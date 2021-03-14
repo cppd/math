@@ -43,7 +43,7 @@ public:
 
 template <std::size_t N, typename T>
 void paint(
-        PainterNotifier<N - 1>* painter_notifier,
+        PainterNotifier<N - 1>* notifier,
         int samples_per_pixel,
         const Scene<N, T>& scene,
         Paintbrush<N - 1>* paintbrush,

@@ -32,33 +32,15 @@ namespace ns::painter
 {
 namespace
 {
-template <std::size_t N, typename T>
-class PixelData final
+class StopData final
 {
         std::atomic_bool* const m_stop;
         std::atomic_bool m_stop_painting = false;
 
-        const Projector<N, T>& m_projector;
-        Sampler<N - 1, T> m_sampler;
-        Pixels<N - 1> m_pixels;
-        PainterNotifier<N - 1>* const m_notifier;
-        Paintbrush<N - 1>* const m_paintbrush;
-
 public:
-        PixelData(
-                const Projector<N, T>& projector,
-                int samples_per_pixel,
-                PainterNotifier<N - 1>* painter_notifier,
-                Paintbrush<N - 1>* paintbrush,
-                std::atomic_bool* stop)
-                : m_stop(stop),
-                  m_projector(projector),
-                  m_sampler(samples_per_pixel),
-                  m_pixels(projector.screen_size()),
-                  m_notifier(painter_notifier),
-                  m_paintbrush(paintbrush)
+        explicit StopData(std::atomic_bool* stop) : m_stop(stop)
         {
-                paintbrush->first_pass();
+                ASSERT(m_stop);
         }
 
         bool stop()
@@ -74,35 +56,34 @@ public:
         {
                 m_stop_painting = true;
         }
+};
 
-        const Projector<N, T>& projector() const
-        {
-                return m_projector;
-        }
+template <std::size_t N, typename T>
+struct PixelData final
+{
+        const Projector<N, T>& projector;
+        Sampler<N - 1, T> sampler;
+        Pixels<N - 1> pixels;
+        Paintbrush<N - 1>* const paintbrush;
 
-        Sampler<N - 1, T>& sampler()
+        PixelData(const Projector<N, T>& projector, int samples_per_pixel, Paintbrush<N - 1>* paintbrush)
+                : projector(projector),
+                  sampler(samples_per_pixel),
+                  pixels(projector.screen_size()),
+                  paintbrush(paintbrush)
         {
-                return m_sampler;
-        }
-
-        Pixels<N - 1>& pixels()
-        {
-                return m_pixels;
-        }
-
-        PainterNotifier<N - 1>& notifier()
-        {
-                return *m_notifier;
-        }
-
-        Paintbrush<N - 1>& paintbrush()
-        {
-                return *m_paintbrush;
+                ASSERT(paintbrush);
+                paintbrush->first_pass();
         }
 };
 
 template <std::size_t N, typename T>
-void paint_pixels(unsigned thread_number, const PaintData<N, T>& paint_data, PixelData<N, T>* pixel_data)
+void paint_pixels(
+        unsigned thread_number,
+        const PaintData<N, T>& paint_data,
+        StopData* stop_data,
+        PixelData<N, T>* pixel_data,
+        PainterNotifier<N - 1>* notifier)
 {
         thread_local RandomEngine<T> random_engine = create_engine<RandomEngine<T>>();
         thread_local std::vector<Vector<N - 1, T>> samples;
@@ -112,21 +93,21 @@ void paint_pixels(unsigned thread_number, const PaintData<N, T>& paint_data, Pix
 
         while (true)
         {
-                if (pixel_data->stop())
+                if (stop_data->stop())
                 {
                         return;
                 }
 
                 std::optional<std::array<int_least16_t, N - 1>> pixel =
-                        pixel_data->paintbrush().next_pixel(ray_count, samples.size());
+                        pixel_data->paintbrush->next_pixel(ray_count, samples.size());
                 if (!pixel)
                 {
                         return;
                 }
 
-                pixel_data->notifier().painter_pixel_before(thread_number, *pixel);
+                notifier->painter_pixel_before(thread_number, *pixel);
 
-                pixel_data->sampler().generate(&samples);
+                pixel_data->sampler.generate(&samples);
                 ray_count = 0;
 
                 Vector<N - 1, T> screen_point = to_vector<T>(*pixel);
@@ -138,7 +119,7 @@ void paint_pixels(unsigned thread_number, const PaintData<N, T>& paint_data, Pix
                         constexpr int RECURSION_LEVEL = 0;
                         constexpr Color::DataType COLOR_LEVEL = 1;
 
-                        Ray<N, T> ray = pixel_data->projector().ray(screen_point + sample_point);
+                        Ray<N, T> ray = pixel_data->projector.ray(screen_point + sample_point);
 
                         std::optional<Color> sample_color =
                                 trace_path(paint_data, &ray_count, random_engine, RECURSION_LEVEL, COLOR_LEVEL, ray);
@@ -150,24 +131,24 @@ void paint_pixels(unsigned thread_number, const PaintData<N, T>& paint_data, Pix
                         }
                 }
 
-                PixelInfo info = pixel_data->pixels().add(*pixel, color, hit_sample_count, samples.size());
+                PixelInfo info = pixel_data->pixels.add(*pixel, color, hit_sample_count, samples.size());
 
-                pixel_data->notifier().painter_pixel_after(thread_number, *pixel, info.color, info.coverage);
+                notifier->painter_pixel_after(thread_number, *pixel, info.color, info.coverage);
         }
 }
 
 template <std::size_t N, typename T>
-void prepare_next_pass(unsigned thread_number, PixelData<N, T>* pixel_data)
+void prepare_next_pass(unsigned thread_number, StopData* stop_data, PixelData<N, T>* pixel_data)
 {
         if (thread_number != 0)
         {
                 return;
         }
-        if (!pixel_data->paintbrush().next_pass())
+        if (!pixel_data->paintbrush->next_pass())
         {
-                pixel_data->set_stop();
+                stop_data->set_stop();
         }
-        pixel_data->sampler().next_pass();
+        pixel_data->sampler.next_pass();
 }
 
 template <std::size_t N, typename T>
@@ -175,52 +156,54 @@ void work_thread(
         unsigned thread_number,
         ThreadBarrier* barrier,
         const PaintData<N, T>& paint_data,
-        PixelData<N, T>* pixel_data)
+        StopData* stop_data,
+        PixelData<N, T>* pixel_data,
+        PainterNotifier<N - 1>* notifier)
 {
         while (true)
         {
                 try
                 {
-                        paint_pixels(thread_number, paint_data, pixel_data);
+                        paint_pixels(thread_number, paint_data, stop_data, pixel_data, notifier);
                         barrier->wait();
                 }
                 catch (const std::exception& e)
                 {
-                        pixel_data->set_stop();
-                        pixel_data->notifier().painter_error_message(std::string("Painter error:\n") + e.what());
+                        stop_data->set_stop();
+                        notifier->painter_error_message(std::string("Painter error:\n") + e.what());
                         barrier->wait();
                 }
                 catch (...)
                 {
-                        pixel_data->set_stop();
-                        pixel_data->notifier().painter_error_message("Unknown painter error");
+                        stop_data->set_stop();
+                        notifier->painter_error_message("Unknown painter error");
                         barrier->wait();
                 }
 
-                if (pixel_data->stop())
+                if (stop_data->stop())
                 {
                         return;
                 }
 
                 try
                 {
-                        prepare_next_pass<N, T>(thread_number, pixel_data);
+                        prepare_next_pass<N, T>(thread_number, stop_data, pixel_data);
                         barrier->wait();
                 }
                 catch (const std::exception& e)
                 {
-                        pixel_data->set_stop();
-                        pixel_data->notifier().painter_error_message(std::string("Painter error:\n") + e.what());
+                        stop_data->set_stop();
+                        notifier->painter_error_message(std::string("Painter error:\n") + e.what());
                         barrier->wait();
                 }
                 catch (...)
                 {
-                        pixel_data->set_stop();
-                        pixel_data->notifier().painter_error_message("Unknown painter error");
+                        stop_data->set_stop();
+                        notifier->painter_error_message("Unknown painter error");
                         barrier->wait();
                 }
 
-                if (pixel_data->stop())
+                if (stop_data->stop())
                 {
                         return;
                 }
@@ -228,7 +211,12 @@ void work_thread(
 }
 
 template <std::size_t N, typename T>
-void paint_threads(int thread_count, const PaintData<N, T>& paint_data, PixelData<N, T>* pixel_data)
+void paint_threads(
+        int thread_count,
+        const PaintData<N, T>& paint_data,
+        StopData* stop_data,
+        PixelData<N, T>* pixel_data,
+        PainterNotifier<N - 1>* notifier)
 {
         ThreadBarrier barrier(thread_count);
         std::vector<std::thread> threads(thread_count);
@@ -237,7 +225,7 @@ void paint_threads(int thread_count, const PaintData<N, T>& paint_data, PixelDat
         {
                 try
                 {
-                        work_thread(thread_number, &barrier, paint_data, pixel_data);
+                        work_thread(thread_number, &barrier, paint_data, stop_data, pixel_data, notifier);
                 }
                 catch (...)
                 {
@@ -260,7 +248,7 @@ void paint_threads(int thread_count, const PaintData<N, T>& paint_data, PixelDat
 // Без выдачи исключений. Про проблемы сообщать через painter_notifier.
 template <std::size_t N, typename T>
 void paint(
-        PainterNotifier<N - 1>* painter_notifier,
+        PainterNotifier<N - 1>* notifier,
         int samples_per_pixel,
         const Scene<N, T>& scene,
         Paintbrush<N - 1>* paintbrush,
@@ -272,7 +260,7 @@ void paint(
         {
                 try
                 {
-                        if (!painter_notifier || !paintbrush || !stop)
+                        if (!notifier || !paintbrush || !stop)
                         {
                                 error("Painter parameters not specified");
                         }
@@ -288,19 +276,18 @@ void paint(
                         }
 
                         const PaintData paint_data(scene, smooth_normal);
+                        StopData stop_data(stop);
+                        PixelData<N, T> pixel_data(scene.projector(), samples_per_pixel, paintbrush);
 
-                        PixelData<N, T> pixel_data(
-                                scene.projector(), samples_per_pixel, painter_notifier, paintbrush, stop);
-
-                        paint_threads(thread_count, paint_data, &pixel_data);
+                        paint_threads(thread_count, paint_data, &stop_data, &pixel_data, notifier);
                 }
                 catch (const std::exception& e)
                 {
-                        painter_notifier->painter_error_message(std::string("Painter error:\n") + e.what());
+                        notifier->painter_error_message(std::string("Painter error:\n") + e.what());
                 }
                 catch (...)
                 {
-                        painter_notifier->painter_error_message("Unknown painter error");
+                        notifier->painter_error_message("Unknown painter error");
                 }
         }
         catch (...)
