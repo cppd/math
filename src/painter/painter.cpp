@@ -63,7 +63,7 @@ struct PixelData final
 {
         const Projector<N, T>& projector;
         Sampler<N - 1, T> sampler;
-        Pixels<N - 1> pixels;
+        Pixels<N - 1, T> pixels;
         Paintbrush<N - 1>* const paintbrush;
 
         PixelData(const Projector<N, T>& projector, int samples_per_pixel, Paintbrush<N - 1>* paintbrush)
@@ -109,30 +109,22 @@ void paint_pixels(
 
                 pixel_data->sampler.generate(&samples);
                 ray_count = 0;
+                Vector<N - 1, T> pixel_org = to_vector<T>(*pixel);
 
-                Vector<N - 1, T> screen_point = to_vector<T>(*pixel);
-                int hit_sample_count = 0;
-                Color color(0);
-
-                for (const Vector<N - 1, T>& sample_point : samples)
+                for (const Vector<N - 1, T>& sample : samples)
                 {
                         constexpr int RECURSION_LEVEL = 0;
                         constexpr Color::DataType COLOR_LEVEL = 1;
 
-                        Ray<N, T> ray = pixel_data->projector.ray(screen_point + sample_point);
+                        Ray<N, T> ray = pixel_data->projector.ray(pixel_org + sample);
 
-                        std::optional<Color> sample_color =
+                        std::optional<Color> color =
                                 trace_path(paint_data, &ray_count, random_engine, RECURSION_LEVEL, COLOR_LEVEL, ray);
 
-                        if (sample_color)
-                        {
-                                color += *sample_color;
-                                ++hit_sample_count;
-                        }
+                        pixel_data->pixels.add_sample(*pixel, sample, color);
                 }
 
-                PixelInfo info = pixel_data->pixels.add(*pixel, color, hit_sample_count, samples.size());
-
+                PixelInfo info = pixel_data->pixels.info(*pixel);
                 notifier->pixel_after(thread_number, *pixel, info.color, info.coverage);
         }
 }

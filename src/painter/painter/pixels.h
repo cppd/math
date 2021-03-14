@@ -21,6 +21,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/com/global_index.h>
 
 #include <array>
+#include <optional>
 #include <vector>
 
 namespace ns::painter
@@ -31,52 +32,58 @@ struct PixelInfo final
         float coverage;
 };
 
-template <std::size_t N>
+template <std::size_t N, typename T>
+class Pixel final
+{
+        Color m_color_sum{0};
+        std::uint_least16_t m_hit_sample_sum = 0;
+        std::uint_least16_t m_missed_sample_sum = 0;
+
+        Color compute_color() const
+        {
+                if (m_hit_sample_sum > 0)
+                {
+                        Color c = m_color_sum / m_hit_sample_sum;
+                        for (unsigned i = 0; i < 3; ++i)
+                        {
+                                if (c.data()[i] > 1)
+                                {
+                                        c.data()[i] = 1;
+                                }
+                        }
+                        return c;
+                }
+                return Color(0);
+        }
+
+        float compute_coverage() const
+        {
+                return static_cast<float>(m_hit_sample_sum) / (m_hit_sample_sum + m_missed_sample_sum);
+        }
+
+public:
+        void add_sample(const Color& color, const Vector<N, T>& /*sample*/)
+        {
+                m_hit_sample_sum += 1;
+                m_color_sum += color;
+        }
+
+        void add_missed()
+        {
+                m_missed_sample_sum += 1;
+        }
+
+        PixelInfo info() const
+        {
+                return {.color = compute_color(), .coverage = compute_coverage()};
+        }
+};
+
+template <std::size_t N, typename T>
 class Pixels final
 {
-        using CounterType = std::uint_least16_t;
-
-        class Pixel
-        {
-                Color m_color_sum{0};
-                CounterType m_hit_sample_sum = 0;
-                CounterType m_all_sample_sum = 0;
-
-                Color compute_color() const
-                {
-                        if (m_hit_sample_sum > 0)
-                        {
-                                Color c = m_color_sum / m_hit_sample_sum;
-                                for (unsigned i = 0; i < 3; ++i)
-                                {
-                                        if (c.data()[i] > 1)
-                                        {
-                                                c.data()[i] = 1;
-                                        }
-                                }
-                                return c;
-                        }
-                        return Color(0);
-                }
-
-                float compute_coverage() const
-                {
-                        return static_cast<float>(m_hit_sample_sum) / m_all_sample_sum;
-                }
-
-        public:
-                PixelInfo add(const Color& color, CounterType hit_samples, CounterType all_samples)
-                {
-                        m_all_sample_sum += all_samples;
-                        m_hit_sample_sum += hit_samples;
-                        m_color_sum += color;
-
-                        return {.color = compute_color(), .coverage = compute_coverage()};
-                }
-        };
-
         const GlobalIndex<N, long long> m_global_index;
-        std::vector<Pixel> m_pixels;
+        std::vector<Pixel<N, T>> m_pixels;
 
 public:
         explicit Pixels(const std::array<int, N>& screen_size) : m_global_index(screen_size)
@@ -84,13 +91,24 @@ public:
                 m_pixels.resize(m_global_index.count());
         }
 
-        PixelInfo add(
+        void add_sample(
                 const std::array<int_least16_t, N>& pixel,
-                const Color& color,
-                CounterType hit_samples,
-                CounterType all_samples)
+                const Vector<N, T>& sample,
+                const std::optional<Color>& color)
         {
-                return m_pixels[m_global_index.compute(pixel)].add(color, hit_samples, all_samples);
+                if (color)
+                {
+                        m_pixels[m_global_index.compute(pixel)].add_sample(*color, sample);
+                }
+                else
+                {
+                        m_pixels[m_global_index.compute(pixel)].add_missed();
+                }
+        }
+
+        PixelInfo info(const std::array<int_least16_t, N>& pixel) const
+        {
+                return m_pixels[m_global_index.compute(pixel)].info();
         }
 };
 }
