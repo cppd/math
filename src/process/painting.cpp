@@ -41,9 +41,10 @@ constexpr int PAINTER_MAXIMUM_SAMPLES_PER_PIXEL = power<N - 1>(10u);
 constexpr int PAINTER_MAXIMUM_SCREEN_SIZE_3D = 10000;
 
 // Размеры экрана в пикселях для 4 и более измерений
-constexpr int PAINTER_DEFAULT_SCREEN_SIZE_ND = 500;
 constexpr int PAINTER_MINIMUM_SCREEN_SIZE_ND = 50;
 constexpr int PAINTER_MAXIMUM_SCREEN_SIZE_ND = 5000;
+template <std::size_t N>
+constexpr int PAINTER_DEFAULT_SCREEN_SIZE_ND = (N == 4) ? 500 : ((N == 5) ? 100 : PAINTER_MINIMUM_SCREEN_SIZE_ND);
 
 template <std::size_t N>
 std::function<void(ProgressRatioList*)> action_painter_function(
@@ -72,6 +73,8 @@ std::function<void(ProgressRatioList*)> action_painter_function(
 
         PainterSceneInfo<N, T> scene_info;
 
+        static_assert(PAINTER_DEFAULT_SAMPLES_PER_PIXEL<N> <= PAINTER_MAXIMUM_SAMPLES_PER_PIXEL<N>);
+
         if constexpr (N == 3)
         {
                 scene_info.camera_up = to_vector<T>(camera.up);
@@ -99,9 +102,12 @@ std::function<void(ProgressRatioList*)> action_painter_function(
         }
         else
         {
+                static_assert(PAINTER_DEFAULT_SCREEN_SIZE_ND<N> >= PAINTER_MINIMUM_SCREEN_SIZE_ND);
+                static_assert(PAINTER_DEFAULT_SCREEN_SIZE_ND<N> <= PAINTER_MAXIMUM_SCREEN_SIZE_ND);
+
                 std::optional<gui::dialog::PainterNdParameters> parameters =
                         gui::dialog::PainterNdParametersDialog::show(
-                                N, hardware_concurrency(), PAINTER_DEFAULT_SCREEN_SIZE_ND,
+                                N, hardware_concurrency(), PAINTER_DEFAULT_SCREEN_SIZE_ND<N>,
                                 PAINTER_MINIMUM_SCREEN_SIZE_ND, PAINTER_MAXIMUM_SCREEN_SIZE_ND,
                                 PAINTER_DEFAULT_SAMPLES_PER_PIXEL<N>, PAINTER_MAXIMUM_SAMPLES_PER_PIXEL<N>);
                 if (!parameters)
