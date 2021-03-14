@@ -105,7 +105,7 @@ void paint_pixels(
                         return;
                 }
 
-                notifier->painter_pixel_before(thread_number, *pixel);
+                notifier->pixel_before(thread_number, *pixel);
 
                 pixel_data->sampler.generate(&samples);
                 ray_count = 0;
@@ -133,7 +133,7 @@ void paint_pixels(
 
                 PixelInfo info = pixel_data->pixels.add(*pixel, color, hit_sample_count, samples.size());
 
-                notifier->painter_pixel_after(thread_number, *pixel, info.color, info.coverage);
+                notifier->pixel_after(thread_number, *pixel, info.color, info.coverage);
         }
 }
 
@@ -170,13 +170,13 @@ void work_thread(
                 catch (const std::exception& e)
                 {
                         stop_data->set_stop();
-                        notifier->painter_error_message(std::string("Painter error:\n") + e.what());
+                        notifier->error_message(std::string("Painter error:\n") + e.what());
                         barrier->wait();
                 }
                 catch (...)
                 {
                         stop_data->set_stop();
-                        notifier->painter_error_message("Unknown painter error");
+                        notifier->error_message("Unknown painter error");
                         barrier->wait();
                 }
 
@@ -193,13 +193,13 @@ void work_thread(
                 catch (const std::exception& e)
                 {
                         stop_data->set_stop();
-                        notifier->painter_error_message(std::string("Painter error:\n") + e.what());
+                        notifier->error_message(std::string("Painter error:\n") + e.what());
                         barrier->wait();
                 }
                 catch (...)
                 {
                         stop_data->set_stop();
-                        notifier->painter_error_message("Unknown painter error");
+                        notifier->error_message("Unknown painter error");
                         barrier->wait();
                 }
 
@@ -283,11 +283,11 @@ void paint(
                 }
                 catch (const std::exception& e)
                 {
-                        notifier->painter_error_message(std::string("Painter error:\n") + e.what());
+                        notifier->error_message(std::string("Painter error:\n") + e.what());
                 }
                 catch (...)
                 {
-                        notifier->painter_error_message("Unknown painter error");
+                        notifier->error_message("Unknown painter error");
                 }
         }
         catch (...)

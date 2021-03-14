@@ -133,14 +133,14 @@ class PainterPixels final : public Pixels, public painter::PainterNotifier<N - 1
 
         // PainterNotifier
 
-        void painter_pixel_before(unsigned thread_number, const std::array<int_least16_t, N - 1>& pixel) override
+        void pixel_before(unsigned thread_number, const std::array<int_least16_t, N - 1>& pixel) override
         {
                 long long x = pixel[0];
                 long long y = m_screen_size[1] - 1 - pixel[1];
                 m_busy_indices_2d[thread_number] = y * m_screen_size[0] + x;
         }
 
-        void painter_pixel_after(
+        void pixel_after(
                 unsigned /*thread_number*/,
                 const std::array<int_least16_t, N - 1>& pixel,
                 const Color& color,
@@ -189,7 +189,7 @@ class PainterPixels final : public Pixels, public painter::PainterNotifier<N - 1
                 std::memcpy(&m_pixels_16[PIXEL_SIZE_16 * index], c_16.data(), c_16.size() * sizeof(c_16[0]));
         }
 
-        void painter_error_message(const std::string& msg) override
+        void error_message(const std::string& msg) override
         {
                 MESSAGE_ERROR(msg);
         }

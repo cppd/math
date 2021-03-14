@@ -49,7 +49,7 @@ constexpr Color::DataType METALNESS = 0;
 constexpr Color::DataType LIGHTING_INTENSITY = 1;
 
 template <std::size_t N>
-class Images : public PainterNotifier<N>
+class Images final : public PainterNotifier<N>
 {
         static constexpr const char* DIRECTORY_NAME = "painter_test";
         static constexpr const char* IMAGE_FILE_FORMAT = "png";
@@ -60,6 +60,34 @@ class Images : public PainterNotifier<N>
 
         std::vector<std::byte> m_pixels;
         std::filesystem::path m_directory;
+
+        void pixel_before(unsigned, const std::array<int_least16_t, N>&) override
+        {
+        }
+
+        void pixel_after(unsigned, const std::array<int_least16_t, N>& pixel, const Color& color, float coverage)
+                override
+        {
+                std::array<int_least16_t, N> p = pixel;
+                p[1] = m_screen_size[1] - 1 - pixel[1];
+
+                Color c = interpolation(m_background_color, color, coverage);
+                unsigned char r = color::linear_float_to_srgb_uint8(c.red());
+                unsigned char g = color::linear_float_to_srgb_uint8(c.green());
+                unsigned char b = color::linear_float_to_srgb_uint8(c.blue());
+
+                std::size_t offset = 3 * m_global_index.compute(pixel);
+                ASSERT(offset + 2 < m_pixels.size());
+                std::byte* ptr = m_pixels.data() + offset;
+                std::memcpy(ptr++, &r, 1);
+                std::memcpy(ptr++, &g, 1);
+                std::memcpy(ptr++, &b, 1);
+        }
+
+        void error_message(const std::string& msg) override
+        {
+                LOG("Painter error message\n" + msg);
+        }
 
 public:
         Images(const std::array<int, N>& screen_size, const Color& background_color)
@@ -82,37 +110,6 @@ public:
                 {
                         error("Error creating directory " + generic_utf8_filename(m_directory));
                 }
-        }
-
-        void painter_pixel_before(unsigned, const std::array<int_least16_t, N>&) override
-        {
-        }
-
-        void painter_pixel_after(
-                unsigned,
-                const std::array<int_least16_t, N>& pixel,
-                const Color& color,
-                float coverage) override
-        {
-                std::array<int_least16_t, N> p = pixel;
-                p[1] = m_screen_size[1] - 1 - pixel[1];
-
-                Color c = interpolation(m_background_color, color, coverage);
-                unsigned char r = color::linear_float_to_srgb_uint8(c.red());
-                unsigned char g = color::linear_float_to_srgb_uint8(c.green());
-                unsigned char b = color::linear_float_to_srgb_uint8(c.blue());
-
-                std::size_t offset = 3 * m_global_index.compute(pixel);
-                ASSERT(offset + 2 < m_pixels.size());
-                std::byte* ptr = m_pixels.data() + offset;
-                std::memcpy(ptr++, &r, 1);
-                std::memcpy(ptr++, &g, 1);
-                std::memcpy(ptr++, &b, 1);
-        }
-
-        void painter_error_message(const std::string& msg) override
-        {
-                LOG("Painter error message\n" + msg);
         }
 
         void write_to_files() const
