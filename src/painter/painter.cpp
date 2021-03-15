@@ -62,7 +62,7 @@ template <std::size_t N, typename T>
 struct PixelData final
 {
         const Projector<N, T>& projector;
-        Sampler<N - 1, T> sampler;
+        SamplerStratifiedJittered<N - 1, T> sampler;
         Pixels<N - 1, T> pixels;
         Paintbrush<N - 1>* const paintbrush;
 
@@ -107,7 +107,7 @@ void paint_pixels(
 
                 notifier->pixel_before(thread_number, *pixel);
 
-                pixel_data->sampler.generate(&samples);
+                pixel_data->sampler.generate(random_engine, &samples);
                 ray_count = 0;
                 Vector<N - 1, T> pixel_org = to_vector<T>(*pixel);
 

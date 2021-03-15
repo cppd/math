@@ -20,11 +20,12 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/com/error.h>
 #include <src/com/print.h>
 #include <src/sampling/halton_sampler.h>
+#include <src/sampling/sj_sampler.h>
 
 namespace ns::painter
 {
 template <std::size_t N, typename T>
-class Sampler final
+class SamplerHalton final
 {
         sampling::HaltonSampler<N, T> m_sampler;
         std::vector<Vector<N, T>> m_samples;
@@ -40,7 +41,7 @@ class Sampler final
         }
 
 public:
-        explicit Sampler(int samples_per_pixel) : m_samples_per_pixel(samples_per_pixel)
+        explicit SamplerHalton(int samples_per_pixel) : m_samples_per_pixel(samples_per_pixel)
         {
                 if (samples_per_pixel <= 0)
                 {
@@ -50,7 +51,8 @@ public:
                 generate_samples();
         }
 
-        void generate(std::vector<Vector<N, T>>* samples) const
+        template <typename RandomEngine>
+        void generate(RandomEngine&, std::vector<Vector<N, T>>* samples) const
         {
                 *samples = m_samples;
         }
@@ -58,6 +60,31 @@ public:
         void next_pass()
         {
                 generate_samples();
+        }
+};
+
+template <std::size_t N, typename T>
+class SamplerStratifiedJittered final
+{
+        static constexpr T MIN = 0;
+        static constexpr T MAX = 1;
+        static constexpr bool SHUFFLE = false;
+
+        sampling::StratifiedJitteredSampler<N, T> m_sampler;
+
+public:
+        explicit SamplerStratifiedJittered(int samples_per_pixel) : m_sampler(MIN, MAX, samples_per_pixel, SHUFFLE)
+        {
+        }
+
+        template <typename RandomEngine>
+        void generate(RandomEngine& random_engine, std::vector<Vector<N, T>>* samples) const
+        {
+                m_sampler.generate(random_engine, samples);
+        }
+
+        void next_pass() const
+        {
         }
 };
 }
