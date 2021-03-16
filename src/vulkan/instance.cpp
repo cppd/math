@@ -51,16 +51,17 @@ std::vector<std::string> merge_required_device_extensions(
         bool with_swapchain,
         const std::vector<std::string>& required_device_extensions)
 {
-        return with_swapchain ? merge<std::string>(required_device_extensions, VK_KHR_SWAPCHAIN_EXTENSION_NAME)
-                              : required_device_extensions;
+        return with_swapchain
+                       ? merge<std::vector<std::string>>(required_device_extensions, VK_KHR_SWAPCHAIN_EXTENSION_NAME)
+                       : required_device_extensions;
 }
 }
 
 VulkanInstance::VulkanInstance(
         const std::vector<std::string>& required_instance_extensions,
         const std::vector<std::string>& required_device_extensions,
-        const std::vector<PhysicalDeviceFeatures>& required_features,
-        const std::vector<PhysicalDeviceFeatures>& optional_features,
+        const std::vector<PhysicalDeviceFeatures>& required_device_features,
+        const std::vector<PhysicalDeviceFeatures>& optional_device_features,
         const std::optional<std::function<VkSurfaceKHR(VkInstance)>>& create_surface)
         : m_instance(create_instance(required_instance_extensions)),
           m_callback(
@@ -75,7 +76,7 @@ VulkanInstance::VulkanInstance(
                   //
                   merge_required_device_extensions(create_surface.has_value(), required_device_extensions),
                   //
-                  required_features)),
+                  required_device_features)),
           //
           m_graphics_compute_family_index(
                   m_physical_device.family_index(VK_QUEUE_GRAPHICS_BIT | VK_QUEUE_COMPUTE_BIT, 0, 0)),
@@ -102,9 +103,9 @@ VulkanInstance::VulkanInstance(
                   //
                   merge_required_device_extensions(create_surface.has_value(), required_device_extensions),
                   //
-                  required_features,
+                  required_device_features,
                   //
-                  optional_features)),
+                  optional_device_features)),
           //
           m_graphics_compute_command_pool(create_command_pool(m_device, m_graphics_compute_family_index)),
           m_compute_command_pool(create_command_pool(m_device, m_compute_family_index)),

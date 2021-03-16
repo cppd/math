@@ -557,9 +557,12 @@ bool PhysicalDevice::queue_family_supports_presentation(uint32_t index) const
 PhysicalDevice create_physical_device(
         VkInstance instance,
         VkSurfaceKHR surface,
-        const std::vector<std::string>& required_extensions,
-        const std::vector<PhysicalDeviceFeatures>& required_features)
+        std::vector<std::string> required_extensions,
+        std::vector<PhysicalDeviceFeatures> required_features)
 {
+        sort_and_unique(&required_extensions);
+        sort_and_unique(&required_features);
+
         LOG(overview_physical_devices(instance, surface));
 
         for (const VkPhysicalDevice& d : physical_devices(instance))
@@ -623,10 +626,14 @@ PhysicalDevice create_physical_device(
 Device create_device(
         const PhysicalDevice& physical_device,
         const std::unordered_map<uint32_t, uint32_t>& queue_families,
-        const std::vector<std::string>& required_extensions,
-        const std::vector<PhysicalDeviceFeatures>& required_features,
-        const std::vector<PhysicalDeviceFeatures>& optional_features)
+        std::vector<std::string> required_extensions,
+        std::vector<PhysicalDeviceFeatures> required_features,
+        std::vector<PhysicalDeviceFeatures> optional_features)
 {
+        sort_and_unique(&required_extensions);
+        sort_and_unique(&required_features);
+        sort_and_unique(&optional_features);
+
         ASSERT(std::all_of(
                 queue_families.cbegin(), queue_families.cend(),
                 [&](const auto& v)

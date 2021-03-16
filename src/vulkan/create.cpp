@@ -22,6 +22,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "query.h"
 #include "settings.h"
 
+#include <src/com/alg.h>
 #include <src/com/error.h>
 #include <src/com/log.h>
 #include <src/com/string/vector.h>
@@ -123,6 +124,8 @@ Instance create_instance(std::vector<std::string> required_extensions)
         {
                 required_extensions.emplace_back(VK_EXT_DEBUG_REPORT_EXTENSION_NAME);
         }
+
+        sort_and_unique(&required_extensions);
 
         check_instance_extension_support(required_extensions);
 

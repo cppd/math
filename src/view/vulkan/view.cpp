@@ -24,6 +24,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "../com/view_thread.h"
 #include "../com/window.h"
 
+#include <src/com/alg.h>
 #include <src/com/conversion.h>
 #include <src/com/error.h>
 #include <src/com/log.h>
@@ -719,12 +720,12 @@ public:
 
                 {
                         const std::vector<std::string> instance_extensions =
-                                merge<std::string>(window::vulkan_create_surface_required_extensions());
+                                unique_elements(window::vulkan_create_surface_required_extensions());
 
                         const std::vector<std::string> device_extensions = {};
 
-                        const std::vector<vulkan::PhysicalDeviceFeatures> required_features =
-                                merge<vulkan::PhysicalDeviceFeatures>(
+                        const std::vector<vulkan::PhysicalDeviceFeatures> required_device_features =
+                                unique_elements(merge<std::vector<vulkan::PhysicalDeviceFeatures>>(
                                         gpu::convex_hull::View::required_device_features(),
                                         gpu::dft::View::required_device_features(),
                                         gpu::optical_flow::View::required_device_features(),
@@ -733,9 +734,9 @@ public:
                                         gpu::text_writer::View::required_device_features(),
                                         device_features_sample_shading(
                                                 VULKAN_MINIMUM_SAMPLE_COUNT, VULKAN_SAMPLE_SHADING),
-                                        device_features_sampler_anisotropy(VULKAN_SAMPLER_ANISOTROPY));
+                                        device_features_sampler_anisotropy(VULKAN_SAMPLER_ANISOTROPY)));
 
-                        const std::vector<vulkan::PhysicalDeviceFeatures> optional_features = {};
+                        const std::vector<vulkan::PhysicalDeviceFeatures> optional_device_features = {};
 
                         const std::function<VkSurfaceKHR(VkInstance)> surface_function = [&](VkInstance instance)
                         {
@@ -743,8 +744,8 @@ public:
                         };
 
                         m_instance = std::make_unique<vulkan::VulkanInstance>(
-                                instance_extensions, device_extensions, required_features, optional_features,
-                                surface_function);
+                                instance_extensions, device_extensions, required_device_features,
+                                optional_device_features, surface_function);
                 }
 
                 ASSERT(m_instance->graphics_compute_command_pool().family_index()

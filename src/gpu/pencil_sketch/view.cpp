@@ -222,9 +222,8 @@ public:
 
 std::vector<vulkan::PhysicalDeviceFeatures> View::required_device_features()
 {
-        return merge<vulkan::PhysicalDeviceFeatures>(
-                std::vector<vulkan::PhysicalDeviceFeatures>(REQUIRED_DEVICE_FEATURES),
-                Compute::required_device_features());
+        return merge<std::vector<vulkan::PhysicalDeviceFeatures>>(
+                REQUIRED_DEVICE_FEATURES, Compute::required_device_features());
 }
 
 std::unique_ptr<View> create_view(

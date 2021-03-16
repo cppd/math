@@ -17,46 +17,72 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
-#include "alg.h"
-
-#include "type/detect.h"
-
-#include <vector>
+#include <iterator>
+#include <utility>
 
 namespace ns
 {
 namespace merge_implementation
 {
 template <typename T1, typename T2>
-void add(std::vector<T1>* v, const std::vector<T2>& e)
+concept VectorAndContainer = requires(T1* v1, const T2& v2)
 {
-        v->insert(v->end(), e.cbegin(), e.cend());
+        v1->push_back(*std::begin(v2));
+        v1->insert(v1->end(), std::begin(v2), std::end(v2));
+};
+
+template <typename T1, typename T2>
+concept SetAndContainer = requires(T1* v1, const T2& v2)
+{
+        v1->contains(*std::begin(v2));
+        v1->insert(std::begin(v2), std::end(v2));
+};
+
+template <typename T1, typename T2>
+concept VectorAndValue = requires(T1* v1, T2&& v2)
+{
+        v1->push_back(std::forward<T2>(v2));
+};
+
+template <typename T1, typename T2>
+concept SetAndValue = requires(T1* v1, T2&& v2)
+{
+        v1->contains(v2);
+        v1->insert(std::forward<T2>(v2));
+};
+
+//
+
+template <typename T1, typename T2>
+void merge(T1* v1, const T2& v2) requires VectorAndContainer<T1, T2>
+{
+        v1->insert(v1->end(), std::begin(v2), std::end(v2));
 }
 
-template <typename T1, typename T2, std::size_t N>
-void add(std::vector<T1>* v, const std::array<T2, N>& e)
+template <typename T1, typename T2>
+void merge(T1* v1, const T2& v2) requires SetAndContainer<T1, T2>
 {
-        v->insert(v->end(), e.cbegin(), e.cend());
+        v1->insert(std::begin(v2), std::end(v2));
 }
 
-template <typename T>
-void add(std::vector<T>* v, const std::type_identity_t<T>& e)
+template <typename T1, typename T2>
+void merge(T1* v1, T2&& v2) requires VectorAndValue<T1, T2>
 {
-        v->push_back(e);
+        v1->push_back(std::forward<T2>(v2));
 }
 
-template <typename T>
-void add(std::vector<T>* v, std::type_identity_t<T>&& e)
+template <typename T1, typename T2>
+void merge(T1* v1, T2&& v2) requires SetAndValue<T1, T2>
 {
-        v->push_back(std::move(e));
+        v1->insert(std::forward<T2>(v2));
 }
 }
 
-template <typename R, typename... T>
-std::vector<R> merge(T&&... data)
+template <typename Result, typename... T>
+Result merge(T&&... data)
 {
-        std::vector<R> res;
-        (merge_implementation::add(&res, std::forward<T>(data)), ...);
-        return unique_elements(std::move(res));
+        Result result;
+        (merge_implementation::merge(&result, std::forward<T>(data)), ...);
+        return result;
 }
 }

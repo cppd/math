@@ -177,13 +177,13 @@ public:
 PhysicalDevice create_physical_device(
         VkInstance instance,
         VkSurfaceKHR surface,
-        const std::vector<std::string>& required_extensions,
-        const std::vector<PhysicalDeviceFeatures>& required_features);
+        std::vector<std::string> required_extensions,
+        std::vector<PhysicalDeviceFeatures> required_features);
 
 Device create_device(
         const PhysicalDevice& physical_device,
         const std::unordered_map<uint32_t, uint32_t>& queue_families,
-        const std::vector<std::string>& required_extensions,
-        const std::vector<PhysicalDeviceFeatures>& required_features,
-        const std::vector<PhysicalDeviceFeatures>& optional_features);
+        std::vector<std::string> required_extensions,
+        std::vector<PhysicalDeviceFeatures> required_features,
+        std::vector<PhysicalDeviceFeatures> optional_features);
 }

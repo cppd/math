@@ -22,7 +22,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "shaders/view.h"
 
 #include <src/com/container.h>
-#include <src/com/merge.h>
 #include <src/numerical/transform.h>
 #include <src/text/font.h>
 #include <src/text/fonts.h>
@@ -345,8 +344,7 @@ public:
 
 std::vector<vulkan::PhysicalDeviceFeatures> View::required_device_features()
 {
-        return merge<vulkan::PhysicalDeviceFeatures>(
-                std::vector<vulkan::PhysicalDeviceFeatures>(REQUIRED_DEVICE_FEATURES));
+        return {REQUIRED_DEVICE_FEATURES};
 }
 
 std::unique_ptr<View> create_view(
