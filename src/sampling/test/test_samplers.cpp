@@ -134,6 +134,29 @@ constexpr int one_dimension_sample_count()
         }
 }
 
+template <typename T, typename RandomEngine>
+std::array<T, 2> min_max_for_sampler(RandomEngine& random_engine)
+{
+        T min;
+        T max;
+        if (std::bernoulli_distribution(0.5)(random_engine))
+        {
+                min = std::uniform_real_distribution<T>(-10, 10)(random_engine);
+                max = std::uniform_real_distribution<T>(min + 0.1, min + 10)(random_engine);
+        }
+        else if (std::bernoulli_distribution(0.5)(random_engine))
+        {
+                min = 0;
+                max = 1;
+        }
+        else
+        {
+                min = -1;
+                max = 1;
+        }
+        return {min, max};
+}
+
 template <std::size_t N, typename T>
 void write_to_file(
         const std::string& name,
@@ -313,49 +336,25 @@ void test_sampler_performance()
         test_performance<long double>();
 }
 
-template <typename T, typename RandomEngine>
-std::array<T, 2> min_max_for_sampler(RandomEngine& random_engine)
-{
-        T min;
-        T max;
-        if (std::bernoulli_distribution(0.5)(random_engine))
-        {
-                min = std::uniform_real_distribution<T>(-10, 10)(random_engine);
-                max = std::uniform_real_distribution<T>(min + 0.1, min + 10)(random_engine);
-        }
-        else if (std::bernoulli_distribution(0.5)(random_engine))
-        {
-                min = 0;
-                max = 1;
-        }
-        else
-        {
-                min = -1;
-                max = 1;
-        }
-        return {min, max};
-}
-
 template <std::size_t N, typename T, typename RandomEngine>
 T test_discrepancy(
-        const std::string& sampler_name,
-        T min,
-        T max,
+        const std::string& name,
+        const T& min,
+        const T& max,
         const std::vector<Vector<N, T>>& data,
-        T discrepancy_limit,
+        const T& discrepancy_limit,
         RandomEngine& random_engine)
 {
-        LOG(sampler_name + ", " + to_string(N) + "d, " + type_name<T>() + ", [" + to_string(min) + ", " + to_string(max)
-            + ")");
+        LOG(name);
 
         constexpr int BOX_COUNT = 10'000;
 
-        T discrepancy = compute_discrepancy(min, max, data, BOX_COUNT, random_engine);
-        LOG("discrepancy = " + to_string(discrepancy));
+        const T discrepancy = compute_discrepancy(min, max, data, BOX_COUNT, random_engine);
+        LOG("Discrepancy = " + to_string(discrepancy));
 
         if (!(discrepancy < discrepancy_limit))
         {
-                error(sampler_name + " discrepancy " + to_string(discrepancy) + " is out of discrepancy limit "
+                error(name + "\n" + "Discrepancy " + to_string(discrepancy) + " is greater than "
                       + to_string(discrepancy_limit));
         }
 
@@ -370,9 +369,13 @@ T test_discrepancy_stratified_jittered_type(int sample_count, std::type_identity
         const auto [min, max] = min_max_for_sampler<T>(engine);
 
         StratifiedJitteredSampler<N, T> sampler(min, max, sample_count, true);
+
         std::vector<Vector<N, T>> data;
         sampler.generate(engine, &data);
-        return test_discrepancy(sampler_name(sampler), min, max, data, max_discrepancy, engine);
+
+        std::string name = sampler_name(sampler) + ", " + to_string(N) + "D, " + type_name<T>() + ", [" + to_string(min)
+                           + ", " + to_string(max) + ")";
+        return test_discrepancy(name, min, max, data, max_discrepancy, engine);
 }
 
 template <std::size_t N, typename T>
@@ -383,9 +386,13 @@ T test_discrepancy_latin_hypercube_type(int sample_count, std::type_identity_t<T
         const auto [min, max] = min_max_for_sampler<T>(engine);
 
         LatinHypercubeSampler<N, T> sampler(min, max, sample_count, true);
+
         std::vector<Vector<N, T>> data;
         sampler.generate(engine, &data);
-        return test_discrepancy(sampler_name(sampler), min, max, data, max_discrepancy, engine);
+
+        std::string name = sampler_name(sampler) + ", " + to_string(N) + "D, " + type_name<T>() + ", [" + to_string(min)
+                           + ", " + to_string(max) + ")";
+        return test_discrepancy(name, min, max, data, max_discrepancy, engine);
 }
 
 template <std::size_t N, typename T>
@@ -394,12 +401,15 @@ T test_discrepancy_halton_type(int sample_count, std::type_identity_t<T> max_dis
         std::mt19937_64 engine = create_engine<std::mt19937_64>();
 
         HaltonSampler<N, T> sampler;
+
         std::vector<Vector<N, T>> data(sample_count);
         for (Vector<N, T>& v : data)
         {
                 v = sampler.generate();
         }
-        return test_discrepancy(sampler_name(sampler), T(0), T(1), data, max_discrepancy, engine);
+
+        std::string name = sampler_name(sampler) + ", " + to_string(N) + "D, " + type_name<T>();
+        return test_discrepancy(name, T(0), T(1), data, max_discrepancy, engine);
 }
 
 template <std::size_t N>
@@ -438,25 +448,25 @@ void test_sampler_discrepancy()
                 constexpr unsigned N = 2;
                 constexpr int SAMPLE_COUNT = power<N>(10);
 
-                test_discrepancy_stratified_jittered<N>(SAMPLE_COUNT, 0.135);
-                test_discrepancy_latin_hypercube<N>(SAMPLE_COUNT, 0.135);
+                test_discrepancy_stratified_jittered<N>(SAMPLE_COUNT, 0.15);
+                test_discrepancy_latin_hypercube<N>(SAMPLE_COUNT, 0.15);
                 test_discrepancy_halton<N>(SAMPLE_COUNT, 0.06);
         }
         {
                 constexpr unsigned N = 3;
                 constexpr int SAMPLE_COUNT = power<N>(10);
 
-                test_discrepancy_stratified_jittered<N>(SAMPLE_COUNT, 0.042);
-                test_discrepancy_latin_hypercube<N>(SAMPLE_COUNT, 0.046);
-                test_discrepancy_halton<N>(SAMPLE_COUNT, 0.015);
+                test_discrepancy_stratified_jittered<N>(SAMPLE_COUNT, 0.048);
+                test_discrepancy_latin_hypercube<N>(SAMPLE_COUNT, 0.048);
+                test_discrepancy_halton<N>(SAMPLE_COUNT, 0.016);
         }
         {
                 constexpr unsigned N = 4;
                 constexpr int SAMPLE_COUNT = power<N>(10);
 
-                test_discrepancy_stratified_jittered<N>(SAMPLE_COUNT, 0.012);
-                test_discrepancy_latin_hypercube<N>(SAMPLE_COUNT, 0.012);
-                test_discrepancy_halton<N>(SAMPLE_COUNT, 0.003);
+                test_discrepancy_stratified_jittered<N>(SAMPLE_COUNT, 0.014);
+                test_discrepancy_latin_hypercube<N>(SAMPLE_COUNT, 0.014);
+                test_discrepancy_halton<N>(SAMPLE_COUNT, 0.0027);
         }
 }
 
