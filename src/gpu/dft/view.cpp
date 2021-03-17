@@ -109,7 +109,7 @@ class Impl final : public View
 
                 m_image = std::make_unique<vulkan::ImageWithMemory>(
                         m_device, m_graphics_command_pool, m_graphics_queue,
-                        std::unordered_set<uint32_t>({m_graphics_family_index}), std::vector<VkFormat>({IMAGE_FORMAT}),
+                        std::vector<uint32_t>({m_graphics_family_index}), std::vector<VkFormat>({IMAGE_FORMAT}),
                         VK_SAMPLE_COUNT_1_BIT, VK_IMAGE_TYPE_2D,
                         vulkan::make_extent(source_rectangle.width(), source_rectangle.height()),
                         VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL,
@@ -201,7 +201,7 @@ class Impl final : public View
                 m_vertices.reset();
                 m_vertices = std::make_unique<vulkan::BufferWithMemory>(
                         vulkan::BufferMemoryType::DeviceLocal, m_device,
-                        std::unordered_set<uint32_t>({m_graphics_queue.family_index()}),
+                        std::vector<uint32_t>({m_graphics_queue.family_index()}),
                         VK_BUFFER_USAGE_VERTEX_BUFFER_BIT | VK_BUFFER_USAGE_TRANSFER_DST_BIT, data_size(vertices));
                 m_vertices->write(
                         m_graphics_command_pool, m_graphics_queue, data_size(vertices), data_pointer(vertices));

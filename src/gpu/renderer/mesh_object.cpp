@@ -38,7 +38,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <array>
 #include <sstream>
 #include <unordered_map>
-#include <unordered_set>
 #include <vector>
 
 namespace ns::gpu::renderer
@@ -137,7 +136,7 @@ void load_vertices(
         const vulkan::Device& device,
         const vulkan::CommandPool& command_pool,
         const vulkan::Queue& queue,
-        const std::unordered_set<uint32_t>& family_indices,
+        const std::vector<uint32_t>& family_indices,
         const mesh::Mesh<3>& mesh,
         const std::vector<int>& sorted_face_indices,
         std::unique_ptr<vulkan::BufferWithMemory>* vertex_buffer,
@@ -310,7 +309,7 @@ std::unique_ptr<vulkan::BufferWithMemory> load_point_vertices(
         const vulkan::Device& device,
         const vulkan::CommandPool& command_pool,
         const vulkan::Queue& queue,
-        const std::unordered_set<uint32_t>& family_indices,
+        const std::vector<uint32_t>& family_indices,
         const mesh::Mesh<3>& mesh)
 {
         if (mesh.points.empty())
@@ -339,7 +338,7 @@ std::unique_ptr<vulkan::BufferWithMemory> load_line_vertices(
         const vulkan::Device& device,
         const vulkan::CommandPool& command_pool,
         const vulkan::Queue& queue,
-        const std::unordered_set<uint32_t>& family_indices,
+        const std::vector<uint32_t>& family_indices,
         const mesh::Mesh<3>& mesh)
 {
         if (mesh.lines.empty())
@@ -371,7 +370,7 @@ std::vector<vulkan::ImageWithMemory> load_textures(
         const vulkan::Device& device,
         const vulkan::CommandPool& command_pool,
         const vulkan::Queue& queue,
-        const std::unordered_set<uint32_t>& family_indices,
+        const std::vector<uint32_t>& family_indices,
         const mesh::Mesh<3>& mesh)
 {
         std::vector<vulkan::ImageWithMemory> textures;
@@ -400,7 +399,7 @@ std::vector<MaterialBuffer> load_materials(
         const vulkan::Device& device,
         const vulkan::CommandPool& command_pool,
         const vulkan::Queue& queue,
-        const std::unordered_set<uint32_t>& family_indices,
+        const std::vector<uint32_t>& family_indices,
         const mesh::Mesh<3>& mesh)
 {
         std::vector<MaterialBuffer> buffers;

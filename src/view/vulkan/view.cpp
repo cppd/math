@@ -111,7 +111,7 @@ void create_resolve_texture_and_command_buffers(
 
         vulkan::ImageWithMemory image(
                 instance.device(), instance.graphics_compute_command_pool(), instance.graphics_compute_queues()[0],
-                std::unordered_set({instance.graphics_compute_command_pool().family_index()}),
+                std::vector<uint32_t>({instance.graphics_compute_command_pool().family_index()}),
                 std::vector<VkFormat>({swapchain.format()}), VK_SAMPLE_COUNT_1_BIT, VK_IMAGE_TYPE_2D,
                 vulkan::make_extent(swapchain.width(), swapchain.height()), IMAGE_LAYOUT,
                 VK_IMAGE_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_SAMPLED_BIT);
@@ -543,7 +543,7 @@ class Impl final
                 m_render_buffers.reset();
                 m_swapchain.reset();
 
-                const std::unordered_set<uint32_t> swapchain_family_indices = {
+                const std::vector<uint32_t> swapchain_family_indices = {
                         m_instance->graphics_compute_queues()[0].family_index(),
                         m_instance->presentation_queue().family_index()};
 
@@ -561,7 +561,7 @@ class Impl final
                 m_object_image = std::make_unique<vulkan::ImageWithMemory>(
                         m_instance->device(), m_instance->graphics_compute_command_pool(),
                         m_instance->graphics_compute_queues()[0],
-                        std::unordered_set({m_instance->graphics_compute_queues()[0].family_index()}),
+                        std::vector<uint32_t>({m_instance->graphics_compute_queues()[0].family_index()}),
                         std::vector<VkFormat>({VULKAN_OBJECT_IMAGE_FORMAT}), VK_SAMPLE_COUNT_1_BIT, VK_IMAGE_TYPE_2D,
                         vulkan::make_extent(m_swapchain->width(), m_swapchain->height()), VK_IMAGE_LAYOUT_GENERAL,
                         VK_IMAGE_USAGE_STORAGE_BIT | VK_IMAGE_USAGE_TRANSFER_DST_BIT);

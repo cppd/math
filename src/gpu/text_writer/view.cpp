@@ -228,7 +228,7 @@ class Impl final : public View
 
                         m_vertex_buffer.emplace(
                                 vulkan::BufferMemoryType::HostVisible, m_device,
-                                std::unordered_set({m_graphics_family_index}), VK_BUFFER_USAGE_VERTEX_BUFFER_BIT,
+                                std::vector<uint32_t>({m_graphics_family_index}), VK_BUFFER_USAGE_VERTEX_BUFFER_BIT,
                                 std::max(m_vertex_buffer->size() * 2, data_size));
 
                         m_command_buffers = create_commands();
@@ -272,7 +272,7 @@ class Impl final : public View
                           m_device,
                           graphics_command_pool,
                           graphics_queue,
-                          std::unordered_set({graphics_queue.family_index()}),
+                          std::vector<uint32_t>({graphics_queue.family_index()}),
                           GRAYSCALE_IMAGE_FORMATS,
                           VK_SAMPLE_COUNT_1_BIT,
                           VK_IMAGE_TYPE_2D,
@@ -286,20 +286,20 @@ class Impl final : public View
                   m_memory(
                           m_device,
                           m_program.descriptor_set_layout(),
-                          std::unordered_set({graphics_queue.family_index()}),
+                          std::vector<uint32_t>({graphics_queue.family_index()}),
                           m_sampler,
                           &m_glyph_texture),
                   m_vertex_buffer(
                           std::in_place,
                           vulkan::BufferMemoryType::HostVisible,
                           m_device,
-                          std::unordered_set({graphics_queue.family_index()}),
+                          std::vector<uint32_t>({graphics_queue.family_index()}),
                           VK_BUFFER_USAGE_VERTEX_BUFFER_BIT,
                           VERTEX_BUFFER_FIRST_SIZE),
                   m_indirect_buffer(
                           vulkan::BufferMemoryType::HostVisible,
                           m_device,
-                          std::unordered_set({graphics_queue.family_index()}),
+                          std::vector<uint32_t>({graphics_queue.family_index()}),
                           VK_BUFFER_USAGE_INDIRECT_BUFFER_BIT,
                           sizeof(VkDrawIndirectCommand)),
                   m_graphics_family_index(graphics_queue.family_index())

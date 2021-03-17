@@ -62,7 +62,7 @@ std::vector<VkDescriptorSetLayoutBinding> Memory::descriptor_set_layout_bindings
 Memory::Memory(
         const vulkan::Device& device,
         VkDescriptorSetLayout descriptor_set_layout,
-        const std::unordered_set<uint32_t>& family_indices,
+        const std::vector<uint32_t>& family_indices,
         VkSampler sampler,
         const vulkan::ImageWithMemory* texture)
         : m_descriptors(device, 1, descriptor_set_layout, descriptor_set_layout_bindings())

@@ -26,8 +26,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/com/log.h>
 #include <src/com/print.h>
 
-#include <unordered_set>
-
 namespace ns::vulkan
 {
 namespace
@@ -165,14 +163,14 @@ vulkan::SwapchainKHR create_swapchain_khr(
         VkExtent2D extent,
         uint32_t image_count,
         VkSurfaceTransformFlagBitsKHR transform,
-        const std::unordered_set<uint32_t>& family_indices)
+        std::vector<uint32_t> family_indices)
 {
         if (family_indices.empty())
         {
-                error("Swapchain family index set is empty");
+                error("No swapchain family indices");
         }
 
-        const std::vector<uint32_t> indices(family_indices.cbegin(), family_indices.cend());
+        sort_and_unique(&family_indices);
 
         VkSwapchainCreateInfoKHR create_info = {};
 
@@ -186,11 +184,11 @@ vulkan::SwapchainKHR create_swapchain_khr(
         create_info.imageArrayLayers = 1;
         create_info.imageUsage = VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT;
 
-        if (indices.size() > 1)
+        if (family_indices.size() > 1)
         {
                 create_info.imageSharingMode = VK_SHARING_MODE_CONCURRENT;
-                create_info.queueFamilyIndexCount = indices.size();
-                create_info.pQueueFamilyIndices = indices.data();
+                create_info.queueFamilyIndexCount = family_indices.size();
+                create_info.pQueueFamilyIndices = family_indices.data();
         }
         else
         {
@@ -301,7 +299,7 @@ bool queue_present(VkSemaphore wait_semaphore, VkSwapchainKHR swapchain, uint32_
 Swapchain::Swapchain(
         VkSurfaceKHR surface,
         const Device& device,
-        const std::unordered_set<uint32_t>& family_indices,
+        const std::vector<uint32_t>& family_indices,
         const VkSurfaceFormatKHR& required_surface_format,
         int preferred_image_count,
         PresentMode preferred_present_mode)

@@ -25,7 +25,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/vulkan/objects.h>
 #include <src/vulkan/shader.h>
 
-#include <unordered_set>
 #include <vector>
 
 namespace ns::gpu::dft
@@ -54,7 +53,7 @@ public:
         ViewMemory(
                 const vulkan::Device& device,
                 VkDescriptorSetLayout descriptor_set_layout,
-                const std::unordered_set<uint32_t>& family_indices);
+                const std::vector<uint32_t>& family_indices);
 
         ViewMemory(const ViewMemory&) = delete;
         ViewMemory& operator=(const ViewMemory&) = delete;

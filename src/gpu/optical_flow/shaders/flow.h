@@ -61,7 +61,7 @@ public:
         FlowMemory(
                 const vulkan::Device& device,
                 VkDescriptorSetLayout descriptor_set_layout,
-                const std::unordered_set<uint32_t>& family_indices);
+                const std::vector<uint32_t>& family_indices);
 
         FlowMemory(const FlowMemory&) = delete;
         FlowMemory& operator=(const FlowMemory&) = delete;

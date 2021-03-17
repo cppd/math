@@ -52,7 +52,7 @@ Matrix<3, 4, Dst> mat3_std140(const Matrix<3, 3, Src>& m)
 }
 }
 
-ShaderBuffers::ShaderBuffers(const vulkan::Device& device, const std::unordered_set<uint32_t>& family_indices)
+ShaderBuffers::ShaderBuffers(const vulkan::Device& device, const std::vector<uint32_t>& family_indices)
 {
         m_uniform_buffers.emplace_back(
                 vulkan::BufferMemoryType::HostVisible, device, family_indices, VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT,
@@ -254,7 +254,7 @@ MaterialBuffer::MaterialBuffer(
         const vulkan::Device& device,
         const vulkan::CommandPool& command_pool,
         const vulkan::Queue& queue,
-        const std::unordered_set<uint32_t>& family_indices,
+        const std::vector<uint32_t>& family_indices,
         const Material& material)
         : m_uniform_buffer(
                 vulkan::BufferMemoryType::DeviceLocal,
@@ -273,7 +273,7 @@ const vulkan::Buffer& MaterialBuffer::buffer() const
 
 //
 
-MeshBuffer::MeshBuffer(const vulkan::Device& device, const std::unordered_set<uint32_t>& family_indices)
+MeshBuffer::MeshBuffer(const vulkan::Device& device, const std::vector<uint32_t>& family_indices)
         : m_uniform_buffer(
                 vulkan::BufferMemoryType::HostVisible,
                 device,
@@ -335,7 +335,7 @@ void MeshBuffer::set_lighting(float ambient, float metalness, float roughness) c
 
 //
 
-VolumeBuffer::VolumeBuffer(const vulkan::Device& device, const std::unordered_set<uint32_t>& family_indices)
+VolumeBuffer::VolumeBuffer(const vulkan::Device& device, const std::vector<uint32_t>& family_indices)
         : m_uniform_buffer_coordinates(
                 vulkan::BufferMemoryType::HostVisible,
                 device,
@@ -466,7 +466,7 @@ TransparencyBuffers::TransparencyBuffers(
         const vulkan::Device& device,
         const vulkan::CommandPool& command_pool,
         const vulkan::Queue& queue,
-        const std::unordered_set<uint32_t>& family_indices,
+        const std::vector<uint32_t>& family_indices,
         VkSampleCountFlagBits sample_count,
         unsigned width,
         unsigned height,

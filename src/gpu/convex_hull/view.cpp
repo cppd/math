@@ -101,7 +101,7 @@ class Impl final : public View
 
                 m_points.emplace(
                         vulkan::BufferMemoryType::DeviceLocal, m_instance.device(),
-                        std::unordered_set({m_family_index}), VK_BUFFER_USAGE_STORAGE_BUFFER_BIT,
+                        std::vector<uint32_t>({m_family_index}), VK_BUFFER_USAGE_STORAGE_BUFFER_BIT,
                         points_buffer_size(rectangle.height()));
 
                 m_memory.set_points(*m_points);

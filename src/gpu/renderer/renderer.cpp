@@ -636,7 +636,7 @@ class Impl final : public Renderer
         void create_depth_image()
         {
                 m_depth_copy_image = std::make_unique<vulkan::DepthImageWithMemory>(
-                        m_device, std::unordered_set({m_graphics_queue.family_index()}),
+                        m_device, std::vector<uint32_t>({m_graphics_queue.family_index()}),
                         std::vector<VkFormat>({m_render_buffers->depth_format()}), m_render_buffers->sample_count(),
                         m_swapchain->width(), m_swapchain->height(),
                         VK_IMAGE_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_SAMPLED_BIT, m_graphics_command_pool,
@@ -647,9 +647,8 @@ class Impl final : public Renderer
         {
                 m_transparency_buffers = std::make_unique<TransparencyBuffers>(
                         m_device, m_graphics_command_pool, m_graphics_queue,
-                        std::unordered_set<uint32_t>({m_graphics_queue.family_index()}),
-                        m_render_buffers->sample_count(), m_swapchain->width(), m_swapchain->height(),
-                        TRANSPARENCY_NODE_BUFFER_MAX_SIZE);
+                        std::vector<uint32_t>({m_graphics_queue.family_index()}), m_render_buffers->sample_count(),
+                        m_swapchain->width(), m_swapchain->height(), TRANSPARENCY_NODE_BUFFER_MAX_SIZE);
 
                 LOG("Transparency node count: " + to_string_digit_groups(m_transparency_buffers->node_count()));
 

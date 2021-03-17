@@ -288,7 +288,7 @@ class Impl final : public VolumeObject
 
                 m_transfer_function = std::make_unique<vulkan::ImageWithMemory>(
                         m_device, m_graphics_command_pool, m_graphics_queue,
-                        std::unordered_set<uint32_t>{m_graphics_queue.family_index()},
+                        std::vector<uint32_t>{m_graphics_queue.family_index()},
                         vulkan_transfer_function_formats(image.color_format), VK_SAMPLE_COUNT_1_BIT, VK_IMAGE_TYPE_1D,
                         vulkan::make_extent(image.size[0]), VK_IMAGE_LAYOUT_UNDEFINED,
                         VK_IMAGE_USAGE_SAMPLED_BIT | VK_IMAGE_USAGE_TRANSFER_DST_BIT);
@@ -316,7 +316,7 @@ class Impl final : public VolumeObject
                         m_image.reset();
                         m_image = std::make_unique<vulkan::ImageWithMemory>(
                                 m_device, m_graphics_command_pool, m_graphics_queue,
-                                std::unordered_set<uint32_t>({m_graphics_queue.family_index()}),
+                                std::vector<uint32_t>({m_graphics_queue.family_index()}),
                                 vulkan_image_formats(image.color_format), VK_SAMPLE_COUNT_1_BIT, VK_IMAGE_TYPE_3D,
                                 vulkan::make_extent(image.size[0], image.size[1], image.size[2]),
                                 VK_IMAGE_LAYOUT_UNDEFINED,

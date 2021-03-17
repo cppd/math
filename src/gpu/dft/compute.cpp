@@ -262,8 +262,7 @@ class Fft1d final
         }
 
 public:
-        Fft1d(const vulkan::Device& device, const std::unordered_set<uint32_t>& family_indices, int count, int n)
-                : m_n(n)
+        Fft1d(const vulkan::Device& device, const std::vector<uint32_t>& family_indices, int count, int n) : m_n(n)
         {
                 if (m_n == 1)
                 {
@@ -524,7 +523,7 @@ class Dft final
 
                 //
 
-                const std::unordered_set<uint32_t> family_indices = {
+                const std::vector<uint32_t> family_indices = {
                         family_index, m_compute_command_pool.family_index(), m_transfer_command_pool.family_index()};
 
                 m_d1_fwd.emplace(m_device, m_transfer_command_pool, m_transfer_queue, family_indices, d1_fwd);
@@ -560,7 +559,7 @@ public:
 
                 create_diagonals(family_index);
 
-                const std::unordered_set<uint32_t> family_indices = {family_index};
+                const std::vector<uint32_t> family_indices = {family_index};
 
                 m_x_d.emplace(m_device, family_indices, m_n1 * m_n2, m_buffer_memory_type);
                 m_buffer.emplace(

@@ -26,7 +26,7 @@ constexpr VkDeviceSize COMPLEX_SIZE = 2 * sizeof(float);
 
 ComplexNumberBuffer::ComplexNumberBuffer(
         const vulkan::Device& device,
-        const std::unordered_set<uint32_t>& family_indices,
+        const std::vector<uint32_t>& family_indices,
         unsigned size,
         vulkan::BufferMemoryType memory_type)
         : m_size(size),
@@ -38,7 +38,7 @@ ComplexNumberBuffer::ComplexNumberBuffer(
         const vulkan::Device& device,
         const vulkan::CommandPool& transfer_command_pool,
         const vulkan::Queue& transfer_queue,
-        const std::unordered_set<uint32_t>& family_indices,
+        const std::vector<uint32_t>& family_indices,
         const std::vector<std::complex<double>>& data)
         : m_size(data.size()),
           m_buffer(

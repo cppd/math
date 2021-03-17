@@ -25,7 +25,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/vulkan/objects.h>
 #include <src/vulkan/shader.h>
 
-#include <unordered_set>
 #include <vector>
 
 namespace ns::gpu::text_writer
@@ -65,7 +64,7 @@ public:
 
         Memory(const vulkan::Device& device,
                VkDescriptorSetLayout descriptor_set_layout,
-               const std::unordered_set<uint32_t>& family_indices,
+               const std::vector<uint32_t>& family_indices,
                VkSampler sampler,
                const vulkan::ImageWithMemory* texture);
 

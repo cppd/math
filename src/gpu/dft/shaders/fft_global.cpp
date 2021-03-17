@@ -54,7 +54,7 @@ std::vector<VkDescriptorSetLayoutBinding> FftGlobalMemory::descriptor_set_layout
 FftGlobalMemory::FftGlobalMemory(
         const vulkan::Device& device,
         VkDescriptorSetLayout descriptor_set_layout,
-        const std::unordered_set<uint32_t>& family_indices)
+        const std::vector<uint32_t>& family_indices)
         : m_descriptors(device, 1, descriptor_set_layout, descriptor_set_layout_bindings())
 {
         std::vector<std::variant<VkDescriptorBufferInfo, VkDescriptorImageInfo>> infos;

@@ -183,8 +183,7 @@ class Impl final : public Compute
                 std::vector<vulkan::ImageWithMemory> images;
                 images.reserve(sizes.size());
 
-                const std::unordered_set<uint32_t> family_indices(
-                        {m_compute_command_pool.family_index(), family_index});
+                const std::vector<uint32_t> family_indices({m_compute_command_pool.family_index(), family_index});
                 const std::vector<VkFormat> formats({IMAGE_FORMAT});
                 for (const vec2i& s : sizes)
                 {
@@ -208,7 +207,7 @@ class Impl final : public Compute
                 }
                 buffers.reserve(sizes.size() - 1);
 
-                const std::unordered_set<uint32_t> family_indices({family_index});
+                const std::vector<uint32_t> family_indices({family_index});
                 for (std::size_t i = 1; i < sizes.size(); ++i)
                 {
                         const int buffer_size = sizes[i][0] * sizes[i][1] * sizeof(vec2f);
@@ -297,7 +296,7 @@ class Impl final : public Compute
                         return i - 1; // буферы начинаются с уровня 1
                 };
 
-                const std::unordered_set<uint32_t> family_indices{family_index};
+                const std::vector<uint32_t> family_indices{family_index};
 
                 std::vector<FlowMemory> flow_memory;
 

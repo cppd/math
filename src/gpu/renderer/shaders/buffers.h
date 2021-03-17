@@ -22,7 +22,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/vulkan/buffers.h>
 #include <src/vulkan/descriptor.h>
 
-#include <unordered_set>
 #include <vector>
 
 namespace ns::gpu::renderer
@@ -75,7 +74,7 @@ class ShaderBuffers
         void copy_to_drawing_buffer(VkDeviceSize offset, const T& data) const;
 
 public:
-        ShaderBuffers(const vulkan::Device& device, const std::unordered_set<uint32_t>& family_indices);
+        ShaderBuffers(const vulkan::Device& device, const std::vector<uint32_t>& family_indices);
 
         const vulkan::Buffer& matrices_buffer() const;
         const vulkan::Buffer& shadow_matrices_buffer() const;
@@ -127,7 +126,7 @@ public:
                 const vulkan::Device& device,
                 const vulkan::CommandPool& command_pool,
                 const vulkan::Queue& queue,
-                const std::unordered_set<uint32_t>& family_indices,
+                const std::vector<uint32_t>& family_indices,
                 const Material& material);
 
         const vulkan::Buffer& buffer() const;
@@ -149,7 +148,7 @@ class MeshBuffer final
         };
 
 public:
-        MeshBuffer(const vulkan::Device& device, const std::unordered_set<uint32_t>& family_indices);
+        MeshBuffer(const vulkan::Device& device, const std::vector<uint32_t>& family_indices);
 
         const vulkan::Buffer& buffer() const;
 
@@ -189,7 +188,7 @@ class VolumeBuffer final
         };
 
 public:
-        VolumeBuffer(const vulkan::Device& device, const std::unordered_set<uint32_t>& family_indices);
+        VolumeBuffer(const vulkan::Device& device, const std::vector<uint32_t>& family_indices);
 
         VkBuffer buffer_coordinates() const;
         VkDeviceSize buffer_coordinates_size() const;
@@ -256,7 +255,7 @@ public:
                 const vulkan::Device& device,
                 const vulkan::CommandPool& command_pool,
                 const vulkan::Queue& queue,
-                const std::unordered_set<uint32_t>& family_indices,
+                const std::vector<uint32_t>& family_indices,
                 VkSampleCountFlagBits sample_count,
                 unsigned width,
                 unsigned height,

@@ -35,11 +35,7 @@ namespace ns::vulkan
 {
 namespace
 {
-Buffer create_buffer(
-        VkDevice device,
-        VkDeviceSize size,
-        VkBufferUsageFlags usage,
-        const std::unordered_set<uint32_t>& family_indices)
+Buffer create_buffer(VkDevice device, VkDeviceSize size, VkBufferUsageFlags usage, std::vector<uint32_t> family_indices)
 {
         if (size <= 0)
         {
@@ -48,10 +44,10 @@ Buffer create_buffer(
 
         if (family_indices.empty())
         {
-                error("Buffer family index set is empty");
+                error("No buffer family indices");
         }
 
-        const std::vector<uint32_t> indices(family_indices.cbegin(), family_indices.cend());
+        sort_and_unique(&family_indices);
 
         VkBufferCreateInfo create_info = {};
 
@@ -59,11 +55,11 @@ Buffer create_buffer(
         create_info.size = size;
         create_info.usage = usage;
 
-        if (indices.size() > 1)
+        if (family_indices.size() > 1)
         {
                 create_info.sharingMode = VK_SHARING_MODE_CONCURRENT;
-                create_info.queueFamilyIndexCount = indices.size();
-                create_info.pQueueFamilyIndices = indices.data();
+                create_info.queueFamilyIndexCount = family_indices.size();
+                create_info.pQueueFamilyIndices = family_indices.data();
         }
         else
         {
@@ -146,7 +142,7 @@ Image create_image(
         VkImageType type,
         VkExtent3D extent,
         VkFormat format,
-        const std::unordered_set<uint32_t>& family_indices,
+        std::vector<uint32_t> family_indices,
         VkSampleCountFlagBits samples,
         VkImageTiling tiling,
         VkImageUsageFlags usage)
@@ -157,10 +153,10 @@ Image create_image(
 
         if (family_indices.empty())
         {
-                error("Image family index set is empty");
+                error("No image family indices");
         }
 
-        const std::vector<uint32_t> indices(family_indices.cbegin(), family_indices.cend());
+        sort_and_unique(&family_indices);
 
         VkImageCreateInfo create_info = {};
 
@@ -176,11 +172,11 @@ Image create_image(
         create_info.samples = samples;
         // create_info.flags = 0;
 
-        if (indices.size() > 1)
+        if (family_indices.size() > 1)
         {
                 create_info.sharingMode = VK_SHARING_MODE_CONCURRENT;
-                create_info.queueFamilyIndexCount = indices.size();
-                create_info.pQueueFamilyIndices = indices.data();
+                create_info.queueFamilyIndexCount = family_indices.size();
+                create_info.pQueueFamilyIndices = family_indices.data();
         }
         else
         {
@@ -753,12 +749,12 @@ void check_depth_formats(const std::vector<VkFormat>& formats)
 BufferWithMemory::BufferWithMemory(
         BufferMemoryType memory_type,
         const Device& device,
-        const std::unordered_set<uint32_t>& family_indices,
+        const std::vector<uint32_t>& family_indices,
         VkBufferUsageFlags usage,
         VkDeviceSize size)
         : m_device(device),
           m_physical_device(device.physical_device()),
-          m_family_indices(family_indices),
+          m_family_indices(family_indices.cbegin(), family_indices.cend()),
           m_buffer(create_buffer(device, size, usage, family_indices)),
           m_memory_properties(
                   memory_type == BufferMemoryType::HostVisible
@@ -878,7 +874,7 @@ ImageWithMemory::ImageWithMemory(
         const Device& device,
         const CommandPool& command_pool,
         const Queue& queue,
-        std::unordered_set<uint32_t> family_indices,
+        const std::vector<uint32_t>& family_indices,
         const std::vector<VkFormat>& format_candidates,
         VkSampleCountFlagBits sample_count,
         VkImageType type,
@@ -888,7 +884,7 @@ ImageWithMemory::ImageWithMemory(
         : m_extent(correct_image_extent(type, extent)),
           m_device(device),
           m_physical_device(device.physical_device()),
-          m_family_indices(std::move(family_indices)),
+          m_family_indices(family_indices.cbegin(), family_indices.cend()),
           m_type(type),
           m_sample_count(sample_count),
           m_usage(usage),
@@ -906,7 +902,7 @@ ImageWithMemory::ImageWithMemory(
                   m_type,
                   m_extent,
                   m_format,
-                  m_family_indices,
+                  family_indices,
                   m_sample_count,
                   VK_IMAGE_TILING_OPTIMAL,
                   m_usage)),
@@ -1014,7 +1010,7 @@ VkExtent3D ImageWithMemory::extent() const
 
 DepthImageWithMemory::DepthImageWithMemory(
         const Device& device,
-        const std::unordered_set<uint32_t>& family_indices,
+        const std::vector<uint32_t>& family_indices,
         const std::vector<VkFormat>& formats,
         VkSampleCountFlagBits samples,
         uint32_t width,
@@ -1051,7 +1047,7 @@ DepthImageWithMemory::DepthImageWithMemory(
 
 DepthImageWithMemory::DepthImageWithMemory(
         const Device& device,
-        const std::unordered_set<uint32_t>& family_indices,
+        const std::vector<uint32_t>& family_indices,
         const std::vector<VkFormat>& formats,
         VkSampleCountFlagBits samples,
         uint32_t width,
@@ -1109,7 +1105,7 @@ unsigned DepthImageWithMemory::height() const
 
 ColorAttachment::ColorAttachment(
         const Device& device,
-        const std::unordered_set<uint32_t>& family_indices,
+        const std::vector<uint32_t>& family_indices,
         VkFormat format,
         VkSampleCountFlagBits samples,
         uint32_t width,

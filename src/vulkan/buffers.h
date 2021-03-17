@@ -28,6 +28,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <cstring>
 #include <span>
 #include <unordered_set>
+#include <vector>
 
 namespace ns::vulkan
 {
@@ -54,7 +55,7 @@ public:
         BufferWithMemory(
                 BufferMemoryType memory_type,
                 const Device& device,
-                const std::unordered_set<uint32_t>& family_indices,
+                const std::vector<uint32_t>& family_indices,
                 VkBufferUsageFlags usage,
                 VkDeviceSize size);
 
@@ -195,7 +196,7 @@ public:
                 const Device& device,
                 const CommandPool& command_pool,
                 const Queue& queue,
-                std::unordered_set<uint32_t> family_indices,
+                const std::vector<uint32_t>& family_indices,
                 const std::vector<VkFormat>& format_candidates,
                 VkSampleCountFlagBits sample_count,
                 VkImageType type,
@@ -246,7 +247,7 @@ class DepthImageWithMemory final
 public:
         DepthImageWithMemory(
                 const Device& device,
-                const std::unordered_set<uint32_t>& family_indices,
+                const std::vector<uint32_t>& family_indices,
                 const std::vector<VkFormat>& formats,
                 VkSampleCountFlagBits samples,
                 uint32_t width,
@@ -254,7 +255,7 @@ public:
                 VkImageUsageFlags usage);
         DepthImageWithMemory(
                 const Device& device,
-                const std::unordered_set<uint32_t>& family_indices,
+                const std::vector<uint32_t>& family_indices,
                 const std::vector<VkFormat>& formats,
                 VkSampleCountFlagBits samples,
                 uint32_t width,
@@ -294,7 +295,7 @@ class ColorAttachment final
 public:
         ColorAttachment(
                 const Device& device,
-                const std::unordered_set<uint32_t>& family_indices,
+                const std::vector<uint32_t>& family_indices,
                 VkFormat format,
                 VkSampleCountFlagBits samples,
                 uint32_t width,

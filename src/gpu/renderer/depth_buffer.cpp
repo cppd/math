@@ -195,7 +195,7 @@ class Impl final : public DepthBuffers
 public:
         Impl(DepthBufferCount buffer_count,
              const vulkan::Swapchain& swapchain,
-             const std::unordered_set<uint32_t>& attachment_family_indices,
+             const std::vector<uint32_t>& attachment_family_indices,
              VkCommandPool graphics_command_pool,
              VkQueue graphics_queue,
              const vulkan::Device& device,
@@ -211,7 +211,7 @@ public:
 Impl::Impl(
         DepthBufferCount buffer_count,
         const vulkan::Swapchain& swapchain,
-        const std::unordered_set<uint32_t>& attachment_family_indices,
+        const std::vector<uint32_t>& attachment_family_indices,
         VkCommandPool graphics_command_pool,
         VkQueue graphics_queue,
         const vulkan::Device& device,
@@ -317,7 +317,7 @@ const std::vector<VkClearValue>& Impl::clear_values() const
 std::unique_ptr<DepthBuffers> create_depth_buffers(
         DepthBufferCount buffer_count,
         const vulkan::Swapchain& swapchain,
-        const std::unordered_set<uint32_t>& attachment_family_indices,
+        const std::vector<uint32_t>& attachment_family_indices,
         VkCommandPool graphics_command_pool,
         VkQueue graphics_queue,
         const vulkan::Device& device,

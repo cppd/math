@@ -26,7 +26,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <functional>
 #include <memory>
-#include <unordered_set>
 #include <vector>
 
 namespace ns::gpu::renderer
@@ -53,7 +52,7 @@ enum class DepthBufferCount
 std::unique_ptr<DepthBuffers> create_depth_buffers(
         DepthBufferCount buffer_count,
         const vulkan::Swapchain& swapchain,
-        const std::unordered_set<uint32_t>& attachment_family_indices,
+        const std::vector<uint32_t>& attachment_family_indices,
         VkCommandPool graphics_command_pool,
         VkQueue graphics_queue,
         const vulkan::Device& device,

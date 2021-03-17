@@ -302,10 +302,10 @@ class Impl final : public RenderBuffers, public Impl3D, public Impl2D
                 unsigned buffer_count,
                 const vulkan::Swapchain& swapchain,
                 VkSampleCountFlagBits sample_count,
-                const std::unordered_set<uint32_t>& attachment_family_indices);
+                const std::vector<uint32_t>& attachment_family_indices);
 #if 0
         void create_swapchain_rendering(unsigned buffer_count, const vulkan::Swapchain& swapchain,
-                                        const std::unordered_set<uint32_t>& attachment_family_indices,
+                                        const std::vector<uint32_t>& attachment_family_indices,
                                         const std::vector<VkFormat>& depth_image_formats);
 #endif
 
@@ -426,7 +426,7 @@ void Impl::create_color_buffer_rendering(
         unsigned buffer_count,
         const vulkan::Swapchain& swapchain,
         VkSampleCountFlagBits sample_count,
-        const std::unordered_set<uint32_t>& attachment_family_indices)
+        const std::vector<uint32_t>& attachment_family_indices)
 {
         for (unsigned i = 0; i < buffer_count; ++i)
         {
@@ -525,7 +525,7 @@ void Impl::create_color_buffer_rendering(
 
 #if 0
 void Impl::create_swapchain_rendering(unsigned buffer_count, const vulkan::Swapchain& swapchain,
-                                      const std::unordered_set<uint32_t>& attachment_family_indices,
+                                      const std::vector<uint32_t>& attachment_family_indices,
                                       const std::vector<VkFormat>& depth_image_formats)
 {
         for (unsigned i = 0; i < buffer_count; ++i)
