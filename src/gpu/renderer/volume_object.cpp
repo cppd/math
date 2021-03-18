@@ -22,6 +22,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "shaders/buffers.h"
 #include "shaders/volume.h"
 
+#include <src/com/alg.h>
+#include <src/com/merge.h>
 #include <src/image/format.h>
 #include <src/vulkan/buffers.h>
 
@@ -154,8 +156,9 @@ vec3d gradient_h(const mat4d& texture_to_world_matrix, const vulkan::ImageWithMe
 class Impl final : public VolumeObject
 {
         const vulkan::Device& m_device;
-        const vulkan::CommandPool& m_graphics_command_pool;
-        const vulkan::Queue& m_graphics_queue;
+        const std::vector<uint32_t> m_family_indices;
+        const vulkan::CommandPool& m_transfer_command_pool;
+        const vulkan::Queue& m_transfer_queue;
 
         mat4d m_vp_matrix = mat4d(1);
         std::optional<vec4d> m_world_clip_plane_equation;
@@ -219,7 +222,7 @@ class Impl final : public VolumeObject
                 color.clamp();
 
                 m_buffer.set_parameters(
-                        m_graphics_command_pool, m_graphics_queue, window_offset, window_scale, volume_alpha_coeficient,
+                        m_transfer_command_pool, m_transfer_queue, window_offset, window_scale, volume_alpha_coeficient,
                         isosurface_alpha, isosurface, isovalue, color);
         }
 
@@ -227,7 +230,7 @@ class Impl final : public VolumeObject
         {
                 std::tie(ambient, metalness, roughness) = clean_shading_parameters(ambient, metalness, roughness);
 
-                m_buffer.set_lighting(m_graphics_command_pool, m_graphics_queue, ambient, metalness, roughness);
+                m_buffer.set_lighting(m_transfer_command_pool, m_transfer_queue, ambient, metalness, roughness);
         }
 
         void buffer_set_coordinates() const
@@ -250,7 +253,7 @@ class Impl final : public VolumeObject
 
         void buffer_set_color_volume(bool color_volume) const
         {
-                m_buffer.set_color_volume(m_graphics_command_pool, m_graphics_queue, color_volume);
+                m_buffer.set_color_volume(m_transfer_command_pool, m_transfer_queue, color_volume);
         }
 
         void create_descriptor_sets()
@@ -287,14 +290,13 @@ class Impl final : public VolumeObject
                 m_transfer_function.reset();
 
                 m_transfer_function = std::make_unique<vulkan::ImageWithMemory>(
-                        m_device, m_graphics_command_pool, m_graphics_queue,
-                        std::vector<uint32_t>{m_graphics_queue.family_index()},
+                        m_device, m_transfer_command_pool, m_transfer_queue, m_family_indices,
                         vulkan_transfer_function_formats(image.color_format), VK_SAMPLE_COUNT_1_BIT, VK_IMAGE_TYPE_1D,
                         vulkan::make_extent(image.size[0]), VK_IMAGE_LAYOUT_UNDEFINED,
                         VK_IMAGE_USAGE_SAMPLED_BIT | VK_IMAGE_USAGE_TRANSFER_DST_BIT);
 
                 m_transfer_function->write_pixels(
-                        m_graphics_command_pool, m_graphics_queue, VK_IMAGE_LAYOUT_UNDEFINED,
+                        m_transfer_command_pool, m_transfer_queue, VK_IMAGE_LAYOUT_UNDEFINED,
                         VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL, image.color_format, image.pixels);
         }
 
@@ -315,8 +317,7 @@ class Impl final : public VolumeObject
 
                         m_image.reset();
                         m_image = std::make_unique<vulkan::ImageWithMemory>(
-                                m_device, m_graphics_command_pool, m_graphics_queue,
-                                std::vector<uint32_t>({m_graphics_queue.family_index()}),
+                                m_device, m_transfer_command_pool, m_transfer_queue, m_family_indices,
                                 vulkan_image_formats(image.color_format), VK_SAMPLE_COUNT_1_BIT, VK_IMAGE_TYPE_3D,
                                 vulkan::make_extent(image.size[0], image.size[1], image.size[2]),
                                 VK_IMAGE_LAYOUT_UNDEFINED,
@@ -332,7 +333,7 @@ class Impl final : public VolumeObject
                 }
 
                 m_image->write_pixels(
-                        m_graphics_command_pool, m_graphics_queue, image_layout,
+                        m_transfer_command_pool, m_transfer_queue, image_layout,
                         VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL, image.color_format, image.pixels);
         }
 
@@ -421,17 +422,18 @@ class Impl final : public VolumeObject
 
 public:
         Impl(const vulkan::Device& device,
-             const vulkan::CommandPool& graphics_command_pool,
-             const vulkan::Queue& graphics_queue,
-             const vulkan::CommandPool& /*transfer_command_pool*/,
-             const vulkan::Queue& /*transfer_queue*/,
+             const std::vector<uint32_t>& graphics_family_indices,
+             const vulkan::CommandPool& transfer_command_pool,
+             const vulkan::Queue& transfer_queue,
              std::vector<vulkan::DescriptorSetLayoutAndBindings> image_layouts,
              VkSampler image_sampler,
              VkSampler transfer_function_sampler)
                 : m_device(device),
-                  m_graphics_command_pool(graphics_command_pool),
-                  m_graphics_queue(graphics_queue),
-                  m_buffer(m_device, {m_graphics_queue.family_index()}),
+                  m_family_indices(unique_elements(
+                          merge<std::vector<uint32_t>>(graphics_family_indices, transfer_queue.family_index()))),
+                  m_transfer_command_pool(transfer_command_pool),
+                  m_transfer_queue(transfer_queue),
+                  m_buffer(m_device, m_family_indices),
                   m_image_layouts(std::move(image_layouts)),
                   m_image_sampler(image_sampler),
                   m_transfer_function_sampler(transfer_function_sampler)
@@ -442,8 +444,7 @@ public:
 
 std::unique_ptr<VolumeObject> create_volume_object(
         const vulkan::Device& device,
-        const vulkan::CommandPool& graphics_command_pool,
-        const vulkan::Queue& graphics_queue,
+        const std::vector<uint32_t>& graphics_family_indices,
         const vulkan::CommandPool& transfer_command_pool,
         const vulkan::Queue& transfer_queue,
         std::vector<vulkan::DescriptorSetLayoutAndBindings> image_layouts,
@@ -451,7 +452,7 @@ std::unique_ptr<VolumeObject> create_volume_object(
         VkSampler transfer_function_sampler)
 {
         return std::make_unique<Impl>(
-                device, graphics_command_pool, graphics_queue, transfer_command_pool, transfer_queue,
-                std::move(image_layouts), image_sampler, transfer_function_sampler);
+                device, graphics_family_indices, transfer_command_pool, transfer_queue, std::move(image_layouts),
+                image_sampler, transfer_function_sampler);
 }
 }
