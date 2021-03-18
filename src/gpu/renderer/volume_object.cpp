@@ -433,11 +433,12 @@ public:
                           merge<std::vector<uint32_t>>(graphics_family_indices, transfer_queue.family_index()))),
                   m_transfer_command_pool(transfer_command_pool),
                   m_transfer_queue(transfer_queue),
-                  m_buffer(m_device, m_family_indices),
+                  m_buffer(m_device, graphics_family_indices, {transfer_queue.family_index()}),
                   m_image_layouts(std::move(image_layouts)),
                   m_image_sampler(image_sampler),
                   m_transfer_function_sampler(transfer_function_sampler)
         {
+                ASSERT(transfer_command_pool.family_index() == transfer_queue.family_index());
         }
 };
 }

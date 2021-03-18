@@ -188,7 +188,10 @@ class VolumeBuffer final
         };
 
 public:
-        VolumeBuffer(const vulkan::Device& device, const std::vector<uint32_t>& family_indices);
+        VolumeBuffer(
+                const vulkan::Device& device,
+                const std::vector<uint32_t>& graphics_family_indices,
+                const std::vector<uint32_t>& transfer_family_indices);
 
         VkBuffer buffer_coordinates() const;
         VkDeviceSize buffer_coordinates_size() const;
@@ -273,5 +276,4 @@ public:
 
         void read(unsigned long long* required_node_memory, unsigned* overload_counter) const;
 };
-
 }

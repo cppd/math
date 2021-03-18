@@ -20,6 +20,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "depth_buffer.h"
 #include "mesh_object.h"
 
+#include "shaders/buffers.h"
 #include "shaders/descriptors.h"
 #include "shaders/normals.h"
 #include "shaders/points.h"

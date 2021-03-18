@@ -19,6 +19,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "../commands.h"
 
+#include <src/com/merge.h>
+
 namespace ns::gpu::renderer
 {
 namespace
@@ -335,17 +337,20 @@ void MeshBuffer::set_lighting(float ambient, float metalness, float roughness) c
 
 //
 
-VolumeBuffer::VolumeBuffer(const vulkan::Device& device, const std::vector<uint32_t>& family_indices)
+VolumeBuffer::VolumeBuffer(
+        const vulkan::Device& device,
+        const std::vector<uint32_t>& graphics_family_indices,
+        const std::vector<uint32_t>& transfer_family_indices)
         : m_uniform_buffer_coordinates(
                 vulkan::BufferMemoryType::HostVisible,
                 device,
-                family_indices,
+                graphics_family_indices,
                 VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT,
                 sizeof(Coordinates)),
           m_uniform_buffer_volume(
                   vulkan::BufferMemoryType::DeviceLocal,
                   device,
-                  family_indices,
+                  merge<std::vector<uint32_t>>(graphics_family_indices, transfer_family_indices),
                   VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT | VK_BUFFER_USAGE_TRANSFER_DST_BIT,
                   sizeof(Volume))
 {
