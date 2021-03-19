@@ -26,37 +26,39 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/com/random/engine.h>
 #include <src/com/thread.h>
 
+#include <atomic>
 #include <random>
 
 namespace ns::painter
 {
 namespace
 {
-class StopData final
+void join_thread(std::thread* thread) noexcept
 {
-        std::atomic_bool* const m_stop;
-        std::atomic_bool m_stop_painting = false;
-
-public:
-        explicit StopData(std::atomic_bool* stop) : m_stop(stop)
+        ASSERT(thread);
+        try
         {
-                ASSERT(m_stop);
-        }
-
-        bool stop()
-        {
-                if (*m_stop)
+                try
                 {
-                        m_stop_painting = true;
+                        if (thread->joinable())
+                        {
+                                thread->join();
+                        }
                 }
-                return m_stop_painting;
+                catch (const std::exception& e)
+                {
+                        error_fatal(std::string("Error joining painter thread ") + e.what());
+                }
+                catch (...)
+                {
+                        error_fatal("Unknown error joining painter thread");
+                }
         }
-
-        void set_stop()
+        catch (...)
         {
-                m_stop_painting = true;
+                error_fatal("Exception in painter join thread exception handlers");
         }
-};
+}
 
 template <std::size_t N, typename T>
 struct PixelData final
@@ -81,7 +83,7 @@ template <std::size_t N, typename T>
 void paint_pixels(
         unsigned thread_number,
         const PaintData<N, T>& paint_data,
-        StopData* stop_data,
+        std::atomic_bool* stop,
         PixelData<N, T>* pixel_data,
         PainterNotifier<N - 1>* notifier)
 {
@@ -93,7 +95,7 @@ void paint_pixels(
 
         while (true)
         {
-                if (stop_data->stop())
+                if (*stop)
                 {
                         return;
                 }
@@ -105,7 +107,7 @@ void paint_pixels(
                         return;
                 }
 
-                notifier->pixel_before(thread_number, *pixel);
+                notifier->pixel_busy(thread_number, *pixel);
 
                 pixel_data->sampler.generate(random_engine, &samples);
                 ray_count = 0;
@@ -125,12 +127,12 @@ void paint_pixels(
                 }
 
                 PixelInfo info = pixel_data->pixels.info(*pixel);
-                notifier->pixel_after(thread_number, *pixel, info.color, info.coverage);
+                notifier->pixel_set(thread_number, *pixel, info.color, info.coverage);
         }
 }
 
 template <std::size_t N, typename T>
-void prepare_next_pass(unsigned thread_number, StopData* stop_data, PixelData<N, T>* pixel_data)
+void prepare_next_pass(unsigned thread_number, std::atomic_bool* stop, PixelData<N, T>* pixel_data)
 {
         if (thread_number != 0)
         {
@@ -138,17 +140,17 @@ void prepare_next_pass(unsigned thread_number, StopData* stop_data, PixelData<N,
         }
         if (!pixel_data->paintbrush->next_pass())
         {
-                stop_data->set_stop();
+                *stop = true;
         }
         pixel_data->sampler.next_pass();
 }
 
 template <std::size_t N, typename T>
-void work_thread(
+void worker_thread(
         unsigned thread_number,
         ThreadBarrier* barrier,
         const PaintData<N, T>& paint_data,
-        StopData* stop_data,
+        std::atomic_bool* stop,
         PixelData<N, T>* pixel_data,
         PainterNotifier<N - 1>* notifier)
 {
@@ -156,46 +158,46 @@ void work_thread(
         {
                 try
                 {
-                        paint_pixels(thread_number, paint_data, stop_data, pixel_data, notifier);
+                        paint_pixels(thread_number, paint_data, stop, pixel_data, notifier);
                         barrier->wait();
                 }
                 catch (const std::exception& e)
                 {
-                        stop_data->set_stop();
+                        *stop = true;
                         notifier->error_message(std::string("Painter error:\n") + e.what());
                         barrier->wait();
                 }
                 catch (...)
                 {
-                        stop_data->set_stop();
+                        *stop = true;
                         notifier->error_message("Unknown painter error");
                         barrier->wait();
                 }
 
-                if (stop_data->stop())
+                if (*stop)
                 {
                         return;
                 }
 
                 try
                 {
-                        prepare_next_pass<N, T>(thread_number, stop_data, pixel_data);
+                        prepare_next_pass<N, T>(thread_number, stop, pixel_data);
                         barrier->wait();
                 }
                 catch (const std::exception& e)
                 {
-                        stop_data->set_stop();
+                        *stop = true;
                         notifier->error_message(std::string("Painter error:\n") + e.what());
                         barrier->wait();
                 }
                 catch (...)
                 {
-                        stop_data->set_stop();
+                        *stop = true;
                         notifier->error_message("Unknown painter error");
                         barrier->wait();
                 }
 
-                if (stop_data->stop())
+                if (*stop)
                 {
                         return;
                 }
@@ -203,43 +205,48 @@ void work_thread(
 }
 
 template <std::size_t N, typename T>
-void paint_threads(
+void worker_threads(
         int thread_count,
         const PaintData<N, T>& paint_data,
-        StopData* stop_data,
+        std::atomic_bool* stop,
         PixelData<N, T>* pixel_data,
-        PainterNotifier<N - 1>* notifier)
+        PainterNotifier<N - 1>* notifier) noexcept
 {
-        ThreadBarrier barrier(thread_count);
-        std::vector<std::thread> threads(thread_count);
-
-        const auto thread_function = [&](unsigned thread_number) noexcept
+        try
         {
-                try
-                {
-                        work_thread(thread_number, &barrier, paint_data, stop_data, pixel_data, notifier);
-                }
-                catch (...)
-                {
-                        error_fatal("Exception in painter function");
-                }
-        };
+                ThreadBarrier barrier(thread_count);
+                std::vector<std::thread> threads(thread_count);
 
-        for (unsigned i = 0; i < threads.size(); ++i)
-        {
-                threads[i] = std::thread(thread_function, i);
+                const auto f = [&](unsigned thread_number) noexcept
+                {
+                        try
+                        {
+                                worker_thread(thread_number, &barrier, paint_data, stop, pixel_data, notifier);
+                        }
+                        catch (...)
+                        {
+                                error_fatal("Exception in painter worker thread function");
+                        }
+                };
+
+                for (unsigned i = 0; i < threads.size(); ++i)
+                {
+                        threads[i] = std::thread(f, i);
+                }
+
+                for (std::thread& t : threads)
+                {
+                        join_thread(&t);
+                }
         }
-
-        for (std::thread& t : threads)
+        catch (...)
         {
-                t.join();
+                error_fatal("Exception in paint worker threads function");
         }
 }
-}
 
-// Без выдачи исключений. Про проблемы сообщать через painter_notifier.
 template <std::size_t N, typename T>
-void paint(
+void painter_thread(
         PainterNotifier<N - 1>* notifier,
         int samples_per_pixel,
         const Scene<N, T>& scene,
@@ -252,26 +259,10 @@ void paint(
         {
                 try
                 {
-                        if (!notifier || !paintbrush || !stop)
-                        {
-                                error("Painter parameters not specified");
-                        }
-                        if (thread_count < 1)
-                        {
-                                error("Painter thread count (" + to_string(thread_count) + ") must be greater than 0");
-                        }
-                        if (paintbrush->screen_size() != scene.projector().screen_size())
-                        {
-                                error("Painter paintbrush size (" + to_string(paintbrush->screen_size())
-                                      + ") are not equal to the projector size ("
-                                      + to_string(scene.projector().screen_size()) + ")");
-                        }
-
                         const PaintData paint_data(scene, smooth_normal);
-                        StopData stop_data(stop);
                         PixelData<N, T> pixel_data(scene.projector(), samples_per_pixel, paintbrush);
 
-                        paint_threads(thread_count, paint_data, &stop_data, &pixel_data, notifier);
+                        worker_threads(thread_count, paint_data, stop, &pixel_data, notifier);
                 }
                 catch (const std::exception& e)
                 {
@@ -284,22 +275,94 @@ void paint(
         }
         catch (...)
         {
-                error_fatal("Exception in painter exception handlers");
+                error_fatal("Exception in painter thread function");
         }
 }
 
-#define PAINT_INSTANTIATION(dimension, type)                                                                           \
-        template void paint<dimension, type>(                                                                          \
-                PainterNotifier<(dimension - 1)>*, int, const Scene<(dimension), type>&, Paintbrush<(dimension - 1)>*, \
-                int, std::atomic_bool*, bool) noexcept;
+template <std::size_t N, typename T>
+class Impl final : public Painter<N, T>
+{
+        const std::thread::id m_thread_id = std::this_thread::get_id();
 
-PAINT_INSTANTIATION(3, float)
-PAINT_INSTANTIATION(4, float)
-PAINT_INSTANTIATION(5, float)
-PAINT_INSTANTIATION(6, float)
+        std::atomic_bool m_stop = false;
+        std::thread m_thread;
 
-PAINT_INSTANTIATION(3, double)
-PAINT_INSTANTIATION(4, double)
-PAINT_INSTANTIATION(5, double)
-PAINT_INSTANTIATION(6, double)
+        void wait() noexcept override
+        {
+                ASSERT(std::this_thread::get_id() == m_thread_id);
+
+                join_thread(&m_thread);
+        }
+
+public:
+        Impl(PainterNotifier<N - 1>* notifier,
+             int samples_per_pixel,
+             std::shared_ptr<const painter::Scene<N, T>> scene,
+             Paintbrush<N - 1>* paintbrush,
+             int thread_count,
+             bool smooth_normal)
+        {
+                if (!notifier || !paintbrush)
+                {
+                        error("Painter parameters not specified");
+                }
+
+                if (thread_count < 1)
+                {
+                        error("Painter thread count (" + to_string(thread_count) + ") must be greater than 0");
+                }
+
+                if (paintbrush->screen_size() != scene->projector().screen_size())
+                {
+                        error("Painter paintbrush size (" + to_string(paintbrush->screen_size())
+                              + ") are not equal to the projector size (" + to_string(scene->projector().screen_size())
+                              + ")");
+                }
+
+                m_thread = std::thread(
+                        [=, stop = &m_stop, scene = std::move(scene)]()
+                        {
+                                painter_thread(
+                                        notifier, samples_per_pixel, *scene, paintbrush, thread_count, stop,
+                                        smooth_normal);
+                        });
+        }
+
+        ~Impl() override
+        {
+                ASSERT(std::this_thread::get_id() == m_thread_id);
+
+                m_stop = true;
+                join_thread(&m_thread);
+        }
+};
+}
+
+template <std::size_t N, typename T>
+std::unique_ptr<Painter<N, T>> create_painter(
+        PainterNotifier<N - 1>* notifier,
+        int samples_per_pixel,
+        std::shared_ptr<const painter::Scene<N, T>> scene,
+        Paintbrush<N - 1>* paintbrush,
+        int thread_count,
+        bool smooth_normal)
+{
+        return std::make_unique<Impl<N, T>>(
+                notifier, samples_per_pixel, std::move(scene), paintbrush, thread_count, smooth_normal);
+}
+
+#define CREATE_PAINTER_INSTANTIATION(N, T)                                                                            \
+        template std::unique_ptr<Painter<(N), T>> create_painter(                                                     \
+                PainterNotifier<(N)-1>*, int, std::shared_ptr<const painter::Scene<(N), T>>, Paintbrush<(N)-1>*, int, \
+                bool);
+
+CREATE_PAINTER_INSTANTIATION(3, float)
+CREATE_PAINTER_INSTANTIATION(4, float)
+CREATE_PAINTER_INSTANTIATION(5, float)
+CREATE_PAINTER_INSTANTIATION(6, float)
+
+CREATE_PAINTER_INSTANTIATION(3, double)
+CREATE_PAINTER_INSTANTIATION(4, double)
+CREATE_PAINTER_INSTANTIATION(5, double)
+CREATE_PAINTER_INSTANTIATION(6, double)
 }

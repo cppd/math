@@ -61,12 +61,11 @@ class Images final : public PainterNotifier<N>
         std::vector<std::byte> m_pixels;
         std::filesystem::path m_directory;
 
-        void pixel_before(unsigned, const std::array<int_least16_t, N>&) override
+        void pixel_busy(unsigned, const std::array<int_least16_t, N>&) override
         {
         }
 
-        void pixel_after(unsigned, const std::array<int_least16_t, N>& pixel, const Color& color, float coverage)
-                override
+        void pixel_set(unsigned, const std::array<int_least16_t, N>& pixel, const Color& color, float coverage) override
         {
                 std::array<int_least16_t, N> p = pixel;
                 p[1] = m_screen_size[1] - 1 - pixel[1];
@@ -192,11 +191,13 @@ void test_painter_file(int samples_per_pixel, int thread_count, std::unique_ptr<
 
         BarPaintbrush paintbrush(scene->projector().screen_size(), paint_height, max_pass_count);
 
-        std::atomic_bool stop = false;
-
         LOG("Painting...");
         TimePoint start_time = time();
-        paint(&images, samples_per_pixel, *scene, &paintbrush, thread_count, &stop, smooth_normal);
+        {
+                std::unique_ptr<Painter<N, T>> painter = create_painter<N, T>(
+                        &images, samples_per_pixel, std::move(scene), &paintbrush, thread_count, smooth_normal);
+                painter->wait();
+        }
         LOG("Painted, " + to_string_fixed(duration_from(start_time), 5) + " s");
 
         LOG("Writing screen images to files...");

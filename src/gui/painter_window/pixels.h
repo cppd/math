@@ -128,19 +128,18 @@ class PainterPixels final : public Pixels, public painter::PainterNotifier<N - 1
 
         std::vector<long long> m_busy_indices_2d;
 
-        std::atomic_bool m_painting_stop;
-        std::thread m_painting_thread;
+        std::unique_ptr<painter::Painter<N, T>> m_painter;
 
         // PainterNotifier
 
-        void pixel_before(unsigned thread_number, const std::array<int_least16_t, N - 1>& pixel) override
+        void pixel_busy(unsigned thread_number, const std::array<int_least16_t, N - 1>& pixel) override
         {
                 long long x = pixel[0];
                 long long y = m_screen_size[1] - 1 - pixel[1];
                 m_busy_indices_2d[thread_number] = y * m_screen_size[0] + x;
         }
 
-        void pixel_after(
+        void pixel_set(
                 unsigned /*thread_number*/,
                 const std::array<int_least16_t, N - 1>& pixel,
                 const Color& color,
@@ -263,24 +262,20 @@ public:
                   m_screen_size(array_to_vector(scene->projector().screen_size())),
                   m_background_color(scene->background_color()),
                   m_paintbrush(scene->projector().screen_size(), PANTBRUSH_WIDTH, -1),
-                  m_busy_indices_2d(thread_count, -1)
+                  m_busy_indices_2d(thread_count, -1),
+                  m_painter(painter::create_painter<N, T>(
+                          this,
+                          samples_per_pixel,
+                          std::move(scene),
+                          &m_paintbrush,
+                          thread_count,
+                          smooth_normal))
         {
-                m_painting_stop = false;
-                m_painting_thread = std::thread(
-                        [=, this, scene = std::move(scene)]()
-                        {
-                                paint(this, samples_per_pixel, *scene, &m_paintbrush, thread_count, &m_painting_stop,
-                                      smooth_normal);
-                        });
         }
 
         ~PainterPixels() override
         {
-                m_painting_stop = true;
-                if (m_painting_thread.joinable())
-                {
-                        m_painting_thread.join();
-                }
+                m_painter.reset();
         }
 };
 }

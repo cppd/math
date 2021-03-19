@@ -20,7 +20,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "objects.h"
 
 #include <array>
-#include <atomic>
+#include <memory>
 #include <string>
 
 namespace ns::painter
@@ -32,8 +32,8 @@ protected:
         virtual ~PainterNotifier() = default;
 
 public:
-        virtual void pixel_before(unsigned thread_number, const std::array<int_least16_t, N>& pixel) = 0;
-        virtual void pixel_after(
+        virtual void pixel_busy(unsigned thread_number, const std::array<int_least16_t, N>& pixel) = 0;
+        virtual void pixel_set(
                 unsigned thread_number,
                 const std::array<int_least16_t, N>& pixel,
                 const Color& c,
@@ -42,12 +42,19 @@ public:
 };
 
 template <std::size_t N, typename T>
-void paint(
+struct Painter
+{
+        virtual ~Painter() = default;
+
+        virtual void wait() noexcept = 0;
+};
+
+template <std::size_t N, typename T>
+std::unique_ptr<Painter<N, T>> create_painter(
         PainterNotifier<N - 1>* notifier,
         int samples_per_pixel,
-        const Scene<N, T>& scene,
+        std::shared_ptr<const painter::Scene<N, T>> scene,
         Paintbrush<N - 1>* paintbrush,
         int thread_count,
-        std::atomic_bool* stop,
-        bool smooth_normal) noexcept;
+        bool smooth_normal);
 }
