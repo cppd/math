@@ -25,6 +25,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/com/print.h>
 #include <src/com/random/engine.h>
 #include <src/com/thread.h>
+#include <src/com/time.h>
 
 #include <atomic>
 #include <random>
@@ -75,7 +76,75 @@ struct PixelData final
                   paintbrush(paintbrush)
         {
                 ASSERT(paintbrush);
-                paintbrush->first_pass();
+                paintbrush->init();
+        }
+};
+
+class Statistics
+{
+        static_assert(std::atomic<long long>::is_always_lock_free);
+
+        std::atomic<long long> m_pixel_count;
+        std::atomic<long long> m_ray_count;
+        std::atomic<long long> m_sample_count;
+
+        long long m_pass_number;
+        TimePoint m_pass_start_time;
+        long long m_pass_start_pixel_count;
+        double m_previous_pass_duration;
+
+        mutable SpinLock m_lock;
+
+public:
+        void init()
+        {
+                m_pixel_count = 0;
+                m_ray_count = 0;
+                m_sample_count = 0;
+
+                m_pass_number = 1;
+                m_pass_start_time = time();
+                m_pass_start_pixel_count = 0;
+                m_previous_pass_duration = 0;
+        }
+
+        void pixel_done(int ray_count, int sample_count)
+        {
+                m_pixel_count.fetch_add(1, std::memory_order_relaxed);
+                m_ray_count.fetch_add(ray_count, std::memory_order_relaxed);
+                m_sample_count.fetch_add(sample_count, std::memory_order_relaxed);
+        }
+
+        void pass_done(bool prepare_next)
+        {
+                TimePoint now = time();
+
+                std::lock_guard lg(m_lock);
+
+                m_previous_pass_duration = duration(m_pass_start_time, now);
+                if (prepare_next)
+                {
+                        ++m_pass_number;
+                        m_pass_start_time = now;
+                        m_pass_start_pixel_count = m_pixel_count;
+                }
+        }
+
+        PainterStatistics statistics() const
+        {
+                PainterStatistics s;
+
+                std::lock_guard lg(m_lock);
+
+                s.pass_number = m_pass_number;
+                s.pass_pixel_count = m_pixel_count - m_pass_start_pixel_count;
+                s.previous_pass_duration = m_previous_pass_duration;
+
+                s.pixel_count = m_pixel_count;
+                s.ray_count = m_ray_count;
+                s.sample_count = m_sample_count;
+
+                return s;
         }
 };
 
@@ -85,13 +154,11 @@ void paint_pixels(
         const PaintData<N, T>& paint_data,
         std::atomic_bool* stop,
         PixelData<N, T>* pixel_data,
+        Statistics* statistics,
         PainterNotifier<N - 1>* notifier)
 {
         thread_local RandomEngine<T> random_engine = create_engine<RandomEngine<T>>();
         thread_local std::vector<Vector<N - 1, T>> samples;
-
-        samples.clear();
-        int ray_count = 0;
 
         while (true)
         {
@@ -100,8 +167,7 @@ void paint_pixels(
                         return;
                 }
 
-                std::optional<std::array<int_least16_t, N - 1>> pixel =
-                        pixel_data->paintbrush->next_pixel(ray_count, samples.size());
+                std::optional<std::array<int_least16_t, N - 1>> pixel = pixel_data->paintbrush->next_pixel();
                 if (!pixel)
                 {
                         return;
@@ -110,7 +176,7 @@ void paint_pixels(
                 notifier->pixel_busy(thread_number, *pixel);
 
                 pixel_data->sampler.generate(random_engine, &samples);
-                ray_count = 0;
+                int ray_count = 0;
                 Vector<N - 1, T> pixel_org = to_vector<T>(*pixel);
 
                 for (const Vector<N - 1, T>& sample : samples)
@@ -128,21 +194,32 @@ void paint_pixels(
 
                 PixelInfo info = pixel_data->pixels.info(*pixel);
                 notifier->pixel_set(thread_number, *pixel, info.color, info.coverage);
+
+                statistics->pixel_done(ray_count, samples.size());
         }
 }
 
 template <std::size_t N, typename T>
-void prepare_next_pass(unsigned thread_number, std::atomic_bool* stop, PixelData<N, T>* pixel_data)
+void prepare_next_pass(
+        unsigned thread_number,
+        std::atomic_bool* stop,
+        PixelData<N, T>* pixel_data,
+        Statistics* statistics)
 {
         if (thread_number != 0)
         {
                 return;
         }
-        if (!pixel_data->paintbrush->next_pass())
+        if (pixel_data->paintbrush->next_pass())
         {
+                statistics->pass_done(true);
+                pixel_data->sampler.next_pass();
+        }
+        else
+        {
+                statistics->pass_done(false);
                 *stop = true;
         }
-        pixel_data->sampler.next_pass();
 }
 
 template <std::size_t N, typename T>
@@ -152,13 +229,14 @@ void worker_thread(
         const PaintData<N, T>& paint_data,
         std::atomic_bool* stop,
         PixelData<N, T>* pixel_data,
+        Statistics* statistics,
         PainterNotifier<N - 1>* notifier)
 {
         while (true)
         {
                 try
                 {
-                        paint_pixels(thread_number, paint_data, stop, pixel_data, notifier);
+                        paint_pixels(thread_number, paint_data, stop, pixel_data, statistics, notifier);
                         barrier->wait();
                 }
                 catch (const std::exception& e)
@@ -181,7 +259,7 @@ void worker_thread(
 
                 try
                 {
-                        prepare_next_pass<N, T>(thread_number, stop, pixel_data);
+                        prepare_next_pass<N, T>(thread_number, stop, pixel_data, statistics);
                         barrier->wait();
                 }
                 catch (const std::exception& e)
@@ -210,6 +288,7 @@ void worker_threads(
         const PaintData<N, T>& paint_data,
         std::atomic_bool* stop,
         PixelData<N, T>* pixel_data,
+        Statistics* statistics,
         PainterNotifier<N - 1>* notifier) noexcept
 {
         try
@@ -221,7 +300,8 @@ void worker_threads(
                 {
                         try
                         {
-                                worker_thread(thread_number, &barrier, paint_data, stop, pixel_data, notifier);
+                                worker_thread(
+                                        thread_number, &barrier, paint_data, stop, pixel_data, statistics, notifier);
                         }
                         catch (...)
                         {
@@ -248,6 +328,7 @@ void worker_threads(
 template <std::size_t N, typename T>
 void painter_thread(
         PainterNotifier<N - 1>* notifier,
+        Statistics* statistics,
         int samples_per_pixel,
         const Scene<N, T>& scene,
         Paintbrush<N - 1>* paintbrush,
@@ -262,7 +343,9 @@ void painter_thread(
                         const PaintData paint_data(scene, smooth_normal);
                         PixelData<N, T> pixel_data(scene.projector(), samples_per_pixel, paintbrush);
 
-                        worker_threads(thread_count, paint_data, stop, &pixel_data, notifier);
+                        statistics->init();
+
+                        worker_threads(thread_count, paint_data, stop, &pixel_data, statistics, notifier);
                 }
                 catch (const std::exception& e)
                 {
@@ -287,11 +370,18 @@ class Impl final : public Painter<N, T>
         std::atomic_bool m_stop = false;
         std::thread m_thread;
 
+        Statistics m_statistics;
+
         void wait() noexcept override
         {
                 ASSERT(std::this_thread::get_id() == m_thread_id);
 
                 join_thread(&m_thread);
+        }
+
+        PainterStatistics statistics() const override
+        {
+                return m_statistics.statistics();
         }
 
 public:
@@ -320,10 +410,10 @@ public:
                 }
 
                 m_thread = std::thread(
-                        [=, stop = &m_stop, scene = std::move(scene)]()
+                        [=, stop = &m_stop, statistics = &m_statistics, scene = std::move(scene)]()
                         {
                                 painter_thread(
-                                        notifier, samples_per_pixel, *scene, paintbrush, thread_count, stop,
+                                        notifier, statistics, samples_per_pixel, *scene, paintbrush, thread_count, stop,
                                         smooth_normal);
                         });
         }

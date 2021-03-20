@@ -42,7 +42,7 @@ struct Pixels
         virtual const std::vector<int>& screen_size() const = 0;
         virtual void set_slice_offset(const std::vector<int>& slider_positions) = 0;
         virtual const std::vector<long long>& busy_indices_2d() const = 0;
-        virtual painter::Statistics statistics() const = 0;
+        virtual painter::PainterStatistics statistics() const = 0;
 
         virtual std::span<const std::byte> slice_r8g8b8a8_with_background() const = 0;
 
@@ -220,9 +220,9 @@ class PainterPixels final : public Pixels, public painter::PainterNotifier<N - 1
                 return m_busy_indices_2d;
         }
 
-        painter::Statistics statistics() const override
+        painter::PainterStatistics statistics() const override
         {
-                return m_paintbrush.statistics();
+                return m_painter->statistics();
         }
 
         std::span<const std::byte> slice_r8g8b8a8_with_background() const override

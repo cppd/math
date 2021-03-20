@@ -92,6 +92,7 @@ class BarPaintbrush final : public Paintbrush<N>
                         }
                 }
         }
+
         static void generate_pixels(const std::array<int, N>& sizes, int paint_height, std::vector<Pixel>* pixels)
         {
                 std::array<int, N + N - 1> min;
@@ -117,12 +118,29 @@ class BarPaintbrush final : public Paintbrush<N>
                 ASSERT(static_cast<long long>(pixels->size()) == multiply_all<long long>(sizes));
         }
 
+        static std::vector<Pixel> generate_pixels(std::array<int, N> sizes, int paint_height)
+        {
+                std::vector<Pixel> pixels;
+
+                std::reverse(sizes.begin(), sizes.end());
+                generate_pixels(sizes, paint_height, &pixels);
+                std::reverse(sizes.begin(), sizes.end());
+
+                for (Pixel& pixel : pixels)
+                {
+                        std::reverse(pixel.begin(), pixel.end());
+                        pixel[1] = sizes[1] - 1 - pixel[1];
+                }
+
+                return pixels;
+        }
+
         std::array<int, N> m_screen_size;
-        std::vector<Pixel> m_pixels;
         int m_max_pass_count;
-        unsigned m_current_pixel = 0;
-        Statistics m_statistics;
-        TimePoint m_pass_start_time;
+        std::vector<Pixel> m_pixels;
+
+        int m_pass_number;
+        unsigned m_current_pixel;
 
         mutable SpinLock m_lock;
 
@@ -148,24 +166,9 @@ public:
 
                 m_screen_size = screen_size;
                 m_max_pass_count = max_pass_count;
+                m_pixels = generate_pixels(screen_size, paint_height);
 
-                std::reverse(m_screen_size.begin(), m_screen_size.end());
-
-                generate_pixels(m_screen_size, paint_height, &m_pixels);
-
-                std::reverse(m_screen_size.begin(), m_screen_size.end());
-
-                for (Pixel& pixel : m_pixels)
-                {
-                        std::reverse(pixel.begin(), pixel.end());
-                        pixel[1] = m_screen_size[1] - 1 - pixel[1];
-                }
-
-                m_statistics.pass_number = 1;
-                m_statistics.pixel_count = 0;
-                m_statistics.ray_count = 0;
-                m_statistics.sample_count = 0;
-                m_statistics.previous_pass_duration = 0;
+                init();
         }
 
         const std::array<int, N>& screen_size() const override
@@ -173,23 +176,20 @@ public:
                 return m_screen_size;
         }
 
-        void first_pass() override
+        void init() override
         {
                 std::lock_guard lg(m_lock);
 
-                m_pass_start_time = time();
+                m_pass_number = 1;
+                m_current_pixel = 0;
         }
 
-        std::optional<Pixel> next_pixel(int previous_pixel_ray_count, int previous_pixel_sample_count) override
+        std::optional<Pixel> next_pixel() override
         {
                 std::lock_guard lg(m_lock);
-
-                m_statistics.ray_count += previous_pixel_ray_count;
-                m_statistics.sample_count += previous_pixel_sample_count;
 
                 if (m_current_pixel < m_pixels.size())
                 {
-                        ++m_statistics.pixel_count;
                         return m_pixels[m_current_pixel++];
                 }
 
@@ -202,30 +202,15 @@ public:
 
                 ASSERT(m_current_pixel == m_pixels.size());
 
-                TimePoint now = time();
-                m_statistics.previous_pass_duration = duration(m_pass_start_time, now);
-                m_pass_start_time = now;
-
-                m_current_pixel = 0;
-
-                if (m_statistics.pass_number == m_max_pass_count)
+                if (m_pass_number == m_max_pass_count)
                 {
                         return false;
                 }
 
-                ++m_statistics.pass_number;
+                m_current_pixel = 0;
+                ++m_pass_number;
 
                 return true;
-        }
-
-        Statistics statistics() const override
-        {
-                std::lock_guard lg(m_lock);
-
-                Statistics s = m_statistics;
-                s.pass_pixel_count = m_current_pixel;
-
-                return s;
         }
 };
 }

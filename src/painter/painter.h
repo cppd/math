@@ -33,12 +33,24 @@ protected:
 
 public:
         virtual void pixel_busy(unsigned thread_number, const std::array<int_least16_t, N>& pixel) = 0;
+
         virtual void pixel_set(
                 unsigned thread_number,
                 const std::array<int_least16_t, N>& pixel,
                 const Color& c,
                 float coverage) = 0;
+
         virtual void error_message(const std::string& msg) = 0;
+};
+
+struct PainterStatistics final
+{
+        long long pass_number;
+        long long pass_pixel_count;
+        long long pixel_count;
+        long long ray_count;
+        long long sample_count;
+        double previous_pass_duration;
 };
 
 template <std::size_t N, typename T>
@@ -47,6 +59,7 @@ struct Painter
         virtual ~Painter() = default;
 
         virtual void wait() noexcept = 0;
+        virtual PainterStatistics statistics() const = 0;
 };
 
 template <std::size_t N, typename T>
