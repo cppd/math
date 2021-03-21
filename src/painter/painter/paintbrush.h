@@ -95,7 +95,7 @@ class Paintbrush final
                 }
         }
 
-        static void generate_pixels(const std::array<int, N>& sizes, int paint_height, std::vector<Pixel>* pixels)
+        static void generate_pixels(const std::array<int, N>& screen_size, int paint_height, std::vector<Pixel>* pixels)
         {
                 std::array<int, N + N - 1> min;
                 std::array<int, N + N - 1> max;
@@ -105,7 +105,7 @@ class Paintbrush final
                 for (unsigned i = 0; i < N; ++i)
                 {
                         min[i] = 0;
-                        max[i] = sizes[i];
+                        max[i] = screen_size[i];
                 }
 
                 for (unsigned i = 0; i < N - 1; ++i)
@@ -117,33 +117,10 @@ class Paintbrush final
 
                 generate_pixels<0>(pixel, min, max, inc, pixels);
 
-                ASSERT(static_cast<long long>(pixels->size()) == multiply_all<long long>(sizes));
+                ASSERT(static_cast<long long>(pixels->size()) == multiply_all<long long>(screen_size));
         }
 
-        static std::vector<Pixel> generate_pixels(std::array<int, N> sizes, int paint_height)
-        {
-                std::vector<Pixel> pixels;
-
-                std::reverse(sizes.begin(), sizes.end());
-                generate_pixels(sizes, paint_height, &pixels);
-                std::reverse(sizes.begin(), sizes.end());
-
-                for (Pixel& pixel : pixels)
-                {
-                        std::reverse(pixel.begin(), pixel.end());
-                        pixel[1] = sizes[1] - 1 - pixel[1];
-                }
-
-                return pixels;
-        }
-
-        std::vector<Pixel> m_pixels;
-        unsigned m_current_pixel;
-
-        mutable SpinLock m_lock;
-
-public:
-        Paintbrush(const std::array<int, N>& screen_size, int paint_height)
+        static std::vector<Pixel> generate_pixels(std::array<int, N> screen_size, int paint_height)
         {
                 for (unsigned i = 0; i < screen_size.size(); ++i)
                 {
@@ -159,11 +136,36 @@ public:
                         error("Error paintbrush paint height " + to_string(paint_height));
                 }
 
-                m_pixels = generate_pixels(screen_size, paint_height);
+                std::vector<Pixel> pixels;
 
-                m_current_pixel = m_pixels.size();
+                std::reverse(screen_size.begin(), screen_size.end());
+                generate_pixels(screen_size, paint_height, &pixels);
+                std::reverse(screen_size.begin(), screen_size.end());
 
-                reset();
+                for (Pixel& pixel : pixels)
+                {
+                        std::reverse(pixel.begin(), pixel.end());
+                        pixel[1] = screen_size[1] - 1 - pixel[1];
+                }
+
+                return pixels;
+        }
+
+        std::vector<Pixel> m_pixels;
+        unsigned long long m_current_pixel;
+
+        mutable SpinLock m_lock;
+
+        void init()
+        {
+                m_current_pixel = 0;
+        }
+
+public:
+        Paintbrush(const std::array<int, N>& screen_size, int paint_height)
+                : m_pixels(generate_pixels(screen_size, paint_height))
+        {
+                init();
         }
 
         void reset()
@@ -172,7 +174,7 @@ public:
 
                 ASSERT(m_current_pixel == m_pixels.size());
 
-                m_current_pixel = 0;
+                init();
         }
 
         std::optional<Pixel> next_pixel()
