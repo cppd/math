@@ -17,6 +17,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
+#include "paintbrush.h"
+
 #include <src/color/color.h>
 #include <src/com/global_index.h>
 
@@ -82,13 +84,28 @@ public:
 template <std::size_t N, typename T>
 class Pixels final
 {
+        static constexpr int PANTBRUSH_WIDTH = 20;
+
         const GlobalIndex<N, long long> m_global_index;
         std::vector<Pixel<N, T>> m_pixels;
 
+        Paintbrush<N> m_paintbrush;
+
 public:
-        explicit Pixels(const std::array<int, N>& screen_size) : m_global_index(screen_size)
+        explicit Pixels(const std::array<int, N>& screen_size)
+                : m_global_index(screen_size), m_paintbrush(screen_size, PANTBRUSH_WIDTH)
         {
                 m_pixels.resize(m_global_index.count());
+        }
+
+        std::optional<std::array<int_least16_t, N>> next_pixel()
+        {
+                return m_paintbrush.next_pixel();
+        }
+
+        void next_pass()
+        {
+                m_paintbrush.reset();
         }
 
         void add_sample(

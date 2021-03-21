@@ -17,7 +17,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "painter.h"
 
-#include "painter/paintbrush.h"
 #include "painter/pixels.h"
 #include "painter/sampler.h"
 #include "painter/statistics.h"
@@ -65,18 +64,12 @@ void join_thread(std::thread* thread) noexcept
 template <std::size_t N, typename T>
 struct PixelData final
 {
-        static constexpr int PANTBRUSH_WIDTH = 20;
-
         const Projector<N, T>& projector;
         SamplerStratifiedJittered<N - 1, T> sampler;
         Pixels<N - 1, T> pixels;
-        Paintbrush<N - 1> paintbrush;
 
         PixelData(const Projector<N, T>& projector, int samples_per_pixel)
-                : projector(projector),
-                  sampler(samples_per_pixel),
-                  pixels(projector.screen_size()),
-                  paintbrush(projector.screen_size(), PANTBRUSH_WIDTH)
+                : projector(projector), sampler(samples_per_pixel), pixels(projector.screen_size())
         {
         }
 };
@@ -117,7 +110,7 @@ void paint_pixels(
                         return;
                 }
 
-                std::optional<std::array<int_least16_t, N - 1>> pixel = pixel_data->paintbrush.next_pixel();
+                std::optional<std::array<int_least16_t, N - 1>> pixel = pixel_data->pixels.next_pixel();
                 if (!pixel)
                 {
                         return;
@@ -165,7 +158,7 @@ void prepare_next_pass(
         if (pass_data->continue_painting())
         {
                 statistics->pass_done(true);
-                pixel_data->paintbrush.reset();
+                pixel_data->pixels.next_pass();
                 pixel_data->sampler.next_pass();
         }
         else
