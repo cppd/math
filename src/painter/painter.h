@@ -21,6 +21,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <array>
 #include <memory>
+#include <optional>
 #include <string>
 
 namespace ns::painter
@@ -70,8 +71,8 @@ template <std::size_t N, typename T>
 std::unique_ptr<Painter<N, T>> create_painter(
         Notifier<N - 1>* notifier,
         int samples_per_pixel,
+        std::optional<int> max_pass_count,
         std::shared_ptr<const Scene<N, T>> scene,
-        Paintbrush<N - 1>* paintbrush,
         int thread_count,
         bool smooth_normal);
 }

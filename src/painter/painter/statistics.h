@@ -43,6 +43,11 @@ class PaintingStatistics
         mutable SpinLock m_lock;
 
 public:
+        PaintingStatistics()
+        {
+                init();
+        }
+
         void init()
         {
                 m_pixel_count = 0;

@@ -17,6 +17,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "painter.h"
 
+#include "painter/paintbrush.h"
 #include "painter/pixels.h"
 #include "painter/sampler.h"
 #include "painter/statistics.h"
@@ -64,19 +65,36 @@ void join_thread(std::thread* thread) noexcept
 template <std::size_t N, typename T>
 struct PixelData final
 {
+        static constexpr int PANTBRUSH_WIDTH = 20;
+
         const Projector<N, T>& projector;
         SamplerStratifiedJittered<N - 1, T> sampler;
         Pixels<N - 1, T> pixels;
-        Paintbrush<N - 1>* const paintbrush;
+        Paintbrush<N - 1> paintbrush;
 
-        PixelData(const Projector<N, T>& projector, int samples_per_pixel, Paintbrush<N - 1>* paintbrush)
+        PixelData(const Projector<N, T>& projector, int samples_per_pixel)
                 : projector(projector),
                   sampler(samples_per_pixel),
                   pixels(projector.screen_size()),
-                  paintbrush(paintbrush)
+                  paintbrush(projector.screen_size(), PANTBRUSH_WIDTH)
         {
-                ASSERT(paintbrush);
-                paintbrush->init();
+        }
+};
+
+class PassData final
+{
+        const std::optional<int> m_max_number;
+        int m_number = 0;
+
+public:
+        explicit PassData(std::optional<int> max_number) : m_max_number(max_number)
+        {
+                ASSERT(!max_number || *max_number > 0);
+        }
+
+        bool continue_painting()
+        {
+                return !(m_max_number && ++m_number == *m_max_number);
         }
 };
 
@@ -99,7 +117,7 @@ void paint_pixels(
                         return;
                 }
 
-                std::optional<std::array<int_least16_t, N - 1>> pixel = pixel_data->paintbrush->next_pixel();
+                std::optional<std::array<int_least16_t, N - 1>> pixel = pixel_data->paintbrush.next_pixel();
                 if (!pixel)
                 {
                         return;
@@ -136,15 +154,18 @@ void prepare_next_pass(
         unsigned thread_number,
         std::atomic_bool* stop,
         PixelData<N, T>* pixel_data,
+        PassData* pass_data,
         PaintingStatistics* statistics)
 {
         if (thread_number != 0)
         {
                 return;
         }
-        if (pixel_data->paintbrush->next_pass())
+
+        if (pass_data->continue_painting())
         {
                 statistics->pass_done(true);
+                pixel_data->paintbrush.reset();
                 pixel_data->sampler.next_pass();
         }
         else
@@ -161,6 +182,7 @@ void worker_thread(
         const PaintData<N, T>& paint_data,
         std::atomic_bool* stop,
         PixelData<N, T>* pixel_data,
+        PassData* pass_data,
         PaintingStatistics* statistics,
         Notifier<N - 1>* notifier)
 {
@@ -191,7 +213,7 @@ void worker_thread(
 
                 try
                 {
-                        prepare_next_pass<N, T>(thread_number, stop, pixel_data, statistics);
+                        prepare_next_pass<N, T>(thread_number, stop, pixel_data, pass_data, statistics);
                         barrier->wait();
                 }
                 catch (const std::exception& e)
@@ -220,6 +242,7 @@ void worker_threads(
         const PaintData<N, T>& paint_data,
         std::atomic_bool* stop,
         PixelData<N, T>* pixel_data,
+        PassData* pass_data,
         PaintingStatistics* statistics,
         Notifier<N - 1>* notifier) noexcept
 {
@@ -233,7 +256,8 @@ void worker_threads(
                         try
                         {
                                 worker_thread(
-                                        thread_number, &barrier, paint_data, stop, pixel_data, statistics, notifier);
+                                        thread_number, &barrier, paint_data, stop, pixel_data, pass_data, statistics,
+                                        notifier);
                         }
                         catch (...)
                         {
@@ -262,8 +286,8 @@ void painter_thread(
         Notifier<N - 1>* notifier,
         PaintingStatistics* statistics,
         int samples_per_pixel,
+        std::optional<int> max_pass_count,
         const Scene<N, T>& scene,
-        Paintbrush<N - 1>* paintbrush,
         int thread_count,
         std::atomic_bool* stop,
         bool smooth_normal) noexcept
@@ -273,11 +297,12 @@ void painter_thread(
                 try
                 {
                         const PaintData paint_data(scene, smooth_normal);
-                        PixelData<N, T> pixel_data(scene.projector(), samples_per_pixel, paintbrush);
+                        PixelData<N, T> pixel_data(scene.projector(), samples_per_pixel);
+                        PassData pass_data(max_pass_count);
 
                         statistics->init();
 
-                        worker_threads(thread_count, paint_data, stop, &pixel_data, statistics, notifier);
+                        worker_threads(thread_count, paint_data, stop, &pixel_data, &pass_data, statistics, notifier);
                 }
                 catch (const std::exception& e)
                 {
@@ -319,14 +344,25 @@ class Impl final : public Painter<N, T>
 public:
         Impl(Notifier<N - 1>* notifier,
              int samples_per_pixel,
+             std::optional<int> max_pass_count,
              std::shared_ptr<const Scene<N, T>> scene,
-             Paintbrush<N - 1>* paintbrush,
              int thread_count,
              bool smooth_normal)
         {
-                if (!notifier || !paintbrush)
+                if (!notifier)
                 {
-                        error("Painter parameters not specified");
+                        error("Painter notifier is not specified");
+                }
+
+                if (!scene)
+                {
+                        error("Painter scene is not specified");
+                }
+
+                if (samples_per_pixel < 1)
+                {
+                        error("Painter samples per pixel (" + to_string(samples_per_pixel)
+                              + ") must be greater than 0");
                 }
 
                 if (thread_count < 1)
@@ -334,19 +370,17 @@ public:
                         error("Painter thread count (" + to_string(thread_count) + ") must be greater than 0");
                 }
 
-                if (paintbrush->screen_size() != scene->projector().screen_size())
+                if (max_pass_count && *max_pass_count < 1)
                 {
-                        error("Painter paintbrush size (" + to_string(paintbrush->screen_size())
-                              + ") are not equal to the projector size (" + to_string(scene->projector().screen_size())
-                              + ")");
+                        error("Painter maximum pass count (" + to_string(*max_pass_count) + ") must be greater than 0");
                 }
 
                 m_thread = std::thread(
                         [=, stop = &m_stop, statistics = &m_statistics, scene = std::move(scene)]()
                         {
                                 painter_thread(
-                                        notifier, statistics, samples_per_pixel, *scene, paintbrush, thread_count, stop,
-                                        smooth_normal);
+                                        notifier, statistics, samples_per_pixel, max_pass_count, *scene, thread_count,
+                                        stop, smooth_normal);
                         });
         }
 
@@ -364,18 +398,18 @@ template <std::size_t N, typename T>
 std::unique_ptr<Painter<N, T>> create_painter(
         Notifier<N - 1>* notifier,
         int samples_per_pixel,
+        std::optional<int> max_pass_count,
         std::shared_ptr<const Scene<N, T>> scene,
-        Paintbrush<N - 1>* paintbrush,
         int thread_count,
         bool smooth_normal)
 {
         return std::make_unique<Impl<N, T>>(
-                notifier, samples_per_pixel, std::move(scene), paintbrush, thread_count, smooth_normal);
+                notifier, samples_per_pixel, max_pass_count, std::move(scene), thread_count, smooth_normal);
 }
 
 #define CREATE_PAINTER_INSTANTIATION(N, T)                        \
         template std::unique_ptr<Painter<(N), T>> create_painter( \
-                Notifier<(N)-1>*, int, std::shared_ptr<const Scene<(N), T>>, Paintbrush<(N)-1>*, int, bool);
+                Notifier<(N)-1>*, int, std::optional<int>, std::shared_ptr<const Scene<(N), T>>, int, bool);
 
 CREATE_PAINTER_INSTANTIATION(3, float)
 CREATE_PAINTER_INSTANTIATION(4, float)

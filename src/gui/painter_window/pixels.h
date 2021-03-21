@@ -25,7 +25,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/com/message.h>
 #include <src/image/conversion.h>
 #include <src/image/format.h>
-#include <src/painter/paintbrushes/bar_paintbrush.h>
 #include <src/painter/painter.h>
 
 #include <cstring>
@@ -104,7 +103,7 @@ class PainterPixels final : public Pixels, public painter::Notifier<N - 1>
                 return image;
         }
 
-        static constexpr int PANTBRUSH_WIDTH = 20;
+        static constexpr std::optional<int> MAX_PASS_COUNT = std::nullopt;
 
         static constexpr image::ColorFormat COLOR_FORMAT_8 = image::ColorFormat::R8G8B8A8_SRGB;
         static constexpr std::size_t PIXEL_SIZE_8 = image::format_pixel_size_in_bytes(COLOR_FORMAT_8);
@@ -115,8 +114,6 @@ class PainterPixels final : public Pixels, public painter::Notifier<N - 1>
         const GlobalIndex<N - 1, long long> m_global_index;
         const std::vector<int> m_screen_size;
         const Color m_background_color;
-
-        painter::BarPaintbrush<N - 1> m_paintbrush;
 
         std::vector<std::byte> m_pixels_8 = make_initial_image(m_screen_size, COLOR_FORMAT_8);
         const std::size_t m_slice_size_8 = PIXEL_SIZE_8 * m_screen_size[0] * m_screen_size[1];
@@ -261,13 +258,12 @@ public:
                 : m_global_index(scene->projector().screen_size()),
                   m_screen_size(array_to_vector(scene->projector().screen_size())),
                   m_background_color(scene->background_color()),
-                  m_paintbrush(scene->projector().screen_size(), PANTBRUSH_WIDTH, -1),
                   m_busy_indices_2d(thread_count, -1),
                   m_painter(painter::create_painter<N, T>(
                           this,
                           samples_per_pixel,
+                          MAX_PASS_COUNT,
                           std::move(scene),
-                          &m_paintbrush,
                           thread_count,
                           smooth_normal))
         {

@@ -17,18 +17,20 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
-#include "../objects.h"
-
 #include <src/com/alg.h>
 #include <src/com/error.h>
 #include <src/com/print.h>
 #include <src/com/thread.h>
-#include <src/com/time.h>
+
+#include <algorithm>
+#include <array>
+#include <optional>
+#include <vector>
 
 namespace ns::painter
 {
 template <std::size_t N>
-class BarPaintbrush final : public Paintbrush<N>
+class Paintbrush final
 {
         static_assert(N >= 2);
 
@@ -135,17 +137,13 @@ class BarPaintbrush final : public Paintbrush<N>
                 return pixels;
         }
 
-        std::array<int, N> m_screen_size;
-        int m_max_pass_count;
         std::vector<Pixel> m_pixels;
-
-        int m_pass_number;
         unsigned m_current_pixel;
 
         mutable SpinLock m_lock;
 
 public:
-        BarPaintbrush(const std::array<int, N>& screen_size, int paint_height, int max_pass_count)
+        Paintbrush(const std::array<int, N>& screen_size, int paint_height)
         {
                 for (unsigned i = 0; i < screen_size.size(); ++i)
                 {
@@ -155,36 +153,29 @@ public:
                                       + to_string(screen_size[i]) + ")");
                         }
                 }
+
                 if (paint_height < 1)
                 {
                         error("Error paintbrush paint height " + to_string(paint_height));
                 }
-                if (!(max_pass_count == -1 || max_pass_count > 0))
-                {
-                        error("Error paintbrush max pass count " + to_string(max_pass_count));
-                }
 
-                m_screen_size = screen_size;
-                m_max_pass_count = max_pass_count;
                 m_pixels = generate_pixels(screen_size, paint_height);
 
-                init();
+                m_current_pixel = m_pixels.size();
+
+                reset();
         }
 
-        const std::array<int, N>& screen_size() const override
-        {
-                return m_screen_size;
-        }
-
-        void init() override
+        void reset()
         {
                 std::lock_guard lg(m_lock);
 
-                m_pass_number = 1;
+                ASSERT(m_current_pixel == m_pixels.size());
+
                 m_current_pixel = 0;
         }
 
-        std::optional<Pixel> next_pixel() override
+        std::optional<Pixel> next_pixel()
         {
                 std::lock_guard lg(m_lock);
 
@@ -194,23 +185,6 @@ public:
                 }
 
                 return std::nullopt;
-        }
-
-        bool next_pass() override
-        {
-                std::lock_guard lg(m_lock);
-
-                ASSERT(m_current_pixel == m_pixels.size());
-
-                if (m_pass_number == m_max_pass_count)
-                {
-                        return false;
-                }
-
-                m_current_pixel = 0;
-                ++m_pass_number;
-
-                return true;
         }
 };
 }

@@ -17,7 +17,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "test_painter.h"
 
-#include "../paintbrushes/bar_paintbrush.h"
 #include "../painter.h"
 #include "../scenes/simple.h"
 #include "../shapes/mesh.h"
@@ -183,19 +182,16 @@ std::unique_ptr<const mesh::Mesh<N>> file_mesh(const std::string& file_name, Pro
 template <std::size_t N, typename T>
 void test_painter_file(int samples_per_pixel, int thread_count, std::unique_ptr<const Scene<N, T>>&& scene)
 {
-        constexpr int paint_height = 2;
         constexpr int max_pass_count = 1;
         constexpr bool smooth_normal = true;
 
         Images images(scene->projector().screen_size(), scene->background_color());
 
-        BarPaintbrush paintbrush(scene->projector().screen_size(), paint_height, max_pass_count);
-
         LOG("Painting...");
         TimePoint start_time = time();
         {
                 std::unique_ptr<Painter<N, T>> painter = create_painter<N, T>(
-                        &images, samples_per_pixel, std::move(scene), &paintbrush, thread_count, smooth_normal);
+                        &images, samples_per_pixel, max_pass_count, std::move(scene), thread_count, smooth_normal);
                 painter->wait();
         }
         LOG("Painted, " + to_string_fixed(duration_from(start_time), 5) + " s");

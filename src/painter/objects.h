@@ -148,18 +148,6 @@ struct Projector
         virtual Ray<N, T> ray(const Vector<N - 1, T>& point) const = 0;
 };
 
-// Последовательность пикселов для рисования.
-template <std::size_t N>
-struct Paintbrush
-{
-        virtual ~Paintbrush() = default;
-
-        virtual void init() = 0;
-        virtual std::optional<std::array<int_least16_t, N>> next_pixel() = 0;
-        virtual bool next_pass() = 0;
-        virtual const std::array<int, N>& screen_size() const = 0;
-};
-
 template <std::size_t N, typename T>
 struct Intersection final
 {
