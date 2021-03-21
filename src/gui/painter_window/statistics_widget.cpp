@@ -77,7 +77,7 @@ StatisticsWidget::~StatisticsWidget() = default;
 
 void StatisticsWidget::update()
 {
-        const painter::PainterStatistics s = m_pixels->statistics();
+        const painter::Statistics s = m_pixels->statistics();
 
         auto [difference, duration] = m_difference->compute(Counters(s.pixel_count, s.ray_count, s.sample_count));
 

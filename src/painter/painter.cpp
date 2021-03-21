@@ -80,7 +80,7 @@ struct PixelData final
         }
 };
 
-class Statistics
+class PaintingStatistics
 {
         static_assert(std::atomic<long long>::is_always_lock_free);
 
@@ -117,11 +117,12 @@ public:
 
         void pass_done(bool prepare_next)
         {
-                TimePoint now = time();
+                const TimePoint now = time();
+                const double previous_pass_duration = duration(m_pass_start_time, now);
 
                 std::lock_guard lg(m_lock);
 
-                m_previous_pass_duration = duration(m_pass_start_time, now);
+                m_previous_pass_duration = previous_pass_duration;
                 if (prepare_next)
                 {
                         ++m_pass_number;
@@ -130,9 +131,9 @@ public:
                 }
         }
 
-        PainterStatistics statistics() const
+        Statistics statistics() const
         {
-                PainterStatistics s;
+                Statistics s;
 
                 std::lock_guard lg(m_lock);
 
@@ -154,8 +155,8 @@ void paint_pixels(
         const PaintData<N, T>& paint_data,
         std::atomic_bool* stop,
         PixelData<N, T>* pixel_data,
-        Statistics* statistics,
-        PainterNotifier<N - 1>* notifier)
+        PaintingStatistics* statistics,
+        Notifier<N - 1>* notifier)
 {
         thread_local RandomEngine<T> random_engine = create_engine<RandomEngine<T>>();
         thread_local std::vector<Vector<N - 1, T>> samples;
@@ -204,7 +205,7 @@ void prepare_next_pass(
         unsigned thread_number,
         std::atomic_bool* stop,
         PixelData<N, T>* pixel_data,
-        Statistics* statistics)
+        PaintingStatistics* statistics)
 {
         if (thread_number != 0)
         {
@@ -229,8 +230,8 @@ void worker_thread(
         const PaintData<N, T>& paint_data,
         std::atomic_bool* stop,
         PixelData<N, T>* pixel_data,
-        Statistics* statistics,
-        PainterNotifier<N - 1>* notifier)
+        PaintingStatistics* statistics,
+        Notifier<N - 1>* notifier)
 {
         while (true)
         {
@@ -288,8 +289,8 @@ void worker_threads(
         const PaintData<N, T>& paint_data,
         std::atomic_bool* stop,
         PixelData<N, T>* pixel_data,
-        Statistics* statistics,
-        PainterNotifier<N - 1>* notifier) noexcept
+        PaintingStatistics* statistics,
+        Notifier<N - 1>* notifier) noexcept
 {
         try
         {
@@ -327,8 +328,8 @@ void worker_threads(
 
 template <std::size_t N, typename T>
 void painter_thread(
-        PainterNotifier<N - 1>* notifier,
-        Statistics* statistics,
+        Notifier<N - 1>* notifier,
+        PaintingStatistics* statistics,
         int samples_per_pixel,
         const Scene<N, T>& scene,
         Paintbrush<N - 1>* paintbrush,
@@ -370,7 +371,7 @@ class Impl final : public Painter<N, T>
         std::atomic_bool m_stop = false;
         std::thread m_thread;
 
-        Statistics m_statistics;
+        PaintingStatistics m_statistics;
 
         void wait() noexcept override
         {
@@ -379,15 +380,15 @@ class Impl final : public Painter<N, T>
                 join_thread(&m_thread);
         }
 
-        PainterStatistics statistics() const override
+        Statistics statistics() const override
         {
                 return m_statistics.statistics();
         }
 
 public:
-        Impl(PainterNotifier<N - 1>* notifier,
+        Impl(Notifier<N - 1>* notifier,
              int samples_per_pixel,
-             std::shared_ptr<const painter::Scene<N, T>> scene,
+             std::shared_ptr<const Scene<N, T>> scene,
              Paintbrush<N - 1>* paintbrush,
              int thread_count,
              bool smooth_normal)
@@ -430,9 +431,9 @@ public:
 
 template <std::size_t N, typename T>
 std::unique_ptr<Painter<N, T>> create_painter(
-        PainterNotifier<N - 1>* notifier,
+        Notifier<N - 1>* notifier,
         int samples_per_pixel,
-        std::shared_ptr<const painter::Scene<N, T>> scene,
+        std::shared_ptr<const Scene<N, T>> scene,
         Paintbrush<N - 1>* paintbrush,
         int thread_count,
         bool smooth_normal)
@@ -441,10 +442,9 @@ std::unique_ptr<Painter<N, T>> create_painter(
                 notifier, samples_per_pixel, std::move(scene), paintbrush, thread_count, smooth_normal);
 }
 
-#define CREATE_PAINTER_INSTANTIATION(N, T)                                                                            \
-        template std::unique_ptr<Painter<(N), T>> create_painter(                                                     \
-                PainterNotifier<(N)-1>*, int, std::shared_ptr<const painter::Scene<(N), T>>, Paintbrush<(N)-1>*, int, \
-                bool);
+#define CREATE_PAINTER_INSTANTIATION(N, T)                        \
+        template std::unique_ptr<Painter<(N), T>> create_painter( \
+                Notifier<(N)-1>*, int, std::shared_ptr<const Scene<(N), T>>, Paintbrush<(N)-1>*, int, bool);
 
 CREATE_PAINTER_INSTANTIATION(3, float)
 CREATE_PAINTER_INSTANTIATION(4, float)

@@ -26,10 +26,10 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 namespace ns::painter
 {
 template <std::size_t N>
-struct PainterNotifier
+struct Notifier
 {
 protected:
-        virtual ~PainterNotifier() = default;
+        virtual ~Notifier() = default;
 
 public:
         virtual void pixel_busy(unsigned thread_number, const std::array<int_least16_t, N>& pixel) = 0;
@@ -43,7 +43,7 @@ public:
         virtual void error_message(const std::string& msg) = 0;
 };
 
-struct PainterStatistics final
+struct Statistics final
 {
         long long pass_number;
         long long pass_pixel_count;
@@ -51,6 +51,10 @@ struct PainterStatistics final
         long long ray_count;
         long long sample_count;
         double previous_pass_duration;
+
+        Statistics() noexcept
+        {
+        }
 };
 
 template <std::size_t N, typename T>
@@ -59,14 +63,14 @@ struct Painter
         virtual ~Painter() = default;
 
         virtual void wait() noexcept = 0;
-        virtual PainterStatistics statistics() const = 0;
+        virtual Statistics statistics() const = 0;
 };
 
 template <std::size_t N, typename T>
 std::unique_ptr<Painter<N, T>> create_painter(
-        PainterNotifier<N - 1>* notifier,
+        Notifier<N - 1>* notifier,
         int samples_per_pixel,
-        std::shared_ptr<const painter::Scene<N, T>> scene,
+        std::shared_ptr<const Scene<N, T>> scene,
         Paintbrush<N - 1>* paintbrush,
         int thread_count,
         bool smooth_normal);

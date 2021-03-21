@@ -21,6 +21,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/numerical/ray.h>
 #include <src/numerical/vec.h>
 
+#include <algorithm>
 #include <array>
 #include <optional>
 #include <random>
@@ -119,8 +120,6 @@ public:
                 const Vector<N, T>& v) const = 0;
 };
 
-//
-
 template <std::size_t N, typename T>
 struct LightProperties final
 {
@@ -136,8 +135,6 @@ struct LightSource
 
         virtual LightProperties<N, T> properties(const Vector<N, T>& point) const = 0;
 };
-
-//
 
 // Преобразование точки на экране в луч в пространстве.
 template <std::size_t N, typename T>

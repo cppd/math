@@ -49,7 +49,7 @@ constexpr Color::DataType METALNESS = 0;
 constexpr Color::DataType LIGHTING_INTENSITY = 1;
 
 template <std::size_t N>
-class Images final : public PainterNotifier<N>
+class Images final : public Notifier<N>
 {
         static constexpr const char* DIRECTORY_NAME = "painter_test";
         static constexpr const char* IMAGE_FILE_FORMAT = "png";
