@@ -22,7 +22,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/com/print.h>
 #include <src/com/thread.h>
 
-#include <algorithm>
 #include <array>
 #include <optional>
 #include <vector>
@@ -36,110 +35,121 @@ class Paintbrush final
 
         using Pixel = std::array<int_least16_t, N>;
 
-        // Две следующих функции проходят циклы по измерениям, кроме последнего,
-        // с интервалом paint_height. По последнему измерению с интервалом 1.
-        // Далее цикл по измерениям, кроме последнего, с интервалом 1 от текущего
-        // значения измерения и paint_height итераций или до максимума.
-        // Пример для 3 измерений
-        // for(int x = 0; x < max_x; x += paint_height)
-        // {
-        //         for(int y = 0; y < max_y; y += paint_height)
-        //         {
-        //                 for(int z = 0; z < max_z; ++z)
-        //                 {
-        //                         for(int sub_x = x; sub_x < std::min(max_x, x + paint_height); ++sub_x)
-        //                         {
-        //                                 for(int sub_y = y; sub_y < std::min(max_y, y + paint_height); ++sub_y)
-        //                                 {
-        //                                         // pixel(sub_x, sub_y, z);
-        //                                 }
-        //                         }
-        //                 }
-        //         }
-        // }
-        template <int level>
+        // Пример для 2 измерений
+        //for (int x = 0; x < screen[0]; x += paintbrush[0])
+        //{
+        //        for (int y = 0; y < screen[1]; y += paintbrush[1])
+        //        {
+        //                for (int sub_x = x; sub_x < std::min(screen[0], x + paintbrush[0]); ++sub_x)
+        //                {
+        //                        for (int sub_y = y; sub_y < std::min(paintbrush[1], y + paintbrush[1]); ++sub_y)
+        //                        {
+        //                                // pixel(sub_x, sub_y);
+        //                        }
+        //                }
+        //        }
+        //}
+
+        template <std::size_t LEVEL>
         static void generate_pixels(
+                const std::array<int, N>& screen_size,
+                const std::array<int, N>& paintbrush_size,
                 Pixel& pixel,
-                std::array<int, N + N - 1>& min,
-                std::array<int, N + N - 1>& max,
-                const std::array<int, N - 1>& inc,
+                std::array<int, N>& min,
+                std::array<int, N>& max,
                 std::vector<Pixel>* pixels)
         {
-                static_assert(level < N + N - 1);
+                static_assert(LEVEL < 2 * N);
 
-                for (int i = min[level]; i < max[level]; (level < N - 1) ? (i += inc[level]) : ++i)
+                if constexpr (LEVEL < N)
                 {
-                        if constexpr (level < N - 1)
+                        int i = 0;
+                        while (i < screen_size[LEVEL])
                         {
-                                min[level + N] = i;
-                                max[level + N] = std::min(max[level], i + inc[level]);
-                        }
-                        if constexpr (level == N - 1)
-                        {
-                                pixel[level] = i;
-                        }
-                        if constexpr (level > N - 1)
-                        {
-                                pixel[level - N] = i;
-                                ASSERT(pixel[level - N] >= min[level - N] && pixel[level - N] < max[level - N]);
-                        }
+                                const int next = screen_size[LEVEL] - paintbrush_size[LEVEL] >= i
+                                                         ? i + paintbrush_size[LEVEL]
+                                                         : screen_size[LEVEL];
 
-                        if constexpr (level < N + N - 2)
-                        {
-                                generate_pixels<level + 1>(pixel, min, max, inc, pixels);
+                                min[LEVEL] = i;
+                                max[LEVEL] = next;
+                                ASSERT(min[LEVEL] < max[LEVEL]);
+
+                                generate_pixels<LEVEL + 1>(screen_size, paintbrush_size, pixel, min, max, pixels);
+
+                                i = next;
                         }
-                        else
+                }
+                else
+                {
+                        constexpr std::size_t n = LEVEL - N;
+                        static_assert(n < N);
+
+                        for (int i = min[n]; i < max[n]; ++i)
                         {
-                                pixels->emplace_back(pixel);
+                                pixel[n] = i;
+                                ASSERT(pixel[n] >= 0 && pixel[n] < screen_size[n]);
+
+                                if constexpr (LEVEL + 1 < 2 * N)
+                                {
+                                        static_assert(n < N - 1);
+                                        generate_pixels<LEVEL + 1>(
+                                                screen_size, paintbrush_size, pixel, min, max, pixels);
+                                }
+                                else
+                                {
+                                        static_assert(n == N - 1);
+                                        pixels->emplace_back(pixel);
+                                }
                         }
                 }
         }
 
-        static void generate_pixels(const std::array<int, N>& screen_size, int paint_height, std::vector<Pixel>* pixels)
+        static std::vector<Pixel> generate_pixels(
+                const std::array<int, N>& screen_size,
+                const std::array<int, N>& paintbrush_size)
         {
-                std::array<int, N + N - 1> min;
-                std::array<int, N + N - 1> max;
-                std::array<int, N - 1> inc;
-                Pixel pixel;
+                std::array<int, N> min;
+                std::array<int, N> max;
 
-                for (unsigned i = 0; i < N; ++i)
+                for (std::size_t i = 0; i < N; ++i)
                 {
                         min[i] = 0;
                         max[i] = screen_size[i];
                 }
 
-                for (unsigned i = 0; i < N - 1; ++i)
-                {
-                        inc[i] = paint_height;
-                }
+                std::vector<Pixel> pixels;
 
-                pixels->clear();
+                Pixel pixel;
+                generate_pixels<0>(screen_size, paintbrush_size, pixel, min, max, &pixels);
+                ASSERT(static_cast<long long>(pixels.size()) == multiply_all<long long>(screen_size));
 
-                generate_pixels<0>(pixel, min, max, inc, pixels);
-
-                ASSERT(static_cast<long long>(pixels->size()) == multiply_all<long long>(screen_size));
+                return pixels;
         }
 
         static std::vector<Pixel> generate_pixels(std::array<int, N> screen_size, int paint_height)
         {
-                for (unsigned i = 0; i < screen_size.size(); ++i)
+                for (std::size_t i = 0; i < N; ++i)
                 {
                         if (screen_size[i] < 1)
                         {
-                                error("Paintbrush size " + to_string(i) + " is not positive ("
-                                      + to_string(screen_size[i]) + ")");
+                                error("Paintbrush screen size " + to_string(screen_size) + " is not positive");
                         }
                 }
 
                 if (paint_height < 1)
                 {
-                        error("Error paintbrush paint height " + to_string(paint_height));
+                        error("Paintbrush size " + to_string(paint_height) + " is not positive");
                 }
 
-                std::vector<Pixel> pixels;
+                std::array<int, N> paintbrush_size;
+                for (std::size_t i = 0; i < N - 1; ++i)
+                {
+                        paintbrush_size[i] = std::min(screen_size[i], paint_height);
+                }
+                paintbrush_size[N - 1] = 1;
 
                 std::reverse(screen_size.begin(), screen_size.end());
-                generate_pixels(screen_size, paint_height, &pixels);
+                std::vector<Pixel> pixels = generate_pixels(screen_size, paintbrush_size);
                 std::reverse(screen_size.begin(), screen_size.end());
 
                 for (Pixel& pixel : pixels)
