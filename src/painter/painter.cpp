@@ -101,7 +101,8 @@ void paint_pixels(
         Notifier<N - 1>* notifier)
 {
         thread_local RandomEngine<T> random_engine = create_engine<RandomEngine<T>>();
-        thread_local std::vector<Vector<N - 1, T>> samples;
+        thread_local std::vector<Vector<N - 1, T>> sample_points;
+        thread_local std::vector<typename Pixels<N - 1, T>::Sample> samples;
 
         while (true)
         {
@@ -118,27 +119,29 @@ void paint_pixels(
 
                 notifier->pixel_busy(thread_number, *pixel);
 
-                pixel_data->sampler.generate(random_engine, &samples);
+                pixel_data->sampler.generate(random_engine, &sample_points);
+                samples.resize(sample_points.size());
                 int ray_count = 0;
-                Vector<N - 1, T> pixel_org = to_vector<T>(*pixel);
+                const Vector<N - 1, T> pixel_org = to_vector<T>(*pixel);
 
-                for (const Vector<N - 1, T>& sample : samples)
+                for (std::size_t i = 0; i < sample_points.size(); ++i)
                 {
                         constexpr int RECURSION_LEVEL = 0;
                         constexpr Color::DataType COLOR_LEVEL = 1;
 
-                        Ray<N, T> ray = pixel_data->projector.ray(pixel_org + sample);
+                        Ray<N, T> ray = pixel_data->projector.ray(pixel_org + sample_points[i]);
 
-                        std::optional<Color> color =
+                        samples[i].point = sample_points[i];
+                        samples[i].color =
                                 trace_path(paint_data, &ray_count, random_engine, RECURSION_LEVEL, COLOR_LEVEL, ray);
-
-                        pixel_data->pixels.add_sample(*pixel, sample, color);
                 }
+
+                pixel_data->pixels.add_samples(*pixel, samples);
 
                 PixelInfo info = pixel_data->pixels.info(*pixel);
                 notifier->pixel_set(thread_number, *pixel, info.color, info.coverage);
 
-                statistics->pixel_done(ray_count, samples.size());
+                statistics->pixel_done(ray_count, sample_points.size());
         }
 }
 

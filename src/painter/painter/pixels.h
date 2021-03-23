@@ -65,7 +65,7 @@ class Pixel final
         }
 
 public:
-        void add_sample(const Color& color, const Vector<N, T>& /*sample*/)
+        void add_sample(const Color& color, const Vector<N, T>& /*point*/)
         {
                 m_hit_sample_sum += 1;
                 m_color_sum += color;
@@ -133,15 +133,28 @@ public:
                 m_paintbrush.reset();
         }
 
-        void add_sample(const std::array<int, N>& pixel, const Vector<N, T>& sample, const std::optional<Color>& color)
+        struct Sample final
         {
-                if (color)
+                Vector<N, T> point;
+                std::optional<Color> color;
+                Sample()
                 {
-                        m_pixels[m_global_index.compute(pixel)].add_sample(*color, sample);
                 }
-                else
+        };
+
+        void add_samples(const std::array<int, N>& pixel, const std::vector<Sample>& samples)
+        {
+                const long long index = m_global_index.compute(pixel);
+                for (const Sample& sample : samples)
                 {
-                        m_pixels[m_global_index.compute(pixel)].add_missed();
+                        if (sample.color)
+                        {
+                                m_pixels[index].add_sample(*sample.color, sample.point);
+                        }
+                        else
+                        {
+                                m_pixels[index].add_missed();
+                        }
                 }
         }
 
