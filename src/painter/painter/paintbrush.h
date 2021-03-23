@@ -20,6 +20,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/com/alg.h>
 #include <src/com/error.h>
 #include <src/com/print.h>
+#include <src/com/type/limit.h>
 
 #include <array>
 #include <optional>
@@ -27,12 +28,11 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 namespace ns::painter
 {
-template <std::size_t N>
+template <std::size_t N, typename T>
 class Paintbrush final
 {
         static_assert(N >= 2);
-
-        using Pixel = std::array<int_least16_t, N>;
+        static_assert(std::is_integral_v<T>);
 
         // Пример для 2 измерений
         //for (int x = 0; x < screen[0]; x += paintbrush[0])
@@ -53,10 +53,10 @@ class Paintbrush final
         static void generate_pixels(
                 const std::array<int, N>& screen_size,
                 const std::array<int, N>& paintbrush_size,
-                Pixel& pixel,
+                std::array<T, N>& pixel,
                 std::array<int, N>& min,
                 std::array<int, N>& max,
-                std::vector<Pixel>* pixels)
+                std::vector<std::array<T, N>>* pixels)
         {
                 static_assert(LEVEL < 2 * N);
 
@@ -83,10 +83,11 @@ class Paintbrush final
                         constexpr std::size_t n = LEVEL - N;
                         static_assert(n < N);
 
+                        ASSERT(min[n] < max[n] && min[n] >= 0 && max[n] <= screen_size[n]);
+
                         for (int i = min[n]; i < max[n]; ++i)
                         {
                                 pixel[n] = i;
-                                ASSERT(pixel[n] >= 0 && pixel[n] < screen_size[n]);
 
                                 if constexpr (LEVEL + 1 < 2 * N)
                                 {
@@ -103,7 +104,7 @@ class Paintbrush final
                 }
         }
 
-        static std::vector<Pixel> generate_pixels(
+        static std::vector<std::array<T, N>> generate_pixels(
                 const std::array<int, N>& screen_size,
                 const std::array<int, N>& paintbrush_size)
         {
@@ -116,22 +117,33 @@ class Paintbrush final
                         max[i] = screen_size[i];
                 }
 
-                std::vector<Pixel> pixels;
+                const std::size_t pixel_count = multiply_all<long long>(screen_size);
 
-                Pixel pixel;
+                std::vector<std::array<T, N>> pixels;
+                pixels.reserve(pixel_count);
+
+                std::array<T, N> pixel;
                 generate_pixels<0>(screen_size, paintbrush_size, pixel, min, max, &pixels);
-                ASSERT(static_cast<long long>(pixels.size()) == multiply_all<long long>(screen_size));
+                ASSERT(pixels.size() == pixel_count);
 
                 return pixels;
         }
 
-        static std::vector<Pixel> generate_pixels(std::array<int, N> screen_size, int paint_height)
+        static std::vector<std::array<T, N>> generate_pixels(std::array<int, N> screen_size, int paint_height)
         {
                 for (std::size_t i = 0; i < N; ++i)
                 {
                         if (screen_size[i] < 1)
                         {
                                 error("Paintbrush screen size " + to_string(screen_size) + " is not positive");
+                        }
+
+                        const int max_coordinate = screen_size[i] - 1;
+                        if (max_coordinate > limits<T>::max())
+                        {
+                                error("Paintbrush screen max coordinate " + to_string(max_coordinate) + " (screen size "
+                                      + to_string(screen_size) + ")" + " is greater than the largest value "
+                                      + to_string(limits<T>::max()) + " of pixel coordinates");
                         }
                 }
 
@@ -148,10 +160,10 @@ class Paintbrush final
                 paintbrush_size[N - 1] = 1;
 
                 std::reverse(screen_size.begin(), screen_size.end());
-                std::vector<Pixel> pixels = generate_pixels(screen_size, paintbrush_size);
+                std::vector<std::array<T, N>> pixels = generate_pixels(screen_size, paintbrush_size);
                 std::reverse(screen_size.begin(), screen_size.end());
 
-                for (Pixel& pixel : pixels)
+                for (std::array<T, N>& pixel : pixels)
                 {
                         std::reverse(pixel.begin(), pixel.end());
                         pixel[1] = screen_size[1] - 1 - pixel[1];
@@ -160,7 +172,7 @@ class Paintbrush final
                 return pixels;
         }
 
-        std::vector<Pixel> m_pixels;
+        std::vector<std::array<T, N>> m_pixels;
         unsigned long long m_current_pixel;
 
         void init()
@@ -182,7 +194,7 @@ public:
                 init();
         }
 
-        std::optional<Pixel> next_pixel()
+        std::optional<std::array<T, N>> next_pixel()
         {
                 if (m_current_pixel < m_pixels.size())
                 {

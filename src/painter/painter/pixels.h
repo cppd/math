@@ -90,7 +90,7 @@ class Pixels final
         const GlobalIndex<N, long long> m_global_index;
         std::vector<Pixel<N, T>> m_pixels;
 
-        Paintbrush<N> m_paintbrush;
+        Paintbrush<N, int_least16_t> m_paintbrush;
 
         mutable SpinLock m_lock;
 

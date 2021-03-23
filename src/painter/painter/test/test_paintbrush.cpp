@@ -19,13 +19,15 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <src/com/error.h>
 #include <src/com/print.h>
+#include <src/com/type/limit.h>
 #include <src/test/test.h>
 
 namespace ns::painter
 {
 namespace
 {
-std::string str(const std::optional<std::array<int_least16_t, 2>>& v)
+template <std::size_t N, typename T>
+std::string str(const std::optional<std::array<T, N>>& v)
 {
         if (v)
         {
@@ -34,9 +36,8 @@ std::string str(const std::optional<std::array<int_least16_t, 2>>& v)
         return "nullopt";
 }
 
-void check_impl(
-        const std::optional<std::array<int_least16_t, 2>>& p,
-        const std::optional<std::array<int_least16_t, 2>>& c)
+template <std::size_t N, typename T>
+void check_impl(const std::optional<std::array<T, N>>& p, const std::optional<std::array<T, N>>& c)
 {
         if (p != c)
         {
@@ -44,19 +45,22 @@ void check_impl(
         }
 }
 
-void check(const std::optional<std::array<int_least16_t, 2>>& p, const std::array<int_least16_t, 2>& c)
+template <std::size_t N, typename T>
+void check(const std::optional<std::array<T, N>>& p, const std::array<T, N>& c)
 {
-        check_impl(p, c);
+        check_impl<N, T>(p, c);
 }
 
-void check(const std::optional<std::array<int_least16_t, 2>>& p, const std::nullopt_t& c)
+template <std::size_t N, typename T>
+void check(const std::optional<std::array<T, N>>& p, const std::nullopt_t& c)
 {
-        check_impl(p, c);
+        check_impl<N, T>(p, c);
 }
 
-void test()
+template <typename T>
+void test_paintbrush()
 {
-        Paintbrush<2> paintbrush({4, 4}, 3);
+        Paintbrush<2, T> paintbrush({4, 4}, 3);
         for (int i = 0; i < 2; ++i)
         {
                 check(paintbrush.next_pixel(), {0, 3});
@@ -78,6 +82,12 @@ void test()
                 check(paintbrush.next_pixel(), std::nullopt);
                 paintbrush.reset();
         }
+}
+
+void test()
+{
+        test_paintbrush<int_least16_t>();
+        test_paintbrush<uint_least16_t>();
 }
 
 TEST_SMALL("Paintbrush", test)
