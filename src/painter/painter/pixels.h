@@ -21,6 +21,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <src/color/color.h>
 #include <src/com/global_index.h>
+#include <src/com/thread.h>
 
 #include <array>
 #include <optional>
@@ -91,6 +92,8 @@ class Pixels final
 
         Paintbrush<N> m_paintbrush;
 
+        mutable SpinLock m_lock;
+
 public:
         explicit Pixels(const std::array<int, N>& screen_size)
                 : m_global_index(screen_size), m_paintbrush(screen_size, PANTBRUSH_WIDTH)
@@ -100,6 +103,8 @@ public:
 
         std::optional<std::array<int_least16_t, N>> next_pixel()
         {
+                std::lock_guard lg(m_lock);
+
                 return m_paintbrush.next_pixel();
         }
 

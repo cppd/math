@@ -20,7 +20,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/com/alg.h>
 #include <src/com/error.h>
 #include <src/com/print.h>
-#include <src/com/thread.h>
 
 #include <array>
 #include <optional>
@@ -164,8 +163,6 @@ class Paintbrush final
         std::vector<Pixel> m_pixels;
         unsigned long long m_current_pixel;
 
-        mutable SpinLock m_lock;
-
         void init()
         {
                 m_current_pixel = 0;
@@ -180,8 +177,6 @@ public:
 
         void reset()
         {
-                std::lock_guard lg(m_lock);
-
                 ASSERT(m_current_pixel == m_pixels.size());
 
                 init();
@@ -189,8 +184,6 @@ public:
 
         std::optional<Pixel> next_pixel()
         {
-                std::lock_guard lg(m_lock);
-
                 if (m_current_pixel < m_pixels.size())
                 {
                         return m_pixels[m_current_pixel++];

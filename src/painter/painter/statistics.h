@@ -50,6 +50,8 @@ public:
 
         void init()
         {
+                std::lock_guard lg(m_lock);
+
                 m_pixel_count = 0;
                 m_ray_count = 0;
                 m_sample_count = 0;
@@ -70,9 +72,10 @@ public:
         void pass_done(bool prepare_next)
         {
                 const TimePoint now = time();
-                const double previous_pass_duration = duration(m_pass_start_time, now);
 
                 std::lock_guard lg(m_lock);
+
+                const double previous_pass_duration = duration(m_pass_start_time, now);
 
                 m_previous_pass_duration = previous_pass_duration;
                 if (prepare_next)
