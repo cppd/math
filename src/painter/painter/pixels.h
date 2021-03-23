@@ -86,26 +86,46 @@ template <std::size_t N, typename T>
 class Pixels final
 {
         static constexpr int PANTBRUSH_WIDTH = 20;
+        using PaintbrushType = std::uint_least16_t;
+
+        static std::optional<std::array<int, N>> to_int(std::optional<std::array<PaintbrushType, N>>&& p)
+        {
+                static_assert(!std::is_same_v<int, PaintbrushType>);
+                if (p)
+                {
+                        std::array<int, N> result;
+                        for (std::size_t i = 0; i < N; ++i)
+                        {
+                                result[i] = (*p)[i];
+                        }
+                        return result;
+                }
+                return std::nullopt;
+        }
 
         const GlobalIndex<N, long long> m_global_index;
         std::vector<Pixel<N, T>> m_pixels;
 
-        Paintbrush<N, int_least16_t> m_paintbrush;
+        Paintbrush<N, PaintbrushType> m_paintbrush;
 
         mutable SpinLock m_lock;
 
 public:
         explicit Pixels(const std::array<int, N>& screen_size)
-                : m_global_index(screen_size), m_paintbrush(screen_size, PANTBRUSH_WIDTH)
+                : m_global_index(screen_size),
+                  m_pixels(m_global_index.count()),
+                  m_paintbrush(screen_size, PANTBRUSH_WIDTH)
         {
-                m_pixels.resize(m_global_index.count());
         }
 
-        std::optional<std::array<int_least16_t, N>> next_pixel()
+        std::optional<std::array<int, N>> next_pixel()
         {
-                std::lock_guard lg(m_lock);
-
-                return m_paintbrush.next_pixel();
+                return to_int(
+                        [&]
+                        {
+                                std::lock_guard lg(m_lock);
+                                return m_paintbrush.next_pixel();
+                        }());
         }
 
         void next_pass()
@@ -113,10 +133,7 @@ public:
                 m_paintbrush.reset();
         }
 
-        void add_sample(
-                const std::array<int_least16_t, N>& pixel,
-                const Vector<N, T>& sample,
-                const std::optional<Color>& color)
+        void add_sample(const std::array<int, N>& pixel, const Vector<N, T>& sample, const std::optional<Color>& color)
         {
                 if (color)
                 {
@@ -128,7 +145,7 @@ public:
                 }
         }
 
-        PixelInfo info(const std::array<int_least16_t, N>& pixel) const
+        PixelInfo info(const std::array<int, N>& pixel) const
         {
                 return m_pixels[m_global_index.compute(pixel)].info();
         }

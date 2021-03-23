@@ -32,7 +32,10 @@ template <std::size_t N, typename T>
 class Paintbrush final
 {
         static_assert(N >= 2);
+
         static_assert(std::is_integral_v<T>);
+        static_assert(std::is_unsigned_v<T>);
+        static_assert(limits<T>::max() <= limits<unsigned>::max());
 
         // Пример для 2 измерений
         //for (int x = 0; x < screen[0]; x += paintbrush[0])
@@ -138,7 +141,7 @@ class Paintbrush final
                                 error("Paintbrush screen size " + to_string(screen_size) + " is not positive");
                         }
 
-                        const int max_coordinate = screen_size[i] - 1;
+                        const unsigned max_coordinate = screen_size[i] - 1;
                         if (max_coordinate > limits<T>::max())
                         {
                                 error("Paintbrush screen max coordinate " + to_string(max_coordinate) + " (screen size "

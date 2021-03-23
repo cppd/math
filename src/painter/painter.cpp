@@ -110,7 +110,7 @@ void paint_pixels(
                         return;
                 }
 
-                std::optional<std::array<int_least16_t, N - 1>> pixel = pixel_data->pixels.next_pixel();
+                std::optional<std::array<int, N - 1>> pixel = pixel_data->pixels.next_pixel();
                 if (!pixel)
                 {
                         return;

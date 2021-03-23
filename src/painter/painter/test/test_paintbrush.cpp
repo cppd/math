@@ -86,8 +86,8 @@ void test_paintbrush()
 
 void test()
 {
-        test_paintbrush<int_least16_t>();
-        test_paintbrush<uint_least16_t>();
+        test_paintbrush<std::uint_least16_t>();
+        test_paintbrush<unsigned>();
 }
 
 TEST_SMALL("Paintbrush", test)

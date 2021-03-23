@@ -60,13 +60,13 @@ class Images final : public Notifier<N>
         std::vector<std::byte> m_pixels;
         std::filesystem::path m_directory;
 
-        void pixel_busy(unsigned, const std::array<int_least16_t, N>&) override
+        void pixel_busy(unsigned, const std::array<int, N>&) override
         {
         }
 
-        void pixel_set(unsigned, const std::array<int_least16_t, N>& pixel, const Color& color, float coverage) override
+        void pixel_set(unsigned, const std::array<int, N>& pixel, const Color& color, float coverage) override
         {
-                std::array<int_least16_t, N> p = pixel;
+                std::array<int, N> p = pixel;
                 p[1] = m_screen_size[1] - 1 - pixel[1];
 
                 Color c = interpolation(m_background_color, color, coverage);

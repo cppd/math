@@ -33,11 +33,11 @@ protected:
         virtual ~Notifier() = default;
 
 public:
-        virtual void pixel_busy(unsigned thread_number, const std::array<int_least16_t, N>& pixel) = 0;
+        virtual void pixel_busy(unsigned thread_number, const std::array<int, N>& pixel) = 0;
 
         virtual void pixel_set(
                 unsigned thread_number,
-                const std::array<int_least16_t, N>& pixel,
+                const std::array<int, N>& pixel,
                 const Color& c,
                 float coverage) = 0;
 

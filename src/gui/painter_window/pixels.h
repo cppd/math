@@ -129,7 +129,7 @@ class PainterPixels final : public Pixels, public painter::Notifier<N - 1>
 
         // PainterNotifier
 
-        void pixel_busy(unsigned thread_number, const std::array<int_least16_t, N - 1>& pixel) override
+        void pixel_busy(unsigned thread_number, const std::array<int, N - 1>& pixel) override
         {
                 long long x = pixel[0];
                 long long y = m_screen_size[1] - 1 - pixel[1];
@@ -138,7 +138,7 @@ class PainterPixels final : public Pixels, public painter::Notifier<N - 1>
 
         void pixel_set(
                 unsigned /*thread_number*/,
-                const std::array<int_least16_t, N - 1>& pixel,
+                const std::array<int, N - 1>& pixel,
                 const Color& color,
                 float coverage) override
         {
@@ -177,7 +177,7 @@ class PainterPixels final : public Pixels, public painter::Notifier<N - 1>
                         c_16[3] = color::linear_float_to_linear_uint16(coverage);
                 }
 
-                std::array<int_least16_t, N - 1> p = pixel;
+                std::array<int, N - 1> p = pixel;
                 p[1] = m_screen_size[1] - 1 - pixel[1];
                 long long index = m_global_index.compute(p);
 
@@ -200,7 +200,7 @@ class PainterPixels final : public Pixels, public painter::Notifier<N - 1>
         void set_slice_offset(const std::vector<int>& slider_positions) override
         {
                 ASSERT(slider_positions.size() + 2 == N - 1);
-                std::array<int_least16_t, N - 1> p;
+                std::array<int, N - 1> p;
                 p[0] = 0;
                 p[1] = 0;
                 for (unsigned dimension = 2; dimension < N - 1; ++dimension)
