@@ -41,6 +41,8 @@ public:
                 const Color& c,
                 float coverage) = 0;
 
+        virtual void pass_done() = 0;
+
         virtual void error_message(const std::string& msg) = 0;
 };
 

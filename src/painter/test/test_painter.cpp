@@ -82,6 +82,10 @@ class Images final : public Notifier<N>
                 std::memcpy(ptr++, &b, 1);
         }
 
+        void pass_done() override
+        {
+        }
+
         void error_message(const std::string& msg) override
         {
                 LOG("Painter error message\n" + msg);

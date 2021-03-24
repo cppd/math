@@ -151,7 +151,8 @@ void prepare_next_pass(
         std::atomic_bool* stop,
         PixelData<N, T>* pixel_data,
         PassData* pass_data,
-        PaintingStatistics* statistics)
+        PaintingStatistics* statistics,
+        Notifier<N - 1>* notifier)
 {
         if (thread_number != 0)
         {
@@ -169,6 +170,7 @@ void prepare_next_pass(
                 statistics->pass_done(false);
                 *stop = true;
         }
+        notifier->pass_done();
 }
 
 template <std::size_t N, typename T>
@@ -209,7 +211,7 @@ void worker_thread(
 
                 try
                 {
-                        prepare_next_pass<N, T>(thread_number, stop, pixel_data, pass_data, statistics);
+                        prepare_next_pass<N, T>(thread_number, stop, pixel_data, pass_data, statistics, notifier);
                         barrier->wait();
                 }
                 catch (const std::exception& e)

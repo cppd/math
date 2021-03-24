@@ -29,6 +29,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <cstring>
 #include <memory>
+#include <mutex>
 #include <span>
 #include <vector>
 
@@ -123,6 +124,9 @@ class PainterPixels final : public Pixels, public painter::Notifier<N - 1>
         const std::size_t m_slice_size_16 = PIXEL_SIZE_16 * m_screen_size[0] * m_screen_size[1];
         long long m_slice_offset_16 = 0;
 
+        std::vector<std::byte> m_saved_pixels_16;
+        mutable std::mutex m_saved_pixels_16_mutex;
+
         std::vector<long long> m_busy_indices_2d;
 
         std::unique_ptr<painter::Painter<N, T>> m_painter;
@@ -185,6 +189,13 @@ class PainterPixels final : public Pixels, public painter::Notifier<N - 1>
                 std::memcpy(&m_pixels_16[PIXEL_SIZE_16 * index], c_16.data(), c_16.size() * sizeof(c_16[0]));
         }
 
+        void pass_done() override
+        {
+                std::lock_guard lg(m_saved_pixels_16_mutex);
+
+                m_saved_pixels_16 = m_pixels_16;
+        }
+
         void error_message(const std::string& msg) override
         {
                 MESSAGE_ERROR(msg);
@@ -239,14 +250,25 @@ class PainterPixels final : public Pixels, public painter::Notifier<N - 1>
 
         std::vector<std::byte> slice() const override
         {
-                const std::byte* begin = m_pixels_16.data() + m_slice_offset_16;
+                std::lock_guard lg(m_saved_pixels_16_mutex);
+
+                const std::vector<std::byte>* const pixels =
+                        !m_saved_pixels_16.empty() ? &m_saved_pixels_16 : &m_pixels_16;
+
+                const std::byte* begin = pixels->data() + m_slice_offset_16;
                 const std::byte* end = begin + m_slice_size_16;
+
                 return {begin, end};
         }
 
         std::vector<std::byte> pixels() const override
         {
-                return m_pixels_16;
+                std::lock_guard lg(m_saved_pixels_16_mutex);
+
+                const std::vector<std::byte>* const pixels =
+                        !m_saved_pixels_16.empty() ? &m_saved_pixels_16 : &m_pixels_16;
+
+                return *pixels;
         }
 
 public:
