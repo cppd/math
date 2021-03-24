@@ -17,12 +17,12 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
-#include "pixels.h"
-
 #include "ui_image_widget.h"
 
 #include <QImage>
 #include <QMenu>
+#include <span>
+#include <vector>
 
 namespace ns::gui::painter_window
 {
@@ -33,8 +33,6 @@ class ImageWidget final : public QWidget
 private:
         Ui::ImageWidget ui;
 
-        const Pixels* m_pixels;
-
         const long long m_image_2d_pixel_count;
         const std::size_t m_image_2d_byte_count;
         QImage m_image_2d;
@@ -42,10 +40,10 @@ private:
         QAction* m_show_threads_action = nullptr;
 
 public:
-        ImageWidget(const Pixels* pixels, QMenu* menu);
+        ImageWidget(int width, int height, QMenu* menu);
 
         QSize size_difference() const;
 
-        void update();
+        void update(const std::span<const std::byte>& pixels_r8g8b8a8, const std::vector<long long>& busy_indices);
 };
 }

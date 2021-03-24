@@ -90,10 +90,11 @@ void PainterWindow::create_interface()
         ui.main_widget->layout()->setContentsMargins(0, 0, 0, 0);
         ui.main_widget->layout()->setSpacing(0);
 
-        m_image_widget = std::make_unique<ImageWidget>(m_pixels.get(), ui.menu_view);
+        m_image_widget =
+                std::make_unique<ImageWidget>(m_pixels->screen_size()[0], m_pixels->screen_size()[1], ui.menu_view);
         ui.main_widget->layout()->addWidget(m_image_widget.get());
 
-        m_statistics_widget = std::make_unique<StatisticsWidget>(m_pixels.get(), UPDATE_INTERVAL);
+        m_statistics_widget = std::make_unique<StatisticsWidget>(UPDATE_INTERVAL);
         ui.main_widget->layout()->addWidget(m_statistics_widget.get());
 
         connect(ui.menu_window->addAction("Adjust size"), &QAction::triggered, this,
@@ -169,8 +170,8 @@ void PainterWindow::on_timer_timeout()
 {
         ASSERT(std::this_thread::get_id() == m_thread_id);
 
-        m_statistics_widget->update();
-        m_image_widget->update();
+        m_statistics_widget->update(m_pixels->statistics());
+        m_image_widget->update(m_pixels->slice_r8g8b8a8_with_background(), m_pixels->busy_indices_2d());
         m_actions->set_progresses();
 }
 }

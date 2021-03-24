@@ -64,10 +64,8 @@ struct StatisticsWidget::Counters final
         }
 };
 
-StatisticsWidget::StatisticsWidget(const Pixels* pixels, std::chrono::milliseconds update_interval)
+StatisticsWidget::StatisticsWidget(std::chrono::milliseconds update_interval)
         : QWidget(nullptr),
-          m_pixels(pixels),
-          m_pixel_count(multiply_all<long long>(m_pixels->screen_size())),
           // Здесь интервал должен быть больше update_interval_milliseconds
           m_difference(std::make_unique<Difference<Counters>>(10 * update_interval))
 {
@@ -84,11 +82,10 @@ StatisticsWidget::StatisticsWidget(const Pixels* pixels, std::chrono::millisecon
 
 StatisticsWidget::~StatisticsWidget() = default;
 
-void StatisticsWidget::update()
+void StatisticsWidget::update(const painter::Statistics& statistics)
 {
-        const painter::Statistics s = m_pixels->statistics();
-
-        auto [difference, duration] = m_difference->compute(Counters(s.pixel_count, s.ray_count, s.sample_count));
+        auto [difference, duration] =
+                m_difference->compute(Counters(statistics.pixel_count, statistics.ray_count, statistics.sample_count));
 
         long long rays_per_second =
                 (duration != 0) ? std::llround(static_cast<double>(difference.ray_count) / duration) : 0;
@@ -98,13 +95,14 @@ void StatisticsWidget::update()
                         ? std::llround(static_cast<double>(difference.sample_count) / difference.pixel_count)
                         : 0;
 
-        long long milliseconds_per_frame = std::llround(1000 * s.previous_pass_duration);
+        long long milliseconds_per_frame = std::llround(1000 * statistics.previous_pass_duration);
 
         set_label_text_and_minimum_width(ui.label_rays_per_second, to_string_digit_groups(rays_per_second));
-        set_label_text_and_minimum_width(ui.label_ray_count, to_string_digit_groups(s.ray_count));
+        set_label_text_and_minimum_width(ui.label_ray_count, to_string_digit_groups(statistics.ray_count));
         set_label_text_and_minimum_width(
-                ui.label_pass_count,
-                to_string_digit_groups(s.pass_number).append(":").append(progress_to_string(s.pass_progress)));
+                ui.label_pass_count, to_string_digit_groups(statistics.pass_number)
+                                             .append(":")
+                                             .append(progress_to_string(statistics.pass_progress)));
         set_label_text_and_minimum_width(ui.label_samples_per_pixel, to_string_digit_groups(samples_per_pixel));
         set_label_text_and_minimum_width(
                 ui.label_milliseconds_per_frame, to_string_digit_groups(milliseconds_per_frame));

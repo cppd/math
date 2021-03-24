@@ -18,9 +18,10 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #pragma once
 
 #include "difference.h"
-#include "pixels.h"
 
 #include "ui_statistics_widget.h"
+
+#include <src/painter/painter.h>
 
 #include <memory>
 
@@ -33,17 +34,13 @@ class StatisticsWidget final : public QWidget
 private:
         Ui::StatisticsWidget ui;
 
-        const Pixels* m_pixels;
-
-        const double m_pixel_count;
-
         struct Counters;
         std::unique_ptr<Difference<Counters>> m_difference;
 
 public:
-        StatisticsWidget(const Pixels* pixels, std::chrono::milliseconds update_interval);
+        StatisticsWidget(std::chrono::milliseconds update_interval);
         ~StatisticsWidget() override;
 
-        void update();
+        void update(const painter::Statistics& statistics);
 };
 }
