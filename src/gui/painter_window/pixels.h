@@ -114,15 +114,14 @@ class PainterPixels final : public Pixels, public painter::Notifier<N - 1>
 
         const GlobalIndex<N - 1, long long> m_global_index;
         const std::vector<int> m_screen_size;
+        long long m_slice = 0;
         const Color m_background_color;
 
         std::vector<std::byte> m_pixels_8 = make_initial_image(m_screen_size, COLOR_FORMAT_8);
         const std::size_t m_slice_size_8 = PIXEL_SIZE_8 * m_screen_size[0] * m_screen_size[1];
-        long long m_slice_offset_8 = 0;
 
         std::vector<std::byte> m_pixels_16 = make_initial_image(m_screen_size, COLOR_FORMAT_16);
         const std::size_t m_slice_size_16 = PIXEL_SIZE_16 * m_screen_size[0] * m_screen_size[1];
-        long long m_slice_offset_16 = 0;
 
         std::vector<std::byte> m_saved_pixels_16;
         mutable std::mutex m_saved_pixels_16_mutex;
@@ -219,8 +218,7 @@ class PainterPixels final : public Pixels, public painter::Notifier<N - 1>
                         p[dimension] = slider_positions[dimension - 2];
                         ASSERT(p[dimension] >= 0 && p[dimension] < m_screen_size[dimension]);
                 }
-                m_slice_offset_8 = PIXEL_SIZE_8 * m_global_index.compute(p);
-                m_slice_offset_16 = PIXEL_SIZE_16 * m_global_index.compute(p);
+                m_slice = m_global_index.compute(p) / m_screen_size[0] / m_screen_size[1];
         }
 
         const std::vector<long long>& busy_indices_2d() const override
@@ -235,7 +233,7 @@ class PainterPixels final : public Pixels, public painter::Notifier<N - 1>
 
         std::span<const std::byte> slice_r8g8b8a8_with_background() const override
         {
-                return std::span(&m_pixels_8[m_slice_offset_8], m_slice_size_8);
+                return std::span(&m_pixels_8[m_slice * m_slice_size_8], m_slice_size_8);
         }
 
         image::ColorFormat color_format() const override
@@ -255,7 +253,7 @@ class PainterPixels final : public Pixels, public painter::Notifier<N - 1>
                 const std::vector<std::byte>* const pixels =
                         !m_saved_pixels_16.empty() ? &m_saved_pixels_16 : &m_pixels_16;
 
-                const std::byte* begin = pixels->data() + m_slice_offset_16;
+                const std::byte* begin = pixels->data() + m_slice * m_slice_size_16;
                 const std::byte* end = begin + m_slice_size_16;
 
                 return {begin, end};
