@@ -322,10 +322,10 @@ class Impl final : public Painter<N, T>
 {
         const std::thread::id m_thread_id = std::this_thread::get_id();
 
+        std::unique_ptr<PaintingStatistics> m_statistics;
+
         std::atomic_bool m_stop = false;
         std::thread m_thread;
-
-        PaintingStatistics m_statistics;
 
         void wait() noexcept override
         {
@@ -336,7 +336,7 @@ class Impl final : public Painter<N, T>
 
         Statistics statistics() const override
         {
-                return m_statistics.statistics();
+                return m_statistics->statistics();
         }
 
 public:
@@ -373,8 +373,11 @@ public:
                         error("Painter maximum pass count (" + to_string(*max_pass_count) + ") must be greater than 0");
                 }
 
+                m_statistics =
+                        std::make_unique<PaintingStatistics>(multiply_all<long long>(scene->projector().screen_size()));
+
                 m_thread = std::thread(
-                        [=, stop = &m_stop, statistics = &m_statistics, scene = std::move(scene)]()
+                        [=, stop = &m_stop, statistics = m_statistics.get(), scene = std::move(scene)]()
                         {
                                 painter_thread(
                                         notifier, statistics, samples_per_pixel, max_pass_count, *scene, thread_count,

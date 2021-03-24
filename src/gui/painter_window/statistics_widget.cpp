@@ -21,20 +21,29 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <src/com/print.h>
 
+#include <algorithm>
 #include <cmath>
 
 namespace ns::gui::painter_window
 {
 namespace
 {
-std::string progress_to_string(const char* prefix, double progress)
+std::string progress_to_string(double progress)
 {
-        int percent = std::floor(progress * 100.0);
-        percent = (percent < 100) ? percent : 99;
-        std::string progress_str = prefix;
-        progress_str += percent < 10 ? "0" : "";
-        progress_str += std::to_string(percent);
-        return progress_str;
+        const int percent = std::clamp(static_cast<int>(progress * 100), 0, 100);
+        std::string str;
+        if (percent < 10)
+        {
+                str += ' ';
+                str += ' ';
+        }
+        else if (percent < 100)
+        {
+                str += ' ';
+        }
+        str += std::to_string(percent);
+        str += '%';
+        return str;
 }
 }
 
@@ -91,13 +100,11 @@ void StatisticsWidget::update()
 
         long long milliseconds_per_frame = std::llround(1000 * s.previous_pass_duration);
 
-        double pass_progress = static_cast<double>(s.pass_pixel_count) / m_pixel_count;
-
         set_label_text_and_minimum_width(ui.label_rays_per_second, to_string_digit_groups(rays_per_second));
         set_label_text_and_minimum_width(ui.label_ray_count, to_string_digit_groups(s.ray_count));
         set_label_text_and_minimum_width(
                 ui.label_pass_count,
-                to_string_digit_groups(s.pass_number).append(progress_to_string(":", pass_progress)));
+                to_string_digit_groups(s.pass_number).append(":").append(progress_to_string(s.pass_progress)));
         set_label_text_and_minimum_width(ui.label_samples_per_pixel, to_string_digit_groups(samples_per_pixel));
         set_label_text_and_minimum_width(
                 ui.label_milliseconds_per_frame, to_string_digit_groups(milliseconds_per_frame));

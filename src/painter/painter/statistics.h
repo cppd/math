@@ -31,6 +31,8 @@ class PaintingStatistics
 {
         static_assert(std::atomic<long long>::is_always_lock_free);
 
+        const long long m_screen_pixel_count;
+
         std::atomic<long long> m_pixel_count;
         std::atomic<long long> m_ray_count;
         std::atomic<long long> m_sample_count;
@@ -43,7 +45,7 @@ class PaintingStatistics
         mutable SpinLock m_lock;
 
 public:
-        PaintingStatistics()
+        PaintingStatistics(long long screen_pixel_count) : m_screen_pixel_count(screen_pixel_count)
         {
                 init();
         }
@@ -93,7 +95,7 @@ public:
                 std::lock_guard lg(m_lock);
 
                 s.pass_number = m_pass_number;
-                s.pass_pixel_count = m_pixel_count - m_pass_start_pixel_count;
+                s.pass_progress = static_cast<double>(m_pixel_count - m_pass_start_pixel_count) / m_screen_pixel_count;
                 s.previous_pass_duration = m_previous_pass_duration;
 
                 s.pixel_count = m_pixel_count;

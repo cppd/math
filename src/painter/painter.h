@@ -49,7 +49,7 @@ public:
 struct Statistics final
 {
         long long pass_number;
-        long long pass_pixel_count;
+        double pass_progress;
         long long pixel_count;
         long long ray_count;
         long long sample_count;
