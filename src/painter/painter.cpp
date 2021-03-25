@@ -68,8 +68,8 @@ struct PixelData final
         SamplerStratifiedJittered<N - 1, T> sampler;
         Pixels<N - 1, T> pixels;
 
-        PixelData(const Projector<N, T>& projector, int samples_per_pixel)
-                : projector(projector), sampler(samples_per_pixel), pixels(projector.screen_size())
+        PixelData(const Projector<N, T>& projector, int samples_per_pixel, Notifier<N - 1>* notifier)
+                : projector(projector), sampler(samples_per_pixel), pixels(projector.screen_size(), notifier)
         {
         }
 };
@@ -91,6 +91,26 @@ public:
         }
 };
 
+template <std::size_t N>
+class ThreadBusy final
+{
+        Notifier<N>* const m_notifier;
+        const unsigned m_thread;
+
+public:
+        ThreadBusy(Notifier<N>* notifier, unsigned thread, const std::array<int, N>& pixel)
+                : m_notifier(notifier), m_thread(thread)
+        {
+                m_notifier->thread_busy(m_thread, pixel);
+        }
+        ~ThreadBusy()
+        {
+                m_notifier->thread_free(m_thread);
+        }
+        ThreadBusy(const ThreadBusy&) = delete;
+        ThreadBusy& operator=(const ThreadBusy&) = delete;
+};
+
 template <std::size_t N, typename T>
 void paint_pixels(
         unsigned thread_number,
@@ -102,7 +122,7 @@ void paint_pixels(
 {
         thread_local RandomEngine<T> random_engine = create_engine<RandomEngine<T>>();
         thread_local std::vector<Vector<N - 1, T>> sample_points;
-        thread_local std::vector<typename Pixels<N - 1, T>::Sample> samples;
+        thread_local std::vector<std::optional<Color>> sample_colors;
 
         while (true)
         {
@@ -117,30 +137,26 @@ void paint_pixels(
                         return;
                 }
 
-                notifier->pixel_busy(thread_number, *pixel);
+                ThreadBusy thread_busy(notifier, thread_number, *pixel);
+
+                const Vector<N - 1, T> pixel_org = to_vector<T>(*pixel);
 
                 pixel_data->sampler.generate(random_engine, &sample_points);
-                samples.resize(sample_points.size());
+                sample_colors.resize(sample_points.size());
+
                 int ray_count = 0;
-                const Vector<N - 1, T> pixel_org = to_vector<T>(*pixel);
 
                 for (std::size_t i = 0; i < sample_points.size(); ++i)
                 {
                         constexpr int RECURSION_LEVEL = 0;
                         constexpr Color::DataType COLOR_LEVEL = 1;
 
-                        Ray<N, T> ray = pixel_data->projector.ray(pixel_org + sample_points[i]);
-
-                        samples[i].point = sample_points[i];
-                        samples[i].color =
-                                trace_path(paint_data, &ray_count, random_engine, RECURSION_LEVEL, COLOR_LEVEL, ray);
+                        sample_colors[i] = trace_path(
+                                paint_data, &ray_count, random_engine, RECURSION_LEVEL, COLOR_LEVEL,
+                                pixel_data->projector.ray(pixel_org + sample_points[i]));
                 }
 
-                pixel_data->pixels.add_samples(*pixel, samples);
-
-                PixelInfo info = pixel_data->pixels.info(*pixel);
-                notifier->pixel_set(thread_number, *pixel, info.color, info.coverage);
-
+                pixel_data->pixels.add_samples(*pixel, sample_points, sample_colors);
                 statistics->pixel_done(ray_count, sample_points.size());
         }
 }
@@ -295,7 +311,7 @@ void painter_thread(
                 try
                 {
                         const PaintData paint_data(scene, smooth_normal);
-                        PixelData<N, T> pixel_data(scene.projector(), samples_per_pixel);
+                        PixelData<N, T> pixel_data(scene.projector(), samples_per_pixel, notifier);
                         PassData pass_data(max_pass_count);
 
                         statistics->init();

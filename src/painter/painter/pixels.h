@@ -19,6 +19,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "paintbrush.h"
 
+#include "../painter.h"
+
 #include <src/color/color.h>
 #include <src/com/global_index.h>
 #include <src/com/thread.h>
@@ -103,6 +105,8 @@ class Pixels final
                 return std::nullopt;
         }
 
+        Notifier<N>* const m_notifier;
+
         const GlobalIndex<N, long long> m_global_index;
         std::vector<Pixel<N, T>> m_pixels;
 
@@ -111,8 +115,9 @@ class Pixels final
         mutable SpinLock m_lock;
 
 public:
-        explicit Pixels(const std::array<int, N>& screen_size)
-                : m_global_index(screen_size),
+        explicit Pixels(const std::array<int, N>& screen_size, Notifier<N>* notifier)
+                : m_notifier(notifier),
+                  m_global_index(screen_size),
                   m_pixels(m_global_index.count()),
                   m_paintbrush(screen_size, PANTBRUSH_WIDTH)
         {
@@ -133,34 +138,27 @@ public:
                 m_paintbrush.reset();
         }
 
-        struct Sample final
+        void add_samples(
+                const std::array<int, N>& pixel,
+                const std::vector<Vector<N, T>>& points,
+                const std::vector<std::optional<Color>>& colors)
         {
-                Vector<N, T> point;
-                std::optional<Color> color;
-                Sample()
-                {
-                }
-        };
+                ASSERT(points.size() == colors.size());
 
-        void add_samples(const std::array<int, N>& pixel, const std::vector<Sample>& samples)
-        {
                 const long long index = m_global_index.compute(pixel);
-                for (const Sample& sample : samples)
+                for (std::size_t i = 0; i < points.size(); ++i)
                 {
-                        if (sample.color)
+                        if (colors[i])
                         {
-                                m_pixels[index].add_sample(*sample.color, sample.point);
+                                m_pixels[index].add_sample(*colors[i], points[i]);
                         }
                         else
                         {
                                 m_pixels[index].add_missed();
                         }
                 }
-        }
-
-        PixelInfo info(const std::array<int, N>& pixel) const
-        {
-                return m_pixels[m_global_index.compute(pixel)].info();
+                PixelInfo info = m_pixels[index].info();
+                m_notifier->pixel_set(pixel, info.color, info.coverage);
         }
 };
 }

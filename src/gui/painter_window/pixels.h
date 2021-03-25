@@ -58,7 +58,7 @@ class PainterPixels final : public Pixels, public painter::Notifier<N - 1>
         static_assert(N >= 3);
 
         static constexpr std::optional<int> MAX_PASS_COUNT = std::nullopt;
-
+        static constexpr long long NULL_INDEX = -1;
         static constexpr image::ColorFormat COLOR_FORMAT_8 = image::ColorFormat::R8G8B8A8_SRGB;
         static constexpr std::size_t PIXEL_SIZE_8 = image::format_pixel_size_in_bytes(COLOR_FORMAT_8);
         static constexpr image::ColorFormat COLOR_FORMAT_16 = image::ColorFormat::R16G16B16A16;
@@ -90,18 +90,19 @@ class PainterPixels final : public Pixels, public painter::Notifier<N - 1>
 
         // PainterNotifier
 
-        void pixel_busy(unsigned thread_number, const std::array<int, N - 1>& pixel) override
+        void thread_busy(unsigned thread_number, const std::array<int, N - 1>& pixel) override
         {
                 long long x = pixel[0];
                 long long y = m_screen_size[1] - 1 - pixel[1];
                 m_busy_indices_2d[thread_number] = y * m_screen_size[0] + x;
         }
 
-        void pixel_set(
-                unsigned /*thread_number*/,
-                const std::array<int, N - 1>& pixel,
-                const Color& color,
-                float coverage) override
+        void thread_free(unsigned thread_number) override
+        {
+                m_busy_indices_2d[thread_number] = NULL_INDEX;
+        }
+
+        void pixel_set(const std::array<int, N - 1>& pixel, const Color& color, float coverage) override
         {
                 std::array<uint8_t, 3> c_8;
                 std::array<uint16_t, 4> c_16;
@@ -231,7 +232,7 @@ public:
                           }(scene->projector().screen_size())),
                   m_background_color(scene->background_color()),
                   m_slice_count(m_global_index.count() / m_screen_size[0] / m_screen_size[1]),
-                  m_busy_indices_2d(thread_count, -1),
+                  m_busy_indices_2d(thread_count, NULL_INDEX),
                   m_painter(painter::create_painter<N, T>(
                           this,
                           samples_per_pixel,

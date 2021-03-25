@@ -33,14 +33,9 @@ protected:
         virtual ~Notifier() = default;
 
 public:
-        virtual void pixel_busy(unsigned thread_number, const std::array<int, N>& pixel) = 0;
-
-        virtual void pixel_set(
-                unsigned thread_number,
-                const std::array<int, N>& pixel,
-                const Color& c,
-                float coverage) = 0;
-
+        virtual void thread_busy(unsigned thread_number, const std::array<int, N>& pixel) = 0;
+        virtual void thread_free(unsigned thread_number) = 0;
+        virtual void pixel_set(const std::array<int, N>& pixel, const Color& c, float coverage) = 0;
         virtual void pass_done() = 0;
 
         virtual void error_message(const std::string& msg) = 0;
