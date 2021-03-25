@@ -23,6 +23,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/com/error.h>
 #include <src/com/global_index.h>
 #include <src/com/message.h>
+#include <src/com/print.h>
 #include <src/image/conversion.h>
 #include <src/image/format.h>
 #include <src/painter/painter.h>
@@ -40,21 +41,22 @@ struct Pixels
         virtual ~Pixels() = default;
 
         virtual const std::vector<int>& screen_size() const = 0;
-        virtual void set_slice_offset(const std::vector<int>& slider_positions) = 0;
         virtual const std::vector<long long>& busy_indices_2d() const = 0;
         virtual painter::Statistics statistics() const = 0;
 
-        virtual std::span<const std::byte> slice_r8g8b8a8_with_background() const = 0;
+        virtual std::span<const std::byte> slice_r8g8b8a8_with_background(long long slice_number) const = 0;
 
         virtual image::ColorFormat color_format() const = 0;
         virtual Color background_color() const = 0;
-        virtual std::vector<std::byte> slice() const = 0;
+        virtual std::vector<std::byte> slice(long long slice_number) const = 0;
         virtual std::vector<std::byte> pixels() const = 0;
 };
 
 template <std::size_t N, typename T>
 class PainterPixels final : public Pixels, public painter::Notifier<N - 1>
 {
+        static_assert(N >= 3);
+
         template <typename Type, std::size_t Size>
         static std::vector<Type> array_to_vector(const std::array<Type, Size>& array)
         {
@@ -64,7 +66,7 @@ class PainterPixels final : public Pixels, public painter::Notifier<N - 1>
         }
 
         static std::vector<std::byte> make_initial_image(
-                const std::vector<int>& screen_size,
+                const std::array<int, N - 1>& screen_size,
                 image::ColorFormat color_format)
         {
                 constexpr std::array<uint8_t, 4> LIGHT = {100, 150, 200, 255};
@@ -113,22 +115,31 @@ class PainterPixels final : public Pixels, public painter::Notifier<N - 1>
         static constexpr std::size_t PIXEL_SIZE_16 = image::format_pixel_size_in_bytes(COLOR_FORMAT_16);
 
         const GlobalIndex<N - 1, long long> m_global_index;
-        const std::vector<int> m_screen_size;
-        long long m_slice = 0;
+        const std::array<int, N - 1> m_screen_size;
+        const std::vector<int> m_screen_size_vector;
         const Color m_background_color;
 
-        std::vector<std::byte> m_pixels_8 = make_initial_image(m_screen_size, COLOR_FORMAT_8);
+        const long long m_slice_count = m_global_index.compute(m_screen_size) / m_screen_size[0] / m_screen_size[1];
         const std::size_t m_slice_size_8 = PIXEL_SIZE_8 * m_screen_size[0] * m_screen_size[1];
-
-        std::vector<std::byte> m_pixels_16 = make_initial_image(m_screen_size, COLOR_FORMAT_16);
         const std::size_t m_slice_size_16 = PIXEL_SIZE_16 * m_screen_size[0] * m_screen_size[1];
 
+        std::vector<std::byte> m_pixels_8 = make_initial_image(m_screen_size, COLOR_FORMAT_8);
+        std::vector<std::byte> m_pixels_16 = make_initial_image(m_screen_size, COLOR_FORMAT_16);
         std::vector<std::byte> m_saved_pixels_16;
         mutable std::mutex m_saved_pixels_16_mutex;
 
         std::vector<long long> m_busy_indices_2d;
 
         std::unique_ptr<painter::Painter<N, T>> m_painter;
+
+        void check_slice_number(long long slice_number) const
+        {
+                if (slice_number < 0 || slice_number >= m_slice_count)
+                {
+                        error("Error slice number " + to_string(slice_number) + ", slice count "
+                              + to_string(m_slice_count));
+                }
+        }
 
         // PainterNotifier
 
@@ -204,21 +215,7 @@ class PainterPixels final : public Pixels, public painter::Notifier<N - 1>
 
         const std::vector<int>& screen_size() const override
         {
-                return m_screen_size;
-        }
-
-        void set_slice_offset(const std::vector<int>& slider_positions) override
-        {
-                ASSERT(slider_positions.size() + 2 == N - 1);
-                std::array<int, N - 1> p;
-                p[0] = 0;
-                p[1] = 0;
-                for (unsigned dimension = 2; dimension < N - 1; ++dimension)
-                {
-                        p[dimension] = slider_positions[dimension - 2];
-                        ASSERT(p[dimension] >= 0 && p[dimension] < m_screen_size[dimension]);
-                }
-                m_slice = m_global_index.compute(p) / m_screen_size[0] / m_screen_size[1];
+                return m_screen_size_vector;
         }
 
         const std::vector<long long>& busy_indices_2d() const override
@@ -231,9 +228,11 @@ class PainterPixels final : public Pixels, public painter::Notifier<N - 1>
                 return m_painter->statistics();
         }
 
-        std::span<const std::byte> slice_r8g8b8a8_with_background() const override
+        std::span<const std::byte> slice_r8g8b8a8_with_background(long long slice_number) const override
         {
-                return std::span(&m_pixels_8[m_slice * m_slice_size_8], m_slice_size_8);
+                check_slice_number(slice_number);
+
+                return std::span(&m_pixels_8[slice_number * m_slice_size_8], m_slice_size_8);
         }
 
         image::ColorFormat color_format() const override
@@ -246,14 +245,16 @@ class PainterPixels final : public Pixels, public painter::Notifier<N - 1>
                 return m_background_color;
         }
 
-        std::vector<std::byte> slice() const override
+        std::vector<std::byte> slice(long long slice_number) const override
         {
+                check_slice_number(slice_number);
+
                 std::lock_guard lg(m_saved_pixels_16_mutex);
 
                 const std::vector<std::byte>* const pixels =
                         !m_saved_pixels_16.empty() ? &m_saved_pixels_16 : &m_pixels_16;
 
-                const std::byte* begin = pixels->data() + m_slice * m_slice_size_16;
+                const std::byte* begin = pixels->data() + slice_number * m_slice_size_16;
                 const std::byte* end = begin + m_slice_size_16;
 
                 return {begin, end};
@@ -276,7 +277,8 @@ public:
                 int samples_per_pixel,
                 bool smooth_normal)
                 : m_global_index(scene->projector().screen_size()),
-                  m_screen_size(array_to_vector(scene->projector().screen_size())),
+                  m_screen_size(scene->projector().screen_size()),
+                  m_screen_size_vector(array_to_vector(m_screen_size)),
                   m_background_color(scene->background_color()),
                   m_busy_indices_2d(thread_count, -1),
                   m_painter(painter::create_painter<N, T>(

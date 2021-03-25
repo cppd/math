@@ -24,6 +24,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <QMenu>
 #include <QStatusBar>
+#include <functional>
 #include <memory>
 #include <string>
 #include <vector>
@@ -36,12 +37,12 @@ class Actions final
         std::unique_ptr<WorkerThreads> m_worker_threads;
         std::vector<Connection> m_connections;
 
-        void save_to_file(const std::string& action) const;
+        void save_to_file(const std::string& action, long long slice) const;
         void save_all_to_files(const std::string& action) const;
         void add_volume(const std::string& action) const;
 
 public:
-        Actions(const Pixels* pixels, QMenu* menu, QStatusBar* status_bar);
+        Actions(const Pixels* pixels, QMenu* menu, QStatusBar* status_bar, std::function<long long()> slice_number);
 
         ~Actions();
 

@@ -108,6 +108,7 @@ void PainterWindow::create_sliders()
         const int count = static_cast<int>(m_pixels->screen_size().size()) - 2;
         if (count <= 0)
         {
+                m_slice = 0;
                 return;
         }
 
@@ -119,7 +120,17 @@ void PainterWindow::create_sliders()
         connect(m_sliders_widget.get(), &SlidersWidget::changed, this,
                 [this](const std::vector<int>& positions)
                 {
-                        m_pixels->set_slice_offset(positions);
+                        ASSERT(!positions.empty() && positions.size() + 2 == m_pixels->screen_size().size());
+                        // ((x[3]*size[2] + x[2])*size[1] + x[1])*size[0] + x[0]
+                        long long slice = 0;
+                        for (int i = static_cast<int>(positions.size()) - 1; i >= 0; --i)
+                        {
+                                std::size_t dimension = i + 2;
+                                ASSERT(dimension < m_pixels->screen_size().size());
+                                ASSERT(positions[i] >= 0 && positions[i] < m_pixels->screen_size()[dimension]);
+                                slice = slice * m_pixels->screen_size()[dimension] + positions[i];
+                        }
+                        m_slice = slice;
                 });
         m_sliders_widget->set(std::vector<int>(count, 0));
 }
@@ -128,7 +139,12 @@ void PainterWindow::create_actions()
 {
         QMenu* menu = ui.menu_actions;
 
-        m_actions = std::make_unique<Actions>(m_pixels.get(), menu, ui.status_bar);
+        m_actions = std::make_unique<Actions>(
+                m_pixels.get(), menu, ui.status_bar,
+                [this]
+                {
+                        return m_slice;
+                });
 
         if (!menu->actions().empty())
         {
@@ -171,7 +187,7 @@ void PainterWindow::on_timer_timeout()
         ASSERT(std::this_thread::get_id() == m_thread_id);
 
         m_statistics_widget->update(m_pixels->statistics());
-        m_image_widget->update(m_pixels->slice_r8g8b8a8_with_background(), m_pixels->busy_indices_2d());
+        m_image_widget->update(m_pixels->slice_r8g8b8a8_with_background(m_slice), m_pixels->busy_indices_2d());
         m_actions->set_progresses();
 }
 }

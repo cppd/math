@@ -19,6 +19,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "process.h"
 
+#include <src/com/error.h>
+
 namespace ns::gui::painter_window
 {
 namespace
@@ -39,17 +41,18 @@ std::string action_name(const QAction* action)
 }
 }
 
-Actions::Actions(const Pixels* pixels, QMenu* menu, QStatusBar* status_bar)
+Actions::Actions(const Pixels* pixels, QMenu* menu, QStatusBar* status_bar, std::function<long long()> slice_number)
         : m_pixels(pixels),
           m_worker_threads(create_worker_threads(REQUIRED_THREAD_COUNT, PERMANENT_THREAD_ID, status_bar))
 {
+        ASSERT(slice_number);
         {
                 QAction* action = menu->addAction("Save...");
                 m_connections.emplace_back(QObject::connect(
                         action, &QAction::triggered,
-                        [=, this]()
+                        [this, action, slice_number = std::move(slice_number)]()
                         {
-                                save_to_file(action_name(action));
+                                save_to_file(action_name(action), slice_number());
                         }));
         }
 
@@ -90,9 +93,9 @@ void Actions::set_progresses()
         m_worker_threads->set_progresses();
 }
 
-void Actions::save_to_file(const std::string& action) const
+void Actions::save_to_file(const std::string& action, long long slice) const
 {
-        std::vector<std::byte> slice = m_pixels->slice();
+        std::vector<std::byte> slice_pixels = m_pixels->slice(slice);
 
         m_worker_threads->terminate_and_start(
                 SAVE_THREAD_ID, action,
@@ -100,7 +103,7 @@ void Actions::save_to_file(const std::string& action) const
                 {
                         return painter_window::save_to_file(
                                 m_pixels->screen_size(), m_pixels->background_color(), m_pixels->color_format(),
-                                std::move(slice));
+                                std::move(slice_pixels));
                 });
 }
 

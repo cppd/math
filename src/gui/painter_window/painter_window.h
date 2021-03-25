@@ -48,6 +48,7 @@ private:
         Ui::PainterWindow ui;
 
         std::unique_ptr<Pixels> m_pixels;
+        long long m_slice = 0;
 
         std::unique_ptr<ImageWidget> m_image_widget;
         std::unique_ptr<StatisticsWidget> m_statistics_widget;
