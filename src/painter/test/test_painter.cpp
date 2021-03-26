@@ -68,12 +68,24 @@ class Images final : public Notifier<N>
         {
         }
 
-        void pixel_set(const std::array<int, N>& pixel, const Color& color, float coverage) override
+        void pixel_set(const std::array<int, N>& pixel, const Color& color, Color::DataType background_coefficient)
+                override
         {
                 std::array<int, N> p = pixel;
                 p[1] = m_screen_size[1] - 1 - pixel[1];
 
-                Color c = interpolation(m_background_color, color, coverage);
+                const Color c = [&]
+                {
+                        if (background_coefficient <= 0)
+                        {
+                                return color;
+                        }
+                        if (background_coefficient >= 1)
+                        {
+                                return m_background_color;
+                        }
+                        return color + background_coefficient * m_background_color;
+                }();
                 unsigned char r = color::linear_float_to_srgb_uint8(c.red());
                 unsigned char g = color::linear_float_to_srgb_uint8(c.green());
                 unsigned char b = color::linear_float_to_srgb_uint8(c.blue());

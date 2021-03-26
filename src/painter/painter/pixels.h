@@ -31,56 +31,46 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 namespace ns::painter
 {
-struct PixelInfo final
-{
-        Color color;
-        float coverage;
-};
-
 template <std::size_t N, typename T>
 class Pixel final
 {
         Color m_color_sum{0};
-        std::uint_least16_t m_hit_sample_sum = 0;
-        std::uint_least16_t m_missed_sample_sum = 0;
-
-        Color compute_color() const
-        {
-                if (m_hit_sample_sum > 0)
-                {
-                        Color c = m_color_sum / m_hit_sample_sum;
-                        for (unsigned i = 0; i < 3; ++i)
-                        {
-                                if (c.data()[i] > 1)
-                                {
-                                        c.data()[i] = 1;
-                                }
-                        }
-                        return c;
-                }
-                return Color(0);
-        }
-
-        float compute_coverage() const
-        {
-                return static_cast<float>(m_hit_sample_sum) / (m_hit_sample_sum + m_missed_sample_sum);
-        }
+        Color::DataType m_hit_weight_sum{0};
+        Color::DataType m_background_weight_sum{0};
 
 public:
         void add_sample(const Color& color, const Vector<N, T>& /*point*/)
         {
-                m_hit_sample_sum += 1;
+                m_hit_weight_sum += 1;
                 m_color_sum += color;
         }
 
-        void add_missed()
+        void add_background()
         {
-                m_missed_sample_sum += 1;
+                m_background_weight_sum += 1;
         }
 
-        PixelInfo info() const
+        struct Info final
         {
-                return {.color = compute_color(), .coverage = compute_coverage()};
+                Color color;
+                Color::DataType background_coefficient;
+        };
+
+        Info info() const
+        {
+                Info info;
+                const Color::DataType sum = m_hit_weight_sum + m_background_weight_sum;
+                if (sum > 0)
+                {
+                        info.color = m_color_sum / sum;
+                        info.background_coefficient = m_background_weight_sum / sum;
+                }
+                else
+                {
+                        info.color = Color(0);
+                        info.background_coefficient = 0;
+                }
+                return info;
         }
 };
 
@@ -154,11 +144,11 @@ public:
                         }
                         else
                         {
-                                m_pixels[index].add_missed();
+                                m_pixels[index].add_background();
                         }
                 }
-                PixelInfo info = m_pixels[index].info();
-                m_notifier->pixel_set(pixel, info.color, info.coverage);
+                typename Pixel<N, T>::Info info = m_pixels[index].info();
+                m_notifier->pixel_set(pixel, info.color, info.background_coefficient);
         }
 };
 }
