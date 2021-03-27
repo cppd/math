@@ -45,7 +45,7 @@ class PaintingStatistics
         mutable SpinLock m_lock;
 
 public:
-        PaintingStatistics(long long screen_pixel_count) : m_screen_pixel_count(screen_pixel_count)
+        explicit PaintingStatistics(long long screen_pixel_count) : m_screen_pixel_count(screen_pixel_count)
         {
                 init();
         }
