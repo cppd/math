@@ -32,6 +32,7 @@ enum class ColorFormat
         R32,
         R32G32B32,
         R32G32B32A32,
+        R32G32B32A32_PREMULTIPLIED
 };
 
 [[noreturn]] void unknown_color_format_error(ColorFormat format);
@@ -59,6 +60,7 @@ constexpr unsigned format_pixel_size_in_bytes(ColorFormat format)
         case ColorFormat::R32G32B32:
                 return 12;
         case ColorFormat::R32G32B32A32:
+        case ColorFormat::R32G32B32A32_PREMULTIPLIED:
                 return 16;
         }
         unknown_color_format_error(format);
@@ -85,6 +87,7 @@ constexpr unsigned format_component_count(ColorFormat format)
         case ColorFormat::R32G32B32:
                 return 3;
         case ColorFormat::R32G32B32A32:
+        case ColorFormat::R32G32B32A32_PREMULTIPLIED:
                 return 4;
         }
         unknown_color_format_error(format);

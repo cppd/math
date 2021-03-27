@@ -158,7 +158,7 @@ public:
         {
                 image::Image<N> image;
 
-                image.color_format = image::ColorFormat::R32G32B32A32;
+                image.color_format = image::ColorFormat::R32G32B32A32_PREMULTIPLIED;
                 image.size = m_screen_size;
                 image.pixels.resize(4 * sizeof(float) * m_pixels.size());
 

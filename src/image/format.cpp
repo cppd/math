@@ -60,6 +60,8 @@ std::string format_to_string(ColorFormat format)
                 return "R32G32B32";
         case ColorFormat::R32G32B32A32:
                 return "R32G32B32A32";
+        case ColorFormat::R32G32B32A32_PREMULTIPLIED:
+                return "R32G32B32A32_PREMULTIPLIED";
         }
         unknown_color_format_error(format);
 }

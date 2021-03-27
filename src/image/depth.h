@@ -18,7 +18,10 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #pragma once
 
 #include "conversion.h"
+#include "format.h"
 #include "image.h"
+
+#include <src/com/error.h>
 
 namespace ns::image
 {
@@ -42,6 +45,9 @@ Image<N> convert_to_8_bit(const Image<N>& image)
                 case ColorFormat::R16G16B16A16:
                 case ColorFormat::R32G32B32A32:
                         return ColorFormat::R8G8B8A8_SRGB;
+                case ColorFormat::R32G32B32A32_PREMULTIPLIED:
+                        error("Format " + format_to_string(ColorFormat::R32G32B32A32_PREMULTIPLIED)
+                              + " is not supported in converting to 8 bit");
                 }
                 unknown_color_format_error(image.color_format);
         }();

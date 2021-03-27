@@ -36,6 +36,7 @@ Image<N> convert_to_r_component_format(const Image<N>& image)
                 case ColorFormat::R8_SRGB:
                 case ColorFormat::R16:
                 case ColorFormat::R32:
+                case ColorFormat::R32G32B32A32_PREMULTIPLIED:
                         error("Unsupported image format " + format_to_string(image.color_format)
                               + " for converting image to R component format");
                 case ColorFormat::R8G8B8_SRGB:

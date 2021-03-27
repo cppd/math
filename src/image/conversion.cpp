@@ -645,6 +645,9 @@ void conv_src_to_floats(
                 default:
                         component_count_error(from_format, to_format);
                 }
+        case ColorFormat::R32G32B32A32_PREMULTIPLIED:
+                error("Format " + format_to_string(ColorFormat::R32G32B32A32_PREMULTIPLIED)
+                      + " is not supported in conversion");
         }
         unknown_color_format_error(from_format);
 }
@@ -713,6 +716,9 @@ void conv_floats_to_dst(
                 default:
                         component_count_error(from_format, to_format);
                 }
+        case ColorFormat::R32G32B32A32_PREMULTIPLIED:
+                error("Format " + format_to_string(ColorFormat::R32G32B32A32_PREMULTIPLIED)
+                      + " is not supported in conversion");
         }
         unknown_color_format_error(to_format);
 }

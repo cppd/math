@@ -49,6 +49,7 @@ std::vector<VkFormat> vulkan_transfer_function_formats(image::ColorFormat color_
         case image::ColorFormat::R8G8B8_SRGB:
         case image::ColorFormat::R16G16B16:
         case image::ColorFormat::R32G32B32:
+        case image::ColorFormat::R32G32B32A32_PREMULTIPLIED:
                 error("Unsupported transfer function format: " + image::format_to_string(color_format));
         }
         error_fatal("Unknown color format " + image::format_to_string(color_format));
@@ -70,6 +71,7 @@ std::vector<VkFormat> vulkan_image_formats(image::ColorFormat color_format)
         case image::ColorFormat::R8G8B8_SRGB:
         case image::ColorFormat::R16G16B16:
         case image::ColorFormat::R32G32B32:
+        case image::ColorFormat::R32G32B32A32_PREMULTIPLIED:
                 error("Unsupported volume image format: " + image::format_to_string(color_format));
         }
         error_fatal("Unknown color format " + image::format_to_string(color_format));

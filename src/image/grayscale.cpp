@@ -141,6 +141,7 @@ void make_grayscale(ColorFormat color_format, const std::span<std::byte>& bytes)
         case ColorFormat::R8_SRGB:
         case ColorFormat::R16:
         case ColorFormat::R32:
+        case ColorFormat::R32G32B32A32_PREMULTIPLIED:
                 error("Unsupported image format " + format_to_string(color_format)
                       + " for converting image to grayscale");
         case ColorFormat::R8G8B8_SRGB:
@@ -166,6 +167,7 @@ std::vector<std::byte> convert_to_r_component_format(ColorFormat color_format, c
         case ColorFormat::R8_SRGB:
         case ColorFormat::R16:
         case ColorFormat::R32:
+        case ColorFormat::R32G32B32A32_PREMULTIPLIED:
                 error("Unsupported image format " + format_to_string(color_format)
                       + " for converting to R component format");
         case ColorFormat::R8G8B8_SRGB:

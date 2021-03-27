@@ -219,16 +219,53 @@ void blend_alpha_r32g32b32a32(const std::span<std::byte>& bytes, const Color& bl
         {
                 std::array<T, 4> pixel;
                 std::memcpy(pixel.data(), ptr, 4 * sizeof(T));
-                if (pixel[3] == 0.0f)
+                if (pixel[3] <= 0)
                 {
                         std::memcpy(ptr, blend_pixel.data(), 3 * sizeof(T));
                 }
-                else if (pixel[3] < 1.0f)
+                else if (pixel[3] < 1)
                 {
                         float alpha = pixel[3];
                         pixel[0] = interpolation(blend_pixel[0], pixel[0], alpha);
                         pixel[1] = interpolation(blend_pixel[1], pixel[1], alpha);
                         pixel[2] = interpolation(blend_pixel[2], pixel[2], alpha);
+                        std::memcpy(ptr, pixel.data(), 3 * sizeof(T));
+                }
+        }
+}
+
+void blend_alpha_r32g32b32a32_premultiplied(const std::span<std::byte>& bytes, const Color& blend_color)
+{
+        using T = float;
+
+        const std::size_t pixel_size = 4 * sizeof(T);
+        const std::size_t pixel_count = bytes.size() / pixel_size;
+        if (pixel_count * pixel_size != bytes.size())
+        {
+                error("Error size " + to_string(bytes.size()) + " for blending R32G32B32A32_PREMULTIPLIED");
+        }
+
+        std::array<T, 3> blend_pixel;
+        blend_pixel[0] = blend_color.data()[0];
+        blend_pixel[1] = blend_color.data()[1];
+        blend_pixel[2] = blend_color.data()[2];
+
+        std::byte* ptr = bytes.data();
+        for (std::size_t i = 0; i < pixel_count; ++i, ptr += pixel_size)
+        {
+                std::array<T, 4> pixel;
+                std::memcpy(pixel.data(), ptr, 4 * sizeof(T));
+                if (pixel[3] <= 0)
+                {
+                        std::memcpy(ptr, blend_pixel.data(), 3 * sizeof(T));
+                }
+                else if (pixel[3] < 1)
+                {
+                        float alpha = pixel[3];
+                        float k = 1 - alpha;
+                        pixel[0] = k * blend_pixel[0] + pixel[0];
+                        pixel[1] = k * blend_pixel[1] + pixel[1];
+                        pixel[2] = k * blend_pixel[2] + pixel[2];
                         std::memcpy(ptr, pixel.data(), 3 * sizeof(T));
                 }
         }
@@ -288,6 +325,10 @@ void blend_alpha(ColorFormat color_format, const std::span<std::byte>& bytes, co
         else if (color_format == ColorFormat::R32G32B32A32)
         {
                 blend_alpha_r32g32b32a32(bytes, color);
+        }
+        else if (color_format == ColorFormat::R32G32B32A32_PREMULTIPLIED)
+        {
+                blend_alpha_r32g32b32a32_premultiplied(bytes, color);
         }
         else
         {
