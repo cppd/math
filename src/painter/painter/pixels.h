@@ -24,6 +24,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/color/color.h>
 #include <src/com/global_index.h>
 #include <src/com/thread.h>
+#include <src/image/image.h>
 
 #include <array>
 #include <optional>
@@ -95,6 +96,7 @@ class Pixels final
                 return std::nullopt;
         }
 
+        const std::array<int, N> m_screen_size;
         Notifier<N>* const m_notifier;
 
         const GlobalIndex<N, long long> m_global_index;
@@ -106,7 +108,8 @@ class Pixels final
 
 public:
         explicit Pixels(const std::array<int, N>& screen_size, Notifier<N>* notifier)
-                : m_notifier(notifier),
+                : m_screen_size(screen_size),
+                  m_notifier(notifier),
                   m_global_index(screen_size),
                   m_pixels(m_global_index.count()),
                   m_paintbrush(screen_size, PANTBRUSH_WIDTH)
@@ -149,6 +152,42 @@ public:
                 }
                 typename Pixel<N, T>::Info info = m_pixels[index].info();
                 m_notifier->pixel_set(pixel, info.color, info.alpha);
+        }
+
+        image::Image<N> image() const
+        {
+                image::Image<N> image;
+
+                image.color_format = image::ColorFormat::R32G32B32A32;
+                image.size = m_screen_size;
+                image.pixels.resize(4 * sizeof(float) * m_pixels.size());
+
+                std::byte* ptr = image.pixels.data();
+                for (const Pixel<N, T>& pixel : m_pixels)
+                {
+                        typename Pixel<N, T>::Info info = pixel.info();
+
+                        float v;
+
+                        v = info.color.red();
+                        std::memcpy(ptr, &v, sizeof(v));
+                        ptr += sizeof(v);
+
+                        v = info.color.green();
+                        std::memcpy(ptr, &v, sizeof(v));
+                        ptr += sizeof(v);
+
+                        v = info.color.blue();
+                        std::memcpy(ptr, &v, sizeof(v));
+                        ptr += sizeof(v);
+
+                        v = info.alpha;
+                        std::memcpy(ptr, &v, sizeof(v));
+                        ptr += sizeof(v);
+                }
+                ASSERT(ptr == image.pixels.data() + image.pixels.size());
+
+                return image;
         }
 };
 }

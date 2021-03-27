@@ -71,21 +71,19 @@ public:
                 m_sample_count.fetch_add(sample_count, std::memory_order_relaxed);
         }
 
-        void pass_done(bool prepare_next)
+        void pass_done()
         {
                 const TimePoint now = time();
-
                 std::lock_guard lg(m_lock);
+                m_previous_pass_duration = duration(m_pass_start_time, now);
+        }
 
-                const double previous_pass_duration = duration(m_pass_start_time, now);
-
-                m_previous_pass_duration = previous_pass_duration;
-                if (prepare_next)
-                {
-                        ++m_pass_number;
-                        m_pass_start_time = now;
-                        m_pass_start_pixel_count = m_pixel_count;
-                }
+        void next_pass()
+        {
+                std::lock_guard lg(m_lock);
+                ++m_pass_number;
+                m_pass_start_time = time();
+                m_pass_start_pixel_count = m_pixel_count;
         }
 
         Statistics statistics() const

@@ -152,7 +152,7 @@ class PainterPixels final : public Pixels, public painter::Notifier<N - 1>
                 std::memcpy(&m_pixels_16[PIXEL_SIZE_16 * index], c_16.data(), c_16.size() * sizeof(c_16[0]));
         }
 
-        void pass_done() override
+        void pass_done(image::Image<N - 1>&&) override
         {
                 std::lock_guard lg(m_saved_pixels_16_mutex);
 

@@ -97,7 +97,7 @@ class Images final : public Notifier<N>
                 std::memcpy(ptr++, &b, 1);
         }
 
-        void pass_done() override
+        void pass_done(image::Image<N>&&) override
         {
         }
 

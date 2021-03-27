@@ -175,18 +175,20 @@ void prepare_next_pass(
                 return;
         }
 
+        statistics->pass_done();
+
+        notifier->pass_done(pixel_data->pixels.image());
+
         if (pass_data->continue_painting())
         {
-                statistics->pass_done(true);
+                statistics->next_pass();
                 pixel_data->pixels.next_pass();
                 pixel_data->sampler.next_pass();
         }
         else
         {
-                statistics->pass_done(false);
                 *stop = true;
         }
-        notifier->pass_done();
 }
 
 template <std::size_t N, typename T>
