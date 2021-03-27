@@ -102,13 +102,12 @@ class PainterPixels final : public Pixels, public painter::Notifier<N - 1>
                 m_busy_indices_2d[thread_number] = NULL_INDEX;
         }
 
-        void pixel_set(const std::array<int, N - 1>& pixel, const Color& color, Color::DataType background_coefficient)
-                override
+        void pixel_set(const std::array<int, N - 1>& pixel, const Color& color, Color::DataType alpha) override
         {
                 std::array<uint8_t, 3> c_8;
                 std::array<uint16_t, 4> c_16;
 
-                if (background_coefficient <= 0)
+                if (alpha >= 1)
                 {
                         c_8[0] = color::linear_float_to_srgb_uint8(color.red());
                         c_8[1] = color::linear_float_to_srgb_uint8(color.green());
@@ -118,7 +117,7 @@ class PainterPixels final : public Pixels, public painter::Notifier<N - 1>
                         c_16[2] = color::linear_float_to_linear_uint16(color.blue());
                         c_16[3] = (1 << 16) - 1;
                 }
-                else if (background_coefficient >= 1)
+                else if (alpha <= 0)
                 {
                         c_8[0] = color::linear_float_to_srgb_uint8(m_background_color.red());
                         c_8[1] = color::linear_float_to_srgb_uint8(m_background_color.green());
@@ -131,13 +130,12 @@ class PainterPixels final : public Pixels, public painter::Notifier<N - 1>
                 else
                 {
                         {
-                                const Color c = color + background_coefficient * m_background_color;
+                                const Color c = color + (1 - alpha) * m_background_color;
                                 c_8[0] = color::linear_float_to_srgb_uint8(c.red());
                                 c_8[1] = color::linear_float_to_srgb_uint8(c.green());
                                 c_8[2] = color::linear_float_to_srgb_uint8(c.blue());
                         }
                         {
-                                const Color::DataType alpha = 1 - background_coefficient;
                                 const Color::DataType alpha_r = 1 / alpha;
                                 c_16[0] = color::linear_float_to_linear_uint16(color.red() * alpha_r);
                                 c_16[1] = color::linear_float_to_linear_uint16(color.green() * alpha_r);

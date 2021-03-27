@@ -53,7 +53,7 @@ public:
         struct Info final
         {
                 Color color;
-                Color::DataType background_coefficient;
+                Color::DataType alpha;
         };
 
         Info info() const
@@ -63,12 +63,12 @@ public:
                 if (sum > 0)
                 {
                         info.color = m_color_sum / sum;
-                        info.background_coefficient = m_background_weight_sum / sum;
+                        info.alpha = 1 - m_background_weight_sum / sum;
                 }
                 else
                 {
                         info.color = Color(0);
-                        info.background_coefficient = 0;
+                        info.alpha = 0;
                 }
                 return info;
         }
@@ -148,7 +148,7 @@ public:
                         }
                 }
                 typename Pixel<N, T>::Info info = m_pixels[index].info();
-                m_notifier->pixel_set(pixel, info.color, info.background_coefficient);
+                m_notifier->pixel_set(pixel, info.color, info.alpha);
         }
 };
 }

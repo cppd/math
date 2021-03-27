@@ -35,10 +35,7 @@ protected:
 public:
         virtual void thread_busy(unsigned thread_number, const std::array<int, N>& pixel) = 0;
         virtual void thread_free(unsigned thread_number) = 0;
-        virtual void pixel_set(
-                const std::array<int, N>& pixel,
-                const Color& c,
-                Color::DataType background_coefficient) = 0;
+        virtual void pixel_set(const std::array<int, N>& pixel, const Color& color, Color::DataType alpha) = 0;
         virtual void pass_done() = 0;
 
         virtual void error_message(const std::string& msg) = 0;
