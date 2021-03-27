@@ -83,7 +83,7 @@ std::function<void(ProgressRatioList*)> save_to_file(
                 ASSERT(image::format_component_count(color_format) == 4);
                 if (parameters.with_background)
                 {
-                        image::blend_alpha(color_format, image.pixels, background);
+                        image::blend_alpha(&image.color_format, image.pixels, background);
                         image = image::delete_alpha(image);
                 }
 
@@ -139,19 +139,19 @@ std::function<void(ProgressRatioList*)> save_all_to_files(
 
                                         if (parameters.with_background && !*parameters.grayscale)
                                         {
-                                                image::blend_alpha(color_format, image.pixels, background);
+                                                image::blend_alpha(&image.color_format, image.pixels, background);
                                                 image = image::delete_alpha(image);
                                         }
                                         else if (parameters.with_background && *parameters.grayscale)
                                         {
-                                                image::blend_alpha(color_format, image.pixels, background);
+                                                image::blend_alpha(&image.color_format, image.pixels, background);
                                                 image::make_grayscale(image.color_format, image.pixels);
                                                 image = image::convert_to_r_component_format(image);
                                         }
                                         else if (!parameters.with_background && *parameters.grayscale)
                                         {
                                                 image::make_grayscale(image.color_format, image.pixels);
-                                                image::blend_alpha(color_format, image.pixels, Color(0));
+                                                image::blend_alpha(&image.color_format, image.pixels, Color(0));
                                                 image = image::convert_to_r_component_format(image);
                                         }
 
@@ -214,20 +214,20 @@ std::function<void(ProgressRatioList*)> add_volume(
 
                                         if (parameters.with_background && !*parameters.grayscale)
                                         {
-                                                image::blend_alpha(color_format, image.pixels, background);
+                                                image::blend_alpha(&image.color_format, image.pixels, background);
                                                 constexpr float ALPHA = 1;
                                                 image::set_alpha(color_format, image.pixels, ALPHA);
                                         }
                                         else if (parameters.with_background && *parameters.grayscale)
                                         {
-                                                image::blend_alpha(color_format, image.pixels, background);
+                                                image::blend_alpha(&image.color_format, image.pixels, background);
                                                 image::make_grayscale(image.color_format, image.pixels);
                                                 image = image::convert_to_r_component_format(image);
                                         }
                                         else if (!parameters.with_background && *parameters.grayscale)
                                         {
                                                 image::make_grayscale(image.color_format, image.pixels);
-                                                image::blend_alpha(color_format, image.pixels, Color(0));
+                                                image::blend_alpha(&image.color_format, image.pixels, Color(0));
                                                 image = image::convert_to_r_component_format(image);
                                         }
 

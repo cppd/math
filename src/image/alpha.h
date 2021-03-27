@@ -26,7 +26,7 @@ namespace ns::image
 {
 std::vector<std::byte> add_alpha(ColorFormat color_format, const std::span<const std::byte>& bytes, float alpha);
 std::vector<std::byte> delete_alpha(ColorFormat color_format, const std::span<const std::byte>& bytes);
-void blend_alpha(ColorFormat color_format, const std::span<std::byte>& bytes, const Color& color);
+void blend_alpha(ColorFormat* color_format, const std::span<std::byte>& bytes, const Color& color);
 void set_alpha(ColorFormat color_format, const std::span<std::byte>& bytes, float alpha);
 
 template <std::size_t N>
