@@ -588,6 +588,7 @@ void conv_src_to_floats(
                 conv_r8g8b8_srgb_to_r32g32b32(from, pixels);
                 return;
         case ColorFormat::R8G8B8A8_SRGB:
+        case ColorFormat::R8G8B8A8_SRGB_PREMULTIPLIED:
                 check_component_count_alpha(from_format, to_format);
                 conv_r8g8b8a8_srgb_to_r32g32b32a32(from, pixels);
                 return;
@@ -600,6 +601,7 @@ void conv_src_to_floats(
                 conv_r16g16b16_to_r32g32b32(from, pixels);
                 return;
         case ColorFormat::R16G16B16A16:
+        case ColorFormat::R16G16B16A16_PREMULTIPLIED:
                 check_component_count_alpha(from_format, to_format);
                 conv_r16g16b16a16_to_r32g32b32a32(from, pixels);
                 return;
@@ -643,6 +645,7 @@ void conv_floats_to_dst(
                         conversion_error(from_format, to_format);
                 }
         case ColorFormat::R8G8B8A8_SRGB:
+        case ColorFormat::R8G8B8A8_SRGB_PREMULTIPLIED:
                 switch (format_component_count(from_format))
                 {
                 case 4:
@@ -670,6 +673,7 @@ void conv_floats_to_dst(
                         conversion_error(from_format, to_format);
                 }
         case ColorFormat::R16G16B16A16:
+        case ColorFormat::R16G16B16A16_PREMULTIPLIED:
                 switch (format_component_count(from_format))
                 {
                 case 4:
@@ -727,6 +731,8 @@ bool is_premultiplied(ColorFormat format)
         case ColorFormat::R32G32B32:
         case ColorFormat::R32G32B32A32:
                 return false;
+        case ColorFormat::R8G8B8A8_SRGB_PREMULTIPLIED:
+        case ColorFormat::R16G16B16A16_PREMULTIPLIED:
         case ColorFormat::R32G32B32A32_PREMULTIPLIED:
                 return true;
         }

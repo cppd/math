@@ -48,12 +48,16 @@ std::string format_to_string(ColorFormat format)
                 return "R8G8B8_SRGB";
         case ColorFormat::R8G8B8A8_SRGB:
                 return "R8G8B8A8_SRGB";
+        case ColorFormat::R8G8B8A8_SRGB_PREMULTIPLIED:
+                return "R8G8B8A8_SRGB_PREMULTIPLIED";
         case ColorFormat::R16:
                 return "R16";
         case ColorFormat::R16G16B16:
                 return "R16G16B16";
         case ColorFormat::R16G16B16A16:
                 return "R16G16B16A16";
+        case ColorFormat::R16G16B16A16_PREMULTIPLIED:
+                return "R16G16B16A16_PREMULTIPLIED";
         case ColorFormat::R32:
                 return "R32";
         case ColorFormat::R32G32B32:
