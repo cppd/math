@@ -24,6 +24,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <src/com/alg.h>
 #include <src/com/merge.h>
+#include <src/image/conversion.h>
 #include <src/image/format.h>
 #include <src/vulkan/buffers.h>
 
@@ -65,17 +66,17 @@ std::vector<VkFormat> vulkan_image_formats(image::ColorFormat color_format)
         case image::ColorFormat::R32:
                 return {VK_FORMAT_R16_UNORM, VK_FORMAT_R32_SFLOAT};
         case image::ColorFormat::R8G8B8A8_SRGB:
+        case image::ColorFormat::R8G8B8A8_SRGB_PREMULTIPLIED:
                 return {VK_FORMAT_R8G8B8A8_SRGB, VK_FORMAT_R16G16B16A16_UNORM, VK_FORMAT_R32G32B32A32_SFLOAT};
         case image::ColorFormat::R16G16B16A16:
+        case image::ColorFormat::R16G16B16A16_PREMULTIPLIED:
         case image::ColorFormat::R32G32B32A32:
+        case image::ColorFormat::R32G32B32A32_PREMULTIPLIED:
                 return {VK_FORMAT_R16G16B16A16_UNORM, VK_FORMAT_R8G8B8A8_SRGB, VK_FORMAT_R32G32B32A32_SFLOAT};
         case image::ColorFormat::R8_SRGB:
         case image::ColorFormat::R8G8B8_SRGB:
         case image::ColorFormat::R16G16B16:
         case image::ColorFormat::R32G32B32:
-        case image::ColorFormat::R8G8B8A8_SRGB_PREMULTIPLIED:
-        case image::ColorFormat::R16G16B16A16_PREMULTIPLIED:
-        case image::ColorFormat::R32G32B32A32_PREMULTIPLIED:
                 error("Unsupported volume image format: " + image::format_to_string(color_format));
         }
         error_fatal("Unknown color format " + image::format_to_string(color_format));
@@ -175,7 +176,7 @@ class Impl final : public VolumeObject
 
         VolumeBuffer m_buffer;
         std::unique_ptr<vulkan::ImageWithMemory> m_image;
-        image::ColorFormat m_image_color_format;
+        std::vector<VkFormat> m_image_formats;
         std::unique_ptr<vulkan::ImageWithMemory> m_transfer_function;
 
         std::unordered_map<VkDescriptorSetLayout, vulkan::Descriptors> m_descriptor_sets;
@@ -306,11 +307,50 @@ class Impl final : public VolumeObject
                         VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL, image.color_format, image.pixels);
         }
 
+        void write_pixels(VkImageLayout image_layout, const image::Image<3>& image)
+        {
+                const auto write =
+                        [this, &image_layout](image::ColorFormat color_format, const std::vector<std::byte>& pixels)
+                {
+                        m_image->write_pixels(
+                                m_transfer_command_pool, m_transfer_queue, image_layout,
+                                VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL, color_format, pixels);
+                };
+
+                switch (image.color_format)
+                {
+                case image::ColorFormat::R8_SRGB:
+                case image::ColorFormat::R16:
+                case image::ColorFormat::R32:
+                case image::ColorFormat::R8G8B8_SRGB:
+                case image::ColorFormat::R16G16B16:
+                case image::ColorFormat::R32G32B32:
+                case image::ColorFormat::R8G8B8A8_SRGB:
+                case image::ColorFormat::R16G16B16A16:
+                case image::ColorFormat::R32G32B32A32:
+                {
+                        write(image.color_format, image.pixels);
+                        return;
+                }
+                case image::ColorFormat::R8G8B8A8_SRGB_PREMULTIPLIED:
+                case image::ColorFormat::R16G16B16A16_PREMULTIPLIED:
+                case image::ColorFormat::R32G32B32A32_PREMULTIPLIED:
+                {
+                        constexpr image::ColorFormat COLOR_FORMAT = image::ColorFormat::R32G32B32A32;
+                        std::vector<std::byte> pixels;
+                        image::format_conversion(image.color_format, image.pixels, COLOR_FORMAT, &pixels);
+                        write(COLOR_FORMAT, pixels);
+                        return;
+                }
+                }
+                error_fatal("Unknown color format " + image::format_to_string(image.color_format));
+        }
+
         void set_image(const image::Image<3>& image, bool* size_changed)
         {
                 VkImageLayout image_layout;
 
-                if (!m_image || m_image_color_format != image.color_format
+                if (!m_image || m_image_formats != vulkan_image_formats(image.color_format)
                     || m_image->width() != static_cast<unsigned>(image.size[0])
                     || m_image->height() != static_cast<unsigned>(image.size[1])
                     || m_image->depth() != static_cast<unsigned>(image.size[2]))
@@ -319,12 +359,12 @@ class Impl final : public VolumeObject
 
                         buffer_set_color_volume(!is_scalar_volume(image.color_format));
 
-                        m_image_color_format = image.color_format;
+                        m_image_formats = vulkan_image_formats(image.color_format);
 
                         m_image.reset();
                         m_image = std::make_unique<vulkan::ImageWithMemory>(
-                                m_device, m_transfer_command_pool, m_transfer_queue, m_family_indices,
-                                vulkan_image_formats(image.color_format), VK_SAMPLE_COUNT_1_BIT, VK_IMAGE_TYPE_3D,
+                                m_device, m_transfer_command_pool, m_transfer_queue, m_family_indices, m_image_formats,
+                                VK_SAMPLE_COUNT_1_BIT, VK_IMAGE_TYPE_3D,
                                 vulkan::make_extent(image.size[0], image.size[1], image.size[2]),
                                 VK_IMAGE_LAYOUT_UNDEFINED,
                                 VK_IMAGE_USAGE_SAMPLED_BIT | VK_IMAGE_USAGE_TRANSFER_DST_BIT);
@@ -338,9 +378,7 @@ class Impl final : public VolumeObject
                         image_layout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
                 }
 
-                m_image->write_pixels(
-                        m_transfer_command_pool, m_transfer_queue, image_layout,
-                        VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL, image.color_format, image.pixels);
+                write_pixels(image_layout, image);
         }
 
         const VkDescriptorSet& descriptor_set(VkDescriptorSetLayout descriptor_set_layout) const override
