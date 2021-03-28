@@ -29,7 +29,7 @@ namespace
 {
 static_assert(sizeof(float) == sizeof(uint32_t));
 
-[[noreturn]] void component_count_error(ColorFormat from_format, ColorFormat to_format)
+[[noreturn]] void conversion_error(ColorFormat from_format, ColorFormat to_format)
 {
         error("Conversion between " + format_to_string(from_format) + " and " + format_to_string(to_format)
               + " is not supported");
@@ -185,41 +185,6 @@ void conv_r8g8b8a8_srgb_to_r32g32b32a32(const std::span<const std::byte>& bytes,
         }
 }
 
-void conv_r8g8b8a8_srgb_to_r32g32b32(const std::span<const std::byte>& bytes, std::vector<float>* floats)
-{
-        using From = uint8_t;
-
-        unsigned component_count = bytes.size() / sizeof(From);
-        ASSERT((component_count % 4) == 0);
-        ASSERT(bytes.size() == (component_count * sizeof(From)));
-
-        floats->resize((component_count / 4) * 3);
-
-        const std::byte* from = bytes.data();
-        const std::byte* end = from + bytes.size();
-        float* to = floats->data();
-
-        while (from != end)
-        {
-                From red;
-                std::memcpy(&red, from, sizeof(From));
-                *to++ = color::srgb_uint8_to_linear_float(red);
-                from += sizeof(From);
-
-                From green;
-                std::memcpy(&green, from, sizeof(From));
-                *to++ = color::srgb_uint8_to_linear_float(green);
-                from += sizeof(From);
-
-                From blue;
-                std::memcpy(&blue, from, sizeof(From));
-                *to++ = color::srgb_uint8_to_linear_float(blue);
-                from += sizeof(From);
-
-                from += sizeof(From);
-        }
-}
-
 void conv_r16g16b16a16_to_r32g32b32a32(const std::span<const std::byte>& bytes, std::vector<float>* floats)
 {
         using From = uint16_t;
@@ -255,63 +220,6 @@ void conv_r16g16b16a16_to_r32g32b32a32(const std::span<const std::byte>& bytes, 
                 std::memcpy(&alpha, from, sizeof(From));
                 *to++ = color::linear_uint16_to_linear_float(alpha);
                 from += sizeof(From);
-        }
-}
-
-void conv_r16g16b16a16_to_r32g32b32(const std::span<const std::byte>& bytes, std::vector<float>* floats)
-{
-        using From = uint16_t;
-
-        unsigned component_count = bytes.size() / sizeof(From);
-        ASSERT(bytes.size() == (component_count * sizeof(From)));
-        ASSERT((component_count % 4) == 0);
-
-        floats->resize((component_count / 4) * 3);
-
-        const std::byte* from = bytes.data();
-        const std::byte* end = from + bytes.size();
-        float* to = floats->data();
-
-        while (from != end)
-        {
-                From red;
-                std::memcpy(&red, from, sizeof(From));
-                *to++ = color::linear_uint16_to_linear_float(red);
-                from += sizeof(From);
-
-                From green;
-                std::memcpy(&green, from, sizeof(From));
-                *to++ = color::linear_uint16_to_linear_float(green);
-                from += sizeof(From);
-
-                From blue;
-                std::memcpy(&blue, from, sizeof(From));
-                *to++ = color::linear_uint16_to_linear_float(blue);
-                from += sizeof(From);
-
-                from += sizeof(From);
-        }
-}
-
-void conv_r32g32b32a32_to_r32g32b32(const std::span<const std::byte>& bytes, std::vector<float>* floats)
-{
-        using From = float;
-
-        unsigned component_count = bytes.size() / sizeof(From);
-        ASSERT(bytes.size() == (component_count * sizeof(From)));
-        ASSERT((component_count % 4) == 0);
-
-        floats->resize((component_count / 4) * 3);
-
-        const std::byte* from = bytes.data();
-        const std::byte* end = from + bytes.size();
-        float* to = floats->data();
-
-        while (from != end)
-        {
-                std::memcpy(to, from, 3 * sizeof(From));
-                to += 3;
-                from += 4 * sizeof(From);
         }
 }
 
@@ -532,6 +440,35 @@ void conv_r32g32b32a32_to_r8g8b8a8_srgb(const std::vector<float>& floats, const 
         }
 }
 
+void conv_r32g32b32a32_to_r8g8b8_srgb(const std::vector<float>& floats, const std::span<std::byte>& bytes)
+{
+        using To = uint8_t;
+
+        ASSERT((floats.size() % 4) == 0);
+        ASSERT(bytes.size() == (floats.size() / 4) * 3 * sizeof(To));
+
+        const float* from = floats.data();
+        const float* end = from + floats.size();
+        std::byte* to = bytes.data();
+
+        while (from != end)
+        {
+                To red = color::linear_float_to_srgb_uint8<float>(*from++);
+                std::memcpy(to, &red, sizeof(To));
+                to += sizeof(To);
+
+                To green = color::linear_float_to_srgb_uint8<float>(*from++);
+                std::memcpy(to, &green, sizeof(To));
+                to += sizeof(To);
+
+                To blue = color::linear_float_to_srgb_uint8<float>(*from++);
+                std::memcpy(to, &blue, sizeof(To));
+                to += sizeof(To);
+
+                ++from;
+        }
+}
+
 void conv_r32g32b32a32_to_r16g16b16a16(const std::vector<float>& floats, const std::span<std::byte>& bytes)
 {
         using To = uint16_t;
@@ -563,6 +500,54 @@ void conv_r32g32b32a32_to_r16g16b16a16(const std::vector<float>& floats, const s
         }
 }
 
+void conv_r32g32b32a32_to_r16g16b16(const std::vector<float>& floats, const std::span<std::byte>& bytes)
+{
+        using To = uint16_t;
+
+        ASSERT((floats.size() % 4) == 0);
+        ASSERT(bytes.size() == (floats.size() / 4) * 3 * sizeof(To));
+
+        const float* from = floats.data();
+        const float* end = from + floats.size();
+        std::byte* to = bytes.data();
+
+        while (from != end)
+        {
+                To red = color::linear_float_to_linear_uint16(*from++);
+                std::memcpy(to, &red, sizeof(To));
+                to += sizeof(To);
+
+                To green = color::linear_float_to_linear_uint16(*from++);
+                std::memcpy(to, &green, sizeof(To));
+                to += sizeof(To);
+
+                To blue = color::linear_float_to_linear_uint16(*from++);
+                std::memcpy(to, &blue, sizeof(To));
+                to += sizeof(To);
+
+                ++from;
+        }
+}
+
+void conv_r32g32b32a32_to_r32g32b32(const std::vector<float>& floats, const std::span<std::byte>& bytes)
+{
+        using To = float;
+
+        ASSERT((floats.size() % 4) == 0);
+        ASSERT(bytes.size() == (floats.size() / 4) * 3 * sizeof(To));
+
+        const float* from = floats.data();
+        const float* end = from + floats.size();
+        std::byte* to = bytes.data();
+
+        while (from != end)
+        {
+                std::memcpy(to, from, 3 * sizeof(To));
+                from += 4;
+                to += 3 * sizeof(To);
+        }
+}
+
 void conv_copy(const std::vector<float>& floats, const std::span<std::byte>& bytes)
 {
         ASSERT(bytes.size() == data_size(floats));
@@ -573,7 +558,16 @@ void check_equal_component_count(ColorFormat from_format, ColorFormat to_format)
 {
         if (format_component_count(from_format) != format_component_count(to_format))
         {
-                component_count_error(from_format, to_format);
+                conversion_error(from_format, to_format);
+        }
+}
+
+void check_component_count_alpha(ColorFormat from_format, ColorFormat to_format)
+{
+        if (!((format_component_count(from_format) == 4 || format_component_count(from_format) == 3)
+              && (format_component_count(to_format) == 4 || format_component_count(to_format) == 3)))
+        {
+                conversion_error(from_format, to_format);
         }
 }
 
@@ -590,64 +584,35 @@ void conv_src_to_floats(
                 conv_r8_srgb_to_r32(from, pixels);
                 return;
         case ColorFormat::R8G8B8_SRGB:
-                check_equal_component_count(from_format, to_format);
+                check_component_count_alpha(from_format, to_format);
                 conv_r8g8b8_srgb_to_r32g32b32(from, pixels);
                 return;
         case ColorFormat::R8G8B8A8_SRGB:
-                switch (format_component_count(to_format))
-                {
-                case 4:
-                        conv_r8g8b8a8_srgb_to_r32g32b32a32(from, pixels);
-                        return;
-                case 3:
-                        conv_r8g8b8a8_srgb_to_r32g32b32(from, pixels);
-                        return;
-                default:
-                        component_count_error(from_format, to_format);
-                }
+                check_component_count_alpha(from_format, to_format);
+                conv_r8g8b8a8_srgb_to_r32g32b32a32(from, pixels);
+                return;
         case ColorFormat::R16:
                 check_equal_component_count(from_format, to_format);
                 conv_r16_to_r32(from, pixels);
                 return;
         case ColorFormat::R16G16B16:
-                check_equal_component_count(from_format, to_format);
+                check_component_count_alpha(from_format, to_format);
                 conv_r16g16b16_to_r32g32b32(from, pixels);
                 return;
         case ColorFormat::R16G16B16A16:
-                switch (format_component_count(to_format))
-                {
-                case 4:
-                        conv_r16g16b16a16_to_r32g32b32a32(from, pixels);
-                        return;
-                case 3:
-                        conv_r16g16b16a16_to_r32g32b32(from, pixels);
-                        return;
-                default:
-                        component_count_error(from_format, to_format);
-                }
+                check_component_count_alpha(from_format, to_format);
+                conv_r16g16b16a16_to_r32g32b32a32(from, pixels);
+                return;
         case ColorFormat::R32:
                 check_equal_component_count(from_format, to_format);
                 conv_copy(from, pixels);
                 return;
         case ColorFormat::R32G32B32:
-                check_equal_component_count(from_format, to_format);
+        case ColorFormat::R32G32B32A32:
+        case ColorFormat::R32G32B32A32_PREMULTIPLIED:
+                check_component_count_alpha(from_format, to_format);
                 conv_copy(from, pixels);
                 return;
-        case ColorFormat::R32G32B32A32:
-                switch (format_component_count(to_format))
-                {
-                case 4:
-                        conv_copy(from, pixels);
-                        return;
-                case 3:
-                        conv_r32g32b32a32_to_r32g32b32(from, pixels);
-                        return;
-                default:
-                        component_count_error(from_format, to_format);
-                }
-        case ColorFormat::R32G32B32A32_PREMULTIPLIED:
-                error("Format " + format_to_string(ColorFormat::R32G32B32A32_PREMULTIPLIED)
-                      + " is not supported in conversion");
         }
         unknown_color_format_error(from_format);
 }
@@ -666,8 +631,17 @@ void conv_floats_to_dst(
                 return;
         }
         case ColorFormat::R8G8B8_SRGB:
-                conv_r32g32b32_to_r8g8b8_srgb(pixels, to);
-                return;
+                switch (format_component_count(from_format))
+                {
+                case 4:
+                        conv_r32g32b32a32_to_r8g8b8_srgb(pixels, to);
+                        return;
+                case 3:
+                        conv_r32g32b32_to_r8g8b8_srgb(pixels, to);
+                        return;
+                default:
+                        conversion_error(from_format, to_format);
+                }
         case ColorFormat::R8G8B8A8_SRGB:
                 switch (format_component_count(from_format))
                 {
@@ -678,14 +652,23 @@ void conv_floats_to_dst(
                         conv_r32g32b32_to_r8g8b8a8_srgb(pixels, to);
                         return;
                 default:
-                        component_count_error(from_format, to_format);
+                        conversion_error(from_format, to_format);
                 }
         case ColorFormat::R16:
                 conv_r32_to_r16(pixels, to);
                 return;
         case ColorFormat::R16G16B16:
-                conv_r32g32b32_to_r16g16b16(pixels, to);
-                return;
+                switch (format_component_count(from_format))
+                {
+                case 4:
+                        conv_r32g32b32a32_to_r16g16b16(pixels, to);
+                        return;
+                case 3:
+                        conv_r32g32b32_to_r16g16b16(pixels, to);
+                        return;
+                default:
+                        conversion_error(from_format, to_format);
+                }
         case ColorFormat::R16G16B16A16:
                 switch (format_component_count(from_format))
                 {
@@ -696,15 +679,25 @@ void conv_floats_to_dst(
                         conv_r32g32b32_to_r16g16b16a16(pixels, to);
                         return;
                 default:
-                        component_count_error(from_format, to_format);
+                        conversion_error(from_format, to_format);
                 }
         case ColorFormat::R32:
                 conv_copy(pixels, to);
                 return;
         case ColorFormat::R32G32B32:
-                conv_copy(pixels, to);
-                return;
+                switch (format_component_count(from_format))
+                {
+                case 4:
+                        conv_r32g32b32a32_to_r32g32b32(pixels, to);
+                        return;
+                case 3:
+                        conv_copy(pixels, to);
+                        return;
+                default:
+                        conversion_error(from_format, to_format);
+                }
         case ColorFormat::R32G32B32A32:
+        case ColorFormat::R32G32B32A32_PREMULTIPLIED:
                 switch (format_component_count(from_format))
                 {
                 case 4:
@@ -714,13 +707,81 @@ void conv_floats_to_dst(
                         conv_r32g32b32_to_r32g32b32a32(pixels, to);
                         return;
                 default:
-                        component_count_error(from_format, to_format);
+                        conversion_error(from_format, to_format);
                 }
-        case ColorFormat::R32G32B32A32_PREMULTIPLIED:
-                error("Format " + format_to_string(ColorFormat::R32G32B32A32_PREMULTIPLIED)
-                      + " is not supported in conversion");
         }
         unknown_color_format_error(to_format);
+}
+
+bool is_premultiplied(ColorFormat format)
+{
+        switch (format)
+        {
+        case ColorFormat::R8_SRGB:
+        case ColorFormat::R8G8B8_SRGB:
+        case ColorFormat::R8G8B8A8_SRGB:
+        case ColorFormat::R16:
+        case ColorFormat::R16G16B16:
+        case ColorFormat::R16G16B16A16:
+        case ColorFormat::R32:
+        case ColorFormat::R32G32B32:
+        case ColorFormat::R32G32B32A32:
+                return false;
+        case ColorFormat::R32G32B32A32_PREMULTIPLIED:
+                return true;
+        }
+        unknown_color_format_error(format);
+}
+
+void undo_alpha_multiplication(std::vector<float>* floats)
+{
+        ASSERT((floats->size() % 4) == 0);
+
+        for (std::size_t i = 0; i < floats->size(); i += 4)
+        {
+                float alpha = (*floats)[i + 3];
+                if (alpha != 0)
+                {
+                        // no clamp to [0, 1]
+                        (*floats)[i + 0] /= alpha;
+                        (*floats)[i + 1] /= alpha;
+                        (*floats)[i + 2] /= alpha;
+                }
+                else
+                {
+                        (*floats)[i + 0] = 0;
+                        (*floats)[i + 1] = 0;
+                        (*floats)[i + 2] = 0;
+                }
+        }
+}
+
+void multiply_alpha(std::vector<float>* floats)
+{
+        ASSERT((floats->size() % 4) == 0);
+
+        for (std::size_t i = 0; i < floats->size(); i += 4)
+        {
+                float alpha = (*floats)[i + 3];
+                (*floats)[i + 0] *= alpha;
+                (*floats)[i + 1] *= alpha;
+                (*floats)[i + 2] *= alpha;
+        }
+}
+
+void alpha_premultiplication(ColorFormat from_format, ColorFormat to_format, std::vector<float>* pixels)
+{
+        if (is_premultiplied(from_format) && !is_premultiplied(to_format))
+        {
+                undo_alpha_multiplication(pixels);
+        }
+        else if (!is_premultiplied(from_format) && is_premultiplied(to_format))
+        {
+                if (format_component_count(from_format) == 4)
+                {
+                        multiply_alpha(pixels);
+                }
+        }
 }
 
 void conv(
@@ -730,7 +791,11 @@ void conv(
         const std::span<std::byte>& to)
 {
         std::vector<float> pixels;
+
         conv_src_to_floats(from_format, from, to_format, &pixels);
+
+        alpha_premultiplication(from_format, to_format, &pixels);
+
         conv_floats_to_dst(from_format, pixels, to_format, to);
 }
 }
