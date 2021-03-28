@@ -147,91 +147,102 @@ void save_image_alpha(
         }
 }
 
-void save_1(const std::string& file_name, const ImageView<2>& image_view)
+void save(const std::string& file_name, const ImageView<2>& image_view)
 {
-        ASSERT(1 == format_component_count(image_view.color_format));
+        const std::size_t width = image_view.size[0];
+        const std::size_t height = image_view.size[1];
 
-        std::size_t width = image_view.size[0];
-        std::size_t height = image_view.size[1];
+        if (image_view.pixels.size() != width * height * format_pixel_size_in_bytes(image_view.color_format))
+        {
+                error("Error image data size " + to_string(image_view.pixels.size()) + " for image size "
+                      + to_string(image_view.size) + " and format " + format_to_string(image_view.color_format));
+        }
 
-        if (image_view.color_format == ColorFormat::R8_SRGB)
+        switch (image_view.color_format)
+        {
+        case ColorFormat::R8_SRGB:
         {
                 save_image(
                         width, height, QImage::Format_Grayscale8, ColorFormat::R8_SRGB, image_view.pixels, file_name);
+                return;
         }
-        else if (image_view.color_format == ColorFormat::R16)
+        case ColorFormat::R16:
         {
                 save_image(width, height, QImage::Format_Grayscale16, ColorFormat::R16, image_view.pixels, file_name);
+                return;
         }
-        else if (image_view.color_format == ColorFormat::R32)
+        case ColorFormat::R32:
         {
                 std::vector<std::byte> bytes;
                 format_conversion(image_view.color_format, image_view.pixels, ColorFormat::R16, &bytes);
                 save_image(width, height, QImage::Format_Grayscale16, ColorFormat::R16, image_view.pixels, file_name);
+                return;
         }
-        else
-        {
-                error("Unsupported format " + format_to_string(image_view.color_format) + "for saving grayscale image");
-        }
-}
-
-void save_3(const std::string& file_name, const ImageView<2>& image_view)
-{
-        ASSERT(3 == format_component_count(image_view.color_format));
-
-        std::size_t width = image_view.size[0];
-        std::size_t height = image_view.size[1];
-
-        if (image_view.color_format == ColorFormat::R8G8B8_SRGB)
+        case ColorFormat::R8G8B8_SRGB:
         {
                 save_image(
                         width, height, QImage::Format_RGB888, ColorFormat::R8G8B8_SRGB, image_view.pixels, file_name);
+                return;
         }
-        else if (image_view.color_format == ColorFormat::R16G16B16)
+        case ColorFormat::R16G16B16:
         {
                 save_image_alpha(
                         width, height, QImage::Format_RGBX64, ColorFormat::R16G16B16, image_view.pixels, file_name);
+                return;
         }
-        else if (image_view.color_format == ColorFormat::R32G32B32)
+        case ColorFormat::R32G32B32:
         {
                 std::vector<std::byte> bytes;
                 format_conversion(image_view.color_format, image_view.pixels, ColorFormat::R16G16B16, &bytes);
                 save_image_alpha(width, height, QImage::Format_RGBX64, ColorFormat::R16G16B16, bytes, file_name);
+                return;
         }
-        else
-        {
-                error("Unsupported format " + format_to_string(image_view.color_format) + "for saving RGB image");
-        }
-}
-
-void save_4(const std::string& file_name, const ImageView<2>& image_view)
-{
-        ASSERT(4 == format_component_count(image_view.color_format));
-
-        std::size_t width = image_view.size[0];
-        std::size_t height = image_view.size[1];
-
-        if (image_view.color_format == ColorFormat::R8G8B8A8_SRGB)
+        case ColorFormat::R8G8B8A8_SRGB:
         {
                 save_image(
                         width, height, QImage::Format_RGBA8888, ColorFormat::R8G8B8A8_SRGB, image_view.pixels,
                         file_name);
+                return;
         }
-        else if (image_view.color_format == ColorFormat::R16G16B16A16)
+        case ColorFormat::R8G8B8A8_SRGB_PREMULTIPLIED:
+        {
+                save_image(
+                        width, height, QImage::Format_RGBA8888_Premultiplied, ColorFormat::R8G8B8A8_SRGB_PREMULTIPLIED,
+                        image_view.pixels, file_name);
+                return;
+        }
+        case ColorFormat::R16G16B16A16:
         {
                 save_image(
                         width, height, QImage::Format_RGBA64, ColorFormat::R16G16B16A16, image_view.pixels, file_name);
+                return;
         }
-        else if (image_view.color_format == ColorFormat::R32G32B32A32)
+        case ColorFormat::R16G16B16A16_PREMULTIPLIED:
+        {
+                save_image(
+                        width, height, QImage::Format_RGBA64_Premultiplied, ColorFormat::R16G16B16A16_PREMULTIPLIED,
+                        image_view.pixels, file_name);
+                return;
+        }
+        case ColorFormat::R32G32B32A32:
         {
                 std::vector<std::byte> bytes;
                 format_conversion(image_view.color_format, image_view.pixels, ColorFormat::R16G16B16A16, &bytes);
                 save_image(width, height, QImage::Format_RGBA64, ColorFormat::R16G16B16A16, bytes, file_name);
+                return;
         }
-        else
+        case ColorFormat::R32G32B32A32_PREMULTIPLIED:
         {
-                error("Unsupported format " + format_to_string(image_view.color_format) + "for saving RGB image");
+                std::vector<std::byte> bytes;
+                format_conversion(
+                        image_view.color_format, image_view.pixels, ColorFormat::R16G16B16A16_PREMULTIPLIED, &bytes);
+                save_image(
+                        width, height, QImage::Format_RGBA64_Premultiplied, ColorFormat::R16G16B16A16_PREMULTIPLIED,
+                        bytes, file_name);
+                return;
         }
+        }
+        error("Unknown format " + format_to_string(image_view.color_format) + "for saving image");
 }
 
 void load_image(QImage* image, ColorFormat format, const std::span<std::byte>& bytes)
@@ -452,29 +463,7 @@ void save(const std::filesystem::path& path, const ImageView<2>& image_view)
 {
         std::string file_name = generic_utf8_filename(file_name_with_extension(path));
 
-        int width = image_view.size[0];
-        int height = image_view.size[1];
-
-        if (image_view.pixels.size() != 1ull * width * height * format_pixel_size_in_bytes(image_view.color_format))
-        {
-                error("Error image data size");
-        }
-
-        switch (format_component_count(image_view.color_format))
-        {
-        case 1:
-                save_1(file_name, image_view);
-                break;
-        case 3:
-                save_3(file_name, image_view);
-                break;
-        case 4:
-                save_4(file_name, image_view);
-                break;
-        default:
-                error("Color format " + format_to_string(image_view.color_format)
-                      + " is not supported for saving to file");
-        }
+        save(file_name, image_view);
 }
 
 Info file_info(const std::filesystem::path& path)
