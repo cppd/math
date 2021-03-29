@@ -37,8 +37,8 @@ class Actions final
         std::unique_ptr<WorkerThreads> m_worker_threads;
         std::vector<Connection> m_connections;
 
-        void save_to_file(const std::string& action, long long slice) const;
-        void save_all_to_files(const std::string& action) const;
+        void save_image(const std::string& action, long long slice) const;
+        void save_image(const std::string& action) const;
         void add_volume(const std::string& action) const;
 
 public:

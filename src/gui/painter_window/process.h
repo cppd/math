@@ -26,14 +26,14 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 namespace ns::gui::painter_window
 {
-std::function<void(ProgressRatioList*)> save_to_file(
+std::function<void(ProgressRatioList*)> save_image(
         int width,
         int height,
         const Color& background,
         image::ColorFormat color_format,
         std::vector<std::byte>&& pixels);
 
-std::function<void(ProgressRatioList*)> save_all_to_files(
+std::function<void(ProgressRatioList*)> save_image(
         const std::vector<int>& size,
         const Color& background,
         image::ColorFormat color_format,

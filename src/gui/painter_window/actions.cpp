@@ -53,7 +53,7 @@ Actions::Actions(const Pixels* pixels, QMenu* menu, QStatusBar* status_bar, std:
                         action, &QAction::triggered,
                         [this, action, slice_number = std::move(slice_number)]()
                         {
-                                save_to_file(action_name(action), slice_number());
+                                save_image(action_name(action), slice_number());
                         }));
         }
 
@@ -65,7 +65,7 @@ Actions::Actions(const Pixels* pixels, QMenu* menu, QStatusBar* status_bar, std:
                                 action, &QAction::triggered,
                                 [=, this]()
                                 {
-                                        save_all_to_files(action_name(action));
+                                        save_image(action_name(action));
                                 }));
                 }
 
@@ -94,7 +94,7 @@ void Actions::set_progresses()
         m_worker_threads->set_progresses();
 }
 
-void Actions::save_to_file(const std::string& action, long long slice) const
+void Actions::save_image(const std::string& action, long long slice) const
 {
         std::optional<Pixels::Image> image = m_pixels->slice(slice);
         if (!image)
@@ -112,13 +112,13 @@ void Actions::save_to_file(const std::string& action, long long slice) const
                 SAVE_THREAD_ID, action,
                 [&]()
                 {
-                        return painter_window::save_to_file(
+                        return painter_window::save_image(
                                 image->size[0], image->size[1], image->background_color, image->color_format,
                                 std::move(image->pixels));
                 });
 }
 
-void Actions::save_all_to_files(const std::string& action) const
+void Actions::save_image(const std::string& action) const
 {
         std::optional<Pixels::Image> image = m_pixels->pixels();
         if (!image)
@@ -131,7 +131,7 @@ void Actions::save_all_to_files(const std::string& action) const
                 SAVE_THREAD_ID, action,
                 [&]()
                 {
-                        return painter_window::save_all_to_files(
+                        return painter_window::save_image(
                                 image->size, image->background_color, image->color_format, std::move(image->pixels));
                 });
 }

@@ -54,7 +54,7 @@ std::array<T, N> to_array(const std::vector<T>& vector)
 }
 }
 
-std::function<void(ProgressRatioList*)> save_to_file(
+std::function<void(ProgressRatioList*)> save_image(
         int width,
         int height,
         const Color& background,
@@ -98,7 +98,7 @@ std::function<void(ProgressRatioList*)> save_to_file(
         };
 }
 
-std::function<void(ProgressRatioList*)> save_all_to_files(
+std::function<void(ProgressRatioList*)> save_image(
         const std::vector<int>& size,
         const Color& background,
         image::ColorFormat color_format,
@@ -106,7 +106,7 @@ std::function<void(ProgressRatioList*)> save_all_to_files(
 {
         if (size.size() < 3)
         {
-                return nullptr;
+                error("Error image dimension " + to_string(size.size()) + " for saving image");
         }
 
         std::optional<dialog::PainterImageParameters> parameters = dialog::PainterImageDialog::show(
@@ -180,7 +180,7 @@ std::function<void(ProgressRatioList*)> add_volume(
 {
         if (size.size() < 3)
         {
-                return nullptr;
+                error("Error image dimension " + to_string(size.size()) + " for adding volume");
         }
 
         std::optional<dialog::PainterImageParameters> parameters = dialog::PainterImageDialog::show(
