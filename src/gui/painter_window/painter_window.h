@@ -71,7 +71,7 @@ private:
         void adjust_window_size();
 
 public:
-        PainterWindow(const std::string& name, std::unique_ptr<Pixels>&& pixels);
+        PainterWindow(const std::string& name, std::unique_ptr<Pixels>&& pixelsz);
 
         ~PainterWindow() override;
 };

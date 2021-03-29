@@ -96,10 +96,15 @@ void Actions::set_progresses()
 
 void Actions::save_to_file(const std::string& action, long long slice) const
 {
-        std::optional<Image> image = m_pixels->slice(slice);
+        std::optional<Pixels::Image> image = m_pixels->slice(slice);
         if (!image)
         {
                 MESSAGE_WARNING("Image is not yet available");
+                return;
+        }
+        if (image->size.size() != 2)
+        {
+                MESSAGE_WARNING("Error 2D image dimension " + to_string(image->size.size()));
                 return;
         }
 
@@ -108,14 +113,14 @@ void Actions::save_to_file(const std::string& action, long long slice) const
                 [&]()
                 {
                         return painter_window::save_to_file(
-                                image->screen_size, image->background_color, image->color_format,
+                                image->size[0], image->size[1], image->background_color, image->color_format,
                                 std::move(image->pixels));
                 });
 }
 
 void Actions::save_all_to_files(const std::string& action) const
 {
-        std::optional<Image> image = m_pixels->pixels();
+        std::optional<Pixels::Image> image = m_pixels->pixels();
         if (!image)
         {
                 MESSAGE_WARNING("Image is not yet available");
@@ -127,14 +132,13 @@ void Actions::save_all_to_files(const std::string& action) const
                 [&]()
                 {
                         return painter_window::save_all_to_files(
-                                image->screen_size, image->background_color, image->color_format,
-                                std::move(image->pixels));
+                                image->size, image->background_color, image->color_format, std::move(image->pixels));
                 });
 }
 
 void Actions::add_volume(const std::string& action) const
 {
-        std::optional<Image> image = m_pixels->pixels();
+        std::optional<Pixels::Image> image = m_pixels->pixels();
         if (!image)
         {
                 MESSAGE_WARNING("Image is not yet available");
@@ -146,8 +150,7 @@ void Actions::add_volume(const std::string& action) const
                 [&]()
                 {
                         return painter_window::add_volume(
-                                image->screen_size, image->background_color, image->color_format,
-                                std::move(image->pixels));
+                                image->size, image->background_color, image->color_format, std::move(image->pixels));
                 });
 }
 }

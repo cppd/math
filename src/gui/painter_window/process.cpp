@@ -55,16 +55,12 @@ std::array<T, N> to_array(const std::vector<T>& vector)
 }
 
 std::function<void(ProgressRatioList*)> save_to_file(
-        const std::vector<int>& size,
+        int width,
+        int height,
         const Color& background,
         image::ColorFormat color_format,
         std::vector<std::byte>&& pixels)
 {
-        if (size.size() != 2)
-        {
-                return nullptr;
-        }
-
         std::optional<dialog::PainterImageParameters> parameters = dialog::PainterImageDialog::show(
                 "Save Image", dialog::PainterImagePathType::File, false /*use_grayscale*/);
         if (!parameters)
@@ -81,7 +77,7 @@ std::function<void(ProgressRatioList*)> save_to_file(
                 progress.set(0);
 
                 image::Image<2> image;
-                image.size = {size[0], size[1]};
+                image.size = {width, height};
                 image.color_format = color_format;
                 image.pixels = std::move(*pixels_ptr);
 

@@ -37,16 +37,16 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 namespace ns::gui::painter_window
 {
-struct Image
-{
-        std::vector<int> screen_size;
-        Color background_color;
-        image::ColorFormat color_format;
-        std::vector<std::byte> pixels;
-};
-
 struct Pixels
 {
+        struct Image
+        {
+                std::vector<int> size;
+                Color background_color;
+                image::ColorFormat color_format;
+                std::vector<std::byte> pixels;
+        };
+
         virtual ~Pixels() = default;
 
         virtual const std::vector<int>& screen_size() const = 0;
@@ -67,22 +67,28 @@ class PainterPixels final : public Pixels, public painter::Notifier<N - 1>
         static constexpr std::optional<int> MAX_PASS_COUNT = std::nullopt;
         static constexpr long long NULL_INDEX = -1;
 
-        static constexpr image::ColorFormat COLOR_FORMAT = image::ColorFormat::R8G8B8A8_SRGB;
-        static constexpr std::size_t PIXEL_SIZE = image::format_pixel_size_in_bytes(COLOR_FORMAT);
+        static constexpr image::ColorFormat RAW_COLOR_FORMAT = image::ColorFormat::R8G8B8A8_SRGB;
+        static constexpr std::size_t RAW_PIXEL_SIZE = image::format_pixel_size_in_bytes(RAW_COLOR_FORMAT);
 
         const GlobalIndex<N - 1, long long> m_global_index;
         const std::vector<int> m_screen_size;
         const Color m_background_color;
         const long long m_slice_count;
 
-        const std::size_t m_slice_size = PIXEL_SIZE * m_screen_size[0] * m_screen_size[1];
-        std::vector<std::byte> m_pixels = make_initial_image(m_screen_size, COLOR_FORMAT);
+        const std::size_t m_raw_slice_size = RAW_PIXEL_SIZE * m_screen_size[0] * m_screen_size[1];
+        std::vector<std::byte> m_raw_pixels = make_initial_image(m_screen_size, RAW_COLOR_FORMAT);
         std::vector<long long> m_busy_indices_2d;
 
         std::optional<image::Image<N - 1>> m_image;
         mutable std::mutex m_image_mutex;
 
         std::unique_ptr<painter::Painter<N, T>> m_painter;
+
+        std::array<int, N - 1> flip_vertically(std::array<int, N - 1> pixel) const
+        {
+                pixel[1] = m_screen_size[1] - 1 - pixel[1];
+                return pixel;
+        }
 
         void check_slice_number(long long slice_number) const
         {
@@ -109,7 +115,7 @@ class PainterPixels final : public Pixels, public painter::Notifier<N - 1>
 
         void pixel_set(const std::array<int, N - 1>& pixel, const Color& color, Color::DataType alpha) override
         {
-                static_assert(COLOR_FORMAT == image::ColorFormat::R8G8B8A8_SRGB);
+                static_assert(RAW_COLOR_FORMAT == image::ColorFormat::R8G8B8A8_SRGB);
 
                 std::array<uint8_t, 3> pixel_data;
 
@@ -133,11 +139,11 @@ class PainterPixels final : public Pixels, public painter::Notifier<N - 1>
                         pixel_data[2] = color::linear_float_to_srgb_uint8(pixel_color.blue());
                 }
 
-                std::array<int, N - 1> p = pixel;
-                p[1] = m_screen_size[1] - 1 - pixel[1];
+                std::byte* dst = &m_raw_pixels[RAW_PIXEL_SIZE * m_global_index.compute(flip_vertically(pixel))];
+                const uint8_t* src = pixel_data.data();
+                constexpr std::size_t size = pixel_data.size() * sizeof(pixel_data[0]);
 
-                std::byte* ptr = &m_pixels[PIXEL_SIZE * m_global_index.compute(p)];
-                std::memcpy(ptr, pixel_data.data(), pixel_data.size() * sizeof(pixel_data[0]));
+                std::memcpy(dst, src, size);
         }
 
         void pass_done(image::Image<N - 1>&& image) override
@@ -173,7 +179,7 @@ class PainterPixels final : public Pixels, public painter::Notifier<N - 1>
         {
                 check_slice_number(slice_number);
 
-                return std::span(&m_pixels[slice_number * m_slice_size], m_slice_size);
+                return std::span(&m_raw_pixels[slice_number * m_raw_slice_size], m_raw_slice_size);
         }
 
         std::optional<Image> slice(long long slice_number) const override
@@ -188,7 +194,7 @@ class PainterPixels final : public Pixels, public painter::Notifier<N - 1>
                 }
 
                 std::optional<Image> image(std::in_place);
-                image->screen_size = {m_screen_size[0], m_screen_size[1]};
+                image->size = {m_screen_size[0], m_screen_size[1]};
                 image->background_color = m_background_color;
                 image->color_format = m_image->color_format;
                 image->pixels = [&]()
@@ -213,7 +219,7 @@ class PainterPixels final : public Pixels, public painter::Notifier<N - 1>
                 }
 
                 std::optional<Image> image(std::in_place);
-                image->screen_size = m_screen_size;
+                image->size = m_screen_size;
                 image->background_color = m_background_color;
                 image->color_format = m_image->color_format;
                 image->pixels = m_image->pixels;

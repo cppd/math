@@ -27,7 +27,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 namespace ns::gui::painter_window
 {
 std::function<void(ProgressRatioList*)> save_to_file(
-        const std::vector<int>& size,
+        int width,
+        int height,
         const Color& background,
         image::ColorFormat color_format,
         std::vector<std::byte>&& pixels);
