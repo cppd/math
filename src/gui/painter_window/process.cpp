@@ -55,11 +55,16 @@ std::array<T, N> to_array(const std::vector<T>& vector)
 }
 
 std::function<void(ProgressRatioList*)> save_to_file(
-        const std::vector<int>& screen_size,
+        const std::vector<int>& size,
         const Color& background,
         image::ColorFormat color_format,
         std::vector<std::byte>&& pixels)
 {
+        if (size.size() != 2)
+        {
+                return nullptr;
+        }
+
         std::optional<dialog::PainterImageParameters> parameters = dialog::PainterImageDialog::show(
                 "Save Image", dialog::PainterImagePathType::File, false /*use_grayscale*/);
         if (!parameters)
@@ -76,7 +81,7 @@ std::function<void(ProgressRatioList*)> save_to_file(
                 progress.set(0);
 
                 image::Image<2> image;
-                image.size = {screen_size[0], screen_size[1]};
+                image.size = {size[0], size[1]};
                 image.color_format = color_format;
                 image.pixels = std::move(*pixels_ptr);
 
@@ -92,17 +97,18 @@ std::function<void(ProgressRatioList*)> save_to_file(
                         image = image::convert_to_8_bit(image);
                 }
 
+                image::flip_vertically(&image);
                 image::save(path_from_utf8(*parameters.path_string), image::ImageView<2>(image));
         };
 }
 
 std::function<void(ProgressRatioList*)> save_all_to_files(
-        const std::vector<int>& screen_size,
+        const std::vector<int>& size,
         const Color& background,
         image::ColorFormat color_format,
         std::vector<std::byte>&& pixels)
 {
-        if (screen_size.size() < 3)
+        if (size.size() < 3)
         {
                 return nullptr;
         }
@@ -122,7 +128,7 @@ std::function<void(ProgressRatioList*)> save_all_to_files(
                 ProgressRatio progress(progress_list, "Saving");
                 progress.set(0);
 
-                const int N = screen_size.size() + 1;
+                const int N = size.size() + 1;
                 process::apply_for_dimension(
                         N,
                         [&]<std::size_t N>(const process::Dimension<N>&)
@@ -131,7 +137,7 @@ std::function<void(ProgressRatioList*)> save_all_to_files(
                                 if constexpr (N_IMAGE >= 3)
                                 {
                                         image::Image<N_IMAGE> image;
-                                        image.size = to_array<N_IMAGE, int>(screen_size);
+                                        image.size = to_array<N_IMAGE, int>(size);
                                         image.color_format = color_format;
                                         image.pixels = std::move(*pixels_ptr);
 
@@ -161,6 +167,7 @@ std::function<void(ProgressRatioList*)> save_all_to_files(
                                                 image = image::convert_to_8_bit(image);
                                         }
 
+                                        image::flip_vertically(&image);
                                         volume::save_to_images(
                                                 path_from_utf8(*parameters.path_string), IMAGE_FILE_FORMAT,
                                                 image::ImageView<N_IMAGE>(image), &progress);
@@ -170,12 +177,12 @@ std::function<void(ProgressRatioList*)> save_all_to_files(
 }
 
 std::function<void(ProgressRatioList*)> add_volume(
-        const std::vector<int>& screen_size,
+        const std::vector<int>& size,
         const Color& background,
         image::ColorFormat color_format,
         std::vector<std::byte>&& pixels)
 {
-        if (screen_size.size() < 3)
+        if (size.size() < 3)
         {
                 return nullptr;
         }
@@ -195,7 +202,7 @@ std::function<void(ProgressRatioList*)> add_volume(
                 ProgressRatio progress(progress_list, "Adding volume");
                 progress.set(0);
 
-                const int N = screen_size.size() + 1;
+                const int N = size.size() + 1;
                 process::apply_for_dimension(
                         N,
                         [&]<std::size_t N>(const process::Dimension<N>&)
@@ -204,11 +211,9 @@ std::function<void(ProgressRatioList*)> add_volume(
                                 if constexpr (N_IMAGE >= 3)
                                 {
                                         image::Image<N_IMAGE> image;
-                                        image.size = to_array<N_IMAGE, int>(screen_size);
+                                        image.size = to_array<N_IMAGE, int>(size);
                                         image.color_format = color_format;
                                         image.pixels = std::move(*pixels_ptr);
-
-                                        image::flip_vertically(&image);
 
                                         ASSERT(image::format_component_count(color_format) == 4);
 
@@ -216,7 +221,7 @@ std::function<void(ProgressRatioList*)> add_volume(
                                         {
                                                 image::blend_alpha(&image.color_format, image.pixels, background);
                                                 constexpr float ALPHA = 1;
-                                                image::set_alpha(color_format, image.pixels, ALPHA);
+                                                image::set_alpha(image.color_format, image.pixels, ALPHA);
                                         }
                                         else if (parameters.with_background && *parameters.grayscale)
                                         {

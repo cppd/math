@@ -31,25 +31,32 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <cstring>
 #include <memory>
 #include <mutex>
+#include <optional>
 #include <span>
 #include <vector>
 
 namespace ns::gui::painter_window
 {
+struct Image
+{
+        std::vector<int> screen_size;
+        Color background_color;
+        image::ColorFormat color_format;
+        std::vector<std::byte> pixels;
+};
+
 struct Pixels
 {
         virtual ~Pixels() = default;
 
         virtual const std::vector<int>& screen_size() const = 0;
+
+        virtual std::span<const std::byte> slice_r8g8b8a8_with_background(long long slice_number) const = 0;
         virtual const std::vector<long long>& busy_indices_2d() const = 0;
         virtual painter::Statistics statistics() const = 0;
 
-        virtual std::span<const std::byte> slice_r8g8b8a8_with_background(long long slice_number) const = 0;
-
-        virtual image::ColorFormat color_format() const = 0;
-        virtual Color background_color() const = 0;
-        virtual std::vector<std::byte> slice(long long slice_number) const = 0;
-        virtual std::vector<std::byte> pixels() const = 0;
+        virtual std::optional<Image> slice(long long slice_number) const = 0;
+        virtual std::optional<Image> pixels() const = 0;
 };
 
 template <std::size_t N, typename T>
@@ -59,23 +66,21 @@ class PainterPixels final : public Pixels, public painter::Notifier<N - 1>
 
         static constexpr std::optional<int> MAX_PASS_COUNT = std::nullopt;
         static constexpr long long NULL_INDEX = -1;
-        static constexpr image::ColorFormat COLOR_FORMAT_8 = image::ColorFormat::R8G8B8A8_SRGB;
-        static constexpr std::size_t PIXEL_SIZE_8 = image::format_pixel_size_in_bytes(COLOR_FORMAT_8);
-        static constexpr image::ColorFormat COLOR_FORMAT_16 = image::ColorFormat::R16G16B16A16;
-        static constexpr std::size_t PIXEL_SIZE_16 = image::format_pixel_size_in_bytes(COLOR_FORMAT_16);
+
+        static constexpr image::ColorFormat COLOR_FORMAT = image::ColorFormat::R8G8B8A8_SRGB;
+        static constexpr std::size_t PIXEL_SIZE = image::format_pixel_size_in_bytes(COLOR_FORMAT);
 
         const GlobalIndex<N - 1, long long> m_global_index;
         const std::vector<int> m_screen_size;
         const Color m_background_color;
         const long long m_slice_count;
-        const std::size_t m_slice_size_8 = PIXEL_SIZE_8 * m_screen_size[0] * m_screen_size[1];
-        const std::size_t m_slice_size_16 = PIXEL_SIZE_16 * m_screen_size[0] * m_screen_size[1];
 
-        std::vector<std::byte> m_pixels_8 = make_initial_image(m_screen_size, COLOR_FORMAT_8);
-        std::vector<std::byte> m_pixels_16 = make_initial_image(m_screen_size, COLOR_FORMAT_16);
-        std::vector<std::byte> m_saved_pixels_16;
-        mutable std::mutex m_saved_pixels_16_mutex;
+        const std::size_t m_slice_size = PIXEL_SIZE * m_screen_size[0] * m_screen_size[1];
+        std::vector<std::byte> m_pixels = make_initial_image(m_screen_size, COLOR_FORMAT);
         std::vector<long long> m_busy_indices_2d;
+
+        std::optional<image::Image<N - 1>> m_image;
+        mutable std::mutex m_image_mutex;
 
         std::unique_ptr<painter::Painter<N, T>> m_painter;
 
@@ -104,59 +109,42 @@ class PainterPixels final : public Pixels, public painter::Notifier<N - 1>
 
         void pixel_set(const std::array<int, N - 1>& pixel, const Color& color, Color::DataType alpha) override
         {
-                std::array<uint8_t, 3> c_8;
-                std::array<uint16_t, 4> c_16;
+                static_assert(COLOR_FORMAT == image::ColorFormat::R8G8B8A8_SRGB);
+
+                std::array<uint8_t, 3> pixel_data;
 
                 if (alpha >= 1)
                 {
-                        c_8[0] = color::linear_float_to_srgb_uint8(color.red());
-                        c_8[1] = color::linear_float_to_srgb_uint8(color.green());
-                        c_8[2] = color::linear_float_to_srgb_uint8(color.blue());
-                        c_16[0] = color::linear_float_to_linear_uint16(color.red());
-                        c_16[1] = color::linear_float_to_linear_uint16(color.green());
-                        c_16[2] = color::linear_float_to_linear_uint16(color.blue());
-                        c_16[3] = (1 << 16) - 1;
+                        pixel_data[0] = color::linear_float_to_srgb_uint8(color.red());
+                        pixel_data[1] = color::linear_float_to_srgb_uint8(color.green());
+                        pixel_data[2] = color::linear_float_to_srgb_uint8(color.blue());
                 }
                 else if (alpha <= 0)
                 {
-                        c_8[0] = color::linear_float_to_srgb_uint8(m_background_color.red());
-                        c_8[1] = color::linear_float_to_srgb_uint8(m_background_color.green());
-                        c_8[2] = color::linear_float_to_srgb_uint8(m_background_color.blue());
-                        c_16[0] = 0;
-                        c_16[1] = 0;
-                        c_16[2] = 0;
-                        c_16[3] = 0;
+                        pixel_data[0] = color::linear_float_to_srgb_uint8(m_background_color.red());
+                        pixel_data[1] = color::linear_float_to_srgb_uint8(m_background_color.green());
+                        pixel_data[2] = color::linear_float_to_srgb_uint8(m_background_color.blue());
                 }
                 else
                 {
-                        {
-                                const Color c = color + (1 - alpha) * m_background_color;
-                                c_8[0] = color::linear_float_to_srgb_uint8(c.red());
-                                c_8[1] = color::linear_float_to_srgb_uint8(c.green());
-                                c_8[2] = color::linear_float_to_srgb_uint8(c.blue());
-                        }
-                        {
-                                const Color::DataType alpha_r = 1 / alpha;
-                                c_16[0] = color::linear_float_to_linear_uint16(color.red() * alpha_r);
-                                c_16[1] = color::linear_float_to_linear_uint16(color.green() * alpha_r);
-                                c_16[2] = color::linear_float_to_linear_uint16(color.blue() * alpha_r);
-                                c_16[3] = color::linear_float_to_linear_uint16(alpha);
-                        }
+                        const Color pixel_color = color + (1 - alpha) * m_background_color;
+                        pixel_data[0] = color::linear_float_to_srgb_uint8(pixel_color.red());
+                        pixel_data[1] = color::linear_float_to_srgb_uint8(pixel_color.green());
+                        pixel_data[2] = color::linear_float_to_srgb_uint8(pixel_color.blue());
                 }
 
                 std::array<int, N - 1> p = pixel;
                 p[1] = m_screen_size[1] - 1 - pixel[1];
-                long long index = m_global_index.compute(p);
 
-                std::memcpy(&m_pixels_8[PIXEL_SIZE_8 * index], c_8.data(), c_8.size() * sizeof(c_8[0]));
-                std::memcpy(&m_pixels_16[PIXEL_SIZE_16 * index], c_16.data(), c_16.size() * sizeof(c_16[0]));
+                std::byte* ptr = &m_pixels[PIXEL_SIZE * m_global_index.compute(p)];
+                std::memcpy(ptr, pixel_data.data(), pixel_data.size() * sizeof(pixel_data[0]));
         }
 
-        void pass_done(image::Image<N - 1>&&) override
+        void pass_done(image::Image<N - 1>&& image) override
         {
-                std::lock_guard lg(m_saved_pixels_16_mutex);
+                std::lock_guard lg(m_image_mutex);
 
-                m_saved_pixels_16 = m_pixels_16;
+                m_image = std::move(image);
         }
 
         void error_message(const std::string& msg) override
@@ -185,42 +173,52 @@ class PainterPixels final : public Pixels, public painter::Notifier<N - 1>
         {
                 check_slice_number(slice_number);
 
-                return std::span(&m_pixels_8[slice_number * m_slice_size_8], m_slice_size_8);
+                return std::span(&m_pixels[slice_number * m_slice_size], m_slice_size);
         }
 
-        image::ColorFormat color_format() const override
-        {
-                return COLOR_FORMAT_16;
-        }
-
-        Color background_color() const override
-        {
-                return m_background_color;
-        }
-
-        std::vector<std::byte> slice(long long slice_number) const override
+        std::optional<Image> slice(long long slice_number) const override
         {
                 check_slice_number(slice_number);
 
-                std::lock_guard lg(m_saved_pixels_16_mutex);
+                std::lock_guard lg(m_image_mutex);
 
-                const std::vector<std::byte>* const pixels =
-                        !m_saved_pixels_16.empty() ? &m_saved_pixels_16 : &m_pixels_16;
+                if (!m_image)
+                {
+                        return std::nullopt;
+                }
 
-                const std::byte* begin = &(*pixels)[slice_number * m_slice_size_16];
-                const std::byte* end = begin + m_slice_size_16;
+                std::optional<Image> image(std::in_place);
+                image->screen_size = {m_screen_size[0], m_screen_size[1]};
+                image->background_color = m_background_color;
+                image->color_format = m_image->color_format;
+                image->pixels = [&]()
+                {
+                        const long long pixel_size = image::format_pixel_size_in_bytes(m_image->color_format);
+                        const long long slice_size = pixel_size * m_screen_size[0] * m_screen_size[1];
+                        const std::byte* begin = &(m_image->pixels)[slice_number * slice_size];
+                        const std::byte* end = begin + slice_size;
+                        return std::vector(begin, end);
+                }();
 
-                return {begin, end};
+                return image;
         }
 
-        std::vector<std::byte> pixels() const override
+        std::optional<Image> pixels() const override
         {
-                std::lock_guard lg(m_saved_pixels_16_mutex);
+                std::lock_guard lg(m_image_mutex);
 
-                const std::vector<std::byte>* const pixels =
-                        !m_saved_pixels_16.empty() ? &m_saved_pixels_16 : &m_pixels_16;
+                if (!m_image)
+                {
+                        return std::nullopt;
+                }
 
-                return *pixels;
+                std::optional<Image> image(std::in_place);
+                image->screen_size = m_screen_size;
+                image->background_color = m_background_color;
+                image->color_format = m_image->color_format;
+                image->pixels = m_image->pixels;
+
+                return image;
         }
 
 public:
