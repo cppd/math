@@ -81,6 +81,16 @@ class Pixels final
         static constexpr int PANTBRUSH_WIDTH = 20;
         using PaintbrushType = std::uint_least16_t;
 
+        static std::array<int, N> screen_max(const std::array<int, N>& screen_size)
+        {
+                std::array<int, N> max;
+                for (std::size_t i = 0; i < N; ++i)
+                {
+                        max[i] = screen_size[i] - 1;
+                }
+                return max;
+        }
+
         static std::optional<std::array<int, N>> to_int(std::optional<std::array<PaintbrushType, N>>&& p)
         {
                 static_assert(!std::is_same_v<int, PaintbrushType>);
@@ -97,6 +107,8 @@ class Pixels final
         }
 
         const std::array<int, N> m_screen_size;
+        const std::array<int, N> m_screen_max = screen_max(m_screen_size);
+
         Notifier<N>* const m_notifier;
 
         const GlobalIndex<N, long long> m_global_index;
@@ -105,6 +117,32 @@ class Pixels final
         Paintbrush<N, PaintbrushType> m_paintbrush;
 
         mutable SpinLock m_lock;
+
+        template <std::size_t I>
+        void region(const std::array<int, N>& min, const std::array<int, N>& max, std::array<int, N>& p)
+        {
+                for (int i = min[I]; i <= max[I]; ++i)
+                {
+                        p[I] = i;
+                        if constexpr (I + 1 < N)
+                        {
+                                region<I + 1>(min, max, p);
+                        }
+                }
+        }
+
+        void region(const std::array<int, N>& pixel, int size)
+        {
+                std::array<int, N> min;
+                std::array<int, N> max;
+                for (std::size_t i = 0; i < N; ++i)
+                {
+                        min[i] = std::max(0, pixel[i] - size);
+                        max[i] = std::min(m_screen_max[i], pixel[i] + size);
+                }
+                std::array<int, N> p;
+                region<0>(min, max, p);
+        }
 
 public:
         explicit Pixels(const std::array<int, N>& screen_size, Notifier<N>* notifier)
