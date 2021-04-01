@@ -40,15 +40,11 @@ class Pixel final
         Color::DataType m_background_weight_sum{0};
 
 public:
-        void add_sample(const Color& color, const Vector<N, T>& /*point*/)
+        void merge(const Color& color_sum, Color::DataType hit_weight_sum, Color::DataType background_weight_sum)
         {
-                m_hit_weight_sum += 1;
-                m_color_sum += color;
-        }
-
-        void add_background()
-        {
-                m_background_weight_sum += 1;
+                m_color_sum += color_sum;
+                m_hit_weight_sum += hit_weight_sum;
+                m_background_weight_sum += background_weight_sum;
         }
 
         struct Info final
@@ -115,8 +111,7 @@ class Pixels final
         std::vector<Pixel<N, T>> m_pixels;
 
         Paintbrush<N, PaintbrushType> m_paintbrush;
-
-        mutable SpinLock m_lock;
+        mutable SpinLock m_paintbrush_lock;
 
         template <std::size_t I>
         void region(const std::array<int, N>& min, const std::array<int, N>& max, std::array<int, N>& p)
@@ -159,7 +154,7 @@ public:
                 return to_int(
                         [&]
                         {
-                                std::lock_guard lg(m_lock);
+                                std::lock_guard lg(m_paintbrush_lock);
                                 return m_paintbrush.next_pixel();
                         }());
         }
@@ -176,52 +171,53 @@ public:
         {
                 ASSERT(points.size() == colors.size());
 
-                const long long index = m_global_index.compute(pixel);
+                Color color_sum{0};
+                Color::DataType hit_weight_sum{0};
+                Color::DataType background_weight_sum{0};
+
                 for (std::size_t i = 0; i < points.size(); ++i)
                 {
                         if (colors[i])
                         {
-                                m_pixels[index].add_sample(*colors[i], points[i]);
+                                color_sum += *colors[i];
+                                hit_weight_sum += 1;
                         }
                         else
                         {
-                                m_pixels[index].add_background();
+                                background_weight_sum += 1;
                         }
                 }
+
+                const long long index = m_global_index.compute(pixel);
+
+                m_pixels[index].merge(color_sum, hit_weight_sum, background_weight_sum);
                 typename Pixel<N, T>::Info info = m_pixels[index].info();
                 m_notifier->pixel_set(pixel, info.color, info.alpha);
         }
 
         image::Image<N> image() const
         {
+                constexpr std::size_t PIXEL_SIZE = 4 * sizeof(float);
+
                 image::Image<N> image;
 
                 image.color_format = image::ColorFormat::R32G32B32A32_PREMULTIPLIED;
                 image.size = m_screen_size;
-                image.pixels.resize(4 * sizeof(float) * m_pixels.size());
+                image.pixels.resize(PIXEL_SIZE * m_pixels.size());
 
                 std::byte* ptr = image.pixels.data();
                 for (const Pixel<N, T>& pixel : m_pixels)
                 {
                         typename Pixel<N, T>::Info info = pixel.info();
 
-                        float v;
+                        std::array<float, 4> rgba;
+                        rgba[0] = info.color.red();
+                        rgba[1] = info.color.green();
+                        rgba[2] = info.color.blue();
+                        rgba[3] = info.alpha;
 
-                        v = info.color.red();
-                        std::memcpy(ptr, &v, sizeof(v));
-                        ptr += sizeof(v);
-
-                        v = info.color.green();
-                        std::memcpy(ptr, &v, sizeof(v));
-                        ptr += sizeof(v);
-
-                        v = info.color.blue();
-                        std::memcpy(ptr, &v, sizeof(v));
-                        ptr += sizeof(v);
-
-                        v = info.alpha;
-                        std::memcpy(ptr, &v, sizeof(v));
-                        ptr += sizeof(v);
+                        std::memcpy(ptr, rgba.data(), PIXEL_SIZE);
+                        ptr += PIXEL_SIZE;
                 }
                 ASSERT(ptr == image.pixels.data() + image.pixels.size());
 
