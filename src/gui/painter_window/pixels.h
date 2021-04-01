@@ -25,6 +25,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/com/global_index.h>
 #include <src/com/message.h>
 #include <src/com/print.h>
+#include <src/com/type/limit.h>
 #include <src/image/format.h>
 #include <src/painter/painter.h>
 
@@ -117,33 +118,31 @@ class PainterPixels final : public Pixels, public painter::Notifier<N - 1>
         {
                 static_assert(RAW_COLOR_FORMAT == image::ColorFormat::R8G8B8A8_SRGB);
 
-                std::array<uint8_t, 3> pixel_data;
+                std::array<uint8_t, 4> rgba;
 
                 if (alpha >= 1)
                 {
-                        pixel_data[0] = color::linear_float_to_srgb_uint8(color.red());
-                        pixel_data[1] = color::linear_float_to_srgb_uint8(color.green());
-                        pixel_data[2] = color::linear_float_to_srgb_uint8(color.blue());
+                        rgba[0] = color::linear_float_to_srgb_uint8(color.red());
+                        rgba[1] = color::linear_float_to_srgb_uint8(color.green());
+                        rgba[2] = color::linear_float_to_srgb_uint8(color.blue());
                 }
                 else if (alpha <= 0)
                 {
-                        pixel_data[0] = color::linear_float_to_srgb_uint8(m_background_color.red());
-                        pixel_data[1] = color::linear_float_to_srgb_uint8(m_background_color.green());
-                        pixel_data[2] = color::linear_float_to_srgb_uint8(m_background_color.blue());
+                        rgba[0] = color::linear_float_to_srgb_uint8(m_background_color.red());
+                        rgba[1] = color::linear_float_to_srgb_uint8(m_background_color.green());
+                        rgba[2] = color::linear_float_to_srgb_uint8(m_background_color.blue());
                 }
                 else
                 {
-                        const Color pixel_color = color + (1 - alpha) * m_background_color;
-                        pixel_data[0] = color::linear_float_to_srgb_uint8(pixel_color.red());
-                        pixel_data[1] = color::linear_float_to_srgb_uint8(pixel_color.green());
-                        pixel_data[2] = color::linear_float_to_srgb_uint8(pixel_color.blue());
+                        const Color c = color + (1 - alpha) * m_background_color;
+                        rgba[0] = color::linear_float_to_srgb_uint8(c.red());
+                        rgba[1] = color::linear_float_to_srgb_uint8(c.green());
+                        rgba[2] = color::linear_float_to_srgb_uint8(c.blue());
                 }
+                rgba[3] = limits<uint8_t>::max();
 
-                std::byte* dst = &m_raw_pixels[RAW_PIXEL_SIZE * m_global_index.compute(flip_vertically(pixel))];
-                const uint8_t* src = pixel_data.data();
-                constexpr std::size_t size = pixel_data.size() * sizeof(pixel_data[0]);
-
-                std::memcpy(dst, src, size);
+                const long long index = m_global_index.compute(flip_vertically(pixel));
+                std::memcpy(&m_raw_pixels[RAW_PIXEL_SIZE * index], rgba.data(), RAW_PIXEL_SIZE);
         }
 
         void pass_done(image::Image<N - 1>&& image) override
