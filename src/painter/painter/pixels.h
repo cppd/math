@@ -32,6 +32,53 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 namespace ns::painter
 {
+namespace pixels_implementation
+{
+template <std::size_t N>
+std::array<int, N> max_values_for_size(const std::array<int, N>& size)
+{
+        std::array<int, N> max;
+        for (std::size_t i = 0; i < N; ++i)
+        {
+                max[i] = size[i] - 1;
+        }
+        return max;
+}
+
+template <typename Dst, std::size_t N, typename T>
+std::optional<std::array<Dst, N>> to_type(std::optional<std::array<T, N>>&& p)
+{
+        static_assert(!std::is_same_v<Dst, T>);
+        if (p)
+        {
+                std::array<Dst, N> result;
+                for (std::size_t i = 0; i < N; ++i)
+                {
+                        result[i] = (*p)[i];
+                }
+                return result;
+        }
+        return std::nullopt;
+}
+
+// ceil(radius - 0.5)
+template <typename T>
+constexpr int integer_radius(T radius)
+{
+        static_assert(std::is_floating_point_v<T>);
+
+        const T t = std::max(T(0), radius - T(0.5));
+        const int t_int = t;
+        return (t == t_int) ? t_int : t_int + 1;
+}
+static_assert(integer_radius(0.5) == 0);
+static_assert(integer_radius(1.0) == 1);
+static_assert(integer_radius(1.4) == 1);
+static_assert(integer_radius(1.5) == 1);
+static_assert(integer_radius(1.6) == 2);
+
+//
+
 template <std::size_t N, typename T>
 class Pixel final
 {
@@ -70,51 +117,31 @@ public:
                 return info;
         }
 };
+}
 
 template <std::size_t N, typename T>
 class Pixels final
 {
-        static constexpr int PANTBRUSH_WIDTH = 20;
         using PaintbrushType = std::uint_least16_t;
 
-        static std::array<int, N> screen_max(const std::array<int, N>& screen_size)
-        {
-                std::array<int, N> max;
-                for (std::size_t i = 0; i < N; ++i)
-                {
-                        max[i] = screen_size[i] - 1;
-                }
-                return max;
-        }
+        static constexpr int PANTBRUSH_WIDTH = 20;
 
-        static std::optional<std::array<int, N>> to_int(std::optional<std::array<PaintbrushType, N>>&& p)
-        {
-                static_assert(!std::is_same_v<int, PaintbrushType>);
-                if (p)
-                {
-                        std::array<int, N> result;
-                        for (std::size_t i = 0; i < N; ++i)
-                        {
-                                result[i] = (*p)[i];
-                        }
-                        return result;
-                }
-                return std::nullopt;
-        }
+        static constexpr T FILTER_RADIUS = 1.5;
+        static constexpr int FILTER_INTEGER_RADIUS = integer_radius(FILTER_RADIUS);
 
         const std::array<int, N> m_screen_size;
-        const std::array<int, N> m_screen_max = screen_max(m_screen_size);
+        const std::array<int, N> m_screen_max = pixels_implementation::max_values_for_size(m_screen_size);
 
         Notifier<N>* const m_notifier;
 
         const GlobalIndex<N, long long> m_global_index;
-        std::vector<Pixel<N, T>> m_pixels;
+        std::vector<pixels_implementation::Pixel<N, T>> m_pixels;
 
         Paintbrush<N, PaintbrushType> m_paintbrush;
         mutable SpinLock m_paintbrush_lock;
 
-        template <std::size_t I>
-        void region(const std::array<int, N>& min, const std::array<int, N>& max, std::array<int, N>& p)
+        template <std::size_t I, typename F>
+        void region(const std::array<int, N>& min, const std::array<int, N>& max, std::array<int, N>& p, const F& f)
         {
                 for (int i = min[I]; i <= max[I]; ++i)
                 {
@@ -123,20 +150,25 @@ class Pixels final
                         {
                                 region<I + 1>(min, max, p);
                         }
+                        else
+                        {
+                                f(p);
+                        }
                 }
         }
 
-        void region(const std::array<int, N>& pixel, int size)
+        template <typename F>
+        void region(const std::array<int, N>& pixel, const F& f)
         {
                 std::array<int, N> min;
                 std::array<int, N> max;
                 for (std::size_t i = 0; i < N; ++i)
                 {
-                        min[i] = std::max(0, pixel[i] - size);
-                        max[i] = std::min(m_screen_max[i], pixel[i] + size);
+                        min[i] = std::max(0, pixel[i] - FILTER_INTEGER_RADIUS);
+                        max[i] = std::min(m_screen_max[i], pixel[i] + FILTER_INTEGER_RADIUS);
                 }
                 std::array<int, N> p;
-                region<0>(min, max, p);
+                region<0>(min, max, p, f);
         }
 
 public:
@@ -151,7 +183,7 @@ public:
 
         std::optional<std::array<int, N>> next_pixel()
         {
-                return to_int(
+                return pixels_implementation::to_type<int>(
                         [&]
                         {
                                 std::lock_guard lg(m_paintbrush_lock);
@@ -191,7 +223,7 @@ public:
                 const long long index = m_global_index.compute(pixel);
 
                 m_pixels[index].merge(color_sum, hit_weight_sum, background_weight_sum);
-                typename Pixel<N, T>::Info info = m_pixels[index].info();
+                typename pixels_implementation::Pixel<N, T>::Info info = m_pixels[index].info();
                 m_notifier->pixel_set(pixel, info.color, info.alpha);
         }
 
@@ -206,9 +238,9 @@ public:
                 image.pixels.resize(PIXEL_SIZE * m_pixels.size());
 
                 std::byte* ptr = image.pixels.data();
-                for (const Pixel<N, T>& pixel : m_pixels)
+                for (const pixels_implementation::Pixel<N, T>& pixel : m_pixels)
                 {
-                        typename Pixel<N, T>::Info info = pixel.info();
+                        typename pixels_implementation::Pixel<N, T>::Info info = pixel.info();
 
                         std::array<float, 4> rgba;
                         rgba[0] = info.color.red();
