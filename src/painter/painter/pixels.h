@@ -117,6 +117,36 @@ public:
                 return info;
         }
 };
+
+template <typename T>
+class LockGuards
+{
+        T& m_locks;
+
+public:
+        explicit LockGuards(T& locks) noexcept : m_locks(locks)
+        {
+                for (auto& lock : m_locks)
+                {
+                        static_assert(noexcept(lock.lock()));
+                        lock.lock();
+                }
+        }
+
+        ~LockGuards()
+        {
+                for (auto& lock : m_locks)
+                {
+                        static_assert(noexcept(lock.unlock()));
+                        lock.unlock();
+                }
+        }
+
+        LockGuards(const LockGuards&) = delete;
+        LockGuards(LockGuards&&) = delete;
+        LockGuards& operator=(const LockGuards&) = delete;
+        LockGuards& operator=(LockGuards&&) = delete;
+};
 }
 
 template <std::size_t N, typename T>
@@ -135,7 +165,9 @@ class Pixels final
         Notifier<N>* const m_notifier;
 
         const GlobalIndex<N, long long> m_global_index;
+
         std::vector<pixels_implementation::Pixel<N, T>> m_pixels;
+        mutable std::vector<SpinLock> m_pixel_locks;
 
         Paintbrush<N, PaintbrushType> m_paintbrush;
         mutable SpinLock m_paintbrush_lock;
@@ -172,18 +204,21 @@ class Pixels final
         }
 
 public:
-        explicit Pixels(const std::array<int, N>& screen_size, Notifier<N>* notifier)
+        Pixels(const std::array<int, N>& screen_size, Notifier<N>* notifier)
                 : m_screen_size(screen_size),
                   m_notifier(notifier),
                   m_global_index(screen_size),
                   m_pixels(m_global_index.count()),
+                  m_pixel_locks(m_pixels.size()),
                   m_paintbrush(screen_size, PANTBRUSH_WIDTH)
         {
         }
 
         std::optional<std::array<int, N>> next_pixel()
         {
-                return pixels_implementation::to_type<int>(
+                namespace impl = pixels_implementation;
+
+                return impl::to_type<int>(
                         [&]
                         {
                                 std::lock_guard lg(m_paintbrush_lock);
@@ -193,6 +228,7 @@ public:
 
         void next_pass()
         {
+                std::lock_guard lg(m_paintbrush_lock);
                 m_paintbrush.reset();
         }
 
@@ -201,6 +237,8 @@ public:
                 const std::vector<Vector<N, T>>& points,
                 const std::vector<std::optional<Color>>& colors)
         {
+                namespace impl = pixels_implementation;
+
                 ASSERT(points.size() == colors.size());
 
                 Color color_sum{0};
@@ -222,13 +260,16 @@ public:
 
                 const long long index = m_global_index.compute(pixel);
 
+                std::lock_guard lg(m_pixel_locks[index]);
                 m_pixels[index].merge(color_sum, hit_weight_sum, background_weight_sum);
-                typename pixels_implementation::Pixel<N, T>::Info info = m_pixels[index].info();
+                typename impl::Pixel<N, T>::Info info = m_pixels[index].info();
                 m_notifier->pixel_set(pixel, info.color, info.alpha);
         }
 
         image::Image<N> image() const
         {
+                namespace impl = pixels_implementation;
+
                 constexpr std::size_t PIXEL_SIZE = 4 * sizeof(float);
 
                 image::Image<N> image;
@@ -237,10 +278,12 @@ public:
                 image.size = m_screen_size;
                 image.pixels.resize(PIXEL_SIZE * m_pixels.size());
 
+                impl::LockGuards lg(m_pixel_locks);
+
                 std::byte* ptr = image.pixels.data();
-                for (const pixels_implementation::Pixel<N, T>& pixel : m_pixels)
+                for (const impl::Pixel<N, T>& pixel : m_pixels)
                 {
-                        typename pixels_implementation::Pixel<N, T>::Info info = pixel.info();
+                        typename impl::Pixel<N, T>::Info info = pixel.info();
 
                         std::array<float, 4> rgba;
                         rgba[0] = info.color.red();
