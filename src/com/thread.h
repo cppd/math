@@ -42,19 +42,19 @@ class SpinLock
         std::atomic_flag spin_lock;
 
 public:
-        SpinLock()
+        SpinLock() noexcept
         {
                 spin_lock.clear();
         }
 
-        void lock()
+        void lock() noexcept
         {
                 while (spin_lock.test_and_set(std::memory_order_acquire))
                 {
                 }
         }
 
-        void unlock()
+        void unlock() noexcept
         {
                 spin_lock.clear(std::memory_order_release);
         }
