@@ -40,6 +40,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <cmath>
 #include <deque>
 #include <list>
+#include <mutex>
 #include <numeric>
 #include <stack>
 #include <tuple>

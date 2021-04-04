@@ -21,8 +21,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <algorithm>
 #include <atomic>
-#include <condition_variable>
-#include <mutex>
 #include <optional>
 #include <queue>
 #include <string>
@@ -57,61 +55,6 @@ public:
         void unlock() noexcept
         {
                 spin_lock.clear(std::memory_order_release);
-        }
-};
-
-class ThreadBarrier
-{
-        std::mutex m_mutex;
-        std::condition_variable m_cv;
-        int m_count;
-        const int m_thread_count;
-        long long m_generation = 0;
-
-public:
-        explicit ThreadBarrier(int thread_count) : m_count(thread_count), m_thread_count(thread_count)
-        {
-        }
-
-        void wait() noexcept
-        {
-                try
-                {
-                        try
-                        {
-                                if (m_thread_count == 1)
-                                {
-                                        return;
-                                }
-
-                                std::unique_lock<std::mutex> lock(m_mutex);
-                                long long g = m_generation;
-                                --m_count;
-                                if (m_count == 0)
-                                {
-                                        ++m_generation;
-                                        m_count = m_thread_count;
-                                        m_cv.notify_all();
-                                }
-                                else
-                                {
-                                        m_cv.wait(
-                                                lock,
-                                                [this, g]
-                                                {
-                                                        return g != m_generation;
-                                                });
-                                }
-                        }
-                        catch (const std::exception& e)
-                        {
-                                error_fatal(std::string("Error thread barrier wait: ") + e.what());
-                        }
-                }
-                catch (...)
-                {
-                        error_fatal("Error thread barrier wait");
-                }
         }
 };
 
@@ -325,44 +268,4 @@ inline void run_in_threads(const std::function<void(std::atomic_size_t&)>& funct
                 function(task);
         }
 }
-
-template <typename T>
-class AtomicCounter
-{
-        static_assert(std::atomic<T>::is_always_lock_free);
-
-        std::atomic<T> m_counter;
-
-public:
-        static constexpr bool is_always_lock_free = std::atomic<T>::is_always_lock_free;
-
-        AtomicCounter() : m_counter(0)
-        {
-        }
-
-        explicit AtomicCounter(std::type_identity_t<T> v) : m_counter(v)
-        {
-        }
-
-        AtomicCounter& operator=(T v)
-        {
-                m_counter.store(v, std::memory_order_relaxed);
-                return *this;
-        }
-
-        operator T() const
-        {
-                return m_counter.load(std::memory_order_relaxed);
-        }
-
-        void operator++()
-        {
-                m_counter.fetch_add(1, std::memory_order_relaxed);
-        }
-
-        void operator+=(T v)
-        {
-                m_counter.fetch_add(v, std::memory_order_relaxed);
-        }
-};
 }

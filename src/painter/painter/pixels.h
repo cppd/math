@@ -27,6 +27,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/image/image.h>
 
 #include <array>
+#include <mutex>
 #include <optional>
 #include <vector>
 

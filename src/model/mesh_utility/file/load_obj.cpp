@@ -22,6 +22,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "../position.h"
 
+#include <src/com/barrier.h>
 #include <src/com/error.h>
 #include <src/com/file/path.h>
 #include <src/com/log.h>
@@ -893,7 +894,7 @@ void read_obj_thread(
         unsigned thread_num,
         unsigned thread_count,
         std::vector<Counters>* counters,
-        ThreadBarrier* barrier,
+        Barrier* barrier,
         std::atomic_bool* error_found,
         std::vector<char>* data_ptr,
         std::vector<long long>* line_begin,
@@ -1139,7 +1140,7 @@ void read_obj(
         read_file_lines(file_name, &data, &line_begin);
 
         std::vector<ObjLine<N>> line_prop(line_begin.size());
-        ThreadBarrier barrier(thread_count);
+        Barrier barrier(thread_count);
         std::atomic_bool error_found{false};
         std::vector<Counters> counters(thread_count);
 

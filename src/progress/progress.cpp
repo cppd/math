@@ -17,10 +17,13 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "progress.h"
 
+#include <src/com/atomic_counter.h>
 #include <src/com/thread.h>
 
 #include <algorithm>
+#include <atomic>
 #include <cmath>
+#include <mutex>
 
 namespace ns
 {

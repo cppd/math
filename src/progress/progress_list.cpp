@@ -18,6 +18,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "progress_list.h"
 
 #include <src/com/error.h>
+#include <src/com/thread.h>
 
 namespace ns
 {

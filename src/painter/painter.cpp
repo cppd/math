@@ -22,6 +22,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "painter/statistics.h"
 #include "painter/trace.h"
 
+#include <src/com/barrier.h>
 #include <src/com/error.h>
 #include <src/com/print.h>
 #include <src/com/random/engine.h>
@@ -194,7 +195,7 @@ void prepare_next_pass(
 template <std::size_t N, typename T>
 void worker_thread(
         unsigned thread_number,
-        ThreadBarrier* barrier,
+        Barrier* barrier,
         const PaintData<N, T>& paint_data,
         std::atomic_bool* stop,
         PixelData<N, T>* pixel_data,
@@ -264,7 +265,7 @@ void worker_threads(
 {
         try
         {
-                ThreadBarrier barrier(thread_count);
+                Barrier barrier(thread_count);
                 std::vector<std::thread> threads(thread_count);
 
                 const auto f = [&](unsigned thread_number) noexcept

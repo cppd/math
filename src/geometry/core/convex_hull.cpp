@@ -58,6 +58,7 @@ Chapman & Hall/CRC, 2004.
 #include "ridge.h"
 
 #include <src/com/arrays.h>
+#include <src/com/barrier.h>
 #include <src/com/bits.h>
 #include <src/com/combinatorics.h>
 #include <src/com/error.h>
@@ -581,7 +582,7 @@ void create_horizon_facets(
         std::vector<FacetStore<Facet<N, S, C>>>* point_conflicts,
         std::vector<std::vector<signed char>>* unique_points_work,
         std::vector<FacetList<Facet<N, S, C>>>* new_facets_vector,
-        ThreadBarrier* thread_barrier)
+        Barrier* barrier)
 {
         try
         {
@@ -590,10 +591,10 @@ void create_horizon_facets(
         }
         catch (...)
         {
-                thread_barrier->wait();
+                barrier->wait();
                 throw;
         }
-        thread_barrier->wait();
+        barrier->wait();
 
         // Вначале убрать ссылки на видимые грани, а потом добавить ссылки на новые грани.
         // Это нужно для уменьшения объёма поиска граней у точек.
@@ -621,7 +622,7 @@ void add_point_to_convex_hull(
         FacetList<Facet<N, S, C>>* facets,
         std::vector<FacetStore<Facet<N, S, C>>>* point_conflicts,
         ThreadPool* thread_pool,
-        ThreadBarrier* thread_barrier,
+        Barrier* barrier,
         std::vector<std::vector<signed char>>* unique_points_work)
 {
         if ((*point_conflicts)[point].size() == 0)
@@ -650,14 +651,13 @@ void add_point_to_convex_hull(
                         {
                                 create_horizon_facets(
                                         thread_id, thread_count, &points, point, point_conflicts, unique_points_work,
-                                        &new_facets, thread_barrier);
+                                        &new_facets, barrier);
                         });
         }
         else
         {
                 // 0 = thread_id, 1 = thread_count
-                create_horizon_facets(
-                        0, 1, &points, point, point_conflicts, unique_points_work, &new_facets, thread_barrier);
+                create_horizon_facets(0, 1, &points, point, point_conflicts, unique_points_work, &new_facets, barrier);
         }
 
         // Удаление видимых граней
@@ -723,7 +723,7 @@ void create_convex_hull(
         create_init_conflict_lists(points, point_enabled, facets, &point_conflicts);
 
         ThreadPool thread_pool(thread_count<S, C>());
-        ThreadBarrier thread_barrier(thread_pool.thread_count());
+        Barrier barrier(thread_pool.thread_count());
 
         // Создаётся здесь, чтобы каждый раз не создавать при расчёте и не выделять каждый раз память,
         // а также не использовать thread_local
@@ -747,7 +747,7 @@ void create_convex_hull(
                 }
 
                 add_point_to_convex_hull(
-                        points, i, facets, &point_conflicts, &thread_pool, &thread_barrier, &unique_points_work);
+                        points, i, facets, &point_conflicts, &thread_pool, &barrier, &unique_points_work);
         }
 
         ASSERT(std::all_of(
