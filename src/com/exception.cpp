@@ -17,40 +17,29 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "exception.h"
 
+#include "error.h"
 #include "message.h"
-#include "thread.h"
-
-#include <exception>
 
 namespace ns
 {
 namespace
 {
-void exception_handler(const std::exception_ptr& ptr, const std::string& description) noexcept
+void message(const std::string& description, const char* exception)
 {
-        try
+        std::string msg;
+        if (!description.empty())
         {
-                try
-                {
-                        std::rethrow_exception(ptr);
-                }
-                catch (const TerminateRequestException&)
-                {
-                }
-                catch (const std::exception& e)
-                {
-                        std::string s = !description.empty() ? (description + ":\n") : std::string();
-                        MESSAGE_ERROR(s + e.what());
-                }
-                catch (...)
-                {
-                        std::string s = !description.empty() ? (description + ":\n") : std::string();
-                        MESSAGE_ERROR(s + "Unknown error");
-                }
+                msg += description;
+                msg += ":\n";
         }
-        catch (...)
+        msg += exception;
+        if (!msg.empty())
         {
-                error_fatal("Exception in exception handlers");
+                MESSAGE_ERROR(msg);
+        }
+        else
+        {
+                MESSAGE_ERROR("Exception without description and exception string");
         }
 }
 }
@@ -59,11 +48,25 @@ void catch_all(const std::string& description, const std::function<void()>& f) n
 {
         try
         {
-                f();
+                try
+                {
+                        f();
+                }
+                catch (const TerminateQuietlyException&)
+                {
+                }
+                catch (const std::exception& e)
+                {
+                        message(description, e.what());
+                }
+                catch (...)
+                {
+                        message(description, "Unknown error");
+                }
         }
         catch (...)
         {
-                exception_handler(std::current_exception(), description);
+                error_fatal("Exception in catch all exception handlers");
         }
 }
 }

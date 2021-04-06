@@ -18,7 +18,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "progress.h"
 
 #include <src/com/atomic_counter.h>
-#include <src/com/thread.h>
+#include <src/com/exception.h>
 
 #include <algorithm>
 #include <atomic>
@@ -58,12 +58,12 @@ public:
 
                 if (terminate & TERMINATE_QUIETLY)
                 {
-                        throw_terminate_quietly_exception();
+                        throw TerminateQuietlyException();
                 }
 
                 if (terminate & TERMINATE_WITH_MESSAGE)
                 {
-                        throw_terminate_with_message_exception();
+                        throw TerminateWithMessageException();
                 }
         }
 };

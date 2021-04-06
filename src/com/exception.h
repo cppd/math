@@ -17,10 +17,33 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
+#include <exception>
 #include <functional>
 #include <string>
 
 namespace ns
 {
+class TerminateQuietlyException final : public std::exception
+{
+        static constexpr const char* m_msg = "Thread termination requested";
+
+public:
+        const char* what() const noexcept override
+        {
+                return m_msg;
+        }
+};
+
+class TerminateWithMessageException final : public std::exception
+{
+        static constexpr const char* m_msg = "Terminated by user";
+
+public:
+        const char* what() const noexcept override
+        {
+                return m_msg;
+        }
+};
+
 void catch_all(const std::string& description, const std::function<void()>& f) noexcept;
 }

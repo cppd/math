@@ -18,7 +18,9 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "progress_list.h"
 
 #include <src/com/error.h>
-#include <src/com/thread.h>
+#include <src/com/exception.h>
+
+#include <thread>
 
 namespace ns
 {
@@ -31,12 +33,12 @@ void ProgressRatioList::add_progress_ratio(ProgressRatioControl* ratio)
 
         if (m_terminate_quietly)
         {
-                throw_terminate_quietly_exception();
+                throw TerminateQuietlyException();
         }
 
         if (m_terminate_with_message)
         {
-                throw_terminate_with_message_exception();
+                throw TerminateWithMessageException();
         }
 
         m_ratios.emplace_back(ratio);

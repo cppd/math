@@ -17,6 +17,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
+#include "exception.h"
 #include "log.h"
 #include "print.h"
 #include "thread.h"
@@ -149,7 +150,7 @@ class ThreadPool
                                 {
                                         m_bound_function(thread_num, THREAD_COUNT);
                                 }
-                                catch (TerminateRequestException&)
+                                catch (const TerminateQuietlyException&)
                                 {
                                 }
                                 catch (const std::exception& e)

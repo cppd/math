@@ -18,6 +18,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #pragma once
 
 #include "error.h"
+#include "exception.h"
 
 #include <algorithm>
 #include <atomic>
@@ -32,38 +33,6 @@ namespace ns
 inline int hardware_concurrency()
 {
         return std::max(1u, std::thread::hardware_concurrency());
-}
-
-class TerminateRequestException final : public std::exception
-{
-        static constexpr const char* m_msg = "Thread termination requested";
-
-public:
-        const char* what() const noexcept override
-        {
-                return m_msg;
-        }
-};
-
-class TerminateWithMessageRequestException final : public std::exception
-{
-        static constexpr const char* m_msg = "Terminated by user";
-
-public:
-        const char* what() const noexcept override
-        {
-                return m_msg;
-        }
-};
-
-[[noreturn]] inline void throw_terminate_quietly_exception()
-{
-        throw TerminateRequestException();
-}
-
-[[noreturn]] inline void throw_terminate_with_message_exception()
-{
-        throw TerminateWithMessageRequestException();
 }
 
 class ThreadsWithCatch
@@ -174,7 +143,7 @@ public:
                                                 {
                                                         f();
                                                 }
-                                                catch (TerminateRequestException&)
+                                                catch (const TerminateQuietlyException&)
                                                 {
                                                 }
                                                 catch (const std::exception& e)
