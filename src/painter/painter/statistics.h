@@ -19,7 +19,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "../painter.h"
 
-#include <src/com/thread.h>
+#include <src/com/spin_lock.h>
 #include <src/com/time.h>
 
 #include <atomic>

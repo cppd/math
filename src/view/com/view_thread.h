@@ -21,11 +21,12 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <src/com/error.h>
 #include <src/com/message.h>
-#include <src/com/thread.h>
+#include <src/com/spin_lock.h>
 
 #include <atomic>
 #include <condition_variable>
 #include <mutex>
+#include <queue>
 #include <thread>
 
 namespace ns::view

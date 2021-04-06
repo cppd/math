@@ -29,6 +29,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <src/com/arrays.h>
 #include <src/com/error.h>
+#include <src/com/spin_lock.h>
 #include <src/com/thread.h>
 #include <src/com/type/limit.h>
 #include <src/numerical/ray.h>

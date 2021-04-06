@@ -23,7 +23,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <src/color/color.h>
 #include <src/com/global_index.h>
-#include <src/com/thread.h>
+#include <src/com/spin_lock.h>
 #include <src/image/image.h>
 
 #include <array>

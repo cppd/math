@@ -21,8 +21,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <algorithm>
 #include <atomic>
-#include <optional>
-#include <queue>
+#include <functional>
 #include <string>
 #include <thread>
 #include <vector>
@@ -34,29 +33,6 @@ inline int hardware_concurrency()
 {
         return std::max(1u, std::thread::hardware_concurrency());
 }
-
-class SpinLock
-{
-        std::atomic_flag spin_lock;
-
-public:
-        SpinLock() noexcept
-        {
-                spin_lock.clear();
-        }
-
-        void lock() noexcept
-        {
-                while (spin_lock.test_and_set(std::memory_order_acquire))
-                {
-                }
-        }
-
-        void unlock() noexcept
-        {
-                spin_lock.clear(std::memory_order_release);
-        }
-};
 
 class TerminateRequestException final : public std::exception
 {
