@@ -17,6 +17,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
+#include "filter.h"
 #include "paintbrush.h"
 
 #include "../painter.h"
@@ -157,8 +158,14 @@ class Pixels final
 
         static constexpr int PANTBRUSH_WIDTH = 20;
 
+        // a=2;
+        // r=1.5;
+        // filter[x_]:=Max[0,Exp[-a*x*x]-Exp[-a*r*r]];
+        // Plot[{filter[x]},{x,-r,r},Filling->Axis,PlotRange->Full]
+        static constexpr T GAUSSIAN_FILTER_ALPHA = 2;
         static constexpr T FILTER_RADIUS = 1.5;
-        static constexpr int FILTER_INTEGER_RADIUS = integer_radius(FILTER_RADIUS);
+
+        const GaussianFilter<T> m_filter{GAUSSIAN_FILTER_ALPHA, FILTER_RADIUS};
 
         const std::array<int, N> m_screen_size;
         const std::array<int, N> m_screen_max = pixels_implementation::max_values_for_size(m_screen_size);
@@ -181,7 +188,7 @@ class Pixels final
                         p[I] = i;
                         if constexpr (I + 1 < N)
                         {
-                                region<I + 1>(min, max, p);
+                                region<I + 1>(min, max, p, f);
                         }
                         else
                         {
@@ -193,6 +200,8 @@ class Pixels final
         template <typename F>
         void region(const std::array<int, N>& pixel, const F& f)
         {
+                static constexpr int FILTER_INTEGER_RADIUS = pixels_implementation::integer_radius(FILTER_RADIUS);
+
                 std::array<int, N> min;
                 std::array<int, N> max;
                 for (std::size_t i = 0; i < N; ++i)
@@ -242,29 +251,47 @@ public:
 
                 ASSERT(points.size() == colors.size());
 
-                Color color_sum{0};
-                Color::DataType hit_weight_sum{0};
-                Color::DataType background_weight_sum{0};
+                region(pixel,
+                       [&](const std::array<int, N>& region_pixel)
+                       {
+                               const Vector<N, T> region_pixel_center_in_point_coordinates = [&]()
+                               {
+                                       Vector<N, T> r;
+                                       for (unsigned i = 0; i < N; ++i)
+                                       {
+                                               r[i] = (region_pixel[i] - pixel[i]) + T(0.5);
+                                       }
+                                       return r;
+                               }();
 
-                for (std::size_t i = 0; i < points.size(); ++i)
-                {
-                        if (colors[i])
-                        {
-                                color_sum += *colors[i];
-                                hit_weight_sum += 1;
-                        }
-                        else
-                        {
-                                background_weight_sum += 1;
-                        }
-                }
+                               Color color_sum{0};
+                               Color::DataType hit_weight_sum{0};
+                               Color::DataType background_weight_sum{0};
 
-                const long long index = m_global_index.compute(pixel);
+                               for (std::size_t i = 0; i < points.size(); ++i)
+                               {
+                                       const Color::DataType weight =
+                                               m_filter.compute(region_pixel_center_in_point_coordinates - points[i]);
 
-                std::lock_guard lg(m_pixel_locks[index]);
-                m_pixels[index].merge(color_sum, hit_weight_sum, background_weight_sum);
-                typename impl::Pixel<N, T>::Info info = m_pixels[index].info();
-                m_notifier->pixel_set(pixel, info.color, info.alpha);
+                                       if (colors[i])
+                                       {
+                                               color_sum += weight * (*colors[i]);
+                                               hit_weight_sum += weight;
+                                       }
+                                       else
+                                       {
+                                               background_weight_sum += weight;
+                                       }
+                               }
+
+                               const long long region_pixel_index = m_global_index.compute(region_pixel);
+
+                               std::lock_guard lg(m_pixel_locks[region_pixel_index]);
+
+                               m_pixels[region_pixel_index].merge(color_sum, hit_weight_sum, background_weight_sum);
+                               const typename impl::Pixel<N, T>::Info info = m_pixels[region_pixel_index].info();
+                               m_notifier->pixel_set(region_pixel, info.color, info.alpha);
+                       });
         }
 
         image::Image<N> image() const
