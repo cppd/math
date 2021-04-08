@@ -158,14 +158,18 @@ class Pixels final
 
         static constexpr int PANTBRUSH_WIDTH = 20;
 
-        // a=2;
-        // r=1.5;
-        // filter[x_]:=Max[0,Exp[-a*x*x]-Exp[-a*r*r]];
-        // Plot[{filter[x]},{x,-r,r},Filling->Axis,PlotRange->Full]
-        static constexpr T GAUSSIAN_FILTER_ALPHA = 2;
+        //radius=1.5;
+        //width=radius/2.5;
+        //alpha=1/(2*width*width);
+        //gaussian[x_]:=Exp[-alpha*x*x];
+        //gaussianFilter[x_]:=gaussian[x]-gaussian[radius];
+        //max=gaussianFilter[0];
+        //triangle[x_]:=If[x<0,max/radius*x+max,-max/radius*x+max];
+        //Plot[{gaussianFilter[x],triangle[x]},{x,-radius,radius},PlotRange->Full]
         static constexpr T FILTER_RADIUS = 1.5;
+        static constexpr T GAUSSIAN_FILTER_WIDTH = FILTER_RADIUS / 2.5;
 
-        const GaussianFilter<T> m_filter{GAUSSIAN_FILTER_ALPHA, FILTER_RADIUS};
+        const GaussianFilter<T> m_filter{GAUSSIAN_FILTER_WIDTH, FILTER_RADIUS};
 
         const std::array<int, N> m_screen_size;
         const std::array<int, N> m_screen_max = pixels_implementation::max_values_for_size(m_screen_size);

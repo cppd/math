@@ -36,29 +36,29 @@ namespace ns::painter
 template <typename T>
 class GaussianFilter final
 {
-        static T gaussian(T negative_alpha, T v)
+        static T gaussian(T alpha, T v)
         {
-                return std::exp(negative_alpha * v * v);
+                return std::exp(alpha * v * v);
         }
 
-        T m_negative_alpha;
+        T m_alpha;
         T m_exp;
 
 public:
-        GaussianFilter(std::type_identity_t<T> alpha, std::type_identity_t<T> radius)
+        GaussianFilter(std::type_identity_t<T> width, std::type_identity_t<T> radius)
         {
-                if (!(alpha > 0))
+                if (!(width > 0))
                 {
-                        error("Gaussian alpha " + to_string(alpha) + " must be positive");
+                        error("Gaussian filter width " + to_string(width) + " must be positive");
                 }
 
                 if (!(radius > 0))
                 {
-                        error("Gaussian radius " + to_string(radius) + " must be positive");
+                        error("Gaussian filter radius " + to_string(radius) + " must be positive");
                 }
 
-                m_negative_alpha = -alpha;
-                m_exp = gaussian(m_negative_alpha, radius);
+                m_alpha = -1 / (2 * width * width);
+                m_exp = gaussian(m_alpha, radius);
         }
 
         template <std::size_t N>
@@ -66,10 +66,10 @@ public:
         {
                 static_assert(N >= 1);
 
-                T r = std::max(T(0), gaussian(m_negative_alpha, p[0]) - m_exp);
+                T r = std::max(T(0), gaussian(m_alpha, p[0]) - m_exp);
                 for (std::size_t i = 1; i < N; ++i)
                 {
-                        r *= std::max(T(0), gaussian(m_negative_alpha, p[i]) - m_exp);
+                        r *= std::max(T(0), gaussian(m_alpha, p[i]) - m_exp);
                 }
                 return r;
         }
