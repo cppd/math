@@ -125,12 +125,14 @@ void blend_alpha_r8g8b8a8(const std::span<std::byte>& bytes, const Color& blend_
                 error("Error size " + to_string(bytes.size()) + " for blending R8G8B8A8");
         }
 
+        const Vector<3, float>& blend_color_rgb = blend_color.rgb<float>();
+
         const std::array<T, 4> blend_pixel = [&]
         {
                 std::array<T, 4> p;
-                p[0] = color::linear_float_to_srgb_uint8(blend_color.data()[0]);
-                p[1] = color::linear_float_to_srgb_uint8(blend_color.data()[1]);
-                p[2] = color::linear_float_to_srgb_uint8(blend_color.data()[2]);
+                p[0] = color::linear_float_to_srgb_uint8(blend_color_rgb[0]);
+                p[1] = color::linear_float_to_srgb_uint8(blend_color_rgb[1]);
+                p[2] = color::linear_float_to_srgb_uint8(blend_color_rgb[2]);
                 p[3] = DST_ALPHA;
                 return p;
         }();
@@ -151,9 +153,9 @@ void blend_alpha_r8g8b8a8(const std::span<std::byte>& bytes, const Color& blend_
                         c[0] = color::srgb_uint8_to_linear_float(pixel[0]);
                         c[1] = color::srgb_uint8_to_linear_float(pixel[1]);
                         c[2] = color::srgb_uint8_to_linear_float(pixel[2]);
-                        c[0] = interpolation(blend_color.data()[0], c[0], alpha);
-                        c[1] = interpolation(blend_color.data()[1], c[1], alpha);
-                        c[2] = interpolation(blend_color.data()[2], c[2], alpha);
+                        c[0] = interpolation(blend_color_rgb[0], c[0], alpha);
+                        c[1] = interpolation(blend_color_rgb[1], c[1], alpha);
+                        c[2] = interpolation(blend_color_rgb[2], c[2], alpha);
                         pixel[0] = color::linear_float_to_srgb_uint8(c[0]);
                         pixel[1] = color::linear_float_to_srgb_uint8(c[1]);
                         pixel[2] = color::linear_float_to_srgb_uint8(c[2]);
@@ -176,12 +178,14 @@ void blend_alpha_r8g8b8a8_premultiplied(const std::span<std::byte>& bytes, const
                 error("Error size " + to_string(bytes.size()) + " for blending R8G8B8A8");
         }
 
+        const Vector<3, float>& blend_color_rgb = blend_color.rgb<float>();
+
         const std::array<T, 4> blend_pixel = [&]
         {
                 std::array<T, 4> p;
-                p[0] = color::linear_float_to_srgb_uint8(blend_color.data()[0]);
-                p[1] = color::linear_float_to_srgb_uint8(blend_color.data()[1]);
-                p[2] = color::linear_float_to_srgb_uint8(blend_color.data()[2]);
+                p[0] = color::linear_float_to_srgb_uint8(blend_color_rgb[0]);
+                p[1] = color::linear_float_to_srgb_uint8(blend_color_rgb[1]);
+                p[2] = color::linear_float_to_srgb_uint8(blend_color_rgb[2]);
                 p[3] = DST_ALPHA;
                 return p;
         }();
@@ -203,9 +207,9 @@ void blend_alpha_r8g8b8a8_premultiplied(const std::span<std::byte>& bytes, const
                         c[0] = color::srgb_uint8_to_linear_float(pixel[0]);
                         c[1] = color::srgb_uint8_to_linear_float(pixel[1]);
                         c[2] = color::srgb_uint8_to_linear_float(pixel[2]);
-                        c[0] = k * blend_color.data()[0] + c[0];
-                        c[1] = k * blend_color.data()[1] + c[1];
-                        c[2] = k * blend_color.data()[2] + c[0];
+                        c[0] = k * blend_color_rgb[0] + c[0];
+                        c[1] = k * blend_color_rgb[1] + c[1];
+                        c[2] = k * blend_color_rgb[2] + c[0];
                         pixel[0] = color::linear_float_to_srgb_uint8(c[0]);
                         pixel[1] = color::linear_float_to_srgb_uint8(c[1]);
                         pixel[2] = color::linear_float_to_srgb_uint8(c[2]);
@@ -228,12 +232,14 @@ void blend_alpha_r16g16b16a16(const std::span<std::byte>& bytes, const Color& bl
                 error("Error size " + to_string(bytes.size()) + " for blending R16G16B16A16");
         }
 
+        const Vector<3, float>& blend_color_rgb = blend_color.rgb<float>();
+
         const std::array<T, 4> blend_pixel = [&]
         {
                 std::array<T, 4> p;
-                p[0] = color::linear_float_to_linear_uint16(blend_color.data()[0]);
-                p[1] = color::linear_float_to_linear_uint16(blend_color.data()[1]);
-                p[2] = color::linear_float_to_linear_uint16(blend_color.data()[2]);
+                p[0] = color::linear_float_to_linear_uint16(blend_color_rgb[0]);
+                p[1] = color::linear_float_to_linear_uint16(blend_color_rgb[1]);
+                p[2] = color::linear_float_to_linear_uint16(blend_color_rgb[2]);
                 p[3] = DST_ALPHA;
                 return p;
         }();
@@ -254,9 +260,9 @@ void blend_alpha_r16g16b16a16(const std::span<std::byte>& bytes, const Color& bl
                         c[0] = color::linear_uint16_to_linear_float(pixel[0]);
                         c[1] = color::linear_uint16_to_linear_float(pixel[1]);
                         c[2] = color::linear_uint16_to_linear_float(pixel[2]);
-                        c[0] = interpolation(blend_color.data()[0], c[0], alpha);
-                        c[1] = interpolation(blend_color.data()[1], c[1], alpha);
-                        c[2] = interpolation(blend_color.data()[2], c[2], alpha);
+                        c[0] = interpolation(blend_color_rgb[0], c[0], alpha);
+                        c[1] = interpolation(blend_color_rgb[1], c[1], alpha);
+                        c[2] = interpolation(blend_color_rgb[2], c[2], alpha);
                         pixel[0] = color::linear_float_to_linear_uint16(c[0]);
                         pixel[1] = color::linear_float_to_linear_uint16(c[1]);
                         pixel[2] = color::linear_float_to_linear_uint16(c[2]);
@@ -279,12 +285,14 @@ void blend_alpha_r16g16b16a16_premultiplied(const std::span<std::byte>& bytes, c
                 error("Error size " + to_string(bytes.size()) + " for blending R16G16B16A16");
         }
 
+        const Vector<3, float>& blend_color_rgb = blend_color.rgb<float>();
+
         const std::array<T, 4> blend_pixel = [&]
         {
                 std::array<T, 4> p;
-                p[0] = color::linear_float_to_linear_uint16(blend_color.data()[0]);
-                p[1] = color::linear_float_to_linear_uint16(blend_color.data()[1]);
-                p[2] = color::linear_float_to_linear_uint16(blend_color.data()[2]);
+                p[0] = color::linear_float_to_linear_uint16(blend_color_rgb[0]);
+                p[1] = color::linear_float_to_linear_uint16(blend_color_rgb[1]);
+                p[2] = color::linear_float_to_linear_uint16(blend_color_rgb[2]);
                 p[3] = DST_ALPHA;
                 return p;
         }();
@@ -306,9 +314,9 @@ void blend_alpha_r16g16b16a16_premultiplied(const std::span<std::byte>& bytes, c
                         c[0] = color::linear_uint16_to_linear_float(pixel[0]);
                         c[1] = color::linear_uint16_to_linear_float(pixel[1]);
                         c[2] = color::linear_uint16_to_linear_float(pixel[2]);
-                        c[0] = k * blend_color.data()[0] + c[0];
-                        c[1] = k * blend_color.data()[1] + c[1];
-                        c[2] = k * blend_color.data()[2] + c[2];
+                        c[0] = k * blend_color_rgb[0] + c[0];
+                        c[1] = k * blend_color_rgb[1] + c[1];
+                        c[2] = k * blend_color_rgb[2] + c[2];
                         pixel[0] = color::linear_float_to_linear_uint16(c[0]);
                         pixel[1] = color::linear_float_to_linear_uint16(c[1]);
                         pixel[2] = color::linear_float_to_linear_uint16(c[2]);
@@ -333,12 +341,14 @@ void blend_alpha_r32g32b32a32(const std::span<std::byte>& bytes, const Color& bl
                 error("Error size " + to_string(bytes.size()) + " for blending R32G32B32A32");
         }
 
+        const Vector<3, float>& blend_color_rgb = blend_color.rgb<float>();
+
         const std::array<T, 4> blend_pixel = [&]
         {
                 std::array<T, 4> p;
-                p[0] = blend_color.data()[0];
-                p[1] = blend_color.data()[1];
-                p[2] = blend_color.data()[2];
+                p[0] = blend_color_rgb[0];
+                p[1] = blend_color_rgb[1];
+                p[2] = blend_color_rgb[2];
                 p[3] = DST_ALPHA;
                 return p;
         }();
@@ -383,12 +393,14 @@ void blend_alpha_r32g32b32a32_premultiplied(const std::span<std::byte>& bytes, c
                 error("Error size " + to_string(bytes.size()) + " for blending R32G32B32A32_PREMULTIPLIED");
         }
 
+        const Vector<3, float>& blend_color_rgb = blend_color.rgb<float>();
+
         const std::array<T, 4> blend_pixel = [&]
         {
                 std::array<T, 4> p;
-                p[0] = blend_color.data()[0];
-                p[1] = blend_color.data()[1];
-                p[2] = blend_color.data()[2];
+                p[0] = blend_color_rgb[0];
+                p[1] = blend_color_rgb[1];
+                p[2] = blend_color_rgb[2];
                 p[3] = DST_ALPHA;
                 return p;
         }();

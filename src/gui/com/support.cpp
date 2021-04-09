@@ -149,7 +149,7 @@ Color qcolor_to_rgb(const QColor& c)
 
 QColor rgb_to_qcolor(const Color& c)
 {
-        Srgb8 srgb8 = c.to_srgb8();
+        Srgb8 srgb8 = c.srgb8();
         return QColor(srgb8.red, srgb8.green, srgb8.blue);
 }
 

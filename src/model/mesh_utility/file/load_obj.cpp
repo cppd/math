@@ -124,9 +124,19 @@ bool check_range(const T1& v, const T2& min, const T3& max)
         return v >= min && v <= max;
 }
 
-bool check_color(const Color& v)
+template <typename T>
+bool check_color(const Vector<3, T>& v)
 {
-        return v.red() >= 0 && v.red() <= 1 && v.green() >= 0 && v.green() <= 1 && v.blue() >= 0 && v.blue() <= 1;
+        static_assert(std::is_floating_point_v<T>);
+
+        for (std::size_t i = 0; i < 3; ++i)
+        {
+                if (!(v[i] >= 0 && v[i] <= 1))
+                {
+                        return false;
+                }
+        }
+        return true;
 }
 
 template <std::size_t N>
@@ -1007,12 +1017,15 @@ void read_lib(
                                         continue;
                                 }
 
-                                read_float(&data[second_b], &mtl->Ka.data());
+                                Vector<3, float> rgb;
+                                read_float(&data[second_b], &rgb);
 
-                                if (!check_color(mtl->Ka))
+                                if (!check_color(rgb))
                                 {
                                         error("Error Ka in material " + mtl->name);
                                 }
+
+                                mtl->Ka.set_rgb(rgb);
                         }
                         else if (str_equal(first, MTL_Kd))
                         {
@@ -1021,12 +1034,15 @@ void read_lib(
                                         continue;
                                 }
 
-                                read_float(&data[second_b], &mtl->Kd.data());
+                                Vector<3, float> rgb;
+                                read_float(&data[second_b], &rgb);
 
-                                if (!check_color(mtl->Kd))
+                                if (!check_color(rgb))
                                 {
                                         error("Error Kd in material " + mtl->name);
                                 }
+
+                                mtl->Kd.set_rgb(rgb);
                         }
                         else if (str_equal(first, MTL_Ks))
                         {
@@ -1035,12 +1051,15 @@ void read_lib(
                                         continue;
                                 }
 
-                                read_float(&data[second_b], &mtl->Ks.data());
+                                Vector<3, float> rgb;
+                                read_float(&data[second_b], &rgb);
 
-                                if (!check_color(mtl->Ks))
+                                if (!check_color(rgb))
                                 {
                                         error("Error Ks in material " + mtl->name);
                                 }
+
+                                mtl->Ks.set_rgb(rgb);
                         }
                         else if (str_equal(first, MTL_Ns))
                         {

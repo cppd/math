@@ -23,11 +23,11 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 namespace ns
 {
-struct Srgb8
+struct Srgb8 final
 {
         const unsigned char red, green, blue;
 
-        constexpr Srgb8(unsigned char r, unsigned char g, unsigned char b) : red(r), green(g), blue(b)
+        constexpr Srgb8(unsigned char red, unsigned char green, unsigned char blue) : red(red), green(green), blue(blue)
         {
         }
 
@@ -37,7 +37,7 @@ struct Srgb8
         }
 };
 
-class Color
+class Color final
 {
         using T = float;
 
@@ -56,7 +56,7 @@ public:
         {
         }
 
-        constexpr explicit Color(const Vector<3, T>& rgb) : m_data(rgb)
+        constexpr Color(T red, T green, T blue) : m_data(red, green, blue)
         {
         }
 
@@ -69,77 +69,68 @@ public:
         }
 
         template <typename F>
-        std::enable_if_t<std::is_same_v<F, T>, const Vector<3, F>&> to_rgb_vector() const
+        [[nodiscard]] std::enable_if_t<std::is_same_v<F, T>, const Vector<3, F>&> rgb() const
         {
                 return m_data;
         }
+
         template <typename F>
-        std::enable_if_t<!std::is_same_v<F, T>, Vector<3, F>> to_rgb_vector() const
+        [[nodiscard]] std::enable_if_t<!std::is_same_v<F, T>, Vector<3, F>> rgb() const
         {
                 static_assert(std::is_floating_point_v<F>);
 
                 return to_vector<F>(m_data);
         }
 
-        Srgb8 to_srgb8() const
+        template <typename F>
+        void set_rgb(const Vector<3, F>& rgb)
         {
-                unsigned char r = color::linear_float_to_srgb_uint8<Color::DataType>(red());
-                unsigned char g = color::linear_float_to_srgb_uint8<Color::DataType>(green());
-                unsigned char b = color::linear_float_to_srgb_uint8<Color::DataType>(blue());
-                return Srgb8(r, g, b);
+                static_assert(std::is_floating_point_v<F>);
+
+                m_data = to_vector<F>(rgb);
         }
 
-        T luminance() const
+        [[nodiscard]] Srgb8 srgb8() const
+        {
+                return Srgb8(
+                        color::linear_float_to_srgb_uint8<Color::DataType>(m_data[0]),
+                        color::linear_float_to_srgb_uint8<Color::DataType>(m_data[1]),
+                        color::linear_float_to_srgb_uint8<Color::DataType>(m_data[2]));
+        }
+
+        [[nodiscard]] T luminance() const
         {
                 return color::linear_float_to_linear_luminance(m_data[0], m_data[1], m_data[2]);
         }
 
-        T max_element() const
+        [[nodiscard]] T max_element() const
         {
                 return std::max(m_data[2], std::max(m_data[0], m_data[1]));
         }
 
-        bool below(T v) const
+        [[nodiscard]] bool below(T v) const
         {
                 return m_data[0] < v && m_data[1] < v && m_data[2] < v;
         }
 
-        Vector<3, T>& data()
-        {
-                return m_data;
-        }
-
-        const Vector<3, T>& data() const
-        {
-                return m_data;
-        }
-
-        T red() const
+        [[nodiscard]] T red() const
         {
                 return m_data[0];
         }
-        T green() const
+
+        [[nodiscard]] T green() const
         {
                 return m_data[1];
         }
-        T blue() const
+
+        [[nodiscard]] T blue() const
         {
                 return m_data[2];
         }
 
-        void operator+=(const Color& c)
-        {
-                m_data += c.m_data;
-        }
-
-        bool operator==(const Color& c) const
-        {
-                return m_data == c.m_data;
-        }
-
         void clamp()
         {
-                for (unsigned i = 0; i < 3; ++i)
+                for (int i = 0; i < 3; ++i)
                 {
                         m_data[i] = std::clamp(m_data[i], T(0), T(1));
                 }
@@ -148,50 +139,95 @@ public:
         [[nodiscard]] Color clamped() const
         {
                 Color c;
-                for (unsigned i = 0; i < 3; ++i)
+                for (int i = 0; i < 3; ++i)
                 {
                         c.m_data[i] = std::clamp(m_data[i], T(0), T(1));
                 }
                 return c;
         }
+
+        template <typename F>
+        [[nodiscard]] Color interpolation(const Color& c, F x) const
+        {
+                Color r;
+                r.m_data = ::ns::interpolation(m_data, c.m_data, x);
+                return r;
+        }
+
+        [[nodiscard]] bool operator==(const Color& c) const
+        {
+                return m_data == c.m_data;
+        }
+
+        Color& operator+=(const Color& c)
+        {
+                m_data += c.m_data;
+                return *this;
+        }
+
+        Color& operator-=(const Color& c)
+        {
+                m_data -= c.m_data;
+                return *this;
+        }
+
+        Color& operator*=(const Color& c)
+        {
+                m_data *= c.m_data;
+                return *this;
+        }
+
+        template <typename F>
+        Color& operator*=(F b)
+        {
+                m_data *= static_cast<Color::DataType>(b);
+                return *this;
+        }
+
+        template <typename F>
+        Color& operator/=(F b)
+        {
+                m_data /= static_cast<Color::DataType>(b);
+                return *this;
+        }
 };
 
 template <typename F>
-Color interpolation(const Color& a, const Color& b, F x)
+[[nodiscard]] Color interpolation(const Color& a, const Color& b, F x)
 {
-        return Color(interpolation(a.data(), b.data(), x));
+        return a.interpolation(b, x);
+}
+
+[[nodiscard]] inline Color operator+(const Color& a, const Color& b)
+{
+        return Color(a) += b;
+}
+
+[[nodiscard]] inline Color operator-(const Color& a, const Color& b)
+{
+        return Color(a) -= b;
 }
 
 template <typename F>
-Color operator*(const Color& a, F b)
+[[nodiscard]] Color operator*(const Color& a, F b)
 {
-        return Color(a.data() * static_cast<Color::DataType>(b));
+        return Color(a) *= b;
 }
 
 template <typename F>
-Color operator*(F b, const Color& a)
+[[nodiscard]] Color operator*(F b, const Color& a)
 {
-        return Color(static_cast<Color::DataType>(b) * a.data());
+        return Color(a) *= b;
+}
+
+[[nodiscard]] inline Color operator*(const Color& a, const Color& b)
+{
+        return Color(a) *= b;
 }
 
 template <typename F>
-Color operator/(const Color& a, F b)
+[[nodiscard]] Color operator/(const Color& a, F b)
 {
-        return Color(a.data() / static_cast<Color::DataType>(b));
-}
-
-inline Color operator+(const Color& a, const Color& b)
-{
-        return Color(a.data() + b.data());
-}
-
-inline Color operator-(const Color& a, const Color& b)
-{
-        return Color(a.data() - b.data());
-}
-
-inline Color operator*(const Color& a, const Color& b)
-{
-        return Color(a.data() * b.data());
+        return Color(a) /= b;
 }
 }

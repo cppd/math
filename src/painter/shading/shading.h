@@ -216,8 +216,8 @@ public:
                 // pdf = 1
                 // s = f / pdf * cos(n,l)
                 // s = f * cos(n,l)
-                vec3 s = n_l * f(metalness, roughness, color.to_rgb_vector<T>(), n, v, l);
-                return Color(to_vector<Color::DataType>(s));
+                vec3 s = n_l * f(metalness, roughness, color.rgb<T>(), n, v, l);
+                return Color(s[0], s[1], s[2]);
         }
 
         template <typename RandomEngine>
@@ -237,7 +237,7 @@ public:
                 // s = f / (cos(n,l) / PI) * cos(n,l)
                 // s = f * PI
                 vec3 s = PI<T> * f(metalness, roughness, color.to_rgb_vector<T>(), n, v, l);
-                return {Color(to_vector<Color::DataType>(s)), l};
+                return {Color(s[0], s[1], s[2]), l};
 #else
                 Vector<N, T> l;
                 T pdf;
@@ -262,8 +262,8 @@ public:
                         return {Color(0), l};
                 }
                 // s = f / pdf * cos(n, l)
-                vec3 s = (dot(n, l) / pdf) * f(metalness, roughness, color.to_rgb_vector<T>(), n, v, l);
-                return {Color(to_vector<Color::DataType>(s)), l};
+                vec3 s = (dot(n, l) / pdf) * f(metalness, roughness, color.rgb<T>(), n, v, l);
+                return {Color(s[0], s[1], s[2]), l};
 #endif
         }
 };
