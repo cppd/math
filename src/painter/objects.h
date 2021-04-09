@@ -33,7 +33,7 @@ template <typename T>
 using RandomEngine = std::conditional_t<std::is_same_v<std::remove_cv<T>, float>, std::mt19937, std::mt19937_64>;
 
 template <std::size_t N, typename T>
-class SurfaceProperties
+class SurfaceProperties final
 {
         // Реальный перпендикуляр.
         Vector<N, T> m_geometric_normal;
@@ -84,12 +84,12 @@ public:
 };
 
 template <std::size_t N, typename T>
-struct SurfaceReflection
+struct Reflection final
 {
         Color color;
-        Vector<N, T> direction;
+        Vector<N, T> l;
 
-        SurfaceReflection(const Color& color, const Vector<N, T>& direction) : color(color), direction(direction)
+        Reflection(const Color& color, const Vector<N, T>& l) : color(color), l(l)
         {
         }
 };
@@ -112,7 +112,7 @@ public:
                 const Vector<N, T>& v,
                 const Vector<N, T>& l) const = 0;
 
-        virtual SurfaceReflection<N, T> reflection(
+        virtual Reflection<N, T> reflection(
                 RandomEngine<T>& random_engine,
                 const Vector<N, T>& p,
                 const void* intersection_data,

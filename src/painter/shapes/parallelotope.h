@@ -95,7 +95,7 @@ public:
                 return m_shading.direct_lighting(m_metalness, m_roughness, m_color, n, v, l);
         }
 
-        SurfaceReflection<N, T> reflection(
+        Reflection<N, T> reflection(
                 RandomEngine<T>& random_engine,
                 const Vector<N, T>& /*p*/,
                 const void* /*intersection_data*/,

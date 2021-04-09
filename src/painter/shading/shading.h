@@ -75,7 +75,7 @@ public:
         }
 
         template <typename RandomEngine>
-        static SurfaceReflection<N, T> reflection(
+        static Reflection<N, T> reflection(
                 RandomEngine& random_engine,
                 T /*metalness*/,
                 T /*roughness*/,
@@ -220,7 +220,7 @@ public:
         }
 
         template <typename RandomEngine>
-        static SurfaceReflection<N, T> reflection(
+        static Reflection<N, T> reflection(
                 RandomEngine& random_engine,
                 T metalness,
                 T roughness,

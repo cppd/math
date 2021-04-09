@@ -321,7 +321,7 @@ Color Mesh<N, T>::lighting(
 }
 
 template <std::size_t N, typename T>
-SurfaceReflection<N, T> Mesh<N, T>::reflection(
+Reflection<N, T> Mesh<N, T>::reflection(
         RandomEngine<T>& random_engine,
         const Vector<N, T>& p,
         const void* intersection_data,

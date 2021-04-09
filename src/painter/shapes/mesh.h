@@ -91,7 +91,7 @@ public:
                 const Vector<N, T>& v,
                 const Vector<N, T>& l) const override;
 
-        SurfaceReflection<N, T> reflection(
+        Reflection<N, T> reflection(
                 RandomEngine<T>& random_engine,
                 const Vector<N, T>& p,
                 const void* intersection_data,
