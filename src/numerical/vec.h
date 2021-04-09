@@ -111,6 +111,16 @@ public:
                 return *this;
         }
 
+        Vector<N, T>& operator*=(const Vector<N, T>& a)
+        {
+                Vector<N, T> res;
+                for (std::size_t i = 0; i < N; ++i)
+                {
+                        m_data[i] *= a[i];
+                }
+                return *this;
+        }
+
         Vector<N, T>& operator*=(const T& v)
         {
                 for (std::size_t i = 0; i < N; ++i)
