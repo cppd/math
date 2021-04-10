@@ -145,15 +145,12 @@ void paint_pixels(
                 pixel_data->sampler.generate(random_engine, &sample_points);
                 sample_colors.resize(sample_points.size());
 
-                int ray_count = 0;
+                RayCount ray_count;
 
                 for (std::size_t i = 0; i < sample_points.size(); ++i)
                 {
-                        constexpr int RECURSION_LEVEL = 0;
-                        constexpr Color::DataType COLOR_LEVEL = 1;
-
                         sample_colors[i] = trace_path(
-                                paint_data, &ray_count, random_engine, RECURSION_LEVEL, COLOR_LEVEL,
+                                paint_data, &ray_count, random_engine,
                                 pixel_data->projector.ray(pixel_org + sample_points[i]));
                 }
 

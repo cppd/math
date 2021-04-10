@@ -103,16 +103,6 @@ public:
                 return color::linear_float_to_linear_luminance(m_data[0], m_data[1], m_data[2]);
         }
 
-        [[nodiscard]] T max_element() const
-        {
-                return std::max(m_data[2], std::max(m_data[0], m_data[1]));
-        }
-
-        [[nodiscard]] bool below(T v) const
-        {
-                return m_data[0] < v && m_data[1] < v && m_data[2] < v;
-        }
-
         [[nodiscard]] T red() const
         {
                 return m_data[0];
@@ -126,6 +116,11 @@ public:
         [[nodiscard]] T blue() const
         {
                 return m_data[2];
+        }
+
+        [[nodiscard]] bool is_black() const
+        {
+                return m_data[0] <= 0 && m_data[1] <= 0 && m_data[2] <= 0;
         }
 
         void clamp()

@@ -23,18 +23,12 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 namespace ns::painter
 {
-template <typename T>
-constexpr T DOT_PRODUCT_EPSILON = 0;
-
-constexpr Color::DataType MIN_COLOR_LEVEL = 1e-4;
-constexpr int MAX_RECURSION_LEVEL = 100;
-constexpr int RAY_OFFSET_IN_EPSILONS = 1000;
-
-static_assert(std::is_floating_point_v<Color::DataType>);
-
 template <std::size_t N, typename T>
-struct PaintData final
+class PaintData final
 {
+        static constexpr int RAY_OFFSET_IN_EPSILONS = 1000;
+
+public:
         const Scene<N, T>& scene;
         const T ray_offset;
         const bool smooth_normal;
@@ -47,14 +41,36 @@ struct PaintData final
         }
 };
 
+class RayCount final
+{
+        int m_ray_count = 0;
+
+public:
+        void inc()
+        {
+                ++m_ray_count;
+        }
+
+        operator int() const
+        {
+                return m_ray_count;
+        }
+};
+
+namespace trace_implementation
+{
+constexpr int MAX_DEPTH = 5;
+
+static_assert(std::is_floating_point_v<Color::DataType>);
+
 template <std::size_t N, typename T>
 bool light_source_is_visible(
-        int* ray_count,
+        RayCount* ray_count,
         const PaintData<N, T>& paint_data,
         const Ray<N, T>& ray,
         T distance_to_light_source)
 {
-        ++(*ray_count);
+        ray_count->inc();
         return !paint_data.scene.has_intersection(ray, distance_to_light_source);
 }
 
@@ -62,15 +78,15 @@ template <std::size_t N, typename T>
 struct Light
 {
         Color color;
-        Vector<N, T> dir_to;
-        Light(const Color& color, const Vector<N, T>& dir_to) : color(color), dir_to(dir_to)
+        Vector<N, T> l;
+        Light(const Color& color, const Vector<N, T>& l) : color(color), l(l)
         {
         }
 };
 
 template <std::size_t N, typename T>
 void find_visible_lights(
-        int* ray_count,
+        RayCount* ray_count,
         const PaintData<N, T>& paint_data,
         const Vector<N, T>& point,
         const Vector<N, T>& geometric_normal,
@@ -84,7 +100,7 @@ void find_visible_lights(
         {
                 const LightProperties light_properties = light_source->properties(point);
 
-                if (light_properties.color.below(MIN_COLOR_LEVEL))
+                if (light_properties.color.is_black())
                 {
                         continue;
                 }
@@ -93,7 +109,7 @@ void find_visible_lights(
 
                 const T dot_light_and_shading_normal = dot(ray_to_light.dir(), shading_normal);
 
-                if (dot_light_and_shading_normal <= DOT_PRODUCT_EPSILON<T>)
+                if (dot_light_and_shading_normal <= 0)
                 {
                         // Свет находится по другую сторону поверхности
                         continue;
@@ -121,7 +137,7 @@ void find_visible_lights(
                         // самого первого пересечения в предположении, что оно произошло с этой самой
                         // окрестностью точки.
 
-                        ++(*ray_count);
+                        ray_count->inc();
                         ray_to_light.move_along_dir(paint_data.ray_offset);
                         std::optional<Intersection<N, T>> intersection = paint_data.scene.intersect(ray_to_light);
                         if (!intersection)
@@ -140,7 +156,7 @@ void find_visible_lights(
                         }
 
                         {
-                                ++(*ray_count);
+                                ray_count->inc();
                                 Ray<N, T> ray_from_light = ray_to_light.reverse_ray();
                                 ray_from_light.move_along_dir(2 * paint_data.ray_offset);
                                 std::optional<Intersection<N, T>> from_light =
@@ -171,108 +187,119 @@ void find_visible_lights(
 template <std::size_t N, typename T>
 std::optional<Color> trace_path(
         const PaintData<N, T>& paint_data,
-        int* ray_count,
+        RayCount* ray_count,
         RandomEngine<T>& random_engine,
-        int recursion_level,
-        Color::DataType color_level,
+        int depth,
         const Ray<N, T>& ray)
 {
-        if (recursion_level > MAX_RECURSION_LEVEL)
-        {
-                return std::nullopt;
-        }
-
-        ++(*ray_count);
+        ray_count->inc();
         std::optional<Intersection<N, T>> intersection = paint_data.scene.intersect(ray);
         if (!intersection)
         {
+                if (depth > 0)
+                {
+                        return paint_data.scene.background_light_source_color();
+                }
                 return std::nullopt;
         }
 
         Vector<N, T> point = ray.point(intersection->distance);
         const SurfaceProperties surface_properties = intersection->surface->properties(point, intersection->data);
-        Vector<N, T> geometric_normal = surface_properties.geometric_normal();
 
         bool use_smooth_normal = paint_data.smooth_normal && surface_properties.shading_normal().has_value();
 
-        Vector<N, T> shading_normal = use_smooth_normal ? *surface_properties.shading_normal() : geometric_normal;
+        Vector<N, T> geometric_normal = surface_properties.geometric_normal();
+        Vector<N, T> n = use_smooth_normal ? *surface_properties.shading_normal() : geometric_normal;
+        if (dot(geometric_normal, n) <= 0)
+        {
+                return Color(0);
+        }
 
-        ASSERT(dot(geometric_normal, shading_normal) > 0);
+        const Vector<N, T> v = -ray.dir();
 
         // Определять только по реальной нормали, так как видимая нормаль может
         // показать, что пересечение находится с другой стороны объекта.
-        if (dot(ray.dir(), geometric_normal) > 0)
+        if (dot(v, geometric_normal) < 0)
         {
                 geometric_normal = -geometric_normal;
-                shading_normal = -shading_normal;
+                n = -n;
+        }
+
+        if (dot(v, n) <= 0)
+        {
+                return Color(0);
         }
 
         Color color_sum(0);
 
-        if (surface_properties.alpha() > 0)
+        const Color::DataType alpha = surface_properties.alpha();
+
+        if (alpha > 0)
         {
                 if (surface_properties.light_source_color())
                 {
-                        color_sum = *surface_properties.light_source_color() * surface_properties.alpha();
+                        color_sum = *surface_properties.light_source_color();
                 }
-
-                const Vector<N, T> v = -ray.dir();
 
                 thread_local std::vector<Light<N, T>> lights;
-                find_visible_lights(
-                        ray_count, paint_data, point, geometric_normal, shading_normal, use_smooth_normal, &lights);
-                if (!lights.empty())
+
+                find_visible_lights(ray_count, paint_data, point, geometric_normal, n, use_smooth_normal, &lights);
+
+                for (const Light<N, T>& light : lights)
                 {
-                        Color direct(0);
-                        for (const Light<N, T>& light : lights)
-                        {
-                                direct += light.color
-                                          * intersection->surface->lighting(
-                                                  point, intersection->data, shading_normal, v, light.dir_to);
-                        }
-                        color_sum += surface_properties.alpha() * direct;
+                        Color color = intersection->surface->lighting(point, intersection->data, n, v, light.l);
+                        color_sum += color * light.color;
                 }
 
+                color_sum *= alpha;
+        }
+
+        if (depth >= MAX_DEPTH)
+        {
+                return color_sum;
+        }
+
+        if (alpha > 0)
+        {
                 // Случайный вектор отражения надо определять от видимой нормали.
                 // Если получившийся случайный вектор отражения показывает
                 // в другую сторону от поверхности, то освещения нет.
 
                 Reflection<N, T> reflection =
-                        intersection->surface->reflection(random_engine, point, intersection->data, shading_normal, v);
-
-                reflection.color *= surface_properties.alpha();
-
-                Color::DataType new_color_level = color_level * reflection.color.max_element();
-                if (new_color_level >= MIN_COLOR_LEVEL && dot(reflection.l, geometric_normal) > DOT_PRODUCT_EPSILON<T>)
+                        intersection->surface->reflection(random_engine, point, intersection->data, n, v);
+                if (!reflection.color.is_black() && dot(reflection.l, geometric_normal) > 0)
                 {
                         Ray<N, T> new_ray = Ray<N, T>(point, reflection.l);
-
                         new_ray.move_along_dir(paint_data.ray_offset);
 
-                        std::optional<Color> reflected = trace_path(
-                                paint_data, ray_count, random_engine, recursion_level + 1, new_color_level, new_ray);
+                        Color reflected = *trace_path(paint_data, ray_count, random_engine, depth + 1, new_ray);
 
-                        color_sum +=
-                                reflection.color * reflected.value_or(paint_data.scene.background_light_source_color());
+                        color_sum += alpha * reflection.color * reflected;
                 }
         }
 
-        if (Color::DataType transmission = 1 - surface_properties.alpha(); transmission > 0)
+        if (alpha < 1)
         {
-                Color::DataType new_color_level = color_level * transmission;
-                if (new_color_level >= MIN_COLOR_LEVEL)
-                {
-                        Ray<N, T> new_ray = ray;
-                        new_ray.set_org(point);
-                        new_ray.move_along_dir(paint_data.ray_offset);
+                Ray<N, T> new_ray = ray;
+                new_ray.set_org(point);
+                new_ray.move_along_dir(paint_data.ray_offset);
 
-                        std::optional<Color> transmitted = trace_path(
-                                paint_data, ray_count, random_engine, recursion_level + 1, new_color_level, new_ray);
+                Color transmitted = *trace_path(paint_data, ray_count, random_engine, depth + 1, new_ray);
 
-                        color_sum += transmission * transmitted.value_or(paint_data.scene.background_color());
-                }
+                color_sum += (1 - alpha) * transmitted;
         }
 
         return color_sum;
+}
+}
+
+template <std::size_t N, typename T>
+std::optional<Color> trace_path(
+        const PaintData<N, T>& paint_data,
+        RayCount* ray_count,
+        RandomEngine<T>& random_engine,
+        const Ray<N, T>& ray)
+{
+        return trace_implementation::trace_path(paint_data, ray_count, random_engine, 0 /*depth*/, ray);
 }
 }

@@ -38,7 +38,7 @@ private:
         std::unique_ptr<Difference<Counters>> m_difference;
 
 public:
-        StatisticsWidget(std::chrono::milliseconds update_interval);
+        explicit StatisticsWidget(std::chrono::milliseconds update_interval);
         ~StatisticsWidget() override;
 
         void update(const painter::Statistics& statistics);
