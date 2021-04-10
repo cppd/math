@@ -27,6 +27,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/com/print.h>
 #include <src/com/random/engine.h>
 #include <src/com/thread.h>
+#include <src/com/type/limit.h>
 
 #include <atomic>
 #include <random>
@@ -35,6 +36,8 @@ namespace ns::painter
 {
 namespace
 {
+constexpr int RAY_OFFSET_IN_EPSILONS = 1000;
+
 void join_thread(std::thread* thread) noexcept
 {
         ASSERT(thread);
@@ -145,13 +148,16 @@ void paint_pixels(
                 pixel_data->sampler.generate(random_engine, &sample_points);
                 sample_colors.resize(sample_points.size());
 
-                RayCount ray_count;
+                int ray_count = 0;
 
                 for (std::size_t i = 0; i < sample_points.size(); ++i)
                 {
-                        sample_colors[i] = trace_path(
-                                paint_data, &ray_count, random_engine,
-                                pixel_data->projector.ray(pixel_org + sample_points[i]));
+                        Ray<N, T> ray = pixel_data->projector.ray(pixel_org + sample_points[i]);
+
+                        TraceResult result = trace_path(paint_data, ray, random_engine);
+
+                        sample_colors[i] = result.color;
+                        ray_count += result.ray_count;
                 }
 
                 pixel_data->pixels.add_samples(*pixel, sample_points, sample_colors);
@@ -310,7 +316,8 @@ void painter_thread(
         {
                 try
                 {
-                        const PaintData paint_data(scene, smooth_normal);
+                        const PaintData paint_data(
+                                scene, scene.size() * (RAY_OFFSET_IN_EPSILONS * limits<T>::epsilon()), smooth_normal);
                         PixelData<N, T> pixel_data(scene.projector(), samples_per_pixel, notifier);
                         PassData pass_data(max_pass_count);
 
