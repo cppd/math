@@ -26,12 +26,18 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
  9.7 Microfacet Theory.
  9.8 BRDF Models for Surface Reflection.
  9.9 BRDF Models for Subsurface Scattering.
-*/
 
-/*
           F(h, l) G2(l, v, h) D(h)
  f spec = ------------------------   (9.34)
              4 |n · l| |n · v|
+*/
+
+/*
+ Matt Pharr, Wenzel Jakob, Greg Humphreys.
+ Physically Based Rendering. From theory to implementation. Third edition.
+ Elsevier, 2017.
+
+ 14.1.2 FresnelBlend
 */
 
 #pragma once
@@ -238,28 +244,39 @@ public:
                 RGB s = PI<T> * f(metalness, roughness, color.rgb<T>(), n, v, l);
                 return {Color(s[0], s[1], s[2]), l};
 #else
+                // 14.1.2 FresnelBlend
+                // Sample from both a cosine-weighted distribution
+                // as well as the microfacet distribution.
+                // The PDF is an average of the two PDFs used.
+
+                const T alpha = sqr(roughness);
+
                 Vector<N, T> l;
-                T pdf;
-                if (std::uniform_real_distribution<T>(0, 1)(random_engine) < T(0.5))
+                Vector<N, T> h;
+                if (std::bernoulli_distribution(0.5)(random_engine))
                 {
                         l = sampling::cosine_on_hemisphere(random_engine, n);
-                        pdf = sampling::cosine_on_hemisphere_pdf<N>(dot(n, l));
+                        h = (v + l).normalized();
                 }
                 else
                 {
-                        T alpha = square(roughness);
-                        Vector<N, T> h = sampling::ggx_vn(random_engine, n, v, alpha);
+                        h = sampling::ggx_vn(random_engine, n, v, alpha);
                         l = numerical::reflect_vn(v, h);
                         if (dot(n, l) <= 0)
                         {
                                 return {Color(0), l};
                         }
-                        pdf = sampling::ggx_vn_reflected_pdf(dot(n, v), dot(n, h), dot(h, l), alpha);
                 }
-                if (pdf == 0)
+
+                T pdf_cosine = sampling::cosine_on_hemisphere_pdf<N>(dot(n, l));
+                T pdf_ggx = sampling::ggx_vn_reflected_pdf(dot(n, v), dot(n, h), dot(h, l), alpha);
+
+                T pdf = T(0.5) * (pdf_cosine + pdf_ggx);
+                if (pdf <= 0)
                 {
                         return {Color(0), l};
                 }
+
                 // s = f / pdf * cos(n, l)
                 RGB s = (dot(n, l) / pdf) * f(metalness, roughness, color.rgb<T>(), n, v, l);
                 return {Color(s[0], s[1], s[2]), l};
