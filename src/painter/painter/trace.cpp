@@ -28,108 +28,63 @@ constexpr int MAX_DEPTH = 5;
 static_assert(std::is_floating_point_v<Color::DataType>);
 
 template <std::size_t N, typename T>
-struct Light final
-{
-        Color color;
-        Vector<N, T> l;
-
-        Light(const Color& color, const Vector<N, T>& l) : color(color), l(l)
-        {
-        }
-};
-
-template <std::size_t N, typename T>
-void find_visible_lights(
+bool occluded(
         const Scene<N, T>& scene,
         const T ray_offset,
-        const Vector<N, T>& point,
         const Vector<N, T>& geometric_normal,
-        const Vector<N, T>& shading_normal,
-        bool use_smooth_normal,
-        std::vector<Light<N, T>>* lights)
+        const bool use_smooth_normal,
+        Ray<N, T> ray_to_light,
+        const Vector<N, T>& direction_to_light)
 {
-        lights->clear();
-
-        for (const LightSource<N, T>* light_source : scene.light_sources())
+        if (!use_smooth_normal || dot(ray_to_light.dir(), geometric_normal) >= 0)
         {
-                const LightProperties light_properties = light_source->properties(point);
-
-                if (light_properties.color.is_black())
-                {
-                        continue;
-                }
-
-                Ray<N, T> ray_to_light = Ray<N, T>(point, light_properties.direction_to_light);
-
-                const T dot_light_and_shading_normal = dot(ray_to_light.dir(), shading_normal);
-
-                if (dot_light_and_shading_normal <= 0)
-                {
-                        // Свет находится по другую сторону поверхности
-                        continue;
-                }
-
-                if (!use_smooth_normal || dot(ray_to_light.dir(), geometric_normal) >= 0)
-                {
-                        // Если объект не состоит из симплексов или геометрическая сторона обращена
-                        // к источнику света, то напрямую рассчитать видимость источника света.
-
-                        ray_to_light.move_along_dir(ray_offset);
-                        if (scene.has_intersection(ray_to_light, light_properties.direction_to_light.norm()))
-                        {
-                                continue;
-                        }
-                }
-                else
-                {
-                        // Если объект состоит из симплексов и геометрическая сторона направлена
-                        // от источника  света, то геометрически она не освещена, но из-за нормалей
-                        // у вершин, дающих сглаживание, она может быть «освещена», и надо определить,
-                        // находится ли она в тени без учёта тени от самой поверхности в окрестности
-                        // точки. Это можно сделать направлением луча к источнику света с игнорированием
-                        // самого первого пересечения в предположении, что оно произошло с этой самой
-                        // окрестностью точки.
-
-                        ray_to_light.move_along_dir(ray_offset);
-                        std::optional<Intersection<N, T>> intersection = scene.intersect(ray_to_light);
-                        if (!intersection)
-                        {
-                                // Если луч к источнику света направлен внутрь поверхности, и нет повторного
-                                // пересечения с поверхностью, то нет освещения в точке.
-                                continue;
-                        }
-
-                        T distance_to_light_source = light_properties.direction_to_light.norm();
-
-                        if (intersection->distance >= distance_to_light_source)
-                        {
-                                // Источник света находится внутри поверхности
-                                continue;
-                        }
-
-                        {
-                                Ray<N, T> ray_from_light = ray_to_light.reverse_ray();
-                                ray_from_light.move_along_dir(2 * ray_offset);
-                                std::optional<Intersection<N, T>> from_light = scene.intersect(ray_from_light);
-                                if (from_light && (from_light->distance < intersection->distance))
-                                {
-                                        // Если для луча, направленного от поверхности и от источника света,
-                                        // имеется пересечение с поверхностью на расстоянии меньше, чем расстояние
-                                        // до пересечения внутрь поверхности к источнику света, то предполагается,
-                                        // что точка находится по другую сторону от источника света.
-                                        continue;
-                                }
-                        }
-
-                        ray_to_light.move_along_dir(intersection->distance + ray_offset);
-                        if (scene.has_intersection(ray_to_light, distance_to_light_source - intersection->distance))
-                        {
-                                continue;
-                        }
-                }
-
-                lights->emplace_back(light_properties.color, ray_to_light.dir());
+                // Если объект не состоит из симплексов или геометрическая сторона обращена
+                // к источнику света, то напрямую рассчитать видимость источника света.
+                ray_to_light.move_along_dir(ray_offset);
+                return scene.has_intersection(ray_to_light, direction_to_light.norm());
         }
+
+        // Если объект состоит из симплексов и геометрическая сторона направлена
+        // от источника  света, то геометрически она не освещена, но из-за нормалей
+        // у вершин, дающих сглаживание, она может быть «освещена», и надо определить,
+        // находится ли она в тени без учёта тени от самой поверхности в окрестности
+        // точки. Это можно сделать направлением луча к источнику света с игнорированием
+        // самого первого пересечения в предположении, что оно произошло с этой самой
+        // окрестностью точки.
+
+        ray_to_light.move_along_dir(ray_offset);
+        std::optional<Intersection<N, T>> intersection = scene.intersect(ray_to_light);
+        if (!intersection)
+        {
+                // Если луч к источнику света направлен внутрь поверхности, и нет повторного
+                // пересечения с поверхностью, то нет освещения в точке.
+                return true;
+        }
+
+        T distance_to_light_source = direction_to_light.norm();
+
+        if (intersection->distance >= distance_to_light_source)
+        {
+                // Источник света находится внутри поверхности
+                return true;
+        }
+
+        {
+                Ray<N, T> ray_from_light = ray_to_light.reverse_ray();
+                ray_from_light.move_along_dir(2 * ray_offset);
+                std::optional<Intersection<N, T>> from_light = scene.intersect(ray_from_light);
+                if (from_light && (from_light->distance < intersection->distance))
+                {
+                        // Если для луча, направленного от поверхности и от источника света,
+                        // имеется пересечение с поверхностью на расстоянии меньше, чем расстояние
+                        // до пересечения внутрь поверхности к источнику света, то предполагается,
+                        // что точка находится по другую сторону от источника света.
+                        return true;
+                }
+        }
+
+        ray_to_light.move_along_dir(intersection->distance + ray_offset);
+        return scene.has_intersection(ray_to_light, distance_to_light_source - intersection->distance);
 }
 
 template <std::size_t N, typename T>
@@ -189,14 +144,32 @@ std::optional<Color> trace_path(
                         color_sum = *surface_properties.light_source_color();
                 }
 
-                thread_local std::vector<Light<N, T>> lights;
-
-                find_visible_lights(scene, ray_offset, point, geometric_normal, n, use_smooth_normal, &lights);
-
-                for (const Light<N, T>& light : lights)
+                for (const LightSource<N, T>* light_source : scene.light_sources())
                 {
-                        Color color = intersection->surface->lighting(point, intersection->data, n, v, light.l);
-                        color_sum += color * light.color;
+                        const LightProperties light_properties = light_source->properties(point);
+
+                        if (light_properties.color.is_black())
+                        {
+                                continue;
+                        }
+
+                        const Ray<N, T> ray_to_light = Ray<N, T>(point, light_properties.direction_to_light);
+
+                        const Vector<N, T> l = ray_to_light.dir();
+                        if (dot(l, n) <= 0)
+                        {
+                                continue;
+                        }
+
+                        if (occluded(
+                                    scene, ray_offset, geometric_normal, use_smooth_normal, ray_to_light,
+                                    light_properties.direction_to_light))
+                        {
+                                continue;
+                        }
+
+                        Color color = intersection->surface->lighting(point, intersection->data, n, v, l);
+                        color_sum += color * light_properties.color;
                 }
 
                 color_sum *= alpha;
