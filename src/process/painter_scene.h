@@ -19,7 +19,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <src/color/color.h>
 #include <src/numerical/vec.h>
-#include <src/painter/lights/constant_light.h>
+#include <src/painter/lights/distant_light.h>
 #include <src/painter/objects.h>
 #include <src/painter/projectors/parallel_projector.h>
 #include <src/painter/scenes/cornell_box.h>
@@ -72,12 +72,9 @@ std::unique_ptr<const painter::Projector<3, T>> create_projector(const PainterSc
 template <typename T>
 std::unique_ptr<const painter::LightSource<3, T>> create_light_source(
         const PainterSceneInfo<3, T>& info,
-        const Color::DataType& lighting_intensity,
-        T scene_size)
+        const Color::DataType& lighting_intensity)
 {
-        Vector<3, T> light_position = info.view_center - info.light_direction * scene_size * T(1000);
-
-        return std::make_unique<const painter::ConstantLight<3, T>>(light_position, Color(lighting_intensity));
+        return std::make_unique<const painter::DistantLight<3, T>>(-info.light_direction, Color(lighting_intensity));
 }
 
 template <typename T>
@@ -91,7 +88,7 @@ std::unique_ptr<const painter::Scene<3, T>> create_scene(
         const T scene_size = (bb.max - bb.min).norm();
 
         std::vector<std::unique_ptr<const painter::LightSource<3, T>>> light_sources;
-        light_sources.push_back(create_light_source(info, lighting_intensity, scene_size));
+        light_sources.push_back(create_light_source(info, lighting_intensity));
 
         std::vector<std::unique_ptr<const painter::Shape<3, T>>> shapes;
         shapes.push_back(std::move(shape));

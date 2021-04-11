@@ -45,11 +45,9 @@ public:
 
         LightProperties<N, T> properties(const Vector<N, T>& point) const override
         {
-                LightProperties<N, T> p;
+                const Vector<N, T> direction = m_location - point;
+                const T squared_distance = direction.norm_squared();
 
-                p.direction_to_light = m_location - point;
-
-                T squared_distance = p.direction_to_light.norm_squared();
                 T coef = m_coef;
                 if constexpr (N == 3)
                 {
@@ -60,8 +58,10 @@ public:
                         coef /= std::pow(squared_distance, T(N - 1) / 2);
                 }
 
+                LightProperties<N, T> p;
+                p.distance = std::sqrt(squared_distance);
+                p.l = direction / p.distance;
                 p.color = m_color * coef;
-
                 return p;
         }
 };

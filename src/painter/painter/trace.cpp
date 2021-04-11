@@ -28,20 +28,33 @@ constexpr int MAX_DEPTH = 5;
 static_assert(std::is_floating_point_v<Color::DataType>);
 
 template <std::size_t N, typename T>
+bool intersection_before_light_source(
+        const std::optional<Intersection<N, T>>& intersection,
+        const std::optional<T> distance_to_light)
+{
+        return intersection && (!distance_to_light || intersection->distance < *distance_to_light);
+}
+
+template <std::size_t N, typename T>
 bool occluded(
         const Scene<N, T>& scene,
         const T ray_offset,
         const Vector<N, T>& geometric_normal,
         const bool use_smooth_normal,
         Ray<N, T> ray_to_light,
-        const Vector<N, T>& direction_to_light)
+        std::optional<T> distance_to_light)
 {
         if (!use_smooth_normal || dot(ray_to_light.dir(), geometric_normal) >= 0)
         {
                 // Если объект не состоит из симплексов или геометрическая сторона обращена
                 // к источнику света, то напрямую рассчитать видимость источника света.
                 ray_to_light.move_along_dir(ray_offset);
-                return scene.has_intersection(ray_to_light, direction_to_light.norm());
+                if (distance_to_light)
+                {
+                        *distance_to_light -= ray_offset;
+                }
+                std::optional<Intersection<N, T>> intersection = scene.intersect(ray_to_light);
+                return intersection_before_light_source(intersection, distance_to_light);
         }
 
         // Если объект состоит из симплексов и геометрическая сторона направлена
@@ -53,38 +66,41 @@ bool occluded(
         // окрестностью точки.
 
         ray_to_light.move_along_dir(ray_offset);
+        if (distance_to_light)
+        {
+                *distance_to_light -= ray_offset;
+        }
         std::optional<Intersection<N, T>> intersection = scene.intersect(ray_to_light);
-        if (!intersection)
+        if (!intersection_before_light_source(intersection, distance_to_light))
         {
                 // Если луч к источнику света направлен внутрь поверхности, и нет повторного
-                // пересечения с поверхностью, то нет освещения в точке.
+                // пересечения с поверхностью до источника света, то нет освещения в точке.
                 return true;
         }
 
-        T distance_to_light_source = direction_to_light.norm();
+        //{
+        //        Ray<N, T> ray_from_light = ray_to_light.reverse_ray();
+        //        ray_from_light.move_along_dir(2 * ray_offset);
+        //        std::optional<Intersection<N, T>> from_light = scene.intersect(ray_from_light);
+        //        if (from_light && from_light->distance < intersection->distance)
+        //        {
+        //                // Если для луча, направленного от поверхности и от источника света,
+        //                // имеется пересечение с поверхностью на расстоянии меньше, чем расстояние
+        //                // до пересечения внутрь поверхности к источнику света, то предполагается,
+        //                // что точка находится по другую сторону от источника света.
+        //                return true;
+        //        }
+        //}
 
-        if (intersection->distance >= distance_to_light_source)
+        ray_to_light.move_along_dir(intersection->distance);
+        ray_to_light.move_along_dir(ray_offset);
+        if (distance_to_light)
         {
-                // Источник света находится внутри поверхности
-                return true;
+                *distance_to_light -= intersection->distance;
+                *distance_to_light -= ray_offset;
         }
-
-        {
-                Ray<N, T> ray_from_light = ray_to_light.reverse_ray();
-                ray_from_light.move_along_dir(2 * ray_offset);
-                std::optional<Intersection<N, T>> from_light = scene.intersect(ray_from_light);
-                if (from_light && (from_light->distance < intersection->distance))
-                {
-                        // Если для луча, направленного от поверхности и от источника света,
-                        // имеется пересечение с поверхностью на расстоянии меньше, чем расстояние
-                        // до пересечения внутрь поверхности к источнику света, то предполагается,
-                        // что точка находится по другую сторону от источника света.
-                        return true;
-                }
-        }
-
-        ray_to_light.move_along_dir(intersection->distance + ray_offset);
-        return scene.has_intersection(ray_to_light, distance_to_light_source - intersection->distance);
+        intersection = scene.intersect(ray_to_light);
+        return intersection_before_light_source(intersection, distance_to_light);
 }
 
 template <std::size_t N, typename T>
@@ -153,8 +169,7 @@ std::optional<Color> trace_path(
                                 continue;
                         }
 
-                        const Ray<N, T> ray_to_light = Ray<N, T>(point, light_properties.direction_to_light);
-
+                        const Ray<N, T> ray_to_light = Ray<N, T>(point, light_properties.l);
                         const Vector<N, T> l = ray_to_light.dir();
                         if (dot(l, n) <= 0)
                         {
@@ -163,7 +178,7 @@ std::optional<Color> trace_path(
 
                         if (occluded(
                                     scene, ray_offset, geometric_normal, use_smooth_normal, ray_to_light,
-                                    light_properties.direction_to_light))
+                                    light_properties.distance))
                         {
                                 continue;
                         }

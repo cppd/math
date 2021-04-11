@@ -124,7 +124,8 @@ template <std::size_t N, typename T>
 struct LightProperties final
 {
         Color color;
-        Vector<N, T> direction_to_light;
+        Vector<N, T> l;
+        std::optional<T> distance;
 };
 
 // Источник света, не являющийся видимым объектом.

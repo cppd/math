@@ -27,23 +27,24 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 namespace ns::painter
 {
 template <std::size_t N, typename T>
-class ConstantLight final : public LightSource<N, T>
+class DistantLight final : public LightSource<N, T>
 {
         static_assert(N >= 2);
         static_assert(std::is_floating_point_v<T>);
 
-        Vector<N, T> m_location;
+        Vector<N, T> m_direction;
         Color m_color;
 
 public:
-        ConstantLight(const Vector<N, T>& location, const Color& color) : m_location(location), m_color(color)
+        DistantLight(const Vector<N, T>& direction, const Color& color)
+                : m_direction(direction.normalized()), m_color(color)
         {
         }
 
-        LightProperties<N, T> properties(const Vector<N, T>& point) const override
+        LightProperties<N, T> properties(const Vector<N, T>& /*point*/) const override
         {
                 LightProperties<N, T> p;
-                p.direction_to_light = m_location - point;
+                p.l = m_direction;
                 p.color = m_color;
                 return p;
         }
