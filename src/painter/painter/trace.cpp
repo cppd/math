@@ -27,33 +27,6 @@ constexpr int MAX_DEPTH = 5;
 
 static_assert(std::is_floating_point_v<Color::DataType>);
 
-class RayCount final
-{
-        int m_count = 0;
-
-public:
-        void inc()
-        {
-                ++m_count;
-        }
-
-        int value() const
-        {
-                return m_count;
-        }
-};
-
-template <std::size_t N, typename T>
-bool light_source_is_visible(
-        RayCount* ray_count,
-        const PaintData<N, T>& paint_data,
-        const Ray<N, T>& ray,
-        T distance_to_light_source)
-{
-        ray_count->inc();
-        return !paint_data.scene.has_intersection(ray, distance_to_light_source);
-}
-
 template <std::size_t N, typename T>
 struct Light final
 {
@@ -67,8 +40,8 @@ struct Light final
 
 template <std::size_t N, typename T>
 void find_visible_lights(
-        RayCount* ray_count,
-        const PaintData<N, T>& paint_data,
+        const Scene<N, T>& scene,
+        const T ray_offset,
         const Vector<N, T>& point,
         const Vector<N, T>& geometric_normal,
         const Vector<N, T>& shading_normal,
@@ -77,7 +50,7 @@ void find_visible_lights(
 {
         lights->clear();
 
-        for (const LightSource<N, T>* light_source : paint_data.scene.light_sources())
+        for (const LightSource<N, T>* light_source : scene.light_sources())
         {
                 const LightProperties light_properties = light_source->properties(point);
 
@@ -101,9 +74,8 @@ void find_visible_lights(
                         // Если объект не состоит из симплексов или геометрическая сторона обращена
                         // к источнику света, то напрямую рассчитать видимость источника света.
 
-                        ray_to_light.move_along_dir(paint_data.ray_offset);
-                        if (!light_source_is_visible(
-                                    ray_count, paint_data, ray_to_light, light_properties.direction_to_light.norm()))
+                        ray_to_light.move_along_dir(ray_offset);
+                        if (scene.has_intersection(ray_to_light, light_properties.direction_to_light.norm()))
                         {
                                 continue;
                         }
@@ -118,9 +90,8 @@ void find_visible_lights(
                         // самого первого пересечения в предположении, что оно произошло с этой самой
                         // окрестностью точки.
 
-                        ray_count->inc();
-                        ray_to_light.move_along_dir(paint_data.ray_offset);
-                        std::optional<Intersection<N, T>> intersection = paint_data.scene.intersect(ray_to_light);
+                        ray_to_light.move_along_dir(ray_offset);
+                        std::optional<Intersection<N, T>> intersection = scene.intersect(ray_to_light);
                         if (!intersection)
                         {
                                 // Если луч к источнику света направлен внутрь поверхности, и нет повторного
@@ -137,11 +108,9 @@ void find_visible_lights(
                         }
 
                         {
-                                ray_count->inc();
                                 Ray<N, T> ray_from_light = ray_to_light.reverse_ray();
-                                ray_from_light.move_along_dir(2 * paint_data.ray_offset);
-                                std::optional<Intersection<N, T>> from_light =
-                                        paint_data.scene.intersect(ray_from_light);
+                                ray_from_light.move_along_dir(2 * ray_offset);
+                                std::optional<Intersection<N, T>> from_light = scene.intersect(ray_from_light);
                                 if (from_light && (from_light->distance < intersection->distance))
                                 {
                                         // Если для луча, направленного от поверхности и от источника света,
@@ -152,10 +121,8 @@ void find_visible_lights(
                                 }
                         }
 
-                        ray_to_light.move_along_dir(intersection->distance + paint_data.ray_offset);
-                        if (!light_source_is_visible(
-                                    ray_count, paint_data, ray_to_light,
-                                    distance_to_light_source - intersection->distance))
+                        ray_to_light.move_along_dir(intersection->distance + ray_offset);
+                        if (scene.has_intersection(ray_to_light, distance_to_light_source - intersection->distance))
                         {
                                 continue;
                         }
@@ -167,19 +134,19 @@ void find_visible_lights(
 
 template <std::size_t N, typename T>
 std::optional<Color> trace_path(
-        const PaintData<N, T>& paint_data,
-        RayCount* ray_count,
-        RandomEngine<T>& random_engine,
-        int depth,
-        const Ray<N, T>& ray)
+        const Scene<N, T>& scene,
+        const T ray_offset,
+        const bool smooth_normals,
+        const Ray<N, T>& ray,
+        const int depth,
+        RandomEngine<T>& random_engine)
 {
-        ray_count->inc();
-        std::optional<Intersection<N, T>> intersection = paint_data.scene.intersect(ray);
+        std::optional<Intersection<N, T>> intersection = scene.intersect(ray);
         if (!intersection)
         {
                 if (depth > 0)
                 {
-                        return paint_data.scene.background_light_source_color();
+                        return scene.background_light_source_color();
                 }
                 return std::nullopt;
         }
@@ -187,7 +154,7 @@ std::optional<Color> trace_path(
         Vector<N, T> point = ray.point(intersection->distance);
         const SurfaceProperties surface_properties = intersection->surface->properties(point, intersection->data);
 
-        bool use_smooth_normal = paint_data.smooth_normal && surface_properties.shading_normal().has_value();
+        bool use_smooth_normal = smooth_normals && surface_properties.shading_normal().has_value();
 
         Vector<N, T> geometric_normal = surface_properties.geometric_normal();
         Vector<N, T> n = use_smooth_normal ? *surface_properties.shading_normal() : geometric_normal;
@@ -224,7 +191,7 @@ std::optional<Color> trace_path(
 
                 thread_local std::vector<Light<N, T>> lights;
 
-                find_visible_lights(ray_count, paint_data, point, geometric_normal, n, use_smooth_normal, &lights);
+                find_visible_lights(scene, ray_offset, point, geometric_normal, n, use_smooth_normal, &lights);
 
                 for (const Light<N, T>& light : lights)
                 {
@@ -251,9 +218,10 @@ std::optional<Color> trace_path(
                 if (!reflection.color.is_black() && dot(reflection.l, geometric_normal) > 0)
                 {
                         Ray<N, T> new_ray = Ray<N, T>(point, reflection.l);
-                        new_ray.move_along_dir(paint_data.ray_offset);
+                        new_ray.move_along_dir(ray_offset);
 
-                        Color reflected = *trace_path(paint_data, ray_count, random_engine, depth + 1, new_ray);
+                        Color reflected =
+                                *trace_path(scene, ray_offset, smooth_normals, new_ray, depth + 1, random_engine);
 
                         color_sum += alpha * reflection.color * reflected;
                 }
@@ -263,9 +231,9 @@ std::optional<Color> trace_path(
         {
                 Ray<N, T> new_ray = ray;
                 new_ray.set_org(point);
-                new_ray.move_along_dir(paint_data.ray_offset);
+                new_ray.move_along_dir(ray_offset);
 
-                Color transmitted = *trace_path(paint_data, ray_count, random_engine, depth + 1, new_ray);
+                Color transmitted = *trace_path(scene, ray_offset, smooth_normals, new_ray, depth + 1, random_engine);
 
                 color_sum += (1 - alpha) * transmitted;
         }
@@ -275,18 +243,18 @@ std::optional<Color> trace_path(
 }
 
 template <std::size_t N, typename T>
-TraceResult trace_path(const PaintData<N, T>& paint_data, const Ray<N, T>& ray, RandomEngine<T>& random_engine)
+std::optional<Color> trace_path(
+        const Scene<N, T>& scene,
+        const T ray_offset,
+        const bool smooth_normals,
+        const Ray<N, T>& ray,
+        RandomEngine<T>& random_engine)
 {
-        RayCount ray_count;
-
-        TraceResult result;
-        result.color = trace_path(paint_data, &ray_count, random_engine, 0 /*depth*/, ray);
-        result.ray_count = ray_count.value();
-        return result;
+        return trace_path(scene, ray_offset, smooth_normals, ray, 0 /*depth*/, random_engine);
 }
 
 #define CREATE_TRACE_PATH_INSTANTIATION(N, T) \
-        template TraceResult trace_path(const PaintData<(N), T>&, const Ray<(N), T>&, RandomEngine<T>&);
+        template std::optional<Color> trace_path(const Scene<(N), T>&, T, bool, const Ray<(N), T>&, RandomEngine<T>&);
 
 CREATE_TRACE_PATH_INSTANTIATION(3, float)
 CREATE_TRACE_PATH_INSTANTIATION(4, float)

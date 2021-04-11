@@ -49,16 +49,20 @@ public:
 
                 p.direction_to_light = m_location - point;
 
-                T square_distance = dot(p.direction_to_light, p.direction_to_light);
-
+                T squared_distance = p.direction_to_light.norm_squared();
+                T coef = m_coef;
                 if constexpr (N == 3)
                 {
-                        p.color = m_color * (m_coef / square_distance);
+                        coef /= squared_distance;
                 }
                 else
                 {
-                        p.color = m_color * (m_coef / std::pow(square_distance, T(N - 1) / 2));
+                        coef /= std::pow(squared_distance, T(N - 1) / 2);
                 }
+
+                p.color = m_color * coef;
+
+                return p;
         }
 };
 }

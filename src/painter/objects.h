@@ -175,5 +175,7 @@ struct Scene
         virtual const Projector<N, T>& projector() const = 0;
         virtual const Color& background_color() const = 0;
         virtual const Color& background_light_source_color() const = 0;
+
+        virtual long long thread_ray_count() const noexcept = 0;
 };
 }

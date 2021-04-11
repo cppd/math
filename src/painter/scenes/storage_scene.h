@@ -212,6 +212,8 @@ void create_tree(
 template <std::size_t N, typename T>
 class StorageScene final : public Scene<N, T>
 {
+        inline static thread_local std::int_fast64_t m_thread_ray_count = 0;
+
         std::vector<std::unique_ptr<const Shape<N, T>>> m_shapes;
         std::vector<std::unique_ptr<const LightSource<N, T>>> m_light_sources;
 
@@ -234,6 +236,8 @@ class StorageScene final : public Scene<N, T>
 
         std::optional<Intersection<N, T>> intersect(const Ray<N, T>& ray) const override
         {
+                ++m_thread_ray_count;
+
                 std::optional<T> root = m_tree.intersect_root(ray);
                 if (!root)
                 {
@@ -284,6 +288,11 @@ class StorageScene final : public Scene<N, T>
         const Color& background_light_source_color() const override
         {
                 return m_background_light_source_color;
+        }
+
+        long long thread_ray_count() const noexcept override
+        {
+                return m_thread_ray_count;
         }
 
 public:

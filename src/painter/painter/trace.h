@@ -24,24 +24,10 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 namespace ns::painter
 {
 template <std::size_t N, typename T>
-struct PaintData final
-{
-        const Scene<N, T>& scene;
-        const T ray_offset;
-        const bool smooth_normal;
-
-        PaintData(const Scene<N, T>& scene, T ray_offset, bool smooth_normal)
-                : scene(scene), ray_offset(ray_offset), smooth_normal(smooth_normal)
-        {
-        }
-};
-
-struct TraceResult final
-{
-        std::optional<Color> color;
-        int ray_count;
-};
-
-template <std::size_t N, typename T>
-TraceResult trace_path(const PaintData<N, T>& paint_data, const Ray<N, T>& ray, RandomEngine<T>& random_engine);
+std::optional<Color> trace_path(
+        const Scene<N, T>& scene,
+        T ray_offset,
+        bool smooth_normals,
+        const Ray<N, T>& ray,
+        RandomEngine<T>& random_engine);
 }

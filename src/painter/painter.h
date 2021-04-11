@@ -73,5 +73,5 @@ std::unique_ptr<Painter<N, T>> create_painter(
         std::optional<int> max_pass_count,
         std::shared_ptr<const Scene<N, T>> scene,
         int thread_count,
-        bool smooth_normal);
+        bool smooth_normals);
 }

@@ -66,6 +66,19 @@ void join_thread(std::thread* thread) noexcept
 }
 
 template <std::size_t N, typename T>
+struct PaintData final
+{
+        const Scene<N, T>& scene;
+        const T ray_offset;
+        const bool smooth_normals;
+
+        PaintData(const Scene<N, T>& scene, T ray_offset, bool smooth_normals)
+                : scene(scene), ray_offset(ray_offset), smooth_normals(smooth_normals)
+        {
+        }
+};
+
+template <std::size_t N, typename T>
 struct PixelData final
 {
         const Projector<N, T>& projector;
@@ -148,20 +161,18 @@ void paint_pixels(
                 pixel_data->sampler.generate(random_engine, &sample_points);
                 sample_colors.resize(sample_points.size());
 
-                int ray_count = 0;
+                const long long ray_count = paint_data.scene.thread_ray_count();
 
                 for (std::size_t i = 0; i < sample_points.size(); ++i)
                 {
                         Ray<N, T> ray = pixel_data->projector.ray(pixel_org + sample_points[i]);
 
-                        TraceResult result = trace_path(paint_data, ray, random_engine);
-
-                        sample_colors[i] = result.color;
-                        ray_count += result.ray_count;
+                        sample_colors[i] = trace_path(
+                                paint_data.scene, paint_data.ray_offset, paint_data.smooth_normals, ray, random_engine);
                 }
 
                 pixel_data->pixels.add_samples(*pixel, sample_points, sample_colors);
-                statistics->pixel_done(ray_count, sample_points.size());
+                statistics->pixel_done(paint_data.scene.thread_ray_count() - ray_count, sample_points.size());
         }
 }
 
@@ -310,14 +321,14 @@ void painter_thread(
         const Scene<N, T>& scene,
         int thread_count,
         std::atomic_bool* stop,
-        bool smooth_normal) noexcept
+        bool smooth_normals) noexcept
 {
         try
         {
                 try
                 {
                         const PaintData paint_data(
-                                scene, scene.size() * (RAY_OFFSET_IN_EPSILONS * limits<T>::epsilon()), smooth_normal);
+                                scene, scene.size() * (RAY_OFFSET_IN_EPSILONS * limits<T>::epsilon()), smooth_normals);
                         PixelData<N, T> pixel_data(scene.projector(), samples_per_pixel, notifier);
                         PassData pass_data(max_pass_count);
 
@@ -368,7 +379,7 @@ public:
              std::optional<int> max_pass_count,
              std::shared_ptr<const Scene<N, T>> scene,
              int thread_count,
-             bool smooth_normal)
+             bool smooth_normals)
         {
                 if (!notifier)
                 {
@@ -404,7 +415,7 @@ public:
                         {
                                 painter_thread(
                                         notifier, statistics, samples_per_pixel, max_pass_count, *scene, thread_count,
-                                        stop, smooth_normal);
+                                        stop, smooth_normals);
                         });
         }
 
@@ -425,10 +436,10 @@ std::unique_ptr<Painter<N, T>> create_painter(
         std::optional<int> max_pass_count,
         std::shared_ptr<const Scene<N, T>> scene,
         int thread_count,
-        bool smooth_normal)
+        bool smooth_normals)
 {
         return std::make_unique<Impl<N, T>>(
-                notifier, samples_per_pixel, max_pass_count, std::move(scene), thread_count, smooth_normal);
+                notifier, samples_per_pixel, max_pass_count, std::move(scene), thread_count, smooth_normals);
 }
 
 #define CREATE_PAINTER_INSTANTIATION(N, T)                        \
