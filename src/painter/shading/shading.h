@@ -204,6 +204,53 @@ class Shading<3, T>
                 return spec + diff;
         }
 
+        //template <typename RandomEngine>
+        //static std::tuple<Vector<N, T>, T> sample(RandomEngine& random_engine, const Vector<N, T>& n)
+        //{
+        //        Vector<N, T> l = sampling::cosine_on_hemisphere(random_engine, n);
+        //        T pdf = sampling::cosine_on_hemisphere_pdf<N>(dot(n, l));
+        //        return {l, pdf};
+        //}
+
+        template <typename RandomEngine>
+        static std::tuple<Vector<N, T>, T> sample(
+                RandomEngine& random_engine,
+                T roughness,
+                const Vector<N, T>& n,
+                const Vector<N, T>& v)
+        {
+                // 14.1.2 FresnelBlend
+                // Sample from both a cosine-weighted distribution
+                // as well as the microfacet distribution.
+                // The PDF is an average of the two PDFs used.
+
+                const T alpha = sqr(roughness);
+
+                Vector<N, T> l;
+                Vector<N, T> h;
+                if (std::bernoulli_distribution(0.5)(random_engine))
+                {
+                        l = sampling::cosine_on_hemisphere(random_engine, n);
+                        h = (v + l).normalized();
+                }
+                else
+                {
+                        h = sampling::ggx_vn(random_engine, n, v, alpha);
+                        l = numerical::reflect_vn(v, h);
+                        if (dot(n, l) <= 0)
+                        {
+                                return {Vector<N, T>(0), 0};
+                        }
+                }
+
+                T pdf_cosine = sampling::cosine_on_hemisphere_pdf<N>(dot(n, l));
+                T pdf_ggx = sampling::ggx_vn_reflected_pdf(dot(n, v), dot(n, h), dot(h, l), alpha);
+
+                T pdf = T(0.5) * (pdf_cosine + pdf_ggx);
+
+                return {l, pdf};
+        }
+
 public:
         static Color direct_lighting(
                 T metalness,
@@ -234,53 +281,15 @@ public:
                 const Vector<N, T>& n,
                 const Vector<N, T>& v)
         {
-#if 0
-                Vector<N, T> l = sampling::cosine_on_hemisphere(random_engine, n);
-                // pdf = cos(n,l) / (integrate cos(n,l) over 2-hemisphere)
-                // pdf = cos(n,l) / PI
-                // s = f / pdf * cos(n,l)
-                // s = f / (cos(n,l) / PI) * cos(n,l)
-                // s = f * PI
-                RGB s = PI<T> * f(metalness, roughness, color.rgb<T>(), n, v, l);
-                return {Color(s[0], s[1], s[2]), l};
-#else
-                // 14.1.2 FresnelBlend
-                // Sample from both a cosine-weighted distribution
-                // as well as the microfacet distribution.
-                // The PDF is an average of the two PDFs used.
-
-                const T alpha = sqr(roughness);
-
-                Vector<N, T> l;
-                Vector<N, T> h;
-                if (std::bernoulli_distribution(0.5)(random_engine))
-                {
-                        l = sampling::cosine_on_hemisphere(random_engine, n);
-                        h = (v + l).normalized();
-                }
-                else
-                {
-                        h = sampling::ggx_vn(random_engine, n, v, alpha);
-                        l = numerical::reflect_vn(v, h);
-                        if (dot(n, l) <= 0)
-                        {
-                                return {Color(0), l};
-                        }
-                }
-
-                T pdf_cosine = sampling::cosine_on_hemisphere_pdf<N>(dot(n, l));
-                T pdf_ggx = sampling::ggx_vn_reflected_pdf(dot(n, v), dot(n, h), dot(h, l), alpha);
-
-                T pdf = T(0.5) * (pdf_cosine + pdf_ggx);
+                const auto [l, pdf] = sample(random_engine, roughness, n, v);
                 if (pdf <= 0)
                 {
-                        return {Color(0), l};
+                        return {Color(0), Vector<N, T>(0)};
                 }
 
                 // s = f / pdf * cos(n, l)
                 RGB s = (dot(n, l) / pdf) * f(metalness, roughness, color.rgb<T>(), n, v, l);
                 return {Color(s[0], s[1], s[2]), l};
-#endif
         }
 };
 }
