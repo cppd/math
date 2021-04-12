@@ -317,7 +317,7 @@ Color Mesh<N, T>::lighting(
                 color = m.Kd;
         }
 
-        return m_shading.direct_lighting(m.metalness, m.roughness, color, n, v, l);
+        return shading_direct_lighting(m.metalness, m.roughness, color, n, v, l);
 }
 
 template <std::size_t N, typename T>
@@ -344,7 +344,7 @@ Reflection<N, T> Mesh<N, T>::reflection(
                 color = m.Kd;
         }
 
-        return m_shading.reflection(random_engine, m.metalness, m.roughness, color, n, v);
+        return shading_reflection(random_engine, m.metalness, m.roughness, color, n, v);
 }
 
 template <std::size_t N, typename T>

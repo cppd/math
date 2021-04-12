@@ -35,7 +35,6 @@ class Parallelotope final : public Shape<N, T>, public Surface<N, T>
         T m_metalness;
         T m_roughness;
         Color m_color;
-        Shading<N, T> m_shading;
 
 public:
         template <typename... V>
@@ -92,7 +91,7 @@ public:
                 const Vector<N, T>& v,
                 const Vector<N, T>& l) const override
         {
-                return m_shading.direct_lighting(m_metalness, m_roughness, m_color, n, v, l);
+                return shading_direct_lighting(m_metalness, m_roughness, m_color, n, v, l);
         }
 
         Reflection<N, T> reflection(
@@ -102,7 +101,7 @@ public:
                 const Vector<N, T>& n,
                 const Vector<N, T>& v) const override
         {
-                return m_shading.reflection(random_engine, m_metalness, m_roughness, m_color, n, v);
+                return shading_reflection(random_engine, m_metalness, m_roughness, m_color, n, v);
         }
 
         geometry::BoundingBox<N, T> bounding_box() const override

@@ -63,8 +63,6 @@ class Mesh final : public Shape<N, T>, public Surface<N, T>
 
         Color::DataType m_alpha;
 
-        Shading<N, T> m_shading;
-
         void create(const mesh::Reading<N>& mesh_object);
         void create(const std::vector<mesh::Reading<N>>& mesh_objects);
 

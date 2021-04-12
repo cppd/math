@@ -57,21 +57,15 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 namespace ns::painter
 {
 template <std::size_t N, typename T>
-class Shading
+class Lambertian
 {
-        static_assert(N >= 4);
+        static_assert(N >= 3);
 
         static constexpr T CONSTANT_REFLECTANCE_FACTOR =
                 T(1) / geometry::sphere_integrate_cosine_factor_over_hemisphere(N);
 
 public:
-        static Color direct_lighting(
-                T /*metalness*/,
-                T /*roughness*/,
-                const Color& color,
-                const Vector<N, T>& n,
-                const Vector<N, T>& /*v*/,
-                const Vector<N, T>& l)
+        static Color direct_lighting(const Color& color, const Vector<N, T>& n, const Vector<N, T>& l)
         {
                 // f = color / (integrate dot(n,l) over hemisphere)
                 // pdf = 1
@@ -81,13 +75,7 @@ public:
         }
 
         template <typename RandomEngine>
-        static Reflection<N, T> reflection(
-                RandomEngine& random_engine,
-                T /*metalness*/,
-                T /*roughness*/,
-                const Color& color,
-                const Vector<N, T>& n,
-                const Vector<N, T>& /*v*/)
+        static Reflection<N, T> reflection(RandomEngine& random_engine, const Color& color, const Vector<N, T>& n)
         {
                 Vector<N, T> v = sampling::cosine_on_hemisphere(random_engine, n);
                 // f = color / (integrate cos(n,l) over hemisphere)
@@ -101,7 +89,7 @@ public:
 };
 
 template <typename T>
-class Shading<3, T>
+class GGX
 {
         static constexpr std::size_t N = 3;
 
@@ -292,4 +280,42 @@ public:
                 return {Color(s[0], s[1], s[2]), l};
         }
 };
+
+template <std::size_t N, typename T>
+Color shading_direct_lighting(
+        T metalness,
+        T roughness,
+        const Color& color,
+        const Vector<N, T>& n,
+        const Vector<N, T>& v,
+        const Vector<N, T>& l)
+{
+        if constexpr (N == 3)
+        {
+                return GGX<T>::direct_lighting(metalness, roughness, color, n, v, l);
+        }
+        else
+        {
+                return Lambertian<N, T>::direct_lighting(color, n, l);
+        }
+}
+
+template <std::size_t N, typename T, typename RandomEngine>
+Reflection<N, T> shading_reflection(
+        RandomEngine& random_engine,
+        T metalness,
+        T roughness,
+        const Color& color,
+        const Vector<N, T>& n,
+        const Vector<N, T>& v)
+{
+        if constexpr (N == 3)
+        {
+                return GGX<T>::reflection(random_engine, metalness, roughness, color, n, v);
+        }
+        else
+        {
+                return Lambertian<N, T>::reflection(random_engine, color, n);
+        }
+}
 }
