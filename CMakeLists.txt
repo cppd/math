@@ -126,11 +126,19 @@ function(AddSourceFiles TARGET_TYPE)
         target_compile_definitions(${PROJECT_NAME} PRIVATE NDEBUG)
 
         target_compile_options(${PROJECT_NAME} PRIVATE -march=native)
+
+        if (DEBUG_BUILD AND RELEASE_BUILD)
+                message(FATAL_ERROR "DEBUG build and RELEASE build")
+        endif()
         if (DEBUG_BUILD)
                 target_compile_options(${PROJECT_NAME} PRIVATE -Og -ggdb)
         else()
                 target_compile_options(${PROJECT_NAME} PRIVATE -O3)
         endif()
+        if (RELEASE_BUILD)
+                target_compile_definitions(${PROJECT_NAME} PRIVATE RELEASE_BUILD)
+        endif()
+
         target_compile_options(${PROJECT_NAME} PRIVATE $<$<COMPILE_LANGUAGE:CXX>: -fno-rtti -fstrict-enums >)
         target_compile_options(${PROJECT_NAME} PRIVATE $<$<CXX_COMPILER_ID:Clang>: -mllvm -inline-threshold=10000 >)
 
