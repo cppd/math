@@ -23,7 +23,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 namespace ns::painter
 {
 template <std::size_t N, typename T>
-Color shading_direct_lighting(
+Color shade(
         T metalness,
         T roughness,
         const Color& color,
@@ -33,16 +33,16 @@ Color shading_direct_lighting(
 {
         if constexpr (N == 3)
         {
-                return GGX<T>::direct_lighting(metalness, roughness, color, n, v, l);
+                return GGX<T>::shade(metalness, roughness, color, n, v, l);
         }
         else
         {
-                return Lambertian<N, T>::direct_lighting(color, n, l);
+                return Lambertian<N, T>::shade(color, n, l);
         }
 }
 
 template <std::size_t N, typename T, typename RandomEngine>
-Reflection<N, T> shading_reflection(
+std::tuple<Vector<N, T>, Color> sample_shade(
         RandomEngine& random_engine,
         T metalness,
         T roughness,
@@ -52,11 +52,11 @@ Reflection<N, T> shading_reflection(
 {
         if constexpr (N == 3)
         {
-                return GGX<T>::reflection(random_engine, metalness, roughness, color, n, v);
+                return GGX<T>::sample_shade(random_engine, metalness, roughness, color, n, v);
         }
         else
         {
-                return Lambertian<N, T>::reflection(random_engine, color, n);
+                return Lambertian<N, T>::sample_shade(random_engine, color, n);
         }
 }
 }

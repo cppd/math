@@ -82,14 +82,14 @@ public:
 
         SurfaceProperties<N, T> properties(const Vector<N, T>& p, const void* intersection_data) const override;
 
-        Color lighting(
+        Color shade(
                 const Vector<N, T>& p,
                 const void* intersection_data,
                 const Vector<N, T>& n,
                 const Vector<N, T>& v,
                 const Vector<N, T>& l) const override;
 
-        Reflection<N, T> reflection(
+        SurfaceReflection<N, T> reflect(
                 RandomEngine<T>& random_engine,
                 const Vector<N, T>& p,
                 const void* intersection_data,

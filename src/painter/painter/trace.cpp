@@ -162,14 +162,14 @@ std::optional<Color> trace_path(
 
                 for (const LightSource<N, T>* light_source : scene.light_sources())
                 {
-                        const LightProperties light_properties = light_source->properties(point);
+                        const LightSourceSample<N, T> sample = light_source->sample(point);
 
-                        if (light_properties.color.is_black())
+                        if (sample.color.is_black() || sample.pdf <= 0)
                         {
                                 continue;
                         }
 
-                        const Ray<N, T> ray_to_light = Ray<N, T>(point, light_properties.l);
+                        const Ray<N, T> ray_to_light = Ray<N, T>(point, sample.l);
                         const Vector<N, T> l = ray_to_light.dir();
                         if (dot(l, n) <= 0)
                         {
@@ -178,13 +178,13 @@ std::optional<Color> trace_path(
 
                         if (occluded(
                                     scene, ray_offset, geometric_normal, use_smooth_normal, ray_to_light,
-                                    light_properties.distance))
+                                    sample.distance))
                         {
                                 continue;
                         }
 
-                        Color color = intersection->surface->lighting(point, intersection->data, n, v, l);
-                        color_sum += color * light_properties.color;
+                        Color surface_color = intersection->surface->shade(point, intersection->data, n, v, l);
+                        color_sum += surface_color * sample.color / sample.pdf;
                 }
 
                 color_sum *= alpha;
@@ -201,8 +201,8 @@ std::optional<Color> trace_path(
                 // Если получившийся случайный вектор отражения показывает
                 // в другую сторону от поверхности, то освещения нет.
 
-                Reflection<N, T> reflection =
-                        intersection->surface->reflection(random_engine, point, intersection->data, n, v);
+                SurfaceReflection<N, T> reflection =
+                        intersection->surface->reflect(random_engine, point, intersection->data, n, v);
                 if (!reflection.color.is_black() && dot(reflection.l, geometric_normal) > 0)
                 {
                         Ray<N, T> new_ray = Ray<N, T>(point, reflection.l);

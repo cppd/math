@@ -32,21 +32,19 @@ class DistantLight final : public LightSource<N, T>
         static_assert(N >= 2);
         static_assert(std::is_floating_point_v<T>);
 
-        Vector<N, T> m_direction;
-        Color m_color;
+        LightSourceSample<N, T> m_sample;
 
 public:
         DistantLight(const Vector<N, T>& direction, const Color& color)
-                : m_direction(direction.normalized()), m_color(color)
         {
+                m_sample.l = direction.normalized();
+                m_sample.color = color;
+                m_sample.pdf = 1;
         }
 
-        LightProperties<N, T> properties(const Vector<N, T>& /*point*/) const override
+        LightSourceSample<N, T> sample(const Vector<N, T>& /*point*/) const override
         {
-                LightProperties<N, T> p;
-                p.l = m_direction;
-                p.color = m_color;
-                return p;
+                return m_sample;
         }
 };
 }

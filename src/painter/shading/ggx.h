@@ -42,8 +42,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
-#include "../objects.h"
-
 #include <src/color/color.h>
 #include <src/com/constant.h>
 #include <src/com/interpolation.h>
@@ -53,6 +51,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/sampling/sphere_cosine.h>
 
 #include <cmath>
+#include <tuple>
 
 namespace ns::painter
 {
@@ -208,7 +207,7 @@ class GGX
         }
 
 public:
-        static Color direct_lighting(
+        static Color shade(
                 T metalness,
                 T roughness,
                 const Color& color,
@@ -221,15 +220,13 @@ public:
                 {
                         return Color(0);
                 }
-                // pdf = 1
-                // s = f / pdf * cos(n,l)
                 // s = f * cos(n,l)
                 RGB s = n_l * f(metalness, roughness, color.rgb<T>(), n, v, l);
                 return Color(s[0], s[1], s[2]);
         }
 
         template <typename RandomEngine>
-        static Reflection<N, T> reflection(
+        static std::tuple<Vector<N, T>, Color> sample_shade(
                 RandomEngine& random_engine,
                 T metalness,
                 T roughness,
@@ -240,12 +237,12 @@ public:
                 const auto [l, pdf] = sample(random_engine, roughness, n, v);
                 if (pdf <= 0)
                 {
-                        return {Color(0), Vector<N, T>(0)};
+                        return {Vector<N, T>(0), Color(0)};
                 }
 
-                // s = f / pdf * cos(n, l)
+                // s = f / pdf * cos(n,l)
                 RGB s = (dot(n, l) / pdf) * f(metalness, roughness, color.rgb<T>(), n, v, l);
-                return {Color(s[0], s[1], s[2]), l};
+                return {l, Color(s[0], s[1], s[2])};
         }
 };
 }

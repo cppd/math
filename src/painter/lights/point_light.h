@@ -43,7 +43,7 @@ public:
         {
         }
 
-        LightProperties<N, T> properties(const Vector<N, T>& point) const override
+        LightSourceSample<N, T> sample(const Vector<N, T>& point) const override
         {
                 const Vector<N, T> direction = m_location - point;
                 const T squared_distance = direction.norm_squared();
@@ -58,11 +58,12 @@ public:
                         coef /= std::pow(squared_distance, T(N - 1) / 2);
                 }
 
-                LightProperties<N, T> p;
-                p.distance = std::sqrt(squared_distance);
-                p.l = direction / p.distance;
-                p.color = m_color * coef;
-                return p;
+                LightSourceSample<N, T> s;
+                s.distance = std::sqrt(squared_distance);
+                s.l = direction / s.distance;
+                s.color = m_color * coef;
+                s.pdf = 1;
+                return s;
         }
 };
 }

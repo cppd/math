@@ -84,14 +84,10 @@ public:
 };
 
 template <std::size_t N, typename T>
-struct Reflection final
+struct SurfaceReflection final
 {
-        Color color;
         Vector<N, T> l;
-
-        Reflection(const Color& color, const Vector<N, T>& l) : color(color), l(l)
-        {
-        }
+        Color color;
 };
 
 // Свойства поверхности надо находить только для ближайшей точки персечения,
@@ -105,14 +101,14 @@ protected:
 public:
         virtual SurfaceProperties<N, T> properties(const Vector<N, T>& p, const void* intersection_data) const = 0;
 
-        virtual Color lighting(
+        virtual Color shade(
                 const Vector<N, T>& p,
                 const void* intersection_data,
                 const Vector<N, T>& n,
                 const Vector<N, T>& v,
                 const Vector<N, T>& l) const = 0;
 
-        virtual Reflection<N, T> reflection(
+        virtual SurfaceReflection<N, T> reflect(
                 RandomEngine<T>& random_engine,
                 const Vector<N, T>& p,
                 const void* intersection_data,
@@ -121,10 +117,11 @@ public:
 };
 
 template <std::size_t N, typename T>
-struct LightProperties final
+struct LightSourceSample final
 {
-        Color color;
         Vector<N, T> l;
+        Color color;
+        Color::DataType pdf;
         std::optional<T> distance;
 };
 
@@ -134,7 +131,7 @@ struct LightSource
 {
         virtual ~LightSource() = default;
 
-        virtual LightProperties<N, T> properties(const Vector<N, T>& point) const = 0;
+        virtual LightSourceSample<N, T> sample(const Vector<N, T>& point) const = 0;
 };
 
 // Преобразование точки на экране в луч в пространстве.

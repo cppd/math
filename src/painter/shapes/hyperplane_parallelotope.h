@@ -84,24 +84,26 @@ public:
                 return s;
         }
 
-        Color lighting(
+        Color shade(
                 const Vector<N, T>& /*p*/,
                 const void* /*intersection_data*/,
                 const Vector<N, T>& n,
                 const Vector<N, T>& v,
                 const Vector<N, T>& l) const override
         {
-                return shading_direct_lighting(m_metalness, m_roughness, m_color, n, v, l);
+                return ::ns::painter::shade(m_metalness, m_roughness, m_color, n, v, l);
         }
 
-        Reflection<N, T> reflection(
+        SurfaceReflection<N, T> reflect(
                 RandomEngine<T>& random_engine,
                 const Vector<N, T>& /*p*/,
                 const void* /*intersection_data*/,
                 const Vector<N, T>& n,
                 const Vector<N, T>& v) const override
         {
-                return shading_reflection(random_engine, m_metalness, m_roughness, m_color, n, v);
+                SurfaceReflection<N, T> r;
+                std::tie(r.l, r.color) = sample_shade(random_engine, m_metalness, m_roughness, m_color, n, v);
+                return r;
         }
 
         geometry::BoundingBox<N, T> bounding_box() const override

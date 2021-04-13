@@ -17,12 +17,12 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
-#include "../objects.h"
-
 #include <src/color/color.h>
 #include <src/geometry/shapes/sphere_integral.h>
 #include <src/numerical/vec.h>
 #include <src/sampling/sphere_cosine.h>
+
+#include <tuple>
 
 namespace ns::painter
 {
@@ -35,26 +35,33 @@ class Lambertian
                 T(1) / geometry::sphere_integrate_cosine_factor_over_hemisphere(N);
 
 public:
-        static Color direct_lighting(const Color& color, const Vector<N, T>& n, const Vector<N, T>& l)
+        static Color shade(const Color& color, const Vector<N, T>& n, const Vector<N, T>& l)
         {
+                T n_l = dot(n, l);
+                if (n_l <= 0)
+                {
+                        return Color(0);
+                }
                 // f = color / (integrate dot(n,l) over hemisphere)
-                // pdf = 1
-                // s = f / pdf * cos(n,l)
+                // s = f * cos(n,l)
                 // s = color / (integrate cos(n,l) over hemisphere) * cos(n,l)
-                return CONSTANT_REFLECTANCE_FACTOR * dot(n, l) * color;
+                return CONSTANT_REFLECTANCE_FACTOR * n_l * color;
         }
 
         template <typename RandomEngine>
-        static Reflection<N, T> reflection(RandomEngine& random_engine, const Color& color, const Vector<N, T>& n)
+        static std::tuple<Vector<N, T>, Color> sample_shade(
+                RandomEngine& random_engine,
+                const Color& color,
+                const Vector<N, T>& n)
         {
-                Vector<N, T> v = sampling::cosine_on_hemisphere(random_engine, n);
+                Vector<N, T> l = sampling::cosine_on_hemisphere(random_engine, n);
                 // f = color / (integrate cos(n,l) over hemisphere)
                 // pdf = cos(n,l) / (integrate cos(n,l) over hemisphere)
                 // s = f / pdf * cos(n,l)
                 // s = color / (integrate cos(n,l) over hemisphere) /
                 //     (cos(n,l) / (integrate cos(n,l) over hemisphere)) * cos(n,l)
                 // s = color
-                return {color, v};
+                return {l, color};
         }
 };
 }

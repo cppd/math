@@ -294,7 +294,7 @@ SurfaceProperties<N, T> Mesh<N, T>::properties(const Vector<N, T>& p, const void
 }
 
 template <std::size_t N, typename T>
-Color Mesh<N, T>::lighting(
+Color Mesh<N, T>::shade(
         const Vector<N, T>& p,
         const void* intersection_data,
         const Vector<N, T>& n,
@@ -317,11 +317,11 @@ Color Mesh<N, T>::lighting(
                 color = m.Kd;
         }
 
-        return shading_direct_lighting(m.metalness, m.roughness, color, n, v, l);
+        return ::ns::painter::shade(m.metalness, m.roughness, color, n, v, l);
 }
 
 template <std::size_t N, typename T>
-Reflection<N, T> Mesh<N, T>::reflection(
+SurfaceReflection<N, T> Mesh<N, T>::reflect(
         RandomEngine<T>& random_engine,
         const Vector<N, T>& p,
         const void* intersection_data,
@@ -344,7 +344,9 @@ Reflection<N, T> Mesh<N, T>::reflection(
                 color = m.Kd;
         }
 
-        return shading_reflection(random_engine, m.metalness, m.roughness, color, n, v);
+        SurfaceReflection<N, T> r;
+        std::tie(r.l, r.color) = sample_shade(random_engine, m.metalness, m.roughness, color, n, v);
+        return r;
 }
 
 template <std::size_t N, typename T>
