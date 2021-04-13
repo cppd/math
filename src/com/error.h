@@ -48,7 +48,7 @@ namespace error_implementation
 }
 }
 
-#if 1
+#if !defined(RELEASE_BUILD)
 #define ASSERT(expr) \
         (static_cast<bool>(expr) ? static_cast<void>(0) : error_implementation::error_assert(#expr, __FILE__, __LINE__))
 #else
