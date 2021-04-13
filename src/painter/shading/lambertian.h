@@ -18,6 +18,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #pragma once
 
 #include <src/color/color.h>
+#include <src/com/error.h>
 #include <src/geometry/shapes/sphere_integral.h>
 #include <src/numerical/vec.h>
 #include <src/sampling/sphere_cosine.h>
@@ -37,11 +38,17 @@ class Lambertian
 public:
         static Color shade(const Color& color, const Vector<N, T>& n, const Vector<N, T>& l)
         {
+                static constexpr Color BLACK(0);
+
+                ASSERT(n.is_unit());
+                ASSERT(l.is_unit());
+
                 T n_l = dot(n, l);
                 if (n_l <= 0)
                 {
-                        return Color(0);
+                        return BLACK;
                 }
+
                 // f = color / (integrate dot(n,l) over hemisphere)
                 // s = f * cos(n,l)
                 // s = color / (integrate cos(n,l) over hemisphere) * cos(n,l)
@@ -54,7 +61,20 @@ public:
                 const Color& color,
                 const Vector<N, T>& n)
         {
+                static constexpr std::tuple<Vector<N, T>, Color> BLACK(Vector<N, T>(0), Color(0));
+
+                ASSERT(n.is_unit());
+
                 Vector<N, T> l = sampling::cosine_on_hemisphere(random_engine, n);
+
+                ASSERT(l.is_unit());
+
+                T n_l = dot(n, l);
+                if (n_l <= 0)
+                {
+                        return BLACK;
+                }
+
                 // f = color / (integrate cos(n,l) over hemisphere)
                 // pdf = cos(n,l) / (integrate cos(n,l) over hemisphere)
                 // s = f / pdf * cos(n,l)

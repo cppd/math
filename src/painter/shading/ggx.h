@@ -44,6 +44,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <src/color/color.h>
 #include <src/com/constant.h>
+#include <src/com/error.h>
 #include <src/com/interpolation.h>
 #include <src/numerical/optics.h>
 #include <src/numerical/vec.h>
@@ -186,12 +187,18 @@ class GGX
                 if (std::bernoulli_distribution(0.5)(random_engine))
                 {
                         l = sampling::cosine_on_hemisphere(random_engine, n);
+                        ASSERT(l.is_unit());
+                        if (dot(n, l) <= 0)
+                        {
+                                return {Vector<N, T>(0), 0};
+                        }
                         h = (v + l).normalized();
                 }
                 else
                 {
                         h = sampling::ggx_vn(random_engine, n, v, alpha);
                         l = numerical::reflect_vn(v, h);
+                        ASSERT(l.is_unit());
                         if (dot(n, l) <= 0)
                         {
                                 return {Vector<N, T>(0), 0};
@@ -215,11 +222,23 @@ public:
                 const Vector<N, T>& v,
                 const Vector<N, T>& l)
         {
+                static constexpr Color BLACK(0);
+
+                ASSERT(n.is_unit());
+                ASSERT(v.is_unit());
+                ASSERT(l.is_unit());
+
+                if (dot(n, v) <= 0)
+                {
+                        return BLACK;
+                }
+
                 T n_l = dot(n, l);
                 if (n_l <= 0)
                 {
-                        return Color(0);
+                        return BLACK;
                 }
+
                 // s = f * cos(n,l)
                 RGB s = n_l * f(metalness, roughness, color.rgb<T>(), n, v, l);
                 return Color(s[0], s[1], s[2]);
@@ -234,14 +253,29 @@ public:
                 const Vector<N, T>& n,
                 const Vector<N, T>& v)
         {
+                static constexpr std::tuple<Vector<N, T>, Color> BLACK(Vector<N, T>(0), Color(0));
+
+                ASSERT(n.is_unit());
+                ASSERT(v.is_unit());
+
+                if (dot(n, v) <= 0)
+                {
+                        return BLACK;
+                }
+
                 const auto [l, pdf] = sample(random_engine, roughness, n, v);
                 if (pdf <= 0)
                 {
-                        return {Vector<N, T>(0), Color(0)};
+                        return BLACK;
                 }
 
+                ASSERT(l.is_unit());
+
+                T n_l = dot(n, l);
+                ASSERT(n_l > 0);
+
                 // s = f / pdf * cos(n,l)
-                RGB s = (dot(n, l) / pdf) * f(metalness, roughness, color.rgb<T>(), n, v, l);
+                RGB s = (n_l / pdf) * f(metalness, roughness, color.rgb<T>(), n, v, l);
                 return {l, Color(s[0], s[1], s[2])};
         }
 };
