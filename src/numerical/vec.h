@@ -21,6 +21,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/com/interpolation.h>
 #include <src/com/math.h>
 #include <src/com/print.h>
+#include <src/com/type/limit.h>
 
 #include <array>
 #include <cmath>
@@ -218,6 +219,15 @@ public:
                         return false;
                 }
                 return true;
+        }
+
+        bool is_unit() const
+        {
+                static constexpr T d = 100 * limits<T>::epsilon();
+                static constexpr T min = square(1 - d);
+                static constexpr T max = square(1 + d);
+                const T s = norm_squared();
+                return s > min && s < max;
         }
 };
 
