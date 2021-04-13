@@ -134,7 +134,7 @@ void check_convex_hull(const std::vector<Vector<N, float>>& points, std::vector<
                 {
                         error("Facet ortho is not finite: " + to_string(facet.ortho()));
                 }
-                if (!(std::abs(1 - facet.ortho().norm()) < 1e-3))
+                if (!facet.ortho().is_unit())
                 {
                         error("Facet ortho is not unit: " + to_string(facet.ortho().norm()));
                 }

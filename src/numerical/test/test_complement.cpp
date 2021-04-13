@@ -43,9 +43,6 @@ constexpr T COS_LIMIT_ORTHOGONAL = limits<T>::epsilon() * 100;
 template <typename T>
 constexpr T COS_LIMIT_PARALLEL = 1 - limits<T>::epsilon() * 100;
 
-template <typename T>
-constexpr T MAX_LENGTH_DISCREPANCY = limits<T>::epsilon() * 100;
-
 template <std::size_t N, typename T>
 constexpr bool vectors_are_orthogonal(const Vector<N, T>& a, const Vector<N, T>& b)
 {
@@ -56,12 +53,6 @@ template <std::size_t N, typename T>
 constexpr bool vectors_are_parallel(const Vector<N, T>& a, const Vector<N, T>& b)
 {
         return std::abs(dot(a, b)) >= COS_LIMIT_PARALLEL<T>;
-}
-
-template <std::size_t N, typename T>
-bool vector_is_unit(const Vector<N, T>& v)
-{
-        return std::abs(1 - v.norm()) <= MAX_LENGTH_DISCREPANCY<T>;
 }
 
 template <std::size_t N, typename T>
@@ -118,23 +109,27 @@ void test_complement(int count)
                 const Vector<N, T>& unit_vector = vectors[num];
                 const std::array<Vector<N, T>, N - 1>& complement = complements[num];
 
-                ASSERT(vector_is_unit(unit_vector));
+                if (!unit_vector.is_unit())
+                {
+                        error("Not unit vector " + to_string(unit_vector));
+                }
 
                 for (const Vector<N, T>& v : complement)
                 {
                         if (!is_finite(v))
                         {
-                                error("Not finite basis vector");
+                                error("Not finite basis vector " + to_string(v));
                         }
 
                         if (!vectors_are_orthogonal(unit_vector, v))
                         {
-                                error("Orthogonal complement basis is not orthogonal to the input vector");
+                                error("Orthogonal complement basis is not orthogonal to the input vector ("
+                                      + to_string(unit_vector) + ", " + to_string(v) + ")");
                         }
 
-                        if (!vector_is_unit(v))
+                        if (!v.is_unit())
                         {
-                                error("Not orthonormal basis");
+                                error("Not orthonormal basis " + to_string(v));
                         }
                 }
 
@@ -144,7 +139,8 @@ void test_complement(int count)
                         {
                                 if (!vectors_are_orthogonal(complement[i], complement[j]))
                                 {
-                                        error("The basis is not orthogonal");
+                                        error("The basis is not orthogonal (" + to_string(complement[i]) + ", "
+                                              + to_string(complement[j]) + ")");
                                 }
                         }
                 }
@@ -153,17 +149,18 @@ void test_complement(int count)
 
                 if (!is_finite(unit_vector_reconstructed))
                 {
-                        error("Not finite reconstructed vector");
+                        error("Not finite reconstructed vector " + to_string(unit_vector_reconstructed));
                 }
 
-                if (!vector_is_unit(unit_vector_reconstructed))
+                if (!unit_vector_reconstructed.is_unit())
                 {
-                        error("Not unit reconstructed vector");
+                        error("Not unit reconstructed vector " + to_string(unit_vector_reconstructed));
                 }
 
                 if (!vectors_are_parallel(unit_vector, unit_vector_reconstructed))
                 {
-                        error("Orthogonal complement error");
+                        error("Orthogonal complement error (" + to_string(unit_vector) + ", "
+                              + to_string(unit_vector_reconstructed) + ")");
                 }
         }
 
