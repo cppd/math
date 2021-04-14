@@ -282,14 +282,12 @@ std::optional<Intersection<N, T>> Mesh<N, T>::intersect(const Ray<N, T>& ray, T 
 template <std::size_t N, typename T>
 SurfaceProperties<N, T> Mesh<N, T>::properties(const Vector<N, T>& p, const void* intersection_data) const
 {
-        SurfaceProperties<N, T> s;
-
         const MeshFacet<N, T>* facet = static_cast<const MeshFacet<N, T>*>(intersection_data);
 
-        s.set_geometric_normal(facet->geometric_normal());
-        s.set_shading_normal(facet->shading_normal(p));
-        s.set_alpha(m_alpha);
-
+        SurfaceProperties<N, T> s;
+        s.geometric_normal = facet->geometric_normal();
+        s.shading_normal = facet->shading_normal(p);
+        s.alpha = m_alpha;
         return s;
 }
 

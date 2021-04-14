@@ -33,53 +33,20 @@ template <typename T>
 using RandomEngine = std::conditional_t<std::is_same_v<std::remove_cv<T>, float>, std::mt19937, std::mt19937_64>;
 
 template <std::size_t N, typename T>
-class SurfaceProperties final
+struct SurfaceProperties final
 {
         // Реальный перпендикуляр.
-        Vector<N, T> m_geometric_normal;
+        Vector<N, T> geometric_normal;
         // Видимый перпендикуляр к поверхности. Например, при интерполяции
         // перпендикуляра по перпендикулярам в вершинах симплексов.
-        std::optional<Vector<N, T>> m_shading_normal;
+        std::optional<Vector<N, T>> shading_normal;
         // Если поверхность является источником света, то цвет этого источника.
-        std::optional<Color> m_light_source_color;
+        std::optional<Color> light_source_color;
         // Коэффициент для прозрачности.
-        Color::DataType m_alpha;
+        Color::DataType alpha = 1;
 
-public:
-        void set_geometric_normal(const Vector<N, T>& normal)
+        SurfaceProperties()
         {
-                m_geometric_normal = normal.normalized();
-        }
-        const Vector<N, T>& geometric_normal() const
-        {
-                return m_geometric_normal;
-        }
-
-        void set_shading_normal(const Vector<N, T>& normal)
-        {
-                m_shading_normal = normal.normalized();
-        }
-        const std::optional<Vector<N, T>>& shading_normal() const
-        {
-                return m_shading_normal;
-        }
-
-        void set_light_source_color(const Color& light_source_color)
-        {
-                m_light_source_color = light_source_color;
-        }
-        const std::optional<Color>& light_source_color() const
-        {
-                return m_light_source_color;
-        }
-
-        void set_alpha(const Color::DataType& alpha)
-        {
-                m_alpha = std::clamp(alpha, Color::DataType(0), Color::DataType(1));
-        }
-        const Color::DataType& alpha() const
-        {
-                return m_alpha;
         }
 };
 
@@ -88,6 +55,10 @@ struct SurfaceReflection final
 {
         Vector<N, T> l;
         Color color;
+
+        SurfaceReflection()
+        {
+        }
 };
 
 // Свойства поверхности надо находить только для ближайшей точки персечения,
@@ -123,6 +94,10 @@ struct LightSourceSample final
         Color color;
         Color::DataType pdf;
         std::optional<T> distance;
+
+        LightSourceSample()
+        {
+        }
 };
 
 // Источник света, не являющийся видимым объектом.

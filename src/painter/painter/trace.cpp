@@ -17,6 +17,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "trace.h"
 
+#include <src/com/error.h>
+
 #include <vector>
 
 namespace ns::painter
@@ -112,7 +114,7 @@ std::optional<Color> trace_path(
         const int depth,
         RandomEngine<T>& random_engine)
 {
-        std::optional<Intersection<N, T>> intersection = scene.intersect(ray);
+        const std::optional<Intersection<N, T>> intersection = scene.intersect(ray);
         if (!intersection)
         {
                 if (depth > 0)
@@ -122,28 +124,33 @@ std::optional<Color> trace_path(
                 return std::nullopt;
         }
 
-        Vector<N, T> point = ray.point(intersection->distance);
-        const SurfaceProperties surface_properties = intersection->surface->properties(point, intersection->data);
-
-        bool use_smooth_normal = smooth_normals && surface_properties.shading_normal().has_value();
-
-        Vector<N, T> geometric_normal = surface_properties.geometric_normal();
-        Vector<N, T> n = use_smooth_normal ? *surface_properties.shading_normal() : geometric_normal;
-        if (dot(geometric_normal, n) <= 0)
-        {
-                return Color(0);
-        }
-
         const Vector<N, T> v = -ray.dir();
+        const Vector<N, T> point = ray.point(intersection->distance);
+        const SurfaceProperties surface_properties = intersection->surface->properties(point, intersection->data);
+        ASSERT(surface_properties.geometric_normal.is_unit());
+
+        const bool use_smooth_normal = smooth_normals && surface_properties.shading_normal.has_value();
 
         // Определять только по реальной нормали, так как видимая нормаль может
         // показать, что пересечение находится с другой стороны объекта.
-        if (dot(v, geometric_normal) < 0)
-        {
-                geometric_normal = -geometric_normal;
-                n = -n;
-        }
+        const bool flip_normals = dot(v, surface_properties.geometric_normal) < 0;
 
+        const Vector<N, T> geometric_normal =
+                flip_normals ? -surface_properties.geometric_normal : surface_properties.geometric_normal;
+        const Vector<N, T> n = [&]
+        {
+                if (use_smooth_normal)
+                {
+                        ASSERT(surface_properties.shading_normal->is_unit());
+                        return flip_normals ? -*surface_properties.shading_normal : *surface_properties.shading_normal;
+                }
+                return geometric_normal;
+        }();
+
+        if (use_smooth_normal && dot(geometric_normal, n) <= 0)
+        {
+                return Color(0);
+        }
         if (dot(v, n) <= 0)
         {
                 return Color(0);
@@ -151,13 +158,13 @@ std::optional<Color> trace_path(
 
         Color color_sum(0);
 
-        const Color::DataType alpha = surface_properties.alpha();
+        const Color::DataType alpha = std::clamp<decltype(surface_properties.alpha)>(surface_properties.alpha, 0, 1);
 
         if (alpha > 0)
         {
-                if (surface_properties.light_source_color())
+                if (surface_properties.light_source_color)
                 {
-                        color_sum = *surface_properties.light_source_color();
+                        color_sum = *surface_properties.light_source_color;
                 }
 
                 for (const LightSource<N, T>* light_source : scene.light_sources())
@@ -183,7 +190,7 @@ std::optional<Color> trace_path(
                                 continue;
                         }
 
-                        Color surface_color = intersection->surface->shade(point, intersection->data, n, v, l);
+                        const Color surface_color = intersection->surface->shade(point, intersection->data, n, v, l);
                         color_sum += surface_color * sample.color / sample.pdf;
                 }
 
@@ -201,14 +208,14 @@ std::optional<Color> trace_path(
                 // Если получившийся случайный вектор отражения показывает
                 // в другую сторону от поверхности, то освещения нет.
 
-                SurfaceReflection<N, T> reflection =
+                const SurfaceReflection<N, T> reflection =
                         intersection->surface->reflect(random_engine, point, intersection->data, n, v);
                 if (!reflection.color.is_black() && dot(reflection.l, geometric_normal) > 0)
                 {
                         Ray<N, T> new_ray = Ray<N, T>(point, reflection.l);
                         new_ray.move_along_dir(ray_offset);
 
-                        Color reflected =
+                        const Color reflected =
                                 *trace_path(scene, ray_offset, smooth_normals, new_ray, depth + 1, random_engine);
 
                         color_sum += alpha * reflection.color * reflected;
@@ -221,7 +228,8 @@ std::optional<Color> trace_path(
                 new_ray.set_org(point);
                 new_ray.move_along_dir(ray_offset);
 
-                Color transmitted = *trace_path(scene, ray_offset, smooth_normals, new_ray, depth + 1, random_engine);
+                const Color transmitted =
+                        *trace_path(scene, ray_offset, smooth_normals, new_ray, depth + 1, random_engine);
 
                 color_sum += (1 - alpha) * transmitted;
         }

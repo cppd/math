@@ -50,12 +50,12 @@ public:
                   m_roughness(std::clamp(roughness, T(0), T(1))),
                   m_color(color.clamped())
         {
-                m_surface_properties.set_alpha(alpha);
+                m_surface_properties.alpha = alpha;
         }
 
         void set_light_source(const Color& color)
         {
-                m_surface_properties.set_light_source_color(color);
+                m_surface_properties.light_source_color = color;
         }
 
         std::optional<T> intersect_bounding(const Ray<N, T>& r) const override
@@ -78,9 +78,7 @@ public:
         SurfaceProperties<N, T> properties(const Vector<N, T>& p, const void* /*intersection_data*/) const override
         {
                 SurfaceProperties<N, T> s = m_surface_properties;
-
-                s.set_geometric_normal(m_parallelotope.normal(p));
-
+                s.geometric_normal = m_parallelotope.normal(p);
                 return s;
         }
 
