@@ -19,7 +19,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <src/com/error.h>
 
-#include <vector>
+#include <algorithm>
 
 namespace ns::painter
 {
@@ -32,7 +32,7 @@ static_assert(std::is_floating_point_v<Color::DataType>);
 template <std::size_t N, typename T>
 bool intersection_before_light_source(
         const std::optional<Intersection<N, T>>& intersection,
-        const std::optional<T> distance_to_light)
+        const std::optional<T>& distance_to_light)
 {
         return intersection && (!distance_to_light || intersection->distance < *distance_to_light);
 }
@@ -50,7 +50,7 @@ bool occluded(
         {
                 // Если объект не состоит из симплексов или геометрическая сторона обращена
                 // к источнику света, то напрямую рассчитать видимость источника света.
-                ray_to_light.move_along_dir(ray_offset);
+                ray_to_light.move(ray_offset);
                 if (distance_to_light)
                 {
                         *distance_to_light -= ray_offset;
@@ -67,7 +67,7 @@ bool occluded(
         // самого первого пересечения в предположении, что оно произошло с этой самой
         // окрестностью точки.
 
-        ray_to_light.move_along_dir(ray_offset);
+        ray_to_light.move(ray_offset);
         if (distance_to_light)
         {
                 *distance_to_light -= ray_offset;
@@ -82,7 +82,7 @@ bool occluded(
 
         //{
         //        Ray<N, T> ray_from_light = ray_to_light.reverse_ray();
-        //        ray_from_light.move_along_dir(2 * ray_offset);
+        //        ray_from_light.move(2 * ray_offset);
         //        std::optional<Intersection<N, T>> from_light = scene.intersect(ray_from_light);
         //        if (from_light && from_light->distance < intersection->distance)
         //        {
@@ -94,8 +94,8 @@ bool occluded(
         //        }
         //}
 
-        ray_to_light.move_along_dir(intersection->distance);
-        ray_to_light.move_along_dir(ray_offset);
+        ray_to_light.move(intersection->distance);
+        ray_to_light.move(ray_offset);
         if (distance_to_light)
         {
                 *distance_to_light -= intersection->distance;
@@ -131,7 +131,7 @@ std::optional<Color> trace_path(
 
         const bool use_smooth_normal = smooth_normals && surface_properties.shading_normal.has_value();
 
-        // Определять только по реальной нормали, так как видимая нормаль может
+        // Определять по реальной нормали, так как видимая нормаль может
         // показать, что пересечение находится с другой стороны объекта.
         const bool flip_normals = dot(v, surface_properties.geometric_normal) < 0;
 
@@ -147,10 +147,6 @@ std::optional<Color> trace_path(
                 return geometric_normal;
         }();
 
-        if (use_smooth_normal && dot(geometric_normal, n) <= 0)
-        {
-                return Color(0);
-        }
         if (dot(v, n) <= 0)
         {
                 return Color(0);
@@ -204,16 +200,11 @@ std::optional<Color> trace_path(
 
         if (alpha > 0)
         {
-                // Случайный вектор отражения надо определять от видимой нормали.
-                // Если получившийся случайный вектор отражения показывает
-                // в другую сторону от поверхности, то освещения нет.
-
                 const SurfaceReflection<N, T> reflection =
                         intersection->surface->reflect(random_engine, point, intersection->data, n, v);
                 if (!reflection.color.is_black() && dot(reflection.l, geometric_normal) > 0)
                 {
-                        Ray<N, T> new_ray = Ray<N, T>(point, reflection.l);
-                        new_ray.move_along_dir(ray_offset);
+                        const Ray<N, T> new_ray = Ray<N, T>(point, reflection.l).move(ray_offset);
 
                         const Color reflected =
                                 *trace_path(scene, ray_offset, smooth_normals, new_ray, depth + 1, random_engine);
@@ -224,9 +215,7 @@ std::optional<Color> trace_path(
 
         if (alpha < 1)
         {
-                Ray<N, T> new_ray = ray;
-                new_ray.set_org(point);
-                new_ray.move_along_dir(ray_offset);
+                const Ray<N, T> new_ray = Ray<N, T>(ray).set_org(point).move(ray_offset);
 
                 const Color transmitted =
                         *trace_path(scene, ray_offset, smooth_normals, new_ray, depth + 1, random_engine);

@@ -21,7 +21,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/numerical/ray.h>
 #include <src/numerical/vec.h>
 
-#include <algorithm>
 #include <array>
 #include <optional>
 #include <random>

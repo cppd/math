@@ -138,7 +138,8 @@ void test_spherical_mesh(const Mesh<N, T>& mesh, int ray_count, ProgressRatio* p
                         LOG("t1_p == " + to_string(intersection->distance));
                 }
 
-                ray.move_along_dir(intersection->distance + ray_offset);
+                ray.move(intersection->distance);
+                ray.move(ray_offset);
 
                 bounding_distance = mesh.intersect_bounding(ray);
                 if (!bounding_distance)
@@ -172,7 +173,8 @@ void test_spherical_mesh(const Mesh<N, T>& mesh, int ray_count, ProgressRatio* p
                         LOG("t2_p == " + to_string(intersection->distance));
                 }
 
-                ray.move_along_dir(intersection->distance + ray_offset);
+                ray.move(intersection->distance);
+                ray.move(ray_offset);
 
                 if ((bounding_distance = mesh.intersect_bounding(ray))
                     && (intersection = mesh.intersect(ray, *bounding_distance)))

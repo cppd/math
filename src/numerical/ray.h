@@ -21,6 +21,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <src/com/print.h>
 
+#include <cmath>
 #include <string>
 
 namespace ns
@@ -40,14 +41,22 @@ public:
         {
         }
 
-        void set_org(const Vector<N, T>& org)
+        Ray& set_org(const Vector<N, T>& org)
         {
                 m_org = org;
+                return *this;
         }
 
-        void set_dir(const Vector<N, T>& dir)
+        Ray& set_dir(const Vector<N, T>& dir)
         {
                 m_dir = dir.normalized();
+                return *this;
+        }
+
+        Ray& move(T t)
+        {
+                m_org = this->point(t);
+                return *this;
         }
 
         const Vector<N, T>& org() const
@@ -62,12 +71,12 @@ public:
 
         Vector<N, T> point(T t) const
         {
-                return m_org + m_dir * t;
-        }
-
-        void move_along_dir(T t)
-        {
-                m_org += m_dir * t;
+                Vector<N, T> p;
+                for (std::size_t i = 0; i < N; ++i)
+                {
+                        p[i] = std::fma(m_dir[i], t, m_org[i]);
+                }
+                return p;
         }
 
         Ray<N, T> reverse_ray() const
