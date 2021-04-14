@@ -36,6 +36,16 @@ QString message()
 
         oss << settings::APPLICATION_NAME;
 
+#if defined(DEBUG_BUILD) && defined(RELEASE_BUILD)
+#error DEBUG_BUILD and RELEASE_BUILD
+#elif defined(DEBUG_BUILD)
+        oss << "\n\n";
+        oss << "Debug Build";
+#elif defined(RELEASE_BUILD)
+        oss << "\n\n";
+        oss << "Release Build";
+#endif
+
         oss << "\n\n";
 #if defined(__clang__)
         oss << "Clang " << __clang_major__ << "." << __clang_minor__ << "." << __clang_patchlevel__;
@@ -47,13 +57,12 @@ QString message()
 
 #if !defined(__cplusplus)
 #error Unknown C++ Version
-#endif
+#else
         oss << "\n";
         oss << "__cplusplus " << __cplusplus;
+#endif
 
-        oss << "\n";
-
-        oss << "\n";
+        oss << "\n\n";
         oss << "Vulkan " << vulkan::API_VERSION_MAJOR << "." << vulkan::API_VERSION_MINOR;
 
         return QString::fromStdString(oss.str());
