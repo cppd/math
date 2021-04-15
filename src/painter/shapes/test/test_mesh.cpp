@@ -135,10 +135,10 @@ void test_spherical_mesh(const Mesh<N, T>& mesh, int ray_count, ProgressRatio* p
                 }
                 if (WITH_RAY_LOG)
                 {
-                        LOG("t1_p == " + to_string(intersection->distance));
+                        LOG("t1_p == " + to_string((intersection->point - ray.org()).norm()));
                 }
 
-                ray.move(intersection->distance);
+                ray.set_org(intersection->point);
                 ray.move(ray_offset);
 
                 bounding_distance = mesh.intersect_bounding(ray);
@@ -170,10 +170,10 @@ void test_spherical_mesh(const Mesh<N, T>& mesh, int ray_count, ProgressRatio* p
                 }
                 if (WITH_RAY_LOG)
                 {
-                        LOG("t2_p == " + to_string(intersection->distance));
+                        LOG("t2_p == " + to_string((intersection->point - ray.org()).norm()));
                 }
 
-                ray.move(intersection->distance);
+                ray.set_org(intersection->point);
                 ray.move(ray_offset);
 
                 if ((bounding_distance = mesh.intersect_bounding(ray))
@@ -182,7 +182,7 @@ void test_spherical_mesh(const Mesh<N, T>& mesh, int ray_count, ProgressRatio* p
                         if (WITH_ERROR_LOG)
                         {
                                 LOG("The third intersection with ray #" + to_string(i) + "\n" + to_string(ray) + "\n"
-                                    + "at point " + to_string(intersection->distance));
+                                    + "at point " + to_string((intersection->point - ray.org()).norm()));
                         }
                         ++error_count;
                         continue;

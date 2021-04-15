@@ -69,10 +69,10 @@ protected:
         virtual ~Surface() = default;
 
 public:
-        virtual SurfaceProperties<N, T> properties(const Vector<N, T>& p, const void* intersection_data) const = 0;
+        virtual SurfaceProperties<N, T> properties(const Vector<N, T>& point, const void* intersection_data) const = 0;
 
         virtual Color shade(
-                const Vector<N, T>& p,
+                const Vector<N, T>& point,
                 const void* intersection_data,
                 const Vector<N, T>& n,
                 const Vector<N, T>& v,
@@ -80,10 +80,23 @@ public:
 
         virtual SurfaceReflection<N, T> reflect(
                 RandomEngine<T>& random_engine,
-                const Vector<N, T>& p,
+                const Vector<N, T>& point,
                 const void* intersection_data,
                 const Vector<N, T>& n,
                 const Vector<N, T>& v) const = 0;
+};
+
+template <std::size_t N, typename T>
+struct Intersection final
+{
+        const Surface<N, T>* surface;
+        Vector<N, T> point;
+        const void* data;
+
+        // Чтобы не было direct-initializing, например в std::optional
+        Intersection() noexcept
+        {
+        }
 };
 
 template <std::size_t N, typename T>
@@ -121,19 +134,6 @@ struct Projector
 };
 
 template <std::size_t N, typename T>
-struct Intersection final
-{
-        T distance;
-        const Surface<N, T>* surface;
-        const void* data;
-
-        // Чтобы не было direct-initializing, например в std::optional
-        Intersection() noexcept
-        {
-        }
-};
-
-template <std::size_t N, typename T>
 struct Scene
 {
         virtual ~Scene() = default;
@@ -141,7 +141,6 @@ struct Scene
         virtual T size() const = 0;
 
         virtual std::optional<Intersection<N, T>> intersect(const Ray<N, T>& ray) const = 0;
-        virtual bool has_intersection(const Ray<N, T>& ray, const T& distance) const = 0;
 
         virtual const std::vector<const LightSource<N, T>*>& light_sources() const = 0;
         virtual const Projector<N, T>& projector() const = 0;

@@ -22,6 +22,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <src/color/color.h>
 #include <src/com/error.h>
+#include <src/com/math.h>
 #include <src/com/type/limit.h>
 #include <src/geometry/spatial/parallelotope_aa.h>
 #include <src/geometry/spatial/shape_intersection.h>
@@ -143,23 +144,27 @@ std::optional<Intersection<N, T>> ray_intersect(
 
         std::make_heap(intersections.begin(), intersections.end());
 
-        T min_distance = limits<T>::max();
+        T min_distance_squared = limits<T>::max();
         std::optional<Intersection<N, T>> intersection;
 
         do
         {
                 const BoundingIntersection<N, T>& bounding = intersections.front();
 
-                if (min_distance < bounding.distance)
+                if (min_distance_squared < square(bounding.distance))
                 {
                         break;
                 }
 
                 std::optional<Intersection<N, T>> v = bounding.shape->intersect(ray, bounding.distance);
-                if (v && (v->distance < min_distance))
+                if (v)
                 {
-                        min_distance = v->distance;
-                        intersection = v;
+                        T distance_squared = (v->point - ray.org()).norm_squared();
+                        if (distance_squared < min_distance_squared)
+                        {
+                                min_distance_squared = distance_squared;
+                                intersection = v;
+                        }
                 }
 
                 std::pop_heap(intersections.begin(), intersections.end());
@@ -251,7 +256,7 @@ class StorageScene final : public Scene<N, T>
                         intersection = scene_implementation::ray_intersect(m_shape_pointers, shape_indices, ray);
                         if (intersection)
                         {
-                                return ray.point(intersection->distance);
+                                return intersection->point;
                         }
                         return std::nullopt;
                 };
@@ -262,12 +267,6 @@ class StorageScene final : public Scene<N, T>
                 }
 
                 return std::nullopt;
-        }
-
-        bool has_intersection(const Ray<N, T>& ray, const T& distance) const override
-        {
-                std::optional<Intersection<N, T>> intersection = intersect(ray);
-                return intersection && intersection->distance <= distance;
         }
 
         const std::vector<const LightSource<N, T>*>& light_sources() const override

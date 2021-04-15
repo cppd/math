@@ -18,6 +18,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "trace.h"
 
 #include <src/com/error.h>
+#include <src/com/math.h>
 
 #include <algorithm>
 
@@ -32,9 +33,10 @@ static_assert(std::is_floating_point_v<Color::DataType>);
 template <std::size_t N, typename T>
 bool intersection_before_light_source(
         const std::optional<Intersection<N, T>>& intersection,
-        const std::optional<T>& distance_to_light)
+        const Vector<N, T>& point,
+        const std::optional<T>& distance)
 {
-        return intersection && (!distance_to_light || intersection->distance < *distance_to_light);
+        return intersection && (!distance || (intersection->point - point).norm_squared() < square(*distance));
 }
 
 template <std::size_t N, typename T>
@@ -43,20 +45,19 @@ bool occluded(
         const T ray_offset,
         const Vector<N, T>& geometric_normal,
         const bool use_smooth_normal,
-        Ray<N, T> ray_to_light,
-        std::optional<T> distance_to_light)
+        const Ray<N, T>& ray,
+        const std::optional<T>& distance)
 {
-        if (!use_smooth_normal || dot(ray_to_light.dir(), geometric_normal) >= 0)
+        const Vector<N, T> point = ray.org();
+
+        std::optional<Intersection<N, T>> intersection;
+
+        if (!use_smooth_normal || dot(ray.dir(), geometric_normal) >= 0)
         {
                 // Если объект не состоит из симплексов или геометрическая сторона обращена
                 // к источнику света, то напрямую рассчитать видимость источника света.
-                ray_to_light.move(ray_offset);
-                if (distance_to_light)
-                {
-                        *distance_to_light -= ray_offset;
-                }
-                std::optional<Intersection<N, T>> intersection = scene.intersect(ray_to_light);
-                return intersection_before_light_source(intersection, distance_to_light);
+                intersection = scene.intersect(Ray<N, T>(ray).move(ray_offset));
+                return intersection_before_light_source(intersection, point, distance);
         }
 
         // Если объект состоит из симплексов и геометрическая сторона направлена
@@ -67,42 +68,16 @@ bool occluded(
         // самого первого пересечения в предположении, что оно произошло с этой самой
         // окрестностью точки.
 
-        ray_to_light.move(ray_offset);
-        if (distance_to_light)
-        {
-                *distance_to_light -= ray_offset;
-        }
-        std::optional<Intersection<N, T>> intersection = scene.intersect(ray_to_light);
-        if (!intersection_before_light_source(intersection, distance_to_light))
+        intersection = scene.intersect(Ray<N, T>(ray).move(ray_offset));
+        if (!intersection_before_light_source(intersection, point, distance))
         {
                 // Если луч к источнику света направлен внутрь поверхности, и нет повторного
                 // пересечения с поверхностью до источника света, то нет освещения в точке.
                 return true;
         }
 
-        //{
-        //        Ray<N, T> ray_from_light = ray_to_light.reverse_ray();
-        //        ray_from_light.move(2 * ray_offset);
-        //        std::optional<Intersection<N, T>> from_light = scene.intersect(ray_from_light);
-        //        if (from_light && from_light->distance < intersection->distance)
-        //        {
-        //                // Если для луча, направленного от поверхности и от источника света,
-        //                // имеется пересечение с поверхностью на расстоянии меньше, чем расстояние
-        //                // до пересечения внутрь поверхности к источнику света, то предполагается,
-        //                // что точка находится по другую сторону от источника света.
-        //                return true;
-        //        }
-        //}
-
-        ray_to_light.move(intersection->distance);
-        ray_to_light.move(ray_offset);
-        if (distance_to_light)
-        {
-                *distance_to_light -= intersection->distance;
-                *distance_to_light -= ray_offset;
-        }
-        intersection = scene.intersect(ray_to_light);
-        return intersection_before_light_source(intersection, distance_to_light);
+        intersection = scene.intersect(Ray<N, T>(ray).set_org(intersection->point).move(ray_offset));
+        return intersection_before_light_source(intersection, point, distance);
 }
 
 template <std::size_t N, typename T>
@@ -125,7 +100,7 @@ std::optional<Color> trace_path(
         }
 
         const Vector<N, T> v = -ray.dir();
-        const Vector<N, T> point = ray.point(intersection->distance);
+        const Vector<N, T>& point = intersection->point;
         const SurfaceProperties surface_properties = intersection->surface->properties(point, intersection->data);
         ASSERT(surface_properties.geometric_normal.is_unit());
 

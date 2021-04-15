@@ -63,12 +63,12 @@ public:
                 return m_hyperplane_parallelotope.intersect(r);
         }
 
-        std::optional<Intersection<N, T>> intersect(const Ray<N, T>&, T bounding_distance) const override
+        std::optional<Intersection<N, T>> intersect(const Ray<N, T>& ray, T bounding_distance) const override
         {
                 // всегда есть пересечение, так как прошла проверка intersect_bounding
 
                 std::optional<Intersection<N, T>> intersection(std::in_place);
-                intersection->distance = bounding_distance;
+                intersection->point = ray.point(bounding_distance);
                 intersection->surface = this;
                 // задавать значение для intersection->data не нужно, так как это один объект
 

@@ -273,7 +273,7 @@ std::optional<Intersection<N, T>> Mesh<N, T>::intersect(const Ray<N, T>& ray, T 
                 return std::nullopt;
         }
         Intersection<N, T> result;
-        result.distance = std::get<0>(*v);
+        result.point = ray.point(std::get<0>(*v));
         result.data = std::get<1>(*v);
         result.surface = this;
         return result;
