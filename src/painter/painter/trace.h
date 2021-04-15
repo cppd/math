@@ -26,7 +26,6 @@ namespace ns::painter
 template <std::size_t N, typename T>
 std::optional<Color> trace_path(
         const Scene<N, T>& scene,
-        T ray_offset,
         bool smooth_normals,
         const Ray<N, T>& ray,
         RandomEngine<T>& random_engine);

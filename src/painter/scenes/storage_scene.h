@@ -217,6 +217,8 @@ void create_tree(
 template <std::size_t N, typename T>
 class StorageScene final : public Scene<N, T>
 {
+        static constexpr int RAY_OFFSET_IN_EPSILONS = 1000;
+
         inline static thread_local std::int_fast64_t m_thread_ray_count = 0;
 
         std::vector<std::unique_ptr<const Shape<N, T>>> m_shapes;
@@ -230,20 +232,17 @@ class StorageScene final : public Scene<N, T>
         std::vector<const Shape<N, T>*> m_shape_pointers;
         std::vector<const LightSource<N, T>*> m_light_source_pointers;
 
-        T m_size;
+        T m_ray_offset;
 
         geometry::SpatialSubdivisionTree<geometry::ParallelotopeAA<N, T>> m_tree;
-
-        T size() const override
-        {
-                return m_size;
-        }
 
         std::optional<Intersection<N, T>> intersect(const Ray<N, T>& ray) const override
         {
                 ++m_thread_ray_count;
 
-                std::optional<T> root = m_tree.intersect_root(ray);
+                const Ray<N, T> ray_with_offset = Ray<N, T>(ray).move(m_ray_offset);
+
+                std::optional<T> root = m_tree.intersect_root(ray_with_offset);
                 if (!root)
                 {
                         return std::nullopt;
@@ -253,7 +252,8 @@ class StorageScene final : public Scene<N, T>
 
                 const auto f = [&](const std::vector<int>& shape_indices) -> std::optional<Vector<N, T>>
                 {
-                        intersection = scene_implementation::ray_intersect(m_shape_pointers, shape_indices, ray);
+                        intersection =
+                                scene_implementation::ray_intersect(m_shape_pointers, shape_indices, ray_with_offset);
                         if (intersection)
                         {
                                 return intersection->point;
@@ -261,7 +261,7 @@ class StorageScene final : public Scene<N, T>
                         return std::nullopt;
                 };
 
-                if (m_tree.trace_ray(ray, *root, f))
+                if (m_tree.trace_ray(ray_with_offset, *root, f))
                 {
                         return intersection;
                 }
@@ -313,7 +313,8 @@ public:
                 const geometry::BoundingBox<N, T> bounding_box =
                         scene_implementation::compute_bounding_box(m_shape_pointers);
 
-                m_size = (bounding_box.max - bounding_box.min).norm();
+                const T scene_size = (bounding_box.max - bounding_box.min).norm();
+                m_ray_offset = scene_size * (RAY_OFFSET_IN_EPSILONS * limits<T>::epsilon());
 
                 ProgressRatio progress(nullptr);
                 scene_implementation::create_tree(m_shape_pointers, bounding_box, &m_tree, &progress);

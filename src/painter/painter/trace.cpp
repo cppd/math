@@ -42,7 +42,6 @@ bool intersection_before_light_source(
 template <std::size_t N, typename T>
 bool occluded(
         const Scene<N, T>& scene,
-        const T ray_offset,
         const Vector<N, T>& geometric_normal,
         const bool use_smooth_normal,
         const Ray<N, T>& ray,
@@ -56,7 +55,7 @@ bool occluded(
         {
                 // Если объект не состоит из симплексов или геометрическая сторона обращена
                 // к источнику света, то напрямую рассчитать видимость источника света.
-                intersection = scene.intersect(Ray<N, T>(ray).move(ray_offset));
+                intersection = scene.intersect(ray);
                 return intersection_before_light_source(intersection, point, distance);
         }
 
@@ -68,7 +67,7 @@ bool occluded(
         // самого первого пересечения в предположении, что оно произошло с этой самой
         // окрестностью точки.
 
-        intersection = scene.intersect(Ray<N, T>(ray).move(ray_offset));
+        intersection = scene.intersect(ray);
         if (!intersection_before_light_source(intersection, point, distance))
         {
                 // Если луч к источнику света направлен внутрь поверхности, и нет повторного
@@ -76,14 +75,13 @@ bool occluded(
                 return true;
         }
 
-        intersection = scene.intersect(Ray<N, T>(ray).set_org(intersection->point).move(ray_offset));
+        intersection = scene.intersect(Ray<N, T>(ray).set_org(intersection->point));
         return intersection_before_light_source(intersection, point, distance);
 }
 
 template <std::size_t N, typename T>
 std::optional<Color> trace_path(
         const Scene<N, T>& scene,
-        const T ray_offset,
         const bool smooth_normals,
         const Ray<N, T>& ray,
         const int depth,
@@ -154,9 +152,7 @@ std::optional<Color> trace_path(
                                 continue;
                         }
 
-                        if (occluded(
-                                    scene, ray_offset, geometric_normal, use_smooth_normal, ray_to_light,
-                                    sample.distance))
+                        if (occluded(scene, geometric_normal, use_smooth_normal, ray_to_light, sample.distance))
                         {
                                 continue;
                         }
@@ -179,22 +175,16 @@ std::optional<Color> trace_path(
                         intersection->surface->reflect(random_engine, point, intersection->data, n, v);
                 if (!reflection.color.is_black() && dot(reflection.l, geometric_normal) > 0)
                 {
-                        const Ray<N, T> new_ray = Ray<N, T>(point, reflection.l).move(ray_offset);
-
-                        const Color reflected =
-                                *trace_path(scene, ray_offset, smooth_normals, new_ray, depth + 1, random_engine);
-
+                        const Ray<N, T> new_ray = Ray<N, T>(point, reflection.l);
+                        const Color reflected = *trace_path(scene, smooth_normals, new_ray, depth + 1, random_engine);
                         color_sum += alpha * reflection.color * reflected;
                 }
         }
 
         if (alpha < 1)
         {
-                const Ray<N, T> new_ray = Ray<N, T>(ray).set_org(point).move(ray_offset);
-
-                const Color transmitted =
-                        *trace_path(scene, ray_offset, smooth_normals, new_ray, depth + 1, random_engine);
-
+                const Ray<N, T> new_ray = Ray<N, T>(ray).set_org(point);
+                const Color transmitted = *trace_path(scene, smooth_normals, new_ray, depth + 1, random_engine);
                 color_sum += (1 - alpha) * transmitted;
         }
 
@@ -205,16 +195,15 @@ std::optional<Color> trace_path(
 template <std::size_t N, typename T>
 std::optional<Color> trace_path(
         const Scene<N, T>& scene,
-        const T ray_offset,
         const bool smooth_normals,
         const Ray<N, T>& ray,
         RandomEngine<T>& random_engine)
 {
-        return trace_path(scene, ray_offset, smooth_normals, ray, 0 /*depth*/, random_engine);
+        return trace_path(scene, smooth_normals, ray, 0 /*depth*/, random_engine);
 }
 
 #define CREATE_TRACE_PATH_INSTANTIATION(N, T) \
-        template std::optional<Color> trace_path(const Scene<(N), T>&, T, bool, const Ray<(N), T>&, RandomEngine<T>&);
+        template std::optional<Color> trace_path(const Scene<(N), T>&, bool, const Ray<(N), T>&, RandomEngine<T>&);
 
 CREATE_TRACE_PATH_INSTANTIATION(3, float)
 CREATE_TRACE_PATH_INSTANTIATION(4, float)

@@ -36,8 +36,6 @@ namespace ns::painter
 {
 namespace
 {
-constexpr int RAY_OFFSET_IN_EPSILONS = 1000;
-
 void join_thread(std::thread* thread) noexcept
 {
         ASSERT(thread);
@@ -69,11 +67,9 @@ template <std::size_t N, typename T>
 struct PaintData final
 {
         const Scene<N, T>& scene;
-        const T ray_offset;
         const bool smooth_normals;
 
-        PaintData(const Scene<N, T>& scene, T ray_offset, bool smooth_normals)
-                : scene(scene), ray_offset(ray_offset), smooth_normals(smooth_normals)
+        PaintData(const Scene<N, T>& scene, bool smooth_normals) : scene(scene), smooth_normals(smooth_normals)
         {
         }
 };
@@ -165,10 +161,8 @@ void paint_pixels(
 
                 for (std::size_t i = 0; i < sample_points.size(); ++i)
                 {
-                        Ray<N, T> ray = pixel_data->projector.ray(pixel_org + sample_points[i]);
-
-                        sample_colors[i] = trace_path(
-                                paint_data.scene, paint_data.ray_offset, paint_data.smooth_normals, ray, random_engine);
+                        const Ray<N, T> ray = pixel_data->projector.ray(pixel_org + sample_points[i]);
+                        sample_colors[i] = trace_path(paint_data.scene, paint_data.smooth_normals, ray, random_engine);
                 }
 
                 pixel_data->pixels.add_samples(*pixel, sample_points, sample_colors);
@@ -327,8 +321,7 @@ void painter_thread(
         {
                 try
                 {
-                        const PaintData paint_data(
-                                scene, scene.size() * (RAY_OFFSET_IN_EPSILONS * limits<T>::epsilon()), smooth_normals);
+                        const PaintData paint_data(scene, smooth_normals);
                         PixelData<N, T> pixel_data(scene.projector(), samples_per_pixel, notifier);
                         PassData pass_data(max_pass_count);
 

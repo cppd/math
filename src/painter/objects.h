@@ -138,8 +138,6 @@ struct Scene
 {
         virtual ~Scene() = default;
 
-        virtual T size() const = 0;
-
         virtual std::optional<Intersection<N, T>> intersect(const Ray<N, T>& ray) const = 0;
 
         virtual const std::vector<const LightSource<N, T>*>& light_sources() const = 0;
