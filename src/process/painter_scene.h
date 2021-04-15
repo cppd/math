@@ -93,7 +93,7 @@ std::unique_ptr<const painter::Scene<3, T>> create_scene(
         std::vector<std::unique_ptr<const painter::Shape<3, T>>> shapes;
         shapes.push_back(std::move(shape));
 
-        return std::make_unique<painter::StorageScene<3, T>>(
+        return painter::create_storage_scene<3, T>(
                 background_color, create_projector(info, scene_size), std::move(light_sources), std::move(shapes));
 }
 }
@@ -113,18 +113,18 @@ std::unique_ptr<const painter::Scene<N, T>> create_painter_scene(
                 {
                         return impl::create_scene(std::move(shape), info, background_color, lighting_intensity);
                 }
-                return cornell_box_scene(
+                return painter::create_cornell_box_scene(
                         info.width, info.height, std::move(shape), info.camera_direction, info.camera_up);
         }
         else
         {
                 if (!info.cornell_box)
                 {
-                        return simple_scene(
+                        return painter::create_simple_scene(
                                 background_color, lighting_intensity, info.min_screen_size, info.max_screen_size,
                                 std::move(shape));
                 }
-                return cornell_box_scene(info.max_screen_size, std::move(shape));
+                return painter::create_cornell_box_scene(info.max_screen_size, std::move(shape));
         }
 }
 }

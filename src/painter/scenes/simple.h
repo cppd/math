@@ -28,12 +28,14 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/com/error.h>
 #include <src/com/type/limit.h>
 
+#include <algorithm>
+#include <cmath>
 #include <memory>
 
 namespace ns::painter
 {
 template <std::size_t N, typename T>
-std::unique_ptr<const Scene<N, T>> simple_scene(
+std::unique_ptr<const Scene<N, T>> create_simple_scene(
         const Color& background_color,
         const Color::DataType& lighting_intensity,
         int min_screen_size,
@@ -108,7 +110,7 @@ std::unique_ptr<const Scene<N, T>> simple_scene(
         std::vector<std::unique_ptr<const Shape<N, T>>> shapes;
         shapes.push_back(std::move(shape));
 
-        return std::make_unique<StorageScene<N, T>>(
+        return create_storage_scene<N, T>(
                 background_color, std::move(projector), std::move(light_sources), std::move(shapes));
 }
 }

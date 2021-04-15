@@ -255,7 +255,7 @@ void test_painter(
                 painter_mesh = std::make_unique<const Mesh<N, T>>(mesh_objects, progress);
         }
 
-        std::unique_ptr<const Scene<N, T>> scene = simple_scene(
+        std::unique_ptr<const Scene<N, T>> scene = create_simple_scene(
                 BACKGROUND_COLOR, LIGHTING_INTENSITY, min_screen_size, max_screen_size, std::move(painter_mesh));
 
         static_assert(type == PainterTestOutputType::File || type == PainterTestOutputType::Window);

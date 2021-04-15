@@ -27,7 +27,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <src/color/colors.h>
 #include <src/com/arrays.h>
-#include <src/numerical/vec.h>
 
 #include <memory>
 
@@ -36,7 +35,7 @@ namespace ns::painter
 namespace cornell_box_scene_implementation
 {
 template <std::size_t N, typename T>
-std::unique_ptr<const Scene<N, T>> cornell_box_scene(
+std::unique_ptr<const Scene<N, T>> create_cornell_box_scene(
         const std::array<int, N - 1>& screen_sizes,
         std::unique_ptr<const Shape<N, T>>&& shape,
         const std::array<Vector<N, T>, N>& camera,
@@ -145,13 +144,13 @@ std::unique_ptr<const Scene<N, T>> cornell_box_scene(
                 //        view_point, camera[N - 1], screen_axes, 80, screen_sizes);
         }
 
-        return std::make_unique<StorageScene<N, T>>(
+        return create_storage_scene<N, T>(
                 BACKGROUND_COLOR, std::move(projector), std::move(light_sources), std::move(shapes));
 }
 }
 
 template <typename T>
-std::unique_ptr<const Scene<3, T>> cornell_box_scene(
+std::unique_ptr<const Scene<3, T>> create_cornell_box_scene(
         int width,
         int height,
         std::unique_ptr<const Shape<3, T>>&& shape,
@@ -168,11 +167,11 @@ std::unique_ptr<const Scene<3, T>> cornell_box_scene(
         const Vector<3, T> right = size * cross(camera_direction, camera_up).normalized();
         const Vector<3, T> up = size * cross(right, dir).normalized();
 
-        return impl::cornell_box_scene({width, height}, std::move(shape), {right, up, dir}, center);
+        return impl::create_cornell_box_scene({width, height}, std::move(shape), {right, up, dir}, center);
 }
 
 template <std::size_t N, typename T>
-std::unique_ptr<const Scene<N, T>> cornell_box_scene(int screen_size, std::unique_ptr<const Shape<N, T>>&& shape)
+std::unique_ptr<const Scene<N, T>> create_cornell_box_scene(int screen_size, std::unique_ptr<const Shape<N, T>>&& shape)
 {
         namespace impl = cornell_box_scene_implementation;
 
@@ -201,6 +200,6 @@ std::unique_ptr<const Scene<N, T>> cornell_box_scene(int screen_size, std::uniqu
         }
         camera[N - 1][N - 1] = -size;
 
-        return impl::cornell_box_scene(screen_sizes, std::move(shape), camera, center);
+        return impl::create_cornell_box_scene(screen_sizes, std::move(shape), camera, center);
 }
 }
