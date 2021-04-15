@@ -202,16 +202,16 @@ std::optional<Color> trace_path(
         return trace_path(scene, smooth_normals, ray, 0 /*depth*/, random_engine);
 }
 
-#define CREATE_TRACE_PATH_INSTANTIATION(N, T) \
+#define TRACE_PATH_INSTANTIATION(N, T) \
         template std::optional<Color> trace_path(const Scene<(N), T>&, bool, const Ray<(N), T>&, RandomEngine<T>&);
 
-CREATE_TRACE_PATH_INSTANTIATION(3, float)
-CREATE_TRACE_PATH_INSTANTIATION(4, float)
-CREATE_TRACE_PATH_INSTANTIATION(5, float)
-CREATE_TRACE_PATH_INSTANTIATION(6, float)
+TRACE_PATH_INSTANTIATION(3, float)
+TRACE_PATH_INSTANTIATION(4, float)
+TRACE_PATH_INSTANTIATION(5, float)
+TRACE_PATH_INSTANTIATION(6, float)
 
-CREATE_TRACE_PATH_INSTANTIATION(3, double)
-CREATE_TRACE_PATH_INSTANTIATION(4, double)
-CREATE_TRACE_PATH_INSTANTIATION(5, double)
-CREATE_TRACE_PATH_INSTANTIATION(6, double)
+TRACE_PATH_INSTANTIATION(3, double)
+TRACE_PATH_INSTANTIATION(4, double)
+TRACE_PATH_INSTANTIATION(5, double)
+TRACE_PATH_INSTANTIATION(6, double)
 }
