@@ -22,13 +22,16 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "../shapes/mesh.h"
 
 #include <src/com/file/path.h>
+#include <src/com/log.h>
 #include <src/com/names.h>
 #include <src/com/random/engine.h>
 #include <src/com/string/str.h>
+#include <src/com/thread.h>
 #include <src/com/time.h>
 #include <src/geometry/shapes/sphere_create.h>
 #include <src/gui/painter_window/painter_window.h>
 #include <src/image/alpha.h>
+#include <src/image/conversion.h>
 #include <src/image/file.h>
 #include <src/image/flip.h>
 #include <src/model/mesh_utility.h>
@@ -58,7 +61,7 @@ void save_image(const std::filesystem::path& path, const Color& blend_color, ima
 
         {
                 std::vector<std::byte> pixels;
-                format_conversion(image.color_format, image.pixels, PIXEL_COLOR_FORMAT, &pixels);
+                image::format_conversion(image.color_format, image.pixels, PIXEL_COLOR_FORMAT, &pixels);
                 image.color_format = PIXEL_COLOR_FORMAT;
                 image.pixels = std::move(pixels);
         }
@@ -252,7 +255,7 @@ void test_painter(
                 }
                 std::vector<const mesh::MeshObject<N>*> mesh_objects;
                 mesh_objects.push_back(&mesh_object);
-                painter_mesh = std::make_unique<const Mesh<N, T>>(mesh_objects, progress);
+                painter_mesh = create_mesh<N, T>(mesh_objects, progress);
         }
 
         std::unique_ptr<const Scene<N, T>> scene = create_simple_scene(

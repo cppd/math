@@ -21,6 +21,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "painter_scene.h"
 
 #include <src/com/log.h>
+#include <src/com/thread.h>
 #include <src/gui/dialogs/painter_3d.h>
 #include <src/gui/dialogs/painter_nd.h>
 #include <src/gui/painter_window/painter_window.h>
@@ -135,7 +136,7 @@ std::function<void(ProgressRatioList*)> action_painter_function(
                                 meshes.push_back(mesh_object.get());
                         }
                         ProgressRatio progress(progress_list);
-                        shape = std::make_unique<painter::Mesh<N, T>>(meshes, &progress);
+                        shape = painter::create_mesh<N, T>(meshes, &progress);
                 }
 
                 if (!shape)

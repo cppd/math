@@ -72,7 +72,7 @@ std::vector<Ray<N, T>> create_rays(const geometry::BoundingBox<N, T>& bb, int ra
 }
 
 template <std::size_t N, typename T>
-void test_spherical_mesh(const Mesh<N, T>& mesh, int ray_count, ProgressRatio* progress)
+void test_spherical_mesh(const Shape<N, T>& mesh, int ray_count, ProgressRatio* progress)
 {
         const geometry::BoundingBox<N, T> bb = mesh.bounding_box();
 
@@ -250,7 +250,7 @@ float random_radius()
 }
 
 template <std::size_t N, typename T>
-std::unique_ptr<const Mesh<N, T>> create_spherical_mesh(int point_count, ProgressRatio* progress)
+std::unique_ptr<const Shape<N, T>> create_spherical_mesh(int point_count, ProgressRatio* progress)
 {
         LOG("painter random sphere");
 
@@ -274,7 +274,7 @@ std::unique_ptr<const Mesh<N, T>> create_spherical_mesh(int point_count, Progres
         mesh::MeshObject<N> mesh_object(std::move(mesh), Matrix<N + 1, N + 1, double>(1), "");
         std::vector<const mesh::MeshObject<N>*> mesh_objects;
         mesh_objects.push_back(&mesh_object);
-        std::unique_ptr<const Mesh<N, T>> painter_mesh = std::make_unique<const Mesh<N, T>>(mesh_objects, progress);
+        std::unique_ptr<const Shape<N, T>> painter_mesh = create_mesh<N, T>(mesh_objects, progress);
 
         LOG("painter random sphere created");
 
@@ -297,7 +297,7 @@ void test_mesh(int point_low, int point_high, int ray_low, int ray_high, Progres
                         std::uniform_int_distribution<int>(ray_low, ray_high)(random_engine));
         }();
 
-        std::unique_ptr<const Mesh<N, T>> mesh = create_spherical_mesh<N, T>(point_count, progress);
+        std::unique_ptr<const Shape<N, T>> mesh = create_spherical_mesh<N, T>(point_count, progress);
 
         test_spherical_mesh(*mesh, ray_count, progress);
 }

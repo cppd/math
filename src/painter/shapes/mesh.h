@@ -17,87 +17,18 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
-#include "mesh_facet.h"
-#include "mesh_texture.h"
 #include "shape.h"
 
-#include "../objects.h"
-#include "../shading/shading.h"
-
-#include <src/color/color.h>
-#include <src/geometry/spatial/object_tree.h>
 #include <src/model/mesh_object.h>
-#include <src/numerical/matrix.h>
 #include <src/progress/progress.h>
 
-#include <optional>
+#include <memory>
+#include <vector>
 
 namespace ns::painter
 {
 template <std::size_t N, typename T>
-class Mesh final : public Shape<N, T>, public Surface<N, T>
-{
-        struct Material
-        {
-                T metalness;
-                T roughness;
-                Color Kd;
-                int map_Kd;
-                Material(T metalness, T roughness, const Color& Kd, int map_Kd)
-                        : metalness(std::clamp(metalness, T(0), T(1))),
-                          roughness(std::clamp(roughness, T(0), T(1))),
-                          Kd(Kd.clamped()),
-                          map_Kd(map_Kd)
-                {
-                }
-        };
-
-        std::vector<Vector<N, T>> m_vertices;
-        std::vector<Vector<N, T>> m_normals;
-        std::vector<Vector<N - 1, T>> m_texcoords;
-        std::vector<Material> m_materials;
-        std::vector<MeshTexture<N - 1>> m_images;
-        std::vector<MeshFacet<N, T>> m_facets;
-
-        std::optional<geometry::ObjectTree<MeshFacet<N, T>>> m_tree;
-
-        Color::DataType m_alpha;
-
-        void create(const mesh::Reading<N>& mesh_object);
-        void create(const std::vector<mesh::Reading<N>>& mesh_objects);
-
-public:
-        Mesh(const std::vector<const mesh::MeshObject<N>*>& mesh_objects, ProgressRatio* progress);
-
-        // Грани имеют адреса первых элементов векторов вершин,
-        // нормалей и текстурных координат, поэтому при копировании
-        // объекта надо менять адреса этих векторов в гранях.
-        Mesh(const Mesh&) = delete;
-        Mesh(Mesh&&) = delete;
-        Mesh& operator=(const Mesh&) = delete;
-        Mesh& operator=(Mesh&&) = delete;
-
-        std::optional<T> intersect_bounding(const Ray<N, T>& r) const override;
-        std::optional<Intersection<N, T>> intersect(const Ray<N, T>&, T bounding_distance) const override;
-
-        SurfaceProperties<N, T> properties(const Vector<N, T>& p, const void* intersection_data) const override;
-
-        Color shade(
-                const Vector<N, T>& p,
-                const void* intersection_data,
-                const Vector<N, T>& n,
-                const Vector<N, T>& v,
-                const Vector<N, T>& l) const override;
-
-        SurfaceReflection<N, T> reflect(
-                RandomEngine<T>& random_engine,
-                const Vector<N, T>& p,
-                const void* intersection_data,
-                const Vector<N, T>& n,
-                const Vector<N, T>& v) const override;
-
-        geometry::BoundingBox<N, T> bounding_box() const override;
-        std::function<bool(const geometry::ShapeWrapperForIntersection<geometry::ParallelotopeAA<N, T>>&)>
-                intersection_function() const override;
-};
+std::unique_ptr<Shape<N, T>> create_mesh(
+        const std::vector<const mesh::MeshObject<N>*>& mesh_objects,
+        ProgressRatio* progress);
 }

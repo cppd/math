@@ -17,15 +17,25 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "mesh.h"
 
+#include "mesh_facet.h"
+#include "mesh_texture.h"
+
+#include "../objects.h"
+#include "../shading/shading.h"
+
+#include <src/color/color.h>
 #include <src/com/log.h>
 #include <src/com/thread.h>
 #include <src/com/time.h>
 #include <src/com/type/limit.h>
+#include <src/geometry/spatial/object_tree.h>
 #include <src/geometry/spatial/shape_intersection.h>
+#include <src/numerical/matrix.h>
 #include <src/numerical/transform.h>
 #include <src/numerical/vec.h>
 
 #include <algorithm>
+#include <optional>
 #include <utility>
 
 namespace ns::painter
@@ -90,7 +100,80 @@ std::array<int, N> add_offset(const std::array<int, N>& src, int offset)
         }
         return r;
 }
-}
+
+template <std::size_t N, typename T>
+class Mesh final : public Shape<N, T>, public Surface<N, T>
+{
+        struct Material
+        {
+                T metalness;
+                T roughness;
+                Color Kd;
+                int map_Kd;
+                Material(T metalness, T roughness, const Color& Kd, int map_Kd)
+                        : metalness(std::clamp(metalness, T(0), T(1))),
+                          roughness(std::clamp(roughness, T(0), T(1))),
+                          Kd(Kd.clamped()),
+                          map_Kd(map_Kd)
+                {
+                }
+        };
+
+        std::vector<Vector<N, T>> m_vertices;
+        std::vector<Vector<N, T>> m_normals;
+        std::vector<Vector<N - 1, T>> m_texcoords;
+        std::vector<Material> m_materials;
+        std::vector<MeshTexture<N - 1>> m_images;
+        std::vector<MeshFacet<N, T>> m_facets;
+
+        std::optional<geometry::ObjectTree<MeshFacet<N, T>>> m_tree;
+
+        Color::DataType m_alpha;
+
+        //
+
+        void create(const mesh::Reading<N>& mesh_object);
+        void create(const std::vector<mesh::Reading<N>>& mesh_objects);
+
+        //
+
+        std::optional<T> intersect_bounding(const Ray<N, T>& r) const override;
+
+        std::optional<Intersection<N, T>> intersect(const Ray<N, T>&, T bounding_distance) const override;
+
+        geometry::BoundingBox<N, T> bounding_box() const override;
+
+        std::function<bool(const geometry::ShapeWrapperForIntersection<geometry::ParallelotopeAA<N, T>>&)>
+                intersection_function() const override;
+
+        //
+
+        SurfaceProperties<N, T> properties(const Vector<N, T>& p, const void* intersection_data) const override;
+
+        Color shade(
+                const Vector<N, T>& p,
+                const void* intersection_data,
+                const Vector<N, T>& n,
+                const Vector<N, T>& v,
+                const Vector<N, T>& l) const override;
+
+        SurfaceReflection<N, T> reflect(
+                RandomEngine<T>& random_engine,
+                const Vector<N, T>& p,
+                const void* intersection_data,
+                const Vector<N, T>& n,
+                const Vector<N, T>& v) const override;
+
+public:
+        Mesh(const std::vector<const mesh::MeshObject<N>*>& mesh_objects, ProgressRatio* progress);
+
+        // Грани имеют адреса первых элементов векторов вершин,
+        // нормалей и текстурных координат, поэтому нельзя копировать.
+        Mesh(const Mesh&) = delete;
+        Mesh(Mesh&&) = delete;
+        Mesh& operator=(const Mesh&) = delete;
+        Mesh& operator=(Mesh&&) = delete;
+};
 
 template <std::size_t N, typename T>
 void Mesh<N, T>::create(const mesh::Reading<N>& mesh_object)
@@ -280,6 +363,23 @@ std::optional<Intersection<N, T>> Mesh<N, T>::intersect(const Ray<N, T>& ray, T 
 }
 
 template <std::size_t N, typename T>
+geometry::BoundingBox<N, T> Mesh<N, T>::bounding_box() const
+{
+        return m_tree->bounding_box();
+}
+
+template <std::size_t N, typename T>
+std::function<bool(const geometry::ShapeWrapperForIntersection<geometry::ParallelotopeAA<N, T>>&)> Mesh<N, T>::
+        intersection_function() const
+{
+        return [w = geometry::ShapeWrapperForIntersection(m_tree->root())](
+                       const geometry::ShapeWrapperForIntersection<geometry::ParallelotopeAA<N, T>>& p)
+        {
+                return geometry::shape_intersection(w, p);
+        };
+}
+
+template <std::size_t N, typename T>
 SurfaceProperties<N, T> Mesh<N, T>::properties(const Vector<N, T>& p, const void* intersection_data) const
 {
         const MeshFacet<N, T>* facet = static_cast<const MeshFacet<N, T>*>(intersection_data);
@@ -346,31 +446,27 @@ SurfaceReflection<N, T> Mesh<N, T>::reflect(
         std::tie(r.l, r.color) = sample_shade(random_engine, m.metalness, m.roughness, color, n, v);
         return r;
 }
-
-template <std::size_t N, typename T>
-geometry::BoundingBox<N, T> Mesh<N, T>::bounding_box() const
-{
-        return m_tree->bounding_box();
 }
 
 template <std::size_t N, typename T>
-std::function<bool(const geometry::ShapeWrapperForIntersection<geometry::ParallelotopeAA<N, T>>&)> Mesh<N, T>::
-        intersection_function() const
+std::unique_ptr<Shape<N, T>> create_mesh(
+        const std::vector<const mesh::MeshObject<N>*>& mesh_objects,
+        ProgressRatio* progress)
 {
-        return [w = geometry::ShapeWrapperForIntersection(m_tree->root())](
-                       const geometry::ShapeWrapperForIntersection<geometry::ParallelotopeAA<N, T>>& p)
-        {
-                return geometry::shape_intersection(w, p);
-        };
+        return std::make_unique<Mesh<N, T>>(mesh_objects, progress);
 }
 
-template class Mesh<3, float>;
-template class Mesh<4, float>;
-template class Mesh<5, float>;
-template class Mesh<6, float>;
+#define CREATE_MESH_INSTANTIATION(N, T)                      \
+        template std::unique_ptr<Shape<(N), T>> create_mesh( \
+                const std::vector<const mesh::MeshObject<(N)>*>&, ProgressRatio*);
 
-template class Mesh<3, double>;
-template class Mesh<4, double>;
-template class Mesh<5, double>;
-template class Mesh<6, double>;
+CREATE_MESH_INSTANTIATION(3, float)
+CREATE_MESH_INSTANTIATION(4, float)
+CREATE_MESH_INSTANTIATION(5, float)
+CREATE_MESH_INSTANTIATION(6, float)
+
+CREATE_MESH_INSTANTIATION(3, double)
+CREATE_MESH_INSTANTIATION(4, double)
+CREATE_MESH_INSTANTIATION(5, double)
+CREATE_MESH_INSTANTIATION(6, double)
 }
