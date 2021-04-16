@@ -120,48 +120,42 @@ std::optional<Color> trace_path(
                 return geometric_normal;
         }();
 
-        if (dot(v, n) <= 0)
+        if (dot(n, v) <= 0)
         {
                 return Color(0);
         }
 
         Color color_sum(0);
 
-        const Color::DataType alpha = std::clamp<decltype(surface_properties.alpha)>(surface_properties.alpha, 0, 1);
-
-        if (alpha > 0)
+        if (surface_properties.light_source_color)
         {
-                if (surface_properties.light_source_color)
+                color_sum = *surface_properties.light_source_color;
+        }
+
+        for (const LightSource<N, T>* light_source : scene.light_sources())
+        {
+                const LightSourceSample<N, T> sample = light_source->sample(point);
+
+                if (sample.color.is_black() || sample.pdf <= 0)
                 {
-                        color_sum = *surface_properties.light_source_color;
+                        continue;
                 }
 
-                for (const LightSource<N, T>* light_source : scene.light_sources())
+                const Vector<N, T>& l = sample.l;
+                ASSERT(l.is_unit());
+
+                if (dot(n, l) <= 0)
                 {
-                        const LightSourceSample<N, T> sample = light_source->sample(point);
-
-                        if (sample.color.is_black() || sample.pdf <= 0)
-                        {
-                                continue;
-                        }
-
-                        const Ray<N, T> ray_to_light = Ray<N, T>(point, sample.l);
-                        const Vector<N, T> l = ray_to_light.dir();
-                        if (dot(l, n) <= 0)
-                        {
-                                continue;
-                        }
-
-                        if (occluded(scene, geometric_normal, use_smooth_normal, ray_to_light, sample.distance))
-                        {
-                                continue;
-                        }
-
-                        const Color surface_color = intersection->surface->shade(point, intersection->data, n, v, l);
-                        color_sum += surface_color * sample.color / sample.pdf;
+                        continue;
                 }
 
-                color_sum *= alpha;
+                if (occluded(scene, geometric_normal, use_smooth_normal, Ray<N, T>(point, l), sample.distance))
+                {
+                        continue;
+                }
+
+                const Color direct_lighting = intersection->surface->shade(point, intersection->data, n, v, l);
+                color_sum += direct_lighting * sample.color / sample.pdf;
         }
 
         if (depth >= MAX_DEPTH)
@@ -169,23 +163,35 @@ std::optional<Color> trace_path(
                 return color_sum;
         }
 
-        if (alpha > 0)
         {
-                const SurfaceReflection<N, T> reflection =
-                        intersection->surface->reflect(random_engine, point, intersection->data, n, v);
-                if (!reflection.color.is_black() && dot(reflection.l, geometric_normal) > 0)
+                const SurfaceSample<N, T> reflection = intersection->surface->sample_shade(
+                        random_engine, SurfaceSampleType::Reflection, point, intersection->data, n, v);
+                if (!reflection.color.is_black())
                 {
-                        const Ray<N, T> new_ray = Ray<N, T>(point, reflection.l);
-                        const Color reflected = *trace_path(scene, smooth_normals, new_ray, depth + 1, random_engine);
-                        color_sum += alpha * reflection.color * reflected;
+                        const Vector<N, T>& l = reflection.l;
+                        ASSERT(l.is_unit());
+                        if (dot(l, geometric_normal) > 0)
+                        {
+                                const Ray<N, T> new_ray = Ray<N, T>(point, l);
+                                color_sum += reflection.color
+                                             * *trace_path(scene, smooth_normals, new_ray, depth + 1, random_engine);
+                        }
                 }
         }
-
-        if (alpha < 1)
         {
-                const Ray<N, T> new_ray = Ray<N, T>(ray).set_org(point);
-                const Color transmitted = *trace_path(scene, smooth_normals, new_ray, depth + 1, random_engine);
-                color_sum += (1 - alpha) * transmitted;
+                const SurfaceSample<N, T> transmission = intersection->surface->sample_shade(
+                        random_engine, SurfaceSampleType::Transmission, point, intersection->data, n, v);
+                if (!transmission.color.is_black())
+                {
+                        const Vector<N, T>& l = transmission.l;
+                        ASSERT(l.is_unit());
+                        if (dot(l, geometric_normal) < 0)
+                        {
+                                const Ray<N, T> new_ray = Ray<N, T>(point, l);
+                                color_sum += transmission.color
+                                             * *trace_path(scene, smooth_normals, new_ray, depth + 1, random_engine);
+                        }
+                }
         }
 
         return color_sum;

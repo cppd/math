@@ -110,11 +110,13 @@ class Mesh final : public Shape<N, T>, public Surface<N, T>
                 T roughness;
                 Color Kd;
                 int map_Kd;
-                Material(T metalness, T roughness, const Color& Kd, int map_Kd)
+                Color::DataType alpha;
+                Material(T metalness, T roughness, const Color& Kd, int map_Kd, Color::DataType alpha)
                         : metalness(std::clamp(metalness, T(0), T(1))),
                           roughness(std::clamp(roughness, T(0), T(1))),
                           Kd(Kd.clamped()),
-                          map_Kd(map_Kd)
+                          map_Kd(map_Kd),
+                          alpha(alpha)
                 {
                 }
         };
@@ -127,8 +129,6 @@ class Mesh final : public Shape<N, T>, public Surface<N, T>
         std::vector<MeshFacet<N, T>> m_facets;
 
         std::optional<geometry::ObjectTree<MeshFacet<N, T>>> m_tree;
-
-        Color::DataType m_alpha;
 
         //
 
@@ -157,8 +157,9 @@ class Mesh final : public Shape<N, T>, public Surface<N, T>
                 const Vector<N, T>& v,
                 const Vector<N, T>& l) const override;
 
-        SurfaceReflection<N, T> reflect(
+        SurfaceSample<N, T> sample_shade(
                 RandomEngine<T>& random_engine,
+                SurfaceSampleType sample_type,
                 const Vector<N, T>& p,
                 const void* intersection_data,
                 const Vector<N, T>& n,
@@ -178,6 +179,13 @@ public:
 template <std::size_t N, typename T>
 void Mesh<N, T>::create(const mesh::Reading<N>& mesh_object)
 {
+        const Color::DataType alpha = std::clamp<Color::DataType>(mesh_object.alpha(), 0, 1);
+
+        if (alpha == 0)
+        {
+                return;
+        }
+
         const mesh::Mesh<N>& mesh = mesh_object.mesh();
 
         if (mesh.vertices.empty())
@@ -233,17 +241,16 @@ void Mesh<N, T>::create(const mesh::Reading<N>& mesh_object)
                         texcoords, material);
         }
 
-        m_alpha = std::clamp(mesh_object.alpha(), Color::DataType(0), Color::DataType(1));
-
         for (const typename mesh::Mesh<N>::Material& m : mesh.materials)
         {
                 int map_Kd = m.map_Kd < 0 ? -1 : (images_offset + m.map_Kd);
-                m_materials.emplace_back(mesh_object.metalness(), mesh_object.roughness(), m.Kd, map_Kd);
+                m_materials.emplace_back(mesh_object.metalness(), mesh_object.roughness(), m.Kd, map_Kd, alpha);
         }
         if (facets_without_material)
         {
                 ASSERT(materials_offset + default_material_index == static_cast<int>(m_materials.size()));
-                m_materials.emplace_back(mesh_object.metalness(), mesh_object.roughness(), mesh_object.color(), -1);
+                m_materials.emplace_back(
+                        mesh_object.metalness(), mesh_object.roughness(), mesh_object.color(), -1, alpha);
         }
 
         for (const image::Image<N - 1>& image : mesh.images)
@@ -302,13 +309,9 @@ void Mesh<N, T>::create(const std::vector<mesh::Reading<N>>& mesh_objects)
                 create(mesh_object);
         }
 
-        if (m_vertices.empty())
+        if (m_vertices.empty() || m_facets.empty())
         {
-                error("No vertices found in meshes");
-        }
-        if (m_facets.empty())
-        {
-                error("No facets found in meshes");
+                error("No visible geometry found in meshes");
         }
 
         ASSERT(vertex_count == m_vertices.size());
@@ -348,7 +351,7 @@ std::optional<T> Mesh<N, T>::intersect_bounding(const Ray<N, T>& r) const
 }
 
 template <std::size_t N, typename T>
-std::optional<Intersection<N, T>> Mesh<N, T>::intersect(const Ray<N, T>& ray, T bounding_distance) const
+std::optional<Intersection<N, T>> Mesh<N, T>::intersect(const Ray<N, T>& ray, const T bounding_distance) const
 {
         std::optional<std::tuple<T, const MeshFacet<N, T>*>> v = m_tree->intersect(ray, bounding_distance);
         if (!v)
@@ -380,26 +383,25 @@ std::function<bool(const geometry::ShapeWrapperForIntersection<geometry::Paralle
 }
 
 template <std::size_t N, typename T>
-SurfaceProperties<N, T> Mesh<N, T>::properties(const Vector<N, T>& p, const void* intersection_data) const
+SurfaceProperties<N, T> Mesh<N, T>::properties(const Vector<N, T>& p, const void* const intersection_data) const
 {
         const MeshFacet<N, T>* facet = static_cast<const MeshFacet<N, T>*>(intersection_data);
 
         SurfaceProperties<N, T> s;
         s.geometric_normal = facet->geometric_normal();
         s.shading_normal = facet->shading_normal(p);
-        s.alpha = m_alpha;
         return s;
 }
 
 template <std::size_t N, typename T>
 Color Mesh<N, T>::shade(
         const Vector<N, T>& p,
-        const void* intersection_data,
+        const void* const intersection_data,
         const Vector<N, T>& n,
         const Vector<N, T>& v,
         const Vector<N, T>& l) const
 {
-        const MeshFacet<N, T>* facet = static_cast<const MeshFacet<N, T>*>(intersection_data);
+        const MeshFacet<N, T>* const facet = static_cast<const MeshFacet<N, T>*>(intersection_data);
 
         ASSERT(facet->material() >= 0);
 
@@ -415,36 +417,53 @@ Color Mesh<N, T>::shade(
                 color = m.Kd;
         }
 
-        return ::ns::painter::shade(m.metalness, m.roughness, color, n, v, l);
+        return m.alpha * ::ns::painter::shade(m.metalness, m.roughness, color, n, v, l);
 }
 
 template <std::size_t N, typename T>
-SurfaceReflection<N, T> Mesh<N, T>::reflect(
+SurfaceSample<N, T> Mesh<N, T>::sample_shade(
         RandomEngine<T>& random_engine,
+        const SurfaceSampleType sample_type,
         const Vector<N, T>& p,
-        const void* intersection_data,
+        const void* const intersection_data,
         const Vector<N, T>& n,
         const Vector<N, T>& v) const
 {
-        const MeshFacet<N, T>* facet = static_cast<const MeshFacet<N, T>*>(intersection_data);
+        const MeshFacet<N, T>* const facet = static_cast<const MeshFacet<N, T>*>(intersection_data);
 
         ASSERT(facet->material() >= 0);
 
         const Material& m = m_materials[facet->material()];
 
-        Color color;
-        if (facet->has_texcoord() && m.map_Kd >= 0)
+        switch (sample_type)
         {
-                color = m_images[m.map_Kd].color(facet->texcoord(p));
-        }
-        else
+        case SurfaceSampleType::Reflection:
         {
-                color = m.Kd;
-        }
+                Color color;
+                if (facet->has_texcoord() && m.map_Kd >= 0)
+                {
+                        color = m_images[m.map_Kd].color(facet->texcoord(p));
+                }
+                else
+                {
+                        color = m.Kd;
+                }
 
-        SurfaceReflection<N, T> r;
-        std::tie(r.l, r.color) = sample_shade(random_engine, m.metalness, m.roughness, color, n, v);
-        return r;
+                SurfaceSample<N, T> s;
+                std::tie(s.l, s.color) =
+                        ::ns::painter::sample_shade(random_engine, m.metalness, m.roughness, color, n, v);
+                s.color *= m.alpha;
+                return s;
+        }
+        case SurfaceSampleType::Transmission:
+        {
+                SurfaceSample<N, T> s;
+                s.l = -v;
+                s.color = Color(1 - m.alpha);
+                return s;
+        }
+        }
+        error_fatal("Unknown sample type");
 }
 }
 

@@ -41,8 +41,6 @@ struct SurfaceProperties final
         std::optional<Vector<N, T>> shading_normal;
         // Если поверхность является источником света, то цвет этого источника.
         std::optional<Color> light_source_color;
-        // Коэффициент для прозрачности.
-        Color::DataType alpha = 1;
 
         SurfaceProperties()
         {
@@ -50,14 +48,20 @@ struct SurfaceProperties final
 };
 
 template <std::size_t N, typename T>
-struct SurfaceReflection final
+struct SurfaceSample final
 {
         Vector<N, T> l;
         Color color;
 
-        SurfaceReflection()
+        SurfaceSample()
         {
         }
+};
+
+enum class SurfaceSampleType
+{
+        Reflection,
+        Transmission
 };
 
 // Свойства поверхности надо находить только для ближайшей точки персечения,
@@ -78,8 +82,9 @@ public:
                 const Vector<N, T>& v,
                 const Vector<N, T>& l) const = 0;
 
-        virtual SurfaceReflection<N, T> reflect(
+        virtual SurfaceSample<N, T> sample_shade(
                 RandomEngine<T>& random_engine,
+                SurfaceSampleType sample_type,
                 const Vector<N, T>& point,
                 const void* intersection_data,
                 const Vector<N, T>& n,
@@ -103,8 +108,8 @@ template <std::size_t N, typename T>
 struct LightSourceSample final
 {
         Vector<N, T> l;
-        Color color;
         Color::DataType pdf;
+        Color color;
         std::optional<T> distance;
 
         LightSourceSample()

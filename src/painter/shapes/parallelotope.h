@@ -30,11 +30,13 @@ namespace ns::painter
 template <std::size_t N, typename T>
 class Parallelotope final : public Shape<N, T>, public Surface<N, T>
 {
-        geometry::Parallelotope<N, T> m_parallelotope;
+        const geometry::Parallelotope<N, T> m_parallelotope;
         SurfaceProperties<N, T> m_surface_properties;
-        T m_metalness;
-        T m_roughness;
-        Color m_color;
+        const T m_metalness;
+        const T m_roughness;
+        const Color m_color;
+        const Color::DataType m_alpha;
+        const bool m_visible = m_alpha > 0;
 
 public:
         template <typename... V>
@@ -48,9 +50,9 @@ public:
                 : m_parallelotope(org, e...),
                   m_metalness(std::clamp(metalness, T(0), T(1))),
                   m_roughness(std::clamp(roughness, T(0), T(1))),
-                  m_color(color.clamped())
+                  m_color(color.clamped()),
+                  m_alpha(std::clamp<Color::DataType>(alpha, 0, 1))
         {
-                m_surface_properties.alpha = alpha;
         }
 
         void set_light_source(const Color& color)
@@ -60,10 +62,10 @@ public:
 
         std::optional<T> intersect_bounding(const Ray<N, T>& r) const override
         {
-                return m_parallelotope.intersect(r);
+                return m_visible && m_parallelotope.intersect(r);
         }
 
-        std::optional<Intersection<N, T>> intersect(const Ray<N, T>& ray, T bounding_distance) const override
+        std::optional<Intersection<N, T>> intersect(const Ray<N, T>& ray, const T bounding_distance) const override
         {
                 // всегда есть пересечение, так как прошла проверка intersect_bounding
 
@@ -89,19 +91,36 @@ public:
                 const Vector<N, T>& v,
                 const Vector<N, T>& l) const override
         {
-                return ::ns::painter::shade(m_metalness, m_roughness, m_color, n, v, l);
+                return m_alpha * ::ns::painter::shade(m_metalness, m_roughness, m_color, n, v, l);
         }
 
-        SurfaceReflection<N, T> reflect(
+        SurfaceSample<N, T> sample_shade(
                 RandomEngine<T>& random_engine,
+                const SurfaceSampleType sample_type,
                 const Vector<N, T>& /*p*/,
                 const void* /*intersection_data*/,
                 const Vector<N, T>& n,
                 const Vector<N, T>& v) const override
         {
-                SurfaceReflection<N, T> r;
-                std::tie(r.l, r.color) = sample_shade(random_engine, m_metalness, m_roughness, m_color, n, v);
-                return r;
+                switch (sample_type)
+                {
+                case SurfaceSampleType::Reflection:
+                {
+                        SurfaceSample<N, T> s;
+                        std::tie(s.l, s.color) =
+                                ::ns::painter::sample_shade(random_engine, m_metalness, m_roughness, m_color, n, v);
+                        s.color *= m_alpha;
+                        return s;
+                }
+                case SurfaceSampleType::Transmission:
+                {
+                        SurfaceSample<N, T> s;
+                        s.l = -v;
+                        s.color = Color(1 - m_alpha);
+                        return s;
+                }
+                }
+                error_fatal("Unknown sample type");
         }
 
         geometry::BoundingBox<N, T> bounding_box() const override

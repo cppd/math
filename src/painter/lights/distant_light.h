@@ -38,8 +38,8 @@ public:
         DistantLight(const Vector<N, T>& direction, const Color& color)
         {
                 m_sample.l = direction.normalized();
-                m_sample.color = color;
                 m_sample.pdf = 1;
+                m_sample.color = color;
         }
 
         LightSourceSample<N, T> sample(const Vector<N, T>& /*point*/) const override
