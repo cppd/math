@@ -17,7 +17,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
-#include "ggx.h"
+#include "ggx_diffuse.h"
 #include "lambertian.h"
 
 #include "../objects.h"
@@ -42,7 +42,7 @@ Color shade(
         }
         if constexpr (N == 3)
         {
-                return alpha * GGX<T>::shade(metalness, roughness, color, n, v, l);
+                return alpha * GGXDiffuse<T>::shade(metalness, roughness, color, n, v, l);
         }
         else
         {
@@ -74,7 +74,8 @@ ShadeSample<N, T> sample_shade(
                 ShadeSample<N, T> s;
                 if constexpr (N == 3)
                 {
-                        std::tie(s.l, s.color) = GGX<T>::sample_shade(random_engine, metalness, roughness, color, n, v);
+                        std::tie(s.l, s.color) =
+                                GGXDiffuse<T>::sample_shade(random_engine, metalness, roughness, color, n, v);
                 }
                 else
                 {

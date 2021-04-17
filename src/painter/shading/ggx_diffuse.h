@@ -57,7 +57,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 namespace ns::painter
 {
 template <typename T>
-class GGX
+class GGXDiffuse
 {
         static constexpr std::size_t N = 3;
 
