@@ -51,25 +51,33 @@ std::optional<Color> trace_path(
 
         const Vector<N, T> v = -ray.dir();
         const Vector<N, T>& point = intersection->point;
-        const SurfaceProperties surface_properties = intersection->surface->properties(point, intersection->data);
-        ASSERT(surface_properties.geometric_normal.is_unit());
 
-        const bool use_smooth_normal = smooth_normals && surface_properties.shading_normal.has_value();
-
-        // Определять по реальной нормали, так как видимая нормаль может
-        // показать, что пересечение находится с другой стороны объекта.
-        const bool flip_normals = dot(v, surface_properties.geometric_normal) < 0;
-
-        const Vector<N, T> geometric_normal =
-                flip_normals ? -surface_properties.geometric_normal : surface_properties.geometric_normal;
-        const Vector<N, T> n = [&]
+        const auto [use_smooth_normal, geometric_normal, n] = [&]()
         {
-                if (use_smooth_normal)
+                const Vector<N, T> g_normal = intersection->surface->geometric_normal(point, intersection->data);
+                ASSERT(g_normal.is_unit());
+
+                const std::optional<Vector<N, T>> s_normal =
+                        intersection->surface->shading_normal(point, intersection->data);
+
+                const bool smooth = smooth_normals && s_normal.has_value();
+
+                // Определять по реальной нормали, так как видимая нормаль может
+                // показать, что пересечение находится с другой стороны объекта.
+                const bool flip = dot(v, g_normal) < 0;
+
+                const Vector<N, T> geometric = flip ? -g_normal : g_normal;
+                const Vector<N, T> shading = [&]
                 {
-                        ASSERT(surface_properties.shading_normal->is_unit());
-                        return flip_normals ? -*surface_properties.shading_normal : *surface_properties.shading_normal;
-                }
-                return geometric_normal;
+                        if (smooth)
+                        {
+                                ASSERT(s_normal->is_unit());
+                                return flip ? -*s_normal : *s_normal;
+                        }
+                        return geometric;
+                }();
+
+                return std::make_tuple(smooth, geometric, shading);
         }();
 
         if (dot(n, v) <= 0)
@@ -79,12 +87,14 @@ std::optional<Color> trace_path(
 
         Color color_sum(0);
 
-        if (surface_properties.light_source_color)
+        if (const std::optional<Color> surface_light_source =
+                    intersection->surface->light_source(point, intersection->data);
+            surface_light_source)
         {
-                color_sum = *surface_properties.light_source_color;
+                color_sum = *surface_light_source;
         }
 
-        for (const LightSource<N, T>* light_source : scene.light_sources())
+        for (const LightSource<N, T>* const light_source : scene.light_sources())
         {
                 const LightSourceSample<N, T> sample = light_source->sample(point);
 
@@ -117,7 +127,7 @@ std::optional<Color> trace_path(
 
         {
                 const ShadeSample<N, T> reflection = intersection->surface->sample_shade(
-                        random_engine, point, intersection->data, ShadeType::Reflection, n, v);
+                        point, intersection->data, random_engine, ShadeType::Reflection, n, v);
                 if (!reflection.color.is_black())
                 {
                         const Vector<N, T>& l = reflection.l;
@@ -132,7 +142,7 @@ std::optional<Color> trace_path(
         }
         {
                 const ShadeSample<N, T> transmission = intersection->surface->sample_shade(
-                        random_engine, point, intersection->data, ShadeType::Transmission, n, v);
+                        point, intersection->data, random_engine, ShadeType::Transmission, n, v);
                 if (!transmission.color.is_black())
                 {
                         const Vector<N, T>& l = transmission.l;

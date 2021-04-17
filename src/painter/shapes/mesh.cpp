@@ -148,19 +148,22 @@ class Mesh final : public Shape<N, T>, public Surface<N, T>
 
         //
 
-        SurfaceProperties<N, T> properties(const Vector<N, T>& point, const void* intersection_data) const override;
+        Vector<N, T> geometric_normal(const Vector<N, T>& point, const void* data) const override;
+        std::optional<Vector<N, T>> shading_normal(const Vector<N, T>& point, const void* data) const override;
+
+        std::optional<Color> light_source(const Vector<N, T>& point, const void* data) const override;
 
         Color shade(
                 const Vector<N, T>& point,
-                const void* intersection_data,
+                const void* data,
                 const Vector<N, T>& n,
                 const Vector<N, T>& v,
                 const Vector<N, T>& l) const override;
 
         ShadeSample<N, T> sample_shade(
-                RandomEngine<T>& random_engine,
                 const Vector<N, T>& point,
-                const void* intersection_data,
+                const void* data,
+                RandomEngine<T>& random_engine,
                 ShadeType shade_type,
                 const Vector<N, T>& n,
                 const Vector<N, T>& v) const override;
@@ -383,25 +386,34 @@ std::function<bool(const geometry::ShapeWrapperForIntersection<geometry::Paralle
 }
 
 template <std::size_t N, typename T>
-SurfaceProperties<N, T> Mesh<N, T>::properties(const Vector<N, T>& point, const void* const intersection_data) const
+Vector<N, T> Mesh<N, T>::geometric_normal(const Vector<N, T>& /*point*/, const void* const data) const
 {
-        const MeshFacet<N, T>* facet = static_cast<const MeshFacet<N, T>*>(intersection_data);
+        const MeshFacet<N, T>* const facet = static_cast<const MeshFacet<N, T>*>(data);
+        return facet->geometric_normal();
+}
 
-        SurfaceProperties<N, T> s;
-        s.geometric_normal = facet->geometric_normal();
-        s.shading_normal = facet->shading_normal(point);
-        return s;
+template <std::size_t N, typename T>
+std::optional<Vector<N, T>> Mesh<N, T>::shading_normal(const Vector<N, T>& point, const void* const data) const
+{
+        const MeshFacet<N, T>* const facet = static_cast<const MeshFacet<N, T>*>(data);
+        return facet->shading_normal(point);
+}
+
+template <std::size_t N, typename T>
+std::optional<Color> Mesh<N, T>::light_source(const Vector<N, T>& /*point*/, const void* /*data*/) const
+{
+        return std::nullopt;
 }
 
 template <std::size_t N, typename T>
 Color Mesh<N, T>::shade(
         const Vector<N, T>& point,
-        const void* const intersection_data,
+        const void* const data,
         const Vector<N, T>& n,
         const Vector<N, T>& v,
         const Vector<N, T>& l) const
 {
-        const MeshFacet<N, T>* const facet = static_cast<const MeshFacet<N, T>*>(intersection_data);
+        const MeshFacet<N, T>* const facet = static_cast<const MeshFacet<N, T>*>(data);
 
         ASSERT(facet->material() >= 0);
 
@@ -422,14 +434,14 @@ Color Mesh<N, T>::shade(
 
 template <std::size_t N, typename T>
 ShadeSample<N, T> Mesh<N, T>::sample_shade(
-        RandomEngine<T>& random_engine,
         const Vector<N, T>& point,
-        const void* const intersection_data,
+        const void* const data,
+        RandomEngine<T>& random_engine,
         const ShadeType shade_type,
         const Vector<N, T>& n,
         const Vector<N, T>& v) const
 {
-        const MeshFacet<N, T>* const facet = static_cast<const MeshFacet<N, T>*>(intersection_data);
+        const MeshFacet<N, T>* const facet = static_cast<const MeshFacet<N, T>*>(data);
 
         ASSERT(facet->material() >= 0);
 

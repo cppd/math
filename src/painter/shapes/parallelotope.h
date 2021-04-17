@@ -31,7 +31,7 @@ template <std::size_t N, typename T>
 class Parallelotope final : public Shape<N, T>, public Surface<N, T>
 {
         const geometry::Parallelotope<N, T> m_parallelotope;
-        SurfaceProperties<N, T> m_surface_properties;
+        std::optional<Color> m_light_source;
         const T m_metalness;
         const T m_roughness;
         const Color m_color;
@@ -57,12 +57,12 @@ public:
 
         void set_light_source(const Color& color)
         {
-                m_surface_properties.light_source_color = color;
+                m_light_source = color;
         }
 
         std::optional<T> intersect_bounding(const Ray<N, T>& r) const override
         {
-                if (m_alpha_nonzero || m_surface_properties.light_source_color)
+                if (m_alpha_nonzero || m_light_source)
                 {
                         return m_parallelotope.intersect(r);
                 }
@@ -81,16 +81,24 @@ public:
                 return intersection;
         }
 
-        SurfaceProperties<N, T> properties(const Vector<N, T>& point, const void* /*intersection_data*/) const override
+        Vector<N, T> geometric_normal(const Vector<N, T>& point, const void* /*data*/) const override
         {
-                SurfaceProperties<N, T> s = m_surface_properties;
-                s.geometric_normal = m_parallelotope.normal(point);
-                return s;
+                return m_parallelotope.normal(point);
+        }
+
+        std::optional<Vector<N, T>> shading_normal(const Vector<N, T>& /*point*/, const void* /*data*/) const override
+        {
+                return std::nullopt;
+        }
+
+        std::optional<Color> light_source(const Vector<N, T>& /*point*/, const void* /*data*/) const override
+        {
+                return m_light_source;
         }
 
         Color shade(
                 const Vector<N, T>& /*point*/,
-                const void* /*intersection_data*/,
+                const void* /*data*/,
                 const Vector<N, T>& n,
                 const Vector<N, T>& v,
                 const Vector<N, T>& l) const override
@@ -99,9 +107,9 @@ public:
         }
 
         ShadeSample<N, T> sample_shade(
-                RandomEngine<T>& random_engine,
                 const Vector<N, T>& /*point*/,
-                const void* /*intersection_data*/,
+                const void* /*data*/,
+                RandomEngine<T>& random_engine,
                 const ShadeType shade_type,
                 const Vector<N, T>& n,
                 const Vector<N, T>& v) const override

@@ -31,20 +31,10 @@ namespace ns::painter
 template <typename T>
 using RandomEngine = std::conditional_t<std::is_same_v<std::remove_cv<T>, float>, std::mt19937, std::mt19937_64>;
 
-template <std::size_t N, typename T>
-struct SurfaceProperties final
+enum class ShadeType
 {
-        // Реальный перпендикуляр.
-        Vector<N, T> geometric_normal;
-        // Видимый перпендикуляр к поверхности. Например, при интерполяции
-        // перпендикуляра по перпендикулярам в вершинах симплексов.
-        std::optional<Vector<N, T>> shading_normal;
-        // Если поверхность является источником света, то цвет этого источника.
-        std::optional<Color> light_source_color;
-
-        SurfaceProperties()
-        {
-        }
+        Reflection,
+        Transmission
 };
 
 template <std::size_t N, typename T>
@@ -58,14 +48,6 @@ struct ShadeSample final
         }
 };
 
-enum class ShadeType
-{
-        Reflection,
-        Transmission
-};
-
-// Свойства поверхности надо находить только для ближайшей точки персечения,
-// поэтому свойства определяются не сразу, а через этот интерфейс.
 template <std::size_t N, typename T>
 class Surface
 {
@@ -73,19 +55,23 @@ protected:
         virtual ~Surface() = default;
 
 public:
-        virtual SurfaceProperties<N, T> properties(const Vector<N, T>& point, const void* intersection_data) const = 0;
+        virtual Vector<N, T> geometric_normal(const Vector<N, T>& point, const void* data) const = 0;
+
+        virtual std::optional<Vector<N, T>> shading_normal(const Vector<N, T>& point, const void* data) const = 0;
+
+        virtual std::optional<Color> light_source(const Vector<N, T>& point, const void* data) const = 0;
 
         virtual Color shade(
                 const Vector<N, T>& point,
-                const void* intersection_data,
+                const void* data,
                 const Vector<N, T>& n,
                 const Vector<N, T>& v,
                 const Vector<N, T>& l) const = 0;
 
         virtual ShadeSample<N, T> sample_shade(
-                RandomEngine<T>& random_engine,
                 const Vector<N, T>& point,
-                const void* intersection_data,
+                const void* data,
+                RandomEngine<T>& random_engine,
                 ShadeType shade_type,
                 const Vector<N, T>& n,
                 const Vector<N, T>& v) const = 0;
@@ -98,8 +84,7 @@ struct Intersection final
         Vector<N, T> point;
         const void* data;
 
-        // Чтобы не было direct-initializing, например в std::optional
-        Intersection() noexcept
+        Intersection()
         {
         }
 };
@@ -117,7 +102,6 @@ struct LightSourceSample final
         }
 };
 
-// Источник света, не являющийся видимым объектом.
 template <std::size_t N, typename T>
 struct LightSource
 {
@@ -126,13 +110,11 @@ struct LightSource
         virtual LightSourceSample<N, T> sample(const Vector<N, T>& point) const = 0;
 };
 
-// Преобразование точки на экране в луч в пространстве.
 template <std::size_t N, typename T>
 struct Projector
 {
         virtual ~Projector() = default;
 
-        // Размер экрана в пикселях
         virtual const std::array<int, N - 1>& screen_size() const = 0;
 
         virtual Ray<N, T> ray(const Vector<N - 1, T>& point) const = 0;
@@ -146,6 +128,7 @@ struct Scene
         virtual std::optional<Intersection<N, T>> intersect(const Ray<N, T>& ray) const = 0;
 
         virtual const std::vector<const LightSource<N, T>*>& light_sources() const = 0;
+
         virtual const Color& background_light() const = 0;
 
         virtual const Projector<N, T>& projector() const = 0;
