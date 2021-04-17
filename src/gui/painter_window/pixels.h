@@ -238,7 +238,7 @@ public:
                           {
                                   return std::vector(array.cbegin(), array.cend());
                           }(scene->projector().screen_size())),
-                  m_background_color(scene->background_color()),
+                  m_background_color(scene->background_light()),
                   m_slice_count(m_global_index.count() / m_screen_size[0] / m_screen_size[1]),
                   m_busy_indices_2d(thread_count, NULL_INDEX),
                   m_painter(painter::create_painter<N, T>(

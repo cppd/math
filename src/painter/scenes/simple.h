@@ -36,7 +36,7 @@ namespace ns::painter
 {
 template <std::size_t N, typename T>
 std::unique_ptr<const Scene<N, T>> create_simple_scene(
-        const Color& background_color,
+        const Color& background_light,
         const Color::DataType& lighting_intensity,
         int min_screen_size,
         int max_screen_size,
@@ -111,6 +111,6 @@ std::unique_ptr<const Scene<N, T>> create_simple_scene(
         shapes.push_back(std::move(shape));
 
         return create_storage_scene<N, T>(
-                background_color, std::move(projector), std::move(light_sources), std::move(shapes));
+                background_light, std::move(projector), std::move(light_sources), std::move(shapes));
 }
 }

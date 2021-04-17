@@ -146,9 +146,9 @@ struct Scene
         virtual std::optional<Intersection<N, T>> intersect(const Ray<N, T>& ray) const = 0;
 
         virtual const std::vector<const LightSource<N, T>*>& light_sources() const = 0;
+        virtual const Color& background_light() const = 0;
+
         virtual const Projector<N, T>& projector() const = 0;
-        virtual const Color& background_color() const = 0;
-        virtual const Color& background_light_source_color() const = 0;
 
         virtual long long thread_ray_count() const noexcept = 0;
 };

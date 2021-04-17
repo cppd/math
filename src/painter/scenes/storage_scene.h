@@ -29,7 +29,7 @@ namespace ns::painter
 {
 template <std::size_t N, typename T>
 std::unique_ptr<Scene<N, T>> create_storage_scene(
-        const Color& background_color,
+        const Color& background_light,
         std::unique_ptr<const Projector<N, T>>&& projector,
         std::vector<std::unique_ptr<const LightSource<N, T>>>&& light_sources,
         std::vector<std::unique_ptr<const Shape<N, T>>>&& shapes);

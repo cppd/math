@@ -53,7 +53,7 @@ std::unique_ptr<const Scene<N, T>> create_cornell_box_scene(
         constexpr Color::DataType ALPHA = 1;
         constexpr T METALNESS = 0.1;
         constexpr T ROUGHNESS = 0.2;
-        constexpr Color BACKGROUND_COLOR = colors::BLACK;
+        constexpr Color BACKGROUND_LIGHT = colors::BLACK;
 
         std::vector<std::unique_ptr<const Shape<N, T>>> shapes;
         std::vector<std::unique_ptr<const LightSource<N, T>>> light_sources;
@@ -145,7 +145,7 @@ std::unique_ptr<const Scene<N, T>> create_cornell_box_scene(
         }
 
         return create_storage_scene<N, T>(
-                BACKGROUND_COLOR, std::move(projector), std::move(light_sources), std::move(shapes));
+                BACKGROUND_LIGHT, std::move(projector), std::move(light_sources), std::move(shapes));
 }
 }
 

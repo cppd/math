@@ -44,7 +44,7 @@ namespace ns::painter
 {
 namespace
 {
-constexpr Color BACKGROUND_COLOR = Color(Srgb8(50, 100, 150));
+constexpr Color BACKGROUND_LIGHT = Color(Srgb8(50, 100, 150));
 constexpr Color DEFAULT_COLOR = Color(Srgb8(150, 170, 150));
 constexpr Color::DataType METALNESS = 0;
 constexpr Color::DataType LIGHTING_INTENSITY = 1;
@@ -198,7 +198,7 @@ void test_painter_file(int samples_per_pixel, int thread_count, std::unique_ptr<
         constexpr int MAX_PASS_COUNT = 1;
         constexpr bool SMOOTH_NORMAL = true;
 
-        Image<N - 1> image(DIRECTORY_NAME, scene->background_color());
+        Image<N - 1> image(DIRECTORY_NAME, scene->background_light());
 
         LOG("Painting...");
         TimePoint start_time = time();
@@ -259,7 +259,7 @@ void test_painter(
         }
 
         std::unique_ptr<const Scene<N, T>> scene = create_simple_scene(
-                BACKGROUND_COLOR, LIGHTING_INTENSITY, min_screen_size, max_screen_size, std::move(painter_mesh));
+                BACKGROUND_LIGHT, LIGHTING_INTENSITY, min_screen_size, max_screen_size, std::move(painter_mesh));
 
         static_assert(type == PainterTestOutputType::File || type == PainterTestOutputType::Window);
 

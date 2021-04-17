@@ -51,7 +51,7 @@ template <std::size_t N>
 std::function<void(ProgressRatioList*)> action_painter_function(
         const std::vector<std::shared_ptr<const mesh::MeshObject<N>>>& mesh_objects,
         const view::info::Camera& camera,
-        const Color& background_color,
+        const Color& background_light,
         const Color::DataType& lighting_intensity)
 {
         ASSERT(!mesh_objects.empty());
@@ -148,7 +148,7 @@ std::function<void(ProgressRatioList*)> action_painter_function(
                 std::string name = mesh_objects.size() != 1 ? "" : mesh_objects[0]->name();
 
                 std::unique_ptr<const painter::Scene<N, T>> scene =
-                        create_painter_scene(std::move(shape), scene_info, background_color, lighting_intensity);
+                        create_painter_scene(std::move(shape), scene_info, background_light, lighting_intensity);
 
                 gui::painter_window::create_painter_window(
                         name, thread_count, samples_per_pixel, !flat_facets, std::move(scene));
@@ -159,7 +159,7 @@ std::function<void(ProgressRatioList*)> action_painter_function(
 std::function<void(ProgressRatioList*)> action_painter(
         const std::vector<storage::MeshObjectConst>& objects,
         const view::info::Camera& camera,
-        const Color& background_color,
+        const Color& background_light,
         const Color::DataType& lighting_intensity)
 {
         std::set<std::size_t> dimensions;
@@ -205,7 +205,7 @@ std::function<void(ProgressRatioList*)> action_painter(
                                         },
                                         std::move(visible_object));
                         }
-                        return action_painter_function(meshes, camera, background_color, lighting_intensity);
+                        return action_painter_function(meshes, camera, background_light, lighting_intensity);
                 });
 }
 }

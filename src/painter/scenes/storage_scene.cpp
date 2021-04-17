@@ -219,8 +219,7 @@ class SceneImpl final : public Scene<N, T>
 
         std::unique_ptr<const Projector<N, T>> m_projector;
 
-        Color m_background_color;
-        Color m_background_light_source_color;
+        Color m_background_light;
 
         std::vector<const Shape<N, T>*> m_shape_pointers;
         std::vector<const LightSource<N, T>*> m_light_source_pointers;
@@ -271,14 +270,9 @@ class SceneImpl final : public Scene<N, T>
                 return *m_projector;
         }
 
-        const Color& background_color() const override
+        const Color& background_light() const override
         {
-                return m_background_color;
-        }
-
-        const Color& background_light_source_color() const override
-        {
-                return m_background_light_source_color;
+                return m_background_light;
         }
 
         long long thread_ray_count() const noexcept override
@@ -288,15 +282,14 @@ class SceneImpl final : public Scene<N, T>
 
 public:
         SceneImpl(
-                const Color& background_color,
+                const Color& background_light,
                 std::unique_ptr<const Projector<N, T>>&& projector,
                 std::vector<std::unique_ptr<const LightSource<N, T>>>&& light_sources,
                 std::vector<std::unique_ptr<const Shape<N, T>>>&& shapes)
                 : m_shapes(std::move(shapes)),
                   m_light_sources(std::move(light_sources)),
                   m_projector(std::move(projector)),
-                  m_background_color(background_color),
-                  m_background_light_source_color(Color(m_background_color.luminance())),
+                  m_background_light(background_light),
                   m_shape_pointers(to_pointers(m_shapes)),
                   m_light_source_pointers(to_pointers(m_light_sources))
         {
@@ -315,13 +308,13 @@ public:
 
 template <std::size_t N, typename T>
 std::unique_ptr<Scene<N, T>> create_storage_scene(
-        const Color& background_color,
+        const Color& background_light,
         std::unique_ptr<const Projector<N, T>>&& projector,
         std::vector<std::unique_ptr<const LightSource<N, T>>>&& light_sources,
         std::vector<std::unique_ptr<const Shape<N, T>>>&& shapes)
 {
         return std::make_unique<SceneImpl<N, T>>(
-                background_color, std::move(projector), std::move(light_sources), std::move(shapes));
+                background_light, std::move(projector), std::move(light_sources), std::move(shapes));
 }
 
 #define CREATE_STORAGE_SCENE_INSTANTIATION(N, T)                           \

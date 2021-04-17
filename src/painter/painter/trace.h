@@ -44,7 +44,7 @@ std::optional<Color> trace_path(
         {
                 if (depth > 0)
                 {
-                        return scene.background_light_source_color();
+                        return scene.background_light();
                 }
                 return std::nullopt;
         }
