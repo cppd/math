@@ -48,17 +48,17 @@ struct SurfaceProperties final
 };
 
 template <std::size_t N, typename T>
-struct SurfaceSample final
+struct ShadeSample final
 {
         Vector<N, T> l;
         Color color;
 
-        SurfaceSample()
+        ShadeSample()
         {
         }
 };
 
-enum class SurfaceSampleType
+enum class ShadeType
 {
         Reflection,
         Transmission
@@ -82,11 +82,11 @@ public:
                 const Vector<N, T>& v,
                 const Vector<N, T>& l) const = 0;
 
-        virtual SurfaceSample<N, T> sample_shade(
+        virtual ShadeSample<N, T> sample_shade(
                 RandomEngine<T>& random_engine,
-                SurfaceSampleType sample_type,
                 const Vector<N, T>& point,
                 const void* intersection_data,
+                ShadeType shade_type,
                 const Vector<N, T>& n,
                 const Vector<N, T>& v) const = 0;
 };

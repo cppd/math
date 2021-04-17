@@ -20,43 +20,77 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "ggx.h"
 #include "lambertian.h"
 
+#include "../objects.h"
+
+#include <src/com/error.h>
+
 namespace ns::painter
 {
 template <std::size_t N, typename T>
 Color shade(
-        T metalness,
-        T roughness,
+        const Color::DataType alpha,
+        const T metalness,
+        const T roughness,
         const Color& color,
         const Vector<N, T>& n,
         const Vector<N, T>& v,
         const Vector<N, T>& l)
 {
+        if (alpha <= 0)
+        {
+                return Color(0);
+        }
         if constexpr (N == 3)
         {
-                return GGX<T>::shade(metalness, roughness, color, n, v, l);
+                return alpha * GGX<T>::shade(metalness, roughness, color, n, v, l);
         }
         else
         {
-                return Lambertian<N, T>::shade(color, n, l);
+                return alpha * Lambertian<N, T>::shade(color, n, l);
         }
 }
 
 template <std::size_t N, typename T, typename RandomEngine>
-std::tuple<Vector<N, T>, Color> sample_shade(
+ShadeSample<N, T> sample_shade(
         RandomEngine& random_engine,
-        T metalness,
-        T roughness,
+        const ShadeType shade_type,
+        const Color::DataType alpha,
+        const T metalness,
+        const T roughness,
         const Color& color,
         const Vector<N, T>& n,
         const Vector<N, T>& v)
 {
-        if constexpr (N == 3)
+        switch (shade_type)
         {
-                return GGX<T>::sample_shade(random_engine, metalness, roughness, color, n, v);
-        }
-        else
+        case ShadeType::Reflection:
         {
-                return Lambertian<N, T>::sample_shade(random_engine, color, n);
+                if (alpha <= 0)
+                {
+                        ShadeSample<N, T> s;
+                        s.color = Color(0);
+                        s.l = Vector<N, T>(0);
+                }
+                ShadeSample<N, T> s;
+                if constexpr (N == 3)
+                {
+                        std::tie(s.l, s.color) = GGX<T>::sample_shade(random_engine, metalness, roughness, color, n, v);
+                }
+                else
+                {
+                        std::tie(s.l, s.color) = Lambertian<N, T>::sample_shade(random_engine, color, n);
+                }
+                s.color *= alpha;
+                return s;
         }
+        case ShadeType::Transmission:
+        {
+                ShadeSample<N, T> s;
+                s.l = -v;
+                s.color = Color(1 - alpha);
+                return s;
+        }
+        }
+        error_fatal("Unknown shade type " + std::to_string(static_cast<unsigned long long>(shade_type)));
 }
 }

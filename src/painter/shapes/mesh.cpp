@@ -148,20 +148,20 @@ class Mesh final : public Shape<N, T>, public Surface<N, T>
 
         //
 
-        SurfaceProperties<N, T> properties(const Vector<N, T>& p, const void* intersection_data) const override;
+        SurfaceProperties<N, T> properties(const Vector<N, T>& point, const void* intersection_data) const override;
 
         Color shade(
-                const Vector<N, T>& p,
+                const Vector<N, T>& point,
                 const void* intersection_data,
                 const Vector<N, T>& n,
                 const Vector<N, T>& v,
                 const Vector<N, T>& l) const override;
 
-        SurfaceSample<N, T> sample_shade(
+        ShadeSample<N, T> sample_shade(
                 RandomEngine<T>& random_engine,
-                SurfaceSampleType sample_type,
-                const Vector<N, T>& p,
+                const Vector<N, T>& point,
                 const void* intersection_data,
+                ShadeType shade_type,
                 const Vector<N, T>& n,
                 const Vector<N, T>& v) const override;
 
@@ -383,19 +383,19 @@ std::function<bool(const geometry::ShapeWrapperForIntersection<geometry::Paralle
 }
 
 template <std::size_t N, typename T>
-SurfaceProperties<N, T> Mesh<N, T>::properties(const Vector<N, T>& p, const void* const intersection_data) const
+SurfaceProperties<N, T> Mesh<N, T>::properties(const Vector<N, T>& point, const void* const intersection_data) const
 {
         const MeshFacet<N, T>* facet = static_cast<const MeshFacet<N, T>*>(intersection_data);
 
         SurfaceProperties<N, T> s;
         s.geometric_normal = facet->geometric_normal();
-        s.shading_normal = facet->shading_normal(p);
+        s.shading_normal = facet->shading_normal(point);
         return s;
 }
 
 template <std::size_t N, typename T>
 Color Mesh<N, T>::shade(
-        const Vector<N, T>& p,
+        const Vector<N, T>& point,
         const void* const intersection_data,
         const Vector<N, T>& n,
         const Vector<N, T>& v,
@@ -410,22 +410,22 @@ Color Mesh<N, T>::shade(
         Color color;
         if (facet->has_texcoord() && m.map_Kd >= 0)
         {
-                color = m_images[m.map_Kd].color(facet->texcoord(p));
+                color = m_images[m.map_Kd].color(facet->texcoord(point));
         }
         else
         {
                 color = m.Kd;
         }
 
-        return m.alpha * ::ns::painter::shade(m.metalness, m.roughness, color, n, v, l);
+        return ::ns::painter::shade(m.alpha, m.metalness, m.roughness, color, n, v, l);
 }
 
 template <std::size_t N, typename T>
-SurfaceSample<N, T> Mesh<N, T>::sample_shade(
+ShadeSample<N, T> Mesh<N, T>::sample_shade(
         RandomEngine<T>& random_engine,
-        const SurfaceSampleType sample_type,
-        const Vector<N, T>& p,
+        const Vector<N, T>& point,
         const void* const intersection_data,
+        const ShadeType shade_type,
         const Vector<N, T>& n,
         const Vector<N, T>& v) const
 {
@@ -435,35 +435,17 @@ SurfaceSample<N, T> Mesh<N, T>::sample_shade(
 
         const Material& m = m_materials[facet->material()];
 
-        switch (sample_type)
+        Color color;
+        if (facet->has_texcoord() && m.map_Kd >= 0)
         {
-        case SurfaceSampleType::Reflection:
+                color = m_images[m.map_Kd].color(facet->texcoord(point));
+        }
+        else
         {
-                Color color;
-                if (facet->has_texcoord() && m.map_Kd >= 0)
-                {
-                        color = m_images[m.map_Kd].color(facet->texcoord(p));
-                }
-                else
-                {
-                        color = m.Kd;
-                }
+                color = m.Kd;
+        }
 
-                SurfaceSample<N, T> s;
-                std::tie(s.l, s.color) =
-                        ::ns::painter::sample_shade(random_engine, m.metalness, m.roughness, color, n, v);
-                s.color *= m.alpha;
-                return s;
-        }
-        case SurfaceSampleType::Transmission:
-        {
-                SurfaceSample<N, T> s;
-                s.l = -v;
-                s.color = Color(1 - m.alpha);
-                return s;
-        }
-        }
-        error_fatal("Unknown sample type");
+        return ::ns::painter::sample_shade(random_engine, shade_type, m.alpha, m.metalness, m.roughness, color, n, v);
 }
 }
 

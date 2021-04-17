@@ -116,8 +116,8 @@ std::optional<Color> trace_path(
         }
 
         {
-                const SurfaceSample<N, T> reflection = intersection->surface->sample_shade(
-                        random_engine, SurfaceSampleType::Reflection, point, intersection->data, n, v);
+                const ShadeSample<N, T> reflection = intersection->surface->sample_shade(
+                        random_engine, point, intersection->data, ShadeType::Reflection, n, v);
                 if (!reflection.color.is_black())
                 {
                         const Vector<N, T>& l = reflection.l;
@@ -131,8 +131,8 @@ std::optional<Color> trace_path(
                 }
         }
         {
-                const SurfaceSample<N, T> transmission = intersection->surface->sample_shade(
-                        random_engine, SurfaceSampleType::Transmission, point, intersection->data, n, v);
+                const ShadeSample<N, T> transmission = intersection->surface->sample_shade(
+                        random_engine, point, intersection->data, ShadeType::Transmission, n, v);
                 if (!transmission.color.is_black())
                 {
                         const Vector<N, T>& l = transmission.l;
