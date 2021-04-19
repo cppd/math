@@ -22,13 +22,14 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "../objects.h"
 #include "../shading/shading.h"
 
+#include <src/com/memory_arena.h>
 #include <src/geometry/spatial/parallelotope.h>
 #include <src/geometry/spatial/shape_intersection.h>
 
 namespace ns::painter
 {
 template <std::size_t N, typename T>
-class Parallelotope final : public Shape<N, T>, public Surface<N, T>
+class Parallelotope final : public Shape<N, T>
 {
         const geometry::Parallelotope<N, T> m_parallelotope;
         std::optional<Color> m_light_source;
@@ -37,6 +38,49 @@ class Parallelotope final : public Shape<N, T>, public Surface<N, T>
         const Color m_color;
         const Color::DataType m_alpha;
         const bool m_alpha_nonzero = m_alpha > 0;
+
+        class IntersectionImpl final : public Intersection<N, T>
+        {
+                const Parallelotope* m_obj;
+
+        public:
+                IntersectionImpl(const Vector<N, T>& point, const Parallelotope* obj)
+                        : Intersection<N, T>(point), m_obj(obj)
+                {
+                }
+
+                Vector<N, T> geometric_normal() const override
+                {
+                        return m_obj->m_parallelotope.normal(this->point());
+                }
+
+                std::optional<Vector<N, T>> shading_normal() const override
+                {
+                        return std::nullopt;
+                }
+
+                std::optional<Color> light_source() const override
+                {
+                        return m_obj->m_light_source;
+                }
+
+                Color shade(const Vector<N, T>& n, const Vector<N, T>& v, const Vector<N, T>& l) const override
+                {
+                        return ::ns::painter::shade(
+                                m_obj->m_alpha, m_obj->m_metalness, m_obj->m_roughness, m_obj->m_color, n, v, l);
+                }
+
+                ShadeSample<N, T> sample_shade(
+                        RandomEngine<T>& random_engine,
+                        ShadeType shade_type,
+                        const Vector<N, T>& n,
+                        const Vector<N, T>& v) const override
+                {
+                        return ::ns::painter::sample_shade(
+                                random_engine, shade_type, m_obj->m_alpha, m_obj->m_metalness, m_obj->m_roughness,
+                                m_obj->m_color, n, v);
+                }
+        };
 
 public:
         template <typename... V>
@@ -69,53 +113,10 @@ public:
                 return std::nullopt;
         }
 
-        std::optional<Intersection<N, T>> intersect(const Ray<N, T>& ray, const T bounding_distance) const override
+        const Intersection<N, T>* intersect(const Ray<N, T>& ray, const T bounding_distance) const override
         {
                 // всегда есть пересечение, так как прошла проверка intersect_bounding
-
-                std::optional<Intersection<N, T>> intersection(std::in_place);
-                intersection->point = ray.point(bounding_distance);
-                intersection->surface = this;
-                // задавать значение для intersection->data не нужно, так как это один объект
-
-                return intersection;
-        }
-
-        Vector<N, T> geometric_normal(const Vector<N, T>& point, const void* /*data*/) const override
-        {
-                return m_parallelotope.normal(point);
-        }
-
-        std::optional<Vector<N, T>> shading_normal(const Vector<N, T>& /*point*/, const void* /*data*/) const override
-        {
-                return std::nullopt;
-        }
-
-        std::optional<Color> light_source(const Vector<N, T>& /*point*/, const void* /*data*/) const override
-        {
-                return m_light_source;
-        }
-
-        Color shade(
-                const Vector<N, T>& /*point*/,
-                const void* /*data*/,
-                const Vector<N, T>& n,
-                const Vector<N, T>& v,
-                const Vector<N, T>& l) const override
-        {
-                return ::ns::painter::shade(m_alpha, m_metalness, m_roughness, m_color, n, v, l);
-        }
-
-        ShadeSample<N, T> sample_shade(
-                const Vector<N, T>& /*point*/,
-                const void* /*data*/,
-                RandomEngine<T>& random_engine,
-                const ShadeType shade_type,
-                const Vector<N, T>& n,
-                const Vector<N, T>& v) const override
-        {
-                return ::ns::painter::sample_shade(
-                        random_engine, shade_type, m_alpha, m_metalness, m_roughness, m_color, n, v);
+                return make_arena_ptr<IntersectionImpl>(ray.point(bounding_distance), this);
         }
 
         geometry::BoundingBox<N, T> bounding_box() const override

@@ -49,44 +49,35 @@ struct ShadeSample final
 };
 
 template <std::size_t N, typename T>
-class Surface
+class Intersection
 {
+        Vector<N, T> m_point;
+
 protected:
-        virtual ~Surface() = default;
+        ~Intersection() = default;
 
 public:
-        virtual Vector<N, T> geometric_normal(const Vector<N, T>& point, const void* data) const = 0;
+        explicit Intersection(const Vector<N, T>& point) : m_point(point)
+        {
+        }
 
-        virtual std::optional<Vector<N, T>> shading_normal(const Vector<N, T>& point, const void* data) const = 0;
+        const Vector<N, T>& point() const
+        {
+                return m_point;
+        }
 
-        virtual std::optional<Color> light_source(const Vector<N, T>& point, const void* data) const = 0;
+        virtual Vector<N, T> geometric_normal() const = 0;
+        virtual std::optional<Vector<N, T>> shading_normal() const = 0;
 
-        virtual Color shade(
-                const Vector<N, T>& point,
-                const void* data,
-                const Vector<N, T>& n,
-                const Vector<N, T>& v,
-                const Vector<N, T>& l) const = 0;
+        virtual std::optional<Color> light_source() const = 0;
+
+        virtual Color shade(const Vector<N, T>& n, const Vector<N, T>& v, const Vector<N, T>& l) const = 0;
 
         virtual ShadeSample<N, T> sample_shade(
-                const Vector<N, T>& point,
-                const void* data,
                 RandomEngine<T>& random_engine,
                 ShadeType shade_type,
                 const Vector<N, T>& n,
                 const Vector<N, T>& v) const = 0;
-};
-
-template <std::size_t N, typename T>
-struct Intersection final
-{
-        const Surface<N, T>* surface;
-        Vector<N, T> point;
-        const void* data;
-
-        Intersection()
-        {
-        }
 };
 
 template <std::size_t N, typename T>
@@ -125,7 +116,7 @@ struct Scene
 {
         virtual ~Scene() = default;
 
-        virtual std::optional<Intersection<N, T>> intersect(const Ray<N, T>& ray) const = 0;
+        virtual const Intersection<N, T>* intersect(const Ray<N, T>& ray) const = 0;
 
         virtual const std::vector<const LightSource<N, T>*>& light_sources() const = 0;
 

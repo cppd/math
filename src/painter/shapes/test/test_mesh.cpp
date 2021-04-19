@@ -19,6 +19,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <src/com/error.h>
 #include <src/com/log.h>
+#include <src/com/memory_arena.h>
 #include <src/com/names.h>
 #include <src/com/print.h>
 #include <src/com/random/engine.h>
@@ -90,6 +91,8 @@ void test_spherical_mesh(const Shape<N, T>& mesh, int ray_count, ProgressRatio* 
 
         for (unsigned i = 1; i <= rays.size(); ++i)
         {
+                MemoryArena::thread_local_instance().clear();
+
                 if ((i & 0xfff) == 0xfff)
                 {
                         progress->set(i, rays.size());
@@ -104,7 +107,7 @@ void test_spherical_mesh(const Shape<N, T>& mesh, int ray_count, ProgressRatio* 
                 }
 
                 std::optional<T> bounding_distance;
-                std::optional<Intersection<N, T>> intersection;
+                const Intersection<N, T>* intersection;
 
                 bounding_distance = mesh.intersect_bounding(ray);
                 if (!bounding_distance)
@@ -135,10 +138,10 @@ void test_spherical_mesh(const Shape<N, T>& mesh, int ray_count, ProgressRatio* 
                 }
                 if (WITH_RAY_LOG)
                 {
-                        LOG("t1_p == " + to_string((intersection->point - ray.org()).norm()));
+                        LOG("t1_p == " + to_string((intersection->point() - ray.org()).norm()));
                 }
 
-                ray.set_org(intersection->point);
+                ray.set_org(intersection->point());
                 ray.move(ray_offset);
 
                 bounding_distance = mesh.intersect_bounding(ray);
@@ -170,10 +173,10 @@ void test_spherical_mesh(const Shape<N, T>& mesh, int ray_count, ProgressRatio* 
                 }
                 if (WITH_RAY_LOG)
                 {
-                        LOG("t2_p == " + to_string((intersection->point - ray.org()).norm()));
+                        LOG("t2_p == " + to_string((intersection->point() - ray.org()).norm()));
                 }
 
-                ray.set_org(intersection->point);
+                ray.set_org(intersection->point());
                 ray.move(ray_offset);
 
                 if ((bounding_distance = mesh.intersect_bounding(ray))
@@ -182,7 +185,7 @@ void test_spherical_mesh(const Shape<N, T>& mesh, int ray_count, ProgressRatio* 
                         if (WITH_ERROR_LOG)
                         {
                                 LOG("The third intersection with ray #" + to_string(i) + "\n" + to_string(ray) + "\n"
-                                    + "at point " + to_string((intersection->point - ray.org()).norm()));
+                                    + "at point " + to_string((intersection->point() - ray.org()).norm()));
                         }
                         ++error_count;
                         continue;

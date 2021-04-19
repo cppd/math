@@ -27,11 +27,11 @@ namespace visibility_implementation
 {
 template <std::size_t N, typename T>
 bool intersection_before(
-        const std::optional<Intersection<N, T>>& intersection,
+        const Intersection<N, T>* intersection,
         const Vector<N, T>& point,
         const std::optional<T>& distance)
 {
-        return intersection && (!distance || (intersection->point - point).norm_squared() < square(*distance));
+        return intersection && (!distance || (intersection->point() - point).norm_squared() < square(*distance));
 }
 }
 
@@ -47,7 +47,7 @@ bool occluded(
 
         const Vector<N, T> point = ray.org();
 
-        std::optional<Intersection<N, T>> intersection;
+        const Intersection<N, T>* intersection;
 
         if (!smooth_normals || dot(ray.dir(), geometric_normal) >= 0)
         {
@@ -73,7 +73,7 @@ bool occluded(
                 return true;
         }
 
-        intersection = scene.intersect(Ray<N, T>(ray).set_org(intersection->point));
+        intersection = scene.intersect(Ray<N, T>(ray).set_org(intersection->point()));
         return impl::intersection_before(intersection, point, distance);
 }
 }

@@ -25,6 +25,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <src/color/color.h>
 #include <src/com/log.h>
+#include <src/com/memory_arena.h>
 #include <src/com/thread.h>
 #include <src/com/time.h>
 #include <src/com/type/limit.h>
@@ -101,30 +102,31 @@ std::array<int, N> add_offset(const std::array<int, N>& src, int offset)
         return r;
 }
 
-template <std::size_t N, typename T>
-class Mesh final : public Shape<N, T>, public Surface<N, T>
+template <typename T>
+struct Material
 {
-        struct Material
+        T metalness;
+        T roughness;
+        Color Kd;
+        int map_Kd;
+        Color::DataType alpha;
+        Material(T metalness, T roughness, const Color& Kd, int map_Kd, Color::DataType alpha)
+                : metalness(std::clamp(metalness, T(0), T(1))),
+                  roughness(std::clamp(roughness, T(0), T(1))),
+                  Kd(Kd.clamped()),
+                  map_Kd(map_Kd),
+                  alpha(alpha)
         {
-                T metalness;
-                T roughness;
-                Color Kd;
-                int map_Kd;
-                Color::DataType alpha;
-                Material(T metalness, T roughness, const Color& Kd, int map_Kd, Color::DataType alpha)
-                        : metalness(std::clamp(metalness, T(0), T(1))),
-                          roughness(std::clamp(roughness, T(0), T(1))),
-                          Kd(Kd.clamped()),
-                          map_Kd(map_Kd),
-                          alpha(alpha)
-                {
-                }
-        };
+        }
+};
 
+template <std::size_t N, typename T>
+class Mesh final : public Shape<N, T>
+{
         std::vector<Vector<N, T>> m_vertices;
         std::vector<Vector<N, T>> m_normals;
         std::vector<Vector<N - 1, T>> m_texcoords;
-        std::vector<Material> m_materials;
+        std::vector<Material<T>> m_materials;
         std::vector<MeshTexture<N - 1>> m_images;
         std::vector<MeshFacet<N, T>> m_facets;
 
@@ -139,7 +141,7 @@ class Mesh final : public Shape<N, T>, public Surface<N, T>
 
         std::optional<T> intersect_bounding(const Ray<N, T>& r) const override;
 
-        std::optional<Intersection<N, T>> intersect(const Ray<N, T>&, T bounding_distance) const override;
+        const Intersection<N, T>* intersect(const Ray<N, T>&, T bounding_distance) const override;
 
         geometry::BoundingBox<N, T> bounding_box() const override;
 
@@ -148,28 +150,18 @@ class Mesh final : public Shape<N, T>, public Surface<N, T>
 
         //
 
-        Vector<N, T> geometric_normal(const Vector<N, T>& point, const void* data) const override;
-        std::optional<Vector<N, T>> shading_normal(const Vector<N, T>& point, const void* data) const override;
-
-        std::optional<Color> light_source(const Vector<N, T>& point, const void* data) const override;
-
-        Color shade(
-                const Vector<N, T>& point,
-                const void* data,
-                const Vector<N, T>& n,
-                const Vector<N, T>& v,
-                const Vector<N, T>& l) const override;
-
-        ShadeSample<N, T> sample_shade(
-                const Vector<N, T>& point,
-                const void* data,
-                RandomEngine<T>& random_engine,
-                ShadeType shade_type,
-                const Vector<N, T>& n,
-                const Vector<N, T>& v) const override;
-
 public:
         Mesh(const std::vector<const mesh::MeshObject<N>*>& mesh_objects, ProgressRatio* progress);
+
+        const std::vector<Material<T>>& materials() const
+        {
+                return m_materials;
+        }
+
+        const std::vector<MeshTexture<N - 1>>& images() const
+        {
+                return m_images;
+        }
 
         // Грани имеют адреса первых элементов векторов вершин,
         // нормалей и текстурных координат, поэтому нельзя копировать.
@@ -177,6 +169,75 @@ public:
         Mesh(Mesh&&) = delete;
         Mesh& operator=(const Mesh&) = delete;
         Mesh& operator=(Mesh&&) = delete;
+};
+
+template <std::size_t N, typename T>
+class IntersectionImpl final : public Intersection<N, T>
+{
+        const Mesh<N, T>* m_mesh;
+        const MeshFacet<N, T>* m_facet;
+
+public:
+        IntersectionImpl(const Vector<N, T>& point, const Mesh<N, T>* mesh, const MeshFacet<N, T>* facet)
+                : Intersection<N, T>(point), m_mesh(mesh), m_facet(facet)
+        {
+        }
+
+        Vector<N, T> geometric_normal() const override
+        {
+                return m_facet->geometric_normal();
+        }
+
+        std::optional<Vector<N, T>> shading_normal() const override
+        {
+                return m_facet->shading_normal(this->point());
+        }
+
+        std::optional<Color> light_source() const override
+        {
+                return std::nullopt;
+        }
+
+        Color shade(const Vector<N, T>& n, const Vector<N, T>& v, const Vector<N, T>& l) const override
+        {
+                ASSERT(m_facet->material() >= 0);
+
+                const Material<T>& m = m_mesh->materials()[m_facet->material()];
+
+                const Color color = [&]
+                {
+                        if (m_facet->has_texcoord() && m.map_Kd >= 0)
+                        {
+                                return m_mesh->images()[m.map_Kd].color(m_facet->texcoord(this->point()));
+                        }
+                        return m.Kd;
+                }();
+
+                return ::ns::painter::shade(m.alpha, m.metalness, m.roughness, color, n, v, l);
+        }
+
+        ShadeSample<N, T> sample_shade(
+                RandomEngine<T>& random_engine,
+                ShadeType shade_type,
+                const Vector<N, T>& n,
+                const Vector<N, T>& v) const override
+        {
+                ASSERT(m_facet->material() >= 0);
+
+                const Material<T>& m = m_mesh->materials()[m_facet->material()];
+
+                const Color color = [&]
+                {
+                        if (m_facet->has_texcoord() && m.map_Kd >= 0)
+                        {
+                                return m_mesh->images()[m.map_Kd].color(m_facet->texcoord(this->point()));
+                        }
+                        return m.Kd;
+                }();
+
+                return ::ns::painter::sample_shade(
+                        random_engine, shade_type, m.alpha, m.metalness, m.roughness, color, n, v);
+        }
 };
 
 template <std::size_t N, typename T>
@@ -354,18 +415,14 @@ std::optional<T> Mesh<N, T>::intersect_bounding(const Ray<N, T>& r) const
 }
 
 template <std::size_t N, typename T>
-std::optional<Intersection<N, T>> Mesh<N, T>::intersect(const Ray<N, T>& ray, const T bounding_distance) const
+const Intersection<N, T>* Mesh<N, T>::intersect(const Ray<N, T>& ray, const T bounding_distance) const
 {
         std::optional<std::tuple<T, const MeshFacet<N, T>*>> v = m_tree->intersect(ray, bounding_distance);
         if (!v)
         {
-                return std::nullopt;
+                return nullptr;
         }
-        Intersection<N, T> result;
-        result.point = ray.point(std::get<0>(*v));
-        result.data = std::get<1>(*v);
-        result.surface = this;
-        return result;
+        return make_arena_ptr<IntersectionImpl<N, T>>(ray.point(std::get<0>(*v)), this, std::get<1>(*v));
 }
 
 template <std::size_t N, typename T>
@@ -383,81 +440,6 @@ std::function<bool(const geometry::ShapeWrapperForIntersection<geometry::Paralle
         {
                 return geometry::shape_intersection(w, p);
         };
-}
-
-template <std::size_t N, typename T>
-Vector<N, T> Mesh<N, T>::geometric_normal(const Vector<N, T>& /*point*/, const void* const data) const
-{
-        const MeshFacet<N, T>* const facet = static_cast<const MeshFacet<N, T>*>(data);
-        return facet->geometric_normal();
-}
-
-template <std::size_t N, typename T>
-std::optional<Vector<N, T>> Mesh<N, T>::shading_normal(const Vector<N, T>& point, const void* const data) const
-{
-        const MeshFacet<N, T>* const facet = static_cast<const MeshFacet<N, T>*>(data);
-        return facet->shading_normal(point);
-}
-
-template <std::size_t N, typename T>
-std::optional<Color> Mesh<N, T>::light_source(const Vector<N, T>& /*point*/, const void* /*data*/) const
-{
-        return std::nullopt;
-}
-
-template <std::size_t N, typename T>
-Color Mesh<N, T>::shade(
-        const Vector<N, T>& point,
-        const void* const data,
-        const Vector<N, T>& n,
-        const Vector<N, T>& v,
-        const Vector<N, T>& l) const
-{
-        const MeshFacet<N, T>* const facet = static_cast<const MeshFacet<N, T>*>(data);
-
-        ASSERT(facet->material() >= 0);
-
-        const Material& m = m_materials[facet->material()];
-
-        Color color;
-        if (facet->has_texcoord() && m.map_Kd >= 0)
-        {
-                color = m_images[m.map_Kd].color(facet->texcoord(point));
-        }
-        else
-        {
-                color = m.Kd;
-        }
-
-        return ::ns::painter::shade(m.alpha, m.metalness, m.roughness, color, n, v, l);
-}
-
-template <std::size_t N, typename T>
-ShadeSample<N, T> Mesh<N, T>::sample_shade(
-        const Vector<N, T>& point,
-        const void* const data,
-        RandomEngine<T>& random_engine,
-        const ShadeType shade_type,
-        const Vector<N, T>& n,
-        const Vector<N, T>& v) const
-{
-        const MeshFacet<N, T>* const facet = static_cast<const MeshFacet<N, T>*>(data);
-
-        ASSERT(facet->material() >= 0);
-
-        const Material& m = m_materials[facet->material()];
-
-        Color color;
-        if (facet->has_texcoord() && m.map_Kd >= 0)
-        {
-                color = m_images[m.map_Kd].color(facet->texcoord(point));
-        }
-        else
-        {
-                color = m.Kd;
-        }
-
-        return ::ns::painter::sample_shade(random_engine, shade_type, m.alpha, m.metalness, m.roughness, color, n, v);
 }
 }
 

@@ -39,7 +39,7 @@ std::optional<Color> trace_path(
         const int depth,
         RandomEngine<T>& random_engine)
 {
-        const std::optional<Intersection<N, T>> intersection = scene.intersect(ray);
+        const Intersection<N, T>* intersection = scene.intersect(ray);
         if (!intersection)
         {
                 if (depth > 0)
@@ -50,15 +50,14 @@ std::optional<Color> trace_path(
         }
 
         const Vector<N, T> v = -ray.dir();
-        const Vector<N, T>& point = intersection->point;
+        const Vector<N, T>& point = intersection->point();
 
         const auto [use_smooth_normal, geometric_normal, n] = [&]()
         {
-                const Vector<N, T> g_normal = intersection->surface->geometric_normal(point, intersection->data);
+                const Vector<N, T> g_normal = intersection->geometric_normal();
                 ASSERT(g_normal.is_unit());
 
-                const std::optional<Vector<N, T>> s_normal =
-                        intersection->surface->shading_normal(point, intersection->data);
+                const std::optional<Vector<N, T>> s_normal = intersection->shading_normal();
 
                 const bool smooth = smooth_normals && s_normal.has_value();
 
@@ -87,11 +86,12 @@ std::optional<Color> trace_path(
 
         Color color_sum(0);
 
-        if (const std::optional<Color> surface_light_source =
-                    intersection->surface->light_source(point, intersection->data);
-            surface_light_source)
         {
-                color_sum = *surface_light_source;
+                const std::optional<Color> surface_light_source = intersection->light_source();
+                if (surface_light_source)
+                {
+                        color_sum = *surface_light_source;
+                }
         }
 
         for (const LightSource<N, T>* const light_source : scene.light_sources())
@@ -116,7 +116,7 @@ std::optional<Color> trace_path(
                         continue;
                 }
 
-                const Color direct_lighting = intersection->surface->shade(point, intersection->data, n, v, l);
+                const Color direct_lighting = intersection->shade(n, v, l);
                 color_sum += direct_lighting * sample.color / sample.pdf;
         }
 
@@ -126,8 +126,8 @@ std::optional<Color> trace_path(
         }
 
         {
-                const ShadeSample<N, T> reflection = intersection->surface->sample_shade(
-                        point, intersection->data, random_engine, ShadeType::Reflection, n, v);
+                const ShadeSample<N, T> reflection =
+                        intersection->sample_shade(random_engine, ShadeType::Reflection, n, v);
                 if (!reflection.color.is_black())
                 {
                         const Vector<N, T>& l = reflection.l;
@@ -141,8 +141,8 @@ std::optional<Color> trace_path(
                 }
         }
         {
-                const ShadeSample<N, T> transmission = intersection->surface->sample_shade(
-                        point, intersection->data, random_engine, ShadeType::Transmission, n, v);
+                const ShadeSample<N, T> transmission =
+                        intersection->sample_shade(random_engine, ShadeType::Transmission, n, v);
                 if (!transmission.color.is_black())
                 {
                         const Vector<N, T>& l = transmission.l;

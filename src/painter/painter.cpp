@@ -24,6 +24,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <src/com/barrier.h>
 #include <src/com/error.h>
+#include <src/com/memory_arena.h>
 #include <src/com/print.h>
 #include <src/com/random/engine.h>
 #include <src/com/thread.h>
@@ -139,6 +140,8 @@ void paint_pixels(
 
         while (true)
         {
+                MemoryArena::thread_local_instance().clear();
+
                 if (*stop)
                 {
                         return;

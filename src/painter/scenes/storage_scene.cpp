@@ -102,7 +102,7 @@ struct BoundingIntersection
 };
 
 template <std::size_t N, typename T>
-std::optional<Intersection<N, T>> ray_intersect(
+const Intersection<N, T>* ray_intersect(
         const std::vector<const Shape<N, T>*>& shapes,
         const std::vector<int>& indices,
         const Ray<N, T>& ray)
@@ -114,7 +114,7 @@ std::optional<Intersection<N, T>> ray_intersect(
                 {
                         return shapes[indices.front()]->intersect(ray, *distance);
                 }
-                return std::nullopt;
+                return nullptr;
         }
 
         // Объекты могут быть сложными, поэтому перед поиском точного пересечения
@@ -133,13 +133,13 @@ std::optional<Intersection<N, T>> ray_intersect(
         }
         if (intersections.empty())
         {
-                return std::nullopt;
+                return nullptr;
         }
 
         std::make_heap(intersections.begin(), intersections.end());
 
         T min_distance_squared = limits<T>::max();
-        std::optional<Intersection<N, T>> intersection;
+        const Intersection<N, T>* min_intersection = nullptr;
 
         do
         {
@@ -150,14 +150,14 @@ std::optional<Intersection<N, T>> ray_intersect(
                         break;
                 }
 
-                std::optional<Intersection<N, T>> v = bounding.shape->intersect(ray, bounding.distance);
-                if (v)
+                const Intersection<N, T>* intersection = bounding.shape->intersect(ray, bounding.distance);
+                if (intersection)
                 {
-                        T distance_squared = (v->point - ray.org()).norm_squared();
+                        T distance_squared = (intersection->point() - ray.org()).norm_squared();
                         if (distance_squared < min_distance_squared)
                         {
                                 min_distance_squared = distance_squared;
-                                intersection = v;
+                                min_intersection = intersection;
                         }
                 }
 
@@ -165,7 +165,7 @@ std::optional<Intersection<N, T>> ray_intersect(
                 intersections.pop_back();
         } while (!intersections.empty());
 
-        return intersection;
+        return min_intersection;
 }
 
 template <std::size_t N, typename T>
@@ -228,7 +228,7 @@ class SceneImpl final : public Scene<N, T>
 
         geometry::SpatialSubdivisionTree<geometry::ParallelotopeAA<N, T>> m_tree;
 
-        std::optional<Intersection<N, T>> intersect(const Ray<N, T>& ray) const override
+        const Intersection<N, T>* intersect(const Ray<N, T>& ray) const override
         {
                 ++m_thread_ray_count;
 
@@ -237,17 +237,17 @@ class SceneImpl final : public Scene<N, T>
                 std::optional<T> root = m_tree.intersect_root(ray_with_offset);
                 if (!root)
                 {
-                        return std::nullopt;
+                        return nullptr;
                 }
 
-                std::optional<Intersection<N, T>> intersection;
+                const Intersection<N, T>* intersection;
 
                 const auto f = [&](const std::vector<int>& shape_indices) -> std::optional<Vector<N, T>>
                 {
                         intersection = ray_intersect(m_shape_pointers, shape_indices, ray_with_offset);
                         if (intersection)
                         {
-                                return intersection->point;
+                                return intersection->point();
                         }
                         return std::nullopt;
                 };
@@ -257,7 +257,7 @@ class SceneImpl final : public Scene<N, T>
                         return intersection;
                 }
 
-                return std::nullopt;
+                return nullptr;
         }
 
         const std::vector<const LightSource<N, T>*>& light_sources() const override
