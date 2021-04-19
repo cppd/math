@@ -18,8 +18,11 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #pragma once
 
 #include "error.h"
+#include "log.h"
+#include "print.h"
 
 #include <cstddef>
+#include <cstring>
 #include <memory>
 #include <thread>
 #include <vector>
@@ -29,7 +32,9 @@ namespace ns
 class MemoryArena
 {
         static constexpr std::size_t ALIGN = alignof(std::max_align_t);
-        static constexpr std::size_t BLOCK_SIZE = 1 << 20;
+        static constexpr std::size_t BLOCK_SIZE = 1 << 18;
+
+        static constexpr std::size_t BLOCK_COUNT_WITHOUT_WARNING = 8;
 
         class Block final
         {
@@ -49,6 +54,11 @@ class MemoryArena
                 std::byte* data(std::size_t index)
                 {
                         return reinterpret_cast<std::byte*>(m_data.data()) + index;
+                }
+
+                void set_zero()
+                {
+                        std::memset(m_data.data(), 0, sizeof(m_data[0]) * m_data.size());
                 }
         };
 
@@ -108,6 +118,13 @@ public:
 
                 m_block = 0;
                 m_index = 0;
+
+#if !defined(RELEASE_BUILD)
+                for (const std::unique_ptr<Block>& block_ptr : m_blocks)
+                {
+                        block_ptr->set_zero();
+                }
+#endif
         }
 
         template <class T, class... Args>
@@ -136,6 +153,13 @@ public:
                 T* ptr = create_object<T>(m_blocks[m_block + 1].get(), 0, std::forward<Args>(args)...);
                 ++m_block;
                 m_index = sizeof(T);
+
+                if (used_blocks() > BLOCK_COUNT_WITHOUT_WARNING)
+                {
+                        LOG("MemoryArena too many blocks; used blocks = " + to_string(used_blocks())
+                            + ", used bytes = " + to_string(used_bytes()));
+                }
+
                 return ptr;
         }
 };
