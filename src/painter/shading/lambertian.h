@@ -17,13 +17,13 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
+#include "../objects.h"
+
 #include <src/color/color.h>
 #include <src/com/error.h>
 #include <src/geometry/shapes/sphere_integral.h>
 #include <src/numerical/vec.h>
 #include <src/sampling/sphere_cosine.h>
-
-#include <tuple>
 
 namespace ns::painter
 {
@@ -56,12 +56,9 @@ public:
         }
 
         template <typename RandomEngine>
-        static std::tuple<Vector<N, T>, Color> sample_shade(
-                RandomEngine& random_engine,
-                const Color& color,
-                const Vector<N, T>& n)
+        static ShadeSample<N, T> sample_shade(RandomEngine& random_engine, const Color& color, const Vector<N, T>& n)
         {
-                static constexpr std::tuple<Vector<N, T>, Color> BLACK(Vector<N, T>(0), Color(0));
+                static constexpr ShadeSample<N, T> BLACK(Vector<N, T>(0), Color(0));
 
                 ASSERT(n.is_unit());
 

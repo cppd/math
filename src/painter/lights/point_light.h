@@ -60,9 +60,9 @@ public:
 
                 LightSourceSample<N, T> s;
                 s.distance = std::sqrt(squared_distance);
-                s.l = direction / s.distance;
+                s.l = direction / *s.distance;
                 s.pdf = 1;
-                s.color = m_color * coef;
+                s.L = m_color * coef;
                 return s;
         }
 };

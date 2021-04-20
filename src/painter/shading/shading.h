@@ -67,25 +67,28 @@ ShadeSample<N, T> sample_shade(
         {
                 if (alpha <= 0)
                 {
-                        ShadeSample<N, T> s;
-                        s.color = Color(0);
-                        s.l = Vector<N, T>(0);
+                        static constexpr ShadeSample<N, T> TRANSPARENT(Vector<N, T>(0), Color(0));
+                        return TRANSPARENT;
                 }
                 ShadeSample<N, T> s;
                 if constexpr (N == 3)
                 {
-                        std::tie(s.l, s.color) =
-                                GGXDiffuse<T>::sample_shade(random_engine, metalness, roughness, color, n, v);
+                        s = GGXDiffuse<T>::sample_shade(random_engine, metalness, roughness, color, n, v);
                 }
                 else
                 {
-                        std::tie(s.l, s.color) = Lambertian<N, T>::sample_shade(random_engine, color, n);
+                        s = Lambertian<N, T>::sample_shade(random_engine, color, n);
                 }
                 s.color *= alpha;
                 return s;
         }
         case ShadeType::Transmission:
         {
+                if (alpha >= 1)
+                {
+                        static constexpr ShadeSample<N, T> OPAQUE(Vector<N, T>(0), Color(0));
+                        return OPAQUE;
+                }
                 ShadeSample<N, T> s;
                 s.l = -v;
                 s.color = Color(1 - alpha);

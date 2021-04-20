@@ -46,6 +46,10 @@ struct ShadeSample final
         ShadeSample()
         {
         }
+
+        constexpr ShadeSample(const Vector<N, T>& l, const Color& color) : l(l), color(color)
+        {
+        }
 };
 
 template <std::size_t N, typename T>
@@ -84,8 +88,8 @@ template <std::size_t N, typename T>
 struct LightSourceSample final
 {
         Vector<N, T> l;
-        Color::DataType pdf;
-        Color color;
+        T pdf;
+        Color L;
         std::optional<T> distance;
 
         LightSourceSample()

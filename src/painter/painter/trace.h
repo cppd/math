@@ -32,14 +32,53 @@ constexpr int MAX_DEPTH = 5;
 static_assert(std::is_floating_point_v<Color::DataType>);
 
 template <std::size_t N, typename T>
+struct Normals final
+{
+        Vector<N, T> geometric;
+        Vector<N, T> shading;
+        bool smooth;
+};
+
+template <std::size_t N, typename T>
+Normals<N, T> compute_normals(
+        const bool smooth_normals,
+        const Intersection<N, T>* const intersection,
+        const Vector<N, T>& v)
+{
+        const Vector<N, T> g_normal = intersection->geometric_normal();
+        ASSERT(g_normal.is_unit());
+
+        const std::optional<Vector<N, T>> s_normal = intersection->shading_normal();
+
+        const bool smooth = smooth_normals && s_normal.has_value();
+
+        // Определять по реальной нормали, так как видимая нормаль может
+        // показать, что пересечение находится с другой стороны объекта.
+        const bool flip = dot(v, g_normal) < 0;
+
+        const Vector<N, T> geometric = flip ? -g_normal : g_normal;
+        const Vector<N, T> shading = [&]
+        {
+                if (smooth)
+                {
+                        ASSERT(s_normal->is_unit());
+                        return flip ? -*s_normal : *s_normal;
+                }
+                return geometric;
+        }();
+
+        return {.geometric = geometric, .shading = shading, .smooth = smooth};
+}
+
+template <std::size_t N, typename T>
 std::optional<Color> trace_path(
         const Scene<N, T>& scene,
         const bool smooth_normals,
         const Ray<N, T>& ray,
         const int depth,
-        RandomEngine<T>& random_engine)
+        RandomEngine<T>& engine)
 {
-        const Intersection<N, T>* intersection = scene.intersect(ray);
+        const Intersection<N, T>* const intersection = scene.intersect(ray);
         if (!intersection)
         {
                 if (depth > 0)
@@ -51,33 +90,8 @@ std::optional<Color> trace_path(
 
         const Vector<N, T> v = -ray.dir();
         const Vector<N, T>& point = intersection->point();
-
-        const auto [use_smooth_normal, geometric_normal, n] = [&]()
-        {
-                const Vector<N, T> g_normal = intersection->geometric_normal();
-                ASSERT(g_normal.is_unit());
-
-                const std::optional<Vector<N, T>> s_normal = intersection->shading_normal();
-
-                const bool smooth = smooth_normals && s_normal.has_value();
-
-                // Определять по реальной нормали, так как видимая нормаль может
-                // показать, что пересечение находится с другой стороны объекта.
-                const bool flip = dot(v, g_normal) < 0;
-
-                const Vector<N, T> geometric = flip ? -g_normal : g_normal;
-                const Vector<N, T> shading = [&]
-                {
-                        if (smooth)
-                        {
-                                ASSERT(s_normal->is_unit());
-                                return flip ? -*s_normal : *s_normal;
-                        }
-                        return geometric;
-                }();
-
-                return std::make_tuple(smooth, geometric, shading);
-        }();
+        const Normals<N, T> normals = compute_normals(smooth_normals, intersection, v);
+        const Vector<N, T>& n = normals.shading;
 
         if (dot(n, v) <= 0)
         {
@@ -86,38 +100,37 @@ std::optional<Color> trace_path(
 
         Color color_sum(0);
 
+        [&]
         {
                 const std::optional<Color> surface_light_source = intersection->light_source();
-                if (surface_light_source)
+                if (!surface_light_source)
                 {
-                        color_sum = *surface_light_source;
+                        return;
                 }
-        }
+
+                color_sum = *surface_light_source;
+        }();
 
         for (const LightSource<N, T>* const light_source : scene.light_sources())
         {
                 const LightSourceSample<N, T> sample = light_source->sample(point);
-
-                if (sample.color.is_black() || sample.pdf <= 0)
+                if (sample.L.is_black() || sample.pdf <= 0)
                 {
                         continue;
                 }
-
                 const Vector<N, T>& l = sample.l;
                 ASSERT(l.is_unit());
-
                 if (dot(n, l) <= 0)
                 {
                         continue;
                 }
-
-                if (occluded(scene, geometric_normal, use_smooth_normal, Ray<N, T>(point, l), sample.distance))
+                if (occluded(scene, normals.geometric, normals.smooth, Ray<N, T>(point, l), sample.distance))
                 {
                         continue;
                 }
 
-                const Color direct_lighting = intersection->shade(n, v, l);
-                color_sum += direct_lighting * sample.color / sample.pdf;
+                const Color color = intersection->shade(n, v, l);
+                color_sum += color * sample.L / sample.pdf;
         }
 
         if (depth >= MAX_DEPTH)
@@ -125,36 +138,41 @@ std::optional<Color> trace_path(
                 return color_sum;
         }
 
+        [&]
         {
-                const ShadeSample<N, T> reflection =
-                        intersection->sample_shade(random_engine, ShadeType::Reflection, n, v);
-                if (!reflection.color.is_black())
+                const ShadeSample<N, T> sample = intersection->sample_shade(engine, ShadeType::Reflection, n, v);
+                if (sample.color.is_black())
                 {
-                        const Vector<N, T>& l = reflection.l;
-                        ASSERT(l.is_unit());
-                        if (dot(l, geometric_normal) > 0)
-                        {
-                                const Color reflected = *trace_path(
-                                        scene, smooth_normals, Ray<N, T>(point, l), depth + 1, random_engine);
-                                color_sum += reflection.color * reflected;
-                        }
+                        return;
                 }
-        }
+                const Vector<N, T>& l = sample.l;
+                ASSERT(l.is_unit());
+                if (!(dot(l, normals.geometric) > 0))
+                {
+                        return;
+                }
+
+                const Color L = *trace_path(scene, smooth_normals, Ray<N, T>(point, l), depth + 1, engine);
+                color_sum += sample.color * L;
+        }();
+
+        [&]
         {
-                const ShadeSample<N, T> transmission =
-                        intersection->sample_shade(random_engine, ShadeType::Transmission, n, v);
-                if (!transmission.color.is_black())
+                const ShadeSample<N, T> sample = intersection->sample_shade(engine, ShadeType::Transmission, n, v);
+                if (sample.color.is_black())
                 {
-                        const Vector<N, T>& l = transmission.l;
-                        ASSERT(l.is_unit());
-                        if (dot(l, geometric_normal) < 0)
-                        {
-                                const Color transmitted = *trace_path(
-                                        scene, smooth_normals, Ray<N, T>(point, l), depth + 1, random_engine);
-                                color_sum += transmission.color * transmitted;
-                        }
+                        return;
                 }
-        }
+                const Vector<N, T>& l = sample.l;
+                ASSERT(l.is_unit());
+                if (!(dot(l, normals.geometric) < 0))
+                {
+                        return;
+                }
+
+                const Color L = *trace_path(scene, smooth_normals, Ray<N, T>(point, l), depth + 1, engine);
+                color_sum += sample.color * L;
+        }();
 
         return color_sum;
 }

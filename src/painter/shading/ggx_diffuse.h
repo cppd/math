@@ -42,6 +42,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
+#include "../objects.h"
+
 #include <src/color/color.h>
 #include <src/com/constant.h>
 #include <src/com/error.h>
@@ -52,7 +54,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/sampling/sphere_cosine.h>
 
 #include <cmath>
-#include <tuple>
 
 namespace ns::painter
 {
@@ -160,16 +161,21 @@ class GGXDiffuse
                 return spec + diff;
         }
 
-        //template <typename RandomEngine>
-        //static std::tuple<Vector<N, T>, T> sample(RandomEngine& random_engine, const Vector<N, T>& n)
-        //{
-        //        Vector<N, T> l = sampling::cosine_on_hemisphere(random_engine, n);
-        //        T pdf = sampling::cosine_on_hemisphere_pdf<N>(dot(n, l));
-        //        return {l, pdf};
-        //}
+        template <typename RandomEngine>
+        static std::tuple<Vector<N, T>, T> sample_cosine(RandomEngine& random_engine, const Vector<N, T>& n)
+        {
+                Vector<N, T> l = sampling::cosine_on_hemisphere(random_engine, n);
+                ASSERT(l.is_unit());
+                if (dot(n, l) <= 0)
+                {
+                        return {Vector<N, T>(0), 0};
+                }
+                T pdf = sampling::cosine_on_hemisphere_pdf<N>(dot(n, l));
+                return {l, pdf};
+        }
 
         template <typename RandomEngine>
-        static std::tuple<Vector<N, T>, T> sample(
+        static std::tuple<Vector<N, T>, T> sample_ggx_cosine(
                 RandomEngine& random_engine,
                 T roughness,
                 const Vector<N, T>& n,
@@ -245,7 +251,7 @@ public:
         }
 
         template <typename RandomEngine>
-        static std::tuple<Vector<N, T>, Color> sample_shade(
+        static ShadeSample<N, T> sample_shade(
                 RandomEngine& random_engine,
                 T metalness,
                 T roughness,
@@ -253,7 +259,7 @@ public:
                 const Vector<N, T>& n,
                 const Vector<N, T>& v)
         {
-                static constexpr std::tuple<Vector<N, T>, Color> BLACK(Vector<N, T>(0), Color(0));
+                static constexpr ShadeSample<N, T> BLACK(Vector<N, T>(0), Color(0));
 
                 ASSERT(n.is_unit());
                 ASSERT(v.is_unit());
@@ -263,7 +269,7 @@ public:
                         return BLACK;
                 }
 
-                const auto [l, pdf] = sample(random_engine, roughness, n, v);
+                const auto [l, pdf] = sample_ggx_cosine(random_engine, roughness, n, v);
                 if (pdf <= 0)
                 {
                         return BLACK;

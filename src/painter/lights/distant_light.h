@@ -39,7 +39,7 @@ public:
         {
                 m_sample.l = direction.normalized();
                 m_sample.pdf = 1;
-                m_sample.color = color;
+                m_sample.L = color;
         }
 
         LightSourceSample<N, T> sample(const Vector<N, T>& /*point*/) const override
