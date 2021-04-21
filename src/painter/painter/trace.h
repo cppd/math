@@ -15,6 +15,25 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
+/*
+ Tomas Akenine-Möller, Eric Haines, Naty Hoffman,
+ Angelo Pesce, Michal Iwanicki, Sébastien Hillaire.
+ Real-Time Rendering. Fourth Edition.
+ CRC Press, 2018.
+
+ 9.3 The BRDF
+
+ Reflectance equation (9.3)
+*/
+
+/*
+ Matt Pharr, Wenzel Jakob, Greg Humphreys.
+ Physically Based Rendering. From theory to implementation. Third edition.
+ Elsevier, 2017.
+
+ 13.10 Importance sampling
+*/
+
 #pragma once
 
 #include "visibility.h"
@@ -111,23 +130,28 @@ std::optional<Color> trace_path(
         for (const LightSource<N, T>* const light_source : scene.light_sources())
         {
                 const LightSourceSample<N, T> sample = light_source->sample(point);
+
                 if (sample.L.is_black() || sample.pdf <= 0)
                 {
                         continue;
                 }
+
                 const Vector<N, T>& l = sample.l;
                 ASSERT(l.is_unit());
-                if (dot(n, l) <= 0)
+
+                const T n_l = dot(n, l);
+                if (n_l <= 0)
                 {
                         continue;
                 }
+
                 if (occluded(scene, normals.geometric, normals.smooth, Ray<N, T>(point, l), sample.distance))
                 {
                         continue;
                 }
 
                 const Color color = surface->shade(n, v, l);
-                color_sum += color * sample.L / sample.pdf;
+                color_sum += color * sample.L * (n_l / sample.pdf);
         }
 
         if (depth >= MAX_DEPTH)
@@ -138,19 +162,28 @@ std::optional<Color> trace_path(
         [&]
         {
                 const ShadeSample<N, T> sample = surface->sample_shade(engine, n, v);
-                if (sample.color.is_black())
+
+                if (sample.color.is_black() || sample.pdf <= 0)
                 {
                         return;
                 }
+
                 const Vector<N, T>& l = sample.l;
                 ASSERT(l.is_unit());
-                if (!(dot(l, normals.geometric) > 0))
+
+                if (dot(l, normals.geometric) <= 0)
+                {
+                        return;
+                }
+
+                const T n_l = dot(n, l);
+                if (n_l <= 0)
                 {
                         return;
                 }
 
                 const Color L = *trace_path(scene, smooth_normals, Ray<N, T>(point, l), depth + 1, engine);
-                color_sum += sample.color * L;
+                color_sum += sample.color * L * (n_l / sample.pdf);
         }();
 
         return color_sum;

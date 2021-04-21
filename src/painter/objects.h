@@ -35,13 +35,14 @@ template <std::size_t N, typename T>
 struct ShadeSample final
 {
         Vector<N, T> l;
+        T pdf;
         Color color;
 
         ShadeSample()
         {
         }
 
-        constexpr ShadeSample(const Vector<N, T>& l, const Color& color) : l(l), color(color)
+        constexpr ShadeSample(const Vector<N, T>& l, T pdf, const Color& color) : l(l), pdf(pdf), color(color)
         {
         }
 };

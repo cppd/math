@@ -37,6 +37,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
  Physically Based Rendering. From theory to implementation. Third edition.
  Elsevier, 2017.
 
+ 13.10 Importance sampling
  14.1.2 FresnelBlend
 */
 
@@ -238,15 +239,12 @@ public:
                 {
                         return BLACK;
                 }
-
-                T n_l = dot(n, l);
-                if (n_l <= 0)
+                if (dot(n, l) <= 0)
                 {
                         return BLACK;
                 }
 
-                // s = f * cos(n,l)
-                RGB s = n_l * f(metalness, roughness, color.rgb<T>(), n, v, l);
+                RGB s = f(metalness, roughness, color.rgb<T>(), n, v, l);
                 return Color(s[0], s[1], s[2]);
         }
 
@@ -259,7 +257,7 @@ public:
                 const Vector<N, T>& n,
                 const Vector<N, T>& v)
         {
-                static constexpr ShadeSample<N, T> BLACK(Vector<N, T>(0), Color(0));
+                static constexpr ShadeSample<N, T> BLACK(Vector<N, T>(0), 0, Color(0));
 
                 ASSERT(n.is_unit());
                 ASSERT(v.is_unit());
@@ -276,13 +274,10 @@ public:
                 }
 
                 ASSERT(l.is_unit());
+                ASSERT(dot(n, l) > 0);
 
-                T n_l = dot(n, l);
-                ASSERT(n_l > 0);
-
-                // s = f / pdf * cos(n,l)
-                RGB s = (n_l / pdf) * f(metalness, roughness, color.rgb<T>(), n, v, l);
-                return {l, Color(s[0], s[1], s[2])};
+                RGB s = f(metalness, roughness, color.rgb<T>(), n, v, l);
+                return {l, pdf, Color(s[0], s[1], s[2])};
         }
 };
 }
