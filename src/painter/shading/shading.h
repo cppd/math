@@ -22,13 +22,10 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "../objects.h"
 
-#include <src/com/error.h>
-
 namespace ns::painter
 {
 template <std::size_t N, typename T>
 Color shade(
-        const Color::DataType alpha,
         const T metalness,
         const T roughness,
         const Color& color,
@@ -36,65 +33,32 @@ Color shade(
         const Vector<N, T>& v,
         const Vector<N, T>& l)
 {
-        if (alpha <= 0)
-        {
-                return Color(0);
-        }
         if constexpr (N == 3)
         {
-                return alpha * GGXDiffuse<T>::shade(metalness, roughness, color, n, v, l);
+                return GGXDiffuse<T>::shade(metalness, roughness, color, n, v, l);
         }
         else
         {
-                return alpha * Lambertian<N, T>::shade(color, n, l);
+                return Lambertian<N, T>::shade(color, n, l);
         }
 }
 
 template <std::size_t N, typename T, typename RandomEngine>
 ShadeSample<N, T> sample_shade(
         RandomEngine& random_engine,
-        const ShadeType shade_type,
-        const Color::DataType alpha,
         const T metalness,
         const T roughness,
         const Color& color,
         const Vector<N, T>& n,
         const Vector<N, T>& v)
 {
-        switch (shade_type)
+        if constexpr (N == 3)
         {
-        case ShadeType::Reflection:
+                return GGXDiffuse<T>::sample_shade(random_engine, metalness, roughness, color, n, v);
+        }
+        else
         {
-                if (alpha <= 0)
-                {
-                        static constexpr ShadeSample<N, T> TRANSPARENT(Vector<N, T>(0), Color(0));
-                        return TRANSPARENT;
-                }
-                ShadeSample<N, T> s;
-                if constexpr (N == 3)
-                {
-                        s = GGXDiffuse<T>::sample_shade(random_engine, metalness, roughness, color, n, v);
-                }
-                else
-                {
-                        s = Lambertian<N, T>::sample_shade(random_engine, color, n);
-                }
-                s.color *= alpha;
-                return s;
+                return Lambertian<N, T>::sample_shade(random_engine, color, n);
         }
-        case ShadeType::Transmission:
-        {
-                if (alpha >= 1)
-                {
-                        static constexpr ShadeSample<N, T> OPAQUE(Vector<N, T>(0), Color(0));
-                        return OPAQUE;
-                }
-                ShadeSample<N, T> s;
-                s.l = -v;
-                s.color = Color(1 - alpha);
-                return s;
-        }
-        }
-        error_fatal("Unknown shade type " + std::to_string(static_cast<unsigned long long>(shade_type)));
 }
 }

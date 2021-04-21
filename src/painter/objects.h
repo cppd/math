@@ -31,12 +31,6 @@ namespace ns::painter
 template <typename T>
 using RandomEngine = std::conditional_t<std::is_same_v<std::remove_cv<T>, float>, std::mt19937, std::mt19937_64>;
 
-enum class ShadeType
-{
-        Reflection,
-        Transmission
-};
-
 template <std::size_t N, typename T>
 struct ShadeSample final
 {
@@ -53,15 +47,15 @@ struct ShadeSample final
 };
 
 template <std::size_t N, typename T>
-class Intersection
+class Surface
 {
         Vector<N, T> m_point;
 
 protected:
-        ~Intersection() = default;
+        ~Surface() = default;
 
 public:
-        explicit Intersection(const Vector<N, T>& point) : m_point(point)
+        explicit Surface(const Vector<N, T>& point) : m_point(point)
         {
         }
 
@@ -79,7 +73,6 @@ public:
 
         virtual ShadeSample<N, T> sample_shade(
                 RandomEngine<T>& random_engine,
-                ShadeType shade_type,
                 const Vector<N, T>& n,
                 const Vector<N, T>& v) const = 0;
 };
@@ -120,7 +113,7 @@ struct Scene
 {
         virtual ~Scene() = default;
 
-        virtual const Intersection<N, T>* intersect(const Ray<N, T>& ray) const = 0;
+        virtual const Surface<N, T>* intersect(const Ray<N, T>& ray) const = 0;
 
         virtual const std::vector<const LightSource<N, T>*>& light_sources() const = 0;
 

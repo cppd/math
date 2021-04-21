@@ -102,7 +102,7 @@ struct BoundingIntersection
 };
 
 template <std::size_t N, typename T>
-const Intersection<N, T>* ray_intersect(
+const Surface<N, T>* ray_intersect(
         const std::vector<const Shape<N, T>*>& shapes,
         const std::vector<int>& indices,
         const Ray<N, T>& ray)
@@ -139,7 +139,7 @@ const Intersection<N, T>* ray_intersect(
         std::make_heap(intersections.begin(), intersections.end());
 
         T min_distance_squared = limits<T>::max();
-        const Intersection<N, T>* min_intersection = nullptr;
+        const Surface<N, T>* closest_surface = nullptr;
 
         do
         {
@@ -150,14 +150,14 @@ const Intersection<N, T>* ray_intersect(
                         break;
                 }
 
-                const Intersection<N, T>* intersection = bounding.shape->intersect(ray, bounding.distance);
-                if (intersection)
+                const Surface<N, T>* surface = bounding.shape->intersect(ray, bounding.distance);
+                if (surface)
                 {
-                        T distance_squared = (intersection->point() - ray.org()).norm_squared();
+                        T distance_squared = (surface->point() - ray.org()).norm_squared();
                         if (distance_squared < min_distance_squared)
                         {
                                 min_distance_squared = distance_squared;
-                                min_intersection = intersection;
+                                closest_surface = surface;
                         }
                 }
 
@@ -165,7 +165,7 @@ const Intersection<N, T>* ray_intersect(
                 intersections.pop_back();
         } while (!intersections.empty());
 
-        return min_intersection;
+        return closest_surface;
 }
 
 template <std::size_t N, typename T>
@@ -228,7 +228,7 @@ class SceneImpl final : public Scene<N, T>
 
         geometry::SpatialSubdivisionTree<geometry::ParallelotopeAA<N, T>> m_tree;
 
-        const Intersection<N, T>* intersect(const Ray<N, T>& ray) const override
+        const Surface<N, T>* intersect(const Ray<N, T>& ray) const override
         {
                 ++m_thread_ray_count;
 
@@ -240,21 +240,21 @@ class SceneImpl final : public Scene<N, T>
                         return nullptr;
                 }
 
-                const Intersection<N, T>* intersection;
+                const Surface<N, T>* surface;
 
                 const auto f = [&](const std::vector<int>& shape_indices) -> std::optional<Vector<N, T>>
                 {
-                        intersection = ray_intersect(m_shape_pointers, shape_indices, ray_with_offset);
-                        if (intersection)
+                        surface = ray_intersect(m_shape_pointers, shape_indices, ray_with_offset);
+                        if (surface)
                         {
-                                return intersection->point();
+                                return surface->point();
                         }
                         return std::nullopt;
                 };
 
                 if (m_tree.trace_ray(ray_with_offset, *root, f))
                 {
-                        return intersection;
+                        return surface;
                 }
 
                 return nullptr;

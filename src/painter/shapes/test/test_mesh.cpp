@@ -107,7 +107,7 @@ void test_spherical_mesh(const Shape<N, T>& mesh, int ray_count, ProgressRatio* 
                 }
 
                 std::optional<T> bounding_distance;
-                const Intersection<N, T>* intersection;
+                const Surface<N, T>* surface;
 
                 bounding_distance = mesh.intersect_bounding(ray);
                 if (!bounding_distance)
@@ -125,8 +125,8 @@ void test_spherical_mesh(const Shape<N, T>& mesh, int ray_count, ProgressRatio* 
                         LOG("t1_a == " + to_string(*bounding_distance));
                 }
 
-                intersection = mesh.intersect(ray, *bounding_distance);
-                if (!intersection)
+                surface = mesh.intersect(ray, *bounding_distance);
+                if (!surface)
                 {
                         if (WITH_ERROR_LOG)
                         {
@@ -138,10 +138,10 @@ void test_spherical_mesh(const Shape<N, T>& mesh, int ray_count, ProgressRatio* 
                 }
                 if (WITH_RAY_LOG)
                 {
-                        LOG("t1_p == " + to_string((intersection->point() - ray.org()).norm()));
+                        LOG("t1_p == " + to_string((surface->point() - ray.org()).norm()));
                 }
 
-                ray.set_org(intersection->point());
+                ray.set_org(surface->point());
                 ray.move(ray_offset);
 
                 bounding_distance = mesh.intersect_bounding(ray);
@@ -160,8 +160,8 @@ void test_spherical_mesh(const Shape<N, T>& mesh, int ray_count, ProgressRatio* 
                         LOG("t2_a == " + to_string(*bounding_distance));
                 }
 
-                intersection = mesh.intersect(ray, *bounding_distance);
-                if (!intersection)
+                surface = mesh.intersect(ray, *bounding_distance);
+                if (!surface)
                 {
                         if (WITH_ERROR_LOG)
                         {
@@ -173,19 +173,19 @@ void test_spherical_mesh(const Shape<N, T>& mesh, int ray_count, ProgressRatio* 
                 }
                 if (WITH_RAY_LOG)
                 {
-                        LOG("t2_p == " + to_string((intersection->point() - ray.org()).norm()));
+                        LOG("t2_p == " + to_string((surface->point() - ray.org()).norm()));
                 }
 
-                ray.set_org(intersection->point());
+                ray.set_org(surface->point());
                 ray.move(ray_offset);
 
                 if ((bounding_distance = mesh.intersect_bounding(ray))
-                    && (intersection = mesh.intersect(ray, *bounding_distance)))
+                    && (surface = mesh.intersect(ray, *bounding_distance)))
                 {
                         if (WITH_ERROR_LOG)
                         {
                                 LOG("The third intersection with ray #" + to_string(i) + "\n" + to_string(ray) + "\n"
-                                    + "at point " + to_string((intersection->point() - ray.org()).norm()));
+                                    + "at point " + to_string((surface->point() - ray.org()).norm()));
                         }
                         ++error_count;
                         continue;

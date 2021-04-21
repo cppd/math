@@ -36,7 +36,7 @@ struct Shape
 
         virtual std::optional<T> intersect_bounding(const Ray<N, T>& ray) const = 0;
 
-        virtual const Intersection<N, T>* intersect(const Ray<N, T>& ray, T bounding_distance) const = 0;
+        virtual const Surface<N, T>* intersect(const Ray<N, T>& ray, T bounding_distance) const = 0;
 
         virtual geometry::BoundingBox<N, T> bounding_box() const = 0;
 

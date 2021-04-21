@@ -39,13 +39,12 @@ class Parallelotope final : public Shape<N, T>
         const Color::DataType m_alpha;
         const bool m_alpha_nonzero = m_alpha > 0;
 
-        class IntersectionImpl final : public Intersection<N, T>
+        class IntersectionImpl final : public Surface<N, T>
         {
                 const Parallelotope* m_obj;
 
         public:
-                IntersectionImpl(const Vector<N, T>& point, const Parallelotope* obj)
-                        : Intersection<N, T>(point), m_obj(obj)
+                IntersectionImpl(const Vector<N, T>& point, const Parallelotope* obj) : Surface<N, T>(point), m_obj(obj)
                 {
                 }
 
@@ -66,19 +65,16 @@ class Parallelotope final : public Shape<N, T>
 
                 Color shade(const Vector<N, T>& n, const Vector<N, T>& v, const Vector<N, T>& l) const override
                 {
-                        return ::ns::painter::shade(
-                                m_obj->m_alpha, m_obj->m_metalness, m_obj->m_roughness, m_obj->m_color, n, v, l);
+                        return ::ns::painter::shade(m_obj->m_metalness, m_obj->m_roughness, m_obj->m_color, n, v, l);
                 }
 
                 ShadeSample<N, T> sample_shade(
                         RandomEngine<T>& random_engine,
-                        ShadeType shade_type,
                         const Vector<N, T>& n,
                         const Vector<N, T>& v) const override
                 {
                         return ::ns::painter::sample_shade(
-                                random_engine, shade_type, m_obj->m_alpha, m_obj->m_metalness, m_obj->m_roughness,
-                                m_obj->m_color, n, v);
+                                random_engine, m_obj->m_metalness, m_obj->m_roughness, m_obj->m_color, n, v);
                 }
         };
 
@@ -113,7 +109,7 @@ public:
                 return std::nullopt;
         }
 
-        const Intersection<N, T>* intersect(const Ray<N, T>& ray, const T bounding_distance) const override
+        const Surface<N, T>* intersect(const Ray<N, T>& ray, const T bounding_distance) const override
         {
                 // всегда есть пересечение, так как прошла проверка intersect_bounding
                 return make_arena_ptr<IntersectionImpl>(ray.point(bounding_distance), this);

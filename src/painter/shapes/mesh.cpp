@@ -141,7 +141,7 @@ class Mesh final : public Shape<N, T>
 
         std::optional<T> intersect_bounding(const Ray<N, T>& r) const override;
 
-        const Intersection<N, T>* intersect(const Ray<N, T>&, T bounding_distance) const override;
+        const Surface<N, T>* intersect(const Ray<N, T>&, T bounding_distance) const override;
 
         geometry::BoundingBox<N, T> bounding_box() const override;
 
@@ -172,14 +172,14 @@ public:
 };
 
 template <std::size_t N, typename T>
-class IntersectionImpl final : public Intersection<N, T>
+class IntersectionImpl final : public Surface<N, T>
 {
         const Mesh<N, T>* m_mesh;
         const MeshFacet<N, T>* m_facet;
 
 public:
         IntersectionImpl(const Vector<N, T>& point, const Mesh<N, T>* mesh, const MeshFacet<N, T>* facet)
-                : Intersection<N, T>(point), m_mesh(mesh), m_facet(facet)
+                : Surface<N, T>(point), m_mesh(mesh), m_facet(facet)
         {
         }
 
@@ -213,14 +213,11 @@ public:
                         return m.Kd;
                 }();
 
-                return ::ns::painter::shade(m.alpha, m.metalness, m.roughness, color, n, v, l);
+                return ::ns::painter::shade(m.metalness, m.roughness, color, n, v, l);
         }
 
-        ShadeSample<N, T> sample_shade(
-                RandomEngine<T>& random_engine,
-                ShadeType shade_type,
-                const Vector<N, T>& n,
-                const Vector<N, T>& v) const override
+        ShadeSample<N, T> sample_shade(RandomEngine<T>& random_engine, const Vector<N, T>& n, const Vector<N, T>& v)
+                const override
         {
                 ASSERT(m_facet->material() >= 0);
 
@@ -235,8 +232,7 @@ public:
                         return m.Kd;
                 }();
 
-                return ::ns::painter::sample_shade(
-                        random_engine, shade_type, m.alpha, m.metalness, m.roughness, color, n, v);
+                return ::ns::painter::sample_shade(random_engine, m.metalness, m.roughness, color, n, v);
         }
 };
 
@@ -415,7 +411,7 @@ std::optional<T> Mesh<N, T>::intersect_bounding(const Ray<N, T>& r) const
 }
 
 template <std::size_t N, typename T>
-const Intersection<N, T>* Mesh<N, T>::intersect(const Ray<N, T>& ray, const T bounding_distance) const
+const Surface<N, T>* Mesh<N, T>::intersect(const Ray<N, T>& ray, const T bounding_distance) const
 {
         std::optional<std::tuple<T, const MeshFacet<N, T>*>> v = m_tree->intersect(ray, bounding_distance);
         if (!v)

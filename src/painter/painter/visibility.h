@@ -26,12 +26,9 @@ namespace ns::painter
 namespace visibility_implementation
 {
 template <std::size_t N, typename T>
-bool intersection_before(
-        const Intersection<N, T>* intersection,
-        const Vector<N, T>& point,
-        const std::optional<T>& distance)
+bool intersection_before(const Surface<N, T>* surface, const Vector<N, T>& point, const std::optional<T>& distance)
 {
-        return intersection && (!distance || (intersection->point() - point).norm_squared() < square(*distance));
+        return surface && (!distance || (surface->point() - point).norm_squared() < square(*distance));
 }
 }
 
@@ -47,14 +44,14 @@ bool occluded(
 
         const Vector<N, T> point = ray.org();
 
-        const Intersection<N, T>* intersection;
+        const Surface<N, T>* surface;
 
         if (!smooth_normals || dot(ray.dir(), geometric_normal) >= 0)
         {
                 // Если объект не состоит из симплексов или геометрическая сторона обращена
                 // к источнику света, то напрямую рассчитать видимость источника света.
-                intersection = scene.intersect(ray);
-                return impl::intersection_before(intersection, point, distance);
+                surface = scene.intersect(ray);
+                return impl::intersection_before(surface, point, distance);
         }
 
         // Если объект состоит из симплексов и геометрическая сторона направлена
@@ -65,15 +62,15 @@ bool occluded(
         // самого первого пересечения в предположении, что оно произошло с этой самой
         // окрестностью точки.
 
-        intersection = scene.intersect(ray);
-        if (!impl::intersection_before(intersection, point, distance))
+        surface = scene.intersect(ray);
+        if (!impl::intersection_before(surface, point, distance))
         {
                 // Если луч к источнику света направлен внутрь поверхности, и нет повторного
                 // пересечения с поверхностью до источника света, то нет освещения в точке.
                 return true;
         }
 
-        intersection = scene.intersect(Ray<N, T>(ray).set_org(intersection->point()));
-        return impl::intersection_before(intersection, point, distance);
+        surface = scene.intersect(Ray<N, T>(ray).set_org(surface->point()));
+        return impl::intersection_before(surface, point, distance);
 }
 }
