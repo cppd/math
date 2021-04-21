@@ -17,10 +17,10 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
+#include "brdf.h"
 #include "shape.h"
 
 #include "../objects.h"
-#include "../shading/shading.h"
 
 #include <src/com/memory_arena.h>
 #include <src/geometry/spatial/parallelotope.h>
@@ -63,17 +63,17 @@ class Parallelotope final : public Shape<N, T>
                         return m_obj->m_light_source;
                 }
 
-                Color shade(const Vector<N, T>& n, const Vector<N, T>& v, const Vector<N, T>& l) const override
+                Color brdf(const Vector<N, T>& n, const Vector<N, T>& v, const Vector<N, T>& l) const override
                 {
-                        return ::ns::painter::shade(m_obj->m_metalness, m_obj->m_roughness, m_obj->m_color, n, v, l);
+                        return ShapeBRDF<N, T>::f(m_obj->m_metalness, m_obj->m_roughness, m_obj->m_color, n, v, l);
                 }
 
-                ShadeSample<N, T> sample_shade(
+                BrdfSample<N, T> sample_brdf(
                         RandomEngine<T>& random_engine,
                         const Vector<N, T>& n,
                         const Vector<N, T>& v) const override
                 {
-                        return ::ns::painter::sample_shade(
+                        return ShapeBRDF<N, T>::sample_f(
                                 random_engine, m_obj->m_metalness, m_obj->m_roughness, m_obj->m_color, n, v);
                 }
         };

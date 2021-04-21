@@ -46,7 +46,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 namespace ns::painter
 {
 template <std::size_t N, typename T>
-class Lambertian
+class LambertianBRDF
 {
         static_assert(N >= 3);
 
@@ -61,7 +61,7 @@ class Lambertian
         }
 
 public:
-        static Color shade(const Color& color, const Vector<N, T>& n, const Vector<N, T>& l)
+        static Color f(const Color& color, const Vector<N, T>& n, const Vector<N, T>& l)
         {
                 static constexpr Color BLACK(0);
 
@@ -77,9 +77,9 @@ public:
         }
 
         template <typename RandomEngine>
-        static ShadeSample<N, T> sample_shade(RandomEngine& random_engine, const Color& color, const Vector<N, T>& n)
+        static BrdfSample<N, T> sample_f(RandomEngine& random_engine, const Color& color, const Vector<N, T>& n)
         {
-                static constexpr ShadeSample<N, T> BLACK(Vector<N, T>(0), 0, Color(0));
+                static constexpr BrdfSample<N, T> BLACK(Vector<N, T>(0), 0, Color(0));
 
                 ASSERT(n.is_unit());
 

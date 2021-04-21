@@ -59,7 +59,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 namespace ns::painter
 {
 template <typename T>
-class GGXDiffuse
+class GGXDiffuseBRDF
 {
         static constexpr std::size_t N = 3;
 
@@ -221,7 +221,7 @@ class GGXDiffuse
         }
 
 public:
-        static Color shade(
+        static Color f(
                 T metalness,
                 T roughness,
                 const Color& color,
@@ -249,7 +249,7 @@ public:
         }
 
         template <typename RandomEngine>
-        static ShadeSample<N, T> sample_shade(
+        static BrdfSample<N, T> sample_f(
                 RandomEngine& random_engine,
                 T metalness,
                 T roughness,
@@ -257,7 +257,7 @@ public:
                 const Vector<N, T>& n,
                 const Vector<N, T>& v)
         {
-                static constexpr ShadeSample<N, T> BLACK(Vector<N, T>(0), 0, Color(0));
+                static constexpr BrdfSample<N, T> BLACK(Vector<N, T>(0), 0, Color(0));
 
                 ASSERT(n.is_unit());
                 ASSERT(v.is_unit());

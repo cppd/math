@@ -17,11 +17,11 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "mesh.h"
 
+#include "brdf.h"
 #include "mesh_facet.h"
 #include "mesh_texture.h"
 
 #include "../objects.h"
-#include "../shading/shading.h"
 
 #include <src/color/color.h>
 #include <src/com/log.h>
@@ -198,7 +198,7 @@ public:
                 return std::nullopt;
         }
 
-        Color shade(const Vector<N, T>& n, const Vector<N, T>& v, const Vector<N, T>& l) const override
+        Color brdf(const Vector<N, T>& n, const Vector<N, T>& v, const Vector<N, T>& l) const override
         {
                 ASSERT(m_facet->material() >= 0);
 
@@ -213,10 +213,10 @@ public:
                         return m.Kd;
                 }();
 
-                return ::ns::painter::shade(m.metalness, m.roughness, color, n, v, l);
+                return ShapeBRDF<N, T>::f(m.metalness, m.roughness, color, n, v, l);
         }
 
-        ShadeSample<N, T> sample_shade(RandomEngine<T>& random_engine, const Vector<N, T>& n, const Vector<N, T>& v)
+        BrdfSample<N, T> sample_brdf(RandomEngine<T>& random_engine, const Vector<N, T>& n, const Vector<N, T>& v)
                 const override
         {
                 ASSERT(m_facet->material() >= 0);
@@ -232,7 +232,7 @@ public:
                         return m.Kd;
                 }();
 
-                return ::ns::painter::sample_shade(random_engine, m.metalness, m.roughness, color, n, v);
+                return ShapeBRDF<N, T>::sample_f(random_engine, m.metalness, m.roughness, color, n, v);
         }
 };
 

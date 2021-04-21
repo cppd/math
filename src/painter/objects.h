@@ -32,17 +32,17 @@ template <typename T>
 using RandomEngine = std::conditional_t<std::is_same_v<std::remove_cv<T>, float>, std::mt19937, std::mt19937_64>;
 
 template <std::size_t N, typename T>
-struct ShadeSample final
+struct BrdfSample final
 {
         Vector<N, T> l;
         T pdf;
-        Color color;
+        Color brdf;
 
-        ShadeSample()
+        BrdfSample()
         {
         }
 
-        constexpr ShadeSample(const Vector<N, T>& l, T pdf, const Color& color) : l(l), pdf(pdf), color(color)
+        constexpr BrdfSample(const Vector<N, T>& l, T pdf, const Color& brdf) : l(l), pdf(pdf), brdf(brdf)
         {
         }
 };
@@ -70,9 +70,9 @@ public:
 
         virtual std::optional<Color> light_source() const = 0;
 
-        virtual Color shade(const Vector<N, T>& n, const Vector<N, T>& v, const Vector<N, T>& l) const = 0;
+        virtual Color brdf(const Vector<N, T>& n, const Vector<N, T>& v, const Vector<N, T>& l) const = 0;
 
-        virtual ShadeSample<N, T> sample_shade(
+        virtual BrdfSample<N, T> sample_brdf(
                 RandomEngine<T>& random_engine,
                 const Vector<N, T>& n,
                 const Vector<N, T>& v) const = 0;

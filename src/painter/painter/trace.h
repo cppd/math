@@ -150,8 +150,8 @@ std::optional<Color> trace_path(
                         continue;
                 }
 
-                const Color color = surface->shade(n, v, l);
-                color_sum += color * sample.L * (n_l / sample.pdf);
+                const Color brdf = surface->brdf(n, v, l);
+                color_sum += brdf * sample.L * (n_l / sample.pdf);
         }
 
         if (depth >= MAX_DEPTH)
@@ -161,9 +161,9 @@ std::optional<Color> trace_path(
 
         [&]
         {
-                const ShadeSample<N, T> sample = surface->sample_shade(engine, n, v);
+                const BrdfSample<N, T> sample = surface->sample_brdf(engine, n, v);
 
-                if (sample.color.is_black() || sample.pdf <= 0)
+                if (sample.brdf.is_black() || sample.pdf <= 0)
                 {
                         return;
                 }
@@ -183,7 +183,7 @@ std::optional<Color> trace_path(
                 }
 
                 const Color L = *trace_path(scene, smooth_normals, Ray<N, T>(point, l), depth + 1, engine);
-                color_sum += sample.color * L * (n_l / sample.pdf);
+                color_sum += sample.brdf * L * (n_l / sample.pdf);
         }();
 
         return color_sum;
