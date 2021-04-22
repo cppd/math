@@ -178,13 +178,13 @@ void bound_cocone(WorkerThreads* threads, const ModelTree* model_tree, const std
                 });
 }
 
-void self_test(WorkerThreads* threads, process::TestType test_type, bool with_confirmation, const std::string& action)
+void self_test(WorkerThreads* threads, process::TestType test_type, const std::string& action)
 {
         threads->terminate_and_start(
                 SELF_TEST_THREAD_ID, action,
                 [&]()
                 {
-                        return process::action_self_test(test_type, with_confirmation);
+                        return process::action_self_test(test_type);
                 });
 }
 }
@@ -238,7 +238,7 @@ Actions::Actions(
                         action, &QAction::triggered,
                         [=]()
                         {
-                                self_test(threads, process::TestType::SmallAndLarge, true, action_name(action));
+                                self_test(threads, process::TestType::SmallAndLarge, action_name(action));
                         }));
         }
         {
@@ -347,7 +347,7 @@ Actions::Actions(
                 }
         }
 
-        self_test(m_worker_threads.get(), process::TestType::Small, false, "Self-Test");
+        self_test(m_worker_threads.get(), process::TestType::Small, "Self-Test");
 
         if (!options.file_name.empty())
         {

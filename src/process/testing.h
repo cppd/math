@@ -29,5 +29,5 @@ enum class TestType
         SmallAndLarge
 };
 
-std::function<void(ProgressRatioList*)> action_self_test(TestType test_type, bool with_confirmation);
+std::function<void(ProgressRatioList*)> action_self_test(TestType test_type);
 }

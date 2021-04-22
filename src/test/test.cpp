@@ -23,6 +23,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/com/variant.h>
 
 #include <random>
+#include <sstream>
 
 namespace ns::test
 {
@@ -39,9 +40,18 @@ Tests& Tests::instance()
         return tests;
 }
 
-void Tests::run(const Test& test, const char* type, ProgressRatios* progress_ratios)
+void Tests::run(
+        const Test& test,
+        const std::string_view& test_name,
+        const char* type_name,
+        ProgressRatios* progress_ratios)
 {
-        const std::string name = std::string("Self-Test, ") + type + ", " + test.name;
+        const std::string name = [&]()
+        {
+                std::ostringstream oss;
+                oss << "Self-Test, " << type_name << ", " << test_name;
+                return oss.str();
+        }();
         ProgressRatio progress(progress_ratios, name);
         auto f1 = [&](void (*f)())
         {
@@ -60,81 +70,114 @@ void Tests::run(const Test& test, const char* type, ProgressRatios* progress_rat
                 });
 }
 
-void Tests::run(std::vector<Test> tests, const char* type, ProgressRatios* progress_ratios)
+std::vector<std::string> Tests::small_names() const
 {
-        std::shuffle(tests.begin(), tests.end(), create_engine<std::mt19937>());
-        for (const Test& test : tests)
+        std::vector<std::string> names;
+        names.reserve(m_small_tests.size());
+        for (const auto& [name, test] : m_small_tests)
         {
-                run(test, type, progress_ratios);
+                names.emplace_back(name);
         }
+        return names;
 }
 
-void Tests::run_small(ProgressRatios* progress_ratios) const
+std::vector<std::string> Tests::large_names() const
 {
-        run(m_small_tests, SMALL, progress_ratios);
+        std::vector<std::string> names;
+        names.reserve(m_large_tests.size());
+        for (const auto& [name, test] : m_large_tests)
+        {
+                names.emplace_back(name);
+        }
+        return names;
 }
 
-void Tests::run_large(ProgressRatios* progress_ratios) const
+std::vector<std::string> Tests::performance_names() const
 {
-        run(m_large_tests, LARGE, progress_ratios);
-}
-
-void Tests::run_performance(ProgressRatios* progress_ratios) const
-{
-        run(m_performance_tests, PERFORMANCE, progress_ratios);
+        std::vector<std::string> names;
+        names.reserve(m_performance_tests.size());
+        for (const auto& [name, test] : m_performance_tests)
+        {
+                names.emplace_back(name);
+        }
+        return names;
 }
 
 void Tests::run_small(const std::string_view& name, ProgressRatios* progress_ratios) const
 {
-        bool found = false;
-        for (const Test& test : m_small_tests)
+        auto iter = m_small_tests.find(name);
+        if (iter == m_small_tests.cend())
         {
-                if (name == test.name)
-                {
-                        run(test, SMALL, progress_ratios);
-                        found = true;
-                        continue;
-                }
+                std::ostringstream oss;
+                oss << SMALL << " test not found " << name;
+                error(oss.str());
         }
-        if (!found)
-        {
-                error(std::string(SMALL) + " test not found " + std::string(name));
-        }
+        run(iter->second, iter->first, SMALL, progress_ratios);
 }
 
 void Tests::run_large(const std::string_view& name, ProgressRatios* progress_ratios) const
 {
-        bool found = false;
-        for (const Test& test : m_large_tests)
+        auto iter = m_large_tests.find(name);
+        if (iter == m_large_tests.cend())
         {
-                if (name == test.name)
-                {
-                        run(test, LARGE, progress_ratios);
-                        found = true;
-                        continue;
-                }
+                std::ostringstream oss;
+                oss << LARGE << " test not found " << name;
+                error(oss.str());
         }
-        if (!found)
-        {
-                error(std::string(LARGE) + " test not found " + std::string(name));
-        }
+        run(iter->second, iter->first, LARGE, progress_ratios);
 }
 
 void Tests::run_performance(const std::string_view& name, ProgressRatios* progress_ratios) const
 {
-        bool found = false;
-        for (const Test& test : m_performance_tests)
+        auto iter = m_performance_tests.find(name);
+        if (iter == m_performance_tests.cend())
         {
-                if (name == test.name)
-                {
-                        run(test, PERFORMANCE, progress_ratios);
-                        found = true;
-                        continue;
-                }
+                std::ostringstream oss;
+                oss << PERFORMANCE << " test not found " << name;
+                error(oss.str());
         }
-        if (!found)
+        run(iter->second, iter->first, PERFORMANCE, progress_ratios);
+}
+
+void Tests::run_small(ProgressRatios* progress_ratios) const
+{
+        run_small(small_names(), progress_ratios);
+}
+
+void Tests::run_large(ProgressRatios* progress_ratios) const
+{
+        run_large(large_names(), progress_ratios);
+}
+
+void Tests::run_performance(ProgressRatios* progress_ratios) const
+{
+        run_performance(performance_names(), progress_ratios);
+}
+
+void Tests::run_small(std::vector<std::string> names, ProgressRatios* progress_ratios) const
+{
+        std::shuffle(names.begin(), names.end(), create_engine<std::mt19937>());
+        for (const std::string& name : names)
         {
-                error(std::string(PERFORMANCE) + " test not found " + std::string(name));
+                run_small(name, progress_ratios);
+        }
+}
+
+void Tests::run_large(std::vector<std::string> names, ProgressRatios* progress_ratios) const
+{
+        std::shuffle(names.begin(), names.end(), create_engine<std::mt19937>());
+        for (const std::string& name : names)
+        {
+                run_large(name, progress_ratios);
+        }
+}
+
+void Tests::run_performance(std::vector<std::string> names, ProgressRatios* progress_ratios) const
+{
+        std::shuffle(names.begin(), names.end(), create_engine<std::mt19937>());
+        for (const std::string& name : names)
+        {
+                run_performance(name, progress_ratios);
         }
 }
 }

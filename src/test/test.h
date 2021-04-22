@@ -19,7 +19,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <src/progress/progress.h>
 
-#include <string_view>
+#include <string>
+#include <unordered_map>
 #include <variant>
 #include <vector>
 
@@ -33,52 +34,63 @@ class Tests final
 
         struct Test final
         {
-                const char* name;
                 std::variant<void (*)(), void (*)(ProgressRatio*)> function;
+
                 template <typename T>
-                Test(const char* name, T* function) : name(name), function(function)
+                explicit Test(T* function) : function(function)
                 {
                         static_assert(std::is_function_v<T>);
                 }
         };
 
-        static void run(const Test& test, const char* type, ProgressRatios* progress_ratios);
-        static void run(std::vector<Test> tests, const char* type, ProgressRatios* progress_ratios);
+        static void run(
+                const Test& test,
+                const std::string_view& test_name,
+                const char* type_name,
+                ProgressRatios* progress_ratios);
 
-        std::vector<Test> m_small_tests;
-        std::vector<Test> m_large_tests;
-        std::vector<Test> m_performance_tests;
+        std::unordered_map<std::string_view, Test> m_small_tests;
+        std::unordered_map<std::string_view, Test> m_large_tests;
+        std::unordered_map<std::string_view, Test> m_performance_tests;
 
         Tests() = default;
 
         template <typename T>
         void add_small(const char* name, T* function)
         {
-                m_small_tests.emplace_back(name, function);
+                m_small_tests.emplace(name, function);
         }
 
         template <typename T>
         void add_large(const char* name, T* function)
         {
-                m_large_tests.emplace_back(name, function);
+                m_large_tests.emplace(name, function);
         }
 
         template <typename T>
         void add_performance(const char* name, T* function)
         {
-                m_performance_tests.emplace_back(name, function);
+                m_performance_tests.emplace(name, function);
         }
 
 public:
         static Tests& instance();
 
-        void run_small(ProgressRatios* progress_ratios) const;
-        void run_large(ProgressRatios* progress_ratios) const;
-        void run_performance(ProgressRatios* progress_ratios) const;
+        std::vector<std::string> small_names() const;
+        std::vector<std::string> large_names() const;
+        std::vector<std::string> performance_names() const;
 
         void run_small(const std::string_view& name, ProgressRatios* progress_ratios) const;
         void run_large(const std::string_view& name, ProgressRatios* progress_ratios) const;
         void run_performance(const std::string_view& name, ProgressRatios* progress_ratios) const;
+
+        void run_small(ProgressRatios* progress_ratios) const;
+        void run_large(ProgressRatios* progress_ratios) const;
+        void run_performance(ProgressRatios* progress_ratios) const;
+
+        void run_small(std::vector<std::string> names, ProgressRatios* progress_ratios) const;
+        void run_large(std::vector<std::string> names, ProgressRatios* progress_ratios) const;
+        void run_performance(std::vector<std::string> names, ProgressRatios* progress_ratios) const;
 };
 
 struct AddSmallTest final

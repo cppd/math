@@ -18,35 +18,37 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "testing.h"
 
 #include <src/com/error.h>
-#include <src/gui/dialogs/message.h>
+#include <src/gui/dialogs/test_selection.h>
 #include <src/test/test.h>
 
 namespace ns::process
 {
-std::function<void(ProgressRatioList*)> action_self_test(TestType test_type, bool with_confirmation)
+std::function<void(ProgressRatioList*)> action_self_test(TestType test_type)
 {
-        if (with_confirmation)
+        switch (test_type)
         {
-                std::optional<bool> yes = gui::dialog::message_question_default_yes("Run the Self-Test?");
-                if (!yes || !*yes)
+        case TestType::Small:
+        {
+                return [=](ProgressRatioList* progress_list)
+                {
+                        test::Tests::instance().run_small(progress_list);
+                };
+        }
+        case TestType::SmallAndLarge:
+        {
+                std::optional<gui::dialog::TestSelectionParameters> tests =
+                        gui::dialog::TestSelectionParametersDialog::show(test::Tests::instance().large_names());
+                if (!tests || tests->test_names.empty())
                 {
                         return nullptr;
                 }
-        }
-
-        return [=](ProgressRatioList* progress_list)
-        {
-                switch (test_type)
+                return [=](ProgressRatioList* progress_list)
                 {
-                case TestType::Small:
                         test::Tests::instance().run_small(progress_list);
-                        return;
-                case TestType::SmallAndLarge:
-                        test::Tests::instance().run_small(progress_list);
-                        test::Tests::instance().run_large(progress_list);
-                        return;
-                }
-                error_fatal("Unknown test type " + std::to_string(static_cast<long long>(test_type)));
-        };
+                        test::Tests::instance().run_large(tests->test_names, progress_list);
+                };
+        }
+        }
+        error_fatal("Unknown test type " + std::to_string(static_cast<long long>(test_type)));
 }
 }
