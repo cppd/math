@@ -15,6 +15,8 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
+#include "brdf.h"
+
 #include "../lambertian.h"
 
 #include <src/com/error.h>
@@ -22,14 +24,13 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/com/print.h>
 #include <src/com/random/engine.h>
 #include <src/com/type/name.h>
-#include <src/sampling/sphere_uniform.h>
 #include <src/test/test.h>
 
 #include <algorithm>
 #include <cmath>
 #include <random>
 
-namespace ns::painter
+namespace ns::painter::brdf::test
 {
 namespace
 {
@@ -39,22 +40,27 @@ void check_color_equal(const Color& directional_albedo, const Color& test)
         {
                 return;
         }
+
         const Vector<3, double> c1 = directional_albedo.rgb<double>();
         const Vector<3, double> c2 = test.rgb<double>();
+
         for (int i = 0; i < 3; ++i)
         {
                 if (!(c1[i] >= 0))
                 {
                         error("RGB is negative " + to_string(c1));
                 }
+
                 if (!(c2[i] >= 0))
                 {
                         error("RGB is negative " + to_string(c2));
                 }
+
                 if (c1[i] == c2[i])
                 {
                         continue;
                 }
+
                 double relative_error = std::abs(c1[i] - c2[i]) / std::max(c1[i], c2[i]);
                 if (!(relative_error < 0.01))
                 {
@@ -64,109 +70,74 @@ void check_color_equal(const Color& directional_albedo, const Color& test)
         }
 }
 
-template <template <std::size_t N, typename> typename BRDF, std::size_t N, typename T>
-void test_brdf_f(const BRDF<N, T>& brdf, const unsigned sample_count)
+Color random_color()
 {
-        const T UNIFORM_ON_HEMISPHERE_PDF = 2 * sampling::uniform_on_sphere_pdf<N, T>();
+        std::mt19937 random_engine = create_engine<std::mt19937>();
+        std::uniform_real_distribution<Color::DataType> urd(0, 1);
 
-        RandomEngine<T> random_engine = create_engine<RandomEngine<T>>();
+        Color::DataType red = urd(random_engine);
+        Color::DataType green = urd(random_engine);
+        Color::DataType blue = urd(random_engine);
 
-        const Color TEST_COLOR = [&]
-        {
-                std::uniform_real_distribution<Color::DataType> urd(0, 1);
-                Color::DataType red = urd(random_engine);
-                Color::DataType green = urd(random_engine);
-                Color::DataType blue = urd(random_engine);
-                return Color(red, green, blue);
-        }();
-
-        const Vector<N, T> n = sampling::uniform_on_sphere<N, T>(random_engine);
-
-        Color sum(0);
-        unsigned sample = 0;
-
-        while (sample < sample_count)
-        {
-                const Vector<N, T> l = sampling::uniform_on_sphere<N, T>(random_engine);
-                const T n_l = dot(n, l);
-
-                if (n_l <= 0)
-                {
-                        Color c = brdf.f(TEST_COLOR, n, l);
-                        if (!c.is_black())
-                        {
-                                error("BRDF color " + to_string(c.rgb<float>()) + " is not black when dot(n,l) <= 0");
-                        }
-                        continue;
-                }
-
-                ++sample;
-                Color c = brdf.f(TEST_COLOR, n, l);
-                if (c.is_black())
-                {
-                        continue;
-                }
-                sum += c * (n_l / UNIFORM_ON_HEMISPHERE_PDF);
-        }
-
-        check_color_equal(sum / sample_count, TEST_COLOR);
-}
-
-template <template <std::size_t N, typename> typename BRDF, std::size_t N, typename T>
-void test_brdf_sample_f(const BRDF<N, T>& brdf, const unsigned sample_count)
-{
-        RandomEngine<T> random_engine = create_engine<RandomEngine<T>>();
-
-        const Color TEST_COLOR = [&]
-        {
-                std::uniform_real_distribution<Color::DataType> urd(0, 1);
-                Color::DataType red = urd(random_engine);
-                Color::DataType green = urd(random_engine);
-                Color::DataType blue = urd(random_engine);
-                return Color(red, green, blue);
-        }();
-
-        const Vector<N, T> n = sampling::uniform_on_sphere<N, T>(random_engine);
-
-        Color sum(0);
-
-        for (unsigned i = 0; i < sample_count; ++i)
-        {
-                BrdfSample<N, T> sample = brdf.sample_f(random_engine, TEST_COLOR, n);
-                if (sample.brdf.is_black() || sample.pdf <= 0)
-                {
-                        continue;
-                }
-                const T n_l = dot(n, sample.l);
-                if (n_l <= 0)
-                {
-                        continue;
-                }
-                sum += sample.brdf * (n_l / sample.pdf);
-        }
-
-        check_color_equal(sum / sample_count, TEST_COLOR);
+        return Color(red, green, blue);
 }
 
 template <std::size_t N, typename T>
-void test_brdf()
+class TestLambertian final : public TestBRDF<N, T>
 {
-        const LambertianBRDF<N, T> brdf;
+        Color m_color;
+
+        Color f(const Vector<N, T>& n, const Vector<N, T>& v, const Vector<N, T>& l) const override
+        {
+                if (dot(n, v) <= 0)
+                {
+                        return Color(0);
+                }
+                return LambertianBRDF<N, T>::f(m_color, n, l);
+        }
+
+        BrdfSample<N, T> sample_f(RandomEngine<T>& random_engine, const Vector<N, T>& n, const Vector<N, T>& v)
+                const override
+        {
+                if (dot(n, v) <= 0)
+                {
+                        return {Vector<N, T>(0), 0, Color(0)};
+                }
+                return LambertianBRDF<N, T>::sample_f(random_engine, m_color, n);
+        }
+
+public:
+        explicit TestLambertian(const Color& color) : m_color(color)
+        {
+        }
+};
+
+template <std::size_t N, typename T>
+void test_lambertian()
+{
         constexpr unsigned SAMPLE_COUNT = 100'000;
 
+        const Color color = random_color();
+
+        TestLambertian<N, T> brdf(color);
+
+        Color result;
+
         LOG(to_string(N) + "D, " + type_name<T>() + ", Lambertian BRDF, f");
-        test_brdf_f(brdf, SAMPLE_COUNT);
+        result = test_brdf_f(brdf, SAMPLE_COUNT);
+        check_color_equal(result, color);
 
         LOG(to_string(N) + "D, " + type_name<T>() + ", Lambertian BRDF, sample f");
-        test_brdf_sample_f(brdf, SAMPLE_COUNT);
+        result = test_brdf_sample_f(brdf, SAMPLE_COUNT);
+        check_color_equal(result, color);
 }
 
 template <typename T>
 void test_brdf()
 {
-        test_brdf<3, T>();
-        test_brdf<4, T>();
-        test_brdf<5, T>();
+        test_lambertian<3, T>();
+        test_lambertian<4, T>();
+        test_lambertian<5, T>();
 }
 
 void test()
