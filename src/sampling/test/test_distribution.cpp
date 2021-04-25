@@ -20,10 +20,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "../sphere_uniform.h"
 #include "distribution/distribution.h"
 
-#include <src/com/constant.h>
 #include <src/com/log.h>
 #include <src/com/random/engine.h>
-#include <src/geometry/shapes/sphere_area.h>
 #include <src/numerical/optics.h>
 #include <src/test/test.h>
 
@@ -35,30 +33,31 @@ namespace ns::sampling::test
 {
 namespace
 {
-template <std::size_t N, typename T>
-void test_uniform_on_sphere(
-        long long unit_count,
-        long long angle_distribution_count,
-        long long surface_distribution_count,
-        long long performance_count)
-{
-        const std::string NAME = "Uniform";
+constexpr long long UNIT_COUNT = 10'000'000;
+constexpr long long ANGLE_COUNT_PER_BUCKET = 1'000;
+constexpr long long SURFACE_COUNT_PER_BUCKET = 10'000;
+constexpr long long PERFORMANCE_COUNT = 10'000'000;
 
-        const Vector<N, T> NORMAL = []()
+template <std::size_t N, typename T>
+void test_uniform_on_sphere()
+{
+        const std::string name = "Uniform";
+
+        const Vector<N, T> normal = []()
         {
                 RandomEngine<T> random_engine = create_engine<RandomEngine<T>>();
                 return uniform_on_sphere<N, T>(random_engine).normalized();
         }();
 
         test_unit<N, T>(
-                NAME, unit_count,
+                name, UNIT_COUNT,
                 [&](RandomEngine<T>& random_engine)
                 {
                         return uniform_on_sphere<N, T>(random_engine);
                 });
 
         test_distribution_angle<N, T>(
-                NAME, angle_distribution_count, NORMAL,
+                name, ANGLE_COUNT_PER_BUCKET, normal,
                 [&](RandomEngine<T>& random_engine)
                 {
                         return uniform_on_sphere<N, T>(random_engine);
@@ -69,7 +68,7 @@ void test_uniform_on_sphere(
                 });
 
         test_distribution_surface<N, T>(
-                NAME, surface_distribution_count,
+                name, SURFACE_COUNT_PER_BUCKET,
                 [&](RandomEngine<T>& random_engine)
                 {
                         return uniform_on_sphere<N, T>(random_engine);
@@ -80,7 +79,7 @@ void test_uniform_on_sphere(
                 });
 
         test_performance<N, T>(
-                NAME, performance_count,
+                name, PERFORMANCE_COUNT,
                 [&](RandomEngine<T>& random_engine)
                 {
                         return uniform_on_sphere<N, T>(random_engine);
@@ -88,32 +87,28 @@ void test_uniform_on_sphere(
 }
 
 template <std::size_t N, typename T>
-void test_cosine_on_hemisphere(
-        long long unit_count,
-        long long angle_distribution_count,
-        long long surface_distribution_count,
-        long long performance_count)
+void test_cosine_on_hemisphere()
 {
-        const std::string NAME = "Cosine";
+        const std::string name = "Cosine";
 
-        const Vector<N, T> NORMAL = []()
+        const Vector<N, T> normal = []()
         {
                 RandomEngine<T> random_engine = create_engine<RandomEngine<T>>();
                 return uniform_on_sphere<N, T>(random_engine).normalized();
         }();
 
         test_unit<N, T>(
-                NAME, unit_count,
+                name, UNIT_COUNT,
                 [&](RandomEngine<T>& random_engine)
                 {
-                        return cosine_on_hemisphere(random_engine, NORMAL);
+                        return cosine_on_hemisphere(random_engine, normal);
                 });
 
         test_distribution_angle<N, T>(
-                NAME, angle_distribution_count, NORMAL,
+                name, ANGLE_COUNT_PER_BUCKET, normal,
                 [&](RandomEngine<T>& random_engine)
                 {
-                        return cosine_on_hemisphere(random_engine, NORMAL);
+                        return cosine_on_hemisphere(random_engine, normal);
                 },
                 [](T angle)
                 {
@@ -121,230 +116,193 @@ void test_cosine_on_hemisphere(
                 });
 
         test_distribution_surface<N, T>(
-                NAME, surface_distribution_count,
+                name, SURFACE_COUNT_PER_BUCKET,
                 [&](RandomEngine<T>& random_engine)
                 {
-                        return cosine_on_hemisphere(random_engine, NORMAL);
+                        return cosine_on_hemisphere(random_engine, normal);
                 },
                 [&](const Vector<N, T>& v)
                 {
-                        return cosine_on_hemisphere_pdf<N, T>(dot(NORMAL, v));
+                        return cosine_on_hemisphere_pdf<N, T>(dot(normal, v));
                 });
 
         test_performance<N, T>(
-                NAME, performance_count,
+                name, PERFORMANCE_COUNT,
                 [&](RandomEngine<T>& random_engine)
                 {
-                        return cosine_on_hemisphere(random_engine, NORMAL);
+                        return cosine_on_hemisphere(random_engine, normal);
                 });
 }
 
 template <std::size_t N, typename T>
-void test_power_cosine_on_hemisphere(
-        long long unit_count,
-        long long angle_distribution_count,
-        long long surface_distribution_count,
-        long long performance_count)
+void test_power_cosine_on_hemisphere()
 {
-        const T POWER = []()
+        const T power = []()
         {
                 RandomEngine<T> random_engine = create_engine<RandomEngine<T>>();
                 return std::uniform_real_distribution<T>(1, 100)(random_engine);
         }();
 
-        const std::string NAME = "Power Cosine, power = " + to_string_fixed(POWER, 1);
+        const std::string name = "Power Cosine, power = " + to_string_fixed(power, 1);
 
-        const Vector<N, T> NORMAL = []()
+        const Vector<N, T> normal = []()
         {
                 RandomEngine<T> random_engine = create_engine<RandomEngine<T>>();
                 return uniform_on_sphere<N, T>(random_engine).normalized();
         }();
 
         test_unit<N, T>(
-                NAME, unit_count,
+                name, UNIT_COUNT,
                 [&](RandomEngine<T>& random_engine)
                 {
-                        return power_cosine_on_hemisphere(random_engine, NORMAL, POWER);
+                        return power_cosine_on_hemisphere(random_engine, normal, power);
                 });
 
         test_distribution_angle<N, T>(
-                NAME, angle_distribution_count, NORMAL,
+                name, ANGLE_COUNT_PER_BUCKET, normal,
                 [&](RandomEngine<T>& random_engine)
                 {
-                        return power_cosine_on_hemisphere(random_engine, NORMAL, POWER);
+                        return power_cosine_on_hemisphere(random_engine, normal, power);
                 },
                 [&](T angle)
                 {
-                        return power_cosine_on_hemisphere_pdf<N, T>(std::cos(angle), POWER);
+                        return power_cosine_on_hemisphere_pdf<N, T>(std::cos(angle), power);
                 });
 
         test_distribution_surface<N, T>(
-                NAME, surface_distribution_count,
+                name, SURFACE_COUNT_PER_BUCKET,
                 [&](RandomEngine<T>& random_engine)
                 {
-                        return power_cosine_on_hemisphere(random_engine, NORMAL, POWER);
+                        return power_cosine_on_hemisphere(random_engine, normal, power);
                 },
                 [&](const Vector<N, T>& v)
                 {
-                        return power_cosine_on_hemisphere_pdf<N, T>(dot(NORMAL, v), POWER);
+                        return power_cosine_on_hemisphere_pdf<N, T>(dot(normal, v), power);
                 });
 
         test_performance<N, T>(
-                NAME, performance_count,
+                name, PERFORMANCE_COUNT,
                 [&](RandomEngine<T>& random_engine)
                 {
-                        return power_cosine_on_hemisphere(random_engine, NORMAL, POWER);
+                        return power_cosine_on_hemisphere(random_engine, normal, power);
                 });
 }
 
 template <std::size_t N, typename T>
-void test_ggx(
-        long long unit_count,
-        long long angle_distribution_count,
-        long long surface_distribution_count,
-        long long performance_count)
+void test_ggx()
 {
-        const T ALPHA = []()
+        const T alpha = []()
         {
                 RandomEngine<T> random_engine = create_engine<RandomEngine<T>>();
                 return std::uniform_real_distribution<T>(0.1, 1)(random_engine);
         }();
 
-        const std::string NAME = "GGX, alpha = " + to_string_fixed(ALPHA, 2);
+        const std::string name = "GGX, alpha = " + to_string_fixed(alpha, 2);
 
-        const Vector<N, T> NORMAL = []()
+        const Vector<N, T> normal = []()
         {
                 RandomEngine<T> random_engine = create_engine<RandomEngine<T>>();
                 return uniform_on_sphere<N, T>(random_engine).normalized();
         }();
 
         test_unit<N, T>(
-                NAME, unit_count,
+                name, UNIT_COUNT,
                 [&](RandomEngine<T>& random_engine)
                 {
                         Vector<N, T> v = uniform_on_sphere<N, T>(random_engine);
-                        if (dot(v, NORMAL) < 0)
+                        if (dot(v, normal) < 0)
                         {
                                 v = -v;
                         }
-                        return ggx_vn(random_engine, NORMAL, v, ALPHA);
+                        return ggx_vn(random_engine, normal, v, alpha);
                 });
 
         test_distribution_angle<N, T>(
-                NAME + ", Normals", angle_distribution_count, NORMAL,
+                name + ", Normals", ANGLE_COUNT_PER_BUCKET, normal,
                 [&](RandomEngine<T>& random_engine)
                 {
-                        return ggx_vn(random_engine, NORMAL, NORMAL, ALPHA);
+                        return ggx_vn(random_engine, normal, normal, alpha);
                 },
                 [&](T angle)
                 {
-                        return ggx_pdf(std::cos(angle), ALPHA);
+                        return ggx_pdf(std::cos(angle), alpha);
                 });
 
         test_distribution_surface<N, T>(
-                NAME + ", Normals", surface_distribution_count,
+                name + ", Normals", SURFACE_COUNT_PER_BUCKET,
                 [&](RandomEngine<T>& random_engine)
                 {
-                        return ggx_vn(random_engine, NORMAL, NORMAL, ALPHA);
+                        return ggx_vn(random_engine, normal, normal, alpha);
                 },
                 [&](const Vector<N, T>& v)
                 {
-                        return ggx_pdf(dot(NORMAL, v), ALPHA);
+                        return ggx_pdf(dot(normal, v), alpha);
                 });
 
-        const Vector<N, T> V = [&]()
+        const Vector<N, T> v = [&]()
         {
                 RandomEngine<T> random_engine = create_engine<RandomEngine<T>>();
-                Vector<N, T> v = uniform_on_sphere<N, T>(random_engine).normalized();
-                if (dot(v, NORMAL) < 0)
+                Vector<N, T> r = uniform_on_sphere<N, T>(random_engine).normalized();
+                if (dot(r, normal) < 0)
                 {
-                        return -v;
+                        return -r;
                 }
-                return v;
+                return r;
         }();
 
-        const T N_V = dot(NORMAL, V);
+        const T n_v = dot(normal, v);
 
         test_distribution_surface<N, T>(
-                NAME + ", Visible Normals", surface_distribution_count,
+                name + ", Visible Normals", SURFACE_COUNT_PER_BUCKET,
                 [&](RandomEngine<T>& random_engine)
                 {
-                        return ggx_vn(random_engine, NORMAL, V, ALPHA);
+                        return ggx_vn(random_engine, normal, v, alpha);
                 },
                 [&](const Vector<N, T>& h)
                 {
-                        const T n_h = dot(NORMAL, h);
-                        const T h_v = dot(h, V);
-                        return ggx_vn_pdf(N_V, n_h, h_v, ALPHA);
+                        const T n_h = dot(normal, h);
+                        const T h_v = dot(h, v);
+                        return ggx_vn_pdf(n_v, n_h, h_v, alpha);
                 });
 
         test_distribution_surface<N, T>(
-                NAME + ", Visible Normals, Reflected", surface_distribution_count,
+                name + ", Visible Normals, Reflected", SURFACE_COUNT_PER_BUCKET,
                 [&](RandomEngine<T>& random_engine)
                 {
-                        const Vector<N, T> h = ggx_vn(random_engine, NORMAL, V, ALPHA);
-                        return numerical::reflect_vn(V, h);
+                        const Vector<N, T> h = ggx_vn(random_engine, normal, v, alpha);
+                        return numerical::reflect_vn(v, h);
                 },
                 [&](const Vector<N, T>& l)
                 {
-                        const Vector<N, T> h = (l + V).normalized();
-                        const T n_h = dot(NORMAL, h);
-                        const T h_v = dot(h, V);
-                        return ggx_vn_reflected_pdf(N_V, n_h, h_v, ALPHA);
+                        const Vector<N, T> h = (l + v).normalized();
+                        const T n_h = dot(normal, h);
+                        const T h_v = dot(h, v);
+                        return ggx_vn_reflected_pdf(n_v, n_h, h_v, alpha);
                 });
 
         test_performance<N, T>(
-                NAME, performance_count,
+                name, PERFORMANCE_COUNT,
                 [&](RandomEngine<T>& random_engine)
                 {
-                        return ggx_vn(random_engine, NORMAL, V, ALPHA);
+                        return ggx_vn(random_engine, normal, v, alpha);
                 });
-}
-
-template <std::size_t N, typename T>
-long long compute_angle_distribution_count()
-{
-        const double bucket_size = AngleBuckets<N, T>::bucket_size();
-        const double s_all = geometry::sphere_relative_area<N, long double>(0, PI<long double>);
-        const double s_bucket = geometry::sphere_relative_area<N, long double>(0, bucket_size);
-        const double uniform_min_count = 1000;
-        const double count = s_all / s_bucket * uniform_min_count;
-        const double round_to = std::pow(10, std::round(std::log10(count)) - 2);
-        const double rounded_count = std::ceil(count / round_to) * round_to;
-        return (rounded_count <= 1e9 ? rounded_count : 0);
-}
-
-template <std::size_t N, typename T>
-long long compute_surface_distribution_count()
-{
-        const double count = 10'000 * SurfaceBuckets<N, T>().bucket_count();
-        const double round_to = std::pow(10, std::round(std::log10(count)) - 2);
-        return std::ceil(count / round_to) * round_to;
 }
 
 template <std::size_t N, typename T>
 void test_distribution()
 {
-        const long long unit_count = 10'000'000;
-        const long long angle_distribution_count = compute_angle_distribution_count<N, T>();
-        const long long surface_distribution_count = compute_surface_distribution_count<N, T>();
-        const long long performance_count = 10'000'000;
-
-        test_uniform_on_sphere<N, T>(
-                unit_count, angle_distribution_count, surface_distribution_count, performance_count);
+        test_uniform_on_sphere<N, T>();
         LOG("");
 
-        test_cosine_on_hemisphere<N, T>(
-                unit_count, angle_distribution_count, surface_distribution_count, performance_count);
+        test_cosine_on_hemisphere<N, T>();
         LOG("");
 
-        test_power_cosine_on_hemisphere<N, T>(
-                unit_count, angle_distribution_count, surface_distribution_count, performance_count);
+        test_power_cosine_on_hemisphere<N, T>();
         LOG("");
 
         if constexpr (N == 3)
         {
-                test_ggx<N, T>(unit_count, angle_distribution_count, surface_distribution_count, performance_count);
+                test_ggx<N, T>();
                 LOG("");
         }
 }

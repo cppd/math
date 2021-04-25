@@ -23,7 +23,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <src/com/error.h>
 #include <src/com/print.h>
-#include <src/com/random/engine.h>
 #include <src/geometry/shapes/sphere_area.h>
 #include <src/geometry/shapes/sphere_create.h>
 #include <src/geometry/spatial/object_tree.h>
@@ -32,7 +31,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <cmath>
 #include <memory>
 #include <optional>
-#include <random>
 #include <sstream>
 #include <vector>
 
@@ -68,8 +66,6 @@ class SurfaceBuckets final
         }
 
         //
-
-        using RandomEngine = std::conditional_t<sizeof(T) <= 4, std::mt19937, std::mt19937_64>;
 
         static constexpr unsigned BUCKET_MIN_COUNT = 100 * (1 << N);
 
@@ -143,6 +139,18 @@ class SurfaceBuckets final
         }
 
 public:
+        std::size_t bucket_count() const
+        {
+                return m_buckets.size();
+        }
+
+        long long distribution_count(const long long uniform_min_count_per_bucket) const
+        {
+                const double count = uniform_min_count_per_bucket * bucket_count();
+                const double round_to = std::pow(10, std::round(std::log10(count)) - 2);
+                return std::ceil(count / round_to) * round_to;
+        }
+
         SurfaceBuckets()
         {
                 m_vertices = std::make_unique<std::vector<Vector<N, T>>>();
@@ -158,21 +166,18 @@ public:
                 ASSERT(m_buckets.size() >= BUCKET_MIN_COUNT);
         }
 
-        std::size_t bucket_count() const
-        {
-                return m_buckets.size();
-        }
-
-        template <typename RandomVector, typename PDF>
-        void compute(long long ray_count, const RandomVector& random_vector, const PDF& pdf)
+        template <typename RandomEngine, typename RandomVector, typename PDF>
+        void compute(
+                RandomEngine& random_engine,
+                const long long ray_count,
+                const RandomVector& random_vector,
+                const PDF& pdf)
         {
                 std::optional<geometry::ObjectTree<Bucket<N, T>>> tree;
                 {
                         ProgressRatio progress(nullptr);
                         tree.emplace(m_buckets, tree_max_depth(), TREE_MIN_OBJECTS_PER_BOX, &progress);
                 }
-
-                RandomEngine random_engine = create_engine<RandomEngine>();
 
                 for (Bucket<N, T>& bucket : m_buckets)
                 {
@@ -202,8 +207,8 @@ public:
                         bucket.add_sample();
                 }
 
-                ray_count *= 4;
-                for (long long i = 0; i < ray_count; ++i)
+                const long long uniform_ray_count = 4 * ray_count;
+                for (long long i = 0; i < uniform_ray_count; ++i)
                 {
                         const Ray<N, T> ray(Vector<N, T>(0), uniform_on_sphere<N, T>(random_engine));
 

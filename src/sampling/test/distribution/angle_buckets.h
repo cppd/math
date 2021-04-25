@@ -23,6 +23,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/com/type/limit.h>
 #include <src/geometry/shapes/sphere_area.h>
 #include <src/numerical/integrate.h>
+#include <src/numerical/vec.h>
 
 #include <algorithm>
 #include <cmath>
@@ -55,9 +56,15 @@ class AngleBuckets
         std::vector<Distribution> m_distribution;
 
 public:
-        static T bucket_size()
+        static long long distribution_count(const long long uniform_min_count_per_bucket)
         {
-                return BUCKET_SIZE;
+                const double bucket_size = BUCKET_SIZE;
+                const double s_all = geometry::sphere_relative_area<N, long double>(0, PI<long double>);
+                const double s_bucket = geometry::sphere_relative_area<N, long double>(0, bucket_size);
+                const double count = s_all / s_bucket * uniform_min_count_per_bucket;
+                const double round_to = std::pow(10, std::round(std::log10(count)) - 2);
+                const double rounded_count = std::ceil(count / round_to) * round_to;
+                return (rounded_count <= 1e9 ? rounded_count : 0);
         }
 
         AngleBuckets()
@@ -74,11 +81,23 @@ public:
                 }
         }
 
-        void add(T angle)
+        template <typename RandomEngine, typename RandomVector>
+        void compute(
+                RandomEngine& random_engine,
+                const long long count,
+                const Vector<N, T>& normal,
+                const RandomVector& random_vector)
         {
-                int bucket = angle * BUCKETS_PER_RADIAN;
-                bucket = std::clamp(bucket, 0, BUCKET_COUNT - 1);
-                ++m_buckets[bucket];
+                for (long long i = 0; i < count; ++i)
+                {
+                        Vector<N, T> v = random_vector(random_engine).normalized();
+                        T cosine = dot(v, normal);
+                        cosine = std::clamp(cosine, T(-1), T(1));
+                        T angle = std::acos(cosine);
+                        int bucket = angle * BUCKETS_PER_RADIAN;
+                        bucket = std::clamp(bucket, 0, BUCKET_COUNT - 1);
+                        ++m_buckets[bucket];
+                }
         }
 
         void compute_distribution()

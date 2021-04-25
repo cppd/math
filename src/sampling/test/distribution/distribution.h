@@ -43,7 +43,7 @@ template <typename T>
 using RandomEngine = std::conditional_t<sizeof(T) <= 4, std::mt19937, std::mt19937_64>;
 
 template <std::size_t N, typename T, typename RandomVector>
-void test_unit(const std::string& name, long long count, const RandomVector& random_vector)
+void test_unit(const std::string& name, const long long count, const RandomVector& random_vector)
 {
         LOG(name + "\n  test unit in " + space_name(N) + ", " + to_string_digit_groups(count) + ", " + type_name<T>());
 
@@ -84,12 +84,16 @@ void test_unit(const std::string& name, long long count, const RandomVector& ran
 template <std::size_t N, typename T, typename RandomVector, typename PDF>
 void test_distribution_angle(
         const std::string& name,
-        long long count,
+        const long long count_per_bucket,
         const Vector<N, T>& normal,
         const RandomVector& random_vector,
         const PDF& pdf)
 {
-        if (!(count > 0))
+        AngleBuckets<N, T> buckets;
+
+        const long long count = buckets.distribution_count(count_per_bucket);
+
+        if (count <= 0)
         {
                 return;
         }
@@ -100,21 +104,13 @@ void test_distribution_angle(
         const int thread_count = hardware_concurrency();
         const long long count_per_thread = (count + thread_count - 1) / thread_count;
 
-        const auto f = [&]()
+        const auto f = [&count_per_thread, &normal, &random_vector]()
         {
-                AngleBuckets<N, T> buckets;
+                AngleBuckets<N, T> thread_buckets;
                 RandomEngine<T> random_engine = create_engine<RandomEngine<T>>();
-                for (long long i = 0; i < count_per_thread; ++i)
-                {
-                        Vector<N, T> v = random_vector(random_engine).normalized();
-                        T cosine = dot(v, normal);
-                        cosine = std::clamp(cosine, T(-1), T(1));
-                        buckets.add(std::acos(cosine));
-                }
-                return buckets;
+                thread_buckets.compute(random_engine, count_per_thread, normal, random_vector);
+                return thread_buckets;
         };
-
-        AngleBuckets<N, T> buckets;
 
         {
                 std::vector<std::future<AngleBuckets<N, T>>> futures;
@@ -143,16 +139,18 @@ void test_distribution_angle(
 template <std::size_t N, typename T, typename RandomVector, typename PDF>
 void test_distribution_surface(
         const std::string& name,
-        long long count,
+        const long long count_per_bucket,
         const RandomVector& random_vector,
         const PDF& pdf)
 {
-        if (!(count > 0))
+        SurfaceBuckets<N, T> buckets;
+
+        const long long count = buckets.distribution_count(count_per_bucket);
+
+        if (count <= 0)
         {
                 return;
         }
-
-        SurfaceBuckets<N, T> buckets;
 
         LOG(name + "\n  test surface distribution in " + space_name(N) + ", " + type_name<T>() + "\n  bucket count "
             + to_string_digit_groups(buckets.bucket_count()) + ", ray count " + to_string_digit_groups(count));
@@ -160,11 +158,11 @@ void test_distribution_surface(
         const int thread_count = hardware_concurrency();
         const long long count_per_thread = (count + thread_count - 1) / thread_count;
 
-        const auto f = [&]()
+        const auto f = [&count_per_thread, &random_vector, &pdf]()
         {
                 SurfaceBuckets<N, T> thread_buckets;
-                ASSERT(thread_buckets.bucket_count() == buckets.bucket_count());
-                thread_buckets.compute(count_per_thread, random_vector, pdf);
+                RandomEngine<T> random_engine = create_engine<RandomEngine<T>>();
+                thread_buckets.compute(random_engine, count_per_thread, random_vector, pdf);
                 return thread_buckets;
         };
 
@@ -191,7 +189,7 @@ void test_distribution_surface(
 }
 
 template <std::size_t N, typename T, typename RandomVector>
-void test_performance(const std::string& name, long long count, const RandomVector& random_vector)
+void test_performance(const std::string& name, const long long count, const RandomVector& random_vector)
 {
         LOG(name + "\n  test performance in " + space_name(N) + ", " + to_string_digit_groups(count) + ", "
             + type_name<T>());
@@ -199,7 +197,7 @@ void test_performance(const std::string& name, long long count, const RandomVect
         RandomEngine<T> random_engine = create_engine<RandomEngine<T>>();
 
         static Vector<N, T> sink;
-        TimePoint start_time = time();
+        const TimePoint start_time = time();
         for (long long i = 0; i < count; ++i)
         {
                 sink = random_vector(random_engine);
