@@ -15,12 +15,11 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include "angle_buckets.h"
-#include "surface_buckets.h"
-
 #include "../ggx.h"
 #include "../sphere_cosine.h"
 #include "../sphere_uniform.h"
+#include "distribution/angle_buckets.h"
+#include "distribution/surface_buckets.h"
 
 #include <src/com/constant.h>
 #include <src/com/error.h>

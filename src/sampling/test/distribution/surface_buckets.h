@@ -19,7 +19,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "surface_bucket.h"
 
-#include "../sphere_uniform.h"
+#include "../../sphere_uniform.h"
 
 #include <src/com/error.h>
 #include <src/com/print.h>
