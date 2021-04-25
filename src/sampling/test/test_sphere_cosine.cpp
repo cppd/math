@@ -18,12 +18,15 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "../sphere_cosine.h"
 #include "distribution/distribution.h"
 
+#include <src/com/log.h>
+#include <src/com/names.h>
+#include <src/com/print.h>
 #include <src/com/random/engine.h>
+#include <src/com/type/name.h>
 #include <src/test/test.h>
 
 #include <cmath>
 #include <random>
-#include <string>
 
 namespace ns::sampling::test
 {
@@ -34,10 +37,13 @@ constexpr long long ANGLE_COUNT_PER_BUCKET = 1'000;
 constexpr long long SURFACE_COUNT_PER_BUCKET = 10'000;
 constexpr long long PERFORMANCE_COUNT = 10'000'000;
 
+template <typename T>
+using RandomEngine = std::conditional_t<sizeof(T) <= 4, std::mt19937, std::mt19937_64>;
+
 template <std::size_t N, typename T>
 void test_cosine_on_hemisphere()
 {
-        const std::string name = "Cosine";
+        LOG("Sphere Cosine, " + space_name(N) + ", " + type_name<T>());
 
         const Vector<N, T> normal = []()
         {
@@ -45,15 +51,15 @@ void test_cosine_on_hemisphere()
                 return uniform_on_sphere<N, T>(random_engine).normalized();
         }();
 
-        test_unit<N, T>(
-                name, UNIT_COUNT,
+        test_unit<N, T, RandomEngine<T>>(
+                UNIT_COUNT,
                 [&](RandomEngine<T>& random_engine)
                 {
                         return cosine_on_hemisphere(random_engine, normal);
                 });
 
-        test_distribution_angle<N, T>(
-                name, ANGLE_COUNT_PER_BUCKET, normal,
+        test_distribution_angle<N, T, RandomEngine<T>>(
+                "", ANGLE_COUNT_PER_BUCKET, normal,
                 [&](RandomEngine<T>& random_engine)
                 {
                         return cosine_on_hemisphere(random_engine, normal);
@@ -63,8 +69,8 @@ void test_cosine_on_hemisphere()
                         return cosine_on_hemisphere_pdf<N, T>(std::cos(angle));
                 });
 
-        test_distribution_surface<N, T>(
-                name, SURFACE_COUNT_PER_BUCKET,
+        test_distribution_surface<N, T, RandomEngine<T>>(
+                "", SURFACE_COUNT_PER_BUCKET,
                 [&](RandomEngine<T>& random_engine)
                 {
                         return cosine_on_hemisphere(random_engine, normal);
@@ -74,8 +80,8 @@ void test_cosine_on_hemisphere()
                         return cosine_on_hemisphere_pdf<N, T>(dot(normal, v));
                 });
 
-        test_performance<N, T>(
-                name, PERFORMANCE_COUNT,
+        test_performance<N, T, RandomEngine<T>>(
+                PERFORMANCE_COUNT,
                 [&](RandomEngine<T>& random_engine)
                 {
                         return cosine_on_hemisphere(random_engine, normal);
@@ -91,7 +97,7 @@ void test_power_cosine_on_hemisphere()
                 return std::uniform_real_distribution<T>(1, 100)(random_engine);
         }();
 
-        const std::string name = "Power Cosine, power = " + to_string_fixed(power, 1);
+        LOG("Sphere Power Cosine, " + space_name(N) + ", " + type_name<T>() + ", power " + to_string_fixed(power, 1));
 
         const Vector<N, T> normal = []()
         {
@@ -99,15 +105,15 @@ void test_power_cosine_on_hemisphere()
                 return uniform_on_sphere<N, T>(random_engine).normalized();
         }();
 
-        test_unit<N, T>(
-                name, UNIT_COUNT,
+        test_unit<N, T, RandomEngine<T>>(
+                UNIT_COUNT,
                 [&](RandomEngine<T>& random_engine)
                 {
                         return power_cosine_on_hemisphere(random_engine, normal, power);
                 });
 
-        test_distribution_angle<N, T>(
-                name, ANGLE_COUNT_PER_BUCKET, normal,
+        test_distribution_angle<N, T, RandomEngine<T>>(
+                "", ANGLE_COUNT_PER_BUCKET, normal,
                 [&](RandomEngine<T>& random_engine)
                 {
                         return power_cosine_on_hemisphere(random_engine, normal, power);
@@ -117,8 +123,8 @@ void test_power_cosine_on_hemisphere()
                         return power_cosine_on_hemisphere_pdf<N, T>(std::cos(angle), power);
                 });
 
-        test_distribution_surface<N, T>(
-                name, SURFACE_COUNT_PER_BUCKET,
+        test_distribution_surface<N, T, RandomEngine<T>>(
+                "", SURFACE_COUNT_PER_BUCKET,
                 [&](RandomEngine<T>& random_engine)
                 {
                         return power_cosine_on_hemisphere(random_engine, normal, power);
@@ -128,8 +134,8 @@ void test_power_cosine_on_hemisphere()
                         return power_cosine_on_hemisphere_pdf<N, T>(dot(normal, v), power);
                 });
 
-        test_performance<N, T>(
-                name, PERFORMANCE_COUNT,
+        test_performance<N, T, RandomEngine<T>>(
+                PERFORMANCE_COUNT,
                 [&](RandomEngine<T>& random_engine)
                 {
                         return power_cosine_on_hemisphere(random_engine, normal, power);

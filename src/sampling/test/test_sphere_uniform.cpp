@@ -18,10 +18,13 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "../sphere_uniform.h"
 #include "distribution/distribution.h"
 
+#include <src/com/log.h>
+#include <src/com/names.h>
 #include <src/com/random/engine.h>
+#include <src/com/type/name.h>
 #include <src/test/test.h>
 
-#include <string>
+#include <random>
 
 namespace ns::sampling::test
 {
@@ -32,10 +35,13 @@ constexpr long long ANGLE_COUNT_PER_BUCKET = 1'000;
 constexpr long long SURFACE_COUNT_PER_BUCKET = 10'000;
 constexpr long long PERFORMANCE_COUNT = 10'000'000;
 
+template <typename T>
+using RandomEngine = std::conditional_t<sizeof(T) <= 4, std::mt19937, std::mt19937_64>;
+
 template <std::size_t N, typename T>
 void test_sphere_uniform()
 {
-        const std::string name = "Uniform";
+        LOG("Sphere Uniform, " + space_name(N) + ", " + type_name<T>());
 
         const Vector<N, T> normal = []()
         {
@@ -43,15 +49,15 @@ void test_sphere_uniform()
                 return uniform_on_sphere<N, T>(random_engine).normalized();
         }();
 
-        test_unit<N, T>(
-                name, UNIT_COUNT,
+        test_unit<N, T, RandomEngine<T>>(
+                UNIT_COUNT,
                 [&](RandomEngine<T>& random_engine)
                 {
                         return uniform_on_sphere<N, T>(random_engine);
                 });
 
-        test_distribution_angle<N, T>(
-                name, ANGLE_COUNT_PER_BUCKET, normal,
+        test_distribution_angle<N, T, RandomEngine<T>>(
+                "", ANGLE_COUNT_PER_BUCKET, normal,
                 [&](RandomEngine<T>& random_engine)
                 {
                         return uniform_on_sphere<N, T>(random_engine);
@@ -61,8 +67,8 @@ void test_sphere_uniform()
                         return uniform_on_sphere_pdf<N, T>();
                 });
 
-        test_distribution_surface<N, T>(
-                name, SURFACE_COUNT_PER_BUCKET,
+        test_distribution_surface<N, T, RandomEngine<T>>(
+                "", SURFACE_COUNT_PER_BUCKET,
                 [&](RandomEngine<T>& random_engine)
                 {
                         return uniform_on_sphere<N, T>(random_engine);
@@ -72,8 +78,8 @@ void test_sphere_uniform()
                         return uniform_on_sphere_pdf<N, T>();
                 });
 
-        test_performance<N, T>(
-                name, PERFORMANCE_COUNT,
+        test_performance<N, T, RandomEngine<T>>(
+                PERFORMANCE_COUNT,
                 [&](RandomEngine<T>& random_engine)
                 {
                         return uniform_on_sphere<N, T>(random_engine);
