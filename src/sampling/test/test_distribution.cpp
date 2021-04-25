@@ -18,199 +18,23 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "../ggx.h"
 #include "../sphere_cosine.h"
 #include "../sphere_uniform.h"
-#include "distribution/angle_buckets.h"
-#include "distribution/surface_buckets.h"
+#include "distribution/distribution.h"
 
 #include <src/com/constant.h>
-#include <src/com/error.h>
 #include <src/com/log.h>
-#include <src/com/names.h>
 #include <src/com/random/engine.h>
-#include <src/com/thread.h>
-#include <src/com/time.h>
-#include <src/com/type/name.h>
 #include <src/geometry/shapes/sphere_area.h>
 #include <src/numerical/optics.h>
 #include <src/test/test.h>
 
 #include <cmath>
-#include <future>
 #include <random>
 #include <string>
-#include <thread>
 
 namespace ns::sampling::test
 {
 namespace
 {
-template <typename T>
-using RandomEngine = std::conditional_t<sizeof(T) <= 4, std::mt19937, std::mt19937_64>;
-
-template <std::size_t N, typename T, typename RandomVector>
-void test_unit(const std::string& name, long long count, const RandomVector& random_vector)
-{
-        LOG(name + "\n  test unit in " + space_name(N) + ", " + to_string_digit_groups(count) + ", " + type_name<T>());
-
-        const int thread_count = hardware_concurrency();
-        const long long count_per_thread = (count + thread_count - 1) / thread_count;
-
-        const auto f = [&]()
-        {
-                RandomEngine<T> random_engine = create_engine<RandomEngine<T>>();
-                for (long long i = 0; i < count_per_thread; ++i)
-                {
-                        T v_norm = random_vector(random_engine).norm();
-                        if (!(v_norm >= T(0.999) && v_norm <= T(1.001)))
-                        {
-                                error(name + " vector is not unit " + to_string(v_norm));
-                        }
-                }
-        };
-
-        std::vector<std::future<void>> futures;
-        std::vector<std::thread> threads;
-        for (int i = 0; i < thread_count; ++i)
-        {
-                std::packaged_task<void()> task(f);
-                futures.emplace_back(task.get_future());
-                threads.emplace_back(std::move(task));
-        }
-        for (std::thread& thread : threads)
-        {
-                thread.join();
-        }
-        for (std::future<void>& future : futures)
-        {
-                future.get();
-        }
-}
-
-template <std::size_t N, typename T, typename RandomVector, typename PDF>
-void test_distribution_angle(
-        const std::string& name,
-        long long count,
-        const Vector<N, T>& normal,
-        const RandomVector& random_vector,
-        const PDF& pdf)
-{
-        if (!(count > 0))
-        {
-                return;
-        }
-
-        LOG(name + "\n  test angle distribution in " + space_name(N) + ", " + to_string_digit_groups(count) + ", "
-            + type_name<T>());
-
-        const int thread_count = hardware_concurrency();
-        const long long count_per_thread = (count + thread_count - 1) / thread_count;
-
-        const auto f = [&]()
-        {
-                AngleBuckets<N, T> buckets;
-                RandomEngine<T> random_engine = create_engine<RandomEngine<T>>();
-                for (long long i = 0; i < count_per_thread; ++i)
-                {
-                        Vector<N, T> v = random_vector(random_engine).normalized();
-                        T cosine = dot(v, normal);
-                        cosine = std::clamp(cosine, T(-1), T(1));
-                        buckets.add(std::acos(cosine));
-                }
-                return buckets;
-        };
-
-        AngleBuckets<N, T> buckets;
-
-        {
-                std::vector<std::future<AngleBuckets<N, T>>> futures;
-                std::vector<std::thread> threads;
-                for (int i = 0; i < thread_count; ++i)
-                {
-                        std::packaged_task<AngleBuckets<N, T>()> task(f);
-                        futures.emplace_back(task.get_future());
-                        threads.emplace_back(std::move(task));
-                }
-                for (std::thread& thread : threads)
-                {
-                        thread.join();
-                }
-                for (std::future<AngleBuckets<N, T>>& future : futures)
-                {
-                        buckets.merge(future.get());
-                }
-        }
-
-        buckets.compute_distribution();
-        //LOG(buckets.histogram());
-        buckets.compare_with_pdf(pdf);
-}
-
-template <std::size_t N, typename T, typename RandomVector, typename PDF>
-void test_distribution_surface(
-        const std::string& name,
-        long long count,
-        const RandomVector& random_vector,
-        const PDF& pdf)
-{
-        if (!(count > 0))
-        {
-                return;
-        }
-
-        SurfaceBuckets<N, T> buckets;
-
-        LOG(name + "\n  test surface distribution in " + space_name(N) + ", " + type_name<T>() + "\n  bucket count "
-            + to_string_digit_groups(buckets.bucket_count()) + ", ray count " + to_string_digit_groups(count));
-
-        const int thread_count = hardware_concurrency();
-        const long long count_per_thread = (count + thread_count - 1) / thread_count;
-
-        const auto f = [&]()
-        {
-                SurfaceBuckets<N, T> thread_buckets;
-                ASSERT(thread_buckets.bucket_count() == buckets.bucket_count());
-                thread_buckets.compute(count_per_thread, random_vector, pdf);
-                return thread_buckets;
-        };
-
-        {
-                std::vector<std::future<SurfaceBuckets<N, T>>> futures;
-                std::vector<std::thread> threads;
-                for (int i = 0; i < thread_count; ++i)
-                {
-                        std::packaged_task<SurfaceBuckets<N, T>()> task(f);
-                        futures.emplace_back(task.get_future());
-                        threads.emplace_back(std::move(task));
-                }
-                for (std::thread& thread : threads)
-                {
-                        thread.join();
-                }
-                for (std::future<SurfaceBuckets<N, T>>& future : futures)
-                {
-                        buckets.merge(future.get());
-                }
-        }
-
-        buckets.compare();
-}
-
-template <std::size_t N, typename T, typename RandomVector>
-void test_performance(const std::string& name, long long count, const RandomVector& random_vector)
-{
-        LOG(name + "\n  test performance in " + space_name(N) + ", " + to_string_digit_groups(count) + ", "
-            + type_name<T>());
-
-        RandomEngine<T> random_engine = create_engine<RandomEngine<T>>();
-
-        static Vector<N, T> sink;
-        TimePoint start_time = time();
-        for (long long i = 0; i < count; ++i)
-        {
-                sink = random_vector(random_engine);
-        }
-        LOG("  " + to_string_digit_groups(std::lround(count / duration_from(start_time))) + " per second");
-}
-
 template <std::size_t N, typename T>
 void test_uniform_on_sphere(
         long long unit_count,
