@@ -467,6 +467,6 @@ void test(ProgressRatio* progress)
         random_data_test(dft.get(), dimensions, progress);
 }
 
-TEST_SMALL("DFT in 2-space", test)
+TEST_SMALL("DFT, 2-Space", test)
 }
 }

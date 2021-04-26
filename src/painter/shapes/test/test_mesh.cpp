@@ -326,9 +326,9 @@ void test_mesh_6(ProgressRatio* progress)
         test_mesh<6, double>(1000, 2000, 90'000, 110'000, progress);
 }
 
-TEST_SMALL("Mesh in 3-Space", test_mesh_3)
-TEST_SMALL("Mesh in 4-Space", test_mesh_4)
-TEST_LARGE("Mesh in 5-Space", test_mesh_5)
-TEST_LARGE("Mesh in 6-Space", test_mesh_6)
+TEST_SMALL("Mesh Intersections, 3-Space", test_mesh_3)
+TEST_SMALL("Mesh Intersections, 4-Space", test_mesh_4)
+TEST_LARGE("Mesh Intersections, 5-Space", test_mesh_5)
+TEST_LARGE("Mesh Intersections, 6-Space", test_mesh_6)
 }
 }

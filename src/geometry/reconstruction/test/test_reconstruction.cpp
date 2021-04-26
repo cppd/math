@@ -289,8 +289,8 @@ void test_reconstruction_4(ProgressRatio* progress)
         test<4>(20000, 25000, progress);
 }
 
-TEST_SMALL("1-Manifold Reconstruction in 2-Space", test_reconstruction_2)
-TEST_SMALL("2-Manifold Reconstruction in 3-Space", test_reconstruction_3)
-TEST_LARGE("3-Manifold Reconstruction in 4-Space", test_reconstruction_4)
+TEST_SMALL("1-Manifold Reconstruction, 2-Space", test_reconstruction_2)
+TEST_SMALL("2-Manifold Reconstruction, 3-Space", test_reconstruction_3)
+TEST_LARGE("3-Manifold Reconstruction, 4-Space", test_reconstruction_4)
 }
 }

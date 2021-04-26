@@ -255,10 +255,10 @@ void test_5(ProgressRatio* progress)
         test<5>(1000, 2000, progress);
 }
 
-TEST_SMALL("Convex Hull in 2-Space", test_2)
-TEST_SMALL("Convex Hull in 3-Space", test_3)
-TEST_SMALL("Convex Hull in 4-Space", test_4)
-TEST_LARGE("Convex Hull in 5-Space", test_5)
+TEST_SMALL("Convex Hull, 2-Space", test_2)
+TEST_SMALL("Convex Hull, 3-Space", test_3)
+TEST_SMALL("Convex Hull, 4-Space", test_4)
+TEST_LARGE("Convex Hull, 5-Space", test_5)
 
 TEST_PERFORMANCE("Convex Hull", test_performance)
 }
