@@ -17,16 +17,15 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "support.h"
 
-#include <src/color/color.h>
 #include <src/com/error.h>
-#include <src/com/log.h>
 
 #include <QApplication>
-#include <QButtonGroup>
 #include <QDesktopWidget>
 #include <QScrollBar>
+#include <algorithm>
+#include <cmath>
+#include <cstring>
 #include <type_traits>
-#include <utility>
 
 namespace ns::gui
 {

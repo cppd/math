@@ -21,6 +21,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "../dialogs/message.h"
 
+#include <src/com/error.h>
 #include <src/com/exception.h>
 #include <src/com/type/limit.h>
 

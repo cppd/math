@@ -18,9 +18,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #pragma once
 
 #include <src/color/color.h>
-#include <src/com/error.h>
-#include <src/com/type/detect.h>
-#include <src/numerical/vec.h>
 #include <src/window/handle.h>
 
 #include <QLabel>
@@ -31,11 +28,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <QRadioButton>
 #include <QSlider>
 #include <QSplitter>
-#include <iterator>
-#include <memory>
 #include <string>
-#include <type_traits>
-#include <vector>
 
 namespace ns::gui
 {
