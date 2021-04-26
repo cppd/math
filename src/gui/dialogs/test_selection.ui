@@ -15,6 +15,9 @@
   </property>
   <layout class="QVBoxLayout" name="verticalLayout">
    <item>
+    <widget class="QLineEdit" name="lineEdit_filter"/>
+   </item>
+   <item>
     <widget class="QListWidget" name="listWidget">
      <property name="selectionMode">
       <enum>QAbstractItemView::NoSelection</enum>

@@ -21,10 +21,81 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "../com/support.h"
 
-#include <algorithm>
-
 namespace ns::gui::dialog
 {
+class TestSelectionParametersDialog::Items final
+{
+        struct Item final
+        {
+                std::string name;
+                QListWidgetItem* item;
+                QString lower_text;
+
+                Item(std::string&& name, QListWidgetItem* item)
+                        : name(std::move(name)), item(item), lower_text(item->text().toLower())
+                {
+                }
+        };
+
+        std::vector<Item> m_items;
+
+public:
+        explicit Items(std::size_t count)
+        {
+                m_items.reserve(count);
+        }
+
+        void add(std::string&& name, QListWidgetItem* item)
+        {
+                item->setCheckState(Qt::Checked);
+                m_items.emplace_back(std::move(name), item);
+        }
+
+        void check(bool checked)
+        {
+                const Qt::CheckState check_state = checked ? Qt::Checked : Qt::Unchecked;
+                for (Item& item : m_items)
+                {
+                        if (!item.item->isHidden())
+                        {
+                                item.item->setCheckState(check_state);
+                        }
+                }
+        }
+
+        void filter(const QString& text)
+        {
+                const QString s = text.simplified().toLower();
+                const QVector<QStringRef> filter = s.splitRef(' ', Qt::SkipEmptyParts);
+                for (Item& item : m_items)
+                {
+                        bool contains = true;
+                        for (const QStringRef& ref : filter)
+                        {
+                                if (!item.lower_text.contains(ref, Qt::CaseSensitive))
+                                {
+                                        contains = false;
+                                        break;
+                                }
+                        }
+                        item.item->setHidden(!contains);
+                }
+        }
+
+        std::vector<std::string> selected() const
+        {
+                std::vector<std::string> names;
+                for (const Item& item : m_items)
+                {
+                        if (!item.item->isHidden() && item.item->checkState() == Qt::Checked)
+                        {
+                                names.push_back(item.name);
+                        }
+                }
+                return names;
+        }
+};
+
 TestSelectionParametersDialog::TestSelectionParametersDialog(
         std::vector<std::string> test_names,
         std::optional<TestSelectionParameters>& parameters)
@@ -35,34 +106,35 @@ TestSelectionParametersDialog::TestSelectionParametersDialog(
 
         std::sort(test_names.begin(), test_names.end());
 
-        for (const std::string& name : test_names)
+        m_items = std::make_unique<Items>(test_names.size());
+
+        for (std::string& name : test_names)
         {
                 std::unique_ptr<QListWidgetItem> item = std::make_unique<QListWidgetItem>(QString::fromStdString(name));
-                item->setCheckState(Qt::Checked);
+                m_items->add(std::move(name), item.get());
                 ui.listWidget->addItem(item.release());
         }
 
         connect(ui.pushButton_set_all, &QPushButton::clicked, this,
                 [this]()
                 {
-                        set_all(true);
+                        m_items->check(true);
                 });
+
         connect(ui.pushButton_clear_all, &QPushButton::clicked, this,
                 [this]()
                 {
-                        set_all(false);
+                        m_items->check(false);
+                });
+
+        connect(ui.lineEdit_filter, &QLineEdit::textChanged, this,
+                [this](const QString& text)
+                {
+                        m_items->filter(text);
                 });
 }
 
-void TestSelectionParametersDialog::set_all(bool checked)
-{
-        const Qt::CheckState check_state = checked ? Qt::Checked : Qt::Unchecked;
-
-        for (int i = 0, count = ui.listWidget->count(); i < count; ++i)
-        {
-                ui.listWidget->item(i)->setCheckState(check_state);
-        }
-}
+TestSelectionParametersDialog::~TestSelectionParametersDialog() = default;
 
 void TestSelectionParametersDialog::done(int r)
 {
@@ -72,15 +144,7 @@ void TestSelectionParametersDialog::done(int r)
                 return;
         }
 
-        std::vector<std::string> test_names;
-        for (int i = 0, count = ui.listWidget->count(); i < count; ++i)
-        {
-                const QListWidgetItem* item = ui.listWidget->item(i);
-                if (!item->isHidden() && item->checkState() == Qt::Checked)
-                {
-                        test_names.push_back(item->text().toStdString());
-                }
-        }
+        std::vector<std::string> test_names = m_items->selected();
 
         if (test_names.empty())
         {

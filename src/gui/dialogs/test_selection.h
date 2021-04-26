@@ -19,6 +19,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "ui_test_selection.h"
 
+#include <memory>
+#include <optional>
 #include <string>
 #include <vector>
 
@@ -35,17 +37,20 @@ class TestSelectionParametersDialog final : public QDialog
 private:
         Ui::TestSelectionParametersDialog ui;
 
+        class Items;
+        std::unique_ptr<Items> m_items;
+
         std::optional<TestSelectionParameters>& m_parameters;
 
         TestSelectionParametersDialog(
                 std::vector<std::string> test_names,
                 std::optional<TestSelectionParameters>& parameters);
 
-        void set_all(bool checked);
-
         void done(int r) override;
 
 public:
+        ~TestSelectionParametersDialog() override;
+
         [[nodiscard]] static std::optional<TestSelectionParameters> show(std::vector<std::string> test_names);
 };
 }
