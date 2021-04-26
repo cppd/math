@@ -153,7 +153,7 @@ void test_geometry_files(
 }
 
 template <std::size_t N>
-void test_geometry_files()
+void test()
 {
         LOG("Test geometry files, " + space_name(N));
 
@@ -174,23 +174,8 @@ void test_geometry_files()
         LOG("Test passed");
 }
 
-void test_3()
-{
-        test_geometry_files<3>();
-}
-
-void test_4()
-{
-        test_geometry_files<4>();
-}
-
-void test_5()
-{
-        test_geometry_files<5>();
-}
-
-TEST_SMALL("Mesh Files 3-Space", test_3)
-TEST_SMALL("Mesh Files 4-Space", test_4)
-TEST_SMALL("Mesh Files 5-Space", test_5)
+TEST_SMALL("Mesh Files 3-Space", test<3>)
+TEST_SMALL("Mesh Files 4-Space", test<4>)
+TEST_SMALL("Mesh Files 5-Space", test<5>)
 }
 }
