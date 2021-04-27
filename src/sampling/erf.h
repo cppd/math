@@ -18,6 +18,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #pragma once
 
 #include <src/com/constant.h>
+#include <src/com/math.h>
 
 #include <cmath>
 
@@ -32,10 +33,10 @@ T erf_inv(T arg)
         static constexpr T k = 2 / (PI<long double> * a);
         static constexpr T a_r = 1 / a;
 
-        T v = std::log((1 - arg) * (1 + arg));
+        T v = std::log(1 - square(arg));
         T v1 = k + v / 2;
         T v2 = v * a_r;
-        T r = std::sqrt(std::sqrt(v1 * v1 - v2) - v1);
+        T r = std::sqrt(std::sqrt(square(v1) - v2) - v1);
         return std::copysign(r, arg);
 }
 }

@@ -67,7 +67,7 @@ Vector<3, T> ggx_vn(RandomEngine& random_engine, const Vector<3, T>& ve, T alpha
                 return vector;
         }();
         T s = T(0.5) * (T(1) + vh[2]);
-        t[1] = interpolation(std::sqrt((1 - t[0]) * (1 + t[0])), t[1], s);
+        t[1] = interpolation(std::sqrt(1 - square(t[0])), t[1], s);
 
         // Section 4.3: reprojection onto hemisphere
         Vector<3, T> nh = [&]

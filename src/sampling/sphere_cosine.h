@@ -50,8 +50,7 @@ Vector<N, T> cosine_on_hemisphere(RandomEngine& random_engine, const Vector<N, T
 
         uniform_in_sphere(random_engine, v, v_length_square);
 
-        T v_length = std::sqrt(v_length_square);
-        T n = std::sqrt((1 - v_length) * (1 + v_length));
+        T n = std::sqrt(1 - v_length_square);
 
         std::array<Vector<N, T>, N - 1> basis = numerical::orthogonal_complement_of_unit_vector(normal);
 
@@ -140,7 +139,7 @@ public:
                 }
 
                 T n = cos_angle;
-                T length = std::sqrt((1 - n) * (1 + n));
+                T length = std::sqrt(1 - square(n));
                 Vector<N - 1, T> v = length * uniform_on_sphere<N - 1, T>(random_engine);
 
                 std::array<Vector<N, T>, N - 1> basis = numerical::orthogonal_complement_of_unit_vector(normal);
@@ -202,7 +201,7 @@ Vector<3, T> power_cosine_on_hemisphere(RandomEngine& random_engine, const Vecto
         uniform_in_sphere(random_engine, v, v_length_square);
 
         T n = std::pow(v_length_square, 1 / (1 + power));
-        T new_length_squared = (1 - n) * (1 + n);
+        T new_length_squared = 1 - square(n);
         v *= std::sqrt(new_length_squared / v_length_square);
 
         std::array<Vector<N, T>, N - 1> basis = numerical::orthogonal_complement_of_unit_vector(normal);
