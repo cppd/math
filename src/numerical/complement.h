@@ -28,6 +28,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "orthogonal.h"
 #include "vec.h"
 
+#include <src/com/error.h>
+
 #include <array>
 #include <utility>
 
@@ -42,11 +44,13 @@ constexpr Vector<sizeof...(I), T> make_vector_one_value(std::integer_sequence<in
 
         return Vector<sizeof...(I), T>((I == ValueIndex ? v : 0)...);
 }
+
 template <std::size_t N, typename T, std::size_t ValueIndex>
 constexpr Vector<N, T> make_vector_one_value(const T& v)
 {
         return make_vector_one_value<ValueIndex>(std::make_integer_sequence<int, N>(), v);
 }
+
 template <typename T, int... I>
 constexpr std::array<Vector<sizeof...(I), T>, sizeof...(I)> make_array_of_vectors_one_value(
         std::integer_sequence<int, I...>,
@@ -66,16 +70,11 @@ static_assert(orthonormal_set<4, double>[3] == Vector<4, double>(0, 0, 0, 1));
 
 template <typename T>
 inline constexpr T LIMIT = static_cast<T>(0.1);
-}
-
-// N - 1 ортогональных единичных вектора, ортогональных заданному единичному вектору
 
 template <std::size_t N, typename T>
-std::array<Vector<N, T>, N - 1> orthogonal_complement_of_unit_vector_by_subspace(const Vector<N, T>& unit_vector)
+std::array<Vector<N, T>, N - 1> orthogonal_complement_by_subspace(const Vector<N, T>& unit_vector)
 {
         static_assert(N > 1);
-
-        namespace impl = complement_implementation;
 
         if constexpr (N == 2)
         {
@@ -85,7 +84,7 @@ std::array<Vector<N, T>, N - 1> orthogonal_complement_of_unit_vector_by_subspace
         if constexpr (N == 3)
         {
                 Vector<3, T> non_collinear_vector =
-                        std::abs(unit_vector[0]) > impl::LIMIT<T> ? Vector<3, T>(0, 1, 0) : Vector<3, T>(1, 0, 0);
+                        std::abs(unit_vector[0]) > LIMIT<T> ? Vector<3, T>(0, 1, 0) : Vector<3, T>(1, 0, 0);
                 Vector<3, T> e0 = cross(unit_vector, non_collinear_vector).normalized();
                 Vector<3, T> e1 = cross(unit_vector, e0);
                 return {e0, e1};
@@ -97,7 +96,7 @@ std::array<Vector<N, T>, N - 1> orthogonal_complement_of_unit_vector_by_subspace
         unsigned exclude_axis = 0;
         for (; exclude_axis < N - 2; ++exclude_axis)
         {
-                if (std::abs(unit_vector[exclude_axis]) > impl::LIMIT<T>)
+                if (std::abs(unit_vector[exclude_axis]) > LIMIT<T>)
                 {
                         break;
                 }
@@ -112,7 +111,7 @@ std::array<Vector<N, T>, N - 1> orthogonal_complement_of_unit_vector_by_subspace
         {
                 if (i != exclude_axis)
                 {
-                        subspace_basis[num++] = impl::orthonormal_set<N, T>[i];
+                        subspace_basis[num++] = orthonormal_set<N, T>[i];
                 }
         }
 
@@ -128,11 +127,9 @@ std::array<Vector<N, T>, N - 1> orthogonal_complement_of_unit_vector_by_subspace
 }
 
 template <std::size_t N, typename T>
-std::array<Vector<N, T>, N - 1> orthogonal_complement_of_unit_vector_by_gram_schmidt(const Vector<N, T>& unit_vector)
+std::array<Vector<N, T>, N - 1> orthogonal_complement_by_gram_schmidt(const Vector<N, T>& unit_vector)
 {
         static_assert(N > 1);
-
-        namespace impl = complement_implementation;
 
         if constexpr (N == 2)
         {
@@ -145,7 +142,7 @@ std::array<Vector<N, T>, N - 1> orthogonal_complement_of_unit_vector_by_gram_sch
         unsigned exclude_axis = 0;
         for (; exclude_axis < N - 1; ++exclude_axis)
         {
-                if (std::abs(unit_vector[exclude_axis]) > impl::LIMIT<T>)
+                if (std::abs(unit_vector[exclude_axis]) > LIMIT<T>)
                 {
                         break;
                 }
@@ -159,7 +156,7 @@ std::array<Vector<N, T>, N - 1> orthogonal_complement_of_unit_vector_by_gram_sch
         {
                 if (i != exclude_axis)
                 {
-                        basis[num++] = impl::orthonormal_set<N, T>[i];
+                        basis[num++] = orthonormal_set<N, T>[i];
                 }
         }
 
@@ -187,17 +184,23 @@ std::array<Vector<N, T>, N - 1> orthogonal_complement_of_unit_vector_by_gram_sch
 
         return res;
 }
+}
 
+// orthonormal orthogonal complement
 template <std::size_t N, typename T>
 std::array<Vector<N, T>, N - 1> orthogonal_complement_of_unit_vector(const Vector<N, T>& unit_vector)
 {
+        ASSERT(unit_vector.is_unit());
+
+        namespace impl = complement_implementation;
+
         if constexpr (N <= 4)
         {
-                return orthogonal_complement_of_unit_vector_by_subspace(unit_vector);
+                return impl::orthogonal_complement_by_subspace(unit_vector);
         }
         if constexpr (N >= 5)
         {
-                return orthogonal_complement_of_unit_vector_by_gram_schmidt(unit_vector);
+                return impl::orthogonal_complement_by_gram_schmidt(unit_vector);
         }
 }
 }

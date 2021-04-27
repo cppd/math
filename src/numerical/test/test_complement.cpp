@@ -31,7 +31,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <random>
 
-namespace ns::numerical
+namespace ns::numerical::complement_implementation
 {
 namespace
 {
@@ -78,11 +78,14 @@ std::vector<std::array<Vector<N, T>, N - 1>> complement_vectors(const std::vecto
 
         for (const Vector<N, T>& unit_vector : vectors)
         {
-                std::array<Vector<N, T>, N - 1> complement =
-                        GramSchmidt ? orthogonal_complement_of_unit_vector_by_gram_schmidt(unit_vector)
-                                    : orthogonal_complement_of_unit_vector_by_subspace(unit_vector);
-
-                res.push_back(complement);
+                if (GramSchmidt)
+                {
+                        res.push_back(orthogonal_complement_by_gram_schmidt(unit_vector));
+                }
+                else
+                {
+                        res.push_back(orthogonal_complement_by_subspace(unit_vector));
+                }
         }
 
         LOG("Time = " + to_string_fixed(duration_from(start_time), 5) + " seconds");
@@ -98,54 +101,54 @@ void test_complement(int count)
         LOG("Test complement in " + space_name(N) + ", " + to_string_digit_groups(count) + " " + type_name<T>() + ": "
             + (GramSchmidt ? "Gram-Schmidt" : "Subspace"));
 
-        std::vector<Vector<N, T>> vectors = random_vectors<N, T>(count);
+        const std::vector<Vector<N, T>> vectors = random_vectors<N, T>(count);
 
-        std::vector<std::array<Vector<N, T>, N - 1>> complements = complement_vectors<GramSchmidt>(vectors);
+        const std::vector<std::array<Vector<N, T>, N - 1>> complements = complement_vectors<GramSchmidt>(vectors);
 
         ASSERT(vectors.size() == complements.size());
 
-        for (unsigned num = 0; num < vectors.size(); ++num)
+        for (std::size_t num = 0; num < vectors.size(); ++num)
         {
                 const Vector<N, T>& unit_vector = vectors[num];
                 const std::array<Vector<N, T>, N - 1>& complement = complements[num];
 
                 if (!unit_vector.is_unit())
                 {
-                        error("Not unit vector " + to_string(unit_vector));
+                        error("Not unit input vector " + to_string(unit_vector));
                 }
 
                 for (const Vector<N, T>& v : complement)
                 {
                         if (!is_finite(v))
                         {
-                                error("Not finite basis vector " + to_string(v));
-                        }
-
-                        if (!vectors_are_orthogonal(unit_vector, v))
-                        {
-                                error("Orthogonal complement basis is not orthogonal to the input vector ("
-                                      + to_string(unit_vector) + ", " + to_string(v) + ")");
+                                error("Not finite complement vector " + to_string(v));
                         }
 
                         if (!v.is_unit())
                         {
-                                error("Not orthonormal basis " + to_string(v));
+                                error("Not unit complement vector " + to_string(v));
+                        }
+
+                        if (!vectors_are_orthogonal(unit_vector, v))
+                        {
+                                error("Complement vector " + to_string(v) + " is not orthogonal to the input vector "
+                                      + to_string(unit_vector));
                         }
                 }
 
-                for (unsigned i = 0; i < complement.size(); ++i)
+                for (std::size_t i = 0; i < complement.size(); ++i)
                 {
-                        for (unsigned j = i + 1; j < complement.size(); ++j)
+                        for (std::size_t j = i + 1; j < complement.size(); ++j)
                         {
                                 if (!vectors_are_orthogonal(complement[i], complement[j]))
                                 {
-                                        error("The basis is not orthogonal (" + to_string(complement[i]) + ", "
-                                              + to_string(complement[j]) + ")");
+                                        error("Complement vectors are not orthogonal (" + to_string(complement[i])
+                                              + ", " + to_string(complement[j]) + ")");
                                 }
                         }
                 }
 
-                Vector<N, T> unit_vector_reconstructed = ortho_nn(complement); // без normalize
+                const Vector<N, T> unit_vector_reconstructed = ortho_nn(complement); // без normalize
 
                 if (!is_finite(unit_vector_reconstructed))
                 {
@@ -159,8 +162,8 @@ void test_complement(int count)
 
                 if (!vectors_are_parallel(unit_vector, unit_vector_reconstructed))
                 {
-                        error("Orthogonal complement error (" + to_string(unit_vector) + ", "
-                              + to_string(unit_vector_reconstructed) + ")");
+                        error("Reconstructed vector " + to_string(unit_vector_reconstructed)
+                              + " is not parallel to input vector " + to_string(unit_vector));
                 }
         }
 
