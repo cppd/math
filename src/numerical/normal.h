@@ -16,11 +16,11 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
 /*
- Jakob Andreas Bærentzen, Jens Gravesen, François Anton, Henrik Aanæs.
- Guide to Computational Geometry Processing. Foundations, Algorithms, and Methods.
- Springer-Verlag London, 2012.
+Jakob Andreas Bærentzen, Jens Gravesen, François Anton, Henrik Aanæs.
+Guide to Computational Geometry Processing. Foundations, Algorithms, and Methods.
+Springer-Verlag London, 2012.
 
- 17.1.1 Computing Point Normals.
+17.1.1 Computing Point Normals
 */
 
 #pragma once

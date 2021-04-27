@@ -16,19 +16,15 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
 /*
-По книге
-
 Aaftab Munshi, Benedict R. Gaster, Timothy G. Mattson, James Fung, Dan Ginsburg.
 OpenCL Programming Guide.
 Addison-Wesley, 2011.
-Chapter 19. Optical Flow.
-
-Дополнительная информация
+19. Optical Flow
 
 Salil Kapur, Nisarg Thakkar.
 Mastering OpenCV Android Application Programming.
 Packt Publishing, 2015.
-Chapter 5. Tracking Objects in Videos.
+5. Tracking Objects in Videos
 */
 
 #include "compute.h"

@@ -16,27 +16,27 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
 /*
- Mike Bailey, Steve Cunningham.
- Graphics Shaders. Theory and Practice. Second Edition.
- CRC Press, 2012.
- 15. Using Shaders for Scientific Visualization.
+Mike Bailey, Steve Cunningham.
+Graphics Shaders. Theory and Practice. Second Edition.
+CRC Press, 2012.
+15. Using Shaders for Scientific Visualization
 
- Tomas Akenine-Möller, Eric Haines, Naty Hoffman,
- Angelo Pesce, Michal Iwanicki, Sébastien Hillaire.
- Real-Time Rendering. Fourth Edition.
- CRC Press, 2018.
- 5. Shading Basics.
- 14. Volumetric and Translucency Rendering.
+Tomas Akenine-Möller, Eric Haines, Naty Hoffman,
+Angelo Pesce, Michal Iwanicki, Sébastien Hillaire.
+Real-Time Rendering. Fourth Edition.
+CRC Press, 2018.
+5. Shading Basics
+14. Volumetric and Translucency Rendering
 
- Klaus Engel, Markus Hadwiger, Joe M. Kniss,
- Christof Rezk-Salama, Daniel Weiskopf.
- Real-Time Volume Graphics.
- A K Peters, Ltd, 2006.
+Klaus Engel, Markus Hadwiger, Joe M. Kniss,
+Christof Rezk-Salama, Daniel Weiskopf.
+Real-Time Volume Graphics.
+A K Peters, Ltd, 2006.
 
- Thomas H. Cormen, Charles E. Leiserson, Ronald L. Rivest, Clifford Stein.
- Introduction to Algorithms. Third Edition.
- The MIT Press, 2009.
- 6. Heapsort.
+Thomas H. Cormen, Charles E. Leiserson, Ronald L. Rivest, Clifford Stein.
+Introduction to Algorithms. Third Edition.
+The MIT Press, 2009.
+6. Heapsort
 */
 
 #extension GL_GOOGLE_include_directive : enable

@@ -16,15 +16,13 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
 /*
-По книге
-
 Eleanor Chu, Alan George.
 INSIDE the FFT BLACK BOX. Serial and Parallel Fast Fourier Transform Algorithms.
 CRC Press LLC, 2000.
 
-Chapter 13: FFTs for Arbitrary N.
+13. FFTs for Arbitrary N
 
-В этой книге в главе 13 есть ошибки при вычислении H2
+В главе 13 есть ошибки при вычислении H2
 
   В примере 13.4.
     Написано:

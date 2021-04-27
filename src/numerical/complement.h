@@ -16,11 +16,11 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
 /*
- Howard Anton, Chris Rorres.
- Elementary Linear Algebra. 11th Edition.
- Wiley, 2014.
+Howard Anton, Chris Rorres.
+Elementary Linear Algebra. 11th Edition.
+Wiley, 2014.
 
- Раздел 6.3 Gram–Schmidt Process; QR-Decomposition.
+6.3 Gram–Schmidt Process; QR-Decomposition
 */
 
 #pragma once

@@ -16,12 +16,12 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
 /*
- Sasho Kalajdzievski.
- An Illustrated Introduction to Topology and Homotopy.
- CRC Press, 2015.
+Sasho Kalajdzievski.
+An Illustrated Introduction to Topology and Homotopy.
+CRC Press, 2015.
 
- 5.1 Finite Products of Spaces.
- 14.4 Regarding Classification of CW-Complexes and Higher Dimensional Manifolds.
+5.1 Finite Products of Spaces
+14.4 Regarding Classification of CW-Complexes and Higher Dimensional Manifolds
 */
 
 #pragma once

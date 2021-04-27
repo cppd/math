@@ -16,18 +16,22 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
 /*
- Matt Pharr, Wenzel Jakob, Greg Humphreys.
- Physically Based Rendering. From theory to implementation. Third edition.
- Elsevier, 2017.
- 13.6 2D Sampling with multidimensional transformations.
+Matt Pharr, Wenzel Jakob, Greg Humphreys.
+Physically Based Rendering. From theory to implementation. Third edition.
+Elsevier, 2017.
 
- Donald Knuth.
- The Art of Computer Programming. Second edition.
- Addison-Wesley, 1981.
- Volume 2. Seminumerical Algorithms.
- 3.4.1. Numerical Distributions.
- E. Other continuous distributions.
- (6) Random point on n-dimensional sphere with radius one.
+13.6 2D Sampling with multidimensional transformations
+*/
+
+/*
+Donald Knuth.
+The Art of Computer Programming. Second edition.
+Addison-Wesley, 1981.
+
+Volume 2. Seminumerical Algorithms
+3.4.1. Numerical Distributions
+E. Other continuous distributions
+(6) Random point on n-dimensional sphere with radius one
 */
 
 #pragma once

@@ -16,12 +16,12 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
 /*
- Jaan Kiusalaas.
- Numerical Methods in Engineering with Python 3.
- Cambridge University Press, 2013.
+Jaan Kiusalaas.
+Numerical Methods in Engineering with Python 3.
+Cambridge University Press, 2013.
 
- 9 Symmetric Matrix Eigenvalue Problems.
- 9.2 Jacobi Method.
+9 Symmetric Matrix Eigenvalue Problems
+9.2 Jacobi Method
 */
 
 #pragma once

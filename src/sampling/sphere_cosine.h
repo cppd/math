@@ -16,11 +16,12 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
 /*
- Matt Pharr, Wenzel Jakob, Greg Humphreys.
- Physically Based Rendering. From theory to implementation. Third edition.
- Elsevier, 2017.
- 13.3 Sampling random variables
- 13.6 2D Sampling with multidimensional transformations.
+Matt Pharr, Wenzel Jakob, Greg Humphreys.
+Physically Based Rendering. From theory to implementation. Third edition.
+Elsevier, 2017.
+
+13.3 Sampling random variables
+13.6 2D Sampling with multidimensional transformations
 */
 
 #pragma once
@@ -65,27 +66,27 @@ Vector<N, T> cosine_on_hemisphere(RandomEngine& random_engine, const Vector<N, T
 }
 
 /*
- angle = ∠(vector, normal)
- PDF = cos(angle)^n * sin(angle)^p
- n >= 1
- p = N-2 >= 1
- 0 <= angle <= PI/2
+angle = ∠(vector, normal)
+PDF = cos(angle)^n * sin(angle)^p
+n >= 1
+p = N-2 >= 1
+0 <= angle <= PI/2
 
- PDF'(x) = 0
- x = atan(sqrt((p/n))
+PDF'(x) = 0
+x = atan(sqrt((p/n))
 
- The rejection method
+The rejection method
 
- mean=ArcTan[Sqrt[p/n]];
- deviation=1/Sqrt[(n+p)*Sqrt[2]];
- c=(deviation*Sqrt[2*Pi])*(Cos[mean]^n*Sin[mean]^p);
+mean=ArcTan[Sqrt[p/n]];
+deviation=1/Sqrt[(n+p)*Sqrt[2]];
+c=(deviation*Sqrt[2*Pi])*(Cos[mean]^n*Sin[mean]^p);
 
- PDF <= c * PDF(normal_distribution(mean, deviation))
- n = 100, p = 2, efficiency ≈ 80%
+PDF <= c * PDF(normal_distribution(mean, deviation))
+n = 100, p = 2, efficiency ≈ 80%
 
- Plot[{Cos[x]^n*Sin[x]^p,c*PDF[NormalDistribution[mean,deviation],x]},
-   {x,-Pi/8,Pi/2},Filling->Axis,PlotRange->Full,PlotLegends->"Expressions"]
- N[Integrate[Cos[x]^n*Sin[x]^p/c,{x,0,Pi/2}]]
+Plot[{Cos[x]^n*Sin[x]^p,c*PDF[NormalDistribution[mean,deviation],x]},
+  {x,-Pi/8,Pi/2},Filling->Axis,PlotRange->Full,PlotLegends->"Expressions"]
+N[Integrate[Cos[x]^n*Sin[x]^p/c,{x,0,Pi/2}]]
 */
 template <std::size_t N, typename T>
 class PowerCosineOnHemisphere
@@ -170,25 +171,25 @@ Vector<N, T> power_cosine_on_hemisphere(RandomEngine& random_engine, const Vecto
 }
 
 /*
- 3-space only
+3-space only
 
- angle = ∠(vector, normal)
- PDF = cos(angle)^n * sin(angle)
- 0 <= angle <= PI/2
+angle = ∠(vector, normal)
+PDF = cos(angle)^n * sin(angle)
+0 <= angle <= PI/2
 
- d = Assuming[n >= 0,
-   ProbabilityDistribution[(Cos[x]^n) * Sin[x], {x, 0, Pi/2}, Method -> "Normalize"]];
- PDF[d, x]
- CDF[d, x]
+d = Assuming[n >= 0,
+  ProbabilityDistribution[(Cos[x]^n) * Sin[x], {x, 0, Pi/2}, Method -> "Normalize"]];
+PDF[d, x]
+CDF[d, x]
 
- CDF = 1 - cos(angle)^(1 + n)
- Inverse CDF = acos((1 - CDF)^(1 / (1 + n)))
- Inverse CDF = acos(x^(1 / (1 + n)))
- Projection on normal = cos(acos(x^(1 / (1 + n))))
- Projection on normal = x^(1 / (1 + n))
+CDF = 1 - cos(angle)^(1 + n)
+Inverse CDF = acos((1 - CDF)^(1 / (1 + n)))
+Inverse CDF = acos(x^(1 / (1 + n)))
+Projection on normal = cos(acos(x^(1 / (1 + n))))
+Projection on normal = x^(1 / (1 + n))
 
- uniform x = length_of_random_vector_in_2_sphere ^ 2
- Projection on normal = squared_length_of_random_vector_in_2_sphere ^ (1 / (1 + n))
+uniform x = length_of_random_vector_in_2_sphere ^ 2
+Projection on normal = squared_length_of_random_vector_in_2_sphere ^ (1 / (1 + n))
 */
 template <typename T, typename RandomEngine>
 Vector<3, T> power_cosine_on_hemisphere(RandomEngine& random_engine, const Vector<3, T>& normal, T power)

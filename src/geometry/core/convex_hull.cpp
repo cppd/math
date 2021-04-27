@@ -16,8 +16,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
 /*
-В частности, по книгам
-
 Satyan L. Devadoss, Joseph O’Rourke.
 Discrete and computational geometry.
 Princeton University Press, 2011.

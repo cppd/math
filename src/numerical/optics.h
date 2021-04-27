@@ -16,11 +16,11 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
 /*
- Samuel R. Buss.
- 3D Computer Graphics. A Mathematical Introduction with OpenGL.
- Cambridge University Press, 2003.
+Samuel R. Buss.
+3D Computer Graphics. A Mathematical Introduction with OpenGL.
+Cambridge University Press, 2003.
 
- The OpenGL® Shading Language.
+The OpenGL® Shading Language.
 */
 
 #pragma once

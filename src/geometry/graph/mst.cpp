@@ -16,15 +16,12 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
 /*
-Минимальное остовное дерево по алгоритму Крускала (Kruskal’s MST algorithm).
-
-По книге
-
 Robert Sedgewick, Kevin Wayne.
 Algorithms. Fourth edition.
 Pearson Education, 2011.
 
-4.3 Minimum Spanning Trees.
+4.3 Minimum Spanning Trees
+Kruskal’s algorithm
 */
 
 #include "mst.h"

@@ -16,11 +16,9 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
 /*
- Формулы имеются в книге
-
- Samuel R. Buss.
- 3D Computer Graphics. A Mathematical Introduction with OpenGL.
- Cambridge University Press, 2003.
+Samuel R. Buss.
+3D Computer Graphics. A Mathematical Introduction with OpenGL.
+Cambridge University Press, 2003.
 */
 
 #pragma once

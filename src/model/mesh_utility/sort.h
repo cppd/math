@@ -15,6 +15,15 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
+/*
+Robert Sedgewick, Kevin Wayne.
+Algorithms. Fourth edition.
+Pearson Education, 2011.
+
+5.1 String Sorts
+Key-indexed counting
+*/
+
 #pragma once
 
 #include "../mesh.h"
@@ -39,12 +48,6 @@ void sort_facets_by_material(
                 {
                         return facet.material < static_cast<int>(mesh.materials.size());
                 }));
-
-        // Robert Sedgewick, Kevin Wayne.
-        // Algorithms. Fourth edition.
-        // Pearson Education, 2011.
-        // 5.1 String Sorts
-        // Key-indexed counting
 
         // Для граней без материала используется дополнительный материал в конце
 

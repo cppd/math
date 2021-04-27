@@ -16,29 +16,29 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
 /*
- Tomas Akenine-Möller, Eric Haines, Naty Hoffman,
- Angelo Pesce, Michal Iwanicki, Sébastien Hillaire.
- Real-Time Rendering. Fourth Edition.
- CRC Press, 2018.
+Tomas Akenine-Möller, Eric Haines, Naty Hoffman,
+Angelo Pesce, Michal Iwanicki, Sébastien Hillaire.
+Real-Time Rendering. Fourth Edition.
+CRC Press, 2018.
 
- 9.5 Fresnel Reflectance.
- 9.6 Microgeometry.
- 9.7 Microfacet Theory.
- 9.8 BRDF Models for Surface Reflection.
- 9.9 BRDF Models for Subsurface Scattering.
+9.5 Fresnel Reflectance
+9.6 Microgeometry
+9.7 Microfacet Theory
+9.8 BRDF Models for Surface Reflection
+9.9 BRDF Models for Subsurface Scattering
 
-          F(h, l) G2(l, v, h) D(h)
- f spec = ------------------------   (9.34)
-             4 |n · l| |n · v|
+         F(h, l) G2(l, v, h) D(h)
+f spec = ------------------------   (9.34)
+            4 |n · l| |n · v|
 */
 
 /*
- Matt Pharr, Wenzel Jakob, Greg Humphreys.
- Physically Based Rendering. From theory to implementation. Third edition.
- Elsevier, 2017.
+Matt Pharr, Wenzel Jakob, Greg Humphreys.
+Physically Based Rendering. From theory to implementation. Third edition.
+Elsevier, 2017.
 
- 13.10 Importance sampling
- 14.1.2 FresnelBlend
+13.10 Importance sampling
+14.1.2 FresnelBlend
 */
 
 #pragma once

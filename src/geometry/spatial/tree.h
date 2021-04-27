@@ -16,11 +16,11 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
 /*
- R. Stuart Ferguson.
- Practical Algorithms For 3D Computer Graphics, Second Edition.
- CRC Press, 2014.
+R. Stuart Ferguson.
+Practical Algorithms For 3D Computer Graphics, Second Edition.
+CRC Press, 2014.
 
- Раздел 5.3.4 Octree decomposition.
+5.3.4 Octree decomposition
 */
 
 #pragma once

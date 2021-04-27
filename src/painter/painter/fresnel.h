@@ -16,11 +16,11 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
 /*
- Matt Pharr, Wenzel Jakob, Greg Humphreys.
- Physically Based Rendering. From theory to implementation. Third edition.
- Elsevier, 2017.
+Matt Pharr, Wenzel Jakob, Greg Humphreys.
+Physically Based Rendering. From theory to implementation. Third edition.
+Elsevier, 2017.
 
- 8.2.1 Fresnel reflectance.
+8.2.1 Fresnel reflectance
 */
 
 #pragma once

@@ -15,6 +15,15 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
+/*
+Richard G. Lyons.
+Understanding Digital Signal Processing. Third Edition.
+Pearson Education, Inc. 2011.
+
+5.3.2 Windows Used in FIR Filter Design
+Blackman window function
+*/
+
 #include "frequency.h"
 
 #include "constant.h"
@@ -26,12 +35,6 @@ namespace ns
 {
 namespace
 {
-// Richard G. Lyons.
-// Understanding Digital Signal Processing. Third Edition.
-// Pearson Education, Inc. 2011.
-//
-// 5.3.2 Windows Used in FIR Filter Design.
-// Blackman window function.
 std::vector<double> lowpass_filter_window_function(std::size_t tap_count)
 {
         if (tap_count < 1)

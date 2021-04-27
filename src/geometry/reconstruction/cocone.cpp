@@ -16,13 +16,12 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
 /*
-Алгоритмы восстановления поверхностей Cocone и BoundCocone.
-
-По книге
-
 Tamal K. Dey.
 Curve and Surface Reconstruction: Algorithms with Mathematical Analysis.
 Cambridge University Press, 2007.
+
+4 Surface Reconstruction
+5 Undersampling
 */
 
 #include "cocone.h"

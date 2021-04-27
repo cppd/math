@@ -16,22 +16,20 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
 /*
- Tomas Akenine-Möller, Eric Haines, Naty Hoffman,
- Angelo Pesce, Michal Iwanicki, Sébastien Hillaire.
- Real-Time Rendering. Fourth Edition.
- CRC Press, 2018.
+Tomas Akenine-Möller, Eric Haines, Naty Hoffman,
+Angelo Pesce, Michal Iwanicki, Sébastien Hillaire.
+Real-Time Rendering. Fourth Edition.
+CRC Press, 2018.
 
- 9.5 Fresnel Reflectance.
- 9.6 Microgeometry.
- 9.7 Microfacet Theory.
- 9.8 BRDF Models for Surface Reflection.
- 9.9 BRDF Models for Subsurface Scattering.
-*/
+9.5 Fresnel Reflectance
+9.6 Microgeometry
+9.7 Microfacet Theory
+9.8 BRDF Models for Surface Reflection
+9.9 BRDF Models for Subsurface Scattering
 
-/*
-          F(h, l) G2(l, v, h) D(h)
- f spec = ------------------------   (9.34)
-             4 |n · l| |n · v|
+         F(h, l) G2(l, v, h) D(h)
+f spec = ------------------------   (9.34)
+            4 |n · l| |n · v|
 */
 
 const float PI = 3.1415926535897932384626433832795028841971693993751;

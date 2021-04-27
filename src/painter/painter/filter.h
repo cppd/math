@@ -16,11 +16,11 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
 /*
- Matt Pharr, Wenzel Jakob, Greg Humphreys.
- Physically Based Rendering. From theory to implementation. Third edition.
- Elsevier, 2017.
+Matt Pharr, Wenzel Jakob, Greg Humphreys.
+Physically Based Rendering. From theory to implementation. Third edition.
+Elsevier, 2017.
 
- 7.8.1 Filter functions
+7.8.1 Filter functions
 */
 
 #pragma once

@@ -16,11 +16,11 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
 /*
- Thomas H. Cormen, Charles E. Leiserson, Ronald L. Rivest, Clifford Stein.
- Introduction to Algorithms. Third Edition.
- The MIT Press, 2009.
+Thomas H. Cormen, Charles E. Leiserson, Ronald L. Rivest, Clifford Stein.
+Introduction to Algorithms. Third Edition.
+The MIT Press, 2009.
 
- Глава 29 Linear Programming.
+29. Linear Programming
 */
 
 #pragma once
