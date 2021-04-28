@@ -21,7 +21,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "hyperplane.h"
 
 #include <src/com/error.h>
-#include <src/numerical/orthogonal.h>
+#include <src/numerical/complement.h>
 #include <src/numerical/ray.h>
 #include <src/numerical/vec.h>
 

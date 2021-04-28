@@ -25,17 +25,95 @@ Wiley, 2014.
 
 #pragma once
 
+#include "determinant.h"
+#include "difference.h"
 #include "identity.h"
-#include "orthogonal.h"
 #include "vec.h"
 
+#include <src/com/arrays.h>
 #include <src/com/error.h>
 
 #include <array>
 #include <cmath>
+#include <vector>
 
 namespace ns::numerical
 {
+template <std::size_t N, typename T>
+Vector<N, T> orthogonal_complement(const std::array<Vector<N, T>, N - 1>& vectors)
+{
+        static_assert(N > 1);
+
+        Vector<N, T> res;
+        for (unsigned i = 0; i < N; ++i)
+        {
+                T minor = determinant(vectors, sequence_uchar_array<N - 1>, del_elem(sequence_uchar_array<N>, i));
+                res[i] = (i & 1) ? -minor : minor;
+        }
+        return res;
+}
+
+template <typename T>
+Vector<2, T> orthogonal_complement(const std::array<Vector<2, T>, 1>& v)
+{
+        return Vector<2, T>(v[0][1], -v[0][0]);
+}
+
+template <typename T>
+Vector<3, T> orthogonal_complement(const std::array<Vector<3, T>, 2>& v)
+{
+        // clang-format off
+        Vector<3, T> res;
+        res[0] = +(v[0][1] * v[1][2] - v[0][2] * v[1][1]);
+        res[1] = -(v[0][0] * v[1][2] - v[0][2] * v[1][0]);
+        res[2] = +(v[0][0] * v[1][1] - v[0][1] * v[1][0]);
+        return res;
+        // clang-format on
+}
+
+template <typename T>
+Vector<4, T> orthogonal_complement(const std::array<Vector<4, T>, 3>& v)
+{
+        // clang-format off
+        Vector<4, T> res;
+
+        res[0] = + v[0][1] * (v[1][2] * v[2][3] - v[1][3] * v[2][2])
+                 - v[0][2] * (v[1][1] * v[2][3] - v[1][3] * v[2][1])
+                 + v[0][3] * (v[1][1] * v[2][2] - v[1][2] * v[2][1]);
+
+        res[1] = - v[0][0] * (v[1][2] * v[2][3] - v[1][3] * v[2][2])
+                 + v[0][2] * (v[1][0] * v[2][3] - v[1][3] * v[2][0])
+                 - v[0][3] * (v[1][0] * v[2][2] - v[1][2] * v[2][0]);
+
+        res[2] = + v[0][0] * (v[1][1] * v[2][3] - v[1][3] * v[2][1])
+                 - v[0][1] * (v[1][0] * v[2][3] - v[1][3] * v[2][0])
+                 + v[0][3] * (v[1][0] * v[2][1] - v[1][1] * v[2][0]);
+
+        res[3] = - v[0][0] * (v[1][1] * v[2][2] - v[1][2] * v[2][1])
+                 + v[0][1] * (v[1][0] * v[2][2] - v[1][2] * v[2][0])
+                 - v[0][2] * (v[1][0] * v[2][1] - v[1][1] * v[2][0]);
+
+        return res;
+        // clang-format on
+}
+
+template <std::size_t N, typename T, typename CalculationType = T>
+Vector<N, CalculationType> orthogonal_complement(
+        const std::vector<Vector<N, T>>& points,
+        const std::array<int, N>& indices)
+{
+        static_assert(N > 1);
+
+        std::array<Vector<N, CalculationType>, N - 1> vectors;
+        for (unsigned i = 0; i < N - 1; ++i)
+        {
+                difference(&vectors[i], points[indices[i + 1]], points[indices[0]]);
+        }
+        return orthogonal_complement(vectors);
+}
+
+//
+
 namespace complement_implementation
 {
 template <typename T>

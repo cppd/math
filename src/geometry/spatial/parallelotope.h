@@ -29,7 +29,7 @@ Cambridge University Press, 2003.
 #include <src/com/error.h>
 #include <src/com/print.h>
 #include <src/com/type/limit.h>
-#include <src/numerical/orthogonal.h>
+#include <src/numerical/complement.h>
 #include <src/numerical/ray.h>
 #include <src/numerical/vec.h>
 

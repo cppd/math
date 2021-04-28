@@ -21,7 +21,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "../core/ridge.h"
 
 #include <src/com/error.h>
-#include <src/numerical/orthogonal.h>
+#include <src/numerical/complement.h>
 #include <src/numerical/vec.h>
 
 #include <unordered_map>

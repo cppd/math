@@ -25,9 +25,9 @@ Springer-Verlag London, 2012.
 
 #pragma once
 
+#include "complement.h"
 #include "eigen.h"
 #include "matrix.h"
-#include "orthogonal.h"
 #include "vec.h"
 
 #include <src/com/error.h>

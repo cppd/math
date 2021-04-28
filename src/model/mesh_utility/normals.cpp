@@ -29,8 +29,8 @@ Springer-Verlag London, 2012.
 #include <src/com/constant.h>
 #include <src/com/error.h>
 #include <src/geometry/shapes/sphere_simplex.h>
+#include <src/numerical/complement.h>
 #include <src/numerical/normal.h>
-#include <src/numerical/orthogonal.h>
 
 namespace ns::mesh
 {

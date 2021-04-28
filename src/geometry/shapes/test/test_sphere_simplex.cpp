@@ -25,7 +25,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/com/random/engine.h>
 #include <src/com/type/name.h>
 #include <src/geometry/spatial/hyperplane_simplex.h>
-#include <src/numerical/orthogonal.h>
+#include <src/numerical/complement.h>
 #include <src/sampling/sphere_uniform.h>
 #include <src/test/test.h>
 

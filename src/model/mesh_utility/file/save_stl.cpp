@@ -28,7 +28,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/com/string/str.h>
 #include <src/com/time.h>
 #include <src/com/type/limit.h>
-#include <src/numerical/orthogonal.h>
+#include <src/numerical/complement.h>
 
 #include <bit>
 #include <fstream>
