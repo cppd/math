@@ -45,13 +45,12 @@ template <std::size_t N, typename T, std::size_t... I>
 std::array<Vector<N, T>, N> make_vectors_impl(const Vector<N, T>& d, std::integer_sequence<std::size_t, I...>)
 {
         static_assert(N == sizeof...(I));
-        // Заполнение диагонали матрицы NxN значениями из d, остальные элементы 0
         std::array<Vector<N, T>, N> vectors{(static_cast<void>(I), Vector<N, T>(0))...};
         ((vectors[I][I] = d[I]), ...);
         return vectors;
 }
-
-template <std::size_t N, typename T, std::size_t... I>
+// Заполнение диагонали матрицы NxN значениями из d, остальные элементы 0
+template <std::size_t N, typename T>
 std::array<Vector<N, T>, N> make_vectors(const Vector<N, T>& d)
 {
         return make_vectors_impl(d, std::make_integer_sequence<std::size_t, N>());

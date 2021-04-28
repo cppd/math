@@ -39,50 +39,27 @@ namespace ns::geometry
 {
 namespace parallelotope_aa_implementation
 {
-// Вспомогательная функция для следующей после неё функции
-template <typename T, std::size_t ValueIndex, std::size_t... I>
-constexpr Vector<sizeof...(I), T> index_vector_impl(T value, std::integer_sequence<std::size_t, I...>)
+template <std::size_t N, typename T, std::size_t... I>
+constexpr std::array<Vector<N, T>, N> make_vectors_impl(const T& v, std::integer_sequence<std::size_t, I...>)
 {
-        return Vector<sizeof...(I), T>((I == ValueIndex ? value : 0)...);
+        static_assert(N == sizeof...(I));
+        std::array<Vector<N, T>, N> vectors{(static_cast<void>(I), Vector<N, T>(0))...};
+        ((vectors[I][I] = v), ...);
+        return vectors;
 }
-// Вектор, в котором координата с индексом ValueIndex равна value, а остальные координаты равны 0
-template <std::size_t N, typename T, std::size_t ValueIndex>
-constexpr Vector<N, T> index_vector(T value)
+// Заполнение диагонали матрицы NxN значением v, остальные элементы 0
+template <std::size_t N, typename T, std::size_t... I>
+constexpr std::array<Vector<N, T>, N> make_vectors(const T& v)
 {
-        return index_vector_impl<T, ValueIndex>(value, std::make_integer_sequence<std::size_t, N>());
+        return make_vectors_impl<N, T>(v, std::make_integer_sequence<std::size_t, N>());
 }
 
-//
-
-// Вспомогательная функция для следующей после неё функции
-template <typename T, std::size_t... I>
-constexpr Vector<sizeof...(I), T> index_vector_impl(unsigned index, T value, std::integer_sequence<std::size_t, I...>)
-{
-        return Vector<sizeof...(I), T>((I == index ? value : 0)...);
-}
-// Вектор, в котором координата с индексом index равна value, а остальные координаты равны 0
 template <std::size_t N, typename T>
 constexpr Vector<N, T> index_vector(unsigned index, T value)
 {
-        return index_vector_impl<T>(index, value, std::make_integer_sequence<std::size_t, N>());
-}
-
-//
-
-// Вспомогательная функция для следующей после неё функции
-template <typename T, std::size_t... I>
-constexpr std::array<Vector<sizeof...(I), T>, sizeof...(I)> index_vectors_impl(
-        T value,
-        std::integer_sequence<std::size_t, I...>)
-{
-        return {index_vector<sizeof...(I), T, I>(value)...};
-}
-// Массив векторов, в котором вектор с индексом i имеет координату с индексом i, равную value.
-// Пример: {( value, 0, 0), (0,  value, 0), (0, 0,  value)},
-template <std::size_t N, typename T>
-constexpr std::array<Vector<N, T>, N> index_vectors(T value)
-{
-        return index_vectors_impl<T>(value, std::make_integer_sequence<std::size_t, N>());
+        Vector<N, T> v(0);
+        v[index] = value;
+        return v;
 }
 }
 
@@ -94,10 +71,10 @@ class ParallelotopeAA final
 
         // Пример массива: {(1, 0, 0), (0, 1, 0), (0, 0, 1)}
         static constexpr std::array<Vector<N, T>, N> NORMALS_POSITIVE =
-                parallelotope_aa_implementation::index_vectors<N, T>(1);
+                parallelotope_aa_implementation::make_vectors<N, T>(1);
         // Пример массива: {(-1, 0, 0), (0, -1, 0), (0, 0, -1)}
         static constexpr std::array<Vector<N, T>, N> NORMALS_NEGATIVE =
-                parallelotope_aa_implementation::index_vectors<N, T>(-1);
+                parallelotope_aa_implementation::make_vectors<N, T>(-1);
 
         static_assert(N <= 27);
 
