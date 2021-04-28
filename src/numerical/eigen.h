@@ -26,6 +26,7 @@ Cambridge University Press, 2013.
 
 #pragma once
 
+#include "identity.h"
 #include "matrix.h"
 #include "vec.h"
 
@@ -111,19 +112,6 @@ void rotate(unsigned k, unsigned l, Matrix<N, N, T>* m, std::array<Vector<N, T>,
                 (*eigenvectors)[l][i] = p_il + s * (p_ik - tau * p_il);
         }
 }
-
-template <std::size_t N, typename T>
-void set_identity_matrix(std::array<Vector<N, T>, N>* eigenvectors)
-{
-        for (unsigned i = 0; i < N; ++i)
-        {
-                for (unsigned j = 0; j < N; ++j)
-                {
-                        (*eigenvectors)[i][j] = 0;
-                }
-                (*eigenvectors)[i][i] = 1;
-        }
-}
 }
 
 class EigenException final : public std::exception
@@ -147,8 +135,7 @@ void eigen_symmetric_upper_triangular(
         static_assert(std::is_floating_point_v<T>);
         namespace impl = jacobi_method_implementation;
 
-        std::array<Vector<N, T>, N> vectors;
-        impl::set_identity_matrix(&vectors);
+        std::array<Vector<N, T>, N> vectors = identity_array<N, T>;
 
         for (unsigned n = 0; n < 20; ++n)
         {

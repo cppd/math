@@ -25,49 +25,19 @@ Wiley, 2014.
 
 #pragma once
 
+#include "identity.h"
 #include "orthogonal.h"
 #include "vec.h"
 
 #include <src/com/error.h>
 
 #include <array>
-#include <utility>
+#include <cmath>
 
 namespace ns::numerical
 {
 namespace complement_implementation
 {
-template <std::size_t ValueIndex, typename T, int... I>
-constexpr Vector<sizeof...(I), T> make_vector_one_value(std::integer_sequence<int, I...>, const T& v)
-{
-        static_assert(ValueIndex >= 0 && ValueIndex < sizeof...(I));
-
-        return Vector<sizeof...(I), T>((I == ValueIndex ? v : 0)...);
-}
-
-template <std::size_t N, typename T, std::size_t ValueIndex>
-constexpr Vector<N, T> make_vector_one_value(const T& v)
-{
-        return make_vector_one_value<ValueIndex>(std::make_integer_sequence<int, N>(), v);
-}
-
-template <typename T, int... I>
-constexpr std::array<Vector<sizeof...(I), T>, sizeof...(I)> make_array_of_vectors_one_value(
-        std::integer_sequence<int, I...>,
-        const T& v)
-{
-        return {make_vector_one_value<sizeof...(I), T, I>(v)...};
-}
-
-template <std::size_t N, typename T>
-inline constexpr std::array<Vector<N, T>, N> orthonormal_set =
-        make_array_of_vectors_one_value(std::make_integer_sequence<int, N>(), static_cast<T>(1));
-
-static_assert(orthonormal_set<4, double>[0] == Vector<4, double>(1, 0, 0, 0));
-static_assert(orthonormal_set<4, double>[1] == Vector<4, double>(0, 1, 0, 0));
-static_assert(orthonormal_set<4, double>[2] == Vector<4, double>(0, 0, 1, 0));
-static_assert(orthonormal_set<4, double>[3] == Vector<4, double>(0, 0, 0, 1));
-
 template <typename T>
 inline constexpr T LIMIT = static_cast<T>(0.1);
 
@@ -111,7 +81,7 @@ std::array<Vector<N, T>, N - 1> orthogonal_complement_by_subspace(const Vector<N
         {
                 if (i != exclude_axis)
                 {
-                        subspace_basis[num++] = orthonormal_set<N, T>[i];
+                        subspace_basis[num++] = identity_array<N, T>[i];
                 }
         }
 
@@ -156,7 +126,7 @@ std::array<Vector<N, T>, N - 1> orthogonal_complement_by_gram_schmidt(const Vect
         {
                 if (i != exclude_axis)
                 {
-                        basis[num++] = orthonormal_set<N, T>[i];
+                        basis[num++] = identity_array<N, T>[i];
                 }
         }
 
