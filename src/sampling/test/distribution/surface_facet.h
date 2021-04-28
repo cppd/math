@@ -65,7 +65,7 @@ public:
         SurfaceFacet(const std::vector<Vector<N, T>>& vertices, const std::array<int, N>& vertex_indices)
                 : m_vertices(vertices), m_v(vertex_indices)
         {
-                m_normal = numerical::ortho_nn(m_vertices, m_v).normalized();
+                m_normal = numerical::orthogonal_complement(m_vertices, m_v).normalized();
                 if (!is_finite(m_normal))
                 {
                         error("Facet normal is not finite, facet vertices\n"

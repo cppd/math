@@ -148,7 +148,7 @@ void test_complement(int count)
                         }
                 }
 
-                const Vector<N, T> unit_vector_reconstructed = ortho_nn(complement); // без normalize
+                const Vector<N, T> unit_vector_reconstructed = orthogonal_complement(complement); // без normalize
 
                 if (!is_finite(unit_vector_reconstructed))
                 {

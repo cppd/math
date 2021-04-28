@@ -96,12 +96,12 @@ HyperplaneParallelotope<N, T>::HyperplaneParallelotope(
 {
         m_org = org;
         m_vectors = vectors;
-        m_normal = numerical::ortho_nn(vectors).normalized();
+        m_normal = numerical::orthogonal_complement(vectors).normalized();
 
         for (unsigned i = 0; i < N - 1; ++i)
         {
                 std::swap(m_normal, m_vectors[i]);
-                m_planes[i].n = numerical::ortho_nn(m_vectors);
+                m_planes[i].n = numerical::orthogonal_complement(m_vectors);
                 std::swap(m_normal, m_vectors[i]);
 
                 if (dot(m_planes[i].n, m_vectors[i]) < 0)

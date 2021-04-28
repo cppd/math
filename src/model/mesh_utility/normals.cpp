@@ -157,7 +157,7 @@ void compute_normals(Mesh<N>* mesh)
         {
                 const typename Mesh<N>::Facet& facet = mesh->facets[f];
 
-                facet_normals[f] = numerical::ortho_nn(vertices, facet.vertices).normalized();
+                facet_normals[f] = numerical::orthogonal_complement(vertices, facet.vertices).normalized();
 
                 for (unsigned i = 0; i < N; ++i)
                 {

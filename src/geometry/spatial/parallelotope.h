@@ -177,7 +177,7 @@ void Parallelotope<N, T>::set_data(const Vector<N, T>& org, const std::array<Vec
         // Вектор n наружу от объекта предназначен для плоскости с параметром d2.
         for (unsigned i = 0; i < N; ++i)
         {
-                m_planes[i].n = numerical::ortho_nn(del_elem(m_vectors, i)).normalized();
+                m_planes[i].n = numerical::orthogonal_complement(del_elem(m_vectors, i)).normalized();
                 if (dot(m_planes[i].n, m_vectors[i]) < 0)
                 {
                         m_planes[i].n = -m_planes[i].n;

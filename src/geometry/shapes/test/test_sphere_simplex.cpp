@@ -88,7 +88,7 @@ void test_integrate(ProgressRatio* progress, double progress_min, double progres
                 return result;
         }();
 
-        const Vector<N, T> simplex_normal = numerical::ortho_nn(simplex_vectors);
+        const Vector<N, T> simplex_normal = numerical::orthogonal_complement(simplex_vectors);
 
         const HyperplaneSimplex<N, T> simplex = [&]()
         {

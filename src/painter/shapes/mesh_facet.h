@@ -133,7 +133,7 @@ public:
 
                 m_material = material;
 
-                m_normal = numerical::ortho_nn(m_vertices, m_v).normalized();
+                m_normal = numerical::orthogonal_complement(m_vertices, m_v).normalized();
 
                 if (!is_finite(m_normal))
                 {

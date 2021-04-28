@@ -75,7 +75,7 @@ public:
                 }
 
                 // Перпендикуляр к симплексу берётся готовым в параметре normal
-                // и должен быть равен ortho_nn(vectors).
+                // и должен быть равен orthogonal_complement(vectors).
 
                 // Найти уравнения плоскостей, проходящих через каждую грань и перпендикулярных симплексу.
                 // Вершина должна находиться на расстоянии 1 от плоскости противоположной ей грани.
@@ -85,7 +85,7 @@ public:
                         // Перпендикуляр от точки к грани — это перпендикуляр к пространству,
                         // образуемому перпендикуляром к симплексу и пространством грани
                         std::swap(normal, vectors[i]);
-                        m_planes[i].n = numerical::ortho_nn(vectors);
+                        m_planes[i].n = numerical::orthogonal_complement(vectors);
                         std::swap(normal, vectors[i]);
 
                         // Уравнение плоскости
@@ -130,7 +130,7 @@ public:
                 }
 
                 vectors[N - 2] = normal;
-                Vector<N, T> n = numerical::ortho_nn(vectors).normalized();
+                Vector<N, T> n = numerical::orthogonal_complement(vectors).normalized();
                 T d = dot(vertices[0], n);
 
                 // Нормаль нужна в направлении вершины N - 1

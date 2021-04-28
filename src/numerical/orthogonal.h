@@ -28,9 +28,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 namespace ns::numerical
 {
-// Вектор из ортогонального дополнения (n-1)-мерного подпространства
 template <std::size_t N, typename T>
-Vector<N, T> ortho_nn(const std::array<Vector<N, T>, N - 1>& vectors)
+Vector<N, T> orthogonal_complement(const std::array<Vector<N, T>, N - 1>& vectors)
 {
         static_assert(N > 1);
 
@@ -49,13 +48,13 @@ Vector<N, T> ortho_nn(const std::array<Vector<N, T>, N - 1>& vectors)
 }
 
 template <typename T>
-Vector<2, T> ortho_nn(const std::array<Vector<2, T>, 1>& v)
+Vector<2, T> orthogonal_complement(const std::array<Vector<2, T>, 1>& v)
 {
         return Vector<2, T>(v[0][1], -v[0][0]);
 }
 
 template <typename T>
-Vector<3, T> ortho_nn(const std::array<Vector<3, T>, 2>& v)
+Vector<3, T> orthogonal_complement(const std::array<Vector<3, T>, 2>& v)
 {
         Vector<3, T> res;
 
@@ -71,7 +70,7 @@ Vector<3, T> ortho_nn(const std::array<Vector<3, T>, 2>& v)
 }
 
 template <typename T>
-Vector<4, T> ortho_nn(const std::array<Vector<4, T>, 3>& v)
+Vector<4, T> orthogonal_complement(const std::array<Vector<4, T>, 3>& v)
 {
         Vector<4, T> res;
 
@@ -114,7 +113,7 @@ inline void to_res_ortho(mpz_class* res, const mpz_class& a, const mpz_class& b,
         mpz_add(res->get_mpz_t(), res->get_mpz_t(), c.get_mpz_t());
 }
 
-inline Vector<4, mpz_class> ortho_nn(const std::array<Vector<4, mpz_class>, 3>& v)
+inline Vector<4, mpz_class> orthogonal_complement(const std::array<Vector<4, mpz_class>, 3>& v)
 {
         thread_local Vector<4, mpz_class> res;
 
@@ -149,9 +148,10 @@ inline Vector<4, mpz_class> ortho_nn(const std::array<Vector<4, mpz_class>, 3>& 
 }
 #endif
 
-// Вектор из ортогонального дополнения (n-1)-мерного пространства, определяемого n точками
 template <std::size_t N, typename T, typename CalculationType = T>
-Vector<N, CalculationType> ortho_nn(const std::vector<Vector<N, T>>& points, const std::array<int, N>& indices)
+Vector<N, CalculationType> orthogonal_complement(
+        const std::vector<Vector<N, T>>& points,
+        const std::array<int, N>& indices)
 {
         static_assert(N > 1);
 
@@ -162,6 +162,6 @@ Vector<N, CalculationType> ortho_nn(const std::vector<Vector<N, T>>& points, con
                 difference(&vectors[i], points[indices[i + 1]], points[indices[0]]);
         }
 
-        return ortho_nn(vectors);
+        return orthogonal_complement(vectors);
 }
 }

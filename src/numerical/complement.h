@@ -89,9 +89,9 @@ std::array<Vector<N, T>, N - 1> orthogonal_complement_by_subspace(const Vector<N
         // к исходному вектору и к уже найденным векторам
         for (unsigned i = 0; i < N - 2; ++i)
         {
-                subspace_basis[i] = ortho_nn(subspace_basis).normalized();
+                subspace_basis[i] = orthogonal_complement(subspace_basis).normalized();
         }
-        subspace_basis[N - 2] = ortho_nn(subspace_basis);
+        subspace_basis[N - 2] = orthogonal_complement(subspace_basis);
 
         return subspace_basis;
 }

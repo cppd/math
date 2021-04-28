@@ -62,11 +62,11 @@ void ortho_e0_e1(
 
         vectors[N - 2] = points[point] - points[indices[0]];
 
-        *e1 = numerical::ortho_nn(vectors).normalized();
+        *e1 = numerical::orthogonal_complement(vectors).normalized();
 
         vectors[N - 2] = *e1;
 
-        *e2 = numerical::ortho_nn(vectors).normalized();
+        *e2 = numerical::orthogonal_complement(vectors).normalized();
 }
 
 template <std::size_t N>

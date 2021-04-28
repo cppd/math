@@ -105,6 +105,6 @@ Vector<N, T> point_normal(const std::vector<Vector<N, T>>& points)
                 vectors[n++] = eigenvectors[i];
         }
 
-        return ortho_nn(vectors).normalized();
+        return orthogonal_complement(vectors).normalized();
 }
 }

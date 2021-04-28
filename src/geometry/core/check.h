@@ -57,7 +57,7 @@ void check_facet_dimension(
                               + " is not equal to " + to_string(N));
                 }
 
-                Vector<N, T> n = numerical::ortho_nn(vertices, facet).normalized();
+                Vector<N, T> n = numerical::orthogonal_complement(vertices, facet).normalized();
                 if (!is_finite(n))
                 {
                         error(name + " facet normal " + to_string(n) + " is not finite");

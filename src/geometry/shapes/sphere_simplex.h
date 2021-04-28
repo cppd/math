@@ -35,7 +35,7 @@ namespace ns::geometry
 //
 //        v[0] = vectors[0];
 //        v[1] = vectors[1];
-//        Vector<3, T> facet_01_normal = numerical::ortho_nn(v);
+//        Vector<3, T> facet_01_normal = numerical::orthogonal_complement(v);
 //        {
 //                T norm = facet_01_normal.norm();
 //                if (norm == 0)
@@ -47,7 +47,7 @@ namespace ns::geometry
 //
 //        v[0] = vectors[1];
 //        v[1] = vectors[2];
-//        Vector<3, T> facet_12_normal = numerical::ortho_nn(v);
+//        Vector<3, T> facet_12_normal = numerical::orthogonal_complement(v);
 //        {
 //                T norm = facet_12_normal.norm();
 //                if (norm == 0)
@@ -59,7 +59,7 @@ namespace ns::geometry
 //
 //        v[0] = vectors[2];
 //        v[1] = vectors[0];
-//        Vector<3, T> facet_20_normal = numerical::ortho_nn(v);
+//        Vector<3, T> facet_20_normal = numerical::orthogonal_complement(v);
 //        {
 //                T norm = facet_20_normal.norm();
 //                if (norm == 0)
