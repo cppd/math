@@ -36,8 +36,8 @@ Elsevier, 2017.
 
 namespace ns::sampling
 {
-template <typename RandomEngine, std::size_t N, typename T>
-Vector<N, T> cosine_on_hemisphere(RandomEngine& random_engine, const Vector<N, T>& normal)
+template <std::size_t N, typename T, typename RandomEngine>
+Vector<N, T> cosine_on_hemisphere(RandomEngine& random_engine)
 {
         static_assert(N > 2);
 
@@ -48,16 +48,32 @@ Vector<N, T> cosine_on_hemisphere(RandomEngine& random_engine, const Vector<N, T
 
         T n = std::sqrt(1 - v_length_square);
 
-        std::array<Vector<N, T>, N - 1> basis = numerical::orthogonal_complement_of_unit_vector(normal);
-
-        Vector<N, T> res = n * normal;
-
-        for (unsigned i = 0; i < N - 1; ++i)
+        Vector<N, T> coordinates;
+        for (std::size_t i = 0; i < N - 1; ++i)
         {
-                res += v[i] * basis[i];
+                coordinates[i] = v[i];
+        }
+        coordinates[N - 1] = n;
+
+        return coordinates;
+}
+
+template <typename RandomEngine, std::size_t N, typename T>
+Vector<N, T> cosine_on_hemisphere(RandomEngine& random_engine, const Vector<N, T>& normal)
+{
+        static_assert(N > 2);
+
+        std::array<Vector<N, T>, N - 1> orthonormal_basis = numerical::orthogonal_complement_of_unit_vector(normal);
+
+        Vector<N, T> coordinates = cosine_on_hemisphere<N, T>(random_engine);
+
+        Vector<N, T> result = coordinates[N - 1] * normal;
+        for (std::size_t i = 0; i < N - 1; ++i)
+        {
+                result += coordinates[i] * orthonormal_basis[i];
         }
 
-        return res;
+        return result;
 }
 
 template <std::size_t N, typename T>

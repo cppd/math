@@ -55,6 +55,31 @@ Plot[{Cos[x]^n*Sin[x]^p,c*PDF[NormalDistribution[mean,deviation],x]},
   {x,-Pi/8,Pi/2},Filling->Axis,PlotRange->Full,PlotLegends->"Expressions"]
 N[Integrate[Cos[x]^n*Sin[x]^p/c,{x,0,Pi/2}]]
 */
+
+/*
+3-space only
+
+angle = ∠(vector, normal)
+PDF = cos(angle)^n * sin(angle)
+0 <= angle <= PI/2
+
+d = Assuming[n >= 0,
+  ProbabilityDistribution[(Cos[x]^n) * Sin[x], {x, 0, Pi/2}, Method -> "Normalize"]];
+PDF[d, x]
+CDF[d, x]
+
+CDF = 1 - cos(angle)^(1 + n)
+Inverse CDF = acos((1 - CDF)^(1 / (1 + n)))
+Inverse CDF = acos(x^(1 / (1 + n)))
+Projection on normal = cos(acos(x^(1 / (1 + n))))
+Projection on normal = x^(1 / (1 + n))
+
+uniform x = length_of_random_vector_in_2_sphere ^ 2
+Projection on normal = squared_length_of_random_vector_in_2_sphere ^ (1 / (1 + n))
+*/
+
+namespace sphere_power_cosine_implementation
+{
 template <std::size_t N, typename T>
 class PowerCosineOnHemisphere
 {
@@ -67,7 +92,6 @@ class PowerCosineOnHemisphere
         std::normal_distribution<T> m_normal_distribution;
         std::uniform_real_distribution<T> m_urd;
 
-public:
         explicit PowerCosineOnHemisphere(std::type_identity_t<T> power)
         {
                 if (!(power >= 1))
@@ -85,8 +109,9 @@ public:
                 m_urd = std::uniform_real_distribution<T>(0, max);
         }
 
+public:
         template <typename RandomEngine>
-        Vector<N, T> sample(RandomEngine& random_engine, const Vector<N, T>& normal)
+        Vector<N, T> sample(RandomEngine& random_engine)
         {
                 T angle;
                 T cos_angle;
@@ -110,58 +135,47 @@ public:
                 T length = std::sqrt(1 - square(n));
                 Vector<N - 1, T> v = length * uniform_on_sphere<N - 1, T>(random_engine);
 
-                std::array<Vector<N, T>, N - 1> basis = numerical::orthogonal_complement_of_unit_vector(normal);
-
-                Vector<N, T> res = n * normal;
-
+                Vector<N, T> coordinates;
                 for (unsigned i = 0; i < N - 1; ++i)
                 {
-                        res += v[i] * basis[i];
+                        coordinates[i] = v[i];
                 }
+                coordinates[N - 1] = n;
 
-                return res;
+                return coordinates;
+        }
+
+        static PowerCosineOnHemisphere& instance(T power)
+        {
+                thread_local std::unordered_map<T, PowerCosineOnHemisphere<N, T>> map;
+                auto iter = map.find(power);
+                if (iter != map.end())
+                {
+                        return iter->second;
+                }
+                return map.emplace(power, PowerCosineOnHemisphere<N, T>(power)).first->second;
         }
 };
+}
 
 template <std::size_t N, typename T, typename RandomEngine>
-Vector<N, T> power_cosine_on_hemisphere(RandomEngine& random_engine, const Vector<N, T>& normal, T power)
+std::enable_if_t<(N > 3), Vector<N, T>> power_cosine_on_hemisphere(
+        RandomEngine& random_engine,
+        std::type_identity_t<T> power)
 {
         static_assert(N > 3);
 
-        thread_local std::unordered_map<T, PowerCosineOnHemisphere<N, T>> map;
-        auto iter = map.find(power);
-        if (iter != map.end())
-        {
-                return iter->second.sample(random_engine, normal);
-        }
-        return map.emplace(power, PowerCosineOnHemisphere<N, T>(power)).first->second.sample(random_engine, normal);
+        namespace impl = sphere_power_cosine_implementation;
+
+        return impl::PowerCosineOnHemisphere<N, T>::instance(power).sample(random_engine);
 }
 
-/*
-3-space only
-
-angle = ∠(vector, normal)
-PDF = cos(angle)^n * sin(angle)
-0 <= angle <= PI/2
-
-d = Assuming[n >= 0,
-  ProbabilityDistribution[(Cos[x]^n) * Sin[x], {x, 0, Pi/2}, Method -> "Normalize"]];
-PDF[d, x]
-CDF[d, x]
-
-CDF = 1 - cos(angle)^(1 + n)
-Inverse CDF = acos((1 - CDF)^(1 / (1 + n)))
-Inverse CDF = acos(x^(1 / (1 + n)))
-Projection on normal = cos(acos(x^(1 / (1 + n))))
-Projection on normal = x^(1 / (1 + n))
-
-uniform x = length_of_random_vector_in_2_sphere ^ 2
-Projection on normal = squared_length_of_random_vector_in_2_sphere ^ (1 / (1 + n))
-*/
-template <typename T, typename RandomEngine>
-Vector<3, T> power_cosine_on_hemisphere(RandomEngine& random_engine, const Vector<3, T>& normal, T power)
+template <std::size_t N, typename T, typename RandomEngine>
+std::enable_if_t<(N == 3), Vector<N, T>> power_cosine_on_hemisphere(
+        RandomEngine& random_engine,
+        std::type_identity_t<T> power)
 {
-        constexpr unsigned N = 3;
+        static_assert(N == 3);
 
         Vector<N - 1, T> v;
         T v_length_square;
@@ -172,16 +186,30 @@ Vector<3, T> power_cosine_on_hemisphere(RandomEngine& random_engine, const Vecto
         T new_length_squared = 1 - square(n);
         v *= std::sqrt(new_length_squared / v_length_square);
 
-        std::array<Vector<N, T>, N - 1> basis = numerical::orthogonal_complement_of_unit_vector(normal);
-
-        Vector<N, T> res = n * normal;
-
+        Vector<N, T> coordinates;
         for (unsigned i = 0; i < N - 1; ++i)
         {
-                res += v[i] * basis[i];
+                coordinates[i] = v[i];
+        }
+        coordinates[N - 1] = n;
+
+        return coordinates;
+}
+
+template <std::size_t N, typename T, typename RandomEngine>
+Vector<N, T> power_cosine_on_hemisphere(RandomEngine& random_engine, const Vector<N, T>& normal, T power)
+{
+        std::array<Vector<N, T>, N - 1> orthonormal_basis = numerical::orthogonal_complement_of_unit_vector(normal);
+
+        Vector<N, T> coordinates = power_cosine_on_hemisphere<N, T>(random_engine, power);
+
+        Vector<N, T> result = coordinates[N - 1] * normal;
+        for (std::size_t i = 0; i < N - 1; ++i)
+        {
+                result += coordinates[i] * orthonormal_basis[i];
         }
 
-        return res;
+        return result;
 }
 
 template <std::size_t N, typename T>
