@@ -42,7 +42,7 @@ namespace ns::numerical
 template <std::size_t N, typename T>
 Vector<N, T> orthogonal_complement(const std::array<Vector<N, T>, N - 1>& vectors)
 {
-        static_assert(N > 1);
+        static_assert(N >= 5);
 
         Vector<N, T> res;
         for (unsigned i = 0; i < N; ++i)
