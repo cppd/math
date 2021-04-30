@@ -116,13 +116,12 @@ Vector<N, CalculationType> orthogonal_complement(
 
 namespace complement_implementation
 {
-template <typename T>
-inline constexpr T LIMIT = static_cast<T>(0.1);
-
 template <std::size_t N, typename T>
 std::array<Vector<N, T>, N - 1> orthogonal_complement_by_subspace(const Vector<N, T>& unit_vector)
 {
         static_assert(N > 1);
+
+        static constexpr T LIMIT = 0.5;
 
         if constexpr (N == 2)
         {
@@ -131,37 +130,41 @@ std::array<Vector<N, T>, N - 1> orthogonal_complement_by_subspace(const Vector<N
 
         if constexpr (N == 3)
         {
-                Vector<3, T> non_collinear_vector =
-                        std::abs(unit_vector[0]) > LIMIT<T> ? Vector<3, T>(0, 1, 0) : Vector<3, T>(1, 0, 0);
-                Vector<3, T> e0 = cross(unit_vector, non_collinear_vector).normalized();
+                static constexpr Vector<3, T> X(1, 0, 0);
+                static constexpr Vector<3, T> Y(0, 1, 0);
+                const Vector<3, T>& v = std::abs(unit_vector[0]) > LIMIT ? Y : X;
+                Vector<3, T> e0 = cross(unit_vector, v).normalized();
                 Vector<3, T> e1 = cross(unit_vector, e0);
                 return {e0, e1};
         }
 
-        // Найти координатную ось, к которой приближается unit_vector, тогда неколлинеарными
-        // векторами к вектору unit_vector будут все остальные координатные оси.
-        // Если ни к одной оси не приближается, то использовать любые оси.
-        unsigned exclude_axis = 0;
-        for (; exclude_axis < N - 2; ++exclude_axis)
+        // Найти координатную ось, к которой приближается unit_vector,
+        // тогда неколлинеарными векторами к unit_vector будут все
+        // остальные координатные оси.
+        const unsigned exclude_axis = [&]
         {
-                if (std::abs(unit_vector[exclude_axis]) > LIMIT<T>)
+                unsigned i = 0;
+                for (; i < N - 2; ++i)
                 {
-                        break;
+                        if (std::abs(unit_vector[i]) > LIMIT)
+                        {
+                                break;
+                        }
                 }
-        }
+                return i;
+        }();
 
-        // Найти неколлинеарные к исходному вектору unit_vector векторы в количестве N - 2,
-        // что вместе с исходным вектором даст N - 1 векторов
+        // Найти неколлинеарные к unit_vector векторы в количестве
+        // N - 2, что вместе с unit_vector даст N - 1 векторов
         std::array<Vector<N, T>, N - 1> subspace_basis;
-        subspace_basis[N - 2] = unit_vector;
-        unsigned num = 0;
-        for (unsigned i = 0; num < N - 2; ++i)
+        for (unsigned i = 0, num = 0; num < N - 2; ++i)
         {
                 if (i != exclude_axis)
                 {
                         subspace_basis[num++] = identity_array<N, T>[i];
                 }
         }
+        subspace_basis[N - 2] = unit_vector;
 
         // Вычисление векторов из одномерных ортогональных дополнений
         // к исходному вектору и к уже найденным векторам
@@ -179,28 +182,29 @@ std::array<Vector<N, T>, N - 1> orthogonal_complement_by_gram_schmidt(const Vect
 {
         static_assert(N > 1);
 
-        if constexpr (N == 2)
+        // Найти самую близкую к unit_vector координатную ось, тогда
+        // unit_vector и остальные оси не будут линейно зависимыми.
+        // Или можно найти первую ось, где abs(unit_vector[i])
+        // больше (constant < 1) * sqrt(1/(N-1)).
+        const unsigned exclude_axis = [&]
         {
-                return {Vector<2, T>(unit_vector[1], -unit_vector[0])};
-        }
-
-        // Найти координатную ось, к которой приближается unit_vector, тогда неколлинеарными
-        // векторами к вектору unit_vector будут все остальные координатные оси.
-        // Если ни к одной оси не приближается, то использовать любые оси.
-        unsigned exclude_axis = 0;
-        for (; exclude_axis < N - 1; ++exclude_axis)
-        {
-                if (std::abs(unit_vector[exclude_axis]) > LIMIT<T>)
+                unsigned i_max = 0;
+                T v_max = std::abs(unit_vector[0]);
+                for (unsigned i = 1; i < N; ++i)
                 {
-                        break;
+                        T v = std::abs(unit_vector[i]);
+                        if (v > v_max)
+                        {
+                                i_max = i;
+                                v_max = v;
+                        }
                 }
-        }
+                return i_max;
+        }();
 
-        // Найти базис из вектора unit_vector и неколлинеарных ему векторов ортонормированного базиса
         std::array<Vector<N, T>, N> basis;
         basis[0] = unit_vector;
-        unsigned num = 1;
-        for (unsigned i = 0; num < N; ++i)
+        for (unsigned i = 0, num = 1; i < N; ++i)
         {
                 if (i != exclude_axis)
                 {
@@ -208,7 +212,6 @@ std::array<Vector<N, T>, N - 1> orthogonal_complement_by_gram_schmidt(const Vect
                 }
         }
 
-        // Процесс Грама-Шмидта.
         // Из неортогонального базиса делается ортогональный базис.
         std::array<Vector<N, T>, N> orthogonal_basis = basis;
         for (unsigned i = 1; i < N; ++i)
@@ -242,13 +245,27 @@ std::array<Vector<N, T>, N - 1> orthogonal_complement_of_unit_vector(const Vecto
 
         namespace impl = complement_implementation;
 
-        if constexpr (N <= 4)
+        if constexpr (std::is_same_v<T, float> || std::is_same_v<T, double>)
         {
-                return impl::orthogonal_complement_by_subspace(unit_vector);
+                if constexpr (N <= 4)
+                {
+                        return impl::orthogonal_complement_by_subspace(unit_vector);
+                }
+                else
+                {
+                        return impl::orthogonal_complement_by_gram_schmidt(unit_vector);
+                }
         }
-        if constexpr (N >= 5)
+        if constexpr (std::is_same_v<T, long double>)
         {
-                return impl::orthogonal_complement_by_gram_schmidt(unit_vector);
+                if constexpr (N <= 6)
+                {
+                        return impl::orthogonal_complement_by_subspace(unit_vector);
+                }
+                else
+                {
+                        return impl::orthogonal_complement_by_gram_schmidt(unit_vector);
+                }
         }
 }
 }
