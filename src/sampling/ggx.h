@@ -33,12 +33,14 @@ CRC Press, 2018.
 #include <src/com/interpolation.h>
 #include <src/com/math.h>
 #include <src/numerical/complement.h>
+#include <src/numerical/identity.h>
 #include <src/numerical/vec.h>
 
 namespace ns::sampling
 {
 namespace ggx_implementation
 {
+#if 0
 template <typename T, typename RandomEngine>
 Vector<3, T> ggx_vn(RandomEngine& random_engine, const Vector<3, T>& ve, T alpha)
 {
@@ -81,22 +83,128 @@ Vector<3, T> ggx_vn(RandomEngine& random_engine, const Vector<3, T>& ve, T alpha
 
         return ne;
 }
+#else
+template <std::size_t N, typename T, typename RandomEngine>
+Vector<N, T> ggx_vn(RandomEngine& random_engine, const Vector<N, T>& ve, T alpha)
+{
+        static_assert(N >= 3);
+
+        // Section 3.2: transforming the view direction to the hemisphere configuration
+        Vector<N, T> vh = [&]
+        {
+                Vector<N, T> t;
+                for (std::size_t i = 0; i < N - 1; ++i)
+                {
+                        t[i] = alpha * ve[i];
+                }
+                t[N - 1] = ve[N - 1];
+                return t.normalized();
+        }();
+
+        // Section 4.1: orthonormal basis
+        std::array<Vector<N, T>, N - 1> orthonormal_basis;
+        {
+                T length_square = 0;
+                for (std::size_t i = 0; i < N - 1; ++i)
+                {
+                        length_square += square(vh[i]);
+                }
+                if (length_square > 0)
+                {
+                        T length = std::sqrt(length_square);
+                        Vector<N - 1, T> plane_v;
+                        for (std::size_t i = 0; i < N - 1; ++i)
+                        {
+                                plane_v[i] = vh[i] / length;
+                        }
+                        std::array<Vector<N - 1, T>, N - 2> plane_basis =
+                                numerical::orthogonal_complement_of_unit_vector(plane_v);
+                        for (std::size_t i = 0; i < N - 2; ++i)
+                        {
+                                for (std::size_t j = 0; j < N - 1; ++j)
+                                {
+                                        orthonormal_basis[i][j] = plane_basis[i][j];
+                                }
+                                orthonormal_basis[i][N - 1] = 0;
+                        }
+                }
+                else
+                {
+                        for (std::size_t i = 0; i < N - 2; ++i)
+                        {
+                                orthonormal_basis[i] = numerical::identity_array<N, T>[i];
+                        }
+                }
+        }
+        orthonormal_basis[N - 2] = vh;
+        orthonormal_basis[N - 2] = numerical::orthogonal_complement(orthonormal_basis);
+        if (orthonormal_basis[N - 2][N - 1] < 0)
+        {
+                orthonormal_basis[N - 2] = -orthonormal_basis[N - 2];
+        }
+
+        // Section 4.2: parameterization of the projected area
+        Vector<N - 1, T> t = [&random_engine]
+        {
+                Vector<N - 1, T> vector;
+                T vector_length_square;
+                uniform_in_sphere(random_engine, vector, vector_length_square);
+                return vector;
+        }();
+        T s = T(0.5) * (T(1) + vh[N - 1]);
+        T a = [&]
+        {
+                T sum = 0;
+                for (std::size_t i = 0; i < N - 2; ++i)
+                {
+                        sum += square(t[i]);
+                }
+                return std::sqrt(1 - sum);
+        }();
+        t[N - 2] = interpolation(a, t[N - 2], s);
+
+        // Section 4.3: reprojection onto hemisphere
+        Vector<N, T> nh = [&]
+        {
+                Vector<N, T> v = vh * std::sqrt(std::max(T(0), 1 - dot(t, t)));
+                for (std::size_t i = 0; i < N - 1; ++i)
+                {
+                        v += t[i] * orthonormal_basis[i];
+                }
+                return v;
+        }();
+
+        // Section 3.4: transforming the normal back to the ellipsoid configuration
+        Vector<N, T> ne;
+        for (std::size_t i = 0; i < N - 1; ++i)
+        {
+                ne[i] = alpha * nh[i];
+        }
+        ne[N - 1] = std::max(T(0), nh[N - 1]);
+
+        return ne.normalized();
+}
+#endif
 }
 
-template <typename T, typename RandomEngine>
-Vector<3, T> ggx_vn(RandomEngine& random_engine, const Vector<3, T>& normal, const Vector<3, T>& v, T alpha)
+template <std::size_t N, typename T, typename RandomEngine>
+Vector<N, T> ggx_vn(RandomEngine& random_engine, const Vector<N, T>& normal, const Vector<N, T>& v, T alpha)
 {
-        std::array<Vector<3, T>, 2> basis = numerical::orthogonal_complement_of_unit_vector(normal);
+        static_assert(N == 3);
 
-        Vector<3, T> ve;
-        ve[0] = dot(v, basis[0]);
-        ve[1] = dot(v, basis[1]);
-        ve[2] = dot(v, normal);
+        std::array<Vector<N, T>, N - 1> basis = numerical::orthogonal_complement_of_unit_vector(normal);
 
-        Vector<3, T> ne = ggx_implementation::ggx_vn(random_engine, ve, alpha);
+        Vector<N, T> ve;
+        for (std::size_t i = 0; i < N - 1; ++i)
+        {
+                ve[i] = dot(v, basis[i]);
+        }
+        ve[N - 1] = dot(v, normal);
 
-        Vector<3, T> res = ne[2] * normal;
-        for (unsigned i = 0; i < 2; ++i)
+        Vector<N, T> ne = ggx_implementation::ggx_vn(random_engine, ve, alpha);
+
+        Vector<N, T> res = ne[N - 1] * normal;
+        for (std::size_t i = 0; i < N - 1; ++i)
         {
                 res += ne[i] * basis[i];
         }
