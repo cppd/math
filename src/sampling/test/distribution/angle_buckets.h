@@ -52,6 +52,26 @@ class AngleBuckets
                 T distribution;
         };
 
+        template <typename PDF>
+        static T mean_pdf(const Distribution& d, const PDF& pdf)
+        {
+                static constexpr int COUNT = 100;
+                const T integral = numerical::integrate<T>(pdf, d.angle_from, d.angle_to, COUNT);
+                return integral / (d.angle_to - d.angle_from);
+        }
+
+        static void check_pdf_and_distribution(const T& pdf, const T& distribution)
+        {
+                if (!(pdf >= 0))
+                {
+                        error("PDF " + to_string(pdf, 5) + " is not positive and not zero");
+                }
+                if (!(distribution >= 0))
+                {
+                        error("Distribution " + to_string(distribution, 5) + " is not positive and not zero");
+                }
+        }
+
         std::vector<long long> m_buckets;
         std::vector<Distribution> m_distribution;
 
@@ -109,6 +129,7 @@ public:
 
                 const long double SPHERE_K =
                         geometry::sphere_area(N) / geometry::sphere_relative_area<N, long double>(0, PI<T>);
+
                 long long cnt = 0;
                 for (unsigned bucket = 0; bucket < m_buckets.size(); ++bucket)
                 {
@@ -139,7 +160,8 @@ public:
                         }));
         }
 
-        std::string histogram() const
+        template <typename PDF>
+        std::string histogram(const PDF& pdf) const
         {
                 constexpr int BAR_SIZE = 100;
                 constexpr int DIVISION_SIZE = 10;
@@ -160,11 +182,10 @@ public:
                 bool new_line = false;
                 for (const Distribution& d : m_distribution)
                 {
-                        if (!(d.distribution >= 0))
-                        {
-                                error("Number is not positive and not zero: distribution = "
-                                      + to_string(d.distribution, 5));
-                        }
+                        const T distribution_value = d.distribution;
+                        const T pdf_mean_value = mean_pdf(d, pdf);
+
+                        check_pdf_and_distribution(pdf_mean_value, distribution_value);
 
                         if (new_line)
                         {
@@ -177,10 +198,11 @@ public:
 
                         oss << std::fixed << std::setprecision(1) << std::setw(5) << to_degrees(d.angle_from);
                         oss << ": ";
-                        oss << std::scientific << std::setprecision(2) << d.distribution;
+                        oss << std::scientific << std::setprecision(2) << distribution_value;
+                        oss << " (" << pdf_mean_value << ")";
                         oss << " ";
 
-                        int count = std::round(d.distribution / max * BAR_SIZE);
+                        const int count = std::round(distribution_value / max * BAR_SIZE);
                         for (int i = 0; i < count; i += DIVISION_SIZE)
                         {
                                 oss << '+';
@@ -199,32 +221,23 @@ public:
         {
                 for (const Distribution& d : m_distribution)
                 {
-                        constexpr int PDF_INTEGRATE_COUNT = 100;
-
                         const T distribution_value = d.distribution;
+                        const T pdf_mean_value = mean_pdf(d, pdf);
 
-                        const T pdf_mean_value =
-                                numerical::integrate<T>(pdf, d.angle_from, d.angle_to, PDF_INTEGRATE_COUNT)
-                                / (d.angle_to - d.angle_from);
-
-                        if (!(pdf_mean_value >= 0 && distribution_value >= 0))
-                        {
-                                error("Number is not positive and not zero: distribution = "
-                                      + to_string(distribution_value, 5) + ", PDF = " + to_string(pdf_mean_value, 5));
-                        }
+                        check_pdf_and_distribution(pdf_mean_value, distribution_value);
 
                         if (pdf_mean_value == distribution_value)
                         {
                                 continue;
                         }
 
-                        T discrepancy_abs = std::abs(pdf_mean_value - distribution_value);
+                        const T discrepancy_abs = std::abs(pdf_mean_value - distribution_value);
                         if (discrepancy_abs <= T(0.05))
                         {
                                 continue;
                         }
 
-                        T discrepancy_rel = discrepancy_abs / std::max(pdf_mean_value, distribution_value);
+                        const T discrepancy_rel = discrepancy_abs / std::max(pdf_mean_value, distribution_value);
                         if (discrepancy_rel <= T(0.05))
                         {
                                 continue;

@@ -126,7 +126,7 @@ void test_distribution_angle(
         }
 
         buckets.compute_distribution();
-        //LOG(buckets.histogram());
+        //LOG(buckets.histogram(pdf));
         buckets.compare_with_pdf(pdf);
 }
 
