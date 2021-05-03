@@ -160,6 +160,7 @@ std::optional<std::string> save_file(const std::string& caption, const std::vect
 {
         std::map<QString, QString> map;
         std::vector<QString> dialog_filters;
+        dialog_filters.reserve(filters.size());
         for (const FileFilter& v : filters)
         {
                 check_filter(v);

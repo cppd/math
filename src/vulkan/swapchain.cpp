@@ -331,6 +331,7 @@ Swapchain::Swapchain(
                 error("Failed to find swapchain images");
         }
 
+        m_image_views.reserve(m_images.size());
         for (const VkImage& image : m_images)
         {
                 m_image_views.push_back(

@@ -338,6 +338,7 @@ public:
                 ASSERT(thread_count > 0);
 
                 m_threads.resize(thread_count);
+                m_progress.reserve(thread_count);
 
                 for (unsigned id = 0; id < m_threads.size(); ++id)
                 {

@@ -73,7 +73,13 @@ vec2i grayscale_groups(const vec2i& group_size, const std::vector<vec2i>& sizes)
 
 std::vector<vec2i> downsample_groups(const vec2i& group_size, const std::vector<vec2i>& sizes)
 {
+        if (sizes.size() <= 1)
+        {
+                return {};
+        }
+
         std::vector<vec2i> groups;
+        groups.reserve(sizes.size() - 1);
 
         for (unsigned i = 1; i < sizes.size(); ++i)
         {
@@ -103,6 +109,7 @@ std::vector<vec2i> flow_groups(
         int top_point_count_y)
 {
         std::vector<vec2i> groups;
+        groups.reserve(sizes.size());
 
         groups.push_back(group_count(top_point_count_x, top_point_count_y, group_size));
 

@@ -40,6 +40,8 @@ SlidersWidget::SlidersWidget(const std::vector<int>& screen_size)
         QGridLayout* layout = new QGridLayout(this);
         layout->setContentsMargins(5, 5, 5, 5);
 
+        m_sliders.reserve(slider_count);
+        m_slider_positions.reserve(slider_count);
         for (int number = 0; number < slider_count; ++number)
         {
                 const int dimension = number + 2;

@@ -89,17 +89,18 @@ bool is_scalar_volume(image::ColorFormat color_format)
 
 image::Image<1> transfer_function()
 {
-        constexpr int size = 256;
-        constexpr Color color = Color(Srgb8(230, 255, 230));
+        constexpr int SIZE = 256;
+        constexpr Color COLOR = Color(Srgb8(230, 255, 230));
 
         std::vector<float> pixels;
-        const float max = size - 1;
-        for (int i = 0; i < size; ++i)
+        pixels.reserve(4 * SIZE);
+        constexpr float MAX = SIZE - 1;
+        for (int i = 0; i < SIZE; ++i)
         {
-                float alpha = i / max;
-                pixels.push_back(color.red());
-                pixels.push_back(color.green());
-                pixels.push_back(color.blue());
+                float alpha = i / MAX;
+                pixels.push_back(COLOR.red());
+                pixels.push_back(COLOR.green());
+                pixels.push_back(COLOR.blue());
                 pixels.push_back(alpha);
         }
 
@@ -108,7 +109,7 @@ image::Image<1> transfer_function()
         image.pixels.resize(data_size(pixels));
         std::memcpy(image.pixels.data(), data_pointer(pixels), data_size(pixels));
         image.color_format = image::ColorFormat::R32G32B32A32;
-        image.size[0] = size;
+        image.size[0] = SIZE;
 
         return image;
 }
