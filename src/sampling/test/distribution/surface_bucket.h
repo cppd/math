@@ -80,7 +80,7 @@ public:
                         double geometry_bucket_area = geometry::sphere_simplex_area(this->vertices());
                         double relative_error = std::abs(bucket_area - geometry_bucket_area)
                                                 / std::max(geometry_bucket_area, bucket_area);
-                        if (!(relative_error < 0.02))
+                        if (!(relative_error < 0.025))
                         {
                                 std::ostringstream oss;
                                 oss << "bucket area relative error = " << relative_error << '\n';
