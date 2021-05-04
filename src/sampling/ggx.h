@@ -32,9 +32,12 @@ CRC Press, 2018.
 
 #include <src/com/interpolation.h>
 #include <src/com/math.h>
+#include <src/geometry/shapes/sphere_integral.h>
 #include <src/numerical/complement.h>
 #include <src/numerical/identity.h>
 #include <src/numerical/vec.h>
+
+#include <cmath>
 
 namespace ns::sampling
 {
@@ -190,8 +193,6 @@ Vector<N, T> ggx_vn(RandomEngine& random_engine, const Vector<N, T>& ve, T alpha
 template <std::size_t N, typename T, typename RandomEngine>
 Vector<N, T> ggx_vn(RandomEngine& random_engine, const Vector<N, T>& normal, const Vector<N, T>& v, T alpha)
 {
-        static_assert(N == 3);
-
         std::array<Vector<N, T>, N - 1> basis = numerical::orthogonal_complement_of_unit_vector(normal);
 
         Vector<N, T> ve;
@@ -236,16 +237,29 @@ T ggx_g1(T n_v, T h_v, T alpha)
 }
 
 // (9.41)
-template <typename T>
+template <std::size_t N, typename T>
 T ggx_pdf(T n_h, T alpha)
 {
+        static_assert(N >= 3);
         static_assert(std::is_floating_point_v<T>);
 
         if (n_h > 0)
         {
+                static constexpr T K = geometry::sphere_integrate_cosine_factor_over_hemisphere(N);
+
                 T alpha_2 = square(alpha);
                 T v = 1 + square(n_h) * (alpha_2 - 1);
-                return n_h * alpha_2 / (PI<T> * square(v));
+                // GGX<3> * pow(sin(hemisphere) / sin(ellipsoid), N - 3)
+                //   sin(hemisphere) / sin(ellipsoid) = 1 / sqrt(v)
+                // GGX<3> / pow(sqrt(v), N - 3)
+                //   GGX<3> = n_h * alpha_2 / (K * v * v)
+                // n_h * alpha_2 / (K * pow(v, 0.5 * (N + 1))
+                T v_power = power<(N + 1) / 2>(v);
+                if constexpr (((N + 1) & 1) == 1)
+                {
+                        v_power *= std::sqrt(v);
+                }
+                return n_h * alpha_2 / (K * v_power);
         }
         return 0;
 }
@@ -258,7 +272,7 @@ T ggx_vn_pdf(T n_v, T n_h, T h_v, T alpha)
 
         if (n_v > 0 && n_h > 0)
         {
-                return ggx_g1(n_v, h_v, alpha) * ggx_pdf(n_h, alpha) / (n_v * n_h);
+                return ggx_g1(n_v, h_v, alpha) * ggx_pdf<3>(n_h, alpha) / (n_v * n_h);
         }
         return 0;
 }

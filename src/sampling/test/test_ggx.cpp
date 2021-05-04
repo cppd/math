@@ -78,7 +78,7 @@ void test_ggx()
                 },
                 [&](T angle)
                 {
-                        return ggx_pdf(std::cos(angle), alpha);
+                        return ggx_pdf<N>(std::cos(angle), alpha);
                 });
 
         test_distribution_surface<N, T, RandomEngine<T>>(
@@ -89,7 +89,7 @@ void test_ggx()
                 },
                 [&](const Vector<N, T>& v)
                 {
-                        return ggx_pdf(dot(normal, v), alpha);
+                        return ggx_pdf<N>(dot(normal, v), alpha);
                 });
 
         const Vector<N, T> v = [&]()
@@ -103,35 +103,38 @@ void test_ggx()
                 return r;
         }();
 
-        const T n_v = dot(normal, v);
+        if constexpr (N == 3)
+        {
+                const T n_v = dot(normal, v);
 
-        test_distribution_surface<N, T, RandomEngine<T>>(
-                "Visible Normals", SURFACE_COUNT_PER_BUCKET,
-                [&](RandomEngine<T>& random_engine)
-                {
-                        return ggx_vn(random_engine, normal, v, alpha);
-                },
-                [&](const Vector<N, T>& h)
-                {
-                        const T n_h = dot(normal, h);
-                        const T h_v = dot(h, v);
-                        return ggx_vn_pdf(n_v, n_h, h_v, alpha);
-                });
+                test_distribution_surface<N, T, RandomEngine<T>>(
+                        "Visible Normals", SURFACE_COUNT_PER_BUCKET,
+                        [&](RandomEngine<T>& random_engine)
+                        {
+                                return ggx_vn(random_engine, normal, v, alpha);
+                        },
+                        [&](const Vector<N, T>& h)
+                        {
+                                const T n_h = dot(normal, h);
+                                const T h_v = dot(h, v);
+                                return ggx_vn_pdf(n_v, n_h, h_v, alpha);
+                        });
 
-        test_distribution_surface<N, T, RandomEngine<T>>(
-                "Visible Normals, Reflected", SURFACE_COUNT_PER_BUCKET,
-                [&](RandomEngine<T>& random_engine)
-                {
-                        const Vector<N, T> h = ggx_vn(random_engine, normal, v, alpha);
-                        return numerical::reflect_vn(v, h);
-                },
-                [&](const Vector<N, T>& l)
-                {
-                        const Vector<N, T> h = (l + v).normalized();
-                        const T n_h = dot(normal, h);
-                        const T h_v = dot(h, v);
-                        return ggx_vn_reflected_pdf(n_v, n_h, h_v, alpha);
-                });
+                test_distribution_surface<N, T, RandomEngine<T>>(
+                        "Visible Normals, Reflected", SURFACE_COUNT_PER_BUCKET,
+                        [&](RandomEngine<T>& random_engine)
+                        {
+                                const Vector<N, T> h = ggx_vn(random_engine, normal, v, alpha);
+                                return numerical::reflect_vn(v, h);
+                        },
+                        [&](const Vector<N, T>& l)
+                        {
+                                const Vector<N, T> h = (l + v).normalized();
+                                const T n_h = dot(normal, h);
+                                const T h_v = dot(h, v);
+                                return ggx_vn_reflected_pdf(n_v, n_h, h_v, alpha);
+                        });
+        }
 
         test_performance<N, T, RandomEngine<T>>(
                 PERFORMANCE_COUNT,
@@ -149,5 +152,7 @@ void test_ggx()
 }
 
 TEST_LARGE("Sample Distribution, GGX, 3-Space", test_ggx<3>)
+TEST_LARGE("Sample Distribution, GGX, 4-Space", test_ggx<4>)
+TEST_LARGE("Sample Distribution, GGX, 5-Space", test_ggx<5>)
 }
 }
