@@ -258,9 +258,9 @@ public:
                 const long long sample_count = buckets_sample_count();
                 const long long uniform_count = buckets_uniform_count();
 
-                T sum_sampled = 0;
-                T sum_expected = 0;
-                T sum_error = 0;
+                long double sum_sampled = 0;
+                long double sum_expected = 0;
+                long double sum_error = 0;
 
                 for (const Bucket<N, T>& bucket : m_buckets)
                 {
@@ -292,10 +292,12 @@ public:
                                 continue;
                         }
 
+                        T max_relative_error = expected_density < UNIFORM_DENSITY ? 0.2 : 0.1;
+
                         T relative_error = std::abs(sampled_density - expected_density)
                                            / std::max(sampled_density, expected_density);
 
-                        if (relative_error <= T(0.1))
+                        if (relative_error <= max_relative_error)
                         {
                                 continue;
                         }
@@ -313,14 +315,14 @@ public:
                         error(oss.str());
                 }
 
-                ASSERT(std::abs(sum_sampled - 1) < T(0.01));
+                ASSERT(std::abs(sum_sampled - 1) < 0.01);
 
-                if (!(std::abs(sum_expected - 1) < T(0.01)))
+                if (!(std::abs(sum_expected - 1) < 0.01))
                 {
                         error("PDF integral " + to_string(sum_expected) + " is not equal to 1");
                 }
 
-                if (!(sum_error < T(0.01)))
+                if (!(sum_error < 0.01))
                 {
                         error("Absolute error " + to_string(sum_error));
                 }
