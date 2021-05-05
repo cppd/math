@@ -17,7 +17,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "../sphere_uniform.h"
 
-#include <src/com/file/path.h>
 #include <src/com/log.h>
 #include <src/com/print.h>
 #include <src/com/random/engine.h>
@@ -25,8 +24,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/com/type/name.h>
 #include <src/test/test.h>
 
-#include <fstream>
 #include <random>
+#include <sstream>
 #include <string>
 
 namespace ns::sampling::test
@@ -35,92 +34,18 @@ namespace
 {
 namespace impl = sphere_implementation;
 
-std::string replace_space(const std::string_view& s)
-{
-        std::string r;
-        r.reserve(s.size());
-        for (char c : s)
-        {
-                r += !std::isspace(static_cast<unsigned char>(c)) ? c : '_';
-        }
-        return r;
-}
-
 template <typename T>
-constexpr std::enable_if_t<std::is_same_v<std::remove_cv_t<T>, std::mt19937>, const char*> random_engine_name()
+constexpr std::string_view ENGINE_NAME = []
 {
-        return "std::mt19937";
-}
-template <typename T>
-constexpr std::enable_if_t<std::is_same_v<std::remove_cv_t<T>, std::mt19937_64>, const char*> random_engine_name()
-{
-        return "std::mt19937_64";
-}
-
-template <std::size_t N, typename T>
-std::filesystem::path samples_file_name(const std::string_view& name)
-{
-        return path_from_utf8(
-                "samples_on_sphere_" + replace_space(name) + "_" + to_string(N) + "d_" + replace_space(type_name<T>())
-                + ".txt");
-}
-
-template <std::size_t N, typename T, typename Generator>
-void write_samples_to_file(const std::string_view& name, int count, const Generator& g)
-{
-        std::ofstream file(std::filesystem::temp_directory_path() / samples_file_name<N, T>(name));
-
-        for (int i = 0; i < count; ++i)
+        if constexpr (std::is_same_v<std::remove_cv_t<T>, std::mt19937>)
         {
-                file << to_string(g()) << "\n";
+                return "std::mt19937";
         }
-}
-
-template <std::size_t N, typename T, typename RandomEngine>
-void write_samples_to_files()
-{
-        RandomEngine random_engine = create_engine<RandomEngine>();
-
-        constexpr int count = N == 2 ? 200 : 1e4;
-
-        LOG("Writing samples " + to_string(N) + "D");
-
-        write_samples_to_file<N, T>(
-                "rejection", count,
-                [&]()
-                {
-                        return impl::uniform_on_sphere_by_rejection<N, T>(random_engine);
-                });
-
-        write_samples_to_file<N, T>(
-                "normal distribution", count,
-                [&]()
-                {
-                        return impl::uniform_on_sphere_by_normal_distribution<N, T>(random_engine);
-                });
-}
-
-template <typename T, typename RandomEngine>
-void write_samples_to_files()
-{
-        static_assert(std::is_floating_point_v<T>);
-
-        LOG(std::string("Files <") + type_name<T>() + ", " + random_engine_name<RandomEngine>() + ">");
-
-        write_samples_to_files<2, T, RandomEngine>();
-        write_samples_to_files<3, T, RandomEngine>();
-        write_samples_to_files<4, T, RandomEngine>();
-}
-
-template <typename RandomEngine>
-void write_samples_to_files()
-{
-        write_samples_to_files<float, RandomEngine>();
-        LOG("");
-        write_samples_to_files<double, RandomEngine>();
-        LOG("");
-        write_samples_to_files<long double, RandomEngine>();
-}
+        if constexpr (std::is_same_v<std::remove_cv_t<T>, std::mt19937_64>)
+        {
+                return "std::mt19937_64";
+        }
+}();
 
 template <std::size_t N, typename T, typename RandomEngine>
 double test_performance_on_sphere_by_rejection(int count, RandomEngine& random_engine)
@@ -217,14 +142,22 @@ std::string time_to_string(double v)
 }
 
 template <Type type, std::size_t N, typename T, typename RandomEngine>
+void write_description()
+{
+        std::ostringstream oss;
+        oss << type_to_string(type) << ", " << N << "D, " << type_name<T>() << ", " << ENGINE_NAME<RandomEngine>;
+        LOG(oss.str());
+}
+
+template <Type type, std::size_t N, typename T, typename RandomEngine>
 void test_performance()
 {
         constexpr int COUNT = 5'000'000;
 
+        write_description<type, N, T, RandomEngine>();
+
         RandomEngine random_engine = create_engine<RandomEngine>();
 
-        LOG(type_to_string(type) + ", " + to_string(N) + "D, " + type_name<T>() + ", "
-            + random_engine_name<RandomEngine>());
         double t;
         switch (type)
         {
@@ -283,9 +216,6 @@ void test_performance()
 
 void test()
 {
-        write_samples_to_files<std::mt19937_64>();
-        LOG("");
-
         test_performance<Type::OnSphere>();
         LOG("");
         test_performance<Type::InSphere>();
