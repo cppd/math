@@ -21,6 +21,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <src/com/constant.h>
 #include <src/com/error.h>
+#include <src/com/math.h>
 #include <src/numerical/integrate.h>
 
 #include <algorithm>
@@ -192,15 +193,15 @@ T sphere_integrate_power_cosine_factor_over_hemisphere(std::type_identity_t<T> k
 
         if constexpr (N == 3)
         {
-                return std::pow(2 * PI<T>, T(1)) / (1 + k);
+                return power<1>(2 * PI<T>) / (1 + k);
         }
         if constexpr (N == 5)
         {
-                return std::pow(2 * PI<T>, T(2)) / ((1 + k) * (3 + k));
+                return power<2>(2 * PI<T>) / ((1 + k) * (3 + k));
         }
         if constexpr (N == 7)
         {
-                return std::pow(2 * PI<T>, T(3)) / ((1 + k) * (3 + k) * (5 + k));
+                return power<3>(2 * PI<T>) / ((1 + k) * (3 + k) * (5 + k));
         }
         return std::pow(PI<T>, (N - 1) / T(2)) * std::exp(std::lgamma((k + 1) / 2) - std::lgamma((k + N) / 2));
 }

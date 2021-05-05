@@ -49,6 +49,7 @@ Elsevier, 2017.
 #include <src/com/constant.h>
 #include <src/com/error.h>
 #include <src/com/interpolation.h>
+#include <src/com/math.h>
 #include <src/numerical/optics.h>
 #include <src/numerical/vec.h>
 #include <src/sampling/ggx.h>
@@ -79,7 +80,7 @@ class GGXDiffuseBRDF
         // Schlick approximation of Fresnel reflectance
         static RGB fresnel(const RGB& f0, T h_l)
         {
-                return mix(f0, RGB(1), std::pow(1 - h_l, T(5)));
+                return mix(f0, RGB(1), power<5>(1 - h_l));
         }
 
         // (9.41)
@@ -106,16 +107,16 @@ class GGXDiffuseBRDF
         // (9.64)
         RGB diffuse(const RGB& f0, const RGB& rho_ss, T n_l, T n_v)
         {
-                T l = (1 - std::pow(1 - n_l, T(5)));
-                T v = (1 - std::pow(1 - n_v, T(5)));
+                T l = (1 - power<5>(1 - n_l));
+                T v = (1 - power<5>(1 - n_v));
                 return (RGB(1) - f0) * rho_ss * ((21 / (20 * PI<T>)) * l * v);
         }
 
         // (9.66), (9.67) without the subsurface term
         static RGB diffuse_disney_without_subsurface(const RGB& rho_ss, T roughness, T n_l, T n_v, T h_l)
         {
-                T l = std::pow(1 - n_l, T(5));
-                T v = std::pow(1 - n_v, T(5));
+                T l = power<5>(1 - n_l);
+                T v = power<5>(1 - n_v);
                 T d_90 = T(0.5) + 2 * roughness * sqr(h_l);
                 T f_d = mix(T(1), d_90, l) * mix(T(1), d_90, v);
                 return rho_ss * (n_l * n_v * (1 / PI<T>)*f_d);
@@ -124,8 +125,8 @@ class GGXDiffuseBRDF
         // (9.66), (9.67)
         static RGB diffuse_disney(const RGB& rho_ss, T roughness, T n_l, T n_v, T h_l, T k_ss)
         {
-                T l = std::pow(1 - n_l, T(5));
-                T v = std::pow(1 - n_v, T(5));
+                T l = power<5>(1 - n_l);
+                T v = power<5>(1 - n_v);
                 T ss_90 = roughness * sqr(h_l);
                 T d_90 = T(0.5) + 2 * ss_90;
                 T f_d = mix(T(1), d_90, l) * mix(T(1), d_90, v);

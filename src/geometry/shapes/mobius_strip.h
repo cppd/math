@@ -18,6 +18,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #pragma once
 
 #include <src/com/constant.h>
+#include <src/com/math.h>
 #include <src/numerical/vec.h>
 
 #include <cmath>
@@ -34,7 +35,7 @@ T curve(T x)
         x = x / (2 * PI<T>);
 
         x = 2 * x - 1;
-        x = std::copysign(std::pow(std::abs(x), 5), x);
+        x = std::copysign(power<5>(std::abs(x)), x);
         x = (x + 1) / 2;
 
         return PI<T> * x;

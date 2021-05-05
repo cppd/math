@@ -19,6 +19,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <src/com/constant.h>
 #include <src/com/error.h>
+#include <src/com/math.h>
 #include <src/geometry/shapes/mobius_strip.h>
 #include <src/geometry/shapes/sphere_create.h>
 #include <src/geometry/shapes/torus.h>
@@ -209,7 +210,7 @@ std::vector<Vector<N, float>> generate_points_sphere_with_notch(unsigned point_c
                 double dot_z = dot(LAST_AXIS<N, double>, v);
                 if (dot_z > 0)
                 {
-                        v[N - 1] *= 1 - std::abs(0.5 * std::pow(dot_z, 5));
+                        v[N - 1] *= 1 - std::abs(0.5 * power<5>(dot_z));
                 }
                 points.add(v);
         }

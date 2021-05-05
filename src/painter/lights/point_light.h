@@ -20,6 +20,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "../objects.h"
 
 #include <src/color/color.h>
+#include <src/com/math.h>
 #include <src/numerical/vec.h>
 
 #include <cmath>
@@ -47,20 +48,22 @@ public:
         {
                 const Vector<N, T> direction = m_location - point;
                 const T squared_distance = direction.norm_squared();
+                const T distance = std::sqrt(squared_distance);
 
                 T coef = m_coef;
-                if constexpr (N == 3)
+
+                if constexpr ((N & 1) == 1)
                 {
-                        coef /= squared_distance;
+                        coef /= power<((N - 1) / 2)>(squared_distance);
                 }
                 else
                 {
-                        coef /= std::pow(squared_distance, T(N - 1) / 2);
+                        coef /= power<((N - 2) / 2)>(squared_distance) * distance;
                 }
 
                 LightSourceSample<N, T> s;
-                s.distance = std::sqrt(squared_distance);
-                s.l = direction / *s.distance;
+                s.distance = distance;
+                s.l = direction / distance;
                 s.pdf = 1;
                 s.L = m_color * coef;
                 return s;

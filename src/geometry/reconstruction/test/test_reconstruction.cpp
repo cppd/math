@@ -19,6 +19,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <src/com/error.h>
 #include <src/com/log.h>
+#include <src/com/math.h>
 #include <src/com/names.h>
 #include <src/com/print.h>
 #include <src/com/random/engine.h>
@@ -81,7 +82,7 @@ std::vector<Vector<N, float>> points_sphere_with_notch(unsigned point_count, boo
                 double dot_z = dot(LAST_AXIS<N, double>, v);
                 if (dot_z > 0)
                 {
-                        v[N - 1] *= 1 - std::abs(0.5 * std::pow(dot_z, 5));
+                        v[N - 1] *= 1 - std::abs(0.5 * power<5>(dot_z));
                 }
 
                 points.push_back(to_vector<float>(v));
