@@ -188,36 +188,11 @@ Vector<N, T> ggx_vn(RandomEngine& random_engine, const Vector<N, T>& ve, T alpha
         return ne.normalized();
 }
 #endif
-}
-
-template <std::size_t N, typename T, typename RandomEngine>
-Vector<N, T> ggx_vn(RandomEngine& random_engine, const Vector<N, T>& normal, const Vector<N, T>& v, T alpha)
-{
-        std::array<Vector<N, T>, N - 1> basis = numerical::orthogonal_complement_of_unit_vector(normal);
-
-        Vector<N, T> ve;
-        for (std::size_t i = 0; i < N - 1; ++i)
-        {
-                ve[i] = dot(v, basis[i]);
-        }
-        ve[N - 1] = dot(v, normal);
-
-        Vector<N, T> ne = ggx_implementation::ggx_vn(random_engine, ve, alpha);
-
-        Vector<N, T> res = ne[N - 1] * normal;
-        for (std::size_t i = 0; i < N - 1; ++i)
-        {
-                res += ne[i] * basis[i];
-        }
-        return res;
-}
 
 // (9.37) (9.42)
 template <typename T>
 T ggx_g1_lambda(T n_v, T alpha)
 {
-        static_assert(std::is_floating_point_v<T>);
-
         T a_square = square(n_v / alpha) / (1 - square(n_v));
 
         return T(0.5) * (std::sqrt(1 + 1 / a_square) - 1);
@@ -227,13 +202,39 @@ T ggx_g1_lambda(T n_v, T alpha)
 template <typename T>
 T ggx_g1(T n_v, T h_v, T alpha)
 {
-        static_assert(std::is_floating_point_v<T>);
-
         if (h_v > 0)
         {
                 return h_v / (1 + ggx_g1_lambda(n_v, alpha));
         }
         return 0;
+}
+}
+
+template <std::size_t N, typename T, typename RandomEngine>
+Vector<N, T> ggx_vn(RandomEngine& random_engine, const Vector<N, T>& normal, const Vector<N, T>& v, T alpha)
+{
+        static_assert(N >= 3);
+        static_assert(std::is_floating_point_v<T>);
+
+        namespace impl = ggx_implementation;
+
+        std::array<Vector<N, T>, N - 1> basis = numerical::orthogonal_complement_of_unit_vector(normal);
+
+        Vector<N, T> ve;
+        for (std::size_t i = 0; i < N - 1; ++i)
+        {
+                ve[i] = dot(v, basis[i]);
+        }
+        ve[N - 1] = dot(v, normal);
+
+        Vector<N, T> ne = impl::ggx_vn(random_engine, ve, alpha);
+
+        Vector<N, T> res = ne[N - 1] * normal;
+        for (std::size_t i = 0; i < N - 1; ++i)
+        {
+                res += ne[i] * basis[i];
+        }
+        return res;
 }
 
 // (9.41)
@@ -265,22 +266,28 @@ T ggx_pdf(T n_h, T alpha)
 }
 
 // (2), (3)
-template <typename T>
+template <std::size_t N, typename T>
 T ggx_vn_pdf(T n_v, T n_h, T h_v, T alpha)
 {
+        static_assert(N >= 3);
         static_assert(std::is_floating_point_v<T>);
+
+        namespace impl = ggx_implementation;
 
         if (n_v > 0 && n_h > 0)
         {
-                return ggx_g1(n_v, h_v, alpha) * ggx_pdf<3>(n_h, alpha) / (n_v * n_h);
+                return impl::ggx_g1(n_v, h_v, alpha) * ggx_pdf<N>(n_h, alpha) / (n_v * n_h);
         }
         return 0;
 }
 
 // (17)
-template <typename T>
+template <std::size_t N, typename T>
 T ggx_vn_reflected_pdf(T n_v, T n_h, T h_v, T alpha)
 {
-        return ggx_vn_pdf(n_v, n_h, h_v, alpha) / (4 * h_v);
+        static_assert(N == 3);
+        static_assert(std::is_floating_point_v<T>);
+
+        return ggx_vn_pdf<N>(n_v, n_h, h_v, alpha) / (4 * h_v);
 }
 }
