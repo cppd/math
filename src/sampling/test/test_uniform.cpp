@@ -77,38 +77,6 @@ void write_samples_to_file(const std::string_view& name, int count, const Genera
 }
 
 template <std::size_t N, typename T, typename RandomEngine>
-void test_performance_rejection(int count, RandomEngine& random_engine)
-{
-        static Vector<N, T> v;
-
-        TimePoint start_time = time();
-
-        for (int i = 0; i < count; ++i)
-        {
-                v = impl::uniform_on_sphere_by_rejection<N, T>(random_engine);
-        }
-
-        LOG("Rejection: time = " + to_string_fixed(duration_from(start_time), 5)
-            + " seconds, count = " + to_string(count));
-}
-
-template <std::size_t N, typename T, typename RandomEngine>
-void test_performance_normal_distribution(int count, RandomEngine& random_engine)
-{
-        static Vector<N, T> v;
-
-        TimePoint start_time = time();
-
-        for (int i = 0; i < count; ++i)
-        {
-                v = impl::uniform_on_sphere_by_normal_distribution<N, T>(random_engine);
-        }
-
-        LOG("Normal distribution: time = " + to_string_fixed(duration_from(start_time), 5)
-            + " seconds, count = " + to_string(count));
-}
-
-template <std::size_t N, typename T, typename RandomEngine>
 void write_samples_to_files()
 {
         RandomEngine random_engine = create_engine<RandomEngine>();
@@ -132,18 +100,6 @@ void write_samples_to_files()
                 });
 }
 
-template <std::size_t N, typename T, typename RandomEngine>
-void test_performance()
-{
-        RandomEngine random_engine = create_engine<RandomEngine>();
-
-        constexpr int count = 5e6;
-
-        LOG("Testing performance " + to_string(N) + "D");
-        test_performance_rejection<N, T>(count, random_engine);
-        test_performance_normal_distribution<N, T>(count, random_engine);
-}
-
 template <typename T, typename RandomEngine>
 void write_samples_to_files()
 {
@@ -156,23 +112,6 @@ void write_samples_to_files()
         write_samples_to_files<4, T, RandomEngine>();
 }
 
-template <typename T, typename RandomEngine>
-void test_performance()
-{
-        static_assert(std::is_floating_point_v<T>);
-
-        LOG(std::string("Performance <") + type_name<T>() + ", " + random_engine_name<RandomEngine>() + ">");
-
-        test_performance<2, T, RandomEngine>();
-        test_performance<3, T, RandomEngine>();
-        test_performance<4, T, RandomEngine>();
-        test_performance<5, T, RandomEngine>();
-        test_performance<6, T, RandomEngine>();
-        test_performance<7, T, RandomEngine>();
-        test_performance<8, T, RandomEngine>();
-        test_performance<9, T, RandomEngine>();
-}
-
 template <typename RandomEngine>
 void write_samples_to_files()
 {
@@ -183,24 +122,173 @@ void write_samples_to_files()
         write_samples_to_files<long double, RandomEngine>();
 }
 
-template <typename T>
+template <std::size_t N, typename T, typename RandomEngine>
+double test_performance_on_sphere_by_rejection(int count, RandomEngine& random_engine)
+{
+        static Vector<N, T> v;
+
+        TimePoint start_time = time();
+
+        for (int i = 0; i < count; ++i)
+        {
+                v = impl::uniform_on_sphere_by_rejection<N, T>(random_engine);
+        }
+
+        return duration_from(start_time);
+}
+
+template <std::size_t N, typename T, typename RandomEngine>
+double test_performance_on_sphere_by_normal_distribution(int count, RandomEngine& random_engine)
+{
+        static Vector<N, T> v;
+
+        TimePoint start_time = time();
+
+        for (int i = 0; i < count; ++i)
+        {
+                v = impl::uniform_on_sphere_by_normal_distribution<N, T>(random_engine);
+        }
+
+        return duration_from(start_time);
+}
+
+template <std::size_t N, typename T, typename RandomEngine>
+double test_performance_in_sphere_by_rejection(int count, RandomEngine& random_engine)
+{
+        static Vector<N, T> v;
+        static T v_length_square;
+
+        TimePoint start_time = time();
+
+        for (int i = 0; i < count; ++i)
+        {
+                impl::uniform_in_sphere_by_rejection(random_engine, v, v_length_square);
+        }
+
+        return duration_from(start_time);
+}
+
+template <std::size_t N, typename T, typename RandomEngine>
+double test_performance_in_sphere_by_normal_distribution(int count, RandomEngine& random_engine)
+{
+        static Vector<N, T> v;
+        static T v_length_square;
+
+        TimePoint start_time = time();
+
+        for (int i = 0; i < count; ++i)
+        {
+                impl::uniform_in_sphere_by_normal_distribution(random_engine, v, v_length_square);
+        }
+
+        return duration_from(start_time);
+}
+
+enum class Type
+{
+        OnSphere,
+        InSphere
+};
+
+std::string type_to_string(Type type)
+{
+        switch (type)
+        {
+        case Type::OnSphere:
+        {
+                return "On Sphere";
+        }
+        case Type::InSphere:
+        {
+                return "In Sphere";
+        }
+        }
+        error_fatal("Unknown type " + to_string(static_cast<long long>(type)));
+}
+
+std::string time_to_string(double v)
+{
+        std::ostringstream oss;
+        oss << std::fixed;
+        oss << std::setprecision(5);
+        oss << std::setw(8);
+        oss << v;
+        return oss.str();
+}
+
+template <Type type, std::size_t N, typename T, typename RandomEngine>
 void test_performance()
 {
-        test_performance<T, std::mt19937>();
+        constexpr int COUNT = 5'000'000;
+
+        RandomEngine random_engine = create_engine<RandomEngine>();
+
+        LOG(type_to_string(type) + ", " + to_string(N) + "D, " + type_name<T>() + ", "
+            + random_engine_name<RandomEngine>());
+        double t;
+        switch (type)
+        {
+        case Type::OnSphere:
+        {
+                t = test_performance_on_sphere_by_rejection<N, T>(COUNT, random_engine);
+                LOG("  Rejection: " + time_to_string(t));
+                t = test_performance_on_sphere_by_normal_distribution<N, T>(COUNT, random_engine);
+                LOG("  Normal   : " + time_to_string(t));
+                return;
+        }
+        case Type::InSphere:
+        {
+                t = test_performance_in_sphere_by_rejection<N, T>(COUNT, random_engine);
+                LOG("  Rejection: " + time_to_string(t));
+                t = test_performance_in_sphere_by_normal_distribution<N, T>(COUNT, random_engine);
+                LOG("  Normal   : " + time_to_string(t));
+                return;
+        }
+        }
+        error_fatal("Unknown type " + to_string(static_cast<long long>(type)));
+}
+
+template <Type type, std::size_t N, typename T>
+void test_performance()
+{
+        test_performance<type, N, T, std::mt19937>();
+        test_performance<type, N, T, std::mt19937_64>();
+}
+
+template <Type type, typename T>
+void test_performance()
+{
+        static_assert(std::is_floating_point_v<T>);
+
+        test_performance<type, 2, T>();
         LOG("");
-        test_performance<T, std::mt19937_64>();
+        test_performance<type, 3, T>();
+        LOG("");
+        test_performance<type, 4, T>();
+        LOG("");
+        test_performance<type, 5, T>();
+        LOG("");
+        test_performance<type, 6, T>();
+        LOG("");
+        test_performance<type, 7, T>();
+}
+
+template <Type type>
+void test_performance()
+{
+        test_performance<type, float>();
+        LOG("");
+        test_performance<type, double>();
 }
 
 void test()
 {
         write_samples_to_files<std::mt19937_64>();
+        LOG("");
 
+        test_performance<Type::OnSphere>();
         LOG("");
-        test_performance<float>();
-        LOG("");
-        test_performance<double>();
-        LOG("");
-        test_performance<long double>();
+        test_performance<Type::InSphere>();
 }
 
 TEST_PERFORMANCE("Uniform Sphere Samples", test)
