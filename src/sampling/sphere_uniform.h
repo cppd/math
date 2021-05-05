@@ -94,7 +94,19 @@ void uniform_in_sphere_by_normal_distribution(RandomEngine& random_engine, Vecto
 
         thread_local std::uniform_real_distribution<T> urd(0, 1);
 
-        T k = std::pow(urd(random_engine), T(1) / N);
+        T k = urd(random_engine);
+        if constexpr (N == 2)
+        {
+                k = std::sqrt(k);
+        }
+        else if constexpr (N == 4)
+        {
+                k = std::sqrt(std::sqrt(k));
+        }
+        else
+        {
+                k = std::pow(k, T(1) / N);
+        }
         v *= k;
         v_length_square = k * k;
 }
@@ -141,7 +153,7 @@ void uniform_in_sphere(RandomEngine& random_engine, Vector<N, T>& v, T& v_length
 {
         namespace impl = sphere_implementation;
 
-        if constexpr (N <= 5)
+        if constexpr (N <= 4)
         {
                 impl::uniform_in_sphere_by_rejection(random_engine, v, v_length_square);
         }
