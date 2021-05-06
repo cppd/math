@@ -264,11 +264,11 @@ public:
 
                 for (const Bucket<N, T>& bucket : m_buckets)
                 {
-                        T bucket_area = bucket.area(uniform_count);
-                        T sampled_distribution = T(bucket.sample_count()) / sample_count;
-                        T sampled_density = sampled_distribution / bucket_area;
-                        T expected_density = bucket.pdf();
-                        T expected_distribution = expected_density * bucket_area;
+                        const T bucket_area = bucket.area(uniform_count);
+                        const T sampled_distribution = T(bucket.sample_count()) / sample_count;
+                        const T sampled_density = sampled_distribution / bucket_area;
+                        const T expected_density = bucket.pdf();
+                        const T expected_distribution = expected_density * bucket_area;
 
                         ASSERT(sampled_density >= 0);
                         ASSERT(sampled_distribution >= 0);
@@ -292,25 +292,33 @@ public:
                                 continue;
                         }
 
-                        T max_relative_error = expected_density < UNIFORM_DENSITY ? 0.2 : 0.1;
+                        const T max_relative_error = expected_density < UNIFORM_DENSITY ? 0.2 : 0.1;
 
-                        T relative_error = std::abs(sampled_density - expected_density)
-                                           / std::max(sampled_density, expected_density);
+                        const T relative_error = std::abs(sampled_density - expected_density)
+                                                 / std::max(sampled_density, expected_density);
 
                         if (relative_error <= max_relative_error)
                         {
                                 continue;
                         }
 
+                        const T uniform_distribution = T(bucket.uniform_count()) / uniform_count;
+                        const T uniform_density = uniform_distribution / bucket_area;
+                        const T bucket_relative_area = bucket_area / geometry::sphere_area(N);
+
                         std::ostringstream oss;
                         oss << "sampled distribution = " << sampled_distribution << '\n';
                         oss << "expected distribution = " << expected_distribution << '\n';
+                        oss << "uniform distribution = " << uniform_distribution << '\n';
                         oss << "sampled density = " << sampled_density << '\n';
                         oss << "expected density = " << expected_density << '\n';
+                        oss << "uniform density = " << UNIFORM_DENSITY << '\n';
+                        oss << "uniform computed density = " << uniform_density << '\n';
                         oss << "bucket area = " << bucket_area << '\n';
+                        oss << "bucket relative area = 1 / " << 1 / bucket_relative_area << '\n';
                         oss << "bucket sample count = " << bucket.sample_count() << '\n';
-                        oss << "bucket uniform count = " << bucket.uniform_count() << '\n';
                         oss << "sample count = " << sample_count << '\n';
+                        oss << "bucket uniform count = " << bucket.uniform_count() << '\n';
                         oss << "uniform count = " << uniform_count;
                         error(oss.str());
                 }
