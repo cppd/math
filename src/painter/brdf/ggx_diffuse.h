@@ -214,7 +214,7 @@ class GGXDiffuseBRDF
                 }
 
                 T pdf_cosine = sampling::cosine_on_hemisphere_pdf<N>(dot(n, l));
-                T pdf_ggx = sampling::ggx_vn_reflected_pdf<N>(dot(n, v), dot(n, h), dot(h, l), alpha);
+                T pdf_ggx = sampling::ggx_reflected_pdf<N>(dot(n, v), dot(n, h), dot(h, l), alpha);
 
                 T pdf = T(0.5) * (pdf_cosine + pdf_ggx);
 

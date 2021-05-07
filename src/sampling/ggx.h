@@ -28,6 +28,7 @@ CRC Press, 2018.
 
 #pragma once
 
+#include "pdf.h"
 #include "sphere_uniform.h"
 
 #include <src/com/interpolation.h>
@@ -281,13 +282,12 @@ T ggx_vn_pdf(T n_v, T n_h, T h_v, T alpha)
         return 0;
 }
 
-// (17)
 template <std::size_t N, typename T>
-T ggx_vn_reflected_pdf(T n_v, T n_h, T h_v, T alpha)
+T ggx_reflected_pdf(T n_v, T n_h, T h_v, T alpha)
 {
-        static_assert(N == 3);
+        static_assert(N >= 3);
         static_assert(std::is_floating_point_v<T>);
 
-        return ggx_vn_pdf<N>(n_v, n_h, h_v, alpha) / (4 * h_v);
+        return reflected_pdf<N>(ggx_vn_pdf<N>(n_v, n_h, h_v, alpha), h_v);
 }
 }

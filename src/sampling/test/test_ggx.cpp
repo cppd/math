@@ -118,23 +118,20 @@ void test_ggx()
                         return ggx_vn_pdf<N>(n_v, n_h, h_v, alpha);
                 });
 
-        if constexpr (N == 3)
-        {
-                test_distribution_surface<N, T, RandomEngine<T>>(
-                        "Visible Normals, Reflected", SURFACE_COUNT_PER_BUCKET,
-                        [&](RandomEngine<T>& random_engine)
-                        {
-                                const Vector<N, T> h = ggx_vn(random_engine, normal, v, alpha);
-                                return numerical::reflect_vn(v, h);
-                        },
-                        [&](const Vector<N, T>& l)
-                        {
-                                const Vector<N, T> h = (l + v).normalized();
-                                const T n_h = dot(normal, h);
-                                const T h_v = dot(h, v);
-                                return ggx_vn_reflected_pdf<N>(n_v, n_h, h_v, alpha);
-                        });
-        }
+        test_distribution_surface<N, T, RandomEngine<T>>(
+                "Visible Normals, Reflected", SURFACE_COUNT_PER_BUCKET,
+                [&](RandomEngine<T>& random_engine)
+                {
+                        const Vector<N, T> h = ggx_vn(random_engine, normal, v, alpha);
+                        return numerical::reflect_vn(v, h);
+                },
+                [&](const Vector<N, T>& l)
+                {
+                        const Vector<N, T> h = (l + v).normalized();
+                        const T n_h = dot(normal, h);
+                        const T h_v = dot(h, v);
+                        return ggx_reflected_pdf<N>(n_v, n_h, h_v, alpha);
+                });
 
         test_performance<N, T, RandomEngine<T>>(
                 PERFORMANCE_COUNT,
