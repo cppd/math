@@ -21,6 +21,9 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "../com/support.h"
 
+#include <regex>
+#include <sstream>
+
 namespace ns::gui::dialog
 {
 class TestSelectionParametersDialog::Items final
@@ -29,10 +32,10 @@ class TestSelectionParametersDialog::Items final
         {
                 std::string name;
                 QListWidgetItem* item;
-                QString lower_text;
+                std::string lower_text;
 
                 Item(std::string&& name, QListWidgetItem* item)
-                        : name(std::move(name)), item(item), lower_text(item->text().toLower())
+                        : name(std::move(name)), item(item), lower_text(item->text().toLower().toStdString())
                 {
                 }
         };
@@ -63,16 +66,62 @@ public:
                 }
         }
 
-        void filter(const QString& text)
+        bool filter_regex(const QString& text)
         {
-                const QString s = text.simplified().toLower();
-                const QVector<QStringRef> filter = s.splitRef(' ', Qt::SkipEmptyParts);
+                bool result = true;
+                const std::vector<std::regex> regex = [&]
+                {
+                        std::vector<std::regex> r;
+                        std::istringstream iss(text.simplified().toLower().toStdString());
+                        std::string s;
+                        while (iss >> s)
+                        {
+                                try
+                                {
+                                        r.emplace_back(std::move(s));
+                                }
+                                catch (...)
+                                {
+                                        result = false;
+                                }
+                        }
+                        return r;
+                }();
                 for (Item& item : m_items)
                 {
                         bool contains = true;
-                        for (const QStringRef& ref : filter)
+                        for (const std::regex& r : regex)
                         {
-                                if (!item.lower_text.contains(ref, Qt::CaseSensitive))
+                                if (!std::regex_search(item.lower_text, r))
+                                {
+                                        contains = false;
+                                        break;
+                                }
+                        }
+                        item.item->setHidden(!contains);
+                }
+                return result;
+        }
+
+        void filter_substr(const QString& text)
+        {
+                const std::vector<std::string> substr = [&]
+                {
+                        std::vector<std::string> r;
+                        std::istringstream iss(text.simplified().toLower().toStdString());
+                        std::string s;
+                        while (iss >> s)
+                        {
+                                r.push_back(std::move(s));
+                        }
+                        return r;
+                }();
+                for (Item& item : m_items)
+                {
+                        bool contains = true;
+                        for (const std::string& s : substr)
+                        {
+                                if (item.lower_text.find(s) == std::string::npos)
                                 {
                                         contains = false;
                                         break;
@@ -130,11 +179,40 @@ TestSelectionParametersDialog::TestSelectionParametersDialog(
         connect(ui.lineEdit_filter, &QLineEdit::textChanged, this,
                 [this](const QString& text)
                 {
-                        m_items->filter(text);
+                        filter(text);
+                });
+
+        ui.checkBox_regex->setChecked(true);
+        connect(ui.checkBox_regex, &QCheckBox::stateChanged, this,
+                [this]()
+                {
+                        filter(ui.lineEdit_filter->text());
                 });
 }
 
 TestSelectionParametersDialog::~TestSelectionParametersDialog() = default;
+
+void TestSelectionParametersDialog::filter(const QString& text)
+{
+        const char* style = nullptr;
+        if (ui.checkBox_regex->isChecked())
+        {
+                if (m_items->filter_regex(text))
+                {
+                        style = "color: black;";
+                }
+                else
+                {
+                        style = "color: red;";
+                }
+        }
+        else
+        {
+                m_items->filter_substr(text);
+                style = "color: black;";
+        }
+        ui.lineEdit_filter->setStyleSheet(style);
+}
 
 void TestSelectionParametersDialog::done(int r)
 {

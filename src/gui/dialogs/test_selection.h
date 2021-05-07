@@ -46,6 +46,8 @@ private:
                 std::vector<std::string> test_names,
                 std::optional<TestSelectionParameters>& parameters);
 
+        void filter(const QString& text);
+
         void done(int r) override;
 
 public:
