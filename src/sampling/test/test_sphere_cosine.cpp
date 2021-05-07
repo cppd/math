@@ -52,7 +52,7 @@ void test_cosine_on_hemisphere()
         }();
 
         test_unit<N, T, RandomEngine<T>>(
-                UNIT_COUNT,
+                "", UNIT_COUNT,
                 [&](RandomEngine<T>& random_engine)
                 {
                         return cosine_on_hemisphere(random_engine, normal);
@@ -81,7 +81,7 @@ void test_cosine_on_hemisphere()
                 });
 
         test_performance<N, T, RandomEngine<T>>(
-                PERFORMANCE_COUNT,
+                "", PERFORMANCE_COUNT,
                 [&](RandomEngine<T>& random_engine)
                 {
                         return cosine_on_hemisphere(random_engine, normal);

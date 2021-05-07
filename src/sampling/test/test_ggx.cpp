@@ -58,7 +58,7 @@ void test_ggx()
         }();
 
         test_unit<N, T, RandomEngine<T>>(
-                UNIT_COUNT,
+                "Visible Normals", UNIT_COUNT,
                 [&](RandomEngine<T>& random_engine)
                 {
                         Vector<N, T> v = uniform_on_sphere<N, T>(random_engine);
@@ -67,6 +67,19 @@ void test_ggx()
                                 v = -v;
                         }
                         return ggx_visible_normals_h(random_engine, normal, v, alpha);
+                });
+
+        test_unit<N, T, RandomEngine<T>>(
+                "Visible Normals, Reflected", UNIT_COUNT,
+                [&](RandomEngine<T>& random_engine)
+                {
+                        Vector<N, T> v = uniform_on_sphere<N, T>(random_engine);
+                        if (dot(v, normal) < 0)
+                        {
+                                v = -v;
+                        }
+                        const auto [h, l] = ggx_visible_normals_h_l(random_engine, normal, v, alpha);
+                        return l;
                 });
 
         test_distribution_angle<N, T, RandomEngine<T>>(
@@ -133,10 +146,18 @@ void test_ggx()
                 });
 
         test_performance<N, T, RandomEngine<T>>(
-                PERFORMANCE_COUNT,
+                "Visible Normals", PERFORMANCE_COUNT,
                 [&](RandomEngine<T>& random_engine)
                 {
                         return ggx_visible_normals_h(random_engine, normal, v, alpha);
+                });
+
+        test_performance<N, T, RandomEngine<T>>(
+                "Visible Normals, Reflected", PERFORMANCE_COUNT,
+                [&](RandomEngine<T>& random_engine)
+                {
+                        const auto [h, l] = ggx_visible_normals_h_l(random_engine, normal, v, alpha);
+                        return l;
                 });
 }
 

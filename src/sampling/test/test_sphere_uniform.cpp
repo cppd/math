@@ -50,7 +50,7 @@ void test_sphere_uniform()
         }();
 
         test_unit<N, T, RandomEngine<T>>(
-                UNIT_COUNT,
+                "", UNIT_COUNT,
                 [&](RandomEngine<T>& random_engine)
                 {
                         return uniform_on_sphere<N, T>(random_engine);
@@ -79,7 +79,7 @@ void test_sphere_uniform()
                 });
 
         test_performance<N, T, RandomEngine<T>>(
-                PERFORMANCE_COUNT,
+                "", PERFORMANCE_COUNT,
                 [&](RandomEngine<T>& random_engine)
                 {
                         return uniform_on_sphere<N, T>(random_engine);

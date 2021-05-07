@@ -24,6 +24,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/com/log.h>
 #include <src/com/print.h>
 #include <src/com/random/engine.h>
+#include <src/com/string/ascii.h>
 #include <src/com/thread.h>
 #include <src/com/time.h>
 
@@ -35,10 +36,51 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 namespace ns::sampling::test
 {
-template <std::size_t N, typename T, typename RandomEngine, typename RandomVector>
-void test_unit(const long long count, const RandomVector& random_vector)
+namespace distribution_implementation
 {
-        LOG("  test unit length, count " + to_string_digit_groups(count));
+inline void add_description(std::string* message, const std::string_view& separator, const std::string& description)
+{
+        if (description.empty())
+        {
+                return;
+        }
+        (*message) += separator;
+        for (char c : description)
+        {
+                (*message) += ascii::is_print(c) ? c : ' ';
+        }
+}
+
+inline void log(const std::string& message, bool add_indent = false)
+{
+        constexpr unsigned INDENT_SIZE = 2;
+        const unsigned indent_size = (add_indent ? 2 : 1) * INDENT_SIZE;
+        std::string s;
+        s.reserve(indent_size + message.size());
+        s += std::string(indent_size, ' ');
+        for (char c : message)
+        {
+                s += c;
+                if (c == '\n')
+                {
+                        s += std::string(indent_size, ' ');
+                }
+        }
+        LOG(s);
+}
+}
+
+template <std::size_t N, typename T, typename RandomEngine, typename RandomVector>
+void test_unit(const std::string& description, const long long count, const RandomVector& random_vector)
+{
+        namespace impl = distribution_implementation;
+
+        {
+                std::string s = "test unit length";
+                impl::add_description(&s, ", ", description);
+                s += ", count " + to_string_digit_groups(count);
+                impl::log(s);
+        }
 
         const int thread_count = hardware_concurrency();
         const long long count_per_thread = (count + thread_count - 1) / thread_count;
@@ -49,10 +91,9 @@ void test_unit(const long long count, const RandomVector& random_vector)
                 for (long long i = 0; i < count_per_thread; ++i)
                 {
                         Vector<N, T> v = random_vector(random_engine);
-                        T v_norm = v.norm();
-                        if (!(v_norm >= T(0.999) && v_norm <= T(1.001)))
+                        if (!(v.is_unit()))
                         {
-                                error("Vector " + to_string(v) + " is not unit " + to_string(v_norm));
+                                error("Vector " + to_string(v) + " is not unit " + to_string(v.norm()));
                         }
                 }
         };
@@ -83,6 +124,8 @@ void test_distribution_angle(
         const RandomVector& random_vector,
         const PDF& pdf)
 {
+        namespace impl = distribution_implementation;
+
         AngleBuckets<N, T> buckets;
 
         const long long count = buckets.distribution_count(count_per_bucket);
@@ -92,8 +135,12 @@ void test_distribution_angle(
                 return;
         }
 
-        LOG("  test angle distribution" + (description.empty() ? "" : ", " + description) + ", count "
-            + to_string_digit_groups(count));
+        {
+                std::string s = "test angle distribution";
+                impl::add_description(&s, ", ", description);
+                s += ", count " + to_string_digit_groups(count);
+                impl::log(s);
+        }
 
         const int thread_count = hardware_concurrency();
         const long long count_per_thread = (count + thread_count - 1) / thread_count;
@@ -126,7 +173,7 @@ void test_distribution_angle(
         }
 
         buckets.compute_distribution();
-        //LOG(buckets.histogram(pdf));
+        //impl::log(buckets.histogram(pdf), true /*add_indent*/);
         buckets.compare_with_pdf(pdf);
 }
 
@@ -137,6 +184,8 @@ void test_distribution_surface(
         const RandomVector& random_vector,
         const PDF& pdf)
 {
+        namespace impl = distribution_implementation;
+
         SurfaceBuckets<N, T> buckets;
 
         const long long count = buckets.distribution_count(count_per_bucket);
@@ -146,8 +195,13 @@ void test_distribution_surface(
                 return;
         }
 
-        LOG("  test surface distribution" + (description.empty() ? "" : ", " + description) + ", buckets "
-            + to_string_digit_groups(buckets.bucket_count()) + ", count " + to_string_digit_groups(count));
+        {
+                std::string s = "test surface distribution";
+                impl::add_description(&s, ", ", description);
+                s += ", buckets " + to_string_digit_groups(buckets.bucket_count());
+                s += ", count " + to_string_digit_groups(count);
+                impl::log(s);
+        }
 
         const int thread_count = hardware_concurrency();
         const long long count_per_thread = (count + thread_count - 1) / thread_count;
@@ -183,9 +237,16 @@ void test_distribution_surface(
 }
 
 template <std::size_t N, typename T, typename RandomEngine, typename RandomVector>
-void test_performance(const long long count, const RandomVector& random_vector)
+void test_performance(const std::string& description, const long long count, const RandomVector& random_vector)
 {
-        LOG("  test performance, count " + to_string_digit_groups(count));
+        namespace impl = distribution_implementation;
+
+        {
+                std::string s = "test performance";
+                impl::add_description(&s, ", ", description);
+                s += ", count " + to_string_digit_groups(count);
+                impl::log(s);
+        }
 
         RandomEngine random_engine = create_engine<RandomEngine>();
 
@@ -195,6 +256,8 @@ void test_performance(const long long count, const RandomVector& random_vector)
         {
                 sink = random_vector(random_engine);
         }
-        LOG("  performance " + to_string_digit_groups(std::lround(count / duration_from(start_time))) + " per second");
+
+        const long long performance = std::lround(count / duration_from(start_time));
+        impl::log("performance " + to_string_digit_groups(performance) + " per second");
 }
 }
