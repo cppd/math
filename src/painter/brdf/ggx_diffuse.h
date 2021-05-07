@@ -50,7 +50,6 @@ Elsevier, 2017.
 #include <src/com/error.h>
 #include <src/com/interpolation.h>
 #include <src/com/math.h>
-#include <src/numerical/optics.h>
 #include <src/numerical/vec.h>
 #include <src/sampling/ggx.h>
 #include <src/sampling/sphere_cosine.h>
@@ -204,17 +203,17 @@ class GGXDiffuseBRDF
                 }
                 else
                 {
-                        h = sampling::ggx_vn(random_engine, n, v, alpha);
-                        l = numerical::reflect_vn(v, h);
+                        std::tie(h, l) = sampling::ggx_visible_normals_h_l(random_engine, n, v, alpha);
                         ASSERT(l.is_unit());
                         if (dot(n, l) <= 0)
                         {
                                 return {Vector<N, T>(0), 0};
                         }
+                        ASSERT(h.is_unit());
                 }
 
                 T pdf_cosine = sampling::cosine_on_hemisphere_pdf<N>(dot(n, l));
-                T pdf_ggx = sampling::ggx_reflected_pdf<N>(dot(n, v), dot(n, h), dot(h, l), alpha);
+                T pdf_ggx = sampling::ggx_visible_normals_l_pdf<N>(dot(n, v), dot(n, h), dot(h, l), alpha);
 
                 T pdf = T(0.5) * (pdf_cosine + pdf_ggx);
 

@@ -36,6 +36,7 @@ CRC Press, 2018.
 #include <src/geometry/shapes/sphere_integral.h>
 #include <src/numerical/complement.h>
 #include <src/numerical/identity.h>
+#include <src/numerical/optics.h>
 #include <src/numerical/vec.h>
 
 #include <cmath>
@@ -212,7 +213,11 @@ T ggx_g1(T n_v, T h_v, T alpha)
 }
 
 template <std::size_t N, typename T, typename RandomEngine>
-Vector<N, T> ggx_vn(RandomEngine& random_engine, const Vector<N, T>& normal, const Vector<N, T>& v, T alpha)
+Vector<N, T> ggx_visible_normals_h(
+        RandomEngine& random_engine,
+        const Vector<N, T>& normal,
+        const Vector<N, T>& v,
+        T alpha)
 {
         static_assert(N >= 3);
         static_assert(std::is_floating_point_v<T>);
@@ -236,6 +241,18 @@ Vector<N, T> ggx_vn(RandomEngine& random_engine, const Vector<N, T>& normal, con
                 res += ne[i] * basis[i];
         }
         return res;
+}
+
+template <std::size_t N, typename T, typename RandomEngine>
+std::tuple<Vector<N, T>, Vector<N, T>> ggx_visible_normals_h_l(
+        RandomEngine& random_engine,
+        const Vector<N, T>& normal,
+        const Vector<N, T>& v,
+        T alpha)
+{
+        Vector<N, T> h = ggx_visible_normals_h(random_engine, normal, v, alpha);
+        Vector<N, T> l = numerical::reflect_vn(v, h);
+        return {h, l};
 }
 
 // (9.41)
@@ -268,7 +285,7 @@ T ggx_pdf(T n_h, T alpha)
 
 // (2), (3)
 template <std::size_t N, typename T>
-T ggx_vn_pdf(T n_v, T n_h, T h_v, T alpha)
+T ggx_visible_normals_h_pdf(T n_v, T n_h, T h_v, T alpha)
 {
         static_assert(N >= 3);
         static_assert(std::is_floating_point_v<T>);
@@ -283,11 +300,11 @@ T ggx_vn_pdf(T n_v, T n_h, T h_v, T alpha)
 }
 
 template <std::size_t N, typename T>
-T ggx_reflected_pdf(T n_v, T n_h, T h_v, T alpha)
+T ggx_visible_normals_l_pdf(T n_v, T n_h, T h_v, T alpha)
 {
         static_assert(N >= 3);
         static_assert(std::is_floating_point_v<T>);
 
-        return reflected_pdf<N>(ggx_vn_pdf<N>(n_v, n_h, h_v, alpha), h_v);
+        return reflected_pdf<N>(ggx_visible_normals_h_pdf<N>(n_v, n_h, h_v, alpha), h_v);
 }
 }
