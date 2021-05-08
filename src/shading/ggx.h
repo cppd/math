@@ -28,9 +28,6 @@ CRC Press, 2018.
 
 #pragma once
 
-#include "pdf.h"
-#include "sphere_uniform.h"
-
 #include <src/com/interpolation.h>
 #include <src/com/math.h>
 #include <src/geometry/shapes/sphere_integral.h>
@@ -38,10 +35,12 @@ CRC Press, 2018.
 #include <src/numerical/identity.h>
 #include <src/numerical/optics.h>
 #include <src/numerical/vec.h>
+#include <src/sampling/pdf.h>
+#include <src/sampling/sphere_uniform.h>
 
 #include <cmath>
 
-namespace ns::sampling
+namespace ns::shading
 {
 namespace ggx_implementation
 {
@@ -70,7 +69,7 @@ Vector<3, T> ggx_vn(RandomEngine& random_engine, const Vector<3, T>& ve, T alpha
         {
                 Vector<2, T> vector;
                 T vector_length_square;
-                uniform_in_sphere(random_engine, vector, vector_length_square);
+                sampling::uniform_in_sphere(random_engine, vector, vector_length_square);
                 return vector;
         }();
         T s = T(0.5) * (T(1) + vh[2]);
@@ -153,7 +152,7 @@ Vector<N, T> ggx_vn(RandomEngine& random_engine, const Vector<N, T>& ve, T alpha
         {
                 Vector<N - 1, T> vector;
                 T vector_length_square;
-                uniform_in_sphere(random_engine, vector, vector_length_square);
+                sampling::uniform_in_sphere(random_engine, vector, vector_length_square);
                 return vector;
         }();
         T s = T(0.5) * (T(1) + vh[N - 1]);
@@ -302,6 +301,6 @@ T ggx_visible_normals_l_pdf(T n_v, T n_h, T h_v, T alpha)
         static_assert(N >= 3);
         static_assert(std::is_floating_point_v<T>);
 
-        return reflected_pdf<N>(ggx_visible_normals_h_pdf<N>(n_v, n_h, h_v, alpha), h_v);
+        return sampling::reflected_pdf<N>(ggx_visible_normals_h_pdf<N>(n_v, n_h, h_v, alpha), h_v);
 }
 }

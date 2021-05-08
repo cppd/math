@@ -16,7 +16,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
 #include "../sphere_cosine.h"
-#include "distribution/distribution.h"
+#include "../testing/distribution.h"
 
 #include <src/com/log.h>
 #include <src/com/names.h>
@@ -51,14 +51,14 @@ void test_cosine_on_hemisphere()
                 return uniform_on_sphere<N, T>(random_engine).normalized();
         }();
 
-        test_unit<N, T, RandomEngine<T>>(
+        testing::test_unit<N, T, RandomEngine<T>>(
                 "", UNIT_COUNT,
                 [&](RandomEngine<T>& random_engine)
                 {
                         return cosine_on_hemisphere(random_engine, normal);
                 });
 
-        test_distribution_angle<N, T, RandomEngine<T>>(
+        testing::test_distribution_angle<N, T, RandomEngine<T>>(
                 "", ANGLE_COUNT_PER_BUCKET, normal,
                 [&](RandomEngine<T>& random_engine)
                 {
@@ -69,7 +69,7 @@ void test_cosine_on_hemisphere()
                         return cosine_on_hemisphere_pdf<N, T>(std::cos(angle));
                 });
 
-        test_distribution_surface<N, T, RandomEngine<T>>(
+        testing::test_distribution_surface<N, T, RandomEngine<T>>(
                 "", SURFACE_COUNT_PER_BUCKET,
                 [&](RandomEngine<T>& random_engine)
                 {
@@ -80,7 +80,7 @@ void test_cosine_on_hemisphere()
                         return cosine_on_hemisphere_pdf<N, T>(dot(normal, v));
                 });
 
-        test_performance<N, T, RandomEngine<T>>(
+        testing::test_performance<N, T, RandomEngine<T>>(
                 "", PERFORMANCE_COUNT,
                 [&](RandomEngine<T>& random_engine)
                 {

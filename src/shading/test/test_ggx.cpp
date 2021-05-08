@@ -16,19 +16,19 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
 #include "../ggx.h"
-#include "distribution/distribution.h"
 
 #include <src/com/log.h>
 #include <src/com/names.h>
 #include <src/com/print.h>
 #include <src/com/random/engine.h>
 #include <src/com/type/name.h>
+#include <src/sampling/testing/distribution.h>
 #include <src/test/test.h>
 
 #include <cmath>
 #include <random>
 
-namespace ns::sampling::test
+namespace ns::shading::test
 {
 namespace
 {
@@ -39,6 +39,8 @@ constexpr long long PERFORMANCE_COUNT = 10'000'000;
 
 template <typename T>
 using RandomEngine = std::conditional_t<sizeof(T) <= 4, std::mt19937, std::mt19937_64>;
+
+namespace st = sampling::testing;
 
 template <std::size_t N, typename T>
 void test_ggx()
@@ -54,14 +56,14 @@ void test_ggx()
         const Vector<N, T> normal = []()
         {
                 RandomEngine<T> random_engine = create_engine<RandomEngine<T>>();
-                return uniform_on_sphere<N, T>(random_engine).normalized();
+                return sampling::uniform_on_sphere<N, T>(random_engine).normalized();
         }();
 
-        test_unit<N, T, RandomEngine<T>>(
+        st::test_unit<N, T, RandomEngine<T>>(
                 "Visible Normals", UNIT_COUNT,
                 [&](RandomEngine<T>& random_engine)
                 {
-                        Vector<N, T> v = uniform_on_sphere<N, T>(random_engine);
+                        Vector<N, T> v = sampling::uniform_on_sphere<N, T>(random_engine);
                         if (dot(v, normal) < 0)
                         {
                                 v = -v;
@@ -69,11 +71,11 @@ void test_ggx()
                         return ggx_visible_normals_h(random_engine, normal, v, alpha);
                 });
 
-        test_unit<N, T, RandomEngine<T>>(
+        st::test_unit<N, T, RandomEngine<T>>(
                 "Visible Normals, Reflected", UNIT_COUNT,
                 [&](RandomEngine<T>& random_engine)
                 {
-                        Vector<N, T> v = uniform_on_sphere<N, T>(random_engine);
+                        Vector<N, T> v = sampling::uniform_on_sphere<N, T>(random_engine);
                         if (dot(v, normal) < 0)
                         {
                                 v = -v;
@@ -82,7 +84,7 @@ void test_ggx()
                         return l;
                 });
 
-        test_distribution_angle<N, T, RandomEngine<T>>(
+        st::test_distribution_angle<N, T, RandomEngine<T>>(
                 "Normals", ANGLE_COUNT_PER_BUCKET, normal,
                 [&](RandomEngine<T>& random_engine)
                 {
@@ -94,7 +96,7 @@ void test_ggx()
                         return n_h * ggx_pdf<N>(n_h, alpha);
                 });
 
-        test_distribution_surface<N, T, RandomEngine<T>>(
+        st::test_distribution_surface<N, T, RandomEngine<T>>(
                 "Normals", SURFACE_COUNT_PER_BUCKET,
                 [&](RandomEngine<T>& random_engine)
                 {
@@ -109,7 +111,7 @@ void test_ggx()
         const Vector<N, T> v = [&]()
         {
                 RandomEngine<T> random_engine = create_engine<RandomEngine<T>>();
-                Vector<N, T> r = uniform_on_sphere<N, T>(random_engine).normalized();
+                Vector<N, T> r = sampling::uniform_on_sphere<N, T>(random_engine).normalized();
                 if (dot(r, normal) < 0)
                 {
                         return -r;
@@ -119,7 +121,7 @@ void test_ggx()
 
         const T n_v = dot(normal, v);
 
-        test_distribution_surface<N, T, RandomEngine<T>>(
+        st::test_distribution_surface<N, T, RandomEngine<T>>(
                 "Visible Normals", SURFACE_COUNT_PER_BUCKET,
                 [&](RandomEngine<T>& random_engine)
                 {
@@ -132,7 +134,7 @@ void test_ggx()
                         return ggx_visible_normals_h_pdf<N>(n_v, n_h, h_v, alpha);
                 });
 
-        test_distribution_surface<N, T, RandomEngine<T>>(
+        st::test_distribution_surface<N, T, RandomEngine<T>>(
                 "Visible Normals, Reflected", SURFACE_COUNT_PER_BUCKET,
                 [&](RandomEngine<T>& random_engine)
                 {
@@ -147,14 +149,14 @@ void test_ggx()
                         return ggx_visible_normals_l_pdf<N>(n_v, n_h, h_v, alpha);
                 });
 
-        test_performance<N, T, RandomEngine<T>>(
+        st::test_performance<N, T, RandomEngine<T>>(
                 "Visible Normals", PERFORMANCE_COUNT,
                 [&](RandomEngine<T>& random_engine)
                 {
                         return ggx_visible_normals_h(random_engine, normal, v, alpha);
                 });
 
-        test_performance<N, T, RandomEngine<T>>(
+        st::test_performance<N, T, RandomEngine<T>>(
                 "Visible Normals, Reflected", PERFORMANCE_COUNT,
                 [&](RandomEngine<T>& random_engine)
                 {

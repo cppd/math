@@ -34,7 +34,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <thread>
 #include <vector>
 
-namespace ns::sampling::test
+namespace ns::sampling::testing
 {
 namespace distribution_implementation
 {

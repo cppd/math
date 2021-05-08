@@ -26,7 +26,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <cmath>
 #include <sstream>
 
-namespace ns::sampling::test
+namespace ns::sampling::testing
 {
 template <std::size_t N, typename T>
 class Bucket final : public SurfaceFacet<N, T>

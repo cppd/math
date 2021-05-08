@@ -51,8 +51,8 @@ Elsevier, 2017.
 #include <src/com/interpolation.h>
 #include <src/com/math.h>
 #include <src/numerical/vec.h>
-#include <src/sampling/ggx.h>
 #include <src/sampling/sphere_cosine.h>
+#include <src/shading/ggx.h>
 
 #include <cmath>
 
@@ -203,7 +203,7 @@ class GGXDiffuseBRDF
                 }
                 else
                 {
-                        std::tie(h, l) = sampling::ggx_visible_normals_h_l(random_engine, n, v, alpha);
+                        std::tie(h, l) = shading::ggx_visible_normals_h_l(random_engine, n, v, alpha);
                         ASSERT(l.is_unit());
                         if (dot(n, l) <= 0)
                         {
@@ -213,7 +213,7 @@ class GGXDiffuseBRDF
                 }
 
                 T pdf_cosine = sampling::cosine_on_hemisphere_pdf<N>(dot(n, l));
-                T pdf_ggx = sampling::ggx_visible_normals_l_pdf<N>(dot(n, v), dot(n, h), dot(h, l), alpha);
+                T pdf_ggx = shading::ggx_visible_normals_l_pdf<N>(dot(n, v), dot(n, h), dot(h, l), alpha);
 
                 T pdf = T(0.5) * (pdf_cosine + pdf_ggx);
 
