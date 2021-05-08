@@ -21,7 +21,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #extension GL_GOOGLE_include_directive : enable
 #include "common.glsl"
-#include "shading.glsl"
+#include "shading_ggx_diffuse.glsl"
 
 // Для каждой группы треугольников с одним материалом отдельно задаётся этот материал и его текстуры
 layout(set = 2, binding = 0, std140) uniform Material
@@ -88,14 +88,14 @@ float edge_factor()
 vec3 shade_light(vec3 color, vec3 n, vec3 v)
 {
         vec3 l = drawing.direction_to_light;
-        vec3 s = shade(mesh.metalness, mesh.roughness, color, n, v, l);
+        vec3 s = shading_ggx_diffuse(mesh.metalness, mesh.roughness, color, n, v, l);
         return s;
 }
 
 vec3 shade_camera(vec3 color, vec3 n, vec3 v)
 {
         vec3 l = v;
-        vec3 s = shade(mesh.metalness, mesh.roughness, color, n, v, l);
+        vec3 s = shading_ggx_diffuse(mesh.metalness, mesh.roughness, color, n, v, l);
         return s;
 }
 

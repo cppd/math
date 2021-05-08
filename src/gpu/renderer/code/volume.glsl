@@ -40,7 +40,7 @@ The MIT Press, 2009.
 */
 
 #extension GL_GOOGLE_include_directive : enable
-#include "shading.glsl"
+#include "shading_ggx_diffuse.glsl"
 #include "transparency.glsl"
 
 const float MIN_TRANSPARENCY = 1.0 / 256;
@@ -448,7 +448,7 @@ vec3 shade(vec3 p)
         vec3 v = drawing.direction_to_camera;
         vec3 l = drawing.direction_to_light;
 
-        vec3 s = shade(volume.metalness, volume.roughness, volume.color, n, v, l);
+        vec3 s = shading_ggx_diffuse(volume.metalness, volume.roughness, volume.color, n, v, l);
 
         return drawing.lighting_intensity * s;
 }

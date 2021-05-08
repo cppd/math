@@ -401,6 +401,7 @@ AddIncludeFiles(VULKAN_SHADERS
                         GLSLANG_VALIDATOR "${GLSLANG_VALIDATOR}"
                         OUTPUT_EXTENSION "spr"
                         SOURCE "src/gpu"
+                        INCLUDE_DIRECTORIES "src/shading"
                         EXTENSIONS ${extensions_shaders}
                         EXTENSIONS_INCLUDE ${extensions_shaders_include})
 
