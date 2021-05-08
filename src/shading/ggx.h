@@ -19,16 +19,22 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 Eric Heitz.
 Sampling the GGX Distribution of Visible Normals.
 Journal of Computer Graphics Techniques (JCGT), vol. 7, no. 4, 1–13, 2018.
+*/
 
+/*
 Tomas Akenine-Möller, Eric Haines, Naty Hoffman,
 Angelo Pesce, Michal Iwanicki, Sébastien Hillaire.
 Real-Time Rendering. Fourth Edition.
 CRC Press, 2018.
+
+9.5 Fresnel Reflectance
+9.6 Microgeometry
+9.7 Microfacet Theory
+9.8 BRDF Models for Surface Reflection
 */
 
 #pragma once
 
-#include <src/com/interpolation.h>
 #include <src/com/math.h>
 #include <src/geometry/shapes/sphere_integral.h>
 #include <src/numerical/complement.h>
@@ -206,6 +212,20 @@ T ggx_g1(T n_v, T alpha)
 {
         return 1 / (1 + ggx_lambda(n_v, alpha));
 }
+
+template <typename T>
+T ggx_g2(T n_v, T n_l, T alpha)
+{
+        return 1 / (1 + ggx_lambda(n_v, alpha) + ggx_lambda(n_l, alpha));
+}
+
+// (9.16)
+// Schlick approximation of Fresnel reflectance
+template <typename T>
+Vector<3, T> fresnel(const Vector<3, T>& f0, T h_l)
+{
+        return interpolation(f0, Vector<3, T>(1), power<5>(1 - h_l));
+}
 }
 
 template <std::size_t N, typename T, typename RandomEngine>
@@ -302,5 +322,30 @@ T ggx_visible_normals_l_pdf(T n_v, T n_h, T h_v, T alpha)
         static_assert(std::is_floating_point_v<T>);
 
         return sampling::reflected_pdf<N>(ggx_visible_normals_h_pdf<N>(n_v, n_h, h_v, alpha), h_v);
+}
+
+// (15), (18), (19)
+// BRDF * (n · l) / PDF = Fresnel * G2 / G1
+template <std::size_t N, typename T>
+Vector<3, T> ggx_brdf(T metalness, T roughness, const Vector<3, T>& surface_color, T n_v, T n_l, T n_h, T h_l)
+{
+        static_assert(N >= 3);
+        static_assert(std::is_floating_point_v<T>);
+
+        namespace impl = ggx_implementation;
+
+        if (n_v > 0 && n_l > 0 && h_l > 0)
+        {
+                static constexpr T F0 = 0.05;
+
+                T alpha = square(roughness);
+
+                Vector<3, T> f0 = interpolation(Vector<3, T>(F0), surface_color, metalness);
+
+                return impl::fresnel(f0, h_l) * ggx_pdf<N>(n_h, alpha) * impl::ggx_g2(n_v, n_l, alpha)
+                       / (n_v * n_l * (1 << (N - 1)) * power<N - 3>(h_l));
+        }
+
+        return Vector<3, T>(0);
 }
 }

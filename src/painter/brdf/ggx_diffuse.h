@@ -21,15 +21,7 @@ Angelo Pesce, Michal Iwanicki, Sébastien Hillaire.
 Real-Time Rendering. Fourth Edition.
 CRC Press, 2018.
 
-9.5 Fresnel Reflectance
-9.6 Microgeometry
-9.7 Microfacet Theory
-9.8 BRDF Models for Surface Reflection
 9.9 BRDF Models for Subsurface Scattering
-
-         F(h, l) G2(l, v, h) D(h)
-f spec = ------------------------   (9.34)
-            4 |n · l| |n · v|
 */
 
 /*
@@ -75,34 +67,6 @@ class GGXDiffuseBRDF
                 return v * v;
         }
 
-        // (9.16)
-        // Schlick approximation of Fresnel reflectance
-        static RGB fresnel(const RGB& f0, T h_l)
-        {
-                return mix(f0, RGB(1), power<5>(1 - h_l));
-        }
-
-        // (9.41)
-        // GGX distribution
-        static T ggx(T alpha_2, T n_h)
-        {
-                T v = 1 + sqr(n_h) * (alpha_2 - 1);
-                return n_h * alpha_2 / (PI<T> * sqr(v));
-        }
-
-        // (9.43)
-        // The combined term for GGX distribution
-        // and the Smith masking-shadowing function
-        //     G2(l, v)
-        // -----------------
-        // 4 |n · l| |n · v|
-        static T g2_combined(T alpha_2, T n_l, T n_v)
-        {
-                T lv = n_l * std::sqrt(mix(sqr(n_v), T(1), alpha_2));
-                T vl = n_v * std::sqrt(mix(sqr(n_l), T(1), alpha_2));
-                return T(0.5) / (lv + vl);
-        }
-
         // (9.64)
         RGB diffuse(const RGB& f0, const RGB& rho_ss, T n_l, T n_v)
         {
@@ -141,14 +105,6 @@ class GGXDiffuseBRDF
                 const Vector<N, T>& v,
                 const Vector<N, T>& l)
         {
-                constexpr T F0 = 0.05;
-
-                T alpha = sqr(roughness);
-                T alpha_2 = sqr(alpha);
-
-                RGB f0 = mix(RGB(F0), surface_color, metalness);
-                RGB rho_ss = mix(surface_color, RGB(0), metalness);
-
                 Vector<N, T> h = (l + v).normalized();
 
                 T n_l = dot(n, l);
@@ -156,7 +112,9 @@ class GGXDiffuseBRDF
                 T n_v = dot(n, v);
                 T n_h = dot(n, h);
 
-                RGB spec = fresnel(f0, h_l) * g2_combined(alpha_2, n_l, n_v) * ggx(alpha_2, n_h);
+                RGB spec = shading::ggx_brdf<N>(metalness, roughness, surface_color, n_v, n_l, n_h, h_l);
+
+                RGB rho_ss = mix(surface_color, RGB(0), metalness);
                 RGB diff = diffuse_disney_without_subsurface(rho_ss, roughness, n_l, n_v, h_l);
 
                 return spec + diff;
