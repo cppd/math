@@ -191,24 +191,21 @@ Vector<N, T> ggx_vn(RandomEngine& random_engine, const Vector<N, T>& ve, T alpha
 }
 #endif
 
-// (9.37) (9.42)
+// (2) (9.37) (9.42)
 template <typename T>
-T ggx_g1_lambda(T n_v, T alpha)
+T ggx_lambda(T n_v, T alpha)
 {
-        T a_square = square(n_v / alpha) / (1 - square(n_v));
+        T n_v_2 = square(n_v);
+        T t = square(alpha) * (1 - n_v_2) / n_v_2;
 
-        return T(0.5) * (std::sqrt(1 + 1 / a_square) - 1);
+        return (std::sqrt(1 + t) - 1) / 2;
 }
 
-// (9.24)
+// (2) (9.24)
 template <typename T>
-T ggx_g1(T n_v, T h_v, T alpha)
+T ggx_g1(T n_v, T alpha)
 {
-        if (h_v > 0)
-        {
-                return h_v / (1 + ggx_g1_lambda(n_v, alpha));
-        }
-        return 0;
+        return 1 / (1 + ggx_lambda(n_v, alpha));
 }
 }
 
@@ -255,7 +252,7 @@ std::tuple<Vector<N, T>, Vector<N, T>> ggx_visible_normals_h_l(
         return {h, l};
 }
 
-// (9.41)
+// (1) (9.41)
 template <std::size_t N, typename T>
 T ggx_pdf(T n_h, T alpha)
 {
@@ -278,12 +275,12 @@ T ggx_pdf(T n_h, T alpha)
                 {
                         v_power *= std::sqrt(v);
                 }
-                return n_h * alpha_2 / (K * v_power);
+                return alpha_2 / (K * v_power);
         }
         return 0;
 }
 
-// (2), (3)
+// (3)
 template <std::size_t N, typename T>
 T ggx_visible_normals_h_pdf(T n_v, T n_h, T h_v, T alpha)
 {
@@ -292,9 +289,9 @@ T ggx_visible_normals_h_pdf(T n_v, T n_h, T h_v, T alpha)
 
         namespace impl = ggx_implementation;
 
-        if (n_v > 0 && n_h > 0)
+        if (n_v > 0 && n_h > 0 && h_v > 0)
         {
-                return impl::ggx_g1(n_v, h_v, alpha) * ggx_pdf<N>(n_h, alpha) / (n_v * n_h);
+                return impl::ggx_g1(n_v, alpha) * h_v * ggx_pdf<N>(n_h, alpha) / n_v;
         }
         return 0;
 }

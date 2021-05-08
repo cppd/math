@@ -90,7 +90,8 @@ void test_ggx()
                 },
                 [&](T angle)
                 {
-                        return ggx_pdf<N>(std::cos(angle), alpha);
+                        const T n_h = std::cos(angle);
+                        return n_h * ggx_pdf<N>(n_h, alpha);
                 });
 
         test_distribution_surface<N, T, RandomEngine<T>>(
@@ -101,7 +102,8 @@ void test_ggx()
                 },
                 [&](const Vector<N, T>& v)
                 {
-                        return ggx_pdf<N>(dot(normal, v), alpha);
+                        const T n_h = dot(normal, v);
+                        return n_h * ggx_pdf<N>(n_h, alpha);
                 });
 
         const Vector<N, T> v = [&]()
