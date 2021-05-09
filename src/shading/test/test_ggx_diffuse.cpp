@@ -19,7 +19,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "color.h"
 
 #include "../ggx_diffuse.h"
-#include "../lambertian.h"
 
 #include <src/com/log.h>
 #include <src/com/print.h>
@@ -27,8 +26,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/com/type/name.h>
 #include <src/test/test.h>
 
-#include <algorithm>
-#include <cmath>
 #include <random>
 
 namespace ns::shading::test
@@ -39,38 +36,7 @@ template <typename T>
 using RandomEngine = std::conditional_t<sizeof(T) <= 4, std::mt19937, std::mt19937_64>;
 
 template <std::size_t N, typename T>
-class TestLambertian final : public TestBRDF<N, T, RandomEngine<T>>
-{
-        const Color m_color = random_non_black_color();
-
-        Color f(const Vector<N, T>& n, const Vector<N, T>& v, const Vector<N, T>& l) const override
-        {
-                if (dot(n, v) <= 0)
-                {
-                        return Color(0);
-                }
-                return LambertianBRDF<N, T>::f(m_color, n, l);
-        }
-
-        Sample<N, T> sample_f(RandomEngine<T>& random_engine, const Vector<N, T>& n, const Vector<N, T>& v)
-                const override
-        {
-                if (dot(n, v) <= 0)
-                {
-                        return {Vector<N, T>(0), 0, Color(0)};
-                }
-                return LambertianBRDF<N, T>::sample_f(random_engine, m_color, n);
-        }
-
-public:
-        const Color& color() const
-        {
-                return m_color;
-        }
-};
-
-template <std::size_t N, typename T>
-class TestGGXDiffuse final : public TestBRDF<N, T, RandomEngine<T>>
+class BRDF final : public TestBRDF<N, T, RandomEngine<T>>
 {
         Color m_color;
         T m_metalness;
@@ -88,10 +54,10 @@ class TestGGXDiffuse final : public TestBRDF<N, T, RandomEngine<T>>
         }
 
 public:
-        TestGGXDiffuse(const Color& color, std::type_identity_t<T> min_roughness)
+        BRDF(const Color& color, std::type_identity_t<T> min_roughness)
         {
                 m_color = color;
-                RandomEngine<T> random_engine = create_engine<RandomEngine<T>>();
+                RandomEngine<std::mt19937_64> random_engine = create_engine<std::mt19937_64>();
                 m_roughness = std::uniform_real_distribution<T>(min_roughness, 1)(random_engine);
                 m_metalness = std::uniform_real_distribution<T>(0, 1)(random_engine);
         }
@@ -103,62 +69,37 @@ public:
 };
 
 template <std::size_t N, typename T>
-void test_lambertian()
-{
-        constexpr unsigned SAMPLE_COUNT = 100'000;
-
-        const TestLambertian<N, T> brdf;
-
-        Color result;
-
-        LOG(to_string(N) + "D, " + type_name<T>() + ", Lambertian BRDF, f");
-        result = test_brdf_f(brdf, SAMPLE_COUNT);
-        check_color_equal(result, brdf.color());
-
-        LOG(to_string(N) + "D, " + type_name<T>() + ", Lambertian BRDF, sample f");
-        result = test_brdf_sample_f(brdf, SAMPLE_COUNT);
-        check_color_equal(result, brdf.color());
-}
-
-template <std::size_t N, typename T>
-void test_ggx_diffuse()
+void test_brdf()
 {
         constexpr unsigned SAMPLE_COUNT = 1'000'000;
         constexpr T MIN_ROUGHNESS = 0.2;
 
         {
-                const TestGGXDiffuse<N, T> brdf(Color(1), MIN_ROUGHNESS);
+                const BRDF<N, T> brdf(Color(1), MIN_ROUGHNESS);
 
                 Color result;
 
-                LOG(to_string(N) + "D, " + type_name<T>() + ", GGX BRDF, f, white");
+                LOG(to_string(N) + "D, " + type_name<T>() + ", f, white");
                 result = test_brdf_f(brdf, SAMPLE_COUNT);
                 check_color_less(result, brdf.color());
 
-                LOG(to_string(N) + "D, " + type_name<T>() + ", GGX BRDF, sample f, white");
+                LOG(to_string(N) + "D, " + type_name<T>() + ", sample f, white");
                 result = test_brdf_sample_f(brdf, SAMPLE_COUNT);
                 check_color_less(result, brdf.color());
         }
         {
-                const TestGGXDiffuse<N, T> brdf(random_non_black_color(), MIN_ROUGHNESS);
+                const BRDF<N, T> brdf(random_non_black_color(), MIN_ROUGHNESS);
 
                 Color result;
 
-                LOG(to_string(N) + "D, " + type_name<T>() + ", GGX BRDF, f, random");
+                LOG(to_string(N) + "D, " + type_name<T>() + ", f, random");
                 result = test_brdf_f(brdf, SAMPLE_COUNT);
                 check_color_range(result);
 
-                LOG(to_string(N) + "D, " + type_name<T>() + ", GGX BRDF, sample f, random");
+                LOG(to_string(N) + "D, " + type_name<T>() + ", sample f, random");
                 result = test_brdf_sample_f(brdf, SAMPLE_COUNT);
                 check_color_range(result);
         }
-}
-
-template <std::size_t N, typename T>
-void test_brdf()
-{
-        test_lambertian<N, T>();
-        test_ggx_diffuse<N, T>();
 }
 
 template <typename T>
@@ -171,14 +112,14 @@ void test_brdf()
 
 void test()
 {
-        LOG("Test BRDF");
+        LOG("Test GGX Diffuse BRDF");
 
         test_brdf<float>();
         test_brdf<double>();
 
-        LOG("Test BRDF passed");
+        LOG("Test GGX Diffuse BRDF passed");
 }
 }
 
-TEST_SMALL("BRDF", test)
+TEST_SMALL("BRDF, GGX Diffuse", test)
 }

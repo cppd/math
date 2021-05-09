@@ -21,7 +21,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 namespace ns::shading::test
 {
-void check_color(const Color& color, const char* description);
 void check_color_equal(const Color& directional_albedo, const Color& surface_color);
 void check_color_less(const Color& directional_albedo, const Color& surface_color);
 void check_color_range(const Color& directional_albedo);

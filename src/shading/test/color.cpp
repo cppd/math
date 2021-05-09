@@ -21,10 +21,13 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/com/print.h>
 #include <src/com/random/engine.h>
 
+#include <algorithm>
 #include <cmath>
 #include <random>
 
 namespace ns::shading::test
+{
+namespace
 {
 void check_color(const Color& color, const char* description)
 {
@@ -52,6 +55,7 @@ void check_color(const Color& color, const char* description)
                         error(std::string(description) + " RGB is negative " + to_string(rgb));
                 }
         }
+}
 }
 
 void check_color_equal(const Color& directional_albedo, const Color& surface_color)
