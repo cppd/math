@@ -196,7 +196,7 @@ Vector<N, T> ggx_vn(RandomEngine& random_engine, const Vector<N, T>& ve, T alpha
 }
 #endif
 
-// (2) (9.37) (9.42)
+// (2), (9.37), (9.42)
 template <typename T>
 T ggx_lambda(T n_v, T alpha)
 {
@@ -206,13 +206,14 @@ T ggx_lambda(T n_v, T alpha)
         return (std::sqrt(1 + t) - 1) / 2;
 }
 
-// (2) (9.24)
+// (2), (9.24)
 template <typename T>
 T ggx_g1(T n_v, T alpha)
 {
         return 1 / (1 + ggx_lambda(n_v, alpha));
 }
 
+// (9.31)
 template <typename T>
 T ggx_g2(T n_v, T n_l, T alpha)
 {
@@ -271,7 +272,7 @@ std::tuple<Vector<N, T>, Vector<N, T>> ggx_visible_normals_h_l(
         return {h, l};
 }
 
-// (1) (9.41)
+// (1), (9.41)
 template <std::size_t N, typename T>
 T ggx_pdf(T n_h, T alpha)
 {
@@ -327,7 +328,7 @@ T ggx_visible_normals_l_pdf(T n_v, T n_h, T h_v, T alpha)
 // (15), (18), (19)
 // BRDF * (n · l) / PDF = Fresnel * G2 / G1
 template <std::size_t N, typename T>
-Vector<3, T> ggx_brdf(T metalness, T roughness, const Vector<3, T>& surface_color, T n_v, T n_l, T n_h, T h_l)
+Vector<3, T> ggx_brdf(T roughness, const Vector<3, T>& f0, T n_v, T n_l, T n_h, T h_l)
 {
         static_assert(N >= 3);
         static_assert(std::is_floating_point_v<T>);
@@ -336,11 +337,7 @@ Vector<3, T> ggx_brdf(T metalness, T roughness, const Vector<3, T>& surface_colo
 
         if (n_v > 0 && n_l > 0 && h_l > 0)
         {
-                static constexpr T F0 = 0.05;
-
                 T alpha = square(roughness);
-
-                Vector<3, T> f0 = interpolation(Vector<3, T>(F0), surface_color, metalness);
 
                 return impl::fresnel(f0, h_l) * ggx_pdf<N>(n_h, alpha) * impl::ggx_g2(n_v, n_l, alpha)
                        / (n_v * n_l * (1 << (N - 1)) * power<N - 3>(h_l));

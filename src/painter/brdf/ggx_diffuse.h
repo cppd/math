@@ -57,45 +57,46 @@ class GGXDiffuseBRDF
 
         using RGB = Vector<3, T>;
 
-        inline static const auto mix = [](const auto&... v)
-        {
-                return interpolation(v...);
-        };
-
         static T sqr(T v)
         {
                 return v * v;
         }
 
         // (9.64)
-        RGB diffuse(const RGB& f0, const RGB& rho_ss, T n_l, T n_v)
+        static RGB diffuse(const RGB& f0, const RGB& rho_ss, T n_l, T n_v)
         {
                 T l = (1 - power<5>(1 - n_l));
                 T v = (1 - power<5>(1 - n_v));
-                return (RGB(1) - f0) * rho_ss * ((21 / (20 * PI<T>)) * l * v);
+                T c = (21 / (20 * PI<T>)) * l * v;
+                return c * (RGB(1) - f0) * rho_ss;
         }
 
         // (9.66), (9.67) without the subsurface term
-        static RGB diffuse_disney_without_subsurface(const RGB& rho_ss, T roughness, T n_l, T n_v, T h_l)
-        {
-                T l = power<5>(1 - n_l);
-                T v = power<5>(1 - n_v);
-                T d_90 = T(0.5) + 2 * roughness * sqr(h_l);
-                T f_d = mix(T(1), d_90, l) * mix(T(1), d_90, v);
-                return rho_ss * (n_l * n_v * (1 / PI<T>)*f_d);
-        }
+        //static RGB diffuse_disney_without_subsurface(const RGB& rho_ss, T roughness, T n_l, T n_v, T h_l)
+        //{
+        //        T l = power<5>(1 - n_l);
+        //        T v = power<5>(1 - n_v);
+        //        T f_d90 = T(0.5) + 2 * roughness * sqr(h_l);
+        //        T f_d90_1 = f_d90 - 1;
+        //        T f_d = (1 + f_d90_1 * l) * (1 + f_d90_1 * v);
+        //        T c = f_d / PI<T>;
+        //        return c * rho_ss;
+        //}
 
         // (9.66), (9.67)
-        static RGB diffuse_disney(const RGB& rho_ss, T roughness, T n_l, T n_v, T h_l, T k_ss)
-        {
-                T l = power<5>(1 - n_l);
-                T v = power<5>(1 - n_v);
-                T ss_90 = roughness * sqr(h_l);
-                T d_90 = T(0.5) + 2 * ss_90;
-                T f_d = mix(T(1), d_90, l) * mix(T(1), d_90, v);
-                T f_ss = (1 / (n_l * n_v) - T(0.5)) * mix(T(1), ss_90, l) * mix(T(1), ss_90, v) + T(0.5);
-                return rho_ss * (n_l * n_v * (1 / PI<T>)*mix(f_d, T(1.25) * f_ss, k_ss));
-        }
+        //static RGB diffuse_disney(const RGB& rho_ss, T roughness, T n_l, T n_v, T h_l, T k_ss)
+        //{
+        //        T l = power<5>(1 - n_l);
+        //        T v = power<5>(1 - n_v);
+        //        T f_ss90 = roughness * sqr(h_l);
+        //        T f_d90 = T(0.5) + 2 * f_ss90;
+        //        T f_d90_1 = f_d90 - 1;
+        //        T f_d = (1 + f_d90_1 * l) * (1 + f_d90_1 * v);
+        //        T f_ss90_1 = f_ss90 - 1;
+        //        T f_ss = (1 / (n_l * n_v) - T(0.5)) * (1 + f_ss90_1 * l) * (1 + f_ss90_1 * v) + T(0.5);
+        //        T c = interpolation(f_d, T(1.25) * f_ss, k_ss) / PI<T>;
+        //        return c * rho_ss;
+        //}
 
         static RGB f(
                 T metalness,
@@ -112,26 +113,28 @@ class GGXDiffuseBRDF
                 T n_v = dot(n, v);
                 T n_h = dot(n, h);
 
-                RGB spec = shading::ggx_brdf<N>(metalness, roughness, surface_color, n_v, n_l, n_h, h_l);
+                static constexpr T F0 = 0.05;
+                const RGB f0 = interpolation(RGB(F0), surface_color, metalness);
+                const RGB rho_ss = interpolation(surface_color, RGB(0), metalness);
 
-                RGB rho_ss = mix(surface_color, RGB(0), metalness);
-                RGB diff = diffuse_disney_without_subsurface(rho_ss, roughness, n_l, n_v, h_l);
+                RGB spec = shading::ggx_brdf<N>(roughness, f0, n_v, n_l, n_h, h_l);
+                RGB diff = diffuse(f0, rho_ss, n_l, n_v);
 
                 return spec + diff;
         }
 
-        template <typename RandomEngine>
-        static std::tuple<Vector<N, T>, T> sample_cosine(RandomEngine& random_engine, const Vector<N, T>& n)
-        {
-                Vector<N, T> l = sampling::cosine_on_hemisphere(random_engine, n);
-                ASSERT(l.is_unit());
-                if (dot(n, l) <= 0)
-                {
-                        return {Vector<N, T>(0), 0};
-                }
-                T pdf = sampling::cosine_on_hemisphere_pdf<N>(dot(n, l));
-                return {l, pdf};
-        }
+        //template <typename RandomEngine>
+        //static std::tuple<Vector<N, T>, T> sample_cosine(RandomEngine& random_engine, const Vector<N, T>& n)
+        //{
+        //        Vector<N, T> l = sampling::cosine_on_hemisphere(random_engine, n);
+        //        ASSERT(l.is_unit());
+        //        if (dot(n, l) <= 0)
+        //        {
+        //                return {Vector<N, T>(0), 0};
+        //        }
+        //        T pdf = sampling::cosine_on_hemisphere_pdf<N>(dot(n, l));
+        //        return {l, pdf};
+        //}
 
         template <typename RandomEngine>
         static std::tuple<Vector<N, T>, T> sample_ggx_cosine(
