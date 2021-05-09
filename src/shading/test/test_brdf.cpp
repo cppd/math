@@ -16,11 +16,11 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
 #include "brdf.h"
+#include "color.h"
 
 #include "../ggx_diffuse.h"
 #include "../lambertian.h"
 
-#include <src/com/error.h>
 #include <src/com/log.h>
 #include <src/com/print.h>
 #include <src/com/random/engine.h>
@@ -38,120 +38,10 @@ namespace
 template <typename T>
 using RandomEngine = std::conditional_t<sizeof(T) <= 4, std::mt19937, std::mt19937_64>;
 
-void check_color(const Color& color, const char* description)
-{
-        if (color.is_black())
-        {
-                error(std::string(description) + " is black");
-        }
-
-        const Vector<3, double> rgb = color.rgb<double>();
-
-        for (int i = 0; i < 3; ++i)
-        {
-                if (std::isnan(rgb[i]))
-                {
-                        error(std::string(description) + " RGB is NaN " + to_string(rgb));
-                }
-
-                if (!std::isfinite(rgb[i]))
-                {
-                        error(std::string(description) + " RGB is not finite " + to_string(rgb));
-                }
-
-                if (!(rgb[i] >= 0))
-                {
-                        error(std::string(description) + " RGB is negative " + to_string(rgb));
-                }
-        }
-}
-
-void check_color_equal(const Color& directional_albedo, const Color& surface_color)
-{
-        check_color(directional_albedo, "Directional albedo");
-        check_color(surface_color, "Surface color");
-
-        const Vector<3, double> c1 = directional_albedo.rgb<double>();
-        const Vector<3, double> c2 = surface_color.rgb<double>();
-
-        for (int i = 0; i < 3; ++i)
-        {
-                if (c1[i] == c2[i])
-                {
-                        continue;
-                }
-
-                double relative_error = std::abs(c1[i] - c2[i]) / std::max(c1[i], c2[i]);
-                if (!(relative_error < 0.01))
-                {
-                        error("BRDF error, directional albedo (RGB " + to_string(c1)
-                              + ") is not equal to surface color (RGB " + to_string(c2) + ")");
-                }
-        }
-}
-
-void check_color_less(const Color& directional_albedo, const Color& surface_color)
-{
-        check_color(directional_albedo, "Directional albedo");
-        check_color(surface_color, "Surface color");
-
-        const Vector<3, double> c1 = directional_albedo.rgb<double>();
-        const Vector<3, double> c2 = surface_color.rgb<double>();
-
-        for (int i = 0; i < 3; ++i)
-        {
-                if (c1[i] <= c2[i])
-                {
-                        continue;
-                }
-
-                double relative_error = std::abs(c1[i] - c2[i]) / std::max(c1[i], c2[i]);
-                if (!(relative_error < 0.01))
-                {
-                        error("BRDF error, directional albedo (RGB " + to_string(c1)
-                              + ") is not less than surface color (RGB " + to_string(c2) + ")");
-                }
-        }
-}
-
-void check_color_range(const Color& directional_albedo)
-{
-        check_color(directional_albedo, "Directional albedo");
-
-        const Vector<3, double> c = directional_albedo.rgb<double>();
-
-        for (int i = 0; i < 3; ++i)
-        {
-                if (c[i] >= 0 && c[i] <= 1)
-                {
-                        continue;
-                }
-
-                error("BRDF error, directional albedo (RGB " + to_string(c) + ") is not in the range [0, 1]");
-        }
-}
-
-Color random_color()
-{
-        std::mt19937 random_engine = create_engine<std::mt19937>();
-        std::uniform_real_distribution<Color::DataType> urd(0, 1);
-
-        Color color;
-        do
-        {
-                Color::DataType red = urd(random_engine);
-                Color::DataType green = urd(random_engine);
-                Color::DataType blue = urd(random_engine);
-                color = Color(red, green, blue);
-        } while (color.is_black());
-
-        return color;
-}
-
 template <std::size_t N, typename T>
 class TestLambertian final : public TestBRDF<N, T, RandomEngine<T>>
 {
-        const Color m_color = random_color();
+        const Color m_color = random_non_black_color();
 
         Color f(const Vector<N, T>& n, const Vector<N, T>& v, const Vector<N, T>& l) const override
         {
@@ -250,7 +140,7 @@ void test_ggx_diffuse()
                 check_color_less(result, brdf.color());
         }
         {
-                const TestGGXDiffuse<N, T> brdf(random_color(), MIN_ROUGHNESS);
+                const TestGGXDiffuse<N, T> brdf(random_non_black_color(), MIN_ROUGHNESS);
 
                 Color result;
 
