@@ -78,13 +78,13 @@ class TestGGXDiffuse final : public TestBRDF<N, T, RandomEngine<T>>
 
         Color f(const Vector<N, T>& n, const Vector<N, T>& v, const Vector<N, T>& l) const override
         {
-                return GGXDiffuseBRDF<T>::f(m_metalness, m_roughness, m_color, n, v, l);
+                return GGXDiffuseBRDF<N, T>::f(m_metalness, m_roughness, m_color, n, v, l);
         }
 
         Sample<N, T> sample_f(RandomEngine<T>& random_engine, const Vector<N, T>& n, const Vector<N, T>& v)
                 const override
         {
-                return GGXDiffuseBRDF<T>::sample_f(random_engine, m_metalness, m_roughness, m_color, n, v);
+                return GGXDiffuseBRDF<N, T>::sample_f(random_engine, m_metalness, m_roughness, m_color, n, v);
         }
 
 public:
@@ -154,14 +154,19 @@ void test_ggx_diffuse()
         }
 }
 
+template <std::size_t N, typename T>
+void test_brdf()
+{
+        test_lambertian<N, T>();
+        test_ggx_diffuse<N, T>();
+}
+
 template <typename T>
 void test_brdf()
 {
-        test_lambertian<3, T>();
-        test_ggx_diffuse<3, T>();
-
-        test_lambertian<4, T>();
-        test_lambertian<5, T>();
+        test_brdf<3, T>();
+        test_brdf<4, T>();
+        test_brdf<5, T>();
 }
 
 void test()

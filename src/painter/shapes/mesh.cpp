@@ -17,7 +17,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "mesh.h"
 
-#include "brdf.h"
 #include "mesh_facet.h"
 #include "mesh_texture.h"
 
@@ -34,6 +33,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/numerical/matrix.h>
 #include <src/numerical/transform.h>
 #include <src/numerical/vec.h>
+#include <src/shading/ggx_diffuse.h>
 
 #include <algorithm>
 #include <optional>
@@ -213,7 +213,7 @@ public:
                         return m.Kd;
                 }();
 
-                return ShapeBRDF<N, T>::f(m.metalness, m.roughness, color, n, v, l);
+                return shading::GGXDiffuseBRDF<N, T>::f(m.metalness, m.roughness, color, n, v, l);
         }
 
         shading::Sample<N, T> sample_brdf(RandomEngine<T>& random_engine, const Vector<N, T>& n, const Vector<N, T>& v)
@@ -232,7 +232,7 @@ public:
                         return m.Kd;
                 }();
 
-                return ShapeBRDF<N, T>::sample_f(random_engine, m.metalness, m.roughness, color, n, v);
+                return shading::GGXDiffuseBRDF<N, T>::sample_f(random_engine, m.metalness, m.roughness, color, n, v);
         }
 };
 

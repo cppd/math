@@ -42,6 +42,7 @@ Elsevier, 2017.
 #include <src/com/error.h>
 #include <src/com/interpolation.h>
 #include <src/com/math.h>
+#include <src/geometry/shapes/sphere_integral.h>
 #include <src/numerical/vec.h>
 #include <src/sampling/sphere_cosine.h>
 #include <src/shading/ggx.h>
@@ -50,10 +51,10 @@ Elsevier, 2017.
 
 namespace ns::shading
 {
-template <typename T>
+template <std::size_t N, typename T>
 class GGXDiffuseBRDF
 {
-        static constexpr std::size_t N = 3;
+        static_assert(N >= 3);
 
         using RGB = Vector<3, T>;
 
@@ -65,9 +66,11 @@ class GGXDiffuseBRDF
         // (9.64)
         static RGB diffuse(const RGB& f0, const RGB& rho_ss, T n_l, T n_v)
         {
+                constexpr T K = geometry::sphere_integrate_cosine_factor_over_hemisphere(N);
+
                 T l = (1 - power<5>(1 - n_l));
                 T v = (1 - power<5>(1 - n_v));
-                T c = (21 / (20 * PI<T>)) * l * v;
+                T c = (21 / (20 * K)) * l * v;
                 return c * (RGB(1) - f0) * rho_ss;
         }
 

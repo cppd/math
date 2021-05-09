@@ -17,7 +17,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
-#include "brdf.h"
 #include "shape.h"
 
 #include "../objects.h"
@@ -25,6 +24,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/com/memory_arena.h>
 #include <src/geometry/spatial/parallelotope.h>
 #include <src/geometry/spatial/shape_intersection.h>
+#include <src/shading/ggx_diffuse.h>
 
 namespace ns::painter
 {
@@ -65,7 +65,8 @@ class Parallelotope final : public Shape<N, T>
 
                 Color brdf(const Vector<N, T>& n, const Vector<N, T>& v, const Vector<N, T>& l) const override
                 {
-                        return ShapeBRDF<N, T>::f(m_obj->m_metalness, m_obj->m_roughness, m_obj->m_color, n, v, l);
+                        return shading::GGXDiffuseBRDF<N, T>::f(
+                                m_obj->m_metalness, m_obj->m_roughness, m_obj->m_color, n, v, l);
                 }
 
                 shading::Sample<N, T> sample_brdf(
@@ -73,7 +74,7 @@ class Parallelotope final : public Shape<N, T>
                         const Vector<N, T>& n,
                         const Vector<N, T>& v) const override
                 {
-                        return ShapeBRDF<N, T>::sample_f(
+                        return shading::GGXDiffuseBRDF<N, T>::sample_f(
                                 random_engine, m_obj->m_metalness, m_obj->m_roughness, m_obj->m_color, n, v);
                 }
         };
