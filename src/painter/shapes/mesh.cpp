@@ -216,7 +216,7 @@ public:
                 return ShapeBRDF<N, T>::f(m.metalness, m.roughness, color, n, v, l);
         }
 
-        BrdfSample<N, T> sample_brdf(RandomEngine<T>& random_engine, const Vector<N, T>& n, const Vector<N, T>& v)
+        shading::Sample<N, T> sample_brdf(RandomEngine<T>& random_engine, const Vector<N, T>& n, const Vector<N, T>& v)
                 const override
         {
                 ASSERT(m_facet->material() >= 0);

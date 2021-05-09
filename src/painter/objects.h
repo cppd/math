@@ -20,6 +20,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/color/color.h>
 #include <src/numerical/ray.h>
 #include <src/numerical/vec.h>
+#include <src/shading/sample.h>
 
 #include <array>
 #include <optional>
@@ -30,22 +31,6 @@ namespace ns::painter
 {
 template <typename T>
 using RandomEngine = std::conditional_t<std::is_same_v<std::remove_cv<T>, float>, std::mt19937, std::mt19937_64>;
-
-template <std::size_t N, typename T>
-struct BrdfSample final
-{
-        Vector<N, T> l;
-        T pdf;
-        Color brdf;
-
-        BrdfSample()
-        {
-        }
-
-        constexpr BrdfSample(const Vector<N, T>& l, T pdf, const Color& brdf) : l(l), pdf(pdf), brdf(brdf)
-        {
-        }
-};
 
 template <std::size_t N, typename T>
 class Surface
@@ -72,7 +57,7 @@ public:
 
         virtual Color brdf(const Vector<N, T>& n, const Vector<N, T>& v, const Vector<N, T>& l) const = 0;
 
-        virtual BrdfSample<N, T> sample_brdf(
+        virtual shading::Sample<N, T> sample_brdf(
                 RandomEngine<T>& random_engine,
                 const Vector<N, T>& n,
                 const Vector<N, T>& v) const = 0;

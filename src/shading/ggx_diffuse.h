@@ -35,7 +35,7 @@ Elsevier, 2017.
 
 #pragma once
 
-#include "../objects.h"
+#include "sample.h"
 
 #include <src/color/color.h>
 #include <src/com/constant.h>
@@ -48,7 +48,7 @@ Elsevier, 2017.
 
 #include <cmath>
 
-namespace ns::painter
+namespace ns::shading
 {
 template <typename T>
 class GGXDiffuseBRDF
@@ -210,7 +210,7 @@ public:
         }
 
         template <typename RandomEngine>
-        static BrdfSample<N, T> sample_f(
+        static Sample<N, T> sample_f(
                 RandomEngine& random_engine,
                 T metalness,
                 T roughness,
@@ -218,7 +218,7 @@ public:
                 const Vector<N, T>& n,
                 const Vector<N, T>& v)
         {
-                static constexpr BrdfSample<N, T> BLACK(Vector<N, T>(0), 0, Color(0));
+                static constexpr Sample<N, T> BLACK(Vector<N, T>(0), 0, Color(0));
 
                 ASSERT(n.is_unit());
                 ASSERT(v.is_unit());

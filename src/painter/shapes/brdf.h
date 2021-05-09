@@ -17,9 +17,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
-#include "../brdf/ggx_diffuse.h"
-#include "../brdf/lambertian.h"
-#include "../objects.h"
+#include <src/shading/ggx_diffuse.h>
+#include <src/shading/lambertian.h>
 
 namespace ns::painter
 {
@@ -36,16 +35,16 @@ struct ShapeBRDF final
         {
                 if constexpr (N == 3)
                 {
-                        return GGXDiffuseBRDF<T>::f(metalness, roughness, color, n, v, l);
+                        return shading::GGXDiffuseBRDF<T>::f(metalness, roughness, color, n, v, l);
                 }
                 else
                 {
-                        return LambertianBRDF<N, T>::f(color, n, l);
+                        return shading::LambertianBRDF<N, T>::f(color, n, l);
                 }
         }
 
         template <typename RandomEngine>
-        static BrdfSample<N, T> sample_f(
+        static shading::Sample<N, T> sample_f(
                 RandomEngine& random_engine,
                 const T metalness,
                 const T roughness,
@@ -55,11 +54,11 @@ struct ShapeBRDF final
         {
                 if constexpr (N == 3)
                 {
-                        return GGXDiffuseBRDF<T>::sample_f(random_engine, metalness, roughness, color, n, v);
+                        return shading::GGXDiffuseBRDF<T>::sample_f(random_engine, metalness, roughness, color, n, v);
                 }
                 else
                 {
-                        return LambertianBRDF<N, T>::sample_f(random_engine, color, n);
+                        return shading::LambertianBRDF<N, T>::sample_f(random_engine, color, n);
                 }
         }
 };

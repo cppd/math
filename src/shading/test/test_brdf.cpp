@@ -31,10 +31,13 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <cmath>
 #include <random>
 
-namespace ns::painter::brdf::test
+namespace ns::shading::test
 {
 namespace
 {
+template <typename T>
+using RandomEngine = std::conditional_t<sizeof(T) <= 4, std::mt19937, std::mt19937_64>;
+
 void check_color(const Color& color, const char* description)
 {
         if (color.is_black())
@@ -146,7 +149,7 @@ Color random_color()
 }
 
 template <std::size_t N, typename T>
-class TestLambertian final : public TestBRDF<N, T>
+class TestLambertian final : public TestBRDF<N, T, RandomEngine<T>>
 {
         const Color m_color = random_color();
 
@@ -159,7 +162,7 @@ class TestLambertian final : public TestBRDF<N, T>
                 return LambertianBRDF<N, T>::f(m_color, n, l);
         }
 
-        BrdfSample<N, T> sample_f(RandomEngine<T>& random_engine, const Vector<N, T>& n, const Vector<N, T>& v)
+        Sample<N, T> sample_f(RandomEngine<T>& random_engine, const Vector<N, T>& n, const Vector<N, T>& v)
                 const override
         {
                 if (dot(n, v) <= 0)
@@ -177,7 +180,7 @@ public:
 };
 
 template <std::size_t N, typename T>
-class TestGGXDiffuse final : public TestBRDF<N, T>
+class TestGGXDiffuse final : public TestBRDF<N, T, RandomEngine<T>>
 {
         Color m_color;
         T m_metalness;
@@ -188,7 +191,7 @@ class TestGGXDiffuse final : public TestBRDF<N, T>
                 return GGXDiffuseBRDF<T>::f(m_metalness, m_roughness, m_color, n, v, l);
         }
 
-        BrdfSample<N, T> sample_f(RandomEngine<T>& random_engine, const Vector<N, T>& n, const Vector<N, T>& v)
+        Sample<N, T> sample_f(RandomEngine<T>& random_engine, const Vector<N, T>& n, const Vector<N, T>& v)
                 const override
         {
                 return GGXDiffuseBRDF<T>::sample_f(random_engine, m_metalness, m_roughness, m_color, n, v);

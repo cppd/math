@@ -35,7 +35,7 @@ Elsevier, 2017.
 
 #pragma once
 
-#include "../objects.h"
+#include "sample.h"
 
 #include <src/color/color.h>
 #include <src/com/error.h>
@@ -43,7 +43,7 @@ Elsevier, 2017.
 #include <src/numerical/vec.h>
 #include <src/sampling/sphere_cosine.h>
 
-namespace ns::painter
+namespace ns::shading
 {
 template <std::size_t N, typename T>
 class LambertianBRDF
@@ -77,9 +77,9 @@ public:
         }
 
         template <typename RandomEngine>
-        static BrdfSample<N, T> sample_f(RandomEngine& random_engine, const Color& color, const Vector<N, T>& n)
+        static Sample<N, T> sample_f(RandomEngine& random_engine, const Color& color, const Vector<N, T>& n)
         {
-                static constexpr BrdfSample<N, T> BLACK(Vector<N, T>(0), 0, Color(0));
+                static constexpr Sample<N, T> BLACK(Vector<N, T>(0), 0, Color(0));
 
                 ASSERT(n.is_unit());
 

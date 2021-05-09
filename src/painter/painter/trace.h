@@ -160,7 +160,7 @@ std::optional<Color> trace_path(
 
         [&]
         {
-                const BrdfSample<N, T> sample = surface->sample_brdf(engine, n, v);
+                const shading::Sample<N, T> sample = surface->sample_brdf(engine, n, v);
 
                 if (sample.brdf.is_black() || sample.pdf <= 0)
                 {

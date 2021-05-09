@@ -17,30 +17,42 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
-#include "../../objects.h"
+#include "../sample.h"
 
 #include <src/com/error.h>
 #include <src/com/print.h>
 #include <src/com/random/engine.h>
 #include <src/sampling/sphere_uniform.h>
 
-namespace ns::painter::brdf::test
+#include <array>
+#include <random>
+
+namespace ns::shading::test
 {
 namespace brdf_implementation
 {
 template <std::size_t N, typename T>
-Vector<N, T> random_v(RandomEngine<T>& random_engine, const Vector<N, T>& n)
+std::array<Vector<N, T>, 2> random_n_v()
 {
+        std::mt19937 random_engine = create_engine<std::mt19937>();
+
+        Vector<N, T> n = sampling::uniform_on_sphere<N, T>(random_engine);
         Vector<N, T> v;
+        T d;
         do
         {
                 v = sampling::uniform_on_sphere<N, T>(random_engine);
-        } while (dot(n, v) <= 0);
-        return v;
+                d = dot(n, v);
+        } while (!(d != 0));
+        if (d > 0)
+        {
+                return {n, v};
+        }
+        return {n, -v};
 }
 }
 
-template <std::size_t N, typename T>
+template <std::size_t N, typename T, typename RandomEngine>
 class TestBRDF
 {
 protected:
@@ -49,22 +61,26 @@ protected:
 public:
         virtual Color f(const Vector<N, T>& n, const Vector<N, T>& v, const Vector<N, T>& l) const = 0;
 
-        virtual BrdfSample<N, T> sample_f(RandomEngine<T>& random_engine, const Vector<N, T>& n, const Vector<N, T>& v)
+        virtual Sample<N, T> sample_f(RandomEngine& random_engine, const Vector<N, T>& n, const Vector<N, T>& v)
                 const = 0;
 };
 
-template <std::size_t N, typename T>
-Color test_brdf_f(const TestBRDF<N, T>& brdf, const unsigned sample_count)
+template <std::size_t N, typename T, typename RandomEngine>
+Color test_brdf_f(const TestBRDF<N, T, RandomEngine>& brdf, const long long sample_count)
 {
+        if (sample_count <= 0)
+        {
+                error("Sample count must be positive");
+        }
+
         const T UNIFORM_ON_HEMISPHERE_PDF = 2 * sampling::uniform_on_sphere_pdf<N, T>();
 
-        RandomEngine<T> random_engine = create_engine<RandomEngine<T>>();
+        const auto [n, v] = brdf_implementation::random_n_v<N, T>();
 
-        const Vector<N, T> n = sampling::uniform_on_sphere<N, T>(random_engine);
-        const Vector<N, T> v = brdf_implementation::random_v(random_engine, n);
+        RandomEngine random_engine = create_engine<RandomEngine>();
 
         Color sum(0);
-        unsigned sample = 0;
+        long long sample = 0;
 
         while (sample < sample_count)
         {
@@ -93,19 +109,23 @@ Color test_brdf_f(const TestBRDF<N, T>& brdf, const unsigned sample_count)
         return sum / sample_count;
 }
 
-template <std::size_t N, typename T>
-Color test_brdf_sample_f(const TestBRDF<N, T>& brdf, const unsigned sample_count)
+template <std::size_t N, typename T, typename RandomEngine>
+Color test_brdf_sample_f(const TestBRDF<N, T, RandomEngine>& brdf, const long long sample_count)
 {
-        RandomEngine<T> random_engine = create_engine<RandomEngine<T>>();
+        if (sample_count <= 0)
+        {
+                error("Sample count must be positive");
+        }
 
-        const Vector<N, T> n = sampling::uniform_on_sphere<N, T>(random_engine);
-        const Vector<N, T> v = brdf_implementation::random_v(random_engine, n);
+        const auto [n, v] = brdf_implementation::random_n_v<N, T>();
+
+        RandomEngine random_engine = create_engine<RandomEngine>();
 
         Color sum(0);
 
-        for (unsigned i = 0; i < sample_count; ++i)
+        for (long long i = 0; i < sample_count; ++i)
         {
-                BrdfSample<N, T> sample = brdf.sample_f(random_engine, n, v);
+                Sample<N, T> sample = brdf.sample_f(random_engine, n, v);
                 if (sample.brdf.is_black() || sample.pdf <= 0)
                 {
                         continue;
