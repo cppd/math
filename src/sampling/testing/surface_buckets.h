@@ -169,15 +169,16 @@ public:
         template <typename RandomEngine, typename RandomVector, typename PDF>
         void compute(
                 RandomEngine& random_engine,
-                const long long ray_count,
+                const long long count,
                 const RandomVector& random_vector,
                 const PDF& pdf)
         {
-                std::optional<geometry::ObjectTree<Bucket<N, T>>> tree;
+                const geometry::ObjectTree<Bucket<N, T>> tree = [&]
                 {
                         ProgressRatio progress(nullptr);
-                        tree.emplace(m_buckets, tree_max_depth(), TREE_MIN_OBJECTS_PER_BOX, &progress);
-                }
+                        return geometry::ObjectTree<Bucket<N, T>>(
+                                m_buckets, tree_max_depth(), TREE_MIN_OBJECTS_PER_BOX, &progress);
+                }();
 
                 for (Bucket<N, T>& bucket : m_buckets)
                 {
@@ -187,49 +188,42 @@ public:
                 m_missed_intersection_count = 0;
                 m_intersection_count = 0;
 
-                for (long long i = 0; i < ray_count; ++i)
+                const auto tree_bucket = [&](const auto& dir) -> std::tuple<Bucket<N, T>&, Vector<N, T>>
                 {
-                        const Ray<N, T> ray(Vector<N, T>(0), random_vector(random_engine));
-
-                        const std::optional<T> root_distance = tree->intersect_root(ray);
-                        ASSERT(root_distance && *root_distance == 0);
-
-                        const std::optional<std::tuple<T, const Bucket<N, T>*>> v =
-                                tree->intersect(ray, *root_distance);
-                        if (!v)
+                        while (true)
                         {
+                                const Ray<N, T> ray(Vector<N, T>(0), dir(random_engine));
+
+                                const std::optional<T> root_distance = tree.intersect_root(ray);
+                                ASSERT(root_distance && *root_distance == 0);
+
+                                const std::optional<std::tuple<T, const Bucket<N, T>*>> v =
+                                        tree.intersect(ray, *root_distance);
+                                if (v)
+                                {
+                                        ++m_intersection_count;
+                                        return {*const_cast<Bucket<N, T>*>(std::get<1>(*v)), ray.dir()};
+                                }
                                 ++m_missed_intersection_count;
-                                continue;
                         }
-                        ++m_intersection_count;
+                };
 
-                        Bucket<N, T>& bucket = *const_cast<Bucket<N, T>*>(std::get<1>(*v));
-                        bucket.add_sample();
-                }
-
-                const long long uniform_ray_count = 4 * ray_count;
-                for (long long i = 0; i < uniform_ray_count; ++i)
+                for (long long i = 0; i < count; ++i)
                 {
-                        const Ray<N, T> ray(Vector<N, T>(0), uniform_on_sphere<N, T>(random_engine));
-
-                        const std::optional<T> root_distance = tree->intersect_root(ray);
-                        ASSERT(root_distance && *root_distance == 0);
-
-                        const std::optional<std::tuple<T, const Bucket<N, T>*>> v =
-                                tree->intersect(ray, *root_distance);
-                        if (!v)
                         {
-                                ++m_missed_intersection_count;
-                                continue;
+                                const auto [bucket, dir] = tree_bucket(random_vector);
+                                bucket.add_sample();
                         }
-                        ++m_intersection_count;
-
-                        Bucket<N, T>& bucket = *const_cast<Bucket<N, T>*>(std::get<1>(*v));
-                        if ((m_intersection_count & 0b11) == 0b11)
                         {
-                                bucket.add_pdf(pdf(ray.dir()));
+                                const auto [bucket, dir] = tree_bucket(uniform_on_sphere<N, T, RandomEngine>);
+                                bucket.add_pdf(pdf(dir));
+                                bucket.add_uniform();
                         }
-                        bucket.add_uniform();
+                        for (int j = 0; j < 3; ++j)
+                        {
+                                const auto [bucket, dir] = tree_bucket(uniform_on_sphere<N, T, RandomEngine>);
+                                bucket.add_uniform();
+                        }
                 }
         }
 
