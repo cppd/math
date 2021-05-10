@@ -27,6 +27,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/com/string/ascii.h>
 #include <src/com/thread.h>
 #include <src/com/time.h>
+#include <src/progress/progress.h>
 
 #include <algorithm>
 #include <cmath>
@@ -71,9 +72,15 @@ inline void log(const std::string& message, bool add_indent = false)
 }
 
 template <std::size_t N, typename T, typename RandomEngine, typename RandomVector>
-void test_unit(const std::string& description, const long long count, const RandomVector& random_vector)
+void test_unit(
+        const std::string& description,
+        const long long count,
+        const RandomVector& random_vector,
+        ProgressRatio* progress)
 {
         namespace impl = distribution_implementation;
+
+        progress->set(0);
 
         {
                 std::string s = "test unit length";
@@ -84,12 +91,17 @@ void test_unit(const std::string& description, const long long count, const Rand
 
         const int thread_count = hardware_concurrency();
         const long long count_per_thread = (count + thread_count - 1) / thread_count;
+        const double count_per_thread_reciprocal = 1.0 / count_per_thread;
 
         const auto f = [&]()
         {
                 RandomEngine random_engine = create_engine<RandomEngine>();
                 for (long long i = 0; i < count_per_thread; ++i)
                 {
+                        if ((i & 0xfff) == 0xfff)
+                        {
+                                progress->set(i * count_per_thread_reciprocal);
+                        }
                         Vector<N, T> v = random_vector(random_engine);
                         if (!(v.is_unit()))
                         {
@@ -122,9 +134,12 @@ void test_distribution_angle(
         const long long count_per_bucket,
         const Vector<N, T>& normal,
         const RandomVector& random_vector,
-        const PDF& pdf)
+        const PDF& pdf,
+        ProgressRatio* progress)
 {
         namespace impl = distribution_implementation;
+
+        progress->set(0);
 
         AngleBuckets<N, T> buckets;
 
@@ -145,11 +160,11 @@ void test_distribution_angle(
         const int thread_count = hardware_concurrency();
         const long long count_per_thread = (count + thread_count - 1) / thread_count;
 
-        const auto f = [&count_per_thread, &normal, &random_vector]()
+        const auto f = [&count_per_thread, &normal, &random_vector, &progress]()
         {
                 AngleBuckets<N, T> thread_buckets;
                 RandomEngine random_engine = create_engine<RandomEngine>();
-                thread_buckets.compute(random_engine, count_per_thread, normal, random_vector);
+                thread_buckets.compute(random_engine, count_per_thread, normal, random_vector, progress);
                 return thread_buckets;
         };
 
@@ -182,9 +197,12 @@ void test_distribution_surface(
         const std::string& description,
         const long long count_per_bucket,
         const RandomVector& random_vector,
-        const PDF& pdf)
+        const PDF& pdf,
+        ProgressRatio* progress)
 {
         namespace impl = distribution_implementation;
+
+        progress->set(0);
 
         SurfaceBuckets<N, T> buckets;
 
@@ -206,11 +224,11 @@ void test_distribution_surface(
         const int thread_count = hardware_concurrency();
         const long long count_per_thread = (count + thread_count - 1) / thread_count;
 
-        const auto f = [&count_per_thread, &random_vector, &pdf]()
+        const auto f = [&count_per_thread, &random_vector, &pdf, &progress]()
         {
                 SurfaceBuckets<N, T> thread_buckets;
                 RandomEngine random_engine = create_engine<RandomEngine>();
-                thread_buckets.compute(random_engine, count_per_thread, random_vector, pdf);
+                thread_buckets.compute(random_engine, count_per_thread, random_vector, pdf, progress);
                 return thread_buckets;
         };
 
@@ -237,9 +255,15 @@ void test_distribution_surface(
 }
 
 template <std::size_t N, typename T, typename RandomEngine, typename RandomVector>
-void test_performance(const std::string& description, const long long count, const RandomVector& random_vector)
+void test_performance(
+        const std::string& description,
+        const long long count,
+        const RandomVector& random_vector,
+        ProgressRatio* progress)
 {
         namespace impl = distribution_implementation;
+
+        progress->set(0);
 
         {
                 std::string s = "test performance";

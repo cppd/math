@@ -24,6 +24,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/geometry/shapes/sphere_area.h>
 #include <src/numerical/integrate.h>
 #include <src/numerical/vec.h>
+#include <src/progress/progress.h>
 
 #include <algorithm>
 #include <cmath>
@@ -106,10 +107,16 @@ public:
                 RandomEngine& random_engine,
                 const long long count,
                 const Vector<N, T>& normal,
-                const RandomVector& random_vector)
+                const RandomVector& random_vector,
+                ProgressRatio* progress)
         {
+                const double count_reciprocal = 1.0 / count;
                 for (long long i = 0; i < count; ++i)
                 {
+                        if ((i & 0xfff) == 0xfff)
+                        {
+                                progress->set(i * count_reciprocal);
+                        }
                         Vector<N, T> v = random_vector(random_engine).normalized();
                         T cosine = dot(v, normal);
                         cosine = std::clamp(cosine, T(-1), T(1));

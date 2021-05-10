@@ -41,7 +41,7 @@ template <typename T>
 using RandomEngine = std::conditional_t<sizeof(T) <= 4, std::mt19937, std::mt19937_64>;
 
 template <std::size_t N, typename T>
-void test_power_cosine_on_hemisphere()
+void test_power_cosine_on_hemisphere(ProgressRatio* progress)
 {
         const T power = []()
         {
@@ -62,7 +62,8 @@ void test_power_cosine_on_hemisphere()
                 [&](RandomEngine<T>& random_engine)
                 {
                         return power_cosine_on_hemisphere(random_engine, normal, power);
-                });
+                },
+                progress);
 
         testing::test_distribution_angle<N, T, RandomEngine<T>>(
                 "", ANGLE_COUNT_PER_BUCKET, normal,
@@ -73,7 +74,8 @@ void test_power_cosine_on_hemisphere()
                 [&](T angle)
                 {
                         return power_cosine_on_hemisphere_pdf<N, T>(std::cos(angle), power);
-                });
+                },
+                progress);
 
         testing::test_distribution_surface<N, T, RandomEngine<T>>(
                 "", SURFACE_COUNT_PER_BUCKET,
@@ -84,21 +86,23 @@ void test_power_cosine_on_hemisphere()
                 [&](const Vector<N, T>& v)
                 {
                         return power_cosine_on_hemisphere_pdf<N, T>(dot(normal, v), power);
-                });
+                },
+                progress);
 
         testing::test_performance<N, T, RandomEngine<T>>(
                 "", PERFORMANCE_COUNT,
                 [&](RandomEngine<T>& random_engine)
                 {
                         return power_cosine_on_hemisphere(random_engine, normal, power);
-                });
+                },
+                progress);
 }
 
 template <std::size_t N>
-void test_power_cosine_on_hemisphere()
+void test_power_cosine_on_hemisphere(ProgressRatio* progress)
 {
-        test_power_cosine_on_hemisphere<N, float>();
-        test_power_cosine_on_hemisphere<N, double>();
+        test_power_cosine_on_hemisphere<N, float>(progress);
+        test_power_cosine_on_hemisphere<N, double>(progress);
 }
 
 TEST_LARGE("Sample Distribution, Sphere Power Cosine, 3-Space", test_power_cosine_on_hemisphere<3>)

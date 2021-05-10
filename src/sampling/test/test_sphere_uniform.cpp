@@ -39,7 +39,7 @@ template <typename T>
 using RandomEngine = std::conditional_t<sizeof(T) <= 4, std::mt19937, std::mt19937_64>;
 
 template <std::size_t N, typename T>
-void test_sphere_uniform()
+void test_sphere_uniform(ProgressRatio* progress)
 {
         LOG("Sphere Uniform, " + space_name(N) + ", " + type_name<T>());
 
@@ -54,7 +54,8 @@ void test_sphere_uniform()
                 [&](RandomEngine<T>& random_engine)
                 {
                         return uniform_on_sphere<N, T>(random_engine);
-                });
+                },
+                progress);
 
         testing::test_distribution_angle<N, T, RandomEngine<T>>(
                 "", ANGLE_COUNT_PER_BUCKET, normal,
@@ -65,7 +66,8 @@ void test_sphere_uniform()
                 [](T /*angle*/)
                 {
                         return uniform_on_sphere_pdf<N, T>();
-                });
+                },
+                progress);
 
         testing::test_distribution_surface<N, T, RandomEngine<T>>(
                 "", SURFACE_COUNT_PER_BUCKET,
@@ -76,21 +78,23 @@ void test_sphere_uniform()
                 [&](const Vector<N, T>& /*v*/)
                 {
                         return uniform_on_sphere_pdf<N, T>();
-                });
+                },
+                progress);
 
         testing::test_performance<N, T, RandomEngine<T>>(
                 "", PERFORMANCE_COUNT,
                 [&](RandomEngine<T>& random_engine)
                 {
                         return uniform_on_sphere<N, T>(random_engine);
-                });
+                },
+                progress);
 }
 
 template <std::size_t N>
-void test_sphere_uniform()
+void test_sphere_uniform(ProgressRatio* progress)
 {
-        test_sphere_uniform<N, float>();
-        test_sphere_uniform<N, double>();
+        test_sphere_uniform<N, float>(progress);
+        test_sphere_uniform<N, double>(progress);
 }
 
 TEST_LARGE("Sample Distribution, Sphere Uniform, 3-Space", test_sphere_uniform<3>)

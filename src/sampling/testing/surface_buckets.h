@@ -27,6 +27,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/geometry/shapes/sphere_create.h>
 #include <src/geometry/spatial/object_tree.h>
 #include <src/numerical/vec.h>
+#include <src/progress/progress.h>
 
 #include <cmath>
 #include <memory>
@@ -171,14 +172,11 @@ public:
                 RandomEngine& random_engine,
                 const long long count,
                 const RandomVector& random_vector,
-                const PDF& pdf)
+                const PDF& pdf,
+                ProgressRatio* progress)
         {
-                const geometry::ObjectTree<Bucket<N, T>> tree = [&]
-                {
-                        ProgressRatio progress(nullptr);
-                        return geometry::ObjectTree<Bucket<N, T>>(
-                                m_buckets, tree_max_depth(), TREE_MIN_OBJECTS_PER_BOX, &progress);
-                }();
+                const geometry::ObjectTree<Bucket<N, T>> tree(
+                        m_buckets, tree_max_depth(), TREE_MIN_OBJECTS_PER_BOX, progress);
 
                 for (Bucket<N, T>& bucket : m_buckets)
                 {
@@ -208,8 +206,15 @@ public:
                         }
                 };
 
+                const double count_reciprocal = 1.0 / count;
+                progress->set(0);
+
                 for (long long i = 0; i < count; ++i)
                 {
+                        if ((i & 0xfff) == 0xfff)
+                        {
+                                progress->set(i * count_reciprocal);
+                        }
                         {
                                 const auto [bucket, dir] = tree_bucket(random_vector);
                                 bucket.add_sample();
