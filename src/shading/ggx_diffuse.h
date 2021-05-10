@@ -56,26 +56,26 @@ class GGXDiffuseBRDF
 {
         static_assert(N >= 3);
 
-        using RGB = Vector<3, T>;
-
         static T sqr(T v)
         {
                 return v * v;
         }
 
         // (9.64)
-        static RGB diffuse(const RGB& f0, const RGB& rho_ss, T n_l, T n_v)
+        static Color diffuse(const Color& f0, const Color& rho_ss, T n_l, T n_v)
         {
+                static constexpr Color WHITE = Color(1);
                 constexpr T K = geometry::sphere_integrate_cosine_factor_over_hemisphere(N);
 
                 T l = (1 - power<5>(1 - n_l));
                 T v = (1 - power<5>(1 - n_v));
                 T c = (21 / (20 * K)) * l * v;
-                return c * (RGB(1) - f0) * rho_ss;
+
+                return c * (WHITE - f0) * rho_ss;
         }
 
         // (9.66), (9.67) without the subsurface term
-        //static RGB diffuse_disney_without_subsurface(const RGB& rho_ss, T roughness, T n_l, T n_v, T h_l)
+        //static Color diffuse_disney_without_subsurface(const Color& rho_ss, T roughness, T n_l, T n_v, T h_l)
         //{
         //        T l = power<5>(1 - n_l);
         //        T v = power<5>(1 - n_v);
@@ -87,7 +87,7 @@ class GGXDiffuseBRDF
         //}
 
         // (9.66), (9.67)
-        //static RGB diffuse_disney(const RGB& rho_ss, T roughness, T n_l, T n_v, T h_l, T k_ss)
+        //static Color diffuse_disney(const Color& rho_ss, T roughness, T n_l, T n_v, T h_l, T k_ss)
         //{
         //        T l = power<5>(1 - n_l);
         //        T v = power<5>(1 - n_v);
@@ -101,10 +101,10 @@ class GGXDiffuseBRDF
         //        return c * rho_ss;
         //}
 
-        static RGB f(
+        static Color f_impl(
                 T metalness,
                 T roughness,
-                const RGB& surface_color,
+                const Color& surface_color,
                 const Vector<N, T>& n,
                 const Vector<N, T>& v,
                 const Vector<N, T>& l)
@@ -116,12 +116,13 @@ class GGXDiffuseBRDF
                 T n_v = dot(n, v);
                 T n_h = dot(n, h);
 
-                static constexpr T F0 = 0.05;
-                const RGB f0 = interpolation(RGB(F0), surface_color, metalness);
-                const RGB rho_ss = interpolation(surface_color, RGB(0), metalness);
+                static constexpr Color F0(0.05);
+                static constexpr Color BLACK(0);
+                const Color f0 = interpolation(F0, surface_color, metalness);
+                const Color rho_ss = interpolation(surface_color, BLACK, metalness);
 
-                RGB spec = shading::ggx_brdf<N>(roughness, f0, n_v, n_l, n_h, h_l);
-                RGB diff = diffuse(f0, rho_ss, n_l, n_v);
+                Color spec = ggx_brdf<N>(roughness, f0, n_v, n_l, n_h, h_l);
+                Color diff = diffuse(f0, rho_ss, n_l, n_v);
 
                 return spec + diff;
         }
@@ -167,7 +168,7 @@ class GGXDiffuseBRDF
                 }
                 else
                 {
-                        std::tie(h, l) = shading::ggx_visible_normals_h_l(random_engine, n, v, alpha);
+                        std::tie(h, l) = ggx_visible_normals_h_l(random_engine, n, v, alpha);
                         ASSERT(l.is_unit());
                         if (dot(n, l) <= 0)
                         {
@@ -177,7 +178,7 @@ class GGXDiffuseBRDF
                 }
 
                 T pdf_cosine = sampling::cosine_on_hemisphere_pdf<N>(dot(n, l));
-                T pdf_ggx = shading::ggx_visible_normals_l_pdf<N>(dot(n, v), dot(n, h), dot(h, l), alpha);
+                T pdf_ggx = ggx_visible_normals_l_pdf<N>(dot(n, v), dot(n, h), dot(h, l), alpha);
 
                 T pdf = T(0.5) * (pdf_cosine + pdf_ggx);
 
@@ -208,8 +209,7 @@ public:
                         return BLACK;
                 }
 
-                RGB s = f(metalness, roughness, color.rgb<T>(), n, v, l);
-                return Color(s[0], s[1], s[2]);
+                return f_impl(metalness, roughness, color, n, v, l);
         }
 
         template <typename RandomEngine>
@@ -240,8 +240,7 @@ public:
                 ASSERT(l.is_unit());
                 ASSERT(dot(n, l) > 0);
 
-                RGB s = f(metalness, roughness, color.rgb<T>(), n, v, l);
-                return {l, pdf, Color(s[0], s[1], s[2])};
+                return {l, pdf, f_impl(metalness, roughness, color, n, v, l)};
         }
 };
 }

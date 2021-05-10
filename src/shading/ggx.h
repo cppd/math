@@ -35,6 +35,7 @@ CRC Press, 2018.
 
 #pragma once
 
+#include <src/color/color.h>
 #include <src/com/math.h>
 #include <src/geometry/shapes/sphere_integral.h>
 #include <src/numerical/complement.h>
@@ -223,9 +224,10 @@ T ggx_g2(T n_v, T n_l, T alpha)
 // (9.16)
 // Schlick approximation of Fresnel reflectance
 template <typename T>
-Vector<3, T> fresnel(const Vector<3, T>& f0, T h_l)
+Color fresnel(const Color& f0, T h_l)
 {
-        return interpolation(f0, Vector<3, T>(1), power<5>(1 - h_l));
+        static constexpr Color WHITE(1);
+        return interpolation(f0, WHITE, power<5>(1 - h_l));
 }
 }
 
@@ -328,7 +330,7 @@ T ggx_visible_normals_l_pdf(T n_v, T n_h, T h_v, T alpha)
 // (15), (18), (19)
 // BRDF * (n · l) / PDF = Fresnel * G2 / G1
 template <std::size_t N, typename T>
-Vector<3, T> ggx_brdf(T roughness, const Vector<3, T>& f0, T n_v, T n_l, T n_h, T h_l)
+Color ggx_brdf(T roughness, const Color& f0, T n_v, T n_l, T n_h, T h_l)
 {
         static_assert(N >= 3);
         static_assert(std::is_floating_point_v<T>);
@@ -339,10 +341,14 @@ Vector<3, T> ggx_brdf(T roughness, const Vector<3, T>& f0, T n_v, T n_l, T n_h, 
         {
                 T alpha = square(roughness);
 
-                return impl::fresnel(f0, h_l) * ggx_pdf<N>(n_h, alpha) * impl::ggx_g2(n_v, n_l, alpha)
-                       / (n_v * n_l * (1 << (N - 1)) * power<N - 3>(h_l));
+                T pdf = ggx_pdf<N>(n_h, alpha);
+                T g2 = impl::ggx_g2(n_v, n_l, alpha);
+                T divisor = (n_v * n_l * (1 << (N - 1)) * power<N - 3>(h_l));
+
+                return impl::fresnel(f0, h_l) * (pdf * g2 / divisor);
         }
 
-        return Vector<3, T>(0);
+        static constexpr Color BLACK(0);
+        return BLACK;
 }
 }
