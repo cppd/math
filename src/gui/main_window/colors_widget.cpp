@@ -27,7 +27,7 @@ namespace ns::gui::main_window
 {
 namespace
 {
-constexpr QRgb BACKGROUND_COLOR = qRgb(50, 100, 150);
+constexpr QRgb BACKGROUND_COLOR = qRgb(75, 90, 105);
 constexpr QRgb WIREFRAME_COLOR = qRgb(255, 255, 255);
 constexpr QRgb CLIP_PLANE_COLOR = qRgb(250, 230, 150);
 constexpr QRgb NORMAL_COLOR_POSITIVE = qRgb(200, 200, 0);
