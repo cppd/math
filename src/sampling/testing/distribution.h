@@ -143,8 +143,11 @@ void test_distribution_angle(
 
         AngleBuckets<N, T> buckets;
 
-        const long long count = buckets.distribution_count(count_per_bucket);
-
+        const long long count = [&]
+        {
+                const double c = buckets.distribution_count(count_per_bucket);
+                return (c <= 1e9) ? c : 0;
+        }();
         if (count <= 0)
         {
                 return;
@@ -157,37 +160,7 @@ void test_distribution_angle(
                 impl::log(s);
         }
 
-        const int thread_count = hardware_concurrency();
-        const long long count_per_thread = (count + thread_count - 1) / thread_count;
-
-        const auto f = [&count_per_thread, &normal, &random_vector, &progress]()
-        {
-                AngleBuckets<N, T> thread_buckets;
-                RandomEngine random_engine = create_engine<RandomEngine>();
-                thread_buckets.compute(random_engine, count_per_thread, normal, random_vector, progress);
-                return thread_buckets;
-        };
-
-        {
-                std::vector<std::future<AngleBuckets<N, T>>> futures;
-                std::vector<std::thread> threads;
-                for (int i = 0; i < thread_count; ++i)
-                {
-                        std::packaged_task<AngleBuckets<N, T>()> task(f);
-                        futures.emplace_back(task.get_future());
-                        threads.emplace_back(std::move(task));
-                }
-                for (std::thread& thread : threads)
-                {
-                        thread.join();
-                }
-                for (std::future<AngleBuckets<N, T>>& future : futures)
-                {
-                        buckets.merge(future.get());
-                }
-        }
-
-        buckets.compute_distribution();
+        buckets.template compute_distribution<RandomEngine>(count, normal, random_vector, progress);
         //impl::log(buckets.histogram(pdf), true /*add_indent*/);
         buckets.compare_with_pdf(pdf);
 }

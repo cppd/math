@@ -20,6 +20,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/com/constant.h>
 #include <src/com/error.h>
 #include <src/com/print.h>
+#include <src/com/random/engine.h>
+#include <src/com/thread.h>
 #include <src/com/type/limit.h>
 #include <src/geometry/shapes/sphere_area.h>
 #include <src/numerical/integrate.h>
@@ -28,6 +30,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <algorithm>
 #include <cmath>
+#include <future>
 #include <iomanip>
 #include <sstream>
 #include <vector>
@@ -73,11 +76,87 @@ class AngleBuckets
                 }
         }
 
-        std::vector<long long> m_buckets;
+        template <typename RandomEngine, typename RandomVector>
+        static int sample_bucket(
+                RandomEngine& random_engine,
+                const Vector<N, T>& normal,
+                const RandomVector& random_vector)
+        {
+                Vector<N, T> v = random_vector(random_engine).normalized();
+                T cosine = dot(v, normal);
+                cosine = std::clamp(cosine, T(-1), T(1));
+                T angle = std::acos(cosine);
+                int bucket = angle * BUCKETS_PER_RADIAN;
+                return std::clamp(bucket, 0, BUCKET_COUNT - 1);
+        }
+
+        template <typename RandomEngine, typename RandomVector>
+        static std::vector<long long> compute_buckets(
+                const long long count,
+                const Vector<N, T>& normal,
+                const RandomVector& random_vector,
+                ProgressRatio* progress)
+        {
+                const int thread_count = hardware_concurrency();
+                const long long count_per_thread = (count + thread_count - 1) / thread_count;
+                const double count_per_thread_reciprocal = 1.0 / count_per_thread;
+
+                const auto f = [&](std::vector<long long>* buckets)
+                {
+                        ASSERT(buckets->size() == BUCKET_COUNT);
+                        RandomEngine random_engine = create_engine<RandomEngine>();
+                        for (long long i = 0; i < count_per_thread; ++i)
+                        {
+                                if ((i & 0xfff) == 0xfff)
+                                {
+                                        progress->set(i * count_per_thread_reciprocal);
+                                }
+                                int bucket = sample_bucket(random_engine, normal, random_vector);
+                                ++(*buckets)[bucket];
+                        }
+                };
+
+                std::vector<std::vector<long long>> thread_buckets(thread_count);
+                for (std::vector<long long>& buckets : thread_buckets)
+                {
+                        buckets.resize(BUCKET_COUNT, 0);
+                }
+
+                {
+                        std::vector<std::future<void>> futures;
+                        std::vector<std::thread> threads;
+                        for (std::vector<long long>& buckets : thread_buckets)
+                        {
+                                std::packaged_task<void(std::vector<long long>*)> task(f);
+                                futures.emplace_back(task.get_future());
+                                threads.emplace_back(std::move(task), &buckets);
+                        }
+                        for (std::thread& thread : threads)
+                        {
+                                thread.join();
+                        }
+                        for (std::future<void>& future : futures)
+                        {
+                                future.get();
+                        }
+                }
+
+                std::vector<long long> result(BUCKET_COUNT, 0);
+                for (const std::vector<long long>& buckets : thread_buckets)
+                {
+                        ASSERT(buckets.size() == BUCKET_COUNT);
+                        for (std::size_t i = 0; i < BUCKET_COUNT; ++i)
+                        {
+                                result[i] += buckets[i];
+                        }
+                }
+                return result;
+        }
+
         std::vector<Distribution> m_distribution;
 
 public:
-        static long long distribution_count(const long long uniform_min_count_per_bucket)
+        static double distribution_count(const long long uniform_min_count_per_bucket)
         {
                 const double bucket_size = BUCKET_SIZE;
                 const double s_all = geometry::sphere_relative_area<N, long double>(0, PI<long double>);
@@ -85,71 +164,41 @@ public:
                 const double count = s_all / s_bucket * uniform_min_count_per_bucket;
                 const double round_to = std::pow(10, std::round(std::log10(count)) - 2);
                 const double rounded_count = std::ceil(count / round_to) * round_to;
-                return (rounded_count <= 1e9 ? rounded_count : 0);
-        }
-
-        AngleBuckets()
-        {
-                m_buckets.resize(BUCKET_COUNT, 0);
-        }
-
-        void merge(const AngleBuckets& other)
-        {
-                ASSERT(m_buckets.size() == other.m_buckets.size());
-                for (unsigned i = 0; i < m_buckets.size(); ++i)
-                {
-                        m_buckets[i] += other.m_buckets[i];
-                }
+                return rounded_count;
         }
 
         template <typename RandomEngine, typename RandomVector>
-        void compute(
-                RandomEngine& random_engine,
+        void compute_distribution(
                 const long long count,
                 const Vector<N, T>& normal,
                 const RandomVector& random_vector,
                 ProgressRatio* progress)
         {
-                const double count_reciprocal = 1.0 / count;
-                for (long long i = 0; i < count; ++i)
-                {
-                        if ((i & 0xfff) == 0xfff)
-                        {
-                                progress->set(i * count_reciprocal);
-                        }
-                        Vector<N, T> v = random_vector(random_engine).normalized();
-                        T cosine = dot(v, normal);
-                        cosine = std::clamp(cosine, T(-1), T(1));
-                        T angle = std::acos(cosine);
-                        int bucket = angle * BUCKETS_PER_RADIAN;
-                        bucket = std::clamp(bucket, 0, BUCKET_COUNT - 1);
-                        ++m_buckets[bucket];
-                }
-        }
+                const std::vector<long long> buckets =
+                        compute_buckets<RandomEngine>(count, normal, random_vector, progress);
+                ASSERT(buckets.size() == BUCKET_COUNT);
 
-        void compute_distribution()
-        {
                 m_distribution.clear();
 
                 std::vector<T> distribution_values;
-                distribution_values.reserve(m_buckets.size());
+                distribution_values.reserve(buckets.size());
 
                 const long double SPHERE_K =
                         geometry::sphere_area(N) / geometry::sphere_relative_area<N, long double>(0, PI<T>);
 
                 long long cnt = 0;
-                for (unsigned bucket = 0; bucket < m_buckets.size(); ++bucket)
+                for (unsigned bucket = 0; bucket < buckets.size(); ++bucket)
                 {
                         Distribution& d = m_distribution.emplace_back();
 
-                        cnt += m_buckets[bucket];
+                        cnt += buckets[bucket];
 
                         d.angle_from = bucket * BUCKET_SIZE;
                         d.angle_to = (bucket + 1) * BUCKET_SIZE;
 
                         long double bucket_area =
                                 SPHERE_K * geometry::sphere_relative_area<N, long double>(d.angle_from, d.angle_to);
-                        d.distribution = m_buckets[bucket] / bucket_area;
+                        d.distribution = buckets[bucket] / bucket_area;
 
                         distribution_values.push_back(d.distribution);
                 }
@@ -226,6 +275,11 @@ public:
         template <typename PDF>
         void compare_with_pdf(const PDF& pdf) const
         {
+                if (m_distribution.empty())
+                {
+                        error("There is no distribution");
+                }
+
                 for (const Distribution& d : m_distribution)
                 {
                         const T distribution_value = d.distribution;
