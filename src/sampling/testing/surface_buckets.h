@@ -18,6 +18,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #pragma once
 
 #include "surface_bucket.h"
+#include "surface_facet.h"
 
 #include "../sphere_uniform.h"
 
@@ -66,83 +67,57 @@ class SurfaceBuckets final
                 }
         }
 
+        static void check_intersections(long long intersection_count, long long missed_intersection_count)
+        {
+                const long long sample_count = intersection_count + missed_intersection_count;
+                if (sample_count < 1'000'000)
+                {
+                        error("Too few samples " + to_string(sample_count));
+                }
+                const long long max_missed_count = std::ceil(sample_count * 1e-6);
+                if (missed_intersection_count >= max_missed_count)
+                {
+                        std::ostringstream oss;
+                        oss << "Too many missed intersections" << '\n';
+                        oss << "missed intersections = " << missed_intersection_count << '\n';
+                        oss << "all samples = " << sample_count << '\n';
+                        oss << "missed/all = " << (double(missed_intersection_count) / sample_count);
+                        error(oss.str());
+                }
+        }
+
         //
 
         static constexpr unsigned BUCKET_MIN_COUNT = 100 * (1 << N);
 
         std::unique_ptr<std::vector<Vector<N, T>>> m_vertices;
         std::vector<std::array<int, N>> m_facets;
+        std::vector<SurfaceFacet<N, T>> m_surface_facets;
+
         std::vector<Bucket<N, T>> m_buckets;
-
-        long long m_missed_intersection_count = 0;
         long long m_intersection_count = 0;
-
-        long long buckets_sample_count() const
-        {
-                long long s = 0;
-                for (const Bucket<N, T>& bucket : m_buckets)
-                {
-                        s += bucket.sample_count();
-                }
-                return s;
-        }
-
-        long long buckets_uniform_count() const
-        {
-                long long s = 0;
-                for (const Bucket<N, T>& bucket : m_buckets)
-                {
-                        s += bucket.uniform_count();
-                }
-                return s;
-        }
-
-        void check_bucket_intersection() const
-        {
-                const long long sample_count = m_missed_intersection_count + m_intersection_count;
-                if (sample_count < 1'000'000)
-                {
-                        error("Too few samples " + to_string(sample_count));
-                }
-                const long long max_missed_count = std::ceil(sample_count * 1e-6);
-                if (m_missed_intersection_count >= max_missed_count)
-                {
-                        std::ostringstream oss;
-                        oss << "Too many missed intersections" << '\n';
-                        oss << "missed intersections = " << m_missed_intersection_count << '\n';
-                        oss << "all samples = " << sample_count << '\n';
-                        oss << "missed/all = " << (double(m_missed_intersection_count) / sample_count);
-                        error(oss.str());
-                }
-        }
-
-        void check_bucket_sizes() const
-        {
-                ASSERT(!m_buckets.empty());
-                long long min = limits<long long>::max();
-                long long max = limits<long long>::lowest();
-                for (const Bucket<N, T>& bucket : m_buckets)
-                {
-                        min = std::min(min, bucket.uniform_count());
-                        max = std::max(max, bucket.uniform_count());
-                }
-                long long maximum_max_min_ratio = N < 5 ? 3 : 10;
-                if (max > 0 && min > 0 && max < maximum_max_min_ratio * min)
-                {
-                        return;
-                }
-                std::ostringstream oss;
-                oss << "Buckets max/min is too large" << '\n';
-                oss << "max = " << max << '\n';
-                oss << "min = " << min << '\n';
-                oss << "max/min = " << (T(max) / min);
-                error(oss.str());
-        }
+        long long m_missed_intersection_count = 0;
 
 public:
+        SurfaceBuckets()
+        {
+                m_vertices = std::make_unique<std::vector<Vector<N, T>>>();
+
+                geometry::create_sphere(BUCKET_MIN_COUNT, m_vertices.get(), &m_facets);
+
+                m_surface_facets.reserve(m_facets.size());
+                for (const std::array<int, N>& vertex_indices : m_facets)
+                {
+                        m_surface_facets.emplace_back(*m_vertices, vertex_indices);
+                }
+                ASSERT(m_surface_facets.size() >= BUCKET_MIN_COUNT);
+
+                m_buckets.resize(m_surface_facets.size());
+        }
+
         std::size_t bucket_count() const
         {
-                return m_buckets.size();
+                return m_surface_facets.size();
         }
 
         long long distribution_count(const long long uniform_min_count_per_bucket) const
@@ -150,21 +125,6 @@ public:
                 const double count = uniform_min_count_per_bucket * bucket_count();
                 const double round_to = std::pow(10, std::round(std::log10(count)) - 2);
                 return std::ceil(count / round_to) * round_to;
-        }
-
-        SurfaceBuckets()
-        {
-                m_vertices = std::make_unique<std::vector<Vector<N, T>>>();
-
-                geometry::create_sphere(BUCKET_MIN_COUNT, m_vertices.get(), &m_facets);
-
-                m_buckets.reserve(m_facets.size());
-                for (const std::array<int, N>& vertex_indices : m_facets)
-                {
-                        m_buckets.emplace_back(*m_vertices, vertex_indices);
-                }
-
-                ASSERT(m_buckets.size() >= BUCKET_MIN_COUNT);
         }
 
         template <typename RandomEngine, typename RandomVector, typename PDF>
@@ -175,8 +135,8 @@ public:
                 const PDF& pdf,
                 ProgressRatio* progress)
         {
-                const geometry::ObjectTree<Bucket<N, T>> tree(
-                        m_buckets, tree_max_depth(), TREE_MIN_OBJECTS_PER_BOX, progress);
+                const geometry::ObjectTree<SurfaceFacet<N, T>> tree(
+                        m_surface_facets, tree_max_depth(), TREE_MIN_OBJECTS_PER_BOX, progress);
 
                 for (Bucket<N, T>& bucket : m_buckets)
                 {
@@ -186,7 +146,7 @@ public:
                 m_missed_intersection_count = 0;
                 m_intersection_count = 0;
 
-                const auto tree_bucket = [&](const auto& dir) -> std::tuple<Bucket<N, T>&, Vector<N, T>>
+                const auto tree_bucket = [&](const auto& dir) -> std::tuple<std::size_t, Vector<N, T>>
                 {
                         while (true)
                         {
@@ -195,12 +155,14 @@ public:
                                 const std::optional<T> root_distance = tree.intersect_root(ray);
                                 ASSERT(root_distance && *root_distance == 0);
 
-                                const std::optional<std::tuple<T, const Bucket<N, T>*>> v =
+                                const std::optional<std::tuple<T, const SurfaceFacet<N, T>*>> v =
                                         tree.intersect(ray, *root_distance);
                                 if (v)
                                 {
                                         ++m_intersection_count;
-                                        return {*const_cast<Bucket<N, T>*>(std::get<1>(*v)), ray.dir()};
+                                        const std::size_t index = std::get<1>(*v) - m_surface_facets.data();
+                                        ASSERT(index < m_surface_facets.size());
+                                        return {index, ray.dir()};
                                 }
                                 ++m_missed_intersection_count;
                         }
@@ -217,17 +179,17 @@ public:
                         }
                         {
                                 const auto [bucket, dir] = tree_bucket(random_vector);
-                                bucket.add_sample();
+                                m_buckets[bucket].add_sample();
                         }
                         {
                                 const auto [bucket, dir] = tree_bucket(uniform_on_sphere<N, T, RandomEngine>);
-                                bucket.add_pdf(pdf(dir));
-                                bucket.add_uniform();
+                                m_buckets[bucket].add_pdf(pdf(dir));
+                                m_buckets[bucket].add_uniform();
                         }
                         for (int j = 0; j < 3; ++j)
                         {
                                 const auto [bucket, dir] = tree_bucket(uniform_on_sphere<N, T, RandomEngine>);
-                                bucket.add_uniform();
+                                m_buckets[bucket].add_uniform();
                         }
                 }
         }
@@ -249,21 +211,25 @@ public:
 
         void compare() const
         {
-                check_bucket_intersection();
-                check_bucket_sizes();
+                check_intersections(m_intersection_count, m_missed_intersection_count);
+                check_bucket_sizes(m_buckets);
 
                 constexpr T UNIFORM_DENSITY = T(1) / geometry::sphere_area(N);
 
-                const long long sample_count = buckets_sample_count();
-                const long long uniform_count = buckets_uniform_count();
+                const long long sample_count = buckets_sample_count(m_buckets);
+                const long long uniform_count = buckets_uniform_count(m_buckets);
 
                 long double sum_sampled = 0;
                 long double sum_expected = 0;
                 long double sum_error = 0;
 
-                for (const Bucket<N, T>& bucket : m_buckets)
+                ASSERT(m_buckets.size() == m_surface_facets.size());
+                for (std::size_t i = 0; i < m_buckets.size(); ++i)
                 {
-                        const T bucket_area = bucket.area(uniform_count);
+                        const Bucket<N, T>& bucket = m_buckets[i];
+
+                        const T bucket_area =
+                                surface_facet_area(m_surface_facets[i], bucket.uniform_count(), uniform_count);
                         const T sampled_distribution = T(bucket.sample_count()) / sample_count;
                         const T sampled_density = sampled_distribution / bucket_area;
                         const T expected_density = bucket.pdf();

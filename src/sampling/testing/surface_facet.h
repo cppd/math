@@ -19,16 +19,21 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <src/com/error.h>
 #include <src/com/print.h>
+#include <src/geometry/shapes/sphere_area.h>
+#include <src/geometry/shapes/sphere_simplex.h>
 #include <src/geometry/spatial/hyperplane_simplex.h>
 #include <src/numerical/complement.h>
 
+#include <algorithm>
 #include <array>
+#include <cmath>
+#include <sstream>
 #include <vector>
 
 namespace ns::sampling::testing
 {
 template <std::size_t N, typename T>
-class SurfaceFacet
+class SurfaceFacet final
 {
         static std::array<Vector<N, T>, N> vertices_to_array(
                 const std::vector<Vector<N, T>>& vertices,
@@ -52,9 +57,6 @@ class SurfaceFacet
         const std::array<int, N> m_v;
         Vector<N, T> m_normal;
         geometry::HyperplaneSimplex<N, T> m_geometry;
-
-protected:
-        ~SurfaceFacet() = default;
 
 public:
         static constexpr std::size_t SPACE_DIMENSION = N;
@@ -107,4 +109,34 @@ public:
                 return result;
         }
 };
+
+template <std::size_t N, typename T>
+double surface_facet_area(
+        const SurfaceFacet<N, T>& facet,
+        const long long uniform_count,
+        const long long all_uniform_count)
+{
+        static constexpr double SPHERE_AREA = geometry::sphere_area(N);
+
+        double area = double(uniform_count) / all_uniform_count * SPHERE_AREA;
+        if constexpr (N == 3)
+        {
+                const double geometry_area = geometry::sphere_simplex_area(facet.vertices());
+
+                const double relative_error = std::abs(area - geometry_area) / std::max(geometry_area, area);
+                if (!(relative_error < 0.025))
+                {
+                        std::ostringstream oss;
+                        oss << "bucket area relative error = " << relative_error << '\n';
+                        oss << "bucket area = " << area << '\n';
+                        oss << "geometry bucket area = " << geometry_area << '\n';
+                        oss << "uniform count = " << uniform_count << '\n';
+                        oss << "all uniform count = " << all_uniform_count;
+                        error(oss.str());
+                }
+
+                area = geometry_area;
+        }
+        return area;
+}
 }

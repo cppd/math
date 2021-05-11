@@ -17,19 +17,17 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
-#include "surface_facet.h"
-
 #include <src/com/error.h>
-#include <src/geometry/shapes/sphere_area.h>
-#include <src/geometry/shapes/sphere_simplex.h>
+#include <src/com/type/limit.h>
 
-#include <cmath>
+#include <algorithm>
 #include <sstream>
+#include <vector>
 
 namespace ns::sampling::testing
 {
 template <std::size_t N, typename T>
-class Bucket final : public SurfaceFacet<N, T>
+class Bucket final
 {
         long long m_sample_count;
         long long m_uniform_count;
@@ -37,8 +35,7 @@ class Bucket final : public SurfaceFacet<N, T>
         double m_pdf_sum;
 
 public:
-        Bucket(const std::vector<Vector<N, T>>& vertices, const std::array<int, N>& vertex_indices)
-                : SurfaceFacet<N, T>(vertices, vertex_indices)
+        Bucket()
         {
                 clear();
         }
@@ -71,30 +68,6 @@ public:
                 return m_uniform_count;
         }
 
-        double area(long long all_uniform_count) const
-        {
-                static constexpr double SPHERE_AREA = geometry::sphere_area(N);
-                double bucket_area = double(m_uniform_count) / all_uniform_count * SPHERE_AREA;
-                if constexpr (N == 3)
-                {
-                        double geometry_bucket_area = geometry::sphere_simplex_area(this->vertices());
-                        double relative_error = std::abs(bucket_area - geometry_bucket_area)
-                                                / std::max(geometry_bucket_area, bucket_area);
-                        if (!(relative_error < 0.025))
-                        {
-                                std::ostringstream oss;
-                                oss << "bucket area relative error = " << relative_error << '\n';
-                                oss << "bucket area = " << bucket_area << '\n';
-                                oss << "geometry bucket area = " << geometry_bucket_area << '\n';
-                                oss << "uniform count = " << m_uniform_count << '\n';
-                                oss << "all uniform count = " << all_uniform_count;
-                                error(oss.str());
-                        }
-                        bucket_area = geometry_bucket_area;
-                }
-                return bucket_area;
-        }
-
         void add_pdf(double pdf)
         {
                 m_pdf_count += 1;
@@ -118,4 +91,50 @@ public:
                 m_pdf_sum += bucket.m_pdf_sum;
         }
 };
+
+template <std::size_t N, typename T>
+long long buckets_sample_count(const std::vector<Bucket<N, T>>& buckets)
+{
+        long long s = 0;
+        for (const Bucket<N, T>& bucket : buckets)
+        {
+                s += bucket.sample_count();
+        }
+        return s;
+}
+
+template <std::size_t N, typename T>
+long long buckets_uniform_count(const std::vector<Bucket<N, T>>& buckets)
+{
+        long long s = 0;
+        for (const Bucket<N, T>& bucket : buckets)
+        {
+                s += bucket.uniform_count();
+        }
+        return s;
+}
+
+template <std::size_t N, typename T>
+void check_bucket_sizes(const std::vector<Bucket<N, T>>& buckets)
+{
+        ASSERT(!buckets.empty());
+        long long min = limits<long long>::max();
+        long long max = limits<long long>::lowest();
+        for (const Bucket<N, T>& bucket : buckets)
+        {
+                min = std::min(min, bucket.uniform_count());
+                max = std::max(max, bucket.uniform_count());
+        }
+        long long maximum_max_min_ratio = N < 5 ? 3 : 10;
+        if (max > 0 && min > 0 && max < maximum_max_min_ratio * min)
+        {
+                return;
+        }
+        std::ostringstream oss;
+        oss << "Buckets max/min is too large" << '\n';
+        oss << "max = " << max << '\n';
+        oss << "min = " << min << '\n';
+        oss << "max/min = " << (T(max) / min);
+        error(oss.str());
+}
 }
