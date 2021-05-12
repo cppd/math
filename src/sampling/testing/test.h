@@ -214,16 +214,42 @@ void test_performance(
                 impl::log(s);
         }
 
-        RandomEngine random_engine = create_engine<RandomEngine>();
-
-        static Vector<N, T> sink;
-        const TimePoint start_time = time();
-        for (long long i = 0; i < count; ++i)
+        const auto f = [&](Vector<N, T>* sink) -> long long
         {
-                sink = random_vector(random_engine);
+                RandomEngine random_engine = create_engine<RandomEngine>();
+                const TimePoint start_time = time();
+                for (long long i = 0; i < count; ++i)
+                {
+                        *sink = random_vector(random_engine);
+                }
+                return std::lround(count / duration_from(start_time));
+        };
+
+        long long performance = 0;
+
+        const int max_thread_count = hardware_concurrency();
+        const int thread_count = std::clamp(max_thread_count - 1, 1, 2);
+
+        std::vector<Vector<N, T>> sinks(thread_count);
+        std::vector<std::future<long long>> futures;
+        std::vector<std::thread> threads;
+        for (int i = 0; i < thread_count; ++i)
+        {
+                std::packaged_task<long long(Vector<N, T>*)> task(f);
+                futures.emplace_back(task.get_future());
+                threads.emplace_back(std::move(task), &sinks[i]);
+        }
+        for (std::thread& thread : threads)
+        {
+                thread.join();
+        }
+        for (std::future<long long>& future : futures)
+        {
+                performance += future.get();
         }
 
-        const long long performance = std::lround(count / duration_from(start_time));
+        performance /= thread_count;
+
         impl::log("performance " + to_string_digit_groups(performance) + " per second");
 }
 }
