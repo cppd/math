@@ -38,7 +38,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 namespace ns::sampling::testing
 {
 template <std::size_t N, typename T>
-class AngleBuckets
+class AngleDistribution
 {
         static constexpr int BUCKET_COUNT = 90;
         static constexpr T BUCKET_SIZE = PI<T> / BUCKET_COUNT;

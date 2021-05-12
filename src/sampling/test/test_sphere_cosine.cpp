@@ -16,7 +16,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
 #include "../sphere_cosine.h"
-#include "../testing/distribution.h"
+#include "../testing/test.h"
 
 #include <src/com/log.h>
 #include <src/com/names.h>

@@ -17,8 +17,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
-#include "angle_buckets.h"
-#include "surface_buckets.h"
+#include "angle_distribution.h"
+#include "sphere_distribution.h"
 
 #include <src/com/error.h>
 #include <src/com/log.h>
@@ -37,7 +37,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 namespace ns::sampling::testing
 {
-namespace distribution_implementation
+namespace test_implementation
 {
 inline void add_description(std::string* message, const std::string_view& separator, const std::string& description)
 {
@@ -78,7 +78,7 @@ void test_unit(
         const RandomVector& random_vector,
         ProgressRatio* progress)
 {
-        namespace impl = distribution_implementation;
+        namespace impl = test_implementation;
 
         progress->set(0);
 
@@ -137,11 +137,11 @@ void test_distribution_angle(
         const PDF& pdf,
         ProgressRatio* progress)
 {
-        namespace impl = distribution_implementation;
+        namespace impl = test_implementation;
 
         progress->set(0);
 
-        AngleBuckets<N, T> buckets;
+        AngleDistribution<N, T> buckets;
 
         const long long count = [&]
         {
@@ -173,11 +173,11 @@ void test_distribution_surface(
         const PDF& pdf,
         ProgressRatio* progress)
 {
-        namespace impl = distribution_implementation;
+        namespace impl = test_implementation;
 
         progress->set(0);
 
-        SurfaceBuckets<N, T> buckets(progress);
+        SphereDistribution<N, T> buckets(progress);
 
         const long long count = buckets.distribution_count(count_per_bucket);
         if (count <= 0)
@@ -203,7 +203,7 @@ void test_performance(
         const RandomVector& random_vector,
         ProgressRatio* progress)
 {
-        namespace impl = distribution_implementation;
+        namespace impl = test_implementation;
 
         progress->set(0);
 

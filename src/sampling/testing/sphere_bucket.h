@@ -27,7 +27,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 namespace ns::sampling::testing
 {
 template <std::size_t N, typename T>
-class Bucket final
+class SphereBucket final
 {
         long long m_sample_count;
         long long m_uniform_count;
@@ -35,7 +35,7 @@ class Bucket final
         double m_pdf_sum;
 
 public:
-        Bucket()
+        SphereBucket()
         {
                 clear();
         }
@@ -83,7 +83,7 @@ public:
                 return m_pdf_sum / m_pdf_count;
         }
 
-        void merge(const Bucket& bucket)
+        void merge(const SphereBucket& bucket)
         {
                 m_sample_count += bucket.m_sample_count;
                 m_uniform_count += bucket.m_uniform_count;
@@ -93,10 +93,10 @@ public:
 };
 
 template <std::size_t N, typename T>
-long long buckets_sample_count(const std::vector<Bucket<N, T>>& buckets)
+long long buckets_sample_count(const std::vector<SphereBucket<N, T>>& buckets)
 {
         long long s = 0;
-        for (const Bucket<N, T>& bucket : buckets)
+        for (const SphereBucket<N, T>& bucket : buckets)
         {
                 s += bucket.sample_count();
         }
@@ -104,10 +104,10 @@ long long buckets_sample_count(const std::vector<Bucket<N, T>>& buckets)
 }
 
 template <std::size_t N, typename T>
-long long buckets_uniform_count(const std::vector<Bucket<N, T>>& buckets)
+long long buckets_uniform_count(const std::vector<SphereBucket<N, T>>& buckets)
 {
         long long s = 0;
-        for (const Bucket<N, T>& bucket : buckets)
+        for (const SphereBucket<N, T>& bucket : buckets)
         {
                 s += bucket.uniform_count();
         }
@@ -115,12 +115,12 @@ long long buckets_uniform_count(const std::vector<Bucket<N, T>>& buckets)
 }
 
 template <std::size_t N, typename T>
-void check_bucket_sizes(const std::vector<Bucket<N, T>>& buckets)
+void check_bucket_sizes(const std::vector<SphereBucket<N, T>>& buckets)
 {
         ASSERT(!buckets.empty());
         long long min = limits<long long>::max();
         long long max = limits<long long>::lowest();
-        for (const Bucket<N, T>& bucket : buckets)
+        for (const SphereBucket<N, T>& bucket : buckets)
         {
                 min = std::min(min, bucket.uniform_count());
                 max = std::max(max, bucket.uniform_count());

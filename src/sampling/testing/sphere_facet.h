@@ -33,7 +33,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 namespace ns::sampling::testing
 {
 template <std::size_t N, typename T>
-class SurfaceFacet final
+class SphereFacet final
 {
         static std::array<Vector<N, T>, N> vertices_to_array(
                 const std::vector<Vector<N, T>>& vertices,
@@ -64,7 +64,7 @@ public:
 
         using DataType = T;
 
-        SurfaceFacet(const std::vector<Vector<N, T>>& vertices, const std::array<int, N>& vertex_indices)
+        SphereFacet(const std::vector<Vector<N, T>>& vertices, const std::array<int, N>& vertex_indices)
                 : m_vertices(vertices), m_v(vertex_indices)
         {
                 m_normal = numerical::orthogonal_complement(m_vertices, m_v).normalized();
@@ -111,8 +111,8 @@ public:
 };
 
 template <std::size_t N, typename T>
-double surface_facet_area(
-        const SurfaceFacet<N, T>& facet,
+double sphere_facet_area(
+        const SphereFacet<N, T>& facet,
         const long long uniform_count,
         const long long all_uniform_count)
 {
@@ -127,9 +127,9 @@ double surface_facet_area(
                 if (!(relative_error < 0.025))
                 {
                         std::ostringstream oss;
-                        oss << "bucket area relative error = " << relative_error << '\n';
-                        oss << "bucket area = " << area << '\n';
-                        oss << "geometry bucket area = " << geometry_area << '\n';
+                        oss << "sphere area relative error = " << relative_error << '\n';
+                        oss << "sphere area = " << area << '\n';
+                        oss << "geometry sphere area = " << geometry_area << '\n';
                         oss << "uniform count = " << uniform_count << '\n';
                         oss << "all uniform count = " << all_uniform_count;
                         error(oss.str());
