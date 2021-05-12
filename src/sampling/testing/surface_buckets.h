@@ -45,6 +45,31 @@ namespace ns::sampling::testing
 {
 namespace surface_buckets_implementation
 {
+template <std::size_t N, typename T>
+struct Sphere final
+{
+        std::vector<Vector<N, T>> vertices;
+        std::vector<SurfaceFacet<N, T>> facets;
+
+        Sphere(unsigned facet_min_count)
+        {
+                std::vector<std::array<int, N>> sphere_facets;
+                geometry::create_sphere(facet_min_count, &vertices, &sphere_facets);
+                ASSERT(sphere_facets.size() >= facet_min_count);
+
+                facets.reserve(sphere_facets.size());
+                for (const std::array<int, N>& vertex_indices : sphere_facets)
+                {
+                        facets.emplace_back(vertices, vertex_indices);
+                }
+        }
+
+        Sphere(const Sphere&) = delete;
+        Sphere(Sphere&&) = delete;
+        Sphere& operator=(const Sphere&) = delete;
+        Sphere& operator=(Sphere&&) = delete;
+};
+
 template <std::size_t N, typename T, typename RandomEngine>
 class FacetFinder final
 {
@@ -148,10 +173,10 @@ class SurfaceBuckets final
 
         static constexpr unsigned BUCKET_MIN_COUNT = 100 * (1 << N);
 
-        std::vector<Vector<N, T>> m_vertices;
-        std::vector<std::array<int, N>> m_facets;
-        std::vector<SurfaceFacet<N, T>> m_surface_facets;
-        std::unique_ptr<geometry::ObjectTree<SurfaceFacet<N, T>>> m_tree;
+        surface_buckets_implementation::Sphere<N, T> m_sphere;
+        geometry::ObjectTree<SurfaceFacet<N, T>> m_tree;
+
+        //
 
         template <typename RandomEngine, typename RandomVector, typename PDF>
         std::vector<Bucket<N, T>> compute_buckets(
@@ -170,8 +195,8 @@ class SurfaceBuckets final
 
                 const auto f = [&](std::vector<Bucket<N, T>>* buckets) -> std::array<long long, 2>
                 {
-                        ASSERT(buckets->size() == m_surface_facets.size());
-                        impl::FacetFinder<N, T, RandomEngine> facet_finder(m_tree.get(), &m_surface_facets);
+                        ASSERT(buckets->size() == m_sphere.facets.size());
+                        impl::FacetFinder<N, T, RandomEngine> facet_finder(&m_tree, &m_sphere.facets);
                         for (long long i = 0; i < count_per_thread; ++i)
                         {
                                 if ((i & 0xfff) == 0xfff)
@@ -201,7 +226,7 @@ class SurfaceBuckets final
                 std::vector<std::vector<Bucket<N, T>>> thread_buckets(thread_count);
                 for (std::vector<Bucket<N, T>>& buckets : thread_buckets)
                 {
-                        buckets.resize(m_surface_facets.size());
+                        buckets.resize(m_sphere.facets.size());
                 }
 
                 {
@@ -230,11 +255,11 @@ class SurfaceBuckets final
                         impl::check_intersections(intersection_count, missed_intersection_count);
                 }
 
-                std::vector<Bucket<N, T>> result(m_surface_facets.size());
+                std::vector<Bucket<N, T>> result(m_sphere.facets.size());
                 for (const std::vector<Bucket<N, T>>& buckets : thread_buckets)
                 {
-                        ASSERT(buckets.size() == m_surface_facets.size());
-                        for (std::size_t i = 0; i < m_surface_facets.size(); ++i)
+                        ASSERT(buckets.size() == m_sphere.facets.size());
+                        for (std::size_t i = 0; i < m_sphere.facets.size(); ++i)
                         {
                                 result[i].merge(buckets[i]);
                         }
@@ -244,18 +269,9 @@ class SurfaceBuckets final
 
 public:
         SurfaceBuckets(ProgressRatio* progress)
+                : m_sphere(BUCKET_MIN_COUNT),
+                  m_tree(m_sphere.facets, tree_max_depth(), TREE_MIN_OBJECTS_PER_BOX, progress)
         {
-                geometry::create_sphere(BUCKET_MIN_COUNT, &m_vertices, &m_facets);
-
-                m_surface_facets.reserve(m_facets.size());
-                for (const std::array<int, N>& vertex_indices : m_facets)
-                {
-                        m_surface_facets.emplace_back(m_vertices, vertex_indices);
-                }
-                ASSERT(m_surface_facets.size() >= BUCKET_MIN_COUNT);
-
-                m_tree = std::make_unique<geometry::ObjectTree<SurfaceFacet<N, T>>>(
-                        m_surface_facets, tree_max_depth(), TREE_MIN_OBJECTS_PER_BOX, progress);
         }
 
         SurfaceBuckets(const SurfaceBuckets&) = delete;
@@ -265,7 +281,7 @@ public:
 
         std::size_t bucket_count() const
         {
-                return m_surface_facets.size();
+                return m_sphere.facets.size();
         }
 
         long long distribution_count(const long long uniform_min_count_per_bucket) const
@@ -296,13 +312,13 @@ public:
                 long double sum_expected = 0;
                 long double sum_error = 0;
 
-                ASSERT(buckets.size() == m_surface_facets.size());
+                ASSERT(buckets.size() == m_sphere.facets.size());
                 for (std::size_t i = 0; i < buckets.size(); ++i)
                 {
                         const Bucket<N, T>& bucket = buckets[i];
 
                         const T bucket_area =
-                                surface_facet_area(m_surface_facets[i], bucket.uniform_count(), uniform_count);
+                                surface_facet_area(m_sphere.facets[i], bucket.uniform_count(), uniform_count);
                         const T sampled_distribution = T(bucket.sample_count()) / sample_count;
                         const T sampled_density = sampled_distribution / bucket_area;
                         const T expected_density = bucket.pdf();
