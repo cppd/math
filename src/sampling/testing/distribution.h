@@ -177,10 +177,9 @@ void test_distribution_surface(
 
         progress->set(0);
 
-        SurfaceBuckets<N, T> buckets;
+        SurfaceBuckets<N, T> buckets(progress);
 
         const long long count = buckets.distribution_count(count_per_bucket);
-
         if (count <= 0)
         {
                 return;
@@ -194,37 +193,7 @@ void test_distribution_surface(
                 impl::log(s);
         }
 
-        const int thread_count = hardware_concurrency();
-        const long long count_per_thread = (count + thread_count - 1) / thread_count;
-
-        const auto f = [&count_per_thread, &random_vector, &pdf, &progress]()
-        {
-                SurfaceBuckets<N, T> thread_buckets;
-                RandomEngine random_engine = create_engine<RandomEngine>();
-                thread_buckets.compute(random_engine, count_per_thread, random_vector, pdf, progress);
-                return thread_buckets;
-        };
-
-        {
-                std::vector<std::future<SurfaceBuckets<N, T>>> futures;
-                std::vector<std::thread> threads;
-                for (int i = 0; i < thread_count; ++i)
-                {
-                        std::packaged_task<SurfaceBuckets<N, T>()> task(f);
-                        futures.emplace_back(task.get_future());
-                        threads.emplace_back(std::move(task));
-                }
-                for (std::thread& thread : threads)
-                {
-                        thread.join();
-                }
-                for (std::future<SurfaceBuckets<N, T>>& future : futures)
-                {
-                        buckets.merge(future.get());
-                }
-        }
-
-        buckets.compare();
+        buckets.template check_distribution<RandomEngine>(count, random_vector, pdf, progress);
 }
 
 template <std::size_t N, typename T, typename RandomEngine, typename RandomVector>

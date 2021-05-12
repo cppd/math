@@ -24,20 +24,97 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <src/com/error.h>
 #include <src/com/print.h>
+#include <src/com/random/engine.h>
+#include <src/com/thread.h>
 #include <src/geometry/shapes/sphere_area.h>
 #include <src/geometry/shapes/sphere_create.h>
 #include <src/geometry/spatial/object_tree.h>
 #include <src/numerical/vec.h>
 #include <src/progress/progress.h>
 
+#include <array>
 #include <cmath>
+#include <future>
 #include <memory>
 #include <optional>
 #include <sstream>
+#include <tuple>
 #include <vector>
 
 namespace ns::sampling::testing
 {
+namespace surface_buckets_implementation
+{
+template <std::size_t N, typename T, typename RandomEngine>
+class FacetFinder final
+{
+        const geometry::ObjectTree<SurfaceFacet<N, T>>* const m_tree;
+        const std::vector<SurfaceFacet<N, T>>* const m_facets;
+        RandomEngine m_random_engine;
+        long long m_intersection_count = 0;
+        long long m_missed_intersection_count = 0;
+
+public:
+        FacetFinder(const geometry::ObjectTree<SurfaceFacet<N, T>>* tree, const std::vector<SurfaceFacet<N, T>>* facets)
+                : m_tree(tree), m_facets(facets), m_random_engine(create_engine<RandomEngine>())
+        {
+        }
+
+        template <typename RandomVector>
+        std::tuple<std::size_t, Vector<N, T>> find(const RandomVector& random_vector)
+        {
+                while (true)
+                {
+                        const Ray<N, T> ray(Vector<N, T>(0), random_vector(m_random_engine));
+
+                        const std::optional<T> root_distance = m_tree->intersect_root(ray);
+                        ASSERT(root_distance && *root_distance == 0);
+
+                        const std::optional<std::tuple<T, const SurfaceFacet<N, T>*>> v =
+                                m_tree->intersect(ray, *root_distance);
+                        if (v)
+                        {
+                                ++m_intersection_count;
+                                const std::size_t index = std::get<1>(*v) - m_facets->data();
+                                ASSERT(index < m_facets->size());
+                                return {index, ray.dir()};
+                        }
+                        ++m_missed_intersection_count;
+                }
+        }
+
+        long long intersection_count() const
+        {
+                return m_intersection_count;
+        }
+
+        long long missed_intersection_count() const
+        {
+                return m_missed_intersection_count;
+        }
+};
+
+inline void check_intersections(long long intersection_count, long long missed_intersection_count)
+{
+        const long long sample_count = intersection_count + missed_intersection_count;
+        if (sample_count < 1'000'000)
+        {
+                error("Too few samples " + to_string(sample_count));
+        }
+
+        const long long max_missed_count = std::ceil(sample_count * 1e-6);
+        if (missed_intersection_count >= max_missed_count)
+        {
+                std::ostringstream oss;
+                oss << "Too many missed intersections" << '\n';
+                oss << "missed intersections = " << missed_intersection_count << '\n';
+                oss << "all samples = " << sample_count << '\n';
+                oss << "missed/all = " << (double(missed_intersection_count) / sample_count);
+                error(oss.str());
+        }
+}
+}
+
 template <std::size_t N, typename T>
 class SurfaceBuckets final
 {
@@ -67,53 +144,124 @@ class SurfaceBuckets final
                 }
         }
 
-        static void check_intersections(long long intersection_count, long long missed_intersection_count)
-        {
-                const long long sample_count = intersection_count + missed_intersection_count;
-                if (sample_count < 1'000'000)
-                {
-                        error("Too few samples " + to_string(sample_count));
-                }
-                const long long max_missed_count = std::ceil(sample_count * 1e-6);
-                if (missed_intersection_count >= max_missed_count)
-                {
-                        std::ostringstream oss;
-                        oss << "Too many missed intersections" << '\n';
-                        oss << "missed intersections = " << missed_intersection_count << '\n';
-                        oss << "all samples = " << sample_count << '\n';
-                        oss << "missed/all = " << (double(missed_intersection_count) / sample_count);
-                        error(oss.str());
-                }
-        }
-
         //
 
         static constexpr unsigned BUCKET_MIN_COUNT = 100 * (1 << N);
 
-        std::unique_ptr<std::vector<Vector<N, T>>> m_vertices;
+        std::vector<Vector<N, T>> m_vertices;
         std::vector<std::array<int, N>> m_facets;
         std::vector<SurfaceFacet<N, T>> m_surface_facets;
+        std::unique_ptr<geometry::ObjectTree<SurfaceFacet<N, T>>> m_tree;
 
-        std::vector<Bucket<N, T>> m_buckets;
-        long long m_intersection_count = 0;
-        long long m_missed_intersection_count = 0;
+        template <typename RandomEngine, typename RandomVector, typename PDF>
+        std::vector<Bucket<N, T>> compute_buckets(
+                const long long count,
+                const RandomVector& random_vector,
+                const PDF& pdf,
+                ProgressRatio* progress) const
+        {
+                namespace impl = surface_buckets_implementation;
+
+                const int thread_count = hardware_concurrency();
+                const long long count_per_thread = (count + thread_count - 1) / thread_count;
+                const double count_per_thread_reciprocal = 1.0 / count_per_thread;
+
+                progress->set(0);
+
+                const auto f = [&](std::vector<Bucket<N, T>>* buckets) -> std::array<long long, 2>
+                {
+                        ASSERT(buckets->size() == m_surface_facets.size());
+                        impl::FacetFinder<N, T, RandomEngine> facet_finder(m_tree.get(), &m_surface_facets);
+                        for (long long i = 0; i < count_per_thread; ++i)
+                        {
+                                if ((i & 0xfff) == 0xfff)
+                                {
+                                        progress->set(i * count_per_thread_reciprocal);
+                                }
+                                {
+                                        const auto [index, dir] = facet_finder.find(random_vector);
+                                        (*buckets)[index].add_sample();
+                                }
+                                {
+                                        const auto [index, dir] =
+                                                facet_finder.find(uniform_on_sphere<N, T, RandomEngine>);
+                                        (*buckets)[index].add_pdf(pdf(dir));
+                                        (*buckets)[index].add_uniform();
+                                }
+                                for (int j = 0; j < 3; ++j)
+                                {
+                                        const auto [index, dir] =
+                                                facet_finder.find(uniform_on_sphere<N, T, RandomEngine>);
+                                        (*buckets)[index].add_uniform();
+                                }
+                        }
+                        return {facet_finder.intersection_count(), facet_finder.missed_intersection_count()};
+                };
+
+                std::vector<std::vector<Bucket<N, T>>> thread_buckets(thread_count);
+                for (std::vector<Bucket<N, T>>& buckets : thread_buckets)
+                {
+                        buckets.resize(m_surface_facets.size());
+                }
+
+                {
+                        long long intersection_count = 0;
+                        long long missed_intersection_count = 0;
+
+                        std::vector<std::future<std::array<long long, 2>>> futures;
+                        std::vector<std::thread> threads;
+                        for (std::vector<Bucket<N, T>>& buckets : thread_buckets)
+                        {
+                                std::packaged_task<std::array<long long, 2>(std::vector<Bucket<N, T>>*)> task(f);
+                                futures.emplace_back(task.get_future());
+                                threads.emplace_back(std::move(task), &buckets);
+                        }
+                        for (std::thread& thread : threads)
+                        {
+                                thread.join();
+                        }
+                        for (std::future<std::array<long long, 2>>& future : futures)
+                        {
+                                const auto [intersections, missed_intersections] = future.get();
+                                intersection_count += intersections;
+                                missed_intersection_count += missed_intersections;
+                        }
+
+                        impl::check_intersections(intersection_count, missed_intersection_count);
+                }
+
+                std::vector<Bucket<N, T>> result(m_surface_facets.size());
+                for (const std::vector<Bucket<N, T>>& buckets : thread_buckets)
+                {
+                        ASSERT(buckets.size() == m_surface_facets.size());
+                        for (std::size_t i = 0; i < m_surface_facets.size(); ++i)
+                        {
+                                result[i].merge(buckets[i]);
+                        }
+                }
+                return result;
+        }
 
 public:
-        SurfaceBuckets()
+        SurfaceBuckets(ProgressRatio* progress)
         {
-                m_vertices = std::make_unique<std::vector<Vector<N, T>>>();
-
-                geometry::create_sphere(BUCKET_MIN_COUNT, m_vertices.get(), &m_facets);
+                geometry::create_sphere(BUCKET_MIN_COUNT, &m_vertices, &m_facets);
 
                 m_surface_facets.reserve(m_facets.size());
                 for (const std::array<int, N>& vertex_indices : m_facets)
                 {
-                        m_surface_facets.emplace_back(*m_vertices, vertex_indices);
+                        m_surface_facets.emplace_back(m_vertices, vertex_indices);
                 }
                 ASSERT(m_surface_facets.size() >= BUCKET_MIN_COUNT);
 
-                m_buckets.resize(m_surface_facets.size());
+                m_tree = std::make_unique<geometry::ObjectTree<SurfaceFacet<N, T>>>(
+                        m_surface_facets, tree_max_depth(), TREE_MIN_OBJECTS_PER_BOX, progress);
         }
+
+        SurfaceBuckets(const SurfaceBuckets&) = delete;
+        SurfaceBuckets(SurfaceBuckets&&) = delete;
+        SurfaceBuckets& operator=(const SurfaceBuckets&) = delete;
+        SurfaceBuckets& operator=(SurfaceBuckets&&) = delete;
 
         std::size_t bucket_count() const
         {
@@ -128,105 +276,30 @@ public:
         }
 
         template <typename RandomEngine, typename RandomVector, typename PDF>
-        void compute(
-                RandomEngine& random_engine,
+        void check_distribution(
                 const long long count,
                 const RandomVector& random_vector,
                 const PDF& pdf,
-                ProgressRatio* progress)
+                ProgressRatio* progress) const
         {
-                const geometry::ObjectTree<SurfaceFacet<N, T>> tree(
-                        m_surface_facets, tree_max_depth(), TREE_MIN_OBJECTS_PER_BOX, progress);
+                const std::vector<Bucket<N, T>> buckets =
+                        compute_buckets<RandomEngine>(count, random_vector, pdf, progress);
 
-                for (Bucket<N, T>& bucket : m_buckets)
-                {
-                        bucket.clear();
-                }
-
-                m_missed_intersection_count = 0;
-                m_intersection_count = 0;
-
-                const auto tree_bucket = [&](const auto& dir) -> std::tuple<std::size_t, Vector<N, T>>
-                {
-                        while (true)
-                        {
-                                const Ray<N, T> ray(Vector<N, T>(0), dir(random_engine));
-
-                                const std::optional<T> root_distance = tree.intersect_root(ray);
-                                ASSERT(root_distance && *root_distance == 0);
-
-                                const std::optional<std::tuple<T, const SurfaceFacet<N, T>*>> v =
-                                        tree.intersect(ray, *root_distance);
-                                if (v)
-                                {
-                                        ++m_intersection_count;
-                                        const std::size_t index = std::get<1>(*v) - m_surface_facets.data();
-                                        ASSERT(index < m_surface_facets.size());
-                                        return {index, ray.dir()};
-                                }
-                                ++m_missed_intersection_count;
-                        }
-                };
-
-                const double count_reciprocal = 1.0 / count;
-                progress->set(0);
-
-                for (long long i = 0; i < count; ++i)
-                {
-                        if ((i & 0xfff) == 0xfff)
-                        {
-                                progress->set(i * count_reciprocal);
-                        }
-                        {
-                                const auto [bucket, dir] = tree_bucket(random_vector);
-                                m_buckets[bucket].add_sample();
-                        }
-                        {
-                                const auto [bucket, dir] = tree_bucket(uniform_on_sphere<N, T, RandomEngine>);
-                                m_buckets[bucket].add_pdf(pdf(dir));
-                                m_buckets[bucket].add_uniform();
-                        }
-                        for (int j = 0; j < 3; ++j)
-                        {
-                                const auto [bucket, dir] = tree_bucket(uniform_on_sphere<N, T, RandomEngine>);
-                                m_buckets[bucket].add_uniform();
-                        }
-                }
-        }
-
-        void merge(const SurfaceBuckets<N, T>& other)
-        {
-                ASSERT(*m_vertices == *other.m_vertices);
-                ASSERT(m_facets == other.m_facets);
-                ASSERT(m_buckets.size() == other.m_buckets.size());
-
-                for (std::size_t i = 0; i < m_buckets.size(); ++i)
-                {
-                        m_buckets[i].merge(other.m_buckets[i]);
-                }
-
-                m_intersection_count += other.m_intersection_count;
-                m_missed_intersection_count += other.m_missed_intersection_count;
-        }
-
-        void compare() const
-        {
-                check_intersections(m_intersection_count, m_missed_intersection_count);
-                check_bucket_sizes(m_buckets);
+                check_bucket_sizes(buckets);
 
                 constexpr T UNIFORM_DENSITY = T(1) / geometry::sphere_area(N);
 
-                const long long sample_count = buckets_sample_count(m_buckets);
-                const long long uniform_count = buckets_uniform_count(m_buckets);
+                const long long sample_count = buckets_sample_count(buckets);
+                const long long uniform_count = buckets_uniform_count(buckets);
 
                 long double sum_sampled = 0;
                 long double sum_expected = 0;
                 long double sum_error = 0;
 
-                ASSERT(m_buckets.size() == m_surface_facets.size());
-                for (std::size_t i = 0; i < m_buckets.size(); ++i)
+                ASSERT(buckets.size() == m_surface_facets.size());
+                for (std::size_t i = 0; i < buckets.size(); ++i)
                 {
-                        const Bucket<N, T>& bucket = m_buckets[i];
+                        const Bucket<N, T>& bucket = buckets[i];
 
                         const T bucket_area =
                                 surface_facet_area(m_surface_facets[i], bucket.uniform_count(), uniform_count);
