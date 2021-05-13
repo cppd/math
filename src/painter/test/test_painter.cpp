@@ -49,8 +49,8 @@ constexpr Color DEFAULT_COLOR = Color(Srgb8(150, 170, 150));
 constexpr Color::DataType METALNESS = 0;
 constexpr Color::DataType LIGHTING_INTENSITY = 1;
 
-constexpr const char* DIRECTORY_NAME = "painter_test";
-constexpr const char* IMAGE_FILE_FORMAT = "png";
+constexpr std::string_view DIRECTORY_NAME = "painter_test";
+constexpr std::string_view IMAGE_FILE_FORMAT = "png";
 constexpr image::ColorFormat PIXEL_COLOR_FORMAT = image::ColorFormat::R8G8B8_SRGB;
 
 template <std::size_t N>
@@ -101,7 +101,7 @@ class Image final : public Notifier<N>
         }
 
 public:
-        explicit Image(const std::string& directory_name, const Color& background_color)
+        explicit Image(const std::string_view& directory_name, const Color& background_color)
                 : m_path(std::filesystem::temp_directory_path() / path_from_utf8(directory_name)),
                   m_background_color(background_color)
         {

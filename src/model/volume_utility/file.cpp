@@ -139,7 +139,7 @@ std::vector<std::string> read_files(const std::filesystem::path& directory)
 template <std::size_t N>
 std::enable_if_t<N >= 3> save_to_images(
         const std::filesystem::path& directory,
-        const std::string& file_format,
+        const std::string_view& file_format,
         const image::ImageView<N>& image_view,
         ProgressRatio* progress,
         unsigned* current,
@@ -305,7 +305,7 @@ VolumeInfo volume_info(const std::filesystem::path& path)
 template <std::size_t N>
 std::enable_if_t<N >= 3> save_to_images(
         const std::filesystem::path& path,
-        const std::string& file_format,
+        const std::string_view& file_format,
         const image::ImageView<N>& image_view,
         ProgressRatio* progress)
 {
@@ -357,17 +357,17 @@ std::enable_if_t<N >= 3, image::Image<N>> load(const std::filesystem::path& path
 
 template void save_to_images(
         const std::filesystem::path&,
-        const std::string&,
+        const std::string_view&,
         const image::ImageView<3>&,
         ProgressRatio*);
 template void save_to_images(
         const std::filesystem::path&,
-        const std::string&,
+        const std::string_view&,
         const image::ImageView<4>&,
         ProgressRatio*);
 template void save_to_images(
         const std::filesystem::path&,
-        const std::string&,
+        const std::string_view&,
         const image::ImageView<5>&,
         ProgressRatio*);
 

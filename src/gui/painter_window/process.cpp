@@ -37,7 +37,7 @@ namespace ns::gui::painter_window
 {
 namespace
 {
-constexpr const char* IMAGE_FILE_FORMAT = "png";
+constexpr std::string_view IMAGE_FILE_FORMAT = "png";
 
 template <std::size_t N, typename T>
 std::array<T, N> to_array(const std::vector<T>& vector)
