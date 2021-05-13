@@ -24,8 +24,8 @@ namespace ns::gui::main_window
 {
 namespace
 {
-// Максимальный коэффициент для умножения и деления α на него.
-constexpr double VOLUME_ALPHA_COEFFICIENT = 50;
+// [1/C, C]
+constexpr double VOLUME_ALPHA_COEFFICIENT = 250;
 }
 
 VolumeWidget::VolumeWidget() : QWidget(nullptr)

@@ -45,10 +45,10 @@
    <item>
     <widget class="QSlider" name="slider_transparency">
      <property name="maximum">
-      <number>100</number>
+      <number>200</number>
      </property>
      <property name="value">
-      <number>50</number>
+      <number>100</number>
      </property>
      <property name="orientation">
       <enum>Qt::Horizontal</enum>
