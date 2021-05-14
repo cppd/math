@@ -51,13 +51,27 @@ std::array<T, N> to_array(const std::vector<T>& vector)
         return array;
 }
 
+struct Parameters final
+{
+        bool with_background;
+        bool grayscale;
+        bool convert_to_8_bit;
+
+        explicit Parameters(const dialog::PainterImageParameters& dialog_parameters)
+                : with_background(dialog_parameters.with_background),
+                  grayscale(dialog_parameters.grayscale),
+                  convert_to_8_bit(dialog_parameters.convert_to_8_bit)
+        {
+        }
+};
+
 template <std::size_t N_IMAGE>
 image::Image<N_IMAGE> create_image(
         const bool delete_alpha,
         const std::array<int, N_IMAGE>& size,
         const Color& background,
         const image::ColorFormat color_format,
-        const dialog::PainterImageParameters& parameters,
+        const Parameters& parameters,
         std::vector<std::byte>&& pixels)
 {
         static_assert(N_IMAGE >= 2);
@@ -109,7 +123,8 @@ void save_image(
         const std::array<int, N_IMAGE>& size,
         const Color& background,
         const image::ColorFormat color_format,
-        const dialog::PainterImageParameters& parameters,
+        const std::string& path_string,
+        const Parameters& parameters,
         std::vector<std::byte>&& pixels,
         ProgressRatio* progress)
 {
@@ -122,7 +137,7 @@ void save_image(
 
         image::flip_vertically(&image);
 
-        std::filesystem::path path = path_from_utf8(*parameters.path_string);
+        std::filesystem::path path = path_from_utf8(path_string);
         image::ImageView<N_IMAGE> image_view(image);
         if constexpr (N_IMAGE == 2)
         {
@@ -139,7 +154,7 @@ void add_volume(
         const std::array<int, N_IMAGE>& size,
         const Color& background,
         const image::ColorFormat color_format,
-        const dialog::PainterImageParameters& parameters,
+        const Parameters& parameters,
         std::vector<std::byte>&& pixels)
 {
         static_assert(N_IMAGE >= 3);
@@ -154,43 +169,44 @@ void add_volume(
 }
 
 std::function<void(ProgressRatioList*)> save_image(
-        int width,
-        int height,
+        const int width,
+        const int height,
         const Color& background,
-        image::ColorFormat color_format,
+        const image::ColorFormat color_format,
         std::vector<std::byte>&& pixels)
 {
-        std::optional<dialog::PainterImageParameters> parameters = dialog::PainterImageDialog::show(
+        std::optional<dialog::PainterImageParameters> dialog_parameters = dialog::PainterImageDialog::show(
                 "Save Image", dialog::PainterImagePathType::File, false /*use_all*/, false /*use_grayscale*/);
-        if (!parameters)
+        if (!dialog_parameters)
         {
                 return nullptr;
         }
-        if (!parameters->path_string)
+        if (!dialog_parameters->path_string)
         {
                 error("No file name");
         }
-        ASSERT(!parameters->all);
-        ASSERT(!parameters->grayscale);
+        ASSERT(!dialog_parameters->all);
+        ASSERT(!dialog_parameters->grayscale);
+        dialog_parameters->grayscale = false;
 
-        parameters->grayscale = false;
-
-        return [=, pixels_ptr = std::make_shared<std::vector<std::byte>>(std::move(pixels)),
-                parameters = std::move(*parameters)](ProgressRatioList* progress_list)
+        return [width, height, background, color_format, parameters = Parameters(*dialog_parameters),
+                path_string = std::move(*dialog_parameters->path_string),
+                pixels = std::make_shared<std::vector<std::byte>>(std::move(pixels))](ProgressRatioList* progress_list)
         {
                 ProgressRatio progress(progress_list, "Saving");
                 progress.set(0);
 
                 const std::array<int, 2> array_size{width, height};
 
-                save_image(array_size, background, color_format, parameters, std::move(*pixels_ptr), &progress);
+                save_image(
+                        array_size, background, color_format, path_string, parameters, std::move(*pixels), &progress);
         };
 }
 
 std::function<void(ProgressRatioList*)> save_image(
         const std::vector<int>& size,
         const Color& background,
-        image::ColorFormat color_format,
+        const image::ColorFormat color_format,
         std::vector<std::byte>&& pixels)
 {
         if (size.size() < 3)
@@ -198,20 +214,21 @@ std::function<void(ProgressRatioList*)> save_image(
                 error("Error image dimension " + to_string(size.size()) + " for saving image");
         }
 
-        std::optional<dialog::PainterImageParameters> parameters = dialog::PainterImageDialog::show(
+        std::optional<dialog::PainterImageParameters> dialog_parameters = dialog::PainterImageDialog::show(
                 "Save All Images", dialog::PainterImagePathType::Directory, false /*use_all*/, true /*use_grayscale*/);
-        if (!parameters)
+        if (!dialog_parameters)
         {
                 return nullptr;
         }
-        if (!parameters->path_string)
+        if (!dialog_parameters->path_string)
         {
                 error("No directory name");
         }
-        ASSERT(!parameters->all);
+        ASSERT(!dialog_parameters->all);
 
-        return [=, pixels_ptr = std::make_shared<std::vector<std::byte>>(std::move(pixels)),
-                parameters = std::move(*parameters)](ProgressRatioList* progress_list)
+        return [size, background, color_format, parameters = Parameters(*dialog_parameters),
+                path_string = std::move(*dialog_parameters->path_string),
+                pixels = std::make_shared<std::vector<std::byte>>(std::move(pixels))](ProgressRatioList* progress_list)
         {
                 const int N = size.size() + 1;
                 process::apply_for_dimension(
@@ -227,8 +244,8 @@ std::function<void(ProgressRatioList*)> save_image(
                                         const std::array<int, N_IMAGE> array_size = to_array<N_IMAGE, int>(size);
 
                                         save_image(
-                                                array_size, background, color_format, parameters,
-                                                std::move(*pixels_ptr), &progress);
+                                                array_size, background, color_format, path_string, parameters,
+                                                std::move(*pixels), &progress);
                                 }
                         });
         };
@@ -237,7 +254,7 @@ std::function<void(ProgressRatioList*)> save_image(
 std::function<void(ProgressRatioList*)> add_volume(
         const std::vector<int>& size,
         const Color& background,
-        image::ColorFormat color_format,
+        const image::ColorFormat color_format,
         std::vector<std::byte>&& pixels)
 {
         if (size.size() < 3)
@@ -245,17 +262,17 @@ std::function<void(ProgressRatioList*)> add_volume(
                 error("Error image dimension " + to_string(size.size()) + " for adding volume");
         }
 
-        std::optional<dialog::PainterImageParameters> parameters = dialog::PainterImageDialog::show(
+        std::optional<dialog::PainterImageParameters> dialog_parameters = dialog::PainterImageDialog::show(
                 "Add Volume", dialog::PainterImagePathType::None, false /*use_all*/, true /*use_grayscale*/);
-        if (!parameters)
+        if (!dialog_parameters)
         {
                 return nullptr;
         }
-        ASSERT(!parameters->path_string.has_value());
-        ASSERT(!parameters->all);
+        ASSERT(!dialog_parameters->path_string.has_value());
+        ASSERT(!dialog_parameters->all);
 
-        return [=, pixels_ptr = std::make_shared<std::vector<std::byte>>(std::move(pixels)),
-                parameters = std::move(*parameters)](ProgressRatioList* progress_list)
+        return [size, background, color_format, parameters = Parameters(*dialog_parameters),
+                pixels = std::make_shared<std::vector<std::byte>>(std::move(pixels))](ProgressRatioList* progress_list)
         {
                 const int N = size.size() + 1;
                 process::apply_for_dimension(
@@ -271,8 +288,7 @@ std::function<void(ProgressRatioList*)> add_volume(
                                         const std::array<int, N_IMAGE> array_size = to_array<N_IMAGE, int>(size);
 
                                         add_volume<N_IMAGE>(
-                                                array_size, background, color_format, parameters,
-                                                std::move(*pixels_ptr));
+                                                array_size, background, color_format, parameters, std::move(*pixels));
                                 }
                         });
         };
