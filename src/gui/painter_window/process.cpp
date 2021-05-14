@@ -53,15 +53,23 @@ std::array<T, N> to_array(const std::vector<T>& vector)
 
 struct Parameters final
 {
-        bool with_background;
+        bool background;
         bool grayscale;
-        bool convert_to_8_bit;
+        bool to_8_bit;
 
-        explicit Parameters(const dialog::PainterImageParameters& dialog_parameters)
-                : with_background(dialog_parameters.with_background),
-                  grayscale(dialog_parameters.grayscale),
-                  convert_to_8_bit(dialog_parameters.convert_to_8_bit)
+        std::string to_string() const
         {
+                std::string s;
+                s += background ? "with_background" : "transparent";
+                if (grayscale)
+                {
+                        s += "_grayscale";
+                }
+                if (to_8_bit)
+                {
+                        s += "_8-bits";
+                }
+                return s;
         }
 };
 
@@ -83,7 +91,7 @@ image::Image<N_IMAGE> create_image(
 
         ASSERT(image::format_component_count(color_format) == 4);
 
-        if (parameters.with_background && !parameters.grayscale)
+        if (parameters.background && !parameters.grayscale)
         {
                 image::blend_alpha(&image.color_format, image.pixels, background);
                 if (delete_alpha)
@@ -96,21 +104,21 @@ image::Image<N_IMAGE> create_image(
                         image::set_alpha(image.color_format, image.pixels, ALPHA);
                 }
         }
-        else if (parameters.with_background && parameters.grayscale)
+        else if (parameters.background && parameters.grayscale)
         {
                 image::blend_alpha(&image.color_format, image.pixels, background);
                 image::make_grayscale(image.color_format, image.pixels);
                 image = image::convert_to_r_component_format(image);
         }
-        else if (!parameters.with_background && parameters.grayscale)
+        else if (!parameters.background && parameters.grayscale)
         {
                 image::make_grayscale(image.color_format, image.pixels);
                 image::blend_alpha(&image.color_format, image.pixels, Color(0));
                 image = image::convert_to_r_component_format(image);
         }
 
-        ASSERT(!(parameters.grayscale && parameters.convert_to_8_bit));
-        if (parameters.convert_to_8_bit)
+        ASSERT(!(parameters.grayscale && parameters.to_8_bit));
+        if (parameters.to_8_bit)
         {
                 image = image::convert_to_8_bit(image);
         }
@@ -123,7 +131,7 @@ void save_image(
         const std::array<int, N_IMAGE>& size,
         const Color& background,
         const image::ColorFormat color_format,
-        const std::string& path_string,
+        const std::filesystem::path& path,
         const Parameters& parameters,
         std::vector<std::byte>&& pixels,
         ProgressRatio* progress)
@@ -137,7 +145,6 @@ void save_image(
 
         image::flip_vertically(&image);
 
-        std::filesystem::path path = path_from_utf8(path_string);
         image::ImageView<N_IMAGE> image_view(image);
         if constexpr (N_IMAGE == 2)
         {
@@ -166,6 +173,24 @@ void add_volume(
 
         process::load_volume<N_IMAGE>("Painter Image", std::move(image));
 }
+
+std::vector<Parameters> create_parameters(const dialog::PainterImageParameters& dialog_parameters)
+{
+        if (dialog_parameters.all)
+        {
+                return {{.background = false, .grayscale = false, .to_8_bit = false},
+                        {.background = false, .grayscale = false, .to_8_bit = true},
+                        {.background = false, .grayscale = true, .to_8_bit = false},
+                        {.background = true, .grayscale = false, .to_8_bit = false},
+                        {.background = true, .grayscale = false, .to_8_bit = true},
+                        {.background = true, .grayscale = true, .to_8_bit = false}};
+        }
+
+        return {
+                {.background = dialog_parameters.with_background,
+                 .grayscale = dialog_parameters.grayscale,
+                 .to_8_bit = dialog_parameters.convert_to_8_bit}};
+}
 }
 
 std::function<void(ProgressRatioList*)> save_image(
@@ -189,7 +214,7 @@ std::function<void(ProgressRatioList*)> save_image(
         ASSERT(!dialog_parameters->grayscale);
         dialog_parameters->grayscale = false;
 
-        return [width, height, background, color_format, parameters = Parameters(*dialog_parameters),
+        return [width, height, background, color_format, parameters = create_parameters(*dialog_parameters),
                 path_string = std::move(*dialog_parameters->path_string),
                 pixels = std::make_shared<std::vector<std::byte>>(std::move(pixels))](ProgressRatioList* progress_list)
         {
@@ -198,8 +223,10 @@ std::function<void(ProgressRatioList*)> save_image(
 
                 const std::array<int, 2> array_size{width, height};
 
+                ASSERT(parameters.size() == 1);
                 save_image(
-                        array_size, background, color_format, path_string, parameters, std::move(*pixels), &progress);
+                        array_size, background, color_format, path_from_utf8(path_string), parameters.front(),
+                        std::move(*pixels), &progress);
         };
 }
 
@@ -215,7 +242,7 @@ std::function<void(ProgressRatioList*)> save_image(
         }
 
         std::optional<dialog::PainterImageParameters> dialog_parameters = dialog::PainterImageDialog::show(
-                "Save All Images", dialog::PainterImagePathType::Directory, false /*use_all*/, true /*use_grayscale*/);
+                "Save All Images", dialog::PainterImagePathType::Directory, true /*use_all*/, true /*use_grayscale*/);
         if (!dialog_parameters)
         {
                 return nullptr;
@@ -224,9 +251,8 @@ std::function<void(ProgressRatioList*)> save_image(
         {
                 error("No directory name");
         }
-        ASSERT(!dialog_parameters->all);
 
-        return [size, background, color_format, parameters = Parameters(*dialog_parameters),
+        return [size, background, color_format, parameters = create_parameters(*dialog_parameters),
                 path_string = std::move(*dialog_parameters->path_string),
                 pixels = std::make_shared<std::vector<std::byte>>(std::move(pixels))](ProgressRatioList* progress_list)
         {
@@ -243,9 +269,43 @@ std::function<void(ProgressRatioList*)> save_image(
 
                                         const std::array<int, N_IMAGE> array_size = to_array<N_IMAGE, int>(size);
 
-                                        save_image(
-                                                array_size, background, color_format, path_string, parameters,
-                                                std::move(*pixels), &progress);
+                                        ASSERT(!parameters.empty());
+
+                                        if (parameters.size() == 1)
+                                        {
+                                                save_image(
+                                                        array_size, background, color_format,
+                                                        path_from_utf8(path_string), parameters.front(),
+                                                        std::move(*pixels), &progress);
+                                                return;
+                                        }
+
+                                        for (std::size_t i = 0; i < parameters.size(); ++i)
+                                        {
+                                                const Parameters& p = parameters[i];
+
+                                                const std::filesystem::path path =
+                                                        path_from_utf8(path_string) / path_from_utf8(p.to_string());
+                                                if (std::filesystem::exists(path))
+                                                {
+                                                        error("Path exists " + generic_utf8_filename(path));
+                                                }
+                                                std::filesystem::create_directory(path);
+
+                                                std::vector<std::byte> image_pixels;
+                                                if (i != parameters.size() - 1)
+                                                {
+                                                        image_pixels = *pixels;
+                                                }
+                                                else
+                                                {
+                                                        image_pixels = std::move(*pixels);
+                                                }
+
+                                                save_image(
+                                                        array_size, background, color_format, path, p,
+                                                        std::move(image_pixels), &progress);
+                                        }
                                 }
                         });
         };
@@ -271,7 +331,7 @@ std::function<void(ProgressRatioList*)> add_volume(
         ASSERT(!dialog_parameters->path_string.has_value());
         ASSERT(!dialog_parameters->all);
 
-        return [size, background, color_format, parameters = Parameters(*dialog_parameters),
+        return [size, background, color_format, parameters = create_parameters(*dialog_parameters),
                 pixels = std::make_shared<std::vector<std::byte>>(std::move(pixels))](ProgressRatioList* progress_list)
         {
                 const int N = size.size() + 1;
@@ -287,8 +347,10 @@ std::function<void(ProgressRatioList*)> add_volume(
 
                                         const std::array<int, N_IMAGE> array_size = to_array<N_IMAGE, int>(size);
 
+                                        ASSERT(parameters.size() == 1);
                                         add_volume<N_IMAGE>(
-                                                array_size, background, color_format, parameters, std::move(*pixels));
+                                                array_size, background, color_format, parameters.front(),
+                                                std::move(*pixels));
                                 }
                         });
         };
