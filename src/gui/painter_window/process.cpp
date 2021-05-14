@@ -69,7 +69,7 @@ image::Image<N_IMAGE> create_image(
 
         ASSERT(image::format_component_count(color_format) == 4);
 
-        if (parameters.with_background && !*parameters.grayscale)
+        if (parameters.with_background && !parameters.grayscale)
         {
                 image::blend_alpha(&image.color_format, image.pixels, background);
                 if (delete_alpha)
@@ -82,20 +82,20 @@ image::Image<N_IMAGE> create_image(
                         image::set_alpha(image.color_format, image.pixels, ALPHA);
                 }
         }
-        else if (parameters.with_background && *parameters.grayscale)
+        else if (parameters.with_background && parameters.grayscale)
         {
                 image::blend_alpha(&image.color_format, image.pixels, background);
                 image::make_grayscale(image.color_format, image.pixels);
                 image = image::convert_to_r_component_format(image);
         }
-        else if (!parameters.with_background && *parameters.grayscale)
+        else if (!parameters.with_background && parameters.grayscale)
         {
                 image::make_grayscale(image.color_format, image.pixels);
                 image::blend_alpha(&image.color_format, image.pixels, Color(0));
                 image = image::convert_to_r_component_format(image);
         }
 
-        ASSERT(!(*parameters.grayscale && parameters.convert_to_8_bit));
+        ASSERT(!(parameters.grayscale && parameters.convert_to_8_bit));
         if (parameters.convert_to_8_bit)
         {
                 image = image::convert_to_8_bit(image);
@@ -161,13 +161,17 @@ std::function<void(ProgressRatioList*)> save_image(
         std::vector<std::byte>&& pixels)
 {
         std::optional<dialog::PainterImageParameters> parameters = dialog::PainterImageDialog::show(
-                "Save Image", dialog::PainterImagePathType::File, false /*use_grayscale*/);
+                "Save Image", dialog::PainterImagePathType::File, false /*use_all*/, false /*use_grayscale*/);
         if (!parameters)
         {
                 return nullptr;
         }
-        ASSERT(parameters->path_string.has_value());
-        ASSERT(!parameters->grayscale.has_value());
+        if (!parameters->path_string)
+        {
+                error("No file name");
+        }
+        ASSERT(!parameters->all);
+        ASSERT(!parameters->grayscale);
 
         parameters->grayscale = false;
 
@@ -195,13 +199,16 @@ std::function<void(ProgressRatioList*)> save_image(
         }
 
         std::optional<dialog::PainterImageParameters> parameters = dialog::PainterImageDialog::show(
-                "Save All Images", dialog::PainterImagePathType::Directory, true /*use_grayscale*/);
+                "Save All Images", dialog::PainterImagePathType::Directory, false /*use_all*/, true /*use_grayscale*/);
         if (!parameters)
         {
                 return nullptr;
         }
-        ASSERT(parameters->path_string.has_value());
-        ASSERT(parameters->grayscale.has_value());
+        if (!parameters->path_string)
+        {
+                error("No directory name");
+        }
+        ASSERT(!parameters->all);
 
         return [=, pixels_ptr = std::make_shared<std::vector<std::byte>>(std::move(pixels)),
                 parameters = std::move(*parameters)](ProgressRatioList* progress_list)
@@ -239,13 +246,13 @@ std::function<void(ProgressRatioList*)> add_volume(
         }
 
         std::optional<dialog::PainterImageParameters> parameters = dialog::PainterImageDialog::show(
-                "Add Volume", dialog::PainterImagePathType::None, true /*use_grayscale*/);
+                "Add Volume", dialog::PainterImagePathType::None, false /*use_all*/, true /*use_grayscale*/);
         if (!parameters)
         {
                 return nullptr;
         }
         ASSERT(!parameters->path_string.has_value());
-        ASSERT(parameters->grayscale.has_value());
+        ASSERT(!parameters->all);
 
         return [=, pixels_ptr = std::make_shared<std::vector<std::byte>>(std::move(pixels)),
                 parameters = std::move(*parameters)](ProgressRatioList* progress_list)

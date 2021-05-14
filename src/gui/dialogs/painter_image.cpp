@@ -36,15 +36,16 @@ constexpr const char* IMAGE_FILE_FORMAT = "png";
 PainterImageDialog::PainterImageDialog(
         const std::string& title,
         PainterImagePathType path_type,
+        bool use_all,
         bool use_grayscale,
         std::optional<PainterImageParameters>& parameters)
-        : QDialog(parent_for_dialog()), m_path_type(path_type), m_parameters(parameters)
+        : QDialog(parent_for_dialog()), m_path_type(path_type), m_use_grayscale(use_grayscale), m_parameters(parameters)
 {
         ui.setupUi(this);
         setWindowTitle(QString::fromStdString(title));
 
         set_path();
-        set_grayscale(use_grayscale);
+        set_checkboxes(use_all);
 
         this->adjustSize();
 }
@@ -74,9 +75,19 @@ void PainterImageDialog::set_path()
         error("Unknown path type " + to_string(static_cast<long long>(m_path_type)));
 }
 
-void PainterImageDialog::set_grayscale(bool use_grayscale)
+void PainterImageDialog::set_checkboxes(bool use_all)
 {
-        if (use_grayscale)
+        if (use_all)
+        {
+                ui.checkBox_all->setVisible(true);
+                connect(ui.checkBox_all, &QCheckBox::toggled, this, &PainterImageDialog::on_all_toggled);
+        }
+        else
+        {
+                ui.checkBox_all->setVisible(false);
+        }
+
+        if (m_use_grayscale)
         {
                 ui.checkBox_grayscale->setVisible(true);
                 connect(ui.checkBox_grayscale, &QCheckBox::toggled, this, &PainterImageDialog::on_grayscale_toggled);
@@ -123,14 +134,23 @@ void PainterImageDialog::done(int r)
         m_parameters.emplace();
 
         m_parameters->path_string = path_string;
-        m_parameters->with_background = ui.checkBox_with_background->isChecked();
-        if (ui.checkBox_grayscale->isVisible())
-        {
-                m_parameters->grayscale = ui.checkBox_grayscale->isChecked();
-        }
-        m_parameters->convert_to_8_bit = ui.checkBox_8_bit->isEnabled() && ui.checkBox_8_bit->isChecked();
 
-        ASSERT(!(m_parameters->grayscale && *m_parameters->grayscale && m_parameters->convert_to_8_bit));
+        if (ui.checkBox_all->isVisible() && ui.checkBox_all->isChecked())
+        {
+                m_parameters->all = true;
+                m_parameters->with_background = false;
+                m_parameters->grayscale = false;
+                m_parameters->convert_to_8_bit = false;
+        }
+        else
+        {
+                m_parameters->all = false;
+                m_parameters->with_background = ui.checkBox_with_background->isChecked();
+                m_parameters->grayscale = ui.checkBox_grayscale->isVisible() && ui.checkBox_grayscale->isChecked();
+                m_parameters->convert_to_8_bit = ui.checkBox_8_bit->isChecked();
+
+                ASSERT(!(m_parameters->grayscale && m_parameters->convert_to_8_bit));
+        }
 
         QDialog::done(r);
 }
@@ -184,14 +204,31 @@ void PainterImageDialog::on_grayscale_toggled()
         }
 }
 
+void PainterImageDialog::on_all_toggled()
+{
+        if (ui.checkBox_all->isChecked())
+        {
+                ui.checkBox_8_bit->setVisible(false);
+                ui.checkBox_grayscale->setVisible(false);
+                ui.checkBox_with_background->setVisible(false);
+        }
+        else
+        {
+                ui.checkBox_8_bit->setVisible(true);
+                ui.checkBox_grayscale->setVisible(m_use_grayscale);
+                ui.checkBox_with_background->setVisible(true);
+        }
+}
+
 std::optional<PainterImageParameters> PainterImageDialog::show(
         const std::string& title,
         PainterImagePathType path_type,
+        bool use_all,
         bool use_grayscale)
 {
         std::optional<PainterImageParameters> parameters;
 
-        QtObjectInDynamicMemory w(new PainterImageDialog(title, path_type, use_grayscale, parameters));
+        QtObjectInDynamicMemory w(new PainterImageDialog(title, path_type, use_all, use_grayscale, parameters));
 
         if (!w->exec() || w.isNull())
         {
