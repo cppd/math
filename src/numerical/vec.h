@@ -15,6 +15,15 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
+/*
+Steven J. Leon.
+Linear Algebra with Applications. Ninth Edition.
+Pearson Education, 2015.
+
+5.4 Inner Product Spaces
+Norms
+*/
+
 #pragma once
 
 #include <src/com/hash.h>
@@ -61,28 +70,28 @@ public:
         {
         }
 
-        constexpr const T& operator[](std::size_t i) const
+        [[nodiscard]] constexpr const T& operator[](std::size_t i) const
         {
                 return m_data[i];
         }
 
-        constexpr T& operator[](std::size_t i)
+        [[nodiscard]] constexpr T& operator[](std::size_t i)
         {
                 return m_data[i];
         }
 
-        const T* data() const
+        [[nodiscard]] const T* data() const
         {
                 static_assert(sizeof(Vector) == N * sizeof(T));
                 return m_data.data();
         }
 
-        std::size_t hash() const
+        [[nodiscard]] std::size_t hash() const
         {
                 return array_hash(m_data);
         }
 
-        constexpr bool operator==(const Vector<N, T>& a) const
+        [[nodiscard]] constexpr bool operator==(const Vector<N, T>& a) const
         {
                 for (std::size_t i = 0; i < N; ++i)
                 {
@@ -140,10 +149,6 @@ public:
                 return *this;
         }
 
-        // Steven J. Leon.
-        // Linear Algebra with Applications. Ninth Edition.
-        // Pearson Education, 2015.
-        // 5.4 Inner Product Spaces.
         [[nodiscard]] T norm_1() const
         {
                 T sum = std::abs(m_data[0]);
@@ -153,6 +158,7 @@ public:
                 }
                 return sum;
         }
+
         [[nodiscard]] T norm_infinity() const
         {
                 T max = std::abs(m_data[0]);
@@ -162,6 +168,7 @@ public:
                 }
                 return max;
         }
+
         [[nodiscard]] T norm_squared() const
         {
                 T s = m_data[0] * m_data[0];
@@ -171,10 +178,12 @@ public:
                 }
                 return s;
         }
+
         [[nodiscard]] T norm() const
         {
                 return std::sqrt(norm_squared());
         }
+
         [[nodiscard]] T norm_stable() const
         {
                 const T max = norm_infinity();
@@ -197,6 +206,7 @@ public:
                         m_data[i] /= n;
                 }
         }
+
         [[nodiscard]] Vector<N, T> normalized() const
         {
                 T n = norm();
@@ -208,7 +218,7 @@ public:
                 return res;
         }
 
-        bool is_zero() const
+        [[nodiscard]] bool is_zero() const
         {
                 for (std::size_t i = 0; i < N; ++i)
                 {
@@ -221,7 +231,7 @@ public:
                 return true;
         }
 
-        bool is_unit() const
+        [[nodiscard]] bool is_unit() const
         {
                 static constexpr T d = 100 * limits<T>::epsilon();
                 static constexpr T min = square(1 - d);
@@ -232,7 +242,7 @@ public:
 };
 
 template <std::size_t N, typename T>
-Vector<N, T> operator+(const Vector<N, T>& a, const Vector<N, T>& b)
+[[nodiscard]] Vector<N, T> operator+(const Vector<N, T>& a, const Vector<N, T>& b)
 {
         Vector<N, T> res;
         for (std::size_t i = 0; i < N; ++i)
@@ -243,7 +253,7 @@ Vector<N, T> operator+(const Vector<N, T>& a, const Vector<N, T>& b)
 }
 
 template <std::size_t N, typename T>
-Vector<N, T> operator-(const Vector<N, T>& a, const Vector<N, T>& b)
+[[nodiscard]] Vector<N, T> operator-(const Vector<N, T>& a, const Vector<N, T>& b)
 {
         Vector<N, T> res;
         for (std::size_t i = 0; i < N; ++i)
@@ -254,7 +264,7 @@ Vector<N, T> operator-(const Vector<N, T>& a, const Vector<N, T>& b)
 }
 
 template <std::size_t N, typename T>
-Vector<N, T> operator*(const Vector<N, T>& a, T b)
+[[nodiscard]] Vector<N, T> operator*(const Vector<N, T>& a, T b)
 {
         Vector<N, T> res;
         for (std::size_t i = 0; i < N; ++i)
@@ -265,7 +275,7 @@ Vector<N, T> operator*(const Vector<N, T>& a, T b)
 }
 
 template <std::size_t N, typename T>
-Vector<N, T> operator*(T b, const Vector<N, T>& a)
+[[nodiscard]] Vector<N, T> operator*(T b, const Vector<N, T>& a)
 {
         Vector<N, T> res;
         for (std::size_t i = 0; i < N; ++i)
@@ -276,7 +286,7 @@ Vector<N, T> operator*(T b, const Vector<N, T>& a)
 }
 
 template <std::size_t N, typename T>
-Vector<N, T> operator*(const Vector<N, T>& a, const Vector<N, T>& b)
+[[nodiscard]] Vector<N, T> operator*(const Vector<N, T>& a, const Vector<N, T>& b)
 {
         Vector<N, T> res;
         for (std::size_t i = 0; i < N; ++i)
@@ -287,7 +297,7 @@ Vector<N, T> operator*(const Vector<N, T>& a, const Vector<N, T>& b)
 }
 
 template <std::size_t N, typename T>
-Vector<N, T> operator/(const Vector<N, T>& a, T b)
+[[nodiscard]] Vector<N, T> operator/(const Vector<N, T>& a, T b)
 {
         Vector<N, T> res;
         for (std::size_t i = 0; i < N; ++i)
@@ -298,7 +308,7 @@ Vector<N, T> operator/(const Vector<N, T>& a, T b)
 }
 
 template <std::size_t N, typename T>
-Vector<N, T> operator-(const Vector<N, T>& a)
+[[nodiscard]] Vector<N, T> operator-(const Vector<N, T>& a)
 {
         Vector<N, T> res;
         for (std::size_t i = 0; i < N; ++i)
@@ -309,7 +319,7 @@ Vector<N, T> operator-(const Vector<N, T>& a)
 }
 
 template <std::size_t N, typename T>
-Vector<N, T> max_vector(const Vector<N, T>& a, const Vector<N, T>& b)
+[[nodiscard]] Vector<N, T> max_vector(const Vector<N, T>& a, const Vector<N, T>& b)
 {
         Vector<N, T> res;
         for (std::size_t i = 0; i < N; ++i)
@@ -320,7 +330,7 @@ Vector<N, T> max_vector(const Vector<N, T>& a, const Vector<N, T>& b)
 }
 
 template <std::size_t N, typename T>
-Vector<N, T> min_vector(const Vector<N, T>& a, const Vector<N, T>& b)
+[[nodiscard]] Vector<N, T> min_vector(const Vector<N, T>& a, const Vector<N, T>& b)
 {
         Vector<N, T> res;
         for (std::size_t i = 0; i < N; ++i)
@@ -331,7 +341,7 @@ Vector<N, T> min_vector(const Vector<N, T>& a, const Vector<N, T>& b)
 }
 
 template <std::size_t N, typename T>
-T dot(const Vector<N, T>& a, const Vector<N, T>& b)
+[[nodiscard]] T dot(const Vector<N, T>& a, const Vector<N, T>& b)
 {
         T res = a[0] * b[0];
         for (std::size_t i = 1; i < N; ++i)
@@ -342,7 +352,7 @@ T dot(const Vector<N, T>& a, const Vector<N, T>& b)
 }
 
 template <std::size_t N, typename T, typename F>
-Vector<N, T> interpolation(const Vector<N, T>& a, const Vector<N, T>& b, F x)
+[[nodiscard]] Vector<N, T> interpolation(const Vector<N, T>& a, const Vector<N, T>& b, F x)
 {
         Vector<N, T> res;
         for (std::size_t i = 0; i < N; ++i)
@@ -353,7 +363,7 @@ Vector<N, T> interpolation(const Vector<N, T>& a, const Vector<N, T>& b, F x)
 }
 
 template <std::size_t N, typename T>
-bool is_finite(const Vector<N, T>& data)
+[[nodiscard]] bool is_finite(const Vector<N, T>& data)
 {
         for (std::size_t i = 0; i < N; ++i)
         {
@@ -367,7 +377,7 @@ bool is_finite(const Vector<N, T>& data)
 }
 
 template <typename Dst, std::size_t N, typename Src>
-std::enable_if_t<!std::is_same_v<Dst, Src>, Vector<N, Dst>> to_vector(const Vector<N, Src>& v)
+[[nodiscard]] std::enable_if_t<!std::is_same_v<Dst, Src>, Vector<N, Dst>> to_vector(const Vector<N, Src>& v)
 {
         Vector<N, Dst> res;
         for (std::size_t i = 0; i < N; ++i)
@@ -378,13 +388,13 @@ std::enable_if_t<!std::is_same_v<Dst, Src>, Vector<N, Dst>> to_vector(const Vect
 }
 
 template <typename Dst, std::size_t N, typename Src>
-std::enable_if_t<std::is_same_v<Dst, Src>, const Vector<N, Dst>&> to_vector(const Vector<N, Src>& v)
+[[nodiscard]] std::enable_if_t<std::is_same_v<Dst, Src>, const Vector<N, Dst>&> to_vector(const Vector<N, Src>& v)
 {
         return v;
 }
 
 template <typename Dst, std::size_t N, typename Src>
-Vector<N, Dst> to_vector(const std::array<Src, N>& array)
+[[nodiscard]] Vector<N, Dst> to_vector(const std::array<Src, N>& array)
 {
         Vector<N, Dst> res;
         for (std::size_t i = 0; i < N; ++i)
@@ -395,7 +405,8 @@ Vector<N, Dst> to_vector(const std::array<Src, N>& array)
 }
 
 template <typename Dst, std::size_t N, typename Src>
-std::enable_if_t<!std::is_same_v<Dst, Src>, std::vector<Vector<N, Dst>>> to_vector(const std::vector<Vector<N, Src>>& v)
+[[nodiscard]] std::enable_if_t<!std::is_same_v<Dst, Src>, std::vector<Vector<N, Dst>>> to_vector(
+        const std::vector<Vector<N, Src>>& v)
 {
         std::vector<Vector<N, Dst>> res;
         res.reserve(v.size());
@@ -407,7 +418,7 @@ std::enable_if_t<!std::is_same_v<Dst, Src>, std::vector<Vector<N, Dst>>> to_vect
 }
 
 template <typename Dst, std::size_t N, typename Src>
-std::enable_if_t<std::is_same_v<Dst, Src>, const std::vector<Vector<N, Dst>>&> to_vector(
+[[nodiscard]] std::enable_if_t<std::is_same_v<Dst, Src>, const std::vector<Vector<N, Dst>>&> to_vector(
         const std::vector<Vector<N, Src>>& v)
 {
         return v;
@@ -431,7 +442,7 @@ template <std::size_t N, typename T>
 // Если векторы единичные, то это синус угла между векторами
 // в двухмерном пространстве
 template <typename T>
-T cross(const Vector<2, T>& v0, const Vector<2, T>& v1)
+[[nodiscard]] T cross(const Vector<2, T>& v0, const Vector<2, T>& v1)
 {
         return v0[0] * v1[1] - v0[1] * v1[0];
 }
@@ -440,7 +451,7 @@ T cross(const Vector<2, T>& v0, const Vector<2, T>& v1)
 // так как понятие векторное произведение имеется только в трёхмерном
 // пространстве, в отличие от ортогональных дополнений
 template <typename T>
-Vector<3, T> cross(const Vector<3, T>& v0, const Vector<3, T>& v1)
+[[nodiscard]] Vector<3, T> cross(const Vector<3, T>& v0, const Vector<3, T>& v1)
 {
         Vector<3, T> res;
 
