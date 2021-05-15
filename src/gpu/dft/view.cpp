@@ -45,12 +45,6 @@ constexpr std::initializer_list<vulkan::PhysicalDeviceFeatures> REQUIRED_DEVICE_
 constexpr int VERTEX_COUNT = 4;
 constexpr VkFormat IMAGE_FORMAT = VK_FORMAT_R32_SFLOAT;
 
-vec4f color_to_vec4f(const Color& color)
-{
-        const Vector<3, float> rgb = color.rgb<float>();
-        return vec4f(rgb[0], rgb[1], rgb[2], 1);
-}
-
 class Impl final : public View
 {
         const std::thread::id m_thread_id = std::this_thread::get_id();
@@ -181,12 +175,12 @@ class Impl final : public View
 
         void set_background_color(const Color& color) override
         {
-                m_memory.set_background_color(color_to_vec4f(color));
+                m_memory.set_background_color(color);
         }
 
         void set_color(const Color& color) override
         {
-                m_memory.set_foreground_color(color_to_vec4f(color));
+                m_memory.set_foreground_color(color);
         }
 
         void create_vertices()
