@@ -45,9 +45,10 @@ constexpr std::initializer_list<vulkan::PhysicalDeviceFeatures> REQUIRED_DEVICE_
 constexpr int VERTEX_COUNT = 4;
 constexpr VkFormat IMAGE_FORMAT = VK_FORMAT_R32_SFLOAT;
 
-vec4f color_to_vec4f(const Color& c)
+vec4f color_to_vec4f(const Color& color)
 {
-        return vec4f(c.red(), c.green(), c.blue(), 1);
+        const Vector<3, float> rgb = color.rgb<float>();
+        return vec4f(rgb[0], rgb[1], rgb[2], 1);
 }
 
 class Impl final : public View

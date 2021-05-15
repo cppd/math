@@ -122,22 +122,25 @@ class PainterPixels final : public Pixels, public painter::Notifier<N - 1>
 
                 if (alpha >= 1)
                 {
-                        rgba[0] = color::linear_float_to_srgb_uint8(color.red());
-                        rgba[1] = color::linear_float_to_srgb_uint8(color.green());
-                        rgba[2] = color::linear_float_to_srgb_uint8(color.blue());
+                        const Vector<3, float> rgb = color.rgb<float>();
+                        rgba[0] = color::linear_float_to_srgb_uint8(rgb[0]);
+                        rgba[1] = color::linear_float_to_srgb_uint8(rgb[1]);
+                        rgba[2] = color::linear_float_to_srgb_uint8(rgb[2]);
                 }
                 else if (alpha <= 0)
                 {
-                        rgba[0] = color::linear_float_to_srgb_uint8(m_background_color.red());
-                        rgba[1] = color::linear_float_to_srgb_uint8(m_background_color.green());
-                        rgba[2] = color::linear_float_to_srgb_uint8(m_background_color.blue());
+                        const Vector<3, float> rgb = m_background_color.rgb<float>();
+                        rgba[0] = color::linear_float_to_srgb_uint8(rgb[0]);
+                        rgba[1] = color::linear_float_to_srgb_uint8(rgb[1]);
+                        rgba[2] = color::linear_float_to_srgb_uint8(rgb[2]);
                 }
                 else
                 {
                         const Color c = color + (1 - alpha) * m_background_color;
-                        rgba[0] = color::linear_float_to_srgb_uint8(c.red());
-                        rgba[1] = color::linear_float_to_srgb_uint8(c.green());
-                        rgba[2] = color::linear_float_to_srgb_uint8(c.blue());
+                        const Vector<3, float> rgb = c.rgb<float>();
+                        rgba[0] = color::linear_float_to_srgb_uint8(rgb[0]);
+                        rgba[1] = color::linear_float_to_srgb_uint8(rgb[1]);
+                        rgba[2] = color::linear_float_to_srgb_uint8(rgb[2]);
                 }
                 rgba[3] = limits<uint8_t>::max();
 

@@ -193,20 +193,22 @@ VkClearValue color_clear_value(VkFormat format, VkColorSpaceKHR color_space, con
         {
                 if (format == VK_FORMAT_R8G8B8A8_UNORM || format == VK_FORMAT_B8G8R8A8_UNORM)
                 {
+                        const Vector<3, float> rgb = color.rgb<float>();
                         VkClearValue clear_value;
-                        clear_value.color.float32[0] = color::linear_float_to_srgb_float(color.red());
-                        clear_value.color.float32[1] = color::linear_float_to_srgb_float(color.green());
-                        clear_value.color.float32[2] = color::linear_float_to_srgb_float(color.blue());
+                        clear_value.color.float32[0] = color::linear_float_to_srgb_float(rgb[0]);
+                        clear_value.color.float32[1] = color::linear_float_to_srgb_float(rgb[1]);
+                        clear_value.color.float32[2] = color::linear_float_to_srgb_float(rgb[2]);
                         clear_value.color.float32[3] = 1;
                         return clear_value;
                 }
 
                 if (format == VK_FORMAT_R8G8B8A8_SRGB || format == VK_FORMAT_B8G8R8A8_SRGB)
                 {
+                        const Vector<3, float> rgb = color.rgb<float>();
                         VkClearValue clear_value;
-                        clear_value.color.float32[0] = color.red();
-                        clear_value.color.float32[1] = color.green();
-                        clear_value.color.float32[2] = color.blue();
+                        clear_value.color.float32[0] = rgb[0];
+                        clear_value.color.float32[1] = rgb[1];
+                        clear_value.color.float32[2] = rgb[2];
                         clear_value.color.float32[3] = 1;
                         return clear_value;
                 }

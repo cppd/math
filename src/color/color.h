@@ -103,21 +103,6 @@ public:
                 return color::linear_float_to_linear_luminance(m_data[0], m_data[1], m_data[2]);
         }
 
-        [[nodiscard]] T red() const
-        {
-                return m_data[0];
-        }
-
-        [[nodiscard]] T green() const
-        {
-                return m_data[1];
-        }
-
-        [[nodiscard]] T blue() const
-        {
-                return m_data[2];
-        }
-
         [[nodiscard]] bool is_black() const
         {
                 return m_data[0] <= 0 && m_data[1] <= 0 && m_data[2] <= 0;

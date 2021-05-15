@@ -315,13 +315,10 @@ public:
                 std::byte* ptr = image.pixels.data();
                 for (const impl::Pixel<N, T>& pixel : m_pixels)
                 {
-                        typename impl::Pixel<N, T>::Info info = pixel.info();
+                        const typename impl::Pixel<N, T>::Info info = pixel.info();
 
-                        std::array<float, 4> rgba;
-                        rgba[0] = info.color.red();
-                        rgba[1] = info.color.green();
-                        rgba[2] = info.color.blue();
-                        rgba[3] = info.alpha;
+                        const Vector<3, float> rgb = info.color.template rgb<float>();
+                        const std::array<float, 4> rgba{rgb[0], rgb[1], rgb[2], info.alpha};
 
                         std::memcpy(ptr, rgba.data(), PIXEL_SIZE);
                         ptr += PIXEL_SIZE;
