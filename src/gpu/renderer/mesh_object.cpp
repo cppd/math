@@ -31,6 +31,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/com/hash.h>
 #include <src/com/log.h>
 #include <src/com/merge.h>
+#include <src/com/print.h>
 #include <src/com/thread.h>
 #include <src/com/time.h>
 #include <src/model/mesh_utility.h>

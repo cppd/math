@@ -180,7 +180,7 @@ const char* read_float(const char* str, Vector<N, T>* v)
         const auto [cnt, ptr] = read_vector(str, v, std::make_integer_sequence<unsigned, N>());
         if (N != cnt)
         {
-                error(std::string("Error read " + to_string(N) + " floating points of ") + type_name<T>() + " type");
+                error("Error read " + std::to_string(N) + " floating points of " + type_name<T>() + " type");
         }
         return ptr;
 }

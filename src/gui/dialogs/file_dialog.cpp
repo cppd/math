@@ -20,6 +20,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "../com/support.h"
 
 #include <src/com/error.h>
+#include <src/com/type/detect.h>
 
 #include <QFileDialog>
 #include <map>
@@ -40,7 +41,7 @@ std::optional<std::string> exec_dialog_for_single_file(QtObjectInDynamicMemory<Q
         QStringList list = (*w)->selectedFiles();
         if (list.size() != 1)
         {
-                error("QFileDialog selected item count (" + to_string(list.size()) + ") is not equal to 1.");
+                error("QFileDialog selected item count (" + std::to_string(list.size()) + ") is not equal to 1.");
         }
 
         return list[0].toStdString();

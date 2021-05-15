@@ -20,12 +20,12 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/com/hash.h>
 #include <src/com/interpolation.h>
 #include <src/com/math.h>
-#include <src/com/print.h>
 #include <src/com/type/limit.h>
 
 #include <array>
 #include <cmath>
 #include <functional>
+#include <sstream>
 #include <tuple>
 
 namespace ns
@@ -414,18 +414,18 @@ std::enable_if_t<std::is_same_v<Dst, Src>, const std::vector<Vector<N, Dst>>&> t
 }
 
 template <std::size_t N, typename T>
-std::string to_string(const Vector<N, T>& data)
+[[nodiscard]] std::string to_string(const Vector<N, T>& v)
 {
-        std::string s;
-        s += "(";
-        s += to_string(data[0]);
+        std::ostringstream oss;
+        oss.precision(limits<T>::max_digits10);
+        oss << '(';
+        oss << v[0];
         for (std::size_t i = 1; i < N; ++i)
         {
-                s += ", ";
-                s += to_string(data[i]);
+                oss << ", " << v[i];
         }
-        s += ")";
-        return s;
+        oss << ')';
+        return oss.str();
 }
 
 // Если векторы единичные, то это синус угла между векторами

@@ -21,6 +21,9 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "../dialogs/color_dialog.h"
 #include "../dialogs/message.h"
 
+#include <algorithm>
+#include <cmath>
+#include <iomanip>
 #include <sstream>
 
 namespace ns::gui::main_window

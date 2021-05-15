@@ -26,6 +26,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "volume_renderer.h"
 
 #include <src/com/log.h>
+#include <src/com/print.h>
 #include <src/numerical/transform.h>
 #include <src/numerical/vec.h>
 #include <src/vulkan/commands.h>
