@@ -20,7 +20,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "initial_image.h"
 
 #include <src/color/color.h>
-#include <src/color/conversion.h>
 #include <src/com/error.h>
 #include <src/com/global_index.h>
 #include <src/com/message.h>
@@ -74,6 +73,7 @@ class PainterPixels final : public Pixels, public painter::Notifier<N - 1>
         const GlobalIndex<N - 1, long long> m_global_index;
         const std::vector<int> m_screen_size;
         const Color m_background_color;
+        const Srgb8 m_background_color_srgb8 = m_background_color.srgb8();
         const long long m_slice_count;
 
         const std::size_t m_raw_slice_size = RAW_PIXEL_SIZE * m_screen_size[0] * m_screen_size[1];
@@ -118,34 +118,34 @@ class PainterPixels final : public Pixels, public painter::Notifier<N - 1>
         {
                 static_assert(RAW_COLOR_FORMAT == image::ColorFormat::R8G8B8A8_SRGB);
 
-                std::array<uint8_t, 4> rgba;
+                std::array<uint8_t, 4> srgba8;
 
                 if (alpha >= 1)
                 {
-                        const Vector<3, float> rgb = color.rgb<float>();
-                        rgba[0] = color::linear_float_to_srgb_uint8(rgb[0]);
-                        rgba[1] = color::linear_float_to_srgb_uint8(rgb[1]);
-                        rgba[2] = color::linear_float_to_srgb_uint8(rgb[2]);
+                        const Srgb8 srgb8 = color.srgb8();
+                        srgba8[0] = srgb8.red;
+                        srgba8[1] = srgb8.green;
+                        srgba8[2] = srgb8.blue;
                 }
                 else if (alpha <= 0)
                 {
-                        const Vector<3, float> rgb = m_background_color.rgb<float>();
-                        rgba[0] = color::linear_float_to_srgb_uint8(rgb[0]);
-                        rgba[1] = color::linear_float_to_srgb_uint8(rgb[1]);
-                        rgba[2] = color::linear_float_to_srgb_uint8(rgb[2]);
+                        srgba8[0] = m_background_color_srgb8.red;
+                        srgba8[1] = m_background_color_srgb8.green;
+                        srgba8[2] = m_background_color_srgb8.blue;
                 }
                 else
                 {
                         const Color c = color + (1 - alpha) * m_background_color;
-                        const Vector<3, float> rgb = c.rgb<float>();
-                        rgba[0] = color::linear_float_to_srgb_uint8(rgb[0]);
-                        rgba[1] = color::linear_float_to_srgb_uint8(rgb[1]);
-                        rgba[2] = color::linear_float_to_srgb_uint8(rgb[2]);
+                        const Srgb8 srgb8 = c.srgb8();
+                        srgba8[0] = srgb8.red;
+                        srgba8[1] = srgb8.green;
+                        srgba8[2] = srgb8.blue;
                 }
-                rgba[3] = limits<uint8_t>::max();
+
+                srgba8[3] = limits<uint8_t>::max();
 
                 const long long index = m_global_index.compute(flip_vertically(pixel));
-                std::memcpy(&m_raw_pixels[RAW_PIXEL_SIZE * index], rgba.data(), RAW_PIXEL_SIZE);
+                std::memcpy(&m_raw_pixels[RAW_PIXEL_SIZE * index], srgba8.data(), RAW_PIXEL_SIZE);
         }
 
         void pass_done(image::Image<N - 1>&& image) override
