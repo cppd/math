@@ -81,7 +81,6 @@ static_assert(integer_radius(1.6) == 2);
 
 //
 
-template <std::size_t N, typename T>
 class Pixel final
 {
         Color m_color_sum{0};
@@ -178,7 +177,7 @@ class Pixels final
 
         const GlobalIndex<N, long long> m_global_index;
 
-        std::vector<pixels_implementation::Pixel<N, T>> m_pixels;
+        std::vector<pixels_implementation::Pixel> m_pixels;
         mutable std::vector<SpinLock> m_pixel_locks;
 
         Paintbrush<N, PaintbrushType> m_paintbrush;
@@ -293,7 +292,7 @@ public:
                                std::lock_guard lg(m_pixel_locks[region_pixel_index]);
 
                                m_pixels[region_pixel_index].merge(color_sum, hit_weight_sum, background_weight_sum);
-                               const typename impl::Pixel<N, T>::Info info = m_pixels[region_pixel_index].info();
+                               const impl::Pixel::Info info = m_pixels[region_pixel_index].info();
                                m_notifier->pixel_set(region_pixel, info.color, info.alpha);
                        });
         }
@@ -313,11 +312,11 @@ public:
                 impl::LockGuards lg(m_pixel_locks);
 
                 std::byte* ptr = image.pixels.data();
-                for (const impl::Pixel<N, T>& pixel : m_pixels)
+                for (const impl::Pixel& pixel : m_pixels)
                 {
-                        const typename impl::Pixel<N, T>::Info info = pixel.info();
+                        const impl::Pixel::Info info = pixel.info();
 
-                        const Vector<3, float> rgb = info.color.template rgb<float>();
+                        const Vector<3, float> rgb = info.color.rgb<float>();
                         const std::array<float, 4> rgba{rgb[0], rgb[1], rgb[2], info.alpha};
 
                         std::memcpy(ptr, rgba.data(), PIXEL_SIZE);
