@@ -140,6 +140,8 @@ void save_image(
 
         constexpr bool DELETE_ALPHA = true;
 
+        progress->set(0);
+
         image::Image<N_IMAGE> image =
                 create_image(DELETE_ALPHA, size, background, color_format, parameters, std::move(pixels));
 
@@ -162,16 +164,61 @@ void add_volume(
         const Color& background,
         const image::ColorFormat color_format,
         const Parameters& parameters,
-        std::vector<std::byte>&& pixels)
+        std::vector<std::byte>&& pixels,
+        ProgressRatio* progress)
 {
         static_assert(N_IMAGE >= 3);
 
         constexpr bool DELETE_ALPHA = false;
 
+        progress->set(0);
+
         image::Image<N_IMAGE> image =
                 create_image(DELETE_ALPHA, size, background, color_format, parameters, std::move(pixels));
 
         process::load_volume<N_IMAGE>("Painter Image", std::move(image));
+}
+
+template <std::size_t N_IMAGE>
+void save_image(
+        const std::array<int, N_IMAGE>& size,
+        const Color& background,
+        const image::ColorFormat color_format,
+        const std::filesystem::path& path,
+        const std::vector<Parameters>& parameters,
+        std::vector<std::byte>&& pixels,
+        ProgressRatio* progress)
+{
+        if (parameters.size() == 1)
+        {
+                save_image(size, background, color_format, path, parameters.front(), std::move(pixels), progress);
+                return;
+        }
+
+        const auto save = [&size, &background, &color_format, &path,
+                           &progress](const Parameters& image_parameters, std::vector<std::byte>&& image_pixels)
+        {
+                const std::filesystem::path image_path = path / path_from_utf8(image_parameters.to_string());
+                if (std::filesystem::exists(image_path))
+                {
+                        error("Path exists " + generic_utf8_filename(image_path));
+                }
+                std::filesystem::create_directory(image_path);
+
+                save_image(
+                        size, background, color_format, image_path, image_parameters, std::move(image_pixels),
+                        progress);
+        };
+
+        if (parameters.empty())
+        {
+                error("No parameters for image saving");
+        }
+        for (std::size_t i = 0; i < parameters.size() - 1; ++i)
+        {
+                save(parameters[i], std::vector(pixels));
+        }
+        save(parameters.back(), std::move(pixels));
 }
 
 std::vector<Parameters> create_parameters(const dialog::PainterImageParameters& dialog_parameters)
@@ -219,14 +266,11 @@ std::function<void(ProgressRatioList*)> save_image(
                 pixels = std::make_shared<std::vector<std::byte>>(std::move(pixels))](ProgressRatioList* progress_list)
         {
                 ProgressRatio progress(progress_list, "Saving");
-                progress.set(0);
-
-                const std::array<int, 2> array_size{width, height};
 
                 ASSERT(parameters.size() == 1);
                 save_image(
-                        array_size, background, color_format, path_from_utf8(path_string), parameters.front(),
-                        std::move(*pixels), &progress);
+                        std::array<int, 2>{width, height}, background, color_format, path_from_utf8(path_string),
+                        parameters.front(), std::move(*pixels), &progress);
         };
 }
 
@@ -265,47 +309,11 @@ std::function<void(ProgressRatioList*)> save_image(
                                 if constexpr (N_IMAGE >= 3)
                                 {
                                         ProgressRatio progress(progress_list, "Saving");
-                                        progress.set(0);
-
-                                        const std::array<int, N_IMAGE> array_size = to_array<N_IMAGE, int>(size);
 
                                         ASSERT(!parameters.empty());
-
-                                        if (parameters.size() == 1)
-                                        {
-                                                save_image(
-                                                        array_size, background, color_format,
-                                                        path_from_utf8(path_string), parameters.front(),
-                                                        std::move(*pixels), &progress);
-                                                return;
-                                        }
-
-                                        for (std::size_t i = 0; i < parameters.size(); ++i)
-                                        {
-                                                const Parameters& p = parameters[i];
-
-                                                const std::filesystem::path path =
-                                                        path_from_utf8(path_string) / path_from_utf8(p.to_string());
-                                                if (std::filesystem::exists(path))
-                                                {
-                                                        error("Path exists " + generic_utf8_filename(path));
-                                                }
-                                                std::filesystem::create_directory(path);
-
-                                                std::vector<std::byte> image_pixels;
-                                                if (i != parameters.size() - 1)
-                                                {
-                                                        image_pixels = *pixels;
-                                                }
-                                                else
-                                                {
-                                                        image_pixels = std::move(*pixels);
-                                                }
-
-                                                save_image(
-                                                        array_size, background, color_format, path, p,
-                                                        std::move(image_pixels), &progress);
-                                        }
+                                        save_image(
+                                                to_array<N_IMAGE, int>(size), background, color_format,
+                                                path_from_utf8(path_string), parameters, std::move(*pixels), &progress);
                                 }
                         });
         };
@@ -343,14 +351,11 @@ std::function<void(ProgressRatioList*)> add_volume(
                                 if constexpr (N_IMAGE >= 3)
                                 {
                                         ProgressRatio progress(progress_list, "Adding volume");
-                                        progress.set(0);
-
-                                        const std::array<int, N_IMAGE> array_size = to_array<N_IMAGE, int>(size);
 
                                         ASSERT(parameters.size() == 1);
                                         add_volume<N_IMAGE>(
-                                                array_size, background, color_format, parameters.front(),
-                                                std::move(*pixels));
+                                                to_array<N_IMAGE, int>(size), background, color_format,
+                                                parameters.front(), std::move(*pixels), &progress);
                                 }
                         });
         };
