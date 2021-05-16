@@ -20,7 +20,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "../sample.h"
 
 #include <src/com/error.h>
-#include <src/com/print.h>
 #include <src/com/random/engine.h>
 #include <src/sampling/sphere_uniform.h>
 
@@ -92,7 +91,7 @@ Color test_brdf_f(const TestBRDF<N, T, RandomEngine>& brdf, const long long samp
                         Color c = brdf.f(n, v, l);
                         if (!c.is_black())
                         {
-                                error("BRDF color " + to_string(c.rgb<float>()) + " is not black when dot(n,l) <= 0");
+                                error("BRDF color is not black when dot(n,l) <= 0 " + to_string(c));
                         }
                         continue;
                 }

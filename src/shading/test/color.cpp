@@ -21,8 +21,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/com/print.h>
 #include <src/com/random/engine.h>
 
-#include <algorithm>
-#include <cmath>
 #include <random>
 
 namespace ns::shading::test
@@ -33,27 +31,22 @@ void check_color(const Color& color, const char* description)
 {
         if (color.is_black())
         {
-                error(std::string(description) + " is black");
+                error(std::string(description) + " is black " + to_string(color));
         }
 
-        const Vector<3, double> rgb = color.rgb<double>();
-
-        for (int i = 0; i < 3; ++i)
+        if (color.has_nan())
         {
-                if (std::isnan(rgb[i]))
-                {
-                        error(std::string(description) + " RGB is NaN " + to_string(rgb));
-                }
+                error(std::string(description) + " has NaN " + to_string(color));
+        }
 
-                if (!std::isfinite(rgb[i]))
-                {
-                        error(std::string(description) + " RGB is not finite " + to_string(rgb));
-                }
+        if (!color.is_finite())
+        {
+                error(std::string(description) + " is not finite " + to_string(color));
+        }
 
-                if (!(rgb[i] >= 0))
-                {
-                        error(std::string(description) + " RGB is negative " + to_string(rgb));
-                }
+        if (!color.is_non_negative())
+        {
+                error(std::string(description) + " is not non-negative " + to_string(color));
         }
 }
 }
@@ -63,22 +56,12 @@ void check_color_equal(const Color& directional_albedo, const Color& surface_col
         check_color(directional_albedo, "Directional albedo");
         check_color(surface_color, "Surface color");
 
-        const Vector<3, double> c1 = directional_albedo.rgb<double>();
-        const Vector<3, double> c2 = surface_color.rgb<double>();
+        constexpr Color::DataType RELATIVE_ERROR = 0.01;
 
-        for (int i = 0; i < 3; ++i)
+        if (!directional_albedo.equal_to(surface_color, RELATIVE_ERROR))
         {
-                if (c1[i] == c2[i])
-                {
-                        continue;
-                }
-
-                double relative_error = std::abs(c1[i] - c2[i]) / std::max(c1[i], c2[i]);
-                if (!(relative_error < 0.01))
-                {
-                        error("BRDF error, directional albedo (RGB " + to_string(c1)
-                              + ") is not equal to surface color (RGB " + to_string(c2) + ")");
-                }
+                error("BRDF error, directional albedo is not equal to surface color\n" + to_string(directional_albedo)
+                      + "\n" + to_string(surface_color));
         }
 }
 
@@ -87,22 +70,12 @@ void check_color_less(const Color& directional_albedo, const Color& surface_colo
         check_color(directional_albedo, "Directional albedo");
         check_color(surface_color, "Surface color");
 
-        const Vector<3, double> c1 = directional_albedo.rgb<double>();
-        const Vector<3, double> c2 = surface_color.rgb<double>();
+        constexpr Color::DataType RELATIVE_ERROR = 0.01;
 
-        for (int i = 0; i < 3; ++i)
+        if (!directional_albedo.less_than(surface_color, RELATIVE_ERROR))
         {
-                if (c1[i] <= c2[i])
-                {
-                        continue;
-                }
-
-                double relative_error = std::abs(c1[i] - c2[i]) / std::max(c1[i], c2[i]);
-                if (!(relative_error < 0.01))
-                {
-                        error("BRDF error, directional albedo (RGB " + to_string(c1)
-                              + ") is not less than surface color (RGB " + to_string(c2) + ")");
-                }
+                error("BRDF error, directional albedo is not less than surface color\n" + to_string(directional_albedo)
+                      + "\n" + to_string(surface_color));
         }
 }
 
@@ -110,16 +83,9 @@ void check_color_range(const Color& directional_albedo)
 {
         check_color(directional_albedo, "Directional albedo");
 
-        const Vector<3, double> c = directional_albedo.rgb<double>();
-
-        for (int i = 0; i < 3; ++i)
+        if (!directional_albedo.is_in_range(0, 1))
         {
-                if (c[i] >= 0 && c[i] <= 1)
-                {
-                        continue;
-                }
-
-                error("BRDF error, directional albedo (RGB " + to_string(c) + ") is not in the range [0, 1]");
+                error("BRDF error, directional albedo is not in the range [0, 1] " + to_string(directional_albedo));
         }
 }
 
