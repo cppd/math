@@ -119,9 +119,9 @@ void check_non_negative()
         for (int w = 3800; w <= 7800; ++w)
         {
                 T t = T(w) / 10;
-                T x = cie_x<xyz>(t);
-                T y = cie_y<xyz>(t);
-                T z = cie_z<xyz>(t);
+                T x = cie_x<xyz, T>(t);
+                T y = cie_y<xyz, T>(t);
+                T z = cie_z<xyz, T>(t);
                 if (!(x >= 0 && y >= 0 && z >= 0))
                 {
                         std::ostringstream oss;
@@ -174,9 +174,9 @@ void check(T max_error_x, T max_error_y, T max_error_z, T max_mean_error_x, T ma
 
         for (const Entry& entry : data<xyz>())
         {
-                sum_x += check<xyz, T>("x", entry.w, cie_x<xyz>(entry.w), entry.x, max_error_x);
-                sum_y += check<xyz, T>("y", entry.w, cie_y<xyz>(entry.w), entry.y, max_error_y);
-                sum_z += check<xyz, T>("z", entry.w, cie_z<xyz>(entry.w), entry.z, max_error_z);
+                sum_x += check<xyz, T>("x", entry.w, cie_x<xyz, T>(entry.w), entry.x, max_error_x);
+                sum_y += check<xyz, T>("y", entry.w, cie_y<xyz, T>(entry.w), entry.y, max_error_y);
+                sum_z += check<xyz, T>("z", entry.w, cie_z<xyz, T>(entry.w), entry.z, max_error_z);
         }
 
         check_mean<xyz, T>("x", sum_x / data<xyz>().size(), max_mean_error_x);
