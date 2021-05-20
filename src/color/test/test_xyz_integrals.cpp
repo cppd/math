@@ -77,7 +77,7 @@ For[i = 380, i < 780, i += 100,
 */
 
 template <typename T>
-void test(T precision)
+void test_31(T precision)
 {
         const auto c = [&](T a, T b)
         {
@@ -116,13 +116,79 @@ void test(T precision)
         c(cie_z_integral<XYZ_31, T>(680, 780), 0.0000000007815251252032879332L);
 }
 
+/*
+x[w1_, w2_] :=
+ Integrate[
+  0.398`30*Exp[-1250*Log[(x + 570.1`30)/1014]^2] +
+   1.132`30*Exp[-234*Log[(1338 - x)/743.5`30]^2], {x, w1, w2}]
+y[w1_, w2_] :=
+ Integrate[1.011`30*Exp[-1/2*((x - 556.1`30)/46.14`30)^2], {x, w1, w2}]
+z[w1_, w2_] :=
+ Integrate[
+  2.06`30*Exp[-32*Log[(x - 265.8`30)/180.4`30]^2], {x, w1, w2}]
+
+For[i = 380, i < 780, i += 100,
+ For[j = i + 100, j <= 780, j += 100,
+  Print[StringTemplate["c(cie_x_integral<XYZ_64, T>(``, ``), ``L);"][
+    i, j, x[i, j]]];
+  Print[StringTemplate["c(cie_y_integral<XYZ_64, T>(``, ``), ``L);"][
+    i, j, y[i, j]]];
+  Print[StringTemplate["c(cie_z_integral<XYZ_64, T>(``, ``), ``L);"][
+    i, j, z[i, j]]]
+  ]]
+*/
+
+template <typename T>
+void test_64(T precision)
+{
+        const auto c = [&](T a, T b)
+        {
+                check<T>(a, b, precision, 5e-9);
+        };
+
+        c(cie_x_integral<XYZ_64, T>(380, 480), 19.48847732828588252162093L);
+        c(cie_y_integral<XYZ_64, T>(380, 480), 5.7847314073216769548408396L);
+        c(cie_z_integral<XYZ_64, T>(380, 480), 104.921897804349332418615282L);
+        c(cie_x_integral<XYZ_64, T>(380, 580), 54.89089498511375680712417L);
+        c(cie_y_integral<XYZ_64, T>(380, 580), 81.5806128939646479680617563L);
+        c(cie_z_integral<XYZ_64, T>(380, 580), 117.343615988990629042884287L);
+        c(cie_x_integral<XYZ_64, T>(380, 680), 117.50005500535119745595017L);
+        c(cie_y_integral<XYZ_64, T>(380, 680), 116.4964829125227628356972433L);
+        c(cie_z_integral<XYZ_64, T>(380, 680), 117.344557478247753697744279L);
+        c(cie_x_integral<XYZ_64, T>(380, 780), 117.849840154035804790415981L);
+        c(cie_y_integral<XYZ_64, T>(380, 780), 116.9200625431827921713652154L);
+        c(cie_z_integral<XYZ_64, T>(380, 780), 117.344557482254431577238072L);
+        c(cie_x_integral<XYZ_64, T>(480, 580), 35.40241765682787428550324L);
+        c(cie_y_integral<XYZ_64, T>(480, 580), 75.7958814866429710132209167L);
+        c(cie_z_integral<XYZ_64, T>(480, 580), 12.421718184641296624269005L);
+        c(cie_x_integral<XYZ_64, T>(480, 680), 98.01157767706531493432924L);
+        c(cie_y_integral<XYZ_64, T>(480, 680), 110.7117515052010858808564037L);
+        c(cie_z_integral<XYZ_64, T>(480, 680), 12.422659673898421279128996L);
+        c(cie_x_integral<XYZ_64, T>(480, 780), 98.36136282574992226879505L);
+        c(cie_y_integral<XYZ_64, T>(480, 780), 111.1353311358611152165243758L);
+        c(cie_z_integral<XYZ_64, T>(480, 780), 12.42265967790509915862279L);
+        c(cie_x_integral<XYZ_64, T>(580, 680), 62.609160020237440648826L);
+        c(cie_y_integral<XYZ_64, T>(580, 680), 34.915870018558114867635487L);
+        c(cie_z_integral<XYZ_64, T>(580, 680), 0.0009414892571246548599919L);
+        c(cie_x_integral<XYZ_64, T>(580, 780), 62.95894516892204798329181L);
+        c(cie_y_integral<XYZ_64, T>(580, 780), 35.3394496492181442033034591L);
+        c(cie_z_integral<XYZ_64, T>(580, 780), 0.0009414932638025343537858L);
+        c(cie_x_integral<XYZ_64, T>(680, 780), 0.34978514868460733446581L);
+        c(cie_y_integral<XYZ_64, T>(680, 780), 0.4235796306600293356679721L);
+        c(cie_z_integral<XYZ_64, T>(680, 780), 0.000000004006677879493793813L);
+}
+
 void test_integrals()
 {
         LOG("Test XYZ integrals");
 
-        test<float>(1e-3);
-        test<double>(1e-12);
-        test<long double>(1e-14);
+        test_31<float>(1e-3);
+        test_31<double>(1e-12);
+        test_31<long double>(1e-14);
+
+        test_64<float>(1e-3);
+        test_64<double>(1e-12);
+        test_64<long double>(1e-14);
 
         LOG("Test XYZ integrals passed");
 }

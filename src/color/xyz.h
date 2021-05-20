@@ -146,6 +146,43 @@ T x_64(T wave)
         return T(0.398) * std::exp(T(-1250) * t1 * t1) + T(1.132) * std::exp(T(-234) * t2 * t2);
 }
 
+/*
+Integrate[Exp[t1*Log[(x+m)/t2]^2],x]
+(Sqrt[Pi]*t2*Erfi[(1 + 2*t1*Log[(m + x)/t2])/(2*Sqrt[t1])])/(E^(1/4/t1)*(2*Sqrt[t1]))
+
+Integrate[Exp[t1*Log[(m-x)/t2]^2],x]
+-((Sqrt[Pi]*t2*Erfi[(1 + 2*t1*Log[(m - x)/t2])/(2*Sqrt[t1])])/(E^(1/4/t1)*(2*Sqrt[t1])))
+
+Simplify[Integrate[0.398`30*Exp[-1250*Log[(x+570.1`30)/1014]^2],x]]
+Simplify[Integrate[1.132`30*Exp[-234*Log[(1338 - x)/743.5`30]^2], x]]
+*/
+template <typename T>
+T x_64_integral(T wave_1, T wave_2)
+{
+        static_assert(std::is_floating_point_v<T>);
+
+        const auto erf_1 = [](T w)
+        {
+                return std::erf(
+                        T(244.731714089055124500775830124L)
+                        - T(35.3553390593273762200422181052L) * std::log(T(570.1) + w));
+        };
+
+        const auto erf_2 = [](T w)
+        {
+                return std::erf(
+                        T(101.167181069172083793364304205L)
+                        - T(15.297058540778354490084672327L) * std::log(T(1338) - w));
+        };
+
+        T s1 = T(-10.1180732728004060626662605914L) * (erf_1(wave_2) - erf_1(wave_1));
+        T s2 = T(48.812202187820072511214075419L) * (erf_2(wave_2) - erf_2(wave_1));
+
+        return s1 + s2;
+}
+
+//
+
 template <typename T>
 T y_64(T wave)
 {
@@ -155,6 +192,27 @@ T y_64(T wave)
         return T(1.011) * std::exp(T(-0.5) * t * t);
 }
 
+/*
+Integrate[Exp[-1/2*((x-m)/t)^2],x]
+(-Sqrt[Pi/2])*t*Erf[(m - x)/(Sqrt[2]*t)]
+
+Integrate[1.011`30*Exp[-1/2*((x-556.1`30)/46.14`30)^2],x]
+*/
+template <typename T>
+T y_64_integral(T wave_1, T wave_2)
+{
+        static_assert(std::is_floating_point_v<T>);
+
+        const auto erf = [](T w)
+        {
+                return std::erf(T(0.0153252444990582471695024785892L) * (w - T(556.1)));
+        };
+
+        return T(58.464021352990290588229753877L) * (erf(wave_2) - erf(wave_1));
+}
+
+//
+
 template <typename T>
 T z_64(T wave)
 {
@@ -163,6 +221,27 @@ T z_64(T wave)
         T t = std::log((wave - T(265.8)) / T(180.4));
         return T(2.060) * std::exp(T(-32) * t * t);
 }
+
+/*
+Integrate[Exp[t1*Log[(x-m)/t2]^2],x]
+(Sqrt[Pi]*t2*Erfi[(1 + 2*t1*Log[(-m + x)/t2])/(2*Sqrt[t1])])/(E^(1/4/t1)*(2*Sqrt[t1]))
+
+Simplify[Integrate[2.06`30*Exp[-32*Log[(x-265.8`30)/180.4`30]^2],x]]
+*/
+template <typename T>
+T z_64_integral(T wave_1, T wave_2)
+{
+        static_assert(std::is_floating_point_v<T>);
+
+        const auto erf = [](T w)
+        {
+                return std::erf(
+                        T(29.4767452173751382583403029225L)
+                        - T(5.6568542494923801952067548968L) * std::log(w - T(265.8)));
+        };
+
+        return T(-58.676828321407216171251716717L) * (erf(wave_2) - erf(wave_1));
+}
 }
 
 enum XYZ
@@ -170,6 +249,8 @@ enum XYZ
         XYZ_31,
         XYZ_64
 };
+
+//
 
 template <XYZ xyz, typename T>
 std::enable_if_t<xyz == XYZ_31, T> cie_x(T wave)
@@ -187,6 +268,8 @@ std::enable_if_t<xyz == XYZ_31, T> cie_z(T wave)
         return xyz_implementation::z_31(wave);
 }
 
+//
+
 template <XYZ xyz, typename T>
 std::enable_if_t<xyz == XYZ_31, T> cie_x_integral(T wave_1, T wave_2)
 {
@@ -203,6 +286,8 @@ std::enable_if_t<xyz == XYZ_31, T> cie_z_integral(T wave_1, T wave_2)
         return xyz_implementation::z_31_integral(wave_1, wave_2);
 }
 
+//
+
 template <XYZ xyz, typename T>
 std::enable_if_t<xyz == XYZ_64, T> cie_x(T wave)
 {
@@ -217,5 +302,23 @@ template <XYZ xyz, typename T>
 std::enable_if_t<xyz == XYZ_64, T> cie_z(T wave)
 {
         return xyz_implementation::z_64(wave);
+}
+
+//
+
+template <XYZ xyz, typename T>
+std::enable_if_t<xyz == XYZ_64, T> cie_x_integral(T wave_1, T wave_2)
+{
+        return xyz_implementation::x_64_integral(wave_1, wave_2);
+}
+template <XYZ xyz, typename T>
+std::enable_if_t<xyz == XYZ_64, T> cie_y_integral(T wave_1, T wave_2)
+{
+        return xyz_implementation::y_64_integral(wave_1, wave_2);
+}
+template <XYZ xyz, typename T>
+std::enable_if_t<xyz == XYZ_64, T> cie_z_integral(T wave_1, T wave_2)
+{
+        return xyz_implementation::z_64_integral(wave_1, wave_2);
 }
 }
