@@ -244,81 +244,101 @@ T z_64_integral(T wave_1, T wave_2)
 }
 }
 
+//
+
 enum XYZ
 {
         XYZ_31,
         XYZ_64
 };
 
-//
+template <XYZ xyz, typename T>
+T cie_x(T wave)
+{
+        static_assert(xyz == XYZ_31 || xyz == XYZ_64);
+
+        if constexpr (xyz == XYZ_31)
+        {
+                return xyz_implementation::x_31(wave);
+        }
+        else
+        {
+                return xyz_implementation::x_64(wave);
+        }
+}
 
 template <XYZ xyz, typename T>
-std::enable_if_t<xyz == XYZ_31, T> cie_x(T wave)
+T cie_y(T wave)
 {
-        return xyz_implementation::x_31(wave);
-}
-template <XYZ xyz, typename T>
-std::enable_if_t<xyz == XYZ_31, T> cie_y(T wave)
-{
-        return xyz_implementation::y_31(wave);
-}
-template <XYZ xyz, typename T>
-std::enable_if_t<xyz == XYZ_31, T> cie_z(T wave)
-{
-        return xyz_implementation::z_31(wave);
+        static_assert(xyz == XYZ_31 || xyz == XYZ_64);
+
+        if constexpr (xyz == XYZ_31)
+        {
+                return xyz_implementation::y_31(wave);
+        }
+        else
+        {
+                return xyz_implementation::y_64(wave);
+        }
 }
 
-//
+template <XYZ xyz, typename T>
+T cie_z(T wave)
+{
+        static_assert(xyz == XYZ_31 || xyz == XYZ_64);
+
+        if constexpr (xyz == XYZ_31)
+        {
+                return xyz_implementation::z_31(wave);
+        }
+        else
+        {
+                return xyz_implementation::z_64(wave);
+        }
+}
 
 template <XYZ xyz, typename T>
-std::enable_if_t<xyz == XYZ_31, T> cie_x_integral(T wave_1, T wave_2)
+T cie_x_integral(T wave_1, T wave_2)
 {
-        return xyz_implementation::x_31_integral(wave_1, wave_2);
-}
-template <XYZ xyz, typename T>
-std::enable_if_t<xyz == XYZ_31, T> cie_y_integral(T wave_1, T wave_2)
-{
-        return xyz_implementation::y_31_integral(wave_1, wave_2);
-}
-template <XYZ xyz, typename T>
-std::enable_if_t<xyz == XYZ_31, T> cie_z_integral(T wave_1, T wave_2)
-{
-        return xyz_implementation::z_31_integral(wave_1, wave_2);
+        static_assert(xyz == XYZ_31 || xyz == XYZ_64);
+
+        if constexpr (xyz == XYZ_31)
+        {
+                return xyz_implementation::x_31_integral(wave_1, wave_2);
+        }
+        else
+        {
+                return xyz_implementation::x_64_integral(wave_1, wave_2);
+        }
 }
 
-//
+template <XYZ xyz, typename T>
+T cie_y_integral(T wave_1, T wave_2)
+{
+        static_assert(xyz == XYZ_31 || xyz == XYZ_64);
+
+        if constexpr (xyz == XYZ_31)
+        {
+                return xyz_implementation::y_31_integral(wave_1, wave_2);
+        }
+        else
+        {
+                return xyz_implementation::y_64_integral(wave_1, wave_2);
+        }
+}
 
 template <XYZ xyz, typename T>
-std::enable_if_t<xyz == XYZ_64, T> cie_x(T wave)
+T cie_z_integral(T wave_1, T wave_2)
 {
-        return xyz_implementation::x_64(wave);
-}
-template <XYZ xyz, typename T>
-std::enable_if_t<xyz == XYZ_64, T> cie_y(T wave)
-{
-        return xyz_implementation::y_64(wave);
-}
-template <XYZ xyz, typename T>
-std::enable_if_t<xyz == XYZ_64, T> cie_z(T wave)
-{
-        return xyz_implementation::z_64(wave);
-}
+        static_assert(xyz == XYZ_31 || xyz == XYZ_64);
 
-//
-
-template <XYZ xyz, typename T>
-std::enable_if_t<xyz == XYZ_64, T> cie_x_integral(T wave_1, T wave_2)
-{
-        return xyz_implementation::x_64_integral(wave_1, wave_2);
-}
-template <XYZ xyz, typename T>
-std::enable_if_t<xyz == XYZ_64, T> cie_y_integral(T wave_1, T wave_2)
-{
-        return xyz_implementation::y_64_integral(wave_1, wave_2);
-}
-template <XYZ xyz, typename T>
-std::enable_if_t<xyz == XYZ_64, T> cie_z_integral(T wave_1, T wave_2)
-{
-        return xyz_implementation::z_64_integral(wave_1, wave_2);
+        if constexpr (xyz == XYZ_31)
+        {
+                return xyz_implementation::z_31_integral(wave_1, wave_2);
+        }
+        else
+        {
+                return xyz_implementation::z_64_integral(wave_1, wave_2);
+        }
 }
 }
