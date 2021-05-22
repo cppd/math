@@ -17,24 +17,11 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
-#include "xyz_versions.h"
-
-#include <vector>
-
 namespace ns::color
 {
-constexpr int XYZ_SAMPLES_MIN_COUNT = 1;
-constexpr int XYZ_SAMPLES_MAX_COUNT = 1'000;
-
-constexpr int XYZ_SAMPLES_MIN_WAVELENGTH = 380;
-constexpr int XYZ_SAMPLES_MAX_WAVELENGTH = 780;
-
-template <XYZ xyz>
-std::vector<float> cie_x_samples(int from, int to, int count);
-
-template <XYZ xyz>
-std::vector<float> cie_y_samples(int from, int to, int count);
-
-template <XYZ xyz>
-std::vector<float> cie_z_samples(int from, int to, int count);
+enum XYZ
+{
+        XYZ_31,
+        XYZ_64
+};
 }

@@ -30,38 +30,55 @@ namespace
 {
 using ComputeType = double;
 
-constexpr XYZ VERSION = XYZ_31;
-
-constexpr int MIN_WAVELENGTH = 380;
-constexpr int MAX_WAVELENGTH = 780;
-
-constexpr int MIN_SAMPLE_COUNT = 1;
-constexpr int MAX_SAMPLE_COUNT = 1'000;
-
-std::vector<float> create_samples(
-        ComputeType(integrate)(ComputeType, ComputeType),
-        const ComputeType from,
-        const ComputeType to,
-        const int count)
+enum class F
 {
+        X,
+        Y,
+        Z
+};
+
+template <XYZ xyz, F f>
+ComputeType integrate(ComputeType from, ComputeType to)
+{
+        static_assert(f == F::X || f == F::Y || f == F::Z);
+
+        if constexpr (f == F::X)
+        {
+                return cie_x_integral<xyz, ComputeType>(from, to);
+        }
+        if constexpr (f == F::Y)
+        {
+                return cie_y_integral<xyz, ComputeType>(from, to);
+        }
+        if constexpr (f == F::Z)
+        {
+                return cie_z_integral<xyz, ComputeType>(from, to);
+        }
+}
+
+template <XYZ xyz, F f>
+std::vector<float> create_samples(const ComputeType from, const ComputeType to, const int count)
+{
+        constexpr double MIN = XYZ_SAMPLES_MIN_WAVELENGTH;
+        constexpr double MAX = XYZ_SAMPLES_MAX_WAVELENGTH;
+
         if (!(from < to))
         {
                 error("The starting wavelength (" + to_string(from) + ") must be less than the ending wavelength ("
                       + to_string(to) + ")");
         }
-        if (!(from >= MIN_WAVELENGTH && to <= MAX_WAVELENGTH))
+        if (!(from >= MIN && to <= MAX))
         {
                 error("Starting and ending wavelengths [" + to_string(from) + ", " + to_string(to)
-                      + "] must be in the range [" + to_string(MIN_WAVELENGTH) + ", " + to_string(MAX_WAVELENGTH)
-                      + "]");
+                      + "] must be in the range [" + to_string(MIN) + ", " + to_string(MAX) + "]");
         }
-        if (!(count >= MIN_SAMPLE_COUNT && count <= MAX_SAMPLE_COUNT))
+        if (!(count >= XYZ_SAMPLES_MIN_COUNT && count <= XYZ_SAMPLES_MAX_COUNT))
         {
-                error("Sample count " + to_string(count) + " must be in the range [" + to_string(MIN_SAMPLE_COUNT)
-                      + ", " + to_string(MAX_SAMPLE_COUNT) + "]");
+                error("Sample count " + to_string(count) + " must be in the range [" + to_string(XYZ_SAMPLES_MIN_COUNT)
+                      + ", " + to_string(XYZ_SAMPLES_MAX_COUNT) + "]");
         }
 
-        static const ComputeType y_integral = cie_y_integral<VERSION, ComputeType>(MIN_WAVELENGTH, MAX_WAVELENGTH);
+        static const ComputeType y_integral = cie_y_integral<xyz, ComputeType>(MIN, MAX);
 
         std::vector<float> samples;
         samples.reserve(count);
@@ -71,7 +88,7 @@ std::vector<float> create_samples(
         {
                 ComputeType wave_2 = std::lerp(from, to, static_cast<ComputeType>(i) / count);
                 ASSERT(wave_1 < wave_2 && wave_1 >= from && wave_2 <= to);
-                ComputeType v = integrate(wave_1, wave_2);
+                ComputeType v = integrate<xyz, f>(wave_1, wave_2);
                 v /= y_integral;
                 samples.push_back(v);
                 wave_1 = wave_2;
@@ -81,18 +98,29 @@ std::vector<float> create_samples(
 }
 }
 
+template <XYZ xyz>
 std::vector<float> cie_x_samples(int from, int to, int count)
 {
-        return create_samples(cie_x_integral<VERSION, ComputeType>, from, to, count);
+        return create_samples<xyz, F::X>(from, to, count);
 }
 
+template <XYZ xyz>
 std::vector<float> cie_y_samples(int from, int to, int count)
 {
-        return create_samples(cie_y_integral<VERSION, ComputeType>, from, to, count);
+        return create_samples<xyz, F::Y>(from, to, count);
 }
 
+template <XYZ xyz>
 std::vector<float> cie_z_samples(int from, int to, int count)
 {
-        return create_samples(cie_z_integral<VERSION, ComputeType>, from, to, count);
+        return create_samples<xyz, F::Z>(from, to, count);
 }
+
+template std::vector<float> cie_x_samples<XYZ_31>(int, int, int);
+template std::vector<float> cie_y_samples<XYZ_31>(int, int, int);
+template std::vector<float> cie_z_samples<XYZ_31>(int, int, int);
+
+template std::vector<float> cie_x_samples<XYZ_64>(int, int, int);
+template std::vector<float> cie_y_samples<XYZ_64>(int, int, int);
+template std::vector<float> cie_z_samples<XYZ_64>(int, int, int);
 }

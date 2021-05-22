@@ -23,6 +23,8 @@ Journal of Computer Graphics Techniques, Vol. 2, No. 2, 2013.
 
 #pragma once
 
+#include "xyz_versions.h"
+
 #include <src/com/error.h>
 
 #include <cmath>
@@ -245,12 +247,6 @@ T z_64_integral(T wave_1, T wave_2)
 }
 
 //
-
-enum XYZ
-{
-        XYZ_31,
-        XYZ_64
-};
 
 template <XYZ xyz, typename T>
 T cie_x(T wave)

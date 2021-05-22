@@ -32,6 +32,7 @@ void check_sum(const std::vector<float>& samples, double min, double max)
         {
                 error("No samples");
         }
+
         double sum = 0;
         for (double v : samples)
         {
@@ -41,6 +42,7 @@ void check_sum(const std::vector<float>& samples, double min, double max)
                 }
                 sum += v;
         }
+
         if (!(sum >= min && sum <= max))
         {
                 error("Sample sum " + to_string(sum) + " is not in the range [" + to_string(min) + ", " + to_string(max)
@@ -48,19 +50,51 @@ void check_sum(const std::vector<float>& samples, double min, double max)
         }
 }
 
+template <XYZ xyz>
+void test()
+{
+        static_assert(XYZ_SAMPLES_MIN_COUNT == 1);
+        static_assert(XYZ_SAMPLES_MAX_COUNT >= 100);
+
+        constexpr double MIN = XYZ_SAMPLES_MIN_WAVELENGTH;
+        constexpr double MAX = XYZ_SAMPLES_MAX_WAVELENGTH;
+
+        static_assert(MIN < 400);
+        static_assert(MAX > 700);
+
+        check_sum(cie_x_samples<xyz>(400, 700, 1), 0.99, 1.01);
+        check_sum(cie_y_samples<xyz>(400, 700, 1), 0.99, 0.9999);
+        check_sum(cie_z_samples<xyz>(400, 700, 1), 0.99, 1.01);
+
+        check_sum(cie_x_samples<xyz>(400, 700, 60), 0.99, 1.01);
+        check_sum(cie_y_samples<xyz>(400, 700, 60), 0.99, 0.9999);
+        check_sum(cie_z_samples<xyz>(400, 700, 60), 0.99, 1.01);
+
+        check_sum(cie_x_samples<xyz>(400, 700, XYZ_SAMPLES_MAX_COUNT), 0.99, 1.01);
+        check_sum(cie_y_samples<xyz>(400, 700, XYZ_SAMPLES_MAX_COUNT), 0.99, 0.9999);
+        check_sum(cie_z_samples<xyz>(400, 700, XYZ_SAMPLES_MAX_COUNT), 0.99, 1.01);
+
+        check_sum(cie_x_samples<xyz>(MIN, MAX, 1), 0.99, 1.01);
+        check_sum(cie_y_samples<xyz>(MIN, MAX, 1), 1 - 1e-7, 1 + 1e-7);
+        check_sum(cie_z_samples<xyz>(MIN, MAX, 1), 0.99, 1.01);
+
+        check_sum(cie_x_samples<xyz>(MIN, MAX, 100), 0.99, 1.01);
+        check_sum(cie_y_samples<xyz>(MIN, MAX, 100), 1 - 1e-7, 1 + 1e-7);
+        check_sum(cie_z_samples<xyz>(MIN, MAX, 100), 0.99, 1.01);
+
+        check_sum(cie_x_samples<xyz>(MIN, MAX, XYZ_SAMPLES_MAX_COUNT), 0.99, 1.01);
+        check_sum(cie_y_samples<xyz>(MIN, MAX, XYZ_SAMPLES_MAX_COUNT), 1 - 1e-7, 1 + 1e-7);
+        check_sum(cie_z_samples<xyz>(MIN, MAX, XYZ_SAMPLES_MAX_COUNT), 0.99, 1.01);
+}
+
 void test_samples()
 {
-        LOG("Test XYZ integrals");
+        LOG("Test XYZ samples");
 
-        check_sum(cie_x_samples(400, 700, 60), 0.99, 1.01);
-        check_sum(cie_y_samples(400, 700, 60), 0.99, 1.01);
-        check_sum(cie_z_samples(400, 700, 60), 0.99, 1.01);
+        test<XYZ_31>();
+        test<XYZ_64>();
 
-        check_sum(cie_x_samples(380, 780, 100), 0.99, 1.01);
-        check_sum(cie_y_samples(380, 780, 100), 0.99, 1.01);
-        check_sum(cie_z_samples(380, 780, 100), 0.99, 1.01);
-
-        LOG("Test XYZ integrals passed");
+        LOG("Test XYZ samples passed");
 }
 
 TEST_SMALL("XYZ Samples", test_samples)
