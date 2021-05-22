@@ -1,0 +1,107 @@
+/*
+Copyright (C) 2017-2021 Topological Manifold
+
+This program is free software: you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with this program.  If not, see <http://www.gnu.org/licenses/>.
+*/
+
+#include "../xyz_rgb.h"
+
+namespace ns::color
+{
+namespace
+{
+template <typename T>
+constexpr T abs(T v)
+{
+        return v < 0 ? -v : v;
+}
+
+template <typename T>
+constexpr bool compare(const std::array<T, 3>& a, const std::array<T, 3>& b, T precision)
+{
+        for (int i = 0; i < 3; ++i)
+        {
+                if (!(abs(a[i] - b[i]) < precision))
+                {
+                        return false;
+                }
+        }
+        return true;
+}
+
+template <typename T>
+constexpr bool check_1(const std::array<T, 3>& v, T precision)
+{
+        const std::array<T, 3> rgb = xyz_to_linear_srgb<XYZ_31, T>(v[0], v[1], v[2]);
+        const std::array<T, 3> xyz = linear_srgb_to_xyz<XYZ_31, T>(rgb[0], rgb[1], rgb[2]);
+        return compare<T>(v, xyz, precision);
+}
+
+template <typename T>
+constexpr bool check_2(const std::array<T, 3>& v, T precision)
+{
+        const std::array<T, 3> xyz = linear_srgb_to_xyz<XYZ_31, T>(v[0], v[1], v[2]);
+        const std::array<T, 3> rgb = xyz_to_linear_srgb<XYZ_31, T>(xyz[0], xyz[1], xyz[2]);
+        return compare<T>(v, rgb, precision);
+}
+
+template <int I, int MAX, typename T>
+constexpr bool check(std::array<T, 3>& v, T precision)
+{
+        static_assert(I >= 0 && I <= 3);
+        if constexpr (I == 3)
+        {
+                return check_1<T>(v, precision) && check_2<T>(v, precision);
+        }
+        else
+        {
+                for (int i = 0; i <= MAX; ++i)
+                {
+                        v[I] = T(i) / MAX;
+                        if (!check<I + 1, MAX, T>(v, precision))
+                        {
+                                return false;
+                        }
+                }
+                return true;
+        }
+}
+
+template <typename T>
+constexpr bool check(T precision)
+{
+        constexpr int MAX = 4;
+        std::array<T, 3> v;
+        return check<0, MAX, T>(v, precision);
+}
+
+template <typename T>
+constexpr bool test()
+{
+        constexpr T D65_X = 0.9505;
+        constexpr T D65_Y = 1;
+        constexpr T D65_Z = 1.089;
+        static_assert(compare<T>(xyz_to_linear_srgb<XYZ_31, T>(D65_X, D65_Y, D65_Z), {1, 1, 1}, 1e-6));
+        static_assert(compare<T>(linear_srgb_to_xyz<XYZ_31, T>(1, 1, 1), {D65_X, D65_Y, D65_Z}, 1e-16));
+
+        static_assert(check<T>(1e-6));
+
+        return true;
+}
+
+static_assert(test<float>());
+static_assert(test<double>());
+static_assert(test<long double>());
+}
+}
