@@ -33,25 +33,6 @@ namespace ns::geometry
 {
 namespace shape_intersection_implementation
 {
-#if 0
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wctor-dtor-privacy"
-template <typename Shape>
-class HasInsideFunction
-{
-        using V = Vector<Shape::SPACE_DIMENSION, typename Shape::DataType>;
-
-        template <typename T>
-        static decltype(std::declval<T>().inside(V()), std::true_type()) t(int);
-        template <typename>
-        static std::false_type t(...);
-
-public:
-        static constexpr bool value = std::is_same_v<decltype(t<Shape>(0)), std::true_type>;
-};
-#pragma GCC diagnostic pop
-#endif
-
 template <typename T>
 constexpr std::size_t size()
 {
