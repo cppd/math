@@ -31,6 +31,8 @@ Elsevier, 2017.
 
 #include "rgb_samples.h"
 
+#include "average.h"
+
 #include <src/com/error.h>
 #include <src/com/print.h>
 
@@ -42,12 +44,27 @@ namespace
 {
 using ComputeType = double;
 
-//constexpr double FROM = 380;
-//constexpr double TO = 720;
-constexpr std::size_t COUNT = 32;
-
 // clang-format off
-constexpr std::array<ComputeType, COUNT> WHITE
+constexpr ComputeType WAVES[] =
+{
+         3.80000000000000000e+02,  3.90967741935483871e+02,
+         4.01935483870967742e+02,  4.12903225806451613e+02,
+         4.23870967741935484e+02,  4.34838709677419355e+02,
+         4.45806451612903226e+02,  4.56774193548387097e+02,
+         4.67741935483870968e+02,  4.78709677419354839e+02,
+         4.89677419354838710e+02,  5.00645161290322581e+02,
+         5.11612903225806452e+02,  5.22580645161290323e+02,
+         5.33548387096774194e+02,  5.44516129032258065e+02,
+         5.55483870967741935e+02,  5.66451612903225806e+02,
+         5.77419354838709677e+02,  5.88387096774193548e+02,
+         5.99354838709677419e+02,  6.10322580645161290e+02,
+         6.21290322580645161e+02,  6.32258064516129032e+02,
+         6.43225806451612903e+02,  6.54193548387096774e+02,
+         6.65161290322580645e+02,  6.76129032258064516e+02,
+         6.87096774193548387e+02,  6.98064516129032258e+02,
+         7.09032258064516129e+02,  7.20000000000000000e+02
+};
+constexpr ComputeType WHITE[] =
 {
          9.99244001556776396e-01,  9.98873380150820056e-01,
          9.98808959251144435e-01,  9.99597166706562734e-01,
@@ -66,7 +83,7 @@ constexpr std::array<ComputeType, COUNT> WHITE
          9.97442192355283863e-01,  9.97699702289689294e-01,
          9.97578852651525905e-01,  9.98077837717103900e-01
 };
-constexpr std::array<ComputeType, COUNT> CYAN
+constexpr ComputeType CYAN[] =
 {
          9.80016496816257132e-01,  9.71927050327868747e-01,
          9.52870360145541939e-01,  9.73978335387087224e-01,
@@ -85,7 +102,7 @@ constexpr std::array<ComputeType, COUNT> CYAN
          1.61097309369761035e-02,  4.63076354639339709e-03,
          5.52959125598782159e-03,  2.37690948500326217e-02
 };
-constexpr std::array<ComputeType, COUNT> MAGENTA
+constexpr ComputeType MAGENTA[] =
 {
          9.35562320003138659e-01,  9.31467078327201103e-01,
          9.24943324472360495e-01,  9.37498241642676033e-01,
@@ -104,7 +121,7 @@ constexpr std::array<ComputeType, COUNT> MAGENTA
          9.37226064837872630e-01,  8.12095717650843318e-01,
          8.38910795701652723e-01,  7.98593695863272224e-01
 };
-constexpr std::array<ComputeType, COUNT> YELLOW
+constexpr ComputeType YELLOW[] =
 {
          5.24519261723505395e-03, -4.51518445651914214e-03,
         -4.94369070049955825e-03, -6.07617627218742275e-03,
@@ -123,7 +140,7 @@ constexpr std::array<ComputeType, COUNT> YELLOW
          9.85932073954387311e-01,  9.87416908752031475e-01,
          9.82024149675078450e-01,  9.77913620650042836e-01
 };
-constexpr std::array<ComputeType, COUNT> RED
+constexpr ComputeType RED[] =
 {
          1.55976441799280940e-01,  1.11475026773856761e-01,
          1.16762040231888367e-01,  1.07003670069072770e-01,
@@ -142,7 +159,7 @@ constexpr std::array<ComputeType, COUNT> RED
          9.17015211653011364e-01,  9.27292166654264061e-01,
          8.79795139060852827e-01,  9.28897872325725515e-01
 };
-constexpr std::array<ComputeType, COUNT> GREEN
+constexpr ComputeType GREEN[] =
 {
          2.49309985259337213e-03, -4.72146876373780340e-03,
         -1.18069493324126969e-02, -8.89762214141937360e-03,
@@ -161,7 +178,7 @@ constexpr std::array<ComputeType, COUNT> GREEN
         -7.40433682307678042e-03, -7.87217815671311000e-06,
          5.10974531416909586e-03, -2.61085999634628986e-03
 };
-constexpr std::array<ComputeType, COUNT> BLUE
+constexpr ComputeType BLUE[] =
 {
          9.33563949530071491e-01,  9.30427169218663419e-01,
          9.36662373405797943e-01,  9.36570876291807242e-01,
@@ -182,22 +199,12 @@ constexpr std::array<ComputeType, COUNT> BLUE
 };
 // clang-format on
 
-std::vector<float> rgb_samples(
-        const std::array<ComputeType, COUNT>& /*samples*/,
-        ComputeType from,
-        ComputeType to,
-        int count)
+template <std::size_t COUNT>
+std::vector<float> rgb_samples(const ComputeType (&samples)[COUNT], int from, int to, int count)
 {
-        if (!(from < to))
-        {
-                error("The starting wavelength (" + to_string(from) + ") must be less than the ending wavelength ("
-                      + to_string(to) + ")");
-        }
-        if (!(count >= 1))
-        {
-                error("Sample count " + to_string(count) + " must be positive");
-        }
-        return {};
+        static_assert(COUNT == 32);
+
+        return average(std::to_array(WAVES), std::to_array(samples), from, to, count);
 }
 }
 
