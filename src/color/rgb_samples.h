@@ -21,11 +21,19 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 namespace ns::color
 {
-std::vector<float> rgb_white_samples(int from, int to, int count);
-std::vector<float> rgb_cyan_samples(int from, int to, int count);
-std::vector<float> rgb_magenta_samples(int from, int to, int count);
-std::vector<float> rgb_yellow_samples(int from, int to, int count);
-std::vector<float> rgb_red_samples(int from, int to, int count);
-std::vector<float> rgb_green_samples(int from, int to, int count);
-std::vector<float> rgb_blue_samples(int from, int to, int count);
+std::vector<float> rgb_reflectance_white_samples(int from, int to, int count);
+std::vector<float> rgb_reflectance_cyan_samples(int from, int to, int count);
+std::vector<float> rgb_reflectance_magenta_samples(int from, int to, int count);
+std::vector<float> rgb_reflectance_yellow_samples(int from, int to, int count);
+std::vector<float> rgb_reflectance_red_samples(int from, int to, int count);
+std::vector<float> rgb_reflectance_green_samples(int from, int to, int count);
+std::vector<float> rgb_reflectance_blue_samples(int from, int to, int count);
+
+std::vector<float> rgb_illumination_white_samples(int from, int to, int count);
+std::vector<float> rgb_illumination_cyan_samples(int from, int to, int count);
+std::vector<float> rgb_illumination_magenta_samples(int from, int to, int count);
+std::vector<float> rgb_illumination_yellow_samples(int from, int to, int count);
+std::vector<float> rgb_illumination_red_samples(int from, int to, int count);
+std::vector<float> rgb_illumination_green_samples(int from, int to, int count);
+std::vector<float> rgb_illumination_blue_samples(int from, int to, int count);
 }
