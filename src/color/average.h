@@ -25,16 +25,27 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 namespace ns::color
 {
-template <typename T, std::size_t COUNT>
-std::vector<float> average(
-        const std::array<T, COUNT>& waves,
-        const std::array<T, COUNT>& samples,
-        std::type_identity_t<T> from,
-        std::type_identity_t<T> to,
+template <typename ResultType, typename Container>
+std::vector<ResultType> average(
+        const Container& waves,
+        const Container& samples,
+        typename Container::value_type from,
+        typename Container::value_type to,
         unsigned count)
 {
+        using T = typename Container::value_type;
         static_assert(std::is_floating_point_v<T>);
-        static_assert(COUNT > 1);
+
+        if (waves.size() != samples.size())
+        {
+                error("Waves size " + to_string(waves.size()) + " is not equal to samples size "
+                      + to_string(samples.size()));
+        }
+
+        if (waves.size() < 2)
+        {
+                error("Sample count " + to_string(waves.size()) + " is less than 2");
+        }
 
         if (!std::is_sorted(waves.cbegin(), waves.cend()))
         {
@@ -77,7 +88,7 @@ std::vector<float> average(
                 ++dst;
         }
 
-        std::vector<float> r;
+        std::vector<ResultType> r;
         r.reserve(count);
 
         T sum = 0;

@@ -20,16 +20,22 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/com/error.h>
 #include <src/com/log.h>
 #include <src/com/print.h>
+#include <src/com/random/engine.h>
+#include <src/numerical/integrate.h>
 #include <src/test/test.h>
 
+#include <algorithm>
 #include <array>
 #include <cmath>
+#include <random>
+#include <sstream>
 
 namespace ns::color
 {
 namespace
 {
-void check(const std::vector<float>& a, const std::vector<float>& b)
+template <typename T>
+void compare(const std::vector<T>& a, const std::vector<T>& b)
 {
         if (a.size() != b.size())
         {
@@ -38,26 +44,190 @@ void check(const std::vector<float>& a, const std::vector<float>& b)
 
         for (std::size_t i = 0; i < a.size(); ++i)
         {
-                if (!(std::abs(a[i] - b[i]) < 1e-5))
+                if (a[i] == b[i])
                 {
-                        error(to_string(a[i]) + " and " + to_string(b[i]) + " are not equal");
+                        continue;
                 }
+
+                T abs = std::abs(a[i] - b[i]);
+                if (abs < T(1e-4))
+                {
+                        continue;
+                }
+
+                T max = std::max(std::abs(a[i]), std::abs(b[i]));
+                if (abs / max < T(1e-3))
+                {
+                        continue;
+                }
+
+                error(to_string(a[i]) + " and " + to_string(b[i]) + " are not equal");
         }
+}
+
+template <typename Container>
+typename Container::value_type f(
+        const typename Container::value_type wave,
+        const Container& waves,
+        const Container& samples)
+{
+        using T = typename Container::value_type;
+
+        if (wave < waves.front() || wave > waves.back())
+        {
+                return 0;
+        }
+
+        auto iter = std::lower_bound(waves.cbegin(), waves.cend(), wave);
+        ASSERT(iter != samples.cend());
+
+        std::size_t index = iter - waves.cbegin();
+        if (waves[index] == wave)
+        {
+                return samples[index];
+        }
+        ASSERT(index != 0);
+
+        T k = (wave - waves[index - 1]) / (waves[index] - waves[index - 1]);
+        return std::lerp(samples[index - 1], samples[index], k);
+}
+
+template <typename Result, typename Container>
+void check(
+        const Container& waves,
+        const Container& samples,
+        const typename Container::value_type from,
+        const typename Container::value_type to,
+        const unsigned count)
+{
+        using T = typename Container::value_type;
+
+        ASSERT(std::is_sorted(waves.cbegin(), waves.cend()));
+
+        const auto function = [&](const T wave)
+        {
+                return f(wave, waves, samples);
+        };
+
+        const std::vector<Result> averages = average<Result>(waves, samples, from, to, count);
+        ASSERT(averages.size() == count);
+
+        std::vector<Result> test_averages;
+        test_averages.reserve(averages.size());
+
+        constexpr int INTEGRATE_COUNT = 10000;
+
+        T a = from;
+        for (std::size_t i = 1; i <= averages.size(); ++i)
+        {
+                T b = std::lerp(from, to, static_cast<T>(i) / averages.size());
+                T integral = numerical::integrate(function, a, b, INTEGRATE_COUNT);
+                T average = integral / (b - a);
+                test_averages.push_back(average);
+                a = b;
+        }
+
+        compare(averages, test_averages);
+}
+
+template <typename ResultType, typename T>
+void test_constant()
+{
+        constexpr std::array<T, 3> waves{2, 4, 6};
+        constexpr std::array<T, 3> samples{1, 1, 1};
+
+        compare(average<ResultType>(waves, samples, 0, 10, 4), {0.2, 1, 0.4, 0});
+        check<ResultType>(waves, samples, 0, 10, 4);
+
+        compare(average<ResultType>(waves, samples, 4, 6, 3), {1, 1, 1});
+        check<ResultType>(waves, samples, 4, 6, 3);
+
+        compare(average<ResultType>(waves, samples, 6, 8, 3), {0, 0, 0});
+        check<ResultType>(waves, samples, 6, 8, 3);
+
+        compare(average<ResultType>(waves, samples, 0, 2, 3), {0, 0, 0});
+        check<ResultType>(waves, samples, 0, 2, 3);
+
+        compare(average<ResultType>(waves, samples, 0, 2.5, 5), {0, 0, 0, 0, 1});
+        check<ResultType>(waves, samples, 0, 2.5, 5);
+
+        compare(average<ResultType>(waves, samples, 5.5, 8, 5), {1, 0, 0, 0, 0});
+        check<ResultType>(waves, samples, 5.5, 8, 5);
+}
+
+template <typename T, typename Engine>
+std::array<T, 2> min_max(std::type_identity_t<T> from, std::type_identity_t<T> to, Engine& engine)
+{
+        ASSERT(from < to);
+        T min;
+        T max;
+        do
+        {
+                min = std::uniform_real_distribution<T>(from, to)(engine);
+                max = std::uniform_real_distribution<T>(from, to)(engine);
+        } while (!(min != max));
+        if (min > max)
+        {
+                std::swap(min, max);
+        }
+        return {min, max};
+}
+
+template <typename ResultType, typename T>
+void test_random()
+{
+        std::mt19937_64 engine = create_engine<std::mt19937_64>();
+
+        constexpr unsigned MIN_COUNT = 10;
+        constexpr unsigned MAX_COUNT = 100;
+        const unsigned wave_count = std::uniform_int_distribution<unsigned>(MIN_COUNT, MAX_COUNT)(engine);
+        const unsigned test_count = std::uniform_int_distribution<unsigned>(MIN_COUNT, MAX_COUNT)(engine);
+
+        constexpr T MIN_WAVE = 100;
+        constexpr T MAX_WAVE = 1000;
+        const auto [wave_min, wave_max] = min_max<T>(MIN_WAVE, MAX_WAVE, engine);
+        const auto [test_min, test_max] = min_max<T>(MIN_WAVE, MAX_WAVE, engine);
+
+        constexpr T MIN_SAMPLE = 0;
+        constexpr T MAX_SAMPLE = 10;
+        const auto [sample_min, sample_max] = min_max<T>(MIN_SAMPLE, MAX_SAMPLE, engine);
+
+        std::vector<T> waves;
+        waves.reserve(wave_count);
+        std::vector<T> samples;
+        samples.reserve(wave_count);
+
+        for (unsigned i = 0; i < wave_count; ++i)
+        {
+                waves.push_back(std::uniform_real_distribution<T>(wave_min, wave_max)(engine));
+                samples.push_back(std::uniform_real_distribution<T>(sample_min, sample_max)(engine));
+        }
+
+        std::sort(waves.begin(), waves.end());
+
+        std::ostringstream oss;
+        oss << std::scientific;
+        oss << "samples " << waves.size() << " [" << waves.front() << ", " << waves.back() << "]; ";
+        oss << "test " << test_count << " [" << test_min << ", " << test_max << "]";
+        LOG(oss.str());
+
+        check<ResultType>(waves, samples, wave_min, wave_max, wave_count);
+        check<ResultType>(waves, samples, test_min, test_max, test_count);
 }
 
 void test()
 {
         LOG("Test average samples");
 
-        constexpr std::array<double, 3> waves{2, 4, 6};
-        constexpr std::array<double, 3> samples{1, 1, 1};
+        test_constant<float, float>();
+        test_constant<float, double>();
+        test_constant<double, float>();
+        test_constant<double, double>();
 
-        check(average(waves, samples, 0, 10, 4), {0.2, 1, 0.4, 0});
-        check(average(waves, samples, 4, 6, 3), {1, 1, 1});
-        check(average(waves, samples, 6, 8, 3), {0, 0, 0});
-        check(average(waves, samples, 0, 2, 3), {0, 0, 0});
-        check(average(waves, samples, 0, 2.5, 5), {0, 0, 0, 0, 1});
-        check(average(waves, samples, 5.5, 8, 5), {1, 0, 0, 0, 0});
+        test_random<float, float>();
+        test_random<float, double>();
+        test_random<double, float>();
+        test_random<double, double>();
 
         LOG("Test average samples passed");
 }

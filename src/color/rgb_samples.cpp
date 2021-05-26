@@ -204,7 +204,7 @@ std::vector<float> rgb_samples(const ComputeType (&samples)[COUNT], int from, in
 {
         static_assert(COUNT == 32);
 
-        return average(std::to_array(WAVES), std::to_array(samples), from, to, count);
+        return average<float>(std::to_array(WAVES), std::to_array(samples), from, to, count);
 }
 }
 
