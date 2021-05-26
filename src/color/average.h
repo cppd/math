@@ -20,29 +20,27 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/com/error.h>
 #include <src/com/print.h>
 
-#include <array>
 #include <vector>
 
 namespace ns::color
 {
-template <typename ResultType, typename Container>
-std::vector<ResultType> average(
+namespace average_implementation
+{
+template <typename Container>
+void check_parameters(
         const Container& waves,
         const Container& samples,
-        typename Container::value_type from,
-        typename Container::value_type to,
-        unsigned count)
+        const typename Container::value_type from,
+        const typename Container::value_type to,
+        const std::size_t count)
 {
-        using T = typename Container::value_type;
-        static_assert(std::is_floating_point_v<T>);
-
-        if (waves.size() != samples.size())
+        if (!(waves.size() == samples.size()))
         {
                 error("Waves size " + to_string(waves.size()) + " is not equal to samples size "
                       + to_string(samples.size()));
         }
 
-        if (waves.size() < 2)
+        if (!(waves.size() >= 2))
         {
                 error("Sample count " + to_string(waves.size()) + " is less than 2");
         }
@@ -62,30 +60,63 @@ std::vector<ResultType> average(
         {
                 error("Sample count " + to_string(count) + " must be positive");
         }
+}
+}
 
-        std::vector<T> dst_waves;
-        dst_waves.reserve(count + 1);
-        dst_waves.push_back(from);
-        for (unsigned i = 1; i <= count; ++i)
+template <typename ResultType, typename Container>
+std::vector<ResultType> average(
+        const Container& waves,
+        const Container& samples,
+        const typename Container::value_type from,
+        const typename Container::value_type to,
+        const std::size_t count)
+{
+        using T = typename Container::value_type;
+        static_assert(std::is_floating_point_v<T>);
+
+        average_implementation::check_parameters(waves, samples, from, to, count);
+
+        const auto area = [&](T a, T b, std::size_t i)
         {
-                T wave = std::lerp(from, to, static_cast<T>(i) / count);
-                ASSERT(wave > dst_waves.back() && wave <= to);
-                dst_waves.push_back(wave);
-        }
+                ASSERT(i > 0 && i < waves.size());
+                ASSERT(b >= a && a >= waves[i - 1] && b <= waves[i]);
 
-        std::size_t src = 0;
-        std::size_t dst = 0;
+                T l = b - a;
+                T p = a + (l / 2);
+                T k = (p - waves[i - 1]) / (waves[i] - waves[i - 1]);
+                T v = std::lerp(samples[i - 1], samples[i], k);
+                return v * l;
+        };
 
-        T prev;
-        if (waves[src] < dst_waves[dst])
+        std::size_t src_i = 0;
+
+        const std::size_t dst_count = count + 1;
+        std::size_t dst_i = 0;
+        T dst_prev = limits<T>::max();
+        T dst_wave = from;
+        const auto dst_move = [&]()
         {
-                prev = waves[src];
-                ++src;
+                ++dst_i;
+                ASSERT(dst_i <= dst_count);
+                if (dst_i < dst_count)
+                {
+                        T w = std::lerp(from, to, static_cast<T>(dst_i) / count);
+                        ASSERT(w > dst_wave && w <= to);
+                        dst_prev = dst_wave;
+                        dst_wave = w;
+                }
+        };
+
+        T prev_wave;
+        if (waves[src_i] < dst_wave)
+        {
+                prev_wave = waves[src_i];
+                ++src_i;
         }
         else
         {
-                prev = dst_waves[dst];
-                ++dst;
+                prev_wave = dst_wave;
+                dst_move();
         }
 
         std::vector<ResultType> r;
@@ -93,48 +124,42 @@ std::vector<ResultType> average(
 
         T sum = 0;
 
-        while (src < waves.size() && dst < dst_waves.size())
+        while (src_i < waves.size() && dst_i < dst_count)
         {
-                if (waves[src] < dst_waves[dst])
+                if (waves[src_i] < dst_wave)
                 {
-                        if (dst > 0 && src > 0)
+                        if (dst_i > 0 && src_i > 0)
                         {
-                                T p = (waves[src] + prev) / 2;
-                                T k = (p - waves[src - 1]) / (waves[src] - waves[src - 1]);
-                                T v = std::lerp(samples[src - 1], samples[src], k);
-                                T l = waves[src] - prev;
-                                sum += v * l;
+                                sum += area(prev_wave, waves[src_i], src_i);
                         }
-                        prev = waves[src];
-                        ++src;
+                        prev_wave = waves[src_i];
+                        ++src_i;
                 }
                 else
                 {
-                        if (dst > 0 && src > 0)
+                        if (dst_i > 0 && src_i > 0)
                         {
-                                T p = (dst_waves[dst] + prev) / 2;
-                                T k = (p - waves[src - 1]) / (waves[src] - waves[src - 1]);
-                                T v = std::lerp(samples[src - 1], samples[src], k);
-                                T l = dst_waves[dst] - prev;
-                                sum += v * l;
+                                sum += area(prev_wave, dst_wave, src_i);
 
-                                r.push_back(sum / (dst_waves[dst] - dst_waves[dst - 1]));
+                                ASSERT(dst_wave - dst_prev > 0);
+                                r.push_back(sum / (dst_wave - dst_prev));
                                 sum = 0;
                         }
-                        else if (dst > 0 && src == 0)
+                        else if (dst_i > 0 && src_i == 0)
                         {
                                 r.push_back(0);
                         }
-                        prev = dst_waves[dst];
-                        ++dst;
+                        prev_wave = dst_wave;
+                        dst_move();
                 }
         }
 
-        if (dst < dst_waves.size())
+        if (dst_i < dst_count)
         {
-                if (dst > 0)
+                if (dst_i > 0)
                 {
-                        r.push_back(sum / (dst_waves[dst] - dst_waves[dst - 1]));
+                        ASSERT(dst_wave - dst_prev > 0);
+                        r.push_back(sum / (dst_wave - dst_prev));
                 }
                 while (r.size() < count)
                 {

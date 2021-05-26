@@ -50,7 +50,7 @@ void compare(const std::vector<T>& a, const std::vector<T>& b)
                 }
 
                 T abs = std::abs(a[i] - b[i]);
-                if (abs < T(1e-4))
+                if (abs < T(1e-3))
                 {
                         continue;
                 }
@@ -110,7 +110,10 @@ void check(
         };
 
         const std::vector<Result> averages = average<Result>(waves, samples, from, to, count);
-        ASSERT(averages.size() == count);
+        if (!(averages.size() == count))
+        {
+                error("Result size " + to_string(averages.size()) + " is not equal to " + to_string(count));
+        }
 
         std::vector<Result> test_averages;
         test_averages.reserve(averages.size());
@@ -156,20 +159,26 @@ void test_constant()
 }
 
 template <typename T, typename Engine>
-std::array<T, 2> min_max(std::type_identity_t<T> from, std::type_identity_t<T> to, Engine& engine)
+std::array<T, 2> min_max(
+        std::type_identity_t<T> from,
+        std::type_identity_t<T> to,
+        std::type_identity_t<T> min_distance,
+        Engine& engine)
 {
         ASSERT(from < to);
+        ASSERT(min_distance < (to - from));
         T min;
         T max;
         do
         {
                 min = std::uniform_real_distribution<T>(from, to)(engine);
                 max = std::uniform_real_distribution<T>(from, to)(engine);
-        } while (!(min != max));
+        } while (!(std::abs(min - max) > min_distance));
         if (min > max)
         {
                 std::swap(min, max);
         }
+        ASSERT((max - min) > min_distance && min >= from && max <= to);
         return {min, max};
 }
 
@@ -183,14 +192,16 @@ void test_random()
         const unsigned wave_count = std::uniform_int_distribution<unsigned>(MIN_COUNT, MAX_COUNT)(engine);
         const unsigned test_count = std::uniform_int_distribution<unsigned>(MIN_COUNT, MAX_COUNT)(engine);
 
-        constexpr T MIN_WAVE = 100;
-        constexpr T MAX_WAVE = 1000;
-        const auto [wave_min, wave_max] = min_max<T>(MIN_WAVE, MAX_WAVE, engine);
-        const auto [test_min, test_max] = min_max<T>(MIN_WAVE, MAX_WAVE, engine);
+        constexpr T WAVE_MIN = 0;
+        constexpr T WAVE_MAX = 1000;
+        constexpr T WAVE_DISTANCE = 1;
+        const auto [wave_min, wave_max] = min_max<T>(WAVE_MIN, WAVE_MAX, WAVE_DISTANCE, engine);
+        const auto [test_min, test_max] = min_max<T>(WAVE_MIN, WAVE_MAX, WAVE_DISTANCE, engine);
 
-        constexpr T MIN_SAMPLE = 0;
-        constexpr T MAX_SAMPLE = 10;
-        const auto [sample_min, sample_max] = min_max<T>(MIN_SAMPLE, MAX_SAMPLE, engine);
+        constexpr T SAMPLE_MIN = 0;
+        constexpr T SAMPLE_MAX = 10;
+        constexpr T SAMPLE_DISTANCE = 1;
+        const auto [sample_min, sample_max] = min_max<T>(SAMPLE_MIN, SAMPLE_MAX, SAMPLE_DISTANCE, engine);
 
         std::vector<T> waves;
         waves.reserve(wave_count);
@@ -206,7 +217,7 @@ void test_random()
         std::sort(waves.begin(), waves.end());
 
         std::ostringstream oss;
-        oss << std::scientific;
+        oss << std::fixed;
         oss << "samples " << waves.size() << " [" << waves.front() << ", " << waves.back() << "]; ";
         oss << "test " << test_count << " [" << test_min << ", " << test_max << "]";
         LOG(oss.str());
