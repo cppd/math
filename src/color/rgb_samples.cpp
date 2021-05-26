@@ -33,10 +33,7 @@ Elsevier, 2017.
 
 #include "average.h"
 
-#include <src/com/error.h>
-#include <src/com/print.h>
-
-#include <array>
+#include <span>
 
 namespace ns::color
 {
@@ -337,7 +334,7 @@ std::vector<float> rgb_samples(const ComputeType (&samples)[COUNT], int from, in
 {
         static_assert(COUNT == 32);
 
-        return average<float>(std::to_array(WAVES), std::to_array(samples), from, to, count);
+        return average<float>(std::span(WAVES), std::span(samples), from, to, count);
 }
 }
 

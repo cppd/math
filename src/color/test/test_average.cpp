@@ -78,10 +78,10 @@ typename Container::value_type f(
                 return 0;
         }
 
-        auto iter = std::lower_bound(waves.cbegin(), waves.cend(), wave);
-        ASSERT(iter != samples.cend());
+        auto iter = std::lower_bound(waves.begin(), waves.end(), wave);
+        ASSERT(iter != samples.end());
 
-        std::size_t index = iter - waves.cbegin();
+        std::size_t index = iter - waves.begin();
         if (waves[index] == wave)
         {
                 return samples[index];
@@ -102,7 +102,7 @@ void check(
 {
         using T = typename Container::value_type;
 
-        ASSERT(std::is_sorted(waves.cbegin(), waves.cend()));
+        ASSERT(std::is_sorted(waves.begin(), waves.end()));
 
         const auto function = [&](const T wave)
         {
@@ -224,6 +224,7 @@ void test_random()
 
         check<ResultType>(waves, samples, wave_min, wave_max, wave_count);
         check<ResultType>(waves, samples, test_min, test_max, test_count);
+        check<ResultType>(std::span(waves), std::span(samples), test_min, test_max, test_count);
 }
 
 void test()

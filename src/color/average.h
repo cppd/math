@@ -45,7 +45,7 @@ void check_parameters(
                 error("Sample count " + to_string(waves.size()) + " is less than 2");
         }
 
-        if (!std::is_sorted(waves.cbegin(), waves.cend()))
+        if (!std::is_sorted(waves.begin(), waves.end()))
         {
                 error("Sample waves are not sorted");
         }
