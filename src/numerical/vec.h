@@ -131,7 +131,7 @@ public:
                 return *this;
         }
 
-        Vector<N, T>& operator*=(const T& v)
+        Vector<N, T>& operator*=(T v)
         {
                 for (std::size_t i = 0; i < N; ++i)
                 {
@@ -140,13 +140,26 @@ public:
                 return *this;
         }
 
-        Vector<N, T>& operator/=(const T& v)
+        Vector<N, T>& operator/=(T v)
         {
                 for (std::size_t i = 0; i < N; ++i)
                 {
                         m_data[i] /= v;
                 }
                 return *this;
+        }
+
+        void multiply_add(const Vector<N, T>& a, T b)
+        {
+                for (std::size_t i = 0; i < N; ++i)
+                {
+                        m_data[i] = std::fma(a[i], b, m_data[i]);
+                }
+        }
+
+        void multiply_add(T b, const Vector<N, T>& a)
+        {
+                multiply_add(a, b);
         }
 
         [[nodiscard]] T norm_1() const
@@ -277,12 +290,7 @@ template <std::size_t N, typename T>
 template <std::size_t N, typename T>
 [[nodiscard]] Vector<N, T> operator*(T b, const Vector<N, T>& a)
 {
-        Vector<N, T> res;
-        for (std::size_t i = 0; i < N; ++i)
-        {
-                res[i] = b * a[i];
-        }
-        return res;
+        return a * b;
 }
 
 template <std::size_t N, typename T>
