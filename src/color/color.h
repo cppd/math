@@ -41,79 +41,47 @@ struct RGB8 final
         }
 };
 
-class Color final
+namespace color_implementation
 {
-        static constexpr std::size_t N = 3;
-        using T = float;
+template <typename Derived, std::size_t N, typename T>
+class Samples
+{
+        static_assert(std::is_floating_point_v<T>);
+
+protected:
+        static constexpr std::size_t SIZE = N;
+        using DataType = T;
 
         Vector<N, T> m_data;
 
-        static_assert(std::is_trivially_copyable_v<Vector<N, T>>);
+        template <typename... Args>
+        constexpr explicit Samples(Args... args) : m_data{args...}
+        {
+                static_assert(std::is_base_of_v<Samples, Derived>);
+                static_assert(std::is_final_v<Derived>);
+                static_assert(sizeof(Samples) == sizeof(Derived));
+                static_assert(std::is_trivially_copyable_v<Derived>);
+        }
+
+        ~Samples() = default;
+
+        [[nodiscard]] std::string to_string(const std::string_view& name) const
+        {
+                std::ostringstream oss;
+                oss.precision(limits<T>::max_digits10);
+                static_assert(N == 3);
+                oss << name;
+                oss << '(';
+                oss << m_data[0];
+                for (std::size_t i = 1; i < N; ++i)
+                {
+                        oss << ", " << m_data[i];
+                }
+                oss << ')';
+                return oss.str();
+        }
 
 public:
-        using DataType = T;
-
-        Color()
-        {
-        }
-
-        constexpr explicit Color(T grayscale) : m_data(grayscale)
-        {
-        }
-
-        constexpr Color(T red, T green, T blue) : m_data(red, green, blue)
-        {
-                static_assert(N == 3);
-        }
-
-        constexpr explicit Color(const RGB8& c)
-                : m_data(
-                        color::srgb_uint8_to_linear_float(c.red),
-                        color::srgb_uint8_to_linear_float(c.green),
-                        color::srgb_uint8_to_linear_float(c.blue))
-        {
-                static_assert(N == 3);
-        }
-
-        template <typename F>
-        [[nodiscard]] std::enable_if_t<std::is_same_v<F, T>, const Vector<3, T>&> rgb() const
-        {
-                static_assert(N == 3);
-                return m_data;
-        }
-
-        template <typename F>
-        [[nodiscard]] std::enable_if_t<!std::is_same_v<F, T>, Vector<3, F>> rgb() const
-        {
-                static_assert(N == 3);
-                static_assert(std::is_floating_point_v<F>);
-                return to_vector<F>(m_data);
-        }
-
-        [[nodiscard]] RGB8 rgb8() const
-        {
-                static_assert(N == 3);
-                return RGB8(
-                        color::linear_float_to_srgb_uint8<T>(m_data[0]),
-                        color::linear_float_to_srgb_uint8<T>(m_data[1]),
-                        color::linear_float_to_srgb_uint8<T>(m_data[2]));
-        }
-
-        template <typename F>
-        void set_rgb(const Vector<3, F>& rgb)
-        {
-                static_assert(N == 3);
-                static_assert(std::is_floating_point_v<F>);
-
-                m_data = to_vector<F>(rgb);
-        }
-
-        [[nodiscard]] T luminance() const
-        {
-                static_assert(N == 3);
-                return color::linear_float_to_linear_luminance(m_data[0], m_data[1], m_data[2]);
-        }
-
         void clamp()
         {
                 for (std::size_t i = 0; i < N; ++i)
@@ -122,9 +90,9 @@ public:
                 }
         }
 
-        [[nodiscard]] Color clamped() const
+        [[nodiscard]] Derived clamped() const
         {
-                Color c;
+                Derived c;
                 for (std::size_t i = 0; i < N; ++i)
                 {
                         c.m_data[i] = std::clamp(m_data[i], T(0), T(1));
@@ -133,48 +101,48 @@ public:
         }
 
         template <typename F>
-        [[nodiscard]] Color interpolation(const Color& c, F x) const
+        [[nodiscard]] Derived interpolation(const Derived& c, F x) const
         {
-                Color r;
+                Derived r;
                 r.m_data = ::ns::interpolation(m_data, c.m_data, x);
                 return r;
         }
 
-        [[nodiscard]] bool operator==(const Color& c) const
+        [[nodiscard]] bool operator==(const Derived& c) const
         {
                 return m_data == c.m_data;
         }
 
-        Color& operator+=(const Color& c)
+        Derived& operator+=(const Derived& c)
         {
                 m_data += c.m_data;
-                return *this;
+                return *static_cast<Derived*>(this);
         }
 
-        Color& operator-=(const Color& c)
+        Derived& operator-=(const Derived& c)
         {
                 m_data -= c.m_data;
-                return *this;
+                return *static_cast<Derived*>(this);
         }
 
-        Color& operator*=(const Color& c)
+        Derived& operator*=(const Derived& c)
         {
                 m_data *= c.m_data;
-                return *this;
+                return *static_cast<Derived*>(this);
         }
 
         template <typename F>
-        Color& operator*=(F b)
+        Derived& operator*=(F b)
         {
                 m_data *= static_cast<T>(b);
-                return *this;
+                return *static_cast<Derived*>(this);
         }
 
         template <typename F>
-        Color& operator/=(F b)
+        Derived& operator/=(F b)
         {
                 m_data /= static_cast<T>(b);
-                return *this;
+                return *static_cast<Derived*>(this);
         }
 
         [[nodiscard]] bool is_black() const
@@ -237,7 +205,7 @@ public:
                 return true;
         }
 
-        [[nodiscard]] bool equal_to(const Color& c, T relative_error) const
+        [[nodiscard]] bool equal_to(const Derived& c, T relative_error) const
         {
                 for (std::size_t i = 0; i < N; ++i)
                 {
@@ -256,7 +224,7 @@ public:
                 return true;
         }
 
-        [[nodiscard]] bool less_than(const Color& c, T relative_error) const
+        [[nodiscard]] bool less_than(const Derived& c, T relative_error) const
         {
                 for (std::size_t i = 0; i < N; ++i)
                 {
@@ -274,23 +242,78 @@ public:
                 }
                 return true;
         }
+};
+}
+
+class RGB final : public color_implementation::Samples<RGB, 3, float>
+{
+        static constexpr std::size_t N = SIZE;
+        using T = DataType;
+        using Base = Samples<RGB, N, T>;
+
+public:
+        using DataType = T;
+
+        RGB()
+        {
+        }
+
+        constexpr explicit RGB(T v) : Samples(v)
+        {
+        }
+
+        constexpr RGB(T red, T green, T blue) : Samples(red, green, blue)
+        {
+        }
+
+        constexpr explicit RGB(const RGB8& c)
+                : Samples(
+                        color::srgb_uint8_to_linear_float(c.red),
+                        color::srgb_uint8_to_linear_float(c.green),
+                        color::srgb_uint8_to_linear_float(c.blue))
+        {
+        }
+
+        template <typename F>
+        [[nodiscard]] std::enable_if_t<std::is_same_v<F, T>, const Vector<3, T>&> rgb() const
+        {
+                return m_data;
+        }
+
+        template <typename F>
+        [[nodiscard]] std::enable_if_t<!std::is_same_v<F, T>, Vector<3, F>> rgb() const
+        {
+                static_assert(std::is_floating_point_v<F>);
+                return to_vector<F>(m_data);
+        }
+
+        [[nodiscard]] RGB8 rgb8() const
+        {
+                return RGB8(
+                        color::linear_float_to_srgb_uint8<T>(m_data[0]),
+                        color::linear_float_to_srgb_uint8<T>(m_data[1]),
+                        color::linear_float_to_srgb_uint8<T>(m_data[2]));
+        }
+
+        template <typename F>
+        void set_rgb(const Vector<3, F>& rgb)
+        {
+                static_assert(std::is_floating_point_v<F>);
+                m_data = to_vector<F>(rgb);
+        }
+
+        [[nodiscard]] T luminance() const
+        {
+                return color::linear_float_to_linear_luminance(m_data[0], m_data[1], m_data[2]);
+        }
 
         [[nodiscard]] std::string to_string() const
         {
-                std::ostringstream oss;
-                oss.precision(limits<T>::max_digits10);
-                static_assert(N == 3);
-                oss << "rgb";
-                oss << '(';
-                oss << m_data[0];
-                for (std::size_t i = 1; i < N; ++i)
-                {
-                        oss << ", " << m_data[i];
-                }
-                oss << ')';
-                return oss.str();
+                return Base::to_string("rgb");
         }
 };
+
+using Color = RGB;
 
 template <typename F>
 [[nodiscard]] Color interpolation(const Color& a, const Color& b, F x)
