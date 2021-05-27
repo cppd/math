@@ -252,6 +252,20 @@ public:
                 const T s = norm_squared();
                 return s > min && s < max;
         }
+
+        [[nodiscard]] std::string to_string() const
+        {
+                std::ostringstream oss;
+                oss.precision(limits<T>::max_digits10);
+                oss << '(';
+                oss << m_data[0];
+                for (std::size_t i = 1; i < N; ++i)
+                {
+                        oss << ", " << m_data[i];
+                }
+                oss << ')';
+                return oss.str();
+        }
 };
 
 template <std::size_t N, typename T>
@@ -396,9 +410,15 @@ template <typename Dst, std::size_t N, typename Src>
 }
 
 template <typename Dst, std::size_t N, typename Src>
-[[nodiscard]] std::enable_if_t<std::is_same_v<Dst, Src>, const Vector<N, Dst>&> to_vector(const Vector<N, Src>& v)
+[[nodiscard]] std::enable_if_t<std::is_same_v<Dst, Src>, const Vector<N, Src>&> to_vector(const Vector<N, Src>& v)
 {
         return v;
+}
+
+template <typename Dst, std::size_t N, typename Src>
+[[nodiscard]] std::enable_if_t<std::is_same_v<Dst, Src>, Vector<N, Src>&&> to_vector(Vector<N, Src>&& v)
+{
+        return std::move(v);
 }
 
 template <typename Dst, std::size_t N, typename Src>
@@ -426,25 +446,23 @@ template <typename Dst, std::size_t N, typename Src>
 }
 
 template <typename Dst, std::size_t N, typename Src>
-[[nodiscard]] std::enable_if_t<std::is_same_v<Dst, Src>, const std::vector<Vector<N, Dst>>&> to_vector(
+[[nodiscard]] std::enable_if_t<std::is_same_v<Dst, Src>, const std::vector<Vector<N, Src>>&> to_vector(
         const std::vector<Vector<N, Src>>& v)
 {
         return v;
 }
 
+template <typename Dst, std::size_t N, typename Src>
+[[nodiscard]] std::enable_if_t<std::is_same_v<Dst, Src>, std::vector<Vector<N, Src>>&&> to_vector(
+        std::vector<Vector<N, Src>>&& v)
+{
+        return std::move(v);
+}
+
 template <std::size_t N, typename T>
 [[nodiscard]] std::string to_string(const Vector<N, T>& v)
 {
-        std::ostringstream oss;
-        oss.precision(limits<T>::max_digits10);
-        oss << '(';
-        oss << v[0];
-        for (std::size_t i = 1; i < N; ++i)
-        {
-                oss << ", " << v[i];
-        }
-        oss << ')';
-        return oss.str();
+        return v.to_string();
 }
 
 // Если векторы единичные, то это синус угла между векторами

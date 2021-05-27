@@ -91,7 +91,7 @@ bool is_scalar_volume(image::ColorFormat color_format)
 image::Image<1> transfer_function()
 {
         constexpr int SIZE = 256;
-        constexpr Srgb8 COLOR = Srgb8(230, 255, 230);
+        constexpr RGB8 COLOR = RGB8(230, 255, 230);
 
         constexpr float RED = color::srgb_uint8_to_linear_float(COLOR.red);
         constexpr float GREEN = color::srgb_uint8_to_linear_float(COLOR.green);

@@ -27,15 +27,15 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 namespace ns
 {
-struct Srgb8 final
+struct RGB8 final
 {
         const unsigned char red, green, blue;
 
-        constexpr Srgb8(unsigned char red, unsigned char green, unsigned char blue) : red(red), green(green), blue(blue)
+        constexpr RGB8(unsigned char red, unsigned char green, unsigned char blue) : red(red), green(green), blue(blue)
         {
         }
 
-        bool operator==(const Srgb8& v) const
+        bool operator==(const RGB8& v) const
         {
                 return red == v.red && green == v.green && blue == v.blue;
         }
@@ -66,7 +66,7 @@ public:
                 static_assert(N == 3);
         }
 
-        constexpr explicit Color(const Srgb8& c)
+        constexpr explicit Color(const RGB8& c)
                 : m_data(
                         color::srgb_uint8_to_linear_float(c.red),
                         color::srgb_uint8_to_linear_float(c.green),
@@ -76,7 +76,7 @@ public:
         }
 
         template <typename F>
-        [[nodiscard]] std::enable_if_t<std::is_same_v<F, T>, const Vector<3, F>&> rgb() const
+        [[nodiscard]] std::enable_if_t<std::is_same_v<F, T>, const Vector<3, T>&> rgb() const
         {
                 static_assert(N == 3);
                 return m_data;
@@ -87,8 +87,16 @@ public:
         {
                 static_assert(N == 3);
                 static_assert(std::is_floating_point_v<F>);
-
                 return to_vector<F>(m_data);
+        }
+
+        [[nodiscard]] RGB8 rgb8() const
+        {
+                static_assert(N == 3);
+                return RGB8(
+                        color::linear_float_to_srgb_uint8<T>(m_data[0]),
+                        color::linear_float_to_srgb_uint8<T>(m_data[1]),
+                        color::linear_float_to_srgb_uint8<T>(m_data[2]));
         }
 
         template <typename F>
@@ -98,15 +106,6 @@ public:
                 static_assert(std::is_floating_point_v<F>);
 
                 m_data = to_vector<F>(rgb);
-        }
-
-        [[nodiscard]] Srgb8 srgb8() const
-        {
-                static_assert(N == 3);
-                return Srgb8(
-                        color::linear_float_to_srgb_uint8<Color::DataType>(m_data[0]),
-                        color::linear_float_to_srgb_uint8<Color::DataType>(m_data[1]),
-                        color::linear_float_to_srgb_uint8<Color::DataType>(m_data[2]));
         }
 
         [[nodiscard]] T luminance() const
@@ -167,14 +166,14 @@ public:
         template <typename F>
         Color& operator*=(F b)
         {
-                m_data *= static_cast<Color::DataType>(b);
+                m_data *= static_cast<T>(b);
                 return *this;
         }
 
         template <typename F>
         Color& operator/=(F b)
         {
-                m_data /= static_cast<Color::DataType>(b);
+                m_data /= static_cast<T>(b);
                 return *this;
         }
 

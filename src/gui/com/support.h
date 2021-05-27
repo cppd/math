@@ -95,7 +95,7 @@ void set_widget_color(QWidget* widget, const Color& c);
 
 void set_slider_to_middle(QSlider* slider);
 
-void append_to_text_edit(QPlainTextEdit* text_edit, const std::string& text, const Srgb8& color) noexcept;
+void append_to_text_edit(QPlainTextEdit* text_edit, const std::string& text, const RGB8& color) noexcept;
 
 window::WindowID widget_window_id(const QWidget* widget);
 double widget_pixels_per_inch(const QWidget* widget);

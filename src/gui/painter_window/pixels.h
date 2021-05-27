@@ -73,7 +73,7 @@ class PainterPixels final : public Pixels, public painter::Notifier<N - 1>
         const GlobalIndex<N - 1, long long> m_global_index;
         const std::vector<int> m_screen_size;
         const Color m_background_color;
-        const Srgb8 m_background_color_srgb8 = m_background_color.srgb8();
+        const RGB8 m_background_color_srgb8 = m_background_color.rgb8();
         const long long m_slice_count;
 
         const std::size_t m_raw_slice_size = RAW_PIXEL_SIZE * m_screen_size[0] * m_screen_size[1];
@@ -122,7 +122,7 @@ class PainterPixels final : public Pixels, public painter::Notifier<N - 1>
 
                 if (alpha >= 1)
                 {
-                        const Srgb8 srgb8 = color.srgb8();
+                        const RGB8 srgb8 = color.rgb8();
                         srgba8[0] = srgb8.red;
                         srgba8[1] = srgb8.green;
                         srgba8[2] = srgb8.blue;
@@ -136,7 +136,7 @@ class PainterPixels final : public Pixels, public painter::Notifier<N - 1>
                 else
                 {
                         const Color c = color + (1 - alpha) * m_background_color;
-                        const Srgb8 srgb8 = c.srgb8();
+                        const RGB8 srgb8 = c.rgb8();
                         srgba8[0] = srgb8.red;
                         srgba8[1] = srgb8.green;
                         srgba8[2] = srgb8.blue;

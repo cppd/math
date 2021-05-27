@@ -51,11 +51,11 @@ namespace
 //        return false;
 //}
 
-void append_text(QPlainTextEdit* text_edit, const std::string& text, const Srgb8& color)
+void append_text(QPlainTextEdit* text_edit, const std::string& text, const RGB8& color)
 {
         // text_edit->moveCursor(QTextCursor::End);
 
-        if (color == Srgb8(0, 0, 0))
+        if (color == RGB8(0, 0, 0))
         {
                 text_edit->appendPlainText(QString::fromStdString(text));
         }
@@ -143,12 +143,12 @@ Color qcolor_to_rgb(const QColor& c)
         unsigned char r = std::clamp(c.red(), 0, 255);
         unsigned char g = std::clamp(c.green(), 0, 255);
         unsigned char b = std::clamp(c.blue(), 0, 255);
-        return Color(Srgb8(r, g, b));
+        return Color(RGB8(r, g, b));
 }
 
 QColor rgb_to_qcolor(const Color& c)
 {
-        Srgb8 srgb8 = c.srgb8();
+        RGB8 srgb8 = c.rgb8();
         return QColor(srgb8.red, srgb8.green, srgb8.blue);
 }
 
@@ -182,7 +182,7 @@ void set_slider_to_middle(QSlider* slider)
         slider->setValue(slider->minimum() + (slider->maximum() - slider->minimum()) / 2);
 }
 
-void append_to_text_edit(QPlainTextEdit* text_edit, const std::string& text, const Srgb8& color) noexcept
+void append_to_text_edit(QPlainTextEdit* text_edit, const std::string& text, const RGB8& color) noexcept
 {
         try
         {

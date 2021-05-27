@@ -33,7 +33,7 @@ class Log final
         struct Message
         {
                 std::string text;
-                Srgb8 color;
+                RGB8 color;
                 template <typename T, typename C>
                 Message(T&& text, C&& color) : text(std::forward<T>(text)), color(std::forward<C>(color))
                 {
