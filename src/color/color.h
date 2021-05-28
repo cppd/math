@@ -49,10 +49,10 @@ class Samples
         static_assert(std::is_floating_point_v<T>);
 
 protected:
+        Vector<N, T> m_data;
+
         static constexpr std::size_t SIZE = N;
         using DataType = T;
-
-        Vector<N, T> m_data;
 
         template <typename... Args>
         constexpr explicit Samples(Args... args) : m_data{args...}
@@ -82,6 +82,18 @@ protected:
         }
 
 public:
+        template <typename F>
+        void multiply_add(const Derived& a, F b)
+        {
+                m_data.multiply_add(a.m_data, static_cast<T>(b));
+        }
+
+        template <typename F>
+        void multiply_add(F b, const Derived& a)
+        {
+                multiply_add(a, b);
+        }
+
         void clamp()
         {
                 for (std::size_t i = 0; i < N; ++i)
@@ -98,51 +110,6 @@ public:
                         c.m_data[i] = std::clamp(m_data[i], T(0), T(1));
                 }
                 return c;
-        }
-
-        template <typename F>
-        [[nodiscard]] Derived interpolation(const Derived& c, F x) const
-        {
-                Derived r;
-                r.m_data = ::ns::interpolation(m_data, c.m_data, x);
-                return r;
-        }
-
-        [[nodiscard]] bool operator==(const Derived& c) const
-        {
-                return m_data == c.m_data;
-        }
-
-        Derived& operator+=(const Derived& c)
-        {
-                m_data += c.m_data;
-                return *static_cast<Derived*>(this);
-        }
-
-        Derived& operator-=(const Derived& c)
-        {
-                m_data -= c.m_data;
-                return *static_cast<Derived*>(this);
-        }
-
-        Derived& operator*=(const Derived& c)
-        {
-                m_data *= c.m_data;
-                return *static_cast<Derived*>(this);
-        }
-
-        template <typename F>
-        Derived& operator*=(F b)
-        {
-                m_data *= static_cast<T>(b);
-                return *static_cast<Derived*>(this);
-        }
-
-        template <typename F>
-        Derived& operator/=(F b)
-        {
-                m_data /= static_cast<T>(b);
-                return *static_cast<Derived*>(this);
         }
 
         [[nodiscard]] bool is_black() const
@@ -242,17 +209,97 @@ public:
                 }
                 return true;
         }
+
+        //
+
+        [[nodiscard]] bool operator==(const Derived& c) const
+        {
+                return m_data == c.m_data;
+        }
+
+        Derived& operator+=(const Derived& c)
+        {
+                m_data += c.m_data;
+                return *static_cast<Derived*>(this);
+        }
+
+        Derived& operator-=(const Derived& c)
+        {
+                m_data -= c.m_data;
+                return *static_cast<Derived*>(this);
+        }
+
+        Derived& operator*=(const Derived& c)
+        {
+                m_data *= c.m_data;
+                return *static_cast<Derived*>(this);
+        }
+
+        template <typename F>
+        Derived& operator*=(F b)
+        {
+                m_data *= static_cast<T>(b);
+                return *static_cast<Derived*>(this);
+        }
+
+        template <typename F>
+        Derived& operator/=(F b)
+        {
+                m_data /= static_cast<T>(b);
+                return *static_cast<Derived*>(this);
+        }
+
+        //
+
+        template <typename F>
+        [[nodiscard]] friend Derived interpolation(const Derived& a, const Derived& b, F x)
+        {
+                Derived r;
+                r.m_data = ::ns::interpolation(a.m_data, b.m_data, x);
+                return r;
+        }
+
+        [[nodiscard]] friend Derived operator+(const Derived& a, const Derived& b)
+        {
+                return Derived(a) += b;
+        }
+
+        [[nodiscard]] friend Derived operator-(const Derived& a, const Derived& b)
+        {
+                return Derived(a) -= b;
+        }
+
+        template <typename F>
+        [[nodiscard]] friend Derived operator*(const Derived& a, F b)
+        {
+                return Derived(a) *= b;
+        }
+
+        template <typename F>
+        [[nodiscard]] friend Derived operator*(F b, const Derived& a)
+        {
+                return Derived(a) *= b;
+        }
+
+        [[nodiscard]] friend Derived operator*(const Derived& a, const Derived& b)
+        {
+                return Derived(a) *= b;
+        }
+
+        template <typename F>
+        [[nodiscard]] friend Derived operator/(const Derived& a, F b)
+        {
+                return Derived(a) /= b;
+        }
 };
 }
 
 class RGB final : public color_implementation::Samples<RGB, 3, float>
 {
-        static constexpr std::size_t N = SIZE;
-        using T = DataType;
-        using Base = Samples<RGB, N, T>;
+        using T = Samples::DataType;
 
 public:
-        using DataType = T;
+        using DataType = Samples::DataType;
 
         RGB()
         {
@@ -309,53 +356,14 @@ public:
 
         [[nodiscard]] std::string to_string() const
         {
-                return Base::to_string("rgb");
+                return Samples::to_string("rgb");
         }
 };
 
-using Color = RGB;
-
-template <typename F>
-[[nodiscard]] Color interpolation(const Color& a, const Color& b, F x)
-{
-        return a.interpolation(b, x);
-}
-
-[[nodiscard]] inline Color operator+(const Color& a, const Color& b)
-{
-        return Color(a) += b;
-}
-
-[[nodiscard]] inline Color operator-(const Color& a, const Color& b)
-{
-        return Color(a) -= b;
-}
-
-template <typename F>
-[[nodiscard]] Color operator*(const Color& a, F b)
-{
-        return Color(a) *= b;
-}
-
-template <typename F>
-[[nodiscard]] Color operator*(F b, const Color& a)
-{
-        return Color(a) *= b;
-}
-
-[[nodiscard]] inline Color operator*(const Color& a, const Color& b)
-{
-        return Color(a) *= b;
-}
-
-template <typename F>
-[[nodiscard]] Color operator/(const Color& a, F b)
-{
-        return Color(a) /= b;
-}
-
-[[nodiscard]] inline std::string to_string(const Color& c)
+[[nodiscard]] inline std::string to_string(const RGB& c)
 {
         return c.to_string();
 }
+
+using Color = RGB;
 }
