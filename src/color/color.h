@@ -17,13 +17,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
+#include "color_samples.h"
 #include "conversion.h"
-
-#include <src/numerical/vec.h>
-
-#include <algorithm>
-#include <cmath>
-#include <sstream>
 
 namespace ns
 {
@@ -41,280 +36,27 @@ struct RGB8 final
         }
 };
 
-namespace color_implementation
+class RGB final : public color::ColorSamples<RGB, 3, float>
 {
-template <typename Derived, std::size_t N, typename T>
-class Samples
-{
-        static_assert(std::is_floating_point_v<T>);
-
-protected:
-        Vector<N, T> m_data;
-
-        static constexpr std::size_t SIZE = N;
-        using DataType = T;
-
-        template <typename... Args>
-        constexpr explicit Samples(Args... args) : m_data{args...}
-        {
-                static_assert(std::is_base_of_v<Samples, Derived>);
-                static_assert(std::is_final_v<Derived>);
-                static_assert(sizeof(Samples) == sizeof(Derived));
-                static_assert(std::is_trivially_copyable_v<Derived>);
-        }
-
-        ~Samples() = default;
-
-        [[nodiscard]] std::string to_string(const std::string_view& name) const
-        {
-                std::ostringstream oss;
-                oss.precision(limits<T>::max_digits10);
-                static_assert(N == 3);
-                oss << name;
-                oss << '(';
-                oss << m_data[0];
-                for (std::size_t i = 1; i < N; ++i)
-                {
-                        oss << ", " << m_data[i];
-                }
-                oss << ')';
-                return oss.str();
-        }
+        using T = ColorSamples::DataType;
 
 public:
-        template <typename F>
-        void multiply_add(const Derived& a, F b)
-        {
-                m_data.multiply_add(a.m_data, static_cast<T>(b));
-        }
-
-        template <typename F>
-        void multiply_add(F b, const Derived& a)
-        {
-                multiply_add(a, b);
-        }
-
-        void clamp()
-        {
-                for (std::size_t i = 0; i < N; ++i)
-                {
-                        m_data[i] = std::clamp(m_data[i], T(0), T(1));
-                }
-        }
-
-        [[nodiscard]] Derived clamped() const
-        {
-                Derived c;
-                for (std::size_t i = 0; i < N; ++i)
-                {
-                        c.m_data[i] = std::clamp(m_data[i], T(0), T(1));
-                }
-                return c;
-        }
-
-        [[nodiscard]] bool is_black() const
-        {
-                for (std::size_t i = 0; i < N; ++i)
-                {
-                        if (!(m_data[0] <= 0))
-                        {
-                                return false;
-                        }
-                }
-                return true;
-        }
-
-        [[nodiscard]] bool has_nan() const
-        {
-                for (std::size_t i = 0; i < N; ++i)
-                {
-                        if (std::isnan(m_data[i]))
-                        {
-                                return true;
-                        }
-                }
-                return false;
-        }
-
-        [[nodiscard]] bool is_finite() const
-        {
-                for (std::size_t i = 0; i < N; ++i)
-                {
-                        if (!std::isfinite(m_data[i]))
-                        {
-                                return false;
-                        }
-                }
-                return true;
-        }
-
-        [[nodiscard]] bool is_non_negative() const
-        {
-                for (std::size_t i = 0; i < N; ++i)
-                {
-                        if (!(m_data[i] >= 0))
-                        {
-                                return false;
-                        }
-                }
-                return true;
-        }
-
-        [[nodiscard]] bool is_in_range(T low, T high) const
-        {
-                for (std::size_t i = 0; i < N; ++i)
-                {
-                        if (!(m_data[i] >= low && m_data[i] <= high))
-                        {
-                                return false;
-                        }
-                }
-                return true;
-        }
-
-        [[nodiscard]] bool equal_to(const Derived& c, T relative_error) const
-        {
-                for (std::size_t i = 0; i < N; ++i)
-                {
-                        T c1 = m_data[i];
-                        T c2 = c.m_data[i];
-                        if (c1 == c2)
-                        {
-                                continue;
-                        }
-                        T max = std::max(std::abs(c1), std::abs(c2));
-                        if (!(std::abs(c1 - c2) / max < relative_error))
-                        {
-                                return false;
-                        }
-                }
-                return true;
-        }
-
-        [[nodiscard]] bool less_than(const Derived& c, T relative_error) const
-        {
-                for (std::size_t i = 0; i < N; ++i)
-                {
-                        T c1 = m_data[i];
-                        T c2 = c.m_data[i];
-                        if (c1 <= c2)
-                        {
-                                continue;
-                        }
-                        T max = std::max(std::abs(c1), std::abs(c2));
-                        if (!(std::abs(c1 - c2) / max < relative_error))
-                        {
-                                return false;
-                        }
-                }
-                return true;
-        }
-
-        //
-
-        [[nodiscard]] bool operator==(const Derived& c) const
-        {
-                return m_data == c.m_data;
-        }
-
-        Derived& operator+=(const Derived& c)
-        {
-                m_data += c.m_data;
-                return *static_cast<Derived*>(this);
-        }
-
-        Derived& operator-=(const Derived& c)
-        {
-                m_data -= c.m_data;
-                return *static_cast<Derived*>(this);
-        }
-
-        Derived& operator*=(const Derived& c)
-        {
-                m_data *= c.m_data;
-                return *static_cast<Derived*>(this);
-        }
-
-        template <typename F>
-        Derived& operator*=(F b)
-        {
-                m_data *= static_cast<T>(b);
-                return *static_cast<Derived*>(this);
-        }
-
-        template <typename F>
-        Derived& operator/=(F b)
-        {
-                m_data /= static_cast<T>(b);
-                return *static_cast<Derived*>(this);
-        }
-
-        //
-
-        template <typename F>
-        [[nodiscard]] friend Derived interpolation(const Derived& a, const Derived& b, F x)
-        {
-                Derived r;
-                r.m_data = ::ns::interpolation(a.m_data, b.m_data, x);
-                return r;
-        }
-
-        [[nodiscard]] friend Derived operator+(const Derived& a, const Derived& b)
-        {
-                return Derived(a) += b;
-        }
-
-        [[nodiscard]] friend Derived operator-(const Derived& a, const Derived& b)
-        {
-                return Derived(a) -= b;
-        }
-
-        template <typename F>
-        [[nodiscard]] friend Derived operator*(const Derived& a, F b)
-        {
-                return Derived(a) *= b;
-        }
-
-        template <typename F>
-        [[nodiscard]] friend Derived operator*(F b, const Derived& a)
-        {
-                return Derived(a) *= b;
-        }
-
-        [[nodiscard]] friend Derived operator*(const Derived& a, const Derived& b)
-        {
-                return Derived(a) *= b;
-        }
-
-        template <typename F>
-        [[nodiscard]] friend Derived operator/(const Derived& a, F b)
-        {
-                return Derived(a) /= b;
-        }
-};
-}
-
-class RGB final : public color_implementation::Samples<RGB, 3, float>
-{
-        using T = Samples::DataType;
-
-public:
-        using DataType = Samples::DataType;
+        using DataType = ColorSamples::DataType;
 
         RGB()
         {
         }
 
-        constexpr explicit RGB(T v) : Samples(v)
+        constexpr explicit RGB(T v) : ColorSamples(v)
         {
         }
 
-        constexpr RGB(T red, T green, T blue) : Samples(red, green, blue)
+        constexpr RGB(T red, T green, T blue) : ColorSamples(red, green, blue)
         {
         }
 
         constexpr explicit RGB(const RGB8& c)
-                : Samples(
+                : ColorSamples(
                         color::srgb_uint8_to_linear_float(c.red),
                         color::srgb_uint8_to_linear_float(c.green),
                         color::srgb_uint8_to_linear_float(c.blue))
@@ -354,16 +96,11 @@ public:
                 return color::linear_float_to_linear_luminance(m_data[0], m_data[1], m_data[2]);
         }
 
-        [[nodiscard]] std::string to_string() const
+        [[nodiscard]] friend std::string to_string(const RGB& c)
         {
-                return Samples::to_string("rgb");
+                return c.to_string("rgb");
         }
 };
-
-[[nodiscard]] inline std::string to_string(const RGB& c)
-{
-        return c.to_string();
-}
 
 using Color = RGB;
 }
