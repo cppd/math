@@ -54,7 +54,6 @@ protected:
         {
                 std::ostringstream oss;
                 oss.precision(limits<T>::max_digits10);
-                static_assert(N == 3);
                 oss << name;
                 oss << '(';
                 oss << m_data[0];
