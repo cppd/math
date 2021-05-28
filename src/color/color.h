@@ -40,64 +40,64 @@ struct RGB8 final
         }
 };
 
-class RGB final : public color::ColorSamples<RGB, 3, float>
+template <typename T>
+class RGB final : public color::ColorSamples<RGB<T>, 3, T>
 {
-        using T = ColorSamples::DataType;
+        using Base = color::ColorSamples<RGB<T>, 3, T>;
 
 public:
-        using DataType = ColorSamples::DataType;
+        using DataType = T;
 
         RGB()
         {
         }
 
-        constexpr explicit RGB(T v) : ColorSamples(v)
+        constexpr explicit RGB(T v) : Base(v)
         {
         }
 
-        constexpr RGB(T red, T green, T blue) : ColorSamples(red, green, blue)
+        constexpr RGB(T red, T green, T blue) : Base(red, green, blue)
         {
         }
 
         constexpr explicit RGB(const RGB8& c)
-                : ColorSamples(
-                        color::srgb_uint8_to_linear_float(c.red),
-                        color::srgb_uint8_to_linear_float(c.green),
-                        color::srgb_uint8_to_linear_float(c.blue))
+                : Base(color::srgb_uint8_to_linear_float(c.red),
+                       color::srgb_uint8_to_linear_float(c.green),
+                       color::srgb_uint8_to_linear_float(c.blue))
         {
         }
 
         template <typename F>
         [[nodiscard]] std::enable_if_t<std::is_same_v<F, T>, const Vector<3, T>&> rgb() const
         {
-                return m_data;
+                return Base::m_data;
         }
 
         template <typename F>
         [[nodiscard]] std::enable_if_t<!std::is_same_v<F, T>, Vector<3, F>> rgb() const
         {
                 static_assert(std::is_floating_point_v<F>);
-                return to_vector<F>(m_data);
+                return to_vector<F>(Base::m_data);
         }
 
         [[nodiscard]] RGB8 rgb8() const
         {
                 return RGB8(
-                        color::linear_float_to_srgb_uint8<T>(m_data[0]),
-                        color::linear_float_to_srgb_uint8<T>(m_data[1]),
-                        color::linear_float_to_srgb_uint8<T>(m_data[2]));
+                        color::linear_float_to_srgb_uint8<T>(Base::m_data[0]),
+                        color::linear_float_to_srgb_uint8<T>(Base::m_data[1]),
+                        color::linear_float_to_srgb_uint8<T>(Base::m_data[2]));
         }
 
         template <typename F>
         void set_rgb(const Vector<3, F>& rgb)
         {
                 static_assert(std::is_floating_point_v<F>);
-                m_data = to_vector<F>(rgb);
+                Base::m_data = to_vector<F>(rgb);
         }
 
         [[nodiscard]] T luminance() const
         {
-                return color::linear_float_to_linear_luminance(m_data[0], m_data[1], m_data[2]);
+                return color::linear_float_to_linear_luminance(Base::m_data[0], Base::m_data[1], Base::m_data[2]);
         }
 
         [[nodiscard]] friend std::string to_string(const RGB& c)
@@ -225,6 +225,6 @@ public:
         }
 };
 
-using Color = RGB;
+using Color = RGB<float>;
 //using Color = Spectrum<380, 720, 64, float>;
 }
