@@ -714,7 +714,7 @@ public:
                 }
 
                 // Этот цвет меняется в set_background_color
-                constexpr Color TEXT_COLOR = Color(RGB8(255, 255, 255));
+                const Color TEXT_COLOR = RGB8(255, 255, 255);
 
                 m_present_mode = VULKAN_DEFAULT_PRESENT_MODE;
 

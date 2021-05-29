@@ -19,14 +19,14 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "color.h"
 
-namespace ns::colors
+namespace ns::colors::rgb
 {
-inline constexpr Color BLACK = Color(RGB8(0, 0, 0));
-inline constexpr Color BLUE = Color(RGB8(0, 0, 255));
-inline constexpr Color CYAN = Color(RGB8(0, 255, 255));
-inline constexpr Color GREEN = Color(RGB8(0, 255, 0));
-inline constexpr Color MAGENTA = Color(RGB8(255, 0, 255));
-inline constexpr Color RED = Color(RGB8(255, 0, 0));
-inline constexpr Color WHITE = Color(RGB8(255, 255, 255));
-inline constexpr Color YELLOW = Color(RGB8(255, 255, 0));
+inline constexpr RGB BLACK(RGB8(0, 0, 0));
+inline constexpr RGB BLUE(RGB8(0, 0, 255));
+inline constexpr RGB CYAN(RGB8(0, 255, 255));
+inline constexpr RGB GREEN(RGB8(0, 255, 0));
+inline constexpr RGB MAGENTA(RGB8(255, 0, 255));
+inline constexpr RGB RED(RGB8(255, 0, 0));
+inline constexpr RGB WHITE(RGB8(255, 255, 255));
+inline constexpr RGB YELLOW(RGB8(255, 255, 0));
 }

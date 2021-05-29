@@ -44,8 +44,8 @@ namespace ns::painter
 {
 namespace
 {
-constexpr Color BACKGROUND_LIGHT = Color(RGB8(50, 100, 150));
-constexpr Color DEFAULT_COLOR = Color(RGB8(150, 170, 150));
+constexpr RGB8 BACKGROUND_LIGHT(50, 100, 150);
+constexpr RGB8 DEFAULT_COLOR(150, 170, 150);
 constexpr Color::DataType METALNESS = 0;
 constexpr Color::DataType LIGHTING_INTENSITY = 1;
 

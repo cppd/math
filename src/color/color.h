@@ -27,10 +27,10 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 namespace ns
 {
-template <typename T>
-class RGB final : public color::ColorSamples<RGB<T>, 3, T>
+class RGB final : public color::ColorSamples<RGB, 3, float>
 {
-        using Base = color::ColorSamples<RGB<T>, 3, T>;
+        using Base = ColorSamples;
+        using T = Base::DataType;
 
 public:
         using DataType = T;
@@ -39,7 +39,7 @@ public:
         {
         }
 
-        constexpr explicit RGB(T v) : Base(v)
+        constexpr explicit RGB(std::type_identity_t<T> v) : Base(v)
         {
         }
 
@@ -47,7 +47,7 @@ public:
         {
         }
 
-        constexpr explicit RGB(const RGB8& c) : Base(c.linear_red(), c.linear_green(), c.linear_blue())
+        constexpr RGB(const RGB8& c) : Base(c.linear_red(), c.linear_green(), c.linear_blue())
         {
         }
 
@@ -96,27 +96,27 @@ class Spectrum final : public color::ColorSamples<Spectrum<FROM, TO, N, T>, N, T
 
         struct Colors
         {
-                std::array<T, N> white;
-                std::array<T, N> cyan;
-                std::array<T, N> magenta;
-                std::array<T, N> yellow;
-                std::array<T, N> red;
-                std::array<T, N> green;
-                std::array<T, N> blue;
+                Vector<N, T> white;
+                Vector<N, T> cyan;
+                Vector<N, T> magenta;
+                Vector<N, T> yellow;
+                Vector<N, T> red;
+                Vector<N, T> green;
+                Vector<N, T> blue;
         };
 
         struct Samples
         {
-                std::array<T, N> x;
-                std::array<T, N> y;
-                std::array<T, N> z;
+                Vector<N, T> x;
+                Vector<N, T> y;
+                Vector<N, T> z;
                 Colors reflectance;
                 Colors illumination;
         };
 
         static Samples create_samples()
         {
-                const auto copy = [](std::array<T, N>* dst, std::vector<T>&& src)
+                const auto copy = [](Vector<N, T>* dst, std::vector<T>&& src)
                 {
                         ASSERT(src.size() == N);
                         for (std::size_t i = 0; i < N; ++i)
@@ -158,6 +158,10 @@ class Spectrum final : public color::ColorSamples<Spectrum<FROM, TO, N, T>, N, T
                 return samples;
         }
 
+        explicit Spectrum(const Vector<3, RGB::DataType>& rgb) : Spectrum(rgb[0], rgb[1], rgb[2])
+        {
+        }
+
 public:
         using DataType = T;
 
@@ -165,15 +169,19 @@ public:
         {
         }
 
-        constexpr explicit Spectrum(T v) : Base(v)
+        constexpr explicit Spectrum(std::type_identity_t<T> v) : Base(v)
         {
         }
 
-        constexpr Spectrum(T /*red*/, T /*green*/, T /*blue*/) : Base(T(0))
+        Spectrum(T /*red*/, T /*green*/, T /*blue*/) : Base(T(0))
         {
         }
 
-        constexpr explicit Spectrum(const RGB8& c) : Spectrum(c.linear_red(), c.linear_green(), c.linear_blue())
+        Spectrum(const RGB& rgb) : Spectrum(rgb.rgb<RGB::DataType>())
+        {
+        }
+
+        Spectrum(const RGB8& c) : Spectrum(c.linear_red(), c.linear_green(), c.linear_blue())
         {
         }
 
@@ -206,6 +214,6 @@ public:
         }
 };
 
-using Color = RGB<float>;
+using Color = RGB;
 //using Color = Spectrum<380, 720, 64, float>;
 }

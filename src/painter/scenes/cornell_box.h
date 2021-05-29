@@ -53,7 +53,7 @@ std::unique_ptr<const Scene<N, T>> create_cornell_box_scene(
         constexpr Color::DataType ALPHA = 1;
         constexpr T METALNESS = 0.1;
         constexpr T ROUGHNESS = 0.2;
-        constexpr Color BACKGROUND_LIGHT = colors::BLACK;
+        const Color BACKGROUND_LIGHT = colors::rgb::BLACK;
 
         std::vector<std::unique_ptr<const Shape<N, T>>> shapes;
         std::vector<std::unique_ptr<const LightSource<N, T>>> light_sources;
@@ -77,14 +77,14 @@ std::unique_ptr<const Scene<N, T>> create_cornell_box_scene(
                 for (unsigned i = 0; i < N - 1; ++i)
                 {
                         shapes.push_back(std::make_unique<HyperplaneParallelotope<N, T>>(
-                                METALNESS, ROUGHNESS, (i >= 1) ? colors::WHITE : colors::RED, ALPHA, org,
+                                METALNESS, ROUGHNESS, (i >= 1) ? colors::rgb::WHITE : colors::rgb::RED, ALPHA, org,
                                 del_elem(walls_vectors, i)));
                         shapes.push_back(std::make_unique<HyperplaneParallelotope<N, T>>(
-                                METALNESS, ROUGHNESS, (i >= 1) ? colors::WHITE : colors::GREEN, ALPHA,
+                                METALNESS, ROUGHNESS, (i >= 1) ? colors::rgb::WHITE : colors::rgb::GREEN, ALPHA,
                                 org + walls_vectors[i], del_elem(walls_vectors, i)));
                 }
                 shapes.push_back(std::make_unique<HyperplaneParallelotope<N, T>>(
-                        METALNESS, ROUGHNESS, colors::WHITE, ALPHA, org + walls_vectors[N - 1],
+                        METALNESS, ROUGHNESS, colors::rgb::WHITE, ALPHA, org + walls_vectors[N - 1],
                         del_elem(walls_vectors, N - 1)));
         }
 
@@ -107,7 +107,7 @@ std::unique_ptr<const Scene<N, T>> create_cornell_box_scene(
                 box_vectors[N - 1] = BOX_SIZE * camera[N - 1];
 
                 shapes.push_back(std::make_unique<Parallelotope<N, T>>(
-                        METALNESS, ROUGHNESS, colors::MAGENTA, ALPHA, box_org, box_vectors));
+                        METALNESS, ROUGHNESS, colors::rgb::MAGENTA, ALPHA, box_org, box_vectors));
         }
 
         // Lamp
@@ -128,7 +128,7 @@ std::unique_ptr<const Scene<N, T>> create_cornell_box_scene(
                 lamp_vectors[N - 2] = LAMP_SIZE * camera[N - 1];
 
                 std::unique_ptr<HyperplaneParallelotope<N, T>> lamp = std::make_unique<HyperplaneParallelotope<N, T>>(
-                        METALNESS, ROUGHNESS, colors::WHITE, ALPHA, lamp_org, lamp_vectors);
+                        METALNESS, ROUGHNESS, colors::rgb::WHITE, ALPHA, lamp_org, lamp_vectors);
                 lamp->set_light_source(Color(50));
 
                 shapes.push_back(std::move(lamp));
