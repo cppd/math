@@ -21,6 +21,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "conversion.h"
 #include "rgb8.h"
 #include "rgb_samples.h"
+#include "xyz_rgb.h"
 #include "xyz_samples.h"
 
 #include <src/com/error.h>
@@ -90,9 +91,11 @@ public:
 template <int FROM, int TO, std::size_t N, typename T>
 class Spectrum final : public color::ColorSamples<Spectrum<FROM, TO, N, T>, N, T>
 {
+        static_assert(N > 3);
+
         using Base = color::ColorSamples<Spectrum<FROM, TO, N, T>, N, T>;
 
-        static_assert(N > 0);
+        static constexpr color::XYZ XYZ_VERSION = color::XYZ_31;
 
         struct Colors
         {
@@ -127,9 +130,9 @@ class Spectrum final : public color::ColorSamples<Spectrum<FROM, TO, N, T>, N, T
 
                 Samples samples;
 
-                copy(&samples.x, color::cie_x_samples<color::XYZ_31>(FROM, TO, N));
-                copy(&samples.y, color::cie_y_samples<color::XYZ_31>(FROM, TO, N));
-                copy(&samples.x, color::cie_z_samples<color::XYZ_31>(FROM, TO, N));
+                copy(&samples.x, color::cie_x_samples<XYZ_VERSION>(FROM, TO, N));
+                copy(&samples.y, color::cie_y_samples<XYZ_VERSION>(FROM, TO, N));
+                copy(&samples.z, color::cie_z_samples<XYZ_VERSION>(FROM, TO, N));
 
                 Colors& reflectance = samples.reflectance;
                 copy(&reflectance.white, color::rgb_reflectance_white_samples(FROM, TO, N));
@@ -158,6 +161,119 @@ class Spectrum final : public color::ColorSamples<Spectrum<FROM, TO, N, T>, N, T
                 return samples;
         }
 
+        //
+
+        static void clamp_negative(Vector<N, T>* v)
+        {
+                for (std::size_t i = 0; i < N; ++i)
+                {
+                        (*v)[i] = std::max<T>(0, (*v)[i]);
+                }
+        }
+
+        // Brian Smits.
+        // An RGB-to-Spectrum Conversion for Reflectances.
+        // Journal of Graphics Tools, 1999.
+        static Vector<N, T> rgb_to_spectrum(T red, T green, T blue, const Colors& c)
+        {
+                ASSERT(is_finite(red));
+                ASSERT(is_finite(green));
+                ASSERT(is_finite(blue));
+
+                red = std::max<T>(0, red);
+                green = std::max<T>(0, green);
+                blue = std::max<T>(0, blue);
+
+                Vector<N, T> spectrum(0);
+
+                if (red <= green && red <= blue)
+                {
+                        spectrum.multiply_add(red, c.white);
+                        if (green <= blue)
+                        {
+                                spectrum.multiply_add(green - red, c.cyan);
+                                spectrum.multiply_add(blue - green, c.blue);
+                        }
+                        else
+                        {
+                                spectrum.multiply_add(blue - red, c.cyan);
+                                spectrum.multiply_add(green - blue, c.green);
+                        }
+                }
+                else if (green <= red && green <= blue)
+                {
+                        spectrum.multiply_add(green, c.white);
+                        if (red <= blue)
+                        {
+                                spectrum.multiply_add(red - green, c.magenta);
+                                spectrum.multiply_add(blue - red, c.blue);
+                        }
+                        else
+                        {
+                                spectrum.multiply_add(blue - green, c.magenta);
+                                spectrum.multiply_add(red - blue, c.red);
+                        }
+                }
+                else if (blue <= red && blue <= green)
+                {
+                        spectrum.multiply_add(blue, c.white);
+                        if (red <= green)
+                        {
+                                spectrum.multiply_add(red - blue, c.yellow);
+                                spectrum.multiply_add(green - red, c.green);
+                        }
+                        else
+                        {
+                                spectrum.multiply_add(green - blue, c.yellow);
+                                spectrum.multiply_add(red - green, c.red);
+                        }
+                }
+                else
+                {
+                        ASSERT(false);
+                        return spectrum;
+                }
+
+                clamp_negative(&spectrum);
+
+                return spectrum;
+        }
+
+        static Vector<N, T> rgb_to_spectrum(T red, T green, T blue)
+        {
+                const Samples& s = samples();
+
+                return rgb_to_spectrum(red, green, blue, s.reflectance);
+        }
+
+        static Vector<3, T> spectrum_to_rgb(Vector<N, T> spectrum)
+        {
+                const Samples& s = samples();
+
+                clamp_negative(&spectrum);
+
+                const T x = dot(spectrum, s.x);
+                const T y = dot(spectrum, s.y);
+                const T z = dot(spectrum, s.z);
+
+                Vector<3, T> rgb = color::xyz_to_linear_srgb<XYZ_VERSION>(x, y, z);
+                rgb[0] = std::clamp<T>(rgb[0], 0, 1);
+                rgb[1] = std::clamp<T>(rgb[1], 0, 1);
+                rgb[2] = std::clamp<T>(rgb[2], 0, 1);
+                return rgb;
+        }
+
+        static T spectrum_to_luminance(Vector<N, T> spectrum)
+        {
+                const Samples& s = samples();
+
+                clamp_negative(&spectrum);
+
+                return dot(spectrum, s.y);
+        }
+
+        //
+
         explicit Spectrum(const Vector<3, RGB::DataType>& rgb) : Spectrum(rgb[0], rgb[1], rgb[2])
         {
         }
@@ -173,7 +289,8 @@ public:
         {
         }
 
-        Spectrum(T /*red*/, T /*green*/, T /*blue*/) : Base(T(0))
+        Spectrum(std::type_identity_t<T> red, std::type_identity_t<T> green, std::type_identity_t<T> blue)
+                : Base(rgb_to_spectrum(red, green, blue))
         {
         }
 
@@ -189,7 +306,7 @@ public:
         [[nodiscard]] Vector<3, F> rgb() const
         {
                 static_assert(std::is_floating_point_v<F>);
-                return Vector<3, F>(0);
+                return to_vector<F>(spectrum_to_rgb(Base::m_data));
         }
 
         [[nodiscard]] RGB8 rgb8() const
@@ -198,14 +315,15 @@ public:
         }
 
         template <typename F>
-        void set_rgb(const Vector<3, F>& /*rgb*/)
+        void set_rgb(const Vector<3, F>& rgb)
         {
                 static_assert(std::is_floating_point_v<F>);
+                Base::m_data = rgb_to_spectrum(rgb[0], rgb[1], rgb[2]);
         }
 
         [[nodiscard]] T luminance() const
         {
-                return 0;
+                return spectrum_to_luminance(Base::m_data);
         }
 
         [[nodiscard]] friend std::string to_string(const Spectrum& c)
