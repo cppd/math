@@ -19,6 +19,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "color_samples.h"
 #include "conversion.h"
+#include "rgb8.h"
 #include "rgb_samples.h"
 #include "xyz_samples.h"
 
@@ -26,20 +27,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 namespace ns
 {
-struct RGB8 final
-{
-        const unsigned char red, green, blue;
-
-        constexpr RGB8(unsigned char red, unsigned char green, unsigned char blue) : red(red), green(green), blue(blue)
-        {
-        }
-
-        bool operator==(const RGB8& v) const
-        {
-                return red == v.red && green == v.green && blue == v.blue;
-        }
-};
-
 template <typename T>
 class RGB final : public color::ColorSamples<RGB<T>, 3, T>
 {
@@ -60,10 +47,7 @@ public:
         {
         }
 
-        constexpr explicit RGB(const RGB8& c)
-                : Base(color::srgb_uint8_to_linear_float(c.red),
-                       color::srgb_uint8_to_linear_float(c.green),
-                       color::srgb_uint8_to_linear_float(c.blue))
+        constexpr explicit RGB(const RGB8& c) : Base(c.linear_red(), c.linear_green(), c.linear_blue())
         {
         }
 
@@ -82,10 +66,7 @@ public:
 
         [[nodiscard]] RGB8 rgb8() const
         {
-                return RGB8(
-                        color::linear_float_to_srgb_uint8<T>(Base::m_data[0]),
-                        color::linear_float_to_srgb_uint8<T>(Base::m_data[1]),
-                        color::linear_float_to_srgb_uint8<T>(Base::m_data[2]));
+                return make_rgb8(Base::m_data);
         }
 
         template <typename F>
@@ -192,7 +173,7 @@ public:
         {
         }
 
-        constexpr explicit Spectrum(const RGB8& /*c*/) : Base(T(0))
+        constexpr explicit Spectrum(const RGB8& c) : Spectrum(c.linear_red(), c.linear_green(), c.linear_blue())
         {
         }
 
@@ -205,7 +186,7 @@ public:
 
         [[nodiscard]] RGB8 rgb8() const
         {
-                return RGB8(0, 0, 0);
+                return make_rgb8(rgb<float>());
         }
 
         template <typename F>
