@@ -28,10 +28,12 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 namespace ns
 {
-class RGB final : public color::ColorSamples<RGB, 3, float>
+namespace color
 {
-        using Base = ColorSamples;
-        using T = Base::DataType;
+template <typename T>
+class RGB final : public ColorSamples<RGB<T>, 3, T>
+{
+        using Base = ColorSamples<RGB<T>, 3, T>;
 
 public:
         using DataType = T;
@@ -44,7 +46,8 @@ public:
         {
         }
 
-        constexpr RGB(T red, T green, T blue) : Base(red, green, blue)
+        constexpr RGB(std::type_identity_t<T> red, std::type_identity_t<T> green, std::type_identity_t<T> blue)
+                : Base(red, green, blue)
         {
         }
 
@@ -79,7 +82,7 @@ public:
 
         [[nodiscard]] T luminance() const
         {
-                return color::linear_float_to_linear_luminance(Base::m_data[0], Base::m_data[1], Base::m_data[2]);
+                return linear_float_to_linear_luminance(Base::m_data[0], Base::m_data[1], Base::m_data[2]);
         }
 
         [[nodiscard]] friend std::string to_string(const RGB& c)
@@ -89,13 +92,15 @@ public:
 };
 
 template <int FROM, int TO, std::size_t N, typename T>
-class Spectrum final : public color::ColorSamples<Spectrum<FROM, TO, N, T>, N, T>
+class Spectrum final : public ColorSamples<Spectrum<FROM, TO, N, T>, N, T>
 {
+        static_assert(FROM >= XYZ_SAMPLES_MIN_WAVELENGTH);
+        static_assert(TO <= XYZ_SAMPLES_MAX_WAVELENGTH);
         static_assert(N > 3);
 
-        using Base = color::ColorSamples<Spectrum<FROM, TO, N, T>, N, T>;
+        using Base = ColorSamples<Spectrum<FROM, TO, N, T>, N, T>;
 
-        static constexpr color::XYZ XYZ_VERSION = color::XYZ_31;
+        static constexpr XYZ XYZ_VERSION = XYZ_31;
 
         struct Colors
         {
@@ -119,7 +124,7 @@ class Spectrum final : public color::ColorSamples<Spectrum<FROM, TO, N, T>, N, T
 
         static Samples create_samples()
         {
-                const auto copy = [](Vector<N, T>* dst, std::vector<T>&& src)
+                const auto copy = [](Vector<N, T>* dst, const std::vector<T>& src)
                 {
                         ASSERT(src.size() == N);
                         for (std::size_t i = 0; i < N; ++i)
@@ -130,27 +135,30 @@ class Spectrum final : public color::ColorSamples<Spectrum<FROM, TO, N, T>, N, T
 
                 Samples samples;
 
-                copy(&samples.x, color::cie_x_samples<XYZ_VERSION>(FROM, TO, N));
-                copy(&samples.y, color::cie_y_samples<XYZ_VERSION>(FROM, TO, N));
-                copy(&samples.z, color::cie_z_samples<XYZ_VERSION>(FROM, TO, N));
+                copy(&samples.x, cie_x_samples<XYZ_VERSION>(FROM, TO, N));
+                copy(&samples.y, cie_y_samples<XYZ_VERSION>(FROM, TO, N));
+                copy(&samples.z, cie_z_samples<XYZ_VERSION>(FROM, TO, N));
 
-                Colors& reflectance = samples.reflectance;
-                copy(&reflectance.white, color::rgb_reflectance_white_samples(FROM, TO, N));
-                copy(&reflectance.cyan, color::rgb_reflectance_cyan_samples(FROM, TO, N));
-                copy(&reflectance.magenta, color::rgb_reflectance_magenta_samples(FROM, TO, N));
-                copy(&reflectance.yellow, color::rgb_reflectance_yellow_samples(FROM, TO, N));
-                copy(&reflectance.red, color::rgb_reflectance_red_samples(FROM, TO, N));
-                copy(&reflectance.green, color::rgb_reflectance_green_samples(FROM, TO, N));
-                copy(&reflectance.blue, color::rgb_reflectance_blue_samples(FROM, TO, N));
-
-                Colors& illumination = samples.illumination;
-                copy(&illumination.white, color::rgb_illumination_white_samples(FROM, TO, N));
-                copy(&illumination.cyan, color::rgb_illumination_cyan_samples(FROM, TO, N));
-                copy(&illumination.magenta, color::rgb_illumination_magenta_samples(FROM, TO, N));
-                copy(&illumination.yellow, color::rgb_illumination_yellow_samples(FROM, TO, N));
-                copy(&illumination.red, color::rgb_illumination_red_samples(FROM, TO, N));
-                copy(&illumination.green, color::rgb_illumination_green_samples(FROM, TO, N));
-                copy(&illumination.blue, color::rgb_illumination_blue_samples(FROM, TO, N));
+                {
+                        Colors& c = samples.reflectance;
+                        copy(&c.white, rgb_reflectance_white_samples(FROM, TO, N));
+                        copy(&c.cyan, rgb_reflectance_cyan_samples(FROM, TO, N));
+                        copy(&c.magenta, rgb_reflectance_magenta_samples(FROM, TO, N));
+                        copy(&c.yellow, rgb_reflectance_yellow_samples(FROM, TO, N));
+                        copy(&c.red, rgb_reflectance_red_samples(FROM, TO, N));
+                        copy(&c.green, rgb_reflectance_green_samples(FROM, TO, N));
+                        copy(&c.blue, rgb_reflectance_blue_samples(FROM, TO, N));
+                }
+                {
+                        Colors& c = samples.illumination;
+                        copy(&c.white, rgb_illumination_white_samples(FROM, TO, N));
+                        copy(&c.cyan, rgb_illumination_cyan_samples(FROM, TO, N));
+                        copy(&c.magenta, rgb_illumination_magenta_samples(FROM, TO, N));
+                        copy(&c.yellow, rgb_illumination_yellow_samples(FROM, TO, N));
+                        copy(&c.red, rgb_illumination_red_samples(FROM, TO, N));
+                        copy(&c.green, rgb_illumination_green_samples(FROM, TO, N));
+                        copy(&c.blue, rgb_illumination_blue_samples(FROM, TO, N));
+                }
 
                 return samples;
         }
@@ -256,7 +264,7 @@ class Spectrum final : public color::ColorSamples<Spectrum<FROM, TO, N, T>, N, T
                 const T y = dot(spectrum, s.y);
                 const T z = dot(spectrum, s.z);
 
-                Vector<3, T> rgb = color::xyz_to_linear_srgb<XYZ_VERSION>(x, y, z);
+                Vector<3, T> rgb = xyz_to_linear_srgb<XYZ_VERSION>(x, y, z);
                 rgb[0] = std::clamp<T>(rgb[0], 0, 1);
                 rgb[1] = std::clamp<T>(rgb[1], 0, 1);
                 rgb[2] = std::clamp<T>(rgb[2], 0, 1);
@@ -274,7 +282,8 @@ class Spectrum final : public color::ColorSamples<Spectrum<FROM, TO, N, T>, N, T
 
         //
 
-        explicit Spectrum(const Vector<3, RGB::DataType>& rgb) : Spectrum(rgb[0], rgb[1], rgb[2])
+        template <typename F>
+        explicit Spectrum(const Vector<3, F>& rgb) : Spectrum(rgb[0], rgb[1], rgb[2])
         {
         }
 
@@ -294,8 +303,10 @@ public:
         {
         }
 
-        Spectrum(const RGB& rgb) : Spectrum(rgb.rgb<RGB::DataType>())
+        template <typename F>
+        Spectrum(const RGB<F>& rgb) : Spectrum(rgb.template rgb<F>())
         {
+                static_assert(std::is_floating_point_v<F>);
         }
 
         Spectrum(const RGB8& c) : Spectrum(c.linear_red(), c.linear_green(), c.linear_blue())
@@ -331,7 +342,11 @@ public:
                 return c.to_string("spectrum");
         }
 };
+}
+
+using RGB = color::RGB<float>;
+using Spectrum = color::Spectrum<380, 720, 64, float>;
 
 using Color = RGB;
-//using Color = Spectrum<380, 720, 64, float>;
+//using Color = Spectrum;
 }
