@@ -28,7 +28,7 @@ constexpr T abs(T v)
 }
 
 template <typename T>
-constexpr bool compare(const std::array<T, 3>& a, const std::array<T, 3>& b, T precision)
+constexpr bool compare(const Vector<3, T>& a, const Vector<3, T>& b, T precision)
 {
         for (int i = 0; i < 3; ++i)
         {
@@ -41,23 +41,23 @@ constexpr bool compare(const std::array<T, 3>& a, const std::array<T, 3>& b, T p
 }
 
 template <typename T>
-constexpr bool check_1(const std::array<T, 3>& v, T precision)
+constexpr bool check_1(const Vector<3, T>& v, T precision)
 {
-        const std::array<T, 3> rgb = xyz_to_linear_srgb<XYZ_31, T>(v[0], v[1], v[2]);
-        const std::array<T, 3> xyz = linear_srgb_to_xyz<XYZ_31, T>(rgb[0], rgb[1], rgb[2]);
+        const Vector<3, T> rgb = xyz_to_linear_srgb<XYZ_31, T>(v[0], v[1], v[2]);
+        const Vector<3, T> xyz = linear_srgb_to_xyz<XYZ_31, T>(rgb[0], rgb[1], rgb[2]);
         return compare<T>(v, xyz, precision);
 }
 
 template <typename T>
-constexpr bool check_2(const std::array<T, 3>& v, T precision)
+constexpr bool check_2(const Vector<3, T>& v, T precision)
 {
-        const std::array<T, 3> xyz = linear_srgb_to_xyz<XYZ_31, T>(v[0], v[1], v[2]);
-        const std::array<T, 3> rgb = xyz_to_linear_srgb<XYZ_31, T>(xyz[0], xyz[1], xyz[2]);
+        const Vector<3, T> xyz = linear_srgb_to_xyz<XYZ_31, T>(v[0], v[1], v[2]);
+        const Vector<3, T> rgb = xyz_to_linear_srgb<XYZ_31, T>(xyz[0], xyz[1], xyz[2]);
         return compare<T>(v, rgb, precision);
 }
 
 template <int I, int MAX, typename T>
-constexpr bool check(std::array<T, 3>& v, T precision)
+constexpr bool check(Vector<3, T>& v, T precision)
 {
         static_assert(I >= 0 && I <= 3);
         if constexpr (I == 3)
@@ -82,7 +82,7 @@ template <typename T>
 constexpr bool check(T precision)
 {
         constexpr int MAX = 4;
-        std::array<T, 3> v;
+        Vector<3, T> v;
         return check<0, MAX, T>(v, precision);
 }
 

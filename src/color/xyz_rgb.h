@@ -19,16 +19,16 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "xyz_versions.h"
 
-#include <array>
+#include <src/numerical/vec.h>
 
 namespace ns::color
 {
 template <XYZ xyz_version, typename T>
-constexpr std::enable_if_t<xyz_version == XYZ_31, std::array<T, 3>> xyz_to_linear_srgb(T x, T y, T z)
+constexpr std::enable_if_t<xyz_version == XYZ_31, Vector<3, T>> xyz_to_linear_srgb(T x, T y, T z)
 {
         static_assert(std::is_floating_point_v<T>);
 
-        std::array<T, 3> rgb;
+        Vector<3, T> rgb;
 
         rgb[0] = T(+3.2406255) * x + T(-1.5372080) * y + T(-0.4986286) * z;
         rgb[1] = T(-0.9689307) * x + T(+1.8757561) * y + T(+0.0415175) * z;
@@ -38,11 +38,11 @@ constexpr std::enable_if_t<xyz_version == XYZ_31, std::array<T, 3>> xyz_to_linea
 }
 
 template <XYZ xyz_version, typename T>
-constexpr std::enable_if_t<xyz_version == XYZ_31, std::array<T, 3>> linear_srgb_to_xyz(T r, T g, T b)
+constexpr std::enable_if_t<xyz_version == XYZ_31, Vector<3, T>> linear_srgb_to_xyz(T r, T g, T b)
 {
         static_assert(std::is_floating_point_v<T>);
 
-        std::array<T, 3> xyz;
+        Vector<3, T> xyz;
 
         xyz[0] = T(0.4124) * r + T(0.3576) * g + T(0.1805) * b;
         xyz[1] = T(0.2126) * r + T(0.7152) * g + T(0.0722) * b;
