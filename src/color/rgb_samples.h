@@ -21,19 +21,22 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 namespace ns::color
 {
-std::vector<float> rgb_reflectance_white_samples(int from, int to, int count);
-std::vector<float> rgb_reflectance_cyan_samples(int from, int to, int count);
-std::vector<float> rgb_reflectance_magenta_samples(int from, int to, int count);
-std::vector<float> rgb_reflectance_yellow_samples(int from, int to, int count);
-std::vector<float> rgb_reflectance_red_samples(int from, int to, int count);
-std::vector<float> rgb_reflectance_green_samples(int from, int to, int count);
-std::vector<float> rgb_reflectance_blue_samples(int from, int to, int count);
+constexpr int RGB_SAMPLES_MIN_WAVELENGTH = 380;
+constexpr int RGB_SAMPLES_MAX_WAVELENGTH = 720;
 
-std::vector<float> rgb_illumination_d65_white_samples(int from, int to, int count);
-std::vector<float> rgb_illumination_d65_cyan_samples(int from, int to, int count);
-std::vector<float> rgb_illumination_d65_magenta_samples(int from, int to, int count);
-std::vector<float> rgb_illumination_d65_yellow_samples(int from, int to, int count);
-std::vector<float> rgb_illumination_d65_red_samples(int from, int to, int count);
-std::vector<float> rgb_illumination_d65_green_samples(int from, int to, int count);
-std::vector<float> rgb_illumination_d65_blue_samples(int from, int to, int count);
+std::vector<double> rgb_reflectance_white_samples(int from, int to, int count);
+std::vector<double> rgb_reflectance_cyan_samples(int from, int to, int count);
+std::vector<double> rgb_reflectance_magenta_samples(int from, int to, int count);
+std::vector<double> rgb_reflectance_yellow_samples(int from, int to, int count);
+std::vector<double> rgb_reflectance_red_samples(int from, int to, int count);
+std::vector<double> rgb_reflectance_green_samples(int from, int to, int count);
+std::vector<double> rgb_reflectance_blue_samples(int from, int to, int count);
+
+std::vector<double> rgb_illumination_d65_white_samples(int from, int to, int count);
+std::vector<double> rgb_illumination_d65_cyan_samples(int from, int to, int count);
+std::vector<double> rgb_illumination_d65_magenta_samples(int from, int to, int count);
+std::vector<double> rgb_illumination_d65_yellow_samples(int from, int to, int count);
+std::vector<double> rgb_illumination_d65_red_samples(int from, int to, int count);
+std::vector<double> rgb_illumination_d65_green_samples(int from, int to, int count);
+std::vector<double> rgb_illumination_d65_blue_samples(int from, int to, int count);
 }

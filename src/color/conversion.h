@@ -214,7 +214,7 @@ constexpr float linear_uint16_to_linear_float(T c)
 template <typename T>
 constexpr T linear_float_to_linear_luminance(T red, T green, T blue)
 {
-        static_assert(std::is_same_v<T, float>);
+        static_assert(std::is_floating_point_v<T>);
 
         return T(0.2126) * red + T(0.7152) * green + T(0.0722) * blue;
 }

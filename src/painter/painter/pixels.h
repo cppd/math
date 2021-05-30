@@ -303,6 +303,12 @@ public:
 
                 constexpr std::size_t PIXEL_SIZE = 4 * sizeof(float);
 
+                struct ImagePixel
+                {
+                        Vector<3, float> rgb;
+                        float alpha;
+                };
+
                 image::Image<N> image;
 
                 image.color_format = image::ColorFormat::R32G32B32A32_PREMULTIPLIED;
@@ -316,10 +322,12 @@ public:
                 {
                         const impl::Pixel::Info info = pixel.info();
 
-                        const Vector<3, float> rgb = info.color.rgb<float>();
-                        const std::array<float, 4> rgba{rgb[0], rgb[1], rgb[2], info.alpha};
+                        ImagePixel rgba;
+                        rgba.rgb = info.color.rgb<float>();
+                        rgba.alpha = info.alpha;
 
-                        std::memcpy(ptr, rgba.data(), PIXEL_SIZE);
+                        static_assert(sizeof(rgba) == PIXEL_SIZE);
+                        std::memcpy(ptr, &rgba, PIXEL_SIZE);
                         ptr += PIXEL_SIZE;
                 }
                 ASSERT(ptr == image.pixels.data() + image.pixels.size());

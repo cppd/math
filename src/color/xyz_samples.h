@@ -30,11 +30,11 @@ constexpr int XYZ_SAMPLES_MIN_WAVELENGTH = 380;
 constexpr int XYZ_SAMPLES_MAX_WAVELENGTH = 780;
 
 template <XYZ xyz>
-std::vector<float> cie_x_samples(int from, int to, int count);
+std::vector<double> cie_x_samples(int from, int to, int count);
 
 template <XYZ xyz>
-std::vector<float> cie_y_samples(int from, int to, int count);
+std::vector<double> cie_y_samples(int from, int to, int count);
 
 template <XYZ xyz>
-std::vector<float> cie_z_samples(int from, int to, int count);
+std::vector<double> cie_z_samples(int from, int to, int count);
 }

@@ -26,7 +26,8 @@ namespace ns::color
 {
 namespace
 {
-void check_sum(const std::vector<float>& samples, double min, double max)
+template <typename T>
+void check_sum(const std::vector<T>& samples, double min, double max)
 {
         if (samples.empty())
         {

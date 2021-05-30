@@ -57,7 +57,7 @@ ComputeType integrate(ComputeType from, ComputeType to)
 }
 
 template <XYZ xyz, F f>
-std::vector<float> create_samples(const ComputeType from, const ComputeType to, const int count)
+std::vector<double> create_samples(const ComputeType from, const ComputeType to, const int count)
 {
         constexpr double MIN = XYZ_SAMPLES_MIN_WAVELENGTH;
         constexpr double MAX = XYZ_SAMPLES_MAX_WAVELENGTH;
@@ -80,7 +80,7 @@ std::vector<float> create_samples(const ComputeType from, const ComputeType to, 
 
         static const ComputeType y_integral = cie_y_integral<xyz, ComputeType>(MIN, MAX);
 
-        std::vector<float> samples;
+        std::vector<double> samples;
         samples.reserve(count);
 
         ComputeType wave_1 = from;
@@ -99,28 +99,28 @@ std::vector<float> create_samples(const ComputeType from, const ComputeType to, 
 }
 
 template <XYZ xyz>
-std::vector<float> cie_x_samples(int from, int to, int count)
+std::vector<double> cie_x_samples(int from, int to, int count)
 {
         return create_samples<xyz, F::X>(from, to, count);
 }
 
 template <XYZ xyz>
-std::vector<float> cie_y_samples(int from, int to, int count)
+std::vector<double> cie_y_samples(int from, int to, int count)
 {
         return create_samples<xyz, F::Y>(from, to, count);
 }
 
 template <XYZ xyz>
-std::vector<float> cie_z_samples(int from, int to, int count)
+std::vector<double> cie_z_samples(int from, int to, int count)
 {
         return create_samples<xyz, F::Z>(from, to, count);
 }
 
-template std::vector<float> cie_x_samples<XYZ_31>(int, int, int);
-template std::vector<float> cie_y_samples<XYZ_31>(int, int, int);
-template std::vector<float> cie_z_samples<XYZ_31>(int, int, int);
+template std::vector<double> cie_x_samples<XYZ_31>(int, int, int);
+template std::vector<double> cie_y_samples<XYZ_31>(int, int, int);
+template std::vector<double> cie_z_samples<XYZ_31>(int, int, int);
 
-template std::vector<float> cie_x_samples<XYZ_64>(int, int, int);
-template std::vector<float> cie_y_samples<XYZ_64>(int, int, int);
-template std::vector<float> cie_z_samples<XYZ_64>(int, int, int);
+template std::vector<double> cie_x_samples<XYZ_64>(int, int, int);
+template std::vector<double> cie_y_samples<XYZ_64>(int, int, int);
+template std::vector<double> cie_z_samples<XYZ_64>(int, int, int);
 }

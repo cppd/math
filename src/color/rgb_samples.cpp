@@ -329,81 +329,85 @@ constexpr ComputeType ILLUMINATION_D65_BLUE[] =
 };
 // clang-format on
 
+static_assert(std::is_sorted(std::cbegin(WAVES), std::cend(WAVES)));
+static_assert(std::span(WAVES).front() == RGB_SAMPLES_MIN_WAVELENGTH);
+static_assert(std::span(WAVES).back() == RGB_SAMPLES_MAX_WAVELENGTH);
+
 template <std::size_t COUNT>
-std::vector<float> rgb_samples(const ComputeType (&samples)[COUNT], int from, int to, int count)
+std::vector<double> rgb_samples(const ComputeType (&samples)[COUNT], int from, int to, int count)
 {
         static_assert(COUNT == 32);
 
-        return average<float>(std::span(WAVES), std::span(samples), from, to, count);
+        return average<double>(std::span(WAVES), std::span(samples), from, to, count);
 }
 }
 
-std::vector<float> rgb_reflectance_white_samples(int from, int to, int count)
+std::vector<double> rgb_reflectance_white_samples(int from, int to, int count)
 {
         return rgb_samples(REFLECTANCE_WHITE, from, to, count);
 }
 
-std::vector<float> rgb_reflectance_cyan_samples(int from, int to, int count)
+std::vector<double> rgb_reflectance_cyan_samples(int from, int to, int count)
 {
         return rgb_samples(REFLECTANCE_CYAN, from, to, count);
 }
 
-std::vector<float> rgb_reflectance_magenta_samples(int from, int to, int count)
+std::vector<double> rgb_reflectance_magenta_samples(int from, int to, int count)
 {
         return rgb_samples(REFLECTANCE_MAGENTA, from, to, count);
 }
 
-std::vector<float> rgb_reflectance_yellow_samples(int from, int to, int count)
+std::vector<double> rgb_reflectance_yellow_samples(int from, int to, int count)
 {
         return rgb_samples(REFLECTANCE_YELLOW, from, to, count);
 }
 
-std::vector<float> rgb_reflectance_red_samples(int from, int to, int count)
+std::vector<double> rgb_reflectance_red_samples(int from, int to, int count)
 {
         return rgb_samples(REFLECTANCE_RED, from, to, count);
 }
 
-std::vector<float> rgb_reflectance_green_samples(int from, int to, int count)
+std::vector<double> rgb_reflectance_green_samples(int from, int to, int count)
 {
         return rgb_samples(REFLECTANCE_GREEN, from, to, count);
 }
 
-std::vector<float> rgb_reflectance_blue_samples(int from, int to, int count)
+std::vector<double> rgb_reflectance_blue_samples(int from, int to, int count)
 {
         return rgb_samples(REFLECTANCE_BLUE, from, to, count);
 }
 
-std::vector<float> rgb_illumination_d65_white_samples(int from, int to, int count)
+std::vector<double> rgb_illumination_d65_white_samples(int from, int to, int count)
 {
         return rgb_samples(ILLUMINATION_D65_WHITE, from, to, count);
 }
 
-std::vector<float> rgb_illumination_d65_cyan_samples(int from, int to, int count)
+std::vector<double> rgb_illumination_d65_cyan_samples(int from, int to, int count)
 {
         return rgb_samples(ILLUMINATION_D65_CYAN, from, to, count);
 }
 
-std::vector<float> rgb_illumination_d65_magenta_samples(int from, int to, int count)
+std::vector<double> rgb_illumination_d65_magenta_samples(int from, int to, int count)
 {
         return rgb_samples(ILLUMINATION_D65_MAGENTA, from, to, count);
 }
 
-std::vector<float> rgb_illumination_d65_yellow_samples(int from, int to, int count)
+std::vector<double> rgb_illumination_d65_yellow_samples(int from, int to, int count)
 {
         return rgb_samples(ILLUMINATION_D65_YELLOW, from, to, count);
 }
 
-std::vector<float> rgb_illumination_d65_red_samples(int from, int to, int count)
+std::vector<double> rgb_illumination_d65_red_samples(int from, int to, int count)
 {
         return rgb_samples(ILLUMINATION_D65_RED, from, to, count);
 }
 
-std::vector<float> rgb_illumination_d65_green_samples(int from, int to, int count)
+std::vector<double> rgb_illumination_d65_green_samples(int from, int to, int count)
 {
         return rgb_samples(ILLUMINATION_D65_GREEN, from, to, count);
 }
 
-std::vector<float> rgb_illumination_d65_blue_samples(int from, int to, int count)
+std::vector<double> rgb_illumination_d65_blue_samples(int from, int to, int count)
 {
         return rgb_samples(ILLUMINATION_D65_BLUE, from, to, count);
 }

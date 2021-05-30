@@ -139,6 +139,18 @@ void test_constant()
         constexpr std::array<T, 3> waves{2, 4, 6};
         constexpr std::array<T, 3> samples{1, 1, 1};
 
+        compare(average<ResultType>(waves, samples, 0, 10, 1), {0.4});
+        check<ResultType>(waves, samples, 0, 10, 1);
+
+        compare(average<ResultType>(waves, samples, 1, 3, 1), {0.5});
+        check<ResultType>(waves, samples, 0, 3, 1);
+
+        compare(average<ResultType>(waves, samples, 5, 7, 1), {0.5});
+        check<ResultType>(waves, samples, 5, 7, 1);
+
+        compare(average<ResultType>(waves, samples, 3, 5, 1), {1});
+        check<ResultType>(waves, samples, 3, 5, 1);
+
         compare(average<ResultType>(waves, samples, 0, 10, 4), {0.2, 1, 0.4, 0});
         check<ResultType>(waves, samples, 0, 10, 4);
 

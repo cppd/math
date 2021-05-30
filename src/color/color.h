@@ -70,7 +70,7 @@ public:
 
         [[nodiscard]] RGB8 rgb8() const
         {
-                return make_rgb8(Base::m_data);
+                return make_rgb8(rgb<float>());
         }
 
         [[nodiscard]] T luminance() const
@@ -84,16 +84,20 @@ public:
         }
 };
 
-template <int FROM, int TO, std::size_t N, typename T>
-class Spectrum final : public ColorSamples<Spectrum<FROM, TO, N, T>, N, T>
+template <typename T, std::size_t N>
+class Spectrum final : public ColorSamples<Spectrum<T, N>, N, T>
 {
+        static constexpr XYZ XYZ_VERSION = XYZ_31;
+        static constexpr int FROM = 380;
+        static constexpr int TO = 720;
+
         static_assert(FROM >= XYZ_SAMPLES_MIN_WAVELENGTH);
+        static_assert(FROM >= RGB_SAMPLES_MIN_WAVELENGTH);
         static_assert(TO <= XYZ_SAMPLES_MAX_WAVELENGTH);
+        static_assert(TO <= RGB_SAMPLES_MAX_WAVELENGTH);
         static_assert(N > 3);
 
-        using Base = ColorSamples<Spectrum<FROM, TO, N, T>, N, T>;
-
-        static constexpr XYZ XYZ_VERSION = XYZ_31;
+        using Base = ColorSamples<Spectrum<T, N>, N, T>;
 
         struct Colors
         {
@@ -117,8 +121,9 @@ class Spectrum final : public ColorSamples<Spectrum<FROM, TO, N, T>, N, T>
 
         static Samples create_samples()
         {
-                const auto copy = [](Vector<N, T>* dst, const std::vector<T>& src)
+                const auto copy = []<typename SourceType>(Vector<N, T>* dst, const std::vector<SourceType>& src)
                 {
+                        static_assert(std::is_floating_point_v<SourceType>);
                         ASSERT(src.size() == N);
                         for (std::size_t i = 0; i < N; ++i)
                         {
@@ -331,7 +336,7 @@ public:
 }
 
 using RGB = color::RGB<float>;
-using Spectrum = color::Spectrum<380, 720, 64, float>;
+using Spectrum = color::Spectrum<float, 64>;
 
 using Color = RGB;
 //using Color = Spectrum;
