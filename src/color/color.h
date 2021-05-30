@@ -73,13 +73,6 @@ public:
                 return make_rgb8(Base::m_data);
         }
 
-        template <typename F>
-        void set_rgb(const Vector<3, F>& rgb)
-        {
-                static_assert(std::is_floating_point_v<F>);
-                Base::m_data = to_vector<F>(rgb);
-        }
-
         [[nodiscard]] T luminance() const
         {
                 return linear_float_to_linear_luminance(Base::m_data[0], Base::m_data[1], Base::m_data[2]);
@@ -323,13 +316,6 @@ public:
         [[nodiscard]] RGB8 rgb8() const
         {
                 return make_rgb8(rgb<float>());
-        }
-
-        template <typename F>
-        void set_rgb(const Vector<3, F>& rgb)
-        {
-                static_assert(std::is_floating_point_v<F>);
-                Base::m_data = rgb_to_spectrum(rgb[0], rgb[1], rgb[2]);
         }
 
         [[nodiscard]] T luminance() const
