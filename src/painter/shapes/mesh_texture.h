@@ -35,7 +35,7 @@ namespace ns::painter
 template <std::size_t N>
 class MeshTexture
 {
-        std::vector<Color> m_data;
+        std::vector<Vector<3, float>> m_rgb_data;
         std::array<int, N> m_size;
         std::array<int, N> m_max;
         GlobalIndex<N, long long> m_global_index;
@@ -61,9 +61,9 @@ class MeshTexture
 
                 m_global_index = decltype(m_global_index)(m_size);
 
-                m_data.clear();
-                m_data.shrink_to_fit();
-                m_data.resize(m_global_index.count());
+                m_rgb_data.clear();
+                m_rgb_data.shrink_to_fit();
+                m_rgb_data.resize(m_global_index.count());
         }
 
 public:
@@ -73,11 +73,17 @@ public:
 
                 image::format_conversion(
                         image.color_format, image.pixels, image::ColorFormat::R32G32B32,
-                        std::as_writable_bytes(std::span(m_data.data(), m_data.size())));
+                        std::as_writable_bytes(std::span(m_rgb_data.data(), m_rgb_data.size())));
 
-                for (Color& c : m_data)
+                for (Vector<3, float>& c : m_rgb_data)
                 {
-                        c.clamp();
+                        if (!is_finite(c))
+                        {
+                                error("Not finite color " + to_string(c) + " in texture");
+                        }
+                        c[0] = std::clamp<float>(c[0], 0, 1);
+                        c[1] = std::clamp<float>(c[1], 0, 1);
+                        c[2] = std::clamp<float>(c[2], 0, 1);
                 }
         }
 
@@ -113,7 +119,7 @@ public:
                         }
                 }
 
-                std::array<Color, (1 << N)> pixels;
+                std::array<Vector<3, float>, (1 << N)> pixels;
 
                 for (unsigned i = 0; i < pixels.size(); ++i)
                 {
@@ -123,10 +129,12 @@ public:
                                 int coordinate = ((1 << n) & i) ? x1[n] : x0[n];
                                 index += m_global_index.stride(n) * coordinate;
                         }
-                        pixels[i] = m_data[index];
+                        pixels[i] = m_rgb_data[index];
                 }
 
-                return interpolation(pixels, x);
+                Vector<3, float> rgb = interpolation(pixels, x);
+
+                return Color(rgb[0], rgb[1], rgb[2]);
         }
 };
 }
