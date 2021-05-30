@@ -124,19 +124,24 @@ bool check_range(const T1& v, const T2& min, const T3& max)
         return v >= min && v <= max;
 }
 
-template <typename T>
-bool check_color(const Vector<3, T>& v)
+Color read_color(const char* str)
 {
-        static_assert(std::is_floating_point_v<T>);
+        static constexpr float MIN = 0;
+        static constexpr float MAX = 1;
 
-        for (std::size_t i = 0; i < 3; ++i)
+        float red;
+        float green;
+        float blue;
+
+        read_float(str, &red, &green, &blue);
+
+        if (!(check_range(red, MIN, MAX) && check_range(green, MIN, MAX) && check_range(blue, MIN, MAX)))
         {
-                if (!(v[i] >= 0 && v[i] <= 1))
-                {
-                        return false;
-                }
+                error("RGB components (" + to_string(red) + ", " + to_string(green) + ", " + to_string(blue)
+                      + ") are not in the range [0, 1]");
         }
-        return true;
+
+        return Color(red, green, blue);
 }
 
 template <std::size_t N>
@@ -344,12 +349,12 @@ void read_float_texture(const char* str, Vector<N, T>* v)
 {
         T tmp;
 
-        int n = read_vector(str, v, &tmp, std::make_integer_sequence<unsigned, N>()).first;
+        int n = read_float(str, v, &tmp).first;
 
         if (n != N && n != N + 1)
         {
-                error(std::string("Error read " + to_string(N) + " or " + to_string(N + 1) + " floating points of ")
-                      + type_name<T>() + " type");
+                error("Error read " + to_string(N) + " or " + to_string(N + 1) + " floating points of " + type_name<T>()
+                      + " type");
         }
 
         if (n == N + 1 && tmp != 0)
@@ -1016,16 +1021,14 @@ void read_lib(
                                 {
                                         continue;
                                 }
-
-                                Vector<3, float> rgb;
-                                read_float(&data[second_b], &rgb);
-
-                                if (!check_color(rgb))
+                                try
                                 {
-                                        error("Error Ka in material " + mtl->name);
+                                        mtl->Ka = read_color(&data[second_b]);
                                 }
-
-                                mtl->Ka.set_rgb(rgb);
+                                catch (const std::exception& e)
+                                {
+                                        error("Reading Ka in material " + mtl->name + "\n" + e.what());
+                                }
                         }
                         else if (str_equal(first, MTL_Kd))
                         {
@@ -1033,16 +1036,14 @@ void read_lib(
                                 {
                                         continue;
                                 }
-
-                                Vector<3, float> rgb;
-                                read_float(&data[second_b], &rgb);
-
-                                if (!check_color(rgb))
+                                try
                                 {
-                                        error("Error Kd in material " + mtl->name);
+                                        mtl->Kd = read_color(&data[second_b]);
                                 }
-
-                                mtl->Kd.set_rgb(rgb);
+                                catch (const std::exception& e)
+                                {
+                                        error("Reading Kd in material " + mtl->name + "\n" + e.what());
+                                }
                         }
                         else if (str_equal(first, MTL_Ks))
                         {
@@ -1050,16 +1051,14 @@ void read_lib(
                                 {
                                         continue;
                                 }
-
-                                Vector<3, float> rgb;
-                                read_float(&data[second_b], &rgb);
-
-                                if (!check_color(rgb))
+                                try
                                 {
-                                        error("Error Ks in material " + mtl->name);
+                                        mtl->Ks = read_color(&data[second_b]);
                                 }
-
-                                mtl->Ks.set_rgb(rgb);
+                                catch (const std::exception& e)
+                                {
+                                        error("Reading Ks in material " + mtl->name + "\n" + e.what());
+                                }
                         }
                         else if (str_equal(first, MTL_Ns))
                         {

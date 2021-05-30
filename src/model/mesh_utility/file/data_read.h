@@ -132,7 +132,7 @@ bool read_one_float_from_string(const char** str, T* p)
         }
         *str = end;
         return true;
-};
+}
 
 template <typename... T>
 int string_to_floats(const char** str, T*... floats)
@@ -152,48 +152,63 @@ int string_to_floats(const char** str, T*... floats)
 
         return cnt;
 }
+
+template <std::size_t N, typename T, unsigned... I>
+int read_vector(const char** str, Vector<N, T>* v, std::integer_sequence<unsigned, I...>&&)
+{
+        static_assert(N == sizeof...(I));
+        return string_to_floats(str, &(*v)[I]...);
 }
 
 template <std::size_t N, typename T, unsigned... I>
-std::pair<int, const char*> read_vector(const char* str, Vector<N, T>* v, std::integer_sequence<unsigned, I...>&&)
+int read_vector(const char** str, Vector<N, T>* v, T* n, std::integer_sequence<unsigned, I...>&&)
 {
         static_assert(N == sizeof...(I));
-        namespace impl = data_read_implementation;
-
-        int cnt = impl::string_to_floats(&str, &(*v)[I]...);
-        return {cnt, str};
+        return string_to_floats(str, &(*v)[I]..., n);
+}
 }
 
-template <std::size_t N, typename T, unsigned... I>
-std::pair<int, const char*> read_vector(const char* str, Vector<N, T>* v, T* n, std::integer_sequence<unsigned, I...>&&)
+template <std::size_t N, typename T>
+[[nodiscard]] std::pair<int, const char*> read_float(const char* str, Vector<N, T>* v, T* n)
 {
-        static_assert(N == sizeof...(I));
         namespace impl = data_read_implementation;
 
-        int cnt = impl::string_to_floats(&str, &(*v)[I]..., n);
+        int cnt = impl::read_vector(&str, v, n, std::make_integer_sequence<unsigned, N>());
         return {cnt, str};
 }
 
 template <std::size_t N, typename T>
 const char* read_float(const char* str, Vector<N, T>* v)
 {
-        const auto [cnt, ptr] = read_vector(str, v, std::make_integer_sequence<unsigned, N>());
-        if (N != cnt)
-        {
-                error("Error read " + std::to_string(N) + " floating points of " + type_name<T>() + " type");
-        }
-        return ptr;
-}
-
-template <typename T>
-const char* read_float(const char* str, T* v)
-{
-        static_assert(std::is_floating_point_v<T>);
         namespace impl = data_read_implementation;
 
-        if (1 != impl::string_to_floats(&str, v))
+        int cnt = impl::read_vector(&str, v, std::make_integer_sequence<unsigned, N>());
+        if (N != cnt)
         {
-                error(std::string("Error read 1 floating point of ") + type_name<T>() + " type");
+                error("Error reading " + std::to_string(N) + " floating point numbers of " + type_name<T>()
+                      + " type, found " + std::to_string(cnt) + " numbers");
+        }
+        return str;
+}
+
+template <typename... Args>
+std::enable_if_t<(sizeof...(Args) > 0) && (std::is_floating_point_v<Args> && ...), const char*> read_float(
+        const char* str,
+        Args*... args)
+{
+        namespace impl = data_read_implementation;
+
+        static constexpr int N = sizeof...(Args);
+        static_assert(N > 0);
+        using T = std::tuple_element_t<0, std::tuple<Args...>>;
+        static_assert((std::is_floating_point_v<Args> && ...));
+        static_assert((std::is_same_v<T, Args> && ...));
+
+        int cnt = impl::string_to_floats(&str, args...);
+        if (N != cnt)
+        {
+                error("Error reading " + std::to_string(N) + " floating point numbers of " + type_name<T>()
+                      + " type, found " + std::to_string(cnt) + " numbers");
         }
         return str;
 }
