@@ -151,13 +151,13 @@ class Spectrum final : public ColorSamples<Spectrum<FROM, TO, N, T>, N, T>
                 }
                 {
                         Colors& c = samples.illumination;
-                        copy(&c.white, rgb_illumination_white_samples(FROM, TO, N));
-                        copy(&c.cyan, rgb_illumination_cyan_samples(FROM, TO, N));
-                        copy(&c.magenta, rgb_illumination_magenta_samples(FROM, TO, N));
-                        copy(&c.yellow, rgb_illumination_yellow_samples(FROM, TO, N));
-                        copy(&c.red, rgb_illumination_red_samples(FROM, TO, N));
-                        copy(&c.green, rgb_illumination_green_samples(FROM, TO, N));
-                        copy(&c.blue, rgb_illumination_blue_samples(FROM, TO, N));
+                        copy(&c.white, rgb_illumination_d65_white_samples(FROM, TO, N));
+                        copy(&c.cyan, rgb_illumination_d65_cyan_samples(FROM, TO, N));
+                        copy(&c.magenta, rgb_illumination_d65_magenta_samples(FROM, TO, N));
+                        copy(&c.yellow, rgb_illumination_d65_yellow_samples(FROM, TO, N));
+                        copy(&c.red, rgb_illumination_d65_red_samples(FROM, TO, N));
+                        copy(&c.green, rgb_illumination_d65_green_samples(FROM, TO, N));
+                        copy(&c.blue, rgb_illumination_d65_blue_samples(FROM, TO, N));
                 }
 
                 return samples;

@@ -29,11 +29,11 @@ std::vector<float> rgb_reflectance_red_samples(int from, int to, int count);
 std::vector<float> rgb_reflectance_green_samples(int from, int to, int count);
 std::vector<float> rgb_reflectance_blue_samples(int from, int to, int count);
 
-std::vector<float> rgb_illumination_white_samples(int from, int to, int count);
-std::vector<float> rgb_illumination_cyan_samples(int from, int to, int count);
-std::vector<float> rgb_illumination_magenta_samples(int from, int to, int count);
-std::vector<float> rgb_illumination_yellow_samples(int from, int to, int count);
-std::vector<float> rgb_illumination_red_samples(int from, int to, int count);
-std::vector<float> rgb_illumination_green_samples(int from, int to, int count);
-std::vector<float> rgb_illumination_blue_samples(int from, int to, int count);
+std::vector<float> rgb_illumination_d65_white_samples(int from, int to, int count);
+std::vector<float> rgb_illumination_d65_cyan_samples(int from, int to, int count);
+std::vector<float> rgb_illumination_d65_magenta_samples(int from, int to, int count);
+std::vector<float> rgb_illumination_d65_yellow_samples(int from, int to, int count);
+std::vector<float> rgb_illumination_d65_red_samples(int from, int to, int count);
+std::vector<float> rgb_illumination_d65_green_samples(int from, int to, int count);
+std::vector<float> rgb_illumination_d65_blue_samples(int from, int to, int count);
 }
