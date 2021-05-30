@@ -51,7 +51,7 @@ struct Pixels
 
         virtual const std::vector<int>& screen_size() const = 0;
 
-        virtual std::span<const std::byte> slice_r8g8b8a8_with_background(long long slice_number) const = 0;
+        virtual std::span<const std::byte> slice_r8g8b8a8(long long slice_number) const = 0;
         virtual const std::vector<long long>& busy_indices_2d() const = 0;
         virtual painter::Statistics statistics() const = 0;
 
@@ -73,7 +73,6 @@ class PainterPixels final : public Pixels, public painter::Notifier<N - 1>
         const GlobalIndex<N - 1, long long> m_global_index;
         const std::vector<int> m_screen_size;
         const Color m_background_color;
-        const RGB8 m_background_color_srgb8 = m_background_color.rgb8();
         const long long m_slice_count;
 
         const std::size_t m_raw_slice_size = RAW_PIXEL_SIZE * m_screen_size[0] * m_screen_size[1];
@@ -114,38 +113,19 @@ class PainterPixels final : public Pixels, public painter::Notifier<N - 1>
                 m_busy_indices_2d[thread_number] = NULL_INDEX;
         }
 
-        void pixel_set(const std::array<int, N - 1>& pixel, const Color& color, Color::DataType alpha) override
+        void pixel_set(const std::array<int, N - 1>& pixel, const Vector<3, float>& rgb) override
         {
                 static_assert(RAW_COLOR_FORMAT == image::ColorFormat::R8G8B8A8_SRGB);
 
-                std::array<uint8_t, 4> srgba8;
+                static constexpr uint8_t ALPHA = limits<uint8_t>::max();
 
-                if (alpha >= 1)
-                {
-                        const RGB8 srgb8 = color.rgb8();
-                        srgba8[0] = srgb8.red;
-                        srgba8[1] = srgb8.green;
-                        srgba8[2] = srgb8.blue;
-                }
-                else if (alpha <= 0)
-                {
-                        srgba8[0] = m_background_color_srgb8.red;
-                        srgba8[1] = m_background_color_srgb8.green;
-                        srgba8[2] = m_background_color_srgb8.blue;
-                }
-                else
-                {
-                        const Color c = color + (1 - alpha) * m_background_color;
-                        const RGB8 srgb8 = c.rgb8();
-                        srgba8[0] = srgb8.red;
-                        srgba8[1] = srgb8.green;
-                        srgba8[2] = srgb8.blue;
-                }
-
-                srgba8[3] = limits<uint8_t>::max();
+                const RGB8 rgb8 = make_rgb8(rgb);
+                const std::array<uint8_t, 4> rgba8{rgb8.red, rgb8.green, rgb8.blue, ALPHA};
 
                 const long long index = m_global_index.compute(flip_vertically(pixel));
-                std::memcpy(&m_raw_pixels[RAW_PIXEL_SIZE * index], srgba8.data(), RAW_PIXEL_SIZE);
+
+                static_assert(sizeof(rgba8) == RAW_PIXEL_SIZE);
+                std::memcpy(&m_raw_pixels[RAW_PIXEL_SIZE * index], rgba8.data(), RAW_PIXEL_SIZE);
         }
 
         void pass_done(image::Image<N - 1>&& image) override
@@ -177,7 +157,7 @@ class PainterPixels final : public Pixels, public painter::Notifier<N - 1>
                 return m_painter->statistics();
         }
 
-        std::span<const std::byte> slice_r8g8b8a8_with_background(long long slice_number) const override
+        std::span<const std::byte> slice_r8g8b8a8(long long slice_number) const override
         {
                 check_slice_number(slice_number);
 

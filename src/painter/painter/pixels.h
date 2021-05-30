@@ -173,6 +173,9 @@ class Pixels final
         const std::array<int, N> m_screen_size;
         const std::array<int, N> m_screen_max = pixels_implementation::max_values_for_size(m_screen_size);
 
+        const Color m_background_color;
+        const Vector<3, float> m_background_color_rgb32 = m_background_color.rgb<float>();
+
         Notifier<N>* const m_notifier;
 
         const GlobalIndex<N, long long> m_global_index;
@@ -216,9 +219,28 @@ class Pixels final
                 region<0>(min, max, p, f);
         }
 
+        Vector<3, float> to_rgb(const pixels_implementation::Pixel::Info& info) const
+        {
+                Vector<3, float> rgb;
+                if (info.alpha >= 1)
+                {
+                        return info.color.rgb<float>();
+                }
+                else if (info.alpha <= 0)
+                {
+                        return m_background_color_rgb32;
+                }
+                else
+                {
+                        const Color c = info.color + (1 - info.alpha) * m_background_color;
+                        return c.rgb<float>();
+                }
+        }
+
 public:
-        Pixels(const std::array<int, N>& screen_size, Notifier<N>* notifier)
+        Pixels(const std::array<int, N>& screen_size, const Color& background_color, Notifier<N>* notifier)
                 : m_screen_size(screen_size),
+                  m_background_color(background_color),
                   m_notifier(notifier),
                   m_global_index(screen_size),
                   m_pixels(m_global_index.count()),
@@ -291,9 +313,9 @@ public:
 
                                std::lock_guard lg(m_pixel_locks[region_pixel_index]);
 
-                               m_pixels[region_pixel_index].merge(color_sum, hit_weight_sum, background_weight_sum);
-                               const impl::Pixel::Info info = m_pixels[region_pixel_index].info();
-                               m_notifier->pixel_set(region_pixel, info.color, info.alpha);
+                               impl::Pixel& p = m_pixels[region_pixel_index];
+                               p.merge(color_sum, hit_weight_sum, background_weight_sum);
+                               m_notifier->pixel_set(region_pixel, to_rgb(p.info()));
                        });
         }
 

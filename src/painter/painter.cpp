@@ -82,8 +82,14 @@ struct PixelData final
         SamplerStratifiedJittered<N - 1, T> sampler;
         Pixels<N - 1, T> pixels;
 
-        PixelData(const Projector<N, T>& projector, int samples_per_pixel, Notifier<N - 1>* notifier)
-                : projector(projector), sampler(samples_per_pixel), pixels(projector.screen_size(), notifier)
+        PixelData(
+                const Projector<N, T>& projector,
+                int samples_per_pixel,
+                const Color& background_color,
+                Notifier<N - 1>* notifier)
+                : projector(projector),
+                  sampler(samples_per_pixel),
+                  pixels(projector.screen_size(), background_color, notifier)
         {
         }
 };
@@ -325,7 +331,8 @@ void painter_thread(
                 try
                 {
                         const PaintData paint_data(scene, smooth_normals);
-                        PixelData<N, T> pixel_data(scene.projector(), samples_per_pixel, notifier);
+                        PixelData<N, T> pixel_data(
+                                scene.projector(), samples_per_pixel, scene.background_light(), notifier);
                         PassData pass_data(max_pass_count);
 
                         statistics->init();

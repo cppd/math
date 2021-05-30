@@ -187,7 +187,7 @@ void PainterWindow::on_timer_timeout()
         ASSERT(std::this_thread::get_id() == m_thread_id);
 
         m_statistics_widget->update(m_pixels->statistics());
-        m_image_widget->update(m_pixels->slice_r8g8b8a8_with_background(m_slice), m_pixels->busy_indices_2d());
+        m_image_widget->update(m_pixels->slice_r8g8b8a8(m_slice), m_pixels->busy_indices_2d());
         m_actions->set_progresses();
 }
 }

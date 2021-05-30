@@ -86,7 +86,7 @@ class Image final : public Notifier<N>
         {
         }
 
-        void pixel_set(const std::array<int, N>&, const Color&, Color::DataType) override
+        void pixel_set(const std::array<int, N>&, const Vector<3, float>&) override
         {
         }
 
