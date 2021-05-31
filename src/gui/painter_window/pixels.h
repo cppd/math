@@ -128,7 +128,7 @@ class PainterPixels final : public Pixels, public painter::Notifier<N - 1>
 
                 const long long index = m_global_index.compute(flip_vertically(pixel));
 
-                static_assert(sizeof(rgba8) == RAW_PIXEL_SIZE);
+                static_assert(std::span(rgba8).size_bytes() == RAW_PIXEL_SIZE);
                 std::memcpy(&m_raw_pixels[RAW_PIXEL_SIZE * index], rgba8.data(), RAW_PIXEL_SIZE);
         }
 
