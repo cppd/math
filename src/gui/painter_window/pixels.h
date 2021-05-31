@@ -41,10 +41,14 @@ struct Pixels
 {
         struct Image
         {
-                std::vector<int> size;
-                Color background_color;
                 image::ColorFormat color_format;
                 std::vector<std::byte> pixels;
+        };
+        struct Images
+        {
+                std::vector<int> size;
+                Image rgb;
+                Image rgba;
         };
 
         virtual ~Pixels() = default;
@@ -55,8 +59,8 @@ struct Pixels
         virtual const std::vector<long long>& busy_indices_2d() const = 0;
         virtual painter::Statistics statistics() const = 0;
 
-        virtual std::optional<Image> slice(long long slice_number) const = 0;
-        virtual std::optional<Image> pixels() const = 0;
+        virtual std::optional<Images> slice(long long slice_number) const = 0;
+        virtual std::optional<Images> pixels() const = 0;
 };
 
 template <std::size_t N, typename T>
@@ -72,14 +76,14 @@ class PainterPixels final : public Pixels, public painter::Notifier<N - 1>
 
         const GlobalIndex<N - 1, long long> m_global_index;
         const std::vector<int> m_screen_size;
-        const Color m_background_color;
         const long long m_slice_count;
 
         const std::size_t m_raw_slice_size = RAW_PIXEL_SIZE * m_screen_size[0] * m_screen_size[1];
         std::vector<std::byte> m_raw_pixels = make_initial_image(m_screen_size, RAW_COLOR_FORMAT);
         std::vector<long long> m_busy_indices_2d;
 
-        std::optional<image::Image<N - 1>> m_image;
+        std::optional<image::Image<N - 1>> m_image_with_background;
+        std::optional<image::Image<N - 1>> m_image_without_background;
         mutable std::mutex m_image_mutex;
 
         std::unique_ptr<painter::Painter<N, T>> m_painter;
@@ -128,11 +132,14 @@ class PainterPixels final : public Pixels, public painter::Notifier<N - 1>
                 std::memcpy(&m_raw_pixels[RAW_PIXEL_SIZE * index], rgba8.data(), RAW_PIXEL_SIZE);
         }
 
-        void pass_done(image::Image<N - 1>&& image) override
+        void pass_done(image::Image<N - 1>&& image_with_background, image::Image<N - 1>&& image_without_background)
+                override
         {
                 std::lock_guard lg(m_image_mutex);
 
-                m_image = std::move(image);
+                m_image_with_background = std::move(image_with_background);
+                m_image_without_background = std::move(image_without_background);
+                ASSERT(m_image_with_background->size == m_image_without_background->size);
         }
 
         void error_message(const std::string& msg) override
@@ -164,49 +171,63 @@ class PainterPixels final : public Pixels, public painter::Notifier<N - 1>
                 return std::span(&m_raw_pixels[slice_number * m_raw_slice_size], m_raw_slice_size);
         }
 
-        std::optional<Image> slice(long long slice_number) const override
+        std::optional<Images> slice(long long slice_number) const override
         {
                 check_slice_number(slice_number);
 
+                const auto slice_pixels = [&](const image::Image<N - 1>& image)
+                {
+                        const long long pixel_size = image::format_pixel_size_in_bytes(image.color_format);
+                        const long long slice_size = pixel_size * m_screen_size[0] * m_screen_size[1];
+                        const std::byte* begin = &image.pixels[slice_number * slice_size];
+                        const std::byte* end = begin + slice_size;
+                        return std::vector(begin, end);
+                };
+
                 std::lock_guard lg(m_image_mutex);
 
-                if (!m_image)
+                ASSERT(m_image_with_background.has_value() == m_image_without_background.has_value());
+                if (!m_image_with_background || !m_image_without_background)
                 {
                         return std::nullopt;
                 }
 
-                std::optional<Image> image(std::in_place);
-                image->size = {m_screen_size[0], m_screen_size[1]};
-                image->background_color = m_background_color;
-                image->color_format = m_image->color_format;
-                image->pixels = [&]()
-                {
-                        const long long pixel_size = image::format_pixel_size_in_bytes(m_image->color_format);
-                        const long long slice_size = pixel_size * m_screen_size[0] * m_screen_size[1];
-                        const std::byte* begin = &(m_image->pixels)[slice_number * slice_size];
-                        const std::byte* end = begin + slice_size;
-                        return std::vector(begin, end);
-                }();
+                const image::Image<N - 1>& rgb = *m_image_with_background;
+                const image::Image<N - 1>& rgba = *m_image_without_background;
 
-                return image;
+                std::optional<Images> images(std::in_place);
+
+                images->size = {m_screen_size[0], m_screen_size[1]};
+                images->rgb.color_format = rgb.color_format;
+                images->rgb.pixels = slice_pixels(rgb);
+                images->rgba.color_format = rgba.color_format;
+                images->rgba.pixels = slice_pixels(rgba);
+
+                return images;
         }
 
-        std::optional<Image> pixels() const override
+        std::optional<Images> pixels() const override
         {
                 std::lock_guard lg(m_image_mutex);
 
-                if (!m_image)
+                ASSERT(m_image_with_background.has_value() == m_image_without_background.has_value());
+                if (!m_image_with_background || !m_image_without_background)
                 {
                         return std::nullopt;
                 }
 
-                std::optional<Image> image(std::in_place);
-                image->size = m_screen_size;
-                image->background_color = m_background_color;
-                image->color_format = m_image->color_format;
-                image->pixels = m_image->pixels;
+                const image::Image<N - 1>& rgb = *m_image_with_background;
+                const image::Image<N - 1>& rgba = *m_image_without_background;
 
-                return image;
+                std::optional<Images> images(std::in_place);
+
+                images->size = m_screen_size;
+                images->rgb.color_format = rgb.color_format;
+                images->rgb.pixels = rgb.pixels;
+                images->rgba.color_format = rgba.color_format;
+                images->rgba.pixels = rgba.pixels;
+
+                return images;
         }
 
 public:
@@ -221,7 +242,6 @@ public:
                           {
                                   return std::vector(array.cbegin(), array.cend());
                           }(scene->projector().screen_size())),
-                  m_background_color(scene->background_light()),
                   m_slice_count(m_global_index.count() / m_screen_size[0] / m_screen_size[1]),
                   m_busy_indices_2d(thread_count, NULL_INDEX),
                   m_painter(painter::create_painter<N, T>(

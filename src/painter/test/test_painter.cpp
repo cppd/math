@@ -90,9 +90,9 @@ class Image final : public Notifier<N>
         {
         }
 
-        void pass_done(image::Image<N>&& image) override
+        void pass_done(image::Image<N>&& image_with_background, image::Image<N>&&) override
         {
-                m_image = std::move(image);
+                m_image = std::move(image_with_background);
         }
 
         void error_message(const std::string& msg) override

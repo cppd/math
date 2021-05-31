@@ -96,15 +96,15 @@ void Actions::set_progresses()
 
 void Actions::save_image(const std::string& action, long long slice) const
 {
-        std::optional<Pixels::Image> image = m_pixels->slice(slice);
-        if (!image)
+        std::optional<Pixels::Images> images = m_pixels->slice(slice);
+        if (!images)
         {
                 MESSAGE_WARNING("Image is not yet available");
                 return;
         }
-        if (image->size.size() != 2)
+        if (images->size.size() != 2)
         {
-                MESSAGE_WARNING("Error 2D image dimension " + to_string(image->size.size()));
+                MESSAGE_WARNING("Error 2D image dimension " + to_string(images->size.size()));
                 return;
         }
 
@@ -113,15 +113,16 @@ void Actions::save_image(const std::string& action, long long slice) const
                 [&]()
                 {
                         return painter_window::save_image(
-                                image->size[0], image->size[1], image->background_color, image->color_format,
-                                std::move(image->pixels));
+                                images->size[0], images->size[1], images->rgb.color_format,
+                                std::move(images->rgb.pixels), images->rgba.color_format,
+                                std::move(images->rgba.pixels));
                 });
 }
 
 void Actions::save_image(const std::string& action) const
 {
-        std::optional<Pixels::Image> image = m_pixels->pixels();
-        if (!image)
+        std::optional<Pixels::Images> images = m_pixels->pixels();
+        if (!images)
         {
                 MESSAGE_WARNING("Image is not yet available");
                 return;
@@ -132,14 +133,15 @@ void Actions::save_image(const std::string& action) const
                 [&]()
                 {
                         return painter_window::save_image(
-                                image->size, image->background_color, image->color_format, std::move(image->pixels));
+                                images->size, images->rgb.color_format, std::move(images->rgb.pixels),
+                                images->rgba.color_format, std::move(images->rgba.pixels));
                 });
 }
 
 void Actions::add_volume(const std::string& action) const
 {
-        std::optional<Pixels::Image> image = m_pixels->pixels();
-        if (!image)
+        std::optional<Pixels::Images> images = m_pixels->pixels();
+        if (!images)
         {
                 MESSAGE_WARNING("Image is not yet available");
                 return;
@@ -150,7 +152,8 @@ void Actions::add_volume(const std::string& action) const
                 [&]()
                 {
                         return painter_window::add_volume(
-                                image->size, image->background_color, image->color_format, std::move(image->pixels));
+                                images->size, images->rgb.color_format, std::move(images->rgb.pixels),
+                                images->rgba.color_format, std::move(images->rgba.pixels));
                 });
 }
 }

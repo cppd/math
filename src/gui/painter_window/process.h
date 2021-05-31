@@ -29,19 +29,22 @@ namespace ns::gui::painter_window
 std::function<void(ProgressRatioList*)> save_image(
         int width,
         int height,
-        const Color& background,
-        image::ColorFormat color_format,
-        std::vector<std::byte>&& pixels);
+        image::ColorFormat color_format_rgb,
+        std::vector<std::byte>&& pixels_rgb,
+        image::ColorFormat color_format_rgba,
+        std::vector<std::byte>&& pixels_rgba);
 
 std::function<void(ProgressRatioList*)> save_image(
         const std::vector<int>& size,
-        const Color& background,
-        image::ColorFormat color_format,
-        std::vector<std::byte>&& pixels);
+        image::ColorFormat color_format_rgb,
+        std::vector<std::byte>&& pixels_rgb,
+        image::ColorFormat color_format_rgba,
+        std::vector<std::byte>&& pixels_rgba);
 
 std::function<void(ProgressRatioList*)> add_volume(
         const std::vector<int>& size,
-        const Color& background,
-        image::ColorFormat color_format,
-        std::vector<std::byte>&& pixels);
+        image::ColorFormat color_format_rgb,
+        std::vector<std::byte>&& pixels_rgb,
+        image::ColorFormat color_format_rgba,
+        std::vector<std::byte>&& pixels_rgba);
 }

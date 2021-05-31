@@ -195,7 +195,10 @@ void prepare_next_pass(
 
         statistics->pass_done();
 
-        notifier->pass_done(pixel_data->pixels.image());
+        image::Image<N - 1> image_with_background;
+        image::Image<N - 1> image_without_background;
+        pixel_data->pixels.images(&image_with_background, &image_without_background);
+        notifier->pass_done(std::move(image_with_background), std::move(image_without_background));
 
         if (pass_data->continue_painting())
         {

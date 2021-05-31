@@ -35,7 +35,6 @@ struct PainterImageParameters final
         std::optional<std::string> path_string;
         bool all;
         bool with_background;
-        bool grayscale;
         bool convert_to_8_bit;
 };
 
@@ -47,7 +46,6 @@ private:
         Ui::PainterImageDialog ui;
 
         const PainterImagePathType m_path_type;
-        const bool m_use_grayscale;
 
         std::optional<PainterImageParameters>& m_parameters;
 
@@ -55,7 +53,6 @@ private:
                 const std::string& title,
                 PainterImagePathType path_type,
                 bool use_all,
-                bool use_grayscale,
                 std::optional<PainterImageParameters>& parameters);
 
         void set_path();
@@ -64,14 +61,12 @@ private:
         void done(int r) override;
 
         void on_select_path_clicked();
-        void on_grayscale_toggled();
         void on_all_toggled();
 
 public:
         [[nodiscard]] static std::optional<PainterImageParameters> show(
                 const std::string& title,
                 PainterImagePathType path_type,
-                bool use_all,
-                bool use_grayscale);
+                bool use_all);
 };
 }

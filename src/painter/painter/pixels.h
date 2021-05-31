@@ -221,7 +221,6 @@ class Pixels final
 
         Vector<3, float> to_rgb(const pixels_implementation::Pixel::Info& info) const
         {
-                Vector<3, float> rgb;
                 if (info.alpha >= 1)
                 {
                         return info.color.rgb<float>();
@@ -319,42 +318,64 @@ public:
                        });
         }
 
-        image::Image<N> image() const
+        void images(image::Image<N>* image_rgb, image::Image<N>* image_rgba) const
         {
                 namespace impl = pixels_implementation;
 
-                constexpr std::size_t PIXEL_SIZE = 4 * sizeof(float);
+                constexpr std::size_t RGB_PIXEL_SIZE = 3 * sizeof(float);
+                constexpr std::size_t RGBA_PIXEL_SIZE = 4 * sizeof(float);
 
-                struct ImagePixel
+                struct RGBA
                 {
                         Vector<3, float> rgb;
                         float alpha;
                 };
 
-                image::Image<N> image;
+                image_rgb->color_format = image::ColorFormat::R32G32B32;
+                image_rgb->size = m_screen_size;
+                image_rgb->pixels.resize(RGB_PIXEL_SIZE * m_pixels.size());
 
-                image.color_format = image::ColorFormat::R32G32B32A32_PREMULTIPLIED;
-                image.size = m_screen_size;
-                image.pixels.resize(PIXEL_SIZE * m_pixels.size());
+                image_rgba->color_format = image::ColorFormat::R32G32B32A32_PREMULTIPLIED;
+                image_rgba->size = m_screen_size;
+                image_rgba->pixels.resize(RGBA_PIXEL_SIZE * m_pixels.size());
 
                 impl::LockGuards lg(m_pixel_locks);
 
-                std::byte* ptr = image.pixels.data();
+                std::byte* ptr_rgb = image_rgb->pixels.data();
+                std::byte* ptr_rgba = image_rgba->pixels.data();
                 for (const impl::Pixel& pixel : m_pixels)
                 {
                         const impl::Pixel::Info info = pixel.info();
 
-                        ImagePixel rgba;
+                        RGBA rgba;
                         rgba.rgb = info.color.rgb<float>();
                         rgba.alpha = info.alpha;
 
-                        static_assert(sizeof(rgba) == PIXEL_SIZE);
-                        std::memcpy(ptr, &rgba, PIXEL_SIZE);
-                        ptr += PIXEL_SIZE;
-                }
-                ASSERT(ptr == image.pixels.data() + image.pixels.size());
+                        Vector<3, float> rgb;
+                        if (info.alpha >= 1)
+                        {
+                                rgb = rgba.rgb;
+                        }
+                        else if (info.alpha <= 0)
+                        {
+                                rgb = m_background_color_rgb32;
+                        }
+                        else
+                        {
+                                const Color c = info.color + (1 - info.alpha) * m_background_color;
+                                rgb = c.rgb<float>();
+                        }
 
-                return image;
+                        static_assert(sizeof(rgb) == RGB_PIXEL_SIZE);
+                        std::memcpy(ptr_rgb, &rgb, RGB_PIXEL_SIZE);
+                        ptr_rgb += RGB_PIXEL_SIZE;
+
+                        static_assert(sizeof(rgba) == RGBA_PIXEL_SIZE);
+                        std::memcpy(ptr_rgba, &rgba, RGBA_PIXEL_SIZE);
+                        ptr_rgba += RGBA_PIXEL_SIZE;
+                }
+                ASSERT(ptr_rgb == image_rgb->pixels.data() + image_rgb->pixels.size());
+                ASSERT(ptr_rgba == image_rgba->pixels.data() + image_rgba->pixels.size());
         }
 };
 }
