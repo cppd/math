@@ -447,17 +447,16 @@ std::unique_ptr<Shape<N, T>> create_mesh(
         return std::make_unique<Mesh<N, T>>(mesh_objects, progress);
 }
 
-#define CREATE_MESH_INSTANTIATION(N, T)                      \
+#define CREATE_MESH_INSTANTIATION_N_T(N, T)                  \
         template std::unique_ptr<Shape<(N), T>> create_mesh( \
                 const std::vector<const mesh::MeshObject<(N)>*>&, ProgressRatio*);
 
-CREATE_MESH_INSTANTIATION(3, float)
-CREATE_MESH_INSTANTIATION(4, float)
-CREATE_MESH_INSTANTIATION(5, float)
-CREATE_MESH_INSTANTIATION(6, float)
+#define CREATE_MESH_INSTANTIATION_N(N)            \
+        CREATE_MESH_INSTANTIATION_N_T((N), float) \
+        CREATE_MESH_INSTANTIATION_N_T((N), double)
 
-CREATE_MESH_INSTANTIATION(3, double)
-CREATE_MESH_INSTANTIATION(4, double)
-CREATE_MESH_INSTANTIATION(5, double)
-CREATE_MESH_INSTANTIATION(6, double)
+CREATE_MESH_INSTANTIATION_N(3)
+CREATE_MESH_INSTANTIATION_N(4)
+CREATE_MESH_INSTANTIATION_N(5)
+CREATE_MESH_INSTANTIATION_N(6)
 }

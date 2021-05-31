@@ -317,19 +317,18 @@ std::unique_ptr<Scene<N, T>> create_storage_scene(
                 background_light, std::move(projector), std::move(light_sources), std::move(shapes));
 }
 
-#define CREATE_STORAGE_SCENE_INSTANTIATION(N, T)                           \
+#define CREATE_STORAGE_SCENE_INSTANTIATION_N_T(N, T)                       \
         template std::unique_ptr<Scene<(N), T>> create_storage_scene(      \
                 const Color&, std::unique_ptr<const Projector<(N), T>>&&,  \
                 std::vector<std::unique_ptr<const LightSource<(N), T>>>&&, \
                 std::vector<std::unique_ptr<const Shape<(N), T>>>&&);
 
-CREATE_STORAGE_SCENE_INSTANTIATION(3, float)
-CREATE_STORAGE_SCENE_INSTANTIATION(4, float)
-CREATE_STORAGE_SCENE_INSTANTIATION(5, float)
-CREATE_STORAGE_SCENE_INSTANTIATION(6, float)
+#define CREATE_STORAGE_SCENE_INSTANTIATION_N(N)            \
+        CREATE_STORAGE_SCENE_INSTANTIATION_N_T((N), float) \
+        CREATE_STORAGE_SCENE_INSTANTIATION_N_T((N), double)
 
-CREATE_STORAGE_SCENE_INSTANTIATION(3, double)
-CREATE_STORAGE_SCENE_INSTANTIATION(4, double)
-CREATE_STORAGE_SCENE_INSTANTIATION(5, double)
-CREATE_STORAGE_SCENE_INSTANTIATION(6, double)
+CREATE_STORAGE_SCENE_INSTANTIATION_N(3)
+CREATE_STORAGE_SCENE_INSTANTIATION_N(4)
+CREATE_STORAGE_SCENE_INSTANTIATION_N(5)
+CREATE_STORAGE_SCENE_INSTANTIATION_N(6)
 }

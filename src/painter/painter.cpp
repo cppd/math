@@ -448,17 +448,16 @@ std::unique_ptr<Painter<N, T>> create_painter(
                 notifier, samples_per_pixel, max_pass_count, std::move(scene), thread_count, smooth_normals);
 }
 
-#define CREATE_PAINTER_INSTANTIATION(N, T)                        \
+#define CREATE_PAINTER_INSTANTIATION_N_T(N, T)                    \
         template std::unique_ptr<Painter<(N), T>> create_painter( \
                 Notifier<(N)-1>*, int, std::optional<int>, std::shared_ptr<const Scene<(N), T>>, int, bool);
 
-CREATE_PAINTER_INSTANTIATION(3, float)
-CREATE_PAINTER_INSTANTIATION(4, float)
-CREATE_PAINTER_INSTANTIATION(5, float)
-CREATE_PAINTER_INSTANTIATION(6, float)
+#define CREATE_PAINTER_INSTANTIATION_N(N)            \
+        CREATE_PAINTER_INSTANTIATION_N_T((N), float) \
+        CREATE_PAINTER_INSTANTIATION_N_T((N), double)
 
-CREATE_PAINTER_INSTANTIATION(3, double)
-CREATE_PAINTER_INSTANTIATION(4, double)
-CREATE_PAINTER_INSTANTIATION(5, double)
-CREATE_PAINTER_INSTANTIATION(6, double)
+CREATE_PAINTER_INSTANTIATION_N(3)
+CREATE_PAINTER_INSTANTIATION_N(4)
+CREATE_PAINTER_INSTANTIATION_N(5)
+CREATE_PAINTER_INSTANTIATION_N(6)
 }
