@@ -195,10 +195,12 @@ void prepare_next_pass(
 
         statistics->pass_done();
 
-        image::Image<N - 1> image_with_background;
-        image::Image<N - 1> image_without_background;
-        pixel_data->pixels.images(&image_with_background, &image_without_background);
-        notifier->pass_done(std::move(image_with_background), std::move(image_without_background));
+        const long long pass_number = statistics->statistics().pass_number;
+        {
+                ImagesWriting lock(notifier->images(pass_number));
+                pixel_data->pixels.images(&lock.image_with_background(), &lock.image_without_background());
+        }
+        notifier->pass_done(pass_number);
 
         if (pass_data->continue_painting())
         {

@@ -24,10 +24,74 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <array>
 #include <memory>
 #include <optional>
+#include <shared_mutex>
 #include <string>
 
 namespace ns::painter
 {
+template <std::size_t N>
+class Images final
+{
+        template <std::size_t>
+        friend class ImagesReading;
+        template <std::size_t>
+        friend class ImagesWriting;
+
+        mutable std::shared_mutex m_mutex;
+        image::Image<N> m_image_with_background;
+        image::Image<N> m_image_without_background;
+
+public:
+        Images() = default;
+
+        Images(const Images&) = delete;
+        Images& operator=(const Images&) = delete;
+        Images(Images&&) = delete;
+        Images& operator=(Images&&) = delete;
+};
+
+template <std::size_t N>
+class ImagesWriting final
+{
+        Images<N>* m_images;
+        std::unique_lock<std::shared_mutex> m_lock;
+
+public:
+        explicit ImagesWriting(Images<N>* images) : m_images(images), m_lock(m_images->m_mutex)
+        {
+        }
+
+        image::Image<N>& image_with_background() const
+        {
+                return m_images->m_image_with_background;
+        }
+        image::Image<N>& image_without_background() const
+        {
+                return m_images->m_image_without_background;
+        }
+};
+
+template <std::size_t N>
+class ImagesReading final
+{
+        const Images<N>* m_images;
+        std::shared_lock<std::shared_mutex> m_lock;
+
+public:
+        explicit ImagesReading(const Images<N>* images) : m_images(images), m_lock(m_images->m_mutex)
+        {
+        }
+
+        const image::Image<N>& image_with_background() const
+        {
+                return m_images->m_image_with_background;
+        }
+        const image::Image<N>& image_without_background() const
+        {
+                return m_images->m_image_without_background;
+        }
+};
+
 template <std::size_t N>
 struct Notifier
 {
@@ -38,7 +102,8 @@ public:
         virtual void thread_busy(unsigned thread_number, const std::array<int, N>& pixel) = 0;
         virtual void thread_free(unsigned thread_number) = 0;
         virtual void pixel_set(const std::array<int, N>& pixel, const Vector<3, float>& rgb) = 0;
-        virtual void pass_done(image::Image<N>&& image_with_background, image::Image<N>&& image_without_background) = 0;
+        virtual Images<N>* images(long long pass_number) = 0;
+        virtual void pass_done(long long pass_number) = 0;
 
         virtual void error_message(const std::string& msg) = 0;
 };

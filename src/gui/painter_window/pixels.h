@@ -28,6 +28,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/image/format.h>
 #include <src/painter/painter.h>
 
+#include <algorithm>
+#include <atomic>
 #include <cstring>
 #include <memory>
 #include <mutex>
@@ -82,9 +84,8 @@ class PainterPixels final : public Pixels, public painter::Notifier<N - 1>
         std::vector<std::byte> m_raw_pixels = make_initial_image(m_screen_size, RAW_COLOR_FORMAT);
         std::vector<long long> m_busy_indices_2d;
 
-        std::optional<image::Image<N - 1>> m_image_with_background;
-        std::optional<image::Image<N - 1>> m_image_without_background;
-        mutable std::mutex m_image_mutex;
+        painter::Images<N - 1> m_painter_images;
+        std::atomic_bool m_painter_images_ready = false;
 
         std::unique_ptr<painter::Painter<N, T>> m_painter;
 
@@ -132,14 +133,14 @@ class PainterPixels final : public Pixels, public painter::Notifier<N - 1>
                 std::memcpy(&m_raw_pixels[RAW_PIXEL_SIZE * index], rgba8.data(), RAW_PIXEL_SIZE);
         }
 
-        void pass_done(image::Image<N - 1>&& image_with_background, image::Image<N - 1>&& image_without_background)
-                override
+        painter::Images<N - 1>* images(long long /*pass_number*/) override
         {
-                std::lock_guard lg(m_image_mutex);
+                return &m_painter_images;
+        }
 
-                m_image_with_background = std::move(image_with_background);
-                m_image_without_background = std::move(image_without_background);
-                ASSERT(m_image_with_background->size == m_image_without_background->size);
+        void pass_done(long long /*pass_number*/) override
+        {
+                m_painter_images_ready = true;
         }
 
         void error_message(const std::string& msg) override
@@ -173,6 +174,11 @@ class PainterPixels final : public Pixels, public painter::Notifier<N - 1>
 
         std::optional<Images> slice(long long slice_number) const override
         {
+                if (!m_painter_images_ready)
+                {
+                        return std::nullopt;
+                }
+
                 check_slice_number(slice_number);
 
                 const auto slice_pixels = [&](const image::Image<N - 1>& image)
@@ -184,16 +190,14 @@ class PainterPixels final : public Pixels, public painter::Notifier<N - 1>
                         return std::vector(begin, end);
                 };
 
-                std::lock_guard lg(m_image_mutex);
+                painter::ImagesReading lock(&m_painter_images);
 
-                ASSERT(m_image_with_background.has_value() == m_image_without_background.has_value());
-                if (!m_image_with_background || !m_image_without_background)
-                {
-                        return std::nullopt;
-                }
+                const image::Image<N - 1>& rgb = lock.image_with_background();
+                const image::Image<N - 1>& rgba = lock.image_without_background();
 
-                const image::Image<N - 1>& rgb = *m_image_with_background;
-                const image::Image<N - 1>& rgba = *m_image_without_background;
+                ASSERT(!rgb.pixels.empty() && !rgb.pixels.empty());
+                ASSERT(std::equal(rgb.size.cbegin(), rgb.size.cend(), m_screen_size.cbegin(), m_screen_size.cend()));
+                ASSERT(std::equal(rgba.size.cbegin(), rgba.size.cend(), m_screen_size.cbegin(), m_screen_size.cend()));
 
                 std::optional<Images> images(std::in_place);
 
@@ -208,16 +212,19 @@ class PainterPixels final : public Pixels, public painter::Notifier<N - 1>
 
         std::optional<Images> pixels() const override
         {
-                std::lock_guard lg(m_image_mutex);
-
-                ASSERT(m_image_with_background.has_value() == m_image_without_background.has_value());
-                if (!m_image_with_background || !m_image_without_background)
+                if (!m_painter_images_ready)
                 {
                         return std::nullopt;
                 }
 
-                const image::Image<N - 1>& rgb = *m_image_with_background;
-                const image::Image<N - 1>& rgba = *m_image_without_background;
+                painter::ImagesReading lock(&m_painter_images);
+
+                const image::Image<N - 1>& rgb = lock.image_with_background();
+                const image::Image<N - 1>& rgba = lock.image_without_background();
+
+                ASSERT(!rgb.pixels.empty() && !rgb.pixels.empty());
+                ASSERT(std::equal(rgb.size.cbegin(), rgb.size.cend(), m_screen_size.cbegin(), m_screen_size.cend()));
+                ASSERT(std::equal(rgba.size.cbegin(), rgba.size.cend(), m_screen_size.cbegin(), m_screen_size.cend()));
 
                 std::optional<Images> images(std::in_place);
 
@@ -253,6 +260,11 @@ public:
                           smooth_normal))
         {
         }
+
+        PainterPixels(const PainterPixels&) = delete;
+        PainterPixels& operator=(const PainterPixels&) = delete;
+        PainterPixels(PainterPixels&&) = delete;
+        PainterPixels& operator=(PainterPixels&&) = delete;
 
         ~PainterPixels() override
         {

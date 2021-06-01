@@ -76,7 +76,8 @@ class Image final : public Notifier<N>
         const std::filesystem::path m_path;
         const Color m_background_color;
 
-        std::optional<image::Image<N>> m_image;
+        std::unique_ptr<Images<N>> m_images = std::make_unique<Images<N>>();
+        std::atomic_bool m_images_ready = false;
 
         void thread_busy(unsigned, const std::array<int, N>&) override
         {
@@ -90,9 +91,14 @@ class Image final : public Notifier<N>
         {
         }
 
-        void pass_done(image::Image<N>&& image_with_background, image::Image<N>&&) override
+        Images<N>* images(long long) override
         {
-                m_image = std::move(image_with_background);
+                return m_images.get();
+        }
+
+        void pass_done(long long) override
+        {
+                m_images_ready = true;
         }
 
         void error_message(const std::string& msg) override
@@ -113,21 +119,12 @@ public:
 
         void write_to_files()
         {
-                if (!m_image)
+                if (!m_images_ready)
                 {
                         error("No painter image to write to files");
                 }
-
-                try
-                {
-                        save_image(m_path, m_background_color, std::move(*m_image));
-                }
-                catch (...)
-                {
-                        m_image.reset();
-                        throw;
-                }
-                m_image.reset();
+                ImagesWriting lock(m_images.get());
+                save_image(m_path, m_background_color, std::move(lock.image_with_background()));
         }
 };
 

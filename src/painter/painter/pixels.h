@@ -225,15 +225,12 @@ class Pixels final
                 {
                         return info.color.rgb<float>();
                 }
-                else if (info.alpha <= 0)
+                if (info.alpha <= 0)
                 {
                         return m_background_color_rgb32;
                 }
-                else
-                {
-                        const Color c = info.color + (1 - info.alpha) * m_background_color;
-                        return c.rgb<float>();
-                }
+                const Color c = info.color + (1 - info.alpha) * m_background_color;
+                return c.rgb<float>();
         }
 
 public:
