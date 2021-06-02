@@ -25,7 +25,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 namespace ns::color
 {
-namespace implementation
+namespace conversion_implementation
 {
 template <typename UInt>
 constexpr float uint_to_float(UInt c)
@@ -139,10 +139,12 @@ inline constexpr std::array<float, 256> SRGB_UINT8_TO_RGB_FLOAT =
 template <typename UInt8>
 constexpr float srgb_uint8_to_linear_float(UInt8 c)
 {
-        static_assert(std::is_same_v<UInt8, std::uint8_t>);
-        static_assert(std::is_same_v<float, std::remove_cvref_t<decltype(implementation::SRGB_UINT8_TO_RGB_FLOAT[c])>>);
+        namespace impl = conversion_implementation;
 
-        return implementation::SRGB_UINT8_TO_RGB_FLOAT[c];
+        static_assert(std::is_same_v<UInt8, std::uint8_t>);
+        static_assert(std::is_same_v<float, std::remove_cvref_t<decltype(impl::SRGB_UINT8_TO_RGB_FLOAT[c])>>);
+
+        return impl::SRGB_UINT8_TO_RGB_FLOAT[c];
 }
 
 template <typename UInt8>
@@ -150,7 +152,7 @@ constexpr float linear_uint8_to_linear_float(UInt8 c)
 {
         static_assert(std::is_same_v<UInt8, std::uint8_t>);
 
-        return implementation::uint_to_float(c);
+        return conversion_implementation::uint_to_float(c);
 }
 
 //
@@ -180,7 +182,7 @@ std::uint8_t linear_float_to_srgb_uint8(T c)
 {
         static_assert(std::is_same_v<T, float>);
 
-        return implementation::float_to_uint<std::uint8_t>(linear_float_to_srgb_float(c));
+        return conversion_implementation::float_to_uint<std::uint8_t>(linear_float_to_srgb_float(c));
 }
 
 template <typename T>
@@ -188,7 +190,7 @@ constexpr std::uint8_t linear_float_to_linear_uint8(T c)
 {
         static_assert(std::is_same_v<T, float>);
 
-        return implementation::float_clamp_to_uint<std::uint8_t>(c);
+        return conversion_implementation::float_clamp_to_uint<std::uint8_t>(c);
 }
 
 //
@@ -198,7 +200,7 @@ constexpr std::uint16_t linear_float_to_linear_uint16(T c)
 {
         static_assert(std::is_same_v<T, float>);
 
-        return implementation::float_clamp_to_uint<std::uint16_t>(c);
+        return conversion_implementation::float_clamp_to_uint<std::uint16_t>(c);
 }
 
 template <typename T>
@@ -206,7 +208,7 @@ constexpr float linear_uint16_to_linear_float(T c)
 {
         static_assert(std::is_same_v<T, std::uint16_t>);
 
-        return implementation::uint_to_float(c);
+        return conversion_implementation::uint_to_float(c);
 }
 
 //
