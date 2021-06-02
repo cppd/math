@@ -17,6 +17,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
+#include <src/color/color.h>
 #include <src/gpu/buffers.h>
 #include <src/numerical/region.h>
 #include <src/vulkan/buffers.h>

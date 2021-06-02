@@ -19,7 +19,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "objects.h"
 
-#include <src/color/color.h>
+#include <src/numerical/vec.h>
 
 #include <string>
 #include <vector>
@@ -49,6 +49,6 @@ Framebuffer create_framebuffer(
         uint32_t height,
         const std::vector<VkImageView>& attachments);
 
-VkClearValue color_clear_value(VkFormat format, VkColorSpaceKHR color_space, const Color& color);
+VkClearValue color_clear_value(VkFormat format, VkColorSpaceKHR color_space, const Vector<3, float>& rgb);
 VkClearValue depth_stencil_clear_value();
 }

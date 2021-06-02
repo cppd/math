@@ -22,6 +22,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "query.h"
 #include "settings.h"
 
+#include <src/color/conversion.h>
 #include <src/com/alg.h>
 #include <src/com/error.h>
 #include <src/com/log.h>
@@ -187,13 +188,12 @@ Framebuffer create_framebuffer(
 
 //
 
-VkClearValue color_clear_value(VkFormat format, VkColorSpaceKHR color_space, const Color& color)
+VkClearValue color_clear_value(VkFormat format, VkColorSpaceKHR color_space, const Vector<3, float>& rgb)
 {
         if (color_space == VK_COLOR_SPACE_SRGB_NONLINEAR_KHR)
         {
                 if (format == VK_FORMAT_R8G8B8A8_UNORM || format == VK_FORMAT_B8G8R8A8_UNORM)
                 {
-                        const Vector<3, float> rgb = color.rgb<float>();
                         VkClearValue clear_value;
                         clear_value.color.float32[0] = color::linear_float_to_srgb_float(rgb[0]);
                         clear_value.color.float32[1] = color::linear_float_to_srgb_float(rgb[1]);
@@ -204,7 +204,6 @@ VkClearValue color_clear_value(VkFormat format, VkColorSpaceKHR color_space, con
 
                 if (format == VK_FORMAT_R8G8B8A8_SRGB || format == VK_FORMAT_B8G8R8A8_SRGB)
                 {
-                        const Vector<3, float> rgb = color.rgb<float>();
                         VkClearValue clear_value;
                         clear_value.color.float32[0] = rgb[0];
                         clear_value.color.float32[1] = rgb[1];

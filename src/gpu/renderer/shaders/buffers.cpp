@@ -168,19 +168,19 @@ void ShaderBuffers::set_viewport(const vec2d& center, const vec2d& factor) const
 
 void ShaderBuffers::set_wireframe_color(const Color& color) const
 {
-        decltype(Drawing().wireframe_color) c = color.rgb<float>();
+        decltype(Drawing().wireframe_color) c = color.rgb32();
         copy_to_drawing_buffer(offsetof(Drawing, wireframe_color), c);
 }
 
 void ShaderBuffers::set_background_color(const Color& color) const
 {
-        decltype(Drawing().background_color) c = color.rgb<float>();
+        decltype(Drawing().background_color) c = color.rgb32();
         copy_to_drawing_buffer(offsetof(Drawing, background_color), c);
 }
 
 void ShaderBuffers::set_clip_plane_color(const Color& color) const
 {
-        decltype(Drawing().clip_plane_color) c = color.rgb<float>();
+        decltype(Drawing().clip_plane_color) c = color.rgb32();
         copy_to_drawing_buffer(offsetof(Drawing, clip_plane_color), c);
 }
 
@@ -192,13 +192,13 @@ void ShaderBuffers::set_normal_length(float length) const
 
 void ShaderBuffers::set_normal_color_positive(const Color& color) const
 {
-        decltype(Drawing().normal_color_positive) c = color.rgb<float>();
+        decltype(Drawing().normal_color_positive) c = color.rgb32();
         copy_to_drawing_buffer(offsetof(Drawing, normal_color_positive), c);
 }
 
 void ShaderBuffers::set_normal_color_negative(const Color& color) const
 {
-        decltype(Drawing().normal_color_negative) c = color.rgb<float>();
+        decltype(Drawing().normal_color_negative) c = color.rgb32();
         copy_to_drawing_buffer(offsetof(Drawing, normal_color_negative), c);
 }
 
@@ -308,7 +308,7 @@ void MeshBuffer::set_coordinates(const mat4d& model_matrix, const mat3d& normal_
 
 void MeshBuffer::set_color(const Color& color) const
 {
-        decltype(Mesh().color) c = color.rgb<float>();
+        decltype(Mesh().color) c = color.rgb32();
         vulkan::map_and_write_to_buffer(m_uniform_buffer, offsetof(Mesh, color), c);
 }
 
@@ -429,7 +429,7 @@ void VolumeBuffer::set_parameters(
         volume.isosurface_alpha = isosurface_alpha;
         volume.isosurface = isosurface ? 1 : 0;
         volume.isovalue = isovalue;
-        volume.color = color.rgb<float>();
+        volume.color = color.rgb32();
 
         m_uniform_buffer_volume.write(
                 command_pool, queue, offset, size, reinterpret_cast<const char*>(&volume) + offset);

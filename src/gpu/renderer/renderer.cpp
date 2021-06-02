@@ -701,7 +701,8 @@ class Impl final : public Renderer
                         commands_init_uint32_storage_image(command_buffer, *m_object_image, OBJECTS_CLEAR_VALUE);
                 };
 
-                const std::vector<VkClearValue> clear_values = m_render_buffers->clear_values(m_clear_color);
+                const std::vector<VkClearValue> clear_values =
+                        m_render_buffers->clear_values(m_clear_color.clamped().rgb32());
                 info.clear_values = &clear_values;
 
                 m_clear_command_buffers = vulkan::create_command_buffers(info);

@@ -17,8 +17,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
-#include <src/color/color.h>
 #include <src/numerical/region.h>
+#include <src/numerical/vec.h>
 
 #include <vector>
 #include <vulkan/vulkan.h>
@@ -41,7 +41,7 @@ public:
         virtual VkRenderPass render_pass_clear() const = 0;
         virtual const std::vector<VkFramebuffer>& framebuffers_clear() const = 0;
 
-        virtual std::vector<VkClearValue> clear_values(const Color& clear_color) const = 0;
+        virtual std::vector<VkClearValue> clear_values(const Vector<3, float>& rgb) const = 0;
 
         virtual void commands_depth_copy(
                 VkCommandBuffer command_buffer,

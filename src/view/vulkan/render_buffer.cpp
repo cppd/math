@@ -178,7 +178,7 @@ class Impl3D : public gpu::RenderBuffers3D
         virtual VkRenderPass render_pass_clear_3d() const = 0;
         virtual const std::vector<VkFramebuffer>& framebuffers_clear_3d() const = 0;
 
-        virtual std::vector<VkClearValue> clear_values_3d(const Color& clear_color) const = 0;
+        virtual std::vector<VkClearValue> clear_values_3d(const Vector<3, float>& rgb) const = 0;
 
         //
 
@@ -217,9 +217,9 @@ class Impl3D : public gpu::RenderBuffers3D
                 return framebuffers_clear_3d();
         }
 
-        std::vector<VkClearValue> clear_values(const Color& clear_color) const final
+        std::vector<VkClearValue> clear_values(const Vector<3, float>& rgb) const final
         {
-                return clear_values_3d(clear_color);
+                return clear_values_3d(rgb);
         }
 
 protected:
@@ -351,7 +351,7 @@ class Impl final : public RenderBuffers, public Impl3D, public Impl2D
         VkRenderPass render_pass_clear_3d() const override;
         const std::vector<VkFramebuffer>& framebuffers_clear_3d() const override;
 
-        std::vector<VkClearValue> clear_values_3d(const Color& clear_color) const override;
+        std::vector<VkClearValue> clear_values_3d(const Vector<3, float>& rgb) const override;
 
         //
 
@@ -607,10 +607,10 @@ const std::vector<VkFramebuffer>& Impl::framebuffers_clear_3d() const
         return m_3d_framebuffers_handles_clear;
 }
 
-std::vector<VkClearValue> Impl::clear_values_3d(const Color& clear_color) const
+std::vector<VkClearValue> Impl::clear_values_3d(const Vector<3, float>& rgb) const
 {
         std::vector<VkClearValue> clear_values(2);
-        clear_values[0] = vulkan::color_clear_value(m_swapchain_format, m_swapchain_color_space, clear_color);
+        clear_values[0] = vulkan::color_clear_value(m_swapchain_format, m_swapchain_color_space, rgb);
         clear_values[1] = vulkan::depth_stencil_clear_value();
         return clear_values;
 }

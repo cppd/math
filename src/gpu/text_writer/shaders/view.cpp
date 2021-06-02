@@ -143,7 +143,7 @@ void Memory::set_matrix(const mat4d& matrix) const
 
 void Memory::set_color(const Color& color) const
 {
-        decltype(Drawing().color) c = color.rgb<float>();
+        decltype(Drawing().color) c = color.rgb32();
         copy_to_drawing_buffer(offsetof(Drawing, color), c);
 }
 

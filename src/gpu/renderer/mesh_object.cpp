@@ -411,9 +411,9 @@ std::vector<MaterialBuffer> load_materials(
         for (const typename mesh::Mesh<3>::Material& mesh_material : mesh.materials)
         {
                 MaterialBuffer::Material mb;
-                mb.Ka = mesh_material.Ka.clamped().rgb<float>();
-                mb.Kd = mesh_material.Kd.clamped().rgb<float>();
-                mb.Ks = mesh_material.Ks.clamped().rgb<float>();
+                mb.Ka = mesh_material.Ka.clamped().rgb32();
+                mb.Kd = mesh_material.Kd.clamped().rgb32();
+                mb.Ks = mesh_material.Ks.clamped().rgb32();
                 mb.Ns = mesh_material.Ns;
                 mb.use_texture_Ka = (mesh_material.map_Ka >= 0) ? 1 : 0;
                 mb.use_texture_Kd = (mesh_material.map_Kd >= 0) ? 1 : 0;

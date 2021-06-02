@@ -89,13 +89,13 @@ const VkDescriptorSet& ViewMemory::descriptor_set() const
 
 void ViewMemory::set_background_color(const Color& background_color) const
 {
-        decltype(Data().background_color) v = background_color.rgb<float>();
+        decltype(Data().background_color) v = background_color.rgb32();
         vulkan::map_and_write_to_buffer(m_uniform_buffers[0], offsetof(Data, background_color), v);
 }
 
 void ViewMemory::set_foreground_color(const Color& foreground_color) const
 {
-        decltype(Data().foreground_color) v = foreground_color.rgb<float>();
+        decltype(Data().foreground_color) v = foreground_color.rgb32();
         vulkan::map_and_write_to_buffer(m_uniform_buffers[0], offsetof(Data, foreground_color), v);
 }
 

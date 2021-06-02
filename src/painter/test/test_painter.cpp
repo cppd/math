@@ -30,9 +30,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/com/time.h>
 #include <src/geometry/shapes/sphere_create.h>
 #include <src/gui/painter_window/painter_window.h>
-#include <src/image/alpha.h>
 #include <src/image/conversion.h>
-#include <src/image/file.h>
 #include <src/image/flip.h>
 #include <src/model/mesh_utility.h>
 #include <src/model/volume_utility.h>
@@ -54,10 +52,9 @@ constexpr std::string_view IMAGE_FILE_FORMAT = "png";
 constexpr image::ColorFormat PIXEL_COLOR_FORMAT = image::ColorFormat::R8G8B8_SRGB;
 
 template <std::size_t N>
-void save_image(const std::filesystem::path& path, const Color& blend_color, image::Image<N>&& image)
+void save_image(const std::filesystem::path& path, image::Image<N>&& image)
 {
         image::flip_vertically(&image);
-        image::blend_alpha(&image.color_format, image.pixels, blend_color);
 
         {
                 std::vector<std::byte> pixels;
@@ -74,7 +71,6 @@ template <std::size_t N>
 class Image final : public Notifier<N>
 {
         const std::filesystem::path m_path;
-        const Color m_background_color;
 
         std::unique_ptr<Images<N>> m_images = std::make_unique<Images<N>>();
         std::atomic_bool m_images_ready = false;
@@ -107,9 +103,8 @@ class Image final : public Notifier<N>
         }
 
 public:
-        explicit Image(const std::string_view& directory_name, const Color& background_color)
-                : m_path(std::filesystem::temp_directory_path() / path_from_utf8(directory_name)),
-                  m_background_color(background_color)
+        explicit Image(const std::string_view& directory_name)
+                : m_path(std::filesystem::temp_directory_path() / path_from_utf8(directory_name))
         {
                 if (!std::filesystem::create_directory(m_path))
                 {
@@ -124,7 +119,7 @@ public:
                         error("No painter image to write to files");
                 }
                 ImagesWriting lock(m_images.get());
-                save_image(m_path, m_background_color, std::move(lock.image_with_background()));
+                save_image(m_path, std::move(lock.image_with_background()));
         }
 };
 
@@ -195,7 +190,7 @@ void test_painter_file(int samples_per_pixel, int thread_count, std::unique_ptr<
         constexpr int MAX_PASS_COUNT = 1;
         constexpr bool SMOOTH_NORMAL = true;
 
-        Image<N - 1> image(DIRECTORY_NAME, scene->background_light());
+        Image<N - 1> image(DIRECTORY_NAME);
 
         LOG("Painting...");
         TimePoint start_time = time();

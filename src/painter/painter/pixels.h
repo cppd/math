@@ -174,7 +174,7 @@ class Pixels final
         const std::array<int, N> m_screen_max = pixels_implementation::max_values_for_size(m_screen_size);
 
         const Color m_background_color;
-        const Vector<3, float> m_background_color_rgb32 = m_background_color.rgb<float>();
+        const Vector<3, float> m_background_color_rgb32 = m_background_color.rgb32();
 
         Notifier<N>* const m_notifier;
 
@@ -223,14 +223,14 @@ class Pixels final
         {
                 if (info.alpha >= 1)
                 {
-                        return info.color.rgb<float>();
+                        return info.color.rgb32();
                 }
                 if (info.alpha <= 0)
                 {
                         return m_background_color_rgb32;
                 }
                 const Color c = info.color + (1 - info.alpha) * m_background_color;
-                return c.rgb<float>();
+                return c.rgb32();
         }
 
 public:
@@ -345,7 +345,7 @@ public:
                         const impl::Pixel::Info info = pixel.info();
 
                         RGBA rgba;
-                        rgba.rgb = info.color.rgb<float>();
+                        rgba.rgb = info.color.rgb32();
                         rgba.alpha = info.alpha;
 
                         Vector<3, float> rgb;
@@ -360,7 +360,7 @@ public:
                         else
                         {
                                 const Color c = info.color + (1 - info.alpha) * m_background_color;
-                                rgb = c.rgb<float>();
+                                rgb = c.rgb32();
                         }
 
                         static_assert(sizeof(rgb) == RGB_PIXEL_SIZE);

@@ -55,22 +55,14 @@ public:
         {
         }
 
-        template <typename F>
-        [[nodiscard]] std::enable_if_t<std::is_same_v<F, T>, const Vector<3, T>&> rgb() const
+        [[nodiscard]] Vector<3, float> rgb32() const
         {
-                return Base::m_data;
-        }
-
-        template <typename F>
-        [[nodiscard]] std::enable_if_t<!std::is_same_v<F, T>, Vector<3, F>> rgb() const
-        {
-                static_assert(std::is_floating_point_v<F>);
-                return to_vector<F>(Base::m_data);
+                return to_vector<float>(Base::m_data);
         }
 
         [[nodiscard]] RGB8 rgb8() const
         {
-                return make_rgb8(rgb<float>());
+                return make_rgb8(rgb32());
         }
 
         [[nodiscard]] T luminance() const
@@ -278,13 +270,6 @@ class Spectrum final : public ColorSamples<Spectrum<T, N>, N, T>
                 return dot(spectrum, s.y);
         }
 
-        //
-
-        template <typename F>
-        explicit Spectrum(const Vector<3, F>& rgb) : Spectrum(rgb[0], rgb[1], rgb[2])
-        {
-        }
-
 public:
         using DataType = T;
 
@@ -301,26 +286,18 @@ public:
         {
         }
 
-        template <typename F>
-        Spectrum(const RGB<F>& rgb) : Spectrum(rgb.template rgb<F>())
-        {
-                static_assert(std::is_floating_point_v<F>);
-        }
-
         Spectrum(const RGB8& c) : Spectrum(c.linear_red(), c.linear_green(), c.linear_blue())
         {
         }
 
-        template <typename F>
-        [[nodiscard]] Vector<3, F> rgb() const
+        [[nodiscard]] Vector<3, float> rgb32() const
         {
-                static_assert(std::is_floating_point_v<F>);
-                return to_vector<F>(spectrum_to_rgb(Base::m_data));
+                return to_vector<float>(spectrum_to_rgb(Base::m_data));
         }
 
         [[nodiscard]] RGB8 rgb8() const
         {
-                return make_rgb8(rgb<float>());
+                return make_rgb8(rgb32());
         }
 
         [[nodiscard]] T luminance() const
