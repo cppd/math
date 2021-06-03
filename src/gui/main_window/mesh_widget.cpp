@@ -173,7 +173,7 @@ void MeshWidget::on_color_clicked()
 
         QPointer ptr(this);
         dialog::color_dialog(
-                "Mesh Color", rgb_to_qcolor(color),
+                "Mesh Color", color_to_qcolor(color),
                 [&](const QColor& c)
                 {
                         if (ptr.isNull())
@@ -185,7 +185,7 @@ void MeshWidget::on_color_clicked()
                                 {
                                         set_widget_color(ui.widget_color, c);
                                         mesh::Writing writing(object.get());
-                                        writing.set_color(qcolor_to_rgb(c));
+                                        writing.set_color(qcolor_to_color(c));
                                 },
                                 *object_opt);
                 });
@@ -270,7 +270,7 @@ void MeshWidget::ui_set(const storage::MeshObjectConst& object)
                         }
                         {
                                 QSignalBlocker blocker(ui.widget_color);
-                                set_widget_color(ui.widget_color, color);
+                                set_widget_color(ui.widget_color, color_to_qcolor(color));
                         }
                         {
                                 double position = ambient;

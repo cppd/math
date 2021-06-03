@@ -175,12 +175,12 @@ class Impl final : public View
 
         void set_background_color(const Color& color) override
         {
-                m_memory.set_background_color(color);
+                m_memory.set_background_color(color.rgb32());
         }
 
         void set_color(const Color& color) override
         {
-                m_memory.set_foreground_color(color);
+                m_memory.set_foreground_color(color.rgb32());
         }
 
         void create_vertices()

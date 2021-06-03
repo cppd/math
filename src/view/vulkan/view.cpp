@@ -351,8 +351,17 @@ class Impl final
         void command(const command::SetBackgroundColor& d)
         {
                 m_renderer->set_background_color(d.value);
-                bool background_is_dark = d.value.luminance() <= 0.5;
-                m_text->set_color(background_is_dark ? Color(1) : Color(0));
+                const bool background_is_dark = d.value.luminance() <= 0.5;
+                if (background_is_dark)
+                {
+                        static const Color white(1);
+                        m_text->set_color(white);
+                }
+                else
+                {
+                        static const Color black(0);
+                        m_text->set_color(black);
+                }
         }
 
         void command(const command::SetWireframeColor& d)
@@ -714,7 +723,7 @@ public:
                 }
 
                 // Этот цвет меняется в set_background_color
-                const Color TEXT_COLOR = RGB8(255, 255, 255);
+                constexpr RGB8 TEXT_COLOR = RGB8(255, 255, 255);
 
                 m_present_mode = VULKAN_DEFAULT_PRESENT_MODE;
 

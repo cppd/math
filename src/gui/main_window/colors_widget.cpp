@@ -41,6 +41,7 @@ constexpr QRgb DFT_COLOR = qRgb(150, 200, 250);
 constexpr double DEFAULT_LIGHTING_INTENSITY = 2.0;
 constexpr double MAXIMUM_LIGHTING_INTENSITY = 20.0;
 static_assert(MAXIMUM_LIGHTING_INTENSITY > 1);
+
 }
 
 ColorsWidget::ColorsWidget() : QWidget(nullptr)
@@ -214,7 +215,7 @@ void ColorsWidget::set_background_color(const QColor& c)
         m_background_color = c;
         if (m_view)
         {
-                m_view->send(view::command::SetBackgroundColor(qcolor_to_rgb(c)));
+                m_view->send(view::command::SetBackgroundColor(qcolor_to_color(c)));
         }
         set_widget_color(ui.widget_background_color, c);
 }
@@ -224,7 +225,7 @@ void ColorsWidget::set_wireframe_color(const QColor& c)
         m_wireframe_color = c;
         if (m_view)
         {
-                m_view->send(view::command::SetWireframeColor(qcolor_to_rgb(c)));
+                m_view->send(view::command::SetWireframeColor(qcolor_to_color(c)));
         }
         set_widget_color(ui.widget_wireframe_color, c);
 }
@@ -234,7 +235,7 @@ void ColorsWidget::set_clip_plane_color(const QColor& c)
         m_clip_plane_color = c;
         if (m_view)
         {
-                m_view->send(view::command::SetClipPlaneColor(qcolor_to_rgb(c)));
+                m_view->send(view::command::SetClipPlaneColor(qcolor_to_color(c)));
         }
         set_widget_color(ui.widget_clip_plane_color, c);
 }
@@ -244,7 +245,7 @@ void ColorsWidget::set_normal_color_positive(const QColor& c)
         m_normal_color_positive = c;
         if (m_view)
         {
-                m_view->send(view::command::SetNormalColorPositive(qcolor_to_rgb(c)));
+                m_view->send(view::command::SetNormalColorPositive(qcolor_to_color(c)));
         }
         set_widget_color(ui.widget_normal_color_positive, c);
 }
@@ -254,7 +255,7 @@ void ColorsWidget::set_normal_color_negative(const QColor& c)
         m_normal_color_negative = c;
         if (m_view)
         {
-                m_view->send(view::command::SetNormalColorNegative(qcolor_to_rgb(c)));
+                m_view->send(view::command::SetNormalColorNegative(qcolor_to_color(c)));
         }
         set_widget_color(ui.widget_normal_color_negative, c);
 }
@@ -264,7 +265,7 @@ void ColorsWidget::set_dft_background_color(const QColor& c)
         m_dft_background_color = c;
         if (m_view)
         {
-                m_view->send(view::command::SetDftBackgroundColor(qcolor_to_rgb(c)));
+                m_view->send(view::command::SetDftBackgroundColor(qcolor_to_color(c)));
         }
         set_widget_color(ui.widget_dft_background_color, c);
 }
@@ -274,44 +275,44 @@ void ColorsWidget::set_dft_color(const QColor& c)
         m_dft_color = c;
         if (m_view)
         {
-                m_view->send(view::command::SetDftColor(qcolor_to_rgb(c)));
+                m_view->send(view::command::SetDftColor(qcolor_to_color(c)));
         }
         set_widget_color(ui.widget_dft_color, c);
 }
 
 Color ColorsWidget::background_color() const
 {
-        return qcolor_to_rgb(m_background_color);
+        return qcolor_to_color(m_background_color);
 }
 
 Color ColorsWidget::wireframe_color() const
 {
-        return qcolor_to_rgb(m_wireframe_color);
+        return qcolor_to_color(m_wireframe_color);
 }
 
 Color ColorsWidget::clip_plane_color() const
 {
-        return qcolor_to_rgb(m_clip_plane_color);
+        return qcolor_to_color(m_clip_plane_color);
 }
 
 Color ColorsWidget::normal_color_positive() const
 {
-        return qcolor_to_rgb(m_normal_color_positive);
+        return qcolor_to_color(m_normal_color_positive);
 }
 
 Color ColorsWidget::normal_color_negative() const
 {
-        return qcolor_to_rgb(m_normal_color_negative);
+        return qcolor_to_color(m_normal_color_negative);
 }
 
 Color ColorsWidget::dft_background_color() const
 {
-        return qcolor_to_rgb(m_dft_background_color);
+        return qcolor_to_color(m_dft_background_color);
 }
 
 Color ColorsWidget::dft_color() const
 {
-        return qcolor_to_rgb(m_dft_color);
+        return qcolor_to_color(m_dft_color);
 }
 
 double ColorsWidget::lighting_intensity() const

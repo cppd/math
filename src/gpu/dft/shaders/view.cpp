@@ -87,15 +87,15 @@ const VkDescriptorSet& ViewMemory::descriptor_set() const
         return m_descriptors.descriptor_set(0);
 }
 
-void ViewMemory::set_background_color(const Color& background_color) const
+void ViewMemory::set_background_color(const vec3f& background_color) const
 {
-        decltype(Data().background_color) v = background_color.rgb32();
+        decltype(Data().background_color) v = background_color;
         vulkan::map_and_write_to_buffer(m_uniform_buffers[0], offsetof(Data, background_color), v);
 }
 
-void ViewMemory::set_foreground_color(const Color& foreground_color) const
+void ViewMemory::set_foreground_color(const vec3f& foreground_color) const
 {
-        decltype(Data().foreground_color) v = foreground_color.rgb32();
+        decltype(Data().foreground_color) v = foreground_color;
         vulkan::map_and_write_to_buffer(m_uniform_buffers[0], offsetof(Data, foreground_color), v);
 }
 

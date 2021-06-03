@@ -57,7 +57,11 @@ public:
 
         [[nodiscard]] Vector<3, float> rgb32() const
         {
-                return to_vector<float>(Base::m_data);
+                Vector<3, float> rgb = to_vector<float>(Base::m_data);
+                rgb[0] = std::clamp<T>(rgb[0], 0, 1);
+                rgb[1] = std::clamp<T>(rgb[1], 0, 1);
+                rgb[2] = std::clamp<T>(rgb[2], 0, 1);
+                return rgb;
         }
 
         [[nodiscard]] RGB8 rgb8() const

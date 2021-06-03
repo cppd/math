@@ -166,21 +166,21 @@ void ShaderBuffers::set_viewport(const vec2d& center, const vec2d& factor) const
         map.write(sizeof(viewport_center), viewport_factor);
 }
 
-void ShaderBuffers::set_wireframe_color(const Color& color) const
+void ShaderBuffers::set_wireframe_color(const vec3f& color) const
 {
-        decltype(Drawing().wireframe_color) c = color.rgb32();
+        decltype(Drawing().wireframe_color) c = color;
         copy_to_drawing_buffer(offsetof(Drawing, wireframe_color), c);
 }
 
-void ShaderBuffers::set_background_color(const Color& color) const
+void ShaderBuffers::set_background_color(const vec3f& color) const
 {
-        decltype(Drawing().background_color) c = color.rgb32();
+        decltype(Drawing().background_color) c = color;
         copy_to_drawing_buffer(offsetof(Drawing, background_color), c);
 }
 
-void ShaderBuffers::set_clip_plane_color(const Color& color) const
+void ShaderBuffers::set_clip_plane_color(const vec3f& color) const
 {
-        decltype(Drawing().clip_plane_color) c = color.rgb32();
+        decltype(Drawing().clip_plane_color) c = color;
         copy_to_drawing_buffer(offsetof(Drawing, clip_plane_color), c);
 }
 
@@ -190,15 +190,15 @@ void ShaderBuffers::set_normal_length(float length) const
         copy_to_drawing_buffer(offsetof(Drawing, normal_length), l);
 }
 
-void ShaderBuffers::set_normal_color_positive(const Color& color) const
+void ShaderBuffers::set_normal_color_positive(const vec3f& color) const
 {
-        decltype(Drawing().normal_color_positive) c = color.rgb32();
+        decltype(Drawing().normal_color_positive) c = color;
         copy_to_drawing_buffer(offsetof(Drawing, normal_color_positive), c);
 }
 
-void ShaderBuffers::set_normal_color_negative(const Color& color) const
+void ShaderBuffers::set_normal_color_negative(const vec3f& color) const
 {
-        decltype(Drawing().normal_color_negative) c = color.rgb32();
+        decltype(Drawing().normal_color_negative) c = color;
         copy_to_drawing_buffer(offsetof(Drawing, normal_color_negative), c);
 }
 
@@ -306,9 +306,9 @@ void MeshBuffer::set_coordinates(const mat4d& model_matrix, const mat3d& normal_
         map.write(offsetof(Mesh, normal_matrix) - offset, normal);
 }
 
-void MeshBuffer::set_color(const Color& color) const
+void MeshBuffer::set_color(const vec3f& color) const
 {
-        decltype(Mesh().color) c = color.rgb32();
+        decltype(Mesh().color) c = color;
         vulkan::map_and_write_to_buffer(m_uniform_buffer, offsetof(Mesh, color), c);
 }
 
@@ -408,7 +408,7 @@ void VolumeBuffer::set_parameters(
         float isosurface_alpha,
         bool isosurface,
         float isovalue,
-        const Color& color) const
+        const vec3f& color) const
 {
         ASSERT(window_offset >= 0);
         ASSERT(window_scale > 0);
@@ -429,7 +429,7 @@ void VolumeBuffer::set_parameters(
         volume.isosurface_alpha = isosurface_alpha;
         volume.isosurface = isosurface ? 1 : 0;
         volume.isovalue = isovalue;
-        volume.color = color.rgb32();
+        volume.color = color;
 
         m_uniform_buffer_volume.write(
                 command_pool, queue, offset, size, reinterpret_cast<const char*>(&volume) + offset);

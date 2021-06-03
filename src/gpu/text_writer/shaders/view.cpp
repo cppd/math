@@ -141,9 +141,9 @@ void Memory::set_matrix(const mat4d& matrix) const
         copy_to_matrices_buffer(offsetof(Matrices, matrix), m);
 }
 
-void Memory::set_color(const Color& color) const
+void Memory::set_color(const vec3f& color) const
 {
-        decltype(Drawing().color) c = color.rgb32();
+        decltype(Drawing().color) c = color;
         copy_to_drawing_buffer(offsetof(Drawing, color), c);
 }
 

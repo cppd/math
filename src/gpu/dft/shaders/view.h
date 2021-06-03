@@ -17,7 +17,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
-#include <src/color/color.h>
 #include <src/numerical/matrix.h>
 #include <src/numerical/region.h>
 #include <src/numerical/vec.h>
@@ -69,8 +68,8 @@ public:
 
         //
 
-        void set_background_color(const Color& background_color) const;
-        void set_foreground_color(const Color& foreground_color) const;
+        void set_background_color(const vec3f& background_color) const;
+        void set_foreground_color(const vec3f& foreground_color) const;
         void set_brightness(float brightness) const;
         void set_image(VkSampler sampler, const vulkan::ImageWithMemory& image) const;
 };

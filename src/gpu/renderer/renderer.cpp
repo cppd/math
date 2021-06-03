@@ -126,7 +126,7 @@ class Impl final : public Renderer
         mat4d m_shadow_vp_matrix = mat4d(1);
         mat4d m_shadow_vp_texture_matrix = mat4d(1);
 
-        Color m_clear_color = Color(0);
+        vec3f m_clear_color_rgb32 = vec3f(0);
         double m_shadow_zoom = 1;
         bool m_show_shadow = false;
         Region<2, int> m_viewport;
@@ -176,8 +176,8 @@ class Impl final : public Renderer
         {
                 ASSERT(m_thread_id == std::this_thread::get_id());
 
-                m_clear_color = color;
-                m_shader_buffers.set_background_color(color);
+                m_clear_color_rgb32 = color.rgb32();
+                m_shader_buffers.set_background_color(m_clear_color_rgb32);
 
                 create_clear_command_buffers();
         }
@@ -185,13 +185,13 @@ class Impl final : public Renderer
         {
                 ASSERT(m_thread_id == std::this_thread::get_id());
 
-                m_shader_buffers.set_wireframe_color(color);
+                m_shader_buffers.set_wireframe_color(color.rgb32());
         }
         void set_clip_plane_color(const Color& color) override
         {
                 ASSERT(m_thread_id == std::this_thread::get_id());
 
-                m_shader_buffers.set_clip_plane_color(color);
+                m_shader_buffers.set_clip_plane_color(color.rgb32());
         }
         void set_normal_length(float length) override
         {
@@ -203,13 +203,13 @@ class Impl final : public Renderer
         {
                 ASSERT(m_thread_id == std::this_thread::get_id());
 
-                m_shader_buffers.set_normal_color_positive(color);
+                m_shader_buffers.set_normal_color_positive(color.rgb32());
         }
         void set_normal_color_negative(const Color& color) override
         {
                 ASSERT(m_thread_id == std::this_thread::get_id());
 
-                m_shader_buffers.set_normal_color_negative(color);
+                m_shader_buffers.set_normal_color_negative(color.rgb32());
         }
         void set_show_smooth(bool show) override
         {
@@ -701,8 +701,7 @@ class Impl final : public Renderer
                         commands_init_uint32_storage_image(command_buffer, *m_object_image, OBJECTS_CLEAR_VALUE);
                 };
 
-                const std::vector<VkClearValue> clear_values =
-                        m_render_buffers->clear_values(m_clear_color.clamped().rgb32());
+                const std::vector<VkClearValue> clear_values = m_render_buffers->clear_values(m_clear_color_rgb32);
                 info.clear_values = &clear_values;
 
                 m_clear_command_buffers = vulkan::create_command_buffers(info);

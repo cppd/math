@@ -78,13 +78,13 @@ public:
                 multiply_add(a, b);
         }
 
-        void clamp()
-        {
-                for (std::size_t i = 0; i < N; ++i)
-                {
-                        m_data[i] = std::clamp(m_data[i], T(0), T(1));
-                }
-        }
+        //void clamp()
+        //{
+        //        for (std::size_t i = 0; i < N; ++i)
+        //        {
+        //                m_data[i] = std::clamp(m_data[i], T(0), T(1));
+        //        }
+        //}
 
         [[nodiscard]] Derived clamped() const
         {

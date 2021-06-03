@@ -138,7 +138,7 @@ void set_horizontal_stretch(QWidget* widget, int stretchFactor)
         widget->setSizePolicy(sp);
 }
 
-Color qcolor_to_rgb(const QColor& c)
+Color qcolor_to_color(const QColor& c)
 {
         unsigned char r = std::clamp(c.red(), 0, 255);
         unsigned char g = std::clamp(c.green(), 0, 255);
@@ -146,7 +146,7 @@ Color qcolor_to_rgb(const QColor& c)
         return RGB8(r, g, b);
 }
 
-QColor rgb_to_qcolor(const Color& c)
+QColor color_to_qcolor(const Color& c)
 {
         RGB8 srgb8 = c.rgb8();
         return QColor(srgb8.red, srgb8.green, srgb8.blue);
@@ -159,13 +159,6 @@ void set_widget_color(QWidget* widget, const QColor& c)
         QPalette palette;
         palette.setColor(QPalette::Window, c);
         widget->setPalette(palette);
-}
-
-void set_widget_color(QWidget* widget, const Color& c)
-{
-        ASSERT(widget);
-
-        set_widget_color(widget, rgb_to_qcolor(c));
 }
 
 //void button_strike_out(QRadioButton* button, bool strike_out)

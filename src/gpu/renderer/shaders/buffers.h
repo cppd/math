@@ -17,8 +17,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
-#include <src/color/color.h>
 #include <src/numerical/matrix.h>
+#include <src/numerical/vec.h>
 #include <src/vulkan/buffers.h>
 #include <src/vulkan/descriptor.h>
 
@@ -89,12 +89,12 @@ public:
 
         void set_clip_plane(const vec4d& equation, bool enabled) const;
         void set_viewport(const vec2d& center, const vec2d& factor) const;
-        void set_wireframe_color(const Color& color) const;
-        void set_background_color(const Color& color) const;
-        void set_clip_plane_color(const Color& color) const;
+        void set_wireframe_color(const vec3f& color) const;
+        void set_background_color(const vec3f& color) const;
+        void set_clip_plane_color(const vec3f& color) const;
         void set_normal_length(float length) const;
-        void set_normal_color_positive(const Color& color) const;
-        void set_normal_color_negative(const Color& color) const;
+        void set_normal_color_positive(const vec3f& color) const;
+        void set_normal_color_negative(const vec3f& color) const;
         void set_lighting_intensity(float intensity) const;
         void set_show_materials(bool show) const;
         void set_direction_to_light(const vec3f& direction) const;
@@ -153,7 +153,7 @@ public:
         const vulkan::Buffer& buffer() const;
 
         void set_coordinates(const mat4d& model_matrix, const mat3d& normal_matrix) const;
-        void set_color(const Color& color) const;
+        void set_color(const vec3f& color) const;
         void set_alpha(float alpha) const;
         void set_lighting(float ambient, float metalness, float roughness) const;
 };
@@ -217,7 +217,7 @@ public:
                 float isosurface_alpha,
                 bool isosurface,
                 float isovalue,
-                const Color& color) const;
+                const vec3f& color) const;
 
         void set_color_volume(const vulkan::CommandPool& command_pool, const vulkan::Queue& queue, bool color_volume)
                 const;

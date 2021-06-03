@@ -17,9 +17,9 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
-#include <src/color/color.h>
 #include <src/numerical/matrix.h>
 #include <src/numerical/region.h>
+#include <src/numerical/vec.h>
 #include <src/vulkan/buffers.h>
 #include <src/vulkan/descriptor.h>
 #include <src/vulkan/objects.h>
@@ -82,7 +82,7 @@ public:
         //
 
         void set_matrix(const mat4d& matrix) const;
-        void set_color(const Color& color) const;
+        void set_color(const vec3f& color) const;
 };
 
 struct Vertex
