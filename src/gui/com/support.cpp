@@ -17,6 +17,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "support.h"
 
+#include <src/color/rgb8.h>
 #include <src/com/error.h>
 
 #include <QApplication>
@@ -148,7 +149,7 @@ Color qcolor_to_color(const QColor& c)
 
 QColor color_to_qcolor(const Color& c)
 {
-        RGB8 srgb8 = c.rgb8();
+        RGB8 srgb8 = make_rgb8(c.rgb32());
         return QColor(srgb8.red, srgb8.green, srgb8.blue);
 }
 

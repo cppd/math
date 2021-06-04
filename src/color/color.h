@@ -30,10 +30,29 @@ namespace ns
 {
 namespace color
 {
+enum class Type
+{
+        Reflectance,
+        Illumination
+};
+
 template <typename T>
 class RGB final : public ColorSamples<RGB<T>, 3, T>
 {
         using Base = ColorSamples<RGB<T>, 3, T>;
+
+        static Vector<3, T> make_rgb(T red, T green, T blue)
+        {
+                ASSERT(std::isfinite(red));
+                ASSERT(std::isfinite(green));
+                ASSERT(std::isfinite(blue));
+
+                red = std::max<T>(0, red);
+                green = std::max<T>(0, green);
+                blue = std::max<T>(0, blue);
+
+                return Vector<3, T>(red, green, blue);
+        }
 
 public:
         using DataType = T;
@@ -42,36 +61,38 @@ public:
         {
         }
 
-        constexpr explicit RGB(std::type_identity_t<T> v) : Base(v)
+        constexpr explicit RGB(std::type_identity_t<T> v) : Base(std::max<T>(0, v))
         {
         }
 
-        constexpr RGB(std::type_identity_t<T> red, std::type_identity_t<T> green, std::type_identity_t<T> blue)
-                : Base(red, green, blue)
+        constexpr RGB(
+                std::type_identity_t<T> red,
+                std::type_identity_t<T> green,
+                std::type_identity_t<T> blue,
+                Type = Type::Reflectance)
+                : Base(make_rgb(red, green, blue))
         {
         }
 
-        constexpr RGB(const RGB8& c) : Base(c.linear_red(), c.linear_green(), c.linear_blue())
+        constexpr RGB(const RGB8& c, Type = Type::Reflectance) : Base(c.linear_red(), c.linear_green(), c.linear_blue())
         {
         }
 
         [[nodiscard]] Vector<3, float> rgb32() const
         {
-                Vector<3, float> rgb = to_vector<float>(Base::m_data);
+                Vector<3, float> rgb = to_vector<float>(Base::data());
                 rgb[0] = std::clamp<T>(rgb[0], 0, 1);
                 rgb[1] = std::clamp<T>(rgb[1], 0, 1);
                 rgb[2] = std::clamp<T>(rgb[2], 0, 1);
                 return rgb;
         }
 
-        [[nodiscard]] RGB8 rgb8() const
-        {
-                return make_rgb8(rgb32());
-        }
-
         [[nodiscard]] T luminance() const
         {
-                return linear_float_to_linear_luminance(Base::m_data[0], Base::m_data[1], Base::m_data[2]);
+                T r = std::max<T>(0, Base::data()[0]);
+                T g = std::max<T>(0, Base::data()[1]);
+                T b = std::max<T>(0, Base::data()[2]);
+                return linear_float_to_linear_luminance(r, g, b);
         }
 
         [[nodiscard]] friend std::string to_string(const RGB& c)
@@ -178,9 +199,9 @@ class Spectrum final : public ColorSamples<Spectrum<T, N>, N, T>
         // Journal of Graphics Tools, 1999.
         static Vector<N, T> rgb_to_spectrum(T red, T green, T blue, const Colors& c)
         {
-                ASSERT(is_finite(red));
-                ASSERT(is_finite(green));
-                ASSERT(is_finite(blue));
+                ASSERT(std::isfinite(red));
+                ASSERT(std::isfinite(green));
+                ASSERT(std::isfinite(blue));
 
                 red = std::max<T>(0, red);
                 green = std::max<T>(0, green);
@@ -241,11 +262,18 @@ class Spectrum final : public ColorSamples<Spectrum<T, N>, N, T>
                 return spectrum;
         }
 
-        static Vector<N, T> rgb_to_spectrum(T red, T green, T blue)
+        static Vector<N, T> rgb_to_spectrum(T red, T green, T blue, Type type)
         {
                 const Samples& s = samples();
 
-                return rgb_to_spectrum(red, green, blue, s.reflectance);
+                switch (type)
+                {
+                case Type::Reflectance:
+                        return rgb_to_spectrum(red, green, blue, s.reflectance);
+                case Type::Illumination:
+                        return rgb_to_spectrum(red, green, blue, s.illumination);
+                }
+                error_fatal("Unknown color type " + std::to_string(static_cast<long long>(type)));
         }
 
         static Vector<3, T> spectrum_to_rgb(Vector<N, T> spectrum)
@@ -281,32 +309,32 @@ public:
         {
         }
 
-        constexpr explicit Spectrum(std::type_identity_t<T> v) : Base(v)
+        constexpr explicit Spectrum(std::type_identity_t<T> v) : Base(std::max<T>(0, v))
         {
         }
 
-        Spectrum(std::type_identity_t<T> red, std::type_identity_t<T> green, std::type_identity_t<T> blue)
-                : Base(rgb_to_spectrum(red, green, blue))
+        Spectrum(
+                std::type_identity_t<T> red,
+                std::type_identity_t<T> green,
+                std::type_identity_t<T> blue,
+                Type type = Type::Reflectance)
+                : Base(rgb_to_spectrum(red, green, blue, type))
         {
         }
 
-        Spectrum(const RGB8& c) : Spectrum(c.linear_red(), c.linear_green(), c.linear_blue())
+        Spectrum(const RGB8& c, Type type = Type::Reflectance)
+                : Spectrum(c.linear_red(), c.linear_green(), c.linear_blue(), type)
         {
         }
 
         [[nodiscard]] Vector<3, float> rgb32() const
         {
-                return to_vector<float>(spectrum_to_rgb(Base::m_data));
-        }
-
-        [[nodiscard]] RGB8 rgb8() const
-        {
-                return make_rgb8(rgb32());
+                return to_vector<float>(spectrum_to_rgb(Base::data()));
         }
 
         [[nodiscard]] T luminance() const
         {
-                return spectrum_to_luminance(Base::m_data);
+                return spectrum_to_luminance(Base::data());
         }
 
         [[nodiscard]] friend std::string to_string(const Spectrum& c)
@@ -320,5 +348,4 @@ using RGB = color::RGB<float>;
 using Spectrum = color::Spectrum<float, 64>;
 
 using Color = RGB;
-//using Color = Spectrum;
 }

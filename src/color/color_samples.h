@@ -32,12 +32,9 @@ class ColorSamples
 {
         static_assert(std::is_floating_point_v<T>);
 
-protected:
         Vector<N, T> m_data;
 
-        static constexpr std::size_t SIZE = N;
-        using DataType = T;
-
+protected:
         template <typename... Args>
         constexpr explicit ColorSamples(Args... args) : m_data{args...}
         {
@@ -49,6 +46,11 @@ protected:
         }
 
         ~ColorSamples() = default;
+
+        const Vector<N, T>& data() const
+        {
+                return m_data;
+        }
 
         [[nodiscard]] std::string to_string(const std::string_view& name) const
         {
@@ -156,7 +158,7 @@ public:
                 return true;
         }
 
-        [[nodiscard]] bool equal_to(const Derived& c, T relative_error) const
+        [[nodiscard]] bool equal_to_relative(const Derived& c, T relative_error) const
         {
                 for (std::size_t i = 0; i < N; ++i)
                 {
@@ -166,8 +168,28 @@ public:
                         {
                                 continue;
                         }
+                        T abs = std::abs(c1 - c2);
                         T max = std::max(std::abs(c1), std::abs(c2));
-                        if (!(std::abs(c1 - c2) / max < relative_error))
+                        if (!(abs / max <= relative_error))
+                        {
+                                return false;
+                        }
+                }
+                return true;
+        }
+
+        [[nodiscard]] bool equal_to_absolute(const Derived& c, T absolute_error) const
+        {
+                for (std::size_t i = 0; i < N; ++i)
+                {
+                        T c1 = m_data[i];
+                        T c2 = c.m_data[i];
+                        if (c1 == c2)
+                        {
+                                continue;
+                        }
+                        T abs = std::abs(c1 - c2);
+                        if (!(abs <= absolute_error))
                         {
                                 return false;
                         }
@@ -195,11 +217,6 @@ public:
         }
 
         //
-
-        [[nodiscard]] bool operator==(const Derived& c) const
-        {
-                return m_data == c.m_data;
-        }
 
         Derived& operator+=(const Derived& c)
         {
@@ -234,6 +251,11 @@ public:
         }
 
         //
+
+        [[nodiscard]] friend bool operator==(const Derived& a, const Derived& b)
+        {
+                return a.m_data == b.m_data;
+        }
 
         template <typename F>
         [[nodiscard]] friend Derived interpolation(const Derived& a, const Derived& b, F x)

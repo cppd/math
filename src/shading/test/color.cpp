@@ -58,7 +58,7 @@ void check_color_equal(const Color& directional_albedo, const Color& surface_col
 
         constexpr Color::DataType RELATIVE_ERROR = 0.01;
 
-        if (!directional_albedo.equal_to(surface_color, RELATIVE_ERROR))
+        if (!directional_albedo.equal_to_relative(surface_color, RELATIVE_ERROR))
         {
                 error("BRDF error, directional albedo is not equal to surface color\n" + to_string(directional_albedo)
                       + "\n" + to_string(surface_color));
