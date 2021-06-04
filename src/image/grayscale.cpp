@@ -45,7 +45,10 @@ uint16_t rgb_to_grayscale(const std::array<uint16_t, 3>& rgb)
 
 float rgb_to_grayscale(const std::array<float, 3>& rgb)
 {
-        return color::linear_float_to_linear_luminance(rgb[0], rgb[1], rgb[2]);
+        float r = std::max<float>(0, rgb[0]);
+        float g = std::max<float>(0, rgb[1]);
+        float b = std::max<float>(0, rgb[2]);
+        return color::linear_float_to_linear_luminance(r, g, b);
 }
 
 template <typename T>
