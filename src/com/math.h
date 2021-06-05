@@ -17,8 +17,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
-#include "type/limit.h"
-#include "type/trait.h"
+#include <cmath>
+#include <limits>
 
 namespace ns
 {
@@ -29,10 +29,14 @@ constexpr T square(const T& v)
 }
 
 template <typename T>
-constexpr bool is_finite(T v)
+constexpr bool is_finite(const T& v)
 {
-        static_assert(is_native_floating_point<T>);
-        return v >= limits<T>::lowest() && v <= limits<T>::max();
+        static_assert(std::is_floating_point_v<T>);
+        if (std::is_constant_evaluated())
+        {
+                return v >= std::numeric_limits<T>::lowest() && v <= std::numeric_limits<T>::max();
+        }
+        return std::isfinite(v);
 }
 
 template <unsigned Exp, typename T>
