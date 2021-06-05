@@ -47,6 +47,57 @@ constexpr int PAINTER_MAXIMUM_SCREEN_SIZE_ND = 5000;
 template <std::size_t N>
 constexpr int PAINTER_DEFAULT_SCREEN_SIZE_ND = (N == 4) ? 500 : ((N == 5) ? 100 : PAINTER_MINIMUM_SCREEN_SIZE_ND);
 
+template <std::size_t N, typename T>
+void thread_function(
+        ProgressRatioList* progress_list,
+        const std::vector<std::shared_ptr<const mesh::MeshObject<N>>>& mesh_objects,
+        const PainterSceneInfo<N, T>& scene_info,
+        const Color& background_light,
+        const Color::DataType& lighting_intensity,
+        int thread_count,
+        int samples_per_pixel,
+        bool flat_facets)
+{
+        std::unique_ptr<const painter::Shape<N, T>> shape;
+        {
+                std::vector<const mesh::MeshObject<N>*> meshes;
+                meshes.reserve(mesh_objects.size());
+                for (const std::shared_ptr<const mesh::MeshObject<N>>& mesh_object : mesh_objects)
+                {
+                        meshes.push_back(mesh_object.get());
+                }
+                ProgressRatio progress(progress_list);
+                shape = painter::create_mesh<N, T>(meshes, &progress);
+        }
+
+        if (!shape)
+        {
+                MESSAGE_WARNING("No object to paint");
+                return;
+        }
+
+        std::string name = mesh_objects.size() != 1 ? "" : mesh_objects[0]->name();
+
+        std::unique_ptr<const painter::Scene<N, T>> scene =
+                create_painter_scene(std::move(shape), scene_info, background_light, lighting_intensity);
+
+        gui::painter_window::create_painter_window(
+                name, thread_count, samples_per_pixel, !flat_facets, std::move(scene));
+}
+
+template <std::size_t N>
+bool has_facets(const std::vector<std::shared_ptr<const mesh::MeshObject<N>>>& mesh_objects)
+{
+        for (const std::shared_ptr<const mesh::MeshObject<N>>& object : mesh_objects)
+        {
+                if (!mesh::Reading<N>(*object).mesh().facets.empty())
+                {
+                        return true;
+                }
+        }
+        return false;
+}
+
 template <std::size_t N>
 std::function<void(ProgressRatioList*)> action_painter_function(
         const std::vector<std::shared_ptr<const mesh::MeshObject<N>>>& mesh_objects,
@@ -55,51 +106,43 @@ std::function<void(ProgressRatioList*)> action_painter_function(
         const Color::DataType& lighting_intensity)
 {
         ASSERT(!mesh_objects.empty());
-        long long facet_count = 0;
-        for (const std::shared_ptr<const mesh::MeshObject<N>>& object : mesh_objects)
-        {
-                facet_count += mesh::Reading<N>(*object).mesh().facets.size();
-        }
-        if (facet_count == 0)
+
+        if (!has_facets(mesh_objects))
         {
                 MESSAGE_WARNING("No objects to paint");
                 return nullptr;
         }
 
-        int thread_count;
-        int samples_per_pixel;
-        bool flat_facets;
-
-        using T = settings::painter::FloatingPoint;
-
-        PainterSceneInfo<N, T> scene_info;
-
         static_assert(PAINTER_DEFAULT_SAMPLES_PER_PIXEL<N> <= PAINTER_MAXIMUM_SAMPLES_PER_PIXEL<N>);
 
         if constexpr (N == 3)
         {
-                scene_info.camera_up = to_vector<T>(camera.up);
-                scene_info.camera_direction = to_vector<T>(camera.forward);
-                scene_info.light_direction = to_vector<T>(camera.lighting);
-                scene_info.view_center = to_vector<T>(camera.view_center);
-                scene_info.view_width = camera.view_width;
-
                 std::optional<gui::dialog::Painter3dParameters> parameters =
                         gui::dialog::Painter3dParametersDialog::show(
                                 hardware_concurrency(), camera.width, camera.height, PAINTER_MAXIMUM_SCREEN_SIZE_3D,
                                 PAINTER_DEFAULT_SAMPLES_PER_PIXEL<N>, PAINTER_MAXIMUM_SAMPLES_PER_PIXEL<N>);
+
                 if (!parameters)
                 {
                         return nullptr;
                 }
 
-                scene_info.width = parameters->width;
-                scene_info.height = parameters->height;
-                scene_info.cornell_box = parameters->cornell_box;
+                return [=](ProgressRatioList* progress_list)
+                {
+                        auto f = [&]<typename T>(T)
+                        {
+                                PainterSceneInfo<N, T> scene_info(
+                                        camera.up, camera.forward, camera.lighting, camera.view_center,
+                                        camera.view_width, parameters->width, parameters->height,
+                                        parameters->cornell_box);
 
-                thread_count = parameters->thread_count;
-                samples_per_pixel = parameters->samples_per_pixel;
-                flat_facets = parameters->flat_facets;
+                                thread_function<N, T>(
+                                        progress_list, mesh_objects, scene_info, background_light, lighting_intensity,
+                                        parameters->thread_count, parameters->samples_per_pixel,
+                                        parameters->flat_facets);
+                        };
+                        f(settings::painter::FloatingPoint());
+                };
         }
         else
         {
@@ -111,48 +154,27 @@ std::function<void(ProgressRatioList*)> action_painter_function(
                                 N, hardware_concurrency(), PAINTER_DEFAULT_SCREEN_SIZE_ND<N>,
                                 PAINTER_MINIMUM_SCREEN_SIZE_ND, PAINTER_MAXIMUM_SCREEN_SIZE_ND,
                                 PAINTER_DEFAULT_SAMPLES_PER_PIXEL<N>, PAINTER_MAXIMUM_SAMPLES_PER_PIXEL<N>);
+
                 if (!parameters)
                 {
                         return nullptr;
                 }
 
-                scene_info.min_screen_size = parameters->min_size;
-                scene_info.max_screen_size = parameters->max_size;
-                scene_info.cornell_box = parameters->cornell_box;
-
-                thread_count = parameters->thread_count;
-                samples_per_pixel = parameters->samples_per_pixel;
-                flat_facets = parameters->flat_facets;
-        }
-
-        return [=](ProgressRatioList* progress_list)
-        {
-                std::unique_ptr<const painter::Shape<N, T>> shape;
+                return [=](ProgressRatioList* progress_list)
                 {
-                        std::vector<const mesh::MeshObject<N>*> meshes;
-                        meshes.reserve(mesh_objects.size());
-                        for (const std::shared_ptr<const mesh::MeshObject<N>>& mesh_object : mesh_objects)
+                        auto f = [&]<typename T>(T)
                         {
-                                meshes.push_back(mesh_object.get());
-                        }
-                        ProgressRatio progress(progress_list);
-                        shape = painter::create_mesh<N, T>(meshes, &progress);
-                }
+                                PainterSceneInfo<N, T> scene_info(
+                                        parameters->min_size, parameters->max_size, parameters->cornell_box);
 
-                if (!shape)
-                {
-                        MESSAGE_WARNING("No object to paint");
-                        return;
-                }
-
-                std::string name = mesh_objects.size() != 1 ? "" : mesh_objects[0]->name();
-
-                std::unique_ptr<const painter::Scene<N, T>> scene =
-                        create_painter_scene(std::move(shape), scene_info, background_light, lighting_intensity);
-
-                gui::painter_window::create_painter_window(
-                        name, thread_count, samples_per_pixel, !flat_facets, std::move(scene));
-        };
+                                thread_function<N, T>(
+                                        progress_list, mesh_objects, scene_info, background_light, lighting_intensity,
+                                        parameters->thread_count, parameters->samples_per_pixel,
+                                        parameters->flat_facets);
+                        };
+                        f(settings::painter::FloatingPoint());
+                };
+        }
 }
 }
 

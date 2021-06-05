@@ -37,6 +37,11 @@ struct PainterSceneInfo
         int min_screen_size;
         int max_screen_size;
         bool cornell_box;
+
+        PainterSceneInfo(int min_screen_size, int max_screen_size, bool cornell_box)
+                : min_screen_size(min_screen_size), max_screen_size(max_screen_size), cornell_box(cornell_box)
+        {
+        }
 };
 
 template <typename T>
@@ -50,6 +55,27 @@ struct PainterSceneInfo<3, T>
         int width;
         int height;
         bool cornell_box;
+
+        template <typename F>
+        PainterSceneInfo(
+                Vector<3, F> camera_up,
+                Vector<3, F> camera_direction,
+                Vector<3, F> light_direction,
+                Vector<3, F> view_center,
+                std::type_identity_t<F> view_width,
+                int width,
+                int height,
+                bool cornell_box)
+                : camera_up(to_vector<T>(camera_up)),
+                  camera_direction(to_vector<T>(camera_direction)),
+                  light_direction(to_vector<T>(light_direction)),
+                  view_center(to_vector<T>(view_center)),
+                  view_width(view_width),
+                  width(width),
+                  height(height),
+                  cornell_box(cornell_box)
+        {
+        }
 };
 
 namespace painter_scene_implementation
