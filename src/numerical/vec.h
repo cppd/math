@@ -399,7 +399,7 @@ template <std::size_t N, typename T>
 }
 
 template <typename Dst, std::size_t N, typename Src>
-[[nodiscard]] std::enable_if_t<!std::is_same_v<Dst, Src>, Vector<N, Dst>> to_vector(const Vector<N, Src>& v)
+[[nodiscard]] constexpr std::enable_if_t<!std::is_same_v<Dst, Src>, Vector<N, Dst>> to_vector(const Vector<N, Src>& v)
 {
         Vector<N, Dst> res;
         for (std::size_t i = 0; i < N; ++i)
@@ -410,19 +410,20 @@ template <typename Dst, std::size_t N, typename Src>
 }
 
 template <typename Dst, std::size_t N, typename Src>
-[[nodiscard]] std::enable_if_t<std::is_same_v<Dst, Src>, const Vector<N, Src>&> to_vector(const Vector<N, Src>& v)
+[[nodiscard]] constexpr std::enable_if_t<std::is_same_v<Dst, Src>, const Vector<N, Src>&> to_vector(
+        const Vector<N, Src>& v)
 {
         return v;
 }
 
 template <typename Dst, std::size_t N, typename Src>
-[[nodiscard]] std::enable_if_t<std::is_same_v<Dst, Src>, Vector<N, Src>&&> to_vector(Vector<N, Src>&& v)
+[[nodiscard]] constexpr std::enable_if_t<std::is_same_v<Dst, Src>, Vector<N, Src>&&> to_vector(Vector<N, Src>&& v)
 {
         return std::move(v);
 }
 
 template <typename Dst, std::size_t N, typename Src>
-[[nodiscard]] Vector<N, Dst> to_vector(const std::array<Src, N>& array)
+[[nodiscard]] constexpr Vector<N, Dst> to_vector(const std::array<Src, N>& array)
 {
         Vector<N, Dst> res;
         for (std::size_t i = 0; i < N; ++i)
