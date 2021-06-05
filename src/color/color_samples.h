@@ -47,7 +47,7 @@ protected:
 
         ~ColorSamples() = default;
 
-        const Vector<N, T>& data() const
+        constexpr const Vector<N, T>& data() const
         {
                 return m_data;
         }

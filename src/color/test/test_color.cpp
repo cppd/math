@@ -29,6 +29,27 @@ namespace ns::color
 {
 namespace
 {
+template <typename T>
+constexpr bool static_check_rgb()
+{
+        static_assert(RGB<T>(1).rgb32() == Vector<3, float>(1, 1, 1));
+        static_assert(RGB<T>(0).rgb32() == Vector<3, float>(0, 0, 0));
+        static_assert(RGB<T>(0.1).rgb32() == Vector<3, float>(0.1));
+        static_assert(RGB<T>(1, 1, 1).rgb32() == Vector<3, float>(1));
+        static_assert(RGB<T>(0, 0, 0).rgb32() == Vector<3, float>(0));
+        static_assert(RGB<T>(0.1, 0.2, 0.3).rgb32() == Vector<3, float>(0.1, 0.2, 0.3));
+        static_assert(RGB<T>(RGB8(255, 255, 255)).rgb32() == Vector<3, float>(1, 1, 1));
+        static_assert(RGB<T>(RGB8(0, 0, 0)).rgb32() == Vector<3, float>(0, 0, 0));
+        static_assert(RGB<T>(RGB8(100, 150, 50)).rgb32() == RGB8(100, 150, 50).linear_rgb());
+        static_assert(RGB<T>(RGB8(250, 10, 100)).rgb32() == RGB8(250, 10, 100).linear_rgb());
+        static_assert(RGB<T>(RGB8(255, 255, 255)).luminance() == 1);
+        static_assert(RGB<T>(0.1, 0.9, 0.2).luminance() == linear_float_to_linear_luminance(T(0.1), T(0.9), T(0.2)));
+        static_assert(RGB<T>(0.9, 0.3, 0.8).luminance() == linear_float_to_linear_luminance(T(0.9), T(0.3), T(0.8)));
+        return true;
+}
+static_assert(static_check_rgb<float>());
+static_assert(static_check_rgb<double>());
+
 bool equal(const Vector<3, float>& rgb_1, const Vector<3, float>& rgb_2, float max_error, float sum_max_error)
 {
         float abs_sum = 0;

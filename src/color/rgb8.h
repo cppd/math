@@ -50,6 +50,11 @@ struct RGB8 final
         {
                 return color::srgb_uint8_to_linear_float(blue);
         }
+
+        constexpr Vector<3, float> linear_rgb() const
+        {
+                return Vector<3, float>(linear_red(), linear_green(), linear_blue());
+        }
 };
 
 inline RGB8 make_rgb8(float red, float green, float blue)

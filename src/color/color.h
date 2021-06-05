@@ -25,6 +25,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "xyz_samples.h"
 
 #include <src/com/error.h>
+#include <src/com/math.h>
 
 namespace ns
 {
@@ -41,11 +42,11 @@ class RGB final : public ColorSamples<RGB<T>, 3, T>
 {
         using Base = ColorSamples<RGB<T>, 3, T>;
 
-        static Vector<3, T> make_rgb(T red, T green, T blue)
+        static constexpr Vector<3, T> make_rgb(T red, T green, T blue)
         {
-                ASSERT(std::isfinite(red));
-                ASSERT(std::isfinite(green));
-                ASSERT(std::isfinite(blue));
+                ASSERT(is_finite(red));
+                ASSERT(is_finite(green));
+                ASSERT(is_finite(blue));
 
                 red = std::max<T>(0, red);
                 green = std::max<T>(0, green);
@@ -78,7 +79,7 @@ public:
         {
         }
 
-        [[nodiscard]] Vector<3, float> rgb32() const
+        [[nodiscard]] constexpr Vector<3, float> rgb32() const
         {
                 Vector<3, float> rgb = to_vector<float>(Base::data());
                 rgb[0] = std::clamp<T>(rgb[0], 0, 1);
@@ -87,7 +88,7 @@ public:
                 return rgb;
         }
 
-        [[nodiscard]] T luminance() const
+        [[nodiscard]] constexpr T luminance() const
         {
                 T r = std::max<T>(0, Base::data()[0]);
                 T g = std::max<T>(0, Base::data()[1]);
