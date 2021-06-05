@@ -36,7 +36,7 @@ class ColorSamples
 
 protected:
         template <typename... Args>
-        constexpr explicit ColorSamples(Args... args) : m_data{args...}
+        constexpr explicit ColorSamples(Args... args) : m_data(args...)
         {
                 static_assert(std::is_base_of_v<ColorSamples, Derived>);
                 static_assert(std::is_final_v<Derived>);
@@ -218,33 +218,33 @@ public:
 
         //
 
-        Derived& operator+=(const Derived& c)
+        constexpr Derived& operator+=(const Derived& c) &
         {
                 m_data += c.m_data;
                 return *static_cast<Derived*>(this);
         }
 
-        Derived& operator-=(const Derived& c)
+        constexpr Derived& operator-=(const Derived& c) &
         {
                 m_data -= c.m_data;
                 return *static_cast<Derived*>(this);
         }
 
-        Derived& operator*=(const Derived& c)
+        constexpr Derived& operator*=(const Derived& c) &
         {
                 m_data *= c.m_data;
                 return *static_cast<Derived*>(this);
         }
 
         template <typename F>
-        Derived& operator*=(F b)
+        constexpr Derived& operator*=(F b) &
         {
                 m_data *= static_cast<T>(b);
                 return *static_cast<Derived*>(this);
         }
 
         template <typename F>
-        Derived& operator/=(F b)
+        constexpr Derived& operator/=(F b) &
         {
                 m_data /= static_cast<T>(b);
                 return *static_cast<Derived*>(this);
@@ -252,7 +252,7 @@ public:
 
         //
 
-        [[nodiscard]] friend bool operator==(const Derived& a, const Derived& b)
+        [[nodiscard]] constexpr friend bool operator==(const Derived& a, const Derived& b)
         {
                 return a.m_data == b.m_data;
         }
@@ -265,37 +265,47 @@ public:
                 return r;
         }
 
-        [[nodiscard]] friend Derived operator+(const Derived& a, const Derived& b)
+        [[nodiscard]] constexpr friend Derived operator+(const Derived& a, const Derived& b)
         {
-                return Derived(a) += b;
+                Derived r;
+                r.m_data = a.m_data + b.m_data;
+                return r;
         }
 
-        [[nodiscard]] friend Derived operator-(const Derived& a, const Derived& b)
+        [[nodiscard]] constexpr friend Derived operator-(const Derived& a, const Derived& b)
         {
-                return Derived(a) -= b;
+                Derived r;
+                r.m_data = a.m_data - b.m_data;
+                return r;
         }
 
-        template <typename F>
-        [[nodiscard]] friend Derived operator*(const Derived& a, F b)
+        [[nodiscard]] constexpr friend Derived operator*(const Derived& a, const Derived& b)
         {
-                return Derived(a) *= b;
-        }
-
-        template <typename F>
-        [[nodiscard]] friend Derived operator*(F b, const Derived& a)
-        {
-                return Derived(a) *= b;
-        }
-
-        [[nodiscard]] friend Derived operator*(const Derived& a, const Derived& b)
-        {
-                return Derived(a) *= b;
+                Derived r;
+                r.m_data = a.m_data * b.m_data;
+                return r;
         }
 
         template <typename F>
-        [[nodiscard]] friend Derived operator/(const Derived& a, F b)
+        [[nodiscard]] constexpr friend Derived operator*(const Derived& a, F b)
         {
-                return Derived(a) /= b;
+                Derived r;
+                r.m_data = a.m_data * static_cast<T>(b);
+                return r;
+        }
+
+        template <typename F>
+        [[nodiscard]] constexpr friend Derived operator*(F b, const Derived& a)
+        {
+                return a * b;
+        }
+
+        template <typename F>
+        [[nodiscard]] constexpr friend Derived operator/(const Derived& a, F b)
+        {
+                Derived r;
+                r.m_data = a.m_data / static_cast<T>(b);
+                return r;
         }
 };
 }

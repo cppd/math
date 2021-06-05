@@ -58,7 +58,7 @@ class RGB final : public ColorSamples<RGB<T>, 3, T>
 public:
         using DataType = T;
 
-        RGB()
+        constexpr RGB()
         {
         }
 
@@ -306,7 +306,7 @@ class Spectrum final : public ColorSamples<Spectrum<T, N>, N, T>
 public:
         using DataType = T;
 
-        Spectrum()
+        constexpr Spectrum()
         {
         }
 
