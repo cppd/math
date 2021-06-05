@@ -345,8 +345,6 @@ public:
 };
 }
 
-using RGB = color::RGB<float>;
+using Color = color::RGB<float>;
 using Spectrum = color::Spectrum<float, 64>;
-
-using Color = RGB;
 }
