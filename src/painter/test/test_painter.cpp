@@ -195,7 +195,7 @@ void test_painter_file(int samples_per_pixel, int thread_count, std::unique_ptr<
         LOG("Painting...");
         TimePoint start_time = time();
         {
-                std::unique_ptr<Painter<N, T>> painter = create_painter<N, T>(
+                std::unique_ptr<Painter> painter = create_painter<N, T>(
                         &image, samples_per_pixel, MAX_PASS_COUNT, std::move(scene), thread_count, SMOOTH_NORMAL);
                 painter->wait();
         }

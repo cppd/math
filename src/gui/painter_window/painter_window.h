@@ -71,7 +71,7 @@ private:
         void adjust_window_size();
 
 public:
-        PainterWindow(const std::string& name, std::unique_ptr<Pixels>&& pixelsz);
+        PainterWindow(const std::string& name, std::unique_ptr<Pixels>&& pixels);
 
         ~PainterWindow() override;
 };
@@ -88,7 +88,7 @@ void create_painter_window(
                 [=, scene = std::shared_ptr<const painter::Scene<N, T>>(std::move(scene))]()
                 {
                         create_and_show_delete_on_close_window<PainterWindow>(
-                                name, std::make_unique<PainterPixels<N, T>>(
+                                name, std::make_unique<PainterPixels<N>>(
                                               scene, thread_count, samples_per_pixel, smooth_normal));
                 });
 }

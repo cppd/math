@@ -122,7 +122,6 @@ struct Statistics final
         }
 };
 
-template <std::size_t N, typename T>
 struct Painter
 {
         virtual ~Painter() = default;
@@ -132,7 +131,7 @@ struct Painter
 };
 
 template <std::size_t N, typename T>
-std::unique_ptr<Painter<N, T>> create_painter(
+std::unique_ptr<Painter> create_painter(
         Notifier<N - 1>* notifier,
         int samples_per_pixel,
         std::optional<int> max_pass_count,

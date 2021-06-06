@@ -86,6 +86,43 @@ void thread_function(
 }
 
 template <std::size_t N>
+struct PainterData
+{
+        const std::vector<std::shared_ptr<const mesh::MeshObject<N>>>* mesh_objects;
+        const view::info::Camera* camera;
+        const Color* background_light;
+        const Color::DataType* lighting_intensity;
+};
+
+template <typename T>
+void thread_function(
+        ProgressRatioList* progress_list,
+        const PainterData<3>& data,
+        const gui::dialog::Painter3dParameters& parameters)
+{
+        PainterSceneInfo<3, T> scene_info(
+                data.camera->up, data.camera->forward, data.camera->lighting, data.camera->view_center,
+                data.camera->view_width, parameters.width, parameters.height, parameters.cornell_box);
+
+        thread_function<3, T>(
+                progress_list, *data.mesh_objects, scene_info, *data.background_light, *data.lighting_intensity,
+                parameters.thread_count, parameters.samples_per_pixel, parameters.flat_facets);
+}
+
+template <typename T, std::size_t N>
+void thread_function(
+        ProgressRatioList* progress_list,
+        const PainterData<N>& data,
+        const gui::dialog::PainterNdParameters& parameters)
+{
+        PainterSceneInfo<N, T> scene_info(parameters.min_size, parameters.max_size, parameters.cornell_box);
+
+        thread_function<N, T>(
+                progress_list, *data.mesh_objects, scene_info, *data.background_light, *data.lighting_intensity,
+                parameters.thread_count, parameters.samples_per_pixel, parameters.flat_facets);
+}
+
+template <std::size_t N>
 bool has_facets(const std::vector<std::shared_ptr<const mesh::MeshObject<N>>>& mesh_objects)
 {
         for (const std::shared_ptr<const mesh::MeshObject<N>>& object : mesh_objects)
@@ -129,19 +166,13 @@ std::function<void(ProgressRatioList*)> action_painter_function(
 
                 return [=](ProgressRatioList* progress_list)
                 {
-                        auto f = [&]<typename T>(T)
-                        {
-                                PainterSceneInfo<N, T> scene_info(
-                                        camera.up, camera.forward, camera.lighting, camera.view_center,
-                                        camera.view_width, parameters->width, parameters->height,
-                                        parameters->cornell_box);
+                        PainterData<N> data;
+                        data.mesh_objects = &mesh_objects;
+                        data.camera = &camera;
+                        data.background_light = &background_light;
+                        data.lighting_intensity = &lighting_intensity;
 
-                                thread_function<N, T>(
-                                        progress_list, mesh_objects, scene_info, background_light, lighting_intensity,
-                                        parameters->thread_count, parameters->samples_per_pixel,
-                                        parameters->flat_facets);
-                        };
-                        f(settings::painter::FloatingPoint());
+                        thread_function<settings::painter::FloatingPoint>(progress_list, data, *parameters);
                 };
         }
         else
@@ -162,17 +193,13 @@ std::function<void(ProgressRatioList*)> action_painter_function(
 
                 return [=](ProgressRatioList* progress_list)
                 {
-                        auto f = [&]<typename T>(T)
-                        {
-                                PainterSceneInfo<N, T> scene_info(
-                                        parameters->min_size, parameters->max_size, parameters->cornell_box);
+                        PainterData<N> data;
+                        data.mesh_objects = &mesh_objects;
+                        data.camera = &camera;
+                        data.background_light = &background_light;
+                        data.lighting_intensity = &lighting_intensity;
 
-                                thread_function<N, T>(
-                                        progress_list, mesh_objects, scene_info, background_light, lighting_intensity,
-                                        parameters->thread_count, parameters->samples_per_pixel,
-                                        parameters->flat_facets);
-                        };
-                        f(settings::painter::FloatingPoint());
+                        thread_function<settings::painter::FloatingPoint>(progress_list, data, *parameters);
                 };
         }
 }
@@ -206,7 +233,9 @@ std::function<void(ProgressRatioList*)> action_painter(
         }
         if (dimensions.size() > 1)
         {
-                MESSAGE_WARNING("Painting different dimensions is not supported: " + to_string(dimensions) + ".");
+                MESSAGE_WARNING(
+                        "Painting different dimensions is not supported, " + to_string(dimensions)
+                        + " different dimensions.");
                 return nullptr;
         }
 

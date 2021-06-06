@@ -75,6 +75,7 @@ struct PainterSceneInfo<3, T>
                   height(height),
                   cornell_box(cornell_box)
         {
+                static_assert(std::is_floating_point_v<F>);
         }
 };
 

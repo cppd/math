@@ -65,7 +65,7 @@ struct Pixels
         virtual std::optional<Images> pixels() const = 0;
 };
 
-template <std::size_t N, typename T>
+template <std::size_t N>
 class PainterPixels final : public Pixels, public painter::Notifier<N - 1>
 {
         static_assert(N >= 3);
@@ -87,7 +87,7 @@ class PainterPixels final : public Pixels, public painter::Notifier<N - 1>
         painter::Images<N - 1> m_painter_images;
         std::atomic_bool m_painter_images_ready = false;
 
-        std::unique_ptr<painter::Painter<N, T>> m_painter;
+        std::unique_ptr<painter::Painter> m_painter;
 
         std::array<int, N - 1> flip_vertically(std::array<int, N - 1> pixel) const
         {
@@ -238,6 +238,7 @@ class PainterPixels final : public Pixels, public painter::Notifier<N - 1>
         }
 
 public:
+        template <typename T>
         PainterPixels(
                 std::shared_ptr<const painter::Scene<N, T>> scene,
                 unsigned thread_count,
@@ -251,7 +252,7 @@ public:
                           }(scene->projector().screen_size())),
                   m_slice_count(m_global_index.count() / m_screen_size[0] / m_screen_size[1]),
                   m_busy_indices_2d(thread_count, NULL_INDEX),
-                  m_painter(painter::create_painter<N, T>(
+                  m_painter(painter::create_painter(
                           this,
                           samples_per_pixel,
                           MAX_PASS_COUNT,

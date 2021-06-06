@@ -359,8 +359,7 @@ void painter_thread(
         }
 }
 
-template <std::size_t N, typename T>
-class Impl final : public Painter<N, T>
+class Impl final : public Painter
 {
         const std::thread::id m_thread_id = std::this_thread::get_id();
 
@@ -382,6 +381,7 @@ class Impl final : public Painter<N, T>
         }
 
 public:
+        template <std::size_t N, typename T>
         Impl(Notifier<N - 1>* notifier,
              int samples_per_pixel,
              std::optional<int> max_pass_count,
@@ -438,7 +438,7 @@ public:
 }
 
 template <std::size_t N, typename T>
-std::unique_ptr<Painter<N, T>> create_painter(
+std::unique_ptr<Painter> create_painter(
         Notifier<N - 1>* notifier,
         int samples_per_pixel,
         std::optional<int> max_pass_count,
@@ -446,12 +446,12 @@ std::unique_ptr<Painter<N, T>> create_painter(
         int thread_count,
         bool smooth_normals)
 {
-        return std::make_unique<Impl<N, T>>(
+        return std::make_unique<Impl>(
                 notifier, samples_per_pixel, max_pass_count, std::move(scene), thread_count, smooth_normals);
 }
 
-#define CREATE_PAINTER_INSTANTIATION_N_T(N, T)                    \
-        template std::unique_ptr<Painter<(N), T>> create_painter( \
+#define CREATE_PAINTER_INSTANTIATION_N_T(N, T)            \
+        template std::unique_ptr<Painter> create_painter( \
                 Notifier<(N)-1>*, int, std::optional<int>, std::shared_ptr<const Scene<(N), T>>, int, bool);
 
 #define CREATE_PAINTER_INSTANTIATION_N(N)            \
