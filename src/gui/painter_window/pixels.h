@@ -25,6 +25,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/com/message.h>
 #include <src/com/print.h>
 #include <src/com/type/limit.h>
+#include <src/com/type/name.h>
 #include <src/image/format.h>
 #include <src/painter/painter.h>
 
@@ -55,6 +56,8 @@ struct Pixels
 
         virtual ~Pixels() = default;
 
+        virtual const char* floating_point_name() const = 0;
+
         virtual const std::vector<int>& screen_size() const = 0;
 
         virtual std::span<const std::byte> slice_r8g8b8a8(long long slice_number) const = 0;
@@ -75,6 +78,8 @@ class PainterPixels final : public Pixels, public painter::Notifier<N - 1>
 
         static constexpr image::ColorFormat RAW_COLOR_FORMAT = image::ColorFormat::R8G8B8A8_SRGB;
         static constexpr std::size_t RAW_PIXEL_SIZE = image::format_pixel_size_in_bytes(RAW_COLOR_FORMAT);
+
+        const char* const m_floating_point_name;
 
         const GlobalIndex<N - 1, long long> m_global_index;
         const std::vector<int> m_screen_size;
@@ -149,6 +154,11 @@ class PainterPixels final : public Pixels, public painter::Notifier<N - 1>
         }
 
         // Pixels
+
+        const char* floating_point_name() const override
+        {
+                return m_floating_point_name;
+        }
 
         const std::vector<int>& screen_size() const override
         {
@@ -244,7 +254,8 @@ public:
                 unsigned thread_count,
                 int samples_per_pixel,
                 bool smooth_normal)
-                : m_global_index(scene->projector().screen_size()),
+                : m_floating_point_name(type_bit_name<T>()),
+                  m_global_index(scene->projector().screen_size()),
                   m_screen_size(
                           [](const auto& array)
                           {
