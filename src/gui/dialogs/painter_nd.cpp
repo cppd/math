@@ -24,6 +24,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/com/error.h>
 #include <src/com/names.h>
 #include <src/com/print.h>
+#include <src/com/type/name.h>
 
 namespace ns::gui::dialog
 {
@@ -35,6 +36,7 @@ PainterNdParametersDialog::PainterNdParametersDialog(
         int max_screen_size,
         int default_samples_per_pixel,
         int max_samples_per_pixel,
+        PainterNdParameters::Precision default_precision,
         std::optional<PainterNdParameters>& parameters)
         : QDialog(parent_for_dialog()), m_parameters(parameters)
 {
@@ -78,6 +80,11 @@ PainterNdParametersDialog::PainterNdParametersDialog(
                 error("Initial samples per pixel " + to_string(default_samples_per_pixel) + " must be in the range [1, "
                       + to_string(max_samples_per_pixel) + "]");
         }
+        if (!(default_precision == PainterNdParameters::Precision::Float
+              || default_precision == PainterNdParameters::Precision::Double))
+        {
+                error("Unknown default precision " + std::to_string(static_cast<long long>(default_precision)));
+        }
 
         m_max_thread_count = max_thread_count;
         m_min_screen_size = min_screen_size;
@@ -104,6 +111,17 @@ PainterNdParametersDialog::PainterNdParametersDialog(
 
         ui.checkBox_flat_facets->setChecked(false);
         ui.checkBox_cornell_box->setChecked(false);
+
+        ui.radioButton_float->setText(type_bit_name<float>());
+        ui.radioButton_double->setText(type_bit_name<double>());
+        if (default_precision == PainterNdParameters::Precision::Float)
+        {
+                ui.radioButton_float->setChecked(true);
+        }
+        else
+        {
+                ui.radioButton_double->setChecked(true);
+        }
 }
 
 void PainterNdParametersDialog::on_min_size_changed(int)
@@ -177,13 +195,29 @@ void PainterNdParametersDialog::done(int r)
                 return;
         }
 
+        if (!(ui.radioButton_float->isChecked() || ui.radioButton_double->isChecked()))
+        {
+                dialog::message_critical("Precision is not selected");
+                return;
+        }
+
         m_parameters.emplace();
+
         m_parameters->thread_count = thread_count;
         m_parameters->samples_per_pixel = samples_per_pixel;
         m_parameters->min_size = min_size;
         m_parameters->max_size = max_size;
         m_parameters->flat_facets = ui.checkBox_flat_facets->isChecked();
         m_parameters->cornell_box = ui.checkBox_cornell_box->isChecked();
+
+        if (ui.radioButton_float->isChecked())
+        {
+                m_parameters->precision = PainterNdParameters::Precision::Float;
+        }
+        else
+        {
+                m_parameters->precision = PainterNdParameters::Precision::Double;
+        }
 
         QDialog::done(r);
 }
@@ -195,13 +229,14 @@ std::optional<PainterNdParameters> PainterNdParametersDialog::show(
         int min_screen_size,
         int max_screen_size,
         int default_samples_per_pixel,
-        int max_samples_per_pixel)
+        int max_samples_per_pixel,
+        PainterNdParameters::Precision default_precision)
 {
         std::optional<PainterNdParameters> parameters;
 
         QtObjectInDynamicMemory w(new PainterNdParametersDialog(
                 dimension, max_thread_count, default_screen_size, min_screen_size, max_screen_size,
-                default_samples_per_pixel, max_samples_per_pixel, parameters));
+                default_samples_per_pixel, max_samples_per_pixel, default_precision, parameters));
 
         if (!w->exec() || w.isNull())
         {

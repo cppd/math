@@ -31,6 +31,12 @@ struct PainterNdParameters final
         int samples_per_pixel;
         bool flat_facets;
         bool cornell_box;
+        enum Precision
+        {
+                Float,
+                Double
+        };
+        Precision precision;
 };
 
 class PainterNdParametersDialog final : public QDialog
@@ -55,6 +61,7 @@ private:
                 int max_screen_size,
                 int default_samples_per_pixel,
                 int max_samples_per_pixel,
+                PainterNdParameters::Precision default_precision,
                 std::optional<PainterNdParameters>& parameters);
 
         void on_min_size_changed(int);
@@ -70,6 +77,7 @@ public:
                 int min_screen_size,
                 int max_screen_size,
                 int default_samples_per_pixel,
-                int max_samples_per_pixel);
+                int max_samples_per_pixel,
+                PainterNdParameters::Precision default_precision);
 };
 }

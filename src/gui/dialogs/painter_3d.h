@@ -31,6 +31,12 @@ struct Painter3dParameters final
         int samples_per_pixel;
         bool flat_facets;
         bool cornell_box;
+        enum class Precision
+        {
+                Float,
+                Double
+        };
+        Precision precision;
 };
 
 class Painter3dParametersDialog final : public QDialog
@@ -57,6 +63,7 @@ private:
                 int max_screen_size,
                 int default_samples_per_pixel,
                 int max_samples_per_pixel,
+                Painter3dParameters::Precision default_precision,
                 std::optional<Painter3dParameters>& parameters);
 
         void on_width_value_changed(int);
@@ -71,6 +78,7 @@ public:
                 int height,
                 int max_screen_size,
                 int default_samples_per_pixel,
-                int max_samples_per_pixel);
+                int max_samples_per_pixel,
+                Painter3dParameters::Precision default_precision);
 };
 }

@@ -25,7 +25,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/gui/dialogs/painter_3d.h>
 #include <src/gui/dialogs/painter_nd.h>
 #include <src/gui/painter_window/painter_window.h>
-#include <src/settings/painter.h>
 
 #include <set>
 
@@ -46,6 +45,8 @@ constexpr int PAINTER_MINIMUM_SCREEN_SIZE_ND = 50;
 constexpr int PAINTER_MAXIMUM_SCREEN_SIZE_ND = 5000;
 template <std::size_t N>
 constexpr int PAINTER_DEFAULT_SCREEN_SIZE_ND = (N == 4) ? 500 : ((N == 5) ? 100 : PAINTER_MINIMUM_SCREEN_SIZE_ND);
+
+using DefaultFloatingPointType = double;
 
 template <std::size_t N, typename T>
 void thread_function(
@@ -151,18 +152,26 @@ std::function<void(ProgressRatioList*)> action_painter_function(
         }
 
         static_assert(PAINTER_DEFAULT_SAMPLES_PER_PIXEL<N> <= PAINTER_MAXIMUM_SAMPLES_PER_PIXEL<N>);
+        static_assert(
+                std::is_same_v<float, DefaultFloatingPointType> || std::is_same_v<double, DefaultFloatingPointType>);
 
         if constexpr (N == 3)
         {
                 std::optional<gui::dialog::Painter3dParameters> parameters =
                         gui::dialog::Painter3dParametersDialog::show(
                                 hardware_concurrency(), camera.width, camera.height, PAINTER_MAXIMUM_SCREEN_SIZE_3D,
-                                PAINTER_DEFAULT_SAMPLES_PER_PIXEL<N>, PAINTER_MAXIMUM_SAMPLES_PER_PIXEL<N>);
+                                PAINTER_DEFAULT_SAMPLES_PER_PIXEL<N>, PAINTER_MAXIMUM_SAMPLES_PER_PIXEL<N>,
+                                std::is_same_v<float, DefaultFloatingPointType>
+                                        ? gui::dialog::Painter3dParameters::Precision::Float
+                                        : gui::dialog::Painter3dParameters::Precision::Double);
 
                 if (!parameters)
                 {
                         return nullptr;
                 }
+
+                ASSERT(parameters->precision == gui::dialog::Painter3dParameters::Precision::Float
+                       || parameters->precision == gui::dialog::Painter3dParameters::Precision::Double);
 
                 return [=](ProgressRatioList* progress_list)
                 {
@@ -172,7 +181,14 @@ std::function<void(ProgressRatioList*)> action_painter_function(
                         data.background_light = &background_light;
                         data.lighting_intensity = &lighting_intensity;
 
-                        thread_function<settings::painter::FloatingPoint>(progress_list, data, *parameters);
+                        if (parameters->precision == gui::dialog::Painter3dParameters::Precision::Float)
+                        {
+                                thread_function<float>(progress_list, data, *parameters);
+                        }
+                        else
+                        {
+                                thread_function<double>(progress_list, data, *parameters);
+                        }
                 };
         }
         else
@@ -184,12 +200,18 @@ std::function<void(ProgressRatioList*)> action_painter_function(
                         gui::dialog::PainterNdParametersDialog::show(
                                 N, hardware_concurrency(), PAINTER_DEFAULT_SCREEN_SIZE_ND<N>,
                                 PAINTER_MINIMUM_SCREEN_SIZE_ND, PAINTER_MAXIMUM_SCREEN_SIZE_ND,
-                                PAINTER_DEFAULT_SAMPLES_PER_PIXEL<N>, PAINTER_MAXIMUM_SAMPLES_PER_PIXEL<N>);
+                                PAINTER_DEFAULT_SAMPLES_PER_PIXEL<N>, PAINTER_MAXIMUM_SAMPLES_PER_PIXEL<N>,
+                                std::is_same_v<float, DefaultFloatingPointType>
+                                        ? gui::dialog::PainterNdParameters::Precision::Float
+                                        : gui::dialog::PainterNdParameters::Precision::Double);
 
                 if (!parameters)
                 {
                         return nullptr;
                 }
+
+                ASSERT(parameters->precision == gui::dialog::PainterNdParameters::Precision::Float
+                       || parameters->precision == gui::dialog::PainterNdParameters::Precision::Double);
 
                 return [=](ProgressRatioList* progress_list)
                 {
@@ -199,7 +221,14 @@ std::function<void(ProgressRatioList*)> action_painter_function(
                         data.background_light = &background_light;
                         data.lighting_intensity = &lighting_intensity;
 
-                        thread_function<settings::painter::FloatingPoint>(progress_list, data, *parameters);
+                        if (parameters->precision == gui::dialog::PainterNdParameters::Precision::Float)
+                        {
+                                thread_function<float>(progress_list, data, *parameters);
+                        }
+                        else
+                        {
+                                thread_function<double>(progress_list, data, *parameters);
+                        }
                 };
         }
 }
