@@ -28,6 +28,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/gui/painter_window/painter_window.h>
 
 #include <set>
+#include <tuple>
 
 namespace ns::process
 {
@@ -47,10 +48,11 @@ constexpr int PAINTER_MAXIMUM_SCREEN_SIZE_ND = 5000;
 template <std::size_t N>
 constexpr int PAINTER_DEFAULT_SCREEN_SIZE_ND = (N == 4) ? 500 : ((N == 5) ? 100 : PAINTER_MINIMUM_SCREEN_SIZE_ND);
 
-using DefaultFloatingPointType = double;
+using Precisions = std::tuple<double, float>;
+constexpr std::size_t DEFAULT_PRECISION_INDEX = 0;
 
 template <std::size_t N, typename T>
-void thread_function(
+void painter_function(
         ProgressRatioList* progress_list,
         const std::vector<std::shared_ptr<const mesh::MeshObject<N>>>& mesh_objects,
         const PainterSceneInfo<N, T>& scene_info,
@@ -87,42 +89,64 @@ void thread_function(
                 name, thread_count, samples_per_pixel, !flat_facets, std::move(scene));
 }
 
-template <std::size_t N>
-struct PainterData
-{
-        const std::vector<std::shared_ptr<const mesh::MeshObject<N>>>* mesh_objects;
-        const view::info::Camera* camera;
-        const Color* background_light;
-        const Color::DataType* lighting_intensity;
-};
-
 template <typename T>
-void thread_function(
-        ProgressRatioList* progress_list,
-        const PainterData<3>& data,
-        const gui::dialog::PainterParameters3d& parameters)
+void scene_function(
+        const std::vector<std::shared_ptr<const mesh::MeshObject<3>>>& mesh_objects,
+        const view::info::Camera& camera,
+        const Color& background_light,
+        const Color::DataType& lighting_intensity,
+        const gui::dialog::PainterParameters3d& parameters,
+        ProgressRatioList* progress_list)
 {
         PainterSceneInfo<3, T> scene_info(
-                data.camera->up, data.camera->forward, data.camera->lighting, data.camera->view_center,
-                data.camera->view_width, parameters.width, parameters.height, parameters.cornell_box);
+                camera.up, camera.forward, camera.lighting, camera.view_center, camera.view_width, parameters.width,
+                parameters.height, parameters.cornell_box);
 
-        thread_function<3, T>(
-                progress_list, *data.mesh_objects, scene_info, *data.background_light, *data.lighting_intensity,
-                parameters.thread_count, parameters.samples_per_pixel, parameters.flat_facets);
+        painter_function<3, T>(
+                progress_list, mesh_objects, scene_info, background_light, lighting_intensity, parameters.thread_count,
+                parameters.samples_per_pixel, parameters.flat_facets);
 }
 
 template <typename T, std::size_t N>
-void thread_function(
-        ProgressRatioList* progress_list,
-        const PainterData<N>& data,
-        const gui::dialog::PainterParametersNd& parameters)
+void scene_function(
+        const std::vector<std::shared_ptr<const mesh::MeshObject<N>>>& mesh_objects,
+        const view::info::Camera&,
+        const Color& background_light,
+        const Color::DataType& lighting_intensity,
+        const gui::dialog::PainterParametersNd& parameters,
+        ProgressRatioList* progress_list)
 {
         PainterSceneInfo<N, T> scene_info(parameters.min_size, parameters.max_size, parameters.cornell_box);
 
-        thread_function<N, T>(
-                progress_list, *data.mesh_objects, scene_info, *data.background_light, *data.lighting_intensity,
-                parameters.thread_count, parameters.samples_per_pixel, parameters.flat_facets);
+        painter_function<N, T>(
+                progress_list, mesh_objects, scene_info, background_light, lighting_intensity, parameters.thread_count,
+                parameters.samples_per_pixel, parameters.flat_facets);
 }
+
+template <std::size_t N, typename Parameters>
+void thread_function(
+        const std::vector<std::shared_ptr<const mesh::MeshObject<N>>>& mesh_objects,
+        const view::info::Camera& camera,
+        const Color& background_light,
+        const Color::DataType& lighting_intensity,
+        const Parameters& parameters,
+        ProgressRatioList* progress_list)
+{
+        static_assert(2 == std::tuple_size_v<Precisions>);
+        switch (parameters.precision_index)
+        {
+        case 0:
+                scene_function<std::tuple_element_t<0, Precisions>>(
+                        mesh_objects, camera, background_light, lighting_intensity, parameters, progress_list);
+                return;
+
+        case 1:
+                scene_function<std::tuple_element_t<1, Precisions>>(
+                        mesh_objects, camera, background_light, lighting_intensity, parameters, progress_list);
+                return;
+        }
+        error("Unknown precision index " + to_string(parameters.precision_index));
+};
 
 template <std::size_t N>
 bool has_facets(const std::vector<std::shared_ptr<const mesh::MeshObject<N>>>& mesh_objects)
@@ -144,8 +168,6 @@ std::function<void(ProgressRatioList*)> action_painter_function(
         const Color& background_light,
         const Color::DataType& lighting_intensity)
 {
-        ASSERT(!mesh_objects.empty());
-
         if (!has_facets(mesh_objects))
         {
                 MESSAGE_WARNING("No objects to paint");
@@ -153,11 +175,12 @@ std::function<void(ProgressRatioList*)> action_painter_function(
         }
 
         static_assert(PAINTER_DEFAULT_SAMPLES_PER_PIXEL<N> <= PAINTER_MAXIMUM_SAMPLES_PER_PIXEL<N>);
+        static_assert(DEFAULT_PRECISION_INDEX < std::tuple_size_v<Precisions>);
 
-        static_assert(
-                std::is_same_v<float, DefaultFloatingPointType> || std::is_same_v<double, DefaultFloatingPointType>);
-        const std::array<const char*, 2> precisions{type_bit_name<double>(), type_bit_name<float>()};
-        const int default_precision_index = std::is_same_v<double, DefaultFloatingPointType> ? 0 : 1;
+        static_assert(2 == std::tuple_size_v<Precisions>);
+        const std::array<const char*, 2> precisions{
+                type_bit_name<std::tuple_element_t<0, Precisions>>(),
+                type_bit_name<std::tuple_element_t<1, Precisions>>()};
 
         if constexpr (N == 3)
         {
@@ -165,31 +188,17 @@ std::function<void(ProgressRatioList*)> action_painter_function(
                         gui::dialog::PainterParameters3dDialog::show(
                                 hardware_concurrency(), camera.width, camera.height, PAINTER_MAXIMUM_SCREEN_SIZE_3D,
                                 PAINTER_DEFAULT_SAMPLES_PER_PIXEL<N>, PAINTER_MAXIMUM_SAMPLES_PER_PIXEL<N>, precisions,
-                                default_precision_index);
+                                DEFAULT_PRECISION_INDEX);
 
                 if (!parameters)
                 {
                         return nullptr;
                 }
 
-                ASSERT(parameters->precision_index == 0 || parameters->precision_index == 1);
-
                 return [=](ProgressRatioList* progress_list)
                 {
-                        PainterData<N> data;
-                        data.mesh_objects = &mesh_objects;
-                        data.camera = &camera;
-                        data.background_light = &background_light;
-                        data.lighting_intensity = &lighting_intensity;
-
-                        if (parameters->precision_index == 0)
-                        {
-                                thread_function<double>(progress_list, data, *parameters);
-                        }
-                        else
-                        {
-                                thread_function<float>(progress_list, data, *parameters);
-                        }
+                        thread_function(
+                                mesh_objects, camera, background_light, lighting_intensity, *parameters, progress_list);
                 };
         }
         else
@@ -202,31 +211,17 @@ std::function<void(ProgressRatioList*)> action_painter_function(
                                 N, hardware_concurrency(), PAINTER_DEFAULT_SCREEN_SIZE_ND<N>,
                                 PAINTER_MINIMUM_SCREEN_SIZE_ND, PAINTER_MAXIMUM_SCREEN_SIZE_ND,
                                 PAINTER_DEFAULT_SAMPLES_PER_PIXEL<N>, PAINTER_MAXIMUM_SAMPLES_PER_PIXEL<N>, precisions,
-                                default_precision_index);
+                                DEFAULT_PRECISION_INDEX);
 
                 if (!parameters)
                 {
                         return nullptr;
                 }
 
-                ASSERT(parameters->precision_index == 0 || parameters->precision_index == 1);
-
                 return [=](ProgressRatioList* progress_list)
                 {
-                        PainterData<N> data;
-                        data.mesh_objects = &mesh_objects;
-                        data.camera = &camera;
-                        data.background_light = &background_light;
-                        data.lighting_intensity = &lighting_intensity;
-
-                        if (parameters->precision_index == 0)
-                        {
-                                thread_function<double>(progress_list, data, *parameters);
-                        }
-                        else
-                        {
-                                thread_function<float>(progress_list, data, *parameters);
-                        }
+                        thread_function(
+                                mesh_objects, camera, background_light, lighting_intensity, *parameters, progress_list);
                 };
         }
 }
