@@ -51,7 +51,7 @@ std::array<Vector<N, T>, 2> random_n_v()
 }
 }
 
-template <std::size_t N, typename T, typename RandomEngine>
+template <std::size_t N, typename T, typename Color, typename RandomEngine>
 class TestBRDF
 {
 protected:
@@ -60,12 +60,12 @@ protected:
 public:
         virtual Color f(const Vector<N, T>& n, const Vector<N, T>& v, const Vector<N, T>& l) const = 0;
 
-        virtual Sample<N, T> sample_f(RandomEngine& random_engine, const Vector<N, T>& n, const Vector<N, T>& v)
+        virtual Sample<N, T, Color> sample_f(RandomEngine& random_engine, const Vector<N, T>& n, const Vector<N, T>& v)
                 const = 0;
 };
 
-template <std::size_t N, typename T, typename RandomEngine>
-Color test_brdf_f(const TestBRDF<N, T, RandomEngine>& brdf, const long long sample_count)
+template <std::size_t N, typename T, typename Color, typename RandomEngine>
+Color test_brdf_f(const TestBRDF<N, T, Color, RandomEngine>& brdf, const long long sample_count)
 {
         if (sample_count <= 0)
         {
@@ -108,8 +108,8 @@ Color test_brdf_f(const TestBRDF<N, T, RandomEngine>& brdf, const long long samp
         return sum / sample_count;
 }
 
-template <std::size_t N, typename T, typename RandomEngine>
-Color test_brdf_sample_f(const TestBRDF<N, T, RandomEngine>& brdf, const long long sample_count)
+template <std::size_t N, typename T, typename Color, typename RandomEngine>
+Color test_brdf_sample_f(const TestBRDF<N, T, Color, RandomEngine>& brdf, const long long sample_count)
 {
         if (sample_count <= 0)
         {
@@ -124,7 +124,7 @@ Color test_brdf_sample_f(const TestBRDF<N, T, RandomEngine>& brdf, const long lo
 
         for (long long i = 0; i < sample_count; ++i)
         {
-                Sample<N, T> sample = brdf.sample_f(random_engine, n, v);
+                Sample<N, T, Color> sample = brdf.sample_f(random_engine, n, v);
                 if (sample.brdf.is_black() || sample.pdf <= 0)
                 {
                         continue;

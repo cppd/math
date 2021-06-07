@@ -17,12 +17,11 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
-#include <src/color/color.h>
 #include <src/numerical/vec.h>
 
 namespace ns::shading
 {
-template <std::size_t N, typename T>
+template <std::size_t N, typename T, typename Color>
 struct Sample final
 {
         Vector<N, T> l;

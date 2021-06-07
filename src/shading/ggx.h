@@ -35,7 +35,6 @@ CRC Press, 2018.
 
 #pragma once
 
-#include <src/color/color.h>
 #include <src/com/math.h>
 #include <src/geometry/shapes/sphere_integral.h>
 #include <src/numerical/complement.h>
@@ -223,7 +222,7 @@ T ggx_g2(T n_v, T n_l, T alpha)
 
 // (9.16)
 // Schlick approximation of Fresnel reflectance
-template <typename T>
+template <typename T, typename Color>
 Color fresnel(const Color& f0, T h_l)
 {
         static constexpr Color WHITE(1);
@@ -329,7 +328,7 @@ T ggx_visible_normals_l_pdf(T n_v, T n_h, T h_v, T alpha)
 
 // (15), (18), (19)
 // BRDF * (n · l) / PDF = Fresnel * G2 / G1
-template <std::size_t N, typename T>
+template <std::size_t N, typename T, typename Color>
 Color ggx_brdf(T roughness, const Color& f0, T n_v, T n_l, T n_h, T h_l)
 {
         static_assert(N >= 3);

@@ -37,7 +37,6 @@ Elsevier, 2017.
 
 #include "sample.h"
 
-#include <src/color/color.h>
 #include <src/com/error.h>
 #include <src/geometry/shapes/sphere_integral.h>
 #include <src/numerical/vec.h>
@@ -50,6 +49,7 @@ class LambertianBRDF
 {
         static_assert(N >= 3);
 
+        template <typename Color>
         static Color f(const Color& color)
         {
                 // f = color / (integrate dot(n,l) over hemisphere)
@@ -61,6 +61,7 @@ class LambertianBRDF
         }
 
 public:
+        template <typename Color>
         static Color f(const Color& color, const Vector<N, T>& n, const Vector<N, T>& l)
         {
                 static constexpr Color BLACK(0);
@@ -76,10 +77,10 @@ public:
                 return f(color);
         }
 
-        template <typename RandomEngine>
-        static Sample<N, T> sample_f(RandomEngine& random_engine, const Color& color, const Vector<N, T>& n)
+        template <typename Color, typename RandomEngine>
+        static Sample<N, T, Color> sample_f(RandomEngine& random_engine, const Color& color, const Vector<N, T>& n)
         {
-                static constexpr Sample<N, T> BLACK(Vector<N, T>(0), 0, Color(0));
+                static constexpr Sample<N, T, Color> BLACK(Vector<N, T>(0), 0, Color(0));
 
                 ASSERT(n.is_unit());
 

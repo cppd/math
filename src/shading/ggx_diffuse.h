@@ -37,7 +37,6 @@ Elsevier, 2017.
 
 #include "sample.h"
 
-#include <src/color/color.h>
 #include <src/com/constant.h>
 #include <src/com/error.h>
 #include <src/com/interpolation.h>
@@ -62,6 +61,7 @@ class GGXDiffuseBRDF
         }
 
         // (9.64)
+        template <typename Color>
         static Color diffuse(const Color& f0, const Color& rho_ss, T n_l, T n_v)
         {
                 static constexpr Color WHITE = Color(1);
@@ -75,6 +75,7 @@ class GGXDiffuseBRDF
         }
 
         // (9.66), (9.67) without the subsurface term
+        //template <typename Color>
         //static Color diffuse_disney_without_subsurface(const Color& rho_ss, T roughness, T n_l, T n_v, T h_l)
         //{
         //        T l = power<5>(1 - n_l);
@@ -87,6 +88,7 @@ class GGXDiffuseBRDF
         //}
 
         // (9.66), (9.67)
+        //template <typename Color>
         //static Color diffuse_disney(const Color& rho_ss, T roughness, T n_l, T n_v, T h_l, T k_ss)
         //{
         //        T l = power<5>(1 - n_l);
@@ -101,6 +103,7 @@ class GGXDiffuseBRDF
         //        return c * rho_ss;
         //}
 
+        template <typename Color>
         static Color f_impl(
                 T metalness,
                 T roughness,
@@ -186,6 +189,7 @@ class GGXDiffuseBRDF
         }
 
 public:
+        template <typename Color>
         static Color f(
                 T metalness,
                 T roughness,
@@ -212,8 +216,8 @@ public:
                 return f_impl(metalness, roughness, color, n, v, l);
         }
 
-        template <typename RandomEngine>
-        static Sample<N, T> sample_f(
+        template <typename Color, typename RandomEngine>
+        static Sample<N, T, Color> sample_f(
                 RandomEngine& random_engine,
                 T metalness,
                 T roughness,
@@ -221,7 +225,7 @@ public:
                 const Vector<N, T>& n,
                 const Vector<N, T>& v)
         {
-                static constexpr Sample<N, T> BLACK(Vector<N, T>(0), 0, Color(0));
+                static constexpr Sample<N, T, Color> BLACK(Vector<N, T>(0), 0, Color(0));
 
                 ASSERT(n.is_unit());
                 ASSERT(v.is_unit());

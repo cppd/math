@@ -70,7 +70,7 @@ class HyperplaneParallelotope final : public Shape<N, T>
                                 m_obj->m_metalness, m_obj->m_roughness, m_obj->m_color, n, v, l);
                 }
 
-                shading::Sample<N, T> sample_brdf(
+                shading::Sample<N, T, Color> sample_brdf(
                         RandomEngine<T>& random_engine,
                         const Vector<N, T>& n,
                         const Vector<N, T>& v) const override

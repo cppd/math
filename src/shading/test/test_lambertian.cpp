@@ -20,6 +20,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "../lambertian.h"
 
+#include <src/color/color.h>
 #include <src/com/log.h>
 #include <src/com/print.h>
 #include <src/com/type/name.h>
@@ -34,10 +35,10 @@ namespace
 template <typename T>
 using RandomEngine = std::conditional_t<sizeof(T) <= 4, std::mt19937, std::mt19937_64>;
 
-template <std::size_t N, typename T>
-class BRDF final : public TestBRDF<N, T, RandomEngine<T>>
+template <std::size_t N, typename T, typename Color>
+class BRDF final : public TestBRDF<N, T, Color, RandomEngine<T>>
 {
-        const Color m_color = random_non_black_color();
+        const Color m_color = random_non_black_color<Color>();
 
         Color f(const Vector<N, T>& n, const Vector<N, T>& v, const Vector<N, T>& l) const override
         {
@@ -48,7 +49,7 @@ class BRDF final : public TestBRDF<N, T, RandomEngine<T>>
                 return LambertianBRDF<N, T>::f(m_color, n, l);
         }
 
-        Sample<N, T> sample_f(RandomEngine<T>& random_engine, const Vector<N, T>& n, const Vector<N, T>& v)
+        Sample<N, T, Color> sample_f(RandomEngine<T>& random_engine, const Vector<N, T>& n, const Vector<N, T>& v)
                 const override
         {
                 if (dot(n, v) <= 0)
@@ -65,38 +66,45 @@ public:
         }
 };
 
-template <std::size_t N, typename T>
+template <std::size_t N, typename T, typename Color>
 void test_brdf()
 {
         constexpr unsigned SAMPLE_COUNT = 100'000;
 
-        const BRDF<N, T> brdf;
+        const BRDF<N, T, Color> brdf;
 
         Color result;
 
-        LOG(to_string(N) + "D, " + type_name<T>() + ", f");
+        LOG(Color::name() + ", " + to_string(N) + "D, " + type_name<T>() + ", f");
         result = test_brdf_f(brdf, SAMPLE_COUNT);
         check_color_equal(result, brdf.color());
 
-        LOG(to_string(N) + "D, " + type_name<T>() + ", sample f");
+        LOG(Color::name() + ", " + to_string(N) + "D, " + type_name<T>() + ", sample f");
         result = test_brdf_sample_f(brdf, SAMPLE_COUNT);
         check_color_equal(result, brdf.color());
 }
 
-template <typename T>
+template <typename T, typename Color>
 void test_brdf()
 {
-        test_brdf<3, T>();
-        test_brdf<4, T>();
-        test_brdf<5, T>();
+        test_brdf<3, T, Color>();
+        test_brdf<4, T, Color>();
+        test_brdf<5, T, Color>();
+}
+
+template <typename Color>
+void test_brdf()
+{
+        test_brdf<float, Color>();
+        test_brdf<double, Color>();
 }
 
 void test()
 {
         LOG("Test Lambertian BRDF");
 
-        test_brdf<float>();
-        test_brdf<double>();
+        test_brdf<Color>();
+        test_brdf<Spectrum>();
 
         LOG("Test Lambertian BRDF passed");
 }
