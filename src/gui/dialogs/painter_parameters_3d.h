@@ -17,67 +17,67 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
-#include "ui_painter_nd.h"
+#include "painter_parameters.h"
+
+#include "ui_painter_parameters_3d.h"
 
 #include <optional>
 
 namespace ns::gui::dialog
 {
-struct PainterNdParameters final
+struct PainterParameters3d final
 {
+        int width;
+        int height;
         int thread_count;
-        int min_size;
-        int max_size;
         int samples_per_pixel;
         bool flat_facets;
         bool cornell_box;
-        enum Precision
-        {
-                Float,
-                Double
-        };
-        Precision precision;
+        int precision_index;
 };
 
-class PainterNdParametersDialog final : public QDialog
+class PainterParameters3dDialog final : public QDialog
 {
         Q_OBJECT
 
 private:
-        Ui::PainterNdParametersDialog ui;
+        Ui::PainterParameters3dDialog ui;
 
-        int m_max_thread_count;
-        int m_min_screen_size;
-        int m_max_screen_size;
-        int m_max_samples_per_pixel;
+        PainterParametersWidget* m_parameters_widget;
 
-        std::optional<PainterNdParameters>& m_parameters;
+        int m_min_width;
+        int m_max_width;
+        int m_min_height;
+        int m_max_height;
+        double m_aspect_ratio;
 
-        PainterNdParametersDialog(
-                int dimension,
+        std::optional<PainterParameters3d>& m_parameters;
+
+        PainterParameters3dDialog(
                 int max_thread_count,
-                int default_screen_size,
-                int min_screen_size,
+                int width,
+                int height,
                 int max_screen_size,
                 int default_samples_per_pixel,
                 int max_samples_per_pixel,
-                PainterNdParameters::Precision default_precision,
-                std::optional<PainterNdParameters>& parameters);
+                const std::array<const char*, 2>& precisions,
+                int default_precision_index,
+                std::optional<PainterParameters3d>& parameters);
 
-        void on_min_size_changed(int);
-        void on_max_size_changed(int);
+        void on_width_value_changed(int);
+        void on_height_value_changed(int);
 
         void done(int r) override;
 
 public:
-        [[nodiscard]] static std::optional<PainterNdParameters> show(
-                int dimension,
+        [[nodiscard]] static std::optional<PainterParameters3d> show(
                 int max_thread_count,
-                int default_screen_size,
-                int min_screen_size,
+                int width,
+                int height,
                 int max_screen_size,
                 int default_samples_per_pixel,
                 int max_samples_per_pixel,
-                PainterNdParameters::Precision default_precision);
+                const std::array<const char*, 2>& precisions,
+                int default_precision_index);
 };
 }

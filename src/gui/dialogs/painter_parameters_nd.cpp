@@ -15,7 +15,7 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include "painter_nd.h"
+#include "painter_parameters_nd.h"
 
 #include "message.h"
 
@@ -24,11 +24,10 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/com/error.h>
 #include <src/com/names.h>
 #include <src/com/print.h>
-#include <src/com/type/name.h>
 
 namespace ns::gui::dialog
 {
-PainterNdParametersDialog::PainterNdParametersDialog(
+PainterParametersNdDialog::PainterParametersNdDialog(
         int dimension,
         int max_thread_count,
         int default_screen_size,
@@ -36,66 +35,53 @@ PainterNdParametersDialog::PainterNdParametersDialog(
         int max_screen_size,
         int default_samples_per_pixel,
         int max_samples_per_pixel,
-        PainterNdParameters::Precision default_precision,
-        std::optional<PainterNdParameters>& parameters)
-        : QDialog(parent_for_dialog()), m_parameters(parameters)
+        const std::array<const char*, 2>& precisions,
+        int default_precision_index,
+        std::optional<PainterParametersNd>& parameters)
+        : QDialog(parent_for_dialog()),
+          m_parameters_widget(new PainterParametersWidget(
+                  this,
+                  max_thread_count,
+                  default_samples_per_pixel,
+                  max_samples_per_pixel,
+                  precisions,
+                  default_precision_index)),
+          m_parameters(parameters)
 {
-        ui.setupUi(this);
-        setWindowTitle("Painter");
-
-        connect(ui.spinBox_min_size, QOverload<int>::of(&QSpinBox::valueChanged), this,
-                &PainterNdParametersDialog::on_min_size_changed);
-        connect(ui.spinBox_max_size, QOverload<int>::of(&QSpinBox::valueChanged), this,
-                &PainterNdParametersDialog::on_max_size_changed);
-
         if (!(dimension >= 4))
         {
                 error("Dimension " + to_string(dimension) + " must be greater than or equal to 4");
         }
-        if (!(max_thread_count >= 1))
-        {
-                error("Maximum thread count " + to_string(max_thread_count) + " must be greater than or equal to 1");
-        }
+
         if (!(1 <= min_screen_size))
         {
                 error("Minumum screen size " + to_string(min_screen_size) + +" must be greater than or equal to 1");
         }
+
         if (!(min_screen_size <= max_screen_size))
         {
                 error("Maximum screen size " + to_string(max_screen_size)
                       + " must be greater than or equal to minimum screen size " + to_string(min_screen_size));
         }
+
         if (!(min_screen_size <= default_screen_size && default_screen_size <= max_screen_size))
         {
                 error("Initial screen size " + to_string(default_screen_size) + +" must be in the range ["
                       + to_string(min_screen_size) + ", " + to_string(max_screen_size) + "]");
         }
-        if (!(1 <= max_samples_per_pixel))
-        {
-                error("Maximum samples per pixel " + to_string(max_samples_per_pixel)
-                      + " must be greater than or equal to 1");
-        }
-        if (!(1 <= default_samples_per_pixel && default_samples_per_pixel <= max_samples_per_pixel))
-        {
-                error("Initial samples per pixel " + to_string(default_samples_per_pixel) + " must be in the range [1, "
-                      + to_string(max_samples_per_pixel) + "]");
-        }
-        if (!(default_precision == PainterNdParameters::Precision::Float
-              || default_precision == PainterNdParameters::Precision::Double))
-        {
-                error("Unknown default precision " + std::to_string(static_cast<long long>(default_precision)));
-        }
 
-        m_max_thread_count = max_thread_count;
+        ui.setupUi(this);
+        setWindowTitle("Painter");
+
+        connect(ui.spinBox_min_size, QOverload<int>::of(&QSpinBox::valueChanged), this,
+                &PainterParametersNdDialog::on_min_size_changed);
+        connect(ui.spinBox_max_size, QOverload<int>::of(&QSpinBox::valueChanged), this,
+                &PainterParametersNdDialog::on_max_size_changed);
+
         m_min_screen_size = min_screen_size;
         m_max_screen_size = max_screen_size;
-        m_max_samples_per_pixel = max_samples_per_pixel;
 
         ui.label_space->setText(QString::fromStdString(space_name(dimension)));
-
-        ui.spinBox_threads->setMinimum(1);
-        ui.spinBox_threads->setMaximum(max_thread_count);
-        ui.spinBox_threads->setValue(max_thread_count);
 
         ui.spinBox_min_size->setMinimum(min_screen_size);
         ui.spinBox_min_size->setMaximum(max_screen_size);
@@ -105,26 +91,10 @@ PainterNdParametersDialog::PainterNdParametersDialog(
         ui.spinBox_max_size->setMaximum(max_screen_size);
         ui.spinBox_max_size->setValue(default_screen_size);
 
-        ui.spinBox_samples_per_pixel->setMinimum(1);
-        ui.spinBox_samples_per_pixel->setMaximum(max_samples_per_pixel);
-        ui.spinBox_samples_per_pixel->setValue(default_samples_per_pixel);
-
-        ui.checkBox_flat_facets->setChecked(false);
-        ui.checkBox_cornell_box->setChecked(false);
-
-        ui.radioButton_float->setText(type_bit_name<float>());
-        ui.radioButton_double->setText(type_bit_name<double>());
-        if (default_precision == PainterNdParameters::Precision::Float)
-        {
-                ui.radioButton_float->setChecked(true);
-        }
-        else
-        {
-                ui.radioButton_double->setChecked(true);
-        }
+        ui.verticalLayout_parameters->addWidget(m_parameters_widget);
 }
 
-void PainterNdParametersDialog::on_min_size_changed(int)
+void PainterParametersNdDialog::on_min_size_changed(int)
 {
         int min = ui.spinBox_min_size->value();
         if (min > ui.spinBox_max_size->value())
@@ -134,7 +104,7 @@ void PainterNdParametersDialog::on_min_size_changed(int)
         }
 }
 
-void PainterNdParametersDialog::on_max_size_changed(int)
+void PainterParametersNdDialog::on_max_size_changed(int)
 {
         int max = ui.spinBox_max_size->value();
         if (max < ui.spinBox_min_size->value())
@@ -144,7 +114,7 @@ void PainterNdParametersDialog::on_max_size_changed(int)
         }
 }
 
-void PainterNdParametersDialog::done(int r)
+void PainterParametersNdDialog::done(int r)
 {
         if (r != QDialog::Accepted)
         {
@@ -152,20 +122,8 @@ void PainterNdParametersDialog::done(int r)
                 return;
         }
 
-        int thread_count = ui.spinBox_threads->value();
-        if (!(thread_count >= 1 && thread_count <= m_max_thread_count))
+        if (!m_parameters_widget->check())
         {
-                std::string msg = "Thread count must be in the range [1, " + to_string(m_max_thread_count) + "].";
-                dialog::message_critical(msg);
-                return;
-        }
-
-        int samples_per_pixel = ui.spinBox_samples_per_pixel->value();
-        if (!(samples_per_pixel >= 1 && samples_per_pixel <= m_max_samples_per_pixel))
-        {
-                std::string msg =
-                        "Samples per pixel must be in the range [1, " + to_string(m_max_samples_per_pixel) + "].";
-                dialog::message_critical(msg);
                 return;
         }
 
@@ -195,34 +153,20 @@ void PainterNdParametersDialog::done(int r)
                 return;
         }
 
-        if (!(ui.radioButton_float->isChecked() || ui.radioButton_double->isChecked()))
-        {
-                dialog::message_critical("Precision is not selected");
-                return;
-        }
-
         m_parameters.emplace();
 
-        m_parameters->thread_count = thread_count;
-        m_parameters->samples_per_pixel = samples_per_pixel;
         m_parameters->min_size = min_size;
         m_parameters->max_size = max_size;
-        m_parameters->flat_facets = ui.checkBox_flat_facets->isChecked();
-        m_parameters->cornell_box = ui.checkBox_cornell_box->isChecked();
-
-        if (ui.radioButton_float->isChecked())
-        {
-                m_parameters->precision = PainterNdParameters::Precision::Float;
-        }
-        else
-        {
-                m_parameters->precision = PainterNdParameters::Precision::Double;
-        }
+        m_parameters->thread_count = m_parameters_widget->thread_count();
+        m_parameters->samples_per_pixel = m_parameters_widget->samples_per_pixel();
+        m_parameters->flat_facets = m_parameters_widget->flat_facets();
+        m_parameters->cornell_box = m_parameters_widget->cornell_box();
+        m_parameters->precision_index = m_parameters_widget->precision_index();
 
         QDialog::done(r);
 }
 
-std::optional<PainterNdParameters> PainterNdParametersDialog::show(
+std::optional<PainterParametersNd> PainterParametersNdDialog::show(
         int dimension,
         int max_thread_count,
         int default_screen_size,
@@ -230,13 +174,14 @@ std::optional<PainterNdParameters> PainterNdParametersDialog::show(
         int max_screen_size,
         int default_samples_per_pixel,
         int max_samples_per_pixel,
-        PainterNdParameters::Precision default_precision)
+        const std::array<const char*, 2>& precisions,
+        int default_precision_index)
 {
-        std::optional<PainterNdParameters> parameters;
+        std::optional<PainterParametersNd> parameters;
 
-        QtObjectInDynamicMemory w(new PainterNdParametersDialog(
+        QtObjectInDynamicMemory w(new PainterParametersNdDialog(
                 dimension, max_thread_count, default_screen_size, min_screen_size, max_screen_size,
-                default_samples_per_pixel, max_samples_per_pixel, default_precision, parameters));
+                default_samples_per_pixel, max_samples_per_pixel, precisions, default_precision_index, parameters));
 
         if (!w->exec() || w.isNull())
         {
