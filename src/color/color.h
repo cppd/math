@@ -27,6 +27,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/com/error.h>
 #include <src/com/math.h>
 
+#include <string>
+
 namespace ns
 {
 namespace color
@@ -94,6 +96,11 @@ public:
                 T g = std::max<T>(0, Base::data()[1]);
                 T b = std::max<T>(0, Base::data()[2]);
                 return linear_float_to_linear_luminance(r, g, b);
+        }
+
+        [[nodiscard]] static std::string name()
+        {
+                return "RGB";
         }
 
         [[nodiscard]] friend std::string to_string(const RGB& c)
@@ -336,6 +343,11 @@ public:
         [[nodiscard]] T luminance() const
         {
                 return spectrum_to_luminance(Base::data());
+        }
+
+        [[nodiscard]] static std::string name()
+        {
+                return "Spectrum";
         }
 
         [[nodiscard]] friend std::string to_string(const Spectrum& c)
