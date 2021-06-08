@@ -66,8 +66,7 @@ class HyperplaneParallelotope final : public Shape<N, T>
 
                 color::Color brdf(const Vector<N, T>& n, const Vector<N, T>& v, const Vector<N, T>& l) const override
                 {
-                        return shading::GGXDiffuseBRDF<N, T>::f(
-                                m_obj->m_metalness, m_obj->m_roughness, m_obj->m_color, n, v, l);
+                        return shading::ggx_diffuse::f(m_obj->m_metalness, m_obj->m_roughness, m_obj->m_color, n, v, l);
                 }
 
                 shading::Sample<N, T, color::Color> sample_brdf(
@@ -75,7 +74,7 @@ class HyperplaneParallelotope final : public Shape<N, T>
                         const Vector<N, T>& n,
                         const Vector<N, T>& v) const override
                 {
-                        return shading::GGXDiffuseBRDF<N, T>::sample_f(
+                        return shading::ggx_diffuse::sample_f(
                                 random_engine, m_obj->m_metalness, m_obj->m_roughness, m_obj->m_color, n, v);
                 }
         };

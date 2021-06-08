@@ -46,7 +46,7 @@ class BRDF final : public TestBRDF<N, T, Color, RandomEngine<T>>
                 {
                         return Color(0);
                 }
-                return LambertianBRDF<N, T>::f(m_color, n, l);
+                return lambertian::f(m_color, n, l);
         }
 
         Sample<N, T, Color> sample_f(RandomEngine<T>& random_engine, const Vector<N, T>& n, const Vector<N, T>& v)
@@ -56,7 +56,7 @@ class BRDF final : public TestBRDF<N, T, Color, RandomEngine<T>>
                 {
                         return {Vector<N, T>(0), 0, Color(0)};
                 }
-                return LambertianBRDF<N, T>::sample_f(random_engine, m_color, n);
+                return lambertian::sample_f(random_engine, m_color, n);
         }
 
 public:

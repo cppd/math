@@ -213,7 +213,7 @@ public:
                         return m.Kd;
                 }();
 
-                return shading::GGXDiffuseBRDF<N, T>::f(m.metalness, m.roughness, color, n, v, l);
+                return shading::ggx_diffuse::f(m.metalness, m.roughness, color, n, v, l);
         }
 
         shading::Sample<N, T, color::Color> sample_brdf(
@@ -234,7 +234,7 @@ public:
                         return m.Kd;
                 }();
 
-                return shading::GGXDiffuseBRDF<N, T>::sample_f(random_engine, m.metalness, m.roughness, color, n, v);
+                return shading::ggx_diffuse::sample_f(random_engine, m.metalness, m.roughness, color, n, v);
         }
 };
 

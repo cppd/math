@@ -45,13 +45,13 @@ class BRDF final : public TestBRDF<N, T, Color, RandomEngine<T>>
 
         Color f(const Vector<N, T>& n, const Vector<N, T>& v, const Vector<N, T>& l) const override
         {
-                return GGXDiffuseBRDF<N, T>::f(m_metalness, m_roughness, m_color, n, v, l);
+                return ggx_diffuse::f(m_metalness, m_roughness, m_color, n, v, l);
         }
 
         Sample<N, T, Color> sample_f(RandomEngine<T>& random_engine, const Vector<N, T>& n, const Vector<N, T>& v)
                 const override
         {
-                return GGXDiffuseBRDF<N, T>::sample_f(random_engine, m_metalness, m_roughness, m_color, n, v);
+                return ggx_diffuse::sample_f(random_engine, m_metalness, m_roughness, m_color, n, v);
         }
 
 public:

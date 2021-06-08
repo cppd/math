@@ -42,65 +42,69 @@ Elsevier, 2017.
 #include <src/numerical/vec.h>
 #include <src/sampling/sphere_cosine.h>
 
-namespace ns::shading
+namespace ns::shading::lambertian
 {
-template <std::size_t N, typename T>
-class LambertianBRDF
+namespace implementation
+{
+template <std::size_t N, typename Color>
+Color f(const Color& color)
+{
+        // f = color / (integrate dot(n,l) over hemisphere)
+
+        static constexpr typename Color::DataType CONSTANT_REFLECTANCE_FACTOR =
+                1.0 / geometry::sphere_integrate_cosine_factor_over_hemisphere(N);
+
+        return CONSTANT_REFLECTANCE_FACTOR * color;
+}
+}
+
+//
+
+template <std::size_t N, typename T, typename Color>
+Color f(const Color& color, const Vector<N, T>& n, const Vector<N, T>& l)
 {
         static_assert(N >= 3);
+        namespace impl = implementation;
 
-        template <typename Color>
-        static Color f(const Color& color)
+        static constexpr Color BLACK(0);
+
+        ASSERT(n.is_unit());
+        ASSERT(l.is_unit());
+
+        if (dot(n, l) <= 0)
         {
-                // f = color / (integrate dot(n,l) over hemisphere)
-
-                static constexpr T CONSTANT_REFLECTANCE_FACTOR =
-                        T(1) / geometry::sphere_integrate_cosine_factor_over_hemisphere(N);
-
-                return CONSTANT_REFLECTANCE_FACTOR * color;
+                return BLACK;
         }
 
-public:
-        template <typename Color>
-        static Color f(const Color& color, const Vector<N, T>& n, const Vector<N, T>& l)
+        return impl::f<N>(color);
+}
+
+template <std::size_t N, typename T, typename Color, typename RandomEngine>
+Sample<N, T, Color> sample_f(RandomEngine& random_engine, const Color& color, const Vector<N, T>& n)
+{
+        static_assert(N >= 3);
+        namespace impl = implementation;
+
+        static constexpr Sample<N, T, Color> BLACK(Vector<N, T>(0), 0, Color(0));
+
+        ASSERT(n.is_unit());
+
+        Vector<N, T> l = sampling::cosine_on_hemisphere(random_engine, n);
+
+        ASSERT(l.is_unit());
+
+        T n_l = dot(n, l);
+        if (n_l <= 0)
         {
-                static constexpr Color BLACK(0);
-
-                ASSERT(n.is_unit());
-                ASSERT(l.is_unit());
-
-                if (dot(n, l) <= 0)
-                {
-                        return BLACK;
-                }
-
-                return f(color);
+                return BLACK;
         }
 
-        template <typename Color, typename RandomEngine>
-        static Sample<N, T, Color> sample_f(RandomEngine& random_engine, const Color& color, const Vector<N, T>& n)
+        T pdf = sampling::cosine_on_hemisphere_pdf<N>(n_l);
+        if (pdf <= 0)
         {
-                static constexpr Sample<N, T, Color> BLACK(Vector<N, T>(0), 0, Color(0));
-
-                ASSERT(n.is_unit());
-
-                Vector<N, T> l = sampling::cosine_on_hemisphere(random_engine, n);
-
-                ASSERT(l.is_unit());
-
-                T n_l = dot(n, l);
-                if (n_l <= 0)
-                {
-                        return BLACK;
-                }
-
-                T pdf = sampling::cosine_on_hemisphere_pdf<N>(n_l);
-                if (pdf <= 0)
-                {
-                        return BLACK;
-                }
-
-                return {l, pdf, f(color)};
+                return BLACK;
         }
-};
+
+        return {l, pdf, impl::f<N>(color)};
+}
 }
