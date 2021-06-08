@@ -122,8 +122,8 @@ void test()
 {
         LOG("Test GGX Diffuse BRDF");
 
-        test_brdf<Color>();
-        test_brdf<Spectrum>();
+        test_brdf<color::Color>();
+        test_brdf<color::Spectrum>();
 
         LOG("Test GGX Diffuse BRDF passed");
 }

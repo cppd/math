@@ -99,17 +99,18 @@ std::unique_ptr<const painter::Projector<3, T>> create_projector(const PainterSc
 template <typename T>
 std::unique_ptr<const painter::LightSource<3, T>> create_light_source(
         const PainterSceneInfo<3, T>& info,
-        const Color::DataType& lighting_intensity)
+        const color::Color::DataType& lighting_intensity)
 {
-        return std::make_unique<const painter::DistantLight<3, T>>(-info.light_direction, Color(lighting_intensity));
+        return std::make_unique<const painter::DistantLight<3, T>>(
+                -info.light_direction, color::Color(lighting_intensity));
 }
 
 template <typename T>
 std::unique_ptr<const painter::Scene<3, T>> create_scene(
         std::unique_ptr<const painter::Shape<3, T>>&& shape,
         const PainterSceneInfo<3, T>& info,
-        const Color& background_light,
-        const Color::DataType& lighting_intensity)
+        const color::Color& background_light,
+        const color::Color::DataType& lighting_intensity)
 {
         const geometry::BoundingBox<3, T> bb = shape->bounding_box();
         const T scene_size = (bb.max - bb.min).norm();
@@ -129,8 +130,8 @@ template <std::size_t N, typename T>
 std::unique_ptr<const painter::Scene<N, T>> create_painter_scene(
         std::unique_ptr<const painter::Shape<N, T>>&& shape,
         const PainterSceneInfo<N, T>& info,
-        const Color& background_light,
-        const Color::DataType& lighting_intensity)
+        const color::Color& background_light,
+        const color::Color::DataType& lighting_intensity)
 {
         if constexpr (N == 3)
         {

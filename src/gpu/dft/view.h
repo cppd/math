@@ -44,8 +44,8 @@ struct View
         virtual VkSemaphore draw(const vulkan::Queue& queue, VkSemaphore wait_semaphore, unsigned image_index) = 0;
 
         virtual void set_brightness(double brightness) = 0;
-        virtual void set_background_color(const Color& color) = 0;
-        virtual void set_color(const Color& color) = 0;
+        virtual void set_background_color(const color::Color& color) = 0;
+        virtual void set_color(const color::Color& color) = 0;
 };
 
 std::unique_ptr<View> create_view(

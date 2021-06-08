@@ -56,8 +56,8 @@ void painter_function(
         ProgressRatioList* progress_list,
         const std::vector<std::shared_ptr<const mesh::MeshObject<N>>>& mesh_objects,
         const PainterSceneInfo<N, T>& scene_info,
-        const Color& background_light,
-        const Color::DataType& lighting_intensity,
+        const color::Color& background_light,
+        const color::Color::DataType& lighting_intensity,
         int thread_count,
         int samples_per_pixel,
         bool flat_facets)
@@ -93,8 +93,8 @@ template <typename T>
 void scene_function(
         const std::vector<std::shared_ptr<const mesh::MeshObject<3>>>& mesh_objects,
         const view::info::Camera& camera,
-        const Color& background_light,
-        const Color::DataType& lighting_intensity,
+        const color::Color& background_light,
+        const color::Color::DataType& lighting_intensity,
         const gui::dialog::PainterParameters3d& parameters,
         ProgressRatioList* progress_list)
 {
@@ -111,8 +111,8 @@ template <typename T, std::size_t N>
 void scene_function(
         const std::vector<std::shared_ptr<const mesh::MeshObject<N>>>& mesh_objects,
         const view::info::Camera&,
-        const Color& background_light,
-        const Color::DataType& lighting_intensity,
+        const color::Color& background_light,
+        const color::Color::DataType& lighting_intensity,
         const gui::dialog::PainterParametersNd& parameters,
         ProgressRatioList* progress_list)
 {
@@ -127,8 +127,8 @@ template <std::size_t N, typename Parameters>
 void thread_function(
         const std::vector<std::shared_ptr<const mesh::MeshObject<N>>>& mesh_objects,
         const view::info::Camera& camera,
-        const Color& background_light,
-        const Color::DataType& lighting_intensity,
+        const color::Color& background_light,
+        const color::Color::DataType& lighting_intensity,
         const Parameters& parameters,
         ProgressRatioList* progress_list)
 {
@@ -165,8 +165,8 @@ template <std::size_t N>
 std::function<void(ProgressRatioList*)> action_painter_function(
         const std::vector<std::shared_ptr<const mesh::MeshObject<N>>>& mesh_objects,
         const view::info::Camera& camera,
-        const Color& background_light,
-        const Color::DataType& lighting_intensity)
+        const color::Color& background_light,
+        const color::Color::DataType& lighting_intensity)
 {
         if (!has_facets(mesh_objects))
         {
@@ -230,8 +230,8 @@ std::function<void(ProgressRatioList*)> action_painter_function(
 std::function<void(ProgressRatioList*)> action_painter(
         const std::vector<storage::MeshObjectConst>& objects,
         const view::info::Camera& camera,
-        const Color& background_light,
-        const Color::DataType& lighting_intensity)
+        const color::Color& background_light,
+        const color::Color::DataType& lighting_intensity)
 {
         std::set<std::size_t> dimensions;
         std::vector<storage::MeshObjectConst> visible_objects;

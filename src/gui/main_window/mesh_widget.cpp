@@ -162,7 +162,7 @@ void MeshWidget::on_color_clicked()
                 return;
         }
 
-        Color color;
+        color::Color color;
         std::visit(
                 [&]<std::size_t N>(const std::shared_ptr<mesh::MeshObject<N>>& object)
                 {
@@ -251,7 +251,7 @@ void MeshWidget::ui_set(const storage::MeshObjectConst& object)
                 [&]<std::size_t N>(const std::shared_ptr<const mesh::MeshObject<N>>& mesh_object)
                 {
                         double alpha;
-                        Color color;
+                        color::Color color;
                         double ambient;
                         double metalness;
                         double roughness;

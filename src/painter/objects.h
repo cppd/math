@@ -53,11 +53,11 @@ public:
         virtual Vector<N, T> geometric_normal() const = 0;
         virtual std::optional<Vector<N, T>> shading_normal() const = 0;
 
-        virtual std::optional<Color> light_source() const = 0;
+        virtual std::optional<color::Color> light_source() const = 0;
 
-        virtual Color brdf(const Vector<N, T>& n, const Vector<N, T>& v, const Vector<N, T>& l) const = 0;
+        virtual color::Color brdf(const Vector<N, T>& n, const Vector<N, T>& v, const Vector<N, T>& l) const = 0;
 
-        virtual shading::Sample<N, T, Color> sample_brdf(
+        virtual shading::Sample<N, T, color::Color> sample_brdf(
                 RandomEngine<T>& random_engine,
                 const Vector<N, T>& n,
                 const Vector<N, T>& v) const = 0;
@@ -68,7 +68,7 @@ struct LightSourceSample final
 {
         Vector<N, T> l;
         T pdf;
-        Color L;
+        color::Color L;
         std::optional<T> distance;
 
         LightSourceSample()
@@ -103,7 +103,7 @@ struct Scene
 
         virtual const std::vector<const LightSource<N, T>*>& light_sources() const = 0;
 
-        virtual const Color& background_light() const = 0;
+        virtual const color::Color& background_light() const = 0;
 
         virtual const Projector<N, T>& projector() const = 0;
 

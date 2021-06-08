@@ -83,12 +83,15 @@ static_assert(integer_radius(1.6) == 2);
 
 class Pixel final
 {
-        Color m_color_sum{0};
-        Color::DataType m_hit_weight_sum{0};
-        Color::DataType m_background_weight_sum{0};
+        color::Color m_color_sum{0};
+        color::Color::DataType m_hit_weight_sum{0};
+        color::Color::DataType m_background_weight_sum{0};
 
 public:
-        void merge(const Color& color_sum, Color::DataType hit_weight_sum, Color::DataType background_weight_sum)
+        void merge(
+                const color::Color& color_sum,
+                color::Color::DataType hit_weight_sum,
+                color::Color::DataType background_weight_sum)
         {
                 m_color_sum += color_sum;
                 m_hit_weight_sum += hit_weight_sum;
@@ -97,14 +100,14 @@ public:
 
         struct Info final
         {
-                Color color;
-                Color::DataType alpha;
+                color::Color color;
+                color::Color::DataType alpha;
         };
 
         Info info() const
         {
                 Info info;
-                const Color::DataType sum = m_hit_weight_sum + m_background_weight_sum;
+                const color::Color::DataType sum = m_hit_weight_sum + m_background_weight_sum;
                 if (sum > 0)
                 {
                         info.color = m_color_sum / sum;
@@ -112,7 +115,7 @@ public:
                 }
                 else
                 {
-                        info.color = Color(0);
+                        info.color = color::Color(0);
                         info.alpha = 0;
                 }
                 return info;
@@ -173,7 +176,7 @@ class Pixels final
         const std::array<int, N> m_screen_size;
         const std::array<int, N> m_screen_max = pixels_implementation::max_values_for_size(m_screen_size);
 
-        const Color m_background_color;
+        const color::Color m_background_color;
         const Vector<3, float> m_background_color_rgb32 = m_background_color.rgb32();
 
         Notifier<N>* const m_notifier;
@@ -229,12 +232,12 @@ class Pixels final
                 {
                         return m_background_color_rgb32;
                 }
-                const Color c = info.color + (1 - info.alpha) * m_background_color;
+                const color::Color c = info.color + (1 - info.alpha) * m_background_color;
                 return c.rgb32();
         }
 
 public:
-        Pixels(const std::array<int, N>& screen_size, const Color& background_color, Notifier<N>* notifier)
+        Pixels(const std::array<int, N>& screen_size, const color::Color& background_color, Notifier<N>* notifier)
                 : m_screen_size(screen_size),
                   m_background_color(background_color),
                   m_notifier(notifier),
@@ -266,7 +269,7 @@ public:
         void add_samples(
                 const std::array<int, N>& pixel,
                 const std::vector<Vector<N, T>>& points,
-                const std::vector<std::optional<Color>>& colors)
+                const std::vector<std::optional<color::Color>>& colors)
         {
                 namespace impl = pixels_implementation;
 
@@ -285,13 +288,13 @@ public:
                                        return r;
                                }();
 
-                               Color color_sum{0};
-                               Color::DataType hit_weight_sum{0};
-                               Color::DataType background_weight_sum{0};
+                               color::Color color_sum{0};
+                               color::Color::DataType hit_weight_sum{0};
+                               color::Color::DataType background_weight_sum{0};
 
                                for (std::size_t i = 0; i < points.size(); ++i)
                                {
-                                       const Color::DataType weight =
+                                       const color::Color::DataType weight =
                                                m_filter.compute(region_pixel_center_in_point_coordinates - points[i]);
 
                                        if (colors[i])
@@ -359,7 +362,7 @@ public:
                         }
                         else
                         {
-                                const Color c = info.color + (1 - info.alpha) * m_background_color;
+                                const color::Color c = info.color + (1 - info.alpha) * m_background_color;
                                 rgb = c.rgb32();
                         }
 

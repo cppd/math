@@ -85,8 +85,8 @@ QSplitter* find_widget_splitter(QObject* object, QWidget* widget);
 
 void set_horizontal_stretch(QWidget* widget, int stretchFactor);
 
-Color qcolor_to_color(const QColor& c);
-QColor color_to_qcolor(const Color& c);
+color::Color qcolor_to_color(const QColor& c);
+QColor color_to_qcolor(const color::Color& c);
 
 void set_widget_color(QWidget* widget, const QColor& c);
 

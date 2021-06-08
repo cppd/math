@@ -53,9 +53,9 @@ struct Mesh final
         struct Material
         {
                 std::string name;
-                Color Ka{0};
-                Color Kd{0};
-                Color Ks{0};
+                color::Color Ka{0};
+                color::Color Kd{0};
+                color::Color Ks{0};
                 float Ns{1};
                 int map_Ka{-1}; // -1 если нет текстуры
                 int map_Kd{-1}; // -1 если нет текстуры

@@ -280,37 +280,37 @@ void ColorsWidget::set_dft_color(const QColor& c)
         set_widget_color(ui.widget_dft_color, c);
 }
 
-Color ColorsWidget::background_color() const
+color::Color ColorsWidget::background_color() const
 {
         return qcolor_to_color(m_background_color);
 }
 
-Color ColorsWidget::wireframe_color() const
+color::Color ColorsWidget::wireframe_color() const
 {
         return qcolor_to_color(m_wireframe_color);
 }
 
-Color ColorsWidget::clip_plane_color() const
+color::Color ColorsWidget::clip_plane_color() const
 {
         return qcolor_to_color(m_clip_plane_color);
 }
 
-Color ColorsWidget::normal_color_positive() const
+color::Color ColorsWidget::normal_color_positive() const
 {
         return qcolor_to_color(m_normal_color_positive);
 }
 
-Color ColorsWidget::normal_color_negative() const
+color::Color ColorsWidget::normal_color_negative() const
 {
         return qcolor_to_color(m_normal_color_negative);
 }
 
-Color ColorsWidget::dft_background_color() const
+color::Color ColorsWidget::dft_background_color() const
 {
         return qcolor_to_color(m_dft_background_color);
 }
 
-Color ColorsWidget::dft_color() const
+color::Color ColorsWidget::dft_color() const
 {
         return qcolor_to_color(m_dft_color);
 }

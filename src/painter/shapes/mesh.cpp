@@ -107,10 +107,10 @@ struct Material
 {
         T metalness;
         T roughness;
-        Color Kd;
+        color::Color Kd;
         int map_Kd;
-        Color::DataType alpha;
-        Material(T metalness, T roughness, const Color& Kd, int map_Kd, Color::DataType alpha)
+        color::Color::DataType alpha;
+        Material(T metalness, T roughness, const color::Color& Kd, int map_Kd, color::Color::DataType alpha)
                 : metalness(std::clamp(metalness, T(0), T(1))),
                   roughness(std::clamp(roughness, T(0), T(1))),
                   Kd(Kd.clamped()),
@@ -193,18 +193,18 @@ public:
                 return m_facet->shading_normal(this->point());
         }
 
-        std::optional<Color> light_source() const override
+        std::optional<color::Color> light_source() const override
         {
                 return std::nullopt;
         }
 
-        Color brdf(const Vector<N, T>& n, const Vector<N, T>& v, const Vector<N, T>& l) const override
+        color::Color brdf(const Vector<N, T>& n, const Vector<N, T>& v, const Vector<N, T>& l) const override
         {
                 ASSERT(m_facet->material() >= 0);
 
                 const Material<T>& m = m_mesh->materials()[m_facet->material()];
 
-                const Color color = [&]
+                const color::Color color = [&]
                 {
                         if (m_facet->has_texcoord() && m.map_Kd >= 0)
                         {
@@ -216,7 +216,7 @@ public:
                 return shading::GGXDiffuseBRDF<N, T>::f(m.metalness, m.roughness, color, n, v, l);
         }
 
-        shading::Sample<N, T, Color> sample_brdf(
+        shading::Sample<N, T, color::Color> sample_brdf(
                 RandomEngine<T>& random_engine,
                 const Vector<N, T>& n,
                 const Vector<N, T>& v) const override
@@ -225,7 +225,7 @@ public:
 
                 const Material<T>& m = m_mesh->materials()[m_facet->material()];
 
-                const Color color = [&]
+                const color::Color color = [&]
                 {
                         if (m_facet->has_texcoord() && m.map_Kd >= 0)
                         {
@@ -241,7 +241,7 @@ public:
 template <std::size_t N, typename T>
 void Mesh<N, T>::create(const mesh::Reading<N>& mesh_object)
 {
-        const Color::DataType alpha = std::clamp<Color::DataType>(mesh_object.alpha(), 0, 1);
+        const color::Color::DataType alpha = std::clamp<color::Color::DataType>(mesh_object.alpha(), 0, 1);
 
         if (alpha == 0)
         {

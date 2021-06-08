@@ -139,7 +139,7 @@ class VolumeObject final : public std::enable_shared_from_this<VolumeObject<N>>
         bool m_isosurface = false;
         float m_isovalue = 0.5f;
 
-        Color m_color = RGB8(235, 255, 235);
+        color::Color m_color = RGB8(235, 255, 235);
         float m_ambient = 0.3;
         float m_metalness = 0.1;
         float m_roughness = 0.2;
@@ -240,12 +240,12 @@ class VolumeObject final : public std::enable_shared_from_this<VolumeObject<N>>
                 m_isovalue = value;
         }
 
-        const Color& color() const
+        const color::Color& color() const
         {
                 return m_color;
         }
 
-        void set_color(const Color& color)
+        void set_color(const color::Color& color)
         {
                 m_color = color;
         }
@@ -474,12 +474,12 @@ public:
                 m_object->set_isovalue(value);
         }
 
-        const Color& color() const
+        const color::Color& color() const
         {
                 return m_object->color();
         }
 
-        void set_color(const Color& color)
+        void set_color(const color::Color& color)
         {
                 m_updates.set(Update::Color);
                 m_object->set_color(color);
@@ -575,7 +575,7 @@ public:
                 return m_object->isovalue();
         }
 
-        const Color& color() const
+        const color::Color& color() const
         {
                 return m_object->color();
         }

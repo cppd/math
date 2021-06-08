@@ -173,12 +173,12 @@ class Impl final : public View
                 m_memory.set_brightness(brightness);
         }
 
-        void set_background_color(const Color& color) override
+        void set_background_color(const color::Color& color) override
         {
                 m_memory.set_background_color(color.rgb32());
         }
 
-        void set_color(const Color& color) override
+        void set_color(const color::Color& color) override
         {
                 m_memory.set_foreground_color(color.rgb32());
         }

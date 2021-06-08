@@ -87,24 +87,24 @@ struct SetLightingIntensity final
 
 struct SetBackgroundColor final
 {
-        Color value;
-        explicit SetBackgroundColor(const Color& value) : value(value)
+        color::Color value;
+        explicit SetBackgroundColor(const color::Color& value) : value(value)
         {
         }
 };
 
 struct SetWireframeColor final
 {
-        Color value;
-        explicit SetWireframeColor(const Color& value) : value(value)
+        color::Color value;
+        explicit SetWireframeColor(const color::Color& value) : value(value)
         {
         }
 };
 
 struct SetClipPlaneColor final
 {
-        Color value;
-        explicit SetClipPlaneColor(const Color& value) : value(value)
+        color::Color value;
+        explicit SetClipPlaneColor(const color::Color& value) : value(value)
         {
         }
 };
@@ -119,16 +119,16 @@ struct SetNormalLength final
 
 struct SetNormalColorPositive final
 {
-        Color value;
-        explicit SetNormalColorPositive(const Color& value) : value(value)
+        color::Color value;
+        explicit SetNormalColorPositive(const color::Color& value) : value(value)
         {
         }
 };
 
 struct SetNormalColorNegative final
 {
-        Color value;
-        explicit SetNormalColorNegative(const Color& value) : value(value)
+        color::Color value;
+        explicit SetNormalColorNegative(const color::Color& value) : value(value)
         {
         }
 };
@@ -207,16 +207,16 @@ struct SetDftBrightness final
 
 struct SetDftBackgroundColor final
 {
-        Color value;
-        explicit SetDftBackgroundColor(const Color& value) : value(value)
+        color::Color value;
+        explicit SetDftBackgroundColor(const color::Color& value) : value(value)
         {
         }
 };
 
 struct SetDftColor final
 {
-        Color value;
-        explicit SetDftColor(const Color& value) : value(value)
+        color::Color value;
+        explicit SetDftColor(const color::Color& value) : value(value)
         {
         }
 };

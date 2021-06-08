@@ -117,7 +117,7 @@ class Impl final : public View
 
         uint32_t m_graphics_family_index;
 
-        void set_color(const Color& color) const override
+        void set_color(const color::Color& color) const override
         {
                 m_memory.set_color(color.rgb32());
         }
@@ -262,7 +262,7 @@ class Impl final : public View
              const vulkan::CommandPool& /*transfer_command_pool*/,
              const vulkan::Queue& /*transfer_queue*/,
              bool sample_shading,
-             const Color& color,
+             const color::Color& color,
              Glyphs&& glyphs)
                 : m_sample_shading(sample_shading),
                   m_instance(instance),
@@ -319,7 +319,7 @@ public:
              const vulkan::Queue& transfer_queue,
              bool sample_shading,
              int size,
-             const Color& color)
+             const color::Color& color)
                 : Impl(instance,
                        graphics_command_pool,
                        graphics_queue,
@@ -355,7 +355,7 @@ std::unique_ptr<View> create_view(
         const vulkan::Queue& transfer_queue,
         bool sample_shading,
         int size,
-        const Color& color)
+        const color::Color& color)
 {
         return std::make_unique<Impl>(
                 instance, graphics_command_pool, graphics_queue, transfer_command_pool, transfer_queue, sample_shading,

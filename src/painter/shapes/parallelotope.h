@@ -32,11 +32,11 @@ template <std::size_t N, typename T>
 class Parallelotope final : public Shape<N, T>
 {
         const geometry::Parallelotope<N, T> m_parallelotope;
-        std::optional<Color> m_light_source;
+        std::optional<color::Color> m_light_source;
         const T m_metalness;
         const T m_roughness;
-        const Color m_color;
-        const Color::DataType m_alpha;
+        const color::Color m_color;
+        const color::Color::DataType m_alpha;
         const bool m_alpha_nonzero = m_alpha > 0;
 
         class IntersectionImpl final : public Surface<N, T>
@@ -58,18 +58,18 @@ class Parallelotope final : public Shape<N, T>
                         return std::nullopt;
                 }
 
-                std::optional<Color> light_source() const override
+                std::optional<color::Color> light_source() const override
                 {
                         return m_obj->m_light_source;
                 }
 
-                Color brdf(const Vector<N, T>& n, const Vector<N, T>& v, const Vector<N, T>& l) const override
+                color::Color brdf(const Vector<N, T>& n, const Vector<N, T>& v, const Vector<N, T>& l) const override
                 {
                         return shading::GGXDiffuseBRDF<N, T>::f(
                                 m_obj->m_metalness, m_obj->m_roughness, m_obj->m_color, n, v, l);
                 }
 
-                shading::Sample<N, T, Color> sample_brdf(
+                shading::Sample<N, T, color::Color> sample_brdf(
                         RandomEngine<T>& random_engine,
                         const Vector<N, T>& n,
                         const Vector<N, T>& v) const override
@@ -84,19 +84,19 @@ public:
         Parallelotope(
                 const T metalness,
                 const T roughness,
-                const Color& color,
-                const Color::DataType alpha,
+                const color::Color& color,
+                const color::Color::DataType alpha,
                 const Vector<N, T>& org,
                 const V&... e)
                 : m_parallelotope(org, e...),
                   m_metalness(std::clamp(metalness, T(0), T(1))),
                   m_roughness(std::clamp(roughness, T(0), T(1))),
                   m_color(color.clamped()),
-                  m_alpha(std::clamp<Color::DataType>(alpha, 0, 1))
+                  m_alpha(std::clamp<color::Color::DataType>(alpha, 0, 1))
         {
         }
 
-        void set_light_source(const Color& color)
+        void set_light_source(const color::Color& color)
         {
                 m_light_source = color;
         }

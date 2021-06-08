@@ -34,7 +34,7 @@ struct View
 
         virtual ~View() = default;
 
-        virtual void set_color(const Color& color) const = 0;
+        virtual void set_color(const color::Color& color) const = 0;
 
         virtual void create_buffers(RenderBuffers2D* render_buffers, const Region<2, int>& viewport) = 0;
         virtual void delete_buffers() = 0;
@@ -54,5 +54,5 @@ std::unique_ptr<View> create_view(
         const vulkan::Queue& transfer_queue,
         bool sample_shading,
         int size,
-        const Color& color);
+        const color::Color& color);
 }

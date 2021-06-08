@@ -219,7 +219,7 @@ class SceneImpl final : public Scene<N, T>
 
         std::unique_ptr<const Projector<N, T>> m_projector;
 
-        Color m_background_light;
+        color::Color m_background_light;
 
         std::vector<const Shape<N, T>*> m_shape_pointers;
         std::vector<const LightSource<N, T>*> m_light_source_pointers;
@@ -270,7 +270,7 @@ class SceneImpl final : public Scene<N, T>
                 return *m_projector;
         }
 
-        const Color& background_light() const override
+        const color::Color& background_light() const override
         {
                 return m_background_light;
         }
@@ -282,7 +282,7 @@ class SceneImpl final : public Scene<N, T>
 
 public:
         SceneImpl(
-                const Color& background_light,
+                const color::Color& background_light,
                 std::unique_ptr<const Projector<N, T>>&& projector,
                 std::vector<std::unique_ptr<const LightSource<N, T>>>&& light_sources,
                 std::vector<std::unique_ptr<const Shape<N, T>>>&& shapes)
@@ -308,7 +308,7 @@ public:
 
 template <std::size_t N, typename T>
 std::unique_ptr<Scene<N, T>> create_storage_scene(
-        const Color& background_light,
+        const color::Color& background_light,
         std::unique_ptr<const Projector<N, T>>&& projector,
         std::vector<std::unique_ptr<const LightSource<N, T>>>&& light_sources,
         std::vector<std::unique_ptr<const Shape<N, T>>>&& shapes)
@@ -317,10 +317,10 @@ std::unique_ptr<Scene<N, T>> create_storage_scene(
                 background_light, std::move(projector), std::move(light_sources), std::move(shapes));
 }
 
-#define CREATE_STORAGE_SCENE_INSTANTIATION_N_T(N, T)                       \
-        template std::unique_ptr<Scene<(N), T>> create_storage_scene(      \
-                const Color&, std::unique_ptr<const Projector<(N), T>>&&,  \
-                std::vector<std::unique_ptr<const LightSource<(N), T>>>&&, \
+#define CREATE_STORAGE_SCENE_INSTANTIATION_N_T(N, T)                             \
+        template std::unique_ptr<Scene<(N), T>> create_storage_scene(            \
+                const color::Color&, std::unique_ptr<const Projector<(N), T>>&&, \
+                std::vector<std::unique_ptr<const LightSource<(N), T>>>&&,       \
                 std::vector<std::unique_ptr<const Shape<(N), T>>>&&);
 
 #define CREATE_STORAGE_SCENE_INSTANTIATION_N(N)            \

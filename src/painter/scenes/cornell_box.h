@@ -50,10 +50,10 @@ std::unique_ptr<const Scene<N, T>> create_cornell_box_scene(
         constexpr T NEAR = 0.7;
         constexpr T DEPTH = NEAR + 0.5 + BOX_SIZE + 2 * BOX_SPACE;
 
-        constexpr Color::DataType ALPHA = 1;
+        constexpr color::Color::DataType ALPHA = 1;
         constexpr T METALNESS = 0.1;
         constexpr T ROUGHNESS = 0.2;
-        const Color BACKGROUND_LIGHT = color::rgb::BLACK;
+        const color::Color BACKGROUND_LIGHT = color::rgb::BLACK;
 
         std::vector<std::unique_ptr<const Shape<N, T>>> shapes;
         std::vector<std::unique_ptr<const LightSource<N, T>>> light_sources;
@@ -129,7 +129,7 @@ std::unique_ptr<const Scene<N, T>> create_cornell_box_scene(
 
                 std::unique_ptr<HyperplaneParallelotope<N, T>> lamp = std::make_unique<HyperplaneParallelotope<N, T>>(
                         METALNESS, ROUGHNESS, color::rgb::WHITE, ALPHA, lamp_org, lamp_vectors);
-                lamp->set_light_source(Color(50));
+                lamp->set_light_source(color::Color(50));
 
                 shapes.push_back(std::move(lamp));
         }

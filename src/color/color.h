@@ -29,9 +29,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <string>
 
-namespace ns
-{
-namespace color
+namespace ns::color
 {
 enum class Type
 {
@@ -110,7 +108,7 @@ public:
 };
 
 template <typename T, std::size_t N>
-class Spectrum final : public ColorSamples<Spectrum<T, N>, N, T>
+class SpectrumSamples final : public ColorSamples<SpectrumSamples<T, N>, N, T>
 {
         static constexpr XYZ XYZ_VERSION = XYZ_31;
         static constexpr int FROM = 380;
@@ -122,7 +120,7 @@ class Spectrum final : public ColorSamples<Spectrum<T, N>, N, T>
         static_assert(TO <= RGB_SAMPLES_MAX_WAVELENGTH);
         static_assert(N > 3);
 
-        using Base = ColorSamples<Spectrum<T, N>, N, T>;
+        using Base = ColorSamples<SpectrumSamples<T, N>, N, T>;
 
         struct Colors
         {
@@ -313,15 +311,15 @@ class Spectrum final : public ColorSamples<Spectrum<T, N>, N, T>
 public:
         using DataType = T;
 
-        constexpr Spectrum()
+        constexpr SpectrumSamples()
         {
         }
 
-        constexpr explicit Spectrum(std::type_identity_t<T> v) : Base(std::max<T>(0, v))
+        constexpr explicit SpectrumSamples(std::type_identity_t<T> v) : Base(std::max<T>(0, v))
         {
         }
 
-        Spectrum(
+        SpectrumSamples(
                 std::type_identity_t<T> red,
                 std::type_identity_t<T> green,
                 std::type_identity_t<T> blue,
@@ -330,8 +328,8 @@ public:
         {
         }
 
-        Spectrum(const RGB8& c, Type type = Type::Reflectance)
-                : Spectrum(c.linear_red(), c.linear_green(), c.linear_blue(), type)
+        SpectrumSamples(const RGB8& c, Type type = Type::Reflectance)
+                : SpectrumSamples(c.linear_red(), c.linear_green(), c.linear_blue(), type)
         {
         }
 
@@ -350,13 +348,12 @@ public:
                 return "Spectrum";
         }
 
-        [[nodiscard]] friend std::string to_string(const Spectrum& c)
+        [[nodiscard]] friend std::string to_string(const SpectrumSamples& c)
         {
                 return c.to_string("spectrum");
         }
 };
-}
 
-using Color = color::RGB<float>;
-using Spectrum = color::Spectrum<float, 64>;
+using Color = RGB<float>;
+using Spectrum = SpectrumSamples<float, 64>;
 }

@@ -534,7 +534,7 @@ class Impl final : public MeshObject
                 m_mesh_buffer.set_lighting(ambient, metalness, roughness);
         }
 
-        void buffer_set_color(const Color& color)
+        void buffer_set_color(const color::Color& color)
         {
                 m_mesh_buffer.set_color(color.rgb32());
         }

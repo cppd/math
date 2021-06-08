@@ -221,7 +221,7 @@ class Impl final : public VolumeObject
                 float isosurface_alpha,
                 bool isosurface,
                 float isovalue,
-                const Color& color) const
+                const color::Color& color) const
         {
                 constexpr float eps = 1e-10f;
                 window_min = std::min(std::max(0.0f, window_min), 1 - eps);

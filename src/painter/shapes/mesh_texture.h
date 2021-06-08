@@ -88,7 +88,7 @@ public:
         }
 
         template <typename T>
-        Color color(const Vector<N, T>& p) const
+        color::Color color(const Vector<N, T>& p) const
         {
                 // Vulkan: Texel Coordinate Systems, Wrapping Operation.
 
@@ -134,7 +134,7 @@ public:
 
                 Vector<3, float> rgb = interpolation(pixels, x);
 
-                return Color(rgb[0], rgb[1], rgb[2]);
+                return color::Color(rgb[0], rgb[1], rgb[2]);
         }
 };
 }

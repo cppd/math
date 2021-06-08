@@ -194,7 +194,7 @@ void VolumeWidget::on_color_clicked()
                 return;
         }
 
-        Color color;
+        color::Color color;
         std::visit(
                 [&]<std::size_t N>(const std::shared_ptr<volume::VolumeObject<N>>& object)
                 {
@@ -367,7 +367,7 @@ void VolumeWidget::ui_set(const storage::VolumeObjectConst& object)
                         double isosurface_alpha;
                         bool isosurface;
                         float isovalue;
-                        Color color;
+                        color::Color color;
                         double ambient;
                         double metalness;
                         double roughness;

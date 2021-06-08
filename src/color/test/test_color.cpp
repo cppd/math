@@ -277,12 +277,12 @@ void test_color()
 {
         test_color<RGB<T>>("RGB", 0, 0, 0, 0, 0.005);
 
-        test_color<ns::Color>("Default Color", 0.03, 0.05, 0.06, 0.07, 0.01);
-        test_color<ns::Spectrum>("Default Spectrum", 0.03, 0.05, 0.06, 0.07, 0.01);
-        test_color<Spectrum<T, 50>>("Spectrum 50", 0.03, 0.05, 0.06, 0.07, 0.01);
-        test_color<Spectrum<T, 64>>("Spectrum 64", 0.03, 0.05, 0.06, 0.07, 0.01);
-        test_color<Spectrum<T, 100>>("Spectrum 100", 0.03, 0.05, 0.06, 0.07, 0.01);
-        test_color<Spectrum<T, 128>>("Spectrum 128", 0.03, 0.05, 0.06, 0.07, 0.01);
+        test_color<Color>("Default Color", 0.03, 0.05, 0.06, 0.07, 0.01);
+        test_color<Spectrum>("Default Spectrum", 0.03, 0.05, 0.06, 0.07, 0.01);
+        test_color<SpectrumSamples<T, 50>>("Spectrum 50", 0.03, 0.05, 0.06, 0.07, 0.01);
+        test_color<SpectrumSamples<T, 64>>("Spectrum 64", 0.03, 0.05, 0.06, 0.07, 0.01);
+        test_color<SpectrumSamples<T, 100>>("Spectrum 100", 0.03, 0.05, 0.06, 0.07, 0.01);
+        test_color<SpectrumSamples<T, 128>>("Spectrum 128", 0.03, 0.05, 0.06, 0.07, 0.01);
 }
 
 void test()

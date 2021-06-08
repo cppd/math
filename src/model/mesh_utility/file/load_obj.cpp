@@ -124,7 +124,7 @@ bool check_range(const T1& v, const T2& min, const T3& max)
         return v >= min && v <= max;
 }
 
-Color read_color(const char* str)
+color::Color read_color(const char* str)
 {
         static constexpr float MIN = 0;
         static constexpr float MAX = 1;
@@ -141,7 +141,7 @@ Color read_color(const char* str)
                       + ") are not in the range [0, 1]");
         }
 
-        return Color(red, green, blue);
+        return color::Color(red, green, blue);
 }
 
 template <std::size_t N>

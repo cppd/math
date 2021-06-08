@@ -47,7 +47,7 @@ namespace trace_implementation
 {
 constexpr int MAX_DEPTH = 5;
 
-static_assert(std::is_floating_point_v<Color::DataType>);
+static_assert(std::is_floating_point_v<color::Color::DataType>);
 
 template <std::size_t N, typename T>
 struct Normals final
@@ -86,7 +86,7 @@ Normals<N, T> compute_normals(const bool smooth_normals, const Surface<N, T>* co
 }
 
 template <std::size_t N, typename T>
-std::optional<Color> trace_path(
+std::optional<color::Color> trace_path(
         const Scene<N, T>& scene,
         const bool smooth_normals,
         const Ray<N, T>& ray,
@@ -110,14 +110,14 @@ std::optional<Color> trace_path(
 
         if (dot(n, v) <= 0)
         {
-                return Color(0);
+                return color::Color(0);
         }
 
-        Color color_sum(0);
+        color::Color color_sum(0);
 
         [&]
         {
-                const std::optional<Color> surface_light_source = surface->light_source();
+                const std::optional<color::Color> surface_light_source = surface->light_source();
                 if (!surface_light_source)
                 {
                         return;
@@ -149,7 +149,7 @@ std::optional<Color> trace_path(
                         continue;
                 }
 
-                const Color brdf = surface->brdf(n, v, l);
+                const color::Color brdf = surface->brdf(n, v, l);
                 color_sum += brdf * sample.L * (n_l / sample.pdf);
         }
 
@@ -160,7 +160,7 @@ std::optional<Color> trace_path(
 
         [&]
         {
-                const shading::Sample<N, T, Color> sample = surface->sample_brdf(engine, n, v);
+                const shading::Sample<N, T, color::Color> sample = surface->sample_brdf(engine, n, v);
 
                 if (sample.brdf.is_black() || sample.pdf <= 0)
                 {
@@ -181,7 +181,7 @@ std::optional<Color> trace_path(
                         return;
                 }
 
-                const Color L = *trace_path(scene, smooth_normals, Ray<N, T>(point, l), depth + 1, engine);
+                const color::Color L = *trace_path(scene, smooth_normals, Ray<N, T>(point, l), depth + 1, engine);
                 color_sum += sample.brdf * L * (n_l / sample.pdf);
         }();
 
@@ -190,7 +190,7 @@ std::optional<Color> trace_path(
 }
 
 template <std::size_t N, typename T>
-std::optional<Color> trace_path(
+std::optional<color::Color> trace_path(
         const Scene<N, T>& scene,
         const bool smooth_normals,
         const Ray<N, T>& ray,

@@ -64,13 +64,13 @@ public:
 
         void set_view(view::View* view);
 
-        Color background_color() const;
-        Color wireframe_color() const;
-        Color clip_plane_color() const;
-        Color normal_color_positive() const;
-        Color normal_color_negative() const;
-        Color dft_background_color() const;
-        Color dft_color() const;
+        color::Color background_color() const;
+        color::Color wireframe_color() const;
+        color::Color clip_plane_color() const;
+        color::Color normal_color_positive() const;
+        color::Color normal_color_negative() const;
+        color::Color dft_background_color() const;
+        color::Color dft_color() const;
         double lighting_intensity() const;
 };
 }

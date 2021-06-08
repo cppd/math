@@ -103,8 +103,8 @@ void test()
 {
         LOG("Test Lambertian BRDF");
 
-        test_brdf<Color>();
-        test_brdf<Spectrum>();
+        test_brdf<color::Color>();
+        test_brdf<color::Spectrum>();
 
         LOG("Test Lambertian BRDF passed");
 }

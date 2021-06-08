@@ -58,12 +58,12 @@ struct Renderer
         virtual ~Renderer() = default;
 
         virtual void set_lighting_intensity(double lighting_intensity) = 0;
-        virtual void set_background_color(const Color& color) = 0;
-        virtual void set_wireframe_color(const Color& color) = 0;
-        virtual void set_clip_plane_color(const Color& color) = 0;
+        virtual void set_background_color(const color::Color& color) = 0;
+        virtual void set_wireframe_color(const color::Color& color) = 0;
+        virtual void set_clip_plane_color(const color::Color& color) = 0;
         virtual void set_normal_length(float length) = 0;
-        virtual void set_normal_color_positive(const Color& color) = 0;
-        virtual void set_normal_color_negative(const Color& color) = 0;
+        virtual void set_normal_color_positive(const color::Color& color) = 0;
+        virtual void set_normal_color_negative(const color::Color& color) = 0;
         virtual void set_show_smooth(bool show) = 0;
         virtual void set_show_wireframe(bool show) = 0;
         virtual void set_show_shadow(bool show) = 0;

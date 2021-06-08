@@ -139,7 +139,7 @@ void set_horizontal_stretch(QWidget* widget, int stretchFactor)
         widget->setSizePolicy(sp);
 }
 
-Color qcolor_to_color(const QColor& c)
+color::Color qcolor_to_color(const QColor& c)
 {
         unsigned char r = std::clamp(c.red(), 0, 255);
         unsigned char g = std::clamp(c.green(), 0, 255);
@@ -147,7 +147,7 @@ Color qcolor_to_color(const QColor& c)
         return RGB8(r, g, b);
 }
 
-QColor color_to_qcolor(const Color& c)
+QColor color_to_qcolor(const color::Color& c)
 {
         RGB8 srgb8 = make_rgb8(c.rgb32());
         return QColor(srgb8.red, srgb8.green, srgb8.blue);

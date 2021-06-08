@@ -85,7 +85,7 @@ struct PixelData final
         PixelData(
                 const Projector<N, T>& projector,
                 int samples_per_pixel,
-                const Color& background_color,
+                const color::Color& background_color,
                 Notifier<N - 1>* notifier)
                 : projector(projector),
                   sampler(samples_per_pixel),
@@ -142,7 +142,7 @@ void paint_pixels(
 {
         thread_local RandomEngine<T> random_engine = create_engine<RandomEngine<T>>();
         thread_local std::vector<Vector<N - 1, T>> sample_points;
-        thread_local std::vector<std::optional<Color>> sample_colors;
+        thread_local std::vector<std::optional<color::Color>> sample_colors;
 
         while (true)
         {
