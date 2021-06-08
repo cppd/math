@@ -36,6 +36,11 @@ namespace
 template <typename T>
 using RandomEngine = std::conditional_t<sizeof(T) <= 4, std::mt19937, std::mt19937_64>;
 
+constexpr unsigned SAMPLE_COUNT = 1'000'000;
+
+template <typename T>
+constexpr T MIN_ROUGHNESS = 0.2;
+
 template <std::size_t N, typename T, typename Color>
 class BRDF final : public TestBRDF<N, T, Color, RandomEngine<T>>
 {
@@ -70,64 +75,88 @@ public:
 };
 
 template <std::size_t N, typename T, typename Color>
-void test_brdf()
+void test_brdf_white()
 {
-        constexpr unsigned SAMPLE_COUNT = 100'000;
-        constexpr T MIN_ROUGHNESS = 0.2;
+        const BRDF<N, T, Color> brdf(Color(1), MIN_ROUGHNESS<T>);
 
-        {
-                const BRDF<N, T, Color> brdf(Color(1), MIN_ROUGHNESS);
+        Color result;
 
-                Color result;
+        LOG(Color::name() + ", " + to_string(N) + "D, " + type_name<T>() + ", f, white");
+        result = test_brdf_f(brdf, SAMPLE_COUNT);
+        check_color_less(result, brdf.color());
 
-                LOG(Color::name() + ", " + to_string(N) + "D, " + type_name<T>() + ", f, white");
-                result = test_brdf_f(brdf, SAMPLE_COUNT);
-                check_color_less(result, brdf.color());
+        LOG(Color::name() + ", " + to_string(N) + "D, " + type_name<T>() + ", sample f, white");
+        result = test_brdf_sample_f(brdf, SAMPLE_COUNT);
+        check_color_less(result, brdf.color());
+}
 
-                LOG(Color::name() + ", " + to_string(N) + "D, " + type_name<T>() + ", sample f, white");
-                result = test_brdf_sample_f(brdf, SAMPLE_COUNT);
-                check_color_less(result, brdf.color());
-        }
-        {
-                const BRDF<N, T, Color> brdf(random_non_black_color<Color>(), MIN_ROUGHNESS);
+template <std::size_t N, typename T, typename Color>
+void test_brdf_random()
+{
+        const BRDF<N, T, Color> brdf(random_non_black_color<Color>(), MIN_ROUGHNESS<T>);
 
-                Color result;
+        Color result;
 
-                LOG(Color::name() + ", " + to_string(N) + "D, " + type_name<T>() + ", f, random");
-                result = test_brdf_f(brdf, SAMPLE_COUNT);
-                check_color_range(result);
+        LOG(Color::name() + ", " + to_string(N) + "D, " + type_name<T>() + ", f, random");
+        result = test_brdf_f(brdf, SAMPLE_COUNT);
+        check_color_range(result);
 
-                LOG(Color::name() + ", " + to_string(N) + "D, " + type_name<T>() + ", sample f, random");
-                result = test_brdf_sample_f(brdf, SAMPLE_COUNT);
-                check_color_range(result);
-        }
+        LOG(Color::name() + ", " + to_string(N) + "D, " + type_name<T>() + ", sample f, random");
+        result = test_brdf_sample_f(brdf, SAMPLE_COUNT);
+        check_color_range(result);
 }
 
 template <typename T, typename Color>
-void test_brdf()
+void test_brdf(ProgressRatio* progress)
 {
-        test_brdf<3, T, Color>();
-        test_brdf<4, T, Color>();
-        test_brdf<5, T, Color>();
+        progress->set(0.0 / 6);
+        test_brdf_white<3, T, Color>();
+
+        progress->set(1.0 / 6);
+        test_brdf_random<3, T, Color>();
+
+        progress->set(2.0 / 6);
+        test_brdf_white<4, T, Color>();
+
+        progress->set(3.0 / 6);
+        test_brdf_random<4, T, Color>();
+
+        progress->set(4.0 / 6);
+        test_brdf_white<5, T, Color>();
+
+        progress->set(5.0 / 6);
+        test_brdf_random<5, T, Color>();
 }
 
-template <typename Color>
-void test_brdf()
-{
-        test_brdf<float, Color>();
-        test_brdf<double, Color>();
-}
-
-void test()
+void test_small(ProgressRatio* progress)
 {
         LOG("Test GGX Diffuse BRDF");
 
-        test_brdf<color::Color>();
-        test_brdf<color::Spectrum>();
+        test_brdf<double, color::Color>(progress);
+
+        LOG("Test GGX Diffuse BRDF passed");
+}
+
+void test_large(ProgressRatio* progress)
+{
+        LOG("Test GGX Diffuse BRDF");
+
+        progress->set_text("float Color");
+        test_brdf<float, color::Color>(progress);
+
+        progress->set_text("double Color");
+        test_brdf<double, color::Color>(progress);
+
+        progress->set_text("float Spectrum");
+        test_brdf<float, color::Spectrum>(progress);
+
+        progress->set_text("double Spectrum");
+        test_brdf<double, color::Spectrum>(progress);
 
         LOG("Test GGX Diffuse BRDF passed");
 }
 }
 
-TEST_SMALL("BRDF, GGX Diffuse", test)
+TEST_SMALL("BRDF, GGX Diffuse", test_small)
+TEST_LARGE("BRDF, GGX Diffuse", test_large)
 }
