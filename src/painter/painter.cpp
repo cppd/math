@@ -64,7 +64,7 @@ void join_thread(std::thread* thread) noexcept
         }
 }
 
-template <std::size_t N, typename T>
+template <std::size_t N, typename T, typename Color>
 struct PaintData final
 {
         const Scene<N, T>& scene;
@@ -75,17 +75,17 @@ struct PaintData final
         }
 };
 
-template <std::size_t N, typename T>
+template <std::size_t N, typename T, typename Color>
 struct PixelData final
 {
         const Projector<N, T>& projector;
         SamplerStratifiedJittered<N - 1, T> sampler;
-        Pixels<N - 1, T> pixels;
+        Pixels<N - 1, T, Color> pixels;
 
         PixelData(
                 const Projector<N, T>& projector,
                 int samples_per_pixel,
-                const color::Color& background_color,
+                const Color& background_color,
                 Notifier<N - 1>* notifier)
                 : projector(projector),
                   sampler(samples_per_pixel),
@@ -131,18 +131,18 @@ public:
         ThreadBusy& operator=(const ThreadBusy&) = delete;
 };
 
-template <std::size_t N, typename T>
+template <std::size_t N, typename T, typename Color>
 void paint_pixels(
         unsigned thread_number,
-        const PaintData<N, T>& paint_data,
+        const PaintData<N, T, Color>& paint_data,
         std::atomic_bool* stop,
-        PixelData<N, T>* pixel_data,
+        PixelData<N, T, Color>* pixel_data,
         PaintingStatistics* statistics,
         Notifier<N - 1>* notifier)
 {
         thread_local RandomEngine<T> random_engine = create_engine<RandomEngine<T>>();
         thread_local std::vector<Vector<N - 1, T>> sample_points;
-        thread_local std::vector<std::optional<color::Color>> sample_colors;
+        thread_local std::vector<std::optional<Color>> sample_colors;
 
         while (true)
         {
@@ -171,7 +171,8 @@ void paint_pixels(
                 for (std::size_t i = 0; i < sample_points.size(); ++i)
                 {
                         const Ray<N, T> ray = pixel_data->projector.ray(pixel_org + sample_points[i]);
-                        sample_colors[i] = trace_path(paint_data.scene, paint_data.smooth_normals, ray, random_engine);
+                        sample_colors[i] = trace_path<N, T, Color>(
+                                paint_data.scene, paint_data.smooth_normals, ray, random_engine);
                 }
 
                 pixel_data->pixels.add_samples(*pixel, sample_points, sample_colors);
@@ -179,11 +180,11 @@ void paint_pixels(
         }
 }
 
-template <std::size_t N, typename T>
+template <std::size_t N, typename T, typename Color>
 void prepare_next_pass(
         unsigned thread_number,
         std::atomic_bool* stop,
-        PixelData<N, T>* pixel_data,
+        PixelData<N, T, Color>* pixel_data,
         PassData* pass_data,
         PaintingStatistics* statistics,
         Notifier<N - 1>* notifier)
@@ -214,13 +215,13 @@ void prepare_next_pass(
         }
 }
 
-template <std::size_t N, typename T>
+template <std::size_t N, typename T, typename Color>
 void worker_thread(
         unsigned thread_number,
         Barrier* barrier,
-        const PaintData<N, T>& paint_data,
+        const PaintData<N, T, Color>& paint_data,
         std::atomic_bool* stop,
-        PixelData<N, T>* pixel_data,
+        PixelData<N, T, Color>* pixel_data,
         PassData* pass_data,
         PaintingStatistics* statistics,
         Notifier<N - 1>* notifier)
@@ -275,12 +276,12 @@ void worker_thread(
         }
 }
 
-template <std::size_t N, typename T>
+template <std::size_t N, typename T, typename Color>
 void worker_threads(
         int thread_count,
-        const PaintData<N, T>& paint_data,
+        const PaintData<N, T, Color>& paint_data,
         std::atomic_bool* stop,
-        PixelData<N, T>* pixel_data,
+        PixelData<N, T, Color>* pixel_data,
         PassData* pass_data,
         PaintingStatistics* statistics,
         Notifier<N - 1>* notifier) noexcept
@@ -335,8 +336,8 @@ void painter_thread(
         {
                 try
                 {
-                        const PaintData paint_data(scene, smooth_normals);
-                        PixelData<N, T> pixel_data(
+                        const PaintData<N, T, color::Color> paint_data(scene, smooth_normals);
+                        PixelData<N, T, color::Color> pixel_data(
                                 scene.projector(), samples_per_pixel, scene.background_light(), notifier);
                         PassData pass_data(max_pass_count);
 

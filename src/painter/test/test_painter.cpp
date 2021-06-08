@@ -44,8 +44,8 @@ namespace
 {
 constexpr RGB8 BACKGROUND_LIGHT(50, 100, 150);
 constexpr RGB8 DEFAULT_COLOR(150, 170, 150);
-constexpr color::Color::DataType METALNESS = 0;
-constexpr color::Color::DataType LIGHTING_INTENSITY = 1;
+constexpr float METALNESS = 0;
+constexpr float LIGHTING_INTENSITY = 1;
 
 constexpr std::string_view DIRECTORY_NAME = "painter_test";
 constexpr std::string_view IMAGE_FILE_FORMAT = "png";

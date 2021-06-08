@@ -17,7 +17,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
-#include <src/color/color.h>
 #include <src/com/error.h>
 #include <src/com/global_index.h>
 #include <src/com/interpolation.h>
@@ -88,7 +87,7 @@ public:
         }
 
         template <typename T>
-        color::Color color(const Vector<N, T>& p) const
+        Vector<3, float> color(const Vector<N, T>& p) const
         {
                 // Vulkan: Texel Coordinate Systems, Wrapping Operation.
 
@@ -134,7 +133,7 @@ public:
 
                 Vector<3, float> rgb = interpolation(pixels, x);
 
-                return color::Color(rgb[0], rgb[1], rgb[2]);
+                return rgb;
         }
 };
 }

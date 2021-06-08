@@ -22,7 +22,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "../painter.h"
 
-#include <src/color/color.h>
 #include <src/com/global_index.h>
 #include <src/com/spin_lock.h>
 #include <src/image/image.h>
@@ -81,17 +80,17 @@ static_assert(integer_radius(1.6) == 2);
 
 //
 
+template <typename Color>
 class Pixel final
 {
-        color::Color m_color_sum{0};
-        color::Color::DataType m_hit_weight_sum{0};
-        color::Color::DataType m_background_weight_sum{0};
+        using DataType = typename Color::DataType;
+
+        Color m_color_sum{0};
+        DataType m_hit_weight_sum{0};
+        DataType m_background_weight_sum{0};
 
 public:
-        void merge(
-                const color::Color& color_sum,
-                color::Color::DataType hit_weight_sum,
-                color::Color::DataType background_weight_sum)
+        void merge(const Color& color_sum, DataType hit_weight_sum, DataType background_weight_sum)
         {
                 m_color_sum += color_sum;
                 m_hit_weight_sum += hit_weight_sum;
@@ -100,14 +99,14 @@ public:
 
         struct Info final
         {
-                color::Color color;
-                color::Color::DataType alpha;
+                Color color;
+                DataType alpha;
         };
 
         Info info() const
         {
                 Info info;
-                const color::Color::DataType sum = m_hit_weight_sum + m_background_weight_sum;
+                const DataType sum = m_hit_weight_sum + m_background_weight_sum;
                 if (sum > 0)
                 {
                         info.color = m_color_sum / sum;
@@ -115,7 +114,7 @@ public:
                 }
                 else
                 {
-                        info.color = color::Color(0);
+                        info.color = Color(0);
                         info.alpha = 0;
                 }
                 return info;
@@ -153,7 +152,7 @@ public:
 };
 }
 
-template <std::size_t N, typename T>
+template <std::size_t N, typename T, typename Color>
 class Pixels final
 {
         using PaintbrushType = std::uint_least16_t;
@@ -176,14 +175,14 @@ class Pixels final
         const std::array<int, N> m_screen_size;
         const std::array<int, N> m_screen_max = pixels_implementation::max_values_for_size(m_screen_size);
 
-        const color::Color m_background_color;
+        const Color m_background_color;
         const Vector<3, float> m_background_color_rgb32 = m_background_color.rgb32();
 
         Notifier<N>* const m_notifier;
 
         const GlobalIndex<N, long long> m_global_index;
 
-        std::vector<pixels_implementation::Pixel> m_pixels;
+        std::vector<pixels_implementation::Pixel<Color>> m_pixels;
         mutable std::vector<SpinLock> m_pixel_locks;
 
         Paintbrush<N, PaintbrushType> m_paintbrush;
@@ -222,7 +221,7 @@ class Pixels final
                 region<0>(min, max, p, f);
         }
 
-        Vector<3, float> to_rgb(const pixels_implementation::Pixel::Info& info) const
+        Vector<3, float> to_rgb(const typename pixels_implementation::Pixel<Color>::Info& info) const
         {
                 if (info.alpha >= 1)
                 {
@@ -232,12 +231,14 @@ class Pixels final
                 {
                         return m_background_color_rgb32;
                 }
-                const color::Color c = info.color + (1 - info.alpha) * m_background_color;
+                const Color c = info.color + (1 - info.alpha) * m_background_color;
                 return c.rgb32();
         }
 
 public:
-        Pixels(const std::array<int, N>& screen_size, const color::Color& background_color, Notifier<N>* notifier)
+        Pixels(const std::array<int, N>& screen_size,
+               const std::type_identity_t<Color>& background_color,
+               Notifier<N>* notifier)
                 : m_screen_size(screen_size),
                   m_background_color(background_color),
                   m_notifier(notifier),
@@ -269,7 +270,7 @@ public:
         void add_samples(
                 const std::array<int, N>& pixel,
                 const std::vector<Vector<N, T>>& points,
-                const std::vector<std::optional<color::Color>>& colors)
+                const std::vector<std::optional<Color>>& colors)
         {
                 namespace impl = pixels_implementation;
 
@@ -288,13 +289,13 @@ public:
                                        return r;
                                }();
 
-                               color::Color color_sum{0};
-                               color::Color::DataType hit_weight_sum{0};
-                               color::Color::DataType background_weight_sum{0};
+                               Color color_sum{0};
+                               typename Color::DataType hit_weight_sum{0};
+                               typename Color::DataType background_weight_sum{0};
 
                                for (std::size_t i = 0; i < points.size(); ++i)
                                {
-                                       const color::Color::DataType weight =
+                                       const typename Color::DataType weight =
                                                m_filter.compute(region_pixel_center_in_point_coordinates - points[i]);
 
                                        if (colors[i])
@@ -312,7 +313,7 @@ public:
 
                                std::lock_guard lg(m_pixel_locks[region_pixel_index]);
 
-                               impl::Pixel& p = m_pixels[region_pixel_index];
+                               impl::Pixel<Color>& p = m_pixels[region_pixel_index];
                                p.merge(color_sum, hit_weight_sum, background_weight_sum);
                                m_notifier->pixel_set(region_pixel, to_rgb(p.info()));
                        });
@@ -343,9 +344,9 @@ public:
 
                 std::byte* ptr_rgb = image_rgb->pixels.data();
                 std::byte* ptr_rgba = image_rgba->pixels.data();
-                for (const impl::Pixel& pixel : m_pixels)
+                for (const impl::Pixel<Color>& pixel : m_pixels)
                 {
-                        const impl::Pixel::Info info = pixel.info();
+                        const typename impl::Pixel<Color>::Info info = pixel.info();
 
                         RGBA rgba;
                         rgba.rgb = info.color.rgb32();
@@ -362,7 +363,7 @@ public:
                         }
                         else
                         {
-                                const color::Color c = info.color + (1 - info.alpha) * m_background_color;
+                                const Color c = info.color + (1 - info.alpha) * m_background_color;
                                 rgb = c.rgb32();
                         }
 

@@ -177,6 +177,16 @@ class IntersectionImpl final : public Surface<N, T>
         const Mesh<N, T>* m_mesh;
         const MeshFacet<N, T>* m_facet;
 
+        color::Color surface_color(const Material<T>& m) const
+        {
+                if (m_facet->has_texcoord() && m.map_Kd >= 0)
+                {
+                        Vector<3, float> rgb = m_mesh->images()[m.map_Kd].color(m_facet->texcoord(this->point()));
+                        return color::Color(rgb[0], rgb[1], rgb[2]);
+                }
+                return m.Kd;
+        }
+
 public:
         IntersectionImpl(const Vector<N, T>& point, const Mesh<N, T>* mesh, const MeshFacet<N, T>* facet)
                 : Surface<N, T>(point), m_mesh(mesh), m_facet(facet)
@@ -204,16 +214,7 @@ public:
 
                 const Material<T>& m = m_mesh->materials()[m_facet->material()];
 
-                const color::Color color = [&]
-                {
-                        if (m_facet->has_texcoord() && m.map_Kd >= 0)
-                        {
-                                return m_mesh->images()[m.map_Kd].color(m_facet->texcoord(this->point()));
-                        }
-                        return m.Kd;
-                }();
-
-                return shading::ggx_diffuse::f(m.metalness, m.roughness, color, n, v, l);
+                return shading::ggx_diffuse::f(m.metalness, m.roughness, surface_color(m), n, v, l);
         }
 
         shading::Sample<N, T, color::Color> sample_brdf(
@@ -225,16 +226,7 @@ public:
 
                 const Material<T>& m = m_mesh->materials()[m_facet->material()];
 
-                const color::Color color = [&]
-                {
-                        if (m_facet->has_texcoord() && m.map_Kd >= 0)
-                        {
-                                return m_mesh->images()[m.map_Kd].color(m_facet->texcoord(this->point()));
-                        }
-                        return m.Kd;
-                }();
-
-                return shading::ggx_diffuse::sample_f(random_engine, m.metalness, m.roughness, color, n, v);
+                return shading::ggx_diffuse::sample_f(random_engine, m.metalness, m.roughness, surface_color(m), n, v);
         }
 };
 

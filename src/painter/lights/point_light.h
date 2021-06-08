@@ -35,11 +35,11 @@ class PointLight final : public LightSource<N, T>
         static_assert(std::is_floating_point_v<T>);
 
         Vector<N, T> m_location;
-        Color m_color;
+        color::Color m_color;
         T m_coef;
 
 public:
-        PointLight(const Vector<N, T>& location, const Color& color, T unit_intensity_distance)
+        PointLight(const Vector<N, T>& location, const color::Color& color, T unit_intensity_distance)
                 : m_location(location), m_color(color), m_coef(std::pow(unit_intensity_distance, T(N - 1)))
         {
         }
