@@ -37,6 +37,8 @@ PainterParametersNdDialog::PainterParametersNdDialog(
         int max_samples_per_pixel,
         const std::array<const char*, 2>& precisions,
         int default_precision_index,
+        const std::array<const char*, 2>& colors,
+        int default_color_index,
         std::optional<PainterParametersNd>& parameters)
         : QDialog(parent_for_dialog()),
           m_parameters_widget(new PainterParametersWidget(
@@ -45,7 +47,9 @@ PainterParametersNdDialog::PainterParametersNdDialog(
                   default_samples_per_pixel,
                   max_samples_per_pixel,
                   precisions,
-                  default_precision_index)),
+                  default_precision_index,
+                  colors,
+                  default_color_index)),
           m_parameters(parameters)
 {
         if (!(dimension >= 4))
@@ -162,6 +166,7 @@ void PainterParametersNdDialog::done(int r)
         m_parameters->flat_facets = m_parameters_widget->flat_facets();
         m_parameters->cornell_box = m_parameters_widget->cornell_box();
         m_parameters->precision_index = m_parameters_widget->precision_index();
+        m_parameters->color_index = m_parameters_widget->color_index();
 
         QDialog::done(r);
 }
@@ -175,13 +180,16 @@ std::optional<PainterParametersNd> PainterParametersNdDialog::show(
         int default_samples_per_pixel,
         int max_samples_per_pixel,
         const std::array<const char*, 2>& precisions,
-        int default_precision_index)
+        int default_precision_index,
+        const std::array<const char*, 2>& colors,
+        int default_color_index)
 {
         std::optional<PainterParametersNd> parameters;
 
         QtObjectInDynamicMemory w(new PainterParametersNdDialog(
                 dimension, max_thread_count, default_screen_size, min_screen_size, max_screen_size,
-                default_samples_per_pixel, max_samples_per_pixel, precisions, default_precision_index, parameters));
+                default_samples_per_pixel, max_samples_per_pixel, precisions, default_precision_index, colors,
+                default_color_index, parameters));
 
         if (!w->exec() || w.isNull())
         {

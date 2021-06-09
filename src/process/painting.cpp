@@ -51,6 +51,9 @@ constexpr int PAINTER_DEFAULT_SCREEN_SIZE_ND = (N == 4) ? 500 : ((N == 5) ? 100 
 using Precisions = std::tuple<double, float>;
 constexpr std::size_t DEFAULT_PRECISION_INDEX = 0;
 
+using Colors = std::tuple<color::Spectrum, color::Color>;
+constexpr std::size_t DEFAULT_COLOR_INDEX = 0;
+
 template <std::size_t N, typename T, typename Color>
 void painter_function(
         ProgressRatioList* progress_list,
@@ -123,6 +126,31 @@ void scene_function(
                 parameters.samples_per_pixel, parameters.flat_facets);
 }
 
+template <typename T, std::size_t N, typename Parameters>
+void color_function(
+        const std::vector<std::shared_ptr<const mesh::MeshObject<N>>>& mesh_objects,
+        const view::info::Camera& camera,
+        const color::Color& background_light,
+        const color::Color::DataType& lighting_intensity,
+        const Parameters& parameters,
+        ProgressRatioList* progress_list)
+{
+        static_assert(2 == std::tuple_size_v<Colors>);
+        switch (parameters.color_index)
+        {
+        case 0:
+                scene_function<T, std::tuple_element_t<0, Colors>>(
+                        mesh_objects, camera, background_light, lighting_intensity, parameters, progress_list);
+                return;
+
+        case 1:
+                scene_function<T, std::tuple_element_t<1, Colors>>(
+                        mesh_objects, camera, background_light, lighting_intensity, parameters, progress_list);
+                return;
+        }
+        error("Unknown color index " + to_string(parameters.color_index));
+};
+
 template <std::size_t N, typename Parameters>
 void thread_function(
         const std::vector<std::shared_ptr<const mesh::MeshObject<N>>>& mesh_objects,
@@ -136,12 +164,12 @@ void thread_function(
         switch (parameters.precision_index)
         {
         case 0:
-                scene_function<std::tuple_element_t<0, Precisions>, color::Color>(
+                color_function<std::tuple_element_t<0, Precisions>>(
                         mesh_objects, camera, background_light, lighting_intensity, parameters, progress_list);
                 return;
 
         case 1:
-                scene_function<std::tuple_element_t<1, Precisions>, color::Color>(
+                color_function<std::tuple_element_t<1, Precisions>>(
                         mesh_objects, camera, background_light, lighting_intensity, parameters, progress_list);
                 return;
         }
@@ -176,11 +204,16 @@ std::function<void(ProgressRatioList*)> action_painter_function(
 
         static_assert(PAINTER_DEFAULT_SAMPLES_PER_PIXEL<N> <= PAINTER_MAXIMUM_SAMPLES_PER_PIXEL<N>);
         static_assert(DEFAULT_PRECISION_INDEX < std::tuple_size_v<Precisions>);
+        static_assert(DEFAULT_COLOR_INDEX < std::tuple_size_v<Colors>);
 
         static_assert(2 == std::tuple_size_v<Precisions>);
         const std::array<const char*, 2> precisions{
                 type_bit_name<std::tuple_element_t<0, Precisions>>(),
                 type_bit_name<std::tuple_element_t<1, Precisions>>()};
+
+        static_assert(2 == std::tuple_size_v<Colors>);
+        const std::array<const char*, 2> colors{
+                std::tuple_element_t<0, Colors>::name(), std::tuple_element_t<1, Colors>::name()};
 
         if constexpr (N == 3)
         {
@@ -188,7 +221,7 @@ std::function<void(ProgressRatioList*)> action_painter_function(
                         gui::dialog::PainterParameters3dDialog::show(
                                 hardware_concurrency(), camera.width, camera.height, PAINTER_MAXIMUM_SCREEN_SIZE_3D,
                                 PAINTER_DEFAULT_SAMPLES_PER_PIXEL<N>, PAINTER_MAXIMUM_SAMPLES_PER_PIXEL<N>, precisions,
-                                DEFAULT_PRECISION_INDEX);
+                                DEFAULT_PRECISION_INDEX, colors, DEFAULT_COLOR_INDEX);
 
                 if (!parameters)
                 {
@@ -211,7 +244,7 @@ std::function<void(ProgressRatioList*)> action_painter_function(
                                 N, hardware_concurrency(), PAINTER_DEFAULT_SCREEN_SIZE_ND<N>,
                                 PAINTER_MINIMUM_SCREEN_SIZE_ND, PAINTER_MAXIMUM_SCREEN_SIZE_ND,
                                 PAINTER_DEFAULT_SAMPLES_PER_PIXEL<N>, PAINTER_MAXIMUM_SAMPLES_PER_PIXEL<N>, precisions,
-                                DEFAULT_PRECISION_INDEX);
+                                DEFAULT_PRECISION_INDEX, colors, DEFAULT_COLOR_INDEX);
 
                 if (!parameters)
                 {

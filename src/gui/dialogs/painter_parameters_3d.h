@@ -34,6 +34,7 @@ struct PainterParameters3d final
         bool flat_facets;
         bool cornell_box;
         int precision_index;
+        int color_index;
 };
 
 class PainterParameters3dDialog final : public QDialog
@@ -62,6 +63,8 @@ private:
                 int max_samples_per_pixel,
                 const std::array<const char*, 2>& precisions,
                 int default_precision_index,
+                const std::array<const char*, 2>& colors,
+                int default_color_index,
                 std::optional<PainterParameters3d>& parameters);
 
         void on_width_value_changed(int);
@@ -78,6 +81,8 @@ public:
                 int default_samples_per_pixel,
                 int max_samples_per_pixel,
                 const std::array<const char*, 2>& precisions,
-                int default_precision_index);
+                int default_precision_index,
+                const std::array<const char*, 2>& colors,
+                int default_color_index);
 };
 }

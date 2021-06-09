@@ -30,7 +30,9 @@ PainterParametersWidget::PainterParametersWidget(
         int default_samples_per_pixel,
         int max_samples_per_pixel,
         const std::array<const char*, 2>& precisions,
-        int default_precision_index)
+        int default_precision_index,
+        const std::array<const char*, 2>& colors,
+        int default_color_index)
         : QWidget(parent)
 {
         if (!(max_thread_count >= 1))
@@ -65,6 +67,21 @@ PainterParametersWidget::PainterParametersWidget(
                 error("Default precision index error " + to_string(default_precision_index));
         }
 
+        if (std::any_of(
+                    colors.cbegin(), colors.cend(),
+                    [](const char* s)
+                    {
+                            return s == nullptr || std::string_view(s).empty();
+                    }))
+        {
+                error("Empty colors");
+        }
+
+        if (!(default_color_index == 0 || default_color_index == 1))
+        {
+                error("Default color index error " + to_string(default_color_index));
+        }
+
         ui.setupUi(this);
 
         this->layout()->setContentsMargins(0, 0, 0, 0);
@@ -93,6 +110,17 @@ PainterParametersWidget::PainterParametersWidget(
         {
                 ui.radioButton_precision_1->setChecked(true);
         }
+
+        ui.radioButton_color_0->setText(colors[0]);
+        ui.radioButton_color_1->setText(colors[1]);
+        if (default_color_index == 0)
+        {
+                ui.radioButton_color_0->setChecked(true);
+        }
+        else
+        {
+                ui.radioButton_color_1->setChecked(true);
+        }
 }
 
 bool PainterParametersWidget::check()
@@ -117,6 +145,12 @@ bool PainterParametersWidget::check()
         if (!(ui.radioButton_precision_0->isChecked() || ui.radioButton_precision_1->isChecked()))
         {
                 dialog::message_critical("Precision is not selected");
+                return false;
+        }
+
+        if (!(ui.radioButton_color_0->isChecked() || ui.radioButton_color_1->isChecked()))
+        {
+                dialog::message_critical("Color is not selected");
                 return false;
         }
 
@@ -146,6 +180,15 @@ bool PainterParametersWidget::cornell_box()
 int PainterParametersWidget::precision_index()
 {
         if (ui.radioButton_precision_0->isChecked())
+        {
+                return 0;
+        }
+        return 1;
+}
+
+int PainterParametersWidget::color_index()
+{
+        if (ui.radioButton_color_0->isChecked())
         {
                 return 0;
         }
