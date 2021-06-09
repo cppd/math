@@ -96,7 +96,7 @@ public:
                 return linear_float_to_linear_luminance(r, g, b);
         }
 
-        [[nodiscard]] static std::string name()
+        [[nodiscard]] static const char* name()
         {
                 return "RGB";
         }
@@ -343,7 +343,7 @@ public:
                 return spectrum_to_luminance(Base::data());
         }
 
-        [[nodiscard]] static std::string name()
+        [[nodiscard]] static const char* name()
         {
                 return "Spectrum";
         }

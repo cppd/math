@@ -81,11 +81,11 @@ void test_brdf_white()
 
         Color result;
 
-        LOG(Color::name() + ", " + to_string(N) + "D, " + type_name<T>() + ", f, white");
+        LOG(std::string(Color::name()) + ", " + to_string(N) + "D, " + type_name<T>() + ", f, white");
         result = test_brdf_f(brdf, SAMPLE_COUNT);
         check_color_less(result, brdf.color());
 
-        LOG(Color::name() + ", " + to_string(N) + "D, " + type_name<T>() + ", sample f, white");
+        LOG(std::string(Color::name()) + ", " + to_string(N) + "D, " + type_name<T>() + ", sample f, white");
         result = test_brdf_sample_f(brdf, SAMPLE_COUNT);
         check_color_less(result, brdf.color());
 }
@@ -97,11 +97,11 @@ void test_brdf_random()
 
         Color result;
 
-        LOG(Color::name() + ", " + to_string(N) + "D, " + type_name<T>() + ", f, random");
+        LOG(std::string(Color::name()) + ", " + to_string(N) + "D, " + type_name<T>() + ", f, random");
         result = test_brdf_f(brdf, SAMPLE_COUNT);
         check_color_range(result);
 
-        LOG(Color::name() + ", " + to_string(N) + "D, " + type_name<T>() + ", sample f, random");
+        LOG(std::string(Color::name()) + ", " + to_string(N) + "D, " + type_name<T>() + ", sample f, random");
         result = test_brdf_sample_f(brdf, SAMPLE_COUNT);
         check_color_range(result);
 }

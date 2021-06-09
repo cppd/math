@@ -75,11 +75,11 @@ void test_brdf()
 
         Color result;
 
-        LOG(Color::name() + ", " + to_string(N) + "D, " + type_name<T>() + ", f");
+        LOG(std::string(Color::name()) + ", " + to_string(N) + "D, " + type_name<T>() + ", f");
         result = test_brdf_f(brdf, SAMPLE_COUNT);
         check_color_equal(result, brdf.color());
 
-        LOG(Color::name() + ", " + to_string(N) + "D, " + type_name<T>() + ", sample f");
+        LOG(std::string(Color::name()) + ", " + to_string(N) + "D, " + type_name<T>() + ", sample f");
         result = test_brdf_sample_f(brdf, SAMPLE_COUNT);
         check_color_equal(result, brdf.color());
 }
