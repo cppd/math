@@ -21,6 +21,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "../scenes/simple.h"
 #include "../shapes/mesh.h"
 
+#include <src/color/color.h>
 #include <src/com/file/path.h>
 #include <src/com/log.h>
 #include <src/com/names.h>
@@ -184,8 +185,8 @@ std::unique_ptr<const mesh::Mesh<N>> file_mesh(const std::string& file_name, Pro
         return mesh::load<N>(file_name, progress);
 }
 
-template <std::size_t N, typename T>
-void test_painter_file(int samples_per_pixel, int thread_count, std::unique_ptr<const Scene<N, T>>&& scene)
+template <std::size_t N, typename T, typename Color>
+void test_painter_file(int samples_per_pixel, int thread_count, std::unique_ptr<const Scene<N, T, Color>>&& scene)
 {
         constexpr int MAX_PASS_COUNT = 1;
         constexpr bool SMOOTH_NORMAL = true;
@@ -195,8 +196,10 @@ void test_painter_file(int samples_per_pixel, int thread_count, std::unique_ptr<
         LOG("Painting...");
         TimePoint start_time = time();
         {
-                std::unique_ptr<Painter> painter = create_painter<N, T>(
-                        &image, samples_per_pixel, MAX_PASS_COUNT, std::move(scene), thread_count, SMOOTH_NORMAL);
+                std::unique_ptr<Painter> painter = create_painter(
+                        &image, samples_per_pixel, MAX_PASS_COUNT,
+                        std::shared_ptr<const painter::Scene<N, T, Color>>(std::move(scene)), thread_count,
+                        SMOOTH_NORMAL);
                 painter->wait();
         }
         LOG("Painted, " + to_string_fixed(duration_from(start_time), 5) + " s");
@@ -207,8 +210,8 @@ void test_painter_file(int samples_per_pixel, int thread_count, std::unique_ptr<
         LOG("Done");
 }
 
-template <std::size_t N, typename T>
-void test_painter_window(int samples_per_pixel, int thread_count, std::unique_ptr<const Scene<N, T>>&& scene)
+template <std::size_t N, typename T, typename Color>
+void test_painter_window(int samples_per_pixel, int thread_count, std::unique_ptr<const Scene<N, T, Color>>&& scene)
 {
         constexpr bool SMOOTH_NORMAL = true;
 
@@ -228,7 +231,7 @@ enum class PainterTestOutputType
         Window
 };
 
-template <PainterTestOutputType type, std::size_t N, typename T>
+template <PainterTestOutputType type, std::size_t N, typename T, typename Color>
 void test_painter(
         std::unique_ptr<const mesh::Mesh<N>>&& mesh,
         ProgressRatio* progress,
@@ -237,7 +240,7 @@ void test_painter(
         int samples_per_pixel,
         int thread_count)
 {
-        std::unique_ptr<const Shape<N, T>> painter_mesh;
+        std::unique_ptr<const Shape<N, T, Color>> painter_mesh;
         {
                 mesh::MeshObject<N> mesh_object(std::move(mesh), Matrix<N + 1, N + 1, double>(1), "");
                 {
@@ -247,11 +250,11 @@ void test_painter(
                 }
                 std::vector<const mesh::MeshObject<N>*> mesh_objects;
                 mesh_objects.push_back(&mesh_object);
-                painter_mesh = create_mesh<N, T>(mesh_objects, progress);
+                painter_mesh = create_mesh<N, T, Color>(mesh_objects, progress);
         }
 
-        std::unique_ptr<const Scene<N, T>> scene = create_simple_scene(
-                BACKGROUND_LIGHT, LIGHTING_INTENSITY, min_screen_size, max_screen_size, std::move(painter_mesh));
+        std::unique_ptr<const Scene<N, T, Color>> scene = create_simple_scene(
+                Color(BACKGROUND_LIGHT), LIGHTING_INTENSITY, min_screen_size, max_screen_size, std::move(painter_mesh));
 
         static_assert(type == PainterTestOutputType::File || type == PainterTestOutputType::Window);
 
@@ -266,7 +269,7 @@ void test_painter(
         }
 }
 
-template <std::size_t N, typename T, PainterTestOutputType type>
+template <std::size_t N, typename T, typename Color, PainterTestOutputType type>
 void test_painter(int samples_per_pixel, int facet_count, int min_screen_size, int max_screen_size)
 {
         const int thread_count = hardware_concurrency();
@@ -274,11 +277,11 @@ void test_painter(int samples_per_pixel, int facet_count, int min_screen_size, i
 
         std::unique_ptr<const mesh::Mesh<N>> mesh = sphere_mesh<N>(facet_count);
 
-        test_painter<type, N, T>(
+        test_painter<type, N, T, Color>(
                 std::move(mesh), &progress, min_screen_size, max_screen_size, samples_per_pixel, thread_count);
 }
 
-template <std::size_t N, typename T, PainterTestOutputType type>
+template <std::size_t N, typename T, typename Color, PainterTestOutputType type>
 void test_painter(int samples_per_pixel, const std::string& file_name, int min_screen_size, int max_screen_size)
 {
         const int thread_count = hardware_concurrency();
@@ -286,7 +289,7 @@ void test_painter(int samples_per_pixel, const std::string& file_name, int min_s
 
         std::unique_ptr<const mesh::Mesh<N>> mesh = file_mesh<N>(file_name, &progress);
 
-        test_painter<type, N, T>(
+        test_painter<type, N, T, Color>(
                 std::move(mesh), &progress, min_screen_size, max_screen_size, samples_per_pixel, thread_count);
 }
 }
@@ -295,27 +298,27 @@ void test_painter_file()
 {
         constexpr unsigned N = 4;
         int samples_per_pixel = 25;
-        test_painter<N, double, PainterTestOutputType::File>(samples_per_pixel, 1000, 10, 100);
+        test_painter<N, double, color::Spectrum, PainterTestOutputType::File>(samples_per_pixel, 1000, 10, 100);
 }
 
 void test_painter_file(const std::string& file_name)
 {
         constexpr unsigned N = 4;
         int samples_per_pixel = 25;
-        test_painter<N, double, PainterTestOutputType::File>(samples_per_pixel, file_name, 10, 100);
+        test_painter<N, double, color::Spectrum, PainterTestOutputType::File>(samples_per_pixel, file_name, 10, 100);
 }
 
 void test_painter_window()
 {
         constexpr unsigned N = 4;
         int samples_per_pixel = 25;
-        test_painter<N, double, PainterTestOutputType::Window>(samples_per_pixel, 1000, 50, 500);
+        test_painter<N, double, color::Spectrum, PainterTestOutputType::Window>(samples_per_pixel, 1000, 50, 500);
 }
 
 void test_painter_window(const std::string& file_name)
 {
         constexpr unsigned N = 4;
         int samples_per_pixel = 25;
-        test_painter<N, double, PainterTestOutputType::Window>(samples_per_pixel, file_name, 50, 500);
+        test_painter<N, double, color::Spectrum, PainterTestOutputType::Window>(samples_per_pixel, file_name, 50, 500);
 }
 }

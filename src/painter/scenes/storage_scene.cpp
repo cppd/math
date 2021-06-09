@@ -17,6 +17,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "storage_scene.h"
 
+#include <src/color/color.h>
 #include <src/com/error.h>
 #include <src/com/math.h>
 #include <src/com/type/limit.h>
@@ -72,8 +73,8 @@ std::vector<P*> to_pointers(const std::vector<std::unique_ptr<P>>& objects)
         return result;
 }
 
-template <std::size_t N, typename T>
-geometry::BoundingBox<N, T> compute_bounding_box(const std::vector<const Shape<N, T>*>& shapes)
+template <std::size_t N, typename T, typename Color>
+geometry::BoundingBox<N, T> compute_bounding_box(const std::vector<const Shape<N, T, Color>*>& shapes)
 {
         geometry::BoundingBox<N, T> bb = shapes[0]->bounding_box();
         for (std::size_t i = 1; i < shapes.size(); ++i)
@@ -85,13 +86,13 @@ geometry::BoundingBox<N, T> compute_bounding_box(const std::vector<const Shape<N
         return bb;
 }
 
-template <std::size_t N, typename T>
+template <std::size_t N, typename T, typename Color>
 struct BoundingIntersection
 {
         T distance;
-        const Shape<N, T>* shape;
+        const Shape<N, T, Color>* shape;
 
-        BoundingIntersection(T distance, const Shape<N, T>* shape) : distance(distance), shape(shape)
+        BoundingIntersection(T distance, const Shape<N, T, Color>* shape) : distance(distance), shape(shape)
         {
         }
 
@@ -101,9 +102,9 @@ struct BoundingIntersection
         }
 };
 
-template <std::size_t N, typename T>
-const Surface<N, T>* ray_intersect(
-        const std::vector<const Shape<N, T>*>& shapes,
+template <std::size_t N, typename T, typename Color>
+const Surface<N, T, Color>* ray_intersect(
+        const std::vector<const Shape<N, T, Color>*>& shapes,
         const std::vector<int>& indices,
         const Ray<N, T>& ray)
 {
@@ -120,7 +121,7 @@ const Surface<N, T>* ray_intersect(
         // Объекты могут быть сложными, поэтому перед поиском точного пересечения
         // их надо разместить по возрастанию примерного пересечения.
 
-        thread_local std::vector<BoundingIntersection<N, T>> intersections;
+        thread_local std::vector<BoundingIntersection<N, T, Color>> intersections;
         intersections.clear();
         intersections.reserve(indices.size());
         for (int index : indices)
@@ -139,18 +140,18 @@ const Surface<N, T>* ray_intersect(
         std::make_heap(intersections.begin(), intersections.end());
 
         T min_distance_squared = limits<T>::max();
-        const Surface<N, T>* closest_surface = nullptr;
+        const Surface<N, T, Color>* closest_surface = nullptr;
 
         do
         {
-                const BoundingIntersection<N, T>& bounding = intersections.front();
+                const BoundingIntersection<N, T, Color>& bounding = intersections.front();
 
                 if (min_distance_squared < square(bounding.distance))
                 {
                         break;
                 }
 
-                const Surface<N, T>* surface = bounding.shape->intersect(ray, bounding.distance);
+                const Surface<N, T, Color>* surface = bounding.shape->intersect(ray, bounding.distance);
                 if (surface)
                 {
                         T distance_squared = (surface->point() - ray.org()).norm_squared();
@@ -168,9 +169,9 @@ const Surface<N, T>* ray_intersect(
         return closest_surface;
 }
 
-template <std::size_t N, typename T>
+template <std::size_t N, typename T, typename Color>
 void create_tree(
-        const std::vector<const Shape<N, T>*>& shapes,
+        const std::vector<const Shape<N, T, Color>*>& shapes,
         const geometry::BoundingBox<N, T>& bounding_box,
         geometry::SpatialSubdivisionTree<geometry::ParallelotopeAA<N, T>>* tree,
         ProgressRatio* progress)
@@ -178,7 +179,7 @@ void create_tree(
         std::vector<std::function<bool(const geometry::ShapeWrapperForIntersection<geometry::ParallelotopeAA<N, T>>&)>>
                 wrappers;
         wrappers.reserve(shapes.size());
-        for (const Shape<N, T>* s : shapes)
+        for (const Shape<N, T, Color>* s : shapes)
         {
                 wrappers.push_back(s->intersection_function());
         }
@@ -207,28 +208,28 @@ void create_tree(
                 thread_count, progress);
 }
 
-template <std::size_t N, typename T>
-class SceneImpl final : public Scene<N, T>
+template <std::size_t N, typename T, typename Color>
+class SceneImpl final : public Scene<N, T, Color>
 {
         static constexpr int RAY_OFFSET_IN_EPSILONS = 1000;
 
         inline static thread_local std::int_fast64_t m_thread_ray_count = 0;
 
-        std::vector<std::unique_ptr<const Shape<N, T>>> m_shapes;
-        std::vector<std::unique_ptr<const LightSource<N, T>>> m_light_sources;
+        std::vector<std::unique_ptr<const Shape<N, T, Color>>> m_shapes;
+        std::vector<std::unique_ptr<const LightSource<N, T, Color>>> m_light_sources;
 
         std::unique_ptr<const Projector<N, T>> m_projector;
 
-        color::Color m_background_light;
+        Color m_background_light;
 
-        std::vector<const Shape<N, T>*> m_shape_pointers;
-        std::vector<const LightSource<N, T>*> m_light_source_pointers;
+        std::vector<const Shape<N, T, Color>*> m_shape_pointers;
+        std::vector<const LightSource<N, T, Color>*> m_light_source_pointers;
 
         T m_ray_offset;
 
         geometry::SpatialSubdivisionTree<geometry::ParallelotopeAA<N, T>> m_tree;
 
-        const Surface<N, T>* intersect(const Ray<N, T>& ray) const override
+        const Surface<N, T, Color>* intersect(const Ray<N, T>& ray) const override
         {
                 ++m_thread_ray_count;
 
@@ -240,7 +241,7 @@ class SceneImpl final : public Scene<N, T>
                         return nullptr;
                 }
 
-                const Surface<N, T>* surface;
+                const Surface<N, T, Color>* surface;
 
                 const auto f = [&](const std::vector<int>& shape_indices) -> std::optional<Vector<N, T>>
                 {
@@ -260,7 +261,7 @@ class SceneImpl final : public Scene<N, T>
                 return nullptr;
         }
 
-        const std::vector<const LightSource<N, T>*>& light_sources() const override
+        const std::vector<const LightSource<N, T, Color>*>& light_sources() const override
         {
                 return m_light_source_pointers;
         }
@@ -270,7 +271,7 @@ class SceneImpl final : public Scene<N, T>
                 return *m_projector;
         }
 
-        const color::Color& background_light() const override
+        const Color& background_light() const override
         {
                 return m_background_light;
         }
@@ -282,10 +283,10 @@ class SceneImpl final : public Scene<N, T>
 
 public:
         SceneImpl(
-                const color::Color& background_light,
+                const Color& background_light,
                 std::unique_ptr<const Projector<N, T>>&& projector,
-                std::vector<std::unique_ptr<const LightSource<N, T>>>&& light_sources,
-                std::vector<std::unique_ptr<const Shape<N, T>>>&& shapes)
+                std::vector<std::unique_ptr<const LightSource<N, T, Color>>>&& light_sources,
+                std::vector<std::unique_ptr<const Shape<N, T, Color>>>&& shapes)
                 : m_shapes(std::move(shapes)),
                   m_light_sources(std::move(light_sources)),
                   m_projector(std::move(projector)),
@@ -306,22 +307,26 @@ public:
 };
 }
 
-template <std::size_t N, typename T>
-std::unique_ptr<Scene<N, T>> create_storage_scene(
-        const color::Color& background_light,
+template <std::size_t N, typename T, typename Color>
+std::unique_ptr<Scene<N, T, Color>> create_storage_scene(
+        const Color& background_light,
         std::unique_ptr<const Projector<N, T>>&& projector,
-        std::vector<std::unique_ptr<const LightSource<N, T>>>&& light_sources,
-        std::vector<std::unique_ptr<const Shape<N, T>>>&& shapes)
+        std::vector<std::unique_ptr<const LightSource<N, T, Color>>>&& light_sources,
+        std::vector<std::unique_ptr<const Shape<N, T, Color>>>&& shapes)
 {
-        return std::make_unique<SceneImpl<N, T>>(
+        return std::make_unique<SceneImpl<N, T, Color>>(
                 background_light, std::move(projector), std::move(light_sources), std::move(shapes));
 }
 
-#define CREATE_STORAGE_SCENE_INSTANTIATION_N_T(N, T)                             \
-        template std::unique_ptr<Scene<(N), T>> create_storage_scene(            \
-                const color::Color&, std::unique_ptr<const Projector<(N), T>>&&, \
-                std::vector<std::unique_ptr<const LightSource<(N), T>>>&&,       \
-                std::vector<std::unique_ptr<const Shape<(N), T>>>&&);
+#define CREATE_STORAGE_SCENE_INSTANTIATION_N_T_C(N, T, C)                     \
+        template std::unique_ptr<Scene<(N), T, C>> create_storage_scene(      \
+                const C&, std::unique_ptr<const Projector<(N), T>>&&,         \
+                std::vector<std::unique_ptr<const LightSource<(N), T, C>>>&&, \
+                std::vector<std::unique_ptr<const Shape<(N), T, C>>>&&);
+
+#define CREATE_STORAGE_SCENE_INSTANTIATION_N_T(N, T)                   \
+        CREATE_STORAGE_SCENE_INSTANTIATION_N_T_C((N), T, color::Color) \
+        CREATE_STORAGE_SCENE_INSTANTIATION_N_T_C((N), T, color::Spectrum)
 
 #define CREATE_STORAGE_SCENE_INSTANTIATION_N(N)            \
         CREATE_STORAGE_SCENE_INSTANTIATION_N_T((N), float) \

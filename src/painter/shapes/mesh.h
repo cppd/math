@@ -27,8 +27,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 namespace ns::painter
 {
-template <std::size_t N, typename T>
-std::unique_ptr<Shape<N, T>> create_mesh(
+template <std::size_t N, typename T, typename Color>
+std::unique_ptr<Shape<N, T, Color>> create_mesh(
         const std::vector<const mesh::MeshObject<N>*>& mesh_objects,
         ProgressRatio* progress);
 }

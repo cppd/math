@@ -102,31 +102,33 @@ std::array<int, N> add_offset(const std::array<int, N>& src, int offset)
         return r;
 }
 
-template <typename T>
+template <typename T, typename Color>
 struct Material
 {
         T metalness;
         T roughness;
-        color::Color Kd;
+        Color Kd;
         int map_Kd;
-        color::Color::DataType alpha;
+        typename Color::DataType alpha;
+
         Material(T metalness, T roughness, const color::Color& Kd, int map_Kd, color::Color::DataType alpha)
                 : metalness(std::clamp(metalness, T(0), T(1))),
                   roughness(std::clamp(roughness, T(0), T(1))),
-                  Kd(Kd.clamped()),
                   map_Kd(map_Kd),
                   alpha(alpha)
         {
+                Vector<3, float> rgb = Kd.clamped().rgb32();
+                this->Kd = Color(rgb[0], rgb[1], rgb[2]);
         }
 };
 
-template <std::size_t N, typename T>
-class Mesh final : public Shape<N, T>
+template <std::size_t N, typename T, typename Color>
+class Mesh final : public Shape<N, T, Color>
 {
         std::vector<Vector<N, T>> m_vertices;
         std::vector<Vector<N, T>> m_normals;
         std::vector<Vector<N - 1, T>> m_texcoords;
-        std::vector<Material<T>> m_materials;
+        std::vector<Material<T, Color>> m_materials;
         std::vector<MeshTexture<N - 1>> m_images;
         std::vector<MeshFacet<N, T>> m_facets;
 
@@ -141,7 +143,7 @@ class Mesh final : public Shape<N, T>
 
         std::optional<T> intersect_bounding(const Ray<N, T>& r) const override;
 
-        const Surface<N, T>* intersect(const Ray<N, T>&, T bounding_distance) const override;
+        const Surface<N, T, Color>* intersect(const Ray<N, T>&, T bounding_distance) const override;
 
         geometry::BoundingBox<N, T> bounding_box() const override;
 
@@ -153,7 +155,7 @@ class Mesh final : public Shape<N, T>
 public:
         Mesh(const std::vector<const mesh::MeshObject<N>*>& mesh_objects, ProgressRatio* progress);
 
-        const std::vector<Material<T>>& materials() const
+        const std::vector<Material<T, Color>>& materials() const
         {
                 return m_materials;
         }
@@ -171,25 +173,25 @@ public:
         Mesh& operator=(Mesh&&) = delete;
 };
 
-template <std::size_t N, typename T>
-class IntersectionImpl final : public Surface<N, T>
+template <std::size_t N, typename T, typename Color>
+class IntersectionImpl final : public Surface<N, T, Color>
 {
-        const Mesh<N, T>* m_mesh;
+        const Mesh<N, T, Color>* m_mesh;
         const MeshFacet<N, T>* m_facet;
 
-        color::Color surface_color(const Material<T>& m) const
+        Color surface_color(const Material<T, Color>& m) const
         {
                 if (m_facet->has_texcoord() && m.map_Kd >= 0)
                 {
                         Vector<3, float> rgb = m_mesh->images()[m.map_Kd].color(m_facet->texcoord(this->point()));
-                        return color::Color(rgb[0], rgb[1], rgb[2]);
+                        return Color(rgb[0], rgb[1], rgb[2]);
                 }
                 return m.Kd;
         }
 
 public:
-        IntersectionImpl(const Vector<N, T>& point, const Mesh<N, T>* mesh, const MeshFacet<N, T>* facet)
-                : Surface<N, T>(point), m_mesh(mesh), m_facet(facet)
+        IntersectionImpl(const Vector<N, T>& point, const Mesh<N, T, Color>* mesh, const MeshFacet<N, T>* facet)
+                : Surface<N, T, Color>(point), m_mesh(mesh), m_facet(facet)
         {
         }
 
@@ -203,37 +205,37 @@ public:
                 return m_facet->shading_normal(this->point());
         }
 
-        std::optional<color::Color> light_source() const override
+        std::optional<Color> light_source() const override
         {
                 return std::nullopt;
         }
 
-        color::Color brdf(const Vector<N, T>& n, const Vector<N, T>& v, const Vector<N, T>& l) const override
+        Color brdf(const Vector<N, T>& n, const Vector<N, T>& v, const Vector<N, T>& l) const override
         {
                 ASSERT(m_facet->material() >= 0);
 
-                const Material<T>& m = m_mesh->materials()[m_facet->material()];
+                const Material<T, Color>& m = m_mesh->materials()[m_facet->material()];
 
                 return shading::ggx_diffuse::f(m.metalness, m.roughness, surface_color(m), n, v, l);
         }
 
-        shading::Sample<N, T, color::Color> sample_brdf(
+        shading::Sample<N, T, Color> sample_brdf(
                 RandomEngine<T>& random_engine,
                 const Vector<N, T>& n,
                 const Vector<N, T>& v) const override
         {
                 ASSERT(m_facet->material() >= 0);
 
-                const Material<T>& m = m_mesh->materials()[m_facet->material()];
+                const Material<T, Color>& m = m_mesh->materials()[m_facet->material()];
 
                 return shading::ggx_diffuse::sample_f(random_engine, m.metalness, m.roughness, surface_color(m), n, v);
         }
 };
 
-template <std::size_t N, typename T>
-void Mesh<N, T>::create(const mesh::Reading<N>& mesh_object)
+template <std::size_t N, typename T, typename Color>
+void Mesh<N, T, Color>::create(const mesh::Reading<N>& mesh_object)
 {
-        const color::Color::DataType alpha = std::clamp<color::Color::DataType>(mesh_object.alpha(), 0, 1);
+        const typename Color::DataType alpha = std::clamp<typename Color::DataType>(mesh_object.alpha(), 0, 1);
 
         if (alpha == 0)
         {
@@ -313,8 +315,8 @@ void Mesh<N, T>::create(const mesh::Reading<N>& mesh_object)
         }
 }
 
-template <std::size_t N, typename T>
-void Mesh<N, T>::create(const std::vector<mesh::Reading<N>>& mesh_objects)
+template <std::size_t N, typename T, typename Color>
+void Mesh<N, T, Color>::create(const std::vector<mesh::Reading<N>>& mesh_objects)
 {
         if (mesh_objects.empty())
         {
@@ -376,8 +378,8 @@ void Mesh<N, T>::create(const std::vector<mesh::Reading<N>>& mesh_objects)
         ASSERT(facet_count == m_facets.size());
 }
 
-template <std::size_t N, typename T>
-Mesh<N, T>::Mesh(const std::vector<const mesh::MeshObject<N>*>& mesh_objects, ProgressRatio* progress)
+template <std::size_t N, typename T, typename Color>
+Mesh<N, T, Color>::Mesh(const std::vector<const mesh::MeshObject<N>*>& mesh_objects, ProgressRatio* progress)
 {
         TimePoint start_time = time();
 
@@ -398,31 +400,31 @@ Mesh<N, T>::Mesh(const std::vector<const mesh::MeshObject<N>*>& mesh_objects, Pr
         LOG("Painter mesh object created, " + to_string_fixed(duration_from(start_time), 5) + " s");
 }
 
-template <std::size_t N, typename T>
-std::optional<T> Mesh<N, T>::intersect_bounding(const Ray<N, T>& r) const
+template <std::size_t N, typename T, typename Color>
+std::optional<T> Mesh<N, T, Color>::intersect_bounding(const Ray<N, T>& r) const
 {
         return m_tree->intersect_root(r);
 }
 
-template <std::size_t N, typename T>
-const Surface<N, T>* Mesh<N, T>::intersect(const Ray<N, T>& ray, const T bounding_distance) const
+template <std::size_t N, typename T, typename Color>
+const Surface<N, T, Color>* Mesh<N, T, Color>::intersect(const Ray<N, T>& ray, const T bounding_distance) const
 {
         std::optional<std::tuple<T, const MeshFacet<N, T>*>> v = m_tree->intersect(ray, bounding_distance);
         if (!v)
         {
                 return nullptr;
         }
-        return make_arena_ptr<IntersectionImpl<N, T>>(ray.point(std::get<0>(*v)), this, std::get<1>(*v));
+        return make_arena_ptr<IntersectionImpl<N, T, Color>>(ray.point(std::get<0>(*v)), this, std::get<1>(*v));
 }
 
-template <std::size_t N, typename T>
-geometry::BoundingBox<N, T> Mesh<N, T>::bounding_box() const
+template <std::size_t N, typename T, typename Color>
+geometry::BoundingBox<N, T> Mesh<N, T, Color>::bounding_box() const
 {
         return m_tree->bounding_box();
 }
 
-template <std::size_t N, typename T>
-std::function<bool(const geometry::ShapeWrapperForIntersection<geometry::ParallelotopeAA<N, T>>&)> Mesh<N, T>::
+template <std::size_t N, typename T, typename Color>
+std::function<bool(const geometry::ShapeWrapperForIntersection<geometry::ParallelotopeAA<N, T>>&)> Mesh<N, T, Color>::
         intersection_function() const
 {
         return [w = geometry::ShapeWrapperForIntersection(m_tree->root())](
@@ -433,17 +435,21 @@ std::function<bool(const geometry::ShapeWrapperForIntersection<geometry::Paralle
 }
 }
 
-template <std::size_t N, typename T>
-std::unique_ptr<Shape<N, T>> create_mesh(
+template <std::size_t N, typename T, typename Color>
+std::unique_ptr<Shape<N, T, Color>> create_mesh(
         const std::vector<const mesh::MeshObject<N>*>& mesh_objects,
         ProgressRatio* progress)
 {
-        return std::make_unique<Mesh<N, T>>(mesh_objects, progress);
+        return std::make_unique<Mesh<N, T, Color>>(mesh_objects, progress);
 }
 
-#define CREATE_MESH_INSTANTIATION_N_T(N, T)                  \
-        template std::unique_ptr<Shape<(N), T>> create_mesh( \
+#define CREATE_MESH_INSTANTIATION_N_T_C(N, T, C)                \
+        template std::unique_ptr<Shape<(N), T, C>> create_mesh( \
                 const std::vector<const mesh::MeshObject<(N)>*>&, ProgressRatio*);
+
+#define CREATE_MESH_INSTANTIATION_N_T(N, T)                   \
+        CREATE_MESH_INSTANTIATION_N_T_C((N), T, color::Color) \
+        CREATE_MESH_INSTANTIATION_N_T_C((N), T, color::Spectrum)
 
 #define CREATE_MESH_INSTANTIATION_N(N)            \
         CREATE_MESH_INSTANTIATION_N_T((N), float) \

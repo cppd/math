@@ -28,24 +28,24 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 namespace ns::painter
 {
-template <std::size_t N, typename T>
-class HyperplaneParallelotope final : public Shape<N, T>
+template <std::size_t N, typename T, typename Color>
+class HyperplaneParallelotope final : public Shape<N, T, Color>
 {
         const geometry::HyperplaneParallelotope<N, T> m_hyperplane_parallelotope;
-        std::optional<color::Color> m_light_source;
+        std::optional<Color> m_light_source;
         const T m_metalness;
         const T m_roughness;
-        const color::Color m_color;
-        const color::Color::DataType m_alpha;
+        const Color m_color;
+        const typename Color::DataType m_alpha;
         const bool m_alpha_nonzero = m_alpha > 0;
 
-        class IntersectionImpl final : public Surface<N, T>
+        class IntersectionImpl final : public Surface<N, T, Color>
         {
                 const HyperplaneParallelotope* m_obj;
 
         public:
                 IntersectionImpl(const Vector<N, T>& point, const HyperplaneParallelotope* obj)
-                        : Surface<N, T>(point), m_obj(obj)
+                        : Surface<N, T, Color>(point), m_obj(obj)
                 {
                 }
 
@@ -59,17 +59,17 @@ class HyperplaneParallelotope final : public Shape<N, T>
                         return std::nullopt;
                 }
 
-                std::optional<color::Color> light_source() const override
+                std::optional<Color> light_source() const override
                 {
                         return m_obj->m_light_source;
                 }
 
-                color::Color brdf(const Vector<N, T>& n, const Vector<N, T>& v, const Vector<N, T>& l) const override
+                Color brdf(const Vector<N, T>& n, const Vector<N, T>& v, const Vector<N, T>& l) const override
                 {
                         return shading::ggx_diffuse::f(m_obj->m_metalness, m_obj->m_roughness, m_obj->m_color, n, v, l);
                 }
 
-                shading::Sample<N, T, color::Color> sample_brdf(
+                shading::Sample<N, T, Color> sample_brdf(
                         RandomEngine<T>& random_engine,
                         const Vector<N, T>& n,
                         const Vector<N, T>& v) const override
@@ -84,19 +84,19 @@ public:
         HyperplaneParallelotope(
                 const T metalness,
                 const T roughness,
-                const color::Color& color,
-                const color::Color::DataType alpha,
+                const Color& color,
+                const typename Color::DataType alpha,
                 const Vector<N, T>& org,
                 const V&... e)
                 : m_hyperplane_parallelotope(org, e...),
                   m_metalness(std::clamp(metalness, T(0), T(1))),
                   m_roughness(std::clamp(roughness, T(0), T(1))),
                   m_color(color.clamped()),
-                  m_alpha(std::clamp<color::Color::DataType>(alpha, 0, 1))
+                  m_alpha(std::clamp<typename Color::DataType>(alpha, 0, 1))
         {
         }
 
-        void set_light_source(const color::Color& color)
+        void set_light_source(const Color& color)
         {
                 m_light_source = color;
         }
@@ -110,7 +110,7 @@ public:
                 return std::nullopt;
         }
 
-        const Surface<N, T>* intersect(const Ray<N, T>& ray, const T bounding_distance) const override
+        const Surface<N, T, Color>* intersect(const Ray<N, T>& ray, const T bounding_distance) const override
         {
                 // всегда есть пересечение, так как прошла проверка intersect_bounding
                 return make_arena_ptr<IntersectionImpl>(ray.point(bounding_distance), this);

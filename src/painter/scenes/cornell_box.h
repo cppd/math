@@ -25,6 +25,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "../shapes/parallelotope.h"
 #include "../shapes/shape.h"
 
+#include <src/color/color.h>
 #include <src/color/colors.h>
 #include <src/com/arrays.h>
 
@@ -34,10 +35,10 @@ namespace ns::painter
 {
 namespace cornell_box_scene_implementation
 {
-template <std::size_t N, typename T>
-std::unique_ptr<const Scene<N, T>> create_cornell_box_scene(
+template <std::size_t N, typename T, typename Color>
+std::unique_ptr<const Scene<N, T, Color>> create_cornell_box_scene(
         const std::array<int, N - 1>& screen_sizes,
-        std::unique_ptr<const Shape<N, T>>&& shape,
+        std::unique_ptr<const Shape<N, T, Color>>&& shape,
         const std::array<Vector<N, T>, N>& camera,
         const Vector<N, T>& center)
 {
@@ -50,13 +51,13 @@ std::unique_ptr<const Scene<N, T>> create_cornell_box_scene(
         constexpr T NEAR = 0.7;
         constexpr T DEPTH = NEAR + 0.5 + BOX_SIZE + 2 * BOX_SPACE;
 
-        constexpr color::Color::DataType ALPHA = 1;
+        constexpr typename Color::DataType ALPHA = 1;
         constexpr T METALNESS = 0.1;
         constexpr T ROUGHNESS = 0.2;
-        const color::Color BACKGROUND_LIGHT = color::rgb::BLACK;
+        constexpr Color BACKGROUND_LIGHT(0);
 
-        std::vector<std::unique_ptr<const Shape<N, T>>> shapes;
-        std::vector<std::unique_ptr<const LightSource<N, T>>> light_sources;
+        std::vector<std::unique_ptr<const Shape<N, T, Color>>> shapes;
+        std::vector<std::unique_ptr<const LightSource<N, T, Color>>> light_sources;
 
         shapes.push_back(std::move(shape));
 
@@ -76,14 +77,14 @@ std::unique_ptr<const Scene<N, T>> create_cornell_box_scene(
 
                 for (unsigned i = 0; i < N - 1; ++i)
                 {
-                        shapes.push_back(std::make_unique<HyperplaneParallelotope<N, T>>(
+                        shapes.push_back(std::make_unique<HyperplaneParallelotope<N, T, Color>>(
                                 METALNESS, ROUGHNESS, (i >= 1) ? color::rgb::WHITE : color::rgb::RED, ALPHA, org,
                                 del_elem(walls_vectors, i)));
-                        shapes.push_back(std::make_unique<HyperplaneParallelotope<N, T>>(
+                        shapes.push_back(std::make_unique<HyperplaneParallelotope<N, T, Color>>(
                                 METALNESS, ROUGHNESS, (i >= 1) ? color::rgb::WHITE : color::rgb::GREEN, ALPHA,
                                 org + walls_vectors[i], del_elem(walls_vectors, i)));
                 }
-                shapes.push_back(std::make_unique<HyperplaneParallelotope<N, T>>(
+                shapes.push_back(std::make_unique<HyperplaneParallelotope<N, T, Color>>(
                         METALNESS, ROUGHNESS, color::rgb::WHITE, ALPHA, org + walls_vectors[N - 1],
                         del_elem(walls_vectors, N - 1)));
         }
@@ -106,7 +107,7 @@ std::unique_ptr<const Scene<N, T>> create_cornell_box_scene(
                 box_vectors[N - 2] = (1 - 2 * BOX_SPACE) * camera[N - 2];
                 box_vectors[N - 1] = BOX_SIZE * camera[N - 1];
 
-                shapes.push_back(std::make_unique<Parallelotope<N, T>>(
+                shapes.push_back(std::make_unique<Parallelotope<N, T, Color>>(
                         METALNESS, ROUGHNESS, color::rgb::MAGENTA, ALPHA, box_org, box_vectors));
         }
 
@@ -127,9 +128,10 @@ std::unique_ptr<const Scene<N, T>> create_cornell_box_scene(
                 }
                 lamp_vectors[N - 2] = LAMP_SIZE * camera[N - 1];
 
-                std::unique_ptr<HyperplaneParallelotope<N, T>> lamp = std::make_unique<HyperplaneParallelotope<N, T>>(
-                        METALNESS, ROUGHNESS, color::rgb::WHITE, ALPHA, lamp_org, lamp_vectors);
-                lamp->set_light_source(color::Color(50));
+                std::unique_ptr<HyperplaneParallelotope<N, T, Color>> lamp =
+                        std::make_unique<HyperplaneParallelotope<N, T, Color>>(
+                                METALNESS, ROUGHNESS, color::rgb::WHITE, ALPHA, lamp_org, lamp_vectors);
+                lamp->set_light_source(Color(50, 50, 50, color::Type::Illumination));
 
                 shapes.push_back(std::move(lamp));
         }
@@ -149,11 +151,11 @@ std::unique_ptr<const Scene<N, T>> create_cornell_box_scene(
 }
 }
 
-template <typename T>
-std::unique_ptr<const Scene<3, T>> create_cornell_box_scene(
+template <typename T, typename Color>
+std::unique_ptr<const Scene<3, T, Color>> create_cornell_box_scene(
         int width,
         int height,
-        std::unique_ptr<const Shape<3, T>>&& shape,
+        std::unique_ptr<const Shape<3, T, Color>>&& shape,
         const Vector<3, T>& camera_direction,
         const Vector<3, T>& camera_up)
 {
@@ -170,8 +172,10 @@ std::unique_ptr<const Scene<3, T>> create_cornell_box_scene(
         return impl::create_cornell_box_scene({width, height}, std::move(shape), {right, up, dir}, center);
 }
 
-template <std::size_t N, typename T>
-std::unique_ptr<const Scene<N, T>> create_cornell_box_scene(int screen_size, std::unique_ptr<const Shape<N, T>>&& shape)
+template <std::size_t N, typename T, typename Color>
+std::unique_ptr<const Scene<N, T, Color>> create_cornell_box_scene(
+        int screen_size,
+        std::unique_ptr<const Shape<N, T, Color>>&& shape)
 {
         namespace impl = cornell_box_scene_implementation;
 

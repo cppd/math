@@ -34,13 +34,13 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 namespace ns::painter
 {
-template <std::size_t N, typename T>
-std::unique_ptr<const Scene<N, T>> create_simple_scene(
-        const color::Color& background_light,
-        const color::Color::DataType& lighting_intensity,
+template <std::size_t N, typename T, typename Color>
+std::unique_ptr<const Scene<N, T, Color>> create_simple_scene(
+        const Color& background_light,
+        const typename Color::DataType& lighting_intensity,
         int min_screen_size,
         int max_screen_size,
-        std::unique_ptr<const Shape<N, T>>&& shape)
+        std::unique_ptr<const Shape<N, T, Color>>&& shape)
 {
         ASSERT(shape);
 
@@ -102,16 +102,17 @@ std::unique_ptr<const Scene<N, T>> create_simple_scene(
 
         Vector<N, T> light_direction(bb.max - center);
 
-        std::vector<std::unique_ptr<const LightSource<N, T>>> light_sources;
-        light_sources.push_back(
-                std::make_unique<const DistantLight<N, T>>(light_direction, color::Color(lighting_intensity)));
+        std::vector<std::unique_ptr<const LightSource<N, T, Color>>> light_sources;
+        light_sources.push_back(std::make_unique<const DistantLight<N, T, Color>>(
+                light_direction,
+                Color(lighting_intensity, lighting_intensity, lighting_intensity, color::Type::Illumination)));
 
         //
 
-        std::vector<std::unique_ptr<const Shape<N, T>>> shapes;
+        std::vector<std::unique_ptr<const Shape<N, T, Color>>> shapes;
         shapes.push_back(std::move(shape));
 
-        return create_storage_scene<N, T>(
+        return create_storage_scene<N, T, Color>(
                 background_light, std::move(projector), std::move(light_sources), std::move(shapes));
 }
 }

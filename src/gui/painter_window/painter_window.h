@@ -76,16 +76,16 @@ public:
         ~PainterWindow() override;
 };
 
-template <std::size_t N, typename T>
+template <std::size_t N, typename T, typename Color>
 void create_painter_window(
         const std::string& name,
         unsigned thread_count,
         int samples_per_pixel,
         bool smooth_normal,
-        std::unique_ptr<const painter::Scene<N, T>>&& scene)
+        std::unique_ptr<const painter::Scene<N, T, Color>>&& scene)
 {
         MainThread::run(
-                [=, scene = std::shared_ptr<const painter::Scene<N, T>>(std::move(scene))]()
+                [=, scene = std::shared_ptr<const painter::Scene<N, T, Color>>(std::move(scene))]()
                 {
                         create_and_show_delete_on_close_window<PainterWindow>(
                                 name, std::make_unique<PainterPixels<N>>(

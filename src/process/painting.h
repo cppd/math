@@ -17,6 +17,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
+#include <src/color/color.h>
 #include <src/progress/progress_list.h>
 #include <src/storage/storage.h>
 #include <src/view/interface.h>

@@ -248,9 +248,9 @@ class PainterPixels final : public Pixels, public painter::Notifier<N - 1>
         }
 
 public:
-        template <typename T>
+        template <typename T, typename Color>
         PainterPixels(
-                std::shared_ptr<const painter::Scene<N, T>> scene,
+                std::shared_ptr<const painter::Scene<N, T, Color>> scene,
                 unsigned thread_count,
                 int samples_per_pixel,
                 bool smooth_normal)

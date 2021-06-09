@@ -17,7 +17,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
-#include <src/color/color.h>
 #include <src/numerical/ray.h>
 #include <src/numerical/vec.h>
 #include <src/shading/sample.h>
@@ -32,7 +31,7 @@ namespace ns::painter
 template <typename T>
 using RandomEngine = std::conditional_t<std::is_same_v<std::remove_cv<T>, float>, std::mt19937, std::mt19937_64>;
 
-template <std::size_t N, typename T>
+template <std::size_t N, typename T, typename Color>
 class Surface
 {
         Vector<N, T> m_point;
@@ -53,22 +52,22 @@ public:
         virtual Vector<N, T> geometric_normal() const = 0;
         virtual std::optional<Vector<N, T>> shading_normal() const = 0;
 
-        virtual std::optional<color::Color> light_source() const = 0;
+        virtual std::optional<Color> light_source() const = 0;
 
-        virtual color::Color brdf(const Vector<N, T>& n, const Vector<N, T>& v, const Vector<N, T>& l) const = 0;
+        virtual Color brdf(const Vector<N, T>& n, const Vector<N, T>& v, const Vector<N, T>& l) const = 0;
 
-        virtual shading::Sample<N, T, color::Color> sample_brdf(
+        virtual shading::Sample<N, T, Color> sample_brdf(
                 RandomEngine<T>& random_engine,
                 const Vector<N, T>& n,
                 const Vector<N, T>& v) const = 0;
 };
 
-template <std::size_t N, typename T>
+template <std::size_t N, typename T, typename Color>
 struct LightSourceSample final
 {
         Vector<N, T> l;
         T pdf;
-        color::Color L;
+        Color L;
         std::optional<T> distance;
 
         LightSourceSample()
@@ -76,12 +75,12 @@ struct LightSourceSample final
         }
 };
 
-template <std::size_t N, typename T>
+template <std::size_t N, typename T, typename Color>
 struct LightSource
 {
         virtual ~LightSource() = default;
 
-        virtual LightSourceSample<N, T> sample(const Vector<N, T>& point) const = 0;
+        virtual LightSourceSample<N, T, Color> sample(const Vector<N, T>& point) const = 0;
 };
 
 template <std::size_t N, typename T>
@@ -94,16 +93,16 @@ struct Projector
         virtual Ray<N, T> ray(const Vector<N - 1, T>& point) const = 0;
 };
 
-template <std::size_t N, typename T>
+template <std::size_t N, typename T, typename Color>
 struct Scene
 {
         virtual ~Scene() = default;
 
-        virtual const Surface<N, T>* intersect(const Ray<N, T>& ray) const = 0;
+        virtual const Surface<N, T, Color>* intersect(const Ray<N, T>& ray) const = 0;
 
-        virtual const std::vector<const LightSource<N, T>*>& light_sources() const = 0;
+        virtual const std::vector<const LightSource<N, T, Color>*>& light_sources() const = 0;
 
-        virtual const color::Color& background_light() const = 0;
+        virtual const Color& background_light() const = 0;
 
         virtual const Projector<N, T>& projector() const = 0;
 

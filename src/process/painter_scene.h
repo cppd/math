@@ -96,50 +96,57 @@ std::unique_ptr<const painter::Projector<3, T>> create_projector(const PainterSc
                 camera_position, info.camera_direction, screen_axes, units_per_pixel, screen_size);
 }
 
-template <typename T>
-std::unique_ptr<const painter::LightSource<3, T>> create_light_source(
+template <typename T, typename Color>
+std::unique_ptr<const painter::LightSource<3, T, Color>> create_light_source(
         const PainterSceneInfo<3, T>& info,
-        const color::Color::DataType& lighting_intensity)
+        const std::type_identity_t<typename Color::DataType>& lighting_intensity)
 {
-        return std::make_unique<const painter::DistantLight<3, T>>(
-                -info.light_direction, color::Color(lighting_intensity));
+        return std::make_unique<const painter::DistantLight<3, T, Color>>(
+                -info.light_direction,
+                Color(lighting_intensity, lighting_intensity, lighting_intensity, color::Type::Illumination));
 }
 
-template <typename T>
-std::unique_ptr<const painter::Scene<3, T>> create_scene(
-        std::unique_ptr<const painter::Shape<3, T>>&& shape,
+template <typename T, typename Color>
+std::unique_ptr<const painter::Scene<3, T, Color>> create_scene(
+        std::unique_ptr<const painter::Shape<3, T, Color>>&& shape,
         const PainterSceneInfo<3, T>& info,
-        const color::Color& background_light,
-        const color::Color::DataType& lighting_intensity)
+        const Color& background_light,
+        const typename Color::DataType& lighting_intensity)
 {
         const geometry::BoundingBox<3, T> bb = shape->bounding_box();
         const T scene_size = (bb.max - bb.min).norm();
 
-        std::vector<std::unique_ptr<const painter::LightSource<3, T>>> light_sources;
-        light_sources.push_back(create_light_source(info, lighting_intensity));
+        std::vector<std::unique_ptr<const painter::LightSource<3, T, Color>>> light_sources;
+        light_sources.push_back(create_light_source<T, Color>(info, lighting_intensity));
 
-        std::vector<std::unique_ptr<const painter::Shape<3, T>>> shapes;
+        std::vector<std::unique_ptr<const painter::Shape<3, T, Color>>> shapes;
         shapes.push_back(std::move(shape));
 
-        return painter::create_storage_scene<3, T>(
+        return painter::create_storage_scene(
                 background_light, create_projector(info, scene_size), std::move(light_sources), std::move(shapes));
 }
 }
 
-template <std::size_t N, typename T>
-std::unique_ptr<const painter::Scene<N, T>> create_painter_scene(
-        std::unique_ptr<const painter::Shape<N, T>>&& shape,
+template <std::size_t N, typename T, typename Color>
+std::unique_ptr<const painter::Scene<N, T, Color>> create_painter_scene(
+        std::unique_ptr<const painter::Shape<N, T, Color>>&& shape,
         const PainterSceneInfo<N, T>& info,
         const color::Color& background_light,
         const color::Color::DataType& lighting_intensity)
 {
+        const auto background = [&background_light]
+        {
+                Vector<3, float> rgb = background_light.rgb32();
+                return Color(rgb[0], rgb[1], rgb[2], color::Type::Illumination);
+        };
+
         if constexpr (N == 3)
         {
                 namespace impl = painter_scene_implementation;
 
                 if (!info.cornell_box)
                 {
-                        return impl::create_scene(std::move(shape), info, background_light, lighting_intensity);
+                        return impl::create_scene(std::move(shape), info, background(), lighting_intensity);
                 }
                 return painter::create_cornell_box_scene(
                         info.width, info.height, std::move(shape), info.camera_direction, info.camera_up);
@@ -149,7 +156,7 @@ std::unique_ptr<const painter::Scene<N, T>> create_painter_scene(
                 if (!info.cornell_box)
                 {
                         return painter::create_simple_scene(
-                                background_light, lighting_intensity, info.min_screen_size, info.max_screen_size,
+                                background(), lighting_intensity, info.min_screen_size, info.max_screen_size,
                                 std::move(shape));
                 }
                 return painter::create_cornell_box_scene(info.max_screen_size, std::move(shape));

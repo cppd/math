@@ -51,7 +51,7 @@ constexpr int PAINTER_DEFAULT_SCREEN_SIZE_ND = (N == 4) ? 500 : ((N == 5) ? 100 
 using Precisions = std::tuple<double, float>;
 constexpr std::size_t DEFAULT_PRECISION_INDEX = 0;
 
-template <std::size_t N, typename T>
+template <std::size_t N, typename T, typename Color>
 void painter_function(
         ProgressRatioList* progress_list,
         const std::vector<std::shared_ptr<const mesh::MeshObject<N>>>& mesh_objects,
@@ -62,7 +62,7 @@ void painter_function(
         int samples_per_pixel,
         bool flat_facets)
 {
-        std::unique_ptr<const painter::Shape<N, T>> shape;
+        std::unique_ptr<const painter::Shape<N, T, Color>> shape = [&]
         {
                 std::vector<const mesh::MeshObject<N>*> meshes;
                 meshes.reserve(mesh_objects.size());
@@ -71,8 +71,8 @@ void painter_function(
                         meshes.push_back(mesh_object.get());
                 }
                 ProgressRatio progress(progress_list);
-                shape = painter::create_mesh<N, T>(meshes, &progress);
-        }
+                return painter::create_mesh<N, T, Color>(meshes, &progress);
+        }();
 
         if (!shape)
         {
@@ -82,14 +82,14 @@ void painter_function(
 
         std::string name = mesh_objects.size() != 1 ? "" : mesh_objects[0]->name();
 
-        std::unique_ptr<const painter::Scene<N, T>> scene =
+        std::unique_ptr<const painter::Scene<N, T, Color>> scene =
                 create_painter_scene(std::move(shape), scene_info, background_light, lighting_intensity);
 
         gui::painter_window::create_painter_window(
                 name, thread_count, samples_per_pixel, !flat_facets, std::move(scene));
 }
 
-template <typename T>
+template <typename T, typename Color>
 void scene_function(
         const std::vector<std::shared_ptr<const mesh::MeshObject<3>>>& mesh_objects,
         const view::info::Camera& camera,
@@ -102,12 +102,12 @@ void scene_function(
                 camera.up, camera.forward, camera.lighting, camera.view_center, camera.view_width, parameters.width,
                 parameters.height, parameters.cornell_box);
 
-        painter_function<3, T>(
+        painter_function<3, T, Color>(
                 progress_list, mesh_objects, scene_info, background_light, lighting_intensity, parameters.thread_count,
                 parameters.samples_per_pixel, parameters.flat_facets);
 }
 
-template <typename T, std::size_t N>
+template <typename T, typename Color, std::size_t N>
 void scene_function(
         const std::vector<std::shared_ptr<const mesh::MeshObject<N>>>& mesh_objects,
         const view::info::Camera&,
@@ -118,7 +118,7 @@ void scene_function(
 {
         PainterSceneInfo<N, T> scene_info(parameters.min_size, parameters.max_size, parameters.cornell_box);
 
-        painter_function<N, T>(
+        painter_function<N, T, Color>(
                 progress_list, mesh_objects, scene_info, background_light, lighting_intensity, parameters.thread_count,
                 parameters.samples_per_pixel, parameters.flat_facets);
 }
@@ -136,12 +136,12 @@ void thread_function(
         switch (parameters.precision_index)
         {
         case 0:
-                scene_function<std::tuple_element_t<0, Precisions>>(
+                scene_function<std::tuple_element_t<0, Precisions>, color::Color>(
                         mesh_objects, camera, background_light, lighting_intensity, parameters, progress_list);
                 return;
 
         case 1:
-                scene_function<std::tuple_element_t<1, Precisions>>(
+                scene_function<std::tuple_element_t<1, Precisions>, color::Color>(
                         mesh_objects, camera, background_light, lighting_intensity, parameters, progress_list);
                 return;
         }

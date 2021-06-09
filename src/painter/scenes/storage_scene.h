@@ -20,17 +20,15 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "../objects.h"
 #include "../shapes/shape.h"
 
-#include <src/color/color.h>
-
 #include <memory>
 #include <vector>
 
 namespace ns::painter
 {
-template <std::size_t N, typename T>
-std::unique_ptr<Scene<N, T>> create_storage_scene(
-        const color::Color& background_light,
+template <std::size_t N, typename T, typename Color>
+std::unique_ptr<Scene<N, T, Color>> create_storage_scene(
+        const Color& background_light,
         std::unique_ptr<const Projector<N, T>>&& projector,
-        std::vector<std::unique_ptr<const LightSource<N, T>>>&& light_sources,
-        std::vector<std::unique_ptr<const Shape<N, T>>>&& shapes);
+        std::vector<std::unique_ptr<const LightSource<N, T, Color>>>&& light_sources,
+        std::vector<std::unique_ptr<const Shape<N, T, Color>>>&& shapes);
 }

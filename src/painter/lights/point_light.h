@@ -19,7 +19,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "../objects.h"
 
-#include <src/color/color.h>
 #include <src/com/math.h>
 #include <src/numerical/vec.h>
 
@@ -28,23 +27,23 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 namespace ns::painter
 {
-template <std::size_t N, typename T>
-class PointLight final : public LightSource<N, T>
+template <std::size_t N, typename T, typename Color>
+class PointLight final : public LightSource<N, T, Color>
 {
         static_assert(N >= 2);
         static_assert(std::is_floating_point_v<T>);
 
         Vector<N, T> m_location;
-        color::Color m_color;
+        Color m_color;
         T m_coef;
 
 public:
-        PointLight(const Vector<N, T>& location, const color::Color& color, T unit_intensity_distance)
+        PointLight(const Vector<N, T>& location, const Color& color, T unit_intensity_distance)
                 : m_location(location), m_color(color), m_coef(std::pow(unit_intensity_distance, T(N - 1)))
         {
         }
 
-        LightSourceSample<N, T> sample(const Vector<N, T>& point) const override
+        LightSourceSample<N, T, Color> sample(const Vector<N, T>& point) const override
         {
                 const Vector<N, T> direction = m_location - point;
                 const T squared_distance = direction.norm_squared();
@@ -61,7 +60,7 @@ public:
                         coef /= power<((N - 2) / 2)>(squared_distance) * distance;
                 }
 
-                LightSourceSample<N, T> s;
+                LightSourceSample<N, T, Color> s;
                 s.distance = distance;
                 s.l = direction / distance;
                 s.pdf = 1;

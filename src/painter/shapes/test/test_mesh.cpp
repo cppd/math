@@ -72,8 +72,8 @@ std::vector<Ray<N, T>> create_rays(const geometry::BoundingBox<N, T>& bb, int ra
         return rays;
 }
 
-template <std::size_t N, typename T>
-void test_spherical_mesh(const Shape<N, T>& mesh, int ray_count, ProgressRatio* progress)
+template <std::size_t N, typename T, typename Color>
+void test_spherical_mesh(const Shape<N, T, Color>& mesh, int ray_count, ProgressRatio* progress)
 {
         const geometry::BoundingBox<N, T> bb = mesh.bounding_box();
 
@@ -107,7 +107,7 @@ void test_spherical_mesh(const Shape<N, T>& mesh, int ray_count, ProgressRatio* 
                 }
 
                 std::optional<T> bounding_distance;
-                const Surface<N, T>* surface;
+                const Surface<N, T, Color>* surface;
 
                 bounding_distance = mesh.intersect_bounding(ray);
                 if (!bounding_distance)
@@ -252,8 +252,8 @@ float random_radius()
         return std::pow(10.0f, exponent);
 }
 
-template <std::size_t N, typename T>
-std::unique_ptr<const Shape<N, T>> create_spherical_mesh(int point_count, ProgressRatio* progress)
+template <std::size_t N, typename T, typename Color>
+std::unique_ptr<const Shape<N, T, Color>> create_spherical_mesh(int point_count, ProgressRatio* progress)
 {
         LOG("painter random sphere");
 
@@ -277,7 +277,7 @@ std::unique_ptr<const Shape<N, T>> create_spherical_mesh(int point_count, Progre
         mesh::MeshObject<N> mesh_object(std::move(mesh), Matrix<N + 1, N + 1, double>(1), "");
         std::vector<const mesh::MeshObject<N>*> mesh_objects;
         mesh_objects.push_back(&mesh_object);
-        std::unique_ptr<const Shape<N, T>> painter_mesh = create_mesh<N, T>(mesh_objects, progress);
+        std::unique_ptr<const Shape<N, T, Color>> painter_mesh = create_mesh<N, T, Color>(mesh_objects, progress);
 
         LOG("painter random sphere created");
 
@@ -300,7 +300,7 @@ void test_mesh(int point_low, int point_high, int ray_low, int ray_high, Progres
                         std::uniform_int_distribution<int>(ray_low, ray_high)(random_engine));
         }();
 
-        std::unique_ptr<const Shape<N, T>> mesh = create_spherical_mesh<N, T>(point_count, progress);
+        std::unique_ptr mesh = create_spherical_mesh<N, T, color::Spectrum>(point_count, progress);
 
         test_spherical_mesh(*mesh, ray_count, progress);
 }

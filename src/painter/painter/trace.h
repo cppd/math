@@ -55,8 +55,11 @@ struct Normals final
         bool smooth;
 };
 
-template <std::size_t N, typename T>
-Normals<N, T> compute_normals(const bool smooth_normals, const Surface<N, T>* const surface, const Vector<N, T>& v)
+template <std::size_t N, typename T, typename Color>
+Normals<N, T> compute_normals(
+        const bool smooth_normals,
+        const Surface<N, T, Color>* const surface,
+        const Vector<N, T>& v)
 {
         const Vector<N, T> g_normal = surface->geometric_normal();
         ASSERT(g_normal.is_unit());
@@ -85,13 +88,13 @@ Normals<N, T> compute_normals(const bool smooth_normals, const Surface<N, T>* co
 
 template <std::size_t N, typename T, typename Color>
 std::optional<Color> trace_path(
-        const Scene<N, T>& scene,
+        const Scene<N, T, Color>& scene,
         const bool smooth_normals,
         const Ray<N, T>& ray,
         const int depth,
         RandomEngine<T>& engine)
 {
-        const Surface<N, T>* const surface = scene.intersect(ray);
+        const Surface<N, T, Color>* const surface = scene.intersect(ray);
         if (!surface)
         {
                 if (depth > 0)
@@ -124,9 +127,9 @@ std::optional<Color> trace_path(
                 color_sum = *surface_light_source;
         }();
 
-        for (const LightSource<N, T>* const light_source : scene.light_sources())
+        for (const LightSource<N, T, Color>* const light_source : scene.light_sources())
         {
-                const LightSourceSample<N, T> sample = light_source->sample(point);
+                const LightSourceSample<N, T, Color> sample = light_source->sample(point);
 
                 if (sample.L.is_black() || sample.pdf <= 0)
                 {
@@ -189,7 +192,7 @@ std::optional<Color> trace_path(
 
 template <std::size_t N, typename T, typename Color>
 std::optional<Color> trace_path(
-        const Scene<N, T>& scene,
+        const Scene<N, T, Color>& scene,
         const bool smooth_normals,
         const Ray<N, T>& ray,
         RandomEngine<T>& random_engine)

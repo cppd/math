@@ -22,6 +22,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "painter/statistics.h"
 #include "painter/trace.h"
 
+#include <src/color/color.h>
 #include <src/com/barrier.h>
 #include <src/com/error.h>
 #include <src/com/memory_arena.h>
@@ -67,10 +68,10 @@ void join_thread(std::thread* thread) noexcept
 template <std::size_t N, typename T, typename Color>
 struct PaintData final
 {
-        const Scene<N, T>& scene;
+        const Scene<N, T, Color>& scene;
         const bool smooth_normals;
 
-        PaintData(const Scene<N, T>& scene, bool smooth_normals) : scene(scene), smooth_normals(smooth_normals)
+        PaintData(const Scene<N, T, Color>& scene, bool smooth_normals) : scene(scene), smooth_normals(smooth_normals)
         {
         }
 };
@@ -321,13 +322,13 @@ void worker_threads(
         }
 }
 
-template <std::size_t N, typename T>
+template <std::size_t N, typename T, typename Color>
 void painter_thread(
         Notifier<N - 1>* notifier,
         PaintingStatistics* statistics,
         int samples_per_pixel,
         std::optional<int> max_pass_count,
-        const Scene<N, T>& scene,
+        const Scene<N, T, Color>& scene,
         int thread_count,
         std::atomic_bool* stop,
         bool smooth_normals) noexcept
@@ -336,8 +337,8 @@ void painter_thread(
         {
                 try
                 {
-                        const PaintData<N, T, color::Color> paint_data(scene, smooth_normals);
-                        PixelData<N, T, color::Color> pixel_data(
+                        const PaintData<N, T, Color> paint_data(scene, smooth_normals);
+                        PixelData<N, T, Color> pixel_data(
                                 scene.projector(), samples_per_pixel, scene.background_light(), notifier);
                         PassData pass_data(max_pass_count);
 
@@ -382,11 +383,11 @@ class Impl final : public Painter
         }
 
 public:
-        template <std::size_t N, typename T>
+        template <std::size_t N, typename T, typename Color>
         Impl(Notifier<N - 1>* notifier,
              int samples_per_pixel,
              std::optional<int> max_pass_count,
-             std::shared_ptr<const Scene<N, T>> scene,
+             std::shared_ptr<const Scene<N, T, Color>> scene,
              int thread_count,
              bool smooth_normals)
         {
@@ -438,12 +439,12 @@ public:
 };
 }
 
-template <std::size_t N, typename T>
+template <std::size_t N, typename T, typename Color>
 std::unique_ptr<Painter> create_painter(
         Notifier<N - 1>* notifier,
         int samples_per_pixel,
         std::optional<int> max_pass_count,
-        std::shared_ptr<const Scene<N, T>> scene,
+        std::shared_ptr<const Scene<N, T, Color>> scene,
         int thread_count,
         bool smooth_normals)
 {
@@ -451,9 +452,13 @@ std::unique_ptr<Painter> create_painter(
                 notifier, samples_per_pixel, max_pass_count, std::move(scene), thread_count, smooth_normals);
 }
 
-#define CREATE_PAINTER_INSTANTIATION_N_T(N, T)            \
+#define CREATE_PAINTER_INSTANTIATION_N_T_C(N, T, C)       \
         template std::unique_ptr<Painter> create_painter( \
-                Notifier<(N)-1>*, int, std::optional<int>, std::shared_ptr<const Scene<(N), T>>, int, bool);
+                Notifier<(N)-1>*, int, std::optional<int>, std::shared_ptr<const Scene<(N), T, C>>, int, bool);
+
+#define CREATE_PAINTER_INSTANTIATION_N_T(N, T)                   \
+        CREATE_PAINTER_INSTANTIATION_N_T_C((N), T, color::Color) \
+        CREATE_PAINTER_INSTANTIATION_N_T_C((N), T, color::Spectrum)
 
 #define CREATE_PAINTER_INSTANTIATION_N(N)            \
         CREATE_PAINTER_INSTANTIATION_N_T((N), float) \

@@ -19,30 +19,29 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "../objects.h"
 
-#include <src/color/color.h>
 #include <src/numerical/vec.h>
 
 #include <type_traits>
 
 namespace ns::painter
 {
-template <std::size_t N, typename T>
-class DistantLight final : public LightSource<N, T>
+template <std::size_t N, typename T, typename Color>
+class DistantLight final : public LightSource<N, T, Color>
 {
         static_assert(N >= 2);
         static_assert(std::is_floating_point_v<T>);
 
-        LightSourceSample<N, T> m_sample;
+        LightSourceSample<N, T, Color> m_sample;
 
 public:
-        DistantLight(const Vector<N, T>& direction, const color::Color& color)
+        DistantLight(const Vector<N, T>& direction, const Color& color)
         {
                 m_sample.l = direction.normalized();
                 m_sample.pdf = 1;
                 m_sample.L = color;
         }
 
-        LightSourceSample<N, T> sample(const Vector<N, T>& /*point*/) const override
+        LightSourceSample<N, T, Color> sample(const Vector<N, T>& /*point*/) const override
         {
                 return m_sample;
         }

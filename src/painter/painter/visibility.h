@@ -25,16 +25,19 @@ namespace ns::painter
 {
 namespace visibility_implementation
 {
-template <std::size_t N, typename T>
-bool intersection_before(const Surface<N, T>* surface, const Vector<N, T>& point, const std::optional<T>& distance)
+template <std::size_t N, typename T, typename Color>
+bool intersection_before(
+        const Surface<N, T, Color>* surface,
+        const Vector<N, T>& point,
+        const std::optional<T>& distance)
 {
         return surface && (!distance || (surface->point() - point).norm_squared() < square(*distance));
 }
 }
 
-template <std::size_t N, typename T>
+template <std::size_t N, typename T, typename Color>
 bool occluded(
-        const Scene<N, T>& scene,
+        const Scene<N, T, Color>& scene,
         const Vector<N, T>& geometric_normal,
         const bool smooth_normals,
         const Ray<N, T>& ray,
@@ -44,7 +47,7 @@ bool occluded(
 
         const Vector<N, T> point = ray.org();
 
-        const Surface<N, T>* surface;
+        const Surface<N, T, Color>* surface;
 
         if (!smooth_normals || dot(ray.dir(), geometric_normal) >= 0)
         {
