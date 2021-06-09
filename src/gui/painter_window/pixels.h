@@ -57,6 +57,7 @@ struct Pixels
         virtual ~Pixels() = default;
 
         virtual const char* floating_point_name() const = 0;
+        virtual const char* color_name() const = 0;
 
         virtual const std::vector<int>& screen_size() const = 0;
 
@@ -80,6 +81,7 @@ class PainterPixels final : public Pixels, public painter::Notifier<N - 1>
         static constexpr std::size_t RAW_PIXEL_SIZE = image::format_pixel_size_in_bytes(RAW_COLOR_FORMAT);
 
         const char* const m_floating_point_name;
+        const char* const m_color_name;
 
         const GlobalIndex<N - 1, long long> m_global_index;
         const std::vector<int> m_screen_size;
@@ -158,6 +160,11 @@ class PainterPixels final : public Pixels, public painter::Notifier<N - 1>
         const char* floating_point_name() const override
         {
                 return m_floating_point_name;
+        }
+
+        const char* color_name() const override
+        {
+                return m_color_name;
         }
 
         const std::vector<int>& screen_size() const override
@@ -255,6 +262,7 @@ public:
                 int samples_per_pixel,
                 bool smooth_normal)
                 : m_floating_point_name(type_bit_name<T>()),
+                  m_color_name(Color::name()),
                   m_global_index(scene->projector().screen_size()),
                   m_screen_size(
                           [](const auto& array)

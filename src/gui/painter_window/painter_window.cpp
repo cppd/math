@@ -97,6 +97,7 @@ void PainterWindow::create_interface()
         m_statistics_widget = std::make_unique<StatisticsWidget>(UPDATE_INTERVAL);
         ui.main_widget->layout()->addWidget(m_statistics_widget.get());
 
+        ui.status_bar->addPermanentWidget(new QLabel(m_pixels->color_name(), this));
         ui.status_bar->addPermanentWidget(new QLabel(m_pixels->floating_point_name(), this));
 
         connect(ui.menu_window->addAction("Adjust size"), &QAction::triggered, this,
