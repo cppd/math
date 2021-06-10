@@ -157,41 +157,15 @@ bool PainterParametersWidget::check()
         return true;
 }
 
-int PainterParametersWidget::thread_count()
+[[nodiscard]] PainterParameters PainterParametersWidget::parameters()
 {
-        return ui.spinBox_threads->value();
-}
-
-int PainterParametersWidget::samples_per_pixel()
-{
-        return ui.spinBox_samples_per_pixel->value();
-}
-
-bool PainterParametersWidget::flat_facets()
-{
-        return ui.checkBox_flat_facets->isChecked();
-}
-
-bool PainterParametersWidget::cornell_box()
-{
-        return ui.checkBox_cornell_box->isChecked();
-}
-
-int PainterParametersWidget::precision_index()
-{
-        if (ui.radioButton_precision_0->isChecked())
-        {
-                return 0;
-        }
-        return 1;
-}
-
-int PainterParametersWidget::color_index()
-{
-        if (ui.radioButton_color_0->isChecked())
-        {
-                return 0;
-        }
-        return 1;
+        PainterParameters p;
+        p.thread_count = ui.spinBox_threads->value();
+        p.samples_per_pixel = ui.spinBox_samples_per_pixel->value();
+        p.flat_facets = ui.checkBox_flat_facets->isChecked();
+        p.cornell_box = ui.checkBox_cornell_box->isChecked();
+        p.precision_index = ui.radioButton_precision_0->isChecked() ? 0 : 1;
+        p.color_index = ui.radioButton_color_0->isChecked() ? 0 : 1;
+        return p;
 }
 }

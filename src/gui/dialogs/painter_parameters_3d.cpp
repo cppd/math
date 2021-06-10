@@ -44,7 +44,7 @@ PainterParameters3dDialog::PainterParameters3dDialog(
         int default_precision_index,
         const std::array<const char*, 2>& colors,
         int default_color_index,
-        std::optional<PainterParameters3d>& parameters)
+        std::optional<std::tuple<PainterParameters, PainterParameters3d>>& parameters)
         : QDialog(parent_for_dialog()),
           m_parameters_widget(new PainterParametersWidget(
                   this,
@@ -146,19 +146,14 @@ void PainterParameters3dDialog::done(int r)
 
         m_parameters.emplace();
 
-        m_parameters->width = width;
-        m_parameters->height = height;
-        m_parameters->thread_count = m_parameters_widget->thread_count();
-        m_parameters->samples_per_pixel = m_parameters_widget->samples_per_pixel();
-        m_parameters->flat_facets = m_parameters_widget->flat_facets();
-        m_parameters->cornell_box = m_parameters_widget->cornell_box();
-        m_parameters->precision_index = m_parameters_widget->precision_index();
-        m_parameters->color_index = m_parameters_widget->color_index();
+        std::get<0>(*m_parameters) = m_parameters_widget->parameters();
+        std::get<1>(*m_parameters).width = width;
+        std::get<1>(*m_parameters).height = height;
 
         QDialog::done(r);
 }
 
-std::optional<PainterParameters3d> PainterParameters3dDialog::show(
+std::optional<std::tuple<PainterParameters, PainterParameters3d>> PainterParameters3dDialog::show(
         int max_thread_count,
         int width,
         int height,
@@ -170,7 +165,7 @@ std::optional<PainterParameters3d> PainterParameters3dDialog::show(
         const std::array<const char*, 2>& colors,
         int default_color_index)
 {
-        std::optional<PainterParameters3d> parameters;
+        std::optional<std::tuple<PainterParameters, PainterParameters3d>> parameters;
 
         QtObjectInDynamicMemory w(new PainterParameters3dDialog(
                 max_thread_count, width, height, max_screen_size, default_samples_per_pixel, max_samples_per_pixel,

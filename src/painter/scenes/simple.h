@@ -36,8 +36,8 @@ namespace ns::painter
 {
 template <std::size_t N, typename T, typename Color>
 std::unique_ptr<const Scene<N, T, Color>> create_simple_scene(
+        const Color& light,
         const Color& background_light,
-        const typename Color::DataType& lighting_intensity,
         int min_screen_size,
         int max_screen_size,
         std::unique_ptr<const Shape<N, T, Color>>&& shape)
@@ -103,9 +103,7 @@ std::unique_ptr<const Scene<N, T, Color>> create_simple_scene(
         Vector<N, T> light_direction(bb.max - center);
 
         std::vector<std::unique_ptr<const LightSource<N, T, Color>>> light_sources;
-        light_sources.push_back(std::make_unique<const DistantLight<N, T, Color>>(
-                light_direction,
-                Color(lighting_intensity, lighting_intensity, lighting_intensity, color::Type::Illumination)));
+        light_sources.push_back(std::make_unique<const DistantLight<N, T, Color>>(light_direction, light));
 
         //
 

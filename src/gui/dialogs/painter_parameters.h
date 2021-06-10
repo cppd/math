@@ -24,6 +24,16 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 namespace ns::gui::dialog
 {
+struct PainterParameters final
+{
+        int thread_count;
+        int samples_per_pixel;
+        bool flat_facets;
+        bool cornell_box;
+        int precision_index;
+        int color_index;
+};
+
 class PainterParametersWidget final : public QWidget
 {
         Q_OBJECT
@@ -46,12 +56,6 @@ public:
                 int default_color_index);
 
         [[nodiscard]] bool check();
-
-        int thread_count();
-        int samples_per_pixel();
-        bool flat_facets();
-        bool cornell_box();
-        int precision_index();
-        int color_index();
+        [[nodiscard]] PainterParameters parameters();
 };
 }

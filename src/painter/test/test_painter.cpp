@@ -44,8 +44,6 @@ namespace ns::painter
 namespace
 {
 constexpr RGB8 BACKGROUND_LIGHT(50, 100, 150);
-constexpr RGB8 DEFAULT_COLOR(150, 170, 150);
-constexpr float METALNESS = 0;
 constexpr float LIGHTING_INTENSITY = 1;
 
 constexpr std::string_view DIRECTORY_NAME = "painter_test";
@@ -243,18 +241,15 @@ void test_painter(
         std::unique_ptr<const Shape<N, T, Color>> painter_mesh;
         {
                 mesh::MeshObject<N> mesh_object(std::move(mesh), Matrix<N + 1, N + 1, double>(1), "");
-                {
-                        mesh::Writing writing(&mesh_object);
-                        writing.set_color(DEFAULT_COLOR);
-                        writing.set_metalness(METALNESS);
-                }
                 std::vector<const mesh::MeshObject<N>*> mesh_objects;
                 mesh_objects.push_back(&mesh_object);
                 painter_mesh = create_mesh<N, T, Color>(mesh_objects, progress);
         }
 
         std::unique_ptr<const Scene<N, T, Color>> scene = create_simple_scene(
-                Color(BACKGROUND_LIGHT), LIGHTING_INTENSITY, min_screen_size, max_screen_size, std::move(painter_mesh));
+                Color(LIGHTING_INTENSITY, LIGHTING_INTENSITY, LIGHTING_INTENSITY, color::Type::Illumination),
+                Color(BACKGROUND_LIGHT, color::Type::Illumination), min_screen_size, max_screen_size,
+                std::move(painter_mesh));
 
         static_assert(type == PainterTestOutputType::File || type == PainterTestOutputType::Window);
 

@@ -39,7 +39,7 @@ PainterParametersNdDialog::PainterParametersNdDialog(
         int default_precision_index,
         const std::array<const char*, 2>& colors,
         int default_color_index,
-        std::optional<PainterParametersNd>& parameters)
+        std::optional<std::tuple<PainterParameters, PainterParametersNd>>& parameters)
         : QDialog(parent_for_dialog()),
           m_parameters_widget(new PainterParametersWidget(
                   this,
@@ -159,19 +159,14 @@ void PainterParametersNdDialog::done(int r)
 
         m_parameters.emplace();
 
-        m_parameters->min_size = min_size;
-        m_parameters->max_size = max_size;
-        m_parameters->thread_count = m_parameters_widget->thread_count();
-        m_parameters->samples_per_pixel = m_parameters_widget->samples_per_pixel();
-        m_parameters->flat_facets = m_parameters_widget->flat_facets();
-        m_parameters->cornell_box = m_parameters_widget->cornell_box();
-        m_parameters->precision_index = m_parameters_widget->precision_index();
-        m_parameters->color_index = m_parameters_widget->color_index();
+        std::get<0>(*m_parameters) = m_parameters_widget->parameters();
+        std::get<1>(*m_parameters).min_size = min_size;
+        std::get<1>(*m_parameters).max_size = max_size;
 
         QDialog::done(r);
 }
 
-std::optional<PainterParametersNd> PainterParametersNdDialog::show(
+std::optional<std::tuple<PainterParameters, PainterParametersNd>> PainterParametersNdDialog::show(
         int dimension,
         int max_thread_count,
         int default_screen_size,
@@ -184,7 +179,7 @@ std::optional<PainterParametersNd> PainterParametersNdDialog::show(
         const std::array<const char*, 2>& colors,
         int default_color_index)
 {
-        std::optional<PainterParametersNd> parameters;
+        std::optional<std::tuple<PainterParameters, PainterParametersNd>> parameters;
 
         QtObjectInDynamicMemory w(new PainterParametersNdDialog(
                 dimension, max_thread_count, default_screen_size, min_screen_size, max_screen_size,

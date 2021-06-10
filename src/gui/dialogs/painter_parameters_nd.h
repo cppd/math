@@ -29,12 +29,6 @@ struct PainterParametersNd final
 {
         int min_size;
         int max_size;
-        int thread_count;
-        int samples_per_pixel;
-        bool flat_facets;
-        bool cornell_box;
-        int precision_index;
-        int color_index;
 };
 
 class PainterParametersNdDialog final : public QDialog
@@ -49,7 +43,7 @@ private:
         int m_min_screen_size;
         int m_max_screen_size;
 
-        std::optional<PainterParametersNd>& m_parameters;
+        std::optional<std::tuple<PainterParameters, PainterParametersNd>>& m_parameters;
 
         PainterParametersNdDialog(
                 int dimension,
@@ -63,7 +57,7 @@ private:
                 int default_precision_index,
                 const std::array<const char*, 2>& colors,
                 int default_color_index,
-                std::optional<PainterParametersNd>& parameters);
+                std::optional<std::tuple<PainterParameters, PainterParametersNd>>& parameters);
 
         void on_min_size_changed(int);
         void on_max_size_changed(int);
@@ -71,7 +65,7 @@ private:
         void done(int r) override;
 
 public:
-        [[nodiscard]] static std::optional<PainterParametersNd> show(
+        [[nodiscard]] static std::optional<std::tuple<PainterParameters, PainterParametersNd>> show(
                 int dimension,
                 int max_thread_count,
                 int default_screen_size,

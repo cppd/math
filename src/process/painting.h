@@ -31,5 +31,5 @@ std::function<void(ProgressRatioList*)> action_painter(
         const std::vector<storage::MeshObjectConst>& objects,
         const view::info::Camera& camera,
         const color::Color& background_light,
-        const color::Color::DataType& lighting_intensity);
+        double lighting_intensity);
 }

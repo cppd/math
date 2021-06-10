@@ -29,12 +29,6 @@ struct PainterParameters3d final
 {
         int width;
         int height;
-        int thread_count;
-        int samples_per_pixel;
-        bool flat_facets;
-        bool cornell_box;
-        int precision_index;
-        int color_index;
 };
 
 class PainterParameters3dDialog final : public QDialog
@@ -52,7 +46,7 @@ private:
         int m_max_height;
         double m_aspect_ratio;
 
-        std::optional<PainterParameters3d>& m_parameters;
+        std::optional<std::tuple<PainterParameters, PainterParameters3d>>& m_parameters;
 
         PainterParameters3dDialog(
                 int max_thread_count,
@@ -65,7 +59,7 @@ private:
                 int default_precision_index,
                 const std::array<const char*, 2>& colors,
                 int default_color_index,
-                std::optional<PainterParameters3d>& parameters);
+                std::optional<std::tuple<PainterParameters, PainterParameters3d>>& parameters);
 
         void on_width_value_changed(int);
         void on_height_value_changed(int);
@@ -73,7 +67,7 @@ private:
         void done(int r) override;
 
 public:
-        [[nodiscard]] static std::optional<PainterParameters3d> show(
+        [[nodiscard]] static std::optional<std::tuple<PainterParameters, PainterParameters3d>> show(
                 int max_thread_count,
                 int width,
                 int height,
