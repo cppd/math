@@ -19,6 +19,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "storage_scene.h"
 
+#include "../lights/point_light.h"
 #include "../objects.h"
 #include "../projectors/perspective_projector.h"
 #include "../shapes/hyperplane_parallelotope.h"
@@ -44,14 +45,14 @@ std::unique_ptr<const Scene<N, T, Color>> create_cornell_box_scene(
 {
         static_assert(N >= 3);
 
-        constexpr T LAMP_SIZE = 0.2;
+        //constexpr T LAMP_SIZE = 0.2;
         constexpr T BOX_SIZE = 0.16;
         constexpr T BOX_SPACE = 0.08;
         constexpr T CAMERA = 0.9;
         constexpr T NEAR = 0.7;
         constexpr T DEPTH = NEAR + 0.5 + BOX_SIZE + 2 * BOX_SPACE;
 
-        constexpr typename Color::DataType ALPHA = 1;
+        constexpr T ALPHA = 1;
         constexpr T METALNESS = 0.1;
         constexpr T ROUGHNESS = 0.2;
         constexpr Color BACKGROUND_LIGHT(0);
@@ -112,28 +113,38 @@ std::unique_ptr<const Scene<N, T, Color>> create_cornell_box_scene(
         }
 
         // Lamp
+        //{
+        //        Vector<N, T> lamp_org = center;
+        //        for (unsigned i = 0; i < N - 2; ++i)
+        //        {
+        //                lamp_org -= (LAMP_SIZE / 2) * camera[i];
+        //        }
+        //        lamp_org += T(0.499) * camera[N - 2];
+        //        lamp_org -= (LAMP_SIZE / 2) * camera[N - 1];
+        //
+        //        std::array<Vector<N, T>, N - 1> lamp_vectors;
+        //        for (unsigned i = 0; i < N - 2; ++i)
+        //        {
+        //                lamp_vectors[i] = LAMP_SIZE * camera[i];
+        //        }
+        //        lamp_vectors[N - 2] = LAMP_SIZE * camera[N - 1];
+        //
+        //        std::unique_ptr<HyperplaneParallelotope<N, T, Color>> lamp =
+        //                std::make_unique<HyperplaneParallelotope<N, T, Color>>(
+        //                        METALNESS, ROUGHNESS, color::rgb::WHITE, ALPHA, lamp_org, lamp_vectors);
+        //        lamp->set_light_source(Color(50, 50, 50, color::Type::Illumination));
+        //
+        //        shapes.push_back(std::move(lamp));
+        //}
+
         {
                 Vector<N, T> lamp_org = center;
-                for (unsigned i = 0; i < N - 2; ++i)
-                {
-                        lamp_org -= (LAMP_SIZE / 2) * camera[i];
-                }
-                lamp_org += T(0.499) * camera[N - 2];
-                lamp_org -= (LAMP_SIZE / 2) * camera[N - 1];
+                lamp_org += T(0.45) * camera[N - 2];
 
-                std::array<Vector<N, T>, N - 1> lamp_vectors;
-                for (unsigned i = 0; i < N - 2; ++i)
-                {
-                        lamp_vectors[i] = LAMP_SIZE * camera[i];
-                }
-                lamp_vectors[N - 2] = LAMP_SIZE * camera[N - 1];
+                constexpr T UNIT_INTENSITY_DISTANCE = 1;
 
-                std::unique_ptr<HyperplaneParallelotope<N, T, Color>> lamp =
-                        std::make_unique<HyperplaneParallelotope<N, T, Color>>(
-                                METALNESS, ROUGHNESS, color::rgb::WHITE, ALPHA, lamp_org, lamp_vectors);
-                lamp->set_light_source(Color(50, 50, 50, color::Type::Illumination));
-
-                shapes.push_back(std::move(lamp));
+                light_sources.push_back(std::make_unique<const PointLight<N, T, Color>>(
+                        lamp_org, Color(1, 1, 1, color::Type::Illumination), UNIT_INTENSITY_DISTANCE));
         }
 
         std::unique_ptr<Projector<N, T>> projector;
