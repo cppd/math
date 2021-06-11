@@ -105,6 +105,12 @@ public:
         {
                 return c.to_string("rgb");
         }
+
+        template <typename Color>
+        Color to_color(Type type = Type::Reflectance) const
+        {
+                return Color(Base::data()[0], Base::data()[1], Base::data()[2], type);
+        }
 };
 
 template <typename T, std::size_t N>

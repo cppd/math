@@ -21,6 +21,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/com/print.h>
 #include <src/com/random/engine.h>
 #include <src/com/type/limit.h>
+#include <src/com/type/name.h>
 #include <src/test/test.h>
 
 #include <cmath>
@@ -199,6 +200,45 @@ void test_color_constructors(const std::string_view& test_name, std::mt19937_64&
                               + ", RGB8 " + to_string(c2));
                 }
         }
+
+        const auto to_color_test = [&]<typename T>(const T&)
+        {
+                const float r_float = rgb[0];
+                const float g_float = rgb[1];
+                const float b_float = rgb[2];
+                {
+                        const ColorType c1 = RGB<T>(r_float, g_float, b_float).template to_color<ColorType>();
+                        const ColorType c2 =
+                                RGB<T>(r_float, g_float, b_float).template to_color<ColorType>(Type::Reflectance);
+                        if (!(c1 == c2))
+                        {
+                                error(std::string(test_name)
+                                      + ": error default to_color type parameter, to_color with default parameter "
+                                      + to_string(c1) + ", to_color with reflectance parameter " + to_string(c2));
+                        }
+                }
+                {
+                        const ColorType c1(r_float, g_float, b_float);
+                        const ColorType c2 = RGB<T>(r_float, g_float, b_float).template to_color<ColorType>();
+                        if (!(c1 == c2))
+                        {
+                                error(std::string(test_name) + ": error to_color: RGB " + to_string(c1) + ", RGB "
+                                      + type_name<T>() + " " + to_string(c2));
+                        }
+                }
+                {
+                        const ColorType c1(r_float, g_float, b_float, Type::Illumination);
+                        const ColorType c2 =
+                                RGB<T>(r_float, g_float, b_float).template to_color<ColorType>(Type::Illumination);
+                        if (!(c1 == c2))
+                        {
+                                error(std::string(test_name) + ": error to_color illumination: RGB " + to_string(c1)
+                                      + ", RGB " + type_name<T>() + " " + to_string(c2));
+                        }
+                }
+        };
+        to_color_test(static_cast<float>(0));
+        to_color_test(static_cast<double>(0));
 
         std::uniform_real_distribution<float> urd_n(-1, 1);
         {
