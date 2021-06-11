@@ -109,16 +109,15 @@ struct Material
         T roughness;
         Color Kd;
         int map_Kd;
-        typename Color::DataType alpha;
+        T alpha;
 
-        Material(T metalness, T roughness, const color::Color& Kd, int map_Kd, color::Color::DataType alpha)
+        Material(T metalness, T roughness, const color::Color& Kd, int map_Kd, T alpha)
                 : metalness(std::clamp(metalness, T(0), T(1))),
                   roughness(std::clamp(roughness, T(0), T(1))),
+                  Kd(Kd.to_color<Color>().clamped()),
                   map_Kd(map_Kd),
                   alpha(alpha)
         {
-                Vector<3, float> rgb = Kd.clamped().rgb32();
-                this->Kd = Color(rgb[0], rgb[1], rgb[2]);
         }
 };
 
@@ -235,7 +234,7 @@ public:
 template <std::size_t N, typename T, typename Color>
 void Mesh<N, T, Color>::create(const mesh::Reading<N>& mesh_object)
 {
-        const typename Color::DataType alpha = std::clamp<typename Color::DataType>(mesh_object.alpha(), 0, 1);
+        const T alpha = std::clamp<T>(mesh_object.alpha(), 0, 1);
 
         if (alpha == 0)
         {

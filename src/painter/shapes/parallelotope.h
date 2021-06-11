@@ -36,7 +36,7 @@ class Parallelotope final : public Shape<N, T, Color>
         const T m_metalness;
         const T m_roughness;
         const Color m_color;
-        const typename Color::DataType m_alpha;
+        const T m_alpha;
         const bool m_alpha_nonzero = m_alpha > 0;
 
         class IntersectionImpl final : public Surface<N, T, Color>
@@ -85,14 +85,14 @@ public:
                 const T metalness,
                 const T roughness,
                 const Color& color,
-                const typename Color::DataType alpha,
+                const T alpha,
                 const Vector<N, T>& org,
                 const V&... e)
                 : m_parallelotope(org, e...),
                   m_metalness(std::clamp(metalness, T(0), T(1))),
                   m_roughness(std::clamp(roughness, T(0), T(1))),
                   m_color(color.clamped()),
-                  m_alpha(std::clamp<typename Color::DataType>(alpha, 0, 1))
+                  m_alpha(std::clamp<T>(alpha, 0, 1))
         {
         }
 
