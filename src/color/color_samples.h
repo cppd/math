@@ -17,7 +17,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
-#include <src/com/interpolation.h>
 #include <src/com/type/limit.h>
 #include <src/numerical/vec.h>
 
@@ -68,14 +67,12 @@ protected:
         }
 
 public:
-        template <typename F>
-        void multiply_add(const Derived& a, F b)
+        void multiply_add(const Derived& a, T b)
         {
-                m_data.multiply_add(a.m_data, static_cast<T>(b));
+                m_data.multiply_add(a.m_data, b);
         }
 
-        template <typename F>
-        void multiply_add(F b, const Derived& a)
+        void multiply_add(T b, const Derived& a)
         {
                 multiply_add(a, b);
         }
@@ -236,17 +233,15 @@ public:
                 return *static_cast<Derived*>(this);
         }
 
-        template <typename F>
-        constexpr Derived& operator*=(F b) &
+        constexpr Derived& operator*=(T b) &
         {
-                m_data *= static_cast<T>(b);
+                m_data *= b;
                 return *static_cast<Derived*>(this);
         }
 
-        template <typename F>
-        constexpr Derived& operator/=(F b) &
+        constexpr Derived& operator/=(T b) &
         {
-                m_data /= static_cast<T>(b);
+                m_data /= b;
                 return *static_cast<Derived*>(this);
         }
 
@@ -257,11 +252,10 @@ public:
                 return a.m_data == b.m_data;
         }
 
-        template <typename F>
-        [[nodiscard]] friend Derived interpolation(const Derived& a, const Derived& b, F x)
+        [[nodiscard]] friend Derived interpolation(const Derived& a, const Derived& b, T t)
         {
                 Derived r;
-                r.m_data = ::ns::interpolation(a.m_data, b.m_data, x);
+                r.m_data = ::ns::interpolation(a.m_data, b.m_data, t);
                 return r;
         }
 
@@ -286,25 +280,22 @@ public:
                 return r;
         }
 
-        template <typename F>
-        [[nodiscard]] constexpr friend Derived operator*(const Derived& a, F b)
+        [[nodiscard]] constexpr friend Derived operator*(const Derived& a, T b)
         {
                 Derived r;
-                r.m_data = a.m_data * static_cast<T>(b);
+                r.m_data = a.m_data * b;
                 return r;
         }
 
-        template <typename F>
-        [[nodiscard]] constexpr friend Derived operator*(F b, const Derived& a)
+        [[nodiscard]] constexpr friend Derived operator*(T b, const Derived& a)
         {
                 return a * b;
         }
 
-        template <typename F>
-        [[nodiscard]] constexpr friend Derived operator/(const Derived& a, F b)
+        [[nodiscard]] constexpr friend Derived operator/(const Derived& a, T b)
         {
                 Derived r;
-                r.m_data = a.m_data / static_cast<T>(b);
+                r.m_data = a.m_data / b;
                 return r;
         }
 };

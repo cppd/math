@@ -347,7 +347,6 @@ Color ggx_brdf(T roughness, const Color& f0, T n_v, T n_l, T n_h, T h_l)
                 return impl::fresnel(f0, h_l) * (pdf * g2 / divisor);
         }
 
-        static constexpr Color BLACK(0);
-        return BLACK;
+        return Color(0);
 }
 }

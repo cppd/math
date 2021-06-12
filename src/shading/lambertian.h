@@ -66,14 +66,12 @@ Color f(const Color& color, const Vector<N, T>& n, const Vector<N, T>& l)
         static_assert(N >= 3);
         namespace impl = implementation;
 
-        static constexpr Color BLACK(0);
-
         ASSERT(n.is_unit());
         ASSERT(l.is_unit());
 
         if (dot(n, l) <= 0)
         {
-                return BLACK;
+                return Color(0);
         }
 
         return impl::f<N>(color);

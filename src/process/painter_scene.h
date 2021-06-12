@@ -66,8 +66,7 @@ Color light_color(const double intensity)
 template <typename Color>
 Color background_light_color(const color::Color& background_light)
 {
-        Vector<3, float> rgb = background_light.rgb32();
-        return Color(rgb[0], rgb[1], rgb[2], color::Type::Illumination);
+        return background_light.to_color<Color>(color::Type::Illumination);
 }
 
 template <typename T, typename Color>

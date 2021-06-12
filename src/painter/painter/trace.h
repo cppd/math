@@ -197,7 +197,6 @@ std::optional<Color> trace_path(
         const Ray<N, T>& ray,
         RandomEngine<T>& random_engine)
 {
-        static_assert(std::is_floating_point_v<typename Color::DataType>);
         return trace_implementation::trace_path<N, T, Color>(scene, smooth_normals, ray, 0 /*depth*/, random_engine);
 }
 }

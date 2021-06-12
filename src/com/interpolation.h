@@ -17,23 +17,22 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
-#include "type/trait.h"
-
 #include <array>
 #include <cmath>
 
 namespace ns
 {
-template <typename T, typename F>
-T interpolation(T v0, T v1, F x)
+template <typename T>
+[[nodiscard]] std::enable_if_t<std::is_floating_point_v<T>, T> interpolation(
+        const T& a,
+        const T& b,
+        const std::type_identity_t<T>& t)
 {
-        static_assert(is_native_floating_point<T> && is_native_floating_point<F>);
-
-        return std::fma(static_cast<T>(x), v1, std::fma(-static_cast<T>(x), v0, v0));
+        return std::fma(t, b, std::fma(-t, a, a));
 }
 
 template <typename T, typename F>
-T interpolation(const T& c00, const T& c10, const T& c01, const T& c11, const F& x, const F& y)
+[[nodiscard]] T interpolation(const T& c00, const T& c10, const T& c01, const T& c11, const F& x, const F& y)
 {
         T t0 = interpolation(c00, c10, x);
         T t1 = interpolation(c01, c11, x);
@@ -41,7 +40,7 @@ T interpolation(const T& c00, const T& c10, const T& c01, const T& c11, const F&
 }
 
 template <typename T, typename F>
-T interpolation(
+[[nodiscard]] T interpolation(
         const T& c000,
         const T& c100,
         const T& c010,
@@ -62,7 +61,7 @@ T interpolation(
 }
 
 template <typename T, typename F>
-T interpolation(
+[[nodiscard]] T interpolation(
         const T& c0000,
         const T& c1000,
         const T& c0100,
@@ -96,7 +95,7 @@ T interpolation(
 }
 
 template <std::size_t N, typename T, typename F>
-T interpolation(const std::array<T, (1 << N)>& data, const std::array<F, N>& p)
+[[nodiscard]] T interpolation(const std::array<T, (1 << N)>& data, const std::array<F, N>& p)
 {
         static_assert(N > 0);
 

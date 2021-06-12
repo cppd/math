@@ -54,7 +54,7 @@ void check_color_equal(const Color& directional_albedo, const Color& surface_col
         check_color(directional_albedo, "Directional albedo");
         check_color(surface_color, "Surface color");
 
-        constexpr typename Color::DataType RELATIVE_ERROR = 0.01;
+        constexpr double RELATIVE_ERROR = 0.01;
 
         if (!directional_albedo.equal_to_relative(surface_color, RELATIVE_ERROR))
         {
@@ -69,7 +69,7 @@ void check_color_less(const Color& directional_albedo, const Color& surface_colo
         check_color(directional_albedo, "Directional albedo");
         check_color(surface_color, "Surface color");
 
-        constexpr typename Color::DataType RELATIVE_ERROR = 0.01;
+        constexpr double RELATIVE_ERROR = 0.01;
 
         if (!directional_albedo.less_than(surface_color, RELATIVE_ERROR))
         {

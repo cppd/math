@@ -21,6 +21,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <src/com/arrays.h>
 #include <src/com/combinatorics.h>
+#include <src/com/type/trait.h>
 
 #include <array>
 

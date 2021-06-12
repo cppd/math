@@ -290,17 +290,17 @@ public:
                                }();
 
                                Color color_sum{0};
-                               typename Color::DataType hit_weight_sum{0};
-                               typename Color::DataType background_weight_sum{0};
+                               T hit_weight_sum{0};
+                               T background_weight_sum{0};
 
                                for (std::size_t i = 0; i < points.size(); ++i)
                                {
-                                       const typename Color::DataType weight =
+                                       const T weight =
                                                m_filter.compute(region_pixel_center_in_point_coordinates - points[i]);
 
                                        if (colors[i])
                                        {
-                                               color_sum += weight * (*colors[i]);
+                                               color_sum.multiply_add(weight, *colors[i]);
                                                hit_weight_sum += weight;
                                        }
                                        else

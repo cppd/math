@@ -193,19 +193,17 @@ Color f(T metalness,
         static_assert(N >= 3);
         namespace impl = implementation;
 
-        static constexpr Color BLACK(0);
-
         ASSERT(n.is_unit());
         ASSERT(v.is_unit());
         ASSERT(l.is_unit());
 
         if (dot(n, v) <= 0)
         {
-                return BLACK;
+                return Color(0);
         }
         if (dot(n, l) <= 0)
         {
-                return BLACK;
+                return Color(0);
         }
 
         return impl::f(metalness, roughness, color, n, v, l);

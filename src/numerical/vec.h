@@ -374,13 +374,13 @@ template <std::size_t N, typename T>
         return res;
 }
 
-template <std::size_t N, typename T, typename F>
-[[nodiscard]] Vector<N, T> interpolation(const Vector<N, T>& a, const Vector<N, T>& b, F x)
+template <std::size_t N, typename T>
+[[nodiscard]] Vector<N, T> interpolation(const Vector<N, T>& a, const Vector<N, T>& b, const std::type_identity_t<T>& t)
 {
         Vector<N, T> res;
         for (std::size_t i = 0; i < N; ++i)
         {
-                res[i] = interpolation(a[i], b[i], x);
+                res[i] = interpolation(a[i], b[i], t);
         }
         return res;
 }
