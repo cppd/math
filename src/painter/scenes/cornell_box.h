@@ -53,9 +53,9 @@ std::unique_ptr<const Scene<N, T, Color>> create_cornell_box_scene(
         constexpr T DEPTH = NEAR + 0.5 + BOX_SIZE + 2 * BOX_SPACE;
 
         constexpr T ALPHA = 1;
-        constexpr T METALNESS = 0.1;
+        constexpr T METALNESS = 0;
         constexpr T ROUGHNESS = 0.2;
-        constexpr Color BACKGROUND_LIGHT(0);
+        const Color BACKGROUND_LIGHT(0.1, 0.1, 0.1, color::Type::Illumination);
 
         std::vector<std::unique_ptr<const Shape<N, T, Color>>> shapes;
         std::vector<std::unique_ptr<const LightSource<N, T, Color>>> light_sources;
@@ -138,13 +138,16 @@ std::unique_ptr<const Scene<N, T, Color>> create_cornell_box_scene(
         //}
 
         {
-                Vector<N, T> lamp_org = center;
-                lamp_org += T(0.45) * camera[N - 2];
+                Vector<N, T> lamp_org = center + T(0.49) * camera[N - 2];
+                Vector<N, T> lamp_direction = -camera[N - 2];
 
-                constexpr T UNIT_INTENSITY_DISTANCE = 1;
+                constexpr T UNIT_INTENSITY_DISTANCE = 1.5;
+                constexpr T FALLOFF_START = 80;
+                constexpr T WIDTH = 90;
 
-                light_sources.push_back(std::make_unique<const PointLight<N, T, Color>>(
-                        lamp_org, Color(1, 1, 1, color::Type::Illumination), UNIT_INTENSITY_DISTANCE));
+                light_sources.push_back(std::make_unique<const SpotLight<N, T, Color>>(
+                        lamp_org, lamp_direction, Color(1, 1, 1, color::Type::Illumination), UNIT_INTENSITY_DISTANCE,
+                        FALLOFF_START, WIDTH));
         }
 
         std::unique_ptr<Projector<N, T>> projector;
