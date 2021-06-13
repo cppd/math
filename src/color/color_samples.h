@@ -77,22 +77,11 @@ public:
                 multiply_add(a, b);
         }
 
-        //void clamp()
-        //{
-        //        for (std::size_t i = 0; i < N; ++i)
-        //        {
-        //                m_data[i] = std::clamp(m_data[i], T(0), T(1));
-        //        }
-        //}
-
-        [[nodiscard]] Derived clamped() const
+        [[nodiscard]] Derived clamped(T low, T high) const
         {
-                Derived c;
-                for (std::size_t i = 0; i < N; ++i)
-                {
-                        c.m_data[i] = std::clamp(m_data[i], T(0), T(1));
-                }
-                return c;
+                Derived r;
+                r.m_data = m_data.clamped(low, high);
+                return r;
         }
 
         [[nodiscard]] bool is_black() const

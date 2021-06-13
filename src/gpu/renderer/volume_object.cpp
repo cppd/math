@@ -234,7 +234,7 @@ class Impl final : public VolumeObject
 
                 m_buffer.set_parameters(
                         m_transfer_command_pool, m_transfer_queue, window_offset, window_scale, volume_alpha_coeficient,
-                        isosurface_alpha, isosurface, isovalue, color.rgb32());
+                        isosurface_alpha, isosurface, isovalue, color.rgb32().clamped(0, 1));
         }
 
         void buffer_set_lighting(float ambient, float metalness, float roughness) const

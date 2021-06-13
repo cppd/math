@@ -176,7 +176,7 @@ class Impl final : public Renderer
         {
                 ASSERT(m_thread_id == std::this_thread::get_id());
 
-                m_clear_color_rgb32 = color.rgb32();
+                m_clear_color_rgb32 = color.rgb32().clamped(0, 1);
                 m_shader_buffers.set_background_color(m_clear_color_rgb32);
 
                 create_clear_command_buffers();
@@ -185,13 +185,13 @@ class Impl final : public Renderer
         {
                 ASSERT(m_thread_id == std::this_thread::get_id());
 
-                m_shader_buffers.set_wireframe_color(color.rgb32());
+                m_shader_buffers.set_wireframe_color(color.rgb32().clamped(0, 1));
         }
         void set_clip_plane_color(const color::Color& color) override
         {
                 ASSERT(m_thread_id == std::this_thread::get_id());
 
-                m_shader_buffers.set_clip_plane_color(color.rgb32());
+                m_shader_buffers.set_clip_plane_color(color.rgb32().clamped(0, 1));
         }
         void set_normal_length(float length) override
         {
@@ -203,13 +203,13 @@ class Impl final : public Renderer
         {
                 ASSERT(m_thread_id == std::this_thread::get_id());
 
-                m_shader_buffers.set_normal_color_positive(color.rgb32());
+                m_shader_buffers.set_normal_color_positive(color.rgb32().clamped(0, 1));
         }
         void set_normal_color_negative(const color::Color& color) override
         {
                 ASSERT(m_thread_id == std::this_thread::get_id());
 
-                m_shader_buffers.set_normal_color_negative(color.rgb32());
+                m_shader_buffers.set_normal_color_negative(color.rgb32().clamped(0, 1));
         }
         void set_show_smooth(bool show) override
         {

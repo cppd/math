@@ -48,9 +48,9 @@ class RGB final : public ColorSamples<RGB<T>, 3, T>
                 ASSERT(is_finite(green));
                 ASSERT(is_finite(blue));
 
-                red = std::max<T>(0, red);
-                green = std::max<T>(0, green);
-                blue = std::max<T>(0, blue);
+                red = std::max(T(0), red);
+                green = std::max(T(0), green);
+                blue = std::max(T(0), blue);
 
                 return Vector<3, T>(red, green, blue);
         }
@@ -62,7 +62,7 @@ public:
         {
         }
 
-        constexpr explicit RGB(std::type_identity_t<T> v) : Base(std::max<T>(0, v))
+        constexpr explicit RGB(std::type_identity_t<T> v) : Base(std::max(T(0), v))
         {
         }
 
@@ -82,17 +82,17 @@ public:
         [[nodiscard]] constexpr Vector<3, float> rgb32() const
         {
                 Vector<3, float> rgb = to_vector<float>(Base::data());
-                rgb[0] = std::clamp<T>(rgb[0], 0, 1);
-                rgb[1] = std::clamp<T>(rgb[1], 0, 1);
-                rgb[2] = std::clamp<T>(rgb[2], 0, 1);
+                rgb[0] = std::max(0.0f, rgb[0]);
+                rgb[1] = std::max(0.0f, rgb[1]);
+                rgb[2] = std::max(0.0f, rgb[2]);
                 return rgb;
         }
 
         [[nodiscard]] constexpr T luminance() const
         {
-                T r = std::max<T>(0, Base::data()[0]);
-                T g = std::max<T>(0, Base::data()[1]);
-                T b = std::max<T>(0, Base::data()[2]);
+                T r = std::max(T(0), Base::data()[0]);
+                T g = std::max(T(0), Base::data()[1]);
+                T b = std::max(T(0), Base::data()[2]);
                 return linear_float_to_linear_luminance(r, g, b);
         }
 
@@ -202,7 +202,7 @@ class SpectrumSamples final : public ColorSamples<SpectrumSamples<T, N>, N, T>
         {
                 for (std::size_t i = 0; i < N; ++i)
                 {
-                        (*v)[i] = std::max<T>(0, (*v)[i]);
+                        (*v)[i] = std::max(T(0), (*v)[i]);
                 }
         }
 
@@ -215,9 +215,9 @@ class SpectrumSamples final : public ColorSamples<SpectrumSamples<T, N>, N, T>
                 ASSERT(std::isfinite(green));
                 ASSERT(std::isfinite(blue));
 
-                red = std::max<T>(0, red);
-                green = std::max<T>(0, green);
-                blue = std::max<T>(0, blue);
+                red = std::max(T(0), red);
+                green = std::max(T(0), green);
+                blue = std::max(T(0), blue);
 
                 Vector<N, T> spectrum(0);
 
@@ -298,11 +298,7 @@ class SpectrumSamples final : public ColorSamples<SpectrumSamples<T, N>, N, T>
                 const T y = dot(spectrum, s.y);
                 const T z = dot(spectrum, s.z);
 
-                Vector<3, T> rgb = xyz_to_linear_srgb<XYZ_VERSION>(x, y, z);
-                rgb[0] = std::clamp<T>(rgb[0], 0, 1);
-                rgb[1] = std::clamp<T>(rgb[1], 0, 1);
-                rgb[2] = std::clamp<T>(rgb[2], 0, 1);
-                return rgb;
+                return xyz_to_linear_srgb<XYZ_VERSION>(x, y, z);
         }
 
         static T spectrum_to_luminance(Vector<N, T> spectrum)
@@ -321,7 +317,7 @@ public:
         {
         }
 
-        constexpr explicit SpectrumSamples(std::type_identity_t<T> v) : Base(std::max<T>(0, v))
+        constexpr explicit SpectrumSamples(std::type_identity_t<T> v) : Base(std::max(T(0), v))
         {
         }
 
@@ -341,7 +337,11 @@ public:
 
         [[nodiscard]] Vector<3, float> rgb32() const
         {
-                return to_vector<float>(spectrum_to_rgb(Base::data()));
+                Vector<3, float> rgb = to_vector<float>(spectrum_to_rgb(Base::data()));
+                rgb[0] = std::max(0.0f, rgb[0]);
+                rgb[1] = std::max(0.0f, rgb[1]);
+                rgb[2] = std::max(0.0f, rgb[2]);
+                return rgb;
         }
 
         [[nodiscard]] T luminance() const
