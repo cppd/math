@@ -31,6 +31,7 @@ Norms
 #include <src/com/math.h>
 #include <src/com/type/limit.h>
 
+#include <algorithm>
 #include <array>
 #include <cmath>
 #include <functional>
@@ -239,6 +240,16 @@ public:
                 static constexpr T max = square(1 + d);
                 const T s = norm_squared();
                 return s > min && s < max;
+        }
+
+        [[nodiscard]] Vector<N, T> clamped(T low, T high) const
+        {
+                Vector<N, T> res;
+                for (std::size_t i = 0; i < N; ++i)
+                {
+                        res[i] = std::clamp(m_data[i], low, high);
+                }
+                return res;
         }
 
         [[nodiscard]] std::string to_string() const
