@@ -49,19 +49,24 @@ void compare(const std::vector<T>& a, const std::vector<T>& b)
                         continue;
                 }
 
-                T abs = std::abs(a[i] - b[i]);
-                if (abs < T(1e-3))
+                const T absolute = std::abs(a[i] - b[i]);
+                if (!(absolute <= T(0.01)))
+                {
+                        error(to_string(a[i]) + " and " + to_string(b[i])
+                              + " are not equal, absolute error = " + to_string(absolute));
+                }
+
+                if (std::abs(a[i]) <= T(0.1) || std::abs(b[i]) <= T(0.1))
                 {
                         continue;
                 }
 
-                T max = std::max(std::abs(a[i]), std::abs(b[i]));
-                if (abs / max < T(1e-3))
+                const T relative = absolute / std::max(std::abs(a[i]), std::abs(b[i]));
+                if (!(relative <= T(0.01)))
                 {
-                        continue;
+                        error(to_string(a[i]) + " and " + to_string(b[i])
+                              + " are not equal, relative error = " + to_string(relative));
                 }
-
-                error(to_string(a[i]) + " and " + to_string(b[i]) + " are not equal");
         }
 }
 
@@ -248,10 +253,13 @@ void test()
         test_constant<double, float>();
         test_constant<double, double>();
 
-        test_random<float, float>();
-        test_random<float, double>();
-        test_random<double, float>();
-        test_random<double, double>();
+        for (int i = 0; i < 2; ++i)
+        {
+                test_random<float, float>();
+                test_random<float, double>();
+                test_random<double, float>();
+                test_random<double, double>();
+        }
 
         LOG("Test average samples passed");
 }
