@@ -27,7 +27,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/image/depth.h>
 #include <src/image/file.h>
 #include <src/image/flip.h>
-#include <src/image/grayscale.h>
+#include <src/image/normalize.h>
 #include <src/model/volume_utility.h>
 #include <src/process/dimension.h>
 #include <src/process/load.h>
@@ -147,6 +147,8 @@ image::Image<N_IMAGE> create_image(
                 image.color_format = color_format_rgba;
                 image.pixels = std::move(pixels_rgba);
         }
+
+        image::normalize(image.color_format, &image.pixels);
 
         if (parameters.to_8_bit)
         {

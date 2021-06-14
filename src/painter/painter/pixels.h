@@ -24,13 +24,11 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <src/com/global_index.h>
 #include <src/com/spin_lock.h>
-#include <src/com/type/limit.h>
 #include <src/image/image.h>
 
 #include <array>
 #include <mutex>
 #include <optional>
-#include <span>
 #include <vector>
 
 namespace ns::painter
@@ -152,19 +150,6 @@ public:
         LockGuards& operator=(const LockGuards&) = delete;
         LockGuards& operator=(LockGuards&&) = delete;
 };
-
-template <std::size_t N, typename T>
-[[nodiscard]] T max(T max, const Vector<N, T>& v)
-{
-        for (std::size_t i = 0; i < N; ++i)
-        {
-                if (is_finite(v[i]))
-                {
-                        max = std::max(max, v[i]);
-                }
-        }
-        return max;
-}
 }
 
 template <std::size_t N, typename T, typename Color>
@@ -355,8 +340,6 @@ public:
                 image_rgba->size = m_screen_size;
                 image_rgba->pixels.resize(RGBA_PIXEL_SIZE * m_pixels.size());
 
-                float max = limits<float>::lowest();
-
                 impl::LockGuards lg(m_pixel_locks);
 
                 std::byte* ptr_rgb = image_rgb->pixels.data();
@@ -391,44 +374,8 @@ public:
                         static_assert(sizeof(rgba) == RGBA_PIXEL_SIZE);
                         std::memcpy(ptr_rgba, &rgba, RGBA_PIXEL_SIZE);
                         ptr_rgba += RGBA_PIXEL_SIZE;
-
-                        max = impl::max(max, rgb);
-                        max = impl::max(max, rgba.rgb);
                 }
                 ASSERT(ptr_rgb == image_rgb->pixels.data() + image_rgb->pixels.size());
-                ASSERT(ptr_rgba == image_rgba->pixels.data() + image_rgba->pixels.size());
-
-                if (max <= 1)
-                {
-                        return;
-                }
-
-                ptr_rgb = image_rgb->pixels.data();
-                for (std::size_t i = 0; i < m_pixels.size(); ++i)
-                {
-                        std::array<float, 3> rgb;
-                        static_assert(std::span(rgb).size_bytes() == RGB_PIXEL_SIZE);
-                        std::memcpy(rgb.data(), ptr_rgb, RGB_PIXEL_SIZE);
-                        rgb[0] /= max;
-                        rgb[1] /= max;
-                        rgb[2] /= max;
-                        std::memcpy(ptr_rgb, rgb.data(), RGB_PIXEL_SIZE);
-                        ptr_rgb += RGB_PIXEL_SIZE;
-                }
-                ASSERT(ptr_rgb == image_rgb->pixels.data() + image_rgb->pixels.size());
-
-                ptr_rgba = image_rgba->pixels.data();
-                for (std::size_t i = 0; i < m_pixels.size(); ++i)
-                {
-                        std::array<float, 4> rgba;
-                        static_assert(std::span(rgba).size_bytes() == RGBA_PIXEL_SIZE);
-                        std::memcpy(rgba.data(), ptr_rgba, RGBA_PIXEL_SIZE);
-                        rgba[0] /= max;
-                        rgba[1] /= max;
-                        rgba[2] /= max;
-                        std::memcpy(ptr_rgba, rgba.data(), RGBA_PIXEL_SIZE);
-                        ptr_rgba += RGBA_PIXEL_SIZE;
-                }
                 ASSERT(ptr_rgba == image_rgba->pixels.data() + image_rgba->pixels.size());
         }
 };
