@@ -82,6 +82,7 @@ class PainterPixels final : public Pixels, public painter::Notifier<N - 1>
 
         static constexpr image::ColorFormat COLOR_FORMAT = image::ColorFormat::R8G8B8A8_SRGB;
         static constexpr std::size_t PIXEL_SIZE = image::format_pixel_size_in_bytes(COLOR_FORMAT);
+        static constexpr uint8_t ALPHA = limits<uint8_t>::max();
 
         const std::thread::id m_thread_id = std::this_thread::get_id();
 
@@ -96,8 +97,10 @@ class PainterPixels final : public Pixels, public painter::Notifier<N - 1>
 
         std::vector<std::byte> m_pixels_r8g8b8a8 = make_initial_image(m_screen_size, COLOR_FORMAT);
 
-        std::vector<std::optional<Vector<3, float>>> m_pixels_original{
-                static_cast<std::size_t>(m_global_index.count())};
+        static constexpr float MIN = limits<float>::lowest();
+        std::vector<Vector<3, float>> m_pixels_original{
+                static_cast<std::size_t>(m_global_index.count()), Vector<3, float>(MIN, MIN, MIN)};
+        float m_pixel_max = 0;
         float m_pixel_max_r = 1;
 
         TimePoint m_last_normalize_time = time();
@@ -106,6 +109,64 @@ class PainterPixels final : public Pixels, public painter::Notifier<N - 1>
         std::atomic_bool m_painter_images_ready = false;
 
         std::unique_ptr<painter::Painter> m_painter;
+
+        static void write_r8g8b8a8(std::byte* ptr, const Vector<3, float>& rgb)
+        {
+                RGB8 rgb8 = make_rgb8(rgb);
+                std::array<uint8_t, 4> rgba8{rgb8.red, rgb8.green, rgb8.blue, ALPHA};
+
+                static_assert(COLOR_FORMAT == image::ColorFormat::R8G8B8A8_SRGB);
+                static_assert(std::span(rgba8).size_bytes() == PIXEL_SIZE);
+                std::memcpy(ptr, rgba8.data(), PIXEL_SIZE);
+        }
+
+        template <std::size_t FLOAT_COUNT>
+        static float max_value(std::size_t& i, const std::vector<Vector<3, float>>& pixels)
+        {
+                static_assert(FLOAT_COUNT > 0 && FLOAT_COUNT % 3 == 0);
+
+                static constexpr std::size_t PIXEL_COUNT = FLOAT_COUNT / 3;
+                if (i + PIXEL_COUNT > pixels.size())
+                {
+                        return MIN;
+                }
+
+                std::array<float, FLOAT_COUNT> m;
+                for (float& v : m)
+                {
+                        v = MIN;
+                }
+
+                const std::size_t MAX = pixels.size() - PIXEL_COUNT;
+                for (; i <= MAX; i += PIXEL_COUNT)
+                {
+                        const float* p = pixels[i].data();
+                        for (std::size_t j = 0; j < FLOAT_COUNT; ++j)
+                        {
+                                m[j] = std::max(m[j], p[j]);
+                        }
+                }
+
+                std::array<float, 3> r{m[0], m[1], m[2]};
+                for (std::size_t j = 3; j < FLOAT_COUNT; j += 3)
+                {
+                        r[0] = std::max(r[0], m[j + 0]);
+                        r[1] = std::max(r[1], m[j + 1]);
+                        r[2] = std::max(r[2], m[j + 2]);
+                }
+
+                return std::max(std::max(r[0], r[1]), r[2]);
+        }
+
+        static float max_value(const std::vector<Vector<3, float>>& pixels)
+        {
+                std::size_t i = 0;
+                const float max_1 = max_value<24>(i, pixels);
+                const float max_2 = max_value<3>(i, pixels);
+                ASSERT(i == pixels.size());
+
+                return std::max(max_1, max_2);
+        }
 
         std::array<int, N - 1> flip_vertically(std::array<int, N - 1> pixel) const
         {
@@ -124,51 +185,30 @@ class PainterPixels final : public Pixels, public painter::Notifier<N - 1>
 
         void normalize_pixels()
         {
-                static_assert(COLOR_FORMAT == image::ColorFormat::R8G8B8A8_SRGB);
-
-                const float max = [this]
+                const float max = max_value(m_pixels_original);
+                if (max == MIN)
                 {
-                        Vector<3, float> m;
-                        m[0] = limits<float>::lowest();
-                        m[1] = limits<float>::lowest();
-                        m[2] = limits<float>::lowest();
-                        for (const std::optional<Vector<3, float>>& pixel : m_pixels_original)
-                        {
-                                if (pixel)
-                                {
-                                        for (std::size_t i = 0; i < 3; ++i)
-                                        {
-                                                if (is_finite((*pixel)[i]))
-                                                {
-                                                        m[i] = std::max(m[i], (*pixel)[i]);
-                                                }
-                                        }
-                                }
-                        }
-                        return std::max(std::max(m[0], m[1]), m[2]);
-                }();
-
-                if (!(max > 0 && max != 1))
+                        m_pixel_max = 0;
+                        m_pixel_max_r = 1;
+                        return;
+                }
+                if (m_pixel_max == max)
                 {
                         return;
                 }
+                m_pixel_max = max;
 
-                const float max_r = 1 / max;
+                const float max_r = 1 / m_pixel_max;
                 m_pixel_max_r = max_r;
 
+                ASSERT(m_pixels_original.size() * PIXEL_SIZE == m_pixels_r8g8b8a8.size());
+
                 std::byte* ptr = m_pixels_r8g8b8a8.data();
-                ASSERT(m_pixels_r8g8b8a8.size() % PIXEL_SIZE == 0);
-                for (std::size_t i = 0; i < m_pixels_original.size(); ++i)
+                for (const Vector<3, float>& pixel : m_pixels_original)
                 {
-                        if (m_pixels_original[i])
+                        if (pixel[0] != MIN)
                         {
-                                std::array<uint8_t, 4> rgba8;
-                                static_assert(std::span(rgba8).size_bytes() == PIXEL_SIZE);
-                                RGB8 rgb8 = make_rgb8(*m_pixels_original[i] * max_r);
-                                rgba8[0] = rgb8.red;
-                                rgba8[1] = rgb8.green;
-                                rgba8[2] = rgb8.blue;
-                                std::memcpy(ptr, rgba8.data(), PIXEL_SIZE);
+                                write_r8g8b8a8(ptr, pixel * max_r);
                         }
                         ptr += PIXEL_SIZE;
                 }
@@ -193,15 +233,9 @@ class PainterPixels final : public Pixels, public painter::Notifier<N - 1>
         {
                 static_assert(COLOR_FORMAT == image::ColorFormat::R8G8B8A8_SRGB);
 
-                static constexpr uint8_t ALPHA = limits<uint8_t>::max();
-
-                const long long index = m_global_index.compute(flip_vertically(pixel));
-
+                const std::size_t index = m_global_index.compute(flip_vertically(pixel));
                 m_pixels_original[index] = rgb;
-                const RGB8 rgb8 = make_rgb8(rgb * m_pixel_max_r);
-                const std::array<uint8_t, 4> rgba8{rgb8.red, rgb8.green, rgb8.blue, ALPHA};
-                static_assert(std::span(rgba8).size_bytes() == PIXEL_SIZE);
-                std::memcpy(&m_pixels_r8g8b8a8[PIXEL_SIZE * index], rgba8.data(), PIXEL_SIZE);
+                write_r8g8b8a8(m_pixels_r8g8b8a8.data() + PIXEL_SIZE * index, rgb * m_pixel_max_r);
         }
 
         painter::Images<N - 1>* images(long long /*pass_number*/) override
