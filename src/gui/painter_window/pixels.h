@@ -23,6 +23,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/com/error.h>
 #include <src/com/global_index.h>
 #include <src/com/message.h>
+#include <src/com/min_max.h>
 #include <src/com/print.h>
 #include <src/com/time.h>
 #include <src/com/type/limit.h>
@@ -100,6 +101,8 @@ class PainterPixels final : public Pixels, public painter::Notifier<N - 1>
         static constexpr float MIN = limits<float>::lowest();
         std::vector<Vector<3, float>> m_pixels_original{
                 static_cast<std::size_t>(m_global_index.count()), Vector<3, float>(MIN, MIN, MIN)};
+        static_assert(sizeof(m_pixels_original[0]) == 3 * sizeof(float));
+        std::span<const float> m_pixels_original_span{m_pixels_original[0].data(), 3 * m_pixels_original.size()};
         float m_pixel_max = 0;
         float m_pixel_max_r = 1;
 
@@ -120,54 +123,6 @@ class PainterPixels final : public Pixels, public painter::Notifier<N - 1>
                 std::memcpy(ptr, rgba8.data(), PIXEL_SIZE);
         }
 
-        template <std::size_t FLOAT_COUNT>
-        static float max_value(std::size_t& i, const std::vector<Vector<3, float>>& pixels)
-        {
-                static_assert(FLOAT_COUNT > 0 && FLOAT_COUNT % 3 == 0);
-
-                static constexpr std::size_t PIXEL_COUNT = FLOAT_COUNT / 3;
-                if (i + PIXEL_COUNT > pixels.size())
-                {
-                        return MIN;
-                }
-
-                std::array<float, FLOAT_COUNT> m;
-                for (float& v : m)
-                {
-                        v = MIN;
-                }
-
-                const std::size_t MAX = pixels.size() - PIXEL_COUNT;
-                for (; i <= MAX; i += PIXEL_COUNT)
-                {
-                        const float* p = pixels[i].data();
-                        for (std::size_t j = 0; j < FLOAT_COUNT; ++j)
-                        {
-                                m[j] = std::max(m[j], p[j]);
-                        }
-                }
-
-                std::array<float, 3> r{m[0], m[1], m[2]};
-                for (std::size_t j = 3; j < FLOAT_COUNT; j += 3)
-                {
-                        r[0] = std::max(r[0], m[j + 0]);
-                        r[1] = std::max(r[1], m[j + 1]);
-                        r[2] = std::max(r[2], m[j + 2]);
-                }
-
-                return std::max(std::max(r[0], r[1]), r[2]);
-        }
-
-        static float max_value(const std::vector<Vector<3, float>>& pixels)
-        {
-                std::size_t i = 0;
-                const float max_1 = max_value<24>(i, pixels);
-                const float max_2 = max_value<3>(i, pixels);
-                ASSERT(i == pixels.size());
-
-                return std::max(max_1, max_2);
-        }
-
         std::array<int, N - 1> flip_vertically(std::array<int, N - 1> pixel) const
         {
                 pixel[1] = m_screen_size[1] - 1 - pixel[1];
@@ -185,7 +140,7 @@ class PainterPixels final : public Pixels, public painter::Notifier<N - 1>
 
         void normalize_pixels()
         {
-                const float max = max_value(m_pixels_original);
+                const float max = max_value(m_pixels_original_span);
                 if (max == MIN)
                 {
                         m_pixel_max = 0;
