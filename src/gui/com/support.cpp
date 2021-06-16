@@ -52,13 +52,18 @@ namespace
 //        return false;
 //}
 
-void append_text(QPlainTextEdit* text_edit, const std::string& text, const RGB8& color)
+QString to_qstring(const std::string_view& text)
+{
+        return QString::fromUtf8(text.data(), text.size());
+}
+
+void append_text(QPlainTextEdit* text_edit, const std::string_view& text, const RGB8& color)
 {
         // text_edit->moveCursor(QTextCursor::End);
 
         if (color == RGB8(0, 0, 0))
         {
-                text_edit->appendPlainText(QString::fromStdString(text));
+                text_edit->appendPlainText(to_qstring(text));
         }
         else
         {
@@ -66,7 +71,7 @@ void append_text(QPlainTextEdit* text_edit, const std::string& text, const RGB8&
                 s += QStringLiteral("<pre><font color=\"");
                 s += QColor(color.red, color.green, color.blue).name();
                 s += QStringLiteral("\">");
-                s += QString::fromStdString(text).toHtmlEscaped();
+                s += to_qstring(text).toHtmlEscaped();
                 s += QStringLiteral(R"(</font></pre>)");
                 text_edit->appendHtml(s);
         }
@@ -176,7 +181,7 @@ void set_slider_to_middle(QSlider* slider)
         slider->setValue(slider->minimum() + (slider->maximum() - slider->minimum()) / 2);
 }
 
-void append_to_text_edit(QPlainTextEdit* text_edit, const std::string& text, const RGB8& color) noexcept
+void append_to_text_edit(QPlainTextEdit* text_edit, const std::string_view& text, const RGB8& color) noexcept
 {
         try
         {
@@ -315,14 +320,14 @@ void add_widget(QWidget* dst, QWidget* src)
         l->addWidget(src);
 }
 
-void set_label_minimum_width_for_text(QLabel* label, const std::string& text)
+void set_label_minimum_width_for_text(QLabel* label, const std::string_view& text)
 {
-        label->setMinimumWidth(label->fontMetrics().boundingRect(QString::fromStdString(text)).width());
+        label->setMinimumWidth(label->fontMetrics().boundingRect(to_qstring(text)).width());
 }
 
-void set_label_text_and_minimum_width(QLabel* label, const std::string& text)
+void set_label_text_and_minimum_width(QLabel* label, const std::string_view& text)
 {
-        QString s = QString::fromStdString(text);
+        QString s = to_qstring(text);
         label->setText(s);
         label->setMinimumWidth(std::max(label->width(), label->fontMetrics().boundingRect(s).width()));
 }

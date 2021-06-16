@@ -28,7 +28,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <QRadioButton>
 #include <QSlider>
 #include <QSplitter>
-#include <string>
+#include <string_view>
 
 namespace ns::gui
 {
@@ -94,7 +94,7 @@ void set_widget_color(QWidget* widget, const QColor& c);
 
 void set_slider_to_middle(QSlider* slider);
 
-void append_to_text_edit(QPlainTextEdit* text_edit, const std::string& text, const RGB8& color) noexcept;
+void append_to_text_edit(QPlainTextEdit* text_edit, const std::string_view& text, const RGB8& color) noexcept;
 
 window::WindowID widget_window_id(const QWidget* widget);
 double widget_pixels_per_inch(const QWidget* widget);
@@ -109,6 +109,6 @@ void set_slider_position(QSlider* slider, double v);
 
 void add_widget(QWidget* dst, QWidget* src);
 
-void set_label_minimum_width_for_text(QLabel* label, const std::string& text);
-void set_label_text_and_minimum_width(QLabel* label, const std::string& text);
+void set_label_minimum_width_for_text(QLabel* label, const std::string_view& text);
+void set_label_text_and_minimum_width(QLabel* label, const std::string_view& text);
 }

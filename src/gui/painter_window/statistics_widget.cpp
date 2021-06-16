@@ -84,7 +84,7 @@ StatisticsWidget::~StatisticsWidget() = default;
 
 void StatisticsWidget::update(const painter::Statistics& statistics, const std::optional<float>& pixel_max)
 {
-        static const std::string not_available = "n/a";
+        static constexpr std::string_view NOT_AVAILABLE = "n/a";
 
         auto [difference, duration] =
                 m_difference->compute(Counters(statistics.pixel_count, statistics.ray_count, statistics.sample_count));
@@ -96,7 +96,7 @@ void StatisticsWidget::update(const painter::Statistics& statistics, const std::
         }
         else
         {
-                set_label_text_and_minimum_width(ui.label_rays_per_second, not_available);
+                set_label_text_and_minimum_width(ui.label_rays_per_second, NOT_AVAILABLE);
         }
 
         set_label_text_and_minimum_width(ui.label_ray_count, to_string_digit_groups(statistics.ray_count));
@@ -114,7 +114,7 @@ void StatisticsWidget::update(const painter::Statistics& statistics, const std::
         }
         else
         {
-                set_label_text_and_minimum_width(ui.label_samples_per_pixel, not_available);
+                set_label_text_and_minimum_width(ui.label_samples_per_pixel, NOT_AVAILABLE);
         }
 
         if (statistics.previous_pass_duration > 0)
@@ -125,7 +125,7 @@ void StatisticsWidget::update(const painter::Statistics& statistics, const std::
         }
         else
         {
-                set_label_text_and_minimum_width(ui.label_milliseconds_per_frame, not_available);
+                set_label_text_and_minimum_width(ui.label_milliseconds_per_frame, NOT_AVAILABLE);
         }
 
         if (pixel_max)
@@ -134,7 +134,7 @@ void StatisticsWidget::update(const painter::Statistics& statistics, const std::
         }
         else
         {
-                set_label_text_and_minimum_width(ui.label_max, not_available);
+                set_label_text_and_minimum_width(ui.label_max, NOT_AVAILABLE);
         }
 }
 }
