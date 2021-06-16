@@ -24,6 +24,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/painter/painter.h>
 
 #include <memory>
+#include <optional>
 
 namespace ns::gui::painter_window
 {
@@ -41,6 +42,6 @@ public:
         explicit StatisticsWidget(std::chrono::milliseconds update_interval);
         ~StatisticsWidget() override;
 
-        void update(const painter::Statistics& statistics);
+        void update(const painter::Statistics& statistics, const std::optional<float>& pixel_max);
 };
 }

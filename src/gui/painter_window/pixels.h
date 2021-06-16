@@ -60,6 +60,7 @@ struct Pixels
 
         virtual const char* floating_point_name() const = 0;
         virtual const char* color_name() const = 0;
+        virtual std::optional<float> pixel_max() const = 0;
 
         virtual const std::vector<int>& screen_size() const = 0;
 
@@ -92,8 +93,9 @@ class PainterPixels final : public Pixels, public painter::Notifier<N - 1>
 
         const GlobalIndex<N - 1, long long> m_global_index;
         const std::vector<int> m_screen_size;
-        const long long m_slice_count;
+        const long long m_slice_count = m_global_index.count() / m_screen_size[0] / m_screen_size[1];
         const std::size_t m_slice_size = PIXEL_SIZE * m_screen_size[0] * m_screen_size[1];
+
         std::vector<long long> m_busy_indices_2d;
 
         std::vector<std::byte> m_pixels_r8g8b8a8 = make_initial_image(m_screen_size, COLOR_FORMAT);
@@ -103,7 +105,8 @@ class PainterPixels final : public Pixels, public painter::Notifier<N - 1>
                 static_cast<std::size_t>(m_global_index.count()), Vector<3, float>(MIN, MIN, MIN)};
         static_assert(sizeof(m_pixels_original[0]) == 3 * sizeof(float));
         std::span<const float> m_pixels_original_span{m_pixels_original[0].data(), 3 * m_pixels_original.size()};
-        float m_pixel_max = 0;
+
+        std::atomic<std::optional<float>> m_pixel_max;
         float m_pixel_max_r = 1;
 
         TimePoint m_last_normalize_time = time();
@@ -143,17 +146,17 @@ class PainterPixels final : public Pixels, public painter::Notifier<N - 1>
                 const float max = max_value(m_pixels_original_span);
                 if (max == MIN)
                 {
-                        m_pixel_max = 0;
+                        m_pixel_max = std::nullopt;
                         m_pixel_max_r = 1;
                         return;
                 }
-                if (m_pixel_max == max)
+                if (m_pixel_max.load() == max)
                 {
                         return;
                 }
                 m_pixel_max = max;
 
-                const float max_r = 1 / m_pixel_max;
+                const float max_r = 1 / max;
                 m_pixel_max_r = max_r;
 
                 ASSERT(m_pixels_original.size() * PIXEL_SIZE == m_pixels_r8g8b8a8.size());
@@ -218,6 +221,11 @@ class PainterPixels final : public Pixels, public painter::Notifier<N - 1>
         const char* color_name() const override
         {
                 return m_color_name;
+        }
+
+        virtual std::optional<float> pixel_max() const override
+        {
+                return m_pixel_max;
         }
 
         const std::vector<int>& screen_size() const override
@@ -330,7 +338,6 @@ public:
                           {
                                   return std::vector(array.cbegin(), array.cend());
                           }(scene->projector().screen_size())),
-                  m_slice_count(m_global_index.count() / m_screen_size[0] / m_screen_size[1]),
                   m_busy_indices_2d(thread_count, NULL_INDEX),
                   m_painter(painter::create_painter(
                           this,

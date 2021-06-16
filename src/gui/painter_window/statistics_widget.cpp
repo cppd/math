@@ -82,29 +82,59 @@ StatisticsWidget::StatisticsWidget(std::chrono::milliseconds update_interval)
 
 StatisticsWidget::~StatisticsWidget() = default;
 
-void StatisticsWidget::update(const painter::Statistics& statistics)
+void StatisticsWidget::update(const painter::Statistics& statistics, const std::optional<float>& pixel_max)
 {
+        static const std::string not_available = "n/a";
+
         auto [difference, duration] =
                 m_difference->compute(Counters(statistics.pixel_count, statistics.ray_count, statistics.sample_count));
 
-        long long rays_per_second =
-                (duration != 0) ? std::llround(static_cast<double>(difference.ray_count) / duration) : 0;
+        if (duration != 0)
+        {
+                long long rays_per_second = std::llround(static_cast<double>(difference.ray_count) / duration);
+                set_label_text_and_minimum_width(ui.label_rays_per_second, to_string_digit_groups(rays_per_second));
+        }
+        else
+        {
+                set_label_text_and_minimum_width(ui.label_rays_per_second, not_available);
+        }
 
-        long long samples_per_pixel =
-                (difference.pixel_count != 0)
-                        ? std::llround(static_cast<double>(difference.sample_count) / difference.pixel_count)
-                        : 0;
-
-        long long milliseconds_per_frame = std::llround(1000 * statistics.previous_pass_duration);
-
-        set_label_text_and_minimum_width(ui.label_rays_per_second, to_string_digit_groups(rays_per_second));
         set_label_text_and_minimum_width(ui.label_ray_count, to_string_digit_groups(statistics.ray_count));
+
         set_label_text_and_minimum_width(
                 ui.label_pass_count, to_string_digit_groups(statistics.pass_number)
                                              .append(":")
                                              .append(progress_to_string(statistics.pass_progress)));
-        set_label_text_and_minimum_width(ui.label_samples_per_pixel, to_string_digit_groups(samples_per_pixel));
-        set_label_text_and_minimum_width(
-                ui.label_milliseconds_per_frame, to_string_digit_groups(milliseconds_per_frame));
+
+        if (difference.pixel_count != 0)
+        {
+                long long samples_per_pixel =
+                        std::llround(static_cast<double>(difference.sample_count) / difference.pixel_count);
+                set_label_text_and_minimum_width(ui.label_samples_per_pixel, to_string_digit_groups(samples_per_pixel));
+        }
+        else
+        {
+                set_label_text_and_minimum_width(ui.label_samples_per_pixel, not_available);
+        }
+
+        if (statistics.previous_pass_duration > 0)
+        {
+                set_label_text_and_minimum_width(
+                        ui.label_milliseconds_per_frame,
+                        to_string_digit_groups(std::llround(1000 * statistics.previous_pass_duration)));
+        }
+        else
+        {
+                set_label_text_and_minimum_width(ui.label_milliseconds_per_frame, not_available);
+        }
+
+        if (pixel_max)
+        {
+                set_label_text_and_minimum_width(ui.label_max, to_string_fixed(*pixel_max, 3));
+        }
+        else
+        {
+                set_label_text_and_minimum_width(ui.label_max, not_available);
+        }
 }
 }
