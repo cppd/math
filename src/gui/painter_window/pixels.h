@@ -64,7 +64,7 @@ struct Pixels
 
         virtual const std::vector<int>& screen_size() const = 0;
 
-        virtual std::span<const std::byte> slice_r8g8b8a8(long long slice_number) = 0;
+        virtual std::span<const std::byte> slice_r8g8b8a8(long long slice_number, float brightness_parameter) = 0;
         virtual const std::vector<long long>& busy_indices_2d() const = 0;
         virtual painter::Statistics statistics() const = 0;
 
@@ -106,8 +106,9 @@ class PainterPixels final : public Pixels, public painter::Notifier<N - 1>
         static_assert(sizeof(m_pixels_original[0]) == 3 * sizeof(float));
         std::span<const float> m_pixels_original_span{m_pixels_original[0].data(), 3 * m_pixels_original.size()};
 
-        std::atomic<std::optional<float>> m_pixel_max;
-        float m_pixel_max_r = 1;
+        float m_pixel_brightness_parameter = 0;
+        std::optional<float> m_pixel_max;
+        float m_pixel_coef = 1;
 
         TimePoint m_last_normalize_time = time();
 
@@ -143,21 +144,23 @@ class PainterPixels final : public Pixels, public painter::Notifier<N - 1>
 
         void normalize_pixels()
         {
+                ASSERT(std::this_thread::get_id() == m_thread_id);
+
                 const float max = max_value(m_pixels_original_span);
                 if (max == MIN)
                 {
                         m_pixel_max = std::nullopt;
-                        m_pixel_max_r = 1;
+                        m_pixel_coef = 1;
                         return;
                 }
-                if (m_pixel_max.load() == max)
+
+                m_pixel_max = max;
+                const float coef = std::lerp(1 / max, 1.0f, m_pixel_brightness_parameter);
+                if (m_pixel_coef == coef)
                 {
                         return;
                 }
-                m_pixel_max = max;
-
-                const float max_r = 1 / max;
-                m_pixel_max_r = max_r;
+                m_pixel_coef = coef;
 
                 ASSERT(m_pixels_original.size() * PIXEL_SIZE == m_pixels_r8g8b8a8.size());
 
@@ -166,7 +169,7 @@ class PainterPixels final : public Pixels, public painter::Notifier<N - 1>
                 {
                         if (pixel[0] != MIN)
                         {
-                                write_r8g8b8a8(ptr, pixel * max_r);
+                                write_r8g8b8a8(ptr, pixel * coef);
                         }
                         ptr += PIXEL_SIZE;
                 }
@@ -193,7 +196,7 @@ class PainterPixels final : public Pixels, public painter::Notifier<N - 1>
 
                 const std::size_t index = m_global_index.compute(flip_vertically(pixel));
                 m_pixels_original[index] = rgb;
-                write_r8g8b8a8(m_pixels_r8g8b8a8.data() + PIXEL_SIZE * index, rgb * m_pixel_max_r);
+                write_r8g8b8a8(m_pixels_r8g8b8a8.data() + PIXEL_SIZE * index, rgb * m_pixel_coef);
         }
 
         painter::Images<N - 1>* images(long long /*pass_number*/) override
@@ -223,7 +226,7 @@ class PainterPixels final : public Pixels, public painter::Notifier<N - 1>
                 return m_color_name;
         }
 
-        virtual std::optional<float> pixel_max() const override
+        std::optional<float> pixel_max() const override
         {
                 return m_pixel_max;
         }
@@ -243,16 +246,24 @@ class PainterPixels final : public Pixels, public painter::Notifier<N - 1>
                 return m_painter->statistics();
         }
 
-        std::span<const std::byte> slice_r8g8b8a8(long long slice_number) override
+        std::span<const std::byte> slice_r8g8b8a8(long long slice_number, float brightness_parameter) override
         {
                 ASSERT(std::this_thread::get_id() == m_thread_id);
 
+                if (!(brightness_parameter >= 0 && brightness_parameter <= 1))
+                {
+                        error("Brightness parameter " + to_string(brightness_parameter)
+                              + " must be in the range [0, 1]");
+                }
+
                 check_slice_number(slice_number);
 
-                if (time() - m_last_normalize_time >= NORMALIZE_INTERVAL)
+                if (time() - m_last_normalize_time >= NORMALIZE_INTERVAL
+                    || m_pixel_brightness_parameter != brightness_parameter)
                 {
-                        normalize_pixels();
+                        m_pixel_brightness_parameter = brightness_parameter;
                         m_last_normalize_time = time();
+                        normalize_pixels();
                 }
 
                 return std::span(&m_pixels_r8g8b8a8[slice_number * m_slice_size], m_slice_size);

@@ -86,16 +86,35 @@ void PainterWindow::create_interface()
         ui.status_bar->setFixedHeight(ui.status_bar->height());
 
         ASSERT(!ui.main_widget->layout());
-        ui.main_widget->setLayout(new QVBoxLayout(ui.main_widget));
-        ui.main_widget->layout()->setContentsMargins(0, 0, 0, 0);
-        ui.main_widget->layout()->setSpacing(0);
+        QVBoxLayout* main_layout = new QVBoxLayout(ui.main_widget);
+        main_layout->setContentsMargins(0, 0, 0, 0);
+        main_layout->setSpacing(0);
+        ui.main_widget->setLayout(main_layout);
+
+        QHBoxLayout* imageLayout = new QHBoxLayout(ui.main_widget);
+        imageLayout->setContentsMargins(0, 0, 0, 0);
+        imageLayout->setSpacing(0);
+        main_layout->addLayout(imageLayout);
+
+        m_brightness_parameter_slider = std::make_unique<QSlider>(Qt::Vertical);
+        m_brightness_parameter_slider->setTracking(false);
+        m_brightness_parameter_slider->setValue(0);
+        m_brightness_parameter = 0;
+        connect(m_brightness_parameter_slider.get(), &QSlider::valueChanged, this,
+                [this](int)
+                {
+                        m_brightness_parameter =
+                                std::clamp(slider_position(m_brightness_parameter_slider.get()), 0.0, 1.0);
+                        update_image();
+                });
+        imageLayout->addWidget(m_brightness_parameter_slider.get());
 
         m_image_widget =
                 std::make_unique<ImageWidget>(m_pixels->screen_size()[0], m_pixels->screen_size()[1], ui.menu_view);
-        ui.main_widget->layout()->addWidget(m_image_widget.get());
+        imageLayout->addWidget(m_image_widget.get());
 
         m_statistics_widget = std::make_unique<StatisticsWidget>(UPDATE_INTERVAL);
-        ui.main_widget->layout()->addWidget(m_statistics_widget.get());
+        main_layout->addWidget(m_statistics_widget.get());
 
         ui.status_bar->addPermanentWidget(new QLabel(m_pixels->color_name(), this));
         ui.status_bar->addPermanentWidget(new QLabel(m_pixels->floating_point_name(), this));
@@ -103,7 +122,7 @@ void PainterWindow::create_interface()
         connect(ui.menu_window->addAction("Adjust size"), &QAction::triggered, this,
                 &PainterWindow::adjust_window_size);
 
-        connect(&m_timer, &QTimer::timeout, this, &PainterWindow::on_timer_timeout);
+        connect(&m_timer, &QTimer::timeout, this, &PainterWindow::update_image);
 }
 
 void PainterWindow::create_sliders()
@@ -185,12 +204,12 @@ void PainterWindow::adjust_window_size()
         resize(QSize(2, 2) + geometry().size() + m_image_widget->size_difference());
 }
 
-void PainterWindow::on_timer_timeout()
+void PainterWindow::update_image()
 {
         ASSERT(std::this_thread::get_id() == m_thread_id);
 
         m_statistics_widget->update(m_pixels->statistics(), m_pixels->pixel_max());
-        m_image_widget->update(m_pixels->slice_r8g8b8a8(m_slice), m_pixels->busy_indices_2d());
+        m_image_widget->update(m_pixels->slice_r8g8b8a8(m_slice, m_brightness_parameter), m_pixels->busy_indices_2d());
         m_actions->set_progresses();
 }
 }

@@ -49,7 +49,9 @@ private:
 
         std::unique_ptr<Pixels> m_pixels;
         long long m_slice = 0;
+        float m_brightness_parameter = 0;
 
+        std::unique_ptr<QSlider> m_brightness_parameter_slider;
         std::unique_ptr<ImageWidget> m_image_widget;
         std::unique_ptr<StatisticsWidget> m_statistics_widget;
         std::unique_ptr<SlidersWidget> m_sliders_widget;
@@ -58,7 +60,6 @@ private:
 
         QTimer m_timer;
 
-        void on_timer_timeout();
         void on_first_shown();
 
         void showEvent(QShowEvent* event) override;
@@ -69,6 +70,8 @@ private:
         void create_actions();
 
         void adjust_window_size();
+
+        void update_image();
 
 public:
         PainterWindow(const std::string& name, std::unique_ptr<Pixels>&& pixels);
