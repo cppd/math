@@ -217,7 +217,7 @@ class Impl final : public VolumeObject
         void buffer_set_parameters(
                 float window_min,
                 float window_max,
-                float volume_alpha_coeficient,
+                float volume_alpha_coefficient,
                 float isosurface_alpha,
                 bool isosurface,
                 float isovalue,
@@ -233,8 +233,8 @@ class Impl final : public VolumeObject
                 isosurface_alpha = std::clamp(isosurface_alpha, 0.0f, 1.0f);
 
                 m_buffer.set_parameters(
-                        m_transfer_command_pool, m_transfer_queue, window_offset, window_scale, volume_alpha_coeficient,
-                        isosurface_alpha, isosurface, isovalue, color.rgb32().clamped(0, 1));
+                        m_transfer_command_pool, m_transfer_queue, window_offset, window_scale,
+                        volume_alpha_coefficient, isosurface_alpha, isosurface, isovalue, color.rgb32().clamped(0, 1));
         }
 
         void buffer_set_lighting(float ambient, float metalness, float roughness) const
