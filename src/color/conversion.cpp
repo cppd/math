@@ -24,29 +24,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 namespace ns::color
 {
-namespace
-{
-template <typename T>
-T srgb_float_to_linear_float(T c)
-{
-        static_assert(std::is_same_v<T, long double>);
-
-        if (c >= 1)
-        {
-                return 1;
-        }
-        if (c >= T(0.04045))
-        {
-                return std::pow((c + T(0.055)) / T(1.055), T(2.4));
-        }
-        if (c > 0)
-        {
-                return c / T(12.92);
-        }
-        return 0;
-}
-}
-
 std::string lookup_table_float()
 {
         std::ostringstream oss;
