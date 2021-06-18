@@ -127,7 +127,7 @@ void save_image_alpha(
         const std::span<const std::byte>& bytes,
         const std::string& file_name)
 {
-        ASSERT(color_format == ColorFormat::R16G16B16);
+        ASSERT(color_format == ColorFormat::R16G16B16_SRGB);
 
         check_size(width, height, color_format, bytes.size());
 
@@ -193,15 +193,23 @@ void save(const std::string& file_name, const ImageView<2>& image_view)
         }
         case ColorFormat::R16G16B16:
         {
+                std::vector<std::byte> bytes;
+                format_conversion(image_view.color_format, image_view.pixels, ColorFormat::R16G16B16_SRGB, &bytes);
+                save_image_alpha(width, height, QImage::Format_RGBX64, ColorFormat::R16G16B16_SRGB, bytes, file_name);
+                return;
+        }
+        case ColorFormat::R16G16B16_SRGB:
+        {
                 save_image_alpha(
-                        width, height, QImage::Format_RGBX64, ColorFormat::R16G16B16, image_view.pixels, file_name);
+                        width, height, QImage::Format_RGBX64, ColorFormat::R16G16B16_SRGB, image_view.pixels,
+                        file_name);
                 return;
         }
         case ColorFormat::R32G32B32:
         {
                 std::vector<std::byte> bytes;
-                format_conversion(image_view.color_format, image_view.pixels, ColorFormat::R16G16B16, &bytes);
-                save_image_alpha(width, height, QImage::Format_RGBX64, ColorFormat::R16G16B16, bytes, file_name);
+                format_conversion(image_view.color_format, image_view.pixels, ColorFormat::R16G16B16_SRGB, &bytes);
+                save_image_alpha(width, height, QImage::Format_RGBX64, ColorFormat::R16G16B16_SRGB, bytes, file_name);
                 return;
         }
         case ColorFormat::R8G8B8A8_SRGB:
@@ -220,32 +228,37 @@ void save(const std::string& file_name, const ImageView<2>& image_view)
         }
         case ColorFormat::R16G16B16A16:
         {
+                std::vector<std::byte> bytes;
+                format_conversion(image_view.color_format, image_view.pixels, ColorFormat::R16G16B16A16_SRGB, &bytes);
+                save_image(width, height, QImage::Format_RGBA64, ColorFormat::R16G16B16A16_SRGB, bytes, file_name);
+                return;
+        }
+        case ColorFormat::R16G16B16A16_SRGB:
+        {
                 save_image(
-                        width, height, QImage::Format_RGBA64, ColorFormat::R16G16B16A16, image_view.pixels, file_name);
+                        width, height, QImage::Format_RGBA64, ColorFormat::R16G16B16A16_SRGB, image_view.pixels,
+                        file_name);
                 return;
         }
         case ColorFormat::R16G16B16A16_PREMULTIPLIED:
         {
-                save_image(
-                        width, height, QImage::Format_RGBA64_Premultiplied, ColorFormat::R16G16B16A16_PREMULTIPLIED,
-                        image_view.pixels, file_name);
+                std::vector<std::byte> bytes;
+                format_conversion(image_view.color_format, image_view.pixels, ColorFormat::R16G16B16A16_SRGB, &bytes);
+                save_image(width, height, QImage::Format_RGBA64, ColorFormat::R16G16B16A16_SRGB, bytes, file_name);
                 return;
         }
         case ColorFormat::R32G32B32A32:
         {
                 std::vector<std::byte> bytes;
-                format_conversion(image_view.color_format, image_view.pixels, ColorFormat::R16G16B16A16, &bytes);
-                save_image(width, height, QImage::Format_RGBA64, ColorFormat::R16G16B16A16, bytes, file_name);
+                format_conversion(image_view.color_format, image_view.pixels, ColorFormat::R16G16B16A16_SRGB, &bytes);
+                save_image(width, height, QImage::Format_RGBA64, ColorFormat::R16G16B16A16_SRGB, bytes, file_name);
                 return;
         }
         case ColorFormat::R32G32B32A32_PREMULTIPLIED:
         {
                 std::vector<std::byte> bytes;
-                format_conversion(
-                        image_view.color_format, image_view.pixels, ColorFormat::R16G16B16A16_PREMULTIPLIED, &bytes);
-                save_image(
-                        width, height, QImage::Format_RGBA64_Premultiplied, ColorFormat::R16G16B16A16_PREMULTIPLIED,
-                        bytes, file_name);
+                format_conversion(image_view.color_format, image_view.pixels, ColorFormat::R16G16B16A16_SRGB, &bytes);
+                save_image(width, height, QImage::Format_RGBA64, ColorFormat::R16G16B16A16_SRGB, bytes, file_name);
                 return;
         }
         }
@@ -269,7 +282,7 @@ void load_image(QImage* image, ColorFormat color_format, const std::span<std::by
 
 void load_image_alpha(QImage* image, ColorFormat color_format, const std::span<std::byte>& bytes)
 {
-        ASSERT(color_format == ColorFormat::R16G16B16);
+        ASSERT(color_format == ColorFormat::R16G16B16_SRGB);
 
         check_size(image->width(), image->height(), color_format, bytes.size());
 
@@ -331,7 +344,7 @@ void load_3(QImage&& image, ColorFormat color_format, const std::span<std::byte>
                 }
                 load_image(&image, color_format, bytes);
         }
-        else if (color_format == ColorFormat::R16G16B16)
+        else if (color_format == ColorFormat::R16G16B16_SRGB)
         {
                 if (image.format() != QImage::Format_RGBX64)
                 {
@@ -357,7 +370,7 @@ void load_4(QImage&& image, ColorFormat color_format, const std::span<std::byte>
                 }
                 load_image(&image, color_format, bytes);
         }
-        else if (color_format == ColorFormat::R16G16B16A16)
+        else if (color_format == ColorFormat::R16G16B16A16_SRGB)
         {
                 if (image.format() != QImage::Format_RGBA64)
                 {
@@ -419,11 +432,11 @@ std::unordered_map<QImage::Format, ColorFormat> q_image_format_to_color_format_m
         map[QImage::Format_RGB555] = ColorFormat::R8G8B8_SRGB;
         map[QImage::Format_RGB666] = ColorFormat::R8G8B8_SRGB;
         map[QImage::Format_RGB888] = ColorFormat::R8G8B8_SRGB;
-        map[QImage::Format_RGBA64] = ColorFormat::R16G16B16A16;
-        map[QImage::Format_RGBA64_Premultiplied] = ColorFormat::R16G16B16A16;
+        map[QImage::Format_RGBA64] = ColorFormat::R16G16B16A16_SRGB;
+        map[QImage::Format_RGBA64_Premultiplied] = ColorFormat::R16G16B16A16_SRGB;
         map[QImage::Format_RGBA8888] = ColorFormat::R8G8B8A8_SRGB;
         map[QImage::Format_RGBA8888_Premultiplied] = ColorFormat::R8G8B8A8_SRGB;
-        map[QImage::Format_RGBX64] = ColorFormat::R16G16B16;
+        map[QImage::Format_RGBX64] = ColorFormat::R16G16B16_SRGB;
         map[QImage::Format_RGBX8888] = ColorFormat::R8G8B8_SRGB;
 
         return map;

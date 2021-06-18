@@ -98,7 +98,9 @@ void normalize(ColorFormat color_format, std::vector<std::byte>* bytes)
         case ColorFormat::R8G8B8A8_SRGB:
         case ColorFormat::R8G8B8A8_SRGB_PREMULTIPLIED:
         case ColorFormat::R16G16B16:
+        case ColorFormat::R16G16B16_SRGB:
         case ColorFormat::R16G16B16A16:
+        case ColorFormat::R16G16B16A16_SRGB:
         case ColorFormat::R16G16B16A16_PREMULTIPLIED:
                 error("Unsupported image format " + format_to_string(color_format) + " for normalizing");
         case ColorFormat::R32:

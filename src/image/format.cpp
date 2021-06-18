@@ -54,8 +54,12 @@ std::string format_to_string(ColorFormat format)
                 return "R16";
         case ColorFormat::R16G16B16:
                 return "R16G16B16";
+        case ColorFormat::R16G16B16_SRGB:
+                return "R16G16B16_SRGB";
         case ColorFormat::R16G16B16A16:
                 return "R16G16B16A16";
+        case ColorFormat::R16G16B16A16_SRGB:
+                return "R16G16B16A16_SRGB";
         case ColorFormat::R16G16B16A16_PREMULTIPLIED:
                 return "R16G16B16A16_PREMULTIPLIED";
         case ColorFormat::R32:

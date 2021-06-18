@@ -43,6 +43,7 @@ std::vector<VkFormat> vulkan_transfer_function_formats(image::ColorFormat color_
         {
         case image::ColorFormat::R8G8B8A8_SRGB:
         case image::ColorFormat::R16G16B16A16:
+        case image::ColorFormat::R16G16B16A16_SRGB:
         case image::ColorFormat::R32G32B32A32:
                 return {VK_FORMAT_R8G8B8A8_SRGB, VK_FORMAT_R16G16B16A16_UNORM, VK_FORMAT_R32G32B32A32_SFLOAT};
         case image::ColorFormat::R16:
@@ -50,6 +51,7 @@ std::vector<VkFormat> vulkan_transfer_function_formats(image::ColorFormat color_
         case image::ColorFormat::R8_SRGB:
         case image::ColorFormat::R8G8B8_SRGB:
         case image::ColorFormat::R16G16B16:
+        case image::ColorFormat::R16G16B16_SRGB:
         case image::ColorFormat::R32G32B32:
         case image::ColorFormat::R8G8B8A8_SRGB_PREMULTIPLIED:
         case image::ColorFormat::R16G16B16A16_PREMULTIPLIED:
@@ -70,6 +72,7 @@ std::vector<VkFormat> vulkan_image_formats(image::ColorFormat color_format)
         case image::ColorFormat::R8G8B8A8_SRGB_PREMULTIPLIED:
                 return {VK_FORMAT_R8G8B8A8_SRGB, VK_FORMAT_R16G16B16A16_UNORM, VK_FORMAT_R32G32B32A32_SFLOAT};
         case image::ColorFormat::R16G16B16A16:
+        case image::ColorFormat::R16G16B16A16_SRGB:
         case image::ColorFormat::R16G16B16A16_PREMULTIPLIED:
         case image::ColorFormat::R32G32B32A32:
         case image::ColorFormat::R32G32B32A32_PREMULTIPLIED:
@@ -77,6 +80,7 @@ std::vector<VkFormat> vulkan_image_formats(image::ColorFormat color_format)
         case image::ColorFormat::R8_SRGB:
         case image::ColorFormat::R8G8B8_SRGB:
         case image::ColorFormat::R16G16B16:
+        case image::ColorFormat::R16G16B16_SRGB:
         case image::ColorFormat::R32G32B32:
                 error("Unsupported volume image format: " + image::format_to_string(color_format));
         }
@@ -328,9 +332,11 @@ class Impl final : public VolumeObject
                 case image::ColorFormat::R32:
                 case image::ColorFormat::R8G8B8_SRGB:
                 case image::ColorFormat::R16G16B16:
+                case image::ColorFormat::R16G16B16_SRGB:
                 case image::ColorFormat::R32G32B32:
                 case image::ColorFormat::R8G8B8A8_SRGB:
                 case image::ColorFormat::R16G16B16A16:
+                case image::ColorFormat::R16G16B16A16_SRGB:
                 case image::ColorFormat::R32G32B32A32:
                 {
                         write(image.color_format, image.pixels);

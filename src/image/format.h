@@ -29,7 +29,9 @@ enum class ColorFormat
         R8G8B8A8_SRGB_PREMULTIPLIED,
         R16,
         R16G16B16,
+        R16G16B16_SRGB,
         R16G16B16A16,
+        R16G16B16A16_SRGB,
         R16G16B16A16_PREMULTIPLIED,
         R32,
         R32G32B32,
@@ -55,8 +57,10 @@ constexpr unsigned format_pixel_size_in_bytes(ColorFormat format)
         case ColorFormat::R16:
                 return 2;
         case ColorFormat::R16G16B16:
+        case ColorFormat::R16G16B16_SRGB:
                 return 6;
         case ColorFormat::R16G16B16A16:
+        case ColorFormat::R16G16B16A16_SRGB:
         case ColorFormat::R16G16B16A16_PREMULTIPLIED:
                 return 8;
         case ColorFormat::R32:
@@ -84,8 +88,10 @@ constexpr unsigned format_component_count(ColorFormat format)
         case ColorFormat::R16:
                 return 1;
         case ColorFormat::R16G16B16:
+        case ColorFormat::R16G16B16_SRGB:
                 return 3;
         case ColorFormat::R16G16B16A16:
+        case ColorFormat::R16G16B16A16_SRGB:
         case ColorFormat::R16G16B16A16_PREMULTIPLIED:
                 return 4;
         case ColorFormat::R32:

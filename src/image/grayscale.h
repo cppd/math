@@ -36,6 +36,8 @@ Image<N> convert_to_r_component_format(const Image<N>& image)
                 case ColorFormat::R8_SRGB:
                 case ColorFormat::R16:
                 case ColorFormat::R32:
+                case ColorFormat::R16G16B16_SRGB:
+                case ColorFormat::R16G16B16A16_SRGB:
                 case ColorFormat::R8G8B8A8_SRGB_PREMULTIPLIED:
                 case ColorFormat::R16G16B16A16_PREMULTIPLIED:
                 case ColorFormat::R32G32B32A32_PREMULTIPLIED:

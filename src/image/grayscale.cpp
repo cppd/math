@@ -25,7 +25,7 @@ namespace ns::image
 {
 namespace
 {
-uint8_t rgb_to_grayscale(const std::array<uint8_t, 3>& rgb)
+uint8_t srgb_8_to_grayscale(const std::array<uint8_t, 3>& rgb)
 {
         float r = color::srgb_uint8_to_linear_float(rgb[0]);
         float g = color::srgb_uint8_to_linear_float(rgb[1]);
@@ -34,7 +34,7 @@ uint8_t rgb_to_grayscale(const std::array<uint8_t, 3>& rgb)
         return color::linear_float_to_srgb_uint8(grayscale);
 }
 
-uint16_t rgb_to_grayscale(const std::array<uint16_t, 3>& rgb)
+uint16_t linear_16_to_grayscale(const std::array<uint16_t, 3>& rgb)
 {
         float r = color::linear_uint16_to_linear_float(rgb[0]);
         float g = color::linear_uint16_to_linear_float(rgb[1]);
@@ -43,7 +43,16 @@ uint16_t rgb_to_grayscale(const std::array<uint16_t, 3>& rgb)
         return color::linear_float_to_linear_uint16(grayscale);
 }
 
-float rgb_to_grayscale(const std::array<float, 3>& rgb)
+uint16_t srgb_16_to_grayscale(const std::array<uint16_t, 3>& rgb)
+{
+        float r = color::srgb_uint16_to_linear_float(rgb[0]);
+        float g = color::srgb_uint16_to_linear_float(rgb[1]);
+        float b = color::srgb_uint16_to_linear_float(rgb[2]);
+        float grayscale = color::linear_float_to_linear_luminance(r, g, b);
+        return color::linear_float_to_linear_uint16(grayscale);
+}
+
+float linear_32_to_grayscale(const std::array<float, 3>& rgb)
 {
         float r = std::max<float>(0, rgb[0]);
         float g = std::max<float>(0, rgb[1]);
@@ -51,8 +60,8 @@ float rgb_to_grayscale(const std::array<float, 3>& rgb)
         return color::linear_float_to_linear_luminance(r, g, b);
 }
 
-template <typename T>
-void make_grayscale(ColorFormat color_format, const std::span<std::byte>& bytes)
+template <typename T, typename F>
+void make_grayscale(ColorFormat color_format, const std::span<std::byte>& bytes, const F& rgb_to_grayscale)
 {
         int component_count = format_component_count(color_format);
         if (component_count < 3)
@@ -149,17 +158,21 @@ void make_grayscale(ColorFormat color_format, const std::span<std::byte>& bytes)
         case ColorFormat::R8G8B8_SRGB:
         case ColorFormat::R8G8B8A8_SRGB:
         case ColorFormat::R8G8B8A8_SRGB_PREMULTIPLIED:
-                make_grayscale<uint8_t>(color_format, bytes);
+                make_grayscale<uint8_t>(color_format, bytes, srgb_8_to_grayscale);
                 return;
         case ColorFormat::R16G16B16:
         case ColorFormat::R16G16B16A16:
         case ColorFormat::R16G16B16A16_PREMULTIPLIED:
-                make_grayscale<uint16_t>(color_format, bytes);
+                make_grayscale<uint16_t>(color_format, bytes, linear_16_to_grayscale);
+                return;
+        case ColorFormat::R16G16B16_SRGB:
+        case ColorFormat::R16G16B16A16_SRGB:
+                make_grayscale<uint16_t>(color_format, bytes, srgb_16_to_grayscale);
                 return;
         case ColorFormat::R32G32B32:
         case ColorFormat::R32G32B32A32:
         case ColorFormat::R32G32B32A32_PREMULTIPLIED:
-                make_grayscale<float>(color_format, bytes);
+                make_grayscale<float>(color_format, bytes, linear_32_to_grayscale);
                 return;
         }
         unknown_color_format_error(color_format);
@@ -181,7 +194,9 @@ std::vector<std::byte> convert_to_r_component_format(ColorFormat color_format, c
         case ColorFormat::R8G8B8A8_SRGB:
                 return convert_to_r_component_format<uint8_t>(color_format, bytes);
         case ColorFormat::R16G16B16:
+        case ColorFormat::R16G16B16_SRGB:
         case ColorFormat::R16G16B16A16:
+        case ColorFormat::R16G16B16A16_SRGB:
                 return convert_to_r_component_format<uint16_t>(color_format, bytes);
         case ColorFormat::R32G32B32:
         case ColorFormat::R32G32B32A32:

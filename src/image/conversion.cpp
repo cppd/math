@@ -147,6 +147,39 @@ void conv_r16g16b16_to_r32g32b32(const std::span<const std::byte>& bytes, std::v
         }
 }
 
+void conv_r16g16b16_srgb_to_r32g32b32(const std::span<const std::byte>& bytes, std::vector<float>* floats)
+{
+        using From = uint16_t;
+
+        unsigned component_count = bytes.size() / sizeof(From);
+        ASSERT(bytes.size() == (component_count * sizeof(From)));
+        ASSERT((component_count % 3) == 0);
+
+        floats->resize(component_count);
+
+        const std::byte* from = bytes.data();
+        const std::byte* end = from + bytes.size();
+        float* to = floats->data();
+
+        while (from != end)
+        {
+                From red;
+                std::memcpy(&red, from, sizeof(From));
+                *to++ = color::srgb_uint16_to_linear_float(red);
+                from += sizeof(From);
+
+                From green;
+                std::memcpy(&green, from, sizeof(From));
+                *to++ = color::srgb_uint16_to_linear_float(green);
+                from += sizeof(From);
+
+                From blue;
+                std::memcpy(&blue, from, sizeof(From));
+                *to++ = color::srgb_uint16_to_linear_float(blue);
+                from += sizeof(From);
+        }
+}
+
 void conv_r8g8b8a8_srgb_to_r32g32b32a32(const std::span<const std::byte>& bytes, std::vector<float>* floats)
 {
         using From = uint8_t;
@@ -214,6 +247,44 @@ void conv_r16g16b16a16_to_r32g32b32a32(const std::span<const std::byte>& bytes, 
                 From blue;
                 std::memcpy(&blue, from, sizeof(From));
                 *to++ = color::linear_uint16_to_linear_float(blue);
+                from += sizeof(From);
+
+                From alpha;
+                std::memcpy(&alpha, from, sizeof(From));
+                *to++ = color::linear_uint16_to_linear_float(alpha);
+                from += sizeof(From);
+        }
+}
+
+void conv_r16g16b16a16_srgb_to_r32g32b32a32(const std::span<const std::byte>& bytes, std::vector<float>* floats)
+{
+        using From = uint16_t;
+
+        unsigned component_count = bytes.size() / sizeof(From);
+        ASSERT(bytes.size() == (component_count * sizeof(From)));
+        ASSERT((component_count % 4) == 0);
+
+        floats->resize(component_count);
+
+        const std::byte* from = bytes.data();
+        const std::byte* end = from + bytes.size();
+        float* to = floats->data();
+
+        while (from != end)
+        {
+                From red;
+                std::memcpy(&red, from, sizeof(From));
+                *to++ = color::srgb_uint16_to_linear_float(red);
+                from += sizeof(From);
+
+                From green;
+                std::memcpy(&green, from, sizeof(From));
+                *to++ = color::srgb_uint16_to_linear_float(green);
+                from += sizeof(From);
+
+                From blue;
+                std::memcpy(&blue, from, sizeof(From));
+                *to++ = color::srgb_uint16_to_linear_float(blue);
                 from += sizeof(From);
 
                 From alpha;
@@ -355,6 +426,33 @@ void conv_r32g32b32_to_r16g16b16(const std::vector<float>& floats, const std::sp
         }
 }
 
+void conv_r32g32b32_to_r16g16b16_srgb(const std::vector<float>& floats, const std::span<std::byte>& bytes)
+{
+        using To = uint16_t;
+
+        ASSERT((floats.size() % 3) == 0);
+        ASSERT(bytes.size() == floats.size() * sizeof(To));
+
+        const float* from = floats.data();
+        const float* end = from + floats.size();
+        std::byte* to = bytes.data();
+
+        while (from != end)
+        {
+                To red = color::linear_float_to_srgb_uint16(*from++);
+                std::memcpy(to, &red, sizeof(To));
+                to += sizeof(To);
+
+                To green = color::linear_float_to_srgb_uint16(*from++);
+                std::memcpy(to, &green, sizeof(To));
+                to += sizeof(To);
+
+                To blue = color::linear_float_to_srgb_uint16(*from++);
+                std::memcpy(to, &blue, sizeof(To));
+                to += sizeof(To);
+        }
+}
+
 void conv_r32g32b32_to_r16g16b16a16(const std::vector<float>& floats, const std::span<std::byte>& bytes)
 {
         using To = uint16_t;
@@ -377,6 +475,37 @@ void conv_r32g32b32_to_r16g16b16a16(const std::vector<float>& floats, const std:
                 to += sizeof(To);
 
                 To blue = color::linear_float_to_linear_uint16(*from++);
+                std::memcpy(to, &blue, sizeof(To));
+                to += sizeof(To);
+
+                To alpha = limits<To>::max();
+                std::memcpy(to, &alpha, sizeof(To));
+                to += sizeof(To);
+        }
+}
+
+void conv_r32g32b32_to_r16g16b16a16_srgb(const std::vector<float>& floats, const std::span<std::byte>& bytes)
+{
+        using To = uint16_t;
+
+        ASSERT((floats.size() % 3) == 0);
+        ASSERT(bytes.size() == (floats.size() / 3) * 4 * sizeof(To));
+
+        const float* from = floats.data();
+        const float* end = from + floats.size();
+        std::byte* to = bytes.data();
+
+        while (from != end)
+        {
+                To red = color::linear_float_to_srgb_uint16(*from++);
+                std::memcpy(to, &red, sizeof(To));
+                to += sizeof(To);
+
+                To green = color::linear_float_to_srgb_uint16(*from++);
+                std::memcpy(to, &green, sizeof(To));
+                to += sizeof(To);
+
+                To blue = color::linear_float_to_srgb_uint16(*from++);
                 std::memcpy(to, &blue, sizeof(To));
                 to += sizeof(To);
 
@@ -500,6 +629,37 @@ void conv_r32g32b32a32_to_r16g16b16a16(const std::vector<float>& floats, const s
         }
 }
 
+void conv_r32g32b32a32_to_r16g16b16a16_srgb(const std::vector<float>& floats, const std::span<std::byte>& bytes)
+{
+        using To = uint16_t;
+
+        ASSERT((floats.size() % 4) == 0);
+        ASSERT(bytes.size() == floats.size() * sizeof(To));
+
+        const float* from = floats.data();
+        const float* end = from + floats.size();
+        std::byte* to = bytes.data();
+
+        while (from != end)
+        {
+                To red = color::linear_float_to_srgb_uint16(*from++);
+                std::memcpy(to, &red, sizeof(To));
+                to += sizeof(To);
+
+                To green = color::linear_float_to_srgb_uint16(*from++);
+                std::memcpy(to, &green, sizeof(To));
+                to += sizeof(To);
+
+                To blue = color::linear_float_to_srgb_uint16(*from++);
+                std::memcpy(to, &blue, sizeof(To));
+                to += sizeof(To);
+
+                To alpha = color::linear_float_to_linear_uint16(*from++);
+                std::memcpy(to, &alpha, sizeof(To));
+                to += sizeof(To);
+        }
+}
+
 void conv_r32g32b32a32_to_r16g16b16(const std::vector<float>& floats, const std::span<std::byte>& bytes)
 {
         using To = uint16_t;
@@ -522,6 +682,35 @@ void conv_r32g32b32a32_to_r16g16b16(const std::vector<float>& floats, const std:
                 to += sizeof(To);
 
                 To blue = color::linear_float_to_linear_uint16(*from++);
+                std::memcpy(to, &blue, sizeof(To));
+                to += sizeof(To);
+
+                ++from;
+        }
+}
+
+void conv_r32g32b32a32_to_r16g16b16_srgb(const std::vector<float>& floats, const std::span<std::byte>& bytes)
+{
+        using To = uint16_t;
+
+        ASSERT((floats.size() % 4) == 0);
+        ASSERT(bytes.size() == (floats.size() / 4) * 3 * sizeof(To));
+
+        const float* from = floats.data();
+        const float* end = from + floats.size();
+        std::byte* to = bytes.data();
+
+        while (from != end)
+        {
+                To red = color::linear_float_to_srgb_uint16(*from++);
+                std::memcpy(to, &red, sizeof(To));
+                to += sizeof(To);
+
+                To green = color::linear_float_to_srgb_uint16(*from++);
+                std::memcpy(to, &green, sizeof(To));
+                to += sizeof(To);
+
+                To blue = color::linear_float_to_srgb_uint16(*from++);
                 std::memcpy(to, &blue, sizeof(To));
                 to += sizeof(To);
 
@@ -600,10 +789,18 @@ void conv_src_to_floats(
                 check_component_count_alpha(from_format, to_format);
                 conv_r16g16b16_to_r32g32b32(from, pixels);
                 return;
+        case ColorFormat::R16G16B16_SRGB:
+                check_component_count_alpha(from_format, to_format);
+                conv_r16g16b16_srgb_to_r32g32b32(from, pixels);
+                return;
         case ColorFormat::R16G16B16A16:
         case ColorFormat::R16G16B16A16_PREMULTIPLIED:
                 check_component_count_alpha(from_format, to_format);
                 conv_r16g16b16a16_to_r32g32b32a32(from, pixels);
+                return;
+        case ColorFormat::R16G16B16A16_SRGB:
+                check_component_count_alpha(from_format, to_format);
+                conv_r16g16b16a16_srgb_to_r32g32b32a32(from, pixels);
                 return;
         case ColorFormat::R32:
                 check_equal_component_count(from_format, to_format);
@@ -672,6 +869,18 @@ void conv_floats_to_dst(
                 default:
                         conversion_error(from_format, to_format);
                 }
+        case ColorFormat::R16G16B16_SRGB:
+                switch (format_component_count(from_format))
+                {
+                case 4:
+                        conv_r32g32b32a32_to_r16g16b16_srgb(pixels, to);
+                        return;
+                case 3:
+                        conv_r32g32b32_to_r16g16b16_srgb(pixels, to);
+                        return;
+                default:
+                        conversion_error(from_format, to_format);
+                }
         case ColorFormat::R16G16B16A16:
         case ColorFormat::R16G16B16A16_PREMULTIPLIED:
                 switch (format_component_count(from_format))
@@ -681,6 +890,18 @@ void conv_floats_to_dst(
                         return;
                 case 3:
                         conv_r32g32b32_to_r16g16b16a16(pixels, to);
+                        return;
+                default:
+                        conversion_error(from_format, to_format);
+                }
+        case ColorFormat::R16G16B16A16_SRGB:
+                switch (format_component_count(from_format))
+                {
+                case 4:
+                        conv_r32g32b32a32_to_r16g16b16a16_srgb(pixels, to);
+                        return;
+                case 3:
+                        conv_r32g32b32_to_r16g16b16a16_srgb(pixels, to);
                         return;
                 default:
                         conversion_error(from_format, to_format);
@@ -726,7 +947,9 @@ bool is_premultiplied(ColorFormat format)
         case ColorFormat::R8G8B8A8_SRGB:
         case ColorFormat::R16:
         case ColorFormat::R16G16B16:
+        case ColorFormat::R16G16B16_SRGB:
         case ColorFormat::R16G16B16A16:
+        case ColorFormat::R16G16B16A16_SRGB:
         case ColorFormat::R32:
         case ColorFormat::R32G32B32:
         case ColorFormat::R32G32B32A32:
