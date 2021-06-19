@@ -23,7 +23,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/com/error.h>
 #include <src/com/file/path.h>
 #include <src/com/print.h>
-#include <src/image/alpha.h>
+#include <src/image/conversion.h>
 #include <src/image/depth.h>
 #include <src/image/file.h>
 #include <src/image/flip.h>
@@ -48,43 +48,6 @@ std::array<T, N> to_array(const std::vector<T>& vector)
         }
         return array;
 }
-
-template <std::size_t N_IMAGE>
-void save_image(const std::filesystem::path& path, image::Image<N_IMAGE>&& image, ProgressRatio* progress)
-{
-        static_assert(N_IMAGE >= 2);
-
-        progress->set(0);
-
-        image::flip_vertically(&image);
-
-        image::ImageView<N_IMAGE> image_view(image);
-        if constexpr (N_IMAGE == 2)
-        {
-                image::save(path, image_view);
-        }
-        else
-        {
-                volume::save_to_images(path, image_view, progress);
-        }
-}
-
-template <std::size_t N_IMAGE>
-void add_volume(image::Image<N_IMAGE>&& image, ProgressRatio* progress)
-{
-        static_assert(N_IMAGE >= 3);
-
-        progress->set(0);
-
-        if (image::format_component_count(image.color_format) == 3)
-        {
-                constexpr float ALPHA = 1;
-                image::add_alpha(image.color_format, image.pixels, ALPHA);
-        }
-
-        process::load_volume<N_IMAGE>("Painter Image", std::move(image));
-}
-
 struct Parameters final
 {
         bool background;
@@ -101,6 +64,111 @@ struct Parameters final
                 return s;
         }
 };
+
+template <std::size_t N_IMAGE>
+void save_to_file(
+        const std::filesystem::path& path,
+        const Parameters& parameters,
+        const std::array<int, N_IMAGE>& size,
+        const image::ColorFormat color_format_rgb,
+        std::vector<std::byte>&& pixels_rgb,
+        const image::ColorFormat color_format_rgba,
+        std::vector<std::byte>&& pixels_rgba,
+        ProgressRatio* progress)
+{
+        static_assert(N_IMAGE >= 2);
+
+        progress->set(0);
+
+        image::Image<N_IMAGE> image;
+
+        image.size = size;
+
+        if (parameters.background)
+        {
+                ASSERT(image::format_component_count(color_format_rgb) == 3);
+                image.color_format = color_format_rgb;
+                image.pixels = std::move(pixels_rgb);
+        }
+        else
+        {
+                ASSERT(image::format_component_count(color_format_rgba) == 4);
+                if (image::is_premultiplied(color_format_rgba))
+                {
+                        image.color_format = image::ColorFormat::R32G32B32A32;
+                        image::format_conversion(color_format_rgba, pixels_rgba, image.color_format, &image.pixels);
+                }
+                else
+                {
+                        image.color_format = color_format_rgba;
+                        image.pixels = std::move(pixels_rgba);
+                }
+        }
+
+        image::normalize(image.color_format, &image.pixels);
+
+        progress->set(0.5);
+
+        if (parameters.to_8_bit)
+        {
+                image = image::convert_to_8_bit(image);
+        }
+
+        image::flip_vertically(&image);
+
+        image::ImageView<N_IMAGE> image_view(image);
+        if constexpr (N_IMAGE == 2)
+        {
+                image::save(path, image_view);
+        }
+        else
+        {
+                volume::save_to_images(path, image_view, progress);
+        }
+}
+
+template <std::size_t N_IMAGE>
+void add_volume(
+        const Parameters& parameters,
+        const std::array<int, N_IMAGE>& size,
+        const image::ColorFormat color_format_rgb,
+        std::vector<std::byte>&& pixels_rgb,
+        const image::ColorFormat color_format_rgba,
+        std::vector<std::byte>&& pixels_rgba,
+        ProgressRatio* progress)
+{
+        static_assert(N_IMAGE >= 3);
+
+        progress->set(0);
+
+        image::Image<N_IMAGE> image;
+
+        image.size = size;
+
+        if (parameters.background)
+        {
+                ASSERT(image::format_component_count(color_format_rgb) == 3);
+                image.color_format = color_format_rgb;
+                image.pixels = std::move(pixels_rgb);
+        }
+        else
+        {
+                ASSERT(image::format_component_count(color_format_rgba) == 4);
+                image.color_format = color_format_rgba;
+                image.pixels = std::move(pixels_rgba);
+        }
+
+        image::normalize(image.color_format, &image.pixels);
+
+        progress->set(0.5);
+
+        if (parameters.to_8_bit)
+        {
+                image = image::convert_to_8_bit(image);
+        }
+
+        process::load_volume<N_IMAGE>("Painter Image", std::move(image));
+}
 
 std::vector<Parameters> create_parameters(const dialog::PainterImageParameters& dialog_parameters)
 {
@@ -121,42 +189,6 @@ std::vector<Parameters> create_parameters(const dialog::PainterImageParameters& 
 }
 
 template <std::size_t N_IMAGE>
-image::Image<N_IMAGE> create_image(
-        const Parameters& parameters,
-        const std::array<int, N_IMAGE>& size,
-        const image::ColorFormat color_format_rgb,
-        std::vector<std::byte>&& pixels_rgb,
-        const image::ColorFormat color_format_rgba,
-        std::vector<std::byte>&& pixels_rgba)
-{
-        static_assert(N_IMAGE >= 2);
-
-        image::Image<N_IMAGE> image;
-
-        image.size = size;
-
-        if (parameters.background)
-        {
-                image.color_format = color_format_rgb;
-                image.pixels = std::move(pixels_rgb);
-        }
-        else
-        {
-                image.color_format = color_format_rgba;
-                image.pixels = std::move(pixels_rgba);
-        }
-
-        image::normalize(image.color_format, &image.pixels);
-
-        if (parameters.to_8_bit)
-        {
-                image = image::convert_to_8_bit(image);
-        }
-
-        return image;
-}
-
-template <std::size_t N_IMAGE>
 void save_image(
         const std::filesystem::path& path,
         const std::vector<Parameters>& parameters,
@@ -169,12 +201,9 @@ void save_image(
 {
         if (parameters.size() == 1)
         {
-                save_image(
-                        path,
-                        create_image(
-                                parameters.front(), size, color_format_rgb, std::move(pixels_rgb), color_format_rgba,
-                                std::move(pixels_rgba)),
-                        progress);
+                save_to_file(
+                        path, parameters.front(), size, color_format_rgb, std::move(pixels_rgb), color_format_rgba,
+                        std::move(pixels_rgba), progress);
                 return;
         }
 
@@ -196,19 +225,13 @@ void save_image(
 
         for (std::size_t i = 0; i < parameters.size() - 1; ++i)
         {
-                save_image(
-                        image_directory(parameters[i]),
-                        create_image(
-                                parameters[i], size, color_format_rgb, std::vector(pixels_rgb), color_format_rgba,
-                                std::vector(pixels_rgba)),
-                        progress);
+                save_to_file(
+                        image_directory(parameters[i]), parameters[i], size, color_format_rgb, std::vector(pixels_rgb),
+                        color_format_rgba, std::vector(pixels_rgba), progress);
         }
-        save_image(
-                image_directory(parameters.back()),
-                create_image(
-                        parameters.back(), size, color_format_rgb, std::move(pixels_rgb), color_format_rgba,
-                        std::move(pixels_rgba)),
-                progress);
+        save_to_file(
+                image_directory(parameters.back()), parameters.back(), size, color_format_rgb, std::move(pixels_rgb),
+                color_format_rgba, std::move(pixels_rgba), progress);
 }
 }
 
@@ -241,11 +264,9 @@ std::function<void(ProgressRatioList*)> save_image(
                 ProgressRatio progress(progress_list, "Saving");
 
                 ASSERT(parameters.size() == 1);
-                save_image(
-                        path_from_utf8(path_string),
-                        create_image(
-                                parameters.front(), std::array<int, 2>{width, height}, color_format_rgb,
-                                std::move(*pixels_rgb), color_format_rgba, std::move(*pixels_rgba)),
+                save_to_file(
+                        path_from_utf8(path_string), parameters.front(), std::array<int, 2>{width, height},
+                        color_format_rgb, std::move(*pixels_rgb), color_format_rgba, std::move(*pixels_rgba),
                         &progress);
         };
 }
@@ -336,11 +357,9 @@ std::function<void(ProgressRatioList*)> add_volume(
                                         ProgressRatio progress(progress_list, "Adding volume");
 
                                         ASSERT(parameters.size() == 1);
-                                        add_volume<N_IMAGE>(
-                                                create_image(
-                                                        parameters.front(), to_array<N_IMAGE, int>(size),
-                                                        color_format_rgb, std::move(*pixels_rgb), color_format_rgba,
-                                                        std::move(*pixels_rgba)),
+                                        add_volume(
+                                                parameters.front(), to_array<N_IMAGE, int>(size), color_format_rgb,
+                                                std::move(*pixels_rgb), color_format_rgba, std::move(*pixels_rgba),
                                                 &progress);
                                 }
                         });

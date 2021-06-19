@@ -18,6 +18,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "alpha.h"
 
 #include <src/color/conversion.h>
+#include <src/com/error.h>
 #include <src/com/math.h>
 #include <src/com/print.h>
 #include <src/com/type/limit.h>
@@ -480,7 +481,6 @@ void blend_alpha_r32g32b32a32_premultiplied(const std::span<std::byte>& bytes, c
                 }
         }
 }
-}
 
 std::vector<std::byte> add_alpha(ColorFormat color_format, const std::span<const std::byte>& bytes, float alpha)
 {
@@ -562,6 +562,7 @@ std::vector<std::byte> delete_alpha(ColorFormat color_format, const std::span<co
         }
 
         return result;
+}
 }
 
 void blend_alpha(ColorFormat* color_format, const std::span<std::byte>& bytes, Vector<3, float> rgb)
@@ -645,4 +646,90 @@ void set_alpha(ColorFormat color_format, const std::span<std::byte>& bytes, floa
 
         error("Unsupported image format " + format_to_string(color_format) + " for setting alpha");
 }
+
+template <std::size_t N>
+Image<N> add_alpha(const Image<N>& image, float alpha)
+{
+        Image<N> result;
+
+        result.color_format = [&]
+        {
+                switch (image.color_format)
+                {
+                case ColorFormat::R8G8B8_SRGB:
+                        return ColorFormat::R8G8B8A8_SRGB;
+                case ColorFormat::R16G16B16:
+                        return ColorFormat::R16G16B16A16;
+                case ColorFormat::R16G16B16_SRGB:
+                        return ColorFormat::R16G16B16A16_SRGB;
+                case ColorFormat::R32G32B32:
+                        return ColorFormat::R32G32B32A32;
+                case ColorFormat::R8G8B8A8_SRGB:
+                case ColorFormat::R16G16B16A16:
+                case ColorFormat::R16G16B16A16_SRGB:
+                case ColorFormat::R32G32B32A32:
+                case ColorFormat::R16:
+                case ColorFormat::R32:
+                case ColorFormat::R8_SRGB:
+                case ColorFormat::R8G8B8A8_SRGB_PREMULTIPLIED:
+                case ColorFormat::R16G16B16A16_PREMULTIPLIED:
+                case ColorFormat::R32G32B32A32_PREMULTIPLIED:
+                        break;
+                }
+                error("Unsupported image format " + format_to_string(image.color_format) + " for adding alpha");
+        }();
+
+        result.size = image.size;
+        result.pixels = add_alpha(image.color_format, image.pixels, alpha);
+
+        return result;
+}
+
+template <std::size_t N>
+Image<N> delete_alpha(const Image<N>& image)
+{
+        Image<N> result;
+
+        result.color_format = [&]
+        {
+                switch (image.color_format)
+                {
+                case ColorFormat::R8G8B8A8_SRGB:
+                        return ColorFormat::R8G8B8_SRGB;
+                case ColorFormat::R16G16B16A16:
+                        return ColorFormat::R16G16B16;
+                case ColorFormat::R16G16B16A16_SRGB:
+                        return ColorFormat::R16G16B16_SRGB;
+                case ColorFormat::R32G32B32A32:
+                        return ColorFormat::R32G32B32;
+                case ColorFormat::R8G8B8_SRGB:
+                case ColorFormat::R16G16B16:
+                case ColorFormat::R16G16B16_SRGB:
+                case ColorFormat::R32G32B32:
+                case ColorFormat::R16:
+                case ColorFormat::R32:
+                case ColorFormat::R8_SRGB:
+                case ColorFormat::R8G8B8A8_SRGB_PREMULTIPLIED:
+                case ColorFormat::R16G16B16A16_PREMULTIPLIED:
+                case ColorFormat::R32G32B32A32_PREMULTIPLIED:
+                        break;
+                }
+                error("Unsupported image format " + format_to_string(image.color_format) + " for deleting alpha");
+        }();
+
+        result.size = image.size;
+        result.pixels = delete_alpha(image.color_format, image.pixels);
+
+        return result;
+}
+
+template Image<2> add_alpha(const Image<2>&, float);
+template Image<3> add_alpha(const Image<3>&, float);
+template Image<4> add_alpha(const Image<4>&, float);
+template Image<5> add_alpha(const Image<5>&, float);
+
+template Image<2> delete_alpha(const Image<2>&);
+template Image<3> delete_alpha(const Image<3>&);
+template Image<4> delete_alpha(const Image<4>&);
+template Image<5> delete_alpha(const Image<5>&);
 }

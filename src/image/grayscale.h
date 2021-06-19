@@ -22,43 +22,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 namespace ns::image
 {
 void make_grayscale(ColorFormat color_format, const std::span<std::byte>& bytes);
-std::vector<std::byte> convert_to_r_component_format(ColorFormat color_format, const std::span<const std::byte>& bytes);
 
 template <std::size_t N>
-Image<N> convert_to_r_component_format(const Image<N>& image)
-{
-        Image<N> result;
-
-        result.color_format = [&]()
-        {
-                switch (image.color_format)
-                {
-                case ColorFormat::R8_SRGB:
-                case ColorFormat::R16:
-                case ColorFormat::R32:
-                case ColorFormat::R16G16B16_SRGB:
-                case ColorFormat::R16G16B16A16_SRGB:
-                case ColorFormat::R8G8B8A8_SRGB_PREMULTIPLIED:
-                case ColorFormat::R16G16B16A16_PREMULTIPLIED:
-                case ColorFormat::R32G32B32A32_PREMULTIPLIED:
-                        error("Unsupported image format " + format_to_string(image.color_format)
-                              + " for converting image to R component format");
-                case ColorFormat::R8G8B8_SRGB:
-                case ColorFormat::R8G8B8A8_SRGB:
-                        return ColorFormat::R8_SRGB;
-                case ColorFormat::R16G16B16:
-                case ColorFormat::R16G16B16A16:
-                        return ColorFormat::R16;
-                case ColorFormat::R32G32B32:
-                case ColorFormat::R32G32B32A32:
-                        return ColorFormat::R32;
-                }
-                unknown_color_format_error(image.color_format);
-        }();
-
-        result.size = image.size;
-        result.pixels = convert_to_r_component_format(image.color_format, image.pixels);
-
-        return result;
-}
+[[nodiscard]] Image<N> convert_to_r_component_format(const Image<N>& image);
 }

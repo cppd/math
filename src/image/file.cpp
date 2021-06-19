@@ -36,7 +36,7 @@ namespace ns::image
 {
 namespace
 {
-constexpr std::string_view DEFAULT_FORMAT = "png";
+constexpr std::string_view WRITE_FORMAT = "png";
 
 std::set<std::string> supported_formats()
 {
@@ -79,8 +79,8 @@ std::filesystem::path file_name_with_extension(std::filesystem::path path)
                 return path;
         }
 
-        check_write_format_support(DEFAULT_FORMAT);
-        return path.replace_extension(DEFAULT_FORMAT);
+        check_write_format_support(WRITE_FORMAT);
+        return path.replace_extension(WRITE_FORMAT);
 }
 
 void check_size(std::size_t width, std::size_t height, ColorFormat format, std::size_t byte_count)
@@ -220,13 +220,6 @@ void save(const std::string& file_name, const ImageView<2>& image_view)
                         file_name);
                 return;
         }
-        case ColorFormat::R8G8B8A8_SRGB_PREMULTIPLIED:
-        {
-                save_image(
-                        width, height, QImage::Format_RGBA8888_Premultiplied, ColorFormat::R8G8B8A8_SRGB_PREMULTIPLIED,
-                        image_view.pixels, file_name);
-                return;
-        }
         case ColorFormat::R16G16B16A16:
         {
                 std::vector<std::byte> bytes;
@@ -241,13 +234,6 @@ void save(const std::string& file_name, const ImageView<2>& image_view)
                         file_name);
                 return;
         }
-        case ColorFormat::R16G16B16A16_PREMULTIPLIED:
-        {
-                std::vector<std::byte> bytes;
-                format_conversion(image_view.color_format, image_view.pixels, ColorFormat::R16G16B16A16_SRGB, &bytes);
-                save_image(width, height, QImage::Format_RGBA64, ColorFormat::R16G16B16A16_SRGB, bytes, file_name);
-                return;
-        }
         case ColorFormat::R32G32B32A32:
         {
                 std::vector<std::byte> bytes;
@@ -255,15 +241,12 @@ void save(const std::string& file_name, const ImageView<2>& image_view)
                 save_image(width, height, QImage::Format_RGBA64, ColorFormat::R16G16B16A16_SRGB, bytes, file_name);
                 return;
         }
+        case ColorFormat::R8G8B8A8_SRGB_PREMULTIPLIED:
+        case ColorFormat::R16G16B16A16_PREMULTIPLIED:
         case ColorFormat::R32G32B32A32_PREMULTIPLIED:
-        {
-                std::vector<std::byte> bytes;
-                format_conversion(image_view.color_format, image_view.pixels, ColorFormat::R16G16B16A16_SRGB, &bytes);
-                save_image(width, height, QImage::Format_RGBA64, ColorFormat::R16G16B16A16_SRGB, bytes, file_name);
-                return;
+                error("Premultiplied image formats are not supported for saving image to file");
         }
-        }
-        error("Unknown format " + format_to_string(image_view.color_format) + "for saving image");
+        error("Unknown format " + format_to_string(image_view.color_format) + " for saving image");
 }
 
 void load_image(QImage* image, ColorFormat color_format, const std::span<std::byte>& bytes)
@@ -481,7 +464,7 @@ const std::unordered_set<QImage::Format>& color_format_to_q_format(ColorFormat f
 
 std::string_view file_extension()
 {
-        return DEFAULT_FORMAT;
+        return WRITE_FORMAT;
 }
 
 void save(const std::filesystem::path& path, const ImageView<2>& image_view)

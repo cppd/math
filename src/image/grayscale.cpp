@@ -144,6 +144,33 @@ std::vector<std::byte> convert_to_r_component_format(ColorFormat color_format, c
         convert_to_r_component_format<T>(color_format, bytes, bytes_r);
         return bytes_r;
 }
+
+std::vector<std::byte> convert_to_r_component_format(ColorFormat color_format, const std::span<const std::byte>& bytes)
+{
+        switch (color_format)
+        {
+        case ColorFormat::R8_SRGB:
+        case ColorFormat::R16:
+        case ColorFormat::R32:
+        case ColorFormat::R8G8B8A8_SRGB_PREMULTIPLIED:
+        case ColorFormat::R16G16B16A16_PREMULTIPLIED:
+        case ColorFormat::R32G32B32A32_PREMULTIPLIED:
+                error("Unsupported image format " + format_to_string(color_format)
+                      + " for converting to R component format");
+        case ColorFormat::R8G8B8_SRGB:
+        case ColorFormat::R8G8B8A8_SRGB:
+                return convert_to_r_component_format<uint8_t>(color_format, bytes);
+        case ColorFormat::R16G16B16:
+        case ColorFormat::R16G16B16_SRGB:
+        case ColorFormat::R16G16B16A16:
+        case ColorFormat::R16G16B16A16_SRGB:
+                return convert_to_r_component_format<uint16_t>(color_format, bytes);
+        case ColorFormat::R32G32B32:
+        case ColorFormat::R32G32B32A32:
+                return convert_to_r_component_format<float>(color_format, bytes);
+        }
+        unknown_color_format_error(color_format);
+}
 }
 
 void make_grayscale(ColorFormat color_format, const std::span<std::byte>& bytes)
@@ -178,30 +205,46 @@ void make_grayscale(ColorFormat color_format, const std::span<std::byte>& bytes)
         unknown_color_format_error(color_format);
 }
 
-std::vector<std::byte> convert_to_r_component_format(ColorFormat color_format, const std::span<const std::byte>& bytes)
+template <std::size_t N>
+Image<N> convert_to_r_component_format(const Image<N>& image)
 {
-        switch (color_format)
+        Image<N> result;
+
+        result.color_format = [&]()
         {
-        case ColorFormat::R8_SRGB:
-        case ColorFormat::R16:
-        case ColorFormat::R32:
-        case ColorFormat::R8G8B8A8_SRGB_PREMULTIPLIED:
-        case ColorFormat::R16G16B16A16_PREMULTIPLIED:
-        case ColorFormat::R32G32B32A32_PREMULTIPLIED:
-                error("Unsupported image format " + format_to_string(color_format)
-                      + " for converting to R component format");
-        case ColorFormat::R8G8B8_SRGB:
-        case ColorFormat::R8G8B8A8_SRGB:
-                return convert_to_r_component_format<uint8_t>(color_format, bytes);
-        case ColorFormat::R16G16B16:
-        case ColorFormat::R16G16B16_SRGB:
-        case ColorFormat::R16G16B16A16:
-        case ColorFormat::R16G16B16A16_SRGB:
-                return convert_to_r_component_format<uint16_t>(color_format, bytes);
-        case ColorFormat::R32G32B32:
-        case ColorFormat::R32G32B32A32:
-                return convert_to_r_component_format<float>(color_format, bytes);
-        }
-        unknown_color_format_error(color_format);
+                switch (image.color_format)
+                {
+                case ColorFormat::R8_SRGB:
+                case ColorFormat::R16:
+                case ColorFormat::R32:
+                case ColorFormat::R16G16B16_SRGB:
+                case ColorFormat::R16G16B16A16_SRGB:
+                case ColorFormat::R8G8B8A8_SRGB_PREMULTIPLIED:
+                case ColorFormat::R16G16B16A16_PREMULTIPLIED:
+                case ColorFormat::R32G32B32A32_PREMULTIPLIED:
+                        error("Unsupported image format " + format_to_string(image.color_format)
+                              + " for converting image to R component format");
+                case ColorFormat::R8G8B8_SRGB:
+                case ColorFormat::R8G8B8A8_SRGB:
+                        return ColorFormat::R8_SRGB;
+                case ColorFormat::R16G16B16:
+                case ColorFormat::R16G16B16A16:
+                        return ColorFormat::R16;
+                case ColorFormat::R32G32B32:
+                case ColorFormat::R32G32B32A32:
+                        return ColorFormat::R32;
+                }
+                unknown_color_format_error(image.color_format);
+        }();
+
+        result.size = image.size;
+        result.pixels = convert_to_r_component_format(image.color_format, image.pixels);
+
+        return result;
 }
+
+template Image<2> convert_to_r_component_format(const Image<2>&);
+template Image<3> convert_to_r_component_format(const Image<3>&);
+template Image<4> convert_to_r_component_format(const Image<4>&);
+template Image<5> convert_to_r_component_format(const Image<5>&);
 }

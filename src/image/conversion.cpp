@@ -938,30 +938,6 @@ void conv_floats_to_dst(
         unknown_color_format_error(to_format);
 }
 
-bool is_premultiplied(ColorFormat format)
-{
-        switch (format)
-        {
-        case ColorFormat::R8_SRGB:
-        case ColorFormat::R8G8B8_SRGB:
-        case ColorFormat::R8G8B8A8_SRGB:
-        case ColorFormat::R16:
-        case ColorFormat::R16G16B16:
-        case ColorFormat::R16G16B16_SRGB:
-        case ColorFormat::R16G16B16A16:
-        case ColorFormat::R16G16B16A16_SRGB:
-        case ColorFormat::R32:
-        case ColorFormat::R32G32B32:
-        case ColorFormat::R32G32B32A32:
-                return false;
-        case ColorFormat::R8G8B8A8_SRGB_PREMULTIPLIED:
-        case ColorFormat::R16G16B16A16_PREMULTIPLIED:
-        case ColorFormat::R32G32B32A32_PREMULTIPLIED:
-                return true;
-        }
-        unknown_color_format_error(format);
-}
-
 void undo_alpha_multiplication(std::vector<float>* floats)
 {
         ASSERT((floats->size() % 4) == 0);
