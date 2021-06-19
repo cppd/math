@@ -22,7 +22,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "options.h"
 
 #include <src/com/error.h>
-#include <src/image/alpha.h>
 #include <src/model/mesh_object.h>
 #include <src/model/mesh_utility.h>
 #include <src/model/volume_object.h>
@@ -103,12 +102,6 @@ std::shared_ptr<volume::VolumeObject<N>> load_volume(
 {
         std::unique_ptr<volume::Volume<N>> volume = repository.volume<N>(object_name, image_size);
 
-        if (image::format_component_count(volume->image.color_format) == 3)
-        {
-                constexpr float alpha = 1.0f;
-                volume->image = image::add_alpha(volume->image, alpha);
-        }
-
         std::shared_ptr<volume::VolumeObject<N>> volume_object = std::make_shared<volume::VolumeObject<N>>(
                 std::move(volume),
                 volume::model_matrix_for_size_and_position(*volume, SCENE_SIZE, SCENE_CENTER<N, double>), object_name);
@@ -124,11 +117,6 @@ std::shared_ptr<volume::VolumeObject<N>> load_volume(const std::string& object_n
         std::unique_ptr<volume::Volume<N>> volume = std::make_unique<volume::Volume<N>>();
 
         volume->image = std::forward<Image>(image);
-        if (image::format_component_count(volume->image.color_format) == 3)
-        {
-                constexpr float alpha = 1.0f;
-                volume->image = image::add_alpha(volume->image, alpha);
-        }
 
         volume->matrix = volume::matrix_for_image_size(volume->image.size);
 
@@ -153,11 +141,6 @@ std::shared_ptr<volume::VolumeObject<N>> load_volume(
                 ProgressRatio progress(progress_list);
                 progress.set_text("Loading: %p%");
                 volume->image = volume::load<N>(path, &progress);
-        }
-        if (image::format_component_count(volume->image.color_format) == 3)
-        {
-                constexpr float alpha = 1.0f;
-                volume->image = image::add_alpha(volume->image, alpha);
         }
 
         volume->matrix = volume::matrix_for_image_size(volume->image.size);
