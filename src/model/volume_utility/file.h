@@ -21,7 +21,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/progress/progress.h>
 
 #include <filesystem>
-#include <string_view>
 
 namespace ns::volume
 {
@@ -35,7 +34,6 @@ VolumeInfo volume_info(const std::filesystem::path& path);
 template <std::size_t N>
 std::enable_if_t<N >= 3> save_to_images(
         const std::filesystem::path& path,
-        const std::string_view& file_format,
         const image::ImageView<N>& image_view,
         ProgressRatio* progress);
 

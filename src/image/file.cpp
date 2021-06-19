@@ -36,7 +36,7 @@ namespace ns::image
 {
 namespace
 {
-constexpr const char* DEFAULT_WRITE_FORMAT = "png";
+constexpr std::string_view DEFAULT_FORMAT = "png";
 
 std::set<std::string> supported_formats()
 {
@@ -48,25 +48,26 @@ std::set<std::string> supported_formats()
         return formats;
 }
 
-void check_write_format_support(const std::string& format)
+void check_write_format_support(const std::string_view& format)
 {
         const static std::set<std::string> formats = supported_formats();
 
-        if (formats.count(to_lower(format)) != 0)
+        if (formats.contains(to_lower(format)))
         {
                 return;
         }
 
-        std::string format_string;
+        std::string s;
         for (const std::string& f : formats)
         {
-                if (!format_string.empty())
+                if (!s.empty())
                 {
-                        format_string += ", ";
+                        s += ", ";
                 }
-                format_string += f;
+                s += f;
         }
-        error("Unsupported format for image writing \"" + format + "\", supported formats " + format_string);
+
+        error("Unsupported format \"" + std::string(format) + "\" for image writing, supported formats " + s);
 }
 
 std::filesystem::path file_name_with_extension(std::filesystem::path path)
@@ -78,8 +79,8 @@ std::filesystem::path file_name_with_extension(std::filesystem::path path)
                 return path;
         }
 
-        check_write_format_support(DEFAULT_WRITE_FORMAT);
-        return path.replace_extension(DEFAULT_WRITE_FORMAT);
+        check_write_format_support(DEFAULT_FORMAT);
+        return path.replace_extension(DEFAULT_FORMAT);
 }
 
 void check_size(std::size_t width, std::size_t height, ColorFormat format, std::size_t byte_count)
@@ -476,6 +477,11 @@ const std::unordered_set<QImage::Format>& color_format_to_q_format(ColorFormat f
         }
         error("Error finding QImage format: unsupported color format " + format_to_string(format));
 }
+}
+
+std::string_view file_extension()
+{
+        return DEFAULT_FORMAT;
 }
 
 void save(const std::filesystem::path& path, const ImageView<2>& image_view)

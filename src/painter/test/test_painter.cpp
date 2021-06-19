@@ -47,7 +47,6 @@ constexpr RGB8 BACKGROUND_LIGHT(50, 100, 150);
 constexpr float LIGHTING_INTENSITY = 1;
 
 constexpr std::string_view DIRECTORY_NAME = "painter_test";
-constexpr std::string_view IMAGE_FILE_FORMAT = "png";
 constexpr image::ColorFormat PIXEL_COLOR_FORMAT = image::ColorFormat::R8G8B8_SRGB;
 
 template <std::size_t N>
@@ -63,7 +62,7 @@ void save_image(const std::filesystem::path& path, image::Image<N>&& image)
         }
 
         ProgressRatio progress(nullptr);
-        volume::save_to_images(path, IMAGE_FILE_FORMAT, image::ImageView(image), &progress);
+        volume::save_to_images(path, image::ImageView(image), &progress);
 }
 
 template <std::size_t N>

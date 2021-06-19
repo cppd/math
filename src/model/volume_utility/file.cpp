@@ -139,7 +139,6 @@ std::vector<std::string> read_files(const std::filesystem::path& directory)
 template <std::size_t N>
 std::enable_if_t<N >= 3> save_to_images(
         const std::filesystem::path& directory,
-        const std::string_view& file_format,
         const image::ImageView<N>& image_view,
         ProgressRatio* progress,
         unsigned* current,
@@ -173,11 +172,10 @@ std::enable_if_t<N >= 3> save_to_images(
                 {
                         const std::filesystem::path directory_n_1 = directory / path_from_utf8(oss.str());
                         std::filesystem::create_directory(directory_n_1);
-                        save_to_images(directory_n_1, file_format, image_view_n_1, progress, current, count);
+                        save_to_images(directory_n_1, image_view_n_1, progress, current, count);
                 }
                 else
                 {
-                        oss << "." << file_format;
                         image::save(directory / path_from_utf8(oss.str()), image_view_n_1);
 
                         progress->set(++(*current), count);
@@ -305,7 +303,6 @@ VolumeInfo volume_info(const std::filesystem::path& path)
 template <std::size_t N>
 std::enable_if_t<N >= 3> save_to_images(
         const std::filesystem::path& path,
-        const std::string_view& file_format,
         const image::ImageView<N>& image_view,
         ProgressRatio* progress)
 {
@@ -319,7 +316,7 @@ std::enable_if_t<N >= 3> save_to_images(
                 error("Too many images to save, image size " + to_string(image_view.size));
         }
         unsigned current = 0;
-        save_to_images(path, file_format, image_view, progress, &current, image_count);
+        save_to_images(path, image_view, progress, &current, image_count);
 }
 
 template <std::size_t N>
@@ -355,21 +352,9 @@ std::enable_if_t<N >= 3, image::Image<N>> load(const std::filesystem::path& path
         return image;
 }
 
-template void save_to_images(
-        const std::filesystem::path&,
-        const std::string_view&,
-        const image::ImageView<3>&,
-        ProgressRatio*);
-template void save_to_images(
-        const std::filesystem::path&,
-        const std::string_view&,
-        const image::ImageView<4>&,
-        ProgressRatio*);
-template void save_to_images(
-        const std::filesystem::path&,
-        const std::string_view&,
-        const image::ImageView<5>&,
-        ProgressRatio*);
+template void save_to_images(const std::filesystem::path&, const image::ImageView<3>&, ProgressRatio*);
+template void save_to_images(const std::filesystem::path&, const image::ImageView<4>&, ProgressRatio*);
+template void save_to_images(const std::filesystem::path&, const image::ImageView<5>&, ProgressRatio*);
 
 template image::Image<3> load<3>(const std::filesystem::path&, ProgressRatio*);
 template image::Image<4> load<4>(const std::filesystem::path&, ProgressRatio*);

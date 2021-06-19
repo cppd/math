@@ -25,14 +25,10 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/com/error.h>
 #include <src/com/file/path.h>
 #include <src/com/print.h>
+#include <src/image/file.h>
 
 namespace ns::gui::dialog
 {
-namespace
-{
-constexpr const char* IMAGE_FILE_FORMAT = "png";
-}
-
 PainterImageDialog::PainterImageDialog(
         const std::string& title,
         PainterImagePathType path_type,
@@ -161,7 +157,7 @@ void PainterImageDialog::on_select_path_clicked()
                 const std::string caption = "File";
                 dialog::FileFilter filter;
                 filter.name = "Images";
-                filter.file_extensions = {IMAGE_FILE_FORMAT};
+                filter.file_extensions.emplace_back(image::file_extension());
                 const bool read_only = true;
                 path = dialog::save_file(caption, {filter}, read_only);
         }

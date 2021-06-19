@@ -22,9 +22,12 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <array>
 #include <filesystem>
 #include <span>
+#include <string_view>
 
 namespace ns::image
 {
+std::string_view file_extension();
+
 void save(const std::filesystem::path& path, const ImageView<2>& image_view);
 
 //
