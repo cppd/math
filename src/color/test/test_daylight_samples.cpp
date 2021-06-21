@@ -80,6 +80,11 @@ void compare_d65(const double cct, const int min, const int max, const unsigned 
                         error("Daylight " + to_string(d65[i]) + " is not positive and not zero");
                 }
 
+                if (d65[i] == daylight[i])
+                {
+                        continue;
+                }
+
                 const double abs = std::abs(d65[i] - daylight[i]);
                 if (!(abs < 0.025))
                 {
