@@ -59,7 +59,7 @@ void compare_d65(const double cct, const int min, const int max, const unsigned 
                 error("Error count " + to_string(count));
         }
 
-        const std::vector<double> d65 = d65_samples(min, max, count);
+        const std::vector<double> d65 = daylight_d65_samples(min, max, count);
         const std::vector<double> daylight = daylight_samples(cct, min, max, count);
 
         if (d65.size() != count || daylight.size() != count)
@@ -77,7 +77,7 @@ void compare_d65(const double cct, const int min, const int max, const unsigned 
                 }
                 if (!(daylight[i] >= 0))
                 {
-                        error("Daylight " + to_string(d65[i]) + " is not positive and not zero");
+                        error("Daylight " + to_string(daylight[i]) + " is not positive and not zero");
                 }
 
                 if (d65[i] == daylight[i])
@@ -86,7 +86,7 @@ void compare_d65(const double cct, const int min, const int max, const unsigned 
                 }
 
                 const double abs = std::abs(d65[i] - daylight[i]);
-                if (!(abs < 0.025))
+                if (!(abs < 0.014))
                 {
                         throw Exception(
                                 "D65 " + to_string(d65[i]) + " and daylight " + to_string(daylight[i])
@@ -94,7 +94,7 @@ void compare_d65(const double cct, const int min, const int max, const unsigned 
                 }
 
                 const double rel = abs / std::max(std::abs(d65[i]), std::abs(daylight[i]));
-                if (!(rel < 6e-4))
+                if (!(rel < 3.5e-4))
                 {
                         throw Exception(
                                 "D65 " + to_string(d65[i]) + " and daylight " + to_string(daylight[i])
@@ -104,7 +104,7 @@ void compare_d65(const double cct, const int min, const int max, const unsigned 
                 abs_sum += abs;
         }
 
-        if (!(abs_sum / count < 0.011))
+        if (!(abs_sum / count < 5.7e-3))
         {
                 throw Exception("Mean absolute error " + to_string(abs_sum / count) + " is too large");
         }
@@ -141,7 +141,7 @@ void test()
 
         constexpr int MIN = DAYLIGHT_SAMPLES_MIN_WAVELENGTH;
         constexpr int MAX = DAYLIGHT_SAMPLES_MAX_WAVELENGTH;
-        constexpr double D65_CCT = 6504;
+        constexpr double D65_CCT = 6503.5;
         {
                 static_assert(MAX - MIN > 5);
                 const int COUNT = std::lround((MAX - MIN) / 5);
