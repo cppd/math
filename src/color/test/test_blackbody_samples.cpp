@@ -26,21 +26,106 @@ namespace ns::color
 {
 namespace
 {
-void check(double a, double b)
+class Exception final : public std::exception
 {
-        if (a == b)
+        std::string m_text;
+
+public:
+        explicit Exception(std::string&& text) : m_text(std::move(text))
         {
-                return;
+        }
+        const char* what() const noexcept override
+        {
+                return m_text.c_str();
+        }
+};
+
+void compare_a(const double t, const int min, const int max, const unsigned count)
+{
+        if (!(max > min))
+        {
+                error("Error min " + to_string(min) + " and max " + to_string(max));
+        }
+        if (!(count > 0))
+        {
+                error("Error count " + to_string(count));
         }
 
-        const double rel = std::abs(a - b) / std::max(std::abs(a), std::abs(b));
-        if (!(rel <= 1e-4))
+        const std::vector<double> a = blackbody_a_samples(min, max, count);
+        const std::vector<double> blackbody = blackbody_samples(t, min, max, count);
+
+        if (a.size() != count || blackbody.size() != count)
         {
-                error(to_string(a) + " and " + to_string(b) + " are not equal, relative error " + to_string(rel));
+                error("Error sample count A " + to_string(a.size()) + " and blackbody " + to_string(blackbody.size()));
+        }
+
+        for (std::size_t i = 0; i < a.size(); ++i)
+        {
+                if (!(a[i] >= 0))
+                {
+                        error("A " + to_string(a[i]) + " is not positive and not zero");
+                }
+                if (!(blackbody[i] >= 0))
+                {
+                        error("Blackbody " + to_string(blackbody[i]) + " is not positive and not zero");
+                }
+
+                if (a[i] == blackbody[i])
+                {
+                        continue;
+                }
+
+                const double abs = std::abs(a[i] - blackbody[i]);
+                const double rel = abs / std::max(std::abs(a[i]), std::abs(blackbody[i]));
+                if (!(rel < 2.5e-5))
+                {
+                        throw Exception(
+                                "A " + to_string(a[i]) + " and blackbody " + to_string(blackbody[i])
+                                + " are not equal, relative error " + to_string(rel));
+                }
         }
 }
 
-void test()
+void check_equal_to_a(double t, int min, int max, unsigned count)
+{
+        try
+        {
+                compare_a(t, min, max, count);
+        }
+        catch (const Exception& e)
+        {
+                error(e.what());
+        }
+}
+
+void check_not_equal_to_a(double t, int min, int max, unsigned count)
+{
+        try
+        {
+                compare_a(t, min, max, count);
+        }
+        catch (const Exception&)
+        {
+                return;
+        }
+        error("Samples T " + to_string(t) + " are equal to A");
+}
+
+void test_blackbody_a()
+{
+        constexpr int MIN = 300;
+        constexpr int MAX = 1000;
+        constexpr int COUNT = 100;
+
+        check_equal_to_a(2855.5, MIN, MAX, COUNT);
+
+        check_not_equal_to_a(2500, MIN, MAX, COUNT);
+        check_not_equal_to_a(2850, MIN, MAX, COUNT);
+        check_not_equal_to_a(2860, MIN, MAX, COUNT);
+        check_not_equal_to_a(3000, MIN, MAX, COUNT);
+}
+
+void test_blackbody()
 {
         //h = 6.62607015`30*(10^-34);
         //kb = 1.380649`30*(10^-23);
@@ -58,8 +143,6 @@ void test()
         //Print[]
         //samples[10000]
 
-        LOG("Test blackbody samples");
-
         constexpr int from = 300;
         constexpr int to = 1000;
         constexpr int count = 7;
@@ -72,6 +155,21 @@ void test()
                         error("Sample count " + to_string(samples.size()) + " is not equal to " + to_string(count));
                 }
                 return samples;
+        };
+
+        const auto check = [](double a, double b)
+        {
+                if (a == b)
+                {
+                        return;
+                }
+
+                const double rel = std::abs(a - b) / std::max(std::abs(a), std::abs(b));
+                if (!(rel <= 1e-4))
+                {
+                        error(to_string(a) + " and " + to_string(b) + " are not equal, relative error "
+                              + to_string(rel));
+                }
         };
 
         {
@@ -107,6 +205,14 @@ void test()
                 check(s[5], 60896183490731.818712);
                 check(s[6], 43620954692038.648322);
         }
+}
+
+void test()
+{
+        LOG("Test blackbody samples");
+
+        test_blackbody();
+        test_blackbody_a();
 
         LOG("Test blackbody samples passed");
 }

@@ -28,42 +28,46 @@ namespace ns::color
 {
 namespace
 {
+// The Planck constant
+constexpr double h = 6.62607015e-34;
+
+// The Boltzmann constant
+constexpr double kb = 1.380649e-23;
+
+// The speed of light
+constexpr double c = 299792458;
+
 double plank(double l, double t)
 {
-        // The Planck constant
-        constexpr double h = 6.62607015e-34;
-        // The Boltzmann constant
-        constexpr double kb = 1.380649e-23;
-        // The speed of light
-        constexpr double c = 299792458;
-
         l *= 1e-9;
-
-        return (2 * h * c * c) / (power<5>(l) * (std::exp((h * c) / (l * kb * t)) - 1));
-}
+        return (2 * h * c * c) / (power<5>(l) * (std::exp((h * c / kb) / (l * t)) - 1));
 }
 
-std::vector<double> blackbody_samples(double t, int from, int to, int count)
+double plank_a(double l)
+{
+        l *= 1e-9;
+        return (2 * h * c * c) / (power<5>(l) * (std::exp((0.01435 / 2848) / l) - 1));
+}
+
+template <typename F>
+std::vector<double> create_samples(int from, int to, int count, const F& f)
 {
         if (!(from < to))
         {
                 error("The starting wavelength (" + to_string(from) + ") must be less than the ending wavelength ("
                       + to_string(to) + ")");
         }
+
         if (!(from > 0))
         {
                 error("Starting wavelength " + to_string(from) + " must be positive");
         }
+
         if (!(count >= BLACKBODY_SAMPLES_MIN_COUNT && count <= BLACKBODY_SAMPLES_MAX_COUNT))
         {
                 error("Sample count " + to_string(count) + " must be in the range ["
                       + to_string(BLACKBODY_SAMPLES_MIN_COUNT) + ", " + to_string(BLACKBODY_SAMPLES_MAX_COUNT) + "]");
         }
-
-        const auto f = [t](double l)
-        {
-                return plank(l, t);
-        };
 
         std::vector<double> samples;
         samples.reserve(count);
@@ -80,5 +84,31 @@ std::vector<double> blackbody_samples(double t, int from, int to, int count)
         }
 
         return samples;
+}
+}
+
+std::vector<double> blackbody_a_samples(int from, int to, int count)
+{
+        return create_samples(
+                from, to, count,
+                [](double l)
+                {
+                        return plank_a(l);
+                });
+}
+
+std::vector<double> blackbody_samples(double t, int from, int to, int count)
+{
+        if (!(t > 0))
+        {
+                error("Color temperature " + to_string(t) + " must be positive");
+        }
+
+        return create_samples(
+                from, to, count,
+                [t](double l)
+                {
+                        return plank(l, t);
+                });
 }
 }

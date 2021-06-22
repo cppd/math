@@ -24,5 +24,6 @@ namespace ns::color
 constexpr int BLACKBODY_SAMPLES_MIN_COUNT = 1;
 constexpr int BLACKBODY_SAMPLES_MAX_COUNT = 1'000;
 
+std::vector<double> blackbody_a_samples(int from, int to, int count);
 std::vector<double> blackbody_samples(double t, int from, int to, int count);
 }
