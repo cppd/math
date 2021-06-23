@@ -18,6 +18,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #pragma once
 
 #include <src/com/type/limit.h>
+#include <src/numerical/vec.h>
 
 #include <array>
 #include <cmath>
@@ -255,5 +256,35 @@ constexpr T linear_float_to_linear_luminance(T red, T green, T blue)
         static_assert(std::is_floating_point_v<T>);
 
         return T(0.2126) * red + T(0.7152) * green + T(0.0722) * blue;
+}
+
+//
+
+template <typename T>
+constexpr Vector<3, T> xyz_to_linear_srgb(T x, T y, T z)
+{
+        static_assert(std::is_floating_point_v<T>);
+
+        Vector<3, T> rgb;
+
+        rgb[0] = T(+3.2406255) * x + T(-1.5372080) * y + T(-0.4986286) * z;
+        rgb[1] = T(-0.9689307) * x + T(+1.8757561) * y + T(+0.0415175) * z;
+        rgb[2] = T(+0.0557101) * x + T(-0.2040211) * y + T(+1.0569959) * z;
+
+        return rgb;
+}
+
+template <typename T>
+constexpr Vector<3, T> linear_srgb_to_xyz(T r, T g, T b)
+{
+        static_assert(std::is_floating_point_v<T>);
+
+        Vector<3, T> xyz;
+
+        xyz[0] = T(0.4124) * r + T(0.3576) * g + T(0.1805) * b;
+        xyz[1] = T(0.2126) * r + T(0.7152) * g + T(0.0722) * b;
+        xyz[2] = T(0.0193) * r + T(0.1192) * g + T(0.9505) * b;
+
+        return xyz;
 }
 }

@@ -21,7 +21,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "conversion.h"
 #include "rgb8.h"
 #include "rgb_samples.h"
-#include "xyz_rgb.h"
 #include "xyz_samples.h"
 
 #include <src/com/error.h>
@@ -298,7 +297,7 @@ class SpectrumSamples final : public ColorSamples<SpectrumSamples<T, N>, N, T>
                 const T y = dot(spectrum, s.y);
                 const T z = dot(spectrum, s.z);
 
-                return xyz_to_linear_srgb<XYZ_VERSION>(x, y, z);
+                return xyz_to_linear_srgb(x, y, z);
         }
 
         static T spectrum_to_luminance(Vector<N, T> spectrum)

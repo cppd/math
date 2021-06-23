@@ -15,7 +15,7 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include "../xyz_rgb.h"
+#include "../conversion.h"
 
 namespace ns::color
 {
@@ -43,16 +43,16 @@ constexpr bool compare(const Vector<3, T>& a, const Vector<3, T>& b, T precision
 template <typename T>
 constexpr bool check_1(const Vector<3, T>& v, T precision)
 {
-        const Vector<3, T> rgb = xyz_to_linear_srgb<XYZ_31, T>(v[0], v[1], v[2]);
-        const Vector<3, T> xyz = linear_srgb_to_xyz<XYZ_31, T>(rgb[0], rgb[1], rgb[2]);
+        const Vector<3, T> rgb = xyz_to_linear_srgb<T>(v[0], v[1], v[2]);
+        const Vector<3, T> xyz = linear_srgb_to_xyz<T>(rgb[0], rgb[1], rgb[2]);
         return compare<T>(v, xyz, precision);
 }
 
 template <typename T>
 constexpr bool check_2(const Vector<3, T>& v, T precision)
 {
-        const Vector<3, T> xyz = linear_srgb_to_xyz<XYZ_31, T>(v[0], v[1], v[2]);
-        const Vector<3, T> rgb = xyz_to_linear_srgb<XYZ_31, T>(xyz[0], xyz[1], xyz[2]);
+        const Vector<3, T> xyz = linear_srgb_to_xyz<T>(v[0], v[1], v[2]);
+        const Vector<3, T> rgb = xyz_to_linear_srgb<T>(xyz[0], xyz[1], xyz[2]);
         return compare<T>(v, rgb, precision);
 }
 
@@ -92,8 +92,8 @@ constexpr bool test()
         constexpr T D65_X = 0.9505;
         constexpr T D65_Y = 1;
         constexpr T D65_Z = 1.089;
-        static_assert(compare<T>(xyz_to_linear_srgb<XYZ_31, T>(D65_X, D65_Y, D65_Z), {1, 1, 1}, 1e-6));
-        static_assert(compare<T>(linear_srgb_to_xyz<XYZ_31, T>(1, 1, 1), {D65_X, D65_Y, D65_Z}, 1e-16));
+        static_assert(compare<T>(xyz_to_linear_srgb<T>(D65_X, D65_Y, D65_Z), {1, 1, 1}, 1e-6));
+        static_assert(compare<T>(linear_srgb_to_xyz<T>(1, 1, 1), {D65_X, D65_Y, D65_Z}, 1e-16));
 
         static_assert(check<T>(1e-6));
 
