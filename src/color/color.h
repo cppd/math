@@ -20,8 +20,9 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "color_samples.h"
 #include "conversion.h"
 #include "rgb8.h"
-#include "rgb_samples.h"
-#include "xyz_samples.h"
+
+#include "samples/rgb_samples.h"
+#include "samples/xyz_samples.h"
 
 #include <src/com/error.h>
 #include <src/com/math.h>
