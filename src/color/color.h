@@ -139,7 +139,7 @@ class SpectrumSamples final : public ColorSamples<SpectrumSamples<T, N>, N, T>
                 Vector<N, T> blue;
         };
 
-        struct Samples
+        struct Functions
         {
                 Vector<N, T> x;
                 Vector<N, T> y;
@@ -148,7 +148,7 @@ class SpectrumSamples final : public ColorSamples<SpectrumSamples<T, N>, N, T>
                 Colors illumination;
         };
 
-        static Samples create_samples()
+        static Functions create_functions()
         {
                 const auto copy = []<typename SourceType>(Vector<N, T>* dst, const std::vector<SourceType>& src)
                 {
@@ -160,14 +160,14 @@ class SpectrumSamples final : public ColorSamples<SpectrumSamples<T, N>, N, T>
                         }
                 };
 
-                Samples samples;
+                Functions functions;
 
-                copy(&samples.x, cie_x_samples<XYZ_VERSION>(FROM, TO, N));
-                copy(&samples.y, cie_y_samples<XYZ_VERSION>(FROM, TO, N));
-                copy(&samples.z, cie_z_samples<XYZ_VERSION>(FROM, TO, N));
+                copy(&functions.x, cie_x_samples<XYZ_VERSION>(FROM, TO, N));
+                copy(&functions.y, cie_y_samples<XYZ_VERSION>(FROM, TO, N));
+                copy(&functions.z, cie_z_samples<XYZ_VERSION>(FROM, TO, N));
 
                 {
-                        Colors& c = samples.reflectance;
+                        Colors& c = functions.reflectance;
                         copy(&c.white, rgb_reflectance_white_samples(FROM, TO, N));
                         copy(&c.cyan, rgb_reflectance_cyan_samples(FROM, TO, N));
                         copy(&c.magenta, rgb_reflectance_magenta_samples(FROM, TO, N));
@@ -177,7 +177,7 @@ class SpectrumSamples final : public ColorSamples<SpectrumSamples<T, N>, N, T>
                         copy(&c.blue, rgb_reflectance_blue_samples(FROM, TO, N));
                 }
                 {
-                        Colors& c = samples.illumination;
+                        Colors& c = functions.illumination;
                         copy(&c.white, rgb_illumination_d65_white_samples(FROM, TO, N));
                         copy(&c.cyan, rgb_illumination_d65_cyan_samples(FROM, TO, N));
                         copy(&c.magenta, rgb_illumination_d65_magenta_samples(FROM, TO, N));
@@ -187,13 +187,13 @@ class SpectrumSamples final : public ColorSamples<SpectrumSamples<T, N>, N, T>
                         copy(&c.blue, rgb_illumination_d65_blue_samples(FROM, TO, N));
                 }
 
-                return samples;
+                return functions;
         }
 
-        static const Samples& samples()
+        static const Functions& functions()
         {
-                static const Samples samples = create_samples();
-                return samples;
+                static const Functions functions = create_functions();
+                return functions;
         }
 
         //
@@ -276,38 +276,38 @@ class SpectrumSamples final : public ColorSamples<SpectrumSamples<T, N>, N, T>
 
         static Vector<N, T> rgb_to_spectrum(T red, T green, T blue, Type type)
         {
-                const Samples& s = samples();
+                const Functions& f = functions();
 
                 switch (type)
                 {
                 case Type::Reflectance:
-                        return rgb_to_spectrum(red, green, blue, s.reflectance);
+                        return rgb_to_spectrum(red, green, blue, f.reflectance);
                 case Type::Illumination:
-                        return rgb_to_spectrum(red, green, blue, s.illumination);
+                        return rgb_to_spectrum(red, green, blue, f.illumination);
                 }
                 error_fatal("Unknown color type " + std::to_string(static_cast<long long>(type)));
         }
 
         static Vector<3, T> spectrum_to_rgb(Vector<N, T> spectrum)
         {
-                const Samples& s = samples();
+                const Functions& f = functions();
 
                 clamp_negative(&spectrum);
 
-                const T x = dot(spectrum, s.x);
-                const T y = dot(spectrum, s.y);
-                const T z = dot(spectrum, s.z);
+                const T x = dot(spectrum, f.x);
+                const T y = dot(spectrum, f.y);
+                const T z = dot(spectrum, f.z);
 
                 return xyz_to_linear_srgb(x, y, z);
         }
 
         static T spectrum_to_luminance(Vector<N, T> spectrum)
         {
-                const Samples& s = samples();
+                const Functions& f = functions();
 
                 clamp_negative(&spectrum);
 
-                return dot(spectrum, s.y);
+                return dot(spectrum, f.y);
         }
 
 public:
