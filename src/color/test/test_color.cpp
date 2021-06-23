@@ -126,7 +126,7 @@ void test_color_white_light(
         std::uniform_real_distribution<float> urd(0, 1);
         const Vector<3, float> rgb(urd(engine), urd(engine), urd(engine));
 
-        const ColorType white_light = ColorType(1, 1, 1, Type::Illumination);
+        const ColorType white_light = ColorType::illuminant(1, 1, 1);
         const ColorType color(rgb[0], rgb[1], rgb[2]);
 
         const ColorType shaded = color * white_light;
@@ -149,8 +149,8 @@ void test_color_white_color(
         std::uniform_real_distribution<float> urd(0, 1);
         const Vector<3, float> rgb(urd(engine), urd(engine), urd(engine));
 
-        const ColorType white_color = ColorType(1, 1, 1);
-        const ColorType light(rgb[0], rgb[1], rgb[2], Type::Illumination);
+        const ColorType white_color(1, 1, 1);
+        const ColorType light = ColorType::illuminant(rgb[0], rgb[1], rgb[2]);
 
         const ColorType shaded = white_color * light;
 
@@ -168,17 +168,6 @@ void test_color_constructors(const std::string_view& test_name, std::mt19937_64&
         std::uniform_real_distribution<float> urd(0, 1);
         const Vector<3, float> rgb(urd(engine), urd(engine), urd(engine));
 
-        {
-                const ColorType c1(rgb[0], rgb[1], rgb[2]);
-                const ColorType c2(rgb[0], rgb[1], rgb[2], Type::Reflectance);
-                if (!(c1 == c2))
-                {
-                        error(std::string(test_name)
-                              + ": error default color type parameter, color with default parameter " + to_string(c1)
-                              + ", color with reflectance parameter " + to_string(c2));
-                }
-        }
-
         const std::uint8_t r = linear_float_to_srgb_uint8(rgb[0]);
         const std::uint8_t g = linear_float_to_srgb_uint8(rgb[1]);
         const std::uint8_t b = linear_float_to_srgb_uint8(rgb[2]);
@@ -192,8 +181,8 @@ void test_color_constructors(const std::string_view& test_name, std::mt19937_64&
                 }
         }
         {
-                const ColorType c1(rgb[0], rgb[1], rgb[2], Type::Illumination);
-                const ColorType c2(RGB8(r, g, b), Type::Illumination);
+                const ColorType c1 = ColorType::illuminant(rgb[0], rgb[1], rgb[2]);
+                const ColorType c2 = ColorType::illuminant(RGB8(r, g, b));
                 if (!(c1.equal_to_absolute(c2, max_error)))
                 {
                         error(std::string(test_name) + " error color constructors illumination: RGB " + to_string(c1)
@@ -207,17 +196,6 @@ void test_color_constructors(const std::string_view& test_name, std::mt19937_64&
                 const float g_float = rgb[1];
                 const float b_float = rgb[2];
                 {
-                        const ColorType c1 = RGB<T>(r_float, g_float, b_float).template to_color<ColorType>();
-                        const ColorType c2 =
-                                RGB<T>(r_float, g_float, b_float).template to_color<ColorType>(Type::Reflectance);
-                        if (!(c1 == c2))
-                        {
-                                error(std::string(test_name)
-                                      + ": error default to_color type parameter, to_color with default parameter "
-                                      + to_string(c1) + ", to_color with reflectance parameter " + to_string(c2));
-                        }
-                }
-                {
                         const ColorType c1(r_float, g_float, b_float);
                         const ColorType c2 = RGB<T>(r_float, g_float, b_float).template to_color<ColorType>();
                         if (!(c1 == c2))
@@ -227,9 +205,8 @@ void test_color_constructors(const std::string_view& test_name, std::mt19937_64&
                         }
                 }
                 {
-                        const ColorType c1(r_float, g_float, b_float, Type::Illumination);
-                        const ColorType c2 =
-                                RGB<T>(r_float, g_float, b_float).template to_color<ColorType>(Type::Illumination);
+                        const ColorType c1 = ColorType::illuminant(r_float, g_float, b_float);
+                        const ColorType c2 = RGB<T>(r_float, g_float, b_float).template to_illuminant<ColorType>();
                         if (!(c1 == c2))
                         {
                                 error(std::string(test_name) + ": error to_color illumination: RGB " + to_string(c1)

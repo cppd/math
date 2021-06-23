@@ -55,7 +55,7 @@ std::unique_ptr<const Scene<N, T, Color>> create_cornell_box_scene(
         constexpr T ALPHA = 1;
         constexpr T METALNESS = 0;
         constexpr T ROUGHNESS = 0.2;
-        const Color BACKGROUND_LIGHT(0.1, 0.1, 0.1, color::Type::Illumination);
+        const Color BACKGROUND_LIGHT = Color::illuminant(0.1, 0.1, 0.1);
 
         std::vector<std::unique_ptr<const Shape<N, T, Color>>> shapes;
         std::vector<std::unique_ptr<const LightSource<N, T, Color>>> light_sources;
@@ -146,8 +146,8 @@ std::unique_ptr<const Scene<N, T, Color>> create_cornell_box_scene(
                 constexpr T WIDTH = 90;
 
                 light_sources.push_back(std::make_unique<const SpotLight<N, T, Color>>(
-                        lamp_org, lamp_direction, Color(1, 1, 1, color::Type::Illumination), UNIT_INTENSITY_DISTANCE,
-                        FALLOFF_START, WIDTH));
+                        lamp_org, lamp_direction, Color::illuminant(1, 1, 1), UNIT_INTENSITY_DISTANCE, FALLOFF_START,
+                        WIDTH));
         }
 
         std::unique_ptr<Projector<N, T>> projector;

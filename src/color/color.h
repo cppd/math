@@ -31,12 +31,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 namespace ns::color
 {
-enum class Type
-{
-        Reflectance,
-        Illumination
-};
-
 template <typename T>
 class RGB final : public Samples<RGB<T>, 3, T>
 {
@@ -66,17 +60,23 @@ public:
         {
         }
 
-        constexpr RGB(
-                std::type_identity_t<T> red,
-                std::type_identity_t<T> green,
-                std::type_identity_t<T> blue,
-                Type = Type::Reflectance)
+        constexpr RGB(std::type_identity_t<T> red, std::type_identity_t<T> green, std::type_identity_t<T> blue)
                 : Base(make_rgb(red, green, blue))
         {
         }
 
-        constexpr RGB(const RGB8& c, Type = Type::Reflectance) : Base(c.linear_red(), c.linear_green(), c.linear_blue())
+        constexpr RGB(const RGB8& c) : Base(c.linear_red(), c.linear_green(), c.linear_blue())
         {
+        }
+
+        static RGB illuminant(std::type_identity_t<T> red, std::type_identity_t<T> green, std::type_identity_t<T> blue)
+        {
+                return RGB(red, green, blue);
+        }
+
+        static RGB illuminant(const RGB8& c)
+        {
+                return RGB(c);
         }
 
         [[nodiscard]] constexpr Vector<3, float> rgb32() const
@@ -107,9 +107,15 @@ public:
         }
 
         template <typename Color>
-        Color to_color(Type type = Type::Reflectance) const
+        Color to_color() const
         {
-                return Color(Base::data()[0], Base::data()[1], Base::data()[2], type);
+                return Color(Base::data()[0], Base::data()[1], Base::data()[2]);
+        }
+
+        template <typename Color>
+        Color to_illuminant() const
+        {
+                return Color::illuminant(Base::data()[0], Base::data()[1], Base::data()[2]);
         }
 };
 
@@ -274,20 +280,6 @@ class SpectrumSamples final : public Samples<SpectrumSamples<T, N>, N, T>
                 return spectrum;
         }
 
-        static Vector<N, T> rgb_to_spectrum(T red, T green, T blue, Type type)
-        {
-                const Functions& f = functions();
-
-                switch (type)
-                {
-                case Type::Reflectance:
-                        return rgb_to_spectrum(red, green, blue, f.reflectance);
-                case Type::Illumination:
-                        return rgb_to_spectrum(red, green, blue, f.illumination);
-                }
-                error_fatal("Unknown color type " + std::to_string(static_cast<long long>(type)));
-        }
-
         static Vector<3, T> spectrum_to_rgb(Vector<N, T> spectrum)
         {
                 const Functions& f = functions();
@@ -310,6 +302,10 @@ class SpectrumSamples final : public Samples<SpectrumSamples<T, N>, N, T>
                 return dot(spectrum, f.y);
         }
 
+        SpectrumSamples(Vector<N, T>&& samples) : Base(std::move(samples))
+        {
+        }
+
 public:
         using DataType = T;
 
@@ -321,18 +317,26 @@ public:
         {
         }
 
-        SpectrumSamples(
-                std::type_identity_t<T> red,
-                std::type_identity_t<T> green,
-                std::type_identity_t<T> blue,
-                Type type = Type::Reflectance)
-                : Base(rgb_to_spectrum(red, green, blue, type))
+        SpectrumSamples(std::type_identity_t<T> red, std::type_identity_t<T> green, std::type_identity_t<T> blue)
+                : SpectrumSamples(rgb_to_spectrum(red, green, blue, functions().reflectance))
         {
         }
 
-        SpectrumSamples(const RGB8& c, Type type = Type::Reflectance)
-                : SpectrumSamples(c.linear_red(), c.linear_green(), c.linear_blue(), type)
+        SpectrumSamples(const RGB8& c) : SpectrumSamples(c.linear_red(), c.linear_green(), c.linear_blue())
         {
+        }
+
+        static SpectrumSamples illuminant(
+                std::type_identity_t<T> red,
+                std::type_identity_t<T> green,
+                std::type_identity_t<T> blue)
+        {
+                return SpectrumSamples(rgb_to_spectrum(red, green, blue, functions().illumination));
+        }
+
+        static SpectrumSamples illuminant(const RGB8& c)
+        {
+                return illuminant(c.linear_red(), c.linear_green(), c.linear_blue());
         }
 
         [[nodiscard]] Vector<3, float> rgb32() const

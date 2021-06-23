@@ -60,13 +60,13 @@ std::unique_ptr<const painter::Projector<3, T>> create_projector(
 template <typename Color>
 Color light_color(const double intensity)
 {
-        return Color(intensity, intensity, intensity, color::Type::Illumination);
+        return Color::illuminant(intensity, intensity, intensity);
 }
 
 template <typename Color>
 Color background_light_color(const color::Color& background_light)
 {
-        return background_light.to_color<Color>(color::Type::Illumination);
+        return background_light.to_illuminant<Color>();
 }
 
 template <typename T, typename Color>
