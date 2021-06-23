@@ -17,9 +17,9 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
-#include "color_samples.h"
 #include "conversion.h"
 #include "rgb8.h"
+#include "samples.h"
 
 #include "samples/rgb_samples.h"
 #include "samples/xyz_samples.h"
@@ -38,9 +38,9 @@ enum class Type
 };
 
 template <typename T>
-class RGB final : public ColorSamples<RGB<T>, 3, T>
+class RGB final : public Samples<RGB<T>, 3, T>
 {
-        using Base = ColorSamples<RGB<T>, 3, T>;
+        using Base = Samples<RGB<T>, 3, T>;
 
         static constexpr Vector<3, T> make_rgb(T red, T green, T blue)
         {
@@ -114,7 +114,7 @@ public:
 };
 
 template <typename T, std::size_t N>
-class SpectrumSamples final : public ColorSamples<SpectrumSamples<T, N>, N, T>
+class SpectrumSamples final : public Samples<SpectrumSamples<T, N>, N, T>
 {
         static constexpr XYZ XYZ_VERSION = XYZ_31;
         static constexpr int FROM = 380;
@@ -126,7 +126,7 @@ class SpectrumSamples final : public ColorSamples<SpectrumSamples<T, N>, N, T>
         static_assert(TO <= RGB_SAMPLES_MAX_WAVELENGTH);
         static_assert(N > 3);
 
-        using Base = ColorSamples<SpectrumSamples<T, N>, N, T>;
+        using Base = Samples<SpectrumSamples<T, N>, N, T>;
 
         struct Colors
         {

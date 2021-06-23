@@ -27,7 +27,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 namespace ns::color
 {
 template <typename Derived, std::size_t N, typename T>
-class ColorSamples
+class Samples
 {
         static_assert(std::is_floating_point_v<T>);
 
@@ -35,16 +35,16 @@ class ColorSamples
 
 protected:
         template <typename... Args>
-        constexpr explicit ColorSamples(Args... args) : m_data(args...)
+        constexpr explicit Samples(Args... args) : m_data(args...)
         {
-                static_assert(std::is_base_of_v<ColorSamples, Derived>);
+                static_assert(std::is_base_of_v<Samples, Derived>);
                 static_assert(std::is_final_v<Derived>);
-                static_assert(sizeof(ColorSamples) == sizeof(Derived));
+                static_assert(sizeof(Samples) == sizeof(Derived));
                 static_assert(std::is_trivially_copyable_v<Derived>);
                 static_assert(std::is_trivially_destructible_v<Derived>);
         }
 
-        ~ColorSamples() = default;
+        ~Samples() = default;
 
         constexpr const Vector<N, T>& data() const
         {
