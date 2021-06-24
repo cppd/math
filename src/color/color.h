@@ -309,6 +309,10 @@ class SpectrumSamples final : public Samples<SpectrumSamples<T, N>, N, T>
 public:
         using DataType = T;
 
+        static constexpr int WAVELENGTH_MIN = FROM;
+        static constexpr int WAVELENGTH_MAX = TO;
+        static constexpr std::size_t SAMPLE_COUNT = N;
+
         constexpr SpectrumSamples()
         {
         }
@@ -324,6 +328,12 @@ public:
 
         SpectrumSamples(const RGB8& c) : SpectrumSamples(c.linear_red(), c.linear_green(), c.linear_blue())
         {
+        }
+
+        static SpectrumSamples create_spectrum(Vector<N, T>&& samples)
+        {
+                clamp_negative(&samples);
+                return SpectrumSamples(std::move(samples));
         }
 
         static SpectrumSamples illuminant(
@@ -361,6 +371,13 @@ public:
         [[nodiscard]] friend std::string to_string(const SpectrumSamples& c)
         {
                 return c.to_string("spectrum");
+        }
+
+        template <typename Color>
+        [[nodiscard]] std::enable_if_t<std::is_same_v<Color, RGB<typename Color::DataType>>, Color> to_rgb() const
+        {
+                Vector<3, T> rgb = spectrum_to_rgb(Base::data());
+                return Color(rgb[0], rgb[1], rgb[2]);
         }
 };
 
