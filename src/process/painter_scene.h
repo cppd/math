@@ -18,6 +18,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #pragma once
 
 #include <src/color/color.h>
+#include <src/color/illuminants.h>
 #include <src/numerical/vec.h>
 #include <src/painter/lights/distant_light.h>
 #include <src/painter/objects.h>
@@ -60,7 +61,7 @@ std::unique_ptr<const painter::Projector<3, T>> create_projector(
 template <typename Color>
 Color light_color(const double intensity)
 {
-        return Color::illuminant(intensity, intensity, intensity);
+        return intensity * color::daylight_d65<Color>();
 }
 
 template <typename Color>
