@@ -28,8 +28,8 @@ namespace ns::color
 {
 namespace
 {
-constexpr int SAMPLES_MIN_COUNT = 1;
-constexpr int SAMPLES_MAX_COUNT = 1'000'000;
+constexpr int MIN_SAMPLE_COUNT = 1;
+constexpr int MAX_SAMPLE_COUNT = 1'000'000;
 
 // The Planck constant
 constexpr double h = 6.62607015e-34;
@@ -66,10 +66,10 @@ std::vector<double> create_samples(int from, int to, int count, const F& f)
                 error("Starting wavelength " + to_string(from) + " must be positive");
         }
 
-        if (!(count >= SAMPLES_MIN_COUNT && count <= SAMPLES_MAX_COUNT))
+        if (!(count >= MIN_SAMPLE_COUNT && count <= MAX_SAMPLE_COUNT))
         {
-                error("Sample count " + to_string(count) + " must be in the range [" + to_string(SAMPLES_MIN_COUNT)
-                      + ", " + to_string(SAMPLES_MAX_COUNT) + "]");
+                error("Sample count " + to_string(count) + " must be in the range [" + to_string(MIN_SAMPLE_COUNT)
+                      + ", " + to_string(MAX_SAMPLE_COUNT) + "]");
         }
 
         std::vector<double> samples;
