@@ -54,9 +54,6 @@ void check_sum(const std::vector<T>& samples, double min, double max)
 template <XYZ xyz>
 void test()
 {
-        static_assert(XYZ_SAMPLES_MIN_COUNT == 1);
-        static_assert(XYZ_SAMPLES_MAX_COUNT >= 100);
-
         constexpr double MIN = XYZ_SAMPLES_MIN_WAVELENGTH;
         constexpr double MAX = XYZ_SAMPLES_MAX_WAVELENGTH;
 
@@ -71,9 +68,9 @@ void test()
         check_sum(cie_y_samples<xyz>(400, 700, 60), 0.99, 0.9999);
         check_sum(cie_z_samples<xyz>(400, 700, 60), 0.99, 1.01);
 
-        check_sum(cie_x_samples<xyz>(400, 700, XYZ_SAMPLES_MAX_COUNT), 0.99, 1.01);
-        check_sum(cie_y_samples<xyz>(400, 700, XYZ_SAMPLES_MAX_COUNT), 0.99, 0.9999);
-        check_sum(cie_z_samples<xyz>(400, 700, XYZ_SAMPLES_MAX_COUNT), 0.99, 1.01);
+        check_sum(cie_x_samples<xyz>(400, 700, 1000), 0.99, 1.01);
+        check_sum(cie_y_samples<xyz>(400, 700, 1000), 0.99, 0.9999);
+        check_sum(cie_z_samples<xyz>(400, 700, 1000), 0.99, 1.01);
 
         check_sum(cie_x_samples<xyz>(MIN, MAX, 1), 0.99, 1.01);
         check_sum(cie_y_samples<xyz>(MIN, MAX, 1), 1 - 1e-7, 1 + 1e-7);
@@ -83,9 +80,9 @@ void test()
         check_sum(cie_y_samples<xyz>(MIN, MAX, 100), 1 - 1e-7, 1 + 1e-7);
         check_sum(cie_z_samples<xyz>(MIN, MAX, 100), 0.99, 1.01);
 
-        check_sum(cie_x_samples<xyz>(MIN, MAX, XYZ_SAMPLES_MAX_COUNT), 0.99, 1.01);
-        check_sum(cie_y_samples<xyz>(MIN, MAX, XYZ_SAMPLES_MAX_COUNT), 1 - 1e-7, 1 + 1e-7);
-        check_sum(cie_z_samples<xyz>(MIN, MAX, XYZ_SAMPLES_MAX_COUNT), 0.99, 1.01);
+        check_sum(cie_x_samples<xyz>(MIN, MAX, 1000), 0.99, 1.01);
+        check_sum(cie_y_samples<xyz>(MIN, MAX, 1000), 1 - 1e-7, 1 + 1e-7);
+        check_sum(cie_z_samples<xyz>(MIN, MAX, 1000), 0.99, 1.01);
 }
 
 void test_samples()

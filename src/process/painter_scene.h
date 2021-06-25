@@ -61,7 +61,7 @@ std::unique_ptr<const painter::Projector<3, T>> create_projector(
 template <typename Color>
 Color light_color(const double intensity)
 {
-        return intensity * color::daylight_d65<Color>();
+        return (intensity * color::daylight_d65()).to_color<Color>();
 }
 
 template <typename Color>

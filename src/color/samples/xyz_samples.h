@@ -23,9 +23,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 namespace ns::color
 {
-constexpr int XYZ_SAMPLES_MIN_COUNT = 1;
-constexpr int XYZ_SAMPLES_MAX_COUNT = 1'000;
-
 constexpr int XYZ_SAMPLES_MIN_WAVELENGTH = 380;
 constexpr int XYZ_SAMPLES_MAX_WAVELENGTH = 780;
 

@@ -28,6 +28,9 @@ namespace ns::color
 {
 namespace
 {
+constexpr int SAMPLES_MIN_COUNT = 1;
+constexpr int SAMPLES_MAX_COUNT = 1'000'000;
+
 using ComputeType = double;
 
 enum class F
@@ -72,10 +75,10 @@ std::vector<double> create_samples(const ComputeType from, const ComputeType to,
                 error("Starting and ending wavelengths [" + to_string(from) + ", " + to_string(to)
                       + "] must be in the range [" + to_string(MIN) + ", " + to_string(MAX) + "]");
         }
-        if (!(count >= XYZ_SAMPLES_MIN_COUNT && count <= XYZ_SAMPLES_MAX_COUNT))
+        if (!(count >= SAMPLES_MIN_COUNT && count <= SAMPLES_MAX_COUNT))
         {
-                error("Sample count " + to_string(count) + " must be in the range [" + to_string(XYZ_SAMPLES_MIN_COUNT)
-                      + ", " + to_string(XYZ_SAMPLES_MAX_COUNT) + "]");
+                error("Sample count " + to_string(count) + " must be in the range [" + to_string(SAMPLES_MIN_COUNT)
+                      + ", " + to_string(SAMPLES_MAX_COUNT) + "]");
         }
 
         static const ComputeType y_integral = cie_y_integral<xyz, ComputeType>(MIN, MAX);

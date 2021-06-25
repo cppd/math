@@ -69,12 +69,12 @@ public:
         {
         }
 
-        static RGB illuminant(std::type_identity_t<T> red, std::type_identity_t<T> green, std::type_identity_t<T> blue)
+        [[nodiscard]] static RGB illuminant(T red, T green, T blue)
         {
                 return RGB(red, green, blue);
         }
 
-        static RGB illuminant(const RGB8& c)
+        [[nodiscard]] static RGB illuminant(const RGB8& c)
         {
                 return RGB(c);
         }
@@ -107,13 +107,13 @@ public:
         }
 
         template <typename Color>
-        Color to_color() const
+        [[nodiscard]] Color to_color() const
         {
                 return Color(Base::data()[0], Base::data()[1], Base::data()[2]);
         }
 
         template <typename Color>
-        Color to_illuminant() const
+        [[nodiscard]] Color to_illuminant() const
         {
                 return Color::illuminant(Base::data()[0], Base::data()[1], Base::data()[2]);
         }
@@ -204,12 +204,18 @@ class SpectrumSamples final : public Samples<SpectrumSamples<T, N>, N, T>
 
         //
 
-        static void clamp_negative(Vector<N, T>* v)
+        static constexpr void clamp_negative(Vector<N, T>* v)
         {
                 for (std::size_t i = 0; i < N; ++i)
                 {
                         (*v)[i] = std::max(T(0), (*v)[i]);
                 }
+        }
+
+        static constexpr Vector<N, T> clamp_negative(Vector<N, T> v)
+        {
+                clamp_negative(&v);
+                return v;
         }
 
         // Brian Smits.
@@ -302,10 +308,6 @@ class SpectrumSamples final : public Samples<SpectrumSamples<T, N>, N, T>
                 return dot(spectrum, f.y);
         }
 
-        SpectrumSamples(Vector<N, T>&& samples) : Base(std::move(samples))
-        {
-        }
-
 public:
         using DataType = T;
 
@@ -321,8 +323,13 @@ public:
         {
         }
 
+        constexpr explicit SpectrumSamples(const Vector<std::size_t(N), std::type_identity_t<T>>& samples)
+                : Base(clamp_negative(samples))
+        {
+        }
+
         SpectrumSamples(std::type_identity_t<T> red, std::type_identity_t<T> green, std::type_identity_t<T> blue)
-                : SpectrumSamples(rgb_to_spectrum(red, green, blue, functions().reflectance))
+                : Base(rgb_to_spectrum(red, green, blue, functions().reflectance))
         {
         }
 
@@ -330,21 +337,12 @@ public:
         {
         }
 
-        static SpectrumSamples create_spectrum(Vector<N, T>&& samples)
-        {
-                clamp_negative(&samples);
-                return SpectrumSamples(std::move(samples));
-        }
-
-        static SpectrumSamples illuminant(
-                std::type_identity_t<T> red,
-                std::type_identity_t<T> green,
-                std::type_identity_t<T> blue)
+        [[nodiscard]] static SpectrumSamples illuminant(T red, T green, T blue)
         {
                 return SpectrumSamples(rgb_to_spectrum(red, green, blue, functions().illumination));
         }
 
-        static SpectrumSamples illuminant(const RGB8& c)
+        [[nodiscard]] static SpectrumSamples illuminant(const RGB8& c)
         {
                 return illuminant(c.linear_red(), c.linear_green(), c.linear_blue());
         }
@@ -374,10 +372,16 @@ public:
         }
 
         template <typename Color>
-        [[nodiscard]] std::enable_if_t<std::is_same_v<Color, RGB<typename Color::DataType>>, Color> to_rgb() const
+        [[nodiscard]] std::enable_if_t<std::is_same_v<Color, RGB<typename Color::DataType>>, Color> to_color() const
         {
                 Vector<3, T> rgb = spectrum_to_rgb(Base::data());
                 return Color(rgb[0], rgb[1], rgb[2]);
+        }
+
+        template <typename Color>
+        [[nodiscard]] std::enable_if_t<std::is_same_v<Color, SpectrumSamples>, const Color&> to_color() const
+        {
+                return *this;
         }
 };
 
