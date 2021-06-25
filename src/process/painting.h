@@ -30,6 +30,6 @@ namespace ns::process
 std::function<void(ProgressRatioList*)> action_painter(
         const std::vector<storage::MeshObjectConst>& objects,
         const view::info::Camera& camera,
-        const color::Color& background_light,
-        double lighting_intensity);
+        double lighting_intensity,
+        const color::Color& background_color);
 }

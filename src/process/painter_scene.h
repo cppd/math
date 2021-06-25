@@ -17,8 +17,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
-#include <src/color/color.h>
-#include <src/color/illuminants.h>
 #include <src/numerical/vec.h>
 #include <src/painter/lights/distant_light.h>
 #include <src/painter/objects.h>
@@ -58,18 +56,6 @@ std::unique_ptr<const painter::Projector<3, T>> create_projector(
                 camera_position, camera_direction, screen_axes, units_per_pixel, screen_size);
 }
 
-template <typename Color>
-Color light_color(const double intensity)
-{
-        return (intensity * color::daylight_d65()).to_color<Color>();
-}
-
-template <typename Color>
-Color background_light_color(const color::Color& background_light)
-{
-        return background_light.to_illuminant<Color>();
-}
-
 template <typename T, typename Color>
 std::unique_ptr<const painter::LightSource<3, T, Color>> create_light_source(
         const Vector<3, T>& direction,
@@ -90,8 +76,8 @@ std::unique_ptr<const painter::Scene<3, T, Color>> create_painter_scene(
         const int width,
         const int height,
         const bool cornell_box,
-        const color::Color& background_light,
-        const double lighting_intensity)
+        const Color& light,
+        const Color& background_light)
 {
         if (cornell_box)
         {
@@ -105,15 +91,13 @@ std::unique_ptr<const painter::Scene<3, T, Color>> create_painter_scene(
                 shape->bounding_box(), camera_up, camera_direction, view_center, view_width, width, height);
 
         std::vector<std::unique_ptr<const painter::LightSource<3, T, Color>>> light_sources;
-        light_sources.push_back(
-                impl::create_light_source(light_direction, impl::light_color<Color>(lighting_intensity)));
+        light_sources.push_back(impl::create_light_source(light_direction, light));
 
         std::vector<std::unique_ptr<const painter::Shape<3, T, Color>>> shapes;
         shapes.push_back(std::move(shape));
 
         return painter::create_storage_scene(
-                impl::background_light_color<Color>(background_light), std::move(projector), std::move(light_sources),
-                std::move(shapes));
+                background_light, std::move(projector), std::move(light_sources), std::move(shapes));
 }
 
 template <std::size_t N, typename T, typename Color>
@@ -122,8 +106,8 @@ std::unique_ptr<const painter::Scene<N, T, Color>> create_painter_scene(
         const int min_screen_size,
         const int max_screen_size,
         const bool cornell_box,
-        const color::Color& background_light,
-        const double lighting_intensity)
+        const Color& light,
+        const Color& background_light)
 {
         static_assert(N >= 4);
 
@@ -135,7 +119,6 @@ std::unique_ptr<const painter::Scene<N, T, Color>> create_painter_scene(
         namespace impl = painter_scene_implementation;
 
         return painter::create_simple_scene(
-                impl::light_color<Color>(lighting_intensity), impl::background_light_color<Color>(background_light),
-                min_screen_size, max_screen_size, std::move(shape));
+                light, background_light, min_screen_size, max_screen_size, std::move(shape));
 }
 }
