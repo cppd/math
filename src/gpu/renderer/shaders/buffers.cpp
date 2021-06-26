@@ -166,10 +166,10 @@ void ShaderBuffers::set_viewport(const vec2d& center, const vec2d& factor) const
         map.write(sizeof(viewport_center), viewport_factor);
 }
 
-void ShaderBuffers::set_wireframe_color(const vec3f& color) const
+void ShaderBuffers::set_lighting_color(const vec3f& color) const
 {
-        decltype(Drawing().wireframe_color) c = color;
-        copy_to_drawing_buffer(offsetof(Drawing, wireframe_color), c);
+        decltype(Drawing().lighting_color) v = color;
+        copy_to_drawing_buffer(offsetof(Drawing, lighting_color), v);
 }
 
 void ShaderBuffers::set_background_color(const vec3f& color) const
@@ -178,16 +178,16 @@ void ShaderBuffers::set_background_color(const vec3f& color) const
         copy_to_drawing_buffer(offsetof(Drawing, background_color), c);
 }
 
+void ShaderBuffers::set_wireframe_color(const vec3f& color) const
+{
+        decltype(Drawing().wireframe_color) c = color;
+        copy_to_drawing_buffer(offsetof(Drawing, wireframe_color), c);
+}
+
 void ShaderBuffers::set_clip_plane_color(const vec3f& color) const
 {
         decltype(Drawing().clip_plane_color) c = color;
         copy_to_drawing_buffer(offsetof(Drawing, clip_plane_color), c);
-}
-
-void ShaderBuffers::set_normal_length(float length) const
-{
-        decltype(Drawing().normal_length) l = length;
-        copy_to_drawing_buffer(offsetof(Drawing, normal_length), l);
 }
 
 void ShaderBuffers::set_normal_color_positive(const vec3f& color) const
@@ -202,10 +202,10 @@ void ShaderBuffers::set_normal_color_negative(const vec3f& color) const
         copy_to_drawing_buffer(offsetof(Drawing, normal_color_negative), c);
 }
 
-void ShaderBuffers::set_lighting_color(const vec3f& color) const
+void ShaderBuffers::set_normal_length(float length) const
 {
-        decltype(Drawing().lighting_color) v = color;
-        copy_to_drawing_buffer(offsetof(Drawing, lighting_color), v);
+        decltype(Drawing().normal_length) l = length;
+        copy_to_drawing_buffer(offsetof(Drawing, normal_length), l);
 }
 
 void ShaderBuffers::set_show_materials(bool show) const

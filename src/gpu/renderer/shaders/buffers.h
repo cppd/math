@@ -41,12 +41,12 @@ class ShaderBuffers
 
         struct Drawing
         {
-                alignas(sizeof(vec4f)) vec3f wireframe_color;
+                alignas(sizeof(vec4f)) vec3f lighting_color;
                 alignas(sizeof(vec4f)) vec3f background_color;
-                float normal_length;
+                alignas(sizeof(vec4f)) vec3f wireframe_color;
                 alignas(sizeof(vec4f)) vec3f normal_color_positive;
                 alignas(sizeof(vec4f)) vec3f normal_color_negative;
-                alignas(sizeof(vec4f)) vec3f lighting_color;
+                float normal_length;
                 uint32_t show_materials;
                 uint32_t show_wireframe;
                 uint32_t show_shadow;
@@ -87,15 +87,15 @@ public:
 
         void set_transparency_max_node_count(uint32_t count) const;
 
-        void set_clip_plane(const vec4d& equation, bool enabled) const;
-        void set_viewport(const vec2d& center, const vec2d& factor) const;
-        void set_wireframe_color(const vec3f& color) const;
+        void set_lighting_color(const vec3f& color) const;
         void set_background_color(const vec3f& color) const;
+        void set_wireframe_color(const vec3f& color) const;
+        void set_clip_plane(const vec4d& equation, bool enabled) const;
         void set_clip_plane_color(const vec3f& color) const;
-        void set_normal_length(float length) const;
+        void set_viewport(const vec2d& center, const vec2d& factor) const;
         void set_normal_color_positive(const vec3f& color) const;
         void set_normal_color_negative(const vec3f& color) const;
-        void set_lighting_color(const vec3f& color) const;
+        void set_normal_length(float length) const;
         void set_show_materials(bool show) const;
         void set_direction_to_light(const vec3f& direction) const;
         void set_direction_to_camera(const vec3f& direction) const;

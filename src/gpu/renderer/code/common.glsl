@@ -31,12 +31,12 @@ matrices;
 
 layout(set = 0, binding = 1, std140) uniform Drawing
 {
-        vec3 wireframe_color;
+        vec3 lighting_color;
         vec3 background_color;
-        float normal_length;
+        vec3 wireframe_color;
         vec3 normal_color_positive;
         vec3 normal_color_negative;
-        vec3 lighting_color;
+        float normal_length;
         bool show_materials;
         bool show_wireframe;
         bool show_shadow;
