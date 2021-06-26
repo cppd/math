@@ -43,6 +43,19 @@ constexpr QRgb DFT_COLOR = qRgb(150, 200, 250);
 constexpr double DEFAULT_LIGHTING_INTENSITY = 2.0;
 constexpr double MAXIMUM_LIGHTING_INTENSITY = 20.0;
 static_assert(MAXIMUM_LIGHTING_INTENSITY > 1);
+
+double position_to_intensity(double position)
+{
+        const double v = 2 * position - 1;
+        const double intensity = std::pow(MAXIMUM_LIGHTING_INTENSITY, v);
+        return std::clamp(intensity, 1 / MAXIMUM_LIGHTING_INTENSITY, MAXIMUM_LIGHTING_INTENSITY);
+}
+
+double intensity_to_position(double intensity)
+{
+        const double position = std::log(intensity) / std::log(MAXIMUM_LIGHTING_INTENSITY);
+        return std::clamp((position + 1) / 2, 0.0, 1.0);
+}
 }
 
 ColorsWidget::ColorsWidget() : QWidget(nullptr)
@@ -52,11 +65,6 @@ ColorsWidget::ColorsWidget() : QWidget(nullptr)
         m_lighting_spectrum = color::daylight_d65();
         m_lighting_rgb = color::Color(1, 1, 1);
 
-        ui.slider_lighting_intensity->setMinimum(0);
-        ui.slider_lighting_intensity->setMaximum(1000);
-
-        set_lighting_color(DEFAULT_LIGHTING_INTENSITY, true /*set_slider*/);
-
         set_background_color(BACKGROUND_COLOR);
         set_wireframe_color(WIREFRAME_COLOR);
         set_clip_plane_color(CLIP_PLANE_COLOR);
@@ -65,8 +73,11 @@ ColorsWidget::ColorsWidget() : QWidget(nullptr)
         set_dft_background_color(DFT_BACKGROUND_COLOR);
         set_dft_color(DFT_COLOR);
 
+        ui.slider_lighting_intensity->setMinimum(0);
+        ui.slider_lighting_intensity->setMaximum(1000);
         connect(ui.slider_lighting_intensity, &QSlider::valueChanged, this,
                 &ColorsWidget::on_lighting_intensity_changed);
+        set_slider_position(ui.slider_lighting_intensity, intensity_to_position(DEFAULT_LIGHTING_INTENSITY));
 
         connect(ui.toolButton_background_color, &QToolButton::clicked, this,
                 &ColorsWidget::on_background_color_clicked);
@@ -87,19 +98,9 @@ void ColorsWidget::set_view(view::View* view)
         m_view = view;
 }
 
-void ColorsWidget::set_lighting_color(double intensity, bool set_slider)
+void ColorsWidget::on_lighting_intensity_changed(int)
 {
-        intensity = std::clamp(intensity, 1 / MAXIMUM_LIGHTING_INTENSITY, MAXIMUM_LIGHTING_INTENSITY);
-
-        if (set_slider)
-        {
-                double position = std::log(intensity) / std::log(MAXIMUM_LIGHTING_INTENSITY);
-                position = (position + 1) / 2;
-                QSignalBlocker blocker(ui.slider_lighting_intensity);
-                set_slider_position(ui.slider_lighting_intensity, position);
-
-                intensity = lighting_intensity();
-        }
+        const double intensity = lighting_intensity();
 
         if (m_view)
         {
@@ -109,11 +110,6 @@ void ColorsWidget::set_lighting_color(double intensity, bool set_slider)
         std::ostringstream oss;
         oss << std::setprecision(2) << std::fixed << intensity;
         ui.label_lighting_intensity->setText(QString::fromStdString(oss.str()));
-}
-
-void ColorsWidget::on_lighting_intensity_changed(int)
-{
-        set_lighting_color(lighting_intensity(), false /*set_slider*/);
 }
 
 void ColorsWidget::on_background_color_clicked()
@@ -286,8 +282,7 @@ void ColorsWidget::set_dft_color(const QColor& c)
 
 double ColorsWidget::lighting_intensity() const
 {
-        double v = 2.0 * slider_position(ui.slider_lighting_intensity) - 1;
-        return std::pow(MAXIMUM_LIGHTING_INTENSITY, v);
+        return position_to_intensity(slider_position(ui.slider_lighting_intensity));
 }
 
 color::Spectrum ColorsWidget::lighting_spectrum() const

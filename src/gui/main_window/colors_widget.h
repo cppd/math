@@ -59,7 +59,6 @@ private:
         void on_dft_background_color_clicked();
         void on_dft_color_clicked();
 
-        void set_lighting_color(double intensity, bool set_slider);
         void set_background_color(const QColor& c);
         void set_wireframe_color(const QColor& c);
         void set_clip_plane_color(const QColor& c);
