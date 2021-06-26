@@ -202,10 +202,10 @@ void ShaderBuffers::set_normal_color_negative(const vec3f& color) const
         copy_to_drawing_buffer(offsetof(Drawing, normal_color_negative), c);
 }
 
-void ShaderBuffers::set_lighting_intensity(float intensity) const
+void ShaderBuffers::set_lighting_color(const vec3f& color) const
 {
-        decltype(Drawing().lighting_intensity) v = intensity;
-        copy_to_drawing_buffer(offsetof(Drawing, lighting_intensity), v);
+        decltype(Drawing().lighting_color) v = color;
+        copy_to_drawing_buffer(offsetof(Drawing, lighting_color), v);
 }
 
 void ShaderBuffers::set_show_materials(bool show) const

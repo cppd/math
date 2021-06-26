@@ -166,11 +166,11 @@ class Impl final : public Renderer
         std::unique_ptr<TransparencyBuffers> m_transparency_buffers;
         vulkan::Semaphore m_render_transparent_as_opaque_signal_semaphore;
 
-        void set_lighting_intensity(double intensity) override
+        void set_lighting_color(const color::Color& color) override
         {
                 ASSERT(m_thread_id == std::this_thread::get_id());
 
-                m_shader_buffers.set_lighting_intensity(intensity);
+                m_shader_buffers.set_lighting_color(color.rgb32().clamped(0, limits<float>::max()));
         }
         void set_background_color(const color::Color& color) override
         {

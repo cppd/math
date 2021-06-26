@@ -99,7 +99,7 @@ void ColorsWidget::set_lighting_intensity(double intensity, bool set_slider)
 
         if (m_view)
         {
-                m_view->send(view::command::SetLightingIntensity(intensity));
+                m_view->send(view::command::SetLightingColor(color::Color(intensity)));
         }
 
         std::ostringstream oss;

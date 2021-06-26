@@ -55,7 +55,7 @@ layout(set = 0, binding = 0, std140) uniform Drawing
         float normal_length;
         vec3 normal_color_positive;
         vec3 normal_color_negative;
-        float lighting_intensity;
+        vec3 lighting_color;
         bool show_materials;
         bool show_wireframe;
         bool show_shadow;
@@ -286,7 +286,7 @@ vec4 volume_color(vec3 p)
         }
         float value = scalar_volume_value(p);
         // vec4 color = texture(transfer_function, value);
-        vec3 color3 = volume.color * (volume.ambient * drawing.lighting_intensity);
+        vec3 color3 = volume.color * drawing.lighting_color * volume.ambient;
         vec4 color = vec4(color3, value);
         color.a = clamp(color.a * volume.volume_alpha_coefficient, 0, 1);
         return color;
@@ -450,7 +450,7 @@ vec3 shade(vec3 p)
 
         vec3 s = shading_ggx_diffuse(volume.metalness, volume.roughness, volume.color, n, v, l);
 
-        return drawing.lighting_intensity * s;
+        return drawing.lighting_color * s;
 }
 
 vec4 isosurface_color(vec3 p)

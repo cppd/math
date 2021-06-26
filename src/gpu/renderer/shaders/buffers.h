@@ -46,7 +46,7 @@ class ShaderBuffers
                 float normal_length;
                 alignas(sizeof(vec4f)) vec3f normal_color_positive;
                 alignas(sizeof(vec4f)) vec3f normal_color_negative;
-                float lighting_intensity;
+                alignas(sizeof(vec4f)) vec3f lighting_color;
                 uint32_t show_materials;
                 uint32_t show_wireframe;
                 uint32_t show_shadow;
@@ -95,7 +95,7 @@ public:
         void set_normal_length(float length) const;
         void set_normal_color_positive(const vec3f& color) const;
         void set_normal_color_negative(const vec3f& color) const;
-        void set_lighting_intensity(float intensity) const;
+        void set_lighting_color(const vec3f& color) const;
         void set_show_materials(bool show) const;
         void set_direction_to_light(const vec3f& direction) const;
         void set_direction_to_camera(const vec3f& direction) const;

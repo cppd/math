@@ -77,10 +77,10 @@ struct ResetView final
 {
 };
 
-struct SetLightingIntensity final
+struct SetLightingColor final
 {
-        double value;
-        explicit SetLightingIntensity(double value) : value(value)
+        color::Color value;
+        explicit SetLightingColor(const color::Color& value) : value(value)
         {
         }
 };
@@ -345,7 +345,7 @@ struct Command final
                 command::SetDftBackgroundColor,
                 command::SetDftBrightness,
                 command::SetDftColor,
-                command::SetLightingIntensity,
+                command::SetLightingColor,
                 command::SetNormalColorNegative,
                 command::SetNormalColorPositive,
                 command::SetNormalLength,

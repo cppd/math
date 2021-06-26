@@ -134,7 +134,7 @@ vec3 shade()
                 color = texture_Kd_color(gs.texture_coordinates).rgb;
         }
 
-        return drawing.lighting_intensity * shade(color) + mesh.ambient * color;
+        return drawing.lighting_color * shade(color) + mesh.ambient * color;
 }
 
 void main()

@@ -343,9 +343,9 @@ class Impl final
                 reset_view_handler();
         }
 
-        void command(const command::SetLightingIntensity& v)
+        void command(const command::SetLightingColor& v)
         {
-                m_renderer->set_lighting_intensity(v.value);
+                m_renderer->set_lighting_color(v.value);
         }
 
         void command(const command::SetBackgroundColor& d)

@@ -152,7 +152,7 @@ std::vector<view::Command> MainWindow::view_initial_commands() const
                 view::command::ShowConvexHull2D(m_view_widget->convex_hull_2d_checked()),
                 view::command::ShowOpticalFlow(m_view_widget->optical_flow_checked()),
                 view::command::ShowNormals(m_view_widget->normals_checked()),
-                view::command::SetLightingIntensity(m_colors_widget->lighting_intensity()),
+                view::command::SetLightingColor(color::Color(m_colors_widget->lighting_intensity())),
                 view::command::SetDftBrightness(m_view_widget->dft_brightness()),
                 view::command::SetDftBackgroundColor(m_colors_widget->dft_background_color()),
                 view::command::SetDftColor(m_colors_widget->dft_color()),
