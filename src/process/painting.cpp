@@ -109,7 +109,7 @@ template <typename T, std::size_t N, typename Parameters>
 void thread_function(
         const std::vector<std::shared_ptr<const mesh::MeshObject<N>>>& mesh_objects,
         const view::info::Camera& camera,
-        const color::Spectrum& light,
+        const std::tuple<color::Spectrum, color::Color>& lighting_color,
         const color::Color& background_color,
         const gui::dialog::PainterParameters& parameters,
         const Parameters& dimension_parameters,
@@ -122,7 +122,7 @@ void thread_function(
         {
                 using Color = std::tuple_element_t<0, Colors>;
                 thread_function<T, Color>(
-                        mesh_objects, camera, light.to_color<Color>(), background_color.to_illuminant<Color>(),
+                        mesh_objects, camera, std::get<Color>(lighting_color), background_color.to_illuminant<Color>(),
                         parameters, dimension_parameters, progress_list);
                 return;
         }
@@ -130,7 +130,7 @@ void thread_function(
         {
                 using Color = std::tuple_element_t<1, Colors>;
                 thread_function<T, Color>(
-                        mesh_objects, camera, light.to_color<Color>(), background_color.to_illuminant<Color>(),
+                        mesh_objects, camera, std::get<Color>(lighting_color), background_color.to_illuminant<Color>(),
                         parameters, dimension_parameters, progress_list);
                 return;
         }
@@ -142,7 +142,7 @@ template <std::size_t N, typename Parameters>
 void thread_function(
         const std::vector<std::shared_ptr<const mesh::MeshObject<N>>>& mesh_objects,
         const view::info::Camera& camera,
-        const color::Spectrum& light,
+        const std::tuple<color::Spectrum, color::Color>& lighting_color,
         const color::Color& background_color,
         const gui::dialog::PainterParameters& parameters,
         const Parameters& dimension_parameters,
@@ -153,12 +153,14 @@ void thread_function(
         {
         case 0:
                 thread_function<std::tuple_element_t<0, Precisions>>(
-                        mesh_objects, camera, light, background_color, parameters, dimension_parameters, progress_list);
+                        mesh_objects, camera, lighting_color, background_color, parameters, dimension_parameters,
+                        progress_list);
                 return;
 
         case 1:
                 thread_function<std::tuple_element_t<1, Precisions>>(
-                        mesh_objects, camera, light, background_color, parameters, dimension_parameters, progress_list);
+                        mesh_objects, camera, lighting_color, background_color, parameters, dimension_parameters,
+                        progress_list);
                 return;
         }
         error("Unknown precision index " + to_string(parameters.precision_index));
@@ -181,7 +183,7 @@ template <std::size_t N>
 std::function<void(ProgressRatioList*)> action_painter_function(
         const std::vector<std::shared_ptr<const mesh::MeshObject<N>>>& mesh_objects,
         const view::info::Camera& camera,
-        const double lighting_intensity,
+        const std::tuple<color::Spectrum, color::Color>& lighting_color,
         const color::Color& background_color)
 {
         if (!has_facets(mesh_objects))
@@ -203,8 +205,6 @@ std::function<void(ProgressRatioList*)> action_painter_function(
         const std::array<const char*, 2> colors{
                 std::tuple_element_t<0, Colors>::name(), std::tuple_element_t<1, Colors>::name()};
 
-        const color::Spectrum light = lighting_intensity * color::daylight_d65();
-
         if constexpr (N == 3)
         {
                 std::optional<std::tuple<gui::dialog::PainterParameters, gui::dialog::PainterParameters3d>> parameters =
@@ -221,7 +221,7 @@ std::function<void(ProgressRatioList*)> action_painter_function(
                 return [=](ProgressRatioList* progress_list)
                 {
                         thread_function(
-                                mesh_objects, camera, light, background_color, std::get<0>(*parameters),
+                                mesh_objects, camera, lighting_color, background_color, std::get<0>(*parameters),
                                 std::get<1>(*parameters), progress_list);
                 };
         }
@@ -245,7 +245,7 @@ std::function<void(ProgressRatioList*)> action_painter_function(
                 return [=](ProgressRatioList* progress_list)
                 {
                         thread_function(
-                                mesh_objects, camera, light, background_color, std::get<0>(*parameters),
+                                mesh_objects, camera, lighting_color, background_color, std::get<0>(*parameters),
                                 std::get<1>(*parameters), progress_list);
                 };
         }
@@ -255,7 +255,7 @@ std::function<void(ProgressRatioList*)> action_painter_function(
 std::function<void(ProgressRatioList*)> action_painter(
         const std::vector<storage::MeshObjectConst>& objects,
         const view::info::Camera& camera,
-        const double lighting_intensity,
+        const std::tuple<color::Spectrum, color::Color>& lighting_color,
         const color::Color& background_color)
 {
         std::set<std::size_t> dimensions;
@@ -303,7 +303,7 @@ std::function<void(ProgressRatioList*)> action_painter(
                                         },
                                         std::move(visible_object));
                         }
-                        return action_painter_function(meshes, camera, lighting_intensity, background_color);
+                        return action_painter_function(meshes, camera, lighting_color, background_color);
                 });
 }
 }

@@ -22,6 +22,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/color/color.h>
 #include <src/view/interface.h>
 
+#include <tuple>
+
 namespace ns::gui::main_window
 {
 class ColorsWidget final : public QWidget
@@ -33,6 +35,9 @@ private:
 
         view::View* m_view = nullptr;
 
+        color::Spectrum m_lighting_spectrum;
+        color::Color m_lighting_rgb;
+
         QColor m_background_color;
         QColor m_wireframe_color;
         QColor m_clip_plane_color;
@@ -40,6 +45,10 @@ private:
         QColor m_normal_color_negative;
         QColor m_dft_background_color;
         QColor m_dft_color;
+
+        double lighting_intensity() const;
+        color::Spectrum lighting_spectrum() const;
+        color::Color lighting_rgb() const;
 
         void on_lighting_intensity_changed(int);
         void on_background_color_clicked();
@@ -50,6 +59,7 @@ private:
         void on_dft_background_color_clicked();
         void on_dft_color_clicked();
 
+        void set_lighting_color(double intensity, bool set_slider);
         void set_background_color(const QColor& c);
         void set_wireframe_color(const QColor& c);
         void set_clip_plane_color(const QColor& c);
@@ -57,13 +67,13 @@ private:
         void set_normal_color_negative(const QColor& c);
         void set_dft_background_color(const QColor& c);
         void set_dft_color(const QColor& c);
-        void set_lighting_intensity(double intensity, bool set_slider);
 
 public:
         ColorsWidget();
 
         void set_view(view::View* view);
 
+        std::tuple<color::Spectrum, color::Color> lighting_color() const;
         color::Color background_color() const;
         color::Color wireframe_color() const;
         color::Color clip_plane_color() const;
@@ -71,6 +81,5 @@ public:
         color::Color normal_color_negative() const;
         color::Color dft_background_color() const;
         color::Color dft_color() const;
-        double lighting_intensity() const;
 };
 }

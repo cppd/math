@@ -158,7 +158,7 @@ void painter(
                         view::info::Camera camera;
                         view->receive({&camera});
                         return process::action_painter(
-                                objects, camera, colors->lighting_intensity(), colors->background_color());
+                                objects, camera, colors->lighting_color(), colors->background_color());
                 });
 }
 

@@ -23,6 +23,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/view/interface.h>
 
 #include <functional>
+#include <tuple>
 #include <vector>
 
 namespace ns::process
@@ -30,6 +31,6 @@ namespace ns::process
 std::function<void(ProgressRatioList*)> action_painter(
         const std::vector<storage::MeshObjectConst>& objects,
         const view::info::Camera& camera,
-        double lighting_intensity,
+        const std::tuple<color::Spectrum, color::Color>& lighting_color,
         const color::Color& background_color);
 }

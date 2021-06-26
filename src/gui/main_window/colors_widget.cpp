@@ -21,6 +21,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "../dialogs/color_dialog.h"
 #include "../dialogs/message.h"
 
+#include <src/color/illuminants.h>
+
 #include <algorithm>
 #include <cmath>
 #include <iomanip>
@@ -41,17 +43,19 @@ constexpr QRgb DFT_COLOR = qRgb(150, 200, 250);
 constexpr double DEFAULT_LIGHTING_INTENSITY = 2.0;
 constexpr double MAXIMUM_LIGHTING_INTENSITY = 20.0;
 static_assert(MAXIMUM_LIGHTING_INTENSITY > 1);
-
 }
 
 ColorsWidget::ColorsWidget() : QWidget(nullptr)
 {
         ui.setupUi(this);
 
+        m_lighting_spectrum = color::daylight_d65();
+        m_lighting_rgb = color::Color(1, 1, 1);
+
         ui.slider_lighting_intensity->setMinimum(0);
         ui.slider_lighting_intensity->setMaximum(1000);
 
-        set_lighting_intensity(DEFAULT_LIGHTING_INTENSITY, true /*set_slider*/);
+        set_lighting_color(DEFAULT_LIGHTING_INTENSITY, true /*set_slider*/);
 
         set_background_color(BACKGROUND_COLOR);
         set_wireframe_color(WIREFRAME_COLOR);
@@ -83,7 +87,7 @@ void ColorsWidget::set_view(view::View* view)
         m_view = view;
 }
 
-void ColorsWidget::set_lighting_intensity(double intensity, bool set_slider)
+void ColorsWidget::set_lighting_color(double intensity, bool set_slider)
 {
         intensity = std::clamp(intensity, 1 / MAXIMUM_LIGHTING_INTENSITY, MAXIMUM_LIGHTING_INTENSITY);
 
@@ -99,7 +103,7 @@ void ColorsWidget::set_lighting_intensity(double intensity, bool set_slider)
 
         if (m_view)
         {
-                m_view->send(view::command::SetLightingColor(color::Color(intensity)));
+                m_view->send(view::command::SetLightingColor(intensity * lighting_rgb()));
         }
 
         std::ostringstream oss;
@@ -109,7 +113,7 @@ void ColorsWidget::set_lighting_intensity(double intensity, bool set_slider)
 
 void ColorsWidget::on_lighting_intensity_changed(int)
 {
-        set_lighting_intensity(lighting_intensity(), false /*set_slider*/);
+        set_lighting_color(lighting_intensity(), false /*set_slider*/);
 }
 
 void ColorsWidget::on_background_color_clicked()
@@ -280,6 +284,28 @@ void ColorsWidget::set_dft_color(const QColor& c)
         set_widget_color(ui.widget_dft_color, c);
 }
 
+double ColorsWidget::lighting_intensity() const
+{
+        double v = 2.0 * slider_position(ui.slider_lighting_intensity) - 1;
+        return std::pow(MAXIMUM_LIGHTING_INTENSITY, v);
+}
+
+color::Spectrum ColorsWidget::lighting_spectrum() const
+{
+        return m_lighting_spectrum;
+}
+
+color::Color ColorsWidget::lighting_rgb() const
+{
+        return m_lighting_rgb;
+}
+
+std::tuple<color::Spectrum, color::Color> ColorsWidget::lighting_color() const
+{
+        const double intensity = lighting_intensity();
+        return {intensity * lighting_spectrum(), intensity * lighting_rgb()};
+}
+
 color::Color ColorsWidget::background_color() const
 {
         return qcolor_to_color(m_background_color);
@@ -313,11 +339,5 @@ color::Color ColorsWidget::dft_background_color() const
 color::Color ColorsWidget::dft_color() const
 {
         return qcolor_to_color(m_dft_color);
-}
-
-double ColorsWidget::lighting_intensity() const
-{
-        double v = 2.0 * slider_position(ui.slider_lighting_intensity) - 1;
-        return std::pow(MAXIMUM_LIGHTING_INTENSITY, v);
 }
 }
