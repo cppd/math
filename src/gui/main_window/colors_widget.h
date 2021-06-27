@@ -22,8 +22,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/color/color.h>
 #include <src/view/interface.h>
 
-#include <tuple>
-
 namespace ns::gui::main_window
 {
 class ColorsWidget final : public QWidget
@@ -35,9 +33,6 @@ private:
 
         view::View* m_view = nullptr;
 
-        color::Spectrum m_lighting_spectrum;
-        color::Color m_lighting_rgb;
-
         QColor m_background_color;
         QColor m_wireframe_color;
         QColor m_clip_plane_color;
@@ -46,11 +41,6 @@ private:
         QColor m_dft_background_color;
         QColor m_dft_color;
 
-        double lighting_intensity() const;
-        color::Spectrum lighting_spectrum() const;
-        color::Color lighting_rgb() const;
-
-        void on_lighting_intensity_changed(int);
         void on_background_color_clicked();
         void on_wireframe_color_clicked();
         void on_clip_plane_color_clicked();
@@ -72,7 +62,6 @@ public:
 
         void set_view(view::View* view);
 
-        std::tuple<color::Spectrum, color::Color> lighting_color() const;
         color::Color background_color() const;
         color::Color wireframe_color() const;
         color::Color clip_plane_color() const;

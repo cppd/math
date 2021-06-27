@@ -20,6 +20,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "actions.h"
 #include "colors_widget.h"
 #include "graphics_widget.h"
+#include "lighting_widget.h"
 #include "log.h"
 #include "mesh_widget.h"
 #include "model_tree.h"
@@ -60,6 +61,7 @@ private:
 
         std::unique_ptr<ModelTree> m_model_tree;
 
+        std::unique_ptr<LightingWidget> m_lighting_widget;
         std::unique_ptr<ColorsWidget> m_colors_widget;
         std::unique_ptr<ViewWidget> m_view_widget;
         std::unique_ptr<MeshWidget> m_mesh_widget;

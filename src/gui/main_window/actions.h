@@ -18,6 +18,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #pragma once
 
 #include "colors_widget.h"
+#include "lighting_widget.h"
 #include "model_tree.h"
 
 #include "../com/command_line.h"
@@ -51,6 +52,7 @@ public:
                 const storage::Repository* repository,
                 view::View* view,
                 ModelTree* model_tree,
+                const LightingWidget* lighting,
                 const ColorsWidget* colors);
 
         ~Actions();

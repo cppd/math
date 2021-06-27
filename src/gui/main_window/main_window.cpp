@@ -101,6 +101,9 @@ void MainWindow::constructor_objects()
         m_model_tree = std::make_unique<ModelTree>();
         add_widget(ui.tab_models, m_model_tree.get());
 
+        m_lighting_widget = std::make_unique<LightingWidget>();
+        add_widget(ui.tab_lighting, m_lighting_widget.get());
+
         m_colors_widget = std::make_unique<ColorsWidget>();
         add_widget(ui.tab_color, m_colors_widget.get());
 
@@ -152,7 +155,7 @@ std::vector<view::Command> MainWindow::view_initial_commands() const
                 view::command::ShowConvexHull2D(m_view_widget->convex_hull_2d_checked()),
                 view::command::ShowOpticalFlow(m_view_widget->optical_flow_checked()),
                 view::command::ShowNormals(m_view_widget->normals_checked()),
-                view::command::SetLightingColor(std::get<color::Color>(m_colors_widget->lighting_color())),
+                view::command::SetLightingColor(m_lighting_widget->rgb()),
                 view::command::SetDftBrightness(m_view_widget->dft_brightness()),
                 view::command::SetDftBackgroundColor(m_colors_widget->dft_background_color()),
                 view::command::SetDftColor(m_colors_widget->dft_color()),
@@ -197,6 +200,7 @@ void MainWindow::terminate_all_threads()
         m_actions.reset();
         m_model_events.reset();
 
+        m_lighting_widget.reset();
         m_colors_widget.reset();
         m_view_widget.reset();
         m_mesh_widget.reset();
@@ -255,6 +259,7 @@ void MainWindow::first_shown()
                 widget_window_id(m_graphics_widget), widget_pixels_per_inch(m_graphics_widget),
                 view_initial_commands());
 
+        m_lighting_widget->set_view(m_view.get());
         m_colors_widget->set_view(m_view.get());
         m_view_widget->set_view(m_view.get());
         m_mesh_widget->set_model_tree(m_model_tree.get());
@@ -262,7 +267,8 @@ void MainWindow::first_shown()
         m_model_events = std::make_unique<application::ModelEvents>(m_model_tree->events(), m_view.get());
         m_actions = std::make_unique<Actions>(
                 options, ui.status_bar, ui.action_self_test, ui.menu_file, ui.menu_create, ui.menu_edit,
-                ui.menu_rendering, m_repository.get(), m_view.get(), m_model_tree.get(), m_colors_widget.get());
+                ui.menu_rendering, m_repository.get(), m_view.get(), m_model_tree.get(), m_lighting_widget.get(),
+                m_colors_widget.get());
 
         if (!ui.menu_file->actions().empty())
         {

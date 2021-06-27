@@ -9,8 +9,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>1564</width>
-    <height>1265</height>
+    <width>1538</width>
+    <height>1352</height>
    </rect>
   </property>
   <widget class="QWidget" name="main_widget">
@@ -52,6 +52,11 @@
         <widget class="QWidget" name="tab_volume">
          <attribute name="title">
           <string>Volume</string>
+         </attribute>
+        </widget>
+        <widget class="QWidget" name="tab_lighting">
+         <attribute name="title">
+          <string>Lighting</string>
          </attribute>
         </widget>
         <widget class="QWidget" name="tab_color">
@@ -97,7 +102,7 @@
     <rect>
      <x>0</x>
      <y>0</y>
-     <width>1564</width>
+     <width>1538</width>
      <height>29</height>
     </rect>
    </property>

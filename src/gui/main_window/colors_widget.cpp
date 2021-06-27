@@ -19,14 +19,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "../com/support.h"
 #include "../dialogs/color_dialog.h"
-#include "../dialogs/message.h"
-
-#include <src/color/illuminants.h>
-
-#include <algorithm>
-#include <cmath>
-#include <iomanip>
-#include <sstream>
 
 namespace ns::gui::main_window
 {
@@ -39,31 +31,11 @@ constexpr QRgb NORMAL_COLOR_POSITIVE = qRgb(200, 200, 0);
 constexpr QRgb NORMAL_COLOR_NEGATIVE = qRgb(50, 150, 50);
 constexpr QRgb DFT_BACKGROUND_COLOR = qRgb(0, 0, 50);
 constexpr QRgb DFT_COLOR = qRgb(150, 200, 250);
-
-constexpr double DEFAULT_LIGHTING_INTENSITY = 2.0;
-constexpr double MAXIMUM_LIGHTING_INTENSITY = 20.0;
-static_assert(MAXIMUM_LIGHTING_INTENSITY > 1);
-
-double position_to_intensity(double position)
-{
-        const double v = 2 * position - 1;
-        const double intensity = std::pow(MAXIMUM_LIGHTING_INTENSITY, v);
-        return std::clamp(intensity, 1 / MAXIMUM_LIGHTING_INTENSITY, MAXIMUM_LIGHTING_INTENSITY);
-}
-
-double intensity_to_position(double intensity)
-{
-        const double position = std::log(intensity) / std::log(MAXIMUM_LIGHTING_INTENSITY);
-        return std::clamp((position + 1) / 2, 0.0, 1.0);
-}
 }
 
 ColorsWidget::ColorsWidget() : QWidget(nullptr)
 {
         ui.setupUi(this);
-
-        m_lighting_spectrum = color::daylight_d65();
-        m_lighting_rgb = color::Color(1, 1, 1);
 
         set_background_color(BACKGROUND_COLOR);
         set_wireframe_color(WIREFRAME_COLOR);
@@ -72,12 +44,6 @@ ColorsWidget::ColorsWidget() : QWidget(nullptr)
         set_normal_color_negative(NORMAL_COLOR_NEGATIVE);
         set_dft_background_color(DFT_BACKGROUND_COLOR);
         set_dft_color(DFT_COLOR);
-
-        ui.slider_lighting_intensity->setMinimum(0);
-        ui.slider_lighting_intensity->setMaximum(1000);
-        connect(ui.slider_lighting_intensity, &QSlider::valueChanged, this,
-                &ColorsWidget::on_lighting_intensity_changed);
-        set_slider_position(ui.slider_lighting_intensity, intensity_to_position(DEFAULT_LIGHTING_INTENSITY));
 
         connect(ui.toolButton_background_color, &QToolButton::clicked, this,
                 &ColorsWidget::on_background_color_clicked);
@@ -96,20 +62,6 @@ ColorsWidget::ColorsWidget() : QWidget(nullptr)
 void ColorsWidget::set_view(view::View* view)
 {
         m_view = view;
-}
-
-void ColorsWidget::on_lighting_intensity_changed(int)
-{
-        const double intensity = lighting_intensity();
-
-        if (m_view)
-        {
-                m_view->send(view::command::SetLightingColor(intensity * lighting_rgb()));
-        }
-
-        std::ostringstream oss;
-        oss << std::setprecision(2) << std::fixed << intensity;
-        ui.label_lighting_intensity->setText(QString::fromStdString(oss.str()));
 }
 
 void ColorsWidget::on_background_color_clicked()
@@ -278,27 +230,6 @@ void ColorsWidget::set_dft_color(const QColor& c)
                 m_view->send(view::command::SetDftColor(qcolor_to_color(c)));
         }
         set_widget_color(ui.widget_dft_color, c);
-}
-
-double ColorsWidget::lighting_intensity() const
-{
-        return position_to_intensity(slider_position(ui.slider_lighting_intensity));
-}
-
-color::Spectrum ColorsWidget::lighting_spectrum() const
-{
-        return m_lighting_spectrum;
-}
-
-color::Color ColorsWidget::lighting_rgb() const
-{
-        return m_lighting_rgb;
-}
-
-std::tuple<color::Spectrum, color::Color> ColorsWidget::lighting_color() const
-{
-        const double intensity = lighting_intensity();
-        return {intensity * lighting_spectrum(), intensity * lighting_rgb()};
 }
 
 color::Color ColorsWidget::background_color() const

@@ -142,6 +142,7 @@ void painter(
         WorkerThreads* threads,
         const ModelTree* model_tree,
         view::View* view,
+        const LightingWidget* lighting,
         const ColorsWidget* colors,
         const std::string& action)
 {
@@ -157,8 +158,7 @@ void painter(
                         }
                         view::info::Camera camera;
                         view->receive({&camera});
-                        return process::action_painter(
-                                objects, camera, colors->lighting_color(), colors->background_color());
+                        return process::action_painter(objects, camera, lighting->color(), colors->background_color());
                 });
 }
 
@@ -200,6 +200,7 @@ Actions::Actions(
         const storage::Repository* repository,
         view::View* view,
         ModelTree* model_tree,
+        const LightingWidget* lighting,
         const ColorsWidget* colors)
         : m_worker_threads(create_worker_threads(REQUIRED_THREAD_COUNT, SELF_TEST_THREAD_ID, status_bar))
 {
@@ -247,7 +248,7 @@ Actions::Actions(
                         action, &QAction::triggered,
                         [=]()
                         {
-                                painter(threads, model_tree, view, colors, action_name(action));
+                                painter(threads, model_tree, view, lighting, colors, action_name(action));
                         }));
         }
         {
