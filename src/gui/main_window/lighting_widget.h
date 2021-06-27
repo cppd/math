@@ -35,14 +35,19 @@ private:
 
         view::View* m_view = nullptr;
 
+        const int m_daylight_min_cct;
+        const int m_daylight_max_cct;
+
+        double m_intensity;
         color::Spectrum m_spectrum;
         color::Color m_rgb;
 
-        double intensity() const;
-        color::Spectrum color_spectrum() const;
-        color::Color color_rgb() const;
+        void send_color();
 
         void on_intensity_changed();
+        void on_daylight_changed();
+        void on_d65_toggled();
+        void on_daylight_toggled();
 
 public:
         LightingWidget();

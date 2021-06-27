@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>307</width>
-    <height>139</height>
+    <width>389</width>
+    <height>348</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -53,6 +53,34 @@
      <property name="value">
       <number>50</number>
      </property>
+     <property name="orientation">
+      <enum>Qt::Horizontal</enum>
+     </property>
+    </widget>
+   </item>
+   <item>
+    <widget class="Line" name="line">
+     <property name="orientation">
+      <enum>Qt::Horizontal</enum>
+     </property>
+    </widget>
+   </item>
+   <item>
+    <widget class="QRadioButton" name="radioButton_d65">
+     <property name="text">
+      <string>D65</string>
+     </property>
+    </widget>
+   </item>
+   <item>
+    <widget class="QRadioButton" name="radioButton_daylight">
+     <property name="text">
+      <string>Daylight</string>
+     </property>
+    </widget>
+   </item>
+   <item>
+    <widget class="QSlider" name="slider_daylight_cct">
      <property name="orientation">
       <enum>Qt::Horizontal</enum>
      </property>
