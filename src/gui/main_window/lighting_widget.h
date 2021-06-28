@@ -35,8 +35,10 @@ private:
 
         view::View* m_view = nullptr;
 
-        const int m_daylight_min_cct;
-        const int m_daylight_max_cct;
+        const double m_daylight_min_cct;
+        const double m_daylight_max_cct;
+        const double m_blackbody_min_t;
+        const double m_blackbody_max_t;
 
         double m_intensity;
         color::Spectrum m_spectrum;
@@ -46,8 +48,11 @@ private:
 
         void on_intensity_changed();
         void on_daylight_changed();
+        void on_blackbody_changed();
         void on_d65_toggled();
         void on_daylight_toggled();
+        void on_blackbody_a_toggled();
+        void on_blackbody_toggled();
 
 public:
         LightingWidget();
