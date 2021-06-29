@@ -99,13 +99,12 @@ void PainterWindow::create_interface()
         m_brightness_parameter_slider = std::make_unique<QSlider>(Qt::Vertical);
         m_brightness_parameter_slider->setTracking(false);
         m_brightness_parameter_slider->setValue(0);
-        m_brightness_parameter = 0;
+        m_pixels->set_brightness_parameter(0);
         connect(m_brightness_parameter_slider.get(), &QSlider::valueChanged, this,
                 [this](int)
                 {
-                        m_brightness_parameter =
-                                std::clamp(slider_position(m_brightness_parameter_slider.get()), 0.0, 1.0);
-                        update_image();
+                        m_pixels->set_brightness_parameter(
+                                std::clamp(slider_position(m_brightness_parameter_slider.get()), 0.0, 1.0));
                 });
         imageLayout->addWidget(m_brightness_parameter_slider.get());
 
@@ -209,7 +208,7 @@ void PainterWindow::update_image()
         ASSERT(std::this_thread::get_id() == m_thread_id);
 
         m_statistics_widget->update(m_pixels->statistics(), m_pixels->pixel_max());
-        m_image_widget->update(m_pixels->slice_r8g8b8a8(m_slice, m_brightness_parameter), m_pixels->busy_indices_2d());
+        m_image_widget->update(m_pixels->slice_r8g8b8a8(m_slice), m_pixels->busy_indices_2d());
         m_actions->set_progresses();
 }
 }

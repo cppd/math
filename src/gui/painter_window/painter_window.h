@@ -49,7 +49,6 @@ private:
 
         std::unique_ptr<Pixels> m_pixels;
         long long m_slice = 0;
-        float m_brightness_parameter = 0;
 
         std::unique_ptr<QSlider> m_brightness_parameter_slider;
         std::unique_ptr<ImageWidget> m_image_widget;

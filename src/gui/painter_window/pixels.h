@@ -64,7 +64,8 @@ struct Pixels
 
         virtual const std::vector<int>& screen_size() const = 0;
 
-        virtual std::span<const std::byte> slice_r8g8b8a8(long long slice_number, float brightness_parameter) = 0;
+        virtual void set_brightness_parameter(float brightness_parameter) = 0;
+        virtual std::span<const std::byte> slice_r8g8b8a8(long long slice_number) = 0;
         virtual const std::vector<long long>& busy_indices_2d() const = 0;
         virtual painter::Statistics statistics() const = 0;
 
@@ -106,16 +107,18 @@ class PainterPixels final : public Pixels, public painter::Notifier<N - 1>
         static_assert(sizeof(m_pixels_original[0]) == 3 * sizeof(float));
         std::span<const float> m_pixels_original_span{m_pixels_original[0].data(), 3 * m_pixels_original.size()};
 
-        float m_pixel_brightness_parameter = 0;
-        std::optional<float> m_pixel_max;
-        float m_pixel_coef = 1;
-
-        TimePoint m_last_normalize_time = time();
+        std::atomic<float> m_pixel_brightness_parameter = 0;
+        std::atomic<float> m_pixel_max = MIN;
+        std::atomic<float> m_pixel_coef = 1;
+        static_assert(std::atomic<float>::is_always_lock_free);
 
         painter::Images<N - 1> m_painter_images;
         std::atomic_bool m_painter_images_ready = false;
 
         std::unique_ptr<painter::Painter> m_painter;
+
+        std::atomic_bool m_normalize_stop = false;
+        std::thread m_normalize_thread;
 
         static void write_r8g8b8a8(std::byte* ptr, const Vector<3, float>& rgb)
         {
@@ -144,36 +147,51 @@ class PainterPixels final : public Pixels, public painter::Notifier<N - 1>
 
         void normalize_pixels()
         {
-                ASSERT(std::this_thread::get_id() == m_thread_id);
+                ASSERT(std::this_thread::get_id() != m_thread_id);
 
-                const float max = max_value(m_pixels_original_span);
-                if (max == MIN)
+                TimePoint last_normalize_time = time();
+                float brightness_parameter = -1;
+
+                while (!m_normalize_stop.load(std::memory_order_acquire))
                 {
-                        m_pixel_max = std::nullopt;
-                        m_pixel_coef = 1;
-                        return;
-                }
-
-                m_pixel_max = max;
-                const float coef = std::lerp(1 / max, 1.0f, m_pixel_brightness_parameter);
-                if (m_pixel_coef == coef)
-                {
-                        return;
-                }
-                m_pixel_coef = coef;
-
-                ASSERT(m_pixels_original.size() * PIXEL_SIZE == m_pixels_r8g8b8a8.size());
-
-                std::byte* ptr = m_pixels_r8g8b8a8.data();
-                for (const Vector<3, float>& pixel : m_pixels_original)
-                {
-                        if (pixel[0] != MIN)
+                        if (time() - last_normalize_time < NORMALIZE_INTERVAL
+                            && m_pixel_brightness_parameter.load(std::memory_order_acquire) == brightness_parameter)
                         {
-                                write_r8g8b8a8(ptr, pixel * coef);
+                                std::this_thread::sleep_for(std::chrono::seconds(1));
+                                continue;
                         }
-                        ptr += PIXEL_SIZE;
+
+                        brightness_parameter = m_pixel_brightness_parameter.load(std::memory_order_acquire);
+                        last_normalize_time = time();
+
+                        const float max = max_value(m_pixels_original_span);
+                        if (max == MIN)
+                        {
+                                m_pixel_max.store(MIN, std::memory_order_release);
+                                m_pixel_coef.store(1, std::memory_order_release);
+                                continue;
+                        }
+
+                        m_pixel_max.store(max, std::memory_order_release);
+                        const float coef = std::lerp(1 / max, 1.0f, brightness_parameter);
+                        if (m_pixel_coef == coef)
+                        {
+                                continue;
+                        }
+                        m_pixel_coef.store(coef, std::memory_order_release);
+
+                        ASSERT(m_pixels_original.size() * PIXEL_SIZE == m_pixels_r8g8b8a8.size());
+                        std::byte* ptr = m_pixels_r8g8b8a8.data();
+                        for (const Vector<3, float>& pixel : m_pixels_original)
+                        {
+                                if (pixel[0] != MIN)
+                                {
+                                        write_r8g8b8a8(ptr, pixel * coef);
+                                }
+                                ptr += PIXEL_SIZE;
+                        }
+                        ASSERT(ptr == m_pixels_r8g8b8a8.data() + m_pixels_r8g8b8a8.size());
                 }
-                ASSERT(ptr == m_pixels_r8g8b8a8.data() + m_pixels_r8g8b8a8.size());
         }
 
         // PainterNotifier
@@ -195,8 +213,9 @@ class PainterPixels final : public Pixels, public painter::Notifier<N - 1>
                 static_assert(COLOR_FORMAT == image::ColorFormat::R8G8B8A8_SRGB);
 
                 const std::size_t index = m_global_index.compute(flip_vertically(pixel));
+                std::byte* const ptr = m_pixels_r8g8b8a8.data() + PIXEL_SIZE * index;
                 m_pixels_original[index] = rgb;
-                write_r8g8b8a8(m_pixels_r8g8b8a8.data() + PIXEL_SIZE * index, rgb * m_pixel_coef);
+                write_r8g8b8a8(ptr, rgb * m_pixel_coef.load(std::memory_order_acquire));
         }
 
         painter::Images<N - 1>* images(long long /*pass_number*/) override
@@ -228,7 +247,12 @@ class PainterPixels final : public Pixels, public painter::Notifier<N - 1>
 
         std::optional<float> pixel_max() const override
         {
-                return m_pixel_max;
+                float max = m_pixel_max.load(std::memory_order_acquire);
+                if (max != MIN)
+                {
+                        return max;
+                }
+                return std::nullopt;
         }
 
         const std::vector<int>& screen_size() const override
@@ -246,25 +270,22 @@ class PainterPixels final : public Pixels, public painter::Notifier<N - 1>
                 return m_painter->statistics();
         }
 
-        std::span<const std::byte> slice_r8g8b8a8(long long slice_number, float brightness_parameter) override
+        void set_brightness_parameter(float brightness_parameter) override
         {
-                ASSERT(std::this_thread::get_id() == m_thread_id);
-
                 if (!(brightness_parameter >= 0 && brightness_parameter <= 1))
                 {
                         error("Brightness parameter " + to_string(brightness_parameter)
                               + " must be in the range [0, 1]");
                 }
 
-                check_slice_number(slice_number);
+                m_pixel_brightness_parameter.store(brightness_parameter, std::memory_order_release);
+        }
 
-                if (time() - m_last_normalize_time >= NORMALIZE_INTERVAL
-                    || m_pixel_brightness_parameter != brightness_parameter)
-                {
-                        m_pixel_brightness_parameter = brightness_parameter;
-                        m_last_normalize_time = time();
-                        normalize_pixels();
-                }
+        std::span<const std::byte> slice_r8g8b8a8(long long slice_number) override
+        {
+                ASSERT(std::this_thread::get_id() == m_thread_id);
+
+                check_slice_number(slice_number);
 
                 return std::span(&m_pixels_r8g8b8a8[slice_number * m_slice_size], m_slice_size);
         }
@@ -358,6 +379,11 @@ public:
                           thread_count,
                           smooth_normal))
         {
+                m_normalize_thread = std::thread(
+                        [this]
+                        {
+                                normalize_pixels();
+                        });
         }
 
         PainterPixels(const PainterPixels&) = delete;
@@ -367,6 +393,8 @@ public:
 
         ~PainterPixels() override
         {
+                m_normalize_stop.store(true, std::memory_order_release);
+                m_normalize_thread.join();
                 m_painter.reset();
         }
 };
