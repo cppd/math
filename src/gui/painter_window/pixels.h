@@ -25,6 +25,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/com/message.h>
 #include <src/com/min_max.h>
 #include <src/com/print.h>
+#include <src/com/spin_lock.h>
 #include <src/com/time.h>
 #include <src/com/type/limit.h>
 #include <src/com/type/name.h>
@@ -87,6 +88,8 @@ class PainterPixels final : public Pixels, public painter::Notifier<N - 1>
         static constexpr std::size_t PIXEL_SIZE = image::format_pixel_size_in_bytes(COLOR_FORMAT);
         static constexpr uint8_t ALPHA = limits<uint8_t>::max();
 
+        static constexpr float MIN = limits<float>::lowest();
+
         const std::thread::id m_thread_id = std::this_thread::get_id();
 
         const char* const m_floating_point_name;
@@ -99,18 +102,14 @@ class PainterPixels final : public Pixels, public painter::Notifier<N - 1>
 
         std::vector<long long> m_busy_indices_2d;
 
-        std::vector<std::byte> m_pixels_r8g8b8a8 = make_initial_image(m_screen_size, COLOR_FORMAT);
+        std::vector<std::byte> m_pixels_r8g8b8a8{make_initial_image(m_screen_size, COLOR_FORMAT)};
+        std::vector<Vector<3, float>> m_pixels_original{std::size_t(m_global_index.count()), Vector<3, float>(MIN)};
+        std::vector<SpinLock> m_pixels_lock{m_pixels_original.size()};
+        float m_pixels_coef = 1;
 
-        static constexpr float MIN = limits<float>::lowest();
-        std::vector<Vector<3, float>> m_pixels_original{
-                static_cast<std::size_t>(m_global_index.count()), Vector<3, float>(MIN, MIN, MIN)};
-        static_assert(sizeof(m_pixels_original[0]) == 3 * sizeof(float));
-        std::span<const float> m_pixels_original_span{m_pixels_original[0].data(), 3 * m_pixels_original.size()};
-
+        static_assert(std::atomic<float>::is_always_lock_free);
         std::atomic<float> m_pixel_brightness_parameter = 0;
         std::atomic<float> m_pixel_max = MIN;
-        std::atomic<float> m_pixel_coef = 1;
-        static_assert(std::atomic<float>::is_always_lock_free);
 
         painter::Images<N - 1> m_painter_images;
         std::atomic_bool m_painter_images_ready = false;
@@ -152,41 +151,45 @@ class PainterPixels final : public Pixels, public painter::Notifier<N - 1>
                 TimePoint last_normalize_time = time();
                 float brightness_parameter = -1;
 
-                while (!m_normalize_stop.load(std::memory_order_acquire))
+                while (!m_normalize_stop.load(std::memory_order_relaxed))
                 {
                         if (time() - last_normalize_time < NORMALIZE_INTERVAL
-                            && m_pixel_brightness_parameter.load(std::memory_order_acquire) == brightness_parameter)
+                            && m_pixel_brightness_parameter.load(std::memory_order_relaxed) == brightness_parameter)
                         {
                                 std::this_thread::sleep_for(std::chrono::seconds(1));
                                 continue;
                         }
 
-                        brightness_parameter = m_pixel_brightness_parameter.load(std::memory_order_acquire);
+                        brightness_parameter = m_pixel_brightness_parameter.load(std::memory_order_relaxed);
                         last_normalize_time = time();
 
-                        const float max = max_value(m_pixels_original_span);
+                        static_assert(sizeof(m_pixels_original[0]) == 3 * sizeof(float));
+                        const float max = max_value(
+                                std::span<const float>(m_pixels_original[0].data(), 3 * m_pixels_original.size()));
                         if (max == MIN)
                         {
-                                m_pixel_max.store(MIN, std::memory_order_release);
-                                m_pixel_coef.store(1, std::memory_order_release);
                                 continue;
                         }
+                        m_pixel_max.store(max, std::memory_order_relaxed);
 
-                        m_pixel_max.store(max, std::memory_order_release);
                         const float coef = std::lerp(1 / max, 1.0f, brightness_parameter);
-                        if (m_pixel_coef == coef)
+                        if (m_pixels_coef == coef)
                         {
                                 continue;
                         }
-                        m_pixel_coef.store(coef, std::memory_order_release);
+                        m_pixels_coef = coef;
 
                         ASSERT(m_pixels_original.size() * PIXEL_SIZE == m_pixels_r8g8b8a8.size());
                         std::byte* ptr = m_pixels_r8g8b8a8.data();
-                        for (const Vector<3, float>& pixel : m_pixels_original)
+                        for (std::size_t i = 0; i < m_pixels_original.size(); ++i)
                         {
-                                if (pixel[0] != MIN)
                                 {
-                                        write_r8g8b8a8(ptr, pixel * coef);
+                                        std::lock_guard lg(m_pixels_lock[i]);
+                                        const Vector<3, float>& pixel = m_pixels_original[i];
+                                        if (pixel[0] != MIN)
+                                        {
+                                                write_r8g8b8a8(ptr, pixel * coef);
+                                        }
                                 }
                                 ptr += PIXEL_SIZE;
                         }
@@ -214,8 +217,10 @@ class PainterPixels final : public Pixels, public painter::Notifier<N - 1>
 
                 const std::size_t index = m_global_index.compute(flip_vertically(pixel));
                 std::byte* const ptr = m_pixels_r8g8b8a8.data() + PIXEL_SIZE * index;
+
+                std::lock_guard lg(m_pixels_lock[index]);
                 m_pixels_original[index] = rgb;
-                write_r8g8b8a8(ptr, rgb * m_pixel_coef.load(std::memory_order_acquire));
+                write_r8g8b8a8(ptr, rgb * m_pixels_coef);
         }
 
         painter::Images<N - 1>* images(long long /*pass_number*/) override
@@ -247,7 +252,7 @@ class PainterPixels final : public Pixels, public painter::Notifier<N - 1>
 
         std::optional<float> pixel_max() const override
         {
-                float max = m_pixel_max.load(std::memory_order_acquire);
+                float max = m_pixel_max.load(std::memory_order_relaxed);
                 if (max != MIN)
                 {
                         return max;
@@ -278,7 +283,7 @@ class PainterPixels final : public Pixels, public painter::Notifier<N - 1>
                               + " must be in the range [0, 1]");
                 }
 
-                m_pixel_brightness_parameter.store(brightness_parameter, std::memory_order_release);
+                m_pixel_brightness_parameter.store(brightness_parameter, std::memory_order_relaxed);
         }
 
         std::span<const std::byte> slice_r8g8b8a8(long long slice_number) override
@@ -393,7 +398,7 @@ public:
 
         ~PainterPixels() override
         {
-                m_normalize_stop.store(true, std::memory_order_release);
+                m_normalize_stop.store(true, std::memory_order_relaxed);
                 m_normalize_thread.join();
                 m_painter.reset();
         }
