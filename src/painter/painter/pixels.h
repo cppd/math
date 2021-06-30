@@ -19,6 +19,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "filter.h"
 #include "paintbrush.h"
+#include "pixel.h"
+#include "region.h"
 
 #include "../painter.h"
 
@@ -35,17 +37,6 @@ namespace ns::painter
 {
 namespace pixels_implementation
 {
-template <std::size_t N>
-std::array<int, N> max_values_for_size(const std::array<int, N>& size)
-{
-        std::array<int, N> max;
-        for (std::size_t i = 0; i < N; ++i)
-        {
-                max[i] = size[i] - 1;
-        }
-        return max;
-}
-
 template <typename Dst, std::size_t N, typename T>
 std::optional<std::array<Dst, N>> to_type(std::optional<std::array<T, N>>&& p)
 {
@@ -61,65 +52,6 @@ std::optional<std::array<Dst, N>> to_type(std::optional<std::array<T, N>>&& p)
         }
         return std::nullopt;
 }
-
-// ceil(radius - 0.5)
-template <typename T>
-constexpr int integer_radius(T radius)
-{
-        static_assert(std::is_floating_point_v<T>);
-
-        const T t = std::max(T(0), radius - T(0.5));
-        const int t_int = t;
-        return (t == t_int) ? t_int : t_int + 1;
-}
-static_assert(integer_radius(0.5) == 0);
-static_assert(integer_radius(1.0) == 1);
-static_assert(integer_radius(1.4) == 1);
-static_assert(integer_radius(1.5) == 1);
-static_assert(integer_radius(1.6) == 2);
-
-//
-
-template <typename Color>
-class Pixel final
-{
-        using DataType = typename Color::DataType;
-
-        Color m_color_sum{0};
-        DataType m_hit_weight_sum{0};
-        DataType m_background_weight_sum{0};
-
-public:
-        void merge(const Color& color_sum, DataType hit_weight_sum, DataType background_weight_sum)
-        {
-                m_color_sum += color_sum;
-                m_hit_weight_sum += hit_weight_sum;
-                m_background_weight_sum += background_weight_sum;
-        }
-
-        struct Info final
-        {
-                Color color;
-                DataType alpha;
-        };
-
-        Info info() const
-        {
-                Info info;
-                const DataType sum = m_hit_weight_sum + m_background_weight_sum;
-                if (sum > 0)
-                {
-                        info.color = m_color_sum / sum;
-                        info.alpha = 1 - m_background_weight_sum / sum;
-                }
-                else
-                {
-                        info.color = Color(0);
-                        info.alpha = 0;
-                }
-                return info;
-        }
-};
 
 template <typename T>
 class LockGuards
@@ -173,7 +105,7 @@ class Pixels final
         const GaussianFilter<T> m_filter{GAUSSIAN_FILTER_WIDTH, FILTER_RADIUS};
 
         const std::array<int, N> m_screen_size;
-        const std::array<int, N> m_screen_max = pixels_implementation::max_values_for_size(m_screen_size);
+        const Region<N> m_region{m_screen_size, FILTER_RADIUS};
 
         const Color m_background_color;
         const Vector<3, float> m_background_color_rgb32 = m_background_color.rgb32();
@@ -182,46 +114,13 @@ class Pixels final
 
         const GlobalIndex<N, long long> m_global_index;
 
-        std::vector<pixels_implementation::Pixel<Color>> m_pixels;
+        std::vector<Pixel<Color>> m_pixels;
         mutable std::vector<SpinLock> m_pixel_locks;
 
         Paintbrush<N, PaintbrushType> m_paintbrush;
         mutable SpinLock m_paintbrush_lock;
 
-        template <std::size_t I, typename F>
-        void region(const std::array<int, N>& min, const std::array<int, N>& max, std::array<int, N>& p, const F& f)
-        {
-                for (int i = min[I]; i <= max[I]; ++i)
-                {
-                        p[I] = i;
-                        if constexpr (I + 1 < N)
-                        {
-                                region<I + 1>(min, max, p, f);
-                        }
-                        else
-                        {
-                                f(p);
-                        }
-                }
-        }
-
-        template <typename F>
-        void region(const std::array<int, N>& pixel, const F& f)
-        {
-                static constexpr int FILTER_INTEGER_RADIUS = pixels_implementation::integer_radius(FILTER_RADIUS);
-
-                std::array<int, N> min;
-                std::array<int, N> max;
-                for (std::size_t i = 0; i < N; ++i)
-                {
-                        min[i] = std::max(0, pixel[i] - FILTER_INTEGER_RADIUS);
-                        max[i] = std::min(m_screen_max[i], pixel[i] + FILTER_INTEGER_RADIUS);
-                }
-                std::array<int, N> p;
-                region<0>(min, max, p, f);
-        }
-
-        Vector<3, float> to_rgb(const typename pixels_implementation::Pixel<Color>::Info& info) const
+        Vector<3, float> to_rgb(const typename Pixel<Color>::Info& info) const
         {
                 if (info.alpha >= 1)
                 {
@@ -272,51 +171,49 @@ public:
                 const std::vector<Vector<N, T>>& points,
                 const std::vector<std::optional<Color>>& colors)
         {
-                namespace impl = pixels_implementation;
-
                 ASSERT(points.size() == colors.size());
 
-                region(pixel,
-                       [&](const std::array<int, N>& region_pixel)
-                       {
-                               const Vector<N, T> region_pixel_center_in_point_coordinates = [&]()
-                               {
-                                       Vector<N, T> r;
-                                       for (unsigned i = 0; i < N; ++i)
-                                       {
-                                               r[i] = (region_pixel[i] - pixel[i]) + T(0.5);
-                                       }
-                                       return r;
-                               }();
+                const auto f = [&](const std::array<int, N>& region_pixel)
+                {
+                        const Vector<N, T> region_pixel_center_in_point_coordinates = [&]()
+                        {
+                                Vector<N, T> r;
+                                for (unsigned i = 0; i < N; ++i)
+                                {
+                                        r[i] = (region_pixel[i] - pixel[i]) + T(0.5);
+                                }
+                                return r;
+                        }();
 
-                               Color color_sum{0};
-                               T hit_weight_sum{0};
-                               T background_weight_sum{0};
+                        Color color_sum{0};
+                        T hit_weight_sum{0};
+                        T background_weight_sum{0};
 
-                               for (std::size_t i = 0; i < points.size(); ++i)
-                               {
-                                       const T weight =
-                                               m_filter.compute(region_pixel_center_in_point_coordinates - points[i]);
+                        for (std::size_t i = 0; i < points.size(); ++i)
+                        {
+                                const T weight = m_filter.compute(region_pixel_center_in_point_coordinates - points[i]);
 
-                                       if (colors[i])
-                                       {
-                                               color_sum.multiply_add(weight, *colors[i]);
-                                               hit_weight_sum += weight;
-                                       }
-                                       else
-                                       {
-                                               background_weight_sum += weight;
-                                       }
-                               }
+                                if (colors[i])
+                                {
+                                        color_sum.multiply_add(weight, *colors[i]);
+                                        hit_weight_sum += weight;
+                                }
+                                else
+                                {
+                                        background_weight_sum += weight;
+                                }
+                        }
 
-                               const long long region_pixel_index = m_global_index.compute(region_pixel);
+                        const long long region_pixel_index = m_global_index.compute(region_pixel);
 
-                               std::lock_guard lg(m_pixel_locks[region_pixel_index]);
+                        std::lock_guard lg(m_pixel_locks[region_pixel_index]);
 
-                               impl::Pixel<Color>& p = m_pixels[region_pixel_index];
-                               p.merge(color_sum, hit_weight_sum, background_weight_sum);
-                               m_notifier->pixel_set(region_pixel, to_rgb(p.info()));
-                       });
+                        Pixel<Color>& p = m_pixels[region_pixel_index];
+                        p.merge(color_sum, hit_weight_sum, background_weight_sum);
+                        m_notifier->pixel_set(region_pixel, to_rgb(p.info()));
+                };
+
+                m_region.region(pixel, f);
         }
 
         void images(image::Image<N>* image_rgb, image::Image<N>* image_rgba) const
@@ -344,9 +241,9 @@ public:
 
                 std::byte* ptr_rgb = image_rgb->pixels.data();
                 std::byte* ptr_rgba = image_rgba->pixels.data();
-                for (const impl::Pixel<Color>& pixel : m_pixels)
+                for (const Pixel<Color>& pixel : m_pixels)
                 {
-                        const typename impl::Pixel<Color>::Info info = pixel.info();
+                        const typename Pixel<Color>::Info info = pixel.info();
 
                         RGBA rgba;
                         rgba.rgb = info.color.rgb32();
