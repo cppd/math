@@ -119,7 +119,7 @@ class Impl final : public View
 
         void set_color(const color::Color& color) const override
         {
-                m_memory.set_color(color.rgb32().clamped(0, 1));
+                m_memory.set_color(color.rgb32().clamp(0, 1));
         }
 
         void draw_commands(VkCommandBuffer command_buffer) const

@@ -45,8 +45,8 @@ class ObjectTree final
                 {
                         for (const Vector<N, T>& v : object.vertices())
                         {
-                                bb.min = min_vector(bb.min, v);
-                                bb.max = max_vector(bb.max, v);
+                                bb.min = min(bb.min, v);
+                                bb.max = max(bb.max, v);
                         }
                 }
                 return bb;

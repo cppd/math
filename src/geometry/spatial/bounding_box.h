@@ -43,8 +43,8 @@ struct BoundingBox final
                 max = points[0];
                 for (std::size_t i = 1; i < Size; ++i)
                 {
-                        min = min_vector(points[i], min);
-                        max = max_vector(points[i], max);
+                        min = ::ns::min(points[i], min);
+                        max = ::ns::max(points[i], max);
                 }
         }
 };

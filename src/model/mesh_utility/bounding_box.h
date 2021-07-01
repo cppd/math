@@ -75,8 +75,8 @@ std::optional<BoundingBox<N>> bounding_box_for_vector(const std::vector<std::opt
         {
                 if (box)
                 {
-                        min = min_vector(min, box->min);
-                        max = max_vector(max, box->max);
+                        min = ::ns::min(min, box->min);
+                        max = ::ns::max(max, box->max);
                 }
         }
 
@@ -119,8 +119,8 @@ std::optional<BoundingBox<N>> bounding_box_by_facets(const Mesh<N>& mesh)
                                 error("Facet vertex index out of bounds");
                         }
 
-                        min = min_vector(min, mesh.vertices[index]);
-                        max = max_vector(max, mesh.vertices[index]);
+                        min = ::ns::min(min, mesh.vertices[index]);
+                        max = ::ns::max(max, mesh.vertices[index]);
                 }
         }
 
@@ -162,8 +162,8 @@ std::optional<BoundingBox<N>> bounding_box_by_lines(const Mesh<N>& mesh)
                                 error("Line vertex index out of bounds");
                         }
 
-                        min = min_vector(min, mesh.vertices[index]);
-                        max = max_vector(max, mesh.vertices[index]);
+                        min = ::ns::min(min, mesh.vertices[index]);
+                        max = ::ns::max(max, mesh.vertices[index]);
                 }
         }
 
@@ -204,8 +204,8 @@ std::optional<BoundingBox<N>> bounding_box_by_points(const Mesh<N>& mesh)
                         error("Point vertex index out of bounds");
                 }
 
-                min = min_vector(min, mesh.vertices[index]);
-                max = max_vector(max, mesh.vertices[index]);
+                min = ::ns::min(min, mesh.vertices[index]);
+                max = ::ns::max(max, mesh.vertices[index]);
         }
 
         if (!impl::min_max_found(min, max))

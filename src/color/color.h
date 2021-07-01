@@ -58,6 +58,7 @@ public:
 
         constexpr explicit RGB(std::type_identity_t<T> v) : Base(std::max(T(0), v))
         {
+                ASSERT(is_finite(v));
         }
 
         constexpr RGB(std::type_identity_t<T> red, std::type_identity_t<T> green, std::type_identity_t<T> blue)
@@ -204,28 +205,14 @@ class SpectrumSamples final : public Samples<SpectrumSamples<T, N>, N, T>
 
         //
 
-        static constexpr void clamp_negative(Vector<N, T>* v)
-        {
-                for (std::size_t i = 0; i < N; ++i)
-                {
-                        (*v)[i] = std::max(T(0), (*v)[i]);
-                }
-        }
-
-        static constexpr Vector<N, T> clamp_negative(Vector<N, T> v)
-        {
-                clamp_negative(&v);
-                return v;
-        }
-
         // Brian Smits.
         // An RGB-to-Spectrum Conversion for Reflectances.
         // Journal of Graphics Tools, 1999.
         static Vector<N, T> rgb_to_spectrum(T red, T green, T blue, const Colors& c)
         {
-                ASSERT(std::isfinite(red));
-                ASSERT(std::isfinite(green));
-                ASSERT(std::isfinite(blue));
+                ASSERT(is_finite(red));
+                ASSERT(is_finite(green));
+                ASSERT(is_finite(blue));
 
                 red = std::max(T(0), red);
                 green = std::max(T(0), green);
@@ -281,31 +268,25 @@ class SpectrumSamples final : public Samples<SpectrumSamples<T, N>, N, T>
                         return spectrum;
                 }
 
-                clamp_negative(&spectrum);
-
-                return spectrum;
+                return spectrum.max_n(0);
         }
 
-        static Vector<3, T> spectrum_to_rgb(Vector<N, T> spectrum)
+        static Vector<3, T> spectrum_to_rgb(const Vector<N, T>& spectrum)
         {
                 const Functions& f = functions();
 
-                clamp_negative(&spectrum);
+                const Vector<N, T> s = spectrum.max_n(0);
 
-                const T x = dot(spectrum, f.x);
-                const T y = dot(spectrum, f.y);
-                const T z = dot(spectrum, f.z);
+                const T x = dot(s, f.x);
+                const T y = dot(s, f.y);
+                const T z = dot(s, f.z);
 
                 return xyz_to_linear_srgb(x, y, z);
         }
 
-        static T spectrum_to_luminance(Vector<N, T> spectrum)
+        static T spectrum_to_luminance(const Vector<N, T>& spectrum)
         {
-                const Functions& f = functions();
-
-                clamp_negative(&spectrum);
-
-                return dot(spectrum, f.y);
+                return dot(spectrum.max_n(0), functions().y);
         }
 
 public:
@@ -321,11 +302,13 @@ public:
 
         constexpr explicit SpectrumSamples(std::type_identity_t<T> v) : Base(std::max(T(0), v))
         {
+                ASSERT(is_finite(v));
         }
 
         constexpr explicit SpectrumSamples(const Vector<std::size_t(N), std::type_identity_t<T>>& samples)
-                : Base(clamp_negative(samples))
+                : Base(samples.max_n(0))
         {
+                ASSERT(is_finite(samples));
         }
 
         SpectrumSamples(std::type_identity_t<T> red, std::type_identity_t<T> green, std::type_identity_t<T> blue)

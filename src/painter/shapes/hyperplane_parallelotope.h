@@ -91,7 +91,7 @@ public:
                 : m_hyperplane_parallelotope(org, e...),
                   m_metalness(std::clamp(metalness, T(0), T(1))),
                   m_roughness(std::clamp(roughness, T(0), T(1))),
-                  m_color(color.clamped(0, 1)),
+                  m_color(color.clamp(0, 1)),
                   m_alpha(std::clamp(alpha, T(0), T(1)))
         {
         }

@@ -411,9 +411,9 @@ std::vector<MaterialBuffer> load_materials(
         for (const typename mesh::Mesh<3>::Material& mesh_material : mesh.materials)
         {
                 MaterialBuffer::Material mb;
-                mb.Ka = mesh_material.Ka.rgb32().clamped(0, 1);
-                mb.Kd = mesh_material.Kd.rgb32().clamped(0, 1);
-                mb.Ks = mesh_material.Ks.rgb32().clamped(0, 1);
+                mb.Ka = mesh_material.Ka.rgb32().clamp(0, 1);
+                mb.Kd = mesh_material.Kd.rgb32().clamp(0, 1);
+                mb.Ks = mesh_material.Ks.rgb32().clamp(0, 1);
                 mb.Ns = mesh_material.Ns;
                 mb.use_texture_Ka = (mesh_material.map_Ka >= 0) ? 1 : 0;
                 mb.use_texture_Kd = (mesh_material.map_Kd >= 0) ? 1 : 0;
@@ -536,7 +536,7 @@ class Impl final : public MeshObject
 
         void buffer_set_color(const color::Color& color)
         {
-                m_mesh_buffer.set_color(color.rgb32().clamped(0, 1));
+                m_mesh_buffer.set_color(color.rgb32().clamp(0, 1));
         }
 
         void buffer_set_alpha(float alpha)

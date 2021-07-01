@@ -242,12 +242,23 @@ public:
                 return s > min && s < max;
         }
 
-        [[nodiscard]] Vector<N, T> clamped(T low, T high) const
+        [[nodiscard]] constexpr Vector<N, T> clamp(T low, T high) const
         {
                 Vector<N, T> res;
                 for (std::size_t i = 0; i < N; ++i)
                 {
                         res[i] = std::clamp(m_data[i], low, high);
+                }
+                return res;
+        }
+
+        [[nodiscard]] constexpr Vector<N, T> max_n(T v) const
+        {
+                Vector<N, T> res;
+                for (std::size_t i = 0; i < N; ++i)
+                {
+                        // v if m_data[i] is NaN
+                        res[i] = std::max(v, m_data[i]);
                 }
                 return res;
         }
@@ -353,7 +364,7 @@ template <std::size_t N, typename T>
 }
 
 template <std::size_t N, typename T>
-[[nodiscard]] Vector<N, T> max_vector(const Vector<N, T>& a, const Vector<N, T>& b)
+[[nodiscard]] Vector<N, T> max(const Vector<N, T>& a, const Vector<N, T>& b)
 {
         Vector<N, T> res;
         for (std::size_t i = 0; i < N; ++i)
@@ -364,7 +375,7 @@ template <std::size_t N, typename T>
 }
 
 template <std::size_t N, typename T>
-[[nodiscard]] Vector<N, T> min_vector(const Vector<N, T>& a, const Vector<N, T>& b)
+[[nodiscard]] Vector<N, T> min(const Vector<N, T>& a, const Vector<N, T>& b)
 {
         Vector<N, T> res;
         for (std::size_t i = 0; i < N; ++i)

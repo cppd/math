@@ -77,10 +77,17 @@ public:
                 multiply_add(a, b);
         }
 
-        [[nodiscard]] Derived clamped(T low, T high) const
+        [[nodiscard]] Derived clamp(T low, T high) const
         {
                 Derived r;
-                r.m_data = m_data.clamped(low, high);
+                r.m_data = m_data.clamp(low, high);
+                return r;
+        }
+
+        [[nodiscard]] Derived max_n(T v) const
+        {
+                Derived r;
+                r.m_data = m_data.max_n(v);
                 return r;
         }
 
@@ -245,6 +252,20 @@ public:
         {
                 Derived r;
                 r.m_data = ::ns::interpolation(a.m_data, b.m_data, t);
+                return r;
+        }
+
+        [[nodiscard]] friend Derived max(const Derived& a, const Derived& b)
+        {
+                Derived r;
+                r.m_data = max(a.m_data, b.m_data);
+                return r;
+        }
+
+        [[nodiscard]] friend Derived min(const Derived& a, const Derived& b)
+        {
+                Derived r;
+                r.m_data = min(a.m_data, b.m_data);
                 return r;
         }
 

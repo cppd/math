@@ -114,7 +114,7 @@ struct Material
         Material(T metalness, T roughness, const color::Color& Kd, int map_Kd, T alpha)
                 : metalness(std::clamp(metalness, T(0), T(1))),
                   roughness(std::clamp(roughness, T(0), T(1))),
-                  Kd(Kd.to_color<Color>().clamped(0, 1)),
+                  Kd(Kd.to_color<Color>().clamp(0, 1)),
                   alpha(std::clamp(alpha, T(0), T(1))),
                   map_Kd(map_Kd)
         {

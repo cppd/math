@@ -80,8 +80,8 @@ geometry::BoundingBox<N, T> compute_bounding_box(const std::vector<const Shape<N
         for (std::size_t i = 1; i < shapes.size(); ++i)
         {
                 geometry::BoundingBox<N, T> shape_bb = shapes[i]->bounding_box();
-                bb.min = min_vector(bb.min, shape_bb.min);
-                bb.max = max_vector(bb.max, shape_bb.max);
+                bb.min = min(bb.min, shape_bb.min);
+                bb.max = max(bb.max, shape_bb.max);
         }
         return bb;
 }

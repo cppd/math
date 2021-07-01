@@ -235,7 +235,7 @@ bool shapes_not_intersect_by_planes(const Shape1& shape_1, const Shape2& shape_2
 //
 //        constexpr std::size_t CONSTRAINT_COUNT = constraint_count<Shape1>() + constraint_count<Shape2>();
 //
-//        const Vector<N, T> min = min_vector(shape_1.min(), shape_2.min());
+//        const Vector<N, T> min = ::ns::min(shape_1.min(), shape_2.min());
 //
 //        std::array<Vector<N, T>, CONSTRAINT_COUNT> a;
 //        std::array<T, CONSTRAINT_COUNT> b;

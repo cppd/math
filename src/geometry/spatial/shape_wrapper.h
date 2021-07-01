@@ -49,7 +49,7 @@ class ShapeWrapperForIntersection final
         //        Vector<N, T> min = vectors[0];
         //        for (std::size_t i = 1; i < ArraySize; ++i)
         //        {
-        //                min = min_vector(vectors[i], min);
+        //                min = ::ns::min(vectors[i], min);
         //        }
         //        return min;
         //}

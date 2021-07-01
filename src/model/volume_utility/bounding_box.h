@@ -75,8 +75,8 @@ std::optional<BoundingBox<N>> bounding_box(const Volume<N>& volume)
 
         for (const Vector<N, double>& v : vertices(volume))
         {
-                min = min_vector(min, v);
-                max = max_vector(max, v);
+                min = ::ns::min(min, v);
+                max = ::ns::max(max, v);
         }
 
         if (!impl::min_max_found(min, max))
