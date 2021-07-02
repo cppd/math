@@ -134,6 +134,50 @@ class Pixels final
                 return c.rgb32();
         }
 
+        void add_samples(
+                const std::array<int, N>& region_pixel,
+                const std::array<int, N>& pixel,
+                const std::vector<Vector<N, T>>& points,
+                const std::vector<std::optional<Color>>& colors)
+        {
+                const Vector<N, T> region_pixel_center = [&]()
+                {
+                        Vector<N, T> r;
+                        for (unsigned i = 0; i < N; ++i)
+                        {
+                                r[i] = (region_pixel[i] - pixel[i]) + T(0.5);
+                        }
+                        return r;
+                }();
+
+                Color color_sum{0};
+                T hit_weight_sum{0};
+                T background_weight_sum{0};
+
+                for (std::size_t i = 0; i < points.size(); ++i)
+                {
+                        const T weight = m_filter.compute(region_pixel_center - points[i]);
+
+                        if (colors[i])
+                        {
+                                color_sum.multiply_add(weight, *colors[i]);
+                                hit_weight_sum += weight;
+                        }
+                        else
+                        {
+                                background_weight_sum += weight;
+                        }
+                }
+
+                const long long index = m_global_index.compute(region_pixel);
+
+                std::lock_guard lg(m_pixel_locks[index]);
+
+                Pixel<Color>& p = m_pixels[index];
+                p.merge(color_sum, hit_weight_sum, background_weight_sum);
+                m_notifier->pixel_set(region_pixel, to_rgb(p.info()));
+        }
+
 public:
         Pixels(const std::array<int, N>& screen_size,
                const std::type_identity_t<Color>& background_color,
@@ -173,47 +217,12 @@ public:
         {
                 ASSERT(points.size() == colors.size());
 
-                const auto f = [&](const std::array<int, N>& region_pixel)
-                {
-                        const Vector<N, T> region_pixel_center_in_point_coordinates = [&]()
+                m_region.region(
+                        pixel,
+                        [&](const std::array<int, N>& region_pixel)
                         {
-                                Vector<N, T> r;
-                                for (unsigned i = 0; i < N; ++i)
-                                {
-                                        r[i] = (region_pixel[i] - pixel[i]) + T(0.5);
-                                }
-                                return r;
-                        }();
-
-                        Color color_sum{0};
-                        T hit_weight_sum{0};
-                        T background_weight_sum{0};
-
-                        for (std::size_t i = 0; i < points.size(); ++i)
-                        {
-                                const T weight = m_filter.compute(region_pixel_center_in_point_coordinates - points[i]);
-
-                                if (colors[i])
-                                {
-                                        color_sum.multiply_add(weight, *colors[i]);
-                                        hit_weight_sum += weight;
-                                }
-                                else
-                                {
-                                        background_weight_sum += weight;
-                                }
-                        }
-
-                        const long long region_pixel_index = m_global_index.compute(region_pixel);
-
-                        std::lock_guard lg(m_pixel_locks[region_pixel_index]);
-
-                        Pixel<Color>& p = m_pixels[region_pixel_index];
-                        p.merge(color_sum, hit_weight_sum, background_weight_sum);
-                        m_notifier->pixel_set(region_pixel, to_rgb(p.info()));
-                };
-
-                m_region.region(pixel, f);
+                                add_samples(region_pixel, pixel, points, colors);
+                        });
         }
 
         void images(image::Image<N>* image_rgb, image::Image<N>* image_rgba) const
