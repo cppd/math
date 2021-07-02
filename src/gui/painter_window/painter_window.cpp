@@ -89,12 +89,12 @@ void PainterWindow::create_interface()
         QVBoxLayout* main_layout = new QVBoxLayout(ui.main_widget);
         main_layout->setContentsMargins(0, 0, 0, 0);
         main_layout->setSpacing(0);
-        ui.main_widget->setLayout(main_layout);
 
-        QHBoxLayout* imageLayout = new QHBoxLayout(ui.main_widget);
-        imageLayout->setContentsMargins(0, 0, 0, 0);
-        imageLayout->setSpacing(0);
-        main_layout->addLayout(imageLayout);
+        QWidget* image_widget = new QWidget(this);
+        QHBoxLayout* image_layout = new QHBoxLayout(image_widget);
+        image_layout->setContentsMargins(0, 0, 0, 0);
+        image_layout->setSpacing(0);
+        main_layout->addWidget(image_widget);
 
         m_brightness_parameter_slider = std::make_unique<QSlider>(Qt::Vertical);
         m_brightness_parameter_slider->setTracking(false);
@@ -106,11 +106,11 @@ void PainterWindow::create_interface()
                         m_pixels->set_brightness_parameter(
                                 std::clamp(slider_position(m_brightness_parameter_slider.get()), 0.0, 1.0));
                 });
-        imageLayout->addWidget(m_brightness_parameter_slider.get());
+        image_layout->addWidget(m_brightness_parameter_slider.get());
 
         m_image_widget =
                 std::make_unique<ImageWidget>(m_pixels->screen_size()[0], m_pixels->screen_size()[1], ui.menu_view);
-        imageLayout->addWidget(m_image_widget.get());
+        image_layout->addWidget(m_image_widget.get());
 
         m_statistics_widget = std::make_unique<StatisticsWidget>(UPDATE_INTERVAL);
         main_layout->addWidget(m_statistics_widget.get());
