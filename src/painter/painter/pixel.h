@@ -17,6 +17,10 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
+#include <src/com/error.h>
+
+#include <tuple>
+
 namespace ns::painter
 {
 template <typename Color>
@@ -36,27 +40,31 @@ public:
                 m_background_weight_sum += background_weight_sum;
         }
 
-        struct Info final
+        bool has_color() const
         {
-                Color color;
-                DataType alpha;
-        };
+                return m_hit_weight_sum > 0;
+        }
 
-        Info info() const
+        Color color(const Color& background_color) const
         {
-                Info info;
+                ASSERT(has_color());
+                if (m_background_weight_sum == 0)
+                {
+                        return m_color_sum / m_hit_weight_sum;
+                }
                 const DataType sum = m_hit_weight_sum + m_background_weight_sum;
-                if (sum > 0)
+                return (m_color_sum + m_background_weight_sum * background_color) / sum;
+        }
+
+        std::tuple<Color, DataType> color_alpha() const
+        {
+                ASSERT(has_color());
+                if (m_background_weight_sum == 0)
                 {
-                        info.color = m_color_sum / sum;
-                        info.alpha = 1 - m_background_weight_sum / sum;
+                        return {m_color_sum / m_hit_weight_sum, 1};
                 }
-                else
-                {
-                        info.color = Color(0);
-                        info.alpha = 0;
-                }
-                return info;
+                const DataType sum = m_hit_weight_sum + m_background_weight_sum;
+                return {m_color_sum / sum, m_hit_weight_sum / sum};
         }
 };
 }

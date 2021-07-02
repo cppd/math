@@ -107,8 +107,8 @@ class Pixels final
         const std::array<int, N> m_screen_size;
         const Region<N> m_region{m_screen_size, FILTER_RADIUS};
 
-        const Color m_background_color;
-        const Vector<3, float> m_background_color_rgb32 = m_background_color.rgb32();
+        const Color m_background;
+        const Vector<3, float> m_background_rgb32 = m_background.rgb32();
 
         Notifier<N>* const m_notifier;
 
@@ -120,32 +120,18 @@ class Pixels final
         Paintbrush<N, PaintbrushType> m_paintbrush;
         mutable SpinLock m_paintbrush_lock;
 
-        Vector<3, float> to_rgb(const typename Pixel<Color>::Info& info) const
-        {
-                if (info.alpha >= 1)
-                {
-                        return info.color.rgb32();
-                }
-                if (info.alpha <= 0)
-                {
-                        return m_background_color_rgb32;
-                }
-                const Color c = info.color + (1 - info.alpha) * m_background_color;
-                return c.rgb32();
-        }
-
         void add_samples(
-                const std::array<int, N>& region_pixel,
                 const std::array<int, N>& pixel,
+                const std::array<int, N>& sample_pixel,
                 const std::vector<Vector<N, T>>& points,
                 const std::vector<std::optional<Color>>& colors)
         {
-                const Vector<N, T> region_pixel_center = [&]()
+                const Vector<N, T> center = [&]()
                 {
                         Vector<N, T> r;
                         for (unsigned i = 0; i < N; ++i)
                         {
-                                r[i] = (region_pixel[i] - pixel[i]) + T(0.5);
+                                r[i] = (pixel[i] - sample_pixel[i]) + T(0.5);
                         }
                         return r;
                 }();
@@ -156,7 +142,7 @@ class Pixels final
 
                 for (std::size_t i = 0; i < points.size(); ++i)
                 {
-                        const T weight = m_filter.compute(region_pixel_center - points[i]);
+                        const T weight = m_filter.compute(center - points[i]);
 
                         if (colors[i])
                         {
@@ -169,13 +155,13 @@ class Pixels final
                         }
                 }
 
-                const long long index = m_global_index.compute(region_pixel);
+                const long long index = m_global_index.compute(pixel);
 
                 std::lock_guard lg(m_pixel_locks[index]);
 
                 Pixel<Color>& p = m_pixels[index];
                 p.merge(color_sum, hit_weight_sum, background_weight_sum);
-                m_notifier->pixel_set(region_pixel, to_rgb(p.info()));
+                m_notifier->pixel_set(pixel, p.has_color() ? p.color(m_background).rgb32() : m_background_rgb32);
         }
 
 public:
@@ -183,7 +169,7 @@ public:
                const std::type_identity_t<Color>& background_color,
                Notifier<N>* notifier)
                 : m_screen_size(screen_size),
-                  m_background_color(background_color),
+                  m_background(background_color),
                   m_notifier(notifier),
                   m_global_index(screen_size),
                   m_pixels(m_global_index.count()),
@@ -252,25 +238,21 @@ public:
                 std::byte* ptr_rgba = image_rgba->pixels.data();
                 for (const Pixel<Color>& pixel : m_pixels)
                 {
-                        const typename Pixel<Color>::Info info = pixel.info();
-
-                        RGBA rgba;
-                        rgba.rgb = info.color.rgb32();
-                        rgba.alpha = info.alpha;
-
                         Vector<3, float> rgb;
-                        if (info.alpha >= 1)
+                        RGBA rgba;
+
+                        if (pixel.has_color())
                         {
-                                rgb = rgba.rgb;
-                        }
-                        else if (info.alpha <= 0)
-                        {
-                                rgb = m_background_color_rgb32;
+                                rgb = pixel.color(m_background).rgb32();
+                                const auto& [color, alpha] = pixel.color_alpha();
+                                rgba.rgb = color.rgb32();
+                                rgba.alpha = alpha;
                         }
                         else
                         {
-                                const Color c = info.color + (1 - info.alpha) * m_background_color;
-                                rgb = c.rgb32();
+                                rgb = m_background_rgb32;
+                                rgba.rgb = m_background_rgb32;
+                                rgba.alpha = 0;
                         }
 
                         static_assert(sizeof(rgb) == RGB_PIXEL_SIZE);
