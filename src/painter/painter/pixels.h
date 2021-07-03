@@ -24,7 +24,9 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "../painter.h"
 
+#include <src/com/error.h>
 #include <src/com/global_index.h>
+#include <src/com/log.h>
 #include <src/com/spin_lock.h>
 #include <src/image/image.h>
 
@@ -75,19 +77,18 @@ class Pixels final
         const GaussianFilter<T> m_filter{GAUSSIAN_FILTER_WIDTH, FILTER_RADIUS};
 
         const std::array<int, N> m_screen_size;
-        const Region<N> m_region{m_screen_size, FILTER_RADIUS};
+        const GlobalIndex<N, long long> m_global_index{m_screen_size};
+        const Region<N> m_filter_region{m_screen_size, FILTER_RADIUS};
 
         const Color m_background;
         const Vector<3, float> m_background_rgb32 = m_background.rgb32();
 
         Notifier<N>* const m_notifier;
 
-        const GlobalIndex<N, long long> m_global_index;
+        std::vector<Pixel<Color>> m_pixels{static_cast<std::size_t>(m_global_index.count())};
+        mutable std::vector<SpinLock> m_pixel_locks{m_pixels.size()};
 
-        std::vector<Pixel<Color>> m_pixels;
-        mutable std::vector<SpinLock> m_pixel_locks;
-
-        Paintbrush<N, PaintbrushType> m_paintbrush;
+        Paintbrush<N, PaintbrushType> m_paintbrush{m_screen_size, PANTBRUSH_WIDTH};
         mutable SpinLock m_paintbrush_lock;
 
         void add_samples(
@@ -106,14 +107,15 @@ class Pixels final
                         return r;
                 }();
 
-                Color color_sum{0};
-                T hit_weight_sum{0};
-                T background_weight_sum{0};
+                Color color_sum(0);
+                T color_weight_sum(0);
+                T background_weight_sum(0);
 
                 for (std::size_t i = 0; i < points.size(); ++i)
                 {
                         const T weight = m_filter.compute(center - points[i]);
                         ASSERT(weight >= 0);
+
                         if (!(weight > 0))
                         {
                                 continue;
@@ -122,7 +124,7 @@ class Pixels final
                         if (colors[i])
                         {
                                 color_sum.multiply_add(weight, *colors[i]);
-                                hit_weight_sum += weight;
+                                color_weight_sum += weight;
                         }
                         else
                         {
@@ -134,22 +136,20 @@ class Pixels final
                 Pixel<Color>& p = m_pixels[index];
 
                 std::lock_guard lg(m_pixel_locks[index]);
-                p.merge(color_sum, hit_weight_sum, background_weight_sum);
+                p.merge(color_sum, color_weight_sum, background_weight_sum);
                 m_notifier->pixel_set(pixel, p.has_color() ? p.color(m_background).rgb32() : m_background_rgb32);
         }
 
 public:
         Pixels(const std::array<int, N>& screen_size,
-               const std::type_identity_t<Color>& background_color,
+               const std::type_identity_t<Color>& background,
                Notifier<N>* notifier)
-                : m_screen_size(screen_size),
-                  m_background(background_color),
-                  m_notifier(notifier),
-                  m_global_index(screen_size),
-                  m_pixels(m_global_index.count()),
-                  m_pixel_locks(m_pixels.size()),
-                  m_paintbrush(screen_size, PANTBRUSH_WIDTH)
+                : m_screen_size(screen_size), m_background(background.max_n(0)), m_notifier(notifier)
         {
+                if (!background.is_finite())
+                {
+                        error("Not finite background " + to_string(background));
+                }
         }
 
         std::optional<std::array<int, N>> next_pixel()
@@ -175,7 +175,15 @@ public:
         {
                 ASSERT(points.size() == colors.size());
 
-                m_region.region(
+                for (const std::optional<Color>& color : colors)
+                {
+                        if (!color->is_finite())
+                        {
+                                LOG("Not finite color " + to_string(*color));
+                        }
+                }
+
+                m_filter_region.traverse(
                         pixel,
                         [&](const std::array<int, N>& region_pixel)
                         {

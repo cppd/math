@@ -52,7 +52,7 @@ class Region final
         }
 
         template <std::size_t I, typename F>
-        static void region(
+        static void traverse(
                 const std::array<int, N>& min,
                 const std::array<int, N>& max,
                 std::array<int, N>& p,
@@ -63,7 +63,7 @@ class Region final
                         p[I] = i;
                         if constexpr (I + 1 < N)
                         {
-                                region<I + 1>(min, max, p, f);
+                                traverse<I + 1>(min, max, p, f);
                         }
                         else
                         {
@@ -83,7 +83,7 @@ public:
         }
 
         template <typename F>
-        void region(const std::array<int, N>& pixel, const F& f) const
+        void traverse(const std::array<int, N>& pixel, const F& f) const
         {
                 std::array<int, N> min;
                 std::array<int, N> max;
@@ -93,7 +93,7 @@ public:
                         max[i] = std::min(m_max[i], pixel[i] + m_integer_radius);
                 }
                 std::array<int, N> p;
-                region<0>(min, max, p, f);
+                traverse<0>(min, max, p, f);
         }
 };
 }

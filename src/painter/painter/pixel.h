@@ -29,20 +29,20 @@ class Pixel final
         using DataType = typename Color::DataType;
 
         Color m_color_sum{0};
-        DataType m_hit_weight_sum{0};
+        DataType m_color_weight_sum{0};
         DataType m_background_weight_sum{0};
 
 public:
-        void merge(const Color& color_sum, DataType hit_weight_sum, DataType background_weight_sum)
+        void merge(const Color& color_sum, DataType color_weight_sum, DataType background_weight_sum)
         {
                 m_color_sum += color_sum;
-                m_hit_weight_sum += hit_weight_sum;
+                m_color_weight_sum += color_weight_sum;
                 m_background_weight_sum += background_weight_sum;
         }
 
         bool has_color() const
         {
-                return m_hit_weight_sum > 0;
+                return m_color_weight_sum > 0;
         }
 
         Color color(const Color& background_color) const
@@ -50,15 +50,15 @@ public:
                 ASSERT(has_color());
                 if (m_background_weight_sum == 0)
                 {
-                        return m_color_sum / m_hit_weight_sum;
+                        return m_color_sum / m_color_weight_sum;
                 }
-                const DataType sum = m_hit_weight_sum + m_background_weight_sum;
+                const DataType sum = m_color_weight_sum + m_background_weight_sum;
                 return (m_color_sum + m_background_weight_sum * background_color) / sum;
         }
 
         bool has_color_alpha() const
         {
-                return m_hit_weight_sum > 0;
+                return m_color_weight_sum > 0;
         }
 
         std::tuple<Color, DataType> color_alpha() const
@@ -66,10 +66,10 @@ public:
                 ASSERT(has_color_alpha());
                 if (m_background_weight_sum == 0)
                 {
-                        return {m_color_sum / m_hit_weight_sum, 1};
+                        return {m_color_sum / m_color_weight_sum, 1};
                 }
-                const DataType sum = m_hit_weight_sum + m_background_weight_sum;
-                return {m_color_sum / sum, m_hit_weight_sum / sum};
+                const DataType sum = m_color_weight_sum + m_background_weight_sum;
+                return {m_color_sum / sum, m_color_weight_sum / sum};
         }
 };
 }
