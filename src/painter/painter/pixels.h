@@ -52,36 +52,6 @@ std::optional<std::array<Dst, N>> to_type(std::optional<std::array<T, N>>&& p)
         }
         return std::nullopt;
 }
-
-template <typename T>
-class LockGuards
-{
-        T& m_locks;
-
-public:
-        explicit LockGuards(T& locks) noexcept : m_locks(locks)
-        {
-                for (auto& lock : m_locks)
-                {
-                        static_assert(noexcept(lock.lock()));
-                        lock.lock();
-                }
-        }
-
-        ~LockGuards()
-        {
-                for (auto& lock : m_locks)
-                {
-                        static_assert(noexcept(lock.unlock()));
-                        lock.unlock();
-                }
-        }
-
-        LockGuards(const LockGuards&) = delete;
-        LockGuards(LockGuards&&) = delete;
-        LockGuards& operator=(const LockGuards&) = delete;
-        LockGuards& operator=(LockGuards&&) = delete;
-};
 }
 
 template <std::size_t N, typename T, typename Color>
@@ -143,6 +113,11 @@ class Pixels final
                 for (std::size_t i = 0; i < points.size(); ++i)
                 {
                         const T weight = m_filter.compute(center - points[i]);
+                        ASSERT(weight >= 0);
+                        if (!(weight > 0))
+                        {
+                                continue;
+                        }
 
                         if (colors[i])
                         {
@@ -156,10 +131,9 @@ class Pixels final
                 }
 
                 const long long index = m_global_index.compute(pixel);
+                Pixel<Color>& p = m_pixels[index];
 
                 std::lock_guard lg(m_pixel_locks[index]);
-
-                Pixel<Color>& p = m_pixels[index];
                 p.merge(color_sum, hit_weight_sum, background_weight_sum);
                 m_notifier->pixel_set(pixel, p.has_color() ? p.color(m_background).rgb32() : m_background_rgb32);
         }
@@ -180,9 +154,7 @@ public:
 
         std::optional<std::array<int, N>> next_pixel()
         {
-                namespace impl = pixels_implementation;
-
-                return impl::to_type<int>(
+                return pixels_implementation::to_type<int>(
                         [&]
                         {
                                 std::lock_guard lg(m_paintbrush_lock);
@@ -232,28 +204,32 @@ public:
                 image_rgba->size = m_screen_size;
                 image_rgba->pixels.resize(RGBA_PIXEL_SIZE * m_pixels.size());
 
-                impl::LockGuards lg(m_pixel_locks);
-
                 std::byte* ptr_rgb = image_rgb->pixels.data();
                 std::byte* ptr_rgba = image_rgba->pixels.data();
-                for (const Pixel<Color>& pixel : m_pixels)
+                for (std::size_t i = 0; i < m_pixels.size(); ++i)
                 {
-                        Vector<3, float> rgb;
-                        RGBA rgba;
+                        const Pixel<Color>& pixel = m_pixels[i];
 
-                        if (pixel.has_color())
+                        std::lock_guard lg(m_pixel_locks[i]);
+
+                        const Vector<3, float> rgb = [&]
                         {
-                                rgb = pixel.color(m_background).rgb32();
-                                const auto& [color, alpha] = pixel.color_alpha();
-                                rgba.rgb = color.rgb32();
-                                rgba.alpha = alpha;
-                        }
-                        else
+                                if (pixel.has_color())
+                                {
+                                        return pixel.color(m_background).rgb32();
+                                }
+                                return m_background_rgb32;
+                        }();
+
+                        const RGBA rgba = [&]
                         {
-                                rgb = m_background_rgb32;
-                                rgba.rgb = m_background_rgb32;
-                                rgba.alpha = 0;
-                        }
+                                if (pixel.has_color_alpha())
+                                {
+                                        const auto& [color, alpha] = pixel.color_alpha();
+                                        return RGBA{.rgb = color.rgb32(), .alpha = alpha};
+                                }
+                                return RGBA{.rgb = Vector<3, float>(0), .alpha = 0};
+                        }();
 
                         static_assert(sizeof(rgb) == RGB_PIXEL_SIZE);
                         std::memcpy(ptr_rgb, &rgb, RGB_PIXEL_SIZE);

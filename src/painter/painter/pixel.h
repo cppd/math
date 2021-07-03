@@ -56,9 +56,14 @@ public:
                 return (m_color_sum + m_background_weight_sum * background_color) / sum;
         }
 
+        bool has_color_alpha() const
+        {
+                return m_hit_weight_sum > 0;
+        }
+
         std::tuple<Color, DataType> color_alpha() const
         {
-                ASSERT(has_color());
+                ASSERT(has_color_alpha());
                 if (m_background_weight_sum == 0)
                 {
                         return {m_color_sum / m_hit_weight_sum, 1};
