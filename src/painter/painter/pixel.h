@@ -17,8 +17,9 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
-#include <src/com/error.h>
+#include <src/com/type/limit.h>
 
+#include <optional>
 #include <tuple>
 
 namespace ns::painter
@@ -30,58 +31,154 @@ class Pixel final
 
         Color m_color_sum{0};
         DataType m_color_weight_sum{0};
+
+        Color m_color_min{0};
+        DataType m_color_min_contribution{limits<DataType>::max()};
+        DataType m_color_min_weight{0};
+
+        Color m_color_max{0};
+        DataType m_color_max_contribution{limits<DataType>::lowest()};
+        DataType m_color_max_weight{0};
+
         DataType m_background_weight_sum{0};
+        DataType m_background_min_weight{limits<DataType>::max()};
+        DataType m_background_max_weight{limits<DataType>::lowest()};
+
+        struct Data final
+        {
+                Color c;
+                DataType c_w;
+                DataType b_w;
+        };
+
+        Data color_data(DataType background_contribution) const
+        {
+                Data r{.c = m_color_sum, .c_w = m_color_weight_sum, .b_w = m_background_weight_sum};
+
+                if (m_background_min_weight * background_contribution < m_color_min_contribution)
+                {
+                        r.c += m_color_min;
+                        r.c_w += m_color_min_weight;
+                }
+                else
+                {
+                        r.b_w += m_background_min_weight;
+                }
+
+                if (m_background_max_weight * background_contribution > m_color_max_contribution)
+                {
+                        r.c += m_color_max;
+                        r.c_w += m_color_max_weight;
+                }
+                else
+                {
+                        r.b_w += m_background_max_weight;
+                }
+
+                return r;
+        }
 
 public:
         void merge_color(
                 const Color& sum_color,
                 DataType sum_weight,
                 const Color& min_color,
-                DataType /*min_contribution*/,
+                DataType min_contribution,
                 DataType min_weight,
                 const Color& max_color,
-                DataType /*max_contribution*/,
+                DataType max_contribution,
                 DataType max_weight)
         {
-                m_color_sum += sum_color + min_color + max_color;
-                m_color_weight_sum += sum_weight + min_weight + max_weight;
+                m_color_sum += sum_color;
+                m_color_weight_sum += sum_weight;
+
+                if (min_contribution < m_color_min_contribution)
+                {
+                        m_color_sum += m_color_min;
+                        m_color_weight_sum += m_color_min_weight;
+                        m_color_min = min_color;
+                        m_color_min_contribution = min_contribution;
+                        m_color_min_weight = min_weight;
+                }
+                else
+                {
+                        m_color_sum += min_color;
+                        m_color_weight_sum += min_weight;
+                }
+
+                if (max_contribution > m_color_max_contribution)
+                {
+                        m_color_sum += m_color_max;
+                        m_color_weight_sum += m_color_max_weight;
+                        m_color_max = max_color;
+                        m_color_max_contribution = max_contribution;
+                        m_color_max_weight = max_weight;
+                }
+                else
+                {
+                        m_color_sum += max_color;
+                        m_color_weight_sum += max_weight;
+                }
         }
 
         void merge_background(DataType sum_weight, DataType min_weight, DataType max_weight)
         {
-                m_background_weight_sum += sum_weight + min_weight + max_weight;
-        }
+                m_background_weight_sum += sum_weight;
 
-        bool has_color() const
-        {
-                return m_color_weight_sum > 0;
-        }
-
-        Color color(const Color& background_color, DataType /*background_contribution*/) const
-        {
-                ASSERT(has_color());
-                if (m_background_weight_sum == 0)
+                if (min_weight < m_background_min_weight)
                 {
-                        return m_color_sum / m_color_weight_sum;
+                        m_background_weight_sum += m_background_min_weight;
+                        m_background_min_weight = min_weight;
                 }
-                const DataType sum = m_color_weight_sum + m_background_weight_sum;
-                return (m_color_sum + m_background_weight_sum * background_color) / sum;
-        }
-
-        bool has_color_alpha() const
-        {
-                return m_color_weight_sum > 0;
-        }
-
-        std::tuple<Color, DataType> color_alpha() const
-        {
-                ASSERT(has_color_alpha());
-                if (m_background_weight_sum == 0)
+                else
                 {
-                        return {m_color_sum / m_color_weight_sum, 1};
+                        m_background_weight_sum += min_weight;
                 }
-                const DataType sum = m_color_weight_sum + m_background_weight_sum;
-                return {m_color_sum / sum, m_color_weight_sum / sum};
+
+                if (max_weight > m_background_max_weight)
+                {
+                        m_background_weight_sum += m_background_max_weight;
+                        m_background_max_weight = max_weight;
+                }
+                else
+                {
+                        m_background_weight_sum += max_weight;
+                }
+        }
+
+        std::optional<Color> color(const Color& background_color, DataType background_contribution) const
+        {
+                const Data data = color_data(background_contribution);
+
+                if (data.c_w == 0)
+                {
+                        return std::nullopt;
+                }
+
+                if (data.b_w == 0)
+                {
+                        return data.c / data.c_w;
+                }
+
+                return (data.c + data.b_w * background_color) / (data.c_w + data.b_w);
+        }
+
+        std::optional<std::tuple<Color, DataType>> color_alpha(DataType background_contribution) const
+        {
+                const Data data = color_data(background_contribution);
+
+                if (data.c_w == 0)
+                {
+                        return std::nullopt;
+                }
+
+                if (data.b_w == 0)
+                {
+                        return std::make_tuple(data.c / data.c_w, DataType(1));
+                }
+
+                const DataType sum = data.c_w + data.b_w;
+                return std::make_tuple(data.c / sum, data.c_w / sum);
         }
 };
 }

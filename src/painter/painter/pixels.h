@@ -324,9 +324,9 @@ class Pixels final
                 {
                         p.merge_background(b->sum, b->min, b->max);
                 }
-                const Vector<3, float> color =
-                        p.has_color() ? p.color(m_background, m_background_contribution).rgb32() : m_background_rgb32;
-                m_notifier->pixel_set(pixel, color);
+                const std::optional<Color> color = p.color(m_background, m_background_contribution);
+                const Vector<3, float> rgb = color ? color->rgb32() : m_background_rgb32;
+                m_notifier->pixel_set(pixel, rgb);
         }
 
 public:
@@ -412,19 +412,21 @@ public:
 
                         const Vector<3, float> rgb = [&]
                         {
-                                if (pixel.has_color())
+                                const std::optional<Color> color = pixel.color(m_background, m_background_contribution);
+                                if (color)
                                 {
-                                        return pixel.color(m_background, m_background_contribution).rgb32();
+                                        return color->rgb32();
                                 }
                                 return m_background_rgb32;
                         }();
 
                         const RGBA rgba = [&]
                         {
-                                if (pixel.has_color_alpha())
+                                const std::optional<std::tuple<Color, typename Color::DataType>> color =
+                                        pixel.color_alpha(m_background_contribution);
+                                if (color)
                                 {
-                                        const auto& [color, alpha] = pixel.color_alpha();
-                                        return RGBA{.rgb = color.rgb32(), .alpha = alpha};
+                                        return RGBA{.rgb = std::get<0>(*color).rgb32(), .alpha = std::get<1>(*color)};
                                 }
                                 return RGBA{.rgb = Vector<3, float>(0), .alpha = 0};
                         }();
