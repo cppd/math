@@ -33,11 +33,23 @@ class Pixel final
         DataType m_background_weight_sum{0};
 
 public:
-        void merge(const Color& color_sum, DataType color_weight_sum, DataType background_weight_sum)
+        void merge_color(
+                const Color& sum_color,
+                DataType sum_weight,
+                const Color& min_color,
+                DataType /*min_contribution*/,
+                DataType min_weight,
+                const Color& max_color,
+                DataType /*max_contribution*/,
+                DataType max_weight)
         {
-                m_color_sum += color_sum;
-                m_color_weight_sum += color_weight_sum;
-                m_background_weight_sum += background_weight_sum;
+                m_color_sum += sum_color + min_color + max_color;
+                m_color_weight_sum += sum_weight + min_weight + max_weight;
+        }
+
+        void merge_background(DataType sum_weight, DataType min_weight, DataType max_weight)
+        {
+                m_background_weight_sum += sum_weight + min_weight + max_weight;
         }
 
         bool has_color() const
@@ -45,7 +57,7 @@ public:
                 return m_color_weight_sum > 0;
         }
 
-        Color color(const Color& background_color) const
+        Color color(const Color& background_color, DataType /*background_contribution*/) const
         {
                 ASSERT(has_color());
                 if (m_background_weight_sum == 0)

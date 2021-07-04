@@ -28,6 +28,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/com/global_index.h>
 #include <src/com/log.h>
 #include <src/com/spin_lock.h>
+#include <src/com/type/limit.h>
 #include <src/image/image.h>
 
 #include <array>
@@ -54,15 +55,10 @@ std::optional<std::array<Dst, N>> to_type(std::optional<std::array<T, N>>&& p)
         }
         return std::nullopt;
 }
-}
 
 template <std::size_t N, typename T, typename Color>
-class Pixels final
+class Filter final
 {
-        using PaintbrushType = std::uint_least16_t;
-
-        static constexpr int PANTBRUSH_WIDTH = 20;
-
         //radius=1.5;
         //width=radius/2.5;
         //alpha=1/(2*width*width);
@@ -76,12 +72,216 @@ class Pixels final
 
         const GaussianFilter<T> m_filter{GAUSSIAN_FILTER_WIDTH, FILTER_RADIUS};
 
+public:
+        static T radius()
+        {
+                return FILTER_RADIUS;
+        }
+
+        static T contribution(const Color& sample)
+        {
+                return sample.luminance();
+        }
+
+        struct ColorSamples final
+        {
+                Color sum_color{0};
+                T sum_weight{0};
+                Color min_color;
+                T min_contribution;
+                T min_weight;
+                Color max_color;
+                T max_contribution;
+                T max_weight;
+
+                ColorSamples()
+                {
+                }
+        };
+
+        std::optional<ColorSamples> color_samples(
+                const Vector<N, T>& center,
+                const std::vector<Vector<N, T>>& points,
+                const std::vector<std::optional<Color>>& colors) const
+        {
+                thread_local std::vector<Color> samples;
+                thread_local std::vector<T> contributions;
+                thread_local std::vector<T> weights;
+
+                samples.clear();
+                contributions.clear();
+                weights.clear();
+
+                T min = limits<T>::max();
+                T max = limits<T>::lowest();
+                std::size_t min_i = limits<std::size_t>::max();
+                std::size_t max_i = limits<std::size_t>::max();
+
+                for (std::size_t i = 0; i < points.size(); ++i)
+                {
+                        if (!colors[i])
+                        {
+                                continue;
+                        }
+
+                        const T weight = m_filter.compute(center - points[i]);
+                        ASSERT(weight >= 0);
+
+                        if (!(weight > 0))
+                        {
+                                continue;
+                        }
+
+                        samples.push_back(weight * (*colors[i]));
+                        contributions.push_back(contribution(samples.back()));
+                        weights.push_back(weight);
+
+                        if (contributions.back() < min)
+                        {
+                                min = contributions.back();
+                                min_i = samples.size() - 1;
+                        }
+
+                        if (contributions.back() > max)
+                        {
+                                max = contributions.back();
+                                max_i = samples.size() - 1;
+                        }
+                }
+
+                if (samples.empty())
+                {
+                        return std::nullopt;
+                }
+
+                ASSERT(min_i < samples.size());
+                ASSERT(max_i < samples.size());
+
+                std::optional<ColorSamples> r(std::in_place);
+
+                r->min_color = samples[min_i];
+                r->min_contribution = contributions[min_i];
+                r->min_weight = weights[min_i];
+
+                r->max_color = samples[max_i];
+                r->max_contribution = contributions[max_i];
+                r->max_weight = weights[max_i];
+
+                if (samples.size() > 2)
+                {
+                        for (std::size_t i = 0; i < samples.size(); ++i)
+                        {
+                                if (i != min_i && i != max_i)
+                                {
+                                        r->sum_color += samples[i];
+                                        r->sum_weight += weights[i];
+                                }
+                        }
+                }
+
+                return r;
+        }
+
+        struct BackgroundSamples final
+        {
+                T sum{0};
+                T min;
+                T max;
+
+                BackgroundSamples()
+                {
+                }
+        };
+
+        std::optional<BackgroundSamples> background_samples(
+                const Vector<N, T>& center,
+                const std::vector<Vector<N, T>>& points,
+                const std::vector<std::optional<Color>>& colors) const
+        {
+                thread_local std::vector<T> weights;
+
+                weights.clear();
+
+                T min = limits<T>::max();
+                T max = limits<T>::lowest();
+                std::size_t min_i = limits<std::size_t>::max();
+                std::size_t max_i = limits<std::size_t>::max();
+
+                for (std::size_t i = 0; i < points.size(); ++i)
+                {
+                        if (colors[i])
+                        {
+                                continue;
+                        }
+
+                        const T weight = m_filter.compute(center - points[i]);
+                        ASSERT(weight >= 0);
+
+                        if (!(weight > 0))
+                        {
+                                continue;
+                        }
+
+                        weights.push_back(weight);
+
+                        if (weight < min)
+                        {
+                                min = weight;
+                                min_i = weights.size() - 1;
+                        }
+
+                        if (weight > max)
+                        {
+                                max = weight;
+                                max_i = weights.size() - 1;
+                        }
+                }
+
+                if (weights.empty())
+                {
+                        return std::nullopt;
+                }
+
+                ASSERT(min_i < weights.size());
+                ASSERT(max_i < weights.size());
+
+                std::optional<BackgroundSamples> r(std::in_place);
+
+                r->min = weights[min_i];
+                r->max = weights[max_i];
+
+                if (weights.size() > 2)
+                {
+                        for (std::size_t i = 0; i < weights.size(); ++i)
+                        {
+                                if (i != min_i && i != max_i)
+                                {
+                                        r->sum += weights[i];
+                                }
+                        }
+                }
+
+                return r;
+        }
+};
+}
+
+template <std::size_t N, typename T, typename Color>
+class Pixels final
+{
+        using PaintbrushType = std::uint_least16_t;
+
+        static constexpr int PANTBRUSH_WIDTH = 20;
+
+        const pixels_implementation::Filter<N, T, Color> m_filter;
+
         const std::array<int, N> m_screen_size;
         const GlobalIndex<N, long long> m_global_index{m_screen_size};
-        const Region<N> m_filter_region{m_screen_size, FILTER_RADIUS};
+        const Region<N> m_filter_region{m_screen_size, m_filter.radius()};
 
         const Color m_background;
         const Vector<3, float> m_background_rgb32 = m_background.rgb32();
+        const T m_background_contribution = m_filter.contribution(m_background);
 
         Notifier<N>* const m_notifier;
 
@@ -107,37 +307,26 @@ class Pixels final
                         return r;
                 }();
 
-                Color color_sum(0);
-                T color_weight_sum(0);
-                T background_weight_sum(0);
-
-                for (std::size_t i = 0; i < points.size(); ++i)
-                {
-                        const T weight = m_filter.compute(center - points[i]);
-                        ASSERT(weight >= 0);
-
-                        if (!(weight > 0))
-                        {
-                                continue;
-                        }
-
-                        if (colors[i])
-                        {
-                                color_sum.multiply_add(weight, *colors[i]);
-                                color_weight_sum += weight;
-                        }
-                        else
-                        {
-                                background_weight_sum += weight;
-                        }
-                }
+                const auto c = m_filter.color_samples(center, points, colors);
+                const auto b = m_filter.background_samples(center, points, colors);
 
                 const long long index = m_global_index.compute(pixel);
                 Pixel<Color>& p = m_pixels[index];
 
                 std::lock_guard lg(m_pixel_locks[index]);
-                p.merge(color_sum, color_weight_sum, background_weight_sum);
-                m_notifier->pixel_set(pixel, p.has_color() ? p.color(m_background).rgb32() : m_background_rgb32);
+                if (c)
+                {
+                        p.merge_color(
+                                c->sum_color, c->sum_weight, c->min_color, c->min_contribution, c->min_weight,
+                                c->max_color, c->max_contribution, c->max_weight);
+                }
+                if (b)
+                {
+                        p.merge_background(b->sum, b->min, b->max);
+                }
+                const Vector<3, float> color =
+                        p.has_color() ? p.color(m_background, m_background_contribution).rgb32() : m_background_rgb32;
+                m_notifier->pixel_set(pixel, color);
         }
 
 public:
@@ -174,6 +363,7 @@ public:
                 const std::vector<std::optional<Color>>& colors)
         {
                 ASSERT(points.size() == colors.size());
+                ASSERT(!points.empty());
 
                 for (const std::optional<Color>& color : colors)
                 {
@@ -224,7 +414,7 @@ public:
                         {
                                 if (pixel.has_color())
                                 {
-                                        return pixel.color(m_background).rgb32();
+                                        return pixel.color(m_background, m_background_contribution).rgb32();
                                 }
                                 return m_background_rgb32;
                         }();
