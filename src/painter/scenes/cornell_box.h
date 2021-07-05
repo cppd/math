@@ -38,6 +38,8 @@ namespace cornell_box_scene_implementation
 {
 template <std::size_t N, typename T, typename Color>
 std::unique_ptr<const Scene<N, T, Color>> create_cornell_box_scene(
+        const Color& light,
+        const Color& background_light,
         const std::array<int, N - 1>& screen_sizes,
         std::unique_ptr<const Shape<N, T, Color>>&& shape,
         const std::array<Vector<N, T>, N>& camera,
@@ -55,7 +57,6 @@ std::unique_ptr<const Scene<N, T, Color>> create_cornell_box_scene(
         constexpr T ALPHA = 1;
         constexpr T METALNESS = 0;
         constexpr T ROUGHNESS = 0.2;
-        const Color BACKGROUND_LIGHT = Color::illuminant(0.1, 0.1, 0.1);
 
         std::vector<std::unique_ptr<const Shape<N, T, Color>>> shapes;
         std::vector<std::unique_ptr<const LightSource<N, T, Color>>> light_sources;
@@ -146,8 +147,7 @@ std::unique_ptr<const Scene<N, T, Color>> create_cornell_box_scene(
                 constexpr T WIDTH = 90;
 
                 light_sources.push_back(std::make_unique<const SpotLight<N, T, Color>>(
-                        lamp_org, lamp_direction, Color::illuminant(1, 1, 1), UNIT_INTENSITY_DISTANCE, FALLOFF_START,
-                        WIDTH));
+                        lamp_org, lamp_direction, light, UNIT_INTENSITY_DISTANCE, FALLOFF_START, WIDTH));
         }
 
         std::unique_ptr<Projector<N, T>> projector;
@@ -161,12 +161,14 @@ std::unique_ptr<const Scene<N, T, Color>> create_cornell_box_scene(
         }
 
         return create_storage_scene<N, T>(
-                BACKGROUND_LIGHT, std::move(projector), std::move(light_sources), std::move(shapes));
+                background_light, std::move(projector), std::move(light_sources), std::move(shapes));
 }
 }
 
 template <typename T, typename Color>
 std::unique_ptr<const Scene<3, T, Color>> create_cornell_box_scene(
+        const Color& light,
+        const Color& background_light,
         int width,
         int height,
         std::unique_ptr<const Shape<3, T, Color>>&& shape,
@@ -183,11 +185,14 @@ std::unique_ptr<const Scene<3, T, Color>> create_cornell_box_scene(
         const Vector<3, T> right = size * cross(camera_direction, camera_up).normalized();
         const Vector<3, T> up = size * cross(right, dir).normalized();
 
-        return impl::create_cornell_box_scene({width, height}, std::move(shape), {right, up, dir}, center);
+        return impl::create_cornell_box_scene(
+                light, background_light, {width, height}, std::move(shape), {right, up, dir}, center);
 }
 
 template <std::size_t N, typename T, typename Color>
 std::unique_ptr<const Scene<N, T, Color>> create_cornell_box_scene(
+        const Color& light,
+        const Color& background_light,
         int screen_size,
         std::unique_ptr<const Shape<N, T, Color>>&& shape)
 {
@@ -218,6 +223,6 @@ std::unique_ptr<const Scene<N, T, Color>> create_cornell_box_scene(
         }
         camera[N - 1][N - 1] = -size;
 
-        return impl::create_cornell_box_scene(screen_sizes, std::move(shape), camera, center);
+        return impl::create_cornell_box_scene(light, background_light, screen_sizes, std::move(shape), camera, center);
 }
 }

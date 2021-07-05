@@ -81,7 +81,8 @@ std::unique_ptr<const painter::Scene<3, T, Color>> create_painter_scene(
 {
         if (cornell_box)
         {
-                return painter::create_cornell_box_scene(width, height, std::move(shape), camera_direction, camera_up);
+                return painter::create_cornell_box_scene(
+                        light, background_light, width, height, std::move(shape), camera_direction, camera_up);
         }
 
         namespace impl = painter_scene_implementation;
@@ -113,7 +114,7 @@ std::unique_ptr<const painter::Scene<N, T, Color>> create_painter_scene(
 
         if (cornell_box)
         {
-                return painter::create_cornell_box_scene(max_screen_size, std::move(shape));
+                return painter::create_cornell_box_scene(light, background_light, max_screen_size, std::move(shape));
         }
 
         namespace impl = painter_scene_implementation;
