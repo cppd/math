@@ -27,31 +27,30 @@ namespace ns::painter
 template <typename Color>
 class Pixel final
 {
-        using DataType = typename Color::DataType;
+        using T = typename Color::DataType;
 
         Color m_color_sum{0};
-        DataType m_color_weight_sum{0};
-
         Color m_color_min{0};
-        DataType m_color_min_contribution{limits<DataType>::max()};
-        DataType m_color_min_weight{0};
-
         Color m_color_max{0};
-        DataType m_color_max_contribution{limits<DataType>::lowest()};
-        DataType m_color_max_weight{0};
 
-        DataType m_background_weight_sum{0};
-        DataType m_background_min_weight{limits<DataType>::max()};
-        DataType m_background_max_weight{limits<DataType>::lowest()};
+        T m_color_weight_sum{0};
+        T m_color_min_contribution{limits<T>::max()};
+        T m_color_min_weight{0};
+        T m_color_max_contribution{limits<T>::lowest()};
+        T m_color_max_weight{0};
+
+        T m_background_weight_sum{0};
+        T m_background_min_weight{limits<T>::max()};
+        T m_background_max_weight{limits<T>::lowest()};
 
         struct Data final
         {
                 Color c;
-                DataType c_w;
-                DataType b_w;
+                T c_w;
+                T b_w;
         };
 
-        Data color_data(DataType background_contribution) const
+        Data color_data(const T& background_contribution) const
         {
                 Data r{.c = m_color_sum, .c_w = m_color_weight_sum, .b_w = m_background_weight_sum};
 
@@ -81,13 +80,13 @@ class Pixel final
 public:
         void merge_color(
                 const Color& sum_color,
-                DataType sum_weight,
+                const T& sum_weight,
                 const Color& min_color,
-                DataType min_contribution,
-                DataType min_weight,
+                const T& min_contribution,
+                const T& min_weight,
                 const Color& max_color,
-                DataType max_contribution,
-                DataType max_weight)
+                const T& max_contribution,
+                const T& max_weight)
         {
                 m_color_sum += sum_color;
                 m_color_weight_sum += sum_weight;
@@ -121,7 +120,7 @@ public:
                 }
         }
 
-        void merge_background(DataType sum_weight, DataType min_weight, DataType max_weight)
+        void merge_background(const T& sum_weight, const T& min_weight, const T& max_weight)
         {
                 m_background_weight_sum += sum_weight;
 
@@ -146,38 +145,41 @@ public:
                 }
         }
 
-        std::optional<Color> color(const Color& background_color, DataType background_contribution) const
+        std::optional<Color> color(const Color& background_color, const T& background_contribution) const
         {
                 const Data data = color_data(background_contribution);
 
-                if (data.c_w == 0)
+                const T sum = data.c_w + data.b_w;
+
+                if (sum == data.b_w)
                 {
                         return std::nullopt;
                 }
 
-                if (data.b_w == 0)
+                if (data.c_w == sum || (data.c_w / sum) == 1)
                 {
-                        return data.c / data.c_w;
+                        return data.c / sum;
                 }
 
-                return (data.c + data.b_w * background_color) / (data.c_w + data.b_w);
+                return (data.c + data.b_w * background_color) / sum;
         }
 
-        std::optional<std::tuple<Color, DataType>> color_alpha(DataType background_contribution) const
+        std::optional<std::tuple<Color, T>> color_alpha(const T& background_contribution) const
         {
                 const Data data = color_data(background_contribution);
 
-                if (data.c_w == 0)
+                const T sum = data.c_w + data.b_w;
+
+                if (sum == data.b_w)
                 {
                         return std::nullopt;
                 }
 
-                if (data.b_w == 0)
+                if (data.c_w == sum || (data.c_w / sum) == 1)
                 {
-                        return std::make_tuple(data.c / data.c_w, DataType(1));
+                        return std::make_tuple(data.c / sum, T(1));
                 }
 
-                const DataType sum = data.c_w + data.b_w;
                 return std::make_tuple(data.c / sum, data.c_w / sum);
         }
 };

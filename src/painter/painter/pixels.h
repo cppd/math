@@ -291,6 +291,41 @@ class Pixels final
         Paintbrush<N, PaintbrushType> m_paintbrush{m_screen_size, PANTBRUSH_WIDTH};
         mutable SpinLock m_paintbrush_lock;
 
+        Vector<4, float> rgba_color(const Pixel<Color>& pixel) const
+        {
+                const auto color_alpha = pixel.color_alpha(m_background_contribution);
+                if (color_alpha)
+                {
+                        Vector<3, float> rgb = std::get<0>(*color_alpha).rgb32();
+                        Vector<4, float> rgba;
+                        rgba[0] = rgb[0];
+                        rgba[1] = rgb[1];
+                        rgba[2] = rgb[2];
+                        rgba[3] = std::get<1>(*color_alpha);
+                        if (!is_finite(rgba))
+                        {
+                                LOG("Not finite RGBA color " + to_string(rgba));
+                        }
+                        return rgba;
+                }
+                return Vector<4, float>(0);
+        }
+
+        Vector<3, float> rgb_color(const Pixel<Color>& pixel) const
+        {
+                const auto color = pixel.color(m_background, m_background_contribution);
+                if (color)
+                {
+                        Vector<3, float> rgb = color->rgb32();
+                        if (!is_finite(rgb))
+                        {
+                                LOG("Not finite RGB color " + to_string(rgb));
+                        }
+                        return rgb;
+                }
+                return m_background_rgb32;
+        }
+
         void add_samples(
                 const std::array<int, N>& pixel,
                 const std::array<int, N>& sample_pixel,
@@ -324,9 +359,7 @@ class Pixels final
                 {
                         p.merge_background(b->sum, b->min, b->max);
                 }
-                const std::optional<Color> color = p.color(m_background, m_background_contribution);
-                const Vector<3, float> rgb = color ? color->rgb32() : m_background_rgb32;
-                m_notifier->pixel_set(pixel, rgb);
+                m_notifier->pixel_set(pixel, rgb_color(p));
         }
 
 public:
@@ -338,6 +371,10 @@ public:
                 if (!background.is_finite())
                 {
                         error("Not finite background " + to_string(background));
+                }
+                if (!is_finite(m_background_rgb32))
+                {
+                        error("Not finite background RGB " + to_string(m_background_rgb32));
                 }
         }
 
@@ -367,9 +404,9 @@ public:
 
                 for (const std::optional<Color>& color : colors)
                 {
-                        if (!color->is_finite())
+                        if (color && !color->is_finite())
                         {
-                                LOG("Not finite color " + to_string(*color));
+                                LOG("Not finite sample color " + to_string(*color));
                         }
                 }
 
@@ -388,12 +425,6 @@ public:
                 constexpr std::size_t RGB_PIXEL_SIZE = 3 * sizeof(float);
                 constexpr std::size_t RGBA_PIXEL_SIZE = 4 * sizeof(float);
 
-                struct RGBA
-                {
-                        Vector<3, float> rgb;
-                        float alpha;
-                };
-
                 image_rgb->color_format = image::ColorFormat::R32G32B32;
                 image_rgb->size = m_screen_size;
                 image_rgb->pixels.resize(RGB_PIXEL_SIZE * m_pixels.size());
@@ -406,30 +437,19 @@ public:
                 std::byte* ptr_rgba = image_rgba->pixels.data();
                 for (std::size_t i = 0; i < m_pixels.size(); ++i)
                 {
-                        const Pixel<Color>& pixel = m_pixels[i];
+                        Vector<4, float> rgba;
+                        Vector<3, float> rgb;
 
-                        std::lock_guard lg(m_pixel_locks[i]);
-
-                        const Vector<3, float> rgb = [&]
                         {
-                                const std::optional<Color> color = pixel.color(m_background, m_background_contribution);
-                                if (color)
-                                {
-                                        return color->rgb32();
-                                }
-                                return m_background_rgb32;
-                        }();
+                                const Pixel<Color>& pixel = m_pixels[i];
+                                std::lock_guard lg(m_pixel_locks[i]);
+                                rgba = rgba_color(pixel);
+                                rgb = rgb_color(pixel);
+                        }
 
-                        const RGBA rgba = [&]
-                        {
-                                const std::optional<std::tuple<Color, typename Color::DataType>> color =
-                                        pixel.color_alpha(m_background_contribution);
-                                if (color)
-                                {
-                                        return RGBA{.rgb = std::get<0>(*color).rgb32(), .alpha = std::get<1>(*color)};
-                                }
-                                return RGBA{.rgb = Vector<3, float>(0), .alpha = 0};
-                        }();
+                        ASSERT(rgba[3] < 1 || !is_finite(rgba) || !is_finite(rgb)
+                               || (rgb[0] == rgba[0] && rgb[1] == rgba[1] && rgb[2] == rgba[2]));
+                        ASSERT(rgba[3] > 0 || !is_finite(rgb) || (rgb == m_background_rgb32));
 
                         static_assert(sizeof(rgb) == RGB_PIXEL_SIZE);
                         std::memcpy(ptr_rgb, &rgb, RGB_PIXEL_SIZE);
