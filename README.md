@@ -15,11 +15,8 @@ Just for fun with mathematics and stuff
   * [Spaces with arbitrary number of dimensions](#spaces-with-arbitrary-number-of-dimensions)
 * [Technical details](#technical-details)
 * [Images](#images)
-  * [4-manifold reconstruction and path tracing in 5-space](#4-manifold-reconstruction-and-path-tracing-in-5-space)
   * [3-manifold reconstruction and path tracing in 4-space](#3-manifold-reconstruction-and-path-tracing-in-4-space)
-  * [2-manifold reconstruction and path tracing in 3-space](#2-manifold-reconstruction-and-path-tracing-in-3-space)
-  * [2D discrete Fourier transform](#2d-discrete-fourier-transform)
-  * [3D model](#3d-model)
+
 
 ## File types
 
@@ -38,7 +35,11 @@ Just for fun with mathematics and stuff
 
 ### CPU
 
-* (n-1)-simplex meshes in n-space on (n-1)-dimensional screen (path tracing).
+Path tracing
+
+* (n-1)-simplex meshes in n-space on (n-1)-dimensional screen.
+* n-dimensional microfacet BRDF.
+* Spectral rendering.
 
 ## Algorithms
 
@@ -68,7 +69,7 @@ Intersection of hyperplanes                        | Gaussian elimination
 Intersection of convex polytopes                   | The simplex algorithm
 Ray intersection acceleration                      | Spatial subdivision and 2<sup>d</sup>-trees
 Eigenvalues and eigenvectors of symmetric matrices | Jacobi method
-Least squares fitting a plane to points            | Principal component analysis 
+Least squares fitting a plane to points            | Principal component analysis
 
 ## Technical details
 
@@ -85,27 +86,6 @@ Build systems             | CMake
 
 ## Images
 
-### 4-manifold reconstruction and path tracing in 5-space
-
-2D slices of a 4D image of the 4-manifold reconstructed from the points on the 4-sphere with a hollow.
-
-* 6-space
-  * The convex hull.
-  * 5-simplex facets.
-* 5-space
-  * 4-simplex mesh without boundary.
-  * 32-tree.
-  * 5-parallelotopes.
-  * Point light source.
-  * Parallel projection onto 4D screen.
-
-<img src="https://i.imgur.com/j1kUkGQ.png" alt="image" width="15%"></img>
-<img src="https://i.imgur.com/A8hpwM7.png" alt="image" width="15%"></img>
-<img src="https://i.imgur.com/rRXVL80.png" alt="image" width="15%"></img>
-<img src="https://i.imgur.com/bimmCBL.png" alt="image" width="15%"></img>
-<img src="https://i.imgur.com/7fEn0iy.png" alt="image" width="15%"></img>
-<img src="https://i.imgur.com/m5FVGza.png" alt="image" width="15%"></img>
-
 ### 3-manifold reconstruction and path tracing in 4-space
 
 A 3D image of the 3-manifold reconstructed from the points on the 3-torus T<sup>3</sup> (S<sup>1</sup>×S<sup>1</sup>×S<sup>1</sup>).
@@ -117,85 +97,25 @@ A 3D image of the 3-manifold reconstructed from the points on the 3-torus T<sup>
   * 3-simplex mesh without boundary.
   * 16-tree.
   * 4-parallelotopes.
-  * Point light source.
+  * 4-dimensional microfacet BRDF.
+  * Distant light source.
   * Parallel projection onto 3D screen.
 
 Volumetric rendering
 
-<img src="https://i.imgur.com/XIgpWmQ.png" alt="image" width="11%"></img>
-<img src="https://i.imgur.com/Qh7Sclb.png" alt="image" width="11%"></img>
-<img src="https://i.imgur.com/89yvIiw.png" alt="image" width="11%"></img>
-<img src="https://i.imgur.com/oMZFlmT.png" alt="image" width="11%"></img>
-<img src="https://i.imgur.com/XNn1piP.png" alt="image" width="11%"></img>
-<img src="https://i.imgur.com/I0z2Pf8.png" alt="image" width="11%"></img>
-
-Volumetric rendering using a clipping plane
-
-<img src="https://i.imgur.com/DyP0jEl.png" alt="image" width="11%"></img>
-<img src="https://i.imgur.com/WQqYxj4.png" alt="image" width="11%"></img>
-<img src="https://i.imgur.com/szEiQHX.png" alt="image" width="11%"></img>
-<img src="https://i.imgur.com/Q3NK7Ee.png" alt="image" width="11%"></img>
-<img src="https://i.imgur.com/HwdpgV3.png" alt="image" width="11%"></img>
-<img src="https://i.imgur.com/dRZGL1A.png" alt="image" width="11%"></img>
-<img src="https://i.imgur.com/0bNbyW6.png" alt="image" width="11%"></img>
-<img src="https://i.imgur.com/9lEosOP.png" alt="image" width="11%"></img>
-
-2D slices
-
-<img src="https://i.imgur.com/OujXP6E.png" alt="image" width="11%"></img>
-<img src="https://i.imgur.com/wYGS7Ny.png" alt="image" width="11%"></img>
-<img src="https://i.imgur.com/YBrlxnL.png" alt="image" width="11%"></img>
-<img src="https://i.imgur.com/p4uN0Rp.png" alt="image" width="11%"></img>
-<img src="https://i.imgur.com/v6m4qnj.png" alt="image" width="11%"></img>
-<img src="https://i.imgur.com/fet4mhg.png" alt="image" width="11%"></img>
-<img src="https://i.imgur.com/mudGwKv.png" alt="image" width="11%"></img>
-<img src="https://i.imgur.com/n5reerR.png" alt="image" width="11%"></img>
-<img src="https://i.imgur.com/OGVUbxe.png" alt="image" width="11%"></img>
-<img src="https://i.imgur.com/aDG9Qjv.png" alt="image" width="11%"></img>
-<img src="https://i.imgur.com/xC8iW26.png" alt="image" width="11%"></img>
-<img src="https://i.imgur.com/T1pdgZt.png" alt="image" width="11%"></img>
-<img src="https://i.imgur.com/XQ1UEz3.png" alt="image" width="11%"></img>
-
-### 2-manifold reconstruction and path tracing in 3-space
-
-Points on the (2,3)-torus knot, the Euclidean minimum spanning tree of the points, and the 2-manifold reconstructed from the points.
-
-* 4-space
-  * The convex hull.
-  * 3-simplex facets.
-* 3-space
-  * 2-simplex mesh without boundary.
-  * 8-tree.
-  * 3-parallelotopes.
-  * Point light source.
-  * Parallel projection onto 2D screen.
-
-<img src="https://i.imgur.com/h3yaTRd.png" alt="image" width="18%"></img>
-<img src="https://i.imgur.com/oC4wcfw.png" alt="image" width="18%"></img>
-<img src="https://i.imgur.com/KfOxuOu.png" alt="image" width="18%"></img>
-<img src="https://i.imgur.com/kFCwTJM.png" alt="image" width="18%"></img>
-<img src="https://i.imgur.com/Vh5Lrcv.png" alt="image" width="18%"></img>
-
-<img src="https://i.imgur.com/8oyND91.png" alt="image" width="18%"></img>
-
-### 2D discrete Fourier transform
-
-Real-time computing on GPU.
-
-<img src="https://i.imgur.com/YnyQWd4.png" alt="image" width="20%"></img>
-
-<img src="https://i.imgur.com/uvHQZmg.png" alt="image" width="20%"></img>
-
-<img src="https://i.imgur.com/5dGkQR9.png" alt="image" width="20%"></img>
-
-### 3D model
-
-Real-time rendering on GPU.
-
-<img src="https://i.imgur.com/eqxSJpD.png" alt="image" width="30%"></img>
-
-Path tracing on CPU.
-
-<img src="https://i.imgur.com/kumiuEr.png" alt="image" width="30%"></img>
-
-<img src="https://i.imgur.com/y9jdovk.png" alt="image" width="30%"></img>
+<img src="https://i.imgur.com/HVCr4iE.png" alt="image" width="23%"></img>
+<img src="https://i.imgur.com/gVDY2I0.png" alt="image" width="23%"></img>
+<img src="https://i.imgur.com/ZDq2Yy9.png" alt="image" width="23%"></img>
+<img src="https://i.imgur.com/9LIkaz2.png" alt="image" width="23%"></img>
+<img src="https://i.imgur.com/y9FAFfV.png" alt="image" width="23%"></img>
+<img src="https://i.imgur.com/Ccq1TQJ.png" alt="image" width="23%"></img>
+<img src="https://i.imgur.com/vZECDgC.png" alt="image" width="23%"></img>
+<img src="https://i.imgur.com/tPKkEjB.png" alt="image" width="23%"></img>
+<img src="https://i.imgur.com/l8Svr03.png" alt="image" width="23%"></img>
+<img src="https://i.imgur.com/9hiGH14.png" alt="image" width="23%"></img>
+<img src="https://i.imgur.com/ebbtmO7.png" alt="image" width="23%"></img>
+<img src="https://i.imgur.com/TsxddOg.png" alt="image" width="23%"></img>
+<img src="https://i.imgur.com/T9g3jrP.png" alt="image" width="23%"></img>
+<img src="https://i.imgur.com/NreAItc.png" alt="image" width="23%"></img>
+<img src="https://i.imgur.com/hs6HMYs.png" alt="image" width="23%"></img>
+<img src="https://i.imgur.com/ILriC4I.png" alt="image" width="23%"></img>
