@@ -53,46 +53,56 @@ namespace ns::shading::ggx_diffuse
 namespace implementation
 {
 // (9.64)
-template <std::size_t N, typename T, typename Color>
-Color diffuse(const Color& f0, const Color& rho_ss, T n_l, T n_v)
-{
-        static constexpr Color WHITE = Color(1);
-        static constexpr T K = geometry::sphere_integrate_cosine_factor_over_hemisphere(N);
-
-        T l = (1 - power<5>(1 - n_l));
-        T v = (1 - power<5>(1 - n_v));
-        T c = (21 / (20 * K)) * l * v;
-
-        return c * (WHITE - f0) * rho_ss;
-}
+//template <std::size_t N, typename T, typename Color>
+//Color diffuse(const Color& f0, const Color& rho_ss, T n_l, T n_v)
+//{
+//        static constexpr Color WHITE = Color(1);
+//        static constexpr T K = geometry::sphere_integrate_cosine_factor_over_hemisphere(N);
+//
+//        T l = (1 - power<5>(1 - n_l));
+//        T v = (1 - power<5>(1 - n_v));
+//        T c = (21 / (20 * K)) * l * v;
+//        return c * (WHITE - f0) * rho_ss;
+//}
 
 // (9.66), (9.67) without the subsurface term
-//template <typename T, typename Color>
-//Color diffuse_disney_without_subsurface(const Color& rho_ss, T roughness, T n_l, T n_v, T h_l)
+//template <std::size_t N, typename T, typename Color>
+//Color diffuse_disney_ws(const Color& /*f0*/, const Color& rho_ss, T roughness, T n_l, T n_v, T h_l)
 //{
+//        static constexpr T K = 1 / geometry::sphere_integrate_cosine_factor_over_hemisphere(N);
+//
 //        T l = power<5>(1 - n_l);
 //        T v = power<5>(1 - n_v);
 //        T f_d90 = T(0.5) + 2 * roughness * square(h_l);
-//        T f_d90_1 = f_d90 - 1;
-//        T f_d = (1 + f_d90_1 * l) * (1 + f_d90_1 * v);
-//        T c = f_d / PI<T>;
-//        return c * rho_ss;
+//        T c = (1 + (f_d90 - 1) * l) * (1 + (f_d90 - 1) * v);
+//        return (c * K) * rho_ss;
 //}
+template <std::size_t N, typename T, typename Color>
+Color diffuse_disney_ws(const Color& f0, const Color& rho_ss, T roughness, T n_l, T n_v, T h_l)
+{
+        static constexpr Color WHITE = Color(1);
+        static constexpr T K = 1 / geometry::sphere_integrate_cosine_factor_over_hemisphere(N);
 
+        T l = power<5>(1 - n_l);
+        T v = power<5>(1 - n_v);
+        T f_d90 = 2 * roughness * square(h_l);
+        T c = (1 + (f_d90 - 1) * l) * (1 + (f_d90 - 1) * v);
+        return (c * K) * (WHITE - f0) * rho_ss;
+}
 // (9.66), (9.67)
-//template <typename T, typename Color>
+//template <std::size_t N, typename T, typename Color>
 //Color diffuse_disney(const Color& rho_ss, T roughness, T n_l, T n_v, T h_l, T k_ss)
 //{
+//        static constexpr T K = 1 / geometry::sphere_integrate_cosine_factor_over_hemisphere(N);
+//
 //        T l = power<5>(1 - n_l);
 //        T v = power<5>(1 - n_v);
 //        T f_ss90 = roughness * square(h_l);
 //        T f_d90 = T(0.5) + 2 * f_ss90;
-//        T f_d90_1 = f_d90 - 1;
-//        T f_d = (1 + f_d90_1 * l) * (1 + f_d90_1 * v);
-//        T f_ss90_1 = f_ss90 - 1;
-//        T f_ss = (1 / (n_l * n_v) - T(0.5)) * (1 + f_ss90_1 * l) * (1 + f_ss90_1 * v) + T(0.5);
-//        T c = interpolation(f_d, T(1.25) * f_ss, k_ss) / PI<T>;
-//        return c * rho_ss;
+//        T f_d = (1 + (f_d90 - 1) * l) * (1 + (f_d90 - 1) * v);
+//        T f_ss = (1 / (n_l * n_v) - T(0.5)) * (1 + (f_ss90 - 1) * l) * (1 + (f_ss90 - 1) * v) + T(0.5);
+//        T c = interpolation(f_d, T(1.25) * f_ss, k_ss);
+//        return (c * K) * rho_ss;
 //}
 
 template <std::size_t N, typename T, typename Color>
@@ -116,7 +126,7 @@ Color f(T metalness,
         const Color rho_ss = interpolation(surface_color, BLACK, metalness);
 
         Color spec = ggx_brdf<N>(roughness, f0, n_v, n_l, n_h, h_l);
-        Color diff = diffuse<N>(f0, rho_ss, n_l, n_v);
+        Color diff = diffuse_disney_ws<N>(f0, rho_ss, roughness, n_l, n_v, h_l);
 
         return spec + diff;
 }
