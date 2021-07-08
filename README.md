@@ -16,6 +16,7 @@ Just for fun with mathematics and stuff
 * [Technical details](#technical-details)
 * [Images](#images)
   * [3-manifold reconstruction and path tracing in 4-space](#3-manifold-reconstruction-and-path-tracing-in-4-space)
+  * [3D model](#3d-model)
 
 
 ## File types
@@ -88,7 +89,7 @@ Build systems             | CMake
 
 ### 3-manifold reconstruction and path tracing in 4-space
 
-A 3D image of the 3-manifold reconstructed from the points on the 3-torus T<sup>3</sup> (S<sup>1</sup>×S<sup>1</sup>×S<sup>1</sup>).
+2D images of a 3D image of the 3-manifold reconstructed from the points on the 3-torus T<sup>3</sup> (S<sup>1</sup>×S<sup>1</sup>×S<sup>1</sup>).
 
 * 5-space
   * The convex hull.
@@ -103,19 +104,34 @@ A 3D image of the 3-manifold reconstructed from the points on the 3-torus T<sup>
 
 Volumetric rendering
 
-<img src="https://i.imgur.com/HVCr4iE.png" alt="image" width="23%"></img>
-<img src="https://i.imgur.com/gVDY2I0.png" alt="image" width="23%"></img>
-<img src="https://i.imgur.com/ZDq2Yy9.png" alt="image" width="23%"></img>
-<img src="https://i.imgur.com/9LIkaz2.png" alt="image" width="23%"></img>
-<img src="https://i.imgur.com/y9FAFfV.png" alt="image" width="23%"></img>
-<img src="https://i.imgur.com/Ccq1TQJ.png" alt="image" width="23%"></img>
-<img src="https://i.imgur.com/vZECDgC.png" alt="image" width="23%"></img>
-<img src="https://i.imgur.com/tPKkEjB.png" alt="image" width="23%"></img>
-<img src="https://i.imgur.com/l8Svr03.png" alt="image" width="23%"></img>
-<img src="https://i.imgur.com/9hiGH14.png" alt="image" width="23%"></img>
-<img src="https://i.imgur.com/ebbtmO7.png" alt="image" width="23%"></img>
-<img src="https://i.imgur.com/TsxddOg.png" alt="image" width="23%"></img>
-<img src="https://i.imgur.com/T9g3jrP.png" alt="image" width="23%"></img>
-<img src="https://i.imgur.com/NreAItc.png" alt="image" width="23%"></img>
-<img src="https://i.imgur.com/hs6HMYs.png" alt="image" width="23%"></img>
-<img src="https://i.imgur.com/ILriC4I.png" alt="image" width="23%"></img>
+<img src="https://i.imgur.com/RnHpwiM.png" alt="image" width="23%"></img>
+<img src="https://i.imgur.com/PcCwmHa.png" alt="image" width="23%"></img>
+<img src="https://i.imgur.com/luG592X.png" alt="image" width="23%"></img>
+<img src="https://i.imgur.com/QG97hys.png" alt="image" width="23%"></img>
+<img src="https://i.imgur.com/XaYJKYV.png" alt="image" width="23%"></img>
+<img src="https://i.imgur.com/JHW8tuq.png" alt="image" width="23%"></img>
+<img src="https://i.imgur.com/wZ4mI7Z.png" alt="image" width="23%"></img>
+<img src="https://i.imgur.com/eiPHeBq.png" alt="image" width="23%"></img>
+<img src="https://i.imgur.com/dTi3yJ4.png" alt="image" width="23%"></img>
+<img src="https://i.imgur.com/eU2aCKe.png" alt="image" width="23%"></img>
+<img src="https://i.imgur.com/vijRFub.png" alt="image" width="23%"></img>
+<img src="https://i.imgur.com/cpmDWWm.png" alt="image" width="23%"></img>
+<img src="https://i.imgur.com/WRD4cu1.png" alt="image" width="23%"></img>
+<img src="https://i.imgur.com/phXLjNI.png" alt="image" width="23%"></img>
+<img src="https://i.imgur.com/eIpFdI7.png" alt="image" width="23%"></img>
+<img src="https://i.imgur.com/jNuOc1b.png" alt="image" width="23%"></img>
+
+
+### 3D model
+
+Spectral rendering
+
+1. Blackbody 2500 K.
+1. Daylight 4000 K.
+1. Daylight D65.
+1. Blackbody 12000 K.
+
+<img src="https://i.imgur.com/XU9kLAq.png" alt="image" width="23%"></img>
+<img src="https://i.imgur.com/gky1Zbg.png" alt="image" width="23%"></img>
+<img src="https://i.imgur.com/JuBq1yc.png" alt="image" width="23%"></img>
+<img src="https://i.imgur.com/yim5PU0.png" alt="image" width="23%"></img>
