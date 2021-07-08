@@ -281,6 +281,7 @@ vec4 volume_color(vec3 p)
         if (volume.color_volume)
         {
                 vec4 color = texture(image, p);
+                color.rgb *= drawing.lighting_color * volume.ambient;
                 color.a = clamp(color.a * volume.volume_alpha_coefficient, 0, 1);
                 return color;
         }
