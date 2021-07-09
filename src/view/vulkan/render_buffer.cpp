@@ -49,7 +49,9 @@ constexpr std::initializer_list<VkFormat> DEPTH_IMAGE_FORMATS =
 
 void check_buffers(
         const std::vector<vulkan::ColorAttachment>& color,
-        const std::vector<vulkan::DepthImageWithMemory>& depth)
+        const std::vector<vulkan::DepthImageWithMemory>& depth,
+        const unsigned width,
+        const unsigned height)
 {
         if (depth.empty())
         {
@@ -118,14 +120,22 @@ void check_buffers(
                         error("There are no color attachments, but depth attachment sample count is not equal to 1");
                 }
         }
+
+        if (!std::all_of(
+                    depth.cbegin(), depth.cend(),
+                    [&](const vulkan::DepthImageWithMemory& d)
+                    {
+                            return d.width() == width && d.height() == height;
+                    }))
+        {
+                error("Depth attachments size is not equal to the required size");
+        }
 }
 
 std::string buffer_info(
         const std::vector<vulkan::ColorAttachment>& color,
         const std::vector<vulkan::DepthImageWithMemory>& depth)
 {
-        check_buffers(color, depth);
-
         std::ostringstream oss;
 
         oss << "Render buffers sample count = "
@@ -268,17 +278,18 @@ protected:
 class Impl final : public RenderBuffers, public Impl3D, public Impl2D
 {
         const vulkan::Device& m_device;
-        VkFormat m_swapchain_format;
         const vulkan::CommandPool& m_command_pool;
 
-        const unsigned m_width, m_height;
+        //
+
+        const VkFormat m_format;
+        const unsigned m_width;
+        const unsigned m_height;
 
         //
 
         std::vector<vulkan::DepthImageWithMemory> m_depth_attachments;
         std::vector<vulkan::ColorAttachment> m_color_attachments;
-
-        //std::vector<VkClearValue> m_clear_values;
 
         vulkan::RenderPass m_3d_render_pass;
         vulkan::RenderPass m_3d_render_pass_clear;
@@ -380,8 +391,8 @@ Impl::Impl(
         const vulkan::Device& device,
         int required_minimum_sample_count)
         : m_device(device),
-          m_swapchain_format(swapchain.format()),
           m_command_pool(command_pool),
+          m_format(swapchain.format()),
           m_width(swapchain.width()),
           m_height(swapchain.height())
 {
@@ -405,7 +416,7 @@ Impl::Impl(
         }
 #endif
 
-        check_buffers(m_color_attachments, m_depth_attachments);
+        check_buffers(m_color_attachments, m_depth_attachments, m_width, m_height);
 
         LOG(buffer_info(m_color_attachments, m_depth_attachments));
 }
@@ -429,8 +440,7 @@ void Impl::create_color_buffer_rendering(
         for (unsigned i = 0; i < buffer_count; ++i)
         {
                 m_color_attachments.emplace_back(
-                        m_device, attachment_family_indices, swapchain.format(), sample_count, swapchain.width(),
-                        swapchain.height());
+                        m_device, attachment_family_indices, m_format, sample_count, m_width, m_height);
 
                 std::vector<VkFormat> depth_formats;
                 if (!m_depth_attachments.empty())
@@ -442,8 +452,7 @@ void Impl::create_color_buffer_rendering(
                         depth_formats = DEPTH_IMAGE_FORMATS;
                 }
                 m_depth_attachments.emplace_back(
-                        m_device, attachment_family_indices, depth_formats, sample_count, swapchain.width(),
-                        swapchain.height(),
+                        m_device, attachment_family_indices, depth_formats, sample_count, m_width, m_height,
                         VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT | VK_IMAGE_USAGE_TRANSFER_SRC_BIT);
         }
 
@@ -463,9 +472,8 @@ void Impl::create_color_buffer_rendering(
 
         //
 
-        m_3d_render_pass = render_pass_color_depth(m_device, swapchain.format(), depth_format, sample_count, false);
-        m_3d_render_pass_clear =
-                render_pass_color_depth(m_device, swapchain.format(), depth_format, sample_count, true);
+        m_3d_render_pass = render_pass_color_depth(m_device, m_format, depth_format, sample_count, false);
+        m_3d_render_pass_clear = render_pass_color_depth(m_device, m_format, depth_format, sample_count, true);
 
         attachments.resize(2);
         for (unsigned i = 0; i < buffer_count; ++i)
@@ -473,32 +481,32 @@ void Impl::create_color_buffer_rendering(
                 attachments[0] = m_color_attachments[i].image_view();
                 attachments[1] = m_depth_attachments[i].image_view();
 
-                m_3d_framebuffers.push_back(vulkan::create_framebuffer(
-                        m_device, m_3d_render_pass, swapchain.width(), swapchain.height(), attachments));
+                m_3d_framebuffers.push_back(
+                        vulkan::create_framebuffer(m_device, m_3d_render_pass, m_width, m_height, attachments));
                 m_3d_framebuffers_handles.push_back(m_3d_framebuffers.back());
 
-                m_3d_framebuffers_clear.push_back(vulkan::create_framebuffer(
-                        m_device, m_3d_render_pass_clear, swapchain.width(), swapchain.height(), attachments));
+                m_3d_framebuffers_clear.push_back(
+                        vulkan::create_framebuffer(m_device, m_3d_render_pass_clear, m_width, m_height, attachments));
                 m_3d_framebuffers_handles_clear.push_back(m_3d_framebuffers_clear.back());
         }
 
         //
 
-        m_2d_render_pass = render_pass_color(m_device, swapchain.format(), sample_count);
+        m_2d_render_pass = render_pass_color(m_device, m_format, sample_count);
 
         attachments.resize(1);
         for (unsigned i = 0; i < buffer_count; ++i)
         {
                 attachments[0] = m_color_attachments[i].image_view();
 
-                m_2d_framebuffers.push_back(vulkan::create_framebuffer(
-                        m_device, m_2d_render_pass, swapchain.width(), swapchain.height(), attachments));
+                m_2d_framebuffers.push_back(
+                        vulkan::create_framebuffer(m_device, m_2d_render_pass, m_width, m_height, attachments));
                 m_2d_framebuffers_handles.push_back(m_2d_framebuffers.back());
         }
 
         //
 
-        m_resolve_render_pass = render_pass_swapchain_color(m_device, swapchain.format(), sample_count);
+        m_resolve_render_pass = render_pass_swapchain_color(m_device, m_format, sample_count);
 
         attachments.resize(2);
         for (unsigned i = 0; i < swapchain.image_views().size(); ++i)
@@ -507,8 +515,8 @@ void Impl::create_color_buffer_rendering(
                 attachments[1] =
                         (buffer_count == 1) ? m_color_attachments[0].image_view() : m_color_attachments[i].image_view();
 
-                m_resolve_framebuffers.push_back(vulkan::create_framebuffer(
-                        m_device, m_resolve_render_pass, swapchain.width(), swapchain.height(), attachments));
+                m_resolve_framebuffers.push_back(
+                        vulkan::create_framebuffer(m_device, m_resolve_render_pass, m_width, m_height, attachments));
                 m_resolve_framebuffers_handles.push_back(m_resolve_framebuffers.back());
         }
 
@@ -516,9 +524,6 @@ void Impl::create_color_buffer_rendering(
         {
                 m_resolve_signal_semaphores.emplace_back(m_device);
         }
-
-        //m_clear_values.resize(2);
-        //m_clear_values[1] = vulkan::depth_stencil_clear_value();
 }
 
 #if 0
@@ -529,7 +534,7 @@ void Impl::create_swapchain_rendering(unsigned buffer_count, const vulkan::Swapc
         for (unsigned i = 0; i < buffer_count; ++i)
         {
                 m_depth_attachments.emplace_back(m_device, attachment_family_indices, depth_image_formats, VK_SAMPLE_COUNT_1_BIT,
-                                                 swapchain.width(), swapchain.height());
+                                                 m_width, m_height);
         }
 
         //
@@ -538,7 +543,7 @@ void Impl::create_swapchain_rendering(unsigned buffer_count, const vulkan::Swapc
 
         std::vector<VkImageView> attachments;
 
-        m_render_pass_depth = impl::render_pass_swapchain_depth(m_device, swapchain.format(), m_depth_attachments[0].format());
+        m_render_pass_depth = impl::render_pass_swapchain_depth(m_device, m_format, m_depth_attachments[0].format());
 
         attachments.resize(2);
         for (unsigned i = 0; i < swapchain.image_views().size(); ++i)
@@ -547,12 +552,12 @@ void Impl::create_swapchain_rendering(unsigned buffer_count, const vulkan::Swapc
                 attachments[1] = (buffer_count == 1) ? m_depth_attachments[0].image_view() : m_depth_attachments[i].image_view();
 
                 m_framebuffers_depth.push_back(
-                        create_framebuffer(m_device, m_render_pass_depth, swapchain.width(), swapchain.height(), attachments));
+                        create_framebuffer(m_device, m_render_pass_depth, m_width, m_height, attachments));
         }
 
         //
 
-        m_render_pass = impl::render_pass_swapchain(m_device, swapchain.format());
+        m_render_pass = impl::render_pass_swapchain(m_device, m_format);
 
         attachments.resize(1);
         for (unsigned i = 0; i < swapchain.image_views().size(); ++i)
@@ -560,21 +565,19 @@ void Impl::create_swapchain_rendering(unsigned buffer_count, const vulkan::Swapc
                 attachments[0] = swapchain.image_views()[i];
 
                 m_framebuffers.push_back(
-                        create_framebuffer(m_device, m_render_pass, swapchain.width(), swapchain.height(), attachments));
+                        create_framebuffer(m_device, m_render_pass, m_width, m_height, attachments));
         }
 }
 #endif
 
 unsigned Impl::width_3d() const
 {
-        ASSERT(!m_depth_attachments.empty());
-        return m_depth_attachments[0].width();
+        return m_width;
 }
 
 unsigned Impl::height_3d() const
 {
-        ASSERT(!m_depth_attachments.empty());
-        return m_depth_attachments[0].height();
+        return m_height;
 }
 
 VkSampleCountFlagBits Impl::sample_count_3d() const
@@ -608,21 +611,19 @@ const std::vector<VkFramebuffer>& Impl::framebuffers_clear_3d() const
 std::vector<VkClearValue> Impl::clear_values_3d(const Vector<3, float>& rgb) const
 {
         std::vector<VkClearValue> clear_values(2);
-        clear_values[0] = vulkan::color_clear_value(m_swapchain_format, rgb);
+        clear_values[0] = vulkan::color_clear_value(m_format, rgb);
         clear_values[1] = vulkan::depth_stencil_clear_value();
         return clear_values;
 }
 
 unsigned Impl::width_2d() const
 {
-        ASSERT(!m_depth_attachments.empty());
-        return m_depth_attachments[0].width();
+        return m_width;
 }
 
 unsigned Impl::height_2d() const
 {
-        ASSERT(!m_depth_attachments.empty());
-        return m_depth_attachments[0].height();
+        return m_height;
 }
 
 VkSampleCountFlagBits Impl::sample_count_2d() const
@@ -657,8 +658,8 @@ void Impl::create_resolve_command_buffers()
         info.render_area.emplace();
         info.render_area->offset.x = 0;
         info.render_area->offset.y = 0;
-        info.render_area->extent.width = m_depth_attachments[0].width();
-        info.render_area->extent.height = m_depth_attachments[0].height();
+        info.render_area->extent.width = m_width;
+        info.render_area->extent.height = m_height;
         info.render_pass = m_resolve_render_pass;
         info.framebuffers = &m_resolve_framebuffers_handles;
         info.command_pool = m_command_pool;
