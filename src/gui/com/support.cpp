@@ -144,6 +144,13 @@ void set_horizontal_stretch(QWidget* widget, int stretchFactor)
         widget->setSizePolicy(sp);
 }
 
+void set_vertical_stretch(QWidget* widget, int stretchFactor)
+{
+        QSizePolicy sp = widget->sizePolicy();
+        sp.setVerticalStretch(stretchFactor);
+        widget->setSizePolicy(sp);
+}
+
 color::Color qcolor_to_color(const QColor& c)
 {
         unsigned char r = std::clamp(c.red(), 0, 255);
