@@ -188,33 +188,42 @@ Framebuffer create_framebuffer(
 
 //
 
-VkClearValue color_clear_value(VkFormat format, VkColorSpaceKHR color_space, const Vector<3, float>& rgb)
+VkClearValue color_clear_value(VkFormat format, const Vector<3, float>& rgb)
 {
-        if (color_space == VK_COLOR_SPACE_SRGB_NONLINEAR_KHR)
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wswitch-enum"
+        switch (format)
         {
-                if (format == VK_FORMAT_R8G8B8A8_UNORM || format == VK_FORMAT_B8G8R8A8_UNORM)
-                {
-                        VkClearValue clear_value;
-                        clear_value.color.float32[0] = color::linear_float_to_srgb_float(rgb[0]);
-                        clear_value.color.float32[1] = color::linear_float_to_srgb_float(rgb[1]);
-                        clear_value.color.float32[2] = color::linear_float_to_srgb_float(rgb[2]);
-                        clear_value.color.float32[3] = 1;
-                        return clear_value;
-                }
-
-                if (format == VK_FORMAT_R8G8B8A8_SRGB || format == VK_FORMAT_B8G8R8A8_SRGB)
-                {
-                        VkClearValue clear_value;
-                        clear_value.color.float32[0] = rgb[0];
-                        clear_value.color.float32[1] = rgb[1];
-                        clear_value.color.float32[2] = rgb[2];
-                        clear_value.color.float32[3] = 1;
-                        return clear_value;
-                }
+        case VK_FORMAT_B8G8R8_UNORM:
+        case VK_FORMAT_R8G8B8_UNORM:
+        case VK_FORMAT_B8G8R8A8_UNORM:
+        case VK_FORMAT_R8G8B8A8_UNORM:
+        {
+                VkClearValue clear_value;
+                clear_value.color.float32[0] = color::linear_float_to_srgb_float(rgb[0]);
+                clear_value.color.float32[1] = color::linear_float_to_srgb_float(rgb[1]);
+                clear_value.color.float32[2] = color::linear_float_to_srgb_float(rgb[2]);
+                clear_value.color.float32[3] = 1;
+                return clear_value;
         }
-
-        error("Unsupported clear color format " + format_to_string(format) + " and color space "
-              + color_space_to_string(color_space));
+        case VK_FORMAT_B8G8R8_SRGB:
+        case VK_FORMAT_R8G8B8_SRGB:
+        case VK_FORMAT_B8G8R8A8_SRGB:
+        case VK_FORMAT_R8G8B8A8_SRGB:
+        case VK_FORMAT_R32G32B32_SFLOAT:
+        case VK_FORMAT_R32G32B32A32_SFLOAT:
+        {
+                VkClearValue clear_value;
+                clear_value.color.float32[0] = rgb[0];
+                clear_value.color.float32[1] = rgb[1];
+                clear_value.color.float32[2] = rgb[2];
+                clear_value.color.float32[3] = 1;
+                return clear_value;
+        }
+        default:
+                error("Unsupported format " + format_to_string(format) + " for color clear value");
+        }
+#pragma GCC diagnostic pop
 }
 
 VkClearValue depth_stencil_clear_value()

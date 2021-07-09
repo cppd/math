@@ -269,7 +269,6 @@ class Impl final : public RenderBuffers, public Impl3D, public Impl2D
 {
         const vulkan::Device& m_device;
         VkFormat m_swapchain_format;
-        VkColorSpaceKHR m_swapchain_color_space;
         const vulkan::CommandPool& m_command_pool;
 
         const unsigned m_width, m_height;
@@ -382,7 +381,6 @@ Impl::Impl(
         int required_minimum_sample_count)
         : m_device(device),
           m_swapchain_format(swapchain.format()),
-          m_swapchain_color_space(swapchain.color_space()),
           m_command_pool(command_pool),
           m_width(swapchain.width()),
           m_height(swapchain.height())
@@ -610,7 +608,7 @@ const std::vector<VkFramebuffer>& Impl::framebuffers_clear_3d() const
 std::vector<VkClearValue> Impl::clear_values_3d(const Vector<3, float>& rgb) const
 {
         std::vector<VkClearValue> clear_values(2);
-        clear_values[0] = vulkan::color_clear_value(m_swapchain_format, m_swapchain_color_space, rgb);
+        clear_values[0] = vulkan::color_clear_value(m_swapchain_format, rgb);
         clear_values[1] = vulkan::depth_stencil_clear_value();
         return clear_values;
 }
