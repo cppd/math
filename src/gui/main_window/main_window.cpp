@@ -59,8 +59,8 @@ MainWindow::MainWindow()
 
 void MainWindow::constructor_graphics_widget()
 {
-        QSplitter* splitter = find_widget_splitter(this, ui.graphics_widget);
-        ASSERT(splitter);
+        QSplitter* const splitter = find_widget_splitter(this, ui.graphics_widget);
+        ASSERT(splitter && splitter->orientation() == Qt::Horizontal);
 
         m_graphics_widget = new GraphicsWidget(this);
 
@@ -72,15 +72,26 @@ void MainWindow::constructor_graphics_widget()
         delete ui.graphics_widget;
         ui.graphics_widget = nullptr;
 
-        set_horizontal_stretch(m_graphics_widget, 5);
         m_graphics_widget->setMinimumSize(400, 400);
         m_graphics_widget->setVisible(true);
 
+        set_horizontal_stretch(m_graphics_widget, 1);
         for (QObject* object : splitter->children())
         {
                 if (object != m_graphics_widget && qobject_cast<QWidget*>(object))
                 {
-                        set_horizontal_stretch(qobject_cast<QWidget*>(object), 1);
+                        set_horizontal_stretch(qobject_cast<QWidget*>(object), 0);
+                }
+        }
+
+        set_vertical_stretch(splitter, 1);
+        QSplitter* const vertical_splitter = find_widget_splitter(this, splitter);
+        ASSERT(vertical_splitter && vertical_splitter->orientation() == Qt::Vertical);
+        for (QObject* object : vertical_splitter->children())
+        {
+                if (object != splitter && qobject_cast<QWidget*>(object))
+                {
+                        set_vertical_stretch(qobject_cast<QWidget*>(object), 0);
                 }
         }
 
