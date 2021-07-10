@@ -18,6 +18,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "view.h"
 
 #include "render_buffer.h"
+#include "swapchain.h"
 
 #include "../com/camera.h"
 #include "../com/frame_rate.h"
@@ -99,27 +100,26 @@ std::vector<vulkan::PhysicalDeviceFeatures> device_features_sampler_anisotropy(b
 
 void create_resolve_texture_and_command_buffers(
         const vulkan::VulkanInstance& instance,
-        const vulkan::Swapchain& swapchain,
         const RenderBuffers& render_buffers,
         const Region<2, int>& rectangle,
         std::unique_ptr<vulkan::ImageWithMemory>* texture,
         std::unique_ptr<vulkan::CommandBuffers>* buffers)
 {
-        ASSERT(render_buffers.image_count() == 1);
+        ASSERT(render_buffers.image_views().size() == 1);
 
         constexpr VkImageLayout IMAGE_LAYOUT = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
 
         vulkan::ImageWithMemory image(
                 instance.device(), instance.graphics_compute_command_pool(), instance.graphics_compute_queues()[0],
                 std::vector<uint32_t>({instance.graphics_compute_command_pool().family_index()}),
-                std::vector<VkFormat>({swapchain.format()}), VK_SAMPLE_COUNT_1_BIT, VK_IMAGE_TYPE_2D,
-                vulkan::make_extent(swapchain.width(), swapchain.height()), IMAGE_LAYOUT,
+                std::vector<VkFormat>({render_buffers.color_format()}), VK_SAMPLE_COUNT_1_BIT, VK_IMAGE_TYPE_2D,
+                vulkan::make_extent(render_buffers.width(), render_buffers.height()), IMAGE_LAYOUT,
                 VK_IMAGE_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_SAMPLED_BIT);
 
         //
 
         vulkan::CommandBuffers command_buffers = vulkan::CommandBuffers(
-                instance.device(), instance.graphics_compute_command_pool(), render_buffers.image_count());
+                instance.device(), instance.graphics_compute_command_pool(), render_buffers.image_views().size());
 
         for (unsigned i = 0; i < command_buffers.count(); ++i)
         {
@@ -158,6 +158,7 @@ class Impl final
         std::unique_ptr<vulkan::Semaphore> m_image_semaphore;
         std::unique_ptr<vulkan::Swapchain> m_swapchain;
         std::unique_ptr<RenderBuffers> m_render_buffers;
+        std::unique_ptr<Swapchain> m_swapchain_resolve;
         std::unique_ptr<vulkan::ImageWithMemory> m_resolve_texture;
         std::unique_ptr<vulkan::CommandBuffers> m_resolve_command_buffers;
         std::unique_ptr<vulkan::Semaphore> m_resolve_semaphore;
@@ -549,21 +550,25 @@ class Impl final
                 m_object_image.reset();
                 m_resolve_command_buffers.reset();
                 m_resolve_texture.reset();
+                m_swapchain_resolve.reset();
                 m_render_buffers.reset();
                 m_swapchain.reset();
 
-                const std::vector<uint32_t> swapchain_family_indices = {
-                        m_instance->graphics_compute_queues()[0].family_index(),
-                        m_instance->presentation_queue().family_index()};
-
                 m_swapchain = std::make_unique<vulkan::Swapchain>(
-                        m_instance->surface(), m_instance->device(), swapchain_family_indices, VULKAN_SURFACE_FORMAT,
-                        VULKAN_PREFERRED_IMAGE_COUNT, m_present_mode);
+                        m_instance->surface(), m_instance->device(),
+                        std::vector<uint32_t>{
+                                m_instance->graphics_compute_queues()[0].family_index(),
+                                m_instance->presentation_queue().family_index()},
+                        VULKAN_SURFACE_FORMAT, VULKAN_PREFERRED_IMAGE_COUNT, m_present_mode);
 
-                constexpr RenderBufferCount buffer_count = RenderBufferCount::One;
                 m_render_buffers = create_render_buffers(
-                        buffer_count, *m_swapchain, m_instance->graphics_compute_command_pool(), m_instance->device(),
+                        1 /*buffer_count*/, m_swapchain->format(), m_swapchain->width(), m_swapchain->height(),
+                        {m_instance->graphics_compute_queues()[0].family_index()}, m_instance->device(),
                         VULKAN_MINIMUM_SAMPLE_COUNT);
+
+                m_swapchain_resolve = std::make_unique<Swapchain>(
+                        m_instance->device(), m_instance->graphics_compute_command_pool(), *m_swapchain,
+                        m_render_buffers->image_views(), m_render_buffers->sample_count());
 
                 //
 
@@ -572,25 +577,25 @@ class Impl final
                         m_instance->graphics_compute_queues()[0],
                         std::vector<uint32_t>({m_instance->graphics_compute_queues()[0].family_index()}),
                         std::vector<VkFormat>({VULKAN_OBJECT_IMAGE_FORMAT}), VK_SAMPLE_COUNT_1_BIT, VK_IMAGE_TYPE_2D,
-                        vulkan::make_extent(m_swapchain->width(), m_swapchain->height()), VK_IMAGE_LAYOUT_GENERAL,
-                        VK_IMAGE_USAGE_STORAGE_BIT | VK_IMAGE_USAGE_TRANSFER_DST_BIT);
+                        vulkan::make_extent(m_render_buffers->width(), m_render_buffers->height()),
+                        VK_IMAGE_LAYOUT_GENERAL, VK_IMAGE_USAGE_STORAGE_BIT | VK_IMAGE_USAGE_TRANSFER_DST_BIT);
 
                 //
 
                 Region<2, int> w_2;
                 const bool two_windows = window_position_and_size(
-                        m_dft_active, m_swapchain->width(), m_swapchain->height(), m_frame_size_in_pixels,
+                        m_dft_active, m_render_buffers->width(), m_render_buffers->height(), m_frame_size_in_pixels,
                         &m_draw_rectangle, &w_2);
 
                 ASSERT(m_draw_rectangle.x0() >= 0 && m_draw_rectangle.y0() >= 0);
                 ASSERT(m_draw_rectangle.width() > 0 && m_draw_rectangle.height() > 0);
-                ASSERT(m_draw_rectangle.x1() <= static_cast<int>(m_swapchain->width()));
-                ASSERT(m_draw_rectangle.y1() <= static_cast<int>(m_swapchain->height()));
+                ASSERT(m_draw_rectangle.x1() <= static_cast<int>(m_render_buffers->width()));
+                ASSERT(m_draw_rectangle.y1() <= static_cast<int>(m_render_buffers->height()));
 
                 //
 
                 create_resolve_texture_and_command_buffers(
-                        *m_instance, *m_swapchain, *m_render_buffers, m_draw_rectangle, &m_resolve_texture,
+                        *m_instance, *m_render_buffers, m_draw_rectangle, &m_resolve_texture,
                         &m_resolve_command_buffers);
 
                 //
@@ -602,7 +607,7 @@ class Impl final
 
                 m_text->create_buffers(
                         &m_render_buffers->buffers_2d(),
-                        Region<2, int>(0, 0, m_swapchain->width(), m_swapchain->height()));
+                        Region<2, int>(0, 0, m_render_buffers->width(), m_render_buffers->height()));
 
                 m_convex_hull->create_buffers(&m_render_buffers->buffers_2d(), *m_object_image, m_draw_rectangle);
 
@@ -616,8 +621,8 @@ class Impl final
                 {
                         ASSERT(w_2.x0() >= 0 && w_2.y0() >= 0);
                         ASSERT(w_2.width() > 0 && w_2.height() > 0);
-                        ASSERT(w_2.x1() <= static_cast<int>(m_swapchain->width()));
-                        ASSERT(w_2.y1() <= static_cast<int>(m_swapchain->height()));
+                        ASSERT(w_2.x1() <= static_cast<int>(m_render_buffers->width()));
+                        ASSERT(w_2.y1() <= static_cast<int>(m_render_buffers->height()));
 
                         m_dft->create_buffers(
                                 &m_render_buffers->buffers_2d(), *m_resolve_texture, m_draw_rectangle, w_2);
@@ -700,8 +705,8 @@ class Impl final
                                 m_text->draw(graphics_queue, wait_semaphore, image_index, m_frame_rate.text_data());
                 }
 
-                wait_semaphore = m_render_buffers->resolve_to_swapchain(
-                        graphics_queue, *m_image_semaphore, wait_semaphore, image_index);
+                wait_semaphore =
+                        m_swapchain_resolve->resolve(graphics_queue, *m_image_semaphore, wait_semaphore, image_index);
 
                 if (!vulkan::queue_present(
                             wait_semaphore, m_swapchain->swapchain(), image_index, m_instance->presentation_queue()))

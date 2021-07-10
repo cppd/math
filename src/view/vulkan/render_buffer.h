@@ -21,7 +21,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/numerical/region.h>
 #include <src/vulkan/buffers.h>
 #include <src/vulkan/objects.h>
-#include <src/vulkan/swapchain.h>
 
 #include <memory>
 
@@ -34,13 +33,12 @@ struct RenderBuffers
         virtual gpu::RenderBuffers3D& buffers_3d() = 0;
         virtual gpu::RenderBuffers2D& buffers_2d() = 0;
 
-        virtual VkSemaphore resolve_to_swapchain(
-                const vulkan::Queue& graphics_queue,
-                VkSemaphore swapchain_image_semaphore,
-                VkSemaphore wait_semaphore,
-                unsigned image_index) const = 0;
-
-        virtual unsigned image_count() const = 0;
+        virtual unsigned width() const = 0;
+        virtual unsigned height() const = 0;
+        virtual VkFormat color_format() const = 0;
+        virtual VkFormat depth_format() const = 0;
+        virtual VkSampleCountFlagBits sample_count() const = 0;
+        virtual const std::vector<VkImageView>& image_views() const = 0;
 
         virtual void commands_color_resolve(
                 VkCommandBuffer command_buffer,
@@ -50,16 +48,12 @@ struct RenderBuffers
                 unsigned image_index) const = 0;
 };
 
-enum class RenderBufferCount
-{
-        One,
-        Swapchain
-};
-
 std::unique_ptr<RenderBuffers> create_render_buffers(
-        RenderBufferCount buffer_count,
-        const vulkan::Swapchain& swapchain,
-        const vulkan::CommandPool& command_pool,
+        unsigned buffer_count,
+        VkFormat format,
+        unsigned width,
+        unsigned height,
+        const std::vector<uint32_t>& family_indices,
         const vulkan::Device& device,
         int required_minimum_sample_count);
 }
