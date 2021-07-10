@@ -45,7 +45,7 @@ struct RenderBuffers
                 const vulkan::ImageWithMemory& image,
                 VkImageLayout layout,
                 const Region<2, int>& rectangle,
-                unsigned image_index) const = 0;
+                unsigned index) const = 0;
 };
 
 std::unique_ptr<RenderBuffers> create_render_buffers(

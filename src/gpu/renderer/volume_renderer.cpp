@@ -256,17 +256,17 @@ std::optional<VkCommandBuffer> VolumeRenderer::command_buffer(unsigned index, bo
         {
                 if (with_fragments)
                 {
-                        index = m_command_buffers_image_fragments->count() == 1 ? 0 : index;
+                        ASSERT(index < m_command_buffers_image_fragments->count());
                         return (*m_command_buffers_image_fragments)[index];
                 }
-                index = m_command_buffers_image->count() == 1 ? 0 : index;
+                ASSERT(index < m_command_buffers_image->count());
                 return (*m_command_buffers_image)[index];
         }
         if (with_fragments)
         {
                 ASSERT(m_command_buffers_fragments);
 
-                index = m_command_buffers_fragments->count() == 1 ? 0 : index;
+                ASSERT(index < m_command_buffers_fragments->count());
                 return (*m_command_buffers_fragments)[index];
         }
         return std::nullopt;

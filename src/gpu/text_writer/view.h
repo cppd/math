@@ -42,7 +42,7 @@ struct View
         virtual VkSemaphore draw(
                 const vulkan::Queue& queue,
                 VkSemaphore wait_semaphore,
-                unsigned image_index,
+                unsigned index,
                 const text::TextData& text_data) = 0;
 };
 

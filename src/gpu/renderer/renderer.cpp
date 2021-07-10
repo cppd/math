@@ -140,7 +140,6 @@ class Impl final : public Renderer
         const vulkan::CommandPool& m_transfer_command_pool;
         const vulkan::Queue& m_transfer_queue;
 
-        const vulkan::Swapchain* m_swapchain = nullptr;
         const RenderBuffers3D* m_render_buffers = nullptr;
         const vulkan::ImageWithMemory* m_object_image = nullptr;
 
@@ -468,7 +467,7 @@ class Impl final : public Renderer
         VkSemaphore draw(
                 const vulkan::Queue& graphics_queue_1,
                 const vulkan::Queue& graphics_queue_2,
-                unsigned image_index) const override
+                const unsigned index) const override
         {
                 ASSERT(m_thread_id == std::this_thread::get_id());
 
@@ -477,13 +476,11 @@ class Impl final : public Renderer
                 ASSERT(graphics_queue_1.family_index() == m_graphics_queue.family_index());
                 ASSERT(graphics_queue_2.family_index() == m_graphics_queue.family_index());
 
-                ASSERT(image_index < m_swapchain->image_views().size());
-
                 VkSemaphore semaphore;
 
                 {
                         ASSERT(m_clear_command_buffers);
-                        unsigned index = m_clear_command_buffers->count() == 1 ? 0 : image_index;
+                        ASSERT(index < m_clear_command_buffers->count());
                         vulkan::queue_submit(
                                 (*m_clear_command_buffers)[index], m_clear_signal_semaphore, graphics_queue_2);
                         semaphore = m_clear_signal_semaphore;
@@ -496,16 +493,16 @@ class Impl final : public Renderer
                         {
                                 vulkan::queue_submit(
                                         semaphore, VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT,
-                                        *m_mesh_renderer.render_command_buffer_all(image_index),
+                                        *m_mesh_renderer.render_command_buffer_all(index),
                                         m_renderer_mesh_signal_semaphore, graphics_queue_1);
 
                                 semaphore = m_renderer_mesh_signal_semaphore;
                         }
                         else
                         {
-                                ASSERT(m_mesh_renderer.depth_command_buffer(image_index));
+                                ASSERT(m_mesh_renderer.depth_command_buffer(index));
                                 vulkan::queue_submit(
-                                        *m_mesh_renderer.depth_command_buffer(image_index),
+                                        *m_mesh_renderer.depth_command_buffer(index),
                                         m_mesh_renderer_depth_signal_semaphore, graphics_queue_1);
 
                                 vulkan::queue_submit(
@@ -513,7 +510,7 @@ class Impl final : public Renderer
                                         std::array<VkPipelineStageFlags, 2>{
                                                 VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT,
                                                 VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT},
-                                        *m_mesh_renderer.render_command_buffer_all(image_index),
+                                        *m_mesh_renderer.render_command_buffer_all(index),
                                         m_renderer_mesh_signal_semaphore, graphics_queue_1);
 
                                 semaphore = m_renderer_mesh_signal_semaphore;
@@ -533,8 +530,7 @@ class Impl final : public Renderer
                                 {
                                         vulkan::queue_submit(
                                                 semaphore, VK_PIPELINE_STAGE_BOTTOM_OF_PIPE_BIT,
-                                                *m_mesh_renderer.render_command_buffer_transparent_as_opaque(
-                                                        image_index),
+                                                *m_mesh_renderer.render_command_buffer_transparent_as_opaque(index),
                                                 m_render_transparent_as_opaque_signal_semaphore, graphics_queue_1);
 
                                         semaphore = m_render_transparent_as_opaque_signal_semaphore;
@@ -558,7 +554,7 @@ class Impl final : public Renderer
                 {
                         vulkan::queue_submit(
                                 semaphore, VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT,
-                                *m_volume_renderer.command_buffer(image_index, transparency),
+                                *m_volume_renderer.command_buffer(index, transparency),
                                 m_renderer_volume_signal_semaphore, graphics_queue_1);
 
                         semaphore = m_renderer_volume_signal_semaphore;
@@ -577,7 +573,6 @@ class Impl final : public Renderer
         }
 
         void create_buffers(
-                const vulkan::Swapchain* swapchain,
                 RenderBuffers3D* render_buffers,
                 const vulkan::ImageWithMemory* objects,
                 const Region<2, int>& viewport) override
@@ -586,11 +581,9 @@ class Impl final : public Renderer
 
                 //
 
-                ASSERT(swapchain);
                 ASSERT(viewport.x1() <= static_cast<int>(objects->width()));
                 ASSERT(viewport.y1() <= static_cast<int>(objects->height()));
 
-                m_swapchain = swapchain;
                 m_render_buffers = render_buffers;
                 m_object_image = objects;
                 m_viewport = viewport;
@@ -638,7 +631,7 @@ class Impl final : public Renderer
                 m_depth_copy_image = std::make_unique<vulkan::DepthImageWithMemory>(
                         m_device, std::vector<uint32_t>({m_graphics_queue.family_index()}),
                         std::vector<VkFormat>({m_render_buffers->depth_format()}), m_render_buffers->sample_count(),
-                        m_swapchain->width(), m_swapchain->height(),
+                        m_render_buffers->width(), m_render_buffers->height(),
                         VK_IMAGE_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_SAMPLED_BIT, m_graphics_command_pool,
                         m_graphics_queue, DEPTH_COPY_IMAGE_LAYOUT);
         }
@@ -648,7 +641,7 @@ class Impl final : public Renderer
                 m_transparency_buffers = std::make_unique<TransparencyBuffers>(
                         m_device, m_graphics_command_pool, m_graphics_queue,
                         std::vector<uint32_t>({m_graphics_queue.family_index()}), m_render_buffers->sample_count(),
-                        m_swapchain->width(), m_swapchain->height(), TRANSPARENCY_NODE_BUFFER_MAX_SIZE);
+                        m_render_buffers->width(), m_render_buffers->height(), TRANSPARENCY_NODE_BUFFER_MAX_SIZE);
 
                 LOG("Transparency node count: " + to_string_digit_groups(m_transparency_buffers->node_count()));
 
@@ -668,14 +661,14 @@ class Impl final : public Renderer
 
         void create_mesh_depth_buffers()
         {
-                ASSERT(m_swapchain);
+                ASSERT(m_render_buffers);
 
                 delete_mesh_depth_buffers();
 
-                constexpr DepthBufferCount buffer_count = DepthBufferCount::One;
                 m_mesh_renderer_depth_render_buffers = create_depth_buffers(
-                        buffer_count, *m_swapchain, {m_graphics_queue.family_index()}, m_graphics_command_pool,
-                        m_graphics_queue, m_device, m_viewport.width(), m_viewport.height(), m_shadow_zoom);
+                        m_render_buffers->framebuffers().size(), {m_graphics_queue.family_index()},
+                        m_graphics_command_pool, m_graphics_queue, m_device, m_viewport.width(), m_viewport.height(),
+                        m_shadow_zoom);
 
                 m_mesh_renderer.create_depth_buffers(m_mesh_renderer_depth_render_buffers.get());
         }
@@ -747,9 +740,13 @@ class Impl final : public Renderer
                 }
                 auto copy_depth = [this](VkCommandBuffer command_buffer)
                 {
+                        ASSERT(m_render_buffers);
+                        ASSERT(m_render_buffers->framebuffers().size() == 1);
+                        constexpr int INDEX = 0;
+
                         m_render_buffers->commands_depth_copy(
                                 command_buffer, m_depth_copy_image->image(), DEPTH_COPY_IMAGE_LAYOUT, m_viewport,
-                                0 /*image_index*/);
+                                INDEX);
                 };
                 for (VolumeObject* visible_volume : m_volume_storage.visible_objects())
                 {

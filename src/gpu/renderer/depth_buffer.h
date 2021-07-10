@@ -22,7 +22,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/vulkan/instance.h>
 #include <src/vulkan/objects.h>
 #include <src/vulkan/shader.h>
-#include <src/vulkan/swapchain.h>
 
 #include <functional>
 #include <memory>
@@ -43,15 +42,8 @@ struct DepthBuffers
         virtual const std::vector<VkClearValue>& clear_values() const = 0;
 };
 
-enum class DepthBufferCount
-{
-        One,
-        Swapchain
-};
-
 std::unique_ptr<DepthBuffers> create_depth_buffers(
-        DepthBufferCount buffer_count,
-        const vulkan::Swapchain& swapchain,
+        unsigned buffer_count,
         const std::vector<uint32_t>& attachment_family_indices,
         VkCommandPool graphics_command_pool,
         VkQueue graphics_queue,

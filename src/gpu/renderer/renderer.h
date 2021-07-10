@@ -26,7 +26,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/numerical/vec.h>
 #include <src/vulkan/buffers.h>
 #include <src/vulkan/instance.h>
-#include <src/vulkan/swapchain.h>
 
 #include <functional>
 #include <memory>
@@ -83,12 +82,11 @@ struct Renderer
         virtual VkSemaphore draw(
                 const vulkan::Queue& graphics_queue_1,
                 const vulkan::Queue& graphics_queue_2,
-                unsigned image_index) const = 0;
+                unsigned index) const = 0;
 
         virtual bool empty() const = 0;
 
         virtual void create_buffers(
-                const vulkan::Swapchain* swapchain,
                 RenderBuffers3D* render_buffers,
                 const vulkan::ImageWithMemory* objects,
                 const Region<2, int>& viewport) = 0;

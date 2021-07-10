@@ -48,7 +48,7 @@ public:
                 VkImage image,
                 VkImageLayout layout,
                 const Region<2, int>& rectangle,
-                unsigned image_index) const = 0;
+                unsigned index) const = 0;
 };
 
 class RenderBuffers2D

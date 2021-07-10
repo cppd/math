@@ -147,19 +147,17 @@ class Impl final : public View
                 m_image.reset();
         }
 
-        VkSemaphore draw(const vulkan::Queue& queue, VkSemaphore wait_semaphore, unsigned image_index) override
+        VkSemaphore draw(const vulkan::Queue& queue, VkSemaphore wait_semaphore, unsigned index) override
         {
                 ASSERT(std::this_thread::get_id() == m_thread_id);
 
                 //
 
                 ASSERT(queue.family_index() == m_graphics_family_index);
-                ASSERT(m_command_buffers->count() == 1 || image_index < m_command_buffers->count());
-
-                const unsigned buffer_index = m_command_buffers->count() == 1 ? 0 : image_index;
+                ASSERT(index < m_command_buffers->count());
 
                 vulkan::queue_submit(
-                        wait_semaphore, VK_PIPELINE_STAGE_COMPUTE_SHADER_BIT, (*m_command_buffers)[buffer_index],
+                        wait_semaphore, VK_PIPELINE_STAGE_COMPUTE_SHADER_BIT, (*m_command_buffers)[index],
                         m_signal_semaphore, queue);
 
                 return m_signal_semaphore;

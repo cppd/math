@@ -44,7 +44,7 @@ struct View
                 const vulkan::Queue& graphics_queue,
                 const vulkan::Queue& compute_queue,
                 VkSemaphore wait_semaphore,
-                unsigned image_index) = 0;
+                unsigned index) = 0;
 
         virtual void reset() = 0;
 };

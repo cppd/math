@@ -584,7 +584,7 @@ std::optional<VkCommandBuffer> MeshRenderer::render_command_buffer_all(unsigned 
 {
         if (m_render_command_buffers_all)
         {
-                index = m_render_command_buffers_all->count() == 1 ? 0 : index;
+                ASSERT(index < m_render_command_buffers_all->count());
                 return (*m_render_command_buffers_all)[index];
         }
         return std::nullopt;
@@ -594,7 +594,7 @@ std::optional<VkCommandBuffer> MeshRenderer::render_command_buffer_transparent_a
 {
         if (m_render_command_buffers_transparent_as_opaque)
         {
-                index = m_render_command_buffers_transparent_as_opaque->count() == 1 ? 0 : index;
+                ASSERT(index < m_render_command_buffers_transparent_as_opaque->count());
                 return (*m_render_command_buffers_transparent_as_opaque)[index];
         }
         return std::nullopt;
@@ -604,7 +604,7 @@ std::optional<VkCommandBuffer> MeshRenderer::depth_command_buffer(unsigned index
 {
         if (m_render_depth_command_buffers)
         {
-                index = m_render_depth_command_buffers->count() == 1 ? 0 : index;
+                ASSERT(index < m_render_depth_command_buffers->count());
                 return (*m_render_depth_command_buffers)[index];
         }
         return std::nullopt;

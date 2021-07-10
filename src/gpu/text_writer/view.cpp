@@ -198,7 +198,7 @@ class Impl final : public View
         VkSemaphore draw(
                 const vulkan::Queue& queue,
                 VkSemaphore wait_semaphore,
-                unsigned image_index,
+                unsigned index,
                 const text::TextData& text_data) override
         {
                 ASSERT(std::this_thread::get_id() == m_thread_id);
@@ -245,13 +245,11 @@ class Impl final : public View
 
                 //
 
-                ASSERT(m_command_buffers->count() == 1 || image_index < m_command_buffers->count());
-
-                const unsigned buffer_index = m_command_buffers->count() == 1 ? 0 : image_index;
+                ASSERT(index < m_command_buffers->count());
 
                 vulkan::queue_submit(
-                        wait_semaphore, VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT,
-                        (*m_command_buffers)[buffer_index], m_semaphore, queue);
+                        wait_semaphore, VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT, (*m_command_buffers)[index],
+                        m_semaphore, queue);
 
                 return m_semaphore;
         }

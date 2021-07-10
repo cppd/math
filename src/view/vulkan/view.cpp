@@ -132,6 +132,8 @@ void create_resolve_texture_and_command_buffers(
 
 class Impl final
 {
+        static constexpr unsigned RENDER_BUFFER_COUNT = 1;
+
         const double m_window_ppi;
         const std::thread::id m_thread_id = std::this_thread::get_id();
 
@@ -562,7 +564,7 @@ class Impl final
                         VULKAN_SURFACE_FORMAT, VULKAN_PREFERRED_IMAGE_COUNT, m_present_mode);
 
                 m_render_buffers = create_render_buffers(
-                        1 /*buffer_count*/, m_swapchain->format(), m_swapchain->width(), m_swapchain->height(),
+                        RENDER_BUFFER_COUNT, m_swapchain->format(), m_swapchain->width(), m_swapchain->height(),
                         {m_instance->graphics_compute_queues()[0].family_index()}, m_instance->device(),
                         VULKAN_MINIMUM_SAMPLE_COUNT);
 
@@ -600,8 +602,7 @@ class Impl final
 
                 //
 
-                m_renderer->create_buffers(
-                        m_swapchain.get(), &m_render_buffers->buffers_3d(), m_object_image.get(), m_draw_rectangle);
+                m_renderer->create_buffers(&m_render_buffers->buffers_3d(), m_object_image.get(), m_draw_rectangle);
 
                 //
 
@@ -637,11 +638,9 @@ class Impl final
         VkSemaphore resolve_to_texture(
                 const vulkan::Queue& graphics_queue,
                 VkSemaphore wait_semaphore,
-                unsigned image_index) const
+                const unsigned index) const
         {
-                ASSERT(m_resolve_command_buffers->count() == 1 || image_index < m_resolve_command_buffers->count());
-
-                const unsigned index = m_resolve_command_buffers->count() == 1 ? 0 : image_index;
+                ASSERT(index < m_resolve_command_buffers->count());
 
                 vulkan::queue_submit(
                         wait_semaphore, VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT, (*m_resolve_command_buffers)[index],
@@ -656,60 +655,62 @@ class Impl final
                         2
                         <= std::tuple_size_v<std::remove_reference_t<decltype(m_instance->graphics_compute_queues())>>);
 
-                uint32_t image_index;
+                uint32_t swapchain_image_index;
                 if (!vulkan::acquire_next_image(
-                            m_instance->device(), m_swapchain->swapchain(), *m_image_semaphore, &image_index))
+                            m_instance->device(), m_swapchain->swapchain(), *m_image_semaphore, &swapchain_image_index))
                 {
                         return false;
                 }
 
                 VkSemaphore wait_semaphore;
 
+                static_assert(RENDER_BUFFER_COUNT == 1);
+                ASSERT(m_render_buffers->image_views().size() == 1);
+                constexpr int INDEX = 0;
+
                 wait_semaphore = m_renderer->draw(
-                        m_instance->graphics_compute_queues()[0], m_instance->graphics_compute_queues()[1],
-                        image_index);
+                        m_instance->graphics_compute_queues()[0], m_instance->graphics_compute_queues()[1], INDEX);
 
                 const vulkan::Queue& graphics_queue = m_instance->graphics_compute_queues()[0];
                 const vulkan::Queue& compute_queue = m_instance->compute_queue();
 
                 if (m_pencil_sketch_active)
                 {
-                        wait_semaphore = resolve_to_texture(graphics_queue, wait_semaphore, image_index);
-                        wait_semaphore = m_pencil_sketch->draw(graphics_queue, wait_semaphore, image_index);
+                        wait_semaphore = resolve_to_texture(graphics_queue, wait_semaphore, INDEX);
+                        wait_semaphore = m_pencil_sketch->draw(graphics_queue, wait_semaphore, INDEX);
                 }
 
                 if (m_dft_active || m_optical_flow_active)
                 {
-                        wait_semaphore = resolve_to_texture(graphics_queue, wait_semaphore, image_index);
+                        wait_semaphore = resolve_to_texture(graphics_queue, wait_semaphore, INDEX);
                 }
 
                 if (m_dft_active)
                 {
-                        wait_semaphore = m_dft->draw(graphics_queue, wait_semaphore, image_index);
+                        wait_semaphore = m_dft->draw(graphics_queue, wait_semaphore, INDEX);
                 }
 
                 if (m_optical_flow_active)
                 {
-                        wait_semaphore =
-                                m_optical_flow->draw(graphics_queue, compute_queue, wait_semaphore, image_index);
+                        wait_semaphore = m_optical_flow->draw(graphics_queue, compute_queue, wait_semaphore, INDEX);
                 }
 
                 if (m_convex_hull_active)
                 {
-                        wait_semaphore = m_convex_hull->draw(graphics_queue, wait_semaphore, image_index);
+                        wait_semaphore = m_convex_hull->draw(graphics_queue, wait_semaphore, INDEX);
                 }
 
                 if (m_text_active)
                 {
-                        wait_semaphore =
-                                m_text->draw(graphics_queue, wait_semaphore, image_index, m_frame_rate.text_data());
+                        wait_semaphore = m_text->draw(graphics_queue, wait_semaphore, INDEX, m_frame_rate.text_data());
                 }
 
-                wait_semaphore =
-                        m_swapchain_resolve->resolve(graphics_queue, *m_image_semaphore, wait_semaphore, image_index);
+                wait_semaphore = m_swapchain_resolve->resolve(
+                        graphics_queue, *m_image_semaphore, wait_semaphore, swapchain_image_index);
 
                 if (!vulkan::queue_present(
-                            wait_semaphore, m_swapchain->swapchain(), image_index, m_instance->presentation_queue()))
+                            wait_semaphore, m_swapchain->swapchain(), swapchain_image_index,
+                            m_instance->presentation_queue()))
                 {
                         return false;
                 }

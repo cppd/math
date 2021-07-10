@@ -157,19 +157,6 @@ std::string buffer_info(
         return oss.str();
 }
 
-unsigned compute_buffer_count(DepthBufferCount buffer_count, const vulkan::Swapchain& swapchain)
-{
-        switch (buffer_count)
-        {
-        case DepthBufferCount::One:
-                return 1;
-        case DepthBufferCount::Swapchain:
-                ASSERT(!swapchain.image_views().empty());
-                return swapchain.image_views().size();
-        }
-        error_fatal("Error depth buffer count");
-}
-
 class Impl final : public DepthBuffers
 {
         const vulkan::Device& m_device;
@@ -193,8 +180,7 @@ class Impl final : public DepthBuffers
         const std::vector<VkClearValue>& clear_values() const override;
 
 public:
-        Impl(DepthBufferCount buffer_count,
-             const vulkan::Swapchain& swapchain,
+        Impl(unsigned buffer_count,
              const std::vector<uint32_t>& attachment_family_indices,
              VkCommandPool graphics_command_pool,
              VkQueue graphics_queue,
@@ -209,8 +195,7 @@ public:
 };
 
 Impl::Impl(
-        DepthBufferCount buffer_count,
-        const vulkan::Swapchain& swapchain,
+        unsigned buffer_count,
         const std::vector<uint32_t>& attachment_family_indices,
         VkCommandPool graphics_command_pool,
         VkQueue graphics_queue,
@@ -226,9 +211,7 @@ Impl::Impl(
         width = std::lround(width * zoom);
         height = std::lround(height * zoom);
 
-        unsigned count = compute_buffer_count(buffer_count, swapchain);
-
-        for (unsigned i = 0; i < count; ++i)
+        for (unsigned i = 0; i < buffer_count; ++i)
         {
                 std::vector<VkFormat> depth_formats;
                 if (!m_depth_attachments.empty())
@@ -315,8 +298,7 @@ const std::vector<VkClearValue>& Impl::clear_values() const
 }
 
 std::unique_ptr<DepthBuffers> create_depth_buffers(
-        DepthBufferCount buffer_count,
-        const vulkan::Swapchain& swapchain,
+        unsigned buffer_count,
         const std::vector<uint32_t>& attachment_family_indices,
         VkCommandPool graphics_command_pool,
         VkQueue graphics_queue,
@@ -326,7 +308,7 @@ std::unique_ptr<DepthBuffers> create_depth_buffers(
         double zoom)
 {
         return std::make_unique<Impl>(
-                buffer_count, swapchain, attachment_family_indices, graphics_command_pool, graphics_queue, device,
-                width, height, zoom);
+                buffer_count, attachment_family_indices, graphics_command_pool, graphics_queue, device, width, height,
+                zoom);
 }
 }

@@ -191,7 +191,7 @@ class Impl final : public View
                 const vulkan::Queue& graphics_queue,
                 const vulkan::Queue& compute_queue,
                 VkSemaphore wait_semaphore,
-                unsigned image_index) override
+                unsigned index) override
         {
                 ASSERT(std::this_thread::get_id() == m_thread_id);
 
@@ -210,12 +210,10 @@ class Impl final : public View
                 //
 
                 ASSERT(graphics_queue.family_index() == m_graphics_command_pool.family_index());
-                ASSERT(m_command_buffers->count() == 1 || image_index < m_command_buffers->count());
-
-                const unsigned buffer_index = m_command_buffers->count() == 1 ? 0 : image_index;
+                ASSERT(index < m_command_buffers->count());
 
                 vulkan::queue_submit(
-                        wait_semaphore, VK_PIPELINE_STAGE_VERTEX_SHADER_BIT, (*m_command_buffers)[buffer_index],
+                        wait_semaphore, VK_PIPELINE_STAGE_VERTEX_SHADER_BIT, (*m_command_buffers)[index],
                         m_signal_semaphore, graphics_queue);
 
                 return m_signal_semaphore;

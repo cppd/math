@@ -40,7 +40,7 @@ struct View
                 const Region<2, int>& rectangle) = 0;
         virtual void delete_buffers() = 0;
 
-        virtual VkSemaphore draw(const vulkan::Queue& queue, VkSemaphore wait_semaphore, unsigned image_index) = 0;
+        virtual VkSemaphore draw(const vulkan::Queue& queue, VkSemaphore wait_semaphore, unsigned index) = 0;
 };
 
 std::unique_ptr<View> create_view(

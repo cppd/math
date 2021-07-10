@@ -155,26 +155,23 @@ class Impl final : public View
                 m_points.reset();
         }
 
-        VkSemaphore draw(const vulkan::Queue& queue, VkSemaphore wait_semaphore, unsigned image_index) override
+        VkSemaphore draw(const vulkan::Queue& queue, VkSemaphore wait_semaphore, unsigned index) override
         {
                 ASSERT(std::this_thread::get_id() == m_thread_id);
 
                 //
-
-                ASSERT(queue.family_index() == m_family_index);
 
                 float brightness = 0.5 + 0.5 * std::sin(ANGULAR_FREQUENCY * duration_from(m_start_time));
                 m_memory.set_brightness(brightness);
 
                 //
 
-                ASSERT(m_command_buffers->count() == 1 || image_index < m_command_buffers->count());
-
-                const unsigned buffer_index = m_command_buffers->count() == 1 ? 0 : image_index;
+                ASSERT(queue.family_index() == m_family_index);
+                ASSERT(index < m_command_buffers->count());
 
                 vulkan::queue_submit(
-                        wait_semaphore, VK_PIPELINE_STAGE_COMPUTE_SHADER_BIT, (*m_command_buffers)[buffer_index],
-                        m_semaphore, queue);
+                        wait_semaphore, VK_PIPELINE_STAGE_COMPUTE_SHADER_BIT, (*m_command_buffers)[index], m_semaphore,
+                        queue);
 
                 return m_semaphore;
         }
