@@ -55,47 +55,77 @@ namespace
 using FrameClock = std::chrono::steady_clock;
 constexpr FrameClock::duration IDLE_MODE_FRAME_DURATION = std::chrono::milliseconds(100);
 
-// 2 - double buffering, 3 - triple buffering
-constexpr int VULKAN_PREFERRED_IMAGE_COUNT = 2;
-// Шейдеры пишут результат в цветовом пространстве RGB, поэтому _SRGB (для результата в sRGB нужен _UNORM).
-constexpr VkSurfaceFormatKHR VULKAN_SURFACE_FORMAT = {VK_FORMAT_B8G8R8A8_SRGB, VK_COLOR_SPACE_SRGB_NONLINEAR_KHR};
-
-constexpr int VULKAN_MINIMUM_SAMPLE_COUNT = 4;
-
-// Supersampling
-constexpr bool VULKAN_SAMPLE_SHADING = true;
-// Anisotropic filtering
-constexpr bool VULKAN_SAMPLER_ANISOTROPY = true;
-
-// Это только для начального значения, а далее оно устанавливается командой set_vertical_sync
-constexpr vulkan::PresentMode VULKAN_DEFAULT_PRESENT_MODE = vulkan::PresentMode::PreferFast;
-
-constexpr VkFormat VULKAN_OBJECT_IMAGE_FORMAT = VK_FORMAT_R32_UINT;
-
-//
-
 constexpr double FRAME_SIZE_IN_MILLIMETERS = 0.5;
 
+constexpr int PREFERRED_IMAGE_COUNT = 2; // 2 - double buffering, 3 - triple buffering
+constexpr VkSurfaceFormatKHR SURFACE_FORMAT = {VK_FORMAT_B8G8R8A8_SRGB, VK_COLOR_SPACE_SRGB_NONLINEAR_KHR};
+
+constexpr int MINIMUM_SAMPLE_COUNT = 4;
+constexpr bool SAMPLE_RATE_SHADING = true; // supersampling
+constexpr bool SAMPLER_ANISOTROPY = true; // anisotropic filtering
+
+constexpr VkFormat OBJECT_IMAGE_FORMAT = VK_FORMAT_R32_UINT;
+
+constexpr vulkan::PresentMode DEFAULT_PRESENT_MODE = vulkan::PresentMode::PreferFast;
+constexpr RGB8 DEFAULT_TEXT_COLOR = RGB8(255, 255, 255);
+
 //
 
-std::vector<vulkan::PhysicalDeviceFeatures> device_features_sample_shading(int sample_count, bool sample_shading)
+double checked_window_ppi(double window_ppi)
 {
-        if (sample_count > 1 && sample_shading)
+        if (!(window_ppi > 0))
         {
-                return {vulkan::PhysicalDeviceFeatures::sampleRateShading};
+                error("Window PPI " + to_string(window_ppi) + "is not positive");
         }
-
-        return {};
+        return window_ppi;
 }
 
-std::vector<vulkan::PhysicalDeviceFeatures> device_features_sampler_anisotropy(bool sampler_anisotropy)
+std::vector<vulkan::PhysicalDeviceFeatures> view_required_device_features()
 {
-        if (sampler_anisotropy)
+        std::vector<vulkan::PhysicalDeviceFeatures> features;
+        if (MINIMUM_SAMPLE_COUNT > 1 && SAMPLE_RATE_SHADING)
         {
-                return {vulkan::PhysicalDeviceFeatures::samplerAnisotropy};
+                features.push_back(vulkan::PhysicalDeviceFeatures::sampleRateShading);
         }
+        if (SAMPLER_ANISOTROPY)
+        {
+                features.push_back(vulkan::PhysicalDeviceFeatures::samplerAnisotropy);
+        }
+        return features;
+}
 
-        return {};
+std::unique_ptr<vulkan::VulkanInstance> create_instance(const window::WindowID& window)
+{
+        const std::vector<std::string> instance_extensions =
+                unique_elements(window::vulkan_create_surface_required_extensions());
+
+        const std::vector<std::string> device_extensions = {};
+
+        const std::vector<vulkan::PhysicalDeviceFeatures> required_device_features =
+                unique_elements(merge<std::vector<vulkan::PhysicalDeviceFeatures>>(
+                        gpu::convex_hull::View::required_device_features(), gpu::dft::View::required_device_features(),
+                        gpu::optical_flow::View::required_device_features(),
+                        gpu::pencil_sketch::View::required_device_features(),
+                        gpu::renderer::Renderer::required_device_features(),
+                        gpu::text_writer::View::required_device_features(), view_required_device_features()));
+
+        const std::vector<vulkan::PhysicalDeviceFeatures> optional_device_features = {};
+
+        const std::function<VkSurfaceKHR(VkInstance)> surface_function = [&](VkInstance instance)
+        {
+                return window::vulkan_create_surface(window, instance);
+        };
+
+        std::unique_ptr<vulkan::VulkanInstance> instance = std::make_unique<vulkan::VulkanInstance>(
+                instance_extensions, device_extensions, required_device_features, optional_device_features,
+                surface_function);
+
+        ASSERT(instance->graphics_compute_command_pool().family_index()
+               == instance->graphics_compute_queues()[0].family_index());
+        ASSERT(instance->compute_command_pool().family_index() == instance->compute_queue().family_index());
+        ASSERT(instance->transfer_command_pool().family_index() == instance->transfer_queue().family_index());
+
+        return instance;
 }
 
 void create_resolve_texture_and_command_buffers(
@@ -134,19 +164,20 @@ class Impl final
 {
         static constexpr unsigned RENDER_BUFFER_COUNT = 1;
 
-        const double m_window_ppi;
         const std::thread::id m_thread_id = std::this_thread::get_id();
-
+        const double m_window_ppi;
         const int m_frame_size_in_pixels = std::max(1, millimeters_to_pixels(FRAME_SIZE_IN_MILLIMETERS, m_window_ppi));
+
+        const std::unique_ptr<vulkan::VulkanInstance> m_instance;
+        const std::unique_ptr<vulkan::Semaphore> m_image_semaphore;
+        const std::unique_ptr<vulkan::Semaphore> m_resolve_semaphore;
 
         FrameRate m_frame_rate{m_window_ppi};
         Camera m_camera;
 
         Region<2, int> m_draw_rectangle{limits<int>::lowest(), limits<int>::lowest(), 0, 0};
 
-        //
-
-        vulkan::PresentMode m_present_mode = VULKAN_DEFAULT_PRESENT_MODE;
+        vulkan::PresentMode m_present_mode = DEFAULT_PRESENT_MODE;
 
         bool m_text_active = true;
         bool m_convex_hull_active = false;
@@ -154,17 +185,6 @@ class Impl final
         bool m_dft_active = false;
         bool m_optical_flow_active = false;
 
-        // В последовательности swapchain, а затем renderer,
-        // так как буферы renderer могут зависеть от swapchain
-        std::unique_ptr<vulkan::VulkanInstance> m_instance;
-        std::unique_ptr<vulkan::Semaphore> m_image_semaphore;
-        std::unique_ptr<vulkan::Swapchain> m_swapchain;
-        std::unique_ptr<RenderBuffers> m_render_buffers;
-        std::unique_ptr<Swapchain> m_swapchain_resolve;
-        std::unique_ptr<vulkan::ImageWithMemory> m_resolve_texture;
-        std::unique_ptr<vulkan::CommandBuffers> m_resolve_command_buffers;
-        std::unique_ptr<vulkan::Semaphore> m_resolve_semaphore;
-        std::unique_ptr<vulkan::ImageWithMemory> m_object_image;
         std::unique_ptr<gpu::renderer::Renderer> m_renderer;
         std::unique_ptr<gpu::text_writer::View> m_text;
         std::unique_ptr<gpu::convex_hull::View> m_convex_hull;
@@ -172,11 +192,14 @@ class Impl final
         std::unique_ptr<gpu::dft::View> m_dft;
         std::unique_ptr<gpu::optical_flow::View> m_optical_flow;
 
-        //
+        std::unique_ptr<vulkan::Swapchain> m_swapchain;
+        std::unique_ptr<RenderBuffers> m_render_buffers;
+        std::unique_ptr<Swapchain> m_swapchain_resolve;
+        std::unique_ptr<vulkan::ImageWithMemory> m_resolve_texture;
+        std::unique_ptr<vulkan::CommandBuffers> m_resolve_command_buffers;
+        std::unique_ptr<vulkan::ImageWithMemory> m_object_image;
 
         std::optional<mat4d> m_clip_plane_view_matrix;
-
-        //
 
         struct PressedMouseButton
         {
@@ -538,7 +561,7 @@ class Impl final
 
         //
 
-        void create_swapchain()
+        void delete_swapchain()
         {
                 m_instance->device_wait_idle();
 
@@ -555,18 +578,23 @@ class Impl final
                 m_swapchain_resolve.reset();
                 m_render_buffers.reset();
                 m_swapchain.reset();
+        }
+
+        void create_swapchain()
+        {
+                delete_swapchain();
 
                 m_swapchain = std::make_unique<vulkan::Swapchain>(
                         m_instance->surface(), m_instance->device(),
                         std::vector<uint32_t>{
                                 m_instance->graphics_compute_queues()[0].family_index(),
                                 m_instance->presentation_queue().family_index()},
-                        VULKAN_SURFACE_FORMAT, VULKAN_PREFERRED_IMAGE_COUNT, m_present_mode);
+                        SURFACE_FORMAT, PREFERRED_IMAGE_COUNT, m_present_mode);
 
                 m_render_buffers = create_render_buffers(
                         RENDER_BUFFER_COUNT, m_swapchain->format(), m_swapchain->width(), m_swapchain->height(),
                         {m_instance->graphics_compute_queues()[0].family_index()}, m_instance->device(),
-                        VULKAN_MINIMUM_SAMPLE_COUNT);
+                        MINIMUM_SAMPLE_COUNT);
 
                 m_swapchain_resolve = std::make_unique<Swapchain>(
                         m_instance->device(), m_instance->graphics_compute_command_pool(), *m_swapchain,
@@ -578,7 +606,7 @@ class Impl final
                         m_instance->device(), m_instance->graphics_compute_command_pool(),
                         m_instance->graphics_compute_queues()[0],
                         std::vector<uint32_t>({m_instance->graphics_compute_queues()[0].family_index()}),
-                        std::vector<VkFormat>({VULKAN_OBJECT_IMAGE_FORMAT}), VK_SAMPLE_COUNT_1_BIT, VK_IMAGE_TYPE_2D,
+                        std::vector<VkFormat>({OBJECT_IMAGE_FORMAT}), VK_SAMPLE_COUNT_1_BIT, VK_IMAGE_TYPE_2D,
                         vulkan::make_extent(m_render_buffers->width(), m_render_buffers->height()),
                         VK_IMAGE_LAYOUT_GENERAL, VK_IMAGE_USAGE_STORAGE_BIT | VK_IMAGE_USAGE_TRANSFER_DST_BIT);
 
@@ -652,8 +680,7 @@ class Impl final
         bool render() const
         {
                 static_assert(
-                        2
-                        <= std::tuple_size_v<std::remove_reference_t<decltype(m_instance->graphics_compute_queues())>>);
+                        2 <= std::tuple_size_v<std::remove_cvref_t<decltype(m_instance->graphics_compute_queues())>>);
 
                 uint32_t swapchain_image_index;
                 if (!vulkan::acquire_next_image(
@@ -721,57 +748,12 @@ class Impl final
         }
 
 public:
-        Impl(const window::WindowID& window, double window_ppi) : m_window_ppi(window_ppi)
+        Impl(const window::WindowID& window, double window_ppi)
+                : m_window_ppi(checked_window_ppi(window_ppi)),
+                  m_instance(create_instance(window)),
+                  m_image_semaphore(std::make_unique<vulkan::Semaphore>(m_instance->device())),
+                  m_resolve_semaphore(std::make_unique<vulkan::Semaphore>(m_instance->device()))
         {
-                if (window_ppi <= 0)
-                {
-                        error("Window PPI is not positive");
-                }
-
-                // Этот цвет меняется в set_background_color
-                constexpr RGB8 TEXT_COLOR = RGB8(255, 255, 255);
-
-                m_present_mode = VULKAN_DEFAULT_PRESENT_MODE;
-
-                {
-                        const std::vector<std::string> instance_extensions =
-                                unique_elements(window::vulkan_create_surface_required_extensions());
-
-                        const std::vector<std::string> device_extensions = {};
-
-                        const std::vector<vulkan::PhysicalDeviceFeatures> required_device_features =
-                                unique_elements(merge<std::vector<vulkan::PhysicalDeviceFeatures>>(
-                                        gpu::convex_hull::View::required_device_features(),
-                                        gpu::dft::View::required_device_features(),
-                                        gpu::optical_flow::View::required_device_features(),
-                                        gpu::pencil_sketch::View::required_device_features(),
-                                        gpu::renderer::Renderer::required_device_features(),
-                                        gpu::text_writer::View::required_device_features(),
-                                        device_features_sample_shading(
-                                                VULKAN_MINIMUM_SAMPLE_COUNT, VULKAN_SAMPLE_SHADING),
-                                        device_features_sampler_anisotropy(VULKAN_SAMPLER_ANISOTROPY)));
-
-                        const std::vector<vulkan::PhysicalDeviceFeatures> optional_device_features = {};
-
-                        const std::function<VkSurfaceKHR(VkInstance)> surface_function = [&](VkInstance instance)
-                        {
-                                return window::vulkan_create_surface(window, instance);
-                        };
-
-                        m_instance = std::make_unique<vulkan::VulkanInstance>(
-                                instance_extensions, device_extensions, required_device_features,
-                                optional_device_features, surface_function);
-                }
-
-                ASSERT(m_instance->graphics_compute_command_pool().family_index()
-                       == m_instance->graphics_compute_queues()[0].family_index());
-                ASSERT(m_instance->compute_command_pool().family_index() == m_instance->compute_queue().family_index());
-                ASSERT(m_instance->transfer_command_pool().family_index()
-                       == m_instance->transfer_queue().family_index());
-
-                m_image_semaphore = std::make_unique<vulkan::Semaphore>(m_instance->device());
-                m_resolve_semaphore = std::make_unique<vulkan::Semaphore>(m_instance->device());
-
                 const vulkan::Queue& graphics_compute_queue = m_instance->graphics_compute_queues()[0];
                 const vulkan::CommandPool& graphics_compute_command_pool = m_instance->graphics_compute_command_pool();
                 const vulkan::Queue& compute_queue = m_instance->compute_queue();
@@ -781,26 +763,26 @@ public:
 
                 m_renderer = gpu::renderer::create_renderer(
                         *m_instance, graphics_compute_command_pool, graphics_compute_queue, transfer_command_pool,
-                        transfer_queue, VULKAN_SAMPLE_SHADING, VULKAN_SAMPLER_ANISOTROPY);
+                        transfer_queue, SAMPLE_RATE_SHADING, SAMPLER_ANISOTROPY);
 
                 m_text = gpu::text_writer::create_view(
                         *m_instance, graphics_compute_command_pool, graphics_compute_queue, transfer_command_pool,
-                        transfer_queue, VULKAN_SAMPLE_SHADING, m_frame_rate.text_size(), TEXT_COLOR);
+                        transfer_queue, SAMPLE_RATE_SHADING, m_frame_rate.text_size(), DEFAULT_TEXT_COLOR);
 
                 m_convex_hull = gpu::convex_hull::create_view(
-                        *m_instance, graphics_compute_command_pool, graphics_compute_queue, VULKAN_SAMPLE_SHADING);
+                        *m_instance, graphics_compute_command_pool, graphics_compute_queue, SAMPLE_RATE_SHADING);
 
                 m_pencil_sketch = gpu::pencil_sketch::create_view(
                         *m_instance, graphics_compute_command_pool, graphics_compute_queue, transfer_command_pool,
-                        transfer_queue, VULKAN_SAMPLE_SHADING);
+                        transfer_queue, SAMPLE_RATE_SHADING);
 
                 m_dft = gpu::dft::create_view(
                         *m_instance, graphics_compute_command_pool, graphics_compute_queue, transfer_command_pool,
-                        transfer_queue, VULKAN_SAMPLE_SHADING);
+                        transfer_queue, SAMPLE_RATE_SHADING);
 
                 m_optical_flow = gpu::optical_flow::create_view(
                         *m_instance, graphics_compute_command_pool, graphics_compute_queue, compute_command_pool,
-                        compute_queue, transfer_command_pool, transfer_queue, VULKAN_SAMPLE_SHADING);
+                        compute_queue, transfer_command_pool, transfer_queue, SAMPLE_RATE_SHADING);
 
                 //
 
@@ -815,6 +797,8 @@ public:
         ~Impl()
         {
                 ASSERT(std::this_thread::get_id() == m_thread_id);
+
+                delete_swapchain();
         }
 
         Impl(const Impl&) = delete;
