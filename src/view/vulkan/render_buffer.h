@@ -42,7 +42,7 @@ struct RenderBuffers
 
         virtual void commands_color_resolve(
                 VkCommandBuffer command_buffer,
-                const vulkan::ImageWithMemory& image,
+                VkImage image,
                 VkImageLayout layout,
                 const Region<2, int>& rectangle,
                 unsigned index) const = 0;

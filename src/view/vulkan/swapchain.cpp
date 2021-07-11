@@ -29,28 +29,27 @@ namespace ns::view
 Swapchain::Swapchain(
         const VkDevice& device,
         const vulkan::CommandPool& command_pool,
-        const vulkan::Swapchain& swapchain,
-        const std::vector<VkImageView>& image_views,
-        const VkSampleCountFlagBits& image_sample_count)
+        const RenderBuffers& render_buffers,
+        const vulkan::Swapchain& swapchain)
         : m_family_index(command_pool.family_index()),
-          m_render_pass(render_pass_swapchain_color(device, swapchain.format(), image_sample_count))
+          m_render_pass(render_pass_swapchain_color(device, swapchain.format(), render_buffers.sample_count()))
 {
+        const std::vector<VkImageView>& image_views = render_buffers.image_views();
+
+        ASSERT(render_buffers.color_format() == swapchain.format());
         ASSERT(image_views.size() == 1 || swapchain.image_views().size() == image_views.size());
 
         std::vector<VkImageView> attachments(2);
 
         for (unsigned i = 0; i < swapchain.image_views().size(); ++i)
         {
+                m_signal_semaphores.emplace_back(device);
+
                 attachments[0] = swapchain.image_views()[i];
                 attachments[1] = (image_views.size() == 1) ? image_views[0] : image_views[i];
 
                 m_framebuffers.push_back(vulkan::create_framebuffer(
                         device, m_render_pass, swapchain.width(), swapchain.height(), attachments));
-        }
-
-        for (unsigned i = 0; i < image_views.size(); ++i)
-        {
-                m_signal_semaphores.emplace_back(device);
         }
 
         std::vector<VkFramebuffer> framebuffers;

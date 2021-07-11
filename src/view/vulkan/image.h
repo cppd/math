@@ -19,31 +19,31 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "render_buffer.h"
 
-#include <src/vulkan/swapchain.h>
-
 #include <vector>
 
 namespace ns::view
 {
-class Swapchain
+class Image
 {
         const uint32_t m_family_index;
-        const vulkan::RenderPass m_render_pass;
-        std::vector<vulkan::Framebuffer> m_framebuffers;
+        std::vector<vulkan::ImageWithMemory> m_images;
         vulkan::CommandBuffers m_command_buffers;
         std::vector<vulkan::Semaphore> m_signal_semaphores;
 
 public:
-        Swapchain(
-                const VkDevice& device,
-                const vulkan::CommandPool& command_pool,
-                const RenderBuffers& render_buffers,
-                const vulkan::Swapchain& swapchain);
+        Image(const vulkan::Device& device,
+              const vulkan::CommandPool& command_pool,
+              const vulkan::Queue& queue,
+              const RenderBuffers& render_buffers,
+              const Region<2, int>& rectangle,
+              VkImageLayout image_layout,
+              VkImageUsageFlags usage);
+
+        const vulkan::ImageWithMemory& image(unsigned image_index) const;
 
         [[nodiscard]] VkSemaphore resolve(
                 const vulkan::Queue& graphics_queue,
-                const VkSemaphore& image_semaphore,
-                const VkSemaphore& wait_semaphore,
+                VkSemaphore wait_semaphore,
                 unsigned image_index) const;
 };
 }

@@ -17,6 +17,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "view.h"
 
+#include "image.h"
 #include "render_buffer.h"
 #include "swapchain.h"
 
@@ -128,38 +129,6 @@ std::unique_ptr<vulkan::VulkanInstance> create_instance(const window::WindowID& 
         return instance;
 }
 
-void create_resolve_texture_and_command_buffers(
-        const vulkan::VulkanInstance& instance,
-        const RenderBuffers& render_buffers,
-        const Region<2, int>& rectangle,
-        std::unique_ptr<vulkan::ImageWithMemory>* texture,
-        std::unique_ptr<vulkan::CommandBuffers>* buffers)
-{
-        ASSERT(render_buffers.image_views().size() == 1);
-
-        constexpr VkImageLayout IMAGE_LAYOUT = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
-
-        vulkan::ImageWithMemory image(
-                instance.device(), instance.graphics_compute_command_pool(), instance.graphics_compute_queues()[0],
-                std::vector<uint32_t>({instance.graphics_compute_command_pool().family_index()}),
-                std::vector<VkFormat>({render_buffers.color_format()}), VK_SAMPLE_COUNT_1_BIT, VK_IMAGE_TYPE_2D,
-                vulkan::make_extent(render_buffers.width(), render_buffers.height()), IMAGE_LAYOUT,
-                VK_IMAGE_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_SAMPLED_BIT);
-
-        //
-
-        vulkan::CommandBuffers command_buffers = vulkan::CommandBuffers(
-                instance.device(), instance.graphics_compute_command_pool(), render_buffers.image_views().size());
-
-        for (unsigned i = 0; i < command_buffers.count(); ++i)
-        {
-                render_buffers.commands_color_resolve(command_buffers[i], image, IMAGE_LAYOUT, rectangle, i);
-        }
-
-        *texture = std::make_unique<vulkan::ImageWithMemory>(std::move(image));
-        *buffers = std::make_unique<vulkan::CommandBuffers>(std::move(command_buffers));
-}
-
 class Impl final
 {
         static constexpr unsigned RENDER_BUFFER_COUNT = 1;
@@ -195,8 +164,7 @@ class Impl final
         std::unique_ptr<vulkan::Swapchain> m_swapchain;
         std::unique_ptr<RenderBuffers> m_render_buffers;
         std::unique_ptr<Swapchain> m_swapchain_resolve;
-        std::unique_ptr<vulkan::ImageWithMemory> m_resolve_texture;
-        std::unique_ptr<vulkan::CommandBuffers> m_resolve_command_buffers;
+        std::unique_ptr<Image> m_image_resolve;
         std::unique_ptr<vulkan::ImageWithMemory> m_object_image;
 
         std::optional<mat4d> m_clip_plane_view_matrix;
@@ -573,8 +541,7 @@ class Impl final
                 m_renderer->delete_buffers();
 
                 m_object_image.reset();
-                m_resolve_command_buffers.reset();
-                m_resolve_texture.reset();
+                m_image_resolve.reset();
                 m_swapchain_resolve.reset();
                 m_render_buffers.reset();
                 m_swapchain.reset();
@@ -597,8 +564,8 @@ class Impl final
                         MINIMUM_SAMPLE_COUNT);
 
                 m_swapchain_resolve = std::make_unique<Swapchain>(
-                        m_instance->device(), m_instance->graphics_compute_command_pool(), *m_swapchain,
-                        m_render_buffers->image_views(), m_render_buffers->sample_count());
+                        m_instance->device(), m_instance->graphics_compute_command_pool(), *m_render_buffers,
+                        *m_swapchain);
 
                 //
 
@@ -624,9 +591,11 @@ class Impl final
 
                 //
 
-                create_resolve_texture_and_command_buffers(
-                        *m_instance, *m_render_buffers, m_draw_rectangle, &m_resolve_texture,
-                        &m_resolve_command_buffers);
+                static_assert(RENDER_BUFFER_COUNT == 1);
+                m_image_resolve = std::make_unique<Image>(
+                        m_instance->device(), m_instance->graphics_compute_command_pool(),
+                        m_instance->graphics_compute_queues()[0], *m_render_buffers, m_draw_rectangle,
+                        VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL, VK_IMAGE_USAGE_SAMPLED_BIT);
 
                 //
 
@@ -641,10 +610,10 @@ class Impl final
                 m_convex_hull->create_buffers(&m_render_buffers->buffers_2d(), *m_object_image, m_draw_rectangle);
 
                 m_pencil_sketch->create_buffers(
-                        &m_render_buffers->buffers_2d(), *m_resolve_texture, *m_object_image, m_draw_rectangle);
+                        &m_render_buffers->buffers_2d(), m_image_resolve->image(0), *m_object_image, m_draw_rectangle);
 
                 m_optical_flow->create_buffers(
-                        &m_render_buffers->buffers_2d(), *m_resolve_texture, m_window_ppi, m_draw_rectangle);
+                        &m_render_buffers->buffers_2d(), m_image_resolve->image(0), m_window_ppi, m_draw_rectangle);
 
                 if (two_windows)
                 {
@@ -654,27 +623,13 @@ class Impl final
                         ASSERT(w_2.y1() <= static_cast<int>(m_render_buffers->height()));
 
                         m_dft->create_buffers(
-                                &m_render_buffers->buffers_2d(), *m_resolve_texture, m_draw_rectangle, w_2);
+                                &m_render_buffers->buffers_2d(), m_image_resolve->image(0), m_draw_rectangle, w_2);
                 }
 
                 //
 
                 m_camera.resize(m_draw_rectangle.width(), m_draw_rectangle.height());
                 m_renderer->set_camera(m_camera.renderer_info());
-        }
-
-        VkSemaphore resolve_to_texture(
-                const vulkan::Queue& graphics_queue,
-                VkSemaphore wait_semaphore,
-                const unsigned index) const
-        {
-                ASSERT(index < m_resolve_command_buffers->count());
-
-                vulkan::queue_submit(
-                        wait_semaphore, VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT, (*m_resolve_command_buffers)[index],
-                        *m_resolve_semaphore, graphics_queue);
-
-                return *m_resolve_semaphore;
         }
 
         bool render() const
@@ -703,13 +658,13 @@ class Impl final
 
                 if (m_pencil_sketch_active)
                 {
-                        wait_semaphore = resolve_to_texture(graphics_queue, wait_semaphore, INDEX);
+                        wait_semaphore = m_image_resolve->resolve(graphics_queue, wait_semaphore, INDEX);
                         wait_semaphore = m_pencil_sketch->draw(graphics_queue, wait_semaphore, INDEX);
                 }
 
                 if (m_dft_active || m_optical_flow_active)
                 {
-                        wait_semaphore = resolve_to_texture(graphics_queue, wait_semaphore, INDEX);
+                        wait_semaphore = m_image_resolve->resolve(graphics_queue, wait_semaphore, INDEX);
                 }
 
                 if (m_dft_active)
