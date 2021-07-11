@@ -679,9 +679,10 @@ class Impl final
 
         [[nodiscard]] bool render_swapchain() const
         {
-                uint32_t image_index;
-                if (!vulkan::acquire_next_image(
-                            m_instance->device(), m_swapchain->swapchain(), m_swapchain_image_semaphore, &image_index))
+                const std::optional<uint32_t> image_index = vulkan::acquire_next_image(
+                        m_instance->device(), m_swapchain->swapchain(), m_swapchain_image_semaphore);
+
+                if (!image_index)
                 {
                         return false;
                 }
@@ -690,10 +691,10 @@ class Impl final
 
                 VkSemaphore semaphore = render();
 
-                semaphore = m_swapchain_resolve->resolve(queue, m_swapchain_image_semaphore, semaphore, image_index);
+                semaphore = m_swapchain_resolve->resolve(queue, m_swapchain_image_semaphore, semaphore, *image_index);
 
                 if (!vulkan::queue_present(
-                            semaphore, m_swapchain->swapchain(), image_index, m_instance->presentation_queue()))
+                            semaphore, m_swapchain->swapchain(), *image_index, m_instance->presentation_queue()))
                 {
                         return false;
                 }

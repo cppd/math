@@ -19,6 +19,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "objects.h"
 
+#include <optional>
 #include <vector>
 
 namespace ns::vulkan
@@ -64,6 +65,14 @@ public:
         const std::vector<ImageView>& image_views() const;
 };
 
-bool acquire_next_image(VkDevice device, VkSwapchainKHR swapchain, VkSemaphore semaphore, uint32_t* image_index);
-bool queue_present(VkSemaphore wait_semaphore, VkSwapchainKHR swapchain, uint32_t image_index, VkQueue queue);
+[[nodiscard]] std::optional<uint32_t> acquire_next_image(
+        VkDevice device,
+        VkSwapchainKHR swapchain,
+        VkSemaphore semaphore);
+
+[[nodiscard]] bool queue_present(
+        VkSemaphore wait_semaphore,
+        VkSwapchainKHR swapchain,
+        uint32_t image_index,
+        VkQueue queue);
 }

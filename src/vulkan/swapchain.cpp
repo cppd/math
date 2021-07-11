@@ -244,24 +244,26 @@ std::string swapchain_info_string(const VkSurfaceFormatKHR& surface_format, int 
 }
 }
 
-bool acquire_next_image(VkDevice device, VkSwapchainKHR swapchain, VkSemaphore semaphore, uint32_t* image_index)
+std::optional<uint32_t> acquire_next_image(VkDevice device, VkSwapchainKHR swapchain, VkSemaphore semaphore)
 {
         constexpr uint64_t timeout = limits<uint64_t>::max();
 
+        uint32_t image_index;
+
         VkResult result =
-                vkAcquireNextImageKHR(device, swapchain, timeout, semaphore, VK_NULL_HANDLE /*fence*/, image_index);
+                vkAcquireNextImageKHR(device, swapchain, timeout, semaphore, VK_NULL_HANDLE /*fence*/, &image_index);
 
         if (result == VK_SUCCESS)
         {
-                return true;
+                return image_index;
         }
         if (result == VK_ERROR_OUT_OF_DATE_KHR)
         {
-                return false;
+                return std::nullopt;
         }
         if (result == VK_SUBOPTIMAL_KHR)
         {
-                return true;
+                return image_index;
         }
 
         vulkan::vulkan_function_error("vkAcquireNextImageKHR", result);
