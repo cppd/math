@@ -19,13 +19,14 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <src/numerical/region.h>
 
+#include <optional>
+#include <tuple>
+
 namespace ns::view
 {
-bool window_position_and_size(
+std::tuple<Region<2, int>, std::optional<Region<2, int>>> window_position_and_size(
         bool two_windows,
         int width,
         int height,
-        int frame,
-        Region<2, int>* window_1,
-        Region<2, int>* window_2);
+        int frame);
 }

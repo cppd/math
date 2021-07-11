@@ -21,16 +21,25 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 namespace ns::view
 {
-bool window_position_and_size(
+namespace
+{
+void check(const Region<2, int>& window, int width, int height)
+{
+        if (!(window.x0() >= 0) || !(window.y0() >= 0) || !(window.width() > 0) || !(window.height() > 0)
+            || !(window.x1() <= width) || !(window.y1() <= height))
+        {
+                error("Error window data");
+        }
+}
+}
+
+std::tuple<Region<2, int>, std::optional<Region<2, int>>> window_position_and_size(
         bool two_windows,
         int width,
         int height,
-        int frame,
-        Region<2, int>* window_1,
-        Region<2, int>* window_2)
+        int frame)
 {
-        ASSERT(window_1);
-        ASSERT(window_2);
+        std::tuple<Region<2, int>, std::optional<Region<2, int>>> result;
 
         if (two_windows)
         {
@@ -38,15 +47,16 @@ bool window_position_and_size(
                 int h = (height - 2 * frame);
                 if (w > 0 && h > 0)
                 {
-                        *window_1 = Region<2, int>(frame, frame, w, h);
-                        *window_2 = Region<2, int>(width - frame - w, frame, w, h);
-                        return true;
+                        std::get<0>(result) = Region<2, int>(frame, frame, w, h);
+                        std::get<1>(result) = Region<2, int>(width - frame - w, frame, w, h);
+                        check(std::get<0>(result), width, height);
+                        check(*std::get<1>(result), width, height);
+                        return result;
                 }
         }
 
-        *window_1 = Region<2, int>(0, 0, width, height);
-        *window_2 = Region<2, int>(0, 0, 0, 0);
-
-        return false;
+        std::get<0>(result) = Region<2, int>(0, 0, width, height);
+        check(std::get<0>(result), width, height);
+        return result;
 }
 }

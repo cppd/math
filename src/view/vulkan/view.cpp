@@ -131,20 +131,22 @@ std::unique_ptr<vulkan::VulkanInstance> create_instance(const window::WindowID& 
 
 class Impl final
 {
+        static_assert(
+                2 <= std::tuple_size_v<std::remove_cvref_t<
+                        decltype(std::declval<vulkan::VulkanInstance>().graphics_compute_queues())>>);
+
         static constexpr unsigned RENDER_BUFFER_COUNT = 1;
 
         const std::thread::id m_thread_id = std::this_thread::get_id();
         const double m_window_ppi;
         const int m_frame_size_in_pixels = std::max(1, millimeters_to_pixels(FRAME_SIZE_IN_MILLIMETERS, m_window_ppi));
 
-        const std::unique_ptr<vulkan::VulkanInstance> m_instance;
-        const std::unique_ptr<vulkan::Semaphore> m_image_semaphore;
-        const std::unique_ptr<vulkan::Semaphore> m_resolve_semaphore;
-
         FrameRate m_frame_rate{m_window_ppi};
         Camera m_camera;
 
         Region<2, int> m_draw_rectangle{limits<int>::lowest(), limits<int>::lowest(), 0, 0};
+
+        std::optional<mat4d> m_clip_plane_view_matrix;
 
         vulkan::PresentMode m_present_mode = DEFAULT_PRESENT_MODE;
 
@@ -154,6 +156,8 @@ class Impl final
         bool m_dft_active = false;
         bool m_optical_flow_active = false;
 
+        const std::unique_ptr<vulkan::VulkanInstance> m_instance;
+
         std::unique_ptr<gpu::renderer::Renderer> m_renderer;
         std::unique_ptr<gpu::text_writer::View> m_text;
         std::unique_ptr<gpu::convex_hull::View> m_convex_hull;
@@ -161,13 +165,13 @@ class Impl final
         std::unique_ptr<gpu::dft::View> m_dft;
         std::unique_ptr<gpu::optical_flow::View> m_optical_flow;
 
+        const vulkan::Semaphore m_swapchain_image_semaphore{m_instance->device()};
         std::unique_ptr<vulkan::Swapchain> m_swapchain;
-        std::unique_ptr<RenderBuffers> m_render_buffers;
         std::unique_ptr<Swapchain> m_swapchain_resolve;
+
+        std::unique_ptr<RenderBuffers> m_render_buffers;
         std::unique_ptr<Image> m_image_resolve;
         std::unique_ptr<vulkan::ImageWithMemory> m_object_image;
-
-        std::optional<mat4d> m_clip_plane_view_matrix;
 
         struct PressedMouseButton
         {
@@ -529,7 +533,7 @@ class Impl final
 
         //
 
-        void delete_swapchain()
+        void delete_buffers()
         {
                 m_instance->device_wait_idle();
 
@@ -540,10 +544,118 @@ class Impl final
                 m_optical_flow->delete_buffers();
                 m_renderer->delete_buffers();
 
-                m_object_image.reset();
                 m_image_resolve.reset();
-                m_swapchain_resolve.reset();
+                m_object_image.reset();
                 m_render_buffers.reset();
+        }
+
+        void create_buffers(VkFormat format, unsigned width, unsigned height)
+        {
+                delete_buffers();
+
+                m_render_buffers = create_render_buffers(
+                        RENDER_BUFFER_COUNT, format, width, height,
+                        {m_instance->graphics_compute_queues()[0].family_index()}, m_instance->device(),
+                        MINIMUM_SAMPLE_COUNT);
+
+                m_object_image = std::make_unique<vulkan::ImageWithMemory>(
+                        m_instance->device(), m_instance->graphics_compute_command_pool(),
+                        m_instance->graphics_compute_queues()[0],
+                        std::vector<uint32_t>({m_instance->graphics_compute_queues()[0].family_index()}),
+                        std::vector<VkFormat>({OBJECT_IMAGE_FORMAT}), VK_SAMPLE_COUNT_1_BIT, VK_IMAGE_TYPE_2D,
+                        vulkan::make_extent(m_render_buffers->width(), m_render_buffers->height()),
+                        VK_IMAGE_LAYOUT_GENERAL, VK_IMAGE_USAGE_STORAGE_BIT | VK_IMAGE_USAGE_TRANSFER_DST_BIT);
+
+                const auto [w_1, w_2] = window_position_and_size(
+                        m_dft_active, m_render_buffers->width(), m_render_buffers->height(), m_frame_size_in_pixels);
+
+                m_draw_rectangle = w_1;
+
+                static_assert(RENDER_BUFFER_COUNT == 1);
+                m_image_resolve = std::make_unique<Image>(
+                        m_instance->device(), m_instance->graphics_compute_command_pool(),
+                        m_instance->graphics_compute_queues()[0], *m_render_buffers, m_draw_rectangle,
+                        VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL, VK_IMAGE_USAGE_SAMPLED_BIT);
+
+                m_renderer->create_buffers(&m_render_buffers->buffers_3d(), m_object_image.get(), m_draw_rectangle);
+
+                m_text->create_buffers(
+                        &m_render_buffers->buffers_2d(),
+                        Region<2, int>(0, 0, m_render_buffers->width(), m_render_buffers->height()));
+
+                m_convex_hull->create_buffers(&m_render_buffers->buffers_2d(), *m_object_image, m_draw_rectangle);
+
+                m_pencil_sketch->create_buffers(
+                        &m_render_buffers->buffers_2d(), m_image_resolve->image(0), *m_object_image, m_draw_rectangle);
+
+                m_optical_flow->create_buffers(
+                        &m_render_buffers->buffers_2d(), m_image_resolve->image(0), m_window_ppi, m_draw_rectangle);
+
+                if (w_2)
+                {
+                        m_dft->create_buffers(
+                                &m_render_buffers->buffers_2d(), m_image_resolve->image(0), m_draw_rectangle, *w_2);
+                }
+
+                m_camera.resize(m_draw_rectangle.width(), m_draw_rectangle.height());
+                m_renderer->set_camera(m_camera.renderer_info());
+        }
+
+        [[nodiscard]] VkSemaphore render() const
+        {
+                static_assert(RENDER_BUFFER_COUNT == 1);
+                ASSERT(m_render_buffers->image_views().size() == 1);
+
+                constexpr int INDEX = 0;
+
+                VkSemaphore semaphore = m_renderer->draw(
+                        m_instance->graphics_compute_queues()[0], m_instance->graphics_compute_queues()[1], INDEX);
+
+                const vulkan::Queue& graphics_queue = m_instance->graphics_compute_queues()[0];
+                const vulkan::Queue& compute_queue = m_instance->compute_queue();
+
+                if (m_pencil_sketch_active)
+                {
+                        semaphore = m_image_resolve->resolve(graphics_queue, semaphore, INDEX);
+                        semaphore = m_pencil_sketch->draw(graphics_queue, semaphore, INDEX);
+                }
+
+                if (m_dft_active || m_optical_flow_active)
+                {
+                        semaphore = m_image_resolve->resolve(graphics_queue, semaphore, INDEX);
+                }
+
+                if (m_dft_active)
+                {
+                        semaphore = m_dft->draw(graphics_queue, semaphore, INDEX);
+                }
+
+                if (m_optical_flow_active)
+                {
+                        semaphore = m_optical_flow->draw(graphics_queue, compute_queue, semaphore, INDEX);
+                }
+
+                if (m_convex_hull_active)
+                {
+                        semaphore = m_convex_hull->draw(graphics_queue, semaphore, INDEX);
+                }
+
+                if (m_text_active)
+                {
+                        semaphore = m_text->draw(graphics_queue, semaphore, INDEX, m_frame_rate.text_data());
+                }
+
+                return semaphore;
+        }
+
+        //
+
+        void delete_swapchain()
+        {
+                m_instance->device_wait_idle();
+
+                m_swapchain_resolve.reset();
+                delete_buffers();
                 m_swapchain.reset();
         }
 
@@ -558,156 +670,42 @@ class Impl final
                                 m_instance->presentation_queue().family_index()},
                         SURFACE_FORMAT, PREFERRED_IMAGE_COUNT, m_present_mode);
 
-                m_render_buffers = create_render_buffers(
-                        RENDER_BUFFER_COUNT, m_swapchain->format(), m_swapchain->width(), m_swapchain->height(),
-                        {m_instance->graphics_compute_queues()[0].family_index()}, m_instance->device(),
-                        MINIMUM_SAMPLE_COUNT);
+                create_buffers(m_swapchain->format(), m_swapchain->width(), m_swapchain->height());
 
                 m_swapchain_resolve = std::make_unique<Swapchain>(
                         m_instance->device(), m_instance->graphics_compute_command_pool(), *m_render_buffers,
                         *m_swapchain);
-
-                //
-
-                m_object_image = std::make_unique<vulkan::ImageWithMemory>(
-                        m_instance->device(), m_instance->graphics_compute_command_pool(),
-                        m_instance->graphics_compute_queues()[0],
-                        std::vector<uint32_t>({m_instance->graphics_compute_queues()[0].family_index()}),
-                        std::vector<VkFormat>({OBJECT_IMAGE_FORMAT}), VK_SAMPLE_COUNT_1_BIT, VK_IMAGE_TYPE_2D,
-                        vulkan::make_extent(m_render_buffers->width(), m_render_buffers->height()),
-                        VK_IMAGE_LAYOUT_GENERAL, VK_IMAGE_USAGE_STORAGE_BIT | VK_IMAGE_USAGE_TRANSFER_DST_BIT);
-
-                //
-
-                Region<2, int> w_2;
-                const bool two_windows = window_position_and_size(
-                        m_dft_active, m_render_buffers->width(), m_render_buffers->height(), m_frame_size_in_pixels,
-                        &m_draw_rectangle, &w_2);
-
-                ASSERT(m_draw_rectangle.x0() >= 0 && m_draw_rectangle.y0() >= 0);
-                ASSERT(m_draw_rectangle.width() > 0 && m_draw_rectangle.height() > 0);
-                ASSERT(m_draw_rectangle.x1() <= static_cast<int>(m_render_buffers->width()));
-                ASSERT(m_draw_rectangle.y1() <= static_cast<int>(m_render_buffers->height()));
-
-                //
-
-                static_assert(RENDER_BUFFER_COUNT == 1);
-                m_image_resolve = std::make_unique<Image>(
-                        m_instance->device(), m_instance->graphics_compute_command_pool(),
-                        m_instance->graphics_compute_queues()[0], *m_render_buffers, m_draw_rectangle,
-                        VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL, VK_IMAGE_USAGE_SAMPLED_BIT);
-
-                //
-
-                m_renderer->create_buffers(&m_render_buffers->buffers_3d(), m_object_image.get(), m_draw_rectangle);
-
-                //
-
-                m_text->create_buffers(
-                        &m_render_buffers->buffers_2d(),
-                        Region<2, int>(0, 0, m_render_buffers->width(), m_render_buffers->height()));
-
-                m_convex_hull->create_buffers(&m_render_buffers->buffers_2d(), *m_object_image, m_draw_rectangle);
-
-                m_pencil_sketch->create_buffers(
-                        &m_render_buffers->buffers_2d(), m_image_resolve->image(0), *m_object_image, m_draw_rectangle);
-
-                m_optical_flow->create_buffers(
-                        &m_render_buffers->buffers_2d(), m_image_resolve->image(0), m_window_ppi, m_draw_rectangle);
-
-                if (two_windows)
-                {
-                        ASSERT(w_2.x0() >= 0 && w_2.y0() >= 0);
-                        ASSERT(w_2.width() > 0 && w_2.height() > 0);
-                        ASSERT(w_2.x1() <= static_cast<int>(m_render_buffers->width()));
-                        ASSERT(w_2.y1() <= static_cast<int>(m_render_buffers->height()));
-
-                        m_dft->create_buffers(
-                                &m_render_buffers->buffers_2d(), m_image_resolve->image(0), m_draw_rectangle, w_2);
-                }
-
-                //
-
-                m_camera.resize(m_draw_rectangle.width(), m_draw_rectangle.height());
-                m_renderer->set_camera(m_camera.renderer_info());
         }
 
-        bool render() const
+        [[nodiscard]] bool render_swapchain() const
         {
-                static_assert(
-                        2 <= std::tuple_size_v<std::remove_cvref_t<decltype(m_instance->graphics_compute_queues())>>);
-
-                uint32_t swapchain_image_index;
+                uint32_t image_index;
                 if (!vulkan::acquire_next_image(
-                            m_instance->device(), m_swapchain->swapchain(), *m_image_semaphore, &swapchain_image_index))
+                            m_instance->device(), m_swapchain->swapchain(), m_swapchain_image_semaphore, &image_index))
                 {
                         return false;
                 }
 
-                VkSemaphore wait_semaphore;
+                const vulkan::Queue& queue = m_instance->graphics_compute_queues()[0];
 
-                static_assert(RENDER_BUFFER_COUNT == 1);
-                ASSERT(m_render_buffers->image_views().size() == 1);
-                constexpr int INDEX = 0;
+                VkSemaphore semaphore = render();
 
-                wait_semaphore = m_renderer->draw(
-                        m_instance->graphics_compute_queues()[0], m_instance->graphics_compute_queues()[1], INDEX);
-
-                const vulkan::Queue& graphics_queue = m_instance->graphics_compute_queues()[0];
-                const vulkan::Queue& compute_queue = m_instance->compute_queue();
-
-                if (m_pencil_sketch_active)
-                {
-                        wait_semaphore = m_image_resolve->resolve(graphics_queue, wait_semaphore, INDEX);
-                        wait_semaphore = m_pencil_sketch->draw(graphics_queue, wait_semaphore, INDEX);
-                }
-
-                if (m_dft_active || m_optical_flow_active)
-                {
-                        wait_semaphore = m_image_resolve->resolve(graphics_queue, wait_semaphore, INDEX);
-                }
-
-                if (m_dft_active)
-                {
-                        wait_semaphore = m_dft->draw(graphics_queue, wait_semaphore, INDEX);
-                }
-
-                if (m_optical_flow_active)
-                {
-                        wait_semaphore = m_optical_flow->draw(graphics_queue, compute_queue, wait_semaphore, INDEX);
-                }
-
-                if (m_convex_hull_active)
-                {
-                        wait_semaphore = m_convex_hull->draw(graphics_queue, wait_semaphore, INDEX);
-                }
-
-                if (m_text_active)
-                {
-                        wait_semaphore = m_text->draw(graphics_queue, wait_semaphore, INDEX, m_frame_rate.text_data());
-                }
-
-                wait_semaphore = m_swapchain_resolve->resolve(
-                        graphics_queue, *m_image_semaphore, wait_semaphore, swapchain_image_index);
+                semaphore = m_swapchain_resolve->resolve(queue, m_swapchain_image_semaphore, semaphore, image_index);
 
                 if (!vulkan::queue_present(
-                            wait_semaphore, m_swapchain->swapchain(), swapchain_image_index,
-                            m_instance->presentation_queue()))
+                            semaphore, m_swapchain->swapchain(), image_index, m_instance->presentation_queue()))
                 {
                         return false;
                 }
 
-                vulkan::queue_wait_idle(graphics_queue);
+                vulkan::queue_wait_idle(queue);
 
                 return true;
         }
 
 public:
         Impl(const window::WindowID& window, double window_ppi)
-                : m_window_ppi(checked_window_ppi(window_ppi)),
-                  m_instance(create_instance(window)),
-                  m_image_semaphore(std::make_unique<vulkan::Semaphore>(m_instance->device())),
-                  m_resolve_semaphore(std::make_unique<vulkan::Semaphore>(m_instance->device()))
+                : m_window_ppi(checked_window_ppi(window_ppi)), m_instance(create_instance(window))
         {
                 const vulkan::Queue& graphics_compute_queue = m_instance->graphics_compute_queues()[0];
                 const vulkan::CommandPool& graphics_compute_command_pool = m_instance->graphics_compute_command_pool();
@@ -775,7 +773,7 @@ public:
                                 m_frame_rate.calculate();
                         }
 
-                        if (!render())
+                        if (!render_swapchain())
                         {
                                 create_swapchain();
                                 continue;
