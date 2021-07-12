@@ -49,7 +49,10 @@ std::enable_if_t<!has_data_and_size<T>, std::size_t> data_size(const T&)
 template <typename T>
 std::enable_if_t<
         has_data_and_size<T>,
-        std::conditional_t<std::is_const_v<T>, const typename T::value_type*, typename T::value_type*>>
+        std::conditional_t<
+                std::is_const_v<std::remove_pointer_t<decltype(std::declval<T>().data())>>,
+                const typename T::value_type*,
+                typename T::value_type*>>
         data_pointer(T& data)
 {
         static_assert(!std::is_pointer_v<T>);
