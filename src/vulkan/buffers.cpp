@@ -35,7 +35,11 @@ namespace ns::vulkan
 {
 namespace
 {
-Buffer create_buffer(VkDevice device, VkDeviceSize size, VkBufferUsageFlags usage, std::vector<uint32_t> family_indices)
+Buffer create_buffer(
+        const VkDevice& device,
+        const VkDeviceSize& size,
+        const VkBufferUsageFlags& usage,
+        std::vector<uint32_t> family_indices)
 {
         if (size <= 0)
         {
@@ -69,7 +73,7 @@ Buffer create_buffer(VkDevice device, VkDeviceSize size, VkBufferUsageFlags usag
         return Buffer(device, create_info);
 }
 
-VkExtent3D correct_image_extent(VkImageType type, const VkExtent3D& extent)
+VkExtent3D correct_image_extent(const VkImageType& type, const VkExtent3D& extent)
 {
         if (type == VK_IMAGE_TYPE_1D)
         {
@@ -95,12 +99,12 @@ VkExtent3D correct_image_extent(VkImageType type, const VkExtent3D& extent)
 }
 
 void check_image_size(
-        VkPhysicalDevice physical_device,
-        VkImageType type,
-        VkExtent3D extent,
-        VkFormat format,
-        VkImageTiling tiling,
-        VkImageUsageFlags usage)
+        const VkPhysicalDevice& physical_device,
+        const VkImageType& type,
+        const VkExtent3D& extent,
+        const VkFormat& format,
+        const VkImageTiling& tiling,
+        const VkImageUsageFlags& usage)
 {
         if (type == VK_IMAGE_TYPE_1D && (extent.width < 1 || extent.height != 1 || extent.depth != 1))
         {
@@ -137,15 +141,15 @@ void check_image_size(
 }
 
 Image create_image(
-        VkDevice device,
-        VkPhysicalDevice physical_device,
-        VkImageType type,
+        const VkDevice& device,
+        const VkPhysicalDevice& physical_device,
+        const VkImageType& type,
         VkExtent3D extent,
-        VkFormat format,
+        const VkFormat& format,
         std::vector<uint32_t> family_indices,
-        VkSampleCountFlagBits samples,
-        VkImageTiling tiling,
-        VkImageUsageFlags usage)
+        const VkSampleCountFlagBits& samples,
+        const VkImageTiling& tiling,
+        const VkImageUsageFlags& usage)
 {
         extent = correct_image_extent(type, extent);
 
@@ -187,10 +191,10 @@ Image create_image(
 }
 
 DeviceMemory create_device_memory(
-        VkDevice device,
-        VkPhysicalDevice physical_device,
-        VkBuffer buffer,
-        VkMemoryPropertyFlags properties)
+        const VkDevice& device,
+        const VkPhysicalDevice& physical_device,
+        const VkBuffer& buffer,
+        const VkMemoryPropertyFlags& properties)
 {
         VkMemoryRequirements memory_requirements;
         vkGetBufferMemoryRequirements(device, buffer, &memory_requirements);
@@ -213,10 +217,10 @@ DeviceMemory create_device_memory(
 }
 
 DeviceMemory create_device_memory(
-        VkDevice device,
-        VkPhysicalDevice physical_device,
-        VkImage image,
-        VkMemoryPropertyFlags properties)
+        const VkDevice& device,
+        const VkPhysicalDevice& physical_device,
+        const VkImage& image,
+        const VkMemoryPropertyFlags& properties)
 {
         VkMemoryRequirements memory_requirements;
         vkGetImageMemoryRequirements(device, image, &memory_requirements);
@@ -238,7 +242,11 @@ DeviceMemory create_device_memory(
         return device_memory;
 }
 
-void copy_host_to_device(const DeviceMemory& device_memory, VkDeviceSize offset, VkDeviceSize size, const void* data)
+void copy_host_to_device(
+        const DeviceMemory& device_memory,
+        const VkDeviceSize& offset,
+        const VkDeviceSize& size,
+        const void* const data)
 {
         void* map_memory_data;
 
@@ -255,24 +263,32 @@ void copy_host_to_device(const DeviceMemory& device_memory, VkDeviceSize offset,
         // vkFlushMappedMemoryRanges, vkInvalidateMappedMemoryRanges
 }
 
-//void copy_device_to_host(const DeviceMemory& device_memory, VkDeviceSize offset, VkDeviceSize size, void* data)
+//void copy_device_to_host(
+//        const DeviceMemory& device_memory,
+//        const VkDeviceSize& offset,
+//        const VkDeviceSize& size,
+//        void* const data)
 //{
 //        void* map_memory_data;
-
+//
 //        VkResult result = vkMapMemory(device_memory.device(), device_memory, offset, size, 0, &map_memory_data);
 //        if (result != VK_SUCCESS)
 //        {
 //                vulkan_function_error("vkMapMemory", result);
 //        }
-
+//
 //        std::memcpy(data, map_memory_data, size);
-
+//
 //        vkUnmapMemory(device_memory.device(), device_memory);
-
+//
 //        // vkFlushMappedMemoryRanges, vkInvalidateMappedMemoryRanges
 //}
 
-void cmd_copy_buffer_to_image(VkCommandBuffer command_buffer, VkImage image, VkBuffer buffer, VkExtent3D extent)
+void cmd_copy_buffer_to_image(
+        const VkCommandBuffer& command_buffer,
+        const VkImage& image,
+        const VkBuffer& buffer,
+        const VkExtent3D& extent)
 {
         VkBufferImageCopy region = {};
 
@@ -292,11 +308,11 @@ void cmd_copy_buffer_to_image(VkCommandBuffer command_buffer, VkImage image, VkB
 }
 
 void cmd_transition_texture_layout(
-        VkImageAspectFlags aspect_mask,
-        VkCommandBuffer command_buffer,
-        VkImage image,
-        VkImageLayout old_layout,
-        VkImageLayout new_layout)
+        const VkImageAspectFlags& aspect_mask,
+        const VkCommandBuffer& command_buffer,
+        const VkImage& image,
+        const VkImageLayout& old_layout,
+        const VkImageLayout& new_layout)
 {
         VkImageMemoryBarrier barrier = {};
 
@@ -357,7 +373,7 @@ void cmd_transition_texture_layout(
         vkCmdPipelineBarrier(command_buffer, source_stage, destination_stage, 0, 0, nullptr, 0, nullptr, 1, &barrier);
 }
 
-void begin_commands(VkCommandBuffer command_buffer)
+void begin_commands(const VkCommandBuffer& command_buffer)
 {
         VkResult result;
 
@@ -372,7 +388,7 @@ void begin_commands(VkCommandBuffer command_buffer)
         }
 }
 
-void end_commands(VkQueue queue, VkCommandBuffer command_buffer)
+void end_commands(const VkQueue& queue, const VkCommandBuffer& command_buffer)
 {
         VkResult result;
 
@@ -387,14 +403,14 @@ void end_commands(VkQueue queue, VkCommandBuffer command_buffer)
 }
 
 void staging_buffer_write(
-        VkDevice device,
-        VkPhysicalDevice physical_device,
+        const VkDevice& device,
+        const VkPhysicalDevice& physical_device,
         const CommandPool& command_pool,
         const Queue& queue,
-        VkBuffer buffer,
-        VkDeviceSize offset,
-        VkDeviceSize size,
-        const void* data)
+        const VkBuffer& buffer,
+        const VkDeviceSize& offset,
+        const VkDeviceSize& size,
+        const void* const data)
 {
         ASSERT(command_pool.family_index() == queue.family_index());
 
@@ -422,14 +438,14 @@ void staging_buffer_write(
 
 template <typename T>
 void staging_image_write(
-        VkDevice device,
-        VkPhysicalDevice physical_device,
+        const VkDevice& device,
+        const VkPhysicalDevice& physical_device,
         const CommandPool& command_pool,
         const Queue& queue,
-        VkImage image,
-        VkImageLayout old_image_layout,
-        VkImageLayout new_image_layout,
-        VkExtent3D extent,
+        const VkImage& image,
+        const VkImageLayout& old_image_layout,
+        const VkImageLayout& new_image_layout,
+        const VkExtent3D& extent,
         const T& data)
 {
         ASSERT(command_pool.family_index() == queue.family_index());
@@ -463,12 +479,12 @@ void staging_image_write(
 }
 
 void transition_texture_layout_color(
-        VkDevice device,
-        VkCommandPool command_pool,
-        VkQueue queue,
-        VkImage image,
-        VkImageLayout old_layout,
-        VkImageLayout new_layout)
+        const VkDevice& device,
+        const VkCommandPool& command_pool,
+        const VkQueue& queue,
+        const VkImage& image,
+        const VkImageLayout& old_layout,
+        const VkImageLayout& new_layout)
 {
         CommandBuffer command_buffer(device, command_pool);
         begin_commands(command_buffer);
@@ -479,12 +495,12 @@ void transition_texture_layout_color(
 }
 
 void transition_texture_layout_depth(
-        VkDevice device,
-        VkCommandPool command_pool,
-        VkQueue queue,
-        VkImage image,
-        VkImageLayout old_layout,
-        VkImageLayout new_layout)
+        const VkDevice& device,
+        const VkCommandPool& command_pool,
+        const VkQueue& queue,
+        const VkImage& image,
+        const VkImageLayout& old_layout,
+        const VkImageLayout& new_layout)
 {
         CommandBuffer command_buffer(device, command_pool);
         begin_commands(command_buffer);
@@ -495,11 +511,11 @@ void transition_texture_layout_depth(
 }
 
 ImageView create_image_view(
-        VkDevice device,
-        VkImage image,
-        VkImageType type,
-        VkFormat format,
-        VkImageAspectFlags aspect_flags)
+        const VkDevice& device,
+        const VkImage& image,
+        const VkImageType& type,
+        const VkFormat& format,
+        const VkImageAspectFlags& aspect_flags)
 {
         VkImageViewCreateInfo create_info = {};
         create_info.sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO;
@@ -540,58 +556,43 @@ ImageView create_image_view(
         return ImageView(device, create_info);
 }
 
-template <typename T>
-void check_buffer_size(const T& pixels, image::ColorFormat color_format, VkExtent3D extent)
+void check_pixel_buffer_size(
+        const std::span<const std::byte>& pixels,
+        const image::ColorFormat& color_format,
+        const VkExtent3D& extent)
 {
-        if ((pixels.size() % image::format_pixel_size_in_bytes(color_format)) != 0)
+        const unsigned pixel_size = image::format_pixel_size_in_bytes(color_format);
+
+        if (pixels.size() % pixel_size != 0)
         {
-                error("Error pixel buffer size");
+                error("Error pixel buffer size " + to_string(pixels.size()) + " for pixel size "
+                      + to_string(pixel_size));
         }
 
-        if (pixels.size()
-            != image::format_pixel_size_in_bytes(color_format) * extent.width * extent.height * extent.depth)
+        if (pixels.size() != pixel_size * extent.width * extent.height * extent.depth)
         {
-                error("Wrong pixel count " + to_string(pixels.size() / image::format_pixel_size_in_bytes(color_format))
-                      + " for image extent (" + to_string(extent.width) + ", " + to_string(extent.height) + ", "
-                      + to_string(extent.depth) + ")");
+                error("Wrong pixel count " + to_string(pixels.size() / pixel_size) + " for image extent ("
+                      + to_string(extent.width) + ", " + to_string(extent.height) + ", " + to_string(extent.depth)
+                      + ")");
         }
 }
 
 void write_pixels_to_image(
-        VkImage image,
-        VkFormat format,
-        VkExtent3D extent,
-        VkImageLayout old_image_layout,
-        VkImageLayout new_image_layout,
-        VkDevice device,
-        VkPhysicalDevice physical_device,
+        const VkImage& image,
+        const VkFormat& format,
+        const VkExtent3D& extent,
+        const VkImageLayout& old_image_layout,
+        const VkImageLayout& new_image_layout,
+        const VkDevice& device,
+        const VkPhysicalDevice& physical_device,
         const CommandPool& command_pool,
         const Queue& queue,
-        image::ColorFormat color_format,
+        const image::ColorFormat& color_format,
         const std::span<const std::byte>& pixels)
 {
-        auto write = [&](image::ColorFormat required_format)
-        {
-                if (color_format == required_format)
-                {
-                        check_buffer_size(pixels, color_format, extent);
+        check_pixel_buffer_size(pixels, color_format, extent);
 
-                        staging_image_write(
-                                device, physical_device, command_pool, queue, image, old_image_layout, new_image_layout,
-                                extent, pixels);
-                }
-                else
-                {
-                        std::vector<std::byte> buffer;
-                        image::format_conversion(color_format, pixels, required_format, &buffer);
-
-                        check_buffer_size(buffer, required_format, extent);
-
-                        staging_image_write(
-                                device, physical_device, command_pool, queue, image, old_image_layout, new_image_layout,
-                                extent, buffer);
-                }
-        };
+        image::ColorFormat required_format;
 
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wswitch-enum"
@@ -599,56 +600,73 @@ void write_pixels_to_image(
         {
         case VK_FORMAT_R8G8B8A8_SRGB:
         {
-                write(image::ColorFormat::R8G8B8A8_SRGB);
+                required_format = image::ColorFormat::R8G8B8A8_SRGB;
                 break;
         }
         case VK_FORMAT_R16G16B16A16_UNORM:
         {
-                write(image::ColorFormat::R16G16B16A16);
+                required_format = image::ColorFormat::R16G16B16A16;
                 break;
         }
         case VK_FORMAT_R32G32B32A32_SFLOAT:
         {
-                write(image::ColorFormat::R32G32B32A32);
+                required_format = image::ColorFormat::R32G32B32A32;
                 break;
         }
         case VK_FORMAT_R8G8B8_SRGB:
         {
-                write(image::ColorFormat::R8G8B8_SRGB);
+                required_format = image::ColorFormat::R8G8B8_SRGB;
                 break;
         }
         case VK_FORMAT_R16G16B16_UNORM:
         {
-                write(image::ColorFormat::R16G16B16);
+                required_format = image::ColorFormat::R16G16B16;
                 break;
         }
         case VK_FORMAT_R32G32B32_SFLOAT:
         {
-                write(image::ColorFormat::R32G32B32);
+                required_format = image::ColorFormat::R32G32B32;
                 break;
         }
         case VK_FORMAT_R8_SRGB:
         {
-                write(image::ColorFormat::R8_SRGB);
+                required_format = image::ColorFormat::R8_SRGB;
                 break;
         }
         case VK_FORMAT_R16_UNORM:
         {
-                write(image::ColorFormat::R16);
+                required_format = image::ColorFormat::R16;
                 break;
         }
         case VK_FORMAT_R32_SFLOAT:
         {
-                write(image::ColorFormat::R32);
+                required_format = image::ColorFormat::R32;
                 break;
         }
         default:
-                error("Unsupported image format " + format_to_string(format));
+                error("Unsupported image format " + format_to_string(format) + " for writing");
         }
 #pragma GCC diagnostic pop
+
+        if (color_format == required_format)
+        {
+                staging_image_write(
+                        device, physical_device, command_pool, queue, image, old_image_layout, new_image_layout, extent,
+                        pixels);
+                return;
+        }
+
+        std::vector<std::byte> buffer;
+        image::format_conversion(color_format, pixels, required_format, &buffer);
+
+        check_pixel_buffer_size(buffer, required_format, extent);
+
+        staging_image_write(
+                device, physical_device, command_pool, queue, image, old_image_layout, new_image_layout, extent,
+                buffer);
 }
 
-VkFormatFeatureFlags format_features_for_image_usage(VkImageUsageFlags usage, bool depth)
+VkFormatFeatureFlags format_features_for_image_usage(VkImageUsageFlags usage, const bool depth)
 {
         VkFormatFeatureFlags features = 0;
         if ((usage & VK_IMAGE_USAGE_TRANSFER_SRC_BIT) == VK_IMAGE_USAGE_TRANSFER_SRC_BIT)
@@ -694,12 +712,12 @@ VkFormatFeatureFlags format_features_for_image_usage(VkImageUsageFlags usage, bo
         return features;
 }
 
-VkFormatFeatureFlags format_features_for_color_image_usage(VkImageUsageFlags usage)
+VkFormatFeatureFlags format_features_for_color_image_usage(const VkImageUsageFlags& usage)
 {
         return format_features_for_image_usage(usage, false /*depth*/);
 }
 
-VkFormatFeatureFlags format_features_for_depth_image_usage(VkImageUsageFlags usage)
+VkFormatFeatureFlags format_features_for_depth_image_usage(const VkImageUsageFlags& usage)
 {
         return format_features_for_image_usage(usage, true /*depth*/);
 }
@@ -941,7 +959,7 @@ void ImageWithMemory::write_pixels(
 {
         check_family_index(command_pool, queue);
 
-        check_buffer_size(pixels, color_format, m_extent);
+        check_pixel_buffer_size(pixels, color_format, m_extent);
 
         write_pixels_to_image(
                 m_image, m_format, m_extent, old_layout, new_layout, m_device, m_physical_device, command_pool, queue,
