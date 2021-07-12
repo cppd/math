@@ -307,6 +307,29 @@ void cmd_copy_buffer_to_image(
         vkCmdCopyBufferToImage(command_buffer, buffer, image, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, 1, &region);
 }
 
+//void cmd_copy_image_to_buffer(
+//        const VkCommandBuffer& command_buffer,
+//        const VkBuffer& buffer,
+//        const VkImage& image,
+//        const VkExtent3D& extent)
+//{
+//        VkBufferImageCopy region = {};
+//
+//        region.bufferOffset = 0;
+//        region.bufferRowLength = 0;
+//        region.bufferImageHeight = 0;
+//
+//        region.imageSubresource.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
+//        region.imageSubresource.mipLevel = 0;
+//        region.imageSubresource.baseArrayLayer = 0;
+//        region.imageSubresource.layerCount = 1;
+//
+//        region.imageOffset = {0, 0, 0};
+//        region.imageExtent = extent;
+//
+//        vkCmdCopyImageToBuffer(command_buffer, image, VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL, buffer, 1, &region);
+//}
+
 void cmd_transition_texture_layout(
         const VkImageAspectFlags& aspect_mask,
         const VkCommandBuffer& command_buffer,
@@ -436,7 +459,6 @@ void staging_buffer_write(
         end_commands(queue, command_buffer);
 }
 
-template <typename T>
 void staging_image_write(
         const VkDevice& device,
         const VkPhysicalDevice& physical_device,
@@ -446,7 +468,7 @@ void staging_image_write(
         const VkImageLayout& old_image_layout,
         const VkImageLayout& new_image_layout,
         const VkExtent3D& extent,
-        const T& data)
+        const std::span<const std::byte>& data)
 {
         ASSERT(command_pool.family_index() == queue.family_index());
 
@@ -461,6 +483,8 @@ void staging_image_write(
         //
 
         copy_host_to_device(staging_device_memory, 0, size, data_pointer(data));
+
+        //
 
         CommandBuffer command_buffer(device, command_pool);
         begin_commands(command_buffer);
@@ -477,6 +501,49 @@ void staging_image_write(
 
         end_commands(queue, command_buffer);
 }
+
+//void staging_image_read(
+//        const VkDevice& device,
+//        const VkPhysicalDevice& physical_device,
+//        const CommandPool& command_pool,
+//        const Queue& queue,
+//        const VkImage& image,
+//        const VkImageLayout& old_image_layout,
+//        const VkImageLayout& new_image_layout,
+//        const VkExtent3D& extent,
+//        const std::span<std::byte>& data)
+//{
+//        ASSERT(command_pool.family_index() == queue.family_index());
+//
+//        const VkDeviceSize size = data_size(data);
+//
+//        Buffer staging_buffer(create_buffer(device, size, VK_BUFFER_USAGE_TRANSFER_DST_BIT, {queue.family_index()}));
+//
+//        DeviceMemory staging_device_memory(create_device_memory(
+//                device, physical_device, staging_buffer,
+//                VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT));
+//
+//        //
+//
+//        CommandBuffer command_buffer(device, command_pool);
+//        begin_commands(command_buffer);
+//
+//        cmd_transition_texture_layout(
+//                VK_IMAGE_ASPECT_COLOR_BIT, command_buffer, image, old_image_layout,
+//                VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL);
+//
+//        cmd_copy_image_to_buffer(command_buffer, staging_buffer, image, extent);
+//
+//        cmd_transition_texture_layout(
+//                VK_IMAGE_ASPECT_COLOR_BIT, command_buffer, image, VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL,
+//                new_image_layout);
+//
+//        end_commands(queue, command_buffer);
+//
+//        //
+//
+//        copy_device_to_host(staging_device_memory, 0, size, data_pointer(data));
+//}
 
 void transition_texture_layout_color(
         const VkDevice& device,
@@ -885,9 +952,6 @@ BufferMapper::~BufferMapper()
 
 //
 
-// VkFormat
-// {VK_FORMAT_R8G8B8A8_SRGB, VK_FORMAT_R16G16B16A16_UNORM, VK_FORMAT_R32G32B32A32_SFLOAT}
-// {VK_FORMAT_R8_SRGB, VK_FORMAT_R16_UNORM, VK_FORMAT_R32_SFLOAT}
 ImageWithMemory::ImageWithMemory(
         const Device& device,
         const CommandPool& command_pool,
@@ -957,6 +1021,8 @@ void ImageWithMemory::write_pixels(
         image::ColorFormat color_format,
         const std::span<const std::byte>& pixels) const
 {
+        ASSERT((m_usage & VK_IMAGE_USAGE_TRANSFER_DST_BIT) == VK_IMAGE_USAGE_TRANSFER_DST_BIT);
+
         check_family_index(command_pool, queue);
 
         check_pixel_buffer_size(pixels, color_format, m_extent);
