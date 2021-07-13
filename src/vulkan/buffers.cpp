@@ -27,6 +27,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/com/error.h>
 #include <src/com/print.h>
 #include <src/image/conversion.h>
+#include <src/image/swap.h>
 
 #include <cstring>
 #include <sstream>
@@ -657,59 +658,57 @@ void write_pixels_to_image(
         const image::ColorFormat& color_format,
         const std::span<const std::byte>& pixels)
 {
+        const auto write = [&](const std::span<const std::byte>& data)
+        {
+                staging_image_write(
+                        device, physical_device, command_pool, queue, image, old_image_layout, new_image_layout, extent,
+                        data);
+        };
+
         check_pixel_buffer_size(pixels, color_format, extent);
 
         image::ColorFormat required_format;
+        bool swap = false;
 
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wswitch-enum"
         switch (format)
         {
-        case VK_FORMAT_R8G8B8A8_SRGB:
-        {
-                required_format = image::ColorFormat::R8G8B8A8_SRGB;
-                break;
-        }
-        case VK_FORMAT_R16G16B16A16_UNORM:
-        {
-                required_format = image::ColorFormat::R16G16B16A16;
-                break;
-        }
-        case VK_FORMAT_R32G32B32A32_SFLOAT:
-        {
-                required_format = image::ColorFormat::R32G32B32A32;
-                break;
-        }
         case VK_FORMAT_R8G8B8_SRGB:
-        {
                 required_format = image::ColorFormat::R8G8B8_SRGB;
                 break;
-        }
+        case VK_FORMAT_B8G8R8_SRGB:
+                required_format = image::ColorFormat::R8G8B8_SRGB;
+                swap = true;
+                break;
+        case VK_FORMAT_R8G8B8A8_SRGB:
+                required_format = image::ColorFormat::R8G8B8A8_SRGB;
+                break;
+        case VK_FORMAT_B8G8R8A8_SRGB:
+                required_format = image::ColorFormat::R8G8B8A8_SRGB;
+                swap = true;
+                break;
         case VK_FORMAT_R16G16B16_UNORM:
-        {
                 required_format = image::ColorFormat::R16G16B16;
                 break;
-        }
+        case VK_FORMAT_R16G16B16A16_UNORM:
+                required_format = image::ColorFormat::R16G16B16A16;
+                break;
         case VK_FORMAT_R32G32B32_SFLOAT:
-        {
                 required_format = image::ColorFormat::R32G32B32;
                 break;
-        }
+        case VK_FORMAT_R32G32B32A32_SFLOAT:
+                required_format = image::ColorFormat::R32G32B32A32;
+                break;
         case VK_FORMAT_R8_SRGB:
-        {
                 required_format = image::ColorFormat::R8_SRGB;
                 break;
-        }
         case VK_FORMAT_R16_UNORM:
-        {
                 required_format = image::ColorFormat::R16;
                 break;
-        }
         case VK_FORMAT_R32_SFLOAT:
-        {
                 required_format = image::ColorFormat::R32;
                 break;
-        }
         default:
                 error("Unsupported image format " + format_to_string(format) + " for writing");
         }
@@ -717,20 +716,26 @@ void write_pixels_to_image(
 
         if (color_format == required_format)
         {
-                staging_image_write(
-                        device, physical_device, command_pool, queue, image, old_image_layout, new_image_layout, extent,
-                        pixels);
+                if (!swap)
+                {
+                        write(pixels);
+                        return;
+                }
+                std::vector<std::byte> buffer{pixels.begin(), pixels.end()};
+                image::swap_rb(color_format, buffer);
+                check_pixel_buffer_size(buffer, color_format, extent);
+                write(buffer);
                 return;
         }
 
         std::vector<std::byte> buffer;
         image::format_conversion(color_format, pixels, required_format, &buffer);
-
+        if (swap)
+        {
+                image::swap_rb(required_format, buffer);
+        }
         check_pixel_buffer_size(buffer, required_format, extent);
-
-        staging_image_write(
-                device, physical_device, command_pool, queue, image, old_image_layout, new_image_layout, extent,
-                buffer);
+        write(buffer);
 }
 
 VkFormatFeatureFlags format_features_for_image_usage(VkImageUsageFlags usage, const bool depth)
