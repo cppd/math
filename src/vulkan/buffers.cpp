@@ -338,6 +338,12 @@ void cmd_transition_texture_layout(
         const VkImageLayout& old_layout,
         const VkImageLayout& new_layout)
 {
+        if (old_layout == new_layout)
+        {
+                error("Unsupported texture layout transition, old = " + image_layout_to_string(old_layout)
+                      + ", new = " + image_layout_to_string(new_layout));
+        }
+
         VkImageMemoryBarrier barrier = {};
 
         barrier.sType = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER;
@@ -356,45 +362,42 @@ void cmd_transition_texture_layout(
         barrier.subresourceRange.baseArrayLayer = 0;
         barrier.subresourceRange.layerCount = 1;
 
-        VkPipelineStageFlags source_stage;
-        VkPipelineStageFlags destination_stage;
+        VkPipelineStageFlags src_stage;
+        VkPipelineStageFlags dst_stage;
 
-        if (old_layout != VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL && new_layout == VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL)
-        {
-                barrier.srcAccessMask = 0;
-                barrier.dstAccessMask = VK_ACCESS_TRANSFER_WRITE_BIT;
-
-                source_stage = VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT;
-                destination_stage = VK_PIPELINE_STAGE_TRANSFER_BIT;
-        }
-        else if (
-                old_layout == VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL
-                && new_layout != VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL)
+        if (old_layout == VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL)
         {
                 barrier.srcAccessMask = VK_ACCESS_TRANSFER_WRITE_BIT;
-                barrier.dstAccessMask = 0;
-
-                source_stage = VK_PIPELINE_STAGE_TRANSFER_BIT;
-                destination_stage = VK_PIPELINE_STAGE_BOTTOM_OF_PIPE_BIT;
+                src_stage = VK_PIPELINE_STAGE_TRANSFER_BIT;
         }
-        else if (
-                old_layout != VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL && old_layout != VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL
-                && new_layout != VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL
-                && new_layout != VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL && old_layout != new_layout)
+        else if (old_layout == VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL)
         {
-                barrier.srcAccessMask = 0;
-                barrier.dstAccessMask = 0;
-
-                source_stage = VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT;
-                destination_stage = VK_PIPELINE_STAGE_BOTTOM_OF_PIPE_BIT;
+                barrier.srcAccessMask = VK_ACCESS_TRANSFER_READ_BIT;
+                src_stage = VK_PIPELINE_STAGE_TRANSFER_BIT;
         }
         else
         {
-                error("Unsupported texture layout transition, old = " + image_layout_to_string(old_layout)
-                      + ", new = " + image_layout_to_string(new_layout));
+                barrier.srcAccessMask = 0;
+                src_stage = VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT;
         }
 
-        vkCmdPipelineBarrier(command_buffer, source_stage, destination_stage, 0, 0, nullptr, 0, nullptr, 1, &barrier);
+        if (new_layout == VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL)
+        {
+                barrier.dstAccessMask = VK_ACCESS_TRANSFER_WRITE_BIT;
+                dst_stage = VK_PIPELINE_STAGE_TRANSFER_BIT;
+        }
+        else if (new_layout == VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL)
+        {
+                barrier.dstAccessMask = VK_ACCESS_TRANSFER_READ_BIT;
+                dst_stage = VK_PIPELINE_STAGE_TRANSFER_BIT;
+        }
+        else
+        {
+                barrier.dstAccessMask = 0;
+                dst_stage = VK_PIPELINE_STAGE_BOTTOM_OF_PIPE_BIT;
+        }
+
+        vkCmdPipelineBarrier(command_buffer, src_stage, dst_stage, 0, 0, nullptr, 0, nullptr, 1, &barrier);
 }
 
 void begin_commands(const VkCommandBuffer& command_buffer)
