@@ -221,6 +221,14 @@ public:
                 image::ColorFormat color_format,
                 const std::span<const std::byte>& pixels) const;
 
+        void read_pixels(
+                const CommandPool& command_pool,
+                const Queue& queue,
+                VkImageLayout old_layout,
+                VkImageLayout new_layout,
+                image::ColorFormat* color_format,
+                std::vector<std::byte>* pixels) const;
+
         VkImage image() const;
         VkImageType type() const;
         VkFormat format() const;

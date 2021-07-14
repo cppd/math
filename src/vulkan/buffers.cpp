@@ -264,26 +264,26 @@ void copy_host_to_device(
         // vkFlushMappedMemoryRanges, vkInvalidateMappedMemoryRanges
 }
 
-//void copy_device_to_host(
-//        const DeviceMemory& device_memory,
-//        const VkDeviceSize& offset,
-//        const VkDeviceSize& size,
-//        void* const data)
-//{
-//        void* map_memory_data;
-//
-//        VkResult result = vkMapMemory(device_memory.device(), device_memory, offset, size, 0, &map_memory_data);
-//        if (result != VK_SUCCESS)
-//        {
-//                vulkan_function_error("vkMapMemory", result);
-//        }
-//
-//        std::memcpy(data, map_memory_data, size);
-//
-//        vkUnmapMemory(device_memory.device(), device_memory);
-//
-//        // vkFlushMappedMemoryRanges, vkInvalidateMappedMemoryRanges
-//}
+void copy_device_to_host(
+        const DeviceMemory& device_memory,
+        const VkDeviceSize& offset,
+        const VkDeviceSize& size,
+        void* const data)
+{
+        void* map_memory_data;
+
+        VkResult result = vkMapMemory(device_memory.device(), device_memory, offset, size, 0, &map_memory_data);
+        if (result != VK_SUCCESS)
+        {
+                vulkan_function_error("vkMapMemory", result);
+        }
+
+        std::memcpy(data, map_memory_data, size);
+
+        vkUnmapMemory(device_memory.device(), device_memory);
+
+        // vkFlushMappedMemoryRanges, vkInvalidateMappedMemoryRanges
+}
 
 void cmd_copy_buffer_to_image(
         const VkCommandBuffer& command_buffer,
@@ -308,28 +308,28 @@ void cmd_copy_buffer_to_image(
         vkCmdCopyBufferToImage(command_buffer, buffer, image, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, 1, &region);
 }
 
-//void cmd_copy_image_to_buffer(
-//        const VkCommandBuffer& command_buffer,
-//        const VkBuffer& buffer,
-//        const VkImage& image,
-//        const VkExtent3D& extent)
-//{
-//        VkBufferImageCopy region = {};
-//
-//        region.bufferOffset = 0;
-//        region.bufferRowLength = 0;
-//        region.bufferImageHeight = 0;
-//
-//        region.imageSubresource.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
-//        region.imageSubresource.mipLevel = 0;
-//        region.imageSubresource.baseArrayLayer = 0;
-//        region.imageSubresource.layerCount = 1;
-//
-//        region.imageOffset = {0, 0, 0};
-//        region.imageExtent = extent;
-//
-//        vkCmdCopyImageToBuffer(command_buffer, image, VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL, buffer, 1, &region);
-//}
+void cmd_copy_image_to_buffer(
+        const VkCommandBuffer& command_buffer,
+        const VkBuffer& buffer,
+        const VkImage& image,
+        const VkExtent3D& extent)
+{
+        VkBufferImageCopy region = {};
+
+        region.bufferOffset = 0;
+        region.bufferRowLength = 0;
+        region.bufferImageHeight = 0;
+
+        region.imageSubresource.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
+        region.imageSubresource.mipLevel = 0;
+        region.imageSubresource.baseArrayLayer = 0;
+        region.imageSubresource.layerCount = 1;
+
+        region.imageOffset = {0, 0, 0};
+        region.imageExtent = extent;
+
+        vkCmdCopyImageToBuffer(command_buffer, image, VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL, buffer, 1, &region);
+}
 
 void cmd_transition_texture_layout(
         const VkImageAspectFlags& aspect_mask,
@@ -340,8 +340,7 @@ void cmd_transition_texture_layout(
 {
         if (old_layout == new_layout)
         {
-                error("Unsupported texture layout transition, old = " + image_layout_to_string(old_layout)
-                      + ", new = " + image_layout_to_string(new_layout));
+                return;
         }
 
         VkImageMemoryBarrier barrier = {};
@@ -506,48 +505,48 @@ void staging_image_write(
         end_commands(queue, command_buffer);
 }
 
-//void staging_image_read(
-//        const VkDevice& device,
-//        const VkPhysicalDevice& physical_device,
-//        const CommandPool& command_pool,
-//        const Queue& queue,
-//        const VkImage& image,
-//        const VkImageLayout& old_image_layout,
-//        const VkImageLayout& new_image_layout,
-//        const VkExtent3D& extent,
-//        const std::span<std::byte>& data)
-//{
-//        ASSERT(command_pool.family_index() == queue.family_index());
-//
-//        const VkDeviceSize size = data_size(data);
-//
-//        Buffer staging_buffer(create_buffer(device, size, VK_BUFFER_USAGE_TRANSFER_DST_BIT, {queue.family_index()}));
-//
-//        DeviceMemory staging_device_memory(create_device_memory(
-//                device, physical_device, staging_buffer,
-//                VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT));
-//
-//        //
-//
-//        CommandBuffer command_buffer(device, command_pool);
-//        begin_commands(command_buffer);
-//
-//        cmd_transition_texture_layout(
-//                VK_IMAGE_ASPECT_COLOR_BIT, command_buffer, image, old_image_layout,
-//                VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL);
-//
-//        cmd_copy_image_to_buffer(command_buffer, staging_buffer, image, extent);
-//
-//        cmd_transition_texture_layout(
-//                VK_IMAGE_ASPECT_COLOR_BIT, command_buffer, image, VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL,
-//                new_image_layout);
-//
-//        end_commands(queue, command_buffer);
-//
-//        //
-//
-//        copy_device_to_host(staging_device_memory, 0, size, data_pointer(data));
-//}
+void staging_image_read(
+        const VkDevice& device,
+        const VkPhysicalDevice& physical_device,
+        const CommandPool& command_pool,
+        const Queue& queue,
+        const VkImage& image,
+        const VkImageLayout& old_image_layout,
+        const VkImageLayout& new_image_layout,
+        const VkExtent3D& extent,
+        const std::span<std::byte>& data)
+{
+        ASSERT(command_pool.family_index() == queue.family_index());
+
+        const VkDeviceSize size = data_size(data);
+
+        Buffer staging_buffer(create_buffer(device, size, VK_BUFFER_USAGE_TRANSFER_DST_BIT, {queue.family_index()}));
+
+        DeviceMemory staging_device_memory(create_device_memory(
+                device, physical_device, staging_buffer,
+                VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT));
+
+        //
+
+        CommandBuffer command_buffer(device, command_pool);
+        begin_commands(command_buffer);
+
+        cmd_transition_texture_layout(
+                VK_IMAGE_ASPECT_COLOR_BIT, command_buffer, image, old_image_layout,
+                VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL);
+
+        cmd_copy_image_to_buffer(command_buffer, staging_buffer, image, extent);
+
+        cmd_transition_texture_layout(
+                VK_IMAGE_ASPECT_COLOR_BIT, command_buffer, image, VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL,
+                new_image_layout);
+
+        end_commands(queue, command_buffer);
+
+        //
+
+        copy_device_to_host(staging_device_memory, 0, size, data_pointer(data));
+}
 
 void transition_texture_layout_color(
         const VkDevice& device,
@@ -557,6 +556,11 @@ void transition_texture_layout_color(
         const VkImageLayout& old_layout,
         const VkImageLayout& new_layout)
 {
+        if (old_layout == new_layout)
+        {
+                return;
+        }
+
         CommandBuffer command_buffer(device, command_pool);
         begin_commands(command_buffer);
 
@@ -573,6 +577,11 @@ void transition_texture_layout_depth(
         const VkImageLayout& old_layout,
         const VkImageLayout& new_layout)
 {
+        if (old_layout == new_layout)
+        {
+                return;
+        }
+
         CommandBuffer command_buffer(device, command_pool);
         begin_commands(command_buffer);
 
@@ -632,7 +641,7 @@ void check_pixel_buffer_size(
         const image::ColorFormat& color_format,
         const VkExtent3D& extent)
 {
-        const unsigned pixel_size = image::format_pixel_size_in_bytes(color_format);
+        const std::size_t pixel_size = image::format_pixel_size_in_bytes(color_format);
 
         if (pixels.size() % pixel_size != 0)
         {
@@ -739,6 +748,80 @@ void write_pixels_to_image(
         }
         check_pixel_buffer_size(buffer, required_format, extent);
         write(buffer);
+}
+
+void read_pixels_from_image(
+        const VkImage& image,
+        const VkFormat& format,
+        const VkExtent3D& extent,
+        const VkImageLayout& old_image_layout,
+        const VkImageLayout& new_image_layout,
+        const VkDevice& device,
+        const VkPhysicalDevice& physical_device,
+        const CommandPool& command_pool,
+        const Queue& queue,
+        image::ColorFormat* const color_format,
+        std::vector<std::byte>* const pixels)
+{
+        bool swap = false;
+
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wswitch-enum"
+        switch (format)
+        {
+        case VK_FORMAT_R8G8B8_SRGB:
+                *color_format = image::ColorFormat::R8G8B8_SRGB;
+                break;
+        case VK_FORMAT_B8G8R8_SRGB:
+                *color_format = image::ColorFormat::R8G8B8_SRGB;
+                swap = true;
+                break;
+        case VK_FORMAT_R8G8B8A8_SRGB:
+                *color_format = image::ColorFormat::R8G8B8A8_SRGB;
+                break;
+        case VK_FORMAT_B8G8R8A8_SRGB:
+                *color_format = image::ColorFormat::R8G8B8A8_SRGB;
+                swap = true;
+                break;
+        case VK_FORMAT_R16G16B16_UNORM:
+                *color_format = image::ColorFormat::R16G16B16;
+                break;
+        case VK_FORMAT_R16G16B16A16_UNORM:
+                *color_format = image::ColorFormat::R16G16B16A16;
+                break;
+        case VK_FORMAT_R32G32B32_SFLOAT:
+                *color_format = image::ColorFormat::R32G32B32;
+                break;
+        case VK_FORMAT_R32G32B32A32_SFLOAT:
+                *color_format = image::ColorFormat::R32G32B32A32;
+                break;
+        case VK_FORMAT_R8_SRGB:
+                *color_format = image::ColorFormat::R8_SRGB;
+                break;
+        case VK_FORMAT_R16_UNORM:
+                *color_format = image::ColorFormat::R16;
+                break;
+        case VK_FORMAT_R32_SFLOAT:
+                *color_format = image::ColorFormat::R32;
+                break;
+        default:
+                error("Unsupported image format " + format_to_string(format) + " for reading");
+        }
+#pragma GCC diagnostic pop
+
+        const std::size_t pixel_size = image::format_pixel_size_in_bytes(*color_format);
+        const std::size_t size = pixel_size * extent.width * extent.height * extent.depth;
+
+        pixels->resize(size);
+
+        staging_image_read(
+                device, physical_device, command_pool, queue, image, old_image_layout, new_image_layout, extent,
+                *pixels);
+
+        if (swap)
+        {
+                image::swap_rb(*color_format, *pixels);
+        }
 }
 
 VkFormatFeatureFlags format_features_for_image_usage(VkImageUsageFlags usage, const bool depth)
@@ -1036,6 +1119,23 @@ void ImageWithMemory::write_pixels(
         check_pixel_buffer_size(pixels, color_format, m_extent);
 
         write_pixels_to_image(
+                m_image, m_format, m_extent, old_layout, new_layout, m_device, m_physical_device, command_pool, queue,
+                color_format, pixels);
+}
+
+void ImageWithMemory::read_pixels(
+        const CommandPool& command_pool,
+        const Queue& queue,
+        VkImageLayout old_layout,
+        VkImageLayout new_layout,
+        image::ColorFormat* color_format,
+        std::vector<std::byte>* pixels) const
+{
+        ASSERT((m_usage & VK_IMAGE_USAGE_TRANSFER_SRC_BIT) == VK_IMAGE_USAGE_TRANSFER_SRC_BIT);
+
+        check_family_index(command_pool, queue);
+
+        read_pixels_from_image(
                 m_image, m_format, m_extent, old_layout, new_layout, m_device, m_physical_device, command_pool, queue,
                 color_format, pixels);
 }
