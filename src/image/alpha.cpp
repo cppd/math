@@ -28,32 +28,21 @@ namespace ns::image
 namespace
 {
 template <typename T>
-void add_alpha(const std::span<const std::byte>& bytes3, const std::span<std::byte>& bytes4, T alpha)
+std::vector<std::byte> add_alpha(const std::span<const std::byte>& bytes, T alpha)
 {
         static_assert(std::is_integral_v<T> || std::is_floating_point_v<T>);
 
-        if (bytes3.size() % (3 * sizeof(T)) != 0)
+        if (bytes.size() % (3 * sizeof(T)) != 0)
         {
-                error("Error RGB data size " + to_string(bytes3.size()) + " for adding alpha");
+                error("Error data size (" + to_string(bytes.size()) + ") for adding alpha");
         }
 
-        if (bytes4.size() % (4 * sizeof(T)) != 0)
-        {
-                error("Error RGBA data size " + to_string(bytes4.size()) + " for adding alpha");
-        }
+        std::vector<std::byte> result(4 * (bytes.size() / 3));
 
-        if ((bytes4.size() / 4) * 3 != bytes3.size() || (bytes3.size() / 3) * 4 != bytes4.size())
-        {
-                error("Error sizes for adding alpha: RGB data size = " + to_string(bytes3.size())
-                      + ", RGBA data size = " + to_string(bytes4.size()));
-        }
-
-        const std::size_t pixel_count = bytes3.size() / (3 * sizeof(T));
-        ASSERT(pixel_count * (3 * sizeof(T)) == bytes3.size());
-
-        const std::byte* src = bytes3.data();
-        std::byte* dst = bytes4.data();
-        for (std::size_t i = 0; i < pixel_count; ++i)
+        const std::byte* src = bytes.data();
+        const std::byte* const src_end = src + bytes.size();
+        std::byte* dst = result.data();
+        while (src != src_end)
         {
                 std::memcpy(dst, src, 3 * sizeof(T));
                 dst += 3 * sizeof(T);
@@ -61,47 +50,35 @@ void add_alpha(const std::span<const std::byte>& bytes3, const std::span<std::by
                 dst += sizeof(T);
                 src += 3 * sizeof(T);
         }
+        ASSERT(dst == result.data() + result.size());
+
+        return result;
 }
 
-void add_alpha(
-        ColorFormat color_format,
-        const std::span<const std::byte>& bytes3,
-        const std::span<std::byte>& bytes4,
-        float alpha)
+template <typename T>
+std::vector<std::byte> delete_alpha(const std::span<const std::byte>& bytes)
 {
-        if (format_component_count(color_format) != 3)
+        static_assert(std::is_integral_v<T> || std::is_floating_point_v<T>);
+
+        if (bytes.size() % (4 * sizeof(T)) != 0)
         {
-                error("Error image format " + format_to_string(color_format) + " for adding alpha");
+                error("Error data size (" + to_string(bytes.size()) + ") for deleting alpha");
         }
 
-        alpha = std::clamp(alpha, 0.0f, 1.0f);
+        std::vector<std::byte> result(3 * (bytes.size() / 4));
 
-        switch (color_format)
+        const std::byte* src = bytes.data();
+        const std::byte* const src_end = src + bytes.size();
+        std::byte* dst = result.data();
+        while (src != src_end)
         {
-        case ColorFormat::R16G16B16:
-        case ColorFormat::R16G16B16_SRGB:
-                add_alpha<uint16_t>(bytes3, bytes4, std::lround(alpha * limits<uint16_t>::max()));
-                return;
-        case ColorFormat::R32G32B32:
-                add_alpha<float>(bytes3, bytes4, alpha);
-                return;
-        case ColorFormat::R8G8B8_SRGB:
-                add_alpha<uint8_t>(bytes3, bytes4, std::lround(alpha * limits<uint8_t>::max()));
-                return;
-        case ColorFormat::R8G8B8A8_SRGB:
-        case ColorFormat::R16G16B16A16:
-        case ColorFormat::R16G16B16A16_SRGB:
-        case ColorFormat::R32G32B32A32:
-        case ColorFormat::R16:
-        case ColorFormat::R32:
-        case ColorFormat::R8_SRGB:
-        case ColorFormat::R8G8B8A8_SRGB_PREMULTIPLIED:
-        case ColorFormat::R16G16B16A16_PREMULTIPLIED:
-        case ColorFormat::R32G32B32A32_PREMULTIPLIED:
-                break;
+                std::memcpy(dst, src, 3 * sizeof(T));
+                src += 4 * sizeof(T);
+                dst += 3 * sizeof(T);
         }
+        ASSERT(dst == result.data() + result.size());
 
-        error("Unsupported image format " + format_to_string(color_format) + " for adding alpha");
+        return result;
 }
 
 template <typename T>
@@ -111,7 +88,7 @@ void set_alpha(const std::span<std::byte>& bytes, T alpha)
 
         if (bytes.size() % (4 * sizeof(T)) != 0)
         {
-                error("Error RGBA data size " + to_string(bytes.size()) + " for setting alpha");
+                error("Error data size " + to_string(bytes.size()) + " for setting alpha");
         }
 
         const std::size_t pixel_count = bytes.size() / (4 * sizeof(T));
@@ -481,88 +458,6 @@ void blend_alpha_r32g32b32a32_premultiplied(const std::span<std::byte>& bytes, c
                 }
         }
 }
-
-std::vector<std::byte> add_alpha(ColorFormat color_format, const std::span<const std::byte>& bytes, float alpha)
-{
-        [&]()
-        {
-                switch (color_format)
-                {
-                case ColorFormat::R8G8B8_SRGB:
-                case ColorFormat::R16G16B16:
-                case ColorFormat::R16G16B16_SRGB:
-                case ColorFormat::R32G32B32:
-                        return;
-                case ColorFormat::R8G8B8A8_SRGB:
-                case ColorFormat::R16G16B16A16:
-                case ColorFormat::R16G16B16A16_SRGB:
-                case ColorFormat::R32G32B32A32:
-                case ColorFormat::R16:
-                case ColorFormat::R32:
-                case ColorFormat::R8_SRGB:
-                case ColorFormat::R8G8B8A8_SRGB_PREMULTIPLIED:
-                case ColorFormat::R16G16B16A16_PREMULTIPLIED:
-                case ColorFormat::R32G32B32A32_PREMULTIPLIED:
-                        break;
-                }
-                error("Unsupported image format " + format_to_string(color_format) + " for adding alpha");
-        }();
-
-        std::vector<std::byte> bytes4;
-
-        bytes4.resize((bytes.size() / 3) * 4);
-        add_alpha(color_format, bytes, bytes4, alpha);
-
-        return bytes4;
-}
-
-std::vector<std::byte> delete_alpha(ColorFormat color_format, const std::span<const std::byte>& bytes)
-{
-        [&]()
-        {
-                switch (color_format)
-                {
-                case ColorFormat::R8G8B8A8_SRGB:
-                case ColorFormat::R16G16B16A16:
-                case ColorFormat::R16G16B16A16_SRGB:
-                case ColorFormat::R32G32B32A32:
-                        return;
-                case ColorFormat::R8G8B8_SRGB:
-                case ColorFormat::R16G16B16:
-                case ColorFormat::R16G16B16_SRGB:
-                case ColorFormat::R32G32B32:
-                case ColorFormat::R16:
-                case ColorFormat::R32:
-                case ColorFormat::R8_SRGB:
-                case ColorFormat::R8G8B8A8_SRGB_PREMULTIPLIED:
-                case ColorFormat::R16G16B16A16_PREMULTIPLIED:
-                case ColorFormat::R32G32B32A32_PREMULTIPLIED:
-                        break;
-                }
-                error("Unsupported image format " + format_to_string(color_format) + " for deleting alpha");
-        }();
-
-        std::size_t src_pixel_size = format_pixel_size_in_bytes(color_format);
-        if (bytes.size() % src_pixel_size != 0)
-        {
-                error("Error byte count (" + to_string(bytes.size()) + ") for format "
-                      + format_to_string(color_format));
-        }
-
-        ASSERT(bytes.size() % 4 == 0);
-        ASSERT(src_pixel_size % 4 == 0);
-        std::vector<std::byte> result(3 * (bytes.size() / 4));
-        std::size_t dst_pixel_size = 3 * (src_pixel_size / 4);
-
-        auto src = bytes.begin();
-        auto dst = result.begin();
-        for (; src != bytes.end(); std::advance(src, src_pixel_size), std::advance(dst, dst_pixel_size))
-        {
-                std::memcpy(&(*dst), &(*src), dst_pixel_size);
-        }
-
-        return result;
-}
 }
 
 void blend_alpha(ColorFormat* color_format, const std::span<std::byte>& bytes, Vector<3, float> rgb)
@@ -612,24 +507,19 @@ void blend_alpha(ColorFormat* color_format, const std::span<std::byte>& bytes, V
 
 void set_alpha(ColorFormat color_format, const std::span<std::byte>& bytes, float alpha)
 {
-        if (format_component_count(color_format) != 4)
-        {
-                error("Error image format " + format_to_string(color_format) + " for setting alpha");
-        }
-
         alpha = std::clamp<float>(alpha, 0, 1);
 
         switch (color_format)
         {
+        case ColorFormat::R8G8B8A8_SRGB:
+                set_alpha<uint8_t>(bytes, std::lround(alpha * limits<uint8_t>::max()));
+                return;
         case ColorFormat::R16G16B16A16:
         case ColorFormat::R16G16B16A16_SRGB:
                 set_alpha<uint16_t>(bytes, std::lround(alpha * limits<uint16_t>::max()));
                 return;
         case ColorFormat::R32G32B32A32:
                 set_alpha<float>(bytes, alpha);
-                return;
-        case ColorFormat::R8G8B8A8_SRGB:
-                set_alpha<uint8_t>(bytes, std::lround(alpha * limits<uint8_t>::max()));
                 return;
         case ColorFormat::R8G8B8_SRGB:
         case ColorFormat::R16G16B16:
@@ -652,37 +542,42 @@ Image<N> add_alpha(const Image<N>& image, float alpha)
 {
         Image<N> result;
 
-        result.color_format = [&]
-        {
-                switch (image.color_format)
-                {
-                case ColorFormat::R8G8B8_SRGB:
-                        return ColorFormat::R8G8B8A8_SRGB;
-                case ColorFormat::R16G16B16:
-                        return ColorFormat::R16G16B16A16;
-                case ColorFormat::R16G16B16_SRGB:
-                        return ColorFormat::R16G16B16A16_SRGB;
-                case ColorFormat::R32G32B32:
-                        return ColorFormat::R32G32B32A32;
-                case ColorFormat::R8G8B8A8_SRGB:
-                case ColorFormat::R16G16B16A16:
-                case ColorFormat::R16G16B16A16_SRGB:
-                case ColorFormat::R32G32B32A32:
-                case ColorFormat::R16:
-                case ColorFormat::R32:
-                case ColorFormat::R8_SRGB:
-                case ColorFormat::R8G8B8A8_SRGB_PREMULTIPLIED:
-                case ColorFormat::R16G16B16A16_PREMULTIPLIED:
-                case ColorFormat::R32G32B32A32_PREMULTIPLIED:
-                        break;
-                }
-                error("Unsupported image format " + format_to_string(image.color_format) + " for adding alpha");
-        }();
+        alpha = std::clamp(alpha, 0.0f, 1.0f);
 
         result.size = image.size;
-        result.pixels = add_alpha(image.color_format, image.pixels, alpha);
 
-        return result;
+        switch (image.color_format)
+        {
+        case ColorFormat::R8G8B8_SRGB:
+                result.color_format = ColorFormat::R8G8B8A8_SRGB;
+                result.pixels = add_alpha<uint8_t>(image.pixels, std::lround(alpha * limits<uint8_t>::max()));
+                return result;
+        case ColorFormat::R16G16B16:
+                result.color_format = ColorFormat::R16G16B16A16;
+                result.pixels = add_alpha<uint16_t>(image.pixels, std::lround(alpha * limits<uint16_t>::max()));
+                return result;
+        case ColorFormat::R16G16B16_SRGB:
+                result.color_format = ColorFormat::R16G16B16A16_SRGB;
+                result.pixels = add_alpha<uint16_t>(image.pixels, std::lround(alpha * limits<uint16_t>::max()));
+                return result;
+        case ColorFormat::R32G32B32:
+                result.color_format = ColorFormat::R32G32B32A32;
+                result.pixels = add_alpha<float>(image.pixels, alpha);
+                return result;
+        case ColorFormat::R8G8B8A8_SRGB:
+        case ColorFormat::R16G16B16A16:
+        case ColorFormat::R16G16B16A16_SRGB:
+        case ColorFormat::R32G32B32A32:
+        case ColorFormat::R16:
+        case ColorFormat::R32:
+        case ColorFormat::R8_SRGB:
+        case ColorFormat::R8G8B8A8_SRGB_PREMULTIPLIED:
+        case ColorFormat::R16G16B16A16_PREMULTIPLIED:
+        case ColorFormat::R32G32B32A32_PREMULTIPLIED:
+                break;
+        }
+
+        error("Unsupported image format " + format_to_string(image.color_format) + " for adding alpha");
 }
 
 template <std::size_t N>
@@ -690,37 +585,40 @@ Image<N> delete_alpha(const Image<N>& image)
 {
         Image<N> result;
 
-        result.color_format = [&]
-        {
-                switch (image.color_format)
-                {
-                case ColorFormat::R8G8B8A8_SRGB:
-                        return ColorFormat::R8G8B8_SRGB;
-                case ColorFormat::R16G16B16A16:
-                        return ColorFormat::R16G16B16;
-                case ColorFormat::R16G16B16A16_SRGB:
-                        return ColorFormat::R16G16B16_SRGB;
-                case ColorFormat::R32G32B32A32:
-                        return ColorFormat::R32G32B32;
-                case ColorFormat::R8G8B8_SRGB:
-                case ColorFormat::R16G16B16:
-                case ColorFormat::R16G16B16_SRGB:
-                case ColorFormat::R32G32B32:
-                case ColorFormat::R16:
-                case ColorFormat::R32:
-                case ColorFormat::R8_SRGB:
-                case ColorFormat::R8G8B8A8_SRGB_PREMULTIPLIED:
-                case ColorFormat::R16G16B16A16_PREMULTIPLIED:
-                case ColorFormat::R32G32B32A32_PREMULTIPLIED:
-                        break;
-                }
-                error("Unsupported image format " + format_to_string(image.color_format) + " for deleting alpha");
-        }();
-
         result.size = image.size;
-        result.pixels = delete_alpha(image.color_format, image.pixels);
 
-        return result;
+        switch (image.color_format)
+        {
+        case ColorFormat::R8G8B8A8_SRGB:
+                result.color_format = ColorFormat::R8G8B8_SRGB;
+                result.pixels = delete_alpha<uint8_t>(image.pixels);
+                return result;
+        case ColorFormat::R16G16B16A16:
+                result.color_format = ColorFormat::R16G16B16;
+                result.pixels = delete_alpha<uint16_t>(image.pixels);
+                return result;
+        case ColorFormat::R16G16B16A16_SRGB:
+                result.color_format = ColorFormat::R16G16B16_SRGB;
+                result.pixels = delete_alpha<uint16_t>(image.pixels);
+                return result;
+        case ColorFormat::R32G32B32A32:
+                result.color_format = ColorFormat::R32G32B32;
+                result.pixels = delete_alpha<float>(image.pixels);
+                return result;
+        case ColorFormat::R8G8B8_SRGB:
+        case ColorFormat::R16G16B16:
+        case ColorFormat::R16G16B16_SRGB:
+        case ColorFormat::R32G32B32:
+        case ColorFormat::R16:
+        case ColorFormat::R32:
+        case ColorFormat::R8_SRGB:
+        case ColorFormat::R8G8B8A8_SRGB_PREMULTIPLIED:
+        case ColorFormat::R16G16B16A16_PREMULTIPLIED:
+        case ColorFormat::R32G32B32A32_PREMULTIPLIED:
+                break;
+        }
+
+        error("Unsupported image format " + format_to_string(image.color_format) + " for deleting alpha");
 }
 
 template Image<2> add_alpha(const Image<2>&, float);
