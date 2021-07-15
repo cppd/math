@@ -84,7 +84,7 @@ typename Container::value_type f(
         }
 
         auto iter = std::lower_bound(waves.begin(), waves.end(), wave);
-        ASSERT(iter != samples.end());
+        ASSERT(iter != waves.end());
 
         std::size_t index = iter - waves.begin();
         if (waves[index] == wave)
