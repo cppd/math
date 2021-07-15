@@ -91,4 +91,12 @@ VkSemaphore Image::resolve(const vulkan::Queue& graphics_queue, VkSemaphore wait
 
         return m_signal_semaphores[image_index];
 }
+
+void Image::resolve(const vulkan::Queue& graphics_queue, const unsigned image_index) const
+{
+        ASSERT(graphics_queue.family_index() == m_family_index);
+        ASSERT(image_index < m_command_buffers.count());
+
+        vulkan::queue_submit(m_command_buffers[image_index], graphics_queue);
+}
 }

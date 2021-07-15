@@ -40,6 +40,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/gpu/pencil_sketch/view.h>
 #include <src/gpu/renderer/renderer.h>
 #include <src/gpu/text_writer/view.h>
+#include <src/image/alpha.h>
 #include <src/numerical/region.h>
 #include <src/vulkan/instance.h>
 #include <src/vulkan/objects.h>
@@ -526,9 +527,41 @@ class Impl final
 
         //
 
-        void info(info::Camera* d)
+        void info(info::Camera* const d) const
         {
                 *d = m_camera.view_info();
+        }
+
+        void info(info::Image* const d) const
+        {
+                static_assert(RENDER_BUFFER_COUNT == 1);
+                ASSERT(m_render_buffers->image_views().size() == 1);
+
+                constexpr int INDEX = 0;
+
+                const vulkan::Queue& queue = m_instance->graphics_compute_queues()[0];
+
+                const int width = m_render_buffers->width();
+                const int height = m_render_buffers->height();
+
+                const Image image(
+                        m_instance->device(), m_instance->graphics_compute_command_pool(), queue, *m_render_buffers,
+                        Region<2, int>(0, 0, width, height), VK_IMAGE_LAYOUT_GENERAL,
+                        VK_IMAGE_USAGE_SAMPLED_BIT | VK_IMAGE_USAGE_TRANSFER_SRC_BIT);
+
+                image.resolve(queue, INDEX);
+
+                vulkan::queue_wait_idle(queue);
+
+                d->image.size[0] = width;
+                d->image.size[1] = height;
+
+                image.image(INDEX).read_pixels(
+                        m_instance->graphics_compute_command_pool(), queue, VK_IMAGE_LAYOUT_GENERAL,
+                        VK_IMAGE_LAYOUT_GENERAL, &d->image.color_format, &d->image.pixels);
+
+                ASSERT(4 == image::format_component_count(d->image.color_format));
+                d->image = image::delete_alpha(d->image);
         }
 
         //

@@ -18,6 +18,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #pragma once
 
 #include <src/color/color.h>
+#include <src/image/image.h>
 #include <src/model/mesh_object.h>
 #include <src/model/volume_object.h>
 #include <src/numerical/matrix.h>
@@ -392,11 +393,16 @@ struct Camera final
         int width;
         int height;
 };
+
+struct Image final
+{
+        image::Image<2> image;
+};
 }
 
 struct Info final
 {
-        using T = std::variant<info::Camera*>;
+        using T = std::variant<info::Camera*, info::Image*>;
 
         template <typename Type, typename = std::enable_if_t<!std::is_same_v<Info, std::remove_cvref_t<Type>>>>
         Info(Type&& arg) : m_data(std::forward<Type>(arg))

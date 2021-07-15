@@ -45,5 +45,7 @@ public:
                 const vulkan::Queue& graphics_queue,
                 VkSemaphore wait_semaphore,
                 unsigned image_index) const;
+
+        void resolve(const vulkan::Queue& graphics_queue, unsigned image_index) const;
 };
 }
