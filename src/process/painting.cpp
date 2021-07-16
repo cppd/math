@@ -136,7 +136,7 @@ void thread_function(
         }
         }
         error("Unknown color index " + to_string(parameters.color_index));
-};
+}
 
 template <std::size_t N, typename Parameters>
 void thread_function(
@@ -164,7 +164,7 @@ void thread_function(
                 return;
         }
         error("Unknown precision index " + to_string(parameters.precision_index));
-};
+}
 
 template <std::size_t N>
 bool has_facets(const std::vector<std::shared_ptr<const mesh::MeshObject<N>>>& mesh_objects)
