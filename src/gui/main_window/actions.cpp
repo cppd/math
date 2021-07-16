@@ -31,8 +31,9 @@ namespace ns::gui::main_window
 namespace
 {
 constexpr unsigned WORKER_THREAD_ID = 0;
-constexpr unsigned SELF_TEST_THREAD_ID = 1;
-constexpr unsigned REQUIRED_THREAD_COUNT = 2;
+constexpr unsigned SAVE_THREAD_ID = 1;
+constexpr unsigned SELF_TEST_THREAD_ID = 2;
+constexpr unsigned REQUIRED_THREAD_COUNT = 3;
 
 std::string action_name(const QAction* action)
 {
@@ -119,6 +120,18 @@ void load_volume(WorkerThreads* threads, const std::filesystem::path& path, cons
                 [&]()
                 {
                         return process::action_load_volume(path);
+                });
+}
+
+void save_view_image(WorkerThreads* threads, view::View* view, const std::string& action)
+{
+        threads->terminate_and_start(
+                SAVE_THREAD_ID, action,
+                [&]()
+                {
+                        view::info::Image image;
+                        view->receive({&image});
+                        return process::action_save_image(std::move(image.image));
                 });
 }
 
@@ -222,6 +235,15 @@ Actions::Actions(
                         [=]()
                         {
                                 load_volume(threads, "", action_name(action));
+                        }));
+        }
+        {
+                QAction* action = menu_file->addAction("Save Image...");
+                m_connections.emplace_back(QObject::connect(
+                        action, &QAction::triggered,
+                        [=]()
+                        {
+                                save_view_image(threads, view, action_name(action));
                         }));
         }
         {

@@ -21,6 +21,9 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/com/file/path.h>
 #include <src/com/message.h>
 #include <src/gui/dialogs/file_dialog.h>
+#include <src/gui/dialogs/view_image.h>
+#include <src/image/depth.h>
+#include <src/image/file.h>
 #include <src/model/mesh_utility.h>
 
 namespace ns::process
@@ -82,5 +85,31 @@ std::function<void(ProgressRatioList*)> action_export(const storage::MeshObjectC
                         return action_export_function(mesh_object);
                 },
                 object);
+}
+
+std::function<void(ProgressRatioList*)> action_save_image(image::Image<2>&& image)
+{
+        const bool use_to_8_bit = 1 < (image::format_pixel_size_in_bytes(image.color_format)
+                                       / image::format_component_count(image.color_format));
+
+        std::optional<gui::dialog::ViewImageParameters> dialog_parameters =
+                gui::dialog::ViewImageDialog::show("Save Image", use_to_8_bit);
+        if (!dialog_parameters)
+        {
+                return nullptr;
+        }
+        ASSERT(use_to_8_bit == dialog_parameters->convert_to_8_bit.has_value());
+
+        return [parameters = std::move(*dialog_parameters),
+                image = std::make_shared<image::Image<2>>(std::move(image))](ProgressRatioList*)
+        {
+                if (parameters.convert_to_8_bit && *parameters.convert_to_8_bit)
+                {
+                        *image = image::convert_to_8_bit(*image);
+                }
+                const std::filesystem::path file_name = path_from_utf8(parameters.path_string);
+                image::save(file_name, image::ImageView<2>(*image));
+                MESSAGE_INFORMATION("Image saved to " + generic_utf8_filename(file_name));
+        };
 }
 }

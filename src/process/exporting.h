@@ -17,6 +17,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
+#include <src/image/image.h>
 #include <src/progress/progress_list.h>
 #include <src/storage/storage.h>
 
@@ -25,4 +26,5 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 namespace ns::process
 {
 std::function<void(ProgressRatioList*)> action_export(const storage::MeshObjectConst& object);
+std::function<void(ProgressRatioList*)> action_save_image(image::Image<2>&& image);
 }
