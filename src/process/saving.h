@@ -25,6 +25,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 namespace ns::process
 {
-std::function<void(ProgressRatioList*)> action_export(const storage::MeshObjectConst& object);
-std::function<void(ProgressRatioList*)> action_save_image(image::Image<2>&& image);
+std::function<void(ProgressRatioList*)> action_save(const storage::MeshObjectConst& object);
+
+std::function<void(ProgressRatioList*)> action_save(image::Image<2>&& image);
 }

@@ -26,10 +26,12 @@ namespace ns::gui::painter_window
 {
 namespace
 {
-constexpr unsigned SAVE_THREAD_ID = 0;
-constexpr unsigned ADD_THREAD_ID = 1;
-constexpr unsigned REQUIRED_THREAD_COUNT = 2;
-constexpr unsigned PERMANENT_THREAD_ID = limits<unsigned>::max();
+enum ThreadId
+{
+        SAVE_THREAD_ID,
+        ADD_THREAD_ID,
+        THREAD_ID_COUNT
+};
 
 std::string action_name(const QAction* action)
 {
@@ -43,8 +45,7 @@ std::string action_name(const QAction* action)
 }
 
 Actions::Actions(const Pixels* pixels, QMenu* menu, QStatusBar* status_bar, std::function<long long()> slice_number)
-        : m_pixels(pixels),
-          m_worker_threads(create_worker_threads(REQUIRED_THREAD_COUNT, PERMANENT_THREAD_ID, status_bar))
+        : m_pixels(pixels), m_worker_threads(create_worker_threads(THREAD_ID_COUNT, std::nullopt, status_bar))
 {
         ASSERT(slice_number);
         {

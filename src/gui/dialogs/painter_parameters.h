@@ -20,7 +20,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "ui_painter_parameters.h"
 
 #include <array>
-#include <string>
 
 namespace ns::gui::dialog
 {

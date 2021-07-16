@@ -21,19 +21,22 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/com/message.h>
 #include <src/com/names.h>
 #include <src/process/computing.h>
-#include <src/process/exporting.h>
 #include <src/process/loading.h>
 #include <src/process/painting.h>
+#include <src/process/saving.h>
 #include <src/process/testing.h>
 
 namespace ns::gui::main_window
 {
 namespace
 {
-constexpr unsigned WORKER_THREAD_ID = 0;
-constexpr unsigned SAVE_THREAD_ID = 1;
-constexpr unsigned SELF_TEST_THREAD_ID = 2;
-constexpr unsigned REQUIRED_THREAD_COUNT = 3;
+enum ThreadId
+{
+        WORKER_THREAD_ID,
+        SAVE_THREAD_ID,
+        SELF_TEST_THREAD_ID,
+        THREAD_ID_COUNT
+};
 
 std::string action_name(const QAction* action)
 {
@@ -123,19 +126,7 @@ void load_volume(WorkerThreads* threads, const std::filesystem::path& path, cons
                 });
 }
 
-void save_view_image(WorkerThreads* threads, view::View* view, const std::string& action)
-{
-        threads->terminate_and_start(
-                SAVE_THREAD_ID, action,
-                [&]()
-                {
-                        view::info::Image image;
-                        view->receive({&image});
-                        return process::action_save_image(std::move(image.image));
-                });
-}
-
-void export_mesh(WorkerThreads* threads, const ModelTree* model_tree, const std::string& action)
+void save_mesh(WorkerThreads* threads, const ModelTree* model_tree, const std::string& action)
 {
         threads->terminate_and_start(
                 WORKER_THREAD_ID, action,
@@ -144,10 +135,22 @@ void export_mesh(WorkerThreads* threads, const ModelTree* model_tree, const std:
                         std::optional<storage::MeshObjectConst> object = model_tree->current_mesh_const();
                         if (!object)
                         {
-                                MESSAGE_WARNING("No mesh to export");
+                                MESSAGE_WARNING("No mesh to save");
                                 return WorkerThreads::Function();
                         }
-                        return process::action_export(*object);
+                        return process::action_save(*object);
+                });
+}
+
+void save_view_image(WorkerThreads* threads, view::View* view, const std::string& action)
+{
+        threads->terminate_and_start(
+                SAVE_THREAD_ID, action,
+                [&]()
+                {
+                        view::info::Image image;
+                        view->receive({&image});
+                        return process::action_save(std::move(image.image));
                 });
 }
 
@@ -215,7 +218,7 @@ Actions::Actions(
         ModelTree* model_tree,
         const LightingWidget* lighting,
         const ColorsWidget* colors)
-        : m_worker_threads(create_worker_threads(REQUIRED_THREAD_COUNT, SELF_TEST_THREAD_ID, status_bar))
+        : m_worker_threads(create_worker_threads(THREAD_ID_COUNT, SELF_TEST_THREAD_ID, status_bar))
 {
         WorkerThreads* threads = m_worker_threads.get();
 
@@ -238,21 +241,21 @@ Actions::Actions(
                         }));
         }
         {
+                QAction* action = menu_file->addAction("Save...");
+                m_connections.emplace_back(QObject::connect(
+                        action, &QAction::triggered,
+                        [=]()
+                        {
+                                save_mesh(threads, model_tree, action_name(action));
+                        }));
+        }
+        {
                 QAction* action = menu_file->addAction("Save Image...");
                 m_connections.emplace_back(QObject::connect(
                         action, &QAction::triggered,
                         [=]()
                         {
                                 save_view_image(threads, view, action_name(action));
-                        }));
-        }
-        {
-                QAction* action = menu_file->addAction("Export...");
-                m_connections.emplace_back(QObject::connect(
-                        action, &QAction::triggered,
-                        [=]()
-                        {
-                                export_mesh(threads, model_tree, action_name(action));
                         }));
         }
         {

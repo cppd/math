@@ -146,7 +146,7 @@ class Impl final : public WorkerThreads
 {
         const std::thread::id m_thread_id = std::this_thread::get_id();
 
-        const unsigned m_permanent_thread_id;
+        const std::optional<unsigned> m_permanent_thread_id;
         QStatusBar* const m_status_bar;
 
         std::deque<ThreadData> m_threads;
@@ -332,7 +332,7 @@ class Impl final : public WorkerThreads
         }
 
 public:
-        Impl(unsigned thread_count, unsigned permanent_thread_id, QStatusBar* status_bar)
+        Impl(unsigned thread_count, const std::optional<unsigned>& permanent_thread_id, QStatusBar* status_bar)
                 : m_permanent_thread_id(permanent_thread_id), m_status_bar(status_bar)
         {
                 ASSERT(thread_count > 0);
@@ -369,7 +369,7 @@ public:
 
 std::unique_ptr<WorkerThreads> create_worker_threads(
         unsigned thread_count,
-        unsigned permanent_thread_id,
+        const std::optional<unsigned>& permanent_thread_id,
         QStatusBar* status_bar)
 {
         return std::make_unique<Impl>(thread_count, permanent_thread_id, status_bar);

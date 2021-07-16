@@ -24,6 +24,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <functional>
 #include <list>
 #include <memory>
+#include <optional>
 #include <string>
 #include <vector>
 
@@ -55,6 +56,6 @@ struct WorkerThreads
 
 std::unique_ptr<WorkerThreads> create_worker_threads(
         unsigned thread_count,
-        unsigned permanent_thread_id,
+        const std::optional<unsigned>& permanent_thread_id,
         QStatusBar* status_bar);
 }

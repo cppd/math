@@ -15,7 +15,7 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include "exporting.h"
+#include "saving.h"
 
 #include <src/com/error.h>
 #include <src/com/file/path.h>
@@ -30,15 +30,15 @@ namespace ns::process
 {
 namespace
 {
-constexpr bool STL_EXPORT_FORMAT_ASCII = true;
+constexpr bool STL_FORMAT_ASCII = true;
 
 template <std::size_t N>
-std::function<void(ProgressRatioList*)> action_export_function(
+std::function<void(ProgressRatioList*)> action_save_function(
         const std::shared_ptr<const mesh::MeshObject<N>>& mesh_object)
 {
         std::string name = mesh_object->name();
 
-        std::string caption = "Export " + name;
+        std::string caption = "Save " + name;
         bool read_only = true;
 
         std::vector<gui::dialog::FileFilter> filters;
@@ -65,29 +65,29 @@ std::function<void(ProgressRatioList*)> action_export_function(
                 {
                 case mesh::FileType::Obj:
                         mesh::save_to_obj(reading.mesh(), file_name, name);
-                        MESSAGE_INFORMATION(name + " exported to OBJ file " + generic_utf8_filename(file_name));
+                        MESSAGE_INFORMATION(name + " saved to OBJ file " + generic_utf8_filename(file_name));
                         return;
                 case mesh::FileType::Stl:
-                        mesh::save_to_stl(reading.mesh(), file_name, name, STL_EXPORT_FORMAT_ASCII);
-                        MESSAGE_INFORMATION(name + " exported to STL file " + generic_utf8_filename(file_name));
+                        mesh::save_to_stl(reading.mesh(), file_name, name, STL_FORMAT_ASCII);
+                        MESSAGE_INFORMATION(name + " saved to STL file " + generic_utf8_filename(file_name));
                         return;
                 }
-                error_fatal("Unknown file type for export");
+                error_fatal("Unknown file type for saving");
         };
 }
 }
 
-std::function<void(ProgressRatioList*)> action_export(const storage::MeshObjectConst& object)
+std::function<void(ProgressRatioList*)> action_save(const storage::MeshObjectConst& object)
 {
         return std::visit(
                 [&]<std::size_t N>(const std::shared_ptr<const mesh::MeshObject<N>>& mesh_object)
                 {
-                        return action_export_function(mesh_object);
+                        return action_save_function(mesh_object);
                 },
                 object);
 }
 
-std::function<void(ProgressRatioList*)> action_save_image(image::Image<2>&& image)
+std::function<void(ProgressRatioList*)> action_save(image::Image<2>&& image)
 {
         const bool use_to_8_bit = 1 < (image::format_pixel_size_in_bytes(image.color_format)
                                        / image::format_component_count(image.color_format));
