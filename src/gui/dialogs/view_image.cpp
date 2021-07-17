@@ -29,9 +29,10 @@ namespace ns::gui::dialog
 {
 ViewImageDialog::ViewImageDialog(
         const std::string& title,
+        const std::string& file_name,
         bool use_convert_to_8_bit,
         std::optional<ViewImageParameters>& parameters)
-        : QDialog(parent_for_dialog()), m_parameters(parameters)
+        : QDialog(parent_for_dialog()), m_file_name(file_name), m_parameters(parameters)
 {
         ui.setupUi(this);
         setWindowTitle(QString::fromStdString(title));
@@ -83,7 +84,12 @@ void ViewImageDialog::on_select_path_clicked()
         filter.name = "Images";
         filter.file_extensions.emplace_back(image::file_extension());
         const bool read_only = true;
-        std::optional<std::string> path = dialog::save_file(caption, {filter}, read_only);
+
+        const std::string file_name =
+                generic_utf8_filename(path_from_utf8(ui.lineEdit_path->text().toStdString()).filename());
+
+        std::optional<std::string> path =
+                dialog::save_file(caption, file_name.empty() ? m_file_name : file_name, {filter}, read_only);
 
         if (path && !ptr.isNull())
         {
@@ -91,11 +97,14 @@ void ViewImageDialog::on_select_path_clicked()
         }
 }
 
-std::optional<ViewImageParameters> ViewImageDialog::show(const std::string& title, bool use_convert_to_8_bit)
+std::optional<ViewImageParameters> ViewImageDialog::show(
+        const std::string& title,
+        const std::string& file_name,
+        bool use_convert_to_8_bit)
 {
         std::optional<ViewImageParameters> parameters;
 
-        QtObjectInDynamicMemory w(new ViewImageDialog(title, use_convert_to_8_bit, parameters));
+        QtObjectInDynamicMemory w(new ViewImageDialog(title, file_name, use_convert_to_8_bit, parameters));
 
         if (!w->exec() || w.isNull())
         {

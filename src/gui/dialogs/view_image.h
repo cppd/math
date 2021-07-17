@@ -37,10 +37,13 @@ class ViewImageDialog final : public QDialog
 private:
         Ui::ViewImageDialog ui;
 
+        const std::string& m_file_name;
+
         std::optional<ViewImageParameters>& m_parameters;
 
         ViewImageDialog(
                 const std::string& title,
+                const std::string& file_name,
                 bool use_convert_to_8_bit,
                 std::optional<ViewImageParameters>& parameters);
 
@@ -51,6 +54,7 @@ private:
 public:
         [[nodiscard]] static std::optional<ViewImageParameters> show(
                 const std::string& title,
+                const std::string& file_name,
                 bool use_convert_to_8_bit);
 };
 }

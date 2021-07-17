@@ -26,6 +26,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/process/saving.h>
 #include <src/process/testing.h>
 
+#include <chrono>
+
 namespace ns::gui::main_window
 {
 namespace
@@ -150,7 +152,7 @@ void save_view_image(WorkerThreads* threads, view::View* view, const std::string
                 {
                         view::info::Image image;
                         view->receive({&image});
-                        return process::action_save(std::move(image.image));
+                        return process::action_save(std::chrono::system_clock::now(), std::move(image.image));
                 });
 }
 

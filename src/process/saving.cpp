@@ -20,11 +20,15 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/com/error.h>
 #include <src/com/file/path.h>
 #include <src/com/message.h>
+#include <src/com/time.h>
 #include <src/gui/dialogs/file_dialog.h>
 #include <src/gui/dialogs/view_image.h>
 #include <src/image/depth.h>
 #include <src/image/file.h>
 #include <src/model/mesh_utility.h>
+
+#include <iomanip>
+#include <sstream>
 
 namespace ns::process
 {
@@ -75,6 +79,14 @@ std::function<void(ProgressRatioList*)> action_save_function(
                 error_fatal("Unknown file type for saving");
         };
 }
+
+std::string time_to_file_name(const std::chrono::system_clock::time_point& time)
+{
+        const std::tm t = time_to_local_time(time);
+        std::ostringstream oss;
+        oss << "image_" << std::put_time(&t, "%Y-%m-%d_%H-%M-%S");
+        return oss.str();
+}
 }
 
 std::function<void(ProgressRatioList*)> action_save(const storage::MeshObjectConst& object)
@@ -87,13 +99,15 @@ std::function<void(ProgressRatioList*)> action_save(const storage::MeshObjectCon
                 object);
 }
 
-std::function<void(ProgressRatioList*)> action_save(image::Image<2>&& image)
+std::function<void(ProgressRatioList*)> action_save(
+        const std::chrono::system_clock::time_point& image_time,
+        image::Image<2>&& image)
 {
         const bool use_to_8_bit = 1 < (image::format_pixel_size_in_bytes(image.color_format)
                                        / image::format_component_count(image.color_format));
 
         std::optional<gui::dialog::ViewImageParameters> dialog_parameters =
-                gui::dialog::ViewImageDialog::show("Save Image", use_to_8_bit);
+                gui::dialog::ViewImageDialog::show("Save Image", time_to_file_name(image_time), use_to_8_bit);
         if (!dialog_parameters)
         {
                 return nullptr;
