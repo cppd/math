@@ -39,7 +39,10 @@ private:
 
         std::optional<ViewImageParameters>& m_parameters;
 
-        ViewImageDialog(const std::string& title, bool use_to_8_bit, std::optional<ViewImageParameters>& parameters);
+        ViewImageDialog(
+                const std::string& title,
+                bool use_convert_to_8_bit,
+                std::optional<ViewImageParameters>& parameters);
 
         void done(int r) override;
 
