@@ -194,15 +194,15 @@ class ImageWithMemory final
 public:
         ImageWithMemory(
                 const Device& device,
-                const CommandPool& command_pool,
-                const Queue& queue,
                 const std::vector<uint32_t>& family_indices,
                 const std::vector<VkFormat>& format_candidates,
                 VkSampleCountFlagBits sample_count,
                 VkImageType type,
                 VkExtent3D extent,
-                VkImageLayout image_layout,
-                VkImageUsageFlags usage);
+                VkImageUsageFlags usage,
+                VkImageLayout layout,
+                const CommandPool& command_pool,
+                const Queue& queue);
 
         ImageWithMemory(const ImageWithMemory&) = delete;
         ImageWithMemory& operator=(const ImageWithMemory&) = delete;
@@ -257,7 +257,7 @@ public:
                 const Device& device,
                 const std::vector<uint32_t>& family_indices,
                 const std::vector<VkFormat>& formats,
-                VkSampleCountFlagBits samples,
+                VkSampleCountFlagBits sample_count,
                 uint32_t width,
                 uint32_t height,
                 VkImageUsageFlags usage);
@@ -265,13 +265,13 @@ public:
                 const Device& device,
                 const std::vector<uint32_t>& family_indices,
                 const std::vector<VkFormat>& formats,
-                VkSampleCountFlagBits samples,
+                VkSampleCountFlagBits sample_count,
                 uint32_t width,
                 uint32_t height,
                 VkImageUsageFlags usage,
-                VkCommandPool graphics_command_pool,
-                VkQueue graphics_queue,
-                VkImageLayout image_layout);
+                VkImageLayout layout,
+                VkCommandPool command_pool,
+                VkQueue queue);
 
         DepthImageWithMemory(const DepthImageWithMemory&) = delete;
         DepthImageWithMemory& operator=(const DepthImageWithMemory&) = delete;
@@ -304,8 +304,8 @@ public:
         ColorAttachment(
                 const Device& device,
                 const std::vector<uint32_t>& family_indices,
-                VkFormat format,
-                VkSampleCountFlagBits samples,
+                const std::vector<VkFormat>& format_candidates,
+                VkSampleCountFlagBits sample_count,
                 uint32_t width,
                 uint32_t height);
 

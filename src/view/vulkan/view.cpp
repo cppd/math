@@ -592,12 +592,12 @@ class Impl final
                         MINIMUM_SAMPLE_COUNT);
 
                 m_object_image = std::make_unique<vulkan::ImageWithMemory>(
-                        m_instance->device(), m_instance->graphics_compute_command_pool(),
-                        m_instance->graphics_compute_queues()[0],
+                        m_instance->device(),
                         std::vector<uint32_t>({m_instance->graphics_compute_queues()[0].family_index()}),
                         std::vector<VkFormat>({OBJECT_IMAGE_FORMAT}), VK_SAMPLE_COUNT_1_BIT, VK_IMAGE_TYPE_2D,
                         vulkan::make_extent(m_render_buffers->width(), m_render_buffers->height()),
-                        VK_IMAGE_LAYOUT_GENERAL, VK_IMAGE_USAGE_STORAGE_BIT | VK_IMAGE_USAGE_TRANSFER_DST_BIT);
+                        VK_IMAGE_USAGE_STORAGE_BIT | VK_IMAGE_USAGE_TRANSFER_DST_BIT, VK_IMAGE_LAYOUT_GENERAL,
+                        m_instance->graphics_compute_command_pool(), m_instance->graphics_compute_queues()[0]);
 
                 const auto [w_1, w_2] = window_position_and_size(
                         m_dft_active, m_render_buffers->width(), m_render_buffers->height(), m_frame_size_in_pixels);

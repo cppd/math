@@ -42,10 +42,10 @@ Image::Image(
         for (unsigned i = 0; i < count; ++i)
         {
                 m_images.emplace_back(
-                        device, command_pool, queue, std::vector<uint32_t>({command_pool.family_index()}),
+                        device, std::vector<uint32_t>({command_pool.family_index()}),
                         std::vector<VkFormat>({render_buffers.color_format()}), VK_SAMPLE_COUNT_1_BIT, VK_IMAGE_TYPE_2D,
-                        vulkan::make_extent(render_buffers.width(), render_buffers.height()), image_layout,
-                        usage | VK_IMAGE_USAGE_TRANSFER_DST_BIT);
+                        vulkan::make_extent(render_buffers.width(), render_buffers.height()),
+                        usage | VK_IMAGE_USAGE_TRANSFER_DST_BIT, image_layout, command_pool, queue);
 
                 m_signal_semaphores.emplace_back(device);
 

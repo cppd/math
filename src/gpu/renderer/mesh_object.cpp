@@ -381,9 +381,10 @@ std::vector<vulkan::ImageWithMemory> load_textures(
         for (const image::Image<2>& image : mesh.images)
         {
                 textures.emplace_back(
-                        device, command_pool, queue, family_indices, COLOR_IMAGE_FORMATS, VK_SAMPLE_COUNT_1_BIT,
-                        VK_IMAGE_TYPE_2D, vulkan::make_extent(image.size[0], image.size[1]), VK_IMAGE_LAYOUT_UNDEFINED,
-                        VK_IMAGE_USAGE_SAMPLED_BIT | VK_IMAGE_USAGE_TRANSFER_DST_BIT);
+                        device, family_indices, COLOR_IMAGE_FORMATS, VK_SAMPLE_COUNT_1_BIT, VK_IMAGE_TYPE_2D,
+                        vulkan::make_extent(image.size[0], image.size[1]),
+                        VK_IMAGE_USAGE_SAMPLED_BIT | VK_IMAGE_USAGE_TRANSFER_DST_BIT, VK_IMAGE_LAYOUT_UNDEFINED,
+                        command_pool, queue);
                 textures.back().write_pixels(
                         command_pool, queue, VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL,
                         image.color_format, image.pixels);
@@ -391,9 +392,9 @@ std::vector<vulkan::ImageWithMemory> load_textures(
 
         // На одну текстуру больше для её указания, но не использования в тех материалах, где нет текстуры
         textures.emplace_back(
-                device, command_pool, queue, family_indices, COLOR_IMAGE_FORMATS, VK_SAMPLE_COUNT_1_BIT,
-                VK_IMAGE_TYPE_2D, vulkan::make_extent(1, 1), VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL,
-                VK_IMAGE_USAGE_SAMPLED_BIT);
+                device, family_indices, COLOR_IMAGE_FORMATS, VK_SAMPLE_COUNT_1_BIT, VK_IMAGE_TYPE_2D,
+                vulkan::make_extent(1, 1), VK_IMAGE_USAGE_SAMPLED_BIT, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL,
+                command_pool, queue);
 
         return textures;
 }

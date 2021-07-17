@@ -339,10 +339,10 @@ class Impl final : public VolumeObject
                 m_transfer_function.reset();
 
                 m_transfer_function = std::make_unique<vulkan::ImageWithMemory>(
-                        m_device, m_transfer_command_pool, m_transfer_queue, m_family_indices,
-                        vulkan_transfer_function_formats(image.color_format), VK_SAMPLE_COUNT_1_BIT, VK_IMAGE_TYPE_1D,
-                        vulkan::make_extent(image.size[0]), VK_IMAGE_LAYOUT_UNDEFINED,
-                        VK_IMAGE_USAGE_SAMPLED_BIT | VK_IMAGE_USAGE_TRANSFER_DST_BIT);
+                        m_device, m_family_indices, vulkan_transfer_function_formats(image.color_format),
+                        VK_SAMPLE_COUNT_1_BIT, VK_IMAGE_TYPE_1D, vulkan::make_extent(image.size[0]),
+                        VK_IMAGE_USAGE_SAMPLED_BIT | VK_IMAGE_USAGE_TRANSFER_DST_BIT, VK_IMAGE_LAYOUT_UNDEFINED,
+                        m_transfer_command_pool, m_transfer_queue);
 
                 m_transfer_function->write_pixels(
                         m_transfer_command_pool, m_transfer_queue, VK_IMAGE_LAYOUT_UNDEFINED,
@@ -366,11 +366,10 @@ class Impl final : public VolumeObject
 
                         m_image.reset();
                         m_image = std::make_unique<vulkan::ImageWithMemory>(
-                                m_device, m_transfer_command_pool, m_transfer_queue, m_family_indices, m_image_formats,
-                                VK_SAMPLE_COUNT_1_BIT, VK_IMAGE_TYPE_3D,
+                                m_device, m_family_indices, m_image_formats, VK_SAMPLE_COUNT_1_BIT, VK_IMAGE_TYPE_3D,
                                 vulkan::make_extent(image.size[0], image.size[1], image.size[2]),
-                                VK_IMAGE_LAYOUT_UNDEFINED,
-                                VK_IMAGE_USAGE_SAMPLED_BIT | VK_IMAGE_USAGE_TRANSFER_DST_BIT);
+                                VK_IMAGE_USAGE_SAMPLED_BIT | VK_IMAGE_USAGE_TRANSFER_DST_BIT, VK_IMAGE_LAYOUT_UNDEFINED,
+                                m_transfer_command_pool, m_transfer_queue);
 
                         image_layout = VK_IMAGE_LAYOUT_UNDEFINED;
                 }

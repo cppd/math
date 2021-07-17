@@ -632,8 +632,8 @@ class Impl final : public Renderer
                         m_device, std::vector<uint32_t>({m_graphics_queue.family_index()}),
                         std::vector<VkFormat>({m_render_buffers->depth_format()}), m_render_buffers->sample_count(),
                         m_render_buffers->width(), m_render_buffers->height(),
-                        VK_IMAGE_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_SAMPLED_BIT, m_graphics_command_pool,
-                        m_graphics_queue, DEPTH_COPY_IMAGE_LAYOUT);
+                        VK_IMAGE_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_SAMPLED_BIT, DEPTH_COPY_IMAGE_LAYOUT,
+                        m_graphics_command_pool, m_graphics_queue);
         }
 
         void create_transparency_buffers()

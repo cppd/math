@@ -1045,15 +1045,15 @@ BufferMapper::~BufferMapper()
 
 ImageWithMemory::ImageWithMemory(
         const Device& device,
-        const CommandPool& command_pool,
-        const Queue& queue,
         const std::vector<uint32_t>& family_indices,
         const std::vector<VkFormat>& format_candidates,
         VkSampleCountFlagBits sample_count,
         VkImageType type,
         VkExtent3D extent,
-        VkImageLayout image_layout,
-        VkImageUsageFlags usage)
+        VkImageUsageFlags usage,
+        VkImageLayout layout,
+        const CommandPool& command_pool,
+        const Queue& queue)
         : m_extent(correct_image_extent(type, extent)),
           m_device(device),
           m_physical_device(device.physical_device()),
@@ -1083,12 +1083,12 @@ ImageWithMemory::ImageWithMemory(
                   create_device_memory(m_device, m_physical_device, m_image, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT)),
           m_image_view(create_image_view(m_device, m_image, m_type, m_format, VK_IMAGE_ASPECT_COLOR_BIT))
 {
-        check_family_index(command_pool, queue);
-
-        if (image_layout != VK_IMAGE_LAYOUT_UNDEFINED)
+        if (layout != VK_IMAGE_LAYOUT_UNDEFINED)
         {
+                check_family_index(command_pool, queue);
+
                 transition_texture_layout_color(
-                        device, command_pool, queue, m_image, VK_IMAGE_LAYOUT_UNDEFINED, image_layout);
+                        device, command_pool, queue, m_image, VK_IMAGE_LAYOUT_UNDEFINED, layout);
         }
 }
 
@@ -1204,7 +1204,7 @@ DepthImageWithMemory::DepthImageWithMemory(
         const Device& device,
         const std::vector<uint32_t>& family_indices,
         const std::vector<VkFormat>& formats,
-        VkSampleCountFlagBits samples,
+        VkSampleCountFlagBits sample_count,
         uint32_t width,
         uint32_t height,
         VkImageUsageFlags usage)
@@ -1221,7 +1221,7 @@ DepthImageWithMemory::DepthImageWithMemory(
         m_usage = usage;
         m_format = find_supported_image_format(
                 device.physical_device(), formats, VK_IMAGE_TYPE_2D, TILING,
-                format_features_for_depth_image_usage(m_usage), m_usage, samples);
+                format_features_for_depth_image_usage(m_usage), m_usage, sample_count);
 
         const VkExtent3D max_extent =
                 max_image_extent(device.physical_device(), m_format, VK_IMAGE_TYPE_2D, TILING, m_usage);
@@ -1230,31 +1230,30 @@ DepthImageWithMemory::DepthImageWithMemory(
 
         m_image = create_image(
                 device, device.physical_device(), VK_IMAGE_TYPE_2D, make_extent(m_width, m_height), m_format,
-                family_indices, samples, TILING, m_usage);
+                family_indices, sample_count, TILING, m_usage);
         m_device_memory =
                 create_device_memory(device, device.physical_device(), m_image, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT);
         m_image_view = create_image_view(device, m_image, VK_IMAGE_TYPE_2D, m_format, VK_IMAGE_ASPECT_DEPTH_BIT);
-        m_sample_count = samples;
+        m_sample_count = sample_count;
 }
 
 DepthImageWithMemory::DepthImageWithMemory(
         const Device& device,
         const std::vector<uint32_t>& family_indices,
         const std::vector<VkFormat>& formats,
-        VkSampleCountFlagBits samples,
+        VkSampleCountFlagBits sample_count,
         uint32_t width,
         uint32_t height,
         VkImageUsageFlags usage,
-        VkCommandPool graphics_command_pool,
-        VkQueue graphics_queue,
-        VkImageLayout image_layout)
-        : DepthImageWithMemory(device, family_indices, formats, samples, width, height, usage)
+        VkImageLayout layout,
+        VkCommandPool command_pool,
+        VkQueue queue)
+        : DepthImageWithMemory(device, family_indices, formats, sample_count, width, height, usage)
 {
-        if (image_layout != VK_IMAGE_LAYOUT_UNDEFINED)
+        if (layout != VK_IMAGE_LAYOUT_UNDEFINED)
         {
                 transition_texture_layout_depth(
-                        device, graphics_command_pool, graphics_queue, m_image, VK_IMAGE_LAYOUT_UNDEFINED,
-                        image_layout);
+                        device, command_pool, queue, m_image, VK_IMAGE_LAYOUT_UNDEFINED, layout);
         }
 }
 
@@ -1298,27 +1297,24 @@ unsigned DepthImageWithMemory::height() const
 ColorAttachment::ColorAttachment(
         const Device& device,
         const std::vector<uint32_t>& family_indices,
-        VkFormat format,
-        VkSampleCountFlagBits samples,
+        const std::vector<VkFormat>& format_candidates,
+        VkSampleCountFlagBits sample_count,
         uint32_t width,
         uint32_t height)
 {
-        std::vector<VkFormat> candidates = {format}; // должен быть только этот формат
-        VkImageTiling tiling = VK_IMAGE_TILING_OPTIMAL;
-        VkFormatFeatureFlags features = VK_FORMAT_FEATURE_COLOR_ATTACHMENT_BIT | VK_FORMAT_FEATURE_TRANSFER_SRC_BIT;
-        VkImageUsageFlags usage = VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT | VK_IMAGE_USAGE_TRANSFER_SRC_BIT;
+        constexpr VkImageTiling tiling = VK_IMAGE_TILING_OPTIMAL;
+        constexpr VkImageUsageFlags usage = VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT | VK_IMAGE_USAGE_TRANSFER_SRC_BIT;
 
         m_format = find_supported_image_format(
-                device.physical_device(), candidates, VK_IMAGE_TYPE_2D, tiling, features, usage, samples);
+                device.physical_device(), format_candidates, VK_IMAGE_TYPE_2D, tiling,
+                format_features_for_color_image_usage(usage), usage, sample_count);
         m_image = create_image(
                 device, device.physical_device(), VK_IMAGE_TYPE_2D, make_extent(width, height), m_format,
-                family_indices, samples, tiling, usage);
+                family_indices, sample_count, tiling, usage);
         m_device_memory =
                 create_device_memory(device, device.physical_device(), m_image, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT);
         m_image_view = create_image_view(device, m_image, VK_IMAGE_TYPE_2D, m_format, VK_IMAGE_ASPECT_COLOR_BIT);
-        m_sample_count = samples;
-
-        ASSERT(m_format == format);
+        m_sample_count = sample_count;
 }
 
 VkImage ColorAttachment::image() const

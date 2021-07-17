@@ -337,9 +337,11 @@ void Impl::create_buffers(
         VkSampleCountFlagBits sample_count,
         const std::vector<uint32_t>& family_indices)
 {
+        const std::vector<VkFormat> color_format = {m_format};
+
         for (unsigned i = 0; i < buffer_count; ++i)
         {
-                m_color_attachments.emplace_back(device, family_indices, m_format, sample_count, m_width, m_height);
+                m_color_attachments.emplace_back(device, family_indices, color_format, sample_count, m_width, m_height);
                 m_color_attachment_image_views.push_back(m_color_attachments.back().image_view());
 
                 std::vector<VkFormat> depth_formats;

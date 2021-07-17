@@ -224,8 +224,8 @@ Impl::Impl(
                 }
                 m_depth_attachments.emplace_back(
                         m_device, attachment_family_indices, depth_formats, SAMPLE_COUNT, width, height,
-                        VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT | VK_IMAGE_USAGE_SAMPLED_BIT, graphics_command_pool,
-                        graphics_queue, IMAGE_LAYOUT);
+                        VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT | VK_IMAGE_USAGE_SAMPLED_BIT, IMAGE_LAYOUT,
+                        graphics_command_pool, graphics_queue);
         }
 
         VkFormat depth_format = m_depth_attachments[0].format();

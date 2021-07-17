@@ -184,9 +184,9 @@ class Impl final : public Compute
                 for (const vec2i& s : sizes)
                 {
                         images.emplace_back(
-                                m_device, m_compute_command_pool, m_compute_queue, family_indices, formats,
-                                VK_SAMPLE_COUNT_1_BIT, VK_IMAGE_TYPE_2D, vulkan::make_extent(s[0], s[1]),
-                                VK_IMAGE_LAYOUT_GENERAL, usage);
+                                m_device, family_indices, formats, VK_SAMPLE_COUNT_1_BIT, VK_IMAGE_TYPE_2D,
+                                vulkan::make_extent(s[0], s[1]), usage, VK_IMAGE_LAYOUT_GENERAL, m_compute_command_pool,
+                                m_compute_queue);
                 }
 
                 return images;
