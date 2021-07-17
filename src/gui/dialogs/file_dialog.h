@@ -34,6 +34,12 @@ struct FileFilter
         const std::vector<FileFilter>& filters,
         bool read_only);
 
+[[nodiscard]] std::optional<std::string> save_file(
+        const std::string& caption,
+        const std::string& file_name,
+        const std::vector<FileFilter>& filters,
+        bool read_only);
+
 [[nodiscard]] std::optional<std::string> open_file(
         const std::string& caption,
         const std::vector<FileFilter>& filters,

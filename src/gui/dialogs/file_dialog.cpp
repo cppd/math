@@ -155,9 +155,12 @@ void check_filter(const FileFilter& filter)
                 }
         }
 }
-}
 
-std::optional<std::string> save_file(const std::string& caption, const std::vector<FileFilter>& filters, bool read_only)
+std::optional<std::string> save_file(
+        const std::string& caption,
+        const std::string* file_name,
+        const std::vector<FileFilter>& filters,
+        bool read_only)
 {
         std::map<QString, QString> map;
         std::vector<QString> dialog_filters;
@@ -189,8 +192,27 @@ std::optional<std::string> save_file(const std::string& caption, const std::vect
         w->setOptions(make_options(read_only));
         w->setAcceptMode(QFileDialog::AcceptSave);
         w->setFileMode(QFileDialog::AnyFile);
+        if (file_name)
+        {
+                w->selectFile(QString::fromStdString(*file_name));
+        }
 
         return exec_dialog_for_single_file(&w);
+}
+}
+
+std::optional<std::string> save_file(const std::string& caption, const std::vector<FileFilter>& filters, bool read_only)
+{
+        return save_file(caption, nullptr, filters, read_only);
+}
+
+std::optional<std::string> save_file(
+        const std::string& caption,
+        const std::string& file_name,
+        const std::vector<FileFilter>& filters,
+        bool read_only)
+{
+        return save_file(caption, &file_name, filters, read_only);
 }
 
 std::optional<std::string> open_file(const std::string& caption, const std::vector<FileFilter>& filters, bool read_only)
