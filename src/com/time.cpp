@@ -15,30 +15,17 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#pragma once
+#include "time.h"
 
-#include <chrono>
-#include <ctime>
+#include <mutex>
 
 namespace ns
 {
-using TimePoint = std::chrono::steady_clock::time_point;
-using TimeDuration = std::chrono::steady_clock::duration;
-
-inline TimePoint time() noexcept
+std::tm time_to_local_time(const std::chrono::system_clock::time_point& time)
 {
-        return std::chrono::steady_clock::now();
+        const std::time_t t = std::chrono::system_clock::to_time_t(time);
+        static std::mutex mutex;
+        std::lock_guard lg(mutex);
+        return *std::localtime(&t);
 }
-
-inline double duration_from(const TimePoint& t) noexcept
-{
-        return std::chrono::duration<double>(std::chrono::steady_clock::now() - t).count();
-}
-
-inline double duration(const TimePoint& t1, const TimePoint& t2) noexcept
-{
-        return std::chrono::duration<double>(t2 - t1).count();
-}
-
-std::tm time_to_local_time(const std::chrono::system_clock::time_point& time);
 }
