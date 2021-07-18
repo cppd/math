@@ -24,13 +24,13 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "sync.h"
 
 #include <src/com/alg.h>
-#include <src/com/error.h>
 #include <src/com/print.h>
 #include <src/image/conversion.h>
 #include <src/image/swap.h>
 
-#include <cstring>
+#include <algorithm>
 #include <sstream>
+#include <unordered_set>
 
 namespace ns::vulkan
 {
@@ -332,7 +332,7 @@ void cmd_copy_image_to_buffer(
 }
 
 void cmd_transition_texture_layout(
-        const VkImageAspectFlags& aspect_mask,
+        const VkImageAspectFlags& aspect_flags,
         const VkCommandBuffer& command_buffer,
         const VkImage& image,
         const VkImageLayout& old_layout,
@@ -355,7 +355,7 @@ void cmd_transition_texture_layout(
 
         barrier.image = image;
 
-        barrier.subresourceRange.aspectMask = aspect_mask;
+        barrier.subresourceRange.aspectMask = aspect_flags;
         barrier.subresourceRange.baseMipLevel = 0;
         barrier.subresourceRange.levelCount = 1;
         barrier.subresourceRange.baseArrayLayer = 0;
@@ -548,7 +548,8 @@ void staging_image_read(
         copy_device_to_host(staging_device_memory, 0, size, data_pointer(data));
 }
 
-void transition_texture_layout_color(
+void transition_texture_layout(
+        const VkImageAspectFlags& aspect_flags,
         const VkDevice& device,
         const VkCommandPool& command_pool,
         const VkQueue& queue,
@@ -564,28 +565,7 @@ void transition_texture_layout_color(
         CommandBuffer command_buffer(device, command_pool);
         begin_commands(command_buffer);
 
-        cmd_transition_texture_layout(VK_IMAGE_ASPECT_COLOR_BIT, command_buffer, image, old_layout, new_layout);
-
-        end_commands(queue, command_buffer);
-}
-
-void transition_texture_layout_depth(
-        const VkDevice& device,
-        const VkCommandPool& command_pool,
-        const VkQueue& queue,
-        const VkImage& image,
-        const VkImageLayout& old_layout,
-        const VkImageLayout& new_layout)
-{
-        if (old_layout == new_layout)
-        {
-                return;
-        }
-
-        CommandBuffer command_buffer(device, command_pool);
-        begin_commands(command_buffer);
-
-        cmd_transition_texture_layout(VK_IMAGE_ASPECT_DEPTH_BIT, command_buffer, image, old_layout, new_layout);
+        cmd_transition_texture_layout(aspect_flags, command_buffer, image, old_layout, new_layout);
 
         end_commands(queue, command_buffer);
 }
@@ -824,7 +804,7 @@ void read_pixels_from_image(
         }
 }
 
-VkFormatFeatureFlags format_features_for_image_usage(VkImageUsageFlags usage, const bool depth)
+VkFormatFeatureFlags format_features_for_image_usage(VkImageUsageFlags usage)
 {
         VkFormatFeatureFlags features = 0;
         if ((usage & VK_IMAGE_USAGE_TRANSFER_SRC_BIT) == VK_IMAGE_USAGE_TRANSFER_SRC_BIT)
@@ -849,10 +829,6 @@ VkFormatFeatureFlags format_features_for_image_usage(VkImageUsageFlags usage, co
         }
         if ((usage & VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT) == VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT)
         {
-                if (depth)
-                {
-                        error("Usage VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT for depth image");
-                }
                 features |= VK_FORMAT_FEATURE_COLOR_ATTACHMENT_BIT;
                 usage &= ~VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT;
         }
@@ -868,16 +844,6 @@ VkFormatFeatureFlags format_features_for_image_usage(VkImageUsageFlags usage, co
                 error(oss.str());
         }
         return features;
-}
-
-VkFormatFeatureFlags format_features_for_color_image_usage(const VkImageUsageFlags& usage)
-{
-        return format_features_for_image_usage(usage, false /*depth*/);
-}
-
-VkFormatFeatureFlags format_features_for_depth_image_usage(const VkImageUsageFlags& usage)
-{
-        return format_features_for_image_usage(usage, true /*depth*/);
 }
 
 template <typename T>
@@ -920,17 +886,32 @@ void check_depth_formats(const std::vector<VkFormat>& formats)
                 }
         }
 }
+
+void check_family_index(
+        const CommandPool& command_pool,
+        const Queue& queue,
+        const std::vector<uint32_t>& family_indices)
+{
+        if (command_pool.family_index() != queue.family_index())
+        {
+                error("Command pool family index is not equal to queue family index");
+        }
+        if (!std::binary_search(family_indices.cbegin(), family_indices.cend(), queue.family_index()))
+        {
+                error("Queue family index is not found in the family indices");
+        }
+}
 }
 
 BufferWithMemory::BufferWithMemory(
         BufferMemoryType memory_type,
         const Device& device,
         const std::vector<uint32_t>& family_indices,
-        VkBufferUsageFlags usage,
-        VkDeviceSize size)
+        const VkBufferUsageFlags usage,
+        const VkDeviceSize size)
         : m_device(device),
           m_physical_device(device.physical_device()),
-          m_family_indices(family_indices.cbegin(), family_indices.cend()),
+          m_family_indices(sort_and_unique(family_indices)),
           m_buffer(create_buffer(device, size, usage, family_indices)),
           m_memory_properties(
                   memory_type == BufferMemoryType::HostVisible
@@ -944,9 +925,9 @@ BufferWithMemory::BufferWithMemory(
 void BufferWithMemory::write(
         const CommandPool& command_pool,
         const Queue& queue,
-        VkDeviceSize offset,
-        VkDeviceSize size,
-        const void* data) const
+        const VkDeviceSize offset,
+        const VkDeviceSize size,
+        const void* const data) const
 {
         if (offset + size > m_buffer.size())
         {
@@ -955,20 +936,16 @@ void BufferWithMemory::write(
 
         ASSERT(data && !host_visible() && has_usage(VK_BUFFER_USAGE_TRANSFER_DST_BIT));
 
-        if (command_pool.family_index() != queue.family_index())
-        {
-                error("Buffer command pool family index is not equal to queue family index");
-        }
-        if (m_family_indices.count(queue.family_index()) == 0)
-        {
-                error("Queue family index not found in buffer family indices");
-        }
+        check_family_index(command_pool, queue, m_family_indices);
 
         staging_buffer_write(m_device, m_physical_device, command_pool, queue, m_buffer, offset, size, data);
 }
 
-void BufferWithMemory::write(const CommandPool& command_pool, const Queue& queue, VkDeviceSize size, const void* data)
-        const
+void BufferWithMemory::write(
+        const CommandPool& command_pool,
+        const Queue& queue,
+        const VkDeviceSize size,
+        const void* const data) const
 {
         if (m_buffer.size() != size)
         {
@@ -1010,7 +987,7 @@ bool BufferWithMemory::host_visible() const
 
 //
 
-BufferMapper::BufferMapper(const BufferWithMemory& buffer, unsigned long long offset, unsigned long long size)
+BufferMapper::BufferMapper(const BufferWithMemory& buffer, const VkDeviceSize offset, const VkDeviceSize size)
         : m_device(buffer.m_device_memory.device()), m_device_memory(buffer.m_device_memory), m_size(size)
 {
         ASSERT(buffer.host_visible());
@@ -1047,17 +1024,17 @@ ImageWithMemory::ImageWithMemory(
         const Device& device,
         const std::vector<uint32_t>& family_indices,
         const std::vector<VkFormat>& format_candidates,
-        VkSampleCountFlagBits sample_count,
-        VkImageType type,
-        VkExtent3D extent,
-        VkImageUsageFlags usage,
-        VkImageLayout layout,
+        const VkSampleCountFlagBits sample_count,
+        const VkImageType type,
+        const VkExtent3D extent,
+        const VkImageUsageFlags usage,
+        const VkImageLayout layout,
         const CommandPool& command_pool,
         const Queue& queue)
         : m_extent(correct_image_extent(type, extent)),
           m_device(device),
           m_physical_device(device.physical_device()),
-          m_family_indices(family_indices.cbegin(), family_indices.cend()),
+          m_family_indices(sort_and_unique(family_indices)),
           m_type(type),
           m_sample_count(sample_count),
           m_usage(usage),
@@ -1066,7 +1043,7 @@ ImageWithMemory::ImageWithMemory(
                   format_candidates,
                   m_type,
                   VK_IMAGE_TILING_OPTIMAL,
-                  format_features_for_color_image_usage(m_usage),
+                  format_features_for_image_usage(m_usage),
                   m_usage,
                   m_sample_count)),
           m_image(create_image(
@@ -1085,36 +1062,25 @@ ImageWithMemory::ImageWithMemory(
 {
         if (layout != VK_IMAGE_LAYOUT_UNDEFINED)
         {
-                check_family_index(command_pool, queue);
+                check_family_index(command_pool, queue, m_family_indices);
 
-                transition_texture_layout_color(
-                        device, command_pool, queue, m_image, VK_IMAGE_LAYOUT_UNDEFINED, layout);
-        }
-}
-
-void ImageWithMemory::check_family_index(const CommandPool& command_pool, const Queue& queue) const
-{
-        if (command_pool.family_index() != queue.family_index())
-        {
-                error("Command pool family index is not equal to queue family index");
-        }
-        if (m_family_indices.count(queue.family_index()) == 0)
-        {
-                error("Queue family index is not found in the image family indices");
+                transition_texture_layout(
+                        VK_IMAGE_ASPECT_COLOR_BIT, device, command_pool, queue, m_image, VK_IMAGE_LAYOUT_UNDEFINED,
+                        layout);
         }
 }
 
 void ImageWithMemory::write_pixels(
         const CommandPool& command_pool,
         const Queue& queue,
-        VkImageLayout old_layout,
-        VkImageLayout new_layout,
-        image::ColorFormat color_format,
+        const VkImageLayout old_layout,
+        const VkImageLayout new_layout,
+        const image::ColorFormat color_format,
         const std::span<const std::byte>& pixels) const
 {
         ASSERT((m_usage & VK_IMAGE_USAGE_TRANSFER_DST_BIT) == VK_IMAGE_USAGE_TRANSFER_DST_BIT);
 
-        check_family_index(command_pool, queue);
+        check_family_index(command_pool, queue, m_family_indices);
 
         check_pixel_buffer_size(pixels, color_format, m_extent);
 
@@ -1126,14 +1092,14 @@ void ImageWithMemory::write_pixels(
 void ImageWithMemory::read_pixels(
         const CommandPool& command_pool,
         const Queue& queue,
-        VkImageLayout old_layout,
-        VkImageLayout new_layout,
-        image::ColorFormat* color_format,
-        std::vector<std::byte>* pixels) const
+        const VkImageLayout old_layout,
+        const VkImageLayout new_layout,
+        image::ColorFormat* const color_format,
+        std::vector<std::byte>* const pixels) const
 {
         ASSERT((m_usage & VK_IMAGE_USAGE_TRANSFER_SRC_BIT) == VK_IMAGE_USAGE_TRANSFER_SRC_BIT);
 
-        check_family_index(command_pool, queue);
+        check_family_index(command_pool, queue, m_family_indices);
 
         read_pixels_from_image(
                 m_image, m_format, m_extent, old_layout, new_layout, m_device, m_physical_device, command_pool, queue,
@@ -1160,7 +1126,7 @@ VkImageView ImageWithMemory::image_view() const
         return m_image_view;
 }
 
-bool ImageWithMemory::has_usage(VkImageUsageFlags usage) const
+bool ImageWithMemory::has_usage(const VkImageUsageFlags usage) const
 {
         return (m_usage & usage) == usage;
 }
@@ -1170,12 +1136,12 @@ VkSampleCountFlagBits ImageWithMemory::sample_count() const
         return m_sample_count;
 }
 
-unsigned ImageWithMemory::width() const
+uint32_t ImageWithMemory::width() const
 {
         return m_extent.width;
 }
 
-unsigned ImageWithMemory::height() const
+uint32_t ImageWithMemory::height() const
 {
         if (m_type == VK_IMAGE_TYPE_1D)
         {
@@ -1184,7 +1150,7 @@ unsigned ImageWithMemory::height() const
         return m_extent.height;
 }
 
-unsigned ImageWithMemory::depth() const
+uint32_t ImageWithMemory::depth() const
 {
         if (m_type != VK_IMAGE_TYPE_3D)
         {
@@ -1204,10 +1170,10 @@ DepthImageWithMemory::DepthImageWithMemory(
         const Device& device,
         const std::vector<uint32_t>& family_indices,
         const std::vector<VkFormat>& formats,
-        VkSampleCountFlagBits sample_count,
-        uint32_t width,
-        uint32_t height,
-        VkImageUsageFlags usage)
+        const VkSampleCountFlagBits sample_count,
+        const uint32_t width,
+        const uint32_t height,
+        const VkImageUsageFlags usage)
 {
         if (width <= 0 || height <= 0)
         {
@@ -1218,10 +1184,15 @@ DepthImageWithMemory::DepthImageWithMemory(
 
         constexpr VkImageTiling TILING = VK_IMAGE_TILING_OPTIMAL;
 
+        if ((usage & VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT) == VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT)
+        {
+                error("Usage VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT for depth image");
+        }
         m_usage = usage;
+
         m_format = find_supported_image_format(
-                device.physical_device(), formats, VK_IMAGE_TYPE_2D, TILING,
-                format_features_for_depth_image_usage(m_usage), m_usage, sample_count);
+                device.physical_device(), formats, VK_IMAGE_TYPE_2D, TILING, format_features_for_image_usage(m_usage),
+                m_usage, sample_count);
 
         const VkExtent3D max_extent =
                 max_image_extent(device.physical_device(), m_format, VK_IMAGE_TYPE_2D, TILING, m_usage);
@@ -1241,19 +1212,20 @@ DepthImageWithMemory::DepthImageWithMemory(
         const Device& device,
         const std::vector<uint32_t>& family_indices,
         const std::vector<VkFormat>& formats,
-        VkSampleCountFlagBits sample_count,
-        uint32_t width,
-        uint32_t height,
-        VkImageUsageFlags usage,
-        VkImageLayout layout,
-        VkCommandPool command_pool,
-        VkQueue queue)
+        const VkSampleCountFlagBits sample_count,
+        const uint32_t width,
+        const uint32_t height,
+        const VkImageUsageFlags usage,
+        const VkImageLayout layout,
+        const VkCommandPool command_pool,
+        const VkQueue queue)
         : DepthImageWithMemory(device, family_indices, formats, sample_count, width, height, usage)
 {
         if (layout != VK_IMAGE_LAYOUT_UNDEFINED)
         {
-                transition_texture_layout_depth(
-                        device, command_pool, queue, m_image, VK_IMAGE_LAYOUT_UNDEFINED, layout);
+                transition_texture_layout(
+                        VK_IMAGE_ASPECT_DEPTH_BIT, device, command_pool, queue, m_image, VK_IMAGE_LAYOUT_UNDEFINED,
+                        layout);
         }
 }
 
@@ -1282,12 +1254,12 @@ VkSampleCountFlagBits DepthImageWithMemory::sample_count() const
         return m_sample_count;
 }
 
-unsigned DepthImageWithMemory::width() const
+uint32_t DepthImageWithMemory::width() const
 {
         return m_width;
 }
 
-unsigned DepthImageWithMemory::height() const
+uint32_t DepthImageWithMemory::height() const
 {
         return m_height;
 }
@@ -1298,16 +1270,16 @@ ColorAttachment::ColorAttachment(
         const Device& device,
         const std::vector<uint32_t>& family_indices,
         const std::vector<VkFormat>& format_candidates,
-        VkSampleCountFlagBits sample_count,
-        uint32_t width,
-        uint32_t height)
+        const VkSampleCountFlagBits sample_count,
+        const uint32_t width,
+        const uint32_t height)
 {
         constexpr VkImageTiling tiling = VK_IMAGE_TILING_OPTIMAL;
         constexpr VkImageUsageFlags usage = VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT | VK_IMAGE_USAGE_TRANSFER_SRC_BIT;
 
         m_format = find_supported_image_format(
                 device.physical_device(), format_candidates, VK_IMAGE_TYPE_2D, tiling,
-                format_features_for_color_image_usage(usage), usage, sample_count);
+                format_features_for_image_usage(usage), usage, sample_count);
         m_image = create_image(
                 device, device.physical_device(), VK_IMAGE_TYPE_2D, make_extent(width, height), m_format,
                 family_indices, sample_count, tiling, usage);
