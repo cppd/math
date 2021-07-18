@@ -193,6 +193,15 @@ public:
                 VkSampleCountFlagBits sample_count,
                 VkImageType type,
                 VkExtent3D extent,
+                VkImageUsageFlags usage);
+
+        ImageWithMemory(
+                const Device& device,
+                const std::vector<uint32_t>& family_indices,
+                const std::vector<VkFormat>& format_candidates,
+                VkSampleCountFlagBits sample_count,
+                VkImageType type,
+                VkExtent3D extent,
                 VkImageUsageFlags usage,
                 VkImageLayout layout,
                 const CommandPool& command_pool,
@@ -255,6 +264,7 @@ public:
                 uint32_t width,
                 uint32_t height,
                 VkImageUsageFlags usage);
+
         DepthImageWithMemory(
                 const Device& device,
                 const std::vector<uint32_t>& family_indices,
@@ -284,37 +294,5 @@ public:
 
         uint32_t width() const;
         uint32_t height() const;
-};
-
-class ColorAttachment final
-{
-        VkFormat m_format;
-        Image m_image;
-        DeviceMemory m_device_memory;
-        ImageView m_image_view;
-        VkSampleCountFlagBits m_sample_count;
-
-public:
-        ColorAttachment(
-                const Device& device,
-                const std::vector<uint32_t>& family_indices,
-                const std::vector<VkFormat>& format_candidates,
-                VkSampleCountFlagBits sample_count,
-                uint32_t width,
-                uint32_t height);
-
-        ColorAttachment(const ColorAttachment&) = delete;
-        ColorAttachment& operator=(const ColorAttachment&) = delete;
-        ColorAttachment& operator=(ColorAttachment&&) = delete;
-
-        ColorAttachment(ColorAttachment&&) = default;
-        ~ColorAttachment() = default;
-
-        //
-
-        VkImage image() const;
-        VkFormat format() const;
-        VkImageView image_view() const;
-        VkSampleCountFlagBits sample_count() const;
 };
 }

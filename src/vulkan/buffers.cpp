@@ -36,6 +36,21 @@ namespace ns::vulkan
 {
 namespace
 {
+const std::unordered_set<VkFormat>& depth_format_set()
+{
+        // clang-format off
+        static const std::unordered_set<VkFormat> formats
+        {
+                VK_FORMAT_D16_UNORM,
+                VK_FORMAT_D32_SFLOAT,
+                VK_FORMAT_D16_UNORM_S8_UINT,
+                VK_FORMAT_D24_UNORM_S8_UINT,
+                VK_FORMAT_D32_SFLOAT_S8_UINT
+        };
+        // clang-format on
+        return formats;
+}
+
 Buffer create_buffer(
         const VkDevice& device,
         const VkDeviceSize& size,
@@ -871,22 +886,6 @@ std::string formats_to_sorted_string(const T& formats, const std::string_view& s
         return s;
 }
 
-void check_depth_formats(const std::vector<VkFormat>& formats)
-{
-        const std::unordered_set<VkFormat> depth_formats{
-                VK_FORMAT_D16_UNORM, VK_FORMAT_D32_SFLOAT, VK_FORMAT_D16_UNORM_S8_UINT, VK_FORMAT_D24_UNORM_S8_UINT,
-                VK_FORMAT_D32_SFLOAT_S8_UINT};
-
-        for (VkFormat format : formats)
-        {
-                if (!depth_formats.contains(format))
-                {
-                        error("Not depth format " + format_to_string(format) + ", depth formats "
-                              + formats_to_sorted_string(depth_formats, ", "));
-                }
-        }
-}
-
 void check_family_index(
         const CommandPool& command_pool,
         const Queue& queue,
@@ -1027,10 +1026,7 @@ ImageWithMemory::ImageWithMemory(
         const VkSampleCountFlagBits sample_count,
         const VkImageType type,
         const VkExtent3D extent,
-        const VkImageUsageFlags usage,
-        const VkImageLayout layout,
-        const CommandPool& command_pool,
-        const Queue& queue)
+        const VkImageUsageFlags usage)
         : m_extent(correct_image_extent(type, extent)),
           m_device(device),
           m_physical_device(device.physical_device()),
@@ -1059,6 +1055,31 @@ ImageWithMemory::ImageWithMemory(
           m_device_memory(
                   create_device_memory(m_device, m_physical_device, m_image, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT)),
           m_image_view(create_image_view(m_device, m_image, m_type, m_format, VK_IMAGE_ASPECT_COLOR_BIT))
+{
+        if (!std::none_of(
+                    format_candidates.cbegin(), format_candidates.cend(),
+                    [set = &depth_format_set()](const VkFormat& format)
+                    {
+                            return set->contains(format);
+                    }))
+        {
+                error("Depth format found\nformats " + formats_to_sorted_string(format_candidates, ", ")
+                      + "\ndepth formats " + formats_to_sorted_string(depth_format_set(), ", "));
+        }
+}
+
+ImageWithMemory::ImageWithMemory(
+        const Device& device,
+        const std::vector<uint32_t>& family_indices,
+        const std::vector<VkFormat>& format_candidates,
+        const VkSampleCountFlagBits sample_count,
+        const VkImageType type,
+        const VkExtent3D extent,
+        const VkImageUsageFlags usage,
+        const VkImageLayout layout,
+        const CommandPool& command_pool,
+        const Queue& queue)
+        : ImageWithMemory(device, family_indices, format_candidates, sample_count, type, extent, usage)
 {
         if (layout != VK_IMAGE_LAYOUT_UNDEFINED)
         {
@@ -1180,7 +1201,16 @@ DepthImageWithMemory::DepthImageWithMemory(
                 error("Depth attachment size error");
         }
 
-        check_depth_formats(formats);
+        if (!std::all_of(
+                    formats.cbegin(), formats.cend(),
+                    [set = &depth_format_set()](const VkFormat& format)
+                    {
+                            return set->contains(format);
+                    }))
+        {
+                error("Not only depth formats\nformats " + formats_to_sorted_string(formats, ", ") + "\ndepth formats "
+                      + formats_to_sorted_string(depth_format_set(), ", "));
+        }
 
         constexpr VkImageTiling TILING = VK_IMAGE_TILING_OPTIMAL;
 
@@ -1262,50 +1292,5 @@ uint32_t DepthImageWithMemory::width() const
 uint32_t DepthImageWithMemory::height() const
 {
         return m_height;
-}
-
-//
-
-ColorAttachment::ColorAttachment(
-        const Device& device,
-        const std::vector<uint32_t>& family_indices,
-        const std::vector<VkFormat>& format_candidates,
-        const VkSampleCountFlagBits sample_count,
-        const uint32_t width,
-        const uint32_t height)
-{
-        constexpr VkImageTiling tiling = VK_IMAGE_TILING_OPTIMAL;
-        constexpr VkImageUsageFlags usage = VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT | VK_IMAGE_USAGE_TRANSFER_SRC_BIT;
-
-        m_format = find_supported_image_format(
-                device.physical_device(), format_candidates, VK_IMAGE_TYPE_2D, tiling,
-                format_features_for_image_usage(usage), usage, sample_count);
-        m_image = create_image(
-                device, device.physical_device(), VK_IMAGE_TYPE_2D, make_extent(width, height), m_format,
-                family_indices, sample_count, tiling, usage);
-        m_device_memory =
-                create_device_memory(device, device.physical_device(), m_image, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT);
-        m_image_view = create_image_view(device, m_image, VK_IMAGE_TYPE_2D, m_format, VK_IMAGE_ASPECT_COLOR_BIT);
-        m_sample_count = sample_count;
-}
-
-VkImage ColorAttachment::image() const
-{
-        return m_image;
-}
-
-VkFormat ColorAttachment::format() const
-{
-        return m_format;
-}
-
-VkImageView ColorAttachment::image_view() const
-{
-        return m_image_view;
-}
-
-VkSampleCountFlagBits ColorAttachment::sample_count() const
-{
-        return m_sample_count;
 }
 }

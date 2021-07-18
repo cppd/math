@@ -47,10 +47,8 @@ constexpr std::initializer_list<VkFormat> DEPTH_IMAGE_FORMATS =
 // clang-format on
 
 void check_buffers(
-        const std::vector<vulkan::ColorAttachment>& color,
-        const std::vector<vulkan::DepthImageWithMemory>& depth,
-        const unsigned width,
-        const unsigned height)
+        const std::vector<vulkan::ImageWithMemory>& color,
+        const std::vector<vulkan::DepthImageWithMemory>& depth)
 {
         if (depth.empty())
         {
@@ -59,7 +57,7 @@ void check_buffers(
 
         if (!std::all_of(
                     color.cbegin(), color.cend(),
-                    [&](const vulkan::ColorAttachment& c)
+                    [&](const vulkan::ImageWithMemory& c)
                     {
                             return c.sample_count() == color[0].sample_count();
                     }))
@@ -69,7 +67,7 @@ void check_buffers(
 
         if (!std::all_of(
                     color.cbegin(), color.cend(),
-                    [&](const vulkan::ColorAttachment& c)
+                    [&](const vulkan::ImageWithMemory& c)
                     {
                             return c.format() == color[0].format();
                     }))
@@ -99,7 +97,7 @@ void check_buffers(
 
         if (!std::all_of(
                     color.cbegin(), color.cend(),
-                    [&](const vulkan::ColorAttachment& c)
+                    [&](const vulkan::ImageWithMemory& c)
                     {
                             return c.sample_count() == depth[0].sample_count();
                     }))
@@ -121,10 +119,20 @@ void check_buffers(
         }
 
         if (!std::all_of(
+                    color.cbegin(), color.cend(),
+                    [&](const vulkan::ImageWithMemory& d)
+                    {
+                            return d.width() == depth[0].width() && d.height() == depth[0].height();
+                    }))
+        {
+                error("Color attachments size is not equal to the required size");
+        }
+
+        if (!std::all_of(
                     depth.cbegin(), depth.cend(),
                     [&](const vulkan::DepthImageWithMemory& d)
                     {
-                            return d.width() == width && d.height() == height;
+                            return d.width() == depth[0].width() && d.height() == depth[0].height();
                     }))
         {
                 error("Depth attachments size is not equal to the required size");
@@ -132,9 +140,11 @@ void check_buffers(
 }
 
 std::string buffer_info(
-        const std::vector<vulkan::ColorAttachment>& color,
+        const std::vector<vulkan::ImageWithMemory>& color,
         const std::vector<vulkan::DepthImageWithMemory>& depth)
 {
+        check_buffers(color, depth);
+
         std::ostringstream oss;
 
         oss << "Render buffers sample count = "
@@ -229,8 +239,8 @@ class Impl final : public RenderBuffers, public Impl3D, public Impl2D
         const unsigned m_width;
         const unsigned m_height;
 
+        std::vector<vulkan::ImageWithMemory> m_color_attachments;
         std::vector<vulkan::DepthImageWithMemory> m_depth_attachments;
-        std::vector<vulkan::ColorAttachment> m_color_attachments;
 
         std::vector<VkImageView> m_color_attachment_image_views;
 
@@ -326,7 +336,7 @@ Impl::Impl(
 
         create_buffers(device, buffer_count, sample_count, family_indices);
 
-        check_buffers(m_color_attachments, m_depth_attachments, m_width, m_height);
+        check_buffers(m_color_attachments, m_depth_attachments);
 
         LOG(buffer_info(m_color_attachments, m_depth_attachments));
 }
@@ -341,7 +351,10 @@ void Impl::create_buffers(
 
         for (unsigned i = 0; i < buffer_count; ++i)
         {
-                m_color_attachments.emplace_back(device, family_indices, color_format, sample_count, m_width, m_height);
+                m_color_attachments.emplace_back(
+                        device, family_indices, color_format, sample_count, VK_IMAGE_TYPE_2D,
+                        vulkan::make_extent(m_width, m_height),
+                        VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT | VK_IMAGE_USAGE_TRANSFER_SRC_BIT);
                 m_color_attachment_image_views.push_back(m_color_attachments.back().image_view());
 
                 std::vector<VkFormat> depth_formats;
