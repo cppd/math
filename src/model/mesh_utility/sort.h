@@ -91,7 +91,7 @@ void sort_facets_by_material(
         ASSERT(facet_offset->size() == facet_count->size());
         ASSERT(facet_count->size() == mesh.materials.size() + 1);
         ASSERT(sorted_facet_indices->size() == mesh.facets.size());
-        ASSERT(sorted_facet_indices->size() == unique_elements(*sorted_facet_indices).size());
+        ASSERT(sorted_facet_indices->size() == sort_and_unique(*sorted_facet_indices).size());
         ASSERT(std::is_sorted(
                 std::cbegin(*sorted_facet_indices), std::cend(*sorted_facet_indices),
                 [&](int a, int b)

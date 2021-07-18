@@ -23,7 +23,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "type/trait.h"
 
 #include <algorithm>
-#include <type_traits>
 
 namespace ns
 {
@@ -42,11 +41,10 @@ void sort_and_unique(T* v, Less less, Equal equal)
 }
 
 template <typename T>
-std::remove_cvref_t<T> unique_elements(T&& v)
+[[nodiscard]] T sort_and_unique(T v)
 {
-        std::remove_cvref_t<T> res(std::forward<T>(v));
-        sort_and_unique(&res);
-        return res;
+        sort_and_unique(&v);
+        return v;
 }
 
 // Можно вместо этого использовать std::all_of или std::find(v.cbegin(), v.cend(), true) == v.cend()

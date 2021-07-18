@@ -868,7 +868,7 @@ public:
              std::vector<vulkan::DescriptorSetLayoutAndBindings> material_layouts,
              VkSampler texture_sampler)
                 : m_device(device),
-                  m_family_indices(unique_elements(
+                  m_family_indices(sort_and_unique(
                           merge<std::vector<uint32_t>>(graphics_family_indices, transfer_queue.family_index()))),
                   m_transfer_command_pool(transfer_command_pool),
                   m_transfer_queue(transfer_queue),

@@ -99,12 +99,12 @@ std::vector<vulkan::PhysicalDeviceFeatures> view_required_device_features()
 std::unique_ptr<vulkan::VulkanInstance> create_instance(const window::WindowID& window)
 {
         const std::vector<std::string> instance_extensions =
-                unique_elements(window::vulkan_create_surface_required_extensions());
+                sort_and_unique(window::vulkan_create_surface_required_extensions());
 
         const std::vector<std::string> device_extensions = {};
 
         const std::vector<vulkan::PhysicalDeviceFeatures> required_device_features =
-                unique_elements(merge<std::vector<vulkan::PhysicalDeviceFeatures>>(
+                sort_and_unique(merge<std::vector<vulkan::PhysicalDeviceFeatures>>(
                         gpu::convex_hull::View::required_device_features(), gpu::dft::View::required_device_features(),
                         gpu::optical_flow::View::required_device_features(),
                         gpu::pencil_sketch::View::required_device_features(),
