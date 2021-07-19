@@ -384,20 +384,56 @@ void transition_texture_layout(
         const VkCommandPool& command_pool,
         const VkQueue& queue,
         const VkImage& image,
-        const VkImageLayout& old_layout,
-        const VkImageLayout& new_layout)
+        const VkImageLayout& layout)
 {
-        if (old_layout == new_layout)
+        ASSERT(layout != VK_IMAGE_LAYOUT_UNDEFINED);
+
+        VkImageMemoryBarrier barrier = {};
+        barrier.sType = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER;
+
+        barrier.oldLayout = VK_IMAGE_LAYOUT_UNDEFINED;
+        barrier.newLayout = layout;
+
+        barrier.srcQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
+        barrier.dstQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
+
+        barrier.image = image;
+
+        barrier.subresourceRange.aspectMask = aspect_flags;
+        barrier.subresourceRange.baseMipLevel = 0;
+        barrier.subresourceRange.levelCount = 1;
+        barrier.subresourceRange.baseArrayLayer = 0;
+        barrier.subresourceRange.layerCount = 1;
+
+        barrier.srcAccessMask = 0;
+        barrier.dstAccessMask = 0;
+        const VkPipelineStageFlags src_stage = VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT;
+        const VkPipelineStageFlags dst_stage = VK_PIPELINE_STAGE_BOTTOM_OF_PIPE_BIT;
+
+        const CommandBuffer command_buffer(device, command_pool);
+
+        VkCommandBufferBeginInfo command_buffer_info = {};
+        command_buffer_info.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
+        command_buffer_info.flags = VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT;
+
+        VkResult result;
+
+        result = vkBeginCommandBuffer(command_buffer, &command_buffer_info);
+        if (result != VK_SUCCESS)
         {
-                return;
+                vulkan_function_error("vkBeginCommandBuffer", result);
         }
 
-        CommandBuffer command_buffer(device, command_pool);
-        begin_commands(command_buffer);
+        vkCmdPipelineBarrier(command_buffer, src_stage, dst_stage, 0, 0, nullptr, 0, nullptr, 1, &barrier);
 
-        cmd_transition_texture_layout(aspect_flags, command_buffer, image, old_layout, new_layout);
+        result = vkEndCommandBuffer(command_buffer);
+        if (result != VK_SUCCESS)
+        {
+                vulkan_function_error("vkEndCommandBuffer", result);
+        }
 
-        end_commands(queue, command_buffer);
+        queue_submit(command_buffer, queue);
+        queue_wait_idle(queue);
 }
 
 ImageView create_image_view(
@@ -944,9 +980,7 @@ ImageWithMemory::ImageWithMemory(
         {
                 check_family_index(command_pool, queue, m_family_indices);
 
-                transition_texture_layout(
-                        VK_IMAGE_ASPECT_COLOR_BIT, device, command_pool, queue, m_image, VK_IMAGE_LAYOUT_UNDEFINED,
-                        layout);
+                transition_texture_layout(VK_IMAGE_ASPECT_COLOR_BIT, device, command_pool, queue, m_image, layout);
         }
 }
 
@@ -1112,9 +1146,7 @@ DepthImageWithMemory::DepthImageWithMemory(
 {
         if (layout != VK_IMAGE_LAYOUT_UNDEFINED)
         {
-                transition_texture_layout(
-                        VK_IMAGE_ASPECT_DEPTH_BIT, device, command_pool, queue, m_image, VK_IMAGE_LAYOUT_UNDEFINED,
-                        layout);
+                transition_texture_layout(VK_IMAGE_ASPECT_DEPTH_BIT, device, command_pool, queue, m_image, layout);
         }
 }
 
