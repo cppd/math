@@ -17,7 +17,9 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "buffers.h"
 
+#include "create.h"
 #include "error.h"
+#include "memory.h"
 #include "print.h"
 #include "query.h"
 #include "queue.h"
@@ -53,211 +55,22 @@ const std::unordered_set<VkFormat>& depth_format_set()
         return formats;
 }
 
-Buffer create_buffer(
-        const VkDevice& device,
-        const VkDeviceSize& size,
-        const VkBufferUsageFlags& usage,
-        std::vector<uint32_t> family_indices)
-{
-        if (size <= 0)
-        {
-                error("Buffer zero size");
-        }
-
-        if (family_indices.empty())
-        {
-                error("No buffer family indices");
-        }
-
-        sort_and_unique(&family_indices);
-
-        VkBufferCreateInfo create_info = {};
-
-        create_info.sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO;
-        create_info.size = size;
-        create_info.usage = usage;
-
-        if (family_indices.size() > 1)
-        {
-                create_info.sharingMode = VK_SHARING_MODE_CONCURRENT;
-                create_info.queueFamilyIndexCount = family_indices.size();
-                create_info.pQueueFamilyIndices = family_indices.data();
-        }
-        else
-        {
-                create_info.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
-        }
-
-        return Buffer(device, create_info);
-}
-
 VkExtent3D correct_image_extent(const VkImageType& type, const VkExtent3D& extent)
 {
-        if (type == VK_IMAGE_TYPE_1D)
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wswitch-enum"
+        switch (type)
         {
-                VkExtent3D e;
-                e.width = extent.width;
-                e.depth = 1;
-                e.height = 1;
-                return e;
-        }
-        if (type == VK_IMAGE_TYPE_2D)
-        {
-                VkExtent3D e;
-                e.width = extent.width;
-                e.height = extent.height;
-                e.depth = 1;
-                return e;
-        }
-        if (type == VK_IMAGE_TYPE_3D)
-        {
+        case VK_IMAGE_TYPE_1D:
+                return {.width = extent.width, .height = 1, .depth = 1};
+        case VK_IMAGE_TYPE_2D:
+                return {.width = extent.width, .height = extent.height, .depth = 1};
+        case VK_IMAGE_TYPE_3D:
                 return extent;
+        default:
+                error("Unknown image type " + image_type_to_string(type));
         }
-        error("Unknown image type " + image_type_to_string(type));
-}
-
-void check_image_size(
-        const VkPhysicalDevice& physical_device,
-        const VkImageType& type,
-        const VkExtent3D& extent,
-        const VkFormat& format,
-        const VkImageTiling& tiling,
-        const VkImageUsageFlags& usage)
-{
-        if (type == VK_IMAGE_TYPE_1D && (extent.width < 1 || extent.height != 1 || extent.depth != 1))
-        {
-                error("Image 1D size error (" + to_string(extent.width) + ", " + to_string(extent.height) + ", "
-                      + to_string(extent.depth) + ")");
-        }
-        if (type == VK_IMAGE_TYPE_2D && (extent.width < 1 || extent.height < 1 || extent.depth != 1))
-        {
-                error("Image 2D size error (" + to_string(extent.width) + ", " + to_string(extent.height) + ", "
-                      + to_string(extent.depth) + ")");
-        }
-        if (type == VK_IMAGE_TYPE_3D && (extent.width < 1 || extent.height < 1 || extent.depth < 1))
-        {
-                error("Image 3D size error (" + to_string(extent.width) + ", " + to_string(extent.height) + ", "
-                      + to_string(extent.depth) + ")");
-        }
-
-        const VkExtent3D max_extent = max_image_extent(physical_device, format, type, tiling, usage);
-        if (extent.width > max_extent.width)
-        {
-                error("Image " + format_to_string(format) + " extent width " + to_string(extent.width)
-                      + " is out of range [1, " + to_string(max_extent.width) + "]");
-        }
-        if (extent.height > max_extent.height)
-        {
-                error("Image " + format_to_string(format) + " extent height " + to_string(extent.height)
-                      + " is out of range [1, " + to_string(max_extent.height) + "]");
-        }
-        if (extent.depth > max_extent.depth)
-        {
-                error("Image " + format_to_string(format) + " extent depth " + to_string(extent.depth)
-                      + " is out of range [1, " + to_string(max_extent.depth) + "]");
-        }
-}
-
-Image create_image(
-        const VkDevice& device,
-        const VkPhysicalDevice& physical_device,
-        const VkImageType& type,
-        VkExtent3D extent,
-        const VkFormat& format,
-        std::vector<uint32_t> family_indices,
-        const VkSampleCountFlagBits& samples,
-        const VkImageTiling& tiling,
-        const VkImageUsageFlags& usage)
-{
-        extent = correct_image_extent(type, extent);
-
-        check_image_size(physical_device, type, extent, format, tiling, usage);
-
-        if (family_indices.empty())
-        {
-                error("No image family indices");
-        }
-
-        sort_and_unique(&family_indices);
-
-        VkImageCreateInfo create_info = {};
-
-        create_info.sType = VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO;
-        create_info.imageType = type;
-        create_info.extent = extent;
-        create_info.mipLevels = 1;
-        create_info.arrayLayers = 1;
-        create_info.format = format;
-        create_info.tiling = tiling;
-        create_info.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
-        create_info.usage = usage;
-        create_info.samples = samples;
-        // create_info.flags = 0;
-
-        if (family_indices.size() > 1)
-        {
-                create_info.sharingMode = VK_SHARING_MODE_CONCURRENT;
-                create_info.queueFamilyIndexCount = family_indices.size();
-                create_info.pQueueFamilyIndices = family_indices.data();
-        }
-        else
-        {
-                create_info.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
-        }
-
-        return Image(device, create_info);
-}
-
-DeviceMemory create_device_memory(
-        const VkDevice& device,
-        const VkPhysicalDevice& physical_device,
-        const VkBuffer& buffer,
-        const VkMemoryPropertyFlags& properties)
-{
-        VkMemoryRequirements memory_requirements;
-        vkGetBufferMemoryRequirements(device, buffer, &memory_requirements);
-
-        VkMemoryAllocateInfo allocate_info = {};
-        allocate_info.sType = VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO;
-        allocate_info.allocationSize = memory_requirements.size;
-        allocate_info.memoryTypeIndex =
-                physical_device_memory_type_index(physical_device, memory_requirements.memoryTypeBits, properties);
-
-        DeviceMemory device_memory(device, allocate_info);
-
-        VkResult result = vkBindBufferMemory(device, buffer, device_memory, 0);
-        if (result != VK_SUCCESS)
-        {
-                vulkan_function_error("vkBindBufferMemory", result);
-        }
-
-        return device_memory;
-}
-
-DeviceMemory create_device_memory(
-        const VkDevice& device,
-        const VkPhysicalDevice& physical_device,
-        const VkImage& image,
-        const VkMemoryPropertyFlags& properties)
-{
-        VkMemoryRequirements memory_requirements;
-        vkGetImageMemoryRequirements(device, image, &memory_requirements);
-
-        VkMemoryAllocateInfo allocate_info = {};
-        allocate_info.sType = VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO;
-        allocate_info.allocationSize = memory_requirements.size;
-        allocate_info.memoryTypeIndex =
-                physical_device_memory_type_index(physical_device, memory_requirements.memoryTypeBits, properties);
-
-        DeviceMemory device_memory(device, allocate_info);
-
-        VkResult result = vkBindImageMemory(device, image, device_memory, 0);
-        if (result != VK_SUCCESS)
-        {
-                vulkan_function_error("vkBindImageMemory", result);
-        }
-
-        return device_memory;
+#pragma GCC diagnostic pop
 }
 
 void copy_host_to_device(
