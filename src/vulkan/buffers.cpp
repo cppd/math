@@ -42,10 +42,12 @@ const std::unordered_set<VkFormat>& depth_format_set()
         static const std::unordered_set<VkFormat> formats
         {
                 VK_FORMAT_D16_UNORM,
-                VK_FORMAT_D32_SFLOAT,
                 VK_FORMAT_D16_UNORM_S8_UINT,
                 VK_FORMAT_D24_UNORM_S8_UINT,
-                VK_FORMAT_D32_SFLOAT_S8_UINT
+                VK_FORMAT_D32_SFLOAT,
+                VK_FORMAT_D32_SFLOAT_S8_UINT,
+                VK_FORMAT_S8_UINT,
+                VK_FORMAT_X8_D24_UNORM_PACK32
         };
         // clang-format on
         return formats;
@@ -301,6 +303,7 @@ void copy_device_to_host(
 }
 
 void cmd_copy_buffer_to_image(
+        const VkImageAspectFlags& aspect_flag,
         const VkCommandBuffer& command_buffer,
         const VkImage& image,
         const VkBuffer& buffer,
@@ -312,7 +315,7 @@ void cmd_copy_buffer_to_image(
         region.bufferRowLength = 0;
         region.bufferImageHeight = 0;
 
-        region.imageSubresource.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
+        region.imageSubresource.aspectMask = aspect_flag;
         region.imageSubresource.mipLevel = 0;
         region.imageSubresource.baseArrayLayer = 0;
         region.imageSubresource.layerCount = 1;
@@ -324,6 +327,7 @@ void cmd_copy_buffer_to_image(
 }
 
 void cmd_copy_image_to_buffer(
+        const VkImageAspectFlags& aspect_flag,
         const VkCommandBuffer& command_buffer,
         const VkBuffer& buffer,
         const VkImage& image,
@@ -335,7 +339,7 @@ void cmd_copy_image_to_buffer(
         region.bufferRowLength = 0;
         region.bufferImageHeight = 0;
 
-        region.imageSubresource.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
+        region.imageSubresource.aspectMask = aspect_flag;
         region.imageSubresource.mipLevel = 0;
         region.imageSubresource.baseArrayLayer = 0;
         region.imageSubresource.layerCount = 1;
@@ -485,6 +489,7 @@ void staging_image_write(
         const VkImage& image,
         const VkImageLayout& old_image_layout,
         const VkImageLayout& new_image_layout,
+        const VkImageAspectFlags& aspect_flag,
         const VkExtent3D& extent,
         const std::span<const std::byte>& data)
 {
@@ -508,14 +513,12 @@ void staging_image_write(
         begin_commands(command_buffer);
 
         cmd_transition_texture_layout(
-                VK_IMAGE_ASPECT_COLOR_BIT, command_buffer, image, old_image_layout,
-                VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL);
+                aspect_flag, command_buffer, image, old_image_layout, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL);
 
-        cmd_copy_buffer_to_image(command_buffer, image, staging_buffer, extent);
+        cmd_copy_buffer_to_image(aspect_flag, command_buffer, image, staging_buffer, extent);
 
         cmd_transition_texture_layout(
-                VK_IMAGE_ASPECT_COLOR_BIT, command_buffer, image, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL,
-                new_image_layout);
+                aspect_flag, command_buffer, image, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, new_image_layout);
 
         end_commands(queue, command_buffer);
 }
@@ -528,6 +531,7 @@ void staging_image_read(
         const VkImage& image,
         const VkImageLayout& old_image_layout,
         const VkImageLayout& new_image_layout,
+        const VkImageAspectFlags& aspect_flag,
         const VkExtent3D& extent,
         const std::span<std::byte>& data)
 {
@@ -547,14 +551,12 @@ void staging_image_read(
         begin_commands(command_buffer);
 
         cmd_transition_texture_layout(
-                VK_IMAGE_ASPECT_COLOR_BIT, command_buffer, image, old_image_layout,
-                VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL);
+                aspect_flag, command_buffer, image, old_image_layout, VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL);
 
-        cmd_copy_image_to_buffer(command_buffer, staging_buffer, image, extent);
+        cmd_copy_image_to_buffer(aspect_flag, command_buffer, staging_buffer, image, extent);
 
         cmd_transition_texture_layout(
-                VK_IMAGE_ASPECT_COLOR_BIT, command_buffer, image, VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL,
-                new_image_layout);
+                aspect_flag, command_buffer, image, VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL, new_image_layout);
 
         end_commands(queue, command_buffer);
 
@@ -656,6 +658,7 @@ void write_pixels_to_image(
         const VkImage& image,
         const VkFormat& format,
         const VkExtent3D& extent,
+        const VkImageAspectFlags& aspect_flag,
         const VkImageLayout& old_image_layout,
         const VkImageLayout& new_image_layout,
         const VkDevice& device,
@@ -668,14 +671,15 @@ void write_pixels_to_image(
         const auto write = [&](const std::span<const std::byte>& data)
         {
                 staging_image_write(
-                        device, physical_device, command_pool, queue, image, old_image_layout, new_image_layout, extent,
-                        data);
+                        device, physical_device, command_pool, queue, image, old_image_layout, new_image_layout,
+                        aspect_flag, extent, data);
         };
 
         check_pixel_buffer_size(pixels, color_format, extent);
 
         image::ColorFormat required_format;
         bool swap = false;
+        bool color = true;
 
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wswitch-enum"
@@ -716,10 +720,30 @@ void write_pixels_to_image(
         case VK_FORMAT_R32_SFLOAT:
                 required_format = image::ColorFormat::R32;
                 break;
+        case VK_FORMAT_D16_UNORM:
+        case VK_FORMAT_D16_UNORM_S8_UINT:
+                if (aspect_flag != VK_IMAGE_ASPECT_DEPTH_BIT)
+                {
+                        error("Unsupported image aspect " + to_string(aspect_flag) + " for writing");
+                }
+                required_format = image::ColorFormat::R16;
+                color = false;
+                break;
+        case VK_FORMAT_D32_SFLOAT:
+        case VK_FORMAT_D32_SFLOAT_S8_UINT:
+                if (aspect_flag != VK_IMAGE_ASPECT_DEPTH_BIT)
+                {
+                        error("Unsupported image aspect " + to_string(aspect_flag) + " for writing");
+                }
+                required_format = image::ColorFormat::R32;
+                color = false;
+                break;
         default:
                 error("Unsupported image format " + format_to_string(format) + " for writing");
         }
 #pragma GCC diagnostic pop
+
+        ASSERT(!color || aspect_flag == VK_IMAGE_ASPECT_COLOR_BIT);
 
         if (color_format == required_format)
         {
@@ -749,6 +773,7 @@ void read_pixels_from_image(
         const VkImage& image,
         const VkFormat& format,
         const VkExtent3D& extent,
+        const VkImageAspectFlags& aspect_flag,
         const VkImageLayout& old_image_layout,
         const VkImageLayout& new_image_layout,
         const VkDevice& device,
@@ -759,6 +784,7 @@ void read_pixels_from_image(
         std::vector<std::byte>* const pixels)
 {
         bool swap = false;
+        bool color = true;
 
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wswitch-enum"
@@ -799,10 +825,30 @@ void read_pixels_from_image(
         case VK_FORMAT_R32_SFLOAT:
                 *color_format = image::ColorFormat::R32;
                 break;
+        case VK_FORMAT_D16_UNORM:
+        case VK_FORMAT_D16_UNORM_S8_UINT:
+                if (aspect_flag != VK_IMAGE_ASPECT_DEPTH_BIT)
+                {
+                        error("Unsupported image aspect " + to_string(aspect_flag) + " for reading");
+                }
+                *color_format = image::ColorFormat::R16;
+                color = false;
+                break;
+        case VK_FORMAT_D32_SFLOAT:
+        case VK_FORMAT_D32_SFLOAT_S8_UINT:
+                if (aspect_flag != VK_IMAGE_ASPECT_DEPTH_BIT)
+                {
+                        error("Unsupported image aspect " + to_string(aspect_flag) + " for reading");
+                }
+                *color_format = image::ColorFormat::R32;
+                color = false;
+                break;
         default:
                 error("Unsupported image format " + format_to_string(format) + " for reading");
         }
 #pragma GCC diagnostic pop
+
+        ASSERT(!color || aspect_flag == VK_IMAGE_ASPECT_COLOR_BIT);
 
         const std::size_t pixel_size = image::format_pixel_size_in_bytes(*color_format);
         const std::size_t size = pixel_size * extent.width * extent.height * extent.depth;
@@ -810,8 +856,8 @@ void read_pixels_from_image(
         pixels->resize(size);
 
         staging_image_read(
-                device, physical_device, command_pool, queue, image, old_image_layout, new_image_layout, extent,
-                *pixels);
+                device, physical_device, command_pool, queue, image, old_image_layout, new_image_layout, aspect_flag,
+                extent, *pixels);
 
         if (swap)
         {
@@ -1106,8 +1152,8 @@ void ImageWithMemory::write_pixels(
         check_pixel_buffer_size(pixels, color_format, m_extent);
 
         write_pixels_to_image(
-                m_image, m_format, m_extent, old_layout, new_layout, m_device, m_physical_device, command_pool, queue,
-                color_format, pixels);
+                m_image, m_format, m_extent, VK_IMAGE_ASPECT_COLOR_BIT, old_layout, new_layout, m_device,
+                m_physical_device, command_pool, queue, color_format, pixels);
 }
 
 void ImageWithMemory::read_pixels(
@@ -1123,8 +1169,8 @@ void ImageWithMemory::read_pixels(
         check_family_index(command_pool, queue, m_family_indices);
 
         read_pixels_from_image(
-                m_image, m_format, m_extent, old_layout, new_layout, m_device, m_physical_device, command_pool, queue,
-                color_format, pixels);
+                m_image, m_format, m_extent, VK_IMAGE_ASPECT_COLOR_BIT, old_layout, new_layout, m_device,
+                m_physical_device, command_pool, queue, color_format, pixels);
 }
 
 VkImage ImageWithMemory::image() const
