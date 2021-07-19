@@ -244,7 +244,7 @@ Impl::Impl(
                 m_framebuffers_handles.push_back(m_framebuffers.back());
         }
 
-        m_clear_values.push_back(vulkan::depth_stencil_clear_value());
+        m_clear_values.push_back(vulkan::create_depth_stencil_clear_value());
 
         check_buffers(m_depth_attachments);
 

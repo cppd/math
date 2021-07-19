@@ -49,8 +49,8 @@ Framebuffer create_framebuffer(
         uint32_t height,
         const std::vector<VkImageView>& attachments);
 
-VkClearValue color_clear_value(VkFormat format, const Vector<3, float>& rgb);
-VkClearValue depth_stencil_clear_value();
+VkClearValue create_color_clear_value(VkFormat format, const Vector<3, float>& rgb);
+VkClearValue create_depth_stencil_clear_value();
 
 Buffer create_buffer(
         VkDevice device,

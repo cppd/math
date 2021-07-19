@@ -249,7 +249,7 @@ Framebuffer create_framebuffer(
 
 //
 
-VkClearValue color_clear_value(VkFormat format, const Vector<3, float>& rgb)
+VkClearValue create_color_clear_value(VkFormat format, const Vector<3, float>& rgb)
 {
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wswitch-enum"
@@ -287,7 +287,7 @@ VkClearValue color_clear_value(VkFormat format, const Vector<3, float>& rgb)
 #pragma GCC diagnostic pop
 }
 
-VkClearValue depth_stencil_clear_value()
+VkClearValue create_depth_stencil_clear_value()
 {
         VkClearValue clear_value;
         clear_value.depthStencil.depth = 1;

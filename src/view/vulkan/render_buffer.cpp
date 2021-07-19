@@ -442,8 +442,8 @@ const std::vector<VkFramebuffer>& Impl::framebuffers_clear_3d() const
 std::vector<VkClearValue> Impl::clear_values_3d(const Vector<3, float>& rgb) const
 {
         std::vector<VkClearValue> clear_values(2);
-        clear_values[0] = vulkan::color_clear_value(m_format, rgb);
-        clear_values[1] = vulkan::depth_stencil_clear_value();
+        clear_values[0] = vulkan::create_color_clear_value(m_format, rgb);
+        clear_values[1] = vulkan::create_depth_stencil_clear_value();
         return clear_values;
 }
 
