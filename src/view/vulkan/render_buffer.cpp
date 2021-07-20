@@ -17,13 +17,13 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "render_buffer.h"
 
+#include "copy.h"
 #include "render_pass.h"
 
 #include <src/com/error.h>
 #include <src/com/log.h>
 #include <src/vulkan/buffers.h>
 #include <src/vulkan/commands.h>
-#include <src/vulkan/copy.h>
 #include <src/vulkan/create.h>
 #include <src/vulkan/error.h>
 #include <src/vulkan/print.h>
@@ -500,7 +500,7 @@ void Impl::commands_color_resolve(
         ASSERT(index < m_color_attachments.size());
         ASSERT(m_color_attachments[index].sample_count() != VK_SAMPLE_COUNT_1_BIT);
 
-        vulkan::commands_image_resolve(
+        commands_image_resolve(
                 command_buffer, VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT, VK_PIPELINE_STAGE_BOTTOM_OF_PIPE_BIT,
                 VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT, VK_PIPELINE_STAGE_BOTTOM_OF_PIPE_BIT, 0, 0, 0, 0,
                 m_color_attachments[index].image(), COLOR_IMAGE_LAYOUT, image, layout, rectangle);
@@ -516,7 +516,7 @@ void Impl::commands_depth_copy(
         ASSERT(layout == VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
         ASSERT(index < m_depth_attachments.size());
 
-        vulkan::commands_image_copy(
+        commands_image_copy(
                 command_buffer, VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT, VK_PIPELINE_STAGE_EARLY_FRAGMENT_TESTS_BIT,
                 VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT, VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT, 0,
                 VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_READ_BIT | VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_WRITE_BIT, 0,

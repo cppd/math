@@ -21,7 +21,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <vulkan/vulkan.h>
 
-namespace ns::vulkan
+namespace ns::view
 {
 void commands_image_resolve(
         VkCommandBuffer command_buffer,
