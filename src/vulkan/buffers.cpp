@@ -71,6 +71,21 @@ VkExtent3D correct_image_extent(const VkImageType& type, const VkExtent3D& exten
 #pragma GCC diagnostic pop
 }
 
+VkExtent2D max_extent_2d(
+        const uint32_t width,
+        const uint32_t height,
+        const VkPhysicalDevice physical_device,
+        const VkFormat format,
+        const VkImageTiling tiling,
+        const VkImageUsageFlags usage)
+{
+        VkExtent3D extent_3d = max_image_extent(physical_device, format, VK_IMAGE_TYPE_2D, tiling, usage);
+        VkExtent2D result;
+        result.width = std::min(width, extent_3d.width);
+        result.height = std::min(height, extent_3d.height);
+        return result;
+}
+
 void transition_texture_layout(
         const VkImageAspectFlags& aspect_flags,
         const VkDevice& device,
@@ -547,12 +562,31 @@ DepthImageWithMemory::DepthImageWithMemory(
         const uint32_t width,
         const uint32_t height,
         const VkImageUsageFlags usage)
+        : m_usage(usage),
+          m_sample_count(sample_count),
+          m_format(find_supported_image_format(
+                  device.physical_device(),
+                  formats,
+                  VK_IMAGE_TYPE_2D,
+                  VK_IMAGE_TILING_OPTIMAL,
+                  format_features_for_image_usage(m_usage),
+                  m_usage,
+                  sample_count)),
+          m_extent(max_extent_2d(width, height, device.physical_device(), m_format, VK_IMAGE_TILING_OPTIMAL, m_usage)),
+          m_image(create_image(
+                  device,
+                  device.physical_device(),
+                  VK_IMAGE_TYPE_2D,
+                  make_extent(m_extent.width, m_extent.height),
+                  m_format,
+                  family_indices,
+                  sample_count,
+                  VK_IMAGE_TILING_OPTIMAL,
+                  m_usage)),
+          m_device_memory(
+                  create_device_memory(device, device.physical_device(), m_image, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT)),
+          m_image_view(create_image_view(device, m_image, VK_IMAGE_TYPE_2D, m_format, VK_IMAGE_ASPECT_DEPTH_BIT))
 {
-        if (width <= 0 || height <= 0)
-        {
-                error("Depth attachment size error");
-        }
-
         if (!std::all_of(
                     formats.cbegin(), formats.cend(),
                     [set = &depth_format_set()](const VkFormat& format)
@@ -563,31 +597,10 @@ DepthImageWithMemory::DepthImageWithMemory(
                 error("Not only depth formats\nformats " + formats_to_sorted_string(formats, ", ") + "\ndepth formats "
                       + formats_to_sorted_string(depth_format_set(), ", "));
         }
-
-        constexpr VkImageTiling TILING = VK_IMAGE_TILING_OPTIMAL;
-
         if ((usage & VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT) == VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT)
         {
                 error("Usage VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT for depth image");
         }
-        m_usage = usage;
-
-        m_format = find_supported_image_format(
-                device.physical_device(), formats, VK_IMAGE_TYPE_2D, TILING, format_features_for_image_usage(m_usage),
-                m_usage, sample_count);
-
-        const VkExtent3D max_extent =
-                max_image_extent(device.physical_device(), m_format, VK_IMAGE_TYPE_2D, TILING, m_usage);
-        m_width = std::min(width, max_extent.width);
-        m_height = std::min(height, max_extent.height);
-
-        m_image = create_image(
-                device, device.physical_device(), VK_IMAGE_TYPE_2D, make_extent(m_width, m_height), m_format,
-                family_indices, sample_count, TILING, m_usage);
-        m_device_memory =
-                create_device_memory(device, device.physical_device(), m_image, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT);
-        m_image_view = create_image_view(device, m_image, VK_IMAGE_TYPE_2D, m_format, VK_IMAGE_ASPECT_DEPTH_BIT);
-        m_sample_count = sample_count;
 }
 
 DepthImageWithMemory::DepthImageWithMemory(
@@ -636,11 +649,11 @@ VkSampleCountFlagBits DepthImageWithMemory::sample_count() const
 
 uint32_t DepthImageWithMemory::width() const
 {
-        return m_width;
+        return m_extent.width;
 }
 
 uint32_t DepthImageWithMemory::height() const
 {
-        return m_height;
+        return m_extent.height;
 }
 }

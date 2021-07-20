@@ -246,14 +246,13 @@ public:
 
 class DepthImageWithMemory final
 {
+        VkImageUsageFlags m_usage;
+        VkSampleCountFlagBits m_sample_count;
         VkFormat m_format;
+        VkExtent2D m_extent;
         Image m_image;
         DeviceMemory m_device_memory;
         ImageView m_image_view;
-        VkSampleCountFlagBits m_sample_count;
-        uint32_t m_width;
-        uint32_t m_height;
-        VkImageUsageFlags m_usage;
 
 public:
         DepthImageWithMemory(
