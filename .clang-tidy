@@ -32,6 +32,7 @@ hicpp-*,
 
 misc-*,
 -misc-no-recursion,
+-misc-misplaced-const,
 
 modernize-*,
 -modernize-use-auto,
