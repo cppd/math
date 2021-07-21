@@ -27,9 +27,9 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "sync.h"
 
 #include <src/com/alg.h>
+#include <src/com/print.h>
 
 #include <algorithm>
-#include <sstream>
 #include <unordered_set>
 
 namespace ns::vulkan
@@ -46,8 +46,18 @@ const std::unordered_set<VkFormat>& depth_format_set()
                 VK_FORMAT_D24_UNORM_S8_UINT,
                 VK_FORMAT_D32_SFLOAT,
                 VK_FORMAT_D32_SFLOAT_S8_UINT,
-                VK_FORMAT_S8_UINT,
                 VK_FORMAT_X8_D24_UNORM_PACK32
+        };
+        // clang-format on
+        return formats;
+}
+
+const std::unordered_set<VkFormat>& stencil_format_set()
+{
+        // clang-format off
+        static const std::unordered_set<VkFormat> formats
+        {
+                VK_FORMAT_S8_UINT
         };
         // clang-format on
         return formats;
@@ -86,7 +96,7 @@ VkExtent2D max_extent_2d(
         return result;
 }
 
-void transition_texture_layout(
+void transition_image_layout(
         const VkImageAspectFlags& aspect_flags,
         const VkDevice& device,
         const VkCommandPool& command_pool,
@@ -225,9 +235,7 @@ VkFormatFeatureFlags format_features_for_image_usage(VkImageUsageFlags usage)
         }
         if (usage != 0)
         {
-                std::ostringstream oss;
-                oss << "Unsupported image usage " << std::hex << usage;
-                error(oss.str());
+                error("Unsupported image usage " + to_string_binary(usage));
         }
         return features;
 }
@@ -429,13 +437,12 @@ ImageWithMemory::ImageWithMemory(
 {
         if (!std::none_of(
                     format_candidates.cbegin(), format_candidates.cend(),
-                    [set = &depth_format_set()](const VkFormat& format)
+                    [depth = &depth_format_set(), stencil = &stencil_format_set()](const VkFormat& format)
                     {
-                            return set->contains(format);
+                            return depth->contains(format) || stencil->contains(format);
                     }))
         {
-                error("Depth format found\nformats " + formats_to_sorted_string(format_candidates, ", ")
-                      + "\ndepth formats " + formats_to_sorted_string(depth_format_set(), ", "));
+                error("Not a color format: " + formats_to_sorted_string(format_candidates, ", "));
         }
 }
 
@@ -456,7 +463,7 @@ ImageWithMemory::ImageWithMemory(
         {
                 check_family_index(command_pool, queue, m_family_indices);
 
-                transition_texture_layout(VK_IMAGE_ASPECT_COLOR_BIT, device, command_pool, queue, m_image, layout);
+                transition_image_layout(VK_IMAGE_ASPECT_COLOR_BIT, device, command_pool, queue, m_image, layout);
         }
 }
 
@@ -589,14 +596,14 @@ DepthImageWithMemory::DepthImageWithMemory(
 {
         if (!std::all_of(
                     formats.cbegin(), formats.cend(),
-                    [set = &depth_format_set()](const VkFormat& format)
+                    [depth = &depth_format_set()](const VkFormat& format)
                     {
-                            return set->contains(format);
+                            return depth->contains(format);
                     }))
         {
-                error("Not only depth formats\nformats " + formats_to_sorted_string(formats, ", ") + "\ndepth formats "
-                      + formats_to_sorted_string(depth_format_set(), ", "));
+                error("Not a depth format: " + formats_to_sorted_string(formats, ", "));
         }
+
         if ((usage & VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT) == VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT)
         {
                 error("Usage VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT for depth image");
@@ -618,7 +625,7 @@ DepthImageWithMemory::DepthImageWithMemory(
 {
         if (layout != VK_IMAGE_LAYOUT_UNDEFINED)
         {
-                transition_texture_layout(VK_IMAGE_ASPECT_DEPTH_BIT, device, command_pool, queue, m_image, layout);
+                transition_image_layout(VK_IMAGE_ASPECT_DEPTH_BIT, device, command_pool, queue, m_image, layout);
         }
 }
 

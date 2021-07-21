@@ -99,7 +99,7 @@ void copy_device_to_host(
         // vkFlushMappedMemoryRanges, vkInvalidateMappedMemoryRanges
 }
 
-void cmd_transition_texture_layout(
+void cmd_transition_image_layout(
         const VkImageAspectFlags& aspect_flags,
         const VkCommandBuffer& command_buffer,
         const VkImage& image,
@@ -275,12 +275,12 @@ void staging_image_write(
         CommandBuffer command_buffer(device, command_pool);
         begin_commands(command_buffer);
 
-        cmd_transition_texture_layout(
+        cmd_transition_image_layout(
                 aspect_flag, command_buffer, image, old_image_layout, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL);
 
         cmd_copy_buffer_to_image(aspect_flag, command_buffer, image, staging_buffer, extent);
 
-        cmd_transition_texture_layout(
+        cmd_transition_image_layout(
                 aspect_flag, command_buffer, image, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, new_image_layout);
 
         end_commands(queue, command_buffer);
@@ -313,12 +313,12 @@ void staging_image_read(
         CommandBuffer command_buffer(device, command_pool);
         begin_commands(command_buffer);
 
-        cmd_transition_texture_layout(
+        cmd_transition_image_layout(
                 aspect_flag, command_buffer, image, old_image_layout, VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL);
 
         cmd_copy_image_to_buffer(aspect_flag, command_buffer, staging_buffer, image, extent);
 
-        cmd_transition_texture_layout(
+        cmd_transition_image_layout(
                 aspect_flag, command_buffer, image, VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL, new_image_layout);
 
         end_commands(queue, command_buffer);
@@ -433,7 +433,7 @@ void write_pixels_to_image(
         case VK_FORMAT_D16_UNORM_S8_UINT:
                 if (aspect_flag != VK_IMAGE_ASPECT_DEPTH_BIT)
                 {
-                        error("Unsupported image aspect " + to_string(aspect_flag) + " for writing");
+                        error("Unsupported image aspect " + to_string_binary(aspect_flag) + " for writing");
                 }
                 required_format = image::ColorFormat::R16;
                 color = false;
@@ -442,7 +442,7 @@ void write_pixels_to_image(
         case VK_FORMAT_D32_SFLOAT_S8_UINT:
                 if (aspect_flag != VK_IMAGE_ASPECT_DEPTH_BIT)
                 {
-                        error("Unsupported image aspect " + to_string(aspect_flag) + " for writing");
+                        error("Unsupported image aspect " + to_string_binary(aspect_flag) + " for writing");
                 }
                 required_format = image::ColorFormat::R32;
                 color = false;
@@ -452,7 +452,10 @@ void write_pixels_to_image(
         }
 #pragma GCC diagnostic pop
 
-        ASSERT(!color || aspect_flag == VK_IMAGE_ASPECT_COLOR_BIT);
+        if (color && aspect_flag != VK_IMAGE_ASPECT_COLOR_BIT)
+        {
+                error("Unsupported image aspect " + to_string_binary(aspect_flag) + " for writing");
+        }
 
         if (color_format == required_format)
         {
@@ -538,7 +541,7 @@ void read_pixels_from_image(
         case VK_FORMAT_D16_UNORM_S8_UINT:
                 if (aspect_flag != VK_IMAGE_ASPECT_DEPTH_BIT)
                 {
-                        error("Unsupported image aspect " + to_string(aspect_flag) + " for reading");
+                        error("Unsupported image aspect " + to_string_binary(aspect_flag) + " for reading");
                 }
                 *color_format = image::ColorFormat::R16;
                 color = false;
@@ -547,7 +550,7 @@ void read_pixels_from_image(
         case VK_FORMAT_D32_SFLOAT_S8_UINT:
                 if (aspect_flag != VK_IMAGE_ASPECT_DEPTH_BIT)
                 {
-                        error("Unsupported image aspect " + to_string(aspect_flag) + " for reading");
+                        error("Unsupported image aspect " + to_string_binary(aspect_flag) + " for reading");
                 }
                 *color_format = image::ColorFormat::R32;
                 color = false;
@@ -557,7 +560,10 @@ void read_pixels_from_image(
         }
 #pragma GCC diagnostic pop
 
-        ASSERT(!color || aspect_flag == VK_IMAGE_ASPECT_COLOR_BIT);
+        if (color && aspect_flag != VK_IMAGE_ASPECT_COLOR_BIT)
+        {
+                error("Unsupported image aspect " + to_string_binary(aspect_flag) + " for reading");
+        }
 
         const std::size_t pixel_size = image::format_pixel_size_in_bytes(*color_format);
         const std::size_t size = pixel_size * extent.width * extent.height * extent.depth;
