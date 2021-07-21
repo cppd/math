@@ -15,22 +15,17 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include "render_buffer.h"
+#include "render_buffers.h"
 
-#include "copy.h"
+#include "buffer_info.h"
+#include "commands.h"
 #include "render_pass.h"
 
 #include <src/com/error.h>
 #include <src/com/log.h>
 #include <src/vulkan/buffers.h>
-#include <src/vulkan/commands.h>
 #include <src/vulkan/create.h>
-#include <src/vulkan/error.h>
-#include <src/vulkan/print.h>
 #include <src/vulkan/query.h>
-
-#include <algorithm>
-#include <sstream>
 
 namespace ns::view
 {
@@ -38,140 +33,6 @@ namespace
 {
 constexpr VkImageLayout COLOR_IMAGE_LAYOUT = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
 constexpr VkImageLayout DEPTH_IMAGE_LAYOUT = VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL;
-
-// clang-format off
-constexpr std::initializer_list<VkFormat> DEPTH_IMAGE_FORMATS =
-{
-        VK_FORMAT_D32_SFLOAT
-};
-// clang-format on
-
-void check_buffers(
-        const std::vector<vulkan::ImageWithMemory>& color,
-        const std::vector<vulkan::DepthImageWithMemory>& depth)
-{
-        if (depth.empty())
-        {
-                error("No depth attachment");
-        }
-
-        if (!std::all_of(
-                    color.cbegin(), color.cend(),
-                    [&](const vulkan::ImageWithMemory& c)
-                    {
-                            return c.sample_count() == color[0].sample_count();
-                    }))
-        {
-                error("Color attachments must have the same sample count");
-        }
-
-        if (!std::all_of(
-                    color.cbegin(), color.cend(),
-                    [&](const vulkan::ImageWithMemory& c)
-                    {
-                            return c.format() == color[0].format();
-                    }))
-        {
-                error("Color attachments must have the same format");
-        }
-
-        if (!std::all_of(
-                    depth.cbegin(), depth.cend(),
-                    [&](const vulkan::DepthImageWithMemory& d)
-                    {
-                            return d.sample_count() == depth[0].sample_count();
-                    }))
-        {
-                error("Depth attachments must have the same sample count");
-        }
-
-        if (!std::all_of(
-                    depth.cbegin(), depth.cend(),
-                    [&](const vulkan::DepthImageWithMemory& d)
-                    {
-                            return d.format() == depth[0].format();
-                    }))
-        {
-                error("Depth attachments must have the same format");
-        }
-
-        if (!std::all_of(
-                    color.cbegin(), color.cend(),
-                    [&](const vulkan::ImageWithMemory& c)
-                    {
-                            return c.sample_count() == depth[0].sample_count();
-                    }))
-        {
-                error("Color attachment sample count is not equal to depth attachment sample count");
-        }
-
-        if (color.empty())
-        {
-                if (!std::all_of(
-                            depth.cbegin(), depth.cend(),
-                            [&](const vulkan::DepthImageWithMemory& d)
-                            {
-                                    return d.sample_count() == VK_SAMPLE_COUNT_1_BIT;
-                            }))
-                {
-                        error("There are no color attachments, but depth attachment sample count is not equal to 1");
-                }
-        }
-
-        if (!std::all_of(
-                    color.cbegin(), color.cend(),
-                    [&](const vulkan::ImageWithMemory& d)
-                    {
-                            return d.width() == depth[0].width() && d.height() == depth[0].height();
-                    }))
-        {
-                error("Color attachments size is not equal to the required size");
-        }
-
-        if (!std::all_of(
-                    depth.cbegin(), depth.cend(),
-                    [&](const vulkan::DepthImageWithMemory& d)
-                    {
-                            return d.width() == depth[0].width() && d.height() == depth[0].height();
-                    }))
-        {
-                error("Depth attachments size is not equal to the required size");
-        }
-}
-
-std::string buffer_info(
-        const std::vector<vulkan::ImageWithMemory>& color,
-        const std::vector<vulkan::DepthImageWithMemory>& depth)
-{
-        check_buffers(color, depth);
-
-        std::ostringstream oss;
-
-        oss << "Render buffers sample count = "
-            << vulkan::integer_sample_count_flag(!color.empty() ? color[0].sample_count() : VK_SAMPLE_COUNT_1_BIT);
-
-        oss << '\n';
-        if (!depth.empty())
-        {
-                oss << "Render buffers depth attachment format = " << vulkan::format_to_string(depth[0].format());
-        }
-        else
-        {
-                oss << "Render buffers do not have depth attachments";
-        }
-
-        oss << '\n';
-        if (!color.empty())
-        {
-                oss << "Render buffers color attachment format = " << vulkan::format_to_string(color[0].format());
-        }
-        else
-        {
-                oss << "Render buffers do not have color attachments";
-        }
-
-        return oss.str();
-}
 
 class Impl3D : public gpu::RenderBuffers3D
 {
@@ -257,6 +118,7 @@ class Impl final : public RenderBuffers, public Impl3D, public Impl2D
 
         void create_buffers(
                 const vulkan::Device& device,
+                const std::span<const VkFormat>& depth_formats,
                 unsigned buffer_count,
                 VkSampleCountFlagBits sample_count,
                 const std::vector<uint32_t>& attachment_family_indices);
@@ -298,7 +160,8 @@ class Impl final : public RenderBuffers, public Impl3D, public Impl2D
 
 public:
         Impl(unsigned buffer_count,
-             VkFormat format,
+             VkFormat color_format,
+             const std::span<const VkFormat>& depth_formats,
              unsigned width,
              unsigned height,
              const std::vector<uint32_t>& family_indices,
@@ -313,13 +176,14 @@ public:
 
 Impl::Impl(
         const unsigned buffer_count,
-        const VkFormat format,
+        const VkFormat color_format,
+        const std::span<const VkFormat>& depth_formats,
         const unsigned width,
         const unsigned height,
         const std::vector<uint32_t>& family_indices,
         const vulkan::Device& device,
         const int required_minimum_sample_count)
-        : m_format(format), m_width(width), m_height(height)
+        : m_format(color_format), m_width(width), m_height(height)
 {
         if (buffer_count < 1)
         {
@@ -331,20 +195,22 @@ Impl::Impl(
                 error("Width " + std::to_string(width) + " and height " + std::to_string(height) + " must be positive");
         }
 
-        const VkSampleCountFlagBits sample_count = vulkan::supported_framebuffer_sample_count_flag(
-                device.physical_device(), required_minimum_sample_count);
+        create_buffers(
+                device, depth_formats, buffer_count,
+                vulkan::supported_framebuffer_sample_count_flag(
+                        device.physical_device(), required_minimum_sample_count),
+                family_indices);
 
-        create_buffers(device, buffer_count, sample_count, family_indices);
+        render_buffer_check(m_color_attachments, m_depth_attachments);
 
-        check_buffers(m_color_attachments, m_depth_attachments);
-
-        LOG(buffer_info(m_color_attachments, m_depth_attachments));
+        LOG(render_buffer_info(m_color_attachments, m_depth_attachments));
 }
 
 void Impl::create_buffers(
         const vulkan::Device& device,
+        const std::span<const VkFormat>& depth_formats,
         const unsigned buffer_count,
-        VkSampleCountFlagBits sample_count,
+        const VkSampleCountFlagBits sample_count,
         const std::vector<uint32_t>& family_indices)
 {
         const std::vector<VkFormat> color_format = {m_format};
@@ -357,17 +223,17 @@ void Impl::create_buffers(
                         VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT | VK_IMAGE_USAGE_TRANSFER_SRC_BIT);
                 m_color_attachment_image_views.push_back(m_color_attachments.back().image_view());
 
-                std::vector<VkFormat> depth_formats;
+                std::vector<VkFormat> formats;
                 if (!m_depth_attachments.empty())
                 {
-                        depth_formats = {m_depth_attachments[0].format()};
+                        formats = {m_depth_attachments[0].format()};
                 }
                 else
                 {
-                        depth_formats = DEPTH_IMAGE_FORMATS;
+                        formats = {depth_formats.begin(), depth_formats.end()};
                 }
                 m_depth_attachments.emplace_back(
-                        device, family_indices, depth_formats, sample_count, m_width, m_height,
+                        device, family_indices, formats, sample_count, m_width, m_height,
                         VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT | VK_IMAGE_USAGE_TRANSFER_SRC_BIT);
         }
 
@@ -527,7 +393,8 @@ void Impl::commands_depth_copy(
 
 std::unique_ptr<RenderBuffers> create_render_buffers(
         const unsigned buffer_count,
-        const VkFormat format,
+        const VkFormat color_format,
+        const std::span<const VkFormat>& depth_formats,
         const unsigned width,
         const unsigned height,
         const std::vector<uint32_t>& family_indices,
@@ -535,6 +402,7 @@ std::unique_ptr<RenderBuffers> create_render_buffers(
         const int required_minimum_sample_count)
 {
         return std::make_unique<Impl>(
-                buffer_count, format, width, height, family_indices, device, required_minimum_sample_count);
+                buffer_count, color_format, depth_formats, width, height, family_indices, device,
+                required_minimum_sample_count);
 }
 }

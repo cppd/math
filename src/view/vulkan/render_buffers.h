@@ -23,6 +23,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/vulkan/objects.h>
 
 #include <memory>
+#include <span>
+#include <vector>
 
 namespace ns::view
 {
@@ -50,7 +52,8 @@ struct RenderBuffers
 
 std::unique_ptr<RenderBuffers> create_render_buffers(
         unsigned buffer_count,
-        VkFormat format,
+        VkFormat color_format,
+        const std::span<const VkFormat>& depth_formats,
         unsigned width,
         unsigned height,
         const std::vector<uint32_t>& family_indices,

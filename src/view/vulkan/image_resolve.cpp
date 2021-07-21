@@ -15,14 +15,14 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include "image.h"
+#include "image_resolve.h"
 
 #include <src/vulkan/error.h>
 #include <src/vulkan/queue.h>
 
 namespace ns::view
 {
-Image::Image(
+ImageResolve::ImageResolve(
         const vulkan::Device& device,
         const vulkan::CommandPool& command_pool,
         const vulkan::Queue& queue,
@@ -72,14 +72,16 @@ Image::Image(
         }
 }
 
-const vulkan::ImageWithMemory& Image::image(const unsigned image_index) const
+const vulkan::ImageWithMemory& ImageResolve::image(const unsigned image_index) const
 {
         ASSERT(image_index < m_images.size());
         return m_images[image_index];
 }
 
-VkSemaphore Image::resolve(const vulkan::Queue& graphics_queue, VkSemaphore wait_semaphore, const unsigned image_index)
-        const
+VkSemaphore ImageResolve::resolve(
+        const vulkan::Queue& graphics_queue,
+        VkSemaphore wait_semaphore,
+        const unsigned image_index) const
 {
         ASSERT(graphics_queue.family_index() == m_family_index);
         ASSERT(image_index < m_command_buffers.count());
@@ -92,7 +94,7 @@ VkSemaphore Image::resolve(const vulkan::Queue& graphics_queue, VkSemaphore wait
         return m_signal_semaphores[image_index];
 }
 
-void Image::resolve(const vulkan::Queue& graphics_queue, const unsigned image_index) const
+void ImageResolve::resolve(const vulkan::Queue& graphics_queue, const unsigned image_index) const
 {
         ASSERT(graphics_queue.family_index() == m_family_index);
         ASSERT(image_index < m_command_buffers.count());

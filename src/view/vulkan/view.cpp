@@ -17,8 +17,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "view.h"
 
-#include "image.h"
-#include "render_buffer.h"
+#include "image_resolve.h"
+#include "render_buffers.h"
 #include "swapchain.h"
 
 #include "../com/camera.h"
@@ -61,6 +61,13 @@ constexpr double FRAME_SIZE_IN_MILLIMETERS = 0.5;
 
 constexpr int PREFERRED_IMAGE_COUNT = 2; // 2 - double buffering, 3 - triple buffering
 constexpr VkSurfaceFormatKHR SURFACE_FORMAT = {VK_FORMAT_B8G8R8A8_SRGB, VK_COLOR_SPACE_SRGB_NONLINEAR_KHR};
+
+// clang-format off
+constexpr std::array DEPTH_FORMATS = std::to_array<VkFormat>
+({
+        VK_FORMAT_D32_SFLOAT
+});
+// clang-format on
 
 constexpr int MINIMUM_SAMPLE_COUNT = 4;
 constexpr bool SAMPLE_RATE_SHADING = true; // supersampling
@@ -171,7 +178,7 @@ class Impl final
         std::unique_ptr<Swapchain> m_swapchain_resolve;
 
         std::unique_ptr<RenderBuffers> m_render_buffers;
-        std::unique_ptr<Image> m_image_resolve;
+        std::unique_ptr<ImageResolve> m_image_resolve;
         std::unique_ptr<vulkan::ImageWithMemory> m_object_image;
 
         struct PressedMouseButton
@@ -544,7 +551,7 @@ class Impl final
                 const int width = m_render_buffers->width();
                 const int height = m_render_buffers->height();
 
-                const Image image(
+                const ImageResolve image(
                         m_instance->device(), m_instance->graphics_compute_command_pool(), queue, *m_render_buffers,
                         Region<2, int>(0, 0, width, height), VK_IMAGE_LAYOUT_GENERAL,
                         VK_IMAGE_USAGE_SAMPLED_BIT | VK_IMAGE_USAGE_TRANSFER_SRC_BIT);
@@ -587,7 +594,7 @@ class Impl final
                 delete_buffers();
 
                 m_render_buffers = create_render_buffers(
-                        RENDER_BUFFER_COUNT, format, width, height,
+                        RENDER_BUFFER_COUNT, format, DEPTH_FORMATS, width, height,
                         {m_instance->graphics_compute_queues()[0].family_index()}, m_instance->device(),
                         MINIMUM_SAMPLE_COUNT);
 
@@ -605,7 +612,7 @@ class Impl final
                 m_draw_rectangle = w_1;
 
                 static_assert(RENDER_BUFFER_COUNT == 1);
-                m_image_resolve = std::make_unique<Image>(
+                m_image_resolve = std::make_unique<ImageResolve>(
                         m_instance->device(), m_instance->graphics_compute_command_pool(),
                         m_instance->graphics_compute_queues()[0], *m_render_buffers, m_draw_rectangle,
                         VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL, VK_IMAGE_USAGE_SAMPLED_BIT);

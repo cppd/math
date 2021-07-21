@@ -17,7 +17,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
-#include "render_buffer.h"
+#include "render_buffers.h"
 
 #include <src/vulkan/swapchain.h>
 

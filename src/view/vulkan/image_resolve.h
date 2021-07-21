@@ -17,13 +17,13 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
-#include "render_buffer.h"
+#include "render_buffers.h"
 
 #include <vector>
 
 namespace ns::view
 {
-class Image
+class ImageResolve
 {
         const uint32_t m_family_index;
         std::vector<vulkan::ImageWithMemory> m_images;
@@ -31,13 +31,14 @@ class Image
         std::vector<vulkan::Semaphore> m_signal_semaphores;
 
 public:
-        Image(const vulkan::Device& device,
-              const vulkan::CommandPool& command_pool,
-              const vulkan::Queue& queue,
-              const RenderBuffers& render_buffers,
-              const Region<2, int>& rectangle,
-              VkImageLayout image_layout,
-              VkImageUsageFlags usage);
+        ImageResolve(
+                const vulkan::Device& device,
+                const vulkan::CommandPool& command_pool,
+                const vulkan::Queue& queue,
+                const RenderBuffers& render_buffers,
+                const Region<2, int>& rectangle,
+                VkImageLayout image_layout,
+                VkImageUsageFlags usage);
 
         const vulkan::ImageWithMemory& image(unsigned image_index) const;
 
