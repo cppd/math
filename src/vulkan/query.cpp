@@ -310,7 +310,7 @@ VkExtent3D max_image_extent(
         return image_properties.maxExtent;
 }
 
-VkSampleCountFlagBits supported_framebuffer_sample_count_flag(
+VkSampleCountFlagBits supported_color_depth_framebuffer_sample_count_flag(
         VkPhysicalDevice physical_device,
         int required_minimum_sample_count)
 {
@@ -328,37 +328,42 @@ VkSampleCountFlagBits supported_framebuffer_sample_count_flag(
                       + " is greater than " + to_string(MAX_SAMPLE_COUNT));
         }
 
+        const auto set = [](const VkSampleCountFlags flags, const VkSampleCountFlagBits bits)
+        {
+                return (flags & bits) == bits;
+        };
+
         VkPhysicalDeviceProperties properties;
         vkGetPhysicalDeviceProperties(physical_device, &properties);
 
-        VkSampleCountFlags sample_counts = std::min(
-                properties.limits.framebufferColorSampleCounts, properties.limits.framebufferDepthSampleCounts);
+        const VkSampleCountFlags flags =
+                properties.limits.framebufferColorSampleCounts & properties.limits.framebufferDepthSampleCounts;
 
-        if ((required_minimum_sample_count <= 1) && (sample_counts & VK_SAMPLE_COUNT_1_BIT))
+        if ((required_minimum_sample_count <= 1) && set(flags, VK_SAMPLE_COUNT_1_BIT))
         {
                 return VK_SAMPLE_COUNT_1_BIT;
         }
-        if ((required_minimum_sample_count <= 2) && (sample_counts & VK_SAMPLE_COUNT_2_BIT))
+        if ((required_minimum_sample_count <= 2) && set(flags, VK_SAMPLE_COUNT_2_BIT))
         {
                 return VK_SAMPLE_COUNT_2_BIT;
         }
-        if ((required_minimum_sample_count <= 4) && (sample_counts & VK_SAMPLE_COUNT_4_BIT))
+        if ((required_minimum_sample_count <= 4) && set(flags, VK_SAMPLE_COUNT_4_BIT))
         {
                 return VK_SAMPLE_COUNT_4_BIT;
         }
-        if ((required_minimum_sample_count <= 8) && (sample_counts & VK_SAMPLE_COUNT_8_BIT))
+        if ((required_minimum_sample_count <= 8) && set(flags, VK_SAMPLE_COUNT_8_BIT))
         {
                 return VK_SAMPLE_COUNT_8_BIT;
         }
-        if ((required_minimum_sample_count <= 16) && (sample_counts & VK_SAMPLE_COUNT_16_BIT))
+        if ((required_minimum_sample_count <= 16) && set(flags, VK_SAMPLE_COUNT_16_BIT))
         {
                 return VK_SAMPLE_COUNT_16_BIT;
         }
-        if ((required_minimum_sample_count <= 32) && (sample_counts & VK_SAMPLE_COUNT_32_BIT))
+        if ((required_minimum_sample_count <= 32) && set(flags, VK_SAMPLE_COUNT_32_BIT))
         {
                 return VK_SAMPLE_COUNT_32_BIT;
         }
-        if ((required_minimum_sample_count <= 64) && (sample_counts & VK_SAMPLE_COUNT_64_BIT))
+        if ((required_minimum_sample_count <= 64) && set(flags, VK_SAMPLE_COUNT_64_BIT))
         {
                 return VK_SAMPLE_COUNT_64_BIT;
         }
@@ -366,7 +371,7 @@ VkSampleCountFlagBits supported_framebuffer_sample_count_flag(
         error("The required minimum sample count " + to_string(required_minimum_sample_count) + " is not available");
 }
 
-int integer_sample_count_flag(VkSampleCountFlagBits sample_count)
+int sample_count_flag_to_integer(VkSampleCountFlagBits sample_count)
 {
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wswitch"

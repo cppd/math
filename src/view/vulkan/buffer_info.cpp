@@ -128,7 +128,7 @@ std::string render_buffer_info(
         std::ostringstream oss;
 
         oss << "Render buffers sample count = "
-            << vulkan::integer_sample_count_flag(!color.empty() ? color[0].sample_count() : VK_SAMPLE_COUNT_1_BIT);
+            << vulkan::sample_count_flag_to_integer(!color.empty() ? color[0].sample_count() : depth[0].sample_count());
 
         oss << '\n';
         if (!depth.empty())

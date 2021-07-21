@@ -197,7 +197,7 @@ Impl::Impl(
 
         create_buffers(
                 device, depth_formats, buffer_count,
-                vulkan::supported_framebuffer_sample_count_flag(
+                vulkan::supported_color_depth_framebuffer_sample_count_flag(
                         device.physical_device(), required_minimum_sample_count),
                 family_indices);
 

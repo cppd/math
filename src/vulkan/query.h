@@ -53,10 +53,10 @@ VkExtent3D max_image_extent(
         VkImageTiling tiling,
         VkImageUsageFlags usage);
 
-VkSampleCountFlagBits supported_framebuffer_sample_count_flag(
+VkSampleCountFlagBits supported_color_depth_framebuffer_sample_count_flag(
         VkPhysicalDevice physical_device,
         int required_minimum_sample_count);
-int integer_sample_count_flag(VkSampleCountFlagBits sample_count);
+int sample_count_flag_to_integer(VkSampleCountFlagBits sample_count);
 
 uint32_t physical_device_memory_type_index(
         VkPhysicalDevice physical_device,
