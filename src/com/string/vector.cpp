@@ -31,9 +31,4 @@ std::vector<const char*> const_char_pointer_vector(const std::vector<std::string
 
         return res;
 }
-
-std::vector<std::string> string_vector(const std::vector<const char*>& v)
-{
-        return std::vector<std::string>(std::cbegin(v), std::cend(v));
-}
 }

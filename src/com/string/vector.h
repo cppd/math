@@ -23,5 +23,4 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 namespace ns
 {
 std::vector<const char*> const_char_pointer_vector(const std::vector<std::string>& v);
-std::vector<std::string> string_vector(const std::vector<const char*>& v);
 }
