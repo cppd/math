@@ -27,7 +27,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "../com/view_thread.h"
 #include "../com/window.h"
 
-#include <src/com/alg.h>
 #include <src/com/conversion.h>
 #include <src/com/error.h>
 #include <src/com/log.h>
@@ -60,6 +59,8 @@ constexpr FrameClock::duration IDLE_MODE_FRAME_DURATION = std::chrono::milliseco
 
 constexpr double FRAME_SIZE_IN_MILLIMETERS = 0.5;
 
+constexpr int RENDER_BUFFER_COUNT = 1;
+
 constexpr int PREFERRED_IMAGE_COUNT = 2; // 2 - double buffering, 3 - triple buffering
 constexpr VkSurfaceFormatKHR SURFACE_FORMAT = {VK_FORMAT_B8G8R8A8_SRGB, VK_COLOR_SPACE_SRGB_NONLINEAR_KHR};
 
@@ -81,71 +82,51 @@ constexpr RGB8 DEFAULT_TEXT_COLOR = RGB8(255, 255, 255);
 
 //
 
-double checked_window_ppi(double window_ppi)
-{
-        if (!(window_ppi > 0))
-        {
-                error("Window PPI " + to_string(window_ppi) + "is not positive");
-        }
-        return window_ppi;
-}
-
-std::vector<vulkan::PhysicalDeviceFeatures> view_required_device_features()
-{
-        std::vector<vulkan::PhysicalDeviceFeatures> features;
-        if (MINIMUM_SAMPLE_COUNT > 1 && SAMPLE_RATE_SHADING)
-        {
-                features.push_back(vulkan::PhysicalDeviceFeatures::sampleRateShading);
-        }
-        if (SAMPLER_ANISOTROPY)
-        {
-                features.push_back(vulkan::PhysicalDeviceFeatures::samplerAnisotropy);
-        }
-        return features;
-}
-
 std::unique_ptr<vulkan::VulkanInstance> create_instance(const window::WindowID& window)
 {
-        const std::vector<std::string> instance_extensions =
-                sort_and_unique(window::vulkan_create_surface_required_extensions());
+        static_assert(
+                2 <= std::tuple_size_v<std::remove_cvref_t<decltype(
+                        std::declval<vulkan::VulkanInstance>().graphics_compute_queues())>>);
+
+        const std::vector<std::string> instance_extensions = window::vulkan_create_surface_required_extensions();
 
         const std::vector<std::string> device_extensions = {};
 
-        const std::vector<vulkan::PhysicalDeviceFeatures> required_device_features =
-                sort_and_unique(merge<std::vector<vulkan::PhysicalDeviceFeatures>>(
-                        gpu::convex_hull::View::required_device_features(), gpu::dft::View::required_device_features(),
-                        gpu::optical_flow::View::required_device_features(),
-                        gpu::pencil_sketch::View::required_device_features(),
-                        gpu::renderer::Renderer::required_device_features(),
-                        gpu::text_writer::View::required_device_features(), view_required_device_features()));
+        const std::vector<vulkan::PhysicalDeviceFeatures> required_device_features = []()
+        {
+                std::vector<vulkan::PhysicalDeviceFeatures> features =
+                        ns::merge<std::vector<vulkan::PhysicalDeviceFeatures>>(
+                                gpu::convex_hull::View::required_device_features(),
+                                gpu::dft::View::required_device_features(),
+                                gpu::optical_flow::View::required_device_features(),
+                                gpu::pencil_sketch::View::required_device_features(),
+                                gpu::renderer::Renderer::required_device_features(),
+                                gpu::text_writer::View::required_device_features());
+                if (MINIMUM_SAMPLE_COUNT > 1 && SAMPLE_RATE_SHADING)
+                {
+                        features.push_back(vulkan::PhysicalDeviceFeatures::sampleRateShading);
+                }
+                if (SAMPLER_ANISOTROPY)
+                {
+                        features.push_back(vulkan::PhysicalDeviceFeatures::samplerAnisotropy);
+                }
+                return features;
+        }();
 
         const std::vector<vulkan::PhysicalDeviceFeatures> optional_device_features = {};
 
-        const std::function<VkSurfaceKHR(VkInstance)> surface_function = [&](VkInstance instance)
+        const std::function<VkSurfaceKHR(VkInstance)> surface_function = [&](const VkInstance instance)
         {
                 return window::vulkan_create_surface(window, instance);
         };
 
-        std::unique_ptr<vulkan::VulkanInstance> instance = std::make_unique<vulkan::VulkanInstance>(
+        return std::make_unique<vulkan::VulkanInstance>(
                 instance_extensions, device_extensions, required_device_features, optional_device_features,
                 surface_function);
-
-        ASSERT(instance->graphics_compute_command_pool().family_index()
-               == instance->graphics_compute_queues()[0].family_index());
-        ASSERT(instance->compute_command_pool().family_index() == instance->compute_queue().family_index());
-        ASSERT(instance->transfer_command_pool().family_index() == instance->transfer_queue().family_index());
-
-        return instance;
 }
 
 class Impl final
 {
-        static_assert(
-                2 <= std::tuple_size_v<std::remove_cvref_t<
-                        decltype(std::declval<vulkan::VulkanInstance>().graphics_compute_queues())>>);
-
-        static constexpr unsigned RENDER_BUFFER_COUNT = 1;
-
         const std::thread::id m_thread_id = std::this_thread::get_id();
         const double m_window_ppi;
         const int m_frame_size_in_pixels = std::max(1, millimeters_to_pixels(FRAME_SIZE_IN_MILLIMETERS, m_window_ppi));
@@ -703,9 +684,14 @@ class Impl final
         }
 
 public:
-        Impl(const window::WindowID& window, double window_ppi)
-                : m_window_ppi(checked_window_ppi(window_ppi)), m_instance(create_instance(window))
+        Impl(const window::WindowID& window, const double window_ppi)
+                : m_window_ppi(window_ppi), m_instance(create_instance(window))
         {
+                if (!(m_window_ppi > 0))
+                {
+                        error("Window PPI " + to_string(m_window_ppi) + "is not positive");
+                }
+
                 const vulkan::Queue& graphics_compute_queue = m_instance->graphics_compute_queues()[0];
                 const vulkan::CommandPool& graphics_compute_command_pool = m_instance->graphics_compute_command_pool();
                 const vulkan::Queue& compute_queue = m_instance->compute_queue();
