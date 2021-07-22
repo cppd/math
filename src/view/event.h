@@ -29,14 +29,14 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 namespace ns::view
 {
-namespace command
-{
 enum class MouseButton
 {
         Left,
         Right
 };
 
+namespace command
+{
 struct UpdateMeshObject final
 {
         std::weak_ptr<const mesh::MeshObject<3>> object;

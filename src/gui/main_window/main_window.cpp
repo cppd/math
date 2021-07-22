@@ -329,12 +329,12 @@ void MainWindow::on_graphics_widget_mouse_press(QMouseEvent* e)
         {
                 if (e->button() == Qt::MouseButton::LeftButton)
                 {
-                        m_view->send(view::command::MousePress(e->x(), e->y(), view::command::MouseButton::Left));
+                        m_view->send(view::command::MousePress(e->x(), e->y(), view::MouseButton::Left));
                         return;
                 }
                 if (e->button() == Qt::MouseButton::RightButton)
                 {
-                        m_view->send(view::command::MousePress(e->x(), e->y(), view::command::MouseButton::Right));
+                        m_view->send(view::command::MousePress(e->x(), e->y(), view::MouseButton::Right));
                         return;
                 }
         }
@@ -346,12 +346,12 @@ void MainWindow::on_graphics_widget_mouse_release(QMouseEvent* e)
         {
                 if (e->button() == Qt::MouseButton::LeftButton)
                 {
-                        m_view->send(view::command::MouseRelease(e->x(), e->y(), view::command::MouseButton::Left));
+                        m_view->send(view::command::MouseRelease(e->x(), e->y(), view::MouseButton::Left));
                         return;
                 }
                 if (e->button() == Qt::MouseButton::RightButton)
                 {
-                        m_view->send(view::command::MouseRelease(e->x(), e->y(), view::command::MouseButton::Right));
+                        m_view->send(view::command::MouseRelease(e->x(), e->y(), view::MouseButton::Right));
                         return;
                 }
         }

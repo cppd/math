@@ -36,12 +36,12 @@ struct MouseButtonInfo final
 
 class Mouse final
 {
-        std::unordered_map<command::MouseButton, MouseButtonInfo> m_buttons;
+        std::unordered_map<MouseButton, MouseButtonInfo> m_buttons;
         int m_x = limits<int>::lowest();
         int m_y = limits<int>::lowest();
 
 public:
-        const MouseButtonInfo& info(const command::MouseButton button) const
+        const MouseButtonInfo& info(const MouseButton button) const
         {
                 auto iter = m_buttons.find(button);
                 if (iter != m_buttons.cend())
@@ -53,7 +53,7 @@ public:
                 return info;
         }
 
-        void press(const int x, const int y, const command::MouseButton button)
+        void press(const int x, const int y, const MouseButton button)
         {
                 m_x = x;
                 m_y = y;
@@ -65,7 +65,7 @@ public:
                 m.delta_y = 0;
         }
 
-        void release(const int x, const int y, const command::MouseButton button)
+        void release(const int x, const int y, const MouseButton button)
         {
                 m_buttons[button].pressed = false;
                 m_x = x;

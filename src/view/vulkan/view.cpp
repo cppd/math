@@ -228,7 +228,7 @@ class Impl final
 
                 bool changed = false;
 
-                const MouseButtonInfo& right = m_mouse.info(command::MouseButton::Right);
+                const MouseButtonInfo& right = m_mouse.info(MouseButton::Right);
                 if (right.pressed && m_draw_rectangle.is_inside(right.pressed_x, right.pressed_y)
                     && (right.delta_x != 0 || right.delta_y != 0))
                 {
@@ -236,7 +236,7 @@ class Impl final
                         changed = true;
                 }
 
-                const MouseButtonInfo& left = m_mouse.info(command::MouseButton::Left);
+                const MouseButtonInfo& left = m_mouse.info(MouseButton::Left);
                 if (left.pressed && m_draw_rectangle.is_inside(left.pressed_x, left.pressed_y)
                     && (left.delta_x != 0 || left.delta_y != 0))
                 {
