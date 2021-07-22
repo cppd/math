@@ -18,6 +18,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "view.h"
 
 #include "image_resolve.h"
+#include "mouse.h"
 #include "render_buffers.h"
 #include "swapchain.h"
 
@@ -151,6 +152,7 @@ class Impl final
 
         FrameRate m_frame_rate{m_window_ppi};
         Camera m_camera;
+        Mouse m_mouse;
 
         Region<2, int> m_draw_rectangle{limits<int>::lowest(), limits<int>::lowest(), 0, 0};
 
@@ -180,30 +182,6 @@ class Impl final
         std::unique_ptr<RenderBuffers> m_render_buffers;
         std::unique_ptr<ImageResolve> m_image_resolve;
         std::unique_ptr<vulkan::ImageWithMemory> m_object_image;
-
-        struct PressedMouseButton
-        {
-                bool pressed = false;
-                int pressed_x;
-                int pressed_y;
-                int delta_x;
-                int delta_y;
-        };
-        std::unordered_map<command::MouseButton, PressedMouseButton> m_mouse;
-        int m_mouse_x = std::numeric_limits<int>::lowest();
-        int m_mouse_y = std::numeric_limits<int>::lowest();
-
-        const PressedMouseButton& pressed_mouse_button(command::MouseButton button) const
-        {
-                auto iter = m_mouse.find(button);
-                if (iter != m_mouse.cend())
-                {
-                        return iter->second;
-                }
-
-                thread_local const PressedMouseButton m{};
-                return m;
-        }
 
         void clip_plane_show(double position)
         {
@@ -246,22 +224,11 @@ class Impl final
 
         void mouse_move(int x, int y)
         {
-                for (auto& [button, m] : m_mouse)
-                {
-                        if (m.pressed)
-                        {
-                                m.delta_x = x - m_mouse_x;
-                                m.delta_y = y - m_mouse_y;
-                        }
-                }
-                m_mouse_x = x;
-                m_mouse_y = y;
-
-                //
+                m_mouse.move(x, y);
 
                 bool changed = false;
 
-                const PressedMouseButton& right = pressed_mouse_button(command::MouseButton::Right);
+                const MouseButtonInfo& right = m_mouse.info(command::MouseButton::Right);
                 if (right.pressed && m_draw_rectangle.is_inside(right.pressed_x, right.pressed_y)
                     && (right.delta_x != 0 || right.delta_y != 0))
                 {
@@ -269,7 +236,7 @@ class Impl final
                         changed = true;
                 }
 
-                const PressedMouseButton& left = pressed_mouse_button(command::MouseButton::Left);
+                const MouseButtonInfo& left = m_mouse.info(command::MouseButton::Left);
                 if (left.pressed && m_draw_rectangle.is_inside(left.pressed_x, left.pressed_y)
                     && (left.delta_x != 0 || left.delta_y != 0))
                 {
@@ -500,21 +467,12 @@ class Impl final
 
         void command(const command::MousePress& d)
         {
-                m_mouse_x = d.x;
-                m_mouse_y = d.y;
-                PressedMouseButton& m = m_mouse[d.button];
-                m.pressed = true;
-                m.pressed_x = m_mouse_x;
-                m.pressed_y = m_mouse_y;
-                m.delta_x = 0;
-                m.delta_y = 0;
+                m_mouse.press(d.x, d.y, d.button);
         }
 
         void command(const command::MouseRelease& d)
         {
-                m_mouse[d.button].pressed = false;
-                m_mouse_x = d.x;
-                m_mouse_y = d.y;
+                m_mouse.release(d.x, d.y, d.button);
         }
 
         void command(const command::MouseMove& d)
