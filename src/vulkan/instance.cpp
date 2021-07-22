@@ -22,16 +22,22 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "error.h"
 
 #include <src/com/alg.h>
+#include <src/com/error.h>
 #include <src/com/log.h>
 #include <src/com/merge.h>
 #include <src/com/print.h>
-#include <src/com/string/vector.h>
+#include <src/com/type/limit.h>
+
+#include <algorithm>
+#include <tuple>
+#include <unordered_map>
 
 namespace ns::vulkan
 {
-constexpr uint32_t NO_FAMILY_INDEX = -1;
 namespace
 {
+constexpr uint32_t NO_FAMILY_INDEX = limits<uint32_t>::max();
+
 std::unordered_map<uint32_t, uint32_t> compute_queue_count(
         const std::vector<std::tuple<uint32_t, uint32_t>>& family_index_and_count,
         const std::vector<VkQueueFamilyProperties>& queue_family_properties)
@@ -55,6 +61,20 @@ std::vector<std::string> merge_required_device_extensions(
                        ? merge<std::vector<std::string>>(required_device_extensions, VK_KHR_SWAPCHAIN_EXTENSION_NAME)
                        : required_device_extensions;
 }
+
+template <typename T>
+void check_family_indices(const CommandPool& pool, const T& queues)
+{
+        if (!std::all_of(
+                    queues.begin(), queues.end(),
+                    [&](const Queue& queue)
+                    {
+                            return pool.family_index() == queue.family_index();
+                    }))
+        {
+                error("Error pool and queue family indices");
+        }
+}
 }
 
 VulkanInstance::VulkanInstance(
@@ -62,19 +82,19 @@ VulkanInstance::VulkanInstance(
         const std::vector<std::string>& required_device_extensions,
         const std::vector<PhysicalDeviceFeatures>& required_device_features,
         const std::vector<PhysicalDeviceFeatures>& optional_device_features,
-        const std::optional<std::function<VkSurfaceKHR(VkInstance)>>& create_surface)
+        const std::function<VkSurfaceKHR(VkInstance)>& create_surface)
         : m_instance(create_instance(required_instance_extensions)),
           m_callback(
                   m_instance.validation_layers_enabled() ? std::make_optional(create_debug_report_callback(m_instance))
                                                          : std::nullopt),
-          m_surface(create_surface ? std::optional(SurfaceKHR(m_instance, *create_surface)) : std::nullopt),
+          m_surface(create_surface ? std::optional(SurfaceKHR(m_instance, create_surface)) : std::nullopt),
           //
           m_physical_device(create_physical_device(
                   m_instance,
                   //
                   (create_surface ? static_cast<VkSurfaceKHR>(*m_surface) : VK_NULL_HANDLE),
                   //
-                  merge_required_device_extensions(create_surface.has_value(), required_device_extensions),
+                  merge_required_device_extensions(create_surface != nullptr, required_device_extensions),
                   //
                   required_device_features)),
           //
@@ -101,7 +121,7 @@ VulkanInstance::VulkanInstance(
                            {m_presentation_family_index, PRESENTATION_QUEUE_COUNT}},
                           m_physical_device.queue_families()),
                   //
-                  merge_required_device_extensions(create_surface.has_value(), required_device_extensions),
+                  merge_required_device_extensions(create_surface != nullptr, required_device_extensions),
                   //
                   required_device_features,
                   //
@@ -174,6 +194,10 @@ VulkanInstance::VulkanInstance(
         }
 
         LOG(s);
+
+        check_family_indices(m_graphics_compute_command_pool, m_graphics_compute_queues);
+        check_family_indices(m_compute_command_pool, m_compute_queues);
+        check_family_indices(m_transfer_command_pool, m_transfer_queues);
 }
 
 VulkanInstance::~VulkanInstance()
