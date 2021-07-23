@@ -29,7 +29,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <src/com/conversion.h>
 #include <src/com/error.h>
-#include <src/com/log.h>
 #include <src/com/merge.h>
 #include <src/com/print.h>
 #include <src/com/type/limit.h>
@@ -61,17 +60,14 @@ constexpr double FRAME_SIZE_IN_MILLIMETERS = 0.5;
 
 constexpr int RENDER_BUFFER_COUNT = 1;
 
-constexpr int PREFERRED_IMAGE_COUNT = 2; // 2 - double buffering, 3 - triple buffering
-constexpr VkSurfaceFormatKHR SURFACE_FORMAT = {VK_FORMAT_B8G8R8A8_SRGB, VK_COLOR_SPACE_SRGB_NONLINEAR_KHR};
+constexpr int SWAPCHAIN_PREFERRED_IMAGE_COUNT = 2; // 2 - double buffering, 3 - triple buffering
+constexpr VkSurfaceFormatKHR SWAPCHAIN_SURFACE_FORMAT{
+        .format = VK_FORMAT_B8G8R8A8_SRGB,
+        .colorSpace = VK_COLOR_SPACE_SRGB_NONLINEAR_KHR};
+constexpr vulkan::PresentMode SWAPCHAIN_INITIAL_PRESENT_MODE = vulkan::PresentMode::PreferFast;
 
-constexpr VkFormat SAVE_IMAGE_FORMAT = VK_FORMAT_R32G32B32A32_SFLOAT;
-
-// clang-format off
-constexpr std::array DEPTH_FORMATS = std::to_array<VkFormat>
-({
-        VK_FORMAT_D32_SFLOAT
-});
-// clang-format on
+constexpr VkFormat SAVE_FORMAT = VK_FORMAT_R32G32B32A32_SFLOAT;
+constexpr std::array DEPTH_FORMATS = std::to_array<VkFormat>({VK_FORMAT_D32_SFLOAT});
 
 constexpr int MINIMUM_SAMPLE_COUNT = 4;
 constexpr bool SAMPLE_RATE_SHADING = true; // supersampling
@@ -79,7 +75,6 @@ constexpr bool SAMPLER_ANISOTROPY = true; // anisotropic filtering
 
 constexpr VkFormat OBJECT_IMAGE_FORMAT = VK_FORMAT_R32_UINT;
 
-constexpr vulkan::PresentMode DEFAULT_PRESENT_MODE = vulkan::PresentMode::PreferFast;
 constexpr RGB8 DEFAULT_TEXT_COLOR = RGB8(255, 255, 255);
 
 //
@@ -141,7 +136,7 @@ class Impl final
 
         std::optional<mat4d> m_clip_plane_view_matrix;
 
-        vulkan::PresentMode m_present_mode = DEFAULT_PRESENT_MODE;
+        vulkan::PresentMode m_present_mode = SWAPCHAIN_INITIAL_PRESENT_MODE;
 
         bool m_text_active = true;
         bool m_convex_hull_active = false;
@@ -491,7 +486,7 @@ class Impl final
                 const int height = m_swapchain->height();
 
                 delete_swapchain_buffers();
-                create_buffers(SAVE_IMAGE_FORMAT, width, height);
+                create_buffers(SAVE_FORMAT, width, height);
 
                 {
                         VkSemaphore semaphore = render();
@@ -668,7 +663,7 @@ class Impl final
                         std::vector<uint32_t>{
                                 m_instance->graphics_compute_queues()[0].family_index(),
                                 m_instance->presentation_queue().family_index()},
-                        SURFACE_FORMAT, PREFERRED_IMAGE_COUNT, m_present_mode);
+                        SWAPCHAIN_SURFACE_FORMAT, SWAPCHAIN_PREFERRED_IMAGE_COUNT, m_present_mode);
 
                 create_swapchain_buffers();
         }
