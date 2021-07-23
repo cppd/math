@@ -18,12 +18,12 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "view.h"
 
 #include "image_resolve.h"
-#include "mouse.h"
 #include "render_buffers.h"
 #include "swapchain.h"
 
 #include "../com/camera.h"
 #include "../com/frame_rate.h"
+#include "../com/mouse.h"
 #include "../com/view_thread.h"
 #include "../com/window.h"
 
@@ -164,13 +164,13 @@ class Impl final
         std::unique_ptr<ImageResolve> m_image_resolve;
         std::unique_ptr<vulkan::ImageWithMemory> m_object_image;
 
-        void clip_plane_show(double position)
+        void clip_plane_show(const double position)
         {
                 m_clip_plane_view_matrix = m_camera.renderer_info().main_view_matrix;
                 clip_plane_position(position);
         }
 
-        void clip_plane_position(double position)
+        void clip_plane_position(const double position)
         {
                 if (!m_clip_plane_view_matrix)
                 {
@@ -203,7 +203,7 @@ class Impl final
                 m_renderer->set_clip_plane(std::nullopt);
         }
 
-        void mouse_move(int x, int y)
+        void mouse_move(const int x, const int y)
         {
                 m_mouse.move(x, y);
 
@@ -242,7 +242,7 @@ class Impl final
                 m_renderer->set_camera(m_camera.renderer_info());
         }
 
-        void set_vertical_sync_swapchain(bool v)
+        void set_vertical_sync_swapchain(const bool v)
         {
                 if (v && m_present_mode != vulkan::PresentMode::PreferSync)
                 {
@@ -514,8 +514,6 @@ class Impl final
 
         void delete_buffers()
         {
-                m_instance->device_wait_idle();
-
                 m_text->delete_buffers();
                 m_convex_hull->delete_buffers();
                 m_pencil_sketch->delete_buffers();
@@ -528,10 +526,8 @@ class Impl final
                 m_render_buffers.reset();
         }
 
-        void create_buffers(VkFormat format, unsigned width, unsigned height)
+        void create_buffers(const VkFormat format, const unsigned width, const unsigned height)
         {
-                delete_buffers();
-
                 m_render_buffers = create_render_buffers(
                         RENDER_BUFFER_COUNT, format, DEPTH_FORMATS, width, height,
                         {m_instance->graphics_compute_queues()[0].family_index()}, m_instance->device(),
@@ -629,12 +625,26 @@ class Impl final
 
         //
 
+        void delete_swapchain_buffers()
+        {
+                m_swapchain_resolve.reset();
+                delete_buffers();
+        }
+
+        void create_swapchain_buffers()
+        {
+                create_buffers(m_swapchain->format(), m_swapchain->width(), m_swapchain->height());
+
+                m_swapchain_resolve = std::make_unique<Swapchain>(
+                        m_instance->device(), m_instance->graphics_compute_command_pool(), *m_render_buffers,
+                        *m_swapchain);
+        }
+
         void delete_swapchain()
         {
                 m_instance->device_wait_idle();
 
-                m_swapchain_resolve.reset();
-                delete_buffers();
+                delete_swapchain_buffers();
                 m_swapchain.reset();
         }
 
@@ -649,11 +659,7 @@ class Impl final
                                 m_instance->presentation_queue().family_index()},
                         SURFACE_FORMAT, PREFERRED_IMAGE_COUNT, m_present_mode);
 
-                create_buffers(m_swapchain->format(), m_swapchain->width(), m_swapchain->height());
-
-                m_swapchain_resolve = std::make_unique<Swapchain>(
-                        m_instance->device(), m_instance->graphics_compute_command_pool(), *m_render_buffers,
-                        *m_swapchain);
+                create_swapchain_buffers();
         }
 
         [[nodiscard]] bool render_swapchain() const
@@ -744,7 +750,7 @@ public:
         Impl& operator=(const Impl&) = delete;
         Impl& operator=(Impl&&) = delete;
 
-        void loop(const std::function<void()>& dispatch_events, std::atomic_bool* stop)
+        void loop(const std::function<void()>& dispatch_events, std::atomic_bool* const stop)
         {
                 ASSERT(std::this_thread::get_id() == m_thread_id);
 
