@@ -22,6 +22,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "swapchain.h"
 
 #include "../com/camera.h"
+#include "../com/clip_plane.h"
 #include "../com/frame_rate.h"
 #include "../com/mouse.h"
 #include "../com/view_thread.h"
@@ -173,25 +174,12 @@ class Impl final
                 {
                         error("Clip plane is not set");
                 }
+                if (!(position >= 0.0 && position <= 1.0))
+                {
+                        error("Error clip plane position " + to_string(position));
+                }
 
-                ASSERT(position >= 0.0 && position <= 1.0);
-
-                // Уравнение плоскости
-                // -z = 0 или (0, 0, -1, 0).
-                // Уравнение плоскости для исходных координат
-                // (0, 0, -1, 0) * view matrix.
-                vec4d plane = -m_clip_plane_view_matrix->row(2);
-
-                vec3d n(plane[0], plane[1], plane[2]);
-                double d = n.norm_1();
-
-                // Уравнение плоскости со смещением
-                // -z = d * (1 - 2 * position) или (0, 0, -1, d * (2 * position - 1)).
-                plane[3] += d * (2 * position - 1);
-
-                plane /= n.norm();
-
-                m_renderer->set_clip_plane(plane);
+                m_renderer->set_clip_plane(create_clip_plane(*m_clip_plane_view_matrix, position));
         }
 
         void clip_plane_hide()
