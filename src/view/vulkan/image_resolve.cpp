@@ -78,7 +78,7 @@ const vulkan::ImageWithMemory& ImageResolve::image(const unsigned image_index) c
         return m_images[image_index];
 }
 
-VkSemaphore ImageResolve::resolve(
+VkSemaphore ImageResolve::resolve_semaphore(
         const vulkan::Queue& graphics_queue,
         VkSemaphore wait_semaphore,
         const unsigned image_index) const
@@ -94,11 +94,13 @@ VkSemaphore ImageResolve::resolve(
         return m_signal_semaphores[image_index];
 }
 
-void ImageResolve::resolve(const vulkan::Queue& graphics_queue, const unsigned image_index) const
+void ImageResolve::resolve(const vulkan::Queue& graphics_queue, VkSemaphore wait_semaphore, const unsigned image_index)
+        const
 {
         ASSERT(graphics_queue.family_index() == m_family_index);
         ASSERT(image_index < m_command_buffers.count());
 
-        vulkan::queue_submit(m_command_buffers[image_index], graphics_queue);
+        vulkan::queue_submit(
+                wait_semaphore, VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT, m_command_buffers[image_index], graphics_queue);
 }
 }

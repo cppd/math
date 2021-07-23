@@ -64,6 +64,8 @@ constexpr int RENDER_BUFFER_COUNT = 1;
 constexpr int PREFERRED_IMAGE_COUNT = 2; // 2 - double buffering, 3 - triple buffering
 constexpr VkSurfaceFormatKHR SURFACE_FORMAT = {VK_FORMAT_B8G8R8A8_SRGB, VK_COLOR_SPACE_SRGB_NONLINEAR_KHR};
 
+constexpr VkFormat SAVE_IMAGE_FORMAT = VK_FORMAT_R32G32B32A32_SFLOAT;
+
 // clang-format off
 constexpr std::array DEPTH_FORMATS = std::to_array<VkFormat>
 ({
@@ -478,36 +480,45 @@ class Impl final
                 *d = m_camera.view_info();
         }
 
-        void info(info::Image* const d) const
+        void info(info::Image* const d)
         {
                 static_assert(RENDER_BUFFER_COUNT == 1);
-                ASSERT(m_render_buffers->image_views().size() == 1);
-
                 constexpr int INDEX = 0;
 
-                const vulkan::Queue& queue = m_instance->graphics_compute_queues()[0];
+                m_instance->device_wait_idle();
 
-                const int width = m_render_buffers->width();
-                const int height = m_render_buffers->height();
+                const int width = m_swapchain->width();
+                const int height = m_swapchain->height();
 
-                const ImageResolve image(
-                        m_instance->device(), m_instance->graphics_compute_command_pool(), queue, *m_render_buffers,
-                        Region<2, int>(0, 0, width, height), VK_IMAGE_LAYOUT_GENERAL,
-                        VK_IMAGE_USAGE_SAMPLED_BIT | VK_IMAGE_USAGE_TRANSFER_SRC_BIT);
+                delete_swapchain_buffers();
+                create_buffers(SAVE_IMAGE_FORMAT, width, height);
 
-                image.resolve(queue, INDEX);
+                {
+                        VkSemaphore semaphore = render();
 
-                vulkan::queue_wait_idle(queue);
+                        const vulkan::Queue& queue = m_instance->graphics_compute_queues()[0];
+
+                        const ImageResolve image(
+                                m_instance->device(), m_instance->graphics_compute_command_pool(), queue,
+                                *m_render_buffers, Region<2, int>(0, 0, width, height), VK_IMAGE_LAYOUT_GENERAL,
+                                VK_IMAGE_USAGE_SAMPLED_BIT | VK_IMAGE_USAGE_TRANSFER_SRC_BIT);
+
+                        image.resolve(queue, semaphore, INDEX);
+                        vulkan::queue_wait_idle(queue);
+
+                        image.image(INDEX).read_pixels(
+                                m_instance->graphics_compute_command_pool(), queue, VK_IMAGE_LAYOUT_GENERAL,
+                                VK_IMAGE_LAYOUT_GENERAL, &d->image.color_format, &d->image.pixels);
+                }
 
                 d->image.size[0] = width;
                 d->image.size[1] = height;
 
-                image.image(INDEX).read_pixels(
-                        m_instance->graphics_compute_command_pool(), queue, VK_IMAGE_LAYOUT_GENERAL,
-                        VK_IMAGE_LAYOUT_GENERAL, &d->image.color_format, &d->image.pixels);
-
                 ASSERT(4 == image::format_component_count(d->image.color_format));
                 d->image = image::delete_alpha(d->image);
+
+                delete_buffers();
+                create_swapchain_buffers();
         }
 
         //
@@ -591,13 +602,13 @@ class Impl final
 
                 if (m_pencil_sketch_active)
                 {
-                        semaphore = m_image_resolve->resolve(graphics_queue, semaphore, INDEX);
+                        semaphore = m_image_resolve->resolve_semaphore(graphics_queue, semaphore, INDEX);
                         semaphore = m_pencil_sketch->draw(graphics_queue, semaphore, INDEX);
                 }
 
                 if (m_dft_active || m_optical_flow_active)
                 {
-                        semaphore = m_image_resolve->resolve(graphics_queue, semaphore, INDEX);
+                        semaphore = m_image_resolve->resolve_semaphore(graphics_queue, semaphore, INDEX);
                 }
 
                 if (m_dft_active)
