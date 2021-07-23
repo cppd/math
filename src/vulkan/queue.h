@@ -37,6 +37,12 @@ void queue_submit(
         VkSemaphore signal_semaphore,
         VkQueue queue);
 
+void queue_submit(
+        VkSemaphore wait_semaphore,
+        VkPipelineStageFlags wait_stage,
+        VkCommandBuffer command_buffer,
+        VkQueue queue);
+
 void queue_submit(VkCommandBuffer command_buffer, VkSemaphore signal_semaphore, VkQueue queue);
 
 void queue_submit(VkCommandBuffer command_buffer, VkQueue queue);
