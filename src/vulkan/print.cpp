@@ -26,7 +26,7 @@ namespace ns::vulkan
 namespace
 {
 template <typename T>
-std::string enum_to_string(T e)
+std::string enum_to_string(const T e)
 {
         static_assert(sizeof(e) <= sizeof(long long));
 
@@ -34,7 +34,7 @@ std::string enum_to_string(T e)
 }
 }
 
-std::string api_version_to_string(uint32_t api_version)
+std::string api_version_to_string(const uint32_t api_version)
 {
         std::ostringstream oss;
         oss << VK_VERSION_MAJOR(api_version) << "." << VK_VERSION_MINOR(api_version) << "."
@@ -42,7 +42,7 @@ std::string api_version_to_string(uint32_t api_version)
         return oss.str();
 }
 
-std::array<std::string, 2> result_to_strings(const VkResult& code)
+std::array<std::string, 2> result_to_strings(const VkResult code)
 {
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wswitch"
@@ -79,8 +79,8 @@ std::array<std::string, 2> result_to_strings(const VkResult& code)
                 return {"VK_ERROR_FEATURE_NOT_PRESENT", "A requested feature is not supported"};
         case VK_ERROR_INCOMPATIBLE_DRIVER:
                 return {"VK_ERROR_INCOMPATIBLE_DRIVER",
-                        "The requested version of Vulkan is not supported by the driver or is otherwise incompatible"
-                        " for implementation-specific reasons"};
+                        "The requested version of Vulkan is not supported by the driver or is otherwise"
+                        " incompatible for implementation-specific reasons"};
         case VK_ERROR_TOO_MANY_OBJECTS:
                 return {"VK_ERROR_TOO_MANY_OBJECTS", "Too many objects of the type have already been created"};
         case VK_ERROR_FORMAT_NOT_SUPPORTED:
@@ -97,20 +97,21 @@ std::array<std::string, 2> result_to_strings(const VkResult& code)
                 return {"VK_ERROR_SURFACE_LOST_KHR", "A surface is no longer available"};
         case VK_ERROR_NATIVE_WINDOW_IN_USE_KHR:
                 return {"VK_ERROR_NATIVE_WINDOW_IN_USE_KHR",
-                        "The requested window is already in use by Vulkan or another API in a manner which prevents"
-                        " it from being used again"};
+                        "The requested window is already in use by Vulkan or another API in a manner which"
+                        " prevents it from being used again"};
         case VK_SUBOPTIMAL_KHR:
                 return {"VK_SUBOPTIMAL_KHR",
-                        "A swapchain no longer matches the surface properties exactly, but can still be used to present"
-                        " to the surface successfully"};
+                        "A swapchain no longer matches the surface properties exactly, but can still be used"
+                        " to present to the surface successfully"};
         case VK_ERROR_OUT_OF_DATE_KHR:
                 return {"VK_ERROR_OUT_OF_DATE_KHR",
-                        "A surface has changed in such a way that it is no longer compatible with the swapchain, and further"
-                        " presentation requests using the swapchain will fail"};
+                        "A surface has changed in such a way that it is no longer compatible"
+                        " with the swapchain, and further presentation requests using"
+                        " the swapchain will fail"};
         case VK_ERROR_INCOMPATIBLE_DISPLAY_KHR:
                 return {"VK_ERROR_INCOMPATIBLE_DISPLAY_KHR",
-                        "The display used by a swapchain does not use the same presentable image layout, or is incompatible"
-                        " in a way that prevents sharing an image"};
+                        "The display used by a swapchain does not use the same presentable image"
+                        " layout, or is incompatible in a way that prevents sharing an image"};
         case VK_ERROR_VALIDATION_FAILED_EXT:
                 return {"VK_ERROR_VALIDATION_FAILED_EXT", ""};
         case VK_ERROR_INVALID_SHADER_NV:
@@ -119,22 +120,55 @@ std::array<std::string, 2> result_to_strings(const VkResult& code)
                 return {"VK_ERROR_FRAGMENTATION_EXT", "A descriptor pool creation has failed due to fragmentation"};
         case VK_ERROR_NOT_PERMITTED_EXT:
                 return {"VK_ERROR_NOT_PERMITTED_EXT", ""};
+        case VK_ERROR_INVALID_OPAQUE_CAPTURE_ADDRESS:
+                return {"VK_ERROR_INVALID_OPAQUE_CAPTURE_ADDRESS",
+                        "A buffer creation or memory allocation failed because"
+                        " the requested address is not available. A shader group handle assignment failed"
+                        " because the requested shader group handle information is no longer valid."};
+        case VK_ERROR_INVALID_DRM_FORMAT_MODIFIER_PLANE_LAYOUT_EXT:
+                return {"VK_ERROR_INVALID_DRM_FORMAT_MODIFIER_PLANE_LAYOUT_EXT", ""};
+        case VK_ERROR_FULL_SCREEN_EXCLUSIVE_MODE_LOST_EXT:
+                return {"VK_ERROR_FULL_SCREEN_EXCLUSIVE_MODE_LOST_EXT",
+                        "An operation on a swapchain created with"
+                        " VK_FULL_SCREEN_EXCLUSIVE_APPLICATION_CONTROLLED_EXT failed as it did not have"
+                        " exlusive full-screen access"};
+        case VK_THREAD_IDLE_KHR:
+                return {"VK_THREAD_IDLE_KHR",
+                        "A deferred operation is not complete but there is currently no work for this"
+                        " thread to do at the time of this call"};
+        case VK_THREAD_DONE_KHR:
+                return {"VK_THREAD_DONE_KHR",
+                        "A deferred operation is not complete but there is no work remaining to"
+                        " assign to additional threads"};
+        case VK_OPERATION_DEFERRED_KHR:
+                return {"VK_OPERATION_DEFERRED_KHR",
+                        "A deferred operation was requested and at least some of the work was deferred"};
+        case VK_OPERATION_NOT_DEFERRED_KHR:
+                return {"VK_OPERATION_NOT_DEFERRED_KHR",
+                        "A deferred operation was requested and no operations were deferred"};
+        case VK_PIPELINE_COMPILE_REQUIRED_EXT:
+                return {"VK_PIPELINE_COMPILE_REQUIRED_EXT",
+                        "A requested pipeline creation would have required compilation,"
+                        " but the application requested compilation to not be performed."};
+        case VK_ERROR_UNKNOWN:
+                return {"VK_ERROR_UNKNOWN", "An unknown error has occurred."};
         }
 #pragma GCC diagnostic pop
-
         return {"Unknown Vulkan return code " + enum_to_string(code), ""};
 }
 
-std::string physical_device_type_to_string(VkPhysicalDeviceType type)
+std::string physical_device_type_to_string(const VkPhysicalDeviceType type)
 {
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wswitch"
         switch (type)
         {
-        case VK_PHYSICAL_DEVICE_TYPE_DISCRETE_GPU:
-                return "Discrete GPU";
+        case VK_PHYSICAL_DEVICE_TYPE_OTHER:
+                return "Unknown";
         case VK_PHYSICAL_DEVICE_TYPE_INTEGRATED_GPU:
                 return "Integrated GPU";
+        case VK_PHYSICAL_DEVICE_TYPE_DISCRETE_GPU:
+                return "Discrete GPU";
         case VK_PHYSICAL_DEVICE_TYPE_VIRTUAL_GPU:
                 return "Virtual GPU";
         case VK_PHYSICAL_DEVICE_TYPE_CPU:
@@ -145,7 +179,7 @@ std::string physical_device_type_to_string(VkPhysicalDeviceType type)
         return "Unknown physical device type " + enum_to_string(type);
 }
 
-std::string format_to_string(VkFormat format)
+std::string format_to_string(const VkFormat format)
 {
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wswitch"
@@ -605,13 +639,45 @@ std::string format_to_string(VkFormat format)
                 return "VK_FORMAT_PVRTC2_2BPP_SRGB_BLOCK_IMG";
         case VK_FORMAT_PVRTC2_4BPP_SRGB_BLOCK_IMG:
                 return "VK_FORMAT_PVRTC2_4BPP_SRGB_BLOCK_IMG";
+        case VK_FORMAT_ASTC_4x4_SFLOAT_BLOCK_EXT:
+                return "VK_FORMAT_ASTC_4x4_SFLOAT_BLOCK_EXT";
+        case VK_FORMAT_ASTC_5x4_SFLOAT_BLOCK_EXT:
+                return "VK_FORMAT_ASTC_5x4_SFLOAT_BLOCK_EXT";
+        case VK_FORMAT_ASTC_5x5_SFLOAT_BLOCK_EXT:
+                return "VK_FORMAT_ASTC_5x5_SFLOAT_BLOCK_EXT";
+        case VK_FORMAT_ASTC_6x5_SFLOAT_BLOCK_EXT:
+                return "VK_FORMAT_ASTC_6x5_SFLOAT_BLOCK_EXT";
+        case VK_FORMAT_ASTC_6x6_SFLOAT_BLOCK_EXT:
+                return "VK_FORMAT_ASTC_6x6_SFLOAT_BLOCK_EXT";
+        case VK_FORMAT_ASTC_8x5_SFLOAT_BLOCK_EXT:
+                return "VK_FORMAT_ASTC_8x5_SFLOAT_BLOCK_EXT";
+        case VK_FORMAT_ASTC_8x6_SFLOAT_BLOCK_EXT:
+                return "VK_FORMAT_ASTC_8x6_SFLOAT_BLOCK_EXT";
+        case VK_FORMAT_ASTC_8x8_SFLOAT_BLOCK_EXT:
+                return "VK_FORMAT_ASTC_8x8_SFLOAT_BLOCK_EXT";
+        case VK_FORMAT_ASTC_10x5_SFLOAT_BLOCK_EXT:
+                return "VK_FORMAT_ASTC_10x5_SFLOAT_BLOCK_EXT";
+        case VK_FORMAT_ASTC_10x6_SFLOAT_BLOCK_EXT:
+                return "VK_FORMAT_ASTC_10x6_SFLOAT_BLOCK_EXT";
+        case VK_FORMAT_ASTC_10x8_SFLOAT_BLOCK_EXT:
+                return "VK_FORMAT_ASTC_10x8_SFLOAT_BLOCK_EXT";
+        case VK_FORMAT_ASTC_10x10_SFLOAT_BLOCK_EXT:
+                return "VK_FORMAT_ASTC_10x10_SFLOAT_BLOCK_EXT";
+        case VK_FORMAT_ASTC_12x10_SFLOAT_BLOCK_EXT:
+                return "VK_FORMAT_ASTC_12x10_SFLOAT_BLOCK_EXT";
+        case VK_FORMAT_ASTC_12x12_SFLOAT_BLOCK_EXT:
+                return "VK_FORMAT_ASTC_12x12_SFLOAT_BLOCK_EXT";
+        case VK_FORMAT_A4R4G4B4_UNORM_PACK16_EXT:
+                return "VK_FORMAT_A4R4G4B4_UNORM_PACK16_EXT";
+        case VK_FORMAT_A4B4G4R4_UNORM_PACK16_EXT:
+                return "VK_FORMAT_A4B4G4R4_UNORM_PACK16_EXT";
         }
 #pragma GCC diagnostic pop
 
         return "Unknown Vulkan VkFormat " + enum_to_string(format);
 }
 
-std::string color_space_to_string(VkColorSpaceKHR color_space)
+std::string color_space_to_string(const VkColorSpaceKHR color_space)
 {
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wswitch"
@@ -647,13 +713,15 @@ std::string color_space_to_string(VkColorSpaceKHR color_space)
                 return "VK_COLOR_SPACE_PASS_THROUGH_EXT";
         case VK_COLOR_SPACE_EXTENDED_SRGB_NONLINEAR_EXT:
                 return "VK_COLOR_SPACE_EXTENDED_SRGB_NONLINEAR_EXT";
+        case VK_COLOR_SPACE_DISPLAY_NATIVE_AMD:
+                return "VK_COLOR_SPACE_DISPLAY_NATIVE_AMD";
         }
 #pragma GCC diagnostic pop
 
         return "Unknown Vulkan VkColorSpaceKHR " + enum_to_string(color_space);
 }
 
-std::string image_type_to_string(VkImageType image_type)
+std::string image_type_to_string(const VkImageType image_type)
 {
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wswitch"
@@ -670,7 +738,7 @@ std::string image_type_to_string(VkImageType image_type)
         return "Unknown image type " + enum_to_string(image_type);
 }
 
-std::string image_layout_to_string(VkImageLayout image_layout)
+std::string image_layout_to_string(const VkImageLayout image_layout)
 {
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wswitch"

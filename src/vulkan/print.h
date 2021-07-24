@@ -24,7 +24,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 namespace ns::vulkan
 {
 std::string api_version_to_string(uint32_t api_version);
-std::array<std::string, 2> result_to_strings(const VkResult& code);
+std::array<std::string, 2> result_to_strings(VkResult code);
 std::string physical_device_type_to_string(VkPhysicalDeviceType type);
 std::string format_to_string(VkFormat format);
 std::string color_space_to_string(VkColorSpaceKHR color_space);
