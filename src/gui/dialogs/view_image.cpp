@@ -27,7 +27,71 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 namespace ns::gui::dialog
 {
+namespace
+{
+#if defined(__clang__)
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wglobal-constructors"
+#endif
+ViewImageParameters g_parameters{.path_string = {}, .normalize = false, .convert_to_8_bit = false};
+#if defined(__clang__)
+#pragma GCC diagnostic pop
+#endif
+
+ViewImageParameters read_current()
+{
+        return g_parameters;
+}
+
+void write_current(ViewImageParameters parameters)
+{
+        parameters.path_string = generic_utf8_filename(path_from_utf8(parameters.path_string).remove_filename());
+        g_parameters = parameters;
+}
+
+std::string initial_path_string(const ViewImageParameters& input, const std::string& file_name)
+{
+        const std::filesystem::path file_path = path_from_utf8(file_name);
+
+        if (file_path.empty())
+        {
+                return {};
+        }
+
+        if (!file_path.has_filename())
+        {
+                error("No file name in file name string " + file_name);
+        }
+
+        if (!std::filesystem::path(file_path).remove_filename().empty())
+        {
+                return file_name;
+        }
+
+        const std::filesystem::path previous_parent_path = path_from_utf8(input.path_string);
+
+        if (previous_parent_path.empty())
+        {
+                return {};
+        }
+
+        ASSERT(std::filesystem::path(previous_parent_path).filename().empty());
+        return generic_utf8_filename(previous_parent_path / file_path);
+}
+
+bool has_directory_and_filename(const std::string& file_name)
+{
+        std::filesystem::path path = path_from_utf8(file_name);
+        if (path.filename().empty())
+        {
+                return false;
+        }
+        return std::filesystem::is_directory(path.remove_filename());
+}
+}
+
 ViewImageDialog::ViewImageDialog(
+        const ViewImageParameters& input,
         const std::string& title,
         const std::string& file_name,
         std::optional<ViewImageParameters>& parameters)
@@ -36,10 +100,12 @@ ViewImageDialog::ViewImageDialog(
         ui.setupUi(this);
         setWindowTitle(QString::fromStdString(title));
 
-        ui.checkBox_normalize->setChecked(false);
-        ui.checkBox_8_bit->setChecked(false);
+        ui.checkBox_normalize->setChecked(input.normalize);
+        ui.checkBox_8_bit->setChecked(input.convert_to_8_bit);
+
         ui.label_path_name->setText("File:");
         ui.lineEdit_path->setReadOnly(true);
+        ui.lineEdit_path->setText(QString::fromStdString(initial_path_string(input, file_name)));
 
         connect(ui.toolButton_select_path, &QToolButton::clicked, this, &ViewImageDialog::on_select_path_clicked);
 
@@ -55,8 +121,8 @@ void ViewImageDialog::done(int r)
         }
 
         std::string path_string = ui.lineEdit_path->text().toStdString();
-        std::filesystem::path path = path_from_utf8(path_string);
-        if (!std::filesystem::is_directory(path.parent_path()) || path.filename().empty())
+
+        if (!has_directory_and_filename(path_string))
         {
                 std::string msg = "File is not selected";
                 dialog::message_critical(msg);
@@ -80,7 +146,7 @@ void ViewImageDialog::on_select_path_clicked()
         dialog::FileFilter filter;
         filter.name = "Images";
         filter.file_extensions.emplace_back(image::file_extension());
-        const bool read_only = true;
+        constexpr bool read_only = true;
 
         const std::string file_name =
                 generic_utf8_filename(path_from_utf8(ui.lineEdit_path->text().toStdString()).filename());
@@ -98,12 +164,15 @@ std::optional<ViewImageParameters> ViewImageDialog::show(const std::string& titl
 {
         std::optional<ViewImageParameters> parameters;
 
-        QtObjectInDynamicMemory w(new ViewImageDialog(title, file_name, parameters));
+        QtObjectInDynamicMemory w(new ViewImageDialog(read_current(), title, file_name, parameters));
 
         if (!w->exec() || w.isNull())
         {
                 return std::nullopt;
         }
+
+        write_current(*parameters);
+
         return parameters;
 }
 }

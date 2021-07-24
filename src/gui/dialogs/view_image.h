@@ -43,6 +43,7 @@ private:
         std::optional<ViewImageParameters>& m_parameters;
 
         ViewImageDialog(
+                const ViewImageParameters& input,
                 const std::string& title,
                 const std::string& file_name,
                 std::optional<ViewImageParameters>& parameters);
