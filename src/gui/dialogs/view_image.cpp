@@ -30,17 +30,17 @@ namespace ns::gui::dialog
 ViewImageDialog::ViewImageDialog(
         const std::string& title,
         const std::string& file_name,
-        bool use_convert_to_8_bit,
         std::optional<ViewImageParameters>& parameters)
         : QDialog(parent_for_dialog()), m_file_name(file_name), m_parameters(parameters)
 {
         ui.setupUi(this);
         setWindowTitle(QString::fromStdString(title));
 
-        ui.checkBox_8_bit->setVisible(use_convert_to_8_bit);
-
+        ui.checkBox_normalize->setChecked(false);
+        ui.checkBox_8_bit->setChecked(false);
         ui.label_path_name->setText("File:");
         ui.lineEdit_path->setReadOnly(true);
+
         connect(ui.toolButton_select_path, &QToolButton::clicked, this, &ViewImageDialog::on_select_path_clicked);
 
         this->adjustSize();
@@ -66,11 +66,8 @@ void ViewImageDialog::done(int r)
         m_parameters.emplace();
 
         m_parameters->path_string = std::move(path_string);
-
-        if (ui.checkBox_8_bit->isVisible())
-        {
-                m_parameters->convert_to_8_bit = ui.checkBox_8_bit->isChecked();
-        }
+        m_parameters->normalize = ui.checkBox_normalize->isChecked();
+        m_parameters->convert_to_8_bit = ui.checkBox_8_bit->isChecked();
 
         QDialog::done(r);
 }
@@ -97,14 +94,11 @@ void ViewImageDialog::on_select_path_clicked()
         }
 }
 
-std::optional<ViewImageParameters> ViewImageDialog::show(
-        const std::string& title,
-        const std::string& file_name,
-        bool use_convert_to_8_bit)
+std::optional<ViewImageParameters> ViewImageDialog::show(const std::string& title, const std::string& file_name)
 {
         std::optional<ViewImageParameters> parameters;
 
-        QtObjectInDynamicMemory w(new ViewImageDialog(title, file_name, use_convert_to_8_bit, parameters));
+        QtObjectInDynamicMemory w(new ViewImageDialog(title, file_name, parameters));
 
         if (!w->exec() || w.isNull())
         {

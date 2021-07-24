@@ -27,7 +27,8 @@ namespace ns::gui::dialog
 struct ViewImageParameters final
 {
         std::string path_string;
-        std::optional<bool> convert_to_8_bit;
+        bool normalize;
+        bool convert_to_8_bit;
 };
 
 class ViewImageDialog final : public QDialog
@@ -44,7 +45,6 @@ private:
         ViewImageDialog(
                 const std::string& title,
                 const std::string& file_name,
-                bool use_convert_to_8_bit,
                 std::optional<ViewImageParameters>& parameters);
 
         void done(int r) override;
@@ -54,7 +54,6 @@ private:
 public:
         [[nodiscard]] static std::optional<ViewImageParameters> show(
                 const std::string& title,
-                const std::string& file_name,
-                bool use_convert_to_8_bit);
+                const std::string& file_name);
 };
 }
