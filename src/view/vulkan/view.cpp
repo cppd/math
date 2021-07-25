@@ -484,7 +484,7 @@ class Impl final
                         const ImageResolve image(
                                 m_instance->device(), m_instance->graphics_compute_command_pool(), queue,
                                 *m_render_buffers, Region<2, int>(0, 0, width, height), VK_IMAGE_LAYOUT_GENERAL,
-                                VK_IMAGE_USAGE_SAMPLED_BIT | VK_IMAGE_USAGE_TRANSFER_SRC_BIT);
+                                VK_IMAGE_USAGE_TRANSFER_SRC_BIT);
 
                         image.resolve(queue, semaphore, INDEX);
                         vulkan::queue_wait_idle(queue);
