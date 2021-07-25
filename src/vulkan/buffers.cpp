@@ -200,35 +200,40 @@ ImageView create_image_view(
         return ImageView(device, create_info);
 }
 
+bool has_bits(const VkImageUsageFlags usage, const VkImageUsageFlagBits bits)
+{
+        return (usage & bits) == bits;
+}
+
 VkFormatFeatureFlags format_features_for_image_usage(VkImageUsageFlags usage)
 {
         VkFormatFeatureFlags features = 0;
-        if ((usage & VK_IMAGE_USAGE_TRANSFER_SRC_BIT) == VK_IMAGE_USAGE_TRANSFER_SRC_BIT)
+        if (has_bits(usage, VK_IMAGE_USAGE_TRANSFER_SRC_BIT))
         {
                 features |= VK_FORMAT_FEATURE_TRANSFER_SRC_BIT;
                 usage &= ~VK_IMAGE_USAGE_TRANSFER_SRC_BIT;
         }
-        if ((usage & VK_IMAGE_USAGE_TRANSFER_DST_BIT) == VK_IMAGE_USAGE_TRANSFER_DST_BIT)
+        if (has_bits(usage, VK_IMAGE_USAGE_TRANSFER_DST_BIT))
         {
                 features |= VK_FORMAT_FEATURE_TRANSFER_DST_BIT;
                 usage &= ~VK_IMAGE_USAGE_TRANSFER_DST_BIT;
         }
-        if ((usage & VK_IMAGE_USAGE_SAMPLED_BIT) == VK_IMAGE_USAGE_SAMPLED_BIT)
+        if (has_bits(usage, VK_IMAGE_USAGE_SAMPLED_BIT))
         {
                 features |= VK_FORMAT_FEATURE_SAMPLED_IMAGE_BIT;
                 usage &= ~VK_IMAGE_USAGE_SAMPLED_BIT;
         }
-        if ((usage & VK_IMAGE_USAGE_STORAGE_BIT) == VK_IMAGE_USAGE_STORAGE_BIT)
+        if (has_bits(usage, VK_IMAGE_USAGE_STORAGE_BIT))
         {
                 features |= VK_FORMAT_FEATURE_STORAGE_IMAGE_BIT;
                 usage &= ~VK_IMAGE_USAGE_STORAGE_BIT;
         }
-        if ((usage & VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT) == VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT)
+        if (has_bits(usage, VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT))
         {
                 features |= VK_FORMAT_FEATURE_COLOR_ATTACHMENT_BIT;
                 usage &= ~VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT;
         }
-        if ((usage & VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT) == VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT)
+        if (has_bits(usage, VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT))
         {
                 features |= VK_FORMAT_FEATURE_DEPTH_STENCIL_ATTACHMENT_BIT;
                 usage &= ~VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT;
@@ -278,6 +283,22 @@ void check_family_index(
         {
                 error("Queue family index is not found in the family indices");
         }
+}
+
+bool has_usage_for_image_view(const VkImageUsageFlags usage)
+{
+        return has_bits(usage, VK_IMAGE_USAGE_SAMPLED_BIT) || has_bits(usage, VK_IMAGE_USAGE_STORAGE_BIT)
+               || has_bits(usage, VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT)
+               || has_bits(usage, VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT)
+               || has_bits(usage, VK_IMAGE_USAGE_INPUT_ATTACHMENT_BIT)
+               || has_bits(usage, VK_IMAGE_USAGE_TRANSIENT_ATTACHMENT_BIT)
+               || has_bits(usage, VK_IMAGE_USAGE_FRAGMENT_SHADING_RATE_ATTACHMENT_BIT_KHR)
+               || has_bits(usage, VK_IMAGE_USAGE_FRAGMENT_DENSITY_MAP_BIT_EXT);
+}
+
+bool has_usage_for_transfer(const VkImageUsageFlags usage)
+{
+        return has_bits(usage, VK_IMAGE_USAGE_TRANSFER_SRC_BIT) || has_bits(usage, VK_IMAGE_USAGE_TRANSFER_DST_BIT);
 }
 }
 
@@ -432,8 +453,7 @@ ImageWithMemory::ImageWithMemory(
                   VK_IMAGE_TILING_OPTIMAL,
                   m_usage)),
           m_device_memory(
-                  create_device_memory(m_device, m_physical_device, m_image, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT)),
-          m_image_view(create_image_view(m_device, m_image, m_type, m_format, VK_IMAGE_ASPECT_COLOR_BIT))
+                  create_device_memory(m_device, m_physical_device, m_image, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT))
 {
         if (!std::none_of(
                     format_candidates.cbegin(), format_candidates.cend(),
@@ -443,6 +463,15 @@ ImageWithMemory::ImageWithMemory(
                     }))
         {
                 error("Not a color format: " + formats_to_sorted_string(format_candidates, ", "));
+        }
+
+        if (has_usage_for_image_view(usage))
+        {
+                m_image_view = create_image_view(m_device, m_image, m_type, m_format, VK_IMAGE_ASPECT_COLOR_BIT);
+        }
+        else if (!has_usage_for_transfer(usage))
+        {
+                error("Unsupported image usage " + to_string_binary(usage) + " for image");
         }
 }
 
@@ -518,6 +547,7 @@ VkFormat ImageWithMemory::format() const
 
 VkImageView ImageWithMemory::image_view() const
 {
+        ASSERT(static_cast<VkImageView>(m_image_view) != VK_NULL_HANDLE);
         return m_image_view;
 }
 
@@ -591,8 +621,7 @@ DepthImageWithMemory::DepthImageWithMemory(
                   VK_IMAGE_TILING_OPTIMAL,
                   m_usage)),
           m_device_memory(
-                  create_device_memory(device, device.physical_device(), m_image, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT)),
-          m_image_view(create_image_view(device, m_image, VK_IMAGE_TYPE_2D, m_format, VK_IMAGE_ASPECT_DEPTH_BIT))
+                  create_device_memory(device, device.physical_device(), m_image, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT))
 {
         if (!std::all_of(
                     formats.cbegin(), formats.cend(),
@@ -607,6 +636,16 @@ DepthImageWithMemory::DepthImageWithMemory(
         if ((usage & VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT) == VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT)
         {
                 error("Usage VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT for depth image");
+        }
+
+        if (has_usage_for_image_view(usage))
+        {
+                m_image_view =
+                        create_image_view(device, m_image, VK_IMAGE_TYPE_2D, m_format, VK_IMAGE_ASPECT_DEPTH_BIT);
+        }
+        else if (!has_usage_for_transfer(usage))
+        {
+                error("Unsupported image usage " + to_string_binary(usage) + " for depth image");
         }
 }
 
@@ -641,6 +680,7 @@ VkFormat DepthImageWithMemory::format() const
 
 VkImageView DepthImageWithMemory::image_view() const
 {
+        ASSERT(static_cast<VkImageView>(m_image_view) != VK_NULL_HANDLE);
         return m_image_view;
 }
 
