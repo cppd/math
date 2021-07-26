@@ -50,13 +50,13 @@ std::unique_ptr<const Scene<N, T, Color>> create_cornell_box_scene(
         //constexpr T LAMP_SIZE = 0.2;
         constexpr T BOX_SIZE = 0.16;
         constexpr T BOX_SPACE = 0.08;
-        constexpr T CAMERA = 0.9;
+        constexpr T CAMERA = 0.8;
         constexpr T NEAR = 0.7;
         constexpr T DEPTH = NEAR + 0.5 + BOX_SIZE + 2 * BOX_SPACE;
 
         constexpr T ALPHA = 1;
         constexpr T METALNESS = 0;
-        constexpr T ROUGHNESS = 0.2;
+        constexpr T ROUGHNESS = 0.35;
 
         std::vector<std::unique_ptr<const Shape<N, T, Color>>> shapes;
         std::vector<std::unique_ptr<const LightSource<N, T, Color>>> light_sources;
