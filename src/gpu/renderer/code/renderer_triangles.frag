@@ -66,10 +66,10 @@ vec4 texture_Ks_color(vec2 c)
         return texture(texture_Ks, c);
 }
 
-bool shadow(vec4 shadow_position)
+float shadow_weight()
 {
-        float dist = texture(shadow_texture, shadow_position.xy).r;
-        return dist <= gs.shadow_position.z;
+        float d = texture(shadow_texture, gs.shadow_position.xy).r;
+        return d <= gs.shadow_position.z ? 1 : 0;
 }
 
 bool has_texture_coordinates()
@@ -110,10 +110,13 @@ vec3 shade(vec3 color)
         }
 
         vec3 s = 0.2 * shade_camera(color, n, v);
-        if (!shadow(gs.shadow_position))
+
+        float c = (1 - shadow_weight());
+        if (c > 0)
         {
-                s += 0.8 * shade_light(color, n, v);
+                s += c * 0.8 * shade_light(color, n, v);
         }
+
         return s;
 }
 
