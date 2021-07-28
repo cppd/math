@@ -36,19 +36,19 @@ void normalize(std::vector<std::byte>* bytes)
         static constexpr std::size_t COLOR_SIZE = N * sizeof(float);
         static constexpr std::size_t PIXEL_SIZE = COMPONENT_COUNT * sizeof(float);
 
-        const std::size_t pixel_count = bytes->size() / PIXEL_SIZE;
-        if (pixel_count * PIXEL_SIZE != bytes->size())
+        if (bytes->size() % PIXEL_SIZE != 0)
         {
                 error("Error size " + to_string(bytes->size()) + " for normalizing " + to_string(COMPONENT_COUNT)
                       + "-component pixels");
         }
 
         std::byte* ptr;
+        const std::byte* const end = bytes->data() + bytes->size();
 
         float max = limits<float>::lowest();
 
         ptr = bytes->data();
-        for (std::size_t i = 0; i < pixel_count; ++i)
+        while (ptr != end)
         {
                 std::array<float, N> pixel;
                 static_assert(std::span<float>(pixel).size_bytes() == COLOR_SIZE);
@@ -72,7 +72,7 @@ void normalize(std::vector<std::byte>* bytes)
         }
 
         ptr = bytes->data();
-        for (std::size_t i = 0; i < pixel_count; ++i)
+        while (ptr != end)
         {
                 std::array<float, N> pixel;
                 static_assert(std::span<float>(pixel).size_bytes() == COLOR_SIZE);
