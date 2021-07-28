@@ -23,7 +23,10 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "../com/support.h"
 
 #include <src/com/file/path.h>
+#include <src/com/string/ascii.h>
 #include <src/image/file.h>
+
+#include <algorithm>
 
 namespace ns::gui::dialog
 {
@@ -88,11 +91,25 @@ bool has_directory_and_filename(const std::string& file_name)
         }
         return std::filesystem::is_directory(path.remove_filename());
 }
+
+void check_print_characters(const std::string& s)
+{
+        if (!std::all_of(
+                    s.begin(), s.end(),
+                    [](char c)
+                    {
+                            return ascii::is_print(c) || !ascii::is_not_new_line(c);
+                    }))
+        {
+                error("Information string has unsupported characters " + s);
+        }
+}
 }
 
 ViewImageDialog::ViewImageDialog(
         const ViewImageParameters& input,
         const std::string& title,
+        const std::string& info,
         const std::string& file_name,
         std::optional<ViewImageParameters>& parameters)
         : QDialog(parent_for_dialog()), m_file_name(file_name), m_parameters(parameters)
@@ -103,7 +120,17 @@ ViewImageDialog::ViewImageDialog(
         ui.checkBox_normalize->setChecked(input.normalize);
         ui.checkBox_8_bit->setChecked(input.convert_to_8_bit);
 
-        ui.label_path_name->setText("File:");
+        if (!info.empty())
+        {
+                check_print_characters(info);
+                ui.label_info->setText(QString::fromStdString(info));
+        }
+        else
+        {
+                ui.label_info->setVisible(false);
+                ui.line->setVisible(false);
+        }
+
         ui.lineEdit_path->setReadOnly(true);
         ui.lineEdit_path->setText(QString::fromStdString(initial_path_string(input, file_name)));
 
@@ -160,11 +187,14 @@ void ViewImageDialog::on_select_path_clicked()
         }
 }
 
-std::optional<ViewImageParameters> ViewImageDialog::show(const std::string& title, const std::string& file_name)
+std::optional<ViewImageParameters> ViewImageDialog::show(
+        const std::string& title,
+        const std::string& info,
+        const std::string& file_name)
 {
         std::optional<ViewImageParameters> parameters;
 
-        QtObjectInDynamicMemory w(new ViewImageDialog(read_current(), title, file_name, parameters));
+        QtObjectInDynamicMemory w(new ViewImageDialog(read_current(), title, info, file_name, parameters));
 
         if (!w->exec() || w.isNull())
         {

@@ -45,6 +45,7 @@ private:
         ViewImageDialog(
                 const ViewImageParameters& input,
                 const std::string& title,
+                const std::string& info,
                 const std::string& file_name,
                 std::optional<ViewImageParameters>& parameters);
 
@@ -55,6 +56,7 @@ private:
 public:
         [[nodiscard]] static std::optional<ViewImageParameters> show(
                 const std::string& title,
+                const std::string& info,
                 const std::string& file_name);
 };
 }
