@@ -101,7 +101,6 @@ Vector<4, T> orthogonal_complement(const std::array<Vector<4, T>, 3>& v)
         return res;
 }
 
-#if 0
 inline Vector<4, mpz_class> orthogonal_complement(const std::array<Vector<4, mpz_class>, 3>& v)
 {
         const auto add_mul = [](mpz_class* const res, const mpz_class& a, const mpz_class& b, const mpz_class& c,
@@ -154,7 +153,6 @@ inline Vector<4, mpz_class> orthogonal_complement(const std::array<Vector<4, mpz
 
         return res;
 }
-#endif
 
 template <std::size_t N, typename T, typename CalculationType = T>
 Vector<N, CalculationType> orthogonal_complement(
