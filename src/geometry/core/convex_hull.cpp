@@ -291,6 +291,25 @@ public:
         }
 };
 
+// The T range is for determinants only, not for Gram matrix
+template <int COUNT, std::size_t N, typename T>
+bool linearly_independent(const std::array<Vector<N, T>, N>& vectors)
+{
+        static_assert(is_integral<T>);
+        static_assert(N > 1);
+        static_assert(COUNT > 0 && COUNT <= N);
+
+        for (const std::array<unsigned char, COUNT>& h_map : combinations<N, COUNT>())
+        {
+                if (numerical::determinant_by_cofactor_expansion(vectors, sequence_uchar_array<COUNT>, h_map) != 0)
+                {
+                        return true;
+                }
+        }
+
+        return false;
+}
+
 template <unsigned simplex_i, std::size_t N, typename SourceType, typename ComputeType>
 void find_simplex_points(
         const std::vector<Vector<N, SourceType>>& points,
@@ -306,7 +325,7 @@ void find_simplex_points(
                 numerical::difference(
                         &(*simplex_vectors)[simplex_i - 1], points[point_i], points[(*simplex_points)[0]]);
 
-                if (numerical::linearly_independent<simplex_i>(*simplex_vectors))
+                if (linearly_independent<simplex_i>(*simplex_vectors))
                 {
                         break;
                 }
@@ -319,8 +338,7 @@ void find_simplex_points(
 
         (*simplex_points)[simplex_i] = point_i;
 
-        // N - максимальный индекс для массива из N + 1 точек
-        if constexpr (simplex_i != N)
+        if constexpr (simplex_i + 1 < N + 1)
         {
                 find_simplex_points<simplex_i + 1>(points, simplex_points, simplex_vectors, point_i + 1);
         }

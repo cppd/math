@@ -32,6 +32,7 @@ Wiley, 2014.
 
 #include <src/com/arrays.h>
 #include <src/com/error.h>
+#include <src/com/mpz.h>
 
 #include <array>
 #include <cmath>
@@ -47,7 +48,8 @@ Vector<N, T> orthogonal_complement(const std::array<Vector<N, T>, N - 1>& vector
         Vector<N, T> res;
         for (unsigned i = 0; i < N; ++i)
         {
-                T minor = determinant(vectors, sequence_uchar_array<N - 1>, del_elem(sequence_uchar_array<N>, i));
+                T minor = determinant_by_cofactor_expansion(
+                        vectors, sequence_uchar_array<N - 1>, del_elem(sequence_uchar_array<N>, i));
                 res[i] = (i & 1) ? -minor : minor;
         }
         return res;
@@ -62,20 +64,21 @@ Vector<2, T> orthogonal_complement(const std::array<Vector<2, T>, 1>& v)
 template <typename T>
 Vector<3, T> orthogonal_complement(const std::array<Vector<3, T>, 2>& v)
 {
-        // clang-format off
         Vector<3, T> res;
         res[0] = +(v[0][1] * v[1][2] - v[0][2] * v[1][1]);
         res[1] = -(v[0][0] * v[1][2] - v[0][2] * v[1][0]);
         res[2] = +(v[0][0] * v[1][1] - v[0][1] * v[1][0]);
         return res;
-        // clang-format on
 }
 
 template <typename T>
 Vector<4, T> orthogonal_complement(const std::array<Vector<4, T>, 3>& v)
 {
-        // clang-format off
+        static_assert(!std::is_same_v<mpz_class, T>);
+
         Vector<4, T> res;
+
+        // clang-format off
 
         res[0] = + v[0][1] * (v[1][2] * v[2][3] - v[1][3] * v[2][2])
                  - v[0][2] * (v[1][1] * v[2][3] - v[1][3] * v[2][1])
@@ -93,9 +96,65 @@ Vector<4, T> orthogonal_complement(const std::array<Vector<4, T>, 3>& v)
                  + v[0][1] * (v[1][0] * v[2][2] - v[1][2] * v[2][0])
                  - v[0][2] * (v[1][0] * v[2][1] - v[1][1] * v[2][0]);
 
-        return res;
         // clang-format on
+
+        return res;
 }
+
+#if 0
+inline Vector<4, mpz_class> orthogonal_complement(const std::array<Vector<4, mpz_class>, 3>& v)
+{
+        const auto add_mul = [](mpz_class* const res, const mpz_class& a, const mpz_class& b, const mpz_class& c,
+                                const mpz_class& d, const mpz_class& e)
+        {
+                mpz_mul(res->get_mpz_t(), b.get_mpz_t(), c.get_mpz_t());
+                mpz_submul(res->get_mpz_t(), d.get_mpz_t(), e.get_mpz_t());
+                mpz_mul(res->get_mpz_t(), a.get_mpz_t(), res->get_mpz_t());
+        };
+
+        const auto res_1 = [](mpz_class* const res, const mpz_class& a, const mpz_class& b, const mpz_class& c)
+        {
+                *res = a;
+                mpz_sub(res->get_mpz_t(), res->get_mpz_t(), b.get_mpz_t());
+                mpz_add(res->get_mpz_t(), res->get_mpz_t(), c.get_mpz_t());
+        };
+
+        const auto res_2 = [](mpz_class* const res, const mpz_class& a, const mpz_class& b, const mpz_class& c)
+        {
+                *res = b;
+                mpz_sub(res->get_mpz_t(), res->get_mpz_t(), a.get_mpz_t());
+                mpz_sub(res->get_mpz_t(), res->get_mpz_t(), c.get_mpz_t());
+        };
+
+        thread_local Vector<4, mpz_class> res;
+
+        thread_local mpz_class x1;
+        thread_local mpz_class x2;
+        thread_local mpz_class x3;
+
+        add_mul(&x1, v[0][1], v[1][2], v[2][3], v[1][3], v[2][2]);
+        add_mul(&x2, v[0][2], v[1][1], v[2][3], v[1][3], v[2][1]);
+        add_mul(&x3, v[0][3], v[1][1], v[2][2], v[1][2], v[2][1]);
+        res_1(&res[0], x1, x2, x3);
+
+        add_mul(&x1, v[0][0], v[1][2], v[2][3], v[1][3], v[2][2]);
+        add_mul(&x2, v[0][2], v[1][0], v[2][3], v[1][3], v[2][0]);
+        add_mul(&x3, v[0][3], v[1][0], v[2][2], v[1][2], v[2][0]);
+        res_2(&res[1], x1, x2, x3);
+
+        add_mul(&x1, v[0][0], v[1][1], v[2][3], v[1][3], v[2][1]);
+        add_mul(&x2, v[0][1], v[1][0], v[2][3], v[1][3], v[2][0]);
+        add_mul(&x3, v[0][3], v[1][0], v[2][1], v[1][1], v[2][0]);
+        res_1(&res[2], x1, x2, x3);
+
+        add_mul(&x1, v[0][0], v[1][1], v[2][2], v[1][2], v[2][1]);
+        add_mul(&x2, v[0][1], v[1][0], v[2][2], v[1][2], v[2][0]);
+        add_mul(&x3, v[0][2], v[1][0], v[2][1], v[1][1], v[2][0]);
+        res_2(&res[3], x1, x2, x3);
+
+        return res;
+}
+#endif
 
 template <std::size_t N, typename T, typename CalculationType = T>
 Vector<N, CalculationType> orthogonal_complement(

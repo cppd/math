@@ -20,14 +20,10 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "vec.h"
 
 #include <src/com/arrays.h>
-#include <src/com/combinatorics.h>
-#include <src/com/type/trait.h>
 
 #include <array>
 
 namespace ns::numerical
-{
-namespace determinant_implementation
 {
 template <std::size_t N_V, std::size_t N_H, typename T, std::size_t DET_SIZE>
 constexpr T determinant_by_cofactor_expansion(
@@ -98,38 +94,5 @@ constexpr T determinant_by_cofactor_expansion(
 
                 return det;
         }
-}
-}
-
-template <std::size_t N_V, std::size_t N_H, typename T, std::size_t DET_SIZE>
-constexpr T determinant(
-        const std::array<Vector<N_H, T>, N_V>& vectors,
-        const std::array<unsigned char, DET_SIZE>& v_map,
-        const std::array<unsigned char, DET_SIZE>& h_map)
-{
-        return determinant_implementation::determinant_by_cofactor_expansion(vectors, v_map, h_map);
-}
-
-// Тип данных передаваемых векторов и диапазон значений рассчитаны только на определители
-// из этих чисел, поэтому нельзя использовать скалярные произведения, матрицы Грама и т.п.
-template <int COUNT, std::size_t N, typename T>
-bool linearly_independent(const std::array<Vector<N, T>, N>& vectors)
-{
-        static_assert(is_integral<T>);
-        static_assert(N > 1);
-        static_assert(COUNT > 0);
-        static_assert(COUNT <= N);
-
-        // Перебор всех вариантов подвекторов размера COUNT,
-        // создавая квадратные матрицы размером COUNT.
-        for (const std::array<unsigned char, COUNT>& h_map : combinations<N, COUNT>())
-        {
-                if (determinant(vectors, sequence_uchar_array<COUNT>, h_map) != 0)
-                {
-                        return true;
-                }
-        }
-
-        return false;
 }
 }

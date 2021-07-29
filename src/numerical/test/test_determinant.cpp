@@ -15,16 +15,16 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include "determinant.h"
+#include "../determinant.h"
 
-namespace ns::numerical::determinant_implementation
+namespace ns::numerical
 {
 // clang-format off
 static_assert
 (
         1'868'201'030'776'500
         ==
-        determinant<7, 7, __int128, 7>
+        determinant_by_cofactor_expansion<7, 7, __int128, 7>
         (
         {{
         {10,  2,   3,   4,   5,   6,   7},
