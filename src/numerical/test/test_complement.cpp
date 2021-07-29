@@ -167,7 +167,7 @@ void test_complement(int count)
                 }
         }
 
-        LOG("Test passed");
+        LOG("Test complement passed");
 }
 
 template <std::size_t N, typename T>
@@ -204,6 +204,79 @@ void test(ProgressRatio* progress)
         progress->set(3, 3);
 }
 
+mpz_class random_mpz(std::mt19937_64& random_engine)
+{
+        using T = long long;
+        std::uniform_int_distribution<T> uid(limits<T>::lowest(), limits<T>::max());
+        mpz_class a;
+        mpz_class b;
+        mpz_class c;
+        mpz_from_any(&a, uid(random_engine));
+        mpz_from_any(&b, uid(random_engine));
+        mpz_from_any(&c, uid(random_engine));
+        return a * b * c;
+}
+
+template <std::size_t N>
+bool is_zero_product(const Vector<N, mpz_class>& v1, const Vector<N, mpz_class>& v2)
+{
+        mpz_class sum = 0;
+        for (std::size_t i = 0; i < N; ++i)
+        {
+                sum += v1[i] * v2[i];
+        }
+        return sum == 0;
+}
+
+template <std::size_t N>
+void test_mpz_impl()
+{
+        static_assert(N > 1);
+
+        std::mt19937_64 random_engine = create_engine<std::mt19937_64>();
+
+        std::array<Vector<N, mpz_class>, N - 1> vectors;
+
+        for (Vector<N, mpz_class>& v : vectors)
+        {
+                do
+                {
+                        for (std::size_t i = 0; i < N; ++i)
+                        {
+                                v[i] = random_mpz(random_engine);
+                        }
+                } while (is_zero_product(v, v));
+        }
+
+        const Vector<N, mpz_class> complement = orthogonal_complement(vectors);
+        if (is_zero_product(complement, complement))
+        {
+                error("Complement vector is zero");
+        }
+
+        for (const Vector<N, mpz_class>& v : vectors)
+        {
+                if (!is_zero_product(complement, v))
+                {
+                        error("Complement vector is not orthogonal for mpz_class");
+                }
+        }
+}
+
+void test_mpz()
+{
+        LOG("Test complement MPZ");
+        test_mpz_impl<2>();
+        test_mpz_impl<3>();
+        test_mpz_impl<4>();
+        test_mpz_impl<5>();
+        test_mpz_impl<6>();
+        test_mpz_impl<7>();
+        test_mpz_impl<8>();
+        LOG("Test complement MPZ passed");
+}
+
 TEST_SMALL("Complement", test)
+TEST_SMALL("Complement, MPZ", test_mpz)
 }
 }
