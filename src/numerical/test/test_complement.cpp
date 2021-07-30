@@ -204,79 +204,120 @@ void test(ProgressRatio* progress)
         progress->set(3, 3);
 }
 
-mpz_class random_mpz(std::mt19937_64& random_engine)
-{
-        using T = long long;
-        std::uniform_int_distribution<T> uid(limits<T>::lowest(), limits<T>::max());
-        mpz_class a;
-        mpz_class b;
-        mpz_class c;
-        mpz_from_any(&a, uid(random_engine));
-        mpz_from_any(&b, uid(random_engine));
-        mpz_from_any(&c, uid(random_engine));
-        return a * b * c;
-}
+//
 
-template <std::size_t N>
-bool is_zero_product(const Vector<N, mpz_class>& v1, const Vector<N, mpz_class>& v2)
+void random_number(mpz_class* v, std::mt19937_64& random_engine)
 {
-        mpz_class sum = 0;
-        for (std::size_t i = 0; i < N; ++i)
+        std::array<unsigned char, 50> data;
+        std::uniform_int_distribution<int> uid(0, limits<unsigned char>::max());
+        for (unsigned char& c : data)
         {
-                sum += v1[i] * v2[i];
+                c = uid(random_engine);
         }
-        return sum == 0;
+        mpz_import(v->get_mpz_t(), 1, -1, data.size(), 0, 0, data.data());
+        if (std::bernoulli_distribution(0.5)(random_engine))
+        {
+                mpz_neg(v->get_mpz_t(), v->get_mpz_t());
+        }
 }
 
-template <std::size_t N>
-void test_mpz_impl()
+void random_number(long long* v, std::mt19937_64& random_engine)
 {
-        static_assert(N > 1);
+        *v = std::uniform_int_distribution<long long>(-100, 100)(random_engine);
+}
 
-        std::mt19937_64 random_engine = create_engine<std::mt19937_64>();
-
-        std::array<Vector<N, mpz_class>, N - 1> vectors;
-
-        for (Vector<N, mpz_class>& v : vectors)
+template <std::size_t N, typename T>
+std::array<Vector<N, T>, N - 1> random_vectors(std::mt19937_64& random_engine)
+{
+        std::array<Vector<N, T>, N - 1> vectors;
+        for (Vector<N, T>& v : vectors)
         {
+                bool not_zero = false;
                 do
                 {
                         for (std::size_t i = 0; i < N; ++i)
                         {
-                                v[i] = random_mpz(random_engine);
+                                random_number(&v[i], random_engine);
+                                not_zero = (v[i] != 0);
                         }
-                } while (is_zero_product(v, v));
+                } while (!not_zero);
         }
+        return vectors;
+}
 
-        const Vector<N, mpz_class> complement = orthogonal_complement(vectors);
-        if (is_zero_product(complement, complement))
+template <std::size_t N, typename T>
+T dot_product(const Vector<N, T>& v1, const Vector<N, T>& v2)
+{
+        T sum = 0;
+        for (std::size_t i = 0; i < N; ++i)
         {
-                error("Complement vector is zero");
+                sum += v1[i] * v2[i];
         }
+        return sum;
+}
 
-        for (const Vector<N, mpz_class>& v : vectors)
+template <typename T>
+std::string type_name() requires std::is_same_v<mpz_class, T>
+{
+        return "mpz";
+}
+
+template <typename T>
+std::string type_name() requires std::is_same_v<long long, T>
+{
+        return "long long";
+}
+
+template <std::size_t N, typename T>
+void test_integer_impl()
+{
+        static_assert(N >= 2);
+
+        std::mt19937_64 random_engine = create_engine<std::mt19937_64>();
+
+        std::array<Vector<N, T>, N - 1> vectors;
+        static Vector<N, T> complement;
+        int i = 0;
+        do
         {
-                if (!is_zero_product(complement, v))
+                if (++i > 10)
                 {
-                        error("Complement vector is not orthogonal for mpz_class");
+                        error("Non-zero complement not found, " + type_name<T>());
+                }
+                vectors = random_vectors<N, T>(random_engine);
+                complement = orthogonal_complement(vectors);
+        } while (dot_product(complement, complement) == 0);
+
+        for (const Vector<N, T>& v : vectors)
+        {
+                if (dot_product(complement, v) != 0)
+                {
+                        error("Complement is not orthogonal, " + type_name<T>());
                 }
         }
 }
 
-void test_mpz()
+template <typename T>
+void test_integer_impl()
 {
-        LOG("Test complement MPZ");
-        test_mpz_impl<2>();
-        test_mpz_impl<3>();
-        test_mpz_impl<4>();
-        test_mpz_impl<5>();
-        test_mpz_impl<6>();
-        test_mpz_impl<7>();
-        test_mpz_impl<8>();
-        LOG("Test complement MPZ passed");
+        test_integer_impl<2, T>();
+        test_integer_impl<3, T>();
+        test_integer_impl<4, T>();
+        test_integer_impl<5, T>();
+        test_integer_impl<6, T>();
+        test_integer_impl<7, T>();
+        test_integer_impl<8, T>();
+}
+
+void test_integer()
+{
+        LOG("Test complement");
+        test_integer_impl<mpz_class>();
+        test_integer_impl<long long>();
+        LOG("Test complement passed");
 }
 
 TEST_SMALL("Complement", test)
-TEST_SMALL("Complement, MPZ", test_mpz)
+TEST_SMALL("Complement, integer", test_integer)
 }
 }
