@@ -45,12 +45,23 @@ Vector<N, T> orthogonal_complement(const std::array<Vector<N, T>, N - 1>& vector
 {
         static_assert(N >= 5);
 
-        Vector<N, T> res;
-        for (unsigned i = 0; i < N; ++i)
+        const auto minor = [&vectors](std::size_t i)
         {
-                T minor = determinant_by_cofactor_expansion(
+                return determinant_by_cofactor_expansion(
                         vectors, sequence_uchar_array<N - 1>, del_elem(sequence_uchar_array<N>, i));
-                res[i] = (i & 1) ? -minor : minor;
+        };
+
+        Vector<N, T> res;
+        for (std::size_t i = 0; i < N; ++i)
+        {
+                if (i & 1)
+                {
+                        res[i] = -minor(i);
+                }
+                else
+                {
+                        res[i] = minor(i);
+                }
         }
         return res;
 }
@@ -162,7 +173,7 @@ Vector<N, CalculationType> orthogonal_complement(
         static_assert(N > 1);
 
         std::array<Vector<N, CalculationType>, N - 1> vectors;
-        for (unsigned i = 0; i < N - 1; ++i)
+        for (std::size_t i = 0; i < N - 1; ++i)
         {
                 difference(&vectors[i], points[indices[i + 1]], points[indices[0]]);
         }
@@ -198,9 +209,9 @@ std::array<Vector<N, T>, N - 1> orthogonal_complement_by_subspace(const Vector<N
         // Найти координатную ось, к которой приближается unit_vector,
         // тогда неколлинеарными векторами к unit_vector будут все
         // остальные координатные оси.
-        const unsigned exclude_axis = [&]
+        const std::size_t exclude_axis = [&]
         {
-                unsigned i = 0;
+                std::size_t i = 0;
                 for (; i < N - 2; ++i)
                 {
                         if (std::abs(unit_vector[i]) > LIMIT)
@@ -214,7 +225,7 @@ std::array<Vector<N, T>, N - 1> orthogonal_complement_by_subspace(const Vector<N
         // Найти неколлинеарные к unit_vector векторы в количестве
         // N - 2, что вместе с unit_vector даст N - 1 векторов
         std::array<Vector<N, T>, N - 1> subspace_basis;
-        for (unsigned i = 0, num = 0; num < N - 2; ++i)
+        for (std::size_t i = 0, num = 0; num < N - 2; ++i)
         {
                 if (i != exclude_axis)
                 {
@@ -225,7 +236,7 @@ std::array<Vector<N, T>, N - 1> orthogonal_complement_by_subspace(const Vector<N
 
         // Вычисление векторов из одномерных ортогональных дополнений
         // к исходному вектору и к уже найденным векторам
-        for (unsigned i = 0; i < N - 2; ++i)
+        for (std::size_t i = 0; i < N - 2; ++i)
         {
                 subspace_basis[i] = orthogonal_complement(subspace_basis).normalized();
         }
@@ -243,11 +254,11 @@ std::array<Vector<N, T>, N - 1> orthogonal_complement_by_gram_schmidt(const Vect
         // unit_vector и остальные оси не будут линейно зависимыми.
         // Или можно найти первую ось, где abs(unit_vector[i])
         // больше (constant < 1) * sqrt(1/(N-1)).
-        const unsigned exclude_axis = [&]
+        const std::size_t exclude_axis = [&]
         {
-                unsigned i_max = 0;
+                std::size_t i_max = 0;
                 T v_max = std::abs(unit_vector[0]);
-                for (unsigned i = 1; i < N; ++i)
+                for (std::size_t i = 1; i < N; ++i)
                 {
                         T v = std::abs(unit_vector[i]);
                         if (v > v_max)
@@ -261,7 +272,7 @@ std::array<Vector<N, T>, N - 1> orthogonal_complement_by_gram_schmidt(const Vect
 
         std::array<Vector<N, T>, N> basis;
         basis[0] = unit_vector;
-        for (unsigned i = 0, num = 1; i < N; ++i)
+        for (std::size_t i = 0, num = 1; i < N; ++i)
         {
                 if (i != exclude_axis)
                 {
@@ -271,12 +282,12 @@ std::array<Vector<N, T>, N - 1> orthogonal_complement_by_gram_schmidt(const Vect
 
         // Из неортогонального базиса делается ортогональный базис.
         std::array<Vector<N, T>, N> orthogonal_basis = basis;
-        for (unsigned i = 1; i < N; ++i)
+        for (std::size_t i = 1; i < N; ++i)
         {
                 // Делить на длину не надо, так как найденные векторы ортогонального
                 // базиса тут же приводятся к единичной длине
                 Vector<N, T> sum(0);
-                for (unsigned n = 0; n < i; ++n)
+                for (std::size_t n = 0; n < i; ++n)
                 {
                         sum += dot(basis[i], orthogonal_basis[n]) * orthogonal_basis[n];
                 }
@@ -285,7 +296,7 @@ std::array<Vector<N, T>, N - 1> orthogonal_complement_by_gram_schmidt(const Vect
 
         // Выбросить исходный вектор, который находится по индексу 0
         std::array<Vector<N, T>, N - 1> res;
-        for (unsigned i = 0; i < N - 1; ++i)
+        for (std::size_t i = 0; i < N - 1; ++i)
         {
                 res[i] = orthogonal_basis[i + 1];
         }
