@@ -35,52 +35,44 @@ constexpr T determinant_by_cofactor_expansion(
         static_assert(N_H >= DET_SIZE);
         static_assert(DET_SIZE > 0);
 
-        // Надо выделить v_map.size() == h_map.size() векторов по вертикали и горизонтали,
-        // определяя коэффициенты по v_map и h_map.
-        // Например, строки с номерами v_map 0 и 3, в каждой строке надо взять элементы
-        // h_map с номерами 1 и 4. Получается матрица 2x2.
-        //           h_map
-        //        x ~ x x ~ x
-        //        x x x x x x
-        // v_map  x x x x x x
-        //        x ~ x x ~ x
-        //        x x x x x x
-
         if constexpr (DET_SIZE == 1)
         {
                 return vectors[v_map[0]][h_map[0]];
         }
-        if constexpr (DET_SIZE == 2)
+        else if constexpr (DET_SIZE == 2)
         {
                 return vectors[v_map[0]][h_map[0]] * vectors[v_map[1]][h_map[1]]
                        - vectors[v_map[0]][h_map[1]] * vectors[v_map[1]][h_map[0]];
         }
-        if constexpr (DET_SIZE == 3)
+        else if constexpr (DET_SIZE == 3)
         {
-                T v00 = vectors[v_map[0]][h_map[0]];
-                T v01 = vectors[v_map[0]][h_map[1]];
-                T v02 = vectors[v_map[0]][h_map[2]];
-                T v10 = vectors[v_map[1]][h_map[0]];
-                T v11 = vectors[v_map[1]][h_map[1]];
-                T v12 = vectors[v_map[1]][h_map[2]];
-                T v20 = vectors[v_map[2]][h_map[0]];
-                T v21 = vectors[v_map[2]][h_map[1]];
-                T v22 = vectors[v_map[2]][h_map[2]];
+                const T& v00 = vectors[v_map[0]][h_map[0]];
+                const T& v01 = vectors[v_map[0]][h_map[1]];
+                const T& v02 = vectors[v_map[0]][h_map[2]];
+                const T& v10 = vectors[v_map[1]][h_map[0]];
+                const T& v11 = vectors[v_map[1]][h_map[1]];
+                const T& v12 = vectors[v_map[1]][h_map[2]];
+                const T& v20 = vectors[v_map[2]][h_map[0]];
+                const T& v21 = vectors[v_map[2]][h_map[1]];
+                const T& v22 = vectors[v_map[2]][h_map[2]];
 
-                T d0 = v00 * (v11 * v22 - v12 * v21);
-                T d1 = v01 * (v10 * v22 - v12 * v20);
-                T d2 = v02 * (v10 * v21 - v11 * v20);
+                const T& d0 = v00 * (v11 * v22 - v12 * v21);
+                const T& d1 = v01 * (v10 * v22 - v12 * v20);
+                const T& d2 = v02 * (v10 * v21 - v11 * v20);
 
                 return d0 - d1 + d2;
         }
-        if constexpr (DET_SIZE >= 4)
+        else
         {
                 T det = 0;
 
-                for (unsigned i = 0; i < DET_SIZE; ++i)
+                const unsigned char row = v_map[0];
+                const std::array<unsigned char, DET_SIZE - 1> map = del_elem(v_map, 0);
+
+                for (std::size_t i = 0; i < DET_SIZE; ++i)
                 {
-                        T entry = vectors[v_map[0]][h_map[i]];
-                        T minor = determinant_by_cofactor_expansion(vectors, del_elem(v_map, 0), del_elem(h_map, i));
+                        const T& entry = vectors[row][h_map[i]];
+                        const T& minor = determinant_by_cofactor_expansion(vectors, map, del_elem(h_map, i));
 
                         if (i & 1)
                         {
