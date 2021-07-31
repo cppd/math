@@ -422,7 +422,7 @@ template <std::size_t N, typename T>
 }
 
 template <typename Dst, std::size_t N, typename Src>
-[[nodiscard]] constexpr std::enable_if_t<!std::is_same_v<Dst, Src>, Vector<N, Dst>> to_vector(const Vector<N, Src>& v)
+[[nodiscard]] constexpr Vector<N, Dst> to_vector(const Vector<N, Src>& v) requires(!std::is_same_v<Dst, Src>)
 {
         Vector<N, Dst> res;
         for (std::size_t i = 0; i < N; ++i)
@@ -433,14 +433,13 @@ template <typename Dst, std::size_t N, typename Src>
 }
 
 template <typename Dst, std::size_t N, typename Src>
-[[nodiscard]] constexpr std::enable_if_t<std::is_same_v<Dst, Src>, const Vector<N, Src>&> to_vector(
-        const Vector<N, Src>& v)
+[[nodiscard]] constexpr const Vector<N, Src>& to_vector(const Vector<N, Src>& v) requires(std::is_same_v<Dst, Src>)
 {
         return v;
 }
 
 template <typename Dst, std::size_t N, typename Src>
-[[nodiscard]] constexpr std::enable_if_t<std::is_same_v<Dst, Src>, Vector<N, Src>&&> to_vector(Vector<N, Src>&& v)
+[[nodiscard]] constexpr Vector<N, Src>&& to_vector(Vector<N, Src>&& v) requires(std::is_same_v<Dst, Src>)
 {
         return std::move(v);
 }
@@ -457,8 +456,8 @@ template <typename Dst, std::size_t N, typename Src>
 }
 
 template <typename Dst, std::size_t N, typename Src>
-[[nodiscard]] std::enable_if_t<!std::is_same_v<Dst, Src>, std::vector<Vector<N, Dst>>> to_vector(
-        const std::vector<Vector<N, Src>>& v)
+[[nodiscard]] std::vector<Vector<N, Dst>> to_vector(const std::vector<Vector<N, Src>>& v) requires(
+        !std::is_same_v<Dst, Src>)
 {
         std::vector<Vector<N, Dst>> res;
         res.reserve(v.size());
@@ -470,15 +469,15 @@ template <typename Dst, std::size_t N, typename Src>
 }
 
 template <typename Dst, std::size_t N, typename Src>
-[[nodiscard]] std::enable_if_t<std::is_same_v<Dst, Src>, const std::vector<Vector<N, Src>>&> to_vector(
-        const std::vector<Vector<N, Src>>& v)
+[[nodiscard]] const std::vector<Vector<N, Src>>& to_vector(const std::vector<Vector<N, Src>>& v) requires(
+        std::is_same_v<Dst, Src>)
 {
         return v;
 }
 
 template <typename Dst, std::size_t N, typename Src>
-[[nodiscard]] std::enable_if_t<std::is_same_v<Dst, Src>, std::vector<Vector<N, Src>>&&> to_vector(
-        std::vector<Vector<N, Src>>&& v)
+[[nodiscard]] std::vector<Vector<N, Src>>&& to_vector(std::vector<Vector<N, Src>>&& v) requires(
+        std::is_same_v<Dst, Src>)
 {
         return std::move(v);
 }
