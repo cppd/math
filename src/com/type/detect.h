@@ -41,20 +41,6 @@ template <typename... Args>
 struct IsVector<std::vector<Args...>> final : std::true_type
 {
 };
-
-template <typename T>
-concept HasBeginEnd = requires(const T& v)
-{
-        std::begin(v);
-        std::end(v);
-};
-
-template <typename T>
-concept HasDataAndSize = requires(const T& v)
-{
-        std::data(v);
-        std::size(v);
-};
 }
 
 template <typename T>
@@ -63,7 +49,15 @@ template <typename T>
 inline constexpr bool is_vector = type_detect_implementation::IsVector<std::remove_cv_t<T>>::value;
 
 template <typename T>
-inline constexpr bool has_cbegin_cend = type_detect_implementation::HasBeginEnd<T>;
+inline constexpr bool has_cbegin_cend = requires(const T& v)
+{
+        std::begin(v);
+        std::end(v);
+};
 template <typename T>
-inline constexpr bool has_data_and_size = type_detect_implementation::HasDataAndSize<T>;
+inline constexpr bool has_data_and_size = requires(const T& v)
+{
+        std::data(v);
+        std::size(v);
+};
 }
