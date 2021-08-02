@@ -28,7 +28,6 @@ namespace ns::geometry
 template <typename Shape, typename = void>
 class ShapeWrapperForIntersection final
 {
-        // Для меньшего количества измерений есть второй класс
         static_assert(Shape::SPACE_DIMENSION >= 4);
 
         static constexpr std::size_t N = Shape::SPACE_DIMENSION;

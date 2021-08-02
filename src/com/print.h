@@ -35,7 +35,7 @@ namespace ns
 std::string to_string(__float128 t);
 
 template <typename T>
-std::enable_if_t<std::is_floating_point_v<T>, std::string> to_string(std::complex<T> t)
+std::string to_string(std::complex<T> t) requires std::is_floating_point_v<T>
 {
         std::ostringstream o;
         o << std::setprecision(limits<T>::max_digits10);
@@ -64,7 +64,7 @@ std::enable_if_t<std::is_floating_point_v<T>, std::string> to_string(std::comple
 }
 
 template <typename T>
-std::enable_if_t<std::is_floating_point_v<T>, std::string> to_string(T t)
+std::string to_string(T t) requires std::is_floating_point_v<T>
 {
         std::ostringstream o;
         o << std::setprecision(limits<T>::max_digits10);
@@ -73,7 +73,7 @@ std::enable_if_t<std::is_floating_point_v<T>, std::string> to_string(T t)
 }
 
 template <typename T>
-std::enable_if_t<std::is_floating_point_v<T>, std::string> to_string(T t, unsigned digits)
+std::string to_string(T t, unsigned digits) requires std::is_floating_point_v<T>
 {
         std::ostringstream o;
         o << std::setprecision(digits);
@@ -82,7 +82,7 @@ std::enable_if_t<std::is_floating_point_v<T>, std::string> to_string(T t, unsign
 }
 
 template <typename T>
-std::enable_if_t<std::is_floating_point_v<T>, std::string> to_string_fixed(T t, unsigned digits)
+std::string to_string_fixed(T t, unsigned digits) requires std::is_floating_point_v<T>
 {
         std::ostringstream o;
         o << std::setprecision(digits);
@@ -110,9 +110,7 @@ std::enable_if_t<std::is_floating_point_v<T>, std::string> to_string_fixed(T t, 
 }
 
 template <typename T>
-std::enable_if_t<std::is_integral_v<T> && std::is_unsigned_v<T>, std::string> to_string_binary(
-        T v,
-        const std::string_view& prefix = "")
+std::string to_string_binary(T v, const std::string_view& prefix = "") requires std::is_unsigned_v<T>
 {
         if (v == 0)
         {
@@ -132,7 +130,7 @@ std::enable_if_t<std::is_integral_v<T> && std::is_unsigned_v<T>, std::string> to
 
 //
 
-namespace integral_to_string_implementation
+namespace print_implementation
 {
 template <unsigned digit_group_size, typename T>
 void f(T v, int i, std::string& r, [[maybe_unused]] char s)
@@ -181,7 +179,7 @@ void f(T v, int i, std::string& r, [[maybe_unused]] char s)
 }
 
 template <unsigned digit_group_size, typename T>
-std::enable_if_t<is_native_integral<T>, std::string> to_string_digit_groups(T v, char s)
+std::string to_string_digit_groups(T v, char s) requires is_native_integral<T>
 {
         static_assert(is_signed<T> != is_unsigned<T>);
 
@@ -204,16 +202,37 @@ std::enable_if_t<is_native_integral<T>, std::string> to_string_digit_groups(T v,
 }
 
 template <typename T>
-std::enable_if_t<is_native_integral<T>, std::string> to_string(T v)
+std::string to_string(T v) requires is_native_integral<T>
 {
-        return integral_to_string_implementation::to_string_digit_groups<0, T>(v, '\x20');
+        return print_implementation::to_string_digit_groups<0, T>(v, '\x20');
 }
 
 template <typename T>
-std::enable_if_t<is_native_integral<T>, std::string> to_string_digit_groups(T v, char s = '\x20')
+std::string to_string_digit_groups(T v, char s = '\x20') requires is_native_integral<T>
 {
-        return integral_to_string_implementation::to_string_digit_groups<3, T>(v, s);
+        return print_implementation::to_string_digit_groups<3, T>(v, s);
 }
+
+//
+
+template <typename T>
+std::string to_string(const T& data) requires has_cbegin_cend<T>
+{
+        auto i = std::cbegin(data);
+        if (i == std::cend(data))
+        {
+                return {};
+        }
+        std::string res = to_string(*i);
+        while (++i != std::cend(data))
+        {
+                res += ", ";
+                res += to_string(*i);
+        }
+        return res;
+}
+
+//
 
 std::string to_string(char) = delete;
 std::string to_string(wchar_t) = delete;
@@ -226,30 +245,8 @@ std::string to_string_digit_groups(char8_t v, char) = delete;
 std::string to_string_digit_groups(char16_t v, char) = delete;
 std::string to_string_digit_groups(char32_t v, char) = delete;
 
-//
-
 template <typename T>
-std::enable_if_t<has_cbegin_cend<T>, std::string> to_string(const T& data)
-{
-        std::string res;
-
-        for (auto i = std::cbegin(data); i != std::cend(data); ++i)
-        {
-                if (i != std::cbegin(data))
-                {
-                        res += ", ";
-                }
-
-                res += to_string(*i);
-        }
-
-        return res;
-}
-
-template <typename T>
-std::enable_if_t<std::is_pointer_v<T>> to_string(const T&) = delete;
-
-//
+std::enable_if_t<std::is_pointer_v<T>, std::string> to_string(const T&) = delete;
 
 template <typename T>
 std::string to_string(std::basic_string<T>) = delete;

@@ -23,10 +23,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 namespace ns
 {
 template <typename T>
-[[nodiscard]] std::enable_if_t<std::is_floating_point_v<T>, T> interpolation(
-        const T& a,
-        const T& b,
-        const std::type_identity_t<T>& t)
+requires(std::is_floating_point_v<T>) [[nodiscard]] T
+        interpolation(const T& a, const T& b, const std::type_identity_t<T>& t)
 {
         return std::fma(t, b, std::fma(-t, a, a));
 }

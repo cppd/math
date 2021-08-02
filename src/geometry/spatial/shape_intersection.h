@@ -185,8 +185,7 @@ bool shapes_not_intersect_by_planes(const Shape1& shape_1, const Shape2& shape_2
 }
 
 //template <typename Shape>
-//constexpr std::enable_if_t<(size<decltype(std::declval<Shape>().constraints().c_eq)>() >= 0), std::size_t>
-//        constraint_count()
+//constexpr std::size_t constraint_count() requires(size<decltype(std::declval<Shape>().constraints().c_eq)>() >= 0)
 //{
 //        static_assert(size<decltype(std::declval<Shape>().constraints().c)>() > 0);
 //        static_assert(size<decltype(std::declval<Shape>().constraints().c_eq)>() > 0);
@@ -198,7 +197,7 @@ bool shapes_not_intersect_by_planes(const Shape1& shape_1, const Shape2& shape_2
 //}
 
 //template <typename Shape>
-//constexpr std::enable_if_t<Shape::SPACE_DIMENSION == Shape::SHAPE_DIMENSION, std::size_t> constraint_count()
+//constexpr std::size_t constraint_count() requires(Shape::SPACE_DIMENSION == Shape::SHAPE_DIMENSION)
 //{
 //        static_assert(size<decltype(std::declval<Shape>().constraints().c)>() > 0);
 //        return size<decltype(std::declval<Shape>().constraints().c)>();

@@ -52,12 +52,13 @@ std::string replace_space(const std::string_view& s)
 }
 
 template <typename T>
-constexpr std::enable_if_t<std::is_same_v<std::remove_cv_t<T>, std::mt19937>, const char*> random_engine_name()
+constexpr const char* random_engine_name() requires std::is_same_v<std::remove_cv_t<T>, std::mt19937>
 {
         return "std::mt19937";
 }
+
 template <typename T>
-constexpr std::enable_if_t<std::is_same_v<std::remove_cv_t<T>, std::mt19937_64>, const char*> random_engine_name()
+constexpr const char* random_engine_name() requires std::is_same_v<std::remove_cv_t<T>, std::mt19937_64>
 {
         return "std::mt19937_64";
 }

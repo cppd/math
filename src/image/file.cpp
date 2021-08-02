@@ -369,8 +369,10 @@ void load_4(QImage&& image, ColorFormat color_format, const std::span<std::byte>
 }
 
 template <typename T>
-std::enable_if_t<std::is_same_v<T, std::filesystem::path>, QImage> open_image(const T& path)
+QImage open_image(const T& path)
 {
+        static_assert(std::is_same_v<T, std::filesystem::path>);
+
         std::string file_name = generic_utf8_filename(path);
         QImage image;
         if (!image.load(QString::fromStdString(file_name)))

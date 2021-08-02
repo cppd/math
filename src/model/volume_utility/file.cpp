@@ -137,7 +137,7 @@ std::vector<std::string> read_files(const std::filesystem::path& directory)
 }
 
 template <std::size_t N>
-std::enable_if_t<N >= 3> save_to_images(
+void save_to_images(
         const std::filesystem::path& directory,
         const image::ImageView<N>& image_view,
         ProgressRatio* progress,
@@ -184,7 +184,7 @@ std::enable_if_t<N >= 3> save_to_images(
 }
 
 template <std::size_t N>
-std::enable_if_t<N >= 3> load_from_images(
+void load_from_images(
         const std::filesystem::path& directory,
         const image::ColorFormat& image_format,
         const std::array<int, N>& image_size,
@@ -301,7 +301,7 @@ VolumeInfo volume_info(const std::filesystem::path& path)
 }
 
 template <std::size_t N>
-std::enable_if_t<N >= 3> save_to_images(
+requires(N >= 3) void save_to_images(
         const std::filesystem::path& path,
         const image::ImageView<N>& image_view,
         ProgressRatio* progress)
@@ -320,7 +320,7 @@ std::enable_if_t<N >= 3> save_to_images(
 }
 
 template <std::size_t N>
-std::enable_if_t<N >= 3, image::Image<N>> load(const std::filesystem::path& path, ProgressRatio* progress)
+requires(N >= 3) image::Image<N> load(const std::filesystem::path& path, ProgressRatio* progress)
 {
         const VolumeInfo info = volume_info(path);
         if (info.size.size() != N)

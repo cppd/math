@@ -89,7 +89,7 @@ public:
 
         [[nodiscard]] std::size_t hash() const
         {
-                return array_hash(m_data);
+                return hash_combine(m_data);
         }
 
         constexpr Vector<N, T>& operator+=(const Vector<N, T>& a) &

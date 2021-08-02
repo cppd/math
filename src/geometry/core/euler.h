@@ -36,7 +36,7 @@ long long simplex_count(const std::vector<std::array<int, N>>& facets)
         {
                 std::size_t operator()(const std::array<int, D + 1>& v) const
                 {
-                        return array_hash(v);
+                        return hash_combine(v);
                 }
         };
 

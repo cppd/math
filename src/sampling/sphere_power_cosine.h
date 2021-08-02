@@ -160,24 +160,16 @@ public:
 }
 
 template <std::size_t N, typename T, typename RandomEngine>
-std::enable_if_t<(N > 3), Vector<N, T>> power_cosine_on_hemisphere(
-        RandomEngine& random_engine,
-        std::type_identity_t<T> power)
+requires(N > 3) Vector<N, T> power_cosine_on_hemisphere(RandomEngine& random_engine, std::type_identity_t<T> power)
 {
-        static_assert(N > 3);
-
         namespace impl = sphere_power_cosine_implementation;
 
         return impl::PowerCosineOnHemisphere<N, T>::instance(power).sample(random_engine);
 }
 
 template <std::size_t N, typename T, typename RandomEngine>
-std::enable_if_t<(N == 3), Vector<N, T>> power_cosine_on_hemisphere(
-        RandomEngine& random_engine,
-        std::type_identity_t<T> power)
+requires(N == 3) Vector<N, T> power_cosine_on_hemisphere(RandomEngine& random_engine, std::type_identity_t<T> power)
 {
-        static_assert(N == 3);
-
         Vector<N - 1, T> v;
         T v_length_square;
 

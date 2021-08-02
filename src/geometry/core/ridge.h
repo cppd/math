@@ -73,7 +73,7 @@ public:
 
         std::size_t hash() const
         {
-                return array_hash(m_vertices);
+                return hash_combine(m_vertices);
         }
 };
 

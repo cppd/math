@@ -192,9 +192,8 @@ const char* read_float(const char* str, Vector<N, T>* v)
 }
 
 template <typename... Args>
-std::enable_if_t<(sizeof...(Args) > 0) && (std::is_floating_point_v<Args> && ...), const char*> read_float(
-        const char* str,
-        Args*... args)
+const char* read_float(const char* str, Args*... args) requires(
+        (sizeof...(Args) > 0) && (std::is_floating_point_v<Args> && ...))
 {
         namespace impl = data_read_implementation;
 

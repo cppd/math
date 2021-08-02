@@ -77,7 +77,7 @@ class Face
 {
         static std::size_t hash(const vec3f& p, const vec3f& n, const vec2f& t)
         {
-                return pack_hash(p[0], p[1], p[2], n[0], n[1], n[2], t[0], t[1]);
+                return hash_combine(p[0], p[1], p[2], n[0], n[1], n[2], t[0], t[1]);
         }
 
 public:

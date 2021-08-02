@@ -355,14 +355,14 @@ public:
         }
 
         template <typename Color>
-        [[nodiscard]] std::enable_if_t<std::is_same_v<Color, RGB<typename Color::DataType>>, Color> to_color() const
+        [[nodiscard]] Color to_color() const requires std::is_same_v<Color, RGB<typename Color::DataType>>
         {
                 Vector<3, T> rgb = spectrum_to_rgb(Base::data());
                 return Color(rgb[0], rgb[1], rgb[2]);
         }
 
         template <typename Color>
-        [[nodiscard]] std::enable_if_t<std::is_same_v<Color, SpectrumSamples>, const Color&> to_color() const
+        [[nodiscard]] const Color& to_color() const requires std::is_same_v<Color, SpectrumSamples>
         {
                 return *this;
         }

@@ -286,7 +286,7 @@ void divide_facets(
 }
 
 template <std::size_t N, typename T>
-std::enable_if_t<N >= 4> divide_facets(
+requires(N >= 4) void divide_facets(
         unsigned min_facet_count,
         const std::vector<std::array<Vector<N, T>, N>>& facets,
         std::vector<Vector<N, T>>* mesh_vertices,

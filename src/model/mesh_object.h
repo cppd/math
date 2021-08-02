@@ -77,8 +77,9 @@ struct MeshEvent final
 
         using T = std::variant<Insert, Erase, Update, Visibility>;
 
-        template <typename Type, typename = std::enable_if_t<!std::is_same_v<MeshEvent, std::remove_cvref_t<Type>>>>
-        MeshEvent(Type&& arg) : m_data(std::forward<Type>(arg))
+        template <typename Type>
+        MeshEvent(Type&& arg) requires(!std::is_same_v<MeshEvent, std::remove_cvref_t<Type>>)
+                : m_data(std::forward<Type>(arg))
         {
         }
 

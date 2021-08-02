@@ -77,8 +77,9 @@ struct VolumeEvent final
 
         using T = std::variant<Insert, Erase, Update, Visibility>;
 
-        template <typename Type, typename = std::enable_if_t<!std::is_same_v<VolumeEvent, std::remove_cvref_t<Type>>>>
-        VolumeEvent(Type&& arg) : m_data(std::forward<Type>(arg))
+        template <typename Type>
+        VolumeEvent(Type&& arg) requires(!std::is_same_v<VolumeEvent, std::remove_cvref_t<Type>>)
+                : m_data(std::forward<Type>(arg))
         {
         }
 

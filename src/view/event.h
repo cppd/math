@@ -367,8 +367,9 @@ struct Command final
                 command::ShowWireframe,
                 command::WindowResize>;
 
-        template <typename Type, typename = std::enable_if_t<!std::is_same_v<Command, std::remove_cvref_t<Type>>>>
-        Command(Type&& arg) : m_data(std::forward<Type>(arg))
+        template <typename Type>
+        Command(Type&& arg) requires(!std::is_same_v<Command, std::remove_cvref_t<Type>>)
+                : m_data(std::forward<Type>(arg))
         {
         }
 
@@ -404,8 +405,8 @@ struct Info final
 {
         using T = std::variant<info::Camera*, info::Image*>;
 
-        template <typename Type, typename = std::enable_if_t<!std::is_same_v<Info, std::remove_cvref_t<Type>>>>
-        Info(Type&& arg) : m_data(std::forward<Type>(arg))
+        template <typename Type>
+        Info(Type&& arg) requires(!std::is_same_v<Info, std::remove_cvref_t<Type>>) : m_data(std::forward<Type>(arg))
         {
         }
 

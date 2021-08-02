@@ -192,12 +192,13 @@ template <std::size_t N, typename DataType, typename ComputeType>
 using Facet = FacetInteger<N, DataType, ComputeType, FacetListConstIterator>;
 
 template <typename T>
-std::enable_if_t<is_native_integral<T>, std::string> type_str()
+std::string type_str() requires is_native_integral<T>
 {
         return to_string(limits<T>::digits) + " bits";
 }
+
 template <typename T>
-std::enable_if_t<std::is_same_v<std::remove_cv_t<T>, mpz_class>, std::string> type_str()
+std::string type_str() requires std::is_same_v<std::remove_cv_t<T>, mpz_class>
 {
         return "mpz_class";
 }

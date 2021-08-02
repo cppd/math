@@ -19,6 +19,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 //#include "container.h"
 
+#include "type/detect.h"
+
 #include <array>
 #include <functional>
 //#include <string_view>
@@ -58,8 +60,10 @@ std::size_t hash_as_string(const std::array<T, N>& v)
 #endif
 
 template <typename T, std::size_t N>
-std::size_t array_hash(const std::array<T, N>& v)
+std::size_t hash_combine(const std::array<T, N>& v)
 {
+        static_assert(N > 0);
+
         std::hash<T> hasher;
         std::size_t seed = hasher(v[0]);
         for (unsigned i = 1; i < N; ++i)
@@ -70,9 +74,10 @@ std::size_t array_hash(const std::array<T, N>& v)
 }
 
 template <typename T, typename... Ts>
-std::size_t pack_hash(const T& v, const Ts&... vs)
+std::size_t hash_combine(const T& v, const Ts&... vs) requires(!is_array<T>)
 {
         static_assert((std::is_same_v<T, Ts> && ...));
+
         std::hash<T> hasher;
         std::size_t seed = hasher(v);
         ((seed ^= hasher(vs) + 0x9e3779b9 + (seed << 6) + (seed >> 2)), ...);

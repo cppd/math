@@ -42,6 +42,6 @@ public:
         };
 
         template <typename T>
-        std::enable_if_t<std::is_same_v<T, char32_t>, std::optional<Char>> render(T code_point) const;
+        requires std::is_same_v<T, char32_t> std::optional<Char> render(T code_point) const;
 };
 }

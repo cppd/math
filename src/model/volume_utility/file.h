@@ -32,11 +32,11 @@ struct VolumeInfo final
 VolumeInfo volume_info(const std::filesystem::path& path);
 
 template <std::size_t N>
-std::enable_if_t<N >= 3> save_to_images(
+requires(N >= 3) void save_to_images(
         const std::filesystem::path& path,
         const image::ImageView<N>& image_view,
         ProgressRatio* progress);
 
 template <std::size_t N>
-std::enable_if_t<N >= 3, image::Image<N>> load(const std::filesystem::path& path, ProgressRatio* progress);
+requires(N >= 3) image::Image<N> load(const std::filesystem::path& path, ProgressRatio* progress);
 }

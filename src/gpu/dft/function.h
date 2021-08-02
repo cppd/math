@@ -28,6 +28,7 @@ std::vector<std::complex<double>> compute_h2(int n, int m, const std::vector<std
 
 template <typename T>
 int shared_size(unsigned dft_size, unsigned max_shared_memory_size);
+
 template <typename T>
 int group_size(
         unsigned dft_size,
@@ -36,25 +37,26 @@ int group_size(
         unsigned max_shared_memory_size);
 
 template <typename Dst, typename Src>
-std::vector<std::complex<Dst>> conv(const std::vector<std::complex<Src>>& data)
+std::vector<std::complex<Dst>> conv(const std::vector<std::complex<Src>>& data) requires(!std::is_same_v<Dst, Src>)
 {
-        if constexpr (std::is_same_v<Dst, Src>)
+        std::vector<std::complex<Dst>> res;
+        res.reserve(data.size());
+        for (std::size_t i = 0; i < data.size(); ++i)
         {
-                return data;
+                res.emplace_back(data[i].real(), data[i].imag());
         }
-        else
-        {
-                std::vector<std::complex<Dst>> res(data.size());
-                for (std::size_t i = 0; i < data.size(); ++i)
-                {
-                        res[i] = {static_cast<Dst>(data[i].real()), static_cast<Dst>(data[i].imag())};
-                }
-                return res;
-        }
+        return res;
 }
 
 template <typename Dst, typename Src>
-std::enable_if_t<std::is_same_v<Dst, Src>, std::vector<std::complex<Dst>>&&> conv(std::vector<std::complex<Src>>&& data)
+const std::vector<std::complex<Dst>>& conv(const std::vector<std::complex<Src>>& data) requires(
+        std::is_same_v<Dst, Src>)
+{
+        return data;
+}
+
+template <typename Dst, typename Src>
+std::vector<std::complex<Dst>>&& conv(std::vector<std::complex<Src>>&& data) requires(std::is_same_v<Dst, Src>)
 {
         return std::move(data);
 }
