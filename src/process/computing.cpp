@@ -18,11 +18,32 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "computing.h"
 
 #include "mesh.h"
+#include "volume.h"
 
 #include <src/gui/dialogs/bound_cocone.h>
+#include <src/gui/dialogs/image_slice.h>
 
 namespace ns::process
 {
+namespace
+{
+std::vector<int> volume_image_size(const storage::VolumeObjectConst& object)
+{
+        std::vector<int> size;
+        std::visit(
+                [&]<std::size_t N>(const std::shared_ptr<const volume::VolumeObject<N>>& volume_object)
+                {
+                        volume::Reading reading(*volume_object);
+                        size = [](const auto& array)
+                        {
+                                return std::vector(array.cbegin(), array.cend());
+                        }(reading.volume().image.size);
+                },
+                object);
+        return size;
+}
+}
+
 std::function<void(ProgressRatioList*)> action_bound_cocone(const storage::MeshObjectConst& object)
 {
         std::optional<gui::dialog::BoundCoconeParameters> parameters = gui::dialog::BoundCoconeParametersDialog::show();
@@ -38,6 +59,38 @@ std::function<void(ProgressRatioList*)> action_bound_cocone(const storage::MeshO
                         {
                                 compute(progress_list, false /*convex hull*/, false /*cocone*/, true /*bound cocone*/,
                                         false /*mst*/, *mesh_object, parameters->rho, parameters->alpha);
+                        };
+                        return f;
+                },
+                object);
+}
+
+std::function<void(ProgressRatioList*)> action_3d_slice(const storage::VolumeObjectConst& object)
+{
+        constexpr int DIMENSION = 3;
+
+        const std::vector<int> size = volume_image_size(object);
+        if (size.size() <= DIMENSION)
+        {
+                error("Volume dimension (" + to_string(size.size()) + ") is not suitable for 3D slice");
+        }
+
+        std::optional<gui::dialog::ImageSliceParameters> parameters =
+                gui::dialog::ImageSliceDialog::show(size, DIMENSION);
+        if (!parameters)
+        {
+                return nullptr;
+        }
+
+        return std::visit(
+                [&]<std::size_t N>(const std::shared_ptr<const volume::VolumeObject<N>>& volume_object)
+                {
+                        std::function<void(ProgressRatioList*)> f = [=](ProgressRatioList* progress_list)
+                        {
+                                if constexpr (N > DIMENSION)
+                                {
+                                        compute_slice<DIMENSION>(progress_list, *volume_object, parameters->slices);
+                                }
                         };
                         return f;
                 },

@@ -196,6 +196,22 @@ void bound_cocone(WorkerThreads* threads, const ModelTree* model_tree, const std
                 });
 }
 
+void volume_3d_slice(WorkerThreads* threads, const ModelTree* model_tree, const std::string& action)
+{
+        threads->terminate_and_start(
+                WORKER_THREAD_ID, action,
+                [&]()
+                {
+                        std::optional<storage::VolumeObjectConst> object = model_tree->current_volume_const();
+                        if (!object)
+                        {
+                                MESSAGE_WARNING("No volume object");
+                                return WorkerThreads::Function();
+                        }
+                        return process::action_3d_slice(*object);
+                });
+}
+
 void self_test(WorkerThreads* threads, process::TestType test_type, const std::string& action)
 {
         threads->terminate_and_start(
@@ -285,6 +301,15 @@ Actions::Actions(
                         [=]()
                         {
                                 bound_cocone(threads, model_tree, action_name(action));
+                        }));
+        }
+        {
+                QAction* action = menu_edit->addAction("3D Slice...");
+                m_connections.emplace_back(QObject::connect(
+                        action, &QAction::triggered,
+                        [=]()
+                        {
+                                volume_3d_slice(threads, model_tree, action_name(action));
                         }));
         }
 
