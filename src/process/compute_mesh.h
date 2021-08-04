@@ -278,7 +278,7 @@ void manifold_constructor(
 }
 
 template <std::size_t N>
-void compute(
+void compute_meshes(
         ProgressRatioList* progress_list,
         bool build_convex_hull,
         bool build_cocone,

@@ -18,7 +18,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #pragma once
 
 #include "dimension.h"
-#include "mesh.h"
 #include "options.h"
 
 #include <src/com/error.h>

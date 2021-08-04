@@ -17,6 +17,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "loading.h"
 
+#include "compute_mesh.h"
 #include "dimension.h"
 #include "load.h"
 
@@ -106,7 +107,7 @@ std::function<void(ProgressRatioList*)> action_load_mesh(std::filesystem::path p
                                 std::shared_ptr<mesh::MeshObject<N>> mesh =
                                         load_mesh<N>(generic_utf8_filename(path.filename()), progress_list, path);
 
-                                compute<N>(
+                                compute_meshes<N>(
                                         progress_list, selection_parameters.convex_hull, selection_parameters.cocone,
                                         selection_parameters.bound_cocone, selection_parameters.mst, *mesh,
                                         bound_cocone_parameters.rho, bound_cocone_parameters.alpha);
@@ -152,7 +153,7 @@ std::function<void(ProgressRatioList*)> action_load_point_mesh(
                                 std::shared_ptr<mesh::MeshObject<N>> mesh = load_point_mesh<N>(
                                         object_name, point_object_parameters->point_count, *repository);
 
-                                compute<N>(
+                                compute_meshes<N>(
                                         progress_list, selection_parameters->convex_hull, selection_parameters->cocone,
                                         selection_parameters->bound_cocone, selection_parameters->mst, *mesh,
                                         bound_cocone_parameters.rho, bound_cocone_parameters.alpha);
@@ -198,7 +199,7 @@ std::function<void(ProgressRatioList*)> action_load_facet_mesh(
                                 std::shared_ptr<mesh::MeshObject<N>> mesh = load_facet_mesh<N>(
                                         object_name, facet_object_parameters->facet_count, *repository);
 
-                                compute<N>(
+                                compute_meshes<N>(
                                         progress_list, selection_parameters->convex_hull, selection_parameters->cocone,
                                         selection_parameters->bound_cocone, selection_parameters->mst, *mesh,
                                         bound_cocone_parameters.rho, bound_cocone_parameters.alpha);

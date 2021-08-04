@@ -17,8 +17,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "computing.h"
 
-#include "mesh.h"
-#include "volume.h"
+#include "compute_mesh.h"
+#include "compute_volume.h"
 
 #include <src/gui/dialogs/bound_cocone.h>
 #include <src/gui/dialogs/image_slice.h>
@@ -57,8 +57,13 @@ std::function<void(ProgressRatioList*)> action_bound_cocone(const storage::MeshO
                 {
                         std::function<void(ProgressRatioList*)> f = [=](ProgressRatioList* progress_list)
                         {
-                                compute(progress_list, false /*convex hull*/, false /*cocone*/, true /*bound cocone*/,
-                                        false /*mst*/, *mesh_object, parameters->rho, parameters->alpha);
+                                constexpr bool convex_hull = false;
+                                constexpr bool cocone = false;
+                                constexpr bool bound_cocone = true;
+                                constexpr bool mst = false;
+                                compute_meshes(
+                                        progress_list, convex_hull, cocone, bound_cocone, mst, *mesh_object,
+                                        parameters->rho, parameters->alpha);
                         };
                         return f;
                 },
@@ -67,7 +72,7 @@ std::function<void(ProgressRatioList*)> action_bound_cocone(const storage::MeshO
 
 std::function<void(ProgressRatioList*)> action_3d_slice(const storage::VolumeObjectConst& object)
 {
-        constexpr int DIMENSION = 3;
+        constexpr std::size_t DIMENSION = 3;
 
         const std::vector<int> size = volume_image_size(object);
         if (size.size() <= DIMENSION)
