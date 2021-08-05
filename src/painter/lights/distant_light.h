@@ -41,9 +41,15 @@ public:
                 m_sample.L = color;
         }
 
-        LightSourceSample<N, T, Color> sample(const Vector<N, T>& /*point*/) const override
+        LightSourceSample<N, T, Color> sample(RandomEngine<T>& /*random_engine*/, const Vector<N, T>& /*point*/)
+                const override
         {
                 return m_sample;
+        }
+
+        T pdf(const Vector<N, T>& /*point*/, const Vector<N, T>& /*l*/) const override
+        {
+                return 0;
         }
 };
 }

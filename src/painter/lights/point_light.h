@@ -127,7 +127,8 @@ public:
                 ASSERT(m_falloff_start >= m_width && m_falloff_width >= 0);
         }
 
-        LightSourceSample<N, T, Color> sample(const Vector<N, T>& point) const override
+        LightSourceSample<N, T, Color> sample(RandomEngine<T>& /*random_engine*/, const Vector<N, T>& point)
+                const override
         {
                 namespace impl = point_light_implementation;
 
@@ -160,6 +161,11 @@ public:
                         s.L = m_color * (coef * k);
                 }
                 return s;
+        }
+
+        T pdf(const Vector<N, T>& /*point*/, const Vector<N, T>& /*l*/) const override
+        {
+                return 0;
         }
 };
 }

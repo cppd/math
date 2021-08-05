@@ -80,7 +80,10 @@ struct LightSource
 {
         virtual ~LightSource() = default;
 
-        virtual LightSourceSample<N, T, Color> sample(const Vector<N, T>& point) const = 0;
+        virtual LightSourceSample<N, T, Color> sample(RandomEngine<T>& random_engine, const Vector<N, T>& point)
+                const = 0;
+
+        virtual T pdf(const Vector<N, T>& point, const Vector<N, T>& l) const = 0;
 };
 
 template <std::size_t N, typename T>

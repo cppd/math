@@ -129,7 +129,7 @@ std::optional<Color> trace_path(
 
         for (const LightSource<N, T, Color>* const light_source : scene.light_sources())
         {
-                const LightSourceSample<N, T, Color> sample = light_source->sample(point);
+                const LightSourceSample<N, T, Color> sample = light_source->sample(engine, point);
 
                 if (sample.L.is_black() || sample.pdf <= 0)
                 {
