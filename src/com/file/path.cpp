@@ -46,7 +46,7 @@ std::filesystem::path path_from_utf8(const T& filename)
 }
 #endif
 
-template std::string generic_utf8_filename(const std::filesystem::path& path);
-template std::filesystem::path path_from_utf8(const std::string& filename);
-template std::filesystem::path path_from_utf8(const std::string_view& filename);
+template std::string generic_utf8_filename(const std::filesystem::path&);
+template std::filesystem::path path_from_utf8(const std::string&);
+template std::filesystem::path path_from_utf8(const std::string_view&);
 }

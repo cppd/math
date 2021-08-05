@@ -182,6 +182,6 @@ char32_t utf8_to_utf32(const std::string& s)
         error("One UTF-8 character string is too long: " + utf8_to_number_string(s));
 }
 
-template std::string utf32_to_number_string(char32_t code_point);
-template std::string utf32_to_utf8(char32_t code_point);
+template std::string utf32_to_number_string(char32_t);
+template std::string utf32_to_utf8(char32_t);
 }

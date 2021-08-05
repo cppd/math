@@ -432,32 +432,14 @@ void vertex_and_facet_data(
         ASSERT(vertex_data->size() == points.size());
 }
 
-template void vertex_and_facet_data(
-        bool find_all_vertex_data,
-        const std::vector<Vector<2, double>>& points,
-        const std::vector<DelaunayObject<2>>& delaunay_objects,
-        const std::vector<DelaunayFacet<2>>& delaunay_facets,
-        std::vector<ManifoldVertex<2>>* vertex_data,
-        std::vector<ManifoldFacet<2>>* facet_data);
-template void vertex_and_facet_data(
-        bool find_all_vertex_data,
-        const std::vector<Vector<3, double>>& points,
-        const std::vector<DelaunayObject<3>>& delaunay_objects,
-        const std::vector<DelaunayFacet<3>>& delaunay_facets,
-        std::vector<ManifoldVertex<3>>* vertex_data,
-        std::vector<ManifoldFacet<3>>* facet_data);
-template void vertex_and_facet_data(
-        bool find_all_vertex_data,
-        const std::vector<Vector<4, double>>& points,
-        const std::vector<DelaunayObject<4>>& delaunay_objects,
-        const std::vector<DelaunayFacet<4>>& delaunay_facets,
-        std::vector<ManifoldVertex<4>>* vertex_data,
-        std::vector<ManifoldFacet<4>>* facet_data);
-template void vertex_and_facet_data(
-        bool find_all_vertex_data,
-        const std::vector<Vector<5, double>>& points,
-        const std::vector<DelaunayObject<5>>& delaunay_objects,
-        const std::vector<DelaunayFacet<5>>& delaunay_facets,
-        std::vector<ManifoldVertex<5>>* vertex_data,
-        std::vector<ManifoldFacet<5>>* facet_data);
+#define VERTEX_AND_FACET_DATA_INSTANTIATION(N)                                                          \
+        template void vertex_and_facet_data(                                                            \
+                bool, const std::vector<Vector<(N), double>>&, const std::vector<DelaunayObject<(N)>>&, \
+                const std::vector<DelaunayFacet<(N)>>&, std::vector<ManifoldVertex<(N)>>*,              \
+                std::vector<ManifoldFacet<(N)>>*);
+
+VERTEX_AND_FACET_DATA_INSTANTIATION(2)
+VERTEX_AND_FACET_DATA_INSTANTIATION(3)
+VERTEX_AND_FACET_DATA_INSTANTIATION(4)
+VERTEX_AND_FACET_DATA_INSTANTIATION(5)
 }

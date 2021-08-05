@@ -1092,56 +1092,23 @@ void compute_convex_hull(
         convex_hull_integer(source_points, ch_facets, progress, write_log);
 }
 
-//
+#define COMPUTE_DELAUNAY_INSTANTIATION(N)                                                  \
+        template void compute_delaunay(                                                    \
+                const std::vector<Vector<(N), float>>&, std::vector<Vector<(N), double>>*, \
+                std::vector<DelaunaySimplex<(N)>>*, ProgressRatio*, bool);
 
-template void compute_delaunay(
-        const std::vector<Vector<2, float>>& source_points,
-        std::vector<Vector<2, double>>* points,
-        std::vector<DelaunaySimplex<2>>* simplices,
-        ProgressRatio* progress,
-        bool write_log);
-template void compute_delaunay(
-        const std::vector<Vector<3, float>>& source_points,
-        std::vector<Vector<3, double>>* points,
-        std::vector<DelaunaySimplex<3>>* simplices,
-        ProgressRatio* progress,
-        bool write_log);
-template void compute_delaunay(
-        const std::vector<Vector<4, float>>& source_points,
-        std::vector<Vector<4, double>>* points,
-        std::vector<DelaunaySimplex<4>>* simplices,
-        ProgressRatio* progress,
-        bool write_log);
-template void compute_delaunay(
-        const std::vector<Vector<5, float>>& source_points,
-        std::vector<Vector<5, double>>* points,
-        std::vector<DelaunaySimplex<5>>* simplices,
-        ProgressRatio* progress,
-        bool write_log);
+#define COMPUTE_CONVEX_HULL_INSTANTIATION(N) \
+        template void compute_convex_hull(   \
+                const std::vector<Vector<(N), float>>&, std::vector<ConvexHullFacet<(N)>>*, ProgressRatio*, bool);
 
-template void compute_convex_hull(
-        const std::vector<Vector<2, float>>& source_points,
-        std::vector<ConvexHullFacet<2>>* ch_facets,
-        ProgressRatio* progress,
-        bool write_log);
-template void compute_convex_hull(
-        const std::vector<Vector<3, float>>& source_points,
-        std::vector<ConvexHullFacet<3>>* ch_facets,
-        ProgressRatio* progress,
-        bool write_log);
-template void compute_convex_hull(
-        const std::vector<Vector<4, float>>& source_points,
-        std::vector<ConvexHullFacet<4>>* ch_facets,
-        ProgressRatio* progress,
-        bool write_log);
-template void compute_convex_hull(
-        const std::vector<Vector<5, float>>& source_points,
-        std::vector<ConvexHullFacet<5>>* ch_facets,
-        ProgressRatio* progress,
-        bool write_log);
-template void compute_convex_hull(
-        const std::vector<Vector<6, float>>& source_points,
-        std::vector<ConvexHullFacet<6>>* ch_facets,
-        ProgressRatio* progress,
-        bool write_log);
+COMPUTE_DELAUNAY_INSTANTIATION(2)
+COMPUTE_DELAUNAY_INSTANTIATION(3)
+COMPUTE_DELAUNAY_INSTANTIATION(4)
+COMPUTE_DELAUNAY_INSTANTIATION(5)
+
+COMPUTE_CONVEX_HULL_INSTANTIATION(2)
+COMPUTE_CONVEX_HULL_INSTANTIATION(3)
+COMPUTE_CONVEX_HULL_INSTANTIATION(4)
+COMPUTE_CONVEX_HULL_INSTANTIATION(5)
+COMPUTE_CONVEX_HULL_INSTANTIATION(6)
 }

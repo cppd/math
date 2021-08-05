@@ -86,9 +86,9 @@ void read_binary_file(const std::filesystem::path& file_name, T* s)
         f.read(s->data(), length);
 }
 
-template void read_text_file(const std::filesystem::path& file_name, std::string* s);
-template void read_text_file(const std::filesystem::path& file_name, std::vector<char>* s);
+template void read_text_file(const std::filesystem::path&, std::string*);
+template void read_text_file(const std::filesystem::path&, std::vector<char>*);
 
-template void read_binary_file(const std::filesystem::path& file_name, std::string* s);
-template void read_binary_file(const std::filesystem::path& file_name, std::vector<char>* s);
+template void read_binary_file(const std::filesystem::path&, std::string*);
+template void read_binary_file(const std::filesystem::path&, std::vector<char>*);
 }

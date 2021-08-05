@@ -245,5 +245,5 @@ requires std::is_same_v<T, char32_t> std::optional<Font::Char> Font::render(T co
         return m_impl->render(code_point);
 }
 
-template std::optional<Font::Char> Font::render(char32_t code_point) const;
+template std::optional<Font::Char> Font::render(char32_t) const;
 }

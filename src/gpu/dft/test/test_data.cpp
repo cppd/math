@@ -118,20 +118,12 @@ void generate_random_data(const std::filesystem::path& file_name, int n1, int n2
         }
 }
 
-template void load_data(
-        const std::filesystem::path& file_name,
-        int* n1,
-        int* n2,
-        std::vector<std::complex<float>>* data);
-template void load_data(
-        const std::filesystem::path& file_name,
-        int* n1,
-        int* n2,
-        std::vector<std::complex<double>>* data);
+template void load_data(const std::filesystem::path&, int*, int*, std::vector<std::complex<float>>*);
+template void load_data(const std::filesystem::path&, int*, int*, std::vector<std::complex<double>>*);
 
-template void save_data(const std::filesystem::path& file_name, const std::vector<std::complex<float>>& x);
-template void save_data(const std::filesystem::path& file_name, const std::vector<std::complex<double>>& x);
+template void save_data(const std::filesystem::path&, const std::vector<std::complex<float>>&);
+template void save_data(const std::filesystem::path&, const std::vector<std::complex<double>>&);
 
-template void generate_random_data<float>(const std::filesystem::path& file_name, int n1, int n2);
-template void generate_random_data<double>(const std::filesystem::path& file_name, int n1, int n2);
+template void generate_random_data<float>(const std::filesystem::path&, int, int);
+template void generate_random_data<double>(const std::filesystem::path&, int, int);
 }

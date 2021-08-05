@@ -136,9 +136,9 @@ void queue_submit(VkQueue queue, VkFence fence)
 }
 
 template void queue_submit(
-        const std::array<VkSemaphore, 2>& wait_semaphores,
-        const std::array<VkPipelineStageFlags, 2>& wait_stages,
-        VkCommandBuffer command_buffer,
-        VkSemaphore signal_semaphore,
-        VkQueue queue);
+        const std::array<VkSemaphore, 2>&,
+        const std::array<VkPipelineStageFlags, 2>&,
+        VkCommandBuffer,
+        VkSemaphore,
+        VkQueue);
 }

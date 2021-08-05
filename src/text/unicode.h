@@ -23,6 +23,7 @@ namespace ns::text::unicode
 {
 template <typename T>
 std::string utf32_to_number_string(T code_point);
+
 std::string utf8_to_number_string(const std::string& s);
 
 template <typename T>

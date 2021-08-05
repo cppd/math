@@ -389,12 +389,15 @@ void create_sphere(
         divide_facets(facet_min_count, create_initial_facets<N, T>(), vertices, facets);
 }
 
-template void create_sphere(unsigned, std::vector<Vector<3, float>>*, std::vector<std::array<int, 3>>*);
-template void create_sphere(unsigned, std::vector<Vector<4, float>>*, std::vector<std::array<int, 4>>*);
-template void create_sphere(unsigned, std::vector<Vector<5, float>>*, std::vector<std::array<int, 5>>*);
-template void create_sphere(unsigned, std::vector<Vector<6, float>>*, std::vector<std::array<int, 6>>*);
-template void create_sphere(unsigned, std::vector<Vector<3, double>>*, std::vector<std::array<int, 3>>*);
-template void create_sphere(unsigned, std::vector<Vector<4, double>>*, std::vector<std::array<int, 4>>*);
-template void create_sphere(unsigned, std::vector<Vector<5, double>>*, std::vector<std::array<int, 5>>*);
-template void create_sphere(unsigned, std::vector<Vector<6, double>>*, std::vector<std::array<int, 6>>*);
+#define CREATE_SPHERE_INSTANTIATION_N_T(N, T) \
+        template void create_sphere(unsigned, std::vector<Vector<(N), T>>*, std::vector<std::array<int, (N)>>*);
+
+#define CREATE_SPHERE_INSTANTIATION_N(N)            \
+        CREATE_SPHERE_INSTANTIATION_N_T((N), float) \
+        CREATE_SPHERE_INSTANTIATION_N_T((N), double)
+
+CREATE_SPHERE_INSTANTIATION_N(3)
+CREATE_SPHERE_INSTANTIATION_N(4)
+CREATE_SPHERE_INSTANTIATION_N(5)
+CREATE_SPHERE_INSTANTIATION_N(6)
 }

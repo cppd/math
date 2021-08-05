@@ -69,7 +69,6 @@ class UnionFind
         }
 
 public:
-        // std::type_identity_t для запрета template argument deduction
         explicit UnionFind(std::type_identity_t<T> count)
                 : m_parent(count), m_component_size(count), m_component_count(count)
         {
@@ -87,7 +86,6 @@ public:
                         return false;
                 }
 
-                // Меньшее дерево подсоединить к большему
                 if (m_component_size[i] < m_component_size[j])
                 {
                         m_parent[i] = j;
