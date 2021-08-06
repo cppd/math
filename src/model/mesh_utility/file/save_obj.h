@@ -24,9 +24,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 namespace ns::mesh::file
 {
-template <std::size_t N>
-std::filesystem::path save_to_obj_file(
-        const Mesh<N>& mesh,
-        const std::filesystem::path& file_name,
-        const std::string_view& comment);
+template <std::size_t N, typename Path>
+std::filesystem::path save_to_obj_file(const Mesh<N>& mesh, const Path& file_name, const std::string_view& comment);
 }

@@ -21,11 +21,10 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <src/progress/progress.h>
 
-#include <filesystem>
 #include <memory>
 
 namespace ns::mesh::file
 {
-template <std::size_t N>
-std::unique_ptr<Mesh<N>> load_from_obj_file(const std::filesystem::path& file_name, ProgressRatio* progress);
+template <std::size_t N, typename Path>
+std::unique_ptr<Mesh<N>> load_from_obj_file(const Path& file_name, ProgressRatio* progress);
 }

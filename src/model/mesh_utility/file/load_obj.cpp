@@ -41,6 +41,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <cstdio>
 #include <cstdlib>
 #include <cstring>
+#include <filesystem>
 #include <map>
 #include <set>
 #include <string>
@@ -1212,8 +1213,8 @@ std::unique_ptr<Mesh<N>> read_obj_and_mtl(const std::filesystem::path& file_name
 }
 }
 
-template <std::size_t N>
-std::unique_ptr<Mesh<N>> load_from_obj_file(const std::filesystem::path& file_name, ProgressRatio* progress)
+template <std::size_t N, typename Path>
+std::unique_ptr<Mesh<N>> load_from_obj_file(const Path& file_name, ProgressRatio* progress)
 {
         TimePoint start_time = time();
 
@@ -1224,8 +1225,8 @@ std::unique_ptr<Mesh<N>> load_from_obj_file(const std::filesystem::path& file_na
         return mesh;
 }
 
-template std::unique_ptr<Mesh<3>> load_from_obj_file(const std::filesystem::path& file_name, ProgressRatio* progress);
-template std::unique_ptr<Mesh<4>> load_from_obj_file(const std::filesystem::path& file_name, ProgressRatio* progress);
-template std::unique_ptr<Mesh<5>> load_from_obj_file(const std::filesystem::path& file_name, ProgressRatio* progress);
-template std::unique_ptr<Mesh<6>> load_from_obj_file(const std::filesystem::path& file_name, ProgressRatio* progress);
+template std::unique_ptr<Mesh<3>> load_from_obj_file(const std::filesystem::path&, ProgressRatio*);
+template std::unique_ptr<Mesh<4>> load_from_obj_file(const std::filesystem::path&, ProgressRatio*);
+template std::unique_ptr<Mesh<5>> load_from_obj_file(const std::filesystem::path&, ProgressRatio*);
+template std::unique_ptr<Mesh<6>> load_from_obj_file(const std::filesystem::path&, ProgressRatio*);
 }

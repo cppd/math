@@ -280,10 +280,10 @@ void write(bool ascii, std::ostream& file, const Mesh<N>& mesh, const std::strin
 }
 }
 
-template <std::size_t N>
+template <std::size_t N, typename Path>
 std::filesystem::path save_to_stl_file(
         const Mesh<N>& mesh,
-        const std::filesystem::path& file_name,
+        const Path& file_name,
         const std::string_view& comment,
         bool ascii_format)
 {
@@ -322,24 +322,12 @@ std::filesystem::path save_to_stl_file(
         return full_name;
 }
 
-template std::filesystem::path save_to_stl_file(
-        const Mesh<3>&,
-        const std::filesystem::path&,
-        const std::string_view&,
-        bool);
-template std::filesystem::path save_to_stl_file(
-        const Mesh<4>&,
-        const std::filesystem::path&,
-        const std::string_view&,
-        bool);
-template std::filesystem::path save_to_stl_file(
-        const Mesh<5>&,
-        const std::filesystem::path&,
-        const std::string_view&,
-        bool);
-template std::filesystem::path save_to_stl_file(
-        const Mesh<6>&,
-        const std::filesystem::path&,
-        const std::string_view&,
-        bool);
+#define SAVE_TO_STL_FILE_INSTANTIATION(N)                \
+        template std::filesystem::path save_to_stl_file( \
+                const Mesh<(N)>&, const std::filesystem::path&, const std::string_view&, bool);
+
+SAVE_TO_STL_FILE_INSTANTIATION(3)
+SAVE_TO_STL_FILE_INSTANTIATION(4)
+SAVE_TO_STL_FILE_INSTANTIATION(5)
+SAVE_TO_STL_FILE_INSTANTIATION(6)
 }

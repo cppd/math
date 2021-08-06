@@ -274,11 +274,8 @@ void check_facets_and_lines(const Mesh<N>& mesh)
 }
 }
 
-template <std::size_t N>
-std::filesystem::path save_to_obj_file(
-        const Mesh<N>& mesh,
-        const std::filesystem::path& file_name,
-        const std::string_view& comment)
+template <std::size_t N, typename Path>
+std::filesystem::path save_to_obj_file(const Mesh<N>& mesh, const Path& file_name, const std::string_view& comment)
 {
         static_assert(N >= 3);
 
@@ -320,8 +317,12 @@ std::filesystem::path save_to_obj_file(
         return full_name;
 }
 
-template std::filesystem::path save_to_obj_file(const Mesh<3>&, const std::filesystem::path&, const std::string_view&);
-template std::filesystem::path save_to_obj_file(const Mesh<4>&, const std::filesystem::path&, const std::string_view&);
-template std::filesystem::path save_to_obj_file(const Mesh<5>&, const std::filesystem::path&, const std::string_view&);
-template std::filesystem::path save_to_obj_file(const Mesh<6>&, const std::filesystem::path&, const std::string_view&);
+#define SAVE_TO_OBJ_FILE_INSTANTIATION(N)                \
+        template std::filesystem::path save_to_obj_file( \
+                const Mesh<(N)>&, const std::filesystem::path&, const std::string_view&);
+
+SAVE_TO_OBJ_FILE_INSTANTIATION(3)
+SAVE_TO_OBJ_FILE_INSTANTIATION(4)
+SAVE_TO_OBJ_FILE_INSTANTIATION(5)
+SAVE_TO_OBJ_FILE_INSTANTIATION(6)
 }

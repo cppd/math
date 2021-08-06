@@ -29,6 +29,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <bit>
 #include <cstring>
+#include <filesystem>
 #include <unordered_map>
 
 namespace ns::mesh::file
@@ -265,8 +266,8 @@ std::unique_ptr<Mesh<N>> read_stl(const std::filesystem::path& file_name, Progre
 }
 }
 
-template <std::size_t N>
-std::unique_ptr<Mesh<N>> load_from_stl_file(const std::filesystem::path& file_name, ProgressRatio* progress)
+template <std::size_t N, typename Path>
+std::unique_ptr<Mesh<N>> load_from_stl_file(const Path& file_name, ProgressRatio* progress)
 {
         TimePoint start_time = time();
 
@@ -277,8 +278,8 @@ std::unique_ptr<Mesh<N>> load_from_stl_file(const std::filesystem::path& file_na
         return mesh;
 }
 
-template std::unique_ptr<Mesh<3>> load_from_stl_file(const std::filesystem::path& file_name, ProgressRatio* progress);
-template std::unique_ptr<Mesh<4>> load_from_stl_file(const std::filesystem::path& file_name, ProgressRatio* progress);
-template std::unique_ptr<Mesh<5>> load_from_stl_file(const std::filesystem::path& file_name, ProgressRatio* progress);
-template std::unique_ptr<Mesh<6>> load_from_stl_file(const std::filesystem::path& file_name, ProgressRatio* progress);
+template std::unique_ptr<Mesh<3>> load_from_stl_file(const std::filesystem::path&, ProgressRatio*);
+template std::unique_ptr<Mesh<4>> load_from_stl_file(const std::filesystem::path&, ProgressRatio*);
+template std::unique_ptr<Mesh<5>> load_from_stl_file(const std::filesystem::path&, ProgressRatio*);
+template std::unique_ptr<Mesh<6>> load_from_stl_file(const std::filesystem::path&, ProgressRatio*);
 }

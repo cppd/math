@@ -20,6 +20,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/com/error.h>
 #include <src/com/file/read.h>
 
+#include <filesystem>
+
 namespace ns::mesh::file
 {
 namespace
@@ -61,9 +63,10 @@ void find_line_begin(const T& s, std::vector<long long>* line_begin)
 }
 }
 
-template <typename T>
-void read_file_lines(const std::filesystem::path& file_name, T* file_data, std::vector<long long>* line_begin)
+template <typename T, typename Path>
+void read_file_lines(const Path& file_name, T* file_data, std::vector<long long>* line_begin)
 {
+        static_assert(std::is_same_v<Path, std::filesystem::path>);
         static_assert(std::is_same_v<T, std::string> || std::is_same_v<T, std::vector<char>>);
 
         read_text_file(file_name, file_data);
@@ -71,15 +74,6 @@ void read_file_lines(const std::filesystem::path& file_name, T* file_data, std::
         find_line_begin(*file_data, line_begin);
 }
 
-//
-
-template void read_file_lines(
-        const std::filesystem::path& file_name,
-        std::string* file_data,
-        std::vector<long long>* line_begin);
-
-template void read_file_lines(
-        const std::filesystem::path& file_name,
-        std::vector<char>* file_data,
-        std::vector<long long>* line_begin);
+template void read_file_lines(const std::filesystem::path&, std::string*, std::vector<long long>*);
+template void read_file_lines(const std::filesystem::path&, std::vector<char>*, std::vector<long long>*);
 }

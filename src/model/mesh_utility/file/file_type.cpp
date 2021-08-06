@@ -23,6 +23,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/com/string/ascii.h>
 
 #include <algorithm>
+#include <filesystem>
 #include <fstream>
 #include <sstream>
 
@@ -148,7 +149,8 @@ int read_dimension_number(const std::string& s)
         return d;
 }
 
-std::tuple<int, MeshFileType> file_dimension_and_type(const std::filesystem::path& file_name)
+template <typename Path>
+std::tuple<int, MeshFileType> file_dimension_and_type(const Path& file_name)
 {
         // Если не только obj, stl, txt, то после obj, stl, txt должно быть целое
         // число и только целое число, например, строка "obj4" или "txt4"
@@ -207,4 +209,6 @@ std::tuple<int, MeshFileType> file_dimension_and_type(const std::filesystem::pat
 
         return {dimension, file_type};
 }
+
+template std::tuple<int, MeshFileType> file_dimension_and_type(const std::filesystem::path&);
 }
