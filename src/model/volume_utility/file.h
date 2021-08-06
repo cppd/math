@@ -20,8 +20,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/image/image.h>
 #include <src/progress/progress.h>
 
-#include <filesystem>
-
 namespace ns::volume
 {
 struct VolumeInfo final
@@ -29,14 +27,13 @@ struct VolumeInfo final
         std::vector<int> size;
         image::ColorFormat format;
 };
-VolumeInfo volume_info(const std::filesystem::path& path);
 
-template <std::size_t N>
-requires(N >= 3) void save_to_images(
-        const std::filesystem::path& path,
-        const image::ImageView<N>& image_view,
-        ProgressRatio* progress);
+template <typename Path>
+VolumeInfo volume_info(const Path& path);
 
-template <std::size_t N>
-requires(N >= 3) image::Image<N> load(const std::filesystem::path& path, ProgressRatio* progress);
+template <std::size_t N, typename Path>
+void save_to_images(const Path& path, const image::ImageView<N>& image_view, ProgressRatio* progress);
+
+template <std::size_t N, typename Path>
+image::Image<N> load(const Path& path, ProgressRatio* progress);
 }

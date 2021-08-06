@@ -179,7 +179,7 @@ template <std::size_t N>
 std::unique_ptr<const mesh::Mesh<N>> file_mesh(const std::string& file_name, ProgressRatio* progress)
 {
         LOG("Loading geometry from file...");
-        return mesh::load<N>(file_name, progress);
+        return mesh::load<N>(path_from_utf8(file_name), progress);
 }
 
 template <std::size_t N, typename T, typename Color>

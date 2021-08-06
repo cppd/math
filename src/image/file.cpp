@@ -28,6 +28,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <QImage>
 #include <QImageWriter>
 #include <cstring>
+#include <filesystem>
 #include <set>
 #include <unordered_map>
 #include <unordered_set>
@@ -469,15 +470,21 @@ std::string_view file_extension()
         return WRITE_FORMAT;
 }
 
-void save(const std::filesystem::path& path, const ImageView<2>& image_view)
+template <typename Path>
+void save(const Path& path, const ImageView<2>& image_view)
 {
+        static_assert(std::is_same_v<Path, std::filesystem::path>);
+
         std::string file_name = generic_utf8_filename(file_name_with_extension(path));
 
         save(file_name, image_view);
 }
 
-Info file_info(const std::filesystem::path& path)
+template <typename Path>
+Info file_info(const Path& path)
 {
+        static_assert(std::is_same_v<Path, std::filesystem::path>);
+
         QImage image = open_image(path);
         Info info;
         info.size[0] = image.width();
@@ -486,12 +493,15 @@ Info file_info(const std::filesystem::path& path)
         return info;
 }
 
+template <typename Path>
 void load(
-        const std::filesystem::path& path,
+        const Path& path,
         ColorFormat color_format,
         const std::array<int, 2>& size,
         const std::span<std::byte>& pixels)
 {
+        static_assert(std::is_same_v<Path, std::filesystem::path>);
+
         check_size(size[0], size[1], color_format, pixels.size());
 
         QImage image = open_image(path);
@@ -526,8 +536,11 @@ void load(
         }
 }
 
-Image<2> load_rgba(const std::filesystem::path& path)
+template <typename Path>
+Image<2> load_rgba(const Path& path)
 {
+        static_assert(std::is_same_v<Path, std::filesystem::path>);
+
         QImage q_image = open_image(path);
 
         Image<2> image;
@@ -540,4 +553,9 @@ Image<2> load_rgba(const std::filesystem::path& path)
 
         return image;
 }
+
+template void save(const std::filesystem::path&, const ImageView<2>&);
+template Info file_info(const std::filesystem::path&);
+template Image<2> load_rgba(const std::filesystem::path&);
+template void load(const std::filesystem::path&, ColorFormat, const std::array<int, 2>&, const std::span<std::byte>&);
 }

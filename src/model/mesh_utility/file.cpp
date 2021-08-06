@@ -69,9 +69,11 @@ std::vector<FileFormat> load_formats(const std::set<unsigned>& dimensions)
 
 //
 
-template <std::size_t N>
-std::unique_ptr<Mesh<N>> load(const std::filesystem::path& file_name, ProgressRatio* progress)
+template <std::size_t N, typename Path>
+std::unique_ptr<Mesh<N>> load(const Path& file_name, ProgressRatio* progress)
 {
+        static_assert(std::is_same_v<Path, std::filesystem::path>);
+
         auto [dimension, file_type] = file::file_dimension_and_type(file_name);
 
         if (dimension != static_cast<int>(N))
@@ -93,12 +95,11 @@ std::unique_ptr<Mesh<N>> load(const std::filesystem::path& file_name, ProgressRa
         error_fatal("Unknown file type");
 }
 
-template <std::size_t N>
-std::filesystem::path save_to_obj(
-        const Mesh<N>& mesh,
-        const std::filesystem::path& file_name,
-        const std::string_view& comment)
+template <std::size_t N, typename Path>
+std::filesystem::path save_to_obj(const Mesh<N>& mesh, const Path& file_name, const std::string_view& comment)
 {
+        static_assert(std::is_same_v<Path, std::filesystem::path>);
+
         if (!file_has_obj_extension(N, file_name))
         {
                 error("Not OBJ file extension \"" + generic_utf8_filename(file_name) + "\" for saving to OBJ format, "
@@ -107,13 +108,15 @@ std::filesystem::path save_to_obj(
         return file::save_to_obj_file(mesh, file_name, comment);
 }
 
-template <std::size_t N>
+template <std::size_t N, typename Path>
 std::filesystem::path save_to_stl(
         const Mesh<N>& mesh,
-        const std::filesystem::path& file_name,
+        const Path& file_name,
         const std::string_view& comment,
         bool ascii_format)
 {
+        static_assert(std::is_same_v<Path, std::filesystem::path>);
+
         if (!file_has_stl_extension(N, file_name))
         {
                 error("Not STL file extension \"" + generic_utf8_filename(file_name) + "\" for saving to STL format, "
@@ -122,20 +125,15 @@ std::filesystem::path save_to_stl(
         return file::save_to_stl_file(mesh, file_name, comment, ascii_format);
 }
 
-//
+#define FUNCTION_INSTANTIATIONS(N)                                                              \
+        template std::unique_ptr<Mesh<(N)>> load(const std::filesystem::path&, ProgressRatio*); \
+        template std::filesystem::path save_to_obj(                                             \
+                const Mesh<(N)>&, const std::filesystem::path&, const std::string_view&);       \
+        template std::filesystem::path save_to_stl(                                             \
+                const Mesh<(N)>&, const std::filesystem::path&, const std::string_view&, bool);
 
-template std::unique_ptr<Mesh<3>> load(const std::filesystem::path&, ProgressRatio*);
-template std::unique_ptr<Mesh<4>> load(const std::filesystem::path&, ProgressRatio*);
-template std::unique_ptr<Mesh<5>> load(const std::filesystem::path&, ProgressRatio*);
-template std::unique_ptr<Mesh<6>> load(const std::filesystem::path&, ProgressRatio*);
-
-template std::filesystem::path save_to_obj(const Mesh<3>&, const std::filesystem::path&, const std::string_view&);
-template std::filesystem::path save_to_obj(const Mesh<4>&, const std::filesystem::path&, const std::string_view&);
-template std::filesystem::path save_to_obj(const Mesh<5>&, const std::filesystem::path&, const std::string_view&);
-template std::filesystem::path save_to_obj(const Mesh<6>&, const std::filesystem::path&, const std::string_view&);
-
-template std::filesystem::path save_to_stl(const Mesh<3>&, const std::filesystem::path&, const std::string_view&, bool);
-template std::filesystem::path save_to_stl(const Mesh<4>&, const std::filesystem::path&, const std::string_view&, bool);
-template std::filesystem::path save_to_stl(const Mesh<5>&, const std::filesystem::path&, const std::string_view&, bool);
-template std::filesystem::path save_to_stl(const Mesh<6>&, const std::filesystem::path&, const std::string_view&, bool);
+FUNCTION_INSTANTIATIONS(3)
+FUNCTION_INSTANTIATIONS(4)
+FUNCTION_INSTANTIATIONS(5)
+FUNCTION_INSTANTIATIONS(6)
 }

@@ -27,6 +27,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/image/flip.h>
 
 #include <cmath>
+#include <filesystem>
 #include <optional>
 #include <sstream>
 #include <vector>
@@ -284,8 +285,11 @@ void find_info(const std::filesystem::path& directory, std::vector<int>* size, i
 }
 }
 
-VolumeInfo volume_info(const std::filesystem::path& path)
+template <typename Path>
+VolumeInfo volume_info(const Path& path)
 {
+        static_assert(std::is_same_v<Path, std::filesystem::path>);
+
         VolumeInfo info;
         find_info(path, &info.size, &info.format);
         if (info.size.size() < 3)
@@ -300,12 +304,11 @@ VolumeInfo volume_info(const std::filesystem::path& path)
         return info;
 }
 
-template <std::size_t N>
-requires(N >= 3) void save_to_images(
-        const std::filesystem::path& path,
-        const image::ImageView<N>& image_view,
-        ProgressRatio* progress)
+template <std::size_t N, typename Path>
+void save_to_images(const Path& path, const image::ImageView<N>& image_view, ProgressRatio* progress)
 {
+        static_assert(std::is_same_v<Path, std::filesystem::path>);
+
         if (!all_positive(image_view.size))
         {
                 error("Image size is not positive: " + to_string(image_view.size));
@@ -319,9 +322,11 @@ requires(N >= 3) void save_to_images(
         save_to_images(path, image_view, progress, &current, image_count);
 }
 
-template <std::size_t N>
-requires(N >= 3) image::Image<N> load(const std::filesystem::path& path, ProgressRatio* progress)
+template <std::size_t N, typename Path>
+image::Image<N> load(const Path& path, ProgressRatio* progress)
 {
+        static_assert(std::is_same_v<Path, std::filesystem::path>);
+
         const VolumeInfo info = volume_info(path);
         if (info.size.size() != N)
         {
@@ -352,11 +357,13 @@ requires(N >= 3) image::Image<N> load(const std::filesystem::path& path, Progres
         return image;
 }
 
-template void save_to_images(const std::filesystem::path&, const image::ImageView<3>&, ProgressRatio*);
-template void save_to_images(const std::filesystem::path&, const image::ImageView<4>&, ProgressRatio*);
-template void save_to_images(const std::filesystem::path&, const image::ImageView<5>&, ProgressRatio*);
+template VolumeInfo volume_info(const std::filesystem::path&);
 
-template image::Image<3> load<3>(const std::filesystem::path&, ProgressRatio*);
-template image::Image<4> load<4>(const std::filesystem::path&, ProgressRatio*);
-template image::Image<5> load<5>(const std::filesystem::path&, ProgressRatio*);
+#define FUNCTION_INSTANTIATIONS(N)                                                                                \
+        template void save_to_images(const std::filesystem::path&, const image::ImageView<(N)>&, ProgressRatio*); \
+        template image::Image<(N)> load<(N)>(const std::filesystem::path&, ProgressRatio*);
+
+FUNCTION_INSTANTIATIONS(3)
+FUNCTION_INSTANTIATIONS(4)
+FUNCTION_INSTANTIATIONS(5)
 }
