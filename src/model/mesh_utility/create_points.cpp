@@ -28,44 +28,62 @@ namespace ns::mesh
 {
 namespace
 {
-template <std::size_t N>
-std::unique_ptr<Mesh<N>> create_mesh(std::vector<Vector<N, float>>&& points)
+template <std::size_t N, typename T>
+std::unique_ptr<Mesh<N>> create_mesh(T&& points)
 {
-        std::unique_ptr<Mesh<N>> mesh = std::make_unique<Mesh<N>>();
-
-        mesh->vertices = std::move(points);
-
-        if (mesh->vertices.empty())
+        if (points.empty())
         {
-                error("No vertices found");
+                error("No points for point object");
         }
 
-        mesh->points.resize(mesh->vertices.size());
-        for (unsigned i = 0; i < mesh->points.size(); ++i)
+        std::unique_ptr<Mesh<N>> mesh = std::make_unique<Mesh<N>>();
+
+        mesh->vertices = std::forward<T>(points);
+
+        mesh->points.reserve(mesh->vertices.size());
+        for (std::size_t i = 0; i < mesh->vertices.size(); ++i)
         {
-                mesh->points[i].vertex = i;
+                typename Mesh<N>::Point mesh_point;
+                mesh_point.vertex = i;
+                mesh->points.push_back(std::move(mesh_point));
         }
 
         set_center_and_length(mesh.get());
 
         return mesh;
 }
-}
 
-template <std::size_t N>
-std::unique_ptr<Mesh<N>> create_mesh_for_points(std::vector<Vector<N, float>>&& points)
+template <std::size_t N, typename T>
+std::unique_ptr<Mesh<N>> create_mesh_for_points_impl(T&& points)
 {
         TimePoint start_time = time();
 
-        std::unique_ptr<Mesh<N>> mesh = create_mesh(std::move(points));
+        std::unique_ptr<Mesh<N>> mesh = create_mesh<N>(std::forward<T>(points));
 
         LOG("Points loaded, " + to_string_fixed(duration_from(start_time), 5) + " s");
 
         return mesh;
 }
+}
 
-template std::unique_ptr<Mesh<3>> create_mesh_for_points(std::vector<Vector<3, float>>&& points);
-template std::unique_ptr<Mesh<4>> create_mesh_for_points(std::vector<Vector<4, float>>&& points);
-template std::unique_ptr<Mesh<5>> create_mesh_for_points(std::vector<Vector<5, float>>&& points);
-template std::unique_ptr<Mesh<6>> create_mesh_for_points(std::vector<Vector<6, float>>&& points);
+template <std::size_t N>
+std::unique_ptr<Mesh<N>> create_mesh_for_points(const std::vector<Vector<N, float>>& points)
+{
+        return create_mesh_for_points_impl<N>(points);
+}
+
+template <std::size_t N>
+std::unique_ptr<Mesh<N>> create_mesh_for_points(std::vector<Vector<N, float>>&& points)
+{
+        return create_mesh_for_points_impl<N>(std::move(points));
+}
+
+#define CREATE_MESH_FOR_POINTS_INSTANTIATION(N)                                                             \
+        template std::unique_ptr<Mesh<(N)>> create_mesh_for_points(const std::vector<Vector<(N), float>>&); \
+        template std::unique_ptr<Mesh<(N)>> create_mesh_for_points(std::vector<Vector<(N), float>>&&);
+
+CREATE_MESH_FOR_POINTS_INSTANTIATION(3)
+CREATE_MESH_FOR_POINTS_INSTANTIATION(4)
+CREATE_MESH_FOR_POINTS_INSTANTIATION(5)
+CREATE_MESH_FOR_POINTS_INSTANTIATION(6)
 }

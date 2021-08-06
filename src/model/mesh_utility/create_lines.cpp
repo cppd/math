@@ -25,7 +25,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/com/time.h>
 
 #include <unordered_map>
-#include <unordered_set>
 
 namespace ns::mesh
 {
@@ -41,40 +40,43 @@ std::unique_ptr<Mesh<N>> create_mesh(
                 error("No lines for line object");
         }
 
-        std::unordered_set<int> vertices;
+        std::unordered_map<int, int> vertices;
 
+        int idx = 0;
         for (const std::array<int, 2>& line : lines)
         {
-                vertices.insert(line[0]);
-                vertices.insert(line[1]);
+                for (int vertex_index : line)
+                {
+                        auto [iter, inserted] = vertices.try_emplace(vertex_index);
+                        if (inserted)
+                        {
+                                iter->second = idx++;
+                        }
+                }
         }
+        ASSERT(idx == static_cast<int>(vertices.size()));
 
         std::unique_ptr<Mesh<N>> mesh = std::make_unique<Mesh<N>>();
 
         mesh->vertices.resize(vertices.size());
-
-        std::unordered_map<int, int> index_map;
-
-        int idx = 0;
-        for (int v : vertices)
+        for (const auto& [old_index, new_index] : vertices)
         {
-                ASSERT(v < static_cast<int>(points.size()));
-
-                index_map[v] = idx;
-                mesh->vertices[idx] = points[v];
-                ++idx;
+                mesh->vertices[new_index] = points[old_index];
         }
 
         mesh->lines.reserve(lines.size());
-
         for (const std::array<int, 2>& line : lines)
         {
-                typename Mesh<N>::Line l;
+                typename Mesh<N>::Line mesh_line;
 
-                l.vertices[0] = index_map[line[0]];
-                l.vertices[1] = index_map[line[1]];
+                for (int i = 0; i < 2; ++i)
+                {
+                        auto iter = vertices.find(line[i]);
+                        ASSERT(iter != vertices.cend());
+                        mesh_line.vertices[i] = iter->second;
+                }
 
-                mesh->lines.push_back(std::move(l));
+                mesh->lines.push_back(std::move(mesh_line));
         }
 
         set_center_and_length(mesh.get());
@@ -97,16 +99,12 @@ std::unique_ptr<Mesh<N>> create_mesh_for_lines(
         return mesh;
 }
 
-template std::unique_ptr<Mesh<3>> create_mesh_for_lines(
-        const std::vector<Vector<3, float>>& points,
-        const std::vector<std::array<int, 2>>& lines);
-template std::unique_ptr<Mesh<4>> create_mesh_for_lines(
-        const std::vector<Vector<4, float>>& points,
-        const std::vector<std::array<int, 2>>& lines);
-template std::unique_ptr<Mesh<5>> create_mesh_for_lines(
-        const std::vector<Vector<5, float>>& points,
-        const std::vector<std::array<int, 2>>& lines);
-template std::unique_ptr<Mesh<6>> create_mesh_for_lines(
-        const std::vector<Vector<6, float>>& points,
-        const std::vector<std::array<int, 2>>& lines);
+#define CREATE_MESH_FOR_LINES_INSTANTIATION(N)                     \
+        template std::unique_ptr<Mesh<(N)>> create_mesh_for_lines( \
+                const std::vector<Vector<(N), float>>&, const std::vector<std::array<int, 2>>&);
+
+CREATE_MESH_FOR_LINES_INSTANTIATION(3)
+CREATE_MESH_FOR_LINES_INSTANTIATION(4)
+CREATE_MESH_FOR_LINES_INSTANTIATION(5)
+CREATE_MESH_FOR_LINES_INSTANTIATION(6)
 }

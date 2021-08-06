@@ -17,11 +17,13 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
-#include <src/model/mesh.h>
+#include "../mesh.h"
+
 #include <src/numerical/vec.h>
 
 #include <array>
 #include <memory>
+#include <vector>
 
 namespace ns::mesh
 {

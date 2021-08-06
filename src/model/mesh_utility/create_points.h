@@ -19,11 +19,16 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "../mesh.h"
 
+#include <src/numerical/vec.h>
+
 #include <memory>
 #include <vector>
 
 namespace ns::mesh
 {
+template <std::size_t N>
+std::unique_ptr<Mesh<N>> create_mesh_for_points(const std::vector<Vector<N, float>>& points);
+
 template <std::size_t N>
 std::unique_ptr<Mesh<N>> create_mesh_for_points(std::vector<Vector<N, float>>&& points);
 }

@@ -74,7 +74,7 @@ std::unique_ptr<Mesh<N>> create_mesh(
                 mesh_facet.has_texcoord = false;
                 mesh_facet.has_normal = false;
 
-                for (unsigned i = 0; i < N; ++i)
+                for (std::size_t i = 0; i < N; ++i)
                 {
                         auto iter = vertices.find(facet[i]);
                         ASSERT(iter != vertices.cend());
@@ -115,16 +115,12 @@ std::unique_ptr<Mesh<N>> create_mesh_for_facets(
         return mesh;
 }
 
-template std::unique_ptr<Mesh<3>> create_mesh_for_facets(
-        const std::vector<Vector<3, float>>& points,
-        const std::vector<std::array<int, 3>>& facets);
-template std::unique_ptr<Mesh<4>> create_mesh_for_facets(
-        const std::vector<Vector<4, float>>& points,
-        const std::vector<std::array<int, 4>>& facets);
-template std::unique_ptr<Mesh<5>> create_mesh_for_facets(
-        const std::vector<Vector<5, float>>& points,
-        const std::vector<std::array<int, 5>>& facets);
-template std::unique_ptr<Mesh<6>> create_mesh_for_facets(
-        const std::vector<Vector<6, float>>& points,
-        const std::vector<std::array<int, 6>>& facets);
+#define CREATE_MESH_FOR_FACETS_INSTANTIATION(N)                     \
+        template std::unique_ptr<Mesh<(N)>> create_mesh_for_facets( \
+                const std::vector<Vector<(N), float>>&, const std::vector<std::array<int, (N)>>&);
+
+CREATE_MESH_FOR_FACETS_INSTANTIATION(3)
+CREATE_MESH_FOR_FACETS_INSTANTIATION(4)
+CREATE_MESH_FOR_FACETS_INSTANTIATION(5)
+CREATE_MESH_FOR_FACETS_INSTANTIATION(6)
 }
