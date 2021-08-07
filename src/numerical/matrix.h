@@ -112,6 +112,16 @@ public:
                 return m_data[r];
         }
 
+        [[nodiscard]] constexpr const std::array<Vector<Columns, T>, Rows>& rows() const
+        {
+                return m_data;
+        }
+
+        [[nodiscard]] constexpr std::array<Vector<Columns, T>, Rows>& rows()
+        {
+                return m_data;
+        }
+
         [[nodiscard]] constexpr const T& operator()(std::size_t r, std::size_t c) const
         {
                 return m_data[r][c];
