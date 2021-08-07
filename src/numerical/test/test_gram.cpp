@@ -16,6 +16,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
 #include "../complement.h"
+#include "../determinant.h"
 #include "../gram.h"
 
 #include <src/com/log.h>
@@ -32,14 +33,14 @@ namespace ns::numerical
 namespace
 {
 template <typename T>
-bool are_equal(const T& a, const T& b)
+bool are_equal(const T& a, const T& b, const T& precision)
 {
         if (a == b)
         {
                 return true;
         }
         const T rel = std::abs(a - b) / std::max(std::abs(a), std::abs(b));
-        return (rel < T(1e-3));
+        return (rel < precision);
 }
 
 template <std::size_t N, typename T, std::size_t Count>
@@ -74,9 +75,9 @@ void test_gram_and_complement(std::mt19937_64& random_engine)
         const std::array<Vector<N, T>, N - 1> vectors = random_vectors<N, T, N - 1>(random_engine);
 
         const T norm_squared = orthogonal_complement(vectors).norm_squared();
-        const T gram_determinant = gram_matrix(vectors).determinant();
+        const T gram_determinant = determinant_by_cofactor_expansion(gram_matrix(vectors).rows());
 
-        if (!are_equal(norm_squared, gram_determinant))
+        if (!are_equal(norm_squared, gram_determinant, T(1e-8)))
         {
                 error("Test <" + to_string(N) + ", " + type_name<T>() + ">, norm squared " + to_string(norm_squared)
                       + " is not equal to Gram determinant " + to_string(gram_determinant));
@@ -93,7 +94,7 @@ void test_gram_and_determinant(std::mt19937_64& random_engine)
         const T determinant_squared = square(Matrix<N, N, T>(vectors).determinant());
         const T gram_determinant = gram_matrix(vectors).determinant();
 
-        if (!are_equal(determinant_squared, gram_determinant))
+        if (!are_equal(determinant_squared, gram_determinant, T(1e-3)))
         {
                 error("Test <" + to_string(N) + ", " + type_name<T>() + ">, determinat squared "
                       + to_string(determinant_squared) + " is not equal to Gram determinant "
