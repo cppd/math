@@ -25,26 +25,27 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 namespace ns::numerical
 {
-template <std::size_t N_V, std::size_t N_H, typename T, std::size_t DET_SIZE>
-constexpr T determinant_by_cofactor_expansion(
+// Cofactor expansion
+template <std::size_t N_V, std::size_t N_H, typename T, std::size_t SIZE>
+constexpr T determinant(
         const std::array<Vector<N_H, T>, N_V>& vectors,
-        const std::array<unsigned char, DET_SIZE>& v_map,
-        const std::array<unsigned char, DET_SIZE>& h_map)
+        const std::array<unsigned char, SIZE>& v_map,
+        const std::array<unsigned char, SIZE>& h_map)
 {
-        static_assert(N_V >= DET_SIZE);
-        static_assert(N_H >= DET_SIZE);
-        static_assert(DET_SIZE > 0);
+        static_assert(N_V >= SIZE);
+        static_assert(N_H >= SIZE);
+        static_assert(SIZE > 0);
 
-        if constexpr (DET_SIZE == 1)
+        if constexpr (SIZE == 1)
         {
                 return vectors[v_map[0]][h_map[0]];
         }
-        else if constexpr (DET_SIZE == 2)
+        else if constexpr (SIZE == 2)
         {
                 return vectors[v_map[0]][h_map[0]] * vectors[v_map[1]][h_map[1]]
                        - vectors[v_map[0]][h_map[1]] * vectors[v_map[1]][h_map[0]];
         }
-        else if constexpr (DET_SIZE == 3)
+        else if constexpr (SIZE == 3)
         {
                 const T& v00 = vectors[v_map[0]][h_map[0]];
                 const T& v01 = vectors[v_map[0]][h_map[1]];
@@ -67,12 +68,12 @@ constexpr T determinant_by_cofactor_expansion(
                 T det = 0;
 
                 const unsigned char row = v_map[0];
-                const std::array<unsigned char, DET_SIZE - 1> map = del_elem(v_map, 0);
+                const std::array<unsigned char, SIZE - 1> map = del_elem(v_map, 0);
 
-                for (std::size_t i = 0; i < DET_SIZE; ++i)
+                for (std::size_t i = 0; i < SIZE; ++i)
                 {
                         const T& entry = vectors[row][h_map[i]];
-                        const T& minor = determinant_by_cofactor_expansion(vectors, map, del_elem(h_map, i));
+                        const T& minor = determinant(vectors, map, del_elem(h_map, i));
 
                         if (i & 1)
                         {
@@ -89,8 +90,8 @@ constexpr T determinant_by_cofactor_expansion(
 }
 
 template <std::size_t N, typename T>
-constexpr T determinant_by_cofactor_expansion(const std::array<Vector<N, T>, N>& vectors)
+constexpr T determinant(const std::array<Vector<N, T>, N>& vectors)
 {
-        return determinant_by_cofactor_expansion(vectors, sequence_uchar_array<N>, sequence_uchar_array<N>);
+        return determinant(vectors, sequence_uchar_array<N>, sequence_uchar_array<N>);
 }
 }

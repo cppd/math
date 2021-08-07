@@ -47,8 +47,7 @@ Vector<N, T> orthogonal_complement(const std::array<Vector<N, T>, N - 1>& vector
 
         const auto minor = [&vectors](std::size_t i)
         {
-                return determinant_by_cofactor_expansion(
-                        vectors, sequence_uchar_array<N - 1>, del_elem(sequence_uchar_array<N>, i));
+                return determinant(vectors, sequence_uchar_array<N - 1>, del_elem(sequence_uchar_array<N>, i));
         };
 
         Vector<N, T> res;

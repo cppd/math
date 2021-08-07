@@ -302,7 +302,7 @@ bool linearly_independent(const std::array<Vector<N, T>, N>& vectors)
 
         for (const std::array<unsigned char, COUNT>& h_map : combinations<N, COUNT>())
         {
-                if (numerical::determinant_by_cofactor_expansion(vectors, sequence_uchar_array<COUNT>, h_map) != 0)
+                if (numerical::determinant(vectors, sequence_uchar_array<COUNT>, h_map) != 0)
                 {
                         return true;
                 }
