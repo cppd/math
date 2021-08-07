@@ -87,4 +87,10 @@ constexpr T determinant_by_cofactor_expansion(
                 return det;
         }
 }
+
+template <std::size_t N, typename T>
+constexpr T determinant_by_cofactor_expansion(const std::array<Vector<N, T>, N>& vectors)
+{
+        return determinant_by_cofactor_expansion(vectors, sequence_uchar_array<N>, sequence_uchar_array<N>);
+}
 }
