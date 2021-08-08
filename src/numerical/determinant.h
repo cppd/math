@@ -20,14 +20,16 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "vec.h"
 
 #include <src/com/arrays.h>
+#include <src/com/type/trait.h>
 
 #include <array>
 
 namespace ns::numerical
 {
-// Cofactor expansion
+namespace determinant_implementation
+{
 template <std::size_t N_V, std::size_t N_H, typename T, std::size_t SIZE>
-constexpr T determinant(
+constexpr T determinant_cofactor_expansion(
         const std::array<Vector<N_H, T>, N_V>& vectors,
         const std::array<unsigned char, SIZE>& v_map,
         const std::array<unsigned char, SIZE>& h_map)
@@ -73,7 +75,7 @@ constexpr T determinant(
                 for (std::size_t i = 0; i < SIZE; ++i)
                 {
                         const T& entry = vectors[row][h_map[i]];
-                        const T& minor = determinant(vectors, map, del_elem(h_map, i));
+                        const T& minor = determinant_cofactor_expansion(vectors, map, del_elem(h_map, i));
 
                         if (i & 1)
                         {
@@ -88,10 +90,35 @@ constexpr T determinant(
                 return det;
         }
 }
+}
+
+template <std::size_t N_V, std::size_t N_H, typename T, std::size_t SIZE>
+constexpr T determinant(
+        const std::array<Vector<N_H, T>, N_V>& vectors,
+        const std::array<unsigned char, SIZE>& v_map,
+        const std::array<unsigned char, SIZE>& h_map)
+{
+        static_assert(is_signed<T>);
+        static_assert(is_integral<T>);
+
+        return determinant_implementation::determinant_cofactor_expansion(vectors, v_map, h_map);
+}
+
+template <std::size_t N, typename T>
+constexpr T determinant(const std::array<Vector<N, T>, N - 1>& vectors, const std::size_t excluded_column)
+{
+        static_assert(is_signed<T>);
+
+        return determinant_implementation::determinant_cofactor_expansion(
+                vectors, sequence_uchar_array<N - 1>, del_elem(sequence_uchar_array<N>, excluded_column));
+}
 
 template <std::size_t N, typename T>
 constexpr T determinant(const std::array<Vector<N, T>, N>& vectors)
 {
-        return determinant(vectors, sequence_uchar_array<N>, sequence_uchar_array<N>);
+        static_assert(is_signed<T>);
+
+        return determinant_implementation::determinant_cofactor_expansion(
+                vectors, sequence_uchar_array<N>, sequence_uchar_array<N>);
 }
 }

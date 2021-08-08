@@ -26,8 +26,11 @@ Cambridge University Press.
 
 #pragma once
 
+#include "vec.h"
+
 #include <src/com/type/trait.h>
 
+#include <array>
 #include <cmath>
 
 namespace ns::numerical
@@ -50,17 +53,79 @@ int find_pivot(const Matrix<N, N, T>& A, int column, int from_row)
         }
         return pivot;
 }
+
+template <std::size_t Size, typename T, template <std::size_t, std::size_t, typename> typename Matrix>
+T determinant_gauss(Matrix<Size, Size, T>* A_p)
+{
+        static_assert(is_floating_point<T>);
+
+        constexpr int N = Size;
+
+        Matrix<N, N, T>& A = *A_p;
+
+        bool sign = false;
+
+        for (int k = 0; k < N - 1; ++k)
+        {
+                int pivot = find_pivot(A, k, k);
+                if (pivot != k)
+                {
+                        std::swap(A.row(pivot), A.row(k));
+                        sign = !sign;
+                }
+
+                for (int i = k + 1; i < N; ++i)
+                {
+                        T l_ik = A(i, k) / A(k, k);
+                        for (int j = k; j < N; ++j)
+                        {
+                                // A(i, j) = A(i, j) - l_ik * A(k, j);
+                                A(i, j) = std::fma(-l_ik, A(k, j), A(i, j));
+                        }
+                }
+        }
+
+        T d = 1;
+        for (int i = 0; i < N; ++i)
+        {
+                d *= A(i, i);
+        }
+
+        return sign ? -d : d;
+}
+
+template <std::size_t R, std::size_t C, typename T>
+class RowMatrix final
+{
+        std::array<Vector<C, T>, R> m_rows;
+
+public:
+        template <typename V>
+        RowMatrix(V&& v) : m_rows(std::forward<V>(v))
+        {
+        }
+        [[nodiscard]] const T& operator()(int r, int c) const&
+        {
+                return m_rows[r][c];
+        }
+        [[nodiscard]] T& operator()(int r, int c) &
+        {
+                return m_rows[r][c];
+        }
+        [[nodiscard]] const Vector<C, T>& row(int r) const&
+        {
+                return m_rows[r];
+        }
+        [[nodiscard]] Vector<C, T>& row(int r) &
+        {
+                return m_rows[r];
+        }
+};
 }
 
 // input: A * x = b.
 // output: b = x; A = upper triangular.
-template <
-        std::size_t Size,
-        typename T,
-        template <std::size_t, std::size_t, typename>
-        typename Matrix,
-        template <std::size_t, typename>
-        typename Vector>
+template <std::size_t Size, typename T, template <std::size_t, std::size_t, typename> typename Matrix>
 void solve_gauss(Matrix<Size, Size, T>* A_p, Vector<Size, T>* b_p)
 {
         static_assert(is_floating_point<T>);
@@ -169,43 +234,12 @@ void solve_gauss(Matrix<SizeA, SizeA, T>* A_p, Matrix<SizeA, SizeB, T>* B_p)
         }
 }
 
-template <std::size_t Size, typename T, template <std::size_t, std::size_t, typename> typename Matrix>
-T determinant_gauss(Matrix<Size, Size, T>* A_p)
+template <std::size_t N, typename T, template <std::size_t, typename> typename Vector>
+T determinant_gauss(const std::array<Vector<N, T>, N>& rows)
 {
-        static_assert(is_floating_point<T>);
+        namespace impl = gauss_implementation;
 
-        constexpr int N = Size;
-
-        Matrix<N, N, T>& A = *A_p;
-
-        bool sign = false;
-
-        for (int k = 0; k < N - 1; ++k)
-        {
-                int pivot = gauss_implementation::find_pivot(A, k, k);
-                if (pivot != k)
-                {
-                        std::swap(A.row(pivot), A.row(k));
-                        sign = !sign;
-                }
-
-                for (int i = k + 1; i < N; ++i)
-                {
-                        T l_ik = A(i, k) / A(k, k);
-                        for (int j = k; j < N; ++j)
-                        {
-                                // A(i, j) = A(i, j) - l_ik * A(k, j);
-                                A(i, j) = std::fma(-l_ik, A(k, j), A(i, j));
-                        }
-                }
-        }
-
-        T d = 1;
-        for (int i = 0; i < N; ++i)
-        {
-                d *= A(i, i);
-        }
-
-        return sign ? -d : d;
+        impl::RowMatrix<N, N, T> matrix{rows};
+        return impl::determinant_gauss(&matrix);
 }
 }

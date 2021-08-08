@@ -17,6 +17,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
+#include "determinant.h"
 #include "gauss.h"
 #include "vec.h"
 
@@ -64,7 +65,7 @@ class Matrix
 
         //
 
-        std::array<Vector<Columns, T>, Rows> m_data;
+        std::array<Vector<Columns, T>, Rows> m_rows;
 
         // template <std::size_t... I>
         // constexpr Vector<Rows, T> column_impl(std::size_t column, std::integer_sequence<std::size_t, I...>) const
@@ -72,7 +73,7 @@ class Matrix
         //        static_assert(sizeof...(I) == Rows);
         //        static_assert(((I >= 0 && I < Rows) && ...));
         //
-        //        return Vector<Rows, T>{m_data[I][column]...};
+        //        return Vector<Rows, T>{m_rows[I][column]...};
         //}
         //
         // constexpr Vector<Rows, T> column_impl(std::size_t column) const
@@ -88,54 +89,44 @@ public:
         template <typename... Args>
         explicit constexpr Matrix(Args&&... args) requires(
                 (sizeof...(args) == Rows) && (std::is_convertible_v<Args, Vector<Columns, T>> && ...))
-                : m_data{std::forward<Args>(args)...}
+                : m_rows{std::forward<Args>(args)...}
         {
         }
 
         template <typename Arg>
         explicit constexpr Matrix(const Arg& v) requires(Columns == Rows && std::is_convertible_v<Arg, T>)
-                : m_data(make_diagonal_matrix(v))
+                : m_rows(make_diagonal_matrix(v))
         {
         }
 
-        explicit constexpr Matrix(const std::array<Vector<Columns, T>, Rows>& data) : m_data(data)
+        explicit constexpr Matrix(const std::array<Vector<Columns, T>, Rows>& data) : m_rows(data)
         {
         }
 
         [[nodiscard]] constexpr const Vector<Columns, T>& row(std::size_t r) const
         {
-                return m_data[r];
+                return m_rows[r];
         }
 
         [[nodiscard]] constexpr Vector<Columns, T>& row(std::size_t r)
         {
-                return m_data[r];
-        }
-
-        [[nodiscard]] constexpr const std::array<Vector<Columns, T>, Rows>& rows() const
-        {
-                return m_data;
-        }
-
-        [[nodiscard]] constexpr std::array<Vector<Columns, T>, Rows>& rows()
-        {
-                return m_data;
+                return m_rows[r];
         }
 
         [[nodiscard]] constexpr const T& operator()(std::size_t r, std::size_t c) const
         {
-                return m_data[r][c];
+                return m_rows[r][c];
         }
 
         [[nodiscard]] constexpr T& operator()(std::size_t r, std::size_t c)
         {
-                return m_data[r][c];
+                return m_rows[r][c];
         }
 
         [[nodiscard]] const T* data() const
         {
                 static_assert(sizeof(Matrix) == Rows * Columns * sizeof(T));
-                return m_data[0].data();
+                return m_rows[0].data();
         }
 
         [[nodiscard]] Matrix<Columns, Rows, T> transpose() const
@@ -145,7 +136,7 @@ public:
                 {
                         for (std::size_t c = 0; c < Columns; ++c)
                         {
-                                res(c, r) = m_data[r][c];
+                                res(c, r) = m_rows[r][c];
                         }
                 }
                 return res;
@@ -154,9 +145,7 @@ public:
         template <std::size_t R = Rows, std::size_t C = Columns>
         [[nodiscard]] T determinant() const requires(R == Rows && C == Columns && Rows == Columns)
         {
-                Matrix<Rows, Rows, T> m(*this);
-
-                return numerical::determinant_gauss(&m);
+                return numerical::determinant(m_rows);
         }
 
         template <std::size_t R = Rows, std::size_t C = Columns>
@@ -192,7 +181,7 @@ public:
                 {
                         for (std::size_t c = 0; c < C; ++c)
                         {
-                                res(r, c) = m_data[r][c];
+                                res(r, c) = m_rows[r][c];
                         }
                 }
                 return res;
@@ -205,7 +194,7 @@ public:
                 T s = 0;
                 for (std::size_t i = 0; i < N; ++i)
                 {
-                        s += m_data[i][i];
+                        s += m_rows[i][i];
                 }
                 return s;
         }
@@ -217,7 +206,7 @@ public:
                 Vector<N, T> d;
                 for (std::size_t i = 0; i < N; ++i)
                 {
-                        d[i] = m_data[i][i];
+                        d[i] = m_rows[i][i];
                 }
                 return d;
         }

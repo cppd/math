@@ -30,7 +30,6 @@ Wiley, 2014.
 #include "identity.h"
 #include "vec.h"
 
-#include <src/com/arrays.h>
 #include <src/com/error.h>
 #include <src/com/mpz.h>
 
@@ -45,22 +44,10 @@ Vector<N, T> orthogonal_complement(const std::array<Vector<N, T>, N - 1>& vector
 {
         static_assert(N >= 5);
 
-        const auto minor = [&vectors](std::size_t i)
-        {
-                return determinant(vectors, sequence_uchar_array<N - 1>, del_elem(sequence_uchar_array<N>, i));
-        };
-
         Vector<N, T> res;
         for (std::size_t i = 0; i < N; ++i)
         {
-                if (i & 1)
-                {
-                        res[i] = -minor(i);
-                }
-                else
-                {
-                        res[i] = minor(i);
-                }
+                res[i] = (i & 1) ? -determinant(vectors, i) : determinant(vectors, i);
         }
         return res;
 }

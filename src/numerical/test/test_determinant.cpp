@@ -17,7 +17,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "../determinant.h"
 #include "../gauss.h"
-#include "../matrix.h"
 
 #include <src/com/error.h>
 #include <src/com/log.h>
@@ -29,7 +28,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <random>
 
-namespace ns::numerical
+namespace ns::numerical::determinant_implementation
 {
 namespace
 {
@@ -94,6 +93,7 @@ template <std::size_t N, typename T>
 void test_determinant(const int count, const std::type_identity_t<T>& precision)
 {
         LOG("Test determinant, " + to_string(N) + ", " + type_name<T>());
+
         const std::vector<std::array<Vector<N, T>, N>> matrices = random_matrices<N, T>(count);
 
         std::vector<T> cofactor_expansion(count);
@@ -103,7 +103,8 @@ void test_determinant(const int count, const std::type_identity_t<T>& precision)
                 TimePoint start_time = time();
                 for (int i = 0; i < count; ++i)
                 {
-                        cofactor_expansion[i] = determinant(matrices[i]);
+                        cofactor_expansion[i] = determinant_cofactor_expansion(
+                                matrices[i], sequence_uchar_array<N>, sequence_uchar_array<N>);
                 }
                 LOG("Time = " + to_string_fixed(duration_from(start_time), 5) + " s, cofactor expansion");
         }
@@ -112,10 +113,15 @@ void test_determinant(const int count, const std::type_identity_t<T>& precision)
                 TimePoint start_time = time();
                 for (int i = 0; i < count; ++i)
                 {
-                        Matrix<N, N, T> matrix(matrices[i]);
-                        row_reduction[i] = determinant_gauss(&matrix);
+                        row_reduction[i] = determinant_gauss(matrices[i]);
                 }
                 LOG("Time = " + to_string_fixed(duration_from(start_time), 5) + " s, row reduction");
+        }
+
+        std::vector<T> determinants(count);
+        for (int i = 0; i < count; ++i)
+        {
+                determinants[i] = determinant(matrices[i]);
         }
 
         for (int i = 0; i < count; ++i)
@@ -124,6 +130,12 @@ void test_determinant(const int count, const std::type_identity_t<T>& precision)
                 {
                         error("Determinants are not equal:\ncofactor_expansion = " + to_string(cofactor_expansion[i])
                               + "\nrow_reduction = " + to_string(row_reduction[i]) + "\n" + to_string(matrices[i]));
+                }
+                if (!(determinants[i] == cofactor_expansion[i] || determinants[i] == row_reduction[i]))
+                {
+                        error("Determinant error:\ndeterminant = " + to_string(determinants[i])
+                              + "\ncofactor_expansion = " + to_string(cofactor_expansion[i])
+                              + "\nrow_reduction = " + to_string(row_reduction[i]));
                 }
         }
 }

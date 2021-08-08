@@ -98,9 +98,9 @@ void test_eigen_defined()
 
         try
         {
-                numerical::eigen_symmetric_upper_triangular(a, TOLERANCE, &eigenvalues, &eigenvectors);
+                eigen_symmetric_upper_triangular(a, TOLERANCE, &eigenvalues, &eigenvectors);
         }
-        catch (const numerical::EigenException& e)
+        catch (const EigenException& e)
         {
                 error(e.what());
         }
@@ -135,9 +135,9 @@ void test_eigen_random(unsigned count)
                 std::array<Vector<N, T>, N> eigenvectors;
                 try
                 {
-                        numerical::eigen_symmetric_upper_triangular(m.matrix, TOLERANCE, &eigenvalues, &eigenvectors);
+                        eigen_symmetric_upper_triangular(m.matrix, TOLERANCE, &eigenvalues, &eigenvectors);
                 }
-                catch (const numerical::EigenException& e)
+                catch (const EigenException& e)
                 {
                         error(e.what());
                 }

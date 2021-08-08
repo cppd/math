@@ -75,7 +75,7 @@ void test_gram_and_complement(std::mt19937_64& random_engine)
         const std::array<Vector<N, T>, N - 1> vectors = random_vectors<N, T, N - 1>(random_engine);
 
         const T norm_squared = orthogonal_complement(vectors).norm_squared();
-        const T gram_determinant = determinant(gram_matrix(vectors).rows());
+        const T gram_determinant = gram_matrix(vectors).determinant();
 
         if (!are_equal(norm_squared, gram_determinant, T(1e-8)))
         {
@@ -91,7 +91,7 @@ void test_gram_and_determinant(std::mt19937_64& random_engine)
 
         const std::array<Vector<N, T>, N> vectors = random_vectors<N, T, N>(random_engine);
 
-        const T determinant_squared = square(Matrix<N, N, T>(vectors).determinant());
+        const T determinant_squared = square(determinant(vectors));
         const T gram_determinant = gram_matrix(vectors).determinant();
 
         if (!are_equal(determinant_squared, gram_determinant, T(1e-3)))
