@@ -46,16 +46,22 @@ constexpr std::array VECTORS = std::to_array<Vector<7, T>>
 });
 // clang-format on
 
-constexpr long long DETERMINANT = 1'868'201'030'776'500;
+template <typename T>
+constexpr bool TEST = 1'868'201'030'776'500
+                      == determinant_cofactor_expansion(VECTORS<T>, sequence_uchar_array<7>, sequence_uchar_array<7>);
 
-static_assert(DETERMINANT == determinant(VECTORS<long long>));
-static_assert(DETERMINANT == determinant(VECTORS<__int128>));
-static_assert(DETERMINANT == determinant(VECTORS<double>));
-static_assert(DETERMINANT == determinant(VECTORS<long double>));
-static_assert(DETERMINANT == determinant(VECTORS<__float128>));
+static_assert(TEST<long long>);
+static_assert(TEST<__int128>);
+static_assert(TEST<double>);
+static_assert(TEST<long double>);
+static_assert(TEST<__float128>);
 
 static_assert(
-        -28 == determinant(VECTORS<int>, std::to_array<unsigned char>({2, 4}), std::to_array<unsigned char>({3, 5})));
+        -28
+        == determinant_cofactor_expansion(
+                VECTORS<int>,
+                std::to_array<unsigned char>({2, 4}),
+                std::to_array<unsigned char>({3, 5})));
 
 //
 
@@ -96,33 +102,42 @@ void test_determinant(const int count, const std::type_identity_t<T>& precision)
 
         const std::vector<std::array<Vector<N, T>, N>> matrices = random_matrices<N, T>(count);
 
-        std::vector<T> cofactor_expansion(count);
-        std::vector<T> row_reduction(count);
-
+        const std::vector<T> cofactor_expansion = [&]
         {
-                TimePoint start_time = time();
+                std::vector<T> res(count);
+                const TimePoint start_time = time();
                 for (int i = 0; i < count; ++i)
                 {
-                        cofactor_expansion[i] = determinant_cofactor_expansion(
+                        res[i] = determinant_cofactor_expansion(
                                 matrices[i], sequence_uchar_array<N>, sequence_uchar_array<N>);
                 }
                 LOG("Time = " + to_string_fixed(duration_from(start_time), 5) + " s, cofactor expansion");
-        }
+                return res;
+        }();
 
+        const std::vector<T> row_reduction = [&]
         {
-                TimePoint start_time = time();
+                std::vector<T> res(count);
+                const TimePoint start_time = time();
                 for (int i = 0; i < count; ++i)
                 {
-                        row_reduction[i] = determinant_gauss(matrices[i]);
+                        res[i] = determinant_gauss(matrices[i]);
                 }
                 LOG("Time = " + to_string_fixed(duration_from(start_time), 5) + " s, row reduction");
-        }
+                return res;
+        }();
 
-        std::vector<T> determinants(count);
-        for (int i = 0; i < count; ++i)
+        const std::vector<T> determinants = [&]
         {
-                determinants[i] = determinant(matrices[i]);
-        }
+                std::vector<T> res(count);
+                const TimePoint start_time = time();
+                for (int i = 0; i < count; ++i)
+                {
+                        res[i] = determinant(matrices[i]);
+                }
+                LOG("Time = " + to_string_fixed(duration_from(start_time), 5) + " s, determinant");
+                return res;
+        }();
 
         for (int i = 0; i < count; ++i)
         {

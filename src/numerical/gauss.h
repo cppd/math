@@ -16,8 +16,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
 /*
-На основе книги
-
 Parallel Scientific Computing in C++ and MPI.
 A seamless approach to parallel algorithms and their implementation.
 George Em Karniadakis, Robert M. Kirby II.
@@ -38,7 +36,7 @@ namespace ns::numerical
 namespace gauss_implementation
 {
 template <std::size_t N, typename T, template <std::size_t, std::size_t, typename> typename Matrix>
-int find_pivot(const Matrix<N, N, T>& A, int column, int from_row)
+constexpr int find_pivot(const Matrix<N, N, T>& A, const int column, const int from_row)
 {
         T max = std::abs(A(from_row, column));
         int pivot = from_row;
@@ -55,40 +53,38 @@ int find_pivot(const Matrix<N, N, T>& A, int column, int from_row)
 }
 
 template <std::size_t Size, typename T, template <std::size_t, std::size_t, typename> typename Matrix>
-T determinant_gauss(Matrix<Size, Size, T>* A_p)
+constexpr T determinant(Matrix<Size, Size, T>&& m)
 {
         static_assert(is_floating_point<T>);
+        static_assert(Size >= 1);
 
         constexpr int N = Size;
-
-        Matrix<N, N, T>& A = *A_p;
 
         bool sign = false;
 
         for (int k = 0; k < N - 1; ++k)
         {
-                int pivot = find_pivot(A, k, k);
+                int pivot = find_pivot(m, k, k);
                 if (pivot != k)
                 {
-                        std::swap(A.row(pivot), A.row(k));
+                        std::swap(m.row(pivot), m.row(k));
                         sign = !sign;
                 }
 
                 for (int i = k + 1; i < N; ++i)
                 {
-                        T l_ik = A(i, k) / A(k, k);
-                        for (int j = k; j < N; ++j)
+                        T l_ik = m(i, k) / m(k, k);
+                        for (int j = k + 1; j < N; ++j)
                         {
-                                // A(i, j) = A(i, j) - l_ik * A(k, j);
-                                A(i, j) = std::fma(-l_ik, A(k, j), A(i, j));
+                                m(i, j) -= l_ik * m(k, j);
                         }
                 }
         }
 
-        T d = 1;
-        for (int i = 0; i < N; ++i)
+        T d = m(0, 0);
+        for (int i = 1; i < N; ++i)
         {
-                d *= A(i, i);
+                d *= m(i, i);
         }
 
         return sign ? -d : d;
@@ -101,22 +97,22 @@ class RowMatrix final
 
 public:
         template <typename V>
-        RowMatrix(V&& v) : m_rows(std::forward<V>(v))
+        constexpr RowMatrix(V&& v) : m_rows(std::forward<V>(v))
         {
         }
-        [[nodiscard]] const T& operator()(int r, int c) const&
-        {
-                return m_rows[r][c];
-        }
-        [[nodiscard]] T& operator()(int r, int c) &
+        [[nodiscard]] constexpr const T& operator()(int r, int c) const&
         {
                 return m_rows[r][c];
         }
-        [[nodiscard]] const Vector<C, T>& row(int r) const&
+        [[nodiscard]] constexpr T& operator()(int r, int c) &
+        {
+                return m_rows[r][c];
+        }
+        [[nodiscard]] constexpr const Vector<C, T>& row(int r) const&
         {
                 return m_rows[r];
         }
-        [[nodiscard]] Vector<C, T>& row(int r) &
+        [[nodiscard]] constexpr Vector<C, T>& row(int r) &
         {
                 return m_rows[r];
         }
@@ -126,7 +122,7 @@ public:
 // input: A * x = b.
 // output: b = x; A = upper triangular.
 template <std::size_t Size, typename T, template <std::size_t, std::size_t, typename> typename Matrix>
-void solve_gauss(Matrix<Size, Size, T>* A_p, Vector<Size, T>* b_p)
+void solve_gauss(Matrix<Size, Size, T>* const A_p, Vector<Size, T>* const b_p)
 {
         static_assert(is_floating_point<T>);
 
@@ -177,7 +173,7 @@ template <
         typename T,
         template <std::size_t, std::size_t, typename>
         typename Matrix>
-void solve_gauss(Matrix<SizeA, SizeA, T>* A_p, Matrix<SizeA, SizeB, T>* B_p)
+void solve_gauss(Matrix<SizeA, SizeA, T>* const A_p, Matrix<SizeA, SizeB, T>* const B_p)
 {
         static_assert(is_floating_point<T>);
 
@@ -235,11 +231,10 @@ void solve_gauss(Matrix<SizeA, SizeA, T>* A_p, Matrix<SizeA, SizeB, T>* B_p)
 }
 
 template <std::size_t N, typename T, template <std::size_t, typename> typename Vector>
-T determinant_gauss(const std::array<Vector<N, T>, N>& rows)
+constexpr T determinant_gauss(const std::array<Vector<N, T>, N>& rows)
 {
         namespace impl = gauss_implementation;
 
-        impl::RowMatrix<N, N, T> matrix{rows};
-        return impl::determinant_gauss(&matrix);
+        return impl::determinant(impl::RowMatrix<N, N, T>(rows));
 }
 }

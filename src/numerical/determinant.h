@@ -17,6 +17,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
+#include "gauss.h"
 #include "vec.h"
 
 #include <src/com/arrays.h>
@@ -108,6 +109,7 @@ template <std::size_t N, typename T>
 constexpr T determinant(const std::array<Vector<N, T>, N - 1>& vectors, const std::size_t excluded_column)
 {
         static_assert(is_signed<T>);
+        static_assert(is_integral<T> || is_floating_point<T>);
 
         return determinant_implementation::determinant_cofactor_expansion(
                 vectors, sequence_uchar_array<N - 1>, del_elem(sequence_uchar_array<N>, excluded_column));
@@ -117,8 +119,24 @@ template <std::size_t N, typename T>
 constexpr T determinant(const std::array<Vector<N, T>, N>& vectors)
 {
         static_assert(is_signed<T>);
+        static_assert(is_integral<T> || is_floating_point<T>);
 
-        return determinant_implementation::determinant_cofactor_expansion(
-                vectors, sequence_uchar_array<N>, sequence_uchar_array<N>);
+        if constexpr (is_integral<T>)
+        {
+                return determinant_implementation::determinant_cofactor_expansion(
+                        vectors, sequence_uchar_array<N>, sequence_uchar_array<N>);
+        }
+        if constexpr (is_floating_point<T>)
+        {
+                if constexpr (N <= 5)
+                {
+                        return determinant_implementation::determinant_cofactor_expansion(
+                                vectors, sequence_uchar_array<N>, sequence_uchar_array<N>);
+                }
+                else
+                {
+                        return determinant_gauss(vectors);
+                }
+        }
 }
 }
