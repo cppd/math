@@ -47,21 +47,27 @@ constexpr std::array VECTORS = std::to_array<Vector<7, T>>
 // clang-format on
 
 template <typename T>
-constexpr bool TEST = 1'868'201'030'776'500
-                      == determinant_cofactor_expansion(VECTORS<T>, sequence_uchar_array<7>, sequence_uchar_array<7>);
+constexpr bool TEST_COFACTOR_EXPANSION =
+        (1'868'201'030'776'500
+         == determinant_cofactor_expansion(VECTORS<T>, sequence_uchar_array<7>, sequence_uchar_array<7>))
+        && (-28
+            == determinant_cofactor_expansion(
+                    VECTORS<T>,
+                    std::to_array<unsigned char>({2, 4}),
+                    std::to_array<unsigned char>({3, 5})));
+static_assert(TEST_COFACTOR_EXPANSION<long long>);
+static_assert(TEST_COFACTOR_EXPANSION<__int128>);
+static_assert(TEST_COFACTOR_EXPANSION<double>);
+static_assert(TEST_COFACTOR_EXPANSION<long double>);
+static_assert(TEST_COFACTOR_EXPANSION<__float128>);
 
-static_assert(TEST<long long>);
-static_assert(TEST<__int128>);
-static_assert(TEST<double>);
-static_assert(TEST<long double>);
-static_assert(TEST<__float128>);
-
-static_assert(
-        -28
-        == determinant_cofactor_expansion(
-                VECTORS<int>,
-                std::to_array<unsigned char>({2, 4}),
-                std::to_array<unsigned char>({3, 5})));
+template <typename T>
+constexpr bool TEST_ROW_REDUCTION = 1'868'201'030'776'499 <= determinant_gauss(VECTORS<T>)
+                                    && determinant_gauss(VECTORS<T>) <= 1'868'201'030'776'500;
+static_assert(TEST_ROW_REDUCTION<float>);
+static_assert(TEST_ROW_REDUCTION<double>);
+static_assert(TEST_ROW_REDUCTION<long double>);
+static_assert(TEST_ROW_REDUCTION<__float128>);
 
 //
 

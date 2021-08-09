@@ -35,14 +35,33 @@ namespace ns::numerical
 {
 namespace gauss_implementation
 {
+template <typename T>
+concept HasStdAbs = requires(const T& v)
+{
+        std::abs(v);
+};
+
+template <typename T>
+constexpr T absolute(T v)
+{
+        if constexpr (HasStdAbs<T>)
+        {
+                if (!std::is_constant_evaluated())
+                {
+                        return std::abs(v);
+                }
+        }
+        return v < 0 ? -v : v;
+}
+
 template <std::size_t N, typename T, template <std::size_t, std::size_t, typename> typename Matrix>
 constexpr int find_pivot(const Matrix<N, N, T>& A, const int column, const int from_row)
 {
-        T max = std::abs(A(from_row, column));
+        T max = absolute(A(from_row, column));
         int pivot = from_row;
         for (int r = from_row + 1; r < int(N); ++r)
         {
-                T v = std::abs(A(r, column));
+                T v = absolute(A(r, column));
                 if (v > max)
                 {
                         max = v;
@@ -52,8 +71,39 @@ constexpr int find_pivot(const Matrix<N, N, T>& A, const int column, const int f
         return pivot;
 }
 
-template <std::size_t Size, typename T, template <std::size_t, std::size_t, typename> typename Matrix>
-constexpr T determinant(Matrix<Size, Size, T>&& m)
+template <std::size_t R, std::size_t C, typename T>
+class RowMatrix final
+{
+        std::array<Vector<C, T>, R> m_rows;
+        std::array<Vector<C, T>*, R> m_pointers;
+
+public:
+        template <typename V>
+        constexpr RowMatrix(V&& v) : m_rows(std::forward<V>(v))
+        {
+                for (std::size_t i = 0; i < R; ++i)
+                {
+                        m_pointers[i] = &m_rows[i];
+                }
+        }
+        RowMatrix(const RowMatrix&) = delete;
+        RowMatrix& operator=(const RowMatrix&) = delete;
+        [[nodiscard]] constexpr const T& operator()(int r, int c) const&
+        {
+                return (*m_pointers[r])[c];
+        }
+        [[nodiscard]] constexpr T& operator()(int r, int c) &
+        {
+                return (*m_pointers[r])[c];
+        }
+        constexpr void swap(int row_1, int row_2) &
+        {
+                std::swap(m_pointers[row_1], m_pointers[row_2]);
+        }
+};
+
+template <std::size_t Size, typename T>
+constexpr T determinant(RowMatrix<Size, Size, T>&& m)
 {
         static_assert(is_floating_point<T>);
         static_assert(Size >= 1);
@@ -67,7 +117,7 @@ constexpr T determinant(Matrix<Size, Size, T>&& m)
                 int pivot = find_pivot(m, k, k);
                 if (pivot != k)
                 {
-                        std::swap(m.row(pivot), m.row(k));
+                        m.swap(pivot, k);
                         sign = !sign;
                 }
 
@@ -89,34 +139,6 @@ constexpr T determinant(Matrix<Size, Size, T>&& m)
 
         return sign ? -d : d;
 }
-
-template <std::size_t R, std::size_t C, typename T>
-class RowMatrix final
-{
-        std::array<Vector<C, T>, R> m_rows;
-
-public:
-        template <typename V>
-        constexpr RowMatrix(V&& v) : m_rows(std::forward<V>(v))
-        {
-        }
-        [[nodiscard]] constexpr const T& operator()(int r, int c) const&
-        {
-                return m_rows[r][c];
-        }
-        [[nodiscard]] constexpr T& operator()(int r, int c) &
-        {
-                return m_rows[r][c];
-        }
-        [[nodiscard]] constexpr const Vector<C, T>& row(int r) const&
-        {
-                return m_rows[r];
-        }
-        [[nodiscard]] constexpr Vector<C, T>& row(int r) &
-        {
-                return m_rows[r];
-        }
-};
 }
 
 // input: A * x = b.
