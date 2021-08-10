@@ -77,14 +77,23 @@ class RowMatrix final
         std::array<Vector<C, T>, R> m_rows;
         std::array<Vector<C, T>*, R> m_pointers;
 
-public:
-        template <typename V>
-        constexpr RowMatrix(V&& v) : m_rows(std::forward<V>(v))
+        constexpr void set_pointers()
         {
                 for (std::size_t i = 0; i < R; ++i)
                 {
                         m_pointers[i] = &m_rows[i];
                 }
+        }
+
+public:
+        constexpr RowMatrix()
+        {
+                set_pointers();
+        }
+        template <typename V>
+        explicit constexpr RowMatrix(V&& v) : m_rows(std::forward<V>(v))
+        {
+                set_pointers();
         }
         RowMatrix(const RowMatrix&) = delete;
         RowMatrix& operator=(const RowMatrix&) = delete;
@@ -258,5 +267,25 @@ constexpr T determinant_gauss(const std::array<Vector<N, T>, N>& rows)
         namespace impl = gauss_implementation;
 
         return impl::determinant(impl::RowMatrix<N, N, T>(rows));
+}
+
+template <std::size_t N, typename T, template <std::size_t, typename> typename Vector>
+constexpr T determinant_gauss(const std::array<Vector<N + 1, T>, N>& rows, const std::size_t excluded_column)
+{
+        namespace impl = gauss_implementation;
+
+        impl::RowMatrix<N, N, T> m;
+        for (std::size_t r = 0; r < N; ++r)
+        {
+                for (std::size_t c = 0; c < excluded_column; ++c)
+                {
+                        m(r, c) = rows[r][c];
+                }
+                for (std::size_t c = excluded_column; c < N; ++c)
+                {
+                        m(r, c) = rows[r][c + 1];
+                }
+        }
+        return impl::determinant(std::move(m));
 }
 }

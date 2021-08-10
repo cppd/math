@@ -69,6 +69,48 @@ static_assert(TEST_ROW_REDUCTION<double>);
 static_assert(TEST_ROW_REDUCTION<long double>);
 static_assert(TEST_ROW_REDUCTION<__float128>);
 
+template <typename T>
+constexpr bool test_cofactor_expansion()
+{
+        Vector<7, T> d;
+        for (int i = 0; i < 7; ++i)
+        {
+                d[i] = determinant_cofactor_expansion(
+                        del_elem(VECTORS<T>, 6), sequence_uchar_array<6>, del_elem(sequence_uchar_array<7>, i));
+        }
+        return d
+               == Vector<7, T>(
+                       -2555210922012, 336840375312, -206347990212, 159370731576, -135170325612, 120413980512,
+                       4125807482688);
+}
+static_assert(test_cofactor_expansion<long long>());
+static_assert(test_cofactor_expansion<__int128>());
+static_assert(test_cofactor_expansion<double>());
+static_assert(test_cofactor_expansion<long double>());
+static_assert(test_cofactor_expansion<__float128>());
+
+template <typename T>
+constexpr bool test_row_reduction()
+{
+        const auto cmp = [](const T& v, const long long& c)
+        {
+                return v > c - T(0.1) && v < c + T(0.1);
+        };
+        constexpr Vector<7, long long> VECTOR(
+                -2555210922012, 336840375312, -206347990212, 159370731576, -135170325612, 120413980512, 4125807482688);
+        for (int i = 0; i < 7; ++i)
+        {
+                if (!cmp(determinant_gauss(del_elem(VECTORS<T>, 6), i), VECTOR[i]))
+                {
+                        return false;
+                }
+        }
+        return true;
+}
+static_assert(test_row_reduction<double>());
+static_assert(test_row_reduction<long double>());
+static_assert(test_row_reduction<__float128>());
+
 //
 
 template <typename T>
@@ -82,19 +124,19 @@ bool are_equal(const T& a, const T& b, const T& precision)
         return (rel < precision);
 }
 
-template <std::size_t N, typename T>
-std::vector<std::array<Vector<N, T>, N>> random_matrices(const int count)
+template <std::size_t Rows, std::size_t Columns, typename T>
+std::vector<std::array<Vector<Columns, T>, Rows>> random_matrices(const int count)
 {
         std::mt19937_64 random_engine = create_engine<std::mt19937_64>();
         std::uniform_real_distribution<T> urd(-10, 10);
-        std::vector<std::array<Vector<N, T>, N>> res(count);
+        std::vector<std::array<Vector<Columns, T>, Rows>> res(count);
         for (int i = 0; i < count; ++i)
         {
-                for (std::size_t j = 0; j < N; ++j)
+                for (std::size_t r = 0; r < Rows; ++r)
                 {
-                        for (std::size_t k = 0; k < N; ++k)
+                        for (std::size_t c = 0; c < Columns; ++c)
                         {
-                                res[i][j][k] = urd(random_engine);
+                                res[i][r][c] = urd(random_engine);
                         }
                 }
         }
@@ -106,7 +148,7 @@ void test_determinant(const int count, const std::type_identity_t<T>& precision)
 {
         LOG("Test determinant, " + to_string(N) + ", " + type_name<T>());
 
-        const std::vector<std::array<Vector<N, T>, N>> matrices = random_matrices<N, T>(count);
+        const std::vector<std::array<Vector<N, T>, N>> matrices = random_matrices<N, N, T>(count);
 
         const std::vector<T> cofactor_expansion = [&]
         {
@@ -161,6 +203,80 @@ void test_determinant(const int count, const std::type_identity_t<T>& precision)
         }
 }
 
+template <std::size_t N, typename T>
+void test_determinant_column(const int count, const std::type_identity_t<T>& precision)
+{
+        LOG("Test determinant column, " + to_string(N) + ", " + type_name<T>());
+
+        const std::vector<std::array<Vector<N, T>, N - 1>> matrices = random_matrices<N - 1, N, T>(count);
+
+        const std::vector<Vector<N, T>> cofactor_expansion = [&]
+        {
+                std::vector<Vector<N, T>> res(count);
+                const TimePoint start_time = time();
+                for (int i = 0; i < count; ++i)
+                {
+                        for (std::size_t c = 0; c < N; ++c)
+                        {
+                                res[i][c] = determinant_cofactor_expansion(
+                                        matrices[i], sequence_uchar_array<N - 1>, del_elem(sequence_uchar_array<N>, c));
+                        }
+                }
+                LOG("Time = " + to_string_fixed(duration_from(start_time), 5) + " s, cofactor expansion");
+                return res;
+        }();
+
+        const std::vector<Vector<N, T>> row_reduction = [&]
+        {
+                std::vector<Vector<N, T>> res(count);
+                const TimePoint start_time = time();
+                for (int i = 0; i < count; ++i)
+                {
+                        for (std::size_t c = 0; c < N; ++c)
+                        {
+                                res[i][c] = determinant_gauss(matrices[i], c);
+                        }
+                }
+                LOG("Time = " + to_string_fixed(duration_from(start_time), 5) + " s, row reduction");
+                return res;
+        }();
+
+        const std::vector<Vector<N, T>> determinants = [&]
+        {
+                std::vector<Vector<N, T>> res(count);
+                const TimePoint start_time = time();
+                for (int i = 0; i < count; ++i)
+                {
+                        for (std::size_t c = 0; c < N; ++c)
+                        {
+                                res[i][c] = determinant(matrices[i], c);
+                        }
+                }
+                LOG("Time = " + to_string_fixed(duration_from(start_time), 5) + " s, determinant");
+                return res;
+        }();
+
+        for (int i = 0; i < count; ++i)
+        {
+                for (std::size_t c = 0; c < N; ++c)
+                {
+                        if (!are_equal(cofactor_expansion[i][c], row_reduction[i][c], precision))
+                        {
+                                error("Determinants are not equal:\ncofactor_expansion = "
+                                      + to_string(cofactor_expansion[i]) + "\nrow_reduction = "
+                                      + to_string(row_reduction[i]) + "\n" + to_string(matrices[i]));
+                        }
+                        if (!(determinants[i][c] == cofactor_expansion[i][c]
+                              || determinants[i][c] == row_reduction[i][c]))
+                        {
+                                error("Determinant error:\ndeterminant = " + to_string(determinants[i])
+                                      + "\ncofactor_expansion = " + to_string(cofactor_expansion[i])
+                                      + "\nrow_reduction = " + to_string(row_reduction[i]));
+                        }
+                }
+        }
+}
+
 template <typename T>
 void test_determinant(const int count, const std::type_identity_t<T>& precision)
 {
@@ -174,11 +290,26 @@ void test_determinant(const int count, const std::type_identity_t<T>& precision)
         test_determinant<8, T>(count, precision);
 }
 
+template <typename T>
+void test_determinant_column(const int count, const std::type_identity_t<T>& precision)
+{
+        test_determinant_column<2, T>(count, precision);
+        test_determinant_column<3, T>(count, precision);
+        test_determinant_column<4, T>(count, precision);
+        test_determinant_column<5, T>(count, precision);
+        test_determinant_column<6, T>(count, precision);
+        test_determinant_column<7, T>(count, precision);
+        test_determinant_column<8, T>(count, precision);
+        test_determinant_column<9, T>(count, precision);
+}
+
 void test()
 {
         LOG("Test determinant");
-        test_determinant<double>(1'000, 1e-8);
-        test_determinant<long double>(100, 1e-11);
+        test_determinant<double>(500, 1e-8);
+        test_determinant<long double>(50, 1e-11);
+        test_determinant_column<double>(500, 1e-8);
+        test_determinant_column<long double>(50, 1e-11);
         LOG("Test determinant passed");
 }
 
