@@ -74,40 +74,31 @@ constexpr int find_pivot(const Matrix<N, N, T>& A, const int column, const int f
 template <std::size_t R, std::size_t C, typename T>
 class RowMatrix final
 {
-        std::array<Vector<C, T>, R> m_rows;
-        std::array<Vector<C, T>*, R> m_pointers;
+        std::array<Vector<C, T>*, R> m_rows;
 
-        constexpr void set_pointers()
+public:
+        constexpr RowMatrix(std::array<Vector<C, T>, R>* rows)
         {
                 for (std::size_t i = 0; i < R; ++i)
                 {
-                        m_pointers[i] = &m_rows[i];
+                        m_rows[i] = rows->data() + i;
                 }
         }
-
-public:
-        constexpr RowMatrix()
-        {
-                set_pointers();
-        }
-        template <typename V>
-        explicit constexpr RowMatrix(V&& v) : m_rows(std::forward<V>(v))
-        {
-                set_pointers();
-        }
-        RowMatrix(const RowMatrix&) = delete;
-        RowMatrix& operator=(const RowMatrix&) = delete;
         [[nodiscard]] constexpr const T& operator()(int r, int c) const&
         {
-                return (*m_pointers[r])[c];
+                return (*m_rows[r])[c];
         }
         [[nodiscard]] constexpr T& operator()(int r, int c) &
         {
-                return (*m_pointers[r])[c];
+                return (*m_rows[r])[c];
+        }
+        [[nodiscard]] constexpr Vector<C, T>& row(int r) &
+        {
+                return *m_rows[r];
         }
         constexpr void swap(int row_1, int row_2) &
         {
-                std::swap(m_pointers[row_1], m_pointers[row_2]);
+                std::swap(m_rows[row_1], m_rows[row_2]);
         }
 };
 
@@ -148,144 +139,156 @@ constexpr T determinant(RowMatrix<Size, Size, T>&& m)
 
         return sign ? -d : d;
 }
-}
 
-// input: A * x = b.
-// output: b = x; A = upper triangular.
-template <std::size_t Size, typename T, template <std::size_t, std::size_t, typename> typename Matrix>
-void solve_gauss(Matrix<Size, Size, T>* const A_p, Vector<Size, T>* const b_p)
+template <std::size_t Size, typename T>
+constexpr Vector<Size, T> solve_gauss(RowMatrix<Size, Size, T>&& a, Vector<Size, T> b)
 {
         static_assert(is_floating_point<T>);
 
         constexpr int N = Size;
 
-        Matrix<N, N, T>& A = *A_p;
-        Vector<N, T>& b = *b_p;
-
         for (int k = 0; k < N - 1; ++k)
         {
-                int pivot = gauss_implementation::find_pivot(A, k, k);
+                int pivot = find_pivot(a, k, k);
                 if (pivot != k)
                 {
-                        std::swap(A.row(pivot), A.row(k));
+                        a.swap(pivot, k);
                         std::swap(b[pivot], b[k]);
                 }
 
                 for (int i = k + 1; i < N; ++i)
                 {
-                        T l_ik = A(i, k) / A(k, k);
+                        T l_ik = a(i, k) / a(k, k);
                         for (int j = k; j < N; ++j)
                         {
-                                // A(i, j) = A(i, j) - l_ik * A(k, j);
-                                A(i, j) = std::fma(-l_ik, A(k, j), A(i, j));
+                                a(i, j) -= l_ik * a(k, j);
                         }
-                        // b[i] = b[i] - l_ik * b[k];
-                        b[i] = std::fma(-l_ik, b[k], b[i]);
+                        b[i] -= l_ik * b[k];
                 }
         }
 
-        b[N - 1] = b[N - 1] / A(N - 1, N - 1);
+        b[N - 1] = b[N - 1] / a(N - 1, N - 1);
         for (int k = N - 2; k >= 0; --k)
         {
                 for (int j = k + 1; j < N; ++j)
                 {
-                        // b[k] = b[k] - A(k, j) * b[j];
-                        b[k] = std::fma(-A(k, j), b[j], b[k]);
+                        b[k] -= a(k, j) * b[j];
                 }
-                b[k] = b[k] / A(k, k);
+                b[k] = b[k] / a(k, k);
         }
+
+        return b;
 }
 
-// Тоже самое, что и для одного столбца b, только сразу для SizeB столбцов B.
-// Если B является единичной матрицей, то в B будет обратная к A матрица.
-template <
-        std::size_t SizeA,
-        std::size_t SizeB,
-        typename T,
-        template <std::size_t, std::size_t, typename>
-        typename Matrix>
-void solve_gauss(Matrix<SizeA, SizeA, T>* const A_p, Matrix<SizeA, SizeB, T>* const B_p)
+template <std::size_t SizeA, std::size_t SizeB, typename T>
+constexpr std::array<Vector<SizeB, T>, SizeA> solve_gauss(
+        RowMatrix<SizeA, SizeA, T>&& a,
+        RowMatrix<SizeA, SizeB, T>&& b)
 {
         static_assert(is_floating_point<T>);
 
         constexpr int N = SizeA;
-        constexpr int NB = SizeB;
-
-        Matrix<N, N, T>& A = *A_p;
-        Matrix<N, NB, T>& B = *B_p;
+        constexpr int M = SizeB;
 
         for (int k = 0; k < N - 1; ++k)
         {
-                int pivot = gauss_implementation::find_pivot(A, k, k);
+                int pivot = find_pivot(a, k, k);
                 if (pivot != k)
                 {
-                        std::swap(A.row(pivot), A.row(k));
-                        std::swap(B.row(pivot), B.row(k));
+                        a.swap(pivot, k);
+                        b.swap(pivot, k);
                 }
 
                 for (int i = k + 1; i < N; ++i)
                 {
-                        T l_ik = A(i, k) / A(k, k);
+                        T l_ik = a(i, k) / a(k, k);
                         for (int j = k; j < N; ++j)
                         {
-                                // A(i, j) = A(i, j) - l_ik * A(k, j);
-                                A(i, j) = std::fma(-l_ik, A(k, j), A(i, j));
+                                a(i, j) -= l_ik * a(k, j);
                         }
-                        for (int n = 0; n < NB; ++n)
+                        for (int m = 0; m < M; ++m)
                         {
-                                // B(i, n) = B(i, n) - l_ik * B(k, n);
-                                B(i, n) = std::fma(-l_ik, B(k, n), B(i, n));
+                                b(i, m) -= l_ik * b(k, m);
                         }
                 }
         }
 
-        for (int n = 0; n < NB; ++n)
+        for (int m = 0; m < M; ++m)
         {
-                B(N - 1, n) = B(N - 1, n) / A(N - 1, N - 1);
+                b(N - 1, m) = b(N - 1, m) / a(N - 1, N - 1);
         }
 
         for (int k = N - 2; k >= 0; --k)
         {
                 for (int j = k + 1; j < N; ++j)
                 {
-                        for (int n = 0; n < NB; ++n)
+                        for (int m = 0; m < M; ++m)
                         {
-                                // B(k, n) = B(k, n) - A(k, j) * B(j, n);
-                                B(k, n) = std::fma(-A(k, j), B(j, n), B(k, n));
+                                b(k, m) -= a(k, j) * b(j, m);
                         }
                 }
-                for (int n = 0; n < NB; ++n)
+                for (int m = 0; m < M; ++m)
                 {
-                        B(k, n) = B(k, n) / A(k, k);
+                        b(k, m) = b(k, m) / a(k, k);
                 }
         }
+
+        std::array<Vector<M, T>, N> res;
+        for (int i = 0; i < N; ++i)
+        {
+                res[i] = std::move(b.row(i));
+        }
+        return res;
+}
 }
 
-template <std::size_t N, typename T, template <std::size_t, typename> typename Vector>
+template <std::size_t N, typename T>
 constexpr T determinant_gauss(const std::array<Vector<N, T>, N>& rows)
 {
         namespace impl = gauss_implementation;
 
-        return impl::determinant(impl::RowMatrix<N, N, T>(rows));
+        std::array<Vector<N, T>, N> rows_copy{rows};
+        return impl::determinant(impl::RowMatrix<N, N, T>(&rows_copy));
 }
 
-template <std::size_t N, typename T, template <std::size_t, typename> typename Vector>
+template <std::size_t N, typename T>
 constexpr T determinant_gauss(const std::array<Vector<N + 1, T>, N>& rows, const std::size_t excluded_column)
 {
         namespace impl = gauss_implementation;
 
-        impl::RowMatrix<N, N, T> m;
+        std::array<Vector<N, T>, N> rows_copy;
         for (std::size_t r = 0; r < N; ++r)
         {
                 for (std::size_t c = 0; c < excluded_column; ++c)
                 {
-                        m(r, c) = rows[r][c];
+                        rows_copy[r][c] = rows[r][c];
                 }
                 for (std::size_t c = excluded_column; c < N; ++c)
                 {
-                        m(r, c) = rows[r][c + 1];
+                        rows_copy[r][c] = rows[r][c + 1];
                 }
         }
-        return impl::determinant(std::move(m));
+        return impl::determinant(impl::RowMatrix<N, N, T>(&rows_copy));
+}
+
+template <std::size_t N, typename T>
+constexpr Vector<N, T> solve_gauss(const std::array<Vector<N, T>, N>& a, const Vector<N, T>& b)
+{
+        namespace impl = gauss_implementation;
+
+        std::array<Vector<N, T>, N> a_copy{a};
+        return impl::solve_gauss(impl::RowMatrix<N, N, T>(&a_copy), b);
+}
+
+template <std::size_t N, std::size_t M, typename T>
+constexpr std::array<Vector<M, T>, N> solve_gauss(
+        const std::array<Vector<N, T>, N>& a,
+        const std::array<Vector<M, T>, N>& b)
+{
+        namespace impl = gauss_implementation;
+
+        std::array<Vector<N, T>, N> a_copy{a};
+        std::array<Vector<M, T>, N> b_copy{b};
+        return impl::solve_gauss(impl::RowMatrix<N, N, T>(&a_copy), impl::RowMatrix<N, M, T>(&b_copy));
 }
 }

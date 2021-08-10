@@ -151,24 +151,15 @@ public:
         template <std::size_t R = Rows, std::size_t C = Columns>
         [[nodiscard]] Matrix<Rows, Rows, T> inverse() const requires(R == Rows && C == Columns && Rows == Columns)
         {
-                Matrix<Rows, Rows, T> m(*this);
-                Matrix<Rows, Rows, T> b(1);
-
-                numerical::solve_gauss<Rows, Rows, T>(&m, &b);
-
-                return b;
+                static constexpr std::array<Vector<Rows, T>, Rows> IDENTITY = make_diagonal_matrix(1);
+                return Matrix<Rows, Rows, T>(numerical::solve_gauss<Rows, Rows, T>(m_rows, IDENTITY));
         }
 
         template <std::size_t R = Rows, std::size_t C = Columns>
         [[nodiscard]] Vector<Rows, T> solve(const Vector<Rows, T>& b) const
                 requires(R == Rows && C == Columns && Rows == Columns)
         {
-                Matrix<Rows, Rows, T> a(*this);
-                Vector<Rows, T> x(b);
-
-                numerical::solve_gauss<Rows, T>(&a, &x);
-
-                return x;
+                return numerical::solve_gauss<Rows, T>(m_rows, b);
         }
 
         template <std::size_t R, std::size_t C>
