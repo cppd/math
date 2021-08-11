@@ -18,7 +18,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #pragma once
 
 #include "determinant.h"
-#include "gauss.h"
+#include "solve.h"
 #include "vec.h"
 
 #include <src/com/type/trait.h>
@@ -151,15 +151,14 @@ public:
         template <std::size_t R = Rows, std::size_t C = Columns>
         [[nodiscard]] Matrix<Rows, Rows, T> inverse() const requires(R == Rows && C == Columns && Rows == Columns)
         {
-                static constexpr std::array<Vector<Rows, T>, Rows> IDENTITY = make_diagonal_matrix(1);
-                return Matrix<Rows, Rows, T>(numerical::solve_gauss<Rows, Rows, T>(m_rows, IDENTITY));
+                return Matrix<Rows, Rows, T>(numerical::inverse(m_rows));
         }
 
         template <std::size_t R = Rows, std::size_t C = Columns>
         [[nodiscard]] Vector<Rows, T> solve(const Vector<Rows, T>& b) const
                 requires(R == Rows && C == Columns && Rows == Columns)
         {
-                return numerical::solve_gauss<Rows, T>(m_rows, b);
+                return numerical::linear_solve<Rows, T>(m_rows, b);
         }
 
         template <std::size_t R, std::size_t C>

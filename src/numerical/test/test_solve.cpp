@@ -15,7 +15,7 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include "../gauss.h"
+#include "../solve.h"
 
 #include <src/com/error.h>
 #include <src/com/log.h>
@@ -114,11 +114,11 @@ constexpr bool are_equal(const std::array<Vector<C, T>, R>& a, const std::array<
 template <typename T>
 constexpr bool test_solve(const T& precision)
 {
-        if (!are_equal(INVERSE<T>, solve_gauss(MATRIX<T>, IDENTITY<T>), precision))
+        if (!are_equal(INVERSE<T>, linear_solve(MATRIX<T>, IDENTITY<T>), precision))
         {
                 return false;
         }
-        if (!are_equal(SOLVED<T>, solve_gauss(MATRIX<T>, ROW<T>), precision))
+        if (!are_equal(SOLVED<T>, linear_solve(MATRIX<T>, ROW<T>), precision))
         {
                 return false;
         }
@@ -181,7 +181,7 @@ void test_solve_vector(const int count, const std::type_identity_t<T>& precision
                 const TimePoint start_time = time();
                 for (int i = 0; i < count; ++i)
                 {
-                        res[i] = solve_gauss(matrices[i], vectors[i]);
+                        res[i] = linear_solve(matrices[i], vectors[i]);
                 }
                 write("Time = " + to_string_fixed(duration_from(start_time), 5) + " s");
                 return res;
@@ -221,7 +221,7 @@ void test_solve_matrix(const int count, const std::type_identity_t<T>& precision
                 const TimePoint start_time = time();
                 for (int i = 0; i < count; ++i)
                 {
-                        res[i] = solve_gauss(matrices[i], columns[i]);
+                        res[i] = linear_solve(matrices[i], columns[i]);
                 }
                 write("Time = " + to_string_fixed(duration_from(start_time), 5) + " s");
                 return res;
