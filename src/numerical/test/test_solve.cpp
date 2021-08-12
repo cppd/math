@@ -15,6 +15,8 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
+#include "../identity.h"
+#include "../matrix.h"
 #include "../solve.h"
 
 #include <src/com/error.h>
@@ -54,17 +56,9 @@ constexpr std::array INVERSE = std::to_array<Vector<4, T>>
 {T(-107) / 50, T(-3) / 50, T(11) / 50, T(1) / 5},
 {T(-497) / 200, T(-13) / 200, T(31) / 200, T(3) / 10}
 });
-template <typename T>
-constexpr std::array IDENTITY = std::to_array<Vector<4, T>>
-({
-{1, 0, 0, 0},
-{0, 1, 0, 0},
-{0, 0, 1, 0},
-{0, 0, 0, 1}
-});
 // clang-format on
 template <typename T>
-constexpr Vector<4, T> ROW{1, 2, 3, 4};
+constexpr Vector<4, T> VECTOR{1, 2, 3, 4};
 template <typename T>
 constexpr Vector<4, T> SOLVED{T(4), T(-2) / 5, T(-4) / 5, T(-19) / 20};
 
@@ -75,22 +69,27 @@ constexpr T absolute(const T& v)
 }
 
 template <typename T>
-constexpr bool are_equal(const T& a, const T& b, const T& precision)
+constexpr bool are_equal(const T& a, const T& b, const T& abs_precision, const T& rel_precision)
 {
         if (a == b)
         {
                 return true;
         }
-        T rel = absolute(a - b) / std::max(absolute(a), absolute(b));
-        return (rel < precision);
+        const T abs = absolute(a - b);
+        if ((a == 0 || b == 0) && (abs <= abs_precision))
+        {
+                return true;
+        }
+        const T rel = abs / std::max(absolute(a), absolute(b));
+        return rel <= rel_precision;
 }
 
 template <std::size_t N, typename T>
-constexpr bool are_equal(const Vector<N, T>& a, const Vector<N, T>& b, const T& precision)
+constexpr bool are_equal(const Vector<N, T>& a, const Vector<N, T>& b, const T& abs_precision, const T& rel_precision)
 {
         for (std::size_t i = 0; i < N; ++i)
         {
-                if (!are_equal(a[i], b[i], precision))
+                if (!are_equal(a[i], b[i], abs_precision, rel_precision))
                 {
                         return false;
                 }
@@ -99,11 +98,15 @@ constexpr bool are_equal(const Vector<N, T>& a, const Vector<N, T>& b, const T& 
 }
 
 template <std::size_t R, std::size_t C, typename T>
-constexpr bool are_equal(const std::array<Vector<C, T>, R>& a, const std::array<Vector<C, T>, R>& b, const T& precision)
+constexpr bool are_equal(
+        const std::array<Vector<C, T>, R>& a,
+        const std::array<Vector<C, T>, R>& b,
+        const T& abs_precision,
+        const T& rel_precision)
 {
         for (std::size_t i = 0; i < R; ++i)
         {
-                if (!are_equal(a[i], b[i], precision))
+                if (!are_equal(a[i], b[i], abs_precision, rel_precision))
                 {
                         return false;
                 }
@@ -112,25 +115,34 @@ constexpr bool are_equal(const std::array<Vector<C, T>, R>& a, const std::array<
 }
 
 template <typename T>
-constexpr bool test_solve(const T& precision)
+constexpr bool test_solve(const std::type_identity_t<T>& abs_precision, const std::type_identity_t<T>& rel_precision)
 {
-        if (!are_equal(INVERSE<T>, linear_solve(MATRIX<T>, IDENTITY<T>), precision))
+        return are_equal(SOLVED<T>, linear_solve(MATRIX<T>, VECTOR<T>), abs_precision, rel_precision)
+               && are_equal(INVERSE<T>, inverse(MATRIX<T>), abs_precision, rel_precision);
+}
+
+static_assert(test_solve<float>(0, 6e-7));
+static_assert(test_solve<double>(0, 2e-15));
+static_assert(test_solve<long double>(0, 7e-19));
+static_assert(test_solve<__float128>(0, 2e-33));
+
+//
+
+template <std::size_t R, std::size_t C, typename T>
+bool are_equal(const Matrix<R, C, T>& a, const Matrix<R, C, T>& b, const T& abs_precision, const T& rel_precision)
+{
+        for (std::size_t r = 0; r < R; ++r)
         {
-                return false;
-        }
-        if (!are_equal(SOLVED<T>, linear_solve(MATRIX<T>, ROW<T>), precision))
-        {
-                return false;
+                for (std::size_t c = 0; c < C; ++c)
+                {
+                        if (!are_equal(a(r, c), b(r, c), abs_precision, rel_precision))
+                        {
+                                return false;
+                        }
+                }
         }
         return true;
 }
-
-static_assert(test_solve<float>(6e-7));
-static_assert(test_solve<double>(2e-15));
-static_assert(test_solve<long double>(7e-19));
-static_assert(test_solve<__float128>(2e-33));
-
-//
 
 template <std::size_t Rows, std::size_t Columns, typename T>
 std::vector<std::array<Vector<Columns, T>, Rows>> random_matrices(const int count)
@@ -168,9 +180,12 @@ std::vector<Vector<N, T>> random_vectors(const int count)
 }
 
 template <std::size_t N, typename T>
-void test_solve_vector(const int count, const std::type_identity_t<T>& precision)
+void test_solve_vector(
+        const int count,
+        const std::type_identity_t<T>& abs_precision,
+        const std::type_identity_t<T>& rel_precision)
 {
-        write("Test solve (" + to_string(N) + "), " + type_name<T>());
+        write("Test solve <" + to_string(N) + ", " + type_name<T>() + ">");
 
         const std::vector<std::array<Vector<N, T>, N>> matrices = random_matrices<N, N, T>(count);
         const std::vector<Vector<N, T>> vectors = random_vectors<N, T>(count);
@@ -189,94 +204,82 @@ void test_solve_vector(const int count, const std::type_identity_t<T>& precision
 
         for (int i = 0; i < count; ++i)
         {
-                Vector<N, T> multiplied;
-                for (std::size_t r = 0; r < N; ++r)
+                const Vector<N, T> multiplied = Matrix(matrices[i]) * solved[i];
+                if (!are_equal(multiplied, vectors[i], abs_precision, rel_precision))
                 {
-                        T sum = 0;
-                        for (std::size_t s = 0; s < N; ++s)
-                        {
-                                sum += matrices[i][r][s] * solved[i][s];
-                        }
-                        multiplied[r] = sum;
-                }
-                if (!are_equal(multiplied, vectors[i], precision))
-                {
-                        error("Failed to solve:\nvectors = " + to_string(vectors[i])
-                              + "\nmultiplied = " + to_string(multiplied));
-                }
-        }
-}
-
-template <std::size_t N, std::size_t M, typename T>
-void test_solve_matrix(const int count, const std::type_identity_t<T>& precision)
-{
-        write("Test solve (" + to_string(N) + ", " + to_string(M) + "), " + type_name<T>());
-
-        const std::vector<std::array<Vector<N, T>, N>> matrices = random_matrices<N, N, T>(count);
-        const std::vector<std::array<Vector<M, T>, N>> columns = random_matrices<N, M, T>(count);
-
-        const std::vector<std::array<Vector<M, T>, N>> solved = [&]
-        {
-                std::vector<std::array<Vector<M, T>, N>> res(count);
-                const TimePoint start_time = time();
-                for (int i = 0; i < count; ++i)
-                {
-                        res[i] = linear_solve(matrices[i], columns[i]);
-                }
-                write("Time = " + to_string_fixed(duration_from(start_time), 5) + " s");
-                return res;
-        }();
-
-        for (int i = 0; i < count; ++i)
-        {
-                std::array<Vector<M, T>, N> multiplied;
-                for (std::size_t r = 0; r < N; ++r)
-                {
-                        for (std::size_t c = 0; c < M; ++c)
-                        {
-                                T sum = 0;
-                                for (std::size_t s = 0; s < N; ++s)
-                                {
-                                        sum += matrices[i][r][s] * solved[i][s][c];
-                                }
-                                multiplied[r][c] = sum;
-                        }
-                }
-                if (!are_equal(multiplied, columns[i], precision))
-                {
-                        error("Failed to solve:\ncolumns = " + to_string(columns[i])
+                        error("Failed to solve:\nmatrix\n" + to_string(Matrix(matrices[i]))
+                              + "\nsolved = " + to_string(solved[i]) + "\nvector = " + to_string(vectors[i])
                               + "\nmultiplied = " + to_string(multiplied));
                 }
         }
 }
 
 template <std::size_t N, typename T>
-void test_solve(const int count, const std::type_identity_t<T>& precision)
+void test_solve_inverse(
+        const int count,
+        const std::type_identity_t<T>& abs_precision,
+        const std::type_identity_t<T>& rel_precision)
 {
-        test_solve_vector<N, T>(count, precision);
-        test_solve_matrix<N, 1, T>(count, precision);
-        test_solve_matrix<N, 2, T>(count, precision);
-        test_solve_matrix<N, 3, T>(count, precision);
+        write("Test inverse <" + to_string(N) + ", " + type_name<T>() + ">");
+
+        const std::vector<std::array<Vector<N, T>, N>> matrices = random_matrices<N, N, T>(count);
+
+        const std::vector<std::array<Vector<N, T>, N>> inversed = [&]
+        {
+                std::vector<std::array<Vector<N, T>, N>> res(count);
+                const TimePoint start_time = time();
+                for (int i = 0; i < count; ++i)
+                {
+                        res[i] = inverse(matrices[i]);
+                }
+                write("Time = " + to_string_fixed(duration_from(start_time), 5) + " s");
+                return res;
+        }();
+
+        const Matrix<N, N, T> identity(identity_array<N, T>);
+
+        for (int i = 0; i < count; ++i)
+        {
+                const Matrix<N, N, T> multiplied = Matrix(matrices[i]) * Matrix(inversed[i]);
+                if (!are_equal(multiplied, identity, abs_precision, rel_precision))
+                {
+                        error("Failed to inverse:\nmatrix\n" + to_string(matrices[i]) + "\ninverse\n"
+                              + to_string(inversed[i]) + "\nmultiplied\n" + to_string(multiplied));
+                }
+        }
+}
+
+template <std::size_t N, typename T>
+void test_solve(
+        const int count,
+        const std::type_identity_t<T>& abs_precision,
+        const std::type_identity_t<T>& rel_precision)
+{
+        test_solve_vector<N, T>(count, abs_precision, rel_precision);
+        test_solve_inverse<N, T>(count, abs_precision, rel_precision);
 }
 
 template <typename T>
-void test_solve(const int count, const std::type_identity_t<T>& precision)
+void test_solve(
+        const int count,
+        const std::type_identity_t<T>& abs_precision,
+        const std::type_identity_t<T>& rel_precision)
 {
-        test_solve<1, T>(count, precision);
-        test_solve<2, T>(count, precision);
-        test_solve<3, T>(count, precision);
-        test_solve<4, T>(count, precision);
-        test_solve<5, T>(count, precision);
-        test_solve<6, T>(count, precision);
-        test_solve<7, T>(count, precision);
-        test_solve<8, T>(count, precision);
+        test_solve<1, T>(count, abs_precision, rel_precision);
+        test_solve<2, T>(count, abs_precision, rel_precision);
+        test_solve<3, T>(count, abs_precision, rel_precision);
+        test_solve<4, T>(count, abs_precision, rel_precision);
+        test_solve<5, T>(count, abs_precision, rel_precision);
+        test_solve<6, T>(count, abs_precision, rel_precision);
+        test_solve<7, T>(count, abs_precision, rel_precision);
+        test_solve<8, T>(count, abs_precision, rel_precision);
 }
 
 void test()
 {
         LOG("Test linear solve");
-        test_solve<double>(1000, 1e-6);
-        test_solve<long double>(100, 1e-9);
+        test_solve<double>(1000, 1e-8, 1e-6);
+        test_solve<long double>(200, 1e-11, 1e-9);
         LOG("Test linear solve passed");
 }
 
