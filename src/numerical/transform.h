@@ -40,27 +40,27 @@ Matrix<4, 4, T> look_at(const Vector<3, T>& eye, const Vector<3, T>& center, con
         return m;
 }
 
-// Исходная система координат: X направо, Y вверх, Z от экрана.
-// Vulkan: X направо [-1, 1], Y вниз [-1, 1], Z в экран [0, 1].
-template <typename T, typename T1, typename T2, typename T3, typename T4, typename T5, typename T6>
-constexpr Matrix<4, 4, T> ortho_vulkan(T1 left, T2 right, T3 bottom, T4 top, T5 near, T6 far)
+// Right-handed coordinate systems
+// Source: X to the right, Y upward
+// Vulkan: X to the right [-1, 1], Y downward [-1, 1], Z [0, 1]
+template <typename T>
+constexpr Matrix<4, 4, T> ortho_vulkan(
+        const std::type_identity_t<T>& left,
+        const std::type_identity_t<T>& right,
+        const std::type_identity_t<T>& bottom,
+        const std::type_identity_t<T>& top,
+        const std::type_identity_t<T>& near,
+        const std::type_identity_t<T>& far)
 {
-        T left_t = left;
-        T right_t = right;
-        T bottom_t = bottom;
-        T top_t = top;
-        T near_t = near;
-        T far_t = far;
-
         Matrix<4, 4, T> m(1);
 
-        m(0, 0) = 2 / (right_t - left_t);
-        m(1, 1) = 2 / (bottom_t - top_t);
-        m(2, 2) = 1 / (far_t - near_t);
+        m(0, 0) = 2 / (right - left);
+        m(1, 1) = 2 / (bottom - top);
+        m(2, 2) = 1 / (far - near);
 
-        m(0, 3) = -(right_t + left_t) / (right_t - left_t);
-        m(1, 3) = -(bottom_t + top_t) / (bottom_t - top_t);
-        m(2, 3) = -near_t / (far_t - near_t);
+        m(0, 3) = -(right + left) / (right - left);
+        m(1, 3) = -(bottom + top) / (bottom - top);
+        m(2, 3) = -near / (far - near);
 
         return m;
 }
@@ -69,7 +69,7 @@ template <std::size_t N, typename T>
 constexpr Matrix<N + 1, N + 1, T> scale(const Vector<N, T>& v)
 {
         Matrix<N + 1, N + 1, T> m(1);
-        for (unsigned i = 0; i < N; ++i)
+        for (std::size_t i = 0; i < N; ++i)
         {
                 m(i, i) = v[i];
         }
@@ -77,7 +77,7 @@ constexpr Matrix<N + 1, N + 1, T> scale(const Vector<N, T>& v)
 }
 
 template <typename T, typename... V>
-constexpr Matrix<sizeof...(V) + 1, sizeof...(V) + 1, T> scale(V... v)
+constexpr Matrix<sizeof...(V) + 1, sizeof...(V) + 1, T> scale(const V&... v)
 {
         return scale(Vector<sizeof...(V), T>(v...));
 }
@@ -86,7 +86,7 @@ template <std::size_t N, typename T>
 constexpr Matrix<N + 1, N + 1, T> translate(const Vector<N, T>& v)
 {
         Matrix<N + 1, N + 1, T> m(1);
-        for (unsigned i = 0; i < N; ++i)
+        for (std::size_t i = 0; i < N; ++i)
         {
                 m(i, N) = v[i];
         }
@@ -94,12 +94,11 @@ constexpr Matrix<N + 1, N + 1, T> translate(const Vector<N, T>& v)
 }
 
 template <typename T, typename... V>
-constexpr Matrix<sizeof...(V) + 1, sizeof...(V) + 1, T> translate(V... v)
+constexpr Matrix<sizeof...(V) + 1, sizeof...(V) + 1, T> translate(const V&... v)
 {
         return translate(Vector<sizeof...(V), T>(v...));
 }
 
-// Для случаев, когда последняя строка матрицы состоит из нулей с последней единицей.
 template <std::size_t N, typename T>
 class MatrixVectorMultiplier
 {
@@ -108,28 +107,28 @@ class MatrixVectorMultiplier
 public:
         explicit MatrixVectorMultiplier(const Matrix<N, N, T>& m) : m_matrix(m)
         {
-                if (m_matrix(N - 1, N - 1) != 1)
-                {
-                        error("Wrong matrix for matrix-vector multiplier");
-                }
-                for (unsigned i = 0; i < N - 1; ++i)
+                for (std::size_t i = 0; i < N - 1; ++i)
                 {
                         if (m_matrix(N - 1, i) != 0)
                         {
                                 error("Wrong matrix for matrix-vector multiplier");
                         }
                 }
+                if (m_matrix(N - 1, N - 1) != 1)
+                {
+                        error("Wrong matrix for matrix-vector multiplier");
+                }
         }
 
         Vector<N - 1, T> operator()(const Vector<N - 1, T>& v) const
         {
                 Vector<N - 1, T> res;
-                for (unsigned r = 0; r < N - 1; ++r)
+                for (std::size_t r = 0; r < N - 1; ++r)
                 {
                         res[r] = m_matrix(r, 0) * v[0];
-                        for (unsigned c = 1; c < N - 1; ++c)
+                        for (std::size_t c = 1; c < N - 1; ++c)
                         {
-                                res[r] = std::fma(m_matrix(r, c), v[c], res[r]);
+                                res[r] += m_matrix(r, c) * v[c];
                         }
                         res[r] += m_matrix(r, N - 1);
                 }
