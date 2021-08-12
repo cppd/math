@@ -217,7 +217,7 @@ template <std::size_t Rows, std::size_t Inner, std::size_t Columns, typename T>
                 {
                         for (std::size_t c = 0; c < Columns; ++c)
                         {
-                                row[c] = std::fma(m1(r, i), m2(i, c), row[c]);
+                                row[c] += m1(r, i) * m2(i, c);
                         }
                 }
         }
@@ -236,7 +236,7 @@ template <std::size_t Rows, std::size_t Columns, typename T>
         {
                 for (std::size_t c = 0; c < Columns; ++c)
                 {
-                        res[c] = std::fma(v[r], m(r, c), res[c]);
+                        res[c] += v[r] * m(r, c);
                 }
         }
         return res;
@@ -251,7 +251,7 @@ template <std::size_t Rows, std::size_t Columns, typename T>
                 res[r] = m(r, 0) * v[0];
                 for (std::size_t c = 1; c < Columns; ++c)
                 {
-                        res[r] = std::fma(m(r, c), v[c], res[r]);
+                        res[r] += m(r, c) * v[c];
                 }
         }
         return res;
