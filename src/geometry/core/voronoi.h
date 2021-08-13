@@ -16,8 +16,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
 /*
-Описание есть, например, в книге
-
 Satyan L. Devadoss, Joseph O’Rourke.
 Discrete and computational geometry.
 Princeton University Press, 2011.
@@ -66,14 +64,13 @@ Princeton University Press, 2011.
 
 namespace ns::geometry
 {
-// Для вершин объекта Делоне найти вершину Вороного, соответствующую этому объекту Делоне
 template <std::size_t N, typename T>
-Vector<N, T> compute_voronoi_vertex(const std::vector<Vector<N, T>>& points, const std::array<int, N + 1>& vertices)
+Vector<N, T> compute_voronoi_vertex_for_delaunay_object(
+        const std::vector<Vector<N, T>>& points,
+        const std::array<int, N + 1>& vertices)
 {
 #if 1
-        // Матрица системы уравнений
         Matrix<N, N, T> a;
-        // Правая часть системы уравнений
         Vector<N, T> b;
 
         Vector<N, T> p0 = points[vertices[0]];
@@ -98,9 +95,7 @@ Vector<N, T> compute_voronoi_vertex(const std::vector<Vector<N, T>>& points, con
 #else
 
 #if 1
-        // Матрица системы уравнений
         Eigen::Matrix<T, N, N> a;
-        // Правая часть системы уравнений
         Eigen::Matrix<T, N, 1> b;
 
         Vector<N, T> p0 = points[vertices[0]];
@@ -117,7 +112,6 @@ Vector<N, T> compute_voronoi_vertex(const std::vector<Vector<N, T>>& points, con
                 b.coeffRef(row, 0) = dot(pn, pn) - dot0;
         }
 
-        // Решение системы уравнений
         Eigen::Matrix<T, N, 1> s = a.fullPivLu().solve(b);
 
         Vector<N, T> voronoi_vertex;
@@ -128,9 +122,7 @@ Vector<N, T> compute_voronoi_vertex(const std::vector<Vector<N, T>>& points, con
 
         return voronoi_vertex;
 #else
-        // Матрица системы уравнений
         Eigen::Matrix<T, N + 1, N + 1> a;
-        // Правая часть системы уравнений
         Eigen::Matrix<T, N + 1, 1> b;
 
         for (unsigned row = 0; row < N + 1; ++row)
@@ -146,10 +138,8 @@ Vector<N, T> compute_voronoi_vertex(const std::vector<Vector<N, T>>& points, con
                 b.coeffRef(row, 0) = paraboloid_f;
         }
 
-        // Решение системы уравнений
         Eigen::Matrix<T, N + 1, 1> s = a.fullPivLu().solve(b);
 
-        //Проецирование в исходное пространство размерности N
         Vector<N, T> voronoi_vertex;
         for (unsigned n = 0; n < N; ++n)
         {
