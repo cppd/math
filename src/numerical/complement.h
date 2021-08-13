@@ -62,9 +62,9 @@ template <typename T>
 Vector<3, T> orthogonal_complement(const std::array<Vector<3, T>, 2>& v)
 {
         Vector<3, T> res;
-        res[0] = +(v[0][1] * v[1][2] - v[0][2] * v[1][1]);
-        res[1] = -(v[0][0] * v[1][2] - v[0][2] * v[1][0]);
-        res[2] = +(v[0][0] * v[1][1] - v[0][1] * v[1][0]);
+        res[0] = v[0][1] * v[1][2] - v[0][2] * v[1][1];
+        res[1] = v[0][2] * v[1][0] - v[0][0] * v[1][2];
+        res[2] = v[0][0] * v[1][1] - v[0][1] * v[1][0];
         return res;
 }
 
