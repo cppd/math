@@ -189,7 +189,12 @@ void load_image(
         image_index->emplace(file_name, *index);
 }
 
-// Варианты данных: "x/x/x ...", "x//x ...", "x// ...", "x/x/ ...", "x/x ...", "x ...".
+// "x/x/x ..."
+// "x//x ..."
+// "x// ..."
+// "x/x/ ..."
+// "x/x ..."
+// "x ..."
 template <typename T, std::size_t MaxGroupCount, std::size_t GroupSize, typename IndexType>
 void read_digit_groups(
         const T& line,
@@ -222,7 +227,7 @@ void read_digit_groups(
 
                 std::array<IndexType, GroupSize>& indices = (*group_ptr)[group_index];
 
-                // Считывается номер вершины
+                // vertex
                 if (read_integer(line, end, &i, &indices[0]))
                 {
                         if (indices[0] == 0)
@@ -235,7 +240,7 @@ void read_digit_groups(
                         error("Error read facet vertex first number");
                 }
 
-                // Считываются текстура и нормаль
+                // texture and normal
                 for (int a = 1; a < static_cast<int>(indices.size()); ++a)
                 {
                         if (i == end || ascii::is_space(line[i]))
@@ -272,11 +277,12 @@ void read_digit_groups(
         }
 }
 
-// 0 означает, что нет индекса.
-// Индексы находятся в порядке facet, texture, normal.
 template <typename T, std::size_t MaxGroupCount>
 void check_index_consistent(const std::array<std::array<T, 3>, MaxGroupCount>& groups, int group_count)
 {
+        // 0 means there is no index.
+        // index order: facet, texture, normal.
+
         ASSERT(group_count <= static_cast<int>(groups.size()));
 
         int texture = 0;
@@ -322,7 +328,6 @@ void read_facets(
                 error("Error facet vertex count " + to_string(group_count) + " (min = " + to_string(N) + ")");
         }
 
-        // Обязательная проверка индексов
         check_index_consistent(groups, group_count);
 
         *facet_count = group_count - (N - 1);
@@ -428,7 +433,9 @@ void read_library_names(
         }
 }
 
-// Разделение строки на 2 части " не_пробелы | остальной текст до символа комментария или конца строки"
+// split string into two parts
+// 1. not space characters
+// 2. all other characters before a comment or the end of the string
 template <typename T, typename Space, typename Comment>
 void split(
         const T& data,
@@ -473,7 +480,7 @@ void split(
                 return;
         }
 
-        // первый пробел пропускается
+        // skip the first space
         ++i;
 
         i2 = i;
@@ -500,7 +507,7 @@ void split_line(
 
         long long last = (line_num + 1 < line_count) ? line_begin[line_num + 1] : data->size();
 
-        // В конце строки находится символ '\n', сместиться на него
+        // move to '\n' at the end of the string
         --last;
 
         long long first_b;
@@ -510,10 +517,10 @@ void split_line(
               second_e);
 
         *first = &(*data)[first_b];
-        (*data)[first_e] = 0; // пробел, символ комментария '#' или символ '\n'
+        (*data)[first_e] = 0; // space, '#', '\n'
 
         *second = &(*data)[*second_b];
-        (*data)[*second_e] = 0; // символ комментария '#' или символ '\n'
+        (*data)[*second_e] = 0; // '#', '\n'
 }
 
 template <std::size_t N>
@@ -523,9 +530,6 @@ bool facet_dimension_is_correct(const std::vector<Vector<N, float>>& vertices, c
 
         Vector<3, double> e0 = to_vector<double>(vertices[indices[1]] - vertices[indices[0]]);
         Vector<3, double> e1 = to_vector<double>(vertices[indices[2]] - vertices[indices[0]]);
-
-        // Перебрать все возможные определители 2x2.
-        // Здесь достаточно просто сравнить с 0.
 
         if (e0[1] * e1[2] - e0[2] * e1[1] != 0)
         {
@@ -783,10 +787,9 @@ void read_obj_stage_one(
         }
 }
 
-// Индексы в OBJ:
-//   начинаются с 1 для абсолютных значений,
-//   начинаются с -1 для относительных значений назад.
-// Преобразование в абсолютные значения с началом от 0.
+// Positive OBJ indices indicate absolute vertex numbers.
+// Negative OBJ indices indicate relative vertex numbers.
+// Convert to absolute numbers starting at 0.
 template <std::size_t N>
 void correct_indices(typename Mesh<N>::Facet* facet, int vertices_size, int texcoords_size, int normals_size)
 {
@@ -920,15 +923,13 @@ void read_obj_thread(
         std::vector<std::filesystem::path>* library_names,
         Mesh<N>* mesh)
 {
-        // параллельно
-
         try
         {
                 read_obj_stage_one(thread_num, thread_count, counters, data_ptr, line_begin, line_prop, progress);
         }
         catch (...)
         {
-                error_found->store(true); // нет исключений
+                error_found->store(true);
                 barrier->wait();
                 throw;
         }
@@ -942,8 +943,6 @@ void read_obj_thread(
         {
                 return;
         }
-
-        //последовательно
 
         line_begin->clear();
         line_begin->shrink_to_fit();
@@ -998,7 +997,6 @@ void read_lib(
                         {
                                 if (material_index->empty())
                                 {
-                                        // все материалы найдены
                                         break;
                                 }
 
@@ -1012,7 +1010,6 @@ void read_lib(
                                 }
                                 else
                                 {
-                                        // ненужный материал
                                         mtl = nullptr;
                                 }
                         }

@@ -28,7 +28,8 @@ namespace ns::geometry
 {
 namespace mobius_strip_implementation
 {
-// На входе от 0 до 2 * PI, на выходе от 0 до PI
+// input: 0, 2 * PI
+// output: 0, PI
 template <typename T>
 T curve(T x)
 {
@@ -50,16 +51,16 @@ Vector<3, T> mobius_strip_point(T width, RandomEngine& random_engine)
         const T alpha = std::uniform_real_distribution<T>(0, 2 * PI<T>)(random_engine);
         const T curve_angle = PI<T> / 2 - impl::curve(alpha);
 
-        // Случайная точка вдоль Z
+        // random point on Z
         Vector<3, T> v(0, 0, std::uniform_real_distribution<T>(-width / 2, width / 2)(random_engine));
 
-        // Вращение вокруг Y
+        // rotate around Y
         v = Vector<3, T>(v[2] * std::sin(curve_angle), 0, v[2] * std::cos(curve_angle));
 
-        // Смещение по X
+        // shift along X
         v = Vector<3, T>(v[0] + 1, 0, v[2]);
 
-        // Вращение вокруг Z
+        // rotate around Z
         v = Vector<3, T>(v[0] * std::cos(alpha), v[0] * std::sin(alpha), v[2]);
 
         return v;

@@ -152,13 +152,6 @@ void write_facet(
 template <bool ascii, std::size_t N>
 void write_facets(std::ostream& file, const Mesh<N>& mesh, const std::vector<Vector<N, float>>& vertices)
 {
-        // Вершины граней надо записывать в трёхмерный STL таким образом,
-        // чтобы при обходе против часовой стрелки перпендикуляр к грани
-        // был направлен противоположно направлению взгляда. В данной модели
-        // нет перпендикуляров у граней, есть только у вершин, поэтому нужно
-        // попытаться определить правильное направление по векторам вершин,
-        // если у вершин они заданы.
-
         for (const typename Mesh<N>::Facet& f : mesh.facets)
         {
                 if (!f.has_normal)
@@ -181,12 +174,8 @@ void write_facets(std::ostream& file, const Mesh<N>& mesh, const std::vector<Vec
                         Vector<3, double> v1 = to_vector<double>(mesh.vertices[v[1]]);
                         Vector<3, double> v2 = to_vector<double>(mesh.vertices[v[2]]);
 
-                        // Перпендикуляр к грани при обходе вершин против часовой
-                        // стрелки и противоположно направлению взгляда
                         Vector<3, double> normal = cross(v1 - v0, v2 - v0);
 
-                        // Если перпендикуляр в противоположном направлении со всеми
-                        // векторами вершин, то меняется порядок вершин.
                         if (dot(to_vector<double>(mesh.normals[f.normals[0]]), normal) < 0
                             && dot(to_vector<double>(mesh.normals[f.normals[1]]), normal) < 0
                             && dot(to_vector<double>(mesh.normals[f.normals[2]]), normal) < 0)

@@ -98,7 +98,6 @@ void write_face(std::ostream& file, const std::array<int, N>& vertices)
         file << OBJ_f;
         for (unsigned i = 0; i < N; ++i)
         {
-                // В файлах OBJ номера начинаются с 1
                 file << ' ' << (vertices[i] + 1);
         }
         file << '\n';
@@ -110,7 +109,6 @@ void write_face(std::ostream& file, const std::array<int, N>& vertices, const st
         file << OBJ_f;
         for (unsigned i = 0; i < N; ++i)
         {
-                // В файлах OBJ номера начинаются с 1
                 file << ' ' << (vertices[i] + 1) << "//" << (normals[i] + 1);
         }
         file << '\n';
@@ -121,8 +119,7 @@ void write_line(std::ostream& file, const std::array<int, 2>& vertices)
         file << OBJ_l;
         for (unsigned i = 0; i < 2; ++i)
         {
-                // В файлах OBJ номера начинаются с 1
-                file << ' ' << vertices[i] + 1;
+                file << ' ' << (vertices[i] + 1);
         }
         file << '\n';
 }
@@ -171,13 +168,6 @@ void write_normals(std::ostream& file, const Mesh<N>& mesh)
 template <std::size_t N>
 void write_facets(std::ostream& file, const Mesh<N>& mesh)
 {
-        // Вершины граней надо записывать в трёхмерный OBJ таким образом,
-        // чтобы при обходе против часовой стрелки перпендикуляр к грани
-        // был направлен противоположно направлению взгляда. В данной модели
-        // нет перпендикуляров у граней, есть только у вершин, поэтому нужно
-        // попытаться определить правильное направление по векторам вершин,
-        // если у вершин они заданы.
-
         for (const typename Mesh<N>::Facet& f : mesh.facets)
         {
                 if (!f.has_normal)
@@ -197,12 +187,8 @@ void write_facets(std::ostream& file, const Mesh<N>& mesh)
                         Vector<3, double> v1 = to_vector<double>(mesh.vertices[v[1]]);
                         Vector<3, double> v2 = to_vector<double>(mesh.vertices[v[2]]);
 
-                        // Перпендикуляр к грани при обходе вершин против часовой
-                        // стрелки и противоположно направлению взгляда
                         Vector<3, double> normal = cross(v1 - v0, v2 - v0);
 
-                        // Если перпендикуляр в противоположном направлении со всеми
-                        // векторами вершин, то меняется порядок вершин.
                         if (dot(to_vector<double>(mesh.normals[n[0]]), normal) < 0
                             && dot(to_vector<double>(mesh.normals[n[1]]), normal) < 0
                             && dot(to_vector<double>(mesh.normals[n[2]]), normal) < 0)

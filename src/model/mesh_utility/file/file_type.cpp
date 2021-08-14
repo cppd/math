@@ -27,16 +27,15 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <fstream>
 #include <sstream>
 
-// Для 3 измерений расширения obj, obj3, stl, stl3, txt, txt3.
-// Для 4 и более измерений objN, stlN, txt, txtN.
-// Если число указано, то используется оно. Если только txt,
-// то подсчитывается количество чисел в первой строке файла.
+// 3 dimension: obj, obj3, stl, stl3, txt, txt3.
+// 4 and more dimensions: objN, stlN, txt, txtN.
+// if number is specified then use it.
+// to find txt dimensions count numbers in the first line.
 
 namespace ns::mesh::file
 {
 namespace
 {
-// Чтение первой строки файла с ограничением на максимальное количество символов
 std::string read_first_line_from_file(const std::filesystem::path& file_name, int max_char_count)
 {
         std::ifstream f(file_name, std::ios_base::binary);
@@ -69,7 +68,6 @@ std::string read_first_line_from_file(const std::filesystem::path& file_name, in
         return line;
 }
 
-// Чтение чисел из строки с проверкой, что имеются только числа и пробелы
 int count_numbers(const std::string& s)
 {
         std::istringstream iss(s);
@@ -103,7 +101,6 @@ int count_numbers(const std::string& s)
         return d;
 }
 
-// Определение размерности по количеству чисел в первой строке файла
 int count_numbers_in_file(const std::filesystem::path& file_name)
 {
         std::string line = read_first_line_from_file(file_name, 1000000);
@@ -117,7 +114,6 @@ int count_numbers_in_file(const std::filesystem::path& file_name)
 }
 }
 
-// Чтение числа из строки с проверкой, что строка содержит только целое число без других символов
 int read_dimension_number(const std::string& s)
 {
         if (!std::all_of(
@@ -152,9 +148,6 @@ int read_dimension_number(const std::string& s)
 template <typename Path>
 std::tuple<int, MeshFileType> file_dimension_and_type(const Path& file_name)
 {
-        // Если не только obj, stl, txt, то после obj, stl, txt должно быть целое
-        // число и только целое число, например, строка "obj4" или "txt4"
-
         const std::string OBJ = ".obj";
         const std::string STL = ".stl";
         const std::string TXT = ".txt";

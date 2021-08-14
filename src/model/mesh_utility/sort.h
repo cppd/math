@@ -49,8 +49,7 @@ void sort_facets_by_material(
                         return facet.material < static_cast<int>(mesh.materials.size());
                 }));
 
-        // Для граней без материала используется дополнительный материал в конце
-
+        // for facets without material there is an additional material at the end
         int max_material_index = mesh.materials.size();
         int new_material_size = mesh.materials.size() + 1;
 
@@ -59,28 +58,21 @@ void sort_facets_by_material(
                 return i >= 0 ? i : max_material_index;
         };
 
-        // Количество граней с заданным материалом
         *facet_count = std::vector<int>(new_material_size, 0);
-
         for (const typename Mesh<N>::Facet& facet : mesh.facets)
         {
                 int m = material_index(facet.material);
                 ++(*facet_count)[m];
         }
 
-        // Начала расположения граней с заданным материалом
         *facet_offset = std::vector<int>(new_material_size);
-
         for (int i = 0, sum = 0; i < new_material_size; ++i)
         {
                 (*facet_offset)[i] = sum;
                 sum += (*facet_count)[i];
         }
 
-        // Индексы граней по возрастанию их материала
         sorted_facet_indices->resize(mesh.facets.size());
-
-        // Текущие начала расположения граней с заданным материалом
         std::vector<int> starting_indices = *facet_offset;
         for (std::size_t i = 0; i < mesh.facets.size(); ++i)
         {

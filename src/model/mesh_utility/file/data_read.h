@@ -28,23 +28,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 namespace ns::mesh::file
 {
-constexpr bool is_hyphen_minus(char c)
-{
-        return c == '-';
-}
-
-template <typename Data, typename Op>
-void read(const Data& data, long long size, const Op& op, long long* i)
-{
-        while (*i < size && op(data[*i]))
-        {
-                ++(*i);
-        }
-}
-
 namespace data_read_implementation
 {
-// Между begin и end находится уже проверенное целое число в формате DDDDD без знака
 template <typename Integer, typename T>
 Integer digits_to_integer(const T& data, long long begin, long long end)
 {
@@ -68,39 +53,7 @@ Integer digits_to_integer(const T& data, long long begin, long long end)
 
         return sum;
 }
-}
 
-template <typename T, typename Integer>
-bool read_integer(const T& data, long long size, long long* pos, Integer* value)
-{
-        static_assert(is_signed<Integer>);
-        namespace impl = data_read_implementation;
-
-        long long begin = *pos;
-
-        if (begin < size && is_hyphen_minus(data[begin]))
-        {
-                ++begin;
-        }
-
-        long long end = begin;
-
-        read(data, size, ascii::is_digit, &end);
-
-        if (end > begin)
-        {
-                *value = (begin == *pos) ? impl::digits_to_integer<Integer>(data, begin, end)
-                                         : -impl::digits_to_integer<Integer>(data, begin, end);
-                *pos = end;
-
-                return true;
-        }
-
-        return false;
-}
-
-namespace data_read_implementation
-{
 template <typename T>
 bool read_one_float_from_string(const char** str, T* p)
 {
@@ -123,13 +76,15 @@ bool read_one_float_from_string(const char** str, T* p)
                 *p = std::strtold(*str, &end);
         }
 
-        // В соответствии со спецификацией файла OBJ, между числами должны быть пробелы,
-        // а после чисел пробелы, конец строки или комментарий.
-        // Здесь без проверок этого.
         if (*str == end || errno == ERANGE || !is_finite(*p))
         {
                 return false;
         }
+        if (!(*end == '\0' || *end == '\n' || *end == ' ' || *end == '#'))
+        {
+                return false;
+        }
+
         *str = end;
         return true;
 }
@@ -137,13 +92,8 @@ bool read_one_float_from_string(const char** str, T* p)
 template <typename... T>
 int string_to_floats(const char** str, T*... floats)
 {
-        constexpr int N = sizeof...(T);
-
-        static_assert(N > 0);
-        static_assert(((
-                std::is_same_v<
-                        std::remove_volatile_t<T>,
-                        float> || std::is_same_v<std::remove_volatile_t<T>, double> || std::is_same_v<std::remove_volatile_t<T>, long double>)&&...));
+        static_assert(sizeof...(T) > 0);
+        static_assert(((std::is_same_v<T, float> || std::is_same_v<T, double> || std::is_same_v<T, long double>)&&...));
 
         errno = 0;
         int cnt = 0;
@@ -166,6 +116,46 @@ int read_vector(const char** str, Vector<N, T>* v, T* n, std::integer_sequence<u
         static_assert(N == sizeof...(I));
         return string_to_floats(str, &(*v)[I]..., n);
 }
+}
+
+//
+
+template <typename Data, typename Op>
+void read(const Data& data, long long size, const Op& op, long long* i)
+{
+        while (*i < size && op(data[*i]))
+        {
+                ++(*i);
+        }
+}
+
+template <typename T, typename Integer>
+bool read_integer(const T& data, long long size, long long* pos, Integer* value)
+{
+        static_assert(is_signed<Integer>);
+        namespace impl = data_read_implementation;
+
+        long long begin = *pos;
+
+        if (begin < size && data[begin] == '-')
+        {
+                ++begin;
+        }
+
+        long long end = begin;
+
+        read(data, size, ascii::is_digit, &end);
+
+        if (end > begin)
+        {
+                *value = (begin == *pos) ? impl::digits_to_integer<Integer>(data, begin, end)
+                                         : -impl::digits_to_integer<Integer>(data, begin, end);
+                *pos = end;
+
+                return true;
+        }
+
+        return false;
 }
 
 template <std::size_t N, typename T>

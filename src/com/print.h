@@ -142,7 +142,6 @@ void f(T v, int i, std::string& r, [[maybe_unused]] char s)
 
         do
         {
-                // Быстрее работает, если переключаться с __int128 на long long
                 if constexpr (std::is_same_v<__int128, std::remove_cv_t<T>> && longlong_less_i128)
                 {
                         if (limits<long long>::lowest() <= v && v <= limits<long long>::max())

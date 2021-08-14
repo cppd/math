@@ -34,7 +34,6 @@ namespace ns::mesh::file
 {
 namespace
 {
-// Чтение вершин из текстового файла. Одна вершина на строку. Координаты через пробел.
 // x0 x1 x2 x3 ...
 // x0 x1 x2 x3 ...
 template <std::size_t N>
@@ -60,7 +59,7 @@ void read_points_thread(
 
                 long long last = (line_num < line_count - 1) ? line_begin[line_num + 1] : data_ptr->size();
 
-                // В конце строки находится символ '\n', сместиться на него и записать вместо него 0
+                // move to '\n' at the end of the string
                 --last;
 
                 (*data_ptr)[last] = 0;

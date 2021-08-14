@@ -33,9 +33,9 @@ struct Mesh final
         struct Facet
         {
                 std::array<int, N> vertices;
-                std::array<int, N> normals; // -1 если нет нормали
-                std::array<int, N> texcoords; // -1 если нет текстурных координат
-                int material; // -1 если нет материала
+                std::array<int, N> normals; // index or -1
+                std::array<int, N> texcoords; // index or -1
+                int material; // index or -1
                 bool has_texcoord;
                 bool has_normal;
         };
@@ -57,9 +57,9 @@ struct Mesh final
                 color::Color Kd{0};
                 color::Color Ks{0};
                 float Ns{1};
-                int map_Ka{-1}; // -1 если нет текстуры
-                int map_Kd{-1}; // -1 если нет текстуры
-                int map_Ks{-1}; // -1 если нет текстуры
+                int map_Ka{-1}; // index or -1
+                int map_Kd{-1}; // index or -1
+                int map_Ks{-1}; // index or -1
         };
 
         std::vector<Vector<N, float>> vertices;

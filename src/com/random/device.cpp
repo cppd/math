@@ -25,7 +25,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 namespace ns
 {
-// Вместо использования std::random_device
 void read_system_random(const std::span<std::byte>& bytes)
 {
         constexpr const char* DEV_RANDOM = "/dev/urandom";
@@ -48,9 +47,9 @@ void read_system_random(const std::span<std::byte>& bytes)
 
 #include "../error.h"
 
-// Вначале windows.h
+// first windows.h
 #include <windows.h>
-// Потом wincrypt.h
+// second wincrypt.h
 #include <wincrypt.h>
 
 namespace ns

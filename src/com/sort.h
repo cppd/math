@@ -22,15 +22,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 namespace ns
 {
-template <typename T, std::size_t N>
-std::array<T, N>&& sort(std::array<T, N>&& v)
-{
-        std::sort(v.begin(), v.end());
-        return std::move(v);
-}
-
-//Эти функции сортировки работают немного быстрее, чем std:sort
-
 namespace sort_implementation
 {
 template <typename T>
@@ -38,19 +29,33 @@ void swap_sort(T& a, T& b)
 {
         if (b < a)
         {
-                T tmp = std::move(a);
-                a = std::move(b);
-                b = std::move(tmp);
+                std::swap(a, b);
         }
 }
+}
+
+template <typename T, std::size_t N>
+std::array<T, N>&& sort(std::array<T, N>&& v)
+{
+        static_assert(N >= 6);
+
+        std::sort(v.begin(), v.end());
+
+        return std::move(v);
+}
+
+template <typename T>
+std::array<T, 1>&& sort(std::array<T, 1>&& v)
+{
+        return std::move(v);
 }
 
 template <typename T>
 std::array<T, 2>&& sort(std::array<T, 2>&& v)
 {
-        using sort_implementation::swap_sort;
+        namespace impl = sort_implementation;
 
-        swap_sort(v[0], v[1]);
+        impl::swap_sort(v[0], v[1]);
 
         return std::move(v);
 }
@@ -58,11 +63,11 @@ std::array<T, 2>&& sort(std::array<T, 2>&& v)
 template <typename T>
 std::array<T, 3>&& sort(std::array<T, 3>&& v)
 {
-        using sort_implementation::swap_sort;
+        namespace impl = sort_implementation;
 
-        swap_sort(v[0], v[1]);
-        swap_sort(v[0], v[2]);
-        swap_sort(v[1], v[2]);
+        impl::swap_sort(v[0], v[1]);
+        impl::swap_sort(v[0], v[2]);
+        impl::swap_sort(v[1], v[2]);
 
         return std::move(v);
 }
@@ -70,13 +75,13 @@ std::array<T, 3>&& sort(std::array<T, 3>&& v)
 template <typename T>
 std::array<T, 4>&& sort(std::array<T, 4>&& v)
 {
-        using sort_implementation::swap_sort;
+        namespace impl = sort_implementation;
 
-        swap_sort(v[0], v[1]);
-        swap_sort(v[2], v[3]);
-        swap_sort(v[0], v[2]);
-        swap_sort(v[1], v[3]);
-        swap_sort(v[1], v[2]);
+        impl::swap_sort(v[0], v[1]);
+        impl::swap_sort(v[2], v[3]);
+        impl::swap_sort(v[0], v[2]);
+        impl::swap_sort(v[1], v[3]);
+        impl::swap_sort(v[1], v[2]);
 
         return std::move(v);
 }
@@ -84,18 +89,17 @@ std::array<T, 4>&& sort(std::array<T, 4>&& v)
 template <typename T>
 std::array<T, 5>&& sort(std::array<T, 5>&& v)
 {
-        using sort_implementation::swap_sort;
+        namespace impl = sort_implementation;
 
-        swap_sort(v[0], v[1]);
-        swap_sort(v[2], v[3]);
-        swap_sort(v[1], v[3]);
-        swap_sort(v[3], v[4]);
-
-        swap_sort(v[0], v[1]);
-        swap_sort(v[2], v[3]);
-        swap_sort(v[0], v[2]);
-        swap_sort(v[1], v[3]);
-        swap_sort(v[1], v[2]);
+        impl::swap_sort(v[0], v[1]);
+        impl::swap_sort(v[2], v[3]);
+        impl::swap_sort(v[1], v[3]);
+        impl::swap_sort(v[3], v[4]);
+        impl::swap_sort(v[0], v[1]);
+        impl::swap_sort(v[2], v[3]);
+        impl::swap_sort(v[0], v[2]);
+        impl::swap_sort(v[1], v[3]);
+        impl::swap_sort(v[1], v[2]);
 
         return std::move(v);
 }

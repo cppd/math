@@ -208,7 +208,7 @@ void test(std::size_t low, std::size_t high, ProgressRatio* progress)
 
 void test_performance()
 {
-        // При N=4, параллельно, 100000 точек, внутри сферы, примерное время: 1.7 сек, 0.4 сек.
+        // N = 4, in parallel, 100000 points, inside sphere, time: 1.7 s, 0.4 s.
 
         constexpr std::size_t N = 4;
 

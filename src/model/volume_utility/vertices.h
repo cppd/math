@@ -28,27 +28,24 @@ namespace ns::volume
 {
 namespace vertices_implementation
 {
-template <int n, typename F, std::size_t N, typename T>
+template <int I, typename F, std::size_t N, typename T>
 void vertices_impl(const Vector<N, T>& org, const std::array<Vector<N, T>, N>& vectors, const F& f)
 {
-        if constexpr (n >= 0)
+        if constexpr (I >= 0)
         {
-                vertices_impl<n - 1>(org, vectors, f);
-                vertices_impl<n - 1>(org + vectors[n], vectors, f);
+                vertices_impl<I - 1>(org, vectors, f);
+                vertices_impl<I - 1>(org + vectors[I], vectors, f);
         }
         else
         {
                 f(org);
         }
 }
+
 template <typename F, std::size_t N, typename T>
 void vertices(const Vector<N, T>& org, const std::array<Vector<N, T>, N>& vectors, const F& f)
 {
-        constexpr int last_index = N - 1;
-
-        // Смещаться по каждому измерению для перехода к другой вершине.
-
-        vertices_impl<last_index>(org, vectors, f);
+        vertices_impl<N - 1>(org, vectors, f);
 }
 }
 

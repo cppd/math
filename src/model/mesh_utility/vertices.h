@@ -25,7 +25,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 namespace ns::mesh
 {
-// Приведение координат к [-1, 1] с сохранением пропорций в заданном пространстве
 template <std::size_t N>
 std::vector<Vector<N, float>> normalize_vertices(const Mesh<N>& mesh, const BoundingBox<N>& box)
 {

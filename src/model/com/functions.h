@@ -30,19 +30,16 @@ std::tuple<Vector<N, T>, T> center_and_length_for_min_max(const Vector<N, T>& mi
 {
         static_assert(is_floating_point<T>);
 
-        for (unsigned i = 0; i < N; ++i)
+        for (std::size_t i = 0; i < N; ++i)
         {
-                if (min[i] >= max[i])
+                if (!(min[i] < max[i]))
                 {
-                        error("Object size error");
+                        error("Object min must be less than max, min = " + to_string(min)
+                              + ", max = " + to_string(max));
                 }
         }
 
         Vector<N, T> center = min + (max - min) / static_cast<T>(2);
-
-        // Т может быть float и координаты точек могут иметь большие
-        // для float величины, например, 10^30, что не позволяет считать
-        // квадраты на float, поэтому используется функция norm_stable.
         T len = (max - min).norm_stable();
 
         if (!is_finite(center))
