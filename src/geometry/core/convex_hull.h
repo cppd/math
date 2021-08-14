@@ -27,7 +27,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 namespace ns::geometry
 {
 template <std::size_t N>
-class ConvexHullFacet
+class ConvexHullFacet final
 {
         const std::array<int, N> m_indices;
         const Vector<N, double> m_ortho;
@@ -48,7 +48,7 @@ public:
 };
 
 template <std::size_t N>
-class DelaunaySimplex
+class DelaunaySimplex final
 {
         const std::array<int, N + 1> m_indices;
         const std::array<Vector<N, double>, N + 1> m_orthos;

@@ -27,27 +27,17 @@ Springer-Verlag Berlin Heidelberg, 2008.
 Handbook of Discrete and Computational Geometry.
 Edited by Jacob E. Goodman, Joseph O’Rourke.
 Chapman & Hall/CRC, 2004.
+*/
 
-  Инкрементальный алгоритм построения выпуклой оболочки с применением списков конфликтов,
-как это описано в главе 11 книги «Computational Geometry.  Algorithms and Applications».
+/*
+Convex hull
+Randomized incremental algorithm.
+(Computational Geometry. Algorithms and Applications. 11 Convex Hulls)
 
-  Для алгоритма со списками конфликтов важен случайный порядок обработки точек.
-
-  Выпуклая оболочка в n-мерном пространстве состоит из (n-1)-симплексов-граней-facet,
-соединённых (n-2)-симплексами-ребрами-ridge. Начальный n-симплекс состоит из n+1 точки,
-образующих n линейно независимых n-векторов.
-  Каждое ребро соединяет две грани. При добавлении новой точки выбрасываются грани,
-видимые из данной точки. Горизонтом видимости являются рёбра, имеющие одну грань.
-К каждому из них надо добавить новую точку, формируя тем самым новую грань выпуклой
-оболочки.
-  Каждая грань имеет список видимых из неё точек. Каждая точка имеет список видимых
-из неё граней. Возможные точки для новой грани берутся у двух имеющихся граней
-горизонта, одна из которых остаётся, другая удаляется.
-
-  Сиплексы Делоне на основе выпуклой оболочки: исходные точки располагаются на параболиде
-размерности n + 1, определяется его выпуклая оболочка, затем выбираются грани с отрицательной
-последней координатой (нижняя часть (n+1)-мерного параболоида) и проецируются в исходное
-пространство.
+Delaunay objects
+The projection to the n-space of the lower convex hull of the points
+(x(0), ..., x(n), x(0)^2 + ... + x(n)^2).
+(Discrete and computational geometry. 4.4 CONVEX HULL REVISITED)
 */
 
 #include "convex_hull.h"
@@ -84,22 +74,12 @@ namespace ns::geometry
 {
 namespace
 {
-//   Входные данные переводятся в целые числа с диапазоном от 0 до максимума с заданной дискретизацией,
-// чтобы иметь абсолютную точность при вычислении выпуклой оболочки, но не иметь всех проблем с плавающей
-// точкой, точность которой надо было бы менять в процессе расчёта.
-//   Если используются 24 бита, то максимальные значения скалярных произведений (определители)
-// попадают в диапазон __int128 для количества измерений не больше 4 при расчётах на параболоиде
-// и не больше 5 при расчётах без параболоида.
-//   Для файлов OBJ с типом float вполне достаточно иметь 24 бита.
-
 constexpr int ORDINARY_BITS = 30;
 constexpr int PARABOLOID_BITS = 24;
 
-// Максимальное значение определителя с размещением последней координаты на параболоиде по значениям других координат
 template <std::size_t N, std::size_t BITS>
-constexpr int max_paraboloid_determinant()
+constexpr int max_determinant_paraboloid()
 {
-        // Например, при N = 4
         // |x x x x*x+x*x+x*x|
         // |x x x x*x+x*x+x*x|
         // |x x x x*x+x*x+x*x|
@@ -121,26 +101,9 @@ constexpr int max_paraboloid_determinant()
         return BITS * (N + 1) + log_2(f) + 1;
 }
 
-// Максимальное значение исходных данных, размещаемых на параболоиде
-template <std::size_t N, std::size_t BITS>
-constexpr int max_paraboloid_source()
-{
-        // Например, при N = 4
-        // |x x x x*x+x*x+x*x|
-        // |x x x x*x+x*x+x*x|
-        // |x x x x*x+x*x+x*x|
-        // |x x x x*x+x*x+x*x|
-        // max = x*x + x*x + x*x
-        // max = (x ^ 2) * (N - 1)
-
-        return BITS * 2 + log_2(N - 1) + 1;
-}
-
-// Максимальное значение определителя
 template <std::size_t N, std::size_t BITS>
 constexpr int max_determinant()
 {
-        // Например, при N = 4
         // |x x x x|
         // |x x x x|
         // |x x x x|
@@ -160,21 +123,29 @@ constexpr int max_determinant()
         return BITS * N + log_2(f) + 1;
 }
 
+template <std::size_t N, std::size_t BITS>
+constexpr int max_paraboloid()
+{
+        // max = x*x + x*x + x*x
+        // max = (x ^ 2) * (N - 1)
+
+        return BITS * 2 + log_2(N - 1) + 1;
+}
+
 template <std::size_t N>
 using ComputeTypeOrdinary = LeastSignedInteger<max_determinant<N, ORDINARY_BITS>()>;
 template <std::size_t N>
 using DataTypeOrdinary = LeastSignedInteger<ORDINARY_BITS>;
 
 template <std::size_t N>
-using ComputeTypeParaboloid = LeastSignedInteger<max_paraboloid_determinant<N, PARABOLOID_BITS>()>;
+using ComputeTypeParaboloid = LeastSignedInteger<max_determinant_paraboloid<N, PARABOLOID_BITS>()>;
 template <std::size_t N>
-using DataTypeParaboloid = LeastSignedInteger<max_paraboloid_source<N, PARABOLOID_BITS>()>;
+using DataTypeParaboloid = LeastSignedInteger<max_paraboloid<N, PARABOLOID_BITS>()>;
 template <std::size_t N>
 using ComputeTypeAfterParaboloid = LeastSignedInteger<max_determinant<N, PARABOLOID_BITS>()>;
 template <std::size_t N>
 using DataTypeAfterParaboloid = LeastSignedInteger<PARABOLOID_BITS>;
 
-// Не надо медленный mpz_class на основных измерениях
 static_assert(is_native_integral<DataTypeOrdinary<2>> && is_native_integral<ComputeTypeOrdinary<2>>);
 static_assert(is_native_integral<DataTypeOrdinary<3>> && is_native_integral<ComputeTypeOrdinary<3>>);
 static_assert(is_native_integral<DataTypeOrdinary<4>> && is_native_integral<ComputeTypeOrdinary<4>>);
@@ -182,6 +153,7 @@ static_assert(is_native_integral<DataTypeParaboloid<3>> && is_native_integral<Co
 static_assert(is_native_integral<DataTypeAfterParaboloid<2>> && is_native_integral<ComputeTypeAfterParaboloid<2>>);
 static_assert(is_native_integral<DataTypeParaboloid<4>> && is_native_integral<ComputeTypeParaboloid<4>>);
 static_assert(is_native_integral<DataTypeAfterParaboloid<3>> && is_native_integral<ComputeTypeAfterParaboloid<3>>);
+
 //
 
 template <typename F>
@@ -203,27 +175,30 @@ std::string type_str() requires std::is_same_v<std::remove_cv_t<T>, mpz_class>
         return "mpz_class";
 }
 
-// Количество потоков для обработки горизонта.
-// В одних случаях параллельность ускоряет (точки внутри сферы), в других замедляет (точки на поверхности сферы).
-// При использовании mpz_class параллельность ускоряет.
+// Here multithreading is not always faster.
+// When points are inside a sphere, multithreading speeds up calculations.
+// When points are on a sphere, multithreading slow down calculations.
+// When using mpz_class, multithreading speeds up calculations.
 template <typename S, typename C>
-int thread_count()
+int thread_count_for_horizon()
 {
         static_assert(is_integral<S> && is_integral<C>);
 
-        if (is_native_integral<S> && is_native_integral<C>)
+        if constexpr (is_native_integral<S> && is_native_integral<C>)
         {
                 return 1;
         }
-
-        int hc = hardware_concurrency();
-        return std::max(hc - 1, 1);
+        else
+        {
+                const int hc = hardware_concurrency();
+                return std::max(hc - 1, 1);
+        }
 }
 
 template <typename T>
 class FacetStore
 {
-        // здесь vector быстрее, чем forward_list, list, set, unordered_set
+        // std::vector is faster than std::forward_list, std::list, std::set, std::unordered_set
         std::vector<const T*> m_data;
 
 public:
@@ -374,7 +349,8 @@ void connect_facets(
         {
                 if (vertices[r] == exclude_point)
                 {
-                        // Ребро горизонта, грань с ним уже соединена при её создании
+                        // the horizon ridge, the facet is aleady connected to it
+                        // when the facet was created
                         continue;
                 }
 
@@ -400,7 +376,6 @@ void connect_facets(
         }
 }
 
-// Найти N + 1 вершин N-симплекса — начальной выпуклой оболочки N-мерного пространства.
 template <std::size_t N, typename S, typename C>
 void create_init_convex_hull(
         const std::vector<Vector<N, S>>& points,
@@ -409,8 +384,6 @@ void create_init_convex_hull(
 {
         find_simplex_points<N, S, C>(points, vertices);
 
-        // Выпуклая оболочка из найденных N + 1 вершин состоит из N + 1 граней,
-        // что равно количеству сочетаний по N вершины из N + 1 вершин.
         facets->clear();
         for (unsigned f = 0; f < N + 1; ++f)
         {
@@ -418,8 +391,6 @@ void create_init_convex_hull(
                 std::prev(facets->end())->set_iter(std::prev(facets->cend()));
         }
 
-        // Количество рёбер для N-симплекса равно количеству
-        // сочетаний по N - 1 вершины из N + 1 вершин.
         constexpr int ridge_count = binomial<N + 1, N - 1>();
 
         int ridges = 0;
@@ -432,7 +403,6 @@ void create_init_convex_hull(
         ASSERT(ridges == ridge_count);
 }
 
-// Начальное заполнение списков конфликтов граней и точек
 template <typename Point, typename Facet>
 void create_init_conflict_lists(
         const std::vector<Point>& points,
@@ -455,7 +425,7 @@ void create_init_conflict_lists(
 
 template <typename Point, typename Facet>
 void add_conflict_points_to_new_facet(
-        const std::vector<Point>* points,
+        const std::vector<Point>& points,
         int point,
         std::vector<signed char>* unique_points,
         const Facet* facet_0,
@@ -466,7 +436,7 @@ void add_conflict_points_to_new_facet(
         {
                 (*unique_points)[p] = 1;
 
-                if (p != point && new_facet->visible_from_point(*points, p))
+                if (p != point && new_facet->visible_from_point(points, p))
                 {
                         new_facet->add_conflict_point(p);
                 }
@@ -478,7 +448,7 @@ void add_conflict_points_to_new_facet(
                         continue;
                 }
 
-                if (p != point && new_facet->visible_from_point(*points, p))
+                if (p != point && new_facet->visible_from_point(points, p))
                 {
                         new_facet->add_conflict_point(p);
                 }
@@ -531,10 +501,10 @@ void add_new_facets_to_conflict_points(
 }
 
 template <typename Point, typename Facet>
-void create_facets(
+void create_facets_for_point_and_horizon(
         unsigned thread_id,
         unsigned thread_count,
-        const std::vector<Point>* points,
+        const std::vector<Point>& points,
         int point,
         std::vector<FacetStore<Facet>>* point_conflicts,
         std::vector<std::vector<signed char>>* unique_points_work,
@@ -550,7 +520,6 @@ void create_facets(
 
         unsigned ridge_count = 0;
 
-        // Добавление граней, состоящих из рёбер горизонта и заданной точки
         for (const Facet* facet : (*point_conflicts)[point])
         {
                 for (unsigned r = 0; r < facet->vertices().size(); ++r)
@@ -569,12 +538,10 @@ void create_facets(
                         ++ridge_count;
                         thread_id += thread_count;
 
-                        // Создание новой грани и соединение новой грани с горизонтом вместо этой грани
-
                         int link_index = link_facet->find_link_index(facet);
 
                         new_facets->emplace_back(
-                                *points, set_elem(facet->vertices(), r, point), link_facet->vertices()[link_index],
+                                points, set_elem(facet->vertices(), r, point), link_facet->vertices()[link_index],
                                 link_facet);
 
                         Facet* new_facet = &(*std::prev(new_facets->end()));
@@ -588,13 +555,11 @@ void create_facets(
         }
 }
 
-// Используются указатели "const type*", так как при ссылках "const type&" происходит копирование данных
-// при работе с std::function и std::thread
 template <std::size_t N, typename S, typename C>
 void create_horizon_facets(
         unsigned thread_id,
         unsigned thread_count,
-        const std::vector<Vector<N, S>>* points,
+        const std::vector<Vector<N, S>>& points,
         int point,
         std::vector<FacetStore<Facet<N, S, C>>>* point_conflicts,
         std::vector<std::vector<signed char>>* unique_points_work,
@@ -603,7 +568,7 @@ void create_horizon_facets(
 {
         try
         {
-                create_facets(
+                create_facets_for_point_and_horizon(
                         thread_id, thread_count, points, point, point_conflicts, unique_points_work, new_facets_vector);
         }
         catch (...)
@@ -613,11 +578,9 @@ void create_horizon_facets(
         }
         barrier->wait();
 
-        // Вначале убрать ссылки на видимые грани, а потом добавить ссылки на новые грани.
-        // Это нужно для уменьшения объёма поиска граней у точек.
-
+        // erase first, then add.
+        // this reduces the amount of searching.
         erase_visible_facets_from_conflict_points(thread_id, thread_count, point_conflicts, point);
-
         add_new_facets_to_conflict_points(thread_id, thread_count, new_facets_vector, point_conflicts);
 }
 
@@ -644,7 +607,7 @@ void add_point_to_convex_hull(
 {
         if ((*point_conflicts)[point].size() == 0)
         {
-                // точка находится внутри оболочки
+                // the point is inside the convex hull
                 return;
         }
 
@@ -660,36 +623,34 @@ void add_point_to_convex_hull(
 
         std::vector<FacetList<Facet<N, S, C>>> new_facets(thread_pool->thread_count());
 
-        // Добавление граней, состоящих из рёбер горизонта и заданной точки.
         if (thread_pool->thread_count() > 1)
         {
                 thread_pool->run(
                         [&](unsigned thread_id, unsigned thread_count)
                         {
                                 create_horizon_facets(
-                                        thread_id, thread_count, &points, point, point_conflicts, unique_points_work,
+                                        thread_id, thread_count, points, point, point_conflicts, unique_points_work,
                                         &new_facets, barrier);
                         });
         }
         else
         {
                 // 0 = thread_id, 1 = thread_count
-                create_horizon_facets(0, 1, &points, point, point_conflicts, unique_points_work, &new_facets, barrier);
+                create_horizon_facets(0, 1, points, point, point_conflicts, unique_points_work, &new_facets, barrier);
         }
 
-        // Удаление видимых граней
+        // Erase visible facets
         for (const Facet<N, S, C>* facet : (*point_conflicts)[point])
         {
                 facets->erase(facet->iter());
         }
 
-        // Для этой точки больше не нужен список видимых граней
         (*point_conflicts)[point].clear();
 
         int facet_count = calculate_facet_count(new_facets);
         int ridge_count = (N - 1) * facet_count / 2;
 
-        // Соединить новые грани между собой, кроме граней горизонта
+        // Connect facets, excluding horizon facets
         int ridges = 0;
         std::unordered_map<Ridge<N>, std::tuple<Facet<N, S, C>*, unsigned>> search_map(ridge_count);
         for (unsigned i = 0; i < new_facets.size(); ++i)
@@ -702,7 +663,6 @@ void add_point_to_convex_hull(
         ASSERT(search_map.empty());
         ASSERT(ridges == ridge_count);
 
-        // Добавить новые грани в общий список граней
         for (unsigned i = 0; i < new_facets.size(); ++i)
         {
                 facets->splice(facets->cend(), new_facets[i]);
@@ -717,7 +677,6 @@ void create_convex_hull(
 {
         static_assert(N > 1);
 
-        // Проверить на минимум по количеству точек
         if (points.size() < N + 1)
         {
                 error("Error point count " + to_string(points.size()) + " for convex hull in " + space_name(N));
@@ -739,19 +698,17 @@ void create_convex_hull(
 
         create_init_conflict_lists(points, point_enabled, facets, &point_conflicts);
 
-        ThreadPool thread_pool(thread_count<S, C>());
+        ThreadPool thread_pool(thread_count_for_horizon<S, C>());
         Barrier barrier(thread_pool.thread_count());
 
-        // Создаётся здесь, чтобы каждый раз не создавать при расчёте и не выделять каждый раз память,
-        // а также не использовать thread_local
         std::vector<std::vector<signed char>> unique_points_work(thread_pool.thread_count());
         for (std::vector<signed char>& v : unique_points_work)
         {
                 v.resize(points.size(), 0);
         }
 
-        // N-симплекс построен, значит уже обработано N + 1 точек
-        for (unsigned i = 0, points_done = N + 1; i < points.size(); ++i, ++points_done)
+        // Initial simplex created, so N + 1 points already processed
+        for (unsigned i = 0, points_processed = N + 1; i < points.size(); ++i, ++points_processed)
         {
                 if (!point_enabled[i])
                 {
@@ -760,7 +717,7 @@ void create_convex_hull(
 
                 if (ProgressRatio::lock_free())
                 {
-                        progress->set(points_done, points.size());
+                        progress->set(points_processed, points.size());
                 }
 
                 add_point_to_convex_hull(
@@ -791,9 +748,6 @@ void find_min_max(const std::vector<Vector<N, float>>& points, Vector<N, float>*
         }
 }
 
-// Для алгоритма принципиально не нужны одинаковые точки - разность между ними даст нулевой вектор.
-// Для алгоритма со списками конфликтов принципиально нужен случайный порядок обработки точек.
-// Масштабирование и перевод в целые числа с сохранением пропорций.
 template <std::size_t N>
 void shuffle_and_convert_to_unique_integer(
         const std::vector<Vector<N, float>>& source_points,
@@ -889,18 +843,16 @@ void paraboloid_convex_hull(
                 LOG(oss.str());
         }
 
-        // Рассчитать Делоне на основе нижней части выпуклой оболочки параболоида размерности N + 1
-
         std::vector<PointCH> data(points.size());
 
-        // Размещение точек на параболоиде
+        // place points onto paraboloid
         for (unsigned i = 0; i < points.size(); ++i)
         {
                 data[i][N] = 0;
                 for (unsigned n = 0; n < N; ++n)
                 {
                         data[i][n] = points[i][n];
-                        // умножение делается в типе данных расчёта, а не в типе исходных данных
+                        // multipication using data type of the 'data'
                         data[i][N] += data[i][n] * data[i][n];
                 }
         }
@@ -912,8 +864,7 @@ void paraboloid_convex_hull(
         data.clear();
         data.shrink_to_fit();
 
-        // Рассчитать ортогональные дополнения к граням в исходном пространстве
-        // размерности N и создать грани
+        // compute ortho in n-space and create facets
 
         using FacetDelaunay = Facet<N, DataTypeAfterParaboloid<N>, ComputeTypeAfterParaboloid<N>>;
         using PointDelaunay = Vector<N, DataTypeAfterParaboloid<N>>;
@@ -931,10 +882,9 @@ void paraboloid_convex_hull(
         simplices->reserve(facets.size());
         for (const FacetCH& facet : facets)
         {
-                // Если последняя координата перпендикуляра грани больше или равна 0,
-                // то эта грань не является нижней частью выпуклой оболочки параболоида
                 if (!facet.last_ortho_coord_is_negative())
                 {
+                        // not the lower convex hull
                         continue;
                 }
 
@@ -943,7 +893,7 @@ void paraboloid_convex_hull(
                 std::array<Vector<N, double>, N + 1> orthos;
                 for (unsigned r = 0; r < N + 1; ++r)
                 {
-                        // Перпендикуляр к грани наружу от симплекса Делоне
+                        // ortho is directed outside
                         orthos[r] = FacetDelaunay(data_d, del_elem(vertices, r), vertices[r], nullptr).double_ortho();
                 }
 
@@ -994,8 +944,6 @@ void ordinary_convex_hull(
         }
 }
 
-//
-// Подготовка данных для выпуклой оболочки
 //
 
 template <std::size_t N>
