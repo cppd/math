@@ -35,7 +35,7 @@ namespace ns
 {
 namespace
 {
-std::vector<double> lowpass_filter_window_function(std::size_t tap_count)
+std::vector<double> lowpass_filter_window_function(int tap_count)
 {
         if (tap_count < 1)
         {
@@ -45,7 +45,7 @@ std::vector<double> lowpass_filter_window_function(std::size_t tap_count)
         std::vector<double> window(tap_count);
 
         double sum = 0;
-        for (std::size_t i = 1; i < tap_count + 1; ++i)
+        for (int i = 1; i < tap_count + 1; ++i)
         {
                 double x = static_cast<double>(i) / (tap_count + 1);
                 double v = 0.42 - 0.5 * std::cos(2 * PI<double> * x) + 0.08 * std::cos(4 * PI<double> * x);
@@ -63,9 +63,8 @@ std::vector<double> lowpass_filter_window_function(std::size_t tap_count)
 }
 
 Frequency::Frequency(double interval_length, int sample_count)
-        : m_interval_length(interval_length),
-          m_sample_count(sample_count),
-          m_sample_frequency(m_sample_count / m_interval_length),
+        : m_sample_count(sample_count),
+          m_sample_frequency(m_sample_count / interval_length),
           m_window(lowpass_filter_window_function(m_sample_count))
 {
         if (interval_length <= 0)

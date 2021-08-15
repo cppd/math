@@ -148,22 +148,22 @@ void test_complement(int count)
                         }
                 }
 
-                const Vector<N, T> unit_vector_reconstructed = orthogonal_complement(complement); // без normalize
+                const Vector<N, T> reconstructed = orthogonal_complement(complement);
 
-                if (!is_finite(unit_vector_reconstructed))
+                if (!is_finite(reconstructed))
                 {
-                        error("Not finite reconstructed vector " + to_string(unit_vector_reconstructed));
+                        error("Not finite reconstructed vector " + to_string(reconstructed));
                 }
 
-                if (!unit_vector_reconstructed.is_unit())
+                if (!reconstructed.is_unit())
                 {
-                        error("Not unit reconstructed vector " + to_string(unit_vector_reconstructed));
+                        error("Not unit reconstructed vector " + to_string(reconstructed));
                 }
 
-                if (!vectors_are_parallel(unit_vector, unit_vector_reconstructed))
+                if (!vectors_are_parallel(unit_vector, reconstructed))
                 {
-                        error("Reconstructed vector " + to_string(unit_vector_reconstructed)
-                              + " is not parallel to input vector " + to_string(unit_vector));
+                        error("Reconstructed vector " + to_string(reconstructed) + " is not parallel to input vector "
+                              + to_string(unit_vector));
                 }
         }
 

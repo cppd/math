@@ -57,7 +57,7 @@ void bit_reverse(const std::vector<int>& reverse_lookup, std::vector<T>* data)
         for (int i = 0; i < N; ++i)
         {
                 int r = reverse_lookup[i];
-                if (i < r) // для исключения одинаковых обменов и уже сделанных обменов
+                if (i < r)
                 {
                         std::swap((*data)[i], (*data)[r]);
                 }
@@ -73,7 +73,7 @@ void bit_reverse(std::vector<T>* data)
         for (int i = 0; i < N; ++i)
         {
                 int r = bit_reverse(bin_size, i);
-                if (i < r) // для исключения одинаковых обменов и уже сделанных обменов
+                if (i < r)
                 {
                         std::swap((*data)[i], (*data)[r]);
                 }

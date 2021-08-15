@@ -48,14 +48,14 @@ void Camera::set_vectors(const vec3d& right, const vec3d& up)
 {
         m_camera_up = up.normalized();
 
-        m_camera_direction = cross(up, right).normalized();
+        m_camera_direction_from = cross(up, right).normalized();
 
-        m_camera_right = cross(m_camera_direction, m_camera_up);
+        m_camera_right = cross(m_camera_direction_from, m_camera_up);
 
         vec3d light_right = rotate_vector_degree(m_camera_up, -45, m_camera_right);
         m_light_up = rotate_vector_degree(light_right, -45, m_camera_up);
 
-        m_light_direction = cross(m_light_up, light_right).normalized();
+        m_light_direction_from = cross(m_light_up, light_right).normalized();
 }
 
 gpu::renderer::CameraInfo::Volume Camera::main_volume() const
@@ -90,12 +90,12 @@ gpu::renderer::CameraInfo::Volume Camera::shadow_volume() const
 
 mat4d Camera::main_view_matrix() const
 {
-        return matrix::look_at<double>(vec3d(0, 0, 0), m_camera_direction, m_camera_up);
+        return matrix::look_at<double>(vec3d(0, 0, 0), m_camera_direction_from, m_camera_up);
 }
 
 mat4d Camera::shadow_view_matrix() const
 {
-        return matrix::look_at(vec3d(0, 0, 0), m_light_direction, m_light_up);
+        return matrix::look_at(vec3d(0, 0, 0), m_light_direction_from, m_light_up);
 }
 
 void Camera::reset(const vec3d& right, const vec3d& up, double scale, const vec2d& window_center)
@@ -139,10 +139,9 @@ void Camera::scale(double x, double y, double delta)
 
         vec2d mouse_local(x - m_width * 0.5, m_height * 0.5 - y);
         vec2d mouse_global(mouse_local + m_window_center);
-        // Формула
-        //   new_center = old_center + (mouse_global * scale_delta - mouse_global)
-        //   -> center = center + mouse_global * scale_delta - mouse_global
-        //   -> center += mouse_global * (scale_delta - 1)
+        // new_center = old_center + (mouse_global * scale_delta - mouse_global)
+        // center = center + mouse_global * scale_delta - mouse_global
+        // center += mouse_global * (scale_delta - 1)
         m_window_center += mouse_global * (scale_delta - 1);
 }
 
@@ -177,8 +176,8 @@ info::Camera Camera::view_info() const
         info::Camera v;
 
         v.up = m_camera_up;
-        v.forward = m_camera_direction;
-        v.lighting = m_light_direction;
+        v.forward = m_camera_direction_from;
+        v.lighting = m_light_direction_from;
         v.width = m_width;
         v.height = m_height;
 
@@ -208,8 +207,8 @@ gpu::renderer::CameraInfo Camera::renderer_info() const
         v.shadow_volume = shadow_volume();
         v.main_view_matrix = main_view_matrix();
         v.shadow_view_matrix = shadow_view_matrix();
-        v.light_direction = m_light_direction;
-        v.camera_direction = m_camera_direction;
+        v.light_direction = m_light_direction_from;
+        v.camera_direction = m_camera_direction_from;
 
         return v;
 }

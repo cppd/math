@@ -25,8 +25,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 namespace ns
 {
-// Количество сочетаний из n по r: C(n, r) = n! / ((n - r)! * r!).
-// Вариант для плавающей точки: std::round(std::exp(std::lgamma(n + 1) - std::lgamma(n - r + 1) - std::lgamma(r + 1))).
+// C(n, r) = n! / ((n - r)! * r!)
+// std::round(std::exp(std::lgamma(n + 1) - std::lgamma(n - r + 1) - std::lgamma(r + 1)))
 template <int N, int R>
 constexpr int binomial()
 {
@@ -56,11 +56,12 @@ constexpr int binomial()
         return m;
 }
 
-// Список сочетаний по R из последовательности чисел от 0 <= x < N
 template <int N, int R>
 std::array<std::array<unsigned char, R>, binomial<N, R>()> combinations()
 {
-        std::array<signed char, N> v;
+        static_assert(N >= R && R > 0);
+
+        std::array<unsigned char, N> v;
 
         std::fill(v.begin(), v.begin() + R, 0);
         std::fill(v.begin() + R, v.end(), 1);
@@ -77,37 +78,7 @@ std::array<std::array<unsigned char, R>, binomial<N, R>()> combinations()
                                 res[row][++cnt] = i;
                         }
                 }
-        }
-
-        return res;
-}
-
-template <int N, int R>
-std::array<std::tuple<std::array<unsigned char, R>, std::array<unsigned char, N - R>>, binomial<N, R>()>
-        combinations_tuple()
-{
-        std::array<signed char, N> v;
-
-        std::fill(v.begin(), v.begin() + R, 0);
-        std::fill(v.begin() + R, v.end(), 1);
-
-        std::array<std::tuple<std::array<unsigned char, R>, std::array<unsigned char, N - R>>, binomial<N, R>()> res;
-
-        for (int row = 0; row < binomial<N, R>(); ++row, std::next_permutation(v.begin(), v.end()))
-        {
-                int cnt_1 = -1;
-                int cnt_2 = -1;
-                for (int i = 0; i < N; ++i)
-                {
-                        if (v[i] == 0)
-                        {
-                                std::get<0>(res[row])[++cnt_1] = i;
-                        }
-                        else
-                        {
-                                std::get<1>(res[row])[++cnt_2] = i;
-                        }
-                }
+                ASSERT(cnt == R - 1);
         }
 
         return res;

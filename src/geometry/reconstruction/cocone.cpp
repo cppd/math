@@ -46,6 +46,11 @@ namespace
 constexpr double RHO_MIN = 0, RHO_MAX = 1;
 constexpr double ALPHA_MIN = 0, ALPHA_MAX = 1;
 
+bool all_false(const std::vector<bool>& data)
+{
+        return std::find(data.cbegin(), data.cend(), true) == data.cend();
+}
+
 template <std::size_t N>
 bool cocone_facet(const std::vector<ManifoldFacet<N>>& facet_data, int facet)
 {

@@ -87,7 +87,7 @@ class CudaPlan2D final
 public:
         CudaPlan2D(int x, int y)
         {
-                // Именно так y, x
+                // y, x
                 if (cufftPlan2d(&m_plan, y, x, CUFFT_C2C) != CUFFT_SUCCESS)
                 {
                         error("cuFFT create FFT plan error");

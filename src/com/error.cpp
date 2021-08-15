@@ -28,8 +28,7 @@ void error(std::string text)
 
 void error_fatal(const char* text) noexcept
 {
-        // Только запись в лог, без вызовов других функций программы,
-        // так как они могут вызвать эту же функцию.
+        // no call to other functions because of a possible recursion
         static_assert(noexcept(application::write_log_fatal_error_and_exit(text)));
         application::write_log_fatal_error_and_exit(text);
 }

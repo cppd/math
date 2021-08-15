@@ -26,7 +26,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/com/time.h>
 
 #include <algorithm>
-#include <atomic>
 #include <fftw3.h>
 #include <mutex>
 
@@ -69,27 +68,29 @@ class FFTPlan final
         fftwf_plan p;
 
 public:
-        FFTPlan(bool inverse, int n1, int n2, std::vector<std::complex<float>>* i, std::vector<std::complex<float>>* o)
+        FFTPlan(const bool inverse,
+                const int n1,
+                const int n2,
+                std::vector<std::complex<float>>* const in,
+                std::vector<std::complex<float>>* const out)
         {
-                ASSERT(1ull * n1 * n2 == i->size());
-                ASSERT(i->size() == o->size());
+                ASSERT(1ull * n1 * n2 == in->size());
+                ASSERT(in->size() == out->size());
 
                 fftwf_plan_with_nthreads(hardware_concurrency());
 
-                // По документации FFTW тип fftwf_complex является массивом float[2]
-                // из действительной части в элементе 0 и мнимой части в элементе 1.
-                // Это совпадает с требованиями к комплексным числам 29.5 Complex numbers
-                // в стандарте C++17.
-                fftwf_complex* in = reinterpret_cast<fftwf_complex*>(i->data());
-                fftwf_complex* out = reinterpret_cast<fftwf_complex*>(o->data());
+                static_assert(sizeof(fftwf_complex) == sizeof(std::complex<float>));
+                static_assert(alignof(fftwf_complex) == alignof(std::complex<float>));
+                fftwf_complex* in_fftw = reinterpret_cast<fftwf_complex*>(in->data());
+                fftwf_complex* out_fftw = reinterpret_cast<fftwf_complex*>(out->data());
 
                 if (inverse)
                 {
-                        p = fftwf_plan_dft_2d(n2, n1, in, out, FFTW_BACKWARD, FFTW_MEASURE);
+                        p = fftwf_plan_dft_2d(n2, n1, in_fftw, out_fftw, FFTW_BACKWARD, FFTW_MEASURE);
                 }
                 else
                 {
-                        p = fftwf_plan_dft_2d(n2, n1, in, out, FFTW_FORWARD, FFTW_MEASURE);
+                        p = fftwf_plan_dft_2d(n2, n1, in_fftw, out_fftw, FFTW_FORWARD, FFTW_MEASURE);
                 }
         }
 
@@ -112,20 +113,22 @@ public:
 class FFTW final : public DFT
 {
         FFTPlanThreads m_threads;
-        std::vector<std::complex<float>> m_in, m_out;
-        FFTPlan m_forward, m_backward;
+        std::vector<std::complex<float>> m_in;
+        std::vector<std::complex<float>> m_out;
+        FFTPlan m_forward;
+        FFTPlan m_backward;
         const float m_inv_k;
 
-        void exec(bool inverse, std::vector<std::complex<float>>* data) override
+        void exec(const bool inverse, std::vector<std::complex<float>>* const data) override
         {
                 if (data->size() != m_in.size())
                 {
                         error("Error size FFTW");
                 }
 
-                std::copy(data->cbegin(), data->cend(), m_in.begin());
+                const TimePoint start_time = time();
 
-                TimePoint start_time = time();
+                std::copy(data->cbegin(), data->cend(), m_in.begin());
 
                 if (inverse)
                 {
@@ -149,7 +152,7 @@ class FFTW final : public DFT
         }
 
 public:
-        FFTW(int n1, int n2)
+        FFTW(const int n1, const int n2)
                 : m_in(1ull * n1 * n2),
                   m_out(1ull * n1 * n2),
                   m_forward(false, n1, n2, &m_in, &m_out),
@@ -160,7 +163,7 @@ public:
 };
 }
 
-std::unique_ptr<DFT> create_fftw(int x, int y)
+std::unique_ptr<DFT> create_fftw(const int x, const int y)
 {
         return std::make_unique<FFTW>(x, y);
 }

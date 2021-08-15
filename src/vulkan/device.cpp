@@ -339,7 +339,7 @@ void make_enabled_device_features(
         const DeviceFeatures& supported_device_features,
         DeviceFeatures* device_features)
 {
-        if (there_is_intersection(required_features, optional_features))
+        if (intersect(required_features, optional_features))
         {
                 error("Required and optional physical device features intersect");
         }

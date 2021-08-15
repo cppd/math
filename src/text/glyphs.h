@@ -27,16 +27,20 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 namespace ns::text
 {
-struct FontGlyph
+struct FontGlyph final
 {
-        int width, height, left, top, advance_x;
+        int width;
+        int height;
+        int left;
+        int top;
+        int advance_x;
 
-        // Начальные (s0, t0) и конечные (s1, t1) координаты символа в текстуре
-        float s0, s1, t0, t1;
+        float s0;
+        float s1;
+        float t0;
+        float t1;
 };
 
-// Информация о символах шрифта с картинкой всех символов вместе.
-// Grayscale, sRGB, uint8.
 void create_font_glyphs(
         const Font& font,
         int max_width,

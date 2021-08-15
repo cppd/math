@@ -36,16 +36,9 @@ class Frequency
         };
 
         const TimePoint m_start_time = time();
-
-        // Интервал в секундах
-        const double m_interval_length;
-        // Сколько отсчётов на интервале, не считая текущего
         const int m_sample_count;
-
         const double m_sample_frequency;
-
         const std::vector<double> m_window;
-
         std::deque<Events> m_deque;
 
 public:

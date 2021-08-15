@@ -29,7 +29,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 namespace ns
 {
-// Нужно целое число со знаком, больше или равное 1
+// positive signed integer
 inline int hardware_concurrency()
 {
         return std::max(1u, std::thread::hardware_concurrency());

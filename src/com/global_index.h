@@ -31,19 +31,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 namespace ns
 {
-//   В одномерном массиве хранятся данные по множеству измерений.
-// Требуется найти индекс элемента с заданными координатами.
-//   Например, имеется 4 измерения с размерами S0, S1, S2, S3
-// и условиями S0 > 0 && S1 > 0 && S2 > 0 && S3 > 0,
-// и имеется элемент с координатами x0, x1, x2, x3 и условиями
-// 0 <= x0 < S0 && 0 <= x1 < S1 && 0 <= x2 < S2 && 0 <= x3 < S3.
-// Тогда индекс элемента в массиве будет равен
-//      ((x3*S2 + x2)*S1 + x1)*S0 + x0
-// или
-//      x3*(S2*S1*S0) + x2*(S1*S0) + x1*(S0) + x0.
-//   Эти варианты имеют одинаковое количество арифметических действий
-// (после предварительного умножения), но второй вариант позволяет
-// параллельно умножать, поэтому используется он.
+// index = ((x[3] * s[2] + x[2]) * s[1] + x[1]) * s[0] + x[0]
+// index = x[3] * (s[2] * s[1] * s[0]) + x[2] * (s[1] * s[0]) + x[1] * (s[0]) + x[0]
 template <std::size_t N, typename IndexType>
 class GlobalIndex
 {
@@ -53,9 +42,6 @@ class GlobalIndex
         template <typename T>
         static constexpr void static_check_input_type()
         {
-                // Все размеры должны быть положительными, все координаты неотрицательными,
-                // поэтому не требуется, чтобы типы были или оба знаковые, или оба беззнаковые.
-
                 static_assert((is_array<T> && std::tuple_size_v<T> == N) || is_vector<T>);
                 static_assert(is_native_integral<typename T::value_type>);
                 static_assert(
@@ -83,7 +69,7 @@ class GlobalIndex
                         error("Global index sizes must be positive");
                 }
 
-                // Для x[0] это 1, для x[1] это size[0], для x[2] == size[1] * size[0] и т.д.
+                // 1, size[0], size[1] * size[0]
                 IndexType previous = 1;
                 std::array<IndexType, N> strides{(I == 0 ? 1 : previous = sizes[I - 1] * previous)...};
 

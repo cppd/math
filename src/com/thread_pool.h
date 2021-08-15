@@ -116,7 +116,6 @@ class ThreadPool
                                         m_enable = false;
                                         m_count = THREAD_COUNT;
                                         ++m_generation;
-                                        // Извещение идёт также и вызывающему потоку, что тут закончилась работа
                                         m_cv_finish.notify_all();
                                 }
                                 else
@@ -205,7 +204,6 @@ class ThreadPool
                         {
                                 long long g = m_generation;
 
-                                // Запуск потоков
                                 {
                                         std::unique_lock<std::mutex> lock(m_mutex_run);
                                         m_enable = true;
@@ -213,7 +211,6 @@ class ThreadPool
 
                                 m_cv_run.notify_all();
 
-                                // Ожидание завершения потоков
                                 {
                                         std::unique_lock<std::mutex> lock(m_mutex_finish);
                                         m_cv_finish.wait(

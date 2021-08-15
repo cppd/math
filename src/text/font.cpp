@@ -119,7 +119,7 @@ void save_to_file(char32_t code_point, const std::optional<Font::Char>& data)
         {
                 std::ostringstream oss;
                 oss << "code_point=" << unicode::utf32_to_number_string(code_point) << ".txt";
-                // Создать пустой файл
+                // create empty file
                 std::ofstream f(oss.str());
                 if (!f)
                 {
@@ -141,7 +141,7 @@ void save_to_file(char32_t code_point, const std::optional<Font::Char>& data)
 
         if (data->width * data->height == 0)
         {
-                // Создать пустой файл
+                // create empty file
                 oss << ".txt";
                 std::ofstream f(oss.str());
                 if (!f)

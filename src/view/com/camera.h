@@ -32,10 +32,10 @@ class Camera final
 
         vec3d m_camera_right{0};
         vec3d m_camera_up{0};
-        vec3d m_camera_direction{0}; // от камеры на объект
+        vec3d m_camera_direction_from{0};
 
         vec3d m_light_up{0};
-        vec3d m_light_direction{0}; // от источника света на объект
+        vec3d m_light_direction_from{0};
 
         vec2d m_window_center{0};
 

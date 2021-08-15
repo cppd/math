@@ -213,10 +213,11 @@ class Impl final : public View
                 text_vertices(m_glyphs, text_data, &vertices);
 
                 static_assert(sizeof(text::TextVertex) == sizeof(Vertex));
-                static_assert(offsetof(text::TextVertex, v) == offsetof(Vertex, window_coordinates));
-                static_assert(offsetof(text::TextVertex, t) == offsetof(Vertex, texture_coordinates));
-                static_assert(std::is_same_v<decltype(text::TextVertex::v), decltype(Vertex::window_coordinates)>);
-                static_assert(std::is_same_v<decltype(text::TextVertex::t), decltype(Vertex::texture_coordinates)>);
+                static_assert(offsetof(text::TextVertex, window) == offsetof(Vertex, window_coordinates));
+                static_assert(offsetof(text::TextVertex, texture) == offsetof(Vertex, texture_coordinates));
+                static_assert(std::is_same_v<decltype(text::TextVertex::window), decltype(Vertex::window_coordinates)>);
+                static_assert(
+                        std::is_same_v<decltype(text::TextVertex::texture), decltype(Vertex::texture_coordinates)>);
 
                 const std::size_t data_size = storage_size(vertices);
 

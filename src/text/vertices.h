@@ -28,12 +28,12 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 namespace ns::text
 {
-struct TextVertex
+struct TextVertex final
 {
-        Vector<2, int_least32_t> v; // Координаты вершины в пространстве экрана.
-        Vector<2, float> t; // Координаты вершины в текстуре.
+        Vector<2, int_least32_t> window;
+        Vector<2, float> texture;
 
-        TextVertex(int v1, int v2, float t1, float t2) : v(v1, v2), t(t1, t2)
+        TextVertex(int w1, int w2, float t1, float t2) : window(w1, w2), texture(t1, t2)
         {
         }
 };

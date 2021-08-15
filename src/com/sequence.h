@@ -62,7 +62,7 @@ auto sequence(IntegerSequence<IntegerType, I...>&&)
 }
 }
 
-// Тип Type<SequenceType<From, ...>, SequenceType<From + 1, ...>, SequenceType<From + 2, ...>, ...>
+// Type<SequenceType<From, ...>, SequenceType<From + 1, ...>, SequenceType<From + 2, ...>, ...>
 template <
         template <typename...>
         typename Type,
@@ -74,8 +74,7 @@ template <
 using SequenceRange = typename sequence_implementation::Sequence<Type, SequenceType, SequenceTypeParameters...>::
         template S<From, To - From + 1>::T;
 
-// Тип Type<SequenceType<Index0, ...>, SequenceType<index1, ...>, SequenceType<index2, ...>, ...>
-// где i берутся из IndexSequence (std::integer_sequence)
+//  Type<SequenceType<Index[0], ...>, SequenceType<index[1], ...>, SequenceType<index[2], ...>, ...>
 template <
         typename IntegerSequence,
         template <typename...>

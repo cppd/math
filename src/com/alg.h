@@ -47,38 +47,8 @@ template <typename T>
         return v;
 }
 
-// Можно вместо этого использовать std::all_of или std::find(v.cbegin(), v.cend(), true) == v.cend()
 template <typename T>
-bool all_false(const T& v)
-{
-        int size = v.size();
-        for (int i = 0; i < size; ++i)
-        {
-                if (v[i])
-                {
-                        return false;
-                }
-        }
-        return true;
-}
-
-// Можно вместо этого использовать std::all_of или std::find(v.cbegin(), v.cend(), false) == v.cend()
-template <typename T>
-bool all_true(const T& v)
-{
-        int size = v.size();
-        for (int i = 0; i < size; ++i)
-        {
-                if (!v[i])
-                {
-                        return false;
-                }
-        }
-        return true;
-}
-
-template <typename T>
-bool all_non_negative(const T& data)
+[[nodiscard]] constexpr bool all_non_negative(const T& data)
 {
         return std::all_of(
                 data.cbegin(), data.cend(),
@@ -89,7 +59,7 @@ bool all_non_negative(const T& data)
 }
 
 template <typename T>
-bool all_positive(const T& data)
+[[nodiscard]] constexpr bool all_positive(const T& data)
 {
         return std::all_of(
                 data.cbegin(), data.cend(),
@@ -100,7 +70,7 @@ bool all_positive(const T& data)
 }
 
 template <typename T>
-bool all_negative(const T& data)
+[[nodiscard]] constexpr bool all_negative(const T& data)
 {
         return std::all_of(
                 data.cbegin(), data.cend(),
@@ -110,9 +80,8 @@ bool all_negative(const T& data)
                 });
 }
 
-// Вместо std::accumulate(v.cbegin(), v.cend(), static_cast<T>(1), std::multiplies<void>())
 template <typename T, typename V>
-constexpr T multiply_all(const V& v)
+[[nodiscard]] constexpr T multiply_all(const V& v)
 {
         static_assert(
                 (is_native_integral<typename V::value_type> && is_native_integral<T>)
@@ -135,7 +104,7 @@ constexpr T multiply_all(const V& v)
 }
 
 template <typename T, typename V>
-constexpr T add_all(const V& v)
+[[nodiscard]] constexpr T add_all(const V& v)
 {
         static_assert(
                 (is_native_integral<typename V::value_type> && is_native_integral<T>)
@@ -157,21 +126,8 @@ constexpr T add_all(const V& v)
         return value;
 }
 
-template <template <typename...> typename Container, typename... T>
-void insert_or_erase(bool insert, const typename Container<T...>::value_type& value, Container<T...>* container)
-{
-        if (insert)
-        {
-                container->insert(value);
-        }
-        else
-        {
-                container->erase(value);
-        }
-}
-
 template <typename T1, typename T2>
-bool there_is_intersection(T1 t1, T2 t2)
+[[nodiscard]] bool intersect(T1 t1, T2 t2)
 {
         std::sort(t1.begin(), t1.end());
         std::sort(t2.begin(), t2.end());
@@ -185,6 +141,7 @@ bool there_is_intersection(T1 t1, T2 t2)
                 {
                         return false;
                 }
+
                 if (i2 == std::cend(t2))
                 {
                         return false;
@@ -198,14 +155,12 @@ bool there_is_intersection(T1 t1, T2 t2)
                 {
                         ++i2;
                 }
+                else if (!(*i1 == *i2))
+                {
+                        error("Failed to find intersection. Not (a < b) and not (a > b) and not (a == b)");
+                }
                 else
                 {
-                        // Из условия !(a < b) && !(a > b) не обязательно следует a == b
-                        if (!(*i1 == *i2))
-                        {
-                                error("Failed to find intersection. Not (a < b) and not (a > b) and not (a == b)");
-                        }
-
                         return true;
                 }
         }
