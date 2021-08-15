@@ -64,7 +64,7 @@ if ((${CMAKE_CXX_COMPILER_ID} STREQUAL "Clang") AND (${CMAKE_CXX_COMPILER_VERSIO
         message(FATAL_ERROR "Not supported Clang C++ compiler version ${CMAKE_CXX_COMPILER_VERSION}")
 endif()
 
-# При наличии enable_language(C CXX) можно указать стандарт для всех проектов
+# after enable_language
 set(CMAKE_C_STANDARD 11)
 set(CMAKE_C_STANDARD_REQUIRED ON)
 set(CMAKE_C_EXTENSIONS OFF)
@@ -72,8 +72,8 @@ set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
 
-# Чтобы было как "make VERBOSE=1"
-# Добавлять после команды project или enable_language
+# "make VERBOSE=1"
+# after project or enable_language
 set(CMAKE_VERBOSE_MAKEFILE TRUE)
 
 include(CheckCSourceCompiles)
@@ -408,7 +408,7 @@ AddIncludeFiles(VULKAN_SHADERS
 target_compile_definitions(${PROJECT_NAME} PRIVATE QT_NO_KEYWORDS)
 target_compile_definitions(${PROJECT_NAME} PRIVATE QT_DISABLE_DEPRECATED_BEFORE=0x050F00)
 
-# CMake при использовании target_include_directories вставляет -I
+# CMake uses -I
 target_include_directories(${PROJECT_NAME} PRIVATE "${PROJECT_SOURCE_DIR}")
 
 #target_compile_options(${PROJECT_NAME} PRIVATE -S -masm=intel)
