@@ -84,15 +84,13 @@ function(SetCompilerWarnings source_files)
                         -Wno-undefined-func-template
                         -Wno-ctad-maybe-unsupported
 
-                        # Из-за файлов Qt отключить для всех файлов
-                        # с последующим включением для файлов проекта
+                        # Qt
                         -Wno-redundant-parens
                         -Wno-extra-semi-stmt
                         >
                 >
         )
 
-        # Предупреждения для файлов проекта и не для файлов Qt
         foreach(f ${source_files})
 
                 if (${f} MATCHES "^.+\.cpp$")
