@@ -66,8 +66,6 @@ Vector<N, T> random_on_sphere(RandomEngine& engine, bool bound)
         return v;
 }
 
-// Точки на сфере с углублением со стороны последней оси
-// в положительном направлении этой оси
 template <std::size_t N>
 std::vector<Vector<N, float>> points_sphere_with_notch(unsigned point_count, bool bound)
 {
@@ -96,8 +94,8 @@ std::vector<Vector<N, float>> clone_object(const std::vector<Vector<N, float>>& 
 {
         ASSERT(clone_count > 1 && clone_count <= (1 << N));
 
-        // Объект находится в начале координат и имеет размеры не более 1 по каждой координате
-        // в обе стороны, поэтому достаточно смещение на 3 для отсутствия пересечений объектов
+        // object has size 1 and is at the origin,
+        // so shift by 3 to avoid intersection
         constexpr float SHIFT = 3;
 
         unsigned all_object_count = (1 + clone_count);
@@ -148,12 +146,11 @@ constexpr std::tuple<unsigned, unsigned> facet_count(unsigned point_count)
         if constexpr (N == 4)
         {
                 ASSERT(point_count >= 5);
-                // Handbook of Discrete and Computational Geometry edited by Jacob E. Goodman and Joseph O’Rourke.
-                // Second edition.
+                // Handbook of Discrete and Computational Geometry edited
+                // by Jacob E. Goodman and Joseph O’Rourke. Second edition.
                 // 22.3 COMPUTING COMBINATORIAL DESCRIPTIONS.
-                // Точно не определить, так как зависит от триангуляции.
-                // Опыты с выпуклой оболочкой со случайным распределением точек на четырёхмерной
-                // сфере дают отношение количества граней к количеству точек около 6.7.
+                // Some experiments (the convex hull of random points on a sphere)
+                // show that it is about 6.7
                 unsigned min = std::lround(6.55 * point_count);
                 unsigned max = std::lround(6.85 * point_count);
                 return {min, max};
@@ -191,7 +188,7 @@ void test_algorithms(
 
         if (!bounded_object)
         {
-                // Задать размер для проверки очистки массивов
+                // set initial size to check resizing in functions
                 std::vector<Vector<N, double>> normals(10000);
                 std::vector<std::array<int, N>> facets(10000);
 
@@ -216,12 +213,10 @@ void test_algorithms(
         }
 
         {
-                // Задать размер для проверки очистки массивов
+                // set initial size to check resizing in functions
                 std::vector<Vector<N, double>> normals(10000);
                 std::vector<std::array<int, N>> facets(10000);
 
-                // BoundCocone может давать разные результаты в зависимости от точек и параметров,
-                // поэтому надо проверять попадание в интервал, а не равенство
                 unsigned expected_facets_min = std::lround(0.9 * FACETS_MIN * object_count);
                 unsigned expected_facets_max = std::lround(1.1 * FACETS_MAX * object_count);
                 std::string facet_count_str = min_max_to_string(expected_facets_min, expected_facets_max);
@@ -252,7 +247,6 @@ void all_tests(bool bounded_object, std::vector<Vector<N, float>>&& points, Prog
 
         LOG("");
 
-        // Размещение вокруг объекта других таких же объектов по каждой координате в обе стороны
         constexpr unsigned CLONE_COUNT = 1 << N;
         constexpr unsigned OBJECT_COUNT = (1 + CLONE_COUNT);
         LOG("------- " + space_name(N) + ", " + to_string(OBJECT_COUNT) + " objects -------");

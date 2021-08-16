@@ -29,30 +29,26 @@ namespace ns::geometry
 namespace extract_manifold_implementation
 {
 template <std::size_t N>
-void find_delaunay_object_facets(
+std::vector<std::vector<int>> find_delaunay_object_facets(
         const std::vector<DelaunayObject<N>>& delaunay_objects,
-        const std::vector<DelaunayFacet<N>>& delaunay_facets,
-        std::vector<std::vector<int>>* delaunay_object_facets)
+        const std::vector<DelaunayFacet<N>>& delaunay_facets)
 {
-        delaunay_object_facets->clear();
-        delaunay_object_facets->resize(delaunay_objects.size());
-
-        for (unsigned i = 0; i < delaunay_facets.size(); ++i)
+        std::vector<std::vector<int>> facets;
+        facets.resize(delaunay_objects.size());
+        for (std::size_t i = 0; i < delaunay_facets.size(); ++i)
         {
-                (*delaunay_object_facets)[delaunay_facets[i].delaunay(0)].push_back(i);
+                facets[delaunay_facets[i].delaunay(0)].push_back(i);
                 if (delaunay_facets[i].one_sided())
                 {
                         continue;
                 }
-                (*delaunay_object_facets)[delaunay_facets[i].delaunay(1)].push_back(i);
+                facets[delaunay_facets[i].delaunay(1)].push_back(i);
         }
+        return facets;
 }
 
-// Выборка только внешних граней cocone.
-// Проход по граням Делоне через объекты Делоне, начиная от самых внешних граней.
-// При встречи грани cocone она помечается как нужная, и за неё идти не надо.
 template <std::size_t N>
-void traverse_delaunay(
+void traverse_delaunay_external_facets(
         const std::vector<DelaunayFacet<N>>& delaunay_facets,
         const std::vector<std::vector<int>>& delaunay_object_facets,
         const std::vector<bool>& cocone_facets,
@@ -61,9 +57,8 @@ void traverse_delaunay(
 {
         std::stack<int> next;
 
-        for (unsigned i = 0; i < delaunay_facets.size(); ++i)
+        for (std::size_t i = 0; i < delaunay_facets.size(); ++i)
         {
-                // Надо начинать обход с внешних граней
                 if (!delaunay_facets[i].one_sided())
                 {
                         continue;
@@ -127,14 +122,12 @@ void extract_manifold(
 {
         namespace impl = extract_manifold_implementation;
 
-        std::vector<std::vector<int>> delaunay_object_facets;
         std::vector<bool> visited_delaunay(delaunay_objects.size(), false);
         std::vector<bool> visited_cocone_facets(cocone_facets->size(), false);
 
-        impl::find_delaunay_object_facets(delaunay_objects, delaunay_facets, &delaunay_object_facets);
-
-        impl::traverse_delaunay(
-                delaunay_facets, delaunay_object_facets, *cocone_facets, &visited_delaunay, &visited_cocone_facets);
+        impl::traverse_delaunay_external_facets(
+                delaunay_facets, impl::find_delaunay_object_facets(delaunay_objects, delaunay_facets), *cocone_facets,
+                &visited_delaunay, &visited_cocone_facets);
 
         *cocone_facets = std::move(visited_cocone_facets);
 }
