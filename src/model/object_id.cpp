@@ -31,6 +31,6 @@ AtomicType g_current_id = 0;
 
 ObjectId::ObjectId()
 {
-        m_id = 1 + g_current_id.fetch_add(1, std::memory_order_relaxed);
+        id_ = 1 + g_current_id.fetch_add(1, std::memory_order_relaxed);
 }
 }

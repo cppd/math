@@ -43,7 +43,7 @@ std::vector<VkDescriptorSetLayoutBinding> FftSharedMemory::descriptor_set_layout
 }
 
 FftSharedMemory::FftSharedMemory(const vulkan::Device& device, VkDescriptorSetLayout descriptor_set_layout)
-        : m_descriptors(device, 1, descriptor_set_layout, descriptor_set_layout_bindings())
+        : descriptors_(device, 1, descriptor_set_layout, descriptor_set_layout_bindings())
 {
 }
 
@@ -54,7 +54,7 @@ unsigned FftSharedMemory::set_number()
 
 const VkDescriptorSet& FftSharedMemory::descriptor_set() const
 {
-        return m_descriptors.descriptor_set(0);
+        return descriptors_.descriptor_set(0);
 }
 
 void FftSharedMemory::set_buffer(const vulkan::BufferWithMemory& buffer) const
@@ -66,7 +66,7 @@ void FftSharedMemory::set_buffer(const vulkan::BufferWithMemory& buffer) const
         buffer_info.offset = 0;
         buffer_info.range = buffer.size();
 
-        m_descriptors.update_descriptor_set(0, BUFFER_BINDING, buffer_info);
+        descriptors_.update_descriptor_set(0, BUFFER_BINDING, buffer_info);
 }
 
 //
@@ -78,56 +78,56 @@ FftSharedConstant::FftSharedConstant()
                 entry.constantID = 0;
                 entry.offset = offsetof(Data, inverse);
                 entry.size = sizeof(Data::inverse);
-                m_entries.push_back(entry);
+                entries_.push_back(entry);
         }
         {
                 VkSpecializationMapEntry entry = {};
                 entry.constantID = 1;
                 entry.offset = offsetof(Data, data_size);
                 entry.size = sizeof(Data::data_size);
-                m_entries.push_back(entry);
+                entries_.push_back(entry);
         }
         {
                 VkSpecializationMapEntry entry = {};
                 entry.constantID = 2;
                 entry.offset = offsetof(Data, n);
                 entry.size = sizeof(Data::n);
-                m_entries.push_back(entry);
+                entries_.push_back(entry);
         }
         {
                 VkSpecializationMapEntry entry = {};
                 entry.constantID = 3;
                 entry.offset = offsetof(Data, n_mask);
                 entry.size = sizeof(Data::n_mask);
-                m_entries.push_back(entry);
+                entries_.push_back(entry);
         }
         {
                 VkSpecializationMapEntry entry = {};
                 entry.constantID = 4;
                 entry.offset = offsetof(Data, n_bits);
                 entry.size = sizeof(Data::n_bits);
-                m_entries.push_back(entry);
+                entries_.push_back(entry);
         }
         {
                 VkSpecializationMapEntry entry = {};
                 entry.constantID = 5;
                 entry.offset = offsetof(Data, shared_size);
                 entry.size = sizeof(Data::shared_size);
-                m_entries.push_back(entry);
+                entries_.push_back(entry);
         }
         {
                 VkSpecializationMapEntry entry = {};
                 entry.constantID = 6;
                 entry.offset = offsetof(Data, reverse_input);
                 entry.size = sizeof(Data::reverse_input);
-                m_entries.push_back(entry);
+                entries_.push_back(entry);
         }
         {
                 VkSpecializationMapEntry entry = {};
                 entry.constantID = 7;
                 entry.offset = offsetof(Data, group_size);
                 entry.size = sizeof(Data::group_size);
-                m_entries.push_back(entry);
+                entries_.push_back(entry);
         }
 }
 
@@ -141,71 +141,71 @@ void FftSharedConstant::set(
         bool reverse_input,
         uint32_t group_size)
 {
-        static_assert(std::is_same_v<decltype(m_data.inverse), uint32_t>);
-        m_data.inverse = inverse ? 1 : 0;
-        static_assert(std::is_same_v<decltype(m_data.data_size), decltype(data_size)>);
-        m_data.data_size = data_size;
-        static_assert(std::is_same_v<decltype(m_data.n), decltype(n)>);
-        m_data.n = n;
-        static_assert(std::is_same_v<decltype(m_data.n_mask), decltype(n_mask)>);
-        m_data.n_mask = n_mask;
-        static_assert(std::is_same_v<decltype(m_data.n_bits), decltype(n_bits)>);
-        m_data.n_bits = n_bits;
-        static_assert(std::is_same_v<decltype(m_data.shared_size), decltype(shared_size)>);
-        m_data.shared_size = shared_size;
-        static_assert(std::is_same_v<decltype(m_data.reverse_input), uint32_t>);
-        m_data.reverse_input = reverse_input ? 1 : 0;
-        static_assert(std::is_same_v<decltype(m_data.group_size), decltype(group_size)>);
-        m_data.group_size = group_size;
+        static_assert(std::is_same_v<decltype(data_.inverse), uint32_t>);
+        data_.inverse = inverse ? 1 : 0;
+        static_assert(std::is_same_v<decltype(data_.data_size), decltype(data_size)>);
+        data_.data_size = data_size;
+        static_assert(std::is_same_v<decltype(data_.n), decltype(n)>);
+        data_.n = n;
+        static_assert(std::is_same_v<decltype(data_.n_mask), decltype(n_mask)>);
+        data_.n_mask = n_mask;
+        static_assert(std::is_same_v<decltype(data_.n_bits), decltype(n_bits)>);
+        data_.n_bits = n_bits;
+        static_assert(std::is_same_v<decltype(data_.shared_size), decltype(shared_size)>);
+        data_.shared_size = shared_size;
+        static_assert(std::is_same_v<decltype(data_.reverse_input), uint32_t>);
+        data_.reverse_input = reverse_input ? 1 : 0;
+        static_assert(std::is_same_v<decltype(data_.group_size), decltype(group_size)>);
+        data_.group_size = group_size;
 }
 
 const std::vector<VkSpecializationMapEntry>& FftSharedConstant::entries() const
 {
-        return m_entries;
+        return entries_;
 }
 
 const void* FftSharedConstant::data() const
 {
-        return &m_data;
+        return &data_;
 }
 
 std::size_t FftSharedConstant::size() const
 {
-        return sizeof(m_data);
+        return sizeof(data_);
 }
 
 //
 
 FftSharedProgram::FftSharedProgram(const vulkan::Device& device)
-        : m_device(device),
-          m_descriptor_set_layout(
+        : device_(device),
+          descriptor_set_layout_(
                   vulkan::create_descriptor_set_layout(device, FftSharedMemory::descriptor_set_layout_bindings())),
-          m_pipeline_layout(
-                  vulkan::create_pipeline_layout(device, {FftSharedMemory::set_number()}, {m_descriptor_set_layout})),
-          m_shader(device, code_fft_shared_comp(), "main")
+          pipeline_layout_(
+                  vulkan::create_pipeline_layout(device, {FftSharedMemory::set_number()}, {descriptor_set_layout_})),
+          shader_(device, code_fft_shared_comp(), "main")
 {
 }
 
 VkDescriptorSetLayout FftSharedProgram::descriptor_set_layout() const
 {
-        return m_descriptor_set_layout;
+        return descriptor_set_layout_;
 }
 
 VkPipelineLayout FftSharedProgram::pipeline_layout() const
 {
-        return m_pipeline_layout;
+        return pipeline_layout_;
 }
 
 VkPipeline FftSharedProgram::pipeline(bool inverse) const
 {
         if (inverse)
         {
-                ASSERT(m_pipeline_inverse != VK_NULL_HANDLE);
-                return m_pipeline_inverse;
+                ASSERT(pipeline_inverse_ != VK_NULL_HANDLE);
+                return pipeline_inverse_;
         }
 
-        ASSERT(m_pipeline_forward != VK_NULL_HANDLE);
-        return m_pipeline_forward;
+        ASSERT(pipeline_forward_ != VK_NULL_HANDLE);
+        return pipeline_forward_;
 }
 
 void FftSharedProgram::create_pipelines(
@@ -218,30 +218,30 @@ void FftSharedProgram::create_pipelines(
         uint32_t group_size)
 {
         {
-                m_constant.set(false, data_size, n, n_mask, n_bits, shared_size, reverse_input, group_size);
+                constant_.set(false, data_size, n, n_mask, n_bits, shared_size, reverse_input, group_size);
 
                 vulkan::ComputePipelineCreateInfo info;
-                info.device = &m_device;
-                info.pipeline_layout = m_pipeline_layout;
-                info.shader = &m_shader;
-                info.constants = &m_constant;
-                m_pipeline_forward = create_compute_pipeline(info);
+                info.device = &device_;
+                info.pipeline_layout = pipeline_layout_;
+                info.shader = &shader_;
+                info.constants = &constant_;
+                pipeline_forward_ = create_compute_pipeline(info);
         }
         {
-                m_constant.set(true, data_size, n, n_mask, n_bits, shared_size, reverse_input, group_size);
+                constant_.set(true, data_size, n, n_mask, n_bits, shared_size, reverse_input, group_size);
 
                 vulkan::ComputePipelineCreateInfo info;
-                info.device = &m_device;
-                info.pipeline_layout = m_pipeline_layout;
-                info.shader = &m_shader;
-                info.constants = &m_constant;
-                m_pipeline_inverse = create_compute_pipeline(info);
+                info.device = &device_;
+                info.pipeline_layout = pipeline_layout_;
+                info.shader = &shader_;
+                info.constants = &constant_;
+                pipeline_inverse_ = create_compute_pipeline(info);
         }
 }
 
 void FftSharedProgram::delete_pipelines()
 {
-        m_pipeline_forward = vulkan::Pipeline();
-        m_pipeline_inverse = vulkan::Pipeline();
+        pipeline_forward_ = vulkan::Pipeline();
+        pipeline_inverse_ = vulkan::Pipeline();
 }
 }

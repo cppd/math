@@ -55,7 +55,7 @@ BoundCoconeParametersDialog::BoundCoconeParametersDialog(
         int minimum_alpha_exponent,
         const BoundCoconeParameters& input,
         std::optional<BoundCoconeParameters>& parameters)
-        : QDialog(parent_for_dialog()), m_parameters(parameters)
+        : QDialog(parent_for_dialog()), parameters_(parameters)
 {
         ui.setupUi(this);
         setWindowTitle("BoundCocone Parameters");
@@ -71,23 +71,23 @@ BoundCoconeParametersDialog::BoundCoconeParametersDialog(
                       + to_string(minimum_alpha_exponent) + " must be in the range [-10, 0]");
         }
 
-        m_min_rho = std::pow(10, minimum_rho_exponent);
-        m_max_rho = 1 - m_min_rho;
-        m_min_alpha = std::pow(10, minimum_alpha_exponent);
-        m_max_alpha = 1 - m_min_alpha;
+        min_rho_ = std::pow(10, minimum_rho_exponent);
+        max_rho_ = 1 - min_rho_;
+        min_alpha_ = std::pow(10, minimum_alpha_exponent);
+        max_alpha_ = 1 - min_alpha_;
 
-        double rho = is_finite(input.rho) ? std::clamp(input.rho, m_min_rho, m_max_rho) : m_min_rho;
+        double rho = is_finite(input.rho) ? std::clamp(input.rho, min_rho_, max_rho_) : min_rho_;
         ui.doubleSpinBox_rho->setDecimals(std::abs(minimum_rho_exponent));
-        ui.doubleSpinBox_rho->setMinimum(m_min_rho);
-        ui.doubleSpinBox_rho->setMaximum(m_max_rho);
-        ui.doubleSpinBox_rho->setSingleStep(m_min_rho);
+        ui.doubleSpinBox_rho->setMinimum(min_rho_);
+        ui.doubleSpinBox_rho->setMaximum(max_rho_);
+        ui.doubleSpinBox_rho->setSingleStep(min_rho_);
         ui.doubleSpinBox_rho->setValue(rho);
 
-        double alpha = is_finite(input.alpha) ? std::clamp(input.alpha, m_min_alpha, m_max_alpha) : m_min_alpha;
+        double alpha = is_finite(input.alpha) ? std::clamp(input.alpha, min_alpha_, max_alpha_) : min_alpha_;
         ui.doubleSpinBox_alpha->setDecimals(std::abs(minimum_alpha_exponent));
-        ui.doubleSpinBox_alpha->setMinimum(m_min_alpha);
-        ui.doubleSpinBox_alpha->setMaximum(m_max_alpha);
-        ui.doubleSpinBox_alpha->setSingleStep(m_min_alpha);
+        ui.doubleSpinBox_alpha->setMinimum(min_alpha_);
+        ui.doubleSpinBox_alpha->setMaximum(max_alpha_);
+        ui.doubleSpinBox_alpha->setSingleStep(min_alpha_);
         ui.doubleSpinBox_alpha->setValue(alpha);
 }
 
@@ -100,26 +100,26 @@ void BoundCoconeParametersDialog::done(int r)
         }
 
         double rho = ui.doubleSpinBox_rho->value();
-        if (!(m_min_rho <= rho && rho <= m_max_rho))
+        if (!(min_rho_ <= rho && rho <= max_rho_))
         {
-                std::string msg = reinterpret_cast<const char*>(u8"ρ must be in the range [") + to_string(m_min_rho)
-                                  + ", " + to_string(m_max_rho) + "]";
+                std::string msg = reinterpret_cast<const char*>(u8"ρ must be in the range [") + to_string(min_rho_)
+                                  + ", " + to_string(max_rho_) + "]";
                 dialog::message_critical(msg);
                 return;
         }
 
         double alpha = ui.doubleSpinBox_alpha->value();
-        if (!(m_min_alpha <= alpha && alpha <= m_max_alpha))
+        if (!(min_alpha_ <= alpha && alpha <= max_alpha_))
         {
-                std::string msg = reinterpret_cast<const char*>(u8"α must be in the range [") + to_string(m_min_alpha)
-                                  + ", " + to_string(m_max_alpha) + "]";
+                std::string msg = reinterpret_cast<const char*>(u8"α must be in the range [") + to_string(min_alpha_)
+                                  + ", " + to_string(max_alpha_) + "]";
                 dialog::message_critical(msg);
                 return;
         }
 
-        m_parameters.emplace();
-        m_parameters->rho = rho;
-        m_parameters->alpha = alpha;
+        parameters_.emplace();
+        parameters_->rho = rho;
+        parameters_->alpha = alpha;
 
         QDialog::done(r);
 }

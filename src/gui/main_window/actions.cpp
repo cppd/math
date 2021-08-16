@@ -236,13 +236,13 @@ Actions::Actions(
         ModelTree* model_tree,
         const LightingWidget* lighting,
         const ColorsWidget* colors)
-        : m_worker_threads(create_worker_threads(THREAD_ID_COUNT, SELF_TEST_THREAD_ID, status_bar))
+        : worker_threads_(create_worker_threads(THREAD_ID_COUNT, SELF_TEST_THREAD_ID, status_bar))
 {
-        WorkerThreads* threads = m_worker_threads.get();
+        WorkerThreads* threads = worker_threads_.get();
 
         {
                 QAction* action = menu_file->addAction("Load Mesh...");
-                m_connections.emplace_back(QObject::connect(
+                connections_.emplace_back(QObject::connect(
                         action, &QAction::triggered,
                         [=]()
                         {
@@ -251,7 +251,7 @@ Actions::Actions(
         }
         {
                 QAction* action = menu_file->addAction("Load Volume...");
-                m_connections.emplace_back(QObject::connect(
+                connections_.emplace_back(QObject::connect(
                         action, &QAction::triggered,
                         [=]()
                         {
@@ -260,7 +260,7 @@ Actions::Actions(
         }
         {
                 QAction* action = menu_file->addAction("Save...");
-                m_connections.emplace_back(QObject::connect(
+                connections_.emplace_back(QObject::connect(
                         action, &QAction::triggered,
                         [=]()
                         {
@@ -269,7 +269,7 @@ Actions::Actions(
         }
         {
                 QAction* action = menu_file->addAction("Save Image...");
-                m_connections.emplace_back(QObject::connect(
+                connections_.emplace_back(QObject::connect(
                         action, &QAction::triggered,
                         [=]()
                         {
@@ -278,7 +278,7 @@ Actions::Actions(
         }
         {
                 QAction* action = action_self_test;
-                m_connections.emplace_back(QObject::connect(
+                connections_.emplace_back(QObject::connect(
                         action, &QAction::triggered,
                         [=]()
                         {
@@ -287,7 +287,7 @@ Actions::Actions(
         }
         {
                 QAction* action = menu_rendering->addAction("Painter...");
-                m_connections.emplace_back(QObject::connect(
+                connections_.emplace_back(QObject::connect(
                         action, &QAction::triggered,
                         [=]()
                         {
@@ -296,7 +296,7 @@ Actions::Actions(
         }
         {
                 QAction* action = menu_edit->addAction("BoundCocone...");
-                m_connections.emplace_back(QObject::connect(
+                connections_.emplace_back(QObject::connect(
                         action, &QAction::triggered,
                         [=]()
                         {
@@ -305,7 +305,7 @@ Actions::Actions(
         }
         {
                 QAction* action = menu_edit->addAction("3D Slice...");
-                m_connections.emplace_back(QObject::connect(
+                connections_.emplace_back(QObject::connect(
                         action, &QAction::triggered,
                         [=]()
                         {
@@ -340,7 +340,7 @@ Actions::Actions(
                                 ASSERT(!object_name.empty());
 
                                 QAction* action = sub_menu->addAction(QString::fromStdString(object_name + "..."));
-                                m_connections.emplace_back(QObject::connect(
+                                connections_.emplace_back(QObject::connect(
                                         action, &QAction::triggered,
                                         [=]()
                                         {
@@ -364,7 +364,7 @@ Actions::Actions(
                                 ASSERT(!object_name.empty());
 
                                 QAction* action = sub_menu->addAction(QString::fromStdString(object_name + "..."));
-                                m_connections.emplace_back(QObject::connect(
+                                connections_.emplace_back(QObject::connect(
                                         action, &QAction::triggered,
                                         [=]()
                                         {
@@ -388,7 +388,7 @@ Actions::Actions(
                                 ASSERT(!object_name.empty());
 
                                 QAction* action = sub_menu->addAction(QString::fromStdString(object_name + "..."));
-                                m_connections.emplace_back(QObject::connect(
+                                connections_.emplace_back(QObject::connect(
                                         action, &QAction::triggered,
                                         [=]()
                                         {
@@ -400,21 +400,21 @@ Actions::Actions(
                 }
         }
 
-        self_test(m_worker_threads.get(), process::TestType::Small, "Self-Test");
+        self_test(worker_threads_.get(), process::TestType::Small, "Self-Test");
 
         if (!options.file_name.empty())
         {
-                load_mesh(m_worker_threads.get(), options.file_name, !options.no_object_selection_dialog, "Load Mesh");
+                load_mesh(worker_threads_.get(), options.file_name, !options.no_object_selection_dialog, "Load Mesh");
         }
 }
 
 Actions::~Actions()
 {
-        m_worker_threads->terminate_all();
+        worker_threads_->terminate_all();
 }
 
 void Actions::set_progresses()
 {
-        m_worker_threads->set_progresses();
+        worker_threads_->set_progresses();
 }
 }

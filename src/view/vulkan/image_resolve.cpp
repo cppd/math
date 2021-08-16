@@ -30,24 +30,24 @@ ImageResolve::ImageResolve(
         const Region<2, int>& rectangle,
         const VkImageLayout image_layout,
         const VkImageUsageFlags usage)
-        : m_family_index(command_pool.family_index())
+        : family_index_(command_pool.family_index())
 {
         const std::size_t count = render_buffers.image_views().size();
 
-        m_images.reserve(count);
-        m_signal_semaphores.reserve(count);
+        images_.reserve(count);
+        signal_semaphores_.reserve(count);
 
-        m_command_buffers = vulkan::CommandBuffers(device, command_pool, count);
+        command_buffers_ = vulkan::CommandBuffers(device, command_pool, count);
 
         for (unsigned i = 0; i < count; ++i)
         {
-                m_images.emplace_back(
+                images_.emplace_back(
                         device, std::vector<uint32_t>({command_pool.family_index()}),
                         std::vector<VkFormat>({render_buffers.color_format()}), VK_SAMPLE_COUNT_1_BIT, VK_IMAGE_TYPE_2D,
                         vulkan::make_extent(render_buffers.width(), render_buffers.height()),
                         usage | VK_IMAGE_USAGE_TRANSFER_DST_BIT, image_layout, command_pool, queue);
 
-                m_signal_semaphores.emplace_back(device);
+                signal_semaphores_.emplace_back(device);
 
                 VkCommandBufferBeginInfo command_buffer_info = {};
                 command_buffer_info.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
@@ -55,16 +55,16 @@ ImageResolve::ImageResolve(
 
                 VkResult result;
 
-                result = vkBeginCommandBuffer(m_command_buffers[i], &command_buffer_info);
+                result = vkBeginCommandBuffer(command_buffers_[i], &command_buffer_info);
                 if (result != VK_SUCCESS)
                 {
                         vulkan::vulkan_function_error("vkBeginCommandBuffer", result);
                 }
 
                 render_buffers.commands_color_resolve(
-                        m_command_buffers[i], m_images[i].image(), image_layout, rectangle, i);
+                        command_buffers_[i], images_[i].image(), image_layout, rectangle, i);
 
-                result = vkEndCommandBuffer(m_command_buffers[i]);
+                result = vkEndCommandBuffer(command_buffers_[i]);
                 if (result != VK_SUCCESS)
                 {
                         vulkan::vulkan_function_error("vkEndCommandBuffer", result);
@@ -74,8 +74,8 @@ ImageResolve::ImageResolve(
 
 const vulkan::ImageWithMemory& ImageResolve::image(const unsigned image_index) const
 {
-        ASSERT(image_index < m_images.size());
-        return m_images[image_index];
+        ASSERT(image_index < images_.size());
+        return images_[image_index];
 }
 
 VkSemaphore ImageResolve::resolve_semaphore(
@@ -83,24 +83,24 @@ VkSemaphore ImageResolve::resolve_semaphore(
         VkSemaphore wait_semaphore,
         const unsigned image_index) const
 {
-        ASSERT(graphics_queue.family_index() == m_family_index);
-        ASSERT(image_index < m_command_buffers.count());
-        ASSERT(image_index < m_signal_semaphores.size());
+        ASSERT(graphics_queue.family_index() == family_index_);
+        ASSERT(image_index < command_buffers_.count());
+        ASSERT(image_index < signal_semaphores_.size());
 
         vulkan::queue_submit(
-                wait_semaphore, VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT, m_command_buffers[image_index],
-                m_signal_semaphores[image_index], graphics_queue);
+                wait_semaphore, VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT, command_buffers_[image_index],
+                signal_semaphores_[image_index], graphics_queue);
 
-        return m_signal_semaphores[image_index];
+        return signal_semaphores_[image_index];
 }
 
 void ImageResolve::resolve(const vulkan::Queue& graphics_queue, VkSemaphore wait_semaphore, const unsigned image_index)
         const
 {
-        ASSERT(graphics_queue.family_index() == m_family_index);
-        ASSERT(image_index < m_command_buffers.count());
+        ASSERT(graphics_queue.family_index() == family_index_);
+        ASSERT(image_index < command_buffers_.count());
 
         vulkan::queue_submit(
-                wait_semaphore, VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT, m_command_buffers[image_index], graphics_queue);
+                wait_semaphore, VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT, command_buffers_[image_index], graphics_queue);
 }
 }

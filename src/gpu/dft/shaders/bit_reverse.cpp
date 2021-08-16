@@ -43,7 +43,7 @@ std::vector<VkDescriptorSetLayoutBinding> BitReverseMemory::descriptor_set_layou
 }
 
 BitReverseMemory::BitReverseMemory(const vulkan::Device& device, VkDescriptorSetLayout descriptor_set_layout)
-        : m_descriptors(device, 1, descriptor_set_layout, descriptor_set_layout_bindings())
+        : descriptors_(device, 1, descriptor_set_layout, descriptor_set_layout_bindings())
 {
 }
 
@@ -54,7 +54,7 @@ unsigned BitReverseMemory::set_number()
 
 const VkDescriptorSet& BitReverseMemory::descriptor_set() const
 {
-        return m_descriptors.descriptor_set(0);
+        return descriptors_.descriptor_set(0);
 }
 
 void BitReverseMemory::set_buffer(const vulkan::BufferWithMemory& buffer) const
@@ -66,7 +66,7 @@ void BitReverseMemory::set_buffer(const vulkan::BufferWithMemory& buffer) const
         buffer_info.offset = 0;
         buffer_info.range = buffer.size();
 
-        m_descriptors.update_descriptor_set(0, BUFFER_BINDING, buffer_info);
+        descriptors_.update_descriptor_set(0, BUFFER_BINDING, buffer_info);
 }
 
 //
@@ -78,100 +78,100 @@ BitReverseConstant::BitReverseConstant()
                 entry.constantID = 0;
                 entry.offset = offsetof(Data, group_size);
                 entry.size = sizeof(Data::group_size);
-                m_entries.push_back(entry);
+                entries_.push_back(entry);
         }
         {
                 VkSpecializationMapEntry entry = {};
                 entry.constantID = 1;
                 entry.offset = offsetof(Data, data_size);
                 entry.size = sizeof(Data::data_size);
-                m_entries.push_back(entry);
+                entries_.push_back(entry);
         }
         {
                 VkSpecializationMapEntry entry = {};
                 entry.constantID = 2;
                 entry.offset = offsetof(Data, n_mask);
                 entry.size = sizeof(Data::n_mask);
-                m_entries.push_back(entry);
+                entries_.push_back(entry);
         }
         {
                 VkSpecializationMapEntry entry = {};
                 entry.constantID = 3;
                 entry.offset = offsetof(Data, n_bits);
                 entry.size = sizeof(Data::n_bits);
-                m_entries.push_back(entry);
+                entries_.push_back(entry);
         }
 }
 
 void BitReverseConstant::set(uint32_t group_size, uint32_t data_size, uint32_t n_mask, uint32_t n_bits)
 {
-        static_assert(std::is_same_v<decltype(m_data.group_size), decltype(group_size)>);
-        m_data.group_size = group_size;
-        static_assert(std::is_same_v<decltype(m_data.data_size), decltype(data_size)>);
-        m_data.data_size = data_size;
-        static_assert(std::is_same_v<decltype(m_data.n_mask), decltype(n_mask)>);
-        m_data.n_mask = n_mask;
-        static_assert(std::is_same_v<decltype(m_data.n_bits), decltype(n_bits)>);
-        m_data.n_bits = n_bits;
+        static_assert(std::is_same_v<decltype(data_.group_size), decltype(group_size)>);
+        data_.group_size = group_size;
+        static_assert(std::is_same_v<decltype(data_.data_size), decltype(data_size)>);
+        data_.data_size = data_size;
+        static_assert(std::is_same_v<decltype(data_.n_mask), decltype(n_mask)>);
+        data_.n_mask = n_mask;
+        static_assert(std::is_same_v<decltype(data_.n_bits), decltype(n_bits)>);
+        data_.n_bits = n_bits;
 }
 
 const std::vector<VkSpecializationMapEntry>& BitReverseConstant::entries() const
 {
-        return m_entries;
+        return entries_;
 }
 
 const void* BitReverseConstant::data() const
 {
-        return &m_data;
+        return &data_;
 }
 
 std::size_t BitReverseConstant::size() const
 {
-        return sizeof(m_data);
+        return sizeof(data_);
 }
 
 //
 
 BitReverseProgram::BitReverseProgram(const vulkan::Device& device)
-        : m_device(device),
-          m_descriptor_set_layout(
+        : device_(device),
+          descriptor_set_layout_(
                   vulkan::create_descriptor_set_layout(device, BitReverseMemory::descriptor_set_layout_bindings())),
-          m_pipeline_layout(
-                  vulkan::create_pipeline_layout(device, {BitReverseMemory::set_number()}, {m_descriptor_set_layout})),
-          m_shader(device, code_bit_reverse_comp(), "main")
+          pipeline_layout_(
+                  vulkan::create_pipeline_layout(device, {BitReverseMemory::set_number()}, {descriptor_set_layout_})),
+          shader_(device, code_bit_reverse_comp(), "main")
 {
 }
 
 VkDescriptorSetLayout BitReverseProgram::descriptor_set_layout() const
 {
-        return m_descriptor_set_layout;
+        return descriptor_set_layout_;
 }
 
 VkPipelineLayout BitReverseProgram::pipeline_layout() const
 {
-        return m_pipeline_layout;
+        return pipeline_layout_;
 }
 
 VkPipeline BitReverseProgram::pipeline() const
 {
-        ASSERT(m_pipeline != VK_NULL_HANDLE);
-        return m_pipeline;
+        ASSERT(pipeline_ != VK_NULL_HANDLE);
+        return pipeline_;
 }
 
 void BitReverseProgram::create_pipeline(uint32_t group_size, uint32_t data_size, uint32_t n_mask, uint32_t n_bits)
 {
-        m_constant.set(group_size, data_size, n_mask, n_bits);
+        constant_.set(group_size, data_size, n_mask, n_bits);
 
         vulkan::ComputePipelineCreateInfo info;
-        info.device = &m_device;
-        info.pipeline_layout = m_pipeline_layout;
-        info.shader = &m_shader;
-        info.constants = &m_constant;
-        m_pipeline = create_compute_pipeline(info);
+        info.device = &device_;
+        info.pipeline_layout = pipeline_layout_;
+        info.shader = &shader_;
+        info.constants = &constant_;
+        pipeline_ = create_compute_pipeline(info);
 }
 
 void BitReverseProgram::delete_pipeline()
 {
-        m_pipeline = vulkan::Pipeline();
+        pipeline_ = vulkan::Pipeline();
 }
 }

@@ -102,19 +102,19 @@ constexpr Matrix<sizeof...(V) + 1, sizeof...(V) + 1, T> translate(const V&... v)
 template <std::size_t N, typename T>
 class MatrixVectorMultiplier
 {
-        Matrix<N, N, T> m_matrix;
+        Matrix<N, N, T> matrix_;
 
 public:
-        explicit MatrixVectorMultiplier(const Matrix<N, N, T>& m) : m_matrix(m)
+        explicit MatrixVectorMultiplier(const Matrix<N, N, T>& m) : matrix_(m)
         {
                 for (std::size_t i = 0; i < N - 1; ++i)
                 {
-                        if (m_matrix(N - 1, i) != 0)
+                        if (matrix_(N - 1, i) != 0)
                         {
                                 error("Wrong matrix for matrix-vector multiplier");
                         }
                 }
-                if (m_matrix(N - 1, N - 1) != 1)
+                if (matrix_(N - 1, N - 1) != 1)
                 {
                         error("Wrong matrix for matrix-vector multiplier");
                 }
@@ -125,12 +125,12 @@ public:
                 Vector<N - 1, T> res;
                 for (std::size_t r = 0; r < N - 1; ++r)
                 {
-                        res[r] = m_matrix(r, 0) * v[0];
+                        res[r] = matrix_(r, 0) * v[0];
                         for (std::size_t c = 1; c < N - 1; ++c)
                         {
-                                res[r] += m_matrix(r, c) * v[c];
+                                res[r] += matrix_(r, c) * v[c];
                         }
-                        res[r] += m_matrix(r, N - 1);
+                        res[r] += matrix_(r, N - 1);
                 }
                 return res;
         }

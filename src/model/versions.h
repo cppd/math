@@ -38,53 +38,53 @@ class Versions
                 {
                 }
         };
-        std::deque<Version> m_versions{{Version(0, std::bitset<N>().set())}};
+        std::deque<Version> versions_{{Version(0, std::bitset<N>().set())}};
 
 public:
         void add(const std::bitset<N>& updates)
         {
-                while (m_versions.size() > MAX_VERSION_COUNT)
+                while (versions_.size() > MAX_VERSION_COUNT)
                 {
-                        m_versions.pop_front();
+                        versions_.pop_front();
                 }
-                m_versions.emplace_back(m_versions.back().version + 1, updates);
+                versions_.emplace_back(versions_.back().version + 1, updates);
         }
 
         void updates(std::optional<int>* version, std::bitset<N>* updates) const
         {
-                ASSERT(!m_versions.empty());
+                ASSERT(!versions_.empty());
 
                 if (!version->has_value())
                 {
-                        *version = m_versions.back().version;
+                        *version = versions_.back().version;
                         updates->set();
                         return;
                 }
 
                 updates->reset();
 
-                ASSERT(version->value() <= m_versions.back().version);
-                if (version->value() == m_versions.back().version)
+                ASSERT(version->value() <= versions_.back().version);
+                if (version->value() == versions_.back().version)
                 {
                         return;
                 }
 
                 int version_from = version->value() + 1;
-                auto iter = m_versions.cbegin();
-                while (iter != m_versions.cend() && iter->version < version_from)
+                auto iter = versions_.cbegin();
+                while (iter != versions_.cend() && iter->version < version_from)
                 {
                         ++iter;
                 }
-                if (iter == m_versions.cend())
+                if (iter == versions_.cend())
                 {
                         error("Version not found");
                 }
-                for (; iter != m_versions.cend(); ++iter)
+                for (; iter != versions_.cend(); ++iter)
                 {
                         *updates |= iter->updates;
                 }
 
-                *version = m_versions.back().version;
+                *version = versions_.back().version;
         }
 };
 }

@@ -39,34 +39,34 @@ std::vector<VkDescriptorSetLayoutBinding> NormalsProgram::descriptor_set_layout_
 }
 
 NormalsProgram::NormalsProgram(const vulkan::Device& device)
-        : m_device(device),
-          m_descriptor_set_layout_shared(
+        : device_(device),
+          descriptor_set_layout_shared_(
                   vulkan::create_descriptor_set_layout(device, descriptor_set_layout_shared_bindings())),
-          m_descriptor_set_layout_mesh(
+          descriptor_set_layout_mesh_(
                   vulkan::create_descriptor_set_layout(device, descriptor_set_layout_mesh_bindings())),
-          m_pipeline_layout(vulkan::create_pipeline_layout(
+          pipeline_layout_(vulkan::create_pipeline_layout(
                   device,
                   {CommonMemory::set_number(), MeshMemory::set_number()},
-                  {m_descriptor_set_layout_shared, m_descriptor_set_layout_mesh})),
-          m_vertex_shader(m_device, code_normals_vert(), "main"),
-          m_geometry_shader(m_device, code_normals_geom(), "main"),
-          m_fragment_shader(m_device, code_normals_frag(), "main")
+                  {descriptor_set_layout_shared_, descriptor_set_layout_mesh_})),
+          vertex_shader_(device_, code_normals_vert(), "main"),
+          geometry_shader_(device_, code_normals_geom(), "main"),
+          fragment_shader_(device_, code_normals_frag(), "main")
 {
 }
 
 VkDescriptorSetLayout NormalsProgram::descriptor_set_layout_shared() const
 {
-        return m_descriptor_set_layout_shared;
+        return descriptor_set_layout_shared_;
 }
 
 VkDescriptorSetLayout NormalsProgram::descriptor_set_layout_mesh() const
 {
-        return m_descriptor_set_layout_mesh;
+        return descriptor_set_layout_mesh_;
 }
 
 VkPipelineLayout NormalsProgram::pipeline_layout() const
 {
-        return m_pipeline_layout;
+        return pipeline_layout_;
 }
 
 vulkan::Pipeline NormalsProgram::create_pipeline(
@@ -78,12 +78,12 @@ vulkan::Pipeline NormalsProgram::create_pipeline(
 {
         vulkan::GraphicsPipelineCreateInfo info;
 
-        info.device = &m_device;
+        info.device = &device_;
         info.render_pass = render_pass;
         info.sub_pass = 0;
         info.sample_count = sample_count;
         info.sample_shading = sample_shading;
-        info.pipeline_layout = m_pipeline_layout;
+        info.pipeline_layout = pipeline_layout_;
         info.viewport = viewport;
         info.primitive_topology = VK_PRIMITIVE_TOPOLOGY_POINT_LIST;
 
@@ -91,7 +91,7 @@ vulkan::Pipeline NormalsProgram::create_pipeline(
         common_constants.set(transparency);
         info.depth_write = !transparency;
 
-        const std::vector<const vulkan::Shader*> shaders = {&m_vertex_shader, &m_geometry_shader, &m_fragment_shader};
+        const std::vector<const vulkan::Shader*> shaders = {&vertex_shader_, &geometry_shader_, &fragment_shader_};
         const std::vector<const vulkan::SpecializationConstant*> constants = {
                 &common_constants, &common_constants, &common_constants};
         const std::vector<VkVertexInputBindingDescription> binding_descriptions =

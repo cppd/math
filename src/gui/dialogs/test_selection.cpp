@@ -40,24 +40,24 @@ class TestSelectionParametersDialog::Items final
                 }
         };
 
-        std::vector<Item> m_items;
+        std::vector<Item> items_;
 
 public:
         explicit Items(std::size_t count)
         {
-                m_items.reserve(count);
+                items_.reserve(count);
         }
 
         void add(std::string&& name, QListWidgetItem* item)
         {
                 item->setCheckState(Qt::Checked);
-                m_items.emplace_back(std::move(name), item);
+                items_.emplace_back(std::move(name), item);
         }
 
         void check(bool checked)
         {
                 const Qt::CheckState check_state = checked ? Qt::Checked : Qt::Unchecked;
-                for (Item& item : m_items)
+                for (Item& item : items_)
                 {
                         if (!item.item->isHidden())
                         {
@@ -87,7 +87,7 @@ public:
                         }
                         return r;
                 }();
-                for (Item& item : m_items)
+                for (Item& item : items_)
                 {
                         bool contains = true;
                         for (const std::regex& r : regex)
@@ -116,7 +116,7 @@ public:
                         }
                         return r;
                 }();
-                for (Item& item : m_items)
+                for (Item& item : items_)
                 {
                         bool contains = true;
                         for (const std::string& s : substr)
@@ -134,7 +134,7 @@ public:
         std::vector<std::string> selected() const
         {
                 std::vector<std::string> names;
-                for (const Item& item : m_items)
+                for (const Item& item : items_)
                 {
                         if (!item.item->isHidden() && item.item->checkState() == Qt::Checked)
                         {
@@ -148,32 +148,32 @@ public:
 TestSelectionParametersDialog::TestSelectionParametersDialog(
         std::vector<std::string> test_names,
         std::optional<TestSelectionParameters>& parameters)
-        : QDialog(parent_for_dialog()), m_parameters(parameters)
+        : QDialog(parent_for_dialog()), parameters_(parameters)
 {
         ui.setupUi(this);
         setWindowTitle("Select Tests");
 
         std::sort(test_names.begin(), test_names.end());
 
-        m_items = std::make_unique<Items>(test_names.size());
+        items_ = std::make_unique<Items>(test_names.size());
 
         for (std::string& name : test_names)
         {
                 std::unique_ptr<QListWidgetItem> item = std::make_unique<QListWidgetItem>(QString::fromStdString(name));
-                m_items->add(std::move(name), item.get());
+                items_->add(std::move(name), item.get());
                 ui.listWidget->addItem(item.release());
         }
 
         connect(ui.pushButton_set_all, &QPushButton::clicked, this,
                 [this]()
                 {
-                        m_items->check(true);
+                        items_->check(true);
                 });
 
         connect(ui.pushButton_clear_all, &QPushButton::clicked, this,
                 [this]()
                 {
-                        m_items->check(false);
+                        items_->check(false);
                 });
 
         connect(ui.lineEdit_filter, &QLineEdit::textChanged, this,
@@ -197,7 +197,7 @@ void TestSelectionParametersDialog::filter(const QString& text)
         const char* style = nullptr;
         if (ui.checkBox_regex->isChecked())
         {
-                if (m_items->filter_regex(text))
+                if (items_->filter_regex(text))
                 {
                         style = "color: black;";
                 }
@@ -208,7 +208,7 @@ void TestSelectionParametersDialog::filter(const QString& text)
         }
         else
         {
-                m_items->filter_substr(text);
+                items_->filter_substr(text);
                 style = "color: black;";
         }
         ui.lineEdit_filter->setStyleSheet(style);
@@ -222,7 +222,7 @@ void TestSelectionParametersDialog::done(int r)
                 return;
         }
 
-        std::vector<std::string> test_names = m_items->selected();
+        std::vector<std::string> test_names = items_->selected();
 
         if (test_names.empty())
         {
@@ -230,8 +230,8 @@ void TestSelectionParametersDialog::done(int r)
                 return;
         }
 
-        m_parameters.emplace();
-        m_parameters->test_names = std::move(test_names);
+        parameters_.emplace();
+        parameters_->test_names = std::move(test_names);
 
         QDialog::done(r);
 }

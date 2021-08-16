@@ -51,18 +51,18 @@ class PointSearch
                 return true;
         }
 
-        std::vector<Vector<N, T>> m_points;
+        std::vector<Vector<N, T>> points_;
 
 public:
         explicit PointSearch(std::vector<Vector<N, T>> points)
         {
-                m_points = std::move(points);
+                points_ = std::move(points);
         }
 
         int count_points(const std::array<std::array<T, 2>, N>& box) const
         {
                 int point_count = 0;
-                for (const Vector<N, T>& p : m_points)
+                for (const Vector<N, T>& p : points_)
                 {
                         if (inside(p, box))
                         {

@@ -38,25 +38,25 @@ class UnionFind
 {
         static_assert(std::is_integral_v<T>);
 
-        std::vector<T> m_parent;
-        std::vector<T> m_component_size;
-        T m_component_count;
+        std::vector<T> parent_;
+        std::vector<T> component_size_;
+        T component_count_;
 
         T find_root(T p) const
         {
-                while (p != m_parent[p])
+                while (p != parent_[p])
                 {
-                        p = m_parent[p];
+                        p = parent_[p];
                 }
                 return p;
         }
 
         void compress_path(T p, T root)
         {
-                while (m_parent[p] != root)
+                while (parent_[p] != root)
                 {
-                        T next = m_parent[p];
-                        m_parent[p] = root;
+                        T next = parent_[p];
+                        parent_[p] = root;
                         p = next;
                 }
         }
@@ -70,10 +70,10 @@ class UnionFind
 
 public:
         explicit UnionFind(std::type_identity_t<T> count)
-                : m_parent(count), m_component_size(count), m_component_count(count)
+                : parent_(count), component_size_(count), component_count_(count)
         {
-                std::iota(m_parent.begin(), m_parent.end(), 0);
-                std::fill(m_component_size.begin(), m_component_size.end(), 1);
+                std::iota(parent_.begin(), parent_.end(), 0);
+                std::fill(component_size_.begin(), component_size_.end(), 1);
         }
 
         bool add_connection(T p, T q)
@@ -86,25 +86,25 @@ public:
                         return false;
                 }
 
-                if (m_component_size[i] < m_component_size[j])
+                if (component_size_[i] < component_size_[j])
                 {
-                        m_parent[i] = j;
-                        m_component_size[j] += m_component_size[i];
+                        parent_[i] = j;
+                        component_size_[j] += component_size_[i];
                 }
                 else
                 {
-                        m_parent[j] = i;
-                        m_component_size[i] += m_component_size[j];
+                        parent_[j] = i;
+                        component_size_[i] += component_size_[j];
                 }
 
-                --m_component_count;
+                --component_count_;
 
                 return true;
         }
 
         //T count() const
         //{
-        //        return m_component_count;
+        //        return component_count_;
         //}
 
         //bool connected(T p, T q) const

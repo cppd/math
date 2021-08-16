@@ -44,33 +44,33 @@ constexpr T MIN_ROUGHNESS = 0.2;
 template <std::size_t N, typename T, typename Color>
 class BRDF final : public TestBRDF<N, T, Color, RandomEngine<T>>
 {
-        Color m_color;
-        T m_metalness;
-        T m_roughness;
+        Color color_;
+        T metalness_;
+        T roughness_;
 
         Color f(const Vector<N, T>& n, const Vector<N, T>& v, const Vector<N, T>& l) const override
         {
-                return ggx_diffuse::f(m_metalness, m_roughness, m_color, n, v, l);
+                return ggx_diffuse::f(metalness_, roughness_, color_, n, v, l);
         }
 
         Sample<N, T, Color> sample_f(RandomEngine<T>& random_engine, const Vector<N, T>& n, const Vector<N, T>& v)
                 const override
         {
-                return ggx_diffuse::sample_f(random_engine, m_metalness, m_roughness, m_color, n, v);
+                return ggx_diffuse::sample_f(random_engine, metalness_, roughness_, color_, n, v);
         }
 
 public:
         BRDF(const Color& color, std::type_identity_t<T> min_roughness)
         {
-                m_color = color;
+                color_ = color;
                 RandomEngine<std::mt19937_64> random_engine = create_engine<std::mt19937_64>();
-                m_roughness = std::uniform_real_distribution<T>(min_roughness, 1)(random_engine);
-                m_metalness = std::uniform_real_distribution<T>(0, 1)(random_engine);
+                roughness_ = std::uniform_real_distribution<T>(min_roughness, 1)(random_engine);
+                metalness_ = std::uniform_real_distribution<T>(0, 1)(random_engine);
         }
 
         const Color& color() const
         {
-                return m_color;
+                return color_;
         }
 };
 

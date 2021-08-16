@@ -28,25 +28,25 @@ constexpr std::size_t ROOT_NODE = 0;
 
 StringTree::StringTree()
 {
-        m_nodes.emplace_back("");
+        nodes_.emplace_back("");
 }
 
 std::size_t StringTree::add(std::string s)
 {
-        m_nodes.emplace_back(std::move(s));
-        m_nodes[ROOT_NODE].children.push_back(m_nodes.size() - 1);
-        return m_nodes.size() - 1;
+        nodes_.emplace_back(std::move(s));
+        nodes_[ROOT_NODE].children.push_back(nodes_.size() - 1);
+        return nodes_.size() - 1;
 }
 
 std::size_t StringTree::add(std::size_t parent, std::string s)
 {
-        if (parent >= m_nodes.size())
+        if (parent >= nodes_.size())
         {
                 error("Node parent out of range");
         }
-        m_nodes.emplace_back(std::move(s));
-        m_nodes[parent].children.push_back(m_nodes.size() - 1);
-        return m_nodes.size() - 1;
+        nodes_.emplace_back(std::move(s));
+        nodes_[parent].children.push_back(nodes_.size() - 1);
+        return nodes_.size() - 1;
 }
 
 std::string StringTree::text(unsigned indent) const
@@ -68,10 +68,10 @@ std::string StringTree::text(unsigned indent) const
                                 s += '\n';
                         }
                         s += std::string((level - 1) * indent, ' ');
-                        s += m_nodes[index].name;
+                        s += nodes_[index].name;
                 }
 
-                for (auto iter = m_nodes[index].children.crbegin(); iter != m_nodes[index].children.crend(); ++iter)
+                for (auto iter = nodes_[index].children.crbegin(); iter != nodes_[index].children.crend(); ++iter)
                 {
                         stack.push({*iter, level + 1});
                 }

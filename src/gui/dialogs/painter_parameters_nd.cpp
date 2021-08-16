@@ -41,7 +41,7 @@ PainterParametersNdDialog::PainterParametersNdDialog(
         int default_color_index,
         std::optional<std::tuple<PainterParameters, PainterParametersNd>>& parameters)
         : QDialog(parent_for_dialog()),
-          m_parameters_widget(new PainterParametersWidget(
+          parameters_widget_(new PainterParametersWidget(
                   this,
                   max_thread_count,
                   default_samples_per_pixel,
@@ -50,7 +50,7 @@ PainterParametersNdDialog::PainterParametersNdDialog(
                   default_precision_index,
                   colors,
                   default_color_index)),
-          m_parameters(parameters)
+          parameters_(parameters)
 {
         if (!(dimension >= 4))
         {
@@ -82,8 +82,8 @@ PainterParametersNdDialog::PainterParametersNdDialog(
         connect(ui.spinBox_max_size, QOverload<int>::of(&QSpinBox::valueChanged), this,
                 &PainterParametersNdDialog::on_max_size_changed);
 
-        m_min_screen_size = min_screen_size;
-        m_max_screen_size = max_screen_size;
+        min_screen_size_ = min_screen_size;
+        max_screen_size_ = max_screen_size;
 
         ui.label_space->setText(QString::fromStdString(space_name(dimension)));
 
@@ -95,7 +95,7 @@ PainterParametersNdDialog::PainterParametersNdDialog(
         ui.spinBox_max_size->setMaximum(max_screen_size);
         ui.spinBox_max_size->setValue(default_screen_size);
 
-        ui.verticalLayout_parameters->addWidget(m_parameters_widget);
+        ui.verticalLayout_parameters->addWidget(parameters_widget_);
 }
 
 void PainterParametersNdDialog::on_min_size_changed(int)
@@ -126,25 +126,25 @@ void PainterParametersNdDialog::done(int r)
                 return;
         }
 
-        if (!m_parameters_widget->check())
+        if (!parameters_widget_->check())
         {
                 return;
         }
 
         int min_size = ui.spinBox_min_size->value();
-        if (!(min_size >= m_min_screen_size && min_size <= m_max_screen_size))
+        if (!(min_size >= min_screen_size_ && min_size <= max_screen_size_))
         {
-                std::string msg = "Minimum size must be in the range [" + to_string(m_min_screen_size) + ", "
-                                  + to_string(m_max_screen_size) + "].";
+                std::string msg = "Minimum size must be in the range [" + to_string(min_screen_size_) + ", "
+                                  + to_string(max_screen_size_) + "].";
                 dialog::message_critical(msg);
                 return;
         }
 
         int max_size = ui.spinBox_max_size->value();
-        if (!(max_size >= m_min_screen_size && max_size <= m_max_screen_size))
+        if (!(max_size >= min_screen_size_ && max_size <= max_screen_size_))
         {
-                std::string msg = "Maximum size must be in the range [" + to_string(m_min_screen_size) + ", "
-                                  + to_string(m_max_screen_size) + "].";
+                std::string msg = "Maximum size must be in the range [" + to_string(min_screen_size_) + ", "
+                                  + to_string(max_screen_size_) + "].";
                 dialog::message_critical(msg);
                 return;
         }
@@ -157,11 +157,11 @@ void PainterParametersNdDialog::done(int r)
                 return;
         }
 
-        m_parameters.emplace();
+        parameters_.emplace();
 
-        std::get<0>(*m_parameters) = m_parameters_widget->parameters();
-        std::get<1>(*m_parameters).min_size = min_size;
-        std::get<1>(*m_parameters).max_size = max_size;
+        std::get<0>(*parameters_) = parameters_widget_->parameters();
+        std::get<1>(*parameters_).min_size = min_size;
+        std::get<1>(*parameters_).max_size = max_size;
 
         QDialog::done(r);
 }

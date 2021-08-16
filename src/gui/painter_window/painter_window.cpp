@@ -33,7 +33,7 @@ constexpr std::chrono::milliseconds UPDATE_INTERVAL{200};
 constexpr std::chrono::milliseconds WINDOW_SHOW_DELAY{50};
 }
 
-PainterWindow::PainterWindow(const std::string& name, std::unique_ptr<Pixels>&& pixels) : m_pixels(std::move(pixels))
+PainterWindow::PainterWindow(const std::string& name, std::unique_ptr<Pixels>&& pixels) : pixels_(std::move(pixels))
 {
         ui.setupUi(this);
 
@@ -52,17 +52,17 @@ PainterWindow::PainterWindow(const std::string& name, std::unique_ptr<Pixels>&& 
 
 PainterWindow::~PainterWindow()
 {
-        ASSERT(std::this_thread::get_id() == m_thread_id);
+        ASSERT(std::this_thread::get_id() == thread_id_);
 
-        m_timer.stop();
+        timer_.stop();
 
-        m_actions.reset();
-        m_pixels.reset();
+        actions_.reset();
+        pixels_.reset();
 }
 
 void PainterWindow::closeEvent(QCloseEvent* event)
 {
-        ASSERT(std::this_thread::get_id() == m_thread_id);
+        ASSERT(std::this_thread::get_id() == thread_id_);
 
         QPointer ptr(this);
         std::optional<bool> yes = dialog::message_question_default_no("Do you want to close the painter window?");
@@ -76,7 +76,7 @@ void PainterWindow::closeEvent(QCloseEvent* event)
                 return;
         }
 
-        m_timer.stop();
+        timer_.stop();
 
         event->accept();
 }
@@ -96,75 +96,75 @@ void PainterWindow::create_interface()
         image_layout->setSpacing(0);
         main_layout->addWidget(image_widget);
 
-        m_brightness_parameter_slider = std::make_unique<QSlider>(Qt::Vertical);
-        m_brightness_parameter_slider->setTracking(false);
-        m_brightness_parameter_slider->setValue(0);
-        m_pixels->set_brightness_parameter(0);
-        connect(m_brightness_parameter_slider.get(), &QSlider::valueChanged, this,
+        brightness_parameter_slider_ = std::make_unique<QSlider>(Qt::Vertical);
+        brightness_parameter_slider_->setTracking(false);
+        brightness_parameter_slider_->setValue(0);
+        pixels_->set_brightness_parameter(0);
+        connect(brightness_parameter_slider_.get(), &QSlider::valueChanged, this,
                 [this](int)
                 {
-                        m_pixels->set_brightness_parameter(
-                                std::clamp(slider_position(m_brightness_parameter_slider.get()), 0.0, 1.0));
+                        pixels_->set_brightness_parameter(
+                                std::clamp(slider_position(brightness_parameter_slider_.get()), 0.0, 1.0));
                 });
-        image_layout->addWidget(m_brightness_parameter_slider.get());
+        image_layout->addWidget(brightness_parameter_slider_.get());
 
-        m_image_widget =
-                std::make_unique<ImageWidget>(m_pixels->screen_size()[0], m_pixels->screen_size()[1], ui.menu_view);
-        image_layout->addWidget(m_image_widget.get());
+        image_widget_ =
+                std::make_unique<ImageWidget>(pixels_->screen_size()[0], pixels_->screen_size()[1], ui.menu_view);
+        image_layout->addWidget(image_widget_.get());
 
-        m_statistics_widget = std::make_unique<StatisticsWidget>(UPDATE_INTERVAL);
-        main_layout->addWidget(m_statistics_widget.get());
+        statistics_widget_ = std::make_unique<StatisticsWidget>(UPDATE_INTERVAL);
+        main_layout->addWidget(statistics_widget_.get());
 
-        ui.status_bar->addPermanentWidget(new QLabel(m_pixels->color_name(), this));
-        ui.status_bar->addPermanentWidget(new QLabel(m_pixels->floating_point_name(), this));
+        ui.status_bar->addPermanentWidget(new QLabel(pixels_->color_name(), this));
+        ui.status_bar->addPermanentWidget(new QLabel(pixels_->floating_point_name(), this));
 
         connect(ui.menu_window->addAction("Adjust size"), &QAction::triggered, this,
                 &PainterWindow::adjust_window_size);
 
-        connect(&m_timer, &QTimer::timeout, this, &PainterWindow::update_image);
+        connect(&timer_, &QTimer::timeout, this, &PainterWindow::update_image);
 }
 
 void PainterWindow::create_sliders()
 {
-        const int count = static_cast<int>(m_pixels->screen_size().size()) - 2;
+        const int count = static_cast<int>(pixels_->screen_size().size()) - 2;
         if (count <= 0)
         {
-                m_slice = 0;
+                slice_ = 0;
                 return;
         }
 
-        m_sliders_widget = std::make_unique<SlidersWidget>(m_pixels->screen_size());
+        sliders_widget_ = std::make_unique<SlidersWidget>(pixels_->screen_size());
 
         ASSERT(qobject_cast<QVBoxLayout*>(ui.main_widget->layout()));
-        qobject_cast<QVBoxLayout*>(ui.main_widget->layout())->insertWidget(1, m_sliders_widget.get());
+        qobject_cast<QVBoxLayout*>(ui.main_widget->layout())->insertWidget(1, sliders_widget_.get());
 
-        connect(m_sliders_widget.get(), &SlidersWidget::changed, this,
+        connect(sliders_widget_.get(), &SlidersWidget::changed, this,
                 [this](const std::vector<int>& positions)
                 {
-                        ASSERT(!positions.empty() && positions.size() + 2 == m_pixels->screen_size().size());
+                        ASSERT(!positions.empty() && positions.size() + 2 == pixels_->screen_size().size());
                         // ((x[3]*size[2] + x[2])*size[1] + x[1])*size[0] + x[0]
                         long long slice = 0;
                         for (int i = static_cast<int>(positions.size()) - 1; i >= 0; --i)
                         {
                                 std::size_t dimension = i + 2;
-                                ASSERT(dimension < m_pixels->screen_size().size());
-                                ASSERT(positions[i] >= 0 && positions[i] < m_pixels->screen_size()[dimension]);
-                                slice = slice * m_pixels->screen_size()[dimension] + positions[i];
+                                ASSERT(dimension < pixels_->screen_size().size());
+                                ASSERT(positions[i] >= 0 && positions[i] < pixels_->screen_size()[dimension]);
+                                slice = slice * pixels_->screen_size()[dimension] + positions[i];
                         }
-                        m_slice = slice;
+                        slice_ = slice;
                 });
-        m_sliders_widget->set(std::vector<int>(count, 0));
+        sliders_widget_->set(std::vector<int>(count, 0));
 }
 
 void PainterWindow::create_actions()
 {
         QMenu* menu = ui.menu_actions;
 
-        m_actions = std::make_unique<Actions>(
-                m_pixels.get(), menu, ui.status_bar,
+        actions_ = std::make_unique<Actions>(
+                pixels_.get(), menu, ui.status_bar,
                 [this]
                 {
-                        return m_slice;
+                        return slice_;
                 });
 
         if (!menu->actions().empty())
@@ -176,39 +176,39 @@ void PainterWindow::create_actions()
 
 void PainterWindow::showEvent(QShowEvent* /*event*/)
 {
-        ASSERT(std::this_thread::get_id() == m_thread_id);
+        ASSERT(std::this_thread::get_id() == thread_id_);
 
-        if (!m_first_show)
+        if (!first_show_)
         {
                 return;
         }
-        m_first_show = false;
+        first_show_ = false;
 
         QTimer::singleShot(WINDOW_SHOW_DELAY, this, &PainterWindow::on_first_shown);
 }
 
 void PainterWindow::on_first_shown()
 {
-        ASSERT(std::this_thread::get_id() == m_thread_id);
+        ASSERT(std::this_thread::get_id() == thread_id_);
 
         adjust_window_size();
 
-        m_timer.start(UPDATE_INTERVAL);
+        timer_.start(UPDATE_INTERVAL);
 }
 
 void PainterWindow::adjust_window_size()
 {
-        ASSERT(std::this_thread::get_id() == m_thread_id);
+        ASSERT(std::this_thread::get_id() == thread_id_);
 
-        resize(QSize(2, 2) + geometry().size() + m_image_widget->size_difference());
+        resize(QSize(2, 2) + geometry().size() + image_widget_->size_difference());
 }
 
 void PainterWindow::update_image()
 {
-        ASSERT(std::this_thread::get_id() == m_thread_id);
+        ASSERT(std::this_thread::get_id() == thread_id_);
 
-        m_statistics_widget->update(m_pixels->statistics(), m_pixels->pixel_max());
-        m_image_widget->update(m_pixels->slice_r8g8b8a8(m_slice), m_pixels->busy_indices_2d());
-        m_actions->set_progresses();
+        statistics_widget_->update(pixels_->statistics(), pixels_->pixel_max());
+        image_widget_->update(pixels_->slice_r8g8b8a8(slice_), pixels_->busy_indices_2d());
+        actions_->set_progresses();
 }
 }

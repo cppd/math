@@ -64,7 +64,7 @@ namespace
 //
 //        static constexpr std::size_t MIDPOINT_COUNT = (N * (N - 1)) / 2;
 //
-//        std::vector<std::array<int, N>> m_facets;
+//        std::vector<std::array<int, N>> facets_;
 //
 //        template <std::size_t M>
 //        static bool on_plane(const std::array<int, M>& object_indices, const std::vector<Vector<N, float>>& vertices)
@@ -202,18 +202,18 @@ namespace
 //                {
 //                        if (!on_plane(facet.vertices(), vertices))
 //                        {
-//                                m_facets.push_back(facet.vertices());
+//                                facets_.push_back(facet.vertices());
 //                        }
 //                }
 //
 //                vertices.resize(vertices.size() - 1);
 //
-//                check(m_facets, vertices, vertex_names);
+//                check(facets_, vertices, vertex_names);
 //        }
 //
 //        std::size_t facet_count() const
 //        {
-//                return m_facets.size();
+//                return facets_.size();
 //        }
 //
 //        template <typename T>
@@ -234,7 +234,7 @@ namespace
 //                        }
 //                }
 //                ASSERT(index == points.size());
-//                for (const std::array<int, N>& indices : m_facets)
+//                for (const std::array<int, N>& indices : facets_)
 //                {
 //                        Facet<N, T>& f = facets->emplace_back();
 //                        for (unsigned i = 0; i < N; ++i)

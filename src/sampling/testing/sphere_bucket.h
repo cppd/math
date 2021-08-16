@@ -29,10 +29,10 @@ namespace ns::sampling::testing
 template <std::size_t N, typename T>
 class SphereBucket final
 {
-        long long m_sample_count;
-        long long m_uniform_count;
-        long long m_pdf_count;
-        double m_pdf_sum;
+        long long sample_count_;
+        long long uniform_count_;
+        long long pdf_count_;
+        double pdf_sum_;
 
 public:
         SphereBucket()
@@ -42,53 +42,53 @@ public:
 
         void clear()
         {
-                m_sample_count = 0;
-                m_uniform_count = 0;
-                m_pdf_count = 0;
-                m_pdf_sum = 0;
+                sample_count_ = 0;
+                uniform_count_ = 0;
+                pdf_count_ = 0;
+                pdf_sum_ = 0;
         }
 
         void add_sample()
         {
-                ++m_sample_count;
+                ++sample_count_;
         }
 
         long long sample_count() const
         {
-                return m_sample_count;
+                return sample_count_;
         }
 
         void add_uniform()
         {
-                ++m_uniform_count;
+                ++uniform_count_;
         }
 
         long long uniform_count() const
         {
-                return m_uniform_count;
+                return uniform_count_;
         }
 
         void add_pdf(double pdf)
         {
-                m_pdf_count += 1;
-                m_pdf_sum += pdf;
+                pdf_count_ += 1;
+                pdf_sum_ += pdf;
         }
 
         double pdf() const
         {
-                if (!(m_pdf_count > 0))
+                if (!(pdf_count_ > 0))
                 {
                         error("Bucket PDF not computed");
                 }
-                return m_pdf_sum / m_pdf_count;
+                return pdf_sum_ / pdf_count_;
         }
 
         void merge(const SphereBucket& bucket)
         {
-                m_sample_count += bucket.m_sample_count;
-                m_uniform_count += bucket.m_uniform_count;
-                m_pdf_count += bucket.m_pdf_count;
-                m_pdf_sum += bucket.m_pdf_sum;
+                sample_count_ += bucket.sample_count_;
+                uniform_count_ += bucket.uniform_count_;
+                pdf_count_ += bucket.pdf_count_;
+                pdf_sum_ += bucket.pdf_sum_;
         }
 };
 

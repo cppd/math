@@ -28,7 +28,7 @@ namespace ns
 class ProgressRatio final
 {
         class Impl;
-        std::unique_ptr<Impl> m_progress;
+        std::unique_ptr<Impl> progress_;
 
 public:
         explicit ProgressRatio(ProgressRatios* ratios, const std::string& permanent_text = "");

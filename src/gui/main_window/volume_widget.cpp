@@ -32,13 +32,13 @@ VolumeWidget::VolumeWidget() : QWidget(nullptr)
 {
         ui.setupUi(this);
 
-        m_widgets.reserve(this->findChildren<QWidget*>().size());
+        widgets_.reserve(this->findChildren<QWidget*>().size());
         for (QWidget* widget : this->findChildren<QWidget*>())
         {
-                m_widgets.emplace_back(widget);
+                widgets_.emplace_back(widget);
         }
 
-        m_slider_levels = std::make_unique<RangeSlider>(ui.slider_level_min, ui.slider_level_max);
+        slider_levels_ = std::make_unique<RangeSlider>(ui.slider_level_min, ui.slider_level_max);
 
         set_model_tree(nullptr);
 
@@ -51,17 +51,17 @@ VolumeWidget::VolumeWidget() : QWidget(nullptr)
         connect(ui.slider_roughness, &QSlider::valueChanged, this, &VolumeWidget::on_roughness_changed);
         connect(ui.slider_transparency, &QSlider::valueChanged, this, &VolumeWidget::on_transparency_changed);
         connect(ui.toolButton_color, &QToolButton::clicked, this, &VolumeWidget::on_color_clicked);
-        connect(m_slider_levels.get(), &RangeSlider::changed, this, &VolumeWidget::on_levels_changed);
+        connect(slider_levels_.get(), &RangeSlider::changed, this, &VolumeWidget::on_levels_changed);
 }
 
 void VolumeWidget::set_model_tree(ModelTree* model_tree)
 {
-        ASSERT(std::this_thread::get_id() == m_thread_id);
+        ASSERT(std::this_thread::get_id() == thread_id_);
 
-        m_model_tree = model_tree;
+        model_tree_ = model_tree;
         if (model_tree)
         {
-                connect(m_model_tree, &ModelTree::item_update, this, &VolumeWidget::on_model_tree_item_update);
+                connect(model_tree_, &ModelTree::item_update, this, &VolumeWidget::on_model_tree_item_update);
                 on_model_tree_item_update();
         }
         else
@@ -72,7 +72,7 @@ void VolumeWidget::set_model_tree(ModelTree* model_tree)
 
 void VolumeWidget::set_enabled(bool enabled) const
 {
-        for (const QPointer<QWidget>& widget : m_widgets)
+        for (const QPointer<QWidget>& widget : widgets_)
         {
                 ASSERT(widget);
                 widget->setEnabled(enabled);
@@ -81,9 +81,9 @@ void VolumeWidget::set_enabled(bool enabled) const
 
 void VolumeWidget::on_levels_changed(double min, double max)
 {
-        ASSERT(std::this_thread::get_id() == m_thread_id);
+        ASSERT(std::this_thread::get_id() == thread_id_);
 
-        std::optional<storage::VolumeObject> volume_object_opt = m_model_tree->current_volume();
+        std::optional<storage::VolumeObject> volume_object_opt = model_tree_->current_volume();
         if (!volume_object_opt)
         {
                 return;
@@ -100,9 +100,9 @@ void VolumeWidget::on_levels_changed(double min, double max)
 
 void VolumeWidget::on_transparency_changed(int)
 {
-        ASSERT(std::this_thread::get_id() == m_thread_id);
+        ASSERT(std::this_thread::get_id() == thread_id_);
 
-        std::optional<storage::VolumeObject> volume_object_opt = m_model_tree->current_volume();
+        std::optional<storage::VolumeObject> volume_object_opt = model_tree_->current_volume();
         if (!volume_object_opt)
         {
                 return;
@@ -122,9 +122,9 @@ void VolumeWidget::on_transparency_changed(int)
 
 void VolumeWidget::on_isosurface_transparency_changed(int)
 {
-        ASSERT(std::this_thread::get_id() == m_thread_id);
+        ASSERT(std::this_thread::get_id() == thread_id_);
 
-        std::optional<storage::VolumeObject> volume_object_opt = m_model_tree->current_volume();
+        std::optional<storage::VolumeObject> volume_object_opt = model_tree_->current_volume();
         if (!volume_object_opt)
         {
                 return;
@@ -143,12 +143,12 @@ void VolumeWidget::on_isosurface_transparency_changed(int)
 
 void VolumeWidget::on_isosurface_clicked()
 {
-        ASSERT(std::this_thread::get_id() == m_thread_id);
+        ASSERT(std::this_thread::get_id() == thread_id_);
 
         bool checked = ui.checkBox_isosurface->isChecked();
         ui.slider_isovalue->setEnabled(checked);
 
-        std::optional<storage::VolumeObject> volume_object_opt = m_model_tree->current_volume();
+        std::optional<storage::VolumeObject> volume_object_opt = model_tree_->current_volume();
         if (!volume_object_opt)
         {
                 return;
@@ -165,9 +165,9 @@ void VolumeWidget::on_isosurface_clicked()
 
 void VolumeWidget::on_isovalue_changed(int)
 {
-        ASSERT(std::this_thread::get_id() == m_thread_id);
+        ASSERT(std::this_thread::get_id() == thread_id_);
 
-        std::optional<storage::VolumeObject> volume_object_opt = m_model_tree->current_volume();
+        std::optional<storage::VolumeObject> volume_object_opt = model_tree_->current_volume();
         if (!volume_object_opt)
         {
                 return;
@@ -186,9 +186,9 @@ void VolumeWidget::on_isovalue_changed(int)
 
 void VolumeWidget::on_color_clicked()
 {
-        ASSERT(std::this_thread::get_id() == m_thread_id);
+        ASSERT(std::this_thread::get_id() == thread_id_);
 
-        std::optional<storage::VolumeObject> object_opt = m_model_tree->current_volume();
+        std::optional<storage::VolumeObject> object_opt = model_tree_->current_volume();
         if (!object_opt)
         {
                 return;
@@ -225,9 +225,9 @@ void VolumeWidget::on_color_clicked()
 
 void VolumeWidget::on_ambient_changed(int)
 {
-        ASSERT(std::this_thread::get_id() == m_thread_id);
+        ASSERT(std::this_thread::get_id() == thread_id_);
 
-        std::optional<storage::VolumeObject> object_opt = m_model_tree->current_volume();
+        std::optional<storage::VolumeObject> object_opt = model_tree_->current_volume();
         if (!object_opt)
         {
                 return;
@@ -246,9 +246,9 @@ void VolumeWidget::on_ambient_changed(int)
 
 void VolumeWidget::on_metalness_changed(int)
 {
-        ASSERT(std::this_thread::get_id() == m_thread_id);
+        ASSERT(std::this_thread::get_id() == thread_id_);
 
-        std::optional<storage::VolumeObject> object_opt = m_model_tree->current_volume();
+        std::optional<storage::VolumeObject> object_opt = model_tree_->current_volume();
         if (!object_opt)
         {
                 return;
@@ -267,9 +267,9 @@ void VolumeWidget::on_metalness_changed(int)
 
 void VolumeWidget::on_roughness_changed(int)
 {
-        ASSERT(std::this_thread::get_id() == m_thread_id);
+        ASSERT(std::this_thread::get_id() == thread_id_);
 
-        std::optional<storage::VolumeObject> object_opt = m_model_tree->current_volume();
+        std::optional<storage::VolumeObject> object_opt = model_tree_->current_volume();
         if (!object_opt)
         {
                 return;
@@ -288,16 +288,16 @@ void VolumeWidget::on_roughness_changed(int)
 
 void VolumeWidget::on_model_tree_item_update()
 {
-        ASSERT(std::this_thread::get_id() == m_thread_id);
+        ASSERT(std::this_thread::get_id() == thread_id_);
 
-        std::optional<ObjectId> id = m_model_tree->current_item();
+        std::optional<ObjectId> id = model_tree_->current_item();
         if (!id)
         {
                 ui_disable();
                 return;
         }
 
-        std::optional<storage::VolumeObjectConst> volume = m_model_tree->volume_const_if_current(*id);
+        std::optional<storage::VolumeObjectConst> volume = model_tree_->volume_const_if_current(*id);
         if (volume)
         {
                 ui_set(*volume);
@@ -310,13 +310,13 @@ void VolumeWidget::on_model_tree_item_update()
 
 void VolumeWidget::ui_disable()
 {
-        ASSERT(std::this_thread::get_id() == m_thread_id);
+        ASSERT(std::this_thread::get_id() == thread_id_);
 
         set_enabled(false);
 
         {
-                QSignalBlocker blocker(m_slider_levels.get());
-                m_slider_levels->set_range(0, 1);
+                QSignalBlocker blocker(slider_levels_.get());
+                slider_levels_->set_range(0, 1);
         }
         {
                 QSignalBlocker blocker(ui.slider_transparency);
@@ -354,7 +354,7 @@ void VolumeWidget::ui_disable()
 
 void VolumeWidget::ui_set(const storage::VolumeObjectConst& object)
 {
-        ASSERT(std::this_thread::get_id() == m_thread_id);
+        ASSERT(std::this_thread::get_id() == thread_id_);
 
         set_enabled(true);
 
@@ -385,8 +385,8 @@ void VolumeWidget::ui_set(const storage::VolumeObjectConst& object)
                                 roughness = reading.roughness();
                         }
                         {
-                                QSignalBlocker blocker(m_slider_levels.get());
-                                m_slider_levels->set_range(min, max);
+                                QSignalBlocker blocker(slider_levels_.get());
+                                slider_levels_->set_range(min, max);
                         }
                         {
                                 volume_alpha_coefficient = std::clamp(

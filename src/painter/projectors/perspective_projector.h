@@ -35,11 +35,11 @@ class PerspectiveProjector final : public Projector<N, T>
         static_assert(N >= 2);
         static_assert(std::is_floating_point_v<T>);
 
-        std::array<int, N - 1> m_screen_size;
-        std::array<Vector<N, T>, N - 1> m_screen_axes;
-        Vector<N - 1, T> m_screen_org;
-        Vector<N, T> m_camera_org;
-        Vector<N, T> m_camera_dir;
+        std::array<int, N - 1> screen_size_;
+        std::array<Vector<N, T>, N - 1> screen_axes_;
+        Vector<N - 1, T> screen_org_;
+        Vector<N, T> camera_org_;
+        Vector<N, T> camera_dir_;
 
 public:
         PerspectiveProjector(
@@ -49,13 +49,13 @@ public:
                 T width_view_angle_degrees,
                 const std::array<int, N - 1>& screen_size)
         {
-                m_screen_size = screen_size;
-                m_screen_org = projectors_implementation::screen_org<T>(screen_size);
-                m_camera_org = camera_org;
-                m_camera_dir = camera_dir.normalized();
-                m_screen_axes = projectors_implementation::normalize_axes(screen_axes);
+                screen_size_ = screen_size;
+                screen_org_ = projectors_implementation::screen_org<T>(screen_size);
+                camera_org_ = camera_org;
+                camera_dir_ = camera_dir.normalized();
+                screen_axes_ = projectors_implementation::normalize_axes(screen_axes);
 
-                projectors_implementation::check_orthogonality(m_camera_dir, m_screen_axes);
+                projectors_implementation::check_orthogonality(camera_dir_, screen_axes_);
 
                 //
 
@@ -67,19 +67,19 @@ public:
                 T half_angle = width_view_angle_degrees * T(0.5) * PI<T> / 180;
                 T dir_length = screen_size[0] * T(0.5) * std::tan(PI<T> / 2 - half_angle);
 
-                m_camera_dir *= dir_length;
+                camera_dir_ *= dir_length;
         }
 
         const std::array<int, N - 1>& screen_size() const override
         {
-                return m_screen_size;
+                return screen_size_;
         }
 
         Ray<N, T> ray(const Vector<N - 1, T>& point) const override
         {
-                Vector<N - 1, T> screen_point = m_screen_org + point;
-                Vector<N, T> screen_dir = projectors_implementation::screen_dir(m_screen_axes, screen_point);
-                return Ray<N, T>(m_camera_org, m_camera_dir + screen_dir);
+                Vector<N - 1, T> screen_point = screen_org_ + point;
+                Vector<N, T> screen_dir = projectors_implementation::screen_dir(screen_axes_, screen_point);
+                return Ray<N, T>(camera_org_, camera_dir_ + screen_dir);
         }
 };
 }

@@ -28,8 +28,8 @@ namespace ns::gpu::dft
 {
 class ComplexNumberBuffer final
 {
-        unsigned m_size;
-        vulkan::BufferWithMemory m_buffer;
+        unsigned size_;
+        vulkan::BufferWithMemory buffer_;
 
 public:
         ComplexNumberBuffer(
@@ -47,17 +47,17 @@ public:
 
         unsigned size() const
         {
-                return m_size;
+                return size_;
         }
 
         operator const vulkan::BufferWithMemory&() const&
         {
-                return m_buffer;
+                return buffer_;
         }
 
         operator VkBuffer() const&
         {
-                return m_buffer;
+                return buffer_;
         }
 
         operator const vulkan::BufferWithMemory&() const&& = delete;

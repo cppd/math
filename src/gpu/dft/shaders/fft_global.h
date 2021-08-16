@@ -34,12 +34,12 @@ class FftGlobalMemory final
         static constexpr int DATA_BINDING = 0;
         static constexpr int BUFFER_BINDING = 1;
 
-        vulkan::Descriptors m_descriptors;
-        std::vector<vulkan::BufferWithMemory> m_uniform_buffers;
+        vulkan::Descriptors descriptors_;
+        std::vector<vulkan::BufferWithMemory> uniform_buffers_;
 
         struct Data
         {
-                uint32_t m_div_2;
+                uint32_t div_2_;
                 float two_pi_div_m;
         };
 
@@ -65,7 +65,7 @@ public:
 
         //
 
-        void set_data(float two_pi_div_m, int m_div_2) const;
+        void set_data(float two_pi_div_m, int div_2_) const;
         void set_buffer(const vulkan::BufferWithMemory& buffer) const;
 };
 
@@ -77,9 +77,9 @@ class FftGlobalConstant final : public vulkan::SpecializationConstant
                 uint32_t inverse;
                 uint32_t data_size;
                 uint32_t n;
-        } m_data;
+        } data_;
 
-        std::vector<VkSpecializationMapEntry> m_entries;
+        std::vector<VkSpecializationMapEntry> entries_;
 
         const std::vector<VkSpecializationMapEntry>& entries() const override;
         const void* data() const override;
@@ -93,14 +93,14 @@ public:
 
 class FftGlobalProgram final
 {
-        const vulkan::Device& m_device;
+        const vulkan::Device& device_;
 
-        vulkan::DescriptorSetLayout m_descriptor_set_layout;
-        vulkan::PipelineLayout m_pipeline_layout;
-        FftGlobalConstant m_constant;
-        vulkan::ComputeShader m_shader;
-        vulkan::Pipeline m_pipeline_forward;
-        vulkan::Pipeline m_pipeline_inverse;
+        vulkan::DescriptorSetLayout descriptor_set_layout_;
+        vulkan::PipelineLayout pipeline_layout_;
+        FftGlobalConstant constant_;
+        vulkan::ComputeShader shader_;
+        vulkan::Pipeline pipeline_forward_;
+        vulkan::Pipeline pipeline_inverse_;
 
 public:
         explicit FftGlobalProgram(const vulkan::Device& device);

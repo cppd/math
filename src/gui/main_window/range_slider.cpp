@@ -34,34 +34,34 @@ static_assert(MIN >= 0 && MIN < MAX);
 }
 
 RangeSlider::RangeSlider(QSlider* slider_min, QSlider* slider_max)
-        : m_slider_min(slider_min),
-          m_slider_max(slider_max),
-          m_last_min(std::numeric_limits<decltype(m_last_min)>::lowest()),
-          m_last_max(std::numeric_limits<decltype(m_last_max)>::lowest())
+        : slider_min_(slider_min),
+          slider_max_(slider_max),
+          last_min_(std::numeric_limits<decltype(last_min_)>::lowest()),
+          last_max_(std::numeric_limits<decltype(last_max_)>::lowest())
 {
-        ASSERT(m_slider_min);
-        ASSERT(m_slider_max);
+        ASSERT(slider_min_);
+        ASSERT(slider_max_);
 
-        m_slider_min->setInvertedAppearance(true);
-        m_slider_min->setMinimum(MIN);
-        m_slider_min->setMaximum(MAX);
-        m_slider_max->setMinimum(m_slider_min->minimum());
-        m_slider_max->setMaximum(m_slider_min->maximum());
+        slider_min_->setInvertedAppearance(true);
+        slider_min_->setMinimum(MIN);
+        slider_min_->setMaximum(MAX);
+        slider_max_->setMinimum(slider_min_->minimum());
+        slider_max_->setMaximum(slider_min_->maximum());
 
-        m_slider_min->setTracking(true);
-        m_slider_max->setTracking(true);
+        slider_min_->setTracking(true);
+        slider_max_->setTracking(true);
 
         set_range(0, 1);
 
-        m_connections.emplace_back(QObject::connect(
-                m_slider_min, &QSlider::valueChanged,
+        connections_.emplace_back(QObject::connect(
+                slider_min_, &QSlider::valueChanged,
                 [&](int)
                 {
                         on_min_value_changed();
                 }));
 
-        m_connections.emplace_back(QObject::connect(
-                m_slider_max, &QSlider::valueChanged,
+        connections_.emplace_back(QObject::connect(
+                slider_max_, &QSlider::valueChanged,
                 [&](int)
                 {
                         on_max_value_changed();
@@ -80,8 +80,8 @@ void RangeSlider::set_range(double min, double max)
         }
 
         {
-                QSignalBlocker blocker_min(m_slider_min);
-                QSignalBlocker blocker_max(m_slider_max);
+                QSignalBlocker blocker_min(slider_min_);
+                QSignalBlocker blocker_max(slider_max_);
                 set_min_value(std::lround(std::lerp(MIN, MAX, min)));
                 set_max_value(std::lround(std::lerp(MIN, MAX, max)));
         }
@@ -93,22 +93,22 @@ void RangeSlider::set_range(double min, double max)
 
 int RangeSlider::min_value() const
 {
-        return m_slider_min->maximum() - m_slider_min->value();
+        return slider_min_->maximum() - slider_min_->value();
 }
 
 int RangeSlider::max_value() const
 {
-        return m_slider_max->value();
+        return slider_max_->value();
 }
 
 void RangeSlider::set_min_value(int value)
 {
-        m_slider_min->setValue(m_slider_min->maximum() - value);
+        slider_min_->setValue(slider_min_->maximum() - value);
 }
 
 void RangeSlider::set_max_value(int value)
 {
-        m_slider_max->setValue(value);
+        slider_max_->setValue(value);
 }
 
 void RangeSlider::on_min_value_changed()
@@ -137,10 +137,10 @@ void RangeSlider::range_changed()
 
         ASSERT(min <= max);
 
-        if (m_last_min != min || m_last_max != max)
+        if (last_min_ != min || last_max_ != max)
         {
-                m_last_min = min;
-                m_last_max = max;
+                last_min_ = min;
+                last_max_ = max;
                 Q_EMIT changed(min, max);
         }
 }

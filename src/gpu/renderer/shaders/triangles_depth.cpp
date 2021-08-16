@@ -39,32 +39,32 @@ std::vector<VkDescriptorSetLayoutBinding> TrianglesDepthProgram::descriptor_set_
 }
 
 TrianglesDepthProgram::TrianglesDepthProgram(const vulkan::Device& device)
-        : m_device(device),
-          m_descriptor_set_layout_shared(
+        : device_(device),
+          descriptor_set_layout_shared_(
                   vulkan::create_descriptor_set_layout(device, descriptor_set_layout_shared_bindings())),
-          m_descriptor_set_layout_mesh(
+          descriptor_set_layout_mesh_(
                   vulkan::create_descriptor_set_layout(device, descriptor_set_layout_mesh_bindings())),
-          m_pipeline_layout(vulkan::create_pipeline_layout(
+          pipeline_layout_(vulkan::create_pipeline_layout(
                   device,
                   {CommonMemory::set_number(), MeshMemory::set_number()},
-                  {m_descriptor_set_layout_shared, m_descriptor_set_layout_mesh})),
-          m_vertex_shader(m_device, code_triangles_depth_vert(), "main")
+                  {descriptor_set_layout_shared_, descriptor_set_layout_mesh_})),
+          vertex_shader_(device_, code_triangles_depth_vert(), "main")
 {
 }
 
 VkDescriptorSetLayout TrianglesDepthProgram::descriptor_set_layout_shared() const
 {
-        return m_descriptor_set_layout_shared;
+        return descriptor_set_layout_shared_;
 }
 
 VkDescriptorSetLayout TrianglesDepthProgram::descriptor_set_layout_mesh() const
 {
-        return m_descriptor_set_layout_mesh;
+        return descriptor_set_layout_mesh_;
 }
 
 VkPipelineLayout TrianglesDepthProgram::pipeline_layout() const
 {
-        return m_pipeline_layout;
+        return pipeline_layout_;
 }
 
 vulkan::Pipeline TrianglesDepthProgram::create_pipeline(
@@ -77,17 +77,17 @@ vulkan::Pipeline TrianglesDepthProgram::create_pipeline(
 
         vulkan::GraphicsPipelineCreateInfo info;
 
-        info.device = &m_device;
+        info.device = &device_;
         info.render_pass = render_pass;
         info.sub_pass = 0;
         info.sample_count = sample_count;
         info.sample_shading = false;
-        info.pipeline_layout = m_pipeline_layout;
+        info.pipeline_layout = pipeline_layout_;
         info.viewport = viewport;
         info.primitive_topology = VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST;
         info.depth_bias = true;
 
-        const std::vector<const vulkan::Shader*> shaders = {&m_vertex_shader};
+        const std::vector<const vulkan::Shader*> shaders = {&vertex_shader_};
         info.shaders = &shaders;
 
         const std::vector<const vulkan::SpecializationConstant*> constants = {nullptr};

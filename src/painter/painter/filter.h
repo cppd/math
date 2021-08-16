@@ -41,8 +41,8 @@ class GaussianFilter final
                 return std::exp(alpha * v * v);
         }
 
-        T m_alpha;
-        T m_exp;
+        T alpha_;
+        T exp_;
 
 public:
         GaussianFilter(std::type_identity_t<T> width, std::type_identity_t<T> radius)
@@ -57,8 +57,8 @@ public:
                         error("Gaussian filter radius " + to_string(radius) + " must be positive");
                 }
 
-                m_alpha = -1 / (2 * width * width);
-                m_exp = gaussian(m_alpha, radius);
+                alpha_ = -1 / (2 * width * width);
+                exp_ = gaussian(alpha_, radius);
         }
 
         template <std::size_t N>
@@ -66,10 +66,10 @@ public:
         {
                 static_assert(N >= 1);
 
-                T r = std::max(T(0), gaussian(m_alpha, p[0]) - m_exp);
+                T r = std::max(T(0), gaussian(alpha_, p[0]) - exp_);
                 for (std::size_t i = 1; i < N; ++i)
                 {
-                        r *= std::max(T(0), gaussian(m_alpha, p[i]) - m_exp);
+                        r *= std::max(T(0), gaussian(alpha_, p[i]) - exp_);
                 }
                 return r;
         }

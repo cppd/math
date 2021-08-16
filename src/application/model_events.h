@@ -32,7 +32,7 @@ namespace ns::application
 {
 class ModelEvents final
 {
-        const std::thread::id m_thread_id = std::this_thread::get_id();
+        const std::thread::id thread_id_ = std::this_thread::get_id();
 
         template <std::size_t N>
         struct Events
@@ -42,7 +42,7 @@ class ModelEvents final
                 std::function<void(mesh::MeshEvent<N>&&)> mesh_events;
                 std::function<void(volume::VolumeEvent<N>&&)> volume_events;
         };
-        Sequence<settings::Dimensions, std::tuple, Events> m_events;
+        Sequence<settings::Dimensions, std::tuple, Events> events_;
 
         static void set(Sequence<settings::Dimensions, std::tuple, Events>* all_events);
         static void unset(const Sequence<settings::Dimensions, std::tuple, Events>& all_events);

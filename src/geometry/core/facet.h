@@ -36,37 +36,37 @@ class FacetBase
         static_assert(N > 1);
 
         // Вершины должны быть отсортированы, чтобы были одинаковые одинаковые последовательности индексов у одинаковых ребер.
-        const std::array<int, N> m_indices;
+        const std::array<int, N> indices_;
 
-        std::vector<int> m_conflict_points;
+        std::vector<int> conflict_points_;
 
         // Итератор на саму грань, чтобы удалять грань из списка без поиска в этом списке
-        FacetIter<Derived> m_list_iter;
+        FacetIter<Derived> list_iter_;
 
         // Указатели на другие грани, соответствующие вершинам
-        std::array<Derived*, N> m_links;
+        std::array<Derived*, N> links_;
 
         // Используется в алгоритме для упрощения поиска и к состоянию грани не имеет отношения, поэтому mutable
-        mutable bool m_marked_as_visible = false;
+        mutable bool marked_as_visible_ = false;
 
 protected:
         ~FacetBase() = default;
 
 public:
-        explicit FacetBase(std::array<int, N>&& vertices) : m_indices(sort(std::move(vertices)))
+        explicit FacetBase(std::array<int, N>&& vertices) : indices_(sort(std::move(vertices)))
         {
         }
 
         const std::array<int, N>& vertices() const
         {
-                return m_indices;
+                return indices_;
         }
 
         int find_index_for_point(int point) const
         {
                 for (unsigned r = 0; r < N; ++r)
                 {
-                        if (m_indices[r] == point)
+                        if (indices_[r] == point)
                         {
                                 return r;
                         }
@@ -76,37 +76,37 @@ public:
 
         void add_conflict_point(int point)
         {
-                m_conflict_points.push_back(point);
+                conflict_points_.push_back(point);
         }
         const std::vector<int>& conflict_points() const
         {
-                return m_conflict_points;
+                return conflict_points_;
         }
 
         void set_iter(FacetIter<Derived> iter)
         {
-                m_list_iter = iter;
+                list_iter_ = iter;
         }
         FacetIter<Derived> iter() const
         {
-                return m_list_iter;
+                return list_iter_;
         }
 
         void set_link(unsigned i, Derived* facet)
         {
                 ASSERT(i < N);
-                m_links[i] = facet;
+                links_[i] = facet;
         }
         Derived* link(unsigned i) const
         {
                 ASSERT(i < N);
-                return m_links[i];
+                return links_[i];
         }
         unsigned find_link_index(const Derived* facet)
         {
                 for (unsigned i = 0; i < N; ++i)
                 {
-                        if (m_links[i] == facet)
+                        if (links_[i] == facet)
                         {
                                 return i;
                         }
@@ -116,11 +116,11 @@ public:
 
         void mark_as_visible() const
         {
-                m_marked_as_visible = true;
+                marked_as_visible_ = true;
         }
         bool marked_as_visible() const
         {
-                return m_marked_as_visible;
+                return marked_as_visible_;
         }
 };
 
@@ -133,7 +133,7 @@ class FacetInteger final : public FacetBase<N, FacetInteger<N, DataType, Compute
         static_assert(is_signed<DataType> && is_signed<ComputeType>);
 
         // Перпендикуляр к грани (вектор из одномерного ортогонального дополнения грани).
-        Vector<N, ComputeType> m_ortho;
+        Vector<N, ComputeType> ortho_;
 
         template <typename T>
         static void negate(Vector<N, T>* v)
@@ -165,10 +165,10 @@ class FacetInteger final : public FacetBase<N, FacetInteger<N, DataType, Compute
                 const Vector<N, DataType>& facet_point = points[Base::vertices()[0]];
                 const Vector<N, DataType>& point = points[p];
 
-                ComputeType d = m_ortho[0] * (point[0] - facet_point[0]);
+                ComputeType d = ortho_[0] * (point[0] - facet_point[0]);
                 for (unsigned n = 1; n < N; ++n)
                 {
-                        d += m_ortho[n] * (point[n] - facet_point[n]);
+                        d += ortho_[n] * (point[n] - facet_point[n]);
                 }
 
                 return d;
@@ -182,9 +182,9 @@ public:
                 const FacetInteger* convex_hull_facet)
                 : Base(std::move(vertices))
         {
-                m_ortho = numerical::orthogonal_complement<N, DataType, ComputeType>(points, Base::vertices());
+                ortho_ = numerical::orthogonal_complement<N, DataType, ComputeType>(points, Base::vertices());
 
-                ASSERT(!m_ortho.is_zero());
+                ASSERT(!ortho_.is_zero());
 
                 ComputeType v = visible(points, convex_hull_point);
 
@@ -196,16 +196,16 @@ public:
                 if (v > 0)
                 {
                         // Точка оболочки видимая, значит поменять направление перпендикуляра наружу от оболочки
-                        negate(&m_ortho);
+                        negate(&ortho_);
                         return;
                 }
                 //   Точка и имеющаяся грань горизонта находятся в одной плоскости, значит их перпендикуляры
                 // задать в одном направлении.
                 //   convex_hull_facet == nullptr при создании начальной оболочки, где точки не должны быть в одной плоскости.
                 ASSERT(convex_hull_facet != nullptr);
-                if (opposite_orthos(m_ortho, convex_hull_facet->m_ortho))
+                if (opposite_orthos(ortho_, convex_hull_facet->ortho_))
                 {
-                        negate(&m_ortho);
+                        negate(&ortho_);
                 }
         }
 
@@ -217,12 +217,12 @@ public:
 
         Vector<N, double> double_ortho() const
         {
-                return to_vector<double>(m_ortho).normalized();
+                return to_vector<double>(ortho_).normalized();
         }
 
         bool last_ortho_coord_is_negative() const
         {
-                return m_ortho[N - 1] < 0;
+                return ortho_[N - 1] < 0;
         }
 };
 
@@ -236,17 +236,17 @@ class FacetInteger<N, DataType, mpz_class, FacetIter> final
         using Base = FacetBase<N, FacetInteger, FacetIter>;
 
         // Перпендикуляр к грани (вектор из одномерного ортогонального дополнения грани).
-        Vector<N, mpz_class> m_ortho;
+        Vector<N, mpz_class> ortho_;
 
 #if 0
-        static void reduce(Vector<N, mpz_class>* m_ortho)
+        static void reduce(Vector<N, mpz_class>* ortho_)
         {
                 thread_local mpz_class gcd;
 
-                mpz_gcd(gcd.get_mpz_t(), (*m_ortho)[0].get_mpz_t(), (*m_ortho)[1].get_mpz_t());
+                mpz_gcd(gcd.get_mpz_t(), (*ortho_)[0].get_mpz_t(), (*ortho_)[1].get_mpz_t());
                 for (unsigned n = 2; n < N && gcd != 1; ++n)
                 {
-                        mpz_gcd(gcd.get_mpz_t(), gcd.get_mpz_t(), (*m_ortho)[n].get_mpz_t());
+                        mpz_gcd(gcd.get_mpz_t(), gcd.get_mpz_t(), (*ortho_)[n].get_mpz_t());
                 }
                 if (gcd <= 1)
                 {
@@ -254,7 +254,7 @@ class FacetInteger<N, DataType, mpz_class, FacetIter> final
                 }
                 for (unsigned n = 0; n < N; ++n)
                 {
-                        mpz_divexact((*m_ortho)[n].get_mpz_t(), (*m_ortho)[n].get_mpz_t(), gcd.get_mpz_t());
+                        mpz_divexact((*ortho_)[n].get_mpz_t(), (*ortho_)[n].get_mpz_t(), gcd.get_mpz_t());
                 }
         }
 #endif
@@ -326,11 +326,11 @@ class FacetInteger<N, DataType, mpz_class, FacetIter> final
                 const Vector<N, DataType>& point = points[p];
 
                 mpz_from_any(&to_point, point[0] - facet_point[0]);
-                mpz_mul(d.get_mpz_t(), m_ortho[0].get_mpz_t(), to_point.get_mpz_t());
+                mpz_mul(d.get_mpz_t(), ortho_[0].get_mpz_t(), to_point.get_mpz_t());
                 for (unsigned n = 1; n < N; ++n)
                 {
                         mpz_from_any(&to_point, point[n] - facet_point[n]);
-                        mpz_addmul(d.get_mpz_t(), m_ortho[n].get_mpz_t(), to_point.get_mpz_t());
+                        mpz_addmul(d.get_mpz_t(), ortho_[n].get_mpz_t(), to_point.get_mpz_t());
                 }
 
                 return mpz_sgn(d.get_mpz_t());
@@ -345,11 +345,11 @@ class FacetInteger<N, DataType, mpz_class, FacetIter> final
                 const Vector<N, mpz_class>& point = points[p];
 
                 mpz_sub(to_point.get_mpz_t(), point[0].get_mpz_t(), facet_point[0].get_mpz_t());
-                mpz_mul(d.get_mpz_t(), m_ortho[0].get_mpz_t(), to_point.get_mpz_t());
+                mpz_mul(d.get_mpz_t(), ortho_[0].get_mpz_t(), to_point.get_mpz_t());
                 for (unsigned n = 1; n < N; ++n)
                 {
                         mpz_sub(to_point.get_mpz_t(), point[n].get_mpz_t(), facet_point[n].get_mpz_t());
-                        mpz_addmul(d.get_mpz_t(), m_ortho[n].get_mpz_t(), to_point.get_mpz_t());
+                        mpz_addmul(d.get_mpz_t(), ortho_[n].get_mpz_t(), to_point.get_mpz_t());
                 }
 
                 return mpz_sgn(d.get_mpz_t());
@@ -363,13 +363,13 @@ public:
                 const FacetInteger* convex_hull_facet)
                 : Base(std::move(vertices))
         {
-                m_ortho = numerical::orthogonal_complement<N, DataType, mpz_class>(points, Base::vertices());
+                ortho_ = numerical::orthogonal_complement<N, DataType, mpz_class>(points, Base::vertices());
 
-                ASSERT(!m_ortho.is_zero());
+                ASSERT(!ortho_.is_zero());
 
 #if 0
                 // Сокращение перпендикуляра не даёт общего ускорения
-                reduce(&m_ortho);
+                reduce(&ortho_);
 #endif
 
                 int v = visible(points, convex_hull_point);
@@ -382,16 +382,16 @@ public:
                 if (v > 0)
                 {
                         // Точка оболочки видимая, значит поменять направление перпендикуляра наружу от оболочки
-                        negate(&m_ortho);
+                        negate(&ortho_);
                         return;
                 }
                 //   Точка и имеющаяся грань горизонта находятся в одной плоскости, значит их перпендикуляры
                 // задать в одном направлении.
                 //   convex_hull_facet == nullptr при создании начальной оболочки, где точки не должны быть в одной плоскости.
                 ASSERT(convex_hull_facet != nullptr);
-                if (opposite_orthos(m_ortho, convex_hull_facet->m_ortho))
+                if (opposite_orthos(ortho_, convex_hull_facet->ortho_))
                 {
-                        negate(&m_ortho);
+                        negate(&ortho_);
                 }
         }
 
@@ -403,12 +403,12 @@ public:
 
         Vector<N, double> double_ortho() const
         {
-                return normalized_double_vector(m_ortho);
+                return normalized_double_vector(ortho_);
         }
 
         bool last_ortho_coord_is_negative() const
         {
-                return mpz_sgn(m_ortho[N - 1].get_mpz_t()) < 0;
+                return mpz_sgn(ortho_[N - 1].get_mpz_t()) < 0;
         }
 };
 }

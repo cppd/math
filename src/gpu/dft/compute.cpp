@@ -204,131 +204,131 @@ void image_barrier_after(VkCommandBuffer command_buffer, VkImage image)
 
 class Fft1d final
 {
-        unsigned m_n;
-        unsigned m_data_size;
-        unsigned m_n_shared;
-        bool m_only_shared;
+        unsigned n_;
+        unsigned data_size_;
+        unsigned n_shared_;
+        bool only_shared_;
 
-        std::optional<FftSharedProgram> m_fft_program;
-        std::optional<FftSharedMemory> m_fft_memory;
-        int m_fft_groups;
+        std::optional<FftSharedProgram> fft_program_;
+        std::optional<FftSharedMemory> fft_memory_;
+        int fft_groups_;
 
-        std::optional<BitReverseProgram> m_bit_reverse_program;
-        std::optional<BitReverseMemory> m_bit_reverse_memory;
-        int m_bit_reverse_groups;
+        std::optional<BitReverseProgram> bit_reverse_program_;
+        std::optional<BitReverseMemory> bit_reverse_memory_;
+        int bit_reverse_groups_;
 
-        std::optional<FftGlobalProgram> m_fft_g_program;
-        std::vector<FftGlobalMemory> m_fft_g_memory;
-        int m_fft_g_groups;
+        std::optional<FftGlobalProgram> fft_g_program_;
+        std::vector<FftGlobalMemory> fft_g_memory_;
+        int fft_g_groups_;
 
-        VkBuffer m_buffer = VK_NULL_HANDLE;
+        VkBuffer buffer_ = VK_NULL_HANDLE;
 
         void commands_fft(VkCommandBuffer command_buffer, bool inverse) const
         {
-                vkCmdBindPipeline(command_buffer, VK_PIPELINE_BIND_POINT_COMPUTE, m_fft_program->pipeline(inverse));
+                vkCmdBindPipeline(command_buffer, VK_PIPELINE_BIND_POINT_COMPUTE, fft_program_->pipeline(inverse));
                 vkCmdBindDescriptorSets(
-                        command_buffer, VK_PIPELINE_BIND_POINT_COMPUTE, m_fft_program->pipeline_layout(),
-                        FftSharedMemory::set_number(), 1, &m_fft_memory->descriptor_set(), 0, nullptr);
-                vkCmdDispatch(command_buffer, m_fft_groups, 1, 1);
+                        command_buffer, VK_PIPELINE_BIND_POINT_COMPUTE, fft_program_->pipeline_layout(),
+                        FftSharedMemory::set_number(), 1, &fft_memory_->descriptor_set(), 0, nullptr);
+                vkCmdDispatch(command_buffer, fft_groups_, 1, 1);
 
-                buffer_barrier(command_buffer, m_buffer);
+                buffer_barrier(command_buffer, buffer_);
         }
 
         void commands_bit_reverse(VkCommandBuffer command_buffer) const
         {
-                vkCmdBindPipeline(command_buffer, VK_PIPELINE_BIND_POINT_COMPUTE, m_bit_reverse_program->pipeline());
+                vkCmdBindPipeline(command_buffer, VK_PIPELINE_BIND_POINT_COMPUTE, bit_reverse_program_->pipeline());
                 vkCmdBindDescriptorSets(
-                        command_buffer, VK_PIPELINE_BIND_POINT_COMPUTE, m_bit_reverse_program->pipeline_layout(),
-                        BitReverseMemory::set_number(), 1, &m_bit_reverse_memory->descriptor_set(), 0, nullptr);
-                vkCmdDispatch(command_buffer, m_bit_reverse_groups, 1, 1);
+                        command_buffer, VK_PIPELINE_BIND_POINT_COMPUTE, bit_reverse_program_->pipeline_layout(),
+                        BitReverseMemory::set_number(), 1, &bit_reverse_memory_->descriptor_set(), 0, nullptr);
+                vkCmdDispatch(command_buffer, bit_reverse_groups_, 1, 1);
 
-                buffer_barrier(command_buffer, m_buffer);
+                buffer_barrier(command_buffer, buffer_);
         }
 
         void commands_fft_g(VkCommandBuffer command_buffer, bool inverse) const
         {
-                vkCmdBindPipeline(command_buffer, VK_PIPELINE_BIND_POINT_COMPUTE, m_fft_g_program->pipeline(inverse));
-                for (const FftGlobalMemory& m : m_fft_g_memory)
+                vkCmdBindPipeline(command_buffer, VK_PIPELINE_BIND_POINT_COMPUTE, fft_g_program_->pipeline(inverse));
+                for (const FftGlobalMemory& m : fft_g_memory_)
                 {
                         vkCmdBindDescriptorSets(
-                                command_buffer, VK_PIPELINE_BIND_POINT_COMPUTE, m_fft_g_program->pipeline_layout(),
+                                command_buffer, VK_PIPELINE_BIND_POINT_COMPUTE, fft_g_program_->pipeline_layout(),
                                 FftGlobalMemory::set_number(), 1, &m.descriptor_set(), 0, nullptr);
-                        vkCmdDispatch(command_buffer, m_fft_g_groups, 1, 1);
+                        vkCmdDispatch(command_buffer, fft_g_groups_, 1, 1);
 
-                        buffer_barrier(command_buffer, m_buffer);
+                        buffer_barrier(command_buffer, buffer_);
                 }
         }
 
 public:
-        Fft1d(const vulkan::Device& device, const std::vector<uint32_t>& family_indices, int count, int n) : m_n(n)
+        Fft1d(const vulkan::Device& device, const std::vector<uint32_t>& family_indices, int count, int n) : n_(n)
         {
-                if (m_n == 1)
+                if (n_ == 1)
                 {
                         return;
                 }
 
-                m_data_size = count * n;
-                m_n_shared = shared_size(n, device.properties().properties_10.limits);
-                m_only_shared = m_n <= m_n_shared;
+                data_size_ = count * n;
+                n_shared_ = shared_size(n, device.properties().properties_10.limits);
+                only_shared_ = n_ <= n_shared_;
 
                 const uint32_t n_mask = n - 1;
                 const uint32_t n_bits = binary_size(n);
 
                 //
 
-                const bool fft_reverse_input = m_only_shared;
-                m_fft_program.emplace(device);
-                m_fft_program->create_pipelines(
-                        m_data_size, n, n_mask, n_bits, m_n_shared, fft_reverse_input,
+                const bool fft_reverse_input = only_shared_;
+                fft_program_.emplace(device);
+                fft_program_->create_pipelines(
+                        data_size_, n, n_mask, n_bits, n_shared_, fft_reverse_input,
                         group_size(n, device.properties().properties_10.limits));
-                m_fft_memory.emplace(device, m_fft_program->descriptor_set_layout());
-                m_fft_groups = group_count(m_data_size, m_n_shared);
+                fft_memory_.emplace(device, fft_program_->descriptor_set_layout());
+                fft_groups_ = group_count(data_size_, n_shared_);
 
-                if (m_only_shared)
+                if (only_shared_)
                 {
                         return;
                 }
 
                 //
 
-                m_bit_reverse_program.emplace(device);
-                m_bit_reverse_program->create_pipeline(GROUP_SIZE_1D, m_data_size, n_mask, n_bits);
-                m_bit_reverse_memory.emplace(device, m_bit_reverse_program->descriptor_set_layout());
-                m_bit_reverse_groups = group_count(m_data_size, GROUP_SIZE_1D);
+                bit_reverse_program_.emplace(device);
+                bit_reverse_program_->create_pipeline(GROUP_SIZE_1D, data_size_, n_mask, n_bits);
+                bit_reverse_memory_.emplace(device, bit_reverse_program_->descriptor_set_layout());
+                bit_reverse_groups_ = group_count(data_size_, GROUP_SIZE_1D);
 
                 //
 
-                m_fft_g_program.emplace(device);
-                m_fft_g_program->create_pipelines(GROUP_SIZE_1D, m_data_size, n);
-                m_fft_g_groups = group_count(m_data_size / 2, GROUP_SIZE_1D);
+                fft_g_program_.emplace(device);
+                fft_g_program_->create_pipelines(GROUP_SIZE_1D, data_size_, n);
+                fft_g_groups_ = group_count(data_size_ / 2, GROUP_SIZE_1D);
 
-                unsigned m_div_2 = m_n_shared; // Половина размера текущих отдельных ДПФ
-                float two_pi_div_m = PI<float> / m_div_2;
-                for (; m_div_2 < m_n; two_pi_div_m /= 2, m_div_2 <<= 1)
+                unsigned div_2_ = n_shared_; // Половина размера текущих отдельных ДПФ
+                float two_pi_div_m = PI<float> / div_2_;
+                for (; div_2_ < n_; two_pi_div_m /= 2, div_2_ <<= 1)
                 {
-                        m_fft_g_memory.emplace_back(device, m_fft_g_program->descriptor_set_layout(), family_indices);
-                        m_fft_g_memory.back().set_data(two_pi_div_m, m_div_2);
+                        fft_g_memory_.emplace_back(device, fft_g_program_->descriptor_set_layout(), family_indices);
+                        fft_g_memory_.back().set_data(two_pi_div_m, div_2_);
                 }
-                ASSERT(!m_fft_g_memory.empty());
-                ASSERT(m_n == (m_n_shared << m_fft_g_memory.size()));
+                ASSERT(!fft_g_memory_.empty());
+                ASSERT(n_ == (n_shared_ << fft_g_memory_.size()));
         }
 
         void set_data(const ComplexNumberBuffer& data)
         {
-                if (m_n == 1)
+                if (n_ == 1)
                 {
                         return;
                 }
 
-                ASSERT(data.size() >= m_data_size);
-                m_buffer = data;
-                m_fft_memory->set_buffer(data);
-                if (m_only_shared)
+                ASSERT(data.size() >= data_size_);
+                buffer_ = data;
+                fft_memory_->set_buffer(data);
+                if (only_shared_)
                 {
                         return;
                 }
-                m_bit_reverse_memory->set_buffer(data);
-                for (const FftGlobalMemory& m : m_fft_g_memory)
+                bit_reverse_memory_->set_buffer(data);
+                for (const FftGlobalMemory& m : fft_g_memory_)
                 {
                         m.set_buffer(data);
                 }
@@ -336,12 +336,12 @@ public:
 
         void commands(VkCommandBuffer command_buffer, bool inverse) const
         {
-                if (m_n == 1)
+                if (n_ == 1)
                 {
                         return;
                 }
 
-                if (m_only_shared)
+                if (only_shared_)
                 {
                         commands_fft(command_buffer, inverse);
                         return;
@@ -364,12 +364,12 @@ public:
                 VkCommandPool pool,
                 VkQueue queue)
         {
-                if (m_n == 1)
+                if (n_ == 1)
                 {
                         return;
                 }
 
-                ASSERT(data.size() == m_data_size);
+                ASSERT(data.size() == data_size_);
 
                 set_data(data);
 
@@ -384,124 +384,124 @@ public:
 
 class Dft final
 {
-        const std::thread::id m_thread_id = std::this_thread::get_id();
+        const std::thread::id thread_id_ = std::this_thread::get_id();
 
-        const vulkan::VulkanInstance& m_instance;
-        const vulkan::Device& m_device;
+        const vulkan::VulkanInstance& instance_;
+        const vulkan::Device& device_;
 
-        const vulkan::CommandPool& m_compute_command_pool;
-        const vulkan::Queue& m_compute_queue;
-        const vulkan::CommandPool& m_transfer_command_pool;
-        const vulkan::Queue& m_transfer_queue;
+        const vulkan::CommandPool& compute_command_pool_;
+        const vulkan::Queue& compute_queue_;
+        const vulkan::CommandPool& transfer_command_pool_;
+        const vulkan::Queue& transfer_queue_;
 
-        const vulkan::BufferMemoryType m_buffer_memory_type;
+        const vulkan::BufferMemoryType buffer_memory_type_;
 
-        MulProgram m_mul_program;
-        MulMemory m_mul_memory;
-        vec2i m_mul_rows_to_buffer_groups = vec2i(0, 0);
-        vec2i m_mul_rows_from_buffer_groups = vec2i(0, 0);
-        vec2i m_mul_columns_to_buffer_groups = vec2i(0, 0);
-        vec2i m_mul_columns_from_buffer_groups = vec2i(0, 0);
+        MulProgram mul_program_;
+        MulMemory mul_memory_;
+        vec2i mul_rows_to_buffer_groups_ = vec2i(0, 0);
+        vec2i mul_rows_from_buffer_groups_ = vec2i(0, 0);
+        vec2i mul_columns_to_buffer_groups_ = vec2i(0, 0);
+        vec2i mul_columns_from_buffer_groups_ = vec2i(0, 0);
 
-        MulDProgram m_mul_d_program;
-        MulDMemory m_mul_d_d1_fwd;
-        MulDMemory m_mul_d_d1_inv;
-        MulDMemory m_mul_d_d2_fwd;
-        MulDMemory m_mul_d_d2_inv;
-        vec2i m_mul_d_row_groups = vec2i(0, 0);
-        vec2i m_mul_d_column_groups = vec2i(0, 0);
+        MulDProgram mul_d_program_;
+        MulDMemory mul_d_d1_fwd_;
+        MulDMemory mul_d_d1_inv_;
+        MulDMemory mul_d_d2_fwd_;
+        MulDMemory mul_d_d2_inv_;
+        vec2i mul_d_row_groups_ = vec2i(0, 0);
+        vec2i mul_d_column_groups_ = vec2i(0, 0);
 
-        std::optional<Fft1d> m_fft_n2_m1;
-        std::optional<Fft1d> m_fft_n1_m2;
+        std::optional<Fft1d> fft_n2_m1_;
+        std::optional<Fft1d> fft_n1_m2_;
 
-        int m_n1 = -1;
-        int m_n2 = -1;
-        int m_m1 = -1;
-        int m_m2 = -1;
+        int n1_ = -1;
+        int n2_ = -1;
+        int m1_ = -1;
+        int m2_ = -1;
 
-        std::optional<ComplexNumberBuffer> m_d1_fwd;
-        std::optional<ComplexNumberBuffer> m_d1_inv;
-        std::optional<ComplexNumberBuffer> m_d2_fwd;
-        std::optional<ComplexNumberBuffer> m_d2_inv;
-        std::optional<ComplexNumberBuffer> m_x_d;
-        std::optional<ComplexNumberBuffer> m_buffer;
+        std::optional<ComplexNumberBuffer> d1_fwd_;
+        std::optional<ComplexNumberBuffer> d1_inv_;
+        std::optional<ComplexNumberBuffer> d2_fwd_;
+        std::optional<ComplexNumberBuffer> d2_inv_;
+        std::optional<ComplexNumberBuffer> x_d_;
+        std::optional<ComplexNumberBuffer> buffer_;
 
         void rows_to_buffer(VkCommandBuffer command_buffer, bool inverse) const
         {
                 vkCmdBindPipeline(
-                        command_buffer, VK_PIPELINE_BIND_POINT_COMPUTE, m_mul_program.pipeline_rows_to_buffer(inverse));
+                        command_buffer, VK_PIPELINE_BIND_POINT_COMPUTE, mul_program_.pipeline_rows_to_buffer(inverse));
                 vkCmdBindDescriptorSets(
-                        command_buffer, VK_PIPELINE_BIND_POINT_COMPUTE, m_mul_program.pipeline_layout(),
-                        MulMemory::set_number(), 1, &m_mul_memory.descriptor_set(), 0, nullptr);
-                vkCmdDispatch(command_buffer, m_mul_rows_to_buffer_groups[0], m_mul_rows_to_buffer_groups[1], 1);
+                        command_buffer, VK_PIPELINE_BIND_POINT_COMPUTE, mul_program_.pipeline_layout(),
+                        MulMemory::set_number(), 1, &mul_memory_.descriptor_set(), 0, nullptr);
+                vkCmdDispatch(command_buffer, mul_rows_to_buffer_groups_[0], mul_rows_to_buffer_groups_[1], 1);
 
-                buffer_barrier(command_buffer, *m_buffer);
+                buffer_barrier(command_buffer, *buffer_);
         }
 
         void rows_mul_d(VkCommandBuffer command_buffer, bool inverse) const
         {
                 const VkDescriptorSet* set =
-                        inverse ? &m_mul_d_d1_inv.descriptor_set() : &m_mul_d_d1_fwd.descriptor_set();
-                vkCmdBindPipeline(command_buffer, VK_PIPELINE_BIND_POINT_COMPUTE, m_mul_d_program.pipeline_rows());
+                        inverse ? &mul_d_d1_inv_.descriptor_set() : &mul_d_d1_fwd_.descriptor_set();
+                vkCmdBindPipeline(command_buffer, VK_PIPELINE_BIND_POINT_COMPUTE, mul_d_program_.pipeline_rows());
                 vkCmdBindDescriptorSets(
-                        command_buffer, VK_PIPELINE_BIND_POINT_COMPUTE, m_mul_d_program.pipeline_layout(),
+                        command_buffer, VK_PIPELINE_BIND_POINT_COMPUTE, mul_d_program_.pipeline_layout(),
                         MulDMemory::set_number(), 1, set, 0, nullptr);
-                vkCmdDispatch(command_buffer, m_mul_d_row_groups[0], m_mul_d_row_groups[1], 1);
+                vkCmdDispatch(command_buffer, mul_d_row_groups_[0], mul_d_row_groups_[1], 1);
 
-                buffer_barrier(command_buffer, *m_buffer);
+                buffer_barrier(command_buffer, *buffer_);
         }
 
         void rows_from_buffer(VkCommandBuffer command_buffer, bool inverse) const
         {
                 vkCmdBindPipeline(
                         command_buffer, VK_PIPELINE_BIND_POINT_COMPUTE,
-                        m_mul_program.pipeline_rows_from_buffer(inverse));
+                        mul_program_.pipeline_rows_from_buffer(inverse));
                 vkCmdBindDescriptorSets(
-                        command_buffer, VK_PIPELINE_BIND_POINT_COMPUTE, m_mul_program.pipeline_layout(),
-                        MulMemory::set_number(), 1, &m_mul_memory.descriptor_set(), 0, nullptr);
-                vkCmdDispatch(command_buffer, m_mul_rows_from_buffer_groups[0], m_mul_rows_from_buffer_groups[1], 1);
+                        command_buffer, VK_PIPELINE_BIND_POINT_COMPUTE, mul_program_.pipeline_layout(),
+                        MulMemory::set_number(), 1, &mul_memory_.descriptor_set(), 0, nullptr);
+                vkCmdDispatch(command_buffer, mul_rows_from_buffer_groups_[0], mul_rows_from_buffer_groups_[1], 1);
 
-                buffer_barrier(command_buffer, *m_x_d);
+                buffer_barrier(command_buffer, *x_d_);
         }
 
         void columns_to_buffer(VkCommandBuffer command_buffer, bool inverse) const
         {
                 vkCmdBindPipeline(
                         command_buffer, VK_PIPELINE_BIND_POINT_COMPUTE,
-                        m_mul_program.pipeline_columns_to_buffer(inverse));
+                        mul_program_.pipeline_columns_to_buffer(inverse));
                 vkCmdBindDescriptorSets(
-                        command_buffer, VK_PIPELINE_BIND_POINT_COMPUTE, m_mul_program.pipeline_layout(),
-                        MulMemory::set_number(), 1, &m_mul_memory.descriptor_set(), 0, nullptr);
-                vkCmdDispatch(command_buffer, m_mul_columns_to_buffer_groups[0], m_mul_columns_to_buffer_groups[1], 1);
+                        command_buffer, VK_PIPELINE_BIND_POINT_COMPUTE, mul_program_.pipeline_layout(),
+                        MulMemory::set_number(), 1, &mul_memory_.descriptor_set(), 0, nullptr);
+                vkCmdDispatch(command_buffer, mul_columns_to_buffer_groups_[0], mul_columns_to_buffer_groups_[1], 1);
 
-                buffer_barrier(command_buffer, *m_buffer);
+                buffer_barrier(command_buffer, *buffer_);
         }
 
         void columns_mul_d(VkCommandBuffer command_buffer, bool inverse) const
         {
                 const VkDescriptorSet* set =
-                        inverse ? &m_mul_d_d2_inv.descriptor_set() : &m_mul_d_d2_fwd.descriptor_set();
-                vkCmdBindPipeline(command_buffer, VK_PIPELINE_BIND_POINT_COMPUTE, m_mul_d_program.pipeline_columns());
+                        inverse ? &mul_d_d2_inv_.descriptor_set() : &mul_d_d2_fwd_.descriptor_set();
+                vkCmdBindPipeline(command_buffer, VK_PIPELINE_BIND_POINT_COMPUTE, mul_d_program_.pipeline_columns());
                 vkCmdBindDescriptorSets(
-                        command_buffer, VK_PIPELINE_BIND_POINT_COMPUTE, m_mul_d_program.pipeline_layout(),
+                        command_buffer, VK_PIPELINE_BIND_POINT_COMPUTE, mul_d_program_.pipeline_layout(),
                         MulDMemory::set_number(), 1, set, 0, nullptr);
-                vkCmdDispatch(command_buffer, m_mul_d_column_groups[0], m_mul_d_column_groups[1], 1);
+                vkCmdDispatch(command_buffer, mul_d_column_groups_[0], mul_d_column_groups_[1], 1);
 
-                buffer_barrier(command_buffer, *m_buffer);
+                buffer_barrier(command_buffer, *buffer_);
         }
 
         void columns_from_buffer(VkCommandBuffer command_buffer, bool inverse) const
         {
                 vkCmdBindPipeline(
                         command_buffer, VK_PIPELINE_BIND_POINT_COMPUTE,
-                        m_mul_program.pipeline_columns_from_buffer(inverse));
+                        mul_program_.pipeline_columns_from_buffer(inverse));
                 vkCmdBindDescriptorSets(
-                        command_buffer, VK_PIPELINE_BIND_POINT_COMPUTE, m_mul_program.pipeline_layout(),
-                        MulMemory::set_number(), 1, &m_mul_memory.descriptor_set(), 0, nullptr);
+                        command_buffer, VK_PIPELINE_BIND_POINT_COMPUTE, mul_program_.pipeline_layout(),
+                        MulMemory::set_number(), 1, &mul_memory_.descriptor_set(), 0, nullptr);
                 vkCmdDispatch(
-                        command_buffer, m_mul_columns_from_buffer_groups[0], m_mul_columns_from_buffer_groups[1], 1);
+                        command_buffer, mul_columns_from_buffer_groups_[0], mul_columns_from_buffer_groups_[1], 1);
 
-                buffer_barrier(command_buffer, *m_x_d);
+                buffer_barrier(command_buffer, *x_d_);
         }
 
         void create_diagonals(uint32_t family_index)
@@ -511,134 +511,133 @@ class Dft final
 
                 // Для обратного преобразования нужна корректировка данных с умножением на коэффициент,
                 // так как разный размер у исходного вектора N и его расширенного M.
-                const double m1_div_n1 = static_cast<double>(m_m1) / m_n1;
-                const double m2_div_n2 = static_cast<double>(m_m2) / m_n2;
+                const double m1_div_n1 = static_cast<double>(m1_) / n1_;
+                const double m2_div_n2 = static_cast<double>(m2_) / n2_;
 
-                std::vector<std::complex<double>> d1_fwd = compute_h2(m_n1, m_m1, compute_h(m_n1, false, 1.0));
-                std::vector<std::complex<double>> d1_inv = compute_h2(m_n1, m_m1, compute_h(m_n1, true, m1_div_n1));
-                std::vector<std::complex<double>> d2_fwd = compute_h2(m_n2, m_m2, compute_h(m_n2, false, 1.0));
-                std::vector<std::complex<double>> d2_inv = compute_h2(m_n2, m_m2, compute_h(m_n2, true, m2_div_n2));
+                std::vector<std::complex<double>> d1_fwd = compute_h2(n1_, m1_, compute_h(n1_, false, 1.0));
+                std::vector<std::complex<double>> d1_inv = compute_h2(n1_, m1_, compute_h(n1_, true, m1_div_n1));
+                std::vector<std::complex<double>> d2_fwd = compute_h2(n2_, m2_, compute_h(n2_, false, 1.0));
+                std::vector<std::complex<double>> d2_inv = compute_h2(n2_, m2_, compute_h(n2_, true, m2_div_n2));
 
                 //
 
                 const std::vector<uint32_t> family_indices = {
-                        family_index, m_compute_command_pool.family_index(), m_transfer_command_pool.family_index()};
+                        family_index, compute_command_pool_.family_index(), transfer_command_pool_.family_index()};
 
-                m_d1_fwd.emplace(m_device, m_transfer_command_pool, m_transfer_queue, family_indices, d1_fwd);
-                m_d1_inv.emplace(m_device, m_transfer_command_pool, m_transfer_queue, family_indices, d1_inv);
-                m_d2_fwd.emplace(m_device, m_transfer_command_pool, m_transfer_queue, family_indices, d2_fwd);
-                m_d2_inv.emplace(m_device, m_transfer_command_pool, m_transfer_queue, family_indices, d2_inv);
+                d1_fwd_.emplace(device_, transfer_command_pool_, transfer_queue_, family_indices, d1_fwd);
+                d1_inv_.emplace(device_, transfer_command_pool_, transfer_queue_, family_indices, d1_inv);
+                d2_fwd_.emplace(device_, transfer_command_pool_, transfer_queue_, family_indices, d2_fwd);
+                d2_inv_.emplace(device_, transfer_command_pool_, transfer_queue_, family_indices, d2_inv);
 
                 {
-                        Fft1d fft(m_instance.device(), {m_compute_command_pool.family_index()}, 1, m_m1);
-                        fft.run_for_data(false, *m_d1_fwd, m_device, m_compute_command_pool, m_compute_queue);
-                        fft.run_for_data(true, *m_d1_inv, m_device, m_compute_command_pool, m_compute_queue);
+                        Fft1d fft(instance_.device(), {compute_command_pool_.family_index()}, 1, m1_);
+                        fft.run_for_data(false, *d1_fwd_, device_, compute_command_pool_, compute_queue_);
+                        fft.run_for_data(true, *d1_inv_, device_, compute_command_pool_, compute_queue_);
                 }
                 {
-                        Fft1d fft(m_instance.device(), {m_compute_command_pool.family_index()}, 1, m_m2);
-                        fft.run_for_data(false, *m_d2_fwd, m_device, m_compute_command_pool, m_compute_queue);
-                        fft.run_for_data(true, *m_d2_inv, m_device, m_compute_command_pool, m_compute_queue);
+                        Fft1d fft(instance_.device(), {compute_command_pool_.family_index()}, 1, m2_);
+                        fft.run_for_data(false, *d2_fwd_, device_, compute_command_pool_, compute_queue_);
+                        fft.run_for_data(true, *d2_inv_, device_, compute_command_pool_, compute_queue_);
                 }
         }
 
 public:
         void create_buffers(unsigned width, unsigned height, uint32_t family_index)
         {
-                ASSERT(m_thread_id == std::this_thread::get_id());
+                ASSERT(thread_id_ == std::this_thread::get_id());
 
                 //
 
                 ASSERT(width > 0 && height > 0);
 
-                m_n1 = width;
-                m_n2 = height;
-                m_m1 = compute_m(m_n1);
-                m_m2 = compute_m(m_n2);
+                n1_ = width;
+                n2_ = height;
+                m1_ = compute_m(n1_);
+                m2_ = compute_m(n2_);
 
                 create_diagonals(family_index);
 
                 const std::vector<uint32_t> family_indices = {family_index};
 
-                m_x_d.emplace(m_device, family_indices, m_n1 * m_n2, m_buffer_memory_type);
-                m_buffer.emplace(
-                        m_device, family_indices, std::max(m_m1 * m_n2, m_m2 * m_n1),
-                        vulkan::BufferMemoryType::DeviceLocal);
+                x_d_.emplace(device_, family_indices, n1_ * n2_, buffer_memory_type_);
+                buffer_.emplace(
+                        device_, family_indices, std::max(m1_ * n2_, m2_ * n1_), vulkan::BufferMemoryType::DeviceLocal);
 
-                m_fft_n2_m1.emplace(m_instance.device(), family_indices, m_n2, m_m1);
-                m_fft_n2_m1->set_data(*m_buffer);
-                m_fft_n1_m2.emplace(m_instance.device(), family_indices, m_n1, m_m2);
-                m_fft_n1_m2->set_data(*m_buffer);
+                fft_n2_m1_.emplace(instance_.device(), family_indices, n2_, m1_);
+                fft_n2_m1_->set_data(*buffer_);
+                fft_n1_m2_.emplace(instance_.device(), family_indices, n1_, m2_);
+                fft_n1_m2_->set_data(*buffer_);
 
-                m_mul_memory.set(*m_x_d, *m_buffer);
-                m_mul_program.create_pipelines(m_n1, m_n2, m_m1, m_m2, GROUP_SIZE_2D[0], GROUP_SIZE_2D[1]);
-                m_mul_rows_to_buffer_groups = group_count(m_m1, m_n2, GROUP_SIZE_2D);
-                m_mul_rows_from_buffer_groups = group_count(m_n1, m_n2, GROUP_SIZE_2D);
-                m_mul_columns_to_buffer_groups = group_count(m_n1, m_m2, GROUP_SIZE_2D);
-                m_mul_columns_from_buffer_groups = group_count(m_n1, m_n2, GROUP_SIZE_2D);
+                mul_memory_.set(*x_d_, *buffer_);
+                mul_program_.create_pipelines(n1_, n2_, m1_, m2_, GROUP_SIZE_2D[0], GROUP_SIZE_2D[1]);
+                mul_rows_to_buffer_groups_ = group_count(m1_, n2_, GROUP_SIZE_2D);
+                mul_rows_from_buffer_groups_ = group_count(n1_, n2_, GROUP_SIZE_2D);
+                mul_columns_to_buffer_groups_ = group_count(n1_, m2_, GROUP_SIZE_2D);
+                mul_columns_from_buffer_groups_ = group_count(n1_, n2_, GROUP_SIZE_2D);
 
-                m_mul_d_d1_fwd.set(*m_d1_fwd, *m_buffer);
-                m_mul_d_d1_inv.set(*m_d1_inv, *m_buffer);
-                m_mul_d_d2_fwd.set(*m_d2_fwd, *m_buffer);
-                m_mul_d_d2_inv.set(*m_d2_inv, *m_buffer);
-                m_mul_d_program.create_pipelines(m_n1, m_n2, m_m1, m_m2, GROUP_SIZE_2D[0], GROUP_SIZE_2D[1]);
-                m_mul_d_row_groups = group_count(m_m1, m_n2, GROUP_SIZE_2D);
-                m_mul_d_column_groups = group_count(m_m2, m_n1, GROUP_SIZE_2D);
+                mul_d_d1_fwd_.set(*d1_fwd_, *buffer_);
+                mul_d_d1_inv_.set(*d1_inv_, *buffer_);
+                mul_d_d2_fwd_.set(*d2_fwd_, *buffer_);
+                mul_d_d2_inv_.set(*d2_inv_, *buffer_);
+                mul_d_program_.create_pipelines(n1_, n2_, m1_, m2_, GROUP_SIZE_2D[0], GROUP_SIZE_2D[1]);
+                mul_d_row_groups_ = group_count(m1_, n2_, GROUP_SIZE_2D);
+                mul_d_column_groups_ = group_count(m2_, n1_, GROUP_SIZE_2D);
         }
 
         void delete_buffers()
         {
-                ASSERT(m_thread_id == std::this_thread::get_id());
+                ASSERT(thread_id_ == std::this_thread::get_id());
 
                 //
 
-                m_mul_program.delete_pipelines();
-                m_mul_d_program.delete_pipelines();
+                mul_program_.delete_pipelines();
+                mul_d_program_.delete_pipelines();
 
-                m_fft_n2_m1.reset();
-                m_fft_n1_m2.reset();
+                fft_n2_m1_.reset();
+                fft_n1_m2_.reset();
 
-                m_d1_fwd.reset();
-                m_d1_inv.reset();
-                m_d2_fwd.reset();
-                m_d2_inv.reset();
-                m_x_d.reset();
-                m_buffer.reset();
+                d1_fwd_.reset();
+                d1_inv_.reset();
+                d2_fwd_.reset();
+                d2_inv_.reset();
+                x_d_.reset();
+                buffer_.reset();
 
-                m_n1 = m_n2 = m_m1 = m_m2 = -1;
+                n1_ = n2_ = m1_ = m2_ = -1;
         }
 
         void compute_commands(VkCommandBuffer command_buffer, bool inverse) const
         {
-                ASSERT(std::this_thread::get_id() == m_thread_id);
+                ASSERT(std::this_thread::get_id() == thread_id_);
 
                 //
 
-                if (m_n1 > 1)
+                if (n1_ > 1)
                 {
                         rows_to_buffer(command_buffer, inverse);
-                        m_fft_n2_m1->commands(command_buffer, inverse);
+                        fft_n2_m1_->commands(command_buffer, inverse);
                         rows_mul_d(command_buffer, inverse);
-                        m_fft_n2_m1->commands(command_buffer, !inverse);
+                        fft_n2_m1_->commands(command_buffer, !inverse);
                         rows_from_buffer(command_buffer, inverse);
                 }
-                if (m_n2 > 1)
+                if (n2_ > 1)
                 {
                         columns_to_buffer(command_buffer, inverse);
-                        m_fft_n1_m2->commands(command_buffer, inverse);
+                        fft_n1_m2_->commands(command_buffer, inverse);
                         columns_mul_d(command_buffer, inverse);
-                        m_fft_n1_m2->commands(command_buffer, !inverse);
+                        fft_n1_m2_->commands(command_buffer, !inverse);
                         columns_from_buffer(command_buffer, inverse);
                 }
         }
 
         const vulkan::BufferWithMemory& buffer() const
         {
-                ASSERT(m_thread_id == std::this_thread::get_id());
+                ASSERT(thread_id_ == std::this_thread::get_id());
 
                 //
 
-                ASSERT(m_x_d);
-                return *m_x_d;
+                ASSERT(x_d_);
+                return *x_d_;
         }
 
         Dft(const vulkan::VulkanInstance& instance,
@@ -647,20 +646,20 @@ public:
             const vulkan::CommandPool& transfer_command_pool,
             const vulkan::Queue& transfer_queue,
             vulkan::BufferMemoryType buffer_memory_type)
-                : m_instance(instance),
-                  m_device(instance.device()),
-                  m_compute_command_pool(compute_command_pool),
-                  m_compute_queue(compute_queue),
-                  m_transfer_command_pool(transfer_command_pool),
-                  m_transfer_queue(transfer_queue),
-                  m_buffer_memory_type(buffer_memory_type),
-                  m_mul_program(instance.device()),
-                  m_mul_memory(instance.device(), m_mul_program.descriptor_set_layout()),
-                  m_mul_d_program(instance.device()),
-                  m_mul_d_d1_fwd(instance.device(), m_mul_d_program.descriptor_set_layout()),
-                  m_mul_d_d1_inv(instance.device(), m_mul_d_program.descriptor_set_layout()),
-                  m_mul_d_d2_fwd(instance.device(), m_mul_d_program.descriptor_set_layout()),
-                  m_mul_d_d2_inv(instance.device(), m_mul_d_program.descriptor_set_layout())
+                : instance_(instance),
+                  device_(instance.device()),
+                  compute_command_pool_(compute_command_pool),
+                  compute_queue_(compute_queue),
+                  transfer_command_pool_(transfer_command_pool),
+                  transfer_queue_(transfer_queue),
+                  buffer_memory_type_(buffer_memory_type),
+                  mul_program_(instance.device()),
+                  mul_memory_(instance.device(), mul_program_.descriptor_set_layout()),
+                  mul_d_program_(instance.device()),
+                  mul_d_d1_fwd_(instance.device(), mul_d_program_.descriptor_set_layout()),
+                  mul_d_d1_inv_(instance.device(), mul_d_program_.descriptor_set_layout()),
+                  mul_d_d2_fwd_(instance.device(), mul_d_program_.descriptor_set_layout()),
+                  mul_d_d2_inv_(instance.device(), mul_d_program_.descriptor_set_layout())
         {
                 ASSERT(compute_command_pool.family_index() == compute_queue.family_index());
                 ASSERT(transfer_command_pool.family_index() == transfer_queue.family_index());
@@ -668,25 +667,25 @@ public:
 
         ~Dft()
         {
-                ASSERT(std::this_thread::get_id() == m_thread_id);
+                ASSERT(std::this_thread::get_id() == thread_id_);
 
                 //
 
-                m_instance.device_wait_idle_noexcept("the Vulkan DFT compute destructor");
+                instance_.device_wait_idle_noexcept("the Vulkan DFT compute destructor");
         }
 };
 
 class DftImage final : public ComputeImage
 {
-        Dft m_dft;
+        Dft dft_;
 
-        CopyInputProgram m_copy_input_program;
-        CopyInputMemory m_copy_input_memory;
-        CopyOutputProgram m_copy_output_program;
-        CopyOutputMemory m_copy_output_memory;
-        vec2i m_copy_groups = vec2i(0, 0);
+        CopyInputProgram copy_input_program_;
+        CopyInputMemory copy_input_memory_;
+        CopyOutputProgram copy_output_program_;
+        CopyOutputMemory copy_output_memory_;
+        vec2i copy_groups_ = vec2i(0, 0);
 
-        VkImage m_output = VK_NULL_HANDLE;
+        VkImage output_ = VK_NULL_HANDLE;
 
         void create_buffers(
                 VkSampler sampler,
@@ -702,62 +701,62 @@ class DftImage final : public ComputeImage
                 ASSERT(rectangle.x1() <= static_cast<int>(input.width()));
                 ASSERT(rectangle.y1() <= static_cast<int>(input.height()));
 
-                m_dft.create_buffers(rectangle.width(), rectangle.height(), family_index);
+                dft_.create_buffers(rectangle.width(), rectangle.height(), family_index);
 
                 //
 
-                m_copy_input_memory.set(sampler, input, m_dft.buffer());
-                m_copy_input_program.create_pipeline(GROUP_SIZE_2D[0], GROUP_SIZE_2D[1], rectangle);
+                copy_input_memory_.set(sampler, input, dft_.buffer());
+                copy_input_program_.create_pipeline(GROUP_SIZE_2D[0], GROUP_SIZE_2D[1], rectangle);
 
                 const int width = rectangle.width();
                 const int height = rectangle.height();
 
-                m_copy_output_memory.set(m_dft.buffer(), output);
-                m_copy_output_program.create_pipeline(GROUP_SIZE_2D[0], GROUP_SIZE_2D[1], 1.0 / (width * height));
+                copy_output_memory_.set(dft_.buffer(), output);
+                copy_output_program_.create_pipeline(GROUP_SIZE_2D[0], GROUP_SIZE_2D[1], 1.0 / (width * height));
 
-                m_copy_groups = group_count(width, height, GROUP_SIZE_2D);
+                copy_groups_ = group_count(width, height, GROUP_SIZE_2D);
 
-                m_output = output.image();
+                output_ = output.image();
         }
 
         void delete_buffers() override
         {
-                m_output = VK_NULL_HANDLE;
+                output_ = VK_NULL_HANDLE;
 
-                m_copy_output_program.delete_pipeline();
-                m_copy_input_program.delete_pipeline();
+                copy_output_program_.delete_pipeline();
+                copy_input_program_.delete_pipeline();
 
                 //
 
-                m_dft.delete_buffers();
+                dft_.delete_buffers();
         }
 
         void compute_commands(VkCommandBuffer command_buffer) const override
         {
-                vkCmdBindPipeline(command_buffer, VK_PIPELINE_BIND_POINT_COMPUTE, m_copy_input_program.pipeline());
+                vkCmdBindPipeline(command_buffer, VK_PIPELINE_BIND_POINT_COMPUTE, copy_input_program_.pipeline());
                 vkCmdBindDescriptorSets(
-                        command_buffer, VK_PIPELINE_BIND_POINT_COMPUTE, m_copy_input_program.pipeline_layout(),
-                        CopyInputMemory::set_number(), 1, &m_copy_input_memory.descriptor_set(), 0, nullptr);
-                vkCmdDispatch(command_buffer, m_copy_groups[0], m_copy_groups[1], 1);
+                        command_buffer, VK_PIPELINE_BIND_POINT_COMPUTE, copy_input_program_.pipeline_layout(),
+                        CopyInputMemory::set_number(), 1, &copy_input_memory_.descriptor_set(), 0, nullptr);
+                vkCmdDispatch(command_buffer, copy_groups_[0], copy_groups_[1], 1);
 
-                buffer_barrier(command_buffer, m_dft.buffer());
+                buffer_barrier(command_buffer, dft_.buffer());
 
                 //
 
                 constexpr bool inverse = false;
-                m_dft.compute_commands(command_buffer, inverse);
+                dft_.compute_commands(command_buffer, inverse);
 
                 //
 
-                image_barrier_before(command_buffer, m_output);
+                image_barrier_before(command_buffer, output_);
 
-                vkCmdBindPipeline(command_buffer, VK_PIPELINE_BIND_POINT_COMPUTE, m_copy_output_program.pipeline());
+                vkCmdBindPipeline(command_buffer, VK_PIPELINE_BIND_POINT_COMPUTE, copy_output_program_.pipeline());
                 vkCmdBindDescriptorSets(
-                        command_buffer, VK_PIPELINE_BIND_POINT_COMPUTE, m_copy_output_program.pipeline_layout(),
-                        CopyOutputMemory::set_number(), 1, &m_copy_output_memory.descriptor_set(), 0, nullptr);
-                vkCmdDispatch(command_buffer, m_copy_groups[0], m_copy_groups[1], 1);
+                        command_buffer, VK_PIPELINE_BIND_POINT_COMPUTE, copy_output_program_.pipeline_layout(),
+                        CopyOutputMemory::set_number(), 1, &copy_output_memory_.descriptor_set(), 0, nullptr);
+                vkCmdDispatch(command_buffer, copy_groups_[0], copy_groups_[1], 1);
 
-                image_barrier_after(command_buffer, m_output);
+                image_barrier_after(command_buffer, output_);
         }
 
 public:
@@ -767,33 +766,33 @@ public:
                 const vulkan::Queue& compute_queue,
                 const vulkan::CommandPool& transfer_command_pool,
                 const vulkan::Queue& transfer_queue)
-                : m_dft(instance,
-                        compute_command_pool,
-                        compute_queue,
-                        transfer_command_pool,
-                        transfer_queue,
-                        vulkan::BufferMemoryType::DeviceLocal),
-                  m_copy_input_program(instance.device()),
-                  m_copy_input_memory(instance.device(), m_copy_input_program.descriptor_set_layout()),
-                  m_copy_output_program(instance.device()),
-                  m_copy_output_memory(instance.device(), m_copy_output_program.descriptor_set_layout())
+                : dft_(instance,
+                       compute_command_pool,
+                       compute_queue,
+                       transfer_command_pool,
+                       transfer_queue,
+                       vulkan::BufferMemoryType::DeviceLocal),
+                  copy_input_program_(instance.device()),
+                  copy_input_memory_(instance.device(), copy_input_program_.descriptor_set_layout()),
+                  copy_output_program_(instance.device()),
+                  copy_output_memory_(instance.device(), copy_output_program_.descriptor_set_layout())
         {
         }
 };
 
 class DftVector final : public ComputeVector
 {
-        vulkan::VulkanInstance m_instance;
-        const vulkan::Device& m_device;
+        vulkan::VulkanInstance instance_;
+        const vulkan::Device& device_;
 
-        const vulkan::CommandPool& m_compute_command_pool;
-        const vulkan::Queue& m_compute_queue;
+        const vulkan::CommandPool& compute_command_pool_;
+        const vulkan::Queue& compute_queue_;
 
-        Dft m_dft;
+        Dft dft_;
 
-        std::optional<vulkan::CommandBuffers> m_command_buffers;
-        unsigned m_width = 0;
-        unsigned m_height = 0;
+        std::optional<vulkan::CommandBuffers> command_buffers_;
+        unsigned width_ = 0;
+        unsigned height_ = 0;
 
         enum DftType
         {
@@ -803,11 +802,11 @@ class DftVector final : public ComputeVector
 
         void delete_buffers()
         {
-                m_width = -1;
-                m_height = -1;
+                width_ = -1;
+                height_ = -1;
 
-                m_command_buffers.reset();
-                m_dft.delete_buffers();
+                command_buffers_.reset();
+                dft_.delete_buffers();
         }
 
         void create_buffers(unsigned width, unsigned height) override
@@ -816,13 +815,13 @@ class DftVector final : public ComputeVector
 
                 //
 
-                m_dft.create_buffers(width, height, m_compute_queue.family_index());
+                dft_.create_buffers(width, height, compute_queue_.family_index());
 
-                m_command_buffers = vulkan::CommandBuffers(m_device, m_compute_command_pool, 2);
+                command_buffers_ = vulkan::CommandBuffers(device_, compute_command_pool_, 2);
                 VkResult result;
                 for (int index : {DftType::Forward, DftType::Inverse})
                 {
-                        VkCommandBuffer command_buffer = (*m_command_buffers)[index];
+                        VkCommandBuffer command_buffer = (*command_buffers_)[index];
 
                         VkCommandBufferBeginInfo command_buffer_info = {};
                         command_buffer_info.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
@@ -836,7 +835,7 @@ class DftVector final : public ComputeVector
                         //
 
                         const bool inverse = (index == DftType::Inverse);
-                        m_dft.compute_commands(command_buffer, inverse);
+                        dft_.compute_commands(command_buffer, inverse);
 
                         //
 
@@ -847,46 +846,46 @@ class DftVector final : public ComputeVector
                         }
                 }
 
-                m_width = width;
-                m_height = height;
+                width_ = width;
+                height_ = height;
         }
 
         void exec(bool inverse, std::vector<std::complex<float>>* src) override
         {
-                if (!(m_width > 0 && m_height > 0 && m_command_buffers))
+                if (!(width_ > 0 && height_ > 0 && command_buffers_))
                 {
                         error("No DFT buffers");
                 }
-                if (!(src && (src->size() == static_cast<std::size_t>(m_width) * m_height)))
+                if (!(src && (src->size() == static_cast<std::size_t>(width_) * height_)))
                 {
                         error("Wrong DFT buffer size");
                 }
 
                 {
-                        vulkan::BufferMapper mapper(m_dft.buffer());
+                        vulkan::BufferMapper mapper(dft_.buffer());
                         mapper.write(*src);
                 }
                 vulkan::queue_submit(
-                        (*m_command_buffers)[inverse ? DftType::Inverse : DftType::Forward], m_compute_queue);
-                vulkan::queue_wait_idle(m_compute_queue);
+                        (*command_buffers_)[inverse ? DftType::Inverse : DftType::Forward], compute_queue_);
+                vulkan::queue_wait_idle(compute_queue_);
                 {
-                        vulkan::BufferMapper mapper(m_dft.buffer());
+                        vulkan::BufferMapper mapper(dft_.buffer());
                         mapper.read(src);
                 }
         }
 
 public:
         DftVector()
-                : m_instance({}, {}, DFT_VECTOR_REQUIRED_DEVICE_FEATURES, {}),
-                  m_device(m_instance.device()),
-                  m_compute_command_pool(m_instance.compute_command_pool()),
-                  m_compute_queue(m_instance.compute_queue()),
-                  m_dft(m_instance,
-                        m_compute_command_pool,
-                        m_compute_queue,
-                        m_instance.transfer_command_pool(),
-                        m_instance.transfer_queue(),
-                        vulkan::BufferMemoryType::HostVisible)
+                : instance_({}, {}, DFT_VECTOR_REQUIRED_DEVICE_FEATURES, {}),
+                  device_(instance_.device()),
+                  compute_command_pool_(instance_.compute_command_pool()),
+                  compute_queue_(instance_.compute_queue()),
+                  dft_(instance_,
+                       compute_command_pool_,
+                       compute_queue_,
+                       instance_.transfer_command_pool(),
+                       instance_.transfer_queue(),
+                       vulkan::BufferMemoryType::HostVisible)
         {
         }
 };

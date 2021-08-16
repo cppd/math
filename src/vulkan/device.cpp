@@ -98,15 +98,15 @@ std::vector<bool> find_presentation_support(
 
 class FeatureIsNotSupported final : public std::exception
 {
-        const char* m_text;
+        const char* text_;
 
 public:
-        explicit FeatureIsNotSupported(const char* feature_name) noexcept : m_text(feature_name)
+        explicit FeatureIsNotSupported(const char* feature_name) noexcept : text_(feature_name)
         {
         }
         const char* what() const noexcept override
         {
-                return m_text;
+                return text_;
         }
 };
 
@@ -422,7 +422,7 @@ std::vector<VkPhysicalDevice> physical_devices(VkInstance instance)
 }
 
 PhysicalDevice::PhysicalDevice(VkPhysicalDevice physical_device, VkSurfaceKHR surface)
-        : m_physical_device(physical_device)
+        : physical_device_(physical_device)
 {
         ASSERT(physical_device != VK_NULL_HANDLE);
 
@@ -449,13 +449,13 @@ PhysicalDevice::PhysicalDevice(VkPhysicalDevice physical_device, VkSurfaceKHR su
                 VkPhysicalDeviceProperties2 properties_2 = {};
                 properties_2.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_PROPERTIES_2;
                 properties_2.pNext = &vulkan_11_properties;
-                vkGetPhysicalDeviceProperties2(m_physical_device, &properties_2);
+                vkGetPhysicalDeviceProperties2(physical_device_, &properties_2);
 
-                m_properties.properties_10 = properties_2.properties;
-                m_properties.properties_11 = vulkan_11_properties;
-                m_properties.properties_11.pNext = nullptr;
-                m_properties.properties_12 = vulkan_12_properties;
-                m_properties.properties_12.pNext = nullptr;
+                properties_.properties_10 = properties_2.properties;
+                properties_.properties_11 = vulkan_11_properties;
+                properties_.properties_11.pNext = nullptr;
+                properties_.properties_12 = vulkan_12_properties;
+                properties_.properties_12.pNext = nullptr;
         }
         {
                 VkPhysicalDeviceVulkan12Features vulkan_12_features = {};
@@ -466,56 +466,56 @@ PhysicalDevice::PhysicalDevice(VkPhysicalDevice physical_device, VkSurfaceKHR su
                 VkPhysicalDeviceFeatures2 features_2 = {};
                 features_2.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_FEATURES_2;
                 features_2.pNext = &vulkan_11_features;
-                vkGetPhysicalDeviceFeatures2(m_physical_device, &features_2);
+                vkGetPhysicalDeviceFeatures2(physical_device_, &features_2);
 
-                m_features.features_10 = features_2.features;
-                m_features.features_11 = vulkan_11_features;
-                m_features.features_11.pNext = nullptr;
-                m_features.features_12 = vulkan_12_features;
-                m_features.features_12.pNext = nullptr;
+                features_.features_10 = features_2.features;
+                features_.features_11 = vulkan_11_features;
+                features_.features_11.pNext = nullptr;
+                features_.features_12 = vulkan_12_features;
+                features_.features_12.pNext = nullptr;
         }
 
-        m_queue_families = find_queue_families(physical_device);
-        m_presentation_supported = find_presentation_support(surface, m_physical_device, m_queue_families);
-        m_supported_extensions = find_extensions(m_physical_device);
+        queue_families_ = find_queue_families(physical_device);
+        presentation_supported_ = find_presentation_support(surface, physical_device_, queue_families_);
+        supported_extensions_ = find_extensions(physical_device_);
 
-        ASSERT(m_queue_families.size() == m_presentation_supported.size());
+        ASSERT(queue_families_.size() == presentation_supported_.size());
 }
 
 PhysicalDevice::operator VkPhysicalDevice() const&
 {
-        return m_physical_device;
+        return physical_device_;
 }
 
 const DeviceFeatures& PhysicalDevice::features() const
 {
-        return m_features;
+        return features_;
 }
 
 const DeviceProperties& PhysicalDevice::properties() const
 {
-        return m_properties;
+        return properties_;
 }
 
 const std::vector<VkQueueFamilyProperties>& PhysicalDevice::queue_families() const
 {
-        return m_queue_families;
+        return queue_families_;
 }
 
 const std::unordered_set<std::string>& PhysicalDevice::supported_extensions() const
 {
-        return m_supported_extensions;
+        return supported_extensions_;
 }
 
 uint32_t PhysicalDevice::family_index(VkQueueFlags set_flags, VkQueueFlags not_set_flags, VkQueueFlags default_flags)
         const
 {
         uint32_t index;
-        if (set_flags && find_family(m_queue_families, set_flags, not_set_flags, &index))
+        if (set_flags && find_family(queue_families_, set_flags, not_set_flags, &index))
         {
                 return index;
         }
-        if (default_flags && find_family(m_queue_families, default_flags, 0, &index))
+        if (default_flags && find_family(queue_families_, default_flags, 0, &index))
         {
                 return index;
         }
@@ -525,9 +525,9 @@ uint32_t PhysicalDevice::family_index(VkQueueFlags set_flags, VkQueueFlags not_s
 
 uint32_t PhysicalDevice::presentation_family_index() const
 {
-        for (std::size_t i = 0; i < m_presentation_supported.size(); ++i)
+        for (std::size_t i = 0; i < presentation_supported_.size(); ++i)
         {
-                if (m_presentation_supported[i])
+                if (presentation_supported_[i])
                 {
                         return i;
                 }
@@ -541,15 +541,15 @@ bool PhysicalDevice::supports_extensions(const std::vector<std::string>& extensi
                 extensions.cbegin(), extensions.cend(),
                 [&](const std::string& e)
                 {
-                        return m_supported_extensions.count(e) >= 1;
+                        return supported_extensions_.count(e) >= 1;
                 });
 }
 
 bool PhysicalDevice::queue_family_supports_presentation(uint32_t index) const
 {
-        ASSERT(index < m_presentation_supported.size());
+        ASSERT(index < presentation_supported_.size());
 
-        return m_presentation_supported[index];
+        return presentation_supported_[index];
 }
 
 //

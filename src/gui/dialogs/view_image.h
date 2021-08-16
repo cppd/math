@@ -38,9 +38,9 @@ class ViewImageDialog final : public QDialog
 private:
         Ui::ViewImageDialog ui;
 
-        const std::string& m_file_name;
+        const std::string& file_name_;
 
-        std::optional<ViewImageParameters>& m_parameters;
+        std::optional<ViewImageParameters>& parameters_;
 
         ViewImageDialog(
                 const ViewImageParameters& input,

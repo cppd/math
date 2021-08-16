@@ -73,8 +73,8 @@ void Tests::run(
 std::vector<std::string> Tests::small_names() const
 {
         std::vector<std::string> names;
-        names.reserve(m_small_tests.size());
-        for (const auto& [name, test] : m_small_tests)
+        names.reserve(small_tests_.size());
+        for (const auto& [name, test] : small_tests_)
         {
                 names.emplace_back(name);
         }
@@ -84,8 +84,8 @@ std::vector<std::string> Tests::small_names() const
 std::vector<std::string> Tests::large_names() const
 {
         std::vector<std::string> names;
-        names.reserve(m_large_tests.size());
-        for (const auto& [name, test] : m_large_tests)
+        names.reserve(large_tests_.size());
+        for (const auto& [name, test] : large_tests_)
         {
                 names.emplace_back(name);
         }
@@ -95,8 +95,8 @@ std::vector<std::string> Tests::large_names() const
 std::vector<std::string> Tests::performance_names() const
 {
         std::vector<std::string> names;
-        names.reserve(m_performance_tests.size());
-        for (const auto& [name, test] : m_performance_tests)
+        names.reserve(performance_tests_.size());
+        for (const auto& [name, test] : performance_tests_)
         {
                 names.emplace_back(name);
         }
@@ -105,8 +105,8 @@ std::vector<std::string> Tests::performance_names() const
 
 void Tests::run_small(const std::string_view& name, ProgressRatios* progress_ratios) const
 {
-        auto iter = m_small_tests.find(name);
-        if (iter == m_small_tests.cend())
+        auto iter = small_tests_.find(name);
+        if (iter == small_tests_.cend())
         {
                 std::ostringstream oss;
                 oss << SMALL << " test not found " << name;
@@ -117,8 +117,8 @@ void Tests::run_small(const std::string_view& name, ProgressRatios* progress_rat
 
 void Tests::run_large(const std::string_view& name, ProgressRatios* progress_ratios) const
 {
-        auto iter = m_large_tests.find(name);
-        if (iter == m_large_tests.cend())
+        auto iter = large_tests_.find(name);
+        if (iter == large_tests_.cend())
         {
                 std::ostringstream oss;
                 oss << LARGE << " test not found " << name;
@@ -129,8 +129,8 @@ void Tests::run_large(const std::string_view& name, ProgressRatios* progress_rat
 
 void Tests::run_performance(const std::string_view& name, ProgressRatios* progress_ratios) const
 {
-        auto iter = m_performance_tests.find(name);
-        if (iter == m_performance_tests.cend())
+        auto iter = performance_tests_.find(name);
+        if (iter == performance_tests_.cend())
         {
                 std::ostringstream oss;
                 oss << PERFORMANCE << " test not found " << name;

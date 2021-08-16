@@ -36,10 +36,10 @@ class FacetObjectParametersDialog final : public QDialog
 private:
         Ui::FacetObjectParametersDialog ui;
 
-        const int m_min_facet_count;
-        const int m_max_facet_count;
+        const int min_facet_count_;
+        const int max_facet_count_;
 
-        std::optional<FacetObjectParameters>& m_parameters;
+        std::optional<FacetObjectParameters>& parameters_;
 
         FacetObjectParametersDialog(
                 int dimension,

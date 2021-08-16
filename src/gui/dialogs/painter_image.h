@@ -46,9 +46,9 @@ class PainterImageDialog final : public QDialog
 private:
         Ui::PainterImageDialog ui;
 
-        const PainterImagePathType m_path_type;
+        const PainterImagePathType path_type_;
 
-        std::optional<PainterImageParameters>& m_parameters;
+        std::optional<PainterImageParameters>& parameters_;
 
         PainterImageDialog(
                 const std::string& title,

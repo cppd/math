@@ -27,21 +27,21 @@ namespace ns
 // Для работы в потоках расчётов
 void ProgressRatioList::add_progress_ratio(ProgressRatioControl* ratio)
 {
-        ASSERT(std::this_thread::get_id() != m_thread_id);
+        ASSERT(std::this_thread::get_id() != thread_id_);
 
-        std::lock_guard lg(m_mutex);
+        std::lock_guard lg(mutex_);
 
-        if (m_terminate_quietly)
+        if (terminate_quietly_)
         {
                 throw TerminateQuietlyException();
         }
 
-        if (m_terminate_with_message)
+        if (terminate_with_message_)
         {
                 throw TerminateWithMessageException();
         }
 
-        m_ratios.emplace_back(ratio);
+        ratios_.emplace_back(ratio);
 }
 
 // Для работы в потоках расчётов
@@ -49,15 +49,15 @@ void ProgressRatioList::delete_progress_ratio(const ProgressRatioControl* ratio)
 {
         try
         {
-                ASSERT(std::this_thread::get_id() != m_thread_id);
+                ASSERT(std::this_thread::get_id() != thread_id_);
 
-                std::lock_guard lg(m_mutex);
+                std::lock_guard lg(mutex_);
 
-                for (auto i = m_ratios.begin(); i != m_ratios.end(); ++i)
+                for (auto i = ratios_.begin(); i != ratios_.end(); ++i)
                 {
                         if (*i == ratio)
                         {
-                                m_ratios.erase(i);
+                                ratios_.erase(i);
                                 return;
                         }
                 }
@@ -71,12 +71,12 @@ void ProgressRatioList::delete_progress_ratio(const ProgressRatioControl* ratio)
 // Для работы в потоке интерфейса
 void ProgressRatioList::terminate_all_quietly()
 {
-        ASSERT(std::this_thread::get_id() == m_thread_id);
+        ASSERT(std::this_thread::get_id() == thread_id_);
 
-        std::lock_guard lg(m_mutex);
+        std::lock_guard lg(mutex_);
 
-        m_terminate_quietly = true;
-        for (ProgressRatioControl* ratio : m_ratios)
+        terminate_quietly_ = true;
+        for (ProgressRatioControl* ratio : ratios_)
         {
                 ratio->terminate_quietly();
         }
@@ -85,12 +85,12 @@ void ProgressRatioList::terminate_all_quietly()
 // Для работы в потоке интерфейса
 void ProgressRatioList::terminate_all_with_message()
 {
-        ASSERT(std::this_thread::get_id() == m_thread_id);
+        ASSERT(std::this_thread::get_id() == thread_id_);
 
-        std::lock_guard lg(m_mutex);
+        std::lock_guard lg(mutex_);
 
-        m_terminate_with_message = true;
-        for (ProgressRatioControl* ratio : m_ratios)
+        terminate_with_message_ = true;
+        for (ProgressRatioControl* ratio : ratios_)
         {
                 ratio->terminate_with_message();
         }
@@ -99,27 +99,27 @@ void ProgressRatioList::terminate_all_with_message()
 // Для работы в потоке интерфейса
 void ProgressRatioList::enable()
 {
-        ASSERT(std::this_thread::get_id() == m_thread_id);
+        ASSERT(std::this_thread::get_id() == thread_id_);
 
-        std::lock_guard lg(m_mutex);
+        std::lock_guard lg(mutex_);
 
-        ASSERT(m_ratios.empty());
+        ASSERT(ratios_.empty());
 
-        m_terminate_quietly = false;
-        m_terminate_with_message = false;
+        terminate_quietly_ = false;
+        terminate_with_message_ = false;
 }
 
 // Для работы в потоке интерфейса
 std::vector<std::tuple<unsigned, unsigned, std::string>> ProgressRatioList::ratios() const
 {
-        ASSERT(std::this_thread::get_id() == m_thread_id);
+        ASSERT(std::this_thread::get_id() == thread_id_);
 
-        std::lock_guard lg(m_mutex);
+        std::lock_guard lg(mutex_);
 
         std::vector<std::tuple<unsigned, unsigned, std::string>> result;
-        result.reserve(m_ratios.size());
+        result.reserve(ratios_.size());
 
-        for (const ProgressRatioControl* ratio : m_ratios)
+        for (const ProgressRatioControl* ratio : ratios_)
         {
                 unsigned v;
                 unsigned m;

@@ -31,18 +31,18 @@ constexpr long long PIXEL_SIZE_BYTES = 4;
 
 ImageWidget::ImageWidget(int width, int height, QMenu* menu)
         : QWidget(nullptr),
-          m_image_2d_pixel_count(1ull * width * height),
-          m_image_2d_byte_count(PIXEL_SIZE_BYTES * m_image_2d_pixel_count),
-          m_image_2d(width, height, QImage::Format_RGBX8888)
+          image_2d_pixel_count_(1ull * width * height),
+          image_2d_byte_count_(PIXEL_SIZE_BYTES * image_2d_pixel_count_),
+          image_2d_(width, height, QImage::Format_RGBX8888)
 {
-        ASSERT(static_cast<std::size_t>(m_image_2d.sizeInBytes()) == m_image_2d_byte_count);
+        ASSERT(static_cast<std::size_t>(image_2d_.sizeInBytes()) == image_2d_byte_count_);
 
         ui.setupUi(this);
 
         layout()->setContentsMargins(0, 0, 0, 0);
 
         ui.label_image->setText("");
-        ui.label_image->resize(m_image_2d.width(), m_image_2d.height());
+        ui.label_image->resize(image_2d_.width(), image_2d_.height());
 
         ui.scrollAreaWidgetContents->layout()->setContentsMargins(0, 0, 0, 0);
         ui.scrollAreaWidgetContents->layout()->setSpacing(0);
@@ -50,16 +50,16 @@ ImageWidget::ImageWidget(int width, int height, QMenu* menu)
         ui.scroll_area->setHorizontalScrollBarPolicy(Qt::ScrollBarAsNeeded);
         ui.scroll_area->setVerticalScrollBarPolicy(Qt::ScrollBarAsNeeded);
 
-        m_show_threads_action = menu->addAction("Show threads");
-        m_show_threads_action->setCheckable(true);
-        m_show_threads_action->setChecked(SHOW_THREADS);
+        show_threads_action_ = menu->addAction("Show threads");
+        show_threads_action_->setCheckable(true);
+        show_threads_action_->setChecked(SHOW_THREADS);
 }
 
 QSize ImageWidget::size_difference() const
 {
         ui.scroll_area->setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
         ui.scroll_area->setVerticalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
-        QSize size = m_image_2d.size() - ui.scroll_area->size();
+        QSize size = image_2d_.size() - ui.scroll_area->size();
         ui.scroll_area->setHorizontalScrollBarPolicy(Qt::ScrollBarAsNeeded);
         ui.scroll_area->setVerticalScrollBarPolicy(Qt::ScrollBarAsNeeded);
         return size;
@@ -67,18 +67,18 @@ QSize ImageWidget::size_difference() const
 
 void ImageWidget::update(const std::span<const std::byte>& pixels_r8g8b8a8, const std::vector<long long>& busy_indices)
 {
-        unsigned char* const image_bits = m_image_2d.bits();
+        unsigned char* const image_bits = image_2d_.bits();
 
-        ASSERT(pixels_r8g8b8a8.size_bytes() == m_image_2d_byte_count);
-        std::memcpy(image_bits, pixels_r8g8b8a8.data(), m_image_2d_byte_count);
+        ASSERT(pixels_r8g8b8a8.size_bytes() == image_2d_byte_count_);
+        std::memcpy(image_bits, pixels_r8g8b8a8.data(), image_2d_byte_count_);
 
-        if (m_show_threads_action->isChecked())
+        if (show_threads_action_->isChecked())
         {
                 for (long long index : busy_indices)
                 {
                         if (index >= 0)
                         {
-                                ASSERT(index < m_image_2d_pixel_count);
+                                ASSERT(index < image_2d_pixel_count_);
                                 index *= PIXEL_SIZE_BYTES;
                                 static_assert(PIXEL_SIZE_BYTES >= 3);
                                 image_bits[index++] ^= 0xff;
@@ -88,7 +88,7 @@ void ImageWidget::update(const std::span<const std::byte>& pixels_r8g8b8a8, cons
                 }
         }
 
-        ui.label_image->setPixmap(QPixmap::fromImage(m_image_2d));
+        ui.label_image->setPixmap(QPixmap::fromImage(image_2d_));
         ui.label_image->update();
 }
 }

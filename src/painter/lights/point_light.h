@@ -52,13 +52,13 @@ class PointLight final : public LightSource<N, T, Color>
         static_assert(N >= 2);
         static_assert(std::is_floating_point_v<T>);
 
-        Vector<N, T> m_location;
-        Color m_color;
-        T m_coef;
+        Vector<N, T> location_;
+        Color color_;
+        T coef_;
 
 public:
         PointLight(const Vector<N, T>& location, const Color& color, std::type_identity_t<T> unit_intensity_distance)
-                : m_location(location), m_color(color), m_coef(std::pow(unit_intensity_distance, T(N - 1)))
+                : location_(location), color_(color), coef_(std::pow(unit_intensity_distance, T(N - 1)))
         {
                 if (!(unit_intensity_distance > 0))
                 {
@@ -70,16 +70,16 @@ public:
         {
                 namespace impl = point_light_implementation;
 
-                const Vector<N, T> direction = m_location - point;
+                const Vector<N, T> direction = location_ - point;
                 const T squared_distance = direction.norm_squared();
                 const T distance = std::sqrt(squared_distance);
-                const T coef = impl::compute_coef<N>(m_coef, squared_distance, distance);
+                const T coef = impl::compute_coef<N>(coef_, squared_distance, distance);
 
                 LightSourceSample<N, T, Color> s;
                 s.distance = distance;
                 s.l = direction / distance;
                 s.pdf = 1;
-                s.L = m_color * coef;
+                s.L = color_ * coef;
                 return s;
         }
 };
@@ -90,13 +90,13 @@ class SpotLight final : public LightSource<N, T, Color>
         static_assert(N >= 2);
         static_assert(std::is_floating_point_v<T>);
 
-        Vector<N, T> m_location;
-        Vector<N, T> m_direction;
-        Color m_color;
-        T m_coef;
-        T m_falloff_start;
-        T m_width;
-        T m_falloff_width;
+        Vector<N, T> location_;
+        Vector<N, T> direction_;
+        Color color_;
+        T coef_;
+        T falloff_start_;
+        T width_;
+        T falloff_width_;
 
 public:
         SpotLight(
@@ -106,13 +106,13 @@ public:
                 std::type_identity_t<T> unit_intensity_distance,
                 std::type_identity_t<T> falloff_start,
                 std::type_identity_t<T> width)
-                : m_location(location),
-                  m_direction(direction.normalized()),
-                  m_color(color),
-                  m_coef(std::pow(unit_intensity_distance, T(N - 1))),
-                  m_falloff_start(std::cos(falloff_start * (PI<T> / 180))),
-                  m_width(std::cos(width * (PI<T> / 180))),
-                  m_falloff_width(m_falloff_start - m_width)
+                : location_(location),
+                  direction_(direction.normalized()),
+                  color_(color),
+                  coef_(std::pow(unit_intensity_distance, T(N - 1))),
+                  falloff_start_(std::cos(falloff_start * (PI<T> / 180))),
+                  width_(std::cos(width * (PI<T> / 180))),
+                  falloff_width_(falloff_start_ - width_)
         {
                 if (!(unit_intensity_distance > 0))
                 {
@@ -124,7 +124,7 @@ public:
                         error("Error falloff start " + to_string(falloff_start) + " and width " + to_string(width));
                 }
 
-                ASSERT(m_falloff_start >= m_width && m_falloff_width >= 0);
+                ASSERT(falloff_start_ >= width_ && falloff_width_ >= 0);
         }
 
         LightSourceSample<N, T, Color> sample(RandomEngine<T>& /*random_engine*/, const Vector<N, T>& point)
@@ -132,11 +132,11 @@ public:
         {
                 namespace impl = point_light_implementation;
 
-                const Vector<N, T> direction = m_location - point;
+                const Vector<N, T> direction = location_ - point;
                 const T squared_distance = direction.norm_squared();
                 const T distance = std::sqrt(squared_distance);
                 const Vector<N, T> l = direction / distance;
-                const T cos = -dot(l, m_direction);
+                const T cos = -dot(l, direction_);
 
                 LightSourceSample<N, T, Color> s;
 
@@ -144,21 +144,21 @@ public:
                 s.l = l;
                 s.pdf = 1;
 
-                if (cos <= m_width)
+                if (cos <= width_)
                 {
                         s.L = Color(0);
                         return s;
                 }
 
-                const T coef = impl::compute_coef<N>(m_coef, squared_distance, distance);
-                if (cos >= m_falloff_start)
+                const T coef = impl::compute_coef<N>(coef_, squared_distance, distance);
+                if (cos >= falloff_start_)
                 {
-                        s.L = m_color * coef;
+                        s.L = color_ * coef;
                 }
                 else
                 {
-                        T k = power<4>((cos - m_width) / m_falloff_width);
-                        s.L = m_color * (coef * k);
+                        T k = power<4>((cos - width_) / falloff_width_);
+                        s.L = color_ * (coef * k);
                 }
                 return s;
         }

@@ -69,9 +69,9 @@ class LogEvents final
         friend void log_impl(LogEvent&&) noexcept;
         friend void log_impl(MessageEvent&&) noexcept;
 
-        std::mutex m_lock;
-        std::vector<const std::function<void(const LogEvent&)>*> m_log_observers;
-        std::vector<const std::function<void(const MessageEvent&)>*> m_msg_observers;
+        std::mutex lock_;
+        std::vector<const std::function<void(const LogEvent&)>*> log_observers_;
+        std::vector<const std::function<void(const MessageEvent&)>*> msg_observers_;
 
         void insert(const std::function<void(const LogEvent&)>* observer);
         void erase(const std::function<void(const LogEvent&)>* observer);
@@ -94,7 +94,7 @@ public:
 
 class LogEventsObserver final
 {
-        std::function<void(const LogEvent&)> m_observer;
+        std::function<void(const LogEvent&)> observer_;
 
 public:
         explicit LogEventsObserver(std::function<void(const LogEvent&)> observer);
@@ -108,7 +108,7 @@ public:
 
 class MessageEventsObserver final
 {
-        std::function<void(const MessageEvent&)> m_observer;
+        std::function<void(const MessageEvent&)> observer_;
 
 public:
         explicit MessageEventsObserver(std::function<void(const MessageEvent&)> observer);

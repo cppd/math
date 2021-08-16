@@ -126,50 +126,50 @@ Descriptors::Descriptors(
         uint32_t max_sets,
         VkDescriptorSetLayout descriptor_set_layout,
         const std::vector<VkDescriptorSetLayoutBinding>& bindings)
-        : m_device(device),
-          m_descriptor_set_layout(descriptor_set_layout),
-          m_descriptor_pool(create_descriptor_pool(
+        : device_(device),
+          descriptor_set_layout_(descriptor_set_layout),
+          descriptor_pool_(create_descriptor_pool(
                   device,
                   bindings,
                   max_sets,
                   VK_DESCRIPTOR_POOL_CREATE_FREE_DESCRIPTOR_SET_BIT)),
-          m_descriptor_set_layout_bindings(bindings),
-          m_descriptor_sets(
-                  m_device,
-                  m_descriptor_pool,
-                  std::vector<VkDescriptorSetLayout>(max_sets, m_descriptor_set_layout)),
-          m_binding_map(create_binding_map(m_descriptor_set_layout_bindings))
+          descriptor_set_layout_bindings_(bindings),
+          descriptor_sets_(
+                  device_,
+                  descriptor_pool_,
+                  std::vector<VkDescriptorSetLayout>(max_sets, descriptor_set_layout_)),
+          binding_map_(create_binding_map(descriptor_set_layout_bindings_))
 {
 }
 
 const VkDescriptorSetLayoutBinding& Descriptors::layout_binding(uint32_t binding) const
 {
-        auto i = m_binding_map.find(binding);
-        if (i == m_binding_map.cend())
+        auto i = binding_map_.find(binding);
+        if (i == binding_map_.cend())
         {
                 error("No binding " + to_string(binding) + " in the descriptor set layout bindings");
         }
 
-        ASSERT(i->second < m_descriptor_set_layout_bindings.size());
+        ASSERT(i->second < descriptor_set_layout_bindings_.size());
 
-        return m_descriptor_set_layout_bindings[i->second];
+        return descriptor_set_layout_bindings_[i->second];
 }
 
 VkDescriptorSetLayout Descriptors::descriptor_set_layout() const noexcept
 {
-        return m_descriptor_set_layout;
+        return descriptor_set_layout_;
 }
 
 uint32_t Descriptors::descriptor_set_count() const
 {
-        return m_descriptor_sets.count();
+        return descriptor_sets_.count();
 }
 
 const VkDescriptorSet& Descriptors::descriptor_set(uint32_t index) const
 {
-        ASSERT(index < m_descriptor_sets.count());
+        ASSERT(index < descriptor_sets_.count());
 
-        return m_descriptor_sets[index];
+        return descriptor_sets_[index];
 }
 
 void Descriptors::update_descriptor_set(
@@ -177,12 +177,12 @@ void Descriptors::update_descriptor_set(
         uint32_t binding,
         const std::variant<VkDescriptorBufferInfo, VkDescriptorImageInfo>& info) const
 {
-        ASSERT(index < m_descriptor_sets.count());
+        ASSERT(index < descriptor_sets_.count());
 
         VkWriteDescriptorSet write =
-                create_write_descriptor_set(m_descriptor_sets[index], layout_binding(binding), info);
+                create_write_descriptor_set(descriptor_sets_[index], layout_binding(binding), info);
 
-        vkUpdateDescriptorSets(m_device, 1, &write, 0, nullptr);
+        vkUpdateDescriptorSets(device_, 1, &write, 0, nullptr);
 }
 
 void Descriptors::update_descriptor_set(
@@ -191,9 +191,9 @@ void Descriptors::update_descriptor_set(
         const std::vector<std::variant<VkDescriptorBufferInfo, VkDescriptorImageInfo>>& descriptor_infos) const
 {
         ASSERT(bindings.size() == descriptor_infos.size());
-        ASSERT(index < m_descriptor_sets.count());
+        ASSERT(index < descriptor_sets_.count());
 
-        VkDescriptorSet descriptor_set = m_descriptor_sets[index];
+        VkDescriptorSet descriptor_set = descriptor_sets_[index];
 
         std::vector<VkWriteDescriptorSet> write(bindings.size());
         for (std::size_t i = 0; i < bindings.size(); ++i)
@@ -202,6 +202,6 @@ void Descriptors::update_descriptor_set(
                         create_write_descriptor_set(descriptor_set, layout_binding(bindings[i]), descriptor_infos[i]);
         }
 
-        vkUpdateDescriptorSets(m_device, write.size(), write.data(), 0, nullptr);
+        vkUpdateDescriptorSets(device_, write.size(), write.data(), 0, nullptr);
 }
 }

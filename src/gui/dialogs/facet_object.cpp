@@ -35,9 +35,9 @@ FacetObjectParametersDialog::FacetObjectParametersDialog(
         int max_facet_count,
         std::optional<FacetObjectParameters>& parameters)
         : QDialog(parent_for_dialog()),
-          m_min_facet_count(min_facet_count),
-          m_max_facet_count(max_facet_count),
-          m_parameters(parameters)
+          min_facet_count_(min_facet_count),
+          max_facet_count_(max_facet_count),
+          parameters_(parameters)
 {
         ui.setupUi(this);
         setWindowTitle("Create Object");
@@ -83,16 +83,16 @@ void FacetObjectParametersDialog::done(int r)
         }
 
         int facet_count = ui.spinBox_facet_count->value();
-        if (!(facet_count >= m_min_facet_count && facet_count <= m_max_facet_count))
+        if (!(facet_count >= min_facet_count_ && facet_count <= max_facet_count_))
         {
-                std::string msg = "Facet count must be in the range [" + to_string(m_min_facet_count) + ", "
-                                  + to_string(m_max_facet_count) + "].";
+                std::string msg = "Facet count must be in the range [" + to_string(min_facet_count_) + ", "
+                                  + to_string(max_facet_count_) + "].";
                 dialog::message_critical(msg);
                 return;
         }
 
-        m_parameters.emplace();
-        m_parameters->facet_count = facet_count;
+        parameters_.emplace();
+        parameters_->facet_count = facet_count;
 
         QDialog::done(r);
 }

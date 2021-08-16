@@ -31,15 +31,15 @@ class ColorsWidget final : public QWidget
 private:
         Ui::ColorsWidget ui;
 
-        view::View* m_view = nullptr;
+        view::View* view_ = nullptr;
 
-        QColor m_background_color;
-        QColor m_wireframe_color;
-        QColor m_clip_plane_color;
-        QColor m_normal_color_positive;
-        QColor m_normal_color_negative;
-        QColor m_dft_background_color;
-        QColor m_dft_color;
+        QColor background_color_;
+        QColor wireframe_color_;
+        QColor clip_plane_color_;
+        QColor normal_color_positive_;
+        QColor normal_color_negative_;
+        QColor dft_background_color_;
+        QColor dft_color_;
 
         void on_background_color_clicked();
         void on_wireframe_color_clicked();

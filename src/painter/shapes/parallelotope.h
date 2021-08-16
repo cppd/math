@@ -31,27 +31,27 @@ namespace ns::painter
 template <std::size_t N, typename T, typename Color>
 class Parallelotope final : public Shape<N, T, Color>
 {
-        const geometry::Parallelotope<N, T> m_parallelotope;
-        std::optional<Color> m_light_source;
-        const T m_metalness;
-        const T m_roughness;
-        const Color m_color;
-        const T m_alpha;
-        const bool m_alpha_nonzero = m_alpha > 0;
+        const geometry::Parallelotope<N, T> parallelotope_;
+        std::optional<Color> light_source_;
+        const T metalness_;
+        const T roughness_;
+        const Color color_;
+        const T alpha_;
+        const bool alpha_nonzero_ = alpha_ > 0;
 
         class IntersectionImpl final : public Surface<N, T, Color>
         {
-                const Parallelotope* m_obj;
+                const Parallelotope* obj_;
 
         public:
                 IntersectionImpl(const Vector<N, T>& point, const Parallelotope* obj)
-                        : Surface<N, T, Color>(point), m_obj(obj)
+                        : Surface<N, T, Color>(point), obj_(obj)
                 {
                 }
 
                 Vector<N, T> geometric_normal() const override
                 {
-                        return m_obj->m_parallelotope.normal(this->point());
+                        return obj_->parallelotope_.normal(this->point());
                 }
 
                 std::optional<Vector<N, T>> shading_normal() const override
@@ -61,12 +61,12 @@ class Parallelotope final : public Shape<N, T, Color>
 
                 std::optional<Color> light_source() const override
                 {
-                        return m_obj->m_light_source;
+                        return obj_->light_source_;
                 }
 
                 Color brdf(const Vector<N, T>& n, const Vector<N, T>& v, const Vector<N, T>& l) const override
                 {
-                        return shading::ggx_diffuse::f(m_obj->m_metalness, m_obj->m_roughness, m_obj->m_color, n, v, l);
+                        return shading::ggx_diffuse::f(obj_->metalness_, obj_->roughness_, obj_->color_, n, v, l);
                 }
 
                 shading::Sample<N, T, Color> sample_brdf(
@@ -75,7 +75,7 @@ class Parallelotope final : public Shape<N, T, Color>
                         const Vector<N, T>& v) const override
                 {
                         return shading::ggx_diffuse::sample_f(
-                                random_engine, m_obj->m_metalness, m_obj->m_roughness, m_obj->m_color, n, v);
+                                random_engine, obj_->metalness_, obj_->roughness_, obj_->color_, n, v);
                 }
         };
 
@@ -88,24 +88,24 @@ public:
                 const T alpha,
                 const Vector<N, T>& org,
                 const V&... e)
-                : m_parallelotope(org, e...),
-                  m_metalness(std::clamp(metalness, T(0), T(1))),
-                  m_roughness(std::clamp(roughness, T(0), T(1))),
-                  m_color(color.clamp(0, 1)),
-                  m_alpha(std::clamp(alpha, T(0), T(1)))
+                : parallelotope_(org, e...),
+                  metalness_(std::clamp(metalness, T(0), T(1))),
+                  roughness_(std::clamp(roughness, T(0), T(1))),
+                  color_(color.clamp(0, 1)),
+                  alpha_(std::clamp(alpha, T(0), T(1)))
         {
         }
 
         void set_light_source(const Color& color)
         {
-                m_light_source = color;
+                light_source_ = color;
         }
 
         std::optional<T> intersect_bounding(const Ray<N, T>& r) const override
         {
-                if (m_alpha_nonzero || m_light_source)
+                if (alpha_nonzero_ || light_source_)
                 {
-                        return m_parallelotope.intersect(r);
+                        return parallelotope_.intersect(r);
                 }
                 return std::nullopt;
         }
@@ -118,13 +118,13 @@ public:
 
         geometry::BoundingBox<N, T> bounding_box() const override
         {
-                return geometry::BoundingBox<N, T>(m_parallelotope.vertices());
+                return geometry::BoundingBox<N, T>(parallelotope_.vertices());
         }
 
         std::function<bool(const geometry::ShapeWrapperForIntersection<geometry::ParallelotopeAA<N, T>>&)>
                 intersection_function() const override
         {
-                return [w = geometry::ShapeWrapperForIntersection(m_parallelotope)](
+                return [w = geometry::ShapeWrapperForIntersection(parallelotope_)](
                                const geometry::ShapeWrapperForIntersection<geometry::ParallelotopeAA<N, T>>& p)
                 {
                         return geometry::shape_intersection(w, p);

@@ -29,44 +29,44 @@ namespace ns
 template <std::size_t N, typename T>
 class Ray final
 {
-        Vector<N, T> m_org;
-        Vector<N, T> m_dir;
+        Vector<N, T> org_;
+        Vector<N, T> dir_;
 
 public:
         Ray()
         {
         }
 
-        Ray(const Vector<N, T>& org, const Vector<N, T>& dir) : m_org(org), m_dir(dir.normalized())
+        Ray(const Vector<N, T>& org, const Vector<N, T>& dir) : org_(org), dir_(dir.normalized())
         {
         }
 
         Ray& set_org(const Vector<N, T>& org)
         {
-                m_org = org;
+                org_ = org;
                 return *this;
         }
 
         Ray& set_dir(const Vector<N, T>& dir)
         {
-                m_dir = dir.normalized();
+                dir_ = dir.normalized();
                 return *this;
         }
 
         Ray& move(T t)
         {
-                m_org = this->point(t);
+                org_ = this->point(t);
                 return *this;
         }
 
         const Vector<N, T>& org() const
         {
-                return m_org;
+                return org_;
         }
 
         const Vector<N, T>& dir() const
         {
-                return m_dir;
+                return dir_;
         }
 
         Vector<N, T> point(T t) const
@@ -74,7 +74,7 @@ public:
                 Vector<N, T> p;
                 for (std::size_t i = 0; i < N; ++i)
                 {
-                        p[i] = std::fma(m_dir[i], t, m_org[i]);
+                        p[i] = std::fma(dir_[i], t, org_[i]);
                 }
                 return p;
         }
@@ -82,8 +82,8 @@ public:
         Ray<N, T> reverse_ray() const
         {
                 Ray<N, T> r;
-                r.m_org = m_org;
-                r.m_dir = -m_dir;
+                r.org_ = org_;
+                r.dir_ = -dir_;
                 return r;
         }
 };

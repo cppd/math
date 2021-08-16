@@ -28,10 +28,10 @@ MeshWidget::MeshWidget() : QWidget(nullptr)
 {
         ui.setupUi(this);
 
-        m_widgets.reserve(this->findChildren<QWidget*>().size());
+        widgets_.reserve(this->findChildren<QWidget*>().size());
         for (QWidget* widget : this->findChildren<QWidget*>())
         {
-                m_widgets.emplace_back(widget);
+                widgets_.emplace_back(widget);
         }
 
         set_model_tree(nullptr);
@@ -45,12 +45,12 @@ MeshWidget::MeshWidget() : QWidget(nullptr)
 
 void MeshWidget::set_model_tree(ModelTree* model_tree)
 {
-        ASSERT(std::this_thread::get_id() == m_thread_id);
+        ASSERT(std::this_thread::get_id() == thread_id_);
 
-        m_model_tree = model_tree;
+        model_tree_ = model_tree;
         if (model_tree)
         {
-                connect(m_model_tree, &ModelTree::item_update, this, &MeshWidget::on_model_tree_item_update);
+                connect(model_tree_, &ModelTree::item_update, this, &MeshWidget::on_model_tree_item_update);
                 on_model_tree_item_update();
         }
         else
@@ -61,7 +61,7 @@ void MeshWidget::set_model_tree(ModelTree* model_tree)
 
 void MeshWidget::set_enabled(bool enabled) const
 {
-        for (const QPointer<QWidget>& widget : m_widgets)
+        for (const QPointer<QWidget>& widget : widgets_)
         {
                 ASSERT(widget);
                 widget->setEnabled(enabled);
@@ -70,9 +70,9 @@ void MeshWidget::set_enabled(bool enabled) const
 
 void MeshWidget::on_ambient_changed(int)
 {
-        ASSERT(std::this_thread::get_id() == m_thread_id);
+        ASSERT(std::this_thread::get_id() == thread_id_);
 
-        std::optional<storage::MeshObject> object_opt = m_model_tree->current_mesh();
+        std::optional<storage::MeshObject> object_opt = model_tree_->current_mesh();
         if (!object_opt)
         {
                 return;
@@ -91,9 +91,9 @@ void MeshWidget::on_ambient_changed(int)
 
 void MeshWidget::on_metalness_changed(int)
 {
-        ASSERT(std::this_thread::get_id() == m_thread_id);
+        ASSERT(std::this_thread::get_id() == thread_id_);
 
-        std::optional<storage::MeshObject> object_opt = m_model_tree->current_mesh();
+        std::optional<storage::MeshObject> object_opt = model_tree_->current_mesh();
         if (!object_opt)
         {
                 return;
@@ -112,9 +112,9 @@ void MeshWidget::on_metalness_changed(int)
 
 void MeshWidget::on_roughness_changed(int)
 {
-        ASSERT(std::this_thread::get_id() == m_thread_id);
+        ASSERT(std::this_thread::get_id() == thread_id_);
 
-        std::optional<storage::MeshObject> object_opt = m_model_tree->current_mesh();
+        std::optional<storage::MeshObject> object_opt = model_tree_->current_mesh();
         if (!object_opt)
         {
                 return;
@@ -133,9 +133,9 @@ void MeshWidget::on_roughness_changed(int)
 
 void MeshWidget::on_transparency_changed(int)
 {
-        ASSERT(std::this_thread::get_id() == m_thread_id);
+        ASSERT(std::this_thread::get_id() == thread_id_);
 
-        std::optional<storage::MeshObject> object_opt = m_model_tree->current_mesh();
+        std::optional<storage::MeshObject> object_opt = model_tree_->current_mesh();
         if (!object_opt)
         {
                 return;
@@ -154,9 +154,9 @@ void MeshWidget::on_transparency_changed(int)
 
 void MeshWidget::on_color_clicked()
 {
-        ASSERT(std::this_thread::get_id() == m_thread_id);
+        ASSERT(std::this_thread::get_id() == thread_id_);
 
-        std::optional<storage::MeshObject> object_opt = m_model_tree->current_mesh();
+        std::optional<storage::MeshObject> object_opt = model_tree_->current_mesh();
         if (!object_opt)
         {
                 return;
@@ -193,16 +193,16 @@ void MeshWidget::on_color_clicked()
 
 void MeshWidget::on_model_tree_item_update()
 {
-        ASSERT(std::this_thread::get_id() == m_thread_id);
+        ASSERT(std::this_thread::get_id() == thread_id_);
 
-        std::optional<ObjectId> id = m_model_tree->current_item();
+        std::optional<ObjectId> id = model_tree_->current_item();
         if (!id)
         {
                 ui_disable();
                 return;
         }
 
-        std::optional<storage::MeshObjectConst> mesh = m_model_tree->mesh_const_if_current(*id);
+        std::optional<storage::MeshObjectConst> mesh = model_tree_->mesh_const_if_current(*id);
         if (mesh)
         {
                 ui_set(*mesh);
@@ -215,7 +215,7 @@ void MeshWidget::on_model_tree_item_update()
 
 void MeshWidget::ui_disable()
 {
-        ASSERT(std::this_thread::get_id() == m_thread_id);
+        ASSERT(std::this_thread::get_id() == thread_id_);
 
         set_enabled(false);
 
@@ -243,7 +243,7 @@ void MeshWidget::ui_disable()
 
 void MeshWidget::ui_set(const storage::MeshObjectConst& object)
 {
-        ASSERT(std::this_thread::get_id() == m_thread_id);
+        ASSERT(std::this_thread::get_id() == thread_id_);
 
         set_enabled(true);
 

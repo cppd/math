@@ -34,19 +34,19 @@ using RandomEngine = std::conditional_t<std::is_same_v<std::remove_cv<T>, float>
 template <std::size_t N, typename T, typename Color>
 class Surface
 {
-        Vector<N, T> m_point;
+        Vector<N, T> point_;
 
 protected:
         ~Surface() = default;
 
 public:
-        explicit Surface(const Vector<N, T>& point) : m_point(point)
+        explicit Surface(const Vector<N, T>& point) : point_(point)
         {
         }
 
         const Vector<N, T>& point() const
         {
-                return m_point;
+                return point_;
         }
 
         virtual Vector<N, T> geometric_normal() const = 0;

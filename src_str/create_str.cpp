@@ -81,7 +81,7 @@ public:
 
 class ofstream final : public std::ofstream
 {
-        std::string m_name;
+        std::string name_;
 
 public:
         explicit ofstream(const char* name, std::ios_base::openmode mode = ios_base::out) : std::ofstream(name, mode)
@@ -90,14 +90,14 @@ public:
                 {
                         error("Error opening output file \"" + std::string(name) + "\"");
                 }
-                m_name = name;
+                name_ = name;
         }
 
         ~ofstream() override
         {
                 if (fail())
                 {
-                        error("Error writing to output file \"" + m_name + "\"");
+                        error("Error writing to output file \"" + name_ + "\"");
                 }
         }
 };

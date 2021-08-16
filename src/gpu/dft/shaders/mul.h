@@ -34,7 +34,7 @@ class MulMemory final
         static constexpr int DATA_BINDING = 0;
         static constexpr int BUFFER_BINDING = 1;
 
-        vulkan::Descriptors m_descriptors;
+        vulkan::Descriptors descriptors_;
 
 public:
         static std::vector<VkDescriptorSetLayoutBinding> descriptor_set_layout_bindings();
@@ -70,9 +70,9 @@ class MulConstant final : public vulkan::SpecializationConstant
                 uint32_t inverse;
                 uint32_t group_size_x;
                 uint32_t group_size_y;
-        } m_data;
+        } data_;
 
-        std::vector<VkSpecializationMapEntry> m_entries;
+        std::vector<VkSpecializationMapEntry> entries_;
 
         const std::vector<VkSpecializationMapEntry>& entries() const override;
         const void* data() const override;
@@ -87,20 +87,20 @@ public:
 
 class MulProgram final
 {
-        const vulkan::Device& m_device;
+        const vulkan::Device& device_;
 
-        vulkan::DescriptorSetLayout m_descriptor_set_layout;
-        vulkan::PipelineLayout m_pipeline_layout;
-        MulConstant m_constant;
-        vulkan::ComputeShader m_shader;
-        vulkan::Pipeline m_pipeline_rows_to_buffer_forward;
-        vulkan::Pipeline m_pipeline_rows_to_buffer_inverse;
-        vulkan::Pipeline m_pipeline_rows_from_buffer_forward;
-        vulkan::Pipeline m_pipeline_rows_from_buffer_inverse;
-        vulkan::Pipeline m_pipeline_columns_to_buffer_forward;
-        vulkan::Pipeline m_pipeline_columns_to_buffer_inverse;
-        vulkan::Pipeline m_pipeline_columns_from_buffer_forward;
-        vulkan::Pipeline m_pipeline_columns_from_buffer_inverse;
+        vulkan::DescriptorSetLayout descriptor_set_layout_;
+        vulkan::PipelineLayout pipeline_layout_;
+        MulConstant constant_;
+        vulkan::ComputeShader shader_;
+        vulkan::Pipeline pipeline_rows_to_buffer_forward_;
+        vulkan::Pipeline pipeline_rows_to_buffer_inverse_;
+        vulkan::Pipeline pipeline_rows_from_buffer_forward_;
+        vulkan::Pipeline pipeline_rows_from_buffer_inverse_;
+        vulkan::Pipeline pipeline_columns_to_buffer_forward_;
+        vulkan::Pipeline pipeline_columns_to_buffer_inverse_;
+        vulkan::Pipeline pipeline_columns_from_buffer_forward_;
+        vulkan::Pipeline pipeline_columns_from_buffer_inverse_;
 
 public:
         explicit MulProgram(const vulkan::Device& device);

@@ -33,11 +33,11 @@ class ImageWidget final : public QWidget
 private:
         Ui::ImageWidget ui;
 
-        const long long m_image_2d_pixel_count;
-        const std::size_t m_image_2d_byte_count;
-        QImage m_image_2d;
+        const long long image_2d_pixel_count_;
+        const std::size_t image_2d_byte_count_;
+        QImage image_2d_;
 
-        QAction* m_show_threads_action = nullptr;
+        QAction* show_threads_action_ = nullptr;
 
 public:
         ImageWidget(int width, int height, QMenu* menu);

@@ -86,12 +86,12 @@ class PowerCosineOnHemisphere
 {
         static_assert(N > 3);
 
-        T m_n;
-        T m_p;
-        T m_mean;
-        T m_normal_distribution_coef;
-        std::normal_distribution<T> m_normal_distribution;
-        std::uniform_real_distribution<T> m_urd;
+        T n_;
+        T p_;
+        T mean_;
+        T normal_distribution_coef_;
+        std::normal_distribution<T> normal_distribution_;
+        std::uniform_real_distribution<T> urd_;
 
         explicit PowerCosineOnHemisphere(std::type_identity_t<T> power)
         {
@@ -100,14 +100,14 @@ class PowerCosineOnHemisphere
                         error("Power for cosine " + to_string(power) + " must be greater than or equal to 1");
                 }
 
-                m_n = power;
-                m_p = N - 2;
-                m_mean = std::atan(std::sqrt(m_p / m_n));
-                T deviation = T(1) / std::sqrt((m_n + m_p) * std::sqrt(T(2)));
-                m_normal_distribution = std::normal_distribution<T>(m_mean, deviation);
-                m_normal_distribution_coef = T(-1) / (T(2) * square(deviation));
-                T max = std::pow(std::cos(m_mean), m_n) * std::pow(std::sin(m_mean), m_p);
-                m_urd = std::uniform_real_distribution<T>(0, max);
+                n_ = power;
+                p_ = N - 2;
+                mean_ = std::atan(std::sqrt(p_ / n_));
+                T deviation = T(1) / std::sqrt((n_ + p_) * std::sqrt(T(2)));
+                normal_distribution_ = std::normal_distribution<T>(mean_, deviation);
+                normal_distribution_coef_ = T(-1) / (T(2) * square(deviation));
+                T max = std::pow(std::cos(mean_), n_) * std::pow(std::sin(mean_), p_);
+                urd_ = std::uniform_real_distribution<T>(0, max);
         }
 
 public:
@@ -118,15 +118,15 @@ public:
                 T cos_angle;
                 while (true)
                 {
-                        angle = m_normal_distribution(random_engine);
+                        angle = normal_distribution_(random_engine);
                         if (angle < 0 || angle > PI<T> / 2)
                         {
                                 continue;
                         }
                         cos_angle = std::cos(angle);
-                        T f = std::pow(cos_angle, m_n) * std::pow(std::sin(angle), m_p);
-                        T p = std::exp(m_normal_distribution_coef * square(angle - m_mean));
-                        if (f > p * m_urd(random_engine))
+                        T f = std::pow(cos_angle, n_) * std::pow(std::sin(angle), p_);
+                        T p = std::exp(normal_distribution_coef_ * square(angle - mean_));
+                        if (f > p * urd_(random_engine))
                         {
                                 break;
                         }

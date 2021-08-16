@@ -34,7 +34,7 @@ PainterImageDialog::PainterImageDialog(
         PainterImagePathType path_type,
         bool use_all,
         std::optional<PainterImageParameters>& parameters)
-        : QDialog(parent_for_dialog()), m_path_type(path_type), m_parameters(parameters)
+        : QDialog(parent_for_dialog()), path_type_(path_type), parameters_(parameters)
 {
         ui.setupUi(this);
         setWindowTitle(QString::fromStdString(title));
@@ -47,7 +47,7 @@ PainterImageDialog::PainterImageDialog(
 
 void PainterImageDialog::set_path()
 {
-        switch (m_path_type)
+        switch (path_type_)
         {
         case PainterImagePathType::None:
                 ui.label_path_name->setVisible(false);
@@ -67,7 +67,7 @@ void PainterImageDialog::set_path()
                         &PainterImageDialog::on_select_path_clicked);
                 return;
         }
-        error("Unknown path type " + to_string(static_cast<long long>(m_path_type)));
+        error("Unknown path type " + to_string(static_cast<long long>(path_type_)));
 }
 
 void PainterImageDialog::set_checkboxes(bool use_all)
@@ -93,7 +93,7 @@ void PainterImageDialog::done(int r)
 
         std::optional<std::string> path_string;
 
-        if (m_path_type == PainterImagePathType::Directory)
+        if (path_type_ == PainterImagePathType::Directory)
         {
                 path_string = ui.lineEdit_path->text().toStdString();
                 std::filesystem::path path = path_from_utf8(*path_string);
@@ -104,7 +104,7 @@ void PainterImageDialog::done(int r)
                         return;
                 }
         }
-        else if (m_path_type == PainterImagePathType::File)
+        else if (path_type_ == PainterImagePathType::File)
         {
                 path_string = ui.lineEdit_path->text().toStdString();
                 std::filesystem::path path = path_from_utf8(*path_string);
@@ -116,21 +116,21 @@ void PainterImageDialog::done(int r)
                 }
         }
 
-        m_parameters.emplace();
+        parameters_.emplace();
 
-        m_parameters->path_string = path_string;
+        parameters_->path_string = path_string;
 
         if (ui.checkBox_all->isVisible() && ui.checkBox_all->isChecked())
         {
-                m_parameters->all = true;
-                m_parameters->with_background = false;
-                m_parameters->convert_to_8_bit = false;
+                parameters_->all = true;
+                parameters_->with_background = false;
+                parameters_->convert_to_8_bit = false;
         }
         else
         {
-                m_parameters->all = false;
-                m_parameters->with_background = ui.checkBox_with_background->isChecked();
-                m_parameters->convert_to_8_bit = ui.checkBox_8_bit->isChecked();
+                parameters_->all = false;
+                parameters_->with_background = ui.checkBox_with_background->isChecked();
+                parameters_->convert_to_8_bit = ui.checkBox_8_bit->isChecked();
         }
 
         QDialog::done(r);
@@ -138,7 +138,7 @@ void PainterImageDialog::done(int r)
 
 void PainterImageDialog::on_select_path_clicked()
 {
-        if (m_path_type == PainterImagePathType::None)
+        if (path_type_ == PainterImagePathType::None)
         {
                 return;
         }
@@ -146,13 +146,13 @@ void PainterImageDialog::on_select_path_clicked()
         QPointer ptr(this);
         std::optional<std::string> path;
 
-        if (m_path_type == PainterImagePathType::Directory)
+        if (path_type_ == PainterImagePathType::Directory)
         {
                 const std::string caption = "Directory";
                 const bool read_only = false;
                 path = dialog::select_directory(caption, read_only);
         }
-        else if (m_path_type == PainterImagePathType::File)
+        else if (path_type_ == PainterImagePathType::File)
         {
                 const std::string caption = "File";
                 dialog::FileFilter filter;

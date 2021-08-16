@@ -26,14 +26,14 @@ namespace ns
 {
 class Barrier
 {
-        std::mutex m_mutex;
-        std::condition_variable m_cv;
-        int m_count;
-        const int m_thread_count;
-        long long m_generation = 0;
+        std::mutex mutex_;
+        std::condition_variable cv_;
+        int count_;
+        const int thread_count_;
+        long long generation_ = 0;
 
 public:
-        explicit Barrier(int thread_count) : m_count(thread_count), m_thread_count(thread_count)
+        explicit Barrier(int thread_count) : count_(thread_count), thread_count_(thread_count)
         {
         }
 
@@ -43,27 +43,27 @@ public:
                 {
                         try
                         {
-                                if (m_thread_count == 1)
+                                if (thread_count_ == 1)
                                 {
                                         return;
                                 }
 
-                                std::unique_lock<std::mutex> lock(m_mutex);
-                                long long g = m_generation;
-                                --m_count;
-                                if (m_count == 0)
+                                std::unique_lock<std::mutex> lock(mutex_);
+                                long long g = generation_;
+                                --count_;
+                                if (count_ == 0)
                                 {
-                                        ++m_generation;
-                                        m_count = m_thread_count;
-                                        m_cv.notify_all();
+                                        ++generation_;
+                                        count_ = thread_count_;
+                                        cv_.notify_all();
                                 }
                                 else
                                 {
-                                        m_cv.wait(
+                                        cv_.wait(
                                                 lock,
                                                 [this, g]
                                                 {
-                                                        return g != m_generation;
+                                                        return g != generation_;
                                                 });
                                 }
                         }

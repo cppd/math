@@ -44,7 +44,7 @@ std::vector<VkDescriptorSetLayoutBinding> MergeMemory::descriptor_set_layout_bin
 }
 
 MergeMemory::MergeMemory(const vulkan::Device& device, VkDescriptorSetLayout descriptor_set_layout)
-        : m_descriptors(device, 1, descriptor_set_layout, descriptor_set_layout_bindings())
+        : descriptors_(device, 1, descriptor_set_layout, descriptor_set_layout_bindings())
 {
 }
 
@@ -55,7 +55,7 @@ unsigned MergeMemory::set_number()
 
 const VkDescriptorSet& MergeMemory::descriptor_set() const
 {
-        return m_descriptors.descriptor_set(0);
+        return descriptors_.descriptor_set(0);
 }
 
 void MergeMemory::set_lines(const vulkan::BufferWithMemory& buffer) const
@@ -67,7 +67,7 @@ void MergeMemory::set_lines(const vulkan::BufferWithMemory& buffer) const
         buffer_info.offset = 0;
         buffer_info.range = buffer.size();
 
-        m_descriptors.update_descriptor_set(0, LINES_BINDING, buffer_info);
+        descriptors_.update_descriptor_set(0, LINES_BINDING, buffer_info);
 }
 
 //
@@ -79,100 +79,100 @@ MergeConstant::MergeConstant()
                 entry.constantID = 0;
                 entry.offset = offsetof(Data, line_size);
                 entry.size = sizeof(Data::line_size);
-                m_entries.push_back(entry);
+                entries_.push_back(entry);
         }
         {
                 VkSpecializationMapEntry entry = {};
                 entry.constantID = 1;
                 entry.offset = offsetof(Data, iteration_count);
                 entry.size = sizeof(Data::iteration_count);
-                m_entries.push_back(entry);
+                entries_.push_back(entry);
         }
         {
                 VkSpecializationMapEntry entry = {};
                 entry.constantID = 2;
                 entry.offset = offsetof(Data, local_size_x);
                 entry.size = sizeof(Data::local_size_x);
-                m_entries.push_back(entry);
+                entries_.push_back(entry);
         }
 }
 
 void MergeConstant::set_line_size(int32_t v)
 {
-        static_assert(std::is_same_v<decltype(m_data.line_size), decltype(v)>);
-        m_data.line_size = v;
+        static_assert(std::is_same_v<decltype(data_.line_size), decltype(v)>);
+        data_.line_size = v;
 }
 
 void MergeConstant::set_iteration_count(int32_t v)
 {
-        static_assert(std::is_same_v<decltype(m_data.iteration_count), decltype(v)>);
-        m_data.iteration_count = v;
+        static_assert(std::is_same_v<decltype(data_.iteration_count), decltype(v)>);
+        data_.iteration_count = v;
 }
 
 void MergeConstant::set_local_size_x(int32_t v)
 {
-        static_assert(std::is_same_v<decltype(m_data.local_size_x), decltype(v)>);
-        m_data.local_size_x = v;
+        static_assert(std::is_same_v<decltype(data_.local_size_x), decltype(v)>);
+        data_.local_size_x = v;
 }
 
 const std::vector<VkSpecializationMapEntry>& MergeConstant::entries() const
 {
-        return m_entries;
+        return entries_;
 }
 
 const void* MergeConstant::data() const
 {
-        return &m_data;
+        return &data_;
 }
 
 std::size_t MergeConstant::size() const
 {
-        return sizeof(m_data);
+        return sizeof(data_);
 }
 
 //
 
 MergeProgram::MergeProgram(const vulkan::Device& device)
-        : m_device(device),
-          m_descriptor_set_layout(
+        : device_(device),
+          descriptor_set_layout_(
                   vulkan::create_descriptor_set_layout(device, MergeMemory::descriptor_set_layout_bindings())),
-          m_pipeline_layout(
-                  vulkan::create_pipeline_layout(device, {MergeMemory::set_number()}, {m_descriptor_set_layout})),
-          m_shader(device, code_merge_comp(), "main")
+          pipeline_layout_(
+                  vulkan::create_pipeline_layout(device, {MergeMemory::set_number()}, {descriptor_set_layout_})),
+          shader_(device, code_merge_comp(), "main")
 {
 }
 
 void MergeProgram::create_pipeline(unsigned height, unsigned local_size_x, unsigned iteration_count)
 {
-        m_constant.set_line_size(height);
-        m_constant.set_local_size_x(local_size_x);
-        m_constant.set_iteration_count(iteration_count);
+        constant_.set_line_size(height);
+        constant_.set_local_size_x(local_size_x);
+        constant_.set_iteration_count(iteration_count);
 
         vulkan::ComputePipelineCreateInfo info;
-        info.device = &m_device;
-        info.pipeline_layout = m_pipeline_layout;
-        info.shader = &m_shader;
-        info.constants = &m_constant;
-        m_pipeline = create_compute_pipeline(info);
+        info.device = &device_;
+        info.pipeline_layout = pipeline_layout_;
+        info.shader = &shader_;
+        info.constants = &constant_;
+        pipeline_ = create_compute_pipeline(info);
 }
 
 void MergeProgram::delete_pipeline()
 {
-        m_pipeline = vulkan::Pipeline();
+        pipeline_ = vulkan::Pipeline();
 }
 
 VkDescriptorSetLayout MergeProgram::descriptor_set_layout() const
 {
-        return m_descriptor_set_layout;
+        return descriptor_set_layout_;
 }
 
 VkPipelineLayout MergeProgram::pipeline_layout() const
 {
-        return m_pipeline_layout;
+        return pipeline_layout_;
 }
 
 VkPipeline MergeProgram::pipeline() const
 {
-        return m_pipeline;
+        return pipeline_;
 }
 }

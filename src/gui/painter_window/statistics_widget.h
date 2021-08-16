@@ -36,7 +36,7 @@ private:
         Ui::StatisticsWidget ui;
 
         struct Counters;
-        std::unique_ptr<Difference<Counters>> m_difference;
+        std::unique_ptr<Difference<Counters>> difference_;
 
 public:
         explicit StatisticsWidget(std::chrono::milliseconds update_interval);

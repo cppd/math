@@ -35,7 +35,7 @@ ImageSliceDialog::ImageSliceDialog(
         const std::vector<int>& size,
         int slice_dimension,
         std::optional<ImageSliceParameters>& parameters)
-        : QDialog(parent_for_dialog()), m_slice_dimension(slice_dimension), m_parameters(parameters)
+        : QDialog(parent_for_dialog()), slice_dimension_(slice_dimension), parameters_(parameters)
 {
         ui.setupUi(this);
         setWindowTitle("Image Slice");
@@ -67,7 +67,7 @@ ImageSliceDialog::ImageSliceDialog(
         QGridLayout* layout = new QGridLayout(widget);
         layout->setContentsMargins(5, 5, 5, 5);
 
-        m_slices.resize(size.size());
+        slices_.resize(size.size());
 
         for (std::size_t i = 0; i < size.size(); ++i)
         {
@@ -92,7 +92,7 @@ ImageSliceDialog::ImageSliceDialog(
                 label->setText(QString::fromStdString(to_string_digit_groups(slider->value())));
 
                 static_assert(!CHECKED);
-                m_slices[i].reset();
+                slices_[i].reset();
 
                 layout->addWidget(label_d, i, 0);
                 layout->addWidget(label_e, i, 1);
@@ -106,7 +106,7 @@ ImageSliceDialog::ImageSliceDialog(
                                 set_label_text_and_minimum_width(label, to_string_digit_groups(slider->value()));
 
                                 ASSERT(check_box->isChecked());
-                                m_slices[i] = slider->value();
+                                slices_[i] = slider->value();
                         });
 
                 connect(check_box, &QCheckBox::stateChanged, this,
@@ -117,11 +117,11 @@ ImageSliceDialog::ImageSliceDialog(
 
                                 if (check_box->isChecked())
                                 {
-                                        m_slices[i] = slider->value();
+                                        slices_[i] = slider->value();
                                 }
                                 else
                                 {
-                                        m_slices[i].reset();
+                                        slices_[i].reset();
                                 }
                         });
         }
@@ -141,8 +141,8 @@ void ImageSliceDialog::done(int r)
                 return;
         }
 
-        int count = m_slices.size();
-        for (const std::optional<int>& v : m_slices)
+        int count = slices_.size();
+        for (const std::optional<int>& v : slices_)
         {
                 if (v.has_value())
                 {
@@ -150,15 +150,15 @@ void ImageSliceDialog::done(int r)
                 }
         }
 
-        if (m_slice_dimension != count)
+        if (slice_dimension_ != count)
         {
-                std::string msg = "Slice dimension must be equal to " + to_string(m_slice_dimension);
+                std::string msg = "Slice dimension must be equal to " + to_string(slice_dimension_);
                 dialog::message_critical(msg);
                 return;
         }
 
-        m_parameters.emplace();
-        m_parameters->slices = std::move(m_slices);
+        parameters_.emplace();
+        parameters_->slices = std::move(slices_);
 
         QDialog::done(r);
 }

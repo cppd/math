@@ -206,30 +206,30 @@ vec3d gradient_h(const mat4d& texture_to_world_matrix, const vulkan::ImageWithMe
 
 class Impl final : public VolumeObject
 {
-        const vulkan::Device& m_device;
-        const std::vector<uint32_t> m_family_indices;
-        const vulkan::CommandPool& m_transfer_command_pool;
-        const vulkan::Queue& m_transfer_queue;
+        const vulkan::Device& device_;
+        const std::vector<uint32_t> family_indices_;
+        const vulkan::CommandPool& transfer_command_pool_;
+        const vulkan::Queue& transfer_queue_;
 
-        mat4d m_vp_matrix = mat4d(1);
-        std::optional<vec4d> m_world_clip_plane_equation;
+        mat4d vp_matrix_ = mat4d(1);
+        std::optional<vec4d> world_clip_plane_equation_;
 
-        mat3d m_object_normal_to_world_normal_matrix;
-        mat4d m_texture_to_world_matrix;
-        vec3d m_gradient_h;
+        mat3d object_normal_to_world_normal_matrix_;
+        mat4d texture_to_world_matrix_;
+        vec3d gradient_h_;
 
-        VolumeBuffer m_buffer;
-        std::unique_ptr<vulkan::ImageWithMemory> m_image;
-        std::vector<VkFormat> m_image_formats;
-        std::unique_ptr<vulkan::ImageWithMemory> m_transfer_function;
+        VolumeBuffer buffer_;
+        std::unique_ptr<vulkan::ImageWithMemory> image_;
+        std::vector<VkFormat> image_formats_;
+        std::unique_ptr<vulkan::ImageWithMemory> transfer_function_;
 
-        std::unordered_map<VkDescriptorSetLayout, vulkan::Descriptors> m_descriptor_sets;
-        const std::vector<vulkan::DescriptorSetLayoutAndBindings> m_image_layouts;
+        std::unordered_map<VkDescriptorSetLayout, vulkan::Descriptors> descriptor_sets_;
+        const std::vector<vulkan::DescriptorSetLayoutAndBindings> image_layouts_;
 
-        VkSampler m_image_sampler;
-        VkSampler m_transfer_function_sampler;
+        VkSampler image_sampler_;
+        VkSampler transfer_function_sampler_;
 
-        std::optional<int> m_version;
+        std::optional<int> version_;
 
         const volume::Update::Flags UPDATE_PARAMETERS = []()
         {
@@ -270,82 +270,82 @@ class Impl final : public VolumeObject
                 isovalue = std::clamp(isovalue, 0.0f, 1.0f);
                 isosurface_alpha = std::clamp(isosurface_alpha, 0.0f, 1.0f);
 
-                m_buffer.set_parameters(
-                        m_transfer_command_pool, m_transfer_queue, window_offset, window_scale,
-                        volume_alpha_coefficient, isosurface_alpha, isosurface, isovalue, color.rgb32().clamp(0, 1));
+                buffer_.set_parameters(
+                        transfer_command_pool_, transfer_queue_, window_offset, window_scale, volume_alpha_coefficient,
+                        isosurface_alpha, isosurface, isovalue, color.rgb32().clamp(0, 1));
         }
 
         void buffer_set_lighting(float ambient, float metalness, float roughness) const
         {
                 std::tie(ambient, metalness, roughness) = clean_shading_parameters(ambient, metalness, roughness);
 
-                m_buffer.set_lighting(m_transfer_command_pool, m_transfer_queue, ambient, metalness, roughness);
+                buffer_.set_lighting(transfer_command_pool_, transfer_queue_, ambient, metalness, roughness);
         }
 
         void buffer_set_coordinates() const
         {
-                const mat4d& mvp = m_vp_matrix * m_texture_to_world_matrix;
+                const mat4d& mvp = vp_matrix_ * texture_to_world_matrix_;
                 const vec4d& clip_plane =
-                        m_world_clip_plane_equation
-                                ? image_clip_plane(*m_world_clip_plane_equation, m_texture_to_world_matrix)
+                        world_clip_plane_equation_
+                                ? image_clip_plane(*world_clip_plane_equation_, texture_to_world_matrix_)
                                 : vec4d(0);
 
-                m_buffer.set_coordinates(
-                        mvp.inverse(), mvp.row(2), clip_plane, m_gradient_h, m_object_normal_to_world_normal_matrix);
+                buffer_.set_coordinates(
+                        mvp.inverse(), mvp.row(2), clip_plane, gradient_h_, object_normal_to_world_normal_matrix_);
         }
 
         void buffer_set_clip_plane() const
         {
-                ASSERT(m_world_clip_plane_equation);
-                m_buffer.set_clip_plane(image_clip_plane(*m_world_clip_plane_equation, m_texture_to_world_matrix));
+                ASSERT(world_clip_plane_equation_);
+                buffer_.set_clip_plane(image_clip_plane(*world_clip_plane_equation_, texture_to_world_matrix_));
         }
 
         void buffer_set_color_volume(bool color_volume) const
         {
-                m_buffer.set_color_volume(m_transfer_command_pool, m_transfer_queue, color_volume);
+                buffer_.set_color_volume(transfer_command_pool_, transfer_queue_, color_volume);
         }
 
         void create_descriptor_sets()
         {
                 VolumeImageMemory::CreateInfo info;
-                info.buffer_coordinates = m_buffer.buffer_coordinates();
-                info.buffer_coordinates_size = m_buffer.buffer_coordinates_size();
-                info.buffer_volume = m_buffer.buffer_volume();
-                info.buffer_volume_size = m_buffer.buffer_volume_size();
-                info.image = m_image->image_view();
-                info.transfer_function = m_transfer_function->image_view();
+                info.buffer_coordinates = buffer_.buffer_coordinates();
+                info.buffer_coordinates_size = buffer_.buffer_coordinates_size();
+                info.buffer_volume = buffer_.buffer_volume();
+                info.buffer_volume_size = buffer_.buffer_volume_size();
+                info.image = image_->image_view();
+                info.transfer_function = transfer_function_->image_view();
 
-                m_descriptor_sets.clear();
-                for (const vulkan::DescriptorSetLayoutAndBindings& layout : m_image_layouts)
+                descriptor_sets_.clear();
+                for (const vulkan::DescriptorSetLayoutAndBindings& layout : image_layouts_)
                 {
                         vulkan::Descriptors sets = VolumeImageMemory::create(
-                                m_device, m_image_sampler, m_transfer_function_sampler, layout.descriptor_set_layout,
+                                device_, image_sampler_, transfer_function_sampler_, layout.descriptor_set_layout,
                                 layout.descriptor_set_layout_bindings, info);
 
                         ASSERT(sets.descriptor_set_count() == 1);
-                        m_descriptor_sets.emplace(sets.descriptor_set_layout(), std::move(sets));
+                        descriptor_sets_.emplace(sets.descriptor_set_layout(), std::move(sets));
                 }
         }
 
         void set_transfer_function()
         {
-                if (m_transfer_function)
+                if (transfer_function_)
                 {
                         return;
                 }
 
                 image::Image<1> image = transfer_function();
 
-                m_transfer_function.reset();
+                transfer_function_.reset();
 
-                m_transfer_function = std::make_unique<vulkan::ImageWithMemory>(
-                        m_device, m_family_indices, vulkan_transfer_function_formats(image.color_format),
+                transfer_function_ = std::make_unique<vulkan::ImageWithMemory>(
+                        device_, family_indices_, vulkan_transfer_function_formats(image.color_format),
                         VK_SAMPLE_COUNT_1_BIT, VK_IMAGE_TYPE_1D, vulkan::make_extent(image.size[0]),
                         VK_IMAGE_USAGE_SAMPLED_BIT | VK_IMAGE_USAGE_TRANSFER_DST_BIT, VK_IMAGE_LAYOUT_UNDEFINED,
-                        m_transfer_command_pool, m_transfer_queue);
+                        transfer_command_pool_, transfer_queue_);
 
-                m_transfer_function->write_pixels(
-                        m_transfer_command_pool, m_transfer_queue, VK_IMAGE_LAYOUT_UNDEFINED,
+                transfer_function_->write_pixels(
+                        transfer_command_pool_, transfer_queue_, VK_IMAGE_LAYOUT_UNDEFINED,
                         VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL, image.color_format, image.pixels);
         }
 
@@ -353,23 +353,23 @@ class Impl final : public VolumeObject
         {
                 VkImageLayout image_layout;
 
-                if (!m_image || m_image_formats != vulkan_image_formats(image.color_format)
-                    || m_image->width() != static_cast<unsigned>(image.size[0])
-                    || m_image->height() != static_cast<unsigned>(image.size[1])
-                    || m_image->depth() != static_cast<unsigned>(image.size[2]))
+                if (!image_ || image_formats_ != vulkan_image_formats(image.color_format)
+                    || image_->width() != static_cast<unsigned>(image.size[0])
+                    || image_->height() != static_cast<unsigned>(image.size[1])
+                    || image_->depth() != static_cast<unsigned>(image.size[2]))
                 {
                         *size_changed = true;
 
                         buffer_set_color_volume(!is_scalar_volume(image.color_format));
 
-                        m_image_formats = vulkan_image_formats(image.color_format);
+                        image_formats_ = vulkan_image_formats(image.color_format);
 
-                        m_image.reset();
-                        m_image = std::make_unique<vulkan::ImageWithMemory>(
-                                m_device, m_family_indices, m_image_formats, VK_SAMPLE_COUNT_1_BIT, VK_IMAGE_TYPE_3D,
+                        image_.reset();
+                        image_ = std::make_unique<vulkan::ImageWithMemory>(
+                                device_, family_indices_, image_formats_, VK_SAMPLE_COUNT_1_BIT, VK_IMAGE_TYPE_3D,
                                 vulkan::make_extent(image.size[0], image.size[1], image.size[2]),
                                 VK_IMAGE_USAGE_SAMPLED_BIT | VK_IMAGE_USAGE_TRANSFER_DST_BIT, VK_IMAGE_LAYOUT_UNDEFINED,
-                                m_transfer_command_pool, m_transfer_queue);
+                                transfer_command_pool_, transfer_queue_);
 
                         image_layout = VK_IMAGE_LAYOUT_UNDEFINED;
                 }
@@ -384,16 +384,16 @@ class Impl final : public VolumeObject
                         image,
                         [this, &image_layout](image::ColorFormat color_format, const std::vector<std::byte>& pixels)
                         {
-                                m_image->write_pixels(
-                                        m_transfer_command_pool, m_transfer_queue, image_layout,
+                                image_->write_pixels(
+                                        transfer_command_pool_, transfer_queue_, image_layout,
                                         VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL, color_format, pixels);
                         });
         }
 
         const VkDescriptorSet& descriptor_set(VkDescriptorSetLayout descriptor_set_layout) const override
         {
-                auto iter = m_descriptor_sets.find(descriptor_set_layout);
-                if (iter == m_descriptor_sets.cend())
+                auto iter = descriptor_sets_.find(descriptor_set_layout);
+                if (iter == descriptor_sets_.cend())
                 {
                         error("Failed to find volume descriptor set for descriptor set layout");
                 }
@@ -404,14 +404,14 @@ class Impl final : public VolumeObject
         void set_matrix_and_clip_plane(const mat4d& vp_matrix, const std::optional<vec4d>& world_clip_plane_equation)
                 override
         {
-                m_vp_matrix = vp_matrix;
-                m_world_clip_plane_equation = world_clip_plane_equation;
+                vp_matrix_ = vp_matrix;
+                world_clip_plane_equation_ = world_clip_plane_equation;
                 buffer_set_coordinates();
         }
 
         void set_clip_plane(const vec4d& world_clip_plane_equation) override
         {
-                m_world_clip_plane_equation = world_clip_plane_equation;
+                world_clip_plane_equation_ = world_clip_plane_equation;
                 buffer_set_clip_plane();
         }
 
@@ -420,7 +420,7 @@ class Impl final : public VolumeObject
                 UpdateChanges update_changes;
 
                 volume::Update::Flags updates;
-                volume_object.updates(&m_version, &updates);
+                volume_object.updates(&version_, &updates);
                 if (updates.none())
                 {
                         return update_changes;
@@ -462,10 +462,10 @@ class Impl final : public VolumeObject
 
                 if (update_matrices)
                 {
-                        m_object_normal_to_world_normal_matrix =
+                        object_normal_to_world_normal_matrix_ =
                                 volume_object.matrix().top_left<3, 3>().inverse().transpose();
-                        m_texture_to_world_matrix = volume_object.matrix() * volume_object.volume().matrix;
-                        m_gradient_h = gradient_h(m_texture_to_world_matrix, *m_image);
+                        texture_to_world_matrix_ = volume_object.matrix() * volume_object.volume().matrix;
+                        gradient_h_ = gradient_h(texture_to_world_matrix_, *image_);
 
                         buffer_set_coordinates();
                 }
@@ -481,15 +481,15 @@ public:
              std::vector<vulkan::DescriptorSetLayoutAndBindings> image_layouts,
              VkSampler image_sampler,
              VkSampler transfer_function_sampler)
-                : m_device(device),
-                  m_family_indices(sort_and_unique(
+                : device_(device),
+                  family_indices_(sort_and_unique(
                           merge<std::vector<uint32_t>>(graphics_family_indices, transfer_queue.family_index()))),
-                  m_transfer_command_pool(transfer_command_pool),
-                  m_transfer_queue(transfer_queue),
-                  m_buffer(m_device, graphics_family_indices, {transfer_queue.family_index()}),
-                  m_image_layouts(std::move(image_layouts)),
-                  m_image_sampler(image_sampler),
-                  m_transfer_function_sampler(transfer_function_sampler)
+                  transfer_command_pool_(transfer_command_pool),
+                  transfer_queue_(transfer_queue),
+                  buffer_(device_, graphics_family_indices, {transfer_queue.family_index()}),
+                  image_layouts_(std::move(image_layouts)),
+                  image_sampler_(image_sampler),
+                  transfer_function_sampler_(transfer_function_sampler)
         {
                 ASSERT(transfer_command_pool.family_index() == transfer_queue.family_index());
         }

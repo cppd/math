@@ -39,40 +39,40 @@ class ThreadsWithCatch
 {
         class ThreadData
         {
-                std::thread m_thread;
-                bool m_has_error = false;
-                std::string m_error_message;
+                std::thread thread_;
+                bool has_error_ = false;
+                std::string error_message_;
 
         public:
-                explicit ThreadData(std::thread&& t) : m_thread(std::move(t))
+                explicit ThreadData(std::thread&& t) : thread_(std::move(t))
                 {
                 }
 
                 void join()
                 {
-                        m_thread.join();
+                        thread_.join();
                 }
 
                 void set_error(const char* s)
                 {
-                        m_has_error = true;
-                        m_error_message = s;
+                        has_error_ = true;
+                        error_message_ = s;
                 }
 
                 bool has_error() const
                 {
-                        return m_has_error;
+                        return has_error_;
                 }
 
                 const std::string& error_message() const
                 {
-                        return m_error_message;
+                        return error_message_;
                 }
         };
 
-        const std::thread::id m_thread_id = std::this_thread::get_id();
+        const std::thread::id thread_id_ = std::this_thread::get_id();
 
-        std::vector<ThreadData> m_threads;
+        std::vector<ThreadData> threads_;
 
         void join(bool* there_is_error, std::string* error_message) noexcept
         {
@@ -82,7 +82,7 @@ class ThreadsWithCatch
                         {
                                 *there_is_error = false;
 
-                                for (ThreadData& thread_data : m_threads)
+                                for (ThreadData& thread_data : threads_)
                                 {
                                         thread_data.join();
 
@@ -97,7 +97,7 @@ class ThreadsWithCatch
                                         }
                                 }
 
-                                m_threads.clear();
+                                threads_.clear();
                         }
                         catch (const std::exception& e)
                         {
@@ -113,14 +113,14 @@ class ThreadsWithCatch
 public:
         explicit ThreadsWithCatch(unsigned thread_count)
         {
-                m_threads.reserve(thread_count);
+                threads_.reserve(thread_count);
         }
 
         ~ThreadsWithCatch()
         {
-                ASSERT(m_thread_id == std::this_thread::get_id());
+                ASSERT(thread_id_ == std::this_thread::get_id());
 
-                if (!m_threads.empty())
+                if (!threads_.empty())
                 {
                         error_fatal("Thread vector is not empty");
                 }
@@ -131,11 +131,11 @@ public:
         {
                 try
                 {
-                        ASSERT(m_thread_id == std::this_thread::get_id());
+                        ASSERT(thread_id_ == std::this_thread::get_id());
                         try
                         {
                                 auto lambda =
-                                        [&, thread_num = m_threads.size(), f = std::forward<F>(function)]() noexcept
+                                        [&, thread_num = threads_.size(), f = std::forward<F>(function)]() noexcept
                                 {
                                         try
                                         {
@@ -148,11 +148,11 @@ public:
                                                 }
                                                 catch (const std::exception& e)
                                                 {
-                                                        m_threads[thread_num].set_error(e.what());
+                                                        threads_[thread_num].set_error(e.what());
                                                 }
                                                 catch (...)
                                                 {
-                                                        m_threads[thread_num].set_error("Unknown error in thread");
+                                                        threads_[thread_num].set_error("Unknown error in thread");
                                                 }
                                         }
                                         catch (...)
@@ -161,7 +161,7 @@ public:
                                         }
                                 };
 
-                                m_threads.emplace_back(std::thread(lambda));
+                                threads_.emplace_back(std::thread(lambda));
                         }
                         catch (const std::exception& e)
                         {
@@ -176,7 +176,7 @@ public:
 
         void join()
         {
-                ASSERT(m_thread_id == std::this_thread::get_id());
+                ASSERT(thread_id_ == std::this_thread::get_id());
 
                 bool there_is_error;
                 std::string error_message;

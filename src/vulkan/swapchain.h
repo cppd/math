@@ -32,11 +32,11 @@ enum class PresentMode
 
 class Swapchain
 {
-        VkSurfaceFormatKHR m_surface_format;
-        VkExtent2D m_extent;
-        SwapchainKHR m_swapchain;
-        std::vector<VkImage> m_images;
-        std::vector<ImageView> m_image_views;
+        VkSurfaceFormatKHR surface_format_;
+        VkExtent2D extent_;
+        SwapchainKHR swapchain_;
+        std::vector<VkImage> images_;
+        std::vector<ImageView> image_views_;
 
 public:
         Swapchain(

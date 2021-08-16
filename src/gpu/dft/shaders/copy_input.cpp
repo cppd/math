@@ -53,7 +53,7 @@ std::vector<VkDescriptorSetLayoutBinding> CopyInputMemory::descriptor_set_layout
 }
 
 CopyInputMemory::CopyInputMemory(const vulkan::Device& device, VkDescriptorSetLayout descriptor_set_layout)
-        : m_descriptors(device, 1, descriptor_set_layout, descriptor_set_layout_bindings())
+        : descriptors_(device, 1, descriptor_set_layout, descriptor_set_layout_bindings())
 {
 }
 
@@ -64,7 +64,7 @@ unsigned CopyInputMemory::set_number()
 
 const VkDescriptorSet& CopyInputMemory::descriptor_set() const
 {
-        return m_descriptors.descriptor_set(0);
+        return descriptors_.descriptor_set(0);
 }
 
 void CopyInputMemory::set(
@@ -80,7 +80,7 @@ void CopyInputMemory::set(
                 image_info.imageView = input.image_view();
                 image_info.sampler = sampler;
 
-                m_descriptors.update_descriptor_set(0, SRC_BINDING, image_info);
+                descriptors_.update_descriptor_set(0, SRC_BINDING, image_info);
         }
         {
                 ASSERT(output.has_usage(VK_BUFFER_USAGE_STORAGE_BUFFER_BIT));
@@ -90,7 +90,7 @@ void CopyInputMemory::set(
                 buffer_info.offset = 0;
                 buffer_info.range = output.size();
 
-                m_descriptors.update_descriptor_set(0, DST_BINDING, buffer_info);
+                descriptors_.update_descriptor_set(0, DST_BINDING, buffer_info);
         }
 }
 
@@ -103,116 +103,116 @@ CopyInputConstant::CopyInputConstant()
                 entry.constantID = 0;
                 entry.offset = offsetof(Data, local_size_x);
                 entry.size = sizeof(Data::local_size_x);
-                m_entries.push_back(entry);
+                entries_.push_back(entry);
         }
         {
                 VkSpecializationMapEntry entry = {};
                 entry.constantID = 1;
                 entry.offset = offsetof(Data, local_size_y);
                 entry.size = sizeof(Data::local_size_y);
-                m_entries.push_back(entry);
+                entries_.push_back(entry);
         }
         {
                 VkSpecializationMapEntry entry = {};
                 entry.constantID = 2;
                 entry.offset = offsetof(Data, x);
                 entry.size = sizeof(Data::x);
-                m_entries.push_back(entry);
+                entries_.push_back(entry);
         }
         {
                 VkSpecializationMapEntry entry = {};
                 entry.constantID = 3;
                 entry.offset = offsetof(Data, y);
                 entry.size = sizeof(Data::y);
-                m_entries.push_back(entry);
+                entries_.push_back(entry);
         }
         {
                 VkSpecializationMapEntry entry = {};
                 entry.constantID = 4;
                 entry.offset = offsetof(Data, width);
                 entry.size = sizeof(Data::width);
-                m_entries.push_back(entry);
+                entries_.push_back(entry);
         }
         {
                 VkSpecializationMapEntry entry = {};
                 entry.constantID = 5;
                 entry.offset = offsetof(Data, height);
                 entry.size = sizeof(Data::height);
-                m_entries.push_back(entry);
+                entries_.push_back(entry);
         }
 }
 
 void CopyInputConstant::set(int32_t local_size_x, int32_t local_size_y, const Region<2, int>& rectangle)
 {
-        static_assert(std::is_same_v<decltype(m_data.local_size_x), decltype(local_size_x)>);
-        m_data.local_size_x = local_size_x;
-        static_assert(std::is_same_v<decltype(m_data.local_size_y), decltype(local_size_y)>);
-        m_data.local_size_y = local_size_y;
+        static_assert(std::is_same_v<decltype(data_.local_size_x), decltype(local_size_x)>);
+        data_.local_size_x = local_size_x;
+        static_assert(std::is_same_v<decltype(data_.local_size_y), decltype(local_size_y)>);
+        data_.local_size_y = local_size_y;
 
         ASSERT(rectangle.is_positive());
-        m_data.x = rectangle.x0();
-        m_data.y = rectangle.y0();
-        m_data.width = rectangle.width();
-        m_data.height = rectangle.height();
+        data_.x = rectangle.x0();
+        data_.y = rectangle.y0();
+        data_.width = rectangle.width();
+        data_.height = rectangle.height();
 }
 
 const std::vector<VkSpecializationMapEntry>& CopyInputConstant::entries() const
 {
-        return m_entries;
+        return entries_;
 }
 
 const void* CopyInputConstant::data() const
 {
-        return &m_data;
+        return &data_;
 }
 
 std::size_t CopyInputConstant::size() const
 {
-        return sizeof(m_data);
+        return sizeof(data_);
 }
 
 //
 
 CopyInputProgram::CopyInputProgram(const vulkan::Device& device)
-        : m_device(device),
-          m_descriptor_set_layout(
+        : device_(device),
+          descriptor_set_layout_(
                   vulkan::create_descriptor_set_layout(device, CopyInputMemory::descriptor_set_layout_bindings())),
-          m_pipeline_layout(
-                  vulkan::create_pipeline_layout(device, {CopyInputMemory::set_number()}, {m_descriptor_set_layout})),
-          m_shader(device, code_copy_input_comp(), "main")
+          pipeline_layout_(
+                  vulkan::create_pipeline_layout(device, {CopyInputMemory::set_number()}, {descriptor_set_layout_})),
+          shader_(device, code_copy_input_comp(), "main")
 {
 }
 
 VkDescriptorSetLayout CopyInputProgram::descriptor_set_layout() const
 {
-        return m_descriptor_set_layout;
+        return descriptor_set_layout_;
 }
 
 VkPipelineLayout CopyInputProgram::pipeline_layout() const
 {
-        return m_pipeline_layout;
+        return pipeline_layout_;
 }
 
 VkPipeline CopyInputProgram::pipeline() const
 {
-        ASSERT(m_pipeline != VK_NULL_HANDLE);
-        return m_pipeline;
+        ASSERT(pipeline_ != VK_NULL_HANDLE);
+        return pipeline_;
 }
 
 void CopyInputProgram::create_pipeline(int32_t local_size_x, int32_t local_size_y, const Region<2, int>& rectangle)
 {
-        m_constant.set(local_size_x, local_size_y, rectangle);
+        constant_.set(local_size_x, local_size_y, rectangle);
 
         vulkan::ComputePipelineCreateInfo info;
-        info.device = &m_device;
-        info.pipeline_layout = m_pipeline_layout;
-        info.shader = &m_shader;
-        info.constants = &m_constant;
-        m_pipeline = create_compute_pipeline(info);
+        info.device = &device_;
+        info.pipeline_layout = pipeline_layout_;
+        info.shader = &shader_;
+        info.constants = &constant_;
+        pipeline_ = create_compute_pipeline(info);
 }
 
 void CopyInputProgram::delete_pipeline()
 {
-        m_pipeline = vulkan::Pipeline();
+        pipeline_ = vulkan::Pipeline();
 }
 }

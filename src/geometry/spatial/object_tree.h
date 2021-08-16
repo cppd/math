@@ -117,31 +117,31 @@ class ObjectTree final
                 return std::nullopt;
         }
 
-        const std::vector<Object>& m_objects;
-        BoundingBox<N, T> m_bounding_box;
-        SpatialSubdivisionTree<TreeParallelotope> m_tree;
+        const std::vector<Object>& objects_;
+        BoundingBox<N, T> bounding_box_;
+        SpatialSubdivisionTree<TreeParallelotope> tree_;
 
 public:
         ObjectTree(const std::vector<Object>& objects, int max_depth, int min_objects_per_box, ProgressRatio* progress)
-                : m_objects(objects)
+                : objects_(objects)
         {
-                m_bounding_box = bounding_box(objects);
-                create_tree(max_depth, min_objects_per_box, m_objects, m_bounding_box, &m_tree, progress);
+                bounding_box_ = bounding_box(objects);
+                create_tree(max_depth, min_objects_per_box, objects_, bounding_box_, &tree_, progress);
         }
 
         const BoundingBox<N, T>& bounding_box() const
         {
-                return m_bounding_box;
+                return bounding_box_;
         }
 
         const TreeParallelotope& root() const
         {
-                return m_tree.root();
+                return tree_.root();
         }
 
         std::optional<T> intersect_root(const Ray<N, T>& ray) const
         {
-                return m_tree.intersect_root(ray);
+                return tree_.intersect_root(ray);
         }
 
         std::optional<std::tuple<T, const Object*>> intersect(const Ray<N, T>& ray, T root_distance) const
@@ -150,7 +150,7 @@ public:
 
                 const auto f = [&](const std::vector<int>& object_indices) -> std::optional<Vector<N, T>>
                 {
-                        intersection = ray_intersection(m_objects, object_indices, ray);
+                        intersection = ray_intersection(objects_, object_indices, ray);
                         if (intersection)
                         {
                                 return ray.point(std::get<0>(*intersection));
@@ -158,7 +158,7 @@ public:
                         return std::nullopt;
                 };
 
-                if (m_tree.trace_ray(ray, root_distance, f))
+                if (tree_.trace_ray(ray, root_distance, f))
                 {
                         return intersection;
                 }

@@ -37,28 +37,28 @@ class VulkanInstance final
         static constexpr unsigned TRANSFER_QUEUE_COUNT = 1;
         static constexpr unsigned PRESENTATION_QUEUE_COUNT = 1;
 
-        const Instance m_instance;
-        const std::optional<DebugReportCallback> m_callback;
+        const Instance instance_;
+        const std::optional<DebugReportCallback> callback_;
 
-        const std::optional<SurfaceKHR> m_surface;
+        const std::optional<SurfaceKHR> surface_;
 
-        const PhysicalDevice m_physical_device;
+        const PhysicalDevice physical_device_;
 
-        const uint32_t m_graphics_compute_family_index;
-        const uint32_t m_compute_family_index;
-        const uint32_t m_transfer_family_index;
-        const uint32_t m_presentation_family_index;
+        const uint32_t graphics_compute_family_index_;
+        const uint32_t compute_family_index_;
+        const uint32_t transfer_family_index_;
+        const uint32_t presentation_family_index_;
 
-        const Device m_device;
+        const Device device_;
 
-        const CommandPool m_graphics_compute_command_pool;
-        const CommandPool m_compute_command_pool;
-        const CommandPool m_transfer_command_pool;
+        const CommandPool graphics_compute_command_pool_;
+        const CommandPool compute_command_pool_;
+        const CommandPool transfer_command_pool_;
 
-        std::array<Queue, GRAPHICS_COMPUTE_QUEUE_COUNT> m_graphics_compute_queues;
-        std::array<Queue, COMPUTE_QUEUE_COUNT> m_compute_queues;
-        std::array<Queue, TRANSFER_QUEUE_COUNT> m_transfer_queues;
-        std::array<Queue, PRESENTATION_QUEUE_COUNT> m_presentation_queues;
+        std::array<Queue, GRAPHICS_COMPUTE_QUEUE_COUNT> graphics_compute_queues_;
+        std::array<Queue, COMPUTE_QUEUE_COUNT> compute_queues_;
+        std::array<Queue, TRANSFER_QUEUE_COUNT> transfer_queues_;
+        std::array<Queue, PRESENTATION_QUEUE_COUNT> presentation_queues_;
 
 public:
         VulkanInstance(
@@ -84,49 +84,49 @@ public:
 
         VkSurfaceKHR surface() const
         {
-                ASSERT(m_surface);
-                return *m_surface;
+                ASSERT(surface_);
+                return *surface_;
         }
 
         const Device& device() const
         {
-                return m_device;
+                return device_;
         }
 
         const vulkan::CommandPool& graphics_compute_command_pool() const
         {
-                return m_graphics_compute_command_pool;
+                return graphics_compute_command_pool_;
         }
 
         const vulkan::CommandPool& compute_command_pool() const
         {
-                return m_compute_command_pool;
+                return compute_command_pool_;
         }
 
         const vulkan::CommandPool& transfer_command_pool() const
         {
-                return m_transfer_command_pool;
+                return transfer_command_pool_;
         }
 
         const std::array<Queue, GRAPHICS_COMPUTE_QUEUE_COUNT>& graphics_compute_queues() const
         {
-                return m_graphics_compute_queues;
+                return graphics_compute_queues_;
         }
 
         const Queue& compute_queue() const
         {
-                return m_compute_queues[0];
+                return compute_queues_[0];
         }
 
         const Queue& transfer_queue() const
         {
-                return m_transfer_queues[0];
+                return transfer_queues_[0];
         }
 
         const Queue& presentation_queue() const
         {
-                ASSERT(m_surface);
-                return m_presentation_queues[0];
+                ASSERT(surface_);
+                return presentation_queues_[0];
         }
 };
 }

@@ -37,13 +37,13 @@ class SphericalProjector final : public Projector<N, T>
         static_assert(N >= 2);
         static_assert(std::is_floating_point_v<T>);
 
-        std::array<int, N - 1> m_screen_size;
-        std::array<Vector<N, T>, N - 1> m_screen_axes;
-        Vector<N - 1, T> m_screen_org;
-        Vector<N, T> m_camera_org;
-        Vector<N, T> m_camera_dir;
+        std::array<int, N - 1> screen_size_;
+        std::array<Vector<N, T>, N - 1> screen_axes_;
+        Vector<N - 1, T> screen_org_;
+        Vector<N, T> camera_org_;
+        Vector<N, T> camera_dir_;
 
-        T m_square_radius;
+        T square_radius_;
 
 public:
         SphericalProjector(
@@ -53,13 +53,13 @@ public:
                 T width_view_angle_degrees,
                 const std::array<int, N - 1>& screen_size)
         {
-                m_screen_size = screen_size;
-                m_screen_org = projectors_implementation::screen_org<T>(screen_size);
-                m_camera_org = camera_org;
-                m_camera_dir = camera_dir.normalized();
-                m_screen_axes = projectors_implementation::normalize_axes(screen_axes);
+                screen_size_ = screen_size;
+                screen_org_ = projectors_implementation::screen_org<T>(screen_size);
+                camera_org_ = camera_org;
+                camera_dir_ = camera_dir.normalized();
+                screen_axes_ = projectors_implementation::normalize_axes(screen_axes);
 
-                projectors_implementation::check_orthogonality(m_camera_dir, m_screen_axes);
+                projectors_implementation::check_orthogonality(camera_dir_, screen_axes_);
 
                 //
 
@@ -82,27 +82,27 @@ public:
                         error("Spherical projection view angle " + to_string(width_view_angle_degrees) + " is too big");
                 }
 
-                m_square_radius = square(screen_size[0] * T(0.5) / sin_alpha);
+                square_radius_ = square(screen_size[0] * T(0.5) / sin_alpha);
         }
 
         const std::array<int, N - 1>& screen_size() const override
         {
-                return m_screen_size;
+                return screen_size_;
         }
 
         Ray<N, T> ray(const Vector<N - 1, T>& point) const override
         {
-                Vector<N - 1, T> screen_point = m_screen_org + point;
+                Vector<N - 1, T> screen_point = screen_org_ + point;
 
-                T radicand = m_square_radius - dot(screen_point, screen_point);
+                T radicand = square_radius_ - dot(screen_point, screen_point);
                 if (!(radicand > 0))
                 {
                         error("Error spherical projection point " + to_string(point));
                 }
                 T z = std::sqrt(radicand);
 
-                Vector<N, T> screen_dir = projectors_implementation::screen_dir(m_screen_axes, screen_point);
-                return Ray<N, T>(m_camera_org, m_camera_dir * z + screen_dir);
+                Vector<N, T> screen_dir = projectors_implementation::screen_dir(screen_axes_, screen_point);
+                return Ray<N, T>(camera_org_, camera_dir_ * z + screen_dir);
         }
 };
 }

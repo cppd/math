@@ -36,10 +36,10 @@ namespace
 {
 class ThreadData
 {
-        ProgressRatioList m_progress_list;
-        std::list<QProgressBar> m_progress_bars;
-        std::thread m_thread;
-        std::atomic_bool m_working = false;
+        ProgressRatioList progress_list_;
+        std::list<QProgressBar> progress_bars_;
+        std::thread thread_;
+        std::atomic_bool working_ = false;
 
         enum class TerminateType
         {
@@ -54,19 +54,19 @@ class ThreadData
                         switch (terminate_type)
                         {
                         case TerminateType::Quietly:
-                                m_progress_list.terminate_all_quietly();
+                                progress_list_.terminate_all_quietly();
                                 break;
                         case TerminateType::WithMessage:
-                                m_progress_list.terminate_all_with_message();
+                                progress_list_.terminate_all_with_message();
                                 break;
                         }
 
-                        if (m_thread.joinable())
+                        if (thread_.joinable())
                         {
-                                m_thread.join();
+                                thread_.join();
                         }
 
-                        m_progress_list.enable();
+                        progress_list_.enable();
                 }
                 catch (...)
                 {
@@ -86,10 +86,10 @@ public:
         {
                 terminate_quietly();
 
-                ASSERT(!m_working);
+                ASSERT(!working_);
 
-                m_working = true;
-                m_thread = std::thread(
+                working_ = true;
+                thread_ = std::thread(
                         [this, func = std::forward<F>(function), description]() noexcept
                         {
                                 try
@@ -98,9 +98,9 @@ public:
                                                 description,
                                                 [&]()
                                                 {
-                                                        func(&m_progress_list);
+                                                        func(&progress_list_);
                                                 });
-                                        m_working = false;
+                                        working_ = false;
                                 }
                                 catch (...)
                                 {
@@ -121,22 +121,22 @@ public:
 
         bool working() const
         {
-                return m_working;
+                return working_;
         }
 
         bool joinable() const
         {
-                return m_thread.joinable();
+                return thread_.joinable();
         }
 
         const ProgressRatioList* progress_list() const
         {
-                return &m_progress_list;
+                return &progress_list_;
         }
 
         std::list<QProgressBar>* progress_bars()
         {
-                return &m_progress_bars;
+                return &progress_bars_;
         }
 };
 
@@ -144,29 +144,29 @@ public:
 
 class Impl final : public WorkerThreads
 {
-        const std::thread::id m_thread_id = std::this_thread::get_id();
+        const std::thread::id thread_id_ = std::this_thread::get_id();
 
-        const std::optional<unsigned> m_permanent_thread_id;
-        QStatusBar* const m_status_bar;
+        const std::optional<unsigned> permanent_thread_id_;
+        QStatusBar* const status_bar_;
 
-        std::deque<ThreadData> m_threads;
-        std::vector<Progress> m_progress;
+        std::deque<ThreadData> threads_;
+        std::vector<Progress> progress_;
 
         ThreadData& thread_data(unsigned id)
         {
-                ASSERT(id < m_threads.size());
-                return m_threads[id];
+                ASSERT(id < threads_.size());
+                return threads_[id];
         }
 
         const ThreadData& thread_data(unsigned id) const
         {
-                ASSERT(id < m_threads.size());
-                return m_threads[id];
+                ASSERT(id < threads_.size());
+                return threads_[id];
         }
 
         void start(unsigned id, const std::string& description, std::function<void(ProgressRatioList*)>&& function)
         {
-                ASSERT(std::this_thread::get_id() == m_thread_id);
+                ASSERT(std::this_thread::get_id() == thread_id_);
 
                 if (!function)
                 {
@@ -178,7 +178,7 @@ class Impl final : public WorkerThreads
 
         bool terminate_with_dialog(unsigned id)
         {
-                ASSERT(std::this_thread::get_id() == m_thread_id);
+                ASSERT(std::this_thread::get_id() == thread_id_);
 
                 if (is_working(id))
                 {
@@ -197,21 +197,21 @@ class Impl final : public WorkerThreads
 
         bool is_working(unsigned id) const
         {
-                ASSERT(std::this_thread::get_id() == m_thread_id);
+                ASSERT(std::this_thread::get_id() == thread_id_);
 
                 return thread_data(id).working();
         }
 
         void terminate_quietly(unsigned id)
         {
-                ASSERT(std::this_thread::get_id() == m_thread_id);
+                ASSERT(std::this_thread::get_id() == thread_id_);
 
                 thread_data(id).terminate_quietly();
         }
 
         void terminate_with_message(unsigned id) override
         {
-                ASSERT(std::this_thread::get_id() == m_thread_id);
+                ASSERT(std::this_thread::get_id() == thread_id_);
 
                 thread_data(id).terminate_with_message();
         }
@@ -236,9 +236,9 @@ class Impl final : public WorkerThreads
 
         void terminate_all() override
         {
-                ASSERT(std::this_thread::get_id() == m_thread_id);
+                ASSERT(std::this_thread::get_id() == thread_id_);
 
-                for (ThreadData& t : m_threads)
+                for (ThreadData& t : threads_)
                 {
                         t.terminate_quietly();
                 }
@@ -246,7 +246,7 @@ class Impl final : public WorkerThreads
 
         unsigned count() const override
         {
-                return m_threads.size();
+                return threads_.size();
         }
 
         void set_progress(unsigned id, const ProgressRatioList* progress_list, std::list<QProgressBar>* progress_bars)
@@ -285,13 +285,13 @@ class Impl final : public WorkerThreads
                 {
                         if (!bar->isVisible())
                         {
-                                if (id == m_permanent_thread_id)
+                                if (id == permanent_thread_id_)
                                 {
-                                        m_status_bar->insertPermanentWidget(0, &(*bar));
+                                        status_bar_->insertPermanentWidget(0, &(*bar));
                                 }
                                 else
                                 {
-                                        m_status_bar->addWidget(&(*bar));
+                                        status_bar_->addWidget(&(*bar));
                                 }
                                 bar->show();
                         }
@@ -318,14 +318,14 @@ class Impl final : public WorkerThreads
 
                 while (bar != progress_bars->end())
                 {
-                        m_status_bar->removeWidget(&(*bar));
+                        status_bar_->removeWidget(&(*bar));
                         bar = progress_bars->erase(bar);
                 }
         }
 
         void set_progresses() override
         {
-                for (const WorkerThreads::Progress& t : m_progress)
+                for (const WorkerThreads::Progress& t : progress_)
                 {
                         set_progress(t.id, t.progress_list, t.progress_bars);
                 }
@@ -333,29 +333,29 @@ class Impl final : public WorkerThreads
 
 public:
         Impl(unsigned thread_count, const std::optional<unsigned>& permanent_thread_id, QStatusBar* status_bar)
-                : m_permanent_thread_id(permanent_thread_id), m_status_bar(status_bar)
+                : permanent_thread_id_(permanent_thread_id), status_bar_(status_bar)
         {
                 ASSERT(thread_count > 0);
 
-                m_threads.resize(thread_count);
-                m_progress.reserve(thread_count);
+                threads_.resize(thread_count);
+                progress_.reserve(thread_count);
 
-                for (unsigned id = 0; id < m_threads.size(); ++id)
+                for (unsigned id = 0; id < threads_.size(); ++id)
                 {
                         Progress p;
                         p.id = id;
-                        p.progress_list = m_threads[id].progress_list();
-                        p.progress_bars = m_threads[id].progress_bars();
-                        m_progress.push_back(p);
+                        p.progress_list = threads_[id].progress_list();
+                        p.progress_bars = threads_[id].progress_bars();
+                        progress_.push_back(p);
                 }
         }
 
         ~Impl() override
         {
-                ASSERT(std::this_thread::get_id() == m_thread_id);
+                ASSERT(std::this_thread::get_id() == thread_id_);
 
                 if (std::any_of(
-                            m_threads.cbegin(), m_threads.cend(),
+                            threads_.cbegin(), threads_.cend(),
                             [](const auto& t)
                             {
                                     return t.working() || t.joinable();

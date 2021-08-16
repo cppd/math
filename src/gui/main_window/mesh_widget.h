@@ -32,12 +32,12 @@ class MeshWidget final : public QWidget
         Q_OBJECT
 
 private:
-        const std::thread::id m_thread_id = std::this_thread::get_id();
+        const std::thread::id thread_id_ = std::this_thread::get_id();
 
         Ui::MeshWidget ui;
 
-        std::vector<QPointer<QWidget>> m_widgets;
-        ModelTree* m_model_tree = nullptr;
+        std::vector<QPointer<QWidget>> widgets_;
+        ModelTree* model_tree_ = nullptr;
 
         void on_ambient_changed(int);
         void on_metalness_changed(int);

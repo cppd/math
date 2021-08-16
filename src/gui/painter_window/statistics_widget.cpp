@@ -67,7 +67,7 @@ struct StatisticsWidget::Counters final
 StatisticsWidget::StatisticsWidget(std::chrono::milliseconds update_interval)
         : QWidget(nullptr),
           // Здесь интервал должен быть больше update_interval_milliseconds
-          m_difference(std::make_unique<Difference<Counters>>(10 * update_interval))
+          difference_(std::make_unique<Difference<Counters>>(10 * update_interval))
 {
         ui.setupUi(this);
 
@@ -87,7 +87,7 @@ void StatisticsWidget::update(const painter::Statistics& statistics, const std::
         static constexpr std::string_view NOT_AVAILABLE = "n/a";
 
         auto [difference, duration] =
-                m_difference->compute(Counters(statistics.pixel_count, statistics.ray_count, statistics.sample_count));
+                difference_->compute(Counters(statistics.pixel_count, statistics.ray_count, statistics.sample_count));
 
         if (duration != 0)
         {

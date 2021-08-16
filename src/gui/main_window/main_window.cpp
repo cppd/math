@@ -52,7 +52,7 @@ MainWindow::MainWindow()
         ui.setupUi(this);
         this->setWindowTitle(settings::APPLICATION_NAME);
 
-        m_log = std::make_unique<Log>(ui.text_log);
+        log_ = std::make_unique<Log>(ui.text_log);
         constructor_graphics_widget();
         constructor_objects();
 }
@@ -62,9 +62,9 @@ void MainWindow::constructor_graphics_widget()
         QSplitter* const splitter = find_widget_splitter(this, ui.graphics_widget);
         ASSERT(splitter && splitter->orientation() == Qt::Horizontal);
 
-        m_graphics_widget = new GraphicsWidget(this);
+        graphics_widget_ = new GraphicsWidget(this);
 
-        QWidget* w = splitter->replaceWidget(splitter->indexOf(ui.graphics_widget), m_graphics_widget);
+        QWidget* w = splitter->replaceWidget(splitter->indexOf(ui.graphics_widget), graphics_widget_);
         if (w != ui.graphics_widget)
         {
                 error_fatal("Failed to replace graphics widget");
@@ -72,13 +72,13 @@ void MainWindow::constructor_graphics_widget()
         delete ui.graphics_widget;
         ui.graphics_widget = nullptr;
 
-        m_graphics_widget->setMinimumSize(400, 400);
-        m_graphics_widget->setVisible(true);
+        graphics_widget_->setMinimumSize(400, 400);
+        graphics_widget_->setVisible(true);
 
-        set_horizontal_stretch(m_graphics_widget, 1);
+        set_horizontal_stretch(graphics_widget_, 1);
         for (QObject* object : splitter->children())
         {
-                if (object != m_graphics_widget && qobject_cast<QWidget*>(object))
+                if (object != graphics_widget_ && qobject_cast<QWidget*>(object))
                 {
                         set_horizontal_stretch(qobject_cast<QWidget*>(object), 0);
                 }
@@ -95,11 +95,11 @@ void MainWindow::constructor_graphics_widget()
                 }
         }
 
-        connect(m_graphics_widget, &GraphicsWidget::mouse_wheel, this, &MainWindow::on_graphics_widget_mouse_wheel);
-        connect(m_graphics_widget, &GraphicsWidget::mouse_move, this, &MainWindow::on_graphics_widget_mouse_move);
-        connect(m_graphics_widget, &GraphicsWidget::mouse_press, this, &MainWindow::on_graphics_widget_mouse_press);
-        connect(m_graphics_widget, &GraphicsWidget::mouse_release, this, &MainWindow::on_graphics_widget_mouse_release);
-        connect(m_graphics_widget, &GraphicsWidget::widget_resize, this, &MainWindow::on_graphics_widget_resize);
+        connect(graphics_widget_, &GraphicsWidget::mouse_wheel, this, &MainWindow::on_graphics_widget_mouse_wheel);
+        connect(graphics_widget_, &GraphicsWidget::mouse_move, this, &MainWindow::on_graphics_widget_mouse_move);
+        connect(graphics_widget_, &GraphicsWidget::mouse_press, this, &MainWindow::on_graphics_widget_mouse_press);
+        connect(graphics_widget_, &GraphicsWidget::mouse_release, this, &MainWindow::on_graphics_widget_mouse_release);
+        connect(graphics_widget_, &GraphicsWidget::widget_resize, this, &MainWindow::on_graphics_widget_resize);
 }
 
 void MainWindow::constructor_objects()
@@ -107,25 +107,25 @@ void MainWindow::constructor_objects()
         // QMenu* menu_create = new QMenu("Create", this);
         // ui.menu_bar->insertMenu(ui.menu_help->menuAction(), menu_create);
 
-        m_repository = std::make_unique<storage::Repository>();
+        repository_ = std::make_unique<storage::Repository>();
 
-        m_model_tree = std::make_unique<ModelTree>();
-        add_widget(ui.tab_models, m_model_tree.get());
+        model_tree_ = std::make_unique<ModelTree>();
+        add_widget(ui.tab_models, model_tree_.get());
 
-        m_lighting_widget = std::make_unique<LightingWidget>();
-        add_widget(ui.tab_lighting, m_lighting_widget.get());
+        lighting_widget_ = std::make_unique<LightingWidget>();
+        add_widget(ui.tab_lighting, lighting_widget_.get());
 
-        m_colors_widget = std::make_unique<ColorsWidget>();
-        add_widget(ui.tab_color, m_colors_widget.get());
+        colors_widget_ = std::make_unique<ColorsWidget>();
+        add_widget(ui.tab_color, colors_widget_.get());
 
-        m_view_widget = std::make_unique<ViewWidget>();
-        add_widget(ui.tab_view, m_view_widget.get());
+        view_widget_ = std::make_unique<ViewWidget>();
+        add_widget(ui.tab_view, view_widget_.get());
 
-        m_mesh_widget = std::make_unique<MeshWidget>();
-        add_widget(ui.tab_mesh, m_mesh_widget.get());
+        mesh_widget_ = std::make_unique<MeshWidget>();
+        add_widget(ui.tab_mesh, mesh_widget_.get());
 
-        m_volume_widget = std::make_unique<VolumeWidget>();
-        add_widget(ui.tab_volume, m_volume_widget.get());
+        volume_widget_ = std::make_unique<VolumeWidget>();
+        add_widget(ui.tab_volume, volume_widget_.get());
 
         //
 
@@ -144,46 +144,46 @@ void MainWindow::constructor_objects()
 
         connect(ui.action_help, &QAction::triggered, this, &MainWindow::on_help_triggered);
 
-        connect(&m_timer, &QTimer::timeout, this, &MainWindow::on_timer);
+        connect(&timer_, &QTimer::timeout, this, &MainWindow::on_timer);
 }
 
 std::vector<view::Command> MainWindow::view_initial_commands() const
 {
-        return {view::command::SetBackgroundColor(m_colors_widget->background_color()),
-                view::command::SetWireframeColor(m_colors_widget->wireframe_color()),
-                view::command::SetClipPlaneColor(m_colors_widget->clip_plane_color()),
-                view::command::SetNormalLength(m_view_widget->normal_length()),
-                view::command::SetNormalColorPositive(m_colors_widget->normal_color_positive()),
-                view::command::SetNormalColorNegative(m_colors_widget->normal_color_negative()),
-                view::command::ShowSmooth(m_view_widget->smooth_checked()),
-                view::command::ShowWireframe(m_view_widget->wireframe_checked()),
-                view::command::ShowShadow(m_view_widget->shadow_checked()),
-                view::command::ShowFog(m_view_widget->fog_checked()),
-                view::command::ShowMaterials(m_view_widget->materials_checked()),
-                view::command::ShowFps(m_view_widget->fps_checked()),
-                view::command::ShowPencilSketch(m_view_widget->pencil_sketch_checked()),
-                view::command::ShowDft(m_view_widget->dft_checked()),
-                view::command::ShowConvexHull2D(m_view_widget->convex_hull_2d_checked()),
-                view::command::ShowOpticalFlow(m_view_widget->optical_flow_checked()),
-                view::command::ShowNormals(m_view_widget->normals_checked()),
-                view::command::SetLightingColor(m_lighting_widget->rgb()),
-                view::command::SetDftBrightness(m_view_widget->dft_brightness()),
-                view::command::SetDftBackgroundColor(m_colors_widget->dft_background_color()),
-                view::command::SetDftColor(m_colors_widget->dft_color()),
-                view::command::SetVerticalSync(m_view_widget->vertical_sync_checked()),
-                view::command::SetShadowZoom(m_view_widget->shadow_zoom())};
+        return {view::command::SetBackgroundColor(colors_widget_->background_color()),
+                view::command::SetWireframeColor(colors_widget_->wireframe_color()),
+                view::command::SetClipPlaneColor(colors_widget_->clip_plane_color()),
+                view::command::SetNormalLength(view_widget_->normal_length()),
+                view::command::SetNormalColorPositive(colors_widget_->normal_color_positive()),
+                view::command::SetNormalColorNegative(colors_widget_->normal_color_negative()),
+                view::command::ShowSmooth(view_widget_->smooth_checked()),
+                view::command::ShowWireframe(view_widget_->wireframe_checked()),
+                view::command::ShowShadow(view_widget_->shadow_checked()),
+                view::command::ShowFog(view_widget_->fog_checked()),
+                view::command::ShowMaterials(view_widget_->materials_checked()),
+                view::command::ShowFps(view_widget_->fps_checked()),
+                view::command::ShowPencilSketch(view_widget_->pencil_sketch_checked()),
+                view::command::ShowDft(view_widget_->dft_checked()),
+                view::command::ShowConvexHull2D(view_widget_->convex_hull_2d_checked()),
+                view::command::ShowOpticalFlow(view_widget_->optical_flow_checked()),
+                view::command::ShowNormals(view_widget_->normals_checked()),
+                view::command::SetLightingColor(lighting_widget_->rgb()),
+                view::command::SetDftBrightness(view_widget_->dft_brightness()),
+                view::command::SetDftBackgroundColor(colors_widget_->dft_background_color()),
+                view::command::SetDftColor(colors_widget_->dft_color()),
+                view::command::SetVerticalSync(view_widget_->vertical_sync_checked()),
+                view::command::SetShadowZoom(view_widget_->shadow_zoom())};
 }
 
 MainWindow::~MainWindow()
 {
-        ASSERT(std::this_thread::get_id() == m_thread_id);
+        ASSERT(std::this_thread::get_id() == thread_id_);
 
         terminate_all_threads();
 }
 
 void MainWindow::closeEvent(QCloseEvent* event)
 {
-        ASSERT(std::this_thread::get_id() == m_thread_id);
+        ASSERT(std::this_thread::get_id() == thread_id_);
 
         QPointer ptr(this);
         std::optional<bool> yes = dialog::message_question_default_no("Do you want to close the main window?");
@@ -204,30 +204,30 @@ void MainWindow::closeEvent(QCloseEvent* event)
 
 void MainWindow::terminate_all_threads()
 {
-        ASSERT(std::this_thread::get_id() == m_thread_id);
+        ASSERT(std::this_thread::get_id() == thread_id_);
 
-        m_timer.stop();
+        timer_.stop();
 
-        m_actions.reset();
-        m_model_events.reset();
+        actions_.reset();
+        model_events_.reset();
 
-        m_lighting_widget.reset();
-        m_colors_widget.reset();
-        m_view_widget.reset();
-        m_mesh_widget.reset();
-        m_volume_widget.reset();
+        lighting_widget_.reset();
+        colors_widget_.reset();
+        view_widget_.reset();
+        mesh_widget_.reset();
+        volume_widget_.reset();
 
-        m_model_tree.reset();
-        m_view.reset();
+        model_tree_.reset();
+        view_.reset();
 }
 
 void MainWindow::showEvent(QShowEvent* /*event*/)
 {
-        if (!m_first_show)
+        if (!first_show_)
         {
                 return;
         }
-        m_first_show = false;
+        first_show_ = false;
 
         // Окно ещё не видно, поэтому небольшая задержка, чтобы окно реально появилось.
         QTimer::singleShot(
@@ -254,7 +254,7 @@ void MainWindow::first_shown()
         if (WINDOW_SIZE_GRAPHICS)
         {
                 QSize size = QDesktopWidget().screenGeometry(this).size() * WINDOW_SIZE_COEF;
-                resize_window_widget(this, m_graphics_widget, size);
+                resize_window_widget(this, graphics_widget_, size);
         }
         else
         {
@@ -266,20 +266,19 @@ void MainWindow::first_shown()
 
         const CommandLineOptions options = command_line_options();
 
-        m_view = view::create_view(
-                widget_window_id(m_graphics_widget), widget_pixels_per_inch(m_graphics_widget),
-                view_initial_commands());
+        view_ = view::create_view(
+                widget_window_id(graphics_widget_), widget_pixels_per_inch(graphics_widget_), view_initial_commands());
 
-        m_lighting_widget->set_view(m_view.get());
-        m_colors_widget->set_view(m_view.get());
-        m_view_widget->set_view(m_view.get());
-        m_mesh_widget->set_model_tree(m_model_tree.get());
-        m_volume_widget->set_model_tree(m_model_tree.get());
-        m_model_events = std::make_unique<application::ModelEvents>(m_model_tree->events(), m_view.get());
-        m_actions = std::make_unique<Actions>(
+        lighting_widget_->set_view(view_.get());
+        colors_widget_->set_view(view_.get());
+        view_widget_->set_view(view_.get());
+        mesh_widget_->set_model_tree(model_tree_.get());
+        volume_widget_->set_model_tree(model_tree_.get());
+        model_events_ = std::make_unique<application::ModelEvents>(model_tree_->events(), view_.get());
+        actions_ = std::make_unique<Actions>(
                 options, ui.status_bar, ui.action_self_test, ui.menu_file, ui.menu_create, ui.menu_edit,
-                ui.menu_rendering, m_repository.get(), m_view.get(), m_model_tree.get(), m_lighting_widget.get(),
-                m_colors_widget.get());
+                ui.menu_rendering, repository_.get(), view_.get(), model_tree_.get(), lighting_widget_.get(),
+                colors_widget_.get());
 
         if (!ui.menu_file->actions().empty())
         {
@@ -287,13 +286,13 @@ void MainWindow::first_shown()
         }
         connect(ui.menu_file->addAction("Exit..."), &QAction::triggered, this, &MainWindow::close);
 
-        m_timer.start(UPDATE_INTERVAL);
+        timer_.start(UPDATE_INTERVAL);
 }
 
 void MainWindow::on_timer()
 {
-        m_log->write();
-        m_actions->set_progresses();
+        log_->write();
+        actions_->set_progresses();
 }
 
 void MainWindow::on_help_triggered()
@@ -308,33 +307,33 @@ void MainWindow::on_about_triggered()
 
 void MainWindow::on_graphics_widget_mouse_wheel(QWheelEvent* e)
 {
-        if (m_view)
+        if (view_)
         {
-                m_view->send(
+                view_->send(
                         view::command::MouseWheel(e->position().x(), e->position().y(), e->angleDelta().y() / 120.0));
         }
 }
 
 void MainWindow::on_graphics_widget_mouse_move(QMouseEvent* e)
 {
-        if (m_view)
+        if (view_)
         {
-                m_view->send(view::command::MouseMove(e->x(), e->y()));
+                view_->send(view::command::MouseMove(e->x(), e->y()));
         }
 }
 
 void MainWindow::on_graphics_widget_mouse_press(QMouseEvent* e)
 {
-        if (m_view)
+        if (view_)
         {
                 if (e->button() == Qt::MouseButton::LeftButton)
                 {
-                        m_view->send(view::command::MousePress(e->x(), e->y(), view::MouseButton::Left));
+                        view_->send(view::command::MousePress(e->x(), e->y(), view::MouseButton::Left));
                         return;
                 }
                 if (e->button() == Qt::MouseButton::RightButton)
                 {
-                        m_view->send(view::command::MousePress(e->x(), e->y(), view::MouseButton::Right));
+                        view_->send(view::command::MousePress(e->x(), e->y(), view::MouseButton::Right));
                         return;
                 }
         }
@@ -342,16 +341,16 @@ void MainWindow::on_graphics_widget_mouse_press(QMouseEvent* e)
 
 void MainWindow::on_graphics_widget_mouse_release(QMouseEvent* e)
 {
-        if (m_view)
+        if (view_)
         {
                 if (e->button() == Qt::MouseButton::LeftButton)
                 {
-                        m_view->send(view::command::MouseRelease(e->x(), e->y(), view::MouseButton::Left));
+                        view_->send(view::command::MouseRelease(e->x(), e->y(), view::MouseButton::Left));
                         return;
                 }
                 if (e->button() == Qt::MouseButton::RightButton)
                 {
-                        m_view->send(view::command::MouseRelease(e->x(), e->y(), view::MouseButton::Right));
+                        view_->send(view::command::MouseRelease(e->x(), e->y(), view::MouseButton::Right));
                         return;
                 }
         }
@@ -359,9 +358,9 @@ void MainWindow::on_graphics_widget_mouse_release(QMouseEvent* e)
 
 void MainWindow::on_graphics_widget_resize(QResizeEvent* e)
 {
-        if (m_view)
+        if (view_)
         {
-                m_view->send(view::command::WindowResize(e->size().width(), e->size().height()));
+                view_->send(view::command::WindowResize(e->size().width(), e->size().height()));
         }
 }
 }

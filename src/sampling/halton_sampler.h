@@ -29,7 +29,7 @@ class HaltonSampler final
 {
         static constexpr unsigned PRIMES[] = {2, 3, 5, 7, 11, 13, 17, 19, 23, 29};
 
-        unsigned m_sample = 0;
+        unsigned sample_ = 0;
 
         template <std::size_t... I>
         static Vector<N, T> generate(unsigned sample, std::integer_sequence<std::size_t, I...>)
@@ -47,7 +47,7 @@ public:
 
         Vector<N, T> generate()
         {
-                return generate(m_sample++, std::make_integer_sequence<std::size_t, N>());
+                return generate(sample_++, std::make_integer_sequence<std::size_t, N>());
         }
 };
 }

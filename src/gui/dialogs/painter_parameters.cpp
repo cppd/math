@@ -86,8 +86,8 @@ PainterParametersWidget::PainterParametersWidget(
 
         this->layout()->setContentsMargins(0, 0, 0, 0);
 
-        m_max_thread_count = max_thread_count;
-        m_max_samples_per_pixel = max_samples_per_pixel;
+        max_thread_count_ = max_thread_count;
+        max_samples_per_pixel_ = max_samples_per_pixel;
 
         ui.spinBox_threads->setMinimum(1);
         ui.spinBox_threads->setMaximum(max_thread_count);
@@ -126,18 +126,18 @@ PainterParametersWidget::PainterParametersWidget(
 bool PainterParametersWidget::check()
 {
         int thread_count = ui.spinBox_threads->value();
-        if (!(thread_count >= 1 && thread_count <= m_max_thread_count))
+        if (!(thread_count >= 1 && thread_count <= max_thread_count_))
         {
-                std::string msg = "Thread count must be in the range [1, " + to_string(m_max_thread_count) + "].";
+                std::string msg = "Thread count must be in the range [1, " + to_string(max_thread_count_) + "].";
                 dialog::message_critical(msg);
                 return false;
         }
 
         int samples_per_pixel = ui.spinBox_samples_per_pixel->value();
-        if (!(samples_per_pixel >= 1 && samples_per_pixel <= m_max_samples_per_pixel))
+        if (!(samples_per_pixel >= 1 && samples_per_pixel <= max_samples_per_pixel_))
         {
                 std::string msg =
-                        "Samples per pixel must be in the range [1, " + to_string(m_max_samples_per_pixel) + "].";
+                        "Samples per pixel must be in the range [1, " + to_string(max_samples_per_pixel_) + "].";
                 dialog::message_critical(msg);
                 return false;
         }

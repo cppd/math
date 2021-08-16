@@ -173,9 +173,9 @@ ModelEvents::ModelEvents(gui::ModelTreeEvents* tree, view::View* view)
                 {
                         (f(events), ...);
                 },
-                m_events);
+                events_);
 
-        set(&m_events);
+        set(&events_);
 }
 
 ModelEvents::ModelEvents()
@@ -191,15 +191,15 @@ ModelEvents::ModelEvents()
                 {
                         (f(events), ...);
                 },
-                m_events);
+                events_);
 
-        set(&m_events);
+        set(&events_);
 }
 
 ModelEvents::~ModelEvents()
 {
-        ASSERT(std::this_thread::get_id() == m_thread_id);
+        ASSERT(std::this_thread::get_id() == thread_id_);
 
-        unset(m_events);
+        unset(events_);
 }
 }

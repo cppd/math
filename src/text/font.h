@@ -26,7 +26,7 @@ namespace ns::text
 class Font final
 {
         class Impl;
-        std::unique_ptr<Impl> m_impl;
+        std::unique_ptr<Impl> impl_;
 
 public:
         Font(int size_in_pixels, std::vector<unsigned char>&& font_data);

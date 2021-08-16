@@ -40,17 +40,17 @@ class ModelTree final : public QWidget, private ModelTreeEvents
         Q_OBJECT
 
 private:
-        const std::thread::id m_thread_id;
+        const std::thread::id thread_id_;
 
         Ui::ModelTree ui;
 
-        storage::Storage m_storage;
+        storage::Storage storage_;
 
-        std::unordered_map<QTreeWidgetItem*, ObjectId> m_map_item_id;
-        std::unordered_map<ObjectId, QTreeWidgetItem*> m_map_id_item;
+        std::unordered_map<QTreeWidgetItem*, ObjectId> map_item_id_;
+        std::unordered_map<ObjectId, QTreeWidgetItem*> map_id_item_;
 
-        std::vector<Connection> m_connections;
-        ThreadQueue m_thread_queue;
+        std::vector<Connection> connections_;
+        ThreadQueue thread_queue_;
 
         void insert(storage::MeshObject&& object, const std::optional<ObjectId>& parent_object_id) override;
         void insert(storage::VolumeObject&& object, const std::optional<ObjectId>& parent_object_id) override;

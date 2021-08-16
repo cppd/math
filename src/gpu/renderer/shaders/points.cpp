@@ -41,34 +41,34 @@ std::vector<VkDescriptorSetLayoutBinding> PointsProgram::descriptor_set_layout_m
 }
 
 PointsProgram::PointsProgram(const vulkan::Device& device)
-        : m_device(device),
-          m_descriptor_set_layout_shared(
+        : device_(device),
+          descriptor_set_layout_shared_(
                   vulkan::create_descriptor_set_layout(device, descriptor_set_layout_shared_bindings())),
-          m_descriptor_set_layout_mesh(
+          descriptor_set_layout_mesh_(
                   vulkan::create_descriptor_set_layout(device, descriptor_set_layout_mesh_bindings())),
-          m_pipeline_layout(vulkan::create_pipeline_layout(
+          pipeline_layout_(vulkan::create_pipeline_layout(
                   device,
                   {CommonMemory::set_number(), MeshMemory::set_number()},
-                  {m_descriptor_set_layout_shared, m_descriptor_set_layout_mesh})),
-          m_vertex_shader_0d(m_device, code_points_0d_vert(), "main"),
-          m_vertex_shader_1d(m_device, code_points_1d_vert(), "main"),
-          m_fragment_shader(m_device, code_points_frag(), "main")
+                  {descriptor_set_layout_shared_, descriptor_set_layout_mesh_})),
+          vertex_shader_0d_(device_, code_points_0d_vert(), "main"),
+          vertex_shader_1d_(device_, code_points_1d_vert(), "main"),
+          fragment_shader_(device_, code_points_frag(), "main")
 {
 }
 
 VkDescriptorSetLayout PointsProgram::descriptor_set_layout_shared() const
 {
-        return m_descriptor_set_layout_shared;
+        return descriptor_set_layout_shared_;
 }
 
 VkDescriptorSetLayout PointsProgram::descriptor_set_layout_mesh() const
 {
-        return m_descriptor_set_layout_mesh;
+        return descriptor_set_layout_mesh_;
 }
 
 VkPipelineLayout PointsProgram::pipeline_layout() const
 {
-        return m_pipeline_layout;
+        return pipeline_layout_;
 }
 
 vulkan::Pipeline PointsProgram::create_pipeline(
@@ -80,12 +80,12 @@ vulkan::Pipeline PointsProgram::create_pipeline(
 {
         vulkan::GraphicsPipelineCreateInfo info;
 
-        info.device = &m_device;
+        info.device = &device_;
         info.render_pass = render_pass;
         info.sub_pass = 0;
         info.sample_count = sample_count;
         info.sample_shading = false;
-        info.pipeline_layout = m_pipeline_layout;
+        info.pipeline_layout = pipeline_layout_;
         info.viewport = viewport;
         info.primitive_topology = primitive_topology;
 
@@ -96,11 +96,11 @@ vulkan::Pipeline PointsProgram::create_pipeline(
         std::vector<const vulkan::Shader*> shaders;
         if (primitive_topology == VK_PRIMITIVE_TOPOLOGY_POINT_LIST)
         {
-                shaders = {&m_vertex_shader_0d, &m_fragment_shader};
+                shaders = {&vertex_shader_0d_, &fragment_shader_};
         }
         else if (primitive_topology == VK_PRIMITIVE_TOPOLOGY_LINE_LIST)
         {
-                shaders = {&m_vertex_shader_1d, &m_fragment_shader};
+                shaders = {&vertex_shader_1d_, &fragment_shader_};
         }
         else
         {

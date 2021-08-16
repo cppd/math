@@ -109,40 +109,40 @@ void callback_mouse_button(GLFWwindow* /*window*/, int button, int action, int /
 
 class WindowCounter
 {
-        static std::atomic_int m_counter;
+        static std::atomic_int counter_;
 
 public:
         WindowCounter()
         {
-                if (++m_counter != 1)
+                if (++counter_ != 1)
                 {
-                        --m_counter;
+                        --counter_;
                         error("Too many GLFW windows");
                 }
         }
         ~WindowCounter()
         {
-                --m_counter;
+                --counter_;
         }
         WindowCounter(const WindowCounter&) = delete;
         WindowCounter& operator=(const WindowCounter&) = delete;
         WindowCounter(WindowCounter&&) = delete;
         WindowCounter& operator=(WindowCounter&&) = delete;
 };
-std::atomic_int WindowCounter::m_counter = 0;
+std::atomic_int WindowCounter::counter_ = 0;
 
 class Impl final : public Window
 {
-        WindowCounter m_window_counter;
+        WindowCounter window_counter_;
 
-        GLFWwindow* m_window;
+        GLFWwindow* window_;
 
         WindowID system_handle() override
         {
 #if defined(__linux__)
-                return glfwGetX11Window(m_window);
+                return glfwGetX11Window(window_);
 #elif defined(_WIN32)
-                return glfwGetWin32Window(m_window);
+                return glfwGetWin32Window(window_);
 #else
 #error This operating system is not supported
 #endif
@@ -151,14 +151,14 @@ class Impl final : public Window
         int width() const override
         {
                 int width, height;
-                glfwGetFramebufferSize(m_window, &width, &height);
+                glfwGetFramebufferSize(window_, &width, &height);
                 return width;
         }
 
         int height() const override
         {
                 int width, height;
-                glfwGetFramebufferSize(m_window, &width, &height);
+                glfwGetFramebufferSize(window_, &width, &height);
                 return height;
         }
 
@@ -166,7 +166,7 @@ class Impl final : public Window
         //{
         //        VkSurfaceKHR surface = VK_NULL_HANDLE;
         //
-        //        VkResult result = glfwCreateWindowSurface(instance, m_window, nullptr, &surface);
+        //        VkResult result = glfwCreateWindowSurface(instance, window_, nullptr, &surface);
         //        if (result != VK_SUCCESS || surface == VK_NULL_HANDLE)
         //        {
         //                error("Failed to create Vulkan GLFW window surface");
@@ -193,23 +193,23 @@ public:
                 // glfwWindowHint(GLFW_RESIZABLE, GLFW_FALSE);
                 glfwWindowHint(GLFW_DECORATED, GLFW_FALSE);
 
-                m_window = glfwCreateWindow(1, 1, "", nullptr, nullptr);
+                window_ = glfwCreateWindow(1, 1, "", nullptr, nullptr);
 
-                if (!m_window)
+                if (!window_)
                 {
                         error("Failed to create GLFW window");
                 }
 
-                glfwSetFramebufferSizeCallback(m_window, callback_framebuffer_size);
-                glfwSetKeyCallback(m_window, callback_key);
-                glfwSetCursorPosCallback(m_window, callback_cursor_pos);
-                glfwSetScrollCallback(m_window, callback_scroll);
-                glfwSetMouseButtonCallback(m_window, callback_mouse_button);
+                glfwSetFramebufferSizeCallback(window_, callback_framebuffer_size);
+                glfwSetKeyCallback(window_, callback_key);
+                glfwSetCursorPosCallback(window_, callback_cursor_pos);
+                glfwSetScrollCallback(window_, callback_scroll);
+                glfwSetMouseButtonCallback(window_, callback_mouse_button);
         }
 
         ~Impl() override
         {
-                glfwDestroyWindow(m_window);
+                glfwDestroyWindow(window_);
         }
 
         Impl(const Impl&) = delete;

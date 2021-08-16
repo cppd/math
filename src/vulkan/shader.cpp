@@ -26,27 +26,27 @@ Shader::Shader(
         const std::span<const uint32_t>& code,
         VkShaderStageFlagBits stage,
         std::string entry_point_name)
-        : m_module(device, code), m_stage(stage), m_entry_point_name(std::move(entry_point_name))
+        : module_(device, code), stage_(stage), entry_point_name_(std::move(entry_point_name))
 {
         ASSERT(stage == VK_SHADER_STAGE_VERTEX_BIT || stage == VK_SHADER_STAGE_TESSELLATION_CONTROL_BIT
                || stage == VK_SHADER_STAGE_TESSELLATION_EVALUATION_BIT || stage == VK_SHADER_STAGE_GEOMETRY_BIT
                || stage == VK_SHADER_STAGE_FRAGMENT_BIT || stage == VK_SHADER_STAGE_COMPUTE_BIT);
-        ASSERT(!m_entry_point_name.empty());
+        ASSERT(!entry_point_name_.empty());
 }
 
 VkShaderModule Shader::module() const
 {
-        return m_module;
+        return module_;
 }
 
 VkShaderStageFlagBits Shader::stage() const
 {
-        return m_stage;
+        return stage_;
 }
 
 const char* Shader::entry_point_name() const
 {
-        return m_entry_point_name.c_str();
+        return entry_point_name_.c_str();
 }
 
 //

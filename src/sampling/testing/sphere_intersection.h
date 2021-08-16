@@ -31,18 +31,18 @@ namespace ns::sampling::testing
 template <std::size_t N, typename T, typename RandomEngine>
 class SphereIntersection final
 {
-        const geometry::ObjectTree<SphereFacet<N, T>>* const m_tree;
-        const std::vector<SphereFacet<N, T>>* const m_facets;
+        const geometry::ObjectTree<SphereFacet<N, T>>* const tree_;
+        const std::vector<SphereFacet<N, T>>* const facets_;
 
-        RandomEngine m_random_engine = create_engine<RandomEngine>();
-        long long m_intersection_count = 0;
-        long long m_missed_intersection_count = 0;
+        RandomEngine random_engine_ = create_engine<RandomEngine>();
+        long long intersection_count_ = 0;
+        long long missed_intersection_count_ = 0;
 
 public:
         SphereIntersection(
                 const geometry::ObjectTree<SphereFacet<N, T>>* tree,
                 const std::vector<SphereFacet<N, T>>* facets)
-                : m_tree(tree), m_facets(facets)
+                : tree_(tree), facets_(facets)
         {
         }
 
@@ -51,32 +51,32 @@ public:
         {
                 while (true)
                 {
-                        const Ray<N, T> ray(Vector<N, T>(0), random_vector(m_random_engine));
+                        const Ray<N, T> ray(Vector<N, T>(0), random_vector(random_engine_));
 
-                        const std::optional<T> root_distance = m_tree->intersect_root(ray);
+                        const std::optional<T> root_distance = tree_->intersect_root(ray);
                         ASSERT(root_distance && *root_distance == 0);
 
                         const std::optional<std::tuple<T, const SphereFacet<N, T>*>> v =
-                                m_tree->intersect(ray, *root_distance);
+                                tree_->intersect(ray, *root_distance);
                         if (v)
                         {
-                                ++m_intersection_count;
-                                const std::size_t index = std::get<1>(*v) - m_facets->data();
-                                ASSERT(index < m_facets->size());
+                                ++intersection_count_;
+                                const std::size_t index = std::get<1>(*v) - facets_->data();
+                                ASSERT(index < facets_->size());
                                 return {index, ray.dir()};
                         }
-                        ++m_missed_intersection_count;
+                        ++missed_intersection_count_;
                 }
         }
 
         long long intersection_count() const
         {
-                return m_intersection_count;
+                return intersection_count_;
         }
 
         long long missed_intersection_count() const
         {
-                return m_missed_intersection_count;
+                return missed_intersection_count_;
         }
 };
 

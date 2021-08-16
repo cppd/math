@@ -35,11 +35,11 @@ class Frequency
                 }
         };
 
-        const TimePoint m_start_time = time();
-        const int m_sample_count;
-        const double m_sample_frequency;
-        const std::vector<double> m_window;
-        std::deque<Events> m_deque;
+        const TimePoint start_time_ = time();
+        const int sample_count_;
+        const double sample_frequency_;
+        const std::vector<double> window_;
+        std::deque<Events> deque_;
 
 public:
         Frequency(double interval_length, int sample_count);

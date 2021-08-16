@@ -47,53 +47,53 @@ constexpr std::initializer_list<vulkan::PhysicalDeviceFeatures> REQUIRED_DEVICE_
 
 class Impl final : public View
 {
-        const std::thread::id m_thread_id = std::this_thread::get_id();
+        const std::thread::id thread_id_ = std::this_thread::get_id();
 
-        // const bool m_sample_shading;
+        // const bool sample_shading_;
 
-        const vulkan::VulkanInstance& m_instance;
-        const vulkan::Device& m_device;
-        const vulkan::CommandPool& m_graphics_command_pool;
-        const vulkan::Queue& m_graphics_queue;
-        const vulkan::CommandPool& m_compute_command_pool;
-        // const vulkan::Queue& m_compute_queue;
-        //const vulkan::CommandPool& m_transfer_command_pool;
-        //const vulkan::Queue& m_transfer_queue;
+        const vulkan::VulkanInstance& instance_;
+        const vulkan::Device& device_;
+        const vulkan::CommandPool& graphics_command_pool_;
+        const vulkan::Queue& graphics_queue_;
+        const vulkan::CommandPool& compute_command_pool_;
+        // const vulkan::Queue& compute_queue_;
+        //const vulkan::CommandPool& transfer_command_pool_;
+        //const vulkan::Queue& transfer_queue_;
 
-        vulkan::Semaphore m_signal_semaphore;
-        ViewProgram m_program;
-        ViewMemory m_memory;
-        vulkan::Sampler m_sampler;
-        std::optional<vulkan::BufferWithMemory> m_top_points;
-        std::optional<vulkan::BufferWithMemory> m_top_flow;
-        std::optional<vulkan::Pipeline> m_pipeline_points;
-        std::optional<vulkan::Pipeline> m_pipeline_lines;
-        std::optional<vulkan::CommandBuffers> m_command_buffers;
+        vulkan::Semaphore signal_semaphore_;
+        ViewProgram program_;
+        ViewMemory memory_;
+        vulkan::Sampler sampler_;
+        std::optional<vulkan::BufferWithMemory> top_points_;
+        std::optional<vulkan::BufferWithMemory> top_flow_;
+        std::optional<vulkan::Pipeline> pipeline_points_;
+        std::optional<vulkan::Pipeline> pipeline_lines_;
+        std::optional<vulkan::CommandBuffers> command_buffers_;
 
-        int m_top_point_count;
+        int top_point_count_;
 
-        std::unique_ptr<Compute> m_compute;
+        std::unique_ptr<Compute> compute_;
 
         void draw_commands(VkCommandBuffer command_buffer) const
         {
-                ASSERT(std::this_thread::get_id() == m_thread_id);
+                ASSERT(std::this_thread::get_id() == thread_id_);
 
                 //
 
-                if (m_top_point_count == 0)
+                if (top_point_count_ == 0)
                 {
                         return;
                 }
 
                 vkCmdBindDescriptorSets(
-                        command_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, m_program.pipeline_layout(),
-                        ViewMemory::set_number(), 1, &m_memory.descriptor_set(), 0, nullptr);
+                        command_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, program_.pipeline_layout(),
+                        ViewMemory::set_number(), 1, &memory_.descriptor_set(), 0, nullptr);
 
-                vkCmdBindPipeline(command_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, *m_pipeline_points);
-                vkCmdDraw(command_buffer, m_top_point_count * 2, 1, 0, 0);
+                vkCmdBindPipeline(command_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, *pipeline_points_);
+                vkCmdDraw(command_buffer, top_point_count_ * 2, 1, 0, 0);
 
-                vkCmdBindPipeline(command_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, *m_pipeline_lines);
-                vkCmdDraw(command_buffer, m_top_point_count * 2, 1, 0, 0);
+                vkCmdBindPipeline(command_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, *pipeline_lines_);
+                vkCmdDraw(command_buffer, top_point_count_ * 2, 1, 0, 0);
         }
 
         void create_buffers(
@@ -102,7 +102,7 @@ class Impl final : public View
                 double window_ppi,
                 const Region<2, int>& rectangle) override
         {
-                ASSERT(m_thread_id == std::this_thread::get_id());
+                ASSERT(thread_id_ == std::this_thread::get_id());
 
                 //
 
@@ -113,37 +113,37 @@ class Impl final : public View
                         rectangle.width(), rectangle.height(), DISTANCE_BETWEEN_POINTS_IN_MM, window_ppi,
                         &point_count_x, &point_count_y, &points);
 
-                m_top_point_count = points.size();
+                top_point_count_ = points.size();
 
-                if (m_top_point_count == 0)
+                if (top_point_count_ == 0)
                 {
                         return;
                 }
 
-                m_top_points.emplace(
-                        vulkan::BufferMemoryType::DeviceLocal, m_device,
+                top_points_.emplace(
+                        vulkan::BufferMemoryType::DeviceLocal, device_,
                         std::vector<uint32_t>(
-                                {m_graphics_command_pool.family_index(), m_compute_command_pool.family_index()}),
+                                {graphics_command_pool_.family_index(), compute_command_pool_.family_index()}),
                         VK_BUFFER_USAGE_STORAGE_BUFFER_BIT | VK_BUFFER_USAGE_TRANSFER_DST_BIT, data_size(points));
-                m_top_points->write(m_graphics_command_pool, m_graphics_queue, data_size(points), data_pointer(points));
+                top_points_->write(graphics_command_pool_, graphics_queue_, data_size(points), data_pointer(points));
 
-                m_top_flow.emplace(
-                        vulkan::BufferMemoryType::DeviceLocal, m_device,
+                top_flow_.emplace(
+                        vulkan::BufferMemoryType::DeviceLocal, device_,
                         std::vector<uint32_t>(
-                                {m_graphics_command_pool.family_index(), m_compute_command_pool.family_index()}),
+                                {graphics_command_pool_.family_index(), compute_command_pool_.family_index()}),
                         VK_BUFFER_USAGE_STORAGE_BUFFER_BIT, points.size() * sizeof(vec2f));
 
-                m_pipeline_points = m_program.create_pipeline(
+                pipeline_points_ = program_.create_pipeline(
                         render_buffers->render_pass(), render_buffers->sample_count(), VK_PRIMITIVE_TOPOLOGY_POINT_LIST,
                         rectangle);
-                m_pipeline_lines = m_program.create_pipeline(
+                pipeline_lines_ = program_.create_pipeline(
                         render_buffers->render_pass(), render_buffers->sample_count(), VK_PRIMITIVE_TOPOLOGY_LINE_LIST,
                         rectangle);
-                m_memory.set_points(*m_top_points);
-                m_memory.set_flow(*m_top_flow);
+                memory_.set_points(*top_points_);
+                memory_.set_flow(*top_flow_);
 
-                m_compute->create_buffers(
-                        m_sampler, input, rectangle, point_count_x, point_count_y, *m_top_points, *m_top_flow);
+                compute_->create_buffers(
+                        sampler_, input, rectangle, point_count_x, point_count_y, *top_points_, *top_flow_);
 
                 // Матрица для рисования на плоскости окна, точка (0, 0) слева вверху
                 double left = 0;
@@ -154,10 +154,10 @@ class Impl final : public View
                 double far = -1;
                 mat4d p = matrix::ortho_vulkan<double>(left, right, bottom, top, near, far);
                 mat4d t = matrix::translate(vec3d(0.5, 0.5, 0));
-                m_memory.set_matrix(p * t);
+                memory_.set_matrix(p * t);
 
                 vulkan::CommandBufferCreateInfo info;
-                info.device = m_device;
+                info.device = device_;
                 info.render_area.emplace();
                 info.render_area->offset.x = 0;
                 info.render_area->offset.y = 0;
@@ -165,26 +165,26 @@ class Impl final : public View
                 info.render_area->extent.height = render_buffers->height();
                 info.render_pass = render_buffers->render_pass();
                 info.framebuffers = &render_buffers->framebuffers();
-                info.command_pool = m_graphics_command_pool;
+                info.command_pool = graphics_command_pool_;
                 info.render_pass_commands = [this](VkCommandBuffer command_buffer)
                 {
                         draw_commands(command_buffer);
                 };
-                m_command_buffers = vulkan::create_command_buffers(info);
+                command_buffers_ = vulkan::create_command_buffers(info);
         }
 
         void delete_buffers() override
         {
-                ASSERT(m_thread_id == std::this_thread::get_id());
+                ASSERT(thread_id_ == std::this_thread::get_id());
 
                 //
 
-                m_command_buffers.reset();
-                m_pipeline_points.reset();
-                m_pipeline_lines.reset();
-                m_compute->delete_buffers();
-                m_top_points.reset();
-                m_top_flow.reset();
+                command_buffers_.reset();
+                pipeline_points_.reset();
+                pipeline_lines_.reset();
+                compute_->delete_buffers();
+                top_points_.reset();
+                top_flow_.reset();
         }
 
         VkSemaphore draw(
@@ -193,40 +193,40 @@ class Impl final : public View
                 VkSemaphore wait_semaphore,
                 unsigned index) override
         {
-                ASSERT(std::this_thread::get_id() == m_thread_id);
+                ASSERT(std::this_thread::get_id() == thread_id_);
 
                 //
 
-                if (m_top_point_count == 0)
+                if (top_point_count_ == 0)
                 {
                         return wait_semaphore;
                 }
 
                 //
 
-                ASSERT(compute_queue.family_index() == m_compute_command_pool.family_index());
-                wait_semaphore = m_compute->compute(compute_queue, wait_semaphore);
+                ASSERT(compute_queue.family_index() == compute_command_pool_.family_index());
+                wait_semaphore = compute_->compute(compute_queue, wait_semaphore);
 
                 //
 
-                ASSERT(graphics_queue.family_index() == m_graphics_command_pool.family_index());
-                ASSERT(index < m_command_buffers->count());
+                ASSERT(graphics_queue.family_index() == graphics_command_pool_.family_index());
+                ASSERT(index < command_buffers_->count());
 
                 vulkan::queue_submit(
-                        wait_semaphore, VK_PIPELINE_STAGE_VERTEX_SHADER_BIT, (*m_command_buffers)[index],
-                        m_signal_semaphore, graphics_queue);
+                        wait_semaphore, VK_PIPELINE_STAGE_VERTEX_SHADER_BIT, (*command_buffers_)[index],
+                        signal_semaphore_, graphics_queue);
 
-                return m_signal_semaphore;
+                return signal_semaphore_;
         }
 
         void reset() override
         {
-                if (m_top_point_count == 0)
+                if (top_point_count_ == 0)
                 {
                         return;
                 }
 
-                m_compute->reset();
+                compute_->reset();
         }
 
 public:
@@ -238,30 +238,30 @@ public:
              const vulkan::CommandPool& /*transfer_command_pool*/,
              const vulkan::Queue& /*transfer_queue*/,
              bool /*sample_shading*/)
-                : // m_sample_shading(sample_shading),
-                  m_instance(instance),
-                  m_device(instance.device()),
-                  m_graphics_command_pool(graphics_command_pool),
-                  m_graphics_queue(graphics_queue),
-                  m_compute_command_pool(compute_command_pool),
-                  // m_compute_queue(compute_queue),
-                  //m_transfer_command_pool(transfer_command_pool),
-                  //m_transfer_queue(transfer_queue),
-                  m_signal_semaphore(instance.device()),
-                  m_program(instance.device()),
-                  m_memory(instance.device(), m_program.descriptor_set_layout(), {graphics_queue.family_index()}),
-                  m_sampler(create_sampler(instance.device())),
-                  m_compute(create_compute(instance, compute_command_pool, compute_queue))
+                : // sample_shading_(sample_shading),
+                  instance_(instance),
+                  device_(instance.device()),
+                  graphics_command_pool_(graphics_command_pool),
+                  graphics_queue_(graphics_queue),
+                  compute_command_pool_(compute_command_pool),
+                  // compute_queue_(compute_queue),
+                  //transfer_command_pool_(transfer_command_pool),
+                  //transfer_queue_(transfer_queue),
+                  signal_semaphore_(instance.device()),
+                  program_(instance.device()),
+                  memory_(instance.device(), program_.descriptor_set_layout(), {graphics_queue.family_index()}),
+                  sampler_(create_sampler(instance.device())),
+                  compute_(create_compute(instance, compute_command_pool, compute_queue))
         {
         }
 
         ~Impl() override
         {
-                ASSERT(std::this_thread::get_id() == m_thread_id);
+                ASSERT(std::this_thread::get_id() == thread_id_);
 
                 //
 
-                m_instance.device_wait_idle_noexcept("the Vulkan optical flow view destructor");
+                instance_.device_wait_idle_noexcept("the Vulkan optical flow view destructor");
         }
 };
 }

@@ -36,15 +36,15 @@ namespace implementation
 template <typename T>
 class ThreadQueue final
 {
-        SpinLock m_lock;
-        std::queue<T> m_queue;
+        SpinLock lock_;
+        std::queue<T> queue_;
 
 public:
         template <typename A>
         void push(A&& e)
         {
-                std::lock_guard lg(m_lock);
-                m_queue.push(std::forward<A>(e));
+                std::lock_guard lg(lock_);
+                queue_.push(std::forward<A>(e));
         }
 
         std::vector<T> pop()
@@ -54,11 +54,11 @@ public:
 
                 std::vector<T> result;
                 {
-                        std::lock_guard lg(m_lock);
-                        while (!m_queue.empty())
+                        std::lock_guard lg(lock_);
+                        while (!queue_.empty())
                         {
-                                result.push_back(std::move(m_queue.front()));
-                                m_queue.pop();
+                                result.push_back(std::move(queue_.front()));
+                                queue_.pop();
                         }
                 }
                 return result;
@@ -68,7 +68,7 @@ public:
 template <typename T>
 class EventQueues final
 {
-        ThreadQueue<Command> m_send_queue;
+        ThreadQueue<Command> send_queue_;
 
         struct ViewInfoExt
         {
@@ -78,7 +78,7 @@ class EventQueues final
                 std::condition_variable cv;
                 bool received;
         };
-        ThreadQueue<ViewInfoExt*> m_receive_queue;
+        ThreadQueue<ViewInfoExt*> receive_queue_;
 
 public:
         explicit EventQueues(std::vector<Command>&& initial_events)
@@ -91,7 +91,7 @@ public:
 
         void send(Command&& event)
         {
-                m_send_queue.push(std::move(event));
+                send_queue_.push(std::move(event));
         }
 
         void receive(const std::vector<Info>& info)
@@ -99,7 +99,7 @@ public:
                 ViewInfoExt v;
                 v.info = &info;
                 v.received = false;
-                m_receive_queue.push(&v);
+                receive_queue_.push(&v);
 
                 std::unique_lock<std::mutex> lock(v.mutex);
                 v.cv.wait(
@@ -112,9 +112,9 @@ public:
 
         void dispatch_events(T* view)
         {
-                view->send(m_send_queue.pop());
+                view->send(send_queue_.pop());
 
-                for (ViewInfoExt* event : m_receive_queue.pop())
+                for (ViewInfoExt* event : receive_queue_.pop())
                 {
                         view->receive(*(event->info));
                         {
@@ -130,20 +130,20 @@ public:
 template <typename T>
 class ViewThread final : public View
 {
-        const std::thread::id m_thread_id = std::this_thread::get_id();
-        implementation::EventQueues<T> m_event_queues;
-        std::thread m_thread;
-        std::atomic_bool m_stop{false};
-        std::atomic_bool m_started{false};
+        const std::thread::id thread_id_ = std::this_thread::get_id();
+        implementation::EventQueues<T> event_queues_;
+        std::thread thread_;
+        std::atomic_bool stop_{false};
+        std::atomic_bool started_{false};
 
         void send(Command&& event) override
         {
-                m_event_queues.send(std::move(event));
+                event_queues_.send(std::move(event));
         }
 
         void receive(const std::vector<Info>& info) override
         {
-                m_event_queues.receive(info);
+                event_queues_.receive(info);
         }
 
         void thread_function(window::WindowID parent_window, double parent_window_ppi)
@@ -154,7 +154,7 @@ class ViewThread final : public View
 
                         T view(parent_window, parent_window_ppi);
 
-                        m_started = true;
+                        started_ = true;
 
                         try
                         {
@@ -162,11 +162,11 @@ class ViewThread final : public View
                                         [&]()
                                         {
                                                 ASSERT(std::this_thread::get_id() == thread_id);
-                                                m_event_queues.dispatch_events(&view);
+                                                event_queues_.dispatch_events(&view);
                                         },
-                                        &m_stop);
+                                        &stop_);
 
-                                if (!m_stop)
+                                if (!stop_)
                                 {
                                         error("Thread ended without stop.");
                                 }
@@ -182,34 +182,34 @@ class ViewThread final : public View
                 }
                 catch (const std::exception& e)
                 {
-                        m_started = true;
+                        started_ = true;
                         MESSAGE_ERROR_FATAL(std::string("Error from view\n") + e.what());
                 }
                 catch (...)
                 {
-                        m_started = true;
+                        started_ = true;
                         MESSAGE_ERROR_FATAL("Unknown error from view");
                 }
         }
 
         void join_thread()
         {
-                ASSERT(std::this_thread::get_id() == m_thread_id);
+                ASSERT(std::this_thread::get_id() == thread_id_);
 
-                if (m_thread.joinable())
+                if (thread_.joinable())
                 {
-                        m_stop = true;
-                        m_thread.join();
+                        stop_ = true;
+                        thread_.join();
                 }
         }
 
 public:
         ViewThread(window::WindowID parent_window, double parent_window_ppi, std::vector<Command>&& initial_commands)
-                : m_event_queues(std::move(initial_commands))
+                : event_queues_(std::move(initial_commands))
         {
                 try
                 {
-                        m_thread = std::thread(
+                        thread_ = std::thread(
                                 [=, this]()
                                 {
                                         try
@@ -225,7 +225,7 @@ public:
                         do
                         {
                                 std::this_thread::yield();
-                        } while (!m_started);
+                        } while (!started_);
                 }
                 catch (...)
                 {
@@ -236,7 +236,7 @@ public:
 
         ~ViewThread() override
         {
-                ASSERT(std::this_thread::get_id() == m_thread_id);
+                ASSERT(std::this_thread::get_id() == thread_id_);
 
                 join_thread();
         }

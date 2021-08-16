@@ -31,11 +31,11 @@ class Samples
 {
         static_assert(std::is_floating_point_v<T>);
 
-        Vector<N, T> m_data;
+        Vector<N, T> data_;
 
 protected:
         template <typename... Args>
-        constexpr explicit Samples(Args... args) : m_data(args...)
+        constexpr explicit Samples(Args... args) : data_(args...)
         {
                 static_assert(std::is_base_of_v<Samples, Derived>);
                 static_assert(std::is_final_v<Derived>);
@@ -48,7 +48,7 @@ protected:
 
         constexpr const Vector<N, T>& data() const
         {
-                return m_data;
+                return data_;
         }
 
         [[nodiscard]] std::string to_string(const std::string_view& name) const
@@ -57,10 +57,10 @@ protected:
                 oss.precision(limits<T>::max_digits10);
                 oss << name;
                 oss << '(';
-                oss << m_data[0];
+                oss << data_[0];
                 for (std::size_t i = 1; i < N; ++i)
                 {
-                        oss << ", " << m_data[i];
+                        oss << ", " << data_[i];
                 }
                 oss << ')';
                 return oss.str();
@@ -69,7 +69,7 @@ protected:
 public:
         void multiply_add(const Derived& a, T b)
         {
-                m_data.multiply_add(a.m_data, b);
+                data_.multiply_add(a.data_, b);
         }
 
         void multiply_add(T b, const Derived& a)
@@ -80,14 +80,14 @@ public:
         [[nodiscard]] Derived clamp(T low, T high) const
         {
                 Derived r;
-                r.m_data = m_data.clamp(low, high);
+                r.data_ = data_.clamp(low, high);
                 return r;
         }
 
         [[nodiscard]] Derived max_n(T v) const
         {
                 Derived r;
-                r.m_data = m_data.max_n(v);
+                r.data_ = data_.max_n(v);
                 return r;
         }
 
@@ -95,7 +95,7 @@ public:
         {
                 for (std::size_t i = 0; i < N; ++i)
                 {
-                        if (!(m_data[0] <= 0))
+                        if (!(data_[0] <= 0))
                         {
                                 return false;
                         }
@@ -107,7 +107,7 @@ public:
         {
                 for (std::size_t i = 0; i < N; ++i)
                 {
-                        if (std::isnan(m_data[i]))
+                        if (std::isnan(data_[i]))
                         {
                                 return true;
                         }
@@ -119,7 +119,7 @@ public:
         {
                 for (std::size_t i = 0; i < N; ++i)
                 {
-                        if (!std::isfinite(m_data[i]))
+                        if (!std::isfinite(data_[i]))
                         {
                                 return false;
                         }
@@ -131,7 +131,7 @@ public:
         {
                 for (std::size_t i = 0; i < N; ++i)
                 {
-                        if (!(m_data[i] >= 0))
+                        if (!(data_[i] >= 0))
                         {
                                 return false;
                         }
@@ -143,7 +143,7 @@ public:
         {
                 for (std::size_t i = 0; i < N; ++i)
                 {
-                        if (!(m_data[i] >= low && m_data[i] <= high))
+                        if (!(data_[i] >= low && data_[i] <= high))
                         {
                                 return false;
                         }
@@ -155,8 +155,8 @@ public:
         {
                 for (std::size_t i = 0; i < N; ++i)
                 {
-                        T c1 = m_data[i];
-                        T c2 = c.m_data[i];
+                        T c1 = data_[i];
+                        T c2 = c.data_[i];
                         if (c1 == c2)
                         {
                                 continue;
@@ -175,8 +175,8 @@ public:
         {
                 for (std::size_t i = 0; i < N; ++i)
                 {
-                        T c1 = m_data[i];
-                        T c2 = c.m_data[i];
+                        T c1 = data_[i];
+                        T c2 = c.data_[i];
                         if (c1 == c2)
                         {
                                 continue;
@@ -194,8 +194,8 @@ public:
         {
                 for (std::size_t i = 0; i < N; ++i)
                 {
-                        T c1 = m_data[i];
-                        T c2 = c.m_data[i];
+                        T c1 = data_[i];
+                        T c2 = c.data_[i];
                         if (c1 <= c2)
                         {
                                 continue;
@@ -213,31 +213,31 @@ public:
 
         constexpr Derived& operator+=(const Derived& c) &
         {
-                m_data += c.m_data;
+                data_ += c.data_;
                 return *static_cast<Derived*>(this);
         }
 
         constexpr Derived& operator-=(const Derived& c) &
         {
-                m_data -= c.m_data;
+                data_ -= c.data_;
                 return *static_cast<Derived*>(this);
         }
 
         constexpr Derived& operator*=(const Derived& c) &
         {
-                m_data *= c.m_data;
+                data_ *= c.data_;
                 return *static_cast<Derived*>(this);
         }
 
         constexpr Derived& operator*=(T b) &
         {
-                m_data *= b;
+                data_ *= b;
                 return *static_cast<Derived*>(this);
         }
 
         constexpr Derived& operator/=(T b) &
         {
-                m_data /= b;
+                data_ /= b;
                 return *static_cast<Derived*>(this);
         }
 
@@ -245,55 +245,55 @@ public:
 
         [[nodiscard]] constexpr friend bool operator==(const Derived& a, const Derived& b)
         {
-                return a.m_data == b.m_data;
+                return a.data_ == b.data_;
         }
 
         [[nodiscard]] friend Derived interpolation(const Derived& a, const Derived& b, T t)
         {
                 Derived r;
-                r.m_data = ::ns::interpolation(a.m_data, b.m_data, t);
+                r.data_ = ::ns::interpolation(a.data_, b.data_, t);
                 return r;
         }
 
         [[nodiscard]] friend Derived max(const Derived& a, const Derived& b)
         {
                 Derived r;
-                r.m_data = max(a.m_data, b.m_data);
+                r.data_ = max(a.data_, b.data_);
                 return r;
         }
 
         [[nodiscard]] friend Derived min(const Derived& a, const Derived& b)
         {
                 Derived r;
-                r.m_data = min(a.m_data, b.m_data);
+                r.data_ = min(a.data_, b.data_);
                 return r;
         }
 
         [[nodiscard]] constexpr friend Derived operator+(const Derived& a, const Derived& b)
         {
                 Derived r;
-                r.m_data = a.m_data + b.m_data;
+                r.data_ = a.data_ + b.data_;
                 return r;
         }
 
         [[nodiscard]] constexpr friend Derived operator-(const Derived& a, const Derived& b)
         {
                 Derived r;
-                r.m_data = a.m_data - b.m_data;
+                r.data_ = a.data_ - b.data_;
                 return r;
         }
 
         [[nodiscard]] constexpr friend Derived operator*(const Derived& a, const Derived& b)
         {
                 Derived r;
-                r.m_data = a.m_data * b.m_data;
+                r.data_ = a.data_ * b.data_;
                 return r;
         }
 
         [[nodiscard]] constexpr friend Derived operator*(const Derived& a, T b)
         {
                 Derived r;
-                r.m_data = a.m_data * b;
+                r.data_ = a.data_ * b;
                 return r;
         }
 
@@ -305,7 +305,7 @@ public:
         [[nodiscard]] constexpr friend Derived operator/(const Derived& a, T b)
         {
                 Derived r;
-                r.m_data = a.m_data / b;
+                r.data_ = a.data_ / b;
                 return r;
         }
 };

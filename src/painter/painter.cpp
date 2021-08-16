@@ -97,36 +97,36 @@ struct PixelData final
 
 class PassData final
 {
-        const std::optional<int> m_max_number;
-        int m_number = 0;
+        const std::optional<int> max_number_;
+        int number_ = 0;
 
 public:
-        explicit PassData(std::optional<int> max_number) : m_max_number(max_number)
+        explicit PassData(std::optional<int> max_number) : max_number_(max_number)
         {
                 ASSERT(!max_number || *max_number > 0);
         }
 
         bool continue_painting()
         {
-                return !(m_max_number && ++m_number == *m_max_number);
+                return !(max_number_ && ++number_ == *max_number_);
         }
 };
 
 template <std::size_t N>
 class ThreadBusy final
 {
-        Notifier<N>* const m_notifier;
-        const unsigned m_thread;
+        Notifier<N>* const notifier_;
+        const unsigned thread_;
 
 public:
         ThreadBusy(Notifier<N>* notifier, unsigned thread, const std::array<int, N>& pixel)
-                : m_notifier(notifier), m_thread(thread)
+                : notifier_(notifier), thread_(thread)
         {
-                m_notifier->thread_busy(m_thread, pixel);
+                notifier_->thread_busy(thread_, pixel);
         }
         ~ThreadBusy()
         {
-                m_notifier->thread_free(m_thread);
+                notifier_->thread_free(thread_);
         }
         ThreadBusy(const ThreadBusy&) = delete;
         ThreadBusy& operator=(const ThreadBusy&) = delete;
@@ -363,23 +363,23 @@ void painter_thread(
 
 class Impl final : public Painter
 {
-        const std::thread::id m_thread_id = std::this_thread::get_id();
+        const std::thread::id thread_id_ = std::this_thread::get_id();
 
-        std::unique_ptr<PaintingStatistics> m_statistics;
+        std::unique_ptr<PaintingStatistics> statistics_;
 
-        std::atomic_bool m_stop = false;
-        std::thread m_thread;
+        std::atomic_bool stop_ = false;
+        std::thread thread_;
 
         void wait() noexcept override
         {
-                ASSERT(std::this_thread::get_id() == m_thread_id);
+                ASSERT(std::this_thread::get_id() == thread_id_);
 
-                join_thread(&m_thread);
+                join_thread(&thread_);
         }
 
         Statistics statistics() const override
         {
-                return m_statistics->statistics();
+                return statistics_->statistics();
         }
 
 public:
@@ -417,11 +417,11 @@ public:
                         error("Painter maximum pass count (" + to_string(*max_pass_count) + ") must be greater than 0");
                 }
 
-                m_statistics =
+                statistics_ =
                         std::make_unique<PaintingStatistics>(multiply_all<long long>(scene->projector().screen_size()));
 
-                m_thread = std::thread(
-                        [=, stop = &m_stop, statistics = m_statistics.get(), scene = std::move(scene)]()
+                thread_ = std::thread(
+                        [=, stop = &stop_, statistics = statistics_.get(), scene = std::move(scene)]()
                         {
                                 painter_thread(
                                         notifier, statistics, samples_per_pixel, max_pass_count, *scene, thread_count,
@@ -431,10 +431,10 @@ public:
 
         ~Impl() override
         {
-                ASSERT(std::this_thread::get_id() == m_thread_id);
+                ASSERT(std::this_thread::get_id() == thread_id_);
 
-                m_stop = true;
-                join_thread(&m_thread);
+                stop_ = true;
+                join_thread(&thread_);
         }
 };
 }

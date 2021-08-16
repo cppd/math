@@ -29,7 +29,7 @@ namespace ns::vulkan
 {
 class InstanceHandle final
 {
-        VkInstance m_instance = VK_NULL_HANDLE;
+        VkInstance instance_ = VK_NULL_HANDLE;
 
         void destroy() noexcept;
         void move(InstanceHandle* from) noexcept;
@@ -50,32 +50,32 @@ public:
 
 class Instance final
 {
-        InstanceHandle m_instance;
-        bool m_validation_layers_enabled;
+        InstanceHandle instance_;
+        bool validation_layers_enabled_;
 
 public:
         explicit Instance(const VkInstanceCreateInfo& create_info)
-                : m_instance(create_info), m_validation_layers_enabled(create_info.enabledLayerCount > 0)
+                : instance_(create_info), validation_layers_enabled_(create_info.enabledLayerCount > 0)
         {
         }
 
         operator VkInstance() const& noexcept
         {
-                return m_instance;
+                return instance_;
         }
 
         operator VkInstance() const&& noexcept = delete;
 
         bool validation_layers_enabled() const noexcept
         {
-                return m_validation_layers_enabled;
+                return validation_layers_enabled_;
         }
 };
 
 class DebugReportCallback final
 {
-        VkInstance m_instance = VK_NULL_HANDLE;
-        VkDebugReportCallbackEXT m_callback = VK_NULL_HANDLE;
+        VkInstance instance_ = VK_NULL_HANDLE;
+        VkDebugReportCallbackEXT callback_ = VK_NULL_HANDLE;
 
         void destroy() noexcept;
         void move(DebugReportCallback* from) noexcept;
@@ -97,7 +97,7 @@ public:
 
 class DeviceHandle final
 {
-        VkDevice m_device = VK_NULL_HANDLE;
+        VkDevice device_ = VK_NULL_HANDLE;
 
         void destroy() noexcept;
         void move(DeviceHandle* from) noexcept;
@@ -119,22 +119,22 @@ public:
 
 class Queue final
 {
-        VkQueue m_queue = VK_NULL_HANDLE;
-        uint32_t m_family_index = limits<uint32_t>::max();
+        VkQueue queue_ = VK_NULL_HANDLE;
+        uint32_t family_index_ = limits<uint32_t>::max();
 
 public:
         Queue() = default;
-        Queue(uint32_t family_index, VkQueue queue) : m_queue(queue), m_family_index(family_index)
+        Queue(uint32_t family_index, VkQueue queue) : queue_(queue), family_index_(family_index)
         {
         }
         operator VkQueue() const& noexcept
         {
-                return m_queue;
+                return queue_;
         }
         operator VkQueue() const&& noexcept = delete;
         uint32_t family_index() const noexcept
         {
-                return m_family_index;
+                return family_index_;
         }
 };
 
@@ -154,11 +154,11 @@ struct DeviceProperties final
 
 class Device final
 {
-        DeviceHandle m_device;
-        VkPhysicalDevice m_physical_device = VK_NULL_HANDLE;
-        const DeviceProperties* m_physical_device_properties = nullptr;
-        DeviceFeatures m_features = {};
-        std::unordered_map<uint32_t, std::vector<VkQueue>> m_queues;
+        DeviceHandle device_;
+        VkPhysicalDevice physical_device_ = VK_NULL_HANDLE;
+        const DeviceProperties* physical_device_properties_ = nullptr;
+        DeviceFeatures features_ = {};
+        std::unordered_map<uint32_t, std::vector<VkQueue>> queues_;
 
 public:
         Device() = default;
@@ -169,23 +169,23 @@ public:
 
         operator VkDevice() const& noexcept
         {
-                return m_device;
+                return device_;
         }
         operator VkDevice() const&& noexcept = delete;
 
         VkPhysicalDevice physical_device() const noexcept
         {
-                return m_physical_device;
+                return physical_device_;
         }
 
         const DeviceFeatures& features() const noexcept
         {
-                return m_features;
+                return features_;
         }
 
         const DeviceProperties& properties() const noexcept
         {
-                return *m_physical_device_properties;
+                return *physical_device_properties_;
         }
 
         Queue queue(uint32_t family_index, uint32_t queue_index) const;
@@ -193,8 +193,8 @@ public:
 
 class SurfaceKHR final
 {
-        VkInstance m_instance = VK_NULL_HANDLE;
-        VkSurfaceKHR m_surface = VK_NULL_HANDLE;
+        VkInstance instance_ = VK_NULL_HANDLE;
+        VkSurfaceKHR surface_ = VK_NULL_HANDLE;
 
         void destroy() noexcept;
         void move(SurfaceKHR* from) noexcept;
@@ -216,8 +216,8 @@ public:
 
 class SwapchainKHR final
 {
-        VkDevice m_device = VK_NULL_HANDLE;
-        VkSwapchainKHR m_swapchain = VK_NULL_HANDLE;
+        VkDevice device_ = VK_NULL_HANDLE;
+        VkSwapchainKHR swapchain_ = VK_NULL_HANDLE;
 
         void destroy() noexcept;
         void move(SwapchainKHR* from) noexcept;
@@ -239,8 +239,8 @@ public:
 
 class ImageView final
 {
-        VkDevice m_device = VK_NULL_HANDLE;
-        VkImageView m_image_view = VK_NULL_HANDLE;
+        VkDevice device_ = VK_NULL_HANDLE;
+        VkImageView image_view_ = VK_NULL_HANDLE;
 
         void destroy() noexcept;
         void move(ImageView* from) noexcept;
@@ -262,8 +262,8 @@ public:
 
 class ShaderModule final
 {
-        VkDevice m_device = VK_NULL_HANDLE;
-        VkShaderModule m_shader_module = VK_NULL_HANDLE;
+        VkDevice device_ = VK_NULL_HANDLE;
+        VkShaderModule shader_module_ = VK_NULL_HANDLE;
 
         void destroy() noexcept;
         void move(ShaderModule* from) noexcept;
@@ -285,8 +285,8 @@ public:
 
 class RenderPass final
 {
-        VkDevice m_device = VK_NULL_HANDLE;
-        VkRenderPass m_render_pass = VK_NULL_HANDLE;
+        VkDevice device_ = VK_NULL_HANDLE;
+        VkRenderPass render_pass_ = VK_NULL_HANDLE;
 
         void destroy() noexcept;
         void move(RenderPass* from) noexcept;
@@ -308,8 +308,8 @@ public:
 
 class PipelineLayout final
 {
-        VkDevice m_device = VK_NULL_HANDLE;
-        VkPipelineLayout m_pipeline_layout = VK_NULL_HANDLE;
+        VkDevice device_ = VK_NULL_HANDLE;
+        VkPipelineLayout pipeline_layout_ = VK_NULL_HANDLE;
 
         void destroy() noexcept;
         void move(PipelineLayout* from) noexcept;
@@ -331,8 +331,8 @@ public:
 
 class Pipeline final
 {
-        VkDevice m_device = VK_NULL_HANDLE;
-        VkPipeline m_pipeline = VK_NULL_HANDLE;
+        VkDevice device_ = VK_NULL_HANDLE;
+        VkPipeline pipeline_ = VK_NULL_HANDLE;
 
         void destroy() noexcept;
         void move(Pipeline* from) noexcept;
@@ -355,8 +355,8 @@ public:
 
 class Framebuffer final
 {
-        VkDevice m_device = VK_NULL_HANDLE;
-        VkFramebuffer m_framebuffer = VK_NULL_HANDLE;
+        VkDevice device_ = VK_NULL_HANDLE;
+        VkFramebuffer framebuffer_ = VK_NULL_HANDLE;
 
         void destroy() noexcept;
         void move(Framebuffer* from) noexcept;
@@ -380,9 +380,9 @@ class CommandPool final
 {
         static constexpr uint32_t NULL_FAMILY_INDEX = limits<uint32_t>::max();
 
-        VkDevice m_device = VK_NULL_HANDLE;
-        VkCommandPool m_command_pool = VK_NULL_HANDLE;
-        uint32_t m_family_index = NULL_FAMILY_INDEX;
+        VkDevice device_ = VK_NULL_HANDLE;
+        VkCommandPool command_pool_ = VK_NULL_HANDLE;
+        uint32_t family_index_ = NULL_FAMILY_INDEX;
 
         void destroy() noexcept;
         void move(CommandPool* from) noexcept;
@@ -406,8 +406,8 @@ public:
 
 class Semaphore final
 {
-        VkDevice m_device = VK_NULL_HANDLE;
-        VkSemaphore m_semaphore = VK_NULL_HANDLE;
+        VkDevice device_ = VK_NULL_HANDLE;
+        VkSemaphore semaphore_ = VK_NULL_HANDLE;
 
         void destroy() noexcept;
         void move(Semaphore* from) noexcept;
@@ -429,8 +429,8 @@ public:
 
 class Fence final
 {
-        VkDevice m_device = VK_NULL_HANDLE;
-        VkFence m_fence = VK_NULL_HANDLE;
+        VkDevice device_ = VK_NULL_HANDLE;
+        VkFence fence_ = VK_NULL_HANDLE;
 
         void destroy() noexcept;
         void move(Fence* from) noexcept;
@@ -452,8 +452,8 @@ public:
 
 class BufferHandle final
 {
-        VkDevice m_device = VK_NULL_HANDLE;
-        VkBuffer m_buffer = VK_NULL_HANDLE;
+        VkDevice device_ = VK_NULL_HANDLE;
+        VkBuffer buffer_ = VK_NULL_HANDLE;
 
         void destroy() noexcept;
         void move(BufferHandle* from) noexcept;
@@ -471,52 +471,52 @@ public:
 
         operator VkBuffer() const& noexcept
         {
-                return m_buffer;
+                return buffer_;
         }
         operator VkBuffer() const&& noexcept = delete;
         VkDevice device() const noexcept
         {
-                return m_device;
+                return device_;
         }
 };
 
 class Buffer final
 {
-        BufferHandle m_buffer;
-        VkDeviceSize m_size;
-        VkBufferUsageFlags m_usage;
+        BufferHandle buffer_;
+        VkDeviceSize size_;
+        VkBufferUsageFlags usage_;
 
 public:
         Buffer() = default;
 
         Buffer(VkDevice device, const VkBufferCreateInfo& create_info)
-                : m_buffer(device, create_info), m_size(create_info.size), m_usage(create_info.usage)
+                : buffer_(device, create_info), size_(create_info.size), usage_(create_info.usage)
         {
         }
 
         operator VkBuffer() const& noexcept
         {
-                return m_buffer;
+                return buffer_;
         }
         operator VkBuffer() const&& noexcept = delete;
         VkDevice device() const noexcept
         {
-                return m_buffer.device();
+                return buffer_.device();
         }
         VkDeviceSize size() const noexcept
         {
-                return m_size;
+                return size_;
         }
         bool has_usage(VkBufferUsageFlagBits flag) const noexcept
         {
-                return (m_usage & flag) == flag;
+                return (usage_ & flag) == flag;
         }
 };
 
 class DeviceMemory final
 {
-        VkDevice m_device = VK_NULL_HANDLE;
-        VkDeviceMemory m_device_memory = VK_NULL_HANDLE;
+        VkDevice device_ = VK_NULL_HANDLE;
+        VkDeviceMemory device_memory_ = VK_NULL_HANDLE;
 
         void destroy() noexcept;
         void move(DeviceMemory* from) noexcept;
@@ -534,20 +534,20 @@ public:
 
         operator VkDeviceMemory() const& noexcept
         {
-                return m_device_memory;
+                return device_memory_;
         }
         operator VkDeviceMemory() const&& noexcept = delete;
         VkDevice device() const noexcept
         {
-                return m_device;
+                return device_;
         }
 };
 
 class CommandBuffer final
 {
-        VkDevice m_device = VK_NULL_HANDLE;
-        VkCommandPool m_command_pool = VK_NULL_HANDLE;
-        VkCommandBuffer m_command_buffer = VK_NULL_HANDLE;
+        VkDevice device_ = VK_NULL_HANDLE;
+        VkCommandPool command_pool_ = VK_NULL_HANDLE;
+        VkCommandBuffer command_buffer_ = VK_NULL_HANDLE;
 
         void destroy() noexcept;
         void move(CommandBuffer* from) noexcept;
@@ -569,9 +569,9 @@ public:
 
 class CommandBuffers final
 {
-        VkDevice m_device = VK_NULL_HANDLE;
-        VkCommandPool m_command_pool = VK_NULL_HANDLE;
-        std::vector<VkCommandBuffer> m_command_buffers;
+        VkDevice device_ = VK_NULL_HANDLE;
+        VkCommandPool command_pool_ = VK_NULL_HANDLE;
+        std::vector<VkCommandBuffer> command_buffers_;
 
         void destroy() noexcept;
         void move(CommandBuffers* from) noexcept;
@@ -594,8 +594,8 @@ public:
 
 class DescriptorSetLayout final
 {
-        VkDevice m_device = VK_NULL_HANDLE;
-        VkDescriptorSetLayout m_descriptor_set_layout = VK_NULL_HANDLE;
+        VkDevice device_ = VK_NULL_HANDLE;
+        VkDescriptorSetLayout descriptor_set_layout_ = VK_NULL_HANDLE;
 
         void destroy() noexcept;
         void move(DescriptorSetLayout* from) noexcept;
@@ -617,8 +617,8 @@ public:
 
 class DescriptorPool final
 {
-        VkDevice m_device = VK_NULL_HANDLE;
-        VkDescriptorPool m_descriptor_pool = VK_NULL_HANDLE;
+        VkDevice device_ = VK_NULL_HANDLE;
+        VkDescriptorPool descriptor_pool_ = VK_NULL_HANDLE;
 
         void destroy() noexcept;
         void move(DescriptorPool* from) noexcept;
@@ -640,9 +640,9 @@ public:
 
 class DescriptorSet final
 {
-        VkDevice m_device = VK_NULL_HANDLE;
-        VkDescriptorPool m_descriptor_pool = VK_NULL_HANDLE;
-        VkDescriptorSet m_descriptor_set = VK_NULL_HANDLE;
+        VkDevice device_ = VK_NULL_HANDLE;
+        VkDescriptorPool descriptor_pool_ = VK_NULL_HANDLE;
+        VkDescriptorSet descriptor_set_ = VK_NULL_HANDLE;
 
         void destroy() noexcept;
         void move(DescriptorSet* from) noexcept;
@@ -664,9 +664,9 @@ public:
 
 class DescriptorSets final
 {
-        VkDevice m_device = VK_NULL_HANDLE;
-        VkDescriptorPool m_descriptor_pool = VK_NULL_HANDLE;
-        std::vector<VkDescriptorSet> m_descriptor_sets;
+        VkDevice device_ = VK_NULL_HANDLE;
+        VkDescriptorPool descriptor_pool_ = VK_NULL_HANDLE;
+        std::vector<VkDescriptorSet> descriptor_sets_;
 
         void destroy() noexcept;
         void move(DescriptorSets* from) noexcept;
@@ -691,8 +691,8 @@ public:
 
 class Image final
 {
-        VkDevice m_device = VK_NULL_HANDLE;
-        VkImage m_image = VK_NULL_HANDLE;
+        VkDevice device_ = VK_NULL_HANDLE;
+        VkImage image_ = VK_NULL_HANDLE;
 
         void destroy() noexcept;
         void move(Image* from) noexcept;
@@ -714,8 +714,8 @@ public:
 
 class Sampler final
 {
-        VkDevice m_device = VK_NULL_HANDLE;
-        VkSampler m_sampler = VK_NULL_HANDLE;
+        VkDevice device_ = VK_NULL_HANDLE;
+        VkSampler sampler_ = VK_NULL_HANDLE;
 
         void destroy() noexcept;
         void move(Sampler* from) noexcept;

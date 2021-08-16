@@ -31,75 +31,74 @@ class PaintingStatistics
 {
         static_assert(std::atomic<long long>::is_always_lock_free);
 
-        const long long m_screen_pixel_count;
+        const long long screen_pixel_count_;
 
-        std::atomic<long long> m_pixel_counter;
-        std::atomic<long long> m_ray_counter;
-        std::atomic<long long> m_sample_counter;
+        std::atomic<long long> pixel_counter_;
+        std::atomic<long long> ray_counter_;
+        std::atomic<long long> sample_counter_;
 
-        long long m_pass_number;
-        TimePoint m_pass_start_time;
-        long long m_pass_start_pixel_count;
-        double m_previous_pass_duration;
+        long long pass_number_;
+        TimePoint pass_start_time_;
+        long long pass_start_pixel_count_;
+        double previous_pass_duration_;
 
-        mutable SpinLock m_lock;
+        mutable SpinLock lock_;
 
 public:
-        explicit PaintingStatistics(long long screen_pixel_count) : m_screen_pixel_count(screen_pixel_count)
+        explicit PaintingStatistics(long long screen_pixel_count) : screen_pixel_count_(screen_pixel_count)
         {
                 init();
         }
 
         void init()
         {
-                std::lock_guard lg(m_lock);
+                std::lock_guard lg(lock_);
 
-                m_pixel_counter = 0;
-                m_ray_counter = 0;
-                m_sample_counter = 0;
+                pixel_counter_ = 0;
+                ray_counter_ = 0;
+                sample_counter_ = 0;
 
-                m_pass_number = 1;
-                m_pass_start_time = time();
-                m_pass_start_pixel_count = 0;
-                m_previous_pass_duration = 0;
+                pass_number_ = 1;
+                pass_start_time_ = time();
+                pass_start_pixel_count_ = 0;
+                previous_pass_duration_ = 0;
         }
 
         void pixel_done(int ray_count, int sample_count)
         {
-                m_pixel_counter.fetch_add(1, std::memory_order_relaxed);
-                m_ray_counter.fetch_add(ray_count, std::memory_order_relaxed);
-                m_sample_counter.fetch_add(sample_count, std::memory_order_relaxed);
+                pixel_counter_.fetch_add(1, std::memory_order_relaxed);
+                ray_counter_.fetch_add(ray_count, std::memory_order_relaxed);
+                sample_counter_.fetch_add(sample_count, std::memory_order_relaxed);
         }
 
         void pass_done()
         {
                 const TimePoint now = time();
-                std::lock_guard lg(m_lock);
-                m_previous_pass_duration = duration(m_pass_start_time, now);
+                std::lock_guard lg(lock_);
+                previous_pass_duration_ = duration(pass_start_time_, now);
         }
 
         void next_pass()
         {
-                std::lock_guard lg(m_lock);
-                ++m_pass_number;
-                m_pass_start_time = time();
-                m_pass_start_pixel_count = m_pixel_counter;
+                std::lock_guard lg(lock_);
+                ++pass_number_;
+                pass_start_time_ = time();
+                pass_start_pixel_count_ = pixel_counter_;
         }
 
         Statistics statistics() const
         {
                 Statistics s;
 
-                std::lock_guard lg(m_lock);
+                std::lock_guard lg(lock_);
 
-                s.pass_number = m_pass_number;
-                s.pass_progress =
-                        static_cast<double>(m_pixel_counter - m_pass_start_pixel_count) / m_screen_pixel_count;
-                s.previous_pass_duration = m_previous_pass_duration;
+                s.pass_number = pass_number_;
+                s.pass_progress = static_cast<double>(pixel_counter_ - pass_start_pixel_count_) / screen_pixel_count_;
+                s.previous_pass_duration = previous_pass_duration_;
 
-                s.pixel_count = m_pixel_counter;
-                s.ray_count = m_ray_counter;
-                s.sample_count = m_sample_counter;
+                s.pixel_count = pixel_counter_;
+                s.ray_count = ray_counter_;
+                s.sample_count = sample_counter_;
 
                 return s;
         }

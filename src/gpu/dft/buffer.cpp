@@ -29,8 +29,8 @@ ComplexNumberBuffer::ComplexNumberBuffer(
         const std::vector<uint32_t>& family_indices,
         unsigned size,
         vulkan::BufferMemoryType memory_type)
-        : m_size(size),
-          m_buffer(memory_type, device, family_indices, VK_BUFFER_USAGE_STORAGE_BUFFER_BIT, size * COMPLEX_SIZE)
+        : size_(size),
+          buffer_(memory_type, device, family_indices, VK_BUFFER_USAGE_STORAGE_BUFFER_BIT, size * COMPLEX_SIZE)
 {
 }
 
@@ -40,15 +40,14 @@ ComplexNumberBuffer::ComplexNumberBuffer(
         const vulkan::Queue& transfer_queue,
         const std::vector<uint32_t>& family_indices,
         const std::vector<std::complex<double>>& data)
-        : m_size(data.size()),
-          m_buffer(
-                  vulkan::BufferMemoryType::DeviceLocal,
+        : size_(data.size()),
+          buffer_(vulkan::BufferMemoryType::DeviceLocal,
                   device,
                   family_indices,
                   VK_BUFFER_USAGE_STORAGE_BUFFER_BIT | VK_BUFFER_USAGE_TRANSFER_DST_BIT,
                   data.size() * COMPLEX_SIZE)
 {
         const std::vector<std::complex<float>>& float_data = conv<float>(data);
-        m_buffer.write(transfer_command_pool, transfer_queue, data_size(float_data), data_pointer(float_data));
+        buffer_.write(transfer_command_pool, transfer_queue, data_size(float_data), data_pointer(float_data));
 }
 }

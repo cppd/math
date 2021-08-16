@@ -36,15 +36,15 @@ struct MouseButtonInfo final
 
 class Mouse final
 {
-        std::unordered_map<MouseButton, MouseButtonInfo> m_buttons;
-        int m_x = limits<int>::lowest();
-        int m_y = limits<int>::lowest();
+        std::unordered_map<MouseButton, MouseButtonInfo> buttons_;
+        int x_ = limits<int>::lowest();
+        int y_ = limits<int>::lowest();
 
 public:
         const MouseButtonInfo& info(const MouseButton button) const
         {
-                auto iter = m_buttons.find(button);
-                if (iter != m_buttons.cend())
+                auto iter = buttons_.find(button);
+                if (iter != buttons_.cend())
                 {
                         return iter->second;
                 }
@@ -55,9 +55,9 @@ public:
 
         void press(const int x, const int y, const MouseButton button)
         {
-                m_x = x;
-                m_y = y;
-                MouseButtonInfo& m = m_buttons[button];
+                x_ = x;
+                y_ = y;
+                MouseButtonInfo& m = buttons_[button];
                 m.pressed = true;
                 m.pressed_x = x;
                 m.pressed_y = y;
@@ -67,23 +67,23 @@ public:
 
         void release(const int x, const int y, const MouseButton button)
         {
-                m_buttons[button].pressed = false;
-                m_x = x;
-                m_y = y;
+                buttons_[button].pressed = false;
+                x_ = x;
+                y_ = y;
         }
 
         void move(const int x, const int y)
         {
-                for (auto& [button, info] : m_buttons)
+                for (auto& [button, info] : buttons_)
                 {
                         if (info.pressed)
                         {
-                                info.delta_x = x - m_x;
-                                info.delta_y = y - m_y;
+                                info.delta_x = x - x_;
+                                info.delta_y = y - y_;
                         }
                 }
-                m_x = x;
-                m_y = y;
+                x_ = x;
+                y_ = y;
         }
 };
 }

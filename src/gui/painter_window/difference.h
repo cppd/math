@@ -38,11 +38,11 @@ class Difference final
                 }
         };
 
-        const TimeDuration m_interval;
-        std::deque<Point> m_deque;
+        const TimeDuration interval_;
+        std::deque<Point> deque_;
 
 public:
-        explicit Difference(std::chrono::milliseconds interval) : m_interval(interval)
+        explicit Difference(std::chrono::milliseconds interval) : interval_(interval)
         {
         }
 
@@ -50,18 +50,17 @@ public:
         std::tuple<T, double> compute(V&& data)
         {
                 TimePoint now = time();
-                TimePoint front_time = now - m_interval;
+                TimePoint front_time = now - interval_;
 
-                while (!m_deque.empty() && m_deque.front().time < front_time)
+                while (!deque_.empty() && deque_.front().time < front_time)
                 {
-                        m_deque.pop_front();
+                        deque_.pop_front();
                 }
 
-                m_deque.emplace_back(std::forward<V>(data), now);
+                deque_.emplace_back(std::forward<V>(data), now);
 
                 return std::make_tuple(
-                        m_deque.back().data - m_deque.front().data,
-                        duration(m_deque.front().time, m_deque.back().time));
+                        deque_.back().data - deque_.front().data, duration(deque_.front().time, deque_.back().time));
         }
 };
 }

@@ -29,13 +29,13 @@ class RangeSlider final : public QObject
 {
         Q_OBJECT
 private:
-        QSlider* m_slider_min;
-        QSlider* m_slider_max;
+        QSlider* slider_min_;
+        QSlider* slider_max_;
 
-        double m_last_min;
-        double m_last_max;
+        double last_min_;
+        double last_max_;
 
-        std::vector<Connection> m_connections;
+        std::vector<Connection> connections_;
 
         void on_min_value_changed();
         void on_max_value_changed();

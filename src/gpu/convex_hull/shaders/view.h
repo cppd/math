@@ -35,8 +35,8 @@ class ViewMemory final
         static constexpr int DATA_BINDING = 0;
         static constexpr int POINTS_BINDING = 1;
 
-        vulkan::Descriptors m_descriptors;
-        std::vector<vulkan::BufferWithMemory> m_uniform_buffers;
+        vulkan::Descriptors descriptors_;
+        std::vector<vulkan::BufferWithMemory> uniform_buffers_;
 
         struct Data
         {
@@ -44,7 +44,7 @@ class ViewMemory final
                 float brightness;
         };
 
-        std::size_t m_data_buffer_index;
+        std::size_t data_buffer_index_;
 
 public:
         static std::vector<VkDescriptorSetLayoutBinding> descriptor_set_layout_bindings();
@@ -75,12 +75,12 @@ public:
 
 class ViewProgram final
 {
-        const vulkan::Device& m_device;
+        const vulkan::Device& device_;
 
-        vulkan::DescriptorSetLayout m_descriptor_set_layout;
-        vulkan::PipelineLayout m_pipeline_layout;
-        vulkan::VertexShader m_vertex_shader;
-        vulkan::FragmentShader m_fragment_shader;
+        vulkan::DescriptorSetLayout descriptor_set_layout_;
+        vulkan::PipelineLayout pipeline_layout_;
+        vulkan::VertexShader vertex_shader_;
+        vulkan::FragmentShader fragment_shader_;
 
 public:
         explicit ViewProgram(const vulkan::Device& device);

@@ -91,7 +91,7 @@ class ParallelotopeAA final
         {
                 T d1, d2;
         };
-        std::array<Planes, N> m_planes;
+        std::array<Planes, N> planes_;
 
         void set_data(const Vector<N, T>& org, const std::array<Vector<N, T>, N>& vectors);
         void set_data(const Vector<N, T>& org, const std::array<T, N>& sizes);
@@ -165,8 +165,8 @@ ParallelotopeAA<N, T>::ParallelotopeAA(const Vector<N, T>& org, const std::array
         }
         for (unsigned i = 0; i < N; ++i)
         {
-                m_planes[i].d1 = org[i];
-                m_planes[i].d2 = org[i] + sizes[i];
+                planes_[i].d1 = org[i];
+                planes_[i].d2 = org[i] + sizes[i];
         }
 }
 
@@ -182,15 +182,15 @@ ParallelotopeAA<N, T>::ParallelotopeAA(const Vector<N, T>& min, const Vector<N, 
         }
         for (unsigned i = 0; i < N; ++i)
         {
-                m_planes[i].d1 = min[i];
-                m_planes[i].d2 = max[i];
+                planes_[i].d1 = min[i];
+                planes_[i].d2 = max[i];
         }
 }
 
 template <std::size_t N, typename T>
 T ParallelotopeAA<N, T>::size(unsigned i) const
 {
-        return m_planes[i].d2 - m_planes[i].d1;
+        return planes_[i].d2 - planes_[i].d1;
 }
 
 // Неравенства в виде b + a * x >= 0, задающие множество точек параллелотопа.
@@ -205,10 +205,10 @@ Constraints<N, T, 2 * N, 0> ParallelotopeAA<N, T>::constraints() const
         for (unsigned i = 0, c_i = 0; i < N; ++i, c_i += 2)
         {
                 result.c[c_i].a = NORMALS_POSITIVE[i];
-                result.c[c_i].b = -m_planes[i].d1;
+                result.c[c_i].b = -planes_[i].d1;
 
                 result.c[c_i + 1].a = NORMALS_NEGATIVE[i];
-                result.c[c_i + 1].b = m_planes[i].d2;
+                result.c[c_i + 1].b = planes_[i].d2;
         }
 
         return result;
@@ -226,7 +226,7 @@ bool ParallelotopeAA<N, T>::intersect_impl(const Ray<N, T>& r, T* first, T* seco
                 if (s == 0)
                 {
                         T d = r.org()[i]; // dot(r.org(), NORMALS_POSITIVE[i])
-                        if (d < m_planes[i].d1 || d > m_planes[i].d2)
+                        if (d < planes_[i].d1 || d > planes_[i].d2)
                         {
                                 // параллельно плоскостям и снаружи
                                 return false;
@@ -236,8 +236,8 @@ bool ParallelotopeAA<N, T>::intersect_impl(const Ray<N, T>& r, T* first, T* seco
                 }
 
                 T d = r.org()[i]; // dot(r.org(), NORMALS_POSITIVE[i])
-                T alpha1 = (m_planes[i].d1 - d) / s;
-                T alpha2 = (m_planes[i].d2 - d) / s;
+                T alpha1 = (planes_[i].d1 - d) / s;
+                T alpha2 = (planes_[i].d2 - d) / s;
 
                 if (s > 0)
                 {
@@ -314,14 +314,14 @@ Vector<N, T> ParallelotopeAA<N, T>::normal(const Vector<N, T>& p) const
         {
                 T l;
 
-                l = std::abs(p[i] - m_planes[i].d1);
+                l = std::abs(p[i] - planes_[i].d1);
                 if (l < min)
                 {
                         min = l;
                         n = NORMALS_NEGATIVE[i];
                 }
 
-                l = std::abs(p[i] - m_planes[i].d2);
+                l = std::abs(p[i] - planes_[i].d2);
                 if (l < min)
                 {
                         min = l;
@@ -339,12 +339,12 @@ bool ParallelotopeAA<N, T>::inside(const Vector<N, T>& p) const
 {
         for (unsigned i = 0; i < N; ++i)
         {
-                if (p[i] < m_planes[i].d1)
+                if (p[i] < planes_[i].d1)
                 {
                         return false;
                 }
 
-                if (p[i] > m_planes[i].d2)
+                if (p[i] > planes_[i].d2)
                 {
                         return false;
                 }
@@ -359,11 +359,11 @@ void ParallelotopeAA<N, T>::binary_division_impl(std::array<Planes, N>* p, const
 {
         if constexpr (INDEX >= 0)
         {
-                (*p)[INDEX].d1 = m_planes[INDEX].d1;
+                (*p)[INDEX].d1 = planes_[INDEX].d1;
                 (*p)[INDEX].d2 = middle_d[INDEX];
                 binary_division_impl<INDEX - 1>(p, middle_d, f);
                 (*p)[INDEX].d1 = middle_d[INDEX];
-                (*p)[INDEX].d2 = m_planes[INDEX].d2;
+                (*p)[INDEX].d2 = planes_[INDEX].d2;
                 binary_division_impl<INDEX - 1>(p, middle_d, f);
         }
         else
@@ -380,7 +380,7 @@ std::array<ParallelotopeAA<N, T>, ParallelotopeAA<N, T>::DIVISIONS> Parallelotop
         Vector<N, T> middle_d;
         for (unsigned i = 0; i < N; ++i)
         {
-                middle_d[i] = (m_planes[i].d1 + m_planes[i].d2) / static_cast<T>(2);
+                middle_d[i] = (planes_[i].d1 + planes_[i].d2) / static_cast<T>(2);
         }
 
         unsigned count = 0;
@@ -388,7 +388,7 @@ std::array<ParallelotopeAA<N, T>, ParallelotopeAA<N, T>::DIVISIONS> Parallelotop
         auto f = [&count, &result, &p]()
         {
                 ASSERT(count < result.size());
-                result[count++].m_planes = p;
+                result[count++].planes_ = p;
         };
 
         binary_division_impl<N - 1>(&p, middle_d, f);
@@ -404,9 +404,9 @@ void ParallelotopeAA<N, T>::vertices_impl(Vector<N, T>* p, const F& f) const
 {
         if constexpr (INDEX >= 0)
         {
-                (*p)[INDEX] = m_planes[INDEX].d1;
+                (*p)[INDEX] = planes_[INDEX].d1;
                 vertices_impl<INDEX - 1>(p, f);
-                (*p)[INDEX] = m_planes[INDEX].d2;
+                (*p)[INDEX] = planes_[INDEX].d2;
                 vertices_impl<INDEX - 1>(p, f);
         }
         else
@@ -445,7 +445,7 @@ std::array<std::array<Vector<N, T>, 2>, ParallelotopeAA<N, T>::EDGE_COUNT> Paral
         std::array<Vector<N, T>, N> vectors;
         for (unsigned i = 0; i < N; ++i)
         {
-                vectors[i] = parallelotope_aa_implementation::index_vector<N, T>(i, m_planes[i].d2 - m_planes[i].d1);
+                vectors[i] = parallelotope_aa_implementation::index_vector<N, T>(i, planes_[i].d2 - planes_[i].d1);
         }
 
         unsigned count = 0;
@@ -454,7 +454,7 @@ std::array<std::array<Vector<N, T>, 2>, ParallelotopeAA<N, T>::EDGE_COUNT> Paral
         {
                 for (unsigned i = 0; i < N; ++i)
                 {
-                        if (p[i] == m_planes[i].d1)
+                        if (p[i] == planes_[i].d1)
                         {
                                 ASSERT(count < result.size());
                                 result[count][0] = p;
@@ -477,7 +477,7 @@ T ParallelotopeAA<N, T>::length() const
         Vector<N, T> s;
         for (unsigned i = 0; i < N; ++i)
         {
-                s[i] = m_planes[i].d2 - m_planes[i].d1;
+                s[i] = planes_[i].d2 - planes_[i].d1;
         }
         return s.norm();
 }
@@ -488,7 +488,7 @@ Vector<N, T> ParallelotopeAA<N, T>::org() const
         Vector<N, T> v;
         for (unsigned i = 0; i < N; ++i)
         {
-                v[i] = m_planes[i].d1;
+                v[i] = planes_[i].d1;
         }
         return v;
 }
@@ -506,7 +506,7 @@ Vector<N, T> ParallelotopeAA<N, T>::min() const
         Vector<N, T> v;
         for (unsigned i = 0; i < N; ++i)
         {
-                v[i] = m_planes[i].d1;
+                v[i] = planes_[i].d1;
         }
         return v;
 }
@@ -517,7 +517,7 @@ Vector<N, T> ParallelotopeAA<N, T>::max() const
         Vector<N, T> v;
         for (unsigned i = 0; i < N; ++i)
         {
-                v[i] = m_planes[i].d2;
+                v[i] = planes_[i].d2;
         }
         return v;
 }

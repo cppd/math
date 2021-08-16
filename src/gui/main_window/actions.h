@@ -38,8 +38,8 @@ namespace ns::gui::main_window
 {
 class Actions final
 {
-        std::unique_ptr<WorkerThreads> m_worker_threads;
-        std::vector<Connection> m_connections;
+        std::unique_ptr<WorkerThreads> worker_threads_;
+        std::vector<Connection> connections_;
 
 public:
         Actions(const CommandLineOptions& options,

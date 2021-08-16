@@ -36,25 +36,25 @@ class AtomicTerminate
         static constexpr DataType TERMINATE_QUIETLY = 0b1;
         static constexpr DataType TERMINATE_WITH_MESSAGE = 0b10;
 
-        std::atomic<DataType> m_terminate = 0;
+        std::atomic<DataType> terminate_ = 0;
 
 public:
         static constexpr bool is_always_lock_free = std::atomic<DataType>::is_always_lock_free;
 
         void set_terminate_quietly()
         {
-                m_terminate |= TERMINATE_QUIETLY;
+                terminate_ |= TERMINATE_QUIETLY;
         }
 
         void set_terminate_with_message()
         {
-                m_terminate |= TERMINATE_WITH_MESSAGE;
+                terminate_ |= TERMINATE_WITH_MESSAGE;
         }
 
         void check_terminate() const
         {
                 // Только одно обращение к атомарным данным и далее работа с копией этих данных
-                DataType terminate = m_terminate;
+                DataType terminate = terminate_;
 
                 if (terminate & TERMINATE_QUIETLY)
                 {
@@ -74,17 +74,17 @@ class ProgressRatio::Impl final : public ProgressRatioControl
         static constexpr unsigned MAX = (1u << 31) - 1;
 
         // К этим переменным имеются частые обращения, поэтому атомарные без мьютексов
-        AtomicCounter<unsigned long long> m_counter{0};
-        AtomicTerminate m_terminate;
+        AtomicCounter<unsigned long long> counter_{0};
+        AtomicTerminate terminate_;
 
         // Строка меняется редко в потоках, читается с частотой таймера интерфейса
         // в потоке интерфейса. Работа со строкой с её защитой мьютексом.
-        std::string m_text;
-        mutable std::mutex m_text_mutex;
+        std::string text_;
+        mutable std::mutex text_mutex_;
 
-        ProgressRatios* m_ratios;
+        ProgressRatios* ratios_;
 
-        const std::string m_permanent_text;
+        const std::string permanent_text_;
 
 public:
         static constexpr bool LOCK_FREE =
@@ -93,29 +93,29 @@ public:
         static_assert(LOCK_FREE);
 
         Impl(ProgressRatios* ratios, std::string permanent_text)
-                : m_ratios(ratios), m_permanent_text(std::move(permanent_text))
+                : ratios_(ratios), permanent_text_(std::move(permanent_text))
         {
                 set_undefined();
 
-                if (m_ratios)
+                if (ratios_)
                 {
-                        m_ratios->add_progress_ratio(this);
+                        ratios_->add_progress_ratio(this);
                 }
         }
 
         ~Impl() override
         {
-                if (m_ratios)
+                if (ratios_)
                 {
-                        m_ratios->delete_progress_ratio(this);
+                        ratios_->delete_progress_ratio(this);
                 }
         }
 
         void set(unsigned v, unsigned m)
         {
-                m_terminate.check_terminate();
+                terminate_.check_terminate();
 
-                m_counter = (static_cast<unsigned long long>(m & MAX) << SHIFT) | (v & MAX);
+                counter_ = (static_cast<unsigned long long>(m & MAX) << SHIFT) | (v & MAX);
         }
 
         void set(double v)
@@ -131,41 +131,41 @@ public:
 
         void set_text(const std::string& text)
         {
-                std::lock_guard lg(m_text_mutex);
-                m_text = text;
+                std::lock_guard lg(text_mutex_);
+                text_ = text;
         }
 
         void terminate_quietly() override
         {
-                m_terminate.set_terminate_quietly();
+                terminate_.set_terminate_quietly();
         }
 
         void terminate_with_message() override
         {
-                m_terminate.set_terminate_with_message();
+                terminate_.set_terminate_with_message();
         }
 
         void get(unsigned* v, unsigned* m) const override
         {
-                unsigned long long c = m_counter;
+                unsigned long long c = counter_;
                 *v = c & MAX;
                 *m = c >> SHIFT;
         }
 
         std::string text() const override
         {
-                std::lock_guard lg(m_text_mutex);
+                std::lock_guard lg(text_mutex_);
 
-                if (m_permanent_text.empty())
+                if (permanent_text_.empty())
                 {
-                        return m_text;
+                        return text_;
                 }
 
-                if (!m_text.empty())
+                if (!text_.empty())
                 {
-                        return m_permanent_text + ". " + m_text;
+                        return permanent_text_ + ". " + text_;
                 }
-                return m_permanent_text;
+                return permanent_text_;
         }
 
         Impl(const Impl&) = delete;
@@ -175,25 +175,25 @@ public:
 };
 
 ProgressRatio::ProgressRatio(ProgressRatios* ratios, const std::string& permanent_text)
-        : m_progress(std::make_unique<Impl>(ratios, permanent_text))
+        : progress_(std::make_unique<Impl>(ratios, permanent_text))
 {
 }
 ProgressRatio::~ProgressRatio() = default;
 void ProgressRatio::set(unsigned v, unsigned m)
 {
-        m_progress->set(v, m);
+        progress_->set(v, m);
 }
 void ProgressRatio::set(double v)
 {
-        m_progress->set(v);
+        progress_->set(v);
 }
 void ProgressRatio::set_undefined()
 {
-        m_progress->set_undefined();
+        progress_->set_undefined();
 }
 void ProgressRatio::set_text(const std::string& text)
 {
-        m_progress->set_text(text);
+        progress_->set_text(text);
 }
 bool ProgressRatio::lock_free()
 {

@@ -52,17 +52,17 @@ RGB8 event_color(application::LogEvent::Type type)
 template <typename D, typename S>
 class Switcher final
 {
-        std::atomic<D*>* const m_dst;
-        S* const m_src;
+        std::atomic<D*>* const dst_;
+        S* const src_;
 
 public:
-        Switcher(std::atomic<D*>* dst, S* src) : m_dst(dst), m_src(src)
+        Switcher(std::atomic<D*>* dst, S* src) : dst_(dst), src_(src)
         {
         }
         ~Switcher()
         {
-                m_src->clear();
-                *m_dst = m_src;
+                src_->clear();
+                *dst_ = src_;
         }
         Switcher(const Switcher&) = delete;
         Switcher(Switcher&&) = delete;
@@ -72,30 +72,30 @@ public:
 }
 
 Log::Log(QPlainTextEdit* text_edit)
-        : m_text_edit(text_edit),
-          m_messages_ptr(&m_messages[0]),
-          m_observer(
+        : text_edit_(text_edit),
+          messages_ptr_(&messages_[0]),
+          observer_(
                   [this](const application::LogEvent& event)
                   {
                           RGB8 color = event_color(event.type);
-                          if (!(*m_messages_ptr).empty() && (*m_messages_ptr).back().color == color)
+                          if (!(*messages_ptr_).empty() && (*messages_ptr_).back().color == color)
                           {
-                                  (*m_messages_ptr).back().text += '\n';
-                                  (*m_messages_ptr).back().text += event.text;
+                                  (*messages_ptr_).back().text += '\n';
+                                  (*messages_ptr_).back().text += event.text;
                                   return;
                           }
-                          (*m_messages_ptr).emplace_back(event.text, color);
+                          (*messages_ptr_).emplace_back(event.text, color);
                   })
 {
 }
 
 void Log::write()
 {
-        std::vector<Message>& log = m_messages[(m_messages_ptr == &m_messages[0]) ? 1 : 0];
-        Switcher switcher(&m_messages_ptr, &log);
+        std::vector<Message>& log = messages_[(messages_ptr_ == &messages_[0]) ? 1 : 0];
+        Switcher switcher(&messages_ptr_, &log);
         for (const Message& m : log)
         {
-                append_to_text_edit(m_text_edit, m.text, m.color);
+                append_to_text_edit(text_edit_, m.text, m.color);
         }
 }
 }

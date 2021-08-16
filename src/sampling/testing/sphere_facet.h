@@ -53,10 +53,10 @@ class SphereFacet final
         // N! / ((N - 2)! * 2!) = (N * (N - 1)) / 2
         static constexpr int EDGE_COUNT = (N * (N - 1)) / 2;
 
-        const std::vector<Vector<N, T>>& m_vertices;
-        const std::array<int, N> m_v;
-        Vector<N, T> m_normal;
-        geometry::HyperplaneSimplex<N, T> m_geometry;
+        const std::vector<Vector<N, T>>& vertices_;
+        const std::array<int, N> v_;
+        Vector<N, T> normal_;
+        geometry::HyperplaneSimplex<N, T> geometry_;
 
 public:
         static constexpr std::size_t SPACE_DIMENSION = N;
@@ -65,31 +65,31 @@ public:
         using DataType = T;
 
         SphereFacet(const std::vector<Vector<N, T>>& vertices, const std::array<int, N>& vertex_indices)
-                : m_vertices(vertices), m_v(vertex_indices)
+                : vertices_(vertices), v_(vertex_indices)
         {
-                m_normal = numerical::orthogonal_complement(m_vertices, m_v).normalized();
-                if (!is_finite(m_normal))
+                normal_ = numerical::orthogonal_complement(vertices_, v_).normalized();
+                if (!is_finite(normal_))
                 {
                         error("Facet normal is not finite, facet vertices\n"
-                              + to_string(vertices_to_array(m_vertices, m_v)));
+                              + to_string(vertices_to_array(vertices_, v_)));
                 }
 
-                m_geometry.set_data(m_normal, vertices_to_array(m_vertices, m_v));
+                geometry_.set_data(normal_, vertices_to_array(vertices_, v_));
         }
 
         std::optional<T> intersect(const Ray<N, T>& r) const
         {
-                return m_geometry.intersect(r, m_vertices[m_v[0]], m_normal);
+                return geometry_.intersect(r, vertices_[v_[0]], normal_);
         }
 
         std::array<Vector<N, T>, N> vertices() const
         {
-                return vertices_to_array(m_vertices, m_v);
+                return vertices_to_array(vertices_, v_);
         }
 
         geometry::Constraints<N, T, N, 1> constraints() const
         {
-                return m_geometry.constraints(m_normal, vertices_to_array(m_vertices, m_v));
+                return geometry_.constraints(normal_, vertices_to_array(vertices_, v_));
         }
 
         std::array<std::array<Vector<N, T>, 2>, EDGE_COUNT> edges() const
@@ -102,7 +102,7 @@ public:
                 {
                         for (unsigned j = i + 1; j < N; ++j)
                         {
-                                result[n++] = {m_vertices[m_v[i]], m_vertices[m_v[j]] - m_vertices[m_v[i]]};
+                                result[n++] = {vertices_[v_[i]], vertices_[v_[j]] - vertices_[v_[i]]};
                         }
                 }
                 ASSERT(n == EDGE_COUNT);

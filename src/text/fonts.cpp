@@ -46,7 +46,7 @@ const Fonts& Fonts::instance()
 
 Fonts::Fonts()
 {
-        m_fonts.emplace(
+        fonts_.emplace(
                 "DejaVuSans",
                 []()
                 {
@@ -59,13 +59,13 @@ Fonts::Fonts()
 
 std::vector<std::string> Fonts::names() const
 {
-        return names_of_map(m_fonts);
+        return names_of_map(fonts_);
 }
 
 std::vector<unsigned char> Fonts::data(const std::string& name) const
 {
-        auto iter = m_fonts.find(name);
-        if (iter != m_fonts.cend())
+        auto iter = fonts_.find(name);
+        if (iter != fonts_.cend())
         {
                 return iter->second();
         }

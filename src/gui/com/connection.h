@@ -24,7 +24,7 @@ namespace ns::gui
 {
 class Connection final
 {
-        std::optional<QMetaObject::Connection> m_connection;
+        std::optional<QMetaObject::Connection> connection_;
 
         void destroy() noexcept;
         void move(Connection* from) noexcept;

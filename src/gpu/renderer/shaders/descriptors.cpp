@@ -25,27 +25,27 @@ CommonConstants::CommonConstants()
         entry.constantID = 0;
         entry.offset = offsetof(Data, transparency_drawing);
         entry.size = sizeof(Data::transparency_drawing);
-        m_entries.push_back(entry);
+        entries_.push_back(entry);
 }
 
 void CommonConstants::set(bool transparency_drawing)
 {
-        m_data.transparency_drawing = transparency_drawing ? 1 : 0;
+        data_.transparency_drawing = transparency_drawing ? 1 : 0;
 }
 
 const std::vector<VkSpecializationMapEntry>& CommonConstants::entries() const
 {
-        return m_entries;
+        return entries_;
 }
 
 const void* CommonConstants::data() const
 {
-        return &m_data;
+        return &data_;
 }
 
 std::size_t CommonConstants::size() const
 {
-        return sizeof(m_data);
+        return sizeof(data_);
 }
 
 //
@@ -153,7 +153,7 @@ CommonMemory::CommonMemory(
         const std::vector<VkDescriptorSetLayoutBinding>& descriptor_set_layout_bindings,
         const vulkan::Buffer& matrices,
         const vulkan::Buffer& drawing)
-        : m_descriptors(device, 1, descriptor_set_layout, descriptor_set_layout_bindings)
+        : descriptors_(device, 1, descriptor_set_layout, descriptor_set_layout_bindings)
 {
         std::vector<std::variant<VkDescriptorBufferInfo, VkDescriptorImageInfo>> infos;
         std::vector<uint32_t> bindings;
@@ -179,7 +179,7 @@ CommonMemory::CommonMemory(
                 bindings.push_back(DRAWING_BINDING);
         }
 
-        m_descriptors.update_descriptor_set(0, bindings, infos);
+        descriptors_.update_descriptor_set(0, bindings, infos);
 }
 
 unsigned CommonMemory::set_number()
@@ -189,7 +189,7 @@ unsigned CommonMemory::set_number()
 
 const VkDescriptorSet& CommonMemory::descriptor_set() const
 {
-        return m_descriptors.descriptor_set(0);
+        return descriptors_.descriptor_set(0);
 }
 
 void CommonMemory::set_shadow_texture(VkSampler sampler, const vulkan::DepthImageWithMemory* shadow_texture) const
@@ -202,7 +202,7 @@ void CommonMemory::set_shadow_texture(VkSampler sampler, const vulkan::DepthImag
         image_info.imageView = shadow_texture->image_view();
         image_info.sampler = sampler;
 
-        m_descriptors.update_descriptor_set(0, SHADOW_BINDING, image_info);
+        descriptors_.update_descriptor_set(0, SHADOW_BINDING, image_info);
 }
 
 void CommonMemory::set_objects_image(const vulkan::ImageWithMemory& objects) const
@@ -214,7 +214,7 @@ void CommonMemory::set_objects_image(const vulkan::ImageWithMemory& objects) con
         image_info.imageLayout = VK_IMAGE_LAYOUT_GENERAL;
         image_info.imageView = objects.image_view();
 
-        m_descriptors.update_descriptor_set(0, OBJECTS_BINDING, image_info);
+        descriptors_.update_descriptor_set(0, OBJECTS_BINDING, image_info);
 }
 
 void CommonMemory::set_transparency(
@@ -270,7 +270,7 @@ void CommonMemory::set_transparency(
                 bindings.push_back(TRANSPARENCY_NODES_BINDING);
         }
 
-        m_descriptors.update_descriptor_set(0, bindings, infos);
+        descriptors_.update_descriptor_set(0, bindings, infos);
 }
 
 //

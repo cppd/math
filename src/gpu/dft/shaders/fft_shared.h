@@ -33,7 +33,7 @@ class FftSharedMemory final
 
         static constexpr int BUFFER_BINDING = 0;
 
-        vulkan::Descriptors m_descriptors;
+        vulkan::Descriptors descriptors_;
 
 public:
         static std::vector<VkDescriptorSetLayoutBinding> descriptor_set_layout_bindings();
@@ -69,9 +69,9 @@ class FftSharedConstant final : public vulkan::SpecializationConstant
                 uint32_t shared_size;
                 uint32_t reverse_input;
                 uint32_t group_size;
-        } m_data;
+        } data_;
 
-        std::vector<VkSpecializationMapEntry> m_entries;
+        std::vector<VkSpecializationMapEntry> entries_;
 
         const std::vector<VkSpecializationMapEntry>& entries() const override;
         const void* data() const override;
@@ -93,14 +93,14 @@ public:
 
 class FftSharedProgram final
 {
-        const vulkan::Device& m_device;
+        const vulkan::Device& device_;
 
-        vulkan::DescriptorSetLayout m_descriptor_set_layout;
-        vulkan::PipelineLayout m_pipeline_layout;
-        FftSharedConstant m_constant;
-        vulkan::ComputeShader m_shader;
-        vulkan::Pipeline m_pipeline_forward;
-        vulkan::Pipeline m_pipeline_inverse;
+        vulkan::DescriptorSetLayout descriptor_set_layout_;
+        vulkan::PipelineLayout pipeline_layout_;
+        FftSharedConstant constant_;
+        vulkan::ComputeShader shader_;
+        vulkan::Pipeline pipeline_forward_;
+        vulkan::Pipeline pipeline_inverse_;
 
 public:
         explicit FftSharedProgram(const vulkan::Device& device);

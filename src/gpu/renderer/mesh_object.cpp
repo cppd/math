@@ -109,21 +109,21 @@ public:
 
 class MapVertex
 {
-        const Face::VertexWithHash* m_data;
+        const Face::VertexWithHash* data_;
 
 public:
-        explicit MapVertex(const Face::VertexWithHash* v) noexcept : m_data(v)
+        explicit MapVertex(const Face::VertexWithHash* v) noexcept : data_(v)
         {
         }
 
         std::size_t hash() const noexcept
         {
-                return m_data->hash;
+                return data_->hash;
         }
 
         bool operator==(const MapVertex& v) const noexcept
         {
-                return m_data->v.p == v.m_data->v.p && m_data->v.n == v.m_data->v.n && m_data->v.t == v.m_data->v.t;
+                return data_->v.p == v.data_->v.p && data_->v.n == v.data_->v.n && data_->v.t == v.data_->v.t;
         }
 
         struct Hash
@@ -482,42 +482,42 @@ std::vector<TrianglesMaterialMemory::MaterialInfo> materials_info(
 
 class Impl final : public MeshObject
 {
-        const vulkan::Device& m_device;
-        const std::vector<uint32_t> m_family_indices;
-        const vulkan::CommandPool& m_transfer_command_pool;
-        const vulkan::Queue& m_transfer_queue;
+        const vulkan::Device& device_;
+        const std::vector<uint32_t> family_indices_;
+        const vulkan::CommandPool& transfer_command_pool_;
+        const vulkan::Queue& transfer_queue_;
 
-        MeshBuffer m_mesh_buffer;
-        std::unordered_map<VkDescriptorSetLayout, vulkan::Descriptors> m_mesh_descriptor_sets;
-        const std::vector<vulkan::DescriptorSetLayoutAndBindings> m_mesh_layouts;
+        MeshBuffer mesh_buffer_;
+        std::unordered_map<VkDescriptorSetLayout, vulkan::Descriptors> mesh_descriptor_sets_;
+        const std::vector<vulkan::DescriptorSetLayoutAndBindings> mesh_layouts_;
 
         struct MaterialVertices
         {
                 int offset;
                 int count;
         };
-        std::vector<MaterialVertices> m_material_vertices;
+        std::vector<MaterialVertices> material_vertices_;
 
-        std::unique_ptr<vulkan::BufferWithMemory> m_faces_vertex_buffer;
-        std::unique_ptr<vulkan::BufferWithMemory> m_faces_index_buffer;
-        unsigned m_faces_vertex_count = 0;
-        unsigned m_faces_index_count = 0;
+        std::unique_ptr<vulkan::BufferWithMemory> faces_vertex_buffer_;
+        std::unique_ptr<vulkan::BufferWithMemory> faces_index_buffer_;
+        unsigned faces_vertex_count_ = 0;
+        unsigned faces_index_count_ = 0;
 
-        std::vector<vulkan::ImageWithMemory> m_textures;
-        std::vector<MaterialBuffer> m_material_buffers;
-        std::unordered_map<VkDescriptorSetLayout, vulkan::Descriptors> m_material_descriptor_sets;
-        const std::vector<vulkan::DescriptorSetLayoutAndBindings> m_material_layouts;
-        VkSampler m_texture_sampler;
+        std::vector<vulkan::ImageWithMemory> textures_;
+        std::vector<MaterialBuffer> material_buffers_;
+        std::unordered_map<VkDescriptorSetLayout, vulkan::Descriptors> material_descriptor_sets_;
+        const std::vector<vulkan::DescriptorSetLayoutAndBindings> material_layouts_;
+        VkSampler texture_sampler_;
 
-        std::unique_ptr<vulkan::BufferWithMemory> m_lines_vertex_buffer;
-        unsigned m_lines_vertex_count = 0;
+        std::unique_ptr<vulkan::BufferWithMemory> lines_vertex_buffer_;
+        unsigned lines_vertex_count_ = 0;
 
-        std::unique_ptr<vulkan::BufferWithMemory> m_points_vertex_buffer;
-        unsigned m_points_vertex_count = 0;
+        std::unique_ptr<vulkan::BufferWithMemory> points_vertex_buffer_;
+        unsigned points_vertex_count_ = 0;
 
-        bool m_transparent = false;
+        bool transparent_ = false;
 
-        std::optional<int> m_version;
+        std::optional<int> version_;
 
         const mesh::Update::Flags UPDATE_LIGHTING = []()
         {
@@ -532,42 +532,42 @@ class Impl final : public MeshObject
         {
                 std::tie(ambient, metalness, roughness) = clean_shading_parameters(ambient, metalness, roughness);
 
-                m_mesh_buffer.set_lighting(ambient, metalness, roughness);
+                mesh_buffer_.set_lighting(ambient, metalness, roughness);
         }
 
         void buffer_set_color(const color::Color& color)
         {
-                m_mesh_buffer.set_color(color.rgb32().clamp(0, 1));
+                mesh_buffer_.set_color(color.rgb32().clamp(0, 1));
         }
 
         void buffer_set_alpha(float alpha)
         {
                 alpha = std::clamp(alpha, 0.0f, 1.0f);
-                m_mesh_buffer.set_alpha(alpha);
+                mesh_buffer_.set_alpha(alpha);
         }
 
         void buffer_set_coordinates(const mat4d& model_matrix)
         {
-                m_mesh_buffer.set_coordinates(model_matrix, model_matrix.top_left<3, 3>().inverse().transpose());
+                mesh_buffer_.set_coordinates(model_matrix, model_matrix.top_left<3, 3>().inverse().transpose());
         }
 
         void create_mesh_descriptor_sets()
         {
-                m_mesh_descriptor_sets.clear();
-                for (const vulkan::DescriptorSetLayoutAndBindings& layout : m_mesh_layouts)
+                mesh_descriptor_sets_.clear();
+                for (const vulkan::DescriptorSetLayoutAndBindings& layout : mesh_layouts_)
                 {
                         vulkan::Descriptors sets = MeshMemory::create(
-                                m_device, layout.descriptor_set_layout, layout.descriptor_set_layout_bindings,
-                                {&m_mesh_buffer.buffer()});
+                                device_, layout.descriptor_set_layout, layout.descriptor_set_layout_bindings,
+                                {&mesh_buffer_.buffer()});
                         ASSERT(sets.descriptor_set_count() == 1);
-                        m_mesh_descriptor_sets.emplace(sets.descriptor_set_layout(), std::move(sets));
+                        mesh_descriptor_sets_.emplace(sets.descriptor_set_layout(), std::move(sets));
                 }
         }
 
         VkDescriptorSet find_mesh_descriptor_set(VkDescriptorSetLayout mesh_descriptor_set_layout) const
         {
-                auto iter = m_mesh_descriptor_sets.find(mesh_descriptor_set_layout);
-                if (iter == m_mesh_descriptor_sets.cend())
+                auto iter = mesh_descriptor_sets_.find(mesh_descriptor_set_layout);
+                if (iter == mesh_descriptor_sets_.cend())
                 {
                         error("Failed to find mesh descriptor sets for mesh descriptor set layout");
                 }
@@ -577,31 +577,31 @@ class Impl final : public MeshObject
 
         void create_material_descriptor_sets(const std::vector<TrianglesMaterialMemory::MaterialInfo>& material_info)
         {
-                m_material_descriptor_sets.clear();
+                material_descriptor_sets_.clear();
                 if (material_info.empty())
                 {
                         return;
                 }
-                for (const vulkan::DescriptorSetLayoutAndBindings& layout : m_material_layouts)
+                for (const vulkan::DescriptorSetLayoutAndBindings& layout : material_layouts_)
                 {
                         vulkan::Descriptors sets = TrianglesMaterialMemory::create(
-                                m_device, m_texture_sampler, layout.descriptor_set_layout,
+                                device_, texture_sampler_, layout.descriptor_set_layout,
                                 layout.descriptor_set_layout_bindings, material_info);
                         ASSERT(sets.descriptor_set_count() == material_info.size());
-                        m_material_descriptor_sets.emplace(sets.descriptor_set_layout(), std::move(sets));
+                        material_descriptor_sets_.emplace(sets.descriptor_set_layout(), std::move(sets));
                 }
         }
 
         const vulkan::Descriptors& find_material_descriptor_sets(
                 VkDescriptorSetLayout material_descriptor_set_layout) const
         {
-                auto iter = m_material_descriptor_sets.find(material_descriptor_set_layout);
-                if (iter == m_material_descriptor_sets.cend())
+                auto iter = material_descriptor_sets_.find(material_descriptor_set_layout);
+                if (iter == material_descriptor_sets_.cend())
                 {
                         error("Failed to find material descriptor sets for material descriptor set layout");
                 }
 
-                ASSERT(iter->second.descriptor_set_count() == m_material_vertices.size());
+                ASSERT(iter->second.descriptor_set_count() == material_vertices_.size());
 
                 return iter->second;
         }
@@ -612,18 +612,18 @@ class Impl final : public MeshObject
         {
                 if (mesh.facets.empty())
                 {
-                        m_textures.clear();
-                        m_material_buffers.clear();
+                        textures_.clear();
+                        material_buffers_.clear();
                         create_material_descriptor_sets({});
                         return;
                 }
 
-                m_textures = load_textures(m_device, m_transfer_command_pool, m_transfer_queue, m_family_indices, mesh);
+                textures_ = load_textures(device_, transfer_command_pool_, transfer_queue_, family_indices_, mesh);
 
-                m_material_buffers =
-                        load_materials(m_device, m_transfer_command_pool, m_transfer_queue, m_family_indices, mesh);
+                material_buffers_ =
+                        load_materials(device_, transfer_command_pool_, transfer_queue_, family_indices_, mesh);
 
-                create_material_descriptor_sets(materials_info(mesh, m_textures, m_material_buffers));
+                create_material_descriptor_sets(materials_info(mesh, textures_, material_buffers_));
         }
 
         void load_mesh_vertices(const mesh::Mesh<3>& mesh)
@@ -638,37 +638,37 @@ class Impl final : public MeshObject
 
                         ASSERT(material_face_offset.size() == material_face_count.size());
                         ASSERT(std::all_of(
-                                m_material_descriptor_sets.cbegin(), m_material_descriptor_sets.cend(),
+                                material_descriptor_sets_.cbegin(), material_descriptor_sets_.cend(),
                                 [&](const auto& v)
                                 {
                                         return material_face_offset.size() == v.second.descriptor_set_count();
                                 }));
 
-                        m_material_vertices.resize(material_face_count.size());
+                        material_vertices_.resize(material_face_count.size());
                         for (unsigned i = 0; i < material_face_count.size(); ++i)
                         {
-                                m_material_vertices[i].offset = 3 * material_face_offset[i];
-                                m_material_vertices[i].count = 3 * material_face_count[i];
+                                material_vertices_[i].offset = 3 * material_face_offset[i];
+                                material_vertices_[i].count = 3 * material_face_count[i];
                         }
 
                         load_vertices(
-                                m_device, m_transfer_command_pool, m_transfer_queue, m_family_indices, mesh,
-                                sorted_face_indices, &m_faces_vertex_buffer, &m_faces_index_buffer,
-                                &m_faces_vertex_count, &m_faces_index_count);
+                                device_, transfer_command_pool_, transfer_queue_, family_indices_, mesh,
+                                sorted_face_indices, &faces_vertex_buffer_, &faces_index_buffer_, &faces_vertex_count_,
+                                &faces_index_count_);
 
-                        ASSERT(m_faces_index_count == 3 * mesh.facets.size());
+                        ASSERT(faces_index_count_ == 3 * mesh.facets.size());
                 }
 
                 {
-                        m_lines_vertex_buffer = load_line_vertices(
-                                m_device, m_transfer_command_pool, m_transfer_queue, m_family_indices, mesh);
-                        m_lines_vertex_count = 2 * mesh.lines.size();
+                        lines_vertex_buffer_ = load_line_vertices(
+                                device_, transfer_command_pool_, transfer_queue_, family_indices_, mesh);
+                        lines_vertex_count_ = 2 * mesh.lines.size();
                 }
 
                 {
-                        m_points_vertex_buffer = load_point_vertices(
-                                m_device, m_transfer_command_pool, m_transfer_queue, m_family_indices, mesh);
-                        m_points_vertex_count = mesh.points.size();
+                        points_vertex_buffer_ = load_point_vertices(
+                                device_, transfer_command_pool_, transfer_queue_, family_indices_, mesh);
+                        points_vertex_count_ = mesh.points.size();
                 }
         }
 
@@ -676,7 +676,7 @@ class Impl final : public MeshObject
 
         bool transparent() const override
         {
-                return m_transparent;
+                return transparent_;
         }
 
         void commands_triangles(
@@ -686,7 +686,7 @@ class Impl final : public MeshObject
                 VkDescriptorSetLayout material_descriptor_set_layout,
                 const std::function<void(VkDescriptorSet descriptor_set)>& bind_material_descriptor_set) const override
         {
-                if (m_faces_vertex_count == 0)
+                if (faces_vertex_count_ == 0)
                 {
                         return;
                 }
@@ -696,15 +696,15 @@ class Impl final : public MeshObject
                 const vulkan::Descriptors& descriptor_sets =
                         find_material_descriptor_sets(material_descriptor_set_layout);
 
-                const std::array<VkBuffer, 1> buffers{*m_faces_vertex_buffer};
+                const std::array<VkBuffer, 1> buffers{*faces_vertex_buffer_};
                 const std::array<VkDeviceSize, 1> offsets{0};
 
                 vkCmdBindVertexBuffers(command_buffer, 0, buffers.size(), buffers.data(), offsets.data());
-                vkCmdBindIndexBuffer(command_buffer, *m_faces_index_buffer, 0, VULKAN_INDEX_TYPE);
+                vkCmdBindIndexBuffer(command_buffer, *faces_index_buffer_, 0, VULKAN_INDEX_TYPE);
 
-                for (unsigned i = 0; i < m_material_vertices.size(); ++i)
+                for (unsigned i = 0; i < material_vertices_.size(); ++i)
                 {
-                        if (m_material_vertices[i].count <= 0)
+                        if (material_vertices_[i].count <= 0)
                         {
                                 continue;
                         }
@@ -712,7 +712,7 @@ class Impl final : public MeshObject
                         bind_material_descriptor_set(descriptor_sets.descriptor_set(i));
 
                         vkCmdDrawIndexed(
-                                command_buffer, m_material_vertices[i].count, 1, m_material_vertices[i].offset, 0, 0);
+                                command_buffer, material_vertices_[i].count, 1, material_vertices_[i].offset, 0, 0);
                 }
         }
 
@@ -721,20 +721,20 @@ class Impl final : public MeshObject
                 VkDescriptorSetLayout mesh_descriptor_set_layout,
                 const std::function<void(VkDescriptorSet descriptor_set)>& bind_mesh_descriptor_set) const override
         {
-                if (m_faces_vertex_count == 0)
+                if (faces_vertex_count_ == 0)
                 {
                         return;
                 }
 
                 bind_mesh_descriptor_set(find_mesh_descriptor_set(mesh_descriptor_set_layout));
 
-                const std::array<VkBuffer, 1> buffers{*m_faces_vertex_buffer};
+                const std::array<VkBuffer, 1> buffers{*faces_vertex_buffer_};
                 const std::array<VkDeviceSize, 1> offsets{0};
 
                 vkCmdBindVertexBuffers(command_buffer, 0, buffers.size(), buffers.data(), offsets.data());
-                vkCmdBindIndexBuffer(command_buffer, *m_faces_index_buffer, 0, VULKAN_INDEX_TYPE);
+                vkCmdBindIndexBuffer(command_buffer, *faces_index_buffer_, 0, VULKAN_INDEX_TYPE);
 
-                vkCmdDrawIndexed(command_buffer, m_faces_index_count, 1, 0, 0, 0);
+                vkCmdDrawIndexed(command_buffer, faces_index_count_, 1, 0, 0, 0);
         }
 
         void commands_triangle_vertices(
@@ -742,19 +742,19 @@ class Impl final : public MeshObject
                 VkDescriptorSetLayout mesh_descriptor_set_layout,
                 const std::function<void(VkDescriptorSet descriptor_set)>& bind_mesh_descriptor_set) const override
         {
-                if (m_faces_vertex_count == 0)
+                if (faces_vertex_count_ == 0)
                 {
                         return;
                 }
 
                 bind_mesh_descriptor_set(find_mesh_descriptor_set(mesh_descriptor_set_layout));
 
-                const std::array<VkBuffer, 1> buffers{*m_faces_vertex_buffer};
+                const std::array<VkBuffer, 1> buffers{*faces_vertex_buffer_};
                 const std::array<VkDeviceSize, 1> offsets{0};
 
                 vkCmdBindVertexBuffers(command_buffer, 0, buffers.size(), buffers.data(), offsets.data());
 
-                vkCmdDraw(command_buffer, m_faces_vertex_count, 1, 0, 0);
+                vkCmdDraw(command_buffer, faces_vertex_count_, 1, 0, 0);
         }
 
         void commands_lines(
@@ -762,19 +762,19 @@ class Impl final : public MeshObject
                 VkDescriptorSetLayout mesh_descriptor_set_layout,
                 const std::function<void(VkDescriptorSet descriptor_set)>& bind_mesh_descriptor_set) const override
         {
-                if (m_lines_vertex_count == 0)
+                if (lines_vertex_count_ == 0)
                 {
                         return;
                 }
 
                 bind_mesh_descriptor_set(find_mesh_descriptor_set(mesh_descriptor_set_layout));
 
-                const std::array<VkBuffer, 1> buffers{*m_lines_vertex_buffer};
+                const std::array<VkBuffer, 1> buffers{*lines_vertex_buffer_};
                 const std::array<VkDeviceSize, 1> offsets{0};
 
                 vkCmdBindVertexBuffers(command_buffer, 0, buffers.size(), buffers.data(), offsets.data());
 
-                vkCmdDraw(command_buffer, m_lines_vertex_count, 1, 0, 0);
+                vkCmdDraw(command_buffer, lines_vertex_count_, 1, 0, 0);
         }
 
         void commands_points(
@@ -782,19 +782,19 @@ class Impl final : public MeshObject
                 VkDescriptorSetLayout mesh_descriptor_set_layout,
                 const std::function<void(VkDescriptorSet descriptor_set)>& bind_mesh_descriptor_set) const override
         {
-                if (m_points_vertex_count == 0)
+                if (points_vertex_count_ == 0)
                 {
                         return;
                 }
 
                 bind_mesh_descriptor_set(find_mesh_descriptor_set(mesh_descriptor_set_layout));
 
-                const std::array<VkBuffer, 1> buffers{*m_points_vertex_buffer};
+                const std::array<VkBuffer, 1> buffers{*points_vertex_buffer_};
                 const std::array<VkDeviceSize, 1> offsets{0};
 
                 vkCmdBindVertexBuffers(command_buffer, 0, buffers.size(), buffers.data(), offsets.data());
 
-                vkCmdDraw(command_buffer, m_points_vertex_count, 1, 0, 0);
+                vkCmdDraw(command_buffer, points_vertex_count_, 1, 0, 0);
         }
 
         UpdateChanges update(const mesh::Reading<3>& mesh_object) override
@@ -802,7 +802,7 @@ class Impl final : public MeshObject
                 UpdateChanges update_changes;
 
                 mesh::Update::Flags updates;
-                mesh_object.updates(&m_version, &updates);
+                mesh_object.updates(&version_, &updates);
                 if (updates.none())
                 {
                         return update_changes;
@@ -829,9 +829,9 @@ class Impl final : public MeshObject
                         buffer_set_alpha(mesh_object.alpha());
 
                         bool transparent = mesh_object.alpha() < 1;
-                        if (m_transparent != transparent)
+                        if (transparent_ != transparent)
                         {
-                                m_transparent = transparent;
+                                transparent_ = transparent;
                                 update_changes.transparency = true;
                         }
                 }
@@ -867,15 +867,15 @@ public:
              std::vector<vulkan::DescriptorSetLayoutAndBindings> mesh_layouts,
              std::vector<vulkan::DescriptorSetLayoutAndBindings> material_layouts,
              VkSampler texture_sampler)
-                : m_device(device),
-                  m_family_indices(sort_and_unique(
+                : device_(device),
+                  family_indices_(sort_and_unique(
                           merge<std::vector<uint32_t>>(graphics_family_indices, transfer_queue.family_index()))),
-                  m_transfer_command_pool(transfer_command_pool),
-                  m_transfer_queue(transfer_queue),
-                  m_mesh_buffer(device, graphics_family_indices),
-                  m_mesh_layouts(std::move(mesh_layouts)),
-                  m_material_layouts(std::move(material_layouts)),
-                  m_texture_sampler(texture_sampler)
+                  transfer_command_pool_(transfer_command_pool),
+                  transfer_queue_(transfer_queue),
+                  mesh_buffer_(device, graphics_family_indices),
+                  mesh_layouts_(std::move(mesh_layouts)),
+                  material_layouts_(std::move(material_layouts)),
+                  texture_sampler_(texture_sampler)
         {
                 ASSERT(transfer_command_pool.family_index() == transfer_queue.family_index());
 

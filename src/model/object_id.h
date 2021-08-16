@@ -26,7 +26,7 @@ class ObjectId final
 {
         using Type = std::uint_least32_t;
 
-        Type m_id;
+        Type id_;
 
 public:
         using T = Type;
@@ -35,12 +35,12 @@ public:
 
         bool operator==(const ObjectId& id) const noexcept
         {
-                return m_id == id.m_id;
+                return id_ == id.id_;
         }
 
         std::size_t hash() const noexcept
         {
-                return std::hash<Type>()(m_id);
+                return std::hash<Type>()(id_);
         }
 };
 }

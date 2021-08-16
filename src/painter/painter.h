@@ -37,9 +37,9 @@ class Images final
         template <std::size_t>
         friend class ImagesWriting;
 
-        mutable std::shared_mutex m_mutex;
-        image::Image<N> m_image_with_background;
-        image::Image<N> m_image_without_background;
+        mutable std::shared_mutex mutex_;
+        image::Image<N> image_with_background_;
+        image::Image<N> image_without_background_;
 
 public:
         Images() = default;
@@ -53,42 +53,42 @@ public:
 template <std::size_t N>
 class ImagesWriting final
 {
-        Images<N>* m_images;
-        std::unique_lock<std::shared_mutex> m_lock;
+        Images<N>* images_;
+        std::unique_lock<std::shared_mutex> lock_;
 
 public:
-        explicit ImagesWriting(Images<N>* images) : m_images(images), m_lock(m_images->m_mutex)
+        explicit ImagesWriting(Images<N>* images) : images_(images), lock_(images_->mutex_)
         {
         }
 
         image::Image<N>& image_with_background() const
         {
-                return m_images->m_image_with_background;
+                return images_->image_with_background_;
         }
         image::Image<N>& image_without_background() const
         {
-                return m_images->m_image_without_background;
+                return images_->image_without_background_;
         }
 };
 
 template <std::size_t N>
 class ImagesReading final
 {
-        const Images<N>* m_images;
-        std::shared_lock<std::shared_mutex> m_lock;
+        const Images<N>* images_;
+        std::shared_lock<std::shared_mutex> lock_;
 
 public:
-        explicit ImagesReading(const Images<N>* images) : m_images(images), m_lock(m_images->m_mutex)
+        explicit ImagesReading(const Images<N>* images) : images_(images), lock_(images_->mutex_)
         {
         }
 
         const image::Image<N>& image_with_background() const
         {
-                return m_images->m_image_with_background;
+                return images_->image_with_background_;
         }
         const image::Image<N>& image_without_background() const
         {
-                return m_images->m_image_without_background;
+                return images_->image_without_background_;
         }
 };
 

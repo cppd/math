@@ -88,9 +88,9 @@ void sort_facets_by_material(
                 std::cbegin(*sorted_facet_indices), std::cend(*sorted_facet_indices),
                 [&](int a, int b)
                 {
-                        int m_a = material_index(mesh.facets[a].material);
-                        int m_b = material_index(mesh.facets[b].material);
-                        return m_a < m_b;
+                        int a_ = material_index(mesh.facets[a].material);
+                        int b_ = material_index(mesh.facets[b].material);
+                        return a_ < b_;
                 }));
 }
 }

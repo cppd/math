@@ -28,22 +28,22 @@ namespace ns::view
 {
 class Camera final
 {
-        mutable SpinLock m_lock;
+        mutable SpinLock lock_;
 
-        vec3d m_camera_right{0};
-        vec3d m_camera_up{0};
-        vec3d m_camera_direction_from{0};
+        vec3d camera_right_{0};
+        vec3d camera_up_{0};
+        vec3d camera_direction_from_{0};
 
-        vec3d m_light_up{0};
-        vec3d m_light_direction_from{0};
+        vec3d light_up_{0};
+        vec3d light_direction_from_{0};
 
-        vec2d m_window_center{0};
+        vec2d window_center_{0};
 
-        int m_width = -1;
-        int m_height = -1;
+        int width_ = -1;
+        int height_ = -1;
 
-        double m_scale_exponent{0};
-        double m_default_scale{1};
+        double scale_exponent_{0};
+        double default_scale_{1};
 
         void set_vectors(const vec3d& right, const vec3d& up);
 

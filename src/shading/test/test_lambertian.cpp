@@ -38,7 +38,7 @@ using RandomEngine = std::conditional_t<sizeof(T) <= 4, std::mt19937, std::mt199
 template <std::size_t N, typename T, typename Color>
 class BRDF final : public TestBRDF<N, T, Color, RandomEngine<T>>
 {
-        const Color m_color = random_non_black_color<Color>();
+        const Color color_ = random_non_black_color<Color>();
 
         Color f(const Vector<N, T>& n, const Vector<N, T>& v, const Vector<N, T>& l) const override
         {
@@ -46,7 +46,7 @@ class BRDF final : public TestBRDF<N, T, Color, RandomEngine<T>>
                 {
                         return Color(0);
                 }
-                return lambertian::f(m_color, n, l);
+                return lambertian::f(color_, n, l);
         }
 
         Sample<N, T, Color> sample_f(RandomEngine<T>& random_engine, const Vector<N, T>& n, const Vector<N, T>& v)
@@ -56,13 +56,13 @@ class BRDF final : public TestBRDF<N, T, Color, RandomEngine<T>>
                 {
                         return {Vector<N, T>(0), 0, Color(0)};
                 }
-                return lambertian::sample_f(random_engine, m_color, n);
+                return lambertian::sample_f(random_engine, color_, n);
         }
 
 public:
         const Color& color() const
         {
-                return m_color;
+                return color_;
         }
 };
 

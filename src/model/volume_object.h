@@ -79,17 +79,17 @@ struct VolumeEvent final
 
         template <typename Type>
         VolumeEvent(Type&& arg) requires(!std::is_same_v<VolumeEvent, std::remove_cvref_t<Type>>)
-                : m_data(std::forward<Type>(arg))
+                : data_(std::forward<Type>(arg))
         {
         }
 
         const T& data() const
         {
-                return m_data;
+                return data_;
         }
 
 private:
-        T m_data;
+        T data_;
 };
 
 namespace Update
@@ -122,41 +122,41 @@ class VolumeObject final : public std::enable_shared_from_this<VolumeObject<N>>
 
         //
 
-        inline static const std::function<void(VolumeEvent<N>&&)>* m_events = nullptr;
+        inline static const std::function<void(VolumeEvent<N>&&)>* events_ = nullptr;
 
         //
 
-        std::unique_ptr<const Volume<N>> m_volume;
-        Matrix<N + 1, N + 1, double> m_matrix;
-        std::string m_name;
-        ObjectId m_id;
+        std::unique_ptr<const Volume<N>> volume_;
+        Matrix<N + 1, N + 1, double> matrix_;
+        std::string name_;
+        ObjectId id_;
 
-        float m_level_min = 0;
-        float m_level_max = 1;
+        float level_min_ = 0;
+        float level_max_ = 1;
 
-        float m_volume_alpha_coefficient = 1;
-        float m_isosurface_alpha = 1;
+        float volume_alpha_coefficient_ = 1;
+        float isosurface_alpha_ = 1;
 
-        bool m_isosurface = false;
-        float m_isovalue = 0.5f;
+        bool isosurface_ = false;
+        float isovalue_ = 0.5f;
 
-        color::Color m_color = RGB8(220, 255, 220);
-        float m_ambient = 0.2;
-        float m_metalness = 0.05;
-        float m_roughness = 0.3;
+        color::Color color_ = RGB8(220, 255, 220);
+        float ambient_ = 0.2;
+        float metalness_ = 0.05;
+        float roughness_ = 0.3;
 
-        bool m_visible = false;
-        bool m_inserted = false;
+        bool visible_ = false;
+        bool inserted_ = false;
 
-        mutable std::shared_mutex m_mutex;
+        mutable std::shared_mutex mutex_;
 
-        Versions<Update::Flags().size()> m_versions;
+        Versions<Update::Flags().size()> versions_;
 
         void send_event(VolumeEvent<N>&& event) noexcept
         {
                 try
                 {
-                        (*m_events)(std::move(event));
+                        (*events_)(std::move(event));
                 }
                 catch (const std::exception& e)
                 {
@@ -172,125 +172,125 @@ class VolumeObject final : public std::enable_shared_from_this<VolumeObject<N>>
 
         const Volume<N>& volume() const
         {
-                return *m_volume;
+                return *volume_;
         }
 
         const Matrix<N + 1, N + 1, double>& matrix() const
         {
-                return m_matrix;
+                return matrix_;
         }
 
         void set_matrix(const Matrix<N + 1, N + 1, double>& matrix)
         {
-                m_matrix = matrix;
+                matrix_ = matrix;
         }
 
         float level_min() const
         {
-                return m_level_min;
+                return level_min_;
         }
 
         float level_max() const
         {
-                return m_level_max;
+                return level_max_;
         }
 
         void set_levels(float min, float max)
         {
-                m_level_min = min;
-                m_level_max = max;
+                level_min_ = min;
+                level_max_ = max;
         }
 
         float volume_alpha_coefficient() const
         {
-                return m_volume_alpha_coefficient;
+                return volume_alpha_coefficient_;
         }
 
         void set_volume_alpha_coefficient(float coefficient)
         {
-                m_volume_alpha_coefficient = coefficient;
+                volume_alpha_coefficient_ = coefficient;
         }
 
         float isosurface_alpha() const
         {
-                return m_isosurface_alpha;
+                return isosurface_alpha_;
         }
 
         void set_isosurface_alpha(float alpha)
         {
-                m_isosurface_alpha = alpha;
+                isosurface_alpha_ = alpha;
         }
 
         bool isosurface() const
         {
-                return m_isosurface;
+                return isosurface_;
         }
 
         void set_isosurface(bool enabled)
         {
-                m_isosurface = enabled;
+                isosurface_ = enabled;
         }
 
         float isovalue() const
         {
-                return m_isovalue;
+                return isovalue_;
         }
 
         void set_isovalue(float value)
         {
-                m_isovalue = value;
+                isovalue_ = value;
         }
 
         const color::Color& color() const
         {
-                return m_color;
+                return color_;
         }
 
         void set_color(const color::Color& color)
         {
-                m_color = color;
+                color_ = color;
         }
 
         float ambient() const
         {
-                return m_ambient;
+                return ambient_;
         }
 
         void set_ambient(float ambient)
         {
-                m_ambient = ambient;
+                ambient_ = ambient;
         }
 
         float metalness() const
         {
-                return m_metalness;
+                return metalness_;
         }
 
         void set_metalness(float metalness)
         {
-                m_metalness = metalness;
+                metalness_ = metalness;
         }
 
         float roughness() const
         {
-                return m_roughness;
+                return roughness_;
         }
 
         void set_roughness(float roughness)
         {
-                m_roughness = roughness;
+                roughness_ = roughness;
         }
 
         void updates(std::optional<int>* version, Update::Flags* updates) const
         {
-                m_versions.updates(version, updates);
+                versions_.updates(version, updates);
         }
 
 public:
         static const std::function<void(VolumeEvent<N>&&)>* set_events(
                 const std::function<void(VolumeEvent<N>&&)>* events)
         {
-                std::swap(m_events, events);
+                std::swap(events_, events);
                 return events;
         }
 
@@ -300,9 +300,9 @@ public:
                 std::unique_ptr<const Volume<N>>&& volume,
                 const Matrix<N + 1, N + 1, double>& matrix,
                 std::string name)
-                : m_volume(std::move(volume)), m_matrix(matrix), m_name(std::move(name))
+                : volume_(std::move(volume)), matrix_(matrix), name_(std::move(name))
         {
-                ASSERT(m_volume);
+                ASSERT(volume_);
         }
 
         VolumeObject(const VolumeObject&) = delete;
@@ -312,57 +312,57 @@ public:
 
         ~VolumeObject()
         {
-                if (m_inserted)
+                if (inserted_)
                 {
-                        send_event(typename VolumeEvent<N>::Erase(m_id));
+                        send_event(typename VolumeEvent<N>::Erase(id_));
                 }
         }
 
         const std::string& name() const
         {
-                return m_name;
+                return name_;
         }
 
         const ObjectId& id() const
         {
-                return m_id;
+                return id_;
         }
 
         void insert(const std::optional<ObjectId>& parent_object_id = std::nullopt)
         {
-                std::unique_lock m_lock(m_mutex);
-                if (!m_inserted)
+                std::unique_lock lock_(mutex_);
+                if (!inserted_)
                 {
-                        m_inserted = true;
+                        inserted_ = true;
                         send_event(typename VolumeEvent<N>::Insert(this->shared_from_this(), parent_object_id));
                 }
         }
 
         void erase()
         {
-                std::unique_lock m_lock(m_mutex);
-                if (m_inserted)
+                std::unique_lock lock_(mutex_);
+                if (inserted_)
                 {
-                        m_inserted = false;
-                        send_event(typename VolumeEvent<N>::Erase(m_id));
+                        inserted_ = false;
+                        send_event(typename VolumeEvent<N>::Erase(id_));
                 }
         }
 
         bool visible() const
         {
-                std::shared_lock lock(m_mutex);
-                return m_visible;
+                std::shared_lock lock(mutex_);
+                return visible_;
         }
 
         void set_visible(bool visible)
         {
-                std::unique_lock lock(m_mutex);
-                if (m_visible == visible)
+                std::unique_lock lock(mutex_);
+                if (visible_ == visible)
                 {
                         return;
                 }
-                m_visible = visible;
-                send_event(typename VolumeEvent<N>::Visibility(m_id, visible));
+                visible_ = visible;
+                send_event(typename VolumeEvent<N>::Visibility(id_, visible));
         }
 };
 
@@ -371,13 +371,13 @@ public:
 template <std::size_t N>
 class Writing final
 {
-        VolumeObject<N>* m_object;
-        std::unique_lock<std::shared_mutex> m_lock;
+        VolumeObject<N>* object_;
+        std::unique_lock<std::shared_mutex> lock_;
 
-        Update::Flags m_updates;
+        Update::Flags updates_;
 
 public:
-        explicit Writing(VolumeObject<N>* object) : m_object(object), m_lock(m_object->m_mutex)
+        explicit Writing(VolumeObject<N>* object) : object_(object), lock_(object_->mutex_)
         {
         }
 
@@ -388,212 +388,212 @@ public:
 
         ~Writing()
         {
-                if (m_updates.none())
+                if (updates_.none())
                 {
                         return;
                 }
-                m_object->m_versions.add(m_updates);
-                if (m_object->m_inserted)
+                object_->versions_.add(updates_);
+                if (object_->inserted_)
                 {
-                        m_object->send_event(typename VolumeEvent<N>::Update(m_object->weak_from_this()));
+                        object_->send_event(typename VolumeEvent<N>::Update(object_->weak_from_this()));
                 }
         }
 
         const Volume<N>& volume() const
         {
-                return m_object->volume();
+                return object_->volume();
         }
 
         const Matrix<N + 1, N + 1, double>& matrix() const
         {
-                return m_object->matrix();
+                return object_->matrix();
         }
 
         void set_matrix(const Matrix<N + 1, N + 1, double>& matrix)
         {
-                m_updates.set(Update::Matrices);
-                m_object->set_matrix(matrix);
+                updates_.set(Update::Matrices);
+                object_->set_matrix(matrix);
         }
 
         float level_min() const
         {
-                return m_object->level_min();
+                return object_->level_min();
         }
 
         float level_max() const
         {
-                return m_object->level_max();
+                return object_->level_max();
         }
 
         void set_levels(float min, float max)
         {
-                m_updates.set(Update::Levels);
-                m_object->set_levels(min, max);
+                updates_.set(Update::Levels);
+                object_->set_levels(min, max);
         }
 
         float volume_alpha_coefficient() const
         {
-                return m_object->volume_alpha_coefficient();
+                return object_->volume_alpha_coefficient();
         }
 
         void set_volume_alpha_coefficient(float coefficient)
         {
-                m_updates.set(Update::VolumeAlphaCoefficient);
-                m_object->set_volume_alpha_coefficient(coefficient);
+                updates_.set(Update::VolumeAlphaCoefficient);
+                object_->set_volume_alpha_coefficient(coefficient);
         }
 
         float isosurface_alpha() const
         {
-                return m_object->isosurface_alpha();
+                return object_->isosurface_alpha();
         }
 
         void set_isosurface_alpha(float alpha)
         {
-                m_updates.set(Update::IsosurfaceAlpha);
-                m_object->set_isosurface_alpha(alpha);
+                updates_.set(Update::IsosurfaceAlpha);
+                object_->set_isosurface_alpha(alpha);
         }
 
         bool isosurface() const
         {
-                return m_object->isosurface();
+                return object_->isosurface();
         }
 
         void set_isosurface(bool enabled)
         {
-                m_updates.set(Update::Isovalue);
-                m_object->set_isosurface(enabled);
+                updates_.set(Update::Isovalue);
+                object_->set_isosurface(enabled);
         }
 
         float isovalue() const
         {
-                return m_object->isovalue();
+                return object_->isovalue();
         }
 
         void set_isovalue(float value)
         {
-                m_updates.set(Update::Isovalue);
-                m_object->set_isovalue(value);
+                updates_.set(Update::Isovalue);
+                object_->set_isovalue(value);
         }
 
         const color::Color& color() const
         {
-                return m_object->color();
+                return object_->color();
         }
 
         void set_color(const color::Color& color)
         {
-                m_updates.set(Update::Color);
-                m_object->set_color(color);
+                updates_.set(Update::Color);
+                object_->set_color(color);
         }
 
         float ambient() const
         {
-                return m_object->ambient();
+                return object_->ambient();
         }
 
         void set_ambient(float ambient)
         {
-                m_updates.set(Update::Ambient);
-                m_object->set_ambient(ambient);
+                updates_.set(Update::Ambient);
+                object_->set_ambient(ambient);
         }
 
         float metalness() const
         {
-                return m_object->metalness();
+                return object_->metalness();
         }
 
         void set_metalness(float metalness)
         {
-                m_updates.set(Update::Metalness);
-                m_object->set_metalness(metalness);
+                updates_.set(Update::Metalness);
+                object_->set_metalness(metalness);
         }
 
         float roughness() const
         {
-                return m_object->roughness();
+                return object_->roughness();
         }
 
         void set_roughness(float roughness)
         {
-                m_updates.set(Update::Roughness);
-                m_object->set_roughness(roughness);
+                updates_.set(Update::Roughness);
+                object_->set_roughness(roughness);
         }
 };
 
 template <std::size_t N>
 class Reading final
 {
-        const VolumeObject<N>* m_object;
-        std::shared_lock<std::shared_mutex> m_lock;
+        const VolumeObject<N>* object_;
+        std::shared_lock<std::shared_mutex> lock_;
 
 public:
-        explicit Reading(const VolumeObject<N>& object) : m_object(&object), m_lock(object.m_mutex)
+        explicit Reading(const VolumeObject<N>& object) : object_(&object), lock_(object.mutex_)
         {
         }
 
         void updates(std::optional<int>* version, Update::Flags* updates) const
         {
-                m_object->updates(version, updates);
+                object_->updates(version, updates);
         }
 
         const Volume<N>& volume() const
         {
-                return m_object->volume();
+                return object_->volume();
         }
 
         const Matrix<N + 1, N + 1, double>& matrix() const
         {
-                return m_object->matrix();
+                return object_->matrix();
         }
 
         float level_min() const
         {
-                return m_object->level_min();
+                return object_->level_min();
         }
 
         float level_max() const
         {
-                return m_object->level_max();
+                return object_->level_max();
         }
 
         float volume_alpha_coefficient() const
         {
-                return m_object->volume_alpha_coefficient();
+                return object_->volume_alpha_coefficient();
         }
 
         float isosurface_alpha() const
         {
-                return m_object->isosurface_alpha();
+                return object_->isosurface_alpha();
         }
 
         bool isosurface() const
         {
-                return m_object->isosurface();
+                return object_->isosurface();
         }
 
         float isovalue() const
         {
-                return m_object->isovalue();
+                return object_->isovalue();
         }
 
         const color::Color& color() const
         {
-                return m_object->color();
+                return object_->color();
         }
 
         float ambient() const
         {
-                return m_object->ambient();
+                return object_->ambient();
         }
 
         float metalness() const
         {
-                return m_object->metalness();
+                return object_->metalness();
         }
 
         float roughness() const
         {
-                return m_object->roughness();
+                return object_->roughness();
         }
 };
 }

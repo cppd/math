@@ -46,28 +46,28 @@ vec3d rotate_vector_degree(const vec3d& axis, double angle_degree, const vec3d& 
 
 void Camera::set_vectors(const vec3d& right, const vec3d& up)
 {
-        m_camera_up = up.normalized();
+        camera_up_ = up.normalized();
 
-        m_camera_direction_from = cross(up, right).normalized();
+        camera_direction_from_ = cross(up, right).normalized();
 
-        m_camera_right = cross(m_camera_direction_from, m_camera_up);
+        camera_right_ = cross(camera_direction_from_, camera_up_);
 
-        vec3d light_right = rotate_vector_degree(m_camera_up, -45, m_camera_right);
-        m_light_up = rotate_vector_degree(light_right, -45, m_camera_up);
+        vec3d light_right = rotate_vector_degree(camera_up_, -45, camera_right_);
+        light_up_ = rotate_vector_degree(light_right, -45, camera_up_);
 
-        m_light_direction_from = cross(m_light_up, light_right).normalized();
+        light_direction_from_ = cross(light_up_, light_right).normalized();
 }
 
 gpu::renderer::CameraInfo::Volume Camera::main_volume() const
 {
-        double scale = m_default_scale / std::pow(SCALE_BASE, m_scale_exponent);
+        double scale = default_scale_ / std::pow(SCALE_BASE, scale_exponent_);
 
         gpu::renderer::CameraInfo::Volume volume;
 
-        volume.left = scale * (m_window_center[0] - 0.5 * m_width);
-        volume.right = scale * (m_window_center[0] + 0.5 * m_width);
-        volume.bottom = scale * (m_window_center[1] - 0.5 * m_height);
-        volume.top = scale * (m_window_center[1] + 0.5 * m_height);
+        volume.left = scale * (window_center_[0] - 0.5 * width_);
+        volume.right = scale * (window_center_[0] + 0.5 * width_);
+        volume.bottom = scale * (window_center_[1] - 0.5 * height_);
+        volume.top = scale * (window_center_[1] + 0.5 * height_);
         volume.near = 1;
         volume.far = -1;
 
@@ -90,42 +90,42 @@ gpu::renderer::CameraInfo::Volume Camera::shadow_volume() const
 
 mat4d Camera::main_view_matrix() const
 {
-        return matrix::look_at<double>(vec3d(0, 0, 0), m_camera_direction_from, m_camera_up);
+        return matrix::look_at<double>(vec3d(0, 0, 0), camera_direction_from_, camera_up_);
 }
 
 mat4d Camera::shadow_view_matrix() const
 {
-        return matrix::look_at(vec3d(0, 0, 0), m_light_direction_from, m_light_up);
+        return matrix::look_at(vec3d(0, 0, 0), light_direction_from_, light_up_);
 }
 
 void Camera::reset(const vec3d& right, const vec3d& up, double scale, const vec2d& window_center)
 {
-        std::lock_guard lg(m_lock);
+        std::lock_guard lg(lock_);
 
         set_vectors(right, up);
 
-        m_scale_exponent = std::log(scale) / std::log(SCALE_BASE);
-        m_window_center = window_center;
+        scale_exponent_ = std::log(scale) / std::log(SCALE_BASE);
+        window_center_ = window_center;
 
-        if (m_width > 0 && m_height > 0)
+        if (width_ > 0 && height_ > 0)
         {
-                m_default_scale = 2.0 / std::min(m_width, m_height);
+                default_scale_ = 2.0 / std::min(width_, height_);
         }
         else
         {
-                m_default_scale = 1;
+                default_scale_ = 1;
         }
 }
 
 void Camera::scale(double x, double y, double delta)
 {
-        std::lock_guard lg(m_lock);
+        std::lock_guard lg(lock_);
 
-        if (!(x < m_width && y < m_height))
+        if (!(x < width_ && y < height_))
         {
                 return;
         }
-        if (!(m_scale_exponent + delta >= SCALE_EXP_MIN && m_scale_exponent + delta <= SCALE_EXP_MAX))
+        if (!(scale_exponent_ + delta >= SCALE_EXP_MIN && scale_exponent_ + delta <= SCALE_EXP_MAX))
         {
                 return;
         }
@@ -134,52 +134,52 @@ void Camera::scale(double x, double y, double delta)
                 return;
         }
 
-        m_scale_exponent += delta;
+        scale_exponent_ += delta;
         double scale_delta = std::pow(SCALE_BASE, delta);
 
-        vec2d mouse_local(x - m_width * 0.5, m_height * 0.5 - y);
-        vec2d mouse_global(mouse_local + m_window_center);
+        vec2d mouse_local(x - width_ * 0.5, height_ * 0.5 - y);
+        vec2d mouse_global(mouse_local + window_center_);
         // new_center = old_center + (mouse_global * scale_delta - mouse_global)
         // center = center + mouse_global * scale_delta - mouse_global
         // center += mouse_global * (scale_delta - 1)
-        m_window_center += mouse_global * (scale_delta - 1);
+        window_center_ += mouse_global * (scale_delta - 1);
 }
 
 void Camera::rotate(double around_up_axis, double around_right_axis)
 {
-        std::lock_guard lg(m_lock);
+        std::lock_guard lg(lock_);
 
-        vec3d right = rotate_vector_degree(m_camera_up, around_up_axis, m_camera_right);
-        vec3d up = rotate_vector_degree(m_camera_right, around_right_axis, m_camera_up);
+        vec3d right = rotate_vector_degree(camera_up_, around_up_axis, camera_right_);
+        vec3d up = rotate_vector_degree(camera_right_, around_right_axis, camera_up_);
         set_vectors(right, up);
 }
 
 void Camera::move(const vec2d& delta)
 {
-        std::lock_guard lg(m_lock);
+        std::lock_guard lg(lock_);
 
-        m_window_center += delta;
+        window_center_ += delta;
 }
 
 void Camera::resize(int width, int height)
 {
-        std::lock_guard lg(m_lock);
+        std::lock_guard lg(lock_);
 
-        m_width = width;
-        m_height = height;
+        width_ = width;
+        height_ = height;
 }
 
 info::Camera Camera::view_info() const
 {
-        std::lock_guard lg(m_lock);
+        std::lock_guard lg(lock_);
 
         info::Camera v;
 
-        v.up = m_camera_up;
-        v.forward = m_camera_direction_from;
-        v.lighting = m_light_direction_from;
-        v.width = m_width;
-        v.height = m_height;
+        v.up = camera_up_;
+        v.forward = camera_direction_from_;
+        v.lighting = light_direction_from_;
+        v.width = width_;
+        v.height = height_;
 
         gpu::renderer::CameraInfo::Volume volume = main_volume();
 
@@ -199,7 +199,7 @@ info::Camera Camera::view_info() const
 
 gpu::renderer::CameraInfo Camera::renderer_info() const
 {
-        std::lock_guard lg(m_lock);
+        std::lock_guard lg(lock_);
 
         gpu::renderer::CameraInfo v;
 
@@ -207,8 +207,8 @@ gpu::renderer::CameraInfo Camera::renderer_info() const
         v.shadow_volume = shadow_volume();
         v.main_view_matrix = main_view_matrix();
         v.shadow_view_matrix = shadow_view_matrix();
-        v.light_direction = m_light_direction_from;
-        v.camera_direction = m_camera_direction_from;
+        v.light_direction = light_direction_from_;
+        v.camera_direction = camera_direction_from_;
 
         return v;
 }

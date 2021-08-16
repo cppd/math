@@ -45,7 +45,7 @@ class Repository final
 
         using Tuple = Sequence<settings::Dimensions, std::tuple, Repositories>;
 
-        Tuple m_data;
+        Tuple data_;
 
 public:
         struct ObjectNames
@@ -74,7 +74,7 @@ public:
                                         }(),
                                         ...);
                         },
-                        m_data);
+                        data_);
 
                 return names;
         }
@@ -82,19 +82,19 @@ public:
         template <std::size_t N>
         std::unique_ptr<mesh::Mesh<N>> point_mesh(const std::string& name, unsigned point_count) const
         {
-                return std::get<Repositories<N>>(m_data).meshes->point_object(name, point_count);
+                return std::get<Repositories<N>>(data_).meshes->point_object(name, point_count);
         }
 
         template <std::size_t N>
         std::unique_ptr<mesh::Mesh<N>> facet_mesh(const std::string& name, unsigned facet_count) const
         {
-                return std::get<Repositories<N>>(m_data).meshes->facet_object(name, facet_count);
+                return std::get<Repositories<N>>(data_).meshes->facet_object(name, facet_count);
         }
 
         template <std::size_t N>
         std::unique_ptr<volume::Volume<N>> volume(const std::string& name, unsigned size) const
         {
-                return std::get<Repositories<N>>(m_data).volumes->object(name, size);
+                return std::get<Repositories<N>>(data_).volumes->object(name, size);
         }
 };
 }

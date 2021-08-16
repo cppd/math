@@ -62,7 +62,7 @@ std::vector<VkDescriptorSetLayoutBinding> FilterMemory::descriptor_set_layout_bi
 }
 
 FilterMemory::FilterMemory(const vulkan::Device& device, VkDescriptorSetLayout descriptor_set_layout)
-        : m_descriptors(device, 1, descriptor_set_layout, descriptor_set_layout_bindings())
+        : descriptors_(device, 1, descriptor_set_layout, descriptor_set_layout_bindings())
 {
 }
 
@@ -73,7 +73,7 @@ unsigned FilterMemory::set_number()
 
 const VkDescriptorSet& FilterMemory::descriptor_set() const
 {
-        return m_descriptors.descriptor_set(0);
+        return descriptors_.descriptor_set(0);
 }
 
 void FilterMemory::set_lines(const vulkan::BufferWithMemory& buffer) const
@@ -85,7 +85,7 @@ void FilterMemory::set_lines(const vulkan::BufferWithMemory& buffer) const
         buffer_info.offset = 0;
         buffer_info.range = buffer.size();
 
-        m_descriptors.update_descriptor_set(0, LINES_BINDING, buffer_info);
+        descriptors_.update_descriptor_set(0, LINES_BINDING, buffer_info);
 }
 
 void FilterMemory::set_points(const vulkan::BufferWithMemory& buffer) const
@@ -97,7 +97,7 @@ void FilterMemory::set_points(const vulkan::BufferWithMemory& buffer) const
         buffer_info.offset = 0;
         buffer_info.range = buffer.size();
 
-        m_descriptors.update_descriptor_set(0, POINTS_BINDING, buffer_info);
+        descriptors_.update_descriptor_set(0, POINTS_BINDING, buffer_info);
 }
 
 void FilterMemory::set_point_count(const vulkan::BufferWithMemory& buffer) const
@@ -109,7 +109,7 @@ void FilterMemory::set_point_count(const vulkan::BufferWithMemory& buffer) const
         buffer_info.offset = 0;
         buffer_info.range = buffer.size();
 
-        m_descriptors.update_descriptor_set(0, POINT_COUNT_BINDING, buffer_info);
+        descriptors_.update_descriptor_set(0, POINT_COUNT_BINDING, buffer_info);
 }
 
 //
@@ -121,72 +121,72 @@ FilterConstant::FilterConstant()
                 entry.constantID = 0;
                 entry.offset = offsetof(Data, line_size);
                 entry.size = sizeof(Data::line_size);
-                m_entries.push_back(entry);
+                entries_.push_back(entry);
         }
 }
 
 void FilterConstant::set_line_size(int32_t v)
 {
-        static_assert(std::is_same_v<decltype(m_data.line_size), decltype(v)>);
-        m_data.line_size = v;
+        static_assert(std::is_same_v<decltype(data_.line_size), decltype(v)>);
+        data_.line_size = v;
 }
 
 const std::vector<VkSpecializationMapEntry>& FilterConstant::entries() const
 {
-        return m_entries;
+        return entries_;
 }
 
 const void* FilterConstant::data() const
 {
-        return &m_data;
+        return &data_;
 }
 
 std::size_t FilterConstant::size() const
 {
-        return sizeof(m_data);
+        return sizeof(data_);
 }
 
 //
 
 FilterProgram::FilterProgram(const vulkan::Device& device)
-        : m_device(device),
-          m_descriptor_set_layout(
+        : device_(device),
+          descriptor_set_layout_(
                   vulkan::create_descriptor_set_layout(device, FilterMemory::descriptor_set_layout_bindings())),
-          m_pipeline_layout(
-                  vulkan::create_pipeline_layout(device, {FilterMemory::set_number()}, {m_descriptor_set_layout})),
-          m_shader(device, code_filter_comp(), "main")
+          pipeline_layout_(
+                  vulkan::create_pipeline_layout(device, {FilterMemory::set_number()}, {descriptor_set_layout_})),
+          shader_(device, code_filter_comp(), "main")
 {
 }
 
 void FilterProgram::create_pipeline(unsigned height)
 {
-        m_constant.set_line_size(height);
+        constant_.set_line_size(height);
 
         vulkan::ComputePipelineCreateInfo info;
-        info.device = &m_device;
-        info.pipeline_layout = m_pipeline_layout;
-        info.shader = &m_shader;
-        info.constants = &m_constant;
-        m_pipeline = create_compute_pipeline(info);
+        info.device = &device_;
+        info.pipeline_layout = pipeline_layout_;
+        info.shader = &shader_;
+        info.constants = &constant_;
+        pipeline_ = create_compute_pipeline(info);
 }
 
 void FilterProgram::delete_pipeline()
 {
-        m_pipeline = vulkan::Pipeline();
+        pipeline_ = vulkan::Pipeline();
 }
 
 VkDescriptorSetLayout FilterProgram::descriptor_set_layout() const
 {
-        return m_descriptor_set_layout;
+        return descriptor_set_layout_;
 }
 
 VkPipelineLayout FilterProgram::pipeline_layout() const
 {
-        return m_pipeline_layout;
+        return pipeline_layout_;
 }
 
 VkPipeline FilterProgram::pipeline() const
 {
-        return m_pipeline;
+        return pipeline_;
 }
 }

@@ -74,31 +74,31 @@ constexpr int find_pivot(const Matrix<N, N, T>& A, const int column, const int f
 template <std::size_t R, std::size_t C, typename T>
 class RowMatrix final
 {
-        std::array<Vector<C, T>*, R> m_rows;
+        std::array<Vector<C, T>*, R> rows_;
 
 public:
         constexpr RowMatrix(std::array<Vector<C, T>, R>* rows)
         {
                 for (std::size_t i = 0; i < R; ++i)
                 {
-                        m_rows[i] = rows->data() + i;
+                        rows_[i] = rows->data() + i;
                 }
         }
         [[nodiscard]] constexpr const T& operator()(int r, int c) const&
         {
-                return (*m_rows[r])[c];
+                return (*rows_[r])[c];
         }
         [[nodiscard]] constexpr T& operator()(int r, int c) &
         {
-                return (*m_rows[r])[c];
+                return (*rows_[r])[c];
         }
         [[nodiscard]] constexpr Vector<C, T>& row(int r) &
         {
-                return *m_rows[r];
+                return *rows_[r];
         }
         constexpr void swap(int row_1, int row_2) &
         {
-                std::swap(m_rows[row_1], m_rows[row_2]);
+                std::swap(rows_[row_1], rows_[row_2]);
         }
 };
 

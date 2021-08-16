@@ -76,28 +76,28 @@ class MeshFacet
         // N! / ((N - 2)! * 2!) = (N * (N - 1)) / 2
         static constexpr int EDGE_COUNT = (N * (N - 1)) / 2;
 
-        const std::vector<Vector<N, T>>& m_vertices;
-        const std::vector<Vector<N, T>>& m_normals;
-        const std::vector<Vector<N - 1, T>>& m_texcoords;
+        const std::vector<Vector<N, T>>& vertices_;
+        const std::vector<Vector<N, T>>& normals_;
+        const std::vector<Vector<N - 1, T>>& texcoords_;
 
-        std::array<int, N> m_v;
-        std::array<int, N> m_n;
-        std::array<int, N> m_t;
+        std::array<int, N> v_;
+        std::array<int, N> n_;
+        std::array<int, N> t_;
 
-        int m_material;
+        int material_;
 
-        Vector<N, T> m_normal;
+        Vector<N, T> normal_;
 
-        geometry::HyperplaneSimplex<N, T> m_geometry;
+        geometry::HyperplaneSimplex<N, T> geometry_;
 
         enum class NormalType : char
         {
                 None,
                 Use,
                 Reverse
-        } m_normal_type;
+        } normal_type_;
 
-        std::array<bool, N> m_reverse_normal;
+        std::array<bool, N> reverse_normal_;
 
 public:
         static constexpr std::size_t SPACE_DIMENSION = N;
@@ -115,47 +115,47 @@ public:
                 bool has_texcoords,
                 const std::array<int, N>& texcoord_indices,
                 int material)
-                : m_vertices(vertices), m_normals(normals), m_texcoords(texcoords)
+                : vertices_(vertices), normals_(normals), texcoords_(texcoords)
         {
                 ASSERT((has_normals && all_non_negative(normal_indices)) || !has_normals);
                 ASSERT((has_texcoords && all_non_negative(texcoord_indices)) || !has_texcoords);
 
-                m_v = vertex_indices;
+                v_ = vertex_indices;
 
                 if (has_texcoords)
                 {
-                        m_t = texcoord_indices;
+                        t_ = texcoord_indices;
                 }
                 else
                 {
-                        m_t[0] = -1;
+                        t_[0] = -1;
                 }
 
-                m_material = material;
+                material_ = material;
 
-                m_normal = numerical::orthogonal_complement(m_vertices, m_v).normalized();
+                normal_ = numerical::orthogonal_complement(vertices_, v_).normalized();
 
-                if (!is_finite(m_normal))
+                if (!is_finite(normal_))
                 {
                         error("Mesh facet normal is not finite, facet vertices\n"
-                              + mesh_facet_implementation::vertices_to_string(m_vertices, m_v));
+                              + mesh_facet_implementation::vertices_to_string(vertices_, v_));
                 }
 
-                m_geometry.set_data(m_normal, mesh_facet_implementation::vertices_to_array(m_vertices, m_v));
+                geometry_.set_data(normal_, mesh_facet_implementation::vertices_to_array(vertices_, v_));
 
                 if (!has_normals)
                 {
-                        m_normal_type = NormalType::None;
+                        normal_type_ = NormalType::None;
                         return;
                 }
 
-                m_n = normal_indices;
+                n_ = normal_indices;
 
                 std::array<T, N> dots;
 
                 for (unsigned i = 0; i < N; ++i)
                 {
-                        dots[i] = dot(m_normals[m_n[i]], m_normal);
+                        dots[i] = dot(normals_[n_[i]], normal_);
                 }
 
                 if (!std::all_of(
@@ -168,7 +168,7 @@ public:
                 {
                         // «Перпендикуляры» на вершинах совсем не перпендикуляры,
                         // поэтому симплекс считать плоским.
-                        m_normal_type = NormalType::None;
+                        normal_type_ = NormalType::None;
                         return;
                 }
 
@@ -176,7 +176,7 @@ public:
                 {
                         // Реальный перпендикуляр и «перпендикуляры» вершин имеют
                         // одинаковое направление, поэтому оставить как есть.
-                        m_normal_type = NormalType::Use;
+                        normal_type_ = NormalType::Use;
                         return;
                 }
 
@@ -185,8 +185,8 @@ public:
                         // Реальный перпендикуляр и все «перпендикуляры» вершин имеют
                         // противоположное направление, поэтому поменять направление
                         // реального перпендикуляра.
-                        m_normal_type = NormalType::Use;
-                        m_normal = -m_normal;
+                        normal_type_ = NormalType::Use;
+                        normal_ = -normal_;
                         return;
                 }
 
@@ -194,21 +194,21 @@ public:
                 // Это происходит, например, при восстановлении поверхностей по алгоритмам
                 // типа Cocone, где соседние объекты Вороного имеют положительные полюсы
                 // в противоположных направлениях.
-                m_normal_type = NormalType::Reverse;
+                normal_type_ = NormalType::Reverse;
                 for (unsigned i = 0; i < N; ++i)
                 {
-                        m_reverse_normal[i] = dots[i] < 0;
+                        reverse_normal_[i] = dots[i] < 0;
                 }
         }
 
         int material() const
         {
-                return m_material;
+                return material_;
         }
 
         bool has_texcoord() const
         {
-                return m_t[0] >= 0;
+                return t_[0] >= 0;
         }
 
         Vector<N - 1, T> texcoord(const Vector<N, T>& point) const
@@ -218,48 +218,48 @@ public:
                         std::array<Vector<N - 1, T>, N> texcoords;
                         for (unsigned i = 0; i < N; ++i)
                         {
-                                texcoords[i] = m_texcoords[m_t[i]];
+                                texcoords[i] = texcoords_[t_[i]];
                         }
-                        return m_geometry.interpolate(point, texcoords);
+                        return geometry_.interpolate(point, texcoords);
                 }
                 error("Mesh facet texture coordinates request when there are no texture coordinates");
         }
 
         std::optional<T> intersect(const Ray<N, T>& r) const
         {
-                return m_geometry.intersect(r, m_vertices[m_v[0]], m_normal);
+                return geometry_.intersect(r, vertices_[v_[0]], normal_);
         }
 
         Vector<N, T> geometric_normal() const
         {
-                return m_normal;
+                return normal_;
         }
 
         Vector<N, T> shading_normal(const Vector<N, T>& point) const
         {
-                switch (m_normal_type)
+                switch (normal_type_)
                 {
                 case NormalType::None:
                 {
-                        return m_normal;
+                        return normal_;
                 }
                 case NormalType::Use:
                 {
                         std::array<Vector<N, T>, N> normals;
                         for (unsigned i = 0; i < N; ++i)
                         {
-                                normals[i] = m_normals[m_n[i]];
+                                normals[i] = normals_[n_[i]];
                         }
-                        return m_geometry.interpolate(point, normals).normalized();
+                        return geometry_.interpolate(point, normals).normalized();
                 }
                 case NormalType::Reverse:
                 {
                         std::array<Vector<N, T>, N> normals;
                         for (unsigned i = 0; i < N; ++i)
                         {
-                                normals[i] = m_reverse_normal[i] ? -m_normals[m_n[i]] : m_normals[m_n[i]];
+                                normals[i] = reverse_normal_[i] ? -normals_[n_[i]] : normals_[n_[i]];
                         }
-                        return m_geometry.interpolate(point, normals).normalized();
+                        return geometry_.interpolate(point, normals).normalized();
                 }
                 }
                 error_fatal("Unknown mesh facet normal type");
@@ -267,12 +267,12 @@ public:
 
         std::array<Vector<N, T>, VERTEX_COUNT> vertices() const
         {
-                return mesh_facet_implementation::vertices_to_array(m_vertices, m_v);
+                return mesh_facet_implementation::vertices_to_array(vertices_, v_);
         }
 
         geometry::Constraints<N, T, N, 1> constraints() const
         {
-                return m_geometry.constraints(m_normal, mesh_facet_implementation::vertices_to_array(m_vertices, m_v));
+                return geometry_.constraints(normal_, mesh_facet_implementation::vertices_to_array(vertices_, v_));
         }
 
         std::array<std::array<Vector<N, T>, 2>, EDGE_COUNT> edges() const
@@ -285,7 +285,7 @@ public:
                 {
                         for (unsigned j = i + 1; j < N; ++j)
                         {
-                                result[n++] = {m_vertices[m_v[i]], m_vertices[m_v[j]] - m_vertices[m_v[i]]};
+                                result[n++] = {vertices_[v_[i]], vertices_[v_[j]] - vertices_[v_[i]]};
                         }
                 }
                 ASSERT(n == EDGE_COUNT);

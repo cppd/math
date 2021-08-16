@@ -82,7 +82,7 @@ ViewWidget::ViewWidget() : QWidget(nullptr)
 
 void ViewWidget::set_view(view::View* view)
 {
-        m_view = view;
+        view_ = view;
 }
 
 void ViewWidget::on_clip_plane_clicked()
@@ -99,23 +99,23 @@ void ViewWidget::on_clip_plane_clicked()
 
         if (checked)
         {
-                if (m_view)
+                if (view_)
                 {
-                        m_view->send(view::command::ClipPlaneShow(slider_position(ui.slider_clip_plane)));
+                        view_->send(view::command::ClipPlaneShow(slider_position(ui.slider_clip_plane)));
                 }
         }
         else
         {
-                if (m_view)
+                if (view_)
                 {
-                        m_view->send(view::command::ClipPlaneHide());
+                        view_->send(view::command::ClipPlaneHide());
                 }
         }
 }
 
 void ViewWidget::on_convex_hull_2d_clicked()
 {
-        m_view->send(view::command::ShowConvexHull2D(ui.checkBox_convex_hull_2d->isChecked()));
+        view_->send(view::command::ShowConvexHull2D(ui.checkBox_convex_hull_2d->isChecked()));
 }
 
 void ViewWidget::on_dft_clicked()
@@ -125,42 +125,42 @@ void ViewWidget::on_dft_clicked()
         ui.label_dft_brightness->setEnabled(checked);
         ui.slider_dft_brightness->setEnabled(checked);
 
-        if (m_view)
+        if (view_)
         {
-                m_view->send(view::command::ShowDft(checked));
+                view_->send(view::command::ShowDft(checked));
         }
 }
 
 void ViewWidget::on_fog_clicked()
 {
-        m_view->send(view::command::ShowFog(ui.checkBox_fog->isChecked()));
+        view_->send(view::command::ShowFog(ui.checkBox_fog->isChecked()));
 }
 
 void ViewWidget::on_fps_clicked()
 {
-        m_view->send(view::command::ShowFps(ui.checkBox_fps->isChecked()));
+        view_->send(view::command::ShowFps(ui.checkBox_fps->isChecked()));
 }
 
 void ViewWidget::on_materials_clicked()
 {
-        m_view->send(view::command::ShowMaterials(ui.checkBox_materials->isChecked()));
+        view_->send(view::command::ShowMaterials(ui.checkBox_materials->isChecked()));
 }
 
 void ViewWidget::on_normals_clicked()
 {
         bool checked = ui.checkBox_normals->isChecked();
         ui.slider_normals->setEnabled(checked);
-        m_view->send(view::command::ShowNormals(checked));
+        view_->send(view::command::ShowNormals(checked));
 }
 
 void ViewWidget::on_optical_flow_clicked()
 {
-        m_view->send(view::command::ShowOpticalFlow(ui.checkBox_optical_flow->isChecked()));
+        view_->send(view::command::ShowOpticalFlow(ui.checkBox_optical_flow->isChecked()));
 }
 
 void ViewWidget::on_pencil_sketch_clicked()
 {
-        m_view->send(view::command::ShowPencilSketch(ui.checkBox_pencil_sketch->isChecked()));
+        view_->send(view::command::ShowPencilSketch(ui.checkBox_pencil_sketch->isChecked()));
 }
 
 void ViewWidget::on_shadow_clicked()
@@ -170,52 +170,52 @@ void ViewWidget::on_shadow_clicked()
         ui.label_shadow_quality->setEnabled(checked);
         ui.slider_shadow_quality->setEnabled(checked);
 
-        if (m_view)
+        if (view_)
         {
-                m_view->send(view::command::ShowShadow(checked));
+                view_->send(view::command::ShowShadow(checked));
         }
 }
 
 void ViewWidget::on_smooth_clicked()
 {
-        m_view->send(view::command::ShowSmooth(ui.checkBox_smooth->isChecked()));
+        view_->send(view::command::ShowSmooth(ui.checkBox_smooth->isChecked()));
 }
 
 void ViewWidget::on_vertical_sync_clicked()
 {
-        m_view->send(view::command::SetVerticalSync(ui.checkBox_vertical_sync->isChecked()));
+        view_->send(view::command::SetVerticalSync(ui.checkBox_vertical_sync->isChecked()));
 }
 
 void ViewWidget::on_wireframe_clicked()
 {
-        m_view->send(view::command::ShowWireframe(ui.checkBox_wireframe->isChecked()));
+        view_->send(view::command::ShowWireframe(ui.checkBox_wireframe->isChecked()));
 }
 
 void ViewWidget::on_reset_view_clicked()
 {
-        m_view->send(view::command::ResetView());
+        view_->send(view::command::ResetView());
 }
 
 void ViewWidget::on_clip_plane_changed(int)
 {
-        m_view->send(view::command::ClipPlanePosition(slider_position(ui.slider_clip_plane)));
+        view_->send(view::command::ClipPlanePosition(slider_position(ui.slider_clip_plane)));
 }
 
 void ViewWidget::on_dft_brightness_changed(int)
 {
-        m_view->send(view::command::SetDftBrightness(dft_brightness()));
+        view_->send(view::command::SetDftBrightness(dft_brightness()));
 }
 
 void ViewWidget::on_normals_changed(int)
 {
-        m_view->send(view::command::SetNormalLength(normal_length()));
+        view_->send(view::command::SetNormalLength(normal_length()));
 }
 
 void ViewWidget::on_shadow_quality_changed(int)
 {
-        if (m_view)
+        if (view_)
         {
-                m_view->send(view::command::SetShadowZoom(shadow_zoom()));
+                view_->send(view::command::SetShadowZoom(shadow_zoom()));
         }
 }
 

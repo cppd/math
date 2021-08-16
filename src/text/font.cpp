@@ -39,25 +39,25 @@ namespace
 {
 class Library final
 {
-        FT_Library m_library;
+        FT_Library library_;
 
 public:
         Library()
         {
-                if (FT_Init_FreeType(&m_library))
+                if (FT_Init_FreeType(&library_))
                 {
                         error("Error init FreeType library");
                 }
         }
         ~Library()
         {
-                FT_Done_FreeType(m_library);
+                FT_Done_FreeType(library_);
         }
 
         operator FT_Library() const
         {
                 static_assert(std::is_pointer_v<FT_Library>);
-                return m_library;
+                return library_;
         }
 
         Library(const Library&) = delete;
@@ -68,23 +68,23 @@ public:
 
 class Face final
 {
-        std::vector<unsigned char> m_font_data;
-        FT_Face m_face;
+        std::vector<unsigned char> font_data_;
+        FT_Face face_;
 
 public:
 #if 0
         Face(FT_Library library, const std::string& font_file)
         {
-                if (FT_New_Face(library, font_file.c_str(), 0, &m_face))
+                if (FT_New_Face(library, font_file.c_str(), 0, &face_))
                 {
                         error("Error FreeType new face, file " + font_file);
                 }
         }
 #endif
         template <typename T>
-        Face(FT_Library library, T&& font_data) : m_font_data(std::forward<T>(font_data))
+        Face(FT_Library library, T&& font_data) : font_data_(std::forward<T>(font_data))
         {
-                if (FT_New_Memory_Face(library, data_pointer(m_font_data), data_size(m_font_data), 0, &m_face))
+                if (FT_New_Memory_Face(library, data_pointer(font_data_), data_size(font_data_), 0, &face_))
                 {
                         error("Error FreeType new memory face");
                 }
@@ -92,19 +92,19 @@ public:
 
         ~Face()
         {
-                FT_Done_Face(m_face);
+                FT_Done_Face(face_);
         }
 
         operator FT_Face() const
         {
                 static_assert(std::is_pointer_v<FT_Face>);
-                return m_face;
+                return face_;
         }
 
         FT_Face operator->() const
         {
                 static_assert(std::is_pointer_v<FT_Face>);
-                return m_face;
+                return face_;
         }
 
         Face(const Face&) = delete;
@@ -163,23 +163,23 @@ void save_to_file(char32_t code_point, const std::optional<Font::Char>& data)
 
 class Font::Impl final
 {
-        const std::thread::id m_thread_id;
+        const std::thread::id thread_id_;
 
-        Library m_library;
-        Face m_face;
+        Library library_;
+        Face face_;
 
-        int m_size;
+        int size_;
 
 public:
         template <typename T>
         Impl(int size_in_pixels, T&& font_data)
-                : m_thread_id(std::this_thread::get_id()), m_face(m_library, std::forward<T>(font_data))
+                : thread_id_(std::this_thread::get_id()), face_(library_, std::forward<T>(font_data))
         {
                 set_size(size_in_pixels);
         }
         ~Impl()
         {
-                ASSERT(std::this_thread::get_id() == m_thread_id);
+                ASSERT(std::this_thread::get_id() == thread_id_);
         }
 
         Impl(const Impl&) = delete;
@@ -189,17 +189,17 @@ public:
 
         void set_size(int size_in_pixels)
         {
-                ASSERT(std::this_thread::get_id() == m_thread_id);
+                ASSERT(std::this_thread::get_id() == thread_id_);
 
-                m_size = size_in_pixels;
-                FT_Set_Pixel_Sizes(m_face, 0, size_in_pixels);
+                size_ = size_in_pixels;
+                FT_Set_Pixel_Sizes(face_, 0, size_in_pixels);
         }
 
         std::optional<Char> render(char32_t code_point) const
         {
-                ASSERT(std::this_thread::get_id() == m_thread_id);
+                ASSERT(std::this_thread::get_id() == thread_id_);
 
-                if (FT_Load_Char(m_face, code_point, FT_LOAD_RENDER))
+                if (FT_Load_Char(face_, code_point, FT_LOAD_RENDER))
                 {
                         return std::nullopt;
                 }
@@ -207,13 +207,13 @@ public:
                 Char res;
 
                 res.code_point = code_point;
-                res.image = m_face->glyph->bitmap.buffer;
-                res.size = m_size;
-                res.width = m_face->glyph->bitmap.width;
-                res.height = m_face->glyph->bitmap.rows;
-                res.left = m_face->glyph->bitmap_left;
-                res.top = m_face->glyph->bitmap_top;
-                res.advance_x = std::lround(m_face->glyph->advance.x / 64.0);
+                res.image = face_->glyph->bitmap.buffer;
+                res.size = size_;
+                res.width = face_->glyph->bitmap.width;
+                res.height = face_->glyph->bitmap.rows;
+                res.left = face_->glyph->bitmap_left;
+                res.top = face_->glyph->bitmap_top;
+                res.advance_x = std::lround(face_->glyph->advance.x / 64.0);
 
                 return res;
         }
@@ -228,7 +228,7 @@ public:
 };
 
 Font::Font(int size_in_pixels, std::vector<unsigned char>&& font_data)
-        : m_impl(std::make_unique<Impl>(size_in_pixels, std::move(font_data)))
+        : impl_(std::make_unique<Impl>(size_in_pixels, std::move(font_data)))
 {
 }
 
@@ -236,13 +236,13 @@ Font::~Font() = default;
 
 void Font::set_size(int size_in_pixels)
 {
-        m_impl->set_size(size_in_pixels);
+        impl_->set_size(size_in_pixels);
 }
 
 template <typename T>
 requires std::is_same_v<T, char32_t> std::optional<Font::Char> Font::render(T code_point) const
 {
-        return m_impl->render(code_point);
+        return impl_->render(code_point);
 }
 
 template std::optional<Font::Char> Font::render(char32_t) const;

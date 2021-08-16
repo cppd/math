@@ -28,15 +28,15 @@ namespace
 {
 class Exception final : public std::exception
 {
-        std::string m_text;
+        std::string text_;
 
 public:
-        explicit Exception(std::string&& text) : m_text(std::move(text))
+        explicit Exception(std::string&& text) : text_(std::move(text))
         {
         }
         const char* what() const noexcept override
         {
-                return m_text.c_str();
+                return text_.c_str();
         }
 };
 

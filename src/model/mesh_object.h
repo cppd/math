@@ -79,17 +79,17 @@ struct MeshEvent final
 
         template <typename Type>
         MeshEvent(Type&& arg) requires(!std::is_same_v<MeshEvent, std::remove_cvref_t<Type>>)
-                : m_data(std::forward<Type>(arg))
+                : data_(std::forward<Type>(arg))
         {
         }
 
         const T& data() const
         {
-                return m_data;
+                return data_;
         }
 
 private:
-        T m_data;
+        T data_;
 };
 
 namespace Update
@@ -118,34 +118,34 @@ class MeshObject final : public std::enable_shared_from_this<MeshObject<N>>
 
         //
 
-        inline static const std::function<void(MeshEvent<N>&&)>* m_events = nullptr;
+        inline static const std::function<void(MeshEvent<N>&&)>* events_ = nullptr;
 
         //
 
-        std::unique_ptr<const Mesh<N>> m_mesh;
-        Matrix<N + 1, N + 1, double> m_matrix;
-        std::string m_name;
-        ObjectId m_id;
+        std::unique_ptr<const Mesh<N>> mesh_;
+        Matrix<N + 1, N + 1, double> matrix_;
+        std::string name_;
+        ObjectId id_;
 
-        float m_alpha = 1;
+        float alpha_ = 1;
 
-        color::Color m_color = RGB8(220, 255, 220);
-        float m_ambient = 0.2;
-        float m_metalness = 0.05;
-        float m_roughness = 0.3;
+        color::Color color_ = RGB8(220, 255, 220);
+        float ambient_ = 0.2;
+        float metalness_ = 0.05;
+        float roughness_ = 0.3;
 
-        bool m_visible = false;
-        bool m_inserted = false;
+        bool visible_ = false;
+        bool inserted_ = false;
 
-        mutable std::shared_mutex m_mutex;
+        mutable std::shared_mutex mutex_;
 
-        Versions<Update::Flags().size()> m_versions;
+        Versions<Update::Flags().size()> versions_;
 
         void send_event(MeshEvent<N>&& event) noexcept
         {
                 try
                 {
-                        (*m_events)(std::move(event));
+                        (*events_)(std::move(event));
                 }
                 catch (const std::exception& e)
                 {
@@ -161,85 +161,85 @@ class MeshObject final : public std::enable_shared_from_this<MeshObject<N>>
 
         const Mesh<N>& mesh() const
         {
-                return *m_mesh;
+                return *mesh_;
         }
 
         const Matrix<N + 1, N + 1, double>& matrix() const
         {
-                return m_matrix;
+                return matrix_;
         }
 
         void set_matrix(const Matrix<N + 1, N + 1, double>& matrix)
         {
-                m_matrix = matrix;
+                matrix_ = matrix;
         }
 
         float alpha() const
         {
-                return m_alpha;
+                return alpha_;
         }
 
         void set_alpha(float alpha)
         {
-                m_alpha = alpha;
+                alpha_ = alpha;
         }
 
         const color::Color& color() const
         {
-                return m_color;
+                return color_;
         }
 
         void set_color(const color::Color& color)
         {
-                m_color = color;
+                color_ = color;
         }
 
         float ambient() const
         {
-                return m_ambient;
+                return ambient_;
         }
 
         void set_ambient(float ambient)
         {
-                m_ambient = ambient;
+                ambient_ = ambient;
         }
 
         float metalness() const
         {
-                return m_metalness;
+                return metalness_;
         }
 
         void set_metalness(float metalness)
         {
-                m_metalness = metalness;
+                metalness_ = metalness;
         }
 
         float roughness() const
         {
-                return m_roughness;
+                return roughness_;
         }
 
         void set_roughness(float roughness)
         {
-                m_roughness = roughness;
+                roughness_ = roughness;
         }
 
         void updates(std::optional<int>* version, Update::Flags* updates) const
         {
-                m_versions.updates(version, updates);
+                versions_.updates(version, updates);
         }
 
 public:
         static const std::function<void(MeshEvent<N>&&)>* set_events(const std::function<void(MeshEvent<N>&&)>* events)
         {
-                std::swap(m_events, events);
+                std::swap(events_, events);
                 return events;
         }
 
         MeshObject(std::unique_ptr<const Mesh<N>>&& mesh, const Matrix<N + 1, N + 1, double>& matrix, std::string name)
-                : m_mesh(std::move(mesh)), m_matrix(matrix), m_name(std::move(name))
+                : mesh_(std::move(mesh)), matrix_(matrix), name_(std::move(name))
         {
-                ASSERT(m_mesh);
+                ASSERT(mesh_);
         }
 
         MeshObject(const MeshObject&) = delete;
@@ -249,59 +249,59 @@ public:
 
         ~MeshObject()
         {
-                if (m_inserted)
+                if (inserted_)
                 {
-                        send_event(typename MeshEvent<N>::Erase(m_id));
+                        send_event(typename MeshEvent<N>::Erase(id_));
                 }
         }
 
         const std::string& name() const
         {
-                return m_name;
+                return name_;
         }
 
         const ObjectId& id() const
         {
-                return m_id;
+                return id_;
         }
 
         void insert(const std::optional<ObjectId>& parent_object_id = std::nullopt)
         {
-                std::unique_lock m_lock(m_mutex);
-                if (!m_inserted)
+                std::unique_lock lock_(mutex_);
+                if (!inserted_)
                 {
-                        m_inserted = true;
+                        inserted_ = true;
                         send_event(typename MeshEvent<N>::Insert(this->shared_from_this(), parent_object_id));
                 }
         }
 
         void erase()
         {
-                std::unique_lock m_lock(m_mutex);
-                if (m_inserted)
+                std::unique_lock lock_(mutex_);
+                if (inserted_)
                 {
-                        m_inserted = false;
-                        send_event(typename MeshEvent<N>::Erase(m_id));
+                        inserted_ = false;
+                        send_event(typename MeshEvent<N>::Erase(id_));
                 }
         }
 
         bool visible() const
         {
-                std::shared_lock lock(m_mutex);
-                return m_visible;
+                std::shared_lock lock(mutex_);
+                return visible_;
         }
 
         void set_visible(bool visible)
         {
-                std::unique_lock lock(m_mutex);
-                if (m_visible == visible)
+                std::unique_lock lock(mutex_);
+                if (visible_ == visible)
                 {
                         return;
                 }
-                m_visible = visible;
-                if (m_inserted)
+                visible_ = visible;
+                if (inserted_)
                 {
-                        send_event(typename MeshEvent<N>::Visibility(m_id, visible));
+                        send_event(typename MeshEvent<N>::Visibility(id_, visible));
                 }
         }
 };
@@ -311,13 +311,13 @@ public:
 template <std::size_t N>
 class Writing final
 {
-        MeshObject<N>* m_object;
-        std::unique_lock<std::shared_mutex> m_lock;
+        MeshObject<N>* object_;
+        std::unique_lock<std::shared_mutex> lock_;
 
-        Update::Flags m_updates;
+        Update::Flags updates_;
 
 public:
-        explicit Writing(MeshObject<N>* object) : m_object(object), m_lock(m_object->m_mutex)
+        explicit Writing(MeshObject<N>* object) : object_(object), lock_(object_->mutex_)
         {
         }
 
@@ -328,158 +328,158 @@ public:
 
         ~Writing()
         {
-                if (m_updates.none())
+                if (updates_.none())
                 {
                         return;
                 }
-                m_object->m_versions.add(m_updates);
-                if (m_object->m_inserted)
+                object_->versions_.add(updates_);
+                if (object_->inserted_)
                 {
-                        m_object->send_event(typename MeshEvent<N>::Update(m_object->weak_from_this()));
+                        object_->send_event(typename MeshEvent<N>::Update(object_->weak_from_this()));
                 }
         }
 
         const std::string& name() const
         {
-                return m_object->name();
+                return object_->name();
         }
 
         const ObjectId& id() const
         {
-                return m_object->id();
+                return object_->id();
         }
 
         const Mesh<N>& mesh() const
         {
-                return m_object->mesh();
+                return object_->mesh();
         }
 
         const Matrix<N + 1, N + 1, double>& matrix() const
         {
-                return m_object->matrix();
+                return object_->matrix();
         }
 
         void set_matrix(const Matrix<N + 1, N + 1, double>& matrix)
         {
-                m_updates.set(Update::Matrix);
-                m_object->set_matrix(matrix);
+                updates_.set(Update::Matrix);
+                object_->set_matrix(matrix);
         }
 
         float alpha() const
         {
-                return m_object->alpha();
+                return object_->alpha();
         }
 
         void set_alpha(float alpha)
         {
-                m_updates.set(Update::Alpha);
-                m_object->set_alpha(alpha);
+                updates_.set(Update::Alpha);
+                object_->set_alpha(alpha);
         }
 
         const color::Color& color() const
         {
-                return m_object->color();
+                return object_->color();
         }
 
         void set_color(const color::Color& color)
         {
-                m_updates.set(Update::Color);
-                m_object->set_color(color);
+                updates_.set(Update::Color);
+                object_->set_color(color);
         }
 
         float ambient() const
         {
-                return m_object->ambient();
+                return object_->ambient();
         }
 
         void set_ambient(float ambient)
         {
-                m_updates.set(Update::Ambient);
-                m_object->set_ambient(ambient);
+                updates_.set(Update::Ambient);
+                object_->set_ambient(ambient);
         }
 
         float metalness() const
         {
-                return m_object->metalness();
+                return object_->metalness();
         }
 
         void set_metalness(float metalness)
         {
-                m_updates.set(Update::Metalness);
-                m_object->set_metalness(metalness);
+                updates_.set(Update::Metalness);
+                object_->set_metalness(metalness);
         }
 
         float roughness() const
         {
-                return m_object->roughness();
+                return object_->roughness();
         }
 
         void set_roughness(float roughness)
         {
-                m_updates.set(Update::Roughness);
-                m_object->set_roughness(roughness);
+                updates_.set(Update::Roughness);
+                object_->set_roughness(roughness);
         }
 };
 
 template <std::size_t N>
 class Reading final
 {
-        const MeshObject<N>* m_object;
-        std::shared_lock<std::shared_mutex> m_lock;
+        const MeshObject<N>* object_;
+        std::shared_lock<std::shared_mutex> lock_;
 
 public:
-        explicit Reading(const MeshObject<N>& object) : m_object(&object), m_lock(object.m_mutex)
+        explicit Reading(const MeshObject<N>& object) : object_(&object), lock_(object.mutex_)
         {
         }
 
         void updates(std::optional<int>* version, Update::Flags* updates) const
         {
-                m_object->updates(version, updates);
+                object_->updates(version, updates);
         }
 
         const std::string& name() const
         {
-                return m_object->name();
+                return object_->name();
         }
 
         const ObjectId& id() const
         {
-                return m_object->id();
+                return object_->id();
         }
 
         const Mesh<N>& mesh() const
         {
-                return m_object->mesh();
+                return object_->mesh();
         }
 
         const Matrix<N + 1, N + 1, double>& matrix() const
         {
-                return m_object->matrix();
+                return object_->matrix();
         }
 
         float alpha() const
         {
-                return m_object->alpha();
+                return object_->alpha();
         }
 
         const color::Color& color() const
         {
-                return m_object->color();
+                return object_->color();
         }
 
         float ambient() const
         {
-                return m_object->ambient();
+                return object_->ambient();
         }
 
         float metalness() const
         {
-                return m_object->metalness();
+                return object_->metalness();
         }
 
         float roughness() const
         {
-                return m_object->roughness();
+                return object_->roughness();
         }
 };
 }

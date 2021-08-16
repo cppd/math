@@ -53,7 +53,7 @@ std::vector<VkDescriptorSetLayoutBinding> DownsampleMemory::descriptor_set_layou
 }
 
 DownsampleMemory::DownsampleMemory(const vulkan::Device& device, VkDescriptorSetLayout descriptor_set_layout)
-        : m_descriptors(device, 2, descriptor_set_layout, descriptor_set_layout_bindings())
+        : descriptors_(device, 2, descriptor_set_layout, descriptor_set_layout_bindings())
 {
 }
 
@@ -65,7 +65,7 @@ unsigned DownsampleMemory::set_number()
 const VkDescriptorSet& DownsampleMemory::descriptor_set(int index) const
 {
         ASSERT(index == 0 || index == 1);
-        return m_descriptors.descriptor_set(index);
+        return descriptors_.descriptor_set(index);
 }
 
 void DownsampleMemory::set_big(const vulkan::ImageWithMemory& image_0, const vulkan::ImageWithMemory& image_1) const
@@ -80,9 +80,9 @@ void DownsampleMemory::set_big(const vulkan::ImageWithMemory& image_0, const vul
         image_info.imageLayout = VK_IMAGE_LAYOUT_GENERAL;
 
         image_info.imageView = image_0.image_view();
-        m_descriptors.update_descriptor_set(0, BIG_BINDING, image_info);
+        descriptors_.update_descriptor_set(0, BIG_BINDING, image_info);
         image_info.imageView = image_1.image_view();
-        m_descriptors.update_descriptor_set(1, BIG_BINDING, image_info);
+        descriptors_.update_descriptor_set(1, BIG_BINDING, image_info);
 }
 
 void DownsampleMemory::set_small(const vulkan::ImageWithMemory& image_0, const vulkan::ImageWithMemory& image_1) const
@@ -97,9 +97,9 @@ void DownsampleMemory::set_small(const vulkan::ImageWithMemory& image_0, const v
         image_info.imageLayout = VK_IMAGE_LAYOUT_GENERAL;
 
         image_info.imageView = image_0.image_view();
-        m_descriptors.update_descriptor_set(0, SMALL_BINDING, image_info);
+        descriptors_.update_descriptor_set(0, SMALL_BINDING, image_info);
         image_info.imageView = image_1.image_view();
-        m_descriptors.update_descriptor_set(1, SMALL_BINDING, image_info);
+        descriptors_.update_descriptor_set(1, SMALL_BINDING, image_info);
 }
 
 //
@@ -111,82 +111,82 @@ DownsampleConstant::DownsampleConstant()
                 entry.constantID = 0;
                 entry.offset = offsetof(Data, local_size_x);
                 entry.size = sizeof(Data::local_size_x);
-                m_entries.push_back(entry);
+                entries_.push_back(entry);
         }
         {
                 VkSpecializationMapEntry entry = {};
                 entry.constantID = 1;
                 entry.offset = offsetof(Data, local_size_y);
                 entry.size = sizeof(Data::local_size_y);
-                m_entries.push_back(entry);
+                entries_.push_back(entry);
         }
 }
 
 void DownsampleConstant::set(uint32_t local_size_x, uint32_t local_size_y)
 {
-        static_assert(std::is_same_v<decltype(m_data.local_size_x), decltype(local_size_x)>);
-        m_data.local_size_x = local_size_x;
-        static_assert(std::is_same_v<decltype(m_data.local_size_y), decltype(local_size_y)>);
-        m_data.local_size_y = local_size_y;
+        static_assert(std::is_same_v<decltype(data_.local_size_x), decltype(local_size_x)>);
+        data_.local_size_x = local_size_x;
+        static_assert(std::is_same_v<decltype(data_.local_size_y), decltype(local_size_y)>);
+        data_.local_size_y = local_size_y;
 }
 
 const std::vector<VkSpecializationMapEntry>& DownsampleConstant::entries() const
 {
-        return m_entries;
+        return entries_;
 }
 
 const void* DownsampleConstant::data() const
 {
-        return &m_data;
+        return &data_;
 }
 
 std::size_t DownsampleConstant::size() const
 {
-        return sizeof(m_data);
+        return sizeof(data_);
 }
 
 //
 
 DownsampleProgram::DownsampleProgram(const vulkan::Device& device)
-        : m_device(device),
-          m_descriptor_set_layout(
+        : device_(device),
+          descriptor_set_layout_(
                   vulkan::create_descriptor_set_layout(device, DownsampleMemory::descriptor_set_layout_bindings())),
-          m_pipeline_layout(
-                  vulkan::create_pipeline_layout(device, {DownsampleMemory::set_number()}, {m_descriptor_set_layout})),
-          m_shader(device, code_downsample_comp(), "main")
+          pipeline_layout_(
+                  vulkan::create_pipeline_layout(device, {DownsampleMemory::set_number()}, {descriptor_set_layout_})),
+          shader_(device, code_downsample_comp(), "main")
 {
 }
 
 VkDescriptorSetLayout DownsampleProgram::descriptor_set_layout() const
 {
-        return m_descriptor_set_layout;
+        return descriptor_set_layout_;
 }
 
 VkPipelineLayout DownsampleProgram::pipeline_layout() const
 {
-        return m_pipeline_layout;
+        return pipeline_layout_;
 }
 
 VkPipeline DownsampleProgram::pipeline() const
 {
-        ASSERT(m_pipeline != VK_NULL_HANDLE);
-        return m_pipeline;
+        ASSERT(pipeline_ != VK_NULL_HANDLE);
+        return pipeline_;
 }
 
 void DownsampleProgram::create_pipeline(uint32_t local_size_x, uint32_t local_size_y)
 {
-        m_constant.set(local_size_x, local_size_y);
+        constant_.set(local_size_x, local_size_y);
 
         vulkan::ComputePipelineCreateInfo info;
-        info.device = &m_device;
-        info.pipeline_layout = m_pipeline_layout;
-        info.shader = &m_shader;
-        info.constants = &m_constant;
-        m_pipeline = create_compute_pipeline(info);
+        info.device = &device_;
+        info.pipeline_layout = pipeline_layout_;
+        info.shader = &shader_;
+        info.constants = &constant_;
+        pipeline_ = create_compute_pipeline(info);
 }
 
 void DownsampleProgram::delete_pipeline()
 {
-        m_pipeline = vulkan::Pipeline();
+        pipeline_ = vulkan::Pipeline();
 }
 }

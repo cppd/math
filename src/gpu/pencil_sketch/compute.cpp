@@ -99,35 +99,35 @@ void image_barrier_after(VkCommandBuffer command_buffer, VkImage image)
 
 class Impl final : public Compute
 {
-        const std::thread::id m_thread_id = std::this_thread::get_id();
+        const std::thread::id thread_id_ = std::this_thread::get_id();
 
-        const vulkan::VulkanInstance& m_instance;
+        const vulkan::VulkanInstance& instance_;
 
-        ComputeProgram m_program;
-        ComputeMemory m_memory;
+        ComputeProgram program_;
+        ComputeMemory memory_;
 
-        unsigned m_groups_x = 0;
-        unsigned m_groups_y = 0;
+        unsigned groups_x_ = 0;
+        unsigned groups_y_ = 0;
 
-        VkImage m_image = VK_NULL_HANDLE;
+        VkImage image_ = VK_NULL_HANDLE;
 
         void compute_commands(VkCommandBuffer command_buffer) const override
         {
-                ASSERT(std::this_thread::get_id() == m_thread_id);
+                ASSERT(std::this_thread::get_id() == thread_id_);
 
                 //
 
-                ASSERT(m_groups_x > 0 && m_groups_y > 0);
+                ASSERT(groups_x_ > 0 && groups_y_ > 0);
 
-                image_barrier_before(command_buffer, m_image);
+                image_barrier_before(command_buffer, image_);
 
-                vkCmdBindPipeline(command_buffer, VK_PIPELINE_BIND_POINT_COMPUTE, m_program.pipeline());
+                vkCmdBindPipeline(command_buffer, VK_PIPELINE_BIND_POINT_COMPUTE, program_.pipeline());
                 vkCmdBindDescriptorSets(
-                        command_buffer, VK_PIPELINE_BIND_POINT_COMPUTE, m_program.pipeline_layout(),
-                        ComputeMemory::set_number(), 1, &m_memory.descriptor_set(), 0, nullptr);
-                vkCmdDispatch(command_buffer, m_groups_x, m_groups_y, 1);
+                        command_buffer, VK_PIPELINE_BIND_POINT_COMPUTE, program_.pipeline_layout(),
+                        ComputeMemory::set_number(), 1, &memory_.descriptor_set(), 0, nullptr);
+                vkCmdDispatch(command_buffer, groups_x_, groups_y_, 1);
 
-                image_barrier_after(command_buffer, m_image);
+                image_barrier_after(command_buffer, image_);
         }
 
         void create_buffers(
@@ -137,11 +137,11 @@ class Impl final : public Compute
                 const Region<2, int>& rectangle,
                 const vulkan::ImageWithMemory& output) override
         {
-                ASSERT(m_thread_id == std::this_thread::get_id());
+                ASSERT(thread_id_ == std::this_thread::get_id());
 
                 //
 
-                m_image = output.image();
+                image_ = output.image();
 
                 //
 
@@ -154,47 +154,47 @@ class Impl final : public Compute
                 ASSERT(rectangle.x1() <= static_cast<int>(objects.width()));
                 ASSERT(rectangle.y1() <= static_cast<int>(objects.height()));
 
-                m_memory.set_input(sampler, input);
-                m_memory.set_object_image(objects);
-                m_memory.set_output_image(output);
+                memory_.set_input(sampler, input);
+                memory_.set_object_image(objects);
+                memory_.set_output_image(output);
 
                 //
 
-                m_program.create_pipeline(GROUP_SIZE, rectangle);
+                program_.create_pipeline(GROUP_SIZE, rectangle);
 
-                m_groups_x = group_count(rectangle.width(), GROUP_SIZE);
-                m_groups_y = group_count(rectangle.height(), GROUP_SIZE);
+                groups_x_ = group_count(rectangle.width(), GROUP_SIZE);
+                groups_y_ = group_count(rectangle.height(), GROUP_SIZE);
         }
 
         void delete_buffers() override
         {
-                ASSERT(m_thread_id == std::this_thread::get_id());
+                ASSERT(thread_id_ == std::this_thread::get_id());
 
                 //
 
-                m_groups_x = 0;
-                m_groups_y = 0;
+                groups_x_ = 0;
+                groups_y_ = 0;
 
-                m_program.delete_pipeline();
+                program_.delete_pipeline();
 
-                m_image = VK_NULL_HANDLE;
+                image_ = VK_NULL_HANDLE;
         }
 
 public:
         explicit Impl(const vulkan::VulkanInstance& instance)
-                : m_instance(instance),
-                  m_program(instance.device()),
-                  m_memory(instance.device(), m_program.descriptor_set_layout())
+                : instance_(instance),
+                  program_(instance.device()),
+                  memory_(instance.device(), program_.descriptor_set_layout())
         {
         }
 
         ~Impl() override
         {
-                ASSERT(std::this_thread::get_id() == m_thread_id);
+                ASSERT(std::this_thread::get_id() == thread_id_);
 
                 //
 
-                m_instance.device_wait_idle_noexcept("the Vulkan pencil sketch compute destructor");
+                instance_.device_wait_idle_noexcept("the Vulkan pencil sketch compute destructor");
         }
 };
 }

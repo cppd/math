@@ -26,7 +26,7 @@ namespace ns::text
 {
 class Fonts
 {
-        std::map<std::string, std::function<std::vector<unsigned char>()>> m_fonts;
+        std::map<std::string, std::function<std::vector<unsigned char>()>> fonts_;
 
         Fonts();
 

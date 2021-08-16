@@ -38,9 +38,9 @@ private:
         Ui::TestSelectionParametersDialog ui;
 
         class Items;
-        std::unique_ptr<Items> m_items;
+        std::unique_ptr<Items> items_;
 
-        std::optional<TestSelectionParameters>& m_parameters;
+        std::optional<TestSelectionParameters>& parameters_;
 
         TestSelectionParametersDialog(
                 std::vector<std::string> test_names,

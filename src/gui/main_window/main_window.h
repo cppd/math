@@ -47,30 +47,30 @@ class MainWindow final : public QMainWindow
         Q_OBJECT
 
 private:
-        const std::thread::id m_thread_id = std::this_thread::get_id();
-        bool m_first_show = true;
+        const std::thread::id thread_id_ = std::this_thread::get_id();
+        bool first_show_ = true;
 
         Ui::MainWindow ui;
 
-        std::unique_ptr<Log> m_log;
+        std::unique_ptr<Log> log_;
 
-        GraphicsWidget* m_graphics_widget;
-        std::unique_ptr<view::View> m_view;
+        GraphicsWidget* graphics_widget_;
+        std::unique_ptr<view::View> view_;
 
-        std::unique_ptr<storage::Repository> m_repository;
+        std::unique_ptr<storage::Repository> repository_;
 
-        std::unique_ptr<ModelTree> m_model_tree;
+        std::unique_ptr<ModelTree> model_tree_;
 
-        std::unique_ptr<LightingWidget> m_lighting_widget;
-        std::unique_ptr<ColorsWidget> m_colors_widget;
-        std::unique_ptr<ViewWidget> m_view_widget;
-        std::unique_ptr<MeshWidget> m_mesh_widget;
-        std::unique_ptr<VolumeWidget> m_volume_widget;
+        std::unique_ptr<LightingWidget> lighting_widget_;
+        std::unique_ptr<ColorsWidget> colors_widget_;
+        std::unique_ptr<ViewWidget> view_widget_;
+        std::unique_ptr<MeshWidget> mesh_widget_;
+        std::unique_ptr<VolumeWidget> volume_widget_;
 
-        std::unique_ptr<application::ModelEvents> m_model_events;
-        std::unique_ptr<Actions> m_actions;
+        std::unique_ptr<application::ModelEvents> model_events_;
+        std::unique_ptr<Actions> actions_;
 
-        QTimer m_timer;
+        QTimer timer_;
 
         void on_about_triggered();
         void on_graphics_widget_mouse_move(QMouseEvent*);

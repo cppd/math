@@ -33,10 +33,10 @@ template <std::size_t N>
 class Ridge
 {
         static_assert(N > 1);
-        std::array<int, N - 1> m_vertices;
+        std::array<int, N - 1> vertices_;
 
 public:
-        explicit Ridge(std::array<int, N - 1>&& vertices) : m_vertices(vertices)
+        explicit Ridge(std::array<int, N - 1>&& vertices) : vertices_(vertices)
         {
                 ASSERT(std::is_sorted(vertices.cbegin(), vertices.cend()));
         }
@@ -44,7 +44,7 @@ public:
         {
                 for (unsigned i = 0; i < N - 1; ++i)
                 {
-                        if (m_vertices[i] != a.m_vertices[i])
+                        if (vertices_[i] != a.vertices_[i])
                         {
                                 return false;
                         }
@@ -55,11 +55,11 @@ public:
         {
                 for (unsigned i = 0; i < N - 1; ++i)
                 {
-                        if (m_vertices[i] < a.m_vertices[i])
+                        if (vertices_[i] < a.vertices_[i])
                         {
                                 return true;
                         }
-                        if (m_vertices[i] > a.m_vertices[i])
+                        if (vertices_[i] > a.vertices_[i])
                         {
                                 return false;
                         }
@@ -68,44 +68,44 @@ public:
         }
         const std::array<int, N - 1>& vertices() const
         {
-                return m_vertices;
+                return vertices_;
         }
 
         std::size_t hash() const
         {
-                return hash_combine(m_vertices);
+                return hash_combine(vertices_);
         }
 };
 
 template <typename Facet>
 class RidgeDataElement
 {
-        const Facet* m_facet;
-        int m_external_vertex_index;
+        const Facet* facet_;
+        int external_vertex_index_;
 
 public:
         RidgeDataElement()
         {
                 reset();
         }
-        RidgeDataElement(const Facet* f, int p) : m_facet(f), m_external_vertex_index(p)
+        RidgeDataElement(const Facet* f, int p) : facet_(f), external_vertex_index_(p)
         {
         }
         int point() const
         {
-                return m_facet->vertices()[m_external_vertex_index];
+                return facet_->vertices()[external_vertex_index_];
         }
         int vertex_index() const
         {
-                return m_external_vertex_index;
+                return external_vertex_index_;
         }
         const Facet* facet() const
         {
-                return m_facet;
+                return facet_;
         }
         void reset()
         {
-                m_facet = nullptr;
+                facet_ = nullptr;
         }
 };
 
@@ -114,12 +114,11 @@ class RidgeDataC
 {
         static_assert(MaxSize > 1);
 
-        std::array<RidgeDataElement<Facet>, MaxSize> m_data;
-        int m_size;
+        std::array<RidgeDataElement<Facet>, MaxSize> data_;
+        int size_;
 
 public:
-        RidgeDataC(const Facet* facet, int external_point_index)
-                : m_data{{{facet, external_point_index}, {}}}, m_size(1)
+        RidgeDataC(const Facet* facet, int external_point_index) : data_{{{facet, external_point_index}, {}}}, size_(1)
         {
         }
 
@@ -127,10 +126,10 @@ public:
         {
                 for (int i = 0; i < MaxSize; ++i)
                 {
-                        if (m_data[i].facet() == nullptr)
+                        if (data_[i].facet() == nullptr)
                         {
-                                m_data[i] = {facet, external_point_index};
-                                ++m_size;
+                                data_[i] = {facet, external_point_index};
+                                ++size_;
                                 return;
                         }
                 }
@@ -144,10 +143,10 @@ public:
         {
                 for (int i = 0; i < MaxSize; ++i)
                 {
-                        if (m_data[i].facet() == facet)
+                        if (data_[i].facet() == facet)
                         {
-                                m_data[i].reset();
-                                --m_size;
+                                data_[i].reset();
+                                --size_;
                                 return;
                         }
                 }
@@ -157,17 +156,17 @@ public:
 
         bool empty() const
         {
-                return m_size == 0;
+                return size_ == 0;
         }
         int size() const
         {
-                return m_size;
+                return size_;
         }
 
         const RidgeDataElement<Facet>& operator[](unsigned i) const
         {
                 ASSERT(i < MaxSize);
-                return m_data[i];
+                return data_[i];
         }
 };
 
@@ -177,24 +176,24 @@ using RidgeData2 = RidgeDataC<2, Facet>;
 template <typename Facet>
 class RidgeDataN
 {
-        std::list<RidgeDataElement<Facet>> m_data;
+        std::list<RidgeDataElement<Facet>> data_;
 
 public:
         RidgeDataN(const Facet* facet, int external_point_index)
         {
-                m_data.emplace_back(facet, external_point_index);
+                data_.emplace_back(facet, external_point_index);
         }
         void add(const Facet* facet, int external_point_index)
         {
-                m_data.emplace_back(facet, external_point_index);
+                data_.emplace_back(facet, external_point_index);
         }
         void remove(const Facet* facet)
         {
-                for (auto iter = m_data.cbegin(); iter != m_data.cend(); ++iter)
+                for (auto iter = data_.cbegin(); iter != data_.cend(); ++iter)
                 {
                         if (iter->facet() == facet)
                         {
-                                m_data.erase(iter);
+                                data_.erase(iter);
                                 return;
                         }
                 }
@@ -202,20 +201,20 @@ public:
         }
         auto cbegin() const
         {
-                return m_data.cbegin();
+                return data_.cbegin();
         }
         auto cend() const
         {
-                return m_data.cend();
+                return data_.cend();
         }
 
         bool empty() const
         {
-                return m_data.empty();
+                return data_.empty();
         }
         int size() const
         {
-                return m_data.size();
+                return data_.size();
         }
 };
 

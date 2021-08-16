@@ -63,27 +63,27 @@ ViewMemory::ViewMemory(
         const vulkan::Device& device,
         VkDescriptorSetLayout descriptor_set_layout,
         const std::vector<uint32_t>& family_indices)
-        : m_descriptors(device, 1, descriptor_set_layout, descriptor_set_layout_bindings())
+        : descriptors_(device, 1, descriptor_set_layout, descriptor_set_layout_bindings())
 {
         std::vector<std::variant<VkDescriptorBufferInfo, VkDescriptorImageInfo>> infos;
         std::vector<uint32_t> bindings;
 
         {
-                m_uniform_buffers.emplace_back(
+                uniform_buffers_.emplace_back(
                         vulkan::BufferMemoryType::HostVisible, device, family_indices,
                         VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT, sizeof(Data));
 
                 VkDescriptorBufferInfo buffer_info = {};
-                buffer_info.buffer = m_uniform_buffers.back();
+                buffer_info.buffer = uniform_buffers_.back();
                 buffer_info.offset = 0;
-                buffer_info.range = m_uniform_buffers.back().size();
+                buffer_info.range = uniform_buffers_.back().size();
 
                 infos.emplace_back(buffer_info);
 
                 bindings.push_back(DATA_BINDING);
         }
 
-        m_descriptors.update_descriptor_set(0, bindings, infos);
+        descriptors_.update_descriptor_set(0, bindings, infos);
 }
 
 unsigned ViewMemory::set_number()
@@ -93,7 +93,7 @@ unsigned ViewMemory::set_number()
 
 const VkDescriptorSet& ViewMemory::descriptor_set() const
 {
-        return m_descriptors.descriptor_set(0);
+        return descriptors_.descriptor_set(0);
 }
 
 void ViewMemory::set_points(const vulkan::BufferWithMemory& buffer) const
@@ -105,7 +105,7 @@ void ViewMemory::set_points(const vulkan::BufferWithMemory& buffer) const
         buffer_info.offset = 0;
         buffer_info.range = buffer.size();
 
-        m_descriptors.update_descriptor_set(0, POINTS_BINDING, buffer_info);
+        descriptors_.update_descriptor_set(0, POINTS_BINDING, buffer_info);
 }
 
 void ViewMemory::set_flow(const vulkan::BufferWithMemory& buffer) const
@@ -117,37 +117,37 @@ void ViewMemory::set_flow(const vulkan::BufferWithMemory& buffer) const
         buffer_info.offset = 0;
         buffer_info.range = buffer.size();
 
-        m_descriptors.update_descriptor_set(0, FLOW_BINDING, buffer_info);
+        descriptors_.update_descriptor_set(0, FLOW_BINDING, buffer_info);
 }
 
 void ViewMemory::set_matrix(const mat4d& matrix) const
 {
         Data data;
         data.matrix = to_matrix<float>(matrix).transpose();
-        vulkan::map_and_write_to_buffer(m_uniform_buffers[0], 0, data);
+        vulkan::map_and_write_to_buffer(uniform_buffers_[0], 0, data);
 }
 
 //
 
 ViewProgram::ViewProgram(const vulkan::Device& device)
-        : m_device(device),
-          m_descriptor_set_layout(
+        : device_(device),
+          descriptor_set_layout_(
                   vulkan::create_descriptor_set_layout(device, ViewMemory::descriptor_set_layout_bindings())),
-          m_pipeline_layout(
-                  vulkan::create_pipeline_layout(device, {ViewMemory::set_number()}, {m_descriptor_set_layout})),
-          m_vertex_shader(m_device, code_view_vert(), "main"),
-          m_fragment_shader(m_device, code_view_frag(), "main")
+          pipeline_layout_(
+                  vulkan::create_pipeline_layout(device, {ViewMemory::set_number()}, {descriptor_set_layout_})),
+          vertex_shader_(device_, code_view_vert(), "main"),
+          fragment_shader_(device_, code_view_frag(), "main")
 {
 }
 
 VkDescriptorSetLayout ViewProgram::descriptor_set_layout() const
 {
-        return m_descriptor_set_layout;
+        return descriptor_set_layout_;
 }
 
 VkPipelineLayout ViewProgram::pipeline_layout() const
 {
-        return m_pipeline_layout;
+        return pipeline_layout_;
 }
 
 vulkan::Pipeline ViewProgram::create_pipeline(
@@ -158,16 +158,16 @@ vulkan::Pipeline ViewProgram::create_pipeline(
 {
         vulkan::GraphicsPipelineCreateInfo info;
 
-        info.device = &m_device;
+        info.device = &device_;
         info.render_pass = render_pass;
         info.sub_pass = 0;
         info.sample_count = sample_count;
         info.sample_shading = false;
-        info.pipeline_layout = m_pipeline_layout;
+        info.pipeline_layout = pipeline_layout_;
         info.viewport = viewport;
         info.primitive_topology = primitive_topology;
 
-        const std::vector<const vulkan::Shader*> shaders = {&m_vertex_shader, &m_fragment_shader};
+        const std::vector<const vulkan::Shader*> shaders = {&vertex_shader_, &fragment_shader_};
         info.shaders = &shaders;
 
         const std::vector<const vulkan::SpecializationConstant*> constants = {nullptr, nullptr};

@@ -26,38 +26,38 @@ class AtomicCounter
 {
         static_assert(std::atomic<T>::is_always_lock_free);
 
-        std::atomic<T> m_counter;
+        std::atomic<T> counter_;
 
 public:
         static constexpr bool is_always_lock_free = std::atomic<T>::is_always_lock_free;
 
-        AtomicCounter() : m_counter(0)
+        AtomicCounter() : counter_(0)
         {
         }
 
-        explicit AtomicCounter(std::type_identity_t<T> v) : m_counter(v)
+        explicit AtomicCounter(std::type_identity_t<T> v) : counter_(v)
         {
         }
 
         AtomicCounter& operator=(T v)
         {
-                m_counter.store(v, std::memory_order_relaxed);
+                counter_.store(v, std::memory_order_relaxed);
                 return *this;
         }
 
         operator T() const
         {
-                return m_counter.load(std::memory_order_relaxed);
+                return counter_.load(std::memory_order_relaxed);
         }
 
         void operator++()
         {
-                m_counter.fetch_add(1, std::memory_order_relaxed);
+                counter_.fetch_add(1, std::memory_order_relaxed);
         }
 
         void operator+=(T v)
         {
-                m_counter.fetch_add(v, std::memory_order_relaxed);
+                counter_.fetch_add(v, std::memory_order_relaxed);
         }
 };
 }

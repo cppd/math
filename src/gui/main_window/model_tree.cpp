@@ -37,11 +37,11 @@ void set_item_color(QTreeWidgetItem* item, bool visible)
 }
 }
 
-ModelTree::ModelTree() : QWidget(nullptr), m_thread_id(std::this_thread::get_id())
+ModelTree::ModelTree() : QWidget(nullptr), thread_id_(std::this_thread::get_id())
 {
         ui.setupUi(this);
 
-        m_connections.emplace_back(QObject::connect(
+        connections_.emplace_back(QObject::connect(
                 ui.model_tree, &QTreeWidget::currentItemChanged,
                 [this](QTreeWidgetItem*, QTreeWidgetItem*)
                 {
@@ -49,7 +49,7 @@ ModelTree::ModelTree() : QWidget(nullptr), m_thread_id(std::this_thread::get_id(
                 }));
 
         ui.model_tree->setContextMenuPolicy(Qt::CustomContextMenu);
-        m_connections.emplace_back(QObject::connect(
+        connections_.emplace_back(QObject::connect(
                 ui.model_tree, &QTreeWidget::customContextMenuRequested,
                 [this](const QPoint& p)
                 {
@@ -59,7 +59,7 @@ ModelTree::ModelTree() : QWidget(nullptr), m_thread_id(std::this_thread::get_id(
 
 ModelTree::~ModelTree()
 {
-        ASSERT(std::this_thread::get_id() == m_thread_id);
+        ASSERT(std::this_thread::get_id() == thread_id_);
 }
 
 ModelTreeEvents* ModelTree::events()
@@ -69,31 +69,31 @@ ModelTreeEvents* ModelTree::events()
 
 void ModelTree::clear()
 {
-        m_thread_queue.push(
+        thread_queue_.push(
                 [this]()
                 {
-                        ASSERT(std::this_thread::get_id() == m_thread_id);
+                        ASSERT(std::this_thread::get_id() == thread_id_);
 
-                        m_map_item_id.clear();
-                        m_map_id_item.clear();
-                        m_storage.clear();
+                        map_item_id_.clear();
+                        map_id_item_.clear();
+                        storage_.clear();
                         ui.model_tree->clear();
                 });
 }
 
 void ModelTree::insert(storage::MeshObject&& object, const std::optional<ObjectId>& parent_object_id)
 {
-        m_thread_queue.push(
+        thread_queue_.push(
                 [this, object = std::move(object), parent_object_id]()
                 {
-                        ASSERT(std::this_thread::get_id() == m_thread_id);
+                        ASSERT(std::this_thread::get_id() == thread_id_);
 
                         std::visit(
                                 [&]<std::size_t N>(const std::shared_ptr<mesh::MeshObject<N>>& mesh)
                                 {
                                         insert_into_tree(
                                                 mesh->id(), N, mesh->name(), mesh->visible(), parent_object_id);
-                                        m_storage.set_mesh_object(mesh);
+                                        storage_.set_mesh_object(mesh);
                                 },
                                 object);
                 });
@@ -101,17 +101,17 @@ void ModelTree::insert(storage::MeshObject&& object, const std::optional<ObjectI
 
 void ModelTree::insert(storage::VolumeObject&& object, const std::optional<ObjectId>& parent_object_id)
 {
-        m_thread_queue.push(
+        thread_queue_.push(
                 [this, object = std::move(object), parent_object_id]()
                 {
-                        ASSERT(std::this_thread::get_id() == m_thread_id);
+                        ASSERT(std::this_thread::get_id() == thread_id_);
 
                         std::visit(
                                 [&]<std::size_t N>(const std::shared_ptr<volume::VolumeObject<N>>& volume)
                                 {
                                         insert_into_tree(
                                                 volume->id(), N, volume->name(), volume->visible(), parent_object_id);
-                                        m_storage.set_volume_object(volume);
+                                        storage_.set_volume_object(volume);
                                 },
                                 object);
                 });
@@ -119,22 +119,22 @@ void ModelTree::insert(storage::VolumeObject&& object, const std::optional<Objec
 
 void ModelTree::erase(ObjectId id)
 {
-        m_thread_queue.push(
+        thread_queue_.push(
                 [this, id]()
                 {
-                        ASSERT(std::this_thread::get_id() == m_thread_id);
+                        ASSERT(std::this_thread::get_id() == thread_id_);
 
-                        m_storage.delete_object(id);
+                        storage_.delete_object(id);
                         erase_from_tree(id);
                 });
 }
 
 void ModelTree::update(ObjectId id)
 {
-        m_thread_queue.push(
+        thread_queue_.push(
                 [this, id]()
                 {
-                        ASSERT(std::this_thread::get_id() == m_thread_id);
+                        ASSERT(std::this_thread::get_id() == thread_id_);
 
                         std::optional<ObjectId> current_id = current_item();
                         if (!current_id)
@@ -151,13 +151,13 @@ void ModelTree::update(ObjectId id)
 
 void ModelTree::show(ObjectId id, bool visible)
 {
-        m_thread_queue.push(
+        thread_queue_.push(
                 [this, id, visible]()
                 {
-                        ASSERT(std::this_thread::get_id() == m_thread_id);
+                        ASSERT(std::this_thread::get_id() == thread_id_);
 
-                        auto iter = m_map_id_item.find(id);
-                        if (iter == m_map_id_item.cend())
+                        auto iter = map_id_item_.find(id);
+                        if (iter == map_id_item_.cend())
                         {
                                 return;
                         }
@@ -172,10 +172,10 @@ void ModelTree::insert_into_tree(
         bool visible,
         const std::optional<ObjectId>& parent_object_id)
 {
-        ASSERT(std::this_thread::get_id() == m_thread_id);
+        ASSERT(std::this_thread::get_id() == thread_id_);
 
-        auto iter = m_map_id_item.find(id);
-        if (iter != m_map_id_item.cend())
+        auto iter = map_id_item_.find(id);
+        if (iter != map_id_item_.cend())
         {
                 return;
         }
@@ -183,8 +183,8 @@ void ModelTree::insert_into_tree(
         QTreeWidgetItem* parent_item = nullptr;
         if (parent_object_id)
         {
-                auto parent_iter = m_map_id_item.find(*parent_object_id);
-                if (parent_iter != m_map_id_item.cend())
+                auto parent_iter = map_id_item_.find(*parent_object_id);
+                if (parent_iter != map_id_item_.cend())
                 {
                         parent_item = parent_iter->second;
                 }
@@ -207,23 +207,23 @@ void ModelTree::insert_into_tree(
 
         set_item_color(item, visible);
 
-        m_map_item_id[item] = id;
-        m_map_id_item[id] = item;
+        map_item_id_[item] = id;
+        map_id_item_[id] = item;
 }
 
 void ModelTree::erase_from_tree(ObjectId id)
 {
-        ASSERT(std::this_thread::get_id() == m_thread_id);
+        ASSERT(std::this_thread::get_id() == thread_id_);
 
-        auto iter = m_map_id_item.find(id);
-        if (iter == m_map_id_item.cend())
+        auto iter = map_id_item_.find(id);
+        if (iter == map_id_item_.cend())
         {
                 return;
         }
         QTreeWidgetItem* item = iter->second;
 
-        m_map_id_item.erase(id);
-        m_map_item_id.erase(item);
+        map_id_item_.erase(id);
+        map_item_id_.erase(item);
 
         if (item->childCount() > 0)
         {
@@ -241,7 +241,7 @@ void ModelTree::erase_from_tree(ObjectId id)
                 {
                         item = parent;
                         parent = item->parent();
-                        ASSERT(m_map_item_id.count(item) == 0);
+                        ASSERT(map_item_id_.count(item) == 0);
                         delete item;
                 }
         }
@@ -249,10 +249,10 @@ void ModelTree::erase_from_tree(ObjectId id)
 
 void ModelTree::show_object(ObjectId id, bool show)
 {
-        ASSERT(std::this_thread::get_id() == m_thread_id);
+        ASSERT(std::this_thread::get_id() == thread_id_);
 
-        std::optional<storage::MeshObject> m = m_storage.mesh_object(id);
-        std::optional<storage::VolumeObject> v = m_storage.volume_object(id);
+        std::optional<storage::MeshObject> m = storage_.mesh_object(id);
+        std::optional<storage::VolumeObject> v = storage_.volume_object(id);
 
         if (m.has_value() && v.has_value())
         {
@@ -281,9 +281,9 @@ void ModelTree::show_object(ObjectId id, bool show)
 
 void ModelTree::show_only_this_object(ObjectId id)
 {
-        ASSERT(std::this_thread::get_id() == m_thread_id);
+        ASSERT(std::this_thread::get_id() == thread_id_);
 
-        for (const auto& v : m_map_id_item)
+        for (const auto& v : map_id_item_)
         {
                 if (id != v.first)
                 {
@@ -295,10 +295,10 @@ void ModelTree::show_only_this_object(ObjectId id)
 
 std::optional<ObjectId> ModelTree::current_item() const
 {
-        ASSERT(std::this_thread::get_id() == m_thread_id);
+        ASSERT(std::this_thread::get_id() == thread_id_);
 
-        auto iter = m_map_item_id.find(ui.model_tree->currentItem());
-        if (iter != m_map_item_id.cend())
+        auto iter = map_item_id_.find(ui.model_tree->currentItem());
+        if (iter != map_item_id_.cend())
         {
                 return iter->second;
         }
@@ -307,24 +307,24 @@ std::optional<ObjectId> ModelTree::current_item() const
 
 //void ModelTree::set_current(ObjectId id)
 //{
-//        auto iter = m_map_id_item.find(id);
-//        if (iter == m_map_id_item.cend())
+//        auto iter = map_id_item_.find(id);
+//        if (iter == map_id_item_.cend())
 //        {
 //                return;
 //        }
-//        m_tree->setCurrentItem(iter->second);
+//        tree_->setCurrentItem(iter->second);
 //}
 
 std::optional<storage::MeshObject> ModelTree::current_mesh() const
 {
-        ASSERT(std::this_thread::get_id() == m_thread_id);
+        ASSERT(std::this_thread::get_id() == thread_id_);
 
         std::optional<ObjectId> id = current_item();
         if (!id)
         {
                 return std::nullopt;
         }
-        std::optional<storage::MeshObject> object = m_storage.mesh_object(*id);
+        std::optional<storage::MeshObject> object = storage_.mesh_object(*id);
         if (!object)
         {
                 return std::nullopt;
@@ -334,14 +334,14 @@ std::optional<storage::MeshObject> ModelTree::current_mesh() const
 
 std::optional<storage::MeshObjectConst> ModelTree::current_mesh_const() const
 {
-        ASSERT(std::this_thread::get_id() == m_thread_id);
+        ASSERT(std::this_thread::get_id() == thread_id_);
 
         std::optional<ObjectId> id = current_item();
         if (!id)
         {
                 return std::nullopt;
         }
-        std::optional<storage::MeshObjectConst> object = m_storage.mesh_object_const(*id);
+        std::optional<storage::MeshObjectConst> object = storage_.mesh_object_const(*id);
         if (!object)
         {
                 return std::nullopt;
@@ -351,14 +351,14 @@ std::optional<storage::MeshObjectConst> ModelTree::current_mesh_const() const
 
 std::optional<storage::MeshObjectConst> ModelTree::mesh_const_if_current(ObjectId id) const
 {
-        ASSERT(std::this_thread::get_id() == m_thread_id);
+        ASSERT(std::this_thread::get_id() == thread_id_);
 
         std::optional<ObjectId> current_id = current_item();
         if (!current_id || id != current_id)
         {
                 return std::nullopt;
         }
-        std::optional<storage::MeshObjectConst> object = m_storage.mesh_object_const(id);
+        std::optional<storage::MeshObjectConst> object = storage_.mesh_object_const(id);
         if (!object)
         {
                 return std::nullopt;
@@ -368,14 +368,14 @@ std::optional<storage::MeshObjectConst> ModelTree::mesh_const_if_current(ObjectI
 
 std::optional<storage::MeshObject> ModelTree::mesh_if_current(ObjectId id) const
 {
-        ASSERT(std::this_thread::get_id() == m_thread_id);
+        ASSERT(std::this_thread::get_id() == thread_id_);
 
         std::optional<ObjectId> current_id = current_item();
         if (!current_id || id != current_id)
         {
                 return std::nullopt;
         }
-        std::optional<storage::MeshObject> object = m_storage.mesh_object(id);
+        std::optional<storage::MeshObject> object = storage_.mesh_object(id);
         if (!object)
         {
                 return std::nullopt;
@@ -385,14 +385,14 @@ std::optional<storage::MeshObject> ModelTree::mesh_if_current(ObjectId id) const
 
 std::optional<storage::VolumeObject> ModelTree::current_volume() const
 {
-        ASSERT(std::this_thread::get_id() == m_thread_id);
+        ASSERT(std::this_thread::get_id() == thread_id_);
 
         std::optional<ObjectId> id = current_item();
         if (!id)
         {
                 return std::nullopt;
         }
-        std::optional<storage::VolumeObject> object = m_storage.volume_object(*id);
+        std::optional<storage::VolumeObject> object = storage_.volume_object(*id);
         if (!object)
         {
                 return std::nullopt;
@@ -402,14 +402,14 @@ std::optional<storage::VolumeObject> ModelTree::current_volume() const
 
 std::optional<storage::VolumeObjectConst> ModelTree::current_volume_const() const
 {
-        ASSERT(std::this_thread::get_id() == m_thread_id);
+        ASSERT(std::this_thread::get_id() == thread_id_);
 
         std::optional<ObjectId> id = current_item();
         if (!id)
         {
                 return std::nullopt;
         }
-        std::optional<storage::VolumeObjectConst> object = m_storage.volume_object_const(*id);
+        std::optional<storage::VolumeObjectConst> object = storage_.volume_object_const(*id);
         if (!object)
         {
                 return std::nullopt;
@@ -419,14 +419,14 @@ std::optional<storage::VolumeObjectConst> ModelTree::current_volume_const() cons
 
 std::optional<storage::VolumeObjectConst> ModelTree::volume_const_if_current(ObjectId id) const
 {
-        ASSERT(std::this_thread::get_id() == m_thread_id);
+        ASSERT(std::this_thread::get_id() == thread_id_);
 
         std::optional<ObjectId> current_id = current_item();
         if (!current_id || id != current_id)
         {
                 return std::nullopt;
         }
-        std::optional<storage::VolumeObjectConst> object = m_storage.volume_object_const(id);
+        std::optional<storage::VolumeObjectConst> object = storage_.volume_object_const(id);
         if (!object)
         {
                 return std::nullopt;
@@ -436,14 +436,14 @@ std::optional<storage::VolumeObjectConst> ModelTree::volume_const_if_current(Obj
 
 std::optional<storage::VolumeObject> ModelTree::volume_if_current(ObjectId id) const
 {
-        ASSERT(std::this_thread::get_id() == m_thread_id);
+        ASSERT(std::this_thread::get_id() == thread_id_);
 
         std::optional<ObjectId> current_id = current_item();
         if (!current_id || id != current_id)
         {
                 return std::nullopt;
         }
-        std::optional<storage::VolumeObject> object = m_storage.volume_object(id);
+        std::optional<storage::VolumeObject> object = storage_.volume_object(id);
         if (!object)
         {
                 return std::nullopt;
@@ -453,18 +453,18 @@ std::optional<storage::VolumeObject> ModelTree::volume_if_current(ObjectId id) c
 
 std::vector<storage::MeshObjectConst> ModelTree::const_mesh_objects() const
 {
-        return m_storage.objects<storage::MeshObjectConst>();
+        return storage_.objects<storage::MeshObjectConst>();
 }
 
 std::vector<storage::VolumeObjectConst> ModelTree::const_volume_objects() const
 {
-        return m_storage.objects<storage::VolumeObjectConst>();
+        return storage_.objects<storage::VolumeObjectConst>();
 }
 
 template <typename T>
 void ModelTree::make_menu_for_object(QMenu* menu, const std::shared_ptr<T>& object)
 {
-        ASSERT(std::this_thread::get_id() == m_thread_id);
+        ASSERT(std::this_thread::get_id() == thread_id_);
 
         {
                 QAction* action = menu->addAction("Show only it");
@@ -516,7 +516,7 @@ void ModelTree::make_menu_for_object(QMenu* menu, const std::shared_ptr<T>& obje
 
 void ModelTree::make_menu(const QPoint& pos)
 {
-        ASSERT(std::this_thread::get_id() == m_thread_id);
+        ASSERT(std::this_thread::get_id() == thread_id_);
 
         QTreeWidgetItem* item = ui.model_tree->itemAt(pos);
         if (item != ui.model_tree->currentItem())

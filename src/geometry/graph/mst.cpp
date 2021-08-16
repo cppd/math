@@ -42,25 +42,25 @@ using Edge2 = Ridge<3>;
 
 struct WeightedEdge
 {
-        double m_weight;
-        Edge2 m_edge;
+        double weight_;
+        Edge2 edge_;
 
 public:
         template <std::size_t N>
         WeightedEdge(const std::vector<Vector<N, float>>& points, const Edge2& edge)
-                : m_weight(to_vector<double>(points[edge.vertices()[1]] - points[edge.vertices()[0]]).norm_squared()),
-                  m_edge(edge)
+                : weight_(to_vector<double>(points[edge.vertices()[1]] - points[edge.vertices()[0]]).norm_squared()),
+                  edge_(edge)
         {
         }
 
         double weight() const
         {
-                return m_weight;
+                return weight_;
         }
 
         int vertex(int i) const
         {
-                return m_edge.vertices()[i];
+                return edge_.vertices()[i];
         }
 };
 

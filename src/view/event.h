@@ -369,17 +369,17 @@ struct Command final
 
         template <typename Type>
         Command(Type&& arg) requires(!std::is_same_v<Command, std::remove_cvref_t<Type>>)
-                : m_data(std::forward<Type>(arg))
+                : data_(std::forward<Type>(arg))
         {
         }
 
         const T& data() const
         {
-                return m_data;
+                return data_;
         }
 
 private:
-        T m_data;
+        T data_;
 };
 
 namespace info
@@ -406,16 +406,16 @@ struct Info final
         using T = std::variant<info::Camera*, info::Image*>;
 
         template <typename Type>
-        Info(Type&& arg) requires(!std::is_same_v<Info, std::remove_cvref_t<Type>>) : m_data(std::forward<Type>(arg))
+        Info(Type&& arg) requires(!std::is_same_v<Info, std::remove_cvref_t<Type>>) : data_(std::forward<Type>(arg))
         {
         }
 
         const T& data() const
         {
-                return m_data;
+                return data_;
         }
 
 private:
-        T m_data;
+        T data_;
 };
 }

@@ -254,17 +254,17 @@ std::vector<std::string> names_of_map(const std::map<std::string, T>& map)
 template <std::size_t N>
 class Impl final : public VolumeObjectRepository<N>
 {
-        std::map<std::string, std::function<std::unique_ptr<volume::Volume<N>>(unsigned)>> m_map;
+        std::map<std::string, std::function<std::unique_ptr<volume::Volume<N>>(unsigned)>> map_;
 
         std::vector<std::string> object_names() const override
         {
-                return names_of_map(m_map);
+                return names_of_map(map_);
         }
 
         std::unique_ptr<volume::Volume<N>> object(const std::string& object_name, unsigned size) const override
         {
-                auto iter = m_map.find(object_name);
-                if (iter != m_map.cend())
+                auto iter = map_.find(object_name);
+                if (iter != map_.cend())
                 {
                         return iter->second(size);
                 }
@@ -274,9 +274,9 @@ class Impl final : public VolumeObjectRepository<N>
 public:
         Impl()
         {
-                m_map.emplace("Scalar Cube", scalar_cube<N>);
-                m_map.emplace("Scalar Ellipsoid", scalar_ellipsoid<N>);
-                m_map.emplace("Color Cube", color_cube<N>);
+                map_.emplace("Scalar Cube", scalar_cube<N>);
+                map_.emplace("Scalar Ellipsoid", scalar_ellipsoid<N>);
+                map_.emplace("Color Cube", color_cube<N>);
         }
 };
 }

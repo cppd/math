@@ -86,71 +86,70 @@ void buffer_barrier(
 
 class Impl final : public Compute
 {
-        const std::thread::id m_thread_id = std::this_thread::get_id();
+        const std::thread::id thread_id_ = std::this_thread::get_id();
 
-        const vulkan::VulkanInstance& m_instance;
+        const vulkan::VulkanInstance& instance_;
 
-        std::optional<vulkan::BufferWithMemory> m_lines_buffer;
-        VkBuffer m_points_buffer = VK_NULL_HANDLE;
-        VkBuffer m_point_count_buffer = VK_NULL_HANDLE;
+        std::optional<vulkan::BufferWithMemory> lines_buffer_;
+        VkBuffer points_buffer_ = VK_NULL_HANDLE;
+        VkBuffer point_count_buffer_ = VK_NULL_HANDLE;
 
-        unsigned m_prepare_group_count = 0;
-        PrepareProgram m_prepare_program;
-        PrepareMemory m_prepare_memory;
+        unsigned prepare_group_count_ = 0;
+        PrepareProgram prepare_program_;
+        PrepareMemory prepare_memory_;
 
-        MergeProgram m_merge_program;
-        MergeMemory m_merge_memory;
+        MergeProgram merge_program_;
+        MergeMemory merge_memory_;
 
-        FilterProgram m_filter_program;
-        FilterMemory m_filter_memory;
+        FilterProgram filter_program_;
+        FilterMemory filter_memory_;
 
         void compute_commands(VkCommandBuffer command_buffer) const override
         {
-                ASSERT(std::this_thread::get_id() == m_thread_id);
+                ASSERT(std::this_thread::get_id() == thread_id_);
 
                 //
 
-                vkCmdBindPipeline(command_buffer, VK_PIPELINE_BIND_POINT_COMPUTE, m_prepare_program.pipeline());
+                vkCmdBindPipeline(command_buffer, VK_PIPELINE_BIND_POINT_COMPUTE, prepare_program_.pipeline());
                 vkCmdBindDescriptorSets(
-                        command_buffer, VK_PIPELINE_BIND_POINT_COMPUTE, m_prepare_program.pipeline_layout(),
-                        PrepareMemory::set_number(), 1, &m_prepare_memory.descriptor_set(), 0, nullptr);
-                vkCmdDispatch(command_buffer, m_prepare_group_count, 1, 1);
+                        command_buffer, VK_PIPELINE_BIND_POINT_COMPUTE, prepare_program_.pipeline_layout(),
+                        PrepareMemory::set_number(), 1, &prepare_memory_.descriptor_set(), 0, nullptr);
+                vkCmdDispatch(command_buffer, prepare_group_count_, 1, 1);
 
                 //
 
                 buffer_barrier(
-                        command_buffer, *m_lines_buffer, VK_ACCESS_SHADER_READ_BIT,
+                        command_buffer, *lines_buffer_, VK_ACCESS_SHADER_READ_BIT,
                         VK_PIPELINE_STAGE_COMPUTE_SHADER_BIT);
 
                 //
 
-                vkCmdBindPipeline(command_buffer, VK_PIPELINE_BIND_POINT_COMPUTE, m_merge_program.pipeline());
+                vkCmdBindPipeline(command_buffer, VK_PIPELINE_BIND_POINT_COMPUTE, merge_program_.pipeline());
                 vkCmdBindDescriptorSets(
-                        command_buffer, VK_PIPELINE_BIND_POINT_COMPUTE, m_merge_program.pipeline_layout(),
-                        MergeMemory::set_number(), 1, &m_merge_memory.descriptor_set(), 0, nullptr);
+                        command_buffer, VK_PIPELINE_BIND_POINT_COMPUTE, merge_program_.pipeline_layout(),
+                        MergeMemory::set_number(), 1, &merge_memory_.descriptor_set(), 0, nullptr);
                 vkCmdDispatch(command_buffer, 2, 1, 1);
 
                 //
 
                 buffer_barrier(
-                        command_buffer, *m_lines_buffer, VK_ACCESS_SHADER_READ_BIT,
+                        command_buffer, *lines_buffer_, VK_ACCESS_SHADER_READ_BIT,
                         VK_PIPELINE_STAGE_COMPUTE_SHADER_BIT);
 
                 //
 
-                vkCmdBindPipeline(command_buffer, VK_PIPELINE_BIND_POINT_COMPUTE, m_filter_program.pipeline());
+                vkCmdBindPipeline(command_buffer, VK_PIPELINE_BIND_POINT_COMPUTE, filter_program_.pipeline());
                 vkCmdBindDescriptorSets(
-                        command_buffer, VK_PIPELINE_BIND_POINT_COMPUTE, m_filter_program.pipeline_layout(),
-                        FilterMemory::set_number(), 1, &m_filter_memory.descriptor_set(), 0, nullptr);
+                        command_buffer, VK_PIPELINE_BIND_POINT_COMPUTE, filter_program_.pipeline_layout(),
+                        FilterMemory::set_number(), 1, &filter_memory_.descriptor_set(), 0, nullptr);
                 vkCmdDispatch(command_buffer, 1, 1, 1);
 
                 //
 
                 buffer_barrier(
-                        command_buffer, m_points_buffer, VK_ACCESS_SHADER_READ_BIT,
-                        VK_PIPELINE_STAGE_VERTEX_SHADER_BIT);
+                        command_buffer, points_buffer_, VK_ACCESS_SHADER_READ_BIT, VK_PIPELINE_STAGE_VERTEX_SHADER_BIT);
                 buffer_barrier(
-                        command_buffer, m_point_count_buffer, VK_ACCESS_INDIRECT_COMMAND_READ_BIT,
+                        command_buffer, point_count_buffer_, VK_ACCESS_INDIRECT_COMMAND_READ_BIT,
                         VK_PIPELINE_STAGE_DRAW_INDIRECT_BIT);
         }
 
@@ -161,7 +160,7 @@ class Impl final : public Compute
                 const vulkan::BufferWithMemory& point_count_buffer,
                 uint32_t family_index) override
         {
-                ASSERT(m_thread_id == std::this_thread::get_id());
+                ASSERT(thread_id_ == std::this_thread::get_id());
 
                 //
 
@@ -175,65 +174,65 @@ class Impl final : public Compute
                 const int width = rectangle.width();
                 const int height = rectangle.height();
 
-                m_lines_buffer.emplace(
-                        vulkan::BufferMemoryType::DeviceLocal, m_instance.device(),
+                lines_buffer_.emplace(
+                        vulkan::BufferMemoryType::DeviceLocal, instance_.device(),
                         std::vector<uint32_t>({family_index}), VK_BUFFER_USAGE_STORAGE_BUFFER_BIT,
                         2 * height * sizeof(int32_t));
-                m_points_buffer = points_buffer;
-                m_point_count_buffer = point_count_buffer;
+                points_buffer_ = points_buffer;
+                point_count_buffer_ = point_count_buffer;
 
-                m_prepare_memory.set_object_image(objects);
-                m_prepare_memory.set_lines(*m_lines_buffer);
-                m_prepare_group_count = height;
-                m_prepare_program.create_pipeline(
-                        group_size_prepare(width, m_instance.device().properties().properties_10.limits), rectangle);
+                prepare_memory_.set_object_image(objects);
+                prepare_memory_.set_lines(*lines_buffer_);
+                prepare_group_count_ = height;
+                prepare_program_.create_pipeline(
+                        group_size_prepare(width, instance_.device().properties().properties_10.limits), rectangle);
 
-                m_merge_memory.set_lines(*m_lines_buffer);
-                m_merge_program.create_pipeline(
-                        height, group_size_merge(height, m_instance.device().properties().properties_10.limits),
+                merge_memory_.set_lines(*lines_buffer_);
+                merge_program_.create_pipeline(
+                        height, group_size_merge(height, instance_.device().properties().properties_10.limits),
                         iteration_count_merge(height));
 
-                m_filter_memory.set_lines(*m_lines_buffer);
-                m_filter_memory.set_points(points_buffer);
-                m_filter_memory.set_point_count(point_count_buffer);
-                m_filter_program.create_pipeline(height);
+                filter_memory_.set_lines(*lines_buffer_);
+                filter_memory_.set_points(points_buffer);
+                filter_memory_.set_point_count(point_count_buffer);
+                filter_program_.create_pipeline(height);
         }
 
         void delete_buffers() override
         {
-                ASSERT(m_thread_id == std::this_thread::get_id());
+                ASSERT(thread_id_ == std::this_thread::get_id());
 
                 //
 
-                m_filter_program.delete_pipeline();
-                m_merge_program.delete_pipeline();
-                m_prepare_program.delete_pipeline();
-                m_prepare_group_count = 0;
+                filter_program_.delete_pipeline();
+                merge_program_.delete_pipeline();
+                prepare_program_.delete_pipeline();
+                prepare_group_count_ = 0;
 
-                m_points_buffer = VK_NULL_HANDLE;
-                m_point_count_buffer = VK_NULL_HANDLE;
-                m_lines_buffer.reset();
+                points_buffer_ = VK_NULL_HANDLE;
+                point_count_buffer_ = VK_NULL_HANDLE;
+                lines_buffer_.reset();
         }
 
 public:
         explicit Impl(const vulkan::VulkanInstance& instance)
-                : m_instance(instance),
-                  m_prepare_program(instance.device()),
-                  m_prepare_memory(instance.device(), m_prepare_program.descriptor_set_layout()),
-                  m_merge_program(instance.device()),
-                  m_merge_memory(instance.device(), m_merge_program.descriptor_set_layout()),
-                  m_filter_program(instance.device()),
-                  m_filter_memory(instance.device(), m_filter_program.descriptor_set_layout())
+                : instance_(instance),
+                  prepare_program_(instance.device()),
+                  prepare_memory_(instance.device(), prepare_program_.descriptor_set_layout()),
+                  merge_program_(instance.device()),
+                  merge_memory_(instance.device(), merge_program_.descriptor_set_layout()),
+                  filter_program_(instance.device()),
+                  filter_memory_(instance.device(), filter_program_.descriptor_set_layout())
         {
         }
 
         ~Impl() override
         {
-                ASSERT(std::this_thread::get_id() == m_thread_id);
+                ASSERT(std::this_thread::get_id() == thread_id_);
 
                 //
 
-                m_instance.device_wait_idle_noexcept("the Vulkan convex hull compute destructor");
+                instance_.device_wait_idle_noexcept("the Vulkan convex hull compute destructor");
         }
 };
 }

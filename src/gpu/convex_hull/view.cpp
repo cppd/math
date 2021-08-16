@@ -51,43 +51,43 @@ constexpr std::initializer_list<vulkan::PhysicalDeviceFeatures> REQUIRED_DEVICE_
 
 class Impl final : public View
 {
-        const std::thread::id m_thread_id = std::this_thread::get_id();
+        const std::thread::id thread_id_ = std::this_thread::get_id();
 
-        const bool m_sample_shading;
-        TimePoint m_start_time = time();
+        const bool sample_shading_;
+        TimePoint start_time_ = time();
 
-        const uint32_t m_family_index;
+        const uint32_t family_index_;
 
-        const vulkan::VulkanInstance& m_instance;
-        VkCommandPool m_graphics_command_pool;
+        const vulkan::VulkanInstance& instance_;
+        VkCommandPool graphics_command_pool_;
 
-        vulkan::Semaphore m_semaphore;
-        ViewProgram m_program;
-        ViewMemory m_memory;
-        std::optional<vulkan::BufferWithMemory> m_points;
-        vulkan::BufferWithMemory m_indirect_buffer;
-        std::optional<vulkan::Pipeline> m_pipeline;
-        std::optional<vulkan::CommandBuffers> m_command_buffers;
+        vulkan::Semaphore semaphore_;
+        ViewProgram program_;
+        ViewMemory memory_;
+        std::optional<vulkan::BufferWithMemory> points_;
+        vulkan::BufferWithMemory indirect_buffer_;
+        std::optional<vulkan::Pipeline> pipeline_;
+        std::optional<vulkan::CommandBuffers> command_buffers_;
 
-        std::unique_ptr<Compute> m_compute;
+        std::unique_ptr<Compute> compute_;
 
         void reset_timer() override
         {
-                m_start_time = time();
+                start_time_ = time();
         }
 
         void draw_commands(VkCommandBuffer command_buffer) const
         {
-                ASSERT(std::this_thread::get_id() == m_thread_id);
+                ASSERT(std::this_thread::get_id() == thread_id_);
 
-                vkCmdBindPipeline(command_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, *m_pipeline);
+                vkCmdBindPipeline(command_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, *pipeline_);
 
                 vkCmdBindDescriptorSets(
-                        command_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, m_program.pipeline_layout(),
-                        ViewMemory::set_number(), 1, &m_memory.descriptor_set(), 0, nullptr);
+                        command_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, program_.pipeline_layout(),
+                        ViewMemory::set_number(), 1, &memory_.descriptor_set(), 0, nullptr);
 
-                ASSERT(m_indirect_buffer.has_usage(VK_BUFFER_USAGE_INDIRECT_BUFFER_BIT));
-                vkCmdDrawIndirect(command_buffer, m_indirect_buffer, 0, 1, sizeof(VkDrawIndirectCommand));
+                ASSERT(indirect_buffer_.has_usage(VK_BUFFER_USAGE_INDIRECT_BUFFER_BIT));
+                vkCmdDrawIndirect(command_buffer, indirect_buffer_, 0, 1, sizeof(VkDrawIndirectCommand));
         }
 
         void create_buffers(
@@ -95,16 +95,16 @@ class Impl final : public View
                 const vulkan::ImageWithMemory& objects,
                 const Region<2, int>& rectangle) override
         {
-                ASSERT(m_thread_id == std::this_thread::get_id());
+                ASSERT(thread_id_ == std::this_thread::get_id());
 
                 //
 
-                m_points.emplace(
-                        vulkan::BufferMemoryType::DeviceLocal, m_instance.device(),
-                        std::vector<uint32_t>({m_family_index}), VK_BUFFER_USAGE_STORAGE_BUFFER_BIT,
+                points_.emplace(
+                        vulkan::BufferMemoryType::DeviceLocal, instance_.device(),
+                        std::vector<uint32_t>({family_index_}), VK_BUFFER_USAGE_STORAGE_BUFFER_BIT,
                         points_buffer_size(rectangle.height()));
 
-                m_memory.set_points(*m_points);
+                memory_.set_points(*points_);
 
                 // Матрица для рисования на плоскости окна, точка (0, 0) слева вверху
                 double left = 0;
@@ -115,15 +115,15 @@ class Impl final : public View
                 double far = -1;
                 mat4d p = matrix::ortho_vulkan<double>(left, right, bottom, top, near, far);
                 mat4d t = matrix::translate(vec3d(0.5, 0.5, 0));
-                m_memory.set_matrix(p * t);
+                memory_.set_matrix(p * t);
 
-                m_pipeline = m_program.create_pipeline(
-                        render_buffers->render_pass(), render_buffers->sample_count(), m_sample_shading, rectangle);
+                pipeline_ = program_.create_pipeline(
+                        render_buffers->render_pass(), render_buffers->sample_count(), sample_shading_, rectangle);
 
-                m_compute->create_buffers(objects, rectangle, *m_points, m_indirect_buffer, m_family_index);
+                compute_->create_buffers(objects, rectangle, *points_, indirect_buffer_, family_index_);
 
                 vulkan::CommandBufferCreateInfo info;
-                info.device = m_instance.device();
+                info.device = instance_.device();
                 info.render_area.emplace();
                 info.render_area->offset.x = 0;
                 info.render_area->offset.y = 0;
@@ -131,49 +131,49 @@ class Impl final : public View
                 info.render_area->extent.height = render_buffers->height();
                 info.render_pass = render_buffers->render_pass();
                 info.framebuffers = &render_buffers->framebuffers();
-                info.command_pool = m_graphics_command_pool;
+                info.command_pool = graphics_command_pool_;
                 info.before_render_pass_commands = [this](VkCommandBuffer command_buffer)
                 {
-                        m_compute->compute_commands(command_buffer);
+                        compute_->compute_commands(command_buffer);
                 };
                 info.render_pass_commands = [this](VkCommandBuffer command_buffer)
                 {
                         draw_commands(command_buffer);
                 };
-                m_command_buffers = vulkan::create_command_buffers(info);
+                command_buffers_ = vulkan::create_command_buffers(info);
         }
 
         void delete_buffers() override
         {
-                ASSERT(m_thread_id == std::this_thread::get_id());
+                ASSERT(thread_id_ == std::this_thread::get_id());
 
                 //
 
-                m_command_buffers.reset();
-                m_pipeline.reset();
-                m_compute->delete_buffers();
-                m_points.reset();
+                command_buffers_.reset();
+                pipeline_.reset();
+                compute_->delete_buffers();
+                points_.reset();
         }
 
         VkSemaphore draw(const vulkan::Queue& queue, VkSemaphore wait_semaphore, unsigned index) override
         {
-                ASSERT(std::this_thread::get_id() == m_thread_id);
+                ASSERT(std::this_thread::get_id() == thread_id_);
 
                 //
 
-                float brightness = 0.5 + 0.5 * std::sin(ANGULAR_FREQUENCY * duration_from(m_start_time));
-                m_memory.set_brightness(brightness);
+                float brightness = 0.5 + 0.5 * std::sin(ANGULAR_FREQUENCY * duration_from(start_time_));
+                memory_.set_brightness(brightness);
 
                 //
 
-                ASSERT(queue.family_index() == m_family_index);
-                ASSERT(index < m_command_buffers->count());
+                ASSERT(queue.family_index() == family_index_);
+                ASSERT(index < command_buffers_->count());
 
                 vulkan::queue_submit(
-                        wait_semaphore, VK_PIPELINE_STAGE_COMPUTE_SHADER_BIT, (*m_command_buffers)[index], m_semaphore,
+                        wait_semaphore, VK_PIPELINE_STAGE_COMPUTE_SHADER_BIT, (*command_buffers_)[index], semaphore_,
                         queue);
 
-                return m_semaphore;
+                return semaphore_;
         }
 
         static VkDrawIndirectCommand draw_indirect_command_data()
@@ -191,34 +191,34 @@ public:
              const vulkan::CommandPool& graphics_command_pool,
              const vulkan::Queue& graphics_queue,
              bool sample_shading)
-                : m_sample_shading(sample_shading),
-                  m_family_index(graphics_command_pool.family_index()),
-                  m_instance(instance),
-                  m_graphics_command_pool(graphics_command_pool),
-                  m_semaphore(instance.device()),
-                  m_program(instance.device()),
-                  m_memory(instance.device(), m_program.descriptor_set_layout(), {m_family_index}),
-                  m_indirect_buffer(
+                : sample_shading_(sample_shading),
+                  family_index_(graphics_command_pool.family_index()),
+                  instance_(instance),
+                  graphics_command_pool_(graphics_command_pool),
+                  semaphore_(instance.device()),
+                  program_(instance.device()),
+                  memory_(instance.device(), program_.descriptor_set_layout(), {family_index_}),
+                  indirect_buffer_(
                           vulkan::BufferMemoryType::DeviceLocal,
-                          m_instance.device(),
-                          {m_family_index},
+                          instance_.device(),
+                          {family_index_},
                           VK_BUFFER_USAGE_STORAGE_BUFFER_BIT | VK_BUFFER_USAGE_INDIRECT_BUFFER_BIT
                                   | VK_BUFFER_USAGE_TRANSFER_DST_BIT,
                           sizeof(VkDrawIndirectCommand)),
-                  m_compute(create_compute(instance))
+                  compute_(create_compute(instance))
         {
                 ASSERT(graphics_command_pool.family_index() == graphics_queue.family_index());
                 const VkDrawIndirectCommand data = draw_indirect_command_data();
-                m_indirect_buffer.write(graphics_command_pool, graphics_queue, data_size(data), data_pointer(data));
+                indirect_buffer_.write(graphics_command_pool, graphics_queue, data_size(data), data_pointer(data));
         }
 
         ~Impl() override
         {
-                ASSERT(std::this_thread::get_id() == m_thread_id);
+                ASSERT(std::this_thread::get_id() == thread_id_);
 
                 //
 
-                m_instance.device_wait_idle_noexcept("the Vulkan convex hull view destructor");
+                instance_.device_wait_idle_noexcept("the Vulkan convex hull view destructor");
         }
 };
 }

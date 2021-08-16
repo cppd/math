@@ -80,21 +80,21 @@ int position_to_temperature(double position, double min, double max)
 
 LightingWidget::LightingWidget()
         : QWidget(nullptr),
-          m_daylight_min_cct(ceil(color::daylight_min_cct(), TEMPERATURE_ROUND)),
-          m_daylight_max_cct(floor(color::daylight_max_cct(), TEMPERATURE_ROUND)),
-          m_blackbody_min_t(ceil(BLACKBODY_MIN_T, TEMPERATURE_ROUND)),
-          m_blackbody_max_t(floor(BLACKBODY_MAX_T, TEMPERATURE_ROUND))
+          daylight_min_cct_(ceil(color::daylight_min_cct(), TEMPERATURE_ROUND)),
+          daylight_max_cct_(floor(color::daylight_max_cct(), TEMPERATURE_ROUND)),
+          blackbody_min_t_(ceil(BLACKBODY_MIN_T, TEMPERATURE_ROUND)),
+          blackbody_max_t_(floor(BLACKBODY_MAX_T, TEMPERATURE_ROUND))
 {
-        if (!(m_daylight_max_cct > m_daylight_min_cct))
+        if (!(daylight_max_cct_ > daylight_min_cct_))
         {
-                error("Error daylight CCT min " + to_string(m_daylight_min_cct) + " and max "
-                      + to_string(m_daylight_max_cct));
+                error("Error daylight CCT min " + to_string(daylight_min_cct_) + " and max "
+                      + to_string(daylight_max_cct_));
         }
 
-        if (!(m_blackbody_max_t > m_blackbody_min_t))
+        if (!(blackbody_max_t_ > blackbody_min_t_))
         {
-                error("Error blackbody T min " + to_string(m_blackbody_min_t) + " and max "
-                      + to_string(m_blackbody_max_t));
+                error("Error blackbody T min " + to_string(blackbody_min_t_) + " and max "
+                      + to_string(blackbody_max_t_));
         }
 
         ui.setupUi(this);
@@ -134,23 +134,23 @@ LightingWidget::LightingWidget()
 
 void LightingWidget::set_view(view::View* view)
 {
-        m_view = view;
+        view_ = view;
 }
 
 void LightingWidget::send_color()
 {
-        if (m_view)
+        if (view_)
         {
-                m_view->send(view::command::SetLightingColor(rgb()));
+                view_->send(view::command::SetLightingColor(rgb()));
         }
 }
 
 void LightingWidget::on_intensity_changed()
 {
-        m_intensity = position_to_intensity(slider_position(ui.slider_intensity));
+        intensity_ = position_to_intensity(slider_position(ui.slider_intensity));
 
         std::ostringstream oss;
-        oss << std::setprecision(2) << std::fixed << m_intensity;
+        oss << std::setprecision(2) << std::fixed << intensity_;
         ui.label_intensity->setText(QString::fromStdString(oss.str()));
 
         send_color();
@@ -163,8 +163,8 @@ void LightingWidget::on_d65_toggled()
                 return;
         }
 
-        m_spectrum = color::daylight_d65();
-        m_rgb = color::Color(1, 1, 1);
+        spectrum_ = color::daylight_d65();
+        rgb_ = color::Color(1, 1, 1);
 
         send_color();
 }
@@ -184,7 +184,7 @@ void LightingWidget::on_daylight_toggled()
 void LightingWidget::on_daylight_changed()
 {
         const double p = slider_position(ui.slider_daylight_cct);
-        const int cct = position_to_temperature(p, m_daylight_min_cct, m_daylight_max_cct);
+        const int cct = position_to_temperature(p, daylight_min_cct_, daylight_max_cct_);
 
         ui.radioButton_daylight->setText(QString::fromUtf8(DAYLIGHT_CCT.data(), DAYLIGHT_CCT.size()).arg(cct));
 
@@ -193,8 +193,8 @@ void LightingWidget::on_daylight_changed()
                 return;
         }
 
-        m_spectrum = color::daylight(cct);
-        m_rgb = m_spectrum.to_color<color::Color>();
+        spectrum_ = color::daylight(cct);
+        rgb_ = spectrum_.to_color<color::Color>();
 
         send_color();
 }
@@ -206,8 +206,8 @@ void LightingWidget::on_blackbody_a_toggled()
                 return;
         }
 
-        m_spectrum = color::blackbody_a();
-        m_rgb = m_spectrum.to_color<color::Color>();
+        spectrum_ = color::blackbody_a();
+        rgb_ = spectrum_.to_color<color::Color>();
 
         send_color();
 }
@@ -227,7 +227,7 @@ void LightingWidget::on_blackbody_toggled()
 void LightingWidget::on_blackbody_changed()
 {
         const double p = slider_position(ui.slider_blackbody_t);
-        const int t = position_to_temperature(p, m_blackbody_min_t, m_blackbody_max_t);
+        const int t = position_to_temperature(p, blackbody_min_t_, blackbody_max_t_);
 
         ui.radioButton_blackbody->setText(QString::fromUtf8(BLACKBODY_T.data(), BLACKBODY_T.size()).arg(t));
 
@@ -236,20 +236,20 @@ void LightingWidget::on_blackbody_changed()
                 return;
         }
 
-        m_spectrum = color::blackbody(t);
-        m_rgb = m_spectrum.to_color<color::Color>();
+        spectrum_ = color::blackbody(t);
+        rgb_ = spectrum_.to_color<color::Color>();
 
         send_color();
 }
 
 color::Spectrum LightingWidget::spectrum() const
 {
-        return m_intensity * m_spectrum;
+        return intensity_ * spectrum_;
 }
 
 color::Color LightingWidget::rgb() const
 {
-        return m_intensity * m_rgb;
+        return intensity_ * rgb_;
 }
 
 std::tuple<color::Spectrum, color::Color> LightingWidget::color() const

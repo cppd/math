@@ -35,8 +35,8 @@ private:
                 QLabel* label;
                 unsigned number;
         };
-        std::unordered_map<QSlider*, Slider> m_sliders;
-        std::vector<int> m_slider_positions;
+        std::unordered_map<QSlider*, Slider> sliders_;
+        std::vector<int> slider_positions_;
 
         void on_slider_changed(int);
 

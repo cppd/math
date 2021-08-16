@@ -82,37 +82,37 @@ class LatinHypercubeSampler
                 return offsets;
         }
 
-        std::vector<T> m_offsets;
-        std::size_t m_initial_shuffle_dimension;
-        std::size_t m_sample_count;
-        T m_min;
-        T m_max;
-        bool m_shuffle;
+        std::vector<T> offsets_;
+        std::size_t initial_shuffle_dimension_;
+        std::size_t sample_count_;
+        T min_;
+        T max_;
+        bool shuffle_;
 
 public:
         LatinHypercubeSampler(std::type_identity_t<T> min, std::type_identity_t<T> max, int sample_count, bool shuffle)
-                : m_offsets(make_offsets(min, max, sample_count)),
-                  m_initial_shuffle_dimension(shuffle ? 0 : 1),
-                  m_sample_count(sample_count),
-                  m_min(min),
-                  m_max(max),
-                  m_shuffle(shuffle)
+                : offsets_(make_offsets(min, max, sample_count)),
+                  initial_shuffle_dimension_(shuffle ? 0 : 1),
+                  sample_count_(sample_count),
+                  min_(min),
+                  max_(max),
+                  shuffle_(shuffle)
         {
         }
 
         bool shuffled() const
         {
-                return m_shuffle;
+                return shuffle_;
         }
 
         T min() const
         {
-                return m_min;
+                return min_;
         }
 
         T max() const
         {
-                return m_max;
+                return max_;
         }
 
         template <typename RandomEngine>
@@ -120,12 +120,12 @@ public:
         {
                 constexpr bool IS_FLOAT = std::is_same_v<std::remove_cvref_t<T>, float>;
 
-                samples->resize(m_sample_count);
+                samples->resize(sample_count_);
 
-                for (std::size_t i = 0; i < m_sample_count; ++i)
+                for (std::size_t i = 0; i < sample_count_; ++i)
                 {
-                        T min = m_offsets[i];
-                        T max = m_offsets[i + 1];
+                        T min = offsets_[i];
+                        T max = offsets_[i + 1];
                         std::uniform_real_distribution<T> urd(min, max);
                         Vector<N, T>& sample = (*samples)[i];
                         for (std::size_t n = 0; n < N; ++n)
@@ -138,7 +138,7 @@ public:
                         }
                 }
 
-                for (std::size_t i = m_initial_shuffle_dimension; i < N; ++i)
+                for (std::size_t i = initial_shuffle_dimension_; i < N; ++i)
                 {
                         shuffle_dimension(random_engine, i, samples);
                 }

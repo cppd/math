@@ -42,12 +42,12 @@ class BufferWithMemory final
 {
         friend BufferMapper;
 
-        VkDevice m_device;
-        VkPhysicalDevice m_physical_device;
-        std::vector<uint32_t> m_family_indices;
-        Buffer m_buffer;
-        VkMemoryPropertyFlags m_memory_properties;
-        DeviceMemory m_device_memory;
+        VkDevice device_;
+        VkPhysicalDevice physical_device_;
+        std::vector<uint32_t> family_indices_;
+        Buffer buffer_;
+        VkMemoryPropertyFlags memory_properties_;
+        DeviceMemory device_memory_;
 
 public:
         BufferWithMemory(
@@ -86,10 +86,10 @@ public:
 
 class BufferMapper final
 {
-        VkDevice m_device;
-        VkDeviceMemory m_device_memory;
-        VkDeviceSize m_size;
-        void* m_pointer;
+        VkDevice device_;
+        VkDeviceMemory device_memory_;
+        VkDeviceSize size_;
+        void* pointer_;
 
 public:
         BufferMapper(const BufferWithMemory& buffer, VkDeviceSize offset, VkDeviceSize size);
@@ -104,35 +104,35 @@ public:
         template <typename T>
         void write(const T& data) const
         {
-                ASSERT(data_size(data) <= m_size);
-                std::memcpy(m_pointer, data_pointer(data), data_size(data));
+                ASSERT(data_size(data) <= size_);
+                std::memcpy(pointer_, data_pointer(data), data_size(data));
         }
 
         template <typename T>
         void write(const VkDeviceSize offset, const T& data) const
         {
-                ASSERT(offset + data_size(data) <= m_size);
-                std::memcpy(static_cast<char*>(m_pointer) + offset, data_pointer(data), data_size(data));
+                ASSERT(offset + data_size(data) <= size_);
+                std::memcpy(static_cast<char*>(pointer_) + offset, data_pointer(data), data_size(data));
         }
 
         void write(const VkDeviceSize offset, const VkDeviceSize size, const void* const data) const
         {
-                ASSERT(offset + size <= m_size);
-                std::memcpy(static_cast<char*>(m_pointer) + offset, data, size);
+                ASSERT(offset + size <= size_);
+                std::memcpy(static_cast<char*>(pointer_) + offset, data, size);
         }
 
         template <typename T>
         void read(T* const data) const
         {
-                ASSERT(data_size(*data) <= m_size);
-                std::memcpy(data_pointer(*data), m_pointer, data_size(*data));
+                ASSERT(data_size(*data) <= size_);
+                std::memcpy(data_pointer(*data), pointer_, data_size(*data));
         }
 
         template <typename T>
         void read(const VkDeviceSize offset, T* const data) const
         {
-                ASSERT(offset + data_size(*data) <= m_size);
-                std::memcpy(data_pointer(*data), static_cast<const char*>(m_pointer) + offset, data_size(*data));
+                ASSERT(offset + data_size(*data) <= size_);
+                std::memcpy(data_pointer(*data), static_cast<const char*>(pointer_) + offset, data_size(*data));
         }
 };
 
@@ -173,17 +173,17 @@ inline VkExtent3D make_extent(const uint32_t width, const uint32_t height = 1, c
 
 class ImageWithMemory final
 {
-        VkExtent3D m_extent;
-        VkDevice m_device;
-        VkPhysicalDevice m_physical_device;
-        std::vector<uint32_t> m_family_indices;
-        VkImageType m_type;
-        VkSampleCountFlagBits m_sample_count;
-        VkImageUsageFlags m_usage;
-        VkFormat m_format;
-        Image m_image;
-        DeviceMemory m_device_memory;
-        ImageView m_image_view;
+        VkExtent3D extent_;
+        VkDevice device_;
+        VkPhysicalDevice physical_device_;
+        std::vector<uint32_t> family_indices_;
+        VkImageType type_;
+        VkSampleCountFlagBits sample_count_;
+        VkImageUsageFlags usage_;
+        VkFormat format_;
+        Image image_;
+        DeviceMemory device_memory_;
+        ImageView image_view_;
 
 public:
         ImageWithMemory(
@@ -246,13 +246,13 @@ public:
 
 class DepthImageWithMemory final
 {
-        VkImageUsageFlags m_usage;
-        VkSampleCountFlagBits m_sample_count;
-        VkFormat m_format;
-        VkExtent2D m_extent;
-        Image m_image;
-        DeviceMemory m_device_memory;
-        ImageView m_image_view;
+        VkImageUsageFlags usage_;
+        VkSampleCountFlagBits sample_count_;
+        VkFormat format_;
+        VkExtent2D extent_;
+        Image image_;
+        DeviceMemory device_memory_;
+        ImageView image_view_;
 
 public:
         DepthImageWithMemory(

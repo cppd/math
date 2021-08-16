@@ -40,8 +40,8 @@ class FlowMemory final
         static constexpr int I_BINDING = 6;
         static constexpr int J_BINDING = 7;
 
-        vulkan::Descriptors m_descriptors;
-        std::vector<vulkan::BufferWithMemory> m_uniform_buffers;
+        vulkan::Descriptors descriptors_;
+        std::vector<vulkan::BufferWithMemory> uniform_buffers_;
 
         struct BufferData
         {
@@ -110,9 +110,9 @@ class FlowConstant final : public vulkan::SpecializationConstant
                 int32_t iteration_count;
                 float stop_move_square;
                 float min_determinant;
-        } m_data;
+        } data_;
 
-        std::vector<VkSpecializationMapEntry> m_entries;
+        std::vector<VkSpecializationMapEntry> entries_;
 
         const std::vector<VkSpecializationMapEntry>& entries() const override;
         const void* data() const override;
@@ -132,13 +132,13 @@ public:
 
 class FlowProgram final
 {
-        const vulkan::Device& m_device;
+        const vulkan::Device& device_;
 
-        vulkan::DescriptorSetLayout m_descriptor_set_layout;
-        vulkan::PipelineLayout m_pipeline_layout;
-        FlowConstant m_constant;
-        vulkan::ComputeShader m_shader;
-        vulkan::Pipeline m_pipeline;
+        vulkan::DescriptorSetLayout descriptor_set_layout_;
+        vulkan::PipelineLayout pipeline_layout_;
+        FlowConstant constant_;
+        vulkan::ComputeShader shader_;
+        vulkan::Pipeline pipeline_;
 
 public:
         explicit FlowProgram(const vulkan::Device& device);

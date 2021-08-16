@@ -90,34 +90,34 @@ class PainterPixels final : public Pixels, public painter::Notifier<N - 1>
 
         static constexpr float MIN = limits<float>::lowest();
 
-        const std::thread::id m_thread_id = std::this_thread::get_id();
+        const std::thread::id thread_id_ = std::this_thread::get_id();
 
-        const char* const m_floating_point_name;
-        const char* const m_color_name;
+        const char* const floating_point_name_;
+        const char* const color_name_;
 
-        const GlobalIndex<N - 1, long long> m_global_index;
-        const std::vector<int> m_screen_size;
-        const long long m_slice_count = m_global_index.count() / m_screen_size[0] / m_screen_size[1];
-        const std::size_t m_slice_size = PIXEL_SIZE * m_screen_size[0] * m_screen_size[1];
+        const GlobalIndex<N - 1, long long> global_index_;
+        const std::vector<int> screen_size_;
+        const long long slice_count_ = global_index_.count() / screen_size_[0] / screen_size_[1];
+        const std::size_t slice_size_ = PIXEL_SIZE * screen_size_[0] * screen_size_[1];
 
-        std::vector<long long> m_busy_indices_2d;
+        std::vector<long long> busy_indices_2d_;
 
-        std::vector<std::byte> m_pixels_r8g8b8a8{make_initial_image(m_screen_size, COLOR_FORMAT)};
-        std::vector<Vector<3, float>> m_pixels_original{std::size_t(m_global_index.count()), Vector<3, float>(MIN)};
-        std::vector<SpinLock> m_pixels_lock{m_pixels_original.size()};
-        float m_pixels_coef = 1;
+        std::vector<std::byte> pixels_r8g8b8a8_{make_initial_image(screen_size_, COLOR_FORMAT)};
+        std::vector<Vector<3, float>> pixels_original_{std::size_t(global_index_.count()), Vector<3, float>(MIN)};
+        std::vector<SpinLock> pixels_lock_{pixels_original_.size()};
+        float pixels_coef_ = 1;
 
         static_assert(std::atomic<float>::is_always_lock_free);
-        std::atomic<float> m_pixel_brightness_parameter = 0;
-        std::atomic<float> m_pixel_max = MIN;
+        std::atomic<float> pixel_brightness_parameter_ = 0;
+        std::atomic<float> pixel_max_ = MIN;
 
-        painter::Images<N - 1> m_painter_images;
-        std::atomic_bool m_painter_images_ready = false;
+        painter::Images<N - 1> painter_images_;
+        std::atomic_bool painter_images_ready_ = false;
 
-        std::unique_ptr<painter::Painter> m_painter;
+        std::unique_ptr<painter::Painter> painter_;
 
-        std::atomic_bool m_normalize_stop = false;
-        std::thread m_normalize_thread;
+        std::atomic_bool normalize_stop_ = false;
+        std::thread normalize_thread_;
 
         static void write_r8g8b8a8(std::byte* ptr, const Vector<3, float>& rgb)
         {
@@ -131,61 +131,61 @@ class PainterPixels final : public Pixels, public painter::Notifier<N - 1>
 
         std::array<int, N - 1> flip_vertically(std::array<int, N - 1> pixel) const
         {
-                pixel[1] = m_screen_size[1] - 1 - pixel[1];
+                pixel[1] = screen_size_[1] - 1 - pixel[1];
                 return pixel;
         }
 
         void check_slice_number(long long slice_number) const
         {
-                if (slice_number < 0 || slice_number >= m_slice_count)
+                if (slice_number < 0 || slice_number >= slice_count_)
                 {
                         error("Error slice number " + to_string(slice_number) + ", slice count "
-                              + to_string(m_slice_count));
+                              + to_string(slice_count_));
                 }
         }
 
         void normalize_pixels()
         {
-                ASSERT(std::this_thread::get_id() != m_thread_id);
+                ASSERT(std::this_thread::get_id() != thread_id_);
 
                 TimePoint last_normalize_time = time();
                 float brightness_parameter = -1;
 
-                while (!m_normalize_stop.load(std::memory_order_relaxed))
+                while (!normalize_stop_.load(std::memory_order_relaxed))
                 {
                         if (time() - last_normalize_time < NORMALIZE_INTERVAL
-                            && m_pixel_brightness_parameter.load(std::memory_order_relaxed) == brightness_parameter)
+                            && pixel_brightness_parameter_.load(std::memory_order_relaxed) == brightness_parameter)
                         {
                                 std::this_thread::sleep_for(std::chrono::seconds(1));
                                 continue;
                         }
 
-                        brightness_parameter = m_pixel_brightness_parameter.load(std::memory_order_relaxed);
+                        brightness_parameter = pixel_brightness_parameter_.load(std::memory_order_relaxed);
                         last_normalize_time = time();
 
-                        static_assert(sizeof(m_pixels_original[0]) == 3 * sizeof(float));
+                        static_assert(sizeof(pixels_original_[0]) == 3 * sizeof(float));
                         const float max = max_value(
-                                std::span<const float>(m_pixels_original[0].data(), 3 * m_pixels_original.size()));
+                                std::span<const float>(pixels_original_[0].data(), 3 * pixels_original_.size()));
                         if (max == MIN)
                         {
                                 continue;
                         }
-                        m_pixel_max.store(max, std::memory_order_relaxed);
+                        pixel_max_.store(max, std::memory_order_relaxed);
 
                         const float coef = std::lerp(1 / max, 1.0f, brightness_parameter);
-                        if (m_pixels_coef == coef)
+                        if (pixels_coef_ == coef)
                         {
                                 continue;
                         }
-                        m_pixels_coef = coef;
+                        pixels_coef_ = coef;
 
-                        ASSERT(m_pixels_original.size() * PIXEL_SIZE == m_pixels_r8g8b8a8.size());
-                        std::byte* ptr = m_pixels_r8g8b8a8.data();
-                        for (std::size_t i = 0; i < m_pixels_original.size(); ++i)
+                        ASSERT(pixels_original_.size() * PIXEL_SIZE == pixels_r8g8b8a8_.size());
+                        std::byte* ptr = pixels_r8g8b8a8_.data();
+                        for (std::size_t i = 0; i < pixels_original_.size(); ++i)
                         {
                                 {
-                                        std::lock_guard lg(m_pixels_lock[i]);
-                                        const Vector<3, float>& pixel = m_pixels_original[i];
+                                        std::lock_guard lg(pixels_lock_[i]);
+                                        const Vector<3, float>& pixel = pixels_original_[i];
                                         if (pixel[0] != MIN)
                                         {
                                                 write_r8g8b8a8(ptr, pixel * coef);
@@ -193,7 +193,7 @@ class PainterPixels final : public Pixels, public painter::Notifier<N - 1>
                                 }
                                 ptr += PIXEL_SIZE;
                         }
-                        ASSERT(ptr == m_pixels_r8g8b8a8.data() + m_pixels_r8g8b8a8.size());
+                        ASSERT(ptr == pixels_r8g8b8a8_.data() + pixels_r8g8b8a8_.size());
                 }
         }
 
@@ -202,35 +202,35 @@ class PainterPixels final : public Pixels, public painter::Notifier<N - 1>
         void thread_busy(unsigned thread_number, const std::array<int, N - 1>& pixel) override
         {
                 long long x = pixel[0];
-                long long y = m_screen_size[1] - 1 - pixel[1];
-                m_busy_indices_2d[thread_number] = y * m_screen_size[0] + x;
+                long long y = screen_size_[1] - 1 - pixel[1];
+                busy_indices_2d_[thread_number] = y * screen_size_[0] + x;
         }
 
         void thread_free(unsigned thread_number) override
         {
-                m_busy_indices_2d[thread_number] = NULL_INDEX;
+                busy_indices_2d_[thread_number] = NULL_INDEX;
         }
 
         void pixel_set(const std::array<int, N - 1>& pixel, const Vector<3, float>& rgb) override
         {
                 static_assert(COLOR_FORMAT == image::ColorFormat::R8G8B8A8_SRGB);
 
-                const std::size_t index = m_global_index.compute(flip_vertically(pixel));
-                std::byte* const ptr = m_pixels_r8g8b8a8.data() + PIXEL_SIZE * index;
+                const std::size_t index = global_index_.compute(flip_vertically(pixel));
+                std::byte* const ptr = pixels_r8g8b8a8_.data() + PIXEL_SIZE * index;
 
-                std::lock_guard lg(m_pixels_lock[index]);
-                m_pixels_original[index] = rgb;
-                write_r8g8b8a8(ptr, rgb * m_pixels_coef);
+                std::lock_guard lg(pixels_lock_[index]);
+                pixels_original_[index] = rgb;
+                write_r8g8b8a8(ptr, rgb * pixels_coef_);
         }
 
         painter::Images<N - 1>* images(long long /*pass_number*/) override
         {
-                return &m_painter_images;
+                return &painter_images_;
         }
 
         void pass_done(long long /*pass_number*/) override
         {
-                m_painter_images_ready = true;
+                painter_images_ready_ = true;
         }
 
         void error_message(const std::string& msg) override
@@ -242,17 +242,17 @@ class PainterPixels final : public Pixels, public painter::Notifier<N - 1>
 
         const char* floating_point_name() const override
         {
-                return m_floating_point_name;
+                return floating_point_name_;
         }
 
         const char* color_name() const override
         {
-                return m_color_name;
+                return color_name_;
         }
 
         std::optional<float> pixel_max() const override
         {
-                float max = m_pixel_max.load(std::memory_order_relaxed);
+                float max = pixel_max_.load(std::memory_order_relaxed);
                 if (max != MIN)
                 {
                         return max;
@@ -262,17 +262,17 @@ class PainterPixels final : public Pixels, public painter::Notifier<N - 1>
 
         const std::vector<int>& screen_size() const override
         {
-                return m_screen_size;
+                return screen_size_;
         }
 
         const std::vector<long long>& busy_indices_2d() const override
         {
-                return m_busy_indices_2d;
+                return busy_indices_2d_;
         }
 
         painter::Statistics statistics() const override
         {
-                return m_painter->statistics();
+                return painter_->statistics();
         }
 
         void set_brightness_parameter(float brightness_parameter) override
@@ -283,21 +283,21 @@ class PainterPixels final : public Pixels, public painter::Notifier<N - 1>
                               + " must be in the range [0, 1]");
                 }
 
-                m_pixel_brightness_parameter.store(brightness_parameter, std::memory_order_relaxed);
+                pixel_brightness_parameter_.store(brightness_parameter, std::memory_order_relaxed);
         }
 
         std::span<const std::byte> slice_r8g8b8a8(long long slice_number) override
         {
-                ASSERT(std::this_thread::get_id() == m_thread_id);
+                ASSERT(std::this_thread::get_id() == thread_id_);
 
                 check_slice_number(slice_number);
 
-                return std::span(&m_pixels_r8g8b8a8[slice_number * m_slice_size], m_slice_size);
+                return std::span(&pixels_r8g8b8a8_[slice_number * slice_size_], slice_size_);
         }
 
         std::optional<Images> slice(long long slice_number) const override
         {
-                if (!m_painter_images_ready)
+                if (!painter_images_ready_)
                 {
                         return std::nullopt;
                 }
@@ -307,24 +307,24 @@ class PainterPixels final : public Pixels, public painter::Notifier<N - 1>
                 const auto slice_pixels = [&](const image::Image<N - 1>& image)
                 {
                         const long long pixel_size = image::format_pixel_size_in_bytes(image.color_format);
-                        const long long slice_size = pixel_size * m_screen_size[0] * m_screen_size[1];
+                        const long long slice_size = pixel_size * screen_size_[0] * screen_size_[1];
                         const std::byte* begin = &image.pixels[slice_number * slice_size];
                         const std::byte* end = begin + slice_size;
                         return std::vector(begin, end);
                 };
 
-                painter::ImagesReading lock(&m_painter_images);
+                painter::ImagesReading lock(&painter_images_);
 
                 const image::Image<N - 1>& rgb = lock.image_with_background();
                 const image::Image<N - 1>& rgba = lock.image_without_background();
 
                 ASSERT(!rgb.pixels.empty() && !rgb.pixels.empty());
-                ASSERT(std::equal(rgb.size.cbegin(), rgb.size.cend(), m_screen_size.cbegin(), m_screen_size.cend()));
-                ASSERT(std::equal(rgba.size.cbegin(), rgba.size.cend(), m_screen_size.cbegin(), m_screen_size.cend()));
+                ASSERT(std::equal(rgb.size.cbegin(), rgb.size.cend(), screen_size_.cbegin(), screen_size_.cend()));
+                ASSERT(std::equal(rgba.size.cbegin(), rgba.size.cend(), screen_size_.cbegin(), screen_size_.cend()));
 
                 std::optional<Images> images(std::in_place);
 
-                images->size = {m_screen_size[0], m_screen_size[1]};
+                images->size = {screen_size_[0], screen_size_[1]};
                 images->rgb.color_format = rgb.color_format;
                 images->rgb.pixels = slice_pixels(rgb);
                 images->rgba.color_format = rgba.color_format;
@@ -335,23 +335,23 @@ class PainterPixels final : public Pixels, public painter::Notifier<N - 1>
 
         std::optional<Images> pixels() const override
         {
-                if (!m_painter_images_ready)
+                if (!painter_images_ready_)
                 {
                         return std::nullopt;
                 }
 
-                painter::ImagesReading lock(&m_painter_images);
+                painter::ImagesReading lock(&painter_images_);
 
                 const image::Image<N - 1>& rgb = lock.image_with_background();
                 const image::Image<N - 1>& rgba = lock.image_without_background();
 
                 ASSERT(!rgb.pixels.empty() && !rgb.pixels.empty());
-                ASSERT(std::equal(rgb.size.cbegin(), rgb.size.cend(), m_screen_size.cbegin(), m_screen_size.cend()));
-                ASSERT(std::equal(rgba.size.cbegin(), rgba.size.cend(), m_screen_size.cbegin(), m_screen_size.cend()));
+                ASSERT(std::equal(rgb.size.cbegin(), rgb.size.cend(), screen_size_.cbegin(), screen_size_.cend()));
+                ASSERT(std::equal(rgba.size.cbegin(), rgba.size.cend(), screen_size_.cbegin(), screen_size_.cend()));
 
                 std::optional<Images> images(std::in_place);
 
-                images->size = m_screen_size;
+                images->size = screen_size_;
                 images->rgb.color_format = rgb.color_format;
                 images->rgb.pixels = rgb.pixels;
                 images->rgba.color_format = rgba.color_format;
@@ -367,16 +367,16 @@ public:
                 unsigned thread_count,
                 int samples_per_pixel,
                 bool smooth_normal)
-                : m_floating_point_name(type_bit_name<T>()),
-                  m_color_name(Color::name()),
-                  m_global_index(scene->projector().screen_size()),
-                  m_screen_size(
+                : floating_point_name_(type_bit_name<T>()),
+                  color_name_(Color::name()),
+                  global_index_(scene->projector().screen_size()),
+                  screen_size_(
                           [](const auto& array)
                           {
                                   return std::vector(array.cbegin(), array.cend());
                           }(scene->projector().screen_size())),
-                  m_busy_indices_2d(thread_count, NULL_INDEX),
-                  m_painter(painter::create_painter(
+                  busy_indices_2d_(thread_count, NULL_INDEX),
+                  painter_(painter::create_painter(
                           this,
                           samples_per_pixel,
                           MAX_PASS_COUNT,
@@ -384,7 +384,7 @@ public:
                           thread_count,
                           smooth_normal))
         {
-                m_normalize_thread = std::thread(
+                normalize_thread_ = std::thread(
                         [this]
                         {
                                 normalize_pixels();
@@ -398,9 +398,9 @@ public:
 
         ~PainterPixels() override
         {
-                m_normalize_stop.store(true, std::memory_order_relaxed);
-                m_normalize_thread.join();
-                m_painter.reset();
+                normalize_stop_.store(true, std::memory_order_relaxed);
+                normalize_thread_.join();
+                painter_.reset();
         }
 };
 }

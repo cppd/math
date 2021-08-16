@@ -99,8 +99,8 @@ class SphereDistribution final
 
         //
 
-        Sphere m_sphere;
-        geometry::ObjectTree<SphereFacet<N, T>> m_tree;
+        Sphere sphere_;
+        geometry::ObjectTree<SphereFacet<N, T>> tree_;
 
         //
 
@@ -119,8 +119,8 @@ class SphereDistribution final
 
                 const auto f = [&](std::vector<SphereBucket<N, T>>* buckets) -> std::array<long long, 2>
                 {
-                        ASSERT(buckets->size() == m_sphere.facets.size());
-                        SphereIntersection<N, T, RandomEngine> facet_finder(&m_tree, &m_sphere.facets);
+                        ASSERT(buckets->size() == sphere_.facets.size());
+                        SphereIntersection<N, T, RandomEngine> facet_finder(&tree_, &sphere_.facets);
                         for (long long i = 0; i < count_per_thread; ++i)
                         {
                                 if ((i & 0xfff) == 0xfff)
@@ -150,7 +150,7 @@ class SphereDistribution final
                 std::vector<std::vector<SphereBucket<N, T>>> thread_buckets(thread_count);
                 for (std::vector<SphereBucket<N, T>>& buckets : thread_buckets)
                 {
-                        buckets.resize(m_sphere.facets.size());
+                        buckets.resize(sphere_.facets.size());
                 }
 
                 {
@@ -179,11 +179,11 @@ class SphereDistribution final
                         check_sphere_intersections(intersection_count, missed_intersection_count);
                 }
 
-                std::vector<SphereBucket<N, T>> result(m_sphere.facets.size());
+                std::vector<SphereBucket<N, T>> result(sphere_.facets.size());
                 for (const std::vector<SphereBucket<N, T>>& buckets : thread_buckets)
                 {
-                        ASSERT(buckets.size() == m_sphere.facets.size());
-                        for (std::size_t i = 0; i < m_sphere.facets.size(); ++i)
+                        ASSERT(buckets.size() == sphere_.facets.size());
+                        for (std::size_t i = 0; i < sphere_.facets.size(); ++i)
                         {
                                 result[i].merge(buckets[i]);
                         }
@@ -193,7 +193,7 @@ class SphereDistribution final
 
 public:
         explicit SphereDistribution(ProgressRatio* progress)
-                : m_sphere(), m_tree(m_sphere.facets, tree_max_depth(), TREE_MIN_OBJECTS_PER_BOX, progress)
+                : sphere_(), tree_(sphere_.facets, tree_max_depth(), TREE_MIN_OBJECTS_PER_BOX, progress)
         {
         }
 
@@ -204,7 +204,7 @@ public:
 
         std::size_t bucket_count() const
         {
-                return m_sphere.facets.size();
+                return sphere_.facets.size();
         }
 
         long long distribution_count(const long long uniform_min_count_per_bucket) const
@@ -235,13 +235,13 @@ public:
                 long double sum_expected = 0;
                 long double sum_error = 0;
 
-                ASSERT(buckets.size() == m_sphere.facets.size());
+                ASSERT(buckets.size() == sphere_.facets.size());
                 for (std::size_t i = 0; i < buckets.size(); ++i)
                 {
                         const SphereBucket<N, T>& bucket = buckets[i];
 
                         const T bucket_area =
-                                sphere_facet_area(m_sphere.facets[i], bucket.uniform_count(), uniform_count);
+                                sphere_facet_area(sphere_.facets[i], bucket.uniform_count(), uniform_count);
                         const T sampled_distribution = T(bucket.sample_count()) / sample_count;
                         const T sampled_density = sampled_distribution / bucket_area;
                         const T expected_density = bucket.pdf();

@@ -45,10 +45,10 @@ class Vector final
 {
         static_assert(N > 0);
 
-        std::array<T, N> m_data;
+        std::array<T, N> data_;
 
         template <std::size_t... I>
-        constexpr Vector(std::integer_sequence<std::size_t, I...>&&, const T& v) : m_data{(static_cast<void>(I), v)...}
+        constexpr Vector(std::integer_sequence<std::size_t, I...>&&, const T& v) : data_{(static_cast<void>(I), v)...}
         {
                 static_assert(sizeof...(I) == N);
         }
@@ -60,8 +60,7 @@ public:
 
         template <typename Arg1, typename Arg2, typename... Args>
         constexpr Vector(Arg1&& arg1, Arg2&& arg2, Args&&... args)
-                : m_data{
-                        static_cast<T>(std::forward<Arg1>(arg1)), static_cast<T>(std::forward<Arg2>(arg2)),
+                : data_{static_cast<T>(std::forward<Arg1>(arg1)), static_cast<T>(std::forward<Arg2>(arg2)),
                         static_cast<T>(std::forward<Args>(args))...}
         {
                 static_assert(sizeof...(args) + 2 == N);
@@ -73,30 +72,30 @@ public:
 
         [[nodiscard]] constexpr const T& operator[](std::size_t i) const
         {
-                return m_data[i];
+                return data_[i];
         }
 
         [[nodiscard]] constexpr T& operator[](std::size_t i)
         {
-                return m_data[i];
+                return data_[i];
         }
 
         [[nodiscard]] const T* data() const
         {
                 static_assert(sizeof(Vector) == N * sizeof(T));
-                return m_data.data();
+                return data_.data();
         }
 
         [[nodiscard]] std::size_t hash() const
         {
-                return hash_combine(m_data);
+                return hash_combine(data_);
         }
 
         constexpr Vector<N, T>& operator+=(const Vector<N, T>& a) &
         {
                 for (std::size_t i = 0; i < N; ++i)
                 {
-                        m_data[i] += a[i];
+                        data_[i] += a[i];
                 }
                 return *this;
         }
@@ -105,7 +104,7 @@ public:
         {
                 for (std::size_t i = 0; i < N; ++i)
                 {
-                        m_data[i] -= a[i];
+                        data_[i] -= a[i];
                 }
                 return *this;
         }
@@ -115,7 +114,7 @@ public:
                 Vector<N, T> res;
                 for (std::size_t i = 0; i < N; ++i)
                 {
-                        m_data[i] *= a[i];
+                        data_[i] *= a[i];
                 }
                 return *this;
         }
@@ -124,7 +123,7 @@ public:
         {
                 for (std::size_t i = 0; i < N; ++i)
                 {
-                        m_data[i] *= v;
+                        data_[i] *= v;
                 }
                 return *this;
         }
@@ -133,7 +132,7 @@ public:
         {
                 for (std::size_t i = 0; i < N; ++i)
                 {
-                        m_data[i] /= v;
+                        data_[i] /= v;
                 }
                 return *this;
         }
@@ -142,7 +141,7 @@ public:
         {
                 for (std::size_t i = 0; i < N; ++i)
                 {
-                        m_data[i] = std::fma(a[i], b, m_data[i]);
+                        data_[i] = std::fma(a[i], b, data_[i]);
                 }
         }
 
@@ -153,30 +152,30 @@ public:
 
         [[nodiscard]] T norm_1() const
         {
-                T sum = std::abs(m_data[0]);
+                T sum = std::abs(data_[0]);
                 for (std::size_t i = 1; i < N; ++i)
                 {
-                        sum += std::abs(m_data[i]);
+                        sum += std::abs(data_[i]);
                 }
                 return sum;
         }
 
         [[nodiscard]] T norm_infinity() const
         {
-                T max = std::abs(m_data[0]);
+                T max = std::abs(data_[0]);
                 for (std::size_t i = 1; i < N; ++i)
                 {
-                        max = std::max(std::abs(m_data[i]), max);
+                        max = std::max(std::abs(data_[i]), max);
                 }
                 return max;
         }
 
         [[nodiscard]] T norm_squared() const
         {
-                T s = m_data[0] * m_data[0];
+                T s = data_[0] * data_[0];
                 for (std::size_t i = 1; i < N; ++i)
                 {
-                        s = std::fma(m_data[i], m_data[i], s);
+                        s = std::fma(data_[i], data_[i], s);
                 }
                 return s;
         }
@@ -190,11 +189,11 @@ public:
         {
                 const T max = norm_infinity();
 
-                T k = m_data[0] / max;
+                T k = data_[0] / max;
                 T s = k * k;
                 for (std::size_t i = 1; i < N; ++i)
                 {
-                        k = m_data[i] / max;
+                        k = data_[i] / max;
                         s = std::fma(k, k, s);
                 }
                 return max * std::sqrt(s);
@@ -205,7 +204,7 @@ public:
                 T n = norm();
                 for (std::size_t i = 0; i < N; ++i)
                 {
-                        m_data[i] /= n;
+                        data_[i] /= n;
                 }
         }
 
@@ -215,7 +214,7 @@ public:
                 Vector<N, T> res;
                 for (std::size_t i = 0; i < N; ++i)
                 {
-                        res[i] = m_data[i] / n;
+                        res[i] = data_[i] / n;
                 }
                 return res;
         }
@@ -224,7 +223,7 @@ public:
         {
                 for (std::size_t i = 0; i < N; ++i)
                 {
-                        if (m_data[i] == 0)
+                        if (data_[i] == 0)
                         {
                                 continue;
                         }
@@ -247,7 +246,7 @@ public:
                 Vector<N, T> res;
                 for (std::size_t i = 0; i < N; ++i)
                 {
-                        res[i] = std::clamp(m_data[i], low, high);
+                        res[i] = std::clamp(data_[i], low, high);
                 }
                 return res;
         }
@@ -257,8 +256,8 @@ public:
                 Vector<N, T> res;
                 for (std::size_t i = 0; i < N; ++i)
                 {
-                        // v if m_data[i] is NaN
-                        res[i] = std::max(v, m_data[i]);
+                        // v if data_[i] is NaN
+                        res[i] = std::max(v, data_[i]);
                 }
                 return res;
         }
@@ -268,10 +267,10 @@ public:
                 std::ostringstream oss;
                 oss.precision(limits<T>::max_digits10);
                 oss << '(';
-                oss << m_data[0];
+                oss << data_[0];
                 for (std::size_t i = 1; i < N; ++i)
                 {
-                        oss << ", " << m_data[i];
+                        oss << ", " << data_[i];
                 }
                 oss << ')';
                 return oss.str();

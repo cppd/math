@@ -35,7 +35,7 @@ class CopyInputMemory final
         static constexpr int SRC_BINDING = 1;
         static constexpr int DST_BINDING = 0;
 
-        vulkan::Descriptors m_descriptors;
+        vulkan::Descriptors descriptors_;
 
 public:
         static std::vector<VkDescriptorSetLayoutBinding> descriptor_set_layout_bindings();
@@ -69,9 +69,9 @@ class CopyInputConstant final : public vulkan::SpecializationConstant
                 int32_t y;
                 int32_t width;
                 int32_t height;
-        } m_data;
+        } data_;
 
-        std::vector<VkSpecializationMapEntry> m_entries;
+        std::vector<VkSpecializationMapEntry> entries_;
 
         const std::vector<VkSpecializationMapEntry>& entries() const override;
         const void* data() const override;
@@ -85,13 +85,13 @@ public:
 
 class CopyInputProgram final
 {
-        const vulkan::Device& m_device;
+        const vulkan::Device& device_;
 
-        vulkan::DescriptorSetLayout m_descriptor_set_layout;
-        vulkan::PipelineLayout m_pipeline_layout;
-        CopyInputConstant m_constant;
-        vulkan::ComputeShader m_shader;
-        vulkan::Pipeline m_pipeline;
+        vulkan::DescriptorSetLayout descriptor_set_layout_;
+        vulkan::PipelineLayout pipeline_layout_;
+        CopyInputConstant constant_;
+        vulkan::ComputeShader shader_;
+        vulkan::Pipeline pipeline_;
 
 public:
         explicit CopyInputProgram(const vulkan::Device& device);

@@ -120,149 +120,149 @@ class Impl final : public Renderer
         // Для работы с этой текстурой надо преобразовать в интервалы x(0, 1) y(0, 1) z(0, 1).
         const mat4d SHADOW_TEXTURE_MATRIX = matrix::scale<double>(0.5, 0.5, 1) * matrix::translate<double>(1, 1, 0);
 
-        const std::thread::id m_thread_id = std::this_thread::get_id();
+        const std::thread::id thread_id_ = std::this_thread::get_id();
 
-        mat4d m_main_vp_matrix = mat4d(1);
-        mat4d m_shadow_vp_matrix = mat4d(1);
-        mat4d m_shadow_vp_texture_matrix = mat4d(1);
+        mat4d main_vp_matrix_ = mat4d(1);
+        mat4d shadow_vp_matrix_ = mat4d(1);
+        mat4d shadow_vp_texture_matrix_ = mat4d(1);
 
-        vec3f m_clear_color_rgb32 = vec3f(0);
-        double m_shadow_zoom = 1;
-        bool m_show_shadow = false;
-        Region<2, int> m_viewport;
-        std::optional<vec4d> m_clip_plane;
-        bool m_show_normals = false;
+        vec3f clear_color_rgb32_ = vec3f(0);
+        double shadow_zoom_ = 1;
+        bool show_shadow_ = false;
+        Region<2, int> viewport_;
+        std::optional<vec4d> clip_plane_;
+        bool show_normals_ = false;
 
-        const vulkan::VulkanInstance& m_instance;
-        const vulkan::Device& m_device;
-        const vulkan::CommandPool& m_graphics_command_pool;
-        const vulkan::Queue& m_graphics_queue;
-        const vulkan::CommandPool& m_transfer_command_pool;
-        const vulkan::Queue& m_transfer_queue;
+        const vulkan::VulkanInstance& instance_;
+        const vulkan::Device& device_;
+        const vulkan::CommandPool& graphics_command_pool_;
+        const vulkan::Queue& graphics_queue_;
+        const vulkan::CommandPool& transfer_command_pool_;
+        const vulkan::Queue& transfer_queue_;
 
-        const RenderBuffers3D* m_render_buffers = nullptr;
-        const vulkan::ImageWithMemory* m_object_image = nullptr;
+        const RenderBuffers3D* render_buffers_ = nullptr;
+        const vulkan::ImageWithMemory* object_image_ = nullptr;
 
-        ShaderBuffers m_shader_buffers;
-        vulkan::Semaphore m_renderer_mesh_signal_semaphore;
-        vulkan::Semaphore m_renderer_volume_signal_semaphore;
+        ShaderBuffers shader_buffers_;
+        vulkan::Semaphore renderer_mesh_signal_semaphore_;
+        vulkan::Semaphore renderer_volume_signal_semaphore_;
 
-        std::unique_ptr<vulkan::DepthImageWithMemory> m_depth_copy_image;
+        std::unique_ptr<vulkan::DepthImageWithMemory> depth_copy_image_;
 
-        std::unique_ptr<DepthBuffers> m_mesh_renderer_depth_render_buffers;
-        vulkan::Semaphore m_mesh_renderer_depth_signal_semaphore;
-        MeshRenderer m_mesh_renderer;
+        std::unique_ptr<DepthBuffers> mesh_renderer_depth_render_buffers_;
+        vulkan::Semaphore mesh_renderer_depth_signal_semaphore_;
+        MeshRenderer mesh_renderer_;
 
-        vulkan::Semaphore m_volume_renderer_signal_semaphore;
-        VolumeRenderer m_volume_renderer;
+        vulkan::Semaphore volume_renderer_signal_semaphore_;
+        VolumeRenderer volume_renderer_;
 
-        ObjectStorage<MeshObject> m_mesh_storage;
-        ObjectStorage<VolumeObject> m_volume_storage;
+        ObjectStorage<MeshObject> mesh_storage_;
+        ObjectStorage<VolumeObject> volume_storage_;
 
-        std::optional<vulkan::CommandBuffers> m_clear_command_buffers;
-        vulkan::Semaphore m_clear_signal_semaphore;
+        std::optional<vulkan::CommandBuffers> clear_command_buffers_;
+        vulkan::Semaphore clear_signal_semaphore_;
 
-        std::unique_ptr<TransparencyBuffers> m_transparency_buffers;
-        vulkan::Semaphore m_render_transparent_as_opaque_signal_semaphore;
+        std::unique_ptr<TransparencyBuffers> transparency_buffers_;
+        vulkan::Semaphore render_transparent_as_opaque_signal_semaphore_;
 
         void set_lighting_color(const color::Color& color) override
         {
-                ASSERT(m_thread_id == std::this_thread::get_id());
+                ASSERT(thread_id_ == std::this_thread::get_id());
 
-                m_shader_buffers.set_lighting_color(color.rgb32().max_n(0));
+                shader_buffers_.set_lighting_color(color.rgb32().max_n(0));
         }
         void set_background_color(const color::Color& color) override
         {
-                ASSERT(m_thread_id == std::this_thread::get_id());
+                ASSERT(thread_id_ == std::this_thread::get_id());
 
-                m_clear_color_rgb32 = color.rgb32().clamp(0, 1);
-                m_shader_buffers.set_background_color(m_clear_color_rgb32);
+                clear_color_rgb32_ = color.rgb32().clamp(0, 1);
+                shader_buffers_.set_background_color(clear_color_rgb32_);
 
                 create_clear_command_buffers();
         }
         void set_wireframe_color(const color::Color& color) override
         {
-                ASSERT(m_thread_id == std::this_thread::get_id());
+                ASSERT(thread_id_ == std::this_thread::get_id());
 
-                m_shader_buffers.set_wireframe_color(color.rgb32().clamp(0, 1));
+                shader_buffers_.set_wireframe_color(color.rgb32().clamp(0, 1));
         }
         void set_clip_plane_color(const color::Color& color) override
         {
-                ASSERT(m_thread_id == std::this_thread::get_id());
+                ASSERT(thread_id_ == std::this_thread::get_id());
 
-                m_shader_buffers.set_clip_plane_color(color.rgb32().clamp(0, 1));
+                shader_buffers_.set_clip_plane_color(color.rgb32().clamp(0, 1));
         }
         void set_normal_length(float length) override
         {
-                ASSERT(m_thread_id == std::this_thread::get_id());
+                ASSERT(thread_id_ == std::this_thread::get_id());
 
-                m_shader_buffers.set_normal_length(length);
+                shader_buffers_.set_normal_length(length);
         }
         void set_normal_color_positive(const color::Color& color) override
         {
-                ASSERT(m_thread_id == std::this_thread::get_id());
+                ASSERT(thread_id_ == std::this_thread::get_id());
 
-                m_shader_buffers.set_normal_color_positive(color.rgb32().clamp(0, 1));
+                shader_buffers_.set_normal_color_positive(color.rgb32().clamp(0, 1));
         }
         void set_normal_color_negative(const color::Color& color) override
         {
-                ASSERT(m_thread_id == std::this_thread::get_id());
+                ASSERT(thread_id_ == std::this_thread::get_id());
 
-                m_shader_buffers.set_normal_color_negative(color.rgb32().clamp(0, 1));
+                shader_buffers_.set_normal_color_negative(color.rgb32().clamp(0, 1));
         }
         void set_show_smooth(bool show) override
         {
-                ASSERT(m_thread_id == std::this_thread::get_id());
+                ASSERT(thread_id_ == std::this_thread::get_id());
 
-                m_shader_buffers.set_show_smooth(show);
+                shader_buffers_.set_show_smooth(show);
         }
         void set_show_wireframe(bool show) override
         {
-                ASSERT(m_thread_id == std::this_thread::get_id());
+                ASSERT(thread_id_ == std::this_thread::get_id());
 
-                m_shader_buffers.set_show_wireframe(show);
+                shader_buffers_.set_show_wireframe(show);
         }
         void set_show_shadow(bool show) override
         {
-                ASSERT(m_thread_id == std::this_thread::get_id());
+                ASSERT(thread_id_ == std::this_thread::get_id());
 
-                m_shader_buffers.set_show_shadow(show);
-                m_show_shadow = show;
+                shader_buffers_.set_show_shadow(show);
+                show_shadow_ = show;
         }
         void set_show_fog(bool show) override
         {
-                ASSERT(m_thread_id == std::this_thread::get_id());
+                ASSERT(thread_id_ == std::this_thread::get_id());
 
-                m_shader_buffers.set_show_fog(show);
+                shader_buffers_.set_show_fog(show);
         }
         void set_show_materials(bool show) override
         {
-                ASSERT(m_thread_id == std::this_thread::get_id());
+                ASSERT(thread_id_ == std::this_thread::get_id());
 
-                m_shader_buffers.set_show_materials(show);
+                shader_buffers_.set_show_materials(show);
         }
         void set_show_normals(bool show) override
         {
-                ASSERT(m_thread_id == std::this_thread::get_id());
+                ASSERT(thread_id_ == std::this_thread::get_id());
 
-                if (m_show_normals != show)
+                if (show_normals_ != show)
                 {
-                        m_show_normals = show;
+                        show_normals_ = show;
                         create_mesh_render_command_buffers();
                 }
         }
         void set_shadow_zoom(double zoom) override
         {
-                ASSERT(m_thread_id == std::this_thread::get_id());
+                ASSERT(thread_id_ == std::this_thread::get_id());
 
-                m_shadow_zoom = zoom;
+                shadow_zoom_ = zoom;
 
                 create_mesh_depth_buffers();
                 create_mesh_command_buffers();
         }
         void set_camera(const CameraInfo& c) override
         {
-                ASSERT(m_thread_id == std::this_thread::get_id());
+                ASSERT(thread_id_ == std::this_thread::get_id());
 
                 const mat4d& shadow_projection_matrix = matrix::ortho_vulkan<double>(
                         c.shadow_volume.left, c.shadow_volume.right, c.shadow_volume.bottom, c.shadow_volume.top,
@@ -271,40 +271,40 @@ class Impl final : public Renderer
                         c.main_volume.left, c.main_volume.right, c.main_volume.bottom, c.main_volume.top,
                         c.main_volume.near, c.main_volume.far);
 
-                m_shadow_vp_matrix = shadow_projection_matrix * c.shadow_view_matrix;
-                m_shadow_vp_texture_matrix = SHADOW_TEXTURE_MATRIX * m_shadow_vp_matrix;
-                m_main_vp_matrix = main_projection_matrix * c.main_view_matrix;
+                shadow_vp_matrix_ = shadow_projection_matrix * c.shadow_view_matrix;
+                shadow_vp_texture_matrix_ = SHADOW_TEXTURE_MATRIX * shadow_vp_matrix_;
+                main_vp_matrix_ = main_projection_matrix * c.main_view_matrix;
 
-                m_shader_buffers.set_direction_to_light(-to_vector<float>(c.light_direction));
-                m_shader_buffers.set_direction_to_camera(-to_vector<float>(c.camera_direction));
+                shader_buffers_.set_direction_to_light(-to_vector<float>(c.light_direction));
+                shader_buffers_.set_direction_to_camera(-to_vector<float>(c.camera_direction));
 
                 set_matrices();
         }
 
         void set_clip_plane(const std::optional<vec4d>& plane) override
         {
-                ASSERT(m_thread_id == std::this_thread::get_id());
+                ASSERT(thread_id_ == std::this_thread::get_id());
 
-                m_clip_plane = plane;
-                if (m_clip_plane)
+                clip_plane_ = plane;
+                if (clip_plane_)
                 {
-                        m_shader_buffers.set_clip_plane(*m_clip_plane, true);
+                        shader_buffers_.set_clip_plane(*clip_plane_, true);
 
-                        for (VolumeObject* visible_volume : m_volume_storage.visible_objects())
+                        for (VolumeObject* visible_volume : volume_storage_.visible_objects())
                         {
-                                visible_volume->set_clip_plane(*m_clip_plane);
+                                visible_volume->set_clip_plane(*clip_plane_);
                         }
                 }
                 else
                 {
-                        m_shader_buffers.set_clip_plane(vec4d(0), false);
+                        shader_buffers_.set_clip_plane(vec4d(0), false);
                 }
                 create_mesh_render_command_buffers();
         }
 
         void object_update(const mesh::MeshObject<3>& object) override
         {
-                ASSERT(m_thread_id == std::this_thread::get_id());
+                ASSERT(thread_id_ == std::this_thread::get_id());
 
                 //
 
@@ -315,17 +315,17 @@ class Impl final : public Renderer
 
                         //
 
-                        ASSERT(m_volume_storage.find(object.id()) == nullptr);
+                        ASSERT(volume_storage_.find(object.id()) == nullptr);
 
-                        MeshObject* ptr = m_mesh_storage.find(object.id());
+                        MeshObject* ptr = mesh_storage_.find(object.id());
                         if (!ptr)
                         {
-                                ptr = m_mesh_storage.insert(
+                                ptr = mesh_storage_.insert(
                                         object.id(),
                                         create_mesh_object(
-                                                m_device, {m_graphics_queue.family_index()}, m_transfer_command_pool,
-                                                m_transfer_queue, m_mesh_renderer.mesh_layouts(),
-                                                m_mesh_renderer.material_layouts(), m_mesh_renderer.texture_sampler()));
+                                                device_, {graphics_queue_.family_index()}, transfer_command_pool_,
+                                                transfer_queue_, mesh_renderer_.mesh_layouts(),
+                                                mesh_renderer_.material_layouts(), mesh_renderer_.texture_sampler()));
 
                                 created = true;
                         }
@@ -337,20 +337,20 @@ class Impl final : public Renderer
                         }
                         catch (const std::exception& e)
                         {
-                                m_mesh_storage.erase(object.id());
+                                mesh_storage_.erase(object.id());
                                 LOG(std::string("Error updating mesh object. ") + e.what());
                                 return;
                         }
                         catch (...)
                         {
-                                m_mesh_storage.erase(object.id());
+                                mesh_storage_.erase(object.id());
                                 LOG("Unknown error updating mesh object");
                                 return;
                         }
 
-                        ASSERT(!(created && m_mesh_storage.is_visible(object.id())));
+                        ASSERT(!(created && mesh_storage_.is_visible(object.id())));
                         if ((update_changes.command_buffers || update_changes.transparency)
-                            && m_mesh_storage.is_visible(object.id()))
+                            && mesh_storage_.is_visible(object.id()))
                         {
                                 create_mesh_command_buffers();
                         }
@@ -364,7 +364,7 @@ class Impl final : public Renderer
 
         void object_update(const volume::VolumeObject<3>& object) override
         {
-                ASSERT(m_thread_id == std::this_thread::get_id());
+                ASSERT(thread_id_ == std::this_thread::get_id());
 
                 //
 
@@ -375,18 +375,18 @@ class Impl final : public Renderer
 
                         //
 
-                        ASSERT(m_mesh_storage.find(object.id()) == nullptr);
+                        ASSERT(mesh_storage_.find(object.id()) == nullptr);
 
-                        VolumeObject* ptr = m_volume_storage.find(object.id());
+                        VolumeObject* ptr = volume_storage_.find(object.id());
                         if (!ptr)
                         {
-                                ptr = m_volume_storage.insert(
+                                ptr = volume_storage_.insert(
                                         object.id(),
                                         create_volume_object(
-                                                m_device, {m_graphics_queue.family_index()}, m_transfer_command_pool,
-                                                m_transfer_queue, m_volume_renderer.image_layouts(),
-                                                m_volume_renderer.image_sampler(),
-                                                m_volume_renderer.transfer_function_sampler()));
+                                                device_, {graphics_queue_.family_index()}, transfer_command_pool_,
+                                                transfer_queue_, volume_renderer_.image_layouts(),
+                                                volume_renderer_.image_sampler(),
+                                                volume_renderer_.transfer_function_sampler()));
 
                                 created = true;
                         }
@@ -398,19 +398,19 @@ class Impl final : public Renderer
                         }
                         catch (const std::exception& e)
                         {
-                                m_volume_storage.erase(object.id());
+                                volume_storage_.erase(object.id());
                                 LOG(std::string("Error updating volume object. ") + e.what());
                                 return;
                         }
                         catch (...)
                         {
-                                m_volume_storage.erase(object.id());
+                                volume_storage_.erase(object.id());
                                 LOG("Unknown error updating volume object");
                                 return;
                         }
 
-                        ASSERT(!(created && m_volume_storage.is_visible(object.id())));
-                        if (update_changes.command_buffers && m_volume_storage.is_visible(object.id()))
+                        ASSERT(!(created && volume_storage_.is_visible(object.id())));
+                        if (update_changes.command_buffers && volume_storage_.is_visible(object.id()))
                         {
                                 create_volume_command_buffers();
                         }
@@ -424,15 +424,15 @@ class Impl final : public Renderer
 
         void object_delete(ObjectId id) override
         {
-                ASSERT(m_thread_id == std::this_thread::get_id());
+                ASSERT(thread_id_ == std::this_thread::get_id());
 
                 //
 
-                if (m_mesh_storage.erase(id))
+                if (mesh_storage_.erase(id))
                 {
                         return;
                 }
-                if (m_volume_storage.erase(id))
+                if (volume_storage_.erase(id))
                 {
                         return;
                 }
@@ -440,25 +440,25 @@ class Impl final : public Renderer
 
         void object_delete_all() override
         {
-                ASSERT(m_thread_id == std::this_thread::get_id());
+                ASSERT(thread_id_ == std::this_thread::get_id());
 
                 //
 
-                m_mesh_storage.clear();
-                m_volume_storage.clear();
+                mesh_storage_.clear();
+                volume_storage_.clear();
         }
 
         void object_show(ObjectId id, bool show) override
         {
-                ASSERT(m_thread_id == std::this_thread::get_id());
+                ASSERT(thread_id_ == std::this_thread::get_id());
 
                 //
 
-                if (m_mesh_storage.set_visible(id, show))
+                if (mesh_storage_.set_visible(id, show))
                 {
                         return;
                 }
-                if (m_volume_storage.set_visible(id, show))
+                if (volume_storage_.set_visible(id, show))
                 {
                         return;
                 }
@@ -469,60 +469,60 @@ class Impl final : public Renderer
                 const vulkan::Queue& graphics_queue_2,
                 const unsigned index) const override
         {
-                ASSERT(m_thread_id == std::this_thread::get_id());
+                ASSERT(thread_id_ == std::this_thread::get_id());
 
                 //
 
-                ASSERT(graphics_queue_1.family_index() == m_graphics_queue.family_index());
-                ASSERT(graphics_queue_2.family_index() == m_graphics_queue.family_index());
+                ASSERT(graphics_queue_1.family_index() == graphics_queue_.family_index());
+                ASSERT(graphics_queue_2.family_index() == graphics_queue_.family_index());
 
                 VkSemaphore semaphore;
 
                 {
-                        ASSERT(m_clear_command_buffers);
-                        ASSERT(index < m_clear_command_buffers->count());
+                        ASSERT(clear_command_buffers_);
+                        ASSERT(index < clear_command_buffers_->count());
                         vulkan::queue_submit(
-                                (*m_clear_command_buffers)[index], m_clear_signal_semaphore, graphics_queue_2);
-                        semaphore = m_clear_signal_semaphore;
+                                (*clear_command_buffers_)[index], clear_signal_semaphore_, graphics_queue_2);
+                        semaphore = clear_signal_semaphore_;
                 }
 
                 bool transparency = false;
-                if (m_mesh_renderer.has_meshes())
+                if (mesh_renderer_.has_meshes())
                 {
-                        if (!m_show_shadow)
+                        if (!show_shadow_)
                         {
                                 vulkan::queue_submit(
                                         semaphore, VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT,
-                                        *m_mesh_renderer.render_command_buffer_all(index),
-                                        m_renderer_mesh_signal_semaphore, graphics_queue_1);
+                                        *mesh_renderer_.render_command_buffer_all(index),
+                                        renderer_mesh_signal_semaphore_, graphics_queue_1);
 
-                                semaphore = m_renderer_mesh_signal_semaphore;
+                                semaphore = renderer_mesh_signal_semaphore_;
                         }
                         else
                         {
-                                ASSERT(m_mesh_renderer.depth_command_buffer(index));
+                                ASSERT(mesh_renderer_.depth_command_buffer(index));
                                 vulkan::queue_submit(
-                                        *m_mesh_renderer.depth_command_buffer(index),
-                                        m_mesh_renderer_depth_signal_semaphore, graphics_queue_1);
+                                        *mesh_renderer_.depth_command_buffer(index),
+                                        mesh_renderer_depth_signal_semaphore_, graphics_queue_1);
 
                                 vulkan::queue_submit(
-                                        std::array<VkSemaphore, 2>{semaphore, m_mesh_renderer_depth_signal_semaphore},
+                                        std::array<VkSemaphore, 2>{semaphore, mesh_renderer_depth_signal_semaphore_},
                                         std::array<VkPipelineStageFlags, 2>{
                                                 VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT,
                                                 VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT},
-                                        *m_mesh_renderer.render_command_buffer_all(index),
-                                        m_renderer_mesh_signal_semaphore, graphics_queue_1);
+                                        *mesh_renderer_.render_command_buffer_all(index),
+                                        renderer_mesh_signal_semaphore_, graphics_queue_1);
 
-                                semaphore = m_renderer_mesh_signal_semaphore;
+                                semaphore = renderer_mesh_signal_semaphore_;
                         }
 
-                        if (m_mesh_renderer.has_transparent_meshes())
+                        if (mesh_renderer_.has_transparent_meshes())
                         {
                                 vulkan::queue_wait_idle(graphics_queue_1);
 
                                 unsigned long long required_node_memory;
                                 unsigned overload_counter;
-                                m_transparency_buffers->read(&required_node_memory, &overload_counter);
+                                transparency_buffers_->read(&required_node_memory, &overload_counter);
 
                                 bool nodes = required_node_memory > TRANSPARENCY_NODE_BUFFER_MAX_SIZE;
                                 bool overload = overload_counter > 0;
@@ -530,10 +530,10 @@ class Impl final : public Renderer
                                 {
                                         vulkan::queue_submit(
                                                 semaphore, VK_PIPELINE_STAGE_BOTTOM_OF_PIPE_BIT,
-                                                *m_mesh_renderer.render_command_buffer_transparent_as_opaque(index),
-                                                m_render_transparent_as_opaque_signal_semaphore, graphics_queue_1);
+                                                *mesh_renderer_.render_command_buffer_transparent_as_opaque(index),
+                                                render_transparent_as_opaque_signal_semaphore_, graphics_queue_1);
 
-                                        semaphore = m_render_transparent_as_opaque_signal_semaphore;
+                                        semaphore = render_transparent_as_opaque_signal_semaphore_;
                                 }
                                 else
                                 {
@@ -550,14 +550,14 @@ class Impl final : public Renderer
                         }
                 }
 
-                if (m_volume_renderer.has_volume() || transparency)
+                if (volume_renderer_.has_volume() || transparency)
                 {
                         vulkan::queue_submit(
                                 semaphore, VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT,
-                                *m_volume_renderer.command_buffer(index, transparency),
-                                m_renderer_volume_signal_semaphore, graphics_queue_1);
+                                *volume_renderer_.command_buffer(index, transparency),
+                                renderer_volume_signal_semaphore_, graphics_queue_1);
 
-                        semaphore = m_renderer_volume_signal_semaphore;
+                        semaphore = renderer_volume_signal_semaphore_;
                 }
 
                 return semaphore;
@@ -565,11 +565,11 @@ class Impl final : public Renderer
 
         bool empty() const override
         {
-                ASSERT(m_thread_id == std::this_thread::get_id());
+                ASSERT(thread_id_ == std::this_thread::get_id());
 
                 //
 
-                return !m_mesh_renderer.render_command_buffer_all(0).has_value() && !m_volume_renderer.has_volume();
+                return !mesh_renderer_.render_command_buffer_all(0).has_value() && !volume_renderer_.has_volume();
         }
 
         void create_buffers(
@@ -577,35 +577,35 @@ class Impl final : public Renderer
                 const vulkan::ImageWithMemory* objects,
                 const Region<2, int>& viewport) override
         {
-                ASSERT(m_thread_id == std::this_thread::get_id());
+                ASSERT(thread_id_ == std::this_thread::get_id());
 
                 //
 
                 ASSERT(viewport.x1() <= static_cast<int>(objects->width()));
                 ASSERT(viewport.y1() <= static_cast<int>(objects->height()));
 
-                m_render_buffers = render_buffers;
-                m_object_image = objects;
-                m_viewport = viewport;
+                render_buffers_ = render_buffers;
+                object_image_ = objects;
+                viewport_ = viewport;
 
-                ViewportTransform t = viewport_transform(m_viewport);
-                m_shader_buffers.set_viewport(t.center, t.factor);
+                ViewportTransform t = viewport_transform(viewport_);
+                shader_buffers_.set_viewport(t.center, t.factor);
 
-                ASSERT(m_render_buffers->framebuffers().size() == m_render_buffers->framebuffers_clear().size());
-                ASSERT(m_render_buffers->framebuffers().size() == 1);
+                ASSERT(render_buffers_->framebuffers().size() == render_buffers_->framebuffers_clear().size());
+                ASSERT(render_buffers_->framebuffers().size() == 1);
 
                 create_depth_image();
                 create_transparency_buffers();
 
-                m_mesh_renderer.create_render_buffers(
-                        m_render_buffers, *m_object_image, m_transparency_buffers->heads(),
-                        m_transparency_buffers->heads_size(), m_transparency_buffers->counters(),
-                        m_transparency_buffers->nodes(), m_viewport);
+                mesh_renderer_.create_render_buffers(
+                        render_buffers_, *object_image_, transparency_buffers_->heads(),
+                        transparency_buffers_->heads_size(), transparency_buffers_->counters(),
+                        transparency_buffers_->nodes(), viewport_);
                 create_mesh_depth_buffers();
 
-                m_volume_renderer.create_buffers(
-                        m_render_buffers, m_graphics_command_pool, m_viewport, m_depth_copy_image->image_view(),
-                        m_transparency_buffers->heads(), m_transparency_buffers->nodes());
+                volume_renderer_.create_buffers(
+                        render_buffers_, graphics_command_pool_, viewport_, depth_copy_image_->image_view(),
+                        transparency_buffers_->heads(), transparency_buffers_->nodes());
 
                 create_mesh_command_buffers();
                 create_volume_command_buffers();
@@ -614,115 +614,114 @@ class Impl final : public Renderer
 
         void delete_buffers() override
         {
-                ASSERT(m_thread_id == std::this_thread::get_id());
+                ASSERT(thread_id_ == std::this_thread::get_id());
 
                 //
 
-                m_clear_command_buffers.reset();
-                m_volume_renderer.delete_buffers();
+                clear_command_buffers_.reset();
+                volume_renderer_.delete_buffers();
                 delete_mesh_depth_buffers();
-                m_mesh_renderer.delete_render_buffers();
-                m_depth_copy_image.reset();
+                mesh_renderer_.delete_render_buffers();
+                depth_copy_image_.reset();
                 delete_transparency_buffers();
         }
 
         void create_depth_image()
         {
-                m_depth_copy_image = std::make_unique<vulkan::DepthImageWithMemory>(
-                        m_device, std::vector<uint32_t>({m_graphics_queue.family_index()}),
-                        std::vector<VkFormat>({m_render_buffers->depth_format()}), m_render_buffers->sample_count(),
-                        m_render_buffers->width(), m_render_buffers->height(),
+                depth_copy_image_ = std::make_unique<vulkan::DepthImageWithMemory>(
+                        device_, std::vector<uint32_t>({graphics_queue_.family_index()}),
+                        std::vector<VkFormat>({render_buffers_->depth_format()}), render_buffers_->sample_count(),
+                        render_buffers_->width(), render_buffers_->height(),
                         VK_IMAGE_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_SAMPLED_BIT, DEPTH_COPY_IMAGE_LAYOUT,
-                        m_graphics_command_pool, m_graphics_queue);
+                        graphics_command_pool_, graphics_queue_);
         }
 
         void create_transparency_buffers()
         {
-                m_transparency_buffers = std::make_unique<TransparencyBuffers>(
-                        m_device, m_graphics_command_pool, m_graphics_queue,
-                        std::vector<uint32_t>({m_graphics_queue.family_index()}), m_render_buffers->sample_count(),
-                        m_render_buffers->width(), m_render_buffers->height(), TRANSPARENCY_NODE_BUFFER_MAX_SIZE);
+                transparency_buffers_ = std::make_unique<TransparencyBuffers>(
+                        device_, graphics_command_pool_, graphics_queue_,
+                        std::vector<uint32_t>({graphics_queue_.family_index()}), render_buffers_->sample_count(),
+                        render_buffers_->width(), render_buffers_->height(), TRANSPARENCY_NODE_BUFFER_MAX_SIZE);
 
-                LOG("Transparency node count: " + to_string_digit_groups(m_transparency_buffers->node_count()));
+                LOG("Transparency node count: " + to_string_digit_groups(transparency_buffers_->node_count()));
 
-                m_shader_buffers.set_transparency_max_node_count(m_transparency_buffers->node_count());
+                shader_buffers_.set_transparency_max_node_count(transparency_buffers_->node_count());
         }
 
         void delete_transparency_buffers()
         {
-                m_transparency_buffers.reset();
+                transparency_buffers_.reset();
         }
 
         void delete_mesh_depth_buffers()
         {
-                m_mesh_renderer.delete_depth_buffers();
-                m_mesh_renderer_depth_render_buffers.reset();
+                mesh_renderer_.delete_depth_buffers();
+                mesh_renderer_depth_render_buffers_.reset();
         }
 
         void create_mesh_depth_buffers()
         {
-                ASSERT(m_render_buffers);
+                ASSERT(render_buffers_);
 
                 delete_mesh_depth_buffers();
 
-                m_mesh_renderer_depth_render_buffers = create_depth_buffers(
-                        m_render_buffers->framebuffers().size(), {m_graphics_queue.family_index()},
-                        m_graphics_command_pool, m_graphics_queue, m_device, m_viewport.width(), m_viewport.height(),
-                        m_shadow_zoom);
+                mesh_renderer_depth_render_buffers_ = create_depth_buffers(
+                        render_buffers_->framebuffers().size(), {graphics_queue_.family_index()},
+                        graphics_command_pool_, graphics_queue_, device_, viewport_.width(), viewport_.height(),
+                        shadow_zoom_);
 
-                m_mesh_renderer.create_depth_buffers(m_mesh_renderer_depth_render_buffers.get());
+                mesh_renderer_.create_depth_buffers(mesh_renderer_depth_render_buffers_.get());
         }
 
         void create_clear_command_buffers()
         {
-                m_clear_command_buffers.reset();
+                clear_command_buffers_.reset();
 
                 vulkan::CommandBufferCreateInfo info;
 
-                info.device = m_device;
+                info.device = device_;
                 info.render_area.emplace();
                 info.render_area->offset.x = 0;
                 info.render_area->offset.y = 0;
-                info.render_area->extent.width = m_render_buffers->width();
-                info.render_area->extent.height = m_render_buffers->height();
-                info.render_pass = m_render_buffers->render_pass_clear();
-                info.framebuffers = &m_render_buffers->framebuffers_clear();
-                info.command_pool = m_graphics_command_pool;
+                info.render_area->extent.width = render_buffers_->width();
+                info.render_area->extent.height = render_buffers_->height();
+                info.render_pass = render_buffers_->render_pass_clear();
+                info.framebuffers = &render_buffers_->framebuffers_clear();
+                info.command_pool = graphics_command_pool_;
 
                 info.before_render_pass_commands = [this](VkCommandBuffer command_buffer)
                 {
-                        commands_init_uint32_storage_image(command_buffer, *m_object_image, OBJECTS_CLEAR_VALUE);
+                        commands_init_uint32_storage_image(command_buffer, *object_image_, OBJECTS_CLEAR_VALUE);
                 };
 
-                const std::vector<VkClearValue> clear_values = m_render_buffers->clear_values(m_clear_color_rgb32);
+                const std::vector<VkClearValue> clear_values = render_buffers_->clear_values(clear_color_rgb32_);
                 info.clear_values = &clear_values;
 
-                m_clear_command_buffers = vulkan::create_command_buffers(info);
+                clear_command_buffers_ = vulkan::create_command_buffers(info);
         }
 
         void create_mesh_render_command_buffers()
         {
-                m_mesh_renderer.delete_render_command_buffers();
+                mesh_renderer_.delete_render_command_buffers();
 
-                m_mesh_renderer.create_render_command_buffers(
-                        m_mesh_storage.visible_objects(), m_graphics_command_pool, m_clip_plane.has_value(),
-                        m_show_normals,
+                mesh_renderer_.create_render_command_buffers(
+                        mesh_storage_.visible_objects(), graphics_command_pool_, clip_plane_.has_value(), show_normals_,
                         [this](VkCommandBuffer command_buffer)
                         {
-                                m_transparency_buffers->commands_init(command_buffer);
+                                transparency_buffers_->commands_init(command_buffer);
                         },
                         [this](VkCommandBuffer command_buffer)
                         {
-                                m_transparency_buffers->commands_read(command_buffer);
+                                transparency_buffers_->commands_read(command_buffer);
                         });
         }
 
         void create_mesh_depth_command_buffers()
         {
-                m_mesh_renderer.delete_depth_command_buffers();
-                m_mesh_renderer.create_depth_command_buffers(
-                        m_mesh_storage.visible_objects(), m_graphics_command_pool, m_clip_plane.has_value(),
-                        m_show_normals);
+                mesh_renderer_.delete_depth_command_buffers();
+                mesh_renderer_.create_depth_command_buffers(
+                        mesh_storage_.visible_objects(), graphics_command_pool_, clip_plane_.has_value(),
+                        show_normals_);
         }
 
         void create_mesh_command_buffers()
@@ -733,38 +732,37 @@ class Impl final : public Renderer
 
         void create_volume_command_buffers()
         {
-                m_volume_renderer.delete_command_buffers();
-                if (m_volume_storage.visible_objects().size() != 1)
+                volume_renderer_.delete_command_buffers();
+                if (volume_storage_.visible_objects().size() != 1)
                 {
                         return;
                 }
                 auto copy_depth = [this](VkCommandBuffer command_buffer)
                 {
-                        ASSERT(m_render_buffers);
-                        ASSERT(m_render_buffers->framebuffers().size() == 1);
+                        ASSERT(render_buffers_);
+                        ASSERT(render_buffers_->framebuffers().size() == 1);
                         constexpr int INDEX = 0;
 
-                        m_render_buffers->commands_depth_copy(
-                                command_buffer, m_depth_copy_image->image(), DEPTH_COPY_IMAGE_LAYOUT, m_viewport,
-                                INDEX);
+                        render_buffers_->commands_depth_copy(
+                                command_buffer, depth_copy_image_->image(), DEPTH_COPY_IMAGE_LAYOUT, viewport_, INDEX);
                 };
-                for (VolumeObject* visible_volume : m_volume_storage.visible_objects())
+                for (VolumeObject* visible_volume : volume_storage_.visible_objects())
                 {
-                        m_volume_renderer.create_command_buffers(visible_volume, m_graphics_command_pool, copy_depth);
+                        volume_renderer_.create_command_buffers(visible_volume, graphics_command_pool_, copy_depth);
                 }
         }
 
         void set_volume_matrix()
         {
-                for (VolumeObject* visible_volume : m_volume_storage.visible_objects())
+                for (VolumeObject* visible_volume : volume_storage_.visible_objects())
                 {
-                        visible_volume->set_matrix_and_clip_plane(m_main_vp_matrix, m_clip_plane);
+                        visible_volume->set_matrix_and_clip_plane(main_vp_matrix_, clip_plane_);
                 }
         }
 
         void set_matrices()
         {
-                m_shader_buffers.set_matrices(m_main_vp_matrix, m_shadow_vp_matrix, m_shadow_vp_texture_matrix);
+                shader_buffers_.set_matrices(main_vp_matrix_, shadow_vp_matrix_, shadow_vp_texture_matrix_);
                 set_volume_matrix();
         }
 
@@ -787,41 +785,41 @@ public:
              const vulkan::Queue& transfer_queue,
              bool sample_shading,
              bool sampler_anisotropy)
-                : m_instance(instance),
-                  m_device(instance.device()),
-                  m_graphics_command_pool(graphics_command_pool),
-                  m_graphics_queue(graphics_queue),
-                  m_transfer_command_pool(transfer_command_pool),
-                  m_transfer_queue(transfer_queue),
-                  m_shader_buffers(m_device, {m_graphics_queue.family_index()}),
-                  m_renderer_mesh_signal_semaphore(m_device),
-                  m_renderer_volume_signal_semaphore(m_device),
-                  m_mesh_renderer_depth_signal_semaphore(m_device),
-                  m_mesh_renderer(m_device, sample_shading, sampler_anisotropy, m_shader_buffers),
-                  m_volume_renderer_signal_semaphore(m_device),
-                  m_volume_renderer(m_device, sample_shading, m_shader_buffers),
-                  m_mesh_storage(
+                : instance_(instance),
+                  device_(instance.device()),
+                  graphics_command_pool_(graphics_command_pool),
+                  graphics_queue_(graphics_queue),
+                  transfer_command_pool_(transfer_command_pool),
+                  transfer_queue_(transfer_queue),
+                  shader_buffers_(device_, {graphics_queue_.family_index()}),
+                  renderer_mesh_signal_semaphore_(device_),
+                  renderer_volume_signal_semaphore_(device_),
+                  mesh_renderer_depth_signal_semaphore_(device_),
+                  mesh_renderer_(device_, sample_shading, sampler_anisotropy, shader_buffers_),
+                  volume_renderer_signal_semaphore_(device_),
+                  volume_renderer_(device_, sample_shading, shader_buffers_),
+                  mesh_storage_(
                           [this]()
                           {
                                   mesh_visibility_changed();
                           }),
-                  m_volume_storage(
+                  volume_storage_(
                           [this]()
                           {
                                   volume_visibility_changed();
                           }),
-                  m_clear_signal_semaphore(m_device),
-                  m_render_transparent_as_opaque_signal_semaphore(m_device)
+                  clear_signal_semaphore_(device_),
+                  render_transparent_as_opaque_signal_semaphore_(device_)
         {
         }
 
         ~Impl() override
         {
-                ASSERT(m_thread_id == std::this_thread::get_id());
+                ASSERT(thread_id_ == std::this_thread::get_id());
 
                 //
 
-                m_instance.device_wait_idle_noexcept("the Vulkan renderer destructor");
+                instance_.device_wait_idle_noexcept("the Vulkan renderer destructor");
         }
 };
 }

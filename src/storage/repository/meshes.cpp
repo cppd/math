@@ -81,8 +81,8 @@ constexpr Vector<N, T> vector_with_last_dimension(V&& v)
 template <std::size_t N>
 class DiscretePoints
 {
-        std::vector<Vector<N, float>> m_points;
-        std::unordered_set<Vector<N, long>> m_integer_points;
+        std::vector<Vector<N, float>> points_;
+        std::unordered_set<Vector<N, long>> integer_points_;
 
         template <typename T>
         static Vector<N, long> to_integer(const Vector<N, T>& v, long factor)
@@ -106,34 +106,34 @@ class DiscretePoints
 public:
         explicit DiscretePoints(unsigned point_count)
         {
-                m_points.reserve(point_count);
-                m_integer_points.reserve(point_count);
+                points_.reserve(point_count);
+                integer_points_.reserve(point_count);
         }
 
         template <typename T>
         void add(const Vector<N, T>& p)
         {
                 Vector<N, long> integer_point = to_integer(p, DISCRETIZATION);
-                if (m_integer_points.count(integer_point) == 0)
+                if (integer_points_.count(integer_point) == 0)
                 {
-                        m_integer_points.insert(integer_point);
-                        m_points.push_back(to_vector<float>(p));
+                        integer_points_.insert(integer_point);
+                        points_.push_back(to_vector<float>(p));
                 }
         }
 
         unsigned size() const
         {
-                return m_points.size();
+                return points_.size();
         }
 
         std::vector<Vector<N, float>> release()
         {
-                ASSERT(m_integer_points.size() == m_points.size());
-                ASSERT(points_are_unique(m_points));
+                ASSERT(integer_points_.size() == points_.size());
+                ASSERT(points_are_unique(points_));
 
-                m_integer_points.clear();
+                integer_points_.clear();
 
-                return std::move(m_points);
+                return std::move(points_);
         }
 };
 
@@ -326,23 +326,23 @@ std::vector<std::string> names_of_map(const std::map<std::string, T>& map)
 template <std::size_t N>
 class Impl final : public MeshObjectRepository<N>
 {
-        std::map<std::string, std::function<std::unique_ptr<mesh::Mesh<N>>(unsigned)>> m_map_point;
-        std::map<std::string, std::function<std::unique_ptr<mesh::Mesh<N>>(unsigned)>> m_map_facet;
+        std::map<std::string, std::function<std::unique_ptr<mesh::Mesh<N>>(unsigned)>> map_point_;
+        std::map<std::string, std::function<std::unique_ptr<mesh::Mesh<N>>(unsigned)>> map_facet_;
 
         std::vector<std::string> point_object_names() const override
         {
-                return names_of_map(m_map_point);
+                return names_of_map(map_point_);
         }
 
         std::vector<std::string> facet_object_names() const override
         {
-                return names_of_map(m_map_facet);
+                return names_of_map(map_facet_);
         }
 
         std::unique_ptr<mesh::Mesh<N>> point_object(const std::string& object_name, unsigned point_count) const override
         {
-                auto iter = m_map_point.find(object_name);
-                if (iter != m_map_point.cend())
+                auto iter = map_point_.find(object_name);
+                if (iter != map_point_.cend())
                 {
                         return iter->second(point_count);
                 }
@@ -351,8 +351,8 @@ class Impl final : public MeshObjectRepository<N>
 
         std::unique_ptr<mesh::Mesh<N>> facet_object(const std::string& object_name, unsigned facet_count) const override
         {
-                auto iter = m_map_facet.find(object_name);
-                if (iter != m_map_facet.cend())
+                auto iter = map_facet_.find(object_name);
+                if (iter != map_facet_.cend())
                 {
                         return iter->second(facet_count);
                 }
@@ -362,21 +362,21 @@ class Impl final : public MeshObjectRepository<N>
 public:
         Impl()
         {
-                m_map_point.emplace("Ellipsoid", ellipsoid<N>);
-                m_map_point.emplace("Ellipsoid, bound", ellipsoid_bound<N>);
+                map_point_.emplace("Ellipsoid", ellipsoid<N>);
+                map_point_.emplace("Ellipsoid, bound", ellipsoid_bound<N>);
 
-                m_map_point.emplace("Sphere with a notch", sphere_with_notch<N>);
-                m_map_point.emplace("Sphere with a notch, bound", sphere_with_notch_bound<N>);
+                map_point_.emplace("Sphere with a notch", sphere_with_notch<N>);
+                map_point_.emplace("Sphere with a notch, bound", sphere_with_notch_bound<N>);
 
                 if constexpr (N == 3)
                 {
-                        m_map_point.emplace(reinterpret_cast<const char*>(u8"Möbius strip"), mobius_strip);
+                        map_point_.emplace(reinterpret_cast<const char*>(u8"Möbius strip"), mobius_strip);
                 }
 
-                m_map_point.emplace("Torus", torus<N>);
-                m_map_point.emplace("Torus, bound", torus_bound<N>);
+                map_point_.emplace("Torus", torus<N>);
+                map_point_.emplace("Torus, bound", torus_bound<N>);
 
-                m_map_facet.emplace("Sphere", sphere<N>);
+                map_facet_.emplace("Sphere", sphere<N>);
         }
 };
 }

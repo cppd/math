@@ -32,8 +32,8 @@ namespace ns::storage
 {
 class Storage final
 {
-        mutable std::shared_mutex m_mutex;
-        std::unordered_map<ObjectId, std::variant<MeshObject, VolumeObject>> m_map;
+        mutable std::shared_mutex mutex_;
+        std::unordered_map<ObjectId, std::variant<MeshObject, VolumeObject>> map_;
 
         template <typename To, typename From>
         static To to_type(From&& object)
@@ -51,22 +51,22 @@ class Storage final
 public:
         void delete_object(ObjectId id)
         {
-                typename decltype(m_map)::mapped_type tmp;
-                std::unique_lock lock(m_mutex);
-                auto iter = m_map.find(id);
-                if (iter != m_map.cend())
+                typename decltype(map_)::mapped_type tmp;
+                std::unique_lock lock(mutex_);
+                auto iter = map_.find(id);
+                if (iter != map_.cend())
                 {
                         tmp = std::move(iter->second);
-                        m_map.erase(iter);
+                        map_.erase(iter);
                 }
         }
 
         void clear()
         {
-                decltype(m_map) tmp;
-                std::unique_lock lock(m_mutex);
-                tmp = std::move(m_map);
-                m_map.clear();
+                decltype(map_) tmp;
+                std::unique_lock lock(mutex_);
+                tmp = std::move(map_);
+                map_.clear();
         }
 
         template <std::size_t N>
@@ -77,11 +77,11 @@ public:
                         error("No mesh object to set in storage");
                 }
 
-                std::unique_lock lock(m_mutex);
-                auto iter = m_map.find(object->id());
-                if (iter == m_map.cend())
+                std::unique_lock lock(mutex_);
+                auto iter = map_.find(object->id());
+                if (iter == map_.cend())
                 {
-                        m_map.emplace(object->id(), object);
+                        map_.emplace(object->id(), object);
                         return;
                 }
 
@@ -99,11 +99,11 @@ public:
                         error("No mesh object to set in storage");
                 }
 
-                std::unique_lock lock(m_mutex);
-                auto iter = m_map.find(object->id());
-                if (iter == m_map.cend())
+                std::unique_lock lock(mutex_);
+                auto iter = map_.find(object->id());
+                if (iter == map_.cend())
                 {
-                        m_map.emplace(object->id(), object);
+                        map_.emplace(object->id(), object);
                         return;
                 }
 
@@ -118,9 +118,9 @@ public:
         {
                 std::optional<MeshObject> opt;
 
-                std::shared_lock lock(m_mutex);
-                auto iter = m_map.find(id);
-                if (iter != m_map.cend())
+                std::shared_lock lock(mutex_);
+                auto iter = map_.find(id);
+                if (iter != map_.cend())
                 {
                         try
                         {
@@ -148,9 +148,9 @@ public:
         {
                 std::optional<VolumeObject> opt;
 
-                std::shared_lock lock(m_mutex);
-                auto iter = m_map.find(id);
-                if (iter != m_map.cend())
+                std::shared_lock lock(mutex_);
+                auto iter = map_.find(id);
+                if (iter != map_.cend())
                 {
                         try
                         {
@@ -178,11 +178,11 @@ public:
         std::vector<T> objects() const
         {
                 std::vector<T> objects;
-                std::shared_lock lock(m_mutex);
+                std::shared_lock lock(mutex_);
                 if constexpr (std::is_same_v<T, MeshObjectConst> || std::is_same_v<T, VolumeObjectConst>)
                 {
                         using OBJ = std::conditional_t<std::is_same_v<T, MeshObjectConst>, MeshObject, VolumeObject>;
-                        for (const auto& v : m_map)
+                        for (const auto& v : map_)
                         {
                                 if (std::holds_alternative<OBJ>(v.second))
                                 {
@@ -193,7 +193,7 @@ public:
                 else
                 {
                         static_assert(std::is_same_v<T, MeshObject> || std::is_same_v<T, VolumeObject>);
-                        for (const auto& v : m_map)
+                        for (const auto& v : map_)
                         {
                                 if (std::holds_alternative<T>(v.second))
                                 {

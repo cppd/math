@@ -33,9 +33,9 @@ namespace ns::gui::painter_window
 {
 class Actions final
 {
-        const Pixels* m_pixels;
-        std::unique_ptr<WorkerThreads> m_worker_threads;
-        std::vector<Connection> m_connections;
+        const Pixels* pixels_;
+        std::unique_ptr<WorkerThreads> worker_threads_;
+        std::vector<Connection> connections_;
 
         void save_image(const std::string& action, long long slice) const;
         void save_image(const std::string& action) const;

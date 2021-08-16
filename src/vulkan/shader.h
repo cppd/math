@@ -26,9 +26,9 @@ namespace ns::vulkan
 {
 class Shader
 {
-        ShaderModule m_module;
-        VkShaderStageFlagBits m_stage;
-        std::string m_entry_point_name;
+        ShaderModule module_;
+        VkShaderStageFlagBits stage_;
+        std::string entry_point_name_;
 
 protected:
         Shader(VkDevice device,

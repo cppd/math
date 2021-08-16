@@ -80,10 +80,10 @@ class Parallelotope final
                 Vector<N, T> n;
                 T d1, d2;
         };
-        std::array<Planes, N> m_planes;
+        std::array<Planes, N> planes_;
 
-        Vector<N, T> m_org;
-        std::array<Vector<N, T>, N> m_vectors;
+        Vector<N, T> org_;
+        std::array<Vector<N, T>, N> vectors_;
 
         void set_data(const Vector<N, T>& org, const std::array<Vector<N, T>, N>& vectors);
 
@@ -168,8 +168,8 @@ Parallelotope<N, T>::Parallelotope(const Vector<N, T>& min, const Vector<N, T>& 
 template <std::size_t N, typename T>
 void Parallelotope<N, T>::set_data(const Vector<N, T>& org, const std::array<Vector<N, T>, N>& vectors)
 {
-        m_org = org;
-        m_vectors = vectors;
+        org_ = org;
+        vectors_ = vectors;
 
         // Расстояние от точки до плоскости
         // dot(p - org, normal) = dot(p, normal) - dot(org, normal)
@@ -177,13 +177,13 @@ void Parallelotope<N, T>::set_data(const Vector<N, T>& org, const std::array<Vec
         // Вектор n наружу от объекта предназначен для плоскости с параметром d2.
         for (unsigned i = 0; i < N; ++i)
         {
-                m_planes[i].n = numerical::orthogonal_complement(del_elem(m_vectors, i)).normalized();
-                if (dot(m_planes[i].n, m_vectors[i]) < 0)
+                planes_[i].n = numerical::orthogonal_complement(del_elem(vectors_, i)).normalized();
+                if (dot(planes_[i].n, vectors_[i]) < 0)
                 {
-                        m_planes[i].n = -m_planes[i].n;
+                        planes_[i].n = -planes_[i].n;
                 }
-                m_planes[i].d1 = dot(m_org, m_planes[i].n);
-                m_planes[i].d2 = dot(m_org + m_vectors[i], m_planes[i].n);
+                planes_[i].d1 = dot(org_, planes_[i].n);
+                planes_[i].d2 = dot(org_ + vectors_[i], planes_[i].n);
         }
 }
 
@@ -198,11 +198,11 @@ Constraints<N, T, 2 * N, 0> Parallelotope<N, T>::constraints() const
         // для точек параллелотопа d + -(n * x) >= 0.
         for (unsigned i = 0, c_i = 0; i < N; ++i, c_i += 2)
         {
-                result.c[c_i].a = m_planes[i].n;
-                result.c[c_i].b = -m_planes[i].d1;
+                result.c[c_i].a = planes_[i].n;
+                result.c[c_i].b = -planes_[i].d1;
 
-                result.c[c_i + 1].a = -m_planes[i].n;
-                result.c[c_i + 1].b = m_planes[i].d2;
+                result.c[c_i + 1].a = -planes_[i].n;
+                result.c[c_i + 1].b = planes_[i].d2;
         }
 
         return result;
@@ -216,11 +216,11 @@ bool Parallelotope<N, T>::intersect_impl(const Ray<N, T>& r, T* first, T* second
 
         for (unsigned i = 0; i < N; ++i)
         {
-                T s = dot(r.dir(), m_planes[i].n);
+                T s = dot(r.dir(), planes_[i].n);
                 if (s == 0)
                 {
-                        T d = dot(r.org(), m_planes[i].n);
-                        if (d < m_planes[i].d1 || d > m_planes[i].d2)
+                        T d = dot(r.org(), planes_[i].n);
+                        if (d < planes_[i].d1 || d > planes_[i].d2)
                         {
                                 // параллельно плоскостям и снаружи
                                 return false;
@@ -229,9 +229,9 @@ bool Parallelotope<N, T>::intersect_impl(const Ray<N, T>& r, T* first, T* second
                         continue;
                 }
 
-                T d = dot(r.org(), m_planes[i].n);
-                T alpha1 = (m_planes[i].d1 - d) / s;
-                T alpha2 = (m_planes[i].d2 - d) / s;
+                T d = dot(r.org(), planes_[i].n);
+                T alpha1 = (planes_[i].d1 - d) / s;
+                T alpha2 = (planes_[i].d2 - d) / s;
 
                 if (s > 0)
                 {
@@ -306,21 +306,21 @@ Vector<N, T> Parallelotope<N, T>::normal(const Vector<N, T>& p) const
         Vector<N, T> n;
         for (unsigned i = 0; i < N; ++i)
         {
-                T d = dot(p, m_planes[i].n);
+                T d = dot(p, planes_[i].n);
                 T l;
 
-                l = std::abs(d - m_planes[i].d1);
+                l = std::abs(d - planes_[i].d1);
                 if (l < min)
                 {
                         min = l;
-                        n = -m_planes[i].n;
+                        n = -planes_[i].n;
                 }
 
-                l = std::abs(d - m_planes[i].d2);
+                l = std::abs(d - planes_[i].d2);
                 if (l < min)
                 {
                         min = l;
-                        n = m_planes[i].n;
+                        n = planes_[i].n;
                 }
         }
 
@@ -334,14 +334,14 @@ bool Parallelotope<N, T>::inside(const Vector<N, T>& p) const
 {
         for (unsigned i = 0; i < N; ++i)
         {
-                T d = dot(p, m_planes[i].n);
+                T d = dot(p, planes_[i].n);
 
-                if (d < m_planes[i].d1)
+                if (d < planes_[i].d1)
                 {
                         return false;
                 }
 
-                if (d > m_planes[i].d2)
+                if (d > planes_[i].d2)
                 {
                         return false;
                 }
@@ -361,11 +361,11 @@ void Parallelotope<N, T>::binary_division_impl(
 {
         if constexpr (INDEX >= 0)
         {
-                (*d1)[INDEX] = m_planes[INDEX].d1;
+                (*d1)[INDEX] = planes_[INDEX].d1;
                 (*d2)[INDEX] = middle_d[INDEX];
                 binary_division_impl<INDEX - 1>(org, d1, d2, half_vectors, middle_d, f);
                 (*d1)[INDEX] = middle_d[INDEX];
-                (*d2)[INDEX] = m_planes[INDEX].d2;
+                (*d2)[INDEX] = planes_[INDEX].d2;
                 binary_division_impl<INDEX - 1>(org + half_vectors[INDEX], d1, d2, half_vectors, middle_d, f);
         }
         else
@@ -383,16 +383,16 @@ std::array<Parallelotope<N, T>, Parallelotope<N, T>::DIVISIONS> Parallelotope<N,
         Vector<N, T> middle_d;
         for (unsigned i = 0; i < N; ++i)
         {
-                half_vectors[i] = m_vectors[i] / static_cast<T>(2);
-                middle_d[i] = (m_planes[i].d2 + m_planes[i].d1) / static_cast<T>(2);
+                half_vectors[i] = vectors_[i] / static_cast<T>(2);
+                middle_d[i] = (planes_[i].d2 + planes_[i].d1) / static_cast<T>(2);
         }
 
         for (Parallelotope& p : result)
         {
-                p.m_vectors = half_vectors;
+                p.vectors_ = half_vectors;
                 for (unsigned i = 0; i < N; ++i)
                 {
-                        p.m_planes[i].n = m_planes[i].n;
+                        p.planes_[i].n = planes_[i].n;
                 }
         }
 
@@ -402,16 +402,16 @@ std::array<Parallelotope<N, T>, Parallelotope<N, T>::DIVISIONS> Parallelotope<N,
         auto f = [&count, &result, &d1, &d2](const Vector<N, T>& org)
         {
                 ASSERT(count < result.size());
-                result[count].m_org = org;
+                result[count].org_ = org;
                 for (unsigned i = 0; i < N; ++i)
                 {
-                        result[count].m_planes[i].d1 = d1[i];
-                        result[count].m_planes[i].d2 = d2[i];
+                        result[count].planes_[i].d1 = d1[i];
+                        result[count].planes_[i].d2 = d2[i];
                 }
                 ++count;
         };
 
-        binary_division_impl<N - 1>(m_org, &d1, &d2, half_vectors, middle_d, f);
+        binary_division_impl<N - 1>(org_, &d1, &d2, half_vectors, middle_d, f);
 
         ASSERT(count == result.size());
 
@@ -425,7 +425,7 @@ void Parallelotope<N, T>::vertices_impl(const Vector<N, T>& p, const F& f) const
         if constexpr (INDEX >= 0)
         {
                 vertices_impl<INDEX - 1>(p, f);
-                vertices_impl<INDEX - 1>(p + m_vectors[INDEX], f);
+                vertices_impl<INDEX - 1>(p + vectors_[INDEX], f);
         }
         else
         {
@@ -445,7 +445,7 @@ std::array<Vector<N, T>, Parallelotope<N, T>::VERTEX_COUNT> Parallelotope<N, T>:
                 result[count++] = p;
         };
 
-        vertices_impl<N - 1>(m_org, f);
+        vertices_impl<N - 1>(org_, f);
 
         ASSERT(count == result.size());
 
@@ -464,7 +464,7 @@ void Parallelotope<N, T>::edges_impl(const Vector<N, T>& p, std::array<bool, N>*
                 edges_impl<INDEX - 1>(p, dimensions, f);
 
                 (*dimensions)[INDEX] = false;
-                edges_impl<INDEX - 1>(p + m_vectors[INDEX], dimensions, f);
+                edges_impl<INDEX - 1>(p + vectors_[INDEX], dimensions, f);
         }
         else
         {
@@ -489,7 +489,7 @@ std::array<std::array<Vector<N, T>, 2>, Parallelotope<N, T>::EDGE_COUNT> Paralle
                         {
                                 ASSERT(count < result.size());
                                 result[count][0] = p;
-                                result[count][1] = m_vectors[i];
+                                result[count][1] = vectors_[i];
                                 ++count;
                         }
                 }
@@ -498,7 +498,7 @@ std::array<std::array<Vector<N, T>, 2>, Parallelotope<N, T>::EDGE_COUNT> Paralle
         // Смещаться по каждому измерению для перехода к другой вершине.
         // Добавлять к массиву рёбер пары, состоящие из вершины и векторов
         // измерений, по которым не смещались для перехода к этой вершине.
-        edges_impl<N - 1>(m_org, &dimensions, f);
+        edges_impl<N - 1>(org_, &dimensions, f);
 
         ASSERT(count == result.size());
 
@@ -511,8 +511,8 @@ void Parallelotope<N, T>::length_impl(const Vector<N, T>& sum, const F& f) const
 {
         if constexpr (INDEX >= 0)
         {
-                length_impl<INDEX - 1>(sum + m_vectors[INDEX], f);
-                length_impl<INDEX - 1>(sum - m_vectors[INDEX], f);
+                length_impl<INDEX - 1>(sum + vectors_[INDEX], f);
+                length_impl<INDEX - 1>(sum - vectors_[INDEX], f);
         }
         else
         {
@@ -538,7 +538,7 @@ T Parallelotope<N, T>::length() const
         // диагонали оставшееся измерение, получаются все диагонали целого параллелотопа.
         // Одно из измерений не меняется, остальные к нему прибавляются и вычитаются.
         constexpr int LAST_INDEX = N - 1;
-        length_impl<LAST_INDEX - 1>(m_vectors[LAST_INDEX], f);
+        length_impl<LAST_INDEX - 1>(vectors_[LAST_INDEX], f);
 
         ASSERT(count == DIAGONAL_COUNT);
 
@@ -548,14 +548,14 @@ T Parallelotope<N, T>::length() const
 template <std::size_t N, typename T>
 const Vector<N, T>& Parallelotope<N, T>::org() const
 {
-        return m_org;
+        return org_;
 }
 
 template <std::size_t N, typename T>
 const Vector<N, T>& Parallelotope<N, T>::e(unsigned n) const
 {
         ASSERT(n < N);
-        return m_vectors[n];
+        return vectors_[n];
 }
 }
 

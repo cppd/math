@@ -63,9 +63,9 @@ std::vector<double> lowpass_filter_window_function(int tap_count)
 }
 
 Frequency::Frequency(double interval_length, int sample_count)
-        : m_sample_count(sample_count),
-          m_sample_frequency(m_sample_count / interval_length),
-          m_window(lowpass_filter_window_function(m_sample_count))
+        : sample_count_(sample_count),
+          sample_frequency_(sample_count_ / interval_length),
+          window_(lowpass_filter_window_function(sample_count_))
 {
         if (interval_length <= 0)
         {
@@ -75,28 +75,28 @@ Frequency::Frequency(double interval_length, int sample_count)
 
 double Frequency::calculate()
 {
-        const int sample_number = duration_from(m_start_time) * m_sample_frequency;
+        const int sample_number = duration_from(start_time_) * sample_frequency_;
 
-        while (!m_deque.empty() && (m_deque.front().sample_number < sample_number - m_sample_count))
+        while (!deque_.empty() && (deque_.front().sample_number < sample_number - sample_count_))
         {
-                m_deque.pop_front();
+                deque_.pop_front();
         }
 
-        for (int i = m_sample_count - m_deque.size(); i >= 0; --i)
+        for (int i = sample_count_ - deque_.size(); i >= 0; --i)
         {
-                m_deque.emplace_back(sample_number - i);
+                deque_.emplace_back(sample_number - i);
         }
 
-        ASSERT(m_deque.size() == 1u + m_sample_count);
+        ASSERT(deque_.size() == 1u + sample_count_);
 
-        ++(m_deque.back().event_count);
+        ++(deque_.back().event_count);
 
         double sum = 0;
-        for (int i = 0; i < m_sample_count; ++i)
+        for (int i = 0; i < sample_count_; ++i)
         {
-                sum += m_window[i] * m_deque[i].event_count;
+                sum += window_[i] * deque_[i].event_count;
         }
 
-        return sum * m_sample_frequency;
+        return sum * sample_frequency_;
 }
 }

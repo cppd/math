@@ -308,15 +308,15 @@ BufferWithMemory::BufferWithMemory(
         const std::vector<uint32_t>& family_indices,
         const VkBufferUsageFlags usage,
         const VkDeviceSize size)
-        : m_device(device),
-          m_physical_device(device.physical_device()),
-          m_family_indices(sort_and_unique(family_indices)),
-          m_buffer(create_buffer(device, size, usage, family_indices)),
-          m_memory_properties(
+        : device_(device),
+          physical_device_(device.physical_device()),
+          family_indices_(sort_and_unique(family_indices)),
+          buffer_(create_buffer(device, size, usage, family_indices)),
+          memory_properties_(
                   memory_type == BufferMemoryType::HostVisible
                           ? (VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT)
                           : (VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT)),
-          m_device_memory(create_device_memory(device, device.physical_device(), m_buffer, m_memory_properties))
+          device_memory_(create_device_memory(device, device.physical_device(), buffer_, memory_properties_))
 {
         ASSERT(size > 0);
 }
@@ -328,16 +328,16 @@ void BufferWithMemory::write(
         const VkDeviceSize size,
         const void* const data) const
 {
-        if (offset + size > m_buffer.size())
+        if (offset + size > buffer_.size())
         {
                 error("Offset and data size is greater than buffer size");
         }
 
         ASSERT(data && !host_visible() && has_usage(VK_BUFFER_USAGE_TRANSFER_DST_BIT));
 
-        check_family_index(command_pool, queue, m_family_indices);
+        check_family_index(command_pool, queue, family_indices_);
 
-        write_data_to_buffer(m_device, m_physical_device, command_pool, queue, m_buffer, offset, size, data);
+        write_data_to_buffer(device_, physical_device_, command_pool, queue, buffer_, offset, size, data);
 }
 
 void BufferWithMemory::write(
@@ -346,7 +346,7 @@ void BufferWithMemory::write(
         const VkDeviceSize size,
         const void* const data) const
 {
-        if (m_buffer.size() != size)
+        if (buffer_.size() != size)
         {
                 error("Buffer size and data size are not equal");
         }
@@ -356,43 +356,43 @@ void BufferWithMemory::write(
 
 BufferWithMemory::operator VkBuffer() const&
 {
-        return m_buffer;
+        return buffer_;
 }
 
 const vulkan::Buffer& BufferWithMemory::buffer() const
 {
-        return m_buffer;
+        return buffer_;
 }
 
 VkDeviceSize BufferWithMemory::size() const
 {
-        return m_buffer.size();
+        return buffer_.size();
 }
 
 bool BufferWithMemory::has_usage(VkBufferUsageFlagBits flag) const
 {
-        return m_buffer.has_usage(flag);
+        return buffer_.has_usage(flag);
 }
 
 VkMemoryPropertyFlags BufferWithMemory::memory_properties() const
 {
-        return m_memory_properties;
+        return memory_properties_;
 }
 
 bool BufferWithMemory::host_visible() const
 {
-        return (m_memory_properties & VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT) == VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT;
+        return (memory_properties_ & VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT) == VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT;
 }
 
 //
 
 BufferMapper::BufferMapper(const BufferWithMemory& buffer, const VkDeviceSize offset, const VkDeviceSize size)
-        : m_device(buffer.m_device_memory.device()), m_device_memory(buffer.m_device_memory), m_size(size)
+        : device_(buffer.device_memory_.device()), device_memory_(buffer.device_memory_), size_(size)
 {
         ASSERT(buffer.host_visible());
-        ASSERT(m_size > 0 && offset + m_size <= buffer.size());
+        ASSERT(size_ > 0 && offset + size_ <= buffer.size());
 
-        VkResult result = vkMapMemory(m_device, m_device_memory, offset, m_size, 0, &m_pointer);
+        VkResult result = vkMapMemory(device_, device_memory_, offset, size_, 0, &pointer_);
         if (result != VK_SUCCESS)
         {
                 vulkan_function_error("vkMapMemory", result);
@@ -400,11 +400,11 @@ BufferMapper::BufferMapper(const BufferWithMemory& buffer, const VkDeviceSize of
 }
 
 BufferMapper::BufferMapper(const BufferWithMemory& buffer)
-        : m_device(buffer.m_device_memory.device()), m_device_memory(buffer.m_device_memory), m_size(buffer.size())
+        : device_(buffer.device_memory_.device()), device_memory_(buffer.device_memory_), size_(buffer.size())
 {
         ASSERT(buffer.host_visible());
 
-        VkResult result = vkMapMemory(m_device, m_device_memory, 0, VK_WHOLE_SIZE, 0, &m_pointer);
+        VkResult result = vkMapMemory(device_, device_memory_, 0, VK_WHOLE_SIZE, 0, &pointer_);
         if (result != VK_SUCCESS)
         {
                 vulkan_function_error("vkMapMemory", result);
@@ -413,7 +413,7 @@ BufferMapper::BufferMapper(const BufferWithMemory& buffer)
 
 BufferMapper::~BufferMapper()
 {
-        vkUnmapMemory(m_device, m_device_memory);
+        vkUnmapMemory(device_, device_memory_);
         // vkFlushMappedMemoryRanges, vkInvalidateMappedMemoryRanges
 }
 
@@ -427,33 +427,32 @@ ImageWithMemory::ImageWithMemory(
         const VkImageType type,
         const VkExtent3D extent,
         const VkImageUsageFlags usage)
-        : m_extent(correct_image_extent(type, extent)),
-          m_device(device),
-          m_physical_device(device.physical_device()),
-          m_family_indices(sort_and_unique(family_indices)),
-          m_type(type),
-          m_sample_count(sample_count),
-          m_usage(usage),
-          m_format(find_supported_image_format(
-                  m_physical_device,
+        : extent_(correct_image_extent(type, extent)),
+          device_(device),
+          physical_device_(device.physical_device()),
+          family_indices_(sort_and_unique(family_indices)),
+          type_(type),
+          sample_count_(sample_count),
+          usage_(usage),
+          format_(find_supported_image_format(
+                  physical_device_,
                   format_candidates,
-                  m_type,
+                  type_,
                   VK_IMAGE_TILING_OPTIMAL,
-                  format_features_for_image_usage(m_usage),
-                  m_usage,
-                  m_sample_count)),
-          m_image(create_image(
-                  m_device,
-                  m_physical_device,
-                  m_type,
-                  m_extent,
-                  m_format,
+                  format_features_for_image_usage(usage_),
+                  usage_,
+                  sample_count_)),
+          image_(create_image(
+                  device_,
+                  physical_device_,
+                  type_,
+                  extent_,
+                  format_,
                   family_indices,
-                  m_sample_count,
+                  sample_count_,
                   VK_IMAGE_TILING_OPTIMAL,
-                  m_usage)),
-          m_device_memory(
-                  create_device_memory(m_device, m_physical_device, m_image, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT))
+                  usage_)),
+          device_memory_(create_device_memory(device_, physical_device_, image_, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT))
 {
         if (!std::none_of(
                     format_candidates.cbegin(), format_candidates.cend(),
@@ -467,7 +466,7 @@ ImageWithMemory::ImageWithMemory(
 
         if (has_usage_for_image_view(usage))
         {
-                m_image_view = create_image_view(m_device, m_image, m_type, m_format, VK_IMAGE_ASPECT_COLOR_BIT);
+                image_view_ = create_image_view(device_, image_, type_, format_, VK_IMAGE_ASPECT_COLOR_BIT);
         }
         else if (!has_usage_for_transfer(usage))
         {
@@ -490,9 +489,9 @@ ImageWithMemory::ImageWithMemory(
 {
         if (layout != VK_IMAGE_LAYOUT_UNDEFINED)
         {
-                check_family_index(command_pool, queue, m_family_indices);
+                check_family_index(command_pool, queue, family_indices_);
 
-                transition_image_layout(VK_IMAGE_ASPECT_COLOR_BIT, device, command_pool, queue, m_image, layout);
+                transition_image_layout(VK_IMAGE_ASPECT_COLOR_BIT, device, command_pool, queue, image_, layout);
         }
 }
 
@@ -504,13 +503,13 @@ void ImageWithMemory::write_pixels(
         const image::ColorFormat color_format,
         const std::span<const std::byte>& pixels) const
 {
-        ASSERT((m_usage & VK_IMAGE_USAGE_TRANSFER_DST_BIT) == VK_IMAGE_USAGE_TRANSFER_DST_BIT);
+        ASSERT((usage_ & VK_IMAGE_USAGE_TRANSFER_DST_BIT) == VK_IMAGE_USAGE_TRANSFER_DST_BIT);
 
-        check_family_index(command_pool, queue, m_family_indices);
+        check_family_index(command_pool, queue, family_indices_);
 
         write_pixels_to_image(
-                m_device, m_physical_device, command_pool, queue, m_image, m_format, m_extent,
-                VK_IMAGE_ASPECT_COLOR_BIT, old_layout, new_layout, color_format, pixels);
+                device_, physical_device_, command_pool, queue, image_, format_, extent_, VK_IMAGE_ASPECT_COLOR_BIT,
+                old_layout, new_layout, color_format, pixels);
 }
 
 void ImageWithMemory::read_pixels(
@@ -521,72 +520,72 @@ void ImageWithMemory::read_pixels(
         image::ColorFormat* const color_format,
         std::vector<std::byte>* const pixels) const
 {
-        ASSERT((m_usage & VK_IMAGE_USAGE_TRANSFER_SRC_BIT) == VK_IMAGE_USAGE_TRANSFER_SRC_BIT);
+        ASSERT((usage_ & VK_IMAGE_USAGE_TRANSFER_SRC_BIT) == VK_IMAGE_USAGE_TRANSFER_SRC_BIT);
 
-        check_family_index(command_pool, queue, m_family_indices);
+        check_family_index(command_pool, queue, family_indices_);
 
         read_pixels_from_image(
-                m_device, m_physical_device, command_pool, queue, m_image, m_format, m_extent,
-                VK_IMAGE_ASPECT_COLOR_BIT, old_layout, new_layout, color_format, pixels);
+                device_, physical_device_, command_pool, queue, image_, format_, extent_, VK_IMAGE_ASPECT_COLOR_BIT,
+                old_layout, new_layout, color_format, pixels);
 }
 
 VkImage ImageWithMemory::image() const
 {
-        return m_image;
+        return image_;
 }
 
 VkImageType ImageWithMemory::type() const
 {
-        return m_type;
+        return type_;
 }
 
 VkFormat ImageWithMemory::format() const
 {
-        return m_format;
+        return format_;
 }
 
 VkImageView ImageWithMemory::image_view() const
 {
-        ASSERT(static_cast<VkImageView>(m_image_view) != VK_NULL_HANDLE);
-        return m_image_view;
+        ASSERT(static_cast<VkImageView>(image_view_) != VK_NULL_HANDLE);
+        return image_view_;
 }
 
 bool ImageWithMemory::has_usage(const VkImageUsageFlags usage) const
 {
-        return (m_usage & usage) == usage;
+        return (usage_ & usage) == usage;
 }
 
 VkSampleCountFlagBits ImageWithMemory::sample_count() const
 {
-        return m_sample_count;
+        return sample_count_;
 }
 
 uint32_t ImageWithMemory::width() const
 {
-        return m_extent.width;
+        return extent_.width;
 }
 
 uint32_t ImageWithMemory::height() const
 {
-        if (m_type == VK_IMAGE_TYPE_1D)
+        if (type_ == VK_IMAGE_TYPE_1D)
         {
                 error("Image 1D has no height");
         }
-        return m_extent.height;
+        return extent_.height;
 }
 
 uint32_t ImageWithMemory::depth() const
 {
-        if (m_type != VK_IMAGE_TYPE_3D)
+        if (type_ != VK_IMAGE_TYPE_3D)
         {
                 error("Only image 3D has depth");
         }
-        return m_extent.depth;
+        return extent_.depth;
 }
 
 VkExtent3D ImageWithMemory::extent() const
 {
-        return m_extent;
+        return extent_;
 }
 
 //
@@ -599,29 +598,29 @@ DepthImageWithMemory::DepthImageWithMemory(
         const uint32_t width,
         const uint32_t height,
         const VkImageUsageFlags usage)
-        : m_usage(usage),
-          m_sample_count(sample_count),
-          m_format(find_supported_image_format(
+        : usage_(usage),
+          sample_count_(sample_count),
+          format_(find_supported_image_format(
                   device.physical_device(),
                   formats,
                   VK_IMAGE_TYPE_2D,
                   VK_IMAGE_TILING_OPTIMAL,
-                  format_features_for_image_usage(m_usage),
-                  m_usage,
+                  format_features_for_image_usage(usage_),
+                  usage_,
                   sample_count)),
-          m_extent(max_extent_2d(width, height, device.physical_device(), m_format, VK_IMAGE_TILING_OPTIMAL, m_usage)),
-          m_image(create_image(
+          extent_(max_extent_2d(width, height, device.physical_device(), format_, VK_IMAGE_TILING_OPTIMAL, usage_)),
+          image_(create_image(
                   device,
                   device.physical_device(),
                   VK_IMAGE_TYPE_2D,
-                  make_extent(m_extent.width, m_extent.height),
-                  m_format,
+                  make_extent(extent_.width, extent_.height),
+                  format_,
                   family_indices,
                   sample_count,
                   VK_IMAGE_TILING_OPTIMAL,
-                  m_usage)),
-          m_device_memory(
-                  create_device_memory(device, device.physical_device(), m_image, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT))
+                  usage_)),
+          device_memory_(
+                  create_device_memory(device, device.physical_device(), image_, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT))
 {
         if (!std::all_of(
                     formats.cbegin(), formats.cend(),
@@ -640,8 +639,7 @@ DepthImageWithMemory::DepthImageWithMemory(
 
         if (has_usage_for_image_view(usage))
         {
-                m_image_view =
-                        create_image_view(device, m_image, VK_IMAGE_TYPE_2D, m_format, VK_IMAGE_ASPECT_DEPTH_BIT);
+                image_view_ = create_image_view(device, image_, VK_IMAGE_TYPE_2D, format_, VK_IMAGE_ASPECT_DEPTH_BIT);
         }
         else if (!has_usage_for_transfer(usage))
         {
@@ -664,43 +662,43 @@ DepthImageWithMemory::DepthImageWithMemory(
 {
         if (layout != VK_IMAGE_LAYOUT_UNDEFINED)
         {
-                transition_image_layout(VK_IMAGE_ASPECT_DEPTH_BIT, device, command_pool, queue, m_image, layout);
+                transition_image_layout(VK_IMAGE_ASPECT_DEPTH_BIT, device, command_pool, queue, image_, layout);
         }
 }
 
 VkImage DepthImageWithMemory::image() const
 {
-        return m_image;
+        return image_;
 }
 
 VkFormat DepthImageWithMemory::format() const
 {
-        return m_format;
+        return format_;
 }
 
 VkImageView DepthImageWithMemory::image_view() const
 {
-        ASSERT(static_cast<VkImageView>(m_image_view) != VK_NULL_HANDLE);
-        return m_image_view;
+        ASSERT(static_cast<VkImageView>(image_view_) != VK_NULL_HANDLE);
+        return image_view_;
 }
 
 VkImageUsageFlags DepthImageWithMemory::usage() const
 {
-        return m_usage;
+        return usage_;
 }
 
 VkSampleCountFlagBits DepthImageWithMemory::sample_count() const
 {
-        return m_sample_count;
+        return sample_count_;
 }
 
 uint32_t DepthImageWithMemory::width() const
 {
-        return m_extent.width;
+        return extent_.width;
 }
 
 uint32_t DepthImageWithMemory::height() const
 {
-        return m_extent.height;
+        return extent_.height;
 }
 }

@@ -33,7 +33,7 @@ class StringTree
                 }
         };
 
-        std::vector<Node> m_nodes;
+        std::vector<Node> nodes_;
 
 public:
         StringTree();

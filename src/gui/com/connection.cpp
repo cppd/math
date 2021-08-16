@@ -23,19 +23,19 @@ namespace ns::gui
 {
 void Connection::destroy() noexcept
 {
-        if (m_connection)
+        if (connection_)
         {
-                QObject::disconnect(*m_connection);
+                QObject::disconnect(*connection_);
         }
 }
 
 void Connection::move(Connection* from) noexcept
 {
-        m_connection = from->m_connection;
-        from->m_connection.reset();
+        connection_ = from->connection_;
+        from->connection_.reset();
 }
 
-Connection::Connection(QMetaObject::Connection&& connection) : m_connection(std::move(connection))
+Connection::Connection(QMetaObject::Connection&& connection) : connection_(std::move(connection))
 {
 }
 

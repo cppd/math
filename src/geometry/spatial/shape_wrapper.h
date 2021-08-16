@@ -36,10 +36,10 @@ class ShapeWrapperForIntersection final
         using Vertices = decltype(std::declval<Shape>().vertices());
         using Constraints = decltype(std::declval<Shape>().constraints());
 
-        const Shape& m_shape;
-        Vertices m_vertices;
-        Constraints m_constraints;
-        //Vector<N, T> m_min;
+        const Shape& shape_;
+        Vertices vertices_;
+        Constraints constraints_;
+        //Vector<N, T> min_;
 
         //template <std::size_t ArraySize, typename T, std::size_t N>
         //static Vector<N, T> find_min_vector(const std::array<Vector<N, T>, ArraySize>& vectors)
@@ -59,29 +59,29 @@ public:
         using DataType = T;
 
         explicit ShapeWrapperForIntersection(const Shape& s)
-                : m_shape(s), m_vertices(s.vertices()), m_constraints(m_shape.constraints())
+                : shape_(s), vertices_(s.vertices()), constraints_(shape_.constraints())
         {
-                //m_min = find_min_vector(m_vertices);
+                //min_ = find_min_vector(vertices_);
         }
 
         bool inside(const Vector<N, T>& p) const
         {
-                return m_shape.inside(p);
+                return shape_.inside(p);
         }
 
         const Vertices& vertices() const
         {
-                return m_vertices;
+                return vertices_;
         }
 
         const Constraints& constraints() const
         {
-                return m_constraints;
+                return constraints_;
         }
 
         //const Vector<N, T>& min() const
         //{
-        //        return m_min;
+        //        return min_;
         //}
 };
 
@@ -97,37 +97,37 @@ class ShapeWrapperForIntersection<Shape, std::enable_if_t<Shape::SPACE_DIMENSION
         using Vertices = decltype(std::declval<Shape>().vertices());
         using Edges = decltype(std::declval<Shape>().edges());
 
-        const Shape& m_shape;
-        Vertices m_vertices;
-        Edges m_edges;
+        const Shape& shape_;
+        Vertices vertices_;
+        Edges edges_;
 
 public:
         static constexpr std::size_t SPACE_DIMENSION = Shape::SPACE_DIMENSION;
         static constexpr std::size_t SHAPE_DIMENSION = Shape::SHAPE_DIMENSION;
         using DataType = T;
 
-        explicit ShapeWrapperForIntersection(const Shape& s) : m_shape(s), m_vertices(s.vertices()), m_edges(s.edges())
+        explicit ShapeWrapperForIntersection(const Shape& s) : shape_(s), vertices_(s.vertices()), edges_(s.edges())
         {
         }
 
         bool inside(const Vector<N, T>& p) const
         {
-                return m_shape.inside(p);
+                return shape_.inside(p);
         }
 
         std::optional<T> intersect(const Ray<N, T>& r) const
         {
-                return m_shape.intersect(r);
+                return shape_.intersect(r);
         }
 
         const Vertices& vertices() const
         {
-                return m_vertices;
+                return vertices_;
         }
 
         const Edges& edges() const
         {
-                return m_edges;
+                return edges_;
         }
 };
 }

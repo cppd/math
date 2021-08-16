@@ -53,7 +53,7 @@ std::vector<VkDescriptorSetLayoutBinding> CopyOutputMemory::descriptor_set_layou
 }
 
 CopyOutputMemory::CopyOutputMemory(const vulkan::Device& device, VkDescriptorSetLayout descriptor_set_layout)
-        : m_descriptors(device, 1, descriptor_set_layout, descriptor_set_layout_bindings())
+        : descriptors_(device, 1, descriptor_set_layout, descriptor_set_layout_bindings())
 {
 }
 
@@ -64,7 +64,7 @@ unsigned CopyOutputMemory::set_number()
 
 const VkDescriptorSet& CopyOutputMemory::descriptor_set() const
 {
-        return m_descriptors.descriptor_set(0);
+        return descriptors_.descriptor_set(0);
 }
 
 void CopyOutputMemory::set(const vulkan::BufferWithMemory& input, const vulkan::ImageWithMemory& output) const
@@ -77,7 +77,7 @@ void CopyOutputMemory::set(const vulkan::BufferWithMemory& input, const vulkan::
                 buffer_info.offset = 0;
                 buffer_info.range = input.size();
 
-                m_descriptors.update_descriptor_set(0, SRC_BINDING, buffer_info);
+                descriptors_.update_descriptor_set(0, SRC_BINDING, buffer_info);
         }
         {
                 ASSERT(output.has_usage(VK_IMAGE_USAGE_STORAGE_BIT));
@@ -87,7 +87,7 @@ void CopyOutputMemory::set(const vulkan::BufferWithMemory& input, const vulkan::
                 image_info.imageLayout = VK_IMAGE_LAYOUT_GENERAL;
                 image_info.imageView = output.image_view();
 
-                m_descriptors.update_descriptor_set(0, DST_BINDING, image_info);
+                descriptors_.update_descriptor_set(0, DST_BINDING, image_info);
         }
 }
 
@@ -100,91 +100,91 @@ CopyOutputConstant::CopyOutputConstant()
                 entry.constantID = 0;
                 entry.offset = offsetof(Data, local_size_x);
                 entry.size = sizeof(Data::local_size_x);
-                m_entries.push_back(entry);
+                entries_.push_back(entry);
         }
         {
                 VkSpecializationMapEntry entry = {};
                 entry.constantID = 1;
                 entry.offset = offsetof(Data, local_size_y);
                 entry.size = sizeof(Data::local_size_y);
-                m_entries.push_back(entry);
+                entries_.push_back(entry);
         }
         {
                 VkSpecializationMapEntry entry = {};
                 entry.constantID = 2;
                 entry.offset = offsetof(Data, to_mul);
                 entry.size = sizeof(Data::to_mul);
-                m_entries.push_back(entry);
+                entries_.push_back(entry);
         }
 }
 
 void CopyOutputConstant::set(uint32_t local_size_x, uint32_t local_size_y, float to_mul)
 {
-        static_assert(std::is_same_v<decltype(m_data.local_size_x), decltype(local_size_x)>);
-        m_data.local_size_x = local_size_x;
-        static_assert(std::is_same_v<decltype(m_data.local_size_y), decltype(local_size_y)>);
-        m_data.local_size_y = local_size_y;
-        static_assert(std::is_same_v<decltype(m_data.to_mul), decltype(to_mul)>);
-        m_data.to_mul = to_mul;
+        static_assert(std::is_same_v<decltype(data_.local_size_x), decltype(local_size_x)>);
+        data_.local_size_x = local_size_x;
+        static_assert(std::is_same_v<decltype(data_.local_size_y), decltype(local_size_y)>);
+        data_.local_size_y = local_size_y;
+        static_assert(std::is_same_v<decltype(data_.to_mul), decltype(to_mul)>);
+        data_.to_mul = to_mul;
 }
 
 const std::vector<VkSpecializationMapEntry>& CopyOutputConstant::entries() const
 {
-        return m_entries;
+        return entries_;
 }
 
 const void* CopyOutputConstant::data() const
 {
-        return &m_data;
+        return &data_;
 }
 
 std::size_t CopyOutputConstant::size() const
 {
-        return sizeof(m_data);
+        return sizeof(data_);
 }
 
 //
 
 CopyOutputProgram::CopyOutputProgram(const vulkan::Device& device)
-        : m_device(device),
-          m_descriptor_set_layout(
+        : device_(device),
+          descriptor_set_layout_(
                   vulkan::create_descriptor_set_layout(device, CopyOutputMemory::descriptor_set_layout_bindings())),
-          m_pipeline_layout(
-                  vulkan::create_pipeline_layout(device, {CopyOutputMemory::set_number()}, {m_descriptor_set_layout})),
-          m_shader(device, code_copy_output_comp(), "main")
+          pipeline_layout_(
+                  vulkan::create_pipeline_layout(device, {CopyOutputMemory::set_number()}, {descriptor_set_layout_})),
+          shader_(device, code_copy_output_comp(), "main")
 {
 }
 
 VkDescriptorSetLayout CopyOutputProgram::descriptor_set_layout() const
 {
-        return m_descriptor_set_layout;
+        return descriptor_set_layout_;
 }
 
 VkPipelineLayout CopyOutputProgram::pipeline_layout() const
 {
-        return m_pipeline_layout;
+        return pipeline_layout_;
 }
 
 VkPipeline CopyOutputProgram::pipeline() const
 {
-        ASSERT(m_pipeline != VK_NULL_HANDLE);
-        return m_pipeline;
+        ASSERT(pipeline_ != VK_NULL_HANDLE);
+        return pipeline_;
 }
 
 void CopyOutputProgram::create_pipeline(uint32_t local_size_x, uint32_t local_size_y, float to_mul)
 {
-        m_constant.set(local_size_x, local_size_y, to_mul);
+        constant_.set(local_size_x, local_size_y, to_mul);
 
         vulkan::ComputePipelineCreateInfo info;
-        info.device = &m_device;
-        info.pipeline_layout = m_pipeline_layout;
-        info.shader = &m_shader;
-        info.constants = &m_constant;
-        m_pipeline = create_compute_pipeline(info);
+        info.device = &device_;
+        info.pipeline_layout = pipeline_layout_;
+        info.shader = &shader_;
+        info.constants = &constant_;
+        pipeline_ = create_compute_pipeline(info);
 }
 
 void CopyOutputProgram::delete_pipeline()
 {
-        m_pipeline = vulkan::Pipeline();
+        pipeline_ = vulkan::Pipeline();
 }
 }

@@ -42,22 +42,22 @@ class PainterWindow final : public QMainWindow
         Q_OBJECT
 
 private:
-        const std::thread::id m_thread_id = std::this_thread::get_id();
-        bool m_first_show = true;
+        const std::thread::id thread_id_ = std::this_thread::get_id();
+        bool first_show_ = true;
 
         Ui::PainterWindow ui;
 
-        std::unique_ptr<Pixels> m_pixels;
-        long long m_slice = 0;
+        std::unique_ptr<Pixels> pixels_;
+        long long slice_ = 0;
 
-        std::unique_ptr<QSlider> m_brightness_parameter_slider;
-        std::unique_ptr<ImageWidget> m_image_widget;
-        std::unique_ptr<StatisticsWidget> m_statistics_widget;
-        std::unique_ptr<SlidersWidget> m_sliders_widget;
+        std::unique_ptr<QSlider> brightness_parameter_slider_;
+        std::unique_ptr<ImageWidget> image_widget_;
+        std::unique_ptr<StatisticsWidget> statistics_widget_;
+        std::unique_ptr<SlidersWidget> sliders_widget_;
 
-        std::unique_ptr<Actions> m_actions;
+        std::unique_ptr<Actions> actions_;
 
-        QTimer m_timer;
+        QTimer timer_;
 
         void on_first_shown();
 

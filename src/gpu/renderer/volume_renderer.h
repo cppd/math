@@ -31,26 +31,26 @@ namespace ns::gpu::renderer
 {
 class VolumeRenderer
 {
-        const std::thread::id m_thread_id = std::this_thread::get_id();
-        const vulkan::Device& m_device;
-        const bool m_sample_shading;
+        const std::thread::id thread_id_ = std::this_thread::get_id();
+        const vulkan::Device& device_;
+        const bool sample_shading_;
 
-        const RenderBuffers3D* m_render_buffers = nullptr;
+        const RenderBuffers3D* render_buffers_ = nullptr;
 
-        VolumeProgram m_program;
+        VolumeProgram program_;
 
-        VolumeSharedMemory m_shared_memory;
+        VolumeSharedMemory shared_memory_;
 
-        std::optional<vulkan::Pipeline> m_pipeline_image;
-        std::optional<vulkan::Pipeline> m_pipeline_image_fragments;
-        std::optional<vulkan::Pipeline> m_pipeline_fragments;
-        std::optional<vulkan::CommandBuffers> m_command_buffers_image;
-        std::optional<vulkan::CommandBuffers> m_command_buffers_image_fragments;
-        std::optional<vulkan::CommandBuffers> m_command_buffers_fragments;
+        std::optional<vulkan::Pipeline> pipeline_image_;
+        std::optional<vulkan::Pipeline> pipeline_image_fragments_;
+        std::optional<vulkan::Pipeline> pipeline_fragments_;
+        std::optional<vulkan::CommandBuffers> command_buffers_image_;
+        std::optional<vulkan::CommandBuffers> command_buffers_image_fragments_;
+        std::optional<vulkan::CommandBuffers> command_buffers_fragments_;
 
-        vulkan::Sampler m_image_sampler;
-        vulkan::Sampler m_depth_sampler;
-        vulkan::Sampler m_transfer_function_sampler;
+        vulkan::Sampler image_sampler_;
+        vulkan::Sampler depth_sampler_;
+        vulkan::Sampler transfer_function_sampler_;
 
         void draw_commands_fragments(VkCommandBuffer command_buffer) const;
         void draw_commands_image(const VolumeObject* volume, VkCommandBuffer command_buffer) const;

@@ -47,14 +47,14 @@ struct DescriptorSetLayoutAndBindings final
 
 class Descriptors final
 {
-        VkDevice m_device;
-        VkDescriptorSetLayout m_descriptor_set_layout;
-        DescriptorPool m_descriptor_pool;
-        std::vector<VkDescriptorSetLayoutBinding> m_descriptor_set_layout_bindings;
-        DescriptorSets m_descriptor_sets;
+        VkDevice device_;
+        VkDescriptorSetLayout descriptor_set_layout_;
+        DescriptorPool descriptor_pool_;
+        std::vector<VkDescriptorSetLayoutBinding> descriptor_set_layout_bindings_;
+        DescriptorSets descriptor_sets_;
 
-        // VkDescriptorSetLayoutBinding::binding -> m_descriptor_set_layout_bindings index
-        std::unordered_map<uint32_t, uint32_t> m_binding_map;
+        // VkDescriptorSetLayoutBinding::binding -> descriptor_set_layout_bindings_ index
+        std::unordered_map<uint32_t, uint32_t> binding_map_;
 
         // VkDescriptorSetLayoutBinding::binding -> const VkDescriptorSetLayoutBinding&
         const VkDescriptorSetLayoutBinding& layout_binding(uint32_t binding) const;

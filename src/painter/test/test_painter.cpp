@@ -68,10 +68,10 @@ void save_image(const std::filesystem::path& path, image::Image<N>&& image)
 template <std::size_t N>
 class Image final : public Notifier<N>
 {
-        const std::filesystem::path m_path;
+        const std::filesystem::path path_;
 
-        std::unique_ptr<Images<N>> m_images = std::make_unique<Images<N>>();
-        std::atomic_bool m_images_ready = false;
+        std::unique_ptr<Images<N>> images_ = std::make_unique<Images<N>>();
+        std::atomic_bool images_ready_ = false;
 
         void thread_busy(unsigned, const std::array<int, N>&) override
         {
@@ -87,12 +87,12 @@ class Image final : public Notifier<N>
 
         Images<N>* images(long long) override
         {
-                return m_images.get();
+                return images_.get();
         }
 
         void pass_done(long long) override
         {
-                m_images_ready = true;
+                images_ready_ = true;
         }
 
         void error_message(const std::string& msg) override
@@ -102,22 +102,22 @@ class Image final : public Notifier<N>
 
 public:
         explicit Image(const std::string_view& directory_name)
-                : m_path(std::filesystem::temp_directory_path() / path_from_utf8(directory_name))
+                : path_(std::filesystem::temp_directory_path() / path_from_utf8(directory_name))
         {
-                if (!std::filesystem::create_directory(m_path))
+                if (!std::filesystem::create_directory(path_))
                 {
-                        error("Error creating directory " + generic_utf8_filename(m_path));
+                        error("Error creating directory " + generic_utf8_filename(path_));
                 }
         }
 
         void write_to_files()
         {
-                if (!m_images_ready)
+                if (!images_ready_)
                 {
                         error("No painter image to write to files");
                 }
-                ImagesWriting lock(m_images.get());
-                save_image(m_path, std::move(lock.image_with_background()));
+                ImagesWriting lock(images_.get());
+                save_image(path_, std::move(lock.image_with_background()));
         }
 };
 

@@ -23,24 +23,24 @@ namespace ns
 {
 class SpinLock final
 {
-        std::atomic_flag m_spin_lock;
+        std::atomic_flag spin_lock_;
 
 public:
         SpinLock() noexcept
         {
-                m_spin_lock.clear();
+                spin_lock_.clear();
         }
 
         void lock() noexcept
         {
-                while (m_spin_lock.test_and_set(std::memory_order_acquire))
+                while (spin_lock_.test_and_set(std::memory_order_acquire))
                 {
                 }
         }
 
         void unlock() noexcept
         {
-                m_spin_lock.clear(std::memory_order_release);
+                spin_lock_.clear(std::memory_order_release);
         }
 };
 }

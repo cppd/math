@@ -63,27 +63,27 @@ class Pixels final
 
         static constexpr int PANTBRUSH_WIDTH = 20;
 
-        const PixelFilter<N, T, Color> m_filter;
+        const PixelFilter<N, T, Color> filter_;
 
-        const std::array<int, N> m_screen_size;
-        const GlobalIndex<N, long long> m_global_index{m_screen_size};
-        const Region<N> m_filter_region{m_screen_size, m_filter.radius()};
+        const std::array<int, N> screen_size_;
+        const GlobalIndex<N, long long> global_index_{screen_size_};
+        const Region<N> filter_region_{screen_size_, filter_.radius()};
 
-        const Color m_background;
-        const Vector<3, float> m_background_rgb32 = m_background.rgb32();
-        const T m_background_contribution = m_filter.contribution(m_background);
+        const Color background_;
+        const Vector<3, float> background_rgb32_ = background_.rgb32();
+        const T background_contribution_ = filter_.contribution(background_);
 
-        Notifier<N>* const m_notifier;
+        Notifier<N>* const notifier_;
 
-        std::vector<Pixel<Color>> m_pixels{static_cast<std::size_t>(m_global_index.count())};
-        mutable std::vector<SpinLock> m_pixel_locks{m_pixels.size()};
+        std::vector<Pixel<Color>> pixels_{static_cast<std::size_t>(global_index_.count())};
+        mutable std::vector<SpinLock> pixel_locks_{pixels_.size()};
 
-        Paintbrush<N, PaintbrushType> m_paintbrush{m_screen_size, PANTBRUSH_WIDTH};
-        mutable SpinLock m_paintbrush_lock;
+        Paintbrush<N, PaintbrushType> paintbrush_{screen_size_, PANTBRUSH_WIDTH};
+        mutable SpinLock paintbrush_lock_;
 
         Vector<4, float> rgba_color(const Pixel<Color>& pixel) const
         {
-                const auto color_alpha = pixel.color_alpha(m_background_contribution);
+                const auto color_alpha = pixel.color_alpha(background_contribution_);
                 if (color_alpha)
                 {
                         Vector<3, float> rgb = std::get<0>(*color_alpha).rgb32();
@@ -103,7 +103,7 @@ class Pixels final
 
         Vector<3, float> rgb_color(const Pixel<Color>& pixel) const
         {
-                const auto color = pixel.color(m_background, m_background_contribution);
+                const auto color = pixel.color(background_, background_contribution_);
                 if (color)
                 {
                         Vector<3, float> rgb = color->rgb32();
@@ -113,7 +113,7 @@ class Pixels final
                         }
                         return rgb;
                 }
-                return m_background_rgb32;
+                return background_rgb32_;
         }
 
         void add_samples(
@@ -132,13 +132,13 @@ class Pixels final
                         return r;
                 }();
 
-                const auto c = m_filter.color_samples(center, points, colors);
-                const auto b = m_filter.background_samples(center, points, colors);
+                const auto c = filter_.color_samples(center, points, colors);
+                const auto b = filter_.background_samples(center, points, colors);
 
-                const long long index = m_global_index.compute(pixel);
-                Pixel<Color>& p = m_pixels[index];
+                const long long index = global_index_.compute(pixel);
+                Pixel<Color>& p = pixels_[index];
 
-                std::lock_guard lg(m_pixel_locks[index]);
+                std::lock_guard lg(pixel_locks_[index]);
                 if (c)
                 {
                         p.merge_color(
@@ -149,22 +149,22 @@ class Pixels final
                 {
                         p.merge_background(b->sum, b->min, b->max);
                 }
-                m_notifier->pixel_set(pixel, rgb_color(p));
+                notifier_->pixel_set(pixel, rgb_color(p));
         }
 
 public:
         Pixels(const std::array<int, N>& screen_size,
                const std::type_identity_t<Color>& background,
                Notifier<N>* notifier)
-                : m_screen_size(screen_size), m_background(background.max_n(0)), m_notifier(notifier)
+                : screen_size_(screen_size), background_(background.max_n(0)), notifier_(notifier)
         {
                 if (!background.is_finite())
                 {
                         error("Not finite background " + to_string(background));
                 }
-                if (!is_finite(m_background_rgb32))
+                if (!is_finite(background_rgb32_))
                 {
-                        error("Not finite background RGB " + to_string(m_background_rgb32));
+                        error("Not finite background RGB " + to_string(background_rgb32_));
                 }
         }
 
@@ -173,15 +173,15 @@ public:
                 return pixels_implementation::to_type<int>(
                         [&]
                         {
-                                std::lock_guard lg(m_paintbrush_lock);
-                                return m_paintbrush.next_pixel();
+                                std::lock_guard lg(paintbrush_lock_);
+                                return paintbrush_.next_pixel();
                         }());
         }
 
         void next_pass()
         {
-                std::lock_guard lg(m_paintbrush_lock);
-                m_paintbrush.reset();
+                std::lock_guard lg(paintbrush_lock_);
+                paintbrush_.reset();
         }
 
         void add_samples(
@@ -200,7 +200,7 @@ public:
                         }
                 }
 
-                m_filter_region.traverse(
+                filter_region_.traverse(
                         pixel,
                         [&](const std::array<int, N>& region_pixel)
                         {
@@ -216,30 +216,30 @@ public:
                 constexpr std::size_t RGBA_PIXEL_SIZE = 4 * sizeof(float);
 
                 image_rgb->color_format = image::ColorFormat::R32G32B32;
-                image_rgb->size = m_screen_size;
-                image_rgb->pixels.resize(RGB_PIXEL_SIZE * m_pixels.size());
+                image_rgb->size = screen_size_;
+                image_rgb->pixels.resize(RGB_PIXEL_SIZE * pixels_.size());
 
                 image_rgba->color_format = image::ColorFormat::R32G32B32A32_PREMULTIPLIED;
-                image_rgba->size = m_screen_size;
-                image_rgba->pixels.resize(RGBA_PIXEL_SIZE * m_pixels.size());
+                image_rgba->size = screen_size_;
+                image_rgba->pixels.resize(RGBA_PIXEL_SIZE * pixels_.size());
 
                 std::byte* ptr_rgb = image_rgb->pixels.data();
                 std::byte* ptr_rgba = image_rgba->pixels.data();
-                for (std::size_t i = 0; i < m_pixels.size(); ++i)
+                for (std::size_t i = 0; i < pixels_.size(); ++i)
                 {
                         Vector<4, float> rgba;
                         Vector<3, float> rgb;
 
                         {
-                                const Pixel<Color>& pixel = m_pixels[i];
-                                std::lock_guard lg(m_pixel_locks[i]);
+                                const Pixel<Color>& pixel = pixels_[i];
+                                std::lock_guard lg(pixel_locks_[i]);
                                 rgba = rgba_color(pixel);
                                 rgb = rgb_color(pixel);
                         }
 
                         ASSERT(rgba[3] < 1 || !is_finite(rgba) || !is_finite(rgb)
                                || (rgb[0] == rgba[0] && rgb[1] == rgba[1] && rgb[2] == rgba[2]));
-                        ASSERT(rgba[3] > 0 || !is_finite(rgb) || (rgb == m_background_rgb32));
+                        ASSERT(rgba[3] > 0 || !is_finite(rgb) || (rgb == background_rgb32_));
 
                         static_assert(sizeof(rgb) == RGB_PIXEL_SIZE);
                         std::memcpy(ptr_rgb, &rgb, RGB_PIXEL_SIZE);

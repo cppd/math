@@ -27,21 +27,21 @@ namespace ns::painter
 template <std::size_t N, typename T>
 class SamplerHalton final
 {
-        sampling::HaltonSampler<N, T> m_sampler;
-        std::vector<Vector<N, T>> m_samples;
-        int m_samples_per_pixel;
+        sampling::HaltonSampler<N, T> sampler_;
+        std::vector<Vector<N, T>> samples_;
+        int samples_per_pixel_;
 
         void generate_samples()
         {
-                m_samples.clear();
-                for (int i = 0; i < m_samples_per_pixel; ++i)
+                samples_.clear();
+                for (int i = 0; i < samples_per_pixel_; ++i)
                 {
-                        m_samples.push_back(m_sampler.generate());
+                        samples_.push_back(sampler_.generate());
                 }
         }
 
 public:
-        explicit SamplerHalton(int samples_per_pixel) : m_samples_per_pixel(samples_per_pixel)
+        explicit SamplerHalton(int samples_per_pixel) : samples_per_pixel_(samples_per_pixel)
         {
                 if (samples_per_pixel <= 0)
                 {
@@ -54,7 +54,7 @@ public:
         template <typename RandomEngine>
         void generate(RandomEngine&, std::vector<Vector<N, T>>* samples) const
         {
-                *samples = m_samples;
+                *samples = samples_;
         }
 
         void next_pass()
@@ -70,17 +70,17 @@ class SamplerStratifiedJittered final
         static constexpr T MAX = 1;
         static constexpr bool SHUFFLE = false;
 
-        sampling::StratifiedJitteredSampler<N, T> m_sampler;
+        sampling::StratifiedJitteredSampler<N, T> sampler_;
 
 public:
-        explicit SamplerStratifiedJittered(int samples_per_pixel) : m_sampler(MIN, MAX, samples_per_pixel, SHUFFLE)
+        explicit SamplerStratifiedJittered(int samples_per_pixel) : sampler_(MIN, MAX, samples_per_pixel, SHUFFLE)
         {
         }
 
         template <typename RandomEngine>
         void generate(RandomEngine& random_engine, std::vector<Vector<N, T>>* samples) const
         {
-                m_sampler.generate(random_engine, samples);
+                sampler_.generate(random_engine, samples);
         }
 
         void next_pass() const

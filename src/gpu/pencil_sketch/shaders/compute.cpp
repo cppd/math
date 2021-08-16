@@ -68,13 +68,13 @@ unsigned ComputeMemory::set_number()
 }
 
 ComputeMemory::ComputeMemory(const vulkan::Device& device, VkDescriptorSetLayout descriptor_set_layout)
-        : m_descriptors(device, 1, descriptor_set_layout, descriptor_set_layout_bindings())
+        : descriptors_(device, 1, descriptor_set_layout, descriptor_set_layout_bindings())
 {
 }
 
 const VkDescriptorSet& ComputeMemory::descriptor_set() const
 {
-        return m_descriptors.descriptor_set(0);
+        return descriptors_.descriptor_set(0);
 }
 
 void ComputeMemory::set_input(VkSampler sampler, const vulkan::ImageWithMemory& image) const
@@ -86,7 +86,7 @@ void ComputeMemory::set_input(VkSampler sampler, const vulkan::ImageWithMemory& 
         image_info.imageView = image.image_view();
         image_info.sampler = sampler;
 
-        m_descriptors.update_descriptor_set(0, INPUT_BINDING, image_info);
+        descriptors_.update_descriptor_set(0, INPUT_BINDING, image_info);
 }
 
 void ComputeMemory::set_output_image(const vulkan::ImageWithMemory& image) const
@@ -98,7 +98,7 @@ void ComputeMemory::set_output_image(const vulkan::ImageWithMemory& image) const
         image_info.imageLayout = VK_IMAGE_LAYOUT_GENERAL;
         image_info.imageView = image.image_view();
 
-        m_descriptors.update_descriptor_set(0, OUTPUT_BINDING, image_info);
+        descriptors_.update_descriptor_set(0, OUTPUT_BINDING, image_info);
 }
 
 void ComputeMemory::set_object_image(const vulkan::ImageWithMemory& image) const
@@ -110,7 +110,7 @@ void ComputeMemory::set_object_image(const vulkan::ImageWithMemory& image) const
         image_info.imageLayout = VK_IMAGE_LAYOUT_GENERAL;
         image_info.imageView = image.image_view();
 
-        m_descriptors.update_descriptor_set(0, OBJECTS_BINDING, image_info);
+        descriptors_.update_descriptor_set(0, OBJECTS_BINDING, image_info);
 }
 
 //
@@ -122,107 +122,107 @@ ComputeConstant::ComputeConstant()
                 entry.constantID = 0;
                 entry.offset = offsetof(Data, local_size);
                 entry.size = sizeof(Data::local_size);
-                m_entries.push_back(entry);
+                entries_.push_back(entry);
         }
         {
                 VkSpecializationMapEntry entry = {};
                 entry.constantID = 1;
                 entry.offset = offsetof(Data, x);
                 entry.size = sizeof(Data::x);
-                m_entries.push_back(entry);
+                entries_.push_back(entry);
         }
         {
                 VkSpecializationMapEntry entry = {};
                 entry.constantID = 2;
                 entry.offset = offsetof(Data, y);
                 entry.size = sizeof(Data::y);
-                m_entries.push_back(entry);
+                entries_.push_back(entry);
         }
         {
                 VkSpecializationMapEntry entry = {};
                 entry.constantID = 3;
                 entry.offset = offsetof(Data, width);
                 entry.size = sizeof(Data::width);
-                m_entries.push_back(entry);
+                entries_.push_back(entry);
         }
         {
                 VkSpecializationMapEntry entry = {};
                 entry.constantID = 4;
                 entry.offset = offsetof(Data, height);
                 entry.size = sizeof(Data::height);
-                m_entries.push_back(entry);
+                entries_.push_back(entry);
         }
 }
 
 void ComputeConstant::set(int32_t local_size, const Region<2, int>& rectangle)
 {
-        static_assert(std::is_same_v<decltype(m_data.local_size), decltype(local_size)>);
-        m_data.local_size = local_size;
+        static_assert(std::is_same_v<decltype(data_.local_size), decltype(local_size)>);
+        data_.local_size = local_size;
 
         ASSERT(rectangle.is_positive());
-        m_data.x = rectangle.x0();
-        m_data.y = rectangle.y0();
-        m_data.width = rectangle.width();
-        m_data.height = rectangle.height();
+        data_.x = rectangle.x0();
+        data_.y = rectangle.y0();
+        data_.width = rectangle.width();
+        data_.height = rectangle.height();
 }
 
 const std::vector<VkSpecializationMapEntry>& ComputeConstant::entries() const
 {
-        return m_entries;
+        return entries_;
 }
 
 const void* ComputeConstant::data() const
 {
-        return &m_data;
+        return &data_;
 }
 
 std::size_t ComputeConstant::size() const
 {
-        return sizeof(m_data);
+        return sizeof(data_);
 }
 
 //
 
 ComputeProgram::ComputeProgram(const vulkan::Device& device)
-        : m_device(device),
-          m_descriptor_set_layout(
+        : device_(device),
+          descriptor_set_layout_(
                   vulkan::create_descriptor_set_layout(device, ComputeMemory::descriptor_set_layout_bindings())),
-          m_pipeline_layout(
-                  vulkan::create_pipeline_layout(device, {ComputeMemory::set_number()}, {m_descriptor_set_layout})),
-          m_shader(device, code_compute_comp(), "main")
+          pipeline_layout_(
+                  vulkan::create_pipeline_layout(device, {ComputeMemory::set_number()}, {descriptor_set_layout_})),
+          shader_(device, code_compute_comp(), "main")
 {
 }
 
 VkDescriptorSetLayout ComputeProgram::descriptor_set_layout() const
 {
-        return m_descriptor_set_layout;
+        return descriptor_set_layout_;
 }
 
 VkPipelineLayout ComputeProgram::pipeline_layout() const
 {
-        return m_pipeline_layout;
+        return pipeline_layout_;
 }
 
 VkPipeline ComputeProgram::pipeline() const
 {
-        ASSERT(m_pipeline != VK_NULL_HANDLE);
-        return m_pipeline;
+        ASSERT(pipeline_ != VK_NULL_HANDLE);
+        return pipeline_;
 }
 
 void ComputeProgram::create_pipeline(unsigned group_size, const Region<2, int>& rectangle)
 {
-        m_constant.set(group_size, rectangle);
+        constant_.set(group_size, rectangle);
 
         vulkan::ComputePipelineCreateInfo info;
-        info.device = &m_device;
-        info.pipeline_layout = m_pipeline_layout;
-        info.shader = &m_shader;
-        info.constants = &m_constant;
-        m_pipeline = create_compute_pipeline(info);
+        info.device = &device_;
+        info.pipeline_layout = pipeline_layout_;
+        info.shader = &shader_;
+        info.constants = &constant_;
+        pipeline_ = create_compute_pipeline(info);
 }
 
 void ComputeProgram::delete_pipeline()
 {
-        m_pipeline = vulkan::Pipeline();
+        pipeline_ = vulkan::Pipeline();
 }
 }

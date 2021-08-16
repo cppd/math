@@ -44,7 +44,7 @@ void write_current(const ObjectSelectionParameters& parameters)
 ObjectSelectionParametersDialog::ObjectSelectionParametersDialog(
         const ObjectSelectionParameters& input,
         std::optional<ObjectSelectionParameters>& parameters)
-        : QDialog(parent_for_dialog()), m_parameters(parameters)
+        : QDialog(parent_for_dialog()), parameters_(parameters)
 {
         ui.setupUi(this);
         setWindowTitle("Object Selection");
@@ -82,11 +82,11 @@ void ObjectSelectionParametersDialog::done(int r)
                 return;
         }
 
-        m_parameters.emplace();
-        m_parameters->bound_cocone = ui.checkBox_bound_cocone->isChecked();
-        m_parameters->cocone = ui.checkBox_cocone->isChecked();
-        m_parameters->convex_hull = ui.checkBox_convex_hull->isChecked();
-        m_parameters->mst = ui.checkBox_minumum_spanning_tree->isChecked();
+        parameters_.emplace();
+        parameters_->bound_cocone = ui.checkBox_bound_cocone->isChecked();
+        parameters_->cocone = ui.checkBox_cocone->isChecked();
+        parameters_->convex_hull = ui.checkBox_convex_hull->isChecked();
+        parameters_->mst = ui.checkBox_minumum_spanning_tree->isChecked();
 
         QDialog::done(r);
 }

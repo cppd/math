@@ -31,9 +31,9 @@ class CommonConstants final : public vulkan::SpecializationConstant
         struct Data
         {
                 uint32_t transparency_drawing;
-        } m_data;
+        } data_;
 
-        std::vector<VkSpecializationMapEntry> m_entries;
+        std::vector<VkSpecializationMapEntry> entries_;
 
         const std::vector<VkSpecializationMapEntry>& entries() const override;
         const void* data() const override;
@@ -59,7 +59,7 @@ class CommonMemory final
         static constexpr int TRANSPARENCY_COUNTERS_BINDING = 6;
         static constexpr int TRANSPARENCY_NODES_BINDING = 7;
 
-        vulkan::Descriptors m_descriptors;
+        vulkan::Descriptors descriptors_;
 
 public:
         static std::vector<VkDescriptorSetLayoutBinding> descriptor_set_layout_bindings(

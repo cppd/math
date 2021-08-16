@@ -64,51 +64,51 @@ MeshRenderer::MeshRenderer(
         bool sample_shading,
         bool sampler_anisotropy,
         const ShaderBuffers& buffers)
-        : m_device(device),
-          m_sample_shading(sample_shading),
+        : device_(device),
+          sample_shading_(sample_shading),
           //
-          m_triangles_program(device),
-          m_triangles_common_memory(
+          triangles_program_(device),
+          triangles_common_memory_(
                   device,
-                  m_triangles_program.descriptor_set_layout_shared(),
-                  m_triangles_program.descriptor_set_layout_shared_bindings(),
+                  triangles_program_.descriptor_set_layout_shared(),
+                  triangles_program_.descriptor_set_layout_shared_bindings(),
                   buffers.matrices_buffer(),
                   buffers.drawing_buffer()),
           //
-          m_triangle_lines_program(device),
-          m_triangle_lines_common_memory(
+          triangle_lines_program_(device),
+          triangle_lines_common_memory_(
                   device,
-                  m_triangle_lines_program.descriptor_set_layout_shared(),
-                  m_triangle_lines_program.descriptor_set_layout_shared_bindings(),
+                  triangle_lines_program_.descriptor_set_layout_shared(),
+                  triangle_lines_program_.descriptor_set_layout_shared_bindings(),
                   buffers.matrices_buffer(),
                   buffers.drawing_buffer()),
           //
-          m_normals_program(device),
-          m_normals_common_memory(
+          normals_program_(device),
+          normals_common_memory_(
                   device,
-                  m_normals_program.descriptor_set_layout_shared(),
-                  m_normals_program.descriptor_set_layout_shared_bindings(),
+                  normals_program_.descriptor_set_layout_shared(),
+                  normals_program_.descriptor_set_layout_shared_bindings(),
                   buffers.matrices_buffer(),
                   buffers.drawing_buffer()),
           //
-          m_triangles_depth_program(device),
-          m_triangles_depth_common_memory(
+          triangles_depth_program_(device),
+          triangles_depth_common_memory_(
                   device,
-                  m_triangles_depth_program.descriptor_set_layout_shared(),
-                  m_triangles_depth_program.descriptor_set_layout_shared_bindings(),
+                  triangles_depth_program_.descriptor_set_layout_shared(),
+                  triangles_depth_program_.descriptor_set_layout_shared_bindings(),
                   buffers.shadow_matrices_buffer(),
                   buffers.drawing_buffer()),
           //
-          m_points_program(device),
-          m_points_common_memory(
+          points_program_(device),
+          points_common_memory_(
                   device,
-                  m_points_program.descriptor_set_layout_shared(),
-                  m_points_program.descriptor_set_layout_shared_bindings(),
+                  points_program_.descriptor_set_layout_shared(),
+                  points_program_.descriptor_set_layout_shared_bindings(),
                   buffers.matrices_buffer(),
                   buffers.drawing_buffer()),
           //
-          m_texture_sampler(create_mesh_texture_sampler(m_device, sampler_anisotropy)),
-          m_shadow_sampler(create_mesh_shadow_sampler(m_device))
+          texture_sampler_(create_mesh_texture_sampler(device_, sampler_anisotropy)),
+          shadow_sampler_(create_mesh_shadow_sampler(device_))
 {
 }
 
@@ -116,18 +116,18 @@ const MeshRenderer::Pipelines& MeshRenderer::render_pipelines(bool transparent) 
 {
         if (transparent)
         {
-                return m_render_pipelines_transparent;
+                return render_pipelines_transparent_;
         }
-        return m_render_pipelines_opaque;
+        return render_pipelines_opaque_;
 }
 
 MeshRenderer::Pipelines& MeshRenderer::render_pipelines(bool transparent)
 {
         if (transparent)
         {
-                return m_render_pipelines_transparent;
+                return render_pipelines_transparent_;
         }
-        return m_render_pipelines_opaque;
+        return render_pipelines_opaque_;
 }
 
 void MeshRenderer::create_render_buffers(
@@ -139,43 +139,43 @@ void MeshRenderer::create_render_buffers(
         const vulkan::Buffer& transparency_nodes,
         const Region<2, int>& viewport)
 {
-        ASSERT(m_thread_id == std::this_thread::get_id());
+        ASSERT(thread_id_ == std::this_thread::get_id());
 
         delete_render_buffers();
 
-        m_render_buffers = render_buffers;
+        render_buffers_ = render_buffers;
 
-        m_triangles_common_memory.set_objects_image(objects_image);
-        m_triangles_common_memory.set_transparency(
+        triangles_common_memory_.set_objects_image(objects_image);
+        triangles_common_memory_.set_transparency(
                 transparency_heads_image, transparency_heads_size_image, transparency_counter, transparency_nodes);
 
-        m_triangle_lines_common_memory.set_objects_image(objects_image);
-        m_triangle_lines_common_memory.set_transparency(
+        triangle_lines_common_memory_.set_objects_image(objects_image);
+        triangle_lines_common_memory_.set_transparency(
                 transparency_heads_image, transparency_heads_size_image, transparency_counter, transparency_nodes);
 
-        m_points_common_memory.set_objects_image(objects_image);
-        m_points_common_memory.set_transparency(
+        points_common_memory_.set_objects_image(objects_image);
+        points_common_memory_.set_transparency(
                 transparency_heads_image, transparency_heads_size_image, transparency_counter, transparency_nodes);
 
-        m_normals_common_memory.set_objects_image(objects_image);
-        m_normals_common_memory.set_transparency(
+        normals_common_memory_.set_objects_image(objects_image);
+        normals_common_memory_.set_transparency(
                 transparency_heads_image, transparency_heads_size_image, transparency_counter, transparency_nodes);
 
         for (bool transparent : {false, true})
         {
-                render_pipelines(transparent).triangles = m_triangles_program.create_pipeline(
-                        render_buffers->render_pass(), render_buffers->sample_count(), m_sample_shading, viewport,
+                render_pipelines(transparent).triangles = triangles_program_.create_pipeline(
+                        render_buffers->render_pass(), render_buffers->sample_count(), sample_shading_, viewport,
                         transparent);
-                render_pipelines(transparent).triangle_lines = m_triangle_lines_program.create_pipeline(
-                        render_buffers->render_pass(), render_buffers->sample_count(), m_sample_shading, viewport,
+                render_pipelines(transparent).triangle_lines = triangle_lines_program_.create_pipeline(
+                        render_buffers->render_pass(), render_buffers->sample_count(), sample_shading_, viewport,
                         transparent);
-                render_pipelines(transparent).normals = m_normals_program.create_pipeline(
-                        render_buffers->render_pass(), render_buffers->sample_count(), m_sample_shading, viewport,
+                render_pipelines(transparent).normals = normals_program_.create_pipeline(
+                        render_buffers->render_pass(), render_buffers->sample_count(), sample_shading_, viewport,
                         transparent);
-                render_pipelines(transparent).points = m_points_program.create_pipeline(
+                render_pipelines(transparent).points = points_program_.create_pipeline(
                         render_buffers->render_pass(), render_buffers->sample_count(), VK_PRIMITIVE_TOPOLOGY_POINT_LIST,
                         viewport, transparent);
-                render_pipelines(transparent).lines = m_points_program.create_pipeline(
+                render_pipelines(transparent).lines = points_program_.create_pipeline(
                         render_buffers->render_pass(), render_buffers->sample_count(), VK_PRIMITIVE_TOPOLOGY_LINE_LIST,
                         viewport, transparent);
         }
@@ -183,7 +183,7 @@ void MeshRenderer::create_render_buffers(
 
 void MeshRenderer::delete_render_buffers()
 {
-        ASSERT(m_thread_id == std::this_thread::get_id());
+        ASSERT(thread_id_ == std::this_thread::get_id());
 
         delete_render_command_buffers();
 
@@ -199,26 +199,26 @@ void MeshRenderer::delete_render_buffers()
 
 void MeshRenderer::create_depth_buffers(const DepthBuffers* depth_buffers)
 {
-        ASSERT(m_thread_id == std::this_thread::get_id());
+        ASSERT(thread_id_ == std::this_thread::get_id());
 
         delete_depth_buffers();
 
-        m_depth_buffers = depth_buffers;
+        depth_buffers_ = depth_buffers;
 
-        m_triangles_common_memory.set_shadow_texture(m_shadow_sampler, depth_buffers->texture(0));
+        triangles_common_memory_.set_shadow_texture(shadow_sampler_, depth_buffers->texture(0));
 
-        m_render_triangles_depth_pipeline = m_triangles_depth_program.create_pipeline(
+        render_triangles_depth_pipeline_ = triangles_depth_program_.create_pipeline(
                 depth_buffers->render_pass(), depth_buffers->sample_count(),
                 Region<2, int>(0, 0, depth_buffers->width(), depth_buffers->height()));
 }
 
 void MeshRenderer::delete_depth_buffers()
 {
-        ASSERT(m_thread_id == std::this_thread::get_id());
+        ASSERT(thread_id_ == std::this_thread::get_id());
 
         delete_depth_command_buffers();
 
-        m_render_triangles_depth_pipeline.reset();
+        render_triangles_depth_pipeline_.reset();
 }
 
 std::vector<vulkan::DescriptorSetLayoutAndBindings> MeshRenderer::mesh_layouts() const
@@ -226,23 +226,22 @@ std::vector<vulkan::DescriptorSetLayoutAndBindings> MeshRenderer::mesh_layouts()
         std::vector<vulkan::DescriptorSetLayoutAndBindings> layouts;
 
         layouts.emplace_back(
-                m_normals_program.descriptor_set_layout_mesh(),
-                m_normals_program.descriptor_set_layout_mesh_bindings());
+                normals_program_.descriptor_set_layout_mesh(), normals_program_.descriptor_set_layout_mesh_bindings());
 
         layouts.emplace_back(
-                m_points_program.descriptor_set_layout_mesh(), m_points_program.descriptor_set_layout_mesh_bindings());
+                points_program_.descriptor_set_layout_mesh(), points_program_.descriptor_set_layout_mesh_bindings());
 
         layouts.emplace_back(
-                m_triangle_lines_program.descriptor_set_layout_mesh(),
-                m_triangle_lines_program.descriptor_set_layout_mesh_bindings());
+                triangle_lines_program_.descriptor_set_layout_mesh(),
+                triangle_lines_program_.descriptor_set_layout_mesh_bindings());
 
         layouts.emplace_back(
-                m_triangles_program.descriptor_set_layout_mesh(),
-                m_triangles_program.descriptor_set_layout_mesh_bindings());
+                triangles_program_.descriptor_set_layout_mesh(),
+                triangles_program_.descriptor_set_layout_mesh_bindings());
 
         layouts.emplace_back(
-                m_triangles_depth_program.descriptor_set_layout_mesh(),
-                m_triangles_depth_program.descriptor_set_layout_mesh_bindings());
+                triangles_depth_program_.descriptor_set_layout_mesh(),
+                triangles_depth_program_.descriptor_set_layout_mesh_bindings());
 
         return layouts;
 }
@@ -252,15 +251,15 @@ std::vector<vulkan::DescriptorSetLayoutAndBindings> MeshRenderer::material_layou
         std::vector<vulkan::DescriptorSetLayoutAndBindings> layouts;
 
         layouts.emplace_back(
-                m_triangles_program.descriptor_set_layout_material(),
-                m_triangles_program.descriptor_set_layout_material_bindings());
+                triangles_program_.descriptor_set_layout_material(),
+                triangles_program_.descriptor_set_layout_material_bindings());
 
         return layouts;
 }
 
 VkSampler MeshRenderer::texture_sampler() const
 {
-        return m_texture_sampler;
+        return texture_sampler_;
 }
 
 template <template <typename...> typename T>
@@ -272,7 +271,7 @@ void MeshRenderer::draw_commands(
         bool depth,
         bool transparent) const
 {
-        ASSERT(m_thread_id == std::this_thread::get_id());
+        ASSERT(thread_id_ == std::this_thread::get_id());
 
         //
 
@@ -294,53 +293,53 @@ void MeshRenderer::draw_commands(
                         command_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, *render_pipelines(transparent).triangles);
 
                 vkCmdBindDescriptorSets(
-                        command_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, m_triangles_program.pipeline_layout(),
-                        CommonMemory::set_number(), 1 /*set count*/, &m_triangles_common_memory.descriptor_set(), 0,
+                        command_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, triangles_program_.pipeline_layout(),
+                        CommonMemory::set_number(), 1 /*set count*/, &triangles_common_memory_.descriptor_set(), 0,
                         nullptr);
 
                 auto bind_descriptor_set_mesh = [&](VkDescriptorSet descriptor_set)
                 {
                         vkCmdBindDescriptorSets(
-                                command_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, m_triangles_program.pipeline_layout(),
+                                command_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, triangles_program_.pipeline_layout(),
                                 MeshMemory::set_number(), 1 /*set count*/, &descriptor_set, 0, nullptr);
                 };
 
                 auto bind_descriptor_set_material = [&](VkDescriptorSet descriptor_set)
                 {
                         vkCmdBindDescriptorSets(
-                                command_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, m_triangles_program.pipeline_layout(),
+                                command_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, triangles_program_.pipeline_layout(),
                                 TrianglesMaterialMemory::set_number(), 1 /*set count*/, &descriptor_set, 0, nullptr);
                 };
 
                 for (const MeshObject* mesh : meshes)
                 {
                         mesh->commands_triangles(
-                                command_buffer, m_triangles_program.descriptor_set_layout_mesh(),
-                                bind_descriptor_set_mesh, m_triangles_program.descriptor_set_layout_material(),
+                                command_buffer, triangles_program_.descriptor_set_layout_mesh(),
+                                bind_descriptor_set_mesh, triangles_program_.descriptor_set_layout_material(),
                                 bind_descriptor_set_material);
                 }
         }
         else
         {
-                vkCmdBindPipeline(command_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, *m_render_triangles_depth_pipeline);
+                vkCmdBindPipeline(command_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, *render_triangles_depth_pipeline_);
 
                 vkCmdBindDescriptorSets(
-                        command_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, m_triangles_depth_program.pipeline_layout(),
-                        CommonMemory::set_number(), 1 /*set count*/, &m_triangles_depth_common_memory.descriptor_set(),
+                        command_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, triangles_depth_program_.pipeline_layout(),
+                        CommonMemory::set_number(), 1 /*set count*/, &triangles_depth_common_memory_.descriptor_set(),
                         0, nullptr);
 
                 auto bind_descriptor_set_mesh = [&](VkDescriptorSet descriptor_set)
                 {
                         vkCmdBindDescriptorSets(
                                 command_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS,
-                                m_triangles_depth_program.pipeline_layout(), MeshMemory::set_number(), 1 /*set count*/,
+                                triangles_depth_program_.pipeline_layout(), MeshMemory::set_number(), 1 /*set count*/,
                                 &descriptor_set, 0, nullptr);
                 };
 
                 for (const MeshObject* mesh : meshes)
                 {
                         mesh->commands_plain_triangles(
-                                command_buffer, m_triangles_depth_program.descriptor_set_layout_mesh(),
+                                command_buffer, triangles_depth_program_.descriptor_set_layout_mesh(),
                                 bind_descriptor_set_mesh);
                 }
         }
@@ -351,22 +350,21 @@ void MeshRenderer::draw_commands(
                         command_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, *render_pipelines(transparent).lines);
 
                 vkCmdBindDescriptorSets(
-                        command_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, m_points_program.pipeline_layout(),
-                        CommonMemory::set_number(), 1 /*set count*/, &m_points_common_memory.descriptor_set(), 0,
+                        command_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, points_program_.pipeline_layout(),
+                        CommonMemory::set_number(), 1 /*set count*/, &points_common_memory_.descriptor_set(), 0,
                         nullptr);
 
                 auto bind_descriptor_set_mesh = [&](VkDescriptorSet descriptor_set)
                 {
                         vkCmdBindDescriptorSets(
-                                command_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, m_points_program.pipeline_layout(),
+                                command_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, points_program_.pipeline_layout(),
                                 MeshMemory::set_number(), 1 /*set count*/, &descriptor_set, 0, nullptr);
                 };
 
                 for (const MeshObject* mesh : meshes)
                 {
                         mesh->commands_lines(
-                                command_buffer, m_points_program.descriptor_set_layout_mesh(),
-                                bind_descriptor_set_mesh);
+                                command_buffer, points_program_.descriptor_set_layout_mesh(), bind_descriptor_set_mesh);
                 }
         }
 
@@ -376,22 +374,21 @@ void MeshRenderer::draw_commands(
                         command_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, *render_pipelines(transparent).points);
 
                 vkCmdBindDescriptorSets(
-                        command_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, m_points_program.pipeline_layout(),
-                        CommonMemory::set_number(), 1 /*set count*/, &m_points_common_memory.descriptor_set(), 0,
+                        command_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, points_program_.pipeline_layout(),
+                        CommonMemory::set_number(), 1 /*set count*/, &points_common_memory_.descriptor_set(), 0,
                         nullptr);
 
                 auto bind_descriptor_set_mesh = [&](VkDescriptorSet descriptor_set)
                 {
                         vkCmdBindDescriptorSets(
-                                command_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, m_points_program.pipeline_layout(),
+                                command_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, points_program_.pipeline_layout(),
                                 MeshMemory::set_number(), 1 /*set count*/, &descriptor_set, 0, nullptr);
                 };
 
                 for (const MeshObject* mesh : meshes)
                 {
                         mesh->commands_points(
-                                command_buffer, m_points_program.descriptor_set_layout_mesh(),
-                                bind_descriptor_set_mesh);
+                                command_buffer, points_program_.descriptor_set_layout_mesh(), bind_descriptor_set_mesh);
                 }
         }
 
@@ -401,22 +398,22 @@ void MeshRenderer::draw_commands(
                         command_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, *render_pipelines(transparent).triangle_lines);
 
                 vkCmdBindDescriptorSets(
-                        command_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, m_triangle_lines_program.pipeline_layout(),
-                        CommonMemory::set_number(), 1 /*set count*/, &m_triangle_lines_common_memory.descriptor_set(),
-                        0, nullptr);
+                        command_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, triangle_lines_program_.pipeline_layout(),
+                        CommonMemory::set_number(), 1 /*set count*/, &triangle_lines_common_memory_.descriptor_set(), 0,
+                        nullptr);
 
                 auto bind_descriptor_set_mesh = [&](VkDescriptorSet descriptor_set)
                 {
                         vkCmdBindDescriptorSets(
                                 command_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS,
-                                m_triangle_lines_program.pipeline_layout(), MeshMemory::set_number(), 1 /*set count*/,
+                                triangle_lines_program_.pipeline_layout(), MeshMemory::set_number(), 1 /*set count*/,
                                 &descriptor_set, 0, nullptr);
                 };
 
                 for (const MeshObject* mesh : meshes)
                 {
                         mesh->commands_plain_triangles(
-                                command_buffer, m_triangle_lines_program.descriptor_set_layout_mesh(),
+                                command_buffer, triangle_lines_program_.descriptor_set_layout_mesh(),
                                 bind_descriptor_set_mesh);
                 }
         }
@@ -427,21 +424,21 @@ void MeshRenderer::draw_commands(
                         command_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, *render_pipelines(transparent).normals);
 
                 vkCmdBindDescriptorSets(
-                        command_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, m_normals_program.pipeline_layout(),
-                        CommonMemory::set_number(), 1 /*set count*/, &m_normals_common_memory.descriptor_set(), 0,
+                        command_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, normals_program_.pipeline_layout(),
+                        CommonMemory::set_number(), 1 /*set count*/, &normals_common_memory_.descriptor_set(), 0,
                         nullptr);
 
                 auto bind_descriptor_set_mesh = [&](VkDescriptorSet descriptor_set)
                 {
                         vkCmdBindDescriptorSets(
-                                command_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, m_normals_program.pipeline_layout(),
+                                command_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, normals_program_.pipeline_layout(),
                                 MeshMemory::set_number(), 1 /*set count*/, &descriptor_set, 0, nullptr);
                 };
 
                 for (const MeshObject* mesh : meshes)
                 {
                         mesh->commands_triangle_vertices(
-                                command_buffer, m_normals_program.descriptor_set_layout_mesh(),
+                                command_buffer, normals_program_.descriptor_set_layout_mesh(),
                                 bind_descriptor_set_mesh);
                 }
         }
@@ -455,11 +452,11 @@ void MeshRenderer::create_render_command_buffers(
         const std::function<void(VkCommandBuffer command_buffer)>& before_transparency_render_pass_commands,
         const std::function<void(VkCommandBuffer command_buffer)>& after_transparency_render_pass_commands)
 {
-        ASSERT(m_thread_id == std::this_thread::get_id());
+        ASSERT(thread_id_ == std::this_thread::get_id());
 
         //
 
-        ASSERT(m_render_buffers);
+        ASSERT(render_buffers_);
 
         delete_render_command_buffers();
 
@@ -474,14 +471,14 @@ void MeshRenderer::create_render_command_buffers(
 
         vulkan::CommandBufferCreateInfo info;
 
-        info.device = m_device;
+        info.device = device_;
         info.render_area.emplace();
         info.render_area->offset.x = 0;
         info.render_area->offset.y = 0;
-        info.render_area->extent.width = m_render_buffers->width();
-        info.render_area->extent.height = m_render_buffers->height();
-        info.render_pass = m_render_buffers->render_pass();
-        info.framebuffers = &m_render_buffers->framebuffers();
+        info.render_area->extent.width = render_buffers_->width();
+        info.render_area->extent.height = render_buffers_->height();
+        info.render_pass = render_buffers_->render_pass();
+        info.framebuffers = &render_buffers_->framebuffers();
         info.command_pool = graphics_command_pool;
 
         info.before_render_pass_commands =
@@ -503,7 +500,7 @@ void MeshRenderer::create_render_command_buffers(
         };
         info.after_render_pass_commands =
                 !transparent_meshes.empty() ? after_transparency_render_pass_commands : nullptr;
-        m_render_command_buffers_all = vulkan::create_command_buffers(info);
+        render_command_buffers_all_ = vulkan::create_command_buffers(info);
 
         if (!transparent_meshes.empty())
         {
@@ -515,14 +512,14 @@ void MeshRenderer::create_render_command_buffers(
                                 false /*transparent_pipeline*/);
                 };
                 info.after_render_pass_commands = nullptr;
-                m_render_command_buffers_transparent_as_opaque = vulkan::create_command_buffers(info);
+                render_command_buffers_transparent_as_opaque_ = vulkan::create_command_buffers(info);
         }
 }
 
 void MeshRenderer::delete_render_command_buffers()
 {
-        m_render_command_buffers_all.reset();
-        m_render_command_buffers_transparent_as_opaque.reset();
+        render_command_buffers_all_.reset();
+        render_command_buffers_transparent_as_opaque_.reset();
 }
 
 void MeshRenderer::create_depth_command_buffers(
@@ -531,11 +528,11 @@ void MeshRenderer::create_depth_command_buffers(
         bool clip_plane,
         bool normals)
 {
-        ASSERT(m_thread_id == std::this_thread::get_id());
+        ASSERT(thread_id_ == std::this_thread::get_id());
 
         //
 
-        ASSERT(m_depth_buffers);
+        ASSERT(depth_buffers_);
 
         delete_depth_command_buffers();
 
@@ -546,66 +543,66 @@ void MeshRenderer::create_depth_command_buffers(
 
         vulkan::CommandBufferCreateInfo info;
 
-        info.device = m_device;
+        info.device = device_;
         info.render_area.emplace();
         info.render_area->offset.x = 0;
         info.render_area->offset.y = 0;
-        info.render_area->extent.width = m_depth_buffers->width();
-        info.render_area->extent.height = m_depth_buffers->height();
-        info.render_pass = m_depth_buffers->render_pass();
-        info.framebuffers = &m_depth_buffers->framebuffers();
+        info.render_area->extent.width = depth_buffers_->width();
+        info.render_area->extent.height = depth_buffers_->height();
+        info.render_pass = depth_buffers_->render_pass();
+        info.framebuffers = &depth_buffers_->framebuffers();
         info.command_pool = graphics_command_pool;
-        info.clear_values = &m_depth_buffers->clear_values();
+        info.clear_values = &depth_buffers_->clear_values();
         info.render_pass_commands = [&](VkCommandBuffer command_buffer)
         {
                 draw_commands(
                         meshes, command_buffer, clip_plane, normals, true /*depth*/, false /*transparent_pipeline*/);
         };
 
-        m_render_depth_command_buffers = vulkan::create_command_buffers(info);
+        render_depth_command_buffers_ = vulkan::create_command_buffers(info);
 }
 
 void MeshRenderer::delete_depth_command_buffers()
 {
-        m_render_depth_command_buffers.reset();
+        render_depth_command_buffers_.reset();
 }
 
 bool MeshRenderer::has_meshes() const
 {
-        return m_render_command_buffers_all.has_value();
+        return render_command_buffers_all_.has_value();
 }
 
 bool MeshRenderer::has_transparent_meshes() const
 {
-        return m_render_command_buffers_transparent_as_opaque.has_value();
+        return render_command_buffers_transparent_as_opaque_.has_value();
 }
 
 std::optional<VkCommandBuffer> MeshRenderer::render_command_buffer_all(unsigned index) const
 {
-        if (m_render_command_buffers_all)
+        if (render_command_buffers_all_)
         {
-                ASSERT(index < m_render_command_buffers_all->count());
-                return (*m_render_command_buffers_all)[index];
+                ASSERT(index < render_command_buffers_all_->count());
+                return (*render_command_buffers_all_)[index];
         }
         return std::nullopt;
 }
 
 std::optional<VkCommandBuffer> MeshRenderer::render_command_buffer_transparent_as_opaque(unsigned index) const
 {
-        if (m_render_command_buffers_transparent_as_opaque)
+        if (render_command_buffers_transparent_as_opaque_)
         {
-                ASSERT(index < m_render_command_buffers_transparent_as_opaque->count());
-                return (*m_render_command_buffers_transparent_as_opaque)[index];
+                ASSERT(index < render_command_buffers_transparent_as_opaque_->count());
+                return (*render_command_buffers_transparent_as_opaque_)[index];
         }
         return std::nullopt;
 }
 
 std::optional<VkCommandBuffer> MeshRenderer::depth_command_buffer(unsigned index) const
 {
-        if (m_render_depth_command_buffers)
+        if (render_depth_command_buffers_)
         {
-                ASSERT(index < m_render_depth_command_buffers->count());
-                return (*m_render_depth_command_buffers)[index];
+                ASSERT(index < render_depth_command_buffers_->count());
+                return (*render_depth_command_buffers_)[index];
         }
         return std::nullopt;
 }

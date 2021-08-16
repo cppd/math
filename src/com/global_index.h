@@ -97,27 +97,27 @@ class GlobalIndex
                 return compute_strides(sizes, std::make_integer_sequence<unsigned, N>());
         }
 
-        std::array<IndexType, N> m_strides;
-        IndexType m_count;
+        std::array<IndexType, N> strides_;
+        IndexType count_;
 
 public:
         GlobalIndex() = default;
 
         template <typename T>
         explicit constexpr GlobalIndex(const T& sizes)
-                : m_strides(compute_strides(sizes)), m_count(m_strides[N - 1] * sizes[N - 1])
+                : strides_(compute_strides(sizes)), count_(strides_[N - 1] * sizes[N - 1])
         {
         }
 
         constexpr IndexType count() const
         {
-                return m_count;
+                return count_;
         }
 
         constexpr IndexType stride(unsigned n) const
         {
                 ASSERT(n < N);
-                return m_strides[n];
+                return strides_[n];
         }
 
         template <typename T>
@@ -133,7 +133,7 @@ public:
                 IndexType global_index = p[0];
                 for (unsigned i = 1; i < N; ++i)
                 {
-                        global_index += m_strides[i] * p[i];
+                        global_index += strides_[i] * p[i];
                 }
 
                 return global_index;

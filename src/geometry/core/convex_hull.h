@@ -29,43 +29,43 @@ namespace ns::geometry
 template <std::size_t N>
 class ConvexHullFacet final
 {
-        const std::array<int, N> m_indices;
-        const Vector<N, double> m_ortho;
+        const std::array<int, N> indices_;
+        const Vector<N, double> ortho_;
 
 public:
         ConvexHullFacet(const std::array<int, N>& indices, const Vector<N, double>& ortho)
-                : m_indices(indices), m_ortho(ortho)
+                : indices_(indices), ortho_(ortho)
         {
         }
         const std::array<int, N>& vertices() const
         {
-                return m_indices;
+                return indices_;
         }
         const Vector<N, double>& ortho() const
         {
-                return m_ortho;
+                return ortho_;
         }
 };
 
 template <std::size_t N>
 class DelaunaySimplex final
 {
-        const std::array<int, N + 1> m_indices;
-        const std::array<Vector<N, double>, N + 1> m_orthos;
+        const std::array<int, N + 1> indices_;
+        const std::array<Vector<N, double>, N + 1> orthos_;
 
 public:
         DelaunaySimplex(const std::array<int, N + 1>& indices, const std::array<Vector<N, double>, N + 1>& orthos)
-                : m_indices(indices), m_orthos(orthos)
+                : indices_(indices), orthos_(orthos)
         {
         }
         const std::array<int, N + 1>& vertices() const
         {
-                return m_indices;
+                return indices_;
         }
         const Vector<N, double>& ortho(unsigned i) const
         {
-                ASSERT(i < m_orthos.size());
-                return m_orthos[i];
+                ASSERT(i < orthos_.size());
+                return orthos_[i];
         }
 };
 

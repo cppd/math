@@ -72,13 +72,13 @@ class Region final
                 }
         }
 
-        std::array<int, N> m_max;
-        int m_integer_radius;
+        std::array<int, N> max_;
+        int integer_radius_;
 
 public:
         template <typename T>
         Region(const std::array<int, N>& size, T radius)
-                : m_max(max_values_for_size(size)), m_integer_radius(integer_radius(radius))
+                : max_(max_values_for_size(size)), integer_radius_(integer_radius(radius))
         {
         }
 
@@ -89,8 +89,8 @@ public:
                 std::array<int, N> max;
                 for (std::size_t i = 0; i < N; ++i)
                 {
-                        min[i] = std::max(0, pixel[i] - m_integer_radius);
-                        max[i] = std::min(m_max[i], pixel[i] + m_integer_radius);
+                        min[i] = std::max(0, pixel[i] - integer_radius_);
+                        max[i] = std::min(max_[i], pixel[i] + integer_radius_);
                 }
                 std::array<int, N> p;
                 traverse<0>(min, max, p, f);

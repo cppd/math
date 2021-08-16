@@ -140,11 +140,11 @@ class StratifiedJitteredSampler
                 return result;
         }
 
-        std::vector<T> m_offsets;
-        std::vector<std::array<int, N>> m_indices;
-        T m_min;
-        T m_max;
-        bool m_shuffle;
+        std::vector<T> offsets_;
+        std::vector<std::array<int, N>> indices_;
+        T min_;
+        T max_;
+        bool shuffle_;
 
 public:
         StratifiedJitteredSampler(
@@ -152,27 +152,27 @@ public:
                 std::type_identity_t<T> max,
                 int sample_count,
                 bool shuffle)
-                : m_offsets(make_offsets(min, max, one_dimension_size(sample_count))),
-                  m_indices(product(m_offsets.size() - 1)),
-                  m_min(min),
-                  m_max(max),
-                  m_shuffle(shuffle)
+                : offsets_(make_offsets(min, max, one_dimension_size(sample_count))),
+                  indices_(product(offsets_.size() - 1)),
+                  min_(min),
+                  max_(max),
+                  shuffle_(shuffle)
         {
         }
 
         bool shuffled() const
         {
-                return m_shuffle;
+                return shuffle_;
         }
 
         T min() const
         {
-                return m_min;
+                return min_;
         }
 
         T max() const
         {
-                return m_max;
+                return max_;
         }
 
         template <typename RandomEngine>
@@ -180,16 +180,16 @@ public:
         {
                 constexpr bool IS_FLOAT = std::is_same_v<std::remove_cvref_t<T>, float>;
 
-                samples->resize(m_indices.size());
+                samples->resize(indices_.size());
 
-                for (std::size_t i = 0; i < m_indices.size(); ++i)
+                for (std::size_t i = 0; i < indices_.size(); ++i)
                 {
-                        const std::array<int, N>& indices = m_indices[i];
+                        const std::array<int, N>& indices = indices_[i];
                         Vector<N, T>& sample = (*samples)[i];
                         for (std::size_t n = 0; n < N; ++n)
                         {
-                                T min = m_offsets[indices[n]];
-                                T max = m_offsets[indices[n] + 1];
+                                T min = offsets_[indices[n]];
+                                T max = offsets_[indices[n] + 1];
                                 // Distribution may return max if T is float
                                 do
                                 {
@@ -198,7 +198,7 @@ public:
                         }
                 }
 
-                if (m_shuffle)
+                if (shuffle_)
                 {
                         std::shuffle(samples->begin(), samples->end(), random_engine);
                 }

@@ -40,7 +40,7 @@ class PixelFilter final
         static constexpr T FILTER_RADIUS = 1.5;
         static constexpr T GAUSSIAN_FILTER_WIDTH = FILTER_RADIUS / 2.5;
 
-        const GaussianFilter<T> m_filter{GAUSSIAN_FILTER_WIDTH, FILTER_RADIUS};
+        const GaussianFilter<T> filter_{GAUSSIAN_FILTER_WIDTH, FILTER_RADIUS};
 
 public:
         static T radius()
@@ -94,7 +94,7 @@ public:
                                 continue;
                         }
 
-                        const T weight = m_filter.compute(center - points[i]);
+                        const T weight = filter_.compute(center - points[i]);
                         ASSERT(weight >= 0);
 
                         if (!(weight > 0))
@@ -184,7 +184,7 @@ public:
                                 continue;
                         }
 
-                        const T weight = m_filter.compute(center - points[i]);
+                        const T weight = filter_.compute(center - points[i]);
                         ASSERT(weight >= 0);
 
                         if (!(weight > 0))

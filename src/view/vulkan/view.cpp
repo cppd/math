@@ -125,52 +125,52 @@ std::unique_ptr<vulkan::VulkanInstance> create_instance(const window::WindowID& 
 
 class Impl final
 {
-        const std::thread::id m_thread_id = std::this_thread::get_id();
-        const double m_window_ppi;
-        const int m_frame_size_in_pixels = std::max(1, millimeters_to_pixels(FRAME_SIZE_IN_MILLIMETERS, m_window_ppi));
+        const std::thread::id thread_id_ = std::this_thread::get_id();
+        const double window_ppi_;
+        const int frame_size_in_pixels_ = std::max(1, millimeters_to_pixels(FRAME_SIZE_IN_MILLIMETERS, window_ppi_));
 
-        FrameRate m_frame_rate{m_window_ppi};
-        Camera m_camera;
-        Mouse m_mouse;
+        FrameRate frame_rate_{window_ppi_};
+        Camera camera_;
+        Mouse mouse_;
 
-        Region<2, int> m_draw_rectangle{limits<int>::lowest(), limits<int>::lowest(), 0, 0};
+        Region<2, int> draw_rectangle_{limits<int>::lowest(), limits<int>::lowest(), 0, 0};
 
-        std::optional<mat4d> m_clip_plane_view_matrix;
+        std::optional<mat4d> clip_plane_view_matrix_;
 
-        vulkan::PresentMode m_present_mode = SWAPCHAIN_INITIAL_PRESENT_MODE;
+        vulkan::PresentMode present_mode_ = SWAPCHAIN_INITIAL_PRESENT_MODE;
 
-        bool m_text_active = true;
-        bool m_convex_hull_active = false;
-        bool m_pencil_sketch_active = false;
-        bool m_dft_active = false;
-        bool m_optical_flow_active = false;
+        bool text_active_ = true;
+        bool convex_hull_active_ = false;
+        bool pencil_sketch_active_ = false;
+        bool dft_active_ = false;
+        bool optical_flow_active_ = false;
 
-        const std::unique_ptr<vulkan::VulkanInstance> m_instance;
+        const std::unique_ptr<vulkan::VulkanInstance> instance_;
 
-        std::unique_ptr<gpu::renderer::Renderer> m_renderer;
-        std::unique_ptr<gpu::text_writer::View> m_text;
-        std::unique_ptr<gpu::convex_hull::View> m_convex_hull;
-        std::unique_ptr<gpu::pencil_sketch::View> m_pencil_sketch;
-        std::unique_ptr<gpu::dft::View> m_dft;
-        std::unique_ptr<gpu::optical_flow::View> m_optical_flow;
+        std::unique_ptr<gpu::renderer::Renderer> renderer_;
+        std::unique_ptr<gpu::text_writer::View> text_;
+        std::unique_ptr<gpu::convex_hull::View> convex_hull_;
+        std::unique_ptr<gpu::pencil_sketch::View> pencil_sketch_;
+        std::unique_ptr<gpu::dft::View> dft_;
+        std::unique_ptr<gpu::optical_flow::View> optical_flow_;
 
-        const vulkan::Semaphore m_swapchain_image_semaphore{m_instance->device()};
-        std::unique_ptr<vulkan::Swapchain> m_swapchain;
-        std::unique_ptr<Swapchain> m_swapchain_resolve;
+        const vulkan::Semaphore swapchain_image_semaphore_{instance_->device()};
+        std::unique_ptr<vulkan::Swapchain> swapchain_;
+        std::unique_ptr<Swapchain> swapchain_resolve_;
 
-        std::unique_ptr<RenderBuffers> m_render_buffers;
-        std::unique_ptr<ImageResolve> m_image_resolve;
-        std::unique_ptr<vulkan::ImageWithMemory> m_object_image;
+        std::unique_ptr<RenderBuffers> render_buffers_;
+        std::unique_ptr<ImageResolve> image_resolve_;
+        std::unique_ptr<vulkan::ImageWithMemory> object_image_;
 
         void clip_plane_show(const double position)
         {
-                m_clip_plane_view_matrix = m_camera.renderer_info().main_view_matrix;
+                clip_plane_view_matrix_ = camera_.renderer_info().main_view_matrix;
                 clip_plane_position(position);
         }
 
         void clip_plane_position(const double position)
         {
-                if (!m_clip_plane_view_matrix)
+                if (!clip_plane_view_matrix_)
                 {
                         error("Clip plane is not set");
                 }
@@ -179,40 +179,40 @@ class Impl final
                         error("Error clip plane position " + to_string(position));
                 }
 
-                m_renderer->set_clip_plane(create_clip_plane(*m_clip_plane_view_matrix, position));
+                renderer_->set_clip_plane(create_clip_plane(*clip_plane_view_matrix_, position));
         }
 
         void clip_plane_hide()
         {
-                m_clip_plane_view_matrix.reset();
-                m_renderer->set_clip_plane(std::nullopt);
+                clip_plane_view_matrix_.reset();
+                renderer_->set_clip_plane(std::nullopt);
         }
 
         void mouse_move(const int x, const int y)
         {
-                m_mouse.move(x, y);
+                mouse_.move(x, y);
 
                 bool changed = false;
 
-                const MouseButtonInfo& right = m_mouse.info(MouseButton::Right);
-                if (right.pressed && m_draw_rectangle.is_inside(right.pressed_x, right.pressed_y)
+                const MouseButtonInfo& right = mouse_.info(MouseButton::Right);
+                if (right.pressed && draw_rectangle_.is_inside(right.pressed_x, right.pressed_y)
                     && (right.delta_x != 0 || right.delta_y != 0))
                 {
-                        m_camera.rotate(-right.delta_x, -right.delta_y);
+                        camera_.rotate(-right.delta_x, -right.delta_y);
                         changed = true;
                 }
 
-                const MouseButtonInfo& left = m_mouse.info(MouseButton::Left);
-                if (left.pressed && m_draw_rectangle.is_inside(left.pressed_x, left.pressed_y)
+                const MouseButtonInfo& left = mouse_.info(MouseButton::Left);
+                if (left.pressed && draw_rectangle_.is_inside(left.pressed_x, left.pressed_y)
                     && (left.delta_x != 0 || left.delta_y != 0))
                 {
-                        m_camera.move(vec2d(-left.delta_x, left.delta_y));
+                        camera_.move(vec2d(-left.delta_x, left.delta_y));
                         changed = true;
                 }
 
                 if (changed)
                 {
-                        m_renderer->set_camera(m_camera.renderer_info());
+                        renderer_->set_camera(camera_.renderer_info());
                 }
         }
 
@@ -220,24 +220,24 @@ class Impl final
 
         void reset_view_handler()
         {
-                ASSERT(std::this_thread::get_id() == m_thread_id);
+                ASSERT(std::this_thread::get_id() == thread_id_);
 
-                m_camera.reset(vec3d(1, 0, 0), vec3d(0, 1, 0), 1, vec2d(0, 0));
+                camera_.reset(vec3d(1, 0, 0), vec3d(0, 1, 0), 1, vec2d(0, 0));
 
-                m_renderer->set_camera(m_camera.renderer_info());
+                renderer_->set_camera(camera_.renderer_info());
         }
 
         void set_vertical_sync_swapchain(const bool v)
         {
-                if (v && m_present_mode != vulkan::PresentMode::PreferSync)
+                if (v && present_mode_ != vulkan::PresentMode::PreferSync)
                 {
-                        m_present_mode = vulkan::PresentMode::PreferSync;
+                        present_mode_ = vulkan::PresentMode::PreferSync;
                         create_swapchain();
                         return;
                 }
-                if (!v && m_present_mode != vulkan::PresentMode::PreferFast)
+                if (!v && present_mode_ != vulkan::PresentMode::PreferFast)
                 {
-                        m_present_mode = vulkan::PresentMode::PreferFast;
+                        present_mode_ = vulkan::PresentMode::PreferFast;
                         create_swapchain();
                         return;
                 }
@@ -249,7 +249,7 @@ class Impl final
         {
                 if (auto ptr = d.object.lock(); ptr)
                 {
-                        m_renderer->object_update(*ptr);
+                        renderer_->object_update(*ptr);
                 }
         }
 
@@ -257,23 +257,23 @@ class Impl final
         {
                 if (auto ptr = d.object.lock(); ptr)
                 {
-                        m_renderer->object_update(*ptr);
+                        renderer_->object_update(*ptr);
                 }
         }
 
         void command(const command::DeleteObject& d)
         {
-                m_renderer->object_delete(d.id);
+                renderer_->object_delete(d.id);
         }
 
         void command(const command::ShowObject& d)
         {
-                m_renderer->object_show(d.id, d.show);
+                renderer_->object_show(d.id, d.show);
         }
 
         void command(const command::DeleteAllObjects&)
         {
-                m_renderer->object_delete_all();
+                renderer_->object_delete_all();
                 reset_view_handler();
         }
 
@@ -284,121 +284,121 @@ class Impl final
 
         void command(const command::SetLightingColor& v)
         {
-                m_renderer->set_lighting_color(v.value);
+                renderer_->set_lighting_color(v.value);
         }
 
         void command(const command::SetBackgroundColor& d)
         {
-                m_renderer->set_background_color(d.value);
+                renderer_->set_background_color(d.value);
                 const bool background_is_dark = d.value.luminance() <= 0.5;
                 if (background_is_dark)
                 {
                         static const color::Color white(1);
-                        m_text->set_color(white);
+                        text_->set_color(white);
                 }
                 else
                 {
                         static const color::Color black(0);
-                        m_text->set_color(black);
+                        text_->set_color(black);
                 }
         }
 
         void command(const command::SetWireframeColor& d)
         {
-                m_renderer->set_wireframe_color(d.value);
+                renderer_->set_wireframe_color(d.value);
         }
 
         void command(const command::SetClipPlaneColor& d)
         {
-                m_renderer->set_clip_plane_color(d.value);
+                renderer_->set_clip_plane_color(d.value);
         }
 
         void command(const command::SetNormalLength& d)
         {
-                m_renderer->set_normal_length(d.value);
+                renderer_->set_normal_length(d.value);
         }
 
         void command(const command::SetNormalColorPositive& d)
         {
-                m_renderer->set_normal_color_positive(d.value);
+                renderer_->set_normal_color_positive(d.value);
         }
 
         void command(const command::SetNormalColorNegative& d)
         {
-                m_renderer->set_normal_color_negative(d.value);
+                renderer_->set_normal_color_negative(d.value);
         }
 
         void command(const command::ShowSmooth& d)
         {
-                m_renderer->set_show_smooth(d.show);
+                renderer_->set_show_smooth(d.show);
         }
 
         void command(const command::ShowWireframe& d)
         {
-                m_renderer->set_show_wireframe(d.show);
+                renderer_->set_show_wireframe(d.show);
         }
 
         void command(const command::ShowShadow& d)
         {
-                m_renderer->set_show_shadow(d.show);
+                renderer_->set_show_shadow(d.show);
         }
 
         void command(const command::ShowFog& d)
         {
-                m_renderer->set_show_fog(d.show);
+                renderer_->set_show_fog(d.show);
         }
 
         void command(const command::ShowMaterials& d)
         {
-                m_renderer->set_show_materials(d.show);
+                renderer_->set_show_materials(d.show);
         }
 
         void command(const command::ShowFps& d)
         {
-                m_text_active = d.show;
+                text_active_ = d.show;
         }
 
         void command(const command::ShowPencilSketch& d)
         {
-                m_pencil_sketch_active = d.show;
+                pencil_sketch_active_ = d.show;
         }
 
         void command(const command::ShowDft& d)
         {
-                if (m_dft_active != d.show)
+                if (dft_active_ != d.show)
                 {
-                        m_dft_active = d.show;
+                        dft_active_ = d.show;
                         create_swapchain();
                 }
         }
 
         void command(const command::SetDftBrightness& d)
         {
-                m_dft->set_brightness(d.value);
+                dft_->set_brightness(d.value);
         }
 
         void command(const command::SetDftBackgroundColor& d)
         {
-                m_dft->set_background_color(d.value);
+                dft_->set_background_color(d.value);
         }
 
         void command(const command::SetDftColor& d)
         {
-                m_dft->set_color(d.value);
+                dft_->set_color(d.value);
         }
 
         void command(const command::ShowConvexHull2D& d)
         {
-                m_convex_hull_active = d.show;
-                if (m_convex_hull_active)
+                convex_hull_active_ = d.show;
+                if (convex_hull_active_)
                 {
-                        m_convex_hull->reset_timer();
+                        convex_hull_->reset_timer();
                 }
         }
 
         void command(const command::ShowOpticalFlow& d)
         {
-                m_optical_flow_active = d.show;
+                optical_flow_active_ = d.show;
         }
 
         void command(const command::SetVerticalSync& d)
@@ -408,7 +408,7 @@ class Impl final
 
         void command(const command::SetShadowZoom& d)
         {
-                m_renderer->set_shadow_zoom(d.value);
+                renderer_->set_shadow_zoom(d.value);
         }
 
         void command(const command::ClipPlaneShow& d)
@@ -428,17 +428,17 @@ class Impl final
 
         void command(const command::ShowNormals& d)
         {
-                m_renderer->set_show_normals(d.show);
+                renderer_->set_show_normals(d.show);
         }
 
         void command(const command::MousePress& d)
         {
-                m_mouse.press(d.x, d.y, d.button);
+                mouse_.press(d.x, d.y, d.button);
         }
 
         void command(const command::MouseRelease& d)
         {
-                m_mouse.release(d.x, d.y, d.button);
+                mouse_.release(d.x, d.y, d.button);
         }
 
         void command(const command::MouseMove& d)
@@ -448,8 +448,8 @@ class Impl final
 
         void command(const command::MouseWheel& d)
         {
-                m_camera.scale(d.x - m_draw_rectangle.x0(), d.y - m_draw_rectangle.y0(), d.delta);
-                m_renderer->set_camera(m_camera.renderer_info());
+                camera_.scale(d.x - draw_rectangle_.x0(), d.y - draw_rectangle_.y0(), d.delta);
+                renderer_->set_camera(camera_.renderer_info());
         }
 
         void command(const command::WindowResize&)
@@ -460,7 +460,7 @@ class Impl final
 
         void info(info::Camera* const d) const
         {
-                *d = m_camera.view_info();
+                *d = camera_.view_info();
         }
 
         void info(info::Image* const d)
@@ -468,10 +468,10 @@ class Impl final
                 static_assert(RENDER_BUFFER_COUNT == 1);
                 constexpr int INDEX = 0;
 
-                m_instance->device_wait_idle();
+                instance_->device_wait_idle();
 
-                const int width = m_swapchain->width();
-                const int height = m_swapchain->height();
+                const int width = swapchain_->width();
+                const int height = swapchain_->height();
 
                 delete_swapchain_buffers();
                 create_buffers(SAVE_FORMAT, width, height);
@@ -479,18 +479,18 @@ class Impl final
                 {
                         VkSemaphore semaphore = render();
 
-                        const vulkan::Queue& queue = m_instance->graphics_compute_queues()[0];
+                        const vulkan::Queue& queue = instance_->graphics_compute_queues()[0];
 
                         const ImageResolve image(
-                                m_instance->device(), m_instance->graphics_compute_command_pool(), queue,
-                                *m_render_buffers, Region<2, int>(0, 0, width, height), VK_IMAGE_LAYOUT_GENERAL,
+                                instance_->device(), instance_->graphics_compute_command_pool(), queue,
+                                *render_buffers_, Region<2, int>(0, 0, width, height), VK_IMAGE_LAYOUT_GENERAL,
                                 VK_IMAGE_USAGE_TRANSFER_SRC_BIT);
 
                         image.resolve(queue, semaphore, INDEX);
                         vulkan::queue_wait_idle(queue);
 
                         image.image(INDEX).read_pixels(
-                                m_instance->graphics_compute_command_pool(), queue, VK_IMAGE_LAYOUT_GENERAL,
+                                instance_->graphics_compute_command_pool(), queue, VK_IMAGE_LAYOUT_GENERAL,
                                 VK_IMAGE_LAYOUT_GENERAL, &d->image.color_format, &d->image.pixels);
                 }
 
@@ -508,110 +508,110 @@ class Impl final
 
         void delete_buffers()
         {
-                m_text->delete_buffers();
-                m_convex_hull->delete_buffers();
-                m_pencil_sketch->delete_buffers();
-                m_dft->delete_buffers();
-                m_optical_flow->delete_buffers();
-                m_renderer->delete_buffers();
+                text_->delete_buffers();
+                convex_hull_->delete_buffers();
+                pencil_sketch_->delete_buffers();
+                dft_->delete_buffers();
+                optical_flow_->delete_buffers();
+                renderer_->delete_buffers();
 
-                m_image_resolve.reset();
-                m_object_image.reset();
-                m_render_buffers.reset();
+                image_resolve_.reset();
+                object_image_.reset();
+                render_buffers_.reset();
         }
 
         void create_buffers(const VkFormat format, const unsigned width, const unsigned height)
         {
-                m_render_buffers = create_render_buffers(
+                render_buffers_ = create_render_buffers(
                         RENDER_BUFFER_COUNT, format, DEPTH_FORMATS, width, height,
-                        {m_instance->graphics_compute_queues()[0].family_index()}, m_instance->device(),
+                        {instance_->graphics_compute_queues()[0].family_index()}, instance_->device(),
                         MINIMUM_SAMPLE_COUNT);
 
-                m_object_image = std::make_unique<vulkan::ImageWithMemory>(
-                        m_instance->device(),
-                        std::vector<uint32_t>({m_instance->graphics_compute_queues()[0].family_index()}),
+                object_image_ = std::make_unique<vulkan::ImageWithMemory>(
+                        instance_->device(),
+                        std::vector<uint32_t>({instance_->graphics_compute_queues()[0].family_index()}),
                         std::vector<VkFormat>({OBJECT_IMAGE_FORMAT}), VK_SAMPLE_COUNT_1_BIT, VK_IMAGE_TYPE_2D,
-                        vulkan::make_extent(m_render_buffers->width(), m_render_buffers->height()),
+                        vulkan::make_extent(render_buffers_->width(), render_buffers_->height()),
                         VK_IMAGE_USAGE_STORAGE_BIT | VK_IMAGE_USAGE_TRANSFER_DST_BIT, VK_IMAGE_LAYOUT_GENERAL,
-                        m_instance->graphics_compute_command_pool(), m_instance->graphics_compute_queues()[0]);
+                        instance_->graphics_compute_command_pool(), instance_->graphics_compute_queues()[0]);
 
                 const auto [w_1, w_2] = window_position_and_size(
-                        m_dft_active, m_render_buffers->width(), m_render_buffers->height(), m_frame_size_in_pixels);
+                        dft_active_, render_buffers_->width(), render_buffers_->height(), frame_size_in_pixels_);
 
-                m_draw_rectangle = w_1;
+                draw_rectangle_ = w_1;
 
                 static_assert(RENDER_BUFFER_COUNT == 1);
-                m_image_resolve = std::make_unique<ImageResolve>(
-                        m_instance->device(), m_instance->graphics_compute_command_pool(),
-                        m_instance->graphics_compute_queues()[0], *m_render_buffers, m_draw_rectangle,
+                image_resolve_ = std::make_unique<ImageResolve>(
+                        instance_->device(), instance_->graphics_compute_command_pool(),
+                        instance_->graphics_compute_queues()[0], *render_buffers_, draw_rectangle_,
                         VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL, VK_IMAGE_USAGE_SAMPLED_BIT);
 
-                m_renderer->create_buffers(&m_render_buffers->buffers_3d(), m_object_image.get(), m_draw_rectangle);
+                renderer_->create_buffers(&render_buffers_->buffers_3d(), object_image_.get(), draw_rectangle_);
 
-                m_text->create_buffers(
-                        &m_render_buffers->buffers_2d(),
-                        Region<2, int>(0, 0, m_render_buffers->width(), m_render_buffers->height()));
+                text_->create_buffers(
+                        &render_buffers_->buffers_2d(),
+                        Region<2, int>(0, 0, render_buffers_->width(), render_buffers_->height()));
 
-                m_convex_hull->create_buffers(&m_render_buffers->buffers_2d(), *m_object_image, m_draw_rectangle);
+                convex_hull_->create_buffers(&render_buffers_->buffers_2d(), *object_image_, draw_rectangle_);
 
-                m_pencil_sketch->create_buffers(
-                        &m_render_buffers->buffers_2d(), m_image_resolve->image(0), *m_object_image, m_draw_rectangle);
+                pencil_sketch_->create_buffers(
+                        &render_buffers_->buffers_2d(), image_resolve_->image(0), *object_image_, draw_rectangle_);
 
-                m_optical_flow->create_buffers(
-                        &m_render_buffers->buffers_2d(), m_image_resolve->image(0), m_window_ppi, m_draw_rectangle);
+                optical_flow_->create_buffers(
+                        &render_buffers_->buffers_2d(), image_resolve_->image(0), window_ppi_, draw_rectangle_);
 
                 if (w_2)
                 {
-                        m_dft->create_buffers(
-                                &m_render_buffers->buffers_2d(), m_image_resolve->image(0), m_draw_rectangle, *w_2);
+                        dft_->create_buffers(
+                                &render_buffers_->buffers_2d(), image_resolve_->image(0), draw_rectangle_, *w_2);
                 }
 
-                m_camera.resize(m_draw_rectangle.width(), m_draw_rectangle.height());
-                m_renderer->set_camera(m_camera.renderer_info());
+                camera_.resize(draw_rectangle_.width(), draw_rectangle_.height());
+                renderer_->set_camera(camera_.renderer_info());
         }
 
         [[nodiscard]] VkSemaphore render() const
         {
                 static_assert(RENDER_BUFFER_COUNT == 1);
-                ASSERT(m_render_buffers->image_views().size() == 1);
+                ASSERT(render_buffers_->image_views().size() == 1);
 
                 constexpr int INDEX = 0;
 
-                VkSemaphore semaphore = m_renderer->draw(
-                        m_instance->graphics_compute_queues()[0], m_instance->graphics_compute_queues()[1], INDEX);
+                VkSemaphore semaphore = renderer_->draw(
+                        instance_->graphics_compute_queues()[0], instance_->graphics_compute_queues()[1], INDEX);
 
-                const vulkan::Queue& graphics_queue = m_instance->graphics_compute_queues()[0];
-                const vulkan::Queue& compute_queue = m_instance->compute_queue();
+                const vulkan::Queue& graphics_queue = instance_->graphics_compute_queues()[0];
+                const vulkan::Queue& compute_queue = instance_->compute_queue();
 
-                if (m_pencil_sketch_active)
+                if (pencil_sketch_active_)
                 {
-                        semaphore = m_image_resolve->resolve_semaphore(graphics_queue, semaphore, INDEX);
-                        semaphore = m_pencil_sketch->draw(graphics_queue, semaphore, INDEX);
+                        semaphore = image_resolve_->resolve_semaphore(graphics_queue, semaphore, INDEX);
+                        semaphore = pencil_sketch_->draw(graphics_queue, semaphore, INDEX);
                 }
 
-                if (m_dft_active || m_optical_flow_active)
+                if (dft_active_ || optical_flow_active_)
                 {
-                        semaphore = m_image_resolve->resolve_semaphore(graphics_queue, semaphore, INDEX);
+                        semaphore = image_resolve_->resolve_semaphore(graphics_queue, semaphore, INDEX);
                 }
 
-                if (m_dft_active)
+                if (dft_active_)
                 {
-                        semaphore = m_dft->draw(graphics_queue, semaphore, INDEX);
+                        semaphore = dft_->draw(graphics_queue, semaphore, INDEX);
                 }
 
-                if (m_optical_flow_active)
+                if (optical_flow_active_)
                 {
-                        semaphore = m_optical_flow->draw(graphics_queue, compute_queue, semaphore, INDEX);
+                        semaphore = optical_flow_->draw(graphics_queue, compute_queue, semaphore, INDEX);
                 }
 
-                if (m_convex_hull_active)
+                if (convex_hull_active_)
                 {
-                        semaphore = m_convex_hull->draw(graphics_queue, semaphore, INDEX);
+                        semaphore = convex_hull_->draw(graphics_queue, semaphore, INDEX);
                 }
 
-                if (m_text_active)
+                if (text_active_)
                 {
-                        semaphore = m_text->draw(graphics_queue, semaphore, INDEX, m_frame_rate.text_data());
+                        semaphore = text_->draw(graphics_queue, semaphore, INDEX, frame_rate_.text_data());
                 }
 
                 return semaphore;
@@ -621,37 +621,36 @@ class Impl final
 
         void delete_swapchain_buffers()
         {
-                m_swapchain_resolve.reset();
+                swapchain_resolve_.reset();
                 delete_buffers();
         }
 
         void create_swapchain_buffers()
         {
-                create_buffers(m_swapchain->format(), m_swapchain->width(), m_swapchain->height());
+                create_buffers(swapchain_->format(), swapchain_->width(), swapchain_->height());
 
-                m_swapchain_resolve = std::make_unique<Swapchain>(
-                        m_instance->device(), m_instance->graphics_compute_command_pool(), *m_render_buffers,
-                        *m_swapchain);
+                swapchain_resolve_ = std::make_unique<Swapchain>(
+                        instance_->device(), instance_->graphics_compute_command_pool(), *render_buffers_, *swapchain_);
         }
 
         void delete_swapchain()
         {
-                m_instance->device_wait_idle();
+                instance_->device_wait_idle();
 
                 delete_swapchain_buffers();
-                m_swapchain.reset();
+                swapchain_.reset();
         }
 
         void create_swapchain()
         {
                 delete_swapchain();
 
-                m_swapchain = std::make_unique<vulkan::Swapchain>(
-                        m_instance->surface(), m_instance->device(),
+                swapchain_ = std::make_unique<vulkan::Swapchain>(
+                        instance_->surface(), instance_->device(),
                         std::vector<uint32_t>{
-                                m_instance->graphics_compute_queues()[0].family_index(),
-                                m_instance->presentation_queue().family_index()},
-                        SWAPCHAIN_SURFACE_FORMAT, SWAPCHAIN_PREFERRED_IMAGE_COUNT, m_present_mode);
+                                instance_->graphics_compute_queues()[0].family_index(),
+                                instance_->presentation_queue().family_index()},
+                        SWAPCHAIN_SURFACE_FORMAT, SWAPCHAIN_PREFERRED_IMAGE_COUNT, present_mode_);
 
                 create_swapchain_buffers();
         }
@@ -659,21 +658,21 @@ class Impl final
         [[nodiscard]] bool render_swapchain() const
         {
                 const std::optional<uint32_t> image_index = vulkan::acquire_next_image(
-                        m_instance->device(), m_swapchain->swapchain(), m_swapchain_image_semaphore);
+                        instance_->device(), swapchain_->swapchain(), swapchain_image_semaphore_);
 
                 if (!image_index)
                 {
                         return false;
                 }
 
-                const vulkan::Queue& queue = m_instance->graphics_compute_queues()[0];
+                const vulkan::Queue& queue = instance_->graphics_compute_queues()[0];
 
                 VkSemaphore semaphore = render();
 
-                semaphore = m_swapchain_resolve->resolve(queue, m_swapchain_image_semaphore, semaphore, *image_index);
+                semaphore = swapchain_resolve_->resolve(queue, swapchain_image_semaphore_, semaphore, *image_index);
 
                 if (!vulkan::queue_present(
-                            semaphore, m_swapchain->swapchain(), *image_index, m_instance->presentation_queue()))
+                            semaphore, swapchain_->swapchain(), *image_index, instance_->presentation_queue()))
                 {
                         return false;
                 }
@@ -685,41 +684,41 @@ class Impl final
 
 public:
         Impl(const window::WindowID& window, const double window_ppi)
-                : m_window_ppi(window_ppi), m_instance(create_instance(window))
+                : window_ppi_(window_ppi), instance_(create_instance(window))
         {
-                if (!(m_window_ppi > 0))
+                if (!(window_ppi_ > 0))
                 {
-                        error("Window PPI " + to_string(m_window_ppi) + "is not positive");
+                        error("Window PPI " + to_string(window_ppi_) + "is not positive");
                 }
 
-                const vulkan::Queue& graphics_compute_queue = m_instance->graphics_compute_queues()[0];
-                const vulkan::CommandPool& graphics_compute_command_pool = m_instance->graphics_compute_command_pool();
-                const vulkan::Queue& compute_queue = m_instance->compute_queue();
-                const vulkan::CommandPool& compute_command_pool = m_instance->compute_command_pool();
-                const vulkan::Queue& transfer_queue = m_instance->transfer_queue();
-                const vulkan::CommandPool& transfer_command_pool = m_instance->transfer_command_pool();
+                const vulkan::Queue& graphics_compute_queue = instance_->graphics_compute_queues()[0];
+                const vulkan::CommandPool& graphics_compute_command_pool = instance_->graphics_compute_command_pool();
+                const vulkan::Queue& compute_queue = instance_->compute_queue();
+                const vulkan::CommandPool& compute_command_pool = instance_->compute_command_pool();
+                const vulkan::Queue& transfer_queue = instance_->transfer_queue();
+                const vulkan::CommandPool& transfer_command_pool = instance_->transfer_command_pool();
 
-                m_renderer = gpu::renderer::create_renderer(
-                        *m_instance, graphics_compute_command_pool, graphics_compute_queue, transfer_command_pool,
+                renderer_ = gpu::renderer::create_renderer(
+                        *instance_, graphics_compute_command_pool, graphics_compute_queue, transfer_command_pool,
                         transfer_queue, SAMPLE_RATE_SHADING, SAMPLER_ANISOTROPY);
 
-                m_text = gpu::text_writer::create_view(
-                        *m_instance, graphics_compute_command_pool, graphics_compute_queue, transfer_command_pool,
-                        transfer_queue, SAMPLE_RATE_SHADING, m_frame_rate.text_size(), DEFAULT_TEXT_COLOR);
+                text_ = gpu::text_writer::create_view(
+                        *instance_, graphics_compute_command_pool, graphics_compute_queue, transfer_command_pool,
+                        transfer_queue, SAMPLE_RATE_SHADING, frame_rate_.text_size(), DEFAULT_TEXT_COLOR);
 
-                m_convex_hull = gpu::convex_hull::create_view(
-                        *m_instance, graphics_compute_command_pool, graphics_compute_queue, SAMPLE_RATE_SHADING);
+                convex_hull_ = gpu::convex_hull::create_view(
+                        *instance_, graphics_compute_command_pool, graphics_compute_queue, SAMPLE_RATE_SHADING);
 
-                m_pencil_sketch = gpu::pencil_sketch::create_view(
-                        *m_instance, graphics_compute_command_pool, graphics_compute_queue, transfer_command_pool,
+                pencil_sketch_ = gpu::pencil_sketch::create_view(
+                        *instance_, graphics_compute_command_pool, graphics_compute_queue, transfer_command_pool,
                         transfer_queue, SAMPLE_RATE_SHADING);
 
-                m_dft = gpu::dft::create_view(
-                        *m_instance, graphics_compute_command_pool, graphics_compute_queue, transfer_command_pool,
+                dft_ = gpu::dft::create_view(
+                        *instance_, graphics_compute_command_pool, graphics_compute_queue, transfer_command_pool,
                         transfer_queue, SAMPLE_RATE_SHADING);
 
-                m_optical_flow = gpu::optical_flow::create_view(
-                        *m_instance, graphics_compute_command_pool, graphics_compute_queue, compute_command_pool,
+                optical_flow_ = gpu::optical_flow::create_view(
+                        *instance_, graphics_compute_command_pool, graphics_compute_queue, compute_command_pool,
                         compute_queue, transfer_command_pool, transfer_queue, SAMPLE_RATE_SHADING);
 
                 //
@@ -734,7 +733,7 @@ public:
 
         ~Impl()
         {
-                ASSERT(std::this_thread::get_id() == m_thread_id);
+                ASSERT(std::this_thread::get_id() == thread_id_);
 
                 delete_swapchain();
         }
@@ -746,16 +745,16 @@ public:
 
         void loop(const std::function<void()>& dispatch_events, std::atomic_bool* const stop)
         {
-                ASSERT(std::this_thread::get_id() == m_thread_id);
+                ASSERT(std::this_thread::get_id() == thread_id_);
 
                 FrameClock::time_point last_frame_time = FrameClock::now();
                 while (!(*stop))
                 {
                         dispatch_events();
 
-                        if (m_text_active)
+                        if (text_active_)
                         {
-                                m_frame_rate.calculate();
+                                frame_rate_.calculate();
                         }
 
                         if (!render_swapchain())
@@ -764,7 +763,7 @@ public:
                                 continue;
                         }
 
-                        if (m_renderer->empty())
+                        if (renderer_->empty())
                         {
                                 std::this_thread::sleep_until(last_frame_time + IDLE_MODE_FRAME_DURATION);
                                 last_frame_time = FrameClock::now();
@@ -774,7 +773,7 @@ public:
 
         void send(std::vector<Command>&& commands)
         {
-                ASSERT(std::this_thread::get_id() == m_thread_id);
+                ASSERT(std::this_thread::get_id() == thread_id_);
 
                 const auto visitor = [this](const auto& c)
                 {
@@ -788,7 +787,7 @@ public:
 
         void receive(const std::vector<Info>& info)
         {
-                ASSERT(std::this_thread::get_id() == m_thread_id);
+                ASSERT(std::this_thread::get_id() == thread_id_);
 
                 const auto visitor = [this](const auto& d)
                 {

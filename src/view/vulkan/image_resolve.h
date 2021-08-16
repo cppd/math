@@ -25,10 +25,10 @@ namespace ns::view
 {
 class ImageResolve
 {
-        const uint32_t m_family_index;
-        std::vector<vulkan::ImageWithMemory> m_images;
-        vulkan::CommandBuffers m_command_buffers;
-        std::vector<vulkan::Semaphore> m_signal_semaphores;
+        const uint32_t family_index_;
+        std::vector<vulkan::ImageWithMemory> images_;
+        vulkan::CommandBuffers command_buffers_;
+        std::vector<vulkan::Semaphore> signal_semaphores_;
 
 public:
         ImageResolve(

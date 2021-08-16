@@ -40,8 +40,8 @@ SlidersWidget::SlidersWidget(const std::vector<int>& screen_size)
         QGridLayout* layout = new QGridLayout(this);
         layout->setContentsMargins(5, 5, 5, 5);
 
-        m_sliders.reserve(slider_count);
-        m_slider_positions.reserve(slider_count);
+        sliders_.reserve(slider_count);
+        slider_positions_.reserve(slider_count);
         for (int number = 0; number < slider_count; ++number)
         {
                 const int dimension = number + 2;
@@ -68,9 +68,9 @@ SlidersWidget::SlidersWidget(const std::vector<int>& screen_size)
                 layout->addWidget(label, number, 2);
                 layout->addWidget(slider, number, 3);
 
-                m_sliders.emplace(slider, Slider{.label = label, .number = static_cast<unsigned>(number)});
-                m_slider_positions.push_back(slider->value());
-                ASSERT(m_slider_positions.back() == positions[number]);
+                sliders_.emplace(slider, Slider{.label = label, .number = static_cast<unsigned>(number)});
+                slider_positions_.push_back(slider->value());
+                ASSERT(slider_positions_.back() == positions[number]);
 
                 connect(slider, &QSlider::valueChanged, this, &SlidersWidget::on_slider_changed);
         }
@@ -78,29 +78,29 @@ SlidersWidget::SlidersWidget(const std::vector<int>& screen_size)
 
 void SlidersWidget::on_slider_changed(int)
 {
-        const auto iter = m_sliders.find(qobject_cast<QSlider*>(sender()));
-        ASSERT(iter != m_sliders.cend());
-        ASSERT(iter->second.number < m_slider_positions.size());
+        const auto iter = sliders_.find(qobject_cast<QSlider*>(sender()));
+        ASSERT(iter != sliders_.cend());
+        ASSERT(iter->second.number < slider_positions_.size());
 
         const int value = iter->first->value();
         set_label_text_and_minimum_width(iter->second.label, to_string_digit_groups(value));
-        m_slider_positions[iter->second.number] = value;
+        slider_positions_[iter->second.number] = value;
 
-        Q_EMIT changed(m_slider_positions);
+        Q_EMIT changed(slider_positions_);
 }
 
 void SlidersWidget::set(const std::vector<int>& positions)
 {
         {
-                ASSERT(positions.size() == m_sliders.size());
+                ASSERT(positions.size() == sliders_.size());
                 QSignalBlocker blocker(this);
-                for (const auto& [slider, info] : m_sliders)
+                for (const auto& [slider, info] : sliders_)
                 {
                         ASSERT(slider->minimum() <= positions[info.number]);
                         ASSERT(positions[info.number] <= slider->maximum());
                         slider->setValue(positions[info.number]);
                 }
         }
-        Q_EMIT changed(m_slider_positions);
+        Q_EMIT changed(slider_positions_);
 }
 }

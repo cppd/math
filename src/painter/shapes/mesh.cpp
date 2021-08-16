@@ -124,14 +124,14 @@ struct Material
 template <std::size_t N, typename T, typename Color>
 class Mesh final : public Shape<N, T, Color>
 {
-        std::vector<Vector<N, T>> m_vertices;
-        std::vector<Vector<N, T>> m_normals;
-        std::vector<Vector<N - 1, T>> m_texcoords;
-        std::vector<Material<T, Color>> m_materials;
-        std::vector<MeshTexture<N - 1>> m_images;
-        std::vector<MeshFacet<N, T>> m_facets;
+        std::vector<Vector<N, T>> vertices_;
+        std::vector<Vector<N, T>> normals_;
+        std::vector<Vector<N - 1, T>> texcoords_;
+        std::vector<Material<T, Color>> materials_;
+        std::vector<MeshTexture<N - 1>> images_;
+        std::vector<MeshFacet<N, T>> facets_;
 
-        std::optional<geometry::ObjectTree<MeshFacet<N, T>>> m_tree;
+        std::optional<geometry::ObjectTree<MeshFacet<N, T>>> tree_;
 
         //
 
@@ -156,12 +156,12 @@ public:
 
         const std::vector<Material<T, Color>>& materials() const
         {
-                return m_materials;
+                return materials_;
         }
 
         const std::vector<MeshTexture<N - 1>>& images() const
         {
-                return m_images;
+                return images_;
         }
 
         // Грани имеют адреса первых элементов векторов вершин,
@@ -175,14 +175,14 @@ public:
 template <std::size_t N, typename T, typename Color>
 class IntersectionImpl final : public Surface<N, T, Color>
 {
-        const Mesh<N, T, Color>* m_mesh;
-        const MeshFacet<N, T>* m_facet;
+        const Mesh<N, T, Color>* mesh_;
+        const MeshFacet<N, T>* facet_;
 
         Color surface_color(const Material<T, Color>& m) const
         {
-                if (m_facet->has_texcoord() && m.map_Kd >= 0)
+                if (facet_->has_texcoord() && m.map_Kd >= 0)
                 {
-                        Vector<3, float> rgb = m_mesh->images()[m.map_Kd].color(m_facet->texcoord(this->point()));
+                        Vector<3, float> rgb = mesh_->images()[m.map_Kd].color(facet_->texcoord(this->point()));
                         return Color(rgb[0], rgb[1], rgb[2]);
                 }
                 return m.Kd;
@@ -190,18 +190,18 @@ class IntersectionImpl final : public Surface<N, T, Color>
 
 public:
         IntersectionImpl(const Vector<N, T>& point, const Mesh<N, T, Color>* mesh, const MeshFacet<N, T>* facet)
-                : Surface<N, T, Color>(point), m_mesh(mesh), m_facet(facet)
+                : Surface<N, T, Color>(point), mesh_(mesh), facet_(facet)
         {
         }
 
         Vector<N, T> geometric_normal() const override
         {
-                return m_facet->geometric_normal();
+                return facet_->geometric_normal();
         }
 
         std::optional<Vector<N, T>> shading_normal() const override
         {
-                return m_facet->shading_normal(this->point());
+                return facet_->shading_normal(this->point());
         }
 
         std::optional<Color> light_source() const override
@@ -211,9 +211,9 @@ public:
 
         Color brdf(const Vector<N, T>& n, const Vector<N, T>& v, const Vector<N, T>& l) const override
         {
-                ASSERT(m_facet->material() >= 0);
+                ASSERT(facet_->material() >= 0);
 
-                const Material<T, Color>& m = m_mesh->materials()[m_facet->material()];
+                const Material<T, Color>& m = mesh_->materials()[facet_->material()];
 
                 return shading::ggx_diffuse::f(m.metalness, m.roughness, surface_color(m), n, v, l);
         }
@@ -223,9 +223,9 @@ public:
                 const Vector<N, T>& n,
                 const Vector<N, T>& v) const override
         {
-                ASSERT(m_facet->material() >= 0);
+                ASSERT(facet_->material() >= 0);
 
-                const Material<T, Color>& m = m_mesh->materials()[m_facet->material()];
+                const Material<T, Color>& m = mesh_->materials()[facet_->material()];
 
                 return shading::ggx_diffuse::sample_f(random_engine, m.metalness, m.roughness, surface_color(m), n, v);
         }
@@ -252,30 +252,30 @@ void Mesh<N, T, Color>::create(const mesh::Reading<N>& mesh_object)
                 return;
         }
 
-        int vertices_offset = m_vertices.size();
-        int normals_offset = m_normals.size();
-        int texcoords_offset = m_texcoords.size();
-        int materials_offset = m_materials.size();
-        int images_offset = m_images.size();
+        int vertices_offset = vertices_.size();
+        int normals_offset = normals_.size();
+        int texcoords_offset = texcoords_.size();
+        int materials_offset = materials_.size();
+        int images_offset = images_.size();
 
         {
                 const std::vector<Vector<N, T>>& vertices = to_vector<T>(mesh.vertices);
-                m_vertices.insert(m_vertices.cend(), vertices.cbegin(), vertices.cend());
+                vertices_.insert(vertices_.cend(), vertices.cbegin(), vertices.cend());
         }
         {
-                auto iter_begin = std::next(m_vertices.begin(), vertices_offset);
-                auto iter_end = m_vertices.end();
+                auto iter_begin = std::next(vertices_.begin(), vertices_offset);
+                auto iter_end = vertices_.end();
                 std::transform(
                         iter_begin, iter_end, iter_begin,
                         matrix::MatrixVectorMultiplier(to_matrix<T>(mesh_object.matrix())));
         }
         {
                 const std::vector<Vector<N, T>>& normals = to_vector<T>(mesh.normals);
-                m_normals.insert(m_normals.cend(), normals.cbegin(), normals.cend());
+                normals_.insert(normals_.cend(), normals.cbegin(), normals.cend());
         }
         {
                 const std::vector<Vector<N - 1, T>>& texcoords = to_vector<T>(mesh.texcoords);
-                m_texcoords.insert(m_texcoords.cend(), texcoords.cbegin(), texcoords.cend());
+                texcoords_.insert(texcoords_.cend(), texcoords.cbegin(), texcoords.cend());
         }
 
         bool facets_without_material = false;
@@ -291,26 +291,26 @@ void Mesh<N, T, Color>::create(const mesh::Reading<N>& mesh_object)
                 std::array<int, N> texcoords = add_offset(facet.texcoords, texcoords_offset, facet.has_texcoord);
                 int material = facet_material + materials_offset;
 
-                m_facets.emplace_back(
-                        m_vertices, m_normals, m_texcoords, vertices, facet.has_normal, normals, facet.has_texcoord,
+                facets_.emplace_back(
+                        vertices_, normals_, texcoords_, vertices, facet.has_normal, normals, facet.has_texcoord,
                         texcoords, material);
         }
 
         for (const typename mesh::Mesh<N>::Material& m : mesh.materials)
         {
                 int map_Kd = m.map_Kd < 0 ? -1 : (images_offset + m.map_Kd);
-                m_materials.emplace_back(mesh_object.metalness(), mesh_object.roughness(), m.Kd, map_Kd, alpha);
+                materials_.emplace_back(mesh_object.metalness(), mesh_object.roughness(), m.Kd, map_Kd, alpha);
         }
         if (facets_without_material)
         {
-                ASSERT(materials_offset + default_material_index == static_cast<int>(m_materials.size()));
-                m_materials.emplace_back(
+                ASSERT(materials_offset + default_material_index == static_cast<int>(materials_.size()));
+                materials_.emplace_back(
                         mesh_object.metalness(), mesh_object.roughness(), mesh_object.color(), -1, alpha);
         }
 
         for (const image::Image<N - 1>& image : mesh.images)
         {
-                m_images.emplace_back(image);
+                images_.emplace_back(image);
         }
 }
 
@@ -322,12 +322,12 @@ void Mesh<N, T, Color>::create(const std::vector<mesh::Reading<N>>& mesh_objects
                 error("No objects to paint");
         }
 
-        m_vertices.clear();
-        m_normals.clear();
-        m_texcoords.clear();
-        m_materials.clear();
-        m_images.clear();
-        m_facets.clear();
+        vertices_.clear();
+        normals_.clear();
+        texcoords_.clear();
+        materials_.clear();
+        images_.clear();
+        facets_.clear();
         std::size_t vertex_count = 0;
         std::size_t normal_count = 0;
         std::size_t texcoord_count = 0;
@@ -352,29 +352,29 @@ void Mesh<N, T, Color>::create(const std::vector<mesh::Reading<N>>& mesh_objects
                 image_count += mesh.mesh().images.size();
                 facet_count += mesh.mesh().facets.size();
         }
-        m_vertices.reserve(vertex_count);
-        m_normals.reserve(normal_count);
-        m_texcoords.reserve(texcoord_count);
-        m_materials.reserve(material_count);
-        m_images.reserve(image_count);
-        m_facets.reserve(facet_count);
+        vertices_.reserve(vertex_count);
+        normals_.reserve(normal_count);
+        texcoords_.reserve(texcoord_count);
+        materials_.reserve(material_count);
+        images_.reserve(image_count);
+        facets_.reserve(facet_count);
 
         for (const mesh::Reading<N>& mesh_object : mesh_objects)
         {
                 create(mesh_object);
         }
 
-        if (m_vertices.empty() || m_facets.empty())
+        if (vertices_.empty() || facets_.empty())
         {
                 error("No visible geometry found in meshes");
         }
 
-        ASSERT(vertex_count == m_vertices.size());
-        ASSERT(normal_count == m_normals.size());
-        ASSERT(texcoord_count == m_texcoords.size());
-        ASSERT(material_count == m_materials.size());
-        ASSERT(image_count == m_images.size());
-        ASSERT(facet_count == m_facets.size());
+        ASSERT(vertex_count == vertices_.size());
+        ASSERT(normal_count == normals_.size());
+        ASSERT(texcoord_count == texcoords_.size());
+        ASSERT(material_count == materials_.size());
+        ASSERT(image_count == images_.size());
+        ASSERT(facet_count == facets_.size());
 }
 
 template <std::size_t N, typename T, typename Color>
@@ -394,7 +394,7 @@ Mesh<N, T, Color>::Mesh(const std::vector<const mesh::MeshObject<N>*>& mesh_obje
 
         progress->set_text(to_string(1 << N) + "-tree: %v of %m");
 
-        m_tree.emplace(m_facets, tree_max_depth<N>(), TREE_MIN_OBJECTS_PER_BOX, progress);
+        tree_.emplace(facets_, tree_max_depth<N>(), TREE_MIN_OBJECTS_PER_BOX, progress);
 
         LOG("Painter mesh object created, " + to_string_fixed(duration_from(start_time), 5) + " s");
 }
@@ -402,13 +402,13 @@ Mesh<N, T, Color>::Mesh(const std::vector<const mesh::MeshObject<N>*>& mesh_obje
 template <std::size_t N, typename T, typename Color>
 std::optional<T> Mesh<N, T, Color>::intersect_bounding(const Ray<N, T>& r) const
 {
-        return m_tree->intersect_root(r);
+        return tree_->intersect_root(r);
 }
 
 template <std::size_t N, typename T, typename Color>
 const Surface<N, T, Color>* Mesh<N, T, Color>::intersect(const Ray<N, T>& ray, const T bounding_distance) const
 {
-        std::optional<std::tuple<T, const MeshFacet<N, T>*>> v = m_tree->intersect(ray, bounding_distance);
+        std::optional<std::tuple<T, const MeshFacet<N, T>*>> v = tree_->intersect(ray, bounding_distance);
         if (!v)
         {
                 return nullptr;
@@ -419,14 +419,14 @@ const Surface<N, T, Color>* Mesh<N, T, Color>::intersect(const Ray<N, T>& ray, c
 template <std::size_t N, typename T, typename Color>
 geometry::BoundingBox<N, T> Mesh<N, T, Color>::bounding_box() const
 {
-        return m_tree->bounding_box();
+        return tree_->bounding_box();
 }
 
 template <std::size_t N, typename T, typename Color>
 std::function<bool(const geometry::ShapeWrapperForIntersection<geometry::ParallelotopeAA<N, T>>&)> Mesh<N, T, Color>::
         intersection_function() const
 {
-        return [w = geometry::ShapeWrapperForIntersection(m_tree->root())](
+        return [w = geometry::ShapeWrapperForIntersection(tree_->root())](
                        const geometry::ShapeWrapperForIntersection<geometry::ParallelotopeAA<N, T>>& p)
         {
                 return geometry::shape_intersection(w, p);

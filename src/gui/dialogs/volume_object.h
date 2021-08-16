@@ -36,10 +36,10 @@ class VolumeObjectParametersDialog final : public QDialog
 private:
         Ui::VolumeObjectParametersDialog ui;
 
-        const int m_min_image_size;
-        const int m_max_image_size;
+        const int min_image_size_;
+        const int max_image_size_;
 
-        std::optional<VolumeObjectParameters>& m_parameters;
+        std::optional<VolumeObjectParameters>& parameters_;
 
         VolumeObjectParametersDialog(
                 int dimension,

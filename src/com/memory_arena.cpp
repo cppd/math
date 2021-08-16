@@ -44,17 +44,17 @@ public:
 template <typename T>
 class Impl final : public Interface<T>
 {
-        std::array<std::byte, 5> m_padding_1;
-        T m_data;
-        std::array<std::byte, 7> m_padding_2;
+        std::array<std::byte, 5> padding_1_;
+        T data_;
+        std::array<std::byte, 7> padding_2_;
 
         T value() const override
         {
-                return m_data;
+                return data_;
         }
 
 public:
-        explicit Impl(std::type_identity_t<T>&& v) : m_data(std::move(v))
+        explicit Impl(std::type_identity_t<T>&& v) : data_(std::move(v))
         {
         }
 };

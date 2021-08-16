@@ -31,14 +31,14 @@ namespace ns::gpu::renderer
 {
 class PointsProgram final
 {
-        const vulkan::Device& m_device;
+        const vulkan::Device& device_;
 
-        vulkan::DescriptorSetLayout m_descriptor_set_layout_shared;
-        vulkan::DescriptorSetLayout m_descriptor_set_layout_mesh;
-        vulkan::PipelineLayout m_pipeline_layout;
-        vulkan::VertexShader m_vertex_shader_0d;
-        vulkan::VertexShader m_vertex_shader_1d;
-        vulkan::FragmentShader m_fragment_shader;
+        vulkan::DescriptorSetLayout descriptor_set_layout_shared_;
+        vulkan::DescriptorSetLayout descriptor_set_layout_mesh_;
+        vulkan::PipelineLayout pipeline_layout_;
+        vulkan::VertexShader vertex_shader_0d_;
+        vulkan::VertexShader vertex_shader_1d_;
+        vulkan::FragmentShader fragment_shader_;
 
 public:
         explicit PointsProgram(const vulkan::Device& device);

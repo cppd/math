@@ -34,10 +34,10 @@ namespace ns::painter
 template <std::size_t N>
 class MeshTexture
 {
-        std::vector<Vector<3, float>> m_rgb_data;
-        std::array<int, N> m_size;
-        std::array<int, N> m_max;
-        GlobalIndex<N, long long> m_global_index;
+        std::vector<Vector<3, float>> rgb_data_;
+        std::array<int, N> size_;
+        std::array<int, N> max_;
+        GlobalIndex<N, long long> global_index_;
 
         void resize(const std::array<int, N>& size)
         {
@@ -51,18 +51,18 @@ class MeshTexture
                         error("Error image size " + to_string(size));
                 }
 
-                m_size = size;
+                size_ = size;
 
                 for (unsigned i = 0; i < N; ++i)
                 {
-                        m_max[i] = m_size[i] - 1;
+                        max_[i] = size_[i] - 1;
                 }
 
-                m_global_index = decltype(m_global_index)(m_size);
+                global_index_ = decltype(global_index_)(size_);
 
-                m_rgb_data.clear();
-                m_rgb_data.shrink_to_fit();
-                m_rgb_data.resize(m_global_index.count());
+                rgb_data_.clear();
+                rgb_data_.shrink_to_fit();
+                rgb_data_.resize(global_index_.count());
         }
 
 public:
@@ -72,9 +72,9 @@ public:
 
                 image::format_conversion(
                         image.color_format, image.pixels, image::ColorFormat::R32G32B32,
-                        std::as_writable_bytes(std::span(m_rgb_data.data(), m_rgb_data.size())));
+                        std::as_writable_bytes(std::span(rgb_data_.data(), rgb_data_.size())));
 
-                for (Vector<3, float>& c : m_rgb_data)
+                for (Vector<3, float>& c : rgb_data_)
                 {
                         if (!is_finite(c))
                         {
@@ -97,7 +97,7 @@ public:
 
                 for (unsigned i = 0; i < N; ++i)
                 {
-                        T v = p[i] * m_size[i] - T(0.5);
+                        T v = p[i] * size_[i] - T(0.5);
                         T floor = std::floor(v);
 
                         x[i] = v - floor;
@@ -107,14 +107,14 @@ public:
                         if ((true))
                         {
                                 // wrap: clamp to edge
-                                x0[i] = std::clamp(x0[i], 0, m_max[i]);
-                                x1[i] = std::clamp(x1[i], 0, m_max[i]);
+                                x0[i] = std::clamp(x0[i], 0, max_[i]);
+                                x1[i] = std::clamp(x1[i], 0, max_[i]);
                         }
                         else
                         {
                                 // wrap: repeate
-                                x0[i] = x0[i] % m_size[i];
-                                x1[i] = x1[i] % m_size[i];
+                                x0[i] = x0[i] % size_[i];
+                                x1[i] = x1[i] % size_[i];
                         }
                 }
 
@@ -126,9 +126,9 @@ public:
                         for (unsigned n = 0; n < N; ++n)
                         {
                                 int coordinate = ((1 << n) & i) ? x1[n] : x0[n];
-                                index += m_global_index.stride(n) * coordinate;
+                                index += global_index_.stride(n) * coordinate;
                         }
-                        pixels[i] = m_rgb_data[index];
+                        pixels[i] = rgb_data_[index];
                 }
 
                 Vector<3, float> rgb = interpolation(pixels, x);

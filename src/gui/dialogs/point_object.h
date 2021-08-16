@@ -36,10 +36,10 @@ class PointObjectParametersDialog final : public QDialog
 private:
         Ui::PointObjectParametersDialog ui;
 
-        const int m_min_point_count;
-        const int m_max_point_count;
+        const int min_point_count_;
+        const int max_point_count_;
 
-        std::optional<PointObjectParameters>& m_parameters;
+        std::optional<PointObjectParameters>& parameters_;
 
         PointObjectParametersDialog(
                 int dimension,

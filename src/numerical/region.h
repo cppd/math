@@ -26,15 +26,15 @@ namespace ns
 template <std::size_t N, typename T>
 class Region final
 {
-        Vector<N, T> m_offset0;
-        Vector<N, T> m_extent;
-        Vector<N, T> m_offset1;
+        Vector<N, T> offset0_;
+        Vector<N, T> extent_;
+        Vector<N, T> offset1_;
 
 public:
         Region() = default;
 
         Region(const Vector<N, T>& offset, const Vector<N, T>& extent)
-                : m_offset0(offset), m_extent(extent), m_offset1(m_offset0 + m_extent)
+                : offset0_(offset), extent_(extent), offset1_(offset0_ + extent_)
         {
         }
 
@@ -44,77 +44,77 @@ public:
         {
                 static_assert(sizeof...(Types) == 2 * N);
                 int i = -1;
-                ((++i < static_cast<int>(N) ? (m_offset0[i] = v) : (m_extent[i - N] = v)), ...);
-                m_offset1 = m_offset0 + m_extent;
+                ((++i < static_cast<int>(N) ? (offset0_[i] = v) : (extent_[i - N] = v)), ...);
+                offset1_ = offset0_ + extent_;
         }
 
         const Vector<N, T>& from() const
         {
-                return m_offset0;
+                return offset0_;
         }
 
         const Vector<N, T>& to() const
         {
-                return m_offset1;
+                return offset1_;
         }
 
         const Vector<N, T>& extent() const
         {
-                return m_extent;
+                return extent_;
         }
 
         template <std::size_t X = N>
         T x0() const requires((X == 2 || X == 3) && X == N)
         {
-                return m_offset0[0];
+                return offset0_[0];
         }
 
         template <std::size_t X = N>
         T y0() const requires((X == 2 || X == 3) && X == N)
         {
-                return m_offset0[1];
+                return offset0_[1];
         }
 
         template <std::size_t X = N>
         T z0() const requires(X == 3 && X == N)
         {
-                return m_offset0[2];
+                return offset0_[2];
         }
 
         template <std::size_t X = N>
         T x1() const requires((X == 2 || X == 3) && X == N)
         {
-                return m_offset1[0];
+                return offset1_[0];
         }
 
         template <std::size_t X = N>
         T y1() const requires((X == 2 || X == 3) && X == N)
         {
-                return m_offset1[1];
+                return offset1_[1];
         }
 
         template <std::size_t X = N>
         T z1() const requires(X == 3 && X == N)
         {
-                return m_offset1[2];
+                return offset1_[2];
         }
 
         template <std::size_t X = N>
         T width() const requires((X == 2 || X == 3) && X == N)
         {
-                return m_extent[0];
+                return extent_[0];
         }
 
         template <std::size_t X = N>
         T height() const requires((X == 2 || X == 3) && X == N)
         {
-                return m_extent[1];
+                return extent_[1];
         }
 
         template <std::size_t X = N>
         T depth() const requires(X == 3 && X == N)
         {
-                return m_extent[2];
+                return extent_[2];
         }
 
         template <typename Type>
@@ -122,7 +122,7 @@ public:
         {
                 for (unsigned i = 0; i < N; ++i)
                 {
-                        if (p[i] < m_offset0[i] || p[i] >= m_offset1[i])
+                        if (p[i] < offset0_[i] || p[i] >= offset1_[i])
                         {
                                 return false;
                         }
@@ -135,22 +135,22 @@ public:
         {
                 static_assert(sizeof...(Types) == N);
                 int i = -1;
-                return (((++i, p >= m_offset0[i] && p < m_offset1[i])) && ...);
+                return (((++i, p >= offset0_[i] && p < offset1_[i])) && ...);
         }
 
         bool is_positive() const
         {
                 for (unsigned i = 0; i < N; ++i)
                 {
-                        if (m_offset0[i] < 0)
+                        if (offset0_[i] < 0)
                         {
                                 return false;
                         }
-                        if (m_extent[i] <= 0)
+                        if (extent_[i] <= 0)
                         {
                                 return false;
                         }
-                        ASSERT(m_offset0[i] + m_extent[i] == m_offset1[i]);
+                        ASSERT(offset0_[i] + extent_[i] == offset1_[i]);
                 }
                 return true;
         }

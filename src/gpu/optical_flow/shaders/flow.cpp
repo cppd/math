@@ -116,20 +116,20 @@ FlowMemory::FlowMemory(
         const vulkan::Device& device,
         VkDescriptorSetLayout descriptor_set_layout,
         const std::vector<uint32_t>& family_indices)
-        : m_descriptors(device, 2, descriptor_set_layout, descriptor_set_layout_bindings())
+        : descriptors_(device, 2, descriptor_set_layout, descriptor_set_layout_bindings())
 {
         std::vector<std::variant<VkDescriptorBufferInfo, VkDescriptorImageInfo>> infos;
         std::vector<uint32_t> bindings;
 
         {
-                m_uniform_buffers.emplace_back(
+                uniform_buffers_.emplace_back(
                         vulkan::BufferMemoryType::HostVisible, device, family_indices,
                         VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT, sizeof(BufferData));
 
                 VkDescriptorBufferInfo buffer_info = {};
-                buffer_info.buffer = m_uniform_buffers.back();
+                buffer_info.buffer = uniform_buffers_.back();
                 buffer_info.offset = 0;
-                buffer_info.range = m_uniform_buffers.back().size();
+                buffer_info.range = uniform_buffers_.back().size();
 
                 infos.emplace_back(buffer_info);
 
@@ -138,7 +138,7 @@ FlowMemory::FlowMemory(
 
         for (int s = 0; s < 2; ++s)
         {
-                m_descriptors.update_descriptor_set(s, bindings, infos);
+                descriptors_.update_descriptor_set(s, bindings, infos);
         }
 }
 
@@ -150,7 +150,7 @@ unsigned FlowMemory::set_number()
 const VkDescriptorSet& FlowMemory::descriptor_set(int index) const
 {
         ASSERT(index == 0 || index == 1);
-        return m_descriptors.descriptor_set(index);
+        return descriptors_.descriptor_set(index);
 }
 
 void FlowMemory::set_data(const Data& data) const
@@ -163,7 +163,7 @@ void FlowMemory::set_data(const Data& data) const
         buffer_data.guess_kx = data.guess_kx;
         buffer_data.guess_ky = data.guess_ky;
         buffer_data.guess_width = data.guess_width;
-        vulkan::map_and_write_to_buffer(m_uniform_buffers[0], buffer_data);
+        vulkan::map_and_write_to_buffer(uniform_buffers_[0], buffer_data);
 }
 
 void FlowMemory::set_dx(const vulkan::ImageWithMemory& image) const
@@ -177,7 +177,7 @@ void FlowMemory::set_dx(const vulkan::ImageWithMemory& image) const
 
         for (int s = 0; s < 2; ++s)
         {
-                m_descriptors.update_descriptor_set(s, DX_BINDING, image_info);
+                descriptors_.update_descriptor_set(s, DX_BINDING, image_info);
         }
 }
 
@@ -192,7 +192,7 @@ void FlowMemory::set_dy(const vulkan::ImageWithMemory& image) const
 
         for (int s = 0; s < 2; ++s)
         {
-                m_descriptors.update_descriptor_set(s, DY_BINDING, image_info);
+                descriptors_.update_descriptor_set(s, DY_BINDING, image_info);
         }
 }
 
@@ -208,9 +208,9 @@ void FlowMemory::set_i(const vulkan::ImageWithMemory& image_0, const vulkan::Ima
         image_info.imageLayout = VK_IMAGE_LAYOUT_GENERAL;
 
         image_info.imageView = image_0.image_view();
-        m_descriptors.update_descriptor_set(0, I_BINDING, image_info);
+        descriptors_.update_descriptor_set(0, I_BINDING, image_info);
         image_info.imageView = image_1.image_view();
-        m_descriptors.update_descriptor_set(1, I_BINDING, image_info);
+        descriptors_.update_descriptor_set(1, I_BINDING, image_info);
 }
 
 void FlowMemory::set_j(
@@ -227,9 +227,9 @@ void FlowMemory::set_j(
         image_info.sampler = sampler;
 
         image_info.imageView = image_0.image_view();
-        m_descriptors.update_descriptor_set(0, J_BINDING, image_info);
+        descriptors_.update_descriptor_set(0, J_BINDING, image_info);
         image_info.imageView = image_1.image_view();
-        m_descriptors.update_descriptor_set(1, J_BINDING, image_info);
+        descriptors_.update_descriptor_set(1, J_BINDING, image_info);
 }
 
 void FlowMemory::set_top_points(const vulkan::BufferWithMemory& buffer) const
@@ -243,7 +243,7 @@ void FlowMemory::set_top_points(const vulkan::BufferWithMemory& buffer) const
 
         for (int s = 0; s < 2; ++s)
         {
-                m_descriptors.update_descriptor_set(s, TOP_POINTS_BINDING, buffer_info);
+                descriptors_.update_descriptor_set(s, TOP_POINTS_BINDING, buffer_info);
         }
 }
 
@@ -258,7 +258,7 @@ void FlowMemory::set_flow(const vulkan::BufferWithMemory& buffer) const
 
         for (int s = 0; s < 2; ++s)
         {
-                m_descriptors.update_descriptor_set(s, POINTS_FLOW_BINDING, buffer_info);
+                descriptors_.update_descriptor_set(s, POINTS_FLOW_BINDING, buffer_info);
         }
 }
 
@@ -273,7 +273,7 @@ void FlowMemory::set_flow_guess(const vulkan::BufferWithMemory& buffer) const
 
         for (int s = 0; s < 2; ++s)
         {
-                m_descriptors.update_descriptor_set(s, POINTS_FLOW_GUESS_BINDING, buffer_info);
+                descriptors_.update_descriptor_set(s, POINTS_FLOW_GUESS_BINDING, buffer_info);
         }
 }
 
@@ -286,42 +286,42 @@ FlowConstant::FlowConstant()
                 entry.constantID = 0;
                 entry.offset = offsetof(Data, local_size_x);
                 entry.size = sizeof(Data::local_size_x);
-                m_entries.push_back(entry);
+                entries_.push_back(entry);
         }
         {
                 VkSpecializationMapEntry entry = {};
                 entry.constantID = 1;
                 entry.offset = offsetof(Data, local_size_y);
                 entry.size = sizeof(Data::local_size_y);
-                m_entries.push_back(entry);
+                entries_.push_back(entry);
         }
         {
                 VkSpecializationMapEntry entry = {};
                 entry.constantID = 2;
                 entry.offset = offsetof(Data, radius);
                 entry.size = sizeof(Data::radius);
-                m_entries.push_back(entry);
+                entries_.push_back(entry);
         }
         {
                 VkSpecializationMapEntry entry = {};
                 entry.constantID = 3;
                 entry.offset = offsetof(Data, iteration_count);
                 entry.size = sizeof(Data::iteration_count);
-                m_entries.push_back(entry);
+                entries_.push_back(entry);
         }
         {
                 VkSpecializationMapEntry entry = {};
                 entry.constantID = 4;
                 entry.offset = offsetof(Data, stop_move_square);
                 entry.size = sizeof(Data::stop_move_square);
-                m_entries.push_back(entry);
+                entries_.push_back(entry);
         }
         {
                 VkSpecializationMapEntry entry = {};
                 entry.constantID = 5;
                 entry.offset = offsetof(Data, min_determinant);
                 entry.size = sizeof(Data::min_determinant);
-                m_entries.push_back(entry);
+                entries_.push_back(entry);
         }
 }
 
@@ -333,61 +333,61 @@ void FlowConstant::set(
         float stop_move_square,
         float min_determinant)
 {
-        static_assert(std::is_same_v<decltype(m_data.local_size_x), decltype(local_size_x)>);
-        m_data.local_size_x = local_size_x;
-        static_assert(std::is_same_v<decltype(m_data.local_size_y), decltype(local_size_y)>);
-        m_data.local_size_y = local_size_y;
-        static_assert(std::is_same_v<decltype(m_data.radius), decltype(radius)>);
-        m_data.radius = radius;
-        static_assert(std::is_same_v<decltype(m_data.iteration_count), decltype(iteration_count)>);
-        m_data.iteration_count = iteration_count;
-        static_assert(std::is_same_v<decltype(m_data.stop_move_square), decltype(stop_move_square)>);
-        m_data.stop_move_square = stop_move_square;
-        static_assert(std::is_same_v<decltype(m_data.min_determinant), decltype(min_determinant)>);
-        m_data.min_determinant = min_determinant;
+        static_assert(std::is_same_v<decltype(data_.local_size_x), decltype(local_size_x)>);
+        data_.local_size_x = local_size_x;
+        static_assert(std::is_same_v<decltype(data_.local_size_y), decltype(local_size_y)>);
+        data_.local_size_y = local_size_y;
+        static_assert(std::is_same_v<decltype(data_.radius), decltype(radius)>);
+        data_.radius = radius;
+        static_assert(std::is_same_v<decltype(data_.iteration_count), decltype(iteration_count)>);
+        data_.iteration_count = iteration_count;
+        static_assert(std::is_same_v<decltype(data_.stop_move_square), decltype(stop_move_square)>);
+        data_.stop_move_square = stop_move_square;
+        static_assert(std::is_same_v<decltype(data_.min_determinant), decltype(min_determinant)>);
+        data_.min_determinant = min_determinant;
 }
 
 const std::vector<VkSpecializationMapEntry>& FlowConstant::entries() const
 {
-        return m_entries;
+        return entries_;
 }
 
 const void* FlowConstant::data() const
 {
-        return &m_data;
+        return &data_;
 }
 
 std::size_t FlowConstant::size() const
 {
-        return sizeof(m_data);
+        return sizeof(data_);
 }
 
 //
 
 FlowProgram::FlowProgram(const vulkan::Device& device)
-        : m_device(device),
-          m_descriptor_set_layout(
+        : device_(device),
+          descriptor_set_layout_(
                   vulkan::create_descriptor_set_layout(device, FlowMemory::descriptor_set_layout_bindings())),
-          m_pipeline_layout(
-                  vulkan::create_pipeline_layout(device, {FlowMemory::set_number()}, {m_descriptor_set_layout})),
-          m_shader(device, code_flow_comp(), "main")
+          pipeline_layout_(
+                  vulkan::create_pipeline_layout(device, {FlowMemory::set_number()}, {descriptor_set_layout_})),
+          shader_(device, code_flow_comp(), "main")
 {
 }
 
 VkDescriptorSetLayout FlowProgram::descriptor_set_layout() const
 {
-        return m_descriptor_set_layout;
+        return descriptor_set_layout_;
 }
 
 VkPipelineLayout FlowProgram::pipeline_layout() const
 {
-        return m_pipeline_layout;
+        return pipeline_layout_;
 }
 
 VkPipeline FlowProgram::pipeline() const
 {
-        ASSERT(m_pipeline != VK_NULL_HANDLE);
-        return m_pipeline;
+        ASSERT(pipeline_ != VK_NULL_HANDLE);
+        return pipeline_;
 }
 
 void FlowProgram::create_pipeline(
@@ -398,18 +398,18 @@ void FlowProgram::create_pipeline(
         float stop_move_square,
         float min_determinant)
 {
-        m_constant.set(local_size_x, local_size_y, radius, iteration_count, stop_move_square, min_determinant);
+        constant_.set(local_size_x, local_size_y, radius, iteration_count, stop_move_square, min_determinant);
 
         vulkan::ComputePipelineCreateInfo info;
-        info.device = &m_device;
-        info.pipeline_layout = m_pipeline_layout;
-        info.shader = &m_shader;
-        info.constants = &m_constant;
-        m_pipeline = create_compute_pipeline(info);
+        info.device = &device_;
+        info.pipeline_layout = pipeline_layout_;
+        info.shader = &shader_;
+        info.constants = &constant_;
+        pipeline_ = create_compute_pipeline(info);
 }
 
 void FlowProgram::delete_pipeline()
 {
-        m_pipeline = vulkan::Pipeline();
+        pipeline_ = vulkan::Pipeline();
 }
 }

@@ -35,14 +35,14 @@ namespace
 {
 class FFTPlanThreads final
 {
-        inline static std::mutex m_mutex;
-        inline static int m_counter = 0;
+        inline static std::mutex mutex_;
+        inline static int counter_ = 0;
 
 public:
         FFTPlanThreads()
         {
-                std::lock_guard lg(m_mutex);
-                if (++m_counter == 1)
+                std::lock_guard lg(mutex_);
+                if (++counter_ == 1)
                 {
                         fftwf_init_threads();
                 }
@@ -50,8 +50,8 @@ public:
 
         ~FFTPlanThreads()
         {
-                std::lock_guard lg(m_mutex);
-                if (--m_counter == 0)
+                std::lock_guard lg(mutex_);
+                if (--counter_ == 0)
                 {
                         fftwf_cleanup_threads();
                 }
@@ -112,40 +112,40 @@ public:
 
 class FFTW final : public DFT
 {
-        FFTPlanThreads m_threads;
-        std::vector<std::complex<float>> m_in;
-        std::vector<std::complex<float>> m_out;
-        FFTPlan m_forward;
-        FFTPlan m_backward;
-        const float m_inv_k;
+        FFTPlanThreads threads_;
+        std::vector<std::complex<float>> in_;
+        std::vector<std::complex<float>> out_;
+        FFTPlan forward_;
+        FFTPlan backward_;
+        const float inv_k_;
 
         void exec(const bool inverse, std::vector<std::complex<float>>* const data) override
         {
-                if (data->size() != m_in.size())
+                if (data->size() != in_.size())
                 {
                         error("Error size FFTW");
                 }
 
                 const TimePoint start_time = time();
 
-                std::copy(data->cbegin(), data->cend(), m_in.begin());
+                std::copy(data->cbegin(), data->cend(), in_.begin());
 
                 if (inverse)
                 {
-                        m_backward.execute();
+                        backward_.execute();
 
                         std::transform(
-                                m_out.cbegin(), m_out.cend(), data->begin(),
-                                [k = m_inv_k](const std::complex<float>& v)
+                                out_.cbegin(), out_.cend(), data->begin(),
+                                [k = inv_k_](const std::complex<float>& v)
                                 {
                                         return v * k;
                                 });
                 }
                 else
                 {
-                        m_forward.execute();
+                        forward_.execute();
 
-                        std::copy(m_out.cbegin(), m_out.cend(), data->begin());
+                        std::copy(out_.cbegin(), out_.cend(), data->begin());
                 }
 
                 LOG("calc FFTW: " + to_string_fixed(1000.0 * duration_from(start_time), 5) + " ms");
@@ -153,11 +153,11 @@ class FFTW final : public DFT
 
 public:
         FFTW(const int n1, const int n2)
-                : m_in(1ull * n1 * n2),
-                  m_out(1ull * n1 * n2),
-                  m_forward(false, n1, n2, &m_in, &m_out),
-                  m_backward(true, n1, n2, &m_in, &m_out),
-                  m_inv_k(1.0f / (1ull * n1 * n2))
+                : in_(1ull * n1 * n2),
+                  out_(1ull * n1 * n2),
+                  forward_(false, n1, n2, &in_, &out_),
+                  backward_(true, n1, n2, &in_, &out_),
+                  inv_k_(1.0f / (1ull * n1 * n2))
         {
         }
 };

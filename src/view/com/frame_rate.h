@@ -24,9 +24,9 @@ namespace ns::view
 {
 class FrameRate
 {
-        Frequency m_frequency;
-        int m_text_size;
-        text::TextData m_text_data;
+        Frequency frequency_;
+        int text_size_;
+        text::TextData text_data_;
 
 public:
         explicit FrameRate(double ppi);
@@ -35,11 +35,11 @@ public:
 
         int text_size() const
         {
-                return m_text_size;
+                return text_size_;
         }
         const text::TextData& text_data() const
         {
-                return m_text_data;
+                return text_data_;
         }
 };
 }

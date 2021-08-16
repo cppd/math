@@ -35,102 +35,102 @@ class ObjectStorage final
 
         using VisibleType = std::conditional_t<std::is_same_v<T, VolumeObject>, T, const T>;
 
-        std::unordered_map<ObjectId, std::unique_ptr<T>> m_map;
-        std::unordered_set<VisibleType*> m_visible_objects;
-        std::function<void()> m_visibility_changed;
+        std::unordered_map<ObjectId, std::unique_ptr<T>> map_;
+        std::unordered_set<VisibleType*> visible_objects_;
+        std::function<void()> visibility_changed_;
 
 public:
         explicit ObjectStorage(std::function<void()>&& visibility_changed)
-                : m_visibility_changed(std::move(visibility_changed))
+                : visibility_changed_(std::move(visibility_changed))
         {
-                ASSERT(m_visibility_changed);
+                ASSERT(visibility_changed_);
         }
 
         T* insert(ObjectId id, std::unique_ptr<T>&& object)
         {
-                const auto pair = m_map.emplace(id, std::move(object));
+                const auto pair = map_.emplace(id, std::move(object));
                 ASSERT(pair.second);
                 return pair.first->second.get();
         }
 
         bool erase(ObjectId id)
         {
-                auto iter = m_map.find(id);
-                if (iter == m_map.cend())
+                auto iter = map_.find(id);
+                if (iter == map_.cend())
                 {
                         return false;
                 }
-                bool visibility_changed = m_visible_objects.erase(iter->second.get()) > 0;
-                m_map.erase(iter);
+                bool visibility_changed = visible_objects_.erase(iter->second.get()) > 0;
+                map_.erase(iter);
                 if (visibility_changed)
                 {
-                        m_visibility_changed();
+                        visibility_changed_();
                 }
                 return true;
         }
 
         bool empty() const
         {
-                ASSERT(!m_map.empty() || m_visible_objects.empty());
-                return m_map.empty();
+                ASSERT(!map_.empty() || visible_objects_.empty());
+                return map_.empty();
         }
 
         void clear()
         {
-                bool visibility_changed = !m_visible_objects.empty();
-                m_visible_objects.clear();
-                m_map.clear();
+                bool visibility_changed = !visible_objects_.empty();
+                visible_objects_.clear();
+                map_.clear();
                 if (visibility_changed)
                 {
-                        m_visibility_changed();
+                        visibility_changed_();
                 }
         }
 
         T* find(ObjectId id) const
         {
-                auto iter = m_map.find(id);
-                return (iter != m_map.cend()) ? iter->second.get() : nullptr;
+                auto iter = map_.find(id);
+                return (iter != map_.cend()) ? iter->second.get() : nullptr;
         }
 
         bool set_visible(ObjectId id, bool visible)
         {
-                auto iter = m_map.find(id);
-                if (iter == m_map.cend())
+                auto iter = map_.find(id);
+                if (iter == map_.cend())
                 {
                         return false;
                 }
 
                 VisibleType* ptr = iter->second.get();
-                auto iter_v = m_visible_objects.find(ptr);
+                auto iter_v = visible_objects_.find(ptr);
                 if (!visible)
                 {
-                        if (iter_v != m_visible_objects.cend())
+                        if (iter_v != visible_objects_.cend())
                         {
-                                m_visible_objects.erase(iter_v);
-                                m_visibility_changed();
+                                visible_objects_.erase(iter_v);
+                                visibility_changed_();
                         }
                 }
-                else if (iter_v == m_visible_objects.cend())
+                else if (iter_v == visible_objects_.cend())
                 {
-                        m_visible_objects.insert(ptr);
-                        m_visibility_changed();
+                        visible_objects_.insert(ptr);
+                        visibility_changed_();
                 }
                 return true;
         }
 
         const std::unordered_set<VisibleType*>& visible_objects() const
         {
-                return m_visible_objects;
+                return visible_objects_;
         }
 
         bool is_visible(ObjectId id) const
         {
-                auto iter = m_map.find(id);
-                if (iter == m_map.cend())
+                auto iter = map_.find(id);
+                if (iter == map_.cend())
                 {
                         return false;
                 }
-                return m_visible_objects.contains(iter->second.get());
+                return visible_objects_.contains(iter->second.get());
         }
 };
 

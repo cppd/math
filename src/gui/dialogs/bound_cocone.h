@@ -36,12 +36,12 @@ class BoundCoconeParametersDialog final : public QDialog
 private:
         Ui::BoundCoconeParametersDialog ui;
 
-        double m_min_rho;
-        double m_max_rho;
-        double m_min_alpha;
-        double m_max_alpha;
+        double min_rho_;
+        double max_rho_;
+        double min_alpha_;
+        double max_alpha_;
 
-        std::optional<BoundCoconeParameters>& m_parameters;
+        std::optional<BoundCoconeParameters>& parameters_;
 
         BoundCoconeParametersDialog(
                 int minimum_rho_exponent,

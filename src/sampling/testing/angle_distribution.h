@@ -153,7 +153,7 @@ class AngleDistribution
                 return result;
         }
 
-        std::vector<Distribution> m_distribution;
+        std::vector<Distribution> distribution_;
 
 public:
         static double distribution_count(const long long uniform_min_count_per_bucket)
@@ -178,7 +178,7 @@ public:
                         compute_buckets<RandomEngine>(count, normal, random_vector, progress);
                 ASSERT(buckets.size() == BUCKET_COUNT);
 
-                m_distribution.clear();
+                distribution_.clear();
 
                 std::vector<T> distribution_values;
                 distribution_values.reserve(buckets.size());
@@ -189,7 +189,7 @@ public:
                 long long cnt = 0;
                 for (unsigned bucket = 0; bucket < buckets.size(); ++bucket)
                 {
-                        Distribution& d = m_distribution.emplace_back();
+                        Distribution& d = distribution_.emplace_back();
 
                         cnt += buckets[bucket];
 
@@ -203,13 +203,13 @@ public:
                         distribution_values.push_back(d.distribution);
                 }
 
-                for (Distribution& d : m_distribution)
+                for (Distribution& d : distribution_)
                 {
                         d.distribution /= cnt;
                 }
 
                 ASSERT(std::is_sorted(
-                        m_distribution.begin(), m_distribution.end(),
+                        distribution_.begin(), distribution_.end(),
                         [](const Distribution& d1, const Distribution& d2)
                         {
                                 return d1.angle_from < d2.angle_from;
@@ -222,13 +222,13 @@ public:
                 constexpr int BAR_SIZE = 100;
                 constexpr int DIVISION_SIZE = 10;
 
-                if (m_distribution.empty())
+                if (distribution_.empty())
                 {
                         error("There is no distribution");
                 }
 
                 T max = limits<T>::lowest();
-                for (const Distribution& d : m_distribution)
+                for (const Distribution& d : distribution_)
                 {
                         max = std::max(max, d.distribution);
                 }
@@ -236,7 +236,7 @@ public:
                 std::ostringstream oss;
 
                 bool new_line = false;
-                for (const Distribution& d : m_distribution)
+                for (const Distribution& d : distribution_)
                 {
                         const T distribution_value = d.distribution;
                         const T pdf_mean_value = mean_pdf(d, pdf);
@@ -275,12 +275,12 @@ public:
         template <typename PDF>
         void compare_with_pdf(const PDF& pdf) const
         {
-                if (m_distribution.empty())
+                if (distribution_.empty())
                 {
                         error("There is no distribution");
                 }
 
-                for (const Distribution& d : m_distribution)
+                for (const Distribution& d : distribution_)
                 {
                         const T distribution_value = d.distribution;
                         const T pdf_mean_value = mean_pdf(d, pdf);

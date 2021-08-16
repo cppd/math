@@ -35,9 +35,9 @@ PointObjectParametersDialog::PointObjectParametersDialog(
         int max_point_count,
         std::optional<PointObjectParameters>& parameters)
         : QDialog(parent_for_dialog()),
-          m_min_point_count(min_point_count),
-          m_max_point_count(max_point_count),
-          m_parameters(parameters)
+          min_point_count_(min_point_count),
+          max_point_count_(max_point_count),
+          parameters_(parameters)
 {
         ui.setupUi(this);
         setWindowTitle("Create Object");
@@ -83,16 +83,16 @@ void PointObjectParametersDialog::done(int r)
         }
 
         int point_count = ui.spinBox_point_count->value();
-        if (!(point_count >= m_min_point_count && point_count <= m_max_point_count))
+        if (!(point_count >= min_point_count_ && point_count <= max_point_count_))
         {
-                std::string msg = "Point count must be in the range [" + to_string(m_min_point_count) + ", "
-                                  + to_string(m_max_point_count) + "].";
+                std::string msg = "Point count must be in the range [" + to_string(min_point_count_) + ", "
+                                  + to_string(max_point_count_) + "].";
                 dialog::message_critical(msg);
                 return;
         }
 
-        m_parameters.emplace();
-        m_parameters->point_count = point_count;
+        parameters_.emplace();
+        parameters_->point_count = point_count;
 
         QDialog::done(r);
 }

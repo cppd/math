@@ -40,15 +40,15 @@ class PainterParameters3dDialog final : public QDialog
 private:
         Ui::PainterParameters3dDialog ui;
 
-        PainterParametersWidget* m_parameters_widget;
+        PainterParametersWidget* parameters_widget_;
 
-        int m_min_width;
-        int m_max_width;
-        int m_min_height;
-        int m_max_height;
-        double m_aspect_ratio;
+        int min_width_;
+        int max_width_;
+        int min_height_;
+        int max_height_;
+        double aspect_ratio_;
 
-        std::optional<std::tuple<PainterParameters, PainterParameters3d>>& m_parameters;
+        std::optional<std::tuple<PainterParameters, PainterParameters3d>>& parameters_;
 
         PainterParameters3dDialog(
                 int max_thread_count,

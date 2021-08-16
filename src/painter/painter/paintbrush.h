@@ -175,33 +175,33 @@ class Paintbrush final
                 return pixels;
         }
 
-        std::vector<std::array<T, N>> m_pixels;
-        unsigned long long m_current_pixel;
+        std::vector<std::array<T, N>> pixels_;
+        unsigned long long current_pixel_;
 
         void init()
         {
-                m_current_pixel = 0;
+                current_pixel_ = 0;
         }
 
 public:
         Paintbrush(const std::array<int, N>& screen_size, int paint_height)
-                : m_pixels(generate_pixels(screen_size, paint_height))
+                : pixels_(generate_pixels(screen_size, paint_height))
         {
                 init();
         }
 
         void reset()
         {
-                ASSERT(m_current_pixel == m_pixels.size());
+                ASSERT(current_pixel_ == pixels_.size());
 
                 init();
         }
 
         std::optional<std::array<T, N>> next_pixel()
         {
-                if (m_current_pixel < m_pixels.size())
+                if (current_pixel_ < pixels_.size())
                 {
-                        return m_pixels[m_current_pixel++];
+                        return pixels_[current_pixel_++];
                 }
 
                 return std::nullopt;

@@ -38,7 +38,7 @@ class ObjectSelectionParametersDialog final : public QDialog
 private:
         Ui::ObjectSelectionParametersDialog ui;
 
-        std::optional<ObjectSelectionParameters>& m_parameters;
+        std::optional<ObjectSelectionParameters>& parameters_;
 
         ObjectSelectionParametersDialog(
                 const ObjectSelectionParameters& input,

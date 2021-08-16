@@ -40,8 +40,8 @@ class PainterParametersWidget final : public QWidget
 private:
         Ui::PainterParametersWidget ui;
 
-        int m_max_thread_count;
-        int m_max_samples_per_pixel;
+        int max_thread_count_;
+        int max_samples_per_pixel_;
 
 public:
         PainterParametersWidget(

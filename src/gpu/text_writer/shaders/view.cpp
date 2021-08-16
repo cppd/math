@@ -65,21 +65,21 @@ Memory::Memory(
         const std::vector<uint32_t>& family_indices,
         VkSampler sampler,
         const vulkan::ImageWithMemory* texture)
-        : m_descriptors(device, 1, descriptor_set_layout, descriptor_set_layout_bindings())
+        : descriptors_(device, 1, descriptor_set_layout, descriptor_set_layout_bindings())
 {
         std::vector<std::variant<VkDescriptorBufferInfo, VkDescriptorImageInfo>> infos;
         std::vector<uint32_t> bindings;
 
         {
-                m_uniform_buffers.emplace_back(
+                uniform_buffers_.emplace_back(
                         vulkan::BufferMemoryType::HostVisible, device, family_indices,
                         VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT, sizeof(Matrices));
-                m_matrices_buffer_index = m_uniform_buffers.size() - 1;
+                matrices_buffer_index_ = uniform_buffers_.size() - 1;
 
                 VkDescriptorBufferInfo buffer_info = {};
-                buffer_info.buffer = m_uniform_buffers.back();
+                buffer_info.buffer = uniform_buffers_.back();
                 buffer_info.offset = 0;
-                buffer_info.range = m_uniform_buffers.back().size();
+                buffer_info.range = uniform_buffers_.back().size();
 
                 infos.emplace_back(buffer_info);
 
@@ -96,22 +96,22 @@ Memory::Memory(
                 bindings.push_back(TEXTURE_BINDING);
         }
         {
-                m_uniform_buffers.emplace_back(
+                uniform_buffers_.emplace_back(
                         vulkan::BufferMemoryType::HostVisible, device, family_indices,
                         VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT, sizeof(Drawing));
-                m_drawing_buffer_index = m_uniform_buffers.size() - 1;
+                drawing_buffer_index_ = uniform_buffers_.size() - 1;
 
                 VkDescriptorBufferInfo buffer_info = {};
-                buffer_info.buffer = m_uniform_buffers.back();
+                buffer_info.buffer = uniform_buffers_.back();
                 buffer_info.offset = 0;
-                buffer_info.range = m_uniform_buffers.back().size();
+                buffer_info.range = uniform_buffers_.back().size();
 
                 infos.emplace_back(buffer_info);
 
                 bindings.push_back(DRAWING_BINDING);
         }
 
-        m_descriptors.update_descriptor_set(0, bindings, infos);
+        descriptors_.update_descriptor_set(0, bindings, infos);
 }
 
 unsigned Memory::set_number()
@@ -121,18 +121,18 @@ unsigned Memory::set_number()
 
 const VkDescriptorSet& Memory::descriptor_set() const
 {
-        return m_descriptors.descriptor_set(0);
+        return descriptors_.descriptor_set(0);
 }
 
 template <typename T>
 void Memory::copy_to_matrices_buffer(VkDeviceSize offset, const T& data) const
 {
-        vulkan::map_and_write_to_buffer(m_uniform_buffers[m_matrices_buffer_index], offset, data);
+        vulkan::map_and_write_to_buffer(uniform_buffers_[matrices_buffer_index_], offset, data);
 }
 template <typename T>
 void Memory::copy_to_drawing_buffer(VkDeviceSize offset, const T& data) const
 {
-        vulkan::map_and_write_to_buffer(m_uniform_buffers[m_drawing_buffer_index], offset, data);
+        vulkan::map_and_write_to_buffer(uniform_buffers_[drawing_buffer_index_], offset, data);
 }
 
 void Memory::set_matrix(const mat4d& matrix) const
@@ -194,23 +194,23 @@ std::vector<VkVertexInputAttributeDescription> Vertex::attribute_descriptions()
 //
 
 Program::Program(const vulkan::Device& device)
-        : m_device(device),
-          m_descriptor_set_layout(
+        : device_(device),
+          descriptor_set_layout_(
                   vulkan::create_descriptor_set_layout(device, Memory::descriptor_set_layout_bindings())),
-          m_pipeline_layout(vulkan::create_pipeline_layout(device, {Memory::set_number()}, {m_descriptor_set_layout})),
-          m_vertex_shader(m_device, code_view_vert(), "main"),
-          m_fragment_shader(m_device, code_view_frag(), "main")
+          pipeline_layout_(vulkan::create_pipeline_layout(device, {Memory::set_number()}, {descriptor_set_layout_})),
+          vertex_shader_(device_, code_view_vert(), "main"),
+          fragment_shader_(device_, code_view_frag(), "main")
 {
 }
 
 VkDescriptorSetLayout Program::descriptor_set_layout() const
 {
-        return m_descriptor_set_layout;
+        return descriptor_set_layout_;
 }
 
 VkPipelineLayout Program::pipeline_layout() const
 {
-        return m_pipeline_layout;
+        return pipeline_layout_;
 }
 
 vulkan::Pipeline Program::create_pipeline(
@@ -221,12 +221,12 @@ vulkan::Pipeline Program::create_pipeline(
 {
         vulkan::GraphicsPipelineCreateInfo info;
 
-        info.device = &m_device;
+        info.device = &device_;
         info.render_pass = render_pass;
         info.sub_pass = 0;
         info.sample_count = sample_count;
         info.sample_shading = sample_shading;
-        info.pipeline_layout = m_pipeline_layout;
+        info.pipeline_layout = pipeline_layout_;
         info.viewport = viewport;
         info.primitive_topology = VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST;
 
@@ -241,7 +241,7 @@ vulkan::Pipeline Program::create_pipeline(
         info.color_blend->dstAlphaBlendFactor = VK_BLEND_FACTOR_ZERO;
         info.color_blend->alphaBlendOp = VK_BLEND_OP_ADD;
 
-        const std::vector<const vulkan::Shader*> shaders = {&m_vertex_shader, &m_fragment_shader};
+        const std::vector<const vulkan::Shader*> shaders = {&vertex_shader_, &fragment_shader_};
         info.shaders = &shaders;
 
         const std::vector<const vulkan::SpecializationConstant*> constants = {nullptr, nullptr};

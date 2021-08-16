@@ -43,11 +43,11 @@ class HyperplaneParallelotope final
                 Vector<N, T> n;
                 T d;
         };
-        std::array<Planes, N - 1> m_planes;
+        std::array<Planes, N - 1> planes_;
 
-        Vector<N, T> m_org;
-        std::array<Vector<N, T>, N - 1> m_vectors;
-        Vector<N, T> m_normal;
+        Vector<N, T> org_;
+        std::array<Vector<N, T>, N - 1> vectors_;
+        Vector<N, T> normal_;
 
         template <int INDEX, typename F>
         void vertices_impl(const Vector<N, T>& p, const F& f) const;
@@ -94,28 +94,28 @@ HyperplaneParallelotope<N, T>::HyperplaneParallelotope(
         const Vector<N, T>& org,
         const std::array<Vector<N, T>, N - 1>& vectors)
 {
-        m_org = org;
-        m_vectors = vectors;
-        m_normal = numerical::orthogonal_complement(vectors).normalized();
+        org_ = org;
+        vectors_ = vectors;
+        normal_ = numerical::orthogonal_complement(vectors).normalized();
 
         for (unsigned i = 0; i < N - 1; ++i)
         {
-                std::swap(m_normal, m_vectors[i]);
-                m_planes[i].n = numerical::orthogonal_complement(m_vectors);
-                std::swap(m_normal, m_vectors[i]);
+                std::swap(normal_, vectors_[i]);
+                planes_[i].n = numerical::orthogonal_complement(vectors_);
+                std::swap(normal_, vectors_[i]);
 
-                if (dot(m_planes[i].n, m_vectors[i]) < 0)
+                if (dot(planes_[i].n, vectors_[i]) < 0)
                 {
-                        m_planes[i].n = -m_planes[i].n;
+                        planes_[i].n = -planes_[i].n;
                 }
 
-                m_planes[i].d = dot(m_org, m_planes[i].n);
+                planes_[i].d = dot(org_, planes_[i].n);
 
                 // Относительное расстояние от вершины до плоскости должно быть равно 1
-                T distance = dot(m_org + m_vectors[i], m_planes[i].n) - m_planes[i].d;
+                T distance = dot(org_ + vectors_[i], planes_[i].n) - planes_[i].d;
                 ASSERT(distance >= 0);
-                m_planes[i].n /= distance;
-                m_planes[i].d /= distance;
+                planes_[i].n /= distance;
+                planes_[i].d /= distance;
         }
 }
 
@@ -130,17 +130,17 @@ Constraints<N, T, 2 * (N - 1), 1> HyperplaneParallelotope<N, T>::constraints() c
         // для точек параллелотопа d + -(n * x) >= 0.
         for (unsigned i = 0, c_i = 0; i < N - 1; ++i, c_i += 2)
         {
-                T len = m_planes[i].n.norm();
+                T len = planes_[i].n.norm();
 
-                result.c[c_i].a = m_planes[i].n / len;
-                result.c[c_i].b = -m_planes[i].d / len;
+                result.c[c_i].a = planes_[i].n / len;
+                result.c[c_i].b = -planes_[i].d / len;
 
-                result.c[c_i + 1].a = -m_planes[i].n / len;
-                result.c[c_i + 1].b = dot(m_org + m_vectors[i], m_planes[i].n) / len;
+                result.c[c_i + 1].a = -planes_[i].n / len;
+                result.c[c_i + 1].b = dot(org_ + vectors_[i], planes_[i].n) / len;
         }
 
-        result.c_eq[0].a = m_normal;
-        result.c_eq[0].b = -dot(m_org, m_normal);
+        result.c_eq[0].a = normal_;
+        result.c_eq[0].b = -dot(org_, normal_);
 
         return result;
 }
@@ -148,7 +148,7 @@ Constraints<N, T, 2 * (N - 1), 1> HyperplaneParallelotope<N, T>::constraints() c
 template <std::size_t N, typename T>
 std::optional<T> HyperplaneParallelotope<N, T>::intersect(const Ray<N, T>& r) const
 {
-        std::optional<T> t = hyperplane_intersect(r, m_org, m_normal);
+        std::optional<T> t = hyperplane_intersect(r, org_, normal_);
         if (!t)
         {
                 return std::nullopt;
@@ -159,7 +159,7 @@ std::optional<T> HyperplaneParallelotope<N, T>::intersect(const Ray<N, T>& r) co
         for (unsigned i = 0; i < N - 1; ++i)
         {
                 // Относительное расстояние от грани до точки является координатой точки
-                T d = dot(intersection_point, m_planes[i].n) - m_planes[i].d;
+                T d = dot(intersection_point, planes_[i].n) - planes_[i].d;
                 if (d <= 0 || d >= 1)
                 {
                         return std::nullopt;
@@ -172,7 +172,7 @@ std::optional<T> HyperplaneParallelotope<N, T>::intersect(const Ray<N, T>& r) co
 template <std::size_t N, typename T>
 const Vector<N, T>& HyperplaneParallelotope<N, T>::normal(const Vector<N, T>&) const
 {
-        return m_normal;
+        return normal_;
 }
 
 template <std::size_t N, typename T>
@@ -182,7 +182,7 @@ void HyperplaneParallelotope<N, T>::vertices_impl(const Vector<N, T>& p, const F
         if constexpr (INDEX >= 0)
         {
                 vertices_impl<INDEX - 1>(p, f);
-                vertices_impl<INDEX - 1>(p + m_vectors[INDEX], f);
+                vertices_impl<INDEX - 1>(p + vectors_[INDEX], f);
         }
         else
         {
@@ -202,7 +202,7 @@ std::array<Vector<N, T>, HyperplaneParallelotope<N, T>::VERTEX_COUNT> Hyperplane
                 result[count++] = p;
         };
 
-        vertices_impl<N - 2>(m_org, f);
+        vertices_impl<N - 2>(org_, f);
 
         ASSERT(count == result.size());
 
@@ -222,7 +222,7 @@ void HyperplaneParallelotope<N, T>::edges_impl(const Vector<N, T>& p, std::array
                 edges_impl<INDEX - 1>(p, dimensions, f);
 
                 (*dimensions)[INDEX] = false;
-                edges_impl<INDEX - 1>(p + m_vectors[INDEX], dimensions, f);
+                edges_impl<INDEX - 1>(p + vectors_[INDEX], dimensions, f);
         }
         else
         {
@@ -248,7 +248,7 @@ std::array<std::array<Vector<N, T>, 2>, HyperplaneParallelotope<N, T>::EDGE_COUN
                         {
                                 ASSERT(count < result.size());
                                 result[count][0] = p;
-                                result[count][1] = m_vectors[i];
+                                result[count][1] = vectors_[i];
                                 ++count;
                         }
                 }
@@ -257,7 +257,7 @@ std::array<std::array<Vector<N, T>, 2>, HyperplaneParallelotope<N, T>::EDGE_COUN
         // Смещаться по каждому измерению для перехода к другой вершине.
         // Добавлять к массиву рёбер пары, состоящие из вершины и векторов
         // измерений, по которым не смещались для перехода к этой вершине.
-        edges_impl<N - 2>(m_org, &dimensions, f);
+        edges_impl<N - 2>(org_, &dimensions, f);
 
         ASSERT(count == result.size());
 
@@ -267,13 +267,13 @@ std::array<std::array<Vector<N, T>, 2>, HyperplaneParallelotope<N, T>::EDGE_COUN
 template <std::size_t N, typename T>
 const Vector<N, T>& HyperplaneParallelotope<N, T>::org() const
 {
-        return m_org;
+        return org_;
 }
 
 template <std::size_t N, typename T>
 const Vector<N, T>& HyperplaneParallelotope<N, T>::e(unsigned n) const
 {
         ASSERT(n < N - 1);
-        return m_vectors[n];
+        return vectors_[n];
 }
 }

@@ -53,7 +53,7 @@ class HyperplaneSimplex final
                 Vector<N, T> n;
                 T d;
         };
-        std::array<Plane, N - 1> m_planes;
+        std::array<Plane, N - 1> planes_;
 
         static T last_coordinate(const Vector<N - 1, T>& coordinates)
         {
@@ -85,18 +85,18 @@ public:
                         // Перпендикуляр от точки к грани — это перпендикуляр к пространству,
                         // образуемому перпендикуляром к симплексу и пространством грани
                         std::swap(normal, vectors[i]);
-                        m_planes[i].n = numerical::orthogonal_complement(vectors);
+                        planes_[i].n = numerical::orthogonal_complement(vectors);
                         std::swap(normal, vectors[i]);
 
                         // Уравнение плоскости
                         // dot(p - org, normal) = dot(p, normal) - dot(org, normal) = dot(p, normal) - d
                         // Плоскость проходит через какую-нибудь вершину грани, например vertices[N - 1].
-                        m_planes[i].d = dot(vertices[N - 1], m_planes[i].n);
+                        planes_[i].d = dot(vertices[N - 1], planes_[i].n);
 
                         // Относительное расстояние от вершины до плоскости должно быть равно 1
-                        T distance = dot(vertices[i], m_planes[i].n) - m_planes[i].d;
-                        m_planes[i].n /= distance;
-                        m_planes[i].d /= distance;
+                        T distance = dot(vertices[i], planes_[i].n) - planes_[i].d;
+                        planes_[i].n /= distance;
+                        planes_[i].d /= distance;
                 }
         }
 
@@ -113,9 +113,9 @@ public:
                 // N - 1 плоскость уже есть, и все они проходят через вершину N - 1
                 for (unsigned i = 0; i < N - 1; ++i)
                 {
-                        T len = m_planes[i].n.norm();
-                        result.c[i].a = m_planes[i].n / len;
-                        result.c[i].b = -m_planes[i].d / len;
+                        T len = planes_[i].n.norm();
+                        result.c[i].a = planes_[i].n / len;
+                        result.c[i].b = -planes_[i].d / len;
                 }
 
                 //
@@ -152,7 +152,7 @@ public:
         {
                 ASSERT(i < N - 1);
                 // Относительное расстояние от грани до точки является координатой точки
-                return dot(point, m_planes[i].n) - m_planes[i].d;
+                return dot(point, planes_[i].n) - planes_[i].d;
         }
 
         Vector<N, T> barycentric_coordinates(const Vector<N, T>& point) const

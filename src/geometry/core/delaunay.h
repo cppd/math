@@ -33,11 +33,11 @@ namespace ns::geometry
 template <std::size_t N>
 class DelaunayFacet final
 {
-        const std::array<int, N> m_vertices;
+        const std::array<int, N> vertices_;
         // the vector is directed outside if there is only one Delaunay object
-        const Vector<N, double> m_ortho;
+        const Vector<N, double> ortho_;
         // the second element is negative if there is only one Delaunay object
-        const std::array<int, 2> m_delaunay;
+        const std::array<int, 2> delaunay_;
 
 public:
         DelaunayFacet(
@@ -45,46 +45,46 @@ public:
                 const Vector<N, double>& ortho,
                 int delaunay_0,
                 int delaunay_1)
-                : m_vertices(vertices), m_ortho(ortho), m_delaunay{delaunay_0, delaunay_1}
+                : vertices_(vertices), ortho_(ortho), delaunay_{delaunay_0, delaunay_1}
         {
         }
         bool one_sided() const
         {
-                return m_delaunay[1] < 0;
+                return delaunay_[1] < 0;
         }
         const std::array<int, N>& vertices() const
         {
-                return m_vertices;
+                return vertices_;
         }
         const Vector<N, double>& ortho() const
         {
-                return m_ortho;
+                return ortho_;
         }
         int delaunay(unsigned i) const
         {
-                ASSERT(i == 0 || (i == 1 && m_delaunay[1] >= 0));
-                return m_delaunay[i];
+                ASSERT(i == 0 || (i == 1 && delaunay_[1] >= 0));
+                return delaunay_[i];
         }
 };
 
 template <std::size_t N>
 class DelaunayObject final
 {
-        const std::array<int, N + 1> m_vertices;
-        const Vector<N, double> m_voronoi_vertex;
+        const std::array<int, N + 1> vertices_;
+        const Vector<N, double> voronoi_vertex_;
 
 public:
         DelaunayObject(const std::array<int, N + 1>& vertices, const Vector<N, double>& voronoi_vertex)
-                : m_vertices(vertices), m_voronoi_vertex(voronoi_vertex)
+                : vertices_(vertices), voronoi_vertex_(voronoi_vertex)
         {
         }
         const std::array<int, N + 1>& vertices() const
         {
-                return m_vertices;
+                return vertices_;
         }
         const Vector<N, double>& voronoi_vertex() const
         {
-                return m_voronoi_vertex;
+                return voronoi_vertex_;
         }
 };
 

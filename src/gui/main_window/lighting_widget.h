@@ -33,16 +33,16 @@ class LightingWidget final : public QWidget
 private:
         Ui::LightingWidget ui;
 
-        view::View* m_view = nullptr;
+        view::View* view_ = nullptr;
 
-        const double m_daylight_min_cct;
-        const double m_daylight_max_cct;
-        const double m_blackbody_min_t;
-        const double m_blackbody_max_t;
+        const double daylight_min_cct_;
+        const double daylight_max_cct_;
+        const double blackbody_min_t_;
+        const double blackbody_max_t_;
 
-        double m_intensity;
-        color::Spectrum m_spectrum;
-        color::Color m_rgb;
+        double intensity_;
+        color::Spectrum spectrum_;
+        color::Color rgb_;
 
         void send_color();
 

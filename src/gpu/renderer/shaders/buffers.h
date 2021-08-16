@@ -28,7 +28,7 @@ namespace ns::gpu::renderer
 {
 class ShaderBuffers
 {
-        std::vector<vulkan::BufferWithMemory> m_uniform_buffers;
+        std::vector<vulkan::BufferWithMemory> uniform_buffers_;
 
         // Если размещать структуры в одном буфере, то требуется выравнивание каждой структуры
         // на VkPhysicalDeviceLimits::minUniformBufferOffsetAlignment для VkDescriptorBufferInfo::offset
@@ -62,9 +62,9 @@ class ShaderBuffers
                 uint32_t transparency_max_node_count;
         };
 
-        std::size_t m_matrices_buffer_index;
-        std::size_t m_shadow_matrices_buffer_index;
-        std::size_t m_drawing_buffer_index;
+        std::size_t matrices_buffer_index_;
+        std::size_t shadow_matrices_buffer_index_;
+        std::size_t drawing_buffer_index_;
 
         template <typename T>
         void copy_to_matrices_buffer(VkDeviceSize offset, const T& data) const;
@@ -107,7 +107,7 @@ public:
 
 class MaterialBuffer final
 {
-        vulkan::BufferWithMemory m_uniform_buffer;
+        vulkan::BufferWithMemory uniform_buffer_;
 
 public:
         struct Material
@@ -134,7 +134,7 @@ public:
 
 class MeshBuffer final
 {
-        vulkan::BufferWithMemory m_uniform_buffer;
+        vulkan::BufferWithMemory uniform_buffer_;
 
         struct Mesh
         {
@@ -160,8 +160,8 @@ public:
 
 class VolumeBuffer final
 {
-        vulkan::BufferWithMemory m_uniform_buffer_coordinates;
-        vulkan::BufferWithMemory m_uniform_buffer_volume;
+        vulkan::BufferWithMemory uniform_buffer_coordinates_;
+        vulkan::BufferWithMemory uniform_buffer_volume_;
 
         struct Coordinates
         {
@@ -237,15 +237,15 @@ class TransparencyBuffers
         // (uint color_rg) + (uint color_ba) + (float depth) + (uint next)
         static constexpr uint32_t NODE_SIZE = 16;
 
-        const unsigned m_node_count;
+        const unsigned node_count_;
 
-        vulkan::ImageWithMemory m_heads;
-        vulkan::ImageWithMemory m_heads_size;
-        vulkan::BufferWithMemory m_node_buffer;
+        vulkan::ImageWithMemory heads_;
+        vulkan::ImageWithMemory heads_size_;
+        vulkan::BufferWithMemory node_buffer_;
 
-        vulkan::BufferWithMemory m_init_buffer;
-        vulkan::BufferWithMemory m_read_buffer;
-        vulkan::BufferWithMemory m_counters;
+        vulkan::BufferWithMemory init_buffer_;
+        vulkan::BufferWithMemory read_buffer_;
+        vulkan::BufferWithMemory counters_;
 
         struct Counters
         {

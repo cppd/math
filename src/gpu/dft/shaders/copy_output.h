@@ -34,7 +34,7 @@ class CopyOutputMemory final
         static constexpr int SRC_BINDING = 0;
         static constexpr int DST_BINDING = 1;
 
-        vulkan::Descriptors m_descriptors;
+        vulkan::Descriptors descriptors_;
 
 public:
         static std::vector<VkDescriptorSetLayoutBinding> descriptor_set_layout_bindings();
@@ -65,9 +65,9 @@ class CopyOutputConstant final : public vulkan::SpecializationConstant
                 uint32_t local_size_x;
                 uint32_t local_size_y;
                 float to_mul;
-        } m_data;
+        } data_;
 
-        std::vector<VkSpecializationMapEntry> m_entries;
+        std::vector<VkSpecializationMapEntry> entries_;
 
         const std::vector<VkSpecializationMapEntry>& entries() const override;
         const void* data() const override;
@@ -81,13 +81,13 @@ public:
 
 class CopyOutputProgram final
 {
-        const vulkan::Device& m_device;
+        const vulkan::Device& device_;
 
-        vulkan::DescriptorSetLayout m_descriptor_set_layout;
-        vulkan::PipelineLayout m_pipeline_layout;
-        CopyOutputConstant m_constant;
-        vulkan::ComputeShader m_shader;
-        vulkan::Pipeline m_pipeline;
+        vulkan::DescriptorSetLayout descriptor_set_layout_;
+        vulkan::PipelineLayout pipeline_layout_;
+        CopyOutputConstant constant_;
+        vulkan::ComputeShader shader_;
+        vulkan::Pipeline pipeline_;
 
 public:
         explicit CopyOutputProgram(const vulkan::Device& device);

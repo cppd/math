@@ -61,14 +61,14 @@ ColorsWidget::ColorsWidget() : QWidget(nullptr)
 
 void ColorsWidget::set_view(view::View* view)
 {
-        m_view = view;
+        view_ = view;
 }
 
 void ColorsWidget::on_background_color_clicked()
 {
         QPointer ptr(this);
         dialog::color_dialog(
-                "Background Color", m_background_color,
+                "Background Color", background_color_,
                 [&](const QColor& c)
                 {
                         if (!ptr.isNull())
@@ -82,7 +82,7 @@ void ColorsWidget::on_wireframe_color_clicked()
 {
         QPointer ptr(this);
         dialog::color_dialog(
-                "Wireframe Color", m_wireframe_color,
+                "Wireframe Color", wireframe_color_,
                 [&](const QColor& c)
                 {
                         if (!ptr.isNull())
@@ -96,7 +96,7 @@ void ColorsWidget::on_clip_plane_color_clicked()
 {
         QPointer ptr(this);
         dialog::color_dialog(
-                "Clip Plane Color", m_clip_plane_color,
+                "Clip Plane Color", clip_plane_color_,
                 [&](const QColor& c)
                 {
                         if (!ptr.isNull())
@@ -110,7 +110,7 @@ void ColorsWidget::on_normal_color_positive_clicked()
 {
         QPointer ptr(this);
         dialog::color_dialog(
-                "Positive Normal Color", m_normal_color_positive,
+                "Positive Normal Color", normal_color_positive_,
                 [&](const QColor& c)
                 {
                         if (!ptr.isNull())
@@ -124,7 +124,7 @@ void ColorsWidget::on_normal_color_negative_clicked()
 {
         QPointer ptr(this);
         dialog::color_dialog(
-                "Negative Normal Color", m_normal_color_negative,
+                "Negative Normal Color", normal_color_negative_,
                 [&](const QColor& c)
                 {
                         if (!ptr.isNull())
@@ -138,7 +138,7 @@ void ColorsWidget::on_dft_background_color_clicked()
 {
         QPointer ptr(this);
         dialog::color_dialog(
-                "DFT Background Color", m_dft_background_color,
+                "DFT Background Color", dft_background_color_,
                 [&](const QColor& c)
                 {
                         if (!ptr.isNull())
@@ -152,7 +152,7 @@ void ColorsWidget::on_dft_color_clicked()
 {
         QPointer ptr(this);
         dialog::color_dialog(
-                "DFT Color", m_dft_color,
+                "DFT Color", dft_color_,
                 [&](const QColor& c)
                 {
                         if (!ptr.isNull())
@@ -164,106 +164,106 @@ void ColorsWidget::on_dft_color_clicked()
 
 void ColorsWidget::set_background_color(const QColor& c)
 {
-        m_background_color = c;
-        if (m_view)
+        background_color_ = c;
+        if (view_)
         {
-                m_view->send(view::command::SetBackgroundColor(qcolor_to_color(c)));
+                view_->send(view::command::SetBackgroundColor(qcolor_to_color(c)));
         }
         set_widget_color(ui.widget_background_color, c);
 }
 
 void ColorsWidget::set_wireframe_color(const QColor& c)
 {
-        m_wireframe_color = c;
-        if (m_view)
+        wireframe_color_ = c;
+        if (view_)
         {
-                m_view->send(view::command::SetWireframeColor(qcolor_to_color(c)));
+                view_->send(view::command::SetWireframeColor(qcolor_to_color(c)));
         }
         set_widget_color(ui.widget_wireframe_color, c);
 }
 
 void ColorsWidget::set_clip_plane_color(const QColor& c)
 {
-        m_clip_plane_color = c;
-        if (m_view)
+        clip_plane_color_ = c;
+        if (view_)
         {
-                m_view->send(view::command::SetClipPlaneColor(qcolor_to_color(c)));
+                view_->send(view::command::SetClipPlaneColor(qcolor_to_color(c)));
         }
         set_widget_color(ui.widget_clip_plane_color, c);
 }
 
 void ColorsWidget::set_normal_color_positive(const QColor& c)
 {
-        m_normal_color_positive = c;
-        if (m_view)
+        normal_color_positive_ = c;
+        if (view_)
         {
-                m_view->send(view::command::SetNormalColorPositive(qcolor_to_color(c)));
+                view_->send(view::command::SetNormalColorPositive(qcolor_to_color(c)));
         }
         set_widget_color(ui.widget_normal_color_positive, c);
 }
 
 void ColorsWidget::set_normal_color_negative(const QColor& c)
 {
-        m_normal_color_negative = c;
-        if (m_view)
+        normal_color_negative_ = c;
+        if (view_)
         {
-                m_view->send(view::command::SetNormalColorNegative(qcolor_to_color(c)));
+                view_->send(view::command::SetNormalColorNegative(qcolor_to_color(c)));
         }
         set_widget_color(ui.widget_normal_color_negative, c);
 }
 
 void ColorsWidget::set_dft_background_color(const QColor& c)
 {
-        m_dft_background_color = c;
-        if (m_view)
+        dft_background_color_ = c;
+        if (view_)
         {
-                m_view->send(view::command::SetDftBackgroundColor(qcolor_to_color(c)));
+                view_->send(view::command::SetDftBackgroundColor(qcolor_to_color(c)));
         }
         set_widget_color(ui.widget_dft_background_color, c);
 }
 
 void ColorsWidget::set_dft_color(const QColor& c)
 {
-        m_dft_color = c;
-        if (m_view)
+        dft_color_ = c;
+        if (view_)
         {
-                m_view->send(view::command::SetDftColor(qcolor_to_color(c)));
+                view_->send(view::command::SetDftColor(qcolor_to_color(c)));
         }
         set_widget_color(ui.widget_dft_color, c);
 }
 
 color::Color ColorsWidget::background_color() const
 {
-        return qcolor_to_color(m_background_color);
+        return qcolor_to_color(background_color_);
 }
 
 color::Color ColorsWidget::wireframe_color() const
 {
-        return qcolor_to_color(m_wireframe_color);
+        return qcolor_to_color(wireframe_color_);
 }
 
 color::Color ColorsWidget::clip_plane_color() const
 {
-        return qcolor_to_color(m_clip_plane_color);
+        return qcolor_to_color(clip_plane_color_);
 }
 
 color::Color ColorsWidget::normal_color_positive() const
 {
-        return qcolor_to_color(m_normal_color_positive);
+        return qcolor_to_color(normal_color_positive_);
 }
 
 color::Color ColorsWidget::normal_color_negative() const
 {
-        return qcolor_to_color(m_normal_color_negative);
+        return qcolor_to_color(normal_color_negative_);
 }
 
 color::Color ColorsWidget::dft_background_color() const
 {
-        return qcolor_to_color(m_dft_background_color);
+        return qcolor_to_color(dft_background_color_);
 }
 
 color::Color ColorsWidget::dft_color() const
 {
-        return qcolor_to_color(m_dft_color);
+        return qcolor_to_color(dft_color_);
 }
 }

@@ -35,9 +35,9 @@ VolumeObjectParametersDialog::VolumeObjectParametersDialog(
         int max_image_size,
         std::optional<VolumeObjectParameters>& parameters)
         : QDialog(parent_for_dialog()),
-          m_min_image_size(min_image_size),
-          m_max_image_size(max_image_size),
-          m_parameters(parameters)
+          min_image_size_(min_image_size),
+          max_image_size_(max_image_size),
+          parameters_(parameters)
 {
         ui.setupUi(this);
         setWindowTitle("Create Object");
@@ -83,16 +83,16 @@ void VolumeObjectParametersDialog::done(int r)
         }
 
         int image_size = ui.spinBox_image_size->value();
-        if (!(image_size >= m_min_image_size && image_size <= m_max_image_size))
+        if (!(image_size >= min_image_size_ && image_size <= max_image_size_))
         {
-                std::string msg = "Error image size. It must be in the range [" + to_string(m_min_image_size) + ", "
-                                  + to_string(m_max_image_size) + "].";
+                std::string msg = "Error image size. It must be in the range [" + to_string(min_image_size_) + ", "
+                                  + to_string(max_image_size_) + "].";
                 dialog::message_critical(msg);
                 return;
         }
 
-        m_parameters.emplace();
-        m_parameters->image_size = image_size;
+        parameters_.emplace();
+        parameters_->image_size = image_size;
 
         QDialog::done(r);
 }

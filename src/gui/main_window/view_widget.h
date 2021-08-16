@@ -30,7 +30,7 @@ class ViewWidget final : public QWidget
 private:
         Ui::ViewWidget ui;
 
-        view::View* m_view = nullptr;
+        view::View* view_ = nullptr;
 
         void on_clip_plane_clicked();
         void on_convex_hull_2d_clicked();

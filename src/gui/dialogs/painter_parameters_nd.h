@@ -40,12 +40,12 @@ class PainterParametersNdDialog final : public QDialog
 private:
         Ui::PainterParametersNdDialog ui;
 
-        PainterParametersWidget* m_parameters_widget;
+        PainterParametersWidget* parameters_widget_;
 
-        int m_min_screen_size;
-        int m_max_screen_size;
+        int min_screen_size_;
+        int max_screen_size_;
 
-        std::optional<std::tuple<PainterParameters, PainterParametersNd>>& m_parameters;
+        std::optional<std::tuple<PainterParameters, PainterParametersNd>>& parameters_;
 
         PainterParametersNdDialog(
                 int dimension,

@@ -301,14 +301,14 @@ void check_rho_and_aplha(double rho, double alpha)
 template <std::size_t N>
 class ManifoldConstructorImpl : public ManifoldConstructor<N>, public ManifoldConstructorCocone<N>
 {
-        const bool m_cocone_only;
+        const bool cocone_only_;
 
-        std::vector<Vector<N, float>> m_source_points;
-        std::vector<Vector<N, double>> m_points;
-        std::vector<DelaunayObject<N>> m_delaunay_objects;
-        std::vector<DelaunayFacet<N>> m_delaunay_facets;
-        std::vector<ManifoldVertex<N>> m_vertex_data;
-        std::vector<ManifoldFacet<N>> m_facet_data;
+        std::vector<Vector<N, float>> source_points_;
+        std::vector<Vector<N, double>> points_;
+        std::vector<DelaunayObject<N>> delaunay_objects_;
+        std::vector<DelaunayFacet<N>> delaunay_facets_;
+        std::vector<ManifoldVertex<N>> vertex_data_;
+        std::vector<ManifoldFacet<N>> facet_data_;
 
         void common_computation(
                 const std::vector<bool>& interior_vertices,
@@ -320,7 +320,7 @@ class ManifoldConstructorImpl : public ManifoldConstructor<N>, public ManifoldCo
                 progress->set(1, 4);
                 LOG("prune facets...");
 
-                prune_facets_incident_to_sharp_ridges(m_points, m_delaunay_facets, interior_vertices, &cocone_facets);
+                prune_facets_incident_to_sharp_ridges(points_, delaunay_facets_, interior_vertices, &cocone_facets);
                 if (all_false(cocone_facets))
                 {
                         error("Cocone facets not found after prune. " + to_string(N - 1)
@@ -330,7 +330,7 @@ class ManifoldConstructorImpl : public ManifoldConstructor<N>, public ManifoldCo
                 progress->set(2, 4);
                 LOG("extract manifold...");
 
-                extract_manifold(m_delaunay_objects, m_delaunay_facets, &cocone_facets);
+                extract_manifold(delaunay_objects_, delaunay_facets_, &cocone_facets);
                 if (all_false(cocone_facets))
                 {
                         error("Cocone facets not found after manifold extraction. " + to_string(N - 1)
@@ -340,9 +340,9 @@ class ManifoldConstructorImpl : public ManifoldConstructor<N>, public ManifoldCo
                 progress->set(3, 4);
                 LOG("create result...");
 
-                create_normals_and_facets(m_delaunay_facets, cocone_facets, m_vertex_data, normals, facets);
+                create_normals_and_facets(delaunay_facets_, cocone_facets, vertex_data_, normals, facets);
 
-                ASSERT(normals->size() == m_points.size());
+                ASSERT(normals->size() == points_.size());
         }
 
         void cocone(
@@ -356,13 +356,13 @@ class ManifoldConstructorImpl : public ManifoldConstructor<N>, public ManifoldCo
                 LOG("vertex data...");
 
                 std::vector<bool> cocone_facets;
-                find_cocone_facets(m_facet_data, &cocone_facets);
+                find_cocone_facets(facet_data_, &cocone_facets);
                 if (all_false(cocone_facets))
                 {
                         error("Cocone facets not found. " + to_string(N - 1) + "-manifold is not reconstructable.");
                 }
 
-                std::vector<bool> interior_vertices(m_vertex_data.size(), true);
+                std::vector<bool> interior_vertices(vertex_data_.size(), true);
 
                 common_computation(interior_vertices, std::move(cocone_facets), normals, facets, progress);
         }
@@ -377,7 +377,7 @@ class ManifoldConstructorImpl : public ManifoldConstructor<N>, public ManifoldCo
                 std::vector<std::array<int, N>>* facets,
                 ProgressRatio* progress) const override
         {
-                if (m_cocone_only)
+                if (cocone_only_)
                 {
                         error("Manifold constructor created for Cocone and not for BoundCocone");
                 }
@@ -390,14 +390,14 @@ class ManifoldConstructorImpl : public ManifoldConstructor<N>, public ManifoldCo
                 LOG("vertex data...");
 
                 std::vector<bool> interior_vertices;
-                find_interior_vertices(rho, std::cos(alpha), m_vertex_data, &interior_vertices);
+                find_interior_vertices(rho, std::cos(alpha), vertex_data_, &interior_vertices);
                 if (all_false(interior_vertices))
                 {
                         error("Interior vertices not found. " + to_string(N - 1) + "-manifold is not reconstructable.");
                 }
 
                 std::vector<bool> cocone_facets;
-                find_cocone_interior_facets(m_delaunay_facets, m_facet_data, interior_vertices, &cocone_facets);
+                find_cocone_interior_facets(delaunay_facets_, facet_data_, interior_vertices, &cocone_facets);
                 if (all_false(cocone_facets))
                 {
                         error("Cocone interior facets not found. " + to_string(N - 1)
@@ -410,8 +410,8 @@ class ManifoldConstructorImpl : public ManifoldConstructor<N>, public ManifoldCo
         std::vector<std::array<int, N + 1>> delaunay_objects() const override
         {
                 std::vector<std::array<int, N + 1>> objects;
-                objects.reserve(m_delaunay_objects.size());
-                for (const DelaunayObject<N>& d : m_delaunay_objects)
+                objects.reserve(delaunay_objects_.size());
+                for (const DelaunayObject<N>& d : delaunay_objects_)
                 {
                         objects.push_back(d.vertices());
                 }
@@ -420,7 +420,7 @@ class ManifoldConstructorImpl : public ManifoldConstructor<N>, public ManifoldCo
 
         const std::vector<Vector<N, float>>& points() const override
         {
-                return m_source_points;
+                return source_points_;
         }
 
 public:
@@ -428,7 +428,7 @@ public:
                 const std::vector<Vector<N, float>>& source_points,
                 bool cocone_only,
                 ProgressRatio* progress)
-                : m_cocone_only(cocone_only), m_source_points(source_points)
+                : cocone_only_(cocone_only), source_points_(source_points)
         {
                 // Проверить на самый минимум по количеству точек
                 if (source_points.size() < N + 2)
@@ -439,12 +439,12 @@ public:
 
                 progress->set_text("Voronoi-Delaunay: %v of %m");
 
-                create_voronoi_delaunay(source_points, &m_points, &m_delaunay_objects, &m_delaunay_facets, progress);
+                create_voronoi_delaunay(source_points, &points_, &delaunay_objects_, &delaunay_facets_, progress);
 
                 vertex_and_facet_data(
-                        !cocone_only, m_points, m_delaunay_objects, m_delaunay_facets, &m_vertex_data, &m_facet_data);
+                        !cocone_only, points_, delaunay_objects_, delaunay_facets_, &vertex_data_, &facet_data_);
 
-                ASSERT(source_points.size() == m_points.size());
+                ASSERT(source_points.size() == points_.size());
         }
 };
 }

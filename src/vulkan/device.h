@@ -150,12 +150,12 @@ std::vector<VkPhysicalDevice> physical_devices(VkInstance instance);
 
 class PhysicalDevice final
 {
-        VkPhysicalDevice m_physical_device;
-        DeviceFeatures m_features;
-        DeviceProperties m_properties;
-        std::vector<VkQueueFamilyProperties> m_queue_families;
-        std::vector<bool> m_presentation_supported;
-        std::unordered_set<std::string> m_supported_extensions;
+        VkPhysicalDevice physical_device_;
+        DeviceFeatures features_;
+        DeviceProperties properties_;
+        std::vector<VkQueueFamilyProperties> queue_families_;
+        std::vector<bool> presentation_supported_;
+        std::unordered_set<std::string> supported_extensions_;
 
 public:
         PhysicalDevice(VkPhysicalDevice physical_device, VkSurfaceKHR surface);

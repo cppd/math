@@ -35,11 +35,11 @@ class ImageSliceDialog final : public QDialog
 private:
         Ui::ImageSliceDialog ui;
 
-        const int m_slice_dimension;
+        const int slice_dimension_;
 
-        std::vector<std::optional<int>> m_slices;
+        std::vector<std::optional<int>> slices_;
 
-        std::optional<ImageSliceParameters>& m_parameters;
+        std::optional<ImageSliceParameters>& parameters_;
 
         ImageSliceDialog(
                 const std::vector<int>& size,

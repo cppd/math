@@ -49,28 +49,28 @@ class Tests final
                 const char* type_name,
                 ProgressRatios* progress_ratios);
 
-        std::unordered_map<std::string_view, Test> m_small_tests;
-        std::unordered_map<std::string_view, Test> m_large_tests;
-        std::unordered_map<std::string_view, Test> m_performance_tests;
+        std::unordered_map<std::string_view, Test> small_tests_;
+        std::unordered_map<std::string_view, Test> large_tests_;
+        std::unordered_map<std::string_view, Test> performance_tests_;
 
         Tests() = default;
 
         template <typename T>
         void add_small(const char* name, T* function)
         {
-                m_small_tests.emplace(name, function);
+                small_tests_.emplace(name, function);
         }
 
         template <typename T>
         void add_large(const char* name, T* function)
         {
-                m_large_tests.emplace(name, function);
+                large_tests_.emplace(name, function);
         }
 
         template <typename T>
         void add_performance(const char* name, T* function)
         {
-                m_performance_tests.emplace(name, function);
+                performance_tests_.emplace(name, function);
         }
 
 public:

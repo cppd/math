@@ -213,29 +213,29 @@ class SceneImpl final : public Scene<N, T, Color>
 {
         static constexpr int RAY_OFFSET_IN_EPSILONS = 1000;
 
-        inline static thread_local std::int_fast64_t m_thread_ray_count = 0;
+        inline static thread_local std::int_fast64_t thread_ray_count_ = 0;
 
-        std::vector<std::unique_ptr<const Shape<N, T, Color>>> m_shapes;
-        std::vector<std::unique_ptr<const LightSource<N, T, Color>>> m_light_sources;
+        std::vector<std::unique_ptr<const Shape<N, T, Color>>> shapes_;
+        std::vector<std::unique_ptr<const LightSource<N, T, Color>>> light_sources_;
 
-        std::unique_ptr<const Projector<N, T>> m_projector;
+        std::unique_ptr<const Projector<N, T>> projector_;
 
-        Color m_background_light;
+        Color background_light_;
 
-        std::vector<const Shape<N, T, Color>*> m_shape_pointers;
-        std::vector<const LightSource<N, T, Color>*> m_light_source_pointers;
+        std::vector<const Shape<N, T, Color>*> shape_pointers_;
+        std::vector<const LightSource<N, T, Color>*> light_source_pointers_;
 
-        T m_ray_offset;
+        T ray_offset_;
 
-        geometry::SpatialSubdivisionTree<geometry::ParallelotopeAA<N, T>> m_tree;
+        geometry::SpatialSubdivisionTree<geometry::ParallelotopeAA<N, T>> tree_;
 
         const Surface<N, T, Color>* intersect(const Ray<N, T>& ray) const override
         {
-                ++m_thread_ray_count;
+                ++thread_ray_count_;
 
-                const Ray<N, T> ray_with_offset = Ray<N, T>(ray).move(m_ray_offset);
+                const Ray<N, T> ray_with_offset = Ray<N, T>(ray).move(ray_offset_);
 
-                std::optional<T> root = m_tree.intersect_root(ray_with_offset);
+                std::optional<T> root = tree_.intersect_root(ray_with_offset);
                 if (!root)
                 {
                         return nullptr;
@@ -245,7 +245,7 @@ class SceneImpl final : public Scene<N, T, Color>
 
                 const auto f = [&](const std::vector<int>& shape_indices) -> std::optional<Vector<N, T>>
                 {
-                        surface = ray_intersect(m_shape_pointers, shape_indices, ray_with_offset);
+                        surface = ray_intersect(shape_pointers_, shape_indices, ray_with_offset);
                         if (surface)
                         {
                                 return surface->point();
@@ -253,7 +253,7 @@ class SceneImpl final : public Scene<N, T, Color>
                         return std::nullopt;
                 };
 
-                if (m_tree.trace_ray(ray_with_offset, *root, f))
+                if (tree_.trace_ray(ray_with_offset, *root, f))
                 {
                         return surface;
                 }
@@ -263,22 +263,22 @@ class SceneImpl final : public Scene<N, T, Color>
 
         const std::vector<const LightSource<N, T, Color>*>& light_sources() const override
         {
-                return m_light_source_pointers;
+                return light_source_pointers_;
         }
 
         const Projector<N, T>& projector() const override
         {
-                return *m_projector;
+                return *projector_;
         }
 
         const Color& background_light() const override
         {
-                return m_background_light;
+                return background_light_;
         }
 
         long long thread_ray_count() const noexcept override
         {
-                return m_thread_ray_count;
+                return thread_ray_count_;
         }
 
 public:
@@ -287,22 +287,22 @@ public:
                 std::unique_ptr<const Projector<N, T>>&& projector,
                 std::vector<std::unique_ptr<const LightSource<N, T, Color>>>&& light_sources,
                 std::vector<std::unique_ptr<const Shape<N, T, Color>>>&& shapes)
-                : m_shapes(std::move(shapes)),
-                  m_light_sources(std::move(light_sources)),
-                  m_projector(std::move(projector)),
-                  m_background_light(background_light),
-                  m_shape_pointers(to_pointers(m_shapes)),
-                  m_light_source_pointers(to_pointers(m_light_sources))
+                : shapes_(std::move(shapes)),
+                  light_sources_(std::move(light_sources)),
+                  projector_(std::move(projector)),
+                  background_light_(background_light),
+                  shape_pointers_(to_pointers(shapes_)),
+                  light_source_pointers_(to_pointers(light_sources_))
         {
-                ASSERT(m_projector);
+                ASSERT(projector_);
 
-                const geometry::BoundingBox<N, T> bounding_box = compute_bounding_box(m_shape_pointers);
+                const geometry::BoundingBox<N, T> bounding_box = compute_bounding_box(shape_pointers_);
 
                 const T scene_size = (bounding_box.max - bounding_box.min).norm();
-                m_ray_offset = scene_size * (RAY_OFFSET_IN_EPSILONS * limits<T>::epsilon());
+                ray_offset_ = scene_size * (RAY_OFFSET_IN_EPSILONS * limits<T>::epsilon());
 
                 ProgressRatio progress(nullptr);
-                create_tree(m_shape_pointers, bounding_box, &m_tree, &progress);
+                create_tree(shape_pointers_, bounding_box, &tree_, &progress);
         }
 };
 }

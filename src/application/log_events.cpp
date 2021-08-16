@@ -90,11 +90,11 @@ void LogEvents::log_event(LogEvent&& event) noexcept
 {
         try
         {
-                std::lock_guard lg(m_lock);
+                std::lock_guard lg(lock_);
 
                 write_log_event(&event);
 
-                for (const std::function<void(const LogEvent&)>* observer : m_log_observers)
+                for (const std::function<void(const LogEvent&)>* observer : log_observers_)
                 {
                         (*observer)(event);
                 }
@@ -116,16 +116,16 @@ void LogEvents::log_event(MessageEvent&& event) noexcept
         {
                 LogEvent log_event(event.text, message_type_to_log_type(event.type));
 
-                std::lock_guard lg(m_lock);
+                std::lock_guard lg(lock_);
 
                 write_log_event(&log_event);
 
-                for (const std::function<void(const LogEvent&)>* observer : m_log_observers)
+                for (const std::function<void(const LogEvent&)>* observer : log_observers_)
                 {
                         (*observer)(log_event);
                 }
 
-                for (const std::function<void(const MessageEvent&)>* observer : m_msg_observers)
+                for (const std::function<void(const MessageEvent&)>* observer : msg_observers_)
                 {
                         (*observer)(event);
                 }
@@ -143,57 +143,57 @@ void LogEvents::log_event(MessageEvent&& event) noexcept
 
 void LogEvents::insert(const std::function<void(const LogEvent&)>* observer)
 {
-        std::lock_guard lg(m_lock);
-        if (std::find(m_log_observers.cbegin(), m_log_observers.cend(), observer) == m_log_observers.cend())
+        std::lock_guard lg(lock_);
+        if (std::find(log_observers_.cbegin(), log_observers_.cend(), observer) == log_observers_.cend())
         {
-                m_log_observers.push_back(observer);
+                log_observers_.push_back(observer);
         }
 }
 
 void LogEvents::erase(const std::function<void(const LogEvent&)>* observer)
 {
-        std::lock_guard lg(m_lock);
-        auto iter = std::remove(m_log_observers.begin(), m_log_observers.end(), observer);
-        m_log_observers.erase(iter, m_log_observers.cend());
+        std::lock_guard lg(lock_);
+        auto iter = std::remove(log_observers_.begin(), log_observers_.end(), observer);
+        log_observers_.erase(iter, log_observers_.cend());
 }
 
 void LogEvents::insert(const std::function<void(const MessageEvent&)>* observer)
 {
-        std::lock_guard lg(m_lock);
-        if (std::find(m_msg_observers.cbegin(), m_msg_observers.cend(), observer) == m_msg_observers.cend())
+        std::lock_guard lg(lock_);
+        if (std::find(msg_observers_.cbegin(), msg_observers_.cend(), observer) == msg_observers_.cend())
         {
-                m_msg_observers.push_back(observer);
+                msg_observers_.push_back(observer);
         }
 }
 
 void LogEvents::erase(const std::function<void(const MessageEvent&)>* observer)
 {
-        std::lock_guard lg(m_lock);
-        auto iter = std::remove(m_msg_observers.begin(), m_msg_observers.end(), observer);
-        m_msg_observers.erase(iter, m_msg_observers.cend());
+        std::lock_guard lg(lock_);
+        auto iter = std::remove(msg_observers_.begin(), msg_observers_.end(), observer);
+        msg_observers_.erase(iter, msg_observers_.cend());
 }
 
 //
 
-LogEventsObserver::LogEventsObserver(std::function<void(const LogEvent&)> observer) : m_observer(std::move(observer))
+LogEventsObserver::LogEventsObserver(std::function<void(const LogEvent&)> observer) : observer_(std::move(observer))
 {
-        g_log_events->insert(&m_observer);
+        g_log_events->insert(&observer_);
 }
 
 LogEventsObserver::~LogEventsObserver()
 {
-        g_log_events->erase(&m_observer);
+        g_log_events->erase(&observer_);
 }
 
 MessageEventsObserver::MessageEventsObserver(std::function<void(const MessageEvent&)> observer)
-        : m_observer(std::move(observer))
+        : observer_(std::move(observer))
 {
-        g_log_events->insert(&m_observer);
+        g_log_events->insert(&observer_);
 }
 
 MessageEventsObserver::~MessageEventsObserver()
 {
-        g_log_events->erase(&m_observer);
+        g_log_events->erase(&observer_);
 }
 
 //

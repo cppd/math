@@ -58,20 +58,20 @@ namespace
 {
 class Provider
 {
-        HCRYPTPROV m_hProvider;
+        HCRYPTPROV hProvider_;
 
 public:
         Provider()
         {
                 if (!::CryptAcquireContext(
-                            &m_hProvider, nullptr, nullptr, PROV_RSA_AES, CRYPT_VERIFYCONTEXT | CRYPT_SILENT))
+                            &hProvider_, nullptr, nullptr, PROV_RSA_AES, CRYPT_VERIFYCONTEXT | CRYPT_SILENT))
                 {
                         error("error CryptAcquireContext");
                 }
         }
         ~Provider()
         {
-                if (!::CryptReleaseContext(m_hProvider, 0))
+                if (!::CryptReleaseContext(hProvider_, 0))
                 {
                         error("error CryptReleaseContext");
                 }
@@ -79,7 +79,7 @@ public:
 
         operator HCRYPTPROV() const
         {
-                return m_hProvider;
+                return hProvider_;
         }
 };
 }

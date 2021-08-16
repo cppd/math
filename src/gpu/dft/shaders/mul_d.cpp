@@ -54,7 +54,7 @@ std::vector<VkDescriptorSetLayoutBinding> MulDMemory::descriptor_set_layout_bind
 }
 
 MulDMemory::MulDMemory(const vulkan::Device& device, VkDescriptorSetLayout descriptor_set_layout)
-        : m_descriptors(device, 1, descriptor_set_layout, descriptor_set_layout_bindings())
+        : descriptors_(device, 1, descriptor_set_layout, descriptor_set_layout_bindings())
 {
 }
 
@@ -65,7 +65,7 @@ unsigned MulDMemory::set_number()
 
 const VkDescriptorSet& MulDMemory::descriptor_set() const
 {
-        return m_descriptors.descriptor_set(0);
+        return descriptors_.descriptor_set(0);
 }
 
 void MulDMemory::set(const vulkan::BufferWithMemory& diagonal, const vulkan::BufferWithMemory& data) const
@@ -78,7 +78,7 @@ void MulDMemory::set(const vulkan::BufferWithMemory& diagonal, const vulkan::Buf
                 buffer_info.offset = 0;
                 buffer_info.range = diagonal.size();
 
-                m_descriptors.update_descriptor_set(0, DIAGONAL_BINDING, buffer_info);
+                descriptors_.update_descriptor_set(0, DIAGONAL_BINDING, buffer_info);
         }
         {
                 ASSERT(data.has_usage(VK_BUFFER_USAGE_STORAGE_BUFFER_BIT));
@@ -88,7 +88,7 @@ void MulDMemory::set(const vulkan::BufferWithMemory& diagonal, const vulkan::Buf
                 buffer_info.offset = 0;
                 buffer_info.range = data.size();
 
-                m_descriptors.update_descriptor_set(0, DATA_BINDING, buffer_info);
+                descriptors_.update_descriptor_set(0, DATA_BINDING, buffer_info);
         }
 }
 
@@ -101,14 +101,14 @@ MulDConstant::MulDConstant()
                 entry.constantID = 0;
                 entry.offset = offsetof(Data, group_size_x);
                 entry.size = sizeof(Data::group_size_x);
-                m_entries.push_back(entry);
+                entries_.push_back(entry);
         }
         {
                 VkSpecializationMapEntry entry = {};
                 entry.constantID = 1;
                 entry.offset = offsetof(Data, group_size_y);
                 entry.size = sizeof(Data::group_size_y);
-                m_entries.push_back(entry);
+                entries_.push_back(entry);
         }
 
         {
@@ -116,76 +116,76 @@ MulDConstant::MulDConstant()
                 entry.constantID = 2;
                 entry.offset = offsetof(Data, rows);
                 entry.size = sizeof(Data::rows);
-                m_entries.push_back(entry);
+                entries_.push_back(entry);
         }
         {
                 VkSpecializationMapEntry entry = {};
                 entry.constantID = 3;
                 entry.offset = offsetof(Data, columns);
                 entry.size = sizeof(Data::columns);
-                m_entries.push_back(entry);
+                entries_.push_back(entry);
         }
 }
 
 void MulDConstant::set(uint32_t group_size_x, uint32_t group_size_y, int32_t rows, int32_t columns)
 {
-        static_assert(std::is_same_v<decltype(m_data.group_size_x), decltype(group_size_x)>);
-        m_data.group_size_x = group_size_x;
-        static_assert(std::is_same_v<decltype(m_data.group_size_y), decltype(group_size_y)>);
-        m_data.group_size_y = group_size_y;
-        static_assert(std::is_same_v<decltype(m_data.rows), decltype(rows)>);
-        m_data.rows = rows;
-        static_assert(std::is_same_v<decltype(m_data.columns), decltype(columns)>);
-        m_data.columns = columns;
+        static_assert(std::is_same_v<decltype(data_.group_size_x), decltype(group_size_x)>);
+        data_.group_size_x = group_size_x;
+        static_assert(std::is_same_v<decltype(data_.group_size_y), decltype(group_size_y)>);
+        data_.group_size_y = group_size_y;
+        static_assert(std::is_same_v<decltype(data_.rows), decltype(rows)>);
+        data_.rows = rows;
+        static_assert(std::is_same_v<decltype(data_.columns), decltype(columns)>);
+        data_.columns = columns;
 }
 
 const std::vector<VkSpecializationMapEntry>& MulDConstant::entries() const
 {
-        return m_entries;
+        return entries_;
 }
 
 const void* MulDConstant::data() const
 {
-        return &m_data;
+        return &data_;
 }
 
 std::size_t MulDConstant::size() const
 {
-        return sizeof(m_data);
+        return sizeof(data_);
 }
 
 //
 
 MulDProgram::MulDProgram(const vulkan::Device& device)
-        : m_device(device),
-          m_descriptor_set_layout(
+        : device_(device),
+          descriptor_set_layout_(
                   vulkan::create_descriptor_set_layout(device, MulDMemory::descriptor_set_layout_bindings())),
-          m_pipeline_layout(
-                  vulkan::create_pipeline_layout(device, {MulDMemory::set_number()}, {m_descriptor_set_layout})),
-          m_shader(device, code_mul_d_comp(), "main")
+          pipeline_layout_(
+                  vulkan::create_pipeline_layout(device, {MulDMemory::set_number()}, {descriptor_set_layout_})),
+          shader_(device, code_mul_d_comp(), "main")
 {
 }
 
 VkDescriptorSetLayout MulDProgram::descriptor_set_layout() const
 {
-        return m_descriptor_set_layout;
+        return descriptor_set_layout_;
 }
 
 VkPipelineLayout MulDProgram::pipeline_layout() const
 {
-        return m_pipeline_layout;
+        return pipeline_layout_;
 }
 
 VkPipeline MulDProgram::pipeline_rows() const
 {
-        ASSERT(m_pipeline_rows != VK_NULL_HANDLE);
-        return m_pipeline_rows;
+        ASSERT(pipeline_rows_ != VK_NULL_HANDLE);
+        return pipeline_rows_;
 }
 
 VkPipeline MulDProgram::pipeline_columns() const
 {
-        ASSERT(m_pipeline_columns != VK_NULL_HANDLE);
-        return m_pipeline_columns;
+        ASSERT(pipeline_columns_ != VK_NULL_HANDLE);
+        return pipeline_columns_;
 }
 
 void MulDProgram::create_pipelines(
@@ -197,30 +197,30 @@ void MulDProgram::create_pipelines(
         uint32_t group_size_y)
 {
         {
-                m_constant.set(group_size_x, group_size_y, n2, m1);
+                constant_.set(group_size_x, group_size_y, n2, m1);
 
                 vulkan::ComputePipelineCreateInfo info;
-                info.device = &m_device;
-                info.pipeline_layout = m_pipeline_layout;
-                info.shader = &m_shader;
-                info.constants = &m_constant;
-                m_pipeline_rows = create_compute_pipeline(info);
+                info.device = &device_;
+                info.pipeline_layout = pipeline_layout_;
+                info.shader = &shader_;
+                info.constants = &constant_;
+                pipeline_rows_ = create_compute_pipeline(info);
         }
         {
-                m_constant.set(group_size_x, group_size_y, n1, m2);
+                constant_.set(group_size_x, group_size_y, n1, m2);
 
                 vulkan::ComputePipelineCreateInfo info;
-                info.device = &m_device;
-                info.pipeline_layout = m_pipeline_layout;
-                info.shader = &m_shader;
-                info.constants = &m_constant;
-                m_pipeline_columns = create_compute_pipeline(info);
+                info.device = &device_;
+                info.pipeline_layout = pipeline_layout_;
+                info.shader = &shader_;
+                info.constants = &constant_;
+                pipeline_columns_ = create_compute_pipeline(info);
         }
 }
 
 void MulDProgram::delete_pipelines()
 {
-        m_pipeline_rows = vulkan::Pipeline();
-        m_pipeline_columns = vulkan::Pipeline();
+        pipeline_rows_ = vulkan::Pipeline();
+        pipeline_columns_ = vulkan::Pipeline();
 }
 }

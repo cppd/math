@@ -76,7 +76,7 @@ VolumeSharedMemory::VolumeSharedMemory(
         VkDescriptorSetLayout descriptor_set_layout,
         const std::vector<VkDescriptorSetLayoutBinding>& descriptor_set_layout_bindings,
         const vulkan::Buffer& drawing)
-        : m_descriptors(device, 1, descriptor_set_layout, descriptor_set_layout_bindings)
+        : descriptors_(device, 1, descriptor_set_layout, descriptor_set_layout_bindings)
 {
         std::vector<std::variant<VkDescriptorBufferInfo, VkDescriptorImageInfo>> infos;
         std::vector<uint32_t> bindings;
@@ -92,7 +92,7 @@ VolumeSharedMemory::VolumeSharedMemory(
                 bindings.push_back(DRAWING_BINDING);
         }
 
-        m_descriptors.update_descriptor_set(0, bindings, infos);
+        descriptors_.update_descriptor_set(0, bindings, infos);
 }
 
 unsigned VolumeSharedMemory::set_number()
@@ -102,7 +102,7 @@ unsigned VolumeSharedMemory::set_number()
 
 const VkDescriptorSet& VolumeSharedMemory::descriptor_set() const
 {
-        return m_descriptors.descriptor_set(0);
+        return descriptors_.descriptor_set(0);
 }
 
 void VolumeSharedMemory::set_depth_image(VkImageView image_view, VkSampler sampler) const
@@ -112,7 +112,7 @@ void VolumeSharedMemory::set_depth_image(VkImageView image_view, VkSampler sampl
         image_info.imageView = image_view;
         image_info.sampler = sampler;
 
-        m_descriptors.update_descriptor_set(0, DEPTH_IMAGE_BINDING, image_info);
+        descriptors_.update_descriptor_set(0, DEPTH_IMAGE_BINDING, image_info);
 }
 
 void VolumeSharedMemory::set_transparency(const vulkan::ImageWithMemory& heads, const vulkan::Buffer& nodes) const
@@ -143,7 +143,7 @@ void VolumeSharedMemory::set_transparency(const vulkan::ImageWithMemory& heads, 
                 bindings.push_back(TRANSPARENCY_NODES_BINDING);
         }
 
-        m_descriptors.update_descriptor_set(0, bindings, infos);
+        descriptors_.update_descriptor_set(0, bindings, infos);
 }
 
 //
@@ -274,34 +274,34 @@ std::vector<VkDescriptorSetLayoutBinding> VolumeProgram::descriptor_set_layout_i
 }
 
 VolumeProgram::VolumeProgram(const vulkan::Device& device)
-        : m_device(device),
-          m_descriptor_set_layout_shared(
+        : device_(device),
+          descriptor_set_layout_shared_(
                   vulkan::create_descriptor_set_layout(device, descriptor_set_layout_shared_bindings())),
-          m_descriptor_set_layout_image(
+          descriptor_set_layout_image_(
                   vulkan::create_descriptor_set_layout(device, descriptor_set_layout_image_bindings())),
-          m_pipeline_layout_image_fragments(vulkan::create_pipeline_layout(
+          pipeline_layout_image_fragments_(vulkan::create_pipeline_layout(
                   device,
                   {VolumeSharedMemory::set_number(), VolumeImageMemory::set_number()},
-                  {m_descriptor_set_layout_shared, m_descriptor_set_layout_image})),
-          m_pipeline_layout_fragments(vulkan::create_pipeline_layout(
+                  {descriptor_set_layout_shared_, descriptor_set_layout_image_})),
+          pipeline_layout_fragments_(vulkan::create_pipeline_layout(
                   device,
                   {VolumeSharedMemory::set_number()},
-                  {m_descriptor_set_layout_shared})),
-          m_vertex_shader(m_device, code_volume_vert(), "main"),
-          m_fragment_shader_image(m_device, code_volume_image_frag(), "main"),
-          m_fragment_shader_image_fragments(m_device, code_volume_image_fragments_frag(), "main"),
-          m_fragment_shader_fragments(m_device, code_volume_fragments_frag(), "main")
+                  {descriptor_set_layout_shared_})),
+          vertex_shader_(device_, code_volume_vert(), "main"),
+          fragment_shader_image_(device_, code_volume_image_frag(), "main"),
+          fragment_shader_image_fragments_(device_, code_volume_image_fragments_frag(), "main"),
+          fragment_shader_fragments_(device_, code_volume_fragments_frag(), "main")
 {
 }
 
 VkDescriptorSetLayout VolumeProgram::descriptor_set_layout_shared() const
 {
-        return m_descriptor_set_layout_shared;
+        return descriptor_set_layout_shared_;
 }
 
 VkDescriptorSetLayout VolumeProgram::descriptor_set_layout_image() const
 {
-        return m_descriptor_set_layout_image;
+        return descriptor_set_layout_image_;
 }
 
 VkPipelineLayout VolumeProgram::pipeline_layout(PipelineLayoutType type) const
@@ -309,9 +309,9 @@ VkPipelineLayout VolumeProgram::pipeline_layout(PipelineLayoutType type) const
         switch (type)
         {
         case PipelineLayoutType::ImageFragments:
-                return m_pipeline_layout_image_fragments;
+                return pipeline_layout_image_fragments_;
         case PipelineLayoutType::Fragments:
-                return m_pipeline_layout_fragments;
+                return pipeline_layout_fragments_;
         }
         error_fatal("Unknown volume pipeline layout type");
 }
@@ -329,22 +329,22 @@ vulkan::Pipeline VolumeProgram::create_pipeline(
         switch (type)
         {
         case PipelineType::Image:
-                pipeline_layout = m_pipeline_layout_image_fragments;
-                fragment_shader = &m_fragment_shader_image;
+                pipeline_layout = pipeline_layout_image_fragments_;
+                fragment_shader = &fragment_shader_image_;
                 break;
         case PipelineType::ImageFragments:
-                pipeline_layout = m_pipeline_layout_image_fragments;
-                fragment_shader = &m_fragment_shader_image_fragments;
+                pipeline_layout = pipeline_layout_image_fragments_;
+                fragment_shader = &fragment_shader_image_fragments_;
                 break;
         case PipelineType::Fragments:
-                pipeline_layout = m_pipeline_layout_fragments;
-                fragment_shader = &m_fragment_shader_fragments;
+                pipeline_layout = pipeline_layout_fragments_;
+                fragment_shader = &fragment_shader_fragments_;
                 break;
         }
 
         vulkan::GraphicsPipelineCreateInfo info;
 
-        info.device = &m_device;
+        info.device = &device_;
         info.render_pass = render_pass;
         info.sub_pass = 0;
         info.sample_count = sample_count;
@@ -366,7 +366,7 @@ vulkan::Pipeline VolumeProgram::create_pipeline(
         info.color_blend->dstAlphaBlendFactor = VK_BLEND_FACTOR_ZERO;
         info.color_blend->alphaBlendOp = VK_BLEND_OP_ADD;
 
-        const std::vector<const vulkan::Shader*> shaders{&m_vertex_shader, fragment_shader};
+        const std::vector<const vulkan::Shader*> shaders{&vertex_shader_, fragment_shader};
         const std::vector<const vulkan::SpecializationConstant*> specialization_constants = {nullptr, nullptr};
         const std::vector<VkVertexInputBindingDescription> binding_descriptions;
         const std::vector<VkVertexInputAttributeDescription> attribute_descriptions;

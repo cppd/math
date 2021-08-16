@@ -35,45 +35,45 @@ class ThreadPool
 {
         const unsigned THREAD_COUNT;
 
-        std::mutex m_mutex_run, m_mutex_finish;
-        std::condition_variable m_cv_run, m_cv_finish;
+        std::mutex mutex_run_, mutex_finish_;
+        std::condition_variable cv_run_, cv_finish_;
 
-        ThreadsWithCatch m_threads;
+        ThreadsWithCatch threads_;
 
         class ThreadError
         {
-                bool m_has_error;
-                std::string m_error_message;
+                bool has_error_;
+                std::string error_message_;
 
         public:
                 void set(const char* s)
                 {
-                        m_has_error = true;
-                        m_error_message = s;
+                        has_error_ = true;
+                        error_message_ = s;
                 }
                 void clear()
                 {
-                        m_has_error = false;
-                        m_error_message.clear();
+                        has_error_ = false;
+                        error_message_.clear();
                 }
                 bool has_error() const
                 {
-                        return m_has_error;
+                        return has_error_;
                 }
                 const std::string& error_message() const
                 {
-                        return m_error_message;
+                        return error_message_;
                 }
         };
 
-        std::vector<ThreadError> m_thread_errors;
+        std::vector<ThreadError> thread_errors_;
 
-        bool m_enable;
-        int m_count;
-        long long m_generation;
-        bool m_exit;
+        bool enable_;
+        int count_;
+        long long generation_;
+        bool exit_;
 
-        std::function<void(unsigned, unsigned)> m_bound_function;
+        std::function<void(unsigned, unsigned)> bound_function_;
 
         bool start_in_thread() noexcept
         {
@@ -81,14 +81,14 @@ class ThreadPool
                 {
                         try
                         {
-                                std::unique_lock<std::mutex> lock(m_mutex_run);
-                                m_cv_run.wait(
+                                std::unique_lock<std::mutex> lock(mutex_run_);
+                                cv_run_.wait(
                                         lock,
                                         [this]
                                         {
-                                                return m_enable || m_exit;
+                                                return enable_ || exit_;
                                         });
-                                return !m_exit;
+                                return !exit_;
                         }
                         catch (const std::exception& e)
                         {
@@ -107,24 +107,24 @@ class ThreadPool
                 {
                         try
                         {
-                                std::unique_lock<std::mutex> lock(m_mutex_finish);
+                                std::unique_lock<std::mutex> lock(mutex_finish_);
 
-                                long long g = m_generation;
-                                --m_count;
-                                if (m_count == 0)
+                                long long g = generation_;
+                                --count_;
+                                if (count_ == 0)
                                 {
-                                        m_enable = false;
-                                        m_count = THREAD_COUNT;
-                                        ++m_generation;
-                                        m_cv_finish.notify_all();
+                                        enable_ = false;
+                                        count_ = THREAD_COUNT;
+                                        ++generation_;
+                                        cv_finish_.notify_all();
                                 }
                                 else
                                 {
-                                        m_cv_finish.wait(
+                                        cv_finish_.wait(
                                                 lock,
                                                 [this, g]
                                                 {
-                                                        return g != m_generation;
+                                                        return g != generation_;
                                                 });
                                 }
                         }
@@ -147,18 +147,18 @@ class ThreadPool
                         {
                                 try
                                 {
-                                        m_bound_function(thread_num, THREAD_COUNT);
+                                        bound_function_(thread_num, THREAD_COUNT);
                                 }
                                 catch (const TerminateQuietlyException&)
                                 {
                                 }
                                 catch (const std::exception& e)
                                 {
-                                        m_thread_errors[thread_num].set(e.what());
+                                        thread_errors_[thread_num].set(e.what());
                                 }
                                 catch (...)
                                 {
-                                        m_thread_errors[thread_num].set("Unknown error in thread of thread pool");
+                                        thread_errors_[thread_num].set("Unknown error in thread of thread pool");
                                 }
                         }
                         catch (const std::exception& e)
@@ -202,22 +202,22 @@ class ThreadPool
                 {
                         try
                         {
-                                long long g = m_generation;
+                                long long g = generation_;
 
                                 {
-                                        std::unique_lock<std::mutex> lock(m_mutex_run);
-                                        m_enable = true;
+                                        std::unique_lock<std::mutex> lock(mutex_run_);
+                                        enable_ = true;
                                 }
 
-                                m_cv_run.notify_all();
+                                cv_run_.notify_all();
 
                                 {
-                                        std::unique_lock<std::mutex> lock(m_mutex_finish);
-                                        m_cv_finish.wait(
+                                        std::unique_lock<std::mutex> lock(mutex_finish_);
+                                        cv_finish_.wait(
                                                 lock,
                                                 [this, g]
                                                 {
-                                                        return g != m_generation;
+                                                        return g != generation_;
                                                 });
                                 }
                         }
@@ -234,7 +234,7 @@ class ThreadPool
 
         void clear_errors()
         {
-                for (ThreadError& thread_error : m_thread_errors)
+                for (ThreadError& thread_error : thread_errors_)
                 {
                         thread_error.clear();
                 }
@@ -245,7 +245,7 @@ class ThreadPool
                 bool there_is_error = false;
                 std::string error_message;
 
-                for (const ThreadError& thread_error : m_thread_errors)
+                for (const ThreadError& thread_error : thread_errors_)
                 {
                         if (thread_error.has_error())
                         {
@@ -266,16 +266,16 @@ class ThreadPool
 
 public:
         explicit ThreadPool(unsigned thread_count)
-                : THREAD_COUNT(thread_count), m_threads(THREAD_COUNT), m_thread_errors(THREAD_COUNT)
+                : THREAD_COUNT(thread_count), threads_(THREAD_COUNT), thread_errors_(THREAD_COUNT)
         {
-                m_enable = false;
-                m_exit = false;
-                m_generation = 0;
-                m_count = THREAD_COUNT;
+                enable_ = false;
+                exit_ = false;
+                generation_ = 0;
+                count_ = THREAD_COUNT;
 
                 for (unsigned i = 0; i < THREAD_COUNT; ++i)
                 {
-                        m_threads.add(
+                        threads_.add(
                                 [&, i]()
                                 {
                                         thread(i);
@@ -290,7 +290,7 @@ public:
 
         void run(std::function<void(unsigned, unsigned)>&& function)
         {
-                m_bound_function = std::move(function);
+                bound_function_ = std::move(function);
 
                 clear_errors();
 
@@ -302,15 +302,15 @@ public:
         ~ThreadPool()
         {
                 {
-                        std::unique_lock<std::mutex> lock(m_mutex_run);
-                        m_exit = true;
+                        std::unique_lock<std::mutex> lock(mutex_run_);
+                        exit_ = true;
                 }
 
-                m_cv_run.notify_all();
+                cv_run_.notify_all();
 
                 try
                 {
-                        m_threads.join();
+                        threads_.join();
                 }
                 catch (const std::exception& e)
                 {

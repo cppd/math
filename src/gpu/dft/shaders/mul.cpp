@@ -54,7 +54,7 @@ std::vector<VkDescriptorSetLayoutBinding> MulMemory::descriptor_set_layout_bindi
 }
 
 MulMemory::MulMemory(const vulkan::Device& device, VkDescriptorSetLayout descriptor_set_layout)
-        : m_descriptors(device, 1, descriptor_set_layout, descriptor_set_layout_bindings())
+        : descriptors_(device, 1, descriptor_set_layout, descriptor_set_layout_bindings())
 {
 }
 
@@ -65,7 +65,7 @@ unsigned MulMemory::set_number()
 
 const VkDescriptorSet& MulMemory::descriptor_set() const
 {
-        return m_descriptors.descriptor_set(0);
+        return descriptors_.descriptor_set(0);
 }
 
 void MulMemory::set(const vulkan::BufferWithMemory& data, const vulkan::BufferWithMemory& buffer) const
@@ -78,7 +78,7 @@ void MulMemory::set(const vulkan::BufferWithMemory& data, const vulkan::BufferWi
                 buffer_info.offset = 0;
                 buffer_info.range = data.size();
 
-                m_descriptors.update_descriptor_set(0, DATA_BINDING, buffer_info);
+                descriptors_.update_descriptor_set(0, DATA_BINDING, buffer_info);
         }
         {
                 ASSERT(buffer.has_usage(VK_BUFFER_USAGE_STORAGE_BUFFER_BIT));
@@ -88,7 +88,7 @@ void MulMemory::set(const vulkan::BufferWithMemory& data, const vulkan::BufferWi
                 buffer_info.offset = 0;
                 buffer_info.range = buffer.size();
 
-                m_descriptors.update_descriptor_set(0, BUFFER_BINDING, buffer_info);
+                descriptors_.update_descriptor_set(0, BUFFER_BINDING, buffer_info);
         }
 }
 
@@ -101,166 +101,165 @@ MulConstant::MulConstant()
                 entry.constantID = 0;
                 entry.offset = offsetof(Data, function_index);
                 entry.size = sizeof(Data::function_index);
-                m_entries.push_back(entry);
+                entries_.push_back(entry);
         }
         {
                 VkSpecializationMapEntry entry = {};
                 entry.constantID = 1;
                 entry.offset = offsetof(Data, n1);
                 entry.size = sizeof(Data::n1);
-                m_entries.push_back(entry);
+                entries_.push_back(entry);
         }
         {
                 VkSpecializationMapEntry entry = {};
                 entry.constantID = 2;
                 entry.offset = offsetof(Data, n2);
                 entry.size = sizeof(Data::n2);
-                m_entries.push_back(entry);
+                entries_.push_back(entry);
         }
         {
                 VkSpecializationMapEntry entry = {};
                 entry.constantID = 3;
                 entry.offset = offsetof(Data, m1);
                 entry.size = sizeof(Data::m1);
-                m_entries.push_back(entry);
+                entries_.push_back(entry);
         }
         {
                 VkSpecializationMapEntry entry = {};
                 entry.constantID = 4;
                 entry.offset = offsetof(Data, m2);
                 entry.size = sizeof(Data::m2);
-                m_entries.push_back(entry);
+                entries_.push_back(entry);
         }
         {
                 VkSpecializationMapEntry entry = {};
                 entry.constantID = 5;
                 entry.offset = offsetof(Data, inverse);
                 entry.size = sizeof(Data::inverse);
-                m_entries.push_back(entry);
+                entries_.push_back(entry);
         }
         {
                 VkSpecializationMapEntry entry = {};
                 entry.constantID = 6;
                 entry.offset = offsetof(Data, group_size_x);
                 entry.size = sizeof(Data::group_size_x);
-                m_entries.push_back(entry);
+                entries_.push_back(entry);
         }
         {
                 VkSpecializationMapEntry entry = {};
                 entry.constantID = 7;
                 entry.offset = offsetof(Data, group_size_y);
                 entry.size = sizeof(Data::group_size_y);
-                m_entries.push_back(entry);
+                entries_.push_back(entry);
         }
 }
 
 void MulConstant::set_data(int32_t n1, int32_t n2, int32_t m1, int32_t m2, uint32_t group_size_x, uint32_t group_size_y)
 {
-        static_assert(std::is_same_v<decltype(m_data.n1), decltype(n1)>);
-        m_data.n1 = n1;
-        static_assert(std::is_same_v<decltype(m_data.n2), decltype(n2)>);
-        m_data.n2 = n2;
-        static_assert(std::is_same_v<decltype(m_data.m1), decltype(m1)>);
-        m_data.m1 = m1;
-        static_assert(std::is_same_v<decltype(m_data.m2), decltype(m2)>);
-        m_data.m2 = m2;
-        static_assert(std::is_same_v<decltype(m_data.group_size_x), decltype(group_size_x)>);
-        m_data.group_size_x = group_size_x;
-        static_assert(std::is_same_v<decltype(m_data.group_size_y), decltype(group_size_y)>);
-        m_data.group_size_y = group_size_y;
+        static_assert(std::is_same_v<decltype(data_.n1), decltype(n1)>);
+        data_.n1 = n1;
+        static_assert(std::is_same_v<decltype(data_.n2), decltype(n2)>);
+        data_.n2 = n2;
+        static_assert(std::is_same_v<decltype(data_.m1), decltype(m1)>);
+        data_.m1 = m1;
+        static_assert(std::is_same_v<decltype(data_.m2), decltype(m2)>);
+        data_.m2 = m2;
+        static_assert(std::is_same_v<decltype(data_.group_size_x), decltype(group_size_x)>);
+        data_.group_size_x = group_size_x;
+        static_assert(std::is_same_v<decltype(data_.group_size_y), decltype(group_size_y)>);
+        data_.group_size_y = group_size_y;
 }
 
 void MulConstant::set_function(int32_t function_index, bool inverse)
 {
-        static_assert(std::is_same_v<decltype(m_data.function_index), int32_t>);
-        m_data.function_index = function_index;
-        static_assert(std::is_same_v<decltype(m_data.inverse), uint32_t>);
-        m_data.inverse = inverse ? 1 : 0;
+        static_assert(std::is_same_v<decltype(data_.function_index), int32_t>);
+        data_.function_index = function_index;
+        static_assert(std::is_same_v<decltype(data_.inverse), uint32_t>);
+        data_.inverse = inverse ? 1 : 0;
 }
 
 const std::vector<VkSpecializationMapEntry>& MulConstant::entries() const
 {
-        return m_entries;
+        return entries_;
 }
 
 const void* MulConstant::data() const
 {
-        return &m_data;
+        return &data_;
 }
 
 std::size_t MulConstant::size() const
 {
-        return sizeof(m_data);
+        return sizeof(data_);
 }
 
 //
 
 MulProgram::MulProgram(const vulkan::Device& device)
-        : m_device(device),
-          m_descriptor_set_layout(
+        : device_(device),
+          descriptor_set_layout_(
                   vulkan::create_descriptor_set_layout(device, MulMemory::descriptor_set_layout_bindings())),
-          m_pipeline_layout(
-                  vulkan::create_pipeline_layout(device, {MulMemory::set_number()}, {m_descriptor_set_layout})),
-          m_shader(device, code_mul_comp(), "main")
+          pipeline_layout_(vulkan::create_pipeline_layout(device, {MulMemory::set_number()}, {descriptor_set_layout_})),
+          shader_(device, code_mul_comp(), "main")
 {
 }
 
 VkDescriptorSetLayout MulProgram::descriptor_set_layout() const
 {
-        return m_descriptor_set_layout;
+        return descriptor_set_layout_;
 }
 
 VkPipelineLayout MulProgram::pipeline_layout() const
 {
-        return m_pipeline_layout;
+        return pipeline_layout_;
 }
 
 VkPipeline MulProgram::pipeline_rows_to_buffer(bool inverse) const
 {
         if (!inverse)
         {
-                ASSERT(m_pipeline_rows_to_buffer_forward != VK_NULL_HANDLE);
-                return m_pipeline_rows_to_buffer_forward;
+                ASSERT(pipeline_rows_to_buffer_forward_ != VK_NULL_HANDLE);
+                return pipeline_rows_to_buffer_forward_;
         }
 
-        ASSERT(m_pipeline_rows_to_buffer_inverse != VK_NULL_HANDLE);
-        return m_pipeline_rows_to_buffer_inverse;
+        ASSERT(pipeline_rows_to_buffer_inverse_ != VK_NULL_HANDLE);
+        return pipeline_rows_to_buffer_inverse_;
 }
 
 VkPipeline MulProgram::pipeline_rows_from_buffer(bool inverse) const
 {
         if (!inverse)
         {
-                ASSERT(m_pipeline_rows_from_buffer_forward != VK_NULL_HANDLE);
-                return m_pipeline_rows_from_buffer_forward;
+                ASSERT(pipeline_rows_from_buffer_forward_ != VK_NULL_HANDLE);
+                return pipeline_rows_from_buffer_forward_;
         }
 
-        ASSERT(m_pipeline_rows_from_buffer_inverse != VK_NULL_HANDLE);
-        return m_pipeline_rows_from_buffer_inverse;
+        ASSERT(pipeline_rows_from_buffer_inverse_ != VK_NULL_HANDLE);
+        return pipeline_rows_from_buffer_inverse_;
 }
 
 VkPipeline MulProgram::pipeline_columns_to_buffer(bool inverse) const
 {
         if (!inverse)
         {
-                ASSERT(m_pipeline_columns_to_buffer_forward != VK_NULL_HANDLE);
-                return m_pipeline_columns_to_buffer_forward;
+                ASSERT(pipeline_columns_to_buffer_forward_ != VK_NULL_HANDLE);
+                return pipeline_columns_to_buffer_forward_;
         }
 
-        ASSERT(m_pipeline_columns_to_buffer_inverse != VK_NULL_HANDLE);
-        return m_pipeline_columns_to_buffer_inverse;
+        ASSERT(pipeline_columns_to_buffer_inverse_ != VK_NULL_HANDLE);
+        return pipeline_columns_to_buffer_inverse_;
 }
 
 VkPipeline MulProgram::pipeline_columns_from_buffer(bool inverse) const
 {
         if (!inverse)
         {
-                ASSERT(m_pipeline_columns_from_buffer_forward != VK_NULL_HANDLE);
-                return m_pipeline_columns_from_buffer_forward;
+                ASSERT(pipeline_columns_from_buffer_forward_ != VK_NULL_HANDLE);
+                return pipeline_columns_from_buffer_forward_;
         }
 
-        ASSERT(m_pipeline_columns_from_buffer_inverse != VK_NULL_HANDLE);
-        return m_pipeline_columns_from_buffer_inverse;
+        ASSERT(pipeline_columns_from_buffer_inverse_ != VK_NULL_HANDLE);
+        return pipeline_columns_from_buffer_inverse_;
 }
 
 void MulProgram::create_pipelines(
@@ -271,44 +270,44 @@ void MulProgram::create_pipelines(
         uint32_t group_size_x,
         uint32_t group_size_y)
 {
-        m_constant.set_data(n1, n2, m1, m2, group_size_x, group_size_y);
+        constant_.set_data(n1, n2, m1, m2, group_size_x, group_size_y);
 
         vulkan::ComputePipelineCreateInfo info;
-        info.device = &m_device;
-        info.pipeline_layout = m_pipeline_layout;
-        info.shader = &m_shader;
-        info.constants = &m_constant;
+        info.device = &device_;
+        info.pipeline_layout = pipeline_layout_;
+        info.shader = &shader_;
+        info.constants = &constant_;
 
-        m_constant.set_function(0, false);
-        m_pipeline_rows_to_buffer_forward = create_compute_pipeline(info);
-        m_constant.set_function(0, true);
-        m_pipeline_rows_to_buffer_inverse = create_compute_pipeline(info);
+        constant_.set_function(0, false);
+        pipeline_rows_to_buffer_forward_ = create_compute_pipeline(info);
+        constant_.set_function(0, true);
+        pipeline_rows_to_buffer_inverse_ = create_compute_pipeline(info);
 
-        m_constant.set_function(1, false);
-        m_pipeline_rows_from_buffer_forward = create_compute_pipeline(info);
-        m_constant.set_function(1, true);
-        m_pipeline_rows_from_buffer_inverse = create_compute_pipeline(info);
+        constant_.set_function(1, false);
+        pipeline_rows_from_buffer_forward_ = create_compute_pipeline(info);
+        constant_.set_function(1, true);
+        pipeline_rows_from_buffer_inverse_ = create_compute_pipeline(info);
 
-        m_constant.set_function(2, false);
-        m_pipeline_columns_to_buffer_forward = create_compute_pipeline(info);
-        m_constant.set_function(2, true);
-        m_pipeline_columns_to_buffer_inverse = create_compute_pipeline(info);
+        constant_.set_function(2, false);
+        pipeline_columns_to_buffer_forward_ = create_compute_pipeline(info);
+        constant_.set_function(2, true);
+        pipeline_columns_to_buffer_inverse_ = create_compute_pipeline(info);
 
-        m_constant.set_function(3, false);
-        m_pipeline_columns_from_buffer_forward = create_compute_pipeline(info);
-        m_constant.set_function(3, true);
-        m_pipeline_columns_from_buffer_inverse = create_compute_pipeline(info);
+        constant_.set_function(3, false);
+        pipeline_columns_from_buffer_forward_ = create_compute_pipeline(info);
+        constant_.set_function(3, true);
+        pipeline_columns_from_buffer_inverse_ = create_compute_pipeline(info);
 }
 
 void MulProgram::delete_pipelines()
 {
-        m_pipeline_rows_to_buffer_forward = vulkan::Pipeline();
-        m_pipeline_rows_to_buffer_inverse = vulkan::Pipeline();
-        m_pipeline_rows_from_buffer_forward = vulkan::Pipeline();
-        m_pipeline_rows_from_buffer_inverse = vulkan::Pipeline();
-        m_pipeline_columns_to_buffer_forward = vulkan::Pipeline();
-        m_pipeline_columns_to_buffer_inverse = vulkan::Pipeline();
-        m_pipeline_columns_from_buffer_forward = vulkan::Pipeline();
-        m_pipeline_columns_from_buffer_inverse = vulkan::Pipeline();
+        pipeline_rows_to_buffer_forward_ = vulkan::Pipeline();
+        pipeline_rows_to_buffer_inverse_ = vulkan::Pipeline();
+        pipeline_rows_from_buffer_forward_ = vulkan::Pipeline();
+        pipeline_rows_from_buffer_inverse_ = vulkan::Pipeline();
+        pipeline_columns_to_buffer_forward_ = vulkan::Pipeline();
+        pipeline_columns_to_buffer_inverse_ = vulkan::Pipeline();
+        pipeline_columns_from_buffer_forward_ = vulkan::Pipeline();
+        pipeline_columns_from_buffer_inverse_ = vulkan::Pipeline();
 }
 }

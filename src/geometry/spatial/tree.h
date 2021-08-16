@@ -61,65 +61,65 @@ class Box final
 
         static constexpr int CHILD_COUNT = BOX_COUNT<Parallelotope::SPACE_DIMENSION>;
 
-        Parallelotope m_parallelotope;
-        std::vector<int> m_object_indices;
-        std::array<int, CHILD_COUNT> m_childs = make_array_value<int, CHILD_COUNT>(EMPTY);
+        Parallelotope parallelotope_;
+        std::vector<int> object_indices_;
+        std::array<int, CHILD_COUNT> childs_ = make_array_value<int, CHILD_COUNT>(EMPTY);
 
 public:
-        explicit Box(Parallelotope&& parallelotope) : m_parallelotope(std::move(parallelotope))
+        explicit Box(Parallelotope&& parallelotope) : parallelotope_(std::move(parallelotope))
         {
         }
 
         Box(Parallelotope&& parallelotope, std::vector<int>&& object_indices)
-                : m_parallelotope(std::move(parallelotope)), m_object_indices(std::move(object_indices))
+                : parallelotope_(std::move(parallelotope)), object_indices_(std::move(object_indices))
         {
         }
 
         const Parallelotope& parallelotope() const
         {
-                return m_parallelotope;
+                return parallelotope_;
         }
 
         void set_child(int child_number, int child_box_index)
         {
-                m_childs[child_number] = child_box_index;
+                childs_[child_number] = child_box_index;
         }
 
         const std::array<int, CHILD_COUNT>& childs() const
         {
-                return m_childs;
+                return childs_;
         }
 
         bool has_childs() const
         {
                 // Они или все заполнены, или все не заполнены
-                return m_childs[0] != EMPTY;
+                return childs_[0] != EMPTY;
         }
 
         void add_object_index(int object_index)
         {
-                m_object_indices.push_back(object_index);
+                object_indices_.push_back(object_index);
         }
 
         void shrink_objects()
         {
-                m_object_indices.shrink_to_fit();
+                object_indices_.shrink_to_fit();
         }
 
         const std::vector<int>& object_indices() const
         {
-                return m_object_indices;
+                return object_indices_;
         }
 
         int object_index_count() const
         {
-                return m_object_indices.size();
+                return object_indices_.size();
         }
 
         void delete_all_objects()
         {
-                m_object_indices.clear();
-                m_object_indices.shrink_to_fit();
+                object_indices_.clear();
+                object_indices_.shrink_to_fit();
         }
 };
 
@@ -159,55 +159,55 @@ class BoxJobs final
         //   поток пришёл за новой задачей, не имея предыдущей — сумма не меняется;
         //   поток пришёл за новой задачей, имея предыдущую — уменьшили сумму на 1;
         //   дали задачу потоку — увеличили сумму на 1.
-        int m_job_count = 0;
+        int job_count_ = 0;
 
-        std::stack<std::tuple<Box*, int>, std::vector<std::tuple<Box*, int>>> m_jobs;
-        SpinLock m_lock;
+        std::stack<std::tuple<Box*, int>, std::vector<std::tuple<Box*, int>>> jobs_;
+        SpinLock lock_;
 
-        bool m_stop_all = false;
+        bool stop_all_ = false;
 
 public:
-        BoxJobs(Box* box, int depth) : m_jobs({{box, depth}})
+        BoxJobs(Box* box, int depth) : jobs_({{box, depth}})
         {
         }
 
         void stop_all()
         {
-                std::lock_guard lg(m_lock);
+                std::lock_guard lg(lock_);
 
-                m_stop_all = true;
+                stop_all_ = true;
         }
 
         void push(Box* box, int depth)
         {
-                std::lock_guard lg(m_lock);
+                std::lock_guard lg(lock_);
 
-                m_jobs.emplace(box, depth);
+                jobs_.emplace(box, depth);
         }
 
         bool pop(Box** box, int* depth)
         {
-                std::lock_guard lg(m_lock);
+                std::lock_guard lg(lock_);
 
-                if (m_stop_all)
+                if (stop_all_)
                 {
                         return false;
                 }
 
                 if (*box)
                 {
-                        --m_job_count;
+                        --job_count_;
                 }
 
-                if (!m_jobs.empty())
+                if (!jobs_.empty())
                 {
-                        std::tie(*box, *depth) = m_jobs.top();
-                        m_jobs.pop();
-                        ++m_job_count;
+                        std::tie(*box, *depth) = jobs_.top();
+                        jobs_.pop();
+                        ++job_count_;
                         return true;
                 }
 
-                if (m_job_count > 0)
+                if (job_count_ > 0)
                 {
                         // Заданий нет, но какие-то потоки ещё работают,
                         // поэтому могут появиться новые задания.
@@ -343,9 +343,9 @@ class SpatialSubdivisionTree final
         // Первым элементом массива является только 0.
         static constexpr int ROOT_BOX = 0;
 
-        std::vector<Box> m_boxes;
+        std::vector<Box> boxes_;
 
-        T m_ray_offset;
+        T ray_offset_;
 
         const Box* find_box_for_point(const Box& box, const Vector<N, T>& p) const
         {
@@ -361,7 +361,7 @@ class SpatialSubdivisionTree final
 
                 for (int child_box : box.childs())
                 {
-                        const Box* b = find_box_for_point(m_boxes[child_box], p);
+                        const Box* b = find_box_for_point(boxes_[child_box], p);
                         if (b)
                         {
                                 return b;
@@ -373,7 +373,7 @@ class SpatialSubdivisionTree final
 
         const Box* find_box_for_point(const Vector<N, T>& p) const
         {
-                return find_box_for_point(m_boxes[ROOT_BOX], p);
+                return find_box_for_point(boxes_[ROOT_BOX], p);
         }
 
 public:
@@ -415,8 +415,8 @@ public:
                 const Vector<N, T> guard_region(GUARD_REGION_SIZE * (bounding_box.max - bounding_box.min).norm());
                 const BoundingBox<N, T> root(bounding_box.min - guard_region, bounding_box.max + guard_region);
 
-                m_ray_offset = std::max(root.max.norm_infinity(), root.min.norm_infinity())
-                               * (RAY_OFFSET_IN_EPSILONS * limits<T>::epsilon() * std::sqrt(T(N)));
+                ray_offset_ = std::max(root.max.norm_infinity(), root.min.norm_infinity())
+                              * (RAY_OFFSET_IN_EPSILONS * limits<T>::epsilon() * std::sqrt(T(N)));
 
                 const int max_box_count = std::lround(impl::maximum_box_count(BOX_COUNT_SUBDIVISION, max_depth));
 
@@ -439,17 +439,17 @@ public:
                 }
                 threads.join();
 
-                m_boxes = move_boxes_to_vector(std::move(boxes));
+                boxes_ = move_boxes_to_vector(std::move(boxes));
         }
 
         const Parallelotope& root() const
         {
-                return m_boxes[ROOT_BOX].parallelotope();
+                return boxes_[ROOT_BOX].parallelotope();
         }
 
         std::optional<T> intersect_root(const Ray<N, T>& ray) const
         {
-                return m_boxes[ROOT_BOX].parallelotope().intersect_volume(ray);
+                return boxes_[ROOT_BOX].parallelotope().intersect_volume(ray);
         }
 
         // Вызывается после intersect_root. Если в intersect_root пересечение было найдено,
@@ -465,7 +465,7 @@ public:
                 box = find_box_for_point(point);
                 if (!box)
                 {
-                        box = find_box_for_point(ray.point(m_ray_offset));
+                        box = find_box_for_point(ray.point(ray_offset_));
                         if (!box)
                         {
                                 return false;
@@ -490,7 +490,7 @@ public:
                         }
 
                         ray.set_org(ray.point(*next));
-                        for (T i = 1, offset = m_ray_offset;; i *= 2, offset = i * m_ray_offset)
+                        for (T i = 1, offset = ray_offset_;; i *= 2, offset = i * ray_offset_)
                         {
                                 point = ray.point(offset);
                                 const Box* next_box = find_box_for_point(point);

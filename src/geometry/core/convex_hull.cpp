@@ -199,50 +199,50 @@ template <typename T>
 class FacetStore
 {
         // std::vector is faster than std::forward_list, std::list, std::set, std::unordered_set
-        std::vector<const T*> m_data;
+        std::vector<const T*> data_;
 
 public:
         void insert(const T* f)
         {
-                m_data.push_back(f);
+                data_.push_back(f);
         }
 #if 0
         void erase(const T* f)
         {
-                m_data.erase(std::find(m_data.cbegin(), m_data.cend(), f));
+                data_.erase(std::find(data_.cbegin(), data_.cend(), f));
         }
 #endif
 #if 0
         void erase(const T* f)
         {
-                int_fast32_t size = m_data.size();
+                int_fast32_t size = data_.size();
                 int_fast32_t i = 0;
-                while (i != size && m_data[i] != f)
+                while (i != size && data_[i] != f)
                 {
                         ++i;
                 }
                 if (i != size)
                 {
-                        std::memmove(&m_data[i], &m_data[i + 1], sizeof(f) * (size - (i + 1)));
-                        m_data.resize(size - 1);
+                        std::memmove(&data_[i], &data_[i + 1], sizeof(f) * (size - (i + 1)));
+                        data_.resize(size - 1);
                 }
         }
 #endif
         void erase(const T* f)
         {
-                int size = m_data.size();
+                int size = data_.size();
                 const T* next = nullptr;
                 for (int_fast32_t i = size - 1; i >= 0; --i)
                 {
-                        const T* current = m_data[i];
-                        m_data[i] = next;
+                        const T* current = data_[i];
+                        data_[i] = next;
                         if (current != f)
                         {
                                 next = current;
                         }
                         else
                         {
-                                m_data.resize(size - 1);
+                                data_.resize(size - 1);
                                 return;
                         }
                 }
@@ -250,20 +250,20 @@ public:
         }
         std::size_t size() const
         {
-                return m_data.size();
+                return data_.size();
         }
         void clear()
         {
-                m_data.clear();
-                // m_data.shrink_to_fit();
+                data_.clear();
+                // data_.shrink_to_fit();
         }
         typename std::vector<const T*>::const_iterator begin() const
         {
-                return m_data.cbegin();
+                return data_.cbegin();
         }
         typename std::vector<const T*>::const_iterator end() const
         {
-                return m_data.cend();
+                return data_.cend();
         }
 };
 

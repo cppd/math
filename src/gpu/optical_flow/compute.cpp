@@ -134,42 +134,42 @@ void buffer_barrier(VkCommandBuffer command_buffer, VkBuffer buffer, VkPipelineS
 
 class Impl final : public Compute
 {
-        const std::thread::id m_thread_id = std::this_thread::get_id();
+        const std::thread::id thread_id_ = std::this_thread::get_id();
 
-        const vulkan::VulkanInstance& m_instance;
-        const vulkan::Device& m_device;
+        const vulkan::VulkanInstance& instance_;
+        const vulkan::Device& device_;
 
-        const vulkan::CommandPool& m_compute_command_pool;
-        const vulkan::Queue& m_compute_queue;
+        const vulkan::CommandPool& compute_command_pool_;
+        const vulkan::Queue& compute_queue_;
 
-        vulkan::Semaphore m_semaphore_first_pyramid;
-        vulkan::Semaphore m_semaphore;
+        vulkan::Semaphore semaphore_first_pyramid_;
+        vulkan::Semaphore semaphore_;
 
-        std::optional<vulkan::CommandBuffer> m_command_buffer_first_pyramid;
-        std::optional<vulkan::CommandBuffers> m_command_buffers;
+        std::optional<vulkan::CommandBuffer> command_buffer_first_pyramid_;
+        std::optional<vulkan::CommandBuffers> command_buffers_;
 
-        std::array<std::vector<vulkan::ImageWithMemory>, 2> m_images;
-        std::vector<vulkan::ImageWithMemory> m_dx;
-        std::vector<vulkan::ImageWithMemory> m_dy;
-        std::vector<vulkan::BufferWithMemory> m_flow_buffers;
+        std::array<std::vector<vulkan::ImageWithMemory>, 2> images_;
+        std::vector<vulkan::ImageWithMemory> dx_;
+        std::vector<vulkan::ImageWithMemory> dy_;
+        std::vector<vulkan::BufferWithMemory> flow_buffers_;
 
-        GrayscaleProgram m_grayscale_program;
-        GrayscaleMemory m_grayscale_memory;
-        vec2i m_grayscale_groups;
+        GrayscaleProgram grayscale_program_;
+        GrayscaleMemory grayscale_memory_;
+        vec2i grayscale_groups_;
 
-        DownsampleProgram m_downsample_program;
-        std::vector<DownsampleMemory> m_downsample_memory;
-        std::vector<vec2i> m_downsample_groups;
+        DownsampleProgram downsample_program_;
+        std::vector<DownsampleMemory> downsample_memory_;
+        std::vector<vec2i> downsample_groups_;
 
-        SobelProgram m_sobel_program;
-        std::vector<SobelMemory> m_sobel_memory;
-        std::vector<vec2i> m_sobel_groups;
+        SobelProgram sobel_program_;
+        std::vector<SobelMemory> sobel_memory_;
+        std::vector<vec2i> sobel_groups_;
 
-        FlowProgram m_flow_program;
-        std::vector<FlowMemory> m_flow_memory;
-        std::vector<vec2i> m_flow_groups;
+        FlowProgram flow_program_;
+        std::vector<FlowMemory> flow_memory_;
+        std::vector<vec2i> flow_groups_;
 
-        int m_i_index = -1;
+        int i_index_ = -1;
 
         std::vector<vulkan::ImageWithMemory> create_images(
                 const std::vector<vec2i>& sizes,
@@ -179,14 +179,14 @@ class Impl final : public Compute
                 std::vector<vulkan::ImageWithMemory> images;
                 images.reserve(sizes.size());
 
-                const std::vector<uint32_t> family_indices({m_compute_command_pool.family_index(), family_index});
+                const std::vector<uint32_t> family_indices({compute_command_pool_.family_index(), family_index});
                 const std::vector<VkFormat> formats({IMAGE_FORMAT});
                 for (const vec2i& s : sizes)
                 {
                         images.emplace_back(
-                                m_device, family_indices, formats, VK_SAMPLE_COUNT_1_BIT, VK_IMAGE_TYPE_2D,
-                                vulkan::make_extent(s[0], s[1]), usage, VK_IMAGE_LAYOUT_GENERAL, m_compute_command_pool,
-                                m_compute_queue);
+                                device_, family_indices, formats, VK_SAMPLE_COUNT_1_BIT, VK_IMAGE_TYPE_2D,
+                                vulkan::make_extent(s[0], s[1]), usage, VK_IMAGE_LAYOUT_GENERAL, compute_command_pool_,
+                                compute_queue_);
                 }
 
                 return images;
@@ -208,7 +208,7 @@ class Impl final : public Compute
                 {
                         const int buffer_size = sizes[i][0] * sizes[i][1] * sizeof(vec2f);
                         buffers.emplace_back(
-                                vulkan::BufferMemoryType::DeviceLocal, m_device, family_indices,
+                                vulkan::BufferMemoryType::DeviceLocal, device_, family_indices,
                                 VK_BUFFER_USAGE_STORAGE_BUFFER_BIT, buffer_size);
                 }
 
@@ -365,33 +365,33 @@ class Impl final : public Compute
         void commands_compute_image_pyramid(int index, VkCommandBuffer command_buffer)
         {
                 ASSERT(index == 0 || index == 1);
-                ASSERT(m_downsample_memory.size() == m_downsample_groups.size());
-                ASSERT(m_downsample_memory.size() + 1 == m_images[index].size());
+                ASSERT(downsample_memory_.size() == downsample_groups_.size());
+                ASSERT(downsample_memory_.size() + 1 == images_[index].size());
 
                 // Уровень 0 заполняется по исходному изображению
-                vkCmdBindPipeline(command_buffer, VK_PIPELINE_BIND_POINT_COMPUTE, m_grayscale_program.pipeline());
+                vkCmdBindPipeline(command_buffer, VK_PIPELINE_BIND_POINT_COMPUTE, grayscale_program_.pipeline());
                 vkCmdBindDescriptorSets(
-                        command_buffer, VK_PIPELINE_BIND_POINT_COMPUTE, m_grayscale_program.pipeline_layout(),
-                        GrayscaleMemory::set_number(), 1, &m_grayscale_memory.descriptor_set(index), 0, nullptr);
-                vkCmdDispatch(command_buffer, m_grayscale_groups[0], m_grayscale_groups[1], 1);
+                        command_buffer, VK_PIPELINE_BIND_POINT_COMPUTE, grayscale_program_.pipeline_layout(),
+                        GrayscaleMemory::set_number(), 1, &grayscale_memory_.descriptor_set(index), 0, nullptr);
+                vkCmdDispatch(command_buffer, grayscale_groups_[0], grayscale_groups_[1], 1);
 
                 image_barrier(
-                        command_buffer, m_images[index][0].image(), VK_IMAGE_LAYOUT_GENERAL, VK_IMAGE_LAYOUT_GENERAL,
+                        command_buffer, images_[index][0].image(), VK_IMAGE_LAYOUT_GENERAL, VK_IMAGE_LAYOUT_GENERAL,
                         VK_ACCESS_SHADER_WRITE_BIT, VK_ACCESS_SHADER_READ_BIT);
 
                 // Каждый следующий уровень меньше предыдущего
-                for (unsigned i = 0; i < m_downsample_groups.size(); ++i)
+                for (unsigned i = 0; i < downsample_groups_.size(); ++i)
                 {
                         vkCmdBindPipeline(
-                                command_buffer, VK_PIPELINE_BIND_POINT_COMPUTE, m_downsample_program.pipeline());
+                                command_buffer, VK_PIPELINE_BIND_POINT_COMPUTE, downsample_program_.pipeline());
                         vkCmdBindDescriptorSets(
-                                command_buffer, VK_PIPELINE_BIND_POINT_COMPUTE, m_downsample_program.pipeline_layout(),
-                                DownsampleMemory::set_number(), 1, &m_downsample_memory[i].descriptor_set(index), 0,
+                                command_buffer, VK_PIPELINE_BIND_POINT_COMPUTE, downsample_program_.pipeline_layout(),
+                                DownsampleMemory::set_number(), 1, &downsample_memory_[i].descriptor_set(index), 0,
                                 nullptr);
-                        vkCmdDispatch(command_buffer, m_downsample_groups[i][0], m_downsample_groups[i][1], 1);
+                        vkCmdDispatch(command_buffer, downsample_groups_[i][0], downsample_groups_[i][1], 1);
 
                         image_barrier(
-                                command_buffer, m_images[index][i + 1].image(), VK_IMAGE_LAYOUT_GENERAL,
+                                command_buffer, images_[index][i + 1].image(), VK_IMAGE_LAYOUT_GENERAL,
                                 VK_IMAGE_LAYOUT_GENERAL, VK_ACCESS_SHADER_WRITE_BIT, VK_ACCESS_SHADER_READ_BIT);
                 }
         }
@@ -399,25 +399,25 @@ class Impl final : public Compute
         void commands_compute_dxdy(int index, VkCommandBuffer command_buffer) const
         {
                 ASSERT(index == 0 || index == 1);
-                ASSERT(m_sobel_memory.size() == m_sobel_groups.size());
-                ASSERT(m_sobel_groups.size() == m_dx.size());
-                ASSERT(m_sobel_groups.size() == m_dy.size());
+                ASSERT(sobel_memory_.size() == sobel_groups_.size());
+                ASSERT(sobel_groups_.size() == dx_.size());
+                ASSERT(sobel_groups_.size() == dy_.size());
 
-                for (unsigned i = 0; i < m_sobel_groups.size(); ++i)
+                for (unsigned i = 0; i < sobel_groups_.size(); ++i)
                 {
-                        vkCmdBindPipeline(command_buffer, VK_PIPELINE_BIND_POINT_COMPUTE, m_sobel_program.pipeline());
+                        vkCmdBindPipeline(command_buffer, VK_PIPELINE_BIND_POINT_COMPUTE, sobel_program_.pipeline());
                         vkCmdBindDescriptorSets(
-                                command_buffer, VK_PIPELINE_BIND_POINT_COMPUTE, m_sobel_program.pipeline_layout(),
-                                SobelMemory::set_number(), 1, &m_sobel_memory[i].descriptor_set(index), 0, nullptr);
-                        vkCmdDispatch(command_buffer, m_sobel_groups[i][0], m_sobel_groups[i][1], 1);
+                                command_buffer, VK_PIPELINE_BIND_POINT_COMPUTE, sobel_program_.pipeline_layout(),
+                                SobelMemory::set_number(), 1, &sobel_memory_[i].descriptor_set(index), 0, nullptr);
+                        vkCmdDispatch(command_buffer, sobel_groups_[i][0], sobel_groups_[i][1], 1);
                 }
 
                 std::vector<VkImage> images;
-                images.reserve(m_dx.size() + m_dy.size());
-                for (unsigned i = 0; i < m_sobel_groups.size(); ++i)
+                images.reserve(dx_.size() + dy_.size());
+                for (unsigned i = 0; i < sobel_groups_.size(); ++i)
                 {
-                        images.push_back(m_dx[i].image());
-                        images.push_back(m_dy[i].image());
+                        images.push_back(dx_[i].image());
+                        images.push_back(dy_[i].image());
                 }
                 image_barrier(
                         command_buffer, images, VK_IMAGE_LAYOUT_GENERAL, VK_IMAGE_LAYOUT_GENERAL,
@@ -427,26 +427,26 @@ class Impl final : public Compute
         void commands_compute_optical_flow(int index, VkCommandBuffer command_buffer, VkBuffer top_flow) const
         {
                 ASSERT(index == 0 || index == 1);
-                ASSERT(m_flow_memory.size() == m_flow_groups.size());
-                ASSERT(m_flow_buffers.size() + 1 == m_flow_groups.size());
+                ASSERT(flow_memory_.size() == flow_groups_.size());
+                ASSERT(flow_buffers_.size() + 1 == flow_groups_.size());
 
-                for (int i = static_cast<int>(m_flow_groups.size()) - 1; i >= 0; --i)
+                for (int i = static_cast<int>(flow_groups_.size()) - 1; i >= 0; --i)
                 {
-                        vkCmdBindPipeline(command_buffer, VK_PIPELINE_BIND_POINT_COMPUTE, m_flow_program.pipeline());
+                        vkCmdBindPipeline(command_buffer, VK_PIPELINE_BIND_POINT_COMPUTE, flow_program_.pipeline());
                         vkCmdBindDescriptorSets(
-                                command_buffer, VK_PIPELINE_BIND_POINT_COMPUTE, m_flow_program.pipeline_layout(),
-                                FlowMemory::set_number(), 1, &m_flow_memory[i].descriptor_set(index), 0, nullptr);
-                        vkCmdDispatch(command_buffer, m_flow_groups[i][0], m_flow_groups[i][1], 1);
+                                command_buffer, VK_PIPELINE_BIND_POINT_COMPUTE, flow_program_.pipeline_layout(),
+                                FlowMemory::set_number(), 1, &flow_memory_[i].descriptor_set(index), 0, nullptr);
+                        vkCmdDispatch(command_buffer, flow_groups_[i][0], flow_groups_[i][1], 1);
 
                         buffer_barrier(
-                                command_buffer, (i != 0) ? m_flow_buffers[i - 1] : top_flow,
+                                command_buffer, (i != 0) ? flow_buffers_[i - 1] : top_flow,
                                 VK_PIPELINE_STAGE_COMPUTE_SHADER_BIT);
                 }
         }
 
         void commands_images_to_sampler_layout(int index, VkCommandBuffer command_buffer)
         {
-                for (const vulkan::ImageWithMemory& image : m_images[index])
+                for (const vulkan::ImageWithMemory& image : images_[index])
                 {
                         image_barrier(
                                 command_buffer, image.image(), VK_IMAGE_LAYOUT_GENERAL,
@@ -456,7 +456,7 @@ class Impl final : public Compute
 
         void commands_images_to_general_layout(int index, VkCommandBuffer command_buffer)
         {
-                for (const vulkan::ImageWithMemory& image : m_images[index])
+                for (const vulkan::ImageWithMemory& image : images_[index])
                 {
                         image_barrier(
                                 command_buffer, image.image(), VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL,
@@ -468,9 +468,9 @@ class Impl final : public Compute
         {
                 VkResult result;
 
-                m_command_buffer_first_pyramid = vulkan::CommandBuffer(m_device, m_compute_command_pool);
+                command_buffer_first_pyramid_ = vulkan::CommandBuffer(device_, compute_command_pool_);
 
-                VkCommandBuffer command_buffer = *m_command_buffer_first_pyramid;
+                VkCommandBuffer command_buffer = *command_buffer_first_pyramid_;
 
                 VkCommandBufferBeginInfo command_buffer_info = {};
                 command_buffer_info.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
@@ -498,11 +498,11 @@ class Impl final : public Compute
         {
                 VkResult result;
 
-                m_command_buffers = vulkan::CommandBuffers(m_device, m_compute_command_pool, 2);
+                command_buffers_ = vulkan::CommandBuffers(device_, compute_command_pool_, 2);
 
                 for (int index = 0; index < 2; ++index)
                 {
-                        VkCommandBuffer command_buffer = (*m_command_buffers)[index];
+                        VkCommandBuffer command_buffer = (*command_buffers_)[index];
 
                         VkCommandBufferBeginInfo command_buffer_info = {};
                         command_buffer_info.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
@@ -535,34 +535,34 @@ class Impl final : public Compute
 
         VkSemaphore compute(const vulkan::Queue& queue, VkSemaphore wait_semaphore) override
         {
-                ASSERT(std::this_thread::get_id() == m_thread_id);
+                ASSERT(std::this_thread::get_id() == thread_id_);
 
                 //
 
-                ASSERT(queue.family_index() == m_compute_command_pool.family_index());
-                ASSERT(m_command_buffers && m_command_buffers->count() == 2);
-                ASSERT(m_i_index == -1 || m_i_index == 0 || m_i_index == 1);
+                ASSERT(queue.family_index() == compute_command_pool_.family_index());
+                ASSERT(command_buffers_ && command_buffers_->count() == 2);
+                ASSERT(i_index_ == -1 || i_index_ == 0 || i_index_ == 1);
 
-                if (m_i_index < 0)
+                if (i_index_ < 0)
                 {
-                        m_i_index = 0;
+                        i_index_ = 0;
 
-                        ASSERT(m_command_buffer_first_pyramid);
+                        ASSERT(command_buffer_first_pyramid_);
                         vulkan::queue_submit(
-                                wait_semaphore, VK_PIPELINE_STAGE_COMPUTE_SHADER_BIT, *m_command_buffer_first_pyramid,
-                                m_semaphore_first_pyramid, queue);
-                        wait_semaphore = m_semaphore_first_pyramid;
+                                wait_semaphore, VK_PIPELINE_STAGE_COMPUTE_SHADER_BIT, *command_buffer_first_pyramid_,
+                                semaphore_first_pyramid_, queue);
+                        wait_semaphore = semaphore_first_pyramid_;
                 }
                 else
                 {
-                        m_i_index = 1 - m_i_index;
+                        i_index_ = 1 - i_index_;
                 }
 
                 vulkan::queue_submit(
-                        wait_semaphore, VK_PIPELINE_STAGE_COMPUTE_SHADER_BIT, (*m_command_buffers)[m_i_index],
-                        m_semaphore, queue);
+                        wait_semaphore, VK_PIPELINE_STAGE_COMPUTE_SHADER_BIT, (*command_buffers_)[i_index_], semaphore_,
+                        queue);
 
-                return m_semaphore;
+                return semaphore_;
         }
 
         void create_buffers(
@@ -574,7 +574,7 @@ class Impl final : public Compute
                 const vulkan::BufferWithMemory& top_points,
                 const vulkan::BufferWithMemory& top_flow) override
         {
-                ASSERT(m_thread_id == std::this_thread::get_id());
+                ASSERT(thread_id_ == std::this_thread::get_id());
 
                 //
 
@@ -586,41 +586,40 @@ class Impl final : public Compute
 
                 const std::vector<vec2i> sizes = pyramid_sizes(input.width(), input.height(), BOTTOM_IMAGE_SIZE);
 
-                const uint32_t family_index = m_compute_command_pool.family_index();
+                const uint32_t family_index = compute_command_pool_.family_index();
 
-                m_images[0] =
+                images_[0] =
                         create_images(sizes, family_index, VK_IMAGE_USAGE_STORAGE_BIT | VK_IMAGE_USAGE_SAMPLED_BIT);
-                m_images[1] =
+                images_[1] =
                         create_images(sizes, family_index, VK_IMAGE_USAGE_STORAGE_BIT | VK_IMAGE_USAGE_SAMPLED_BIT);
-                m_dx = create_images(sizes, family_index, VK_IMAGE_USAGE_STORAGE_BIT);
-                m_dy = create_images(sizes, family_index, VK_IMAGE_USAGE_STORAGE_BIT);
-                m_flow_buffers = create_flow_buffers(sizes, family_index);
+                dx_ = create_images(sizes, family_index, VK_IMAGE_USAGE_STORAGE_BIT);
+                dy_ = create_images(sizes, family_index, VK_IMAGE_USAGE_STORAGE_BIT);
+                flow_buffers_ = create_flow_buffers(sizes, family_index);
 
                 constexpr vec2i GROUPS = GROUP_SIZE;
                 constexpr int GROUPS_X = GROUP_SIZE[0];
                 constexpr int GROUPS_Y = GROUP_SIZE[1];
 
-                m_grayscale_groups = grayscale_groups(GROUPS, sizes);
-                m_grayscale_program.create_pipeline(GROUPS_X, GROUPS_Y, rectangle);
-                m_grayscale_memory.set_src(sampler, input);
-                m_grayscale_memory.set_dst(m_images[0][0], m_images[1][0]);
+                grayscale_groups_ = grayscale_groups(GROUPS, sizes);
+                grayscale_program_.create_pipeline(GROUPS_X, GROUPS_Y, rectangle);
+                grayscale_memory_.set_src(sampler, input);
+                grayscale_memory_.set_dst(images_[0][0], images_[1][0]);
 
-                m_downsample_groups = downsample_groups(GROUPS, sizes);
-                m_downsample_program.create_pipeline(GROUPS_X, GROUPS_Y);
-                m_downsample_memory =
-                        create_downsample_memory(m_device, m_downsample_program.descriptor_set_layout(), m_images);
+                downsample_groups_ = downsample_groups(GROUPS, sizes);
+                downsample_program_.create_pipeline(GROUPS_X, GROUPS_Y);
+                downsample_memory_ =
+                        create_downsample_memory(device_, downsample_program_.descriptor_set_layout(), images_);
 
-                m_sobel_groups = sobel_groups(GROUPS, sizes);
-                m_sobel_program.create_pipeline(GROUPS_X, GROUPS_Y);
-                m_sobel_memory =
-                        create_sobel_memory(m_device, m_sobel_program.descriptor_set_layout(), m_images, m_dx, m_dy);
+                sobel_groups_ = sobel_groups(GROUPS, sizes);
+                sobel_program_.create_pipeline(GROUPS_X, GROUPS_Y);
+                sobel_memory_ = create_sobel_memory(device_, sobel_program_.descriptor_set_layout(), images_, dx_, dy_);
 
-                m_flow_groups = flow_groups(GROUPS, sizes, top_point_count_x, top_point_count_y);
-                m_flow_program.create_pipeline(
+                flow_groups_ = flow_groups(GROUPS, sizes, top_point_count_x, top_point_count_y);
+                flow_program_.create_pipeline(
                         GROUPS_X, GROUPS_Y, RADIUS, ITERATION_COUNT, STOP_MOVE_SQUARE, MIN_DETERMINANT);
-                m_flow_memory = create_flow_memory(
-                        m_device, m_flow_program.descriptor_set_layout(), family_index, sampler, sizes, m_flow_buffers,
-                        top_point_count_x, top_point_count_y, top_points, top_flow, m_images, m_dx, m_dy);
+                flow_memory_ = create_flow_memory(
+                        device_, flow_program_.descriptor_set_layout(), family_index, sampler, sizes, flow_buffers_,
+                        top_point_count_x, top_point_count_y, top_points, top_flow, images_, dx_, dy_);
 
                 create_command_buffer_first_pyramid();
                 create_command_buffers(top_flow);
@@ -628,60 +627,60 @@ class Impl final : public Compute
 
         void delete_buffers() override
         {
-                ASSERT(m_thread_id == std::this_thread::get_id());
+                ASSERT(thread_id_ == std::this_thread::get_id());
 
                 //
 
-                m_command_buffer_first_pyramid.reset();
-                m_command_buffers.reset();
+                command_buffer_first_pyramid_.reset();
+                command_buffers_.reset();
 
-                m_grayscale_program.delete_pipeline();
-                m_downsample_program.delete_pipeline();
-                m_sobel_program.delete_pipeline();
-                m_flow_program.delete_pipeline();
+                grayscale_program_.delete_pipeline();
+                downsample_program_.delete_pipeline();
+                sobel_program_.delete_pipeline();
+                flow_program_.delete_pipeline();
 
-                m_images[0].clear();
-                m_images[1].clear();
-                m_dx.clear();
-                m_dy.clear();
-                m_flow_buffers.clear();
-                m_downsample_memory.clear();
-                m_downsample_memory.clear();
-                m_sobel_memory.clear();
-                m_flow_memory.clear();
+                images_[0].clear();
+                images_[1].clear();
+                dx_.clear();
+                dy_.clear();
+                flow_buffers_.clear();
+                downsample_memory_.clear();
+                downsample_memory_.clear();
+                sobel_memory_.clear();
+                flow_memory_.clear();
         }
 
         void reset() override
         {
-                m_i_index = -1;
+                i_index_ = -1;
         }
 
 public:
         Impl(const vulkan::VulkanInstance& instance,
              const vulkan::CommandPool& compute_command_pool,
              const vulkan::Queue& compute_queue)
-                : m_instance(instance),
-                  m_device(instance.device()),
-                  m_compute_command_pool(compute_command_pool),
-                  m_compute_queue(compute_queue),
-                  m_semaphore_first_pyramid(instance.device()),
-                  m_semaphore(instance.device()),
-                  m_grayscale_program(instance.device()),
-                  m_grayscale_memory(m_device, m_grayscale_program.descriptor_set_layout()),
-                  m_downsample_program(instance.device()),
-                  m_sobel_program(instance.device()),
-                  m_flow_program(instance.device())
+                : instance_(instance),
+                  device_(instance.device()),
+                  compute_command_pool_(compute_command_pool),
+                  compute_queue_(compute_queue),
+                  semaphore_first_pyramid_(instance.device()),
+                  semaphore_(instance.device()),
+                  grayscale_program_(instance.device()),
+                  grayscale_memory_(device_, grayscale_program_.descriptor_set_layout()),
+                  downsample_program_(instance.device()),
+                  sobel_program_(instance.device()),
+                  flow_program_(instance.device())
         {
                 ASSERT(compute_command_pool.family_index() == compute_queue.family_index());
         }
 
         ~Impl() override
         {
-                ASSERT(std::this_thread::get_id() == m_thread_id);
+                ASSERT(std::this_thread::get_id() == thread_id_);
 
                 //
 
-                m_instance.device_wait_idle_noexcept("the Vulkan optical flow compute destructor");
+                instance_.device_wait_idle_noexcept("the Vulkan optical flow compute destructor");
         }
 };
 }

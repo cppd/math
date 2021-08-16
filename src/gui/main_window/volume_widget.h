@@ -33,13 +33,13 @@ class VolumeWidget final : public QWidget
         Q_OBJECT
 
 private:
-        const std::thread::id m_thread_id = std::this_thread::get_id();
+        const std::thread::id thread_id_ = std::this_thread::get_id();
 
         Ui::VolumeWidget ui;
 
-        std::unique_ptr<RangeSlider> m_slider_levels;
-        std::vector<QPointer<QWidget>> m_widgets;
-        ModelTree* m_model_tree = nullptr;
+        std::unique_ptr<RangeSlider> slider_levels_;
+        std::vector<QPointer<QWidget>> widgets_;
+        ModelTree* model_tree_ = nullptr;
 
         void on_isosurface_clicked();
         void on_isosurface_transparency_changed(int value);

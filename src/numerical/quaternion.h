@@ -28,41 +28,41 @@ class Quaternion
 {
         static_assert(is_native_floating_point<T>);
 
-        Vector<4, T> m_data;
+        Vector<4, T> data_;
 
 public:
         Quaternion() = default;
 
-        Quaternion(T w, T x, T y, T z) : m_data(w, x, y, z)
+        Quaternion(T w, T x, T y, T z) : data_(w, x, y, z)
         {
         }
 
-        Quaternion(T w, const Vector<3, T>& v) : m_data(w, v[0], v[1], v[2])
+        Quaternion(T w, const Vector<3, T>& v) : data_(w, v[0], v[1], v[2])
         {
         }
 
-        explicit Quaternion(const Vector<4, T>& v) : m_data(v)
+        explicit Quaternion(const Vector<4, T>& v) : data_(v)
         {
         }
 
         T operator[](unsigned i) const
         {
-                return m_data[i];
+                return data_[i];
         }
 
         T& operator[](unsigned i)
         {
-                return m_data[i];
+                return data_[i];
         }
 
         const Vector<4, T>& data() const
         {
-                return m_data;
+                return data_;
         }
 
         Vector<3, T> imag() const
         {
-                return Vector<3, T>(m_data[1], m_data[2], m_data[3]);
+                return Vector<3, T>(data_[1], data_[2], data_[3]);
         }
 };
 

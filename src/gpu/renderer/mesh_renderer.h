@@ -38,27 +38,27 @@ namespace ns::gpu::renderer
 {
 class MeshRenderer
 {
-        const std::thread::id m_thread_id = std::this_thread::get_id();
-        const vulkan::Device& m_device;
-        const bool m_sample_shading;
+        const std::thread::id thread_id_ = std::this_thread::get_id();
+        const vulkan::Device& device_;
+        const bool sample_shading_;
 
-        const RenderBuffers3D* m_render_buffers = nullptr;
-        const DepthBuffers* m_depth_buffers = nullptr;
+        const RenderBuffers3D* render_buffers_ = nullptr;
+        const DepthBuffers* depth_buffers_ = nullptr;
 
-        TrianglesProgram m_triangles_program;
-        CommonMemory m_triangles_common_memory;
+        TrianglesProgram triangles_program_;
+        CommonMemory triangles_common_memory_;
 
-        TriangleLinesProgram m_triangle_lines_program;
-        CommonMemory m_triangle_lines_common_memory;
+        TriangleLinesProgram triangle_lines_program_;
+        CommonMemory triangle_lines_common_memory_;
 
-        NormalsProgram m_normals_program;
-        CommonMemory m_normals_common_memory;
+        NormalsProgram normals_program_;
+        CommonMemory normals_common_memory_;
 
-        TrianglesDepthProgram m_triangles_depth_program;
-        CommonMemory m_triangles_depth_common_memory;
+        TrianglesDepthProgram triangles_depth_program_;
+        CommonMemory triangles_depth_common_memory_;
 
-        PointsProgram m_points_program;
-        CommonMemory m_points_common_memory;
+        PointsProgram points_program_;
+        CommonMemory points_common_memory_;
 
         struct Pipelines
         {
@@ -68,16 +68,16 @@ class MeshRenderer
                 std::optional<vulkan::Pipeline> points;
                 std::optional<vulkan::Pipeline> lines;
         };
-        Pipelines m_render_pipelines_opaque;
-        Pipelines m_render_pipelines_transparent;
-        std::optional<vulkan::CommandBuffers> m_render_command_buffers_all;
-        std::optional<vulkan::CommandBuffers> m_render_command_buffers_transparent_as_opaque;
+        Pipelines render_pipelines_opaque_;
+        Pipelines render_pipelines_transparent_;
+        std::optional<vulkan::CommandBuffers> render_command_buffers_all_;
+        std::optional<vulkan::CommandBuffers> render_command_buffers_transparent_as_opaque_;
 
-        std::optional<vulkan::Pipeline> m_render_triangles_depth_pipeline;
-        std::optional<vulkan::CommandBuffers> m_render_depth_command_buffers;
+        std::optional<vulkan::Pipeline> render_triangles_depth_pipeline_;
+        std::optional<vulkan::CommandBuffers> render_depth_command_buffers_;
 
-        vulkan::Sampler m_texture_sampler;
-        vulkan::Sampler m_shadow_sampler;
+        vulkan::Sampler texture_sampler_;
+        vulkan::Sampler shadow_sampler_;
 
         const Pipelines& render_pipelines(bool transparent) const;
         Pipelines& render_pipelines(bool transparent);

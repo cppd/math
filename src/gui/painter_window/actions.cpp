@@ -45,12 +45,12 @@ std::string action_name(const QAction* action)
 }
 
 Actions::Actions(const Pixels* pixels, QMenu* menu, QStatusBar* status_bar, std::function<long long()> slice_number)
-        : m_pixels(pixels), m_worker_threads(create_worker_threads(THREAD_ID_COUNT, std::nullopt, status_bar))
+        : pixels_(pixels), worker_threads_(create_worker_threads(THREAD_ID_COUNT, std::nullopt, status_bar))
 {
         ASSERT(slice_number);
         {
                 QAction* action = menu->addAction("Save...");
-                m_connections.emplace_back(QObject::connect(
+                connections_.emplace_back(QObject::connect(
                         action, &QAction::triggered,
                         [this, action, slice_number = std::move(slice_number)]()
                         {
@@ -58,11 +58,11 @@ Actions::Actions(const Pixels* pixels, QMenu* menu, QStatusBar* status_bar, std:
                         }));
         }
 
-        if (m_pixels->screen_size().size() >= 3)
+        if (pixels_->screen_size().size() >= 3)
         {
                 {
                         QAction* action = menu->addAction("Save all...");
-                        m_connections.emplace_back(QObject::connect(
+                        connections_.emplace_back(QObject::connect(
                                 action, &QAction::triggered,
                                 [=, this]()
                                 {
@@ -74,7 +74,7 @@ Actions::Actions(const Pixels* pixels, QMenu* menu, QStatusBar* status_bar, std:
 
                 {
                         QAction* action = menu->addAction("Add volume...");
-                        m_connections.emplace_back(QObject::connect(
+                        connections_.emplace_back(QObject::connect(
                                 action, &QAction::triggered,
                                 [=, this]()
                                 {
@@ -86,18 +86,18 @@ Actions::Actions(const Pixels* pixels, QMenu* menu, QStatusBar* status_bar, std:
 
 Actions::~Actions()
 {
-        m_connections.clear();
-        m_worker_threads->terminate_all();
+        connections_.clear();
+        worker_threads_->terminate_all();
 }
 
 void Actions::set_progresses()
 {
-        m_worker_threads->set_progresses();
+        worker_threads_->set_progresses();
 }
 
 void Actions::save_image(const std::string& action, long long slice) const
 {
-        std::optional<Pixels::Images> images = m_pixels->slice(slice);
+        std::optional<Pixels::Images> images = pixels_->slice(slice);
         if (!images)
         {
                 MESSAGE_WARNING("Image is not yet available");
@@ -109,7 +109,7 @@ void Actions::save_image(const std::string& action, long long slice) const
                 return;
         }
 
-        m_worker_threads->terminate_and_start(
+        worker_threads_->terminate_and_start(
                 SAVE_THREAD_ID, action,
                 [&]()
                 {
@@ -122,14 +122,14 @@ void Actions::save_image(const std::string& action, long long slice) const
 
 void Actions::save_image(const std::string& action) const
 {
-        std::optional<Pixels::Images> images = m_pixels->pixels();
+        std::optional<Pixels::Images> images = pixels_->pixels();
         if (!images)
         {
                 MESSAGE_WARNING("Image is not yet available");
                 return;
         }
 
-        m_worker_threads->terminate_and_start(
+        worker_threads_->terminate_and_start(
                 SAVE_THREAD_ID, action,
                 [&]()
                 {
@@ -141,14 +141,14 @@ void Actions::save_image(const std::string& action) const
 
 void Actions::add_volume(const std::string& action) const
 {
-        std::optional<Pixels::Images> images = m_pixels->pixels();
+        std::optional<Pixels::Images> images = pixels_->pixels();
         if (!images)
         {
                 MESSAGE_WARNING("Image is not yet available");
                 return;
         }
 
-        m_worker_threads->terminate_and_start(
+        worker_threads_->terminate_and_start(
                 ADD_THREAD_ID, action,
                 [&]()
                 {

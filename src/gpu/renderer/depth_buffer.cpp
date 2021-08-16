@@ -159,15 +159,15 @@ std::string buffer_info(
 
 class Impl final : public DepthBuffers
 {
-        const vulkan::Device& m_device;
+        const vulkan::Device& device_;
 
         //
 
-        std::vector<vulkan::DepthImageWithMemory> m_depth_attachments;
-        vulkan::RenderPass m_render_pass;
-        std::vector<vulkan::Framebuffer> m_framebuffers;
-        std::vector<VkFramebuffer> m_framebuffers_handles;
-        std::vector<VkClearValue> m_clear_values;
+        std::vector<vulkan::DepthImageWithMemory> depth_attachments_;
+        vulkan::RenderPass render_pass_;
+        std::vector<vulkan::Framebuffer> framebuffers_;
+        std::vector<VkFramebuffer> framebuffers_handles_;
+        std::vector<VkClearValue> clear_values_;
 
         //
 
@@ -203,7 +203,7 @@ Impl::Impl(
         unsigned width,
         unsigned height,
         double zoom)
-        : m_device(device)
+        : device_(device)
 {
         ASSERT(!attachment_family_indices.empty());
 
@@ -214,68 +214,68 @@ Impl::Impl(
         for (unsigned i = 0; i < buffer_count; ++i)
         {
                 std::vector<VkFormat> depth_formats;
-                if (!m_depth_attachments.empty())
+                if (!depth_attachments_.empty())
                 {
-                        depth_formats = {m_depth_attachments[0].format()};
+                        depth_formats = {depth_attachments_[0].format()};
                 }
                 else
                 {
                         depth_formats = DEPTH_IMAGE_FORMATS;
                 }
-                m_depth_attachments.emplace_back(
-                        m_device, attachment_family_indices, depth_formats, SAMPLE_COUNT, width, height,
+                depth_attachments_.emplace_back(
+                        device_, attachment_family_indices, depth_formats, SAMPLE_COUNT, width, height,
                         VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT | VK_IMAGE_USAGE_SAMPLED_BIT, IMAGE_LAYOUT,
                         graphics_command_pool, graphics_queue);
         }
 
-        VkFormat depth_format = m_depth_attachments[0].format();
-        unsigned depth_width = m_depth_attachments[0].width();
-        unsigned depth_height = m_depth_attachments[0].height();
+        VkFormat depth_format = depth_attachments_[0].format();
+        unsigned depth_width = depth_attachments_[0].width();
+        unsigned depth_height = depth_attachments_[0].height();
 
-        m_render_pass = create_render_pass_depth(m_device, depth_format);
+        render_pass_ = create_render_pass_depth(device_, depth_format);
 
         std::vector<VkImageView> attachments(1);
-        for (const vulkan::DepthImageWithMemory& depth_attachment : m_depth_attachments)
+        for (const vulkan::DepthImageWithMemory& depth_attachment : depth_attachments_)
         {
                 attachments[0] = depth_attachment.image_view();
 
-                m_framebuffers.push_back(
-                        create_framebuffer(m_device, m_render_pass, depth_width, depth_height, attachments));
-                m_framebuffers_handles.push_back(m_framebuffers.back());
+                framebuffers_.push_back(
+                        create_framebuffer(device_, render_pass_, depth_width, depth_height, attachments));
+                framebuffers_handles_.push_back(framebuffers_.back());
         }
 
-        m_clear_values.push_back(vulkan::create_depth_stencil_clear_value());
+        clear_values_.push_back(vulkan::create_depth_stencil_clear_value());
 
-        check_buffers(m_depth_attachments);
+        check_buffers(depth_attachments_);
 
-        LOG(buffer_info(m_depth_attachments, zoom, width, height));
+        LOG(buffer_info(depth_attachments_, zoom, width, height));
 }
 
 const vulkan::DepthImageWithMemory* Impl::texture(unsigned index) const
 {
-        ASSERT(index < m_depth_attachments.size());
+        ASSERT(index < depth_attachments_.size());
 
-        // Указатель можно возвращать, так как m_depth_attachments
+        // Указатель можно возвращать, так как depth_attachments_
         // не меняется, а при работе Impl(Impl&&) сохранятся указатели,
         // так как std::vector(std::vector&&) сохраняет указатели.
-        return &m_depth_attachments[index];
+        return &depth_attachments_[index];
 }
 
 unsigned Impl::width() const
 {
-        ASSERT(!m_depth_attachments.empty() && m_depth_attachments.size() == m_framebuffers.size());
-        return m_depth_attachments[0].width();
+        ASSERT(!depth_attachments_.empty() && depth_attachments_.size() == framebuffers_.size());
+        return depth_attachments_[0].width();
 }
 
 unsigned Impl::height() const
 {
-        ASSERT(!m_depth_attachments.empty() && m_depth_attachments.size() == m_framebuffers.size());
-        return m_depth_attachments[0].height();
+        ASSERT(!depth_attachments_.empty() && depth_attachments_.size() == framebuffers_.size());
+        return depth_attachments_[0].height();
 }
 
 VkRenderPass Impl::render_pass() const
 {
-        return m_render_pass;
+        return render_pass_;
 }
 
 VkSampleCountFlagBits Impl::sample_count() const
@@ -285,15 +285,15 @@ VkSampleCountFlagBits Impl::sample_count() const
 
 const std::vector<VkFramebuffer>& Impl::framebuffers() const
 {
-        ASSERT(!m_depth_attachments.empty() && m_depth_attachments.size() == m_framebuffers.size());
-        ASSERT(m_framebuffers.size() == m_framebuffers_handles.size());
-        return m_framebuffers_handles;
+        ASSERT(!depth_attachments_.empty() && depth_attachments_.size() == framebuffers_.size());
+        ASSERT(framebuffers_.size() == framebuffers_handles_.size());
+        return framebuffers_handles_;
 }
 
 const std::vector<VkClearValue>& Impl::clear_values() const
 {
-        ASSERT(m_clear_values.size() == 1);
-        return m_clear_values;
+        ASSERT(clear_values_.size() == 1);
+        return clear_values_;
 }
 }
 

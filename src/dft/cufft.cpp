@@ -82,13 +82,13 @@ void cuda_device_sync()
 
 class CudaPlan2D final
 {
-        cufftHandle m_plan;
+        cufftHandle plan_;
 
 public:
         CudaPlan2D(int x, int y)
         {
                 // y, x
-                if (cufftPlan2d(&m_plan, y, x, CUFFT_C2C) != CUFFT_SUCCESS)
+                if (cufftPlan2d(&plan_, y, x, CUFFT_C2C) != CUFFT_SUCCESS)
                 {
                         error("cuFFT create FFT plan error");
                 }
@@ -96,12 +96,12 @@ public:
 
         ~CudaPlan2D()
         {
-                cufftDestroy(m_plan);
+                cufftDestroy(plan_);
         }
 
         operator cufftHandle() const
         {
-                return m_plan;
+                return plan_;
         }
 
         CudaPlan2D(const CudaPlan2D&) = delete;
@@ -113,24 +113,23 @@ public:
 template <typename T>
 class CudaMemory final
 {
-        std::size_t m_size;
+        std::size_t size_;
         T* d_mem;
 
 public:
-        explicit CudaMemory(std::size_t s) : m_size(s)
+        explicit CudaMemory(std::size_t s) : size_(s)
         {
-                if (m_size < 1)
+                if (size_ < 1)
                 {
                         error("CUDA malloc size < 1");
                 }
 
                 cuda_check_errors();
 
-                cudaError_t r = cudaMalloc(&d_mem, m_size * sizeof(T));
+                cudaError_t r = cudaMalloc(&d_mem, size_ * sizeof(T));
                 if (r != cudaSuccess)
                 {
-                        error("Error CUDA malloc " + to_string(m_size * sizeof(T))
-                              + " bytes: " + cudaGetErrorString(r));
+                        error("Error CUDA malloc " + to_string(size_ * sizeof(T)) + " bytes: " + cudaGetErrorString(r));
                 }
         }
 
@@ -146,12 +145,12 @@ public:
 
         std::size_t size() const
         {
-                return m_size;
+                return size_;
         }
 
         std::size_t bytes() const
         {
-                return m_size * sizeof(T);
+                return size_ * sizeof(T);
         }
 
         CudaMemory(const CudaMemory&) = delete;
@@ -204,18 +203,18 @@ class CudaFFT final : public DFT
         static_assert(offsetof(cufftComplex, x) == 0);
         static_assert(offsetof(cufftComplex, y) == sizeof(float));
 
-        CudaPlan2D m_plan;
-        CudaMemory<cufftComplex> m_cuda_data;
-        const float m_inv_k;
+        CudaPlan2D plan_;
+        CudaMemory<cufftComplex> cuda_data_;
+        const float inv_k_;
 
         void exec(bool inverse, std::vector<std::complex<float>>* data) override
         {
-                if (data->size() != m_cuda_data.size())
+                if (data->size() != cuda_data_.size())
                 {
                         error("Error size cuFFT");
                 }
 
-                cuda_memory_copy(m_cuda_data, *data);
+                cuda_memory_copy(cuda_data_, *data);
 
                 cuda_device_sync();
 
@@ -223,14 +222,14 @@ class CudaFFT final : public DFT
 
                 if (inverse)
                 {
-                        if (CUFFT_SUCCESS != cufftExecC2C(m_plan, m_cuda_data, m_cuda_data, CUFFT_INVERSE))
+                        if (CUFFT_SUCCESS != cufftExecC2C(plan_, cuda_data_, cuda_data_, CUFFT_INVERSE))
                         {
                                 error("cuFFT Error: Unable to execute inverse plan");
                         }
                 }
                 else
                 {
-                        if (CUFFT_SUCCESS != cufftExecC2C(m_plan, m_cuda_data, m_cuda_data, CUFFT_FORWARD))
+                        if (CUFFT_SUCCESS != cufftExecC2C(plan_, cuda_data_, cuda_data_, CUFFT_FORWARD))
                         {
                                 error("cuFFT Error: Unable to execute forward plan");
                         }
@@ -240,13 +239,13 @@ class CudaFFT final : public DFT
 
                 LOG("calc cuFFT: " + to_string_fixed(1000.0 * duration_from(start_time), 5) + " ms");
 
-                cuda_memory_copy(data, m_cuda_data);
+                cuda_memory_copy(data, cuda_data_);
 
                 if (inverse)
                 {
                         std::transform(
                                 data->cbegin(), data->cend(), data->begin(),
-                                [k = m_inv_k](const std::complex<float>& v)
+                                [k = inv_k_](const std::complex<float>& v)
                                 {
                                         return v * k;
                                 });
@@ -254,7 +253,7 @@ class CudaFFT final : public DFT
         }
 
 public:
-        CudaFFT(int x, int y) : m_plan(x, y), m_cuda_data(1ull * x * y), m_inv_k(1.0f / (1ull * x * y))
+        CudaFFT(int x, int y) : plan_(x, y), cuda_data_(1ull * x * y), inv_k_(1.0f / (1ull * x * y))
         {
         }
 };

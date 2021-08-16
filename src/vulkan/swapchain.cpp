@@ -316,58 +316,58 @@ Swapchain::Swapchain(
                 error("Failed to find surface details");
         }
 
-        m_surface_format = choose_surface_format(required_surface_format, surface_formats);
-        m_extent = choose_extent(surface_capabilities);
+        surface_format_ = choose_surface_format(required_surface_format, surface_formats);
+        extent_ = choose_extent(surface_capabilities);
         VkPresentModeKHR present_mode = choose_present_mode(present_modes, preferred_present_mode);
         uint32_t image_count = choose_image_count(surface_capabilities, preferred_image_count);
 
-        LOG(swapchain_info_string(m_surface_format, preferred_image_count, image_count));
+        LOG(swapchain_info_string(surface_format_, preferred_image_count, image_count));
 
-        m_swapchain = create_swapchain_khr(
-                device, surface, m_surface_format, present_mode, m_extent, image_count,
+        swapchain_ = create_swapchain_khr(
+                device, surface, surface_format_, present_mode, extent_, image_count,
                 surface_capabilities.currentTransform, family_indices);
 
-        m_images = swapchain_images(device, m_swapchain);
-        if (m_images.empty())
+        images_ = swapchain_images(device, swapchain_);
+        if (images_.empty())
         {
                 error("Failed to find swapchain images");
         }
 
-        m_image_views.reserve(m_images.size());
-        for (const VkImage& image : m_images)
+        image_views_.reserve(images_.size());
+        for (const VkImage& image : images_)
         {
-                m_image_views.push_back(
-                        create_image_view(device, image, m_surface_format.format, VK_IMAGE_ASPECT_COLOR_BIT));
+                image_views_.push_back(
+                        create_image_view(device, image, surface_format_.format, VK_IMAGE_ASPECT_COLOR_BIT));
         }
 }
 
 VkSwapchainKHR Swapchain::swapchain() const
 {
-        return m_swapchain;
+        return swapchain_;
 }
 
 uint32_t Swapchain::width() const
 {
-        return m_extent.width;
+        return extent_.width;
 }
 
 uint32_t Swapchain::height() const
 {
-        return m_extent.height;
+        return extent_.height;
 }
 
 VkFormat Swapchain::format() const
 {
-        return m_surface_format.format;
+        return surface_format_.format;
 }
 
 VkColorSpaceKHR Swapchain::color_space() const
 {
-        return m_surface_format.colorSpace;
+        return surface_format_.colorSpace;
 }
 
 const std::vector<ImageView>& Swapchain::image_views() const
 {
-        return m_image_views;
+        return image_views_;
 }
 }

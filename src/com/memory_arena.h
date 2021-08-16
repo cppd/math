@@ -38,27 +38,27 @@ class MemoryArena
 
         class Block final
         {
-                std::vector<std::aligned_storage_t<ALIGN, ALIGN>> m_data;
+                std::vector<std::aligned_storage_t<ALIGN, ALIGN>> data_;
 
         public:
                 Block()
                 {
                         static_assert(ALIGN <= BLOCK_SIZE);
                         static_assert(BLOCK_SIZE % ALIGN == 0);
-                        static_assert(sizeof(decltype(m_data)::value_type) == ALIGN);
-                        static_assert(alignof(decltype(m_data)::value_type) == ALIGN);
+                        static_assert(sizeof(decltype(data_)::value_type) == ALIGN);
+                        static_assert(alignof(decltype(data_)::value_type) == ALIGN);
 
-                        m_data.resize(BLOCK_SIZE / ALIGN);
+                        data_.resize(BLOCK_SIZE / ALIGN);
                 }
 
                 std::byte* data(std::size_t index)
                 {
-                        return reinterpret_cast<std::byte*>(m_data.data()) + index;
+                        return reinterpret_cast<std::byte*>(data_.data()) + index;
                 }
 
                 void set_zero()
                 {
-                        std::memset(m_data.data(), 0, sizeof(m_data[0]) * m_data.size());
+                        std::memset(data_.data(), 0, sizeof(data_[0]) * data_.size());
                 }
         };
 
@@ -75,14 +75,14 @@ class MemoryArena
                 return new (block->data(index)) T(std::forward<Args>(args)...);
         }
 
-        const std::thread::id m_thread_id = std::this_thread::get_id();
-        std::vector<std::unique_ptr<Block>> m_blocks;
-        std::size_t m_block;
-        std::size_t m_index;
+        const std::thread::id thread_id_ = std::this_thread::get_id();
+        std::vector<std::unique_ptr<Block>> blocks_;
+        std::size_t block_;
+        std::size_t index_;
 
         MemoryArena()
         {
-                m_blocks.push_back(std::make_unique<Block>());
+                blocks_.push_back(std::make_unique<Block>());
                 clear();
         }
 
@@ -100,27 +100,27 @@ public:
 
         std::size_t used_blocks() const
         {
-                ASSERT(std::this_thread::get_id() == m_thread_id);
+                ASSERT(std::this_thread::get_id() == thread_id_);
 
-                return m_block + 1;
+                return block_ + 1;
         }
 
         std::size_t used_bytes() const
         {
-                ASSERT(std::this_thread::get_id() == m_thread_id);
+                ASSERT(std::this_thread::get_id() == thread_id_);
 
-                return m_block * BLOCK_SIZE + m_index;
+                return block_ * BLOCK_SIZE + index_;
         }
 
         void clear()
         {
-                ASSERT(std::this_thread::get_id() == m_thread_id);
+                ASSERT(std::this_thread::get_id() == thread_id_);
 
-                m_block = 0;
-                m_index = 0;
+                block_ = 0;
+                index_ = 0;
 
 #if !defined(RELEASE_BUILD)
-                for (const std::unique_ptr<Block>& block_ptr : m_blocks)
+                for (const std::unique_ptr<Block>& block_ptr : blocks_)
                 {
                         block_ptr->set_zero();
                 }
@@ -130,7 +130,7 @@ public:
         template <class T, class... Args>
         T* make(Args&&... args)
         {
-                ASSERT(std::this_thread::get_id() == m_thread_id);
+                ASSERT(std::this_thread::get_id() == thread_id_);
 
                 static_assert(std::is_trivially_destructible_v<T>);
                 static_assert(alignof(T) <= ALIGN);
@@ -138,21 +138,21 @@ public:
 
                 static_assert(sizeof(T) <= BLOCK_SIZE / 1024);
 
-                std::size_t index = next_index<T>(m_index);
+                std::size_t index = next_index<T>(index_);
                 if (index + sizeof(T) <= BLOCK_SIZE)
                 {
-                        T* ptr = create_object<T>(m_blocks[m_block].get(), index, std::forward<Args>(args)...);
-                        m_index = index + sizeof(T);
+                        T* ptr = create_object<T>(blocks_[block_].get(), index, std::forward<Args>(args)...);
+                        index_ = index + sizeof(T);
                         return ptr;
                 }
 
-                if (m_block + 1 == m_blocks.size())
+                if (block_ + 1 == blocks_.size())
                 {
-                        m_blocks.push_back(std::make_unique<Block>());
+                        blocks_.push_back(std::make_unique<Block>());
                 }
-                T* ptr = create_object<T>(m_blocks[m_block + 1].get(), 0, std::forward<Args>(args)...);
-                ++m_block;
-                m_index = sizeof(T);
+                T* ptr = create_object<T>(blocks_[block_ + 1].get(), 0, std::forward<Args>(args)...);
+                ++block_;
+                index_ = sizeof(T);
 
                 if (used_blocks() > BLOCK_COUNT_WITHOUT_WARNING)
                 {

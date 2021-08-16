@@ -31,8 +31,8 @@ Swapchain::Swapchain(
         const vulkan::CommandPool& command_pool,
         const RenderBuffers& render_buffers,
         const vulkan::Swapchain& swapchain)
-        : m_family_index(command_pool.family_index()),
-          m_render_pass(render_pass_swapchain_color(device, swapchain.format(), render_buffers.sample_count()))
+        : family_index_(command_pool.family_index()),
+          render_pass_(render_pass_swapchain_color(device, swapchain.format(), render_buffers.sample_count()))
 {
         const std::vector<VkImageView>& image_views = render_buffers.image_views();
 
@@ -43,23 +43,23 @@ Swapchain::Swapchain(
 
         for (unsigned i = 0; i < swapchain.image_views().size(); ++i)
         {
-                m_signal_semaphores.emplace_back(device);
+                signal_semaphores_.emplace_back(device);
 
                 attachments[0] = swapchain.image_views()[i];
                 attachments[1] = (image_views.size() == 1) ? image_views[0] : image_views[i];
 
-                m_framebuffers.push_back(vulkan::create_framebuffer(
-                        device, m_render_pass, swapchain.width(), swapchain.height(), attachments));
+                framebuffers_.push_back(vulkan::create_framebuffer(
+                        device, render_pass_, swapchain.width(), swapchain.height(), attachments));
         }
 
         std::vector<VkFramebuffer> framebuffers;
-        framebuffers.reserve(m_framebuffers.size());
-        for (const vulkan::Framebuffer& framebuffer : m_framebuffers)
+        framebuffers.reserve(framebuffers_.size());
+        for (const vulkan::Framebuffer& framebuffer : framebuffers_)
         {
                 framebuffers.push_back(framebuffer);
         }
 
-        m_command_buffers = vulkan::CommandBuffers();
+        command_buffers_ = vulkan::CommandBuffers();
 
         vulkan::CommandBufferCreateInfo info;
         info.device = device;
@@ -68,11 +68,11 @@ Swapchain::Swapchain(
         info.render_area->offset.y = 0;
         info.render_area->extent.width = swapchain.width();
         info.render_area->extent.height = swapchain.height();
-        info.render_pass = m_render_pass;
+        info.render_pass = render_pass_;
         info.framebuffers = &framebuffers;
         info.command_pool = command_pool;
 
-        m_command_buffers = vulkan::create_command_buffers(info);
+        command_buffers_ = vulkan::create_command_buffers(info);
 }
 
 VkSemaphore Swapchain::resolve(
@@ -81,11 +81,11 @@ VkSemaphore Swapchain::resolve(
         const VkSemaphore& wait_semaphore,
         const unsigned image_index) const
 {
-        ASSERT(graphics_queue.family_index() == m_family_index);
-        ASSERT(image_index < m_command_buffers.count());
-        ASSERT(m_signal_semaphores.size() == 1 || image_index < m_signal_semaphores.size());
+        ASSERT(graphics_queue.family_index() == family_index_);
+        ASSERT(image_index < command_buffers_.count());
+        ASSERT(signal_semaphores_.size() == 1 || image_index < signal_semaphores_.size());
 
-        const unsigned semaphore_index = m_signal_semaphores.size() == 1 ? 0 : image_index;
+        const unsigned semaphore_index = signal_semaphores_.size() == 1 ? 0 : image_index;
 
         std::array<VkSemaphore, 2> wait_semaphores;
         std::array<VkPipelineStageFlags, 2> wait_stages;
@@ -97,9 +97,9 @@ VkSemaphore Swapchain::resolve(
         wait_stages[1] = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
 
         vulkan::queue_submit(
-                wait_semaphores, wait_stages, m_command_buffers[image_index], m_signal_semaphores[semaphore_index],
+                wait_semaphores, wait_stages, command_buffers_[image_index], signal_semaphores_[semaphore_index],
                 graphics_queue);
 
-        return m_signal_semaphores[semaphore_index];
+        return signal_semaphores_[semaphore_index];
 }
 }

@@ -40,12 +40,12 @@ class Log final
                 }
         };
 
-        QPlainTextEdit* const m_text_edit;
+        QPlainTextEdit* const text_edit_;
 
-        std::array<std::vector<Message>, 2> m_messages;
-        std::atomic<std::vector<Message>*> m_messages_ptr;
+        std::array<std::vector<Message>, 2> messages_;
+        std::atomic<std::vector<Message>*> messages_ptr_;
 
-        application::LogEventsObserver m_observer;
+        application::LogEventsObserver observer_;
 
 public:
         explicit Log(QPlainTextEdit* text_edit);

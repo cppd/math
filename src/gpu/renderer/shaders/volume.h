@@ -38,7 +38,7 @@ class VolumeSharedMemory final
         static constexpr int TRANSPARENCY_HEADS_BINDING = 2;
         static constexpr int TRANSPARENCY_NODES_BINDING = 3;
 
-        vulkan::Descriptors m_descriptors;
+        vulkan::Descriptors descriptors_;
 
 public:
         static std::vector<VkDescriptorSetLayoutBinding> descriptor_set_layout_bindings();
@@ -99,16 +99,16 @@ public:
 
 class VolumeProgram final
 {
-        const vulkan::Device& m_device;
+        const vulkan::Device& device_;
 
-        vulkan::DescriptorSetLayout m_descriptor_set_layout_shared;
-        vulkan::DescriptorSetLayout m_descriptor_set_layout_image;
-        vulkan::PipelineLayout m_pipeline_layout_image_fragments;
-        vulkan::PipelineLayout m_pipeline_layout_fragments;
-        vulkan::VertexShader m_vertex_shader;
-        vulkan::FragmentShader m_fragment_shader_image;
-        vulkan::FragmentShader m_fragment_shader_image_fragments;
-        vulkan::FragmentShader m_fragment_shader_fragments;
+        vulkan::DescriptorSetLayout descriptor_set_layout_shared_;
+        vulkan::DescriptorSetLayout descriptor_set_layout_image_;
+        vulkan::PipelineLayout pipeline_layout_image_fragments_;
+        vulkan::PipelineLayout pipeline_layout_fragments_;
+        vulkan::VertexShader vertex_shader_;
+        vulkan::FragmentShader fragment_shader_image_;
+        vulkan::FragmentShader fragment_shader_image_fragments_;
+        vulkan::FragmentShader fragment_shader_fragments_;
 
 public:
         enum class PipelineLayoutType

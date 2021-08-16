@@ -56,53 +56,53 @@ Matrix<3, 4, Dst> mat3_std140(const Matrix<3, 3, Src>& m)
 
 ShaderBuffers::ShaderBuffers(const vulkan::Device& device, const std::vector<uint32_t>& family_indices)
 {
-        m_uniform_buffers.emplace_back(
+        uniform_buffers_.emplace_back(
                 vulkan::BufferMemoryType::HostVisible, device, family_indices, VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT,
                 sizeof(Matrices));
-        m_matrices_buffer_index = m_uniform_buffers.size() - 1;
+        matrices_buffer_index_ = uniform_buffers_.size() - 1;
 
-        m_uniform_buffers.emplace_back(
+        uniform_buffers_.emplace_back(
                 vulkan::BufferMemoryType::HostVisible, device, family_indices, VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT,
                 sizeof(Matrices));
-        m_shadow_matrices_buffer_index = m_uniform_buffers.size() - 1;
+        shadow_matrices_buffer_index_ = uniform_buffers_.size() - 1;
 
-        m_uniform_buffers.emplace_back(
+        uniform_buffers_.emplace_back(
                 vulkan::BufferMemoryType::HostVisible, device, family_indices, VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT,
                 sizeof(Drawing));
-        m_drawing_buffer_index = m_uniform_buffers.size() - 1;
+        drawing_buffer_index_ = uniform_buffers_.size() - 1;
 }
 
 const vulkan::Buffer& ShaderBuffers::matrices_buffer() const
 {
-        return m_uniform_buffers[m_matrices_buffer_index].buffer();
+        return uniform_buffers_[matrices_buffer_index_].buffer();
 }
 
 const vulkan::Buffer& ShaderBuffers::shadow_matrices_buffer() const
 {
-        return m_uniform_buffers[m_shadow_matrices_buffer_index].buffer();
+        return uniform_buffers_[shadow_matrices_buffer_index_].buffer();
 }
 
 const vulkan::Buffer& ShaderBuffers::drawing_buffer() const
 {
-        return m_uniform_buffers[m_drawing_buffer_index].buffer();
+        return uniform_buffers_[drawing_buffer_index_].buffer();
 }
 
 template <typename T>
 void ShaderBuffers::copy_to_matrices_buffer(VkDeviceSize offset, const T& data) const
 {
-        vulkan::map_and_write_to_buffer(m_uniform_buffers[m_matrices_buffer_index], offset, data);
+        vulkan::map_and_write_to_buffer(uniform_buffers_[matrices_buffer_index_], offset, data);
 }
 
 template <typename T>
 void ShaderBuffers::copy_to_shadow_matrices_buffer(VkDeviceSize offset, const T& data) const
 {
-        vulkan::map_and_write_to_buffer(m_uniform_buffers[m_shadow_matrices_buffer_index], offset, data);
+        vulkan::map_and_write_to_buffer(uniform_buffers_[shadow_matrices_buffer_index_], offset, data);
 }
 
 template <typename T>
 void ShaderBuffers::copy_to_drawing_buffer(VkDeviceSize offset, const T& data) const
 {
-        vulkan::map_and_write_to_buffer(m_uniform_buffers[m_drawing_buffer_index], offset, data);
+        vulkan::map_and_write_to_buffer(uniform_buffers_[drawing_buffer_index_], offset, data);
 }
 
 void ShaderBuffers::set_matrices(
@@ -139,7 +139,7 @@ void ShaderBuffers::set_clip_plane(const vec4d& equation, bool enabled) const
         constexpr std::size_t offset = offsetof(Drawing, clip_plane_equation);
         constexpr std::size_t size = sizeof(Drawing::clip_plane_equation) + sizeof(Drawing::clip_plane_enabled);
 
-        vulkan::BufferMapper map(m_uniform_buffers[m_drawing_buffer_index], offset, size);
+        vulkan::BufferMapper map(uniform_buffers_[drawing_buffer_index_], offset, size);
 
         decltype(Drawing().clip_plane_equation) clip_plane_equation = to_vector<float>(equation);
         decltype(Drawing().clip_plane_enabled) clip_plane_enabled = enabled ? 1 : 0;
@@ -157,7 +157,7 @@ void ShaderBuffers::set_viewport(const vec2d& center, const vec2d& factor) const
         constexpr std::size_t offset = offsetof(Drawing, viewport_center);
         constexpr std::size_t size = sizeof(Drawing::viewport_center) + sizeof(Drawing::viewport_factor);
 
-        vulkan::BufferMapper map(m_uniform_buffers[m_drawing_buffer_index], offset, size);
+        vulkan::BufferMapper map(uniform_buffers_[drawing_buffer_index_], offset, size);
 
         decltype(Drawing().viewport_center) viewport_center = to_vector<float>(center);
         decltype(Drawing().viewport_factor) viewport_factor = to_vector<float>(factor);
@@ -258,25 +258,25 @@ MaterialBuffer::MaterialBuffer(
         const vulkan::Queue& queue,
         const std::vector<uint32_t>& family_indices,
         const Material& material)
-        : m_uniform_buffer(
+        : uniform_buffer_(
                 vulkan::BufferMemoryType::DeviceLocal,
                 device,
                 family_indices,
                 VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT | VK_BUFFER_USAGE_TRANSFER_DST_BIT,
                 sizeof(Material))
 {
-        m_uniform_buffer.write(command_pool, queue, data_size(material), data_pointer(material));
+        uniform_buffer_.write(command_pool, queue, data_size(material), data_pointer(material));
 }
 
 const vulkan::Buffer& MaterialBuffer::buffer() const
 {
-        return m_uniform_buffer.buffer();
+        return uniform_buffer_.buffer();
 }
 
 //
 
 MeshBuffer::MeshBuffer(const vulkan::Device& device, const std::vector<uint32_t>& family_indices)
-        : m_uniform_buffer(
+        : uniform_buffer_(
                 vulkan::BufferMemoryType::HostVisible,
                 device,
                 family_indices,
@@ -287,7 +287,7 @@ MeshBuffer::MeshBuffer(const vulkan::Device& device, const std::vector<uint32_t>
 
 const vulkan::Buffer& MeshBuffer::buffer() const
 {
-        return m_uniform_buffer.buffer();
+        return uniform_buffer_.buffer();
 }
 
 void MeshBuffer::set_coordinates(const mat4d& model_matrix, const mat3d& normal_matrix) const
@@ -297,7 +297,7 @@ void MeshBuffer::set_coordinates(const mat4d& model_matrix, const mat3d& normal_
         constexpr std::size_t offset = offsetof(Mesh, model_matrix);
         constexpr std::size_t size = offsetof(Mesh, normal_matrix) + sizeof(Mesh::normal_matrix) - offset;
 
-        vulkan::BufferMapper map(m_uniform_buffer, offset, size);
+        vulkan::BufferMapper map(uniform_buffer_, offset, size);
 
         decltype(Mesh().model_matrix) model = mat4_std140<float>(model_matrix);
         decltype(Mesh().normal_matrix) normal = mat3_std140<float>(normal_matrix);
@@ -309,13 +309,13 @@ void MeshBuffer::set_coordinates(const mat4d& model_matrix, const mat3d& normal_
 void MeshBuffer::set_color(const vec3f& color) const
 {
         decltype(Mesh().color) c = color;
-        vulkan::map_and_write_to_buffer(m_uniform_buffer, offsetof(Mesh, color), c);
+        vulkan::map_and_write_to_buffer(uniform_buffer_, offsetof(Mesh, color), c);
 }
 
 void MeshBuffer::set_alpha(float alpha) const
 {
         decltype(Mesh().alpha) a = alpha;
-        vulkan::map_and_write_to_buffer(m_uniform_buffer, offsetof(Mesh, alpha), a);
+        vulkan::map_and_write_to_buffer(uniform_buffer_, offsetof(Mesh, alpha), a);
 }
 
 void MeshBuffer::set_lighting(float ambient, float metalness, float roughness) const
@@ -325,7 +325,7 @@ void MeshBuffer::set_lighting(float ambient, float metalness, float roughness) c
         constexpr std::size_t offset = offsetof(Mesh, ambient);
         constexpr std::size_t size = offsetof(Mesh, roughness) + sizeof(Mesh::roughness) - offset;
 
-        vulkan::BufferMapper map(m_uniform_buffer, offset, size);
+        vulkan::BufferMapper map(uniform_buffer_, offset, size);
 
         Mesh mesh;
         mesh.ambient = ambient;
@@ -341,13 +341,13 @@ VolumeBuffer::VolumeBuffer(
         const vulkan::Device& device,
         const std::vector<uint32_t>& graphics_family_indices,
         const std::vector<uint32_t>& transfer_family_indices)
-        : m_uniform_buffer_coordinates(
+        : uniform_buffer_coordinates_(
                 vulkan::BufferMemoryType::HostVisible,
                 device,
                 graphics_family_indices,
                 VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT,
                 sizeof(Coordinates)),
-          m_uniform_buffer_volume(
+          uniform_buffer_volume_(
                   vulkan::BufferMemoryType::DeviceLocal,
                   device,
                   merge<std::vector<uint32_t>>(graphics_family_indices, transfer_family_indices),
@@ -358,22 +358,22 @@ VolumeBuffer::VolumeBuffer(
 
 VkBuffer VolumeBuffer::buffer_coordinates() const
 {
-        return m_uniform_buffer_coordinates;
+        return uniform_buffer_coordinates_;
 }
 
 VkDeviceSize VolumeBuffer::buffer_coordinates_size() const
 {
-        return m_uniform_buffer_coordinates.size();
+        return uniform_buffer_coordinates_.size();
 }
 
 VkBuffer VolumeBuffer::buffer_volume() const
 {
-        return m_uniform_buffer_volume;
+        return uniform_buffer_volume_;
 }
 
 VkDeviceSize VolumeBuffer::buffer_volume_size() const
 {
-        return m_uniform_buffer_volume.size();
+        return uniform_buffer_volume_.size();
 }
 
 void VolumeBuffer::set_coordinates(
@@ -389,14 +389,14 @@ void VolumeBuffer::set_coordinates(
         coordinates.clip_plane_equation = to_vector<float>(clip_plane_equation);
         coordinates.gradient_h = to_vector<float>(gradient_h);
         coordinates.normal_matrix = mat3_std140<float>(normal_matrix);
-        vulkan::map_and_write_to_buffer(m_uniform_buffer_coordinates, 0, coordinates);
+        vulkan::map_and_write_to_buffer(uniform_buffer_coordinates_, 0, coordinates);
 }
 
 void VolumeBuffer::set_clip_plane(const vec4d& clip_plane_equation) const
 {
         decltype(Coordinates().clip_plane_equation) clip_plane = to_vector<float>(clip_plane_equation);
         vulkan::map_and_write_to_buffer(
-                m_uniform_buffer_coordinates, offsetof(Coordinates, clip_plane_equation), clip_plane);
+                uniform_buffer_coordinates_, offsetof(Coordinates, clip_plane_equation), clip_plane);
 }
 
 void VolumeBuffer::set_parameters(
@@ -431,7 +431,7 @@ void VolumeBuffer::set_parameters(
         volume.isovalue = isovalue;
         volume.color = color;
 
-        m_uniform_buffer_volume.write(
+        uniform_buffer_volume_.write(
                 command_pool, queue, offset, size, reinterpret_cast<const char*>(&volume) + offset);
 }
 
@@ -441,7 +441,7 @@ void VolumeBuffer::set_color_volume(
         bool color_volume) const
 {
         decltype(Volume().color_volume) v = color_volume ? 1 : 0;
-        m_uniform_buffer_volume.write(
+        uniform_buffer_volume_.write(
                 command_pool, queue, offsetof(Volume, color_volume), data_size(v), data_pointer(v));
 }
 
@@ -463,7 +463,7 @@ void VolumeBuffer::set_lighting(
         volume.metalness = metalness;
         volume.roughness = roughness;
 
-        m_uniform_buffer_volume.write(
+        uniform_buffer_volume_.write(
                 command_pool, queue, offset, size, reinterpret_cast<const char*>(&volume) + offset);
 }
 
@@ -476,22 +476,22 @@ TransparencyBuffers::TransparencyBuffers(
         unsigned width,
         unsigned height,
         unsigned long long max_node_buffer_size)
-        : m_node_count(
+        : node_count_(
                 std::min(
                         max_node_buffer_size,
                         static_cast<unsigned long long>(device.properties().properties_10.limits.maxStorageBufferRange))
                 / NODE_SIZE),
-          m_heads(device,
-                  family_indices,
-                  std::vector<VkFormat>({VK_FORMAT_R32_UINT}),
-                  sample_count,
-                  VK_IMAGE_TYPE_2D,
-                  vulkan::make_extent(width, height),
-                  VK_IMAGE_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_STORAGE_BIT,
-                  VK_IMAGE_LAYOUT_GENERAL,
-                  command_pool,
-                  queue),
-          m_heads_size(
+          heads_(device,
+                 family_indices,
+                 std::vector<VkFormat>({VK_FORMAT_R32_UINT}),
+                 sample_count,
+                 VK_IMAGE_TYPE_2D,
+                 vulkan::make_extent(width, height),
+                 VK_IMAGE_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_STORAGE_BIT,
+                 VK_IMAGE_LAYOUT_GENERAL,
+                 command_pool,
+                 queue),
+          heads_size_(
                   device,
                   family_indices,
                   std::vector<VkFormat>({VK_FORMAT_R32_UINT}),
@@ -502,25 +502,25 @@ TransparencyBuffers::TransparencyBuffers(
                   VK_IMAGE_LAYOUT_GENERAL,
                   command_pool,
                   queue),
-          m_node_buffer(
+          node_buffer_(
                   vulkan::BufferMemoryType::DeviceLocal,
                   device,
                   family_indices,
                   VK_BUFFER_USAGE_STORAGE_BUFFER_BIT,
-                  m_node_count * NODE_SIZE),
-          m_init_buffer(
+                  node_count_ * NODE_SIZE),
+          init_buffer_(
                   vulkan::BufferMemoryType::HostVisible,
                   device,
                   family_indices,
                   VK_BUFFER_USAGE_TRANSFER_SRC_BIT,
                   sizeof(Counters)),
-          m_read_buffer(
+          read_buffer_(
                   vulkan::BufferMemoryType::HostVisible,
                   device,
                   family_indices,
                   VK_BUFFER_USAGE_TRANSFER_DST_BIT,
                   sizeof(Counters)),
-          m_counters(
+          counters_(
                   vulkan::BufferMemoryType::DeviceLocal,
                   device,
                   family_indices,
@@ -531,50 +531,50 @@ TransparencyBuffers::TransparencyBuffers(
         Counters counters;
         counters.transparency_node_counter = 0;
         counters.transparency_overload_counter = 0;
-        vulkan::BufferMapper mapper(m_init_buffer, 0, m_init_buffer.size());
+        vulkan::BufferMapper mapper(init_buffer_, 0, init_buffer_.size());
         mapper.write(counters);
 }
 
 const vulkan::Buffer& TransparencyBuffers::counters() const
 {
-        return m_counters.buffer();
+        return counters_.buffer();
 }
 
 const vulkan::ImageWithMemory& TransparencyBuffers::heads() const
 {
-        return m_heads;
+        return heads_;
 }
 
 const vulkan::ImageWithMemory& TransparencyBuffers::heads_size() const
 {
-        return m_heads_size;
+        return heads_size_;
 }
 
 const vulkan::Buffer& TransparencyBuffers::nodes() const
 {
-        return m_node_buffer.buffer();
+        return node_buffer_.buffer();
 }
 
 unsigned TransparencyBuffers::node_count() const
 {
-        return m_node_count;
+        return node_count_;
 }
 
 void TransparencyBuffers::commands_init(VkCommandBuffer command_buffer) const
 {
-        commands_init_uint32_storage_image(command_buffer, m_heads, HEADS_NULL_POINTER);
-        commands_init_uint32_storage_image(command_buffer, m_heads_size, 0);
-        commands_init_buffer(command_buffer, m_init_buffer, m_counters);
+        commands_init_uint32_storage_image(command_buffer, heads_, HEADS_NULL_POINTER);
+        commands_init_uint32_storage_image(command_buffer, heads_size_, 0);
+        commands_init_buffer(command_buffer, init_buffer_, counters_);
 }
 
 void TransparencyBuffers::commands_read(VkCommandBuffer command_buffer) const
 {
-        commands_read_buffer(command_buffer, m_counters, m_read_buffer);
+        commands_read_buffer(command_buffer, counters_, read_buffer_);
 }
 
 void TransparencyBuffers::read(unsigned long long* required_node_memory, unsigned* overload_counter) const
 {
-        vulkan::BufferMapper mapper(m_read_buffer);
+        vulkan::BufferMapper mapper(read_buffer_);
         Counters counters;
         mapper.read(&counters);
         *required_node_memory = counters.transparency_node_counter * NODE_SIZE;

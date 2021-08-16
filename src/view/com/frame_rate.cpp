@@ -36,20 +36,20 @@ constexpr double TEXT_Y_IN_POINTS = TEXT_STEP_Y_IN_POINTS;
 constexpr const char* TEXT = "FPS: ";
 }
 
-FrameRate::FrameRate(double ppi) : m_frequency(INTERVAL_LENGTH, SAMPLE_COUNT)
+FrameRate::FrameRate(double ppi) : frequency_(INTERVAL_LENGTH, SAMPLE_COUNT)
 {
-        m_text_size = points_to_pixels(TEXT_SIZE_IN_POINTS, ppi);
+        text_size_ = points_to_pixels(TEXT_SIZE_IN_POINTS, ppi);
 
-        m_text_data.step_y = points_to_pixels(TEXT_STEP_Y_IN_POINTS, ppi);
-        m_text_data.start_x = points_to_pixels(TEXT_X_IN_POINTS, ppi);
-        m_text_data.start_y = points_to_pixels(TEXT_Y_IN_POINTS, ppi);
-        m_text_data.text.resize(2);
-        m_text_data.text[0] = TEXT;
-        m_text_data.text[1] = "";
+        text_data_.step_y = points_to_pixels(TEXT_STEP_Y_IN_POINTS, ppi);
+        text_data_.start_x = points_to_pixels(TEXT_X_IN_POINTS, ppi);
+        text_data_.start_y = points_to_pixels(TEXT_Y_IN_POINTS, ppi);
+        text_data_.text.resize(2);
+        text_data_.text[0] = TEXT;
+        text_data_.text[1] = "";
 }
 
 void FrameRate::calculate()
 {
-        m_text_data.text[1] = to_string(std::lround(m_frequency.calculate()));
+        text_data_.text[1] = to_string(std::lround(frequency_.calculate()));
 }
 }

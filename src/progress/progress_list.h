@@ -30,11 +30,11 @@ namespace ns
 {
 class ProgressRatioList final : public ProgressRatios
 {
-        const std::thread::id m_thread_id = std::this_thread::get_id();
-        std::list<ProgressRatioControl*> m_ratios;
-        bool m_terminate_quietly = false;
-        bool m_terminate_with_message = false;
-        mutable std::mutex m_mutex;
+        const std::thread::id thread_id_ = std::this_thread::get_id();
+        std::list<ProgressRatioControl*> ratios_;
+        bool terminate_quietly_ = false;
+        bool terminate_with_message_ = false;
+        mutable std::mutex mutex_;
 
 public:
         // Для работы в потоках расчётов
