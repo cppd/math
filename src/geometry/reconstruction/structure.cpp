@@ -15,6 +15,12 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
+/*
+Tamal K. Dey.
+Curve and Surface Reconstruction: Algorithms with Mathematical Analysis.
+Cambridge University Press, 2007.
+*/
+
 #include "structure.h"
 
 #include "functions.h"
@@ -27,26 +33,17 @@ namespace ns::geometry
 {
 namespace
 {
-constexpr double MIN_DOUBLE = limits<double>::lowest();
-
-// Значения косинусов для частного случая, когда вместе имеется:
-// а) маленький угол между вектором PA от вершины P к вершине A ребра
-//  ячейки Вороного и прямой положительного полюса,
-// б) большой угол (близко к PI) между вектором PA от вершины P к вершине A
-//  ребра ячейки Вороного и вектором этого ребра в направлении от точки A.
 constexpr double LIMIT_COSINE_FOR_INTERSECTION_PA_POLE = 0.99;
 constexpr double LIMIT_COSINE_FOR_INTERSECTION_PA_AB = -0.9999;
 
-// Соединения вершины с объектами Делоне и гранями объектов Делоне
-struct VertexConnections
+struct VertexConnections final
 {
         struct Facet
         {
-                // глобальный индекс грани
                 int facet_index;
-                // локальный индекс вершины грани, являющейся данной вершиной
-                int vertex_index;
-                Facet(int facet_index, int vertex_index) : facet_index(facet_index), vertex_index(vertex_index)
+                int facet_vertex_index;
+                Facet(int facet_index, int facet_vertex_index)
+                        : facet_index(facet_index), facet_vertex_index(facet_vertex_index)
                 {
                 }
         };
@@ -54,11 +51,7 @@ struct VertexConnections
         std::vector<Facet> facets;
 };
 
-//   Если вершина находится на краю объекта, то вектором положительного полюса
-// считается сумма перпендикуляров односторонних граней.
-//   Если вершина не находится на краю объекта, то вектором положительного полюса
-// считается вектор от вершины к наиболее удалённой вершине ячейки Вороного.
-//   В книге это Definition 4.1 (Poles).
+// Definition 4.1 (Poles).
 template <std::size_t N>
 Vector<N, double> voronoi_positive_norm(
         const Vector<N, double>& vertex,
@@ -85,28 +78,26 @@ Vector<N, double> voronoi_positive_norm(
                 {
                         if (delaunay_facets[vertex_facet.facet_index].one_sided())
                         {
-                                sum = sum + delaunay_facets[vertex_facet.facet_index].ortho();
+                                sum += delaunay_facets[vertex_facet.facet_index].ortho();
                         }
                 }
-
                 positive_norm = sum.normalized();
         }
         else
         {
-                double max_distance = MIN_DOUBLE;
+                double max_distance = limits<double>::lowest();
                 Vector<N, double> max_vector(0);
                 for (int object_index : vertex_connections.objects)
                 {
                         Vector<N, double> voronoi_vertex = delaunay_objects[object_index].voronoi_vertex();
                         Vector<N, double> vp = voronoi_vertex - vertex;
-                        double distance = dot(vp, vp);
+                        double distance = vp.norm_squared();
                         if (distance > max_distance)
                         {
                                 max_distance = distance;
                                 max_vector = vp;
                         }
                 }
-
                 positive_norm = max_vector.normalized();
         }
 
@@ -118,11 +109,8 @@ Vector<N, double> voronoi_positive_norm(
         return positive_norm;
 }
 
-//   Вектором отрицательного полюса считается вектор от вершины к наиболее
-// удалённой вершине ячейки Вороного, при котором угол между этим вектором
-// и вектором к положительному полюсу составляет более 90 градусов.
-//   Высотой ячейки Вороного является длина отрицательного полюса.
-//   В книге это Definition 4.1 (Poles) и Definition 5.3.
+// Definition 4.1 (Poles).
+// Definition 5.3 (The radius and the height of a Voronoi cell).
 template <std::size_t N>
 double voronoi_height(
         const Vector<N, double>& vertex,
@@ -130,7 +118,7 @@ double voronoi_height(
         const Vector<N, double>& positive_pole_norm,
         const std::vector<int>& vertex_objects)
 {
-        double max_distance = MIN_DOUBLE;
+        double max_distance = limits<double>::lowest();
         // Vector<N, double> negative_pole(0);
         bool found = false;
 
@@ -144,7 +132,7 @@ double voronoi_height(
                         continue;
                 }
 
-                double distance = dot(vp, vp);
+                double distance = vp.norm_squared();
                 if (distance > max_distance)
                 {
                         max_distance = distance;
@@ -189,27 +177,25 @@ double voronoi_edge_radius(
                 return std::max(pa_length, pb_length);
         }
 
-        // Если вершины Вороного совпадают, то до этого места не дойдёт, так как тогда они внутри cocone.
-        // Поэтому можно брать разницу между вершинами как вектор направления от a к b.
-        // Но могут быть и небольшие разницы на границах cocone.
+        // here Voronoi vertices are not equal (if equal then they are inside cocone),
+        // so it is possible to take a non-zero vector from a to b.
         Vector<N, double> a_to_b = facet.one_sided() ? facet.ortho()
                                                      : (delaunay_objects[facet.delaunay(1)].voronoi_vertex()
                                                         - delaunay_objects[facet.delaunay(0)].voronoi_vertex());
 
-        double max_distance;
-
-        if (!intersect_cocone(positive_pole, pa, a_to_b, &max_distance))
+        std::optional<double> max_distance = intersect_cocone_max_distance(positive_pole, pa, a_to_b);
+        if (!max_distance)
         {
-                // Если вектор PA направлен далеко от cocone и близко к положительному полюсу
+                // if PA is close to positive pole
                 if (std::abs(cos_n_a) > LIMIT_COSINE_FOR_INTERSECTION_PA_POLE)
                 {
                         double a_to_b_length = facet.one_sided() ? 1.0 : a_to_b.norm();
                         double cos_pa_ab = dot(pa, a_to_b) / (pa_length * a_to_b_length);
 
-                        // Если PA и AB направлены почти в противоположных направлениях
+                        // if PA and AB are in opposite directions
                         if (cos_pa_ab < LIMIT_COSINE_FOR_INTERSECTION_PA_AB)
                         {
-                                // Пересечение близко к вершине, поэтому считать равным 0
+                                // close to vertex
                                 max_distance = 0;
                         }
                         else
@@ -223,21 +209,20 @@ double voronoi_edge_radius(
                 }
         }
 
-        if (!is_finite(max_distance))
+        if (!is_finite(*max_distance))
         {
                 error("Cocone intersection distance is not finite");
         }
 
         if (cocone_inside_or_equal(cos_n_a))
         {
-                return std::max(pa_length, max_distance);
+                return std::max(pa_length, *max_distance);
         }
 
-        return max_distance;
+        return *max_distance;
 }
 
-// Радиус ячейки Вороного равен максимальному расстоянию от вершины то границ ячейки Вороного в границах cocone.
-// В книге это Definition 5.3.
+// Definition 5.3 (The radius and the height of a Voronoi cell).
 template <std::size_t N>
 void cocone_facets_and_voronoi_radius(
         const Vector<N, double>& vertex,
@@ -257,13 +242,10 @@ void cocone_facets_and_voronoi_radius(
         {
                 const DelaunayFacet<N>& facet = delaunay_facets[vertex_facet.facet_index];
 
-                // Вектор от вершины к одной из 2 вершин Вороного грани
                 Vector<N, double> pa = delaunay_objects[facet.delaunay(0)].voronoi_vertex() - vertex;
                 double pa_length = pa.norm();
                 double cos_n_a = dot(positive_pole, pa) / pa_length;
 
-                // Вектор от вершины к другой из 2 вершин Вороного.
-                // Если нет второй вершины, то перпендикуляр наружу.
                 double pb_length;
                 double cos_n_b;
                 if (facet.one_sided())
@@ -283,9 +265,10 @@ void cocone_facets_and_voronoi_radius(
                         continue;
                 }
 
-                // Грань считается cocone, если соответствующее ей ребро Вороного пересекает cocone всех N вершин.
-                // Найдено пересечение с cocone одной из вершин.
-                (*facet_data)[vertex_facet.facet_index].cocone_vertex[vertex_facet.vertex_index] = true;
+                // The facet is marked as a cocone facet only if the Voronoi edge
+                // intersects cocones of all N vertices of the facet.
+                // The intersection is found for this facet vertex.
+                (*facet_data)[vertex_facet.facet_index].cocone_vertex[vertex_facet.facet_vertex_index] = true;
 
                 if (find_radius && *radius != limits<double>::max())
                 {
@@ -299,6 +282,9 @@ void cocone_facets_and_voronoi_radius(
         ASSERT(!find_radius || (*radius > 0 && *radius <= limits<double>::max()));
 }
 
+// 5.1.2 Flat Sample Points.
+// The set of points in P whose Voronoi cells intersect
+// the cocone of p are called the cocone neighbors of p.
 template <std::size_t N>
 void cocone_neighbors(
         const std::vector<DelaunayFacet<N>>& delaunay_facets,
@@ -316,18 +302,16 @@ void cocone_neighbors(
                 for (const VertexConnections::Facet& vertex_facet : vertex_connections[vertex_index].facets)
                 {
                         int facet_index = vertex_facet.facet_index;
-                        unsigned skip_v = vertex_facet.vertex_index;
+                        unsigned skip_v = vertex_facet.facet_vertex_index;
 
                         for (unsigned v = 0; v < N; ++v)
                         {
                                 if (v == skip_v)
                                 {
-                                        // Эта вершина грани совпадает с рассматриваемой вершиной, поэтому пропустить
                                         ASSERT(delaunay_facets[facet_index].vertices()[v] == vertex_index);
                                         continue;
                                 }
 
-                                // Если грань попадает в cocone вершины, то включить эту вершину в список соседей cocone
                                 if (facet_data[facet_index].cocone_vertex[v])
                                 {
                                         (*vertex_data)[vertex_index].cocone_neighbors.push_back(
@@ -392,8 +376,8 @@ void vertex_and_facet_data(
         {
                 if (connections[v].facets.empty() && connections[v].objects.empty())
                 {
-                        // Не все исходные точки становятся вершинами в Делоне.
-                        // Выпуклая оболочка может пропустить некоторые точки (одинаковые, близкие и т.д.).
+                        // No all points are Delaunay vertices.
+                        // Integer convex hull algorithm can skip some points.
                         vertex_data->emplace_back(Vector<N, double>(0), 0, 0);
                         continue;
                 }

@@ -123,9 +123,9 @@ void check_convex_hull(const std::vector<Vector<N, float>>& points, std::vector<
                         array_facets.push_back(facet.vertices());
                 }
 
-                constexpr bool has_boundary = false;
+                constexpr bool HAS_BOUNDARY = false;
                 const int euler_characteristic = euler_characteristic_for_convex_polytope<N>();
-                check_mesh("Convex hull in " + space_name(N), points, array_facets, has_boundary, euler_characteristic);
+                check_mesh("Convex hull in " + space_name(N), points, array_facets, HAS_BOUNDARY, euler_characteristic);
         }
 
         for (const ConvexHullFacet<N>& facet : *facets)
@@ -182,7 +182,7 @@ template <std::size_t N>
 void test(std::size_t low, std::size_t high, ProgressRatio* progress)
 {
         constexpr bool ON_SPHERE = false;
-        const int SIZE = [&]()
+        const int size = [&]()
         {
                 std::mt19937_64 engine = create_engine<std::mt19937_64>();
                 return std::uniform_int_distribution<int>(low, high)(engine);
@@ -191,7 +191,7 @@ void test(std::size_t low, std::size_t high, ProgressRatio* progress)
         {
                 LOG("-----------------");
                 constexpr bool ZERO = false;
-                std::vector<Vector<N, float>> points = generate_random_data<N>(ZERO, SIZE, ON_SPHERE);
+                std::vector<Vector<N, float>> points = generate_random_data<N>(ZERO, size, ON_SPHERE);
                 LOG("Convex hull in " + space_name(N) + ", point count " + to_string(points.size()));
                 std::vector<ConvexHullFacet<N>> facets = create_convex_hull(points, progress);
                 check_convex_hull(points, &facets);
@@ -199,7 +199,7 @@ void test(std::size_t low, std::size_t high, ProgressRatio* progress)
         {
                 LOG("-----------------");
                 constexpr bool ZERO = true;
-                std::vector<Vector<N, float>> points = generate_random_data<N>(ZERO, SIZE, ON_SPHERE);
+                std::vector<Vector<N, float>> points = generate_random_data<N>(ZERO, size, ON_SPHERE);
                 LOG("Convex hull in " + space_name(N) + ", point count " + to_string(points.size()));
                 std::vector<ConvexHullFacet<N>> facets = create_convex_hull(points, progress);
                 check_convex_hull(points, &facets);

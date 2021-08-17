@@ -55,8 +55,8 @@ struct ManifoldConstructor
                 std::vector<std::array<int, N>>* facets,
                 ProgressRatio* progress) const = 0;
         virtual void bound_cocone(
-                double RHO,
-                double ALPHA,
+                double rho,
+                double alpha,
                 std::vector<Vector<N, double>>* normals,
                 std::vector<std::array<int, N>>* facets,
                 ProgressRatio* progress) const = 0;

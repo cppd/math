@@ -109,12 +109,12 @@ public:
         }
 };
 
-template <int MaxSize, typename Facet>
+template <int MAX_SIZE, typename Facet>
 class RidgeDataC
 {
-        static_assert(MaxSize > 1);
+        static_assert(MAX_SIZE > 1);
 
-        std::array<RidgeDataElement<Facet>, MaxSize> data_;
+        std::array<RidgeDataElement<Facet>, MAX_SIZE> data_;
         int size_;
 
 public:
@@ -124,7 +124,7 @@ public:
 
         void add(const Facet* facet, int external_point_index)
         {
-                for (int i = 0; i < MaxSize; ++i)
+                for (int i = 0; i < MAX_SIZE; ++i)
                 {
                         if (data_[i].facet() == nullptr)
                         {
@@ -141,7 +141,7 @@ public:
 
         void remove(const Facet* facet)
         {
-                for (int i = 0; i < MaxSize; ++i)
+                for (int i = 0; i < MAX_SIZE; ++i)
                 {
                         if (data_[i].facet() == facet)
                         {
@@ -165,7 +165,7 @@ public:
 
         const RidgeDataElement<Facet>& operator[](unsigned i) const
         {
-                ASSERT(i < MaxSize);
+                ASSERT(i < MAX_SIZE);
                 return data_[i];
         }
 };

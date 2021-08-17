@@ -207,9 +207,9 @@ void test_algorithms(
                               + to_string(facets.size()));
                 }
 
-                constexpr bool has_boundary = false;
+                constexpr bool HAS_BOUNDARY = false;
                 const int euler_characteristic = object_count * euler_characteristic_for_convex_polytope<N>();
-                check_mesh("Cocone reconstruction", points, facets, has_boundary, euler_characteristic);
+                check_mesh("Cocone reconstruction", points, facets, HAS_BOUNDARY, euler_characteristic);
         }
 
         {
@@ -256,17 +256,17 @@ void all_tests(bool bounded_object, std::vector<Vector<N, float>>&& points, Prog
 template <std::size_t N>
 void test(int low, int high, ProgressRatio* progress)
 {
-        const int POINT_COUNT = [&]()
+        const int point_count = [&]()
         {
                 std::mt19937 engine = create_engine<std::mt19937>();
                 return std::uniform_int_distribution<int>(low, high)(engine);
         }();
 
         LOG("\n--- Unbound " + to_string(N - 1) + "-manifold reconstructions in " + space_name(N) + " ---\n");
-        all_tests<N>(false, points_sphere_with_notch<N>(POINT_COUNT, false), progress);
+        all_tests<N>(false, points_sphere_with_notch<N>(point_count, false), progress);
 
         LOG("\n--- Bound " + to_string(N - 1) + "-manifold reconstructions in " + space_name(N) + " ---\n");
-        all_tests<N>(true, points_sphere_with_notch<N>(POINT_COUNT, true), progress);
+        all_tests<N>(true, points_sphere_with_notch<N>(point_count, true), progress);
 }
 
 void test_reconstruction_2(ProgressRatio* progress)

@@ -23,35 +23,35 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/numerical/vec.h>
 
 #include <cmath>
+#include <optional>
 
 namespace ns::geometry
 {
 namespace functions_implementation
 {
-// Константа алгоритмов Cocone, равна cos(3 * PI / 8)
+// cos(3 * PI / 8)
 template <typename T>
-inline constexpr T COS_OF_AN_OPENING_ANGLE_WITH_THE_AXIS =
-        0.3826834323650897717284599840303988667613445624856270414338006356275460339600896922370137853422835471L;
+inline constexpr T COS_OF_AN_OPENING_ANGLE_WITH_THE_AXIS = 0.38268343236508977172845998403039886676134456248563L;
 }
 
-// Условия пересечения ребра ячейки Вороного, соответствующего грани, с cocone вершины.
-// Параметры - косинусы между перпендикуляром к вершине и двумя вершинами ребра ячейки Вороного.
+// Check if a Voronoi edge e = (a, b) intersects the cocone of p,
+// n is the unit vector of the pole vector vp.
 template <typename T>
-bool voronoi_edge_intersects_cocone(T cos_n_a, T cos_n_b)
+bool voronoi_edge_intersects_cocone(const T cos_n_pa, const T cos_n_pb)
 {
         static_assert(is_native_floating_point<T>);
+        namespace impl = functions_implementation;
 
-        constexpr T cos_cocone = functions_implementation::COS_OF_AN_OPENING_ANGLE_WITH_THE_AXIS<T>;
-
-        if (std::abs(cos_n_a) < cos_cocone || std::abs(cos_n_b) < cos_cocone)
+        if ((std::abs(cos_n_pa) < impl::COS_OF_AN_OPENING_ANGLE_WITH_THE_AXIS<T>)
+            || (std::abs(cos_n_pb) < impl::COS_OF_AN_OPENING_ANGLE_WITH_THE_AXIS<T>))
         {
                 return true;
         }
-        if (cos_n_a < 0 && cos_n_b > 0)
+        if (cos_n_pa < 0 && cos_n_pb > 0)
         {
                 return true;
         }
-        if (cos_n_a > 0 && cos_n_b < 0)
+        if (cos_n_pa > 0 && cos_n_pb < 0)
         {
                 return true;
         }
@@ -59,48 +59,46 @@ bool voronoi_edge_intersects_cocone(T cos_n_a, T cos_n_b)
 }
 
 template <typename... T>
-bool cocone_inside_or_equal(T... cos_n_p)
+bool cocone_inside_or_equal(const T... cos_n_p)
 {
         static_assert((is_native_floating_point<T> && ...));
+        namespace impl = functions_implementation;
 
-        return ((std::abs(cos_n_p) <= functions_implementation::COS_OF_AN_OPENING_ANGLE_WITH_THE_AXIS<T>)&&...);
+        return ((std::abs(cos_n_p) <= impl::COS_OF_AN_OPENING_ANGLE_WITH_THE_AXIS<T>)&&...);
 }
 
 /*
-Пересечение отрезка AB с двойным конусом с заданной осью и заданным углом между осью и конусом.
+Intersection of a vector and a double cone.
 
-Вектор от центра конуса к точке A равен PA, вектор от центра конуса к точке B равен PB.
-Вектор от центра конуса к точке пересечения AB с конусом равен PI = PA + t × (PB - PA),
-где 0 <= t <= 1.
+alpha: the opening angle with the axis.
+N: the unit cone axis.
+PA: the vector from the apex to A.
+AB: the vector for the intersection.
+PI: the vector from the apex to the intersection
+of AB and the cone, PA + t × AB, 0 <= t.
 
-Надо найти такие t, при которых косинус между PI и единичным вектором оси конуса равен заданному
-косинусу со знаком плюс или минус:
-        normalize(PA + t × (PB - PA))⋅N = ±cos(alpha).
-Из двух t надо выбрать одно такое, при котором вектор PI максимален.
+normalize(PA + t × AB)⋅N = ±cos(alpha).
+Select PI with a maximum length.
 
-Обозначаем a = PA, b = PB, n = N:
-        ((a + t×(b-a))/norm(a+t×(b-a)))⋅n = ±cos(alpha),
-        ((a⋅n + t×(b-a)⋅n))/norm(a+t×(b-a)) = ±cos(alpha),
-        ((a⋅n + t×(b-a)⋅n))²/(a+t×(b-a))² = cos²(alpha).
-
-Далее раскрываем квадраты и группируем по степеням t.
-Получается квадратное уравнение относительно t:
-          t² × ((n⋅(b-a))² - cos²(alpha)×(b-a)²)
-        + t¹ × 2 × ((a⋅n)(n⋅(b-a)) - a⋅(b-a)×cos²(alpha))
-        + t⁰ × ((a⋅n)² - a²×cos²(alpha))
-          = 0
+a = PA, ab = AB, n = N:
+ ((a + t×ab)/norm(a+t×ab))⋅n = ±cos(alpha),
+ ((a⋅n + t×ab⋅n))/norm(a+t×ab) = ±cos(alpha),
+ ((a⋅n + t×ab⋅n))²/(a+t×ab)² = cos²(alpha).
+ t² × ((n⋅ab)² - cos²(alpha)×(ab)²)
+  + t¹ × 2 × ((a⋅n)(n⋅ab) - a⋅ab×cos²(alpha))
+  + t⁰ × ((a⋅n)² - a²×cos²(alpha))
+  = 0.
 */
 template <std::size_t N, typename T>
-bool intersect_cocone(
+std::optional<T> intersect_cocone_max_distance(
         const Vector<N, T>& normalized_cone_axis,
         const Vector<N, T>& from_apex_to_point_a,
-        const Vector<N, T>& from_point_a_to_point_b,
-        T* distance)
+        const Vector<N, T>& vector_from_point_a)
 {
         static_assert(is_native_floating_point<T>);
 
         const Vector<N, T>& vec_a = from_apex_to_point_a;
-        const Vector<N, T>& vec_ab = from_point_a_to_point_b;
+        const Vector<N, T>& vec_ab = vector_from_point_a;
         const Vector<N, T>& vec_norm = normalized_cone_axis;
 
         T n_ab = dot(vec_norm, vec_ab);
@@ -110,7 +108,7 @@ bool intersect_cocone(
         T a_ab = dot(vec_a, vec_ab);
         T square_cos = square(functions_implementation::COS_OF_AN_OPENING_ANGLE_WITH_THE_AXIS<T>);
 
-        // коэффициенты квадратного уравнения ax² + bx + c = 0
+        // ax² + bx + c = 0
         T a = square(n_ab) - square_cos * square_ab;
         T b = 2 * (a_n * n_ab - a_ab * square_cos);
         T c = square(a_n) - square_a * square_cos;
@@ -119,7 +117,7 @@ bool intersect_cocone(
         T t2;
         if (!numerical::quadratic_equation(a, b, c, &t1, &t2))
         {
-                return false;
+                return std::nullopt;
         }
 
         bool t1_ok = t1 >= 0 && t1 <= limits<T>::max();
@@ -127,40 +125,18 @@ bool intersect_cocone(
 
         if (!t1_ok && !t2_ok)
         {
-                return false;
+                return std::nullopt;
         }
-
-        Vector<N, T> from_apex_to_intersection_point;
-
         if (t1_ok && !t2_ok)
         {
-                from_apex_to_intersection_point = vec_a + t1 * vec_ab;
-                *distance = from_apex_to_intersection_point.norm();
-                return true;
+                return (vec_a + t1 * vec_ab).norm();
         }
         if (!t1_ok && t2_ok)
         {
-                from_apex_to_intersection_point = vec_a + t2 * vec_ab;
-                *distance = from_apex_to_intersection_point.norm();
-                return true;
+                return (vec_a + t2 * vec_ab).norm();
         }
-
-        Vector<N, T> pi_1 = vec_a + t1 * vec_ab;
-        Vector<N, T> pi_2 = vec_a + t2 * vec_ab;
-        T dot_1 = dot(pi_1, pi_1);
-        T dot_2 = dot(pi_2, pi_2);
-
-        if (dot_1 > dot_2)
-        {
-                from_apex_to_intersection_point = pi_1;
-                *distance = std::sqrt(dot_1);
-        }
-        else
-        {
-                from_apex_to_intersection_point = pi_2;
-                *distance = std::sqrt(dot_2);
-        }
-
-        return true;
+        T d_1 = (vec_a + t1 * vec_ab).norm_squared();
+        T d_2 = (vec_a + t2 * vec_ab).norm_squared();
+        return (d_1 > d_2) ? std::sqrt(d_1) : std::sqrt(d_2);
 }
 }

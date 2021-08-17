@@ -44,9 +44,9 @@ struct ManifoldVertex
 template <std::size_t N>
 struct ManifoldFacet
 {
-        std::array<bool, N> cocone_vertex;
+        std::array<bool, N> cocone_vertex{make_array_value<bool, N>(false)};
 
-        ManifoldFacet() : cocone_vertex(make_array_value<bool, N>(false))
+        ManifoldFacet()
         {
         }
 };

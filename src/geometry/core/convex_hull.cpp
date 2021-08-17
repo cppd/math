@@ -286,7 +286,7 @@ bool linearly_independent(const std::array<Vector<N, T>, N>& vectors)
         return false;
 }
 
-template <unsigned simplex_i, std::size_t N, typename SourceType, typename ComputeType>
+template <unsigned SIMPLEX_I, std::size_t N, typename SourceType, typename ComputeType>
 void find_simplex_points(
         const std::vector<Vector<N, SourceType>>& points,
         std::array<int, N + 1>* simplex_points,
@@ -294,14 +294,14 @@ void find_simplex_points(
         unsigned point_i)
 {
         static_assert(N > 1);
-        static_assert(simplex_i <= N);
+        static_assert(SIMPLEX_I <= N);
 
         for (; point_i < points.size(); ++point_i)
         {
                 numerical::difference(
-                        &(*simplex_vectors)[simplex_i - 1], points[point_i], points[(*simplex_points)[0]]);
+                        &(*simplex_vectors)[SIMPLEX_I - 1], points[point_i], points[(*simplex_points)[0]]);
 
-                if (linearly_independent<simplex_i>(*simplex_vectors))
+                if (linearly_independent<SIMPLEX_I>(*simplex_vectors))
                 {
                         break;
                 }
@@ -309,14 +309,14 @@ void find_simplex_points(
 
         if (point_i == points.size())
         {
-                error("point " + to_string(simplex_i + 1) + " of " + to_string(N) + "-simplex not found");
+                error("point " + to_string(SIMPLEX_I + 1) + " of " + to_string(N) + "-simplex not found");
         }
 
-        (*simplex_points)[simplex_i] = point_i;
+        (*simplex_points)[SIMPLEX_I] = point_i;
 
-        if constexpr (simplex_i + 1 < N + 1)
+        if constexpr (SIMPLEX_I + 1 < N + 1)
         {
-                find_simplex_points<simplex_i + 1>(points, simplex_points, simplex_vectors, point_i + 1);
+                find_simplex_points<SIMPLEX_I + 1>(points, simplex_points, simplex_vectors, point_i + 1);
         }
 }
 
@@ -391,16 +391,16 @@ void create_init_convex_hull(
                 std::prev(facets->end())->set_iter(std::prev(facets->cend()));
         }
 
-        constexpr int ridge_count = binomial<N + 1, N - 1>();
+        constexpr int RIDGE_COUNT = binomial<N + 1, N - 1>();
 
         int ridges = 0;
-        std::unordered_map<Ridge<N>, std::tuple<Facet<N, S, C>*, unsigned>> search_map(ridge_count);
+        std::unordered_map<Ridge<N>, std::tuple<Facet<N, S, C>*, unsigned>> search_map(RIDGE_COUNT);
         for (Facet<N, S, C>& facet : *facets)
         {
                 connect_facets(&facet, -1, &search_map, &ridges);
         }
         ASSERT(search_map.empty());
-        ASSERT(ridges == ridge_count);
+        ASSERT(ridges == RIDGE_COUNT);
 }
 
 template <typename Point, typename Facet>

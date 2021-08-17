@@ -15,6 +15,14 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
+/*
+Tamal K. Dey.
+Curve and Surface Reconstruction: Algorithms with Mathematical Analysis.
+Cambridge University Press, 2007.
+
+4.1.3 Pruning
+*/
+
 #pragma once
 
 #include "../core/delaunay.h"
@@ -39,10 +47,8 @@ using RidgeMap = std::unordered_map<Ridge<N>, RidgeData<N>>;
 template <std::size_t N>
 using RidgeSet = std::unordered_set<Ridge<N>>;
 
-// Единичный вектор e1 из ортогонального дополнения (n-1)-мерного
-// пространства, определяемого n-1 точками и ещё одной точкой.
-// Единичный вектор e2 из ортогонального дополнения (n-1)-мерного
-// пространства, определяемого n-1 точками и вектором e1.
+// e1 = unit orthogonal complement of n-1 points and a point.
+// e2 = unit orthogonal complement of n-1 points and e1.
 template <std::size_t N, typename T>
 void ortho_e0_e1(
         const std::vector<Vector<N, T>>& points,
@@ -98,18 +104,21 @@ bool sharp_ridge(
 
         if (ridge_data.size() == 1)
         {
-                // Грань с одним объектом считается острой
+                // sharp by default
                 return true;
         }
 
-        // Ортонормированный базис размерности 2 в ортогональном дополнении ребра ridge
+        // orthonormal orthogonal complement of ridge
         Vector<N, double> e0;
         Vector<N, double> e1;
         ortho_e0_e1(points, ridge.vertices(), ridge_data.cbegin()->point(), &e0, &e1);
 
-        // Координаты вектора первой грани при проецировании в пространство базиса e0, e1.
-        Vector<N, double> base_vec = points[ridge_data.cbegin()->point()] - points[ridge.vertices()[0]];
-        Vector<2, double> base = Vector<2, double>(dot(e0, base_vec), dot(e1, base_vec)).normalized();
+        const auto e0_e1 = [&e0, &e1](const Vector<N, double>& v)
+        {
+                return Vector<2, double>(dot(e0, v), dot(e1, v)).normalized();
+        };
+
+        Vector<2, double> base = e0_e1(points[ridge_data.cbegin()->point()] - points[ridge.vertices()[0]]);
         ASSERT(is_finite(base));
 
         double cos_plus = 1;
@@ -117,12 +126,9 @@ bool sharp_ridge(
         double sin_plus = 0;
         double sin_minus = 0;
 
-        // Проецирование граней в пространство базиса e0, e1 и вычисление максимальных углов отклонений
-        // граней от первой грани по обе стороны.
         for (auto ridge_facet = std::next(ridge_data.cbegin()); ridge_facet != ridge_data.cend(); ++ridge_facet)
         {
-                Vector<N, double> facet_vec = points[ridge_facet->point()] - points[ridge.vertices()[0]];
-                Vector<2, double> v = Vector<2, double>(dot(e0, facet_vec), dot(e1, facet_vec)).normalized();
+                Vector<2, double> v = e0_e1(points[ridge_facet->point()] - points[ridge.vertices()[0]]);
                 ASSERT(is_finite(v));
 
                 double sine = cross(base, v);
@@ -146,30 +152,22 @@ bool sharp_ridge(
                 }
         }
 
-        // Нужны сравнения с углом 90 градусов, поэтому далее можно обойтись без арккосинусов,
-        // используя вместо них знак косинуса.
-
-        // Если любой из двух углов больше или равен 90 градусов, то грань не острая
+        // not sharp if any angle is greater than or equal to 90 degree
         if (cos_plus <= 0 || cos_minus <= 0)
         {
                 return false;
         }
 
-        // Сумма двух углов, меньших 90, меньше 180 градусов, поэтому для определения суммы углов
-        // можно применить формулу косинуса суммы углов
-        // cos(a + b) = cos(a)cos(b) - sin(a)sin(b)
-        // Здесь нужен модуль синуса, так как ранее в программе sin_minus <= 0.
+        // if two angles are less than 90 degrees, then their sum is less 180 degrees
+        // cos(a + b) = cos(a)cos(b) - sin(a)sin(b).
+        // sin_minus <= 0, so use its absolute value
         double cos_a_plus_b = cos_plus * cos_minus - std::abs(sin_plus * sin_minus);
 
-        // Если сумма углов меньше 90 градусов, то грань острая
+        // sharp if the sum is less than 90
         return cos_a_plus_b > 0;
 }
 }
 
-// Удаление граней, относящихся к острым рёбрам.
-// Ребро считается острым, если угол между его двумя последовательными гранями больше 3 * PI / 2
-// или, что тоже самое, все грани находятся внутри угла PI / 2. Ребро с одной гранью считается
-// острым. Образующиеся после удаления грани новые острые рёбра тоже должны обрабатываться.
 template <std::size_t N>
 void prune_facets_incident_to_sharp_ridges(
         const std::vector<Vector<N, double>>& points,
@@ -216,8 +214,6 @@ void prune_facets_incident_to_sharp_ridges(
                                 continue;
                         }
 
-                        // Поместить в отдельную переменную, чтобы не проходить по граням ребра при
-                        // одновременнном удалении этих граней
                         std::vector<const DelaunayFacet<N>*> facets_to_remove;
                         facets_to_remove.reserve(ridge_iter->second.size());
 
@@ -226,15 +222,14 @@ void prune_facets_incident_to_sharp_ridges(
                                 add_to_ridges(*(d->facet()), d->point(), &tmp_ridges);
                                 facets_to_remove.push_back(d->facet());
 
-                                // Пометить грань как удалённую
                                 auto del = facets_ptr.find(d->facet());
                                 ASSERT(del != facets_ptr.cend());
                                 (*cocone_facets)[del->second] = false;
                         }
 
-                        for (unsigned f = 0; f < facets_to_remove.size(); ++f)
+                        for (const DelaunayFacet<N>* facet : facets_to_remove)
                         {
-                                remove_from_ridges(*(facets_to_remove[f]), &ridge_map);
+                                remove_from_ridges(*facet, &ridge_map);
                         }
                 }
 

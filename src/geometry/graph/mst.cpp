@@ -40,7 +40,7 @@ namespace
 {
 using Edge2 = Ridge<3>;
 
-struct WeightedEdge
+class WeightedEdge
 {
         double weight_;
         Edge2 edge_;
