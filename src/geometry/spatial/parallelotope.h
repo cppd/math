@@ -49,7 +49,7 @@ std::array<Vector<N, T>, N> make_vectors_impl(const Vector<N, T>& d, std::intege
         ((vectors[I][I] = d[I]), ...);
         return vectors;
 }
-// Заполнение диагонали матрицы NxN значениями из d, остальные элементы 0
+// Diagonal matrix NxN
 template <std::size_t N, typename T>
 std::array<Vector<N, T>, N> make_vectors(const Vector<N, T>& d)
 {
@@ -65,14 +65,15 @@ class Parallelotope final
 
         static_assert(N <= 27);
 
-        // Количество объектов после деления по каждому измерению
+        // Object count after binary division
         static constexpr int DIVISIONS = 1 << N;
 
         static constexpr int DIAGONAL_COUNT = 1 << (N - 1);
         static constexpr int VERTEX_COUNT = 1 << N;
 
-        // Количество вершин 2 ^ N умножить на количество измерений N у каждой вершины
-        // и для уникальности разделить на 2 = ((2 ^ N) * N) / 2 = (2 ^ (N - 1)) * N
+        // Vertex count 2 ^ N multiplied by vertex dimension
+        // count N and divided by 2 for uniqueness
+        // ((2 ^ N) * N) / 2 = (2 ^ (N - 1)) * N
         static constexpr int EDGE_COUNT = (1 << (N - 1)) * N;
 
         struct Planes
@@ -142,7 +143,6 @@ public:
         const Vector<N, T>& e(unsigned n) const;
 };
 
-// Параметр vectors — это все только Vector<N, T>
 template <std::size_t N, typename T>
 template <typename... P>
 Parallelotope<N, T>::Parallelotope(const Vector<N, T>& org, const P&... vectors)
@@ -171,10 +171,10 @@ void Parallelotope<N, T>::set_data(const Vector<N, T>& org, const std::array<Vec
         org_ = org;
         vectors_ = vectors;
 
-        // Расстояние от точки до плоскости
+        // distance from point to plane
         // dot(p - org, normal) = dot(p, normal) - dot(org, normal)
         // d = dot(org, normal)
-        // Вектор n наружу от объекта предназначен для плоскости с параметром d2.
+        // Vector n is directed outward and is for the plane with d2 parameter.
         for (unsigned i = 0; i < N; ++i)
         {
                 planes_[i].n = numerical::orthogonal_complement(del_elem(vectors_, i)).normalized();
@@ -187,15 +187,14 @@ void Parallelotope<N, T>::set_data(const Vector<N, T>& org, const std::array<Vec
         }
 }
 
-// Неравенства в виде b + a * x >= 0, задающие множество точек параллелотопа.
+// 2 * N constraints b + a * x >= 0
 template <std::size_t N, typename T>
 Constraints<N, T, 2 * N, 0> Parallelotope<N, T>::constraints() const
 {
         Constraints<N, T, 2 * N, 0> result;
 
-        // Плоскости n * x - d имеют перпендикуляр с направлением наружу.
-        // Направление внутрь -n * x + d или d + -(n * x), тогда условие
-        // для точек параллелотопа d + -(n * x) >= 0.
+        // Planes n * x - d have vectors n directed outward.
+        // Points are inside if n * x - d <= 0 or d + -(n * x) >= 0.
         for (unsigned i = 0, c_i = 0; i < N; ++i, c_i += 2)
         {
                 result.c[c_i].a = planes_[i].n;
@@ -219,13 +218,14 @@ bool Parallelotope<N, T>::intersect_impl(const Ray<N, T>& r, T* first, T* second
                 T s = dot(r.dir(), planes_[i].n);
                 if (s == 0)
                 {
+                        // parallel to plane
                         T d = dot(r.org(), planes_[i].n);
                         if (d < planes_[i].d1 || d > planes_[i].d2)
                         {
-                                // параллельно плоскостям и снаружи
+                                // outside the plane
                                 return false;
                         }
-                        // внутри плоскостей
+                        // inside the plane
                         continue;
                 }
 
@@ -235,15 +235,15 @@ bool Parallelotope<N, T>::intersect_impl(const Ray<N, T>& r, T* first, T* second
 
                 if (s > 0)
                 {
-                        // пересечение снаружи для первой плоскости
-                        // пересечение внутри для второй плоскости
+                        // front intersection for the first plane
+                        // back intersection for the second plane
                         f_max = std::max(alpha1, f_max);
                         b_min = std::min(alpha2, b_min);
                 }
                 else
                 {
-                        // пересечение внутри для первой плоскости
-                        // пересечение снаружи для второй плоскости
+                        // back intersection for the first plane
+                        // front intersection for the second plane
                         b_min = std::min(alpha1, b_min);
                         f_max = std::max(alpha2, f_max);
                 }
@@ -299,7 +299,7 @@ std::optional<T> Parallelotope<N, T>::intersect_volume(const Ray<N, T>& r) const
 template <std::size_t N, typename T>
 Vector<N, T> Parallelotope<N, T>::normal(const Vector<N, T>& p) const
 {
-        // К какой плоскости точка ближе, такой и перпендикуляр в точке
+        // the normal of the plane closest to the point
 
         T min = limits<T>::max();
 
@@ -495,9 +495,6 @@ std::array<std::array<Vector<N, T>, 2>, Parallelotope<N, T>::EDGE_COUNT> Paralle
                 }
         };
 
-        // Смещаться по каждому измерению для перехода к другой вершине.
-        // Добавлять к массиву рёбер пары, состоящие из вершины и векторов
-        // измерений, по которым не смещались для перехода к этой вершине.
         edges_impl<N - 1>(org_, &dimensions, f);
 
         ASSERT(count == result.size());
@@ -533,10 +530,7 @@ T Parallelotope<N, T>::length() const
                 max_squared = std::max(max_squared, d.norm_squared());
         };
 
-        // Перебрать все диагонали одной из граней параллелотопа с учётом их направления.
-        // Количество таких диагоналей равно 2 ^ (N - 1). Добавляя к каждой такой
-        // диагонали оставшееся измерение, получаются все диагонали целого параллелотопа.
-        // Одно из измерений не меняется, остальные к нему прибавляются и вычитаются.
+        // compute all diagonals and find the diagonal with the maximum length
         constexpr int LAST_INDEX = N - 1;
         length_impl<LAST_INDEX - 1>(vectors_[LAST_INDEX], f);
 

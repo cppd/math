@@ -44,10 +44,11 @@ class HyperplaneSimplex final
         static_assert(N >= 2);
         static_assert(is_floating_point<T>);
 
-        // (N-1)-мерные плоскости, перпендикулярные (N-1)-симплексу и проходящие через его грани,
-        // за исключением одной грани.
-        // Хранятся только данные плоскостей. Перпендикуляр и точки симплекса передаются
-        // в параметрах функций, так как они имеются в структурах данных самого симплекса.
+        // (N-1)-dimensional planes
+        // They are orthogonal to (N-1)-simplex and passing
+        // through its ridges except for one ridge.
+        // Only planes are stored. Simplex normal and vertices are passed
+        // in function parameters so as not to duplicate data.
         struct Plane
         {
                 Vector<N, T> n;
@@ -58,7 +59,7 @@ class HyperplaneSimplex final
         static T last_coordinate(const Vector<N - 1, T>& coordinates)
         {
                 T r = 1;
-                for (unsigned i = 0; i < N - 1; ++i)
+                for (std::size_t i = 0; i < N - 1; ++i)
                 {
                         r -= coordinates[i];
                 }
@@ -69,49 +70,43 @@ public:
         void set_data(Vector<N, T> normal, const std::array<Vector<N, T>, N>& vertices)
         {
                 std::array<Vector<N, T>, N - 1> vectors;
-                for (unsigned i = 0; i < N - 1; ++i)
+                for (std::size_t i = 0; i < N - 1; ++i)
                 {
                         vectors[i] = vertices[i] - vertices[N - 1];
                 }
 
-                // Перпендикуляр к симплексу берётся готовым в параметре normal
-                // и должен быть равен orthogonal_complement(vectors).
+                // normal must be equal to orthogonal_complement(vectors)
 
-                // Найти уравнения плоскостей, проходящих через каждую грань и перпендикулярных симплексу.
-                // Вершина должна находиться на расстоянии 1 от плоскости противоположной ей грани.
-                // Кроме последней вершины, так как одна из барицентрических координат определяется по другим.
-                for (unsigned i = 0; i < N - 1; ++i)
+                // create N - 1 planes that pass through vertex N - 1,
+                // through simples ridges, and that are orthogonal to the simplex.
+                for (std::size_t i = 0; i < N - 1; ++i)
                 {
-                        // Перпендикуляр от точки к грани — это перпендикуляр к пространству,
-                        // образуемому перпендикуляром к симплексу и пространством грани
                         std::swap(normal, vectors[i]);
                         planes_[i].n = numerical::orthogonal_complement(vectors);
                         std::swap(normal, vectors[i]);
 
-                        // Уравнение плоскости
                         // dot(p - org, normal) = dot(p, normal) - dot(org, normal) = dot(p, normal) - d
-                        // Плоскость проходит через какую-нибудь вершину грани, например vertices[N - 1].
+                        // org = vertices[N - 1]
                         planes_[i].d = dot(vertices[N - 1], planes_[i].n);
 
-                        // Относительное расстояние от вершины до плоскости должно быть равно 1
                         T distance = dot(vertices[i], planes_[i].n) - planes_[i].d;
                         planes_[i].n /= distance;
                         planes_[i].d /= distance;
                 }
         }
 
-        // N неравенств в виде b + a * x >= 0 и одно равенство в виде b + a * x = 0,
-        // задающие множество точек симплекса.
-        // Параметры normal и vertices точно такие же, как при вызове set_data.
+        // N constraints b + a * x >= 0
+        // one constraint b + a * x = 0
+        // normal and vertices are the same as in set_data function
         Constraints<N, T, N, 1> constraints(Vector<N, T> normal, const std::array<Vector<N, T>, N>& vertices) const
         {
                 Constraints<N, T, N, 1> result;
 
-                // На основе уравнений плоскостей n * x - d = 0, перпендикуляры которых направлены
-                // внутрь симплекса, а значит получается условие n * x - d >= 0 или условие -d + n * x >= 0.
+                // Planes n * x - d have vectors n directed inward.
+                // Points are inside if n * x - d >= 0 or -d + n * x >= 0.
 
-                // N - 1 плоскость уже есть, и все они проходят через вершину N - 1
-                for (unsigned i = 0; i < N - 1; ++i)
+                // There are already N - 1 planes passing through vertex N - 1
+                for (std::size_t i = 0; i < N - 1; ++i)
                 {
                         T len = planes_[i].n.norm();
                         result.c[i].a = planes_[i].n / len;
@@ -120,11 +115,11 @@ public:
 
                 //
 
-                // Построение плоскости, не проходящей через вершину N - 1.
-                // На основе функции set_data.
+                // Create a plane that do not pass through vertex N - 1
+                // Based on set_data function.
 
                 std::array<Vector<N, T>, N - 1> vectors;
-                for (unsigned i = 0; i < N - 2; ++i)
+                for (std::size_t i = 0; i < N - 2; ++i)
                 {
                         vectors[i] = vertices[i + 1] - vertices[0];
                 }
@@ -133,14 +128,14 @@ public:
                 Vector<N, T> n = numerical::orthogonal_complement(vectors).normalized();
                 T d = dot(vertices[0], n);
 
-                // Нормаль нужна в направлении вершины N - 1
+                // normal must be directed to vertex N - 1
                 bool to_vertex = dot(vertices[N - 1], n) - d >= 0;
                 result.c[N - 1].a = to_vertex ? n : -n;
                 result.c[N - 1].b = to_vertex ? -d : d;
 
                 //
 
-                // На основе уравнения плоскости симплекса n * x - d = 0
+                // based on the simplex plane equation n * x - d = 0
                 d = dot(vertices[0], normal);
                 result.c_eq[0].a = normal;
                 result.c_eq[0].b = -d;
@@ -151,7 +146,7 @@ public:
         T barycentric_coordinate(const Vector<N, T>& point, unsigned i) const
         {
                 ASSERT(i < N - 1);
-                // Относительное расстояние от грани до точки является координатой точки
+                // The distance from the ridge to the point is the barycentric coordinate.
                 return dot(point, planes_[i].n) - planes_[i].d;
         }
 
@@ -159,7 +154,7 @@ public:
         {
                 Vector<N, T> coords;
                 coords[N - 1] = 1;
-                for (unsigned i = 0; i < N - 1; ++i)
+                for (std::size_t i = 0; i < N - 1; ++i)
                 {
                         coords[i] = barycentric_coordinate(point, i);
                         coords[N - 1] -= coords[i];
@@ -180,7 +175,7 @@ public:
 
                 Vector<N - 1, T> coordinates;
 
-                for (unsigned i = 0; i < N - 1; ++i)
+                for (std::size_t i = 0; i < N - 1; ++i)
                 {
                         coordinates[i] = barycentric_coordinate(intersection_point, i);
                         if (coordinates[i] <= 0 || coordinates[i] >= 1)
@@ -203,7 +198,7 @@ public:
 
                 InterpolationType result = bc[0] * n[0];
 
-                for (unsigned i = 1; i < N; ++i)
+                for (std::size_t i = 1; i < N; ++i)
                 {
                         result += bc[i] * n[i];
                 }

@@ -239,8 +239,7 @@ bool shapes_not_intersect_by_planes(const Shape1& shape_1, const Shape2& shape_2
 //        std::array<Vector<N, T>, CONSTRAINT_COUNT> a;
 //        std::array<T, CONSTRAINT_COUNT> b;
 //
-//        // Со смещением минимума к нулю для всех ограничений,
-//        // чтобы работа была с положительными числами
+//        // make non-negative numbers
 //        // x_new = x_old - min
 //        // x_old = x_new + min
 //        // a ⋅ (x_new + min) + b  ->  a ⋅ x_new + a ⋅ min + b  ->  a ⋅ x_new + (a ⋅ min + b)
@@ -323,15 +322,6 @@ void static_checks(const Shape1& shape_1, const Shape2& shape_2)
 }
 }
 
-// Пересечение выпуклых объектов.
-// * Достаточное условие пересечения:
-//     Любая вершина одного объекта находится внутри другого объекта.
-// * Достаточное условие отсутствия пересечения:
-//     Все вершины одного объекта находятся по одну сторону от другого объекта.
-// * Необходимое и достаточное условие пересечения:
-//     Система неравенств объектов имеет решение.
-// Объекты в 2D и 3D пересекаются, если любая вершина одного объекта находится
-// внутри другого объекта или ребро одного объекта пересекает другой объект.
 template <typename Shape1, typename Shape2>
 bool shape_intersection(const Shape1& shape_1, const Shape2& shape_2)
 {

@@ -80,7 +80,7 @@ public:
                 return parallelotope_;
         }
 
-        void set_child(int child_number, int child_box_index)
+        void set_child(const int child_number, const int child_box_index)
         {
                 childs_[child_number] = child_box_index;
         }
@@ -92,11 +92,11 @@ public:
 
         bool has_childs() const
         {
-                // Они или все заполнены, или все не заполнены
+                // all are empty or all are not empty
                 return childs_[0] != EMPTY;
         }
 
-        void add_object_index(int object_index)
+        void add_object_index(const int object_index)
         {
                 object_indices_.push_back(object_index);
         }
@@ -123,7 +123,7 @@ public:
         }
 };
 
-inline std::vector<int> zero_based_indices(int object_index_count)
+inline std::vector<int> zero_based_indices(const int object_index_count)
 {
         std::vector<int> object_indices(object_index_count);
         std::iota(object_indices.begin(), object_indices.end(), 0);
@@ -153,12 +153,12 @@ std::vector<Box<Parallelotope>> move_boxes_to_vector(Container<Box<Parallelotope
 template <typename Box>
 class BoxJobs final
 {
-        // Если задач нет, и все потоки с ними не работают, то всё сделано. Если задач нет,
-        // но хотя бы один поток с ними работает, то могут появиться новые задачи и надо подождать.
-        // Вместо учёта заданий для каждого потока, используется просто сумма задач по всем потокам:
-        //   поток пришёл за новой задачей, не имея предыдущей — сумма не меняется;
-        //   поток пришёл за новой задачей, имея предыдущую — уменьшили сумму на 1;
-        //   дали задачу потоку — увеличили сумму на 1.
+        // If there are no jobs and all thread do nothing, then there will be no more jobs.
+        // If there are no jobs and a thread do something, then new jobs can be created.
+        // Instead of counting jobs for each thread, the sum of jobs across all threads is used.
+        // A thread requires a new jobs without having a job - the sum is the same.
+        // A thread requires a new jobs having a job - the sum decreases by 1.
+        // A thread gets a new jobs - the sum increases by 1.
         int job_count_ = 0;
 
         std::stack<std::tuple<Box*, int>, std::vector<std::tuple<Box*, int>>> jobs_;
@@ -167,7 +167,7 @@ class BoxJobs final
         bool stop_all_ = false;
 
 public:
-        BoxJobs(Box* box, int depth) : jobs_({{box, depth}})
+        BoxJobs(Box* const box, const int depth) : jobs_({{box, depth}})
         {
         }
 
@@ -178,14 +178,14 @@ public:
                 stop_all_ = true;
         }
 
-        void push(Box* box, int depth)
+        void push(Box* box, const int depth)
         {
                 std::lock_guard lg(lock_);
 
                 jobs_.emplace(box, depth);
         }
 
-        bool pop(Box** box, int* depth)
+        bool pop(Box** const box, int* const depth)
         {
                 std::lock_guard lg(lock_);
 
@@ -209,21 +209,18 @@ public:
 
                 if (job_count_ > 0)
                 {
-                        // Заданий нет, но какие-то потоки ещё работают,
-                        // поэтому могут появиться новые задания.
                         *box = nullptr;
                         return true;
                 }
 
-                // Заданий нет и все потоки с ними не работают.
                 return false;
         }
 };
 
 template <template <typename...> typename Container, typename Parallelotope, int... I>
 std::array<std::tuple<int, Box<Parallelotope>*, int>, BOX_COUNT<Parallelotope::SPACE_DIMENSION>> create_child_boxes(
-        SpinLock* boxes_lock,
-        Container<Box<Parallelotope>>* boxes,
+        SpinLock* const boxes_lock,
+        Container<Box<Parallelotope>>* const boxes,
         const Parallelotope& parallelotope,
         std::integer_sequence<int, I...>)
 {
@@ -244,32 +241,27 @@ void extend(
         const int MAX_DEPTH,
         const int MIN_OBJECTS,
         const int MAX_BOXES,
-        SpinLock* boxes_lock,
-        Container<Box<Parallelotope>>* boxes,
-        BoxJobs<Box<Parallelotope>>* box_jobs,
+        SpinLock* const boxes_lock,
+        Container<Box<Parallelotope>>* const boxes,
+        BoxJobs<Box<Parallelotope>>* const box_jobs,
         const ObjectIntersections& object_intersections,
-        ProgressRatio* progress)
+        ProgressRatio* const progress)
 try
 {
-        // Адреса имеющихся элементов не должны меняться при вставке
-        // новых элементов, поэтому требуется std::deque или std::list.
         static_assert(
-                std::is_same_v<
-                        Container<Box<Parallelotope>>,
-                        std::deque<Box<
-                                Parallelotope>>> || std::is_same_v<Container<Box<Parallelotope>>, std::list<Box<Parallelotope>>>);
+                (std::is_same_v<Container<Box<Parallelotope>>, std::deque<Box<Parallelotope>>>)
+                || (std::is_same_v<Container<Box<Parallelotope>>, std::list<Box<Parallelotope>>>));
 
         constexpr auto integer_sequence_n =
                 std::make_integer_sequence<int, BOX_COUNT<Parallelotope::SPACE_DIMENSION>>();
 
-        Box<Parallelotope>* box = nullptr; // nullptr — предыдущей задачи нет.
+        Box<Parallelotope>* box = nullptr; // no previous job
         int depth;
 
         while (box_jobs->pop(&box, &depth))
         {
                 if (!box)
                 {
-                        // Новой задачи нет, но другие потоки работают над задачами.
                         continue;
                 }
 
@@ -305,11 +297,10 @@ catch (...)
         throw;
 }
 
-inline double maximum_box_count(int box_count, int max_depth)
+inline double maximum_box_count(const int box_count, const int max_depth)
 {
-        // Сумма геометрической прогрессии со знаменателем box_count.
-        // Sum = (pow(r, n) - 1) / (r - 1).
-
+        // the sum of the numbers in a geometric progression
+        // (pow(r, n) - 1) / (r - 1)
         return (std::pow(box_count, max_depth) - 1) / (box_count - 1);
 }
 }
@@ -323,8 +314,7 @@ class SpatialSubdivisionTree final
         static constexpr int N = Parallelotope::SPACE_DIMENSION;
         using T = typename Parallelotope::DataType;
 
-        // Адреса имеющихся элементов не должны меняться при вставке
-        // новых элементов, поэтому требуется std::deque или std::list.
+        // std::deque or std::list to keep object addreses unchanged when inserting
         using BoxContainer = std::deque<Box>;
 
         static constexpr T GUARD_REGION_SIZE = 1e-4;
@@ -340,7 +330,6 @@ class SpatialSubdivisionTree final
 
         static constexpr int BOX_COUNT_SUBDIVISION = spatial_subdivision_tree_implementation::BOX_COUNT<N>;
 
-        // Первым элементом массива является только 0.
         static constexpr int ROOT_BOX = 0;
 
         std::vector<Box> boxes_;
@@ -379,13 +368,13 @@ class SpatialSubdivisionTree final
 public:
         template <typename ObjectIntersections>
         void decompose(
-                int max_depth,
-                int min_objects_per_box,
-                int object_count,
+                const int max_depth,
+                const int min_objects_per_box,
+                const int object_count,
                 const BoundingBox<N, T>& bounding_box,
                 const ObjectIntersections& object_intersections,
-                unsigned thread_count,
-                ProgressRatio* progress)
+                const unsigned thread_count,
+                ProgressRatio* const progress)
 
         {
                 static_assert(BOX_COUNT_LIMIT <= (1LL << 31) - 1);
@@ -403,7 +392,6 @@ public:
                               + to_string(MIN_OBJECTS_PER_BOX_MIN) + ", " + to_string(MIN_OBJECTS_PER_BOX_MAX) + "].");
                 }
 
-                // Немного прибавить к максимуму для учёта ошибок плавающей точки
                 if (impl::maximum_box_count(BOX_COUNT_SUBDIVISION, max_depth) > BOX_COUNT_LIMIT + 0.1)
                 {
                         error("Spatial subdivision " + to_string(BOX_COUNT_SUBDIVISION) + "-tree is too deep. Depth "
@@ -452,10 +440,10 @@ public:
                 return boxes_[ROOT_BOX].parallelotope().intersect_volume(ray);
         }
 
-        // Вызывается после intersect_root. Если в intersect_root пересечение было найдено,
-        // то сюда передаётся результат пересечения в параметре root_t.
+        // this function is called after intersect_root.
+        // root_t is the intersection found by intersect_root.
         template <typename FindIntersection>
-        bool trace_ray(Ray<N, T> ray, T root_t, const FindIntersection& find_intersection) const
+        bool trace_ray(Ray<N, T> ray, const T root_t, const FindIntersection& find_intersection) const
         {
                 const Box* box;
                 Vector<N, T> point;

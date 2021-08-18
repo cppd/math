@@ -271,10 +271,8 @@ std::vector<VectorP<Parallelotope>> cover_points(
 
         for (int i = 0; i < count; ++i)
         {
-                // Точки на всё пространство параллелотопа с запасом
                 points.push_back(p.org() + ((unit[I] * cover[I](engine)) + ...));
 
-                // Точки на гранях параллелотопа
                 for (unsigned n = 0; n < N; ++n)
                 {
                         Vector<N, T> v;
@@ -309,16 +307,14 @@ Vector<N, T> random_direction(RandomEngine& engine)
 {
         std::uniform_real_distribution<T> urd_dir(-1, 1);
 
+        // equal probability is not needed
         while (true)
         {
                 Vector<N, T> direction;
-
-                // Равновероятность всех направлений не нужна
                 for (unsigned i = 0; i < N; ++i)
                 {
                         direction[i] = urd_dir(engine);
                 }
-
                 if (direction.norm() > 0)
                 {
                         return direction;
@@ -333,16 +329,14 @@ Vector<N, T> random_direction_for_parallelotope_comparison(RandomEngine& engine)
         std::uniform_int_distribution<int> uid_dir(-1, 1);
         std::uniform_int_distribution<int> uid_select(0, 10);
 
+        // equal probability is not needed
         while (true)
         {
                 Vector<N, T> direction;
-
-                // Равновероятность всех направлений не нужна
                 for (unsigned i = 0; i < N; ++i)
                 {
                         direction[i] = uid_select(engine) != 0 ? urd_dir(engine) : uid_dir(engine);
                 }
-
                 if (direction.norm() > 0)
                 {
                         return direction;

@@ -33,9 +33,12 @@ template <std::size_t N, typename T>
 class HyperplaneParallelotope final
 {
         static_assert(N <= 30);
+
         static constexpr int VERTEX_COUNT = 1 << (N - 1);
-        // Количество вершин 2 ^ (N-1) умножить на количество измерений (N-1) у каждой вершины
-        // и для уникальности разделить на 2 = ((2 ^ (N-1)) * (N-1)) / 2 = (2 ^ (N-2)) * (N-1)
+
+        // vertex count 2 ^ (N-1) multiplied by vertex dimension
+        // count (N-1) and divided by 2 for uniqueness
+        // ((2 ^ (N-1)) * (N-1)) / 2 = (2 ^ (N-2)) * (N-1)
         static constexpr int EDGE_COUNT = (1 << (N - 2)) * (N - 1);
 
         struct Planes
@@ -111,7 +114,6 @@ HyperplaneParallelotope<N, T>::HyperplaneParallelotope(
 
                 planes_[i].d = dot(org_, planes_[i].n);
 
-                // Относительное расстояние от вершины до плоскости должно быть равно 1
                 T distance = dot(org_ + vectors_[i], planes_[i].n) - planes_[i].d;
                 ASSERT(distance >= 0);
                 planes_[i].n /= distance;
@@ -119,15 +121,15 @@ HyperplaneParallelotope<N, T>::HyperplaneParallelotope(
         }
 }
 
-// 2*(N-1) неравенств в виде b + a * x >= 0 и одно равенство в виде b + a * x = 0
+// 2*(N-1) constraints b + a * x >= 0
+// one constraint b + a * x = 0
 template <std::size_t N, typename T>
 Constraints<N, T, 2 * (N - 1), 1> HyperplaneParallelotope<N, T>::constraints() const
 {
         Constraints<N, T, 2 * (N - 1), 1> result;
 
-        // Плоскости n * x - d имеют перпендикуляр с направлением наружу.
-        // Направление внутрь -n * x + d или d + -(n * x), тогда условие
-        // для точек параллелотопа d + -(n * x) >= 0.
+        // Planes n * x - d have vectors n directed outward.
+        // Points are inside if n * x - d <= 0 or d + -(n * x) >= 0.
         for (unsigned i = 0, c_i = 0; i < N - 1; ++i, c_i += 2)
         {
                 T len = planes_[i].n.norm();
@@ -158,7 +160,6 @@ std::optional<T> HyperplaneParallelotope<N, T>::intersect(const Ray<N, T>& r) co
 
         for (unsigned i = 0; i < N - 1; ++i)
         {
-                // Относительное расстояние от грани до точки является координатой точки
                 T d = dot(intersection_point, planes_[i].n) - planes_[i].d;
                 if (d <= 0 || d >= 1)
                 {
@@ -254,9 +255,6 @@ std::array<std::array<Vector<N, T>, 2>, HyperplaneParallelotope<N, T>::EDGE_COUN
                 }
         };
 
-        // Смещаться по каждому измерению для перехода к другой вершине.
-        // Добавлять к массиву рёбер пары, состоящие из вершины и векторов
-        // измерений, по которым не смещались для перехода к этой вершине.
         edges_impl<N - 2>(org_, &dimensions, f);
 
         ASSERT(count == result.size());

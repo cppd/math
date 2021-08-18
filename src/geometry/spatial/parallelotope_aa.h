@@ -47,7 +47,7 @@ constexpr std::array<Vector<N, T>, N> make_vectors_impl(const T& v, std::integer
         ((vectors[I][I] = v), ...);
         return vectors;
 }
-// Заполнение диагонали матрицы NxN значением v, остальные элементы 0
+// Diagonal matrix NxN
 template <std::size_t N, typename T, std::size_t... I>
 constexpr std::array<Vector<N, T>, N> make_vectors(const T& v)
 {
@@ -69,22 +69,23 @@ class ParallelotopeAA final
         static_assert(N >= 2);
         static_assert(std::is_floating_point_v<T>);
 
-        // Пример массива: {(1, 0, 0), (0, 1, 0), (0, 0, 1)}
+        // Example: {(1, 0, 0), (0, 1, 0), (0, 0, 1)}
         static constexpr std::array<Vector<N, T>, N> NORMALS_POSITIVE =
                 parallelotope_aa_implementation::make_vectors<N, T>(1);
-        // Пример массива: {(-1, 0, 0), (0, -1, 0), (0, 0, -1)}
+        // Example: {(-1, 0, 0), (0, -1, 0), (0, 0, -1)}
         static constexpr std::array<Vector<N, T>, N> NORMALS_NEGATIVE =
                 parallelotope_aa_implementation::make_vectors<N, T>(-1);
 
         static_assert(N <= 27);
 
-        // Количество объектов после деления по каждому измерению
+        // Object count after binary division
         static constexpr int DIVISIONS = 1 << N;
 
         static constexpr int VERTEX_COUNT = 1 << N;
 
-        // Количество вершин 2 ^ N умножить на количество измерений N у каждой вершины
-        // и для уникальности разделить на 2 = ((2 ^ N) * N) / 2 = (2 ^ (N - 1)) * N
+        // Vertex count 2 ^ N multiplied by vertex dimension
+        // count N and divided by 2 for uniqueness
+        // ((2 ^ N) * N) / 2 = (2 ^ (N - 1)) * N
         static constexpr int EDGE_COUNT = (1 << (N - 1)) * N;
 
         struct Planes
@@ -193,15 +194,14 @@ T ParallelotopeAA<N, T>::size(unsigned i) const
         return planes_[i].d2 - planes_[i].d1;
 }
 
-// Неравенства в виде b + a * x >= 0, задающие множество точек параллелотопа.
+// 2 * N constraints b + a * x >= 0
 template <std::size_t N, typename T>
 Constraints<N, T, 2 * N, 0> ParallelotopeAA<N, T>::constraints() const
 {
         Constraints<N, T, 2 * N, 0> result;
 
-        // Плоскости n * x - d имеют перпендикуляр с направлением наружу.
-        // Направление внутрь -n * x + d или d + -(n * x), тогда условие
-        // для точек параллелотопа d + -(n * x) >= 0.
+        // Planes n * x - d have vectors n directed outward.
+        // Points are inside if n * x - d <= 0 or d + -(n * x) >= 0.
         for (unsigned i = 0, c_i = 0; i < N; ++i, c_i += 2)
         {
                 result.c[c_i].a = NORMALS_POSITIVE[i];
@@ -228,10 +228,10 @@ bool ParallelotopeAA<N, T>::intersect_impl(const Ray<N, T>& r, T* first, T* seco
                         T d = r.org()[i]; // dot(r.org(), NORMALS_POSITIVE[i])
                         if (d < planes_[i].d1 || d > planes_[i].d2)
                         {
-                                // параллельно плоскостям и снаружи
+                                // parallel and outside the plane
                                 return false;
                         }
-                        // внутри плоскостей
+                        // inside the plane
                         continue;
                 }
 
@@ -241,15 +241,15 @@ bool ParallelotopeAA<N, T>::intersect_impl(const Ray<N, T>& r, T* first, T* seco
 
                 if (s > 0)
                 {
-                        // пересечение снаружи для первой плоскости
-                        // пересечение внутри для второй плоскости
+                        // front intersection for the first plane
+                        // back intersection for the second plane
                         f_max = std::max(alpha1, f_max);
                         b_min = std::min(alpha2, b_min);
                 }
                 else
                 {
-                        // пересечение внутри для первой плоскости
-                        // пересечение снаружи для второй плоскости
+                        // back intersection for the first plane
+                        // front intersection for the second plane
                         b_min = std::min(alpha1, b_min);
                         f_max = std::max(alpha2, f_max);
                 }
@@ -305,7 +305,7 @@ std::optional<T> ParallelotopeAA<N, T>::intersect_volume(const Ray<N, T>& r) con
 template <std::size_t N, typename T>
 Vector<N, T> ParallelotopeAA<N, T>::normal(const Vector<N, T>& p) const
 {
-        // К какой плоскости точка ближе, такой и перпендикуляр в точке
+        // the normal of the plane closest to the point
 
         T min = limits<T>::max();
 
