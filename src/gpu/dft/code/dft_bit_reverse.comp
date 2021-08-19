@@ -47,7 +47,7 @@ void main()
         uint n_base = thread_id - i;
         uint r = bit_reverse(i, N_BITS);
 
-        if (i < r) // для исключения одинаковых обменов и уже сделанных обменов
+        if (i < r)
         {
                 uint i_index = n_base + i;
                 uint r_index = n_base + r;

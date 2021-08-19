@@ -22,8 +22,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 namespace ns::gpu::dft
 {
-// Или само число степень двух,
-// или минимальная степень двух, равная или больше 2N-2
+// If n is a power of 2 then n.
+// Otherwise, bit_ceil(2N-2)
 int compute_m(int n)
 {
         int log2_n = log_2(n);
@@ -42,7 +42,7 @@ int compute_m(int n)
 }
 
 // Compute the symmetric Toeplitz H: for given N, compute the scalar constants
-// Формулы 13.4, 13.22.
+// 13.4, 13.22.
 std::vector<std::complex<double>> compute_h(int n, bool inverse, double coef)
 {
         std::vector<std::complex<double>> h(n);
@@ -53,8 +53,8 @@ std::vector<std::complex<double>> compute_h(int n, bool inverse, double coef)
 
                 // h[l] = std::polar(Coef, (inverse ? -PI : PI) / n * l * l);
 
-                // Вместо l * l / n нужно вычислить mod(l * l / n, 2), чтобы в тригонометрические функции
-                // поступало не больше 2 * PI.
+                // Instead of l*l/n compute mod(l*l/n, 2) so that trigonometric
+                // functions work with numbers no more than 2π.
                 long long dividend = l * l;
                 long long quotient = dividend / n;
                 long long remainder = dividend - quotient * n;
@@ -68,8 +68,7 @@ std::vector<std::complex<double>> compute_h(int n, bool inverse, double coef)
 }
 
 // Embed H in the circulant H(2)
-// На основе исправленных формул 13.11, 13.23, 13.24, 13.25.
-// Об исправлении в комментарии о книге.
+// Based on corrected formulas 13.11, 13.23, 13.24, 13.25.
 std::vector<std::complex<double>> compute_h2(int n, int m, const std::vector<std::complex<double>>& h)
 {
         std::vector<std::complex<double>> h2(m);
@@ -92,10 +91,11 @@ std::vector<std::complex<double>> compute_h2(int n, int m, const std::vector<std
 template <typename T>
 int shared_size(unsigned dft_size, unsigned max_shared_memory_size)
 {
-        // минимум из
-        // 1) требуемый размер, но не меньше 128, чтобы в группе было хотя бы 64 потока по потоку на 2 элемента:
-        //   NVIDIA работает по 32 потока вместе (warp), AMD по 64 потока вместе (wavefront).
-        // 2) максимальная степень 2, которая меньше или равна вместимости разделяемой памяти
+        // minimum of
+        // 1) requested size, but not less than 128 so that a group
+        //  has at least 64 threads, one thread for 2 elements.
+        //  NVIDIA warp size is 32, AMD wavefront size is 64.
+        // 2) bit_floor(element count)
         return std::min(std::max(128u, dft_size), 1u << log_2(max_shared_memory_size / sizeof(T)));
 }
 
@@ -106,7 +106,7 @@ int group_size(
         unsigned max_group_invocations,
         unsigned max_shared_memory_size)
 {
-        // не больше 1 потока на 2 элемента
+        // no more than 1 thread for 2 elements
         int max_threads_required = shared_size<T>(dft_size, max_shared_memory_size) / 2;
         int max_threads_supported = std::min(max_group_size_x, max_group_invocations);
         return std::min(max_threads_required, max_threads_supported);

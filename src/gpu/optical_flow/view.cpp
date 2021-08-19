@@ -145,7 +145,7 @@ class Impl final : public View
                 compute_->create_buffers(
                         sampler_, input, rectangle, point_count_x, point_count_y, *top_points_, *top_flow_);
 
-                // Матрица для рисования на плоскости окна, точка (0, 0) слева вверху
+                // (0, 0) is top left
                 double left = 0;
                 double right = rectangle.width();
                 double bottom = rectangle.height();

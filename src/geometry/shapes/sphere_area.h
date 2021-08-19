@@ -18,17 +18,18 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #pragma once
 
 #include <src/com/constant.h>
-#include <src/com/error.h>
 #include <src/numerical/integrate.h>
 
 #include <cmath>
 
 namespace ns::geometry
 {
-// 2 * pow(π, n/2) / gamma(n/2)
-constexpr long double sphere_area(unsigned N)
+template <unsigned N>
+constexpr long double sphere_area()
 {
-        ASSERT(N >= 2);
+        static_assert(N >= 2);
+
+        // 2 * pow(π, n/2) / gamma(n/2)
 
         if ((N & 1) == 0)
         {

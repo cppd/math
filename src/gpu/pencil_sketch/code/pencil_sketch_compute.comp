@@ -46,7 +46,6 @@ const float Gauss[delta * 2 + 1][delta * 2 + 1] =
 };
 // clang-format on
 
-// фоновые пиксели считать 0
 const float background_value = 0;
 
 float luminance_of_rgb(vec4 c)

@@ -161,8 +161,8 @@ vec4d image_clip_plane(const vec4d& world_clip_plane, const mat4d& model)
 {
         vec4d p = world_clip_plane * model;
 
-        // из уравнения n * x + d с нормалью внутрь
-        // в уравнение n * x - d с нормалью наружу
+        // from n * x + d with normal directed inward
+        // to n * x - d with normal directed outward
         p[3] = -p[3];
         vec3d n = vec3d(p[0], p[1], p[2]);
         return p / -n.norm();
@@ -170,7 +170,7 @@ vec4d image_clip_plane(const vec4d& world_clip_plane, const mat4d& model)
 
 vec3d world_volume_size(const mat4d& texture_to_world_matrix)
 {
-        // Например, для x: texture_to_world_matrix * vec4(1, 0, 0, 1) -> vec3 -> length
+        // Example for x: texture_to_world_matrix * vec4(1, 0, 0, 1) -> vec3 -> length
         vec3d size;
         for (unsigned i = 0; i < 3; ++i)
         {
@@ -180,7 +180,7 @@ vec3d world_volume_size(const mat4d& texture_to_world_matrix)
         return size;
 }
 
-// В текстурных координатах
+// in texture coordinates
 vec3d gradient_h(const mat4d& texture_to_world_matrix, const vulkan::ImageWithMemory& image)
 {
         vec3d texture_pixel_size(1.0 / image.width(), 1.0 / image.height(), 1.0 / image.depth());

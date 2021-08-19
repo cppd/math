@@ -39,7 +39,7 @@ class FftGlobalMemory final
 
         struct Data
         {
-                uint32_t div_2_;
+                uint32_t m_div_2;
                 float two_pi_div_m;
         };
 

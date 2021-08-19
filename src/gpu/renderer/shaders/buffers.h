@@ -30,8 +30,9 @@ class ShaderBuffers
 {
         std::vector<vulkan::BufferWithMemory> uniform_buffers_;
 
-        // Если размещать структуры в одном буфере, то требуется выравнивание каждой структуры
-        // на VkPhysicalDeviceLimits::minUniformBufferOffsetAlignment для VkDescriptorBufferInfo::offset
+        // If structures are placed in one buffer then
+        // VkPhysicalDeviceLimits::minUniformBufferOffsetAlignment
+        // is the minimum required alignment for VkDescriptorBufferInfo::offset
 
         struct Matrices
         {

@@ -289,7 +289,7 @@ class Impl final : public Compute
                 const auto flow_index = [&](std::size_t i)
                 {
                         ASSERT(i > 0 && i < size);
-                        return i - 1; // буферы начинаются с уровня 1
+                        return i - 1; // buffers start at level 1
                 };
 
                 const std::vector<uint32_t> family_indices{family_index};
@@ -309,8 +309,7 @@ class Impl final : public Compute
 
                         if (!top)
                         {
-                                // Не самый верхний уровень, поэтому расчёт для всех точек
-                                top_points_ptr = &top_points; // не используется
+                                top_points_ptr = &top_points; // not used
                                 flow_ptr = &flow_buffers[flow_index(i)];
                                 data.use_all_points = true;
                                 data.point_count_x = sizes[i][0];
@@ -318,8 +317,6 @@ class Impl final : public Compute
                         }
                         else
                         {
-                                // Самый верхний уровень, поэтому расчёт только для заданных
-                                // точек для рисования на экране
                                 top_points_ptr = &top_points;
                                 flow_ptr = &top_flow;
                                 data.use_all_points = false;
@@ -329,8 +326,6 @@ class Impl final : public Compute
 
                         if (!bottom)
                         {
-                                // Не самый нижний уровень, поэтому в качестве приближения
-                                // использовать поток, полученный на меньших изображениях
                                 int i_prev = i + 1;
                                 data.use_guess = true;
                                 data.guess_kx = (sizes[i_prev][0] != sizes[i][0]) ? 2 : 1;
@@ -340,8 +335,7 @@ class Impl final : public Compute
                         }
                         else
                         {
-                                // Самый нижний уровень пирамиды, поэтому нет приближения
-                                flow_guess_ptr = &flow_buffers[0]; // не используется
+                                flow_guess_ptr = &flow_buffers[0]; // not used
                                 data.use_guess = false;
                         }
 
@@ -368,7 +362,6 @@ class Impl final : public Compute
                 ASSERT(downsample_memory_.size() == downsample_groups_.size());
                 ASSERT(downsample_memory_.size() + 1 == images_[index].size());
 
-                // Уровень 0 заполняется по исходному изображению
                 vkCmdBindPipeline(command_buffer, VK_PIPELINE_BIND_POINT_COMPUTE, grayscale_program_.pipeline());
                 vkCmdBindDescriptorSets(
                         command_buffer, VK_PIPELINE_BIND_POINT_COMPUTE, grayscale_program_.pipeline_layout(),
@@ -379,7 +372,6 @@ class Impl final : public Compute
                         command_buffer, images_[index][0].image(), VK_IMAGE_LAYOUT_GENERAL, VK_IMAGE_LAYOUT_GENERAL,
                         VK_ACCESS_SHADER_WRITE_BIT, VK_ACCESS_SHADER_READ_BIT);
 
-                // Каждый следующий уровень меньше предыдущего
                 for (unsigned i = 0; i < downsample_groups_.size(); ++i)
                 {
                         vkCmdBindPipeline(
@@ -515,7 +507,7 @@ class Impl final : public Compute
 
                         //
 
-                        // i — предыдущее изображение, 1-i — текущее изображение
+                        // i — previous image, 1-i — current image
                         commands_compute_image_pyramid(1 - index, command_buffer);
                         commands_compute_dxdy(index, command_buffer);
 
@@ -584,7 +576,8 @@ class Impl final : public Compute
                 ASSERT(rectangle.x1() <= static_cast<int>(input.width()));
                 ASSERT(rectangle.y1() <= static_cast<int>(input.height()));
 
-                const std::vector<vec2i> sizes = pyramid_sizes(input.width(), input.height(), BOTTOM_IMAGE_SIZE);
+                const std::vector<vec2i> sizes =
+                        pyramid_sizes(input.width(), input.height(), BOTTOM_IMAGE_MINIMUM_SIZE);
 
                 const uint32_t family_index = compute_command_pool_.family_index();
 
@@ -616,7 +609,7 @@ class Impl final : public Compute
 
                 flow_groups_ = flow_groups(GROUPS, sizes, top_point_count_x, top_point_count_y);
                 flow_program_.create_pipeline(
-                        GROUPS_X, GROUPS_Y, RADIUS, ITERATION_COUNT, STOP_MOVE_SQUARE, MIN_DETERMINANT);
+                        GROUPS_X, GROUPS_Y, RADIUS, MAX_ITERATION_COUNT, STOP_MOVE_SQUARE, MIN_DETERMINANT);
                 flow_memory_ = create_flow_memory(
                         device_, flow_program_.descriptor_set_layout(), family_index, sampler, sizes, flow_buffers_,
                         top_point_count_x, top_point_count_y, top_points, top_flow, images_, dx_, dy_);

@@ -116,9 +116,10 @@ void transparency_message(long long required_node_memory, long long overload_cou
 
 class Impl final : public Renderer
 {
-        // Для получения текстуры для тени результат рисования находится в интервалах x(-1, 1) y(-1, 1) z(0, 1).
-        // Для работы с этой текстурой надо преобразовать в интервалы x(0, 1) y(0, 1) z(0, 1).
-        const mat4d SHADOW_TEXTURE_MATRIX = matrix::scale<double>(0.5, 0.5, 1) * matrix::translate<double>(1, 1, 0);
+        // shadow coordinates x(-1, 1) y(-1, 1) z(0, 1).
+        // shadow texture coordinates x(0, 1) y(0, 1) z(0, 1).
+        static constexpr mat4d SHADOW_TEXTURE_MATRIX =
+                matrix::scale<double>(0.5, 0.5, 1) * matrix::translate<double>(1, 1, 0);
 
         const std::thread::id thread_id_ = std::this_thread::get_id();
 

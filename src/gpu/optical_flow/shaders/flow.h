@@ -107,7 +107,7 @@ class FlowConstant final : public vulkan::SpecializationConstant
                 uint32_t local_size_x;
                 uint32_t local_size_y;
                 int32_t radius;
-                int32_t iteration_count;
+                int32_t max_iteration_count;
                 float stop_move_square;
                 float min_determinant;
         } data_;
@@ -125,7 +125,7 @@ public:
                 uint32_t local_size_x,
                 uint32_t local_size_y,
                 int32_t radius,
-                int32_t iteration_count,
+                int32_t max_iteration_count,
                 float stop_move_square,
                 float min_determinant);
 };
@@ -154,7 +154,7 @@ public:
                 uint32_t local_size_x,
                 uint32_t local_size_y,
                 int32_t radius,
-                int32_t iteration_count,
+                int32_t max_iteration_count,
                 float stop_move_square,
                 float min_determinant);
         void delete_pipeline();

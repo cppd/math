@@ -51,9 +51,7 @@ void main()
                 return;
         }
 
-        // номер задачи внутри одного БПФ
         uint i = thread_id & n_div_2_mask;
-        // начало ДПФ
         uint n_base = (thread_id - i) << 1;
 
         uint idx = i & (m_div_2 - 1);

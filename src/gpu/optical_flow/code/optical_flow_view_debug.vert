@@ -29,8 +29,7 @@ const vec4 vertices[4] = vec4[4]
 );
 // clang-format on
 
-// Рисование в текстуру перевёрнуто по вертикали,
-// поэтому координаты текстуры (0, 0) находятся внизу слева
+// Texture (0, 0) is bottom left
 // const vec2 texture_coordinates[4] = vec2[4](vec2(0, 1), vec2(1, 1), vec2(0, 0), vec2(1, 0));
 
 void main(void)

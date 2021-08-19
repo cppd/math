@@ -58,7 +58,7 @@ void commands_init_uint32_storage_image(
 
         VkImageSubresourceRange range = barrier.subresourceRange;
 
-        // Для vkCmdClearColorImage нужно VK_IMAGE_USAGE_TRANSFER_DST_BIT
+        // for vkCmdClearColorImage
         ASSERT(image.has_usage(VK_IMAGE_USAGE_TRANSFER_DST_BIT));
 
         vkCmdClearColorImage(

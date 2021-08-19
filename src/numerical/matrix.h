@@ -203,7 +203,9 @@ public:
 };
 
 template <std::size_t Rows, std::size_t Inner, std::size_t Columns, typename T>
-[[nodiscard]] Matrix<Rows, Columns, T> operator*(const Matrix<Rows, Inner, T>& m1, const Matrix<Inner, Columns, T>& m2)
+[[nodiscard]] constexpr Matrix<Rows, Columns, T> operator*(
+        const Matrix<Rows, Inner, T>& m1,
+        const Matrix<Inner, Columns, T>& m2)
 {
         Matrix<Rows, Columns, T> res;
         for (std::size_t r = 0; r < Rows; ++r)
@@ -225,7 +227,7 @@ template <std::size_t Rows, std::size_t Inner, std::size_t Columns, typename T>
 }
 
 template <std::size_t Rows, std::size_t Columns, typename T>
-[[nodiscard]] Vector<Columns, T> operator*(const Vector<Rows, T>& v, const Matrix<Rows, Columns, T>& m)
+[[nodiscard]] constexpr Vector<Columns, T> operator*(const Vector<Rows, T>& v, const Matrix<Rows, Columns, T>& m)
 {
         Vector<Columns, T> res;
         for (std::size_t c = 0; c < Columns; ++c)
@@ -243,7 +245,7 @@ template <std::size_t Rows, std::size_t Columns, typename T>
 }
 
 template <std::size_t Rows, std::size_t Columns, typename T>
-[[nodiscard]] Vector<Rows, T> operator*(const Matrix<Rows, Columns, T>& m, const Vector<Columns, T>& v)
+[[nodiscard]] constexpr Vector<Rows, T> operator*(const Matrix<Rows, Columns, T>& m, const Vector<Columns, T>& v)
 {
         Vector<Rows, T> res;
         for (std::size_t r = 0; r < Rows; ++r)

@@ -19,7 +19,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 layout(local_size_x_id = 0, local_size_y_id = 1) in;
 layout(constant_id = 2) const int RADIUS = 1;
-layout(constant_id = 3) const int ITERATION_COUNT = 1;
+layout(constant_id = 3) const int MAX_ITERATION_COUNT = 1;
 layout(constant_id = 4) const float STOP_MOVE_SQUARE = 1;
 layout(constant_id = 5) const float MIN_DETERMINANT = 1;
 layout(binding = 4, r32f) readonly restrict uniform image2D image_dx;
@@ -93,7 +93,6 @@ bool compute_g_inv(ivec2 p, out mat2 g_inv)
                 }
         }
 
-        // матрица задаётся по столбцам, но в данном случае нет разницы
         mat2 g = mat2(sum_x2, sum_xy, sum_xy, sum_y2);
 
         float det = determinant(g);
@@ -137,7 +136,7 @@ void main(void)
 
         vec2 guess = use_guess ? get_guess(p) : vec2(0, 0);
 
-        for (int i = 0; i < ITERATION_COUNT; ++i)
+        for (int i = 0; i < MAX_ITERATION_COUNT; ++i)
         {
                 vec2 b = vec2(0, 0);
 

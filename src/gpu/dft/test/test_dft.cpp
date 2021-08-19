@@ -384,12 +384,12 @@ void constant_data_test(ComputeVector* dft, ProgressRatio* progress)
         // const std::vector<complex> source_data(
         //        {{1, 0}, {2, 0}, {30, 0}, {4, 0}}); //, {-20, 0}, {3, 0}}); //, {-5, 0}});//, {-1, 0}});
         const std::vector<complex> source_data({{1, 0}, {2, 0}, {3, 0}, {4, 0}, {5, 0}, {6, 0}});
-        const int N = source_data.size() / 3;
-        const int K = source_data.size() / N;
+        const int n = source_data.size() / 3;
+        const int k = source_data.size() / n;
 
         log_data(source_data);
 
-        dft_test("constant", dft, N, K, source_data, progress);
+        dft_test("constant", dft, n, k, source_data, progress);
 
         LOG("---\nDFT check passed");
 }
@@ -457,8 +457,6 @@ void test(ProgressRatio* progress)
         ASSERT(progress);
 
         std::unique_ptr<ComputeVector> dft = create_compute_vector();
-
-        // progress два раза проходит от начала до конца для двух типов данных
 
         constant_data_test(dft.get(), progress);
 

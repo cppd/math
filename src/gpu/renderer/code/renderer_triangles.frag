@@ -23,7 +23,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "common.glsl"
 #include "shading_ggx_diffuse.glsl"
 
-// Для каждой группы треугольников с одним материалом отдельно задаётся этот материал и его текстуры
 layout(set = 2, binding = 0, std140) uniform Material
 {
         vec3 Ka;
@@ -74,7 +73,6 @@ float shadow_weight()
 
 bool has_texture_coordinates()
 {
-        // Если нет текстурных координат, то они задаются числом -1e10
         return gs.texture_coordinates[0] > -1e9;
 }
 

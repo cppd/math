@@ -67,24 +67,20 @@ vec3[3] compute_normals()
 
         vec3 normals[3];
 
-        // Нужно направить векторы вершин грани по направлению перпендикуляра
-        // к той стороне грани, которая обращена к камере.
-        // direction_to_camera - это направление на камеру.
-
         if (drawing.show_smooth)
         {
-                // в направлении от камеры
+                // from camera
                 geometric_world_normal =
                         faceforward(geometric_world_normal, drawing.direction_to_camera, geometric_world_normal);
 
-                // Повернуть векторы вершин в противоположном вектору geometric_normal направлении
+                // in the opposite direction to geometric_world_normal
                 normals[0] = faceforward(vs[0].world_normal, geometric_world_normal, vs[0].world_normal);
                 normals[1] = faceforward(vs[1].world_normal, geometric_world_normal, vs[1].world_normal);
                 normals[2] = faceforward(vs[2].world_normal, geometric_world_normal, vs[2].world_normal);
         }
         else
         {
-                // в направлении на камеру
+                // to camera
                 geometric_world_normal =
                         faceforward(geometric_world_normal, -drawing.direction_to_camera, geometric_world_normal);
 

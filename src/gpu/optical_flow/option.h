@@ -21,25 +21,14 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 namespace ns::gpu::optical_flow
 {
-// Размеры групп потоков вычислительных шейдеров
 constexpr vec2i GROUP_SIZE(16, 16);
 
-// Минимальный размер изображения для пирамиды изображений
-constexpr int BOTTOM_IMAGE_SIZE = 16;
+constexpr int BOTTOM_IMAGE_MINIMUM_SIZE = 16;
 
-// Параметры алгоритма для передачи в вычислительный шейдер
-// Радиус окрестности точки
 constexpr int RADIUS = 6;
-
-// Максимальное количество итераций
-constexpr int ITERATION_COUNT = 10;
-
-// Если на итерации квадрат потока меньше этого значения, то выход из цикла
+constexpr int MAX_ITERATION_COUNT = 10;
 constexpr float STOP_MOVE_SQUARE = square(1e-3f);
-
-// Если определитель матрицы G меньше этого значения, то считается, что нет потока
 constexpr float MIN_DETERMINANT = 1;
 
-// Расстояние между точками потока на экране в миллиметрах
 constexpr double DISTANCE_BETWEEN_POINTS_IN_MM = 2;
 }

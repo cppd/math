@@ -181,7 +181,7 @@ Vector<N, T> uniform_on_sphere(RandomEngine& random_engine)
 template <std::size_t N, typename T>
 T uniform_on_sphere_pdf()
 {
-        static constexpr T n = 1 / geometry::sphere_area(N);
+        static constexpr T n = 1 / geometry::sphere_area<N>();
         return n;
 }
 

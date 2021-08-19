@@ -41,7 +41,7 @@ namespace
 using shapes::test::compare;
 
 template <unsigned N>
-constexpr long double pi_pow = power<N>(PI<long double>);
+constexpr long double PI_POW = power<N>(PI<long double>);
 
 static_assert(sphere_unit_integral_over_cosine_integral(2) == PI<long double> / 2);
 static_assert(sphere_unit_integral_over_cosine_integral(3) == 2.0L);
@@ -94,20 +94,20 @@ static_assert(
                 sphere_unit_integral_over_cosine_integral(111111),
                 417.77023023440949387785892293393789130459621662998L));
 
-static_assert(compare(10, sphere_integrate_cosine_factor_over_hemisphere(2), 2.0L));
-static_assert(compare(10, sphere_integrate_cosine_factor_over_hemisphere(3), pi_pow<1>));
-static_assert(compare(10, sphere_integrate_cosine_factor_over_hemisphere(4), 4 * pi_pow<1> / 3));
-static_assert(compare(10, sphere_integrate_cosine_factor_over_hemisphere(5), pi_pow<2> / 2));
-static_assert(compare(10, sphere_integrate_cosine_factor_over_hemisphere(6), 8 * pi_pow<2> / 15));
-static_assert(compare(10, sphere_integrate_cosine_factor_over_hemisphere(7), pi_pow<3> / 6));
-static_assert(compare(10, sphere_integrate_cosine_factor_over_hemisphere(8), 16 * pi_pow<3> / 105));
-static_assert(compare(10, sphere_integrate_cosine_factor_over_hemisphere(9), pi_pow<4> / 24));
-static_assert(compare(10, sphere_integrate_cosine_factor_over_hemisphere(10), 32 * pi_pow<4> / 945));
-static_assert(compare(10, sphere_integrate_cosine_factor_over_hemisphere(15), pi_pow<7> / 5040));
-static_assert(compare(10, sphere_integrate_cosine_factor_over_hemisphere(20), 1024 * pi_pow<9> / 654729075));
-static_assert(compare(10, sphere_integrate_cosine_factor_over_hemisphere(25), pi_pow<12> / 479001600));
-static_assert(compare(10, sphere_integrate_cosine_factor_over_hemisphere(30), 32768 * pi_pow<14> / 6190283353629375));
-static_assert(compare(10, sphere_integrate_cosine_factor_over_hemisphere(35), pi_pow<17> / 355687428096000));
+static_assert(compare(10, sphere_integrate_cosine_factor_over_hemisphere<2>(), 2.0L));
+static_assert(compare(10, sphere_integrate_cosine_factor_over_hemisphere<3>(), PI_POW<1>));
+static_assert(compare(10, sphere_integrate_cosine_factor_over_hemisphere<4>(), 4 * PI_POW<1> / 3));
+static_assert(compare(10, sphere_integrate_cosine_factor_over_hemisphere<5>(), PI_POW<2> / 2));
+static_assert(compare(10, sphere_integrate_cosine_factor_over_hemisphere<6>(), 8 * PI_POW<2> / 15));
+static_assert(compare(10, sphere_integrate_cosine_factor_over_hemisphere<7>(), PI_POW<3> / 6));
+static_assert(compare(10, sphere_integrate_cosine_factor_over_hemisphere<8>(), 16 * PI_POW<3> / 105));
+static_assert(compare(10, sphere_integrate_cosine_factor_over_hemisphere<9>(), PI_POW<4> / 24));
+static_assert(compare(10, sphere_integrate_cosine_factor_over_hemisphere<10>(), 32 * PI_POW<4> / 945));
+static_assert(compare(10, sphere_integrate_cosine_factor_over_hemisphere<15>(), PI_POW<7> / 5040));
+static_assert(compare(10, sphere_integrate_cosine_factor_over_hemisphere<20>(), 1024 * PI_POW<9> / 654729075));
+static_assert(compare(10, sphere_integrate_cosine_factor_over_hemisphere<25>(), PI_POW<12> / 479001600));
+static_assert(compare(10, sphere_integrate_cosine_factor_over_hemisphere<30>(), 32768 * PI_POW<14> / 6190283353629375));
+static_assert(compare(10, sphere_integrate_cosine_factor_over_hemisphere<35>(), PI_POW<17> / 355687428096000));
 
 template <typename T>
 void test_integrate_power_cosine(T precision)
@@ -232,12 +232,12 @@ void test_cosine()
 {
         static_assert(std::is_floating_point_v<T>);
 
-        constexpr int count = 10'000'000;
+        constexpr int COUNT = 10'000'000;
 
         std::mt19937_64 engine = create_engine<std::mt19937_64>();
 
         long double sum = 0;
-        for (int i = 0; i < count; ++i)
+        for (int i = 0; i < COUNT; ++i)
         {
                 Vector<N, T> v;
                 T length_square;
@@ -247,7 +247,7 @@ void test_cosine()
                 sum += std::abs(c);
         }
 
-        long double data = static_cast<long double>(count) / sum;
+        long double data = static_cast<long double>(COUNT) / sum;
         long double function = sphere_unit_integral_over_cosine_integral(N);
         long double discrepancy_percent = std::abs((data - function) / function) * 100;
 

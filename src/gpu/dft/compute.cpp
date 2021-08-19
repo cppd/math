@@ -21,24 +21,25 @@ INSIDE the FFT BLACK BOX. Serial and Parallel Fast Fourier Transform Algorithms.
 CRC Press LLC, 2000.
 
 13. FFTs for Arbitrary N
+*/
 
-В главе 13 есть ошибки при вычислении H2
-
-  В примере 13.4.
-    Написано:
+/*
+There are errors in chapter 13 when calculating H2
+  Example 13.4
+    written:
       h0, h1, h2, h3, h4, h5, 0, 0, 0, 0, 0,  0, h4, h3, h2, h1.
-    Надо:
+    correct:
       h0, h1, h2, h3, h4, h5, 0, 0, 0, 0, 0, h5, h4, h3, h2, h1.
 
-  В формулах 13.11, 13.23, 13.24, 13.25.
-    Написано:
-      h2(l) = h(l) для l = 0,...,N - 1,
-      h2(l) = 0 для l = N,..., M - N + 1,
-      h2(l) = h(M - l) для l = M - N + 2,..., M - 1.
-    Надо:
-      h2(l) = h(l) для l = 0,...,N - 1,
-      h2(l) = 0 для l = N,..., M - N,
-      h2(l) = h(M - l) для l = M - N + 1,..., M - 1.
+  Formulas 13.11, 13.23, 13.24, 13.25.
+    Written:
+      h2(l) = h(l), if l = 0,...,N - 1,
+      h2(l) = 0, if l = N,..., M - N + 1,
+      h2(l) = h(M - l), if l = M - N + 2,..., M - 1.
+    Correct:
+      h2(l) = h(l), if l = 0,...,N - 1,
+      h2(l) = 0, if l = N,..., M - N,
+      h2(l) = h(M - l), if l = M - N + 1,..., M - 1.
 */
 
 #include "compute.h"
@@ -302,7 +303,7 @@ public:
                 fft_g_program_->create_pipelines(GROUP_SIZE_1D, data_size_, n);
                 fft_g_groups_ = group_count(data_size_ / 2, GROUP_SIZE_1D);
 
-                unsigned div_2_ = n_shared_; // Половина размера текущих отдельных ДПФ
+                unsigned div_2_ = n_shared_; // hald the size of DFT
                 float two_pi_div_m = PI<float> / div_2_;
                 for (; div_2_ < n_; two_pi_div_m /= 2, div_2_ <<= 1)
                 {
@@ -347,13 +348,10 @@ public:
                         return;
                 }
 
-                // Если n превышает максимум обрабатываемых данных shared_size, то вначале
-                // надо отдельно выполнить перестановку данных, а потом запускать функции
-                // с отключенной перестановкой, иначе одни запуски будут вносить изменения
-                // в данные других запусков, так как результат пишется в исходные данные.
+                // n is greater than shared_size. First bit reverse
+                // then compute, because calculations are in place.
                 commands_bit_reverse(command_buffer);
                 commands_fft(command_buffer, inverse);
-                // Досчитать до нужного размера уже в глобальной памяти без разделяемой
                 commands_fft_g(command_buffer, inverse);
         }
 
@@ -507,10 +505,9 @@ class Dft final
         void create_diagonals(uint32_t family_index)
         {
                 // Compute the diagonal D in Lemma 13.2: use the radix-2 FFT
-                // Формулы 13.13, 13.26.
+                // 13.13, 13.26.
 
-                // Для обратного преобразования нужна корректировка данных с умножением на коэффициент,
-                // так как разный размер у исходного вектора N и его расширенного M.
+                // Coefficients for inverse DFT, because N is not equal to M.
                 const double m1_div_n1 = static_cast<double>(m1_) / n1_;
                 const double m2_div_n2 = static_cast<double>(m2_) / n2_;
 
@@ -743,8 +740,8 @@ class DftImage final : public ComputeImage
 
                 //
 
-                constexpr bool inverse = false;
-                dft_.compute_commands(command_buffer, inverse);
+                constexpr bool INVERSE = false;
+                dft_.compute_commands(command_buffer, INVERSE);
 
                 //
 

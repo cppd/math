@@ -123,9 +123,10 @@ constexpr long double sphere_unit_integral_over_cosine_integral(const unsigned n
         return p;
 }
 
-constexpr long double sphere_integrate_cosine_factor_over_hemisphere(const unsigned n)
+template <std::size_t N>
+constexpr long double sphere_integrate_cosine_factor_over_hemisphere()
 {
-        return sphere_area(n) / sphere_unit_integral_over_cosine_integral(n) / 2;
+        return sphere_area<N>() / sphere_unit_integral_over_cosine_integral(N) / 2;
 }
 
 /*

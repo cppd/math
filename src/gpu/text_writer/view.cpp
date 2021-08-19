@@ -175,7 +175,7 @@ class Impl final : public View
 
                 command_buffers_ = create_commands();
 
-                // Матрица для рисования на плоскости окна, точка (0, 0) слева вверху
+                // (0, 0) is top left
                 double left = 0;
                 double right = viewport.width();
                 double bottom = viewport.height();

@@ -191,6 +191,7 @@ public:
 
         Impl(const Impl&) = delete;
         Impl& operator=(const Impl&) = delete;
+        Impl(Impl&&) = delete;
         Impl& operator=(Impl&&) = delete;
 };
 
@@ -255,9 +256,6 @@ const vulkan::DepthImageWithMemory* Impl::texture(unsigned index) const
 {
         ASSERT(index < depth_attachments_.size());
 
-        // Указатель можно возвращать, так как depth_attachments_
-        // не меняется, а при работе Impl(Impl&&) сохранятся указатели,
-        // так как std::vector(std::vector&&) сохраняет указатели.
         return &depth_attachments_[index];
 }
 

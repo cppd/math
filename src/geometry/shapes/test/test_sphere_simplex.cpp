@@ -63,7 +63,7 @@ void test_integrate(ProgressRatio* progress, double progress_min, double progres
                 return result;
         }();
 
-        const T area = sphere_area(N);
+        const T area = sphere_area<N>();
         const T simplex_area = sphere_simplex_area(simplex_vertices);
         const T relative_area = simplex_area / area;
 
@@ -97,14 +97,14 @@ void test_integrate(ProgressRatio* progress, double progress_min, double progres
                 return result;
         }();
 
-        constexpr double count_r = 1.0 / RAY_COUNT;
+        constexpr double RAY_COUNT_R = 1.0 / RAY_COUNT;
         unsigned intersect_count = 0;
         progress->set(progress_min);
         for (unsigned i = 0; i < RAY_COUNT; ++i)
         {
                 if ((i & 0xfff) == 0xfff)
                 {
-                        progress->set(std::lerp(progress_min, progress_max, i * count_r));
+                        progress->set(std::lerp(progress_min, progress_max, i * RAY_COUNT_R));
                 }
                 const Ray<N, T> ray(Vector<N, T>(0), sampling::uniform_on_sphere<N, T>(random_engine));
                 if (simplex.intersect(ray, simplex_vertices[0], simplex_normal))

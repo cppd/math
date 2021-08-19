@@ -44,18 +44,15 @@ vec2 complex_mul(vec2 a, vec2 b)
         return vec2(a.x * b.x - a.y * b.y, a.x * b.y + a.y * b.x);
 }
 
-// Функция подстановки переменных, формулы 13.4, 13.27, 13.28, 13.32.
-// Используется в 4 функциях: по строкам в обе стороны и по столбцам в обе 2 стороны
+// Formulas 13.4, 13.27, 13.28, 13.32.
 vec2 mul_data(vec2 x, int l, int n)
 {
         // float theta = ((INVERSE ? PI : -PI) * l * l) / n;
 
-        // Вместо l * l / n нужно вычислить mod(l * l / n, 2), чтобы в тригонометрические функции
-        // поступало не больше 2 * PI.
-        // Также надо избежать вычисления l * l с плавающей точкой, так как может потеряться точность
-        // при использовании float.
-        // При l до sqrt(2 ^ 31) = 46340 результат умножения не переполнит dividend, а для данной
-        // задачи 46340 достаточно.
+        // Instead of l*l/n compute mod(l*l/n, 2) so that trigonometric
+        // functions work with numbers no more than 2π.
+        // Avoid computing l*l using the float type. If l is less than
+        // sqrt(2^31)=46340 then l*l is inside of the int range.
 
         int dividend = l * l;
         int quotient = dividend / n;
@@ -116,6 +113,7 @@ void rows_mul_from_buffer()
         data[j * N1 + i] = mul_data(x, i, N1);
 }
 
+// with transposition
 void columns_mul_to_buffer()
 {
         int i = int(gl_GlobalInvocationID.x);
@@ -128,17 +126,16 @@ void columns_mul_to_buffer()
 
         if (j >= N2)
         {
-                // С транспонированием
                 buf[i * M2 + j] = vec2(0, 0);
         }
         else
         {
                 vec2 x = data[j * N1 + i];
-                // С транспонированием
                 buf[i * M2 + j] = mul_data(x, j, N2);
         }
 }
 
+// with transposition
 void columns_mul_from_buffer()
 {
         int i = int(gl_GlobalInvocationID.x);
@@ -149,7 +146,6 @@ void columns_mul_from_buffer()
                 return;
         }
 
-        // С транспонированием
         vec2 x = buf[i * M2 + j];
         data[j * N1 + i] = mul_data(x, j, N2);
 }

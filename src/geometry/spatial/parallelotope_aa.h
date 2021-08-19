@@ -225,13 +225,14 @@ bool ParallelotopeAA<N, T>::intersect_impl(const Ray<N, T>& r, T* first, T* seco
                 T s = r.dir()[i]; // dot(r.dir(), NORMALS_POSITIVE[i])
                 if (s == 0)
                 {
+                        // parallel to the planes
                         T d = r.org()[i]; // dot(r.org(), NORMALS_POSITIVE[i])
                         if (d < planes_[i].d1 || d > planes_[i].d2)
                         {
-                                // parallel and outside the plane
+                                // outside the planes
                                 return false;
                         }
-                        // inside the plane
+                        // inside the planes
                         continue;
                 }
 

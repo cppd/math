@@ -305,8 +305,8 @@ FlowConstant::FlowConstant()
         {
                 VkSpecializationMapEntry entry = {};
                 entry.constantID = 3;
-                entry.offset = offsetof(Data, iteration_count);
-                entry.size = sizeof(Data::iteration_count);
+                entry.offset = offsetof(Data, max_iteration_count);
+                entry.size = sizeof(Data::max_iteration_count);
                 entries_.push_back(entry);
         }
         {
@@ -329,7 +329,7 @@ void FlowConstant::set(
         uint32_t local_size_x,
         uint32_t local_size_y,
         int32_t radius,
-        int32_t iteration_count,
+        int32_t max_iteration_count,
         float stop_move_square,
         float min_determinant)
 {
@@ -339,8 +339,8 @@ void FlowConstant::set(
         data_.local_size_y = local_size_y;
         static_assert(std::is_same_v<decltype(data_.radius), decltype(radius)>);
         data_.radius = radius;
-        static_assert(std::is_same_v<decltype(data_.iteration_count), decltype(iteration_count)>);
-        data_.iteration_count = iteration_count;
+        static_assert(std::is_same_v<decltype(data_.max_iteration_count), decltype(max_iteration_count)>);
+        data_.max_iteration_count = max_iteration_count;
         static_assert(std::is_same_v<decltype(data_.stop_move_square), decltype(stop_move_square)>);
         data_.stop_move_square = stop_move_square;
         static_assert(std::is_same_v<decltype(data_.min_determinant), decltype(min_determinant)>);
@@ -394,11 +394,11 @@ void FlowProgram::create_pipeline(
         uint32_t local_size_x,
         uint32_t local_size_y,
         int32_t radius,
-        int32_t iteration_count,
+        int32_t max_iteration_count,
         float stop_move_square,
         float min_determinant)
 {
-        constant_.set(local_size_x, local_size_y, radius, iteration_count, stop_move_square, min_determinant);
+        constant_.set(local_size_x, local_size_y, radius, max_iteration_count, stop_move_square, min_determinant);
 
         vulkan::ComputePipelineCreateInfo info;
         info.device = &device_;

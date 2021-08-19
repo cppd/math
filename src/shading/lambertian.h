@@ -52,7 +52,7 @@ Color f(const Color& color)
         // f = color / (integrate dot(n,l) over hemisphere)
 
         static constexpr typename Color::DataType CONSTANT_REFLECTANCE_FACTOR =
-                1.0 / geometry::sphere_integrate_cosine_factor_over_hemisphere(N);
+                1.0 / geometry::sphere_integrate_cosine_factor_over_hemisphere<N>();
 
         return CONSTANT_REFLECTANCE_FACTOR * color;
 }

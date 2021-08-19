@@ -56,12 +56,12 @@ constexpr std::initializer_list<VkFormat> COLOR_IMAGE_FORMATS =
 };
 // clang-format on
 
-// Число используется в шейдере для определения наличия текстурных координат
-constexpr vec2f NO_TEXTURE_COORDINATES = vec2f(-1e10);
+constexpr vec2f NULL_TEXTURE_COORDINATES = vec2f(-1e10);
 
 constexpr VkIndexType VULKAN_INDEX_TYPE = VK_INDEX_TYPE_UINT32;
 
-constexpr float LIMIT_COSINE = 0.7; // 0.7 немного больше 45 градусов
+// acos(0.7) is slightly greater than 45 degrees
+constexpr float LIMIT_COSINE = 0.7;
 
 using IndexType = std::conditional_t<
         VULKAN_INDEX_TYPE == VK_INDEX_TYPE_UINT32,
@@ -236,7 +236,7 @@ void load_vertices(
                         {
                                 for (int i = 0; i < 3; ++i)
                                 {
-                                        t[i] = NO_TEXTURE_COORDINATES;
+                                        t[i] = NULL_TEXTURE_COORDINATES;
                                 }
                         }
 
@@ -390,7 +390,7 @@ std::vector<vulkan::ImageWithMemory> load_textures(
                         image.color_format, image.pixels);
         }
 
-        // На одну текстуру больше для её указания, но не использования в тех материалах, где нет текстуры
+        // texture for materials without texture
         textures.emplace_back(
                 device, family_indices, COLOR_IMAGE_FORMATS, VK_SAMPLE_COUNT_1_BIT, VK_IMAGE_TYPE_2D,
                 vulkan::make_extent(1, 1), VK_IMAGE_USAGE_SAMPLED_BIT, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL,
@@ -423,7 +423,7 @@ std::vector<MaterialBuffer> load_materials(
                 buffers.emplace_back(device, command_pool, queue, family_indices, mb);
         }
 
-        // На один материал больше для его указания, но не использования в вершинах, не имеющих материала
+        // material for vertices without material
         MaterialBuffer::Material mb;
         mb.Ka = vec3f(0);
         mb.Kd = vec3f(0);
@@ -443,10 +443,8 @@ std::vector<TrianglesMaterialMemory::MaterialInfo> materials_info(
         const std::vector<vulkan::ImageWithMemory>& textures,
         const std::vector<MaterialBuffer>& material_buffers)
 {
-        // Текстур имеется больше на одну для её использования в тех материалах, где нет текстуры
+        // one more texture and material for specifying but not using
         ASSERT(textures.size() == mesh.images.size() + 1);
-
-        // Буферов имеется больше на один для его указания, но не использования в вершинах, не имеющих материала
         ASSERT(material_buffers.size() == mesh.materials.size() + 1);
 
         VkImageView no_texture = textures.back().image_view();

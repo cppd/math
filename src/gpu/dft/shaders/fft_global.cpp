@@ -88,11 +88,11 @@ const VkDescriptorSet& FftGlobalMemory::descriptor_set() const
         return descriptors_.descriptor_set(0);
 }
 
-void FftGlobalMemory::set_data(float two_pi_div_m, int div_2_) const
+void FftGlobalMemory::set_data(float two_pi_div_m, int m_div_2) const
 {
         Data d;
         d.two_pi_div_m = two_pi_div_m;
-        d.div_2_ = div_2_;
+        d.m_div_2 = m_div_2;
         vulkan::map_and_write_to_buffer(uniform_buffers_[0], d);
 }
 

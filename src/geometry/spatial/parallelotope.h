@@ -218,14 +218,14 @@ bool Parallelotope<N, T>::intersect_impl(const Ray<N, T>& r, T* first, T* second
                 T s = dot(r.dir(), planes_[i].n);
                 if (s == 0)
                 {
-                        // parallel to plane
+                        // parallel to the planes
                         T d = dot(r.org(), planes_[i].n);
                         if (d < planes_[i].d1 || d > planes_[i].d2)
                         {
-                                // outside the plane
+                                // outside the planes
                                 return false;
                         }
-                        // inside the plane
+                        // inside the planes
                         continue;
                 }
 

@@ -29,16 +29,16 @@ struct Constraint final
         T b;
 };
 
-template <std::size_t N, typename T, std::size_t Count, std::size_t CountEq>
+template <std::size_t N, typename T, std::size_t COUNT, std::size_t COUNT_EQ>
 struct Constraints final
 {
-        std::array<Constraint<N, T>, Count> c;
-        std::array<Constraint<N, T>, CountEq> c_eq;
+        std::array<Constraint<N, T>, COUNT> c;
+        std::array<Constraint<N, T>, COUNT_EQ> c_eq;
 };
 
-template <std::size_t N, typename T, std::size_t Count>
-struct Constraints<N, T, Count, 0> final
+template <std::size_t N, typename T, std::size_t COUNT>
+struct Constraints<N, T, COUNT, 0> final
 {
-        std::array<Constraint<N, T>, Count> c;
+        std::array<Constraint<N, T>, COUNT> c;
 };
 }

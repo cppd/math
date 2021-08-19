@@ -148,8 +148,8 @@ void test_polytope(
         std::vector<std::array<int, N>> mesh_facets;
         create_mesh(facets, &mesh_vertices, &mesh_facets);
 
-        constexpr bool has_boundary = false;
-        check_mesh(name, mesh_vertices, mesh_facets, has_boundary, euler_characteristic_for_convex_polytope<N>());
+        constexpr bool HAS_BOUNDARY = false;
+        check_mesh(name, mesh_vertices, mesh_facets, HAS_BOUNDARY, euler_characteristic_for_convex_polytope<N>());
 }
 
 template <std::size_t N, typename T>
@@ -161,19 +161,19 @@ void test_polytopes()
                 test_simplex(simplex);
         }
         {
-                const std::string NAME = "Regular cross-polytope";
+                const std::string name = "Regular cross-polytope";
                 constexpr unsigned FACET_COUNT = 1 << N;
                 constexpr unsigned VERTEX_COUNT = 2 * N;
                 std::vector<std::array<Vector<N, T>, N>> facets = create_cross_polytope<N, T>();
-                test_polytope(NAME, facets, FACET_COUNT, VERTEX_COUNT);
+                test_polytope(name, facets, FACET_COUNT, VERTEX_COUNT);
         }
         if constexpr (N == 3)
         {
-                const std::string NAME = "Regular icosahedron";
+                const std::string name = "Regular icosahedron";
                 constexpr unsigned FACET_COUNT = 20;
                 constexpr unsigned VERTEX_COUNT = 12;
                 std::vector<std::array<Vector<3, T>, 3>> facets = create_icosahedron<T>();
-                test_polytope(NAME, facets, FACET_COUNT, VERTEX_COUNT);
+                test_polytope(name, facets, FACET_COUNT, VERTEX_COUNT);
         }
 }
 

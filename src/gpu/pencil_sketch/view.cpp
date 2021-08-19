@@ -166,7 +166,7 @@ class Impl final : public View
         {
                 std::array<ViewVertex, VERTEX_COUNT> vertices;
 
-                // Текстурный 0 находится вверху
+                // texture (0, 0) is top left
                 vertices[0] = {{-1, +1, 0, 1}, {0, 1}};
                 vertices[1] = {{+1, +1, 0, 1}, {1, 1}};
                 vertices[2] = {{-1, -1, 0, 1}, {0, 0}};

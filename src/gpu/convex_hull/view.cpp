@@ -106,7 +106,7 @@ class Impl final : public View
 
                 memory_.set_points(*points_);
 
-                // Матрица для рисования на плоскости окна, точка (0, 0) слева вверху
+                // (0, 0) is top left
                 double left = 0;
                 double right = rectangle.width();
                 double bottom = rectangle.height();

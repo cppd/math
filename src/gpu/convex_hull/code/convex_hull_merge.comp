@@ -48,9 +48,9 @@ void copy_from_buffer()
         }
 }
 
-// Векторное произведение на плоскости (b-a)⨯(c-a).
-// Точки по возрастанию a, b, c поворачивают налево, если больше 0
-// Точки по возрастанию a, b, c поворачивают направо, если меньше 0
+// cross product (b-a)⨯(c-a)
+// if positive then a, b and c form a left turn
+// if negative then a, b and c form a right turn
 bool convex_ok(vec2 a, vec2 b, vec2 c)
 {
         vec2 ab = b - a, ac = c - a;

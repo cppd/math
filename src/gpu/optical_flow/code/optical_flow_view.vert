@@ -40,9 +40,6 @@ void main(void)
 {
         const int vertex_index = gl_VertexIndex;
 
-        // Две вершины на одну точку.
-        // Одна вершина начало линии, вторая вершина конец линии.
-
         uint point_number = vertex_index >> 1;
 
         vec2 s;

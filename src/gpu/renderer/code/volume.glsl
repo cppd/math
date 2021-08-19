@@ -320,19 +320,20 @@ bool intersect(vec3 ray_org, vec3 ray_dir, vec3 planes_min, vec3 planes_max, out
         float f_max = -1e38;
         float b_min = 1e38;
 
-        // На основе функции из ParallelotopeAA
+        // based on ParallelotopeAA functions
         for (int i = 0; i < 3; ++i)
         {
                 float s = ray_dir[i]; // dot(ray_dir, planes[i].n);
                 if (s == 0)
                 {
+                        // parallel to the planes
                         float d = ray_org[i]; // dot(ray_org, planes[i].n);
                         if (d < planes_min[i] || d > planes_max[i])
                         {
-                                // параллельно плоскостям и снаружи
+                                // outside the planes
                                 return false;
                         }
-                        // внутри плоскостей
+                        // inside the planes
                         continue;
                 }
 
@@ -342,15 +343,15 @@ bool intersect(vec3 ray_org, vec3 ray_dir, vec3 planes_min, vec3 planes_max, out
 
                 if (s > 0)
                 {
-                        // пересечение снаружи для первой плоскости
-                        // пересечение внутри для второй плоскости
+                        // front intersection for the first plane
+                        // back intersection for the second plane
                         f_max = max(alpha1, f_max);
                         b_min = min(alpha2, b_min);
                 }
                 else
                 {
-                        // пересечение внутри для первой плоскости
-                        // пересечение снаружи для второй плоскости
+                        // back intersection for the first plane
+                        // front intersection for the second plane
                         b_min = min(alpha1, b_min);
                         f_max = max(alpha2, f_max);
                 }
@@ -361,7 +362,7 @@ bool intersect(vec3 ray_org, vec3 ray_dir, vec3 planes_min, vec3 planes_max, out
                 }
         }
 
-        // На основе функции из Parallelotope для случая одной плоскости
+        // based on Parallelotope functions
         if (drawing.clip_plane_enabled)
         {
                 do
@@ -372,12 +373,13 @@ bool intersect(vec3 ray_org, vec3 ray_dir, vec3 planes_min, vec3 planes_max, out
                         float s = dot(ray_dir, n);
                         if (s == 0)
                         {
+                                // parallel to the plane
                                 if (dot(ray_org, n) > d)
                                 {
-                                        // параллельно плоскости и снаружи
+                                        // outside the plane
                                         return false;
                                 }
-                                // внутри плоскости
+                                // inside the plane
                                 continue;
                         }
 
@@ -385,12 +387,12 @@ bool intersect(vec3 ray_org, vec3 ray_dir, vec3 planes_min, vec3 planes_max, out
 
                         if (s < 0)
                         {
-                                // пересечение снаружи
+                                // front intersection
                                 f_max = max(alpha, f_max);
                         }
                         else
                         {
-                                // пересечение внутри
+                                // back intersection
                                 b_min = min(alpha, b_min);
                         }
 

@@ -27,62 +27,60 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 namespace ns::gpu::convex_hull
 {
-int points_buffer_size(int height)
+int points_buffer_size(const int height)
 {
-        // 2 линии точек + 1 точка, тип ivec2
+        // 2 lines + 1 point, GLSL ivec2
         return (2 * height + 1) * (2 * sizeof(int32_t));
 }
 
 int group_size_prepare(
-        int width,
-        unsigned max_group_size_x,
-        unsigned max_group_invocations,
-        unsigned max_shared_memory_size)
+        const int width,
+        const unsigned max_group_size_x,
+        const unsigned max_group_invocations,
+        const unsigned max_shared_memory_size)
 {
-        unsigned shared_size_per_thread = 2 * sizeof(int32_t); // GLSL ivec2
+        constexpr unsigned SHARED_SIZE_PER_THREAD = 2 * sizeof(int32_t); // GLSL ivec2
 
         int max_group_size_limit = std::min(max_group_size_x, max_group_invocations);
-        int max_group_size_memory = max_shared_memory_size / shared_size_per_thread;
+        int max_group_size_memory = max_shared_memory_size / SHARED_SIZE_PER_THREAD;
 
-        // максимально возможная степень 2
         int max_group_size = 1 << log_2(std::min(max_group_size_limit, max_group_size_memory));
 
-        // один поток обрабатывает 2 и более пикселей, при этом число потоков должно быть степенью 2.
+        // one thread for 2 or more pixels, power of 2
         int pref_thread_count = (width > 1) ? (1 << log_2(width - 1)) : 1;
 
         return (pref_thread_count <= max_group_size) ? pref_thread_count : max_group_size;
 }
 
 int group_size_merge(
-        int height,
-        unsigned max_group_size_x,
-        unsigned max_group_invocations,
-        unsigned max_shared_memory_size)
+        const int height,
+        const unsigned max_group_size_x,
+        const unsigned max_group_invocations,
+        const unsigned max_shared_memory_size)
 {
         static_assert(sizeof(float) == 4);
 
-        unsigned shared_size_per_item = sizeof(float); // GLSL float
+        constexpr unsigned SHARED_SIZE_PER_ITEM = sizeof(float); // GLSL float
 
-        if (max_shared_memory_size < height * shared_size_per_item)
+        if (max_shared_memory_size < height * SHARED_SIZE_PER_ITEM)
         {
-                error("Shared memory problem: needs " + to_string(height * shared_size_per_item) + ", exists "
+                error("Shared memory problem: needs " + to_string(height * SHARED_SIZE_PER_ITEM) + ", exists "
                       + to_string(max_shared_memory_size));
         }
 
-        int max_group_size = std::min(max_group_size_x, max_group_invocations);
+        const int max_group_size = std::min(max_group_size_x, max_group_invocations);
 
-        // Один поток первоначально обрабатывает группы до 4 элементов.
-        int pref_thread_count = group_count(height, 4);
+        // one thread for a group for up to 4 items.
+        const int pref_thread_count = group_count(height, 4);
 
         return (pref_thread_count <= max_group_size) ? pref_thread_count : max_group_size;
 }
 
-int iteration_count_merge(int size)
+int iteration_count_merge(const int size)
 {
-        // Расчёт начинается с 4 элементов, правый средний индекс (начало второй половины) равен 2.
-        // На каждой итерации индекс увеличивается в 2 раза.
-        // Этот индекс должен быть строго меньше заданного числа size.
-        // Поэтому число итераций равно максимальной степени 2, в которой число 2 строго меньше заданного числа size.
+        // Starts with groups of 4 items, the right half of the group starts with index 2.
+        // Increase the index by 2 times at each iteration.
+        // This index must be strictly less than size.
         return (size > 2) ? log_2(size - 1) : 0;
 }
 }

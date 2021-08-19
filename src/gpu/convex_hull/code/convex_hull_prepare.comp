@@ -29,8 +29,8 @@ layout(binding = 1, r32ui) readonly restrict uniform uimage2D objects;
 
 layout(std430, binding = 0) writeonly restrict buffer Lines
 {
-        // Индексы для минимумов [0, HEIGHT - 1].
-        // Индексы для максимумов [HEIGHT, 2 * HEIGHT - 1].
+        // Line for minimum: x = Lines[i], y = i
+        // Line for maximum: x = Lines[i], y = i + HEIGHT
         int lines[2 * HEIGHT];
 };
 
@@ -40,14 +40,14 @@ bool not_background(int x, int y)
         return s.r != 0;
 }
 
-// В x пишутся минимумы, в y пишутся максимумы
+// x for minimum values, y for maximum values
 shared ivec2 shared_buffer[BUFFER_SIZE];
 
 void main(void)
 {
-        // Одна группа обрабатывает одну строку
-        // gl_LocalInvocationID.x координата X по горизонтали
-        // gl_WorkGroupID.x координата Y по вертикали
+        // One group for one row
+        // x = gl_LocalInvocationID.x
+        // y = gl_WorkGroupID.x
 
         const int local_id = int(gl_LocalInvocationID.x);
         const int y = int(gl_WorkGroupID.x);

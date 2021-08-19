@@ -344,10 +344,10 @@ Vector<N, T> random_direction_for_parallelotope_comparison(RandomEngine& engine)
         }
 }
 
-template <std::size_t N, std::size_t Count, typename T>
-bool point_is_in_feasible_region(const Vector<N, T>& point, const std::array<Constraint<N, T>, Count>& c)
+template <std::size_t N, std::size_t COUNT, typename T>
+bool point_is_in_feasible_region(const Vector<N, T>& point, const std::array<Constraint<N, T>, COUNT>& c)
 {
-        for (unsigned i = 0; i < Count; ++i)
+        for (unsigned i = 0; i < COUNT; ++i)
         {
                 T r = dot(c[i].a, point) + c[i].b;
 

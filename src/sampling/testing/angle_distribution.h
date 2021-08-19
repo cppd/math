@@ -184,7 +184,7 @@ public:
                 distribution_values.reserve(buckets.size());
 
                 const long double SPHERE_K =
-                        geometry::sphere_area(N) / geometry::sphere_relative_area<N, long double>(0, PI<T>);
+                        geometry::sphere_area<N>() / geometry::sphere_relative_area<N, long double>(0, PI<T>);
 
                 long long cnt = 0;
                 for (unsigned bucket = 0; bucket < buckets.size(); ++bucket)
