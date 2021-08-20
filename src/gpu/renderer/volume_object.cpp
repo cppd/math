@@ -261,9 +261,9 @@ class Impl final : public VolumeObject
                 float isovalue,
                 const color::Color& color) const
         {
-                constexpr float eps = 1e-10f;
-                window_min = std::min(std::max(0.0f, window_min), 1 - eps);
-                window_max = std::max(std::min(1.0f, window_max), window_min + eps);
+                constexpr float EPS = 1e-10f;
+                window_min = std::min(std::max(0.0f, window_min), 1 - EPS);
+                window_max = std::max(std::min(1.0f, window_max), window_min + EPS);
                 float window_offset = window_min;
                 float window_scale = 1 / (window_max - window_min);
 

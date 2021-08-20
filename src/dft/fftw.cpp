@@ -65,7 +65,7 @@ public:
 
 class FFTPlan final
 {
-        fftwf_plan p;
+        fftwf_plan plan_;
 
 public:
         FFTPlan(const bool inverse,
@@ -86,22 +86,22 @@ public:
 
                 if (inverse)
                 {
-                        p = fftwf_plan_dft_2d(n2, n1, in_fftw, out_fftw, FFTW_BACKWARD, FFTW_MEASURE);
+                        plan_ = fftwf_plan_dft_2d(n2, n1, in_fftw, out_fftw, FFTW_BACKWARD, FFTW_MEASURE);
                 }
                 else
                 {
-                        p = fftwf_plan_dft_2d(n2, n1, in_fftw, out_fftw, FFTW_FORWARD, FFTW_MEASURE);
+                        plan_ = fftwf_plan_dft_2d(n2, n1, in_fftw, out_fftw, FFTW_FORWARD, FFTW_MEASURE);
                 }
         }
 
         ~FFTPlan()
         {
-                fftwf_destroy_plan(p);
+                fftwf_destroy_plan(plan_);
         }
 
         void execute() const
         {
-                fftwf_execute(p);
+                fftwf_execute(plan_);
         }
 
         FFTPlan(const FFTPlan&) = delete;

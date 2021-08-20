@@ -62,7 +62,8 @@ std::unique_ptr<const Scene<N, T, Color>> create_simple_scene(
         //
 
         T max_projected_object_size = limits<T>::lowest();
-        for (unsigned i = 0; i < N - 1; ++i) // кроме последнего измерения, по которому находится камера
+        // excluding camera direction N - 1
+        for (unsigned i = 0; i < N - 1; ++i)
         {
                 max_projected_object_size = std::max(object_size[i], max_projected_object_size);
         }

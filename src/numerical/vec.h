@@ -487,30 +487,19 @@ template <std::size_t N, typename T>
         return v.to_string();
 }
 
-// Если векторы единичные, то это синус угла между векторами
-// в двухмерном пространстве
 template <typename T>
 [[nodiscard]] T cross(const Vector<2, T>& v0, const Vector<2, T>& v1)
 {
         return v0[0] * v1[1] - v0[1] * v1[0];
 }
 
-// Дублирование кода из функции orthogonal_complement, но так удобнее,
-// так как понятие векторное произведение имеется только в трёхмерном
-// пространстве, в отличие от ортогональных дополнений
 template <typename T>
 [[nodiscard]] Vector<3, T> cross(const Vector<3, T>& v0, const Vector<3, T>& v1)
 {
         Vector<3, T> res;
-
-        // clang-format off
-
-        res[0] = +(v0[1] * v1[2] - v0[2] * v1[1]);
-        res[1] = -(v0[0] * v1[2] - v0[2] * v1[0]);
-        res[2] = +(v0[0] * v1[1] - v0[1] * v1[0]);
-
-        // clang-format on
-
+        res[0] = v0[1] * v1[2] - v0[2] * v1[1];
+        res[1] = v0[2] * v1[0] - v0[0] * v1[2];
+        res[2] = v0[0] * v1[1] - v0[1] * v1[0];
         return res;
 }
 

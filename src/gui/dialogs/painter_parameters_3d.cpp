@@ -29,7 +29,6 @@ namespace ns::gui::dialog
 {
 namespace
 {
-// Это диалоговое окно предназначено только для 3 измерений
 constexpr int DIMENSION = 3;
 }
 

@@ -32,11 +32,10 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 namespace ns::gui
 {
-// Чтобы объект Qt, имеющий родителя, не удалялся два и более раз, нужно использовать
-// динамическую память и класс QPointer.
-// Такие возможные многократные удаления могут происходить, например, когда родительское
-// окно диалогового окна удаляется во время выполнения функции exec диалогового окна,
-// и тогда после функции exec уже нельзя удалять диалоговое окно.
+// Using dynamic memory and QPointer to avoid multiple deletions
+// of Qt object with parent.
+// For example, do not delete a dialog when the dialog's parent
+// is deleted while the dialog is open via exec().
 template <typename T>
 class QtObjectInDynamicMemory final : public QPointer<T>
 {
@@ -83,8 +82,8 @@ QWidget* parent_for_dialog();
 
 QSplitter* find_widget_splitter(QObject* object, QWidget* widget);
 
-void set_horizontal_stretch(QWidget* widget, int stretchFactor);
-void set_vertical_stretch(QWidget* widget, int stretchFactor);
+void set_horizontal_stretch(QWidget* widget, int stretch_factor);
+void set_vertical_stretch(QWidget* widget, int stretch_factor);
 
 color::Color qcolor_to_color(const QColor& c);
 QColor color_to_qcolor(const color::Color& c);

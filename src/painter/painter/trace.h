@@ -68,8 +68,6 @@ Normals<N, T> compute_normals(
 
         const bool smooth = smooth_normals && s_normal.has_value();
 
-        // Определять по реальной нормали, так как видимая нормаль может
-        // показать, что пересечение находится с другой стороны объекта.
         const bool flip = dot(v, g_normal) < 0;
 
         const Vector<N, T> geometric = flip ? -g_normal : g_normal;

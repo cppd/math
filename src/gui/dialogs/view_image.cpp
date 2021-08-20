@@ -173,13 +173,13 @@ void ViewImageDialog::on_select_path_clicked()
         dialog::FileFilter filter;
         filter.name = "Images";
         filter.file_extensions.emplace_back(image::file_extension());
-        constexpr bool read_only = true;
+        constexpr bool READ_ONLY = true;
 
         const std::string file_name =
                 generic_utf8_filename(path_from_utf8(ui.lineEdit_path->text().toStdString()).filename());
 
         std::optional<std::string> path =
-                dialog::save_file(caption, file_name.empty() ? file_name_ : file_name, {filter}, read_only);
+                dialog::save_file(caption, file_name.empty() ? file_name_ : file_name, {filter}, READ_ONLY);
 
         if (path && !ptr.isNull())
         {

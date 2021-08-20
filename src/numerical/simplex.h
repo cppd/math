@@ -158,10 +158,6 @@ void pivot(std::array<T, M>& b, std::array<Vector<N, T>, M>& a, T& v, Vector<N, 
         ASSERT(e < N);
         ASSERT(a[l][e] != 0);
 
-        // С отличием от алгоритма в книге в том, что пишется в переменные
-        // с теми же номерами без замены индексов l и e, а также используется
-        // другая работа со знаками.
-
         b[l] = -b[l] / a[l][e];
         for (unsigned j = 0; j < N; ++j)
         {
@@ -203,20 +199,20 @@ void pivot(std::array<T, M>& b, std::array<Vector<N, T>, M>& a, T& v, Vector<N, 
         c[e] = c[e] * a[l][e];
 }
 
-template <std::size_t N_Source, std::size_t M, typename T>
+template <std::size_t N_SOURCE, std::size_t M, typename T>
 void make_aux_and_maps(
-        const std::array<Vector<N_Source, T>, M>& a_input,
+        const std::array<Vector<N_SOURCE, T>, M>& a_input,
         std::array<T, M>* b,
-        std::array<Vector<N_Source + 1, T>, M>* a,
+        std::array<Vector<N_SOURCE + 1, T>, M>* a,
         T* v,
-        Vector<N_Source + 1, T>* c,
-        std::array<unsigned, N_Source + 1>* map_n,
+        Vector<N_SOURCE + 1, T>* c,
+        std::array<unsigned, N_SOURCE + 1>* map_n,
         std::array<unsigned, M>* map_m)
 {
         for (unsigned m = 0; m < M; ++m)
         {
                 T max = std::abs(a_input[m][0]);
-                for (unsigned n = 1; n < N_Source; ++n)
+                for (unsigned n = 1; n < N_SOURCE; ++n)
                 {
                         max = std::max(max, std::abs(a_input[m][n]));
                 }
@@ -227,7 +223,7 @@ void make_aux_and_maps(
 
                 (*b)[m] *= max_reciprocal;
                 (*a)[m][0] = 1;
-                for (unsigned n = 0; n < N_Source; ++n)
+                for (unsigned n = 0; n < N_SOURCE; ++n)
                 {
                         (*a)[m][n + 1] = a_input[m][n] * max_reciprocal;
                 }
@@ -235,7 +231,7 @@ void make_aux_and_maps(
 
         //
 
-        constexpr unsigned N = N_Source + 1;
+        constexpr unsigned N = N_SOURCE + 1;
 
         //
 
@@ -275,7 +271,6 @@ bool variable_x0_is_zero(
 
         for (unsigned m = 0; m < M; ++m)
         {
-                // b из-за численных ошибок может быть меньше 0, поэтому <= 0 вместо == 0
                 if (map_m[m] == 0 && b[m] <= 0)
                 {
                         return true;
@@ -309,15 +304,13 @@ bool find_positive_index(const Vector<N, T>& c, unsigned* e)
 
 // 29.5 The initial basic feasible solution.
 // Finding an initial solution.
-// Упрощённый вариант INITIALIZE-SIMPLEX для определения
-// наличия решения системы неравенств.
-template <bool with_print, std::size_t N_Source, std::size_t M, typename T>
-ConstraintSolution solve_constraints(std::array<T, M> b, const std::array<Vector<N_Source, T>, M>& a_input)
+template <bool WITH_PRINT, std::size_t N_SOURCE, std::size_t M, typename T>
+ConstraintSolution solve_constraints(std::array<T, M> b, const std::array<Vector<N_SOURCE, T>, M>& a_input)
 {
-        static_assert(std::is_floating_point_v<T> || (!with_print && is_native_floating_point<T>));
-        static_assert(N_Source > 0 && M > 0);
+        static_assert(std::is_floating_point_v<T> || (!WITH_PRINT && is_native_floating_point<T>));
+        static_assert(N_SOURCE > 0 && M > 0);
 
-        constexpr unsigned N = N_Source + 1;
+        constexpr unsigned N = N_SOURCE + 1;
 
         constexpr int MAX_ITERATION_COUNT = binomial<N + M, M>();
 
@@ -344,7 +337,7 @@ ConstraintSolution solve_constraints(std::array<T, M> b, const std::array<Vector
 
         make_aux_and_maps(a_input, &b, &a, &v, &c, &map_n, &map_m);
 
-        if constexpr (with_print)
+        if constexpr (WITH_PRINT)
         {
                 LOG("");
                 LOG("Preprocessed");
@@ -371,7 +364,7 @@ ConstraintSolution solve_constraints(std::array<T, M> b, const std::array<Vector
         pivot(b, a, v, c, k, 0);
         std::swap(map_m[k], map_n[0]);
 
-        if constexpr (with_print)
+        if constexpr (WITH_PRINT)
         {
                 LOG("");
                 LOG("First pivot");
@@ -380,14 +373,12 @@ ConstraintSolution solve_constraints(std::array<T, M> b, const std::array<Vector
 
         //
 
-        // Рассматривается со второго варианта, поэтому начинается со второй итерации
         for (int iteration = 2;; ++iteration)
         {
                 unsigned e;
 
                 if (!find_positive_index(c, &e))
                 {
-                        // Все индексы меньше или равны 0, значит найдено оптимальное решение
                         break;
                 }
 
@@ -401,8 +392,6 @@ ConstraintSolution solve_constraints(std::array<T, M> b, const std::array<Vector
                 static_assert(M > 0 && M - 1 < limits<unsigned>::max());
                 for (unsigned i = 0; i < M; ++i)
                 {
-                        // В теории не должно становиться меньше 0, но из-за численных
-                        // ошибок может, поэтому поставить значение больше или равно 0.
                         b[i] = std::max(static_cast<T>(0), b[i]);
 
                         if (a[i][e] < 0)
@@ -425,7 +414,7 @@ ConstraintSolution solve_constraints(std::array<T, M> b, const std::array<Vector
                 pivot(b, a, v, c, l, e);
                 std::swap(map_m[l], map_n[e]);
 
-                if constexpr (with_print)
+                if constexpr (WITH_PRINT)
                 {
                         LOG("");
                         LOG("iteration " + to_string(iteration));

@@ -207,9 +207,9 @@ void write_facets(std::ostream& file, const Mesh<N>& mesh)
         }
 }
 
-std::string stl_type_name(std::size_t N)
+std::string stl_type_name(std::size_t n)
 {
-        return "STL-" + to_string(N);
+        return "STL-" + to_string(n);
 }
 
 template <std::size_t N>

@@ -40,10 +40,8 @@ constexpr int PAINTER_DEFAULT_SAMPLES_PER_PIXEL = (N == 3) ? 25 : 1;
 template <std::size_t N>
 constexpr int PAINTER_MAXIMUM_SAMPLES_PER_PIXEL = power<N - 1>(10u);
 
-// Максимальный размер экрана в пикселях для 3 измерений
 constexpr int PAINTER_MAXIMUM_SCREEN_SIZE_3D = 10000;
 
-// Размеры экрана в пикселях для 4 и более измерений
 constexpr int PAINTER_MINIMUM_SCREEN_SIZE_ND = 50;
 constexpr int PAINTER_MAXIMUM_SCREEN_SIZE_ND = 5000;
 template <std::size_t N>

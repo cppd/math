@@ -157,7 +157,7 @@ void test()
 {
         LOG("Test geometry files, " + space_name(N));
 
-        const unsigned FACET_COUNT = []()
+        const unsigned facet_count = []()
         {
                 std::mt19937 engine = create_engine<std::mt19937>();
                 return std::uniform_int_distribution<unsigned>(100, 1000)(engine);
@@ -167,7 +167,7 @@ void test()
 
         std::vector<Vector<N, float>> vertices;
         std::vector<std::array<int, N>> facets;
-        geometry::create_sphere(FACET_COUNT, &vertices, &facets);
+        geometry::create_sphere(facet_count, &vertices, &facets);
 
         test_geometry_files(to_string(N - 1) + "-sphere", vertices, facets, &progress);
 

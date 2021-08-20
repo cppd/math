@@ -267,7 +267,7 @@ public:
 
         void insert(const std::optional<ObjectId>& parent_object_id = std::nullopt)
         {
-                std::unique_lock lock_(mutex_);
+                std::unique_lock lock(mutex_);
                 if (!inserted_)
                 {
                         inserted_ = true;

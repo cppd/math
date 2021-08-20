@@ -42,7 +42,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <string>
 #include <vector>
 
-using complex = std::complex<float>;
+using Complex = std::complex<float>;
 
 namespace ns::gpu::dft
 {
@@ -56,8 +56,8 @@ constexpr double DISCREPANCY_LIMIT = 1e-4;
 void compare(
         const std::string& name_compute,
         const std::string& name_library,
-        const std::vector<complex>& x_compute,
-        const std::vector<complex>& x_library)
+        const std::vector<Complex>& x_compute,
+        const std::vector<Complex>& x_library)
 {
         if (x_compute.size() != x_library.size())
         {
@@ -91,7 +91,7 @@ std::string time_string(const std::string& name, const TimePoint& start_time)
         return name + " time: " + to_string_fixed(1000.0 * duration_from(start_time), 5) + " ms";
 }
 
-void log_data(const std::vector<complex>& data)
+void log_data(const std::vector<Complex>& data)
 {
         if (data.size() > 10)
         {
@@ -100,7 +100,7 @@ void log_data(const std::vector<complex>& data)
         std::string s = "Data:";
         if (!data.empty())
         {
-                for (const complex& c : data)
+                for (const Complex& c : data)
                 {
                         s += "\n  " + to_string(c);
                 }
@@ -112,7 +112,7 @@ void log_data(const std::vector<complex>& data)
         LOG(s);
 }
 
-void compute_vulkan(ComputeVector* dft, bool inverse, int n1, int n2, std::vector<complex>* data)
+void compute_vulkan(ComputeVector* dft, bool inverse, int n1, int n2, std::vector<Complex>* data)
 {
         if (inverse)
         {
@@ -165,7 +165,7 @@ void compute_cuda(bool inverse, int n1, int n2, std::vector<complex>* data)
 #endif
 
 #if defined(FFTW_FOUND)
-void compute_fftw(bool inverse, int n1, int n2, std::vector<complex>* data)
+void compute_fftw(bool inverse, int n1, int n2, std::vector<Complex>* data)
 {
         if (inverse)
         {
@@ -192,8 +192,8 @@ std::filesystem::path make_path(const std::string_view& name)
 
 struct DftData
 {
-        std::vector<complex> forward;
-        std::vector<complex> inverse;
+        std::vector<Complex> forward;
+        std::vector<Complex> inverse;
 };
 
 DftData run_vulkan(
@@ -201,14 +201,14 @@ DftData run_vulkan(
         ComputeVector* dft,
         const int n1,
         const int n2,
-        const std::vector<complex>& source_data,
+        const std::vector<Complex>& source_data,
         ProgressRatio* progress,
         int* computation,
         int computation_count)
 {
         DftData dft_data;
 
-        std::vector<complex> data(source_data);
+        std::vector<Complex> data(source_data);
 
         compute_vulkan(dft, false, n1, n2, &data);
         log_data(data);
@@ -289,13 +289,13 @@ void run_fftw(
         const std::string& test_name,
         const int n1,
         const int n2,
-        const std::vector<complex>& source_data,
+        const std::vector<Complex>& source_data,
         ProgressRatio* progress,
         int* computation,
         int computation_count,
         const DftData& vulkan_data)
 {
-        std::vector<complex> data(source_data);
+        std::vector<Complex> data(source_data);
 
         try
         {
@@ -346,7 +346,7 @@ void dft_test(
         ComputeVector* dft,
         const int n1,
         const int n2,
-        const std::vector<complex>& source_data,
+        const std::vector<Complex>& source_data,
         ProgressRatio* progress)
 {
         int computation_count = 2;
@@ -383,7 +383,7 @@ void constant_data_test(ComputeVector* dft, ProgressRatio* progress)
 
         // const std::vector<complex> source_data(
         //        {{1, 0}, {2, 0}, {30, 0}, {4, 0}}); //, {-20, 0}, {3, 0}}); //, {-5, 0}});//, {-1, 0}});
-        const std::vector<complex> source_data({{1, 0}, {2, 0}, {3, 0}, {4, 0}, {5, 0}, {6, 0}});
+        const std::vector<Complex> source_data({{1, 0}, {2, 0}, {3, 0}, {4, 0}, {5, 0}, {6, 0}});
         const int n = source_data.size() / 3;
         const int k = source_data.size() / n;
 
@@ -400,11 +400,11 @@ void random_data_test(ComputeVector* dft, const std::array<int, 2>& dimensions, 
 
         const std::filesystem::path input_file_name = make_path("dft_input.txt");
 
-        generate_random_data<complex::value_type>(input_file_name, dimensions[0], dimensions[1]);
+        generate_random_data<Complex::value_type>(input_file_name, dimensions[0], dimensions[1]);
 
         int n1;
         int n2;
-        std::vector<complex> source_data;
+        std::vector<Complex> source_data;
         load_data(input_file_name, &n1, &n2, &source_data);
 
         if (dimensions[0] != n1 || dimensions[1] != n2)

@@ -66,9 +66,6 @@ std::optional<Vector<N, T>> refract(const Vector<N, T>& v, const Vector<N, T>& n
 }
 
 // 3D Computer Graphics. A Mathematical Introduction with OpenGL.
-// Для GCC работает медленнее функции из документации GLSL, где косинус
-// второго угла определяется через косинус первого угла, а не через синус
-// второго угла, как в этой функции.
 template <std::size_t N, typename T>
 std::optional<Vector<N, T>> refract2(const Vector<N, T>& v, const Vector<N, T>& normal, T eta)
 {

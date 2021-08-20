@@ -38,9 +38,7 @@ namespace ns::gui::main_window
 {
 namespace
 {
-// Размер окна по сравнению с экраном.
 constexpr double WINDOW_SIZE_COEF = 0.7;
-// Если true, то размер для графики, если false, то размер всего окна.
 constexpr bool WINDOW_SIZE_GRAPHICS = true;
 
 constexpr std::chrono::milliseconds UPDATE_INTERVAL{200};
@@ -134,7 +132,7 @@ void MainWindow::constructor_objects()
 
         ui.tab_widget->setCurrentWidget(ui.tab_models);
 
-        // Чтобы добавление и удаление QProgressBar не меняло высоту ui.statusBar
+        // disable ui.statusBar height changing when a widget is added or removed
         ui.status_bar->setFixedHeight(ui.status_bar->height());
 
         //
@@ -229,7 +227,7 @@ void MainWindow::showEvent(QShowEvent* /*event*/)
         }
         first_show_ = false;
 
-        // Окно ещё не видно, поэтому небольшая задержка, чтобы окно реально появилось.
+        // window is not yet visible on showEvent
         QTimer::singleShot(
                 WINDOW_SHOW_DELAY, this,
                 [this]()

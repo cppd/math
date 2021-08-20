@@ -51,7 +51,7 @@ std::set<std::string> supported_formats()
 
 void check_write_format_support(const std::string_view& format)
 {
-        const static std::set<std::string> formats = supported_formats();
+        static const std::set<std::string> formats = supported_formats();
 
         if (formats.contains(to_lower(format)))
         {
@@ -133,7 +133,7 @@ void save_image_alpha(
 
         check_size(width, height, color_format, bytes.size());
 
-        const uint16_t ALPHA = 65535;
+        constexpr uint16_t ALPHA = 65535;
 
         QImage image(width, height, q_format);
 

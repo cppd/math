@@ -36,17 +36,14 @@ namespace ns::process
 {
 namespace
 {
-// Количество точек для готовых объектов.
 constexpr int POINT_COUNT_MINIMUM = 100;
 constexpr int POINT_COUNT_DEFAULT = 10'000;
 constexpr int POINT_COUNT_MAXIMUM = 1'000'000;
 
-// Количество граней для готовых объектов.
 constexpr int FACET_COUNT_MINIMUM = 1;
 constexpr int FACET_COUNT_DEFAULT = 10'000;
 constexpr int FACET_COUNT_MAXIMUM = 100'000'000;
 
-// Размер изображений по одному измерению для готовых объёмов.
 constexpr int VOLUME_IMAGE_SIZE_MINIMUM = 10;
 constexpr int VOLUME_IMAGE_SIZE_DEFAULT = 500;
 constexpr int VOLUME_IMAGE_SIZE_MAXIMUM = 1000;

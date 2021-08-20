@@ -32,7 +32,6 @@ static_assert(NORMAL_LENGTH_DEFAULT >= NORMAL_LENGTH_MINIMUM);
 static_assert(NORMAL_LENGTH_DEFAULT <= NORMAL_LENGTH_MAXIMUM);
 static_assert(NORMAL_LENGTH_MAXIMUM - NORMAL_LENGTH_MINIMUM > 0);
 
-// увеличение текстуры тени по сравнению с размером окна.
 constexpr int SHADOW_ZOOM = 2;
 
 constexpr double DFT_MAX_BRIGHTNESS = 50000;
@@ -45,7 +44,6 @@ ViewWidget::ViewWidget() : QWidget(nullptr)
         ui.checkBox_clip_plane->setChecked(false);
         ui.slider_clip_plane->setEnabled(false);
         set_slider_position(ui.slider_clip_plane, 0.5);
-        // Должно быть точное среднее положение
         ASSERT(((ui.slider_clip_plane->maximum() - ui.slider_clip_plane->minimum()) & 1) == 0);
 
         ui.checkBox_normals->setChecked(false);

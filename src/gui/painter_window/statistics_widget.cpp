@@ -28,6 +28,8 @@ namespace ns::gui::painter_window
 {
 namespace
 {
+constexpr int DIFFERENCE_INTERVAL_IN_UPDATES = 10;
+
 std::string progress_to_string(double progress)
 {
         const int percent = std::clamp(static_cast<int>(progress * 100), 0, 100);
@@ -66,8 +68,7 @@ struct StatisticsWidget::Counters final
 
 StatisticsWidget::StatisticsWidget(std::chrono::milliseconds update_interval)
         : QWidget(nullptr),
-          // Здесь интервал должен быть больше update_interval_milliseconds
-          difference_(std::make_unique<Difference<Counters>>(10 * update_interval))
+          difference_(std::make_unique<Difference<Counters>>(DIFFERENCE_INTERVAL_IN_UPDATES * update_interval))
 {
         ui.setupUi(this);
 

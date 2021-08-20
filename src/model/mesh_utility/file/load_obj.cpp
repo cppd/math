@@ -96,9 +96,9 @@ static_assert(
         str_equal("ab", "ab") && str_equal("", "") && !str_equal("", "ab") && !str_equal("ab", "")
         && !str_equal("ab", "ac") && !str_equal("ba", "ca") && !str_equal("a", "xyz"));
 
-std::string obj_type_name(std::size_t N)
+std::string obj_type_name(std::size_t n)
 {
-        return "OBJ-" + to_string(N);
+        return "OBJ-" + to_string(n);
 }
 
 template <typename T>
@@ -195,12 +195,12 @@ void load_image(
 // "x/x/ ..."
 // "x/x ..."
 // "x ..."
-template <typename T, std::size_t MaxGroupCount, std::size_t GroupSize, typename IndexType>
+template <typename T, std::size_t MAX_GROUP_COUNT, std::size_t GROUP_SIZE, typename IndexType>
 void read_digit_groups(
         const T& line,
         long long begin,
         long long end,
-        std::array<std::array<IndexType, GroupSize>, MaxGroupCount>* group_ptr,
+        std::array<std::array<IndexType, GROUP_SIZE>, MAX_GROUP_COUNT>* group_ptr,
         int* group_count)
 {
         int group_index = -1;
@@ -225,7 +225,7 @@ void read_digit_groups(
                               + " (max supported = " + to_string(group_ptr->size()) + ")");
                 }
 
-                std::array<IndexType, GroupSize>& indices = (*group_ptr)[group_index];
+                std::array<IndexType, GROUP_SIZE>& indices = (*group_ptr)[group_index];
 
                 // vertex
                 if (read_integer(line, end, &i, &indices[0]))
@@ -277,8 +277,8 @@ void read_digit_groups(
         }
 }
 
-template <typename T, std::size_t MaxGroupCount>
-void check_index_consistent(const std::array<std::array<T, 3>, MaxGroupCount>& groups, int group_count)
+template <typename T, std::size_t MAX_GROUP_COUNT>
+void check_index_consistent(const std::array<std::array<T, 3>, MAX_GROUP_COUNT>& groups, int group_count)
 {
         // 0 means there is no index.
         // index order: facet, texture, normal.

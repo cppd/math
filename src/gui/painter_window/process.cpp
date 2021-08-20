@@ -300,9 +300,9 @@ std::function<void(ProgressRatioList*)> save_image(
                 pixels_rgba = std::make_shared<std::vector<std::byte>>(std::move(pixels_rgba))](
                        ProgressRatioList* progress_list)
         {
-                const int N = size.size() + 1;
+                const int n = size.size() + 1;
                 process::apply_for_dimension(
-                        N,
+                        n,
                         [&]<std::size_t N>(const process::Dimension<N>&)
                         {
                                 constexpr int N_IMAGE = N - 1;

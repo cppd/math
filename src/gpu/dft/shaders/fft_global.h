@@ -65,7 +65,7 @@ public:
 
         //
 
-        void set_data(float two_pi_div_m, int div_2_) const;
+        void set_data(float two_pi_div_m, int m_div_2) const;
         void set_buffer(const vulkan::BufferWithMemory& buffer) const;
 };
 

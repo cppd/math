@@ -37,7 +37,7 @@ class Paintbrush final
         static_assert(std::is_unsigned_v<T>);
         static_assert(limits<T>::max() <= limits<unsigned>::max());
 
-        // Пример для 2 измерений
+        // Example for 2D
         //for (int x = 0; x < screen[0]; x += paintbrush[0])
         //{
         //        for (int y = 0; y < screen[1]; y += paintbrush[1])

@@ -311,10 +311,10 @@ void test_integer_impl()
 
 void test_integer()
 {
-        LOG("Test complement");
+        LOG("Test integer complement");
         test_integer_impl<mpz_class>();
         test_integer_impl<long long>();
-        LOG("Test complement passed");
+        LOG("Test integer complement passed");
 }
 
 TEST_SMALL("Complement", test)

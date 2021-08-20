@@ -33,13 +33,13 @@ enum class FileType
 };
 FileType file_type_by_name(const std::filesystem::path& file_name);
 
-std::string obj_file_extension(std::size_t N);
+std::string obj_file_extension(std::size_t n);
 std::vector<std::string> obj_file_extensions(const std::set<unsigned>& dimensions);
-bool file_has_obj_extension(std::size_t N, const std::filesystem::path& file_name);
+bool file_has_obj_extension(std::size_t n, const std::filesystem::path& file_name);
 
-std::string stl_file_extension(std::size_t N);
+std::string stl_file_extension(std::size_t n);
 std::vector<std::string> stl_file_extensions(const std::set<unsigned>& dimensions);
-bool file_has_stl_extension(std::size_t N, const std::filesystem::path& file_name);
+bool file_has_stl_extension(std::size_t n, const std::filesystem::path& file_name);
 
 std::vector<std::string> txt_file_extensions(const std::set<unsigned>& dimensions);
 }

@@ -481,10 +481,10 @@ void verify_intersection(const Ray<N, T>& ray, const Parallelotope&... p)
         }
 }
 
-template <std::size_t N, typename T, std::size_t Count>
-void verify_vectors(const std::array<Vector<N, T>, Count>& vectors, const std::string& name)
+template <std::size_t N, typename T, std::size_t COUNT>
+void verify_vectors(const std::array<Vector<N, T>, COUNT>& vectors, const std::string& name)
 {
-        for (unsigned i = 1; i < Count; ++i)
+        for (unsigned i = 1; i < COUNT; ++i)
         {
                 if (!almost_equal(vectors[i], vectors[0]))
                 {

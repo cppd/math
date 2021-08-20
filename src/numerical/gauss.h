@@ -55,13 +55,13 @@ constexpr T absolute(T v)
 }
 
 template <std::size_t N, typename T, template <std::size_t, std::size_t, typename> typename Matrix>
-constexpr int find_pivot(const Matrix<N, N, T>& A, const int column, const int from_row)
+constexpr int find_pivot(const Matrix<N, N, T>& a, const int column, const int from_row)
 {
-        T max = absolute(A(from_row, column));
+        T max = absolute(a(from_row, column));
         int pivot = from_row;
         for (int r = from_row + 1; r < int(N); ++r)
         {
-                T v = absolute(A(r, column));
+                T v = absolute(a(r, column));
                 if (v > max)
                 {
                         max = v;

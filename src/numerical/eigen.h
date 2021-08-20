@@ -116,12 +116,12 @@ void rotate(unsigned k, unsigned l, Matrix<N, N, T>* m, std::array<Vector<N, T>,
 
 class EigenException final : public std::exception
 {
-        static constexpr const char* msg_ = "Jacobi method did not converge";
+        static constexpr const char* MSG = "Jacobi method did not converge";
 
 public:
         const char* what() const noexcept override
         {
-                return msg_;
+                return MSG;
         }
 };
 

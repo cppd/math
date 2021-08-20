@@ -137,17 +137,17 @@ QSplitter* find_widget_splitter(QObject* object, QWidget* widget)
         return nullptr;
 }
 
-void set_horizontal_stretch(QWidget* widget, int stretchFactor)
+void set_horizontal_stretch(QWidget* widget, int stretch_factor)
 {
         QSizePolicy sp = widget->sizePolicy();
-        sp.setHorizontalStretch(stretchFactor);
+        sp.setHorizontalStretch(stretch_factor);
         widget->setSizePolicy(sp);
 }
 
-void set_vertical_stretch(QWidget* widget, int stretchFactor)
+void set_vertical_stretch(QWidget* widget, int stretch_factor)
 {
         QSizePolicy sp = widget->sizePolicy();
-        sp.setVerticalStretch(stretchFactor);
+        sp.setVerticalStretch(stretch_factor);
         widget->setSizePolicy(sp);
 }
 
@@ -275,28 +275,26 @@ void move_window_to_desktop_center(QMainWindow* window)
 {
         ASSERT(window);
 
-        // Из документации на move: the position on the desktop, including frame
+        // move function includes frame
         window->move(
                 (QDesktopWidget().availableGeometry(window).width() - window->frameGeometry().width()) / 2,
                 (QDesktopWidget().availableGeometry(window).height() - window->frameGeometry().height()) / 2);
 }
 
-// Изменение размеров окна
 void resize_window_frame(QMainWindow* window, const QSize& frame_size)
 {
         ASSERT(window);
 
-        // Из документации на resize: the size excluding any window frame
-        window->resize(frame_size - (window->frameGeometry().size() - window->geometry().size()));
+        // resize function excludes frame
+        window->resize(frame_size - window->frameGeometry().size() + window->geometry().size());
 }
 
-// Изменение размеров окна для получения заданного размера заданного объекта этого окна
 void resize_window_widget(QMainWindow* window, QWidget* widget, const QSize& widget_size)
 {
         ASSERT(window && widget);
 
-        // Из документации на resize: the size excluding any window frame
-        window->resize(widget_size + (window->geometry().size() - widget->size()));
+        // resize function excludes frame
+        window->resize(widget_size - widget->size() + window->geometry().size());
 }
 
 double slider_position(const QSlider* slider)

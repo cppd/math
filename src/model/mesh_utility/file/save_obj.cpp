@@ -211,9 +211,9 @@ void write_lines(std::ostream& file, const Mesh<N>& mesh)
         }
 }
 
-std::string obj_type_name(std::size_t N)
+std::string obj_type_name(std::size_t n)
 {
-        return "OBJ-" + to_string(N);
+        return "OBJ-" + to_string(n);
 }
 
 template <std::size_t N>

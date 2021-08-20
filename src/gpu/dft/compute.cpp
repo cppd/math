@@ -303,12 +303,12 @@ public:
                 fft_g_program_->create_pipelines(GROUP_SIZE_1D, data_size_, n);
                 fft_g_groups_ = group_count(data_size_ / 2, GROUP_SIZE_1D);
 
-                unsigned div_2_ = n_shared_; // hald the size of DFT
-                float two_pi_div_m = PI<float> / div_2_;
-                for (; div_2_ < n_; two_pi_div_m /= 2, div_2_ <<= 1)
+                unsigned m_div_2 = n_shared_; // hald the size of DFT
+                float two_pi_div_m = PI<float> / m_div_2;
+                for (; m_div_2 < n_; two_pi_div_m /= 2, m_div_2 <<= 1)
                 {
                         fft_g_memory_.emplace_back(device, fft_g_program_->descriptor_set_layout(), family_indices);
-                        fft_g_memory_.back().set_data(two_pi_div_m, div_2_);
+                        fft_g_memory_.back().set_data(two_pi_div_m, m_div_2);
                 }
                 ASSERT(!fft_g_memory_.empty());
                 ASSERT(n_ == (n_shared_ << fft_g_memory_.size()));

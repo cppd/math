@@ -51,8 +51,8 @@ void test_sphere_creation()
                       + to_string(FACET_COUNT));
         }
 
-        constexpr bool has_boundary = false;
-        check_mesh(name, vertices, facets, has_boundary, euler_characteristic_for_convex_polytope<N>());
+        constexpr bool HAS_BOUNDARY = false;
+        check_mesh(name, vertices, facets, HAS_BOUNDARY, euler_characteristic_for_convex_polytope<N>());
 }
 
 template <std::size_t N>

@@ -48,7 +48,7 @@ std::optional<std::array<T, 2>> cos1_cos2(const Vector<N, T>& v, const Vector<N,
                 return {{std::abs(dot1), std::sqrt(cos2_square)}};
         }
 
-        // полное внутреннее отражение
+        // total internal reflection
         return std::nullopt;
 }
 }
