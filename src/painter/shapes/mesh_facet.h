@@ -18,6 +18,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #pragma once
 
 #include <src/com/alg.h>
+#include <src/com/combinatorics.h>
 #include <src/com/error.h>
 #include <src/geometry/spatial/constraint.h>
 #include <src/geometry/spatial/hyperplane_simplex.h>
@@ -65,16 +66,10 @@ class MeshFacet
 {
         static_assert(N >= 3);
 
-        // Минимум абсолютного значения косинуса угла между нормалью симплекса и нормалями
-        // его вершин, при котором используются эти нормали вершин. При меньших значениях
-        // косинуса нормали вершин считаются неправильными и игнорируются.
-        static constexpr T LIMIT_COSINE = 0.7; // 0.7 немного больше 45 градусов
+        static constexpr T MIN_COSINE_VERTEX_NORMAL_FACET_NORMAL = 0.7;
 
         static constexpr int VERTEX_COUNT = N;
-
-        // Количество сочетаний по 2 из N
-        // N! / ((N - 2)! * 2!) = (N * (N - 1)) / 2
-        static constexpr int EDGE_COUNT = (N * (N - 1)) / 2;
+        static constexpr int EDGE_COUNT = binomial<N, 2>();
 
         const std::vector<Vector<N, T>>& vertices_;
         const std::vector<Vector<N, T>>& normals_;
@@ -162,38 +157,27 @@ public:
                             dots.cbegin(), dots.cend(),
                             [](const T& d)
                             {
-                                    static_assert(LIMIT_COSINE > 0);
-                                    return is_finite(d) && std::abs(d) >= LIMIT_COSINE;
+                                    static_assert(MIN_COSINE_VERTEX_NORMAL_FACET_NORMAL > 0);
+                                    return is_finite(d) && std::abs(d) >= MIN_COSINE_VERTEX_NORMAL_FACET_NORMAL;
                             }))
                 {
-                        // «Перпендикуляры» на вершинах совсем не перпендикуляры,
-                        // поэтому симплекс считать плоским.
                         normal_type_ = NormalType::None;
                         return;
                 }
 
                 if (all_positive(dots))
                 {
-                        // Реальный перпендикуляр и «перпендикуляры» вершин имеют
-                        // одинаковое направление, поэтому оставить как есть.
                         normal_type_ = NormalType::Use;
                         return;
                 }
 
                 if (all_negative(dots))
                 {
-                        // Реальный перпендикуляр и все «перпендикуляры» вершин имеют
-                        // противоположное направление, поэтому поменять направление
-                        // реального перпендикуляра.
                         normal_type_ = NormalType::Use;
                         normal_ = -normal_;
                         return;
                 }
 
-                // «Перпендикуляры» на вершинах могут быть направлены в разные стороны от грани.
-                // Это происходит, например, при восстановлении поверхностей по алгоритмам
-                // типа Cocone, где соседние объекты Вороного имеют положительные полюсы
-                // в противоположных направлениях.
                 normal_type_ = NormalType::Reverse;
                 for (unsigned i = 0; i < N; ++i)
                 {

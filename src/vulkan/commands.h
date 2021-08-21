@@ -20,22 +20,21 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "objects.h"
 
 #include <functional>
-#include <optional>
 #include <vector>
 
 namespace ns::vulkan
 {
 struct CommandBufferCreateInfo
 {
-        // std::optional для проверки, что значения заданы
+        // required, std::optional is used to check that values are set
         std::optional<VkDevice> device;
         std::optional<VkRect2D> render_area;
         std::optional<VkRenderPass> render_pass;
-        std::optional<const std::vector<VkFramebuffer>*> framebuffers;
+        const std::vector<VkFramebuffer>* framebuffers = nullptr;
         std::optional<VkCommandPool> command_pool;
 
-        // Эти значения могут быть не заданы
-        std::optional<const std::vector<VkClearValue>*> clear_values;
+        // optional
+        const std::vector<VkClearValue>* clear_values = nullptr;
         std::function<void(VkCommandBuffer command_buffer)> before_render_pass_commands;
         std::function<void(VkCommandBuffer command_buffer)> render_pass_commands;
         std::function<void(VkCommandBuffer command_buffer)> after_render_pass_commands;

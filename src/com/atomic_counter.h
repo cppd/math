@@ -59,5 +59,10 @@ public:
         {
                 counter_.fetch_add(v, std::memory_order_relaxed);
         }
+
+        void operator|=(T v)
+        {
+                counter_.fetch_or(v, std::memory_order_relaxed);
+        }
 };
 }

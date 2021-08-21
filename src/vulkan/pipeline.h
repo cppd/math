@@ -30,8 +30,8 @@ namespace ns::vulkan
 {
 struct GraphicsPipelineCreateInfo
 {
-        // std::optional для проверки, что значения заданы
-        std::optional<const Device*> device;
+        // required, std::optional is used to check that values are set
+        const Device* device = nullptr;
         std::optional<VkRenderPass> render_pass;
         std::optional<uint32_t> sub_pass;
         std::optional<VkSampleCountFlagBits> sample_count;
@@ -39,16 +39,16 @@ struct GraphicsPipelineCreateInfo
         std::optional<VkPipelineLayout> pipeline_layout;
         std::optional<Region<2, int>> viewport;
         std::optional<VkPrimitiveTopology> primitive_topology;
-        std::optional<const std::vector<const Shader*>*> shaders;
-        std::optional<const std::vector<const SpecializationConstant*>*> constants;
-        std::optional<const std::vector<VkVertexInputBindingDescription>*> binding_descriptions;
-        std::optional<const std::vector<VkVertexInputAttributeDescription>*> attribute_descriptions;
+        const std::vector<const Shader*>* shaders = nullptr;
+        const std::vector<const SpecializationConstant*>* constants = nullptr;
+        const std::vector<VkVertexInputBindingDescription>* binding_descriptions = nullptr;
+        const std::vector<VkVertexInputAttributeDescription>* attribute_descriptions = nullptr;
 
         bool depth_bias = false;
         bool depth_test = true;
         bool depth_write = true;
 
-        // Это значение может быть не задано
+        // optional
         std::optional<VkPipelineColorBlendAttachmentState> color_blend;
 };
 
@@ -56,10 +56,13 @@ Pipeline create_graphics_pipeline(const GraphicsPipelineCreateInfo& info);
 
 struct ComputePipelineCreateInfo
 {
-        std::optional<const Device*> device;
-        std::optional<VkPipelineLayout> pipeline_layout;
-        std::optional<const ComputeShader*> shader;
-        std::optional<const SpecializationConstant*> constants;
+        // required
+        const Device* device = nullptr;
+        VkPipelineLayout pipeline_layout = VK_NULL_HANDLE;
+        const ComputeShader* shader = nullptr;
+
+        // optional
+        const SpecializationConstant* constants = nullptr;
 };
 
 Pipeline create_compute_pipeline(const ComputePipelineCreateInfo& info);

@@ -61,8 +61,9 @@ int tree_max_depth()
         case 6:
                 return 5;
         default:
-                // Сумма геометрической прогрессии s = (pow(r, n) - 1) / (r - 1).
-                // Для s и r найти n = log(s * (r - 1) + 1) / log(r).
+                // the sum of the numbers in a geometric progression
+                // s = (pow(r, n) - 1) / (r - 1)
+                // n = log(s * (r - 1) + 1) / log(r)
                 double s = 1e9;
                 double r = std::pow(2, N);
                 double n = std::log(s * (r - 1) + 1) / std::log(r);
@@ -164,8 +165,7 @@ public:
                 return images_;
         }
 
-        // Грани имеют адреса первых элементов векторов вершин,
-        // нормалей и текстурных координат, поэтому нельзя копировать.
+        // Mesh facets store pointers to vertices_, normals_, texcoords_
         Mesh(const Mesh&) = delete;
         Mesh(Mesh&&) = delete;
         Mesh& operator=(const Mesh&) = delete;

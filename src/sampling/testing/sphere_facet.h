@@ -17,6 +17,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
+#include <src/com/combinatorics.h>
 #include <src/com/error.h>
 #include <src/com/print.h>
 #include <src/geometry/shapes/sphere_area.h>
@@ -48,10 +49,7 @@ class SphereFacet final
         }
 
         static constexpr int VERTEX_COUNT = N;
-
-        // Количество сочетаний по 2 из N
-        // N! / ((N - 2)! * 2!) = (N * (N - 1)) / 2
-        static constexpr int EDGE_COUNT = (N * (N - 1)) / 2;
+        static constexpr int EDGE_COUNT = binomial<N, 2>();
 
         const std::vector<Vector<N, T>>& vertices_;
         const std::array<int, N> v_;

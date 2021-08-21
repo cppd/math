@@ -23,7 +23,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "com/log.h"
 
 // clang-format off
-// Перед включением GLFW/glfw3.h надо включить vulkan/vulkan.h
+// include vulkan/vulkan.h before GLFW/glfw3.h
 #include <vulkan/vulkan.h>
 #include <GLFW/glfw3.h>
 #if defined(__linux__)
@@ -42,8 +42,6 @@ namespace ns::vulkan
 {
 namespace
 {
-// В один момент времени допускается существование только одного окна,
-// поэтому можно использовать глобальную переменную
 WindowEvent* g_event_interface = nullptr;
 
 void callback_error(int /*error*/, const char* description)
@@ -109,7 +107,7 @@ void callback_mouse_button(GLFWwindow* /*window*/, int button, int action, int /
 
 class WindowCounter
 {
-        static std::atomic_int counter_;
+        inline static std::atomic_int counter_ = 0;
 
 public:
         WindowCounter()
@@ -129,7 +127,6 @@ public:
         WindowCounter(WindowCounter&&) = delete;
         WindowCounter& operator=(WindowCounter&&) = delete;
 };
-std::atomic_int WindowCounter::counter_ = 0;
 
 class Impl final : public Window
 {

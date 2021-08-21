@@ -112,7 +112,6 @@ public:
 
         const Surface<N, T, Color>* intersect(const Ray<N, T>& ray, const T bounding_distance) const override
         {
-                // всегда есть пересечение, так как прошла проверка intersect_bounding
                 return make_arena_ptr<IntersectionImpl>(ray.point(bounding_distance), this);
         }
 

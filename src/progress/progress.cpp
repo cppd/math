@@ -21,7 +21,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/com/exception.h>
 
 #include <algorithm>
-#include <atomic>
 #include <cmath>
 #include <mutex>
 
@@ -29,17 +28,15 @@ namespace ns
 {
 class AtomicTerminate
 {
-        // Для одного обращения к атомарным данным вместо двух обращений к std::atomic_bool
-        // используется хранение двух bool в одном std::atomic<int>.
-        using DataType = int;
+        using DataType = std::uint_least8_t;
 
         static constexpr DataType TERMINATE_QUIETLY = 0b1;
         static constexpr DataType TERMINATE_WITH_MESSAGE = 0b10;
 
-        std::atomic<DataType> terminate_ = 0;
+        AtomicCounter<DataType> terminate_{0};
 
 public:
-        static constexpr bool is_always_lock_free = std::atomic<DataType>::is_always_lock_free;
+        static constexpr bool LOCK_FREE = AtomicCounter<DataType>::is_always_lock_free;
 
         void set_terminate_quietly()
         {
@@ -53,8 +50,7 @@ public:
 
         void check_terminate() const
         {
-                // Только одно обращение к атомарным данным и далее работа с копией этих данных
-                DataType terminate = terminate_;
+                const DataType terminate = terminate_;
 
                 if (terminate & TERMINATE_QUIETLY)
                 {
@@ -70,15 +66,14 @@ public:
 
 class ProgressRatio::Impl final : public ProgressRatioControl
 {
-        static constexpr unsigned SHIFT = 32;
-        static constexpr unsigned MAX = (1u << 31) - 1;
+        using CounterType = std::uint_least64_t;
 
-        // К этим переменным имеются частые обращения, поэтому атомарные без мьютексов
-        AtomicCounter<unsigned long long> counter_{0};
+        static constexpr unsigned SHIFT = 32;
+        static constexpr unsigned MAX = (1ull << SHIFT) - 1;
+
+        AtomicCounter<CounterType> counter_{0};
         AtomicTerminate terminate_;
 
-        // Строка меняется редко в потоках, читается с частотой таймера интерфейса
-        // в потоке интерфейса. Работа со строкой с её защитой мьютексом.
         std::string text_;
         mutable std::mutex text_mutex_;
 
@@ -87,9 +82,7 @@ class ProgressRatio::Impl final : public ProgressRatioControl
         const std::string permanent_text_;
 
 public:
-        static constexpr bool LOCK_FREE =
-                AtomicCounter<unsigned long long>::is_always_lock_free && AtomicTerminate::is_always_lock_free;
-
+        static constexpr bool LOCK_FREE = AtomicCounter<CounterType>::is_always_lock_free && AtomicTerminate::LOCK_FREE;
         static_assert(LOCK_FREE);
 
         Impl(ProgressRatios* ratios, std::string permanent_text)
@@ -111,11 +104,11 @@ public:
                 }
         }
 
-        void set(unsigned v, unsigned m)
+        void set(unsigned value, unsigned maximum)
         {
                 terminate_.check_terminate();
 
-                counter_ = (static_cast<unsigned long long>(m & MAX) << SHIFT) | (v & MAX);
+                counter_ = (static_cast<CounterType>(maximum & MAX) << SHIFT) | (value & MAX);
         }
 
         void set(double v)
@@ -145,11 +138,11 @@ public:
                 terminate_.set_terminate_with_message();
         }
 
-        void get(unsigned* v, unsigned* m) const override
+        void get(unsigned* value, unsigned* maximum) const override
         {
-                unsigned long long c = counter_;
-                *v = c & MAX;
-                *m = c >> SHIFT;
+                CounterType c = counter_;
+                *value = c & MAX;
+                *maximum = c >> SHIFT;
         }
 
         std::string text() const override
@@ -179,9 +172,9 @@ ProgressRatio::ProgressRatio(ProgressRatios* ratios, const std::string& permanen
 {
 }
 ProgressRatio::~ProgressRatio() = default;
-void ProgressRatio::set(unsigned v, unsigned m)
+void ProgressRatio::set(unsigned value, unsigned maximum)
 {
-        progress_->set(v, m);
+        progress_->set(value, maximum);
 }
 void ProgressRatio::set(double v)
 {

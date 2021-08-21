@@ -29,8 +29,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 namespace ns::painter
 {
-// Параллельное проецирование точек экрана на полусферу и создание лучей
-// из центра полусферы в направлении точек на сфере.
+// Project screen points onto a hemisphere with the center on the screen.
+// Make rays from the hemisphere center to the projections.
 template <std::size_t N, typename T>
 class SphericalProjector final : public Projector<N, T>
 {
@@ -94,7 +94,7 @@ public:
         {
                 Vector<N - 1, T> screen_point = screen_org_ + point;
 
-                T radicand = square_radius_ - dot(screen_point, screen_point);
+                T radicand = square_radius_ - screen_point.norm_squared();
                 if (!(radicand > 0))
                 {
                         error("Error spherical projection point " + to_string(point));

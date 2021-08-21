@@ -37,11 +37,11 @@ class ProgressRatioList final : public ProgressRatios
         mutable std::mutex mutex_;
 
 public:
-        // Для работы в потоках расчётов
+        // for worker threads
         void add_progress_ratio(ProgressRatioControl* ratio) override;
         void delete_progress_ratio(const ProgressRatioControl* ratio) noexcept override;
 
-        // Для работы в потоке интерфейса
+        // for UI thread
         void terminate_all_quietly();
         void terminate_all_with_message();
         void enable();

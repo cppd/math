@@ -24,7 +24,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 namespace ns
 {
-// Для работы в потоках расчётов
+// for worker threads
 class ProgressRatio final
 {
         class Impl;
@@ -34,7 +34,7 @@ public:
         explicit ProgressRatio(ProgressRatios* ratios, const std::string& permanent_text = "");
         ~ProgressRatio();
 
-        void set(unsigned v, unsigned m);
+        void set(unsigned value, unsigned maximum);
         void set(double v);
         void set_undefined();
         void set_text(const std::string& text);

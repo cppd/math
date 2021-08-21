@@ -67,17 +67,24 @@ void pipeline_shader_stage_create_info(
 
 Pipeline create_graphics_pipeline(const GraphicsPipelineCreateInfo& info)
 {
+        if (!info.device || !info.render_pass || !info.sub_pass || !info.sample_count || !info.sample_shading
+            || !info.pipeline_layout || !info.viewport || !info.primitive_topology || !info.shaders || !info.constants
+            || !info.binding_descriptions || !info.attribute_descriptions)
+        {
+                error("No required data to create graphics pipeline");
+        }
+
         std::vector<VkPipelineShaderStageCreateInfo> pipeline_shader_stage_info;
         std::vector<std::unique_ptr<VkSpecializationInfo>> specialization_info;
         pipeline_shader_stage_create_info(
-                *info.shaders.value(), *info.constants.value(), &pipeline_shader_stage_info, &specialization_info);
+                *info.shaders, *info.constants, &pipeline_shader_stage_info, &specialization_info);
 
         VkPipelineVertexInputStateCreateInfo vertex_input_state_info = {};
         vertex_input_state_info.sType = VK_STRUCTURE_TYPE_PIPELINE_VERTEX_INPUT_STATE_CREATE_INFO;
-        vertex_input_state_info.vertexBindingDescriptionCount = info.binding_descriptions.value()->size();
-        vertex_input_state_info.pVertexBindingDescriptions = info.binding_descriptions.value()->data();
-        vertex_input_state_info.vertexAttributeDescriptionCount = info.attribute_descriptions.value()->size();
-        vertex_input_state_info.pVertexAttributeDescriptions = info.attribute_descriptions.value()->data();
+        vertex_input_state_info.vertexBindingDescriptionCount = info.binding_descriptions->size();
+        vertex_input_state_info.pVertexBindingDescriptions = info.binding_descriptions->data();
+        vertex_input_state_info.vertexAttributeDescriptionCount = info.attribute_descriptions->size();
+        vertex_input_state_info.pVertexAttributeDescriptions = info.attribute_descriptions->data();
 
         VkPipelineInputAssemblyStateCreateInfo input_assembly_state_info = {};
         input_assembly_state_info.sType = VK_STRUCTURE_TYPE_PIPELINE_INPUT_ASSEMBLY_STATE_CREATE_INFO;
@@ -130,7 +137,7 @@ Pipeline create_graphics_pipeline(const GraphicsPipelineCreateInfo& info)
         multisampling_state_info.rasterizationSamples = info.sample_count.value();
         if (info.sample_count.value() != VK_SAMPLE_COUNT_1_BIT && info.sample_shading.value())
         {
-                if (!info.device.value()->features().features_10.sampleRateShading)
+                if (!info.device->features().features_10.sampleRateShading)
                 {
                         error("Sample shading required but not supported");
                 }
@@ -218,47 +225,51 @@ Pipeline create_graphics_pipeline(const GraphicsPipelineCreateInfo& info)
         // create_info.basePipelineHandle = VK_NULL_HANDLE;
         // create_info.basePipelineIndex = -1;
 
-        return Pipeline(*info.device.value(), create_info);
+        return Pipeline(*info.device, create_info);
 }
 
 Pipeline create_compute_pipeline(const ComputePipelineCreateInfo& info)
 {
-        ASSERT(info.shader.value()->stage() == VK_SHADER_STAGE_COMPUTE_BIT);
+        if (!info.device || info.pipeline_layout == VK_NULL_HANDLE || !info.shader)
+        {
+                error("No required data to create compute pipeline");
+        }
 
-        ASSERT(!info.constants.has_value() || info.constants.value() != nullptr);
-        ASSERT(!info.constants.has_value() || info.constants.value()->size() > 0);
-        ASSERT(!info.constants.has_value() || info.constants.value()->data() != nullptr);
-        ASSERT(!info.constants.has_value() || !info.constants.value()->entries().empty());
+        ASSERT(info.shader->stage() == VK_SHADER_STAGE_COMPUTE_BIT);
 
-        ASSERT(!info.constants.has_value()
+        ASSERT(!info.constants || info.constants->size() > 0);
+        ASSERT(!info.constants || info.constants->data() != nullptr);
+        ASSERT(!info.constants || !info.constants->entries().empty());
+
+        ASSERT(!info.constants
                || std::all_of(
-                       info.constants.value()->entries().cbegin(), info.constants.value()->entries().cend(),
+                       info.constants->entries().cbegin(), info.constants->entries().cend(),
                        [&](const VkSpecializationMapEntry& entry)
                        {
-                               return entry.offset + entry.size <= info.constants.value()->size();
+                               return entry.offset + entry.size <= info.constants->size();
                        }));
 
         VkSpecializationInfo specialization_info;
         VkPipelineShaderStageCreateInfo stage_info = {};
         stage_info.sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
-        stage_info.stage = info.shader.value()->stage();
-        stage_info.module = info.shader.value()->module();
-        stage_info.pName = info.shader.value()->entry_point_name();
-        if (info.constants.has_value())
+        stage_info.stage = info.shader->stage();
+        stage_info.module = info.shader->module();
+        stage_info.pName = info.shader->entry_point_name();
+        if (info.constants)
         {
                 specialization_info = {};
-                specialization_info.mapEntryCount = info.constants.value()->entries().size();
-                specialization_info.pMapEntries = info.constants.value()->entries().data();
-                specialization_info.dataSize = info.constants.value()->size();
-                specialization_info.pData = info.constants.value()->data();
+                specialization_info.mapEntryCount = info.constants->entries().size();
+                specialization_info.pMapEntries = info.constants->entries().data();
+                specialization_info.dataSize = info.constants->size();
+                specialization_info.pData = info.constants->data();
                 stage_info.pSpecializationInfo = &specialization_info;
         }
 
         VkComputePipelineCreateInfo create_info = {};
         create_info.sType = VK_STRUCTURE_TYPE_COMPUTE_PIPELINE_CREATE_INFO;
         create_info.stage = stage_info;
-        create_info.layout = info.pipeline_layout.value();
+        create_info.layout = info.pipeline_layout;
 
-        return Pipeline(*info.device.value(), create_info);
+        return Pipeline(*info.device, create_info);
 }
 }

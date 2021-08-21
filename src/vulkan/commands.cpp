@@ -19,14 +19,20 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "error.h"
 
+#include <src/com/error.h>
+
 namespace ns::vulkan
 {
 CommandBuffers create_command_buffers(const CommandBufferCreateInfo& info)
 {
+        if (!info.device || !info.render_area || !info.render_pass || !info.framebuffers || !info.command_pool)
+        {
+                error("No required data to create command buffers");
+        }
+
         VkResult result;
 
-        CommandBuffers command_buffers(
-                info.device.value(), info.command_pool.value(), info.framebuffers.value()->size());
+        CommandBuffers command_buffers(info.device.value(), info.command_pool.value(), info.framebuffers->size());
 
         for (uint32_t i = 0; i < command_buffers.count(); ++i)
         {
@@ -49,13 +55,13 @@ CommandBuffers create_command_buffers(const CommandBufferCreateInfo& info)
                 VkRenderPassBeginInfo render_pass_info = {};
                 render_pass_info.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
                 render_pass_info.renderPass = info.render_pass.value();
-                render_pass_info.framebuffer = (*info.framebuffers.value())[i];
+                render_pass_info.framebuffer = (*info.framebuffers)[i];
                 render_pass_info.renderArea = info.render_area.value();
 
                 if (info.clear_values)
                 {
-                        render_pass_info.clearValueCount = (*info.clear_values)->size();
-                        render_pass_info.pClearValues = (*info.clear_values)->data();
+                        render_pass_info.clearValueCount = info.clear_values->size();
+                        render_pass_info.pClearValues = info.clear_values->data();
                 }
                 else
                 {

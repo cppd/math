@@ -68,16 +68,11 @@ VkPresentModeKHR choose_present_mode(
         const std::vector<VkPresentModeKHR>& present_modes,
         vulkan::PresentMode preferred_present_mode)
 {
-        // VK_PRESENT_MODE_FIFO_KHR всегда поддерживается
-
         switch (preferred_present_mode)
         {
         case vulkan::PresentMode::PreferSync:
-
                 return VK_PRESENT_MODE_FIFO_KHR;
-
         case vulkan::PresentMode::PreferFast:
-
                 for (const VkPresentModeKHR& present_mode : present_modes)
                 {
                         if (present_mode == VK_PRESENT_MODE_IMMEDIATE_KHR)
@@ -85,7 +80,7 @@ VkPresentModeKHR choose_present_mode(
                                 return present_mode;
                         }
                 }
-
+                // VK_PRESENT_MODE_FIFO_KHR is required to be supported
                 return VK_PRESENT_MODE_FIFO_KHR;
         }
 

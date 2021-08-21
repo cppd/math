@@ -60,8 +60,9 @@ class SphereDistribution final
                 case 6:
                         return 5;
                 default:
-                        // Сумма геометрической прогрессии s = (pow(r, n) - 1) / (r - 1).
-                        // Для s и r найти n = log(s * (r - 1) + 1) / log(r).
+                        // the sum of the numbers in a geometric progression
+                        // s = (pow(r, n) - 1) / (r - 1)
+                        // n = log(s * (r - 1) + 1) / log(r)
                         double s = 1e9;
                         double r = std::pow(2, N);
                         double n = std::log(s * (r - 1) + 1) / std::log(r);

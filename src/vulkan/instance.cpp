@@ -107,8 +107,9 @@ VulkanInstance::VulkanInstance(
           transfer_family_index_(physical_device_.family_index(
                   VK_QUEUE_TRANSFER_BIT,
                   VK_QUEUE_GRAPHICS_BIT | VK_QUEUE_COMPUTE_BIT,
-                  // Наличие VK_QUEUE_GRAPHICS_BIT или VK_QUEUE_COMPUTE_BIT
-                  // означает (возможно неявно) наличие VK_QUEUE_TRANSFER_BIT
+                  // All commands that are allowed on a queue that supports
+                  // transfer operations are also allowed on a queue that
+                  // supports either graphics or compute operations
                   VK_QUEUE_GRAPHICS_BIT | VK_QUEUE_COMPUTE_BIT)),
           presentation_family_index_(create_surface ? physical_device_.presentation_family_index() : NO_FAMILY_INDEX),
           //

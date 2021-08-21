@@ -24,7 +24,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 namespace ns
 {
-// Для работы в потоках расчётов
+// for worker threads
 void ProgressRatioList::add_progress_ratio(ProgressRatioControl* ratio)
 {
         ASSERT(std::this_thread::get_id() != thread_id_);
@@ -44,7 +44,7 @@ void ProgressRatioList::add_progress_ratio(ProgressRatioControl* ratio)
         ratios_.emplace_back(ratio);
 }
 
-// Для работы в потоках расчётов
+// for worker threads
 void ProgressRatioList::delete_progress_ratio(const ProgressRatioControl* ratio) noexcept
 {
         try
@@ -68,7 +68,7 @@ void ProgressRatioList::delete_progress_ratio(const ProgressRatioControl* ratio)
         }
 }
 
-// Для работы в потоке интерфейса
+// for UI thread
 void ProgressRatioList::terminate_all_quietly()
 {
         ASSERT(std::this_thread::get_id() == thread_id_);
@@ -82,7 +82,7 @@ void ProgressRatioList::terminate_all_quietly()
         }
 }
 
-// Для работы в потоке интерфейса
+// for UI thread
 void ProgressRatioList::terminate_all_with_message()
 {
         ASSERT(std::this_thread::get_id() == thread_id_);
@@ -96,7 +96,7 @@ void ProgressRatioList::terminate_all_with_message()
         }
 }
 
-// Для работы в потоке интерфейса
+// for UI thread
 void ProgressRatioList::enable()
 {
         ASSERT(std::this_thread::get_id() == thread_id_);
@@ -109,7 +109,7 @@ void ProgressRatioList::enable()
         terminate_with_message_ = false;
 }
 
-// Для работы в потоке интерфейса
+// for UI thread
 std::vector<std::tuple<unsigned, unsigned, std::string>> ProgressRatioList::ratios() const
 {
         ASSERT(std::this_thread::get_id() == thread_id_);
@@ -121,10 +121,10 @@ std::vector<std::tuple<unsigned, unsigned, std::string>> ProgressRatioList::rati
 
         for (const ProgressRatioControl* ratio : ratios_)
         {
-                unsigned v;
-                unsigned m;
-                ratio->get(&v, &m);
-                result.emplace_back(v, m, ratio->text());
+                unsigned value;
+                unsigned maximum;
+                ratio->get(&value, &maximum);
+                result.emplace_back(value, maximum, ratio->text());
         }
         return result;
 }

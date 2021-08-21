@@ -29,7 +29,7 @@ protected:
 public:
         virtual void terminate_quietly() = 0;
         virtual void terminate_with_message() = 0;
-        virtual void get(unsigned* v, unsigned* m) const = 0;
+        virtual void get(unsigned* value, unsigned* maximum) const = 0;
         virtual std::string text() const = 0;
 };
 

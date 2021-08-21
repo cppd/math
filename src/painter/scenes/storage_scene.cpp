@@ -51,8 +51,9 @@ int tree_max_depth()
         case 6:
                 return 5;
         default:
-                // Сумма геометрической прогрессии s = (pow(r, n) - 1) / (r - 1).
-                // Для s и r найти n = log(s * (r - 1) + 1) / log(r).
+                // the sum of the numbers in a geometric progression
+                // s = (pow(r, n) - 1) / (r - 1)
+                // n = log(s * (r - 1) + 1) / log(r)
                 double s = 1e9;
                 double r = std::pow(2, N);
                 double n = std::log(s * (r - 1) + 1) / std::log(r);
@@ -117,9 +118,6 @@ const Surface<N, T, Color>* ray_intersect(
                 }
                 return nullptr;
         }
-
-        // Объекты могут быть сложными, поэтому перед поиском точного пересечения
-        // их надо разместить по возрастанию примерного пересечения.
 
         thread_local std::vector<BoundingIntersection<N, T, Color>> intersections;
         intersections.clear();

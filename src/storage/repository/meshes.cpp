@@ -37,9 +37,7 @@ namespace ns::storage
 {
 namespace
 {
-// Надо располагать точки по целым числам, так как выпуклая оболочка работает с целыми числами.
-// Для float большое число не надо.
-constexpr unsigned DISCRETIZATION = 100000;
+constexpr int POINT_DISCRETIZATION = 100000;
 
 constexpr double COS_FOR_BOUND = -0.3;
 constexpr double MOBIUS_STRIP_WIDTH = 1;
@@ -82,14 +80,14 @@ template <std::size_t N>
 class DiscretePoints
 {
         std::vector<Vector<N, float>> points_;
-        std::unordered_set<Vector<N, long>> integer_points_;
+        std::unordered_set<Vector<N, int>> integer_points_;
 
         template <typename T>
-        static Vector<N, long> to_integer(const Vector<N, T>& v, long factor)
+        static Vector<N, int> to_integer(const Vector<N, T>& v, int factor)
         {
                 static_assert(std::is_floating_point_v<T>);
 
-                Vector<N, long> r;
+                Vector<N, int> r;
                 for (unsigned n = 0; n < N; ++n)
                 {
                         r[n] = std::lround(v[n] * factor);
@@ -113,8 +111,8 @@ public:
         template <typename T>
         void add(const Vector<N, T>& p)
         {
-                Vector<N, long> integer_point = to_integer(p, DISCRETIZATION);
-                if (integer_points_.count(integer_point) == 0)
+                Vector<N, int> integer_point = to_integer(p, POINT_DISCRETIZATION);
+                if (!integer_points_.contains(integer_point))
                 {
                         integer_points_.insert(integer_point);
                         points_.push_back(to_vector<float>(p));
@@ -195,8 +193,6 @@ std::vector<Vector<N, float>> generate_points_ellipsoid(unsigned point_count, bo
         return points.release();
 }
 
-// Точки на сфере с углублением со стороны последней оси
-// в положительном направлении этой оси
 template <std::size_t N>
 std::vector<Vector<N, float>> generate_points_sphere_with_notch(unsigned point_count, bool bound)
 {
@@ -207,10 +203,10 @@ std::vector<Vector<N, float>> generate_points_sphere_with_notch(unsigned point_c
         while (points.size() < point_count)
         {
                 Vector<N, double> v = random_on_sphere<N, double>(engine, bound);
-                double dot_z = dot(LAST_AXIS<N, double>, v);
-                if (dot_z > 0)
+                double dot_last_axis = v[N - 1];
+                if (dot_last_axis > 0)
                 {
-                        v[N - 1] *= 1 - std::abs(0.5 * power<5>(dot_z));
+                        v[N - 1] *= 1 - std::abs(0.5 * power<5>(dot_last_axis));
                 }
                 points.add(v);
         }

@@ -60,8 +60,7 @@ constexpr vec2f NULL_TEXTURE_COORDINATES = vec2f(-1e10);
 
 constexpr VkIndexType VULKAN_INDEX_TYPE = VK_INDEX_TYPE_UINT32;
 
-// acos(0.7) is slightly greater than 45 degrees
-constexpr float LIMIT_COSINE = 0.7;
+constexpr float MIN_COSINE_VERTEX_NORMAL_FACET_NORMAL = 0.7;
 
 using IndexType = std::conditional_t<
         VULKAN_INDEX_TYPE == VK_INDEX_TYPE_UINT32,
@@ -198,10 +197,11 @@ void load_vertices(
                                 }
                                 if (std::all_of(
                                             dots.cbegin(), dots.cend(),
-                                            [](float d)
+                                            [](const auto& d)
                                             {
-                                                    static_assert(LIMIT_COSINE > 0);
-                                                    return is_finite(d) && std::abs(d) >= LIMIT_COSINE;
+                                                    static_assert(MIN_COSINE_VERTEX_NORMAL_FACET_NORMAL > 0);
+                                                    return is_finite(d)
+                                                           && std::abs(d) >= MIN_COSINE_VERTEX_NORMAL_FACET_NORMAL;
                                             }))
                                 {
                                         for (int i = 0; i < 3; ++i)

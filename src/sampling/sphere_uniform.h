@@ -184,13 +184,4 @@ T uniform_on_sphere_pdf()
         static constexpr T n = 1 / geometry::sphere_area<N>();
         return n;
 }
-
-// Вариант алгоритма для равномерных точек на диске.
-// Работает медленнее алгоритма с выбрасыванием значений.
-//   std::uniform_real_distribution<T> urd(0, 1);
-//   v_length_square = urd(random_engine);
-//   T theta = 2 * static_cast<T>(PI) * urd(random_engine);
-//   T r = std::sqrt(v_length_square);
-//   x = r * std::cos(theta);
-//   y = r * std::sin(theta);
 }

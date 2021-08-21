@@ -42,9 +42,6 @@ template <std::size_t N>
 using VolumeObjectConstPtr = std::shared_ptr<const volume::VolumeObject<N>>;
 }
 
-// Используется std::variant<std::shared_ptr<mesh>, ...> вместо std::shared_ptr<std::variant<mesh...>>
-// для того, чтобы можно было копировать указатели в функциях-шаблонах, имеющих параметр размерности.
-
 using MeshObject = Sequence<settings::Dimensions, std::variant, types_implementation::MeshObjectPtr>;
 using MeshObjectConst = Sequence<settings::Dimensions, std::variant, types_implementation::MeshObjectConstPtr>;
 

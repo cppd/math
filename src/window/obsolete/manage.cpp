@@ -95,8 +95,6 @@ WindowInit::~WindowInit()
 
 //        Display* display = g_display;
 
-//        // В SFML окно уже показано, но свойства изменяются только перед mapping,
-//        // поэтому убрать окно, изменить свойства, показать окно.
 //        XUnmapWindow(display, window);
 
 //#if 1
@@ -114,14 +112,12 @@ WindowInit::~WindowInit()
 //        XChangeProperty(display, window, wm_state, xa_atom(), 32, PropModeAppend, skip_pager, 1);
 //#endif
 
-//        // после изменения, но до отображения, сменить родительское окно
 //        XReparentWindow(display, window, parent, 0, 0);
 
 //        XWindowAttributes parent_attr;
 //        XGetWindowAttributes(display, parent, &parent_attr);
 //        XResizeWindow(display, window, parent_attr.width, parent_attr.height);
 
-//        // показать обратно
 //        XMapWindow(display, window);
 //}
 
@@ -131,8 +127,6 @@ WindowInit::~WindowInit()
 
 //        Display* display = g_display;
 
-//        // В SFML окно уже показано, но свойства изменяются только перед mapping,
-//        // поэтому убрать окно, изменить свойства, показать окно.
 //        XUnmapWindow(display, window);
 
 //        Atom wm_state = XInternAtom(display, "_NET_WM_STATE", False);
@@ -140,10 +134,8 @@ WindowInit::~WindowInit()
 //        const unsigned char* fullscreen = reinterpret_cast<const unsigned char*>(&wm_state_fullscreen);
 //        XChangeProperty(display, window, wm_state, xa_atom(), 32, PropModeAppend, fullscreen, 1);
 
-//        // после изменения, но до отображения, сменить родительское окно
 //        XReparentWindow(display, window, XDefaultRootWindow(display), 0, 0);
 
-//        // показать обратно
 //        XMapWindow(display, window);
 //}
 
