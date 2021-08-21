@@ -25,23 +25,23 @@ namespace ns
 {
 class TerminateQuietlyException final : public std::exception
 {
-        static constexpr const char* msg_ = "Thread termination requested";
+        static constexpr const char* MSG = "Thread termination requested";
 
 public:
         const char* what() const noexcept override
         {
-                return msg_;
+                return MSG;
         }
 };
 
 class TerminateWithMessageException final : public std::exception
 {
-        static constexpr const char* msg_ = "Terminated by user";
+        static constexpr const char* MSG = "Terminated by user";
 
 public:
         const char* what() const noexcept override
         {
-                return msg_;
+                return MSG;
         }
 };
 

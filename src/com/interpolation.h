@@ -133,9 +133,9 @@ template <std::size_t N, typename T, typename F>
 
         if constexpr (N >= 5)
         {
-                constexpr std::size_t next_n = N - 1;
-                std::array<T, (1 << next_n)> tmp_data;
-                std::array<F, next_n> tmp_p;
+                constexpr std::size_t NEXT_N = N - 1;
+                std::array<T, (1 << NEXT_N)> tmp_data;
+                std::array<F, NEXT_N> tmp_p;
 
                 for (std::size_t i = 0; i < data.size(); i += 2)
                 {

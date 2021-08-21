@@ -234,11 +234,11 @@ public:
 
         [[nodiscard]] bool is_unit() const
         {
-                static constexpr T d = 100 * limits<T>::epsilon();
-                static constexpr T min = square(1 - d);
-                static constexpr T max = square(1 + d);
+                static constexpr T D = 100 * limits<T>::epsilon();
+                static constexpr T MIN = square(1 - D);
+                static constexpr T MAX = square(1 + D);
                 const T s = norm_squared();
-                return s > min && s < max;
+                return s > MIN && s < MAX;
         }
 
         [[nodiscard]] constexpr Vector<N, T> clamp(T low, T high) const

@@ -81,8 +81,8 @@ T cosine_on_hemisphere_pdf(T n_v)
 {
         if (n_v > 0)
         {
-                static constexpr T k = 1 / geometry::sphere_integrate_cosine_factor_over_hemisphere<N>();
-                return n_v * k;
+                static constexpr T R = 1 / geometry::sphere_integrate_cosine_factor_over_hemisphere<N>();
+                return n_v * R;
         }
         return 0;
 }

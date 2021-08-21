@@ -33,33 +33,33 @@ constexpr int MAX_SAMPLE_COUNT = 1'000'000;
 
 using ComputeType = double;
 
-enum class F
+enum class FunctionType
 {
         X,
         Y,
         Z
 };
 
-template <XYZ xyz, F f>
+template <XYZ xyz, FunctionType F>
 ComputeType integrate(ComputeType from, ComputeType to)
 {
-        static_assert(f == F::X || f == F::Y || f == F::Z);
+        static_assert(F == FunctionType::X || F == FunctionType::Y || F == FunctionType::Z);
 
-        if constexpr (f == F::X)
+        if constexpr (F == FunctionType::X)
         {
                 return cie_x_integral<xyz, ComputeType>(from, to);
         }
-        if constexpr (f == F::Y)
+        if constexpr (F == FunctionType::Y)
         {
                 return cie_y_integral<xyz, ComputeType>(from, to);
         }
-        if constexpr (f == F::Z)
+        if constexpr (F == FunctionType::Z)
         {
                 return cie_z_integral<xyz, ComputeType>(from, to);
         }
 }
 
-template <XYZ xyz, F f>
+template <XYZ xyz, FunctionType F>
 std::vector<double> create_samples(const ComputeType from, const ComputeType to, const int count)
 {
         constexpr double MIN = XYZ_SAMPLES_MIN_WAVELENGTH;
@@ -91,7 +91,7 @@ std::vector<double> create_samples(const ComputeType from, const ComputeType to,
         {
                 ComputeType wave_2 = std::lerp(from, to, static_cast<ComputeType>(i) / count);
                 ASSERT(wave_1 < wave_2 && wave_1 >= from && wave_2 <= to);
-                ComputeType v = integrate<xyz, f>(wave_1, wave_2);
+                ComputeType v = integrate<xyz, F>(wave_1, wave_2);
                 v /= y_integral;
                 samples.push_back(v);
                 wave_1 = wave_2;
@@ -104,19 +104,19 @@ std::vector<double> create_samples(const ComputeType from, const ComputeType to,
 template <XYZ xyz>
 std::vector<double> cie_x_samples(int from, int to, int count)
 {
-        return create_samples<xyz, F::X>(from, to, count);
+        return create_samples<xyz, FunctionType::X>(from, to, count);
 }
 
 template <XYZ xyz>
 std::vector<double> cie_y_samples(int from, int to, int count)
 {
-        return create_samples<xyz, F::Y>(from, to, count);
+        return create_samples<xyz, FunctionType::Y>(from, to, count);
 }
 
 template <XYZ xyz>
 std::vector<double> cie_z_samples(int from, int to, int count)
 {
-        return create_samples<xyz, F::Z>(from, to, count);
+        return create_samples<xyz, FunctionType::Z>(from, to, count);
 }
 
 template std::vector<double> cie_x_samples<XYZ_31>(int, int, int);

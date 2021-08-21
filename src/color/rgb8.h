@@ -25,7 +25,9 @@ namespace ns
 {
 struct RGB8 final
 {
-        const unsigned char red, green, blue;
+        unsigned char red;
+        unsigned char green;
+        unsigned char blue;
 
         constexpr RGB8(unsigned char red, unsigned char green, unsigned char blue) : red(red), green(green), blue(blue)
         {

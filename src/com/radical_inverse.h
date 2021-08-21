@@ -32,22 +32,22 @@ Elsevier, 2017.
 
 namespace ns
 {
-template <unsigned Base, typename Result>
+template <unsigned BASE, typename Result>
 constexpr Result radical_inverse(unsigned long long v)
 {
-        static_assert(Base >= 2);
+        static_assert(BASE >= 2);
         static_assert(std::is_floating_point_v<Result>);
 
-        constexpr Result BASE_FLOAT = Base;
+        constexpr Result BASE_FLOAT = BASE;
 
         unsigned long long reverse = 0;
         Result base = 1;
         while (v)
         {
-                unsigned long long next = v / Base;
-                unsigned long long digit = v - next * Base;
+                unsigned long long next = v / BASE;
+                unsigned long long digit = v - next * BASE;
                 v = next;
-                reverse = reverse * Base + digit;
+                reverse = reverse * BASE + digit;
                 base *= BASE_FLOAT;
         }
         return std::min(reverse / base, PREVIOUS_BEFORE_ONE<Result>);

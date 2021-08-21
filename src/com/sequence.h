@@ -32,17 +32,17 @@ template <
         typename... SequenceTypeParameters>
 struct Sequence
 {
-        template <int first, int N, std::size_t... I>
+        template <int FIRST, int N, std::size_t... I>
         struct S
         {
                 static_assert(N > 0);
-                using T = typename S<first, N - 1, N - 1, I...>::T;
+                using T = typename S<FIRST, N - 1, N - 1, I...>::T;
         };
-        template <int first, std::size_t... I>
-        struct S<first, 0, I...>
+        template <int FIRST, std::size_t... I>
+        struct S<FIRST, 0, I...>
         {
                 static_assert(sizeof...(I) > 0);
-                using T = Type<SequenceType<first + I, SequenceTypeParameters...>...>;
+                using T = Type<SequenceType<FIRST + I, SequenceTypeParameters...>...>;
         };
 };
 
@@ -66,13 +66,13 @@ auto sequence(IntegerSequence<IntegerType, I...>&&)
 template <
         template <typename...>
         typename Type,
-        int From,
-        int To,
+        int FROM,
+        int TO,
         template <std::size_t, typename...>
         typename SequenceType,
         typename... SequenceTypeParameters>
 using SequenceRange = typename sequence_implementation::Sequence<Type, SequenceType, SequenceTypeParameters...>::
-        template S<From, To - From + 1>::T;
+        template S<FROM, TO - FROM + 1>::T;
 
 //  Type<SequenceType<Index[0], ...>, SequenceType<index[1], ...>, SequenceType<index[2], ...>, ...>
 template <

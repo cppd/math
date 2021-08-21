@@ -132,36 +132,36 @@ std::string to_string_binary(T v, const std::string_view& prefix = "") requires 
 
 namespace print_implementation
 {
-template <unsigned digit_group_size, typename T>
+template <unsigned DIGIT_GROUP_SIZE, typename T>
 void f(T v, int i, std::string& r, [[maybe_unused]] char s)
 {
-        constexpr bool longlong_less_i128 = limits<long long>::max() < limits<__int128>::max()
+        constexpr bool LONGLONG_LESS_I128 = limits<long long>::max() < limits<__int128>::max()
                                             && limits<long long>::lowest() > limits<__int128>::lowest();
 
-        constexpr bool ulonglong_less_ui128 = limits<unsigned long long>::max() < limits<unsigned __int128>::max();
+        constexpr bool ULONGLONG_LESS_UI128 = limits<unsigned long long>::max() < limits<unsigned __int128>::max();
 
         do
         {
-                if constexpr (std::is_same_v<__int128, std::remove_cv_t<T>> && longlong_less_i128)
+                if constexpr (std::is_same_v<__int128, std::remove_cv_t<T>> && LONGLONG_LESS_I128)
                 {
                         if (limits<long long>::lowest() <= v && v <= limits<long long>::max())
                         {
-                                f<digit_group_size, long long>(v, i, r, s);
+                                f<DIGIT_GROUP_SIZE, long long>(v, i, r, s);
                                 break;
                         }
                 }
-                if constexpr (std::is_same_v<unsigned __int128, std::remove_cv_t<T>> && ulonglong_less_ui128)
+                if constexpr (std::is_same_v<unsigned __int128, std::remove_cv_t<T>> && ULONGLONG_LESS_UI128)
                 {
                         if (v <= limits<unsigned long long>::max())
                         {
-                                f<digit_group_size, unsigned long long>(v, i, r, s);
+                                f<DIGIT_GROUP_SIZE, unsigned long long>(v, i, r, s);
                                 break;
                         }
                 }
 
-                if constexpr (digit_group_size > 0)
+                if constexpr (DIGIT_GROUP_SIZE > 0)
                 {
-                        if ((++i % digit_group_size) == 0 && i != 0)
+                        if ((++i % DIGIT_GROUP_SIZE) == 0 && i != 0)
                         {
                                 r += s;
                         }
@@ -177,7 +177,7 @@ void f(T v, int i, std::string& r, [[maybe_unused]] char s)
         } while ((v /= 10) != 0);
 }
 
-template <unsigned digit_group_size, typename T>
+template <unsigned DIGIT_GROUP_SIZE, typename T>
 std::string to_string_digit_groups(T v, char s) requires is_native_integral<T>
 {
         static_assert(is_signed<T> != is_unsigned<T>);
@@ -187,7 +187,7 @@ std::string to_string_digit_groups(T v, char s) requires is_native_integral<T>
 
         bool negative = is_unsigned<T> ? false : v < 0;
 
-        f<digit_group_size, T>(v, -1, r, s);
+        f<DIGIT_GROUP_SIZE, T>(v, -1, r, s);
 
         if (negative)
         {

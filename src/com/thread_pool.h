@@ -33,7 +33,7 @@ namespace ns
 {
 class ThreadPool
 {
-        const unsigned THREAD_COUNT;
+        const unsigned thread_count_;
 
         std::mutex mutex_run_, mutex_finish_;
         std::condition_variable cv_run_, cv_finish_;
@@ -114,7 +114,7 @@ class ThreadPool
                                 if (count_ == 0)
                                 {
                                         enable_ = false;
-                                        count_ = THREAD_COUNT;
+                                        count_ = thread_count_;
                                         ++generation_;
                                         cv_finish_.notify_all();
                                 }
@@ -147,7 +147,7 @@ class ThreadPool
                         {
                                 try
                                 {
-                                        bound_function_(thread_num, THREAD_COUNT);
+                                        bound_function_(thread_num, thread_count_);
                                 }
                                 catch (const TerminateQuietlyException&)
                                 {
@@ -266,14 +266,14 @@ class ThreadPool
 
 public:
         explicit ThreadPool(unsigned thread_count)
-                : THREAD_COUNT(thread_count), threads_(THREAD_COUNT), thread_errors_(THREAD_COUNT)
+                : thread_count_(thread_count), threads_(thread_count_), thread_errors_(thread_count_)
         {
                 enable_ = false;
                 exit_ = false;
                 generation_ = 0;
-                count_ = THREAD_COUNT;
+                count_ = thread_count_;
 
-                for (unsigned i = 0; i < THREAD_COUNT; ++i)
+                for (unsigned i = 0; i < thread_count_; ++i)
                 {
                         threads_.add(
                                 [&, i]()
@@ -285,7 +285,7 @@ public:
 
         unsigned thread_count() const
         {
-                return THREAD_COUNT;
+                return thread_count_;
         }
 
         void run(std::function<void(unsigned, unsigned)>&& function)

@@ -26,18 +26,18 @@ namespace ns::numerical
 {
 namespace identity_implementation
 {
-template <std::size_t ValueIndex, typename T, int... I>
+template <std::size_t VALUE_INDEX, typename T, int... I>
 constexpr Vector<sizeof...(I), T> make_vector_one_value(std::integer_sequence<int, I...>, const T& value)
 {
-        static_assert(ValueIndex >= 0 && ValueIndex < sizeof...(I));
+        static_assert(VALUE_INDEX >= 0 && VALUE_INDEX < sizeof...(I));
 
-        return Vector<sizeof...(I), T>((I == ValueIndex ? value : 0)...);
+        return Vector<sizeof...(I), T>((I == VALUE_INDEX ? value : 0)...);
 }
 
-template <std::size_t N, typename T, std::size_t ValueIndex>
+template <std::size_t N, typename T, std::size_t VALUE_INDEX>
 constexpr Vector<N, T> make_vector_one_value(const T& value)
 {
-        return make_vector_one_value<ValueIndex>(std::make_integer_sequence<int, N>(), value);
+        return make_vector_one_value<VALUE_INDEX>(std::make_integer_sequence<int, N>(), value);
 }
 
 template <typename T, int... I>

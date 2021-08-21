@@ -23,17 +23,17 @@ namespace ns
 {
 namespace
 {
-template <typename Result, unsigned Base, typename T>
+template <typename Result, unsigned BASE, typename T>
 constexpr bool compare(T v, T v1, T v2)
 {
-        return static_cast<Result>(v1) / v2 == radical_inverse<Base, Result>(v);
+        return static_cast<Result>(v1) / v2 == radical_inverse<BASE, Result>(v);
 }
 
-template <unsigned Base, typename T>
+template <unsigned BASE, typename T>
 constexpr bool compare(T v, T v1, T v2)
 {
-        return compare<float, Base>(v, v1, v2) && compare<double, Base>(v, v1, v2)
-               && compare<long double, Base>(v, v1, v2);
+        return compare<float, BASE>(v, v1, v2) && compare<double, BASE>(v, v1, v2)
+               && compare<long double, BASE>(v, v1, v2);
 }
 
 static_assert(compare<2>(0, 0, 1));
@@ -57,23 +57,23 @@ static_assert(compare<16>(0x123456789F, 0xF987654321, 0x1'00'0000'0000));
 
 //
 
-template <unsigned Base, typename Result, typename T>
+template <unsigned BASE, typename Result, typename T>
 constexpr bool check_max()
 {
-        return 1 > radical_inverse<Base, Result>(limits<T>::max());
+        return 1 > radical_inverse<BASE, Result>(limits<T>::max());
 }
 
-template <unsigned Base, typename T>
+template <unsigned BASE, typename T>
 constexpr bool check_max()
 {
-        return check_max<Base, float, T>() && check_max<Base, double, T>() && check_max<Base, long double, T>();
+        return check_max<BASE, float, T>() && check_max<BASE, double, T>() && check_max<BASE, long double, T>();
 }
 
-template <unsigned Base>
+template <unsigned BASE>
 constexpr bool check_max()
 {
-        return check_max<Base, int>() && check_max<Base, unsigned>() && check_max<Base, long long>()
-               && check_max<Base, unsigned long long>();
+        return check_max<BASE, int>() && check_max<BASE, unsigned>() && check_max<BASE, long long>()
+               && check_max<BASE, unsigned long long>();
 }
 
 static_assert(check_max<2>());

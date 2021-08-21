@@ -39,54 +39,54 @@ constexpr bool is_finite(const T& v)
         return std::isfinite(v);
 }
 
-template <unsigned Exp, typename T>
+template <unsigned EXPONENT, typename T>
 constexpr T power([[maybe_unused]] T base)
 {
-        if constexpr (Exp == 0)
+        if constexpr (EXPONENT == 0)
         {
                 return 1;
         }
-        if constexpr (Exp == 1)
+        if constexpr (EXPONENT == 1)
         {
                 return base;
         }
-        if constexpr (Exp == 2)
+        if constexpr (EXPONENT == 2)
         {
                 return base * base;
         }
-        if constexpr (Exp == 3)
+        if constexpr (EXPONENT == 3)
         {
                 return base * base * base;
         }
-        if constexpr (Exp == 4)
+        if constexpr (EXPONENT == 4)
         {
                 T t = base * base;
                 return t * t;
         }
-        if constexpr (Exp == 5)
+        if constexpr (EXPONENT == 5)
         {
                 T t = base * base;
                 return t * t * base;
         }
-        if constexpr (Exp == 6)
+        if constexpr (EXPONENT == 6)
         {
                 T t = base * base;
                 return t * t * t;
         }
-        if constexpr (Exp == 7)
+        if constexpr (EXPONENT == 7)
         {
                 T t = base * base;
                 return t * t * t * base;
         }
-        if constexpr (Exp == 8)
+        if constexpr (EXPONENT == 8)
         {
                 T t = base * base;
                 T t2 = t * t;
                 return t2 * t2;
         }
-        if constexpr (Exp >= 9)
+        if constexpr (EXPONENT >= 9)
         {
-                unsigned exp = Exp;
+                unsigned exp = EXPONENT;
 
                 T res = (exp & 1) ? base : 1;
                 exp >>= 1;

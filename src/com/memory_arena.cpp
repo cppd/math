@@ -89,12 +89,12 @@ void compare_data(const std::vector<const Interface<T>*>& pointers, std::mt19937
 }
 
 template <typename T>
-constexpr std::size_t objects_in_block = MemoryArena::block_size() / sizeof(Impl<T>);
+constexpr std::size_t OBJECTS_IN_BLOCK = MemoryArena::block_size() / sizeof(Impl<T>);
 
 template <typename T>
 std::size_t compute_block_count(const std::size_t object_count)
 {
-        return (object_count + objects_in_block<T> - 1) / objects_in_block<T>;
+        return (object_count + OBJECTS_IN_BLOCK<T> - 1) / OBJECTS_IN_BLOCK<T>;
 }
 
 template <typename T>
@@ -102,7 +102,7 @@ std::size_t compute_byte_count(const std::size_t object_count)
 {
         const std::size_t block_count = compute_block_count<T>(object_count);
         return object_count * sizeof(Impl<T>)
-               + (block_count - 1) * (MemoryArena::block_size() - objects_in_block<T> * sizeof(Impl<T>));
+               + (block_count - 1) * (MemoryArena::block_size() - OBJECTS_IN_BLOCK<T> * sizeof(Impl<T>));
 }
 
 template <typename T>

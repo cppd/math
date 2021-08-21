@@ -31,25 +31,22 @@ namespace
 constexpr int MIN_SAMPLE_COUNT = 1;
 constexpr int MAX_SAMPLE_COUNT = 1'000'000;
 
-// The Planck constant
-constexpr double h = 6.62607015e-34;
-
-// The Boltzmann constant
-constexpr double kb = 1.380649e-23;
-
-// The speed of light
-constexpr double c = 299792458;
+constexpr double PLANCK_CONSTANT = 6.62607015e-34;
+constexpr double BOLTZMANN_CONSTANT = 1.380649e-23;
+constexpr double SPEED_OF_LIGHT = 299792458;
 
 double plank(double l, double t)
 {
         l *= 1e-9;
-        return (2 * h * c * c) / (power<5>(l) * (std::exp((h * c / kb) / (l * t)) - 1));
+        return (2 * PLANCK_CONSTANT * SPEED_OF_LIGHT * SPEED_OF_LIGHT)
+               / (power<5>(l) * (std::exp((PLANCK_CONSTANT * SPEED_OF_LIGHT / BOLTZMANN_CONSTANT) / (l * t)) - 1));
 }
 
 double plank_a(double l)
 {
         l *= 1e-9;
-        return (2 * h * c * c) / (power<5>(l) * (std::exp((0.01435 / 2848) / l) - 1));
+        return (2 * PLANCK_CONSTANT * SPEED_OF_LIGHT * SPEED_OF_LIGHT)
+               / (power<5>(l) * (std::exp((0.01435 / 2848) / l) - 1));
 }
 
 template <typename F>

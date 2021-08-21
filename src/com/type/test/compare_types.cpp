@@ -34,13 +34,13 @@ constexpr int N = 1 << 27;
 template <typename T>
 __attribute__((noinline)) double computation(std::vector<T>* v)
 {
-        constexpr T add = 20;
-        constexpr T sub = 30;
+        constexpr T ADD = 20;
+        constexpr T SUB = 30;
 
         TimePoint start_time = time();
         for (int i = 0; i < N; ++i)
         {
-                (*v)[i] = ((*v)[i] + add) * ((*v)[i] - sub) + add;
+                (*v)[i] = ((*v)[i] + ADD) * ((*v)[i] - SUB) + ADD;
         }
         return duration_from(start_time);
 }

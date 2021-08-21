@@ -38,12 +38,12 @@ constexpr std::array<T, sizeof...(I)> make_array_value(std::integer_sequence<std
         return {(static_cast<void>(I), v)...};
 }
 
-template <std::size_t ValueIndex, typename T, std::size_t... I>
+template <std::size_t VALUE_INDEX, typename T, std::size_t... I>
 constexpr std::array<T, sizeof...(I)> make_array_one_value(std::integer_sequence<std::size_t, I...>, const T& v)
 {
-        static_assert(ValueIndex >= 0 && ValueIndex < sizeof...(I));
+        static_assert(VALUE_INDEX >= 0 && VALUE_INDEX < sizeof...(I));
 
-        return {(I == ValueIndex ? v : 0)...};
+        return {(I == VALUE_INDEX ? v : 0)...};
 }
 
 //
@@ -74,10 +74,11 @@ constexpr std::array<T, N> make_array_value(const T& v)
         return arrays_implementation::make_array_value(std::make_integer_sequence<std::size_t, N>(), v);
 }
 
-template <typename T, std::size_t N, std::size_t ValueIndex>
+template <typename T, std::size_t N, std::size_t VALUE_INDEX>
 constexpr std::array<T, N> make_array_one_value(const T& v)
 {
-        return arrays_implementation::make_array_one_value<ValueIndex>(std::make_integer_sequence<std::size_t, N>(), v);
+        return arrays_implementation::make_array_one_value<VALUE_INDEX>(
+                std::make_integer_sequence<std::size_t, N>(), v);
 }
 
 template <std::size_t N>

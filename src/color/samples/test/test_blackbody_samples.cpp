@@ -143,16 +143,16 @@ void test_blackbody()
         //Print[]
         //samples[10000]
 
-        constexpr int from = 300;
-        constexpr int to = 1000;
-        constexpr int count = 7;
+        constexpr int FROM = 300;
+        constexpr int TO = 1000;
+        constexpr int COUNT = 7;
 
         const auto create_samples = [&](double t)
         {
-                std::vector<double> samples = blackbody_samples(t, from, to, count);
-                if (samples.size() != static_cast<std::size_t>(count))
+                std::vector<double> samples = blackbody_samples(t, FROM, TO, COUNT);
+                if (samples.size() != static_cast<std::size_t>(COUNT))
                 {
-                        error("Sample count " + to_string(samples.size()) + " is not equal to " + to_string(count));
+                        error("Sample count " + to_string(samples.size()) + " is not equal to " + to_string(COUNT));
                 }
                 return samples;
         };

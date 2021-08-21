@@ -144,15 +144,15 @@ void test()
         constexpr double D65_CCT = 6503.5;
         {
                 static_assert(MAX - MIN > 5);
-                const int COUNT = std::lround((MAX - MIN) / 5);
+                const int count = std::lround((MAX - MIN) / 5);
+                check_equal_to_d65(D65_CCT, MIN, MAX, count);
+        }
+        {
+                constexpr int COUNT = 64;
                 check_equal_to_d65(D65_CCT, MIN, MAX, COUNT);
         }
         {
-                const int COUNT = 64;
-                check_equal_to_d65(D65_CCT, MIN, MAX, COUNT);
-        }
-        {
-                const int COUNT = 64;
+                constexpr int COUNT = 64;
                 check_not_equal_to_d65(5000, MIN, MAX, COUNT);
                 check_not_equal_to_d65(6500, MIN, MAX, COUNT);
                 check_not_equal_to_d65(6510, MIN, MAX, COUNT);

@@ -102,13 +102,13 @@ public:
         }
 };
 
-template <std::size_t Size, typename T>
-constexpr T determinant(RowMatrix<Size, Size, T>&& m)
+template <std::size_t SIZE, typename T>
+constexpr T determinant(RowMatrix<SIZE, SIZE, T>&& m)
 {
         static_assert(is_floating_point<T>);
-        static_assert(Size >= 1);
+        static_assert(SIZE >= 1);
 
-        constexpr int N = Size;
+        constexpr int N = SIZE;
 
         bool sign = false;
 
@@ -140,12 +140,12 @@ constexpr T determinant(RowMatrix<Size, Size, T>&& m)
         return sign ? -d : d;
 }
 
-template <std::size_t Size, typename T>
-constexpr Vector<Size, T> solve_gauss(RowMatrix<Size, Size, T>&& a, Vector<Size, T> b)
+template <std::size_t SIZE, typename T>
+constexpr Vector<SIZE, T> solve_gauss(RowMatrix<SIZE, SIZE, T>&& a, Vector<SIZE, T> b)
 {
         static_assert(is_floating_point<T>);
 
-        constexpr int N = Size;
+        constexpr int N = SIZE;
 
         for (int k = 0; k < N - 1; ++k)
         {
@@ -180,15 +180,15 @@ constexpr Vector<Size, T> solve_gauss(RowMatrix<Size, Size, T>&& a, Vector<Size,
         return b;
 }
 
-template <std::size_t SizeA, std::size_t SizeB, typename T>
-constexpr std::array<Vector<SizeB, T>, SizeA> solve_gauss(
-        RowMatrix<SizeA, SizeA, T>&& a,
-        RowMatrix<SizeA, SizeB, T>&& b)
+template <std::size_t SIZE_A, std::size_t SIZE_B, typename T>
+constexpr std::array<Vector<SIZE_B, T>, SIZE_A> solve_gauss(
+        RowMatrix<SIZE_A, SIZE_A, T>&& a,
+        RowMatrix<SIZE_A, SIZE_B, T>&& b)
 {
         static_assert(is_floating_point<T>);
 
-        constexpr int N = SizeA;
-        constexpr int M = SizeB;
+        constexpr int N = SIZE_A;
+        constexpr int M = SIZE_B;
 
         for (int k = 0; k < N - 1; ++k)
         {

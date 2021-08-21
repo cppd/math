@@ -277,7 +277,7 @@ public:
 
         void erase()
         {
-                std::unique_lock lock_(mutex_);
+                std::unique_lock lock(mutex_);
                 if (inserted_)
                 {
                         inserted_ = false;

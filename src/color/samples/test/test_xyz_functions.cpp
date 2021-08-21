@@ -264,16 +264,16 @@ void check(T max_error_x, T max_error_y, T max_error_z, T max_mean_error_x, T ma
         T sum_y = 0;
         T sum_z = 0;
 
-        constexpr const std::array<double, WAVES.size()>& x = data_x<xyz>();
-        constexpr const std::array<double, WAVES.size()>& y = data_y<xyz>();
-        constexpr const std::array<double, WAVES.size()>& z = data_z<xyz>();
+        constexpr const std::array<double, WAVES.size()>& X = data_x<xyz>();
+        constexpr const std::array<double, WAVES.size()>& Y = data_y<xyz>();
+        constexpr const std::array<double, WAVES.size()>& Z = data_z<xyz>();
 
         for (std::size_t i = 0; i < WAVES.size(); ++i)
         {
                 const T w = WAVES[i];
-                sum_x += check<xyz, T>("x", w, cie_x<xyz, T>(w), x[i], max_error_x);
-                sum_y += check<xyz, T>("y", w, cie_y<xyz, T>(w), y[i], max_error_y);
-                sum_z += check<xyz, T>("z", w, cie_z<xyz, T>(w), z[i], max_error_z);
+                sum_x += check<xyz, T>("x", w, cie_x<xyz, T>(w), X[i], max_error_x);
+                sum_y += check<xyz, T>("y", w, cie_y<xyz, T>(w), Y[i], max_error_y);
+                sum_z += check<xyz, T>("z", w, cie_z<xyz, T>(w), Z[i], max_error_z);
         }
 
         check_mean<xyz, T>("x", sum_x / WAVES.size(), max_mean_error_x);

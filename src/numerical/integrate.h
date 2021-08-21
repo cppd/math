@@ -27,15 +27,15 @@ T integrate(const F& f, T from, T to, int count)
         static_assert(std::is_floating_point_v<T>);
         static_assert(std::is_same_v<T, decltype(f(T()))>);
 
-        const T COUNT = count;
+        const T t_count = count;
         // Composite Trapezoidal Rule
         T sum = 0;
-        for (T i = 1; i < COUNT; ++i)
+        for (T i = 1; i < t_count; ++i)
         {
-                T x = std::lerp(from, to, i / COUNT);
+                T x = std::lerp(from, to, i / t_count);
                 sum += f(x);
         }
-        T h_2 = (to - from) / (2 * COUNT);
+        T h_2 = (to - from) / (2 * t_count);
         return (f(from) + 2 * sum + f(to)) * h_2;
 }
 }

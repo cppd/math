@@ -37,17 +37,17 @@ concept BitFloatingPoint = (StdFloatingPoint<T> && std::numeric_limits<T>::is_ie
 template <BitFloatingPoint T>
 constexpr unsigned floating_point_bit_count()
 {
-        constexpr unsigned max_exponent = limits<T>::max_exponent;
-        static_assert(1 == std::popcount(max_exponent));
+        constexpr unsigned MAX_EXPONENT = limits<T>::max_exponent;
+        static_assert(1 == std::popcount(MAX_EXPONENT));
 
-        constexpr unsigned size = limits<T>::digits + 1 + std::countr_zero(max_exponent);
+        constexpr unsigned SIZE = limits<T>::digits + 1 + std::countr_zero(MAX_EXPONENT);
         if constexpr (!std::is_same_v<std::remove_cv_t<T>, long double>)
         {
-                return size;
+                return SIZE;
         }
         else
         {
-                return size == 79 ? 80 : size;
+                return SIZE == 79 ? 80 : SIZE;
         }
 }
 
@@ -92,14 +92,14 @@ const char* type_bit_name()
 
         if constexpr (size < 100)
         {
-                static constexpr std::array str = std::to_array<char>({'f', 'p', '0' + size / 10, '0' + size % 10, 0});
-                return str.data();
+                static constexpr std::array STR = std::to_array<char>({'f', 'p', '0' + size / 10, '0' + size % 10, 0});
+                return STR.data();
         }
         else
         {
-                static constexpr std::array str =
+                static constexpr std::array STR =
                         std::to_array<char>({'f', 'p', '0' + size / 100, '0' + (size % 100) / 10, '0' + size % 10, 0});
-                return str.data();
+                return STR.data();
         }
 }
 

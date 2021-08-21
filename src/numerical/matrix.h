@@ -29,56 +29,56 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 namespace ns
 {
-template <std::size_t Rows, std::size_t Columns, typename T>
+template <std::size_t ROWS, std::size_t COLUMNS, typename T>
 class Matrix
 {
         static_assert(is_floating_point<T>);
-        static_assert(Rows >= 1 && Columns >= 1);
+        static_assert(ROWS >= 1 && COLUMNS >= 1);
 
-        template <std::size_t Column, std::size_t... I>
-        static constexpr Vector<Columns, T> make_vector_one_value_impl(
+        template <std::size_t COLUMN, std::size_t... I>
+        static constexpr Vector<COLUMNS, T> make_vector_one_value_impl(
                 const T& v,
                 std::integer_sequence<std::size_t, I...>)
         {
-                static_assert(sizeof...(I) == Columns);
-                static_assert(((I >= 0 && I < Columns) && ...));
-                static_assert(Column >= 0 && Column < Columns);
+                static_assert(sizeof...(I) == COLUMNS);
+                static_assert(((I >= 0 && I < COLUMNS) && ...));
+                static_assert(COLUMN >= 0 && COLUMN < COLUMNS);
 
-                return {(I == Column ? v : 0)...};
+                return {(I == COLUMN ? v : 0)...};
         }
 
         template <std::size_t... I>
-        static constexpr std::array<Vector<Columns, T>, Rows> make_one_value_rows_impl(
+        static constexpr std::array<Vector<COLUMNS, T>, ROWS> make_one_value_rows_impl(
                 const T& v,
                 std::integer_sequence<std::size_t, I...>)
         {
-                static_assert(sizeof...(I) == Rows);
-                static_assert(((I >= 0 && I < Rows) && ...));
+                static_assert(sizeof...(I) == ROWS);
+                static_assert(((I >= 0 && I < ROWS) && ...));
 
-                return {make_vector_one_value_impl<I>(v, std::make_integer_sequence<std::size_t, Columns>())...};
+                return {make_vector_one_value_impl<I>(v, std::make_integer_sequence<std::size_t, COLUMNS>())...};
         }
 
-        static constexpr std::array<Vector<Columns, T>, Rows> make_diagonal_matrix(const T& v)
+        static constexpr std::array<Vector<COLUMNS, T>, ROWS> make_diagonal_matrix(const T& v)
         {
-                return make_one_value_rows_impl(v, std::make_integer_sequence<std::size_t, Rows>());
+                return make_one_value_rows_impl(v, std::make_integer_sequence<std::size_t, ROWS>());
         }
 
         //
 
-        std::array<Vector<Columns, T>, Rows> rows_;
+        std::array<Vector<COLUMNS, T>, ROWS> rows_;
 
         // template <std::size_t... I>
-        // constexpr Vector<Rows, T> column_impl(std::size_t column, std::integer_sequence<std::size_t, I...>) const
+        // constexpr Vector<ROWS, T> column_impl(std::size_t column, std::integer_sequence<std::size_t, I...>) const
         //{
-        //        static_assert(sizeof...(I) == Rows);
-        //        static_assert(((I >= 0 && I < Rows) && ...));
+        //        static_assert(sizeof...(I) == ROWS);
+        //        static_assert(((I >= 0 && I < ROWS) && ...));
         //
-        //        return Vector<Rows, T>{rows_[I][column]...};
+        //        return Vector<ROWS, T>{rows_[I][column]...};
         //}
         //
-        // constexpr Vector<Rows, T> column_impl(std::size_t column) const
+        // constexpr Vector<ROWES, T> column_impl(std::size_t column) const
         //{
-        //        return column_impl(column, std::make_integer_sequence<std::size_t, Rows>());
+        //        return column_impl(column, std::make_integer_sequence<std::size_t, ROWS>());
         //}
 
 public:
@@ -88,27 +88,27 @@ public:
 
         template <typename... Args>
         explicit constexpr Matrix(Args&&... args) requires(
-                (sizeof...(args) == Rows) && (std::is_convertible_v<Args, Vector<Columns, T>> && ...))
+                (sizeof...(args) == ROWS) && (std::is_convertible_v<Args, Vector<COLUMNS, T>> && ...))
                 : rows_{std::forward<Args>(args)...}
         {
         }
 
         template <typename Arg>
-        explicit constexpr Matrix(const Arg& v) requires(Columns == Rows && std::is_convertible_v<Arg, T>)
+        explicit constexpr Matrix(const Arg& v) requires(COLUMNS == ROWS && std::is_convertible_v<Arg, T>)
                 : rows_(make_diagonal_matrix(v))
         {
         }
 
-        explicit constexpr Matrix(const std::array<Vector<Columns, T>, Rows>& data) : rows_(data)
+        explicit constexpr Matrix(const std::array<Vector<COLUMNS, T>, ROWS>& data) : rows_(data)
         {
         }
 
-        [[nodiscard]] constexpr const Vector<Columns, T>& row(std::size_t r) const
+        [[nodiscard]] constexpr const Vector<COLUMNS, T>& row(std::size_t r) const
         {
                 return rows_[r];
         }
 
-        [[nodiscard]] constexpr Vector<Columns, T>& row(std::size_t r)
+        [[nodiscard]] constexpr Vector<COLUMNS, T>& row(std::size_t r)
         {
                 return rows_[r];
         }
@@ -125,16 +125,16 @@ public:
 
         [[nodiscard]] const T* data() const
         {
-                static_assert(sizeof(Matrix) == Rows * Columns * sizeof(T));
+                static_assert(sizeof(Matrix) == ROWS * COLUMNS * sizeof(T));
                 return rows_[0].data();
         }
 
-        [[nodiscard]] Matrix<Columns, Rows, T> transpose() const
+        [[nodiscard]] Matrix<COLUMNS, ROWS, T> transpose() const
         {
-                Matrix<Columns, Rows, T> res;
-                for (std::size_t r = 0; r < Rows; ++r)
+                Matrix<COLUMNS, ROWS, T> res;
+                for (std::size_t r = 0; r < ROWS; ++r)
                 {
-                        for (std::size_t c = 0; c < Columns; ++c)
+                        for (std::size_t c = 0; c < COLUMNS; ++c)
                         {
                                 res(c, r) = rows_[r][c];
                         }
@@ -142,29 +142,29 @@ public:
                 return res;
         }
 
-        template <std::size_t R = Rows, std::size_t C = Columns>
-        [[nodiscard]] T determinant() const requires(R == Rows && C == Columns && Rows == Columns)
+        template <std::size_t R = ROWS, std::size_t C = COLUMNS>
+        [[nodiscard]] T determinant() const requires(R == ROWS && C == COLUMNS && ROWS == COLUMNS)
         {
                 return numerical::determinant(rows_);
         }
 
-        template <std::size_t R = Rows, std::size_t C = Columns>
-        [[nodiscard]] Matrix<Rows, Rows, T> inverse() const requires(R == Rows && C == Columns && Rows == Columns)
+        template <std::size_t R = ROWS, std::size_t C = COLUMNS>
+        [[nodiscard]] Matrix<ROWS, ROWS, T> inverse() const requires(R == ROWS && C == COLUMNS && ROWS == COLUMNS)
         {
-                return Matrix<Rows, Rows, T>(numerical::inverse(rows_));
+                return Matrix<ROWS, ROWS, T>(numerical::inverse(rows_));
         }
 
-        template <std::size_t R = Rows, std::size_t C = Columns>
-        [[nodiscard]] Vector<Rows, T> solve(const Vector<Rows, T>& b) const
-                requires(R == Rows && C == Columns && Rows == Columns)
+        template <std::size_t R = ROWS, std::size_t C = COLUMNS>
+        [[nodiscard]] Vector<ROWS, T> solve(const Vector<ROWS, T>& b) const
+                requires(R == ROWS && C == COLUMNS && ROWS == COLUMNS)
         {
-                return numerical::linear_solve<Rows, T>(rows_, b);
+                return numerical::linear_solve<ROWS, T>(rows_, b);
         }
 
         template <std::size_t R, std::size_t C>
         [[nodiscard]] Matrix<R, C, T> top_left() const
         {
-                static_assert(R > 0 && C > 0 && R <= Rows && C <= Columns && (R < Rows || C < Columns));
+                static_assert(R > 0 && C > 0 && R <= ROWS && C <= COLUMNS && (R < ROWS || C < COLUMNS));
 
                 Matrix<R, C, T> res;
                 for (std::size_t r = 0; r < R; ++r)
@@ -179,7 +179,7 @@ public:
 
         [[nodiscard]] T trace() const
         {
-                static constexpr std::size_t N = std::min(Rows, Columns);
+                static constexpr std::size_t N = std::min(ROWS, COLUMNS);
 
                 T s = 0;
                 for (std::size_t i = 0; i < N; ++i)
@@ -189,9 +189,9 @@ public:
                 return s;
         }
 
-        [[nodiscard]] Vector<std::min(Rows, Columns), T> diagonal() const
+        [[nodiscard]] Vector<std::min(ROWS, COLUMNS), T> diagonal() const
         {
-                static constexpr std::size_t N = std::min(Rows, Columns);
+                static constexpr std::size_t N = std::min(ROWS, COLUMNS);
 
                 Vector<N, T> d;
                 for (std::size_t i = 0; i < N; ++i)
@@ -202,22 +202,22 @@ public:
         }
 };
 
-template <std::size_t Rows, std::size_t Inner, std::size_t Columns, typename T>
-[[nodiscard]] constexpr Matrix<Rows, Columns, T> operator*(
-        const Matrix<Rows, Inner, T>& m1,
-        const Matrix<Inner, Columns, T>& m2)
+template <std::size_t ROWS, std::size_t INNER, std::size_t COLUMNS, typename T>
+[[nodiscard]] constexpr Matrix<ROWS, COLUMNS, T> operator*(
+        const Matrix<ROWS, INNER, T>& m1,
+        const Matrix<INNER, COLUMNS, T>& m2)
 {
-        Matrix<Rows, Columns, T> res;
-        for (std::size_t r = 0; r < Rows; ++r)
+        Matrix<ROWS, COLUMNS, T> res;
+        for (std::size_t r = 0; r < ROWS; ++r)
         {
-                Vector<Columns, T>& row = res.row(r);
-                for (std::size_t c = 0; c < Columns; ++c)
+                Vector<COLUMNS, T>& row = res.row(r);
+                for (std::size_t c = 0; c < COLUMNS; ++c)
                 {
                         row[c] = m1(r, 0) * m2(0, c);
                 }
-                for (std::size_t i = 1; i < Inner; ++i)
+                for (std::size_t i = 1; i < INNER; ++i)
                 {
-                        for (std::size_t c = 0; c < Columns; ++c)
+                        for (std::size_t c = 0; c < COLUMNS; ++c)
                         {
                                 row[c] += m1(r, i) * m2(i, c);
                         }
@@ -226,17 +226,17 @@ template <std::size_t Rows, std::size_t Inner, std::size_t Columns, typename T>
         return res;
 }
 
-template <std::size_t Rows, std::size_t Columns, typename T>
-[[nodiscard]] constexpr Vector<Columns, T> operator*(const Vector<Rows, T>& v, const Matrix<Rows, Columns, T>& m)
+template <std::size_t ROWS, std::size_t COLUMNS, typename T>
+[[nodiscard]] constexpr Vector<COLUMNS, T> operator*(const Vector<ROWS, T>& v, const Matrix<ROWS, COLUMNS, T>& m)
 {
-        Vector<Columns, T> res;
-        for (std::size_t c = 0; c < Columns; ++c)
+        Vector<COLUMNS, T> res;
+        for (std::size_t c = 0; c < COLUMNS; ++c)
         {
                 res[c] = v[0] * m(0, c);
         }
-        for (std::size_t r = 1; r < Rows; ++r)
+        for (std::size_t r = 1; r < ROWS; ++r)
         {
-                for (std::size_t c = 0; c < Columns; ++c)
+                for (std::size_t c = 0; c < COLUMNS; ++c)
                 {
                         res[c] += v[r] * m(r, c);
                 }
@@ -244,14 +244,14 @@ template <std::size_t Rows, std::size_t Columns, typename T>
         return res;
 }
 
-template <std::size_t Rows, std::size_t Columns, typename T>
-[[nodiscard]] constexpr Vector<Rows, T> operator*(const Matrix<Rows, Columns, T>& m, const Vector<Columns, T>& v)
+template <std::size_t ROWS, std::size_t COLUMNS, typename T>
+[[nodiscard]] constexpr Vector<ROWS, T> operator*(const Matrix<ROWS, COLUMNS, T>& m, const Vector<COLUMNS, T>& v)
 {
-        Vector<Rows, T> res;
-        for (std::size_t r = 0; r < Rows; ++r)
+        Vector<ROWS, T> res;
+        for (std::size_t r = 0; r < ROWS; ++r)
         {
                 res[r] = m(r, 0) * v[0];
-                for (std::size_t c = 1; c < Columns; ++c)
+                for (std::size_t c = 1; c < COLUMNS; ++c)
                 {
                         res[r] += m(r, c) * v[c];
                 }
@@ -259,14 +259,14 @@ template <std::size_t Rows, std::size_t Columns, typename T>
         return res;
 }
 
-template <typename Dst, std::size_t Rows, std::size_t Columns, typename Src>
-[[nodiscard]] Matrix<Rows, Columns, Dst> to_matrix(const Matrix<Rows, Columns, Src>& m) requires(
+template <typename Dst, std::size_t ROWS, std::size_t COLUMNS, typename Src>
+[[nodiscard]] Matrix<ROWS, COLUMNS, Dst> to_matrix(const Matrix<ROWS, COLUMNS, Src>& m) requires(
         !std::is_same_v<Dst, Src>)
 {
-        Matrix<Rows, Columns, Dst> res;
-        for (std::size_t r = 0; r < Rows; ++r)
+        Matrix<ROWS, COLUMNS, Dst> res;
+        for (std::size_t r = 0; r < ROWS; ++r)
         {
-                for (std::size_t c = 0; c < Columns; ++c)
+                for (std::size_t c = 0; c < COLUMNS; ++c)
                 {
                         res(r, c) = m(r, c);
                 }
@@ -274,19 +274,19 @@ template <typename Dst, std::size_t Rows, std::size_t Columns, typename Src>
         return res;
 }
 
-template <typename Dst, std::size_t Rows, std::size_t Columns, typename Src>
-[[nodiscard]] const Matrix<Rows, Columns, Src>& to_matrix(const Matrix<Rows, Columns, Src>& m) requires(
+template <typename Dst, std::size_t ROWS, std::size_t COLUMNS, typename Src>
+[[nodiscard]] const Matrix<ROWS, COLUMNS, Src>& to_matrix(const Matrix<ROWS, COLUMNS, Src>& m) requires(
         std::is_same_v<Dst, Src>)
 {
         return m;
 }
 
-template <std::size_t Rows, std::size_t Columns, typename T>
-[[nodiscard]] std::string to_string(const Matrix<Rows, Columns, T>& m)
+template <std::size_t ROWS, std::size_t COLUMNS, typename T>
+[[nodiscard]] std::string to_string(const Matrix<ROWS, COLUMNS, T>& m)
 {
         std::string s;
         s += to_string(m.row(0));
-        for (std::size_t r = 1; r < Rows; ++r)
+        for (std::size_t r = 1; r < ROWS; ++r)
         {
                 s += '\n';
                 s += to_string(m.row(r));
