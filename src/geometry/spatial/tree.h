@@ -29,6 +29,7 @@ CRC Press, 2014.
 
 #include <src/com/arrays.h>
 #include <src/com/error.h>
+#include <src/com/progression.h>
 #include <src/com/spin_lock.h>
 #include <src/com/thread.h>
 #include <src/com/type/limit.h>
@@ -299,9 +300,7 @@ catch (...)
 
 inline double maximum_box_count(const int box_count, const int max_depth)
 {
-        // the sum of the numbers in a geometric progression
-        // (pow(r, n) - 1) / (r - 1)
-        return (std::pow(box_count, max_depth) - 1) / (box_count - 1);
+        return geometric_progression_sum(box_count, max_depth);
 }
 }
 

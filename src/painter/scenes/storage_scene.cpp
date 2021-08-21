@@ -20,6 +20,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/color/color.h>
 #include <src/com/error.h>
 #include <src/com/math.h>
+#include <src/com/progression.h>
 #include <src/com/type/limit.h>
 #include <src/geometry/spatial/parallelotope_aa.h>
 #include <src/geometry/spatial/shape_intersection.h>
@@ -51,12 +52,9 @@ int tree_max_depth()
         case 6:
                 return 5;
         default:
-                // the sum of the numbers in a geometric progression
-                // s = (pow(r, n) - 1) / (r - 1)
-                // n = log(s * (r - 1) + 1) / log(r)
-                double s = 1e9;
-                double r = std::pow(2, N);
-                double n = std::log(s * (r - 1) + 1) / std::log(r);
+                static constexpr double SUM = 1e9;
+                static constexpr double RATIO = power<N>(2);
+                const double n = geometric_progression_n(RATIO, SUM);
                 return std::max(2.0, std::floor(n));
         }
 }
