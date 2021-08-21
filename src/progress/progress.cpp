@@ -17,15 +17,45 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "progress.h"
 
-#include <src/com/atomic_counter.h>
 #include <src/com/exception.h>
 
 #include <algorithm>
+#include <atomic>
 #include <cmath>
 #include <mutex>
 
 namespace ns
 {
+namespace
+{
+constexpr bool LOCK_FREE = true;
+
+template <typename T>
+class RelaxedAtomic
+{
+        std::atomic<T> counter_{0};
+
+        static_assert(decltype(counter_)::is_always_lock_free == LOCK_FREE);
+
+public:
+        RelaxedAtomic& operator=(const T& v)
+        {
+                counter_.store(v, std::memory_order_relaxed);
+                return *this;
+        }
+
+        operator T() const
+        {
+                return counter_.load(std::memory_order_relaxed);
+        }
+
+        void operator|=(const T& v)
+        {
+                counter_.fetch_or(v, std::memory_order_relaxed);
+        }
+};
+}
+
 class AtomicTerminate
 {
         using DataType = std::uint_least8_t;
@@ -33,11 +63,9 @@ class AtomicTerminate
         static constexpr DataType TERMINATE_QUIETLY = 0b1;
         static constexpr DataType TERMINATE_WITH_MESSAGE = 0b10;
 
-        AtomicCounter<DataType> terminate_{0};
+        RelaxedAtomic<DataType> terminate_;
 
 public:
-        static constexpr bool LOCK_FREE = AtomicCounter<DataType>::is_always_lock_free;
-
         void set_terminate_quietly()
         {
                 terminate_ |= TERMINATE_QUIETLY;
@@ -71,7 +99,7 @@ class ProgressRatio::Impl final : public ProgressRatioControl
         static constexpr unsigned SHIFT = 32;
         static constexpr unsigned MAX = (1ull << SHIFT) - 1;
 
-        AtomicCounter<CounterType> counter_{0};
+        RelaxedAtomic<CounterType> counter_;
         AtomicTerminate terminate_;
 
         std::string text_;
@@ -82,9 +110,6 @@ class ProgressRatio::Impl final : public ProgressRatioControl
         const std::string permanent_text_;
 
 public:
-        static constexpr bool LOCK_FREE = AtomicCounter<CounterType>::is_always_lock_free && AtomicTerminate::LOCK_FREE;
-        static_assert(LOCK_FREE);
-
         Impl(ProgressRatios* ratios, std::string permanent_text)
                 : ratios_(ratios), permanent_text_(std::move(permanent_text))
         {
@@ -190,6 +215,6 @@ void ProgressRatio::set_text(const std::string& text)
 }
 bool ProgressRatio::lock_free()
 {
-        return Impl::LOCK_FREE;
+        return LOCK_FREE;
 }
 }
