@@ -507,20 +507,25 @@ const std::unordered_set<std::string>& PhysicalDevice::supported_extensions() co
         return supported_extensions_;
 }
 
-uint32_t PhysicalDevice::family_index(VkQueueFlags set_flags, VkQueueFlags not_set_flags, VkQueueFlags default_flags)
-        const
+uint32_t PhysicalDevice::family_index(
+        VkQueueFlags set_flags,
+        VkQueueFlags not_set_flags,
+        const std::initializer_list<VkQueueFlags>& default_flags) const
 {
         uint32_t index;
         if (set_flags && find_family(queue_families_, set_flags, not_set_flags, &index))
         {
                 return index;
         }
-        if (default_flags && find_family(queue_families_, default_flags, 0, &index))
+        for (auto iter = default_flags.begin(); iter != default_flags.end(); ++iter)
         {
-                return index;
+                if (*iter && find_family(queue_families_, *iter, 0, &index))
+                {
+                        return index;
+                }
         }
-        error("Queue family not found, flags " + to_string(set_flags) + " " + to_string(not_set_flags) + " "
-              + to_string(default_flags));
+        error("Queue family not found, flags set " + to_string(set_flags) + "; not set " + to_string(not_set_flags)
+              + "; default " + to_string(default_flags));
 }
 
 uint32_t PhysicalDevice::presentation_family_index() const
@@ -593,7 +598,7 @@ PhysicalDevice create_physical_device(
 
                 try
                 {
-                        physical_device.family_index(VK_QUEUE_GRAPHICS_BIT | VK_QUEUE_COMPUTE_BIT, 0, 0);
+                        physical_device.family_index(VK_QUEUE_GRAPHICS_BIT | VK_QUEUE_COMPUTE_BIT, 0, {0});
                 }
                 catch (...)
                 {
