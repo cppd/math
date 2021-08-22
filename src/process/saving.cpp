@@ -72,11 +72,11 @@ std::function<void(ProgressRatioList*)> action_save_function(
                 {
                 case mesh::FileType::Obj:
                         mesh::save_to_obj(reading.mesh(), file_name, name);
-                        MESSAGE_INFORMATION(name + " saved to OBJ file " + generic_utf8_filename(file_name));
+                        message_information(name + " saved to OBJ file " + generic_utf8_filename(file_name));
                         return;
                 case mesh::FileType::Stl:
                         mesh::save_to_stl(reading.mesh(), file_name, name, STL_FORMAT_ASCII);
-                        MESSAGE_INFORMATION(name + " saved to STL file " + generic_utf8_filename(file_name));
+                        message_information(name + " saved to STL file " + generic_utf8_filename(file_name));
                         return;
                 }
                 error_fatal("Unknown file type for saving");

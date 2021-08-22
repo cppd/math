@@ -100,12 +100,12 @@ void Actions::save_image(const std::string& action, long long slice) const
         std::optional<Pixels::Images> images = pixels_->slice(slice);
         if (!images)
         {
-                MESSAGE_WARNING("Image is not yet available");
+                message_warning("Image is not yet available");
                 return;
         }
         if (images->size.size() != 2)
         {
-                MESSAGE_WARNING("Error 2D image dimension " + to_string(images->size.size()));
+                message_warning("Error 2D image dimension " + to_string(images->size.size()));
                 return;
         }
 
@@ -125,7 +125,7 @@ void Actions::save_image(const std::string& action) const
         std::optional<Pixels::Images> images = pixels_->pixels();
         if (!images)
         {
-                MESSAGE_WARNING("Image is not yet available");
+                message_warning("Image is not yet available");
                 return;
         }
 
@@ -144,7 +144,7 @@ void Actions::add_volume(const std::string& action) const
         std::optional<Pixels::Images> images = pixels_->pixels();
         if (!images)
         {
-                MESSAGE_WARNING("Image is not yet available");
+                message_warning("Image is not yet available");
                 return;
         }
 

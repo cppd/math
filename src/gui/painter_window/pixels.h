@@ -235,7 +235,7 @@ class PainterPixels final : public Pixels, public painter::Notifier<N - 1>
 
         void error_message(const std::string& msg) override
         {
-                MESSAGE_ERROR(msg);
+                message_error(msg);
         }
 
         // Pixels

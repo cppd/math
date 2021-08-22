@@ -76,7 +76,7 @@ void thread_function(
         }();
         if (!shape)
         {
-                MESSAGE_WARNING("No object to paint");
+                message_warning("No object to paint");
                 return;
         }
 
@@ -186,7 +186,7 @@ std::function<void(ProgressRatioList*)> action_painter_function(
 {
         if (!has_facets(mesh_objects))
         {
-                MESSAGE_WARNING("No objects to paint");
+                message_warning("No objects to paint");
                 return nullptr;
         }
 
@@ -273,12 +273,12 @@ std::function<void(ProgressRatioList*)> action_painter(
         }
         if (visible_objects.empty())
         {
-                MESSAGE_WARNING("No objects to paint");
+                message_warning("No objects to paint");
                 return nullptr;
         }
         if (dimensions.size() > 1)
         {
-                MESSAGE_WARNING(
+                message_warning(
                         "Painting different dimensions is not supported, " + to_string(dimensions)
                         + " different dimensions.");
                 return nullptr;

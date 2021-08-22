@@ -137,7 +137,7 @@ void save_mesh(WorkerThreads* threads, const ModelTree* model_tree, const std::s
                         std::optional<storage::MeshObjectConst> object = model_tree->current_mesh_const();
                         if (!object)
                         {
-                                MESSAGE_WARNING("No mesh to save");
+                                message_warning("No mesh to save");
                                 return WorkerThreads::Function();
                         }
                         return process::action_save(*object);
@@ -171,7 +171,7 @@ void painter(
                         std::vector<storage::MeshObjectConst> objects = model_tree->const_mesh_objects();
                         if (objects.empty())
                         {
-                                MESSAGE_WARNING("No objects to paint");
+                                message_warning("No objects to paint");
                                 return WorkerThreads::Function();
                         }
                         view::info::Camera camera;
@@ -189,7 +189,7 @@ void bound_cocone(WorkerThreads* threads, const ModelTree* model_tree, const std
                         std::optional<storage::MeshObjectConst> object = model_tree->current_mesh_const();
                         if (!object)
                         {
-                                MESSAGE_WARNING("No object to compute BoundCocone");
+                                message_warning("No object to compute BoundCocone");
                                 return WorkerThreads::Function();
                         }
                         return process::action_bound_cocone(*object);
@@ -205,7 +205,7 @@ void volume_3d_slice(WorkerThreads* threads, const ModelTree* model_tree, const 
                         std::optional<storage::VolumeObjectConst> object = model_tree->current_volume_const();
                         if (!object)
                         {
-                                MESSAGE_WARNING("No volume object");
+                                message_warning("No volume object");
                                 return WorkerThreads::Function();
                         }
                         return process::action_3d_slice(*object);

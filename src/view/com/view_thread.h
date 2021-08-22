@@ -173,22 +173,22 @@ class ViewThread final : public View
                         }
                         catch (const std::exception& e)
                         {
-                                MESSAGE_ERROR_FATAL(std::string("Error from view\n") + e.what());
+                                message_error_fatal(std::string("Error from view\n") + e.what());
                         }
                         catch (...)
                         {
-                                MESSAGE_ERROR_FATAL("Unknown error from view");
+                                message_error_fatal("Unknown error from view");
                         }
                 }
                 catch (const std::exception& e)
                 {
                         started_ = true;
-                        MESSAGE_ERROR_FATAL(std::string("Error from view\n") + e.what());
+                        message_error_fatal(std::string("Error from view\n") + e.what());
                 }
                 catch (...)
                 {
                         started_ = true;
-                        MESSAGE_ERROR_FATAL("Unknown error from view");
+                        message_error_fatal("Unknown error from view");
                 }
         }
 

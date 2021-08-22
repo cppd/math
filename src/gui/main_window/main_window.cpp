@@ -238,11 +238,11 @@ void MainWindow::showEvent(QShowEvent* /*event*/)
                         }
                         catch (const std::exception& e)
                         {
-                                MESSAGE_ERROR_FATAL(e.what());
+                                message_error_fatal(e.what());
                         }
                         catch (...)
                         {
-                                MESSAGE_ERROR_FATAL("Error first show");
+                                message_error_fatal("Error first show");
                         }
                 });
 }

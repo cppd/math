@@ -119,7 +119,7 @@ std::function<void(ProgressRatioList*)> action_load_point_mesh(
 {
         if (object_name.empty())
         {
-                MESSAGE_ERROR("Empty mesh repository object name");
+                message_error("Empty mesh repository object name");
                 return nullptr;
         }
 
@@ -165,7 +165,7 @@ std::function<void(ProgressRatioList*)> action_load_facet_mesh(
 {
         if (object_name.empty())
         {
-                MESSAGE_ERROR("Empty mesh repository object name");
+                message_error("Empty mesh repository object name");
                 return nullptr;
         }
 
@@ -239,7 +239,7 @@ std::function<void(ProgressRatioList*)> action_load_volume(
 {
         if (object_name.empty())
         {
-                MESSAGE_ERROR("Empty volume repository object name");
+                message_error("Empty volume repository object name");
                 return nullptr;
         }
 

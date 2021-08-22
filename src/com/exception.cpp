@@ -35,11 +35,11 @@ void message(const std::string& description, const char* exception)
         msg += exception;
         if (!msg.empty())
         {
-                MESSAGE_ERROR(msg);
+                message_error(msg);
         }
         else
         {
-                MESSAGE_ERROR("Exception without description and exception string");
+                message_error("Exception without description and exception string");
         }
 }
 }

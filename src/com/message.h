@@ -21,8 +21,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 namespace ns
 {
-void MESSAGE_ERROR(const std::string_view& msg) noexcept;
-void MESSAGE_ERROR_FATAL(const std::string_view& msg) noexcept;
-void MESSAGE_WARNING(const std::string_view& msg) noexcept;
-void MESSAGE_INFORMATION(const std::string_view& msg) noexcept;
+void message_error(const std::string_view& msg) noexcept;
+void message_error_fatal(const std::string_view& msg) noexcept;
+void message_warning(const std::string_view& msg) noexcept;
+void message_information(const std::string_view& msg) noexcept;
 }
