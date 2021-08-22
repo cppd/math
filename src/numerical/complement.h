@@ -217,7 +217,7 @@ std::array<Vector<N, T>, N - 1> orthogonal_complement_by_subspace(const Vector<N
         {
                 if (i != excluded_axis)
                 {
-                        subspace_basis[num++] = identity_array<N, T>[i];
+                        subspace_basis[num++] = IDENTITY_ARRAY<N, T>[i];
                 }
         }
         subspace_basis[N - 2] = unit_vector;
@@ -244,7 +244,7 @@ std::array<Vector<N, T>, N - 1> orthogonal_complement_by_gram_schmidt(const Vect
         {
                 if (i != excluded_axis)
                 {
-                        basis[num++] = identity_array<N, T>[i];
+                        basis[num++] = IDENTITY_ARRAY<N, T>[i];
                 }
         }
 

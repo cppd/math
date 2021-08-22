@@ -35,13 +35,13 @@ struct BoundingBox final
         {
         }
 
-        template <std::size_t Size>
-        explicit BoundingBox(const std::array<Vector<N, T>, Size>& points)
+        template <std::size_t SIZE>
+        explicit BoundingBox(const std::array<Vector<N, T>, SIZE>& points)
         {
-                static_assert(Size > 0);
+                static_assert(SIZE > 0);
                 min = points[0];
                 max = points[0];
-                for (std::size_t i = 1; i < Size; ++i)
+                for (std::size_t i = 1; i < SIZE; ++i)
                 {
                         min = ::ns::min(points[i], min);
                         max = ::ns::max(points[i], max);

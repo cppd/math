@@ -135,7 +135,7 @@ void eigen_symmetric_upper_triangular(
         static_assert(std::is_floating_point_v<T>);
         namespace impl = jacobi_method_implementation;
 
-        std::array<Vector<N, T>, N> vectors = identity_array<N, T>;
+        std::array<Vector<N, T>, N> vectors = IDENTITY_ARRAY<N, T>;
 
         for (unsigned n = 0; n < 20; ++n)
         {

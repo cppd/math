@@ -47,33 +47,38 @@ using RidgeMap = std::unordered_map<Ridge<N>, RidgeData<N>>;
 template <std::size_t N>
 using RidgeSet = std::unordered_set<Ridge<N>>;
 
-// e1 = unit orthogonal complement of n-1 points and a point.
-// e2 = unit orthogonal complement of n-1 points and e1.
+// orthonormal orthogonal complement of a ridge
 template <std::size_t N, typename T>
-void ortho_e0_e1(
-        const std::vector<Vector<N, T>>& points,
-        const std::array<int, N - 1>& indices,
-        int point,
-        Vector<N, T>* e1,
-        Vector<N, T>* e2)
+class RidgeComplement
 {
-        static_assert(N > 1);
+        static_assert(N >= 2);
 
-        std::array<Vector<N, T>, N - 1> vectors;
+        // e0 = unit orthogonal complement of n-1 points and a point.
+        // e1 = unit orthogonal complement of n-1 points and e0.
+        Vector<N, T> e0_;
+        Vector<N, T> e1_;
 
-        for (unsigned i = 0; i < N - 2; ++i)
+public:
+        RidgeComplement(const std::vector<Vector<N, T>>& points, const std::array<int, N - 1>& indices, const int point)
         {
-                vectors[i] = points[indices[i + 1]] - points[indices[0]];
+                std::array<Vector<N, T>, N - 1> vectors;
+                for (std::size_t i = 0; i < N - 2; ++i)
+                {
+                        vectors[i] = points[indices[i + 1]] - points[indices[0]];
+                }
+
+                vectors[N - 2] = points[point] - points[indices[0]];
+                e0_ = numerical::orthogonal_complement(vectors).normalized();
+
+                vectors[N - 2] = e0_;
+                e1_ = numerical::orthogonal_complement(vectors).normalized();
         }
 
-        vectors[N - 2] = points[point] - points[indices[0]];
-
-        *e1 = numerical::orthogonal_complement(vectors).normalized();
-
-        vectors[N - 2] = *e1;
-
-        *e2 = numerical::orthogonal_complement(vectors).normalized();
-}
+        Vector<2, T> coordinates(const Vector<N, T>& v) const
+        {
+                return Vector<2, T>(dot(e0_, v), dot(e1_, v)).normalized();
+        }
+};
 
 template <std::size_t N>
 bool boundary_ridge(const std::vector<bool>& interior_vertices, const Ridge<N>& ridge)
@@ -88,9 +93,9 @@ bool boundary_ridge(const std::vector<bool>& interior_vertices, const Ridge<N>& 
         return false;
 }
 
-template <std::size_t N>
+template <std::size_t N, typename T>
 bool sharp_ridge(
-        const std::vector<Vector<N, double>>& points,
+        const std::vector<Vector<N, T>>& points,
         const std::vector<bool>& interior_vertices,
         const Ridge<N>& ridge,
         const RidgeData<N>& ridge_data)
@@ -108,31 +113,23 @@ bool sharp_ridge(
                 return true;
         }
 
-        // orthonormal orthogonal complement of ridge
-        Vector<N, double> e0;
-        Vector<N, double> e1;
-        ortho_e0_e1(points, ridge.vertices(), ridge_data.cbegin()->point(), &e0, &e1);
+        const RidgeComplement basis(points, ridge.vertices(), ridge_data.cbegin()->point());
 
-        const auto e0_e1 = [&e0, &e1](const Vector<N, double>& v)
-        {
-                return Vector<2, double>(dot(e0, v), dot(e1, v)).normalized();
-        };
-
-        Vector<2, double> base = e0_e1(points[ridge_data.cbegin()->point()] - points[ridge.vertices()[0]]);
+        const Vector<2, T> base = basis.coordinates(points[ridge_data.cbegin()->point()] - points[ridge.vertices()[0]]);
         ASSERT(is_finite(base));
 
-        double cos_plus = 1;
-        double cos_minus = 1;
-        double sin_plus = 0;
-        double sin_minus = 0;
+        T cos_plus = 1;
+        T cos_minus = 1;
+        T sin_plus = 0;
+        T sin_minus = 0;
 
         for (auto ridge_facet = std::next(ridge_data.cbegin()); ridge_facet != ridge_data.cend(); ++ridge_facet)
         {
-                Vector<2, double> v = e0_e1(points[ridge_facet->point()] - points[ridge.vertices()[0]]);
+                const Vector<2, T> v = basis.coordinates(points[ridge_facet->point()] - points[ridge.vertices()[0]]);
                 ASSERT(is_finite(v));
 
-                double sine = cross(base, v);
-                double cosine = dot(base, v);
+                const T sine = cross(base, v);
+                const T cosine = dot(base, v);
 
                 if (sine >= 0)
                 {
@@ -161,7 +158,7 @@ bool sharp_ridge(
         // if two angles are less than 90 degrees, then their sum is less 180 degrees
         // cos(a + b) = cos(a)cos(b) - sin(a)sin(b).
         // sin_minus <= 0, so use its absolute value
-        double cos_a_plus_b = cos_plus * cos_minus - std::abs(sin_plus * sin_minus);
+        T cos_a_plus_b = cos_plus * cos_minus - std::abs(sin_plus * sin_minus);
 
         // sharp if the sum is less than 90
         return cos_a_plus_b > 0;
@@ -173,7 +170,7 @@ void prune_facets_incident_to_sharp_ridges(
         const std::vector<Vector<N, double>>& points,
         const std::vector<DelaunayFacet<N>>& delaunay_facets,
         const std::vector<bool>& interior_vertices,
-        std::vector<bool>* cocone_facets)
+        std::vector<bool>* const cocone_facets)
 {
         namespace impl = prune_facets_implementation;
 

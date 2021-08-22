@@ -148,13 +148,13 @@ int read_dimension_number(const std::string& s)
 template <typename Path>
 std::tuple<int, MeshFileType> file_dimension_and_type(const Path& file_name)
 {
-        const std::string OBJ = ".obj";
-        const std::string STL = ".stl";
-        const std::string TXT = ".txt";
+        static constexpr std::string_view OBJ = ".obj";
+        static constexpr std::string_view STL = ".stl";
+        static constexpr std::string_view TXT = ".txt";
 
-        std::string e = generic_utf8_filename(file_name.extension());
+        const std::string extension = generic_utf8_filename(file_name.extension());
 
-        if (e.empty() || e[0] != '.')
+        if (extension.empty() || extension[0] != '.')
         {
                 error("No file extension found");
         }
@@ -162,25 +162,25 @@ std::tuple<int, MeshFileType> file_dimension_and_type(const Path& file_name)
         int dimension;
         MeshFileType file_type;
 
-        if (e.find(OBJ) == 0)
+        if (extension.find(OBJ) == 0)
         {
-                dimension = (e == OBJ) ? 3 : read_dimension_number(e.substr(OBJ.size()));
+                dimension = (extension == OBJ) ? 3 : read_dimension_number(extension.substr(OBJ.size()));
                 file_type = MeshFileType::Obj;
         }
-        else if (e.find(STL) == 0)
+        else if (extension.find(STL) == 0)
         {
-                dimension = (e == STL) ? 3 : read_dimension_number(e.substr(STL.size()));
+                dimension = (extension == STL) ? 3 : read_dimension_number(extension.substr(STL.size()));
                 file_type = MeshFileType::Stl;
         }
-        else if (e.find(TXT) == 0)
+        else if (extension.find(TXT) == 0)
         {
-                if (e == TXT)
+                if (extension == TXT)
                 {
                         dimension = count_numbers_in_file(file_name);
                 }
                 else
                 {
-                        dimension = read_dimension_number(e.substr(TXT.size()));
+                        dimension = read_dimension_number(extension.substr(TXT.size()));
                         int dimension_numbers = count_numbers_in_file(file_name);
                         if (dimension != dimension_numbers)
                         {
@@ -192,7 +192,7 @@ std::tuple<int, MeshFileType> file_dimension_and_type(const Path& file_name)
         }
         else
         {
-                error("Unsupported file format " + e);
+                error("Unsupported file format " + extension);
         }
 
         if (dimension < 3)

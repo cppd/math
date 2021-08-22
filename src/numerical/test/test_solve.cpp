@@ -144,17 +144,17 @@ bool are_equal(const Matrix<R, C, T>& a, const Matrix<R, C, T>& b, const T& abs_
         return true;
 }
 
-template <std::size_t Rows, std::size_t Columns, typename T>
-std::vector<std::array<Vector<Columns, T>, Rows>> random_matrices(const int count)
+template <std::size_t ROWS, std::size_t COLUMNS, typename T>
+std::vector<std::array<Vector<COLUMNS, T>, ROWS>> random_matrices(const int count)
 {
         std::mt19937_64 random_engine = create_engine<std::mt19937_64>();
         std::uniform_real_distribution<T> urd(-10, 10);
-        std::vector<std::array<Vector<Columns, T>, Rows>> res(count);
+        std::vector<std::array<Vector<COLUMNS, T>, ROWS>> res(count);
         for (int i = 0; i < count; ++i)
         {
-                for (std::size_t r = 0; r < Rows; ++r)
+                for (std::size_t r = 0; r < ROWS; ++r)
                 {
-                        for (std::size_t c = 0; c < Columns; ++c)
+                        for (std::size_t c = 0; c < COLUMNS; ++c)
                         {
                                 res[i][r][c] = urd(random_engine);
                         }
@@ -236,7 +236,7 @@ void test_solve_inverse(
                 return res;
         }();
 
-        const Matrix<N, N, T> identity(identity_array<N, T>);
+        const Matrix<N, N, T> identity(IDENTITY_ARRAY<N, T>);
 
         for (int i = 0; i < count; ++i)
         {

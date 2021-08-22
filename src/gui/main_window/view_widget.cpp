@@ -85,14 +85,14 @@ void ViewWidget::set_view(view::View* view)
 
 void ViewWidget::on_clip_plane_clicked()
 {
-        constexpr double default_position = 0.5;
+        constexpr double DEFAULT_POSITION = 0.5;
 
         bool checked = ui.checkBox_clip_plane->isChecked();
 
         ui.slider_clip_plane->setEnabled(checked);
         {
                 QSignalBlocker blocker(ui.slider_clip_plane);
-                set_slider_position(ui.slider_clip_plane, default_position);
+                set_slider_position(ui.slider_clip_plane, DEFAULT_POSITION);
         }
 
         if (checked)

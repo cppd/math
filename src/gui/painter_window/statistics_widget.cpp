@@ -51,9 +51,9 @@ std::string progress_to_string(double progress)
 
 struct StatisticsWidget::Counters final
 {
-        const long long pixel_count;
-        const long long ray_count;
-        const long long sample_count;
+        long long pixel_count;
+        long long ray_count;
+        long long sample_count;
 
         Counters(long long pixel_count, long long ray_count, long long sample_count)
                 : pixel_count(pixel_count), ray_count(ray_count), sample_count(sample_count)

@@ -38,7 +38,7 @@ constexpr double LIMIT_COSINE_FOR_INTERSECTION_PA_AB = -0.9999;
 
 struct VertexConnections final
 {
-        struct Facet
+        struct Facet final
         {
                 int facet_index;
                 int facet_vertex_index;
@@ -162,10 +162,10 @@ double voronoi_edge_radius(
         const DelaunayFacet<N>& facet,
         const Vector<N, double>& positive_pole,
         const Vector<N, double>& pa,
-        double pa_length,
-        double pb_length,
-        double cos_n_a,
-        double cos_n_b)
+        const double pa_length,
+        const double pb_length,
+        const double cos_n_a,
+        const double cos_n_b)
 {
         if (facet.one_sided() && cocone_inside_or_equal(cos_n_b))
         {
@@ -230,9 +230,9 @@ void cocone_facets_and_voronoi_radius(
         const std::vector<DelaunayFacet<N>>& delaunay_facets,
         const Vector<N, double>& positive_pole,
         const VertexConnections& vertex_connections,
-        bool find_radius,
-        std::vector<ManifoldFacet<N>>* facet_data,
-        double* radius)
+        const bool find_radius,
+        std::vector<ManifoldFacet<N>>* const facet_data,
+        double* const radius)
 {
         ASSERT(delaunay_facets.size() == facet_data->size());
 
@@ -290,7 +290,7 @@ void cocone_neighbors(
         const std::vector<DelaunayFacet<N>>& delaunay_facets,
         const std::vector<ManifoldFacet<N>>& facet_data,
         const std::vector<VertexConnections>& vertex_connections,
-        std::vector<ManifoldVertex<N>>* vertex_data)
+        std::vector<ManifoldVertex<N>>* const vertex_data)
 {
         ASSERT(delaunay_facets.size() == facet_data.size());
         ASSERT(vertex_connections.size() == vertex_data->size());
@@ -325,46 +325,46 @@ void cocone_neighbors(
 }
 
 template <std::size_t N>
-void vertex_connections(
-        int vertex_count,
+std::vector<VertexConnections> vertex_connections(
+        const int vertex_count,
         const std::vector<DelaunayObject<N>>& objects,
-        const std::vector<DelaunayFacet<N>>& facets,
-        std::vector<VertexConnections>* conn)
+        const std::vector<DelaunayFacet<N>>& facets)
 {
-        conn->clear();
-        conn->resize(vertex_count);
+        std::vector<VertexConnections> connections(vertex_count);
 
-        for (unsigned facet = 0; facet < facets.size(); ++facet)
+        for (std::size_t facet = 0; facet < facets.size(); ++facet)
         {
                 int local_index = -1;
                 for (int vertex : facets[facet].vertices())
                 {
-                        (*conn)[vertex].facets.emplace_back(facet, ++local_index);
+                        ASSERT(vertex < vertex_count);
+                        connections[vertex].facets.emplace_back(facet, ++local_index);
                 }
         }
 
-        for (unsigned object = 0; object < objects.size(); ++object)
+        for (std::size_t object = 0; object < objects.size(); ++object)
         {
                 for (int vertex : objects[object].vertices())
                 {
-                        (*conn)[vertex].objects.emplace_back(object);
+                        ASSERT(vertex < vertex_count);
+                        connections[vertex].objects.emplace_back(object);
                 }
         }
+
+        return connections;
 }
 }
 
 template <std::size_t N>
-void vertex_and_facet_data(
-        bool find_all_vertex_data,
+void find_vertex_and_facet_data(
+        bool find_cocone_neighbors,
         const std::vector<Vector<N, double>>& points,
         const std::vector<DelaunayObject<N>>& objects,
         const std::vector<DelaunayFacet<N>>& facets,
         std::vector<ManifoldVertex<N>>* vertex_data,
         std::vector<ManifoldFacet<N>>* facet_data)
 {
-        std::vector<VertexConnections> connections;
-
-        vertex_connections(points.size(), objects, facets, &connections);
+        const std::vector<VertexConnections> connections = vertex_connections(points.size(), objects, facets);
 
         vertex_data->clear();
         vertex_data->reserve(points.size());
@@ -388,7 +388,7 @@ void vertex_and_facet_data(
 
                 double radius;
 
-                if (!find_all_vertex_data)
+                if (!find_cocone_neighbors)
                 {
                         cocone_facets_and_voronoi_radius(
                                 points[v], objects, facets, positive_norm, connections[v], false /*find_radius*/,
@@ -408,7 +408,7 @@ void vertex_and_facet_data(
                 }
         }
 
-        if (find_all_vertex_data)
+        if (find_cocone_neighbors)
         {
                 cocone_neighbors(facets, *facet_data, connections, vertex_data);
         }
@@ -417,7 +417,7 @@ void vertex_and_facet_data(
 }
 
 #define VERTEX_AND_FACET_DATA_INSTANTIATION(N)                                                          \
-        template void vertex_and_facet_data(                                                            \
+        template void find_vertex_and_facet_data(                                                       \
                 bool, const std::vector<Vector<(N), double>>&, const std::vector<DelaunayObject<(N)>>&, \
                 const std::vector<DelaunayFacet<(N)>>&, std::vector<ManifoldVertex<(N)>>*,              \
                 std::vector<ManifoldFacet<(N)>>*);

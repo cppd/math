@@ -98,27 +98,31 @@ bool file_has_stl_extension(std::size_t n, const std::filesystem::path& file_nam
 
 FileType file_type_by_name(const std::filesystem::path& file_name)
 {
-        const std::string ext = generic_utf8_filename(file_name.extension());
-        const std::string OBJ = ".obj";
-        if (ext.find(OBJ) == 0)
+        static constexpr std::string_view OBJ = ".obj";
+        static constexpr std::string_view STL = ".stl";
+
+        const std::string extension = generic_utf8_filename(file_name.extension());
+
+        if (extension.find(OBJ) == 0)
         {
-                if (ext == OBJ)
+                if (extension == OBJ)
                 {
                         return FileType::Obj;
                 }
-                file::read_dimension_number(ext.substr(OBJ.size()));
+                file::read_dimension_number(extension.substr(OBJ.size()));
                 return FileType::Obj;
         }
-        const std::string STL = ".stl";
-        if (ext.find(STL) == 0)
+
+        if (extension.find(STL) == 0)
         {
-                if (ext == STL)
+                if (extension == STL)
                 {
                         return FileType::Stl;
                 }
-                file::read_dimension_number(ext.substr(STL.size()));
+                file::read_dimension_number(extension.substr(STL.size()));
                 return FileType::Stl;
         }
+
         error("Failed to find the file type by its extension for the file name " + generic_utf8_filename(file_name));
 }
 

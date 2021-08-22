@@ -136,10 +136,10 @@ void ShaderBuffers::set_clip_plane(const vec4d& equation, bool enabled) const
                 offsetof(Drawing, clip_plane_equation) + sizeof(Drawing::clip_plane_equation)
                 == offsetof(Drawing, clip_plane_enabled));
 
-        constexpr std::size_t offset = offsetof(Drawing, clip_plane_equation);
-        constexpr std::size_t size = sizeof(Drawing::clip_plane_equation) + sizeof(Drawing::clip_plane_enabled);
+        constexpr std::size_t OFFSET = offsetof(Drawing, clip_plane_equation);
+        constexpr std::size_t SIZE = sizeof(Drawing::clip_plane_equation) + sizeof(Drawing::clip_plane_enabled);
 
-        vulkan::BufferMapper map(uniform_buffers_[drawing_buffer_index_], offset, size);
+        vulkan::BufferMapper map(uniform_buffers_[drawing_buffer_index_], OFFSET, SIZE);
 
         decltype(Drawing().clip_plane_equation) clip_plane_equation = to_vector<float>(equation);
         decltype(Drawing().clip_plane_enabled) clip_plane_enabled = enabled ? 1 : 0;
@@ -154,10 +154,10 @@ void ShaderBuffers::set_viewport(const vec2d& center, const vec2d& factor) const
                 offsetof(Drawing, viewport_center) + sizeof(Drawing::viewport_factor)
                 == offsetof(Drawing, viewport_factor));
 
-        constexpr std::size_t offset = offsetof(Drawing, viewport_center);
-        constexpr std::size_t size = sizeof(Drawing::viewport_center) + sizeof(Drawing::viewport_factor);
+        constexpr std::size_t OFFSET = offsetof(Drawing, viewport_center);
+        constexpr std::size_t SIZE = sizeof(Drawing::viewport_center) + sizeof(Drawing::viewport_factor);
 
-        vulkan::BufferMapper map(uniform_buffers_[drawing_buffer_index_], offset, size);
+        vulkan::BufferMapper map(uniform_buffers_[drawing_buffer_index_], OFFSET, SIZE);
 
         decltype(Drawing().viewport_center) viewport_center = to_vector<float>(center);
         decltype(Drawing().viewport_factor) viewport_factor = to_vector<float>(factor);
@@ -294,16 +294,16 @@ void MeshBuffer::set_coordinates(const mat4d& model_matrix, const mat3d& normal_
 {
         static_assert(offsetof(Mesh, model_matrix) + sizeof(Mesh::model_matrix) == offsetof(Mesh, normal_matrix));
 
-        constexpr std::size_t offset = offsetof(Mesh, model_matrix);
-        constexpr std::size_t size = offsetof(Mesh, normal_matrix) + sizeof(Mesh::normal_matrix) - offset;
+        constexpr std::size_t OFFSET = offsetof(Mesh, model_matrix);
+        constexpr std::size_t SIZE = offsetof(Mesh, normal_matrix) + sizeof(Mesh::normal_matrix) - OFFSET;
 
-        vulkan::BufferMapper map(uniform_buffer_, offset, size);
+        vulkan::BufferMapper map(uniform_buffer_, OFFSET, SIZE);
 
         decltype(Mesh().model_matrix) model = mat4_std140<float>(model_matrix);
         decltype(Mesh().normal_matrix) normal = mat3_std140<float>(normal_matrix);
 
-        map.write(offsetof(Mesh, model_matrix) - offset, model);
-        map.write(offsetof(Mesh, normal_matrix) - offset, normal);
+        map.write(offsetof(Mesh, model_matrix) - OFFSET, model);
+        map.write(offsetof(Mesh, normal_matrix) - OFFSET, normal);
 }
 
 void MeshBuffer::set_color(const vec3f& color) const
@@ -322,17 +322,17 @@ void MeshBuffer::set_lighting(float ambient, float metalness, float roughness) c
 {
         static_assert(offsetof(Mesh, roughness) - offsetof(Mesh, ambient) == 2 * sizeof(float));
 
-        constexpr std::size_t offset = offsetof(Mesh, ambient);
-        constexpr std::size_t size = offsetof(Mesh, roughness) + sizeof(Mesh::roughness) - offset;
+        constexpr std::size_t OFFSET = offsetof(Mesh, ambient);
+        constexpr std::size_t SIZE = offsetof(Mesh, roughness) + sizeof(Mesh::roughness) - OFFSET;
 
-        vulkan::BufferMapper map(uniform_buffer_, offset, size);
+        vulkan::BufferMapper map(uniform_buffer_, OFFSET, SIZE);
 
         Mesh mesh;
         mesh.ambient = ambient;
         mesh.metalness = metalness;
         mesh.roughness = roughness;
 
-        map.write(0, size, reinterpret_cast<const char*>(&mesh) + offset);
+        map.write(0, SIZE, reinterpret_cast<const char*>(&mesh) + OFFSET);
 }
 
 //
@@ -418,8 +418,8 @@ void VolumeBuffer::set_parameters(
 
         static_assert(offsetof(Volume, color) - offsetof(Volume, window_offset) == 8 * sizeof(float));
 
-        constexpr std::size_t offset = offsetof(Volume, window_offset);
-        constexpr std::size_t size = offsetof(Volume, color) + sizeof(Volume::color) - offset;
+        constexpr std::size_t OFFSET = offsetof(Volume, window_offset);
+        constexpr std::size_t SIZE = offsetof(Volume, color) + sizeof(Volume::color) - OFFSET;
 
         Volume volume;
 
@@ -432,7 +432,7 @@ void VolumeBuffer::set_parameters(
         volume.color = color;
 
         uniform_buffer_volume_.write(
-                command_pool, queue, offset, size, reinterpret_cast<const char*>(&volume) + offset);
+                command_pool, queue, OFFSET, SIZE, reinterpret_cast<const char*>(&volume) + OFFSET);
 }
 
 void VolumeBuffer::set_color_volume(
@@ -454,8 +454,8 @@ void VolumeBuffer::set_lighting(
 {
         static_assert(offsetof(Volume, roughness) - offsetof(Volume, ambient) == 2 * sizeof(float));
 
-        constexpr std::size_t offset = offsetof(Volume, ambient);
-        constexpr std::size_t size = offsetof(Volume, roughness) + sizeof(Volume::roughness) - offset;
+        constexpr std::size_t OFFSET = offsetof(Volume, ambient);
+        constexpr std::size_t SIZE = offsetof(Volume, roughness) + sizeof(Volume::roughness) - OFFSET;
 
         Volume volume;
 
@@ -464,7 +464,7 @@ void VolumeBuffer::set_lighting(
         volume.roughness = roughness;
 
         uniform_buffer_volume_.write(
-                command_pool, queue, offset, size, reinterpret_cast<const char*>(&volume) + offset);
+                command_pool, queue, OFFSET, SIZE, reinterpret_cast<const char*>(&volume) + OFFSET);
 }
 
 TransparencyBuffers::TransparencyBuffers(

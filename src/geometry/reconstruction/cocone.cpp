@@ -433,7 +433,7 @@ public:
 
                 create_voronoi_delaunay(source_points, &points_, &delaunay_objects_, &delaunay_facets_, progress);
 
-                vertex_and_facet_data(
+                find_vertex_and_facet_data(
                         !cocone_only, points_, delaunay_objects_, delaunay_facets_, &vertex_data_, &facet_data_);
 
                 ASSERT(source_points.size() == points_.size());

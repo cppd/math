@@ -142,7 +142,7 @@ Vector<N, T> ggx_vn(RandomEngine& random_engine, const Vector<N, T>& ve, T alpha
                 {
                         for (std::size_t i = 0; i < N - 2; ++i)
                         {
-                                orthonormal_basis[i] = numerical::identity_array<N, T>[i];
+                                orthonormal_basis[i] = numerical::IDENTITY_ARRAY<N, T>[i];
                         }
                 }
         }

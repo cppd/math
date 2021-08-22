@@ -77,7 +77,7 @@ class RowMatrix final
         std::array<Vector<C, T>*, R> rows_;
 
 public:
-        constexpr RowMatrix(std::array<Vector<C, T>, R>* rows)
+        explicit constexpr RowMatrix(std::array<Vector<C, T>, R>* rows)
         {
                 for (std::size_t i = 0; i < R; ++i)
                 {

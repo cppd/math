@@ -50,7 +50,7 @@ constexpr std::array VECTORS = std::to_array<Vector<7, T>>
 template <typename T>
 constexpr bool TEST_COFACTOR_EXPANSION =
         (1'868'201'030'776'500
-         == determinant_cofactor_expansion(VECTORS<T>, sequence_uchar_array<7>, sequence_uchar_array<7>))
+         == determinant_cofactor_expansion(VECTORS<T>, SEQUENCE_UCHAR_ARRAY<7>, SEQUENCE_UCHAR_ARRAY<7>))
         && (-28
             == determinant_cofactor_expansion(
                     VECTORS<T>,
@@ -77,7 +77,7 @@ constexpr bool test_cofactor_expansion()
         for (int i = 0; i < 7; ++i)
         {
                 d[i] = determinant_cofactor_expansion(
-                        del_elem(VECTORS<T>, 6), sequence_uchar_array<6>, del_elem(sequence_uchar_array<7>, i));
+                        del_elem(VECTORS<T>, 6), SEQUENCE_UCHAR_ARRAY<6>, del_elem(SEQUENCE_UCHAR_ARRAY<7>, i));
         }
         return d
                == Vector<7, T>(
@@ -125,17 +125,17 @@ bool are_equal(const T& a, const T& b, const T& precision)
         return (rel < precision);
 }
 
-template <std::size_t Rows, std::size_t Columns, typename T>
-std::vector<std::array<Vector<Columns, T>, Rows>> random_matrices(const int count)
+template <std::size_t ROWS, std::size_t COLUMNS, typename T>
+std::vector<std::array<Vector<COLUMNS, T>, ROWS>> random_matrices(const int count)
 {
         std::mt19937_64 random_engine = create_engine<std::mt19937_64>();
         std::uniform_real_distribution<T> urd(-10, 10);
-        std::vector<std::array<Vector<Columns, T>, Rows>> res(count);
+        std::vector<std::array<Vector<COLUMNS, T>, ROWS>> res(count);
         for (int i = 0; i < count; ++i)
         {
-                for (std::size_t r = 0; r < Rows; ++r)
+                for (std::size_t r = 0; r < ROWS; ++r)
                 {
-                        for (std::size_t c = 0; c < Columns; ++c)
+                        for (std::size_t c = 0; c < COLUMNS; ++c)
                         {
                                 res[i][r][c] = urd(random_engine);
                         }
@@ -158,7 +158,7 @@ void test_determinant(const int count, const std::type_identity_t<T>& precision)
                 for (int i = 0; i < count; ++i)
                 {
                         res[i] = determinant_cofactor_expansion(
-                                matrices[i], sequence_uchar_array<N>, sequence_uchar_array<N>);
+                                matrices[i], SEQUENCE_UCHAR_ARRAY<N>, SEQUENCE_UCHAR_ARRAY<N>);
                 }
                 LOG("Time = " + to_string_fixed(duration_from(start_time), 5) + " s, cofactor expansion");
                 return res;
@@ -220,7 +220,7 @@ void test_determinant_column(const int count, const std::type_identity_t<T>& pre
                         for (std::size_t c = 0; c < N; ++c)
                         {
                                 res[i][c] = determinant_cofactor_expansion(
-                                        matrices[i], sequence_uchar_array<N - 1>, del_elem(sequence_uchar_array<N>, c));
+                                        matrices[i], SEQUENCE_UCHAR_ARRAY<N - 1>, del_elem(SEQUENCE_UCHAR_ARRAY<N>, c));
                         }
                 }
                 LOG("Time = " + to_string_fixed(duration_from(start_time), 5) + " s, cofactor expansion");

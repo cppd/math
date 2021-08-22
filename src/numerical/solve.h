@@ -164,7 +164,7 @@ template <std::size_t N, typename T>
         }
         else
         {
-                return solve_gauss(a, identity_array<N, T>);
+                return solve_gauss(a, IDENTITY_ARRAY<N, T>);
         }
 }
 }

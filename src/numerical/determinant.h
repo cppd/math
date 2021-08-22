@@ -114,15 +114,15 @@ constexpr T determinant(const std::array<Vector<N, T>, N - 1>& vectors, const st
         if constexpr (is_integral<T>)
         {
                 return determinant_implementation::determinant_cofactor_expansion(
-                        vectors, sequence_uchar_array<N - 1>, del_elem(sequence_uchar_array<N>, excluded_column));
+                        vectors, SEQUENCE_UCHAR_ARRAY<N - 1>, del_elem(SEQUENCE_UCHAR_ARRAY<N>, excluded_column));
         }
         if constexpr (is_floating_point<T>)
         {
                 if constexpr (N <= 6)
                 {
                         return determinant_implementation::determinant_cofactor_expansion(
-                                vectors, sequence_uchar_array<N - 1>,
-                                del_elem(sequence_uchar_array<N>, excluded_column));
+                                vectors, SEQUENCE_UCHAR_ARRAY<N - 1>,
+                                del_elem(SEQUENCE_UCHAR_ARRAY<N>, excluded_column));
                 }
                 else
                 {
@@ -140,14 +140,14 @@ constexpr T determinant(const std::array<Vector<N, T>, N>& vectors)
         if constexpr (is_integral<T>)
         {
                 return determinant_implementation::determinant_cofactor_expansion(
-                        vectors, sequence_uchar_array<N>, sequence_uchar_array<N>);
+                        vectors, SEQUENCE_UCHAR_ARRAY<N>, SEQUENCE_UCHAR_ARRAY<N>);
         }
         if constexpr (is_floating_point<T>)
         {
                 if constexpr (N <= 5)
                 {
                         return determinant_implementation::determinant_cofactor_expansion(
-                                vectors, sequence_uchar_array<N>, sequence_uchar_array<N>);
+                                vectors, SEQUENCE_UCHAR_ARRAY<N>, SEQUENCE_UCHAR_ARRAY<N>);
                 }
                 else
                 {

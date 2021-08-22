@@ -56,6 +56,6 @@ constexpr std::array<Vector<N, T>, N> make_array_of_vector_one_value(const T& va
 }
 
 template <std::size_t N, typename T>
-inline constexpr std::array<Vector<N, T>, N> identity_array =
+inline constexpr std::array<Vector<N, T>, N> IDENTITY_ARRAY =
         identity_implementation::make_array_of_vector_one_value<N, T>(1);
 }

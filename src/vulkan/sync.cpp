@@ -34,9 +34,9 @@ void reset_fence(VkDevice device, VkFence fence)
 
 bool wait_for_fence(VkDevice device, VkFence fence, uint64_t timeout_nanoseconds)
 {
-        constexpr VkBool32 wait_all = VK_TRUE;
+        static constexpr VkBool32 WAIT_ALL = VK_TRUE;
 
-        VkResult result = vkWaitForFences(device, 1, &fence, wait_all, timeout_nanoseconds);
+        VkResult result = vkWaitForFences(device, 1, &fence, WAIT_ALL, timeout_nanoseconds);
         if (result == VK_SUCCESS)
         {
                 return true;

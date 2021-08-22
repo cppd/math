@@ -72,7 +72,7 @@ Color test_brdf_f(const TestBRDF<N, T, Color, RandomEngine>& brdf, const long lo
                 error("Sample count must be positive");
         }
 
-        const T UNIFORM_ON_HEMISPHERE_PDF = 2 * sampling::uniform_on_sphere_pdf<N, T>();
+        static constexpr T UNIFORM_ON_HEMISPHERE_PDF = 2 * sampling::uniform_on_sphere_pdf<N, T>();
 
         const auto [n, v] = brdf_implementation::random_n_v<N, T>();
 

@@ -50,12 +50,12 @@ void check_volume_size(unsigned size)
         }
 }
 
-template <std::size_t N, std::size_t Level, typename F>
+template <std::size_t N, std::size_t LEVEL, typename F>
 void image_coordinates(const std::array<int, N>& size, Vector<N, float>* coordinates, const F& f)
 {
-        static_assert(Level < N);
+        static_assert(LEVEL < N);
 
-        constexpr std::size_t D = N - Level - 1;
+        constexpr std::size_t D = N - LEVEL - 1;
 
         ASSERT(size[D] > 0);
         ASSERT(size[D] <= 1e6);
@@ -67,9 +67,9 @@ void image_coordinates(const std::array<int, N>& size, Vector<N, float>* coordin
         {
                 (*coordinates)[D] = i * max_i_reciprocal;
 
-                if constexpr (Level + 1 < N)
+                if constexpr (LEVEL + 1 < N)
                 {
-                        image_coordinates<N, Level + 1>(size, coordinates, f);
+                        image_coordinates<N, LEVEL + 1>(size, coordinates, f);
                 }
                 else
                 {
@@ -106,11 +106,13 @@ I float_to_uint(F v)
 template <std::size_t N>
 std::unique_ptr<volume::Volume<N>> scalar_cube(unsigned size)
 {
-        constexpr image::ColorFormat COLOR_FORMAT = image::ColorFormat::R16;
-        using DATA_TYPE = uint16_t;
+        static constexpr image::ColorFormat COLOR_FORMAT = image::ColorFormat::R16;
+        using Type = std::uint16_t;
 
-        constexpr DATA_TYPE VALUE = 10000;
-        constexpr DATA_TYPE MIN = 500;
+        static_assert(format_pixel_size_in_bytes(COLOR_FORMAT) == sizeof(Type));
+
+        static constexpr Type VALUE = 10000;
+        static constexpr Type MIN = 500;
 
         check_volume_size<N>(size);
 
@@ -140,7 +142,7 @@ std::unique_ptr<volume::Volume<N>> scalar_cube(unsigned size)
                                         break;
                                 }
                         }
-                        DATA_TYPE value = cube ? VALUE : MIN;
+                        Type value = cube ? VALUE : MIN;
                         std::memcpy(ptr, &value, sizeof(value));
                         ptr += sizeof(value);
                 });

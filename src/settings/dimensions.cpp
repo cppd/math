@@ -23,16 +23,16 @@ namespace ns::settings
 {
 namespace
 {
-template <std::size_t Index, typename... T>
+template <std::size_t INDEX, typename... T>
 constexpr bool compare_two_elements(const std::tuple<T...>& t)
 {
-        if constexpr (Index + 1 == sizeof...(T))
+        if constexpr (INDEX + 1 == sizeof...(T))
         {
                 return true;
         }
         else
         {
-                return std::get<Index>(t) < std::get<Index + 1>(t);
+                return std::get<INDEX>(t) < std::get<INDEX + 1>(t);
         }
 }
 

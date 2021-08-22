@@ -82,7 +82,7 @@ constexpr std::array<T, N> make_array_one_value(const T& v)
 }
 
 template <std::size_t N>
-inline constexpr std::array<unsigned char, N> sequence_uchar_array = make_array_sequence<unsigned char, N>();
+inline constexpr std::array<unsigned char, N> SEQUENCE_UCHAR_ARRAY = make_array_sequence<unsigned char, N>();
 
 //
 

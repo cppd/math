@@ -87,18 +87,18 @@ constexpr const char* type_name() requires(std::is_same_v<std::remove_cv_t<T>, _
 template <type_name_implementation::BitFloatingPoint T>
 const char* type_bit_name()
 {
-        static constexpr std::size_t size = type_name_implementation::floating_point_bit_count<T>();
-        static_assert(size >= 10 && size <= 999);
+        static constexpr std::size_t SIZE = type_name_implementation::floating_point_bit_count<T>();
+        static_assert(SIZE >= 10 && SIZE <= 999);
 
-        if constexpr (size < 100)
+        if constexpr (SIZE < 100)
         {
-                static constexpr std::array STR = std::to_array<char>({'f', 'p', '0' + size / 10, '0' + size % 10, 0});
+                static constexpr std::array STR = std::to_array<char>({'f', 'p', '0' + SIZE / 10, '0' + SIZE % 10, 0});
                 return STR.data();
         }
         else
         {
                 static constexpr std::array STR =
-                        std::to_array<char>({'f', 'p', '0' + size / 100, '0' + (size % 100) / 10, '0' + size % 10, 0});
+                        std::to_array<char>({'f', 'p', '0' + SIZE / 100, '0' + (SIZE % 100) / 10, '0' + SIZE % 10, 0});
                 return STR.data();
         }
 }

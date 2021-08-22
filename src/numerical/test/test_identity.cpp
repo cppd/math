@@ -28,14 +28,14 @@ constexpr bool test()
                 {
                         if (i != j)
                         {
-                                if (!(identity_array<N, T>[i][j] == 0))
+                                if (!(IDENTITY_ARRAY<N, T>[i][j] == 0))
                                 {
                                         return false;
                                 }
                         }
                         else
                         {
-                                if (!(identity_array<N, T>[i][j] == 1))
+                                if (!(IDENTITY_ARRAY<N, T>[i][j] == 1))
                                 {
                                         return false;
                                 }

@@ -196,7 +196,7 @@ int thread_count_for_horizon()
 }
 
 template <typename T>
-class FacetStore
+class FacetStore final
 {
         // std::vector is faster than std::forward_list, std::list, std::set, std::unordered_set
         std::vector<const T*> data_;
@@ -248,19 +248,23 @@ public:
                 }
                 error("facet not found in facets of point");
         }
+
         std::size_t size() const
         {
                 return data_.size();
         }
+
         void clear()
         {
                 data_.clear();
                 // data_.shrink_to_fit();
         }
+
         typename std::vector<const T*>::const_iterator begin() const
         {
                 return data_.cbegin();
         }
+
         typename std::vector<const T*>::const_iterator end() const
         {
                 return data_.cend();
@@ -277,7 +281,7 @@ bool linearly_independent(const std::array<Vector<N, T>, N>& vectors)
 
         for (const std::array<unsigned char, COUNT>& h_map : combinations<N, COUNT>())
         {
-                if (numerical::determinant(vectors, sequence_uchar_array<COUNT>, h_map) != 0)
+                if (numerical::determinant(vectors, SEQUENCE_UCHAR_ARRAY<COUNT>, h_map) != 0)
                 {
                         return true;
                 }
@@ -506,7 +510,7 @@ void create_facets_for_point_and_horizon(
         unsigned thread_count,
         const std::vector<Point>& points,
         int point,
-        std::vector<FacetStore<Facet>>* point_conflicts,
+        const std::vector<FacetStore<Facet>>& point_conflicts,
         std::vector<std::vector<signed char>>* unique_points_work,
         std::vector<FacetList<Facet>>* new_facets_vector)
 {
@@ -520,7 +524,7 @@ void create_facets_for_point_and_horizon(
 
         unsigned ridge_count = 0;
 
-        for (const Facet* facet : (*point_conflicts)[point])
+        for (const Facet* facet : point_conflicts[point])
         {
                 for (unsigned r = 0; r < facet->vertices().size(); ++r)
                 {
@@ -569,7 +573,8 @@ void create_horizon_facets(
         try
         {
                 create_facets_for_point_and_horizon(
-                        thread_id, thread_count, points, point, point_conflicts, unique_points_work, new_facets_vector);
+                        thread_id, thread_count, points, point, *point_conflicts, unique_points_work,
+                        new_facets_vector);
         }
         catch (...)
         {

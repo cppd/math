@@ -27,12 +27,11 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 namespace ns::geometry
 {
 template <std::size_t N>
-struct ManifoldVertex
+struct ManifoldVertex final
 {
-        const Vector<N, double> positive_norm;
-        // const Vector<N, double> negative_pole;
-        const double height;
-        const double radius;
+        Vector<N, double> positive_norm;
+        double height;
+        double radius;
         std::vector<int> cocone_neighbors;
 
         ManifoldVertex(const Vector<N, double>& positive_norm, double height, double radius)
@@ -42,18 +41,14 @@ struct ManifoldVertex
 };
 
 template <std::size_t N>
-struct ManifoldFacet
+struct ManifoldFacet final
 {
         std::array<bool, N> cocone_vertex{make_array_value<bool, N>(false)};
-
-        ManifoldFacet()
-        {
-        }
 };
 
 template <std::size_t N>
-void vertex_and_facet_data(
-        bool find_all_vertex_data,
+void find_vertex_and_facet_data(
+        bool find_cocone_neighbors,
         const std::vector<Vector<N, double>>& points,
         const std::vector<DelaunayObject<N>>& delaunay_objects,
         const std::vector<DelaunayFacet<N>>& delaunay_facets,

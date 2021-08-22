@@ -131,9 +131,9 @@ void RangeSlider::on_max_value_changed()
 
 void RangeSlider::range_changed()
 {
-        constexpr double d = MAX - MIN;
-        const double min = (min_value() - MIN) / d;
-        const double max = (max_value() - MIN) / d;
+        constexpr double LENGTH = MAX - MIN;
+        const double min = (min_value() - MIN) / LENGTH;
+        const double max = (max_value() - MIN) / LENGTH;
 
         ASSERT(min <= max);
 

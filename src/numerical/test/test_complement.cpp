@@ -68,7 +68,7 @@ std::vector<Vector<N, T>> random_vectors(int count)
         return res;
 }
 
-template <bool GramSchmidt, std::size_t N, typename T>
+template <bool GRAM_SCHMIDT, std::size_t N, typename T>
 std::vector<std::array<Vector<N, T>, N - 1>> complement_vectors(const std::vector<Vector<N, T>>& vectors)
 {
         std::vector<std::array<Vector<N, T>, N - 1>> res;
@@ -78,7 +78,7 @@ std::vector<std::array<Vector<N, T>, N - 1>> complement_vectors(const std::vecto
 
         for (const Vector<N, T>& unit_vector : vectors)
         {
-                if (GramSchmidt)
+                if (GRAM_SCHMIDT)
                 {
                         res.push_back(orthogonal_complement_by_gram_schmidt(unit_vector));
                 }
@@ -93,17 +93,17 @@ std::vector<std::array<Vector<N, T>, N - 1>> complement_vectors(const std::vecto
         return res;
 }
 
-template <std::size_t N, typename T, bool GramSchmidt>
+template <std::size_t N, typename T, bool GRAM_SCHMIDT>
 void test_complement(int count)
 {
         ASSERT(count > 0);
 
         LOG("Test complement in " + space_name(N) + ", " + to_string_digit_groups(count) + " " + type_name<T>() + ": "
-            + (GramSchmidt ? "Gram-Schmidt" : "Subspace"));
+            + (GRAM_SCHMIDT ? "Gram-Schmidt" : "Subspace"));
 
         const std::vector<Vector<N, T>> vectors = random_vectors<N, T>(count);
 
-        const std::vector<std::array<Vector<N, T>, N - 1>> complements = complement_vectors<GramSchmidt>(vectors);
+        const std::vector<std::array<Vector<N, T>, N - 1>> complements = complement_vectors<GRAM_SCHMIDT>(vectors);
 
         ASSERT(vectors.size() == complements.size());
 

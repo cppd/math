@@ -517,9 +517,9 @@ uint32_t PhysicalDevice::family_index(
         {
                 return index;
         }
-        for (auto iter = default_flags.begin(); iter != default_flags.end(); ++iter)
+        for (const VkQueueFlags& flags : default_flags)
         {
-                if (*iter && find_family(queue_families_, *iter, 0, &index))
+                if (flags && find_family(queue_families_, flags, 0, &index))
                 {
                         return index;
                 }

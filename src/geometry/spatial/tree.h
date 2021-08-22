@@ -239,9 +239,9 @@ std::array<std::tuple<int, Box<Parallelotope>*, int>, BOX_COUNT<Parallelotope::S
 
 template <template <typename...> typename Container, typename Parallelotope, typename ObjectIntersections>
 void extend(
-        const int MAX_DEPTH,
-        const int MIN_OBJECTS,
-        const int MAX_BOXES,
+        const int max_depth,
+        const int min_objects,
+        const int max_boxes,
         SpinLock* const boxes_lock,
         Container<Box<Parallelotope>>* const boxes,
         BoxJobs<Box<Parallelotope>>* const box_jobs,
@@ -253,7 +253,7 @@ try
                 (std::is_same_v<Container<Box<Parallelotope>>, std::deque<Box<Parallelotope>>>)
                 || (std::is_same_v<Container<Box<Parallelotope>>, std::list<Box<Parallelotope>>>));
 
-        constexpr auto integer_sequence_n =
+        constexpr auto INTEGER_SEQUENCE_N =
                 std::make_integer_sequence<int, BOX_COUNT<Parallelotope::SPACE_DIMENSION>>();
 
         Box<Parallelotope>* box = nullptr; // no previous job
@@ -266,19 +266,19 @@ try
                         continue;
                 }
 
-                if (depth >= MAX_DEPTH || box->object_index_count() <= MIN_OBJECTS)
+                if (depth >= max_depth || box->object_index_count() <= min_objects)
                 {
                         continue;
                 }
 
                 for (const auto& [i, child_box, child_box_index] :
-                     create_child_boxes(boxes_lock, boxes, box->parallelotope(), integer_sequence_n))
+                     create_child_boxes(boxes_lock, boxes, box->parallelotope(), INTEGER_SEQUENCE_N))
                 {
                         box->set_child(i, child_box_index);
 
                         if ((child_box_index & 0xfff) == 0xfff)
                         {
-                                progress->set(child_box_index, MAX_BOXES);
+                                progress->set(child_box_index, max_boxes);
                         }
 
                         for (int object_index : object_intersections(child_box->parallelotope(), box->object_indices()))

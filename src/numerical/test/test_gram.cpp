@@ -43,12 +43,12 @@ bool are_equal(const T& a, const T& b, const T& precision)
         return (rel < precision);
 }
 
-template <std::size_t N, typename T, std::size_t Count>
-std::array<Vector<N, T>, Count> random_vectors(std::mt19937_64& random_engine)
+template <std::size_t N, typename T, std::size_t COUNT>
+std::array<Vector<N, T>, COUNT> random_vectors(std::mt19937_64& random_engine)
 {
         std::uniform_real_distribution<T> urd(-10, 10);
 
-        std::array<Vector<N, T>, Count> vectors;
+        std::array<Vector<N, T>, COUNT> vectors;
 
         for (Vector<N, T>& v : vectors)
         {

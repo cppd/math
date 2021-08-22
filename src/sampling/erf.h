@@ -29,14 +29,13 @@ T erf_inv(T arg)
 {
         static_assert(std::is_floating_point_v<T>);
 
-        static constexpr T a = 8 * (PI<long double> - 3) / (3 * PI<long double> * (4 - PI<long double>));
-        static constexpr T k = 2 / (PI<long double> * a);
-        static constexpr T a_r = 1 / a;
+        static constexpr T A = 8 * (PI<long double> - 3) / (3 * PI<long double> * (4 - PI<long double>));
+        static constexpr T K = 2 / (PI<long double> * A);
 
-        T v = std::log(1 - square(arg));
-        T v1 = k + v / 2;
-        T v2 = v * a_r;
-        T r = std::sqrt(std::sqrt(square(v1) - v2) - v1);
+        const T v = std::log(1 - square(arg));
+        const T v1 = K + v / 2;
+        const T v2 = v / A;
+        const T r = std::sqrt(std::sqrt(square(v1) - v2) - v1);
         return std::copysign(r, arg);
 }
 }

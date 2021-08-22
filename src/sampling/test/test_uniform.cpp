@@ -110,21 +110,21 @@ double test_performance_in_sphere_by_normal_distribution(int count, RandomEngine
         return duration_from(start_time);
 }
 
-enum class Type
+enum class SampleType
 {
         OnSphere,
         InSphere
 };
 
-std::string type_to_string(Type type)
+std::string type_to_string(SampleType type)
 {
         switch (type)
         {
-        case Type::OnSphere:
+        case SampleType::OnSphere:
         {
                 return "On Sphere";
         }
-        case Type::InSphere:
+        case SampleType::InSphere:
         {
                 return "In Sphere";
         }
@@ -142,27 +142,27 @@ std::string time_to_string(double v)
         return oss.str();
 }
 
-template <Type type, std::size_t N, typename T, typename RandomEngine>
+template <SampleType SAMPLE_TYPE, std::size_t N, typename T, typename RandomEngine>
 void write_description()
 {
         std::ostringstream oss;
-        oss << type_to_string(type) << ", " << N << "D, " << type_name<T>() << ", " << ENGINE_NAME<RandomEngine>;
+        oss << type_to_string(SAMPLE_TYPE) << ", " << N << "D, " << type_name<T>() << ", " << ENGINE_NAME<RandomEngine>;
         LOG(oss.str());
 }
 
-template <Type type, std::size_t N, typename T, typename RandomEngine>
+template <SampleType SAMPLE_TYPE, std::size_t N, typename T, typename RandomEngine>
 void test_performance()
 {
         constexpr int COUNT = 5'000'000;
 
-        write_description<type, N, T, RandomEngine>();
+        write_description<SAMPLE_TYPE, N, T, RandomEngine>();
 
         RandomEngine random_engine = create_engine<RandomEngine>();
 
         double t;
-        switch (type)
+        switch (SAMPLE_TYPE)
         {
-        case Type::OnSphere:
+        case SampleType::OnSphere:
         {
                 t = test_performance_on_sphere_by_rejection<N, T>(COUNT, random_engine);
                 LOG("  Rejection: " + time_to_string(t));
@@ -170,7 +170,7 @@ void test_performance()
                 LOG("  Normal   : " + time_to_string(t));
                 return;
         }
-        case Type::InSphere:
+        case SampleType::InSphere:
         {
                 t = test_performance_in_sphere_by_rejection<N, T>(COUNT, random_engine);
                 LOG("  Rejection: " + time_to_string(t));
@@ -179,47 +179,47 @@ void test_performance()
                 return;
         }
         }
-        error_fatal("Unknown type " + to_string(static_cast<long long>(type)));
+        error_fatal("Unknown type " + to_string(static_cast<long long>(SAMPLE_TYPE)));
 }
 
-template <Type type, std::size_t N, typename T>
+template <SampleType SAMPLE_TYPE, std::size_t N, typename T>
 void test_performance()
 {
-        test_performance<type, N, T, std::mt19937>();
-        test_performance<type, N, T, std::mt19937_64>();
+        test_performance<SAMPLE_TYPE, N, T, std::mt19937>();
+        test_performance<SAMPLE_TYPE, N, T, std::mt19937_64>();
 }
 
-template <Type type, typename T>
+template <SampleType SAMPLE_TYPE, typename T>
 void test_performance()
 {
         static_assert(std::is_floating_point_v<T>);
 
-        test_performance<type, 2, T>();
+        test_performance<SAMPLE_TYPE, 2, T>();
         LOG("");
-        test_performance<type, 3, T>();
+        test_performance<SAMPLE_TYPE, 3, T>();
         LOG("");
-        test_performance<type, 4, T>();
+        test_performance<SAMPLE_TYPE, 4, T>();
         LOG("");
-        test_performance<type, 5, T>();
+        test_performance<SAMPLE_TYPE, 5, T>();
         LOG("");
-        test_performance<type, 6, T>();
+        test_performance<SAMPLE_TYPE, 6, T>();
         LOG("");
-        test_performance<type, 7, T>();
+        test_performance<SAMPLE_TYPE, 7, T>();
 }
 
-template <Type type>
+template <SampleType SAMPLE_TYPE>
 void test_performance()
 {
-        test_performance<type, float>();
+        test_performance<SAMPLE_TYPE, float>();
         LOG("");
-        test_performance<type, double>();
+        test_performance<SAMPLE_TYPE, double>();
 }
 
 void test()
 {
-        test_performance<Type::OnSphere>();
+        test_performance<SampleType::OnSphere>();
         LOG("");
-        test_performance<Type::InSphere>();
+        test_performance<SampleType::InSphere>();
 }
 
 TEST_PERFORMANCE("Uniform Sphere Samples", test)

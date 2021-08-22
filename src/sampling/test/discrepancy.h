@@ -162,19 +162,19 @@ T compute_discrepancy(
                 check_point_range(p, min, max);
         }
 
-        const T BOX_MIN = min;
-        const T BOX_MAX = std::nextafter(max, limits<T>::max());
-        const T BOX_VOLUME = std::pow(BOX_MAX - BOX_MIN, T(N));
+        const T box_min = min;
+        const T box_max = std::nextafter(max, limits<T>::max());
+        const T volume = std::pow(box_max - box_min, T(N));
 
         PointSearch<N, T> point_search(points);
 
         T max_discrepancy = limits<T>::lowest();
         for (int i = 0; i < box_count; ++i)
         {
-                const std::array<std::array<T, 2>, N> box = make_random_box<N, T>(BOX_MIN, BOX_MAX, random_engine);
+                const std::array<std::array<T, 2>, N> box = make_random_box<N, T>(box_min, box_max, random_engine);
                 const T box_volume = compute_box_volume(box);
                 const int point_count = point_search.count_points(box);
-                const T discrepancy = std::abs(box_volume / BOX_VOLUME - static_cast<T>(point_count) / points.size());
+                const T discrepancy = std::abs(box_volume / volume - static_cast<T>(point_count) / points.size());
                 max_discrepancy = std::max(discrepancy, max_discrepancy);
         }
 

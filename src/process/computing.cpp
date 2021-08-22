@@ -57,12 +57,12 @@ std::function<void(ProgressRatioList*)> action_bound_cocone(const storage::MeshO
                 {
                         std::function<void(ProgressRatioList*)> f = [=](ProgressRatioList* progress_list)
                         {
-                                constexpr bool convex_hull = false;
-                                constexpr bool cocone = false;
-                                constexpr bool bound_cocone = true;
-                                constexpr bool mst = false;
+                                constexpr bool CONVEX_HULL = false;
+                                constexpr bool COCONE = false;
+                                constexpr bool BOUND_COCONE = true;
+                                constexpr bool MST = false;
                                 compute_meshes(
-                                        progress_list, convex_hull, cocone, bound_cocone, mst, *mesh_object,
+                                        progress_list, CONVEX_HULL, COCONE, BOUND_COCONE, MST, *mesh_object,
                                         parameters->rho, parameters->alpha);
                         };
                         return f;
