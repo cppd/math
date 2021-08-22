@@ -24,40 +24,40 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 namespace ns::application
 {
+enum class LogType
+{
+        Normal,
+        Error,
+        Warning,
+        Information
+};
+
+enum class MessageType
+{
+        Error,
+        ErrorFatal,
+        Warning,
+        Information
+};
+
 struct LogEvent final
 {
-        enum class Type
-        {
-                Normal,
-                Error,
-                Warning,
-                Information
-        };
-
         std::string text;
-        Type type;
+        LogType type;
 
         template <typename T>
-        LogEvent(T&& text, Type type) : text(std::forward<T>(text)), type(type)
+        LogEvent(T&& text, LogType type) : text(std::forward<T>(text)), type(type)
         {
         }
 };
 
 struct MessageEvent final
 {
-        enum class Type
-        {
-                Error,
-                ErrorFatal,
-                Warning,
-                Information
-        };
-
         std::string text;
-        Type type;
+        MessageType type;
 
         template <typename T>
-        MessageEvent(T&& text, Type type) : text(std::forward<T>(text)), type(type)
+        MessageEvent(T&& text, MessageType type) : text(std::forward<T>(text)), type(type)
         {
         }
 };
@@ -66,8 +66,8 @@ class LogEvents final
 {
         friend class LogEventsObserver;
         friend class MessageEventsObserver;
-        friend void log_impl(LogEvent&&) noexcept;
-        friend void log_impl(MessageEvent&&) noexcept;
+        friend void log_impl(const std::string_view&, LogType) noexcept;
+        friend void log_impl(const std::string_view&, MessageType) noexcept;
 
         std::mutex lock_;
         std::vector<const std::function<void(const LogEvent&)>*> log_observers_;
@@ -79,8 +79,8 @@ class LogEvents final
         void insert(const std::function<void(const MessageEvent&)>* observer);
         void erase(const std::function<void(const MessageEvent&)>* observer);
 
-        void log_event(LogEvent&& event) noexcept;
-        void log_event(MessageEvent&& event) noexcept;
+        void log_event(const std::string_view& text, LogType type) noexcept;
+        void log_event(const std::string_view& text, MessageType type) noexcept;
 
 public:
         LogEvents();
@@ -120,6 +120,6 @@ public:
         MessageEventsObserver& operator=(MessageEventsObserver&&) = delete;
 };
 
-void log_impl(LogEvent&& event) noexcept;
-void log_impl(MessageEvent&& event) noexcept;
+void log_impl(const std::string_view& text, LogType type) noexcept;
+void log_impl(const std::string_view& text, MessageType type) noexcept;
 }

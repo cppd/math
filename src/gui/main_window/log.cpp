@@ -25,28 +25,28 @@ namespace ns::gui::main_window
 {
 namespace
 {
-RGB8 event_color(application::LogEvent::Type type)
+RGB8 event_color(application::LogType type)
 {
         switch (type)
         {
-        case application::LogEvent::Type::Normal:
+        case application::LogType::Normal:
         {
                 return RGB8(0, 0, 0);
         }
-        case application::LogEvent::Type::Error:
+        case application::LogType::Error:
         {
                 return RGB8(255, 0, 0);
         }
-        case application::LogEvent::Type::Warning:
+        case application::LogType::Warning:
         {
                 return RGB8(200, 150, 0);
         }
-        case application::LogEvent::Type::Information:
+        case application::LogType::Information:
         {
                 return RGB8(0, 0, 255);
         }
         }
-        error_fatal("Unknown log event type");
+        error_fatal("Unknown log event type " + std::to_string(static_cast<long long>(type)));
 }
 
 template <typename D, typename S>

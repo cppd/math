@@ -17,12 +17,12 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
-#include <string>
+#include <string_view>
 
 namespace ns
 {
-void LOG(const std::string& msg) noexcept;
-void LOG_ERROR(const std::string& msg) noexcept;
-void LOG_WARNING(const std::string& msg) noexcept;
-void LOG_INFORMATION(const std::string& msg) noexcept;
+void LOG(const std::string_view& msg) noexcept;
+void LOG_ERROR(const std::string_view& msg) noexcept;
+void LOG_WARNING(const std::string_view& msg) noexcept;
+void LOG_INFORMATION(const std::string_view& msg) noexcept;
 }

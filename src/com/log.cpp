@@ -21,23 +21,23 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 namespace ns
 {
-void LOG(const std::string& msg) noexcept
+void LOG(const std::string_view& msg) noexcept
 {
-        application::log_impl(application::LogEvent(msg, application::LogEvent::Type::Normal));
+        application::log_impl(msg, application::LogType::Normal);
 }
 
-void LOG_ERROR(const std::string& msg) noexcept
+void LOG_ERROR(const std::string_view& msg) noexcept
 {
-        application::log_impl(application::LogEvent(msg, application::LogEvent::Type::Error));
+        application::log_impl(msg, application::LogType::Error);
 }
 
-void LOG_WARNING(const std::string& msg) noexcept
+void LOG_WARNING(const std::string_view& msg) noexcept
 {
-        application::log_impl(application::LogEvent(msg, application::LogEvent::Type::Warning));
+        application::log_impl(msg, application::LogType::Warning);
 }
 
-void LOG_INFORMATION(const std::string& msg) noexcept
+void LOG_INFORMATION(const std::string_view& msg) noexcept
 {
-        application::log_impl(application::LogEvent(msg, application::LogEvent::Type::Information));
+        application::log_impl(msg, application::LogType::Information);
 }
 }

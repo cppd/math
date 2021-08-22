@@ -27,46 +27,46 @@ namespace
 {
 LogEvents* g_log_events = nullptr;
 
-LogEvent::Type message_type_to_log_type(MessageEvent::Type type)
+LogType message_type_to_log_type(MessageType type)
 {
         switch (type)
         {
-        case MessageEvent::Type::Error:
-        case MessageEvent::Type::ErrorFatal:
+        case MessageType::Error:
+        case MessageType::ErrorFatal:
         {
-                return LogEvent::Type::Error;
+                return LogType::Error;
         }
-        case MessageEvent::Type::Information:
+        case MessageType::Information:
         {
-                return LogEvent::Type::Information;
+                return LogType::Information;
         }
-        case MessageEvent::Type::Warning:
+        case MessageType::Warning:
         {
-                return LogEvent::Type::Warning;
+                return LogType::Warning;
         }
         }
-        return LogEvent::Type::Error;
+        return LogType::Error;
 }
 
-std::string_view log_type_to_string(LogEvent::Type type)
+std::string_view log_type_to_string(LogType type)
 {
         switch (type)
         {
-        case LogEvent::Type::Error:
+        case LogType::Error:
                 return "error";
-        case LogEvent::Type::Information:
+        case LogType::Information:
                 return "information";
-        case LogEvent::Type::Normal:
+        case LogType::Normal:
                 return "";
-        case LogEvent::Type::Warning:
+        case LogType::Warning:
                 return "warning";
         }
         return "unknown";
 }
 
-void write_log_event(LogEvent* event)
+std::string write_log_event(const std::string_view& text, const LogType type)
 {
-        event->text = write_log(event->text, log_type_to_string(event->type));
+        return write_log(text, log_type_to_string(type));
 }
 }
 
@@ -86,17 +86,21 @@ LogEvents::~LogEvents()
         g_log_events = nullptr;
 }
 
-void LogEvents::log_event(LogEvent&& event) noexcept
+void LogEvents::log_event(const std::string_view& text, const LogType type) noexcept
 {
         try
         {
                 std::lock_guard lg(lock_);
 
-                write_log_event(&event);
+                std::string log_text = write_log_event(text, type);
 
-                for (const std::function<void(const LogEvent&)>* observer : log_observers_)
+                if (!log_observers_.empty())
                 {
-                        (*observer)(event);
+                        const LogEvent event(std::move(log_text), type);
+                        for (const std::function<void(const LogEvent&)>* observer : log_observers_)
+                        {
+                                (*observer)(event);
+                        }
                 }
         }
         catch (const std::exception& e)
@@ -110,24 +114,32 @@ void LogEvents::log_event(LogEvent&& event) noexcept
         }
 }
 
-void LogEvents::log_event(MessageEvent&& event) noexcept
+void LogEvents::log_event(const std::string_view& text, const MessageType type) noexcept
 {
         try
         {
-                LogEvent log_event(event.text, message_type_to_log_type(event.type));
+                const LogType log_type = message_type_to_log_type(type);
 
                 std::lock_guard lg(lock_);
 
-                write_log_event(&log_event);
+                std::string log_text = write_log_event(text, log_type);
 
-                for (const std::function<void(const LogEvent&)>* observer : log_observers_)
+                if (!log_observers_.empty())
                 {
-                        (*observer)(log_event);
+                        const LogEvent event(std::move(log_text), log_type);
+                        for (const std::function<void(const LogEvent&)>* observer : log_observers_)
+                        {
+                                (*observer)(event);
+                        }
                 }
 
-                for (const std::function<void(const MessageEvent&)>* observer : msg_observers_)
+                if (!msg_observers_.empty())
                 {
-                        (*observer)(event);
+                        const MessageEvent event(text, type);
+                        for (const std::function<void(const MessageEvent&)>* observer : msg_observers_)
+                        {
+                                (*observer)(event);
+                        }
                 }
         }
         catch (const std::exception& e)
@@ -198,13 +210,13 @@ MessageEventsObserver::~MessageEventsObserver()
 
 //
 
-void log_impl(LogEvent&& event) noexcept
+void log_impl(const std::string_view& text, LogType type) noexcept
 {
-        g_log_events->log_event(std::move(event));
+        g_log_events->log_event(text, type);
 }
 
-void log_impl(MessageEvent&& event) noexcept
+void log_impl(const std::string_view& text, MessageType type) noexcept
 {
-        g_log_events->log_event(std::move(event));
+        g_log_events->log_event(text, type);
 }
 }

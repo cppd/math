@@ -71,19 +71,20 @@ void message_event(const application::MessageEvent& event)
 {
         switch (event.type)
         {
-        case application::MessageEvent::Type::Error:
+        case application::MessageType::Error:
                 dialog::message_critical(event.text);
                 return;
-        case application::MessageEvent::Type::ErrorFatal:
+        case application::MessageType::ErrorFatal:
                 dialog::message_critical(event.text, false /*with_parent*/);
                 error_fatal("Exit after error message\n" + event.text);
-        case application::MessageEvent::Type::Information:
+        case application::MessageType::Information:
                 dialog::message_information(event.text);
                 return;
-        case application::MessageEvent::Type::Warning:
+        case application::MessageType::Warning:
                 dialog::message_warning(event.text);
                 return;
         }
+        error_fatal("Unknown message event type " + std::to_string(static_cast<long long>(event.type)));
 }
 }
 
