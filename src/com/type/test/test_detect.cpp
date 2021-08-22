@@ -20,10 +20,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 namespace ns
 {
 static_assert(is_array<const std::array<int, 1>>);
-static_assert(is_vector<const std::vector<int>>);
-
 static_assert(!is_array<const std::vector<int>>);
-static_assert(!is_vector<const std::array<int, 1>>);
 
 static_assert(has_cbegin_cend<const std::array<int, 1>>);
 static_assert(has_cbegin_cend<std::vector<double>&>);

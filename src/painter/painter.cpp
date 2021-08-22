@@ -68,36 +68,38 @@ void join_thread(std::thread* thread) noexcept
 template <std::size_t N, typename T, typename Color>
 struct PaintData final
 {
-        const Scene<N, T, Color>& scene;
-        const bool smooth_normals;
+        const Scene<N, T, Color>* scene;
+        bool smooth_normals;
 
-        PaintData(const Scene<N, T, Color>& scene, bool smooth_normals) : scene(scene), smooth_normals(smooth_normals)
+        PaintData(const Scene<N, T, Color>* scene, bool smooth_normals) : scene(scene), smooth_normals(smooth_normals)
         {
+                ASSERT(scene);
         }
 };
 
 template <std::size_t N, typename T, typename Color>
 struct PixelData final
 {
-        const Projector<N, T>& projector;
+        const Projector<N, T>* projector;
         SamplerStratifiedJittered<N - 1, T> sampler;
         Pixels<N - 1, T, Color> pixels;
 
         PixelData(
-                const Projector<N, T>& projector,
+                const Projector<N, T>* projector,
                 int samples_per_pixel,
                 const Color& background_color,
                 Notifier<N - 1>* notifier)
                 : projector(projector),
                   sampler(samples_per_pixel),
-                  pixels(projector.screen_size(), background_color, notifier)
+                  pixels(projector->screen_size(), background_color, notifier)
         {
+                ASSERT(projector);
         }
 };
 
 class PassData final
 {
-        const std::optional<int> max_number_;
+        std::optional<int> max_number_;
         int number_ = 0;
 
 public:
@@ -105,7 +107,6 @@ public:
         {
                 ASSERT(!max_number || *max_number > 0);
         }
-
         bool continue_painting()
         {
                 return !(max_number_ && ++number_ == *max_number_);
@@ -115,8 +116,8 @@ public:
 template <std::size_t N>
 class ThreadBusy final
 {
-        Notifier<N>* const notifier_;
-        const unsigned thread_;
+        Notifier<N>* notifier_;
+        unsigned thread_;
 
 public:
         ThreadBusy(Notifier<N>* notifier, unsigned thread, const std::array<int, N>& pixel)
@@ -167,17 +168,17 @@ void paint_pixels(
                 pixel_data->sampler.generate(random_engine, &sample_points);
                 sample_colors.resize(sample_points.size());
 
-                const long long ray_count = paint_data.scene.thread_ray_count();
+                const long long ray_count = paint_data.scene->thread_ray_count();
 
                 for (std::size_t i = 0; i < sample_points.size(); ++i)
                 {
-                        const Ray<N, T> ray = pixel_data->projector.ray(pixel_org + sample_points[i]);
+                        const Ray<N, T> ray = pixel_data->projector->ray(pixel_org + sample_points[i]);
                         sample_colors[i] = trace_path<N, T, Color>(
-                                paint_data.scene, paint_data.smooth_normals, ray, random_engine);
+                                *paint_data.scene, paint_data.smooth_normals, ray, random_engine);
                 }
 
                 pixel_data->pixels.add_samples(*pixel, sample_points, sample_colors);
-                statistics->pixel_done(paint_data.scene.thread_ray_count() - ray_count, sample_points.size());
+                statistics->pixel_done(paint_data.scene->thread_ray_count() - ray_count, sample_points.size());
         }
 }
 
@@ -337,9 +338,9 @@ void painter_thread(
         {
                 try
                 {
-                        const PaintData<N, T, Color> paint_data(scene, smooth_normals);
+                        const PaintData<N, T, Color> paint_data(&scene, smooth_normals);
                         PixelData<N, T, Color> pixel_data(
-                                scene.projector(), samples_per_pixel, scene.background_light(), notifier);
+                                &scene.projector(), samples_per_pixel, scene.background_light(), notifier);
                         PassData pass_data(max_pass_count);
 
                         statistics->init();

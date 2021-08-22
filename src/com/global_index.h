@@ -20,14 +20,12 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "alg.h"
 #include "error.h"
 
-#include "type/detect.h"
 #include "type/limit.h"
 #include "type/trait.h"
 
 #include <array>
 #include <cstddef>
 #include <utility>
-#include <vector>
 
 namespace ns
 {
@@ -40,9 +38,9 @@ class GlobalIndex
         static_assert(is_native_integral<IndexType>);
 
         template <typename T>
-        static constexpr void static_check_input_type()
+        static constexpr void check_input_type()
         {
-                static_assert((is_array<T> && std::tuple_size_v<T> == N) || is_vector<T>);
+                static_assert(std::tuple_size_v<T> == N);
                 static_assert(is_native_integral<typename T::value_type>);
                 static_assert(
                         limits<IndexType>::digits >= limits<typename T::value_type>::digits
@@ -57,12 +55,7 @@ class GlobalIndex
         {
                 static_assert(sizeof...(I) == N);
 
-                static_check_input_type<T>();
-
-                if constexpr (is_vector<T>)
-                {
-                        ASSERT(sizes.size() == N);
-                }
+                check_input_type<T>();
 
                 if (!((sizes[I] > 0) && ...))
                 {
@@ -123,12 +116,7 @@ public:
         template <typename T>
         constexpr IndexType compute(const T& p) const
         {
-                static_check_input_type<T>();
-
-                if constexpr (is_vector<T>)
-                {
-                        ASSERT(p.size() == N);
-                }
+                check_input_type<T>();
 
                 IndexType global_index = p[0];
                 for (unsigned i = 1; i < N; ++i)

@@ -83,24 +83,24 @@ class Paintbrush final
                 }
                 else
                 {
-                        constexpr std::size_t n = LEVEL - N;
-                        static_assert(n < N);
+                        constexpr std::size_t L_N = LEVEL - N;
+                        static_assert(L_N < N);
 
-                        ASSERT(min[n] < max[n] && min[n] >= 0 && max[n] <= screen_size[n]);
+                        ASSERT(min[L_N] < max[L_N] && min[L_N] >= 0 && max[L_N] <= screen_size[L_N]);
 
-                        for (int i = min[n]; i < max[n]; ++i)
+                        for (int i = min[L_N]; i < max[L_N]; ++i)
                         {
-                                pixel[n] = i;
+                                pixel[L_N] = i;
 
                                 if constexpr (LEVEL + 1 < 2 * N)
                                 {
-                                        static_assert(n < N - 1);
+                                        static_assert(L_N < N - 1);
                                         generate_pixels<LEVEL + 1>(
                                                 screen_size, paintbrush_size, pixel, min, max, pixels);
                                 }
                                 else
                                 {
-                                        static_assert(n == N - 1);
+                                        static_assert(L_N == N - 1);
                                         pixels->emplace_back(pixel);
                                 }
                         }

@@ -156,9 +156,11 @@ template <std::size_t N>
 std::unique_ptr<volume::Volume<N>> scalar_ellipsoid(unsigned size)
 {
         constexpr image::ColorFormat COLOR_FORMAT = image::ColorFormat::R16;
-        using DATA_TYPE = uint16_t;
+        using Type = uint16_t;
 
-        constexpr DATA_TYPE MIN = 500;
+        static_assert(format_pixel_size_in_bytes(COLOR_FORMAT) == sizeof(Type));
+
+        constexpr Type MIN = 500;
 
         check_volume_size<N>(size);
 
@@ -186,8 +188,7 @@ std::unique_ptr<volume::Volume<N>> scalar_ellipsoid(unsigned size)
                 {
                         Vector<N, float> p = coordinates - center;
                         float distance = 2 * p.norm();
-                        DATA_TYPE value =
-                                std::max(MIN, float_to_uint<DATA_TYPE>(1.0f - std::clamp(distance, 0.0f, 1.0f)));
+                        Type value = std::max(MIN, float_to_uint<Type>(1.0f - std::clamp(distance, 0.0f, 1.0f)));
                         std::memcpy(ptr, &value, sizeof(value));
                         ptr += sizeof(value);
                 });
