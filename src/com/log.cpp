@@ -19,24 +19,24 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <src/application/log_events.h>
 
-namespace ns
+namespace ns::log_implementation
 {
-void LOG(const std::string_view& msg) noexcept
+void log(const std::string_view& msg) noexcept
 {
         application::log_impl(msg, application::LogType::Normal);
 }
 
-void LOG_ERROR(const std::string_view& msg) noexcept
+void log_error(const std::string_view& msg) noexcept
 {
         application::log_impl(msg, application::LogType::Error);
 }
 
-void LOG_WARNING(const std::string_view& msg) noexcept
+void log_warning(const std::string_view& msg) noexcept
 {
         application::log_impl(msg, application::LogType::Warning);
 }
 
-void LOG_INFORMATION(const std::string_view& msg) noexcept
+void log_information(const std::string_view& msg) noexcept
 {
         application::log_impl(msg, application::LogType::Information);
 }

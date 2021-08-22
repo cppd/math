@@ -19,10 +19,15 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <string_view>
 
-namespace ns
+namespace ns::log_implementation
 {
-void LOG(const std::string_view& msg) noexcept;
-void LOG_ERROR(const std::string_view& msg) noexcept;
-void LOG_WARNING(const std::string_view& msg) noexcept;
-void LOG_INFORMATION(const std::string_view& msg) noexcept;
+void log(const std::string_view& msg) noexcept;
+void log_error(const std::string_view& msg) noexcept;
+void log_warning(const std::string_view& msg) noexcept;
+void log_information(const std::string_view& msg) noexcept;
 }
+
+#define LOG(m) ::ns::log_implementation::log(m)
+#define LOG_ERROR(m) ::ns::log_implementation::log_error(m)
+#define LOG_WARNING(m) ::ns::log_implementation::log_warning(m)
+#define LOG_INFORMATION(m) ::ns::log_implementation::log_information(m)
