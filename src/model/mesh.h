@@ -53,13 +53,8 @@ struct Mesh final
         struct Material
         {
                 std::string name;
-                color::Color Ka{0};
-                color::Color Kd{0};
-                color::Color Ks{0};
-                float Ns{1};
-                int map_Ka{-1}; // index or -1
-                int map_Kd{-1}; // index or -1
-                int map_Ks{-1}; // index or -1
+                color::Color color{0};
+                int image{-1}; // index or -1
         };
 
         std::vector<Vector<N, float>> vertices;

@@ -64,13 +64,13 @@ constexpr const char* OBJ_usemtl = "usemtl";
 constexpr const char* OBJ_mtllib = "mtllib";
 
 constexpr const char* MTL_newmtl = "newmtl";
-constexpr const char* MTL_Ka = "Ka";
+//constexpr const char* MTL_Ka = "Ka";
 constexpr const char* MTL_Kd = "Kd";
-constexpr const char* MTL_Ks = "Ks";
-constexpr const char* MTL_Ns = "Ns";
-constexpr const char* MTL_map_Ka = "map_Ka";
+//constexpr const char* MTL_Ks = "Ks";
+//constexpr const char* MTL_Ns = "Ns";
+//constexpr const char* MTL_map_Ka = "map_Ka";
 constexpr const char* MTL_map_Kd = "map_Kd";
-constexpr const char* MTL_map_Ks = "map_Ks";
+//constexpr const char* MTL_map_Ks = "map_Ks";
 
 constexpr bool is_number_sign(char c)
 {
@@ -1013,21 +1013,6 @@ void read_lib(
                                         mtl = nullptr;
                                 }
                         }
-                        else if (str_equal(first, MTL_Ka))
-                        {
-                                if (!mtl)
-                                {
-                                        continue;
-                                }
-                                try
-                                {
-                                        mtl->Ka = read_color(&data[second_b]);
-                                }
-                                catch (const std::exception& e)
-                                {
-                                        error("Reading Ka in material " + mtl->name + "\n" + e.what());
-                                }
-                        }
                         else if (str_equal(first, MTL_Kd))
                         {
                                 if (!mtl)
@@ -1036,51 +1021,12 @@ void read_lib(
                                 }
                                 try
                                 {
-                                        mtl->Kd = read_color(&data[second_b]);
+                                        mtl->color = read_color(&data[second_b]);
                                 }
                                 catch (const std::exception& e)
                                 {
                                         error("Reading Kd in material " + mtl->name + "\n" + e.what());
                                 }
-                        }
-                        else if (str_equal(first, MTL_Ks))
-                        {
-                                if (!mtl)
-                                {
-                                        continue;
-                                }
-                                try
-                                {
-                                        mtl->Ks = read_color(&data[second_b]);
-                                }
-                                catch (const std::exception& e)
-                                {
-                                        error("Reading Ks in material " + mtl->name + "\n" + e.what());
-                                }
-                        }
-                        else if (str_equal(first, MTL_Ns))
-                        {
-                                if (!mtl)
-                                {
-                                        continue;
-                                }
-
-                                read_float(&data[second_b], &mtl->Ns);
-
-                                if (!check_range(mtl->Ns, 0, 1000))
-                                {
-                                        error("Error Ns in material " + mtl->name);
-                                }
-                        }
-                        else if (str_equal(first, MTL_map_Ka))
-                        {
-                                if (!mtl)
-                                {
-                                        continue;
-                                }
-
-                                read_name("file", data, second_b, second_e, &name);
-                                load_image<N>(lib_dir, name, image_index, &mesh->images, &mtl->map_Ka);
                         }
                         else if (str_equal(first, MTL_map_Kd))
                         {
@@ -1090,17 +1036,7 @@ void read_lib(
                                 }
 
                                 read_name("file", data, second_b, second_e, &name);
-                                load_image<N>(lib_dir, name, image_index, &mesh->images, &mtl->map_Kd);
-                        }
-                        else if (str_equal(first, MTL_map_Ks))
-                        {
-                                if (!mtl)
-                                {
-                                        continue;
-                                }
-
-                                read_name("file", data, second_b, second_e, &name);
-                                load_image<N>(lib_dir, name, image_index, &mesh->images, &mtl->map_Ks);
+                                load_image<N>(lib_dir, name, image_index, &mesh->images, &mtl->image);
                         }
                 }
                 catch (const std::exception& e)

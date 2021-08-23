@@ -107,16 +107,16 @@ struct Material
 {
         T metalness;
         T roughness;
-        Color Kd;
+        Color color;
         T alpha;
-        int map_Kd;
+        int image;
 
-        Material(T metalness, T roughness, const color::Color& Kd, int map_Kd, T alpha)
+        Material(T metalness, T roughness, const color::Color& color, int image, T alpha)
                 : metalness(std::clamp(metalness, T(0), T(1))),
                   roughness(std::clamp(roughness, T(0), T(1))),
-                  Kd(Kd.to_color<Color>().clamp(0, 1)),
+                  color(color.to_color<Color>().clamp(0, 1)),
                   alpha(std::clamp(alpha, T(0), T(1))),
-                  map_Kd(map_Kd)
+                  image(image)
         {
         }
 };
@@ -179,12 +179,12 @@ class IntersectionImpl final : public Surface<N, T, Color>
 
         Color surface_color(const Material<T, Color>& m) const
         {
-                if (facet_->has_texcoord() && m.map_Kd >= 0)
+                if (facet_->has_texcoord() && m.image >= 0)
                 {
-                        Vector<3, float> rgb = mesh_->images()[m.map_Kd].color(facet_->texcoord(this->point()));
+                        Vector<3, float> rgb = mesh_->images()[m.image].color(facet_->texcoord(this->point()));
                         return Color(rgb[0], rgb[1], rgb[2]);
                 }
-                return m.Kd;
+                return m.color;
         }
 
 public:
@@ -297,8 +297,8 @@ void Mesh<N, T, Color>::create(const mesh::Reading<N>& mesh_object)
 
         for (const typename mesh::Mesh<N>::Material& m : mesh.materials)
         {
-                int map_Kd = m.map_Kd < 0 ? -1 : (images_offset + m.map_Kd);
-                materials_.emplace_back(mesh_object.metalness(), mesh_object.roughness(), m.Kd, map_Kd, alpha);
+                int image = m.image < 0 ? -1 : (images_offset + m.image);
+                materials_.emplace_back(mesh_object.metalness(), mesh_object.roughness(), m.color, image, alpha);
         }
         if (facets_without_material)
         {

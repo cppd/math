@@ -412,8 +412,8 @@ std::vector<MaterialBuffer> load_materials(
         for (const typename mesh::Mesh<3>::Material& mesh_material : mesh.materials)
         {
                 MaterialBuffer::Material mb{
-                        .color = mesh_material.Kd.rgb32().clamp(0, 1),
-                        .use_texture = (mesh_material.map_Kd >= 0) ? 1u : 0,
+                        .color = mesh_material.color.rgb32().clamp(0, 1),
+                        .use_texture = (mesh_material.image >= 0) ? 1u : 0,
                         .use_material = 1};
                 buffers.emplace_back(device, command_pool, queue, family_indices, mb);
         }
@@ -443,12 +443,12 @@ std::vector<TrianglesMaterialMemory::MaterialInfo> materials_info(
         {
                 const typename mesh::Mesh<3>::Material& mesh_material = mesh.materials[i];
 
-                ASSERT(mesh_material.map_Kd < static_cast<int>(textures.size()) - 1);
+                ASSERT(mesh_material.image < static_cast<int>(textures.size()) - 1);
 
                 TrianglesMaterialMemory::MaterialInfo& m = materials.emplace_back();
                 m.buffer = material_buffers[i].buffer();
                 m.buffer_size = material_buffers[i].buffer().size();
-                m.texture = (mesh_material.map_Kd >= 0) ? textures[mesh_material.map_Kd].image_view() : no_texture;
+                m.texture = (mesh_material.image >= 0) ? textures[mesh_material.image].image_view() : no_texture;
         }
 
         TrianglesMaterialMemory::MaterialInfo& m = materials.emplace_back();
