@@ -50,24 +50,24 @@ public:
                 versions_.emplace_back(versions_.back().version + 1, updates);
         }
 
-        void updates(std::optional<int>* version, std::bitset<N>* updates) const
+        std::bitset<N> updates(std::optional<int>* version) const
         {
+                ASSERT(version);
                 ASSERT(!versions_.empty());
 
                 if (!version->has_value())
                 {
                         *version = versions_.back().version;
-                        updates->set();
-                        return;
+                        return std::bitset<N>().set();
                 }
-
-                updates->reset();
 
                 ASSERT(version->value() <= versions_.back().version);
                 if (version->value() == versions_.back().version)
                 {
-                        return;
+                        return std::bitset<N>();
                 }
+
+                std::bitset<N> updates;
 
                 int version_from = version->value() + 1;
                 auto iter = versions_.cbegin();
@@ -81,10 +81,11 @@ public:
                 }
                 for (; iter != versions_.cend(); ++iter)
                 {
-                        *updates |= iter->updates;
+                        updates |= iter->updates;
                 }
 
                 *version = versions_.back().version;
+                return updates;
         }
 };
 }

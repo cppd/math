@@ -788,14 +788,13 @@ class Impl final : public MeshObject
 
         UpdateChanges update(const mesh::Reading<3>& mesh_object) override
         {
-                UpdateChanges update_changes;
-
-                mesh::Updates updates;
-                mesh_object.updates(&version_, &updates);
+                const mesh::Updates updates = mesh_object.updates(&version_);
                 if (updates.none())
                 {
-                        return update_changes;
+                        return {};
                 }
+
+                UpdateChanges update_changes;
 
                 ASSERT(!mesh_object.mesh().facets.empty() || !mesh_object.mesh().lines.empty()
                        || !mesh_object.mesh().points.empty());

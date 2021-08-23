@@ -278,9 +278,9 @@ class VolumeObject final : public std::enable_shared_from_this<VolumeObject<N>>
                 roughness_ = roughness;
         }
 
-        void updates(std::optional<int>* version, Updates* updates) const
+        Updates updates(std::optional<int>* version) const
         {
-                versions_.updates(version, updates);
+                return versions_.updates(version);
         }
 
 public:
@@ -528,9 +528,9 @@ public:
         {
         }
 
-        void updates(std::optional<int>* version, Updates* updates) const
+        Updates updates(std::optional<int>* version) const
         {
-                object_->updates(version, updates);
+                return object_->updates(version);
         }
 
         const Volume<N>& volume() const

@@ -396,14 +396,13 @@ class Impl final : public VolumeObject
 
         UpdateChanges update(const volume::Reading<3>& volume_object) override
         {
-                UpdateChanges update_changes;
-
-                volume::Updates updates;
-                volume_object.updates(&version_, &updates);
+                const volume::Updates updates = volume_object.updates(&version_);
                 if (updates.none())
                 {
-                        return update_changes;
+                        return {};
                 }
+
+                UpdateChanges update_changes;
 
                 static_assert(volume::Updates().size() == 11);
 
