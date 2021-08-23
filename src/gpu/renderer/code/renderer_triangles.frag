@@ -25,19 +25,12 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 layout(set = 2, binding = 0, std140) uniform Material
 {
-        vec3 Ka;
-        vec3 Kd;
-        vec3 Ks;
-        float Ns;
-        bool use_texture_Ka;
-        bool use_texture_Kd;
-        bool use_texture_Ks;
+        vec3 color;
+        bool use_texture;
         bool use_material;
 }
 mtl;
-layout(set = 2, binding = 1) uniform sampler2D texture_Ka;
-layout(set = 2, binding = 2) uniform sampler2D texture_Kd;
-layout(set = 2, binding = 3) uniform sampler2D texture_Ks;
+layout(set = 2, binding = 1) uniform sampler2D material_texture;
 
 //
 
@@ -51,19 +44,6 @@ layout(location = 0) in GS
 gs;
 
 //
-
-vec4 texture_Ka_color(vec2 c)
-{
-        return texture(texture_Ka, c);
-}
-vec4 texture_Kd_color(vec2 c)
-{
-        return texture(texture_Kd, c);
-}
-vec4 texture_Ks_color(vec2 c)
-{
-        return texture(texture_Ks, c);
-}
 
 float shadow_weight()
 {
@@ -126,13 +106,13 @@ vec3 shade()
         {
                 color = mesh.color;
         }
-        else if (!has_texture_coordinates() || !mtl.use_texture_Kd)
+        else if (!has_texture_coordinates() || !mtl.use_texture)
         {
-                color = mtl.Kd;
+                color = mtl.color;
         }
         else
         {
-                color = texture_Kd_color(gs.texture_coordinates).rgb;
+                color = texture(material_texture, gs.texture_coordinates).rgb;
         }
 
         return drawing.lighting_color * shade(color) + mesh.ambient * color;

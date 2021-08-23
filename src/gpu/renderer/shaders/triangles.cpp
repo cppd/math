@@ -43,27 +43,7 @@ std::vector<VkDescriptorSetLayoutBinding> TrianglesMaterialMemory::descriptor_se
         }
         {
                 VkDescriptorSetLayoutBinding b = {};
-                b.binding = TEXTURE_KA_BINDING;
-                b.descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
-                b.descriptorCount = 1;
-                b.stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
-                b.pImmutableSamplers = nullptr;
-
-                bindings.push_back(b);
-        }
-        {
-                VkDescriptorSetLayoutBinding b = {};
-                b.binding = TEXTURE_KD_BINDING;
-                b.descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
-                b.descriptorCount = 1;
-                b.stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
-                b.pImmutableSamplers = nullptr;
-
-                bindings.push_back(b);
-        }
-        {
-                VkDescriptorSetLayoutBinding b = {};
-                b.binding = TEXTURE_KS_BINDING;
+                b.binding = TEXTURE_BINDING;
                 b.descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
                 b.descriptorCount = 1;
                 b.stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
@@ -87,8 +67,7 @@ vulkan::Descriptors TrianglesMaterialMemory::create(
                 materials.cbegin(), materials.cend(),
                 [](const MaterialInfo& m)
                 {
-                        return m.buffer != VK_NULL_HANDLE && m.buffer_size > 0 && m.texture_Ka != VK_NULL_HANDLE
-                               && m.texture_Kd != VK_NULL_HANDLE && m.texture_Ks != VK_NULL_HANDLE;
+                        return m.buffer != VK_NULL_HANDLE && m.buffer_size > 0 && m.texture != VK_NULL_HANDLE;
                 }));
 
         vulkan::Descriptors descriptors(
@@ -116,32 +95,12 @@ vulkan::Descriptors TrianglesMaterialMemory::create(
                 {
                         VkDescriptorImageInfo image_info = {};
                         image_info.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
-                        image_info.imageView = material.texture_Ka;
+                        image_info.imageView = material.texture;
                         image_info.sampler = sampler;
 
                         infos.emplace_back(image_info);
 
-                        bindings.push_back(TEXTURE_KA_BINDING);
-                }
-                {
-                        VkDescriptorImageInfo image_info = {};
-                        image_info.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
-                        image_info.imageView = material.texture_Kd;
-                        image_info.sampler = sampler;
-
-                        infos.emplace_back(image_info);
-
-                        bindings.push_back(TEXTURE_KD_BINDING);
-                }
-                {
-                        VkDescriptorImageInfo image_info = {};
-                        image_info.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
-                        image_info.imageView = material.texture_Ks;
-                        image_info.sampler = sampler;
-
-                        infos.emplace_back(image_info);
-
-                        bindings.push_back(TEXTURE_KS_BINDING);
+                        bindings.push_back(TEXTURE_BINDING);
                 }
                 descriptors.update_descriptor_set(i, bindings, infos);
         }

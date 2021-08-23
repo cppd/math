@@ -113,13 +113,8 @@ class MaterialBuffer final
 public:
         struct Material
         {
-                alignas(sizeof(vec4f)) vec3f Ka;
-                alignas(sizeof(vec4f)) vec3f Kd;
-                alignas(sizeof(vec4f)) vec3f Ks;
-                float Ns;
-                uint32_t use_texture_Ka;
-                uint32_t use_texture_Kd;
-                uint32_t use_texture_Ks;
+                alignas(sizeof(vec4f)) vec3f color;
+                uint32_t use_texture;
                 uint32_t use_material;
         };
 

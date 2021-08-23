@@ -411,28 +411,15 @@ std::vector<MaterialBuffer> load_materials(
 
         for (const typename mesh::Mesh<3>::Material& mesh_material : mesh.materials)
         {
-                MaterialBuffer::Material mb;
-                mb.Ka = mesh_material.Ka.rgb32().clamp(0, 1);
-                mb.Kd = mesh_material.Kd.rgb32().clamp(0, 1);
-                mb.Ks = mesh_material.Ks.rgb32().clamp(0, 1);
-                mb.Ns = mesh_material.Ns;
-                mb.use_texture_Ka = (mesh_material.map_Ka >= 0) ? 1 : 0;
-                mb.use_texture_Kd = (mesh_material.map_Kd >= 0) ? 1 : 0;
-                mb.use_texture_Ks = (mesh_material.map_Ks >= 0) ? 1 : 0;
-                mb.use_material = 1;
+                MaterialBuffer::Material mb{
+                        .color = mesh_material.Kd.rgb32().clamp(0, 1),
+                        .use_texture = (mesh_material.map_Kd >= 0) ? 1u : 0,
+                        .use_material = 1};
                 buffers.emplace_back(device, command_pool, queue, family_indices, mb);
         }
 
         // material for vertices without material
-        MaterialBuffer::Material mb;
-        mb.Ka = vec3f(0);
-        mb.Kd = vec3f(0);
-        mb.Ks = vec3f(0);
-        mb.Ns = 0;
-        mb.use_texture_Ka = 0;
-        mb.use_texture_Kd = 0;
-        mb.use_texture_Ks = 0;
-        mb.use_material = 0;
+        MaterialBuffer::Material mb{.color = vec3f(0), .use_texture = 0, .use_material = 0};
         buffers.emplace_back(device, command_pool, queue, family_indices, mb);
 
         return buffers;
@@ -456,24 +443,18 @@ std::vector<TrianglesMaterialMemory::MaterialInfo> materials_info(
         {
                 const typename mesh::Mesh<3>::Material& mesh_material = mesh.materials[i];
 
-                ASSERT(mesh_material.map_Ka < static_cast<int>(textures.size()) - 1);
                 ASSERT(mesh_material.map_Kd < static_cast<int>(textures.size()) - 1);
-                ASSERT(mesh_material.map_Ks < static_cast<int>(textures.size()) - 1);
 
                 TrianglesMaterialMemory::MaterialInfo& m = materials.emplace_back();
                 m.buffer = material_buffers[i].buffer();
                 m.buffer_size = material_buffers[i].buffer().size();
-                m.texture_Ka = (mesh_material.map_Ka >= 0) ? textures[mesh_material.map_Ka].image_view() : no_texture;
-                m.texture_Kd = (mesh_material.map_Kd >= 0) ? textures[mesh_material.map_Kd].image_view() : no_texture;
-                m.texture_Ks = (mesh_material.map_Ks >= 0) ? textures[mesh_material.map_Ks].image_view() : no_texture;
+                m.texture = (mesh_material.map_Kd >= 0) ? textures[mesh_material.map_Kd].image_view() : no_texture;
         }
 
         TrianglesMaterialMemory::MaterialInfo& m = materials.emplace_back();
         m.buffer = material_buffers.back().buffer();
         m.buffer_size = material_buffers.back().buffer().size();
-        m.texture_Ka = no_texture;
-        m.texture_Kd = no_texture;
-        m.texture_Ks = no_texture;
+        m.texture = no_texture;
 
         return materials;
 }

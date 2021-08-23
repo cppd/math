@@ -33,9 +33,7 @@ class TrianglesMaterialMemory final
         static constexpr int SET_NUMBER = 2;
 
         static constexpr int MATERIAL_BINDING = 0;
-        static constexpr int TEXTURE_KA_BINDING = 1;
-        static constexpr int TEXTURE_KD_BINDING = 2;
-        static constexpr int TEXTURE_KS_BINDING = 3;
+        static constexpr int TEXTURE_BINDING = 1;
 
 public:
         static std::vector<VkDescriptorSetLayoutBinding> descriptor_set_layout_bindings();
@@ -45,9 +43,7 @@ public:
         {
                 VkBuffer buffer;
                 VkDeviceSize buffer_size;
-                VkImageView texture_Ka;
-                VkImageView texture_Kd;
-                VkImageView texture_Ks;
+                VkImageView texture;
         };
 
         static vulkan::Descriptors create(
