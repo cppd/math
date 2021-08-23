@@ -517,15 +517,6 @@ class Impl final : public MeshObject
 
         std::optional<int> version_;
 
-        const mesh::Update::Flags UPDATE_LIGHTING = []()
-        {
-                mesh::Update::Flags flags;
-                flags.set(mesh::Update::Ambient);
-                flags.set(mesh::Update::Metalness);
-                flags.set(mesh::Update::Roughness);
-                return flags;
-        }();
-
         void buffer_set_lighting(float ambient, float metalness, float roughness) const
         {
                 std::tie(ambient, metalness, roughness) = clean_shading_parameters(ambient, metalness, roughness);
@@ -799,7 +790,7 @@ class Impl final : public MeshObject
         {
                 UpdateChanges update_changes;
 
-                mesh::Update::Flags updates;
+                mesh::Updates updates;
                 mesh_object.updates(&version_, &updates);
                 if (updates.none())
                 {
@@ -809,20 +800,18 @@ class Impl final : public MeshObject
                 ASSERT(!mesh_object.mesh().facets.empty() || !mesh_object.mesh().lines.empty()
                        || !mesh_object.mesh().points.empty());
 
-                static_assert(mesh::Update::Flags().size() == 7);
+                static_assert(mesh::Updates().size() == 7);
 
-                bool update_mesh = updates[mesh::Update::Mesh];
-                bool update_matrix = updates[mesh::Update::Matrix];
-                bool update_color = updates[mesh::Update::Color];
-                bool update_alpha = updates[mesh::Update::Alpha];
-                bool update_lighting = (updates & UPDATE_LIGHTING).any();
+                static constexpr mesh::Updates LIGHTING_UPDATES(
+                        (1ull << mesh::UPDATE_AMBIENT) | (1ull << mesh::UPDATE_METALNESS)
+                        | (1ull << mesh::UPDATE_ROUGHNESS));
 
-                if (update_matrix)
+                if (updates[mesh::UPDATE_MATRIX])
                 {
                         buffer_set_coordinates(mesh_object.matrix());
                 }
 
-                if (update_alpha)
+                if (updates[mesh::UPDATE_ALPHA])
                 {
                         buffer_set_alpha(mesh_object.alpha());
 
@@ -834,17 +823,17 @@ class Impl final : public MeshObject
                         }
                 }
 
-                if (update_color)
+                if (updates[mesh::UPDATE_COLOR])
                 {
                         buffer_set_color(mesh_object.color());
                 }
 
-                if (update_lighting)
+                if ((updates & LIGHTING_UPDATES).any())
                 {
                         buffer_set_lighting(mesh_object.ambient(), mesh_object.metalness(), mesh_object.roughness());
                 }
 
-                if (update_mesh)
+                if (updates[mesh::UPDATE_MESH])
                 {
                         const mesh::Mesh<3>& mesh = mesh_object.mesh();
 

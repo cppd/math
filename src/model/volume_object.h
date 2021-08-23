@@ -92,24 +92,21 @@ private:
         T data_;
 };
 
-namespace Update
+enum Update
 {
-enum Flag
-{
-        Image,
-        Matrices,
-        Levels,
-        VolumeAlphaCoefficient,
-        IsosurfaceAlpha,
-        Isosurface,
-        Isovalue,
-        Color,
-        Ambient,
-        Metalness,
-        Roughness
+        UPDATE_IMAGE,
+        UPDATE_MATRICES,
+        UPDATE_LEVELS,
+        UPDATE_VOLUME_ALPHA_COEFFICIENT,
+        UPDATE_ISOSURFACE_ALPHA,
+        UPDATE_ISOSURFACE,
+        UPDATE_ISOVALUE,
+        UPDATE_COLOR,
+        UPDATE_AMBIENT,
+        UPDATE_METALNESS,
+        UPDATE_ROUGHNESS
 };
-using Flags = std::bitset<Flag::Roughness + 1>;
-}
+using Updates = std::bitset<UPDATE_ROUGHNESS + 1>;
 
 template <std::size_t N>
 class VolumeObject final : public std::enable_shared_from_this<VolumeObject<N>>
@@ -150,7 +147,7 @@ class VolumeObject final : public std::enable_shared_from_this<VolumeObject<N>>
 
         mutable std::shared_mutex mutex_;
 
-        Versions<Update::Flags().size()> versions_;
+        Versions<Updates().size()> versions_;
 
         void send_event(VolumeEvent<N>&& event) noexcept
         {
@@ -281,7 +278,7 @@ class VolumeObject final : public std::enable_shared_from_this<VolumeObject<N>>
                 roughness_ = roughness;
         }
 
-        void updates(std::optional<int>* version, Update::Flags* updates) const
+        void updates(std::optional<int>* version, Updates* updates) const
         {
                 versions_.updates(version, updates);
         }
@@ -374,7 +371,7 @@ class Writing final
         VolumeObject<N>* object_;
         std::unique_lock<std::shared_mutex> lock_;
 
-        Update::Flags updates_;
+        Updates updates_;
 
 public:
         explicit Writing(VolumeObject<N>* object) : object_(object), lock_(object_->mutex_)
@@ -411,7 +408,7 @@ public:
 
         void set_matrix(const Matrix<N + 1, N + 1, double>& matrix)
         {
-                updates_.set(Update::Matrices);
+                updates_.set(UPDATE_MATRICES);
                 object_->set_matrix(matrix);
         }
 
@@ -427,7 +424,7 @@ public:
 
         void set_levels(float min, float max)
         {
-                updates_.set(Update::Levels);
+                updates_.set(UPDATE_LEVELS);
                 object_->set_levels(min, max);
         }
 
@@ -438,7 +435,7 @@ public:
 
         void set_volume_alpha_coefficient(float coefficient)
         {
-                updates_.set(Update::VolumeAlphaCoefficient);
+                updates_.set(UPDATE_VOLUME_ALPHA_COEFFICIENT);
                 object_->set_volume_alpha_coefficient(coefficient);
         }
 
@@ -449,7 +446,7 @@ public:
 
         void set_isosurface_alpha(float alpha)
         {
-                updates_.set(Update::IsosurfaceAlpha);
+                updates_.set(UPDATE_ISOSURFACE_ALPHA);
                 object_->set_isosurface_alpha(alpha);
         }
 
@@ -460,7 +457,7 @@ public:
 
         void set_isosurface(bool enabled)
         {
-                updates_.set(Update::Isovalue);
+                updates_.set(UPDATE_ISOVALUE);
                 object_->set_isosurface(enabled);
         }
 
@@ -471,7 +468,7 @@ public:
 
         void set_isovalue(float value)
         {
-                updates_.set(Update::Isovalue);
+                updates_.set(UPDATE_ISOVALUE);
                 object_->set_isovalue(value);
         }
 
@@ -482,7 +479,7 @@ public:
 
         void set_color(const color::Color& color)
         {
-                updates_.set(Update::Color);
+                updates_.set(UPDATE_COLOR);
                 object_->set_color(color);
         }
 
@@ -493,7 +490,7 @@ public:
 
         void set_ambient(float ambient)
         {
-                updates_.set(Update::Ambient);
+                updates_.set(UPDATE_AMBIENT);
                 object_->set_ambient(ambient);
         }
 
@@ -504,7 +501,7 @@ public:
 
         void set_metalness(float metalness)
         {
-                updates_.set(Update::Metalness);
+                updates_.set(UPDATE_METALNESS);
                 object_->set_metalness(metalness);
         }
 
@@ -515,7 +512,7 @@ public:
 
         void set_roughness(float roughness)
         {
-                updates_.set(Update::Roughness);
+                updates_.set(UPDATE_ROUGHNESS);
                 object_->set_roughness(roughness);
         }
 };
@@ -531,7 +528,7 @@ public:
         {
         }
 
-        void updates(std::optional<int>* version, Update::Flags* updates) const
+        void updates(std::optional<int>* version, Updates* updates) const
         {
                 object_->updates(version, updates);
         }

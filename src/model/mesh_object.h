@@ -92,20 +92,17 @@ private:
         T data_;
 };
 
-namespace Update
+enum Update
 {
-enum Flag
-{
-        Mesh,
-        Alpha,
-        Matrix,
-        Color,
-        Ambient,
-        Metalness,
-        Roughness
+        UPDATE_MESH,
+        UPDATE_ALPHA,
+        UPDATE_MATRIX,
+        UPDATE_COLOR,
+        UPDATE_AMBIENT,
+        UPDATE_METALNESS,
+        UPDATE_ROUGHNESS
 };
-using Flags = std::bitset<Flag::Roughness + 1>;
-}
+using Updates = std::bitset<UPDATE_ROUGHNESS + 1>;
 
 template <std::size_t N>
 class MeshObject final : public std::enable_shared_from_this<MeshObject<N>>
@@ -139,7 +136,7 @@ class MeshObject final : public std::enable_shared_from_this<MeshObject<N>>
 
         mutable std::shared_mutex mutex_;
 
-        Versions<Update::Flags().size()> versions_;
+        Versions<Updates().size()> versions_;
 
         void send_event(MeshEvent<N>&& event) noexcept
         {
@@ -224,7 +221,7 @@ class MeshObject final : public std::enable_shared_from_this<MeshObject<N>>
                 roughness_ = roughness;
         }
 
-        void updates(std::optional<int>* version, Update::Flags* updates) const
+        void updates(std::optional<int>* version, Updates* updates) const
         {
                 versions_.updates(version, updates);
         }
@@ -314,7 +311,7 @@ class Writing final
         MeshObject<N>* object_;
         std::unique_lock<std::shared_mutex> lock_;
 
-        Update::Flags updates_;
+        Updates updates_;
 
 public:
         explicit Writing(MeshObject<N>* object) : object_(object), lock_(object_->mutex_)
@@ -361,7 +358,7 @@ public:
 
         void set_matrix(const Matrix<N + 1, N + 1, double>& matrix)
         {
-                updates_.set(Update::Matrix);
+                updates_.set(UPDATE_MATRIX);
                 object_->set_matrix(matrix);
         }
 
@@ -372,7 +369,7 @@ public:
 
         void set_alpha(float alpha)
         {
-                updates_.set(Update::Alpha);
+                updates_.set(UPDATE_ALPHA);
                 object_->set_alpha(alpha);
         }
 
@@ -383,7 +380,7 @@ public:
 
         void set_color(const color::Color& color)
         {
-                updates_.set(Update::Color);
+                updates_.set(UPDATE_COLOR);
                 object_->set_color(color);
         }
 
@@ -394,7 +391,7 @@ public:
 
         void set_ambient(float ambient)
         {
-                updates_.set(Update::Ambient);
+                updates_.set(UPDATE_AMBIENT);
                 object_->set_ambient(ambient);
         }
 
@@ -405,7 +402,7 @@ public:
 
         void set_metalness(float metalness)
         {
-                updates_.set(Update::Metalness);
+                updates_.set(UPDATE_METALNESS);
                 object_->set_metalness(metalness);
         }
 
@@ -416,7 +413,7 @@ public:
 
         void set_roughness(float roughness)
         {
-                updates_.set(Update::Roughness);
+                updates_.set(UPDATE_ROUGHNESS);
                 object_->set_roughness(roughness);
         }
 };
@@ -432,7 +429,7 @@ public:
         {
         }
 
-        void updates(std::optional<int>* version, Update::Flags* updates) const
+        void updates(std::optional<int>* version, Updates* updates) const
         {
                 object_->updates(version, updates);
         }

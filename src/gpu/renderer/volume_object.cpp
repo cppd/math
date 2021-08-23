@@ -231,27 +231,6 @@ class Impl final : public VolumeObject
 
         std::optional<int> version_;
 
-        const volume::Update::Flags UPDATE_PARAMETERS = []()
-        {
-                volume::Update::Flags flags;
-                flags.set(volume::Update::Color);
-                flags.set(volume::Update::Levels);
-                flags.set(volume::Update::Isovalue);
-                flags.set(volume::Update::Isosurface);
-                flags.set(volume::Update::IsosurfaceAlpha);
-                flags.set(volume::Update::VolumeAlphaCoefficient);
-                return flags;
-        }();
-
-        const volume::Update::Flags UPDATE_LIGHTING = []()
-        {
-                volume::Update::Flags flags;
-                flags.set(volume::Update::Ambient);
-                flags.set(volume::Update::Metalness);
-                flags.set(volume::Update::Roughness);
-                return flags;
-        }();
-
         void buffer_set_parameters(
                 float window_min,
                 float window_max,
@@ -419,34 +398,36 @@ class Impl final : public VolumeObject
         {
                 UpdateChanges update_changes;
 
-                volume::Update::Flags updates;
+                volume::Updates updates;
                 volume_object.updates(&version_, &updates);
                 if (updates.none())
                 {
                         return update_changes;
                 }
 
-                static_assert(volume::Update::Flags().size() == 11);
+                static_assert(volume::Updates().size() == 11);
 
-                bool update_image = updates[volume::Update::Image];
-                bool update_matrices = updates[volume::Update::Matrices];
-                bool update_parameters = (updates & UPDATE_PARAMETERS).any();
-                bool update_ligthing = (updates & UPDATE_LIGHTING).any();
+                static constexpr volume::Updates PARAMETERS_UPDATE(
+                        (1ull << volume::UPDATE_COLOR) | (1ull << volume::UPDATE_LEVELS)
+                        | (1ull << volume::UPDATE_ISOVALUE) | (1ull << volume::UPDATE_ISOSURFACE)
+                        | (1ull << volume::UPDATE_ISOSURFACE_ALPHA)
+                        | (1ull << volume::UPDATE_VOLUME_ALPHA_COEFFICIENT));
 
-                if (update_image)
+                static constexpr volume::Updates LIGHTING_UPDATE(
+                        (1ull << volume::UPDATE_AMBIENT) | (1ull << volume::UPDATE_METALNESS)
+                        | (1ull << volume::UPDATE_ROUGHNESS));
+
+                bool size_changed = false;
+
+                if (updates[volume::UPDATE_IMAGE])
                 {
                         set_transfer_function();
-
-                        bool size_changed;
                         set_image(volume_object.volume().image, &size_changed);
-                        update_matrices = update_matrices || size_changed;
-
                         create_descriptor_sets();
-
                         update_changes.command_buffers = true;
                 }
 
-                if (update_parameters)
+                if ((updates & PARAMETERS_UPDATE).any())
                 {
                         buffer_set_parameters(
                                 volume_object.level_min(), volume_object.level_max(),
@@ -454,13 +435,13 @@ class Impl final : public VolumeObject
                                 volume_object.isosurface(), volume_object.isovalue(), volume_object.color());
                 }
 
-                if (update_ligthing)
+                if ((updates & LIGHTING_UPDATE).any())
                 {
                         buffer_set_lighting(
                                 volume_object.ambient(), volume_object.metalness(), volume_object.roughness());
                 }
 
-                if (update_matrices)
+                if (size_changed || updates[volume::UPDATE_MATRICES])
                 {
                         object_normal_to_world_normal_matrix_ =
                                 volume_object.matrix().top_left<3, 3>().inverse().transpose();
