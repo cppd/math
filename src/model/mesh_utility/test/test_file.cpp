@@ -122,7 +122,7 @@ void test_stl_file(
 }
 
 template <std::size_t N>
-void test_geometry_files(
+void test_mesh_files(
         const std::string& name,
         const std::vector<Vector<N, float>>& vertices,
         const std::vector<std::array<int, N>>& facets,
@@ -155,7 +155,7 @@ void test_geometry_files(
 template <std::size_t N>
 void test()
 {
-        LOG("Test geometry files, " + space_name(N));
+        LOG("Test mesh files, " + space_name(N));
 
         const unsigned facet_count = []()
         {
@@ -169,9 +169,9 @@ void test()
         std::vector<std::array<int, N>> facets;
         geometry::create_sphere(facet_count, &vertices, &facets);
 
-        test_geometry_files(to_string(N - 1) + "-sphere", vertices, facets, &progress);
+        test_mesh_files(to_string(N - 1) + "-sphere", vertices, facets, &progress);
 
-        LOG("Test passed");
+        LOG("Test mesh files passed");
 }
 
 TEST_SMALL("Mesh Files 3-Space", test<3>)
