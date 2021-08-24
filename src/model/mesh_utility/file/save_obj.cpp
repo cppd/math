@@ -37,12 +37,6 @@ namespace
 {
 constexpr bool NORMALIZE_VERTEX_COORDINATES = false;
 
-constexpr const char* OBJ_comment_and_space = "# ";
-constexpr char OBJ_v = 'v';
-constexpr char OBJ_n = 'n';
-constexpr char OBJ_f = 'f';
-constexpr char OBJ_l = 'l';
-
 void write_comment(std::ostream& file, const std::string_view& comment)
 {
         if (comment.empty())
@@ -52,17 +46,22 @@ void write_comment(std::ostream& file, const std::string_view& comment)
 
         std::string str;
 
-        str += OBJ_comment_and_space;
+        bool first = true;
         for (char c : comment)
         {
                 if (c != '\n')
                 {
+                        if (first)
+                        {
+                                str += "# ";
+                                first = false;
+                        }
                         str += c;
                 }
                 else
                 {
                         str += '\n';
-                        str += OBJ_comment_and_space;
+                        first = true;
                 }
         }
         str += '\n';
@@ -70,58 +69,83 @@ void write_comment(std::ostream& file, const std::string_view& comment)
         file << str;
 }
 
+void write_vertex(std::ostream& file)
+{
+        file << 'v';
+}
+
+void write_normal(std::ostream& file)
+{
+        file << "vn";
+}
+
+void write_face(std::ostream& file)
+{
+        file << 'f';
+}
+
+void write_line(std::ostream& file)
+{
+        file << 'l';
+}
+
+void write_nl(std::ostream& file)
+{
+        file << '\n';
+}
+
 template <std::size_t N>
 void write_vertex(std::ostream& file, const Vector<N, float>& vertex)
 {
-        file << OBJ_v;
+        write_vertex(file);
         for (unsigned i = 0; i < N; ++i)
         {
                 file << ' ' << vertex[i];
         }
-        file << '\n';
+        write_nl(file);
 }
 
 template <std::size_t N>
 void write_normal(std::ostream& file, const Vector<N, float>& normal)
 {
-        file << OBJ_v << OBJ_n;
+        write_normal(file);
         for (unsigned i = 0; i < N; ++i)
         {
                 file << ' ' << normal[i];
         }
-        file << '\n';
+        write_nl(file);
 }
 
 template <std::size_t N>
 void write_face(std::ostream& file, const std::array<int, N>& vertices)
 {
-        file << OBJ_f;
+        write_face(file);
         for (unsigned i = 0; i < N; ++i)
         {
                 file << ' ' << (vertices[i] + 1);
         }
-        file << '\n';
+        write_nl(file);
 }
 
 template <std::size_t N>
 void write_face(std::ostream& file, const std::array<int, N>& vertices, const std::array<int, N>& normals)
 {
-        file << OBJ_f;
+        write_face(file);
         for (unsigned i = 0; i < N; ++i)
         {
                 file << ' ' << (vertices[i] + 1) << "//" << (normals[i] + 1);
         }
-        file << '\n';
+        write_nl(file);
 }
 
 void write_line(std::ostream& file, const std::array<int, 2>& vertices)
 {
-        file << OBJ_l;
+        write_line(file);
         for (unsigned i = 0; i < 2; ++i)
         {
                 file << ' ' << (vertices[i] + 1);
         }
-        file << '\n';
+        write_nl(file);
 }
 
 template <std::size_t N>

@@ -56,32 +56,6 @@ constexpr int MAX_FACETS_PER_LINE = 1;
 template <>
 constexpr int MAX_FACETS_PER_LINE<3> = 5;
 
-constexpr const char* OBJ_v = "v";
-constexpr const char* OBJ_vt = "vt";
-constexpr const char* OBJ_vn = "vn";
-constexpr const char* OBJ_f = "f";
-constexpr const char* OBJ_usemtl = "usemtl";
-constexpr const char* OBJ_mtllib = "mtllib";
-
-constexpr const char* MTL_newmtl = "newmtl";
-//constexpr const char* MTL_Ka = "Ka";
-constexpr const char* MTL_Kd = "Kd";
-//constexpr const char* MTL_Ks = "Ks";
-//constexpr const char* MTL_Ns = "Ns";
-//constexpr const char* MTL_map_Ka = "map_Ka";
-constexpr const char* MTL_map_Kd = "map_Kd";
-//constexpr const char* MTL_map_Ks = "map_Ks";
-
-constexpr bool is_number_sign(char c)
-{
-        return c == '#';
-}
-
-constexpr bool is_solidus(char c)
-{
-        return c == '/';
-}
-
 constexpr bool str_equal(const char* s1, const char* s2)
 {
         while (*s1 == *s2 && *s1)
@@ -249,9 +223,9 @@ void read_digit_groups(
                                 continue;
                         }
 
-                        if (!is_solidus(line[i]))
+                        if (line[i] != '/')
                         {
-                                error("Error read facet vertex number");
+                                error(std::string("Error read facet number, expected '/', found '") + line[i] + "'");
                         }
 
                         ++i;
@@ -436,25 +410,27 @@ void read_library_names(
 // split string into two parts
 // 1. not space characters
 // 2. all other characters before a comment or the end of the string
-template <typename T, typename Space, typename Comment>
 void split(
-        const T& data,
+        const std::vector<char>& data,
         long long first,
         long long last,
-        const Space& space,
-        const Comment& comment,
         long long* first_b,
         long long* first_e,
         long long* second_b,
         long long* second_e)
 {
+        const auto is_comment = [](char c)
+        {
+                return c == '#';
+        };
+
         long long i = first;
 
-        while (i < last && space(data[i]))
+        while (i < last && ascii::is_space(data[i]))
         {
                 ++i;
         }
-        if (i == last || comment(data[i]))
+        if (i == last || is_comment(data[i]))
         {
                 *first_b = i;
                 *first_e = i;
@@ -464,7 +440,7 @@ void split(
         }
 
         long long i2 = i + 1;
-        while (i2 < last && !space(data[i2]) && !comment(data[i2]))
+        while (i2 < last && !ascii::is_space(data[i2]) && !is_comment(data[i2]))
         {
                 ++i2;
         }
@@ -473,7 +449,7 @@ void split(
 
         i = i2;
 
-        if (i == last || comment(data[i]))
+        if (i == last || is_comment(data[i]))
         {
                 *second_b = i;
                 *second_e = i;
@@ -484,7 +460,7 @@ void split(
         ++i;
 
         i2 = i;
-        while (i2 < last && !comment(data[i2]))
+        while (i2 < last && !is_comment(data[i2]))
         {
                 ++i2;
         }
@@ -493,9 +469,8 @@ void split(
         *second_e = i2;
 }
 
-template <typename T>
 void split_line(
-        T* data,
+        std::vector<char>* data,
         const std::vector<long long>& line_begin,
         long long line_num,
         const char** first,
@@ -513,8 +488,7 @@ void split_line(
         long long first_b;
         long long first_e;
 
-        split(*data, line_begin[line_num], last, ascii::is_space, is_number_sign, &first_b, &first_e, second_b,
-              second_e);
+        split(*data, line_begin[line_num], last, &first_b, &first_e, second_b, second_e);
 
         *first = &(*data)[first_b];
         (*data)[first_e] = 0; // space, '#', '\n'
@@ -716,7 +690,7 @@ void read_obj_stage_one(
 
                 try
                 {
-                        if (str_equal(first, OBJ_v))
+                        if (str_equal(first, "v"))
                         {
                                 lp.type = ObjLineType::v;
                                 Vector<N, float> v;
@@ -725,7 +699,7 @@ void read_obj_stage_one(
 
                                 ++((*counters)[thread_num].vertex);
                         }
-                        else if (str_equal(first, OBJ_vt))
+                        else if (str_equal(first, "vt"))
                         {
                                 lp.type = ObjLineType::vt;
                                 Vector<N - 1, float> v;
@@ -737,7 +711,7 @@ void read_obj_stage_one(
 
                                 ++((*counters)[thread_num].texcoord);
                         }
-                        else if (str_equal(first, OBJ_vn))
+                        else if (str_equal(first, "vn"))
                         {
                                 lp.type = ObjLineType::vn;
                                 Vector<N, float> v;
@@ -750,18 +724,18 @@ void read_obj_stage_one(
 
                                 ++((*counters)[thread_num].normal);
                         }
-                        else if (str_equal(first, OBJ_f))
+                        else if (str_equal(first, "f"))
                         {
                                 lp.type = ObjLineType::f;
                                 read_facets<N>(data, lp.second_b, lp.second_e, &lp.facets, &lp.facet_count);
 
                                 ++((*counters)[thread_num].facet);
                         }
-                        else if (str_equal(first, OBJ_usemtl))
+                        else if (str_equal(first, "usemtl"))
                         {
                                 lp.type = ObjLineType::usemtl;
                         }
-                        else if (str_equal(first, OBJ_mtllib))
+                        else if (str_equal(first, "mtllib"))
                         {
                                 lp.type = ObjLineType::mtllib;
                         }
@@ -993,7 +967,7 @@ void read_lib(
                         if (!*first)
                         {
                         }
-                        else if (str_equal(first, MTL_newmtl))
+                        else if (str_equal(first, "newmtl"))
                         {
                                 if (material_index->empty())
                                 {
@@ -1013,7 +987,7 @@ void read_lib(
                                         mtl = nullptr;
                                 }
                         }
-                        else if (str_equal(first, MTL_Kd))
+                        else if (str_equal(first, "Kd"))
                         {
                                 if (!mtl)
                                 {
@@ -1028,7 +1002,7 @@ void read_lib(
                                         error("Reading Kd in material " + mtl->name + "\n" + e.what());
                                 }
                         }
-                        else if (str_equal(first, MTL_map_Kd))
+                        else if (str_equal(first, "map_Kd"))
                         {
                                 if (!mtl)
                                 {
