@@ -26,9 +26,9 @@ namespace ns::gui::dialog
 {
 enum class PainterImagePathType
 {
-        None,
-        File,
-        Directory
+        NONE,
+        FILE,
+        DIRECTORY
 };
 
 struct PainterImageParameters final

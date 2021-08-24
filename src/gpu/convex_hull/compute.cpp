@@ -175,7 +175,7 @@ class Impl final : public Compute
                 const int height = rectangle.height();
 
                 lines_buffer_.emplace(
-                        vulkan::BufferMemoryType::DeviceLocal, instance_.device(),
+                        vulkan::BufferMemoryType::DEVICE_LOCAL, instance_.device(),
                         std::vector<uint32_t>({family_index}), VK_BUFFER_USAGE_STORAGE_BUFFER_BIT,
                         2 * height * sizeof(int32_t));
                 points_buffer_ = points_buffer;

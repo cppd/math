@@ -65,7 +65,7 @@ constexpr int SWAPCHAIN_PREFERRED_IMAGE_COUNT = 2; // 2 - double buffering, 3 - 
 constexpr VkSurfaceFormatKHR SWAPCHAIN_SURFACE_FORMAT{
         .format = VK_FORMAT_B8G8R8A8_SRGB,
         .colorSpace = VK_COLOR_SPACE_SRGB_NONLINEAR_KHR};
-constexpr vulkan::PresentMode SWAPCHAIN_INITIAL_PRESENT_MODE = vulkan::PresentMode::PreferFast;
+constexpr vulkan::PresentMode SWAPCHAIN_INITIAL_PRESENT_MODE = vulkan::PresentMode::PREFER_FAST;
 
 constexpr VkFormat SAVE_FORMAT = VK_FORMAT_R32G32B32A32_SFLOAT;
 constexpr std::array DEPTH_FORMATS = std::to_array<VkFormat>({VK_FORMAT_D32_SFLOAT});
@@ -194,7 +194,7 @@ class Impl final
 
                 bool changed = false;
 
-                const MouseButtonInfo& right = mouse_.info(MouseButton::Right);
+                const MouseButtonInfo& right = mouse_.info(MouseButton::RIGHT);
                 if (right.pressed && draw_rectangle_.is_inside(right.pressed_x, right.pressed_y)
                     && (right.delta_x != 0 || right.delta_y != 0))
                 {
@@ -202,7 +202,7 @@ class Impl final
                         changed = true;
                 }
 
-                const MouseButtonInfo& left = mouse_.info(MouseButton::Left);
+                const MouseButtonInfo& left = mouse_.info(MouseButton::LEFT);
                 if (left.pressed && draw_rectangle_.is_inside(left.pressed_x, left.pressed_y)
                     && (left.delta_x != 0 || left.delta_y != 0))
                 {
@@ -229,15 +229,15 @@ class Impl final
 
         void set_vertical_sync_swapchain(const bool v)
         {
-                if (v && present_mode_ != vulkan::PresentMode::PreferSync)
+                if (v && present_mode_ != vulkan::PresentMode::PREFER_SYNC)
                 {
-                        present_mode_ = vulkan::PresentMode::PreferSync;
+                        present_mode_ = vulkan::PresentMode::PREFER_SYNC;
                         create_swapchain();
                         return;
                 }
-                if (!v && present_mode_ != vulkan::PresentMode::PreferFast)
+                if (!v && present_mode_ != vulkan::PresentMode::PREFER_FAST)
                 {
-                        present_mode_ = vulkan::PresentMode::PreferFast;
+                        present_mode_ = vulkan::PresentMode::PREFER_FAST;
                         create_swapchain();
                         return;
                 }

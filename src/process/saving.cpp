@@ -70,11 +70,11 @@ std::function<void(ProgressRatioList*)> action_save_function(
                 mesh::Reading reading(*mesh_object);
                 switch (file_type)
                 {
-                case mesh::FileType::Obj:
+                case mesh::FileType::OBJ:
                         mesh::save_to_obj(reading.mesh(), file_name, name);
                         message_information(name + " saved to OBJ file " + generic_utf8_filename(file_name));
                         return;
-                case mesh::FileType::Stl:
+                case mesh::FileType::STL:
                         mesh::save_to_stl(reading.mesh(), file_name, name, STL_FORMAT_ASCII);
                         message_information(name + " saved to STL file " + generic_utf8_filename(file_name));
                         return;

@@ -28,8 +28,8 @@ int file_dimension(const std::filesystem::path& file_name);
 
 enum class FileType
 {
-        Obj,
-        Stl
+        OBJ,
+        STL
 };
 FileType file_type_by_name(const std::filesystem::path& file_name);
 

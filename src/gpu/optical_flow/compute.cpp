@@ -208,7 +208,7 @@ class Impl final : public Compute
                 {
                         const int buffer_size = sizes[i][0] * sizes[i][1] * sizeof(vec2f);
                         buffers.emplace_back(
-                                vulkan::BufferMemoryType::DeviceLocal, device_, family_indices,
+                                vulkan::BufferMemoryType::DEVICE_LOCAL, device_, family_indices,
                                 VK_BUFFER_USAGE_STORAGE_BUFFER_BIT, buffer_size);
                 }
 

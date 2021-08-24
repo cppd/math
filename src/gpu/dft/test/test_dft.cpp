@@ -421,28 +421,28 @@ void random_data_test(ComputeVector* dft, const std::array<int, 2>& dimensions, 
 
 enum class TestSize
 {
-        Small,
-        Big
+        SMALL,
+        LARGE
 };
 
 TestSize find_test_size()
 {
         std::mt19937_64 engine = create_engine<std::mt19937_64>();
         std::bernoulli_distribution small_test(0.9);
-        return small_test(engine) ? TestSize::Small : TestSize::Big;
+        return small_test(engine) ? TestSize::SMALL : TestSize::LARGE;
 }
 
 std::array<int, 2> find_dimensions(TestSize test_size)
 {
         switch (test_size)
         {
-        case TestSize::Small:
+        case TestSize::SMALL:
         {
                 std::mt19937_64 engine = create_engine<std::mt19937_64>();
                 std::uniform_int_distribution<int> uid(1, 100);
                 return {uid(engine), uid(engine)};
         }
-        case TestSize::Big:
+        case TestSize::LARGE:
         {
                 int n1 = 3001; // 3001; // 61;//1001; 1009
                 int n2 = 997; // 61;//997;

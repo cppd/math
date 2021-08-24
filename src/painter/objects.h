@@ -67,7 +67,7 @@ struct LightSourceSample final
 {
         Vector<N, T> l;
         T pdf;
-        Color L;
+        Color radiance;
         std::optional<T> distance;
 
         LightSourceSample()

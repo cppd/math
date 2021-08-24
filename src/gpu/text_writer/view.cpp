@@ -228,7 +228,7 @@ class Impl final : public View
                         command_buffers_.reset();
 
                         vertex_buffer_.emplace(
-                                vulkan::BufferMemoryType::HostVisible, device_,
+                                vulkan::BufferMemoryType::HOST_VISIBLE, device_,
                                 std::vector<uint32_t>({graphics_family_index_}), VK_BUFFER_USAGE_VERTEX_BUFFER_BIT,
                                 std::max(vertex_buffer_->size() * 2, data_size));
 
@@ -289,13 +289,13 @@ class Impl final : public View
                           &glyph_texture_),
                   vertex_buffer_(
                           std::in_place,
-                          vulkan::BufferMemoryType::HostVisible,
+                          vulkan::BufferMemoryType::HOST_VISIBLE,
                           device_,
                           std::vector<uint32_t>({graphics_queue.family_index()}),
                           VK_BUFFER_USAGE_VERTEX_BUFFER_BIT,
                           VERTEX_BUFFER_FIRST_SIZE),
                   indirect_buffer_(
-                          vulkan::BufferMemoryType::HostVisible,
+                          vulkan::BufferMemoryType::HOST_VISIBLE,
                           device_,
                           std::vector<uint32_t>({graphics_queue.family_index()}),
                           VK_BUFFER_USAGE_INDIRECT_BUFFER_BIT,

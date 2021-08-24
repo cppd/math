@@ -23,21 +23,21 @@ namespace ns
 {
 void message_error(const std::string_view& msg) noexcept
 {
-        application::log_impl(msg, application::MessageType::Error);
+        application::log_impl(msg, application::MessageType::ERROR);
 }
 
 void message_error_fatal(const std::string_view& msg) noexcept
 {
-        application::log_impl(msg, application::MessageType::ErrorFatal);
+        application::log_impl(msg, application::MessageType::ERROR_FATAL);
 }
 
 void message_warning(const std::string_view& msg) noexcept
 {
-        application::log_impl(msg, application::MessageType::Warning);
+        application::log_impl(msg, application::MessageType::WARNING);
 }
 
 void message_information(const std::string_view& msg) noexcept
 {
-        application::log_impl(msg, application::MessageType::Information);
+        application::log_impl(msg, application::MessageType::INFORMATION);
 }
 }

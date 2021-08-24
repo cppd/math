@@ -42,7 +42,7 @@ static_assert(std::numeric_limits<double>::max() == max_binary_fraction<double>(
 namespace
 {
 template <typename T>
-class compare_with_numeric_limits
+class CompareWithNumericLimits
 {
         static_assert(limits<T>::epsilon() == std::numeric_limits<T>::epsilon());
         static_assert(limits<T>::max() == std::numeric_limits<T>::max());
@@ -52,9 +52,9 @@ class compare_with_numeric_limits
         static_assert(limits<T>::max_digits10 == std::numeric_limits<T>::max_digits10);
         static_assert(limits<T>::radix == std::numeric_limits<T>::radix);
 };
-template class compare_with_numeric_limits<float>;
-template class compare_with_numeric_limits<double>;
-template class compare_with_numeric_limits<long double>;
+template class CompareWithNumericLimits<float>;
+template class CompareWithNumericLimits<double>;
+template class CompareWithNumericLimits<long double>;
 }
 
 static_assert(limits<unsigned __int128>::max() > 0);

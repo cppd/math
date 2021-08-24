@@ -24,9 +24,9 @@ namespace ns::mesh::file
 {
 enum class MeshFileType
 {
-        Obj,
-        Stl,
-        Txt
+        OBJ,
+        STL,
+        TXT
 };
 
 template <typename Path>

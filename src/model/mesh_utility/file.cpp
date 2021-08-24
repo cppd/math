@@ -84,11 +84,11 @@ std::unique_ptr<Mesh<N>> load(const Path& file_name, ProgressRatio* progress)
 
         switch (file_type)
         {
-        case file::MeshFileType::Obj:
+        case file::MeshFileType::OBJ:
                 return file::load_from_obj_file<N>(file_name, progress);
-        case file::MeshFileType::Stl:
+        case file::MeshFileType::STL:
                 return file::load_from_stl_file<N>(file_name, progress);
-        case file::MeshFileType::Txt:
+        case file::MeshFileType::TXT:
                 return file::load_from_txt_file<N>(file_name, progress);
         }
 

@@ -27,14 +27,14 @@ std::function<void(ProgressRatioList*)> action_self_test(TestType test_type)
 {
         switch (test_type)
         {
-        case TestType::Small:
+        case TestType::SMALL:
         {
                 return [=](ProgressRatioList* progress_list)
                 {
                         test::Tests::instance().run_small(progress_list);
                 };
         }
-        case TestType::SmallAndLarge:
+        case TestType::ALL:
         {
                 std::optional<gui::dialog::TestSelectionParameters> tests =
                         gui::dialog::TestSelectionParametersDialog::show(test::Tests::instance().large_names());

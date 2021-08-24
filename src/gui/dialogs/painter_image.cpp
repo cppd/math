@@ -49,18 +49,18 @@ void PainterImageDialog::set_path()
 {
         switch (path_type_)
         {
-        case PainterImagePathType::None:
+        case PainterImagePathType::NONE:
                 ui.label_path_name->setVisible(false);
                 ui.lineEdit_path->setVisible(false);
                 ui.toolButton_select_path->setVisible(false);
                 return;
-        case PainterImagePathType::Directory:
+        case PainterImagePathType::DIRECTORY:
                 ui.label_path_name->setText("Directory:");
                 ui.lineEdit_path->setReadOnly(true);
                 connect(ui.toolButton_select_path, &QToolButton::clicked, this,
                         &PainterImageDialog::on_select_path_clicked);
                 return;
-        case PainterImagePathType::File:
+        case PainterImagePathType::FILE:
                 ui.label_path_name->setText("File:");
                 ui.lineEdit_path->setReadOnly(true);
                 connect(ui.toolButton_select_path, &QToolButton::clicked, this,
@@ -93,7 +93,7 @@ void PainterImageDialog::done(int r)
 
         std::optional<std::string> path_string;
 
-        if (path_type_ == PainterImagePathType::Directory)
+        if (path_type_ == PainterImagePathType::DIRECTORY)
         {
                 path_string = ui.lineEdit_path->text().toStdString();
                 std::filesystem::path path = path_from_utf8(*path_string);
@@ -104,7 +104,7 @@ void PainterImageDialog::done(int r)
                         return;
                 }
         }
-        else if (path_type_ == PainterImagePathType::File)
+        else if (path_type_ == PainterImagePathType::FILE)
         {
                 path_string = ui.lineEdit_path->text().toStdString();
                 std::filesystem::path path = path_from_utf8(*path_string);
@@ -138,7 +138,7 @@ void PainterImageDialog::done(int r)
 
 void PainterImageDialog::on_select_path_clicked()
 {
-        if (path_type_ == PainterImagePathType::None)
+        if (path_type_ == PainterImagePathType::NONE)
         {
                 return;
         }
@@ -146,13 +146,13 @@ void PainterImageDialog::on_select_path_clicked()
         QPointer ptr(this);
         std::optional<std::string> path;
 
-        if (path_type_ == PainterImagePathType::Directory)
+        if (path_type_ == PainterImagePathType::DIRECTORY)
         {
                 const std::string caption = "Directory";
                 const bool read_only = false;
                 path = dialog::select_directory(caption, read_only);
         }
-        else if (path_type_ == PainterImagePathType::File)
+        else if (path_type_ == PainterImagePathType::FILE)
         {
                 const std::string caption = "File";
                 dialog::FileFilter filter;

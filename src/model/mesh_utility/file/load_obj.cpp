@@ -525,14 +525,14 @@ bool facet_dimension_is_correct(const std::vector<Vector<N, float>>& vertices, c
 
 enum class ObjLineType
 {
-        v,
-        vt,
-        vn,
-        f,
-        usemtl,
-        mtllib,
-        None,
-        NotSupported
+        V,
+        VT,
+        VN,
+        F,
+        USEMTL,
+        MTLLIB,
+        NONE,
+        NOT_SUPPORTED
 };
 
 template <std::size_t N>
@@ -692,7 +692,7 @@ void read_obj_stage_one(
                 {
                         if (str_equal(first, "v"))
                         {
-                                lp.type = ObjLineType::v;
+                                lp.type = ObjLineType::V;
                                 Vector<N, float> v;
                                 read_float(&data[lp.second_b], &v);
                                 lp.v = v;
@@ -701,7 +701,7 @@ void read_obj_stage_one(
                         }
                         else if (str_equal(first, "vt"))
                         {
-                                lp.type = ObjLineType::vt;
+                                lp.type = ObjLineType::VT;
                                 Vector<N - 1, float> v;
                                 read_float_texture(&data[lp.second_b], &v);
                                 for (unsigned i = 0; i < N - 1; ++i)
@@ -713,7 +713,7 @@ void read_obj_stage_one(
                         }
                         else if (str_equal(first, "vn"))
                         {
-                                lp.type = ObjLineType::vn;
+                                lp.type = ObjLineType::VN;
                                 Vector<N, float> v;
                                 read_float(&data[lp.second_b], &v);
                                 lp.v = v.normalized();
@@ -726,26 +726,26 @@ void read_obj_stage_one(
                         }
                         else if (str_equal(first, "f"))
                         {
-                                lp.type = ObjLineType::f;
+                                lp.type = ObjLineType::F;
                                 read_facets<N>(data, lp.second_b, lp.second_e, &lp.facets, &lp.facet_count);
 
                                 ++((*counters)[thread_num].facet);
                         }
                         else if (str_equal(first, "usemtl"))
                         {
-                                lp.type = ObjLineType::usemtl;
+                                lp.type = ObjLineType::USEMTL;
                         }
                         else if (str_equal(first, "mtllib"))
                         {
-                                lp.type = ObjLineType::mtllib;
+                                lp.type = ObjLineType::MTLLIB;
                         }
                         else if (!*first)
                         {
-                                lp.type = ObjLineType::None;
+                                lp.type = ObjLineType::NONE;
                         }
                         else
                         {
-                                lp.type = ObjLineType::NotSupported;
+                                lp.type = ObjLineType::NOT_SUPPORTED;
                         }
                 }
                 catch (const std::exception& e)
@@ -817,10 +817,10 @@ void read_obj_stage_two(
 
                 switch (lp.type)
                 {
-                case ObjLineType::v:
+                case ObjLineType::V:
                         mesh->vertices.push_back(lp.v);
                         break;
-                case ObjLineType::vt:
+                case ObjLineType::VT:
                 {
                         mesh->texcoords.resize(mesh->texcoords.size() + 1);
                         Vector<N - 1, float>& new_vector = mesh->texcoords[mesh->texcoords.size() - 1];
@@ -830,10 +830,10 @@ void read_obj_stage_two(
                         }
                         break;
                 }
-                case ObjLineType::vn:
+                case ObjLineType::VN:
                         mesh->normals.push_back(lp.v);
                         break;
-                case ObjLineType::f:
+                case ObjLineType::F:
                         for (int i = 0; i < lp.facet_count; ++i)
                         {
                                 lp.facets[i].material = mtl_index;
@@ -843,7 +843,7 @@ void read_obj_stage_two(
                                 mesh->facets.push_back(std::move(lp.facets[i]));
                         }
                         break;
-                case ObjLineType::usemtl:
+                case ObjLineType::USEMTL:
                 {
                         std::string mtl_name;
                         read_name("material", data, lp.second_b, lp.second_e, &mtl_name);
@@ -862,11 +862,11 @@ void read_obj_stage_two(
                         }
                         break;
                 }
-                case ObjLineType::mtllib:
+                case ObjLineType::MTLLIB:
                         read_library_names(data, lp.second_b, lp.second_e, library_names, &unique_library_names);
                         break;
-                case ObjLineType::None:
-                case ObjLineType::NotSupported:
+                case ObjLineType::NONE:
+                case ObjLineType::NOT_SUPPORTED:
                         break;
                 }
         }

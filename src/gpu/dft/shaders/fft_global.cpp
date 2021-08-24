@@ -62,7 +62,7 @@ FftGlobalMemory::FftGlobalMemory(
 
         {
                 uniform_buffers_.emplace_back(
-                        vulkan::BufferMemoryType::HostVisible, device, family_indices,
+                        vulkan::BufferMemoryType::HOST_VISIBLE, device, family_indices,
                         VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT, sizeof(Data));
 
                 VkDescriptorBufferInfo buffer_info = {};

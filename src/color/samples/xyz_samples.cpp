@@ -17,7 +17,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "xyz_samples.h"
 
-#include "xyz.h"
+#include "xyz_functions.h"
 
 #include <src/com/error.h>
 #include <src/com/print.h>

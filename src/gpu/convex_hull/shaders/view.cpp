@@ -61,7 +61,7 @@ ViewMemory::ViewMemory(
 
         {
                 uniform_buffers_.emplace_back(
-                        vulkan::BufferMemoryType::HostVisible, device, family_indices,
+                        vulkan::BufferMemoryType::HOST_VISIBLE, device, family_indices,
                         VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT, sizeof(Data));
                 data_buffer_index_ = uniform_buffers_.size() - 1;
 

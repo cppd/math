@@ -71,16 +71,16 @@ void message_event(const application::MessageEvent& event)
 {
         switch (event.type)
         {
-        case application::MessageType::Error:
+        case application::MessageType::ERROR:
                 dialog::message_critical(event.text);
                 return;
-        case application::MessageType::ErrorFatal:
+        case application::MessageType::ERROR_FATAL:
                 dialog::message_critical(event.text, false /*with_parent*/);
                 error_fatal("Exit after error message\n" + event.text);
-        case application::MessageType::Information:
+        case application::MessageType::INFORMATION:
                 dialog::message_information(event.text);
                 return;
-        case application::MessageType::Warning:
+        case application::MessageType::WARNING:
                 dialog::message_warning(event.text);
                 return;
         }

@@ -165,12 +165,12 @@ std::tuple<int, MeshFileType> file_dimension_and_type(const Path& file_name)
         if (extension.find(OBJ) == 0)
         {
                 dimension = (extension == OBJ) ? 3 : read_dimension_number(extension.substr(OBJ.size()));
-                file_type = MeshFileType::Obj;
+                file_type = MeshFileType::OBJ;
         }
         else if (extension.find(STL) == 0)
         {
                 dimension = (extension == STL) ? 3 : read_dimension_number(extension.substr(STL.size()));
-                file_type = MeshFileType::Stl;
+                file_type = MeshFileType::STL;
         }
         else if (extension.find(TXT) == 0)
         {
@@ -188,7 +188,7 @@ std::tuple<int, MeshFileType> file_dimension_and_type(const Path& file_name)
                                       + " and in file data " + to_string(dimension_numbers));
                         }
                 }
-                file_type = MeshFileType::Txt;
+                file_type = MeshFileType::TXT;
         }
         else
         {

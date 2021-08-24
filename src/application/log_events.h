@@ -26,18 +26,18 @@ namespace ns::application
 {
 enum class LogType
 {
-        Normal,
-        Error,
-        Warning,
-        Information
+        NORMAL,
+        ERROR,
+        WARNING,
+        INFORMATION
 };
 
 enum class MessageType
 {
-        Error,
-        ErrorFatal,
-        Warning,
-        Information
+        ERROR,
+        ERROR_FATAL,
+        WARNING,
+        INFORMATION
 };
 
 struct LogEvent final

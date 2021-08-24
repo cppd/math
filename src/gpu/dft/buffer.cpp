@@ -41,7 +41,7 @@ ComplexNumberBuffer::ComplexNumberBuffer(
         const std::vector<uint32_t>& family_indices,
         const std::vector<std::complex<double>>& data)
         : size_(data.size()),
-          buffer_(vulkan::BufferMemoryType::DeviceLocal,
+          buffer_(vulkan::BufferMemoryType::DEVICE_LOCAL,
                   device,
                   family_indices,
                   VK_BUFFER_USAGE_STORAGE_BUFFER_BIT | VK_BUFFER_USAGE_TRANSFER_DST_BIT,

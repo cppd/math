@@ -23,7 +23,7 @@ Journal of Computer Graphics Techniques, Vol. 2, No. 2, 2013.
 
 #pragma once
 
-#include "xyz_versions.h"
+#include "xyz_type.h"
 
 #include <src/com/error.h>
 

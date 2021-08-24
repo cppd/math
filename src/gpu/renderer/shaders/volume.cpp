@@ -308,9 +308,9 @@ VkPipelineLayout VolumeProgram::pipeline_layout(PipelineLayoutType type) const
 {
         switch (type)
         {
-        case PipelineLayoutType::ImageFragments:
+        case PipelineLayoutType::IMAGE_FRAGMENTS:
                 return pipeline_layout_image_fragments_;
-        case PipelineLayoutType::Fragments:
+        case PipelineLayoutType::FRAGMENTS:
                 return pipeline_layout_fragments_;
         }
         error_fatal("Unknown volume pipeline layout type");
@@ -328,15 +328,15 @@ vulkan::Pipeline VolumeProgram::create_pipeline(
 
         switch (type)
         {
-        case PipelineType::Image:
+        case PipelineType::IMAGE:
                 pipeline_layout = pipeline_layout_image_fragments_;
                 fragment_shader = &fragment_shader_image_;
                 break;
-        case PipelineType::ImageFragments:
+        case PipelineType::IMAGE_FRAGMENTS:
                 pipeline_layout = pipeline_layout_image_fragments_;
                 fragment_shader = &fragment_shader_image_fragments_;
                 break;
-        case PipelineType::Fragments:
+        case PipelineType::FRAGMENTS:
                 pipeline_layout = pipeline_layout_fragments_;
                 fragment_shader = &fragment_shader_fragments_;
                 break;

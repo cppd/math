@@ -174,7 +174,7 @@ class Impl final : public View
 
                 vertices_.reset();
                 vertices_ = std::make_unique<vulkan::BufferWithMemory>(
-                        vulkan::BufferMemoryType::DeviceLocal, device_,
+                        vulkan::BufferMemoryType::DEVICE_LOCAL, device_,
                         std::vector<uint32_t>({graphics_queue_.family_index() /*, transfer_queue_.family_index()*/}),
                         VK_BUFFER_USAGE_VERTEX_BUFFER_BIT | VK_BUFFER_USAGE_TRANSFER_DST_BIT, data_size(vertices));
                 vertices_->write(graphics_command_pool_, graphics_queue_, data_size(vertices), data_pointer(vertices));

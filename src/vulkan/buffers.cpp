@@ -313,7 +313,7 @@ BufferWithMemory::BufferWithMemory(
           family_indices_(sort_and_unique(family_indices)),
           buffer_(create_buffer(device, size, usage, family_indices)),
           memory_properties_(
-                  memory_type == BufferMemoryType::HostVisible
+                  memory_type == BufferMemoryType::HOST_VISIBLE
                           ? (VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT)
                           : (VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT)),
           device_memory_(create_device_memory(device, device.physical_device(), buffer_, memory_properties_))

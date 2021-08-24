@@ -113,15 +113,15 @@ class VolumeProgram final
 public:
         enum class PipelineLayoutType
         {
-                ImageFragments,
-                Fragments
+                IMAGE_FRAGMENTS,
+                FRAGMENTS
         };
 
         enum class PipelineType
         {
-                Image,
-                ImageFragments,
-                Fragments
+                IMAGE,
+                IMAGE_FRAGMENTS,
+                FRAGMENTS
         };
 
         explicit VolumeProgram(const vulkan::Device& device);

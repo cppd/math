@@ -44,8 +44,8 @@ int max_digit_count_zero_based(int count)
 
 enum class ContentType
 {
-        Files,
-        Directories
+        FILES,
+        DIRECTORIES
 };
 
 struct DirectoryContent final
@@ -105,7 +105,7 @@ std::optional<DirectoryContent> read_directory_ascii_content(const std::filesyst
         }
 
         return DirectoryContent{
-                .type = (files ? ContentType::Files : ContentType::Directories),
+                .type = (files ? ContentType::FILES : ContentType::DIRECTORIES),
                 .entries = std::move(entries)};
 }
 
@@ -116,7 +116,7 @@ std::vector<std::string> read_directories(const std::filesystem::path& directory
         {
                 error("Directories not found in " + generic_utf8_filename(directory));
         }
-        if (content->type != ContentType::Directories)
+        if (content->type != ContentType::DIRECTORIES)
         {
                 error("Directory " + generic_utf8_filename(directory) + " does not contain only directories");
         }
@@ -130,7 +130,7 @@ std::vector<std::string> read_files(const std::filesystem::path& directory)
         {
                 error("Files not found in " + generic_utf8_filename(directory));
         }
-        if (content->type != ContentType::Files)
+        if (content->type != ContentType::FILES)
         {
                 error("Directory " + generic_utf8_filename(directory) + " does not contain only files");
         }
@@ -263,14 +263,14 @@ void find_info(const std::filesystem::path& directory, std::vector<int>* size, i
 
         switch (content->type)
         {
-        case ContentType::Directories:
+        case ContentType::DIRECTORIES:
         {
                 size->push_back(content->entries.size());
                 content.reset();
                 find_info(first, size, format);
                 return;
         }
-        case ContentType::Files:
+        case ContentType::FILES:
         {
                 image::Info info = image::file_info(first);
                 const auto [width, height] = info.size;

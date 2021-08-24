@@ -57,17 +57,17 @@ Matrix<3, 4, Dst> mat3_std140(const Matrix<3, 3, Src>& m)
 ShaderBuffers::ShaderBuffers(const vulkan::Device& device, const std::vector<uint32_t>& family_indices)
 {
         uniform_buffers_.emplace_back(
-                vulkan::BufferMemoryType::HostVisible, device, family_indices, VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT,
+                vulkan::BufferMemoryType::HOST_VISIBLE, device, family_indices, VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT,
                 sizeof(Matrices));
         matrices_buffer_index_ = uniform_buffers_.size() - 1;
 
         uniform_buffers_.emplace_back(
-                vulkan::BufferMemoryType::HostVisible, device, family_indices, VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT,
+                vulkan::BufferMemoryType::HOST_VISIBLE, device, family_indices, VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT,
                 sizeof(Matrices));
         shadow_matrices_buffer_index_ = uniform_buffers_.size() - 1;
 
         uniform_buffers_.emplace_back(
-                vulkan::BufferMemoryType::HostVisible, device, family_indices, VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT,
+                vulkan::BufferMemoryType::HOST_VISIBLE, device, family_indices, VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT,
                 sizeof(Drawing));
         drawing_buffer_index_ = uniform_buffers_.size() - 1;
 }
@@ -259,7 +259,7 @@ MaterialBuffer::MaterialBuffer(
         const std::vector<uint32_t>& family_indices,
         const Material& material)
         : uniform_buffer_(
-                vulkan::BufferMemoryType::DeviceLocal,
+                vulkan::BufferMemoryType::DEVICE_LOCAL,
                 device,
                 family_indices,
                 VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT | VK_BUFFER_USAGE_TRANSFER_DST_BIT,
@@ -277,7 +277,7 @@ const vulkan::Buffer& MaterialBuffer::buffer() const
 
 MeshBuffer::MeshBuffer(const vulkan::Device& device, const std::vector<uint32_t>& family_indices)
         : uniform_buffer_(
-                vulkan::BufferMemoryType::HostVisible,
+                vulkan::BufferMemoryType::HOST_VISIBLE,
                 device,
                 family_indices,
                 VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT,
@@ -342,13 +342,13 @@ VolumeBuffer::VolumeBuffer(
         const std::vector<uint32_t>& graphics_family_indices,
         const std::vector<uint32_t>& transfer_family_indices)
         : uniform_buffer_coordinates_(
-                vulkan::BufferMemoryType::HostVisible,
+                vulkan::BufferMemoryType::HOST_VISIBLE,
                 device,
                 graphics_family_indices,
                 VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT,
                 sizeof(Coordinates)),
           uniform_buffer_volume_(
-                  vulkan::BufferMemoryType::DeviceLocal,
+                  vulkan::BufferMemoryType::DEVICE_LOCAL,
                   device,
                   merge<std::vector<uint32_t>>(graphics_family_indices, transfer_family_indices),
                   VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT | VK_BUFFER_USAGE_TRANSFER_DST_BIT,
@@ -503,25 +503,25 @@ TransparencyBuffers::TransparencyBuffers(
                   command_pool,
                   queue),
           node_buffer_(
-                  vulkan::BufferMemoryType::DeviceLocal,
+                  vulkan::BufferMemoryType::DEVICE_LOCAL,
                   device,
                   family_indices,
                   VK_BUFFER_USAGE_STORAGE_BUFFER_BIT,
                   node_count_ * NODE_SIZE),
           init_buffer_(
-                  vulkan::BufferMemoryType::HostVisible,
+                  vulkan::BufferMemoryType::HOST_VISIBLE,
                   device,
                   family_indices,
                   VK_BUFFER_USAGE_TRANSFER_SRC_BIT,
                   sizeof(Counters)),
           read_buffer_(
-                  vulkan::BufferMemoryType::HostVisible,
+                  vulkan::BufferMemoryType::HOST_VISIBLE,
                   device,
                   family_indices,
                   VK_BUFFER_USAGE_TRANSFER_DST_BIT,
                   sizeof(Counters)),
           counters_(
-                  vulkan::BufferMemoryType::DeviceLocal,
+                  vulkan::BufferMemoryType::DEVICE_LOCAL,
                   device,
                   family_indices,
                   VK_BUFFER_USAGE_TRANSFER_SRC_BIT | VK_BUFFER_USAGE_TRANSFER_DST_BIT

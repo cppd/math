@@ -282,7 +282,7 @@ Actions::Actions(
                         action, &QAction::triggered,
                         [=]()
                         {
-                                self_test(threads, process::TestType::SmallAndLarge, action_name(action));
+                                self_test(threads, process::TestType::ALL, action_name(action));
                         }));
         }
         {
@@ -400,7 +400,7 @@ Actions::Actions(
                 }
         }
 
-        self_test(worker_threads_.get(), process::TestType::Small, "Self-Test");
+        self_test(worker_threads_.get(), process::TestType::SMALL, "Self-Test");
 
         if (!options.file_name.empty())
         {

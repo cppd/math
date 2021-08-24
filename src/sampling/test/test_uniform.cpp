@@ -112,19 +112,19 @@ double test_performance_in_sphere_by_normal_distribution(int count, RandomEngine
 
 enum class SampleType
 {
-        OnSphere,
-        InSphere
+        ON_SPHERE,
+        IN_SPHERE
 };
 
 std::string type_to_string(SampleType type)
 {
         switch (type)
         {
-        case SampleType::OnSphere:
+        case SampleType::ON_SPHERE:
         {
                 return "On Sphere";
         }
-        case SampleType::InSphere:
+        case SampleType::IN_SPHERE:
         {
                 return "In Sphere";
         }
@@ -162,7 +162,7 @@ void test_performance()
         double t;
         switch (SAMPLE_TYPE)
         {
-        case SampleType::OnSphere:
+        case SampleType::ON_SPHERE:
         {
                 t = test_performance_on_sphere_by_rejection<N, T>(COUNT, random_engine);
                 LOG("  Rejection: " + time_to_string(t));
@@ -170,7 +170,7 @@ void test_performance()
                 LOG("  Normal   : " + time_to_string(t));
                 return;
         }
-        case SampleType::InSphere:
+        case SampleType::IN_SPHERE:
         {
                 t = test_performance_in_sphere_by_rejection<N, T>(COUNT, random_engine);
                 LOG("  Rejection: " + time_to_string(t));
@@ -217,9 +217,9 @@ void test_performance()
 
 void test()
 {
-        test_performance<SampleType::OnSphere>();
+        test_performance<SampleType::ON_SPHERE>();
         LOG("");
-        test_performance<SampleType::InSphere>();
+        test_performance<SampleType::IN_SPHERE>();
 }
 
 TEST_PERFORMANCE("Uniform Sphere Samples", test)

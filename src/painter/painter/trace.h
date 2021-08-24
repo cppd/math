@@ -129,7 +129,7 @@ std::optional<Color> trace_path(
         {
                 const LightSourceSample<N, T, Color> sample = light_source->sample(engine, point);
 
-                if (sample.L.is_black() || sample.pdf <= 0)
+                if (sample.radiance.is_black() || sample.pdf <= 0)
                 {
                         continue;
                 }
@@ -149,7 +149,7 @@ std::optional<Color> trace_path(
                 }
 
                 const Color brdf = surface->brdf(n, v, l);
-                color_sum += brdf * sample.L * (n_l / sample.pdf);
+                color_sum += brdf * sample.radiance * (n_l / sample.pdf);
         }
 
         if (depth >= MAX_DEPTH)
@@ -180,8 +180,9 @@ std::optional<Color> trace_path(
                         return;
                 }
 
-                const Color L = *trace_path<N, T, Color>(scene, smooth_normals, Ray<N, T>(point, l), depth + 1, engine);
-                color_sum += sample.brdf * L * (n_l / sample.pdf);
+                const Color radiance =
+                        *trace_path<N, T, Color>(scene, smooth_normals, Ray<N, T>(point, l), depth + 1, engine);
+                color_sum += sample.brdf * radiance * (n_l / sample.pdf);
         }();
 
         return color_sum;

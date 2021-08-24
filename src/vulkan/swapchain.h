@@ -26,8 +26,8 @@ namespace ns::vulkan
 {
 enum class PresentMode
 {
-        PreferSync,
-        PreferFast
+        PREFER_SYNC,
+        PREFER_FAST
 };
 
 class Swapchain

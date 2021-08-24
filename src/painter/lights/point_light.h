@@ -79,7 +79,7 @@ public:
                 s.distance = distance;
                 s.l = direction / distance;
                 s.pdf = 1;
-                s.L = color_ * coef;
+                s.radiance = color_ * coef;
                 return s;
         }
 };
@@ -146,19 +146,19 @@ public:
 
                 if (cos <= width_)
                 {
-                        s.L = Color(0);
+                        s.radiance = Color(0);
                         return s;
                 }
 
                 const T coef = impl::compute_coef<N>(coef_, squared_distance, distance);
                 if (cos >= falloff_start_)
                 {
-                        s.L = color_ * coef;
+                        s.radiance = color_ * coef;
                 }
                 else
                 {
                         T k = power<4>((cos - width_) / falloff_width_);
-                        s.L = color_ * (coef * k);
+                        s.radiance = color_ * (coef * k);
                 }
                 return s;
         }

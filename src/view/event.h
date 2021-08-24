@@ -31,8 +31,8 @@ namespace ns::view
 {
 enum class MouseButton
 {
-        Left,
-        Right
+        LEFT,
+        RIGHT
 };
 
 namespace command

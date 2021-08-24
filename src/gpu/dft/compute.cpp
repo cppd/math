@@ -558,7 +558,8 @@ public:
 
                 x_d_.emplace(device_, family_indices, n1_ * n2_, buffer_memory_type_);
                 buffer_.emplace(
-                        device_, family_indices, std::max(m1_ * n2_, m2_ * n1_), vulkan::BufferMemoryType::DeviceLocal);
+                        device_, family_indices, std::max(m1_ * n2_, m2_ * n1_),
+                        vulkan::BufferMemoryType::DEVICE_LOCAL);
 
                 fft_n2_m1_.emplace(instance_.device(), family_indices, n2_, m1_);
                 fft_n2_m1_->set_data(*buffer_);
@@ -768,7 +769,7 @@ public:
                        compute_queue,
                        transfer_command_pool,
                        transfer_queue,
-                       vulkan::BufferMemoryType::DeviceLocal),
+                       vulkan::BufferMemoryType::DEVICE_LOCAL),
                   copy_input_program_(instance.device()),
                   copy_input_memory_(instance.device(), copy_input_program_.descriptor_set_layout()),
                   copy_output_program_(instance.device()),
@@ -793,8 +794,8 @@ class DftVector final : public ComputeVector
 
         enum DftType
         {
-                Forward,
-                Inverse
+                FORWARD,
+                INVERSE
         };
 
         void delete_buffers()
@@ -816,7 +817,7 @@ class DftVector final : public ComputeVector
 
                 command_buffers_ = vulkan::CommandBuffers(device_, compute_command_pool_, 2);
                 VkResult result;
-                for (int index : {DftType::Forward, DftType::Inverse})
+                for (int index : {DftType::FORWARD, DftType::INVERSE})
                 {
                         VkCommandBuffer command_buffer = (*command_buffers_)[index];
 
@@ -831,7 +832,7 @@ class DftVector final : public ComputeVector
 
                         //
 
-                        const bool inverse = (index == DftType::Inverse);
+                        const bool inverse = (index == DftType::INVERSE);
                         dft_.compute_commands(command_buffer, inverse);
 
                         //
@@ -863,7 +864,7 @@ class DftVector final : public ComputeVector
                         mapper.write(*src);
                 }
                 vulkan::queue_submit(
-                        (*command_buffers_)[inverse ? DftType::Inverse : DftType::Forward], compute_queue_);
+                        (*command_buffers_)[inverse ? DftType::INVERSE : DftType::FORWARD], compute_queue_);
                 vulkan::queue_wait_idle(compute_queue_);
                 {
                         vulkan::BufferMapper mapper(dft_.buffer());
@@ -882,7 +883,7 @@ public:
                        compute_queue_,
                        instance_.transfer_command_pool(),
                        instance_.transfer_queue(),
-                       vulkan::BufferMemoryType::HostVisible)
+                       vulkan::BufferMemoryType::HOST_VISIBLE)
         {
         }
 };

@@ -41,23 +41,23 @@ namespace ns::numerical
 {
 enum class ConstraintSolution
 {
-        Infeasible,
-        Feasible,
-        Unbound,
-        Cycling
+        INFEASIBLE,
+        FEASIBLE,
+        UNBOUND,
+        CYCLING
 };
 
 inline const char* constraint_solution_to_string(const ConstraintSolution& cs)
 {
         switch (cs)
         {
-        case ConstraintSolution::Infeasible:
+        case ConstraintSolution::INFEASIBLE:
                 return "Infeasible";
-        case ConstraintSolution::Feasible:
+        case ConstraintSolution::FEASIBLE:
                 return "Feasible";
-        case ConstraintSolution::Unbound:
+        case ConstraintSolution::UNBOUND:
                 return "Unbound";
-        case ConstraintSolution::Cycling:
+        case ConstraintSolution::CYCLING:
                 return "Cycling";
         }
         error_fatal("Unknown ConstraintSolution");
@@ -323,7 +323,7 @@ ConstraintSolution solve_constraints(std::array<T, M> b, const std::array<Vector
         }
         if (min >= 0)
         {
-                return ConstraintSolution::Feasible;
+                return ConstraintSolution::FEASIBLE;
         }
 
         //
@@ -358,7 +358,7 @@ ConstraintSolution solve_constraints(std::array<T, M> b, const std::array<Vector
         }
         if (min >= 0)
         {
-                return ConstraintSolution::Feasible;
+                return ConstraintSolution::FEASIBLE;
         }
 
         pivot(b, a, v, c, k, 0);
@@ -384,7 +384,7 @@ ConstraintSolution solve_constraints(std::array<T, M> b, const std::array<Vector
 
                 if (iteration >= MAX_ITERATION_COUNT)
                 {
-                        return ConstraintSolution::Cycling;
+                        return ConstraintSolution::CYCLING;
                 }
 
                 T max_delta = limits<T>::lowest();
@@ -408,7 +408,7 @@ ConstraintSolution solve_constraints(std::array<T, M> b, const std::array<Vector
 
                 if (l == limits<unsigned>::max())
                 {
-                        return ConstraintSolution::Unbound;
+                        return ConstraintSolution::UNBOUND;
                 }
 
                 pivot(b, a, v, c, l, e);
@@ -424,10 +424,10 @@ ConstraintSolution solve_constraints(std::array<T, M> b, const std::array<Vector
 
         if (variable_x0_is_zero(b, map_n, map_m))
         {
-                return ConstraintSolution::Feasible;
+                return ConstraintSolution::FEASIBLE;
         }
 
-        return ConstraintSolution::Infeasible;
+        return ConstraintSolution::INFEASIBLE;
 }
 }
 

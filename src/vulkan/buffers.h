@@ -32,8 +32,8 @@ namespace ns::vulkan
 {
 enum class BufferMemoryType
 {
-        HostVisible,
-        DeviceLocal
+        HOST_VISIBLE,
+        DEVICE_LOCAL
 };
 
 class BufferMapper;

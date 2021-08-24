@@ -25,8 +25,8 @@ namespace ns::process
 {
 enum class TestType
 {
-        Small,
-        SmallAndLarge
+        SMALL,
+        ALL
 };
 
 std::function<void(ProgressRatioList*)> action_self_test(TestType test_type);

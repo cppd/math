@@ -282,12 +282,12 @@ void load_vertices(
         TimePoint load_start_time = time();
 
         *vertex_buffer = std::make_unique<vulkan::BufferWithMemory>(
-                vulkan::BufferMemoryType::DeviceLocal, device, family_indices,
+                vulkan::BufferMemoryType::DEVICE_LOCAL, device, family_indices,
                 VK_BUFFER_USAGE_VERTEX_BUFFER_BIT | VK_BUFFER_USAGE_TRANSFER_DST_BIT, data_size(vertices));
         (*vertex_buffer)->write(command_pool, queue, data_size(vertices), data_pointer(vertices));
 
         *index_buffer = std::make_unique<vulkan::BufferWithMemory>(
-                vulkan::BufferMemoryType::DeviceLocal, device, family_indices,
+                vulkan::BufferMemoryType::DEVICE_LOCAL, device, family_indices,
                 VK_BUFFER_USAGE_INDEX_BUFFER_BIT | VK_BUFFER_USAGE_TRANSFER_DST_BIT, data_size(indices));
         (*index_buffer)->write(command_pool, queue, data_size(indices), data_pointer(indices));
 
@@ -329,7 +329,7 @@ std::unique_ptr<vulkan::BufferWithMemory> load_point_vertices(
         }
 
         std::unique_ptr<vulkan::BufferWithMemory> buffer = std::make_unique<vulkan::BufferWithMemory>(
-                vulkan::BufferMemoryType::DeviceLocal, device, family_indices,
+                vulkan::BufferMemoryType::DEVICE_LOCAL, device, family_indices,
                 VK_BUFFER_USAGE_VERTEX_BUFFER_BIT | VK_BUFFER_USAGE_TRANSFER_DST_BIT, data_size(vertices));
 
         buffer->write(command_pool, queue, data_size(vertices), data_pointer(vertices));
@@ -361,7 +361,7 @@ std::unique_ptr<vulkan::BufferWithMemory> load_line_vertices(
         }
 
         std::unique_ptr<vulkan::BufferWithMemory> buffer = std::make_unique<vulkan::BufferWithMemory>(
-                vulkan::BufferMemoryType::DeviceLocal, device, family_indices,
+                vulkan::BufferMemoryType::DEVICE_LOCAL, device, family_indices,
                 VK_BUFFER_USAGE_VERTEX_BUFFER_BIT | VK_BUFFER_USAGE_TRANSFER_DST_BIT, data_size(vertices));
 
         buffer->write(command_pool, queue, data_size(vertices), data_pointer(vertices));

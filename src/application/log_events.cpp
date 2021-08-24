@@ -31,34 +31,34 @@ LogType message_type_to_log_type(MessageType type)
 {
         switch (type)
         {
-        case MessageType::Error:
-        case MessageType::ErrorFatal:
+        case MessageType::ERROR:
+        case MessageType::ERROR_FATAL:
         {
-                return LogType::Error;
+                return LogType::ERROR;
         }
-        case MessageType::Information:
+        case MessageType::INFORMATION:
         {
-                return LogType::Information;
+                return LogType::INFORMATION;
         }
-        case MessageType::Warning:
+        case MessageType::WARNING:
         {
-                return LogType::Warning;
+                return LogType::WARNING;
         }
         }
-        return LogType::Error;
+        return LogType::ERROR;
 }
 
 std::string_view log_type_to_string(LogType type)
 {
         switch (type)
         {
-        case LogType::Error:
+        case LogType::ERROR:
                 return "error";
-        case LogType::Information:
+        case LogType::INFORMATION:
                 return "information";
-        case LogType::Normal:
+        case LogType::NORMAL:
                 return "";
-        case LogType::Warning:
+        case LogType::WARNING:
                 return "warning";
         }
         return "unknown";

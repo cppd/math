@@ -29,19 +29,19 @@ RGB8 event_color(application::LogType type)
 {
         switch (type)
         {
-        case application::LogType::Normal:
+        case application::LogType::NORMAL:
         {
                 return RGB8(0, 0, 0);
         }
-        case application::LogType::Error:
+        case application::LogType::ERROR:
         {
                 return RGB8(255, 0, 0);
         }
-        case application::LogType::Warning:
+        case application::LogType::WARNING:
         {
                 return RGB8(200, 150, 0);
         }
-        case application::LogType::Information:
+        case application::LogType::INFORMATION:
         {
                 return RGB8(0, 0, 255);
         }

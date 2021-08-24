@@ -23,21 +23,21 @@ namespace ns::log_implementation
 {
 void log(const std::string_view& msg) noexcept
 {
-        application::log_impl(msg, application::LogType::Normal);
+        application::log_impl(msg, application::LogType::NORMAL);
 }
 
 void log_error(const std::string_view& msg) noexcept
 {
-        application::log_impl(msg, application::LogType::Error);
+        application::log_impl(msg, application::LogType::ERROR);
 }
 
 void log_warning(const std::string_view& msg) noexcept
 {
-        application::log_impl(msg, application::LogType::Warning);
+        application::log_impl(msg, application::LogType::WARNING);
 }
 
 void log_information(const std::string_view& msg) noexcept
 {
-        application::log_impl(msg, application::LogType::Information);
+        application::log_impl(msg, application::LogType::INFORMATION);
 }
 }

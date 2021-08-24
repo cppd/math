@@ -87,10 +87,11 @@ class MeshFacet
 
         enum class NormalType : char
         {
-                None,
-                Use,
-                Reverse
-        } normal_type_;
+                NONE,
+                USE,
+                REVERSE
+        };
+        NormalType normal_type_;
 
         std::array<bool, N> reverse_normal_;
 
@@ -140,7 +141,7 @@ public:
 
                 if (!has_normals)
                 {
-                        normal_type_ = NormalType::None;
+                        normal_type_ = NormalType::NONE;
                         return;
                 }
 
@@ -161,24 +162,24 @@ public:
                                     return is_finite(d) && std::abs(d) >= MIN_COSINE_VERTEX_NORMAL_FACET_NORMAL;
                             }))
                 {
-                        normal_type_ = NormalType::None;
+                        normal_type_ = NormalType::NONE;
                         return;
                 }
 
                 if (all_positive(dots))
                 {
-                        normal_type_ = NormalType::Use;
+                        normal_type_ = NormalType::USE;
                         return;
                 }
 
                 if (all_negative(dots))
                 {
-                        normal_type_ = NormalType::Use;
+                        normal_type_ = NormalType::USE;
                         normal_ = -normal_;
                         return;
                 }
 
-                normal_type_ = NormalType::Reverse;
+                normal_type_ = NormalType::REVERSE;
                 for (unsigned i = 0; i < N; ++i)
                 {
                         reverse_normal_[i] = dots[i] < 0;
@@ -223,11 +224,11 @@ public:
         {
                 switch (normal_type_)
                 {
-                case NormalType::None:
+                case NormalType::NONE:
                 {
                         return normal_;
                 }
-                case NormalType::Use:
+                case NormalType::USE:
                 {
                         std::array<Vector<N, T>, N> normals;
                         for (unsigned i = 0; i < N; ++i)
@@ -236,7 +237,7 @@ public:
                         }
                         return geometry_.interpolate(point, normals).normalized();
                 }
-                case NormalType::Reverse:
+                case NormalType::REVERSE:
                 {
                         std::array<Vector<N, T>, N> normals;
                         for (unsigned i = 0; i < N; ++i)

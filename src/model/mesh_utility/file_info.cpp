@@ -107,20 +107,20 @@ FileType file_type_by_name(const std::filesystem::path& file_name)
         {
                 if (extension == OBJ)
                 {
-                        return FileType::Obj;
+                        return FileType::OBJ;
                 }
                 file::read_dimension_number(extension.substr(OBJ.size()));
-                return FileType::Obj;
+                return FileType::OBJ;
         }
 
         if (extension.find(STL) == 0)
         {
                 if (extension == STL)
                 {
-                        return FileType::Stl;
+                        return FileType::STL;
                 }
                 file::read_dimension_number(extension.substr(STL.size()));
-                return FileType::Stl;
+                return FileType::STL;
         }
 
         error("Failed to find the file type by its extension for the file name " + generic_utf8_filename(file_name));

@@ -60,15 +60,15 @@ void VolumeRenderer::create_buffers(
 
         pipeline_image_ = program_.create_pipeline(
                 render_buffers->render_pass(), render_buffers->sample_count(), sample_shading_, viewport,
-                VolumeProgram::PipelineType::Image);
+                VolumeProgram::PipelineType::IMAGE);
 
         pipeline_image_fragments_ = program_.create_pipeline(
                 render_buffers->render_pass(), render_buffers->sample_count(), sample_shading_, viewport,
-                VolumeProgram::PipelineType::ImageFragments);
+                VolumeProgram::PipelineType::IMAGE_FRAGMENTS);
 
         pipeline_fragments_ = program_.create_pipeline(
                 render_buffers->render_pass(), render_buffers->sample_count(), sample_shading_, viewport,
-                VolumeProgram::PipelineType::Fragments);
+                VolumeProgram::PipelineType::FRAGMENTS);
 
         create_command_buffers_fragments(graphics_command_pool);
 }
@@ -114,7 +114,7 @@ void VolumeRenderer::draw_commands_fragments(VkCommandBuffer command_buffer) con
 
         vkCmdBindDescriptorSets(
                 command_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS,
-                program_.pipeline_layout(VolumeProgram::PipelineLayoutType::Fragments),
+                program_.pipeline_layout(VolumeProgram::PipelineLayoutType::FRAGMENTS),
                 VolumeSharedMemory::set_number(), 1 /*set count*/, &shared_memory_.descriptor_set(), 0, nullptr);
 
         vkCmdDraw(command_buffer, 3, 1, 0, 0);
@@ -130,12 +130,12 @@ void VolumeRenderer::draw_commands_image(const VolumeObject* volume, VkCommandBu
 
         vkCmdBindDescriptorSets(
                 command_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS,
-                program_.pipeline_layout(VolumeProgram::PipelineLayoutType::ImageFragments),
+                program_.pipeline_layout(VolumeProgram::PipelineLayoutType::IMAGE_FRAGMENTS),
                 VolumeSharedMemory::set_number(), 1 /*set count*/, &shared_memory_.descriptor_set(), 0, nullptr);
 
         vkCmdBindDescriptorSets(
                 command_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS,
-                program_.pipeline_layout(VolumeProgram::PipelineLayoutType::ImageFragments),
+                program_.pipeline_layout(VolumeProgram::PipelineLayoutType::IMAGE_FRAGMENTS),
                 VolumeImageMemory::set_number(), 1 /*set count*/,
                 &volume->descriptor_set(program_.descriptor_set_layout_image()), 0, nullptr);
 
@@ -152,12 +152,12 @@ void VolumeRenderer::draw_commands_image_fragments(const VolumeObject* volume, V
 
         vkCmdBindDescriptorSets(
                 command_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS,
-                program_.pipeline_layout(VolumeProgram::PipelineLayoutType::ImageFragments),
+                program_.pipeline_layout(VolumeProgram::PipelineLayoutType::IMAGE_FRAGMENTS),
                 VolumeSharedMemory::set_number(), 1 /*set count*/, &shared_memory_.descriptor_set(), 0, nullptr);
 
         vkCmdBindDescriptorSets(
                 command_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS,
-                program_.pipeline_layout(VolumeProgram::PipelineLayoutType::ImageFragments),
+                program_.pipeline_layout(VolumeProgram::PipelineLayoutType::IMAGE_FRAGMENTS),
                 VolumeImageMemory::set_number(), 1 /*set count*/,
                 &volume->descriptor_set(program_.descriptor_set_layout_image()), 0, nullptr);
 

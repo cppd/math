@@ -81,7 +81,7 @@ void test_feasible()
                 std::array<Vector<2, T>, 2> a{Vector<2, T>(-2, 1), Vector<2, T>(-1, 5)};
 
                 n::ConstraintSolution cs = n::solve_constraints(a, b);
-                if (cs != n::ConstraintSolution::Feasible)
+                if (cs != n::ConstraintSolution::FEASIBLE)
                 {
                         n::solve_constraints_with_print(a, b);
                         LOG(n::constraint_solution_to_string(cs));
@@ -96,7 +96,7 @@ void test_feasible()
                         Vector<2, T>(1.01e10, 1.00132e10)};
 
                 n::ConstraintSolution cs = n::solve_constraints(a, b);
-                if (cs != n::ConstraintSolution::Feasible)
+                if (cs != n::ConstraintSolution::FEASIBLE)
                 {
                         n::solve_constraints_with_print(a, b);
                         LOG(n::constraint_solution_to_string(cs));
@@ -111,7 +111,7 @@ void test_feasible()
                         Vector<2, T>(1.01, 1.00132)};
 
                 n::ConstraintSolution cs = n::solve_constraints(a, b);
-                if (cs != n::ConstraintSolution::Infeasible)
+                if (cs != n::ConstraintSolution::INFEASIBLE)
                 {
                         n::solve_constraints_with_print(a, b);
                         LOG(n::constraint_solution_to_string(cs));

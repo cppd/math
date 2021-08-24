@@ -224,8 +224,8 @@ void test_painter_window(int samples_per_pixel, int thread_count, std::unique_pt
 
 enum class OutputType
 {
-        File,
-        Window
+        FILE,
+        WINDOW
 };
 
 template <OutputType OUTPUT_TYPE, std::size_t N, typename T, typename Color>
@@ -249,14 +249,14 @@ void test_painter(
                 Color::illuminant(LIGHTING_INTENSITY, LIGHTING_INTENSITY, LIGHTING_INTENSITY),
                 Color::illuminant(BACKGROUND_LIGHT), min_screen_size, max_screen_size, std::move(painter_mesh));
 
-        static_assert(OUTPUT_TYPE == OutputType::File || OUTPUT_TYPE == OutputType::Window);
+        static_assert(OUTPUT_TYPE == OutputType::FILE || OUTPUT_TYPE == OutputType::WINDOW);
 
-        if constexpr (OUTPUT_TYPE == OutputType::File)
+        if constexpr (OUTPUT_TYPE == OutputType::FILE)
         {
                 test_painter_file(samples_per_pixel, thread_count, std::move(scene));
         }
 
-        if constexpr (OUTPUT_TYPE == OutputType::Window)
+        if constexpr (OUTPUT_TYPE == OutputType::WINDOW)
         {
                 test_painter_window(samples_per_pixel, thread_count, std::move(scene));
         }
@@ -291,27 +291,27 @@ void test_painter_file()
 {
         constexpr unsigned N = 4;
         constexpr int SAMPLES_PER_PIXEL = 25;
-        test_painter<N, double, color::Spectrum, OutputType::File>(SAMPLES_PER_PIXEL, 1000, 10, 100);
+        test_painter<N, double, color::Spectrum, OutputType::FILE>(SAMPLES_PER_PIXEL, 1000, 10, 100);
 }
 
 void test_painter_file(const std::string& file_name)
 {
         constexpr unsigned N = 4;
         constexpr int SAMPLES_PER_PIXEL = 25;
-        test_painter<N, double, color::Spectrum, OutputType::File>(SAMPLES_PER_PIXEL, file_name, 10, 100);
+        test_painter<N, double, color::Spectrum, OutputType::FILE>(SAMPLES_PER_PIXEL, file_name, 10, 100);
 }
 
 void test_painter_window()
 {
         constexpr unsigned N = 4;
         constexpr int SAMPLES_PER_PIXEL = 25;
-        test_painter<N, double, color::Spectrum, OutputType::Window>(SAMPLES_PER_PIXEL, 1000, 50, 500);
+        test_painter<N, double, color::Spectrum, OutputType::WINDOW>(SAMPLES_PER_PIXEL, 1000, 50, 500);
 }
 
 void test_painter_window(const std::string& file_name)
 {
         constexpr unsigned N = 4;
         constexpr int SAMPLES_PER_PIXEL = 25;
-        test_painter<N, double, color::Spectrum, OutputType::Window>(SAMPLES_PER_PIXEL, file_name, 50, 500);
+        test_painter<N, double, color::Spectrum, OutputType::WINDOW>(SAMPLES_PER_PIXEL, file_name, 50, 500);
 }
 }

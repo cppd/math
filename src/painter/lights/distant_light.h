@@ -38,7 +38,7 @@ public:
         {
                 sample_.l = direction.normalized();
                 sample_.pdf = 1;
-                sample_.L = color;
+                sample_.radiance = color;
         }
 
         LightSourceSample<N, T, Color> sample(RandomEngine<T>& /*random_engine*/, const Vector<N, T>& /*point*/)

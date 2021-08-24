@@ -70,9 +70,9 @@ VkPresentModeKHR choose_present_mode(
 {
         switch (preferred_present_mode)
         {
-        case vulkan::PresentMode::PreferSync:
+        case vulkan::PresentMode::PREFER_SYNC:
                 return VK_PRESENT_MODE_FIFO_KHR;
-        case vulkan::PresentMode::PreferFast:
+        case vulkan::PresentMode::PREFER_FAST:
                 for (const VkPresentModeKHR& present_mode : present_modes)
                 {
                         if (present_mode == VK_PRESENT_MODE_IMMEDIATE_KHR)

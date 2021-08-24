@@ -43,8 +43,8 @@ class ThreadData
 
         enum class TerminateType
         {
-                Quietly,
-                WithMessage
+                QUIETLY,
+                WITH_MESSAGE
         };
 
         void terminate(TerminateType terminate_type) noexcept
@@ -53,10 +53,10 @@ class ThreadData
                 {
                         switch (terminate_type)
                         {
-                        case TerminateType::Quietly:
+                        case TerminateType::QUIETLY:
                                 progress_list_.terminate_all_quietly();
                                 break;
-                        case TerminateType::WithMessage:
+                        case TerminateType::WITH_MESSAGE:
                                 progress_list_.terminate_all_with_message();
                                 break;
                         }
@@ -72,9 +72,9 @@ class ThreadData
                 {
                         switch (terminate_type)
                         {
-                        case TerminateType::Quietly:
+                        case TerminateType::QUIETLY:
                                 error_fatal("Error terminating thread quietly error");
-                        case TerminateType::WithMessage:
+                        case TerminateType::WITH_MESSAGE:
                                 error_fatal("Error terminating thread with message error");
                         }
                 }
@@ -111,12 +111,12 @@ public:
 
         void terminate_quietly()
         {
-                terminate(TerminateType::Quietly);
+                terminate(TerminateType::QUIETLY);
         }
 
         void terminate_with_message()
         {
-                terminate(TerminateType::WithMessage);
+                terminate(TerminateType::WITH_MESSAGE);
         }
 
         bool working() const
