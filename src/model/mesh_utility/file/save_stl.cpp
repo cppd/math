@@ -41,16 +41,6 @@ constexpr bool NORMALIZE_VERTEX_COORDINATES = false;
 
 static_assert(std::endian::native == std::endian::little, "Binary STL numbers must be little-endian");
 
-// clang-format off
-constexpr const char* SOLID        = "solid";
-constexpr const char* FACET_NORMAL = "facet normal";
-constexpr const char* OUTER_LOOP   = "  outer loop";
-constexpr const char* VERTEX       = "    vertex";
-constexpr const char* END_LOOP     = "  endloop";
-constexpr const char* END_FACET    = "endfacet";
-constexpr const char* END_SOLID    = "endsolid";
-// clang-format on
-
 std::string comment_to_solid_name(const std::string_view& comment)
 {
         std::string str;
@@ -68,12 +58,12 @@ std::string comment_to_solid_name(const std::string_view& comment)
 
 void write_begin_ascii(std::ostream& file, const std::string& solid_name)
 {
-        file << SOLID << ' ' << solid_name << '\n';
+        file << "solid " << solid_name << '\n';
 }
 
 void write_end_ascii(std::ostream& file, const std::string& solid_name)
 {
-        file << END_SOLID << ' ' << solid_name << '\n';
+        file << "endsolid " << solid_name << '\n';
 }
 
 void write_begin_binary(std::ostream& file, unsigned facet_count)
@@ -102,7 +92,7 @@ void write_end_binary(std::ostream& file)
         file.write(reinterpret_cast<const char*>(&end), sizeof(end));
 }
 
-template <bool ascii, std::size_t N>
+template <bool ASCII, std::size_t N>
 void write_facet(
         std::ostream& file,
         const Vector<N, double>& normal,
@@ -115,8 +105,16 @@ void write_facet(
                 n = Vector<N, float>(0);
         }
 
-        if (ascii)
+        if (ASCII)
         {
+                // clang-format off
+                static constexpr std::string_view FACET_NORMAL = "facet normal";
+                static constexpr std::string_view OUTER_LOOP   = "  outer loop";
+                static constexpr std::string_view VERTEX       = "    vertex";
+                static constexpr std::string_view END_LOOP     = "  endloop";
+                static constexpr std::string_view END_FACET    = "endfacet";
+                // clang-format on
+
                 file << FACET_NORMAL;
                 for (unsigned i = 0; i < N; ++i)
                 {
@@ -149,7 +147,7 @@ void write_facet(
         }
 }
 
-template <bool ascii, std::size_t N>
+template <bool ASCII, std::size_t N>
 void write_facets(std::ostream& file, const Mesh<N>& mesh, const std::vector<Vector<N, float>>& vertices)
 {
         for (const typename Mesh<N>::Facet& f : mesh.facets)
@@ -158,13 +156,13 @@ void write_facets(std::ostream& file, const Mesh<N>& mesh, const std::vector<Vec
                 {
                         Vector<N, double> normal =
                                 numerical::orthogonal_complement<N, float, double>(vertices, f.vertices);
-                        write_facet<ascii>(file, normal, f.vertices, vertices);
+                        write_facet<ASCII>(file, normal, f.vertices, vertices);
                 }
                 else if constexpr (N != 3)
                 {
                         Vector<N, double> normal =
                                 numerical::orthogonal_complement<N, float, double>(vertices, f.vertices);
-                        write_facet<ascii>(file, normal, f.vertices, vertices);
+                        write_facet<ASCII>(file, normal, f.vertices, vertices);
                 }
                 else
                 {
@@ -184,12 +182,12 @@ void write_facets(std::ostream& file, const Mesh<N>& mesh, const std::vector<Vec
                                 normal = -normal;
                         }
 
-                        write_facet<ascii>(file, normal, v, vertices);
+                        write_facet<ASCII>(file, normal, v, vertices);
                 }
         }
 }
 
-template <bool ascii, std::size_t N>
+template <bool ASCII, std::size_t N>
 void write_facets(std::ostream& file, const Mesh<N>& mesh)
 {
         if (NORMALIZE_VERTEX_COORDINATES)
@@ -199,11 +197,11 @@ void write_facets(std::ostream& file, const Mesh<N>& mesh)
                 {
                         error("Facet coordinates are not found");
                 }
-                write_facets<ascii>(file, mesh, normalize_vertices(mesh, *box));
+                write_facets<ASCII>(file, mesh, normalize_vertices(mesh, *box));
         }
         else
         {
-                write_facets<ascii>(file, mesh, mesh.vertices);
+                write_facets<ASCII>(file, mesh, mesh.vertices);
         }
 }
 

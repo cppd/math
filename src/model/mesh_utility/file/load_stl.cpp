@@ -80,12 +80,12 @@ bool is_binary(const std::string& data)
                 });
 }
 
-template <typename Data, typename Word>
-void read_keyword(const Data& data, long long data_size, const Word& word, long long* i)
+template <typename Data>
+void read_keyword(const Data& data, long long data_size, const std::string_view& word, long long* i)
 {
         if (*i + static_cast<long long>(word.size()) > data_size)
         {
-                error("Keyword " + word + " not found in STL file when expected");
+                error("Keyword " + std::string(word) + " not found in STL file when expected");
         }
         long long d = *i;
         auto w = word.cbegin();
@@ -99,7 +99,7 @@ void read_keyword(const Data& data, long long data_size, const Word& word, long 
                 *i = d;
                 return;
         }
-        error("Keyword " + word + " not found in STL file when expected");
+        error("Keyword " + std::string(word) + " not found in STL file when expected");
 }
 
 template <std::size_t N>
@@ -108,13 +108,13 @@ void read_ascii_stl(
         ProgressRatio* progress,
         const std::function<void(const std::array<Vector<N, float>, N>&)>& yield_facet)
 {
-        const std::string SOLID = "solid";
-        const std::string FACET_NORMAL = "facet normal";
-        const std::string OUTER_LOOP = "outer loop";
-        const std::string VERTEX = "vertex";
-        const std::string END_LOOP = "endloop";
-        const std::string END_FACET = "endfacet";
-        const std::string END_SOLID = "endsolid";
+        static constexpr std::string_view SOLID = "solid";
+        static constexpr std::string_view FACET_NORMAL = "facet normal";
+        static constexpr std::string_view OUTER_LOOP = "outer loop";
+        static constexpr std::string_view VERTEX = "vertex";
+        static constexpr std::string_view END_LOOP = "endloop";
+        static constexpr std::string_view END_FACET = "endfacet";
+        static constexpr std::string_view END_SOLID = "endsolid";
 
         const char* const data = file_data.c_str();
         const long long size = file_data.size();
