@@ -154,80 +154,24 @@ static_assert(X_64.size() == WAVES.size());
 static_assert(Y_64.size() == WAVES.size());
 static_assert(Z_64.size() == WAVES.size());
 
-template <XYZ xyz>
-constexpr const std::array<double, WAVES.size()>& data_x()
+template <typename T, typename F>
+void check_non_negative(const char* name, const F& f)
 {
-        static_assert(xyz == XYZ_31 || xyz == XYZ_64);
-        switch (xyz)
+        for (int i = 3800; i <= 7800; ++i)
         {
-        case XYZ_31:
-                return X_31;
-        case XYZ_64:
-                return X_64;
-        }
-}
-
-template <XYZ xyz>
-constexpr const std::array<double, WAVES.size()>& data_y()
-{
-        static_assert(xyz == XYZ_31 || xyz == XYZ_64);
-        switch (xyz)
-        {
-        case XYZ_31:
-                return Y_31;
-        case XYZ_64:
-                return Y_64;
-        }
-}
-
-template <XYZ xyz>
-constexpr const std::array<double, WAVES.size()>& data_z()
-{
-        static_assert(xyz == XYZ_31 || xyz == XYZ_64);
-        switch (xyz)
-        {
-        case XYZ_31:
-                return Z_31;
-        case XYZ_64:
-                return Z_64;
-        }
-}
-
-std::ostream& operator<<(std::ostream& os, XYZ xyz)
-{
-        switch (xyz)
-        {
-        case XYZ_31:
-                return (os << "XYZ 31");
-        case XYZ_64:
-                return (os << "XYZ 64");
-        }
-        error_fatal("Unknown XYZ type " + std::to_string(static_cast<long long>(xyz)));
-}
-
-template <XYZ xyz, typename T>
-void check_non_negative()
-{
-        for (int w = 3800; w <= 7800; ++w)
-        {
-                T t = T(w) / 10;
-                T x = cie_x<xyz, T>(t);
-                T y = cie_y<xyz, T>(t);
-                T z = cie_z<xyz, T>(t);
-                if (!(x >= 0 && y >= 0 && z >= 0))
+                T w = T(i) / 10;
+                T v = f(w);
+                if (!(v >= 0))
                 {
                         std::ostringstream oss;
                         oss.precision(limits<T>::max_digits10);
-                        oss << xyz << ", approximation is not non-negative";
-                        oss << ", x = " << x;
-                        oss << ", y = " << y;
-                        oss << ", z = " << z;
+                        oss << name << ", approximation " << v << " is not non-negative for wave " << w;
                         error(oss.str());
                 }
         }
 }
 
-template <XYZ xyz, typename T>
+template <typename T>
 T check(const char* name, T wave, T f, T tab, T max_error)
 {
         T abs_error = std::abs(f - tab);
@@ -235,9 +179,9 @@ T check(const char* name, T wave, T f, T tab, T max_error)
         {
                 std::ostringstream oss;
                 oss.precision(limits<T>::max_digits10);
-                oss << xyz;
+                oss << name;
                 oss << ", wavelength = " << wave;
-                oss << ", " << name << " = " << f;
+                oss << ", f = " << f;
                 oss << ", tab = " << tab;
                 oss << ", error = " << abs_error;
                 error(oss.str());
@@ -245,49 +189,42 @@ T check(const char* name, T wave, T f, T tab, T max_error)
         return abs_error;
 };
 
-template <XYZ xyz, typename T>
+template <typename T>
 void check_mean(const char* name, T mean, T max_error)
 {
         if (!(mean < max_error))
         {
                 std::ostringstream oss;
                 oss.precision(limits<T>::max_digits10);
-                oss << xyz << ", mean error " << name << " = " << mean;
+                oss << name << ", mean error = " << mean;
                 error(oss.str());
         }
 };
 
-template <XYZ xyz, typename T>
-void check(T max_error_x, T max_error_y, T max_error_z, T max_mean_error_x, T max_mean_error_y, T max_mean_error_z)
+template <typename T, typename F>
+void check(const char* name, const F& f, const std::array<double, WAVES.size()>& data, T max_error, T max_mean_error)
 {
-        T sum_x = 0;
-        T sum_y = 0;
-        T sum_z = 0;
-
-        constexpr const std::array<double, WAVES.size()>& X = data_x<xyz>();
-        constexpr const std::array<double, WAVES.size()>& Y = data_y<xyz>();
-        constexpr const std::array<double, WAVES.size()>& Z = data_z<xyz>();
-
+        T sum = 0;
         for (std::size_t i = 0; i < WAVES.size(); ++i)
         {
                 const T w = WAVES[i];
-                sum_x += check<xyz, T>("x", w, cie_x<xyz, T>(w), X[i], max_error_x);
-                sum_y += check<xyz, T>("y", w, cie_y<xyz, T>(w), Y[i], max_error_y);
-                sum_z += check<xyz, T>("z", w, cie_z<xyz, T>(w), Z[i], max_error_z);
+                sum += check<T>(name, w, f(w), data[i], max_error);
         }
+        check_mean<T>(name, sum / WAVES.size(), max_mean_error);
 
-        check_mean<xyz, T>("x", sum_x / WAVES.size(), max_mean_error_x);
-        check_mean<xyz, T>("y", sum_y / WAVES.size(), max_mean_error_y);
-        check_mean<xyz, T>("z", sum_z / WAVES.size(), max_mean_error_z);
-
-        check_non_negative<xyz, T>();
+        check_non_negative<T>(name, f);
 }
 
 template <typename T>
 void check()
 {
-        check<XYZ_31, T>(0.0139, 0.0074, 0.0222, 0.0049, 0.0021, 0.0021);
-        check<XYZ_64, T>(0.0470, 0.0254, 0.0574, 0.0099, 0.0092, 0.0085);
+        check<T>("X 31", cie_x<XYZ_31, T>, X_31, 0.0139, 0.0049);
+        check<T>("Y 31", cie_y<XYZ_31, T>, Y_31, 0.0074, 0.0021);
+        check<T>("Z 31", cie_z<XYZ_31, T>, Z_31, 0.0222, 0.0021);
+
+        check<T>("X 64", cie_x<XYZ_64, T>, X_64, 0.0470, 0.0099);
+        check<T>("Y 64", cie_y<XYZ_64, T>, Y_64, 0.0254, 0.0092);
+        check<T>("Z 64", cie_z<XYZ_64, T>, Z_64, 0.0574, 0.0085);
 }
 
 void test()
