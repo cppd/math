@@ -39,7 +39,7 @@ VolumeObjectParametersDialog::VolumeObjectParametersDialog(
           max_image_size_(max_image_size),
           parameters_(parameters)
 {
-        ui.setupUi(this);
+        ui_.setupUi(this);
         setWindowTitle("Create Object");
 
         if (!(dimension >= 2))
@@ -65,13 +65,13 @@ VolumeObjectParametersDialog::VolumeObjectParametersDialog(
                       + to_string(max_image_size) + "]");
         }
 
-        ui.label_space->setText(QString::fromStdString(space_name(dimension)));
-        ui.label_object->setText(QString::fromStdString(object_name));
+        ui_.label_space->setText(QString::fromStdString(space_name(dimension)));
+        ui_.label_object->setText(QString::fromStdString(object_name));
 
-        ui.spinBox_image_size->setMinimum(min_image_size);
-        ui.spinBox_image_size->setMaximum(max_image_size);
-        ui.spinBox_image_size->setValue(default_image_size);
-        ui.spinBox_image_size->setSingleStep(std::max(1, max_image_size / 1000));
+        ui_.spinBox_image_size->setMinimum(min_image_size);
+        ui_.spinBox_image_size->setMaximum(max_image_size);
+        ui_.spinBox_image_size->setValue(default_image_size);
+        ui_.spinBox_image_size->setSingleStep(std::max(1, max_image_size / 1000));
 }
 
 void VolumeObjectParametersDialog::done(int r)
@@ -82,7 +82,7 @@ void VolumeObjectParametersDialog::done(int r)
                 return;
         }
 
-        int image_size = ui.spinBox_image_size->value();
+        int image_size = ui_.spinBox_image_size->value();
         if (!(image_size >= min_image_size_ && image_size <= max_image_size_))
         {
                 std::string msg = "Error image size. It must be in the range [" + to_string(min_image_size_) + ", "

@@ -35,7 +35,7 @@ class TestSelectionParametersDialog final : public QDialog
 {
         Q_OBJECT
 private:
-        Ui::TestSelectionParametersDialog ui;
+        Ui::TestSelectionParametersDialog ui_;
 
         class Items;
         std::unique_ptr<Items> items_;

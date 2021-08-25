@@ -35,7 +35,7 @@ constexpr QRgb DFT_COLOR = qRgb(150, 200, 250);
 
 ColorsWidget::ColorsWidget() : QWidget(nullptr)
 {
-        ui.setupUi(this);
+        ui_.setupUi(this);
 
         set_background_color(BACKGROUND_COLOR);
         set_wireframe_color(WIREFRAME_COLOR);
@@ -45,18 +45,18 @@ ColorsWidget::ColorsWidget() : QWidget(nullptr)
         set_dft_background_color(DFT_BACKGROUND_COLOR);
         set_dft_color(DFT_COLOR);
 
-        connect(ui.toolButton_background_color, &QToolButton::clicked, this,
+        connect(ui_.toolButton_background_color, &QToolButton::clicked, this,
                 &ColorsWidget::on_background_color_clicked);
-        connect(ui.toolButton_clip_plane_color, &QToolButton::clicked, this,
+        connect(ui_.toolButton_clip_plane_color, &QToolButton::clicked, this,
                 &ColorsWidget::on_clip_plane_color_clicked);
-        connect(ui.toolButton_dft_background_color, &QToolButton::clicked, this,
+        connect(ui_.toolButton_dft_background_color, &QToolButton::clicked, this,
                 &ColorsWidget::on_dft_background_color_clicked);
-        connect(ui.toolButton_dft_color, &QToolButton::clicked, this, &ColorsWidget::on_dft_color_clicked);
-        connect(ui.toolButton_normal_color_negative, &QToolButton::clicked, this,
+        connect(ui_.toolButton_dft_color, &QToolButton::clicked, this, &ColorsWidget::on_dft_color_clicked);
+        connect(ui_.toolButton_normal_color_negative, &QToolButton::clicked, this,
                 &ColorsWidget::on_normal_color_negative_clicked);
-        connect(ui.toolButton_normal_color_positive, &QToolButton::clicked, this,
+        connect(ui_.toolButton_normal_color_positive, &QToolButton::clicked, this,
                 &ColorsWidget::on_normal_color_positive_clicked);
-        connect(ui.toolButton_wireframe_color, &QToolButton::clicked, this, &ColorsWidget::on_wireframe_color_clicked);
+        connect(ui_.toolButton_wireframe_color, &QToolButton::clicked, this, &ColorsWidget::on_wireframe_color_clicked);
 }
 
 void ColorsWidget::set_view(view::View* view)
@@ -169,7 +169,7 @@ void ColorsWidget::set_background_color(const QColor& c)
         {
                 view_->send(view::command::SetBackgroundColor(qcolor_to_color(c)));
         }
-        set_widget_color(ui.widget_background_color, c);
+        set_widget_color(ui_.widget_background_color, c);
 }
 
 void ColorsWidget::set_wireframe_color(const QColor& c)
@@ -179,7 +179,7 @@ void ColorsWidget::set_wireframe_color(const QColor& c)
         {
                 view_->send(view::command::SetWireframeColor(qcolor_to_color(c)));
         }
-        set_widget_color(ui.widget_wireframe_color, c);
+        set_widget_color(ui_.widget_wireframe_color, c);
 }
 
 void ColorsWidget::set_clip_plane_color(const QColor& c)
@@ -189,7 +189,7 @@ void ColorsWidget::set_clip_plane_color(const QColor& c)
         {
                 view_->send(view::command::SetClipPlaneColor(qcolor_to_color(c)));
         }
-        set_widget_color(ui.widget_clip_plane_color, c);
+        set_widget_color(ui_.widget_clip_plane_color, c);
 }
 
 void ColorsWidget::set_normal_color_positive(const QColor& c)
@@ -199,7 +199,7 @@ void ColorsWidget::set_normal_color_positive(const QColor& c)
         {
                 view_->send(view::command::SetNormalColorPositive(qcolor_to_color(c)));
         }
-        set_widget_color(ui.widget_normal_color_positive, c);
+        set_widget_color(ui_.widget_normal_color_positive, c);
 }
 
 void ColorsWidget::set_normal_color_negative(const QColor& c)
@@ -209,7 +209,7 @@ void ColorsWidget::set_normal_color_negative(const QColor& c)
         {
                 view_->send(view::command::SetNormalColorNegative(qcolor_to_color(c)));
         }
-        set_widget_color(ui.widget_normal_color_negative, c);
+        set_widget_color(ui_.widget_normal_color_negative, c);
 }
 
 void ColorsWidget::set_dft_background_color(const QColor& c)
@@ -219,7 +219,7 @@ void ColorsWidget::set_dft_background_color(const QColor& c)
         {
                 view_->send(view::command::SetDftBackgroundColor(qcolor_to_color(c)));
         }
-        set_widget_color(ui.widget_dft_background_color, c);
+        set_widget_color(ui_.widget_dft_background_color, c);
 }
 
 void ColorsWidget::set_dft_color(const QColor& c)
@@ -229,7 +229,7 @@ void ColorsWidget::set_dft_color(const QColor& c)
         {
                 view_->send(view::command::SetDftColor(qcolor_to_color(c)));
         }
-        set_widget_color(ui.widget_dft_color, c);
+        set_widget_color(ui_.widget_dft_color, c);
 }
 
 color::Color ColorsWidget::background_color() const

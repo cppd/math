@@ -35,7 +35,7 @@ constexpr std::chrono::milliseconds WINDOW_SHOW_DELAY{50};
 
 PainterWindow::PainterWindow(const std::string& name, std::unique_ptr<Pixels>&& pixels) : pixels_(std::move(pixels))
 {
-        ui.setupUi(this);
+        ui_.setupUi(this);
 
         std::string title = std::string(settings::APPLICATION_NAME);
         if (!name.empty())
@@ -83,10 +83,10 @@ void PainterWindow::closeEvent(QCloseEvent* event)
 
 void PainterWindow::create_interface()
 {
-        ui.status_bar->setFixedHeight(ui.status_bar->height());
+        ui_.status_bar->setFixedHeight(ui_.status_bar->height());
 
-        ASSERT(!ui.main_widget->layout());
-        QVBoxLayout* main_layout = new QVBoxLayout(ui.main_widget);
+        ASSERT(!ui_.main_widget->layout());
+        QVBoxLayout* main_layout = new QVBoxLayout(ui_.main_widget);
         main_layout->setContentsMargins(0, 0, 0, 0);
         main_layout->setSpacing(0);
 
@@ -109,16 +109,16 @@ void PainterWindow::create_interface()
         image_layout->addWidget(brightness_parameter_slider_.get());
 
         image_widget_ =
-                std::make_unique<ImageWidget>(pixels_->screen_size()[0], pixels_->screen_size()[1], ui.menu_view);
+                std::make_unique<ImageWidget>(pixels_->screen_size()[0], pixels_->screen_size()[1], ui_.menu_view);
         image_layout->addWidget(image_widget_.get());
 
         statistics_widget_ = std::make_unique<StatisticsWidget>(UPDATE_INTERVAL);
         main_layout->addWidget(statistics_widget_.get());
 
-        ui.status_bar->addPermanentWidget(new QLabel(pixels_->color_name(), this));
-        ui.status_bar->addPermanentWidget(new QLabel(pixels_->floating_point_name(), this));
+        ui_.status_bar->addPermanentWidget(new QLabel(pixels_->color_name(), this));
+        ui_.status_bar->addPermanentWidget(new QLabel(pixels_->floating_point_name(), this));
 
-        connect(ui.menu_window->addAction("Adjust size"), &QAction::triggered, this,
+        connect(ui_.menu_window->addAction("Adjust size"), &QAction::triggered, this,
                 &PainterWindow::adjust_window_size);
 
         connect(&timer_, &QTimer::timeout, this, &PainterWindow::update_image);
@@ -135,8 +135,8 @@ void PainterWindow::create_sliders()
 
         sliders_widget_ = std::make_unique<SlidersWidget>(pixels_->screen_size());
 
-        ASSERT(qobject_cast<QVBoxLayout*>(ui.main_widget->layout()));
-        qobject_cast<QVBoxLayout*>(ui.main_widget->layout())->insertWidget(1, sliders_widget_.get());
+        ASSERT(qobject_cast<QVBoxLayout*>(ui_.main_widget->layout()));
+        qobject_cast<QVBoxLayout*>(ui_.main_widget->layout())->insertWidget(1, sliders_widget_.get());
 
         connect(sliders_widget_.get(), &SlidersWidget::changed, this,
                 [this](const std::vector<int>& positions)
@@ -158,10 +158,10 @@ void PainterWindow::create_sliders()
 
 void PainterWindow::create_actions()
 {
-        QMenu* menu = ui.menu_actions;
+        QMenu* menu = ui_.menu_actions;
 
         actions_ = std::make_unique<Actions>(
-                pixels_.get(), menu, ui.status_bar,
+                pixels_.get(), menu, ui_.status_bar,
                 [this]
                 {
                         return slice_;

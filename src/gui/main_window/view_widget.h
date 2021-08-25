@@ -28,7 +28,7 @@ class ViewWidget final : public QWidget
         Q_OBJECT
 
 private:
-        Ui::ViewWidget ui;
+        Ui::ViewWidget ui_;
 
         view::View* view_ = nullptr;
 

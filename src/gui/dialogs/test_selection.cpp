@@ -150,7 +150,7 @@ TestSelectionParametersDialog::TestSelectionParametersDialog(
         std::optional<TestSelectionParameters>& parameters)
         : QDialog(parent_for_dialog()), parameters_(parameters)
 {
-        ui.setupUi(this);
+        ui_.setupUi(this);
         setWindowTitle("Select Tests");
 
         std::sort(test_names.begin(), test_names.end());
@@ -161,32 +161,32 @@ TestSelectionParametersDialog::TestSelectionParametersDialog(
         {
                 std::unique_ptr<QListWidgetItem> item = std::make_unique<QListWidgetItem>(QString::fromStdString(name));
                 items_->add(std::move(name), item.get());
-                ui.listWidget->addItem(item.release());
+                ui_.listWidget->addItem(item.release());
         }
 
-        connect(ui.pushButton_set_all, &QPushButton::clicked, this,
+        connect(ui_.pushButton_set_all, &QPushButton::clicked, this,
                 [this]()
                 {
                         items_->check(true);
                 });
 
-        connect(ui.pushButton_clear_all, &QPushButton::clicked, this,
+        connect(ui_.pushButton_clear_all, &QPushButton::clicked, this,
                 [this]()
                 {
                         items_->check(false);
                 });
 
-        connect(ui.lineEdit_filter, &QLineEdit::textChanged, this,
+        connect(ui_.lineEdit_filter, &QLineEdit::textChanged, this,
                 [this](const QString& text)
                 {
                         filter(text);
                 });
 
-        ui.checkBox_regex->setChecked(true);
-        connect(ui.checkBox_regex, &QCheckBox::stateChanged, this,
+        ui_.checkBox_regex->setChecked(true);
+        connect(ui_.checkBox_regex, &QCheckBox::stateChanged, this,
                 [this]()
                 {
-                        filter(ui.lineEdit_filter->text());
+                        filter(ui_.lineEdit_filter->text());
                 });
 }
 
@@ -195,7 +195,7 @@ TestSelectionParametersDialog::~TestSelectionParametersDialog() = default;
 void TestSelectionParametersDialog::filter(const QString& text)
 {
         const char* style = nullptr;
-        if (ui.checkBox_regex->isChecked())
+        if (ui_.checkBox_regex->isChecked())
         {
                 if (items_->filter_regex(text))
                 {
@@ -211,7 +211,7 @@ void TestSelectionParametersDialog::filter(const QString& text)
                 items_->filter_substr(text);
                 style = "color: black;";
         }
-        ui.lineEdit_filter->setStyleSheet(style);
+        ui_.lineEdit_filter->setStyleSheet(style);
 }
 
 void TestSelectionParametersDialog::done(int r)

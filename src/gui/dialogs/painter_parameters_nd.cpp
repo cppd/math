@@ -74,47 +74,47 @@ PainterParametersNdDialog::PainterParametersNdDialog(
                       + to_string(min_screen_size) + ", " + to_string(max_screen_size) + "]");
         }
 
-        ui.setupUi(this);
+        ui_.setupUi(this);
         setWindowTitle("Painter");
 
-        connect(ui.spinBox_min_size, QOverload<int>::of(&QSpinBox::valueChanged), this,
+        connect(ui_.spinBox_min_size, QOverload<int>::of(&QSpinBox::valueChanged), this,
                 &PainterParametersNdDialog::on_min_size_changed);
-        connect(ui.spinBox_max_size, QOverload<int>::of(&QSpinBox::valueChanged), this,
+        connect(ui_.spinBox_max_size, QOverload<int>::of(&QSpinBox::valueChanged), this,
                 &PainterParametersNdDialog::on_max_size_changed);
 
         min_screen_size_ = min_screen_size;
         max_screen_size_ = max_screen_size;
 
-        ui.label_space->setText(QString::fromStdString(space_name(dimension)));
+        ui_.label_space->setText(QString::fromStdString(space_name(dimension)));
 
-        ui.spinBox_min_size->setMinimum(min_screen_size);
-        ui.spinBox_min_size->setMaximum(max_screen_size);
-        ui.spinBox_min_size->setValue(min_screen_size);
+        ui_.spinBox_min_size->setMinimum(min_screen_size);
+        ui_.spinBox_min_size->setMaximum(max_screen_size);
+        ui_.spinBox_min_size->setValue(min_screen_size);
 
-        ui.spinBox_max_size->setMinimum(min_screen_size);
-        ui.spinBox_max_size->setMaximum(max_screen_size);
-        ui.spinBox_max_size->setValue(default_screen_size);
+        ui_.spinBox_max_size->setMinimum(min_screen_size);
+        ui_.spinBox_max_size->setMaximum(max_screen_size);
+        ui_.spinBox_max_size->setValue(default_screen_size);
 
-        ui.verticalLayout_parameters->addWidget(parameters_widget_);
+        ui_.verticalLayout_parameters->addWidget(parameters_widget_);
 }
 
 void PainterParametersNdDialog::on_min_size_changed(int)
 {
-        int min = ui.spinBox_min_size->value();
-        if (min > ui.spinBox_max_size->value())
+        int min = ui_.spinBox_min_size->value();
+        if (min > ui_.spinBox_max_size->value())
         {
-                QSignalBlocker blocker(ui.spinBox_max_size);
-                ui.spinBox_max_size->setValue(min);
+                QSignalBlocker blocker(ui_.spinBox_max_size);
+                ui_.spinBox_max_size->setValue(min);
         }
 }
 
 void PainterParametersNdDialog::on_max_size_changed(int)
 {
-        int max = ui.spinBox_max_size->value();
-        if (max < ui.spinBox_min_size->value())
+        int max = ui_.spinBox_max_size->value();
+        if (max < ui_.spinBox_min_size->value())
         {
-                QSignalBlocker blocker(ui.spinBox_min_size);
-                ui.spinBox_min_size->setValue(max);
+                QSignalBlocker blocker(ui_.spinBox_min_size);
+                ui_.spinBox_min_size->setValue(max);
         }
 }
 
@@ -131,7 +131,7 @@ void PainterParametersNdDialog::done(int r)
                 return;
         }
 
-        int min_size = ui.spinBox_min_size->value();
+        int min_size = ui_.spinBox_min_size->value();
         if (!(min_size >= min_screen_size_ && min_size <= max_screen_size_))
         {
                 std::string msg = "Minimum size must be in the range [" + to_string(min_screen_size_) + ", "
@@ -140,7 +140,7 @@ void PainterParametersNdDialog::done(int r)
                 return;
         }
 
-        int max_size = ui.spinBox_max_size->value();
+        int max_size = ui_.spinBox_max_size->value();
         if (!(max_size >= min_screen_size_ && max_size <= max_screen_size_))
         {
                 std::string msg = "Maximum size must be in the range [" + to_string(min_screen_size_) + ", "

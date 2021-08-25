@@ -39,43 +39,43 @@ constexpr double DFT_GAMMA = 0.5;
 }
 ViewWidget::ViewWidget() : QWidget(nullptr)
 {
-        ui.setupUi(this);
+        ui_.setupUi(this);
 
-        ui.checkBox_clip_plane->setChecked(false);
-        ui.slider_clip_plane->setEnabled(false);
-        set_slider_position(ui.slider_clip_plane, 0.5);
-        ASSERT(((ui.slider_clip_plane->maximum() - ui.slider_clip_plane->minimum()) & 1) == 0);
+        ui_.checkBox_clip_plane->setChecked(false);
+        ui_.slider_clip_plane->setEnabled(false);
+        set_slider_position(ui_.slider_clip_plane, 0.5);
+        ASSERT(((ui_.slider_clip_plane->maximum() - ui_.slider_clip_plane->minimum()) & 1) == 0);
 
-        ui.checkBox_normals->setChecked(false);
-        ui.slider_normals->setEnabled(false);
+        ui_.checkBox_normals->setChecked(false);
+        ui_.slider_normals->setEnabled(false);
         set_slider_position(
-                ui.slider_normals,
+                ui_.slider_normals,
                 (NORMAL_LENGTH_DEFAULT - NORMAL_LENGTH_MINIMUM) / (NORMAL_LENGTH_MAXIMUM - NORMAL_LENGTH_MINIMUM));
 
-        ui.slider_shadow_quality->setSliderPosition(SHADOW_ZOOM);
+        ui_.slider_shadow_quality->setSliderPosition(SHADOW_ZOOM);
 
         on_dft_clicked();
         on_shadow_clicked();
         on_clip_plane_clicked();
 
-        connect(ui.checkBox_clip_plane, &QCheckBox::clicked, this, &ViewWidget::on_clip_plane_clicked);
-        connect(ui.checkBox_convex_hull_2d, &QCheckBox::clicked, this, &ViewWidget::on_convex_hull_2d_clicked);
-        connect(ui.checkBox_dft, &QCheckBox::clicked, this, &ViewWidget::on_dft_clicked);
-        connect(ui.checkBox_fog, &QCheckBox::clicked, this, &ViewWidget::on_fog_clicked);
-        connect(ui.checkBox_fps, &QCheckBox::clicked, this, &ViewWidget::on_fps_clicked);
-        connect(ui.checkBox_materials, &QCheckBox::clicked, this, &ViewWidget::on_materials_clicked);
-        connect(ui.checkBox_normals, &QCheckBox::clicked, this, &ViewWidget::on_normals_clicked);
-        connect(ui.checkBox_optical_flow, &QCheckBox::clicked, this, &ViewWidget::on_optical_flow_clicked);
-        connect(ui.checkBox_pencil_sketch, &QCheckBox::clicked, this, &ViewWidget::on_pencil_sketch_clicked);
-        connect(ui.checkBox_shadow, &QCheckBox::clicked, this, &ViewWidget::on_shadow_clicked);
-        connect(ui.checkBox_smooth, &QCheckBox::clicked, this, &ViewWidget::on_smooth_clicked);
-        connect(ui.checkBox_vertical_sync, &QCheckBox::clicked, this, &ViewWidget::on_vertical_sync_clicked);
-        connect(ui.checkBox_wireframe, &QCheckBox::clicked, this, &ViewWidget::on_wireframe_clicked);
-        connect(ui.pushButton_reset_view, &QPushButton::clicked, this, &ViewWidget::on_reset_view_clicked);
-        connect(ui.slider_clip_plane, &QSlider::valueChanged, this, &ViewWidget::on_clip_plane_changed);
-        connect(ui.slider_dft_brightness, &QSlider::valueChanged, this, &ViewWidget::on_dft_brightness_changed);
-        connect(ui.slider_normals, &QSlider::valueChanged, this, &ViewWidget::on_normals_changed);
-        connect(ui.slider_shadow_quality, &QSlider::valueChanged, this, &ViewWidget::on_shadow_quality_changed);
+        connect(ui_.checkBox_clip_plane, &QCheckBox::clicked, this, &ViewWidget::on_clip_plane_clicked);
+        connect(ui_.checkBox_convex_hull_2d, &QCheckBox::clicked, this, &ViewWidget::on_convex_hull_2d_clicked);
+        connect(ui_.checkBox_dft, &QCheckBox::clicked, this, &ViewWidget::on_dft_clicked);
+        connect(ui_.checkBox_fog, &QCheckBox::clicked, this, &ViewWidget::on_fog_clicked);
+        connect(ui_.checkBox_fps, &QCheckBox::clicked, this, &ViewWidget::on_fps_clicked);
+        connect(ui_.checkBox_materials, &QCheckBox::clicked, this, &ViewWidget::on_materials_clicked);
+        connect(ui_.checkBox_normals, &QCheckBox::clicked, this, &ViewWidget::on_normals_clicked);
+        connect(ui_.checkBox_optical_flow, &QCheckBox::clicked, this, &ViewWidget::on_optical_flow_clicked);
+        connect(ui_.checkBox_pencil_sketch, &QCheckBox::clicked, this, &ViewWidget::on_pencil_sketch_clicked);
+        connect(ui_.checkBox_shadow, &QCheckBox::clicked, this, &ViewWidget::on_shadow_clicked);
+        connect(ui_.checkBox_smooth, &QCheckBox::clicked, this, &ViewWidget::on_smooth_clicked);
+        connect(ui_.checkBox_vertical_sync, &QCheckBox::clicked, this, &ViewWidget::on_vertical_sync_clicked);
+        connect(ui_.checkBox_wireframe, &QCheckBox::clicked, this, &ViewWidget::on_wireframe_clicked);
+        connect(ui_.pushButton_reset_view, &QPushButton::clicked, this, &ViewWidget::on_reset_view_clicked);
+        connect(ui_.slider_clip_plane, &QSlider::valueChanged, this, &ViewWidget::on_clip_plane_changed);
+        connect(ui_.slider_dft_brightness, &QSlider::valueChanged, this, &ViewWidget::on_dft_brightness_changed);
+        connect(ui_.slider_normals, &QSlider::valueChanged, this, &ViewWidget::on_normals_changed);
+        connect(ui_.slider_shadow_quality, &QSlider::valueChanged, this, &ViewWidget::on_shadow_quality_changed);
 }
 
 void ViewWidget::set_view(view::View* view)
@@ -87,19 +87,19 @@ void ViewWidget::on_clip_plane_clicked()
 {
         constexpr double DEFAULT_POSITION = 0.5;
 
-        bool checked = ui.checkBox_clip_plane->isChecked();
+        bool checked = ui_.checkBox_clip_plane->isChecked();
 
-        ui.slider_clip_plane->setEnabled(checked);
+        ui_.slider_clip_plane->setEnabled(checked);
         {
-                QSignalBlocker blocker(ui.slider_clip_plane);
-                set_slider_position(ui.slider_clip_plane, DEFAULT_POSITION);
+                QSignalBlocker blocker(ui_.slider_clip_plane);
+                set_slider_position(ui_.slider_clip_plane, DEFAULT_POSITION);
         }
 
         if (checked)
         {
                 if (view_)
                 {
-                        view_->send(view::command::ClipPlaneShow(slider_position(ui.slider_clip_plane)));
+                        view_->send(view::command::ClipPlaneShow(slider_position(ui_.slider_clip_plane)));
                 }
         }
         else
@@ -113,15 +113,15 @@ void ViewWidget::on_clip_plane_clicked()
 
 void ViewWidget::on_convex_hull_2d_clicked()
 {
-        view_->send(view::command::ShowConvexHull2D(ui.checkBox_convex_hull_2d->isChecked()));
+        view_->send(view::command::ShowConvexHull2D(ui_.checkBox_convex_hull_2d->isChecked()));
 }
 
 void ViewWidget::on_dft_clicked()
 {
-        bool checked = ui.checkBox_dft->isChecked();
+        bool checked = ui_.checkBox_dft->isChecked();
 
-        ui.label_dft_brightness->setEnabled(checked);
-        ui.slider_dft_brightness->setEnabled(checked);
+        ui_.label_dft_brightness->setEnabled(checked);
+        ui_.slider_dft_brightness->setEnabled(checked);
 
         if (view_)
         {
@@ -131,42 +131,42 @@ void ViewWidget::on_dft_clicked()
 
 void ViewWidget::on_fog_clicked()
 {
-        view_->send(view::command::ShowFog(ui.checkBox_fog->isChecked()));
+        view_->send(view::command::ShowFog(ui_.checkBox_fog->isChecked()));
 }
 
 void ViewWidget::on_fps_clicked()
 {
-        view_->send(view::command::ShowFps(ui.checkBox_fps->isChecked()));
+        view_->send(view::command::ShowFps(ui_.checkBox_fps->isChecked()));
 }
 
 void ViewWidget::on_materials_clicked()
 {
-        view_->send(view::command::ShowMaterials(ui.checkBox_materials->isChecked()));
+        view_->send(view::command::ShowMaterials(ui_.checkBox_materials->isChecked()));
 }
 
 void ViewWidget::on_normals_clicked()
 {
-        bool checked = ui.checkBox_normals->isChecked();
-        ui.slider_normals->setEnabled(checked);
+        bool checked = ui_.checkBox_normals->isChecked();
+        ui_.slider_normals->setEnabled(checked);
         view_->send(view::command::ShowNormals(checked));
 }
 
 void ViewWidget::on_optical_flow_clicked()
 {
-        view_->send(view::command::ShowOpticalFlow(ui.checkBox_optical_flow->isChecked()));
+        view_->send(view::command::ShowOpticalFlow(ui_.checkBox_optical_flow->isChecked()));
 }
 
 void ViewWidget::on_pencil_sketch_clicked()
 {
-        view_->send(view::command::ShowPencilSketch(ui.checkBox_pencil_sketch->isChecked()));
+        view_->send(view::command::ShowPencilSketch(ui_.checkBox_pencil_sketch->isChecked()));
 }
 
 void ViewWidget::on_shadow_clicked()
 {
-        bool checked = ui.checkBox_shadow->isChecked();
+        bool checked = ui_.checkBox_shadow->isChecked();
 
-        ui.label_shadow_quality->setEnabled(checked);
-        ui.slider_shadow_quality->setEnabled(checked);
+        ui_.label_shadow_quality->setEnabled(checked);
+        ui_.slider_shadow_quality->setEnabled(checked);
 
         if (view_)
         {
@@ -176,17 +176,17 @@ void ViewWidget::on_shadow_clicked()
 
 void ViewWidget::on_smooth_clicked()
 {
-        view_->send(view::command::ShowSmooth(ui.checkBox_smooth->isChecked()));
+        view_->send(view::command::ShowSmooth(ui_.checkBox_smooth->isChecked()));
 }
 
 void ViewWidget::on_vertical_sync_clicked()
 {
-        view_->send(view::command::SetVerticalSync(ui.checkBox_vertical_sync->isChecked()));
+        view_->send(view::command::SetVerticalSync(ui_.checkBox_vertical_sync->isChecked()));
 }
 
 void ViewWidget::on_wireframe_clicked()
 {
-        view_->send(view::command::ShowWireframe(ui.checkBox_wireframe->isChecked()));
+        view_->send(view::command::ShowWireframe(ui_.checkBox_wireframe->isChecked()));
 }
 
 void ViewWidget::on_reset_view_clicked()
@@ -196,7 +196,7 @@ void ViewWidget::on_reset_view_clicked()
 
 void ViewWidget::on_clip_plane_changed(int)
 {
-        view_->send(view::command::ClipPlanePosition(slider_position(ui.slider_clip_plane)));
+        view_->send(view::command::ClipPlanePosition(slider_position(ui_.slider_clip_plane)));
 }
 
 void ViewWidget::on_dft_brightness_changed(int)
@@ -219,79 +219,79 @@ void ViewWidget::on_shadow_quality_changed(int)
 
 double ViewWidget::dft_brightness() const
 {
-        double value = ui.slider_dft_brightness->value() - ui.slider_dft_brightness->minimum();
-        double delta = ui.slider_dft_brightness->maximum() - ui.slider_dft_brightness->minimum();
+        double value = ui_.slider_dft_brightness->value() - ui_.slider_dft_brightness->minimum();
+        double delta = ui_.slider_dft_brightness->maximum() - ui_.slider_dft_brightness->minimum();
         double value_gamma = std::pow(value / delta, DFT_GAMMA);
         return std::pow(DFT_MAX_BRIGHTNESS, value_gamma);
 }
 
 double ViewWidget::shadow_zoom() const
 {
-        return ui.slider_shadow_quality->value();
+        return ui_.slider_shadow_quality->value();
 }
 
 double ViewWidget::normal_length() const
 {
-        return interpolation(NORMAL_LENGTH_MINIMUM, NORMAL_LENGTH_MAXIMUM, slider_position(ui.slider_normals));
+        return interpolation(NORMAL_LENGTH_MINIMUM, NORMAL_LENGTH_MAXIMUM, slider_position(ui_.slider_normals));
 }
 
 bool ViewWidget::smooth_checked() const
 {
-        return ui.checkBox_smooth->isChecked();
+        return ui_.checkBox_smooth->isChecked();
 }
 
 bool ViewWidget::wireframe_checked() const
 {
-        return ui.checkBox_wireframe->isChecked();
+        return ui_.checkBox_wireframe->isChecked();
 }
 
 bool ViewWidget::shadow_checked() const
 {
-        return ui.checkBox_shadow->isChecked();
+        return ui_.checkBox_shadow->isChecked();
 }
 
 bool ViewWidget::fog_checked() const
 {
-        return ui.checkBox_fog->isChecked();
+        return ui_.checkBox_fog->isChecked();
 }
 
 bool ViewWidget::materials_checked() const
 {
-        return ui.checkBox_materials->isChecked();
+        return ui_.checkBox_materials->isChecked();
 }
 
 bool ViewWidget::fps_checked() const
 {
-        return ui.checkBox_fps->isChecked();
+        return ui_.checkBox_fps->isChecked();
 }
 
 bool ViewWidget::pencil_sketch_checked() const
 {
-        return ui.checkBox_pencil_sketch->isChecked();
+        return ui_.checkBox_pencil_sketch->isChecked();
 }
 
 bool ViewWidget::dft_checked() const
 {
-        return ui.checkBox_dft->isChecked();
+        return ui_.checkBox_dft->isChecked();
 }
 
 bool ViewWidget::convex_hull_2d_checked() const
 {
-        return ui.checkBox_convex_hull_2d->isChecked();
+        return ui_.checkBox_convex_hull_2d->isChecked();
 }
 
 bool ViewWidget::optical_flow_checked() const
 {
-        return ui.checkBox_optical_flow->isChecked();
+        return ui_.checkBox_optical_flow->isChecked();
 }
 
 bool ViewWidget::normals_checked() const
 {
-        return ui.checkBox_normals->isChecked();
+        return ui_.checkBox_normals->isChecked();
 }
 
 bool ViewWidget::vertical_sync_checked() const
 {
-        return ui.checkBox_vertical_sync->isChecked();
+        return ui_.checkBox_vertical_sync->isChecked();
 }
 }

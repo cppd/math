@@ -35,7 +35,7 @@ class VolumeWidget final : public QWidget
 private:
         const std::thread::id thread_id_ = std::this_thread::get_id();
 
-        Ui::VolumeWidget ui;
+        Ui::VolumeWidget ui_;
 
         std::unique_ptr<RangeSlider> slider_levels_;
         std::vector<QPointer<QWidget>> widgets_;

@@ -34,7 +34,7 @@ class FacetObjectParametersDialog final : public QDialog
         Q_OBJECT
 
 private:
-        Ui::FacetObjectParametersDialog ui;
+        Ui::FacetObjectParametersDialog ui_;
 
         const int min_facet_count_;
         const int max_facet_count_;

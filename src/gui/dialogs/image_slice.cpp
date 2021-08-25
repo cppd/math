@@ -37,7 +37,7 @@ ImageSliceDialog::ImageSliceDialog(
         std::optional<ImageSliceParameters>& parameters)
         : QDialog(parent_for_dialog()), slice_dimension_(slice_dimension), parameters_(parameters)
 {
-        ui.setupUi(this);
+        ui_.setupUi(this);
         setWindowTitle("Image Slice");
 
         if (!(size.size() >= 2))

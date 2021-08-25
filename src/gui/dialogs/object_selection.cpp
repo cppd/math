@@ -46,32 +46,32 @@ ObjectSelectionParametersDialog::ObjectSelectionParametersDialog(
         std::optional<ObjectSelectionParameters>& parameters)
         : QDialog(parent_for_dialog()), parameters_(parameters)
 {
-        ui.setupUi(this);
+        ui_.setupUi(this);
         setWindowTitle("Object Selection");
 
-        connect(ui.pushButton_set_all, &QPushButton::clicked, this,
+        connect(ui_.pushButton_set_all, &QPushButton::clicked, this,
                 [this]()
                 {
                         set_all(true);
                 });
-        connect(ui.pushButton_clear_all, &QPushButton::clicked, this,
+        connect(ui_.pushButton_clear_all, &QPushButton::clicked, this,
                 [this]()
                 {
                         set_all(false);
                 });
 
-        ui.checkBox_bound_cocone->setChecked(input.bound_cocone);
-        ui.checkBox_cocone->setChecked(input.cocone);
-        ui.checkBox_convex_hull->setChecked(input.convex_hull);
-        ui.checkBox_minumum_spanning_tree->setChecked(input.mst);
+        ui_.checkBox_bound_cocone->setChecked(input.bound_cocone);
+        ui_.checkBox_cocone->setChecked(input.cocone);
+        ui_.checkBox_convex_hull->setChecked(input.convex_hull);
+        ui_.checkBox_minumum_spanning_tree->setChecked(input.mst);
 }
 
 void ObjectSelectionParametersDialog::set_all(bool checked)
 {
-        ui.checkBox_convex_hull->setChecked(checked);
-        ui.checkBox_minumum_spanning_tree->setChecked(checked);
-        ui.checkBox_cocone->setChecked(checked);
-        ui.checkBox_bound_cocone->setChecked(checked);
+        ui_.checkBox_convex_hull->setChecked(checked);
+        ui_.checkBox_minumum_spanning_tree->setChecked(checked);
+        ui_.checkBox_cocone->setChecked(checked);
+        ui_.checkBox_bound_cocone->setChecked(checked);
 }
 
 void ObjectSelectionParametersDialog::done(int r)
@@ -83,10 +83,10 @@ void ObjectSelectionParametersDialog::done(int r)
         }
 
         parameters_.emplace();
-        parameters_->bound_cocone = ui.checkBox_bound_cocone->isChecked();
-        parameters_->cocone = ui.checkBox_cocone->isChecked();
-        parameters_->convex_hull = ui.checkBox_convex_hull->isChecked();
-        parameters_->mst = ui.checkBox_minumum_spanning_tree->isChecked();
+        parameters_->bound_cocone = ui_.checkBox_bound_cocone->isChecked();
+        parameters_->cocone = ui_.checkBox_cocone->isChecked();
+        parameters_->convex_hull = ui_.checkBox_convex_hull->isChecked();
+        parameters_->mst = ui_.checkBox_minumum_spanning_tree->isChecked();
 
         QDialog::done(r);
 }

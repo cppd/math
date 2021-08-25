@@ -31,7 +31,7 @@ class ImageWidget final : public QWidget
         Q_OBJECT
 
 private:
-        Ui::ImageWidget ui;
+        Ui::ImageWidget ui_;
 
         const long long image_2d_pixel_count_;
         const std::size_t image_2d_byte_count_;

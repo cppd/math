@@ -97,23 +97,23 @@ LightingWidget::LightingWidget()
                       + to_string(blackbody_max_t_));
         }
 
-        ui.setupUi(this);
+        ui_.setupUi(this);
 
-        ui.slider_intensity->setMinimum(0);
-        ui.slider_intensity->setMaximum(1000);
-        set_slider_position(ui.slider_intensity, intensity_to_position(DEFAULT_LIGHTING_INTENSITY));
+        ui_.slider_intensity->setMinimum(0);
+        ui_.slider_intensity->setMaximum(1000);
+        set_slider_position(ui_.slider_intensity, intensity_to_position(DEFAULT_LIGHTING_INTENSITY));
 
-        ui.slider_daylight_cct->setMinimum(0);
-        ui.slider_daylight_cct->setMaximum(1000);
-        set_slider_to_middle(ui.slider_daylight_cct);
+        ui_.slider_daylight_cct->setMinimum(0);
+        ui_.slider_daylight_cct->setMaximum(1000);
+        set_slider_to_middle(ui_.slider_daylight_cct);
 
-        ui.slider_blackbody_t->setMinimum(0);
-        ui.slider_blackbody_t->setMaximum(1000);
-        set_slider_to_middle(ui.slider_blackbody_t);
+        ui_.slider_blackbody_t->setMinimum(0);
+        ui_.slider_blackbody_t->setMaximum(1000);
+        set_slider_to_middle(ui_.slider_blackbody_t);
 
-        ui.radioButton_d65->setChecked(true);
-        ui.radioButton_d65->setText(QString::fromUtf8(DAYLIGHT_D65.data(), DAYLIGHT_D65.size()));
-        ui.radioButton_blackbody_a->setText(QString::fromUtf8(BLACKBODY_A.data(), BLACKBODY_A.size()));
+        ui_.radioButton_d65->setChecked(true);
+        ui_.radioButton_d65->setText(QString::fromUtf8(DAYLIGHT_D65.data(), DAYLIGHT_D65.size()));
+        ui_.radioButton_blackbody_a->setText(QString::fromUtf8(BLACKBODY_A.data(), BLACKBODY_A.size()));
 
         on_intensity_changed();
         on_daylight_changed();
@@ -123,13 +123,13 @@ LightingWidget::LightingWidget()
         on_blackbody_a_toggled();
         on_blackbody_toggled();
 
-        connect(ui.slider_intensity, &QSlider::valueChanged, this, &LightingWidget::on_intensity_changed);
-        connect(ui.slider_daylight_cct, &QSlider::valueChanged, this, &LightingWidget::on_daylight_changed);
-        connect(ui.slider_blackbody_t, &QSlider::valueChanged, this, &LightingWidget::on_blackbody_changed);
-        connect(ui.radioButton_d65, &QRadioButton::toggled, this, &LightingWidget::on_d65_toggled);
-        connect(ui.radioButton_daylight, &QRadioButton::toggled, this, &LightingWidget::on_daylight_toggled);
-        connect(ui.radioButton_blackbody_a, &QRadioButton::toggled, this, &LightingWidget::on_blackbody_a_toggled);
-        connect(ui.radioButton_blackbody, &QRadioButton::toggled, this, &LightingWidget::on_blackbody_toggled);
+        connect(ui_.slider_intensity, &QSlider::valueChanged, this, &LightingWidget::on_intensity_changed);
+        connect(ui_.slider_daylight_cct, &QSlider::valueChanged, this, &LightingWidget::on_daylight_changed);
+        connect(ui_.slider_blackbody_t, &QSlider::valueChanged, this, &LightingWidget::on_blackbody_changed);
+        connect(ui_.radioButton_d65, &QRadioButton::toggled, this, &LightingWidget::on_d65_toggled);
+        connect(ui_.radioButton_daylight, &QRadioButton::toggled, this, &LightingWidget::on_daylight_toggled);
+        connect(ui_.radioButton_blackbody_a, &QRadioButton::toggled, this, &LightingWidget::on_blackbody_a_toggled);
+        connect(ui_.radioButton_blackbody, &QRadioButton::toggled, this, &LightingWidget::on_blackbody_toggled);
 }
 
 void LightingWidget::set_view(view::View* view)
@@ -147,18 +147,18 @@ void LightingWidget::send_color()
 
 void LightingWidget::on_intensity_changed()
 {
-        intensity_ = position_to_intensity(slider_position(ui.slider_intensity));
+        intensity_ = position_to_intensity(slider_position(ui_.slider_intensity));
 
         std::ostringstream oss;
         oss << std::setprecision(2) << std::fixed << intensity_;
-        ui.label_intensity->setText(QString::fromStdString(oss.str()));
+        ui_.label_intensity->setText(QString::fromStdString(oss.str()));
 
         send_color();
 }
 
 void LightingWidget::on_d65_toggled()
 {
-        if (!ui.radioButton_d65->isChecked())
+        if (!ui_.radioButton_d65->isChecked())
         {
                 return;
         }
@@ -171,8 +171,8 @@ void LightingWidget::on_d65_toggled()
 
 void LightingWidget::on_daylight_toggled()
 {
-        const bool checked = ui.radioButton_daylight->isChecked();
-        ui.slider_daylight_cct->setEnabled(checked);
+        const bool checked = ui_.radioButton_daylight->isChecked();
+        ui_.slider_daylight_cct->setEnabled(checked);
         if (!checked)
         {
                 return;
@@ -183,12 +183,12 @@ void LightingWidget::on_daylight_toggled()
 
 void LightingWidget::on_daylight_changed()
 {
-        const double p = slider_position(ui.slider_daylight_cct);
+        const double p = slider_position(ui_.slider_daylight_cct);
         const int cct = position_to_temperature(p, daylight_min_cct_, daylight_max_cct_);
 
-        ui.radioButton_daylight->setText(QString::fromUtf8(DAYLIGHT_CCT.data(), DAYLIGHT_CCT.size()).arg(cct));
+        ui_.radioButton_daylight->setText(QString::fromUtf8(DAYLIGHT_CCT.data(), DAYLIGHT_CCT.size()).arg(cct));
 
-        if (!ui.radioButton_daylight->isChecked())
+        if (!ui_.radioButton_daylight->isChecked())
         {
                 return;
         }
@@ -201,7 +201,7 @@ void LightingWidget::on_daylight_changed()
 
 void LightingWidget::on_blackbody_a_toggled()
 {
-        if (!ui.radioButton_blackbody_a->isChecked())
+        if (!ui_.radioButton_blackbody_a->isChecked())
         {
                 return;
         }
@@ -214,8 +214,8 @@ void LightingWidget::on_blackbody_a_toggled()
 
 void LightingWidget::on_blackbody_toggled()
 {
-        const bool checked = ui.radioButton_blackbody->isChecked();
-        ui.slider_blackbody_t->setEnabled(checked);
+        const bool checked = ui_.radioButton_blackbody->isChecked();
+        ui_.slider_blackbody_t->setEnabled(checked);
         if (!checked)
         {
                 return;
@@ -226,12 +226,12 @@ void LightingWidget::on_blackbody_toggled()
 
 void LightingWidget::on_blackbody_changed()
 {
-        const double p = slider_position(ui.slider_blackbody_t);
+        const double p = slider_position(ui_.slider_blackbody_t);
         const int t = position_to_temperature(p, blackbody_min_t_, blackbody_max_t_);
 
-        ui.radioButton_blackbody->setText(QString::fromUtf8(BLACKBODY_T.data(), BLACKBODY_T.size()).arg(t));
+        ui_.radioButton_blackbody->setText(QString::fromUtf8(BLACKBODY_T.data(), BLACKBODY_T.size()).arg(t));
 
-        if (!ui.radioButton_blackbody->isChecked())
+        if (!ui_.radioButton_blackbody->isChecked())
         {
                 return;
         }

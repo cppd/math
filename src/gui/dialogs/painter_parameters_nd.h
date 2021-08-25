@@ -38,7 +38,7 @@ class PainterParametersNdDialog final : public QDialog
         Q_OBJECT
 
 private:
-        Ui::PainterParametersNdDialog ui;
+        Ui::PainterParametersNdDialog ui_;
 
         PainterParametersWidget* parameters_widget_;
 

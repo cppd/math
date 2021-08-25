@@ -29,7 +29,7 @@ class ColorsWidget final : public QWidget
         Q_OBJECT
 
 private:
-        Ui::ColorsWidget ui;
+        Ui::ColorsWidget ui_;
 
         view::View* view_ = nullptr;
 

@@ -34,7 +34,7 @@ class BoundCoconeParametersDialog final : public QDialog
         Q_OBJECT
 
 private:
-        Ui::BoundCoconeParametersDialog ui;
+        Ui::BoundCoconeParametersDialog ui_;
 
         double min_rho_;
         double max_rho_;

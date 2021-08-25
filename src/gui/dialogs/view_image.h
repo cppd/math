@@ -36,7 +36,7 @@ class ViewImageDialog final : public QDialog
         Q_OBJECT
 
 private:
-        Ui::ViewImageDialog ui;
+        Ui::ViewImageDialog ui_;
 
         const std::string& file_name_;
 

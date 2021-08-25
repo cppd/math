@@ -33,7 +33,7 @@ class ImageSliceDialog final : public QDialog
 {
         Q_OBJECT
 private:
-        Ui::ImageSliceDialog ui;
+        Ui::ImageSliceDialog ui_;
 
         const int slice_dimension_;
 

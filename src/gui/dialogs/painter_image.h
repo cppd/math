@@ -44,7 +44,7 @@ class PainterImageDialog final : public QDialog
         Q_OBJECT
 
 private:
-        Ui::PainterImageDialog ui;
+        Ui::PainterImageDialog ui_;
 
         const PainterImagePathType path_type_;
 

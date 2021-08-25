@@ -36,7 +36,7 @@ PainterImageDialog::PainterImageDialog(
         std::optional<PainterImageParameters>& parameters)
         : QDialog(parent_for_dialog()), path_type_(path_type), parameters_(parameters)
 {
-        ui.setupUi(this);
+        ui_.setupUi(this);
         setWindowTitle(QString::fromStdString(title));
 
         set_path();
@@ -50,20 +50,20 @@ void PainterImageDialog::set_path()
         switch (path_type_)
         {
         case PainterImagePathType::NONE:
-                ui.label_path_name->setVisible(false);
-                ui.lineEdit_path->setVisible(false);
-                ui.toolButton_select_path->setVisible(false);
+                ui_.label_path_name->setVisible(false);
+                ui_.lineEdit_path->setVisible(false);
+                ui_.toolButton_select_path->setVisible(false);
                 return;
         case PainterImagePathType::DIRECTORY:
-                ui.label_path_name->setText("Directory:");
-                ui.lineEdit_path->setReadOnly(true);
-                connect(ui.toolButton_select_path, &QToolButton::clicked, this,
+                ui_.label_path_name->setText("Directory:");
+                ui_.lineEdit_path->setReadOnly(true);
+                connect(ui_.toolButton_select_path, &QToolButton::clicked, this,
                         &PainterImageDialog::on_select_path_clicked);
                 return;
         case PainterImagePathType::FILE:
-                ui.label_path_name->setText("File:");
-                ui.lineEdit_path->setReadOnly(true);
-                connect(ui.toolButton_select_path, &QToolButton::clicked, this,
+                ui_.label_path_name->setText("File:");
+                ui_.lineEdit_path->setReadOnly(true);
+                connect(ui_.toolButton_select_path, &QToolButton::clicked, this,
                         &PainterImageDialog::on_select_path_clicked);
                 return;
         }
@@ -74,12 +74,12 @@ void PainterImageDialog::set_checkboxes(bool use_all)
 {
         if (use_all)
         {
-                ui.checkBox_all->setVisible(true);
-                connect(ui.checkBox_all, &QCheckBox::toggled, this, &PainterImageDialog::on_all_toggled);
+                ui_.checkBox_all->setVisible(true);
+                connect(ui_.checkBox_all, &QCheckBox::toggled, this, &PainterImageDialog::on_all_toggled);
         }
         else
         {
-                ui.checkBox_all->setVisible(false);
+                ui_.checkBox_all->setVisible(false);
         }
 }
 
@@ -95,7 +95,7 @@ void PainterImageDialog::done(int r)
 
         if (path_type_ == PainterImagePathType::DIRECTORY)
         {
-                path_string = ui.lineEdit_path->text().toStdString();
+                path_string = ui_.lineEdit_path->text().toStdString();
                 std::filesystem::path path = path_from_utf8(*path_string);
                 if (!std::filesystem::is_directory(path))
                 {
@@ -106,7 +106,7 @@ void PainterImageDialog::done(int r)
         }
         else if (path_type_ == PainterImagePathType::FILE)
         {
-                path_string = ui.lineEdit_path->text().toStdString();
+                path_string = ui_.lineEdit_path->text().toStdString();
                 std::filesystem::path path = path_from_utf8(*path_string);
                 if (!std::filesystem::is_directory(path.parent_path()) || path.filename().empty())
                 {
@@ -120,7 +120,7 @@ void PainterImageDialog::done(int r)
 
         parameters_->path_string = path_string;
 
-        if (ui.checkBox_all->isVisible() && ui.checkBox_all->isChecked())
+        if (ui_.checkBox_all->isVisible() && ui_.checkBox_all->isChecked())
         {
                 parameters_->all = true;
                 parameters_->with_background = false;
@@ -129,8 +129,8 @@ void PainterImageDialog::done(int r)
         else
         {
                 parameters_->all = false;
-                parameters_->with_background = ui.checkBox_with_background->isChecked();
-                parameters_->convert_to_8_bit = ui.checkBox_8_bit->isChecked();
+                parameters_->with_background = ui_.checkBox_with_background->isChecked();
+                parameters_->convert_to_8_bit = ui_.checkBox_8_bit->isChecked();
         }
 
         QDialog::done(r);
@@ -168,21 +168,21 @@ void PainterImageDialog::on_select_path_clicked()
 
         if (path && !ptr.isNull())
         {
-                ui.lineEdit_path->setText(QString::fromStdString(*path));
+                ui_.lineEdit_path->setText(QString::fromStdString(*path));
         }
 }
 
 void PainterImageDialog::on_all_toggled()
 {
-        if (ui.checkBox_all->isChecked())
+        if (ui_.checkBox_all->isChecked())
         {
-                ui.checkBox_8_bit->setVisible(false);
-                ui.checkBox_with_background->setVisible(false);
+                ui_.checkBox_8_bit->setVisible(false);
+                ui_.checkBox_with_background->setVisible(false);
         }
         else
         {
-                ui.checkBox_8_bit->setVisible(true);
-                ui.checkBox_with_background->setVisible(true);
+                ui_.checkBox_8_bit->setVisible(true);
+                ui_.checkBox_with_background->setVisible(true);
         }
 }
 

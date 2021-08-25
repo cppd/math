@@ -31,7 +31,7 @@ class LightingWidget final : public QWidget
         Q_OBJECT
 
 private:
-        Ui::LightingWidget ui;
+        Ui::LightingWidget ui_;
 
         view::View* view_ = nullptr;
 

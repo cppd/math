@@ -34,7 +34,7 @@ class VolumeObjectParametersDialog final : public QDialog
         Q_OBJECT
 
 private:
-        Ui::VolumeObjectParametersDialog ui;
+        Ui::VolumeObjectParametersDialog ui_;
 
         const int min_image_size_;
         const int max_image_size_;

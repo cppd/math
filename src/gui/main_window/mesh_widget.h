@@ -34,7 +34,7 @@ class MeshWidget final : public QWidget
 private:
         const std::thread::id thread_id_ = std::this_thread::get_id();
 
-        Ui::MeshWidget ui;
+        Ui::MeshWidget ui_;
 
         std::vector<QPointer<QWidget>> widgets_;
         ModelTree* model_tree_ = nullptr;

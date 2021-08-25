@@ -45,7 +45,7 @@ private:
         const std::thread::id thread_id_ = std::this_thread::get_id();
         bool first_show_ = true;
 
-        Ui::PainterWindow ui;
+        Ui::PainterWindow ui_;
 
         std::unique_ptr<Pixels> pixels_;
         long long slice_ = 0;

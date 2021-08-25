@@ -33,7 +33,7 @@ class StatisticsWidget final : public QWidget
         Q_OBJECT
 
 private:
-        Ui::StatisticsWidget ui;
+        Ui::StatisticsWidget ui_;
 
         struct Counters;
         std::unique_ptr<Difference<Counters>> difference_;

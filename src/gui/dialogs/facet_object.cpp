@@ -39,7 +39,7 @@ FacetObjectParametersDialog::FacetObjectParametersDialog(
           max_facet_count_(max_facet_count),
           parameters_(parameters)
 {
-        ui.setupUi(this);
+        ui_.setupUi(this);
         setWindowTitle("Create Object");
 
         if (!(dimension >= 2))
@@ -65,13 +65,13 @@ FacetObjectParametersDialog::FacetObjectParametersDialog(
                       + to_string(max_facet_count) + "]");
         }
 
-        ui.label_space->setText(QString::fromStdString(space_name(dimension)));
-        ui.label_object->setText(QString::fromStdString(object_name));
+        ui_.label_space->setText(QString::fromStdString(space_name(dimension)));
+        ui_.label_object->setText(QString::fromStdString(object_name));
 
-        ui.spinBox_facet_count->setMinimum(min_facet_count);
-        ui.spinBox_facet_count->setMaximum(max_facet_count);
-        ui.spinBox_facet_count->setValue(default_facet_count);
-        ui.spinBox_facet_count->setSingleStep(std::max(1, max_facet_count / 1000));
+        ui_.spinBox_facet_count->setMinimum(min_facet_count);
+        ui_.spinBox_facet_count->setMaximum(max_facet_count);
+        ui_.spinBox_facet_count->setValue(default_facet_count);
+        ui_.spinBox_facet_count->setSingleStep(std::max(1, max_facet_count / 1000));
 }
 
 void FacetObjectParametersDialog::done(int r)
@@ -82,7 +82,7 @@ void FacetObjectParametersDialog::done(int r)
                 return;
         }
 
-        int facet_count = ui.spinBox_facet_count->value();
+        int facet_count = ui_.spinBox_facet_count->value();
         if (!(facet_count >= min_facet_count_ && facet_count <= max_facet_count_))
         {
                 std::string msg = "Facet count must be in the range [" + to_string(min_facet_count_) + ", "

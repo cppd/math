@@ -47,28 +47,28 @@ constexpr std::chrono::milliseconds WINDOW_SHOW_DELAY{50};
 
 MainWindow::MainWindow()
 {
-        ui.setupUi(this);
+        ui_.setupUi(this);
         this->setWindowTitle(settings::APPLICATION_NAME);
 
-        log_ = std::make_unique<Log>(ui.text_log);
+        log_ = std::make_unique<Log>(ui_.text_log);
         constructor_graphics_widget();
         constructor_objects();
 }
 
 void MainWindow::constructor_graphics_widget()
 {
-        QSplitter* const splitter = find_widget_splitter(this, ui.graphics_widget);
+        QSplitter* const splitter = find_widget_splitter(this, ui_.graphics_widget);
         ASSERT(splitter && splitter->orientation() == Qt::Horizontal);
 
         graphics_widget_ = new GraphicsWidget(this);
 
-        QWidget* w = splitter->replaceWidget(splitter->indexOf(ui.graphics_widget), graphics_widget_);
-        if (w != ui.graphics_widget)
+        QWidget* w = splitter->replaceWidget(splitter->indexOf(ui_.graphics_widget), graphics_widget_);
+        if (w != ui_.graphics_widget)
         {
                 error_fatal("Failed to replace graphics widget");
         }
-        delete ui.graphics_widget;
-        ui.graphics_widget = nullptr;
+        delete ui_.graphics_widget;
+        ui_.graphics_widget = nullptr;
 
         graphics_widget_->setMinimumSize(400, 400);
         graphics_widget_->setVisible(true);
@@ -102,45 +102,42 @@ void MainWindow::constructor_graphics_widget()
 
 void MainWindow::constructor_objects()
 {
-        // QMenu* menu_create = new QMenu("Create", this);
-        // ui.menu_bar->insertMenu(ui.menu_help->menuAction(), menu_create);
-
         repository_ = std::make_unique<storage::Repository>();
 
         model_tree_ = std::make_unique<ModelTree>();
-        add_widget(ui.tab_models, model_tree_.get());
+        add_widget(ui_.tab_models, model_tree_.get());
 
         lighting_widget_ = std::make_unique<LightingWidget>();
-        add_widget(ui.tab_lighting, lighting_widget_.get());
+        add_widget(ui_.tab_lighting, lighting_widget_.get());
 
         colors_widget_ = std::make_unique<ColorsWidget>();
-        add_widget(ui.tab_color, colors_widget_.get());
+        add_widget(ui_.tab_color, colors_widget_.get());
 
         view_widget_ = std::make_unique<ViewWidget>();
-        add_widget(ui.tab_view, view_widget_.get());
+        add_widget(ui_.tab_view, view_widget_.get());
 
         mesh_widget_ = std::make_unique<MeshWidget>();
-        add_widget(ui.tab_mesh, mesh_widget_.get());
+        add_widget(ui_.tab_mesh, mesh_widget_.get());
 
         volume_widget_ = std::make_unique<VolumeWidget>();
-        add_widget(ui.tab_volume, volume_widget_.get());
+        add_widget(ui_.tab_volume, volume_widget_.get());
 
         //
 
-        ui.main_widget->layout()->setContentsMargins(0, 0, 0, 0);
-        ui.main_widget->layout()->setSpacing(0);
+        ui_.main_widget->layout()->setContentsMargins(0, 0, 0, 0);
+        ui_.main_widget->layout()->setSpacing(0);
 
-        ui.tab_widget->setCurrentWidget(ui.tab_models);
+        ui_.tab_widget->setCurrentWidget(ui_.tab_models);
 
-        // disable ui.statusBar height changing when a widget is added or removed
-        ui.status_bar->setFixedHeight(ui.status_bar->height());
+        // disable height changing when a widget is added or removed
+        ui_.status_bar->setFixedHeight(ui_.status_bar->height());
 
         //
 
-        ui.action_about->setText("About " + QString(settings::APPLICATION_NAME));
-        connect(ui.action_about, &QAction::triggered, this, &MainWindow::on_about_triggered);
+        ui_.action_about->setText("About " + QString(settings::APPLICATION_NAME));
+        connect(ui_.action_about, &QAction::triggered, this, &MainWindow::on_about_triggered);
 
-        connect(ui.action_help, &QAction::triggered, this, &MainWindow::on_help_triggered);
+        connect(ui_.action_help, &QAction::triggered, this, &MainWindow::on_help_triggered);
 
         connect(&timer_, &QTimer::timeout, this, &MainWindow::on_timer);
 }
@@ -274,15 +271,15 @@ void MainWindow::first_shown()
         volume_widget_->set_model_tree(model_tree_.get());
         model_events_ = std::make_unique<application::ModelEvents>(model_tree_->events(), view_.get());
         actions_ = std::make_unique<Actions>(
-                options, ui.status_bar, ui.action_self_test, ui.menu_file, ui.menu_create, ui.menu_edit,
-                ui.menu_rendering, repository_.get(), view_.get(), model_tree_.get(), lighting_widget_.get(),
+                options, ui_.status_bar, ui_.action_self_test, ui_.menu_file, ui_.menu_create, ui_.menu_edit,
+                ui_.menu_rendering, repository_.get(), view_.get(), model_tree_.get(), lighting_widget_.get(),
                 colors_widget_.get());
 
-        if (!ui.menu_file->actions().empty())
+        if (!ui_.menu_file->actions().empty())
         {
-                ui.menu_file->addSeparator();
+                ui_.menu_file->addSeparator();
         }
-        connect(ui.menu_file->addAction("Exit..."), &QAction::triggered, this, &MainWindow::close);
+        connect(ui_.menu_file->addAction("Exit..."), &QAction::triggered, this, &MainWindow::close);
 
         timer_.start(UPDATE_INTERVAL);
 }

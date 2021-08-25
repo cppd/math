@@ -42,7 +42,7 @@ class ModelTree final : public QWidget, private ModelTreeEvents
 private:
         const std::thread::id thread_id_;
 
-        Ui::ModelTree ui;
+        Ui::ModelTree ui_;
 
         storage::Storage storage_;
 

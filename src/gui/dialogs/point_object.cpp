@@ -39,7 +39,7 @@ PointObjectParametersDialog::PointObjectParametersDialog(
           max_point_count_(max_point_count),
           parameters_(parameters)
 {
-        ui.setupUi(this);
+        ui_.setupUi(this);
         setWindowTitle("Create Object");
 
         if (!(dimension >= 2))
@@ -65,13 +65,13 @@ PointObjectParametersDialog::PointObjectParametersDialog(
                       + to_string(max_point_count) + "]");
         }
 
-        ui.label_space->setText(QString::fromStdString(space_name(dimension)));
-        ui.label_object->setText(QString::fromStdString(object_name));
+        ui_.label_space->setText(QString::fromStdString(space_name(dimension)));
+        ui_.label_object->setText(QString::fromStdString(object_name));
 
-        ui.spinBox_point_count->setMinimum(min_point_count);
-        ui.spinBox_point_count->setMaximum(max_point_count);
-        ui.spinBox_point_count->setValue(default_point_count);
-        ui.spinBox_point_count->setSingleStep(std::max(1, max_point_count / 1000));
+        ui_.spinBox_point_count->setMinimum(min_point_count);
+        ui_.spinBox_point_count->setMaximum(max_point_count);
+        ui_.spinBox_point_count->setValue(default_point_count);
+        ui_.spinBox_point_count->setSingleStep(std::max(1, max_point_count / 1000));
 }
 
 void PointObjectParametersDialog::done(int r)
@@ -82,7 +82,7 @@ void PointObjectParametersDialog::done(int r)
                 return;
         }
 
-        int point_count = ui.spinBox_point_count->value();
+        int point_count = ui_.spinBox_point_count->value();
         if (!(point_count >= min_point_count_ && point_count <= max_point_count_))
         {
                 std::string msg = "Point count must be in the range [" + to_string(min_point_count_) + ", "

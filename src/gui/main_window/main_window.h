@@ -50,7 +50,7 @@ private:
         const std::thread::id thread_id_ = std::this_thread::get_id();
         bool first_show_ = true;
 
-        Ui::MainWindow ui;
+        Ui::MainWindow ui_;
 
         std::unique_ptr<Log> log_;
 
