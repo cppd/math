@@ -22,7 +22,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 namespace ns
 {
-namespace types_implementation
+namespace type_limit_implementation
 {
 template <typename T>
 constexpr T binary_epsilon()
@@ -80,21 +80,21 @@ constexpr T binary_exponent(int e)
 }
 
 template <typename T>
-inline constexpr bool SPECIALIZED_INTEGRAL = (std::is_integral_v<T>)&&(std::numeric_limits<T>::is_specialized);
+concept IntegralType =
+        std::is_integral_v<T> || std::is_same_v<T, signed __int128> || std::is_same_v<T, unsigned __int128>;
 
 template <typename T>
-inline constexpr bool SPECIALIZED_FLOATING_POINT =
-        (std::is_floating_point_v<T>)&&(std::numeric_limits<T>::is_specialized);
-
-template <typename T, typename = void>
-class limits;
+concept FloatingPointType = std::is_floating_point_v<T> || std::is_same_v<T, __float128>;
 
 template <typename T>
-class limits<T, std::enable_if_t<SPECIALIZED_INTEGRAL<T>>>
+struct limits;
+
+// clang-format off
+
+template <typename T>
+requires IntegralType<T> && std::numeric_limits<T>::is_specialized
+struct limits<T>
 {
-        static_assert(SPECIALIZED_INTEGRAL<T>);
-
-public:
         static constexpr T max()
         {
                 return std::numeric_limits<T>::max();
@@ -109,11 +109,9 @@ public:
 };
 
 template <typename T>
-class limits<T, std::enable_if_t<SPECIALIZED_FLOATING_POINT<T>>>
+requires FloatingPointType<T> && std::numeric_limits<T>::is_specialized
+struct limits<T>
 {
-        static_assert(SPECIALIZED_FLOATING_POINT<T>);
-
-public:
         static constexpr T epsilon()
         {
                 return std::numeric_limits<T>::epsilon();
@@ -134,12 +132,9 @@ public:
 };
 
 template <typename T>
-class limits<T, std::enable_if_t<std::is_same_v<T, unsigned __int128> && !SPECIALIZED_INTEGRAL<T>>>
+requires std::is_same_v<T, unsigned __int128> && (!std::numeric_limits<T>::is_specialized)
+struct limits<T>
 {
-        static_assert(std::is_same_v<T, unsigned __int128>);
-        static_assert(!SPECIALIZED_INTEGRAL<T>);
-
-public:
         static constexpr T max()
         {
                 return -1;
@@ -154,12 +149,9 @@ public:
 };
 
 template <typename T>
-class limits<T, std::enable_if_t<std::is_same_v<T, signed __int128> && !SPECIALIZED_INTEGRAL<T>>>
+requires std::is_same_v<T, signed __int128> && (!std::numeric_limits<T>::is_specialized)
+struct limits<T>
 {
-        static_assert(std::is_same_v<T, signed __int128>);
-        static_assert(!SPECIALIZED_INTEGRAL<T>);
-
-public:
         static constexpr T max()
         {
                 return static_cast<unsigned __int128>(-1) >> 1;
@@ -174,15 +166,12 @@ public:
 };
 
 template <typename T>
-class limits<T, std::enable_if_t<std::is_same_v<T, __float128> && !SPECIALIZED_FLOATING_POINT<T>>>
+requires std::is_same_v<T, __float128> && (!std::numeric_limits<T>::is_specialized)
+struct limits<T>
 {
-        static_assert(std::is_same_v<T, __float128>);
-        static_assert(!SPECIALIZED_FLOATING_POINT<T>);
-
         // epsilon = strtoflt128("1.92592994438723585305597794258492732e-34", nullptr)
         // max = strtoflt128("1.18973149535723176508575932662800702e4932", nullptr)
 
-public:
         static constexpr T epsilon()
         {
                 return binary_epsilon<T>();
@@ -201,24 +190,26 @@ public:
         static constexpr int max_exponent = 16384;
         static constexpr int radix = 2;
 };
+
+// clang-format on
 }
 
 //
 
 template <typename T>
-class limits : public types_implementation::limits<T>
+struct limits final : type_limit_implementation::limits<T>
 {
 };
 template <typename T>
-class limits<const T> : public types_implementation::limits<T>
+struct limits<const T> final : type_limit_implementation::limits<T>
 {
 };
 template <typename T>
-class limits<volatile T> : public types_implementation::limits<T>
+struct limits<volatile T> final : type_limit_implementation::limits<T>
 {
 };
 template <typename T>
-class limits<const volatile T> : public types_implementation::limits<T>
+struct limits<const volatile T> final : type_limit_implementation::limits<T>
 {
 };
 }

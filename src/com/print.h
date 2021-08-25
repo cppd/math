@@ -245,7 +245,7 @@ std::string to_string_digit_groups(char16_t v, char) = delete;
 std::string to_string_digit_groups(char32_t v, char) = delete;
 
 template <typename T>
-std::enable_if_t<std::is_pointer_v<T>, std::string> to_string(const T&) = delete;
+std::string to_string(const T&) requires std::is_pointer_v<T> = delete;
 
 template <typename T>
 std::string to_string(std::basic_string<T>) = delete;

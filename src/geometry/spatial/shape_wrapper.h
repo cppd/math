@@ -20,12 +20,12 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/numerical/ray.h>
 #include <src/numerical/vec.h>
 
-#include <type_traits>
+#include <optional>
 #include <utility>
 
 namespace ns::geometry
 {
-template <typename Shape, typename = void>
+template <typename Shape>
 class ShapeWrapperForIntersection final
 {
         static_assert(Shape::SPACE_DIMENSION >= 4);
@@ -86,11 +86,8 @@ public:
 };
 
 template <typename Shape>
-class ShapeWrapperForIntersection<Shape, std::enable_if_t<Shape::SPACE_DIMENSION == 3 || Shape::SPACE_DIMENSION == 2>>
-        final
+requires(Shape::SPACE_DIMENSION == 3 || Shape::SPACE_DIMENSION == 2) class ShapeWrapperForIntersection<Shape> final
 {
-        static_assert(Shape::SPACE_DIMENSION == 3 || Shape::SPACE_DIMENSION == 2);
-
         static constexpr std::size_t N = Shape::SPACE_DIMENSION;
 
         using T = typename Shape::DataType;
