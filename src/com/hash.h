@@ -52,7 +52,7 @@ std::size_t hash_as_string(const std::array<T, N>& v)
         static_assert(std::is_integral_v<T> || std::is_floating_point_v<T>);
 
         const char* s = reinterpret_cast<const char*>(v.data());
-        std::size_t size = storage_size(v);
+        std::size_t size = data_size(v);
 
         // return jenkins_one_at_a_time_hash(s, size);
         return std::hash<std::string_view>()(std::string_view(s, size));

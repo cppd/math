@@ -21,15 +21,4 @@ namespace ns
 {
 static_assert(is_array<const std::array<int, 1>>);
 static_assert(!is_array<const std::vector<int>>);
-
-static_assert(has_cbegin_cend<const std::array<int, 1>>);
-static_assert(has_cbegin_cend<std::vector<double>&>);
-static_assert(has_cbegin_cend<int[1]>);
-static_assert(!has_cbegin_cend<int>);
-static_assert(!has_cbegin_cend<double*>);
-
-static_assert(has_data_and_size<const std::array<int, 1>>);
-static_assert(has_data_and_size<std::vector<double>&>);
-static_assert(!has_data_and_size<int>);
-static_assert(!has_data_and_size<double*>);
 }

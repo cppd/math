@@ -215,7 +215,11 @@ std::string to_string_digit_groups(T v, char s = '\x20') requires is_native_inte
 //
 
 template <typename T>
-std::string to_string(const T& data) requires has_cbegin_cend<T>
+std::string to_string(const T& data) requires requires(const T& v)
+{
+        std::begin(v);
+        std::end(v);
+}
 {
         auto i = std::cbegin(data);
         if (i == std::cend(data))

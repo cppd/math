@@ -219,9 +219,9 @@ class Impl final : public View
                 static_assert(
                         std::is_same_v<decltype(text::TextVertex::texture), decltype(Vertex::texture_coordinates)>);
 
-                const std::size_t data_size = storage_size(vertices);
+                const std::size_t size = data_size(vertices);
 
-                if (vertex_buffer_->size() < data_size)
+                if (vertex_buffer_->size() < size)
                 {
                         vulkan::queue_wait_idle(queue);
 
@@ -230,7 +230,7 @@ class Impl final : public View
                         vertex_buffer_.emplace(
                                 vulkan::BufferMemoryType::HOST_VISIBLE, device_,
                                 std::vector<uint32_t>({graphics_family_index_}), VK_BUFFER_USAGE_VERTEX_BUFFER_BIT,
-                                std::max(vertex_buffer_->size() * 2, data_size));
+                                std::max(vertex_buffer_->size() * 2, size));
 
                         command_buffers_ = create_commands();
                 }

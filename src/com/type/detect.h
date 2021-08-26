@@ -36,17 +36,4 @@ struct IsArray<std::array<T, N>> final : std::true_type
 
 template <typename T>
 inline constexpr bool is_array = type_detect_implementation::IsArray<std::remove_cv_t<T>>::value;
-
-template <typename T>
-inline constexpr bool has_cbegin_cend = requires(const T& v)
-{
-        std::begin(v);
-        std::end(v);
-};
-template <typename T>
-inline constexpr bool has_data_and_size = requires(const T& v)
-{
-        std::data(v);
-        std::size(v);
-};
 }

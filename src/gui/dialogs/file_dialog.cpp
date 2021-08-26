@@ -20,7 +20,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "../com/support.h"
 
 #include <src/com/error.h>
-#include <src/com/type/detect.h>
 
 #include <QFileDialog>
 #include <map>
@@ -59,14 +58,16 @@ QFileDialog::Options make_options(bool read_only)
         return options;
 }
 
-template <typename... T>
-QString file_filter(const std::string& name, const T&... extensions)
+QString file_filter(const std::string& name, const std::vector<std::string>& extensions)
 {
-        static_assert(sizeof...(T) > 0);
-
         if (name.empty())
         {
                 error("No filter file name");
+        }
+
+        if (extensions.empty())
+        {
+                error("No file filter extensions");
         }
 
         std::string filter;
@@ -74,48 +75,18 @@ QString file_filter(const std::string& name, const T&... extensions)
         filter += name + " (";
 
         bool first = true;
-
-        auto add_string = [&](const std::string& ext)
+        for (const std::string& e : extensions)
         {
-                if (std::count(ext.cbegin(), ext.cend(), '*') > 0)
+                if (std::count(e.cbegin(), e.cend(), '*') > 0)
                 {
-                        error("Character * in file filter extension " + ext);
+                        error("Character * in file filter extension " + e);
                 }
                 if (!first)
                 {
                         filter += " ";
                 }
                 first = false;
-                filter += "*." + ext;
-        };
-
-        auto add = [&](const auto& ext)
-        {
-                if constexpr (has_cbegin_cend<decltype(ext)>)
-                {
-                        if constexpr (!std::is_same_v<char, std::remove_cvref_t<decltype(*std::cbegin(ext))>>)
-                        {
-                                for (const std::string& e : ext)
-                                {
-                                        add_string(e);
-                                }
-                        }
-                        else
-                        {
-                                add_string(ext);
-                        }
-                }
-                else
-                {
-                        add_string(ext);
-                }
-        };
-
-        (add(extensions), ...);
-
-        if (first)
-        {
-                error("No file filter extensions");
+                filter += "*." + e;
         }
 
         filter += ")";

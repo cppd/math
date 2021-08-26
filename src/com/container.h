@@ -24,45 +24,46 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 namespace ns
 {
-template <typename T>
-constexpr auto storage_size(const T& c) -> decltype(std::size(c))
+namespace container_implementation
 {
-        return std::size(c) * sizeof(typename T::value_type); // sizeof(c[0])
+template <typename T>
+concept Container = requires(const T& v)
+{
+        std::data(v);
+        std::size(v);
+        v[0];
+};
 }
 
 template <typename T>
-std::size_t data_size(const T& data) requires(has_data_and_size<T>)
+std::size_t data_size(const T& data)
 {
         static_assert(!std::is_pointer_v<T>);
-        static_assert(std::is_standard_layout_v<typename T::value_type>);
-        return storage_size(data);
+        if constexpr (container_implementation::Container<T>)
+        {
+                static_assert(std::is_trivially_copyable_v<typename T::value_type>);
+                return std::size(data) * sizeof(typename T::value_type);
+        }
+        else
+        {
+                static_assert(std::is_trivially_copyable_v<T>);
+                return sizeof(T);
+        }
 }
 
 template <typename T>
-std::size_t data_size(const T&) requires(!has_data_and_size<T>)
+auto data_pointer(T& data)
 {
         static_assert(!std::is_pointer_v<T>);
-        static_assert(std::is_standard_layout_v<T>);
-        return sizeof(T);
-}
-
-template <typename T>
-std::conditional_t<
-        std::is_const_v<std::remove_pointer_t<decltype(std::declval<T>().data())>>,
-        const typename T::value_type*,
-        typename T::value_type*>
-        data_pointer(T& data) requires(has_data_and_size<T>)
-{
-        static_assert(!std::is_pointer_v<T>);
-        static_assert(std::is_standard_layout_v<typename T::value_type>);
-        return data.data();
-}
-
-template <typename T>
-std::conditional_t<std::is_const_v<T>, const T*, T*> data_pointer(T& data) requires(!has_data_and_size<T>)
-{
-        static_assert(!std::is_pointer_v<T>);
-        static_assert(std::is_standard_layout_v<T>);
-        return &data;
+        if constexpr (container_implementation::Container<T>)
+        {
+                static_assert(std::is_trivially_copyable_v<typename T::value_type>);
+                return std::data(data);
+        }
+        else
+        {
+                static_assert(std::is_trivially_copyable_v<T>);
+                return &data;
+        }
 }
 }
