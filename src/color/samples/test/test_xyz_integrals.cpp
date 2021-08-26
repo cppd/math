@@ -31,7 +31,7 @@ namespace ns::color
 namespace
 {
 template <typename T>
-void check(const T a, const T b, const T precision, const T min)
+void check(const T& a, const T& b, const T& precision, const T& min)
 {
         if (a == b)
         {
@@ -75,27 +75,27 @@ For[i = 380, i < 780, i += 100,
 */
 
 template <typename T>
-void test_31(const T precision, const int numerical_count, const T numerical_precision)
+void test_31(const T& precision, const int numerical_count, const T& numerical_precision)
 {
-        const auto integrate = [&](const auto& f, const T a, const T b)
+        const auto integrate = [&](const auto& f, const T& a, const T& b)
         {
                 return numerical::integrate(f, a, b, numerical_count);
         };
 
-        const auto cx = [&](const T a, const T b, const T v)
+        const auto cx = [&](const T& a, const T& b, const T& v)
         {
-                check<T>(cie_x_integral<XYZ_31, T>(a, b), v, precision, 0);
-                check<T>(integrate(cie_x<XYZ_31, T>, a, b), v, numerical_precision, 0);
+                check<T>(cie_x_31_integral<T>(a, b), v, precision, 0);
+                check<T>(integrate(cie_x_31<T>, a, b), v, numerical_precision, 0);
         };
-        const auto cy = [&](const T a, const T b, const T v)
+        const auto cy = [&](const T& a, const T& b, const T& v)
         {
-                check<T>(cie_y_integral<XYZ_31, T>(a, b), v, precision, 0);
-                check<T>(integrate(cie_y<XYZ_31, T>, a, b), v, numerical_precision, 0);
+                check<T>(cie_y_31_integral<T>(a, b), v, precision, 0);
+                check<T>(integrate(cie_y_31<T>, a, b), v, numerical_precision, 0);
         };
-        const auto cz = [&](const T a, const T b, const T v)
+        const auto cz = [&](const T& a, const T& b, const T& v)
         {
-                check<T>(cie_z_integral<XYZ_31, T>(a, b), v, precision, 1e-9);
-                check<T>(integrate(cie_z<XYZ_31, T>, a, b), v, numerical_precision, 1e-9);
+                check<T>(cie_z_31_integral<T>(a, b), v, precision, 1e-9);
+                check<T>(integrate(cie_z_31<T>, a, b), v, numerical_precision, 1e-9);
         };
 
         cx(380, 480, 17.0952220179951084163111128L);
@@ -150,27 +150,27 @@ For[i = 380, i < 780, i += 100,
 */
 
 template <typename T>
-void test_64(const T precision, const int numerical_count, const T numerical_precision)
+void test_64(const T& precision, const int numerical_count, const T& numerical_precision)
 {
-        const auto integrate = [&](const auto& f, const T a, const T b)
+        const auto integrate = [&](const auto& f, const T& a, const T& b)
         {
                 return numerical::integrate(f, a, b, numerical_count);
         };
 
-        const auto cx = [&](const T a, const T b, const T v)
+        const auto cx = [&](const T& a, const T& b, const T& v)
         {
-                check<T>(cie_x_integral<XYZ_64, T>(a, b), v, precision, 0);
-                check<T>(integrate(cie_x<XYZ_64, T>, a, b), v, numerical_precision, 0);
+                check<T>(cie_x_64_integral<T>(a, b), v, precision, 0);
+                check<T>(integrate(cie_x_64<T>, a, b), v, numerical_precision, 0);
         };
-        const auto cy = [&](const T a, const T b, const T v)
+        const auto cy = [&](const T& a, const T& b, const T& v)
         {
-                check<T>(cie_y_integral<XYZ_64, T>(a, b), v, precision, 0);
-                check<T>(integrate(cie_y<XYZ_64, T>, a, b), v, numerical_precision, 0);
+                check<T>(cie_y_64_integral<T>(a, b), v, precision, 0);
+                check<T>(integrate(cie_y_64<T>, a, b), v, numerical_precision, 0);
         };
-        const auto cz = [&](const T a, const T b, const T v)
+        const auto cz = [&](const T& a, const T& b, const T& v)
         {
-                check<T>(cie_z_integral<XYZ_64, T>(a, b), v, precision, 5e-9);
-                check<T>(integrate(cie_z<XYZ_64, T>, a, b), v, numerical_precision, 5e-9);
+                check<T>(cie_z_64_integral<T>(a, b), v, precision, 5e-9);
+                check<T>(integrate(cie_z_64<T>, a, b), v, numerical_precision, 5e-9);
         };
 
         cx(380, 480, 19.48847732828588252162093L);

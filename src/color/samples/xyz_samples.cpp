@@ -33,55 +33,55 @@ constexpr int MAX_SAMPLE_COUNT = 1'000'000;
 
 using ComputeType = double;
 
-enum class FunctionType
+enum class Function
 {
         X,
         Y,
         Z
 };
 
-template <XYZ xyz, FunctionType F>
-ComputeType integrate(ComputeType from, ComputeType to)
+template <XYZ TYPE, Function F>
+ComputeType integrate(const ComputeType& from, const ComputeType& to)
 {
-        static_assert(F == FunctionType::X || F == FunctionType::Y || F == FunctionType::Z);
+        static_assert(TYPE == XYZ_31 || TYPE == XYZ_64);
+        static_assert(F == Function::X || F == Function::Y || F == Function::Z);
 
-        if constexpr (F == FunctionType::X)
+        switch (F)
         {
-                return cie_x_integral<xyz, ComputeType>(from, to);
-        }
-        if constexpr (F == FunctionType::Y)
-        {
-                return cie_y_integral<xyz, ComputeType>(from, to);
-        }
-        if constexpr (F == FunctionType::Z)
-        {
-                return cie_z_integral<xyz, ComputeType>(from, to);
+        case Function::X:
+                return TYPE == XYZ_31 ? cie_x_31_integral(from, to) : cie_x_64_integral(from, to);
+        case Function::Y:
+                return TYPE == XYZ_31 ? cie_y_31_integral(from, to) : cie_y_64_integral(from, to);
+        case Function::Z:
+                return TYPE == XYZ_31 ? cie_z_31_integral(from, to) : cie_z_64_integral(from, to);
         }
 }
 
-template <XYZ xyz, FunctionType F>
-std::vector<double> create_samples(const ComputeType from, const ComputeType to, const int count)
+template <XYZ TYPE, Function F>
+std::vector<double> create_samples(const ComputeType& from, const ComputeType& to, const int count)
 {
-        constexpr double MIN = XYZ_SAMPLES_MIN_WAVELENGTH;
-        constexpr double MAX = XYZ_SAMPLES_MAX_WAVELENGTH;
+        constexpr ComputeType MIN = XYZ_SAMPLES_MIN_WAVELENGTH;
+        constexpr ComputeType MAX = XYZ_SAMPLES_MAX_WAVELENGTH;
 
         if (!(from < to))
         {
                 error("The starting wavelength (" + to_string(from) + ") must be less than the ending wavelength ("
                       + to_string(to) + ")");
         }
+
         if (!(from >= MIN && to <= MAX))
         {
                 error("Starting and ending wavelengths [" + to_string(from) + ", " + to_string(to)
                       + "] must be in the range [" + to_string(MIN) + ", " + to_string(MAX) + "]");
         }
+
         if (!(count >= MIN_SAMPLE_COUNT && count <= MAX_SAMPLE_COUNT))
         {
                 error("Sample count " + to_string(count) + " must be in the range [" + to_string(MIN_SAMPLE_COUNT)
                       + ", " + to_string(MAX_SAMPLE_COUNT) + "]");
         }
 
-        static const ComputeType y_integral = cie_y_integral<xyz, ComputeType>(MIN, MAX);
+        static const ComputeType y_integral = integrate<TYPE, Function::Y>(MIN, MAX);
 
         std::vector<double> samples;
         samples.reserve(count);
@@ -89,11 +89,10 @@ std::vector<double> create_samples(const ComputeType from, const ComputeType to,
         ComputeType wave_1 = from;
         for (int i = 1; i <= count; ++i)
         {
-                ComputeType wave_2 = std::lerp(from, to, static_cast<ComputeType>(i) / count);
+                const ComputeType wave_2 = std::lerp(from, to, static_cast<ComputeType>(i) / count);
                 ASSERT(wave_1 < wave_2 && wave_1 >= from && wave_2 <= to);
-                ComputeType v = integrate<xyz, F>(wave_1, wave_2);
-                v /= y_integral;
-                samples.push_back(v);
+                const ComputeType v = integrate<TYPE, F>(wave_1, wave_2);
+                samples.push_back(v / y_integral);
                 wave_1 = wave_2;
         }
 
@@ -101,22 +100,22 @@ std::vector<double> create_samples(const ComputeType from, const ComputeType to,
 }
 }
 
-template <XYZ xyz>
+template <XYZ TYPE>
 std::vector<double> cie_x_samples(int from, int to, int count)
 {
-        return create_samples<xyz, FunctionType::X>(from, to, count);
+        return create_samples<TYPE, Function::X>(from, to, count);
 }
 
-template <XYZ xyz>
+template <XYZ TYPE>
 std::vector<double> cie_y_samples(int from, int to, int count)
 {
-        return create_samples<xyz, FunctionType::Y>(from, to, count);
+        return create_samples<TYPE, Function::Y>(from, to, count);
 }
 
-template <XYZ xyz>
+template <XYZ TYPE>
 std::vector<double> cie_z_samples(int from, int to, int count)
 {
-        return create_samples<xyz, FunctionType::Z>(from, to, count);
+        return create_samples<TYPE, Function::Z>(from, to, count);
 }
 
 template std::vector<double> cie_x_samples<XYZ_31>(int, int, int);

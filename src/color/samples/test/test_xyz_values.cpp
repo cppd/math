@@ -155,7 +155,7 @@ static_assert(Y_64.size() == WAVES.size());
 static_assert(Z_64.size() == WAVES.size());
 
 template <typename T, typename F>
-void check_non_negative(const char* name, const F& f)
+void check_non_negative(const std::string_view& name, const F& f)
 {
         for (int i = 3800; i <= 7800; ++i)
         {
@@ -172,43 +172,49 @@ void check_non_negative(const char* name, const F& f)
 }
 
 template <typename T>
-T check(const char* name, T wave, T f, T tab, T max_error)
+T check_abs(const std::string_view& name, const T& wave, const T& f, const T& tab, const T& max_error)
 {
-        T abs_error = std::abs(f - tab);
-        if (!(abs_error < max_error))
+        const T abs_error = std::abs(f - tab);
+        if (abs_error < max_error)
         {
-                std::ostringstream oss;
-                oss.precision(limits<T>::max_digits10);
-                oss << name;
-                oss << ", wavelength = " << wave;
-                oss << ", f = " << f;
-                oss << ", tab = " << tab;
-                oss << ", error = " << abs_error;
-                error(oss.str());
+                return abs_error;
         }
-        return abs_error;
+        std::ostringstream oss;
+        oss.precision(limits<T>::max_digits10);
+        oss << name;
+        oss << ", wavelength = " << wave;
+        oss << ", f = " << f;
+        oss << ", tab = " << tab;
+        oss << ", error = " << abs_error;
+        error(oss.str());
 };
 
 template <typename T>
-void check_mean(const char* name, T mean, T max_error)
+void check_mean(const std::string_view& name, const T& mean, const T& max_error)
 {
-        if (!(mean < max_error))
+        if (mean < max_error)
         {
-                std::ostringstream oss;
-                oss.precision(limits<T>::max_digits10);
-                oss << name << ", mean error = " << mean;
-                error(oss.str());
+                return;
         }
+        std::ostringstream oss;
+        oss.precision(limits<T>::max_digits10);
+        oss << name << ", mean error = " << mean;
+        error(oss.str());
 };
 
 template <typename T, typename F>
-void check(const char* name, const F& f, const std::array<double, WAVES.size()>& data, T max_error, T max_mean_error)
+void check(
+        const std::string_view& name,
+        const F& f,
+        const std::array<double, WAVES.size()>& data,
+        const T& max_error,
+        const T& max_mean_error)
 {
         T sum = 0;
         for (std::size_t i = 0; i < WAVES.size(); ++i)
         {
                 const T w = WAVES[i];
-                sum += check<T>(name, w, f(w), data[i], max_error);
+                sum += check_abs<T>(name, w, f(w), data[i], max_error);
         }
         check_mean<T>(name, sum / WAVES.size(), max_mean_error);
 
@@ -218,13 +224,13 @@ void check(const char* name, const F& f, const std::array<double, WAVES.size()>&
 template <typename T>
 void check()
 {
-        check<T>("X 31", cie_x<XYZ_31, T>, X_31, 0.0139, 0.0049);
-        check<T>("Y 31", cie_y<XYZ_31, T>, Y_31, 0.0074, 0.0021);
-        check<T>("Z 31", cie_z<XYZ_31, T>, Z_31, 0.0222, 0.0021);
+        check<T>("X 31", cie_x_31<T>, X_31, 0.0139, 0.0049);
+        check<T>("Y 31", cie_y_31<T>, Y_31, 0.0074, 0.0021);
+        check<T>("Z 31", cie_z_31<T>, Z_31, 0.0222, 0.0021);
 
-        check<T>("X 64", cie_x<XYZ_64, T>, X_64, 0.0470, 0.0099);
-        check<T>("Y 64", cie_y<XYZ_64, T>, Y_64, 0.0254, 0.0092);
-        check<T>("Z 64", cie_z<XYZ_64, T>, Z_64, 0.0574, 0.0085);
+        check<T>("X 64", cie_x_64<T>, X_64, 0.0470, 0.0099);
+        check<T>("Y 64", cie_y_64<T>, Y_64, 0.0254, 0.0092);
+        check<T>("Z 64", cie_z_64<T>, Z_64, 0.0574, 0.0085);
 }
 
 void test()

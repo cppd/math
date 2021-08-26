@@ -27,7 +27,7 @@ namespace ns::color
 namespace
 {
 template <typename T>
-void check_sum(const std::vector<T>& samples, double min, double max)
+void check_sum(const std::vector<T>& samples, const double min, const double max)
 {
         if (samples.empty())
         {
@@ -51,7 +51,7 @@ void check_sum(const std::vector<T>& samples, double min, double max)
         }
 }
 
-template <XYZ xyz>
+template <XYZ TYPE>
 void test()
 {
         constexpr double MIN = XYZ_SAMPLES_MIN_WAVELENGTH;
@@ -60,29 +60,29 @@ void test()
         static_assert(MIN < 400);
         static_assert(MAX > 700);
 
-        check_sum(cie_x_samples<xyz>(400, 700, 1), 0.99, 1.01);
-        check_sum(cie_y_samples<xyz>(400, 700, 1), 0.99, 0.9999);
-        check_sum(cie_z_samples<xyz>(400, 700, 1), 0.99, 1.01);
+        check_sum(cie_x_samples<TYPE>(400, 700, 1), 0.99, 1.01);
+        check_sum(cie_y_samples<TYPE>(400, 700, 1), 0.99, 0.9999);
+        check_sum(cie_z_samples<TYPE>(400, 700, 1), 0.99, 1.01);
 
-        check_sum(cie_x_samples<xyz>(400, 700, 60), 0.99, 1.01);
-        check_sum(cie_y_samples<xyz>(400, 700, 60), 0.99, 0.9999);
-        check_sum(cie_z_samples<xyz>(400, 700, 60), 0.99, 1.01);
+        check_sum(cie_x_samples<TYPE>(400, 700, 60), 0.99, 1.01);
+        check_sum(cie_y_samples<TYPE>(400, 700, 60), 0.99, 0.9999);
+        check_sum(cie_z_samples<TYPE>(400, 700, 60), 0.99, 1.01);
 
-        check_sum(cie_x_samples<xyz>(400, 700, 1000), 0.99, 1.01);
-        check_sum(cie_y_samples<xyz>(400, 700, 1000), 0.99, 0.9999);
-        check_sum(cie_z_samples<xyz>(400, 700, 1000), 0.99, 1.01);
+        check_sum(cie_x_samples<TYPE>(400, 700, 1000), 0.99, 1.01);
+        check_sum(cie_y_samples<TYPE>(400, 700, 1000), 0.99, 0.9999);
+        check_sum(cie_z_samples<TYPE>(400, 700, 1000), 0.99, 1.01);
 
-        check_sum(cie_x_samples<xyz>(MIN, MAX, 1), 0.99, 1.01);
-        check_sum(cie_y_samples<xyz>(MIN, MAX, 1), 1 - 1e-7, 1 + 1e-7);
-        check_sum(cie_z_samples<xyz>(MIN, MAX, 1), 0.99, 1.01);
+        check_sum(cie_x_samples<TYPE>(MIN, MAX, 1), 0.99, 1.01);
+        check_sum(cie_y_samples<TYPE>(MIN, MAX, 1), 1 - 1e-7, 1 + 1e-7);
+        check_sum(cie_z_samples<TYPE>(MIN, MAX, 1), 0.99, 1.01);
 
-        check_sum(cie_x_samples<xyz>(MIN, MAX, 100), 0.99, 1.01);
-        check_sum(cie_y_samples<xyz>(MIN, MAX, 100), 1 - 1e-7, 1 + 1e-7);
-        check_sum(cie_z_samples<xyz>(MIN, MAX, 100), 0.99, 1.01);
+        check_sum(cie_x_samples<TYPE>(MIN, MAX, 100), 0.99, 1.01);
+        check_sum(cie_y_samples<TYPE>(MIN, MAX, 100), 1 - 1e-7, 1 + 1e-7);
+        check_sum(cie_z_samples<TYPE>(MIN, MAX, 100), 0.99, 1.01);
 
-        check_sum(cie_x_samples<xyz>(MIN, MAX, 1000), 0.99, 1.01);
-        check_sum(cie_y_samples<xyz>(MIN, MAX, 1000), 1 - 1e-7, 1 + 1e-7);
-        check_sum(cie_z_samples<xyz>(MIN, MAX, 1000), 0.99, 1.01);
+        check_sum(cie_x_samples<TYPE>(MIN, MAX, 1000), 0.99, 1.01);
+        check_sum(cie_y_samples<TYPE>(MIN, MAX, 1000), 1 - 1e-7, 1 + 1e-7);
+        check_sum(cie_z_samples<TYPE>(MIN, MAX, 1000), 0.99, 1.01);
 }
 
 void test_samples()

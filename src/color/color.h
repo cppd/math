@@ -123,7 +123,7 @@ public:
 template <typename T, std::size_t N>
 class SpectrumSamples final : public Samples<SpectrumSamples<T, N>, N, T>
 {
-        static constexpr XYZ XYZ_VERSION = XYZ_31;
+        static constexpr XYZ XYZ_TYPE = XYZ_31;
         static constexpr int FROM = 380;
         static constexpr int TO = 720;
 
@@ -169,9 +169,9 @@ class SpectrumSamples final : public Samples<SpectrumSamples<T, N>, N, T>
 
                 Functions functions;
 
-                copy(&functions.x, cie_x_samples<XYZ_VERSION>(FROM, TO, N));
-                copy(&functions.y, cie_y_samples<XYZ_VERSION>(FROM, TO, N));
-                copy(&functions.z, cie_z_samples<XYZ_VERSION>(FROM, TO, N));
+                copy(&functions.x, cie_x_samples<XYZ_TYPE>(FROM, TO, N));
+                copy(&functions.y, cie_y_samples<XYZ_TYPE>(FROM, TO, N));
+                copy(&functions.z, cie_z_samples<XYZ_TYPE>(FROM, TO, N));
 
                 {
                         Colors& c = functions.reflectance;
