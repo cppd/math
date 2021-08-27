@@ -80,7 +80,7 @@ bool read_one_float_from_string(const char** str, T* p)
         {
                 return false;
         }
-        if (!(*end == '\0' || *end == '\n' || *end == ' ' || *end == '#'))
+        if (!(ascii::is_space(*end) || *end == '\0' || *end == '#'))
         {
                 return false;
         }
