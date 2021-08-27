@@ -72,7 +72,7 @@ void check_manifoldness(const std::string& name, const std::vector<std::array<in
         {
                 std::size_t operator()(const std::array<int, N - 1>& v) const
                 {
-                        return hash_combine(v);
+                        return compute_hash(v);
                 }
         };
 
