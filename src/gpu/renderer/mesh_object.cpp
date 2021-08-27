@@ -72,57 +72,60 @@ std::string time_string(double time)
         return to_string_fixed(1000.0 * time, 5) + " ms";
 }
 
-class Face
+class Vertex final
 {
-        static std::size_t hash(const vec3f& p, const vec3f& n, const vec2f& t)
-        {
-                return compute_hash(p[0], p[1], p[2], n[0], n[1], n[2], t[0], t[1]);
-        }
+        vec3f p_;
+        vec3f n_;
+        vec2f t_;
+        std::size_t hash_;
 
 public:
-        struct Vertex
+        void set(const vec3f& p, const vec3f& n, const vec2f& t)
         {
-                vec3f p;
-                vec3f n;
-                vec2f t;
-        };
-        struct VertexWithHash
-        {
-                Vertex v;
-                std::size_t hash;
-        };
+                p_ = p;
+                n_ = n;
+                t_ = t;
+                hash_ = compute_hash(p[0], p[1], p[2], n[0], n[1], n[2], t[0], t[1]);
+        }
 
-        std::array<VertexWithHash, 3> vertices;
-
-        void set(const std::array<vec3f, 3>& p, const std::array<vec3f, 3>& n, const std::array<vec2f, 3>& t)
+        const vec3f& p() const
         {
-                for (int i = 0; i < 3; ++i)
-                {
-                        vertices[i].v.p = p[i];
-                        vertices[i].v.n = n[i];
-                        vertices[i].v.t = t[i];
-                        vertices[i].hash = hash(p[i], n[i], t[i]);
-                }
+                return p_;
+        }
+
+        const vec3f& n() const
+        {
+                return n_;
+        }
+
+        const vec2f& t() const
+        {
+                return t_;
+        }
+
+        const std::size_t& hash() const
+        {
+                return hash_;
         }
 };
 
-class MapVertex
+class MapVertex final
 {
-        const Face::VertexWithHash* data_;
-
-public:
-        explicit MapVertex(const Face::VertexWithHash* v) noexcept : data_(v)
-        {
-        }
+        const Vertex* data_;
 
         std::size_t hash() const noexcept
         {
-                return data_->hash;
+                return data_->hash();
+        }
+
+public:
+        explicit MapVertex(const Vertex* v) noexcept : data_(v)
+        {
         }
 
         bool operator==(const MapVertex& v) const noexcept
         {
-                return data_->v.p == v.data_->v.p && data_->v.n == v.data_->v.n && data_->v.t == v.data_->v.t;
+                return data_->p() == v.data_->p() && data_->n() == v.data_->n() && data_->t() == v.data_->t();
         }
 
         struct Hash
@@ -159,9 +162,9 @@ void load_vertices(
 
         //
 
-        TimePoint create_start_time = time();
+        const TimePoint create_start_time = time();
 
-        std::vector<Face> faces(sorted_face_indices.size());
+        std::vector<std::array<Vertex, 3>> faces(sorted_face_indices.size());
 
         const auto function = [&](std::atomic_size_t& task)
         {
@@ -240,17 +243,20 @@ void load_vertices(
                                 }
                         }
 
-                        faces[index].set(p, n, t);
+                        for (int i = 0; i < 3; ++i)
+                        {
+                                faces[index][i].set(p[i], n[i], t[i]);
+                        }
                 }
         };
 
         run_in_threads(function, sorted_face_indices.size());
 
-        double create_duration = duration_from(create_start_time);
+        const double create_duration = duration_from(create_start_time);
 
         //
 
-        TimePoint map_start_time = time();
+        const TimePoint map_start_time = time();
 
         std::vector<TrianglesVertex> vertices;
         std::vector<IndexType> indices;
@@ -259,15 +265,15 @@ void load_vertices(
         indices.reserve(3 * mesh.facets.size());
         map.reserve(3 * mesh.facets.size());
 
-        for (const Face& face : faces)
+        for (const std::array<Vertex, 3>& face_vertices : faces)
         {
                 for (int i = 0; i < 3; ++i)
                 {
-                        const auto [iter, inserted] = map.emplace(&face.vertices[i], map.size());
+                        const auto [iter, inserted] = map.emplace(&face_vertices[i], map.size());
                         if (inserted)
                         {
-                                const Face::Vertex& v = face.vertices[i].v;
-                                vertices.emplace_back(v.p, v.n, v.t);
+                                const Vertex& vertex = face_vertices[i];
+                                vertices.emplace_back(vertex.p(), vertex.n(), vertex.t());
                         }
                         indices.push_back(iter->second);
                 }
@@ -275,11 +281,11 @@ void load_vertices(
 
         ASSERT((indices.size() >= 3) && (indices.size() % 3 == 0));
 
-        double map_duration = duration_from(map_start_time);
+        const double map_duration = duration_from(map_start_time);
 
         //
 
-        TimePoint load_start_time = time();
+        const TimePoint load_start_time = time();
 
         *vertex_buffer = std::make_unique<vulkan::BufferWithMemory>(
                 vulkan::BufferMemoryType::DEVICE_LOCAL, device, family_indices,
@@ -294,7 +300,7 @@ void load_vertices(
         *vertex_count = vertices.size();
         *index_count = indices.size();
 
-        double load_duration = duration_from(load_start_time);
+        const double load_duration = duration_from(load_start_time);
 
         //
 
