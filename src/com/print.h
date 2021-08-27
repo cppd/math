@@ -17,7 +17,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
-#include "type/detect.h"
 #include "type/limit.h"
 #include "type/trait.h"
 
