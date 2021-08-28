@@ -21,7 +21,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/com/mpz.h>
 #include <src/com/print.h>
 #include <src/com/sort.h>
-#include <src/com/type/trait.h>
+#include <src/com/type/concept.h>
 #include <src/numerical/complement.h>
 #include <src/numerical/vec.h>
 
@@ -122,8 +122,8 @@ class FacetInteger final : public FacetBase<N, FacetInteger<N, DataType, Compute
         using Base = FacetBase<N, FacetInteger, FacetIter>;
 
         static_assert(!std::is_class_v<DataType> && !std::is_class_v<ComputeType>);
-        static_assert(is_integral<DataType> && is_integral<ComputeType>);
-        static_assert(is_signed<DataType> && is_signed<ComputeType>);
+        static_assert(Integral<DataType> && Integral<ComputeType>);
+        static_assert(Signed<DataType> && Signed<ComputeType>);
 
         template <typename T>
         static void negate(Vector<N, T>* v)
@@ -222,8 +222,8 @@ class FacetInteger<N, DataType, mpz_class, FacetIter> final
         : public FacetBase<N, FacetInteger<N, DataType, mpz_class, FacetIter>, FacetIter>
 {
         static_assert(!std::is_class_v<DataType>);
-        static_assert(is_integral<DataType>);
-        static_assert(is_signed<DataType>);
+        static_assert(Integral<DataType>);
+        static_assert(Signed<DataType>);
 
         using Base = FacetBase<N, FacetInteger, FacetIter>;
 

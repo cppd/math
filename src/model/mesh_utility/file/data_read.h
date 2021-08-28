@@ -21,7 +21,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/com/string/ascii.h>
 #include <src/com/type/limit.h>
 #include <src/com/type/name.h>
-#include <src/com/type/trait.h>
 #include <src/numerical/vec.h>
 
 #include <string>
@@ -133,7 +132,7 @@ void read(const Data& data, long long size, const Op& op, long long* i)
 template <typename T, typename Integer>
 bool read_integer(const T& data, long long size, long long* pos, Integer* value)
 {
-        static_assert(is_signed<Integer>);
+        static_assert(std::is_signed_v<Integer>);
         namespace impl = data_read_implementation;
 
         long long begin = *pos;

@@ -27,7 +27,6 @@ Cambridge University Press, 2003.
 #include "hyperplane.h"
 
 #include <src/com/error.h>
-#include <src/com/type/trait.h>
 #include <src/numerical/complement.h>
 #include <src/numerical/ray.h>
 #include <src/numerical/vec.h>
@@ -42,7 +41,7 @@ template <std::size_t N, typename T>
 class HyperplaneSimplex final
 {
         static_assert(N >= 2);
-        static_assert(is_floating_point<T>);
+        static_assert(std::is_floating_point_v<T>);
 
         // (N-1)-dimensional planes
         // They are orthogonal to (N-1)-simplex and passing

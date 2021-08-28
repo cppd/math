@@ -31,8 +31,8 @@ The MIT Press, 2009.
 #include <src/com/error.h>
 #include <src/com/log.h>
 #include <src/com/print.h>
+#include <src/com/type/concept.h>
 #include <src/com/type/limit.h>
-#include <src/com/type/trait.h>
 
 #include <array>
 #include <sstream>
@@ -152,7 +152,7 @@ void print_simplex_algorithm_data(
 template <std::size_t N, std::size_t M, typename T>
 void pivot(std::array<T, M>& b, std::array<Vector<N, T>, M>& a, T& v, Vector<N, T>& c, unsigned l, unsigned e)
 {
-        static_assert(is_floating_point<T>);
+        static_assert(FloatingPoint<T>);
 
         ASSERT(l < M);
         ASSERT(e < N);
@@ -307,7 +307,7 @@ bool find_positive_index(const Vector<N, T>& c, unsigned* e)
 template <bool WITH_PRINT, std::size_t N_SOURCE, std::size_t M, typename T>
 ConstraintSolution solve_constraints(std::array<T, M> b, const std::array<Vector<N_SOURCE, T>, M>& a_input)
 {
-        static_assert(std::is_floating_point_v<T> || (!WITH_PRINT && is_floating_point<T>));
+        static_assert(std::is_floating_point_v<T> || (!WITH_PRINT && FloatingPoint<T>));
         static_assert(N_SOURCE > 0 && M > 0);
 
         constexpr unsigned N = N_SOURCE + 1;

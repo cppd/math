@@ -27,7 +27,7 @@ Cambridge University Press.
 #include "vec.h"
 
 #include <src/com/math.h>
-#include <src/com/type/trait.h>
+#include <src/com/type/concept.h>
 
 #include <array>
 #include <cmath>
@@ -87,7 +87,7 @@ public:
 template <std::size_t SIZE, typename T>
 constexpr T determinant(RowMatrix<SIZE, SIZE, T>&& m)
 {
-        static_assert(is_floating_point<T>);
+        static_assert(FloatingPoint<T>);
         static_assert(SIZE >= 1);
 
         constexpr int N = SIZE;
@@ -125,7 +125,7 @@ constexpr T determinant(RowMatrix<SIZE, SIZE, T>&& m)
 template <std::size_t SIZE, typename T>
 constexpr Vector<SIZE, T> solve_gauss(RowMatrix<SIZE, SIZE, T>&& a, Vector<SIZE, T> b)
 {
-        static_assert(is_floating_point<T>);
+        static_assert(FloatingPoint<T>);
 
         constexpr int N = SIZE;
 
@@ -167,7 +167,7 @@ constexpr std::array<Vector<SIZE_B, T>, SIZE_A> solve_gauss(
         RowMatrix<SIZE_A, SIZE_A, T>&& a,
         RowMatrix<SIZE_A, SIZE_B, T>&& b)
 {
-        static_assert(is_floating_point<T>);
+        static_assert(FloatingPoint<T>);
 
         constexpr int N = SIZE_A;
         constexpr int M = SIZE_B;

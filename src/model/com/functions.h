@@ -28,7 +28,7 @@ namespace ns::model
 template <std::size_t N, typename T>
 std::tuple<Vector<N, T>, T> center_and_length_for_min_max(const Vector<N, T>& min, const Vector<N, T>& max)
 {
-        static_assert(is_floating_point<T>);
+        static_assert(FloatingPoint<T>);
 
         for (std::size_t i = 0; i < N; ++i)
         {

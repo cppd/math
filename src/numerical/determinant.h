@@ -21,7 +21,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "vec.h"
 
 #include <src/com/arrays.h>
-#include <src/com/type/trait.h>
+#include <src/com/type/concept.h>
 
 #include <array>
 
@@ -99,8 +99,8 @@ constexpr T determinant(
         const std::array<unsigned char, SIZE>& v_map,
         const std::array<unsigned char, SIZE>& h_map)
 {
-        static_assert(is_signed<T>);
-        static_assert(is_integral<T>);
+        static_assert(Signed<T>);
+        static_assert(Integral<T>);
 
         return determinant_implementation::determinant_cofactor_expansion(vectors, v_map, h_map);
 }
@@ -108,15 +108,15 @@ constexpr T determinant(
 template <std::size_t N, typename T>
 constexpr T determinant(const std::array<Vector<N, T>, N - 1>& vectors, const std::size_t excluded_column)
 {
-        static_assert(is_signed<T>);
-        static_assert(is_integral<T> || is_floating_point<T>);
+        static_assert(Signed<T>);
+        static_assert(Integral<T> || FloatingPoint<T>);
 
-        if constexpr (is_integral<T>)
+        if constexpr (Integral<T>)
         {
                 return determinant_implementation::determinant_cofactor_expansion(
                         vectors, SEQUENCE_UCHAR_ARRAY<N - 1>, del_elem(SEQUENCE_UCHAR_ARRAY<N>, excluded_column));
         }
-        if constexpr (is_floating_point<T>)
+        if constexpr (FloatingPoint<T>)
         {
                 if constexpr (N <= 6)
                 {
@@ -134,15 +134,15 @@ constexpr T determinant(const std::array<Vector<N, T>, N - 1>& vectors, const st
 template <std::size_t N, typename T>
 constexpr T determinant(const std::array<Vector<N, T>, N>& vectors)
 {
-        static_assert(is_signed<T>);
-        static_assert(is_integral<T> || is_floating_point<T>);
+        static_assert(Signed<T>);
+        static_assert(Integral<T> || FloatingPoint<T>);
 
-        if constexpr (is_integral<T>)
+        if constexpr (Integral<T>)
         {
                 return determinant_implementation::determinant_cofactor_expansion(
                         vectors, SEQUENCE_UCHAR_ARRAY<N>, SEQUENCE_UCHAR_ARRAY<N>);
         }
-        if constexpr (is_floating_point<T>)
+        if constexpr (FloatingPoint<T>)
         {
                 if constexpr (N <= 5)
                 {

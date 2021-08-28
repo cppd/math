@@ -20,8 +20,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "alg.h"
 #include "error.h"
 
+#include "type/concept.h"
 #include "type/limit.h"
-#include "type/trait.h"
 
 #include <array>
 #include <cstddef>
@@ -35,13 +35,13 @@ template <std::size_t N, typename IndexType>
 class GlobalIndex
 {
         static_assert(N > 0);
-        static_assert(is_integral<IndexType>);
+        static_assert(Integral<IndexType>);
 
         template <typename T>
         static constexpr void check_input_type()
         {
                 static_assert(std::tuple_size_v<T> == N);
-                static_assert(is_integral<typename T::value_type>);
+                static_assert(Integral<typename T::value_type>);
                 static_assert(
                         limits<IndexType>::digits >= limits<typename T::value_type>::digits
                         || (limits<IndexType>::digits >= limits<std::ptrdiff_t>::digits
@@ -66,7 +66,7 @@ class GlobalIndex
                 IndexType previous = 1;
                 std::array<IndexType, N> strides{(I == 0 ? 1 : previous = sizes[I - 1] * previous)...};
 
-                using CheckType = std::conditional_t<is_signed<typename T::value_type>, __int128, unsigned __int128>;
+                using CheckType = std::conditional_t<Signed<typename T::value_type>, __int128, unsigned __int128>;
                 if (static_cast<CheckType>(strides[N - 1]) * static_cast<CheckType>(sizes[N - 1])
                     != multiply_all<CheckType>(sizes))
                 {

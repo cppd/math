@@ -19,8 +19,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "error.h"
 
+#include "type/concept.h"
 #include "type/limit.h"
-#include "type/trait.h"
 
 #include <algorithm>
 
@@ -84,9 +84,9 @@ template <typename T, typename V>
 [[nodiscard]] constexpr T multiply_all(const V& v)
 {
         static_assert(
-                (is_integral<typename V::value_type> && is_integral<T>)
-                || (is_floating_point<typename V::value_type> && is_floating_point<T>));
-        static_assert(is_signed<typename V::value_type> == is_signed<T>);
+                (Integral<typename V::value_type> && Integral<T>)
+                || (FloatingPoint<typename V::value_type> && FloatingPoint<T>));
+        static_assert(Signed<typename V::value_type> == Signed<T>);
         static_assert(limits<typename V::value_type>::digits <= limits<T>::digits);
 
         if (v.empty())
@@ -107,9 +107,9 @@ template <typename T, typename V>
 [[nodiscard]] constexpr T add_all(const V& v)
 {
         static_assert(
-                (is_integral<typename V::value_type> && is_integral<T>)
-                || (is_floating_point<typename V::value_type> && is_floating_point<T>));
-        static_assert(is_signed<typename V::value_type> == is_signed<T>);
+                (Integral<typename V::value_type> && Integral<T>)
+                || (FloatingPoint<typename V::value_type> && FloatingPoint<T>));
+        static_assert(Signed<typename V::value_type> == Signed<T>);
         static_assert(limits<typename V::value_type>::digits <= limits<T>::digits);
 
         if (v.empty())

@@ -55,9 +55,9 @@ The projection to the n-space of the lower convex hull of the points
 #include <src/com/names.h>
 #include <src/com/print.h>
 #include <src/com/thread_pool.h>
+#include <src/com/type/concept.h>
 #include <src/com/type/find.h>
 #include <src/com/type/limit.h>
-#include <src/com/type/trait.h>
 #include <src/numerical/determinant.h>
 #include <src/numerical/difference.h>
 #include <src/numerical/vec.h>
@@ -155,12 +155,12 @@ struct CheckTypes final
         static_assert(!CHECK_NON_CLASS || !std::is_class_v<ComputeTypeParaboloid<N>>);
         static_assert(!CHECK_NON_CLASS || !std::is_class_v<DataTypeAfterParaboloid<N>>);
         static_assert(!CHECK_NON_CLASS || !std::is_class_v<ComputeTypeAfterParaboloid<N>>);
-        static_assert(is_integral<DataTypeOrdinary<N>>);
-        static_assert(is_integral<ComputeTypeOrdinary<N>>);
-        static_assert(is_integral<DataTypeParaboloid<N>>);
-        static_assert(is_integral<ComputeTypeParaboloid<N>>);
-        static_assert(is_integral<DataTypeAfterParaboloid<N>>);
-        static_assert(is_integral<ComputeTypeAfterParaboloid<N>>);
+        static_assert(Integral<DataTypeOrdinary<N>>);
+        static_assert(Integral<ComputeTypeOrdinary<N>>);
+        static_assert(Integral<DataTypeParaboloid<N>>);
+        static_assert(Integral<ComputeTypeParaboloid<N>>);
+        static_assert(Integral<DataTypeAfterParaboloid<N>>);
+        static_assert(Integral<ComputeTypeAfterParaboloid<N>>);
 };
 template struct CheckTypes<2, true>;
 template struct CheckTypes<3, true>;
@@ -180,7 +180,7 @@ using Facet = FacetInteger<N, DataType, ComputeType, FacetListConstIterator>;
 template <typename T>
 std::string type_str() requires(!std::is_same_v<std::remove_cv_t<T>, mpz_class>)
 {
-        static_assert(is_integral<T>);
+        static_assert(Integral<T>);
         return to_string(limits<T>::digits) + " bits";
 }
 
@@ -197,7 +197,7 @@ std::string type_str() requires std::is_same_v<std::remove_cv_t<T>, mpz_class>
 template <typename S, typename C>
 int thread_count_for_horizon()
 {
-        static_assert(is_integral<S> && is_integral<C>);
+        static_assert(Integral<S> && Integral<C>);
 
         if constexpr (!std::is_class_v<S> && !std::is_class_v<C>)
         {
@@ -290,7 +290,7 @@ public:
 template <int COUNT, std::size_t N, typename T>
 bool linearly_independent(const std::array<Vector<N, T>, N>& vectors)
 {
-        static_assert(is_integral<T>);
+        static_assert(Integral<T>);
         static_assert(N > 1);
         static_assert(COUNT > 0 && COUNT <= N);
 

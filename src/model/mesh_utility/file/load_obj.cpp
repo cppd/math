@@ -34,7 +34,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/com/time.h>
 #include <src/com/type/limit.h>
 #include <src/com/type/name.h>
-#include <src/com/type/trait.h>
 #include <src/image/file.h>
 #include <src/image/flip.h>
 

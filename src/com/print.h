@@ -17,8 +17,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
+#include "type/concept.h"
 #include "type/limit.h"
-#include "type/trait.h"
 
 #include <algorithm>
 #include <bit>
@@ -167,7 +167,7 @@ void f(T v, int i, std::string& r, [[maybe_unused]] char s)
                 }
 
                 int remainder = v % 10;
-                if constexpr (is_signed<T>)
+                if constexpr (Signed<T>)
                 {
                         remainder = std::abs(remainder);
                 }
@@ -177,17 +177,17 @@ void f(T v, int i, std::string& r, [[maybe_unused]] char s)
 }
 
 template <unsigned DIGIT_GROUP_SIZE, typename T>
-std::string to_string_digit_groups(const T& v, const char s) requires is_integral<T>
+std::string to_string_digit_groups(const T& v, const char s) requires Integral<T>
 {
         static_assert(!std::is_class_v<T>);
-        static_assert(is_signed<T> != is_unsigned<T>);
+        static_assert(Signed<T> != Unsigned<T>);
 
         std::string r;
         r.reserve(limits<T>::digits10 * 1.5);
 
         f<DIGIT_GROUP_SIZE, T>(v, -1, r, s);
 
-        if (is_signed<T> && v < 0)
+        if (Signed<T> && v < 0)
         {
                 r += '-';
         }
@@ -199,13 +199,13 @@ std::string to_string_digit_groups(const T& v, const char s) requires is_integra
 }
 
 template <typename T>
-std::string to_string(T v) requires is_integral<T>
+std::string to_string(T v) requires Integral<T>
 {
         return print_implementation::to_string_digit_groups<0, T>(v, '\x20');
 }
 
 template <typename T>
-std::string to_string_digit_groups(T v, char s = '\x20') requires is_integral<T>
+std::string to_string_digit_groups(T v, char s = '\x20') requires Integral<T>
 {
         return print_implementation::to_string_digit_groups<3, T>(v, s);
 }

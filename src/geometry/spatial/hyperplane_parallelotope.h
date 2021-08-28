@@ -32,6 +32,9 @@ namespace ns::geometry
 template <std::size_t N, typename T>
 class HyperplaneParallelotope final
 {
+        static_assert(N >= 2);
+        static_assert(std::is_floating_point_v<T>);
+
         static_assert(N <= 30);
 
         static constexpr int VERTEX_COUNT = 1 << (N - 1);

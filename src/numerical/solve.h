@@ -31,7 +31,7 @@ Cramer’s Rule
 #include "identity.h"
 #include "vec.h"
 
-#include <src/com/type/trait.h>
+#include <src/com/type/concept.h>
 
 #include <array>
 
@@ -139,7 +139,7 @@ constexpr std::array<Vector<N, T>, N> inverse_cofactor_expansion(const std::arra
 template <std::size_t N, typename T>
 [[nodiscard]] constexpr Vector<N, T> linear_solve(const std::array<Vector<N, T>, N>& a, const Vector<N, T>& b)
 {
-        static_assert(is_floating_point<T>);
+        static_assert(FloatingPoint<T>);
         static_assert(N > 0);
 
         if constexpr (N <= 3)
@@ -155,7 +155,7 @@ template <std::size_t N, typename T>
 template <std::size_t N, typename T>
 [[nodiscard]] constexpr std::array<Vector<N, T>, N> inverse(const std::array<Vector<N, T>, N>& a)
 {
-        static_assert(is_floating_point<T>);
+        static_assert(FloatingPoint<T>);
         static_assert(N > 0);
 
         if constexpr (N <= 3)
