@@ -55,28 +55,28 @@ Integer digits_to_integer(const T& data, long long begin, long long end)
 }
 
 template <typename T>
+T str_to_floating_point(const char* str, char** end) requires(std::is_same_v<T, float>)
+{
+        return std::strtof(str, end);
+}
+template <typename T>
+T str_to_floating_point(const char* str, char** end) requires(std::is_same_v<T, double>)
+{
+        return std::strtod(str, end);
+}
+template <typename T>
+T str_to_floating_point(const char* str, char** end) requires(std::is_same_v<T, long double>)
+{
+        return std::strtold(str, end);
+}
+
+template <typename T>
 bool read_one_float_from_string(const char** str, T* p)
 {
-        using FP = std::remove_volatile_t<T>;
-
-        static_assert(std::is_same_v<FP, float> || std::is_same_v<FP, double> || std::is_same_v<FP, long double>);
-
         char* end;
+        T value = str_to_floating_point<T>(*str, &end);
 
-        if constexpr (std::is_same_v<FP, float>)
-        {
-                *p = std::strtof(*str, &end);
-        }
-        if constexpr (std::is_same_v<FP, double>)
-        {
-                *p = std::strtod(*str, &end);
-        }
-        if constexpr (std::is_same_v<FP, long double>)
-        {
-                *p = std::strtold(*str, &end);
-        }
-
-        if (*str == end || errno == ERANGE || !is_finite(*p))
+        if (end == *str || errno == ERANGE || !is_finite(value))
         {
                 return false;
         }
@@ -85,6 +85,7 @@ bool read_one_float_from_string(const char** str, T* p)
                 return false;
         }
 
+        *p = value;
         *str = end;
         return true;
 }

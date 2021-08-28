@@ -17,22 +17,18 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "../conversion.h"
 
+#include <src/com/math.h>
+
 namespace ns::color
 {
 namespace
 {
 template <typename T>
-constexpr T abs(T v)
-{
-        return v < 0 ? -v : v;
-}
-
-template <typename T>
 constexpr bool compare(const Vector<3, T>& a, const Vector<3, T>& b, T precision)
 {
         for (int i = 0; i < 3; ++i)
         {
-                if (!(abs(a[i] - b[i]) < precision))
+                if (!(absolute(a[i] - b[i]) < precision))
                 {
                         return false;
                 }
@@ -87,21 +83,19 @@ constexpr bool check(T precision)
 }
 
 template <typename T>
-constexpr bool test()
+struct Check final
 {
-        constexpr T D65_X = 0.9505;
-        constexpr T D65_Y = 1;
-        constexpr T D65_Z = 1.089;
+        static constexpr T D65_X = 0.9505;
+        static constexpr T D65_Y = 1;
+        static constexpr T D65_Z = 1.089;
         static_assert(compare<T>(xyz_to_linear_srgb<T>(D65_X, D65_Y, D65_Z), {1, 1, 1}, 1e-6));
         static_assert(compare<T>(linear_srgb_to_xyz<T>(1, 1, 1), {D65_X, D65_Y, D65_Z}, 1e-16));
 
         static_assert(check<T>(1e-6));
+};
 
-        return true;
-}
-
-static_assert(test<float>());
-static_assert(test<double>());
-static_assert(test<long double>());
+template struct Check<float>;
+template struct Check<double>;
+template struct Check<long double>;
 }
 }

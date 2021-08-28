@@ -26,6 +26,7 @@ Cambridge University Press.
 
 #include "vec.h"
 
+#include <src/com/math.h>
 #include <src/com/type/trait.h>
 
 #include <array>
@@ -35,25 +36,6 @@ namespace ns::numerical
 {
 namespace gauss_implementation
 {
-template <typename T>
-concept HasStdAbs = requires(const T& v)
-{
-        std::abs(v);
-};
-
-template <typename T>
-constexpr T absolute(T v)
-{
-        if constexpr (HasStdAbs<T>)
-        {
-                if (!std::is_constant_evaluated())
-                {
-                        return std::abs(v);
-                }
-        }
-        return v < 0 ? -v : v;
-}
-
 template <std::size_t N, typename T, template <std::size_t, std::size_t, typename> typename Matrix>
 constexpr int find_pivot(const Matrix<N, N, T>& a, const int column, const int from_row)
 {

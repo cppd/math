@@ -34,6 +34,14 @@ namespace ns::painter
 template <std::size_t N>
 class MeshTexture
 {
+        enum class Wrap
+        {
+                CLAMP_TO_EDGE,
+                REPEATE
+        };
+
+        static constexpr Wrap WRAP = Wrap::CLAMP_TO_EDGE;
+
         std::vector<Vector<3, float>> rgb_data_;
         std::array<int, N> size_;
         std::array<int, N> max_;
@@ -93,7 +101,7 @@ public:
 
                 std::array<int, N> x0;
                 std::array<int, N> x1;
-                std::array<T, N> x;
+                std::array<float, N> x;
 
                 for (unsigned i = 0; i < N; ++i)
                 {
@@ -104,15 +112,14 @@ public:
                         x0[i] = floor;
                         x1[i] = x0[i] + 1;
 
-                        if ((true))
+                        static_assert(WRAP == Wrap::CLAMP_TO_EDGE || WRAP == Wrap::REPEATE);
+                        if constexpr (WRAP == Wrap::CLAMP_TO_EDGE)
                         {
-                                // wrap: clamp to edge
                                 x0[i] = std::clamp(x0[i], 0, max_[i]);
                                 x1[i] = std::clamp(x1[i], 0, max_[i]);
                         }
                         else
                         {
-                                // wrap: repeate
                                 x0[i] = x0[i] % size_[i];
                                 x1[i] = x1[i] % size_[i];
                         }

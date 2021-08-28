@@ -30,9 +30,9 @@ std::size_t compute_hash(const T& v, const Ts&... vs)
                 seed ^= hash + 0x9e3779b9 + (seed << 6) + (seed >> 2);
         };
 
-        static constexpr bool HAS_HASH = requires(const T& value)
+        static constexpr bool HAS_HASH = requires
         {
-                std::hash<T>{}(value);
+                std::hash<T>{}(v);
         };
 
         if constexpr (HAS_HASH)

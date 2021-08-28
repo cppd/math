@@ -19,11 +19,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "vec.h"
 
-#include <src/com/print.h>
-
-#include <cmath>
-#include <string>
-
 namespace ns
 {
 template <std::size_t N, typename T>
@@ -53,33 +48,33 @@ public:
                 return *this;
         }
 
-        Ray& move(T t)
+        Ray& move(const T& t)
         {
                 org_ = this->point(t);
                 return *this;
         }
 
-        const Vector<N, T>& org() const
+        [[nodiscard]] const Vector<N, T>& org() const
         {
                 return org_;
         }
 
-        const Vector<N, T>& dir() const
+        [[nodiscard]] const Vector<N, T>& dir() const
         {
                 return dir_;
         }
 
-        Vector<N, T> point(T t) const
+        [[nodiscard]] Vector<N, T> point(const T& t) const
         {
                 Vector<N, T> p;
                 for (std::size_t i = 0; i < N; ++i)
                 {
-                        p[i] = std::fma(dir_[i], t, org_[i]);
+                        p[i] = dir_[i] * t + org_[i];
                 }
                 return p;
         }
 
-        Ray<N, T> reverse_ray() const
+        [[nodiscard]] Ray<N, T> reverse_ray() const
         {
                 Ray<N, T> r;
                 r.org_ = org_;
@@ -89,8 +84,8 @@ public:
 };
 
 template <std::size_t N, typename T>
-std::string to_string(const Ray<N, T>& data)
+[[nodiscard]] std::string to_string(const Ray<N, T>& ray)
 {
-        return "(org " + to_string(data.org()) + ", dir " + to_string(data.dir()) + ")";
+        return "(org " + to_string(ray.org()) + ", dir " + to_string(ray.dir()) + ")";
 }
 }

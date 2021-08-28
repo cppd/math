@@ -19,6 +19,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <cmath>
 #include <limits>
+#include <type_traits>
 
 namespace ns
 {
@@ -26,6 +27,29 @@ template <typename T>
 constexpr T square(const T& v)
 {
         return v * v;
+}
+
+template <typename T>
+constexpr T interpolation(const T& a, const T& b, const T& t) requires(std::is_floating_point_v<T>)
+{
+        return (1 - t) * a + t * b;
+}
+
+template <typename T>
+constexpr T absolute(const T& v)
+{
+        constexpr bool HAS_ABS = requires
+        {
+                std::abs(v);
+        };
+        if constexpr (HAS_ABS)
+        {
+                if (!std::is_constant_evaluated())
+                {
+                        return std::abs(v);
+                }
+        }
+        return v < 0 ? -v : v;
 }
 
 template <typename T>

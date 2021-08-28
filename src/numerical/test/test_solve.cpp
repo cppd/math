@@ -21,6 +21,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <src/com/error.h>
 #include <src/com/log.h>
+#include <src/com/math.h>
 #include <src/com/print.h>
 #include <src/com/random/engine.h>
 #include <src/com/time.h>
@@ -61,12 +62,6 @@ template <typename T>
 constexpr Vector<4, T> VECTOR{1, 2, 3, 4};
 template <typename T>
 constexpr Vector<4, T> SOLVED{T(4), T(-2) / 5, T(-4) / 5, T(-19) / 20};
-
-template <typename T>
-constexpr T absolute(const T& v)
-{
-        return v < 0 ? -v : v;
-}
 
 template <typename T>
 constexpr bool are_equal(const T& a, const T& b, const T& abs_precision, const T& rel_precision)

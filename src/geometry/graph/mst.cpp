@@ -213,7 +213,7 @@ std::vector<std::array<int, 2>> minimum_spanning_tree(
 
 #define MINIMUM_SPANNING_TREE_INSTANTIATION(N)                          \
         template std::vector<std::array<int, 2>> minimum_spanning_tree( \
-                const std::vector<Vector<(N), float>>&, const std::vector<std::array<int, (N + 1)>>&, ProgressRatio*);
+                const std::vector<Vector<(N), float>>&, const std::vector<std::array<int, (N) + 1>>&, ProgressRatio*);
 
 MINIMUM_SPANNING_TREE_INSTANTIATION(2)
 MINIMUM_SPANNING_TREE_INSTANTIATION(3)

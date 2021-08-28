@@ -67,24 +67,24 @@ protected:
         }
 
 public:
-        void multiply_add(const Derived& a, T b)
+        void multiply_add(const Derived& a, const T& b)
         {
                 data_.multiply_add(a.data_, b);
         }
 
-        void multiply_add(T b, const Derived& a)
+        void multiply_add(const T& b, const Derived& a)
         {
                 multiply_add(a, b);
         }
 
-        [[nodiscard]] Derived clamp(T low, T high) const
+        [[nodiscard]] Derived clamp(const T& low, const T& high) const
         {
                 Derived r;
                 r.data_ = data_.clamp(low, high);
                 return r;
         }
 
-        [[nodiscard]] Derived max_n(T v) const
+        [[nodiscard]] Derived max_n(const T& v) const
         {
                 Derived r;
                 r.data_ = data_.max_n(v);
@@ -139,7 +139,7 @@ public:
                 return true;
         }
 
-        [[nodiscard]] bool is_in_range(T low, T high) const
+        [[nodiscard]] bool is_in_range(const T& low, const T& high) const
         {
                 for (std::size_t i = 0; i < N; ++i)
                 {
@@ -151,7 +151,7 @@ public:
                 return true;
         }
 
-        [[nodiscard]] bool equal_to_relative(const Derived& c, T relative_error) const
+        [[nodiscard]] bool equal_to_relative(const Derived& c, const T& relative_error) const
         {
                 for (std::size_t i = 0; i < N; ++i)
                 {
@@ -171,7 +171,7 @@ public:
                 return true;
         }
 
-        [[nodiscard]] bool equal_to_absolute(const Derived& c, T absolute_error) const
+        [[nodiscard]] bool equal_to_absolute(const Derived& c, const T& absolute_error) const
         {
                 for (std::size_t i = 0; i < N; ++i)
                 {
@@ -190,7 +190,7 @@ public:
                 return true;
         }
 
-        [[nodiscard]] bool less_than(const Derived& c, T relative_error) const
+        [[nodiscard]] bool less_than(const Derived& c, const T& relative_error) const
         {
                 for (std::size_t i = 0; i < N; ++i)
                 {
@@ -229,13 +229,13 @@ public:
                 return *static_cast<Derived*>(this);
         }
 
-        constexpr Derived& operator*=(T b) &
+        constexpr Derived& operator*=(const T& b) &
         {
                 data_ *= b;
                 return *static_cast<Derived*>(this);
         }
 
-        constexpr Derived& operator/=(T b) &
+        constexpr Derived& operator/=(const T& b) &
         {
                 data_ /= b;
                 return *static_cast<Derived*>(this);
@@ -248,7 +248,7 @@ public:
                 return a.data_ == b.data_;
         }
 
-        [[nodiscard]] friend Derived interpolation(const Derived& a, const Derived& b, T t)
+        [[nodiscard]] friend Derived interpolation(const Derived& a, const Derived& b, const T& t)
         {
                 Derived r;
                 r.data_ = ::ns::interpolation(a.data_, b.data_, t);
@@ -290,19 +290,19 @@ public:
                 return r;
         }
 
-        [[nodiscard]] constexpr friend Derived operator*(const Derived& a, T b)
+        [[nodiscard]] constexpr friend Derived operator*(const Derived& a, const T& b)
         {
                 Derived r;
                 r.data_ = a.data_ * b;
                 return r;
         }
 
-        [[nodiscard]] constexpr friend Derived operator*(T b, const Derived& a)
+        [[nodiscard]] constexpr friend Derived operator*(const T& b, const Derived& a)
         {
                 return a * b;
         }
 
-        [[nodiscard]] constexpr friend Derived operator/(const Derived& a, T b)
+        [[nodiscard]] constexpr friend Derived operator/(const Derived& a, const T& b)
         {
                 Derived r;
                 r.data_ = a.data_ / b;

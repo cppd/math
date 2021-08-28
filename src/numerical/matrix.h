@@ -30,7 +30,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 namespace ns
 {
 template <std::size_t ROWS, std::size_t COLUMNS, typename T>
-class Matrix
+class Matrix final
 {
         static_assert(is_floating_point<T>);
         static_assert(ROWS >= 1 && COLUMNS >= 1);

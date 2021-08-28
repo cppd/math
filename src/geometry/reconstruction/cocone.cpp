@@ -461,9 +461,9 @@ std::unique_ptr<ManifoldConstructorCocone<N>> create_manifold_constructor_cocone
         template std::unique_ptr<ManifoldConstructor<(N)>> create_manifold_constructor( \
                 const std::vector<Vector<(N), float>>&, ProgressRatio*);
 
-#define CREATE_MANIFOLD_CONSTRUCTOR_COCONE_INSTANTIATION(N)                                        \
-        template std::unique_ptr<ManifoldConstructorCocone<N>> create_manifold_constructor_cocone( \
-                const std::vector<Vector<N, float>>&, ProgressRatio*);
+#define CREATE_MANIFOLD_CONSTRUCTOR_COCONE_INSTANTIATION(N)                                          \
+        template std::unique_ptr<ManifoldConstructorCocone<(N)>> create_manifold_constructor_cocone( \
+                const std::vector<Vector<(N), float>>&, ProgressRatio*);
 
 CREATE_MANIFOLD_CONSTRUCTOR_INSTANTIATION(2)
 CREATE_MANIFOLD_CONSTRUCTOR_INSTANTIATION(3)

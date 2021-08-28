@@ -21,13 +21,15 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <src/com/error.h>
 
+#include <cmath>
+
 namespace ns::gui::main_window
 {
 namespace
 {
-constexpr float NORMAL_LENGTH_MINIMUM = 0.001;
-constexpr float NORMAL_LENGTH_DEFAULT = 0.05;
-constexpr float NORMAL_LENGTH_MAXIMUM = 0.2;
+constexpr double NORMAL_LENGTH_MINIMUM = 0.001;
+constexpr double NORMAL_LENGTH_DEFAULT = 0.05;
+constexpr double NORMAL_LENGTH_MAXIMUM = 0.2;
 static_assert(NORMAL_LENGTH_DEFAULT >= NORMAL_LENGTH_MINIMUM);
 static_assert(NORMAL_LENGTH_DEFAULT <= NORMAL_LENGTH_MAXIMUM);
 static_assert(NORMAL_LENGTH_MAXIMUM - NORMAL_LENGTH_MINIMUM > 0);
@@ -232,7 +234,7 @@ double ViewWidget::shadow_zoom() const
 
 double ViewWidget::normal_length() const
 {
-        return interpolation(NORMAL_LENGTH_MINIMUM, NORMAL_LENGTH_MAXIMUM, slider_position(ui_.slider_normals));
+        return std::lerp(NORMAL_LENGTH_MINIMUM, NORMAL_LENGTH_MAXIMUM, slider_position(ui_.slider_normals));
 }
 
 bool ViewWidget::smooth_checked() const

@@ -27,7 +27,6 @@ Norms
 #pragma once
 
 #include <src/com/hash.h>
-#include <src/com/interpolation.h>
 #include <src/com/math.h>
 #include <src/com/type/limit.h>
 
@@ -119,7 +118,7 @@ public:
                 return *this;
         }
 
-        constexpr Vector<N, T>& operator*=(T v) &
+        constexpr Vector<N, T>& operator*=(const T& v) &
         {
                 for (std::size_t i = 0; i < N; ++i)
                 {
@@ -128,7 +127,7 @@ public:
                 return *this;
         }
 
-        constexpr Vector<N, T>& operator/=(T v) &
+        constexpr Vector<N, T>& operator/=(const T& v) &
         {
                 for (std::size_t i = 0; i < N; ++i)
                 {
@@ -137,15 +136,15 @@ public:
                 return *this;
         }
 
-        void multiply_add(const Vector<N, T>& a, T b)
+        void multiply_add(const Vector<N, T>& a, const T& b)
         {
                 for (std::size_t i = 0; i < N; ++i)
                 {
-                        data_[i] = std::fma(a[i], b, data_[i]);
+                        data_[i] += a[i] * b;
                 }
         }
 
-        void multiply_add(T b, const Vector<N, T>& a)
+        void multiply_add(const T& b, const Vector<N, T>& a)
         {
                 multiply_add(a, b);
         }
@@ -175,7 +174,7 @@ public:
                 T s = data_[0] * data_[0];
                 for (std::size_t i = 1; i < N; ++i)
                 {
-                        s = std::fma(data_[i], data_[i], s);
+                        s += data_[i] * data_[i];
                 }
                 return s;
         }
@@ -194,7 +193,7 @@ public:
                 for (std::size_t i = 1; i < N; ++i)
                 {
                         k = data_[i] / max;
-                        s = std::fma(k, k, s);
+                        s += k * k;
                 }
                 return max * std::sqrt(s);
         }
@@ -241,7 +240,7 @@ public:
                 return s > MIN && s < MAX;
         }
 
-        [[nodiscard]] constexpr Vector<N, T> clamp(T low, T high) const
+        [[nodiscard]] constexpr Vector<N, T> clamp(const T& low, const T& high) const
         {
                 Vector<N, T> res;
                 for (std::size_t i = 0; i < N; ++i)
@@ -251,7 +250,7 @@ public:
                 return res;
         }
 
-        [[nodiscard]] constexpr Vector<N, T> max_n(T v) const
+        [[nodiscard]] constexpr Vector<N, T> max_n(const T& v) const
         {
                 Vector<N, T> res;
                 for (std::size_t i = 0; i < N; ++i)
@@ -313,7 +312,7 @@ template <std::size_t N, typename T>
 }
 
 template <std::size_t N, typename T>
-[[nodiscard]] constexpr Vector<N, T> operator*(const Vector<N, T>& a, T b)
+[[nodiscard]] constexpr Vector<N, T> operator*(const Vector<N, T>& a, const T& b)
 {
         Vector<N, T> res;
         for (std::size_t i = 0; i < N; ++i)
@@ -324,7 +323,7 @@ template <std::size_t N, typename T>
 }
 
 template <std::size_t N, typename T>
-[[nodiscard]] constexpr Vector<N, T> operator*(T b, const Vector<N, T>& a)
+[[nodiscard]] constexpr Vector<N, T> operator*(const T& b, const Vector<N, T>& a)
 {
         return a * b;
 }
@@ -341,7 +340,7 @@ template <std::size_t N, typename T>
 }
 
 template <std::size_t N, typename T>
-[[nodiscard]] constexpr Vector<N, T> operator/(const Vector<N, T>& a, T b)
+[[nodiscard]] constexpr Vector<N, T> operator/(const Vector<N, T>& a, const T& b)
 {
         Vector<N, T> res;
         for (std::size_t i = 0; i < N; ++i)
@@ -390,13 +389,13 @@ template <std::size_t N, typename T>
         T res = a[0] * b[0];
         for (std::size_t i = 1; i < N; ++i)
         {
-                res = std::fma(a[i], b[i], res);
+                res += a[i] * b[i];
         }
         return res;
 }
 
 template <std::size_t N, typename T>
-[[nodiscard]] Vector<N, T> interpolation(const Vector<N, T>& a, const Vector<N, T>& b, const std::type_identity_t<T>& t)
+[[nodiscard]] Vector<N, T> interpolation(const Vector<N, T>& a, const Vector<N, T>& b, const T& t)
 {
         Vector<N, T> res;
         for (std::size_t i = 0; i < N; ++i)
