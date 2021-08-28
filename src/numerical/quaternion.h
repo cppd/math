@@ -19,14 +19,12 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "vec.h"
 
-#include <src/com/type/trait.h>
-
 namespace ns
 {
 template <typename T>
-class Quaternion
+class Quaternion final
 {
-        static_assert(is_native_floating_point<T>);
+        static_assert(std::is_floating_point_v<T>);
 
         Vector<4, T> data_;
 

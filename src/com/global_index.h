@@ -35,13 +35,13 @@ template <std::size_t N, typename IndexType>
 class GlobalIndex
 {
         static_assert(N > 0);
-        static_assert(is_native_integral<IndexType>);
+        static_assert(is_integral<IndexType>);
 
         template <typename T>
         static constexpr void check_input_type()
         {
                 static_assert(std::tuple_size_v<T> == N);
-                static_assert(is_native_integral<typename T::value_type>);
+                static_assert(is_integral<typename T::value_type>);
                 static_assert(
                         limits<IndexType>::digits >= limits<typename T::value_type>::digits
                         || (limits<IndexType>::digits >= limits<std::ptrdiff_t>::digits

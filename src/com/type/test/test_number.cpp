@@ -28,12 +28,15 @@ namespace ns
 namespace
 {
 template <typename T>
-constexpr T NEGATIVE_EPSILON = T(1) - PREVIOUS_BEFORE_ONE<T>;
-
-static_assert((1 - NEGATIVE_EPSILON<float> < 1) && (1 - NEGATIVE_EPSILON<float> / 2 == 1));
-static_assert((1 - NEGATIVE_EPSILON<double> < 1) && (1 - NEGATIVE_EPSILON<double> / 2 == 1));
-static_assert((1 - NEGATIVE_EPSILON<long double> < 1) && (1 - NEGATIVE_EPSILON<long double> / 2 == 1));
-static_assert((1 - NEGATIVE_EPSILON<__float128> < 1) && (1 - NEGATIVE_EPSILON<__float128> / 2 == 1));
+struct Check final
+{
+        static constexpr T NEGATIVE_EPSILON = T(1) - PREVIOUS_BEFORE_ONE<T>;
+        static_assert(1 - NEGATIVE_EPSILON < 1);
+        static_assert(1 - (NEGATIVE_EPSILON / 2) == 1);
+};
+template struct Check<float>;
+template struct Check<double>;
+template struct Check<long double>;
 
 template <typename T>
 void test_negative_epsilon()

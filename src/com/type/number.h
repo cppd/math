@@ -17,18 +17,16 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
-#include "limit.h"
-#include "trait.h"
+#include <limits>
+#include <type_traits>
 
 namespace ns
 {
-namespace number_implementation
-{
 template <typename T>
-constexpr T previous_before_one()
+inline constexpr T PREVIOUS_BEFORE_ONE = []
 {
-        static_assert(is_native_floating_point<T>);
-        static_assert(limits<T>::radix == 2);
+        static_assert(std::is_floating_point_v<T>);
+        static_assert(std::numeric_limits<T>::radix == 2);
 
         T prev_e = 1;
         T e = 1;
@@ -38,9 +36,5 @@ constexpr T previous_before_one()
                 e /= 2;
         } while (1 - e != 1);
         return 1 - prev_e;
-}
-}
-
-template <typename T>
-inline constexpr T PREVIOUS_BEFORE_ONE = number_implementation::previous_before_one<T>();
+}();
 }

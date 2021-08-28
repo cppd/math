@@ -33,7 +33,7 @@ namespace data_read_implementation
 template <typename Integer, typename T>
 Integer digits_to_integer(const T& data, long long begin, long long end)
 {
-        static_assert(is_native_integral<Integer>);
+        static_assert(std::is_integral_v<Integer>);
 
         long long length = end - begin;
 

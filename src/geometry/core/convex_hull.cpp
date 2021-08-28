@@ -146,13 +146,27 @@ using ComputeTypeAfterParaboloid = LeastSignedInteger<max_determinant<N, PARABOL
 template <std::size_t N>
 using DataTypeAfterParaboloid = LeastSignedInteger<PARABOLOID_BITS>;
 
-static_assert(is_native_integral<DataTypeOrdinary<2>> && is_native_integral<ComputeTypeOrdinary<2>>);
-static_assert(is_native_integral<DataTypeOrdinary<3>> && is_native_integral<ComputeTypeOrdinary<3>>);
-static_assert(is_native_integral<DataTypeOrdinary<4>> && is_native_integral<ComputeTypeOrdinary<4>>);
-static_assert(is_native_integral<DataTypeParaboloid<3>> && is_native_integral<ComputeTypeParaboloid<3>>);
-static_assert(is_native_integral<DataTypeAfterParaboloid<2>> && is_native_integral<ComputeTypeAfterParaboloid<2>>);
-static_assert(is_native_integral<DataTypeParaboloid<4>> && is_native_integral<ComputeTypeParaboloid<4>>);
-static_assert(is_native_integral<DataTypeAfterParaboloid<3>> && is_native_integral<ComputeTypeAfterParaboloid<3>>);
+template <std::size_t N, bool CHECK_NON_CLASS>
+struct CheckTypes final
+{
+        static_assert(!CHECK_NON_CLASS || !std::is_class_v<DataTypeOrdinary<N>>);
+        static_assert(!CHECK_NON_CLASS || !std::is_class_v<ComputeTypeOrdinary<N>>);
+        static_assert(!CHECK_NON_CLASS || !std::is_class_v<DataTypeParaboloid<N>>);
+        static_assert(!CHECK_NON_CLASS || !std::is_class_v<ComputeTypeParaboloid<N>>);
+        static_assert(!CHECK_NON_CLASS || !std::is_class_v<DataTypeAfterParaboloid<N>>);
+        static_assert(!CHECK_NON_CLASS || !std::is_class_v<ComputeTypeAfterParaboloid<N>>);
+        static_assert(is_integral<DataTypeOrdinary<N>>);
+        static_assert(is_integral<ComputeTypeOrdinary<N>>);
+        static_assert(is_integral<DataTypeParaboloid<N>>);
+        static_assert(is_integral<ComputeTypeParaboloid<N>>);
+        static_assert(is_integral<DataTypeAfterParaboloid<N>>);
+        static_assert(is_integral<ComputeTypeAfterParaboloid<N>>);
+};
+template struct CheckTypes<2, true>;
+template struct CheckTypes<3, true>;
+template struct CheckTypes<4, true>;
+template struct CheckTypes<5, false>;
+template struct CheckTypes<6, false>;
 
 //
 
@@ -164,8 +178,9 @@ template <std::size_t N, typename DataType, typename ComputeType>
 using Facet = FacetInteger<N, DataType, ComputeType, FacetListConstIterator>;
 
 template <typename T>
-std::string type_str() requires is_native_integral<T>
+std::string type_str() requires(!std::is_same_v<std::remove_cv_t<T>, mpz_class>)
 {
+        static_assert(is_integral<T>);
         return to_string(limits<T>::digits) + " bits";
 }
 
@@ -184,7 +199,7 @@ int thread_count_for_horizon()
 {
         static_assert(is_integral<S> && is_integral<C>);
 
-        if constexpr (is_native_integral<S> && is_native_integral<C>)
+        if constexpr (!std::is_class_v<S> && !std::is_class_v<C>)
         {
                 return 1;
         }

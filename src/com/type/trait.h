@@ -23,33 +23,22 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 namespace ns
 {
 template <typename T>
-inline constexpr bool is_native_integral =
-        std::is_integral_v<T> || (std::is_same_v<std::remove_cv_t<T>, unsigned __int128>)
-        || (std::is_same_v<std::remove_cv_t<T>, signed __int128>);
-
-template <typename T>
-inline constexpr bool is_integral = is_native_integral<T> || std::is_same_v<std::remove_cv_t<T>, mpz_class>;
-
-static_assert(!is_native_integral<mpz_class>);
+inline constexpr bool is_integral = std::is_integral_v<T> || (std::is_same_v<std::remove_cv_t<T>, unsigned __int128>)
+                                    || (std::is_same_v<std::remove_cv_t<T>, signed __int128>)
+                                    || std::is_same_v<std::remove_cv_t<T>, mpz_class>;
 
 //
 
 template <typename T>
-inline constexpr bool is_native_floating_point =
+inline constexpr bool is_floating_point =
         std::is_floating_point_v<T> || std::is_same_v<std::remove_cv_t<T>, __float128>;
 
-template <typename T>
-inline constexpr bool is_floating_point = is_native_floating_point<T> || std::is_same_v<std::remove_cv_t<T>, mpf_class>;
-
-static_assert(!is_native_floating_point<mpf_class>);
-
 //
 
 template <typename T>
-inline constexpr bool is_signed = std::is_signed_v<T> || (std::is_same_v<std::remove_cv_t<T>, mpz_class>)
-                                  || (std::is_same_v<std::remove_cv_t<T>, mpf_class>)
-                                  || (std::is_same_v<std::remove_cv_t<T>, __int128>)
-                                  || (std::is_same_v<std::remove_cv_t<T>, __float128>);
+inline constexpr bool is_signed = std::is_signed_v<T> || (std::is_same_v<std::remove_cv_t<T>, __int128>)
+                                  || (std::is_same_v<std::remove_cv_t<T>, __float128>)
+                                  || (std::is_same_v<std::remove_cv_t<T>, mpz_class>);
 
 template <typename T>
 inline constexpr bool is_unsigned = std::is_unsigned_v<T> || (std::is_same_v<std::remove_cv_t<T>, unsigned __int128>);

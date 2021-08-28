@@ -24,6 +24,8 @@ namespace ns
 template <std::size_t N, typename T>
 class Ray final
 {
+        static_assert(std::is_floating_point_v<T>);
+
         Vector<N, T> org_;
         Vector<N, T> dir_;
 

@@ -18,7 +18,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #pragma once
 
 #include <src/com/type/limit.h>
-#include <src/com/type/trait.h>
 #include <src/numerical/quadratic.h>
 #include <src/numerical/vec.h>
 
@@ -39,7 +38,7 @@ inline constexpr T COS_OF_AN_OPENING_ANGLE_WITH_THE_AXIS = 0.3826834323650897717
 template <typename T>
 bool voronoi_edge_intersects_cocone(const T cos_n_pa, const T cos_n_pb)
 {
-        static_assert(is_native_floating_point<T>);
+        static_assert(std::is_floating_point_v<T>);
         namespace impl = functions_implementation;
 
         if ((std::abs(cos_n_pa) < impl::COS_OF_AN_OPENING_ANGLE_WITH_THE_AXIS<T>)
@@ -61,7 +60,7 @@ bool voronoi_edge_intersects_cocone(const T cos_n_pa, const T cos_n_pb)
 template <typename... T>
 bool cocone_inside_or_equal(const T... cos_n_p)
 {
-        static_assert((is_native_floating_point<T> && ...));
+        static_assert((std::is_floating_point_v<T> && ...));
         namespace impl = functions_implementation;
 
         return ((std::abs(cos_n_p) <= impl::COS_OF_AN_OPENING_ANGLE_WITH_THE_AXIS<T>)&&...);
@@ -95,7 +94,7 @@ std::optional<T> intersect_cocone_max_distance(
         const Vector<N, T>& from_apex_to_point_a,
         const Vector<N, T>& vector_from_point_a)
 {
-        static_assert(is_native_floating_point<T>);
+        static_assert(std::is_floating_point_v<T>);
 
         const Vector<N, T>& vec_a = from_apex_to_point_a;
         const Vector<N, T>& vec_ab = vector_from_point_a;

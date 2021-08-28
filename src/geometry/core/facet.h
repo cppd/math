@@ -121,7 +121,8 @@ class FacetInteger final : public FacetBase<N, FacetInteger<N, DataType, Compute
 {
         using Base = FacetBase<N, FacetInteger, FacetIter>;
 
-        static_assert(is_native_integral<DataType> && is_native_integral<ComputeType>);
+        static_assert(!std::is_class_v<DataType> && !std::is_class_v<ComputeType>);
+        static_assert(is_integral<DataType> && is_integral<ComputeType>);
         static_assert(is_signed<DataType> && is_signed<ComputeType>);
 
         template <typename T>
@@ -220,6 +221,7 @@ template <std::size_t N, typename DataType, template <typename> typename FacetIt
 class FacetInteger<N, DataType, mpz_class, FacetIter> final
         : public FacetBase<N, FacetInteger<N, DataType, mpz_class, FacetIter>, FacetIter>
 {
+        static_assert(!std::is_class_v<DataType>);
         static_assert(is_integral<DataType>);
         static_assert(is_signed<DataType>);
 

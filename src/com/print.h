@@ -177,18 +177,17 @@ void f(T v, int i, std::string& r, [[maybe_unused]] char s)
 }
 
 template <unsigned DIGIT_GROUP_SIZE, typename T>
-std::string to_string_digit_groups(T v, char s) requires is_native_integral<T>
+std::string to_string_digit_groups(const T& v, const char s) requires is_integral<T>
 {
+        static_assert(!std::is_class_v<T>);
         static_assert(is_signed<T> != is_unsigned<T>);
 
         std::string r;
         r.reserve(limits<T>::digits10 * 1.5);
 
-        bool negative = is_unsigned<T> ? false : v < 0;
-
         f<DIGIT_GROUP_SIZE, T>(v, -1, r, s);
 
-        if (negative)
+        if (is_signed<T> && v < 0)
         {
                 r += '-';
         }
@@ -200,13 +199,13 @@ std::string to_string_digit_groups(T v, char s) requires is_native_integral<T>
 }
 
 template <typename T>
-std::string to_string(T v) requires is_native_integral<T>
+std::string to_string(T v) requires is_integral<T>
 {
         return print_implementation::to_string_digit_groups<0, T>(v, '\x20');
 }
 
 template <typename T>
-std::string to_string_digit_groups(T v, char s = '\x20') requires is_native_integral<T>
+std::string to_string_digit_groups(T v, char s = '\x20') requires is_integral<T>
 {
         return print_implementation::to_string_digit_groups<3, T>(v, s);
 }
@@ -214,19 +213,19 @@ std::string to_string_digit_groups(T v, char s = '\x20') requires is_native_inte
 //
 
 template <typename T>
-std::string to_string(const T& data) requires requires(const T& v)
+std::string to_string(const T& data) requires requires
 {
-        std::begin(v);
-        std::end(v);
+        std::begin(data);
+        std::end(data);
 }
 {
-        auto i = std::cbegin(data);
-        if (i == std::cend(data))
+        auto i = std::begin(data);
+        if (i == std::end(data))
         {
                 return {};
         }
         std::string res = to_string(*i);
-        while (++i != std::cend(data))
+        while (++i != std::end(data))
         {
                 res += ", ";
                 res += to_string(*i);

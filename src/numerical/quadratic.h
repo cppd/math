@@ -22,16 +22,18 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 namespace ns::numerical
 {
 template <typename T>
-bool quadratic_equation(T a, T b, T c, T* r1, T* r2)
+[[nodiscard]] bool quadratic_equation(const T& a, const T& b, const T& c, T* r1, T* r2)
 {
-        T discriminant = b * b - 4 * a * c;
+        static_assert(std::is_floating_point_v<T>);
+
+        const T discriminant = b * b - 4 * a * c;
 
         if (discriminant < 0)
         {
                 return false;
         }
 
-        T sqrt_d = std::sqrt(discriminant);
+        const T sqrt_d = std::sqrt(discriminant);
 
         if (b >= 0)
         {

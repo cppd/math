@@ -22,7 +22,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 namespace ns::numerical
 {
 template <typename T, typename F>
-T integrate(const F& f, T from, T to, int count)
+[[nodiscard]] T integrate(const F& f, const T& from, const T& to, const int count)
 {
         static_assert(std::is_floating_point_v<T>);
         static_assert(std::is_same_v<T, decltype(f(T()))>);
@@ -35,7 +35,7 @@ T integrate(const F& f, T from, T to, int count)
                 T x = std::lerp(from, to, i / t_count);
                 sum += f(x);
         }
-        T h_2 = (to - from) / (2 * t_count);
+        const T h_2 = (to - from) / (2 * t_count);
         return (f(from) + 2 * sum + f(to)) * h_2;
 }
 }
