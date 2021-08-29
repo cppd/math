@@ -81,7 +81,7 @@ class ThreadPool
                 {
                         try
                         {
-                                std::unique_lock<std::mutex> lock(mutex_run_);
+                                std::unique_lock lock(mutex_run_);
                                 cv_run_.wait(
                                         lock,
                                         [this]
@@ -107,7 +107,7 @@ class ThreadPool
                 {
                         try
                         {
-                                std::unique_lock<std::mutex> lock(mutex_finish_);
+                                std::unique_lock lock(mutex_finish_);
 
                                 long long g = generation_;
                                 --count_;
@@ -205,14 +205,14 @@ class ThreadPool
                                 long long g = generation_;
 
                                 {
-                                        std::unique_lock<std::mutex> lock(mutex_run_);
+                                        std::lock_guard lg(mutex_run_);
                                         enable_ = true;
                                 }
 
                                 cv_run_.notify_all();
 
                                 {
-                                        std::unique_lock<std::mutex> lock(mutex_finish_);
+                                        std::unique_lock lock(mutex_finish_);
                                         cv_finish_.wait(
                                                 lock,
                                                 [this, g]
@@ -302,7 +302,7 @@ public:
         ~ThreadPool()
         {
                 {
-                        std::unique_lock<std::mutex> lock(mutex_run_);
+                        std::lock_guard lg(mutex_run_);
                         exit_ = true;
                 }
 

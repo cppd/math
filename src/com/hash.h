@@ -25,7 +25,7 @@ namespace ns
 template <typename T, typename... Ts>
 std::size_t compute_hash(const T& v, const Ts&... vs)
 {
-        static constexpr auto combine = [](std::size_t& seed, const std::size_t& hash)
+        const auto combine = [](std::size_t& seed, const std::size_t& hash)
         {
                 seed ^= hash + 0x9e3779b9 + (seed << 6) + (seed >> 2);
         };

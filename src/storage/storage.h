@@ -24,6 +24,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/model/volume_object.h>
 
 #include <memory>
+#include <mutex>
 #include <shared_mutex>
 #include <unordered_map>
 #include <variant>

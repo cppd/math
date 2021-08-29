@@ -101,7 +101,7 @@ public:
                 v.received = false;
                 receive_queue_.push(&v);
 
-                std::unique_lock<std::mutex> lock(v.mutex);
+                std::unique_lock lock(v.mutex);
                 v.cv.wait(
                         lock,
                         [&]
