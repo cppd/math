@@ -96,188 +96,305 @@ std::vector<bool> find_presentation_support(
         return presentation_supported;
 }
 
+#define CASE_FEATURE_10_NAME(feature)                                        \
+        case offsetof(VkPhysicalDeviceFeatures, feature) / sizeof(VkBool32): \
+                return #feature;
+
+#define CASE_FEATURE_11_NAME(feature)                                                 \
+        case (offsetof(VkPhysicalDeviceVulkan11Features, feature)                     \
+              - offsetof(VkPhysicalDeviceVulkan11Features, storageBuffer16BitAccess)) \
+                / sizeof(VkBool32):                                                   \
+                return #feature;
+
+#define CASE_FEATURE_12_NAME(feature)                                                 \
+        case (offsetof(VkPhysicalDeviceVulkan12Features, feature)                     \
+              - offsetof(VkPhysicalDeviceVulkan12Features, samplerMirrorClampToEdge)) \
+                / sizeof(VkBool32):                                                   \
+                return #feature;
+
+std::string feature_10_name(const std::size_t index)
+{
+        switch (index)
+        {
+                CASE_FEATURE_10_NAME(robustBufferAccess)
+                CASE_FEATURE_10_NAME(fullDrawIndexUint32)
+                CASE_FEATURE_10_NAME(imageCubeArray)
+                CASE_FEATURE_10_NAME(independentBlend)
+                CASE_FEATURE_10_NAME(geometryShader)
+                CASE_FEATURE_10_NAME(tessellationShader)
+                CASE_FEATURE_10_NAME(sampleRateShading)
+                CASE_FEATURE_10_NAME(dualSrcBlend)
+                CASE_FEATURE_10_NAME(logicOp)
+                CASE_FEATURE_10_NAME(multiDrawIndirect)
+                CASE_FEATURE_10_NAME(drawIndirectFirstInstance)
+                CASE_FEATURE_10_NAME(depthClamp)
+                CASE_FEATURE_10_NAME(depthBiasClamp)
+                CASE_FEATURE_10_NAME(fillModeNonSolid)
+                CASE_FEATURE_10_NAME(depthBounds)
+                CASE_FEATURE_10_NAME(wideLines)
+                CASE_FEATURE_10_NAME(largePoints)
+                CASE_FEATURE_10_NAME(alphaToOne)
+                CASE_FEATURE_10_NAME(multiViewport)
+                CASE_FEATURE_10_NAME(samplerAnisotropy)
+                CASE_FEATURE_10_NAME(textureCompressionETC2)
+                CASE_FEATURE_10_NAME(textureCompressionASTC_LDR)
+                CASE_FEATURE_10_NAME(textureCompressionBC)
+                CASE_FEATURE_10_NAME(occlusionQueryPrecise)
+                CASE_FEATURE_10_NAME(pipelineStatisticsQuery)
+                CASE_FEATURE_10_NAME(vertexPipelineStoresAndAtomics)
+                CASE_FEATURE_10_NAME(fragmentStoresAndAtomics)
+                CASE_FEATURE_10_NAME(shaderTessellationAndGeometryPointSize)
+                CASE_FEATURE_10_NAME(shaderImageGatherExtended)
+                CASE_FEATURE_10_NAME(shaderStorageImageExtendedFormats)
+                CASE_FEATURE_10_NAME(shaderStorageImageMultisample)
+                CASE_FEATURE_10_NAME(shaderStorageImageReadWithoutFormat)
+                CASE_FEATURE_10_NAME(shaderStorageImageWriteWithoutFormat)
+                CASE_FEATURE_10_NAME(shaderUniformBufferArrayDynamicIndexing)
+                CASE_FEATURE_10_NAME(shaderSampledImageArrayDynamicIndexing)
+                CASE_FEATURE_10_NAME(shaderStorageBufferArrayDynamicIndexing)
+                CASE_FEATURE_10_NAME(shaderStorageImageArrayDynamicIndexing)
+                CASE_FEATURE_10_NAME(shaderClipDistance)
+                CASE_FEATURE_10_NAME(shaderCullDistance)
+                CASE_FEATURE_10_NAME(shaderFloat64)
+                CASE_FEATURE_10_NAME(shaderInt64)
+                CASE_FEATURE_10_NAME(shaderInt16)
+                CASE_FEATURE_10_NAME(shaderResourceResidency)
+                CASE_FEATURE_10_NAME(shaderResourceMinLod)
+                CASE_FEATURE_10_NAME(sparseBinding)
+                CASE_FEATURE_10_NAME(sparseResidencyBuffer)
+                CASE_FEATURE_10_NAME(sparseResidencyImage2D)
+                CASE_FEATURE_10_NAME(sparseResidencyImage3D)
+                CASE_FEATURE_10_NAME(sparseResidency2Samples)
+                CASE_FEATURE_10_NAME(sparseResidency4Samples)
+                CASE_FEATURE_10_NAME(sparseResidency8Samples)
+                CASE_FEATURE_10_NAME(sparseResidency16Samples)
+                CASE_FEATURE_10_NAME(sparseResidencyAliased)
+                CASE_FEATURE_10_NAME(variableMultisampleRate)
+                CASE_FEATURE_10_NAME(inheritedQueries)
+        default:
+                return "Unknown feature (index " + std::to_string(index) + " in VkPhysicalDeviceFeatures)";
+        }
+}
+
+std::string feature_11_name(const std::size_t index)
+{
+        switch (index)
+        {
+                CASE_FEATURE_11_NAME(storageBuffer16BitAccess)
+                CASE_FEATURE_11_NAME(uniformAndStorageBuffer16BitAccess)
+                CASE_FEATURE_11_NAME(storagePushConstant16)
+                CASE_FEATURE_11_NAME(storageInputOutput16)
+                CASE_FEATURE_11_NAME(multiview)
+                CASE_FEATURE_11_NAME(multiviewGeometryShader)
+                CASE_FEATURE_11_NAME(multiviewTessellationShader)
+                CASE_FEATURE_11_NAME(variablePointersStorageBuffer)
+                CASE_FEATURE_11_NAME(variablePointers)
+                CASE_FEATURE_11_NAME(protectedMemory)
+                CASE_FEATURE_11_NAME(samplerYcbcrConversion)
+                CASE_FEATURE_11_NAME(shaderDrawParameters)
+        default:
+                return "Unknown feature (index " + std::to_string(index) + " in VkPhysicalDeviceVulkan11Features)";
+        }
+}
+
+std::string feature_12_name(const std::size_t index)
+{
+        switch (index)
+        {
+                CASE_FEATURE_12_NAME(samplerMirrorClampToEdge)
+                CASE_FEATURE_12_NAME(drawIndirectCount)
+                CASE_FEATURE_12_NAME(storageBuffer8BitAccess)
+                CASE_FEATURE_12_NAME(uniformAndStorageBuffer8BitAccess)
+                CASE_FEATURE_12_NAME(storagePushConstant8)
+                CASE_FEATURE_12_NAME(shaderBufferInt64Atomics)
+                CASE_FEATURE_12_NAME(shaderSharedInt64Atomics)
+                CASE_FEATURE_12_NAME(shaderFloat16)
+                CASE_FEATURE_12_NAME(shaderInt8)
+                CASE_FEATURE_12_NAME(descriptorIndexing)
+                CASE_FEATURE_12_NAME(shaderInputAttachmentArrayDynamicIndexing)
+                CASE_FEATURE_12_NAME(shaderUniformTexelBufferArrayDynamicIndexing)
+                CASE_FEATURE_12_NAME(shaderStorageTexelBufferArrayDynamicIndexing)
+                CASE_FEATURE_12_NAME(shaderUniformBufferArrayNonUniformIndexing)
+                CASE_FEATURE_12_NAME(shaderSampledImageArrayNonUniformIndexing)
+                CASE_FEATURE_12_NAME(shaderStorageBufferArrayNonUniformIndexing)
+                CASE_FEATURE_12_NAME(shaderStorageImageArrayNonUniformIndexing)
+                CASE_FEATURE_12_NAME(shaderInputAttachmentArrayNonUniformIndexing)
+                CASE_FEATURE_12_NAME(shaderUniformTexelBufferArrayNonUniformIndexing)
+                CASE_FEATURE_12_NAME(shaderStorageTexelBufferArrayNonUniformIndexing)
+                CASE_FEATURE_12_NAME(descriptorBindingUniformBufferUpdateAfterBind)
+                CASE_FEATURE_12_NAME(descriptorBindingSampledImageUpdateAfterBind)
+                CASE_FEATURE_12_NAME(descriptorBindingStorageImageUpdateAfterBind)
+                CASE_FEATURE_12_NAME(descriptorBindingStorageBufferUpdateAfterBind)
+                CASE_FEATURE_12_NAME(descriptorBindingUniformTexelBufferUpdateAfterBind)
+                CASE_FEATURE_12_NAME(descriptorBindingStorageTexelBufferUpdateAfterBind)
+                CASE_FEATURE_12_NAME(descriptorBindingUpdateUnusedWhilePending)
+                CASE_FEATURE_12_NAME(descriptorBindingPartiallyBound)
+                CASE_FEATURE_12_NAME(descriptorBindingVariableDescriptorCount)
+                CASE_FEATURE_12_NAME(runtimeDescriptorArray)
+                CASE_FEATURE_12_NAME(samplerFilterMinmax)
+                CASE_FEATURE_12_NAME(scalarBlockLayout)
+                CASE_FEATURE_12_NAME(imagelessFramebuffer)
+                CASE_FEATURE_12_NAME(uniformBufferStandardLayout)
+                CASE_FEATURE_12_NAME(shaderSubgroupExtendedTypes)
+                CASE_FEATURE_12_NAME(separateDepthStencilLayouts)
+                CASE_FEATURE_12_NAME(hostQueryReset)
+                CASE_FEATURE_12_NAME(timelineSemaphore)
+                CASE_FEATURE_12_NAME(bufferDeviceAddress)
+                CASE_FEATURE_12_NAME(bufferDeviceAddressCaptureReplay)
+                CASE_FEATURE_12_NAME(bufferDeviceAddressMultiDevice)
+                CASE_FEATURE_12_NAME(vulkanMemoryModel)
+                CASE_FEATURE_12_NAME(vulkanMemoryModelDeviceScope)
+                CASE_FEATURE_12_NAME(vulkanMemoryModelAvailabilityVisibilityChains)
+                CASE_FEATURE_12_NAME(shaderOutputViewportIndex)
+                CASE_FEATURE_12_NAME(shaderOutputLayer)
+                CASE_FEATURE_12_NAME(subgroupBroadcastDynamicId)
+        default:
+                return "Unknown feature (index " + std::to_string(index) + " in VkPhysicalDeviceVulkan12Features)";
+        }
+}
+
 class FeatureIsNotSupported final : public std::exception
 {
-        const char* text_;
+        std::string text_;
 
 public:
-        explicit FeatureIsNotSupported(const char* feature_name) noexcept : text_(feature_name)
+        explicit FeatureIsNotSupported(std::string feature_name) noexcept : text_(std::move(feature_name))
         {
         }
         const char* what() const noexcept override
         {
-                return text_;
+                return text_.c_str();
         }
 };
 
-[[noreturn]] void feature_is_not_supported(const char* feature_name)
+[[noreturn]] void feature_is_not_supported_error(std::string feature_name)
 {
-        throw FeatureIsNotSupported(feature_name);
+        throw FeatureIsNotSupported(std::move(feature_name));
 }
 
-#define CASE_FEATURE_10(feature)                                                                           \
-        case PhysicalDeviceFeatures::feature:                                                              \
-                if (!device_features.features_10.feature && required)                                      \
-                {                                                                                          \
-                        feature_is_not_supported(#feature);                                                \
-                }                                                                                          \
-                if (result_device_features)                                                                \
-                {                                                                                          \
-                        result_device_features->features_10.feature = device_features.features_10.feature; \
-                }                                                                                          \
-                break;
+template <std::size_t COUNT, std::size_t OFFSET, typename NameFunction, typename Features>
+void set_features(
+        const NameFunction& name_function,
+        const Features& features,
+        const bool required,
+        const Features& device_features,
+        Features* const result_features)
+{
+        static_assert(COUNT * sizeof(VkBool32) + OFFSET <= sizeof(Features));
 
-#define CASE_FEATURE_11(feature)                                                                           \
-        case PhysicalDeviceFeatures::feature:                                                              \
-                if (!device_features.features_11.feature && required)                                      \
-                {                                                                                          \
-                        feature_is_not_supported(#feature);                                                \
-                }                                                                                          \
-                if (result_device_features)                                                                \
-                {                                                                                          \
-                        result_device_features->features_11.feature = device_features.features_11.feature; \
-                }                                                                                          \
-                break;
+        constexpr std::size_t SIZE = sizeof(VkBool32);
+        constexpr VkBool32 TRUE = VK_TRUE;
 
-#define CASE_FEATURE_12(feature)                                                                           \
-        case PhysicalDeviceFeatures::feature:                                                              \
-                if (!device_features.features_12.feature && required)                                      \
-                {                                                                                          \
-                        feature_is_not_supported(#feature);                                                \
-                }                                                                                          \
-                if (result_device_features)                                                                \
-                {                                                                                          \
-                        result_device_features->features_12.feature = device_features.features_12.feature; \
-                }                                                                                          \
-                break;
+        const std::byte* ptr = reinterpret_cast<const std::byte*>(&features) + OFFSET;
+        const std::byte* device_ptr = reinterpret_cast<const std::byte*>(&device_features) + OFFSET;
+        std::byte* result_ptr = reinterpret_cast<std::byte*>(result_features) + OFFSET;
+
+        for (std::size_t i = 0; i < COUNT; ++i, ptr += SIZE, device_ptr += SIZE, result_ptr += SIZE)
+        {
+                VkBool32 feature;
+                std::memcpy(&feature, ptr, SIZE);
+                if (!feature)
+                {
+                        continue;
+                }
+
+                VkBool32 device_feature;
+                std::memcpy(&device_feature, device_ptr, SIZE);
+                if (device_feature)
+                {
+                        std::memcpy(result_ptr, &TRUE, SIZE);
+                }
+                else if (required)
+                {
+                        feature_is_not_supported_error(name_function(i));
+                }
+        }
+}
 
 void set_features(
-        const std::vector<PhysicalDeviceFeatures>& features,
-        bool required,
-        const DeviceFeatures& device_features,
-        DeviceFeatures* result_device_features = nullptr)
+        const VkPhysicalDeviceFeatures& features,
+        const bool required,
+        const VkPhysicalDeviceFeatures& device_features,
+        VkPhysicalDeviceFeatures* const result_features)
 {
-        for (PhysicalDeviceFeatures f : features)
+        static constexpr std::size_t OFFSET = 0;
+        static constexpr std::size_t COUNT = 55;
+        set_features<COUNT, OFFSET>(feature_10_name, features, required, device_features, result_features);
+}
+
+void set_features(
+        const VkPhysicalDeviceVulkan11Features& features,
+        const bool required,
+        const VkPhysicalDeviceVulkan11Features& device_features,
+        VkPhysicalDeviceVulkan11Features* const result_features)
+{
+        static constexpr std::size_t OFFSET = offsetof(VkPhysicalDeviceVulkan11Features, storageBuffer16BitAccess);
+        static constexpr std::size_t COUNT = 12;
+        set_features<COUNT, OFFSET>(feature_11_name, features, required, device_features, result_features);
+}
+
+void set_features(
+        const VkPhysicalDeviceVulkan12Features& features,
+        const bool required,
+        const VkPhysicalDeviceVulkan12Features& device_features,
+        VkPhysicalDeviceVulkan12Features* const result_features)
+{
+        static constexpr std::size_t OFFSET = offsetof(VkPhysicalDeviceVulkan12Features, samplerMirrorClampToEdge);
+        static constexpr std::size_t COUNT = 47;
+        set_features<COUNT, OFFSET>(feature_12_name, features, required, device_features, result_features);
+}
+
+void set_features(
+        const std::vector<DeviceFeatures>& features,
+        const bool required,
+        const DeviceFeatures& device_features,
+        DeviceFeatures* const result_features)
+{
+        for (const DeviceFeatures& feature : features)
         {
-                switch (f)
-                {
-                        CASE_FEATURE_10(alphaToOne)
-                        CASE_FEATURE_10(depthBiasClamp)
-                        CASE_FEATURE_10(depthBounds)
-                        CASE_FEATURE_10(depthClamp)
-                        CASE_FEATURE_10(drawIndirectFirstInstance)
-                        CASE_FEATURE_10(dualSrcBlend)
-                        CASE_FEATURE_10(fillModeNonSolid)
-                        CASE_FEATURE_10(fragmentStoresAndAtomics)
-                        CASE_FEATURE_10(fullDrawIndexUint32)
-                        CASE_FEATURE_10(geometryShader)
-                        CASE_FEATURE_10(imageCubeArray)
-                        CASE_FEATURE_10(independentBlend)
-                        CASE_FEATURE_10(inheritedQueries)
-                        CASE_FEATURE_10(largePoints)
-                        CASE_FEATURE_10(logicOp)
-                        CASE_FEATURE_10(multiDrawIndirect)
-                        CASE_FEATURE_10(multiViewport)
-                        CASE_FEATURE_10(occlusionQueryPrecise)
-                        CASE_FEATURE_10(pipelineStatisticsQuery)
-                        CASE_FEATURE_10(robustBufferAccess)
-                        CASE_FEATURE_10(sampleRateShading)
-                        CASE_FEATURE_10(samplerAnisotropy)
-                        CASE_FEATURE_10(shaderClipDistance)
-                        CASE_FEATURE_10(shaderCullDistance)
-                        CASE_FEATURE_10(shaderFloat64)
-                        CASE_FEATURE_10(shaderImageGatherExtended)
-                        CASE_FEATURE_10(shaderInt16)
-                        CASE_FEATURE_10(shaderInt64)
-                        CASE_FEATURE_10(shaderResourceMinLod)
-                        CASE_FEATURE_10(shaderResourceResidency)
-                        CASE_FEATURE_10(shaderSampledImageArrayDynamicIndexing)
-                        CASE_FEATURE_10(shaderStorageBufferArrayDynamicIndexing)
-                        CASE_FEATURE_10(shaderStorageImageArrayDynamicIndexing)
-                        CASE_FEATURE_10(shaderStorageImageExtendedFormats)
-                        CASE_FEATURE_10(shaderStorageImageMultisample)
-                        CASE_FEATURE_10(shaderStorageImageReadWithoutFormat)
-                        CASE_FEATURE_10(shaderStorageImageWriteWithoutFormat)
-                        CASE_FEATURE_10(shaderTessellationAndGeometryPointSize)
-                        CASE_FEATURE_10(shaderUniformBufferArrayDynamicIndexing)
-                        CASE_FEATURE_10(sparseBinding)
-                        CASE_FEATURE_10(sparseResidency16Samples)
-                        CASE_FEATURE_10(sparseResidency2Samples)
-                        CASE_FEATURE_10(sparseResidency4Samples)
-                        CASE_FEATURE_10(sparseResidency8Samples)
-                        CASE_FEATURE_10(sparseResidencyAliased)
-                        CASE_FEATURE_10(sparseResidencyBuffer)
-                        CASE_FEATURE_10(sparseResidencyImage2D)
-                        CASE_FEATURE_10(sparseResidencyImage3D)
-                        CASE_FEATURE_10(tessellationShader)
-                        CASE_FEATURE_10(textureCompressionASTC_LDR)
-                        CASE_FEATURE_10(textureCompressionBC)
-                        CASE_FEATURE_10(textureCompressionETC2)
-                        CASE_FEATURE_10(variableMultisampleRate)
-                        CASE_FEATURE_10(vertexPipelineStoresAndAtomics)
-                        CASE_FEATURE_10(wideLines)
-                        //
-                        CASE_FEATURE_11(multiview)
-                        CASE_FEATURE_11(multiviewGeometryShader)
-                        CASE_FEATURE_11(multiviewTessellationShader)
-                        CASE_FEATURE_11(protectedMemory)
-                        CASE_FEATURE_11(samplerYcbcrConversion)
-                        CASE_FEATURE_11(shaderDrawParameters)
-                        CASE_FEATURE_11(storageBuffer16BitAccess)
-                        CASE_FEATURE_11(storageInputOutput16)
-                        CASE_FEATURE_11(storagePushConstant16)
-                        CASE_FEATURE_11(uniformAndStorageBuffer16BitAccess)
-                        CASE_FEATURE_11(variablePointers)
-                        CASE_FEATURE_11(variablePointersStorageBuffer)
-                        //
-                        CASE_FEATURE_12(bufferDeviceAddress)
-                        CASE_FEATURE_12(bufferDeviceAddressCaptureReplay)
-                        CASE_FEATURE_12(bufferDeviceAddressMultiDevice)
-                        CASE_FEATURE_12(descriptorBindingPartiallyBound)
-                        CASE_FEATURE_12(descriptorBindingSampledImageUpdateAfterBind)
-                        CASE_FEATURE_12(descriptorBindingStorageBufferUpdateAfterBind)
-                        CASE_FEATURE_12(descriptorBindingStorageImageUpdateAfterBind)
-                        CASE_FEATURE_12(descriptorBindingStorageTexelBufferUpdateAfterBind)
-                        CASE_FEATURE_12(descriptorBindingUniformBufferUpdateAfterBind)
-                        CASE_FEATURE_12(descriptorBindingUniformTexelBufferUpdateAfterBind)
-                        CASE_FEATURE_12(descriptorBindingUpdateUnusedWhilePending)
-                        CASE_FEATURE_12(descriptorBindingVariableDescriptorCount)
-                        CASE_FEATURE_12(descriptorIndexing)
-                        CASE_FEATURE_12(drawIndirectCount)
-                        CASE_FEATURE_12(hostQueryReset)
-                        CASE_FEATURE_12(imagelessFramebuffer)
-                        CASE_FEATURE_12(runtimeDescriptorArray)
-                        CASE_FEATURE_12(samplerFilterMinmax)
-                        CASE_FEATURE_12(samplerMirrorClampToEdge)
-                        CASE_FEATURE_12(scalarBlockLayout)
-                        CASE_FEATURE_12(separateDepthStencilLayouts)
-                        CASE_FEATURE_12(shaderBufferInt64Atomics)
-                        CASE_FEATURE_12(shaderFloat16)
-                        CASE_FEATURE_12(shaderInputAttachmentArrayDynamicIndexing)
-                        CASE_FEATURE_12(shaderInputAttachmentArrayNonUniformIndexing)
-                        CASE_FEATURE_12(shaderInt8)
-                        CASE_FEATURE_12(shaderOutputLayer)
-                        CASE_FEATURE_12(shaderOutputViewportIndex)
-                        CASE_FEATURE_12(shaderSampledImageArrayNonUniformIndexing)
-                        CASE_FEATURE_12(shaderSharedInt64Atomics)
-                        CASE_FEATURE_12(shaderStorageBufferArrayNonUniformIndexing)
-                        CASE_FEATURE_12(shaderStorageImageArrayNonUniformIndexing)
-                        CASE_FEATURE_12(shaderStorageTexelBufferArrayDynamicIndexing)
-                        CASE_FEATURE_12(shaderStorageTexelBufferArrayNonUniformIndexing)
-                        CASE_FEATURE_12(shaderSubgroupExtendedTypes)
-                        CASE_FEATURE_12(shaderUniformBufferArrayNonUniformIndexing)
-                        CASE_FEATURE_12(shaderUniformTexelBufferArrayDynamicIndexing)
-                        CASE_FEATURE_12(shaderUniformTexelBufferArrayNonUniformIndexing)
-                        CASE_FEATURE_12(storageBuffer8BitAccess)
-                        CASE_FEATURE_12(storagePushConstant8)
-                        CASE_FEATURE_12(subgroupBroadcastDynamicId)
-                        CASE_FEATURE_12(timelineSemaphore)
-                        CASE_FEATURE_12(uniformAndStorageBuffer8BitAccess)
-                        CASE_FEATURE_12(uniformBufferStandardLayout)
-                        CASE_FEATURE_12(vulkanMemoryModel)
-                        CASE_FEATURE_12(vulkanMemoryModelAvailabilityVisibilityChains)
-                        CASE_FEATURE_12(vulkanMemoryModelDeviceScope)
-                }
+                set_features(feature.features_10, required, device_features.features_10, &result_features->features_10);
+                set_features(feature.features_11, required, device_features.features_11, &result_features->features_11);
+                set_features(feature.features_12, required, device_features.features_12, &result_features->features_12);
+        }
+}
+
+DeviceFeatures make_features(
+        const std::vector<DeviceFeatures>& required_features,
+        const std::vector<DeviceFeatures>& optional_features,
+        const DeviceFeatures& supported_device_features)
+{
+        DeviceFeatures device_features = {};
+
+        try
+        {
+                set_features(required_features, true, supported_device_features, &device_features);
+        }
+        catch (const FeatureIsNotSupported& e)
+        {
+                error(std::string("Required physical device feature ") + e.what() + " is not supported");
+        }
+
+        try
+        {
+                set_features(optional_features, false, supported_device_features, &device_features);
+        }
+        catch (const FeatureIsNotSupported&)
+        {
+                error("Exception when setting optional device features");
+        }
+
+        return device_features;
+}
+
+void check_features(const std::vector<DeviceFeatures>& features, const DeviceFeatures& device_features)
+{
+        constexpr bool REQUIRED = true;
+        DeviceFeatures result_features;
+        for (const DeviceFeatures& feature : features)
+        {
+                set_features(feature.features_10, REQUIRED, device_features.features_10, &result_features.features_10);
+                set_features(feature.features_11, REQUIRED, device_features.features_11, &result_features.features_11);
+                set_features(feature.features_12, REQUIRED, device_features.features_12, &result_features.features_12);
         }
 }
 
@@ -331,38 +448,6 @@ std::unordered_set<std::string> find_extensions(VkPhysicalDevice device)
         }
 
         return extension_set;
-}
-
-void make_enabled_device_features(
-        const std::vector<PhysicalDeviceFeatures>& required_features,
-        const std::vector<PhysicalDeviceFeatures>& optional_features,
-        const DeviceFeatures& supported_device_features,
-        DeviceFeatures* device_features)
-{
-        if (intersect(required_features, optional_features))
-        {
-                error("Required and optional physical device features intersect");
-        }
-
-        *device_features = {};
-
-        try
-        {
-                set_features(required_features, true, supported_device_features, device_features);
-        }
-        catch (const FeatureIsNotSupported& e)
-        {
-                error(std::string("Required physical device feature ") + e.what() + " is not supported");
-        }
-
-        try
-        {
-                set_features(optional_features, false, supported_device_features, device_features);
-        }
-        catch (const FeatureIsNotSupported&)
-        {
-                error("Exception when setting optional device features");
-        }
 }
 }
 
@@ -563,10 +648,9 @@ PhysicalDevice create_physical_device(
         VkInstance instance,
         VkSurfaceKHR surface,
         std::vector<std::string> required_extensions,
-        std::vector<PhysicalDeviceFeatures> required_features)
+        const std::vector<DeviceFeatures>& required_features)
 {
         sort_and_unique(&required_extensions);
-        sort_and_unique(&required_features);
 
         LOG(overview_physical_devices(instance, surface));
 
@@ -584,7 +668,7 @@ PhysicalDevice create_physical_device(
 
                 try
                 {
-                        set_features(required_features, true, physical_device.features());
+                        check_features(required_features, physical_device.features());
                 }
                 catch (const FeatureIsNotSupported&)
                 {
@@ -632,12 +716,10 @@ Device create_device(
         const PhysicalDevice& physical_device,
         const std::unordered_map<uint32_t, uint32_t>& queue_families,
         std::vector<std::string> required_extensions,
-        std::vector<PhysicalDeviceFeatures> required_features,
-        std::vector<PhysicalDeviceFeatures> optional_features)
+        const std::vector<DeviceFeatures>& required_features,
+        const std::vector<DeviceFeatures>& optional_features)
 {
         sort_and_unique(&required_extensions);
-        sort_and_unique(&required_features);
-        sort_and_unique(&optional_features);
 
         ASSERT(std::all_of(
                 queue_families.cbegin(), queue_families.cend(),
@@ -680,18 +762,16 @@ Device create_device(
                 ++i;
         }
 
-        DeviceFeatures enabled_features = {};
-        make_enabled_device_features(
-                required_features, optional_features, physical_device.features(), &enabled_features);
+        DeviceFeatures features = make_features(required_features, optional_features, physical_device.features());
 
-        enabled_features.features_12.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_VULKAN_1_2_FEATURES;
-        enabled_features.features_12.pNext = nullptr;
-        enabled_features.features_11.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_VULKAN_1_1_FEATURES;
-        enabled_features.features_11.pNext = &enabled_features.features_12;
+        features.features_12.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_VULKAN_1_2_FEATURES;
+        features.features_12.pNext = nullptr;
+        features.features_11.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_VULKAN_1_1_FEATURES;
+        features.features_11.pNext = &features.features_12;
         VkPhysicalDeviceFeatures2 features_2 = {};
         features_2.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_FEATURES_2;
-        features_2.pNext = &enabled_features.features_11;
-        features_2.features = enabled_features.features_10;
+        features_2.pNext = &features.features_11;
+        features_2.features = features.features_10;
 
         VkDeviceCreateInfo create_info = {};
         create_info.sType = VK_STRUCTURE_TYPE_DEVICE_CREATE_INFO;

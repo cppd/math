@@ -35,12 +35,12 @@ namespace ns::gpu::dft
 {
 namespace
 {
-// clang-format off
-constexpr std::initializer_list<vulkan::PhysicalDeviceFeatures> REQUIRED_DEVICE_FEATURES =
+constexpr vulkan::DeviceFeatures REQUIRED_DEVICE_FEATURES = []
 {
-        vulkan::PhysicalDeviceFeatures::vertexPipelineStoresAndAtomics
-};
-// clang-format on
+        vulkan::DeviceFeatures features{};
+        features.features_10.vertexPipelineStoresAndAtomics = VK_TRUE;
+        return features;
+}();
 
 constexpr int VERTEX_COUNT = 4;
 constexpr VkFormat IMAGE_FORMAT = VK_FORMAT_R32_SFLOAT;
@@ -238,9 +238,9 @@ public:
 };
 }
 
-std::vector<vulkan::PhysicalDeviceFeatures> View::required_device_features()
+std::vector<vulkan::DeviceFeatures> View::required_device_features()
 {
-        return merge<std::vector<vulkan::PhysicalDeviceFeatures>>(
+        return merge<std::vector<vulkan::DeviceFeatures>>(
                 REQUIRED_DEVICE_FEATURES, ComputeImage::required_device_features());
 }
 

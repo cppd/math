@@ -29,7 +29,7 @@ namespace ns::gpu::dft
 {
 struct ComputeImage
 {
-        static std::vector<vulkan::PhysicalDeviceFeatures> required_device_features();
+        static vulkan::DeviceFeatures required_device_features();
 
         virtual ~ComputeImage() = default;
 

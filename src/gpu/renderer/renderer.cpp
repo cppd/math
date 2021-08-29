@@ -43,15 +43,15 @@ namespace ns::gpu::renderer
 {
 namespace
 {
-// clang-format off
-constexpr std::initializer_list<vulkan::PhysicalDeviceFeatures> REQUIRED_DEVICE_FEATURES =
+constexpr vulkan::DeviceFeatures REQUIRED_DEVICE_FEATURES = []
 {
-        vulkan::PhysicalDeviceFeatures::fragmentStoresAndAtomics,
-        vulkan::PhysicalDeviceFeatures::geometryShader,
-        vulkan::PhysicalDeviceFeatures::shaderClipDistance,
-        vulkan::PhysicalDeviceFeatures::shaderStorageImageMultisample
-};
-// clang-format on
+        vulkan::DeviceFeatures features{};
+        features.features_10.geometryShader = VK_TRUE;
+        features.features_10.fragmentStoresAndAtomics = VK_TRUE;
+        features.features_10.shaderStorageImageMultisample = VK_TRUE;
+        features.features_10.shaderClipDistance = VK_TRUE;
+        return features;
+}();
 
 constexpr VkImageLayout DEPTH_COPY_IMAGE_LAYOUT = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
 constexpr uint32_t OBJECTS_CLEAR_VALUE = 0;
@@ -825,7 +825,7 @@ public:
 };
 }
 
-std::vector<vulkan::PhysicalDeviceFeatures> Renderer::required_device_features()
+vulkan::DeviceFeatures Renderer::required_device_features()
 {
         return REQUIRED_DEVICE_FEATURES;
 }

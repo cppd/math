@@ -41,11 +41,7 @@ namespace ns::gpu::convex_hull
 {
 namespace
 {
-// clang-format off
-constexpr std::initializer_list<vulkan::PhysicalDeviceFeatures> REQUIRED_DEVICE_FEATURES =
-{
-};
-// clang-format on
+constexpr vulkan::DeviceFeatures REQUIRED_DEVICE_FEATURES = {};
 
 int group_size_merge(int height, const VkPhysicalDeviceLimits& limits)
 {
@@ -237,7 +233,7 @@ public:
 };
 }
 
-std::vector<vulkan::PhysicalDeviceFeatures> Compute::required_device_features()
+vulkan::DeviceFeatures Compute::required_device_features()
 {
         return REQUIRED_DEVICE_FEATURES;
 }

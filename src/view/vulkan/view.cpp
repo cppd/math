@@ -78,6 +78,20 @@ constexpr VkFormat OBJECT_IMAGE_FORMAT = VK_FORMAT_R32_UINT;
 
 constexpr RGB8 DEFAULT_TEXT_COLOR = RGB8(255, 255, 255);
 
+constexpr vulkan::DeviceFeatures REQUIRED_DEVICE_FEATURES = []
+{
+        vulkan::DeviceFeatures features{};
+        if (MINIMUM_SAMPLE_COUNT > 1 && SAMPLE_RATE_SHADING)
+        {
+                features.features_10.sampleRateShading = VK_TRUE;
+        }
+        if (SAMPLER_ANISOTROPY)
+        {
+                features.features_10.samplerAnisotropy = VK_TRUE;
+        }
+        return features;
+}();
+
 //
 
 std::unique_ptr<vulkan::VulkanInstance> create_instance(const window::WindowID& window)
@@ -90,28 +104,17 @@ std::unique_ptr<vulkan::VulkanInstance> create_instance(const window::WindowID& 
 
         const std::vector<std::string> device_extensions = {};
 
-        const std::vector<vulkan::PhysicalDeviceFeatures> required_device_features = []()
+        const std::vector<vulkan::DeviceFeatures> required_device_features = []()
         {
-                std::vector<vulkan::PhysicalDeviceFeatures> features =
-                        ns::merge<std::vector<vulkan::PhysicalDeviceFeatures>>(
-                                gpu::convex_hull::View::required_device_features(),
-                                gpu::dft::View::required_device_features(),
-                                gpu::optical_flow::View::required_device_features(),
-                                gpu::pencil_sketch::View::required_device_features(),
-                                gpu::renderer::Renderer::required_device_features(),
-                                gpu::text_writer::View::required_device_features());
-                if (MINIMUM_SAMPLE_COUNT > 1 && SAMPLE_RATE_SHADING)
-                {
-                        features.push_back(vulkan::PhysicalDeviceFeatures::sampleRateShading);
-                }
-                if (SAMPLER_ANISOTROPY)
-                {
-                        features.push_back(vulkan::PhysicalDeviceFeatures::samplerAnisotropy);
-                }
-                return features;
+                return ns::merge<std::vector<vulkan::DeviceFeatures>>(
+                        REQUIRED_DEVICE_FEATURES, gpu::convex_hull::View::required_device_features(),
+                        gpu::dft::View::required_device_features(), gpu::optical_flow::View::required_device_features(),
+                        gpu::pencil_sketch::View::required_device_features(),
+                        gpu::renderer::Renderer::required_device_features(),
+                        gpu::text_writer::View::required_device_features());
         }();
 
-        const std::vector<vulkan::PhysicalDeviceFeatures> optional_device_features = {};
+        const std::vector<vulkan::DeviceFeatures> optional_device_features = {};
 
         const std::function<VkSurfaceKHR(VkInstance)> surface_function = [&](const VkInstance instance)
         {

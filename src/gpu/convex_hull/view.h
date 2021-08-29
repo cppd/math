@@ -29,7 +29,7 @@ namespace ns::gpu::convex_hull
 {
 struct View
 {
-        static std::vector<vulkan::PhysicalDeviceFeatures> required_device_features();
+        static std::vector<vulkan::DeviceFeatures> required_device_features();
 
         virtual ~View() = default;
 

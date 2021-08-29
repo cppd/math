@@ -48,11 +48,7 @@ namespace
 {
 constexpr VkFormat IMAGE_FORMAT = VK_FORMAT_R32_SFLOAT;
 
-// clang-format off
-constexpr std::initializer_list<vulkan::PhysicalDeviceFeatures> REQUIRED_DEVICE_FEATURES =
-{
-};
-// clang-format on
+constexpr vulkan::DeviceFeatures REQUIRED_DEVICE_FEATURES = {};
 
 void image_barrier(
         VkCommandBuffer command_buffer,
@@ -678,7 +674,7 @@ public:
 };
 }
 
-std::vector<vulkan::PhysicalDeviceFeatures> Compute::required_device_features()
+vulkan::DeviceFeatures Compute::required_device_features()
 {
         return REQUIRED_DEVICE_FEATURES;
 }

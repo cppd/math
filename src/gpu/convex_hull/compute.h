@@ -28,7 +28,7 @@ namespace ns::gpu::convex_hull
 {
 struct Compute
 {
-        static std::vector<vulkan::PhysicalDeviceFeatures> required_device_features();
+        static vulkan::DeviceFeatures required_device_features();
 
         virtual ~Compute() = default;
 

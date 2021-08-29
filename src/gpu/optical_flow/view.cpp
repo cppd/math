@@ -38,12 +38,12 @@ namespace ns::gpu::optical_flow
 {
 namespace
 {
-// clang-format off
-constexpr std::initializer_list<vulkan::PhysicalDeviceFeatures> REQUIRED_DEVICE_FEATURES =
+constexpr vulkan::DeviceFeatures REQUIRED_DEVICE_FEATURES = []
 {
-        vulkan::PhysicalDeviceFeatures::vertexPipelineStoresAndAtomics
-};
-// clang-format on
+        vulkan::DeviceFeatures features{};
+        features.features_10.vertexPipelineStoresAndAtomics = VK_TRUE;
+        return features;
+}();
 
 class Impl final : public View
 {
@@ -266,9 +266,9 @@ public:
 };
 }
 
-std::vector<vulkan::PhysicalDeviceFeatures> View::required_device_features()
+std::vector<vulkan::DeviceFeatures> View::required_device_features()
 {
-        return merge<std::vector<vulkan::PhysicalDeviceFeatures>>(
+        return merge<std::vector<vulkan::DeviceFeatures>>(
                 REQUIRED_DEVICE_FEATURES, Compute::required_device_features());
 }
 
