@@ -97,8 +97,8 @@ constexpr vulkan::DeviceFeatures REQUIRED_DEVICE_FEATURES = []
 std::unique_ptr<vulkan::VulkanInstance> create_instance(const window::WindowID& window)
 {
         static_assert(
-                2 <= std::tuple_size_v<std::remove_cvref_t<decltype(
-                        std::declval<vulkan::VulkanInstance>().graphics_compute_queues())>>);
+                2 <= std::tuple_size_v<std::remove_cvref_t<
+                        decltype(std::declval<vulkan::VulkanInstance>().graphics_compute_queues())>>);
 
         const std::vector<std::string> instance_extensions = window::vulkan_create_surface_required_extensions();
 

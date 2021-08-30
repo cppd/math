@@ -28,6 +28,7 @@ namespace ns::gui::main_window
 class RangeSlider final : public QObject
 {
         Q_OBJECT
+
 private:
         QSlider* slider_min_;
         QSlider* slider_max_;

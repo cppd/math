@@ -25,7 +25,7 @@ namespace ns
 namespace type_limit_implementation
 {
 template <typename T>
-constexpr T binary_epsilon()
+constexpr T binary_epsilon() noexcept
 {
         T prev_e = 1;
         T e = 1;
@@ -38,7 +38,7 @@ constexpr T binary_epsilon()
 }
 
 template <typename T>
-constexpr T max_binary_fraction()
+constexpr T max_binary_fraction() noexcept
 {
         // max_binary_fraction = 2 - binary_epsilon
         T prev_r = 1;
@@ -54,7 +54,7 @@ constexpr T max_binary_fraction()
 }
 
 template <typename T>
-constexpr T binary_exponent(int e)
+constexpr T binary_exponent(int e) noexcept
 {
         if (e == 0)
         {
@@ -95,11 +95,11 @@ template <typename T>
 requires IntegralType<T> && std::numeric_limits<T>::is_specialized
 struct limits<T>
 {
-        static constexpr T max()
+        static constexpr T max() noexcept
         {
                 return std::numeric_limits<T>::max();
         }
-        static constexpr T lowest()
+        static constexpr T lowest() noexcept
         {
                 return std::numeric_limits<T>::lowest();
         }
@@ -112,34 +112,40 @@ template <typename T>
 requires FloatingPointType<T> && std::numeric_limits<T>::is_specialized
 struct limits<T>
 {
-        static constexpr T epsilon()
+        static constexpr T epsilon() noexcept
         {
                 return std::numeric_limits<T>::epsilon();
         }
-        static constexpr T max()
+        static constexpr T max() noexcept
         {
                 return std::numeric_limits<T>::max();
         }
-        static constexpr T lowest()
+        static constexpr T lowest() noexcept
         {
                 return std::numeric_limits<T>::lowest();
+        }
+        static constexpr T infinity() noexcept
+        {
+                static_assert(std::numeric_limits<T>::has_infinity);
+                return std::numeric_limits<T>::infinity();
         }
         static constexpr int digits = std::numeric_limits<T>::digits;
         static constexpr int digits10 = std::numeric_limits<T>::digits10;
         static constexpr int max_digits10 = std::numeric_limits<T>::max_digits10;
         static constexpr int max_exponent = std::numeric_limits<T>::max_exponent;
         static constexpr int radix = std::numeric_limits<T>::radix;
+        static constexpr bool is_iec559 = std::numeric_limits<T>::is_iec559;
 };
 
 template <typename T>
 requires std::is_same_v<T, unsigned __int128> && (!std::numeric_limits<T>::is_specialized)
 struct limits<T>
 {
-        static constexpr T max()
+        static constexpr T max() noexcept
         {
                 return -1;
         }
-        static constexpr T lowest()
+        static constexpr T lowest() noexcept
         {
                 return 0;
         }
@@ -152,11 +158,11 @@ template <typename T>
 requires std::is_same_v<T, signed __int128> && (!std::numeric_limits<T>::is_specialized)
 struct limits<T>
 {
-        static constexpr T max()
+        static constexpr T max() noexcept
         {
                 return static_cast<unsigned __int128>(-1) >> 1;
         }
-        static constexpr T lowest()
+        static constexpr T lowest() noexcept
         {
                 return -max() - 1;
         }
@@ -172,15 +178,15 @@ struct limits<T>
         // epsilon = strtoflt128("1.92592994438723585305597794258492732e-34", nullptr)
         // max = strtoflt128("1.18973149535723176508575932662800702e4932", nullptr)
 
-        static constexpr T epsilon()
+        static constexpr T epsilon() noexcept
         {
                 return binary_epsilon<T>();
         }
-        static constexpr T max()
+        static constexpr T max() noexcept
         {
                 return max_binary_fraction<T>() * binary_exponent<T>(16383);
         }
-        static constexpr T lowest()
+        static constexpr T lowest() noexcept
         {
                 return -max();
         }
@@ -189,6 +195,7 @@ struct limits<T>
         static constexpr int max_digits10 = 36;
         static constexpr int max_exponent = 16384;
         static constexpr int radix = 2;
+        static constexpr bool is_iec559 = true;
 };
 
 // clang-format on

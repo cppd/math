@@ -17,8 +17,9 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
+#include "type/limit.h"
+
 #include <cmath>
-#include <limits>
 #include <type_traits>
 
 namespace ns
@@ -58,7 +59,7 @@ constexpr bool is_finite(const T& v)
         static_assert(std::is_floating_point_v<T>);
         if (std::is_constant_evaluated())
         {
-                return v >= std::numeric_limits<T>::lowest() && v <= std::numeric_limits<T>::max();
+                return v >= limits<T>::lowest() && v <= limits<T>::max();
         }
         return std::isfinite(v);
 }

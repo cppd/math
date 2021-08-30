@@ -18,9 +18,9 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "range_slider.h"
 
 #include <src/com/error.h>
+#include <src/com/type/limit.h>
 
 #include <cmath>
-#include <limits>
 #include <numeric>
 
 namespace ns::gui::main_window
@@ -36,8 +36,8 @@ static_assert(MIN >= 0 && MIN < MAX);
 RangeSlider::RangeSlider(QSlider* slider_min, QSlider* slider_max)
         : slider_min_(slider_min),
           slider_max_(slider_max),
-          last_min_(std::numeric_limits<decltype(last_min_)>::lowest()),
-          last_max_(std::numeric_limits<decltype(last_max_)>::lowest())
+          last_min_(limits<decltype(last_min_)>::lowest()),
+          last_max_(limits<decltype(last_max_)>::lowest())
 {
         ASSERT(slider_min_);
         ASSERT(slider_max_);

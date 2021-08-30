@@ -31,7 +31,7 @@ template <typename T>
 concept StdFloatingPoint = (std::is_same_v<std::remove_cv_t<T>, float>) || (std::is_same_v<std::remove_cv_t<T>, double>)
                            || (std::is_same_v<std::remove_cv_t<T>, long double>);
 template <typename T>
-concept BitFloatingPoint = (StdFloatingPoint<T> && std::numeric_limits<T>::is_iec559)
+concept BitFloatingPoint = (StdFloatingPoint<T> && limits<T>::is_iec559)
                            || (std::is_same_v<std::remove_cv_t<T>, __float128>);
 
 template <BitFloatingPoint T>

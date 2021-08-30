@@ -17,7 +17,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
-#include <limits>
+#include "limit.h"
+
 #include <type_traits>
 
 namespace ns
@@ -26,7 +27,7 @@ template <typename T>
 inline constexpr T PREVIOUS_BEFORE_ONE = []
 {
         static_assert(std::is_floating_point_v<T>);
-        static_assert(std::numeric_limits<T>::radix == 2);
+        static_assert(limits<T>::radix == 2);
 
         T prev_e = 1;
         T e = 1;

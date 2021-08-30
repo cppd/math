@@ -42,6 +42,6 @@ public:
         };
 
         template <typename T>
-        requires std::is_same_v<T, char32_t> std::optional<Char> render(T code_point) const;
+        std::optional<Char> render(T code_point) const;
 };
 }

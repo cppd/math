@@ -22,10 +22,10 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/com/print.h>
 #include <src/com/random/engine.h>
 #include <src/com/time.h>
+#include <src/com/type/limit.h>
 #include <src/com/type/name.h>
 #include <src/test/test.h>
 
-#include <limits>
 #include <random>
 #include <sstream>
 
@@ -40,7 +40,7 @@ std::string make_string(T arg, T inverse, T erf)
 
         std::ostringstream oss;
         oss << std::scientific;
-        oss << std::setprecision(std::numeric_limits<T>::max_digits10);
+        oss << std::setprecision(limits<T>::max_digits10);
         oss << "arg = " << arg << ", erf_inv = " << inverse << ", erf = " << erf;
         return oss.str();
 }
@@ -57,14 +57,14 @@ void test_erf_inv(std::type_identity_t<T> arg, std::type_identity_t<T> precision
         {
                 if (erf == 1)
                 {
-                        if (!(inverse == std::numeric_limits<T>::infinity()))
+                        if (!(inverse == limits<T>::infinity()))
                         {
                                 error("erf inverse is not inf for erf 1");
                         }
                 }
                 else if (erf == -1)
                 {
-                        if (!(inverse == -std::numeric_limits<T>::infinity()))
+                        if (!(inverse == -limits<T>::infinity()))
                         {
                                 error("erf inverse is not inf for erf 1");
                         }
@@ -91,8 +91,7 @@ void test_erf_inv(std::type_identity_t<T> arg, std::type_identity_t<T> precision
                 {
                         T p = precision;
 
-                        if (erf > 1 - 100 * std::numeric_limits<T>::epsilon()
-                            || erf < -1 + 100 * std::numeric_limits<T>::epsilon())
+                        if (erf > 1 - 100 * limits<T>::epsilon() || erf < -1 + 100 * limits<T>::epsilon())
                         {
                                 p *= 10;
                         }
@@ -190,7 +189,7 @@ void test_erf_inv_from_array(std::type_identity_t<T> precision)
                 error("erf_inv(2) is not NAN");
         }
 
-        if (!(erf_inv(T(-1)) == -std::numeric_limits<T>::infinity()))
+        if (!(erf_inv(T(-1)) == -limits<T>::infinity()))
         {
                 error("erf_inv(-1) is not -infinity");
         }
@@ -200,7 +199,7 @@ void test_erf_inv_from_array(std::type_identity_t<T> precision)
                 error("erf_inv(0) is not 0");
         }
 
-        if (!(erf_inv(T(1)) == std::numeric_limits<T>::infinity()))
+        if (!(erf_inv(T(1)) == limits<T>::infinity()))
         {
                 error("erf_inv(1) is not infinity");
         }

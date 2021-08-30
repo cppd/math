@@ -32,6 +32,7 @@ struct ImageSliceParameters final
 class ImageSliceDialog final : public QDialog
 {
         Q_OBJECT
+
 private:
         Ui::ImageSliceDialog ui_;
 

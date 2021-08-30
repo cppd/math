@@ -82,6 +82,7 @@ template <
         template <std::size_t, typename...>
         typename SequenceType,
         typename... SequenceTypeParameters>
-using Sequence = std::remove_pointer_t<decltype(
-        sequence_implementation::sequence<Type, SequenceType, SequenceTypeParameters...>(IntegerSequence()))>;
+using Sequence =
+        std::remove_pointer_t<decltype(sequence_implementation::sequence<Type, SequenceType, SequenceTypeParameters...>(
+                IntegerSequence()))>;
 }

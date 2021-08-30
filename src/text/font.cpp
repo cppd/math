@@ -240,8 +240,10 @@ void Font::set_size(int size_in_pixels)
 }
 
 template <typename T>
-requires std::is_same_v<T, char32_t> std::optional<Font::Char> Font::render(T code_point) const
+std::optional<Font::Char> Font::render(T code_point) const
 {
+        static_assert(std::is_same_v<T, char32_t>);
+
         return impl_->render(code_point);
 }
 

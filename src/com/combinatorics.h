@@ -19,9 +19,10 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "error.h"
 
+#include "type/limit.h"
+
 #include <algorithm>
 #include <array>
-#include <limits>
 #include <tuple>
 
 namespace ns
@@ -32,6 +33,8 @@ template <int N, int R>
 constexpr int binomial()
 {
         static_assert(N >= R && R >= 0);
+
+        constexpr unsigned long long MAX = limits<int>::max();
 
         constexpr unsigned long long K = (R <= N / 2) ? (N - R) : R;
         unsigned long long m = 1;
@@ -49,7 +52,8 @@ constexpr int binomial()
         {
                 m /= i;
         }
-        if (m > std::numeric_limits<int>::max())
+
+        if (m > MAX)
         {
                 error("Binomial result overflow");
         }

@@ -31,6 +31,75 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 namespace ns
 {
+namespace print_implementation
+{
+template <unsigned DIGIT_GROUP_SIZE, typename T>
+void f(T v, int i, std::string& r, [[maybe_unused]] char s)
+{
+        constexpr bool LONGLONG_LESS_I128 = limits<long long>::max() < limits<__int128>::max()
+                                            && limits<long long>::lowest() > limits<__int128>::lowest();
+
+        constexpr bool ULONGLONG_LESS_UI128 = limits<unsigned long long>::max() < limits<unsigned __int128>::max();
+
+        do
+        {
+                if constexpr (std::is_same_v<__int128, std::remove_cv_t<T>> && LONGLONG_LESS_I128)
+                {
+                        if (limits<long long>::lowest() <= v && v <= limits<long long>::max())
+                        {
+                                f<DIGIT_GROUP_SIZE, long long>(v, i, r, s);
+                                break;
+                        }
+                }
+                if constexpr (std::is_same_v<unsigned __int128, std::remove_cv_t<T>> && ULONGLONG_LESS_UI128)
+                {
+                        if (v <= limits<unsigned long long>::max())
+                        {
+                                f<DIGIT_GROUP_SIZE, unsigned long long>(v, i, r, s);
+                                break;
+                        }
+                }
+
+                if constexpr (DIGIT_GROUP_SIZE > 0)
+                {
+                        if ((++i % DIGIT_GROUP_SIZE) == 0 && i != 0)
+                        {
+                                r += s;
+                        }
+                }
+
+                int remainder = v % 10;
+                if constexpr (Signed<T>)
+                {
+                        remainder = std::abs(remainder);
+                }
+                r += static_cast<char>(remainder + '0');
+
+        } while ((v /= 10) != 0);
+}
+
+template <unsigned DIGIT_GROUP_SIZE, typename T>
+std::string to_string_digit_groups(const T& v, const char s) requires Integral<T>
+{
+        static_assert(!std::is_class_v<T>);
+        static_assert(Signed<T> != Unsigned<T>);
+
+        std::string r;
+        r.reserve(limits<T>::digits10 * 1.5);
+
+        f<DIGIT_GROUP_SIZE, T>(v, -1, r, s);
+
+        if (Signed<T> && v < 0)
+        {
+                r += '-';
+        }
+
+        std::reverse(r.begin(), r.end());
+
+        return r;
+}
+}
+
 std::string to_string(__float128 t);
 
 template <typename T>
@@ -116,7 +185,7 @@ std::string to_string_binary(T v, const std::string_view& prefix = "") requires 
                 return std::string(prefix) + '0';
         }
         // std::bit_width
-        unsigned width = std::numeric_limits<T>::digits - std::countl_zero(v);
+        unsigned width = limits<T>::digits - std::countl_zero(v);
         std::string s(prefix);
         s.resize(s.size() + width);
         for (std::ptrdiff_t i = std::ssize(s) - 1; i >= std::ssize(prefix); --i)
@@ -128,75 +197,6 @@ std::string to_string_binary(T v, const std::string_view& prefix = "") requires 
 }
 
 //
-
-namespace print_implementation
-{
-template <unsigned DIGIT_GROUP_SIZE, typename T>
-void f(T v, int i, std::string& r, [[maybe_unused]] char s)
-{
-        constexpr bool LONGLONG_LESS_I128 = limits<long long>::max() < limits<__int128>::max()
-                                            && limits<long long>::lowest() > limits<__int128>::lowest();
-
-        constexpr bool ULONGLONG_LESS_UI128 = limits<unsigned long long>::max() < limits<unsigned __int128>::max();
-
-        do
-        {
-                if constexpr (std::is_same_v<__int128, std::remove_cv_t<T>> && LONGLONG_LESS_I128)
-                {
-                        if (limits<long long>::lowest() <= v && v <= limits<long long>::max())
-                        {
-                                f<DIGIT_GROUP_SIZE, long long>(v, i, r, s);
-                                break;
-                        }
-                }
-                if constexpr (std::is_same_v<unsigned __int128, std::remove_cv_t<T>> && ULONGLONG_LESS_UI128)
-                {
-                        if (v <= limits<unsigned long long>::max())
-                        {
-                                f<DIGIT_GROUP_SIZE, unsigned long long>(v, i, r, s);
-                                break;
-                        }
-                }
-
-                if constexpr (DIGIT_GROUP_SIZE > 0)
-                {
-                        if ((++i % DIGIT_GROUP_SIZE) == 0 && i != 0)
-                        {
-                                r += s;
-                        }
-                }
-
-                int remainder = v % 10;
-                if constexpr (Signed<T>)
-                {
-                        remainder = std::abs(remainder);
-                }
-                r += static_cast<char>(remainder + '0');
-
-        } while ((v /= 10) != 0);
-}
-
-template <unsigned DIGIT_GROUP_SIZE, typename T>
-std::string to_string_digit_groups(const T& v, const char s) requires Integral<T>
-{
-        static_assert(!std::is_class_v<T>);
-        static_assert(Signed<T> != Unsigned<T>);
-
-        std::string r;
-        r.reserve(limits<T>::digits10 * 1.5);
-
-        f<DIGIT_GROUP_SIZE, T>(v, -1, r, s);
-
-        if (Signed<T> && v < 0)
-        {
-                r += '-';
-        }
-
-        std::reverse(r.begin(), r.end());
-
-        return r;
-}
-}
 
 template <typename T>
 std::string to_string(T v) requires Integral<T>
@@ -247,7 +247,7 @@ std::string to_string_digit_groups(char16_t v, char) = delete;
 std::string to_string_digit_groups(char32_t v, char) = delete;
 
 template <typename T>
-std::string to_string(const T&) requires std::is_pointer_v<T> = delete;
+std::string to_string(const T&) requires(std::is_pointer_v<T>) = delete;
 
 template <typename T>
 std::string to_string(std::basic_string<T>) = delete;

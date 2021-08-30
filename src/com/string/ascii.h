@@ -63,8 +63,10 @@ constexpr int char_to_int(char c)
 }
 
 template <typename T>
-bool is_ascii(const T& s) requires std::is_same_v<std::remove_cvref_t<typename T::value_type>, char>
+bool is_ascii(const T& s)
 {
+        static_assert(std::is_same_v<std::remove_cvref_t<typename T::value_type>, char>);
+
         return std::all_of(
                 s.cbegin(), s.cend(),
                 [](char c)
