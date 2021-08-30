@@ -24,8 +24,8 @@ include("${CMAKE_SOURCE_DIR}/cmake/cmake_compiler_warnings.cmake")
 ##################################################
 
 set(compilers "GNU;Clang")
-set(gcc_minimal_version "10")
-set(clang_minimal_version "11")
+set(gcc_minimal_version "11")
+set(clang_minimal_version "12")
 
 set(extensions_shaders "comp;frag;geom;vert;tesc;tese")
 set(extensions_shaders_include "glsl")
