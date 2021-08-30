@@ -138,7 +138,7 @@ class Impl final
 
         Region<2, int> draw_rectangle_{limits<int>::lowest(), limits<int>::lowest(), 0, 0};
 
-        std::optional<mat4d> clip_plane_view_matrix_;
+        std::optional<Matrix4d> clip_plane_view_matrix_;
 
         vulkan::PresentMode present_mode_ = SWAPCHAIN_INITIAL_PRESENT_MODE;
 
@@ -209,7 +209,7 @@ class Impl final
                 if (left.pressed && draw_rectangle_.is_inside(left.pressed_x, left.pressed_y)
                     && (left.delta_x != 0 || left.delta_y != 0))
                 {
-                        camera_.move(vec2d(-left.delta_x, left.delta_y));
+                        camera_.move(Vector2d(-left.delta_x, left.delta_y));
                         changed = true;
                 }
 
@@ -225,7 +225,7 @@ class Impl final
         {
                 ASSERT(std::this_thread::get_id() == thread_id_);
 
-                camera_.reset(vec3d(1, 0, 0), vec3d(0, 1, 0), 1, vec2d(0, 0));
+                camera_.reset(Vector3d(1, 0, 0), Vector3d(0, 1, 0), 1, Vector2d(0, 0));
 
                 renderer_->set_camera(camera_.renderer_info());
         }

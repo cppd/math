@@ -26,11 +26,11 @@ namespace ns::gpu::renderer
 {
 struct TrianglesVertex
 {
-        vec3f position;
-        vec3f normal;
-        vec2f texture_coordinates;
+        Vector3f position;
+        Vector3f normal;
+        Vector2f texture_coordinates;
 
-        constexpr TrianglesVertex(const vec3f& position, const vec3f& normal, const vec2f& texture_coordinates)
+        constexpr TrianglesVertex(const Vector3f& position, const Vector3f& normal, const Vector2f& texture_coordinates)
                 : position(position), normal(normal), texture_coordinates(texture_coordinates)
         {
         }

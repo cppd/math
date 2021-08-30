@@ -56,7 +56,7 @@ constexpr std::initializer_list<VkFormat> COLOR_IMAGE_FORMATS =
 };
 // clang-format on
 
-constexpr vec2f NULL_TEXTURE_COORDINATES = vec2f(-1e10);
+constexpr Vector2f NULL_TEXTURE_COORDINATES = Vector2f(-1e10);
 
 constexpr VkIndexType VULKAN_INDEX_TYPE = VK_INDEX_TYPE_UINT32;
 
@@ -74,13 +74,13 @@ std::string time_string(double time)
 
 class Vertex final
 {
-        vec3f p_;
-        vec3f n_;
-        vec2f t_;
+        Vector3f p_;
+        Vector3f n_;
+        Vector2f t_;
         std::size_t hash_;
 
 public:
-        void set(const vec3f& p, const vec3f& n, const vec2f& t)
+        void set(const Vector3f& p, const Vector3f& n, const Vector2f& t)
         {
                 p_ = p;
                 n_ = n;
@@ -88,17 +88,17 @@ public:
                 hash_ = compute_hash(p[0], p[1], p[2], n[0], n[1], n[2], t[0], t[1]);
         }
 
-        const vec3f& p() const
+        const Vector3f& p() const
         {
                 return p_;
         }
 
-        const vec3f& n() const
+        const Vector3f& n() const
         {
                 return n_;
         }
 
-        const vec2f& t() const
+        const Vector2f& t() const
         {
                 return t_;
         }
@@ -172,9 +172,9 @@ void load_vertices(
                 std::size_t index = 0;
                 while ((index = task++) < size)
                 {
-                        std::array<vec3f, 3> p;
-                        std::array<vec3f, 3> n;
-                        std::array<vec2f, 3> t;
+                        std::array<Vector3f, 3> p;
+                        std::array<Vector3f, 3> n;
+                        std::array<Vector2f, 3> t;
 
                         int face_index = sorted_face_indices[index];
 
@@ -185,7 +185,7 @@ void load_vertices(
                                 p[i] = mesh.vertices[f.vertices[i]];
                         }
 
-                        const vec3f geometric_normal = cross(p[1] - p[0], p[2] - p[0]).normalized();
+                        const Vector3f geometric_normal = cross(p[1] - p[0], p[2] - p[0]).normalized();
                         if (!is_finite(geometric_normal))
                         {
                                 error("Face unit orthogonal vector is not finite for the face with vertices ("
@@ -425,7 +425,7 @@ std::vector<MaterialBuffer> load_materials(
         }
 
         // material for vertices without material
-        MaterialBuffer::Material mb{.color = vec3f(0), .use_texture = 0, .use_material = 0};
+        MaterialBuffer::Material mb{.color = Vector3f(0), .use_texture = 0, .use_material = 0};
         buffers.emplace_back(device, command_pool, queue, family_indices, mb);
 
         return buffers;
@@ -522,7 +522,7 @@ class Impl final : public MeshObject
                 mesh_buffer_.set_alpha(alpha);
         }
 
-        void buffer_set_coordinates(const mat4d& model_matrix)
+        void buffer_set_coordinates(const Matrix4d& model_matrix)
         {
                 mesh_buffer_.set_coordinates(model_matrix, model_matrix.top_left<3, 3>().inverse().transpose());
         }

@@ -27,9 +27,9 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 namespace ns::gpu::optical_flow
 {
-std::vector<vec2i> pyramid_sizes(int width, int height, int min_size)
+std::vector<Vector2i> pyramid_sizes(int width, int height, int min_size)
 {
-        std::vector<vec2i> sizes;
+        std::vector<Vector2i> sizes;
 
         sizes.emplace_back(width, height);
 
@@ -58,7 +58,7 @@ std::vector<vec2i> pyramid_sizes(int width, int height, int min_size)
                 height = new_height;
         }
 
-        // for (const vec2i& v : sizes)
+        // for (const Vector2i& v : sizes)
         //{
         //        LOG(to_string(v[0]) + " x " + to_string(v[1]));
         //}
@@ -66,19 +66,19 @@ std::vector<vec2i> pyramid_sizes(int width, int height, int min_size)
         return sizes;
 }
 
-vec2i grayscale_groups(const vec2i& group_size, const std::vector<vec2i>& sizes)
+Vector2i grayscale_groups(const Vector2i& group_size, const std::vector<Vector2i>& sizes)
 {
         return group_count(sizes[0][0], sizes[0][1], group_size);
 }
 
-std::vector<vec2i> downsample_groups(const vec2i& group_size, const std::vector<vec2i>& sizes)
+std::vector<Vector2i> downsample_groups(const Vector2i& group_size, const std::vector<Vector2i>& sizes)
 {
         if (sizes.size() <= 1)
         {
                 return {};
         }
 
-        std::vector<vec2i> groups;
+        std::vector<Vector2i> groups;
         groups.reserve(sizes.size() - 1);
 
         for (unsigned i = 1; i < sizes.size(); ++i)
@@ -89,12 +89,12 @@ std::vector<vec2i> downsample_groups(const vec2i& group_size, const std::vector<
         return groups;
 }
 
-std::vector<vec2i> sobel_groups(const vec2i& group_size, const std::vector<vec2i>& sizes)
+std::vector<Vector2i> sobel_groups(const Vector2i& group_size, const std::vector<Vector2i>& sizes)
 {
-        std::vector<vec2i> groups;
+        std::vector<Vector2i> groups;
         groups.reserve(sizes.size());
 
-        for (const vec2i& size : sizes)
+        for (const Vector2i& size : sizes)
         {
                 groups.push_back(group_count(size[0], size[1], group_size));
         }
@@ -102,13 +102,13 @@ std::vector<vec2i> sobel_groups(const vec2i& group_size, const std::vector<vec2i
         return groups;
 }
 
-std::vector<vec2i> flow_groups(
-        const vec2i& group_size,
-        const std::vector<vec2i>& sizes,
+std::vector<Vector2i> flow_groups(
+        const Vector2i& group_size,
+        const std::vector<Vector2i>& sizes,
         int top_point_count_x,
         int top_point_count_y)
 {
-        std::vector<vec2i> groups;
+        std::vector<Vector2i> groups;
         groups.reserve(sizes.size());
 
         groups.push_back(group_count(top_point_count_x, top_point_count_y, group_size));
@@ -128,7 +128,7 @@ void create_top_level_points(
         int ppi,
         int* point_count_x,
         int* point_count_y,
-        std::vector<vec2i>* points)
+        std::vector<Vector2i>* points)
 {
         ASSERT(width >= 0 && height >= 0 && ppi >= 0);
 
@@ -167,7 +167,7 @@ void create_top_level_points(
         {
                 for (int x = distance; x < width - distance; x += size)
                 {
-                        (*points)[index++] = vec2i(x, y);
+                        (*points)[index++] = Vector2i(x, y);
                 }
         }
 

@@ -42,12 +42,12 @@ class Memory final
 
         struct Matrices
         {
-                mat4f matrix;
+                Matrix4f matrix;
         };
 
         struct Drawing
         {
-                vec3f color;
+                Vector3f color;
         };
 
         std::size_t matrices_buffer_index_;
@@ -81,8 +81,8 @@ public:
 
         //
 
-        void set_matrix(const mat4d& matrix) const;
-        void set_color(const vec3f& color) const;
+        void set_matrix(const Matrix4d& matrix) const;
+        void set_color(const Vector3f& color) const;
 };
 
 struct Vertex

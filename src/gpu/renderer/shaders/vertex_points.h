@@ -26,9 +26,9 @@ namespace ns::gpu::renderer
 {
 struct PointsVertex
 {
-        vec3f position;
+        Vector3f position;
 
-        explicit constexpr PointsVertex(const vec3f& position) : position(position)
+        explicit constexpr PointsVertex(const Vector3f& position) : position(position)
         {
         }
 

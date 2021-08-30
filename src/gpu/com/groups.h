@@ -26,13 +26,13 @@ constexpr int group_count(int size, int group_size)
         return (size + group_size - 1) / group_size;
 }
 
-constexpr vec2i group_count(int x, int y, vec2i group_size)
+constexpr Vector2i group_count(int x, int y, Vector2i group_size)
 {
-        return vec2i(group_count(x, group_size[0]), group_count(y, group_size[1]));
+        return Vector2i(group_count(x, group_size[0]), group_count(y, group_size[1]));
 }
 
-constexpr vec3i group_count(int x, int y, int z, vec3i group_size)
+constexpr Vector3i group_count(int x, int y, int z, Vector3i group_size)
 {
-        return vec3i(group_count(x, group_size[0]), group_count(y, group_size[1]), group_count(z, group_size[2]));
+        return Vector3i(group_count(x, group_size[0]), group_count(y, group_size[1]), group_count(z, group_size[2]));
 }
 }

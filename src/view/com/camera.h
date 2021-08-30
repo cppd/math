@@ -30,14 +30,14 @@ class Camera final
 {
         mutable SpinLock lock_;
 
-        vec3d camera_right_{0};
-        vec3d camera_up_{0};
-        vec3d camera_direction_from_{0};
+        Vector3d camera_right_{0};
+        Vector3d camera_up_{0};
+        Vector3d camera_direction_from_{0};
 
-        vec3d light_up_{0};
-        vec3d light_direction_from_{0};
+        Vector3d light_up_{0};
+        Vector3d light_direction_from_{0};
 
-        vec2d window_center_{0};
+        Vector2d window_center_{0};
 
         int width_ = -1;
         int height_ = -1;
@@ -45,18 +45,18 @@ class Camera final
         double scale_exponent_{0};
         double default_scale_{1};
 
-        void set_vectors(const vec3d& right, const vec3d& up);
+        void set_vectors(const Vector3d& right, const Vector3d& up);
 
         gpu::renderer::CameraInfo::Volume main_volume() const;
         gpu::renderer::CameraInfo::Volume shadow_volume() const;
-        mat4d main_view_matrix() const;
-        mat4d shadow_view_matrix() const;
+        Matrix4d main_view_matrix() const;
+        Matrix4d shadow_view_matrix() const;
 
 public:
-        void reset(const vec3d& right, const vec3d& up, double scale, const vec2d& window_center);
+        void reset(const Vector3d& right, const Vector3d& up, double scale, const Vector2d& window_center);
         void scale(double x, double y, double delta);
         void rotate(double around_up_axis, double around_right_axis);
-        void move(const vec2d& delta);
+        void move(const Vector2d& delta);
         void resize(int width, int height);
 
         info::Camera view_info() const;

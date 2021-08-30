@@ -40,7 +40,7 @@ class ViewMemory final
 
         struct Data
         {
-                mat4f matrix;
+                Matrix4f matrix;
                 float brightness;
         };
 
@@ -68,7 +68,7 @@ public:
 
         //
 
-        void set_matrix(const mat4d& matrix) const;
+        void set_matrix(const Matrix4d& matrix) const;
         void set_brightness(float brightness) const;
         void set_points(const vulkan::BufferWithMemory& buffer) const;
 };

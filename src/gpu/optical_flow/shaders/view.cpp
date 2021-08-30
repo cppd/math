@@ -120,7 +120,7 @@ void ViewMemory::set_flow(const vulkan::BufferWithMemory& buffer) const
         descriptors_.update_descriptor_set(0, FLOW_BINDING, buffer_info);
 }
 
-void ViewMemory::set_matrix(const mat4d& matrix) const
+void ViewMemory::set_matrix(const Matrix4d& matrix) const
 {
         Data data;
         data.matrix = to_matrix<float>(matrix).transpose();

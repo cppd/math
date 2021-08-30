@@ -106,7 +106,7 @@ class Impl final : public View
 
                 //
 
-                std::vector<vec2i> points;
+                std::vector<Vector2i> points;
                 int point_count_x;
                 int point_count_y;
                 create_top_level_points(
@@ -131,7 +131,7 @@ class Impl final : public View
                         vulkan::BufferMemoryType::DEVICE_LOCAL, device_,
                         std::vector<uint32_t>(
                                 {graphics_command_pool_.family_index(), compute_command_pool_.family_index()}),
-                        VK_BUFFER_USAGE_STORAGE_BUFFER_BIT, points.size() * sizeof(vec2f));
+                        VK_BUFFER_USAGE_STORAGE_BUFFER_BIT, points.size() * sizeof(Vector2f));
 
                 pipeline_points_ = program_.create_pipeline(
                         render_buffers->render_pass(), render_buffers->sample_count(), VK_PRIMITIVE_TOPOLOGY_POINT_LIST,
@@ -152,8 +152,8 @@ class Impl final : public View
                 double top = 0;
                 double near = 1;
                 double far = -1;
-                mat4d p = matrix::ortho_vulkan<double>(left, right, bottom, top, near, far);
-                mat4d t = matrix::translate(vec3d(0.5, 0.5, 0));
+                Matrix4d p = matrix::ortho_vulkan<double>(left, right, bottom, top, near, far);
+                Matrix4d t = matrix::translate(Vector3d(0.5, 0.5, 0));
                 memory_.set_matrix(p * t);
 
                 vulkan::CommandBufferCreateInfo info;

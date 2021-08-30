@@ -294,8 +294,8 @@ template <std::size_t ROWS, std::size_t COLUMNS, typename T>
         return s;
 }
 
-using mat3d = Matrix<3, 3, double>;
-using mat3f = Matrix<3, 3, float>;
-using mat4d = Matrix<4, 4, double>;
-using mat4f = Matrix<4, 4, float>;
+using Matrix3d = Matrix<3, 3, double>;
+using Matrix3f = Matrix<3, 3, float>;
+using Matrix4d = Matrix<4, 4, double>;
+using Matrix4f = Matrix<4, 4, float>;
 }

@@ -19,7 +19,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 namespace ns
 {
-static_assert(sizeof(vec2f) == 2 * sizeof(float));
-static_assert(sizeof(vec3f) == 3 * sizeof(float));
-static_assert(sizeof(vec4f) == 4 * sizeof(float));
+static_assert(sizeof(Vector2f) == 2 * sizeof(float));
+static_assert(sizeof(Vector3f) == 3 * sizeof(float));
+static_assert(sizeof(Vector4f) == 4 * sizeof(float));
 }

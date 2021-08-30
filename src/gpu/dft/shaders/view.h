@@ -41,8 +41,8 @@ class ViewMemory final
 
         struct Data
         {
-                alignas(sizeof(vec4f)) vec3f background_color;
-                alignas(sizeof(vec4f)) vec3f foreground_color;
+                alignas(sizeof(Vector4f)) Vector3f background_color;
+                alignas(sizeof(Vector4f)) Vector3f foreground_color;
                 float brightness;
         };
 
@@ -68,16 +68,16 @@ public:
 
         //
 
-        void set_background_color(const vec3f& background_color) const;
-        void set_foreground_color(const vec3f& foreground_color) const;
+        void set_background_color(const Vector3f& background_color) const;
+        void set_foreground_color(const Vector3f& foreground_color) const;
         void set_brightness(float brightness) const;
         void set_image(VkSampler sampler, const vulkan::ImageWithMemory& image) const;
 };
 
 struct ViewVertex
 {
-        vec4f position;
-        vec2f texture_coordinates;
+        Vector4f position;
+        Vector2f texture_coordinates;
 
         static std::vector<VkVertexInputBindingDescription> binding_descriptions();
         static std::vector<VkVertexInputAttributeDescription> attribute_descriptions();

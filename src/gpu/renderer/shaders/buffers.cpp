@@ -106,9 +106,9 @@ void ShaderBuffers::copy_to_drawing_buffer(VkDeviceSize offset, const T& data) c
 }
 
 void ShaderBuffers::set_matrices(
-        const mat4d& main_vp_matrix,
-        const mat4d& shadow_vp_matrix,
-        const mat4d& shadow_vp_texture_matrix) const
+        const Matrix4d& main_vp_matrix,
+        const Matrix4d& shadow_vp_matrix,
+        const Matrix4d& shadow_vp_texture_matrix) const
 {
         {
                 Matrices matrices;
@@ -130,7 +130,7 @@ void ShaderBuffers::set_transparency_max_node_count(uint32_t count) const
         copy_to_drawing_buffer(offsetof(Drawing, transparency_max_node_count), c);
 }
 
-void ShaderBuffers::set_clip_plane(const vec4d& equation, bool enabled) const
+void ShaderBuffers::set_clip_plane(const Vector4d& equation, bool enabled) const
 {
         static_assert(
                 offsetof(Drawing, clip_plane_equation) + sizeof(Drawing::clip_plane_equation)
@@ -148,7 +148,7 @@ void ShaderBuffers::set_clip_plane(const vec4d& equation, bool enabled) const
         map.write(sizeof(clip_plane_equation), clip_plane_enabled);
 }
 
-void ShaderBuffers::set_viewport(const vec2d& center, const vec2d& factor) const
+void ShaderBuffers::set_viewport(const Vector2d& center, const Vector2d& factor) const
 {
         static_assert(
                 offsetof(Drawing, viewport_center) + sizeof(Drawing::viewport_factor)
@@ -166,37 +166,37 @@ void ShaderBuffers::set_viewport(const vec2d& center, const vec2d& factor) const
         map.write(sizeof(viewport_center), viewport_factor);
 }
 
-void ShaderBuffers::set_lighting_color(const vec3f& color) const
+void ShaderBuffers::set_lighting_color(const Vector3f& color) const
 {
         decltype(Drawing().lighting_color) v = color;
         copy_to_drawing_buffer(offsetof(Drawing, lighting_color), v);
 }
 
-void ShaderBuffers::set_background_color(const vec3f& color) const
+void ShaderBuffers::set_background_color(const Vector3f& color) const
 {
         decltype(Drawing().background_color) c = color;
         copy_to_drawing_buffer(offsetof(Drawing, background_color), c);
 }
 
-void ShaderBuffers::set_wireframe_color(const vec3f& color) const
+void ShaderBuffers::set_wireframe_color(const Vector3f& color) const
 {
         decltype(Drawing().wireframe_color) c = color;
         copy_to_drawing_buffer(offsetof(Drawing, wireframe_color), c);
 }
 
-void ShaderBuffers::set_clip_plane_color(const vec3f& color) const
+void ShaderBuffers::set_clip_plane_color(const Vector3f& color) const
 {
         decltype(Drawing().clip_plane_color) c = color;
         copy_to_drawing_buffer(offsetof(Drawing, clip_plane_color), c);
 }
 
-void ShaderBuffers::set_normal_color_positive(const vec3f& color) const
+void ShaderBuffers::set_normal_color_positive(const Vector3f& color) const
 {
         decltype(Drawing().normal_color_positive) c = color;
         copy_to_drawing_buffer(offsetof(Drawing, normal_color_positive), c);
 }
 
-void ShaderBuffers::set_normal_color_negative(const vec3f& color) const
+void ShaderBuffers::set_normal_color_negative(const Vector3f& color) const
 {
         decltype(Drawing().normal_color_negative) c = color;
         copy_to_drawing_buffer(offsetof(Drawing, normal_color_negative), c);
@@ -238,13 +238,13 @@ void ShaderBuffers::set_show_smooth(bool show) const
         copy_to_drawing_buffer(offsetof(Drawing, show_smooth), s);
 }
 
-void ShaderBuffers::set_direction_to_light(const vec3f& direction) const
+void ShaderBuffers::set_direction_to_light(const Vector3f& direction) const
 {
         decltype(Drawing().direction_to_light) d = direction;
         copy_to_drawing_buffer(offsetof(Drawing, direction_to_light), d);
 }
 
-void ShaderBuffers::set_direction_to_camera(const vec3f& direction) const
+void ShaderBuffers::set_direction_to_camera(const Vector3f& direction) const
 {
         decltype(Drawing().direction_to_camera) d = direction;
         copy_to_drawing_buffer(offsetof(Drawing, direction_to_camera), d);
@@ -290,7 +290,7 @@ const vulkan::Buffer& MeshBuffer::buffer() const
         return uniform_buffer_.buffer();
 }
 
-void MeshBuffer::set_coordinates(const mat4d& model_matrix, const mat3d& normal_matrix) const
+void MeshBuffer::set_coordinates(const Matrix4d& model_matrix, const Matrix3d& normal_matrix) const
 {
         static_assert(offsetof(Mesh, model_matrix) + sizeof(Mesh::model_matrix) == offsetof(Mesh, normal_matrix));
 
@@ -306,7 +306,7 @@ void MeshBuffer::set_coordinates(const mat4d& model_matrix, const mat3d& normal_
         map.write(offsetof(Mesh, normal_matrix) - OFFSET, normal);
 }
 
-void MeshBuffer::set_color(const vec3f& color) const
+void MeshBuffer::set_color(const Vector3f& color) const
 {
         decltype(Mesh().color) c = color;
         vulkan::map_and_write_to_buffer(uniform_buffer_, offsetof(Mesh, color), c);
@@ -377,11 +377,11 @@ VkDeviceSize VolumeBuffer::buffer_volume_size() const
 }
 
 void VolumeBuffer::set_coordinates(
-        const mat4d& inverse_mvp_matrix,
-        const vec4d& third_row_of_mvp,
-        const vec4d& clip_plane_equation,
-        const vec3d& gradient_h,
-        const mat3d& normal_matrix) const
+        const Matrix4d& inverse_mvp_matrix,
+        const Vector4d& third_row_of_mvp,
+        const Vector4d& clip_plane_equation,
+        const Vector3d& gradient_h,
+        const Matrix3d& normal_matrix) const
 {
         Coordinates coordinates;
         coordinates.inverse_mvp_matrix = mat4_std140<float>(inverse_mvp_matrix);
@@ -392,7 +392,7 @@ void VolumeBuffer::set_coordinates(
         vulkan::map_and_write_to_buffer(uniform_buffer_coordinates_, 0, coordinates);
 }
 
-void VolumeBuffer::set_clip_plane(const vec4d& clip_plane_equation) const
+void VolumeBuffer::set_clip_plane(const Vector4d& clip_plane_equation) const
 {
         decltype(Coordinates().clip_plane_equation) clip_plane = to_vector<float>(clip_plane_equation);
         vulkan::map_and_write_to_buffer(
@@ -408,7 +408,7 @@ void VolumeBuffer::set_parameters(
         float isosurface_alpha,
         bool isosurface,
         float isovalue,
-        const vec3f& color) const
+        const Vector3f& color) const
 {
         ASSERT(window_offset >= 0);
         ASSERT(window_scale > 0);

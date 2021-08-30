@@ -151,24 +151,24 @@ class Impl final : public Compute
 
         GrayscaleProgram grayscale_program_;
         GrayscaleMemory grayscale_memory_;
-        vec2i grayscale_groups_;
+        Vector2i grayscale_groups_;
 
         DownsampleProgram downsample_program_;
         std::vector<DownsampleMemory> downsample_memory_;
-        std::vector<vec2i> downsample_groups_;
+        std::vector<Vector2i> downsample_groups_;
 
         SobelProgram sobel_program_;
         std::vector<SobelMemory> sobel_memory_;
-        std::vector<vec2i> sobel_groups_;
+        std::vector<Vector2i> sobel_groups_;
 
         FlowProgram flow_program_;
         std::vector<FlowMemory> flow_memory_;
-        std::vector<vec2i> flow_groups_;
+        std::vector<Vector2i> flow_groups_;
 
         int i_index_ = -1;
 
         std::vector<vulkan::ImageWithMemory> create_images(
-                const std::vector<vec2i>& sizes,
+                const std::vector<Vector2i>& sizes,
                 uint32_t family_index,
                 VkImageUsageFlags usage) const
         {
@@ -177,7 +177,7 @@ class Impl final : public Compute
 
                 const std::vector<uint32_t> family_indices({compute_command_pool_.family_index(), family_index});
                 const std::vector<VkFormat> formats({IMAGE_FORMAT});
-                for (const vec2i& s : sizes)
+                for (const Vector2i& s : sizes)
                 {
                         images.emplace_back(
                                 device_, family_indices, formats, VK_SAMPLE_COUNT_1_BIT, VK_IMAGE_TYPE_2D,
@@ -189,7 +189,7 @@ class Impl final : public Compute
         }
 
         std::vector<vulkan::BufferWithMemory> create_flow_buffers(
-                const std::vector<vec2i>& sizes,
+                const std::vector<Vector2i>& sizes,
                 uint32_t family_index) const
         {
                 std::vector<vulkan::BufferWithMemory> buffers;
@@ -202,7 +202,7 @@ class Impl final : public Compute
                 const std::vector<uint32_t> family_indices({family_index});
                 for (std::size_t i = 1; i < sizes.size(); ++i)
                 {
-                        const int buffer_size = sizes[i][0] * sizes[i][1] * sizeof(vec2f);
+                        const int buffer_size = sizes[i][0] * sizes[i][1] * sizeof(Vector2f);
                         buffers.emplace_back(
                                 vulkan::BufferMemoryType::DEVICE_LOCAL, device_, family_indices,
                                 VK_BUFFER_USAGE_STORAGE_BUFFER_BIT, buffer_size);
@@ -259,7 +259,7 @@ class Impl final : public Compute
                 VkDescriptorSetLayout descriptor_set_layout,
                 uint32_t family_index,
                 VkSampler sampler,
-                const std::vector<vec2i>& sizes,
+                const std::vector<Vector2i>& sizes,
                 const std::vector<vulkan::BufferWithMemory>& flow_buffers,
                 int top_point_count_x,
                 int top_point_count_y,
@@ -572,7 +572,7 @@ class Impl final : public Compute
                 ASSERT(rectangle.x1() <= static_cast<int>(input.width()));
                 ASSERT(rectangle.y1() <= static_cast<int>(input.height()));
 
-                const std::vector<vec2i> sizes =
+                const std::vector<Vector2i> sizes =
                         pyramid_sizes(input.width(), input.height(), BOTTOM_IMAGE_MINIMUM_SIZE);
 
                 const uint32_t family_index = compute_command_pool_.family_index();
@@ -585,7 +585,7 @@ class Impl final : public Compute
                 dy_ = create_images(sizes, family_index, VK_IMAGE_USAGE_STORAGE_BIT);
                 flow_buffers_ = create_flow_buffers(sizes, family_index);
 
-                constexpr vec2i GROUPS = GROUP_SIZE;
+                constexpr Vector2i GROUPS = GROUP_SIZE;
                 constexpr int GROUPS_X = GROUP_SIZE[0];
                 constexpr int GROUPS_Y = GROUP_SIZE[1];
 

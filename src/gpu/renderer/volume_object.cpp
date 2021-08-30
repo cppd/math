@@ -157,35 +157,35 @@ image::Image<1> transfer_function()
         return image;
 }
 
-vec4d image_clip_plane(const vec4d& world_clip_plane, const mat4d& model)
+Vector4d image_clip_plane(const Vector4d& world_clip_plane, const Matrix4d& model)
 {
-        vec4d p = world_clip_plane * model;
+        Vector4d p = world_clip_plane * model;
 
         // from n * x + d with normal directed inward
         // to n * x - d with normal directed outward
         p[3] = -p[3];
-        vec3d n = vec3d(p[0], p[1], p[2]);
+        Vector3d n = Vector3d(p[0], p[1], p[2]);
         return p / -n.norm();
 }
 
-vec3d world_volume_size(const mat4d& texture_to_world_matrix)
+Vector3d world_volume_size(const Matrix4d& texture_to_world_matrix)
 {
-        // Example for x: texture_to_world_matrix * vec4(1, 0, 0, 1) -> vec3 -> length
-        vec3d size;
+        // Example for x: texture_to_world_matrix * (1, 0, 0, 1) -> (x, y, z) -> length
+        Vector3d size;
         for (unsigned i = 0; i < 3; ++i)
         {
-                vec3d v(texture_to_world_matrix(0, i), texture_to_world_matrix(1, i), texture_to_world_matrix(2, i));
+                Vector3d v(texture_to_world_matrix(0, i), texture_to_world_matrix(1, i), texture_to_world_matrix(2, i));
                 size[i] = v.norm();
         }
         return size;
 }
 
 // in texture coordinates
-vec3d gradient_h(const mat4d& texture_to_world_matrix, const vulkan::ImageWithMemory& image)
+Vector3d gradient_h(const Matrix4d& texture_to_world_matrix, const vulkan::ImageWithMemory& image)
 {
-        vec3d texture_pixel_size(1.0 / image.width(), 1.0 / image.height(), 1.0 / image.depth());
+        Vector3d texture_pixel_size(1.0 / image.width(), 1.0 / image.height(), 1.0 / image.depth());
 
-        vec3d world_pixel_size(texture_pixel_size * world_volume_size(texture_to_world_matrix));
+        Vector3d world_pixel_size(texture_pixel_size * world_volume_size(texture_to_world_matrix));
 
         double min_world_pixel_size = world_pixel_size[0];
         for (unsigned i = 1; i < 3; ++i)
@@ -195,7 +195,7 @@ vec3d gradient_h(const mat4d& texture_to_world_matrix, const vulkan::ImageWithMe
 
         min_world_pixel_size *= GRADIENT_H_IN_PIXELS;
 
-        vec3d h;
+        Vector3d h;
         for (unsigned i = 0; i < 3; ++i)
         {
                 h[i] = (min_world_pixel_size / world_pixel_size[i]) * texture_pixel_size[i];
@@ -211,12 +211,12 @@ class Impl final : public VolumeObject
         const vulkan::CommandPool& transfer_command_pool_;
         const vulkan::Queue& transfer_queue_;
 
-        mat4d vp_matrix_ = mat4d(1);
-        std::optional<vec4d> world_clip_plane_equation_;
+        Matrix4d vp_matrix_ = Matrix4d(1);
+        std::optional<Vector4d> world_clip_plane_equation_;
 
-        mat3d object_normal_to_world_normal_matrix_;
-        mat4d texture_to_world_matrix_;
-        vec3d gradient_h_;
+        Matrix3d object_normal_to_world_normal_matrix_;
+        Matrix4d texture_to_world_matrix_;
+        Vector3d gradient_h_;
 
         VolumeBuffer buffer_;
         std::unique_ptr<vulkan::ImageWithMemory> image_;
@@ -263,11 +263,11 @@ class Impl final : public VolumeObject
 
         void buffer_set_coordinates() const
         {
-                const mat4d& mvp = vp_matrix_ * texture_to_world_matrix_;
-                const vec4d& clip_plane =
+                const Matrix4d& mvp = vp_matrix_ * texture_to_world_matrix_;
+                const Vector4d& clip_plane =
                         world_clip_plane_equation_
                                 ? image_clip_plane(*world_clip_plane_equation_, texture_to_world_matrix_)
-                                : vec4d(0);
+                                : Vector4d(0);
 
                 buffer_.set_coordinates(
                         mvp.inverse(), mvp.row(2), clip_plane, gradient_h_, object_normal_to_world_normal_matrix_);
@@ -380,15 +380,16 @@ class Impl final : public VolumeObject
                 return iter->second.descriptor_set(0);
         }
 
-        void set_matrix_and_clip_plane(const mat4d& vp_matrix, const std::optional<vec4d>& world_clip_plane_equation)
-                override
+        void set_matrix_and_clip_plane(
+                const Matrix4d& vp_matrix,
+                const std::optional<Vector4d>& world_clip_plane_equation) override
         {
                 vp_matrix_ = vp_matrix;
                 world_clip_plane_equation_ = world_clip_plane_equation;
                 buffer_set_coordinates();
         }
 
-        void set_clip_plane(const vec4d& world_clip_plane_equation) override
+        void set_clip_plane(const Vector4d& world_clip_plane_equation) override
         {
                 world_clip_plane_equation_ = world_clip_plane_equation;
                 buffer_set_clip_plane();

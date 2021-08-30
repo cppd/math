@@ -21,7 +21,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 namespace ns::gpu::optical_flow
 {
-constexpr vec2i GROUP_SIZE(16, 16);
+constexpr Vector2i GROUP_SIZE(16, 16);
 
 constexpr int BOTTOM_IMAGE_MINIMUM_SIZE = 16;
 

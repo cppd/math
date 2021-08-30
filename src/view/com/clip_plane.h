@@ -23,15 +23,15 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 namespace ns::view
 {
-[[nodiscard]] inline vec4d create_clip_plane(const mat4d& clip_plane_view, const double position)
+[[nodiscard]] inline Vector4d create_clip_plane(const Matrix4d& clip_plane_view, const double position)
 {
         ASSERT(position >= 0.0 && position <= 1.0);
 
         // -z = 0 or (0, 0, -1, 0).
         // (0, 0, -1, 0) * view matrix.
-        vec4d plane = -clip_plane_view.row(2);
+        Vector4d plane = -clip_plane_view.row(2);
 
-        vec3d n(plane[0], plane[1], plane[2]);
+        Vector3d n(plane[0], plane[1], plane[2]);
         double d = n.norm_1();
 
         // -z = d * (1 - 2 * position)

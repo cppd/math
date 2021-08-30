@@ -36,30 +36,30 @@ class ShaderBuffers
 
         struct Matrices
         {
-                mat4f vp_matrix;
-                mat4f shadow_vp_texture_matrix;
+                Matrix4f vp_matrix;
+                Matrix4f shadow_vp_texture_matrix;
         };
 
         struct Drawing
         {
-                alignas(sizeof(vec4f)) vec3f lighting_color;
-                alignas(sizeof(vec4f)) vec3f background_color;
-                alignas(sizeof(vec4f)) vec3f wireframe_color;
-                alignas(sizeof(vec4f)) vec3f normal_color_positive;
-                alignas(sizeof(vec4f)) vec3f normal_color_negative;
+                alignas(sizeof(Vector4f)) Vector3f lighting_color;
+                alignas(sizeof(Vector4f)) Vector3f background_color;
+                alignas(sizeof(Vector4f)) Vector3f wireframe_color;
+                alignas(sizeof(Vector4f)) Vector3f normal_color_positive;
+                alignas(sizeof(Vector4f)) Vector3f normal_color_negative;
                 float normal_length;
                 uint32_t show_materials;
                 uint32_t show_wireframe;
                 uint32_t show_shadow;
                 uint32_t show_fog;
                 uint32_t show_smooth;
-                alignas(sizeof(vec4f)) vec3f clip_plane_color;
-                alignas(sizeof(vec4f)) vec4f clip_plane_equation;
+                alignas(sizeof(Vector4f)) Vector3f clip_plane_color;
+                alignas(sizeof(Vector4f)) Vector4f clip_plane_equation;
                 uint32_t clip_plane_enabled;
-                alignas(sizeof(vec4f)) vec3f direction_to_light;
-                alignas(sizeof(vec4f)) vec3f direction_to_camera;
-                alignas(sizeof(vec2f)) vec2f viewport_center;
-                alignas(sizeof(vec2f)) vec2f viewport_factor;
+                alignas(sizeof(Vector4f)) Vector3f direction_to_light;
+                alignas(sizeof(Vector4f)) Vector3f direction_to_camera;
+                alignas(sizeof(Vector2f)) Vector2f viewport_center;
+                alignas(sizeof(Vector2f)) Vector2f viewport_factor;
                 uint32_t transparency_max_node_count;
         };
 
@@ -82,24 +82,24 @@ public:
         const vulkan::Buffer& drawing_buffer() const;
 
         void set_matrices(
-                const mat4d& main_vp_matrix,
-                const mat4d& shadow_vp_matrix,
-                const mat4d& shadow_vp_texture_matrix) const;
+                const Matrix4d& main_vp_matrix,
+                const Matrix4d& shadow_vp_matrix,
+                const Matrix4d& shadow_vp_texture_matrix) const;
 
         void set_transparency_max_node_count(uint32_t count) const;
 
-        void set_lighting_color(const vec3f& color) const;
-        void set_background_color(const vec3f& color) const;
-        void set_wireframe_color(const vec3f& color) const;
-        void set_clip_plane(const vec4d& equation, bool enabled) const;
-        void set_clip_plane_color(const vec3f& color) const;
-        void set_viewport(const vec2d& center, const vec2d& factor) const;
-        void set_normal_color_positive(const vec3f& color) const;
-        void set_normal_color_negative(const vec3f& color) const;
+        void set_lighting_color(const Vector3f& color) const;
+        void set_background_color(const Vector3f& color) const;
+        void set_wireframe_color(const Vector3f& color) const;
+        void set_clip_plane(const Vector4d& equation, bool enabled) const;
+        void set_clip_plane_color(const Vector3f& color) const;
+        void set_viewport(const Vector2d& center, const Vector2d& factor) const;
+        void set_normal_color_positive(const Vector3f& color) const;
+        void set_normal_color_negative(const Vector3f& color) const;
         void set_normal_length(float length) const;
         void set_show_materials(bool show) const;
-        void set_direction_to_light(const vec3f& direction) const;
-        void set_direction_to_camera(const vec3f& direction) const;
+        void set_direction_to_light(const Vector3f& direction) const;
+        void set_direction_to_camera(const Vector3f& direction) const;
         void set_show_smooth(bool show) const;
         void set_show_wireframe(bool show) const;
         void set_show_shadow(bool show) const;
@@ -113,7 +113,7 @@ class MaterialBuffer final
 public:
         struct Material
         {
-                alignas(sizeof(vec4f)) vec3f color;
+                alignas(sizeof(Vector4f)) Vector3f color;
                 uint32_t use_texture;
                 uint32_t use_material;
         };
@@ -134,9 +134,9 @@ class MeshBuffer final
 
         struct Mesh
         {
-                alignas(sizeof(vec4f)) mat4f model_matrix;
-                alignas(sizeof(vec4f)) Matrix<3, 4, float> normal_matrix;
-                alignas(sizeof(vec4f)) vec3f color;
+                alignas(sizeof(Vector4f)) Matrix4f model_matrix;
+                alignas(sizeof(Vector4f)) Matrix<3, 4, float> normal_matrix;
+                alignas(sizeof(Vector4f)) Vector3f color;
                 float alpha;
                 float ambient;
                 float metalness;
@@ -148,8 +148,8 @@ public:
 
         const vulkan::Buffer& buffer() const;
 
-        void set_coordinates(const mat4d& model_matrix, const mat3d& normal_matrix) const;
-        void set_color(const vec3f& color) const;
+        void set_coordinates(const Matrix4d& model_matrix, const Matrix3d& normal_matrix) const;
+        void set_color(const Vector3f& color) const;
         void set_alpha(float alpha) const;
         void set_lighting(float ambient, float metalness, float roughness) const;
 };
@@ -161,11 +161,11 @@ class VolumeBuffer final
 
         struct Coordinates
         {
-                alignas(sizeof(vec4f)) mat4f inverse_mvp_matrix;
-                alignas(sizeof(vec4f)) vec4f third_row_of_mvp;
-                alignas(sizeof(vec4f)) vec4f clip_plane_equation;
-                alignas(sizeof(vec4f)) vec3f gradient_h;
-                alignas(sizeof(vec4f)) Matrix<3, 4, float> normal_matrix;
+                alignas(sizeof(Vector4f)) Matrix4f inverse_mvp_matrix;
+                alignas(sizeof(Vector4f)) Vector4f third_row_of_mvp;
+                alignas(sizeof(Vector4f)) Vector4f clip_plane_equation;
+                alignas(sizeof(Vector4f)) Vector3f gradient_h;
+                alignas(sizeof(Vector4f)) Matrix<3, 4, float> normal_matrix;
         };
 
         struct Volume
@@ -176,7 +176,7 @@ class VolumeBuffer final
                 float isosurface_alpha;
                 uint32_t isosurface;
                 float isovalue;
-                alignas(sizeof(vec4f)) vec3f color;
+                alignas(sizeof(Vector4f)) Vector3f color;
                 uint32_t color_volume;
                 float ambient;
                 float metalness;
@@ -196,13 +196,13 @@ public:
         VkDeviceSize buffer_volume_size() const;
 
         void set_coordinates(
-                const mat4d& inverse_mvp_matrix,
-                const vec4d& third_row_of_mvp,
-                const vec4d& clip_plane_equation,
-                const vec3d& gradient_h,
-                const mat3d& normal_matrix) const;
+                const Matrix4d& inverse_mvp_matrix,
+                const Vector4d& third_row_of_mvp,
+                const Vector4d& clip_plane_equation,
+                const Vector3d& gradient_h,
+                const Matrix3d& normal_matrix) const;
 
-        void set_clip_plane(const vec4d& clip_plane_equation) const;
+        void set_clip_plane(const Vector4d& clip_plane_equation) const;
 
         void set_parameters(
                 const vulkan::CommandPool& command_pool,
@@ -213,7 +213,7 @@ public:
                 float isosurface_alpha,
                 bool isosurface,
                 float isovalue,
-                const vec3f& color) const;
+                const Vector3f& color) const;
 
         void set_color_volume(const vulkan::CommandPool& command_pool, const vulkan::Queue& queue, bool color_volume)
                 const;

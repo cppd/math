@@ -60,16 +60,16 @@ constexpr uint32_t TRANSPARENCY_NODE_BUFFER_MAX_SIZE = (1ull << 30);
 struct ViewportTransform
 {
         // device_coordinates = (framebuffer_coordinates - center) * factor
-        vec2d center;
-        vec2d factor;
+        Vector2d center;
+        Vector2d factor;
 };
 ViewportTransform viewport_transform(const Region<2, int>& viewport)
 {
-        const vec2d offset = to_vector<double>(viewport.from());
-        const vec2d extent = to_vector<double>(viewport.extent());
+        const Vector2d offset = to_vector<double>(viewport.from());
+        const Vector2d extent = to_vector<double>(viewport.extent());
         ViewportTransform t;
         t.center = offset + 0.5 * extent;
-        t.factor = vec2d(2.0 / extent[0], 2.0 / extent[1]);
+        t.factor = Vector2d(2.0 / extent[0], 2.0 / extent[1]);
         return t;
 }
 
@@ -118,20 +118,20 @@ class Impl final : public Renderer
 {
         // shadow coordinates x(-1, 1) y(-1, 1) z(0, 1).
         // shadow texture coordinates x(0, 1) y(0, 1) z(0, 1).
-        static constexpr mat4d SHADOW_TEXTURE_MATRIX =
+        static constexpr Matrix4d SHADOW_TEXTURE_MATRIX =
                 matrix::scale<double>(0.5, 0.5, 1) * matrix::translate<double>(1, 1, 0);
 
         const std::thread::id thread_id_ = std::this_thread::get_id();
 
-        mat4d main_vp_matrix_ = mat4d(1);
-        mat4d shadow_vp_matrix_ = mat4d(1);
-        mat4d shadow_vp_texture_matrix_ = mat4d(1);
+        Matrix4d main_vp_matrix_ = Matrix4d(1);
+        Matrix4d shadow_vp_matrix_ = Matrix4d(1);
+        Matrix4d shadow_vp_texture_matrix_ = Matrix4d(1);
 
-        vec3f clear_color_rgb32_ = vec3f(0);
+        Vector3f clear_color_rgb32_ = Vector3f(0);
         double shadow_zoom_ = 1;
         bool show_shadow_ = false;
         Region<2, int> viewport_;
-        std::optional<vec4d> clip_plane_;
+        std::optional<Vector4d> clip_plane_;
         bool show_normals_ = false;
 
         const vulkan::VulkanInstance& instance_;
@@ -265,10 +265,10 @@ class Impl final : public Renderer
         {
                 ASSERT(thread_id_ == std::this_thread::get_id());
 
-                const mat4d& shadow_projection_matrix = matrix::ortho_vulkan<double>(
+                const Matrix4d& shadow_projection_matrix = matrix::ortho_vulkan<double>(
                         c.shadow_volume.left, c.shadow_volume.right, c.shadow_volume.bottom, c.shadow_volume.top,
                         c.shadow_volume.near, c.shadow_volume.far);
-                const mat4d& main_projection_matrix = matrix::ortho_vulkan<double>(
+                const Matrix4d& main_projection_matrix = matrix::ortho_vulkan<double>(
                         c.main_volume.left, c.main_volume.right, c.main_volume.bottom, c.main_volume.top,
                         c.main_volume.near, c.main_volume.far);
 
@@ -282,7 +282,7 @@ class Impl final : public Renderer
                 set_matrices();
         }
 
-        void set_clip_plane(const std::optional<vec4d>& plane) override
+        void set_clip_plane(const std::optional<Vector4d>& plane) override
         {
                 ASSERT(thread_id_ == std::this_thread::get_id());
 
@@ -298,7 +298,7 @@ class Impl final : public Renderer
                 }
                 else
                 {
-                        shader_buffers_.set_clip_plane(vec4d(0), false);
+                        shader_buffers_.set_clip_plane(Vector4d(0), false);
                 }
                 create_mesh_render_command_buffers();
         }

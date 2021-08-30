@@ -74,7 +74,7 @@ constexpr vulkan::DeviceFeatures DFT_IMAGE_REQUIRED_DEVICE_FEATURES = {};
 constexpr vulkan::DeviceFeatures DFT_VECTOR_REQUIRED_DEVICE_FEATURES = {};
 
 constexpr const int GROUP_SIZE_1D = 256;
-constexpr const vec2i GROUP_SIZE_2D = vec2i(16, 16);
+constexpr const Vector2i GROUP_SIZE_2D = Vector2i(16, 16);
 
 int shared_size(int dft_size, const VkPhysicalDeviceLimits& limits)
 {
@@ -390,18 +390,18 @@ class Dft final
 
         MulProgram mul_program_;
         MulMemory mul_memory_;
-        vec2i mul_rows_to_buffer_groups_ = vec2i(0, 0);
-        vec2i mul_rows_from_buffer_groups_ = vec2i(0, 0);
-        vec2i mul_columns_to_buffer_groups_ = vec2i(0, 0);
-        vec2i mul_columns_from_buffer_groups_ = vec2i(0, 0);
+        Vector2i mul_rows_to_buffer_groups_ = Vector2i(0, 0);
+        Vector2i mul_rows_from_buffer_groups_ = Vector2i(0, 0);
+        Vector2i mul_columns_to_buffer_groups_ = Vector2i(0, 0);
+        Vector2i mul_columns_from_buffer_groups_ = Vector2i(0, 0);
 
         MulDProgram mul_d_program_;
         MulDMemory mul_d_d1_fwd_;
         MulDMemory mul_d_d1_inv_;
         MulDMemory mul_d_d2_fwd_;
         MulDMemory mul_d_d2_inv_;
-        vec2i mul_d_row_groups_ = vec2i(0, 0);
-        vec2i mul_d_column_groups_ = vec2i(0, 0);
+        Vector2i mul_d_row_groups_ = Vector2i(0, 0);
+        Vector2i mul_d_column_groups_ = Vector2i(0, 0);
 
         std::optional<Fft1d> fft_n2_m1_;
         std::optional<Fft1d> fft_n1_m2_;
@@ -675,7 +675,7 @@ class DftImage final : public ComputeImage
         CopyInputMemory copy_input_memory_;
         CopyOutputProgram copy_output_program_;
         CopyOutputMemory copy_output_memory_;
-        vec2i copy_groups_ = vec2i(0, 0);
+        Vector2i copy_groups_ = Vector2i(0, 0);
 
         VkImage output_ = VK_NULL_HANDLE;
 

@@ -25,6 +25,6 @@ static_assert(group_count(13, 4) == 4);
 static_assert(group_count(14, 4) == 4);
 static_assert(group_count(1, 100) == 1);
 static_assert(group_count(100, 1) == 100);
-static_assert(group_count(11, 17, vec2i(4, 5)) == vec2i(3, 4));
-static_assert(group_count(11, 17, 19, vec3i(4, 5, 3)) == vec3i(3, 4, 7));
+static_assert(group_count(11, 17, Vector2i(4, 5)) == Vector2i(3, 4));
+static_assert(group_count(11, 17, 19, Vector3i(4, 5, 3)) == Vector3i(3, 4, 7));
 }

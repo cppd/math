@@ -42,7 +42,7 @@ class ViewMemory final
 
         struct Data
         {
-                mat4f matrix;
+                Matrix4f matrix;
         };
 
 public:
@@ -69,7 +69,7 @@ public:
 
         void set_points(const vulkan::BufferWithMemory& buffer) const;
         void set_flow(const vulkan::BufferWithMemory& buffer) const;
-        void set_matrix(const mat4d& matrix) const;
+        void set_matrix(const Matrix4d& matrix) const;
 };
 
 class ViewProgram final

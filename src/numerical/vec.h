@@ -502,15 +502,15 @@ template <typename T>
         return res;
 }
 
-using vec2d = Vector<2, double>;
-using vec3d = Vector<3, double>;
-using vec4d = Vector<4, double>;
-using vec2f = Vector<2, float>;
-using vec3f = Vector<3, float>;
-using vec4f = Vector<4, float>;
-using vec2i = Vector<2, int>;
-using vec3i = Vector<3, int>;
-using vec4i = Vector<4, int>;
+using Vector2d = Vector<2, double>;
+using Vector3d = Vector<3, double>;
+using Vector4d = Vector<4, double>;
+using Vector2f = Vector<2, float>;
+using Vector3f = Vector<3, float>;
+using Vector4f = Vector<4, float>;
+using Vector2i = Vector<2, int>;
+using Vector3i = Vector<3, int>;
+using Vector4i = Vector<4, int>;
 }
 
 namespace std
