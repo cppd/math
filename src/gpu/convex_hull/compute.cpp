@@ -41,7 +41,10 @@ namespace ns::gpu::convex_hull
 {
 namespace
 {
-constexpr vulkan::DeviceFeatures REQUIRED_DEVICE_FEATURES = {};
+vulkan::DeviceFeatures device_features()
+{
+        return {};
+}
 
 int group_size_merge(int height, const VkPhysicalDeviceLimits& limits)
 {
@@ -235,7 +238,7 @@ public:
 
 vulkan::DeviceFeatures Compute::required_device_features()
 {
-        return REQUIRED_DEVICE_FEATURES;
+        return device_features();
 }
 
 std::unique_ptr<Compute> create_compute(const vulkan::VulkanInstance& instance)

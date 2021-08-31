@@ -61,12 +61,12 @@ PhysicalDevice create_physical_device(
         VkInstance instance,
         VkSurfaceKHR surface,
         std::vector<std::string> required_extensions,
-        const std::vector<DeviceFeatures>& required_features);
+        const DeviceFeatures& required_features);
 
 Device create_device(
         const PhysicalDevice& physical_device,
         const std::unordered_map<uint32_t, uint32_t>& queue_families,
         std::vector<std::string> required_extensions,
-        const std::vector<DeviceFeatures>& required_features,
-        const std::vector<DeviceFeatures>& optional_features);
+        const DeviceFeatures& required_features,
+        const DeviceFeatures& optional_features);
 }

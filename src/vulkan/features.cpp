@@ -27,6 +27,7 @@ namespace ns::vulkan
 namespace
 {
 constexpr std::size_t SIZE = sizeof(VkBool32);
+constexpr VkBool32 TRUE = VK_TRUE;
 
 template <typename T>
 struct FeatureProperties;
@@ -235,13 +236,32 @@ public:
         throw FeatureIsNotSupported(std::move(feature_name));
 }
 
+template <typename Features>
+void add_features(Features* const dst, const Features& src)
+{
+        static constexpr std::size_t COUNT = FeatureProperties<Features>::COUNT;
+        static constexpr std::size_t OFFSET = FeatureProperties<Features>::OFFSET;
+
+        std::byte* dst_ptr = reinterpret_cast<std::byte*>(dst) + OFFSET;
+        const std::byte* src_ptr = reinterpret_cast<const std::byte*>(&src) + OFFSET;
+
+        for (std::size_t i = 0; i < COUNT; ++i, dst_ptr += SIZE, src_ptr += SIZE)
+        {
+                VkBool32 feature;
+                std::memcpy(&feature, src_ptr, SIZE);
+                if (!feature)
+                {
+                        continue;
+                }
+                std::memcpy(dst_ptr, &TRUE, SIZE);
+        }
+}
+
 template <bool REQUIRED, typename Features>
 void set_features(const Features& features, const Features& supported_features, Features* const result_features)
 {
         static constexpr std::size_t COUNT = FeatureProperties<Features>::COUNT;
         static constexpr std::size_t OFFSET = FeatureProperties<Features>::OFFSET;
-
-        static constexpr VkBool32 TRUE = VK_TRUE;
 
         const std::byte* ptr = reinterpret_cast<const std::byte*>(&features) + OFFSET;
         const std::byte* supported_ptr = reinterpret_cast<const std::byte*>(&supported_features) + OFFSET;
@@ -298,25 +318,26 @@ void check_features(const Features& required_features, const Features& supported
 
 template <bool REQUIRED>
 void set_features(
-        const std::vector<DeviceFeatures>& features,
+        const DeviceFeatures& features,
         const DeviceFeatures& supported_features,
         DeviceFeatures* const result_features)
 {
-        for (const DeviceFeatures& feature : features)
-        {
-                set_features<REQUIRED>(
-                        feature.features_10, supported_features.features_10, &result_features->features_10);
-                set_features<REQUIRED>(
-                        feature.features_11, supported_features.features_11, &result_features->features_11);
-                set_features<REQUIRED>(
-                        feature.features_12, supported_features.features_12, &result_features->features_12);
-        }
+        set_features<REQUIRED>(features.features_10, supported_features.features_10, &result_features->features_10);
+        set_features<REQUIRED>(features.features_11, supported_features.features_11, &result_features->features_11);
+        set_features<REQUIRED>(features.features_12, supported_features.features_12, &result_features->features_12);
 }
 }
 
+void add_features(DeviceFeatures* dst, const DeviceFeatures& src)
+{
+        add_features(&dst->features_10, src.features_10);
+        add_features(&dst->features_11, src.features_11);
+        add_features(&dst->features_12, src.features_12);
+}
+
 DeviceFeatures make_features(
-        const std::vector<DeviceFeatures>& required_features,
-        const std::vector<DeviceFeatures>& optional_features,
+        const DeviceFeatures& required_features,
+        const DeviceFeatures& optional_features,
         const DeviceFeatures& supported_features)
 {
         DeviceFeatures result_features = {};
@@ -342,16 +363,13 @@ DeviceFeatures make_features(
         return result_features;
 }
 
-bool check_features(const std::vector<DeviceFeatures>& required_features, const DeviceFeatures& supported_features)
+bool check_features(const DeviceFeatures& required_features, const DeviceFeatures& supported_features)
 {
         try
         {
-                for (const DeviceFeatures& features : required_features)
-                {
-                        check_features(features.features_10, supported_features.features_10);
-                        check_features(features.features_11, supported_features.features_11);
-                        check_features(features.features_12, supported_features.features_12);
-                }
+                check_features(required_features.features_10, supported_features.features_10);
+                check_features(required_features.features_11, supported_features.features_11);
+                check_features(required_features.features_12, supported_features.features_12);
         }
         catch (const FeatureIsNotSupported&)
         {

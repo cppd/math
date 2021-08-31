@@ -22,7 +22,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/vulkan/instance.h>
 
 #include <memory>
-#include <vector>
 
 namespace ns::gpu::optical_flow
 {

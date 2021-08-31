@@ -19,16 +19,14 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "objects.h"
 
-#include <vector>
-
 namespace ns::vulkan
 {
+void add_features(DeviceFeatures* dst, const DeviceFeatures& src);
+
 DeviceFeatures make_features(
-        const std::vector<DeviceFeatures>& required_features,
-        const std::vector<DeviceFeatures>& optional_features,
+        const DeviceFeatures& required_features,
+        const DeviceFeatures& optional_features,
         const DeviceFeatures& supported_features);
 
-[[nodiscard]] bool check_features(
-        const std::vector<DeviceFeatures>& required_features,
-        const DeviceFeatures& supported_features);
+[[nodiscard]] bool check_features(const DeviceFeatures& required_features, const DeviceFeatures& supported_features);
 }

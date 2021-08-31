@@ -26,10 +26,10 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <src/com/container.h>
 #include <src/com/error.h>
-#include <src/com/merge.h>
 #include <src/numerical/transform.h>
 #include <src/vulkan/commands.h>
 #include <src/vulkan/create.h>
+#include <src/vulkan/features.h>
 #include <src/vulkan/queue.h>
 
 #include <thread>
@@ -38,12 +38,12 @@ namespace ns::gpu::optical_flow
 {
 namespace
 {
-constexpr vulkan::DeviceFeatures REQUIRED_DEVICE_FEATURES = []
+vulkan::DeviceFeatures device_features()
 {
         vulkan::DeviceFeatures features{};
         features.features_10.vertexPipelineStoresAndAtomics = VK_TRUE;
         return features;
-}();
+}
 
 class Impl final : public View
 {
@@ -266,10 +266,11 @@ public:
 };
 }
 
-std::vector<vulkan::DeviceFeatures> View::required_device_features()
+vulkan::DeviceFeatures View::required_device_features()
 {
-        return merge<std::vector<vulkan::DeviceFeatures>>(
-                REQUIRED_DEVICE_FEATURES, Compute::required_device_features());
+        vulkan::DeviceFeatures features = device_features();
+        vulkan::add_features(&features, Compute::required_device_features());
+        return features;
 }
 
 std::unique_ptr<View> create_view(

@@ -29,9 +29,12 @@ namespace ns::gpu::pencil_sketch
 {
 namespace
 {
-constexpr vulkan::DeviceFeatures REQUIRED_DEVICE_FEATURES = {};
-
 constexpr unsigned GROUP_SIZE = 16;
+
+vulkan::DeviceFeatures device_features()
+{
+        return {};
+}
 
 void image_barrier_before(VkCommandBuffer command_buffer, VkImage image)
 {
@@ -197,7 +200,7 @@ public:
 
 vulkan::DeviceFeatures Compute::required_device_features()
 {
-        return REQUIRED_DEVICE_FEATURES;
+        return device_features();
 }
 
 std::unique_ptr<Compute> create_compute(const vulkan::VulkanInstance& instance)

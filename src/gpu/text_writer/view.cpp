@@ -45,8 +45,6 @@ namespace
 {
 constexpr int VERTEX_BUFFER_FIRST_SIZE = 10;
 
-constexpr vulkan::DeviceFeatures REQUIRED_DEVICE_FEATURES = {};
-
 // clang-format off
 constexpr std::initializer_list<VkFormat> GRAYSCALE_IMAGE_FORMATS =
 {
@@ -55,6 +53,11 @@ constexpr std::initializer_list<VkFormat> GRAYSCALE_IMAGE_FORMATS =
         VK_FORMAT_R32_SFLOAT
 };
 // clang-format on
+
+vulkan::DeviceFeatures device_features()
+{
+        return {};
+}
 
 std::vector<unsigned char> font_data()
 {
@@ -341,7 +344,7 @@ public:
 
 vulkan::DeviceFeatures View::required_device_features()
 {
-        return REQUIRED_DEVICE_FEATURES;
+        return device_features();
 }
 
 std::unique_ptr<View> create_view(

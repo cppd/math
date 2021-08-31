@@ -140,9 +140,9 @@ public:
 
 struct DeviceFeatures final
 {
-        VkPhysicalDeviceFeatures features_10;
-        VkPhysicalDeviceVulkan11Features features_11;
-        VkPhysicalDeviceVulkan12Features features_12;
+        VkPhysicalDeviceFeatures features_10{};
+        VkPhysicalDeviceVulkan11Features features_11{};
+        VkPhysicalDeviceVulkan12Features features_12{};
 };
 
 struct DeviceProperties final
@@ -157,7 +157,7 @@ class Device final
         DeviceHandle device_;
         VkPhysicalDevice physical_device_ = VK_NULL_HANDLE;
         const DeviceProperties* physical_device_properties_ = nullptr;
-        DeviceFeatures features_ = {};
+        DeviceFeatures features_;
         std::unordered_map<uint32_t, std::vector<VkQueue>> queues_;
 
 public:

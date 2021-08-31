@@ -24,9 +24,9 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <src/com/container.h>
 #include <src/com/error.h>
-#include <src/com/merge.h>
 #include <src/vulkan/commands.h>
 #include <src/vulkan/create.h>
+#include <src/vulkan/features.h>
 #include <src/vulkan/queue.h>
 
 #include <thread>
@@ -35,15 +35,15 @@ namespace ns::gpu::dft
 {
 namespace
 {
-constexpr vulkan::DeviceFeatures REQUIRED_DEVICE_FEATURES = []
+constexpr int VERTEX_COUNT = 4;
+constexpr VkFormat IMAGE_FORMAT = VK_FORMAT_R32_SFLOAT;
+
+vulkan::DeviceFeatures device_features()
 {
         vulkan::DeviceFeatures features{};
         features.features_10.vertexPipelineStoresAndAtomics = VK_TRUE;
         return features;
-}();
-
-constexpr int VERTEX_COUNT = 4;
-constexpr VkFormat IMAGE_FORMAT = VK_FORMAT_R32_SFLOAT;
+}
 
 class Impl final : public View
 {
@@ -238,10 +238,11 @@ public:
 };
 }
 
-std::vector<vulkan::DeviceFeatures> View::required_device_features()
+vulkan::DeviceFeatures View::required_device_features()
 {
-        return merge<std::vector<vulkan::DeviceFeatures>>(
-                REQUIRED_DEVICE_FEATURES, ComputeImage::required_device_features());
+        vulkan::DeviceFeatures features = device_features();
+        vulkan::add_features(&features, ComputeImage::required_device_features());
+        return features;
 }
 
 std::unique_ptr<View> create_view(

@@ -70,11 +70,21 @@ namespace ns::gpu::dft
 {
 namespace
 {
-constexpr vulkan::DeviceFeatures DFT_IMAGE_REQUIRED_DEVICE_FEATURES = {};
-constexpr vulkan::DeviceFeatures DFT_VECTOR_REQUIRED_DEVICE_FEATURES = {};
-
 constexpr const int GROUP_SIZE_1D = 256;
 constexpr const Vector2i GROUP_SIZE_2D = Vector2i(16, 16);
+
+vulkan::DeviceFeatures image_device_features()
+{
+        return {};
+}
+vulkan::DeviceFeatures vector_required_device_features()
+{
+        return {};
+}
+vulkan::DeviceFeatures vector_optional_device_features()
+{
+        return {};
+}
 
 int shared_size(int dft_size, const VkPhysicalDeviceLimits& limits)
 {
@@ -868,7 +878,7 @@ class DftVector final : public ComputeVector
 
 public:
         DftVector()
-                : instance_({}, {}, {DFT_VECTOR_REQUIRED_DEVICE_FEATURES}, {}),
+                : instance_({}, {}, vector_required_device_features(), vector_optional_device_features()),
                   device_(instance_.device()),
                   compute_command_pool_(instance_.compute_command_pool()),
                   compute_queue_(instance_.compute_queue()),
@@ -885,7 +895,7 @@ public:
 
 vulkan::DeviceFeatures ComputeImage::required_device_features()
 {
-        return DFT_IMAGE_REQUIRED_DEVICE_FEATURES;
+        return image_device_features();
 }
 
 std::unique_ptr<ComputeImage> create_compute_image(

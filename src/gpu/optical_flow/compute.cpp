@@ -41,6 +41,7 @@ Packt Publishing, 2015.
 #include <src/vulkan/queue.h>
 
 #include <thread>
+#include <vector>
 
 namespace ns::gpu::optical_flow
 {
@@ -48,7 +49,10 @@ namespace
 {
 constexpr VkFormat IMAGE_FORMAT = VK_FORMAT_R32_SFLOAT;
 
-constexpr vulkan::DeviceFeatures REQUIRED_DEVICE_FEATURES = {};
+vulkan::DeviceFeatures device_features()
+{
+        return {};
+}
 
 void image_barrier(
         VkCommandBuffer command_buffer,
@@ -676,7 +680,7 @@ public:
 
 vulkan::DeviceFeatures Compute::required_device_features()
 {
-        return REQUIRED_DEVICE_FEATURES;
+        return device_features();
 }
 
 std::unique_ptr<Compute> create_compute(

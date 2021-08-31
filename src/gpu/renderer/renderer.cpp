@@ -43,7 +43,11 @@ namespace ns::gpu::renderer
 {
 namespace
 {
-constexpr vulkan::DeviceFeatures REQUIRED_DEVICE_FEATURES = []
+constexpr VkImageLayout DEPTH_COPY_IMAGE_LAYOUT = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
+constexpr uint32_t OBJECTS_CLEAR_VALUE = 0;
+constexpr uint32_t TRANSPARENCY_NODE_BUFFER_MAX_SIZE = (1ull << 30);
+
+vulkan::DeviceFeatures device_features()
 {
         vulkan::DeviceFeatures features{};
         features.features_10.geometryShader = VK_TRUE;
@@ -51,11 +55,7 @@ constexpr vulkan::DeviceFeatures REQUIRED_DEVICE_FEATURES = []
         features.features_10.shaderStorageImageMultisample = VK_TRUE;
         features.features_10.shaderClipDistance = VK_TRUE;
         return features;
-}();
-
-constexpr VkImageLayout DEPTH_COPY_IMAGE_LAYOUT = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
-constexpr uint32_t OBJECTS_CLEAR_VALUE = 0;
-constexpr uint32_t TRANSPARENCY_NODE_BUFFER_MAX_SIZE = (1ull << 30);
+}
 
 struct ViewportTransform
 {
@@ -827,7 +827,7 @@ public:
 
 vulkan::DeviceFeatures Renderer::required_device_features()
 {
-        return REQUIRED_DEVICE_FEATURES;
+        return device_features();
 }
 
 std::unique_ptr<Renderer> create_renderer(

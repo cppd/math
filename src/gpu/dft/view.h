@@ -24,13 +24,12 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/vulkan/instance.h>
 
 #include <memory>
-#include <vector>
 
 namespace ns::gpu::dft
 {
 struct View
 {
-        static std::vector<vulkan::DeviceFeatures> required_device_features();
+        static vulkan::DeviceFeatures required_device_features();
 
         virtual ~View() = default;
 
