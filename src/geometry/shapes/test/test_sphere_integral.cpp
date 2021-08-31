@@ -32,66 +32,63 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <cmath>
 #include <random>
 #include <sstream>
-#include <version>
 
-namespace ns::geometry
+namespace ns::geometry::shapes::test
 {
 namespace
 {
-using shapes::test::compare;
-
 template <unsigned N>
 constexpr long double PI_POW = power<N>(PI<long double>);
 
-static_assert(sphere_unit_integral_over_cosine_integral(2) == PI<long double> / 2);
-static_assert(sphere_unit_integral_over_cosine_integral(3) == 2.0L);
-static_assert(sphere_unit_integral_over_cosine_integral(4) == 3 * PI<long double> / 4);
-static_assert(sphere_unit_integral_over_cosine_integral(5) == 8.0L / 3);
-static_assert(sphere_unit_integral_over_cosine_integral(6) == 15 * PI<long double> / 16);
-static_assert(sphere_unit_integral_over_cosine_integral(7) == 16.0L / 5);
-static_assert(sphere_unit_integral_over_cosine_integral(8) == 35 * PI<long double> / 32);
-static_assert(sphere_unit_integral_over_cosine_integral(9) == 128.0L / 35);
-static_assert(sphere_unit_integral_over_cosine_integral(10) == 315 * PI<long double> / 256);
-static_assert(sphere_unit_integral_over_cosine_integral(15) == 2048.0L / 429);
-static_assert(sphere_unit_integral_over_cosine_integral(20) == 230945 * PI<long double> / 131072);
-static_assert(sphere_unit_integral_over_cosine_integral(25) == 4194304.0L / 676039);
-static_assert(sphere_unit_integral_over_cosine_integral(30) == 145422675 * PI<long double> / 67108864);
-static_assert(sphere_unit_integral_over_cosine_integral(35) == 4294967296.0L / 583401555);
-static_assert(sphere_unit_integral_over_cosine_integral(40) == 172308161025 * PI<long double> / 68719476736);
-static_assert(sphere_unit_integral_over_cosine_integral(45) == 2199023255552.0L / 263012370465);
-static_assert(sphere_unit_integral_over_cosine_integral(50) == 395033145117975 * PI<long double> / 140737488355328);
+static_assert(sphere_unit_integral_over_cosine_integral<2>() == PI<long double> / 2);
+static_assert(sphere_unit_integral_over_cosine_integral<3>() == 2.0L);
+static_assert(sphere_unit_integral_over_cosine_integral<4>() == 3 * PI<long double> / 4);
+static_assert(sphere_unit_integral_over_cosine_integral<5>() == 8.0L / 3);
+static_assert(sphere_unit_integral_over_cosine_integral<6>() == 15 * PI<long double> / 16);
+static_assert(sphere_unit_integral_over_cosine_integral<7>() == 16.0L / 5);
+static_assert(sphere_unit_integral_over_cosine_integral<8>() == 35 * PI<long double> / 32);
+static_assert(sphere_unit_integral_over_cosine_integral<9>() == 128.0L / 35);
+static_assert(sphere_unit_integral_over_cosine_integral<10>() == 315 * PI<long double> / 256);
+static_assert(sphere_unit_integral_over_cosine_integral<15>() == 2048.0L / 429);
+static_assert(sphere_unit_integral_over_cosine_integral<20>() == 230945 * PI<long double> / 131072);
+static_assert(sphere_unit_integral_over_cosine_integral<25>() == 4194304.0L / 676039);
+static_assert(sphere_unit_integral_over_cosine_integral<30>() == 145422675 * PI<long double> / 67108864);
+static_assert(sphere_unit_integral_over_cosine_integral<35>() == 4294967296.0L / 583401555);
+static_assert(sphere_unit_integral_over_cosine_integral<40>() == 172308161025 * PI<long double> / 68719476736);
+static_assert(sphere_unit_integral_over_cosine_integral<45>() == 2199023255552.0L / 263012370465);
+static_assert(sphere_unit_integral_over_cosine_integral<50>() == 395033145117975 * PI<long double> / 140737488355328);
 
 static_assert(
         compare(100,
-                sphere_unit_integral_over_cosine_integral(100),
+                sphere_unit_integral_over_cosine_integral<100>(),
                 12.501848174018745379275573489380728033040074896079L));
 static_assert(
         compare(100,
-                sphere_unit_integral_over_cosine_integral(111),
+                sphere_unit_integral_over_cosine_integral<111>(),
                 13.174777832962239058614925399585148625028896951069L));
 static_assert(
         compare(100,
-                sphere_unit_integral_over_cosine_integral(1000),
+                sphere_unit_integral_over_cosine_integral<1000>(),
                 39.623365897903642007708353245685137074363243183299L));
 static_assert(
         compare(100,
-                sphere_unit_integral_over_cosine_integral(1111),
+                sphere_unit_integral_over_cosine_integral<1111>(),
                 41.765649734171325590236939525014997796257742486580L));
 static_assert(
         compare(100,
-                sphere_unit_integral_over_cosine_integral(10000),
+                sphere_unit_integral_over_cosine_integral<10000>(),
                 125.32828048537769879104381707556904854866773242018L));
 static_assert(
         compare(100,
-                sphere_unit_integral_over_cosine_integral(11111),
+                sphere_unit_integral_over_cosine_integral<11111>(),
                 132.10727688710841589303636622242392351328925358716L));
 static_assert(
         compare(100,
-                sphere_unit_integral_over_cosine_integral(100000),
+                sphere_unit_integral_over_cosine_integral<100000>(),
                 396.33173893001525509395803345305504249366537658804L));
 static_assert(
         compare(100,
-                sphere_unit_integral_over_cosine_integral(111111),
+                sphere_unit_integral_over_cosine_integral<111111>(),
                 417.77023023440949387785892293393789130459621662998L));
 
 static_assert(compare(10, sphere_integrate_cosine_factor_over_hemisphere<2>(), 2.0L));
@@ -109,12 +106,16 @@ static_assert(compare(10, sphere_integrate_cosine_factor_over_hemisphere<25>(), 
 static_assert(compare(10, sphere_integrate_cosine_factor_over_hemisphere<30>(), 32768 * PI_POW<14> / 6190283353629375));
 static_assert(compare(10, sphere_integrate_cosine_factor_over_hemisphere<35>(), PI_POW<17> / 355687428096000));
 
-template <typename T>
-void test_integrate_power_cosine(T precision)
-{
-        LOG(std::string("Test integrate power cosine, ") + type_name<T>());
+//
 
-        const auto cmp = [&]<std::size_t N>(std::in_place_index_t<N>, T v1, T v2)
+template <typename T>
+void test_integrate_power_cosine(const T& precision)
+{
+        const std::string name = std::string("Test integrate power cosine <") + type_name<T>() + ">";
+
+        LOG(name);
+
+        const auto cmp = [&]<std::size_t N>(std::in_place_index_t<N>, const T v1, const T v2)
         {
                 compare("Test integrate power cosine", sphere_integrate_power_cosine_factor_over_hemisphere<N, T>(v1),
                         v2, precision);
@@ -164,80 +165,64 @@ void test_integrate_power_cosine(T precision)
         cmp(std::in_place_index<10>, 1e2, 0.0000032089323218906003781602335385785508268283638231843L);
         cmp(std::in_place_index<10>, 1e3, 0.00000000012107121111939898632517568543157447062530555860635L);
 
-        LOG("Check passed");
-}
-
-//
-
-#if defined(__cpp_lib_math_special_functions) && __cpp_lib_math_special_functions >= 201603L
-template <typename T>
-T beta(std::type_identity_t<T> x, std::type_identity_t<T> y)
-{
-        static_assert(std::is_floating_point_v<T>);
-        return std::beta(x, y);
-}
-#else
-#if !defined(__clang__)
-#error __cpp_lib_math_special_functions
-#endif
-template <typename T>
-T beta(std::type_identity_t<T> x, std::type_identity_t<T> y)
-{
-        static_assert(std::is_floating_point_v<T>);
-        // Β(x, y) = Γ(x) * Γ(y) / Γ(x + y)
-        return std::exp(std::lgamma(x) + std::lgamma(y) - std::lgamma(x + y));
-}
-#endif
-
-void compare_with_beta(unsigned n)
-{
-        long double v_beta = beta<long double>(0.5L, (n - 1) / 2.0L) / beta<long double>(1.0L, (n - 1) / 2.0L);
-        long double v_function = sphere_unit_integral_over_cosine_integral(n);
-        long double discrepancy_percent = std::abs((v_beta - v_function) / v_function) * 100;
-
-        if (!(discrepancy_percent <= 1e-10))
-        {
-                std::ostringstream oss;
-                oss << std::fixed;
-                oss << std::setprecision(limits<long double>::max_digits10);
-                oss << "N = " << n << ", beta = " << v_beta << ", function = " << v_function;
-                oss << std::scientific;
-                oss << std::setprecision(5);
-                oss << ", discrepancy = " << discrepancy_percent << "%";
-
-                error("Huge discrepancy between beta and function: " + oss.str());
-        }
-}
-
-void compare_with_beta()
-{
-        LOG("Compare with beta");
-
-        for (unsigned n = 2; n < 10'000; ++n)
-        {
-                compare_with_beta(n);
-        }
-        for (unsigned n = 10'000; n <= 1'000'000; (n & 1) == 0 ? ++n : n += 999)
-        {
-                compare_with_beta(n);
-        }
-
-        LOG("Check passed");
+        LOG(name + " passed");
 }
 
 //
 
 template <std::size_t N, typename T>
-void test_cosine()
+void compare_with_gamma(const T& precision)
+{
+        constexpr T INTEGRAL = sphere_unit_integral_over_cosine_integral<N>();
+
+        // sqrt(π) * gamma((k+n)/2) / (gamma((1+k)/2) * gamma(n/2))
+        // sqrt(π) * gamma((n+1)/2) / gamma(n/2)
+        const T gamma = std::sqrt(PI<T>)
+                        * std::exp(std::lgamma(static_cast<T>(N + 1) / 2) - std::lgamma(static_cast<T>(N) / 2));
+
+        const T relative_error = std::abs(gamma - INTEGRAL) / std::max(std::abs(gamma), std::abs(INTEGRAL));
+
+        if (!(relative_error <= precision))
+        {
+                std::ostringstream oss;
+                oss << std::scientific;
+                oss << std::setprecision(limits<T>::max_digits10);
+                oss << "N = " << N << ", gamma = " << gamma << ", function = " << INTEGRAL;
+                oss << ", relative error = " << relative_error;
+                error("Sphere integral error: " + oss.str());
+        }
+}
+
+template <typename T, std::size_t... I>
+void compare_with_gamma(const T& precision, std::integer_sequence<std::size_t, I...>&&)
+{
+        (compare_with_gamma<I + 2, T>(precision), ...);
+}
+
+template <typename T>
+void compare_with_gamma(const T& precision)
+{
+        LOG("Compare with gamma");
+
+        compare_with_gamma<T>(precision, std::make_integer_sequence<std::size_t, 100>());
+
+        compare_with_gamma<1'000, T>(precision);
+        compare_with_gamma<1'111, T>(precision);
+
+        LOG("Compare with gamma passed");
+}
+
+//
+
+template <std::size_t N, typename T>
+void test_cosine(const int count, const T& precision)
 {
         static_assert(std::is_floating_point_v<T>);
-
-        constexpr int COUNT = 10'000'000;
 
         std::mt19937_64 engine = create_engine<std::mt19937_64>();
 
         long double sum = 0;
-        for (int i = 0; i < COUNT; ++i)
+        for (int i = 0; i < count; ++i)
         {
                 Vector<N, T> v;
                 T length_square;
@@ -247,54 +232,60 @@ void test_cosine()
                 sum += std::abs(c);
         }
 
-        long double data = static_cast<long double>(COUNT) / sum;
-        long double function = sphere_unit_integral_over_cosine_integral(N);
-        long double discrepancy_percent = std::abs((data - function) / function) * 100;
+        const long double data = static_cast<long double>(count) / sum;
+        const long double function = sphere_unit_integral_over_cosine_integral<N>();
+        const long double relative_error = std::abs(data - function) / std::max(std::abs(data), std::abs(function));
 
         std::ostringstream oss;
         oss << std::fixed;
         oss << std::setprecision(limits<long double>::max_digits10);
         oss << "N = " << std::setw(2) << N << ", data = " << data << ", function = " << function;
-        oss << std::setprecision(5);
-        oss << ", discrepancy = " << discrepancy_percent << "%";
+        oss << ", relative error = ";
+        oss << std::setprecision(7) << relative_error;
         LOG(oss.str());
 
-        if (!(discrepancy_percent <= 0.1))
+        if (!(relative_error <= precision))
         {
-                error("Huge discrepancy between data and function: " + oss.str());
+                error("Sphere integral error: " + oss.str());
         }
 }
 
 template <typename T, std::size_t... I>
-void test_cosine(std::integer_sequence<std::size_t, I...>)
+void test_cosine(const int count, const T& precision, std::integer_sequence<std::size_t, I...>)
 {
-        (test_cosine<I + 2, T>(), ...);
+        (test_cosine<I + 2, T>(count, precision), ...);
 }
 
 template <typename T>
-void test_cosine()
+void test_cosine(const int count, const T& precision)
 {
-        LOG(std::string("Test cosine sphere, ") + type_name<T>());
+        const std::string name = std::string("Test cosine sphere <") + type_name<T>() + ">";
 
-        test_cosine<T>(std::make_integer_sequence<std::size_t, 10>());
+        LOG(name);
 
-        LOG("Check passed");
+        test_cosine<T>(count, precision, std::make_integer_sequence<std::size_t, 10>());
+
+        LOG(name + " passed");
 }
+
+//
 
 void test_sphere_integral_small()
 {
         test_integrate_power_cosine<float>(1e-3);
         test_integrate_power_cosine<double>(1e-12);
         test_integrate_power_cosine<long double>(1e-16);
+
+        compare_with_gamma<float>(1e-3);
+        compare_with_gamma<double>(1e-12);
+        compare_with_gamma<long double>(1e-15);
 }
 
 void test_sphere_integral_large()
 {
-        compare_with_beta();
+        test_cosine<float>(10'000'000, 1e-3);
         LOG("");
-        test_cosine<float>();
-        LOG("");
-        test_cosine<double>();
+        test_cosine<double>(10'000'000, 1e-3);
 }
 
 TEST_SMALL("Sphere Integral", test_sphere_integral_small)

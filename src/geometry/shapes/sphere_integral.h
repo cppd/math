@@ -20,7 +20,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "sphere_area.h"
 
 #include <src/com/constant.h>
-#include <src/com/error.h>
 #include <src/com/math.h>
 
 #include <cmath>
@@ -56,16 +55,17 @@ sqrt(π) ⋅  ------- ⋅ -----------------------
 ----------------
  (n-2) (n-4) ...
 */
-constexpr long double sphere_unit_integral_over_cosine_integral(const unsigned n)
+template <std::size_t N>
+constexpr long double sphere_unit_integral_over_cosine_integral()
 {
-        ASSERT(n >= 2);
+        static_assert(N >= 2);
 
         unsigned long long divident = 1;
-        unsigned long long divisor = (n & 1) == 0 ? 2 : 1;
+        unsigned long long divisor = (N & 1) == 0 ? 2 : 1;
 
         bool overflow = false;
 
-        for (int i = n - 1; i > 1; i -= 2)
+        for (int i = N - 1; i > 1; i -= 2)
         {
                 unsigned long long new_divident = divident * i;
                 if (new_divident <= divident)
@@ -104,8 +104,8 @@ constexpr long double sphere_unit_integral_over_cosine_integral(const unsigned n
         }
         else
         {
-                p = (n & 1) == 0 ? 0.5 : 1;
-                for (int i = n - 1; i > 1; i -= 2)
+                p = (N & 1) == 0 ? 0.5 : 1;
+                for (int i = N - 1; i > 1; i -= 2)
                 {
                         p *= i;
                         if (i > 2)
@@ -115,7 +115,7 @@ constexpr long double sphere_unit_integral_over_cosine_integral(const unsigned n
                 }
         }
 
-        if ((n & 1) == 0)
+        if ((N & 1) == 0)
         {
                 p *= PI<long double>;
         }
@@ -126,7 +126,7 @@ constexpr long double sphere_unit_integral_over_cosine_integral(const unsigned n
 template <std::size_t N>
 constexpr long double sphere_integrate_cosine_factor_over_hemisphere()
 {
-        return sphere_area<N>() / sphere_unit_integral_over_cosine_integral(N) / 2;
+        return sphere_area<N>() / sphere_unit_integral_over_cosine_integral<N>() / 2;
 }
 
 /*
