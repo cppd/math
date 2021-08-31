@@ -33,12 +33,10 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <random>
 #include <sstream>
 
-namespace ns::geometry
+namespace ns::geometry::shapes::test
 {
 namespace
 {
-using shapes::test::compare;
-
 template <std::size_t N, typename T>
 void test_integrate(ProgressRatio* progress, double progress_min, double progress_max)
 {
