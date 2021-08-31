@@ -51,7 +51,7 @@ public:
         uint32_t family_index(
                 VkQueueFlags set_flags,
                 VkQueueFlags not_set_flags,
-                const std::initializer_list<VkQueueFlags>& default_flags) const;
+                const std::vector<VkQueueFlags>& default_flags) const;
         uint32_t presentation_family_index() const;
         bool supports_extensions(const std::vector<std::string>& extensions) const;
         bool queue_family_supports_presentation(uint32_t index) const;

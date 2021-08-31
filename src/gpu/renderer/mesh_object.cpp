@@ -48,12 +48,12 @@ namespace ns::gpu::renderer
 namespace
 {
 // clang-format off
-constexpr std::initializer_list<VkFormat> COLOR_IMAGE_FORMATS =
-{
+constexpr std::array COLOR_IMAGE_FORMATS = std::to_array<VkFormat>
+({
         VK_FORMAT_R8G8B8A8_SRGB,
         VK_FORMAT_R16G16B16A16_UNORM,
         VK_FORMAT_R32G32B32A32_SFLOAT
-};
+});
 // clang-format on
 
 constexpr Vector2f NULL_TEXTURE_COORDINATES = Vector2f(-1e10);
@@ -382,12 +382,14 @@ std::vector<vulkan::ImageWithMemory> load_textures(
         const std::vector<uint32_t>& family_indices,
         const mesh::Mesh<3>& mesh)
 {
+        const std::vector<VkFormat> formats(std::cbegin(COLOR_IMAGE_FORMATS), std::cend(COLOR_IMAGE_FORMATS));
+
         std::vector<vulkan::ImageWithMemory> textures;
 
         for (const image::Image<2>& image : mesh.images)
         {
                 textures.emplace_back(
-                        device, family_indices, COLOR_IMAGE_FORMATS, VK_SAMPLE_COUNT_1_BIT, VK_IMAGE_TYPE_2D,
+                        device, family_indices, formats, VK_SAMPLE_COUNT_1_BIT, VK_IMAGE_TYPE_2D,
                         vulkan::make_extent(image.size[0], image.size[1]),
                         VK_IMAGE_USAGE_SAMPLED_BIT | VK_IMAGE_USAGE_TRANSFER_DST_BIT, VK_IMAGE_LAYOUT_UNDEFINED,
                         command_pool, queue);
@@ -398,9 +400,8 @@ std::vector<vulkan::ImageWithMemory> load_textures(
 
         // texture for materials without texture
         textures.emplace_back(
-                device, family_indices, COLOR_IMAGE_FORMATS, VK_SAMPLE_COUNT_1_BIT, VK_IMAGE_TYPE_2D,
-                vulkan::make_extent(1, 1), VK_IMAGE_USAGE_SAMPLED_BIT, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL,
-                command_pool, queue);
+                device, family_indices, formats, VK_SAMPLE_COUNT_1_BIT, VK_IMAGE_TYPE_2D, vulkan::make_extent(1, 1),
+                VK_IMAGE_USAGE_SAMPLED_BIT, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL, command_pool, queue);
 
         return textures;
 }

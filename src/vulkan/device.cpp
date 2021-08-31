@@ -294,7 +294,7 @@ const std::unordered_set<std::string>& PhysicalDevice::supported_extensions() co
 uint32_t PhysicalDevice::family_index(
         VkQueueFlags set_flags,
         VkQueueFlags not_set_flags,
-        const std::initializer_list<VkQueueFlags>& default_flags) const
+        const std::vector<VkQueueFlags>& default_flags) const
 {
         uint32_t index;
         if (set_flags && find_family(queue_families_, set_flags, not_set_flags, &index))

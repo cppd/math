@@ -46,12 +46,12 @@ namespace
 constexpr int VERTEX_BUFFER_FIRST_SIZE = 10;
 
 // clang-format off
-constexpr std::initializer_list<VkFormat> GRAYSCALE_IMAGE_FORMATS =
-{
+constexpr std::array GRAYSCALE_IMAGE_FORMATS = std::to_array<VkFormat>
+({
         VK_FORMAT_R8_SRGB,
         VK_FORMAT_R16_UNORM,
         VK_FORMAT_R32_SFLOAT
-};
+});
 // clang-format on
 
 vulkan::DeviceFeatures device_features()
@@ -272,7 +272,9 @@ class Impl final : public View
                   glyph_texture_(
                           device_,
                           std::vector<uint32_t>({graphics_queue.family_index()}),
-                          GRAYSCALE_IMAGE_FORMATS,
+                          std::vector<VkFormat>(
+                                  std::cbegin(GRAYSCALE_IMAGE_FORMATS),
+                                  std::cend(GRAYSCALE_IMAGE_FORMATS)),
                           VK_SAMPLE_COUNT_1_BIT,
                           VK_IMAGE_TYPE_2D,
                           vulkan::make_extent(glyphs.image().size[0], glyphs.image().size[1]),

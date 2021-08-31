@@ -24,6 +24,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/vulkan/print.h>
 
 #include <algorithm>
+#include <array>
 #include <sstream>
 
 namespace ns::gpu::renderer
@@ -31,10 +32,10 @@ namespace ns::gpu::renderer
 namespace
 {
 // clang-format off
-constexpr std::initializer_list<VkFormat> DEPTH_IMAGE_FORMATS =
-{
+constexpr std::array DEPTH_IMAGE_FORMATS = std::to_array<VkFormat>
+({
         VK_FORMAT_D32_SFLOAT
-};
+});
 // clang-format on
 
 constexpr VkSampleCountFlagBits SAMPLE_COUNT = VK_SAMPLE_COUNT_1_BIT;
@@ -212,16 +213,12 @@ Impl::Impl(
         width = std::lround(width * zoom);
         height = std::lround(height * zoom);
 
+        std::vector<VkFormat> depth_formats(std::cbegin(DEPTH_IMAGE_FORMATS), std::cend(DEPTH_IMAGE_FORMATS));
         for (unsigned i = 0; i < buffer_count; ++i)
         {
-                std::vector<VkFormat> depth_formats;
-                if (!depth_attachments_.empty())
+                if (i == 1)
                 {
                         depth_formats = {depth_attachments_[0].format()};
-                }
-                else
-                {
-                        depth_formats = DEPTH_IMAGE_FORMATS;
                 }
                 depth_attachments_.emplace_back(
                         device_, attachment_family_indices, depth_formats, SAMPLE_COUNT, width, height,
