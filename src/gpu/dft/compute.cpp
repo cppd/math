@@ -56,7 +56,6 @@ There are errors in chapter 13 when calculating H2
 #include "shaders/mul.h"
 #include "shaders/mul_d.h"
 
-#include <src/com/bits.h>
 #include <src/com/constant.h>
 #include <src/com/error.h>
 #include <src/vulkan/error.h>
@@ -86,7 +85,7 @@ vulkan::DeviceFeatures vector_optional_device_features()
         return {};
 }
 
-int shared_size(int dft_size, const VkPhysicalDeviceLimits& limits)
+unsigned shared_size(int dft_size, const VkPhysicalDeviceLimits& limits)
 {
         return dft::shared_size<std::complex<float>>(dft_size, limits.maxComputeSharedMemorySize);
 }
@@ -265,11 +264,21 @@ class Fft1d final
         }
 
 public:
-        Fft1d(const vulkan::Device& device, const std::vector<uint32_t>& family_indices, int count, int n) : n_(n)
+        Fft1d(const vulkan::Device& device, const std::vector<uint32_t>& family_indices, unsigned count, unsigned n)
+                : n_(n)
         {
                 if (n_ == 1)
                 {
                         return;
+                }
+
+                if (n <= 0)
+                {
+                        error("FFT size " + std::to_string(n) + " is not positive");
+                }
+                if (!std::has_single_bit(n))
+                {
+                        error("FFT size " + std::to_string(n) + " is not an integral power of 2");
                 }
 
                 data_size_ = count * n;
@@ -277,7 +286,7 @@ public:
                 only_shared_ = n_ <= n_shared_;
 
                 const uint32_t n_mask = n - 1;
-                const uint32_t n_bits = binary_size(n);
+                const uint32_t n_bits = std::bit_width(n) - 1;
 
                 //
 

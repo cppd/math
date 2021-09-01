@@ -98,7 +98,7 @@ constexpr int max_determinant_paraboloid()
 
         f *= (N - 1);
 
-        return BITS * (N + 1) + log_2(f) + 1;
+        return BITS * (N + 1) + bit_width(f);
 }
 
 template <std::size_t N, std::size_t BITS>
@@ -120,7 +120,7 @@ constexpr int max_determinant()
                 f *= i;
         }
 
-        return BITS * N + log_2(f) + 1;
+        return BITS * N + bit_width(f);
 }
 
 template <std::size_t N, std::size_t BITS>
@@ -129,7 +129,7 @@ constexpr int max_paraboloid()
         // max = x*x + x*x + x*x
         // max = (x ^ 2) * (N - 1)
 
-        return BITS * 2 + log_2(N - 1) + 1;
+        return BITS * 2 + bit_width(N - 1);
 }
 
 template <std::size_t N>

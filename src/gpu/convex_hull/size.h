@@ -35,5 +35,5 @@ int group_size_merge(
         unsigned max_group_invocations,
         unsigned max_shared_memory_size);
 
-int iteration_count_merge(int size);
+int iteration_count_merge(unsigned size);
 }

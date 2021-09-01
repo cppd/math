@@ -27,10 +27,10 @@ std::vector<std::complex<double>> compute_h(int n, bool inverse, double coef);
 std::vector<std::complex<double>> compute_h2(int n, int m, const std::vector<std::complex<double>>& h);
 
 template <typename T>
-int shared_size(unsigned dft_size, unsigned max_shared_memory_size);
+unsigned shared_size(unsigned dft_size, unsigned max_shared_memory_size);
 
 template <typename T>
-int group_size(
+unsigned group_size(
         unsigned dft_size,
         unsigned max_group_size_x,
         unsigned max_group_invocations,

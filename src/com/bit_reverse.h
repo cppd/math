@@ -17,10 +17,10 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
-#include "bits.h"
 #include "error.h"
 
 #include <array>
+#include <bit>
 #include <cstdint>
 #include <vector>
 
@@ -118,7 +118,15 @@ constexpr uint64_t bit_reverse_64(uint64_t v)
 
 inline void create_bit_reverse_lookup_table(const int size, std::vector<int>* const data)
 {
-        const int bit_count = binary_size(size);
+        if (size <= 0)
+        {
+                error("Table size " + std::to_string(size) + " is not positive");
+        }
+        if (!std::has_single_bit(static_cast<unsigned>(size)))
+        {
+                error("Table size " + std::to_string(size) + " is not an integral power of 2");
+        }
+        const int bit_count = std::bit_width(static_cast<unsigned>(size)) - 1;
         data->resize(size);
         for (int i = 0; i < size; ++i)
         {
@@ -137,21 +145,6 @@ void bit_reverse(const std::vector<int>& reverse_lookup, std::vector<T>* const d
         for (int i = 0; i < size; ++i)
         {
                 const int r = reverse_lookup[i];
-                if (i < r)
-                {
-                        std::swap((*data)[i], (*data)[r]);
-                }
-        }
-}
-
-template <typename T>
-void bit_reverse(std::vector<T>* const data)
-{
-        const int size = data->size();
-        const int bit_count = binary_size(size);
-        for (int i = 0; i < size; ++i)
-        {
-                const int r = bit_reverse(bit_count, i);
                 if (i < r)
                 {
                         std::swap((*data)[i], (*data)[r]);

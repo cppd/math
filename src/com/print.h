@@ -184,8 +184,7 @@ std::string to_string_binary(T v, const std::string_view& prefix = "") requires 
         {
                 return std::string(prefix) + '0';
         }
-        // std::bit_width
-        unsigned width = limits<T>::digits - std::countl_zero(v);
+        unsigned width = std::bit_width(v);
         std::string s(prefix);
         s.resize(s.size() + width);
         for (std::ptrdiff_t i = std::ssize(s) - 1; i >= std::ssize(prefix); --i)

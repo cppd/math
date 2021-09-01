@@ -15,30 +15,12 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#pragma once
-
-#include "error.h"
-#include "print.h"
-
-#include "type/concept.h"
+#include "bits.h"
 
 namespace ns
 {
-template <typename T>
-constexpr T bit_width(T n)
-{
-        static_assert(Integral<T>);
-
-        if (n <= 0)
-        {
-                error("Bit width parameter " + to_string(n) + " is not positive");
-        }
-
-        T b = 1;
-        while (n >>= 1)
-        {
-                ++b;
-        }
-        return b;
-}
+static_assert(bit_width(__int128(0b10000)) == 5);
+static_assert(bit_width(__int128(0b10001)) == 5);
+static_assert(bit_width(__int128(0b10101)) == 5);
+static_assert(bit_width(__int128(0b11111)) == 5);
 }

@@ -17,28 +17,27 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "function.h"
 
-#include <src/com/bits.h>
 #include <src/com/constant.h>
+#include <src/com/error.h>
+#include <src/com/type/limit.h>
+
+#include <bit>
 
 namespace ns::gpu::dft
 {
-// If n is a power of 2 then n.
-// Otherwise, bit_ceil(2N-2)
 int compute_m(int n)
 {
-        int log2_n = log_2(n);
-        if ((1 << log2_n) == n)
+        static constexpr int MAX_POWER_OF_2 = 1 << (limits<int>::digits - 1);
+        if (n < 1 || n > MAX_POWER_OF_2 / 2)
+        {
+                error("Error size " + std::to_string(n) + " for compute m");
+        }
+
+        if (std::has_single_bit(static_cast<unsigned>(n)))
         {
                 return n;
         }
-
-        int t = (2 * n - 2);
-        int log2_t = log_2(t);
-        if ((1 << log2_t) == t)
-        {
-                return t;
-        }
-        return (1 << log2_t) << 1;
+        return std::bit_ceil(static_cast<unsigned>(2 * n - 2));
 }
 
 // Compute the symmetric Toeplitz H: for given N, compute the scalar constants
@@ -89,29 +88,31 @@ std::vector<std::complex<double>> compute_h2(int n, int m, const std::vector<std
 }
 
 template <typename T>
-int shared_size(unsigned dft_size, unsigned max_shared_memory_size)
+unsigned shared_size(unsigned dft_size, unsigned max_shared_memory_size)
 {
         // minimum of
         // 1) requested size, but not less than 128 so that a group
         //  has at least 64 threads, one thread for 2 elements.
         //  NVIDIA warp size is 32, AMD wavefront size is 64.
         // 2) bit_floor(element count)
-        return std::min(std::max(128u, dft_size), 1u << log_2(max_shared_memory_size / sizeof(T)));
+        const unsigned s1 = std::max(128u, dft_size);
+        const unsigned s2 = std::bit_floor(max_shared_memory_size / sizeof(T));
+        return std::min(s1, s2);
 }
 
 template <typename T>
-int group_size(
+unsigned group_size(
         unsigned dft_size,
         unsigned max_group_size_x,
         unsigned max_group_invocations,
         unsigned max_shared_memory_size)
 {
         // no more than 1 thread for 2 elements
-        int max_threads_required = shared_size<T>(dft_size, max_shared_memory_size) / 2;
-        int max_threads_supported = std::min(max_group_size_x, max_group_invocations);
+        unsigned max_threads_required = shared_size<T>(dft_size, max_shared_memory_size) / 2;
+        unsigned max_threads_supported = std::min(max_group_size_x, max_group_invocations);
         return std::min(max_threads_required, max_threads_supported);
 }
 
-template int shared_size<std::complex<float>>(unsigned, unsigned);
-template int group_size<std::complex<float>>(unsigned, unsigned, unsigned, unsigned);
+template unsigned shared_size<std::complex<float>>(unsigned, unsigned);
+template unsigned group_size<std::complex<float>>(unsigned, unsigned, unsigned, unsigned);
 }

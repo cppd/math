@@ -19,11 +19,11 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "../com/groups.h"
 
-#include <src/com/bits.h>
 #include <src/com/error.h>
 #include <src/com/print.h>
 
 #include <algorithm>
+#include <bit>
 
 namespace ns::gpu::convex_hull
 {
@@ -41,13 +41,13 @@ int group_size_prepare(
 {
         constexpr unsigned SHARED_SIZE_PER_THREAD = 2 * sizeof(int32_t); // GLSL ivec2
 
-        int max_group_size_limit = std::min(max_group_size_x, max_group_invocations);
-        int max_group_size_memory = max_shared_memory_size / SHARED_SIZE_PER_THREAD;
+        unsigned max_group_size_limit = std::min(max_group_size_x, max_group_invocations);
+        unsigned max_group_size_memory = max_shared_memory_size / SHARED_SIZE_PER_THREAD;
 
-        int max_group_size = 1 << log_2(std::min(max_group_size_limit, max_group_size_memory));
+        unsigned max_group_size = std::bit_floor(std::min(max_group_size_limit, max_group_size_memory));
 
         // one thread for 2 or more pixels, power of 2
-        int pref_thread_count = (width > 1) ? (1 << log_2(width - 1)) : 1;
+        unsigned pref_thread_count = (width > 1) ? (std::bit_floor(static_cast<unsigned>(width) - 1)) : 1;
 
         return (pref_thread_count <= max_group_size) ? pref_thread_count : max_group_size;
 }
@@ -76,11 +76,11 @@ int group_size_merge(
         return (pref_thread_count <= max_group_size) ? pref_thread_count : max_group_size;
 }
 
-int iteration_count_merge(const int size)
+int iteration_count_merge(const unsigned size)
 {
         // Starts with groups of 4 items, the right half of the group starts with index 2.
         // Increase the index by 2 times at each iteration.
         // This index must be strictly less than size.
-        return (size > 2) ? log_2(size - 1) : 0;
+        return (size > 2) ? (std::bit_width(size - 1) - 1) : 0;
 }
 }
