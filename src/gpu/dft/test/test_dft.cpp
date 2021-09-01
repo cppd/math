@@ -144,7 +144,7 @@ void compute_vulkan(ComputeVector* dft, bool inverse, int n1, int n2, std::vecto
 }
 
 #if defined(CUDA_FOUND)
-void compute_cuda(bool inverse, int n1, int n2, std::vector<complex>* data)
+void compute_cuda(bool inverse, int n1, int n2, std::vector<Complex>* data)
 {
         if (inverse)
         {
@@ -232,13 +232,13 @@ void run_cuda(
         const std::string& test_name,
         const int n1,
         const int n2,
-        const std::vector<complex>& source_data,
+        const std::vector<Complex>& source_data,
         ProgressRatio* progress,
         int* computation,
         int computation_count,
         const DftData& vulkan_data)
 {
-        std::vector<complex> data(source_data);
+        std::vector<Complex> data(source_data);
 
         try
         {

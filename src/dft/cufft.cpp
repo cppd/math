@@ -114,7 +114,7 @@ template <typename T>
 class CudaMemory final
 {
         std::size_t size_;
-        T* d_mem;
+        T* memory_;
 
 public:
         explicit CudaMemory(std::size_t s) : size_(s)
@@ -126,7 +126,7 @@ public:
 
                 cuda_check_errors();
 
-                cudaError_t r = cudaMalloc(&d_mem, size_ * sizeof(T));
+                cudaError_t r = cudaMalloc(&memory_, size_ * sizeof(T));
                 if (r != cudaSuccess)
                 {
                         error("Error CUDA malloc " + to_string(size_ * sizeof(T)) + " bytes: " + cudaGetErrorString(r));
@@ -135,12 +135,12 @@ public:
 
         ~CudaMemory()
         {
-                cudaFree(d_mem);
+                cudaFree(memory_);
         }
 
         operator T*() const
         {
-                return d_mem;
+                return memory_;
         }
 
         std::size_t size() const
@@ -204,17 +204,17 @@ class CudaFFT final : public DFT
         static_assert(offsetof(cufftComplex, y) == sizeof(float));
 
         CudaPlan2D plan_;
-        CudaMemory<cufftComplex> cuda_data_;
+        CudaMemory<cufftComplex> memory_;
         const float inv_k_;
 
         void exec(bool inverse, std::vector<std::complex<float>>* data) override
         {
-                if (data->size() != cuda_data_.size())
+                if (data->size() != memory_.size())
                 {
                         error("Error size cuFFT");
                 }
 
-                cuda_memory_copy(cuda_data_, *data);
+                cuda_memory_copy(memory_, *data);
 
                 cuda_device_sync();
 
@@ -222,14 +222,14 @@ class CudaFFT final : public DFT
 
                 if (inverse)
                 {
-                        if (CUFFT_SUCCESS != cufftExecC2C(plan_, cuda_data_, cuda_data_, CUFFT_INVERSE))
+                        if (CUFFT_SUCCESS != cufftExecC2C(plan_, memory_, memory_, CUFFT_INVERSE))
                         {
                                 error("cuFFT Error: Unable to execute inverse plan");
                         }
                 }
                 else
                 {
-                        if (CUFFT_SUCCESS != cufftExecC2C(plan_, cuda_data_, cuda_data_, CUFFT_FORWARD))
+                        if (CUFFT_SUCCESS != cufftExecC2C(plan_, memory_, memory_, CUFFT_FORWARD))
                         {
                                 error("cuFFT Error: Unable to execute forward plan");
                         }
@@ -239,7 +239,7 @@ class CudaFFT final : public DFT
 
                 LOG("calc cuFFT: " + to_string_fixed(1000.0 * duration_from(start_time), 5) + " ms");
 
-                cuda_memory_copy(data, cuda_data_);
+                cuda_memory_copy(data, memory_);
 
                 if (inverse)
                 {
@@ -253,7 +253,7 @@ class CudaFFT final : public DFT
         }
 
 public:
-        CudaFFT(int x, int y) : plan_(x, y), cuda_data_(1ull * x * y), inv_k_(1.0f / (1ull * x * y))
+        CudaFFT(int x, int y) : plan_(x, y), memory_(1ull * x * y), inv_k_(1.0f / (1ull * x * y))
         {
         }
 };
