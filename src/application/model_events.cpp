@@ -17,16 +17,136 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "model_events.h"
 
-#include <src/com/variant.h>
+#include <src/com/error.h>
 
 namespace ns::application
 {
-void ModelEvents::set(Sequence<settings::Dimensions, std::tuple, Events>* all_events)
+namespace
 {
-        ASSERT(all_events);
+template <std::size_t N>
+class Visitor final
+{
+        gui::ModelTreeEvents* tree_;
+        view::View* view_;
 
-        const auto f = []<std::size_t N>(Events<N>& events)
+public:
+        Visitor(gui::ModelTreeEvents* const tree, view::View* const view) : tree_(tree), view_(view)
         {
+        }
+
+        //
+
+        void operator()(const typename mesh::MeshEvent<N>::Insert& event) const
+        {
+                if constexpr (N == 3)
+                {
+                        view_->send(view::command::UpdateMeshObject(event.object));
+                }
+                ASSERT(event.object);
+                tree_->insert(event.object, event.parent_object_id);
+        }
+
+        void operator()(const typename mesh::MeshEvent<N>::Erase& event) const
+        {
+                if constexpr (N == 3)
+                {
+                        view_->send(view::command::DeleteObject(event.id));
+                }
+                tree_->erase(event.id);
+        }
+
+        void operator()(const typename mesh::MeshEvent<N>::Update& event) const
+        {
+                if constexpr (N == 3)
+                {
+                        view_->send(view::command::UpdateMeshObject(event.object));
+                }
+                ObjectId id;
+                {
+                        auto ptr = event.object.lock();
+                        if (!ptr)
+                        {
+                                return;
+                        }
+                        id = ptr->id();
+                }
+                tree_->update(id);
+        }
+
+        void operator()(const typename mesh::MeshEvent<N>::Visibility& event) const
+        {
+                if constexpr (N == 3)
+                {
+                        view_->send(view::command::ShowObject(event.id, event.visible));
+                }
+                tree_->show(event.id, event.visible);
+        }
+
+        //
+
+        void operator()(const typename volume::VolumeEvent<N>::Insert& event) const
+        {
+                if constexpr (N == 3)
+                {
+                        view_->send(view::command::UpdateVolumeObject(event.object));
+                }
+                ASSERT(event.object);
+                tree_->insert(event.object, event.parent_object_id);
+        }
+
+        void operator()(const typename volume::VolumeEvent<N>::Erase& event) const
+        {
+                if constexpr (N == 3)
+                {
+                        view_->send(view::command::DeleteObject(event.id));
+                }
+                tree_->erase(event.id);
+        }
+
+        void operator()(const typename volume::VolumeEvent<N>::Update& event) const
+        {
+                if constexpr (N == 3)
+                {
+                        view_->send(view::command::UpdateVolumeObject(event.object));
+                }
+                ObjectId id;
+                {
+                        auto ptr = event.object.lock();
+                        if (!ptr)
+                        {
+                                return;
+                        }
+                        id = ptr->id();
+                }
+                tree_->update(id);
+        }
+
+        void operator()(const typename volume::VolumeEvent<N>::Visibility& event) const
+        {
+                if constexpr (N == 3)
+                {
+                        view_->send(view::command::ShowObject(event.id, event.visible));
+                }
+                tree_->show(event.id, event.visible);
+        }
+};
+}
+
+ModelEvents::ModelEvents(gui::ModelTreeEvents* const tree, view::View* const view)
+{
+        ASSERT(tree);
+        ASSERT(view);
+
+        const auto f = [&]<std::size_t N>(Events<N>& events)
+        {
+                events.mesh_events = [visitor = Visitor<N>(tree, view)](mesh::MeshEvent<N>&& event)
+                {
+                        std::visit(visitor, event.data());
+                };
+                events.volume_events = [visitor = Visitor<N>(tree, view)](volume::VolumeEvent<N>&& event)
+                {
+                        std::visit(visitor, event.data());
+                };
                 events.saved_mesh_events = mesh::MeshObject<N>::set_events(&events.mesh_events);
                 events.saved_volume_events = volume::VolumeObject<N>::set_events(&events.volume_events);
         };
@@ -36,20 +156,40 @@ void ModelEvents::set(Sequence<settings::Dimensions, std::tuple, Events>* all_ev
                 {
                         (f(events), ...);
                 },
-                *all_events);
+                events_);
 }
 
-void ModelEvents::unset(const Sequence<settings::Dimensions, std::tuple, Events>& all_events)
+ModelEvents::ModelEvents()
 {
+        const auto f = []<std::size_t N>(Events<N>& events)
+        {
+                events.mesh_events = [](mesh::MeshEvent<N>&&) {};
+                events.volume_events = [](volume::VolumeEvent<N>&&) {};
+                events.saved_mesh_events = mesh::MeshObject<N>::set_events(&events.mesh_events);
+                events.saved_volume_events = volume::VolumeObject<N>::set_events(&events.volume_events);
+        };
+
+        std::apply(
+                [&f]<std::size_t... N>(Events<N> & ... events)
+                {
+                        (f(events), ...);
+                },
+                events_);
+}
+
+ModelEvents::~ModelEvents()
+{
+        ASSERT(std::this_thread::get_id() == thread_id_);
+
         const auto f = []<std::size_t N>(const Events<N>& events)
         {
-                const std::function<void(mesh::MeshEvent<N> &&)>* m =
-                        mesh::MeshObject<N>::set_events(events.saved_mesh_events);
-
-                const std::function<void(volume::VolumeEvent<N> &&)>* v =
-                        volume::VolumeObject<N>::set_events(events.saved_volume_events);
-
-                if (m != &events.mesh_events || v != &events.volume_events)
+                const auto* const m = mesh::MeshObject<N>::set_events(events.saved_mesh_events);
+                if (m != &events.mesh_events)
+                {
+                        ASSERT(false);
+                }
+                const auto* const v = volume::VolumeObject<N>::set_events(events.saved_volume_events);
+                if (v != &events.volume_events)
                 {
                         ASSERT(false);
                 }
@@ -60,146 +200,6 @@ void ModelEvents::unset(const Sequence<settings::Dimensions, std::tuple, Events>
                 {
                         (f(events), ...);
                 },
-                all_events);
-}
-
-ModelEvents::ModelEvents(gui::ModelTreeEvents* tree, view::View* view)
-{
-        ASSERT(tree);
-        ASSERT(view);
-
-        const auto f = [&]<std::size_t N>(Events<N>& events)
-        {
-                auto mesh_visitors = Visitors{
-                        [=](const typename mesh::MeshEvent<N>::Insert& v)
-                        {
-                                if constexpr (N == 3)
-                                {
-                                        view->send(view::command::UpdateMeshObject(v.object));
-                                }
-                                ASSERT(v.object);
-                                tree->insert(v.object, v.parent_object_id);
-                        },
-                        [=](const typename mesh::MeshEvent<N>::Erase& v)
-                        {
-                                if constexpr (N == 3)
-                                {
-                                        view->send(view::command::DeleteObject(v.id));
-                                }
-                                tree->erase(v.id);
-                        },
-                        [=](const typename mesh::MeshEvent<N>::Update& v)
-                        {
-                                if constexpr (N == 3)
-                                {
-                                        view->send(view::command::UpdateMeshObject(v.object));
-                                }
-                                ObjectId id;
-                                {
-                                        auto ptr = v.object.lock();
-                                        if (!ptr)
-                                        {
-                                                return;
-                                        }
-                                        id = ptr->id();
-                                }
-                                tree->update(id);
-                        },
-                        [=](const typename mesh::MeshEvent<N>::Visibility& v)
-                        {
-                                if constexpr (N == 3)
-                                {
-                                        view->send(view::command::ShowObject(v.id, v.visible));
-                                }
-                                tree->show(v.id, v.visible);
-                        }};
-
-                auto volume_visitors = Visitors{
-                        [=](const typename volume::VolumeEvent<N>::Insert& v)
-                        {
-                                if constexpr (N == 3)
-                                {
-                                        view->send(view::command::UpdateVolumeObject(v.object));
-                                }
-                                ASSERT(v.object);
-                                tree->insert(v.object, v.parent_object_id);
-                        },
-                        [=](const typename volume::VolumeEvent<N>::Erase& v)
-                        {
-                                if constexpr (N == 3)
-                                {
-                                        view->send(view::command::DeleteObject(v.id));
-                                }
-                                tree->erase(v.id);
-                        },
-                        [=](const typename volume::VolumeEvent<N>::Update& v)
-                        {
-                                if constexpr (N == 3)
-                                {
-                                        view->send(view::command::UpdateVolumeObject(v.object));
-                                }
-                                ObjectId id;
-                                {
-                                        auto ptr = v.object.lock();
-                                        if (!ptr)
-                                        {
-                                                return;
-                                        }
-                                        id = ptr->id();
-                                }
-                                tree->update(id);
-                        },
-                        [=](const typename volume::VolumeEvent<N>::Visibility& v)
-                        {
-                                if constexpr (N == 3)
-                                {
-                                        view->send(view::command::ShowObject(v.id, v.visible));
-                                }
-                                tree->show(v.id, v.visible);
-                        }};
-
-                events.mesh_events = [mesh_visitors](mesh::MeshEvent<N>&& event)
-                {
-                        std::visit(mesh_visitors, event.data());
-                };
-                events.volume_events = [volume_visitors](volume::VolumeEvent<N>&& event)
-                {
-                        std::visit(volume_visitors, event.data());
-                };
-        };
-
-        std::apply(
-                [&f]<std::size_t... N>(Events<N> & ... events)
-                {
-                        (f(events), ...);
-                },
                 events_);
-
-        set(&events_);
-}
-
-ModelEvents::ModelEvents()
-{
-        const auto f = []<std::size_t N>(Events<N>& events)
-        {
-                events.mesh_events = [](mesh::MeshEvent<N>&&) {};
-                events.volume_events = [](volume::VolumeEvent<N>&&) {};
-        };
-
-        std::apply(
-                [&f]<std::size_t... N>(Events<N> & ... events)
-                {
-                        (f(events), ...);
-                },
-                events_);
-
-        set(&events_);
-}
-
-ModelEvents::~ModelEvents()
-{
-        ASSERT(std::this_thread::get_id() == thread_id_);
-
-        unset(events_);
 }
 }

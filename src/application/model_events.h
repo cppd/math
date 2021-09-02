@@ -35,7 +35,7 @@ class ModelEvents final
         const std::thread::id thread_id_ = std::this_thread::get_id();
 
         template <std::size_t N>
-        struct Events
+        struct Events final
         {
                 const std::function<void(mesh::MeshEvent<N>&&)>* saved_mesh_events;
                 const std::function<void(volume::VolumeEvent<N>&&)>* saved_volume_events;
@@ -43,9 +43,6 @@ class ModelEvents final
                 std::function<void(volume::VolumeEvent<N>&&)> volume_events;
         };
         Sequence<settings::Dimensions, std::tuple, Events> events_;
-
-        static void set(Sequence<settings::Dimensions, std::tuple, Events>* all_events);
-        static void unset(const Sequence<settings::Dimensions, std::tuple, Events>& all_events);
 
 public:
         ModelEvents();
