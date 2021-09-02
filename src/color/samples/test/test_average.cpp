@@ -241,7 +241,7 @@ void test_random()
 
         check<ResultType>(waves, samples, wave_min, wave_max, wave_count);
         check<ResultType>(waves, samples, test_min, test_max, test_count);
-        check<ResultType>(std::span(waves), std::span(samples), test_min, test_max, test_count);
+        check<ResultType>(std::span<const T>(waves), std::span<const T>(samples), test_min, test_max, test_count);
 }
 
 void test()
