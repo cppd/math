@@ -21,6 +21,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <src/com/error.h>
 
+#include <optional>
 #include <stack>
 #include <vector>
 
@@ -48,87 +49,99 @@ std::vector<std::vector<int>> find_delaunay_object_facets(
 }
 
 template <std::size_t N>
-void traverse_delaunay_external_facets(
-        const std::vector<DelaunayFacet<N>>& delaunay_facets,
-        const std::vector<std::vector<int>>& delaunay_object_facets,
-        const std::vector<bool>& cocone_facets,
-        std::vector<bool>* visited_delaunay,
-        std::vector<bool>* visited_cocone_facets)
+std::stack<int> find_external_facets(const std::vector<DelaunayFacet<N>>& delaunay_facets)
 {
-        std::stack<int> next;
-
+        std::stack<int> facets;
         for (std::size_t i = 0; i < delaunay_facets.size(); ++i)
         {
                 if (!delaunay_facets[i].one_sided())
                 {
                         continue;
                 }
-                next.push(i);
+                facets.push(i);
         }
+        return facets;
+}
 
-        while (!next.empty())
+template <std::size_t N>
+std::optional<int> delaunay_for_facet(const DelaunayFacet<N>& facet, std::vector<bool>* visited_delaunay_objects)
+{
+        int index;
+        if (facet.one_sided())
         {
-                int facet_index = next.top();
-                next.pop();
-
-                if (cocone_facets[facet_index])
+                if ((*visited_delaunay_objects)[facet.delaunay(0)])
                 {
-                        (*visited_cocone_facets)[facet_index] = true;
+                        return std::nullopt;
+                }
+                index = facet.delaunay(0);
+        }
+        else
+        {
+                if ((*visited_delaunay_objects)[facet.delaunay(0)] && (*visited_delaunay_objects)[facet.delaunay(1)])
+                {
+                        return std::nullopt;
+                }
+                ASSERT((*visited_delaunay_objects)[facet.delaunay(0)]
+                       || (*visited_delaunay_objects)[facet.delaunay(1)]);
+                index = (*visited_delaunay_objects)[facet.delaunay(0)] ? facet.delaunay(1) : facet.delaunay(0);
+        }
+        (*visited_delaunay_objects)[index] = true;
+        return index;
+}
+
+template <std::size_t N>
+std::vector<bool> traverse_delaunay_facets(
+        const std::vector<DelaunayObject<N>>& delaunay_objects,
+        const std::vector<DelaunayFacet<N>>& delaunay_facets,
+        const std::vector<bool>& cocone_facets)
+{
+        const std::vector<std::vector<int>>& delaunay_object_facets =
+                find_delaunay_object_facets(delaunay_objects, delaunay_facets);
+
+        std::vector<bool> visited_cocone_facets(cocone_facets.size(), false);
+        std::vector<bool> visited_delaunay_objects(delaunay_objects.size(), false);
+
+        std::stack<int> next_facets = find_external_facets(delaunay_facets);
+
+        while (!next_facets.empty())
+        {
+                const int facet = next_facets.top();
+                next_facets.pop();
+
+                if (cocone_facets[facet])
+                {
+                        visited_cocone_facets[facet] = true;
                         continue;
                 }
 
-                const DelaunayFacet<N>& facet = delaunay_facets[facet_index];
-
-                int delaunay_index;
-                if (facet.one_sided())
+                const std::optional<int> delaunay =
+                        delaunay_for_facet(delaunay_facets[facet], &visited_delaunay_objects);
+                if (!delaunay)
                 {
-                        if ((*visited_delaunay)[facet.delaunay(0)])
-                        {
-                                continue;
-                        }
-
-                        delaunay_index = facet.delaunay(0);
-                }
-                else
-                {
-                        if ((*visited_delaunay)[facet.delaunay(0)] && (*visited_delaunay)[facet.delaunay(1)])
-                        {
-                                continue;
-                        }
-
-                        ASSERT((*visited_delaunay)[facet.delaunay(0)] || (*visited_delaunay)[facet.delaunay(1)]);
-
-                        delaunay_index = (*visited_delaunay)[facet.delaunay(0)] ? facet.delaunay(1) : facet.delaunay(0);
+                        continue;
                 }
 
-                (*visited_delaunay)[delaunay_index] = true;
-
-                for (int f : delaunay_object_facets[delaunay_index])
+                for (const int f : delaunay_object_facets[*delaunay])
                 {
-                        if (f != facet_index)
+                        if (f != facet)
                         {
-                                next.push(f);
+                                next_facets.push(f);
                         }
                 }
         }
+
+        return visited_cocone_facets;
 }
 }
 
 template <std::size_t N>
-void extract_manifold(
+std::vector<bool> extract_manifold(
         const std::vector<DelaunayObject<N>>& delaunay_objects,
         const std::vector<DelaunayFacet<N>>& delaunay_facets,
-        std::vector<bool>* cocone_facets)
+        const std::vector<bool>& cocone_facets)
 {
         namespace impl = extract_manifold_implementation;
 
-        std::vector<bool> visited_delaunay(delaunay_objects.size(), false);
-        std::vector<bool> visited_cocone_facets(cocone_facets->size(), false);
-
-        impl::traverse_delaunay_external_facets(
-                delaunay_facets, impl::find_delaunay_object_facets(delaunay_objects, delaunay_facets), *cocone_facets,
-                &visited_delaunay, &visited_cocone_facets);
-
-        *cocone_facets = std::move(visited_cocone_facets);
+        return impl::traverse_delaunay_facets(delaunay_objects, delaunay_facets, cocone_facets);
 }
 }

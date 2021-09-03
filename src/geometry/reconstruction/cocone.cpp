@@ -97,17 +97,13 @@ bool normal_condition(const ManifoldVertex<N>& v1, const ManifoldVertex<N>& v2, 
 }
 
 template <std::size_t N>
-void find_interior_vertices(
+void initial_phase(
         const double rho,
         const double cosine_of_alpha,
         const std::vector<ManifoldVertex<N>>& vertices,
-        std::vector<bool>* const interior_vertices)
+        std::vector<bool>* const interior_vertices,
+        std::size_t* interior_count)
 {
-        interior_vertices->clear();
-        interior_vertices->resize(vertices.size(), false);
-
-        int interior_count = 0;
-
         for (std::size_t v = 0; v < vertices.size(); ++v)
         {
                 const ManifoldVertex<N>& vertex = vertices[v];
@@ -119,7 +115,7 @@ void find_interior_vertices(
 
                 bool flat = [&]
                 {
-                        for (int n : vertex.cocone_neighbors)
+                        for (const auto& n : vertex.cocone_neighbors)
                         {
                                 if (!normal_condition(vertex, vertices[n], cosine_of_alpha))
                                 {
@@ -132,58 +128,85 @@ void find_interior_vertices(
                 if (flat)
                 {
                         (*interior_vertices)[v] = true;
-                        ++interior_count;
+                        ++(*interior_count);
                 }
         }
+}
 
-        LOG("interior points after initial phase: " + to_string(interior_count) + " (" + to_string(vertices.size())
-            + ")");
+template <std::size_t N>
+void expansion_phase(
+        const double rho,
+        const double cosine_of_alpha,
+        const std::vector<ManifoldVertex<N>>& vertices,
+        std::vector<bool>* const interior_vertices,
+        std::size_t* interior_count)
+{
+        for (std::size_t v = 0; v < vertices.size(); ++v)
+        {
+                if ((*interior_vertices)[v])
+                {
+                        continue;
+                }
+
+                const ManifoldVertex<N>& vertex = vertices[v];
+
+                if (!ratio_condition(vertex, rho))
+                {
+                        continue;
+                }
+
+                for (const auto& n : vertex.cocone_neighbors)
+                {
+                        if (!(*interior_vertices)[n])
+                        {
+                                continue;
+                        }
+
+                        if (normal_condition(vertex, vertices[n], cosine_of_alpha))
+                        {
+                                (*interior_vertices)[v] = true;
+                                ++(*interior_count);
+                                break;
+                        }
+                }
+        }
+}
+
+template <std::size_t N>
+std::vector<bool> find_interior_vertices(
+        const double rho,
+        const double cosine_of_alpha,
+        const std::vector<ManifoldVertex<N>>& vertices)
+{
+        std::vector<bool> interior_vertices(vertices.size(), false);
+
+        std::size_t interior_count = 0;
+
+        initial_phase(rho, cosine_of_alpha, vertices, &interior_vertices, &interior_count);
+
+        LOG("interior_vertices initial phase, interior points count = " + to_string(interior_count)
+            + ", vertex count = " + to_string(vertices.size()));
 
         if (interior_count == 0)
         {
-                return;
+                return interior_vertices;
         }
 
-        bool found;
-        do
+        while (true)
         {
-                found = false;
-
-                for (std::size_t v = 0; v < vertices.size(); ++v)
+                std::size_t count = 0;
+                expansion_phase(rho, cosine_of_alpha, vertices, &interior_vertices, &count);
+                if (count == 0)
                 {
-                        if ((*interior_vertices)[v])
-                        {
-                                continue;
-                        }
-
-                        const ManifoldVertex<N>& vertex = vertices[v];
-
-                        if (!ratio_condition(vertex, rho))
-                        {
-                                continue;
-                        }
-
-                        for (int n : vertex.cocone_neighbors)
-                        {
-                                if (!(*interior_vertices)[n])
-                                {
-                                        continue;
-                                }
-
-                                if (normal_condition(vertex, vertices[n], cosine_of_alpha))
-                                {
-                                        (*interior_vertices)[v] = true;
-                                        found = true;
-                                        ++interior_count;
-                                        break;
-                                }
-                        }
+                        break;
                 }
+                interior_count += count;
+        }
 
-        } while (found);
+        LOG("interior_vertices expansion phase, interior point count = " + to_string(interior_count)
+            + ", vertex count = " + to_string(vertices.size()));
 
-        LOG("interior points after expansion phase: " + to_string(interior_count) + " (" + to_string(vertices.size())
-            + ")");
+        return interior_vertices;
 }
 
 template <std::size_t N>
@@ -209,21 +232,19 @@ bool cocone_interior_facet(
 }
 
 template <std::size_t N>
-void find_cocone_interior_facets(
+std::vector<bool> find_cocone_interior_facets(
         const std::vector<DelaunayFacet<N>>& delaunay_facets,
         const std::vector<ManifoldFacet<N>>& facet_data,
-        const std::vector<bool>& interior_vertices,
-        std::vector<bool>* const cocone_facets)
+        const std::vector<bool>& interior_vertices)
 {
         ASSERT(delaunay_facets.size() == facet_data.size());
 
-        cocone_facets->clear();
-        cocone_facets->resize(facet_data.size());
-
+        std::vector<bool> cocone_facets(facet_data.size());
         for (std::size_t i = 0; i < facet_data.size(); ++i)
         {
-                (*cocone_facets)[i] = cocone_interior_facet(delaunay_facets, facet_data, interior_vertices, i);
+                cocone_facets[i] = cocone_interior_facet(delaunay_facets, facet_data, interior_vertices, i);
         }
+        return cocone_facets;
 }
 
 template <std::size_t N>
@@ -324,7 +345,7 @@ class ManifoldConstructorImpl : public ManifoldConstructor<N>, public ManifoldCo
                 progress->set(2, 4);
                 LOG("extract manifold...");
 
-                extract_manifold(delaunay_objects_, delaunay_facets_, &cocone_facets);
+                cocone_facets = extract_manifold(delaunay_objects_, delaunay_facets_, cocone_facets);
                 if (all_false(cocone_facets))
                 {
                         error("Cocone facets not found after manifold extraction. " + to_string(N - 1)
@@ -382,15 +403,14 @@ class ManifoldConstructorImpl : public ManifoldConstructor<N>, public ManifoldCo
                 progress->set(0, 4);
                 LOG("vertex data...");
 
-                std::vector<bool> interior_vertices;
-                find_interior_vertices(rho, std::cos(alpha), vertex_data_, &interior_vertices);
+                const std::vector<bool> interior_vertices = find_interior_vertices(rho, std::cos(alpha), vertex_data_);
                 if (all_false(interior_vertices))
                 {
                         error("Interior vertices not found. " + to_string(N - 1) + "-manifold is not reconstructable.");
                 }
 
-                std::vector<bool> cocone_facets;
-                find_cocone_interior_facets(delaunay_facets_, facet_data_, interior_vertices, &cocone_facets);
+                std::vector<bool> cocone_facets =
+                        find_cocone_interior_facets(delaunay_facets_, facet_data_, interior_vertices);
                 if (all_false(cocone_facets))
                 {
                         error("Cocone interior facets not found. " + to_string(N - 1)

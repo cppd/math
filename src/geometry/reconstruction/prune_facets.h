@@ -163,6 +163,52 @@ bool sharp_ridge(
         // sharp if the sum is less than 90
         return cos_a_plus_b > 0;
 }
+
+template <std::size_t N>
+RidgeSet<N> prune(
+        const std::vector<Vector<N, double>>& points,
+        const std::vector<bool>& interior_vertices,
+        const std::unordered_map<const DelaunayFacet<N>*, int>& facet_ptr_index,
+        const RidgeSet<N>& suspicious_ridges,
+        std::vector<bool>* const cocone_facets,
+        RidgeMap<N>* const ridge_map)
+{
+        RidgeSet<N> ridges;
+
+        for (const Ridge<N>& r : suspicious_ridges)
+        {
+                auto ridge_iter = ridge_map->find(r);
+                if (ridge_iter == ridge_map->cend())
+                {
+                        continue;
+                }
+
+                if (!sharp_ridge(points, interior_vertices, ridge_iter->first, ridge_iter->second))
+                {
+                        continue;
+                }
+
+                std::vector<const DelaunayFacet<N>*> facets_to_remove;
+                facets_to_remove.reserve(ridge_iter->second.size());
+
+                for (auto d = ridge_iter->second.cbegin(); d != ridge_iter->second.cend(); ++d)
+                {
+                        add_to_ridges(*(d->facet()), d->point(), &ridges);
+                        facets_to_remove.push_back(d->facet());
+
+                        auto del = facet_ptr_index.find(d->facet());
+                        ASSERT(del != facet_ptr_index.cend());
+                        (*cocone_facets)[del->second] = false;
+                }
+
+                for (const DelaunayFacet<N>* facet : facets_to_remove)
+                {
+                        remove_from_ridges(*facet, ridge_map);
+                }
+        }
+
+        return ridges;
+}
 }
 
 template <std::size_t N>
@@ -178,13 +224,13 @@ void prune_facets_incident_to_sharp_ridges(
         ASSERT(points.size() == interior_vertices.size());
 
         impl::RidgeMap<N> ridge_map;
-        std::unordered_map<const DelaunayFacet<N>*, int> facets_ptr;
+        std::unordered_map<const DelaunayFacet<N>*, int> facet_ptr_index;
         for (unsigned i = 0; i < delaunay_facets.size(); ++i)
         {
                 if ((*cocone_facets)[i])
                 {
                         add_to_ridges(delaunay_facets[i], &ridge_map);
-                        facets_ptr.emplace(&delaunay_facets[i], i);
+                        facet_ptr_index.emplace(&delaunay_facets[i], i);
                 }
         }
 
@@ -196,41 +242,8 @@ void prune_facets_incident_to_sharp_ridges(
 
         while (!suspicious_ridges.empty())
         {
-                impl::RidgeSet<N> tmp_ridges;
-
-                for (const Ridge<N>& r : suspicious_ridges)
-                {
-                        auto ridge_iter = ridge_map.find(r);
-                        if (ridge_iter == ridge_map.cend())
-                        {
-                                continue;
-                        }
-
-                        if (!impl::sharp_ridge(points, interior_vertices, ridge_iter->first, ridge_iter->second))
-                        {
-                                continue;
-                        }
-
-                        std::vector<const DelaunayFacet<N>*> facets_to_remove;
-                        facets_to_remove.reserve(ridge_iter->second.size());
-
-                        for (auto d = ridge_iter->second.cbegin(); d != ridge_iter->second.cend(); ++d)
-                        {
-                                add_to_ridges(*(d->facet()), d->point(), &tmp_ridges);
-                                facets_to_remove.push_back(d->facet());
-
-                                auto del = facets_ptr.find(d->facet());
-                                ASSERT(del != facets_ptr.cend());
-                                (*cocone_facets)[del->second] = false;
-                        }
-
-                        for (const DelaunayFacet<N>* facet : facets_to_remove)
-                        {
-                                remove_from_ridges(*facet, &ridge_map);
-                        }
-                }
-
-                suspicious_ridges = std::move(tmp_ridges);
+                suspicious_ridges = impl::prune(
+                        points, interior_vertices, facet_ptr_index, suspicious_ridges, cocone_facets, &ridge_map);
         }
 }
 }
