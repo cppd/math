@@ -19,7 +19,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <src/com/error.h>
 #include <src/com/print.h>
-#include <src/com/type/limit.h>
 
 #include <algorithm>
 #include <cmath>
@@ -105,58 +104,57 @@ std::vector<ResultType> average(
         const std::type_identity_t<T>& to,
         const std::size_t count)
 {
+        static_assert(std::is_floating_point_v<ResultType>);
         static_assert(std::is_floating_point_v<T>);
+
+        static constexpr ResultType DEFAULT_VALUE = 0;
 
         check_parameters(waves, samples, from, to, count);
 
+        if (to <= waves.front() || from >= waves.back())
+        {
+                return std::vector<ResultType>(count, DEFAULT_VALUE);
+        }
+
+        std::vector<ResultType> result;
+        result.reserve(count);
+
         std::size_t dst_i = 0;
-        T dst_prev = limits<T>::max();
+        T dst_prev;
         T dst_next = from;
+        move_dst(from, to, count, dst_i, dst_prev, dst_next);
 
-        std::size_t src_i;
-        T prev_wave;
-        if (waves[0] < from)
+        while (dst_next <= waves.front())
         {
-                src_i = 1;
-                prev_wave = waves[0];
-        }
-        else
-        {
+                result.push_back(DEFAULT_VALUE);
                 move_dst(from, to, count, dst_i, dst_prev, dst_next);
-                src_i = 0;
-                prev_wave = from;
+        }
+        ASSERT(dst_i <= count);
+
+        std::size_t src_i = 1;
+        while (waves[src_i] <= dst_prev)
+        {
+                ++src_i;
+                ASSERT(src_i < waves.size());
         }
 
-        std::vector<ResultType> r;
-        r.reserve(count);
-
+        T prev_wave = std::max(waves[src_i - 1], dst_prev);
         T sum = 0;
 
         while (src_i < waves.size() && dst_i <= count)
         {
                 if (waves[src_i] < dst_next)
                 {
-                        if (dst_i > 0 && src_i > 0)
-                        {
-                                sum += compute_area(waves, samples, prev_wave, waves[src_i], src_i);
-                        }
+                        sum += compute_area(waves, samples, prev_wave, waves[src_i], src_i);
                         prev_wave = waves[src_i];
                         ++src_i;
                 }
                 else
                 {
-                        if (dst_i > 0 && src_i > 0)
-                        {
-                                sum += compute_area(waves, samples, prev_wave, dst_next, src_i);
-
-                                ASSERT(dst_next - dst_prev > 0);
-                                r.push_back(sum / (dst_next - dst_prev));
-                                sum = 0;
-                        }
-                        else if (dst_i > 0 && src_i == 0)
-                        {
-                                r.push_back(0);
-                        }
+                        sum += compute_area(waves, samples, prev_wave, dst_next, src_i);
+                        ASSERT(dst_next - dst_prev > 0);
+                        result.push_back(sum / (dst_next - dst_prev));
+                        sum = 0;
                         prev_wave = dst_next;
                         move_dst(from, to, count, dst_i, dst_prev, dst_next);
                 }
@@ -164,20 +162,17 @@ std::vector<ResultType> average(
 
         if (dst_i <= count)
         {
-                if (dst_i > 0)
+                ASSERT(dst_next - dst_prev > 0);
+                result.push_back(sum / (dst_next - dst_prev));
+                while (result.size() < count)
                 {
-                        ASSERT(dst_next - dst_prev > 0);
-                        r.push_back(sum / (dst_next - dst_prev));
-                }
-                while (r.size() < count)
-                {
-                        r.push_back(0);
+                        result.push_back(DEFAULT_VALUE);
                 }
         }
 
-        ASSERT(r.size() == count);
+        ASSERT(result.size() == count);
 
-        return r;
+        return result;
 }
 
 #define AVERAGE_INSTANTIATION(T1, T2)                                                                    \
