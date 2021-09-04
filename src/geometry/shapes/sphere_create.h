@@ -26,7 +26,7 @@ namespace ns::geometry
 {
 template <std::size_t N, typename T>
 void create_sphere(
-        unsigned facet_min_count,
+        unsigned min_facet_count,
         std::vector<Vector<N, T>>* vertices,
         std::vector<std::array<int, N>>* facets);
 }
