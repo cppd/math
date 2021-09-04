@@ -64,7 +64,6 @@ The projection to the n-space of the lower convex hull of the points
 
 #include <algorithm>
 #include <cstdint>
-#include <map>
 #include <random>
 #include <sstream>
 #include <unordered_map>
@@ -74,8 +73,8 @@ namespace ns::geometry
 {
 namespace
 {
-constexpr int ORDINARY_BITS = 30;
-constexpr int PARABOLOID_BITS = 24;
+constexpr int CONVEX_HULL_BITS = 30;
+constexpr int DELAUNAY_BITS = 24;
 
 template <std::size_t N, std::size_t BITS>
 constexpr int max_determinant_paraboloid()
@@ -133,34 +132,34 @@ constexpr int max_paraboloid()
 }
 
 template <std::size_t N>
-using ComputeTypeOrdinary = LeastSignedInteger<max_determinant<N, ORDINARY_BITS>()>;
+using ConvexHullComputeType = LeastSignedInteger<max_determinant<N, CONVEX_HULL_BITS>()>;
 template <std::size_t N>
-using DataTypeOrdinary = LeastSignedInteger<ORDINARY_BITS>;
+using ConvexHullDataType = LeastSignedInteger<CONVEX_HULL_BITS>;
 
 template <std::size_t N>
-using ComputeTypeParaboloid = LeastSignedInteger<max_determinant_paraboloid<N, PARABOLOID_BITS>()>;
+using DelaunayParaboloidComputeType = LeastSignedInteger<max_determinant_paraboloid<N, DELAUNAY_BITS>()>;
 template <std::size_t N>
-using DataTypeParaboloid = LeastSignedInteger<max_paraboloid<N, PARABOLOID_BITS>()>;
+using DelaunayParaboloidDataType = LeastSignedInteger<max_paraboloid<N, DELAUNAY_BITS>()>;
 template <std::size_t N>
-using ComputeTypeAfterParaboloid = LeastSignedInteger<max_determinant<N, PARABOLOID_BITS>()>;
+using DelaunayComputeType = LeastSignedInteger<max_determinant<N, DELAUNAY_BITS>()>;
 template <std::size_t N>
-using DataTypeAfterParaboloid = LeastSignedInteger<PARABOLOID_BITS>;
+using DelaunayDataType = LeastSignedInteger<DELAUNAY_BITS>;
 
 template <std::size_t N, bool CHECK_NON_CLASS>
 struct CheckTypes final
 {
-        static_assert(!CHECK_NON_CLASS || !std::is_class_v<DataTypeOrdinary<N>>);
-        static_assert(!CHECK_NON_CLASS || !std::is_class_v<ComputeTypeOrdinary<N>>);
-        static_assert(!CHECK_NON_CLASS || !std::is_class_v<DataTypeParaboloid<N>>);
-        static_assert(!CHECK_NON_CLASS || !std::is_class_v<ComputeTypeParaboloid<N>>);
-        static_assert(!CHECK_NON_CLASS || !std::is_class_v<DataTypeAfterParaboloid<N>>);
-        static_assert(!CHECK_NON_CLASS || !std::is_class_v<ComputeTypeAfterParaboloid<N>>);
-        static_assert(Integral<DataTypeOrdinary<N>>);
-        static_assert(Integral<ComputeTypeOrdinary<N>>);
-        static_assert(Integral<DataTypeParaboloid<N>>);
-        static_assert(Integral<ComputeTypeParaboloid<N>>);
-        static_assert(Integral<DataTypeAfterParaboloid<N>>);
-        static_assert(Integral<ComputeTypeAfterParaboloid<N>>);
+        static_assert(!CHECK_NON_CLASS || !std::is_class_v<ConvexHullDataType<N>>);
+        static_assert(!CHECK_NON_CLASS || !std::is_class_v<ConvexHullComputeType<N>>);
+        static_assert(!CHECK_NON_CLASS || !std::is_class_v<DelaunayParaboloidDataType<N>>);
+        static_assert(!CHECK_NON_CLASS || !std::is_class_v<DelaunayParaboloidComputeType<N>>);
+        static_assert(!CHECK_NON_CLASS || !std::is_class_v<DelaunayDataType<N>>);
+        static_assert(!CHECK_NON_CLASS || !std::is_class_v<DelaunayComputeType<N>>);
+        static_assert(Integral<ConvexHullDataType<N>>);
+        static_assert(Integral<ConvexHullComputeType<N>>);
+        static_assert(Integral<DelaunayParaboloidDataType<N>>);
+        static_assert(Integral<DelaunayParaboloidComputeType<N>>);
+        static_assert(Integral<DelaunayDataType<N>>);
+        static_assert(Integral<DelaunayComputeType<N>>);
 };
 template struct CheckTypes<2, true>;
 template struct CheckTypes<3, true>;
@@ -172,8 +171,10 @@ template struct CheckTypes<6, false>;
 
 template <typename F>
 using FacetList = std::list<F>;
+
 template <typename F>
 using FacetListConstIterator = typename FacetList<F>::const_iterator;
+
 template <std::size_t N, typename DataType, typename ComputeType>
 using Facet = FacetInteger<N, DataType, ComputeType, FacetListConstIterator>;
 
@@ -217,7 +218,7 @@ class FacetStore final
         std::vector<const T*> data_;
 
 public:
-        void insert(const T* f)
+        void insert(const T* const f)
         {
                 data_.push_back(f);
         }
@@ -243,7 +244,7 @@ public:
                 }
         }
 #endif
-        void erase(const T* f)
+        void erase(const T* const f)
         {
                 int size = data_.size();
                 const T* next = nullptr;
@@ -308,8 +309,8 @@ bool linearly_independent(const std::array<Vector<N, T>, N>& vectors)
 template <unsigned SIMPLEX_I, std::size_t N, typename SourceType, typename ComputeType>
 void find_simplex_points(
         const std::vector<Vector<N, SourceType>>& points,
-        std::array<int, N + 1>* simplex_points,
-        std::array<Vector<N, ComputeType>, N>* simplex_vectors,
+        std::array<int, N + 1>* const simplex_points,
+        std::array<Vector<N, ComputeType>, N>* const simplex_vectors,
         unsigned point_i)
 {
         static_assert(N > 1);
@@ -340,7 +341,7 @@ void find_simplex_points(
 }
 
 template <std::size_t N, typename SourceType, typename ComputeType>
-void find_simplex_points(const std::vector<Vector<N, SourceType>>& points, std::array<int, N + 1>* simplex_points)
+void find_simplex_points(const std::vector<Vector<N, SourceType>>& points, std::array<int, N + 1>* const simplex_points)
 {
         static_assert(N > 1);
 
@@ -358,10 +359,10 @@ void find_simplex_points(const std::vector<Vector<N, SourceType>>& points, std::
 
 template <std::size_t N, typename Facet, template <typename...> typename Map>
 void connect_facets(
-        Facet* facet,
-        int exclude_point,
-        Map<Ridge<N>, std::tuple<Facet*, unsigned>>* search_map,
-        int* ridge_count)
+        Facet* const facet,
+        const int exclude_point,
+        Map<Ridge<N>, std::tuple<Facet*, unsigned>>* const search_map,
+        int* const ridge_count)
 {
         const std::array<int, N>& vertices = facet->vertices();
         for (unsigned r = 0; r < N; ++r)
@@ -398,8 +399,8 @@ void connect_facets(
 template <std::size_t N, typename S, typename C>
 void create_init_convex_hull(
         const std::vector<Vector<N, S>>& points,
-        std::array<int, N + 1>* vertices,
-        FacetList<Facet<N, S, C>>* facets)
+        std::array<int, N + 1>* const vertices,
+        FacetList<Facet<N, S, C>>* const facets)
 {
         find_simplex_points<N, S, C>(points, vertices);
 
@@ -426,8 +427,8 @@ template <typename Point, typename Facet>
 void create_init_conflict_lists(
         const std::vector<Point>& points,
         const std::vector<unsigned char>& enabled,
-        FacetList<Facet>* facets,
-        std::vector<FacetStore<Facet>>* point_conflicts)
+        FacetList<Facet>* const facets,
+        std::vector<FacetStore<Facet>>* const point_conflicts)
 {
         for (Facet& facet : *facets)
         {
@@ -445,11 +446,11 @@ void create_init_conflict_lists(
 template <typename Point, typename Facet>
 void add_conflict_points_to_new_facet(
         const std::vector<Point>& points,
-        int point,
-        std::vector<signed char>* unique_points,
-        const Facet* facet_0,
-        const Facet* facet_1,
-        Facet* new_facet)
+        const int point,
+        std::vector<signed char>* const unique_points,
+        const Facet* const facet_0,
+        const Facet* const facet_1,
+        Facet* const new_facet)
 {
         for (int p : facet_0->conflict_points())
         {
@@ -480,10 +481,10 @@ void add_conflict_points_to_new_facet(
 
 template <typename Facet>
 void erase_visible_facets_from_conflict_points(
-        unsigned thread_id,
-        unsigned thread_count,
-        std::vector<FacetStore<Facet>>* point_conflicts,
-        int point)
+        const unsigned thread_id,
+        const unsigned thread_count,
+        std::vector<FacetStore<Facet>>* const point_conflicts,
+        const int point)
 {
         for (const Facet* facet : (*point_conflicts)[point])
         {
@@ -499,10 +500,10 @@ void erase_visible_facets_from_conflict_points(
 
 template <typename Facet>
 void add_new_facets_to_conflict_points(
-        unsigned thread_id,
-        unsigned thread_count,
-        std::vector<FacetList<Facet>>* new_facets_vector,
-        std::vector<FacetStore<Facet>>* point_conflicts)
+        const unsigned thread_id,
+        const unsigned thread_count,
+        std::vector<FacetList<Facet>>* const new_facets_vector,
+        std::vector<FacetStore<Facet>>* const point_conflicts)
 {
         for (unsigned i = 0; i < new_facets_vector->size(); ++i)
         {
@@ -521,13 +522,13 @@ void add_new_facets_to_conflict_points(
 
 template <typename Point, typename Facet>
 void create_facets_for_point_and_horizon(
-        unsigned thread_id,
-        unsigned thread_count,
+        const unsigned thread_id,
+        const unsigned thread_count,
         const std::vector<Point>& points,
-        int point,
+        const int point,
         const std::vector<FacetStore<Facet>>& point_conflicts,
-        std::vector<std::vector<signed char>>* unique_points_work,
-        std::vector<FacetList<Facet>>* new_facets_vector)
+        std::vector<std::vector<signed char>>* const unique_points_work,
+        std::vector<FacetList<Facet>>* const new_facets_vector)
 {
         ASSERT(new_facets_vector->size() == thread_count);
         ASSERT(unique_points_work->size() == thread_count);
@@ -538,7 +539,7 @@ void create_facets_for_point_and_horizon(
         new_facets->clear();
 
         unsigned ridge_count = 0;
-
+        unsigned index = thread_id;
         for (const Facet* facet : point_conflicts[point])
         {
                 for (unsigned r = 0; r < facet->vertices().size(); ++r)
@@ -549,13 +550,13 @@ void create_facets_for_point_and_horizon(
                         {
                                 continue;
                         }
-                        if (ridge_count != thread_id)
+                        if (ridge_count != index)
                         {
                                 ++ridge_count;
                                 continue;
                         }
                         ++ridge_count;
-                        thread_id += thread_count;
+                        index += thread_count;
 
                         int link_index = link_facet->find_link_index(facet);
 
@@ -576,14 +577,14 @@ void create_facets_for_point_and_horizon(
 
 template <std::size_t N, typename S, typename C>
 void create_horizon_facets(
-        unsigned thread_id,
-        unsigned thread_count,
+        const unsigned thread_id,
+        const unsigned thread_count,
         const std::vector<Vector<N, S>>& points,
-        int point,
-        std::vector<FacetStore<Facet<N, S, C>>>* point_conflicts,
-        std::vector<std::vector<signed char>>* unique_points_work,
-        std::vector<FacetList<Facet<N, S, C>>>* new_facets_vector,
-        Barrier* barrier)
+        const int point,
+        std::vector<FacetStore<Facet<N, S, C>>>* const point_conflicts,
+        std::vector<std::vector<signed char>>* const unique_points_work,
+        std::vector<FacetList<Facet<N, S, C>>>* const new_facets_vector,
+        Barrier* const barrier)
 {
         try
         {
@@ -618,12 +619,12 @@ unsigned calculate_facet_count(const std::vector<T>& facets)
 template <std::size_t N, typename S, typename C>
 void add_point_to_convex_hull(
         const std::vector<Vector<N, S>>& points,
-        int point,
-        FacetList<Facet<N, S, C>>* facets,
-        std::vector<FacetStore<Facet<N, S, C>>>* point_conflicts,
-        ThreadPool* thread_pool,
-        Barrier* barrier,
-        std::vector<std::vector<signed char>>* unique_points_work)
+        const int point,
+        FacetList<Facet<N, S, C>>* const facets,
+        std::vector<FacetStore<Facet<N, S, C>>>* const point_conflicts,
+        ThreadPool* const thread_pool,
+        Barrier* const barrier,
+        std::vector<std::vector<signed char>>* const unique_points_work)
 {
         if ((*point_conflicts)[point].size() == 0)
         {
@@ -646,7 +647,7 @@ void add_point_to_convex_hull(
         if (thread_pool->thread_count() > 1)
         {
                 thread_pool->run(
-                        [&](unsigned thread_id, unsigned thread_count)
+                        [&](const unsigned thread_id, const unsigned thread_count)
                         {
                                 create_horizon_facets(
                                         thread_id, thread_count, points, point, point_conflicts, unique_points_work,
@@ -692,8 +693,8 @@ void add_point_to_convex_hull(
 template <std::size_t N, typename S, typename C>
 void create_convex_hull(
         const std::vector<Vector<N, S>>& points,
-        FacetList<Facet<N, S, C>>* facets,
-        ProgressRatio* progress)
+        FacetList<Facet<N, S, C>>* const facets,
+        ProgressRatio* const progress)
 {
         static_assert(N > 1);
 
@@ -753,81 +754,6 @@ void create_convex_hull(
 }
 
 template <std::size_t N>
-void find_min_max(const std::vector<Vector<N, float>>& points, Vector<N, float>* min, Vector<N, float>* max)
-{
-        ASSERT(!points.empty());
-
-        *min = *max = points[0];
-        for (unsigned i = 1; i < points.size(); ++i)
-        {
-                for (unsigned n = 0; n < N; ++n)
-                {
-                        (*min)[n] = std::min((*min)[n], points[i][n]);
-                        (*max)[n] = std::max((*max)[n], points[i][n]);
-                }
-        }
-}
-
-template <std::size_t N>
-void shuffle_and_convert_to_unique_integer(
-        const std::vector<Vector<N, float>>& source_points,
-        long long max_value,
-        std::vector<Vector<N, long long>>* points,
-        std::vector<int>* points_map)
-{
-        ASSERT(0 < max_value);
-
-        points->clear();
-        points->reserve(source_points.size());
-
-        points_map->clear();
-        points_map->reserve(source_points.size());
-
-        std::vector<int> random_map(source_points.size());
-        std::iota(random_map.begin(), random_map.end(), 0);
-        std::shuffle(random_map.begin(), random_map.end(), std::mt19937_64(source_points.size()));
-
-        Vector<N, float> min;
-        Vector<N, float> max;
-        find_min_max(source_points, &min, &max);
-
-        double max_d = (max - min).norm_infinity();
-        if (max_d == 0)
-        {
-                error("all points are equal to each other");
-        }
-        double scale_factor = max_value / max_d;
-
-        std::unordered_set<Vector<N, long long>> unique_check(source_points.size());
-
-        for (unsigned i = 0; i < source_points.size(); ++i)
-        {
-                int random_i = random_map[i];
-
-                Vector<N, double> float_value = to_vector<double>(source_points[random_i] - min) * scale_factor;
-
-                Vector<N, long long> integer_value;
-
-                for (unsigned n = 0; n < N; ++n)
-                {
-                        long long ll = std::llround(float_value[n]);
-                        if (ll < 0 || ll > max_value)
-                        {
-                                error("points preprocessing error: value < 0 || value > MAX");
-                        }
-                        integer_value[n] = ll;
-                }
-
-                if (unique_check.count(integer_value) == 0)
-                {
-                        unique_check.insert(integer_value);
-                        points->push_back(integer_value);
-                        points_map->push_back(random_i);
-                }
-        }
-}
-
-template <std::size_t N>
 std::array<int, N> restore_indices(const std::array<int, N>& vertices, const std::vector<int>& points_map)
 {
         std::array<int, N> res;
@@ -838,69 +764,64 @@ std::array<int, N> restore_indices(const std::array<int, N>& vertices, const std
         return res;
 }
 
-template <std::size_t N>
-void paraboloid_convex_hull(
-        const std::vector<Vector<N, long long>>& points,
-        const std::vector<int>& points_map,
-        std::vector<DelaunaySimplex<N>>* simplices,
-        ProgressRatio* progress,
-        bool write_log)
+template <typename PointType, std::size_t N>
+std::vector<PointType> create_points_paraboloid(const std::vector<Vector<N, long long>>& points)
 {
-        using FacetCH = Facet<N + 1, DataTypeParaboloid<N + 1>, ComputeTypeParaboloid<N + 1>>;
-        using PointCH = Vector<N + 1, DataTypeParaboloid<N + 1>>;
+        static_assert(std::tuple_size_v<PointType> == N + 1);
 
-        if (write_log)
-        {
-                std::ostringstream oss;
-                oss << "Convex hull" << '\n';
-                oss << "  Paraboloid " << space_name(N + 1) << '\n';
-                oss << "    Max: " << PARABOLOID_BITS << '\n';
-                oss << "    Data: " << type_str<DataTypeParaboloid<N + 1>>() << '\n';
-                oss << "    Compute: " << type_str<ComputeTypeParaboloid<N + 1>>() << '\n';
-                oss << "  " << space_name(N) << '\n';
-                oss << "    Data: " << type_str<DataTypeAfterParaboloid<N>>() << '\n';
-                oss << "    Compute: " << type_str<ComputeTypeAfterParaboloid<N>>();
-                LOG(oss.str());
-        }
-
-        std::vector<PointCH> data(points.size());
-
-        // place points onto paraboloid
-        for (unsigned i = 0; i < points.size(); ++i)
+        std::vector<PointType> data(points.size());
+        for (std::size_t i = 0; i < points.size(); ++i)
         {
                 data[i][N] = 0;
-                for (unsigned n = 0; n < N; ++n)
+                for (std::size_t n = 0; n < N; ++n)
                 {
                         data[i][n] = points[i][n];
                         // multipication using data type of the 'data'
                         data[i][N] += data[i][n] * data[i][n];
                 }
         }
+        return data;
+}
 
-        FacetList<FacetCH> facets;
+template <typename PointType, std::size_t N>
+std::vector<PointType> create_points(const std::vector<Vector<N, long long>>& points)
+{
+        static_assert(std::tuple_size_v<PointType> == N);
 
-        create_convex_hull(data, &facets, progress);
+        std::vector<PointType> data(points.size());
+        for (std::size_t i = 0; i < points.size(); ++i)
+        {
+                for (std::size_t n = 0; n < N; ++n)
+                {
+                        data[i][n] = points[i][n];
+                }
+        }
+        return data;
+}
 
-        data.clear();
-        data.shrink_to_fit();
+template <std::size_t N>
+void compute_delaunay(
+        const std::vector<Vector<N, long long>>& points,
+        const std::vector<int>& points_map,
+        std::vector<DelaunaySimplex<N>>* const simplices,
+        ProgressRatio* const progress)
+{
+        using FacetCH = Facet<N + 1, DelaunayParaboloidDataType<N + 1>, DelaunayParaboloidComputeType<N + 1>>;
+        using PointCH = Vector<N + 1, DelaunayParaboloidDataType<N + 1>>;
+        using FacetDelaunay = Facet<N, DelaunayDataType<N>, DelaunayComputeType<N>>;
+        using PointDelaunay = Vector<N, DelaunayDataType<N>>;
+
+        FacetList<FacetCH> convex_hull_facets;
+
+        create_convex_hull(create_points_paraboloid<PointCH>(points), &convex_hull_facets, progress);
 
         // compute ortho in n-space and create facets
 
-        using FacetDelaunay = Facet<N, DataTypeAfterParaboloid<N>, ComputeTypeAfterParaboloid<N>>;
-        using PointDelaunay = Vector<N, DataTypeAfterParaboloid<N>>;
-
-        std::vector<PointDelaunay> data_d(points.size());
-        for (unsigned i = 0; i < points.size(); ++i)
-        {
-                for (unsigned n = 0; n < N; ++n)
-                {
-                        data_d[i][n] = points[i][n];
-                }
-        }
+        std::vector<PointDelaunay> data = create_points<PointDelaunay>(points);
 
         simplices->clear();
-        simplices->reserve(facets.size());
-        for (const FacetCH& facet : facets)
+        simplices->reserve(convex_hull_facets.size());
+        for (const FacetCH& facet : convex_hull_facets)
         {
                 if (!facet.last_ortho_coord_is_negative())
                 {
@@ -911,10 +832,10 @@ void paraboloid_convex_hull(
                 const std::array<int, N + 1>& vertices = facet.vertices();
 
                 std::array<Vector<N, double>, N + 1> orthos;
-                for (unsigned r = 0; r < N + 1; ++r)
+                for (std::size_t r = 0; r < N + 1; ++r)
                 {
                         // ortho is directed outside
-                        orthos[r] = FacetDelaunay(data_d, del_elem(vertices, r), vertices[r], nullptr).double_ortho();
+                        orthos[r] = FacetDelaunay(data, del_elem(vertices, r), vertices[r], nullptr).double_ortho();
                 }
 
                 simplices->emplace_back(restore_indices(vertices, points_map), orthos);
@@ -922,92 +843,207 @@ void paraboloid_convex_hull(
 }
 
 template <std::size_t N>
-void ordinary_convex_hull(
+void compute_convex_hull(
         const std::vector<Vector<N, long long>>& points,
         const std::vector<int>& points_map,
-        std::vector<ConvexHullFacet<N>>* ch_facets,
-        ProgressRatio* progress,
-        bool write_log)
+        std::vector<ConvexHullFacet<N>>* const facets,
+        ProgressRatio* const progress)
 {
-        using Facet = Facet<N, DataTypeOrdinary<N>, ComputeTypeOrdinary<N>>;
-        using Point = Vector<N, DataTypeOrdinary<N>>;
+        using Facet = Facet<N, ConvexHullDataType<N>, ConvexHullComputeType<N>>;
+        using Point = Vector<N, ConvexHullDataType<N>>;
 
-        if (write_log)
+        FacetList<Facet> convex_hull_facets;
+
+        create_convex_hull(create_points<Point>(points), &convex_hull_facets, progress);
+
+        facets->clear();
+        facets->reserve(convex_hull_facets.size());
+        for (const Facet& facet : convex_hull_facets)
         {
-                std::ostringstream oss;
-                oss << "Convex hull " << space_name(N) << '\n';
-                oss << "  Max: " << to_string(ORDINARY_BITS) << '\n';
-                oss << "  Data: " << type_str<DataTypeOrdinary<N>>() << '\n';
-                oss << "  Compute: " << type_str<ComputeTypeOrdinary<N>>();
-                LOG(oss.str());
-        }
-
-        std::vector<Point> data(points.size());
-
-        for (unsigned i = 0; i < points.size(); ++i)
-        {
-                for (unsigned n = 0; n < N; ++n)
-                {
-                        data[i][n] = points[i][n];
-                }
-        }
-
-        FacetList<Facet> facets;
-
-        create_convex_hull(data, &facets, progress);
-
-        ch_facets->clear();
-        ch_facets->reserve(facets.size());
-        for (const Facet& facet : facets)
-        {
-                ch_facets->emplace_back(restore_indices(facet.vertices(), points_map), facet.double_ortho());
+                facets->emplace_back(restore_indices(facet.vertices(), points_map), facet.double_ortho());
         }
 }
 
-//
+template <std::size_t N>
+class Transform
+{
+        const std::vector<Vector<N, float>>* points_;
+        long long max_value_;
+        Vector<N, float> min_;
+        double scale_;
+
+public:
+        Transform(const std::vector<Vector<N, float>>* const points, const long long max_value)
+        {
+                ASSERT(points);
+                ASSERT(!points->empty());
+                ASSERT(0 < max_value);
+
+                Vector<N, float> min = (*points)[0];
+                Vector<N, float> max = (*points)[0];
+                for (std::size_t i = 1; i < points->size(); ++i)
+                {
+                        for (std::size_t n = 0; n < N; ++n)
+                        {
+                                min[n] = std::min(min[n], (*points)[i][n]);
+                                max[n] = std::max(max[n], (*points)[i][n]);
+                        }
+                }
+
+                double max_d = (max - min).norm_infinity();
+                if (max_d == 0)
+                {
+                        error("All points are equal to each other");
+                }
+
+                points_ = points;
+                max_value_ = max_value;
+                min_ = min;
+                scale_ = max_value / max_d;
+        }
+
+        Vector<N, long long> to_integer(const std::size_t i) const
+        {
+                ASSERT(i < points_->size());
+
+                const Vector<N, double> float_value = to_vector<double>((*points_)[i] - min_) * scale_;
+
+                Vector<N, long long> integer_value;
+                for (std::size_t n = 0; n < N; ++n)
+                {
+                        const long long ll = std::llround(float_value[n]);
+                        if (!(ll >= 0 && ll <= max_value_))
+                        {
+                                error("Points preprocessing error: value " + to_string(ll) + " is not in the range [0, "
+                                      + to_string(max_value_) + "]");
+                        }
+                        integer_value[n] = ll;
+                }
+                return integer_value;
+        }
+};
 
 template <std::size_t N>
-void delaunay_integer(
-        const std::vector<Vector<N, float>>& source_points,
-        std::vector<Vector<N, double>>* points,
-        std::vector<DelaunaySimplex<N>>* simplices,
-        ProgressRatio* progress,
-        bool write_log)
+std::vector<int> create_random_map(const std::vector<Vector<N, float>>& source_points)
 {
+        std::vector<int> random_map(source_points.size());
+        std::iota(random_map.begin(), random_map.end(), 0);
+        std::shuffle(random_map.begin(), random_map.end(), std::mt19937_64(source_points.size()));
+        return random_map;
+}
+
+template <std::size_t N>
+void shuffle_and_convert_to_unique_integer(
+        const std::vector<Vector<N, float>>& source_points,
+        const long long max_value,
+        std::vector<Vector<N, long long>>* const points,
+        std::vector<int>* const points_map)
+{
+        points->clear();
+        points->reserve(source_points.size());
+
+        points_map->clear();
+        points_map->reserve(source_points.size());
+
+        const std::vector<int> random_map{create_random_map(source_points)};
+        const Transform transform{&source_points, max_value};
+
+        std::unordered_set<Vector<N, long long>> set(source_points.size());
+        for (std::size_t i = 0; i < source_points.size(); ++i)
+        {
+                const int random_index = random_map[i];
+                const Vector<N, long long> integer_value = transform.to_integer(random_index);
+                if (set.insert(integer_value).second)
+                {
+                        points->push_back(integer_value);
+                        points_map->push_back(random_index);
+                }
+        }
+}
+
+template <std::size_t N>
+std::string delaunay_description()
+{
+        std::ostringstream oss;
+        oss << "Delaunay" << '\n';
+        oss << "  Convex hull " << space_name(N + 1) << '\n';
+        oss << "    Max: " << DELAUNAY_BITS << '\n';
+        oss << "    Data: " << type_str<DelaunayParaboloidDataType<N + 1>>() << '\n';
+        oss << "    Compute: " << type_str<DelaunayParaboloidComputeType<N + 1>>() << '\n';
+        oss << "  " << space_name(N) << '\n';
+        oss << "    Data: " << type_str<DelaunayDataType<N>>() << '\n';
+        oss << "    Compute: " << type_str<DelaunayComputeType<N>>();
+        return oss.str();
+}
+
+template <std::size_t N>
+std::string convex_hull_description()
+{
+        std::ostringstream oss;
+        oss << "Convex hull " << space_name(N) << '\n';
+        oss << "  Max: " << CONVEX_HULL_BITS << '\n';
+        oss << "  Data: " << type_str<ConvexHullDataType<N>>() << '\n';
+        oss << "  Compute: " << type_str<ConvexHullComputeType<N>>();
+        return oss.str();
+}
+}
+
+template <std::size_t N>
+void compute_delaunay(
+        const std::vector<Vector<N, float>>& source_points,
+        std::vector<Vector<N, double>>* const points,
+        std::vector<DelaunaySimplex<N>>* const simplices,
+        ProgressRatio* const progress,
+        const bool write_log)
+{
+        if (source_points.empty())
+        {
+                error("No points to compute delaunay");
+        }
+
         if (write_log)
         {
-                LOG("Convex hull paraboloid in " + space_name(N + 1) + " integer");
+                LOG("Delaunay in " + space_name(N + 1) + " integer");
         }
 
         std::vector<Vector<N, long long>> convex_hull_points;
         std::vector<int> points_map;
 
-        constexpr long long MAX = (1ull << PARABOLOID_BITS) - 1;
-
+        constexpr long long MAX = (1ull << DELAUNAY_BITS) - 1;
         shuffle_and_convert_to_unique_integer(source_points, MAX, &convex_hull_points, &points_map);
 
-        paraboloid_convex_hull(convex_hull_points, points_map, simplices, progress, write_log);
+        if (write_log)
+        {
+                LOG(delaunay_description<N>());
+        }
+
+        compute_delaunay(convex_hull_points, points_map, simplices, progress);
 
         points->clear();
         points->resize(source_points.size(), Vector<N, double>(0));
-        for (unsigned i = 0; i < convex_hull_points.size(); ++i)
+        for (std::size_t i = 0; i < convex_hull_points.size(); ++i)
         {
                 (*points)[points_map[i]] = to_vector<double>(convex_hull_points[i]);
         }
 
         if (write_log)
         {
-                LOG("Convex hull paraboloid in " + space_name(N + 1) + " integer done");
+                LOG("Delaunay in " + space_name(N + 1) + " integer done");
         }
 }
 
 template <std::size_t N>
-void convex_hull_integer(
+void compute_convex_hull(
         const std::vector<Vector<N, float>>& source_points,
-        std::vector<ConvexHullFacet<N>>* facets,
-        ProgressRatio* progress,
-        bool write_log)
+        std::vector<ConvexHullFacet<N>>* const facets,
+        ProgressRatio* const progress,
+        const bool write_log)
 {
+        if (source_points.empty())
+        {
+                error("No data to compute convex hull");
+        }
+
         if (write_log)
         {
                 LOG("Convex hull in " + space_name(N) + " integer");
@@ -1016,48 +1052,20 @@ void convex_hull_integer(
         std::vector<int> points_map;
         std::vector<Vector<N, long long>> convex_hull_points;
 
-        constexpr long long MAX = (1ull << ORDINARY_BITS) - 1;
-
+        constexpr long long MAX = (1ull << CONVEX_HULL_BITS) - 1;
         shuffle_and_convert_to_unique_integer(source_points, MAX, &convex_hull_points, &points_map);
 
-        ordinary_convex_hull(convex_hull_points, points_map, facets, progress, write_log);
+        if (write_log)
+        {
+                LOG(convex_hull_description<N>());
+        }
+
+        compute_convex_hull(convex_hull_points, points_map, facets, progress);
 
         if (write_log)
         {
                 LOG("Convex hull in " + space_name(N) + " integer done");
         }
-}
-}
-
-template <std::size_t N>
-void compute_delaunay(
-        const std::vector<Vector<N, float>>& source_points,
-        std::vector<Vector<N, double>>* points,
-        std::vector<DelaunaySimplex<N>>* simplices,
-        ProgressRatio* progress,
-        bool write_log)
-{
-        if (source_points.empty())
-        {
-                error("No points for compute delaunay");
-        }
-
-        delaunay_integer(source_points, points, simplices, progress, write_log);
-}
-
-template <std::size_t N>
-void compute_convex_hull(
-        const std::vector<Vector<N, float>>& source_points,
-        std::vector<ConvexHullFacet<N>>* ch_facets,
-        ProgressRatio* progress,
-        bool write_log)
-{
-        if (source_points.empty())
-        {
-                error("No points for compute convex hull");
-        }
-
-        convex_hull_integer(source_points, ch_facets, progress, write_log);
 }
 
 #define COMPUTE_DELAUNAY_INSTANTIATION(N)                                                  \

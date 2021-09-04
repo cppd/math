@@ -80,7 +80,7 @@ void compute_delaunay(
 template <std::size_t N>
 void compute_convex_hull(
         const std::vector<Vector<N, float>>& source_points,
-        std::vector<ConvexHullFacet<N>>* ch_facets,
+        std::vector<ConvexHullFacet<N>>* facets,
         ProgressRatio* progress,
         bool write_log);
 }
