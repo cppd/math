@@ -37,7 +37,7 @@ namespace
 {
 constexpr double GRADIENT_H_IN_PIXELS = 0.5;
 
-std::vector<VkFormat> vulkan_transfer_function_formats(image::ColorFormat color_format)
+std::vector<VkFormat> vulkan_transfer_function_formats(const image::ColorFormat color_format)
 {
         switch (color_format)
         {
@@ -61,7 +61,7 @@ std::vector<VkFormat> vulkan_transfer_function_formats(image::ColorFormat color_
         error_fatal("Unknown color format " + image::format_to_string(color_format));
 }
 
-std::vector<VkFormat> vulkan_image_formats(image::ColorFormat color_format)
+std::vector<VkFormat> vulkan_image_formats(const image::ColorFormat color_format)
 {
         switch (color_format)
         {
@@ -339,6 +339,8 @@ class Impl final : public VolumeObject
                 {
                         *size_changed = true;
 
+                        image_layout = VK_IMAGE_LAYOUT_UNDEFINED;
+
                         buffer_set_color_volume(!is_scalar_volume(image.color_format));
 
                         image_formats_ = vulkan_image_formats(image.color_format);
@@ -347,10 +349,8 @@ class Impl final : public VolumeObject
                         image_ = std::make_unique<vulkan::ImageWithMemory>(
                                 device_, family_indices_, image_formats_, VK_SAMPLE_COUNT_1_BIT, VK_IMAGE_TYPE_3D,
                                 vulkan::make_extent(image.size[0], image.size[1], image.size[2]),
-                                VK_IMAGE_USAGE_SAMPLED_BIT | VK_IMAGE_USAGE_TRANSFER_DST_BIT, VK_IMAGE_LAYOUT_UNDEFINED,
+                                VK_IMAGE_USAGE_SAMPLED_BIT | VK_IMAGE_USAGE_TRANSFER_DST_BIT, image_layout,
                                 transfer_command_pool_, transfer_queue_);
-
-                        image_layout = VK_IMAGE_LAYOUT_UNDEFINED;
                 }
                 else
                 {
