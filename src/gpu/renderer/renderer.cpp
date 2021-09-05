@@ -307,54 +307,48 @@ class Impl final : public Renderer
         {
                 ASSERT(thread_id_ == std::this_thread::get_id());
 
-                //
+                ASSERT(volume_storage_.find(object.id()) == nullptr);
 
                 bool created = false;
 
+                MeshObject* ptr = mesh_storage_.find(object.id());
+                if (!ptr)
+                {
+                        ptr = mesh_storage_.insert(
+                                object.id(),
+                                create_mesh_object(
+                                        device_, {graphics_queue_.family_index()}, transfer_command_pool_,
+                                        transfer_queue_, mesh_renderer_.mesh_layouts(),
+                                        mesh_renderer_.material_layouts(), mesh_renderer_.texture_sampler()));
+
+                        created = true;
+                }
+
+                MeshObject::UpdateChanges update_changes;
+                try
                 {
                         mesh::Reading reading(object);
+                        update_changes = ptr->update(reading);
+                }
+                catch (const std::exception& e)
+                {
+                        mesh_storage_.erase(object.id());
+                        LOG(std::string("Error updating mesh object. ") + e.what());
+                        return;
+                }
+                catch (...)
+                {
+                        mesh_storage_.erase(object.id());
+                        LOG("Unknown error updating mesh object");
+                        return;
+                }
 
-                        //
+                ASSERT(!(created && mesh_storage_.is_visible(object.id())));
 
-                        ASSERT(volume_storage_.find(object.id()) == nullptr);
-
-                        MeshObject* ptr = mesh_storage_.find(object.id());
-                        if (!ptr)
-                        {
-                                ptr = mesh_storage_.insert(
-                                        object.id(),
-                                        create_mesh_object(
-                                                device_, {graphics_queue_.family_index()}, transfer_command_pool_,
-                                                transfer_queue_, mesh_renderer_.mesh_layouts(),
-                                                mesh_renderer_.material_layouts(), mesh_renderer_.texture_sampler()));
-
-                                created = true;
-                        }
-
-                        MeshObject::UpdateChanges update_changes;
-                        try
-                        {
-                                update_changes = ptr->update(reading);
-                        }
-                        catch (const std::exception& e)
-                        {
-                                mesh_storage_.erase(object.id());
-                                LOG(std::string("Error updating mesh object. ") + e.what());
-                                return;
-                        }
-                        catch (...)
-                        {
-                                mesh_storage_.erase(object.id());
-                                LOG("Unknown error updating mesh object");
-                                return;
-                        }
-
-                        ASSERT(!(created && mesh_storage_.is_visible(object.id())));
-                        if ((update_changes.command_buffers || update_changes.transparency)
-                            && mesh_storage_.is_visible(object.id()))
-                        {
-                                create_mesh_command_buffers();
-                        }
+                if ((update_changes.command_buffers || update_changes.transparency)
+                    && mesh_storage_.is_visible(object.id()))
+                {
+                        create_mesh_command_buffers();
                 }
 
                 if (created)
@@ -367,54 +361,47 @@ class Impl final : public Renderer
         {
                 ASSERT(thread_id_ == std::this_thread::get_id());
 
-                //
+                ASSERT(mesh_storage_.find(object.id()) == nullptr);
 
                 bool created = false;
 
+                VolumeObject* ptr = volume_storage_.find(object.id());
+                if (!ptr)
+                {
+                        ptr = volume_storage_.insert(
+                                object.id(), create_volume_object(
+                                                     device_, {graphics_queue_.family_index()}, transfer_command_pool_,
+                                                     transfer_queue_, volume_renderer_.image_layouts(),
+                                                     volume_renderer_.image_sampler(),
+                                                     volume_renderer_.transfer_function_sampler()));
+
+                        created = true;
+                }
+
+                VolumeObject::UpdateChanges update_changes;
+                try
                 {
                         volume::Reading reading(object);
+                        update_changes = ptr->update(reading);
+                }
+                catch (const std::exception& e)
+                {
+                        volume_storage_.erase(object.id());
+                        LOG(std::string("Error updating volume object. ") + e.what());
+                        return;
+                }
+                catch (...)
+                {
+                        volume_storage_.erase(object.id());
+                        LOG("Unknown error updating volume object");
+                        return;
+                }
 
-                        //
+                ASSERT(!(created && volume_storage_.is_visible(object.id())));
 
-                        ASSERT(mesh_storage_.find(object.id()) == nullptr);
-
-                        VolumeObject* ptr = volume_storage_.find(object.id());
-                        if (!ptr)
-                        {
-                                ptr = volume_storage_.insert(
-                                        object.id(),
-                                        create_volume_object(
-                                                device_, {graphics_queue_.family_index()}, transfer_command_pool_,
-                                                transfer_queue_, volume_renderer_.image_layouts(),
-                                                volume_renderer_.image_sampler(),
-                                                volume_renderer_.transfer_function_sampler()));
-
-                                created = true;
-                        }
-
-                        VolumeObject::UpdateChanges update_changes;
-                        try
-                        {
-                                update_changes = ptr->update(reading);
-                        }
-                        catch (const std::exception& e)
-                        {
-                                volume_storage_.erase(object.id());
-                                LOG(std::string("Error updating volume object. ") + e.what());
-                                return;
-                        }
-                        catch (...)
-                        {
-                                volume_storage_.erase(object.id());
-                                LOG("Unknown error updating volume object");
-                                return;
-                        }
-
-                        ASSERT(!(created && volume_storage_.is_visible(object.id())));
-                        if (update_changes.command_buffers && volume_storage_.is_visible(object.id()))
-                        {
-                                create_volume_command_buffers();
-                        }
+                if (update_changes.command_buffers && volume_storage_.is_visible(object.id()))
+                {
+                        create_volume_command_buffers();
                 }
 
                 if (created)
@@ -426,8 +413,6 @@ class Impl final : public Renderer
         void object_delete(ObjectId id) override
         {
                 ASSERT(thread_id_ == std::this_thread::get_id());
-
-                //
 
                 if (mesh_storage_.erase(id))
                 {
@@ -443,8 +428,6 @@ class Impl final : public Renderer
         {
                 ASSERT(thread_id_ == std::this_thread::get_id());
 
-                //
-
                 mesh_storage_.clear();
                 volume_storage_.clear();
         }
@@ -452,8 +435,6 @@ class Impl final : public Renderer
         void object_show(ObjectId id, bool show) override
         {
                 ASSERT(thread_id_ == std::this_thread::get_id());
-
-                //
 
                 if (mesh_storage_.set_visible(id, show))
                 {
@@ -465,6 +446,77 @@ class Impl final : public Renderer
                 }
         }
 
+        [[nodiscard]] std::tuple<VkSemaphore, bool> draw_meshes(
+                VkSemaphore semaphore,
+                const vulkan::Queue& graphics_queue,
+                const unsigned index) const
+        {
+                if (!show_shadow_)
+                {
+                        ASSERT(*mesh_renderer_.render_command_buffer_all(index));
+                        vulkan::queue_submit(
+                                semaphore, VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT,
+                                *mesh_renderer_.render_command_buffer_all(index), renderer_mesh_signal_semaphore_,
+                                graphics_queue);
+
+                        semaphore = renderer_mesh_signal_semaphore_;
+                }
+                else
+                {
+                        ASSERT(mesh_renderer_.depth_command_buffer(index));
+                        vulkan::queue_submit(
+                                *mesh_renderer_.depth_command_buffer(index), mesh_renderer_depth_signal_semaphore_,
+                                graphics_queue);
+
+                        ASSERT(*mesh_renderer_.render_command_buffer_all(index));
+                        vulkan::queue_submit(
+                                std::array<VkSemaphore, 2>{semaphore, mesh_renderer_depth_signal_semaphore_},
+                                std::array<VkPipelineStageFlags, 2>{
+                                        VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT, VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT},
+                                *mesh_renderer_.render_command_buffer_all(index), renderer_mesh_signal_semaphore_,
+                                graphics_queue);
+
+                        semaphore = renderer_mesh_signal_semaphore_;
+                }
+
+                if (!mesh_renderer_.has_transparent_meshes())
+                {
+                        transparency_message(-1, -1);
+                        return {semaphore, false /*transparency*/};
+                }
+
+                vulkan::queue_wait_idle(graphics_queue);
+
+                unsigned long long required_node_memory;
+                unsigned overload_counter;
+                transparency_buffers_->read(&required_node_memory, &overload_counter);
+
+                const bool nodes = required_node_memory > TRANSPARENCY_NODE_BUFFER_MAX_SIZE;
+                const bool overload = overload_counter > 0;
+                bool transparency;
+                if (nodes || overload)
+                {
+                        ASSERT(*mesh_renderer_.render_command_buffer_transparent_as_opaque(index));
+                        vulkan::queue_submit(
+                                semaphore, VK_PIPELINE_STAGE_BOTTOM_OF_PIPE_BIT,
+                                *mesh_renderer_.render_command_buffer_transparent_as_opaque(index),
+                                render_transparent_as_opaque_signal_semaphore_, graphics_queue);
+
+                        semaphore = render_transparent_as_opaque_signal_semaphore_;
+                        transparency = false;
+                }
+                else
+                {
+                        transparency = true;
+                }
+
+                transparency_message(
+                        nodes ? static_cast<long long>(required_node_memory) : -1,
+                        overload ? static_cast<long long>(overload_counter) : -1);
+
+                return {semaphore, transparency};
+        }
+
         VkSemaphore draw(
                 const vulkan::Queue& graphics_queue_1,
                 const vulkan::Queue& graphics_queue_2,
@@ -472,87 +524,25 @@ class Impl final : public Renderer
         {
                 ASSERT(thread_id_ == std::this_thread::get_id());
 
-                //
-
                 ASSERT(graphics_queue_1.family_index() == graphics_queue_.family_index());
                 ASSERT(graphics_queue_2.family_index() == graphics_queue_.family_index());
 
-                VkSemaphore semaphore;
+                ASSERT(clear_command_buffers_);
+                ASSERT(index < clear_command_buffers_->count());
+                vulkan::queue_submit((*clear_command_buffers_)[index], clear_signal_semaphore_, graphics_queue_2);
 
-                {
-                        ASSERT(clear_command_buffers_);
-                        ASSERT(index < clear_command_buffers_->count());
-                        vulkan::queue_submit(
-                                (*clear_command_buffers_)[index], clear_signal_semaphore_, graphics_queue_2);
-                        semaphore = clear_signal_semaphore_;
-                }
+                VkSemaphore semaphore = clear_signal_semaphore_;
 
                 bool transparency = false;
+
                 if (mesh_renderer_.has_meshes())
                 {
-                        if (!show_shadow_)
-                        {
-                                vulkan::queue_submit(
-                                        semaphore, VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT,
-                                        *mesh_renderer_.render_command_buffer_all(index),
-                                        renderer_mesh_signal_semaphore_, graphics_queue_1);
-
-                                semaphore = renderer_mesh_signal_semaphore_;
-                        }
-                        else
-                        {
-                                ASSERT(mesh_renderer_.depth_command_buffer(index));
-                                vulkan::queue_submit(
-                                        *mesh_renderer_.depth_command_buffer(index),
-                                        mesh_renderer_depth_signal_semaphore_, graphics_queue_1);
-
-                                vulkan::queue_submit(
-                                        std::array<VkSemaphore, 2>{semaphore, mesh_renderer_depth_signal_semaphore_},
-                                        std::array<VkPipelineStageFlags, 2>{
-                                                VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT,
-                                                VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT},
-                                        *mesh_renderer_.render_command_buffer_all(index),
-                                        renderer_mesh_signal_semaphore_, graphics_queue_1);
-
-                                semaphore = renderer_mesh_signal_semaphore_;
-                        }
-
-                        if (mesh_renderer_.has_transparent_meshes())
-                        {
-                                vulkan::queue_wait_idle(graphics_queue_1);
-
-                                unsigned long long required_node_memory;
-                                unsigned overload_counter;
-                                transparency_buffers_->read(&required_node_memory, &overload_counter);
-
-                                bool nodes = required_node_memory > TRANSPARENCY_NODE_BUFFER_MAX_SIZE;
-                                bool overload = overload_counter > 0;
-                                if (nodes || overload)
-                                {
-                                        vulkan::queue_submit(
-                                                semaphore, VK_PIPELINE_STAGE_BOTTOM_OF_PIPE_BIT,
-                                                *mesh_renderer_.render_command_buffer_transparent_as_opaque(index),
-                                                render_transparent_as_opaque_signal_semaphore_, graphics_queue_1);
-
-                                        semaphore = render_transparent_as_opaque_signal_semaphore_;
-                                }
-                                else
-                                {
-                                        transparency = true;
-                                }
-
-                                transparency_message(
-                                        nodes ? static_cast<long long>(required_node_memory) : -1,
-                                        overload ? static_cast<long long>(overload_counter) : -1);
-                        }
-                        else
-                        {
-                                transparency_message(-1, -1);
-                        }
+                        std::tie(semaphore, transparency) = draw_meshes(semaphore, graphics_queue_1, index);
                 }
 
                 if (volume_renderer_.has_volume() || transparency)
                 {
+                        ASSERT(*volume_renderer_.command_buffer(index, transparency));
                         vulkan::queue_submit(
                                 semaphore, VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT,
                                 *volume_renderer_.command_buffer(index, transparency),
@@ -568,8 +558,6 @@ class Impl final : public Renderer
         {
                 ASSERT(thread_id_ == std::this_thread::get_id());
 
-                //
-
                 return !mesh_renderer_.render_command_buffer_all(0).has_value() && !volume_renderer_.has_volume();
         }
 
@@ -579,8 +567,6 @@ class Impl final : public Renderer
                 const Region<2, int>& viewport) override
         {
                 ASSERT(thread_id_ == std::this_thread::get_id());
-
-                //
 
                 ASSERT(viewport.x1() <= static_cast<int>(objects->width()));
                 ASSERT(viewport.y1() <= static_cast<int>(objects->height()));
