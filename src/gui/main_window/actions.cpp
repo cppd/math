@@ -40,9 +40,9 @@ enum ThreadId
         THREAD_ID_COUNT
 };
 
-std::string action_name(const QAction* action)
+std::string action_name(const QAction& action)
 {
-        std::string s = action->text().toStdString();
+        std::string s = action.text().toStdString();
         while (!s.empty() && s.back() == '.')
         {
                 s.pop_back();
@@ -51,9 +51,9 @@ std::string action_name(const QAction* action)
 }
 
 void load_point_mesh(
-        WorkerThreads* threads,
-        const storage::Repository* repository,
-        int dimension,
+        WorkerThreads* const threads,
+        const storage::Repository* const repository,
+        const int dimension,
         const std::string& object_name,
         const std::string& action)
 {
@@ -69,9 +69,9 @@ void load_point_mesh(
 }
 
 void load_facet_mesh(
-        WorkerThreads* threads,
-        const storage::Repository* repository,
-        int dimension,
+        WorkerThreads* const threads,
+        const storage::Repository* const repository,
+        const int dimension,
         const std::string& object_name,
         const std::string& action)
 {
@@ -87,9 +87,9 @@ void load_facet_mesh(
 }
 
 void load_mesh(
-        WorkerThreads* threads,
+        WorkerThreads* const threads,
         const std::filesystem::path& path,
-        bool use_object_selection_dialog,
+        const bool use_object_selection_dialog,
         const std::string& action)
 {
         threads->terminate_and_start(
@@ -104,9 +104,9 @@ void load_mesh(
 }
 
 void load_volume(
-        WorkerThreads* threads,
-        const storage::Repository* repository,
-        int dimension,
+        WorkerThreads* const threads,
+        const storage::Repository* const repository,
+        const int dimension,
         const std::string& object_name,
         const std::string& action)
 {
@@ -118,7 +118,7 @@ void load_volume(
                 });
 }
 
-void load_volume(WorkerThreads* threads, const std::filesystem::path& path, const std::string& action)
+void load_volume(WorkerThreads* const threads, const std::filesystem::path& path, const std::string& action)
 {
         threads->terminate_and_start(
                 WORKER_THREAD_ID, action,
@@ -128,7 +128,7 @@ void load_volume(WorkerThreads* threads, const std::filesystem::path& path, cons
                 });
 }
 
-void save_mesh(WorkerThreads* threads, const ModelTree* model_tree, const std::string& action)
+void save_mesh(WorkerThreads* const threads, const ModelTree* const model_tree, const std::string& action)
 {
         threads->terminate_and_start(
                 WORKER_THREAD_ID, action,
@@ -144,7 +144,7 @@ void save_mesh(WorkerThreads* threads, const ModelTree* model_tree, const std::s
                 });
 }
 
-void save_view_image(WorkerThreads* threads, view::View* view, const std::string& action)
+void save_view_image(WorkerThreads* const threads, view::View* const view, const std::string& action)
 {
         threads->terminate_and_start(
                 SAVE_THREAD_ID, action,
@@ -157,11 +157,11 @@ void save_view_image(WorkerThreads* threads, view::View* view, const std::string
 }
 
 void painter(
-        WorkerThreads* threads,
-        const ModelTree* model_tree,
-        view::View* view,
-        const LightingWidget* lighting,
-        const ColorsWidget* colors,
+        WorkerThreads* const threads,
+        const ModelTree* const model_tree,
+        view::View* const view,
+        const LightingWidget* const lighting,
+        const ColorsWidget* const colors,
         const std::string& action)
 {
         threads->terminate_and_start(
@@ -180,7 +180,7 @@ void painter(
                 });
 }
 
-void bound_cocone(WorkerThreads* threads, const ModelTree* model_tree, const std::string& action)
+void bound_cocone(WorkerThreads* const threads, const ModelTree* const model_tree, const std::string& action)
 {
         threads->terminate_and_start(
                 WORKER_THREAD_ID, action,
@@ -196,7 +196,7 @@ void bound_cocone(WorkerThreads* threads, const ModelTree* model_tree, const std
                 });
 }
 
-void volume_3d_slice(WorkerThreads* threads, const ModelTree* model_tree, const std::string& action)
+void volume_3d_slice(WorkerThreads* const threads, const ModelTree* const model_tree, const std::string& action)
 {
         threads->terminate_and_start(
                 WORKER_THREAD_ID, action,
@@ -212,7 +212,7 @@ void volume_3d_slice(WorkerThreads* threads, const ModelTree* model_tree, const 
                 });
 }
 
-void self_test(WorkerThreads* threads, process::TestType test_type, const std::string& action)
+void self_test(WorkerThreads* const threads, const process::TestType test_type, const std::string& action)
 {
         threads->terminate_and_start(
                 SELF_TEST_THREAD_ID, action,
@@ -221,184 +221,238 @@ void self_test(WorkerThreads* threads, process::TestType test_type, const std::s
                         return process::action_self_test(test_type);
                 });
 }
+
+void create_menu(
+        std::vector<Connection>* const connections,
+        WorkerThreads* const threads,
+        QAction* const action_self_test,
+        QMenu* const menu_file,
+        QMenu* const menu_edit,
+        QMenu* const menu_rendering,
+        view::View* const view,
+        ModelTree* const model_tree,
+        const LightingWidget* const lighting,
+        const ColorsWidget* const colors)
+{
+        QAction* action;
+
+        action = menu_file->addAction("Load Mesh...");
+        connections->emplace_back(QObject::connect(
+                action, &QAction::triggered,
+                [=]()
+                {
+                        load_mesh(threads, "", true, action_name(*action));
+                }));
+
+        action = menu_file->addAction("Load Volume...");
+        connections->emplace_back(QObject::connect(
+                action, &QAction::triggered,
+                [=]()
+                {
+                        load_volume(threads, "", action_name(*action));
+                }));
+
+        action = menu_file->addAction("Save...");
+        connections->emplace_back(QObject::connect(
+                action, &QAction::triggered,
+                [=]()
+                {
+                        save_mesh(threads, model_tree, action_name(*action));
+                }));
+
+        action = menu_file->addAction("Save Image...");
+        connections->emplace_back(QObject::connect(
+                action, &QAction::triggered,
+                [=]()
+                {
+                        save_view_image(threads, view, action_name(*action));
+                }));
+
+        action = action_self_test;
+        connections->emplace_back(QObject::connect(
+                action, &QAction::triggered,
+                [=]()
+                {
+                        self_test(threads, process::TestType::ALL, action_name(*action));
+                }));
+
+        action = menu_rendering->addAction("Painter...");
+        connections->emplace_back(QObject::connect(
+                action, &QAction::triggered,
+                [=]()
+                {
+                        painter(threads, model_tree, view, lighting, colors, action_name(*action));
+                }));
+
+        action = menu_edit->addAction("BoundCocone...");
+        connections->emplace_back(QObject::connect(
+                action, &QAction::triggered,
+                [=]()
+                {
+                        bound_cocone(threads, model_tree, action_name(*action));
+                }));
+
+        action = menu_edit->addAction("3D Slice...");
+        connections->emplace_back(QObject::connect(
+                action, &QAction::triggered,
+                [=]()
+                {
+                        volume_3d_slice(threads, model_tree, action_name(*action));
+                }));
 }
 
-Actions::Actions(
-        const CommandLineOptions& options,
-        QStatusBar* status_bar,
-        QAction* action_self_test,
-        QMenu* menu_file,
-        QMenu* menu_create,
-        QMenu* menu_edit,
-        QMenu* menu_rendering,
-        const storage::Repository* repository,
-        view::View* view,
-        ModelTree* model_tree,
-        const LightingWidget* lighting,
-        const ColorsWidget* colors)
-        : worker_threads_(create_worker_threads(THREAD_ID_COUNT, SELF_TEST_THREAD_ID, status_bar))
+void create_point_mesh_menu(
+        const int dimension,
+        std::vector<std::string>&& object_names,
+        std::vector<Connection>* const connections,
+        WorkerThreads* const threads,
+        QMenu* const menu,
+        const storage::Repository* const repository)
 {
-        WorkerThreads* threads = worker_threads_.get();
-
+        if (object_names.empty())
         {
-                QAction* action = menu_file->addAction("Load Mesh...");
-                connections_.emplace_back(QObject::connect(
-                        action, &QAction::triggered,
-                        [=]()
-                        {
-                                load_mesh(threads, "", true, action_name(action));
-                        }));
-        }
-        {
-                QAction* action = menu_file->addAction("Load Volume...");
-                connections_.emplace_back(QObject::connect(
-                        action, &QAction::triggered,
-                        [=]()
-                        {
-                                load_volume(threads, "", action_name(action));
-                        }));
-        }
-        {
-                QAction* action = menu_file->addAction("Save...");
-                connections_.emplace_back(QObject::connect(
-                        action, &QAction::triggered,
-                        [=]()
-                        {
-                                save_mesh(threads, model_tree, action_name(action));
-                        }));
-        }
-        {
-                QAction* action = menu_file->addAction("Save Image...");
-                connections_.emplace_back(QObject::connect(
-                        action, &QAction::triggered,
-                        [=]()
-                        {
-                                save_view_image(threads, view, action_name(action));
-                        }));
-        }
-        {
-                QAction* action = action_self_test;
-                connections_.emplace_back(QObject::connect(
-                        action, &QAction::triggered,
-                        [=]()
-                        {
-                                self_test(threads, process::TestType::ALL, action_name(action));
-                        }));
-        }
-        {
-                QAction* action = menu_rendering->addAction("Painter...");
-                connections_.emplace_back(QObject::connect(
-                        action, &QAction::triggered,
-                        [=]()
-                        {
-                                painter(threads, model_tree, view, lighting, colors, action_name(action));
-                        }));
-        }
-        {
-                QAction* action = menu_edit->addAction("BoundCocone...");
-                connections_.emplace_back(QObject::connect(
-                        action, &QAction::triggered,
-                        [=]()
-                        {
-                                bound_cocone(threads, model_tree, action_name(action));
-                        }));
-        }
-        {
-                QAction* action = menu_edit->addAction("3D Slice...");
-                connections_.emplace_back(QObject::connect(
-                        action, &QAction::triggered,
-                        [=]()
-                        {
-                                volume_3d_slice(threads, model_tree, action_name(action));
-                        }));
+                return;
         }
 
+        if (!menu->actions().isEmpty())
+        {
+                menu->addSeparator();
+        }
+
+        std::sort(object_names.begin(), object_names.end());
+        for (const std::string& object_name : object_names)
+        {
+                ASSERT(!object_name.empty());
+
+                QAction* action = menu->addAction(QString::fromStdString(object_name + "..."));
+                connections->emplace_back(QObject::connect(
+                        action, &QAction::triggered,
+                        [=]()
+                        {
+                                load_point_mesh(threads, repository, dimension, object_name, action_name(*action));
+                        }));
+        }
+}
+
+void create_facet_mesh_menu(
+        const int dimension,
+        std::vector<std::string>&& object_names,
+        std::vector<Connection>* const connections,
+        WorkerThreads* const threads,
+        QMenu* const menu,
+        const storage::Repository* const repository)
+{
+        if (object_names.empty())
+        {
+                return;
+        }
+
+        if (!menu->actions().isEmpty())
+        {
+                menu->addSeparator();
+        }
+
+        std::sort(object_names.begin(), object_names.end());
+        for (const std::string& object_name : object_names)
+        {
+                ASSERT(!object_name.empty());
+
+                QAction* action = menu->addAction(QString::fromStdString(object_name + "..."));
+                connections->emplace_back(QObject::connect(
+                        action, &QAction::triggered,
+                        [=]()
+                        {
+                                load_facet_mesh(threads, repository, dimension, object_name, action_name(*action));
+                        }));
+        }
+}
+
+void create_volume_menu(
+        const int dimension,
+        std::vector<std::string>&& object_names,
+        std::vector<Connection>* const connections,
+        WorkerThreads* const threads,
+        QMenu* const menu,
+        const storage::Repository* const repository)
+{
+        if (object_names.empty() || dimension != 3)
+        {
+                return;
+        }
+
+        if (!menu->actions().isEmpty())
+        {
+                menu->addSeparator();
+        }
+
+        std::sort(object_names.begin(), object_names.end());
+        for (const std::string& object_name : object_names)
+        {
+                ASSERT(!object_name.empty());
+
+                QAction* action = menu->addAction(QString::fromStdString(object_name + "..."));
+                connections->emplace_back(QObject::connect(
+                        action, &QAction::triggered,
+                        [=]()
+                        {
+                                load_volume(threads, repository, dimension, object_name, action_name(*action));
+                        }));
+        }
+}
+
+void create_repository_menu(
+        std::vector<Connection>* const connections,
+        WorkerThreads* const threads,
+        QMenu* const menu_create,
+        const storage::Repository* const repository)
+{
         std::vector<storage::Repository::ObjectNames> repository_objects = repository->object_names();
+
         std::sort(
                 repository_objects.begin(), repository_objects.end(),
                 [](const auto& a, const auto& b)
                 {
                         return a.dimension < b.dimension;
                 });
+
         for (storage::Repository::ObjectNames& objects : repository_objects)
         {
-                const int dimension = objects.dimension;
-                ASSERT(dimension > 0);
+                QMenu* const sub_menu = menu_create->addMenu(QString::fromStdString(space_name(objects.dimension)));
 
-                QMenu* sub_menu = menu_create->addMenu(QString::fromStdString(space_name(dimension)));
+                create_point_mesh_menu(
+                        objects.dimension, std::move(objects.point_mesh_names), connections, threads, sub_menu,
+                        repository);
 
-                if (!objects.point_mesh_names.empty())
-                {
-                        if (!sub_menu->actions().isEmpty())
-                        {
-                                sub_menu->addSeparator();
-                        }
+                create_facet_mesh_menu(
+                        objects.dimension, std::move(objects.facet_mesh_names), connections, threads, sub_menu,
+                        repository);
 
-                        std::sort(objects.point_mesh_names.begin(), objects.point_mesh_names.end());
-                        for (const std::string& object_name : objects.point_mesh_names)
-                        {
-                                ASSERT(!object_name.empty());
-
-                                QAction* action = sub_menu->addAction(QString::fromStdString(object_name + "..."));
-                                connections_.emplace_back(QObject::connect(
-                                        action, &QAction::triggered,
-                                        [=]()
-                                        {
-                                                load_point_mesh(
-                                                        threads, repository, dimension, object_name,
-                                                        action_name(action));
-                                        }));
-                        }
-                }
-
-                if (!objects.facet_mesh_names.empty())
-                {
-                        if (!sub_menu->actions().isEmpty())
-                        {
-                                sub_menu->addSeparator();
-                        }
-
-                        std::sort(objects.facet_mesh_names.begin(), objects.facet_mesh_names.end());
-                        for (const std::string& object_name : objects.facet_mesh_names)
-                        {
-                                ASSERT(!object_name.empty());
-
-                                QAction* action = sub_menu->addAction(QString::fromStdString(object_name + "..."));
-                                connections_.emplace_back(QObject::connect(
-                                        action, &QAction::triggered,
-                                        [=]()
-                                        {
-                                                load_facet_mesh(
-                                                        threads, repository, dimension, object_name,
-                                                        action_name(action));
-                                        }));
-                        }
-                }
-
-                if (!objects.volume_names.empty() && dimension == 3)
-                {
-                        if (!sub_menu->actions().isEmpty())
-                        {
-                                sub_menu->addSeparator();
-                        }
-
-                        std::sort(objects.volume_names.begin(), objects.volume_names.end());
-                        for (const std::string& object_name : objects.volume_names)
-                        {
-                                ASSERT(!object_name.empty());
-
-                                QAction* action = sub_menu->addAction(QString::fromStdString(object_name + "..."));
-                                connections_.emplace_back(QObject::connect(
-                                        action, &QAction::triggered,
-                                        [=]()
-                                        {
-                                                load_volume(
-                                                        threads, repository, dimension, object_name,
-                                                        action_name(action));
-                                        }));
-                        }
-                }
+                create_volume_menu(
+                        objects.dimension, std::move(objects.volume_names), connections, threads, sub_menu, repository);
         }
+}
+}
+
+Actions::Actions(
+        const CommandLineOptions& options,
+        QStatusBar* const status_bar,
+        QAction* const action_self_test,
+        QMenu* const menu_file,
+        QMenu* const menu_create,
+        QMenu* const menu_edit,
+        QMenu* const menu_rendering,
+        const storage::Repository* const repository,
+        view::View* const view,
+        ModelTree* const model_tree,
+        const LightingWidget* const lighting,
+        const ColorsWidget* const colors)
+        : worker_threads_(create_worker_threads(THREAD_ID_COUNT, SELF_TEST_THREAD_ID, status_bar))
+{
+        create_menu(
+                &connections_, worker_threads_.get(), action_self_test, menu_file, menu_edit, menu_rendering, view,
+                model_tree, lighting, colors);
+
+        create_repository_menu(&connections_, worker_threads_.get(), menu_create, repository);
 
         self_test(worker_threads_.get(), process::TestType::SMALL, "Self-Test");
 
