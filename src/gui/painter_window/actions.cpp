@@ -33,9 +33,9 @@ enum ThreadId
         THREAD_ID_COUNT
 };
 
-std::string action_name(const QAction* action)
+std::string action_name(const QAction& action)
 {
-        std::string s = action->text().toStdString();
+        std::string s = action.text().toStdString();
         while (!s.empty() && s.back() == '.')
         {
                 s.pop_back();
@@ -44,43 +44,44 @@ std::string action_name(const QAction* action)
 }
 }
 
-Actions::Actions(const Pixels* pixels, QMenu* menu, QStatusBar* status_bar, std::function<long long()> slice_number)
+Actions::Actions(
+        const Pixels* const pixels,
+        QMenu* const menu,
+        QStatusBar* const status_bar,
+        std::function<long long()> slice_number)
         : pixels_(pixels), worker_threads_(create_worker_threads(THREAD_ID_COUNT, std::nullopt, status_bar))
 {
         ASSERT(slice_number);
-        {
-                QAction* action = menu->addAction("Save...");
-                connections_.emplace_back(QObject::connect(
-                        action, &QAction::triggered,
-                        [this, action, slice_number = std::move(slice_number)]()
-                        {
-                                save_image(action_name(action), slice_number());
-                        }));
-        }
+
+        QAction* action;
+
+        action = menu->addAction("Save...");
+        connections_.emplace_back(QObject::connect(
+                action, &QAction::triggered,
+                [this, action, slice_number = std::move(slice_number)]()
+                {
+                        save_image(action_name(*action), slice_number());
+                }));
 
         if (pixels_->screen_size().size() >= 3)
         {
-                {
-                        QAction* action = menu->addAction("Save all...");
-                        connections_.emplace_back(QObject::connect(
-                                action, &QAction::triggered,
-                                [=, this]()
-                                {
-                                        save_image(action_name(action));
-                                }));
-                }
+                action = menu->addAction("Save all...");
+                connections_.emplace_back(QObject::connect(
+                        action, &QAction::triggered,
+                        [=, this]()
+                        {
+                                save_image(action_name(*action));
+                        }));
 
                 menu->addSeparator();
 
-                {
-                        QAction* action = menu->addAction("Add volume...");
-                        connections_.emplace_back(QObject::connect(
-                                action, &QAction::triggered,
-                                [=, this]()
-                                {
-                                        add_volume(action_name(action));
-                                }));
-                }
+                action = menu->addAction("Add volume...");
+                connections_.emplace_back(QObject::connect(
+                        action, &QAction::triggered,
+                        [=, this]()
+                        {
+                                add_volume(action_name(*action));
+                        }));
         }
 }
 
@@ -95,7 +96,7 @@ void Actions::set_progresses()
         worker_threads_->set_progresses();
 }
 
-void Actions::save_image(const std::string& action, long long slice) const
+void Actions::save_image(const std::string& action, const long long slice) const
 {
         std::optional<Pixels::Images> images = pixels_->slice(slice);
         if (!images)
