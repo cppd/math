@@ -35,6 +35,7 @@ The MIT Press, 2009.
 #include <src/com/type/limit.h>
 
 #include <array>
+#include <optional>
 #include <sstream>
 
 namespace ns::numerical
@@ -67,29 +68,7 @@ namespace simplex_algorithm_implementation
 {
 template <std::size_t N, std::size_t M, typename T>
 void print_simplex_algorithm_data(
-        const std::array<T, M>& b,
-        const std::array<Vector<N, T>, M>& a,
-        const T& v,
-        const Vector<N, T>& c) noexcept
-{
-        try
-        {
-                static_assert(std::is_floating_point_v<T>);
-
-                LOG("z = " + to_string(v) + " + " + to_string(c));
-                for (unsigned i = 0; i < M; ++i)
-                {
-                        LOG(to_string(b[i]) + " + " + to_string(a[i]));
-                }
-        }
-        catch (...)
-        {
-                error_fatal("Error in print simplex algorithm data function 1");
-        }
-}
-
-template <std::size_t N, std::size_t M, typename T>
-void print_simplex_algorithm_data(
+        const std::string_view& text,
         const std::array<T, M>& b,
         const std::array<Vector<N, T>, M>& a,
         const T& v,
@@ -100,14 +79,18 @@ void print_simplex_algorithm_data(
         static_assert(std::is_floating_point_v<T>);
         try
         {
-                int int_w = (N + M - 1) < 10 ? 1 : std::floor(std::log10(N + M - 1)) + 1;
-
-                int precision = limits<T>::max_digits10;
-
                 std::ostringstream oss;
+
+                oss << '\n';
+                oss << text << '\n';
+
+                const int int_w = (N + M - 1) < 10 ? 1 : std::floor(std::log10(N + M - 1)) + 1;
+
+                const int precision = limits<T>::max_digits10;
+
                 oss << std::setprecision(precision);
 
-                int float_w = precision + 6 + 3;
+                const int float_w = precision + 6 + 3;
 
                 oss << std::setfill('-');
                 oss << std::setw(float_w + 4 + int_w) << "b(v)";
@@ -143,7 +126,7 @@ void print_simplex_algorithm_data(
         }
         catch (...)
         {
-                error_fatal("Error in print simplex algorithm data function 2");
+                error_fatal("Error in print simplex algorithm data function");
         }
 }
 
@@ -231,7 +214,7 @@ void make_aux_and_maps(
 
         //
 
-        constexpr unsigned N = N_SOURCE + 1;
+        static constexpr unsigned N = N_SOURCE + 1;
 
         //
 
@@ -302,51 +285,23 @@ bool find_positive_index(const Vector<N, T>& c, unsigned* e)
         return false;
 }
 
-// 29.5 The initial basic feasible solution.
-// Finding an initial solution.
-template <bool WITH_PRINT, std::size_t N_SOURCE, std::size_t M, typename T>
-ConstraintSolution solve_constraints(std::array<T, M> b, const std::array<Vector<N_SOURCE, T>, M>& a_input)
+template <std::size_t M, typename T>
+bool min_is_non_negative(const std::array<T, M>& b)
 {
-        static_assert(std::is_floating_point_v<T> || (!WITH_PRINT && FloatingPoint<T>));
-        static_assert(N_SOURCE > 0 && M > 0);
+        for (unsigned m = 0; m < M; ++m)
+        {
+                if (!(b[m] >= 0))
+                {
+                        return false;
+                }
+        }
+        return true;
+}
 
-        constexpr unsigned N = N_SOURCE + 1;
-
-        constexpr int MAX_ITERATION_COUNT = binomial<N + M, M>();
-
-        //
-
+template <std::size_t M, typename T>
+unsigned find_index_of_min(const std::array<T, M>& b)
+{
         T min = b[0];
-        for (unsigned m = 1; m < M; ++m)
-        {
-                min = std::min(b[m], min);
-        }
-        if (min >= 0)
-        {
-                return ConstraintSolution::FEASIBLE;
-        }
-
-        //
-
-        T v;
-        Vector<N, T> c;
-        std::array<Vector<N, T>, M> a;
-
-        std::array<unsigned, N> map_n;
-        std::array<unsigned, M> map_m;
-
-        make_aux_and_maps(a_input, &b, &a, &v, &c, &map_n, &map_m);
-
-        if constexpr (WITH_PRINT)
-        {
-                LOG("");
-                LOG("Preprocessed");
-                print_simplex_algorithm_data(b, a, v, c, map_n, map_m);
-        }
-
-        //
-
-        min = b[0];
         unsigned k = 0;
         for (unsigned m = 1; m < M; ++m)
         {
@@ -356,22 +311,22 @@ ConstraintSolution solve_constraints(std::array<T, M> b, const std::array<Vector
                         k = m;
                 }
         }
-        if (min >= 0)
-        {
-                return ConstraintSolution::FEASIBLE;
-        }
+        return k;
+}
 
-        pivot(b, a, v, c, k, 0);
-        std::swap(map_m[k], map_n[0]);
-
-        if constexpr (WITH_PRINT)
-        {
-                LOG("");
-                LOG("First pivot");
-                print_simplex_algorithm_data(b, a, v, c, map_n, map_m);
-        }
-
-        //
+// 29.3 The simplex algorithm.
+// The formal simplex algorithm.
+// Lines 3–12 of SIMPLEX.
+template <bool WITH_PRINT, std::size_t N, std::size_t M, typename T>
+std::optional<ConstraintSolution> simplex_iterations(
+        std::array<Vector<N, T>, M>& a,
+        std::array<T, M>& b,
+        Vector<N, T>& c,
+        T& v,
+        std::array<unsigned, N>& map_n,
+        std::array<unsigned, M>& map_m)
+{
+        static constexpr int MAX_ITERATION_COUNT = binomial<N + M, M>();
 
         for (int iteration = 2;; ++iteration)
         {
@@ -379,7 +334,7 @@ ConstraintSolution solve_constraints(std::array<T, M> b, const std::array<Vector
 
                 if (!find_positive_index(c, &e))
                 {
-                        break;
+                        return std::nullopt;
                 }
 
                 if (iteration >= MAX_ITERATION_COUNT)
@@ -416,10 +371,66 @@ ConstraintSolution solve_constraints(std::array<T, M> b, const std::array<Vector
 
                 if constexpr (WITH_PRINT)
                 {
-                        LOG("");
-                        LOG("iteration " + to_string(iteration));
-                        print_simplex_algorithm_data(b, a, v, c, map_n, map_m);
+                        print_simplex_algorithm_data("iteration " + to_string(iteration), b, a, v, c, map_n, map_m);
                 }
+        }
+}
+
+// 29.5 The initial basic feasible solution.
+// Finding an initial solution.
+template <bool WITH_PRINT, std::size_t N_SOURCE, std::size_t M, typename T>
+ConstraintSolution solve_constraints(std::array<T, M> b, const std::array<Vector<N_SOURCE, T>, M>& a_input)
+{
+        static_assert(std::is_floating_point_v<T> || (!WITH_PRINT && FloatingPoint<T>));
+        static_assert(N_SOURCE > 0 && M > 0);
+
+        if (min_is_non_negative(b))
+        {
+                return ConstraintSolution::FEASIBLE;
+        }
+
+        //
+
+        static constexpr unsigned N = N_SOURCE + 1;
+
+        T v;
+        Vector<N, T> c;
+        std::array<Vector<N, T>, M> a;
+
+        std::array<unsigned, N> map_n;
+        std::array<unsigned, M> map_m;
+
+        make_aux_and_maps(a_input, &b, &a, &v, &c, &map_n, &map_m);
+
+        if constexpr (WITH_PRINT)
+        {
+                print_simplex_algorithm_data("Preprocessed", b, a, v, c, map_n, map_m);
+        }
+
+        //
+
+        const unsigned k = find_index_of_min(b);
+        if (b[k] >= 0)
+        {
+                return ConstraintSolution::FEASIBLE;
+        }
+
+        pivot(b, a, v, c, k, 0);
+        std::swap(map_m[k], map_n[0]);
+
+        if constexpr (WITH_PRINT)
+        {
+                print_simplex_algorithm_data("First pivot", b, a, v, c, map_n, map_m);
+        }
+
+        //
+
+        const std::optional<ConstraintSolution> simplex_result =
+                simplex_iterations<WITH_PRINT>(a, b, c, v, map_n, map_m);
+
+        if (simplex_result)
+        {
+                return *simplex_result;
         }
 
         if (variable_x0_is_zero(b, map_n, map_m))

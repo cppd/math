@@ -26,6 +26,29 @@ namespace ns::numerical
 {
 namespace
 {
+template <std::size_t N, std::size_t M, typename T>
+void print_simplex_data(
+        const std::array<T, M>& b,
+        const std::array<Vector<N, T>, M>& a,
+        const T& v,
+        const Vector<N, T>& c) noexcept
+{
+        try
+        {
+                static_assert(std::is_floating_point_v<T>);
+
+                LOG("z = " + to_string(v) + " + " + to_string(c));
+                for (unsigned i = 0; i < M; ++i)
+                {
+                        LOG(to_string(b[i]) + " + " + to_string(a[i]));
+                }
+        }
+        catch (...)
+        {
+                error_fatal("Error in print simplex data function");
+        }
+}
+
 template <typename T>
 void test_pivot()
 {
@@ -42,7 +65,7 @@ void test_pivot()
 
         if (!(b == std::array<T, 3>{21, 6, 9}))
         {
-                impl::print_simplex_algorithm_data(b, a, v, c);
+                print_simplex_data(b, a, v, c);
                 error("pivot b error");
         }
 
@@ -50,19 +73,19 @@ void test_pivot()
               == std::array<Vector<3, T>, 3>{
                       Vector<3, T>(0.25, -0.75, -2.5), Vector<3, T>(0.5, -1.5, -4), Vector<3, T>(-0.25, -0.25, -0.5)}))
         {
-                impl::print_simplex_algorithm_data(b, a, v, c);
+                print_simplex_data(b, a, v, c);
                 error("pivot a error");
         }
 
         if (!(v == 32))
         {
-                impl::print_simplex_algorithm_data(b, a, v, c);
+                print_simplex_data(b, a, v, c);
                 error("pivot v error");
         }
 
         if (!(c == Vector<3, T>(-0.75, 0.25, 0.5)))
         {
-                impl::print_simplex_algorithm_data(b, a, v, c);
+                print_simplex_data(b, a, v, c);
                 error("pivot c error");
         }
 
