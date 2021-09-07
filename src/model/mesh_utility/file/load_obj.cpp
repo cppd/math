@@ -69,7 +69,7 @@ static_assert(
         str_equal("ab", "ab") && str_equal("", "") && !str_equal("", "ab") && !str_equal("ab", "")
         && !str_equal("ab", "ac") && !str_equal("ba", "ca") && !str_equal("a", "xyz"));
 
-std::string obj_type_name(std::size_t n)
+std::string obj_type_name(const std::size_t n)
 {
         return "OBJ-" + to_string(n);
 }
@@ -98,7 +98,7 @@ bool check_range(const T1& v, const T2& min, const T3& max)
         return v >= min && v <= max;
 }
 
-color::Color read_color(const char* str)
+color::Color read_color(const char* const str)
 {
         static constexpr float MIN = 0;
         static constexpr float MAX = 1;
@@ -138,9 +138,9 @@ template <std::size_t N>
 void load_image(
         const std::filesystem::path& dir_name,
         const std::filesystem::path& image_name,
-        std::map<std::string, int>* image_index,
-        std::vector<image::Image<N - 1>>* images,
-        int* index)
+        std::map<std::string, int>* const image_index,
+        std::vector<image::Image<N - 1>>* const images,
+        int* const index)
 {
         std::filesystem::path file_name = path_from_utf8(trim(generic_utf8_filename(image_name)));
 
@@ -162,19 +162,78 @@ void load_image(
         image_index->emplace(file_name, *index);
 }
 
-// "x/x/x ..."
-// "x//x ..."
-// "x// ..."
-// "x/x/ ..."
-// "x/x ..."
-// "x ..."
+// "x/x/x"
+// "x//x"
+// "x//"
+// "x/x/"
+// "x/x"
+// "x"
+template <typename T, std::size_t GROUP_SIZE, typename IndexType>
+void read_digit_group(
+        const T& line,
+        const long long end,
+        long long* const from,
+        std::array<IndexType, GROUP_SIZE>* const group_indices)
+{
+        auto& i = *from;
+        auto& indices = *group_indices;
+
+        // vertex
+        if (read_integer(line, end, &i, &indices[0]))
+        {
+                if (indices[0] == 0)
+                {
+                        error("Zero facet index");
+                }
+        }
+        else
+        {
+                error("Error read facet vertex first number");
+        }
+
+        // texture and normal
+        for (int a = 1; a < static_cast<int>(indices.size()); ++a)
+        {
+                if (i == end || ascii::is_space(line[i]))
+                {
+                        indices[a] = 0;
+                        continue;
+                }
+
+                if (line[i] != '/')
+                {
+                        error(std::string("Error read facet number, expected '/', found '") + line[i] + "'");
+                }
+
+                ++i;
+
+                if (i == end || ascii::is_space(line[i]))
+                {
+                        indices[a] = 0;
+                        continue;
+                }
+
+                if (read_integer(line, end, &i, &indices[a]))
+                {
+                        if (indices[a] == 0)
+                        {
+                                error("Zero facet index");
+                        }
+                }
+                else
+                {
+                        indices[a] = 0;
+                }
+        }
+}
+
 template <typename T, std::size_t MAX_GROUP_COUNT, std::size_t GROUP_SIZE, typename IndexType>
 void read_digit_groups(
         const T& line,
-        long long begin,
-        long long end,
-        std::array<std::array<IndexType, GROUP_SIZE>, MAX_GROUP_COUNT>* group_ptr,
-        int* group_count)
+        const long long begin,
+        const long long end,
+        std::array<std::array<IndexType, GROUP_SIZE>, MAX_GROUP_COUNT>* const group_ptr,
+        int* const group_count)
 {
         int group_index = -1;
 
@@ -198,60 +257,12 @@ void read_digit_groups(
                               + " (max supported = " + to_string(group_ptr->size()) + ")");
                 }
 
-                std::array<IndexType, GROUP_SIZE>& indices = (*group_ptr)[group_index];
-
-                // vertex
-                if (read_integer(line, end, &i, &indices[0]))
-                {
-                        if (indices[0] == 0)
-                        {
-                                error("Zero facet index");
-                        }
-                }
-                else
-                {
-                        error("Error read facet vertex first number");
-                }
-
-                // texture and normal
-                for (int a = 1; a < static_cast<int>(indices.size()); ++a)
-                {
-                        if (i == end || ascii::is_space(line[i]))
-                        {
-                                indices[a] = 0;
-                                continue;
-                        }
-
-                        if (line[i] != '/')
-                        {
-                                error(std::string("Error read facet number, expected '/', found '") + line[i] + "'");
-                        }
-
-                        ++i;
-
-                        if (i == end || ascii::is_space(line[i]))
-                        {
-                                indices[a] = 0;
-                                continue;
-                        }
-
-                        if (read_integer(line, end, &i, &indices[a]))
-                        {
-                                if (indices[a] == 0)
-                                {
-                                        error("Zero facet index");
-                                }
-                        }
-                        else
-                        {
-                                indices[a] = 0;
-                        }
-                }
+                read_digit_group(line, end, &i, &(*group_ptr)[group_index]);
         }
 }
 
 template <typename T, std::size_t MAX_GROUP_COUNT>
-void check_index_consistent(const std::array<std::array<T, 3>, MAX_GROUP_COUNT>& groups, int group_count)
+void check_index_consistent(const std::array<std::array<T, 3>, MAX_GROUP_COUNT>& groups, const int group_count)
 {
         // 0 means there is no index.
         // index order: facet, texture, normal.
@@ -281,10 +292,10 @@ void check_index_consistent(const std::array<std::array<T, 3>, MAX_GROUP_COUNT>&
 template <std::size_t N, typename T>
 void read_facets(
         const T& data,
-        long long begin,
-        long long end,
-        std::array<typename Mesh<N>::Facet, MAX_FACETS_PER_LINE<N>>* facets,
-        int* facet_count)
+        const long long begin,
+        const long long end,
+        std::array<typename Mesh<N>::Facet, MAX_FACETS_PER_LINE<N>>* const facets,
+        int* const facet_count)
 {
         static_assert(N >= 3);
 
@@ -324,7 +335,7 @@ void read_facets(
 }
 
 template <std::size_t N, typename T>
-void read_float_texture(const char* str, Vector<N, T>* v)
+void read_float_texture(const char* const str, Vector<N, T>* const v)
 {
         T tmp;
 
@@ -343,7 +354,12 @@ void read_float_texture(const char* str, Vector<N, T>* v)
 }
 
 template <typename T>
-void read_name(const char* object_name, const T& data, long long begin, long long end, std::string* name)
+void read_name(
+        const char* const object_name,
+        const T& data,
+        const long long begin,
+        const long long end,
+        std::string* const name)
 {
         const long long size = end;
 
@@ -371,10 +387,10 @@ void read_name(const char* object_name, const T& data, long long begin, long lon
 template <typename T>
 void read_library_names(
         const T& data,
-        long long begin,
-        long long end,
-        std::vector<std::filesystem::path>* v,
-        std::set<std::filesystem::path>* lib_unique_names)
+        const long long begin,
+        const long long end,
+        std::vector<std::filesystem::path>* const v,
+        std::set<std::filesystem::path>* const lib_unique_names)
 {
         const long long size = end;
         bool found = false;
@@ -411,12 +427,12 @@ void read_library_names(
 // 2. all other characters before a comment or the end of the string
 void split(
         const std::vector<char>& data,
-        long long first,
-        long long last,
-        long long* first_b,
-        long long* first_e,
-        long long* second_b,
-        long long* second_e)
+        const long long first,
+        const long long last,
+        long long* const first_b,
+        long long* const first_e,
+        long long* const second_b,
+        long long* const second_e)
 {
         const auto is_comment = [](char c)
         {
@@ -469,13 +485,13 @@ void split(
 }
 
 void split_line(
-        std::vector<char>* data,
+        std::vector<char>* const data,
         const std::vector<long long>& line_begin,
-        long long line_num,
-        const char** first,
-        const char** second,
-        long long* second_b,
-        long long* second_e)
+        const long long line_num,
+        const char** const first,
+        const char** const second,
+        long long* const second_b,
+        long long* const second_e)
 {
         long long line_count = line_begin.size();
 
@@ -562,54 +578,64 @@ struct Counters
 };
 
 template <std::size_t N>
+void check_facet_indices(
+        const int vertex_count,
+        const int texcoord_count,
+        const int normal_count,
+        const typename Mesh<N>::Facet& facet)
+{
+        for (unsigned i = 0; i < N; ++i)
+        {
+                if (facet.vertices[i] < 0 || facet.vertices[i] >= vertex_count)
+                {
+                        error("Vertex index " + to_string(facet.vertices[i]) + " is out of bounds [0, "
+                              + to_string(vertex_count) + ")");
+                }
+
+                if (facet.has_texcoord)
+                {
+                        if (facet.texcoords[i] < 0 || facet.texcoords[i] >= texcoord_count)
+                        {
+                                error("Texture coordinate index " + to_string(facet.texcoords[i])
+                                      + " is out of bounds [0, " + to_string(texcoord_count) + ")");
+                        }
+                }
+                else
+                {
+                        if (facet.texcoords[i] != -1)
+                        {
+                                error("No texture but texture coordinate index is not set to -1");
+                        }
+                }
+
+                if (facet.has_normal)
+                {
+                        if (facet.normals[i] < 0 || facet.normals[i] >= normal_count)
+                        {
+                                error("Normal index " + to_string(facet.normals[i]) + " is out of bounds [0, "
+                                      + to_string(normal_count) + ")");
+                        }
+                }
+                else
+                {
+                        if (facet.normals[i] != -1)
+                        {
+                                error("No normals but normal coordinate index is not set to -1");
+                        }
+                }
+        }
+}
+
+template <std::size_t N>
 void check_facet_indices(const Mesh<N>& mesh)
 {
-        int vertex_count = mesh.vertices.size();
-        int texcoord_count = mesh.texcoords.size();
-        int normal_count = mesh.normals.size();
+        const int vertex_count = mesh.vertices.size();
+        const int texcoord_count = mesh.texcoords.size();
+        const int normal_count = mesh.normals.size();
 
         for (const typename Mesh<N>::Facet& facet : mesh.facets)
         {
-                for (unsigned i = 0; i < N; ++i)
-                {
-                        if (facet.vertices[i] < 0 || facet.vertices[i] >= vertex_count)
-                        {
-                                error("Vertex index " + to_string(facet.vertices[i]) + " is out of bounds [0, "
-                                      + to_string(vertex_count) + ")");
-                        }
-
-                        if (facet.has_texcoord)
-                        {
-                                if (facet.texcoords[i] < 0 || facet.texcoords[i] >= texcoord_count)
-                                {
-                                        error("Texture coordinate index " + to_string(facet.texcoords[i])
-                                              + " is out of bounds [0, " + to_string(texcoord_count) + ")");
-                                }
-                        }
-                        else
-                        {
-                                if (facet.texcoords[i] != -1)
-                                {
-                                        error("No texture but texture coordinate index is not set to -1");
-                                }
-                        }
-
-                        if (facet.has_normal)
-                        {
-                                if (facet.normals[i] < 0 || facet.normals[i] >= normal_count)
-                                {
-                                        error("Normal index " + to_string(facet.normals[i]) + " is out of bounds [0, "
-                                              + to_string(normal_count) + ")");
-                                }
-                        }
-                        else
-                        {
-                                if (facet.normals[i] != -1)
-                                {
-                                        error("No normals but normal coordinate index is not set to -1");
-                                }
-                        }
-                }
+                check_facet_indices<N>(vertex_count, texcoord_count, normal_count, facet);
         }
 }
 
@@ -658,18 +684,84 @@ bool remove_facets_with_incorrect_dimension([[maybe_unused]] Mesh<N>* mesh)
 }
 
 template <std::size_t N>
+void read_obj_line(
+        std::vector<Counters>* const counters,
+        const unsigned thread_num,
+        const char* const first,
+        const std::vector<char>& data,
+        ObjLine<N>* const lp)
+{
+        if (str_equal(first, "v"))
+        {
+                lp->type = ObjLineType::V;
+                Vector<N, float> v;
+                read_float(&data[lp->second_b], &v);
+                lp->v = v;
+
+                ++((*counters)[thread_num].vertex);
+        }
+        else if (str_equal(first, "vt"))
+        {
+                lp->type = ObjLineType::VT;
+                Vector<N - 1, float> v;
+                read_float_texture(&data[lp->second_b], &v);
+                for (unsigned i = 0; i < N - 1; ++i)
+                {
+                        lp->v[i] = v[i];
+                }
+
+                ++((*counters)[thread_num].texcoord);
+        }
+        else if (str_equal(first, "vn"))
+        {
+                lp->type = ObjLineType::VN;
+                Vector<N, float> v;
+                read_float(&data[lp->second_b], &v);
+                lp->v = v.normalized();
+                if (!is_finite(lp->v))
+                {
+                        lp->v = Vector<N, float>(0);
+                }
+
+                ++((*counters)[thread_num].normal);
+        }
+        else if (str_equal(first, "f"))
+        {
+                lp->type = ObjLineType::F;
+                read_facets<N>(data, lp->second_b, lp->second_e, &lp->facets, &lp->facet_count);
+
+                ++((*counters)[thread_num].facet);
+        }
+        else if (str_equal(first, "usemtl"))
+        {
+                lp->type = ObjLineType::USEMTL;
+        }
+        else if (str_equal(first, "mtllib"))
+        {
+                lp->type = ObjLineType::MTLLIB;
+        }
+        else if (!*first)
+        {
+                lp->type = ObjLineType::NONE;
+        }
+        else
+        {
+                lp->type = ObjLineType::NOT_SUPPORTED;
+        }
+}
+
+template <std::size_t N>
 void read_obj_stage_one(
-        unsigned thread_num,
-        unsigned thread_count,
-        std::vector<Counters>* counters,
-        std::vector<char>* data_ptr,
-        std::vector<long long>* line_begin,
-        std::vector<ObjLine<N>>* line_prop,
-        ProgressRatio* progress)
+        const unsigned thread_num,
+        const unsigned thread_count,
+        std::vector<Counters>* const counters,
+        std::vector<char>* const data_ptr,
+        std::vector<long long>* const line_begin,
+        std::vector<ObjLine<N>>* const line_prop,
+        ProgressRatio* const progress)
 {
         ASSERT(counters->size() == thread_count);
 
-        std::vector<char>& data = *data_ptr;
         const long long line_count = line_begin->size();
         const double line_count_reciprocal = 1.0 / line_begin->size();
 
@@ -680,72 +772,16 @@ void read_obj_stage_one(
                         progress->set(line_num * line_count_reciprocal);
                 }
 
-                ObjLine<N> lp;
+                ObjLine<N> obj_line;
 
                 const char* first;
                 const char* second;
 
-                split_line(&data, *line_begin, line_num, &first, &second, &lp.second_b, &lp.second_e);
+                split_line(data_ptr, *line_begin, line_num, &first, &second, &obj_line.second_b, &obj_line.second_e);
 
                 try
                 {
-                        if (str_equal(first, "v"))
-                        {
-                                lp.type = ObjLineType::V;
-                                Vector<N, float> v;
-                                read_float(&data[lp.second_b], &v);
-                                lp.v = v;
-
-                                ++((*counters)[thread_num].vertex);
-                        }
-                        else if (str_equal(first, "vt"))
-                        {
-                                lp.type = ObjLineType::VT;
-                                Vector<N - 1, float> v;
-                                read_float_texture(&data[lp.second_b], &v);
-                                for (unsigned i = 0; i < N - 1; ++i)
-                                {
-                                        lp.v[i] = v[i];
-                                }
-
-                                ++((*counters)[thread_num].texcoord);
-                        }
-                        else if (str_equal(first, "vn"))
-                        {
-                                lp.type = ObjLineType::VN;
-                                Vector<N, float> v;
-                                read_float(&data[lp.second_b], &v);
-                                lp.v = v.normalized();
-                                if (!is_finite(lp.v))
-                                {
-                                        lp.v = Vector<N, float>(0);
-                                }
-
-                                ++((*counters)[thread_num].normal);
-                        }
-                        else if (str_equal(first, "f"))
-                        {
-                                lp.type = ObjLineType::F;
-                                read_facets<N>(data, lp.second_b, lp.second_e, &lp.facets, &lp.facet_count);
-
-                                ++((*counters)[thread_num].facet);
-                        }
-                        else if (str_equal(first, "usemtl"))
-                        {
-                                lp.type = ObjLineType::USEMTL;
-                        }
-                        else if (str_equal(first, "mtllib"))
-                        {
-                                lp.type = ObjLineType::MTLLIB;
-                        }
-                        else if (!*first)
-                        {
-                                lp.type = ObjLineType::NONE;
-                        }
-                        else
-                        {
-                                lp.type = ObjLineType::NOT_SUPPORTED;
-                        }
+                        read_obj_line(counters, thread_num, first, *data_ptr, &obj_line);
                 }
                 catch (const std::exception& e)
                 {
@@ -756,7 +792,7 @@ void read_obj_stage_one(
                         error("Line " + to_string(line_num) + ": " + first + " " + second + "\n" + "Unknown error");
                 }
 
-                (*line_prop)[line_num] = lp;
+                (*line_prop)[line_num] = obj_line;
         }
 }
 
@@ -764,7 +800,11 @@ void read_obj_stage_one(
 // Negative OBJ indices indicate relative vertex numbers.
 // Convert to absolute numbers starting at 0.
 template <std::size_t N>
-void correct_indices(typename Mesh<N>::Facet* facet, int vertices_size, int texcoords_size, int normals_size)
+void correct_indices(
+        typename Mesh<N>::Facet* const facet,
+        const int vertices_size,
+        const int texcoords_size,
+        const int normals_size)
 {
         for (unsigned i = 0; i < N; ++i)
         {
@@ -786,12 +826,12 @@ void correct_indices(typename Mesh<N>::Facet* facet, int vertices_size, int texc
 template <std::size_t N>
 void read_obj_stage_two(
         const Counters& counters,
-        std::vector<char>* data_ptr,
-        std::vector<ObjLine<N>>* line_prop,
-        ProgressRatio* progress,
-        std::map<std::string, int>* material_index,
-        std::vector<std::filesystem::path>* library_names,
-        Mesh<N>* mesh)
+        std::vector<char>* const data_ptr,
+        std::vector<ObjLine<N>>* const line_prop,
+        ProgressRatio* const progress,
+        std::map<std::string, int>* const material_index,
+        std::vector<std::filesystem::path>* const library_names,
+        Mesh<N>* const mesh)
 {
         mesh->vertices.reserve(counters.vertex);
         mesh->texcoords.reserve(counters.texcoord);
@@ -883,18 +923,18 @@ Counters sum_counters(const std::vector<Counters>& counters)
 
 template <std::size_t N>
 void read_obj_thread(
-        unsigned thread_num,
-        unsigned thread_count,
-        std::vector<Counters>* counters,
-        Barrier* barrier,
-        std::atomic_bool* error_found,
-        std::vector<char>* data_ptr,
-        std::vector<long long>* line_begin,
-        std::vector<ObjLine<N>>* line_prop,
-        ProgressRatio* progress,
-        std::map<std::string, int>* material_index,
-        std::vector<std::filesystem::path>* library_names,
-        Mesh<N>* mesh)
+        const unsigned thread_num,
+        const unsigned thread_count,
+        std::vector<Counters>* const counters,
+        Barrier* const barrier,
+        std::atomic_bool* const error_found,
+        std::vector<char>* const data_ptr,
+        std::vector<long long>* const line_begin,
+        std::vector<ObjLine<N>>* const line_prop,
+        ProgressRatio* const progress,
+        std::map<std::string, int>* const material_index,
+        std::vector<std::filesystem::path>* const library_names,
+        Mesh<N>* const mesh)
 {
         try
         {
@@ -924,13 +964,132 @@ void read_obj_thread(
 }
 
 template <std::size_t N>
+class ReadLibData
+{
+        const std::filesystem::path* lib_dir_;
+        const std::vector<char>* data_;
+        Mesh<N>* mesh_;
+        std::map<std::string, int>* material_index_;
+        std::map<std::string, int>* image_index_;
+        typename Mesh<N>::Material* mtl_;
+
+public:
+        ReadLibData(
+                const std::filesystem::path* const lib_dir,
+                const std::vector<char>* const data,
+                Mesh<N>* const mesh,
+                std::map<std::string, int>* const material_index,
+                std::map<std::string, int>* const image_index,
+                typename Mesh<N>::Material* const mtl)
+                : lib_dir_(lib_dir),
+                  data_(data),
+                  mesh_(mesh),
+                  material_index_(material_index),
+                  image_index_(image_index),
+                  mtl_(mtl)
+        {
+        }
+        const std::filesystem::path& lib_dir() const
+        {
+                return *lib_dir_;
+        }
+        const std::vector<char>& data() const
+        {
+                return *data_;
+        }
+        Mesh<N>& mesh() const
+        {
+                return *mesh_;
+        }
+        std::map<std::string, int>& material_index() const
+        {
+                return *material_index_;
+        }
+        std::map<std::string, int>& image_index() const
+        {
+                return *image_index_;
+        }
+        typename Mesh<N>::Material* mtl() const
+        {
+                return mtl_;
+        }
+        void set_mtl(typename Mesh<N>::Material* const mtl)
+        {
+                mtl_ = mtl;
+        }
+};
+
+template <std::size_t N>
+bool read_lib_line(
+        ReadLibData<N>* const data,
+        const char* const first,
+        const long long second_b,
+        const long long second_e)
+{
+        if (!*first)
+        {
+                return true;
+        }
+
+        if (str_equal(first, "newmtl"))
+        {
+                if (data->material_index().empty())
+                {
+                        return false;
+                }
+
+                std::string name;
+                read_name("material", data->data(), second_b, second_e, &name);
+
+                auto iter = data->material_index().find(name);
+                if (iter != data->material_index().end())
+                {
+                        data->set_mtl(&(data->mesh().materials[iter->second]));
+                        data->material_index().erase(name);
+                }
+                else
+                {
+                        data->set_mtl(nullptr);
+                }
+        }
+        else if (str_equal(first, "Kd"))
+        {
+                if (!data->mtl())
+                {
+                        return true;
+                }
+                try
+                {
+                        data->mtl()->color = read_color(&(data->data())[second_b]);
+                }
+                catch (const std::exception& e)
+                {
+                        error("Reading Kd in material " + data->mtl()->name + "\n" + e.what());
+                }
+        }
+        else if (str_equal(first, "map_Kd"))
+        {
+                if (!data->mtl())
+                {
+                        return true;
+                }
+
+                std::string name;
+                read_name("file", data->data(), second_b, second_e, &name);
+                load_image<N>(data->lib_dir(), name, &data->image_index(), &data->mesh().images, &data->mtl()->image);
+        }
+
+        return true;
+}
+
+template <std::size_t N>
 void read_lib(
         const std::filesystem::path& dir_name,
         const std::filesystem::path& file_name,
-        ProgressRatio* progress,
-        std::map<std::string, int>* material_index,
-        std::map<std::string, int>* image_index,
-        Mesh<N>* mesh)
+        ProgressRatio* const progress,
+        std::map<std::string, int>* const material_index,
+        std::map<std::string, int>* const image_index,
+        Mesh<N>* const mesh)
 {
         std::vector<char> data;
         std::vector<long long> line_begin;
@@ -941,11 +1100,10 @@ void read_lib(
 
         const std::filesystem::path lib_dir = lib_name.parent_path();
 
-        typename Mesh<N>::Material* mtl = nullptr;
-        std::string name;
-
         const long long line_count = line_begin.size();
         const double line_count_reciprocal = 1.0 / line_begin.size();
+
+        ReadLibData<N> read_data(&lib_dir, &data, mesh, material_index, image_index, nullptr);
 
         for (long long line_num = 0; line_num < line_count; ++line_num)
         {
@@ -963,53 +1121,9 @@ void read_lib(
 
                 try
                 {
-                        if (!*first)
+                        if (!read_lib_line(&read_data, first, second_b, second_e))
                         {
-                        }
-                        else if (str_equal(first, "newmtl"))
-                        {
-                                if (material_index->empty())
-                                {
-                                        break;
-                                }
-
-                                read_name("material", data, second_b, second_e, &name);
-
-                                auto iter = material_index->find(name);
-                                if (iter != material_index->end())
-                                {
-                                        mtl = &(mesh->materials[iter->second]);
-                                        material_index->erase(name);
-                                }
-                                else
-                                {
-                                        mtl = nullptr;
-                                }
-                        }
-                        else if (str_equal(first, "Kd"))
-                        {
-                                if (!mtl)
-                                {
-                                        continue;
-                                }
-                                try
-                                {
-                                        mtl->color = read_color(&data[second_b]);
-                                }
-                                catch (const std::exception& e)
-                                {
-                                        error("Reading Kd in material " + mtl->name + "\n" + e.what());
-                                }
-                        }
-                        else if (str_equal(first, "map_Kd"))
-                        {
-                                if (!mtl)
-                                {
-                                        continue;
-                                }
-
-                                read_name("file", data, second_b, second_e, &name);
-                                load_image<N>(lib_dir, name, image_index, &mesh->images, &mtl->image);
+                                break;
                         }
                 }
                 catch (const std::exception& e)
@@ -1028,10 +1142,10 @@ void read_lib(
 template <std::size_t N>
 void read_libs(
         const std::filesystem::path& dir_name,
-        ProgressRatio* progress,
-        std::map<std::string, int>* material_index,
+        ProgressRatio* const progress,
+        std::map<std::string, int>* const material_index,
         const std::vector<std::filesystem::path>& library_names,
-        Mesh<N>* mesh)
+        Mesh<N>* const mesh)
 {
         std::map<std::string, int> image_index;
 
@@ -1052,10 +1166,10 @@ void read_libs(
 template <std::size_t N>
 void read_obj(
         const std::filesystem::path& file_name,
-        ProgressRatio* progress,
-        std::map<std::string, int>* material_index,
-        std::vector<std::filesystem::path>* library_names,
-        Mesh<N>* mesh)
+        ProgressRatio* const progress,
+        std::map<std::string, int>* const material_index,
+        std::vector<std::filesystem::path>* const library_names,
+        Mesh<N>* const mesh)
 {
         const int thread_count = hardware_concurrency();
 
@@ -1084,7 +1198,7 @@ void read_obj(
 }
 
 template <std::size_t N>
-std::unique_ptr<Mesh<N>> read_obj_and_mtl(const std::filesystem::path& file_name, ProgressRatio* progress)
+std::unique_ptr<Mesh<N>> read_obj_and_mtl(const std::filesystem::path& file_name, ProgressRatio* const progress)
 {
         progress->set_undefined();
 
@@ -1120,7 +1234,7 @@ std::unique_ptr<Mesh<N>> read_obj_and_mtl(const std::filesystem::path& file_name
 }
 
 template <std::size_t N, typename Path>
-std::unique_ptr<Mesh<N>> load_from_obj_file(const Path& file_name, ProgressRatio* progress)
+std::unique_ptr<Mesh<N>> load_from_obj_file(const Path& file_name, ProgressRatio* const progress)
 {
         TimePoint start_time = time();
 
