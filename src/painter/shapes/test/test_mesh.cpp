@@ -49,7 +49,7 @@ constexpr bool WITH_RAY_LOG = false;
 constexpr bool WITH_ERROR_LOG = false;
 
 template <std::size_t N, typename T>
-std::vector<Ray<N, T>> create_rays_for_spherical_mesh(const geometry::BoundingBox<N, T>& bb, int ray_count)
+std::vector<Ray<N, T>> create_rays_for_spherical_mesh(const geometry::BoundingBox<N, T>& bb, const int ray_count)
 {
         const Vector<N, T> center = (bb.max + bb.min) / T(2);
         const T radius = 2 * ((bb.max - bb.min) / T(2)).norm_infinity();
@@ -69,7 +69,51 @@ std::vector<Ray<N, T>> create_rays_for_spherical_mesh(const geometry::BoundingBo
 }
 
 template <std::size_t N, typename T, typename Color>
-void test_spherical_mesh(const Shape<N, T, Color>& mesh, int ray_count, ProgressRatio* progress)
+const Surface<N, T, Color>* intersect_mesh(
+        const char* const name_1,
+        const char* const name_2,
+        const Shape<N, T, Color>& mesh,
+        const Ray<N, T>& ray,
+        const unsigned ray_number,
+        int* const error_count)
+{
+        const std::optional<T> bounding_distance = mesh.intersect_bounding(ray);
+        if (!bounding_distance)
+        {
+                if (WITH_ERROR_LOG)
+                {
+                        LOG(std::string("No ") + name_1 + " bounding intersection with ray #" + to_string(ray_number)
+                            + "\n" + to_string(ray));
+                }
+                ++(*error_count);
+                return nullptr;
+        }
+        if (WITH_RAY_LOG)
+        {
+                LOG(std::string(name_2) + "_a == " + to_string(*bounding_distance));
+        }
+
+        const Surface<N, T, Color>* const surface = mesh.intersect(ray, *bounding_distance);
+        if (!surface)
+        {
+                if (WITH_ERROR_LOG)
+                {
+                        LOG(std::string("No ") + name_1 + " intersection with ray #" + to_string(ray_number) + "\n"
+                            + "bounding distance " + to_string(*bounding_distance) + "\n" + to_string(ray));
+                }
+                ++(*error_count);
+                return nullptr;
+        }
+        if (WITH_RAY_LOG)
+        {
+                LOG(std::string(name_2) + "_p == " + to_string((surface->point() - ray.org()).norm()));
+        }
+
+        return surface;
+}
+
+template <std::size_t N, typename T, typename Color>
+void test_spherical_mesh(const Shape<N, T, Color>& mesh, const int ray_count, ProgressRatio* const progress)
 {
         const geometry::BoundingBox<N, T> bb = mesh.bounding_box();
 
@@ -102,81 +146,28 @@ void test_spherical_mesh(const Shape<N, T, Color>& mesh, int ray_count, Progress
                         LOG("ray #" + to_string(i) + " in " + space_name(N));
                 }
 
-                std::optional<T> bounding_distance;
                 const Surface<N, T, Color>* surface;
 
-                bounding_distance = mesh.intersect_bounding(ray);
-                if (!bounding_distance)
-                {
-                        if (WITH_ERROR_LOG)
-                        {
-                                LOG("No the first bounding intersection with ray #" + to_string(i) + "\n"
-                                    + to_string(ray));
-                        }
-                        ++error_count;
-                        continue;
-                }
-                if (WITH_RAY_LOG)
-                {
-                        LOG("t1_a == " + to_string(*bounding_distance));
-                }
-
-                surface = mesh.intersect(ray, *bounding_distance);
+                surface = intersect_mesh("the first", "t1", mesh, ray, i, &error_count);
                 if (!surface)
                 {
-                        if (WITH_ERROR_LOG)
-                        {
-                                LOG("No the first intersection with ray #" + to_string(i) + "\n" + "bounding distance "
-                                    + to_string(*bounding_distance) + "\n" + to_string(ray));
-                        }
-                        ++error_count;
                         continue;
-                }
-                if (WITH_RAY_LOG)
-                {
-                        LOG("t1_p == " + to_string((surface->point() - ray.org()).norm()));
                 }
 
                 ray.set_org(surface->point());
                 ray.move(ray_offset);
 
-                bounding_distance = mesh.intersect_bounding(ray);
-                if (!bounding_distance)
-                {
-                        if (WITH_ERROR_LOG)
-                        {
-                                LOG("No the second bounding intersection with ray #" + to_string(i) + "\n"
-                                    + to_string(ray));
-                        }
-                        ++error_count;
-                        continue;
-                }
-                if (WITH_RAY_LOG)
-                {
-                        LOG("t2_a == " + to_string(*bounding_distance));
-                }
-
-                surface = mesh.intersect(ray, *bounding_distance);
+                surface = intersect_mesh("the second", "t2", mesh, ray, i, &error_count);
                 if (!surface)
                 {
-                        if (WITH_ERROR_LOG)
-                        {
-                                LOG("No the second intersection with ray #" + to_string(i) + "\n" + "bounding "
-                                    + to_string(*bounding_distance) + "\n" + to_string(ray));
-                        }
-                        ++error_count;
                         continue;
-                }
-                if (WITH_RAY_LOG)
-                {
-                        LOG("t2_p == " + to_string((surface->point() - ray.org()).norm()));
                 }
 
                 ray.set_org(surface->point());
                 ray.move(ray_offset);
 
-                if ((bounding_distance = mesh.intersect_bounding(ray))
-                    && (surface = mesh.intersect(ray, *bounding_distance)))
+                const std::optional<T> bounding_distance = mesh.intersect_bounding(ray);
+                if (bounding_distance && (surface = mesh.intersect(ray, *bounding_distance)))
                 {
                         if (WITH_ERROR_LOG)
                         {
@@ -188,7 +179,7 @@ void test_spherical_mesh(const Shape<N, T, Color>& mesh, int ray_count, Progress
                 }
         }
 
-        double error_percent = 100.0 * error_count / rays.size();
+        const double error_percent = 100.0 * error_count / rays.size();
 
         LOG("intersections " + to_string_fixed(duration_from(start_time), 5) + " s");
         LOG("");
@@ -205,11 +196,11 @@ void test_spherical_mesh(const Shape<N, T, Color>& mesh, int ray_count, Progress
 template <std::size_t N>
 void create_spherical_mesh(
         const Vector<N, float>& center,
-        float radius,
-        int point_count,
-        std::vector<Vector<N, float>>* points,
-        std::vector<std::array<int, N>>* facets,
-        ProgressRatio* progress)
+        const float radius,
+        const int point_count,
+        std::vector<Vector<N, float>>* const points,
+        std::vector<std::array<int, N>>* const facets,
+        ProgressRatio* const progress)
 {
         std::mt19937_64 random_engine(point_count);
         points->resize(point_count);
@@ -244,7 +235,7 @@ float random_radius()
         static constexpr std::array<int, 2> MIN_MAX = EXPONENTS[N - 3];
 
         std::mt19937 random_engine = create_engine<std::mt19937>();
-        float exponent = std::uniform_real_distribution<float>(MIN_MAX[0], MIN_MAX[1])(random_engine);
+        const float exponent = std::uniform_real_distribution<float>(MIN_MAX[0], MIN_MAX[1])(random_engine);
         return std::pow(10.0f, exponent);
 }
 
