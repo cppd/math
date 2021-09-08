@@ -93,6 +93,64 @@ std::vector<std::array<Vector<N, T>, N - 1>> complement_vectors(const std::vecto
         return res;
 }
 
+template <std::size_t N, typename T>
+void test_complement(const Vector<N, T>& unit_vector, const std::array<Vector<N, T>, N - 1>& complement)
+{
+        if (!unit_vector.is_unit())
+        {
+                error("Not unit input vector " + to_string(unit_vector));
+        }
+
+        for (const Vector<N, T>& v : complement)
+        {
+                if (!is_finite(v))
+                {
+                        error("Not finite complement vector " + to_string(v));
+                }
+
+                if (!v.is_unit())
+                {
+                        error("Not unit complement vector " + to_string(v));
+                }
+
+                if (!vectors_are_orthogonal(unit_vector, v))
+                {
+                        error("Complement vector " + to_string(v) + " is not orthogonal to the input vector "
+                              + to_string(unit_vector));
+                }
+        }
+
+        for (std::size_t i = 0; i < complement.size(); ++i)
+        {
+                for (std::size_t j = i + 1; j < complement.size(); ++j)
+                {
+                        if (!vectors_are_orthogonal(complement[i], complement[j]))
+                        {
+                                error("Complement vectors are not orthogonal (" + to_string(complement[i]) + ", "
+                                      + to_string(complement[j]) + ")");
+                        }
+                }
+        }
+
+        const Vector<N, T> reconstructed = orthogonal_complement(complement);
+
+        if (!is_finite(reconstructed))
+        {
+                error("Not finite reconstructed vector " + to_string(reconstructed));
+        }
+
+        if (!reconstructed.is_unit())
+        {
+                error("Not unit reconstructed vector " + to_string(reconstructed));
+        }
+
+        if (!vectors_are_parallel(unit_vector, reconstructed))
+        {
+                error("Reconstructed vector " + to_string(reconstructed) + " is not parallel to input vector "
+                      + to_string(unit_vector));
+        }
+}
+
 template <std::size_t N, typename T, bool GRAM_SCHMIDT>
 void test_complement(int count)
 {
@@ -107,64 +165,9 @@ void test_complement(int count)
 
         ASSERT(vectors.size() == complements.size());
 
-        for (std::size_t num = 0; num < vectors.size(); ++num)
+        for (std::size_t i = 0; i < vectors.size(); ++i)
         {
-                const Vector<N, T>& unit_vector = vectors[num];
-                const std::array<Vector<N, T>, N - 1>& complement = complements[num];
-
-                if (!unit_vector.is_unit())
-                {
-                        error("Not unit input vector " + to_string(unit_vector));
-                }
-
-                for (const Vector<N, T>& v : complement)
-                {
-                        if (!is_finite(v))
-                        {
-                                error("Not finite complement vector " + to_string(v));
-                        }
-
-                        if (!v.is_unit())
-                        {
-                                error("Not unit complement vector " + to_string(v));
-                        }
-
-                        if (!vectors_are_orthogonal(unit_vector, v))
-                        {
-                                error("Complement vector " + to_string(v) + " is not orthogonal to the input vector "
-                                      + to_string(unit_vector));
-                        }
-                }
-
-                for (std::size_t i = 0; i < complement.size(); ++i)
-                {
-                        for (std::size_t j = i + 1; j < complement.size(); ++j)
-                        {
-                                if (!vectors_are_orthogonal(complement[i], complement[j]))
-                                {
-                                        error("Complement vectors are not orthogonal (" + to_string(complement[i])
-                                              + ", " + to_string(complement[j]) + ")");
-                                }
-                        }
-                }
-
-                const Vector<N, T> reconstructed = orthogonal_complement(complement);
-
-                if (!is_finite(reconstructed))
-                {
-                        error("Not finite reconstructed vector " + to_string(reconstructed));
-                }
-
-                if (!reconstructed.is_unit())
-                {
-                        error("Not unit reconstructed vector " + to_string(reconstructed));
-                }
-
-                if (!vectors_are_parallel(unit_vector, reconstructed))
-                {
-                        error("Reconstructed vector " + to_string(reconstructed) + " is not parallel to input vector "
-                              + to_string(unit_vector));
-                }
+                test_complement(vectors[i], complements[i]);
         }
 
         LOG("Test complement passed");
