@@ -20,6 +20,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/com/radical_inverse.h>
 #include <src/numerical/vec.h>
 
+#include <array>
 #include <utility>
 
 namespace ns::sampling
@@ -27,7 +28,7 @@ namespace ns::sampling
 template <std::size_t N, typename T>
 class HaltonSampler final
 {
-        static constexpr unsigned PRIMES[] = {2, 3, 5, 7, 11, 13, 17, 19, 23, 29};
+        static constexpr std::array PRIMES = std::to_array<unsigned>({2, 3, 5, 7, 11, 13, 17, 19, 23, 29});
 
         unsigned sample_ = 0;
 
