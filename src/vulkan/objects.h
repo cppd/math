@@ -154,6 +154,8 @@ struct DeviceProperties final
 
 class Device final
 {
+        static DeviceFeatures device_features(const VkDeviceCreateInfo& create_info);
+
         DeviceHandle device_;
         VkPhysicalDevice physical_device_ = VK_NULL_HANDLE;
         const DeviceProperties* physical_device_properties_ = nullptr;
