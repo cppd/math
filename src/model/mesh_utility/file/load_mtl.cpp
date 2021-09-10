@@ -100,7 +100,7 @@ void load_image(
 }
 
 template <std::size_t N>
-class ReadLib
+class ReadLib final
 {
         const std::filesystem::path* lib_dir_;
         const std::vector<char>* data_;
