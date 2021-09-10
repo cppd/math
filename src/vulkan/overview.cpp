@@ -139,7 +139,7 @@ std::string subgroup_features(VkSubgroupFeatureFlags flags)
         return s;
 }
 
-std::string shader_float_controls_independence(VkShaderFloatControlsIndependence v)
+std::string shader_float_controls_independence(const VkShaderFloatControlsIndependence v)
 {
         if (v == VK_SHADER_FLOAT_CONTROLS_INDEPENDENCE_32_BIT_ONLY)
         {
@@ -157,7 +157,7 @@ std::string shader_float_controls_independence(VkShaderFloatControlsIndependence
         return "UNKNOWN";
 }
 
-std::string point_clipping_behavior(VkPointClippingBehavior v)
+std::string point_clipping_behavior(const VkPointClippingBehavior v)
 {
         if (v == VK_POINT_CLIPPING_BEHAVIOR_ALL_CLIP_PLANES)
         {
@@ -170,35 +170,37 @@ std::string point_clipping_behavior(VkPointClippingBehavior v)
         return "UNKNOWN";
 }
 
-void conformance_version(const PhysicalDevice& device, std::size_t device_node, StringTree* tree)
+void conformance_version(const PhysicalDevice& device, const std::size_t device_node, StringTree* const tree)
 {
         std::ostringstream oss;
-        VkConformanceVersion v = device.properties().properties_12.conformanceVersion;
-        oss << static_cast<int>(v.major) << "." << static_cast<int>(v.minor) << "." << static_cast<int>(v.subminor)
-            << "." << static_cast<int>(v.patch);
+        const VkConformanceVersion v = device.properties().properties_12.conformanceVersion;
+        oss << static_cast<int>(v.major);
+        oss << "." << static_cast<int>(v.minor);
+        oss << "." << static_cast<int>(v.subminor);
+        oss << "." << static_cast<int>(v.patch);
         std::size_t node = tree->add(device_node, "Conformance Version");
         tree->add(node, oss.str());
 }
 
-void device_name(const PhysicalDevice& device, std::size_t device_node, StringTree* tree)
+void device_name(const PhysicalDevice& device, const std::size_t device_node, StringTree* const tree)
 {
-        std::size_t type_node = tree->add(device_node, "Device Name");
-        const char* device_name = static_cast<const char*>(device.properties().properties_10.deviceName);
+        const std::size_t type_node = tree->add(device_node, "Device Name");
+        const char* const device_name = static_cast<const char*>(device.properties().properties_10.deviceName);
         tree->add(type_node, device_name);
 }
 
-void driver_info(const PhysicalDevice& device, std::size_t device_node, StringTree* tree)
+void driver_info(const PhysicalDevice& device, const std::size_t device_node, StringTree* const tree)
 {
-        std::size_t node = tree->add(device_node, "Driver");
-        const char* driver_name = static_cast<const char*>(device.properties().properties_12.driverName);
+        const std::size_t node = tree->add(device_node, "Driver");
+        const char* const driver_name = static_cast<const char*>(device.properties().properties_12.driverName);
         tree->add(node, std::string("Name = ") + driver_name);
-        const char* driver_info = static_cast<const char*>(device.properties().properties_12.driverInfo);
+        const char* const driver_info = static_cast<const char*>(device.properties().properties_12.driverInfo);
         tree->add(node, std::string("Info = ") + driver_info);
 }
 
-void device_type(const PhysicalDevice& device, std::size_t device_node, StringTree* tree)
+void device_type(const PhysicalDevice& device, const std::size_t device_node, StringTree* const tree)
 {
-        std::size_t type_node = tree->add(device_node, "Device Type");
+        const std::size_t type_node = tree->add(device_node, "Device Type");
         try
         {
                 tree->add(type_node, physical_device_type_to_string(device.properties().properties_10.deviceType));
@@ -209,9 +211,9 @@ void device_type(const PhysicalDevice& device, std::size_t device_node, StringTr
         }
 }
 
-void api_version(const PhysicalDevice& device, std::size_t device_node, StringTree* tree)
+void api_version(const PhysicalDevice& device, const std::size_t device_node, StringTree* const tree)
 {
-        std::size_t api_node = tree->add(device_node, "API Version");
+        const std::size_t api_node = tree->add(device_node, "API Version");
         try
         {
                 tree->add(api_node, api_version_to_string(device.properties().properties_10.apiVersion));
@@ -222,10 +224,9 @@ void api_version(const PhysicalDevice& device, std::size_t device_node, StringTr
         }
 }
 
-void extensions(const PhysicalDevice& device, std::size_t device_node, StringTree* tree)
+void extensions(const PhysicalDevice& device, const std::size_t device_node, StringTree* const tree)
 {
-        std::size_t extensions_node = tree->add(device_node, "Extensions");
-
+        const std::size_t extensions_node = tree->add(device_node, "Extensions");
         try
         {
                 for (const std::string& e : sorted(device.supported_extensions()))
@@ -239,27 +240,78 @@ void extensions(const PhysicalDevice& device, std::size_t device_node, StringTre
         }
 }
 
-#define ADD_VALUE_10(v) properties.emplace_back(#v, to_string(device_properties.properties_10.limits.v))
+template <typename T>
+void add_value(
+        const T& value,
+        const std::string_view& name,
+        std::vector<std::tuple<std::string, std::string>>* const properties)
+{
+        properties->emplace_back(name, to_string(value));
+}
 
-#define ADD_SAMPLE_10(v) properties.emplace_back(#v, samples(device_properties.properties_10.limits.v))
+void add_value(
+        const VkPointClippingBehavior& value,
+        const std::string_view& name,
+        std::vector<std::tuple<std::string, std::string>>* const properties)
+{
+        properties->emplace_back(name, point_clipping_behavior(value));
+}
 
-#define ADD_VALUE_11(v) properties.emplace_back(#v, to_string(device_properties.properties_11.v))
+void add_value(
+        const VkShaderFloatControlsIndependence& value,
+        const std::string_view& name,
+        std::vector<std::tuple<std::string, std::string>>* const properties)
+{
+        properties->emplace_back(name, shader_float_controls_independence(value));
+}
 
-#define ADD_SHADER_STAGE_11(v) properties.emplace_back(#v, shader_stages(device_properties.properties_11.v))
+void add_sample(
+        const VkSampleCountFlags& flags,
+        const std::string_view& name,
+        std::vector<std::tuple<std::string, std::string>>* const properties)
+{
+        properties->emplace_back(name, samples(flags));
+}
 
-#define ADD_POINT_CLIPPING_BEHAVIOR_11(v) \
-        properties.emplace_back(#v, point_clipping_behavior(device_properties.properties_11.v))
+void add_shader_stage(
+        const VkShaderStageFlags& flags,
+        const std::string_view& name,
+        std::vector<std::tuple<std::string, std::string>>* const properties)
+{
+        properties->emplace_back(name, shader_stages(flags));
+}
 
-#define ADD_SUBGROUP_FEATURE_11(v) properties.emplace_back(#v, subgroup_features(device_properties.properties_11.v))
+void add_subgroup_feature(
+        const VkSubgroupFeatureFlags& flags,
+        const std::string_view& name,
+        std::vector<std::tuple<std::string, std::string>>* const properties)
+{
+        properties->emplace_back(name, subgroup_features(flags));
+}
 
-#define ADD_VALUE_12(v) properties.emplace_back(#v, to_string(device_properties.properties_12.v))
+void add_resolve_mode(
+        const VkResolveModeFlags& flags,
+        const std::string_view& name,
+        std::vector<std::tuple<std::string, std::string>>* const properties)
+{
+        properties->emplace_back(name, resolve_modes(flags));
+}
 
-#define ADD_SAMPLE_12(v) properties.emplace_back(#v, samples(device_properties.properties_12.v))
+#define ADD_VALUE_10(v) add_value(device_properties.properties_10.limits.v, #v, &properties)
 
-#define ADD_RESOLVE_MODE_12(v) properties.emplace_back(#v, resolve_modes(device_properties.properties_12.v))
+#define ADD_SAMPLE_10(v) add_sample(device_properties.properties_10.limits.v, #v, &properties)
 
-#define ADD_SHADER_FLOAT_CONTROLS_INDEPENDENCE_12(v) \
-        properties.emplace_back(#v, shader_float_controls_independence(device_properties.properties_12.v))
+#define ADD_VALUE_11(v) add_value(device_properties.properties_11.v, #v, &properties)
+
+#define ADD_SHADER_STAGE_11(v) add_shader_stage(device_properties.properties_11.v, #v, &properties)
+
+#define ADD_SUBGROUP_FEATURE_11(v) add_subgroup_feature(device_properties.properties_11.v, #v, &properties)
+
+#define ADD_VALUE_12(v) add_value(device_properties.properties_12.v, #v, &properties)
+
+#define ADD_SAMPLE_12(v) add_sample(device_properties.properties_12.v, #v, &properties)
+
+#define ADD_RESOLVE_MODE_12(v) add_resolve_mode(device_properties.properties_12.v, #v, &properties)
 
 std::vector<std::tuple<std::string, std::string>> find_properties(const DeviceProperties& device_properties)
 {
@@ -370,7 +422,7 @@ std::vector<std::tuple<std::string, std::string>> find_properties(const DevicePr
         ADD_VALUE_10(viewportBoundsRange);
         ADD_VALUE_10(viewportSubPixelBits);
         //
-        ADD_POINT_CLIPPING_BEHAVIOR_11(pointClippingBehavior);
+        ADD_VALUE_11(pointClippingBehavior);
         ADD_SHADER_STAGE_11(subgroupSupportedStages);
         ADD_SUBGROUP_FEATURE_11(subgroupSupportedOperations);
         ADD_VALUE_11(maxMemoryAllocationSize);
@@ -384,8 +436,8 @@ std::vector<std::tuple<std::string, std::string>> find_properties(const DevicePr
         ADD_RESOLVE_MODE_12(supportedDepthResolveModes);
         ADD_RESOLVE_MODE_12(supportedStencilResolveModes);
         ADD_SAMPLE_12(framebufferIntegerColorSampleCounts);
-        ADD_SHADER_FLOAT_CONTROLS_INDEPENDENCE_12(denormBehaviorIndependence);
-        ADD_SHADER_FLOAT_CONTROLS_INDEPENDENCE_12(roundingModeIndependence);
+        ADD_VALUE_12(denormBehaviorIndependence);
+        ADD_VALUE_12(roundingModeIndependence);
         ADD_VALUE_12(filterMinmaxImageComponentMapping);
         ADD_VALUE_12(filterMinmaxSingleComponentFormats);
         ADD_VALUE_12(independentResolve);
@@ -460,19 +512,19 @@ void properties(const PhysicalDevice& device, const std::size_t device_node, Str
 }
 
 void add_feature(
-        const VkBool32 feature_value,
+        const VkBool32 value,
+        const std::string_view& name,
         std::vector<std::string>* const supported,
-        std::vector<std::string>* const not_supported,
-        const std::string_view& name)
+        std::vector<std::string>* const not_supported)
 {
-        (feature_value == VK_TRUE ? supported : not_supported)->emplace_back(name);
+        (value == VK_TRUE ? supported : not_supported)->emplace_back(name);
 }
 
-#define ADD_FEATURE_10(v) add_feature(device_features.features_10.v, &supported, &not_supported, #v)
+#define ADD_FEATURE_10(v) add_feature(device_features.features_10.v, #v, &supported, &not_supported)
 
-#define ADD_FEATURE_11(v) add_feature(device_features.features_11.v, &supported, &not_supported, #v)
+#define ADD_FEATURE_11(v) add_feature(device_features.features_11.v, #v, &supported, &not_supported)
 
-#define ADD_FEATURE_12(v) add_feature(device_features.features_12.v, &supported, &not_supported, #v)
+#define ADD_FEATURE_12(v) add_feature(device_features.features_12.v, #v, &supported, &not_supported)
 
 std::tuple<std::vector<std::string>, std::vector<std::string>> find_features(const DeviceFeatures& device_features)
 {
@@ -628,11 +680,11 @@ void features(const PhysicalDevice& device, const std::size_t device_node, Strin
 void queues(
         const PhysicalDevice& device,
         const VkQueueFamilyProperties& family_properties,
-        std::size_t family_index,
-        std::size_t queue_families_node,
-        StringTree* tree)
+        const std::size_t family_index,
+        const std::size_t queue_families_node,
+        StringTree* const tree)
 {
-        std::size_t queue_family_node = tree->add(queue_families_node, "Family " + to_string(family_index));
+        const std::size_t queue_family_node = tree->add(queue_families_node, "Family " + to_string(family_index));
 
         try
         {
@@ -675,9 +727,9 @@ void queues(
         }
 }
 
-void queue_families(const PhysicalDevice& device, std::size_t device_node, StringTree* tree)
+void queue_families(const PhysicalDevice& device, const std::size_t device_node, StringTree* const tree)
 {
-        std::size_t queue_families_node = tree->add(device_node, "QueueFamilies");
+        const std::size_t queue_families_node = tree->add(device_node, "QueueFamilies");
 
         try
         {
@@ -694,9 +746,9 @@ void queue_families(const PhysicalDevice& device, std::size_t device_node, Strin
 
 //
 
-void api_version(StringTree* tree)
+void api_version(StringTree* const tree)
 {
-        std::size_t api_node = tree->add("API Version");
+        const std::size_t api_node = tree->add("API Version");
         try
         {
                 tree->add(api_node, api_version_to_string(supported_instance_api_version()));
@@ -706,9 +758,9 @@ void api_version(StringTree* tree)
                 tree->add(api_node, e.what());
         }
 }
-void extensions(StringTree* tree)
+void extensions(StringTree* const tree)
 {
-        std::size_t extensions_node = tree->add("Extensions");
+        const std::size_t extensions_node = tree->add("Extensions");
         try
         {
                 for (const std::string& extension : sorted(supported_instance_extensions()))
@@ -722,9 +774,9 @@ void extensions(StringTree* tree)
         }
 }
 
-void validation_layers(StringTree* tree)
+void validation_layers(StringTree* const tree)
 {
-        std::size_t validation_layers_node = tree->add("Validation Layers");
+        const std::size_t validation_layers_node = tree->add("Validation Layers");
         try
         {
                 for (const std::string& layer : sorted(supported_validation_layers()))
@@ -738,9 +790,9 @@ void validation_layers(StringTree* tree)
         }
 }
 
-void required_surface_extensions(StringTree* tree)
+void required_surface_extensions(StringTree* const tree)
 {
-        std::size_t required_surface_extensions_node = tree->add("Required Surface Extensions");
+        const std::size_t required_surface_extensions_node = tree->add("Required Surface Extensions");
         try
         {
                 for (const std::string& extension : sorted(window::vulkan_create_surface_required_extensions()))
@@ -767,7 +819,7 @@ std::string overview()
         return tree.text(TREE_LEVEL_INDENT);
 }
 
-std::string overview_physical_devices(VkInstance instance, VkSurfaceKHR surface)
+std::string overview_physical_devices(const VkInstance instance, const VkSurfaceKHR surface)
 {
         StringTree tree;
 
@@ -775,14 +827,14 @@ std::string overview_physical_devices(VkInstance instance, VkSurfaceKHR surface)
 
         for (const VkPhysicalDevice& d : physical_devices(instance))
         {
-                PhysicalDevice device(d, surface);
+                const PhysicalDevice device(d, surface);
 
                 if (!uuids.emplace(to_string(device.properties().properties_10.pipelineCacheUUID)).second)
                 {
                         continue;
                 }
 
-                std::size_t node = tree.add("Physical Device");
+                const std::size_t node = tree.add("Physical Device");
 
                 device_name(device, node, &tree);
                 device_type(device, node, &tree);
