@@ -23,7 +23,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "../position.h"
 
-#include <src/com/barrier.h>
 #include <src/com/error.h>
 #include <src/com/file/path.h>
 #include <src/com/log.h>
@@ -35,6 +34,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/com/type/name.h>
 
 #include <filesystem>
+#include <latch>
 #include <map>
 #include <set>
 #include <string>
@@ -715,7 +715,7 @@ void read_obj_thread(
         const unsigned thread_num,
         const unsigned thread_count,
         std::vector<Counters>* const counters,
-        Barrier* const barrier,
+        std::latch* const latch,
         std::atomic_bool* const error_found,
         std::vector<char>* const data_ptr,
         std::vector<long long>* const line_begin,
@@ -732,10 +732,10 @@ void read_obj_thread(
         catch (...)
         {
                 error_found->store(true);
-                barrier->wait();
+                latch->arrive_and_wait();
                 throw;
         }
-        barrier->wait();
+        latch->arrive_and_wait();
         if (*error_found)
         {
                 return;
@@ -750,6 +750,40 @@ void read_obj_thread(
         line_begin->shrink_to_fit();
 
         read_obj_stage_two(sum_counters(*counters), data_ptr, line_prop, progress, material_index, library_names, mesh);
+}
+
+template <std::size_t N>
+void read_obj(
+        const std::filesystem::path& file_name,
+        ProgressRatio* const progress,
+        std::map<std::string, int>* const material_index,
+        std::vector<std::filesystem::path>* const library_names,
+        Mesh<N>* const mesh)
+{
+        const unsigned thread_count = hardware_concurrency();
+
+        std::vector<char> data;
+        std::vector<long long> line_begin;
+
+        read_file_lines(file_name, &data, &line_begin);
+
+        std::vector<ObjLine<N>> line_prop{line_begin.size()};
+        std::latch latch{thread_count};
+        std::atomic_bool error_found{false};
+        std::vector<Counters> counters{thread_count};
+
+        ThreadsWithCatch threads{thread_count};
+        for (unsigned i = 0; i < thread_count; ++i)
+        {
+                threads.add(
+                        [&, i]()
+                        {
+                                read_obj_thread(
+                                        i, thread_count, &counters, &latch, &error_found, &data, &line_begin,
+                                        &line_prop, progress, material_index, library_names, mesh);
+                        });
+        }
+        threads.join();
 }
 
 template <std::size_t N>
@@ -774,40 +808,6 @@ void read_libs(
 
         mesh->materials.shrink_to_fit();
         mesh->images.shrink_to_fit();
-}
-
-template <std::size_t N>
-void read_obj(
-        const std::filesystem::path& file_name,
-        ProgressRatio* const progress,
-        std::map<std::string, int>* const material_index,
-        std::vector<std::filesystem::path>* const library_names,
-        Mesh<N>* const mesh)
-{
-        const int thread_count = hardware_concurrency();
-
-        std::vector<char> data;
-        std::vector<long long> line_begin;
-
-        read_file_lines(file_name, &data, &line_begin);
-
-        std::vector<ObjLine<N>> line_prop(line_begin.size());
-        Barrier barrier(thread_count);
-        std::atomic_bool error_found{false};
-        std::vector<Counters> counters(thread_count);
-
-        ThreadsWithCatch threads(thread_count);
-        for (int i = 0; i < thread_count; ++i)
-        {
-                threads.add(
-                        [&, i]()
-                        {
-                                read_obj_thread(
-                                        i, thread_count, &counters, &barrier, &error_found, &data, &line_begin,
-                                        &line_prop, progress, material_index, library_names, mesh);
-                        });
-        }
-        threads.join();
 }
 
 template <std::size_t N>
