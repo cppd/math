@@ -153,7 +153,7 @@ class Impl final : public View
                 double near = 1;
                 double far = -1;
                 Matrix4d p = matrix::ortho_vulkan<double>(left, right, bottom, top, near, far);
-                Matrix4d t = matrix::translate(Vector3d(0.5, 0.5, 0));
+                Matrix4d t = matrix::translate<double>(0.5, 0.5, 0);
                 memory_.set_matrix(p * t);
 
                 vulkan::CommandBufferCreateInfo info;
