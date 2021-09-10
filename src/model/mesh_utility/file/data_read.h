@@ -116,9 +116,91 @@ int read_vector(const char** str, Vector<N, T>* v, T* n, std::integer_sequence<u
         static_assert(N == sizeof...(I));
         return string_to_floats(str, &(*v)[I]..., n);
 }
+
+// split string into two parts
+// 1. not space characters
+// 2. all other characters before a comment or the end of the string
+inline void split(
+        const std::vector<char>& data,
+        const long long first,
+        const long long last,
+        long long* const first_b,
+        long long* const first_e,
+        long long* const second_b,
+        long long* const second_e)
+{
+        const auto is_comment = [](char c)
+        {
+                return c == '#';
+        };
+
+        long long i = first;
+
+        while (i < last && ascii::is_space(data[i]))
+        {
+                ++i;
+        }
+        if (i == last || is_comment(data[i]))
+        {
+                *first_b = i;
+                *first_e = i;
+                *second_b = i;
+                *second_e = i;
+                return;
+        }
+
+        long long i2 = i + 1;
+        while (i2 < last && !ascii::is_space(data[i2]) && !is_comment(data[i2]))
+        {
+                ++i2;
+        }
+        *first_b = i;
+        *first_e = i2;
+
+        i = i2;
+
+        if (i == last || is_comment(data[i]))
+        {
+                *second_b = i;
+                *second_e = i;
+                return;
+        }
+
+        // skip the first space
+        ++i;
+
+        i2 = i;
+        while (i2 < last && !is_comment(data[i2]))
+        {
+                ++i2;
+        }
+
+        *second_b = i;
+        *second_e = i2;
+}
 }
 
 //
+
+constexpr bool str_equal(const char* s1, const char* s2)
+{
+        while (*s1 == *s2 && *s1)
+        {
+                ++s1;
+                ++s2;
+        }
+        return *s1 == *s2;
+}
+
+static_assert(
+        str_equal("ab", "ab") && str_equal("", "") && !str_equal("", "ab") && !str_equal("ab", "")
+        && !str_equal("ab", "ac") && !str_equal("ba", "ca") && !str_equal("a", "xyz"));
+
+template <typename T1, typename T2, typename T3>
+bool check_range(const T1& v, const T2& min, const T3& max)
+{
+        return v >= min && v <= max;
+}
 
 template <typename Data, typename Op>
 void read(const Data& data, long long size, const Op& op, long long* i)
@@ -200,5 +282,64 @@ const char* read_float(const char* str, Args*... args) requires(
                       + " type, found " + std::to_string(cnt) + " numbers");
         }
         return str;
+}
+
+inline void split_line(
+        std::vector<char>* const data,
+        const std::vector<long long>& line_begin,
+        const long long line_num,
+        const char** const first,
+        const char** const second,
+        long long* const second_b,
+        long long* const second_e)
+{
+        long long line_count = line_begin.size();
+
+        long long last = (line_num + 1 < line_count) ? line_begin[line_num + 1] : data->size();
+
+        // move to '\n' at the end of the string
+        --last;
+
+        long long first_b;
+        long long first_e;
+
+        data_read_implementation::split(*data, line_begin[line_num], last, &first_b, &first_e, second_b, second_e);
+
+        *first = &(*data)[first_b];
+        (*data)[first_e] = 0; // space, '#', '\n'
+
+        *second = &(*data)[*second_b];
+        (*data)[*second_e] = 0; // '#', '\n'
+}
+
+template <typename T>
+void read_name(
+        const char* const object_name,
+        const T& data,
+        const long long begin,
+        const long long end,
+        std::string* const name)
+{
+        const long long size = end;
+
+        long long i = begin;
+        read(data, size, ascii::is_space, &i);
+        if (i == size)
+        {
+                error("Error read " + std::string(object_name) + " name");
+        }
+
+        long long i2 = i;
+        read(data, size, ascii::is_not_space, &i2);
+
+        *name = std::string(&data[i], i2 - i);
+
+        i = i2;
+
+        read(data, size, ascii::is_space, &i);
+        if (i != size)
+        {
+                error("Error read " + std::string(object_name) + " name");
+        }
 }
 }

@@ -19,6 +19,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "data_read.h"
 #include "file_lines.h"
+#include "load_mtl.h"
 
 #include "../position.h"
 
@@ -29,17 +30,10 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/com/math.h>
 #include <src/com/print.h>
 #include <src/com/string/ascii.h>
-#include <src/com/string/str.h>
 #include <src/com/thread.h>
 #include <src/com/time.h>
-#include <src/com/type/limit.h>
 #include <src/com/type/name.h>
-#include <src/image/file.h>
-#include <src/image/flip.h>
 
-#include <cstdio>
-#include <cstdlib>
-#include <cstring>
 #include <filesystem>
 #include <map>
 #include <set>
@@ -54,20 +48,6 @@ template <std::size_t N>
 constexpr int MAX_FACETS_PER_LINE = 1;
 template <>
 constexpr int MAX_FACETS_PER_LINE<3> = 5;
-
-constexpr bool str_equal(const char* s1, const char* s2)
-{
-        while (*s1 == *s2 && *s1)
-        {
-                ++s1;
-                ++s2;
-        }
-        return *s1 == *s2;
-}
-
-static_assert(
-        str_equal("ab", "ab") && str_equal("", "") && !str_equal("", "ab") && !str_equal("ab", "")
-        && !str_equal("ab", "ac") && !str_equal("ba", "ca") && !str_equal("a", "xyz"));
 
 std::string obj_type_name(const std::size_t n)
 {
@@ -90,76 +70,6 @@ std::string map_keys_to_string(const std::map<std::string, T>& m)
                 }
         }
         return names;
-}
-
-template <typename T1, typename T2, typename T3>
-bool check_range(const T1& v, const T2& min, const T3& max)
-{
-        return v >= min && v <= max;
-}
-
-color::Color read_color(const char* const str)
-{
-        static constexpr float MIN = 0;
-        static constexpr float MAX = 1;
-
-        float red;
-        float green;
-        float blue;
-
-        read_float(str, &red, &green, &blue);
-
-        if (!(check_range(red, MIN, MAX) && check_range(green, MIN, MAX) && check_range(blue, MIN, MAX)))
-        {
-                error("RGB components (" + to_string(red) + ", " + to_string(green) + ", " + to_string(blue)
-                      + ") are not in the range [0, 1]");
-        }
-
-        return color::Color(red, green, blue);
-}
-
-template <std::size_t N>
-image::Image<N> read_image_from_file(const std::filesystem::path& file_name)
-{
-        if constexpr (N != 2)
-        {
-                error("Reading " + to_string(N - 1) + "-dimensional images for " + obj_type_name(N)
-                      + " is not supported");
-        }
-        else
-        {
-                image::Image<2> obj_image = image::load_rgba(file_name);
-                image::flip_vertically(&obj_image);
-                return obj_image;
-        }
-}
-
-template <std::size_t N>
-void load_image(
-        const std::filesystem::path& dir_name,
-        const std::filesystem::path& image_name,
-        std::map<std::string, int>* const image_index,
-        std::vector<image::Image<N - 1>>* const images,
-        int* const index)
-{
-        std::filesystem::path file_name = path_from_utf8(trim(generic_utf8_filename(image_name)));
-
-        if (file_name.empty())
-        {
-                error("No image file name");
-        }
-
-        file_name = dir_name / file_name;
-
-        if (auto iter = image_index->find(file_name); iter != image_index->end())
-        {
-                *index = iter->second;
-                return;
-        }
-
-        images->push_back(read_image_from_file<N - 1>(file_name));
-        *index = images->size() - 1;
-        image_index->emplace(file_name, *index);
 }
 
 // "x/x/x"
@@ -354,37 +264,6 @@ void read_float_texture(const char* const str, Vector<N, T>* const v)
 }
 
 template <typename T>
-void read_name(
-        const char* const object_name,
-        const T& data,
-        const long long begin,
-        const long long end,
-        std::string* const name)
-{
-        const long long size = end;
-
-        long long i = begin;
-        read(data, size, ascii::is_space, &i);
-        if (i == size)
-        {
-                error("Error read " + std::string(object_name) + " name");
-        }
-
-        long long i2 = i;
-        read(data, size, ascii::is_not_space, &i2);
-
-        *name = std::string(&data[i], i2 - i);
-
-        i = i2;
-
-        read(data, size, ascii::is_space, &i);
-        if (i != size)
-        {
-                error("Error read " + std::string(object_name) + " name");
-        }
-}
-
-template <typename T>
 void read_library_names(
         const T& data,
         const long long begin,
@@ -420,96 +299,6 @@ void read_library_names(
                         lib_unique_names->insert(std::move(name));
                 }
         }
-}
-
-// split string into two parts
-// 1. not space characters
-// 2. all other characters before a comment or the end of the string
-void split(
-        const std::vector<char>& data,
-        const long long first,
-        const long long last,
-        long long* const first_b,
-        long long* const first_e,
-        long long* const second_b,
-        long long* const second_e)
-{
-        const auto is_comment = [](char c)
-        {
-                return c == '#';
-        };
-
-        long long i = first;
-
-        while (i < last && ascii::is_space(data[i]))
-        {
-                ++i;
-        }
-        if (i == last || is_comment(data[i]))
-        {
-                *first_b = i;
-                *first_e = i;
-                *second_b = i;
-                *second_e = i;
-                return;
-        }
-
-        long long i2 = i + 1;
-        while (i2 < last && !ascii::is_space(data[i2]) && !is_comment(data[i2]))
-        {
-                ++i2;
-        }
-        *first_b = i;
-        *first_e = i2;
-
-        i = i2;
-
-        if (i == last || is_comment(data[i]))
-        {
-                *second_b = i;
-                *second_e = i;
-                return;
-        }
-
-        // skip the first space
-        ++i;
-
-        i2 = i;
-        while (i2 < last && !is_comment(data[i2]))
-        {
-                ++i2;
-        }
-
-        *second_b = i;
-        *second_e = i2;
-}
-
-void split_line(
-        std::vector<char>* const data,
-        const std::vector<long long>& line_begin,
-        const long long line_num,
-        const char** const first,
-        const char** const second,
-        long long* const second_b,
-        long long* const second_e)
-{
-        long long line_count = line_begin.size();
-
-        long long last = (line_num + 1 < line_count) ? line_begin[line_num + 1] : data->size();
-
-        // move to '\n' at the end of the string
-        --last;
-
-        long long first_b;
-        long long first_e;
-
-        split(*data, line_begin[line_num], last, &first_b, &first_e, second_b, second_e);
-
-        *first = &(*data)[first_b];
-        (*data)[first_e] = 0; // space, '#', '\n'
-
-        *second = &(*data)[*second_b];
-        (*data)[*second_e] = 0; // '#', '\n'
 }
 
 template <std::size_t N>
@@ -961,182 +750,6 @@ void read_obj_thread(
         line_begin->shrink_to_fit();
 
         read_obj_stage_two(sum_counters(*counters), data_ptr, line_prop, progress, material_index, library_names, mesh);
-}
-
-template <std::size_t N>
-class ReadLibData
-{
-        const std::filesystem::path* lib_dir_;
-        const std::vector<char>* data_;
-        Mesh<N>* mesh_;
-        std::map<std::string, int>* material_index_;
-        std::map<std::string, int>* image_index_;
-        typename Mesh<N>::Material* mtl_;
-
-public:
-        ReadLibData(
-                const std::filesystem::path* const lib_dir,
-                const std::vector<char>* const data,
-                Mesh<N>* const mesh,
-                std::map<std::string, int>* const material_index,
-                std::map<std::string, int>* const image_index,
-                typename Mesh<N>::Material* const mtl)
-                : lib_dir_(lib_dir),
-                  data_(data),
-                  mesh_(mesh),
-                  material_index_(material_index),
-                  image_index_(image_index),
-                  mtl_(mtl)
-        {
-        }
-        const std::filesystem::path& lib_dir() const
-        {
-                return *lib_dir_;
-        }
-        const std::vector<char>& data() const
-        {
-                return *data_;
-        }
-        Mesh<N>& mesh() const
-        {
-                return *mesh_;
-        }
-        std::map<std::string, int>& material_index() const
-        {
-                return *material_index_;
-        }
-        std::map<std::string, int>& image_index() const
-        {
-                return *image_index_;
-        }
-        typename Mesh<N>::Material* mtl() const
-        {
-                return mtl_;
-        }
-        void set_mtl(typename Mesh<N>::Material* const mtl)
-        {
-                mtl_ = mtl;
-        }
-};
-
-template <std::size_t N>
-bool read_lib_line(
-        ReadLibData<N>* const data,
-        const char* const first,
-        const long long second_b,
-        const long long second_e)
-{
-        if (!*first)
-        {
-                return true;
-        }
-
-        if (str_equal(first, "newmtl"))
-        {
-                if (data->material_index().empty())
-                {
-                        return false;
-                }
-
-                std::string name;
-                read_name("material", data->data(), second_b, second_e, &name);
-
-                auto iter = data->material_index().find(name);
-                if (iter != data->material_index().end())
-                {
-                        data->set_mtl(&(data->mesh().materials[iter->second]));
-                        data->material_index().erase(name);
-                }
-                else
-                {
-                        data->set_mtl(nullptr);
-                }
-        }
-        else if (str_equal(first, "Kd"))
-        {
-                if (!data->mtl())
-                {
-                        return true;
-                }
-                try
-                {
-                        data->mtl()->color = read_color(&(data->data())[second_b]);
-                }
-                catch (const std::exception& e)
-                {
-                        error("Reading Kd in material " + data->mtl()->name + "\n" + e.what());
-                }
-        }
-        else if (str_equal(first, "map_Kd"))
-        {
-                if (!data->mtl())
-                {
-                        return true;
-                }
-
-                std::string name;
-                read_name("file", data->data(), second_b, second_e, &name);
-                load_image<N>(data->lib_dir(), name, &data->image_index(), &data->mesh().images, &data->mtl()->image);
-        }
-
-        return true;
-}
-
-template <std::size_t N>
-void read_lib(
-        const std::filesystem::path& dir_name,
-        const std::filesystem::path& file_name,
-        ProgressRatio* const progress,
-        std::map<std::string, int>* const material_index,
-        std::map<std::string, int>* const image_index,
-        Mesh<N>* const mesh)
-{
-        std::vector<char> data;
-        std::vector<long long> line_begin;
-
-        const std::filesystem::path lib_name = dir_name / file_name;
-
-        read_file_lines(lib_name, &data, &line_begin);
-
-        const std::filesystem::path lib_dir = lib_name.parent_path();
-
-        const long long line_count = line_begin.size();
-        const double line_count_reciprocal = 1.0 / line_begin.size();
-
-        ReadLibData<N> read_data(&lib_dir, &data, mesh, material_index, image_index, nullptr);
-
-        for (long long line_num = 0; line_num < line_count; ++line_num)
-        {
-                if ((line_num & 0xfff) == 0xfff)
-                {
-                        progress->set(line_num * line_count_reciprocal);
-                }
-
-                const char* first;
-                const char* second;
-                long long second_b;
-                long long second_e;
-
-                split_line(&data, line_begin, line_num, &first, &second, &second_b, &second_e);
-
-                try
-                {
-                        if (!read_lib_line(&read_data, first, second_b, second_e))
-                        {
-                                break;
-                        }
-                }
-                catch (const std::exception& e)
-                {
-                        error("Library: " + generic_utf8_filename(lib_name) + "\n" + "Line " + to_string(line_num)
-                              + ": " + first + " " + second + "\n" + e.what());
-                }
-                catch (...)
-                {
-                        error("Library: " + generic_utf8_filename(lib_name) + "\n" + "Line " + to_string(line_num)
-                              + ": " + first + " " + second + "\n" + "Unknown error");
-                }
-        }
 }
 
 template <std::size_t N>
