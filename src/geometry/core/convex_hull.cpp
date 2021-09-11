@@ -43,6 +43,7 @@ The projection to the n-space of the lower convex hull of the points
 #include "convex_hull.h"
 
 #include "facet.h"
+#include "integer.h"
 #include "ridge.h"
 
 #include <src/com/arrays.h>
@@ -68,7 +69,6 @@ The projection to the n-space of the lower convex hull of the points
 #include <random>
 #include <sstream>
 #include <unordered_map>
-#include <unordered_set>
 
 namespace ns::geometry
 {
@@ -759,17 +759,6 @@ void create_convex_hull(
                 }));
 }
 
-template <std::size_t N>
-std::array<int, N> restore_indices(const std::array<int, N>& vertices, const std::vector<int>& points_map)
-{
-        std::array<int, N> res;
-        for (unsigned n = 0; n < N; ++n)
-        {
-                res[n] = points_map[vertices[n]];
-        }
-        return res;
-}
-
 template <typename PointType, std::size_t N, typename SourceType>
 std::vector<PointType> create_points_paraboloid(const std::vector<Vector<N, SourceType>>& points)
 {
@@ -803,6 +792,17 @@ std::vector<PointType> create_points(const std::vector<Vector<N, SourceType>>& p
                 }
         }
         return data;
+}
+
+template <std::size_t N>
+std::array<int, N> restore_indices(const std::array<int, N>& vertices, const std::vector<int>& points_map)
+{
+        std::array<int, N> res;
+        for (std::size_t n = 0; n < N; ++n)
+        {
+                res[n] = points_map[vertices[n]];
+        }
+        return res;
 }
 
 template <std::size_t N, typename SourceType>
@@ -867,95 +867,6 @@ void compute_convex_hull(
         for (const Facet& facet : convex_hull_facets)
         {
                 facets->emplace_back(restore_indices(facet.vertices(), points_map), facet.double_ortho());
-        }
-}
-
-template <std::size_t N, typename IntegerType>
-class Transform
-{
-        const std::vector<Vector<N, float>>* points_;
-        IntegerType max_value_;
-        Vector<N, float> min_;
-        double scale_;
-
-public:
-        Transform(const std::vector<Vector<N, float>>* const points, const IntegerType max_value)
-        {
-                ASSERT(points);
-                ASSERT(!points->empty());
-                ASSERT(0 < max_value);
-
-                Vector<N, float> min = (*points)[0];
-                Vector<N, float> max = (*points)[0];
-                for (std::size_t i = 1; i < points->size(); ++i)
-                {
-                        for (std::size_t n = 0; n < N; ++n)
-                        {
-                                min[n] = std::min(min[n], (*points)[i][n]);
-                                max[n] = std::max(max[n], (*points)[i][n]);
-                        }
-                }
-
-                double max_d = (max - min).norm_infinity();
-                if (max_d == 0)
-                {
-                        error("All points are equal to each other");
-                }
-
-                points_ = points;
-                max_value_ = max_value;
-                min_ = min;
-                scale_ = max_value / max_d;
-        }
-
-        Vector<N, IntegerType> to_integer(const std::size_t i) const
-        {
-                ASSERT(i < points_->size());
-
-                const Vector<N, double> float_value = to_vector<double>((*points_)[i] - min_) * scale_;
-
-                Vector<N, IntegerType> integer_value;
-                for (std::size_t n = 0; n < N; ++n)
-                {
-                        const long long ll = std::llround(float_value[n]);
-                        if (!(ll >= 0 && ll <= max_value_))
-                        {
-                                error("Points preprocessing error: value " + to_string(ll) + " is not in the range [0, "
-                                      + to_string(max_value_) + "]");
-                        }
-                        integer_value[n] = ll;
-                }
-                return integer_value;
-        }
-};
-
-template <std::size_t N, typename IntegerType>
-void convert_to_unique_integer(
-        const std::vector<Vector<N, float>>& source_points,
-        const IntegerType max_value,
-        std::vector<Vector<N, IntegerType>>* const points,
-        std::vector<int>* const map)
-{
-        ASSERT(points && map);
-
-        points->clear();
-        points->reserve(source_points.size());
-
-        map->clear();
-        map->reserve(source_points.size());
-
-        const Transform transform{&source_points, max_value};
-
-        std::unordered_set<Vector<N, IntegerType>> set(source_points.size());
-
-        for (std::size_t i = 0; i < source_points.size(); ++i)
-        {
-                const Vector<N, IntegerType> integer_value = transform.to_integer(i);
-                if (set.insert(integer_value).second)
-                {
-                        points->push_back(integer_value);
-                        map->push_back(i);
-                }
         }
 }
 
