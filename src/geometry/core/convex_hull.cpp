@@ -54,6 +54,7 @@ The projection to the n-space of the lower convex hull of the points
 #include <src/com/math.h>
 #include <src/com/names.h>
 #include <src/com/print.h>
+#include <src/com/shuffle.h>
 #include <src/com/thread_pool.h>
 #include <src/com/type/concept.h>
 #include <src/com/type/find.h>
@@ -75,6 +76,11 @@ namespace
 {
 constexpr int CONVEX_HULL_BITS = 30;
 constexpr int DELAUNAY_BITS = 24;
+
+using ConvexHullSourceInteger = LeastSignedInteger<CONVEX_HULL_BITS>;
+using DelaunaySourceInteger = LeastSignedInteger<DELAUNAY_BITS>;
+constexpr ConvexHullSourceInteger MAX_CONVEX_HULL{(1ull << CONVEX_HULL_BITS) - 1};
+constexpr DelaunaySourceInteger MAX_DELAUNAY{(1ull << DELAUNAY_BITS) - 1};
 
 template <std::size_t N, std::size_t BITS>
 constexpr int max_determinant_paraboloid()
@@ -764,8 +770,8 @@ std::array<int, N> restore_indices(const std::array<int, N>& vertices, const std
         return res;
 }
 
-template <typename PointType, std::size_t N>
-std::vector<PointType> create_points_paraboloid(const std::vector<Vector<N, long long>>& points)
+template <typename PointType, std::size_t N, typename SourceType>
+std::vector<PointType> create_points_paraboloid(const std::vector<Vector<N, SourceType>>& points)
 {
         static_assert(std::tuple_size_v<PointType> == N + 1);
 
@@ -783,8 +789,8 @@ std::vector<PointType> create_points_paraboloid(const std::vector<Vector<N, long
         return data;
 }
 
-template <typename PointType, std::size_t N>
-std::vector<PointType> create_points(const std::vector<Vector<N, long long>>& points)
+template <typename PointType, std::size_t N, typename SourceType>
+std::vector<PointType> create_points(const std::vector<Vector<N, SourceType>>& points)
 {
         static_assert(std::tuple_size_v<PointType> == N);
 
@@ -799,9 +805,9 @@ std::vector<PointType> create_points(const std::vector<Vector<N, long long>>& po
         return data;
 }
 
-template <std::size_t N>
+template <std::size_t N, typename SourceType>
 void compute_delaunay(
-        const std::vector<Vector<N, long long>>& points,
+        const std::vector<Vector<N, SourceType>>& points,
         const std::vector<int>& points_map,
         std::vector<DelaunaySimplex<N>>* const simplices,
         ProgressRatio* const progress)
@@ -842,9 +848,9 @@ void compute_delaunay(
         }
 }
 
-template <std::size_t N>
+template <std::size_t N, typename SourceType>
 void compute_convex_hull(
-        const std::vector<Vector<N, long long>>& points,
+        const std::vector<Vector<N, SourceType>>& points,
         const std::vector<int>& points_map,
         std::vector<ConvexHullFacet<N>>* const facets,
         ProgressRatio* const progress)
@@ -864,16 +870,16 @@ void compute_convex_hull(
         }
 }
 
-template <std::size_t N>
+template <std::size_t N, typename IntegerType>
 class Transform
 {
         const std::vector<Vector<N, float>>* points_;
-        long long max_value_;
+        IntegerType max_value_;
         Vector<N, float> min_;
         double scale_;
 
 public:
-        Transform(const std::vector<Vector<N, float>>* const points, const long long max_value)
+        Transform(const std::vector<Vector<N, float>>* const points, const IntegerType max_value)
         {
                 ASSERT(points);
                 ASSERT(!points->empty());
@@ -902,13 +908,13 @@ public:
                 scale_ = max_value / max_d;
         }
 
-        Vector<N, long long> to_integer(const std::size_t i) const
+        Vector<N, IntegerType> to_integer(const std::size_t i) const
         {
                 ASSERT(i < points_->size());
 
                 const Vector<N, double> float_value = to_vector<double>((*points_)[i] - min_) * scale_;
 
-                Vector<N, long long> integer_value;
+                Vector<N, IntegerType> integer_value;
                 for (std::size_t n = 0; n < N; ++n)
                 {
                         const long long ll = std::llround(float_value[n]);
@@ -923,40 +929,32 @@ public:
         }
 };
 
-template <std::size_t N>
-std::vector<int> create_random_map(const std::vector<Vector<N, float>>& source_points)
-{
-        std::vector<int> random_map(source_points.size());
-        std::iota(random_map.begin(), random_map.end(), 0);
-        std::shuffle(random_map.begin(), random_map.end(), std::mt19937_64(source_points.size()));
-        return random_map;
-}
-
-template <std::size_t N>
-void shuffle_and_convert_to_unique_integer(
+template <std::size_t N, typename IntegerType>
+void convert_to_unique_integer(
         const std::vector<Vector<N, float>>& source_points,
-        const long long max_value,
-        std::vector<Vector<N, long long>>* const points,
-        std::vector<int>* const points_map)
+        const IntegerType max_value,
+        std::vector<Vector<N, IntegerType>>* const points,
+        std::vector<int>* const map)
 {
+        ASSERT(points && map);
+
         points->clear();
         points->reserve(source_points.size());
 
-        points_map->clear();
-        points_map->reserve(source_points.size());
+        map->clear();
+        map->reserve(source_points.size());
 
-        const std::vector<int> random_map{create_random_map(source_points)};
         const Transform transform{&source_points, max_value};
 
-        std::unordered_set<Vector<N, long long>> set(source_points.size());
+        std::unordered_set<Vector<N, IntegerType>> set(source_points.size());
+
         for (std::size_t i = 0; i < source_points.size(); ++i)
         {
-                const int random_index = random_map[i];
-                const Vector<N, long long> integer_value = transform.to_integer(random_index);
+                const Vector<N, IntegerType> integer_value = transform.to_integer(i);
                 if (set.insert(integer_value).second)
                 {
                         points->push_back(integer_value);
-                        points_map->push_back(random_index);
+                        map->push_back(i);
                 }
         }
 }
@@ -1006,11 +1004,12 @@ void compute_delaunay(
                 LOG("Delaunay in " + space_name(N + 1) + " integer");
         }
 
-        std::vector<Vector<N, long long>> convex_hull_points;
+        std::vector<Vector<N, DelaunaySourceInteger>> convex_hull_points;
         std::vector<int> points_map;
 
-        constexpr long long MAX = (1ull << DELAUNAY_BITS) - 1;
-        shuffle_and_convert_to_unique_integer(source_points, MAX, &convex_hull_points, &points_map);
+        convert_to_unique_integer(source_points, MAX_DELAUNAY, &convex_hull_points, &points_map);
+
+        shuffle(std::mt19937_64(convex_hull_points.size()), &convex_hull_points, &points_map);
 
         if (write_log)
         {
@@ -1050,10 +1049,11 @@ void compute_convex_hull(
         }
 
         std::vector<int> points_map;
-        std::vector<Vector<N, long long>> convex_hull_points;
+        std::vector<Vector<N, ConvexHullSourceInteger>> convex_hull_points;
 
-        constexpr long long MAX = (1ull << CONVEX_HULL_BITS) - 1;
-        shuffle_and_convert_to_unique_integer(source_points, MAX, &convex_hull_points, &points_map);
+        convert_to_unique_integer(source_points, MAX_CONVEX_HULL, &convex_hull_points, &points_map);
+
+        shuffle(std::mt19937_64(convex_hull_points.size()), &convex_hull_points, &points_map);
 
         if (write_log)
         {
