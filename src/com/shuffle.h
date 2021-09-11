@@ -21,26 +21,52 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <random>
 #include <tuple>
-#include <vector>
 
 namespace ns
 {
 // Donald Knuth. The Art of Computer Programming. Second edition. Addison-Wesley, 1981.
 // Volume 2. Seminumerical Algorithms. 3.4.2. Random Sampling and Shuffling.
-template <typename T, typename RandomEngine>
-void shuffle_dimension(RandomEngine& random_engine, std::size_t dimension, std::vector<T>* v)
-{
-        ASSERT(dimension < std::tuple_size_v<T>);
 
-        if (v->size() < 2)
+template <typename RandomEngine, typename T>
+void shuffle_dimension(RandomEngine&& random_engine, const std::size_t dimension, T* const data)
+{
+        ASSERT(dimension < std::tuple_size_v<typename T::value_type>);
+
+        if (data->size() < 2)
         {
                 return;
         }
 
-        for (std::size_t i = v->size() - 1; i > 0; --i)
+        for (std::size_t i = data->size() - 1; i > 0; --i)
         {
                 std::size_t j = std::uniform_int_distribution<std::size_t>(0, i)(random_engine);
-                std::swap((*v)[i][dimension], (*v)[j][dimension]);
+                std::swap((*data)[i][dimension], (*data)[j][dimension]);
+        }
+}
+
+template <typename RandomEngine, typename... T>
+void shuffle(RandomEngine&& random_engine, T* const... data)
+{
+        static_assert(sizeof...(T) >= 1);
+
+        ASSERT((data && ...));
+
+        const std::size_t size = std::get<0>(std::make_tuple(data->size()...));
+
+        if constexpr (sizeof...(T) >= 2)
+        {
+                ASSERT(((data->size() == size) && ...));
+        }
+
+        if (size < 2)
+        {
+                return;
+        }
+
+        for (std::size_t i = size - 1; i > 0; --i)
+        {
+                const std::size_t j = std::uniform_int_distribution<std::size_t>(0, i)(random_engine);
+                (std::swap((*data)[i], (*data)[j]), ...);
         }
 }
 }
