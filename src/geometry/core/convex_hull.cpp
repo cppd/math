@@ -228,50 +228,24 @@ public:
         {
                 data_.push_back(f);
         }
-#if 0
-        void erase(const T* f)
-        {
-                data_.erase(std::find(data_.cbegin(), data_.cend(), f));
-        }
-#endif
-#if 0
-        void erase(const T* f)
-        {
-                int_fast32_t size = data_.size();
-                int_fast32_t i = 0;
-                while (i != size && data_[i] != f)
-                {
-                        ++i;
-                }
-                if (i != size)
-                {
-                        std::memmove(&data_[i], &data_[i + 1], sizeof(f) * (size - (i + 1)));
-                        data_.resize(size - 1);
-                }
-        }
-#endif
+
         void erase(const T* const f)
         {
-                int size = data_.size();
-                const T* next = nullptr;
-                for (int_fast32_t i = size - 1; i >= 0; --i)
+                const int size = data_.size();
+                for (int i = 0; i < size; ++i)
                 {
-                        const T* current = data_[i];
-                        data_[i] = next;
-                        if (current != f)
+                        if (data_[i] != f)
                         {
-                                next = current;
+                                continue;
                         }
-                        else
-                        {
-                                data_.resize(size - 1);
-                                return;
-                        }
+                        data_[i] = data_[size - 1];
+                        data_.resize(size - 1);
+                        return;
                 }
                 error("facet not found in facets of point");
         }
 
-        std::size_t size() const
+        std::size_t size() const noexcept
         {
                 return data_.size();
         }
@@ -279,15 +253,14 @@ public:
         void clear()
         {
                 data_.clear();
-                // data_.shrink_to_fit();
         }
 
-        typename std::vector<const T*>::const_iterator begin() const
+        auto begin() const noexcept
         {
                 return data_.cbegin();
         }
 
-        typename std::vector<const T*>::const_iterator end() const
+        auto end() const noexcept
         {
                 return data_.cend();
         }
