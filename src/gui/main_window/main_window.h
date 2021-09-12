@@ -72,13 +72,11 @@ private:
 
         QTimer timer_;
 
-        void on_about_triggered();
         void on_graphics_widget_mouse_move(QMouseEvent*);
         void on_graphics_widget_mouse_press(QMouseEvent*);
         void on_graphics_widget_mouse_release(QMouseEvent*);
         void on_graphics_widget_mouse_wheel(QWheelEvent*);
         void on_graphics_widget_resize(QResizeEvent*);
-        void on_help_triggered();
         void on_timer();
 
         void constructor_graphics_widget();

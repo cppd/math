@@ -44,10 +44,11 @@ public:
                 return *this;
         }
 
-        operator T() const
+        operator T() const&
         {
                 return counter_.load(std::memory_order_relaxed);
         }
+        operator T() const&& = delete;
 
         void operator|=(const T& v)
         {

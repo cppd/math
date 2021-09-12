@@ -26,8 +26,6 @@ class MainThread final : public QObject
 {
         Q_OBJECT
 
-        void slot(const std::function<void()>&) const;
-
 public:
         MainThread();
         ~MainThread() override;

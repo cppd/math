@@ -26,8 +26,6 @@ class ThreadQueue final : public QObject
 {
         Q_OBJECT
 
-        void slot(const std::function<void()>&) const;
-
 public:
         ThreadQueue();
 

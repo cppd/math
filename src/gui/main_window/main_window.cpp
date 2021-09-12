@@ -135,9 +135,17 @@ void MainWindow::constructor_objects()
         //
 
         ui_.action_about->setText("About " + QString(settings::APPLICATION_NAME));
-        connect(ui_.action_about, &QAction::triggered, this, &MainWindow::on_about_triggered);
+        connect(ui_.action_about, &QAction::triggered, this,
+                []
+                {
+                        dialog::application_about();
+                });
 
-        connect(ui_.action_help, &QAction::triggered, this, &MainWindow::on_help_triggered);
+        connect(ui_.action_help, &QAction::triggered, this,
+                []
+                {
+                        dialog::application_help();
+                });
 
         connect(&timer_, &QTimer::timeout, this, &MainWindow::on_timer);
 }
@@ -288,16 +296,6 @@ void MainWindow::on_timer()
 {
         log_->write();
         actions_->set_progresses();
-}
-
-void MainWindow::on_help_triggered()
-{
-        dialog::application_help();
-}
-
-void MainWindow::on_about_triggered()
-{
-        dialog::application_about();
 }
 
 void MainWindow::on_graphics_widget_mouse_wheel(QWheelEvent* e)

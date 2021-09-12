@@ -23,12 +23,13 @@ ThreadQueue::ThreadQueue()
 {
         qRegisterMetaType<std::function<void()>>("std::function<void()>");
 
-        connect(this, &ThreadQueue::signal, this, &ThreadQueue::slot, Qt::QueuedConnection);
-}
-
-void ThreadQueue::slot(const std::function<void()>& f) const
-{
-        f();
+        connect(
+                this, &ThreadQueue::signal, this,
+                [](const std::function<void()>& f)
+                {
+                        f();
+                },
+                Qt::QueuedConnection);
 }
 
 void ThreadQueue::push(const std::function<void()>& f) const

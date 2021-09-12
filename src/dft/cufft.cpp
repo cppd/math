@@ -99,10 +99,11 @@ public:
                 cufftDestroy(plan_);
         }
 
-        operator cufftHandle() const
+        operator cufftHandle() const&
         {
                 return plan_;
         }
+        operator cufftHandle() const&& = delete;
 
         CudaPlan2D(const CudaPlan2D&) = delete;
         CudaPlan2D& operator=(const CudaPlan2D&) = delete;
@@ -138,7 +139,7 @@ public:
                 cudaFree(memory_);
         }
 
-        operator T*() const
+        T* data() const
         {
                 return memory_;
         }
@@ -169,7 +170,7 @@ void cuda_memory_copy(CudaMemory<M>& memory, const std::vector<T>& src)
 
         cuda_check_errors();
 
-        cudaError_t r = cudaMemcpy(memory, src.data(), memory.bytes(), cudaMemcpyHostToDevice);
+        cudaError_t r = cudaMemcpy(memory.data(), src.data(), memory.bytes(), cudaMemcpyHostToDevice);
         if (r != cudaSuccess)
         {
                 error("CUDA copy to device error: " + std::string(cudaGetErrorString(r)));
@@ -187,7 +188,7 @@ void cuda_memory_copy(std::vector<T>* dst, const CudaMemory<M>& memory)
 
         cuda_check_errors();
 
-        cudaError_t r = cudaMemcpy(dst->data(), memory, memory.bytes(), cudaMemcpyDeviceToHost);
+        cudaError_t r = cudaMemcpy(dst->data(), memory.data(), memory.bytes(), cudaMemcpyDeviceToHost);
         if (r != cudaSuccess)
         {
                 error("CUDA copy from device error: " + std::string(cudaGetErrorString(r)));
@@ -222,14 +223,14 @@ class CudaFFT final : public DFT
 
                 if (inverse)
                 {
-                        if (CUFFT_SUCCESS != cufftExecC2C(plan_, memory_, memory_, CUFFT_INVERSE))
+                        if (CUFFT_SUCCESS != cufftExecC2C(plan_, memory_.data(), memory_.data(), CUFFT_INVERSE))
                         {
                                 error("cuFFT Error: Unable to execute inverse plan");
                         }
                 }
                 else
                 {
-                        if (CUFFT_SUCCESS != cufftExecC2C(plan_, memory_, memory_, CUFFT_FORWARD))
+                        if (CUFFT_SUCCESS != cufftExecC2C(plan_, memory_.data(), memory_.data(), CUFFT_FORWARD))
                         {
                                 error("cuFFT Error: Unable to execute forward plan");
                         }

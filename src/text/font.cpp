@@ -54,11 +54,12 @@ public:
                 FT_Done_FreeType(library_);
         }
 
-        operator FT_Library() const
+        operator FT_Library() const&
         {
                 static_assert(std::is_pointer_v<FT_Library>);
                 return library_;
         }
+        operator FT_Library() const&& = delete;
 
         Library(const Library&) = delete;
         Library& operator=(const Library&) = delete;
@@ -95,11 +96,12 @@ public:
                 FT_Done_Face(face_);
         }
 
-        operator FT_Face() const
+        operator FT_Face() const&
         {
                 static_assert(std::is_pointer_v<FT_Face>);
                 return face_;
         }
+        operator FT_Face() const&& = delete;
 
         FT_Face operator->() const
         {

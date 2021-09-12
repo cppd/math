@@ -40,7 +40,7 @@ public:
 
         // offset[0], offset[1], ..., offset[N - 1], extent[0], extent[1], ..., extent[N - 1]
         template <typename... Types>
-        Region(const Types&... v)
+        explicit Region(const Types&... v)
         {
                 static_assert(sizeof...(Types) == 2 * N);
                 int i = -1;

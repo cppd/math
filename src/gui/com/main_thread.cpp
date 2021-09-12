@@ -38,7 +38,13 @@ MainThread::MainThread()
 
         qRegisterMetaType<std::function<void()>>("std::function<void()>");
 
-        connect(this, &MainThread::signal, this, &MainThread::slot, Qt::AutoConnection);
+        connect(
+                this, &MainThread::signal, this,
+                [](const std::function<void()>& f)
+                {
+                        f();
+                },
+                Qt::AutoConnection);
 
         g_main_thread = this;
 }
@@ -46,11 +52,6 @@ MainThread::MainThread()
 MainThread::~MainThread()
 {
         g_main_thread = nullptr;
-}
-
-void MainThread::slot(const std::function<void()>& f) const
-{
-        f();
 }
 
 void MainThread::run(const std::function<void()>& f)
