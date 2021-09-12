@@ -32,24 +32,28 @@ namespace ns::gui::dialog
 {
 namespace
 {
-#if defined(__clang__)
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wglobal-constructors"
-#endif
-ViewImageParameters g_parameters{.path_string = {}, .normalize = false, .convert_to_8_bit = false};
-#if defined(__clang__)
-#pragma GCC diagnostic pop
-#endif
-
-ViewImageParameters read_current()
+class DialogParameters final
 {
-        return g_parameters;
-}
+        ViewImageParameters parameters_{.path_string = {}, .normalize = false, .convert_to_8_bit = false};
 
-void write_current(ViewImageParameters parameters)
+public:
+        ViewImageParameters read() const
+        {
+                return parameters_;
+        }
+
+        void write(ViewImageParameters view_image_parameters)
+        {
+                view_image_parameters.path_string =
+                        generic_utf8_filename(path_from_utf8(view_image_parameters.path_string).remove_filename());
+                parameters_ = std::move(view_image_parameters);
+        }
+};
+
+DialogParameters& dialog_parameters()
 {
-        parameters.path_string = generic_utf8_filename(path_from_utf8(parameters.path_string).remove_filename());
-        g_parameters = parameters;
+        static DialogParameters parameters;
+        return parameters;
 }
 
 std::string initial_path_string(const ViewImageParameters& input, const std::string& file_name)
@@ -194,14 +198,14 @@ std::optional<ViewImageParameters> ViewImageDialog::show(
 {
         std::optional<ViewImageParameters> parameters;
 
-        QtObjectInDynamicMemory w(new ViewImageDialog(read_current(), title, info, file_name, parameters));
+        QtObjectInDynamicMemory w(new ViewImageDialog(dialog_parameters().read(), title, info, file_name, parameters));
 
         if (!w->exec() || w.isNull())
         {
                 return std::nullopt;
         }
 
-        write_current(*parameters);
+        dialog_parameters().write(*parameters);
 
         return parameters;
 }
