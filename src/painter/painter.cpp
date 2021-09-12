@@ -23,7 +23,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "painter/trace.h"
 
 #include <src/color/color.h>
-#include <src/com/barrier.h>
 #include <src/com/error.h>
 #include <src/com/memory_arena.h>
 #include <src/com/print.h>
@@ -32,13 +31,14 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/com/type/limit.h>
 
 #include <atomic>
+#include <barrier>
 #include <random>
 
 namespace ns::painter
 {
 namespace
 {
-void join_thread(std::thread* thread) noexcept
+void join_thread(std::thread* const thread) noexcept
 {
         ASSERT(thread);
         try
@@ -71,7 +71,8 @@ struct PaintData final
         const Scene<N, T, Color>* scene;
         bool smooth_normals;
 
-        PaintData(const Scene<N, T, Color>* scene, bool smooth_normals) : scene(scene), smooth_normals(smooth_normals)
+        PaintData(const Scene<N, T, Color>* const scene, const bool smooth_normals)
+                : scene(scene), smooth_normals(smooth_normals)
         {
                 ASSERT(scene);
         }
@@ -85,10 +86,10 @@ struct PixelData final
         Pixels<N - 1, T, Color> pixels;
 
         PixelData(
-                const Projector<N, T>* projector,
-                int samples_per_pixel,
+                const Projector<N, T>* const projector,
+                const int samples_per_pixel,
                 const Color& background_color,
-                Notifier<N - 1>* notifier)
+                Notifier<N - 1>* const notifier)
                 : projector(projector),
                   sampler(samples_per_pixel),
                   pixels(projector->screen_size(), background_color, notifier)
@@ -103,7 +104,7 @@ class PassData final
         int number_ = 0;
 
 public:
-        explicit PassData(std::optional<int> max_number) : max_number_(max_number)
+        explicit PassData(const std::optional<int> max_number) : max_number_(max_number)
         {
                 ASSERT(!max_number || *max_number > 0);
         }
@@ -120,7 +121,7 @@ class ThreadBusy final
         unsigned thread_;
 
 public:
-        ThreadBusy(Notifier<N>* notifier, unsigned thread, const std::array<int, N>& pixel)
+        ThreadBusy(Notifier<N>* const notifier, const unsigned thread, const std::array<int, N>& pixel)
                 : notifier_(notifier), thread_(thread)
         {
                 notifier_->thread_busy(thread_, pixel);
@@ -135,12 +136,12 @@ public:
 
 template <std::size_t N, typename T, typename Color>
 void paint_pixels(
-        unsigned thread_number,
+        const unsigned thread_number,
         const PaintData<N, T, Color>& paint_data,
-        std::atomic_bool* stop,
-        PixelData<N, T, Color>* pixel_data,
-        PaintingStatistics* statistics,
-        Notifier<N - 1>* notifier)
+        std::atomic_bool* const stop,
+        PixelData<N, T, Color>* const pixel_data,
+        PaintingStatistics* const statistics,
+        Notifier<N - 1>* const notifier)
 {
         thread_local RandomEngine<T> random_engine = create_engine<RandomEngine<T>>();
         thread_local std::vector<Vector<N - 1, T>> sample_points;
@@ -155,7 +156,7 @@ void paint_pixels(
                         return;
                 }
 
-                std::optional<std::array<int, N - 1>> pixel = pixel_data->pixels.next_pixel();
+                const std::optional<std::array<int, N - 1>> pixel = pixel_data->pixels.next_pixel();
                 if (!pixel)
                 {
                         return;
@@ -184,12 +185,12 @@ void paint_pixels(
 
 template <std::size_t N, typename T, typename Color>
 void prepare_next_pass(
-        unsigned thread_number,
-        std::atomic_bool* stop,
-        PixelData<N, T, Color>* pixel_data,
-        PassData* pass_data,
-        PaintingStatistics* statistics,
-        Notifier<N - 1>* notifier)
+        const unsigned thread_number,
+        std::atomic_bool* const stop,
+        PixelData<N, T, Color>* const pixel_data,
+        PassData* const pass_data,
+        PaintingStatistics* const statistics,
+        Notifier<N - 1>* const notifier)
 {
         if (thread_number != 0)
         {
@@ -199,10 +200,12 @@ void prepare_next_pass(
         statistics->pass_done();
 
         const long long pass_number = statistics->statistics().pass_number;
+
         {
                 ImagesWriting lock(notifier->images(pass_number));
                 pixel_data->pixels.images(&lock.image_with_background(), &lock.image_without_background());
         }
+
         notifier->pass_done(pass_number);
 
         if (pass_data->continue_painting())
@@ -219,34 +222,33 @@ void prepare_next_pass(
 
 template <std::size_t N, typename T, typename Color>
 void worker_thread(
-        unsigned thread_number,
-        Barrier* barrier,
+        const unsigned thread_number,
+        std::barrier<>* const barrier,
         const PaintData<N, T, Color>& paint_data,
-        std::atomic_bool* stop,
-        PixelData<N, T, Color>* pixel_data,
-        PassData* pass_data,
-        PaintingStatistics* statistics,
-        Notifier<N - 1>* notifier)
+        std::atomic_bool* const stop,
+        PixelData<N, T, Color>* const pixel_data,
+        PassData* const pass_data,
+        PaintingStatistics* const statistics,
+        Notifier<N - 1>* const notifier)
 {
         while (true)
         {
                 try
                 {
                         paint_pixels(thread_number, paint_data, stop, pixel_data, statistics, notifier);
-                        barrier->wait();
                 }
                 catch (const std::exception& e)
                 {
                         *stop = true;
                         notifier->error_message(std::string("Painter error:\n") + e.what());
-                        barrier->wait();
                 }
                 catch (...)
                 {
                         *stop = true;
                         notifier->error_message("Unknown painter error");
-                        barrier->wait();
                 }
+
+                barrier->arrive_and_wait();
 
                 if (*stop)
                 {
@@ -256,20 +258,19 @@ void worker_thread(
                 try
                 {
                         prepare_next_pass<N, T>(thread_number, stop, pixel_data, pass_data, statistics, notifier);
-                        barrier->wait();
                 }
                 catch (const std::exception& e)
                 {
                         *stop = true;
                         notifier->error_message(std::string("Painter error:\n") + e.what());
-                        barrier->wait();
                 }
                 catch (...)
                 {
                         *stop = true;
                         notifier->error_message("Unknown painter error");
-                        barrier->wait();
                 }
+
+                barrier->arrive_and_wait();
 
                 if (*stop)
                 {
@@ -280,67 +281,63 @@ void worker_thread(
 
 template <std::size_t N, typename T, typename Color>
 void worker_threads(
-        int thread_count,
+        const int thread_count,
         const PaintData<N, T, Color>& paint_data,
-        std::atomic_bool* stop,
-        PixelData<N, T, Color>* pixel_data,
-        PassData* pass_data,
-        PaintingStatistics* statistics,
-        Notifier<N - 1>* notifier) noexcept
+        std::atomic_bool* const stop,
+        PixelData<N, T, Color>* const pixel_data,
+        PassData* const pass_data,
+        PaintingStatistics* const statistics,
+        Notifier<N - 1>* const notifier) noexcept
 {
-        try
+        std::barrier barrier(thread_count);
+
+        const auto f = [&](const unsigned thread_number) noexcept
         {
-                Barrier barrier(thread_count);
-                std::vector<std::thread> threads(thread_count);
-
-                const auto f = [&](unsigned thread_number) noexcept
+                try
                 {
-                        try
-                        {
-                                worker_thread(
-                                        thread_number, &barrier, paint_data, stop, pixel_data, pass_data, statistics,
-                                        notifier);
-                        }
-                        catch (...)
-                        {
-                                error_fatal("Exception in painter worker thread function");
-                        }
-                };
-
-                for (unsigned i = 0; i < threads.size(); ++i)
-                {
-                        threads[i] = std::thread(f, i);
+                        worker_thread(
+                                thread_number, &barrier, paint_data, stop, pixel_data, pass_data, statistics, notifier);
                 }
-
-                for (std::thread& t : threads)
+                catch (...)
                 {
-                        join_thread(&t);
+                        error_fatal("Exception in painter worker thread function");
                 }
+        };
+
+        std::vector<std::thread> threads;
+        threads.reserve(thread_count);
+
+        for (int i = 0; i < thread_count; ++i)
+        {
+                threads.emplace_back(f, i);
         }
-        catch (...)
+
+        for (std::thread& t : threads)
         {
-                error_fatal("Exception in paint worker threads function");
+                join_thread(&t);
         }
 }
 
 template <std::size_t N, typename T, typename Color>
 void painter_thread(
-        Notifier<N - 1>* notifier,
-        PaintingStatistics* statistics,
-        int samples_per_pixel,
-        std::optional<int> max_pass_count,
+        Notifier<N - 1>* const notifier,
+        PaintingStatistics* const statistics,
+        const int samples_per_pixel,
+        const std::optional<int> max_pass_count,
         const Scene<N, T, Color>& scene,
-        int thread_count,
-        std::atomic_bool* stop,
-        bool smooth_normals) noexcept
+        const int thread_count,
+        std::atomic_bool* const stop,
+        const bool smooth_normals) noexcept
 {
         try
         {
                 try
                 {
                         const PaintData<N, T, Color> paint_data(&scene, smooth_normals);
+
                         PixelData<N, T, Color> pixel_data(
                                 &scene.projector(), samples_per_pixel, scene.background_light(), notifier);
+
                         PassData pass_data(max_pass_count);
 
                         statistics->init();
@@ -385,12 +382,12 @@ class Impl final : public Painter
 
 public:
         template <std::size_t N, typename T, typename Color>
-        Impl(Notifier<N - 1>* notifier,
-             int samples_per_pixel,
-             std::optional<int> max_pass_count,
+        Impl(Notifier<N - 1>* const notifier,
+             const int samples_per_pixel,
+             const std::optional<int> max_pass_count,
              std::shared_ptr<const Scene<N, T, Color>> scene,
-             int thread_count,
-             bool smooth_normals)
+             const int thread_count,
+             const bool smooth_normals)
         {
                 if (!notifier)
                 {
@@ -442,12 +439,12 @@ public:
 
 template <std::size_t N, typename T, typename Color>
 std::unique_ptr<Painter> create_painter(
-        Notifier<N - 1>* notifier,
-        int samples_per_pixel,
-        std::optional<int> max_pass_count,
+        Notifier<N - 1>* const notifier,
+        const int samples_per_pixel,
+        const std::optional<int> max_pass_count,
         std::shared_ptr<const Scene<N, T, Color>> scene,
-        int thread_count,
-        bool smooth_normals)
+        const int thread_count,
+        const bool smooth_normals)
 {
         return std::make_unique<Impl>(
                 notifier, samples_per_pixel, max_pass_count, std::move(scene), thread_count, smooth_normals);
