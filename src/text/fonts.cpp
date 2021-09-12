@@ -23,18 +23,12 @@ namespace ns::text
 {
 namespace
 {
-template <typename T>
-std::vector<std::string> names_of_map(const std::map<std::string, T>& map)
+std::vector<unsigned char> deja_vu_sans()
 {
-        std::vector<std::string> names;
-        names.reserve(map.size());
-
-        for (const auto& e : map)
-        {
-                names.push_back(e.first);
-        }
-
-        return names;
+        static constexpr unsigned char DATA[] = {
+#include "DejaVuSans.ttf.bin"
+        };
+        return {std::cbegin(DATA), std::cend(DATA)};
 }
 }
 
@@ -46,29 +40,27 @@ const Fonts& Fonts::instance()
 
 Fonts::Fonts()
 {
-        fonts_.emplace(
-                "DejaVuSans",
-                []()
-                {
-                        static constexpr unsigned char FONT[] = {
-#include "DejaVuSans.ttf.bin"
-                        };
-                        return std::vector<unsigned char>(std::cbegin(FONT), std::cend(FONT));
-                });
+        fonts_.emplace("DejaVuSans", deja_vu_sans);
 }
 
 std::vector<std::string> Fonts::names() const
 {
-        return names_of_map(fonts_);
+        std::vector<std::string> names;
+        names.reserve(fonts_.size());
+        for (const auto& e : fonts_)
+        {
+                names.emplace_back(e.first);
+        }
+        return names;
 }
 
-std::vector<unsigned char> Fonts::data(const std::string& name) const
+std::vector<unsigned char> Fonts::data(const std::string_view& name) const
 {
-        auto iter = fonts_.find(name);
+        const auto iter = fonts_.find(name);
         if (iter != fonts_.cend())
         {
                 return iter->second();
         }
-        error("Font not found: " + name);
+        error("Font not found: " + std::string(name));
 }
 }

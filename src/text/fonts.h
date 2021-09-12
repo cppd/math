@@ -17,7 +17,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
-#include <functional>
 #include <map>
 #include <string>
 #include <vector>
@@ -26,7 +25,7 @@ namespace ns::text
 {
 class Fonts
 {
-        std::map<std::string, std::function<std::vector<unsigned char>()>> fonts_;
+        std::map<std::string_view, std::vector<unsigned char> (*)()> fonts_;
 
         Fonts();
 
@@ -34,6 +33,6 @@ public:
         static const Fonts& instance();
 
         std::vector<std::string> names() const;
-        std::vector<unsigned char> data(const std::string& name) const;
+        std::vector<unsigned char> data(const std::string_view& name) const;
 };
 }
