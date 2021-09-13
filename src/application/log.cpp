@@ -33,22 +33,14 @@ namespace ns::application
 {
 namespace
 {
-std::mutex g_lock;
-
-#if defined(__clang__)
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wglobal-constructors"
-#endif
-const std::chrono::steady_clock::time_point START_TIME = std::chrono::steady_clock::now();
-#if defined(__clang__)
-#pragma GCC diagnostic pop
-#endif
-
 class Log final
 {
         static constexpr unsigned MAX_THREADS = 1'000'000;
         static constexpr unsigned THREADS_WIDTH = 6;
 
+        std::chrono::steady_clock::time_point start_time_ = std::chrono::steady_clock::now();
+
+        std::mutex lock_;
         std::unordered_map<std::thread::id, unsigned> map_;
         unsigned width_ = THREADS_WIDTH;
         std::ostringstream oss_line_beginning_;
@@ -76,7 +68,10 @@ class Log final
                 oss_line_beginning_ << std::setw(width_) << iter->second;
         }
 
-        std::string format(const std::string_view& text, const std::string_view& description, double time) noexcept
+        std::string format(
+                const std::string_view& text,
+                const std::string_view& description,
+                const double time) noexcept
         {
                 oss_line_beginning_.str(std::string());
                 oss_line_beginning_ << "[" << std::setw(11) << time << "][";
@@ -119,6 +114,16 @@ class Log final
                 file_ << text;
         }
 
+        std::string write(const std::string_view& text, const std::string_view& description) noexcept
+        {
+                const double time =
+                        std::chrono::duration<double>(std::chrono::steady_clock::now() - start_time_).count();
+                std::string result = format(text, description, time);
+                write(result);
+                result.pop_back();
+                return result;
+        }
+
 public:
         Log()
         {
@@ -144,33 +149,34 @@ public:
                 file_ << std::unitbuf;
         }
 
-        std::string write(const std::string_view& text, const std::string_view& description, double time) noexcept
+        std::string write_log(const std::string_view& text, const std::string_view& description) noexcept
         {
-                std::string result = format(text, description, time);
-                write(result);
-                result.pop_back();
-                return result;
+                std::lock_guard lg(lock_);
+                return write(text, description);
+        }
+
+        [[noreturn]] void write_log_fatal_error_and_exit(const char* const text) noexcept
+        {
+                std::lock_guard lg(lock_);
+                write(text, "fatal error");
+                std::_Exit(EXIT_FAILURE);
         }
 };
 
-std::string write(const std::string_view& text, const std::string_view& description) noexcept
+Log& log()
 {
-        const double time = std::chrono::duration<double>(std::chrono::steady_clock::now() - START_TIME).count();
         static Log log;
-        return log.write(text, description, time);
+        return log;
 }
 }
 
 std::string write_log(const std::string_view& text, const std::string_view& description) noexcept
 {
-        std::lock_guard lg(g_lock);
-        return write(text, description);
+        return log().write_log(text, description);
 }
 
-void write_log_fatal_error_and_exit(const char* text) noexcept
+void write_log_fatal_error_and_exit(const char* const text) noexcept
 {
-        std::lock_guard lg(g_lock);
-        write(text, "fatal error");
-        std::_Exit(EXIT_FAILURE);
+        log().write_log_fatal_error_and_exit(text);
 }
 }
