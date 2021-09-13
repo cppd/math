@@ -88,13 +88,14 @@ void read_keyword(const Data& data, long long data_size, const std::string_view&
                 error("Keyword " + std::string(word) + " not found in STL file when expected");
         }
         long long d = *i;
-        auto w = word.cbegin();
-        while (w != word.cend() && data[d] == *w)
+        const char* w = word.data();
+        const char* const end = word.data() + word.size();
+        while (w != end && data[d] == *w)
         {
                 ++d;
                 ++w;
         }
-        if (w == word.cend())
+        if (w == end)
         {
                 *i = d;
                 return;
