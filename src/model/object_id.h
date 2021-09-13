@@ -17,6 +17,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
+#include <atomic>
 #include <cstdint>
 #include <functional>
 
@@ -24,14 +25,17 @@ namespace ns
 {
 class ObjectId final
 {
-        using Type = std::uint_least32_t;
+        using T = std::uint_least32_t;
 
-        Type id_;
+        inline static std::atomic<T> current_id_ = 0;
+        static_assert(decltype(current_id_)::is_always_lock_free);
+
+        T id_;
 
 public:
-        using T = Type;
-
-        ObjectId();
+        ObjectId() noexcept : id_(1 + current_id_.fetch_add(1, std::memory_order_relaxed))
+        {
+        }
 
         bool operator==(const ObjectId& id) const noexcept
         {
@@ -40,7 +44,7 @@ public:
 
         std::size_t hash() const noexcept
         {
-                return std::hash<Type>()(id_);
+                return std::hash<T>()(id_);
         }
 };
 }
