@@ -42,11 +42,11 @@ public:
                 return parameters_;
         }
 
-        void write(ViewImageParameters view_image_parameters)
+        void write(ViewImageParameters parameters)
         {
-                view_image_parameters.path_string =
-                        generic_utf8_filename(path_from_utf8(view_image_parameters.path_string).remove_filename());
-                parameters_ = std::move(view_image_parameters);
+                parameters.path_string =
+                        generic_utf8_filename(path_from_utf8(parameters.path_string).remove_filename());
+                parameters_ = std::move(parameters);
         }
 };
 

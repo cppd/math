@@ -34,19 +34,29 @@ namespace
 constexpr int MINIMUM_RHO_EXPONENT = -3;
 constexpr int MINIMUM_ALPHA_EXPONENT = -3;
 
-std::mutex g_mutex;
-BoundCoconeParameters g_parameters{.rho = 0.3, .alpha = 0.14};
-
-BoundCoconeParameters read_current()
+class DialogParameters final
 {
-        std::lock_guard lg(g_mutex);
-        return g_parameters;
-}
+        mutable std::mutex mutex_;
+        BoundCoconeParameters parameters_{.rho = 0.3, .alpha = 0.14};
 
-void write_current(const BoundCoconeParameters& parameters)
+public:
+        BoundCoconeParameters read() const
+        {
+                std::lock_guard lg(mutex_);
+                return parameters_;
+        }
+
+        void write(const BoundCoconeParameters& parameters)
+        {
+                std::lock_guard lg(mutex_);
+                parameters_ = parameters;
+        }
+};
+
+DialogParameters& dialog_parameters()
 {
-        std::lock_guard lg(g_mutex);
-        g_parameters = parameters;
+        static DialogParameters parameters;
+        return parameters;
 }
 }
 
@@ -129,20 +139,20 @@ std::optional<BoundCoconeParameters> BoundCoconeParametersDialog::show()
         std::optional<BoundCoconeParameters> parameters;
 
         QtObjectInDynamicMemory w(new BoundCoconeParametersDialog(
-                MINIMUM_RHO_EXPONENT, MINIMUM_ALPHA_EXPONENT, read_current(), parameters));
+                MINIMUM_RHO_EXPONENT, MINIMUM_ALPHA_EXPONENT, dialog_parameters().read(), parameters));
 
         if (!w->exec() || w.isNull())
         {
                 return std::nullopt;
         }
 
-        write_current(*parameters);
+        dialog_parameters().write(*parameters);
 
         return parameters;
 }
 
 BoundCoconeParameters BoundCoconeParametersDialog::current()
 {
-        return read_current();
+        return dialog_parameters().read();
 }
 }

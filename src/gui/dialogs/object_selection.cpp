@@ -25,19 +25,29 @@ namespace ns::gui::dialog
 {
 namespace
 {
-std::mutex g_mutex;
-ObjectSelectionParameters g_parameters{.bound_cocone = true, .cocone = true, .convex_hull = true, .mst = true};
-
-ObjectSelectionParameters read_current()
+class DialogParameters final
 {
-        std::lock_guard lg(g_mutex);
-        return g_parameters;
-}
+        mutable std::mutex mutex_;
+        ObjectSelectionParameters parameters_{.bound_cocone = true, .cocone = true, .convex_hull = true, .mst = true};
 
-void write_current(const ObjectSelectionParameters& parameters)
+public:
+        ObjectSelectionParameters read() const
+        {
+                std::lock_guard lg(mutex_);
+                return parameters_;
+        }
+
+        void write(const ObjectSelectionParameters& parameters)
+        {
+                std::lock_guard lg(mutex_);
+                parameters_ = parameters;
+        }
+};
+
+DialogParameters& dialog_parameters()
 {
-        std::lock_guard lg(g_mutex);
-        g_parameters = parameters;
+        static DialogParameters parameters;
+        return parameters;
 }
 }
 
@@ -95,20 +105,20 @@ std::optional<ObjectSelectionParameters> ObjectSelectionParametersDialog::show()
 {
         std::optional<ObjectSelectionParameters> parameters;
 
-        QtObjectInDynamicMemory w(new ObjectSelectionParametersDialog(read_current(), parameters));
+        QtObjectInDynamicMemory w(new ObjectSelectionParametersDialog(dialog_parameters().read(), parameters));
 
         if (!w->exec() || w.isNull())
         {
                 return std::nullopt;
         }
 
-        write_current(*parameters);
+        dialog_parameters().write(*parameters);
 
         return parameters;
 }
 
 ObjectSelectionParameters ObjectSelectionParametersDialog::current()
 {
-        return read_current();
+        return dialog_parameters().read();
 }
 }
