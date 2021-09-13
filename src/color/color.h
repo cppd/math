@@ -66,7 +66,7 @@ public:
         {
         }
 
-        constexpr RGB(const RGB8& c) : Base(c.linear_red(), c.linear_green(), c.linear_blue())
+        constexpr explicit RGB(const RGB8& c) : Base(c.linear_red(), c.linear_green(), c.linear_blue())
         {
         }
 
@@ -316,7 +316,7 @@ public:
         {
         }
 
-        SpectrumSamples(const RGB8& c) : SpectrumSamples(c.linear_red(), c.linear_green(), c.linear_blue())
+        explicit SpectrumSamples(const RGB8& c) : SpectrumSamples(c.linear_red(), c.linear_green(), c.linear_blue())
         {
         }
 

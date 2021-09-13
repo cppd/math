@@ -76,7 +76,7 @@ constexpr bool SAMPLER_ANISOTROPY = true; // anisotropic filtering
 
 constexpr VkFormat OBJECT_IMAGE_FORMAT = VK_FORMAT_R32_UINT;
 
-constexpr RGB8 DEFAULT_TEXT_COLOR = RGB8(255, 255, 255);
+constexpr color::Color DEFAULT_TEXT_COLOR{RGB8(255, 255, 255)};
 
 vulkan::DeviceFeatures device_features()
 {

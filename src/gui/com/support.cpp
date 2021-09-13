@@ -156,7 +156,7 @@ color::Color qcolor_to_color(const QColor& c)
         unsigned char r = std::clamp(c.red(), 0, 255);
         unsigned char g = std::clamp(c.green(), 0, 255);
         unsigned char b = std::clamp(c.blue(), 0, 255);
-        return RGB8(r, g, b);
+        return color::Color(RGB8(r, g, b));
 }
 
 QColor color_to_qcolor(const color::Color& c)
