@@ -96,7 +96,7 @@ public:
 struct AddSmallTest final
 {
         template <typename T>
-        AddSmallTest(const char* name, T* function) noexcept
+        AddSmallTest(const char* name, T* function)
         {
                 Tests::instance().add_small(name, function);
         }
@@ -105,7 +105,7 @@ struct AddSmallTest final
 struct AddLargeTest final
 {
         template <typename T>
-        AddLargeTest(const char* name, T* function) noexcept
+        AddLargeTest(const char* name, T* function)
         {
                 Tests::instance().add_large(name, function);
         }
@@ -114,7 +114,7 @@ struct AddLargeTest final
 struct AddPerformanceTest final
 {
         template <typename T>
-        AddPerformanceTest(const char* name, T* function) noexcept
+        AddPerformanceTest(const char* name, T* function)
         {
                 Tests::instance().add_performance(name, function);
         }
