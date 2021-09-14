@@ -30,7 +30,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <optional>
 #include <shared_mutex>
 #include <string>
-#include <unordered_set>
 #include <variant>
 
 namespace ns::mesh
@@ -38,60 +37,50 @@ namespace ns::mesh
 template <std::size_t N>
 class MeshObject;
 
-template <std::size_t N>
-struct MeshEvent final
+namespace event
 {
-        struct Insert final
-        {
-                std::shared_ptr<MeshObject<N>> object;
-                std::optional<ObjectId> parent_object_id;
-                Insert(std::shared_ptr<MeshObject<N>>&& object, const std::optional<ObjectId>& parent_object_id)
-                        : object(std::move(object)), parent_object_id(parent_object_id)
-                {
-                }
-        };
-
-        struct Erase final
-        {
-                ObjectId id;
-                explicit Erase(ObjectId id) : id(id)
-                {
-                }
-        };
-
-        struct Update final
-        {
-                std::weak_ptr<MeshObject<N>> object;
-                explicit Update(std::weak_ptr<MeshObject<N>>&& object) : object(std::move(object))
-                {
-                }
-        };
-
-        struct Visibility final
-        {
-                ObjectId id;
-                bool visible;
-                Visibility(ObjectId id, bool visible) : id(id), visible(visible)
-                {
-                }
-        };
-
-        using T = std::variant<Insert, Erase, Update, Visibility>;
-
-        template <typename Type>
-        MeshEvent(Type&& arg) requires(!std::is_same_v<MeshEvent, std::remove_cvref_t<Type>>)
-                : data_(std::forward<Type>(arg))
+template <std::size_t N>
+struct Insert final
+{
+        std::shared_ptr<MeshObject<N>> object;
+        std::optional<ObjectId> parent_object_id;
+        Insert(std::shared_ptr<MeshObject<N>>&& object, const std::optional<ObjectId>& parent_object_id)
+                : object(std::move(object)), parent_object_id(parent_object_id)
         {
         }
-
-        const T& data() const
-        {
-                return data_;
-        }
-
-private:
-        T data_;
 };
+
+template <std::size_t N>
+struct Erase final
+{
+        ObjectId id;
+        explicit Erase(ObjectId id) : id(id)
+        {
+        }
+};
+
+template <std::size_t N>
+struct Update final
+{
+        std::weak_ptr<MeshObject<N>> object;
+        explicit Update(std::weak_ptr<MeshObject<N>>&& object) : object(std::move(object))
+        {
+        }
+};
+
+template <std::size_t N>
+struct Visibility final
+{
+        ObjectId id;
+        bool visible;
+        Visibility(ObjectId id, bool visible) : id(id), visible(visible)
+        {
+        }
+};
+}
+
+template <std::size_t N>
+using MeshEvent = std::variant<event::Erase<N>, event::Insert<N>, event::Update<N>, event::Visibility<N>>;
 
 enum Update
 {
@@ -249,7 +238,7 @@ public:
         {
                 if (inserted_)
                 {
-                        send_event(typename MeshEvent<N>::Erase(id_));
+                        send_event(event::Erase<N>(id_));
                 }
         }
 
@@ -269,7 +258,7 @@ public:
                 if (!inserted_)
                 {
                         inserted_ = true;
-                        send_event(typename MeshEvent<N>::Insert(this->shared_from_this(), parent_object_id));
+                        send_event(event::Insert<N>(this->shared_from_this(), parent_object_id));
                 }
         }
 
@@ -279,7 +268,7 @@ public:
                 if (inserted_)
                 {
                         inserted_ = false;
-                        send_event(typename MeshEvent<N>::Erase(id_));
+                        send_event(event::Erase<N>(id_));
                 }
         }
 
@@ -299,7 +288,7 @@ public:
                 visible_ = visible;
                 if (inserted_)
                 {
-                        send_event(typename MeshEvent<N>::Visibility(id_, visible));
+                        send_event(event::Visibility<N>(id_, visible));
                 }
         }
 };
@@ -333,7 +322,7 @@ public:
                 object_->versions_.add(updates_);
                 if (object_->inserted_)
                 {
-                        object_->send_event(typename MeshEvent<N>::Update(object_->weak_from_this()));
+                        object_->send_event(event::Update<N>(object_->weak_from_this()));
                 }
         }
 

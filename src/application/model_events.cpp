@@ -36,7 +36,7 @@ public:
 
         //
 
-        void operator()(const typename mesh::MeshEvent<N>::Insert& event) const
+        void operator()(const mesh::event::Insert<N>& event) const
         {
                 if constexpr (N == 3)
                 {
@@ -46,7 +46,7 @@ public:
                 tree_->insert(event.object, event.parent_object_id);
         }
 
-        void operator()(const typename mesh::MeshEvent<N>::Erase& event) const
+        void operator()(const mesh::event::Erase<N>& event) const
         {
                 if constexpr (N == 3)
                 {
@@ -55,7 +55,7 @@ public:
                 tree_->erase(event.id);
         }
 
-        void operator()(const typename mesh::MeshEvent<N>::Update& event) const
+        void operator()(const mesh::event::Update<N>& event) const
         {
                 if constexpr (N == 3)
                 {
@@ -73,7 +73,7 @@ public:
                 tree_->update(id);
         }
 
-        void operator()(const typename mesh::MeshEvent<N>::Visibility& event) const
+        void operator()(const mesh::event::Visibility<N>& event) const
         {
                 if constexpr (N == 3)
                 {
@@ -84,7 +84,7 @@ public:
 
         //
 
-        void operator()(const typename volume::VolumeEvent<N>::Insert& event) const
+        void operator()(const volume::event::Insert<N>& event) const
         {
                 if constexpr (N == 3)
                 {
@@ -94,7 +94,7 @@ public:
                 tree_->insert(event.object, event.parent_object_id);
         }
 
-        void operator()(const typename volume::VolumeEvent<N>::Erase& event) const
+        void operator()(const volume::event::Erase<N>& event) const
         {
                 if constexpr (N == 3)
                 {
@@ -103,7 +103,7 @@ public:
                 tree_->erase(event.id);
         }
 
-        void operator()(const typename volume::VolumeEvent<N>::Update& event) const
+        void operator()(const volume::event::Update<N>& event) const
         {
                 if constexpr (N == 3)
                 {
@@ -121,7 +121,7 @@ public:
                 tree_->update(id);
         }
 
-        void operator()(const typename volume::VolumeEvent<N>::Visibility& event) const
+        void operator()(const volume::event::Visibility<N>& event) const
         {
                 if constexpr (N == 3)
                 {
@@ -141,11 +141,11 @@ ModelEvents::ModelEvents(gui::ModelTreeEvents* const tree, view::View* const vie
         {
                 events.mesh_events = [visitor = Visitor<N>(tree, view)](mesh::MeshEvent<N>&& event)
                 {
-                        std::visit(visitor, event.data());
+                        std::visit(visitor, event);
                 };
                 events.volume_events = [visitor = Visitor<N>(tree, view)](volume::VolumeEvent<N>&& event)
                 {
-                        std::visit(visitor, event.data());
+                        std::visit(visitor, event);
                 };
                 events.saved_mesh_events = mesh::MeshObject<N>::set_events(&events.mesh_events);
                 events.saved_volume_events = volume::VolumeObject<N>::set_events(&events.volume_events);
