@@ -326,61 +326,44 @@ struct WindowResize final
 };
 }
 
-struct Command final
-{
-        using T = std::variant<
-                command::UpdateMeshObject,
-                command::UpdateVolumeObject,
-                command::ClipPlaneHide,
-                command::ClipPlanePosition,
-                command::ClipPlaneShow,
-                command::DeleteAllObjects,
-                command::DeleteObject,
-                command::MouseMove,
-                command::MousePress,
-                command::MouseRelease,
-                command::MouseWheel,
-                command::ResetView,
-                command::SetBackgroundColor,
-                command::SetClipPlaneColor,
-                command::SetDftBackgroundColor,
-                command::SetDftBrightness,
-                command::SetDftColor,
-                command::SetLightingColor,
-                command::SetNormalColorNegative,
-                command::SetNormalColorPositive,
-                command::SetNormalLength,
-                command::SetShadowZoom,
-                command::SetVerticalSync,
-                command::SetWireframeColor,
-                command::ShowConvexHull2D,
-                command::ShowDft,
-                command::ShowFog,
-                command::ShowFps,
-                command::ShowMaterials,
-                command::ShowNormals,
-                command::ShowObject,
-                command::ShowOpticalFlow,
-                command::ShowPencilSketch,
-                command::ShowShadow,
-                command::ShowSmooth,
-                command::ShowWireframe,
-                command::WindowResize>;
-
-        template <typename Type>
-        Command(Type&& arg) requires(!std::is_same_v<Command, std::remove_cvref_t<Type>>)
-                : data_(std::forward<Type>(arg))
-        {
-        }
-
-        const T& data() const
-        {
-                return data_;
-        }
-
-private:
-        T data_;
-};
+using Command = std::variant<
+        command::ClipPlaneHide,
+        command::ClipPlanePosition,
+        command::ClipPlaneShow,
+        command::DeleteAllObjects,
+        command::DeleteObject,
+        command::MouseMove,
+        command::MousePress,
+        command::MouseRelease,
+        command::MouseWheel,
+        command::ResetView,
+        command::SetBackgroundColor,
+        command::SetClipPlaneColor,
+        command::SetDftBackgroundColor,
+        command::SetDftBrightness,
+        command::SetDftColor,
+        command::SetLightingColor,
+        command::SetNormalColorNegative,
+        command::SetNormalColorPositive,
+        command::SetNormalLength,
+        command::SetShadowZoom,
+        command::SetVerticalSync,
+        command::SetWireframeColor,
+        command::ShowConvexHull2D,
+        command::ShowDft,
+        command::ShowFog,
+        command::ShowFps,
+        command::ShowMaterials,
+        command::ShowNormals,
+        command::ShowObject,
+        command::ShowOpticalFlow,
+        command::ShowPencilSketch,
+        command::ShowShadow,
+        command::ShowSmooth,
+        command::ShowWireframe,
+        command::UpdateMeshObject,
+        command::UpdateVolumeObject,
+        command::WindowResize>;
 
 namespace info
 {
@@ -401,21 +384,5 @@ struct Image final
 };
 }
 
-struct Info final
-{
-        using T = std::variant<info::Camera*, info::Image*>;
-
-        template <typename Type>
-        Info(Type&& arg) requires(!std::is_same_v<Info, std::remove_cvref_t<Type>>) : data_(std::forward<Type>(arg))
-        {
-        }
-
-        const T& data() const
-        {
-                return data_;
-        }
-
-private:
-        T data_;
-};
+using Info = std::variant<info::Camera*, info::Image*>;
 }

@@ -780,27 +780,27 @@ public:
         {
                 ASSERT(std::this_thread::get_id() == thread_id_);
 
-                const auto visitor = [this](const auto& c)
+                const auto visitor = [this](const auto& v)
                 {
-                        command(c);
+                        command(v);
                 };
-                for (const view::Command& command : commands)
+                for (const view::Command& v : commands)
                 {
-                        std::visit(visitor, command.data());
+                        std::visit(visitor, v);
                 }
         }
 
-        void receive(const std::vector<Info>& info)
+        void receive(const std::vector<Info>& infos)
         {
                 ASSERT(std::this_thread::get_id() == thread_id_);
 
-                const auto visitor = [this](const auto& d)
+                const auto visitor = [this](const auto& v)
                 {
-                        this->info(d);
+                        info(v);
                 };
-                for (const Info& v : info)
+                for (const Info& v : infos)
                 {
-                        std::visit(visitor, v.data());
+                        std::visit(visitor, v);
                 }
         }
 };
