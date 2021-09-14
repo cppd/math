@@ -66,7 +66,7 @@ void Tests::run(
                 name,
                 [&]()
                 {
-                        std::visit(Visitors{f1, f2}, test.function);
+                        std::visit(Visitors{f1, f2}, test);
                 });
 }
 

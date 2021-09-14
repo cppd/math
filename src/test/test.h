@@ -32,16 +32,7 @@ class Tests final
         friend struct AddLargeTest;
         friend struct AddPerformanceTest;
 
-        struct Test final
-        {
-                std::variant<void (*)(), void (*)(ProgressRatio*)> function;
-
-                template <typename T>
-                explicit Test(T* function) : function(function)
-                {
-                        static_assert(std::is_function_v<T>);
-                }
-        };
+        using Test = std::variant<void (*)(), void (*)(ProgressRatio*)>;
 
         static void run(
                 const Test& test,
@@ -56,19 +47,19 @@ class Tests final
         Tests() = default;
 
         template <typename T>
-        void add_small(const char* name, T* function)
+        void add_small(const char* const name, T* const function) noexcept
         {
                 small_tests_.emplace(name, function);
         }
 
         template <typename T>
-        void add_large(const char* name, T* function)
+        void add_large(const char* const name, T* const function) noexcept
         {
                 large_tests_.emplace(name, function);
         }
 
         template <typename T>
-        void add_performance(const char* name, T* function)
+        void add_performance(const char* const name, T* const function) noexcept
         {
                 performance_tests_.emplace(name, function);
         }
@@ -96,7 +87,7 @@ public:
 struct AddSmallTest final
 {
         template <typename T>
-        AddSmallTest(const char* name, T* function)
+        AddSmallTest(const char* const name, T* const function) noexcept
         {
                 Tests::instance().add_small(name, function);
         }
@@ -105,7 +96,7 @@ struct AddSmallTest final
 struct AddLargeTest final
 {
         template <typename T>
-        AddLargeTest(const char* name, T* function)
+        AddLargeTest(const char* const name, T* const function) noexcept
         {
                 Tests::instance().add_large(name, function);
         }
@@ -114,7 +105,7 @@ struct AddLargeTest final
 struct AddPerformanceTest final
 {
         template <typename T>
-        AddPerformanceTest(const char* name, T* function)
+        AddPerformanceTest(const char* const name, T* const function) noexcept
         {
                 Tests::instance().add_performance(name, function);
         }
@@ -131,15 +122,15 @@ struct AddPerformanceTest final
 #define TEST_IMPL_UNIQUE_NAME_2(n) test_name_##n
 #define TEST_IMPL_UNIQUE_NAME(n) TEST_IMPL_UNIQUE_NAME_2(n)
 
-#define TEST_IMPL_INSERT(type, name, f)                                      \
+#define TEST_IMPL_ADD(type, name, f)                                         \
         namespace                                                            \
         {                                                                    \
         TEST_IMPL_PRAGMA_PUSH                                                \
-        const ::ns::test::type TEST_IMPL_UNIQUE_NAME(__LINE__)((name), (f)); \
+        const ::ns::test::type TEST_IMPL_UNIQUE_NAME(__LINE__){(name), (f)}; \
         TEST_IMPL_PRAGMA_POP                                                 \
         }
 
-#define TEST_SMALL(name, f) TEST_IMPL_INSERT(AddSmallTest, (name), (f))
-#define TEST_LARGE(name, f) TEST_IMPL_INSERT(AddLargeTest, (name), (f))
-#define TEST_PERFORMANCE(name, f) TEST_IMPL_INSERT(AddPerformanceTest, (name), (f))
+#define TEST_SMALL(name, f) TEST_IMPL_ADD(AddSmallTest, (name), (f))
+#define TEST_LARGE(name, f) TEST_IMPL_ADD(AddLargeTest, (name), (f))
+#define TEST_PERFORMANCE(name, f) TEST_IMPL_ADD(AddPerformanceTest, (name), (f))
 }
