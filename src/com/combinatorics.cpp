@@ -19,16 +19,39 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 namespace ns
 {
-static_assert(binomial<0, 0>() == 1);
-static_assert(binomial<1, 0>() == 1);
-static_assert(binomial<1, 1>() == 1);
-static_assert(binomial<100, 0>() == 1);
-static_assert(binomial<100, 100>() == 1);
-static_assert(binomial<100, 1>() == 100);
-static_assert(binomial<100, 99>() == 100);
-static_assert(binomial<20, 10>() == 184756);
-static_assert(binomial<30, 20>() == 30045015);
-static_assert(binomial<30, 10>() == 30045015);
-static_assert(binomial<40, 30>() == 847660528);
-static_assert(binomial<40, 10>() == 847660528);
+static_assert(BINOMIAL<0, 0> == 1);
+static_assert(BINOMIAL<1, 0> == 1);
+static_assert(BINOMIAL<1, 1> == 1);
+static_assert(BINOMIAL<100, 0> == 1);
+static_assert(BINOMIAL<100, 100> == 1);
+static_assert(BINOMIAL<100, 1> == 100);
+static_assert(BINOMIAL<100, 99> == 100);
+static_assert(BINOMIAL<20, 10> == 184756);
+static_assert(BINOMIAL<30, 20> == 30045015);
+static_assert(BINOMIAL<30, 10> == 30045015);
+static_assert(BINOMIAL<40, 30> == 847660528);
+static_assert(BINOMIAL<40, 10> == 847660528);
+
+// clang-format off
+static_assert(
+        COMBINATIONS<4, 1> == std::to_array<std::array<unsigned char, 1>>
+        ({
+                 {0}, {1}, {2}, {3}
+        }));
+static_assert(
+        COMBINATIONS<4, 2> == std::to_array<std::array<unsigned char, 2>>
+        ({
+                {0, 1}, {0, 2}, {0, 3}, {1, 2}, {1, 3}, {2, 3}
+        }));
+static_assert(
+        COMBINATIONS<4, 3> == std::to_array<std::array<unsigned char, 3>>
+        ({
+                 {0, 1, 2}, {0, 1, 3}, {0, 2, 3}, {1, 2, 3}
+        }));
+static_assert(
+        COMBINATIONS<4, 4> == std::to_array<std::array<unsigned char, 4>>
+        ({
+                 {0, 1, 2, 3}
+        }));
+// clang-format on
 }

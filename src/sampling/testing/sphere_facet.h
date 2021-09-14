@@ -49,7 +49,7 @@ class SphereFacet final
         }
 
         static constexpr int VERTEX_COUNT = N;
-        static constexpr int EDGE_COUNT = binomial<N, 2>();
+        static constexpr int EDGE_COUNT = BINOMIAL<N, 2>;
 
         const std::vector<Vector<N, T>>& vertices_;
         const std::array<int, N> v_;

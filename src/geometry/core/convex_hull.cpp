@@ -274,15 +274,12 @@ bool linearly_independent(const std::array<Vector<N, T>, N>& vectors)
         static_assert(N > 1);
         static_assert(COUNT > 0 && COUNT <= N);
 
-        for (const std::array<unsigned char, COUNT>& h_map : combinations<N, COUNT>())
-        {
-                if (numerical::determinant(vectors, SEQUENCE_UCHAR_ARRAY<COUNT>, h_map) != 0)
+        return std::any_of(
+                COMBINATIONS<N, COUNT>.cbegin(), COMBINATIONS<N, COUNT>.cend(),
+                [&vectors](const std::array<unsigned char, COUNT>& h_map)
                 {
-                        return true;
-                }
-        }
-
-        return false;
+                        return numerical::determinant(vectors, SEQUENCE_UCHAR_ARRAY<COUNT>, h_map) != 0;
+                });
 }
 
 template <unsigned SIMPLEX_I, std::size_t N, typename SourceType, typename ComputeType>
@@ -390,7 +387,7 @@ void create_init_convex_hull(
                 std::prev(facets->end())->set_iter(std::prev(facets->cend()));
         }
 
-        constexpr int RIDGE_COUNT = binomial<N + 1, N - 1>();
+        constexpr int RIDGE_COUNT = BINOMIAL<N + 1, N - 1>;
 
         int ridges = 0;
         std::unordered_map<Ridge<N>, std::tuple<Facet<N, S, C>*, unsigned>> search_map(RIDGE_COUNT);

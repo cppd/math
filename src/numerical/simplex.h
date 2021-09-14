@@ -326,7 +326,7 @@ std::optional<ConstraintSolution> simplex_iterations(
         std::array<unsigned, N>& map_n,
         std::array<unsigned, M>& map_m)
 {
-        static constexpr int MAX_ITERATION_COUNT = binomial<N + M, M>();
+        static constexpr int MAX_ITERATION_COUNT = BINOMIAL<N + M, M>;
 
         for (int iteration = 2;; ++iteration)
         {

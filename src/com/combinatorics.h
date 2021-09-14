@@ -23,24 +23,23 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <algorithm>
 #include <array>
-#include <tuple>
 
 namespace ns
 {
 // C(n, r) = n! / ((n - r)! * r!)
 // std::round(std::exp(std::lgamma(n + 1) - std::lgamma(n - r + 1) - std::lgamma(r + 1)))
 template <int N, int R>
-constexpr int binomial()
+inline constexpr int BINOMIAL = []
 {
         static_assert(N >= R && R >= 0);
 
-        constexpr unsigned long long MAX = limits<int>::max();
+        constexpr unsigned __int128 MAX = limits<int>::max();
 
-        constexpr unsigned long long K = (R <= N / 2) ? (N - R) : R;
-        unsigned long long m = 1;
-        for (unsigned long long i = N; i > K; --i)
+        constexpr unsigned __int128 K = (R <= N / 2) ? (N - R) : R;
+        unsigned __int128 m = 1;
+        for (unsigned __int128 i = N; i > K; --i)
         {
-                unsigned long long v = m * i;
+                unsigned __int128 v = m * i;
                 if ((v / i) != m)
                 {
                         error("Binomial overflow");
@@ -48,7 +47,7 @@ constexpr int binomial()
                 m = v;
         }
         static_assert(N >= K);
-        for (unsigned long long i = N - K; i > 1; --i)
+        for (unsigned __int128 i = N - K; i > 1; --i)
         {
                 m /= i;
         }
@@ -59,10 +58,10 @@ constexpr int binomial()
         }
 
         return m;
-}
+}();
 
 template <int N, int R>
-std::array<std::array<unsigned char, R>, binomial<N, R>()> combinations()
+inline constexpr std::array<std::array<unsigned char, R>, BINOMIAL<N, R>> COMBINATIONS = []
 {
         static_assert(N >= R && R > 0);
 
@@ -71,9 +70,9 @@ std::array<std::array<unsigned char, R>, binomial<N, R>()> combinations()
         std::fill(v.begin(), v.begin() + R, 0);
         std::fill(v.begin() + R, v.end(), 1);
 
-        std::array<std::array<unsigned char, R>, binomial<N, R>()> res;
+        std::array<std::array<unsigned char, R>, BINOMIAL<N, R>> res;
 
-        for (int row = 0; row < binomial<N, R>(); ++row, std::next_permutation(v.begin(), v.end()))
+        for (int row = 0; row < BINOMIAL<N, R>; ++row, std::next_permutation(v.begin(), v.end()))
         {
                 int cnt = -1;
                 for (int i = 0; i < N; ++i)
@@ -83,9 +82,8 @@ std::array<std::array<unsigned char, R>, binomial<N, R>()> combinations()
                                 res[row][++cnt] = i;
                         }
                 }
-                ASSERT(cnt == R - 1);
         }
 
         return res;
-}
+}();
 }

@@ -40,14 +40,12 @@ long long simplex_count(const std::vector<std::array<int, N>>& facets)
                 }
         };
 
-        const std::array<std::array<unsigned char, D + 1>, binomial<N, D + 1>()> simplices = combinations<N, D + 1>();
-
         std::unordered_set<std::array<int, D + 1>, Hash> simplex_set;
 
         for (std::array<int, N> facet : facets)
         {
                 facet = sort(std::move(facet));
-                for (const std::array<unsigned char, D + 1>& simplex : simplices)
+                for (const std::array<unsigned char, D + 1>& simplex : COMBINATIONS<N, D + 1>)
                 {
                         std::array<int, D + 1> simplex_vertex_indices;
                         for (unsigned i = 0; i < D + 1; ++i)
