@@ -60,12 +60,11 @@ void image_coordinates(const std::array<int, N>& size, Vector<N, float>* coordin
         ASSERT(size[D] > 0);
         ASSERT(size[D] <= 1e6);
 
-        float max_i = size[D] - 1;
-        float max_i_reciprocal = 1.0f / max_i;
+        const float max_i = size[D] - 1;
 
-        for (float i = 0; i <= max_i; ++i)
+        for (int i = 0; i < size[D]; ++i)
         {
-                (*coordinates)[D] = i * max_i_reciprocal;
+                (*coordinates)[D] = i / max_i;
 
                 if constexpr (LEVEL + 1 < N)
                 {

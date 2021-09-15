@@ -29,6 +29,7 @@ CRC Press, 2014.
 
 #include <src/com/arrays.h>
 #include <src/com/error.h>
+#include <src/com/print.h>
 #include <src/com/progression.h>
 #include <src/com/spin_lock.h>
 #include <src/com/thread.h>
@@ -44,6 +45,7 @@ CRC Press, 2014.
 #include <list>
 #include <mutex>
 #include <numeric>
+#include <optional>
 #include <stack>
 #include <tuple>
 #include <vector>
@@ -477,7 +479,10 @@ public:
                         }
 
                         ray.set_org(ray.point(*next));
-                        for (T i = 1, offset = ray_offset_;; i *= 2, offset = i * ray_offset_)
+
+                        T offset = ray_offset_;
+                        T k = 1;
+                        while (true)
                         {
                                 point = ray.point(offset);
                                 const Box* next_box = find_box_for_point(point);
@@ -491,10 +496,13 @@ public:
                                         ray.set_org(point);
                                         break;
                                 }
-                                if (i >= T(1e10))
+
+                                if (k >= T(1e10))
                                 {
                                         return false;
                                 }
+                                k *= 2;
+                                offset = k * ray_offset_;
                         }
                 }
         }

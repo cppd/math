@@ -86,10 +86,11 @@ std::vector<double> create_samples(const ComputeType& from, const ComputeType& t
         std::vector<double> samples;
         samples.reserve(count);
 
+        const ComputeType count_ct = count;
         ComputeType wave_1 = from;
         for (int i = 1; i <= count; ++i)
         {
-                const ComputeType wave_2 = std::lerp(from, to, static_cast<ComputeType>(i) / count);
+                const ComputeType wave_2 = std::lerp(from, to, i / count_ct);
                 ASSERT(wave_1 < wave_2 && wave_1 >= from && wave_2 <= to);
                 const ComputeType v = integrate<TYPE, F>(wave_1, wave_2);
                 samples.push_back(v / y_integral);

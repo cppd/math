@@ -73,10 +73,11 @@ std::vector<double> create_samples(int from, int to, int count, const F& f)
         samples.reserve(count);
 
         constexpr int INTEGRATE_COUNT = 100;
+        const double count_d = count;
         double wave_1 = from;
         for (int i = 1; i <= count; ++i)
         {
-                double wave_2 = std::lerp(from, to, static_cast<double>(i) / count);
+                double wave_2 = std::lerp(from, to, i / count_d);
                 ASSERT(wave_1 < wave_2 && wave_1 >= from && wave_2 <= to);
                 double v = numerical::integrate(f, wave_1, wave_2, INTEGRATE_COUNT);
                 samples.push_back(v / (wave_2 - wave_1));
