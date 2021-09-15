@@ -21,10 +21,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "debug.h"
 #include "error.h"
 
-#include <src/com/alg.h>
 #include <src/com/error.h>
 #include <src/com/log.h>
-#include <src/com/merge.h>
 #include <src/com/print.h>
 #include <src/com/type/limit.h>
 
@@ -57,9 +55,13 @@ std::vector<std::string> merge_required_device_extensions(
         bool with_swapchain,
         const std::vector<std::string>& required_device_extensions)
 {
-        return with_swapchain
-                       ? merge<std::vector<std::string>>(required_device_extensions, VK_KHR_SWAPCHAIN_EXTENSION_NAME)
-                       : required_device_extensions;
+        if (with_swapchain)
+        {
+                std::vector<std::string> extensions = required_device_extensions;
+                extensions.emplace_back(VK_KHR_SWAPCHAIN_EXTENSION_NAME);
+                return extensions;
+        }
+        return required_device_extensions;
 }
 
 template <typename T>

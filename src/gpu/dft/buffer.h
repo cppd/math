@@ -54,13 +54,12 @@ public:
         {
                 return buffer_;
         }
+        operator const vulkan::BufferWithMemory&() const&& = delete;
 
         operator VkBuffer() const&
         {
                 return buffer_;
         }
-
-        operator const vulkan::BufferWithMemory&() const&& = delete;
         operator VkBuffer() const&& = delete;
 };
 }

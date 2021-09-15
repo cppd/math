@@ -31,12 +31,12 @@ static_assert(
 
 static_assert(
         GlobalIndex<5, __int128>(std::array<unsigned char, 5>{100, 100, 100, 100, 100})
-                .compute(std::array<signed char, 5>{1, 1, 1, 1, 1})
+                .compute(std::array<int, 5>{1, 1, 1, 1, 1})
         == 101010101);
 
 static_assert(
         GlobalIndex<5, long long>(std::array<std::size_t, 5>{123, 456, 789, 987, 654})
-                .compute(std::array<signed char, 5>{12, 34, 56, 78, 98})
+                .compute(std::array<int, 5>{12, 34, 56, 78, 98})
         == 4283912376450);
 
 static_assert(

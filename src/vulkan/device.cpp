@@ -199,8 +199,8 @@ std::vector<VkPhysicalDevice> physical_devices(VkInstance instance)
                 VkPhysicalDeviceProperties properties;
                 vkGetPhysicalDeviceProperties(d, &properties);
                 oss << "\n";
-                oss << properties.deviceName << "\n  API version " << VK_VERSION_MAJOR(properties.apiVersion) << "."
-                    << VK_VERSION_MINOR(properties.apiVersion);
+                oss << static_cast<const char*>(properties.deviceName) << "\n  API version "
+                    << VK_VERSION_MAJOR(properties.apiVersion) << "." << VK_VERSION_MINOR(properties.apiVersion);
         }
         error(oss.str());
 }

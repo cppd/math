@@ -39,8 +39,8 @@ class Camera final
 
         Vector2d window_center_{0};
 
-        int width_ = -1;
-        int height_ = -1;
+        int width_{-1};
+        int height_{-1};
 
         double scale_exponent_{0};
         double default_scale_{1};
@@ -48,7 +48,6 @@ class Camera final
         void set_vectors(const Vector3d& right, const Vector3d& up);
 
         gpu::renderer::CameraInfo::Volume main_volume() const;
-        gpu::renderer::CameraInfo::Volume shadow_volume() const;
         Matrix4d main_view_matrix() const;
         Matrix4d shadow_view_matrix() const;
 

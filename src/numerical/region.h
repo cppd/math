@@ -26,12 +26,16 @@ namespace ns
 template <std::size_t N, typename T>
 class Region final
 {
+        static_assert(N >= 1);
+
         Vector<N, T> offset0_;
         Vector<N, T> extent_;
         Vector<N, T> offset1_;
 
 public:
-        Region() = default;
+        Region()
+        {
+        }
 
         Region(const Vector<N, T>& offset, const Vector<N, T>& extent)
                 : offset0_(offset), extent_(extent), offset1_(offset0_ + extent_)
@@ -63,56 +67,47 @@ public:
                 return extent_;
         }
 
-        template <std::size_t X = N>
-        T x0() const requires((X == 2 || X == 3) && X == N)
+        T x0() const requires(N == 1 || N == 2 || N == 3)
         {
                 return offset0_[0];
         }
 
-        template <std::size_t X = N>
-        T y0() const requires((X == 2 || X == 3) && X == N)
+        T y0() const requires(N == 2 || N == 3)
         {
                 return offset0_[1];
         }
 
-        template <std::size_t X = N>
-        T z0() const requires(X == 3 && X == N)
+        T z0() const requires(N == 3)
         {
                 return offset0_[2];
         }
 
-        template <std::size_t X = N>
-        T x1() const requires((X == 2 || X == 3) && X == N)
+        T x1() const requires(N == 1 || N == 2 || N == 3)
         {
                 return offset1_[0];
         }
 
-        template <std::size_t X = N>
-        T y1() const requires((X == 2 || X == 3) && X == N)
+        T y1() const requires(N == 2 || N == 3)
         {
                 return offset1_[1];
         }
 
-        template <std::size_t X = N>
-        T z1() const requires(X == 3 && X == N)
+        T z1() const requires(N == 3)
         {
                 return offset1_[2];
         }
 
-        template <std::size_t X = N>
-        T width() const requires((X == 2 || X == 3) && X == N)
+        T width() const requires(N == 1 || N == 2 || N == 3)
         {
                 return extent_[0];
         }
 
-        template <std::size_t X = N>
-        T height() const requires((X == 2 || X == 3) && X == N)
+        T height() const requires(N == 2 || N == 3)
         {
                 return extent_[1];
         }
 
-        template <std::size_t X = N>
-        T depth() const requires(X == 3 && X == N)
+        T depth() const requires(N == 3)
         {
                 return extent_[2];
         }

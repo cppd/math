@@ -142,21 +142,17 @@ public:
                 return res;
         }
 
-        template <std::size_t R = ROWS, std::size_t C = COLUMNS>
-        [[nodiscard]] T determinant() const requires(R == ROWS && C == COLUMNS && ROWS == COLUMNS)
+        [[nodiscard]] T determinant() const requires(ROWS == COLUMNS)
         {
                 return numerical::determinant(rows_);
         }
 
-        template <std::size_t R = ROWS, std::size_t C = COLUMNS>
-        [[nodiscard]] Matrix<ROWS, ROWS, T> inverse() const requires(R == ROWS && C == COLUMNS && ROWS == COLUMNS)
+        [[nodiscard]] Matrix<ROWS, ROWS, T> inverse() const requires(ROWS == COLUMNS)
         {
                 return Matrix<ROWS, ROWS, T>(numerical::inverse(rows_));
         }
 
-        template <std::size_t R = ROWS, std::size_t C = COLUMNS>
-        [[nodiscard]] Vector<ROWS, T> solve(const Vector<ROWS, T>& b) const
-                requires(R == ROWS && C == COLUMNS && ROWS == COLUMNS)
+        [[nodiscard]] Vector<ROWS, T> solve(const Vector<ROWS, T>& b) const requires(ROWS == COLUMNS)
         {
                 return numerical::linear_solve<ROWS, T>(rows_, b);
         }

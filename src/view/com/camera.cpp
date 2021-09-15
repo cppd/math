@@ -33,6 +33,9 @@ constexpr double SCALE_EXP_MAX = 100;
 
 constexpr double PI_DIV_180 = PI<double> / 180;
 
+constexpr gpu::renderer::CameraInfo::Volume SHADOW_VOLUME =
+        {.left = -1, .right = 1, .bottom = -1, .top = 1, .near = 1, .far = -1};
+
 constexpr double to_radians(double angle)
 {
         return angle * PI_DIV_180;
@@ -68,20 +71,6 @@ gpu::renderer::CameraInfo::Volume Camera::main_volume() const
         volume.right = scale * (window_center_[0] + 0.5 * width_);
         volume.bottom = scale * (window_center_[1] - 0.5 * height_);
         volume.top = scale * (window_center_[1] + 0.5 * height_);
-        volume.near = 1;
-        volume.far = -1;
-
-        return volume;
-}
-
-gpu::renderer::CameraInfo::Volume Camera::shadow_volume() const
-{
-        gpu::renderer::CameraInfo::Volume volume;
-
-        volume.left = -1;
-        volume.right = 1;
-        volume.bottom = -1;
-        volume.top = 1;
         volume.near = 1;
         volume.far = -1;
 
@@ -204,7 +193,7 @@ gpu::renderer::CameraInfo Camera::renderer_info() const
         gpu::renderer::CameraInfo v;
 
         v.main_volume = main_volume();
-        v.shadow_volume = shadow_volume();
+        v.shadow_volume = SHADOW_VOLUME;
         v.main_view_matrix = main_view_matrix();
         v.shadow_view_matrix = shadow_view_matrix();
         v.light_direction = light_direction_from_;
