@@ -17,25 +17,29 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
-#include <cmath>
+#include <src/com/type/concept.h>
+
+#include <type_traits>
 
 namespace ns::numerical
 {
 template <typename T, typename F>
-[[nodiscard]] T integrate(const F& f, const T& from, const T& to, const int count)
+[[nodiscard]] constexpr T integrate(const F& f, const T& from, const T& to, const int count)
 {
-        static_assert(std::is_floating_point_v<T>);
+        static_assert(FloatingPoint<T>);
         static_assert(std::is_same_v<T, decltype(f(T()))>);
 
-        const T t_count = count;
         // Composite Trapezoidal Rule
+
+        const T t_count = count;
+        const T distance = to - from;
         T sum = 0;
-        for (T i = 1; i < t_count; ++i)
+        for (int i = 1; i < count; ++i)
         {
-                T x = std::lerp(from, to, i / t_count);
+                T x = from + (i / t_count) * distance;
                 sum += f(x);
         }
-        const T h_2 = (to - from) / (2 * t_count);
+        const T h_2 = distance / (2 * t_count);
         return (f(from) + 2 * sum + f(to)) * h_2;
 }
 }
