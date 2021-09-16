@@ -276,11 +276,11 @@ class Impl final : public MeshObject
                 const vulkan::Descriptors& descriptor_sets =
                         find_material_descriptor_sets(material_descriptor_set_layout);
 
-                const std::array<VkBuffer, 1> buffers{*faces_vertex_buffer_};
+                const std::array<VkBuffer, 1> buffers{faces_vertex_buffer_->buffer()};
                 const std::array<VkDeviceSize, 1> offsets{0};
 
                 vkCmdBindVertexBuffers(command_buffer, 0, buffers.size(), buffers.data(), offsets.data());
-                vkCmdBindIndexBuffer(command_buffer, *faces_index_buffer_, 0, VERTEX_INDEX_TYPE);
+                vkCmdBindIndexBuffer(command_buffer, faces_index_buffer_->buffer(), 0, VERTEX_INDEX_TYPE);
 
                 for (unsigned i = 0; i < material_vertices_.size(); ++i)
                 {
@@ -308,11 +308,11 @@ class Impl final : public MeshObject
 
                 bind_mesh_descriptor_set(find_mesh_descriptor_set(mesh_descriptor_set_layout));
 
-                const std::array<VkBuffer, 1> buffers{*faces_vertex_buffer_};
+                const std::array<VkBuffer, 1> buffers{faces_vertex_buffer_->buffer()};
                 const std::array<VkDeviceSize, 1> offsets{0};
 
                 vkCmdBindVertexBuffers(command_buffer, 0, buffers.size(), buffers.data(), offsets.data());
-                vkCmdBindIndexBuffer(command_buffer, *faces_index_buffer_, 0, VERTEX_INDEX_TYPE);
+                vkCmdBindIndexBuffer(command_buffer, faces_index_buffer_->buffer(), 0, VERTEX_INDEX_TYPE);
 
                 vkCmdDrawIndexed(command_buffer, faces_index_count_, 1, 0, 0, 0);
         }
@@ -329,7 +329,7 @@ class Impl final : public MeshObject
 
                 bind_mesh_descriptor_set(find_mesh_descriptor_set(mesh_descriptor_set_layout));
 
-                const std::array<VkBuffer, 1> buffers{*faces_vertex_buffer_};
+                const std::array<VkBuffer, 1> buffers{faces_vertex_buffer_->buffer()};
                 const std::array<VkDeviceSize, 1> offsets{0};
 
                 vkCmdBindVertexBuffers(command_buffer, 0, buffers.size(), buffers.data(), offsets.data());
@@ -349,7 +349,7 @@ class Impl final : public MeshObject
 
                 bind_mesh_descriptor_set(find_mesh_descriptor_set(mesh_descriptor_set_layout));
 
-                const std::array<VkBuffer, 1> buffers{*lines_vertex_buffer_};
+                const std::array<VkBuffer, 1> buffers{lines_vertex_buffer_->buffer()};
                 const std::array<VkDeviceSize, 1> offsets{0};
 
                 vkCmdBindVertexBuffers(command_buffer, 0, buffers.size(), buffers.data(), offsets.data());
@@ -369,7 +369,7 @@ class Impl final : public MeshObject
 
                 bind_mesh_descriptor_set(find_mesh_descriptor_set(mesh_descriptor_set_layout));
 
-                const std::array<VkBuffer, 1> buffers{*points_vertex_buffer_};
+                const std::array<VkBuffer, 1> buffers{points_vertex_buffer_->buffer()};
                 const std::array<VkDeviceSize, 1> offsets{0};
 
                 vkCmdBindVertexBuffers(command_buffer, 0, buffers.size(), buffers.data(), offsets.data());

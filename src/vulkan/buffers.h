@@ -75,8 +75,6 @@ public:
 
         void write(const CommandPool& command_pool, const Queue& queue, VkDeviceSize size, const void* data) const;
 
-        operator VkBuffer() const&;
-        operator VkBuffer() const&& = delete;
         const vulkan::Buffer& buffer() const;
         VkDeviceSize size() const;
         bool has_usage(VkBufferUsageFlagBits flag) const;

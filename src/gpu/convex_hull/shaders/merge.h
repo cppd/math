@@ -17,7 +17,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
-#include <src/vulkan/buffers.h>
 #include <src/vulkan/constant.h>
 #include <src/vulkan/descriptor.h>
 #include <src/vulkan/objects.h>
@@ -54,7 +53,7 @@ public:
 
         //
 
-        void set_lines(const vulkan::BufferWithMemory& buffer) const;
+        void set_lines(const vulkan::Buffer& buffer) const;
 };
 
 class MergeConstant final : public vulkan::SpecializationConstant

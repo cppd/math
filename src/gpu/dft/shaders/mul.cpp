@@ -68,7 +68,7 @@ const VkDescriptorSet& MulMemory::descriptor_set() const
         return descriptors_.descriptor_set(0);
 }
 
-void MulMemory::set(const vulkan::BufferWithMemory& data, const vulkan::BufferWithMemory& buffer) const
+void MulMemory::set(const vulkan::Buffer& data, const vulkan::Buffer& buffer) const
 {
         {
                 ASSERT(data.has_usage(VK_BUFFER_USAGE_STORAGE_BUFFER_BIT));

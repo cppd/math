@@ -139,11 +139,12 @@ class Impl final : public View
                 pipeline_lines_ = program_.create_pipeline(
                         render_buffers->render_pass(), render_buffers->sample_count(), VK_PRIMITIVE_TOPOLOGY_LINE_LIST,
                         rectangle);
-                memory_.set_points(*top_points_);
-                memory_.set_flow(*top_flow_);
+                memory_.set_points(top_points_->buffer());
+                memory_.set_flow(top_flow_->buffer());
 
                 compute_->create_buffers(
-                        sampler_, input, rectangle, point_count_x, point_count_y, *top_points_, *top_flow_);
+                        sampler_, input, rectangle, point_count_x, point_count_y, top_points_->buffer(),
+                        top_flow_->buffer());
 
                 // (0, 0) is top left
                 double left = 0;

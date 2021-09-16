@@ -354,11 +354,6 @@ void BufferWithMemory::write(
         write(command_pool, queue, 0, size, data);
 }
 
-BufferWithMemory::operator VkBuffer() const&
-{
-        return buffer_;
-}
-
 const vulkan::Buffer& BufferWithMemory::buffer() const
 {
         return buffer_;

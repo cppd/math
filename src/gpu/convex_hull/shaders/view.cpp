@@ -66,7 +66,7 @@ ViewMemory::ViewMemory(
                 data_buffer_index_ = uniform_buffers_.size() - 1;
 
                 VkDescriptorBufferInfo buffer_info = {};
-                buffer_info.buffer = uniform_buffers_.back();
+                buffer_info.buffer = uniform_buffers_.back().buffer();
                 buffer_info.offset = 0;
                 buffer_info.range = uniform_buffers_.back().size();
 
@@ -100,7 +100,7 @@ void ViewMemory::set_brightness(float brightness) const
         vulkan::map_and_write_to_buffer(uniform_buffers_[data_buffer_index_], offsetof(Data, brightness), b);
 }
 
-void ViewMemory::set_points(const vulkan::BufferWithMemory& buffer) const
+void ViewMemory::set_points(const vulkan::Buffer& buffer) const
 {
         ASSERT(buffer.has_usage(VK_BUFFER_USAGE_STORAGE_BUFFER_BIT));
 

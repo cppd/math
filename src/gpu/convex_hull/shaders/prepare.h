@@ -57,7 +57,7 @@ public:
         //
 
         void set_object_image(const vulkan::ImageWithMemory& storage_image) const;
-        void set_lines(const vulkan::BufferWithMemory& buffer) const;
+        void set_lines(const vulkan::Buffer& buffer) const;
 };
 
 class PrepareConstant final : public vulkan::SpecializationConstant

@@ -88,7 +88,7 @@ void commands_init_buffer(
         buffer_copy.srcOffset = 0;
         buffer_copy.dstOffset = 0;
         buffer_copy.size = dst.size();
-        vkCmdCopyBuffer(command_buffer, src, dst, 1, &buffer_copy);
+        vkCmdCopyBuffer(command_buffer, src.buffer(), dst.buffer(), 1, &buffer_copy);
 
         VkBufferMemoryBarrier barrier = {};
         barrier.sType = VK_STRUCTURE_TYPE_BUFFER_MEMORY_BARRIER;
@@ -96,7 +96,7 @@ void commands_init_buffer(
         barrier.dstAccessMask = VK_ACCESS_SHADER_WRITE_BIT | VK_ACCESS_SHADER_READ_BIT;
         barrier.srcQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
         barrier.dstQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
-        barrier.buffer = dst;
+        barrier.buffer = dst.buffer();
         barrier.offset = 0;
         barrier.size = VK_WHOLE_SIZE;
 
@@ -119,7 +119,7 @@ void commands_read_buffer(
         barrier.dstAccessMask = 0;
         barrier.srcQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
         barrier.dstQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
-        barrier.buffer = src;
+        barrier.buffer = src.buffer();
         barrier.offset = 0;
         barrier.size = VK_WHOLE_SIZE;
 
@@ -131,6 +131,6 @@ void commands_read_buffer(
         buffer_copy.srcOffset = 0;
         buffer_copy.dstOffset = 0;
         buffer_copy.size = dst.size();
-        vkCmdCopyBuffer(command_buffer, src, dst, 1, &buffer_copy);
+        vkCmdCopyBuffer(command_buffer, src.buffer(), dst.buffer(), 1, &buffer_copy);
 }
 }

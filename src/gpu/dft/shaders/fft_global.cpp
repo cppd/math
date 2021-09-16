@@ -66,7 +66,7 @@ FftGlobalMemory::FftGlobalMemory(
                         VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT, sizeof(Data));
 
                 VkDescriptorBufferInfo buffer_info = {};
-                buffer_info.buffer = uniform_buffers_.back();
+                buffer_info.buffer = uniform_buffers_.back().buffer();
                 buffer_info.offset = 0;
                 buffer_info.range = uniform_buffers_.back().size();
 
@@ -96,7 +96,7 @@ void FftGlobalMemory::set_data(float two_pi_div_m, int m_div_2) const
         vulkan::map_and_write_to_buffer(uniform_buffers_[0], d);
 }
 
-void FftGlobalMemory::set_buffer(const vulkan::BufferWithMemory& buffer) const
+void FftGlobalMemory::set_buffer(const vulkan::Buffer& buffer) const
 {
         ASSERT(buffer.has_usage(VK_BUFFER_USAGE_STORAGE_BUFFER_BIT));
 

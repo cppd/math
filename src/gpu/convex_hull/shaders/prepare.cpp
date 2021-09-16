@@ -80,7 +80,7 @@ void PrepareMemory::set_object_image(const vulkan::ImageWithMemory& storage_imag
         descriptors_.update_descriptor_set(0, OBJECTS_BINDING, image_info);
 }
 
-void PrepareMemory::set_lines(const vulkan::BufferWithMemory& buffer) const
+void PrepareMemory::set_lines(const vulkan::Buffer& buffer) const
 {
         ASSERT(buffer.has_usage(VK_BUFFER_USAGE_STORAGE_BUFFER_BIT));
 

@@ -127,7 +127,7 @@ FlowMemory::FlowMemory(
                         VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT, sizeof(BufferData));
 
                 VkDescriptorBufferInfo buffer_info = {};
-                buffer_info.buffer = uniform_buffers_.back();
+                buffer_info.buffer = uniform_buffers_.back().buffer();
                 buffer_info.offset = 0;
                 buffer_info.range = uniform_buffers_.back().size();
 
@@ -232,7 +232,7 @@ void FlowMemory::set_j(
         descriptors_.update_descriptor_set(1, J_BINDING, image_info);
 }
 
-void FlowMemory::set_top_points(const vulkan::BufferWithMemory& buffer) const
+void FlowMemory::set_top_points(const vulkan::Buffer& buffer) const
 {
         ASSERT(buffer.has_usage(VK_BUFFER_USAGE_STORAGE_BUFFER_BIT));
 
@@ -247,7 +247,7 @@ void FlowMemory::set_top_points(const vulkan::BufferWithMemory& buffer) const
         }
 }
 
-void FlowMemory::set_flow(const vulkan::BufferWithMemory& buffer) const
+void FlowMemory::set_flow(const vulkan::Buffer& buffer) const
 {
         ASSERT(buffer.has_usage(VK_BUFFER_USAGE_STORAGE_BUFFER_BIT));
 
@@ -262,7 +262,7 @@ void FlowMemory::set_flow(const vulkan::BufferWithMemory& buffer) const
         }
 }
 
-void FlowMemory::set_flow_guess(const vulkan::BufferWithMemory& buffer) const
+void FlowMemory::set_flow_guess(const vulkan::Buffer& buffer) const
 {
         ASSERT(buffer.has_usage(VK_BUFFER_USAGE_STORAGE_BUFFER_BIT));
 

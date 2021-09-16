@@ -87,7 +87,7 @@ class Impl final : public View
                         ViewMemory::set_number(), 1, &memory_.descriptor_set(), 0, nullptr);
 
                 ASSERT(indirect_buffer_.has_usage(VK_BUFFER_USAGE_INDIRECT_BUFFER_BIT));
-                vkCmdDrawIndirect(command_buffer, indirect_buffer_, 0, 1, sizeof(VkDrawIndirectCommand));
+                vkCmdDrawIndirect(command_buffer, indirect_buffer_.buffer(), 0, 1, sizeof(VkDrawIndirectCommand));
         }
 
         void create_buffers(
@@ -104,7 +104,7 @@ class Impl final : public View
                         std::vector<uint32_t>({family_index_}), VK_BUFFER_USAGE_STORAGE_BUFFER_BIT,
                         points_buffer_size(rectangle.height()));
 
-                memory_.set_points(*points_);
+                memory_.set_points(points_->buffer());
 
                 // (0, 0) is top left
                 double left = 0;
@@ -120,7 +120,8 @@ class Impl final : public View
                 pipeline_ = program_.create_pipeline(
                         render_buffers->render_pass(), render_buffers->sample_count(), sample_shading_, rectangle);
 
-                compute_->create_buffers(objects, rectangle, *points_, indirect_buffer_, family_index_);
+                compute_->create_buffers(
+                        objects, rectangle, points_->buffer(), indirect_buffer_.buffer(), family_index_);
 
                 vulkan::CommandBufferCreateInfo info;
                 info.device = instance_.device();

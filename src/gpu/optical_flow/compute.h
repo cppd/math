@@ -38,8 +38,8 @@ struct Compute
                 const Region<2, int>& rectangle,
                 unsigned top_point_count_x,
                 unsigned top_point_count_y,
-                const vulkan::BufferWithMemory& top_points,
-                const vulkan::BufferWithMemory& top_flow) = 0;
+                const vulkan::Buffer& top_points,
+                const vulkan::Buffer& top_flow) = 0;
         virtual void delete_buffers() = 0;
 
         virtual void reset() = 0;

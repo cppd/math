@@ -68,7 +68,7 @@ const VkDescriptorSet& MulDMemory::descriptor_set() const
         return descriptors_.descriptor_set(0);
 }
 
-void MulDMemory::set(const vulkan::BufferWithMemory& diagonal, const vulkan::BufferWithMemory& data) const
+void MulDMemory::set(const vulkan::Buffer& diagonal, const vulkan::Buffer& data) const
 {
         {
                 ASSERT(diagonal.has_usage(VK_BUFFER_USAGE_STORAGE_BUFFER_BIT));

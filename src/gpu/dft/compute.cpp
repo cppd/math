@@ -335,16 +335,16 @@ public:
                 }
 
                 ASSERT(data.size() >= data_size_);
-                buffer_ = data;
-                fft_memory_->set_buffer(data);
+                buffer_ = data.buffer();
+                fft_memory_->set_buffer(data.buffer());
                 if (only_shared_)
                 {
                         return;
                 }
-                bit_reverse_memory_->set_buffer(data);
+                bit_reverse_memory_->set_buffer(data.buffer());
                 for (const FftGlobalMemory& m : fft_g_memory_)
                 {
-                        m.set_buffer(data);
+                        m.set_buffer(data.buffer());
                 }
         }
 
@@ -446,7 +446,7 @@ class Dft final
                         MulMemory::set_number(), 1, &mul_memory_.descriptor_set(), 0, nullptr);
                 vkCmdDispatch(command_buffer, mul_rows_to_buffer_groups_[0], mul_rows_to_buffer_groups_[1], 1);
 
-                buffer_barrier(command_buffer, *buffer_);
+                buffer_barrier(command_buffer, buffer_->buffer());
         }
 
         void rows_mul_d(VkCommandBuffer command_buffer, bool inverse) const
@@ -459,7 +459,7 @@ class Dft final
                         MulDMemory::set_number(), 1, set, 0, nullptr);
                 vkCmdDispatch(command_buffer, mul_d_row_groups_[0], mul_d_row_groups_[1], 1);
 
-                buffer_barrier(command_buffer, *buffer_);
+                buffer_barrier(command_buffer, buffer_->buffer());
         }
 
         void rows_from_buffer(VkCommandBuffer command_buffer, bool inverse) const
@@ -472,7 +472,7 @@ class Dft final
                         MulMemory::set_number(), 1, &mul_memory_.descriptor_set(), 0, nullptr);
                 vkCmdDispatch(command_buffer, mul_rows_from_buffer_groups_[0], mul_rows_from_buffer_groups_[1], 1);
 
-                buffer_barrier(command_buffer, *x_d_);
+                buffer_barrier(command_buffer, x_d_->buffer());
         }
 
         void columns_to_buffer(VkCommandBuffer command_buffer, bool inverse) const
@@ -485,7 +485,7 @@ class Dft final
                         MulMemory::set_number(), 1, &mul_memory_.descriptor_set(), 0, nullptr);
                 vkCmdDispatch(command_buffer, mul_columns_to_buffer_groups_[0], mul_columns_to_buffer_groups_[1], 1);
 
-                buffer_barrier(command_buffer, *buffer_);
+                buffer_barrier(command_buffer, buffer_->buffer());
         }
 
         void columns_mul_d(VkCommandBuffer command_buffer, bool inverse) const
@@ -498,7 +498,7 @@ class Dft final
                         MulDMemory::set_number(), 1, set, 0, nullptr);
                 vkCmdDispatch(command_buffer, mul_d_column_groups_[0], mul_d_column_groups_[1], 1);
 
-                buffer_barrier(command_buffer, *buffer_);
+                buffer_barrier(command_buffer, buffer_->buffer());
         }
 
         void columns_from_buffer(VkCommandBuffer command_buffer, bool inverse) const
@@ -512,7 +512,7 @@ class Dft final
                 vkCmdDispatch(
                         command_buffer, mul_columns_from_buffer_groups_[0], mul_columns_from_buffer_groups_[1], 1);
 
-                buffer_barrier(command_buffer, *x_d_);
+                buffer_barrier(command_buffer, x_d_->buffer());
         }
 
         void create_diagonals(uint32_t family_index)
@@ -579,17 +579,17 @@ public:
                 fft_n1_m2_.emplace(instance_.device(), family_indices, n1_, m2_);
                 fft_n1_m2_->set_data(*buffer_);
 
-                mul_memory_.set(*x_d_, *buffer_);
+                mul_memory_.set(x_d_->buffer(), buffer_->buffer());
                 mul_program_.create_pipelines(n1_, n2_, m1_, m2_, GROUP_SIZE_2D[0], GROUP_SIZE_2D[1]);
                 mul_rows_to_buffer_groups_ = group_count(m1_, n2_, GROUP_SIZE_2D);
                 mul_rows_from_buffer_groups_ = group_count(n1_, n2_, GROUP_SIZE_2D);
                 mul_columns_to_buffer_groups_ = group_count(n1_, m2_, GROUP_SIZE_2D);
                 mul_columns_from_buffer_groups_ = group_count(n1_, n2_, GROUP_SIZE_2D);
 
-                mul_d_d1_fwd_.set(*d1_fwd_, *buffer_);
-                mul_d_d1_inv_.set(*d1_inv_, *buffer_);
-                mul_d_d2_fwd_.set(*d2_fwd_, *buffer_);
-                mul_d_d2_inv_.set(*d2_inv_, *buffer_);
+                mul_d_d1_fwd_.set(d1_fwd_->buffer(), buffer_->buffer());
+                mul_d_d1_inv_.set(d1_inv_->buffer(), buffer_->buffer());
+                mul_d_d2_fwd_.set(d2_fwd_->buffer(), buffer_->buffer());
+                mul_d_d2_inv_.set(d2_inv_->buffer(), buffer_->buffer());
                 mul_d_program_.create_pipelines(n1_, n2_, m1_, m2_, GROUP_SIZE_2D[0], GROUP_SIZE_2D[1]);
                 mul_d_row_groups_ = group_count(m1_, n2_, GROUP_SIZE_2D);
                 mul_d_column_groups_ = group_count(m2_, n1_, GROUP_SIZE_2D);
@@ -641,14 +641,20 @@ public:
                 }
         }
 
-        const vulkan::BufferWithMemory& buffer() const
+        const vulkan::Buffer& buffer() const
         {
                 ASSERT(thread_id_ == std::this_thread::get_id());
 
-                //
+                ASSERT(x_d_);
+                return x_d_->buffer();
+        }
+
+        const vulkan::BufferWithMemory& buffer_with_memory() const
+        {
+                ASSERT(thread_id_ == std::this_thread::get_id());
 
                 ASSERT(x_d_);
-                return *x_d_;
+                return x_d_->buffer_with_memory();
         }
 
         Dft(const vulkan::VulkanInstance& instance,
@@ -873,14 +879,14 @@ class DftVector final : public ComputeVector
                 }
 
                 {
-                        vulkan::BufferMapper mapper(dft_.buffer());
+                        vulkan::BufferMapper mapper(dft_.buffer_with_memory());
                         mapper.write(*src);
                 }
                 vulkan::queue_submit(
                         (*command_buffers_)[inverse ? DftType::INVERSE : DftType::FORWARD], compute_queue_);
                 vulkan::queue_wait_idle(compute_queue_);
                 {
-                        vulkan::BufferMapper mapper(dft_.buffer());
+                        vulkan::BufferMapper mapper(dft_.buffer_with_memory());
                         mapper.read(src);
                 }
         }

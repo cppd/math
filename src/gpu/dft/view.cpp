@@ -82,7 +82,7 @@ class Impl final : public View
                         command_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, program_.pipeline_layout(),
                         ViewMemory::set_number(), 1, &memory_.descriptor_set(), 0, nullptr);
 
-                const std::array<VkBuffer, 1> buffers{*vertices_};
+                const std::array<VkBuffer, 1> buffers{vertices_->buffer()};
                 const std::array<VkDeviceSize, 1> offsets{0};
                 vkCmdBindVertexBuffers(command_buffer, 0, buffers.size(), buffers.data(), offsets.data());
 

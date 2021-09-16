@@ -132,6 +132,17 @@ void buffer_barrier(VkCommandBuffer command_buffer, VkBuffer buffer, VkPipelineS
                 nullptr, 1, &barrier, 0, nullptr);
 }
 
+std::vector<const vulkan::Buffer*> to_buffer_pointers(const std::vector<vulkan::BufferWithMemory>& buffers)
+{
+        std::vector<const vulkan::Buffer*> result;
+        result.reserve(buffers.size());
+        for (const vulkan::BufferWithMemory& buffer : buffers)
+        {
+                result.push_back(&buffer.buffer());
+        }
+        return result;
+}
+
 class Impl final : public Compute
 {
         const std::thread::id thread_id_ = std::this_thread::get_id();
@@ -264,11 +275,11 @@ class Impl final : public Compute
                 uint32_t family_index,
                 VkSampler sampler,
                 const std::vector<Vector2i>& sizes,
-                const std::vector<vulkan::BufferWithMemory>& flow_buffers,
+                const std::vector<const vulkan::Buffer*>& flow_buffers,
                 int top_point_count_x,
                 int top_point_count_y,
-                const vulkan::BufferWithMemory& top_points,
-                const vulkan::BufferWithMemory& top_flow,
+                const vulkan::Buffer& top_points,
+                const vulkan::Buffer& top_flow,
                 const std::array<std::vector<vulkan::ImageWithMemory>, 2>& images,
                 const std::vector<vulkan::ImageWithMemory>& dx,
                 const std::vector<vulkan::ImageWithMemory>& dy)
@@ -298,9 +309,9 @@ class Impl final : public Compute
 
                 for (std::size_t i = 0; i < size; ++i)
                 {
-                        const vulkan::BufferWithMemory* top_points_ptr;
-                        const vulkan::BufferWithMemory* flow_ptr;
-                        const vulkan::BufferWithMemory* flow_guess_ptr;
+                        const vulkan::Buffer* top_points_ptr;
+                        const vulkan::Buffer* flow_ptr;
+                        const vulkan::Buffer* flow_guess_ptr;
 
                         FlowMemory::Data data;
 
@@ -310,7 +321,7 @@ class Impl final : public Compute
                         if (!top)
                         {
                                 top_points_ptr = &top_points; // not used
-                                flow_ptr = &flow_buffers[flow_index(i)];
+                                flow_ptr = flow_buffers[flow_index(i)];
                                 data.use_all_points = true;
                                 data.point_count_x = sizes[i][0];
                                 data.point_count_y = sizes[i][1];
@@ -331,11 +342,11 @@ class Impl final : public Compute
                                 data.guess_kx = (sizes[i_prev][0] != sizes[i][0]) ? 2 : 1;
                                 data.guess_ky = (sizes[i_prev][1] != sizes[i][1]) ? 2 : 1;
                                 data.guess_width = sizes[i_prev][0];
-                                flow_guess_ptr = &flow_buffers[flow_index(i_prev)];
+                                flow_guess_ptr = flow_buffers[flow_index(i_prev)];
                         }
                         else
                         {
-                                flow_guess_ptr = &flow_buffers[0]; // not used
+                                flow_guess_ptr = flow_buffers[0]; // not used
                                 data.use_guess = false;
                         }
 
@@ -431,7 +442,7 @@ class Impl final : public Compute
                         vkCmdDispatch(command_buffer, flow_groups_[i][0], flow_groups_[i][1], 1);
 
                         buffer_barrier(
-                                command_buffer, (i != 0) ? flow_buffers_[i - 1] : top_flow,
+                                command_buffer, (i != 0) ? flow_buffers_[i - 1].buffer() : top_flow,
                                 VK_PIPELINE_STAGE_COMPUTE_SHADER_BIT);
                 }
         }
@@ -563,8 +574,8 @@ class Impl final : public Compute
                 const Region<2, int>& rectangle,
                 unsigned top_point_count_x,
                 unsigned top_point_count_y,
-                const vulkan::BufferWithMemory& top_points,
-                const vulkan::BufferWithMemory& top_flow) override
+                const vulkan::Buffer& top_points,
+                const vulkan::Buffer& top_flow) override
         {
                 ASSERT(thread_id_ == std::this_thread::get_id());
 
@@ -610,9 +621,11 @@ class Impl final : public Compute
                 flow_groups_ = flow_groups(GROUPS, sizes, top_point_count_x, top_point_count_y);
                 flow_program_.create_pipeline(
                         GROUPS_X, GROUPS_Y, RADIUS, MAX_ITERATION_COUNT, STOP_MOVE_SQUARE, MIN_DETERMINANT);
+
                 flow_memory_ = create_flow_memory(
-                        device_, flow_program_.descriptor_set_layout(), family_index, sampler, sizes, flow_buffers_,
-                        top_point_count_x, top_point_count_y, top_points, top_flow, images_, dx_, dy_);
+                        device_, flow_program_.descriptor_set_layout(), family_index, sampler, sizes,
+                        to_buffer_pointers(flow_buffers_), top_point_count_x, top_point_count_y, top_points, top_flow,
+                        images_, dx_, dy_);
 
                 create_command_buffer_first_pyramid();
                 create_command_buffers(top_flow);

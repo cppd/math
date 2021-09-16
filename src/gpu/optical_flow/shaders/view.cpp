@@ -74,7 +74,7 @@ ViewMemory::ViewMemory(
                         VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT, sizeof(Data));
 
                 VkDescriptorBufferInfo buffer_info = {};
-                buffer_info.buffer = uniform_buffers_.back();
+                buffer_info.buffer = uniform_buffers_.back().buffer();
                 buffer_info.offset = 0;
                 buffer_info.range = uniform_buffers_.back().size();
 
@@ -96,7 +96,7 @@ const VkDescriptorSet& ViewMemory::descriptor_set() const
         return descriptors_.descriptor_set(0);
 }
 
-void ViewMemory::set_points(const vulkan::BufferWithMemory& buffer) const
+void ViewMemory::set_points(const vulkan::Buffer& buffer) const
 {
         ASSERT(buffer.has_usage(VK_BUFFER_USAGE_STORAGE_BUFFER_BIT));
 
@@ -108,7 +108,7 @@ void ViewMemory::set_points(const vulkan::BufferWithMemory& buffer) const
         descriptors_.update_descriptor_set(0, POINTS_BINDING, buffer_info);
 }
 
-void ViewMemory::set_flow(const vulkan::BufferWithMemory& buffer) const
+void ViewMemory::set_flow(const vulkan::Buffer& buffer) const
 {
         ASSERT(buffer.has_usage(VK_BUFFER_USAGE_STORAGE_BUFFER_BIT));
 

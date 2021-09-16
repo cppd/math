@@ -50,16 +50,14 @@ public:
                 return size_;
         }
 
-        operator const vulkan::BufferWithMemory&() const&
+        const vulkan::Buffer& buffer() const
         {
-                return buffer_;
+                return buffer_.buffer();
         }
-        operator const vulkan::BufferWithMemory&() const&& = delete;
 
-        operator VkBuffer() const&
+        const vulkan::BufferWithMemory& buffer_with_memory() const
         {
                 return buffer_;
         }
-        operator VkBuffer() const&& = delete;
 };
 }

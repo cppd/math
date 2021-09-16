@@ -55,7 +55,7 @@ public:
 
         //
 
-        void set(const vulkan::BufferWithMemory& input, const vulkan::ImageWithMemory& output) const;
+        void set(const vulkan::Buffer& input, const vulkan::ImageWithMemory& output) const;
 };
 
 class CopyOutputConstant final : public vulkan::SpecializationConstant

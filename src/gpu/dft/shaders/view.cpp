@@ -65,7 +65,7 @@ ViewMemory::ViewMemory(
                         VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT, sizeof(Data));
 
                 VkDescriptorBufferInfo buffer_info = {};
-                buffer_info.buffer = uniform_buffers_.back();
+                buffer_info.buffer = uniform_buffers_.back().buffer();
                 buffer_info.offset = 0;
                 buffer_info.range = uniform_buffers_.back().size();
 

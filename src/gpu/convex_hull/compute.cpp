@@ -118,7 +118,7 @@ class Impl final : public Compute
                 //
 
                 buffer_barrier(
-                        command_buffer, *lines_buffer_, VK_ACCESS_SHADER_READ_BIT,
+                        command_buffer, lines_buffer_->buffer(), VK_ACCESS_SHADER_READ_BIT,
                         VK_PIPELINE_STAGE_COMPUTE_SHADER_BIT);
 
                 //
@@ -132,7 +132,7 @@ class Impl final : public Compute
                 //
 
                 buffer_barrier(
-                        command_buffer, *lines_buffer_, VK_ACCESS_SHADER_READ_BIT,
+                        command_buffer, lines_buffer_->buffer(), VK_ACCESS_SHADER_READ_BIT,
                         VK_PIPELINE_STAGE_COMPUTE_SHADER_BIT);
 
                 //
@@ -155,8 +155,8 @@ class Impl final : public Compute
         void create_buffers(
                 const vulkan::ImageWithMemory& objects,
                 const Region<2, int>& rectangle,
-                const vulkan::BufferWithMemory& points_buffer,
-                const vulkan::BufferWithMemory& point_count_buffer,
+                const vulkan::Buffer& points_buffer,
+                const vulkan::Buffer& point_count_buffer,
                 uint32_t family_index) override
         {
                 ASSERT(thread_id_ == std::this_thread::get_id());
@@ -181,17 +181,17 @@ class Impl final : public Compute
                 point_count_buffer_ = point_count_buffer;
 
                 prepare_memory_.set_object_image(objects);
-                prepare_memory_.set_lines(*lines_buffer_);
+                prepare_memory_.set_lines(lines_buffer_->buffer());
                 prepare_group_count_ = height;
                 prepare_program_.create_pipeline(
                         group_size_prepare(width, instance_.device().properties().properties_10.limits), rectangle);
 
-                merge_memory_.set_lines(*lines_buffer_);
+                merge_memory_.set_lines(lines_buffer_->buffer());
                 merge_program_.create_pipeline(
                         height, group_size_merge(height, instance_.device().properties().properties_10.limits),
                         iteration_count_merge(height));
 
-                filter_memory_.set_lines(*lines_buffer_);
+                filter_memory_.set_lines(lines_buffer_->buffer());
                 filter_memory_.set_points(points_buffer);
                 filter_memory_.set_point_count(point_count_buffer);
                 filter_program_.create_pipeline(height);

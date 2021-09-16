@@ -36,8 +36,8 @@ struct Compute
         virtual void create_buffers(
                 const vulkan::ImageWithMemory& objects,
                 const Region<2, int>& rectangle,
-                const vulkan::BufferWithMemory& points_buffer,
-                const vulkan::BufferWithMemory& point_count_buffer,
+                const vulkan::Buffer& points_buffer,
+                const vulkan::Buffer& point_count_buffer,
                 uint32_t family_index) = 0;
         virtual void delete_buffers() = 0;
 };

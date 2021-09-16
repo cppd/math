@@ -56,7 +56,7 @@ public:
 
         //
 
-        void set(VkSampler sampler, const vulkan::ImageWithMemory& input, const vulkan::BufferWithMemory& output) const;
+        void set(VkSampler sampler, const vulkan::ImageWithMemory& input, const vulkan::Buffer& output) const;
 };
 
 class CopyInputConstant final : public vulkan::SpecializationConstant

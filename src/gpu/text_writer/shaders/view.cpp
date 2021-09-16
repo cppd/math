@@ -77,7 +77,7 @@ Memory::Memory(
                 matrices_buffer_index_ = uniform_buffers_.size() - 1;
 
                 VkDescriptorBufferInfo buffer_info = {};
-                buffer_info.buffer = uniform_buffers_.back();
+                buffer_info.buffer = uniform_buffers_.back().buffer();
                 buffer_info.offset = 0;
                 buffer_info.range = uniform_buffers_.back().size();
 
@@ -102,7 +102,7 @@ Memory::Memory(
                 drawing_buffer_index_ = uniform_buffers_.size() - 1;
 
                 VkDescriptorBufferInfo buffer_info = {};
-                buffer_info.buffer = uniform_buffers_.back();
+                buffer_info.buffer = uniform_buffers_.back().buffer();
                 buffer_info.offset = 0;
                 buffer_info.range = uniform_buffers_.back().size();
 

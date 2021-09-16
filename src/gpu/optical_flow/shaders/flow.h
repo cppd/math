@@ -95,9 +95,9 @@ public:
         void set_j(VkSampler sampler, const vulkan::ImageWithMemory& image_0, const vulkan::ImageWithMemory& image_1)
                 const;
 
-        void set_top_points(const vulkan::BufferWithMemory& buffer) const;
-        void set_flow(const vulkan::BufferWithMemory& buffer) const;
-        void set_flow_guess(const vulkan::BufferWithMemory& buffer) const;
+        void set_top_points(const vulkan::Buffer& buffer) const;
+        void set_flow(const vulkan::Buffer& buffer) const;
+        void set_flow_guess(const vulkan::Buffer& buffer) const;
 };
 
 class FlowConstant final : public vulkan::SpecializationConstant

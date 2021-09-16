@@ -358,7 +358,7 @@ VolumeBuffer::VolumeBuffer(
 
 VkBuffer VolumeBuffer::buffer_coordinates() const
 {
-        return uniform_buffer_coordinates_;
+        return uniform_buffer_coordinates_.buffer();
 }
 
 VkDeviceSize VolumeBuffer::buffer_coordinates_size() const
@@ -368,7 +368,7 @@ VkDeviceSize VolumeBuffer::buffer_coordinates_size() const
 
 VkBuffer VolumeBuffer::buffer_volume() const
 {
-        return uniform_buffer_volume_;
+        return uniform_buffer_volume_.buffer();
 }
 
 VkDeviceSize VolumeBuffer::buffer_volume_size() const

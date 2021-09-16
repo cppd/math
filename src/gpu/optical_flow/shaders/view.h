@@ -67,8 +67,8 @@ public:
 
         //
 
-        void set_points(const vulkan::BufferWithMemory& buffer) const;
-        void set_flow(const vulkan::BufferWithMemory& buffer) const;
+        void set_points(const vulkan::Buffer& buffer) const;
+        void set_flow(const vulkan::Buffer& buffer) const;
         void set_matrix(const Matrix4d& matrix) const;
 };
 

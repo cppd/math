@@ -67,10 +67,7 @@ const VkDescriptorSet& CopyInputMemory::descriptor_set() const
         return descriptors_.descriptor_set(0);
 }
 
-void CopyInputMemory::set(
-        VkSampler sampler,
-        const vulkan::ImageWithMemory& input,
-        const vulkan::BufferWithMemory& output) const
+void CopyInputMemory::set(VkSampler sampler, const vulkan::ImageWithMemory& input, const vulkan::Buffer& output) const
 {
         {
                 ASSERT(input.has_usage(VK_IMAGE_USAGE_SAMPLED_BIT));
