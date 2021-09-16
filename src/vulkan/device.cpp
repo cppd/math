@@ -266,7 +266,7 @@ PhysicalDevice::PhysicalDevice(VkPhysicalDevice physical_device, VkSurfaceKHR su
         ASSERT(queue_families_.size() == presentation_supported_.size());
 }
 
-PhysicalDevice::operator VkPhysicalDevice() const&
+VkPhysicalDevice PhysicalDevice::device() const
 {
         return physical_device_;
 }
@@ -395,7 +395,7 @@ PhysicalDevice create_physical_device(
                                 continue;
                         }
 
-                        if (!surface_suitable(surface, physical_device))
+                        if (!surface_suitable(surface, physical_device.device()))
                         {
                                 continue;
                         }
@@ -481,6 +481,6 @@ Device create_device(
                 create_info.ppEnabledExtensionNames = extensions.data();
         }
 
-        return Device(physical_device, &physical_device.properties(), create_info);
+        return Device(physical_device.device(), &physical_device.properties(), create_info);
 }
 }
