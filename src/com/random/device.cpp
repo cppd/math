@@ -56,7 +56,7 @@ namespace ns
 {
 namespace
 {
-class Provider
+class Provider final
 {
         HCRYPTPROV hProvider_;
 
@@ -69,6 +69,7 @@ public:
                         error("error CryptAcquireContext");
                 }
         }
+
         ~Provider()
         {
                 if (!::CryptReleaseContext(hProvider_, 0))
@@ -77,10 +78,16 @@ public:
                 }
         }
 
-        operator HCRYPTPROV() const
+        operator HCRYPTPROV() const&
         {
                 return hProvider_;
         }
+        operator HCRYPTPROV() const&& = delete;
+
+        Provider(const Provider&) = delete;
+        Provider& operator=(const Provider&) = delete;
+        Provider(Provider&&) = delete;
+        Provider& operator=(Provider&&) = delete;
 };
 }
 

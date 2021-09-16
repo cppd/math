@@ -49,6 +49,7 @@ public:
                         error("Error init FreeType library");
                 }
         }
+
         ~Library()
         {
                 FT_Done_FreeType(library_);
@@ -165,7 +166,7 @@ void save_to_file(char32_t code_point, const std::optional<Font::Char>& data)
 
 class Font::Impl final
 {
-        const std::thread::id thread_id_;
+        const std::thread::id thread_id_ = std::this_thread::get_id();
 
         Library library_;
         Face face_;
@@ -174,11 +175,11 @@ class Font::Impl final
 
 public:
         template <typename T>
-        Impl(int size_in_pixels, T&& font_data)
-                : thread_id_(std::this_thread::get_id()), face_(library_, std::forward<T>(font_data))
+        Impl(int size_in_pixels, T&& font_data) : face_(library_, std::forward<T>(font_data))
         {
                 set_size(size_in_pixels);
         }
+
         ~Impl()
         {
                 ASSERT(std::this_thread::get_id() == thread_id_);
