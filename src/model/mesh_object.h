@@ -315,14 +315,25 @@ public:
 
         ~Writing()
         {
-                if (updates_.none())
+                try
                 {
-                        return;
+                        if (updates_.none())
+                        {
+                                return;
+                        }
+                        object_->versions_.add(updates_);
+                        if (object_->inserted_)
+                        {
+                                object_->send_event(event::Update<N>(object_->weak_from_this()));
+                        }
                 }
-                object_->versions_.add(updates_);
-                if (object_->inserted_)
+                catch (const std::exception& e)
                 {
-                        object_->send_event(event::Update<N>(object_->weak_from_this()));
+                        error_fatal(std::string("Error in mesh writing destructor: ") + e.what());
+                }
+                catch (...)
+                {
+                        error_fatal("Error in mesh writing destructor");
                 }
         }
 
