@@ -164,7 +164,7 @@ void check_non_negative(const std::string_view& name, const F& f)
                 if (!(v >= 0))
                 {
                         std::ostringstream oss;
-                        oss.precision(limits<T>::max_digits10);
+                        oss.precision(Limits<T>::max_digits10());
                         oss << name << ", approximation " << v << " is not non-negative for wave " << w;
                         error(oss.str());
                 }
@@ -180,7 +180,7 @@ T check_abs(const std::string_view& name, const T& wave, const T& f, const T& ta
                 return abs_error;
         }
         std::ostringstream oss;
-        oss.precision(limits<T>::max_digits10);
+        oss.precision(Limits<T>::max_digits10());
         oss << name;
         oss << ", wavelength = " << wave;
         oss << ", f = " << f;
@@ -197,7 +197,7 @@ void check_mean(const std::string_view& name, const T& mean, const T& max_error)
                 return;
         }
         std::ostringstream oss;
-        oss.precision(limits<T>::max_digits10);
+        oss.precision(Limits<T>::max_digits10());
         oss << name << ", mean error = " << mean;
         error(oss.str());
 };

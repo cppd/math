@@ -35,7 +35,7 @@ class Paintbrush final
 
         static_assert(std::is_integral_v<T>);
         static_assert(std::is_unsigned_v<T>);
-        static_assert(limits<T>::max() <= limits<unsigned>::max());
+        static_assert(Limits<T>::max() <= Limits<unsigned>::max());
 
         // Example for 2D
         //for (int x = 0; x < screen[0]; x += paintbrush[0])
@@ -142,11 +142,11 @@ class Paintbrush final
                         }
 
                         const unsigned max_coordinate = screen_size[i] - 1;
-                        if (max_coordinate > limits<T>::max())
+                        if (max_coordinate > Limits<T>::max())
                         {
                                 error("Paintbrush screen max coordinate " + to_string(max_coordinate) + " (screen size "
                                       + to_string(screen_size) + ")" + " is greater than the largest value "
-                                      + to_string(limits<T>::max()) + " of pixel coordinates");
+                                      + to_string(Limits<T>::max()) + " of pixel coordinates");
                         }
                 }
 

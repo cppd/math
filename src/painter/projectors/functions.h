@@ -29,7 +29,7 @@ namespace ns::painter::projectors_implementation
 template <std::size_t N, typename T>
 void check_orthogonality(const Vector<N, T>& camera_dir, const std::array<Vector<N, T>, N - 1>& screen_axes)
 {
-        constexpr T LIMIT_COS = limits<T>::epsilon() * 100;
+        constexpr T LIMIT_COS = Limits<T>::epsilon() * 100;
 
         for (unsigned i = 0; i < N - 1; ++i)
         {

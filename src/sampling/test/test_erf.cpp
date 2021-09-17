@@ -41,7 +41,7 @@ std::string make_string(T arg, T inverse, T erf)
 
         std::ostringstream oss;
         oss << std::scientific;
-        oss << std::setprecision(limits<T>::max_digits10);
+        oss << std::setprecision(Limits<T>::max_digits10());
         oss << "arg = " << arg << ", erf_inv = " << inverse << ", erf = " << erf;
         return oss.str();
 }
@@ -58,14 +58,14 @@ void test_erf_inv(std::type_identity_t<T> arg, std::type_identity_t<T> precision
         {
                 if (erf == 1)
                 {
-                        if (!(inverse == limits<T>::infinity()))
+                        if (!(inverse == Limits<T>::infinity()))
                         {
                                 error("erf inverse is not inf for erf 1");
                         }
                 }
                 else if (erf == -1)
                 {
-                        if (!(inverse == -limits<T>::infinity()))
+                        if (!(inverse == -Limits<T>::infinity()))
                         {
                                 error("erf inverse is not inf for erf 1");
                         }
@@ -92,7 +92,7 @@ void test_erf_inv(std::type_identity_t<T> arg, std::type_identity_t<T> precision
                 {
                         T p = precision;
 
-                        if (erf > 1 - 100 * limits<T>::epsilon() || erf < -1 + 100 * limits<T>::epsilon())
+                        if (erf > 1 - 100 * Limits<T>::epsilon() || erf < -1 + 100 * Limits<T>::epsilon())
                         {
                                 p *= 10;
                         }
@@ -190,7 +190,7 @@ void test_erf_inv_from_array(std::type_identity_t<T> precision)
                 error("erf_inv(2) is not NAN");
         }
 
-        if (!(erf_inv(T(-1)) == -limits<T>::infinity()))
+        if (!(erf_inv(T(-1)) == -Limits<T>::infinity()))
         {
                 error("erf_inv(-1) is not -infinity");
         }
@@ -200,7 +200,7 @@ void test_erf_inv_from_array(std::type_identity_t<T> precision)
                 error("erf_inv(0) is not 0");
         }
 
-        if (!(erf_inv(T(1)) == limits<T>::infinity()))
+        if (!(erf_inv(T(1)) == Limits<T>::infinity()))
         {
                 error("erf_inv(1) is not infinity");
         }

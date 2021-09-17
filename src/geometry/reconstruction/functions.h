@@ -119,8 +119,8 @@ std::optional<T> intersect_cocone_max_distance(
                 return std::nullopt;
         }
 
-        bool t1_ok = t1 >= 0 && t1 <= limits<T>::max();
-        bool t2_ok = t2 >= 0 && t2 <= limits<T>::max();
+        bool t1_ok = t1 >= 0 && t1 <= Limits<T>::max();
+        bool t2_ok = t2 >= 0 && t2 <= Limits<T>::max();
 
         if (!t1_ok && !t2_ok)
         {

@@ -314,7 +314,7 @@ void save_to_images(const Path& path, const image::ImageView<N>& image_view, Pro
                 error("Image size is not positive: " + to_string(image_view.size));
         }
         long long image_count = multiply_all<long long>(image_view.size) / image_view.size[0] / image_view.size[1];
-        if (static_cast<unsigned long long>(image_count) > limits<unsigned>::max())
+        if (static_cast<unsigned long long>(image_count) > Limits<unsigned>::max())
         {
                 error("Too many images to save, image size " + to_string(image_view.size));
         }
@@ -345,7 +345,7 @@ image::Image<N> load(const Path& path, ProgressRatio* progress)
         image.pixels.resize(image::format_pixel_size_in_bytes(info.format) * pixel_count);
 
         long long image_count = pixel_count / image.size[0] / image.size[1];
-        if (static_cast<unsigned long long>(image_count) > limits<unsigned>::max())
+        if (static_cast<unsigned long long>(image_count) > Limits<unsigned>::max())
         {
                 error("Too many images to load, image size " + to_string(info.size));
         }

@@ -99,7 +99,7 @@ I float_to_uint(F v)
 {
         static_assert(std::is_same_v<F, float>);
         static_assert(std::is_same_v<I, uint8_t> || std::is_same_v<I, uint16_t>);
-        return v * F(limits<I>::max()) + F(0.5);
+        return v * F(Limits<I>::max()) + F(0.5);
 }
 
 template <std::size_t N>

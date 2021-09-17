@@ -210,8 +210,8 @@ Constraints<N, T, 2 * N, 0> Parallelotope<N, T>::constraints() const
 template <std::size_t N, typename T>
 bool Parallelotope<N, T>::intersect_impl(const Ray<N, T>& r, T* first, T* second) const
 {
-        T f_max = limits<T>::lowest();
-        T b_min = limits<T>::max();
+        T f_max = Limits<T>::lowest();
+        T b_min = Limits<T>::max();
 
         for (unsigned i = 0; i < N; ++i)
         {
@@ -301,7 +301,7 @@ Vector<N, T> Parallelotope<N, T>::normal(const Vector<N, T>& p) const
 {
         // the normal of the plane closest to the point
 
-        T min = limits<T>::max();
+        T min = Limits<T>::max();
 
         Vector<N, T> n;
         for (unsigned i = 0; i < N; ++i)
@@ -324,7 +324,7 @@ Vector<N, T> Parallelotope<N, T>::normal(const Vector<N, T>& p) const
                 }
         }
 
-        ASSERT(min < limits<T>::max());
+        ASSERT(min < Limits<T>::max());
 
         return n;
 }
@@ -520,7 +520,7 @@ void Parallelotope<N, T>::length_impl(const Vector<N, T>& sum, const F& f) const
 template <std::size_t N, typename T>
 T Parallelotope<N, T>::length() const
 {
-        T max_squared = limits<T>::lowest();
+        T max_squared = Limits<T>::lowest();
 
         unsigned count = 0;
 

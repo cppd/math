@@ -27,7 +27,7 @@ namespace ns::gpu::dft
 {
 int compute_m(int n)
 {
-        static constexpr int MAX_POWER_OF_2 = 1 << (limits<int>::digits - 1);
+        static constexpr int MAX_POWER_OF_2 = 1 << (Limits<int>::digits() - 1);
         if (n < 1 || n > MAX_POWER_OF_2 / 2)
         {
                 error("Error size " + std::to_string(n) + " for compute m");

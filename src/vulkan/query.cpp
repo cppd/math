@@ -408,7 +408,7 @@ uint32_t physical_device_memory_type_index(
         VkPhysicalDeviceMemoryProperties memory_properties;
         vkGetPhysicalDeviceMemoryProperties(physical_device, &memory_properties);
 
-        if (memory_properties.memoryTypeCount >= limits<uint32_t>::digits)
+        if (memory_properties.memoryTypeCount >= static_cast<unsigned>(Limits<uint32_t>::digits()))
         {
                 error("memoryTypeCount >= memory_type_bits bit count");
         }

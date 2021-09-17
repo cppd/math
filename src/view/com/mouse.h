@@ -37,8 +37,8 @@ struct MouseButtonInfo final
 class Mouse final
 {
         std::unordered_map<MouseButton, MouseButtonInfo> buttons_;
-        int x_ = limits<int>::lowest();
-        int y_ = limits<int>::lowest();
+        int x_ = Limits<int>::lowest();
+        int y_ = Limits<int>::lowest();
 
 public:
         const MouseButtonInfo& info(const MouseButton button) const

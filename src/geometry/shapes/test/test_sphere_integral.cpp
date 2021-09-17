@@ -186,7 +186,7 @@ void compare_with_gamma(const T& precision)
         {
                 std::ostringstream oss;
                 oss << std::scientific;
-                oss << std::setprecision(limits<T>::max_digits10);
+                oss << std::setprecision(Limits<T>::max_digits10());
                 oss << "N = " << N << ", gamma = " << gamma << ", function = " << INTEGRAL;
                 oss << ", relative error = " << relative_error;
                 error("Sphere integral error: " + oss.str());
@@ -238,7 +238,7 @@ void test_cosine(const int count, const T& precision)
 
         std::ostringstream oss;
         oss << std::fixed;
-        oss << std::setprecision(limits<long double>::max_digits10);
+        oss << std::setprecision(Limits<long double>::max_digits10());
         oss << "N = " << std::setw(2) << N << ", data = " << data << ", function = " << function;
         oss << ", relative error = ";
         oss << std::setprecision(7) << relative_error;

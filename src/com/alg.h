@@ -87,7 +87,7 @@ template <typename T, typename V>
                 (Integral<typename V::value_type> && Integral<T>)
                 || (FloatingPoint<typename V::value_type> && FloatingPoint<T>));
         static_assert(Signed<typename V::value_type> == Signed<T>);
-        static_assert(limits<typename V::value_type>::digits <= limits<T>::digits);
+        static_assert(Limits<typename V::value_type>::digits() <= Limits<T>::digits());
 
         if (v.empty())
         {
@@ -110,7 +110,7 @@ template <typename T, typename V>
                 (Integral<typename V::value_type> && Integral<T>)
                 || (FloatingPoint<typename V::value_type> && FloatingPoint<T>));
         static_assert(Signed<typename V::value_type> == Signed<T>);
-        static_assert(limits<typename V::value_type>::digits <= limits<T>::digits);
+        static_assert(Limits<typename V::value_type>::digits() <= Limits<T>::digits());
 
         if (v.empty())
         {

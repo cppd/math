@@ -127,7 +127,7 @@ void test_eigen_defined()
 template <std::size_t N, typename T>
 void test_eigen_random(unsigned count)
 {
-        constexpr T TOLERANCE = limits<T>::epsilon() * 100;
+        constexpr T TOLERANCE = Limits<T>::epsilon() * 100;
 
         for (const MatrixWithDeterminant<N, T>& m : random_symmetric_matrices<N, T>(count, -1, 1))
         {

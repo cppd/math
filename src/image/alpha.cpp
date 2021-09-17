@@ -106,7 +106,7 @@ void blend_alpha_r8g8b8a8(const std::span<std::byte>& bytes, const Vector<3, flo
         using T = uint8_t;
 
         static constexpr std::size_t PIXEL_SIZE = 4 * sizeof(T);
-        static constexpr T DST_ALPHA = limits<T>::max();
+        static constexpr T DST_ALPHA = Limits<T>::max();
 
         const std::size_t pixel_count = bytes.size() / PIXEL_SIZE;
         if (pixel_count * PIXEL_SIZE != bytes.size())
@@ -133,7 +133,7 @@ void blend_alpha_r8g8b8a8(const std::span<std::byte>& bytes, const Vector<3, flo
                 {
                         std::memcpy(ptr, blend_pixel.data(), PIXEL_SIZE);
                 }
-                else if (pixel[3] < limits<T>::max())
+                else if (pixel[3] < Limits<T>::max())
                 {
                         float alpha = color::linear_uint8_to_linear_float(pixel[3]);
                         std::array<float, 3> c;
@@ -157,7 +157,7 @@ void blend_alpha_r8g8b8a8_premultiplied(const std::span<std::byte>& bytes, const
         using T = uint8_t;
 
         static constexpr std::size_t PIXEL_SIZE = 4 * sizeof(T);
-        static constexpr T DST_ALPHA = limits<T>::max();
+        static constexpr T DST_ALPHA = Limits<T>::max();
 
         const std::size_t pixel_count = bytes.size() / PIXEL_SIZE;
         if (pixel_count * PIXEL_SIZE != bytes.size())
@@ -184,7 +184,7 @@ void blend_alpha_r8g8b8a8_premultiplied(const std::span<std::byte>& bytes, const
                 {
                         std::memcpy(ptr, blend_pixel.data(), PIXEL_SIZE);
                 }
-                else if (pixel[3] < limits<T>::max())
+                else if (pixel[3] < Limits<T>::max())
                 {
                         float alpha = color::linear_uint8_to_linear_float(pixel[3]);
                         float k = 1 - alpha;
@@ -209,7 +209,7 @@ void blend_alpha_r16g16b16a16(const std::span<std::byte>& bytes, const Vector<3,
         using T = uint16_t;
 
         static constexpr std::size_t PIXEL_SIZE = 4 * sizeof(T);
-        static constexpr T DST_ALPHA = limits<T>::max();
+        static constexpr T DST_ALPHA = Limits<T>::max();
 
         const std::size_t pixel_count = bytes.size() / PIXEL_SIZE;
         if (pixel_count * PIXEL_SIZE != bytes.size())
@@ -236,7 +236,7 @@ void blend_alpha_r16g16b16a16(const std::span<std::byte>& bytes, const Vector<3,
                 {
                         std::memcpy(ptr, blend_pixel.data(), PIXEL_SIZE);
                 }
-                else if (pixel[3] < limits<T>::max())
+                else if (pixel[3] < Limits<T>::max())
                 {
                         float alpha = color::linear_uint16_to_linear_float(pixel[3]);
                         std::array<float, 3> c;
@@ -260,7 +260,7 @@ void blend_alpha_r16g16b16a16_srgb(const std::span<std::byte>& bytes, const Vect
         using T = uint16_t;
 
         static constexpr std::size_t PIXEL_SIZE = 4 * sizeof(T);
-        static constexpr T DST_ALPHA = limits<T>::max();
+        static constexpr T DST_ALPHA = Limits<T>::max();
 
         const std::size_t pixel_count = bytes.size() / PIXEL_SIZE;
         if (pixel_count * PIXEL_SIZE != bytes.size())
@@ -287,7 +287,7 @@ void blend_alpha_r16g16b16a16_srgb(const std::span<std::byte>& bytes, const Vect
                 {
                         std::memcpy(ptr, blend_pixel.data(), PIXEL_SIZE);
                 }
-                else if (pixel[3] < limits<T>::max())
+                else if (pixel[3] < Limits<T>::max())
                 {
                         float alpha = color::linear_uint16_to_linear_float(pixel[3]);
                         std::array<float, 3> c;
@@ -311,7 +311,7 @@ void blend_alpha_r16g16b16a16_premultiplied(const std::span<std::byte>& bytes, c
         using T = uint16_t;
 
         static constexpr std::size_t PIXEL_SIZE = 4 * sizeof(T);
-        static constexpr T DST_ALPHA = limits<T>::max();
+        static constexpr T DST_ALPHA = Limits<T>::max();
 
         const std::size_t pixel_count = bytes.size() / PIXEL_SIZE;
         if (pixel_count * PIXEL_SIZE != bytes.size())
@@ -338,7 +338,7 @@ void blend_alpha_r16g16b16a16_premultiplied(const std::span<std::byte>& bytes, c
                 {
                         std::memcpy(ptr, blend_pixel.data(), PIXEL_SIZE);
                 }
-                else if (pixel[3] < limits<T>::max())
+                else if (pixel[3] < Limits<T>::max())
                 {
                         float alpha = color::linear_uint16_to_linear_float(pixel[3]);
                         float k = 1 - alpha;
@@ -512,11 +512,11 @@ void set_alpha(ColorFormat color_format, const std::span<std::byte>& bytes, floa
         switch (color_format)
         {
         case ColorFormat::R8G8B8A8_SRGB:
-                set_alpha<uint8_t>(bytes, std::lround(alpha * limits<uint8_t>::max()));
+                set_alpha<uint8_t>(bytes, std::lround(alpha * Limits<uint8_t>::max()));
                 return;
         case ColorFormat::R16G16B16A16:
         case ColorFormat::R16G16B16A16_SRGB:
-                set_alpha<uint16_t>(bytes, std::lround(alpha * limits<uint16_t>::max()));
+                set_alpha<uint16_t>(bytes, std::lround(alpha * Limits<uint16_t>::max()));
                 return;
         case ColorFormat::R32G32B32A32:
                 set_alpha<float>(bytes, alpha);
@@ -550,15 +550,15 @@ Image<N> add_alpha(const Image<N>& image, float alpha)
         {
         case ColorFormat::R8G8B8_SRGB:
                 result.color_format = ColorFormat::R8G8B8A8_SRGB;
-                result.pixels = add_alpha<uint8_t>(image.pixels, std::lround(alpha * limits<uint8_t>::max()));
+                result.pixels = add_alpha<uint8_t>(image.pixels, std::lround(alpha * Limits<uint8_t>::max()));
                 return result;
         case ColorFormat::R16G16B16:
                 result.color_format = ColorFormat::R16G16B16A16;
-                result.pixels = add_alpha<uint16_t>(image.pixels, std::lround(alpha * limits<uint16_t>::max()));
+                result.pixels = add_alpha<uint16_t>(image.pixels, std::lround(alpha * Limits<uint16_t>::max()));
                 return result;
         case ColorFormat::R16G16B16_SRGB:
                 result.color_format = ColorFormat::R16G16B16A16_SRGB;
-                result.pixels = add_alpha<uint16_t>(image.pixels, std::lround(alpha * limits<uint16_t>::max()));
+                result.pixels = add_alpha<uint16_t>(image.pixels, std::lround(alpha * Limits<uint16_t>::max()));
                 return result;
         case ColorFormat::R32G32B32:
                 result.color_format = ColorFormat::R32G32B32A32;

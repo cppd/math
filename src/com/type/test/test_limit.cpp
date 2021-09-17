@@ -47,32 +47,32 @@ namespace
 template <typename T>
 class CompareWithNumericLimits
 {
-        static_assert(limits<T>::epsilon() == std::numeric_limits<T>::epsilon());
-        static_assert(limits<T>::max() == std::numeric_limits<T>::max());
-        static_assert(limits<T>::lowest() == std::numeric_limits<T>::lowest());
-        static_assert(limits<T>::infinity() == std::numeric_limits<T>::infinity());
-        static_assert(limits<T>::digits == std::numeric_limits<T>::digits);
-        static_assert(limits<T>::digits10 == std::numeric_limits<T>::digits10);
-        static_assert(limits<T>::max_digits10 == std::numeric_limits<T>::max_digits10);
-        static_assert(limits<T>::radix == std::numeric_limits<T>::radix);
-        static_assert(limits<T>::is_iec559 == std::numeric_limits<T>::is_iec559);
+        static_assert(Limits<T>::epsilon() == std::numeric_limits<T>::epsilon());
+        static_assert(Limits<T>::max() == std::numeric_limits<T>::max());
+        static_assert(Limits<T>::lowest() == std::numeric_limits<T>::lowest());
+        static_assert(Limits<T>::infinity() == std::numeric_limits<T>::infinity());
+        static_assert(Limits<T>::digits() == std::numeric_limits<T>::digits);
+        static_assert(Limits<T>::digits10() == std::numeric_limits<T>::digits10);
+        static_assert(Limits<T>::max_digits10() == std::numeric_limits<T>::max_digits10);
+        static_assert(Limits<T>::radix() == std::numeric_limits<T>::radix);
+        static_assert(Limits<T>::is_iec559() == std::numeric_limits<T>::is_iec559);
 };
 template class CompareWithNumericLimits<float>;
 template class CompareWithNumericLimits<double>;
 template class CompareWithNumericLimits<long double>;
 
-static_assert(limits<unsigned __int128>::max() > 0);
-static_assert(limits<unsigned __int128>::max() == (((static_cast<unsigned __int128>(1) << 127) - 1) << 1) + 1);
-static_assert(limits<unsigned __int128>::max() + 1 == 0);
-static_assert(limits<unsigned __int128>::max() == static_cast<unsigned __int128>(-1));
-static_assert(limits<unsigned __int128>::lowest() == 0);
+static_assert(Limits<unsigned __int128>::max() > 0);
+static_assert(Limits<unsigned __int128>::max() == (((static_cast<unsigned __int128>(1) << 127) - 1) << 1) + 1);
+static_assert(Limits<unsigned __int128>::max() + 1 == 0);
+static_assert(Limits<unsigned __int128>::max() == static_cast<unsigned __int128>(-1));
+static_assert(Limits<unsigned __int128>::lowest() == 0);
 
-static_assert(limits<signed __int128>::max() > 0);
-static_assert(limits<signed __int128>::lowest() < 0);
-static_assert(static_cast<unsigned __int128>(limits<signed __int128>::max()) == limits<unsigned __int128>::max() >> 1);
+static_assert(Limits<signed __int128>::max() > 0);
+static_assert(Limits<signed __int128>::lowest() < 0);
+static_assert(static_cast<unsigned __int128>(Limits<signed __int128>::max()) == Limits<unsigned __int128>::max() >> 1);
 static_assert(
         (static_cast<unsigned __int128>(1) << 127)
-        == static_cast<unsigned __int128>(limits<signed __int128>::max()) + 1);
-static_assert(limits<signed __int128>::lowest() + 1 + limits<signed __int128>::max() == 0);
+        == static_cast<unsigned __int128>(Limits<signed __int128>::max()) + 1);
+static_assert(Limits<signed __int128>::lowest() + 1 + Limits<signed __int128>::max() == 0);
 }
 }

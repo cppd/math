@@ -34,14 +34,14 @@ class Pixel final
         Color color_max_{0};
 
         T color_weight_sum_{0};
-        T color_min_contribution_{limits<T>::max()};
+        T color_min_contribution_{Limits<T>::max()};
         T color_min_weight_{0};
-        T color_max_contribution_{limits<T>::lowest()};
+        T color_max_contribution_{Limits<T>::lowest()};
         T color_max_weight_{0};
 
         T background_weight_sum_{0};
-        T background_min_weight_{limits<T>::max()};
-        T background_max_weight_{limits<T>::lowest()};
+        T background_min_weight_{Limits<T>::max()};
+        T background_max_weight_{Limits<T>::lowest()};
 
         struct Data final
         {

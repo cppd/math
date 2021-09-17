@@ -188,7 +188,7 @@ template <typename T>
 std::string type_str() requires(!std::is_same_v<std::remove_cv_t<T>, mpz_class>)
 {
         static_assert(Integral<T>);
-        return to_string(limits<T>::digits) + " bits";
+        return to_string(Limits<T>::digits()) + " bits";
 }
 
 template <typename T>

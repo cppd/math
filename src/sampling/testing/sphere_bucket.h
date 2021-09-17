@@ -118,8 +118,8 @@ template <std::size_t N, typename T>
 void check_bucket_sizes(const std::vector<SphereBucket<N, T>>& buckets)
 {
         ASSERT(!buckets.empty());
-        long long min = limits<long long>::max();
-        long long max = limits<long long>::lowest();
+        long long min = Limits<long long>::max();
+        long long max = Limits<long long>::lowest();
         for (const SphereBucket<N, T>& bucket : buckets)
         {
                 min = std::min(min, bucket.uniform_count());

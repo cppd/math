@@ -58,7 +58,7 @@ std::optional<T> max(const std::span<const std::byte>& bytes)
                 return std::nullopt;
         }
 
-        constexpr T MIN = limits<T>::lowest();
+        constexpr T MIN = Limits<T>::lowest();
 
         T max = MIN;
 

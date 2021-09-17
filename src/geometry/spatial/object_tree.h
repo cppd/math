@@ -39,8 +39,8 @@ class ObjectTree final
         static BoundingBox<N, T> bounding_box(const std::vector<Object>& objects)
         {
                 BoundingBox<N, T> bb;
-                bb.min = Vector<N, T>(limits<T>::max());
-                bb.max = Vector<N, T>(limits<T>::lowest());
+                bb.min = Vector<N, T>(Limits<T>::max());
+                bb.max = Vector<N, T>(Limits<T>::lowest());
                 for (const Object& object : objects)
                 {
                         for (const Vector<N, T>& v : object.vertices())
@@ -96,7 +96,7 @@ class ObjectTree final
                 const std::vector<int>& indices,
                 const Ray<N, T>& ray)
         {
-                T min = limits<T>::max();
+                T min = Limits<T>::max();
                 const Object* object = nullptr;
 
                 for (int index : indices)

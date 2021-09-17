@@ -82,10 +82,10 @@ public:
                 contributions.clear();
                 weights.clear();
 
-                T min = limits<T>::max();
-                T max = limits<T>::lowest();
-                std::size_t min_i = limits<std::size_t>::max();
-                std::size_t max_i = limits<std::size_t>::max();
+                T min = Limits<T>::max();
+                T max = Limits<T>::lowest();
+                std::size_t min_i = Limits<std::size_t>::max();
+                std::size_t max_i = Limits<std::size_t>::max();
 
                 for (std::size_t i = 0; i < points.size(); ++i)
                 {
@@ -172,10 +172,10 @@ public:
 
                 weights.clear();
 
-                T min = limits<T>::max();
-                T max = limits<T>::lowest();
-                std::size_t min_i = limits<std::size_t>::max();
-                std::size_t max_i = limits<std::size_t>::max();
+                T min = Limits<T>::max();
+                T max = Limits<T>::lowest();
+                std::size_t min_i = Limits<std::size_t>::max();
+                std::size_t max_i = Limits<std::size_t>::max();
 
                 for (std::size_t i = 0; i < points.size(); ++i)
                 {

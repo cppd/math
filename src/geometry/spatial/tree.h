@@ -405,7 +405,7 @@ public:
                 const BoundingBox<N, T> root(bounding_box.min - guard_region, bounding_box.max + guard_region);
 
                 ray_offset_ = std::max(root.max.norm_infinity(), root.min.norm_infinity())
-                              * (RAY_OFFSET_IN_EPSILONS * limits<T>::epsilon() * std::sqrt(T(N)));
+                              * (RAY_OFFSET_IN_EPSILONS * Limits<T>::epsilon() * std::sqrt(T(N)));
 
                 const int max_box_count = std::lround(impl::maximum_box_count(BOX_COUNT_SUBDIVISION, max_depth));
 

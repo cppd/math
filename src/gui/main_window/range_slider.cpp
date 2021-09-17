@@ -36,8 +36,8 @@ static_assert(MIN >= 0 && MIN < MAX);
 RangeSlider::RangeSlider(QSlider* slider_min, QSlider* slider_max)
         : slider_min_(slider_min),
           slider_max_(slider_max),
-          last_min_(limits<decltype(last_min_)>::lowest()),
-          last_max_(limits<decltype(last_max_)>::lowest())
+          last_min_(Limits<decltype(last_min_)>::lowest()),
+          last_max_(Limits<decltype(last_max_)>::lowest())
 {
         ASSERT(slider_min_);
         ASSERT(slider_max_);

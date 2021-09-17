@@ -290,7 +290,7 @@ std::filesystem::path save_to_stl_file(
         if (ascii_format)
         {
                 file << std::scientific;
-                file << std::setprecision(limits<float>::max_digits10);
+                file << std::setprecision(Limits<float>::max_digits10());
                 file << std::showpoint;
                 file << std::showpos;
         }

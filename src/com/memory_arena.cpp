@@ -157,7 +157,7 @@ void test_int()
         LOG("Test arena int, object count " + to_string(object_count) + ", block count "
             + to_string(compute_block_count<int>(object_count)));
 
-        const std::uniform_int_distribution<int> uid(limits<int>::lowest(), limits<int>::max());
+        const std::uniform_int_distribution<int> uid(Limits<int>::lowest(), Limits<int>::max());
 
         for (int i = 0; i < 2; ++i)
         {

@@ -85,7 +85,7 @@ Vector<N, double> voronoi_positive_norm(
         }
         else
         {
-                double max_distance = limits<double>::lowest();
+                double max_distance = Limits<double>::lowest();
                 Vector<N, double> max_vector(0);
                 for (int object_index : vertex_connections.objects)
                 {
@@ -118,7 +118,7 @@ double voronoi_height(
         const Vector<N, double>& positive_pole_norm,
         const std::vector<int>& vertex_objects)
 {
-        double max_distance = limits<double>::lowest();
+        double max_distance = Limits<double>::lowest();
         // Vector<N, double> negative_pole(0);
         bool found = false;
 
@@ -169,7 +169,7 @@ double voronoi_edge_radius(
 {
         if (facet.one_sided() && cocone_inside_or_equal(cos_n_b))
         {
-                return limits<double>::max();
+                return Limits<double>::max();
         }
 
         if (!facet.one_sided() && cocone_inside_or_equal(cos_n_a, cos_n_b))
@@ -270,7 +270,7 @@ void cocone_facets_and_voronoi_radius(
                 // The intersection is found for this facet vertex.
                 (*facet_data)[vertex_facet.facet_index].cocone_vertex[vertex_facet.facet_vertex_index] = true;
 
-                if (find_radius && *radius != limits<double>::max())
+                if (find_radius && *radius != Limits<double>::max())
                 {
                         double edge_radius = voronoi_edge_radius(
                                 delaunay_objects, facet, positive_pole, pa, pa_length, pb_length, cos_n_a, cos_n_b);
@@ -279,7 +279,7 @@ void cocone_facets_and_voronoi_radius(
                 }
         }
 
-        ASSERT(!find_radius || (*radius > 0 && *radius <= limits<double>::max()));
+        ASSERT(!find_radius || (*radius > 0 && *radius <= Limits<double>::max()));
 }
 
 // 5.1.2 Flat Sample Points.

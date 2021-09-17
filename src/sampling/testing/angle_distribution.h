@@ -227,7 +227,7 @@ public:
                         error("There is no distribution");
                 }
 
-                T max = limits<T>::lowest();
+                T max = Limits<T>::lowest();
                 for (const Distribution& d : distribution_)
                 {
                         max = std::max(max, d.distribution);

@@ -31,16 +31,16 @@ template <typename T>
 concept StdFloatingPoint = (std::is_same_v<std::remove_cv_t<T>, float>) || (std::is_same_v<std::remove_cv_t<T>, double>)
                            || (std::is_same_v<std::remove_cv_t<T>, long double>);
 template <typename T>
-concept BitFloatingPoint = (StdFloatingPoint<T> && limits<T>::is_iec559)
+concept BitFloatingPoint = (StdFloatingPoint<T> && Limits<T>::is_iec559())
                            || (std::is_same_v<std::remove_cv_t<T>, __float128>);
 
 template <BitFloatingPoint T>
 constexpr unsigned floating_point_bit_count()
 {
-        constexpr unsigned MAX_EXPONENT = limits<T>::max_exponent;
+        constexpr unsigned MAX_EXPONENT = Limits<T>::max_exponent();
         static_assert(1 == std::popcount(MAX_EXPONENT));
 
-        constexpr unsigned SIZE = limits<T>::digits + 1 + std::countr_zero(MAX_EXPONENT);
+        constexpr unsigned SIZE = Limits<T>::digits() + 1 + std::countr_zero(MAX_EXPONENT);
         if constexpr (!std::is_same_v<std::remove_cv_t<T>, long double>)
         {
                 return SIZE;

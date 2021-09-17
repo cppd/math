@@ -36,16 +36,16 @@ namespace print_implementation
 template <unsigned DIGIT_GROUP_SIZE, typename T>
 void f(T v, int i, std::string& r, [[maybe_unused]] char s)
 {
-        constexpr bool LONGLONG_LESS_I128 = limits<long long>::max() < limits<__int128>::max()
-                                            && limits<long long>::lowest() > limits<__int128>::lowest();
+        constexpr bool LONGLONG_LESS_I128 = Limits<long long>::max() < Limits<__int128>::max()
+                                            && Limits<long long>::lowest() > Limits<__int128>::lowest();
 
-        constexpr bool ULONGLONG_LESS_UI128 = limits<unsigned long long>::max() < limits<unsigned __int128>::max();
+        constexpr bool ULONGLONG_LESS_UI128 = Limits<unsigned long long>::max() < Limits<unsigned __int128>::max();
 
         do
         {
                 if constexpr (std::is_same_v<__int128, std::remove_cv_t<T>> && LONGLONG_LESS_I128)
                 {
-                        if (limits<long long>::lowest() <= v && v <= limits<long long>::max())
+                        if (Limits<long long>::lowest() <= v && v <= Limits<long long>::max())
                         {
                                 f<DIGIT_GROUP_SIZE, long long>(v, i, r, s);
                                 break;
@@ -53,7 +53,7 @@ void f(T v, int i, std::string& r, [[maybe_unused]] char s)
                 }
                 if constexpr (std::is_same_v<unsigned __int128, std::remove_cv_t<T>> && ULONGLONG_LESS_UI128)
                 {
-                        if (v <= limits<unsigned long long>::max())
+                        if (v <= Limits<unsigned long long>::max())
                         {
                                 f<DIGIT_GROUP_SIZE, unsigned long long>(v, i, r, s);
                                 break;
@@ -85,7 +85,7 @@ std::string to_string_digit_groups(const T& v, const char s) requires Integral<T
         static_assert(Signed<T> != Unsigned<T>);
 
         std::string r;
-        r.reserve(limits<T>::digits10 * 1.5);
+        r.reserve(Limits<T>::digits10() * 1.5);
 
         f<DIGIT_GROUP_SIZE, T>(v, -1, r, s);
 
@@ -106,7 +106,7 @@ template <typename T>
 std::string to_string(std::complex<T> t) requires std::is_floating_point_v<T>
 {
         std::ostringstream o;
-        o << std::setprecision(limits<T>::max_digits10);
+        o << std::setprecision(Limits<T>::max_digits10());
 
         if (t.real() >= 0)
         {
@@ -135,7 +135,7 @@ template <typename T>
 std::string to_string(T t) requires std::is_floating_point_v<T>
 {
         std::ostringstream o;
-        o << std::setprecision(limits<T>::max_digits10);
+        o << std::setprecision(Limits<T>::max_digits10());
         o << t;
         return o.str();
 }

@@ -37,8 +37,8 @@ namespace bounding_box_implementation
 template <std::size_t N, typename T>
 void init_min_max(Vector<N, T>* min, Vector<N, T>* max)
 {
-        *min = Vector<N, T>(limits<T>::max());
-        *max = Vector<N, T>(limits<T>::lowest());
+        *min = Vector<N, T>(Limits<T>::max());
+        *max = Vector<N, T>(Limits<T>::lowest());
 }
 
 template <std::size_t N, typename T>

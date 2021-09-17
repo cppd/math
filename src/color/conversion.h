@@ -33,7 +33,7 @@ constexpr float uint_to_float(UInt c)
 {
         static_assert(std::is_same_v<UInt, std::uint8_t> || std::is_same_v<UInt, std::uint16_t>);
 
-        constexpr float MAX = limits<UInt>::max();
+        constexpr float MAX = Limits<UInt>::max();
         return c / MAX;
 }
 
@@ -43,7 +43,7 @@ constexpr UInt float_to_uint(T c)
         static_assert(std::is_same_v<UInt, std::uint8_t> || std::is_same_v<UInt, std::uint16_t>);
         static_assert(std::is_same_v<T, float>);
 
-        constexpr float MAX = limits<UInt>::max();
+        constexpr float MAX = Limits<UInt>::max();
         return c * MAX + 0.5f;
 }
 
@@ -61,7 +61,7 @@ constexpr UInt float_clamp_to_uint(T c)
                 }
                 return 0;
         }
-        return limits<UInt>::max();
+        return Limits<UInt>::max();
 }
 
 // clang-format off

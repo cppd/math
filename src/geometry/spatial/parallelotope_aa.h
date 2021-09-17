@@ -217,8 +217,8 @@ Constraints<N, T, 2 * N, 0> ParallelotopeAA<N, T>::constraints() const
 template <std::size_t N, typename T>
 bool ParallelotopeAA<N, T>::intersect_impl(const Ray<N, T>& r, T* first, T* second) const
 {
-        T f_max = limits<T>::lowest();
-        T b_min = limits<T>::max();
+        T f_max = Limits<T>::lowest();
+        T b_min = Limits<T>::max();
 
         for (unsigned i = 0; i < N; ++i)
         {
@@ -308,7 +308,7 @@ Vector<N, T> ParallelotopeAA<N, T>::normal(const Vector<N, T>& p) const
 {
         // the normal of the plane closest to the point
 
-        T min = limits<T>::max();
+        T min = Limits<T>::max();
 
         Vector<N, T> n;
         for (unsigned i = 0; i < N; ++i)
@@ -330,7 +330,7 @@ Vector<N, T> ParallelotopeAA<N, T>::normal(const Vector<N, T>& p) const
                 }
         }
 
-        ASSERT(min < limits<T>::max());
+        ASSERT(min < Limits<T>::max());
 
         return n;
 }

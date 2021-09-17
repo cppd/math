@@ -27,7 +27,7 @@ namespace ns::color
 std::string lookup_table_float()
 {
         std::ostringstream oss;
-        oss << std::setprecision(limits<float>::max_digits10);
+        oss << std::setprecision(Limits<float>::max_digits10());
         oss << std::scientific;
         oss << "// clang-format off\n";
         oss << "inline constexpr std::array<float, 256> SRGB_UINT8_TO_RGB_FLOAT =\n";
@@ -52,7 +52,7 @@ std::string lookup_table_uint16()
         oss << "// clang-format off\n";
         oss << "inline constexpr std::array<std::uint16_t, 256> SRGB_UINT8_TO_RGB_UINT16 =\n";
         oss << "{";
-        constexpr long double MAX_UINT16 = limits<std::uint16_t>::max();
+        constexpr long double MAX_UINT16 = Limits<std::uint16_t>::max();
         for (unsigned i = 0; i <= 255; ++i)
         {
                 oss << ((i != 0) ? "," : "");

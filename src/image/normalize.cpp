@@ -45,7 +45,7 @@ void normalize(std::vector<std::byte>* bytes)
         std::byte* ptr;
         const std::byte* const end = bytes->data() + bytes->size();
 
-        float max = limits<float>::lowest();
+        float max = Limits<float>::lowest();
 
         ptr = bytes->data();
         while (ptr != end)

@@ -233,7 +233,7 @@ public:
 
         [[nodiscard]] bool is_unit() const
         {
-                static constexpr T D = 100 * limits<T>::epsilon();
+                static constexpr T D = 100 * Limits<T>::epsilon();
                 static constexpr T MIN = square(1 - D);
                 static constexpr T MAX = square(1 + D);
                 const T s = norm_squared();
@@ -264,7 +264,7 @@ public:
         [[nodiscard]] std::string to_string() const
         {
                 std::ostringstream oss;
-                oss.precision(limits<T>::max_digits10);
+                oss.precision(Limits<T>::max_digits10());
                 oss << '(';
                 oss << data_[0];
                 for (std::size_t i = 1; i < N; ++i)

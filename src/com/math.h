@@ -59,7 +59,7 @@ constexpr bool is_finite(const T& v)
         static_assert(std::is_floating_point_v<T>);
         if (std::is_constant_evaluated())
         {
-                return v >= limits<T>::lowest() && v <= limits<T>::max();
+                return v >= Limits<T>::lowest() && v <= Limits<T>::max();
         }
         return std::isfinite(v);
 }

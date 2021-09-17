@@ -135,7 +135,7 @@ const Surface<N, T, Color>* ray_intersect(
 
         std::make_heap(intersections.begin(), intersections.end());
 
-        T min_distance_squared = limits<T>::max();
+        T min_distance_squared = Limits<T>::max();
         const Surface<N, T, Color>* closest_surface = nullptr;
 
         do
@@ -295,7 +295,7 @@ public:
                 const geometry::BoundingBox<N, T> bounding_box = compute_bounding_box(shape_pointers_);
 
                 const T scene_size = (bounding_box.max - bounding_box.min).norm();
-                ray_offset_ = scene_size * (RAY_OFFSET_IN_EPSILONS * limits<T>::epsilon());
+                ray_offset_ = scene_size * (RAY_OFFSET_IN_EPSILONS * Limits<T>::epsilon());
 
                 ProgressRatio progress(nullptr);
                 create_tree(shape_pointers_, bounding_box, &tree_, &progress);

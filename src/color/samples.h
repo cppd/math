@@ -54,7 +54,7 @@ protected:
         [[nodiscard]] std::string to_string(const std::string_view& name) const
         {
                 std::ostringstream oss;
-                oss.precision(limits<T>::max_digits10);
+                oss.precision(Limits<T>::max_digits10());
                 oss << name;
                 oss << '(';
                 oss << data_[0];

@@ -26,7 +26,7 @@ namespace
 template <typename T>
 struct Check final
 {
-        static constexpr T MAX = limits<T>::max() / 2;
+        static constexpr T MAX = Limits<T>::max() / 2;
         static_assert(interpolation<T>(1, MAX, 0) == 1);
         static_assert(interpolation<T>(1, MAX, 1) == MAX);
         static_assert(interpolation<T>(MAX, 1, 0) == MAX);

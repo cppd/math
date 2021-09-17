@@ -35,7 +35,7 @@ namespace ns::geometry::shapes::test
 namespace
 {
 template <typename T>
-constexpr T ABS_ERROR = 10 * limits<T>::epsilon();
+constexpr T ABS_ERROR = 10 * Limits<T>::epsilon();
 
 template <std::size_t N, typename T>
 void test_simplex(const std::array<Vector<N, T>, N + 1>& vertices)

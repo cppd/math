@@ -87,13 +87,13 @@ template <typename T>
 concept FloatingPointType = std::is_floating_point_v<T> || std::is_same_v<T, __float128>;
 
 template <typename T>
-struct limits;
+struct Limits;
 
 // clang-format off
 
 template <typename T>
 requires IntegralType<T> && std::numeric_limits<T>::is_specialized
-struct limits<T>
+struct Limits<T>
 {
         static constexpr T max() noexcept
         {
@@ -103,14 +103,23 @@ struct limits<T>
         {
                 return std::numeric_limits<T>::lowest();
         }
-        static constexpr int digits = std::numeric_limits<T>::digits;
-        static constexpr int digits10 = std::numeric_limits<T>::digits10;
-        static constexpr int radix = std::numeric_limits<T>::radix;
+        static constexpr int digits() noexcept
+        {
+                return std::numeric_limits<T>::digits;
+        }
+        static constexpr int digits10() noexcept
+        {
+                return std::numeric_limits<T>::digits10;
+        }
+        static constexpr int radix() noexcept
+        {
+                return std::numeric_limits<T>::radix;
+        }
 };
 
 template <typename T>
 requires FloatingPointType<T> && std::numeric_limits<T>::is_specialized
-struct limits<T>
+struct Limits<T>
 {
         static constexpr T epsilon() noexcept
         {
@@ -129,17 +138,35 @@ struct limits<T>
                 static_assert(std::numeric_limits<T>::has_infinity);
                 return std::numeric_limits<T>::infinity();
         }
-        static constexpr int digits = std::numeric_limits<T>::digits;
-        static constexpr int digits10 = std::numeric_limits<T>::digits10;
-        static constexpr int max_digits10 = std::numeric_limits<T>::max_digits10;
-        static constexpr int max_exponent = std::numeric_limits<T>::max_exponent;
-        static constexpr int radix = std::numeric_limits<T>::radix;
-        static constexpr bool is_iec559 = std::numeric_limits<T>::is_iec559;
+        static constexpr int digits() noexcept
+        {
+                return std::numeric_limits<T>::digits;
+        }
+        static constexpr int digits10() noexcept
+        {
+                return std::numeric_limits<T>::digits10;
+        }
+        static constexpr int max_digits10() noexcept
+        {
+                return std::numeric_limits<T>::max_digits10;
+        }
+        static constexpr int max_exponent() noexcept
+        {
+                return std::numeric_limits<T>::max_exponent;
+        }
+        static constexpr int radix() noexcept
+        {
+                return std::numeric_limits<T>::radix;
+        }
+        static constexpr bool is_iec559() noexcept
+        {
+                return std::numeric_limits<T>::is_iec559;
+        }
 };
 
 template <typename T>
 requires std::is_same_v<T, unsigned __int128> && (!std::numeric_limits<T>::is_specialized)
-struct limits<T>
+struct Limits<T>
 {
         static constexpr T max() noexcept
         {
@@ -149,14 +176,23 @@ struct limits<T>
         {
                 return 0;
         }
-        static constexpr int digits = 128;
-        static constexpr int digits10 = 38;
-        static constexpr int radix = 2;
+        static constexpr int digits() noexcept
+        {
+                return 128;
+        }
+        static constexpr int digits10() noexcept
+        {
+                return 38;
+        }
+        static constexpr int radix() noexcept
+        {
+                return 2;
+        }
 };
 
 template <typename T>
 requires std::is_same_v<T, signed __int128> && (!std::numeric_limits<T>::is_specialized)
-struct limits<T>
+struct Limits<T>
 {
         static constexpr T max() noexcept
         {
@@ -166,14 +202,23 @@ struct limits<T>
         {
                 return -max() - 1;
         }
-        static constexpr int digits = 127;
-        static constexpr int digits10 = 38;
-        static constexpr int radix = 2;
+        static constexpr int digits() noexcept
+        {
+                return 127;
+        }
+        static constexpr int digits10() noexcept
+        {
+                return 38;
+        }
+        static constexpr int radix() noexcept
+        {
+                return 2;
+        }
 };
 
 template <typename T>
 requires std::is_same_v<T, __float128> && (!std::numeric_limits<T>::is_specialized)
-struct limits<T>
+struct Limits<T>
 {
         // epsilon = strtoflt128("1.92592994438723585305597794258492732e-34", nullptr)
         // max = strtoflt128("1.18973149535723176508575932662800702e4932", nullptr)
@@ -190,12 +235,30 @@ struct limits<T>
         {
                 return -max();
         }
-        static constexpr int digits = 113;
-        static constexpr int digits10 = 33;
-        static constexpr int max_digits10 = 36;
-        static constexpr int max_exponent = 16384;
-        static constexpr int radix = 2;
-        static constexpr bool is_iec559 = true;
+        static constexpr int digits() noexcept
+        {
+                return 113;
+        }
+        static constexpr int digits10() noexcept
+        {
+                return 33;
+        }
+        static constexpr int max_digits10() noexcept
+        {
+                return 36;
+        }
+        static constexpr int max_exponent() noexcept
+        {
+                return 16384;
+        }
+        static constexpr int radix() noexcept
+        {
+                return 2;
+        }
+        static constexpr bool is_iec559() noexcept
+        {
+                return true;
+        }
 };
 
 // clang-format on
@@ -204,19 +267,19 @@ struct limits<T>
 //
 
 template <typename T>
-struct limits final : type_limit_implementation::limits<T>
+struct Limits final : type_limit_implementation::Limits<T>
 {
 };
 template <typename T>
-struct limits<const T> final : type_limit_implementation::limits<T>
+struct Limits<const T> final : type_limit_implementation::Limits<T>
 {
 };
 template <typename T>
-struct limits<volatile T> final : type_limit_implementation::limits<T>
+struct Limits<volatile T> final : type_limit_implementation::Limits<T>
 {
 };
 template <typename T>
-struct limits<const volatile T> final : type_limit_implementation::limits<T>
+struct Limits<const volatile T> final : type_limit_implementation::Limits<T>
 {
 };
 }

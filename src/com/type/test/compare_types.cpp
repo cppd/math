@@ -109,15 +109,15 @@ void compare_types()
                 LOG("long double " + to_string(computation(&v)));
         }
         {
-                std::vector<int> v(N, std::sqrt(limits<int>::max()) / 10);
+                std::vector<int> v(N, std::sqrt(Limits<int>::max()) / 10);
                 LOG("int " + to_string(computation(&v)));
         }
         {
-                std::vector<long> v(N, std::sqrt(limits<long>::max()) / 10);
+                std::vector<long> v(N, std::sqrt(Limits<long>::max()) / 10);
                 LOG("long " + to_string(computation(&v)));
         }
         {
-                std::vector<long long> v(N, std::sqrt(limits<long long>::max()) / 10);
+                std::vector<long long> v(N, std::sqrt(Limits<long long>::max()) / 10);
                 LOG("long long " + to_string(computation(&v)));
         }
         {

@@ -34,7 +34,7 @@ std::optional<T> hyperplane_intersect(
         T s = dot(plane_normal, ray.dir());
         T t = dot(plane_point - ray.org(), plane_normal) / s;
 
-        if (t > T(0) && t <= limits<T>::max())
+        if (t > T(0) && t <= Limits<T>::max())
         {
                 return t;
         }

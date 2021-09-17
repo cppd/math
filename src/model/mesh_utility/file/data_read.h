@@ -36,7 +36,7 @@ Integer digits_to_integer(const T& data, long long begin, long long end)
 
         long long length = end - begin;
 
-        if (length > limits<Integer>::digits10 || length < 1)
+        if (length > Limits<Integer>::digits10() || length < 1)
         {
                 error("Error convert " + std::string(&data[begin], length) + " to integral");
         }

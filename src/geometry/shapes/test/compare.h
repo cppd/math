@@ -31,10 +31,10 @@ constexpr bool compare(int epsilon_count, T v1, T v2)
 {
         static_assert(std::is_floating_point_v<T>);
         return is_finite(v1) && is_finite(v2) && (v1 > 0) && (v2 > 0)
-               && v2 > (v1 - v1 * (epsilon_count * limits<T>::epsilon()))
-               && v2 < (v1 + v1 * (epsilon_count * limits<T>::epsilon()))
-               && v1 > (v2 - v2 * (epsilon_count * limits<T>::epsilon()))
-               && v1 < (v2 + v2 * (epsilon_count * limits<T>::epsilon()));
+               && v2 > (v1 - v1 * (epsilon_count * Limits<T>::epsilon()))
+               && v2 < (v1 + v1 * (epsilon_count * Limits<T>::epsilon()))
+               && v1 > (v2 - v2 * (epsilon_count * Limits<T>::epsilon()))
+               && v1 < (v2 + v2 * (epsilon_count * Limits<T>::epsilon()));
 }
 
 static_assert(compare(1, 1.1, 1.1));

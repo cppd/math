@@ -45,7 +45,7 @@ struct Check final
         static_assert(RGB<T>(RGB8(0, 0, 0)).rgb32() == Vector<3, float>(0, 0, 0));
         static_assert(RGB<T>(RGB8(100, 150, 50)).rgb32() == RGB8(100, 150, 50).linear_rgb());
         static_assert(RGB<T>(RGB8(250, 10, 100)).rgb32() == RGB8(250, 10, 100).linear_rgb());
-        static_assert(absolute(RGB<T>(RGB8(255, 255, 255)).luminance() - 1) < 1000 * limits<T>::epsilon());
+        static_assert(absolute(RGB<T>(RGB8(255, 255, 255)).luminance() - 1) < 1000 * Limits<T>::epsilon());
         static_assert(RGB<T>(0.1, 0.9, 0.2).luminance() == linear_float_to_linear_luminance(T(0.1), T(0.9), T(0.2)));
         static_assert(RGB<T>(0.9, 0.3, 0.8).luminance() == linear_float_to_linear_luminance(T(0.9), T(0.3), T(0.8)));
 

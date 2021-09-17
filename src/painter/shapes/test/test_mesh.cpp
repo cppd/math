@@ -117,7 +117,7 @@ void test_spherical_mesh(const Shape<N, T, Color>& mesh, const int ray_count, Pr
 {
         const geometry::BoundingBox<N, T> bb = mesh.bounding_box();
 
-        const T ray_offset = std::max(bb.min.norm_infinity(), bb.max.norm_infinity()) * (100 * limits<T>::epsilon());
+        const T ray_offset = std::max(bb.min.norm_infinity(), bb.max.norm_infinity()) * (100 * Limits<T>::epsilon());
         LOG("ray offset = " + to_string(ray_offset));
 
         const std::vector<Ray<N, T>> rays = create_rays_for_spherical_mesh(bb, ray_count);

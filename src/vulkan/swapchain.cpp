@@ -241,7 +241,7 @@ std::string swapchain_info_string(const VkSurfaceFormatKHR& surface_format, int 
 
 std::optional<uint32_t> acquire_next_image(VkDevice device, VkSwapchainKHR swapchain, VkSemaphore semaphore)
 {
-        static constexpr uint64_t TIMEOUT = limits<uint64_t>::max();
+        static constexpr uint64_t TIMEOUT = Limits<uint64_t>::max();
 
         uint32_t image_index;
 

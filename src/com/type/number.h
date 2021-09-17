@@ -27,7 +27,7 @@ template <typename T>
 inline constexpr T PREVIOUS_BEFORE_ONE = []
 {
         static_assert(std::is_floating_point_v<T>);
-        static_assert(limits<T>::radix == 2);
+        static_assert(Limits<T>::radix() == 2);
 
         T prev_e = 1;
         T e = 1;

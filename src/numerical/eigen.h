@@ -63,7 +63,7 @@ void rotate(unsigned k, unsigned l, Matrix<N, N, T>* m, std::array<Vector<N, T>,
                 const T diff = a(l, l) - a(k, k);
                 T phi = diff / (2 * a(k, l));
                 T phi_s = phi * phi + 1;
-                if (phi_s <= limits<T>::max())
+                if (phi_s <= Limits<T>::max())
                 {
                         t = 1 / (std::abs(phi) + std::sqrt(phi_s));
                         t = std::copysign(t, phi);

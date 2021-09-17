@@ -43,9 +43,9 @@ class GlobalIndex
                 static_assert(std::tuple_size_v<T> == N);
                 static_assert(Integral<typename T::value_type>);
                 static_assert(
-                        limits<IndexType>::digits >= limits<typename T::value_type>::digits
-                        || (limits<IndexType>::digits >= limits<std::ptrdiff_t>::digits
-                            && limits<typename T::value_type>::digits >= limits<std::ptrdiff_t>::digits));
+                        Limits<IndexType>::digits() >= Limits<typename T::value_type>::digits()
+                        || (Limits<IndexType>::digits() >= Limits<std::ptrdiff_t>::digits()
+                            && Limits<typename T::value_type>::digits() >= Limits<std::ptrdiff_t>::digits()));
         }
 
         template <typename T, unsigned... I>

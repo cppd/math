@@ -33,7 +33,7 @@ inline constexpr int BINOMIAL = []
 {
         static_assert(N >= R && R >= 0);
 
-        constexpr unsigned __int128 MAX = limits<int>::max();
+        constexpr unsigned __int128 MAX = Limits<int>::max();
 
         constexpr unsigned __int128 K = (R <= N / 2) ? (N - R) : R;
         unsigned __int128 m = 1;

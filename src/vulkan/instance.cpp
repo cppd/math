@@ -34,7 +34,7 @@ namespace ns::vulkan
 {
 namespace
 {
-constexpr uint32_t NO_FAMILY_INDEX = limits<uint32_t>::max();
+constexpr uint32_t NO_FAMILY_INDEX = Limits<uint32_t>::max();
 
 std::unordered_map<uint32_t, uint32_t> compute_queue_count(
         const std::vector<std::tuple<uint32_t, uint32_t>>& family_index_and_count,

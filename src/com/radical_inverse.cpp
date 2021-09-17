@@ -60,7 +60,7 @@ static_assert(compare<16>(0x123456789F, 0xF987654321, 0x1'00'0000'0000));
 template <unsigned BASE, typename Result, typename T>
 constexpr bool check_max()
 {
-        return 1 > radical_inverse<BASE, Result>(limits<T>::max());
+        return 1 > radical_inverse<BASE, Result>(Limits<T>::max());
 }
 
 template <unsigned BASE, typename T>

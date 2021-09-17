@@ -86,7 +86,7 @@ void print_simplex_algorithm_data(
 
                 const int int_w = (N + M - 1) < 10 ? 1 : std::floor(std::log10(N + M - 1)) + 1;
 
-                const int precision = limits<T>::max_digits10;
+                const int precision = Limits<T>::max_digits10();
 
                 oss << std::setprecision(precision);
 
@@ -271,7 +271,7 @@ bool find_positive_index(const Vector<N, T>& c, unsigned* e)
         {
                 max_abs_c = std::max(max_abs_c, std::abs(c[i]));
         }
-        T eps_c = max_abs_c * (2 * limits<T>::epsilon());
+        T eps_c = max_abs_c * (2 * Limits<T>::epsilon());
 
         for (unsigned i = 0; i < N; ++i)
         {
@@ -342,9 +342,9 @@ std::optional<ConstraintSolution> simplex_iterations(
                         return ConstraintSolution::CYCLING;
                 }
 
-                T max_delta = limits<T>::lowest();
-                unsigned l = limits<unsigned>::max();
-                static_assert(M > 0 && M - 1 < limits<unsigned>::max());
+                T max_delta = Limits<T>::lowest();
+                unsigned l = Limits<unsigned>::max();
+                static_assert(M > 0 && M - 1 < Limits<unsigned>::max());
                 for (unsigned i = 0; i < M; ++i)
                 {
                         b[i] = std::max(static_cast<T>(0), b[i]);
@@ -353,7 +353,7 @@ std::optional<ConstraintSolution> simplex_iterations(
                         {
                                 T delta = b[i] / a[i][e];
 
-                                if (delta > max_delta || l == limits<unsigned>::max())
+                                if (delta > max_delta || l == Limits<unsigned>::max())
                                 {
                                         max_delta = delta;
                                         l = i;
@@ -361,7 +361,7 @@ std::optional<ConstraintSolution> simplex_iterations(
                         }
                 }
 
-                if (l == limits<unsigned>::max())
+                if (l == Limits<unsigned>::max())
                 {
                         return ConstraintSolution::UNBOUND;
                 }

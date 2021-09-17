@@ -138,7 +138,7 @@ class Impl final
         Camera camera_;
         Mouse mouse_;
 
-        Region<2, int> draw_rectangle_{limits<int>::lowest(), limits<int>::lowest(), 0, 0};
+        Region<2, int> draw_rectangle_{Limits<int>::lowest(), Limits<int>::lowest(), 0, 0};
 
         std::optional<Matrix4d> clip_plane_view_matrix_;
 

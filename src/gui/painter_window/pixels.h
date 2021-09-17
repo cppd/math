@@ -86,9 +86,9 @@ class PainterPixels final : public Pixels, public painter::Notifier<N - 1>
 
         static constexpr image::ColorFormat COLOR_FORMAT = image::ColorFormat::R8G8B8A8_SRGB;
         static constexpr std::size_t PIXEL_SIZE = image::format_pixel_size_in_bytes(COLOR_FORMAT);
-        static constexpr uint8_t ALPHA = limits<uint8_t>::max();
+        static constexpr uint8_t ALPHA = Limits<uint8_t>::max();
 
-        static constexpr float MIN = limits<float>::lowest();
+        static constexpr float MIN = Limits<float>::lowest();
 
         const std::thread::id thread_id_ = std::this_thread::get_id();
 

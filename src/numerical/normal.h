@@ -70,7 +70,7 @@ Vector<N, T> point_normal(const std::vector<Vector<N, T>>& points)
                 }
         }
 
-        T max = limits<T>::lowest();
+        T max = Limits<T>::lowest();
         for (std::size_t i = 0; i < N - 1; ++i)
         {
                 for (std::size_t j = i + 1; j < N; ++j)
@@ -79,7 +79,7 @@ Vector<N, T> point_normal(const std::vector<Vector<N, T>>& points)
                 }
         }
 
-        const T tolerance = max * (100 * limits<T>::epsilon());
+        const T tolerance = max * (100 * Limits<T>::epsilon());
         Vector<N, T> eigenvalues;
         std::array<Vector<N, T>, N> eigenvectors;
         eigen_symmetric_upper_triangular(covariance_matrix, tolerance, &eigenvalues, &eigenvectors);

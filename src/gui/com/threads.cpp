@@ -251,7 +251,7 @@ class Impl final : public WorkerThreads
 
         void set_progress(unsigned id, const ProgressRatioList* progress_list, std::list<QProgressBar>* progress_bars)
         {
-                constexpr unsigned MAX_INT{limits<int>::max()};
+                constexpr unsigned MAX_INT{Limits<int>::max()};
 
                 std::vector<std::tuple<unsigned, unsigned, std::string>> ratios = progress_list->ratios();
 

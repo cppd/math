@@ -120,7 +120,7 @@ public:
 class Queue final
 {
         VkQueue queue_ = VK_NULL_HANDLE;
-        uint32_t family_index_ = limits<uint32_t>::max();
+        uint32_t family_index_ = Limits<uint32_t>::max();
 
 public:
         Queue() = default;
@@ -380,7 +380,7 @@ public:
 
 class CommandPool final
 {
-        static constexpr uint32_t NULL_FAMILY_INDEX = limits<uint32_t>::max();
+        static constexpr uint32_t NULL_FAMILY_INDEX = Limits<uint32_t>::max();
 
         VkDevice device_ = VK_NULL_HANDLE;
         VkCommandPool command_pool_ = VK_NULL_HANDLE;

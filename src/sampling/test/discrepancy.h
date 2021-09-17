@@ -163,12 +163,12 @@ T compute_discrepancy(
         }
 
         const T box_min = min;
-        const T box_max = std::nextafter(max, limits<T>::max());
+        const T box_max = std::nextafter(max, Limits<T>::max());
         const T volume = std::pow(box_max - box_min, T(N));
 
         PointSearch<N, T> point_search(points);
 
-        T max_discrepancy = limits<T>::lowest();
+        T max_discrepancy = Limits<T>::lowest();
         for (int i = 0; i < box_count; ++i)
         {
                 const std::array<std::array<T, 2>, N> box = make_random_box<N, T>(box_min, box_max, random_engine);

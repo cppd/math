@@ -393,7 +393,7 @@ void conv_r32g32b32_to_r8g8b8a8_srgb(const std::vector<float>& floats, const std
                 std::memcpy(to, &blue, sizeof(To));
                 to += sizeof(To);
 
-                To alpha = limits<To>::max();
+                To alpha = Limits<To>::max();
                 std::memcpy(to, &alpha, sizeof(To));
                 to += sizeof(To);
         }
@@ -478,7 +478,7 @@ void conv_r32g32b32_to_r16g16b16a16(const std::vector<float>& floats, const std:
                 std::memcpy(to, &blue, sizeof(To));
                 to += sizeof(To);
 
-                To alpha = limits<To>::max();
+                To alpha = Limits<To>::max();
                 std::memcpy(to, &alpha, sizeof(To));
                 to += sizeof(To);
         }
@@ -509,7 +509,7 @@ void conv_r32g32b32_to_r16g16b16a16_srgb(const std::vector<float>& floats, const
                 std::memcpy(to, &blue, sizeof(To));
                 to += sizeof(To);
 
-                To alpha = limits<To>::max();
+                To alpha = Limits<To>::max();
                 std::memcpy(to, &alpha, sizeof(To));
                 to += sizeof(To);
         }

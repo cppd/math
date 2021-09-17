@@ -38,10 +38,10 @@ namespace
 constexpr int VECTOR_COUNT = 100'000;
 
 template <typename T>
-constexpr T COS_LIMIT_ORTHOGONAL = limits<T>::epsilon() * 100;
+constexpr T COS_LIMIT_ORTHOGONAL = Limits<T>::epsilon() * 100;
 
 template <typename T>
-constexpr T COS_LIMIT_PARALLEL = 1 - limits<T>::epsilon() * 100;
+constexpr T COS_LIMIT_PARALLEL = 1 - Limits<T>::epsilon() * 100;
 
 template <std::size_t N, typename T>
 constexpr bool vectors_are_orthogonal(const Vector<N, T>& a, const Vector<N, T>& b)
@@ -212,7 +212,7 @@ void test(ProgressRatio* progress)
 void random_number(mpz_class* v, std::mt19937_64& random_engine)
 {
         std::array<unsigned char, 50> data;
-        std::uniform_int_distribution<int> uid(0, limits<unsigned char>::max());
+        std::uniform_int_distribution<int> uid(0, Limits<unsigned char>::max());
         for (unsigned char& c : data)
         {
                 c = uid(random_engine);

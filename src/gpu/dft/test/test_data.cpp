@@ -80,7 +80,7 @@ void save_data(const std::filesystem::path& file_name, const std::vector<std::co
         std::ofstream file(file_name);
 
         file << std::scientific;
-        file << std::setprecision(limits<T>::max_digits10);
+        file << std::setprecision(Limits<T>::max_digits10());
         file << std::showpos;
         file << std::showpoint;
 
@@ -108,7 +108,7 @@ void generate_random_data(const std::filesystem::path& file_name, int n1, int n2
         file << n1 << ' ' << n2 << '\n';
 
         file << std::scientific;
-        file << std::setprecision(limits<T>::max_digits10);
+        file << std::setprecision(Limits<T>::max_digits10());
         file << std::showpos;
         file << std::showpoint;
 
