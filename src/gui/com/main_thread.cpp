@@ -23,11 +23,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 namespace ns::gui
 {
-namespace
-{
-const MainThread* g_main_thread = nullptr;
-}
-
 MainThread::MainThread()
 {
         static std::atomic_int call_counter = 0;
@@ -46,16 +41,16 @@ MainThread::MainThread()
                 },
                 Qt::AutoConnection);
 
-        g_main_thread = this;
+        main_thread_ = this;
 }
 
 MainThread::~MainThread()
 {
-        g_main_thread = nullptr;
+        main_thread_ = nullptr;
 }
 
 void MainThread::run(const std::function<void()>& f)
 {
-        Q_EMIT g_main_thread->signal(f);
+        Q_EMIT main_thread_->signal(f);
 }
 }

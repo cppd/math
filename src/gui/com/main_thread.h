@@ -26,6 +26,9 @@ class MainThread final : public QObject
 {
         Q_OBJECT
 
+private:
+        inline static const MainThread* main_thread_ = nullptr;
+
 public:
         MainThread();
         ~MainThread() override;
