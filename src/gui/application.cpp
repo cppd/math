@@ -23,6 +23,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "dialogs/message.h"
 #include "main_window/main_window.h"
 
+#include <src/application/model_events.h>
 #include <src/com/error.h>
 #include <src/com/log.h>
 
@@ -90,6 +91,8 @@ void message_event(const application::MessageEvent& event)
 
 int run_application(int argc, char** argv)
 {
+        application::ModelEvents model_events;
+
         Application a(argc, argv);
 
         MainThread ui_thread;

@@ -15,8 +15,6 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include "application/log_events.h"
-#include "application/model_events.h"
 #include "com/error.h"
 #include "gui/application.h"
 
@@ -28,9 +26,6 @@ int main(int argc, char** argv)
         {
                 try
                 {
-                        ns::application::LogEvents log_events;
-                        ns::application::ModelEvents model_events;
-
                         return ns::gui::run_application(argc, argv);
                 }
                 catch (const std::exception& e)

@@ -19,14 +19,13 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "log.h"
 
-#include <atomic>
+#include <mutex>
+#include <vector>
 
 namespace ns::application
 {
 namespace
 {
-LogEvents* g_log_events = nullptr;
-
 LogType message_type_to_log_type(MessageType type)
 {
         switch (type)
@@ -68,23 +67,30 @@ std::string write_log_event(const std::string_view& text, const LogType type)
 {
         return write_log(text, log_type_to_string(type));
 }
-}
 
-LogEvents::LogEvents()
+class LogEvents final
 {
-        static std::atomic_int call_counter = 0;
-        if (++call_counter != 1)
-        {
-                write_log_fatal_error_and_exit("Log events must be called once");
-        }
+        std::mutex lock_;
+        std::vector<const std::function<void(const LogEvent&)>*> log_observers_;
+        std::vector<const std::function<void(const MessageEvent&)>*> msg_observers_;
 
-        g_log_events = this;
-}
+public:
+        LogEvents() = default;
 
-LogEvents::~LogEvents()
-{
-        g_log_events = nullptr;
-}
+        LogEvents(const LogEvents&) = delete;
+        LogEvents(LogEvents&&) = delete;
+        LogEvents& operator=(const LogEvents&) = delete;
+        LogEvents& operator=(LogEvents&&) = delete;
+
+        void insert(const std::function<void(const LogEvent&)>* observer);
+        void erase(const std::function<void(const LogEvent&)>* observer);
+
+        void insert(const std::function<void(const MessageEvent&)>* observer);
+        void erase(const std::function<void(const MessageEvent&)>* observer);
+
+        void log_event(const std::string_view& text, LogType type) noexcept;
+        void log_event(const std::string_view& text, MessageType type) noexcept;
+};
 
 void LogEvents::log_event(const std::string_view& text, const LogType type) noexcept
 {
@@ -185,38 +191,45 @@ void LogEvents::erase(const std::function<void(const MessageEvent&)>* observer)
         msg_observers_.erase(iter, msg_observers_.cend());
 }
 
+LogEvents& log_events()
+{
+        static LogEvents log_events;
+        return log_events;
+}
+}
+
 //
 
 LogEventsObserver::LogEventsObserver(std::function<void(const LogEvent&)> observer) : observer_(std::move(observer))
 {
-        g_log_events->insert(&observer_);
+        log_events().insert(&observer_);
 }
 
 LogEventsObserver::~LogEventsObserver()
 {
-        g_log_events->erase(&observer_);
+        log_events().erase(&observer_);
 }
 
 MessageEventsObserver::MessageEventsObserver(std::function<void(const MessageEvent&)> observer)
         : observer_(std::move(observer))
 {
-        g_log_events->insert(&observer_);
+        log_events().insert(&observer_);
 }
 
 MessageEventsObserver::~MessageEventsObserver()
 {
-        g_log_events->erase(&observer_);
+        log_events().erase(&observer_);
 }
 
 //
 
 void log_impl(const std::string_view& text, LogType type) noexcept
 {
-        g_log_events->log_event(text, type);
+        log_events().log_event(text, type);
 }
 
 void log_impl(const std::string_view& text, MessageType type) noexcept
 {
-        g_log_events->log_event(text, type);
+        log_events().log_event(text, type);
 }
 }

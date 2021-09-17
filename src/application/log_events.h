@@ -18,9 +18,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #pragma once
 
 #include <functional>
-#include <mutex>
 #include <string>
-#include <vector>
 
 namespace ns::application
 {
@@ -60,36 +58,6 @@ struct MessageEvent final
         MessageEvent(T&& text, MessageType type) : text(std::forward<T>(text)), type(type)
         {
         }
-};
-
-class LogEvents final
-{
-        friend class LogEventsObserver;
-        friend class MessageEventsObserver;
-        friend void log_impl(const std::string_view&, LogType) noexcept;
-        friend void log_impl(const std::string_view&, MessageType) noexcept;
-
-        std::mutex lock_;
-        std::vector<const std::function<void(const LogEvent&)>*> log_observers_;
-        std::vector<const std::function<void(const MessageEvent&)>*> msg_observers_;
-
-        void insert(const std::function<void(const LogEvent&)>* observer);
-        void erase(const std::function<void(const LogEvent&)>* observer);
-
-        void insert(const std::function<void(const MessageEvent&)>* observer);
-        void erase(const std::function<void(const MessageEvent&)>* observer);
-
-        void log_event(const std::string_view& text, LogType type) noexcept;
-        void log_event(const std::string_view& text, MessageType type) noexcept;
-
-public:
-        LogEvents();
-        ~LogEvents();
-
-        LogEvents(const LogEvents&) = delete;
-        LogEvents(LogEvents&&) = delete;
-        LogEvents& operator=(const LogEvents&) = delete;
-        LogEvents& operator=(LogEvents&&) = delete;
 };
 
 class LogEventsObserver final
