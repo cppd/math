@@ -49,6 +49,7 @@ modernize-*,
 performance-*,
 
 readability-*,
+-readability-avoid-const-params-in-decls,
 -readability-magic-numbers,
 -readability-misleading-indentation,
 -readability-named-parameter,
