@@ -17,6 +17,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
+#include <src/com/error.h>
 #include <src/progress/progress.h>
 
 #include <string>
@@ -47,19 +48,19 @@ class Tests final
         Tests() = default;
 
         template <typename T>
-        void add_small(const char* const name, T* const function) noexcept
+        void add_small(const char* const name, T* const function)
         {
                 small_tests_.emplace(name, function);
         }
 
         template <typename T>
-        void add_large(const char* const name, T* const function) noexcept
+        void add_large(const char* const name, T* const function)
         {
                 large_tests_.emplace(name, function);
         }
 
         template <typename T>
-        void add_performance(const char* const name, T* const function) noexcept
+        void add_performance(const char* const name, T* const function)
         {
                 performance_tests_.emplace(name, function);
         }
@@ -89,7 +90,14 @@ struct AddSmallTest final
         template <typename T>
         AddSmallTest(const char* const name, T* const function) noexcept
         {
-                Tests::instance().add_small(name, function);
+                try
+                {
+                        Tests::instance().add_small(name, function);
+                }
+                catch (...)
+                {
+                        error_fatal("Error adding small test");
+                }
         }
 };
 
@@ -98,7 +106,14 @@ struct AddLargeTest final
         template <typename T>
         AddLargeTest(const char* const name, T* const function) noexcept
         {
-                Tests::instance().add_large(name, function);
+                try
+                {
+                        Tests::instance().add_large(name, function);
+                }
+                catch (...)
+                {
+                        error_fatal("Error adding large test");
+                }
         }
 };
 
@@ -107,7 +122,14 @@ struct AddPerformanceTest final
         template <typename T>
         AddPerformanceTest(const char* const name, T* const function) noexcept
         {
-                Tests::instance().add_performance(name, function);
+                try
+                {
+                        Tests::instance().add_performance(name, function);
+                }
+                catch (...)
+                {
+                        error_fatal("Error adding performance test");
+                }
         }
 };
 
