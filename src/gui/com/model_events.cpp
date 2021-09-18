@@ -19,18 +19,18 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <src/com/error.h>
 
-namespace ns::application
+namespace ns::gui
 {
 namespace
 {
 template <std::size_t N>
 class Visitor final
 {
-        gui::ModelTreeEvents* tree_;
+        ModelTreeEvents* tree_;
         view::View* view_;
 
 public:
-        Visitor(gui::ModelTreeEvents* const tree, view::View* const view) : tree_(tree), view_(view)
+        Visitor(ModelTreeEvents* const tree, view::View* const view) : tree_(tree), view_(view)
         {
         }
 
@@ -144,7 +144,7 @@ void ModelEvents::Events<N>::send(volume::VolumeEvent<N>&& event) const
         std::visit(Visitor<N>(tree, view), event);
 }
 
-ModelEvents::ModelEvents(gui::ModelTreeEvents* const tree, view::View* const view)
+ModelEvents::ModelEvents(ModelTreeEvents* const tree, view::View* const view)
 {
         ASSERT(tree);
         ASSERT(view);

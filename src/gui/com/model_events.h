@@ -17,8 +17,9 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
+#include "model_tree.h"
+
 #include <src/com/sequence.h>
-#include <src/gui/model_tree.h>
 #include <src/model/mesh_object.h>
 #include <src/model/volume_object.h>
 #include <src/settings/dimensions.h>
@@ -27,7 +28,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <thread>
 #include <tuple>
 
-namespace ns::application
+namespace ns::gui
 {
 class ModelEvents final
 {
@@ -36,7 +37,7 @@ class ModelEvents final
         template <std::size_t N>
         struct Events final : public mesh::MeshEvents<N>, public volume::VolumeEvents<N>
         {
-                gui::ModelTreeEvents* tree;
+                ModelTreeEvents* tree;
                 view::View* view;
 
                 void send(mesh::MeshEvent<N>&& event) const override;
@@ -45,7 +46,7 @@ class ModelEvents final
         Sequence<settings::Dimensions, std::tuple, Events> events_;
 
 public:
-        ModelEvents(gui::ModelTreeEvents* tree, view::View* view);
+        ModelEvents(ModelTreeEvents* tree, view::View* view);
         ~ModelEvents();
 
         ModelEvents(const ModelEvents&) = delete;

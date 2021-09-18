@@ -18,8 +18,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #pragma once
 
 #include "../com/connection.h"
+#include "../com/model_tree.h"
 #include "../com/thread_queue.h"
-#include "../model_tree.h"
 
 #include "ui_model_tree.h"
 

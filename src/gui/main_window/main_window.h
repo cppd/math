@@ -27,9 +27,10 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "view_widget.h"
 #include "volume_widget.h"
 
+#include "../com/model_events.h"
+
 #include "ui_main_window.h"
 
-#include <src/application/model_events.h>
 #include <src/progress/progress_list.h>
 #include <src/storage/repository.h>
 #include <src/view/interface.h>
@@ -67,7 +68,7 @@ private:
         std::unique_ptr<MeshWidget> mesh_widget_;
         std::unique_ptr<VolumeWidget> volume_widget_;
 
-        std::unique_ptr<application::ModelEvents> model_events_;
+        std::unique_ptr<ModelEvents> model_events_;
         std::unique_ptr<Actions> actions_;
 
         QTimer timer_;
