@@ -82,6 +82,16 @@ struct Visibility final
 template <std::size_t N>
 using VolumeEvent = std::variant<event::Erase<N>, event::Insert<N>, event::Update<N>, event::Visibility<N>>;
 
+template <std::size_t N>
+class VolumeEvents
+{
+protected:
+        ~VolumeEvents() = default;
+
+public:
+        virtual void send(VolumeEvent<N>&&) const = 0;
+};
+
 enum Update
 {
         UPDATE_IMAGE,
@@ -109,7 +119,15 @@ class VolumeObject final : public std::enable_shared_from_this<VolumeObject<N>>
 
         //
 
-        inline static const std::function<void(VolumeEvent<N>&&)>* events_ = nullptr;
+        class DefaultEvents final : public VolumeEvents<N>
+        {
+                void send(VolumeEvent<N>&&) const override
+                {
+                }
+        };
+        static constexpr DefaultEvents DEFAULT_EVENTS{};
+
+        inline static const VolumeEvents<N>* events_ = &DEFAULT_EVENTS;
 
         //
 
@@ -143,7 +161,7 @@ class VolumeObject final : public std::enable_shared_from_this<VolumeObject<N>>
         {
                 try
                 {
-                        (*events_)(std::move(event));
+                        events_->send(std::move(event));
                 }
                 catch (const std::exception& e)
                 {
@@ -274,11 +292,15 @@ class VolumeObject final : public std::enable_shared_from_this<VolumeObject<N>>
         }
 
 public:
-        static const std::function<void(VolumeEvent<N>&&)>* set_events(
-                const std::function<void(VolumeEvent<N>&&)>* events)
+        static void set_events(const VolumeEvents<N>* const events)
         {
-                std::swap(events_, events);
-                return events;
+                if (events)
+                {
+                        ASSERT(events_ == &DEFAULT_EVENTS);
+                        events_ = events;
+                        return;
+                }
+                events_ = &DEFAULT_EVENTS;
         }
 
         //

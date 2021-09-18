@@ -24,7 +24,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/settings/dimensions.h>
 #include <src/view/interface.h>
 
-#include <functional>
 #include <thread>
 #include <tuple>
 
@@ -35,17 +34,17 @@ class ModelEvents final
         const std::thread::id thread_id_ = std::this_thread::get_id();
 
         template <std::size_t N>
-        struct Events final
+        struct Events final : public mesh::MeshEvents<N>, public volume::VolumeEvents<N>
         {
-                const std::function<void(mesh::MeshEvent<N>&&)>* saved_mesh_events;
-                const std::function<void(volume::VolumeEvent<N>&&)>* saved_volume_events;
-                std::function<void(mesh::MeshEvent<N>&&)> mesh_events;
-                std::function<void(volume::VolumeEvent<N>&&)> volume_events;
+                gui::ModelTreeEvents* tree;
+                view::View* view;
+
+                void send(mesh::MeshEvent<N>&& event) const override;
+                void send(volume::VolumeEvent<N>&& event) const override;
         };
         Sequence<settings::Dimensions, std::tuple, Events> events_;
 
 public:
-        ModelEvents();
         ModelEvents(gui::ModelTreeEvents* tree, view::View* view);
         ~ModelEvents();
 

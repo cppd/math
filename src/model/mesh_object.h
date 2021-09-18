@@ -82,6 +82,16 @@ struct Visibility final
 template <std::size_t N>
 using MeshEvent = std::variant<event::Erase<N>, event::Insert<N>, event::Update<N>, event::Visibility<N>>;
 
+template <std::size_t N>
+class MeshEvents
+{
+protected:
+        ~MeshEvents() = default;
+
+public:
+        virtual void send(MeshEvent<N>&&) const = 0;
+};
+
 enum Update
 {
         UPDATE_MESH,
@@ -105,7 +115,15 @@ class MeshObject final : public std::enable_shared_from_this<MeshObject<N>>
 
         //
 
-        inline static const std::function<void(MeshEvent<N>&&)>* events_ = nullptr;
+        class DefaultEvents final : public MeshEvents<N>
+        {
+                void send(MeshEvent<N>&&) const override
+                {
+                }
+        };
+        static constexpr DefaultEvents DEFAULT_EVENTS{};
+
+        inline static const MeshEvents<N>* events_ = &DEFAULT_EVENTS;
 
         //
 
@@ -132,7 +150,7 @@ class MeshObject final : public std::enable_shared_from_this<MeshObject<N>>
         {
                 try
                 {
-                        (*events_)(std::move(event));
+                        events_->send(std::move(event));
                 }
                 catch (const std::exception& e)
                 {
@@ -217,10 +235,15 @@ class MeshObject final : public std::enable_shared_from_this<MeshObject<N>>
         }
 
 public:
-        static const std::function<void(MeshEvent<N>&&)>* set_events(const std::function<void(MeshEvent<N>&&)>* events)
+        static void set_events(const MeshEvents<N>* const events)
         {
-                std::swap(events_, events);
-                return events;
+                if (events)
+                {
+                        ASSERT(events_ == &DEFAULT_EVENTS);
+                        events_ = events;
+                        return;
+                }
+                events_ = &DEFAULT_EVENTS;
         }
 
         MeshObject(std::unique_ptr<const Mesh<N>>&& mesh, const Matrix<N + 1, N + 1, double>& matrix, std::string name)

@@ -132,6 +132,18 @@ public:
 };
 }
 
+template <std::size_t N>
+void ModelEvents::Events<N>::send(mesh::MeshEvent<N>&& event) const
+{
+        std::visit(Visitor<N>(tree, view), event);
+}
+
+template <std::size_t N>
+void ModelEvents::Events<N>::send(volume::VolumeEvent<N>&& event) const
+{
+        std::visit(Visitor<N>(tree, view), event);
+}
+
 ModelEvents::ModelEvents(gui::ModelTreeEvents* const tree, view::View* const view)
 {
         ASSERT(tree);
@@ -139,34 +151,10 @@ ModelEvents::ModelEvents(gui::ModelTreeEvents* const tree, view::View* const vie
 
         const auto f = [&]<std::size_t N>(Events<N>& events)
         {
-                events.mesh_events = [visitor = Visitor<N>(tree, view)](mesh::MeshEvent<N>&& event)
-                {
-                        std::visit(visitor, event);
-                };
-                events.volume_events = [visitor = Visitor<N>(tree, view)](volume::VolumeEvent<N>&& event)
-                {
-                        std::visit(visitor, event);
-                };
-                events.saved_mesh_events = mesh::MeshObject<N>::set_events(&events.mesh_events);
-                events.saved_volume_events = volume::VolumeObject<N>::set_events(&events.volume_events);
-        };
-
-        std::apply(
-                [&f]<std::size_t... N>(Events<N> & ... events)
-                {
-                        (f(events), ...);
-                },
-                events_);
-}
-
-ModelEvents::ModelEvents()
-{
-        const auto f = []<std::size_t N>(Events<N>& events)
-        {
-                events.mesh_events = [](mesh::MeshEvent<N>&&) {};
-                events.volume_events = [](volume::VolumeEvent<N>&&) {};
-                events.saved_mesh_events = mesh::MeshObject<N>::set_events(&events.mesh_events);
-                events.saved_volume_events = volume::VolumeObject<N>::set_events(&events.volume_events);
+                events.tree = tree;
+                events.view = view;
+                mesh::MeshObject<N>::set_events(&events);
+                volume::VolumeObject<N>::set_events(&events);
         };
 
         std::apply(
@@ -181,18 +169,10 @@ ModelEvents::~ModelEvents()
 {
         ASSERT(std::this_thread::get_id() == thread_id_);
 
-        const auto f = []<std::size_t N>(const Events<N>& events)
+        const auto f = []<std::size_t N>(const Events<N>&)
         {
-                const auto* const m = mesh::MeshObject<N>::set_events(events.saved_mesh_events);
-                if (m != &events.mesh_events)
-                {
-                        ASSERT(false);
-                }
-                const auto* const v = volume::VolumeObject<N>::set_events(events.saved_volume_events);
-                if (v != &events.volume_events)
-                {
-                        ASSERT(false);
-                }
+                mesh::MeshObject<N>::set_events(nullptr);
+                volume::VolumeObject<N>::set_events(nullptr);
         };
 
         std::apply(
