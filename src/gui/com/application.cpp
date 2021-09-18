@@ -32,6 +32,33 @@ Application::Application(int& argc, char** const argv) : QApplication(argc, argv
         {
                 error_fatal("Application must be created once");
         }
+
+        qRegisterMetaType<std::function<void()>>("std::function<void()>");
+
+        connect(
+                this, &Application::signal, this,
+                [](const std::function<void()>& f)
+                {
+                        f();
+                },
+                Qt::AutoConnection);
+
+        application_ = this;
+}
+
+Application::~Application()
+{
+        application_ = nullptr;
+}
+
+void Application::run(const std::function<void()>& f)
+{
+        Q_EMIT application_->signal(f);
+}
+
+const QApplication* Application::instance()
+{
+        return application_;
 }
 
 bool Application::notify(QObject* const receiver, QEvent* const event) noexcept
@@ -53,10 +80,10 @@ bool Application::notify(QObject* const receiver, QEvent* const event) noexcept
                 }
                 catch (...)
                 {
-                        const char* const msg = "Error in an event receiver";
+                        constexpr const char* MSG = "Error in an event receiver";
                         constexpr bool WITH_PARENT = false;
-                        dialog::message_critical(msg, WITH_PARENT);
-                        error_fatal(msg);
+                        dialog::message_critical(MSG, WITH_PARENT);
+                        error_fatal(MSG);
                 }
         }
         catch (...)

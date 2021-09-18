@@ -17,6 +17,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "support.h"
 
+#include "application.h"
+
 #include <src/color/rgb8.h>
 #include <src/com/error.h>
 
@@ -80,13 +82,13 @@ void append_text(QPlainTextEdit* text_edit, const std::string_view& text, const 
 
 QWidget* parent_for_dialog()
 {
-        return qApp->activeWindow();
+        return Application::instance()->activeWindow();
 }
 
 //std::string main_window_title()
 //{
 //        QMainWindow* main_window = nullptr;
-//        for (QWidget* widget : qApp->topLevelWidgets())
+//        for (QWidget* widget : Application::instance()->topLevelWidgets())
 //        {
 //                QMainWindow* window = qobject_cast<QMainWindow*>(widget);
 //                if (window)

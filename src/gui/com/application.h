@@ -18,14 +18,31 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #pragma once
 
 #include <QApplication>
+#include <functional>
 
 namespace ns::gui
 {
 class Application final : public QApplication
 {
+        Q_OBJECT
+
+private:
+        inline static const Application* application_ = nullptr;
+
         bool notify(QObject* receiver, QEvent* event) noexcept override;
 
 public:
         Application(int& argc, char** argv);
+        ~Application() override;
+
+        Application(const Application&) = delete;
+        Application& operator=(const Application&) = delete;
+
+        static void run(const std::function<void()>& f);
+
+        static const QApplication* instance();
+
+Q_SIGNALS:
+        void signal(const std::function<void()>&) const;
 };
 }

@@ -19,7 +19,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "com/application.h"
 #include "com/command_line.h"
-#include "com/main_thread.h"
 #include "com/support.h"
 #include "dialogs/message.h"
 #include "main_window/main_window.h"
@@ -59,12 +58,10 @@ int run_application(int argc, char** argv)
 
         Application a(argc, argv);
 
-        MainThread ui_thread;
-
         application::MessageEventsObserver message_observer(
                 [](const application::MessageEvent& event)
                 {
-                        MainThread::run(
+                        Application::run(
                                 [event]()
                                 {
                                         message_event(event);

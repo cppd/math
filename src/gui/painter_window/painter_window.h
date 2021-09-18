@@ -23,7 +23,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "sliders_widget.h"
 #include "statistics_widget.h"
 
-#include "../com/main_thread.h"
+#include "../com/application.h"
 #include "../com/support.h"
 
 #include "ui_painter_window.h"
@@ -86,7 +86,7 @@ void create_painter_window(
         bool smooth_normal,
         std::unique_ptr<const painter::Scene<N, T, Color>>&& scene)
 {
-        MainThread::run(
+        Application::run(
                 [=, scene = std::shared_ptr<const painter::Scene<N, T, Color>>(std::move(scene))]()
                 {
                         create_and_show_delete_on_close_window<PainterWindow>(
