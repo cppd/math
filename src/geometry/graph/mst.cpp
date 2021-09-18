@@ -29,9 +29,9 @@ Kruskal’s algorithm
 #include "../core/ridge.h"
 
 #include <src/com/alg.h>
+#include <src/com/chrono.h>
 #include <src/com/log.h>
 #include <src/com/print.h>
-#include <src/com/time.h>
 #include <src/com/union_find.h>
 
 namespace ns::geometry
@@ -176,7 +176,7 @@ std::vector<std::array<int, 2>> minimum_spanning_tree(
 
         LOG("Minimum spanning tree...");
         progress->set_text("Minimum spanning tree");
-        TimePoint start_time = time();
+        Clock::time_point start_time = Clock::now();
 
         progress->set(0, 5);
 

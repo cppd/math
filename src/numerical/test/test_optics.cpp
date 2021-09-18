@@ -17,12 +17,12 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "../optics.h"
 
+#include <src/com/chrono.h>
 #include <src/com/error.h>
 #include <src/com/log.h>
 #include <src/com/names.h>
 #include <src/com/print.h>
 #include <src/com/random/engine.h>
-#include <src/com/time.h>
 #include <src/com/type/name.h>
 #include <src/sampling/sphere_uniform.h>
 #include <src/test/test.h>
@@ -64,7 +64,7 @@ void test(std::string text, const std::vector<Vector<N, T>> data, const F& f)
 {
         static_assert(std::is_trivially_copyable_v<decltype(f(data[0]))>);
         std::vector<decltype(f(data[0]))> result(data.size());
-        TimePoint start_time = time();
+        Clock::time_point start_time = Clock::now();
         for (std::size_t i = 0; i < data.size(); ++i)
         {
                 result[i] = f(data[i]);

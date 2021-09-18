@@ -17,10 +17,10 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "../convex_hull.h"
 
+#include <src/com/chrono.h>
 #include <src/com/log.h>
 #include <src/com/names.h>
 #include <src/com/random/engine.h>
-#include <src/com/time.h>
 #include <src/geometry/core/check.h>
 #include <src/geometry/core/euler.h>
 #include <src/test/test.h>
@@ -168,7 +168,7 @@ std::vector<ConvexHullFacet<N>> create_convex_hull(std::vector<Vector<N, float>>
         std::vector<ConvexHullFacet<N>> facets;
 
         LOG("Convex hull...");
-        TimePoint start_time = time();
+        Clock::time_point start_time = Clock::now();
 
         compute_convex_hull(points, &facets, progress, true);
 

@@ -17,7 +17,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
-#include <src/com/time.h>
+#include <src/com/chrono.h>
 
 #include <deque>
 #include <tuple>
@@ -30,15 +30,15 @@ class Difference final
         struct Point final
         {
                 T data;
-                TimePoint time;
+                Clock::time_point time;
 
                 template <typename V>
-                Point(V&& data, const TimePoint& time) : data(std::forward<V>(data)), time(time)
+                Point(V&& data, const Clock::time_point& time) : data(std::forward<V>(data)), time(time)
                 {
                 }
         };
 
-        const TimeDuration interval_;
+        const Clock::duration interval_;
         std::deque<Point> deque_;
 
 public:
@@ -49,8 +49,8 @@ public:
         template <typename V>
         std::tuple<T, double> compute(V&& data)
         {
-                TimePoint now = time();
-                TimePoint front_time = now - interval_;
+                Clock::time_point now = Clock::now();
+                Clock::time_point front_time = now - interval_;
 
                 while (!deque_.empty() && deque_.front().time < front_time)
                 {

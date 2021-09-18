@@ -19,12 +19,12 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "../matrix.h"
 #include "../solve.h"
 
+#include <src/com/chrono.h>
 #include <src/com/error.h>
 #include <src/com/log.h>
 #include <src/com/math.h>
 #include <src/com/print.h>
 #include <src/com/random/engine.h>
-#include <src/com/time.h>
 #include <src/com/type/name.h>
 #include <src/test/test.h>
 
@@ -188,7 +188,7 @@ void test_solve_vector(
         const std::vector<Vector<N, T>> solved = [&]
         {
                 std::vector<Vector<N, T>> res(count);
-                const TimePoint start_time = time();
+                const Clock::time_point start_time = Clock::now();
                 for (int i = 0; i < count; ++i)
                 {
                         res[i] = linear_solve(matrices[i], vectors[i]);
@@ -222,7 +222,7 @@ void test_solve_inverse(
         const std::vector<std::array<Vector<N, T>, N>> inversed = [&]
         {
                 std::vector<std::array<Vector<N, T>, N>> res(count);
-                const TimePoint start_time = time();
+                const Clock::time_point start_time = Clock::now();
                 for (int i = 0; i < count; ++i)
                 {
                         res[i] = inverse(matrices[i]);

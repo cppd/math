@@ -19,8 +19,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "../painter.h"
 
+#include <src/com/chrono.h>
 #include <src/com/spin_lock.h>
-#include <src/com/time.h>
 
 #include <atomic>
 #include <mutex>
@@ -38,7 +38,7 @@ class PaintingStatistics
         std::atomic<long long> sample_counter_;
 
         long long pass_number_;
-        TimePoint pass_start_time_;
+        Clock::time_point pass_start_time_;
         long long pass_start_pixel_count_;
         double previous_pass_duration_;
 
@@ -59,7 +59,7 @@ public:
                 sample_counter_ = 0;
 
                 pass_number_ = 1;
-                pass_start_time_ = time();
+                pass_start_time_ = Clock::now();
                 pass_start_pixel_count_ = 0;
                 previous_pass_duration_ = 0;
         }
@@ -73,7 +73,7 @@ public:
 
         void pass_done()
         {
-                const TimePoint now = time();
+                const Clock::time_point now = Clock::now();
                 std::lock_guard lg(lock_);
                 previous_pass_duration_ = duration(pass_start_time_, now);
         }
@@ -82,7 +82,7 @@ public:
         {
                 std::lock_guard lg(lock_);
                 ++pass_number_;
-                pass_start_time_ = time();
+                pass_start_time_ = Clock::now();
                 pass_start_pixel_count_ = pixel_counter_;
         }
 

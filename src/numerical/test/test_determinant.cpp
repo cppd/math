@@ -19,11 +19,11 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "../gauss.h"
 
 #include <src/com/arrays.h>
+#include <src/com/chrono.h>
 #include <src/com/error.h>
 #include <src/com/log.h>
 #include <src/com/print.h>
 #include <src/com/random/engine.h>
-#include <src/com/time.h>
 #include <src/com/type/name.h>
 #include <src/test/test.h>
 
@@ -154,7 +154,7 @@ void test_determinant(const int count, const std::type_identity_t<T>& precision)
         const std::vector<T> cofactor_expansion = [&]
         {
                 std::vector<T> res(count);
-                const TimePoint start_time = time();
+                const Clock::time_point start_time = Clock::now();
                 for (int i = 0; i < count; ++i)
                 {
                         res[i] = determinant_cofactor_expansion(
@@ -167,7 +167,7 @@ void test_determinant(const int count, const std::type_identity_t<T>& precision)
         const std::vector<T> row_reduction = [&]
         {
                 std::vector<T> res(count);
-                const TimePoint start_time = time();
+                const Clock::time_point start_time = Clock::now();
                 for (int i = 0; i < count; ++i)
                 {
                         res[i] = determinant_gauss(matrices[i]);
@@ -179,7 +179,7 @@ void test_determinant(const int count, const std::type_identity_t<T>& precision)
         const std::vector<T> determinants = [&]
         {
                 std::vector<T> res(count);
-                const TimePoint start_time = time();
+                const Clock::time_point start_time = Clock::now();
                 for (int i = 0; i < count; ++i)
                 {
                         res[i] = determinant(matrices[i]);
@@ -214,7 +214,7 @@ void test_determinant_column(const int count, const std::type_identity_t<T>& pre
         const std::vector<Vector<N, T>> cofactor_expansion = [&]
         {
                 std::vector<Vector<N, T>> res(count);
-                const TimePoint start_time = time();
+                const Clock::time_point start_time = Clock::now();
                 for (int i = 0; i < count; ++i)
                 {
                         for (std::size_t c = 0; c < N; ++c)
@@ -230,7 +230,7 @@ void test_determinant_column(const int count, const std::type_identity_t<T>& pre
         const std::vector<Vector<N, T>> row_reduction = [&]
         {
                 std::vector<Vector<N, T>> res(count);
-                const TimePoint start_time = time();
+                const Clock::time_point start_time = Clock::now();
                 for (int i = 0; i < count; ++i)
                 {
                         for (std::size_t c = 0; c < N; ++c)
@@ -245,7 +245,7 @@ void test_determinant_column(const int count, const std::type_identity_t<T>& pre
         const std::vector<Vector<N, T>> determinants = [&]
         {
                 std::vector<Vector<N, T>> res(count);
-                const TimePoint start_time = time();
+                const Clock::time_point start_time = Clock::now();
                 for (int i = 0; i < count; ++i)
                 {
                         for (std::size_t c = 0; c < N; ++c)

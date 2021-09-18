@@ -22,10 +22,10 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "shaders/view.h"
 
+#include <src/com/chrono.h>
 #include <src/com/container.h>
 #include <src/com/error.h>
 #include <src/com/log.h>
-#include <src/com/time.h>
 #include <src/numerical/transform.h>
 #include <src/vulkan/commands.h>
 #include <src/vulkan/create.h>
@@ -54,7 +54,7 @@ class Impl final : public View
         const std::thread::id thread_id_ = std::this_thread::get_id();
 
         const bool sample_shading_;
-        TimePoint start_time_ = time();
+        Clock::time_point start_time_ = Clock::now();
 
         const uint32_t family_index_;
 
@@ -73,7 +73,7 @@ class Impl final : public View
 
         void reset_timer() override
         {
-                start_time_ = time();
+                start_time_ = Clock::now();
         }
 
         void draw_commands(VkCommandBuffer command_buffer) const

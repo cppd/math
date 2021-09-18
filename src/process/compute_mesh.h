@@ -17,10 +17,10 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
+#include <src/com/chrono.h>
 #include <src/com/log.h>
 #include <src/com/names.h>
 #include <src/com/thread.h>
-#include <src/com/time.h>
 #include <src/geometry/core/convex_hull.h>
 #include <src/geometry/graph/mst.h>
 #include <src/geometry/reconstruction/cocone.h>
@@ -69,7 +69,7 @@ std::unique_ptr<const mesh::Mesh<N>> mesh_convex_hull(const mesh::Mesh<N>& mesh,
 
         std::vector<geometry::ConvexHullFacet<N>> convex_hull_facets;
 
-        TimePoint start_time = time();
+        Clock::time_point start_time = Clock::now();
 
         geometry::compute_convex_hull(points, &convex_hull_facets, progress, true);
 
@@ -118,7 +118,7 @@ void cocone(
         {
                 ProgressRatio progress(progress_list);
 
-                TimePoint start_time = time();
+                Clock::time_point start_time = Clock::now();
 
                 std::vector<Vector<N, double>> normals;
                 std::vector<std::array<int, N>> facets;
@@ -153,7 +153,7 @@ void bound_cocone(
         {
                 ProgressRatio progress(progress_list);
 
-                TimePoint start_time = time();
+                Clock::time_point start_time = Clock::now();
 
                 std::vector<Vector<N, double>> normals;
                 std::vector<std::array<int, N>> facets;
@@ -208,7 +208,7 @@ std::unique_ptr<geometry::ManifoldConstructor<N>> create_manifold_constructor(
         const std::vector<Vector<N, float>>& points)
 {
         ProgressRatio progress(progress_list);
-        TimePoint start_time = time();
+        Clock::time_point start_time = Clock::now();
 
         std::unique_ptr<geometry::ManifoldConstructor<N>> manifold_constructor =
                 geometry::create_manifold_constructor(points, &progress);

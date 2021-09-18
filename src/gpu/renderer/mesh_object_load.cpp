@@ -20,13 +20,13 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "shaders/vertex_points.h"
 #include "shaders/vertex_triangles.h"
 
+#include <src/com/chrono.h>
 #include <src/com/container.h>
 #include <src/com/hash.h>
 #include <src/com/log.h>
 #include <src/com/math.h>
 #include <src/com/print.h>
 #include <src/com/thread.h>
-#include <src/com/time.h>
 
 #include <algorithm>
 #include <array>
@@ -323,7 +323,7 @@ void load_vertices(
 
         //
 
-        const TimePoint create_start_time = time();
+        const Clock::time_point create_start_time = Clock::now();
 
         const std::vector<std::array<Vertex, 3>> faces = create_faces(mesh, sorted_face_indices);
 
@@ -331,7 +331,7 @@ void load_vertices(
 
         //
 
-        const TimePoint map_start_time = time();
+        const Clock::time_point map_start_time = Clock::now();
 
         const BufferMesh buffer_mesh = create_buffer_mesh(faces);
 
@@ -339,7 +339,7 @@ void load_vertices(
 
         //
 
-        const TimePoint load_start_time = time();
+        const Clock::time_point load_start_time = Clock::now();
 
         load_mesh_to_buffers(device, command_pool, queue, family_indices, buffer_mesh, vertex_buffer, index_buffer);
         *vertex_count = buffer_mesh.vertices.size();

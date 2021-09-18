@@ -19,10 +19,10 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "position.h"
 
+#include <src/com/chrono.h>
 #include <src/com/error.h>
 #include <src/com/log.h>
 #include <src/com/print.h>
-#include <src/com/time.h>
 
 namespace ns::mesh
 {
@@ -56,7 +56,7 @@ std::unique_ptr<Mesh<N>> create_mesh(T&& points)
 template <std::size_t N, typename T>
 std::unique_ptr<Mesh<N>> create_mesh_for_points_impl(T&& points)
 {
-        TimePoint start_time = time();
+        Clock::time_point start_time = Clock::now();
 
         std::unique_ptr<Mesh<N>> mesh = create_mesh<N>(std::forward<T>(points));
 

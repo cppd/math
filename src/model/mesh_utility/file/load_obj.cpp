@@ -23,6 +23,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "../position.h"
 
+#include <src/com/chrono.h>
 #include <src/com/error.h>
 #include <src/com/file/path.h>
 #include <src/com/log.h>
@@ -30,7 +31,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/com/print.h>
 #include <src/com/string/ascii.h>
 #include <src/com/thread.h>
-#include <src/com/time.h>
 #include <src/com/type/name.h>
 
 #include <filesystem>
@@ -849,7 +849,7 @@ std::unique_ptr<Mesh<N>> read_obj_and_mtl(const std::filesystem::path& file_name
 template <std::size_t N, typename Path>
 std::unique_ptr<Mesh<N>> load_from_obj_file(const Path& file_name, ProgressRatio* const progress)
 {
-        TimePoint start_time = time();
+        Clock::time_point start_time = Clock::now();
 
         std::unique_ptr<Mesh<N>> mesh = read_obj_and_mtl<N>(file_name, progress);
 

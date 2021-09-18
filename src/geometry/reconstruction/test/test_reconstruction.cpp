@@ -17,13 +17,13 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "../cocone.h"
 
+#include <src/com/chrono.h>
 #include <src/com/error.h>
 #include <src/com/log.h>
 #include <src/com/math.h>
 #include <src/com/names.h>
 #include <src/com/print.h>
 #include <src/com/random/engine.h>
-#include <src/com/time.h>
 #include <src/geometry/core/check.h>
 #include <src/geometry/core/euler.h>
 #include <src/sampling/sphere_uniform.h>
@@ -180,7 +180,7 @@ void test_algorithms(
 
         const auto [FACETS_MIN, FACETS_MAX] = facet_count<N>(points.size() / object_count);
 
-        TimePoint start_time = time();
+        Clock::time_point start_time = Clock::now();
 
         LOG("Point count: " + to_string(points.size()));
 

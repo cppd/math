@@ -22,11 +22,11 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "../unique.h"
 #include "../vertices.h"
 
+#include <src/com/chrono.h>
 #include <src/com/file/path.h>
 #include <src/com/log.h>
 #include <src/com/print.h>
 #include <src/com/string/str.h>
-#include <src/com/time.h>
 #include <src/com/type/limit.h>
 
 #include <fstream>
@@ -304,7 +304,7 @@ std::filesystem::path save_to_obj_file(const Mesh<N>& mesh, const Path& file_nam
         file << std::setprecision(Limits<float>::max_digits10());
         file << std::showpoint;
 
-        TimePoint start_time = time();
+        Clock::time_point start_time = Clock::now();
 
         file << std::noshowpos;
         write_comment(file, comment);

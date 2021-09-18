@@ -20,13 +20,13 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "angle_distribution.h"
 #include "sphere_distribution.h"
 
+#include <src/com/chrono.h>
 #include <src/com/error.h>
 #include <src/com/log.h>
 #include <src/com/print.h>
 #include <src/com/random/engine.h>
 #include <src/com/string/ascii.h>
 #include <src/com/thread.h>
-#include <src/com/time.h>
 #include <src/progress/progress.h>
 
 #include <algorithm>
@@ -217,7 +217,7 @@ void test_performance(
         const auto f = [&](Vector<N, T>* sink) -> long long
         {
                 RandomEngine random_engine = create_engine<RandomEngine>();
-                const TimePoint start_time = time();
+                const Clock::time_point start_time = Clock::now();
                 for (long long i = 0; i < count; ++i)
                 {
                         *sink = random_vector(random_engine);

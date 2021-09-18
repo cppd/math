@@ -19,11 +19,11 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "fftw.h"
 
+#include <src/com/chrono.h>
 #include <src/com/error.h>
 #include <src/com/log.h>
 #include <src/com/print.h>
 #include <src/com/thread.h>
-#include <src/com/time.h>
 
 #include <algorithm>
 #include <fftw3.h>
@@ -126,7 +126,7 @@ class FFTW final : public DFT
                         error("Error size FFTW");
                 }
 
-                const TimePoint start_time = time();
+                const Clock::time_point start_time = Clock::now();
 
                 std::copy(data->cbegin(), data->cend(), in_.begin());
 

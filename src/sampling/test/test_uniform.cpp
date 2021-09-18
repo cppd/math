@@ -17,11 +17,11 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "../sphere_uniform.h"
 
+#include <src/com/chrono.h>
 #include <src/com/error.h>
 #include <src/com/log.h>
 #include <src/com/print.h>
 #include <src/com/random/engine.h>
-#include <src/com/time.h>
 #include <src/com/type/name.h>
 #include <src/test/test.h>
 
@@ -53,7 +53,7 @@ double test_performance_on_sphere_by_rejection(int count, RandomEngine& random_e
 {
         static Vector<N, T> v;
 
-        TimePoint start_time = time();
+        Clock::time_point start_time = Clock::now();
 
         for (int i = 0; i < count; ++i)
         {
@@ -68,7 +68,7 @@ double test_performance_on_sphere_by_normal_distribution(int count, RandomEngine
 {
         static Vector<N, T> v;
 
-        TimePoint start_time = time();
+        Clock::time_point start_time = Clock::now();
 
         for (int i = 0; i < count; ++i)
         {
@@ -84,7 +84,7 @@ double test_performance_in_sphere_by_rejection(int count, RandomEngine& random_e
         static Vector<N, T> v;
         static T v_length_square;
 
-        TimePoint start_time = time();
+        Clock::time_point start_time = Clock::now();
 
         for (int i = 0; i < count; ++i)
         {
@@ -100,7 +100,7 @@ double test_performance_in_sphere_by_normal_distribution(int count, RandomEngine
         static Vector<N, T> v;
         static T v_length_square;
 
-        TimePoint start_time = time();
+        Clock::time_point start_time = Clock::now();
 
         for (int i = 0; i < count; ++i)
         {

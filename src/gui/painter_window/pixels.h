@@ -20,13 +20,13 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "initial_image.h"
 
 #include <src/color/color.h>
+#include <src/com/chrono.h>
 #include <src/com/error.h>
 #include <src/com/global_index.h>
 #include <src/com/message.h>
 #include <src/com/min_max.h>
 #include <src/com/print.h>
 #include <src/com/spin_lock.h>
-#include <src/com/time.h>
 #include <src/com/type/limit.h>
 #include <src/com/type/name.h>
 #include <src/image/format.h>
@@ -148,12 +148,12 @@ class PainterPixels final : public Pixels, public painter::Notifier<N - 1>
         {
                 ASSERT(std::this_thread::get_id() != thread_id_);
 
-                TimePoint last_normalize_time = time();
+                Clock::time_point last_normalize_time = Clock::now();
                 float brightness_parameter = -1;
 
                 while (!normalize_stop_.load(std::memory_order_relaxed))
                 {
-                        if (time() - last_normalize_time < NORMALIZE_INTERVAL
+                        if (Clock::now() - last_normalize_time < NORMALIZE_INTERVAL
                             && pixel_brightness_parameter_.load(std::memory_order_relaxed) == brightness_parameter)
                         {
                                 std::this_thread::sleep_for(std::chrono::seconds(1));
@@ -161,7 +161,7 @@ class PainterPixels final : public Pixels, public painter::Notifier<N - 1>
                         }
 
                         brightness_parameter = pixel_brightness_parameter_.load(std::memory_order_relaxed);
-                        last_normalize_time = time();
+                        last_normalize_time = Clock::now();
 
                         static_assert(sizeof(pixels_original_[0]) == 3 * sizeof(float));
                         const float max = max_value(

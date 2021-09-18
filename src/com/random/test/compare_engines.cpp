@@ -17,8 +17,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "../engine.h"
 
+#include <src/com/chrono.h>
 #include <src/com/log.h>
-#include <src/com/time.h>
 #include <src/com/type/name.h>
 #include <src/test/test.h>
 
@@ -40,7 +40,7 @@ void test_random_engine(const std::string_view& engine_name)
         std::uniform_real_distribution<T> urd(0, 1);
 
         T sum = 0;
-        TimePoint start_time = time();
+        Clock::time_point start_time = Clock::now();
         for (int i = 0; i < 100'000'000; ++i)
         {
                 sum += urd(engine);

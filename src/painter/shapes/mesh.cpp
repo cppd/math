@@ -23,12 +23,12 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "../objects.h"
 
 #include <src/color/color.h>
+#include <src/com/chrono.h>
 #include <src/com/log.h>
 #include <src/com/math.h>
 #include <src/com/memory_arena.h>
 #include <src/com/progression.h>
 #include <src/com/thread.h>
-#include <src/com/time.h>
 #include <src/com/type/limit.h>
 #include <src/geometry/spatial/object_tree.h>
 #include <src/geometry/spatial/shape_intersection.h>
@@ -379,7 +379,7 @@ void Mesh<N, T, Color>::create(const std::vector<mesh::Reading<N>>& mesh_objects
 template <std::size_t N, typename T, typename Color>
 Mesh<N, T, Color>::Mesh(const std::vector<const mesh::MeshObject<N>*>& mesh_objects, ProgressRatio* progress)
 {
-        TimePoint start_time = time();
+        Clock::time_point start_time = Clock::now();
 
         {
                 std::vector<mesh::Reading<N>> reading;

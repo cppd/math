@@ -20,10 +20,10 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "normals.h"
 #include "position.h"
 
+#include <src/com/chrono.h>
 #include <src/com/error.h>
 #include <src/com/log.h>
 #include <src/com/print.h>
-#include <src/com/time.h>
 
 #include <unordered_map>
 
@@ -99,14 +99,14 @@ std::unique_ptr<Mesh<N>> create_mesh_for_facets(
 {
         std::unique_ptr<Mesh<N>> mesh;
         {
-                TimePoint start_time = time();
+                Clock::time_point start_time = Clock::now();
 
                 mesh = create_mesh(points, facets);
 
                 LOG("Facets loaded, " + to_string_fixed(duration_from(start_time), 5) + " s");
         }
         {
-                TimePoint start_time = time();
+                Clock::time_point start_time = Clock::now();
 
                 compute_normals(mesh.get());
 

@@ -19,10 +19,10 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "cufft.h"
 
+#include <src/com/chrono.h>
 #include <src/com/error.h>
 #include <src/com/log.h>
 #include <src/com/print.h>
-#include <src/com/time.h>
 
 //#include <cuda.h>
 #include <cuda_runtime.h>
@@ -219,7 +219,7 @@ class CudaFFT final : public DFT
 
                 cuda_device_sync();
 
-                TimePoint start_time = time();
+                Clock::time_point start_time = Clock::now();
 
                 if (inverse)
                 {

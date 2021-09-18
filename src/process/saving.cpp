@@ -17,11 +17,11 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "saving.h"
 
+#include <src/com/chrono.h>
 #include <src/com/error.h>
 #include <src/com/file/path.h>
 #include <src/com/message.h>
 #include <src/com/print.h>
-#include <src/com/time.h>
 #include <src/gui/dialogs/file_dialog.h>
 #include <src/gui/dialogs/view_image.h>
 #include <src/image/depth.h>

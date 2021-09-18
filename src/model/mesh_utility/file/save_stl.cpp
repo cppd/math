@@ -22,11 +22,11 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "../unique.h"
 #include "../vertices.h"
 
+#include <src/com/chrono.h>
 #include <src/com/file/path.h>
 #include <src/com/log.h>
 #include <src/com/print.h>
 #include <src/com/string/str.h>
-#include <src/com/time.h>
 #include <src/com/type/limit.h>
 #include <src/numerical/complement.h>
 
@@ -295,7 +295,7 @@ std::filesystem::path save_to_stl_file(
                 file << std::showpos;
         }
 
-        TimePoint start_time = time();
+        Clock::time_point start_time = Clock::now();
 
         write(ascii_format, file, mesh, comment);
 

@@ -22,11 +22,11 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "../position.h"
 
+#include <src/com/chrono.h>
 #include <src/com/error.h>
 #include <src/com/log.h>
 #include <src/com/print.h>
 #include <src/com/thread.h>
-#include <src/com/time.h>
 
 #include <filesystem>
 
@@ -135,7 +135,7 @@ std::unique_ptr<Mesh<N>> read_text(const std::filesystem::path& file_name, Progr
 template <std::size_t N, typename Path>
 std::unique_ptr<Mesh<N>> load_from_txt_file(const Path& file_name, ProgressRatio* progress)
 {
-        TimePoint start_time = time();
+        Clock::time_point start_time = Clock::now();
 
         std::unique_ptr<Mesh<N>> mesh = read_text<N>(file_name, progress);
 

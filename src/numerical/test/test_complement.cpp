@@ -17,13 +17,13 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "../complement.h"
 
+#include <src/com/chrono.h>
 #include <src/com/error.h>
 #include <src/com/log.h>
 #include <src/com/math.h>
 #include <src/com/names.h>
 #include <src/com/print.h>
 #include <src/com/random/engine.h>
-#include <src/com/time.h>
 #include <src/com/type/limit.h>
 #include <src/com/type/name.h>
 #include <src/sampling/sphere_uniform.h>
@@ -74,7 +74,7 @@ std::vector<std::array<Vector<N, T>, N - 1>> complement_vectors(const std::vecto
         std::vector<std::array<Vector<N, T>, N - 1>> res;
         res.reserve(vectors.size());
 
-        TimePoint start_time = time();
+        Clock::time_point start_time = Clock::now();
 
         for (const Vector<N, T>& unit_vector : vectors)
         {

@@ -15,10 +15,10 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
+#include <src/com/chrono.h>
 #include <src/com/log.h>
 #include <src/com/math.h>
 #include <src/com/print.h>
-#include <src/com/time.h>
 #include <src/com/type/limit.h>
 #include <src/test/test.h>
 
@@ -37,7 +37,7 @@ __attribute__((noinline)) double computation(std::vector<T>* v)
         constexpr T ADD = 20;
         constexpr T SUB = 30;
 
-        TimePoint start_time = time();
+        Clock::time_point start_time = Clock::now();
         for (int i = 0; i < N; ++i)
         {
                 (*v)[i] = ((*v)[i] + ADD) * ((*v)[i] - SUB) + ADD;
@@ -52,7 +52,7 @@ __attribute__((noinline)) double computation(std::vector<mpz_class>* v)
         mpz_class tmp1;
         mpz_class tmp2;
 
-        TimePoint start_time = time();
+        Clock::time_point start_time = Clock::now();
         for (int i = 0; i < N; ++i)
         {
                 mpz_add(tmp1.get_mpz_t(), (*v)[i].get_mpz_t(), add.get_mpz_t());
@@ -70,7 +70,7 @@ __attribute__((noinline)) double computation(std::vector<mpf_class>* v)
         mpf_class tmp1;
         mpf_class tmp2;
 
-        TimePoint start_time = time();
+        Clock::time_point start_time = Clock::now();
         for (int i = 0; i < N; ++i)
         {
                 mpf_add(tmp1.get_mpf_t(), (*v)[i].get_mpf_t(), add.get_mpf_t());

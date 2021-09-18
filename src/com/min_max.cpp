@@ -17,11 +17,11 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "min_max.h"
 
+#include <src/com/chrono.h>
 #include <src/com/error.h>
 #include <src/com/log.h>
 #include <src/com/print.h>
 #include <src/com/random/engine.h>
-#include <src/com/time.h>
 #include <src/com/type/name.h>
 #include <src/test/test.h>
 
@@ -97,12 +97,12 @@ void test_min_max_performance(Engine& engine)
         }();
 
         {
-                TimePoint t1 = time();
+                Clock::time_point t1 = Clock::now();
                 const T v1 = min_value(std::span<const T>(data));
                 const double d1 = duration_from(t1);
                 LOG("       min_value" + type_str + " = " + to_string(d1) + " seconds");
 
-                TimePoint t2 = time();
+                Clock::time_point t2 = Clock::now();
                 const T v2 = *std::min_element(data.cbegin(), data.cend());
                 const double d2 = duration_from(t2);
                 LOG("std::min_element" + type_str + " = " + to_string(d2) + " seconds");
@@ -110,12 +110,12 @@ void test_min_max_performance(Engine& engine)
                 check_equal<T>(v1, v2, "minimum");
         }
         {
-                TimePoint t1 = time();
+                Clock::time_point t1 = Clock::now();
                 const T v1 = max_value(std::span<const T>(data));
                 const double d1 = duration_from(t1);
                 LOG("       max_value" + type_str + " = " + to_string(d1) + " seconds");
 
-                TimePoint t2 = time();
+                Clock::time_point t2 = Clock::now();
                 const T v2 = *std::max_element(data.cbegin(), data.cend());
                 const double d2 = duration_from(t2);
                 LOG("std::max_element" + type_str + " = " + to_string(d2) + " seconds");

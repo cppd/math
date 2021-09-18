@@ -22,13 +22,13 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "../shapes/mesh.h"
 
 #include <src/color/color.h>
+#include <src/com/chrono.h>
 #include <src/com/file/path.h>
 #include <src/com/log.h>
 #include <src/com/names.h>
 #include <src/com/random/engine.h>
 #include <src/com/string/str.h>
 #include <src/com/thread.h>
-#include <src/com/time.h>
 #include <src/geometry/shapes/sphere_create.h>
 #include <src/gui/painter_window/painter_window.h>
 #include <src/image/conversion.h>
@@ -191,7 +191,7 @@ void test_painter_file(int samples_per_pixel, int thread_count, std::unique_ptr<
         Image<N - 1> image(DIRECTORY_NAME);
 
         LOG("Painting...");
-        TimePoint start_time = time();
+        Clock::time_point start_time = Clock::now();
         {
                 std::unique_ptr<Painter> painter = create_painter(
                         &image, samples_per_pixel, MAX_PASS_COUNT,

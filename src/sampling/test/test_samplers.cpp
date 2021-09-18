@@ -21,11 +21,11 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "../lh_sampler.h"
 #include "../sj_sampler.h"
 
+#include <src/com/chrono.h>
 #include <src/com/file/path.h>
 #include <src/com/log.h>
 #include <src/com/print.h>
 #include <src/com/random/engine.h>
-#include <src/com/time.h>
 #include <src/com/type/name.h>
 #include <src/test/test.h>
 
@@ -264,7 +264,7 @@ void test_performance(bool shuffle)
 
         {
                 StratifiedJitteredSampler<N, T> sampler(0, 1, SAMPLE_COUNT, shuffle);
-                TimePoint start_time = time();
+                Clock::time_point start_time = Clock::now();
                 for (int i = 0; i < ITER_COUNT; ++i)
                 {
                         sampler.generate(random_engine, &data);
@@ -274,7 +274,7 @@ void test_performance(bool shuffle)
         }
         {
                 LatinHypercubeSampler<N, T> sampler(0, 1, SAMPLE_COUNT, shuffle);
-                TimePoint start_time = time();
+                Clock::time_point start_time = Clock::now();
                 for (int i = 0; i < ITER_COUNT; ++i)
                 {
                         sampler.generate(random_engine, &data);
@@ -284,7 +284,7 @@ void test_performance(bool shuffle)
         }
         {
                 HaltonSampler<N, T> sampler;
-                TimePoint start_time = time();
+                Clock::time_point start_time = Clock::now();
                 data.resize(SAMPLE_COUNT);
                 for (int i = 0; i < ITER_COUNT; ++i)
                 {

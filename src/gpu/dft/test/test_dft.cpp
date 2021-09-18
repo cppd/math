@@ -27,12 +27,12 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "../compute.h"
 
+#include <src/com/chrono.h>
 #include <src/com/error.h>
 #include <src/com/file/path.h>
 #include <src/com/log.h>
 #include <src/com/print.h>
 #include <src/com/random/engine.h>
-#include <src/com/time.h>
 #include <src/test/test.h>
 
 #include <array>
@@ -86,7 +86,7 @@ void compare(
 }
 #endif
 
-std::string time_string(const std::string& name, const TimePoint& start_time)
+std::string time_string(const std::string& name, const Clock::time_point& start_time)
 {
         return name + " time: " + to_string_fixed(1000.0 * duration_from(start_time), 5) + " ms";
 }
@@ -135,7 +135,7 @@ void compute_vulkan(ComputeVector* dft, bool inverse, int n1, int n2, std::vecto
                 dft->create_buffers(uid(engine), uid(engine));
         }
 
-        TimePoint start_time = time();
+        Clock::time_point start_time = Clock::now();
 
         dft->create_buffers(n1, n2);
         dft->exec(inverse, data);
@@ -155,7 +155,7 @@ void compute_cuda(bool inverse, int n1, int n2, std::vector<Complex>* data)
                 LOG("----- cuFFT forward -----");
         }
 
-        TimePoint start_time = time();
+        Clock::time_point start_time = Clock::now();
 
         std::unique_ptr<ns::dft::DFT> cufft = ns::dft::create_cufft(n1, n2);
         cufft->exec(inverse, data);
@@ -176,7 +176,7 @@ void compute_fftw(bool inverse, int n1, int n2, std::vector<Complex>* data)
                 LOG("----- FFTW forward -----");
         }
 
-        TimePoint start_time = time();
+        Clock::time_point start_time = Clock::now();
 
         std::unique_ptr<ns::dft::DFT> fftw = ns::dft::create_fftw(n1, n2);
         fftw->exec(inverse, data);

@@ -17,7 +17,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
-#include "time.h"
+#include "chrono.h"
 
 #include <deque>
 #include <vector>
@@ -35,7 +35,7 @@ class Frequency
                 }
         };
 
-        const TimePoint start_time_ = time();
+        const Clock::time_point start_time_ = Clock::now();
         const int sample_count_;
         const double sample_frequency_;
         const std::vector<double> window_;

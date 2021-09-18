@@ -17,11 +17,11 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "../erf.h"
 
+#include <src/com/chrono.h>
 #include <src/com/error.h>
 #include <src/com/log.h>
 #include <src/com/print.h>
 #include <src/com/random/engine.h>
-#include <src/com/time.h>
 #include <src/com/type/limit.h>
 #include <src/com/type/name.h>
 #include <src/test/test.h>
@@ -232,7 +232,7 @@ void test_performance()
         }
 
         std::vector<T> result(COUNT);
-        TimePoint time_point = time();
+        Clock::time_point time_point = Clock::now();
         for (int i = 0; i < COUNT; ++i)
         {
                 result[i] = erf_inv(data[i]);
