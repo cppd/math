@@ -15,14 +15,14 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include "log_events.h"
-
 #include "log.h"
+
+#include "write.h"
 
 #include <mutex>
 #include <vector>
 
-namespace ns::application
+namespace ns
 {
 namespace
 {
@@ -200,6 +200,16 @@ LogEvents& log_events()
 
 //
 
+void log(const std::string_view& text, LogType type) noexcept
+{
+        log_events().log_event(text, type);
+}
+
+void log(const std::string_view& text, MessageType type) noexcept
+{
+        log_events().log_event(text, type);
+}
+
 LogEventsObserver::LogEventsObserver(std::function<void(const LogEvent&)> observer) : observer_(std::move(observer))
 {
         log_events().insert(&observer_);
@@ -219,17 +229,5 @@ MessageEventsObserver::MessageEventsObserver(std::function<void(const MessageEve
 MessageEventsObserver::~MessageEventsObserver()
 {
         log_events().erase(&observer_);
-}
-
-//
-
-void log_impl(const std::string_view& text, LogType type) noexcept
-{
-        log_events().log_event(text, type);
-}
-
-void log_impl(const std::string_view& text, MessageType type) noexcept
-{
-        log_events().log_event(text, type);
 }
 }

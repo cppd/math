@@ -17,7 +17,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "error.h"
 
-#include <src/application/log.h>
+#include "log/write.h"
 
 namespace ns
 {
@@ -29,8 +29,8 @@ void error(std::string text)
 void error_fatal(const char* text) noexcept
 {
         // no call to other functions because of a possible recursion
-        static_assert(noexcept(application::write_log_fatal_error_and_exit(text)));
-        application::write_log_fatal_error_and_exit(text);
+        static_assert(noexcept(write_log_fatal_error_and_exit(text)));
+        write_log_fatal_error_and_exit(text);
 }
 
 void error_fatal(const std::string& text) noexcept

@@ -30,20 +30,20 @@ namespace ns::gui
 {
 namespace
 {
-void message_event(const application::MessageEvent& event)
+void message_event(const MessageEvent& event)
 {
         switch (event.type)
         {
-        case application::MessageType::ERROR:
+        case MessageType::ERROR:
                 dialog::message_critical(event.text);
                 return;
-        case application::MessageType::ERROR_FATAL:
+        case MessageType::ERROR_FATAL:
                 dialog::message_critical(event.text, false /*with_parent*/);
                 error_fatal("Exit after error message\n" + event.text);
-        case application::MessageType::INFORMATION:
+        case MessageType::INFORMATION:
                 dialog::message_information(event.text);
                 return;
-        case application::MessageType::WARNING:
+        case MessageType::WARNING:
                 dialog::message_warning(event.text);
                 return;
         }
@@ -55,8 +55,8 @@ int run_application(int argc, char** argv)
 {
         Application a(argc, argv);
 
-        application::MessageEventsObserver message_observer(
-                [](const application::MessageEvent& event)
+        MessageEventsObserver message_observer(
+                [](const MessageEvent& event)
                 {
                         Application::run(
                                 [event]()

@@ -17,8 +17,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
-#include <src/application/log_events.h>
 #include <src/color/color.h>
+#include <src/com/log/log.h>
 
 #include <QPlainTextEdit>
 #include <array>
@@ -45,7 +45,7 @@ class Log final
         std::array<std::vector<Message>, 2> messages_;
         std::atomic<std::vector<Message>*> messages_ptr_;
 
-        application::LogEventsObserver observer_;
+        LogEventsObserver observer_;
 
 public:
         explicit Log(QPlainTextEdit* text_edit);

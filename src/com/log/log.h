@@ -20,7 +20,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <functional>
 #include <string>
 
-namespace ns::application
+namespace ns
 {
 enum class LogType
 {
@@ -60,6 +60,9 @@ struct MessageEvent final
         }
 };
 
+void log(const std::string_view& text, LogType type) noexcept;
+void log(const std::string_view& text, MessageType type) noexcept;
+
 class LogEventsObserver final
 {
         std::function<void(const LogEvent&)> observer_;
@@ -87,7 +90,4 @@ public:
         MessageEventsObserver& operator=(const MessageEventsObserver&) = delete;
         MessageEventsObserver& operator=(MessageEventsObserver&&) = delete;
 };
-
-void log_impl(const std::string_view& text, LogType type) noexcept;
-void log_impl(const std::string_view& text, MessageType type) noexcept;
 }

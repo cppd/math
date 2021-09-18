@@ -17,27 +17,27 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "message.h"
 
-#include <src/application/log_events.h>
+#include "log/log.h"
 
 namespace ns
 {
 void message_error(const std::string_view& msg) noexcept
 {
-        application::log_impl(msg, application::MessageType::ERROR);
+        log(msg, MessageType::ERROR);
 }
 
 void message_error_fatal(const std::string_view& msg) noexcept
 {
-        application::log_impl(msg, application::MessageType::ERROR_FATAL);
+        log(msg, MessageType::ERROR_FATAL);
 }
 
 void message_warning(const std::string_view& msg) noexcept
 {
-        application::log_impl(msg, application::MessageType::WARNING);
+        log(msg, MessageType::WARNING);
 }
 
 void message_information(const std::string_view& msg) noexcept
 {
-        application::log_impl(msg, application::MessageType::INFORMATION);
+        log(msg, MessageType::INFORMATION);
 }
 }

@@ -25,23 +25,23 @@ namespace ns::gui::main_window
 {
 namespace
 {
-RGB8 event_color(application::LogType type)
+RGB8 event_color(LogType type)
 {
         switch (type)
         {
-        case application::LogType::NORMAL:
+        case LogType::NORMAL:
         {
                 return RGB8(0, 0, 0);
         }
-        case application::LogType::ERROR:
+        case LogType::ERROR:
         {
                 return RGB8(255, 0, 0);
         }
-        case application::LogType::WARNING:
+        case LogType::WARNING:
         {
                 return RGB8(200, 150, 0);
         }
-        case application::LogType::INFORMATION:
+        case LogType::INFORMATION:
         {
                 return RGB8(0, 0, 255);
         }
@@ -75,7 +75,7 @@ Log::Log(QPlainTextEdit* text_edit)
         : text_edit_(text_edit),
           messages_ptr_(&messages_[0]),
           observer_(
-                  [this](const application::LogEvent& event)
+                  [this](const LogEvent& event)
                   {
                           RGB8 color = event_color(event.type);
                           if (!(*messages_ptr_).empty() && (*messages_ptr_).back().color == color)
