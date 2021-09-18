@@ -17,6 +17,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "application.h"
 
+#include "com/application.h"
 #include "com/command_line.h"
 #include "com/main_thread.h"
 #include "com/support.h"
@@ -31,43 +32,6 @@ namespace ns::gui
 {
 namespace
 {
-class Application final : public QApplication
-{
-        bool notify(QObject* receiver, QEvent* event) noexcept override
-        {
-                try
-                {
-                        try
-                        {
-                                return QApplication::notify(receiver, event);
-                        }
-                        catch (const std::exception& e)
-                        {
-                                std::string msg;
-                                msg += "Error in an event receiver\n";
-                                msg += e.what();
-                                dialog::message_critical(msg, false /*with_parent*/);
-                                error_fatal(msg);
-                        }
-                        catch (...)
-                        {
-                                const char* msg = "Error in an event receiver";
-                                dialog::message_critical(msg, false /*with_parent*/);
-                                error_fatal(msg);
-                        }
-                }
-                catch (...)
-                {
-                        error_fatal("Exception in the notify exception handlers");
-                }
-        }
-
-public:
-        Application(int& argc, char** argv) : QApplication(argc, argv)
-        {
-        }
-};
-
 void message_event(const application::MessageEvent& event)
 {
         switch (event.type)
