@@ -20,25 +20,54 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <exception>
 
-int main(int argc, char** argv)
+namespace
 {
-        try
+[[noreturn]] void terminate_write()
+{
+        if (std::current_exception())
         {
                 try
                 {
-                        return ns::gui::run_application(argc, argv);
+                        std::rethrow_exception(std::current_exception());
                 }
                 catch (const std::exception& e)
                 {
-                        ns::error_fatal(std::string("Error in the main function\n") + e.what());
+                        try
+                        {
+                                ns::error_fatal(std::string("terminate called, exception: ") + e.what());
+                        }
+                        catch (...)
+                        {
+                                ns::error_fatal("terminate called, exception in exception handler");
+                        }
                 }
                 catch (...)
                 {
-                        ns::error_fatal("Unknown error in the main function");
+                        ns::error_fatal("terminate called, unknown exception");
                 }
+        }
+        else
+        {
+                ns::error_fatal("terminate called, no exception");
+        }
+}
+
+[[noreturn]] void terminate_handler()
+{
+        try
+        {
+                terminate_write();
         }
         catch (...)
         {
-                ns::error_fatal("Exception in the main function exception handlers");
         }
+        std::abort();
+}
+}
+
+int main(int argc, char** argv)
+{
+        std::set_terminate(terminate_handler);
+
+        return ns::gui::run_application(argc, argv);
 }
