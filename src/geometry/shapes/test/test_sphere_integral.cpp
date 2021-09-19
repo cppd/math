@@ -20,8 +20,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "../sphere_integral.h"
 
 #include <src/com/constant.h>
+#include <src/com/exponent.h>
 #include <src/com/log.h>
-#include <src/com/math.h>
 #include <src/com/random/engine.h>
 #include <src/com/type/limit.h>
 #include <src/com/type/name.h>

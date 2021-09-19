@@ -23,6 +23,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/com/type/name.h>
 #include <src/numerical/vec.h>
 
+#include <cmath>
 #include <string>
 
 namespace ns::mesh::file
@@ -75,7 +76,7 @@ bool read_one_float_from_string(const char** str, T* p)
         char* end;
         T value = str_to_floating_point<T>(*str, &end);
 
-        if (end == *str || errno == ERANGE || !is_finite(value))
+        if (end == *str || errno == ERANGE || !std::isfinite(value))
         {
                 return false;
         }

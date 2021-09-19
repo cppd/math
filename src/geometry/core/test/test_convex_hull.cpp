@@ -86,7 +86,7 @@ void check_visible_from_point(const std::vector<Vector<N, float>>& points, const
         }
 
         const double d = dot(facet.ortho(), v);
-        if (!is_finite(d))
+        if (!std::isfinite(d))
         {
                 error("Dot product between " + to_string(facet.ortho()) + " and " + to_string(v)
                       + " is not finite: " + to_string(d));

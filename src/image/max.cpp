@@ -18,8 +18,9 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "max.h"
 
 #include <src/com/error.h>
-#include <src/com/math.h>
 #include <src/com/print.h>
+
+#include <cmath>
 
 namespace ns::image
 {
@@ -28,13 +29,14 @@ namespace
 template <typename T>
 bool finite(const T& v)
 {
+        static_assert(std::is_arithmetic_v<T>);
         if constexpr (!std::is_floating_point_v<T>)
         {
                 return true;
         }
         else
         {
-                return is_finite(v);
+                return std::isfinite(v);
         }
 }
 

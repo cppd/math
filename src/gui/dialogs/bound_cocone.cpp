@@ -22,7 +22,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "../com/support.h"
 
 #include <src/com/error.h>
-#include <src/com/math.h>
 #include <src/com/print.h>
 
 #include <mutex>
@@ -86,14 +85,14 @@ BoundCoconeParametersDialog::BoundCoconeParametersDialog(
         min_alpha_ = std::pow(10, minimum_alpha_exponent);
         max_alpha_ = 1 - min_alpha_;
 
-        double rho = is_finite(input.rho) ? std::clamp(input.rho, min_rho_, max_rho_) : min_rho_;
+        double rho = std::isfinite(input.rho) ? std::clamp(input.rho, min_rho_, max_rho_) : min_rho_;
         ui_.doubleSpinBox_rho->setDecimals(std::abs(minimum_rho_exponent));
         ui_.doubleSpinBox_rho->setMinimum(min_rho_);
         ui_.doubleSpinBox_rho->setMaximum(max_rho_);
         ui_.doubleSpinBox_rho->setSingleStep(min_rho_);
         ui_.doubleSpinBox_rho->setValue(rho);
 
-        double alpha = is_finite(input.alpha) ? std::clamp(input.alpha, min_alpha_, max_alpha_) : min_alpha_;
+        double alpha = std::isfinite(input.alpha) ? std::clamp(input.alpha, min_alpha_, max_alpha_) : min_alpha_;
         ui_.doubleSpinBox_alpha->setDecimals(std::abs(minimum_alpha_exponent));
         ui_.doubleSpinBox_alpha->setMinimum(min_alpha_);
         ui_.doubleSpinBox_alpha->setMaximum(max_alpha_);

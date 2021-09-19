@@ -18,10 +18,10 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "normalize.h"
 
 #include <src/com/error.h>
-#include <src/com/math.h>
 #include <src/com/print.h>
 #include <src/com/type/limit.h>
 
+#include <cmath>
 #include <span>
 
 namespace ns::image
@@ -55,7 +55,7 @@ void normalize(std::vector<std::byte>* bytes)
                 std::memcpy(pixel.data(), ptr, COLOR_SIZE);
                 for (std::size_t n = 0; n < N; ++n)
                 {
-                        if (is_finite(pixel[n]))
+                        if (std::isfinite(pixel[n]))
                         {
                                 max = std::max(max, pixel[n]);
                         }
@@ -64,7 +64,7 @@ void normalize(std::vector<std::byte>* bytes)
         }
         ASSERT(ptr == bytes->data() + bytes->size());
 
-        ASSERT(is_finite(max));
+        ASSERT(std::isfinite(max));
 
         if (!(max > 0 && max != 1))
         {

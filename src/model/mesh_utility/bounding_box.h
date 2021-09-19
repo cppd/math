@@ -21,6 +21,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <src/com/error.h>
 
+#include <cmath>
 #include <optional>
 #include <vector>
 
@@ -47,11 +48,11 @@ bool min_max_found(const Vector<N, T>& min, const Vector<N, T>& max)
 {
         for (unsigned i = 0; i < N; ++i)
         {
-                if (!is_finite(min[i]))
+                if (!std::isfinite(min[i]))
                 {
                         error("Mesh min is not finite");
                 }
-                if (!is_finite(max[i]))
+                if (!std::isfinite(max[i]))
                 {
                         error("Mesh max is not finite");
                 }

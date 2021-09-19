@@ -25,6 +25,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/com/type/name.h>
 #include <src/test/test.h>
 
+#include <cmath>
 #include <random>
 
 namespace ns::numerical
@@ -79,7 +80,7 @@ std::vector<MatrixWithDeterminant<N, T>> random_symmetric_matrices(unsigned coun
                                 }
                         }
                         m.determinant = m.matrix.determinant();
-                } while (!(is_finite(m.determinant) && m.determinant >= T(0.001)));
+                } while (!(std::isfinite(m.determinant) && m.determinant >= T(0.001)));
         }
         return matrices;
 }

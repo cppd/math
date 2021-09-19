@@ -65,7 +65,7 @@ void test_integrate(ProgressRatio* progress, double progress_min, double progres
         const T simplex_area = sphere_simplex_area(simplex_vertices);
         const T relative_area = simplex_area / area;
 
-        if (!is_finite(relative_area))
+        if (!std::isfinite(relative_area))
         {
                 error("Relative area " + to_string(relative_area) + " is not finite, sphere area = " + to_string(area)
                       + ", simplex area = " + to_string(simplex_area));

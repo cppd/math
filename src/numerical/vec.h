@@ -26,9 +26,9 @@ Norms
 
 #pragma once
 
+#include <src/com/exponent.h>
 #include <src/com/hash.h>
 #include <src/com/interpolation.h>
-#include <src/com/math.h>
 #include <src/com/type/limit.h>
 
 #include <algorithm>
@@ -407,11 +407,11 @@ template <std::size_t N, typename T>
 }
 
 template <std::size_t N, typename T>
-[[nodiscard]] bool is_finite(const Vector<N, T>& data)
+[[nodiscard]] bool is_finite(const Vector<N, T>& data) requires(std::is_floating_point_v<T>)
 {
         for (std::size_t i = 0; i < N; ++i)
         {
-                if (is_finite(data[i]))
+                if (std::isfinite(data[i]))
                 {
                         continue;
                 }

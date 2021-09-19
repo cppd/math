@@ -21,6 +21,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/com/print.h>
 #include <src/numerical/vec.h>
 
+#include <cmath>
 #include <tuple>
 
 namespace ns::model
@@ -46,7 +47,7 @@ std::tuple<Vector<N, T>, T> center_and_length_for_min_max(const Vector<N, T>& mi
         {
                 error("Object center is not finite");
         }
-        if (!is_finite(len))
+        if (!std::isfinite(len))
         {
                 error("Object length is not finite");
         }

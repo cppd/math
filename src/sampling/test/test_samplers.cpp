@@ -22,6 +22,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "../sj_sampler.h"
 
 #include <src/com/chrono.h>
+#include <src/com/exponent.h>
 #include <src/com/file/path.h>
 #include <src/com/log.h>
 #include <src/com/print.h>

@@ -26,6 +26,7 @@ Elsevier, 2017.
 #pragma once
 
 #include <src/com/error.h>
+#include <src/com/exponent.h>
 #include <src/com/names.h>
 #include <src/com/print.h>
 #include <src/numerical/vec.h>

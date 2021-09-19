@@ -24,8 +24,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <src/color/color.h>
 #include <src/com/chrono.h>
+#include <src/com/exponent.h>
 #include <src/com/log.h>
-#include <src/com/math.h>
 #include <src/com/memory_arena.h>
 #include <src/com/progression.h>
 #include <src/com/thread.h>

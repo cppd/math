@@ -52,7 +52,6 @@ The projection to the n-space of the lower convex hull of the points
 #include <src/com/combinatorics.h>
 #include <src/com/error.h>
 #include <src/com/log.h>
-#include <src/com/math.h>
 #include <src/com/names.h>
 #include <src/com/print.h>
 #include <src/com/shuffle.h>

@@ -30,6 +30,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/image/normalize.h>
 #include <src/model/mesh_utility.h>
 
+#include <cmath>
 #include <iomanip>
 #include <sstream>
 
@@ -98,7 +99,7 @@ std::string image_info(const image::Image<2>& image)
         {
                 error("Maximum image value is not found");
         }
-        if (!(is_finite(*max) && *max >= 0))
+        if (!(std::isfinite(*max) && *max >= 0))
         {
                 error("Error maximum image value " + to_string(*max));
         }

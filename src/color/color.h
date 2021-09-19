@@ -210,9 +210,9 @@ class SpectrumSamples final : public Samples<SpectrumSamples<T, N>, N, T>
         // Journal of Graphics Tools, 1999.
         static Vector<N, T> rgb_to_spectrum(T red, T green, T blue, const Colors& c)
         {
-                ASSERT(is_finite(red));
-                ASSERT(is_finite(green));
-                ASSERT(is_finite(blue));
+                ASSERT(std::isfinite(red));
+                ASSERT(std::isfinite(green));
+                ASSERT(std::isfinite(blue));
 
                 red = std::max(T(0), red);
                 green = std::max(T(0), green);

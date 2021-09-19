@@ -20,6 +20,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "../sphere_area.h"
 
 #include <src/com/constant.h>
+#include <src/com/exponent.h>
 #include <src/com/log.h>
 #include <src/com/type/name.h>
 #include <src/test/test.h>

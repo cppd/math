@@ -24,7 +24,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "../sphere_uniform.h"
 
 #include <src/com/error.h>
-#include <src/com/math.h>
+#include <src/com/exponent.h>
 #include <src/com/print.h>
 #include <src/com/progression.h>
 #include <src/com/thread.h>

@@ -18,7 +18,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #pragma once
 
 #include <src/com/constant.h>
-#include <src/com/math.h>
+#include <src/com/exponent.h>
 
 #include <cmath>
 

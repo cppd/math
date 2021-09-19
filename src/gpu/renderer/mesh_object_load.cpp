@@ -24,7 +24,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/com/container.h>
 #include <src/com/hash.h>
 #include <src/com/log.h>
-#include <src/com/math.h>
 #include <src/com/print.h>
 #include <src/com/thread.h>
 
@@ -164,7 +163,7 @@ void set_face_vertices(
                             [](const auto& d)
                             {
                                     static_assert(MIN_COSINE_VERTEX_NORMAL_FACET_NORMAL > 0);
-                                    return is_finite(d) && std::abs(d) >= MIN_COSINE_VERTEX_NORMAL_FACET_NORMAL;
+                                    return std::isfinite(d) && std::abs(d) >= MIN_COSINE_VERTEX_NORMAL_FACET_NORMAL;
                             }))
                 {
                         for (int i = 0; i < 3; ++i)

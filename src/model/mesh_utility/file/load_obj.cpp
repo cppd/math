@@ -27,7 +27,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/com/error.h>
 #include <src/com/file/path.h>
 #include <src/com/log.h>
-#include <src/com/math.h>
 #include <src/com/print.h>
 #include <src/com/string/ascii.h>
 #include <src/com/thread.h>

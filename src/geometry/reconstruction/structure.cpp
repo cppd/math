@@ -148,7 +148,7 @@ double voronoi_height(
 
         double len = std::sqrt(max_distance);
 
-        if (!is_finite(len))
+        if (!std::isfinite(len))
         {
                 error("Negative pole vector not finite");
         }
@@ -209,7 +209,7 @@ double voronoi_edge_radius(
                 }
         }
 
-        if (!is_finite(*max_distance))
+        if (!std::isfinite(*max_distance))
         {
                 error("Cocone intersection distance is not finite");
         }

@@ -18,7 +18,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "blackbody_samples.h"
 
 #include <src/com/error.h>
-#include <src/com/math.h>
+#include <src/com/exponent.h>
 #include <src/com/print.h>
 #include <src/numerical/integrate.h>
 

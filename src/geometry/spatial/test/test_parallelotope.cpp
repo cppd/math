@@ -351,7 +351,7 @@ bool point_is_in_feasible_region(const Vector<N, T>& point, const std::array<Con
         {
                 T r = dot(c[i].a, point) + c[i].b;
 
-                if (!is_finite(r))
+                if (!std::isfinite(r))
                 {
                         error("Not finite point " + to_string(point) + " and constraint a = " + to_string(c[i].a)
                               + ", b = " + to_string(c[i].b));

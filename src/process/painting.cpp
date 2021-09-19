@@ -21,6 +21,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "painter_scene.h"
 
 #include <src/color/illuminants.h>
+#include <src/com/exponent.h>
 #include <src/com/log.h>
 #include <src/com/thread.h>
 #include <src/com/type/name.h>

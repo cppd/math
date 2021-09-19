@@ -23,6 +23,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <src/com/constant.h>
 #include <src/com/error.h>
+#include <src/com/exponent.h>
 #include <src/com/print.h>
 #include <src/numerical/ray.h>
 #include <src/numerical/vec.h>

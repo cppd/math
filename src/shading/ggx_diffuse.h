@@ -39,7 +39,7 @@ Elsevier, 2017.
 
 #include <src/com/constant.h>
 #include <src/com/error.h>
-#include <src/com/math.h>
+#include <src/com/exponent.h>
 #include <src/geometry/shapes/sphere_integral.h>
 #include <src/numerical/vec.h>
 #include <src/sampling/sphere_cosine.h>

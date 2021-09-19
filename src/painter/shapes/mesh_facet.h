@@ -27,6 +27,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/numerical/vec.h>
 
 #include <array>
+#include <cmath>
 #include <string>
 #include <vector>
 
@@ -159,7 +160,7 @@ public:
                             [](const T& d)
                             {
                                     static_assert(MIN_COSINE_VERTEX_NORMAL_FACET_NORMAL > 0);
-                                    return is_finite(d) && std::abs(d) >= MIN_COSINE_VERTEX_NORMAL_FACET_NORMAL;
+                                    return std::isfinite(d) && std::abs(d) >= MIN_COSINE_VERTEX_NORMAL_FACET_NORMAL;
                             }))
                 {
                         normal_type_ = NormalType::NONE;

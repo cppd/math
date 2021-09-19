@@ -17,6 +17,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
+#include <src/com/exponent.h>
 #include <src/com/type/limit.h>
 #include <src/numerical/quadratic.h>
 #include <src/numerical/vec.h>
