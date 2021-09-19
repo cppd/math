@@ -24,7 +24,7 @@ namespace ns::vulkan
 {
 namespace
 {
-void add_to_debug_message(std::string* str, const char* text)
+void add(std::string* const str, const char* const text)
 {
         if (!str->empty())
         {
@@ -33,53 +33,58 @@ void add_to_debug_message(std::string* str, const char* text)
         *str += text;
 }
 
+bool bits(const VkDebugReportFlagsEXT flags, const VkDebugReportFlagBitsEXT bits)
+{
+        return (flags & bits) == bits;
+}
+
 VKAPI_ATTR VkBool32 VKAPI_CALL debug_callback(
-        VkDebugReportFlagsEXT flags,
-        VkDebugReportObjectTypeEXT /*objectType*/,
-        uint64_t /*object*/,
-        std::size_t /*location*/,
-        int32_t /*messageCode*/,
-        const char* /*pLayerPrefix*/,
-        const char* pMessage,
-        void* /*pUserData*/)
+        const VkDebugReportFlagsEXT flags,
+        const VkDebugReportObjectTypeEXT /*object_type*/,
+        const uint64_t /*object*/,
+        const std::size_t /*location*/,
+        const int32_t /*message_code*/,
+        const char* const /*layer_prefix*/,
+        const char* const message,
+        void* const /*user_data*/)
 {
         std::string s;
 
-        if (flags & VK_DEBUG_REPORT_INFORMATION_BIT_EXT)
+        if (bits(flags, VK_DEBUG_REPORT_INFORMATION_BIT_EXT))
         {
-                add_to_debug_message(&s, "information");
+                add(&s, "information");
         }
-        if (flags & VK_DEBUG_REPORT_WARNING_BIT_EXT)
+        if (bits(flags, VK_DEBUG_REPORT_WARNING_BIT_EXT))
         {
-                add_to_debug_message(&s, "warning");
+                add(&s, "warning");
         }
-        if (flags & VK_DEBUG_REPORT_PERFORMANCE_WARNING_BIT_EXT)
+        if (bits(flags, VK_DEBUG_REPORT_PERFORMANCE_WARNING_BIT_EXT))
         {
-                add_to_debug_message(&s, "performance warning");
+                add(&s, "performance warning");
         }
-        if (flags & VK_DEBUG_REPORT_ERROR_BIT_EXT)
+        if (bits(flags, VK_DEBUG_REPORT_ERROR_BIT_EXT))
         {
-                add_to_debug_message(&s, "error");
+                add(&s, "error");
         }
-        if (flags & VK_DEBUG_REPORT_DEBUG_BIT_EXT)
+        if (bits(flags, VK_DEBUG_REPORT_DEBUG_BIT_EXT))
         {
-                add_to_debug_message(&s, "debug");
+                add(&s, "debug");
         }
 
         if (!s.empty())
         {
-                LOG("Validation layer message (" + s + "): " + std::string(pMessage));
+                LOG("Validation layer message (" + s + "): " + message);
         }
         else
         {
-                LOG("Validation layer message: " + std::string(pMessage));
+                LOG(std::string("Validation layer message: ") + message);
         }
 
         return VK_FALSE;
 }
 }
 
-DebugReportCallback create_debug_report_callback(VkInstance instance)
+DebugReportCallback create_debug_report_callback(const VkInstance instance)
 {
         if (instance == VK_NULL_HANDLE)
         {
@@ -93,10 +98,9 @@ DebugReportCallback create_debug_report_callback(VkInstance instance)
         create_info.flags |= VK_DEBUG_REPORT_ERROR_BIT_EXT;
         create_info.flags |= VK_DEBUG_REPORT_WARNING_BIT_EXT;
         create_info.flags |= VK_DEBUG_REPORT_PERFORMANCE_WARNING_BIT_EXT;
-#if 0
-        create_info.flags |= VK_DEBUG_REPORT_DEBUG_BIT_EXT;
-        create_info.flags |= VK_DEBUG_REPORT_INFORMATION_BIT_EXT;
-#endif
+
+        //create_info.flags |= VK_DEBUG_REPORT_DEBUG_BIT_EXT;
+        //create_info.flags |= VK_DEBUG_REPORT_INFORMATION_BIT_EXT;
 
         create_info.pfnCallback = debug_callback;
 

@@ -30,7 +30,7 @@ namespace ns::mesh
 template <std::size_t N>
 struct Mesh final
 {
-        struct Facet
+        struct Facet final
         {
                 std::array<int, N> vertices;
                 std::array<int, N> normals; // index or -1
@@ -40,17 +40,17 @@ struct Mesh final
                 bool has_normal;
         };
 
-        struct Point
+        struct Point final
         {
                 int vertex;
         };
 
-        struct Line
+        struct Line final
         {
                 std::array<int, 2> vertices;
         };
 
-        struct Material
+        struct Material final
         {
                 std::string name;
                 color::Color color{0};

@@ -84,13 +84,10 @@ void read_digit_group(
         long long* const from,
         std::array<IndexType, GROUP_SIZE>* const group_indices)
 {
-        auto& i = *from;
-        auto& indices = *group_indices;
-
         // vertex
-        if (read_integer(line, end, &i, &indices[0]))
+        if (read_integer(line, end, from, &(*group_indices)[0]))
         {
-                if (indices[0] == 0)
+                if ((*group_indices)[0] == 0)
                 {
                         error("Zero facet index");
                 }
@@ -101,37 +98,37 @@ void read_digit_group(
         }
 
         // texture and normal
-        for (int a = 1; a < static_cast<int>(indices.size()); ++a)
+        for (int a = 1; a < static_cast<int>(group_indices->size()); ++a)
         {
-                if (i == end || ascii::is_space(line[i]))
+                if (*from == end || ascii::is_space(line[*from]))
                 {
-                        indices[a] = 0;
+                        (*group_indices)[a] = 0;
                         continue;
                 }
 
-                if (line[i] != '/')
+                if (line[*from] != '/')
                 {
-                        error(std::string("Error read facet number, expected '/', found '") + line[i] + "'");
+                        error(std::string("Error read facet number, expected '/', found '") + line[*from] + "'");
                 }
 
-                ++i;
+                ++(*from);
 
-                if (i == end || ascii::is_space(line[i]))
+                if (*from == end || ascii::is_space(line[*from]))
                 {
-                        indices[a] = 0;
+                        (*group_indices)[a] = 0;
                         continue;
                 }
 
-                if (read_integer(line, end, &i, &indices[a]))
+                if (read_integer(line, end, from, &(*group_indices)[a]))
                 {
-                        if (indices[a] == 0)
+                        if ((*group_indices)[a] == 0)
                         {
                                 error("Zero facet index");
                         }
                 }
                 else
                 {
-                        indices[a] = 0;
+                        (*group_indices)[a] = 0;
                 }
         }
 }

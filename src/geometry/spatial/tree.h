@@ -31,7 +31,6 @@ CRC Press, 2014.
 #include <src/com/error.h>
 #include <src/com/print.h>
 #include <src/com/progression.h>
-#include <src/com/spin_lock.h>
 #include <src/com/thread.h>
 #include <src/com/type/limit.h>
 #include <src/numerical/ray.h>
@@ -154,7 +153,17 @@ std::vector<Box<Parallelotope>> move_boxes_to_vector(Container<Box<Parallelotope
 }
 
 template <typename Box>
-class BoxJobs final
+struct Job final
+{
+        Box* box;
+        int depth;
+        Job(Box* box, int depth) : box(box), depth(depth)
+        {
+        }
+};
+
+template <typename Box>
+class Jobs final
 {
         // If there are no jobs and all thread do nothing, then there will be no more jobs.
         // If there are no jobs and a thread do something, then new jobs can be created.
@@ -164,13 +173,13 @@ class BoxJobs final
         // A thread gets a new jobs - the sum increases by 1.
         int job_count_ = 0;
 
-        std::stack<std::tuple<Box*, int>, std::vector<std::tuple<Box*, int>>> jobs_;
-        SpinLock lock_;
+        std::stack<Job<Box>, std::vector<Job<Box>>> jobs_;
+        std::mutex lock_;
 
         bool stop_all_ = false;
 
 public:
-        BoxJobs(Box* const box, const int depth) : jobs_({{box, depth}})
+        Jobs(const Job<Box>& job) : jobs_({job})
         {
         }
 
@@ -181,14 +190,14 @@ public:
                 stop_all_ = true;
         }
 
-        void push(Box* box, const int depth)
+        void push(const Job<Box>& job)
         {
                 std::lock_guard lg(lock_);
 
-                jobs_.emplace(box, depth);
+                jobs_.push(job);
         }
 
-        bool pop(Box** const box, int* const depth)
+        bool pop(Job<Box>* const job)
         {
                 std::lock_guard lg(lock_);
 
@@ -197,14 +206,14 @@ public:
                         return false;
                 }
 
-                if (*box)
+                if (job->box)
                 {
                         --job_count_;
                 }
 
                 if (!jobs_.empty())
                 {
-                        std::tie(*box, *depth) = jobs_.top();
+                        *job = jobs_.top();
                         jobs_.pop();
                         ++job_count_;
                         return true;
@@ -212,7 +221,7 @@ public:
 
                 if (job_count_ > 0)
                 {
-                        *box = nullptr;
+                        job->box = nullptr;
                         return true;
                 }
 
@@ -222,7 +231,7 @@ public:
 
 template <template <typename...> typename Container, typename Parallelotope, int... I>
 std::array<std::tuple<int, Box<Parallelotope>*, int>, BOX_COUNT<Parallelotope::SPACE_DIMENSION>> create_child_boxes(
-        SpinLock* const boxes_lock,
+        std::mutex* const boxes_lock,
         Container<Box<Parallelotope>>* const boxes,
         const Parallelotope& parallelotope,
         std::integer_sequence<int, I...>)
@@ -244,9 +253,9 @@ void extend(
         const int max_depth,
         const int min_objects,
         const int max_boxes,
-        SpinLock* const boxes_lock,
+        std::mutex* const boxes_lock,
         Container<Box<Parallelotope>>* const boxes,
-        BoxJobs<Box<Parallelotope>>* const box_jobs,
+        Jobs<Box<Parallelotope>>* const jobs,
         const ObjectIntersections& object_intersections,
         ProgressRatio* const progress)
 try
@@ -258,45 +267,45 @@ try
         constexpr auto INTEGER_SEQUENCE_N =
                 std::make_integer_sequence<int, BOX_COUNT<Parallelotope::SPACE_DIMENSION>>();
 
-        Box<Parallelotope>* box = nullptr; // no previous job
-        int depth;
+        Job<Box<Parallelotope>> job(nullptr, 0); // nullptr - no previous job
 
-        while (box_jobs->pop(&box, &depth))
+        while (jobs->pop(&job))
         {
-                if (!box)
+                if (!job.box)
                 {
                         continue;
                 }
 
-                if (depth >= max_depth || box->object_index_count() <= min_objects)
+                if (job.depth >= max_depth || job.box->object_index_count() <= min_objects)
                 {
                         continue;
                 }
 
                 for (const auto& [i, child_box, child_box_index] :
-                     create_child_boxes(boxes_lock, boxes, box->parallelotope(), INTEGER_SEQUENCE_N))
+                     create_child_boxes(boxes_lock, boxes, job.box->parallelotope(), INTEGER_SEQUENCE_N))
                 {
-                        box->set_child(i, child_box_index);
+                        job.box->set_child(i, child_box_index);
 
                         if ((child_box_index & 0xfff) == 0xfff)
                         {
                                 progress->set(child_box_index, max_boxes);
                         }
 
-                        for (int object_index : object_intersections(child_box->parallelotope(), box->object_indices()))
+                        for (int object_index :
+                             object_intersections(child_box->parallelotope(), job.box->object_indices()))
                         {
                                 child_box->add_object_index(object_index);
                         }
 
-                        box_jobs->push(child_box, depth + 1);
+                        jobs->push(Job(child_box, job.depth + 1));
                 }
 
-                box->delete_all_objects();
+                job.box->delete_all_objects();
         }
 }
 catch (...)
 {
-        box_jobs->stop_all();
+        jobs->stop_all();
         throw;
 }
 
@@ -310,7 +319,8 @@ template <typename Parallelotope>
 class SpatialSubdivisionTree final
 {
         using Box = spatial_subdivision_tree_implementation::Box<Parallelotope>;
-        using BoxJobs = spatial_subdivision_tree_implementation::BoxJobs<Box>;
+        using Job = spatial_subdivision_tree_implementation::Job<Box>;
+        using BoxJobs = spatial_subdivision_tree_implementation::Jobs<Box>;
 
         static constexpr int N = Parallelotope::SPACE_DIMENSION;
         using T = typename Parallelotope::DataType;
@@ -412,9 +422,9 @@ public:
                 BoxContainer boxes;
                 boxes.emplace_back(Parallelotope(root.min, root.max), impl::zero_based_indices(object_count));
 
-                BoxJobs jobs(&boxes.front(), 1 /*depth*/);
+                BoxJobs jobs(Job(&boxes.front(), 1 /*depth*/));
 
-                SpinLock boxes_lock;
+                std::mutex boxes_lock;
 
                 ThreadsWithCatch threads(thread_count);
                 for (unsigned i = 0; i < thread_count; ++i)
