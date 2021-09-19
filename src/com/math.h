@@ -31,12 +31,6 @@ constexpr T square(const T& v)
 }
 
 template <typename T>
-constexpr T interpolation(const T& a, const T& b, const T& t) requires(std::is_floating_point_v<T>)
-{
-        return (1 - t) * a + t * b;
-}
-
-template <typename T>
 constexpr T absolute(const T& v)
 {
         constexpr bool HAS_ABS = requires

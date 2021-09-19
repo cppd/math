@@ -17,32 +17,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "math.h"
 
-#include "type/limit.h"
-
 namespace ns
 {
-namespace
-{
-template <typename T>
-struct Check final
-{
-        static constexpr T MAX = Limits<T>::max() / 2;
-        static_assert(interpolation<T>(1, MAX, 0) == 1);
-        static_assert(interpolation<T>(1, MAX, 1) == MAX);
-        static_assert(interpolation<T>(MAX, 1, 0) == MAX);
-        static_assert(interpolation<T>(MAX, 1, 1) == 1);
-        static_assert(interpolation<T>(1, MAX, T(1) / 2) == MAX / 2);
-        static_assert(interpolation<T>(MAX, 1, T(1) / 2) == MAX / 2);
-        static_assert(interpolation<T>(3, 11, T(1) / 4) == 5);
-        static_assert(interpolation<T>(-3, -11, T(1) / 4) == -5);
-        static_assert(interpolation<T>(-3, 5, T(1) / 4) == -1);
-        static_assert(interpolation<T>(3, -5, T(1) / 4) == 1);
-};
-template struct Check<float>;
-template struct Check<double>;
-template struct Check<long double>;
-}
-
 static_assert(power<0>(10) == 1);
 static_assert(power<0>(-10) == 1);
 static_assert(power<1>(10) == 10);

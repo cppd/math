@@ -27,6 +27,7 @@ Norms
 #pragma once
 
 #include <src/com/hash.h>
+#include <src/com/interpolation.h>
 #include <src/com/math.h>
 #include <src/com/type/limit.h>
 

@@ -35,6 +35,7 @@ CRC Press, 2018.
 
 #pragma once
 
+#include <src/com/interpolation.h>
 #include <src/com/math.h>
 #include <src/geometry/shapes/sphere_integral.h>
 #include <src/numerical/complement.h>
