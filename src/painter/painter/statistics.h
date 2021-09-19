@@ -20,7 +20,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "../painter.h"
 
 #include <src/com/chrono.h>
-#include <src/com/spin_lock.h>
 
 #include <atomic>
 #include <mutex>
@@ -42,7 +41,7 @@ class PaintingStatistics
         long long pass_start_pixel_count_;
         double previous_pass_duration_;
 
-        mutable SpinLock lock_;
+        mutable std::mutex lock_;
 
 public:
         explicit PaintingStatistics(long long screen_pixel_count) : screen_pixel_count_(screen_pixel_count)

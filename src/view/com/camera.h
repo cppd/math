@@ -19,16 +19,17 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "../interface.h"
 
-#include <src/com/spin_lock.h>
 #include <src/gpu/renderer/renderer.h>
 #include <src/numerical/matrix.h>
 #include <src/numerical/vec.h>
+
+#include <mutex>
 
 namespace ns::view
 {
 class Camera final
 {
-        mutable SpinLock lock_;
+        mutable std::mutex lock_;
 
         Vector3d camera_right_{0};
         Vector3d camera_up_{0};

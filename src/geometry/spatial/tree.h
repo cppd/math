@@ -179,7 +179,7 @@ class Jobs final
         bool stop_all_ = false;
 
 public:
-        Jobs(const Job<Box>& job) : jobs_({job})
+        explicit Jobs(const Job<Box>& job) : jobs_({job})
         {
         }
 
