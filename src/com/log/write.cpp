@@ -159,7 +159,7 @@ public:
         {
                 std::lock_guard lg(lock_);
                 write(text, "fatal error");
-                std::_Exit(EXIT_FAILURE);
+                std::abort();
         }
 };
 
