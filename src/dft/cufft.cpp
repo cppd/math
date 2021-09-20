@@ -99,11 +99,10 @@ public:
                 cufftDestroy(plan_);
         }
 
-        operator cufftHandle() const&
+        cufftHandle handle() const
         {
                 return plan_;
         }
-        operator cufftHandle() const&& = delete;
 
         CudaPlan2D(const CudaPlan2D&) = delete;
         CudaPlan2D& operator=(const CudaPlan2D&) = delete;
@@ -223,14 +222,16 @@ class CudaFFT final : public DFT
 
                 if (inverse)
                 {
-                        if (CUFFT_SUCCESS != cufftExecC2C(plan_, memory_.data(), memory_.data(), CUFFT_INVERSE))
+                        if (CUFFT_SUCCESS
+                            != cufftExecC2C(plan_.handle(), memory_.data(), memory_.data(), CUFFT_INVERSE))
                         {
                                 error("cuFFT Error: Unable to execute inverse plan");
                         }
                 }
                 else
                 {
-                        if (CUFFT_SUCCESS != cufftExecC2C(plan_, memory_.data(), memory_.data(), CUFFT_FORWARD))
+                        if (CUFFT_SUCCESS
+                            != cufftExecC2C(plan_.handle(), memory_.data(), memory_.data(), CUFFT_FORWARD))
                         {
                                 error("cuFFT Error: Unable to execute forward plan");
                         }
