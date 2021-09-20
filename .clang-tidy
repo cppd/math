@@ -8,6 +8,7 @@ Checks:
 
 bugprone-*,
 -bugprone-narrowing-conversions,
+-bugprone-macro-parentheses,
 
 cert-*,
 
@@ -66,9 +67,11 @@ CheckOptions:
 - key:   cppcoreguidelines-special-member-functions.AllowSoleDefaultDtor
   value: '1'
 - key:   hicpp-signed-bitwise.IgnorePositiveIntegerLiterals
-  value: 'true'
+  value: '1'
 - key:   misc-non-private-member-variables-in-classes.IgnoreClassesWithAllMemberVariablesBeingPublic
   value: '1'
+- key:   modernize-loop-convert.UseCxx20ReverseRanges
+  value: '0'
 - key:   performance-move-const-arg.CheckTriviallyCopyableMove
   value: '0'
 - key:   readability-implicit-bool-conversion.AllowIntegerConditions
