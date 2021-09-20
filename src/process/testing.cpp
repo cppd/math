@@ -17,7 +17,9 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "testing.h"
 
+#include <src/com/enum.h>
 #include <src/com/error.h>
+#include <src/com/print.h>
 #include <src/gui/dialogs/test_selection.h>
 #include <src/test/test.h>
 
@@ -49,6 +51,6 @@ std::function<void(ProgressRatioList*)> action_self_test(TestType test_type)
                 };
         }
         }
-        error_fatal("Unknown test type " + std::to_string(static_cast<long long>(test_type)));
+        error_fatal("Unknown test type " + to_string(enum_to_int(test_type)));
 }
 }

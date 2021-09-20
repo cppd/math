@@ -17,25 +17,15 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "format.h"
 
+#include <src/com/enum.h>
 #include <src/com/error.h>
 #include <src/com/print.h>
 
 namespace ns::image
 {
-namespace
-{
-template <typename T>
-std::string enum_to_string(T e)
-{
-        static_assert(sizeof(e) <= sizeof(long long));
-
-        return to_string(static_cast<long long>(e));
-}
-}
-
 [[noreturn]] void unknown_color_format_error(ColorFormat format)
 {
-        error_fatal("Unknown color format " + enum_to_string(format));
+        error_fatal("Unknown color format " + to_string(enum_to_int(format)));
 }
 
 std::string format_to_string(ColorFormat format)

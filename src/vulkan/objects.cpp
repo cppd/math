@@ -20,6 +20,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "error.h"
 #include "extensions.h"
 
+#include <src/com/enum.h>
 #include <src/com/error.h>
 #include <src/com/print.h>
 #include <src/com/type/limit.h>
@@ -244,7 +245,7 @@ DeviceFeatures Device::device_features(const VkDeviceCreateInfo& create_info)
                 }
                 else
                 {
-                        error("Unknown device create info type " + to_string(static_cast<long long>(type)));
+                        error("Unknown device create info type " + to_string(enum_to_int(type)));
                 }
         }
 

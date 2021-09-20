@@ -19,6 +19,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "conversion.h"
 
+#include <src/com/enum.h>
 #include <src/com/error.h>
 #include <src/com/file/path.h>
 #include <src/com/print.h>
@@ -449,7 +450,7 @@ ColorFormat q_format_to_color_format(QImage::Format format)
         {
                 return iter->second;
         }
-        error("Error finding color format: unsupported QImage format " + to_string(static_cast<long long>(format)));
+        error("Error finding color format: unsupported QImage format " + to_string(enum_to_int(format)));
 }
 
 const std::unordered_set<QImage::Format>& color_format_to_q_format(ColorFormat format)
@@ -516,7 +517,7 @@ void load(
 
         if (!color_format_to_q_format(color_format).contains(image.format()))
         {
-                error("Wrong QImage format " + to_string(static_cast<long long>(image.format())) + " for color format "
+                error("Wrong QImage format " + to_string(enum_to_int(image.format())) + " for color format "
                       + format_to_string(color_format));
         }
 

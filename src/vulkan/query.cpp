@@ -20,6 +20,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "error.h"
 #include "print.h"
 
+#include <src/com/enum.h>
 #include <src/com/error.h>
 #include <src/com/print.h>
 
@@ -213,14 +214,14 @@ VkFormat find_supported_format(
         }
         else
         {
-                error("Unknown image tiling " + to_string(static_cast<long long>(tiling)));
+                error("Unknown image tiling " + to_string(enum_to_int(tiling)));
         }
 
         std::ostringstream oss;
 
         oss << "Failed to find supported 2D image format.";
         oss << " Format candidates " << vulkan_formats_to_string(candidates) << ".";
-        oss << " Tiling " << static_cast<long long>(tiling) << ".";
+        oss << " Tiling " << enum_to_int(tiling) << ".";
         oss << std::hex;
         oss << " Features 0x" << features << ".";
 
@@ -257,7 +258,7 @@ VkFormat find_supported_image_format(
                 }
                 else
                 {
-                        error("Unknown image tiling " + to_string(static_cast<long long>(tiling)));
+                        error("Unknown image tiling " + to_string(enum_to_int(tiling)));
                 }
 
                 VkImageFormatProperties image_properties;
@@ -282,7 +283,7 @@ VkFormat find_supported_image_format(
         oss << "Failed to find supported image format.";
         oss << " Format candidates " << vulkan_formats_to_string(candidates) << ".";
         oss << " Image type " << image_type_to_string(image_type) << ".";
-        oss << " Tiling " << static_cast<long long>(tiling) << ".";
+        oss << " Tiling " << enum_to_int(tiling) << ".";
         oss << std::hex;
         oss << " Features 0x" << features << ".";
         oss << " Usage 0x" << usage << ".";
@@ -394,8 +395,7 @@ int sample_count_flag_to_integer(VkSampleCountFlagBits sample_count)
         }
 #pragma GCC diagnostic pop
 
-        static_assert(sizeof(sample_count) <= sizeof(long long));
-        error("Unknown sample count flag " + to_string(static_cast<long long>(sample_count)));
+        error("Unknown sample count flag " + to_string(enum_to_int(sample_count)));
 }
 
 uint32_t physical_device_memory_type_index(

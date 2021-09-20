@@ -19,7 +19,9 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "../com/support.h"
 
+#include <src/com/enum.h>
 #include <src/com/error.h>
+#include <src/com/print.h>
 
 namespace ns::gui::main_window
 {
@@ -46,7 +48,7 @@ RGB8 event_color(LogType type)
                 return RGB8(0, 0, 255);
         }
         }
-        error_fatal("Unknown log event type " + std::to_string(static_cast<long long>(type)));
+        error_fatal("Unknown log event type " + to_string(enum_to_int(type)));
 }
 
 template <typename D, typename S>

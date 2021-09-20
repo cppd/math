@@ -18,6 +18,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "../sphere_uniform.h"
 
 #include <src/com/chrono.h>
+#include <src/com/enum.h>
 #include <src/com/error.h>
 #include <src/com/log.h>
 #include <src/com/print.h>
@@ -129,7 +130,7 @@ std::string type_to_string(SampleType type)
                 return "In Sphere";
         }
         }
-        error_fatal("Unknown type " + to_string(static_cast<long long>(type)));
+        error_fatal("Unknown type " + to_string(enum_to_int(type)));
 }
 
 std::string time_to_string(double v)
@@ -179,7 +180,7 @@ void test_performance()
                 return;
         }
         }
-        error_fatal("Unknown type " + to_string(static_cast<long long>(SAMPLE_TYPE)));
+        error_fatal("Unknown type " + to_string(enum_to_int(SAMPLE_TYPE)));
 }
 
 template <SampleType SAMPLE_TYPE, std::size_t N, typename T>

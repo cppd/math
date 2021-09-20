@@ -22,6 +22,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "../com/support.h"
 
+#include <src/com/enum.h>
 #include <src/com/error.h>
 #include <src/com/file/path.h>
 #include <src/com/print.h>
@@ -67,7 +68,7 @@ void PainterImageDialog::set_path()
                         &PainterImageDialog::on_select_path_clicked);
                 return;
         }
-        error("Unknown path type " + to_string(static_cast<long long>(path_type_)));
+        error("Unknown path type " + to_string(enum_to_int(path_type_)));
 }
 
 void PainterImageDialog::set_checkboxes(bool use_all)

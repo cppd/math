@@ -17,23 +17,13 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "print.h"
 
+#include <src/com/enum.h>
 #include <src/com/print.h>
 
 #include <sstream>
 
 namespace ns::vulkan
 {
-namespace
-{
-template <typename T>
-std::string enum_to_string(const T e)
-{
-        static_assert(sizeof(e) <= sizeof(long long));
-
-        return to_string(static_cast<long long>(e));
-}
-}
-
 std::string api_version_to_string(const uint32_t api_version)
 {
         std::ostringstream oss;
@@ -154,7 +144,7 @@ std::array<std::string, 2> result_to_strings(const VkResult code)
                 return {"VK_ERROR_UNKNOWN", "An unknown error has occurred."};
         }
 #pragma GCC diagnostic pop
-        return {"Unknown Vulkan return code " + enum_to_string(code), ""};
+        return {"Unknown Vulkan return code " + to_string(enum_to_int(code)), ""};
 }
 
 std::string physical_device_type_to_string(const VkPhysicalDeviceType type)
@@ -176,7 +166,7 @@ std::string physical_device_type_to_string(const VkPhysicalDeviceType type)
         }
 #pragma GCC diagnostic pop
 
-        return "Unknown physical device type " + enum_to_string(type);
+        return "Unknown physical device type " + to_string(enum_to_int(type));
 }
 
 std::string format_to_string(const VkFormat format)
@@ -674,7 +664,7 @@ std::string format_to_string(const VkFormat format)
         }
 #pragma GCC diagnostic pop
 
-        return "Unknown Vulkan VkFormat " + enum_to_string(format);
+        return "Unknown Vulkan VkFormat " + to_string(enum_to_int(format));
 }
 
 std::string color_space_to_string(const VkColorSpaceKHR color_space)
@@ -718,7 +708,7 @@ std::string color_space_to_string(const VkColorSpaceKHR color_space)
         }
 #pragma GCC diagnostic pop
 
-        return "Unknown Vulkan VkColorSpaceKHR " + enum_to_string(color_space);
+        return "Unknown Vulkan VkColorSpaceKHR " + to_string(enum_to_int(color_space));
 }
 
 std::string image_type_to_string(const VkImageType image_type)
@@ -735,7 +725,7 @@ std::string image_type_to_string(const VkImageType image_type)
                 return "VK_IMAGE_TYPE_3D";
         }
 #pragma GCC diagnostic pop
-        return "Unknown image type " + enum_to_string(image_type);
+        return "Unknown image type " + to_string(enum_to_int(image_type));
 }
 
 std::string image_layout_to_string(const VkImageLayout image_layout)
@@ -784,6 +774,6 @@ std::string image_layout_to_string(const VkImageLayout image_layout)
                 return "VK_IMAGE_LAYOUT_FRAGMENT_DENSITY_MAP_OPTIMAL_EXT";
         }
 #pragma GCC diagnostic pop
-        return "Unknown image layout " + enum_to_string(image_layout);
+        return "Unknown image layout " + to_string(enum_to_int(image_layout));
 }
 }
