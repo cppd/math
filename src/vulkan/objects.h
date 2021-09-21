@@ -21,7 +21,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <functional>
 #include <span>
-#include <unordered_map>
 #include <vector>
 #include <vulkan/vulkan.h>
 
@@ -136,61 +135,6 @@ public:
         {
                 return family_index_;
         }
-};
-
-struct DeviceFeatures final
-{
-        VkPhysicalDeviceFeatures features_10{};
-        VkPhysicalDeviceVulkan11Features features_11{};
-        VkPhysicalDeviceVulkan12Features features_12{};
-};
-
-struct DeviceProperties final
-{
-        VkPhysicalDeviceProperties properties_10;
-        VkPhysicalDeviceVulkan11Properties properties_11;
-        VkPhysicalDeviceVulkan12Properties properties_12;
-};
-
-class Device final
-{
-        static DeviceFeatures device_features(const VkDeviceCreateInfo& create_info);
-
-        DeviceHandle device_;
-        VkPhysicalDevice physical_device_ = VK_NULL_HANDLE;
-        const DeviceProperties* physical_device_properties_ = nullptr;
-        DeviceFeatures features_;
-        std::unordered_map<uint32_t, std::vector<VkQueue>> queues_;
-
-public:
-        Device() = default;
-
-        Device(VkPhysicalDevice physical_device,
-               const DeviceProperties* physical_device_properties,
-               const VkDeviceCreateInfo& create_info);
-
-        operator VkDevice() const& noexcept
-        {
-                return device_;
-        }
-        operator VkDevice() const&& noexcept = delete;
-
-        VkPhysicalDevice physical_device() const noexcept
-        {
-                return physical_device_;
-        }
-
-        const DeviceFeatures& features() const noexcept
-        {
-                return features_;
-        }
-
-        const DeviceProperties& properties() const noexcept
-        {
-                return *physical_device_properties_;
-        }
-
-        Queue queue(uint32_t family_index, uint32_t queue_index) const;
 };
 
 class SurfaceKHR final

@@ -19,6 +19,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <src/numerical/region.h>
 #include <src/vulkan/descriptor.h>
+#include <src/vulkan/device.h>
 #include <src/vulkan/objects.h>
 #include <src/vulkan/shader.h>
 
@@ -28,7 +29,7 @@ namespace ns::gpu::renderer
 {
 class TriangleLinesProgram final
 {
-        const vulkan::Device& device_;
+        const vulkan::Device* device_;
 
         vulkan::DescriptorSetLayout descriptor_set_layout_shared_;
         vulkan::DescriptorSetLayout descriptor_set_layout_mesh_;
@@ -38,7 +39,7 @@ class TriangleLinesProgram final
         vulkan::FragmentShader fragment_shader_;
 
 public:
-        explicit TriangleLinesProgram(const vulkan::Device& device);
+        explicit TriangleLinesProgram(const vulkan::Device* device);
 
         TriangleLinesProgram(const TriangleLinesProgram&) = delete;
         TriangleLinesProgram& operator=(const TriangleLinesProgram&) = delete;

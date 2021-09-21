@@ -75,10 +75,11 @@ std::vector<TrianglesMaterialMemory::MaterialInfo> materials_info(
 
 class Impl final : public MeshObject
 {
-        const vulkan::Device& device_;
+        const vulkan::Device* const device_;
+        const vulkan::CommandPool* const transfer_command_pool_;
+        const vulkan::Queue* const transfer_queue_;
+
         const std::vector<uint32_t> family_indices_;
-        const vulkan::CommandPool& transfer_command_pool_;
-        const vulkan::Queue& transfer_queue_;
 
         MeshBuffer mesh_buffer_;
         std::unordered_map<VkDescriptorSetLayout, vulkan::Descriptors> mesh_descriptor_sets_;
@@ -141,7 +142,7 @@ class Impl final : public MeshObject
                 for (const vulkan::DescriptorSetLayoutAndBindings& layout : mesh_layouts_)
                 {
                         vulkan::Descriptors sets = MeshMemory::create(
-                                device_, layout.descriptor_set_layout, layout.descriptor_set_layout_bindings,
+                                *device_, layout.descriptor_set_layout, layout.descriptor_set_layout_bindings,
                                 {&mesh_buffer_.buffer()});
                         ASSERT(sets.descriptor_set_count() == 1);
                         mesh_descriptor_sets_.emplace(sets.descriptor_set_layout(), std::move(sets));
@@ -169,7 +170,7 @@ class Impl final : public MeshObject
                 for (const vulkan::DescriptorSetLayoutAndBindings& layout : material_layouts_)
                 {
                         vulkan::Descriptors sets = TrianglesMaterialMemory::create(
-                                device_, texture_sampler_, layout.descriptor_set_layout,
+                                *device_, texture_sampler_, layout.descriptor_set_layout,
                                 layout.descriptor_set_layout_bindings, material_info);
                         ASSERT(sets.descriptor_set_count() == material_info.size());
                         material_descriptor_sets_.emplace(sets.descriptor_set_layout(), std::move(sets));
@@ -202,10 +203,10 @@ class Impl final : public MeshObject
                         return;
                 }
 
-                textures_ = load_textures(device_, transfer_command_pool_, transfer_queue_, family_indices_, mesh);
+                textures_ = load_textures(*device_, *transfer_command_pool_, *transfer_queue_, family_indices_, mesh);
 
                 material_buffers_ =
-                        load_materials(device_, transfer_command_pool_, transfer_queue_, family_indices_, mesh);
+                        load_materials(*device_, *transfer_command_pool_, *transfer_queue_, family_indices_, mesh);
 
                 create_material_descriptor_sets(materials_info(mesh, textures_, material_buffers_));
         }
@@ -236,7 +237,7 @@ class Impl final : public MeshObject
                         }
 
                         load_vertices(
-                                device_, transfer_command_pool_, transfer_queue_, family_indices_, mesh,
+                                *device_, *transfer_command_pool_, *transfer_queue_, family_indices_, mesh,
                                 sorted_face_indices, &faces_vertex_buffer_, &faces_index_buffer_, &faces_vertex_count_,
                                 &faces_index_count_);
 
@@ -244,11 +245,11 @@ class Impl final : public MeshObject
                 }
 
                 lines_vertex_buffer_ =
-                        load_line_vertices(device_, transfer_command_pool_, transfer_queue_, family_indices_, mesh);
+                        load_line_vertices(*device_, *transfer_command_pool_, *transfer_queue_, family_indices_, mesh);
                 lines_vertex_count_ = 2 * mesh.lines.size();
 
                 points_vertex_buffer_ =
-                        load_point_vertices(device_, transfer_command_pool_, transfer_queue_, family_indices_, mesh);
+                        load_point_vertices(*device_, *transfer_command_pool_, *transfer_queue_, family_indices_, mesh);
                 points_vertex_count_ = mesh.points.size();
         }
 
@@ -437,24 +438,24 @@ class Impl final : public MeshObject
         }
 
 public:
-        Impl(const vulkan::Device& device,
+        Impl(const vulkan::Device* device,
              const std::vector<uint32_t>& graphics_family_indices,
-             const vulkan::CommandPool& transfer_command_pool,
-             const vulkan::Queue& transfer_queue,
+             const vulkan::CommandPool* transfer_command_pool,
+             const vulkan::Queue* transfer_queue,
              std::vector<vulkan::DescriptorSetLayoutAndBindings> mesh_layouts,
              std::vector<vulkan::DescriptorSetLayoutAndBindings> material_layouts,
              VkSampler texture_sampler)
                 : device_(device),
-                  family_indices_(sort_and_unique(
-                          merge<std::vector<uint32_t>>(graphics_family_indices, transfer_queue.family_index()))),
                   transfer_command_pool_(transfer_command_pool),
                   transfer_queue_(transfer_queue),
-                  mesh_buffer_(device, graphics_family_indices),
+                  family_indices_(sort_and_unique(
+                          merge<std::vector<uint32_t>>(graphics_family_indices, transfer_queue->family_index()))),
+                  mesh_buffer_(*device, graphics_family_indices),
                   mesh_layouts_(std::move(mesh_layouts)),
                   material_layouts_(std::move(material_layouts)),
                   texture_sampler_(texture_sampler)
         {
-                ASSERT(transfer_command_pool.family_index() == transfer_queue.family_index());
+                ASSERT(transfer_command_pool->family_index() == transfer_queue->family_index());
 
                 create_mesh_descriptor_sets();
         }
@@ -462,10 +463,10 @@ public:
 }
 
 std::unique_ptr<MeshObject> create_mesh_object(
-        const vulkan::Device& device,
+        const vulkan::Device* device,
         const std::vector<uint32_t>& graphics_family_indices,
-        const vulkan::CommandPool& transfer_command_pool,
-        const vulkan::Queue& transfer_queue,
+        const vulkan::CommandPool* transfer_command_pool,
+        const vulkan::Queue* transfer_queue,
         std::vector<vulkan::DescriptorSetLayoutAndBindings> mesh_layouts,
         std::vector<vulkan::DescriptorSetLayoutAndBindings> material_layouts,
         VkSampler texture_sampler)

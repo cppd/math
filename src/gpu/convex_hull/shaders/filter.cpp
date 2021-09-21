@@ -61,7 +61,7 @@ std::vector<VkDescriptorSetLayoutBinding> FilterMemory::descriptor_set_layout_bi
         return bindings;
 }
 
-FilterMemory::FilterMemory(const vulkan::Device& device, VkDescriptorSetLayout descriptor_set_layout)
+FilterMemory::FilterMemory(const VkDevice& device, VkDescriptorSetLayout descriptor_set_layout)
         : descriptors_(device, 1, descriptor_set_layout, descriptor_set_layout_bindings())
 {
 }
@@ -148,7 +148,7 @@ std::size_t FilterConstant::size() const
 
 //
 
-FilterProgram::FilterProgram(const vulkan::Device& device)
+FilterProgram::FilterProgram(const VkDevice& device)
         : device_(device),
           descriptor_set_layout_(
                   vulkan::create_descriptor_set_layout(device, FilterMemory::descriptor_set_layout_bindings())),
@@ -163,7 +163,7 @@ void FilterProgram::create_pipeline(unsigned height)
         constant_.set_line_size(height);
 
         vulkan::ComputePipelineCreateInfo info;
-        info.device = &device_;
+        info.device = device_;
         info.pipeline_layout = pipeline_layout_;
         info.shader = &shader_;
         info.constants = &constant_;

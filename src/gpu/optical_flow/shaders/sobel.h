@@ -41,7 +41,7 @@ public:
         static std::vector<VkDescriptorSetLayoutBinding> descriptor_set_layout_bindings();
         static unsigned set_number();
 
-        SobelMemory(const vulkan::Device& device, VkDescriptorSetLayout descriptor_set_layout);
+        SobelMemory(const VkDevice& device, VkDescriptorSetLayout descriptor_set_layout);
 
         SobelMemory(const SobelMemory&) = delete;
         SobelMemory& operator=(const SobelMemory&) = delete;
@@ -83,7 +83,7 @@ public:
 
 class SobelProgram final
 {
-        const vulkan::Device& device_;
+        VkDevice device_;
 
         vulkan::DescriptorSetLayout descriptor_set_layout_;
         vulkan::PipelineLayout pipeline_layout_;
@@ -92,7 +92,7 @@ class SobelProgram final
         vulkan::Pipeline pipeline_;
 
 public:
-        explicit SobelProgram(const vulkan::Device& device);
+        explicit SobelProgram(const VkDevice& device);
 
         SobelProgram(const SobelProgram&) = delete;
         SobelProgram& operator=(const SobelProgram&) = delete;

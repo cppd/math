@@ -67,7 +67,7 @@ unsigned ComputeMemory::set_number()
         return SET_NUMBER;
 }
 
-ComputeMemory::ComputeMemory(const vulkan::Device& device, VkDescriptorSetLayout descriptor_set_layout)
+ComputeMemory::ComputeMemory(const VkDevice& device, VkDescriptorSetLayout descriptor_set_layout)
         : descriptors_(device, 1, descriptor_set_layout, descriptor_set_layout_bindings())
 {
 }
@@ -183,7 +183,7 @@ std::size_t ComputeConstant::size() const
 
 //
 
-ComputeProgram::ComputeProgram(const vulkan::Device& device)
+ComputeProgram::ComputeProgram(const VkDevice& device)
         : device_(device),
           descriptor_set_layout_(
                   vulkan::create_descriptor_set_layout(device, ComputeMemory::descriptor_set_layout_bindings())),
@@ -214,7 +214,7 @@ void ComputeProgram::create_pipeline(unsigned group_size, const Region<2, int>& 
         constant_.set(group_size, rectangle);
 
         vulkan::ComputePipelineCreateInfo info;
-        info.device = &device_;
+        info.device = device_;
         info.pipeline_layout = pipeline_layout_;
         info.shader = &shader_;
         info.constants = &constant_;

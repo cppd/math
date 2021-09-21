@@ -22,6 +22,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/numerical/vec.h>
 #include <src/vulkan/buffers.h>
 #include <src/vulkan/descriptor.h>
+#include <src/vulkan/device.h>
 #include <src/vulkan/objects.h>
 #include <src/vulkan/shader.h>
 
@@ -31,7 +32,7 @@ namespace ns::gpu::renderer
 {
 class PointsProgram final
 {
-        const vulkan::Device& device_;
+        const vulkan::Device* device_;
 
         vulkan::DescriptorSetLayout descriptor_set_layout_shared_;
         vulkan::DescriptorSetLayout descriptor_set_layout_mesh_;
@@ -41,7 +42,7 @@ class PointsProgram final
         vulkan::FragmentShader fragment_shader_;
 
 public:
-        explicit PointsProgram(const vulkan::Device& device);
+        explicit PointsProgram(const vulkan::Device* device);
 
         PointsProgram(const PointsProgram&) = delete;
         PointsProgram& operator=(const PointsProgram&) = delete;

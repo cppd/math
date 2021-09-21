@@ -123,7 +123,7 @@ public:
         std::function<bool(const geometry::ShapeWrapperForIntersection<geometry::ParallelotopeAA<N, T>>&)>
                 intersection_function() const override
         {
-                return [w = geometry::ShapeWrapperForIntersection(parallelotope_)](
+                return [w = geometry::ShapeWrapperForIntersection(&parallelotope_)](
                                const geometry::ShapeWrapperForIntersection<geometry::ParallelotopeAA<N, T>>& p)
                 {
                         return geometry::shape_intersection(w, p);

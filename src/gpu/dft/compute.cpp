@@ -165,13 +165,13 @@ class Dft final
 {
         const std::thread::id thread_id_ = std::this_thread::get_id();
 
-        const vulkan::VulkanInstance& instance_;
-        const vulkan::Device& device_;
+        const vulkan::VulkanInstance* const instance_;
+        const vulkan::Device* const device_;
 
-        const vulkan::CommandPool& compute_command_pool_;
-        const vulkan::Queue& compute_queue_;
-        const vulkan::CommandPool& transfer_command_pool_;
-        const vulkan::Queue& transfer_queue_;
+        const vulkan::CommandPool* const compute_command_pool_;
+        const vulkan::Queue* const compute_queue_;
+        const vulkan::CommandPool* const transfer_command_pool_;
+        const vulkan::Queue* const transfer_queue_;
 
         const vulkan::BufferMemoryType buffer_memory_type_;
 
@@ -300,24 +300,24 @@ class Dft final
                 //
 
                 const std::vector<uint32_t> family_indices = {
-                        family_index, compute_command_pool_.family_index(), transfer_command_pool_.family_index()};
+                        family_index, compute_command_pool_->family_index(), transfer_command_pool_->family_index()};
 
-                d1_fwd_.emplace(device_, transfer_command_pool_, transfer_queue_, family_indices, d1_fwd);
-                d1_inv_.emplace(device_, transfer_command_pool_, transfer_queue_, family_indices, d1_inv);
-                d2_fwd_.emplace(device_, transfer_command_pool_, transfer_queue_, family_indices, d2_fwd);
-                d2_inv_.emplace(device_, transfer_command_pool_, transfer_queue_, family_indices, d2_inv);
+                d1_fwd_.emplace(*device_, *transfer_command_pool_, *transfer_queue_, family_indices, d1_fwd);
+                d1_inv_.emplace(*device_, *transfer_command_pool_, *transfer_queue_, family_indices, d1_inv);
+                d2_fwd_.emplace(*device_, *transfer_command_pool_, *transfer_queue_, family_indices, d2_fwd);
+                d2_inv_.emplace(*device_, *transfer_command_pool_, *transfer_queue_, family_indices, d2_inv);
 
                 {
                         std::unique_ptr<Fft> fft =
-                                create_fft(instance_.device(), {compute_command_pool_.family_index()}, 1, m1_);
-                        fft->run_for_data(false, *d1_fwd_, device_, compute_command_pool_, compute_queue_);
-                        fft->run_for_data(true, *d1_inv_, device_, compute_command_pool_, compute_queue_);
+                                create_fft(instance_->device(), {compute_command_pool_->family_index()}, 1, m1_);
+                        fft->run_for_data(false, *d1_fwd_, *device_, *compute_command_pool_, *compute_queue_);
+                        fft->run_for_data(true, *d1_inv_, *device_, *compute_command_pool_, *compute_queue_);
                 }
                 {
                         std::unique_ptr<Fft> fft =
-                                create_fft(instance_.device(), {compute_command_pool_.family_index()}, 1, m2_);
-                        fft->run_for_data(false, *d2_fwd_, device_, compute_command_pool_, compute_queue_);
-                        fft->run_for_data(true, *d2_inv_, device_, compute_command_pool_, compute_queue_);
+                                create_fft(instance_->device(), {compute_command_pool_->family_index()}, 1, m2_);
+                        fft->run_for_data(false, *d2_fwd_, *device_, *compute_command_pool_, *compute_queue_);
+                        fft->run_for_data(true, *d2_inv_, *device_, *compute_command_pool_, *compute_queue_);
                 }
         }
 
@@ -339,17 +339,17 @@ public:
 
                 const std::vector<uint32_t> family_indices = {family_index};
 
-                x_d_.emplace(device_, family_indices, n1_ * n2_, buffer_memory_type_);
+                x_d_.emplace(*device_, family_indices, n1_ * n2_, buffer_memory_type_);
                 buffer_.emplace(
-                        device_, family_indices, std::max(m1_ * n2_, m2_ * n1_),
+                        *device_, family_indices, std::max(m1_ * n2_, m2_ * n1_),
                         vulkan::BufferMemoryType::DEVICE_LOCAL);
 
                 fft_n2_m1_.reset();
-                fft_n2_m1_ = create_fft(instance_.device(), family_indices, n2_, m1_);
+                fft_n2_m1_ = create_fft(instance_->device(), family_indices, n2_, m1_);
                 fft_n2_m1_->set_data(*buffer_);
 
                 fft_n1_m2_.reset();
-                fft_n1_m2_ = create_fft(instance_.device(), family_indices, n1_, m2_);
+                fft_n1_m2_ = create_fft(instance_->device(), family_indices, n1_, m2_);
                 fft_n1_m2_->set_data(*buffer_);
 
                 mul_memory_.set(x_d_->buffer(), buffer_->buffer());
@@ -430,29 +430,29 @@ public:
                 return x_d_->buffer_with_memory();
         }
 
-        Dft(const vulkan::VulkanInstance& instance,
-            const vulkan::CommandPool& compute_command_pool,
-            const vulkan::Queue& compute_queue,
-            const vulkan::CommandPool& transfer_command_pool,
-            const vulkan::Queue& transfer_queue,
+        Dft(const vulkan::VulkanInstance* instance,
+            const vulkan::CommandPool* compute_command_pool,
+            const vulkan::Queue* compute_queue,
+            const vulkan::CommandPool* transfer_command_pool,
+            const vulkan::Queue* transfer_queue,
             const vulkan::BufferMemoryType& buffer_memory_type)
                 : instance_(instance),
-                  device_(instance.device()),
+                  device_(&instance->device()),
                   compute_command_pool_(compute_command_pool),
                   compute_queue_(compute_queue),
                   transfer_command_pool_(transfer_command_pool),
                   transfer_queue_(transfer_queue),
                   buffer_memory_type_(buffer_memory_type),
-                  mul_program_(instance.device()),
-                  mul_memory_(instance.device(), mul_program_.descriptor_set_layout()),
-                  mul_d_program_(instance.device()),
-                  mul_d_d1_fwd_(instance.device(), mul_d_program_.descriptor_set_layout()),
-                  mul_d_d1_inv_(instance.device(), mul_d_program_.descriptor_set_layout()),
-                  mul_d_d2_fwd_(instance.device(), mul_d_program_.descriptor_set_layout()),
-                  mul_d_d2_inv_(instance.device(), mul_d_program_.descriptor_set_layout())
+                  mul_program_(instance->device()),
+                  mul_memory_(instance->device(), mul_program_.descriptor_set_layout()),
+                  mul_d_program_(instance->device()),
+                  mul_d_d1_fwd_(instance->device(), mul_d_program_.descriptor_set_layout()),
+                  mul_d_d1_inv_(instance->device(), mul_d_program_.descriptor_set_layout()),
+                  mul_d_d2_fwd_(instance->device(), mul_d_program_.descriptor_set_layout()),
+                  mul_d_d2_inv_(instance->device(), mul_d_program_.descriptor_set_layout())
         {
-                ASSERT(compute_command_pool.family_index() == compute_queue.family_index());
-                ASSERT(transfer_command_pool.family_index() == transfer_queue.family_index());
+                ASSERT(compute_command_pool->family_index() == compute_queue->family_index());
+                ASSERT(transfer_command_pool->family_index() == transfer_queue->family_index());
         }
 
         ~Dft()
@@ -461,7 +461,7 @@ public:
 
                 //
 
-                instance_.device_wait_idle_noexcept("the Vulkan DFT compute destructor");
+                instance_->device_wait_idle_noexcept("the Vulkan DFT compute destructor");
         }
 };
 
@@ -551,21 +551,21 @@ class DftImage final : public ComputeImage
 
 public:
         DftImage(
-                const vulkan::VulkanInstance& instance,
-                const vulkan::CommandPool& compute_command_pool,
-                const vulkan::Queue& compute_queue,
-                const vulkan::CommandPool& transfer_command_pool,
-                const vulkan::Queue& transfer_queue)
+                const vulkan::VulkanInstance* instance,
+                const vulkan::CommandPool* compute_command_pool,
+                const vulkan::Queue* compute_queue,
+                const vulkan::CommandPool* transfer_command_pool,
+                const vulkan::Queue* transfer_queue)
                 : dft_(instance,
                        compute_command_pool,
                        compute_queue,
                        transfer_command_pool,
                        transfer_queue,
                        vulkan::BufferMemoryType::DEVICE_LOCAL),
-                  copy_input_program_(instance.device()),
-                  copy_input_memory_(instance.device(), copy_input_program_.descriptor_set_layout()),
-                  copy_output_program_(instance.device()),
-                  copy_output_memory_(instance.device(), copy_output_program_.descriptor_set_layout())
+                  copy_input_program_(instance->device()),
+                  copy_input_memory_(instance->device(), copy_input_program_.descriptor_set_layout()),
+                  copy_output_program_(instance->device()),
+                  copy_output_memory_(instance->device(), copy_output_program_.descriptor_set_layout())
         {
         }
 };
@@ -573,10 +573,6 @@ public:
 class DftVector final : public ComputeVector
 {
         vulkan::VulkanInstance instance_;
-        const vulkan::Device& device_;
-
-        const vulkan::CommandPool& compute_command_pool_;
-        const vulkan::Queue& compute_queue_;
 
         Dft dft_;
 
@@ -605,9 +601,9 @@ class DftVector final : public ComputeVector
 
                 //
 
-                dft_.create_buffers(width, height, compute_queue_.family_index());
+                dft_.create_buffers(width, height, instance_.compute_queue().family_index());
 
-                command_buffers_ = vulkan::CommandBuffers(device_, compute_command_pool_, 2);
+                command_buffers_ = vulkan::CommandBuffers(instance_.device(), instance_.compute_command_pool(), 2);
                 VkResult result;
                 for (int index : {DftType::FORWARD, DftType::INVERSE})
                 {
@@ -658,8 +654,8 @@ class DftVector final : public ComputeVector
                 }
 
                 vulkan::queue_submit(
-                        (*command_buffers_)[inverse ? DftType::INVERSE : DftType::FORWARD], compute_queue_);
-                vulkan::queue_wait_idle(compute_queue_);
+                        (*command_buffers_)[inverse ? DftType::INVERSE : DftType::FORWARD], instance_.compute_queue());
+                vulkan::queue_wait_idle(instance_.compute_queue());
 
                 {
                         vulkan::BufferMapper mapper(dft_.buffer_with_memory());
@@ -670,14 +666,11 @@ class DftVector final : public ComputeVector
 public:
         DftVector()
                 : instance_({}, {}, vector_required_device_features(), vector_optional_device_features()),
-                  device_(instance_.device()),
-                  compute_command_pool_(instance_.compute_command_pool()),
-                  compute_queue_(instance_.compute_queue()),
-                  dft_(instance_,
-                       compute_command_pool_,
-                       compute_queue_,
-                       instance_.transfer_command_pool(),
-                       instance_.transfer_queue(),
+                  dft_(&instance_,
+                       &instance_.compute_command_pool(),
+                       &instance_.compute_queue(),
+                       &instance_.transfer_command_pool(),
+                       &instance_.transfer_queue(),
                        vulkan::BufferMemoryType::HOST_VISIBLE)
         {
         }
@@ -690,11 +683,11 @@ vulkan::DeviceFeatures ComputeImage::required_device_features()
 }
 
 std::unique_ptr<ComputeImage> create_compute_image(
-        const vulkan::VulkanInstance& instance,
-        const vulkan::CommandPool& compute_command_pool,
-        const vulkan::Queue& compute_queue,
-        const vulkan::CommandPool& transfer_command_pool,
-        const vulkan::Queue& transfer_queue)
+        const vulkan::VulkanInstance* instance,
+        const vulkan::CommandPool* compute_command_pool,
+        const vulkan::Queue* compute_queue,
+        const vulkan::CommandPool* transfer_command_pool,
+        const vulkan::Queue* transfer_queue)
 {
         return std::make_unique<DftImage>(
                 instance, compute_command_pool, compute_queue, transfer_command_pool, transfer_queue);

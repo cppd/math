@@ -62,7 +62,7 @@ std::vector<VkDescriptorSetLayoutBinding> SobelMemory::descriptor_set_layout_bin
         return bindings;
 }
 
-SobelMemory::SobelMemory(const vulkan::Device& device, VkDescriptorSetLayout descriptor_set_layout)
+SobelMemory::SobelMemory(const VkDevice& device, VkDescriptorSetLayout descriptor_set_layout)
         : descriptors_(device, 2, descriptor_set_layout, descriptor_set_layout_bindings())
 {
 }
@@ -170,7 +170,7 @@ std::size_t SobelConstant::size() const
 
 //
 
-SobelProgram::SobelProgram(const vulkan::Device& device)
+SobelProgram::SobelProgram(const VkDevice& device)
         : device_(device),
           descriptor_set_layout_(
                   vulkan::create_descriptor_set_layout(device, SobelMemory::descriptor_set_layout_bindings())),
@@ -201,7 +201,7 @@ void SobelProgram::create_pipeline(uint32_t local_size_x, uint32_t local_size_y)
         constant_.set(local_size_x, local_size_y);
 
         vulkan::ComputePipelineCreateInfo info;
-        info.device = &device_;
+        info.device = device_;
         info.pipeline_layout = pipeline_layout_;
         info.shader = &shader_;
         info.constants = &constant_;

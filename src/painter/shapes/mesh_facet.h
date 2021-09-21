@@ -72,9 +72,9 @@ class MeshFacet
         static constexpr int VERTEX_COUNT = N;
         static constexpr int EDGE_COUNT = BINOMIAL<N, 2>;
 
-        const std::vector<Vector<N, T>>& vertices_;
-        const std::vector<Vector<N, T>>& normals_;
-        const std::vector<Vector<N - 1, T>>& texcoords_;
+        const std::vector<Vector<N, T>>* vertices_;
+        const std::vector<Vector<N, T>>* normals_;
+        const std::vector<Vector<N - 1, T>>* texcoords_;
 
         std::array<int, N> v_;
         std::array<int, N> n_;
@@ -103,9 +103,9 @@ public:
         using DataType = T;
 
         MeshFacet(
-                const std::vector<Vector<N, T>>& vertices,
-                const std::vector<Vector<N, T>>& normals,
-                const std::vector<Vector<N - 1, T>>& texcoords,
+                const std::vector<Vector<N, T>>* vertices,
+                const std::vector<Vector<N, T>>* normals,
+                const std::vector<Vector<N - 1, T>>* texcoords,
                 const std::array<int, N>& vertex_indices,
                 bool has_normals,
                 const std::array<int, N>& normal_indices,
@@ -130,15 +130,15 @@ public:
 
                 material_ = material;
 
-                normal_ = numerical::orthogonal_complement(vertices_, v_).normalized();
+                normal_ = numerical::orthogonal_complement(*vertices_, v_).normalized();
 
                 if (!is_finite(normal_))
                 {
                         error("Mesh facet normal is not finite, facet vertices\n"
-                              + mesh_facet_implementation::vertices_to_string(vertices_, v_));
+                              + mesh_facet_implementation::vertices_to_string(*vertices_, v_));
                 }
 
-                geometry_.set_data(normal_, mesh_facet_implementation::vertices_to_array(vertices_, v_));
+                geometry_.set_data(normal_, mesh_facet_implementation::vertices_to_array(*vertices_, v_));
 
                 if (!has_normals)
                 {
@@ -152,7 +152,7 @@ public:
 
                 for (unsigned i = 0; i < N; ++i)
                 {
-                        dots[i] = dot(normals_[n_[i]], normal_);
+                        dots[i] = dot((*normals_)[n_[i]], normal_);
                 }
 
                 if (!std::all_of(
@@ -204,7 +204,7 @@ public:
                         std::array<Vector<N - 1, T>, N> texcoords;
                         for (unsigned i = 0; i < N; ++i)
                         {
-                                texcoords[i] = texcoords_[t_[i]];
+                                texcoords[i] = (*texcoords_)[t_[i]];
                         }
                         return geometry_.interpolate(point, texcoords);
                 }
@@ -213,7 +213,7 @@ public:
 
         std::optional<T> intersect(const Ray<N, T>& r) const
         {
-                return geometry_.intersect(r, vertices_[v_[0]], normal_);
+                return geometry_.intersect(r, (*vertices_)[v_[0]], normal_);
         }
 
         Vector<N, T> geometric_normal() const
@@ -234,7 +234,7 @@ public:
                         std::array<Vector<N, T>, N> normals;
                         for (unsigned i = 0; i < N; ++i)
                         {
-                                normals[i] = normals_[n_[i]];
+                                normals[i] = (*normals_)[n_[i]];
                         }
                         return geometry_.interpolate(point, normals).normalized();
                 }
@@ -243,7 +243,7 @@ public:
                         std::array<Vector<N, T>, N> normals;
                         for (unsigned i = 0; i < N; ++i)
                         {
-                                normals[i] = reverse_normal_[i] ? -normals_[n_[i]] : normals_[n_[i]];
+                                normals[i] = reverse_normal_[i] ? -(*normals_)[n_[i]] : (*normals_)[n_[i]];
                         }
                         return geometry_.interpolate(point, normals).normalized();
                 }
@@ -253,12 +253,12 @@ public:
 
         std::array<Vector<N, T>, VERTEX_COUNT> vertices() const
         {
-                return mesh_facet_implementation::vertices_to_array(vertices_, v_);
+                return mesh_facet_implementation::vertices_to_array(*vertices_, v_);
         }
 
         geometry::Constraints<N, T, N, 1> constraints() const
         {
-                return geometry_.constraints(normal_, mesh_facet_implementation::vertices_to_array(vertices_, v_));
+                return geometry_.constraints(normal_, mesh_facet_implementation::vertices_to_array(*vertices_, v_));
         }
 
         std::array<std::array<Vector<N, T>, 2>, EDGE_COUNT> edges() const
@@ -271,7 +271,7 @@ public:
                 {
                         for (unsigned j = i + 1; j < N; ++j)
                         {
-                                result[n++] = {vertices_[v_[i]], vertices_[v_[j]] - vertices_[v_[i]]};
+                                result[n++] = {(*vertices_)[v_[i]], (*vertices_)[v_[j]] - (*vertices_)[v_[i]]};
                         }
                 }
                 ASSERT(n == EDGE_COUNT);

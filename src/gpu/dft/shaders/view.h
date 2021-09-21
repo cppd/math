@@ -85,7 +85,7 @@ struct ViewVertex
 
 class ViewProgram final
 {
-        const vulkan::Device& device_;
+        const vulkan::Device* device_;
 
         vulkan::DescriptorSetLayout descriptor_set_layout_;
         vulkan::PipelineLayout pipeline_layout_;
@@ -93,7 +93,7 @@ class ViewProgram final
         vulkan::FragmentShader fragment_shader_;
 
 public:
-        explicit ViewProgram(const vulkan::Device& device);
+        explicit ViewProgram(const vulkan::Device* device);
 
         ViewProgram(const ViewProgram&) = delete;
         ViewProgram& operator=(const ViewProgram&) = delete;

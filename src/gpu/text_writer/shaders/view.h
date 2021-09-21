@@ -96,7 +96,7 @@ struct Vertex
 
 class Program final
 {
-        const vulkan::Device& device_;
+        const vulkan::Device* device_;
 
         vulkan::DescriptorSetLayout descriptor_set_layout_;
         vulkan::PipelineLayout pipeline_layout_;
@@ -104,7 +104,7 @@ class Program final
         vulkan::FragmentShader fragment_shader_;
 
 public:
-        explicit Program(const vulkan::Device& device);
+        explicit Program(const vulkan::Device* device);
 
         Program(const Program&) = delete;
         Program& operator=(const Program&) = delete;

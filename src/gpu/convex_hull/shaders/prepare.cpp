@@ -53,7 +53,7 @@ std::vector<VkDescriptorSetLayoutBinding> PrepareMemory::descriptor_set_layout_b
         return bindings;
 }
 
-PrepareMemory::PrepareMemory(const vulkan::Device& device, VkDescriptorSetLayout descriptor_set_layout)
+PrepareMemory::PrepareMemory(const VkDevice& device, VkDescriptorSetLayout descriptor_set_layout)
         : descriptors_(device, 1, descriptor_set_layout, descriptor_set_layout_bindings())
 {
 }
@@ -171,7 +171,7 @@ std::size_t PrepareConstant::size() const
 
 //
 
-PrepareProgram::PrepareProgram(const vulkan::Device& device)
+PrepareProgram::PrepareProgram(const VkDevice& device)
         : device_(device),
           descriptor_set_layout_(
                   vulkan::create_descriptor_set_layout(device, PrepareMemory::descriptor_set_layout_bindings())),
@@ -186,7 +186,7 @@ void PrepareProgram::create_pipeline(unsigned buffer_and_group_size, const Regio
         constant_.set(buffer_and_group_size, buffer_and_group_size, rectangle);
 
         vulkan::ComputePipelineCreateInfo info;
-        info.device = &device_;
+        info.device = device_;
         info.pipeline_layout = pipeline_layout_;
         info.shader = &shader_;
         info.constants = &constant_;

@@ -52,7 +52,7 @@ std::vector<VkDescriptorSetLayoutBinding> GrayscaleMemory::descriptor_set_layout
         return bindings;
 }
 
-GrayscaleMemory::GrayscaleMemory(const vulkan::Device& device, VkDescriptorSetLayout descriptor_set_layout)
+GrayscaleMemory::GrayscaleMemory(const VkDevice& device, VkDescriptorSetLayout descriptor_set_layout)
         : descriptors_(device, 2, descriptor_set_layout, descriptor_set_layout_bindings())
 {
 }
@@ -179,7 +179,7 @@ std::size_t GrayscaleConstant::size() const
 
 //
 
-GrayscaleProgram::GrayscaleProgram(const vulkan::Device& device)
+GrayscaleProgram::GrayscaleProgram(const VkDevice& device)
         : device_(device),
           descriptor_set_layout_(
                   vulkan::create_descriptor_set_layout(device, GrayscaleMemory::descriptor_set_layout_bindings())),
@@ -210,7 +210,7 @@ void GrayscaleProgram::create_pipeline(uint32_t local_size_x, uint32_t local_siz
         constant_.set(local_size_x, local_size_y, rectangle);
 
         vulkan::ComputePipelineCreateInfo info;
-        info.device = &device_;
+        info.device = device_;
         info.pipeline_layout = pipeline_layout_;
         info.shader = &shader_;
         info.constants = &constant_;

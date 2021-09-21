@@ -51,12 +51,12 @@ class Impl final : public View
 
         // const bool sample_shading_;
 
-        const vulkan::VulkanInstance& instance_;
-        const vulkan::Device& device_;
-        const vulkan::CommandPool& graphics_command_pool_;
-        const vulkan::Queue& graphics_queue_;
-        //const vulkan::CommandPool& transfer_command_pool_;
-        //const vulkan::Queue& transfer_queue_;
+        const vulkan::VulkanInstance* const instance_;
+        const vulkan::Device* const device_;
+        const vulkan::CommandPool* const graphics_command_pool_;
+        const vulkan::Queue* const graphics_queue_;
+        //const vulkan::CommandPool* const transfer_command_pool_;
+        //const vulkan::Queue* const transfer_queue_;
         uint32_t graphics_family_index_;
 
         vulkan::Semaphore signal_semaphore_;
@@ -100,11 +100,11 @@ class Impl final : public View
                 //
 
                 image_ = std::make_unique<vulkan::ImageWithMemory>(
-                        device_, std::vector<uint32_t>({graphics_family_index_}), std::vector<VkFormat>({IMAGE_FORMAT}),
-                        VK_SAMPLE_COUNT_1_BIT, VK_IMAGE_TYPE_2D,
+                        *device_, std::vector<uint32_t>({graphics_family_index_}),
+                        std::vector<VkFormat>({IMAGE_FORMAT}), VK_SAMPLE_COUNT_1_BIT, VK_IMAGE_TYPE_2D,
                         vulkan::make_extent(rectangle.width(), rectangle.height()),
                         VK_IMAGE_USAGE_STORAGE_BIT | VK_IMAGE_USAGE_SAMPLED_BIT,
-                        VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL, graphics_command_pool_, graphics_queue_);
+                        VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL, *graphics_command_pool_, *graphics_queue_);
 
                 memory_.set_image(sampler_, *image_);
 
@@ -114,7 +114,7 @@ class Impl final : public View
                 compute_->create_buffers(sampler_, input, objects, rectangle, *image_);
 
                 vulkan::CommandBufferCreateInfo info;
-                info.device = device_;
+                info.device = *device_;
                 info.render_area.emplace();
                 info.render_area->offset.x = 0;
                 info.render_area->offset.y = 0;
@@ -122,7 +122,7 @@ class Impl final : public View
                 info.render_area->extent.height = render_buffers->height();
                 info.render_pass = render_buffers->render_pass();
                 info.framebuffers = &render_buffers->framebuffers();
-                info.command_pool = graphics_command_pool_;
+                info.command_pool = *graphics_command_pool_;
                 info.before_render_pass_commands = [this](VkCommandBuffer command_buffer)
                 {
                         compute_->compute_commands(command_buffer);
@@ -174,31 +174,32 @@ class Impl final : public View
 
                 vertices_.reset();
                 vertices_ = std::make_unique<vulkan::BufferWithMemory>(
-                        vulkan::BufferMemoryType::DEVICE_LOCAL, device_,
-                        std::vector<uint32_t>({graphics_queue_.family_index() /*, transfer_queue_.family_index()*/}),
+                        vulkan::BufferMemoryType::DEVICE_LOCAL, *device_,
+                        std::vector<uint32_t>({graphics_queue_->family_index() /*, transfer_queue_.family_index()*/}),
                         VK_BUFFER_USAGE_VERTEX_BUFFER_BIT | VK_BUFFER_USAGE_TRANSFER_DST_BIT, data_size(vertices));
-                vertices_->write(graphics_command_pool_, graphics_queue_, data_size(vertices), data_pointer(vertices));
+                vertices_->write(
+                        *graphics_command_pool_, *graphics_queue_, data_size(vertices), data_pointer(vertices));
         }
 
 public:
-        Impl(const vulkan::VulkanInstance& instance,
-             const vulkan::CommandPool& graphics_command_pool,
-             const vulkan::Queue& graphics_queue,
-             const vulkan::CommandPool& /*transfer_command_pool*/,
-             const vulkan::Queue& /*transfer_queue*/,
+        Impl(const vulkan::VulkanInstance* instance,
+             const vulkan::CommandPool* graphics_command_pool,
+             const vulkan::Queue* graphics_queue,
+             const vulkan::CommandPool* /*transfer_command_pool*/,
+             const vulkan::Queue* /*transfer_queue*/,
              bool /*sample_shading*/)
                 : // sample_shading_(sample_shading),
                   instance_(instance),
-                  device_(instance.device()),
+                  device_(&instance->device()),
                   graphics_command_pool_(graphics_command_pool),
                   graphics_queue_(graphics_queue),
                   //transfer_command_pool_(transfer_command_pool),
                   //transfer_queue_(transfer_queue),
-                  graphics_family_index_(graphics_queue.family_index()),
-                  signal_semaphore_(instance.device()),
-                  program_(instance.device()),
-                  memory_(instance.device(), program_.descriptor_set_layout()),
-                  sampler_(create_sampler(instance.device())),
+                  graphics_family_index_(graphics_queue->family_index()),
+                  signal_semaphore_(instance->device()),
+                  program_(&instance->device()),
+                  memory_(instance->device(), program_.descriptor_set_layout()),
+                  sampler_(create_sampler(instance->device())),
                   compute_(create_compute(instance))
         {
                 create_vertices();
@@ -210,7 +211,7 @@ public:
 
                 //
 
-                instance_.device_wait_idle_noexcept("the Vulkan pencil sketch view destructor");
+                instance_->device_wait_idle_noexcept("the Vulkan pencil sketch view destructor");
         }
 };
 }
@@ -223,11 +224,11 @@ vulkan::DeviceFeatures View::required_device_features()
 }
 
 std::unique_ptr<View> create_view(
-        const vulkan::VulkanInstance& instance,
-        const vulkan::CommandPool& graphics_command_pool,
-        const vulkan::Queue& graphics_queue,
-        const vulkan::CommandPool& transfer_command_pool,
-        const vulkan::Queue& transfer_queue,
+        const vulkan::VulkanInstance* instance,
+        const vulkan::CommandPool* graphics_command_pool,
+        const vulkan::Queue* graphics_queue,
+        const vulkan::CommandPool* transfer_command_pool,
+        const vulkan::Queue* transfer_queue,
         bool sample_shading)
 {
         return std::make_unique<Impl>(

@@ -291,7 +291,7 @@ void Mesh<N, T, Color>::create(const mesh::Reading<N>& mesh_object)
                 int material = facet_material + materials_offset;
 
                 facets_.emplace_back(
-                        vertices_, normals_, texcoords_, vertices, facet.has_normal, normals, facet.has_texcoord,
+                        &vertices_, &normals_, &texcoords_, vertices, facet.has_normal, normals, facet.has_texcoord,
                         texcoords, material);
         }
 
@@ -393,7 +393,7 @@ Mesh<N, T, Color>::Mesh(const std::vector<const mesh::MeshObject<N>*>& mesh_obje
 
         progress->set_text(to_string(1 << N) + "-tree: %v of %m");
 
-        tree_.emplace(facets_, tree_max_depth<N>(), TREE_MIN_OBJECTS_PER_BOX, progress);
+        tree_.emplace(&facets_, tree_max_depth<N>(), TREE_MIN_OBJECTS_PER_BOX, progress);
 
         LOG("Painter mesh object created, " + to_string_fixed(duration_from(start_time), 5) + " s");
 }
@@ -425,7 +425,7 @@ template <std::size_t N, typename T, typename Color>
 std::function<bool(const geometry::ShapeWrapperForIntersection<geometry::ParallelotopeAA<N, T>>&)> Mesh<N, T, Color>::
         intersection_function() const
 {
-        return [w = geometry::ShapeWrapperForIntersection(tree_->root())](
+        return [w = geometry::ShapeWrapperForIntersection(&tree_->root())](
                        const geometry::ShapeWrapperForIntersection<geometry::ParallelotopeAA<N, T>>& p)
         {
                 return geometry::shape_intersection(w, p);

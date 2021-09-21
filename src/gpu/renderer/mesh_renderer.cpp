@@ -60,16 +60,16 @@ void find_opaque_and_transparent(
 }
 
 MeshRenderer::MeshRenderer(
-        const vulkan::Device& device,
+        const vulkan::Device* device,
         bool sample_shading,
         bool sampler_anisotropy,
         const ShaderBuffers& buffers)
-        : device_(device),
+        : device_(*device),
           sample_shading_(sample_shading),
           //
           triangles_program_(device),
           triangles_common_memory_(
-                  device,
+                  *device,
                   triangles_program_.descriptor_set_layout_shared(),
                   triangles_program_.descriptor_set_layout_shared_bindings(),
                   buffers.matrices_buffer(),
@@ -77,7 +77,7 @@ MeshRenderer::MeshRenderer(
           //
           triangle_lines_program_(device),
           triangle_lines_common_memory_(
-                  device,
+                  *device,
                   triangle_lines_program_.descriptor_set_layout_shared(),
                   triangle_lines_program_.descriptor_set_layout_shared_bindings(),
                   buffers.matrices_buffer(),
@@ -85,7 +85,7 @@ MeshRenderer::MeshRenderer(
           //
           normals_program_(device),
           normals_common_memory_(
-                  device,
+                  *device,
                   normals_program_.descriptor_set_layout_shared(),
                   normals_program_.descriptor_set_layout_shared_bindings(),
                   buffers.matrices_buffer(),
@@ -93,7 +93,7 @@ MeshRenderer::MeshRenderer(
           //
           triangles_depth_program_(device),
           triangles_depth_common_memory_(
-                  device,
+                  *device,
                   triangles_depth_program_.descriptor_set_layout_shared(),
                   triangles_depth_program_.descriptor_set_layout_shared_bindings(),
                   buffers.shadow_matrices_buffer(),
@@ -101,14 +101,14 @@ MeshRenderer::MeshRenderer(
           //
           points_program_(device),
           points_common_memory_(
-                  device,
+                  *device,
                   points_program_.descriptor_set_layout_shared(),
                   points_program_.descriptor_set_layout_shared_bindings(),
                   buffers.matrices_buffer(),
                   buffers.drawing_buffer()),
           //
-          texture_sampler_(create_mesh_texture_sampler(device_, sampler_anisotropy)),
-          shadow_sampler_(create_mesh_shadow_sampler(device_))
+          texture_sampler_(create_mesh_texture_sampler(*device, sampler_anisotropy)),
+          shadow_sampler_(create_mesh_shadow_sampler(*device))
 {
 }
 

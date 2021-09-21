@@ -20,10 +20,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "error.h"
 #include "extensions.h"
 
-#include <src/com/enum.h>
 #include <src/com/error.h>
-#include <src/com/print.h>
-#include <src/com/type/limit.h>
 
 #include <algorithm>
 
@@ -191,117 +188,6 @@ DeviceHandle& DeviceHandle::operator=(DeviceHandle&& from) noexcept
 DeviceHandle::operator VkDevice() const& noexcept
 {
         return device_;
-}
-
-//
-
-DeviceFeatures Device::device_features(const VkDeviceCreateInfo& create_info)
-{
-        DeviceFeatures features;
-
-        bool features_10 = false;
-        bool features_11 = false;
-        bool features_12 = false;
-
-        const void* ptr = create_info.pNext;
-
-        while (ptr)
-        {
-                VkStructureType type;
-                std::memcpy(&type, ptr, sizeof(VkStructureType));
-                if (type == VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_FEATURES_2)
-                {
-                        if (features_10)
-                        {
-                                error("Unique device features required");
-                        }
-                        features_10 = true;
-                        VkPhysicalDeviceFeatures2 features_2;
-                        std::memcpy(&features_2, ptr, sizeof(VkPhysicalDeviceFeatures2));
-                        ptr = features_2.pNext;
-                        features.features_10 = features_2.features;
-                }
-                else if (type == VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_VULKAN_1_1_FEATURES)
-                {
-                        if (features_11)
-                        {
-                                error("Unique device features required");
-                        }
-                        features_11 = true;
-                        std::memcpy(&features.features_11, ptr, sizeof(VkPhysicalDeviceVulkan11Features));
-                        ptr = features.features_11.pNext;
-                        features.features_11.pNext = nullptr;
-                }
-                else if (type == VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_VULKAN_1_2_FEATURES)
-                {
-                        if (features_12)
-                        {
-                                error("Unique device features required");
-                        }
-                        features_12 = true;
-                        std::memcpy(&features.features_12, ptr, sizeof(VkPhysicalDeviceVulkan12Features));
-                        ptr = features.features_12.pNext;
-                        features.features_12.pNext = nullptr;
-                }
-                else
-                {
-                        error("Unknown device create info type " + to_string(enum_to_int(type)));
-                }
-        }
-
-        if (!features_10 || !features_11 || !features_12)
-        {
-                error("Not all device features specified for device creation");
-        }
-
-        return features;
-}
-
-Device::Device(
-        VkPhysicalDevice physical_device,
-        const DeviceProperties* physical_device_properties,
-        const VkDeviceCreateInfo& create_info)
-        : device_(physical_device, create_info),
-          physical_device_(physical_device),
-          physical_device_properties_(physical_device_properties),
-          features_(device_features(create_info))
-{
-        ASSERT(!create_info.pEnabledFeatures);
-
-        for (unsigned i = 0; i < create_info.queueCreateInfoCount; ++i)
-        {
-                uint32_t family_index = create_info.pQueueCreateInfos[i].queueFamilyIndex;
-                uint32_t queue_count = create_info.pQueueCreateInfos[i].queueCount;
-                auto [iter, inserted] = queues_.try_emplace(family_index);
-                if (!inserted)
-                {
-                        error("Non unique device queue family indices");
-                }
-                for (uint32_t queue_index = 0; queue_index < queue_count; ++queue_index)
-                {
-                        VkQueue queue;
-                        vkGetDeviceQueue(device_, family_index, queue_index, &queue);
-                        if (queue == VK_NULL_HANDLE)
-                        {
-                                error("Null queue handle");
-                        }
-                        iter->second.push_back(queue);
-                }
-        }
-}
-
-Queue Device::queue(uint32_t family_index, uint32_t queue_index) const
-{
-        const auto iter = queues_.find(family_index);
-        if (iter == queues_.cend())
-        {
-                error("Queue family index " + to_string(family_index) + " not found");
-        }
-        if (queue_index >= iter->second.size())
-        {
-                error("Queue " + to_string(queue_index) + " not found");
-        }
-        return {family_index, iter->second[queue_index]};
 }
 
 //

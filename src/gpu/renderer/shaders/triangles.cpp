@@ -133,21 +133,21 @@ std::vector<VkDescriptorSetLayoutBinding> TrianglesProgram::descriptor_set_layou
         return TrianglesMaterialMemory::descriptor_set_layout_bindings();
 }
 
-TrianglesProgram::TrianglesProgram(const vulkan::Device& device)
+TrianglesProgram::TrianglesProgram(const vulkan::Device* device)
         : device_(device),
           descriptor_set_layout_shared_(
-                  vulkan::create_descriptor_set_layout(device, descriptor_set_layout_shared_bindings())),
+                  vulkan::create_descriptor_set_layout(*device, descriptor_set_layout_shared_bindings())),
           descriptor_set_layout_mesh_(
-                  vulkan::create_descriptor_set_layout(device, descriptor_set_layout_mesh_bindings())),
+                  vulkan::create_descriptor_set_layout(*device, descriptor_set_layout_mesh_bindings())),
           descriptor_set_layout_material_(
-                  vulkan::create_descriptor_set_layout(device, descriptor_set_layout_material_bindings())),
+                  vulkan::create_descriptor_set_layout(*device, descriptor_set_layout_material_bindings())),
           pipeline_layout_(vulkan::create_pipeline_layout(
-                  device,
+                  *device,
                   {CommonMemory::set_number(), MeshMemory::set_number(), TrianglesMaterialMemory::set_number()},
                   {descriptor_set_layout_shared_, descriptor_set_layout_mesh_, descriptor_set_layout_material_})),
-          vertex_shader_(device_, code_triangles_vert(), "main"),
-          geometry_shader_(device_, code_triangles_geom(), "main"),
-          fragment_shader_(device_, code_triangles_frag(), "main")
+          vertex_shader_(*device_, code_triangles_vert(), "main"),
+          geometry_shader_(*device_, code_triangles_geom(), "main"),
+          fragment_shader_(*device_, code_triangles_frag(), "main")
 {
 }
 
@@ -179,7 +179,7 @@ vulkan::Pipeline TrianglesProgram::create_pipeline(
 {
         vulkan::GraphicsPipelineCreateInfo info;
 
-        info.device = &device_;
+        info.device = device_;
         info.render_pass = render_pass;
         info.sub_pass = 0;
         info.sample_count = sample_count;

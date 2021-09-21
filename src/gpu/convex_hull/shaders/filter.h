@@ -40,7 +40,7 @@ public:
         static std::vector<VkDescriptorSetLayoutBinding> descriptor_set_layout_bindings();
         static unsigned set_number();
 
-        FilterMemory(const vulkan::Device& device, VkDescriptorSetLayout descriptor_set_layout);
+        FilterMemory(const VkDevice& device, VkDescriptorSetLayout descriptor_set_layout);
 
         FilterMemory(const FilterMemory&) = delete;
         FilterMemory& operator=(const FilterMemory&) = delete;
@@ -81,7 +81,7 @@ public:
 
 class FilterProgram final
 {
-        const vulkan::Device& device_;
+        VkDevice device_;
 
         vulkan::DescriptorSetLayout descriptor_set_layout_;
         vulkan::PipelineLayout pipeline_layout_;
@@ -90,7 +90,7 @@ class FilterProgram final
         vulkan::Pipeline pipeline_;
 
 public:
-        explicit FilterProgram(const vulkan::Device& device);
+        explicit FilterProgram(const VkDevice& device);
 
         FilterProgram(const FilterProgram&) = delete;
         FilterProgram& operator=(const FilterProgram&) = delete;

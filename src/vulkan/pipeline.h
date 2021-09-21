@@ -18,6 +18,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #pragma once
 
 #include "constant.h"
+#include "device.h"
 #include "objects.h"
 #include "shader.h"
 
@@ -57,7 +58,7 @@ Pipeline create_graphics_pipeline(const GraphicsPipelineCreateInfo& info);
 struct ComputePipelineCreateInfo
 {
         // required
-        const Device* device = nullptr;
+        VkDevice device = VK_NULL_HANDLE;
         VkPipelineLayout pipeline_layout = VK_NULL_HANDLE;
         const ComputeShader* shader = nullptr;
 

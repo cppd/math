@@ -39,7 +39,7 @@ namespace ns::gpu::renderer
 class MeshRenderer
 {
         const std::thread::id thread_id_ = std::this_thread::get_id();
-        const vulkan::Device& device_;
+        const VkDevice device_;
         const bool sample_shading_;
 
         const RenderBuffers3D* render_buffers_ = nullptr;
@@ -93,7 +93,7 @@ class MeshRenderer
 
 public:
         MeshRenderer(
-                const vulkan::Device& device,
+                const vulkan::Device* device,
                 bool sample_shading,
                 bool sampler_anisotropy,
                 const ShaderBuffers& buffers);

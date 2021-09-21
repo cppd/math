@@ -696,35 +696,35 @@ public:
                         error("Window PPI " + to_string(window_ppi_) + "is not positive");
                 }
 
-                const vulkan::Queue& graphics_compute_queue = instance_->graphics_compute_queues()[0];
-                const vulkan::CommandPool& graphics_compute_command_pool = instance_->graphics_compute_command_pool();
-                const vulkan::Queue& compute_queue = instance_->compute_queue();
-                const vulkan::CommandPool& compute_command_pool = instance_->compute_command_pool();
-                const vulkan::Queue& transfer_queue = instance_->transfer_queue();
-                const vulkan::CommandPool& transfer_command_pool = instance_->transfer_command_pool();
+                const vulkan::Queue* const graphics_queue = &instance_->graphics_compute_queues()[0];
+                const vulkan::CommandPool* const graphics_pool = &instance_->graphics_compute_command_pool();
+                const vulkan::Queue* const compute_queue = &instance_->compute_queue();
+                const vulkan::CommandPool* const compute_pool = &instance_->compute_command_pool();
+                const vulkan::Queue* const transfer_queue = &instance_->transfer_queue();
+                const vulkan::CommandPool* const transfer_pool = &instance_->transfer_command_pool();
 
                 renderer_ = gpu::renderer::create_renderer(
-                        *instance_, graphics_compute_command_pool, graphics_compute_queue, transfer_command_pool,
-                        transfer_queue, SAMPLE_RATE_SHADING, SAMPLER_ANISOTROPY);
+                        instance_.get(), graphics_pool, graphics_queue, transfer_pool, transfer_queue,
+                        SAMPLE_RATE_SHADING, SAMPLER_ANISOTROPY);
 
                 text_ = gpu::text_writer::create_view(
-                        *instance_, graphics_compute_command_pool, graphics_compute_queue, transfer_command_pool,
-                        transfer_queue, SAMPLE_RATE_SHADING, frame_rate_.text_size(), DEFAULT_TEXT_COLOR);
+                        instance_.get(), graphics_pool, graphics_queue, transfer_pool, transfer_queue,
+                        SAMPLE_RATE_SHADING, frame_rate_.text_size(), DEFAULT_TEXT_COLOR);
 
                 convex_hull_ = gpu::convex_hull::create_view(
-                        *instance_, graphics_compute_command_pool, graphics_compute_queue, SAMPLE_RATE_SHADING);
+                        instance_.get(), graphics_pool, graphics_queue, SAMPLE_RATE_SHADING);
 
                 pencil_sketch_ = gpu::pencil_sketch::create_view(
-                        *instance_, graphics_compute_command_pool, graphics_compute_queue, transfer_command_pool,
-                        transfer_queue, SAMPLE_RATE_SHADING);
+                        instance_.get(), graphics_pool, graphics_queue, transfer_pool, transfer_queue,
+                        SAMPLE_RATE_SHADING);
 
                 dft_ = gpu::dft::create_view(
-                        *instance_, graphics_compute_command_pool, graphics_compute_queue, transfer_command_pool,
-                        transfer_queue, SAMPLE_RATE_SHADING);
+                        instance_.get(), graphics_pool, graphics_queue, transfer_pool, transfer_queue,
+                        SAMPLE_RATE_SHADING);
 
                 optical_flow_ = gpu::optical_flow::create_view(
-                        *instance_, graphics_compute_command_pool, graphics_compute_queue, compute_command_pool,
-                        compute_queue, transfer_command_pool, transfer_queue, SAMPLE_RATE_SHADING);
+                        instance_.get(), graphics_pool, graphics_queue, compute_pool, compute_queue, transfer_pool,
+                        transfer_queue, SAMPLE_RATE_SHADING);
 
                 //
 

@@ -64,14 +64,14 @@ class ObjectTree final
                 wrappers.reserve(objects.size());
                 for (const Object& t : objects)
                 {
-                        wrappers.emplace_back(t);
+                        wrappers.emplace_back(&t);
                 }
 
                 const auto object_intersections =
                         [&w = std::as_const(wrappers)](
                                 const TreeParallelotope& parallelotope, const std::vector<int>& indices)
                 {
-                        ShapeWrapperForIntersection p(parallelotope);
+                        ShapeWrapperForIntersection p(&parallelotope);
                         std::vector<int> intersections;
                         intersections.reserve(indices.size());
                         for (int object_index : indices)
@@ -117,16 +117,16 @@ class ObjectTree final
                 return std::nullopt;
         }
 
-        const std::vector<Object>& objects_;
+        const std::vector<Object>* const objects_;
         BoundingBox<N, T> bounding_box_;
         SpatialSubdivisionTree<TreeParallelotope> tree_;
 
 public:
-        ObjectTree(const std::vector<Object>& objects, int max_depth, int min_objects_per_box, ProgressRatio* progress)
+        ObjectTree(const std::vector<Object>* objects, int max_depth, int min_objects_per_box, ProgressRatio* progress)
                 : objects_(objects)
         {
-                bounding_box_ = bounding_box(objects);
-                create_tree(max_depth, min_objects_per_box, objects_, bounding_box_, &tree_, progress);
+                bounding_box_ = bounding_box(*objects);
+                create_tree(max_depth, min_objects_per_box, *objects_, bounding_box_, &tree_, progress);
         }
 
         const BoundingBox<N, T>& bounding_box() const
@@ -150,7 +150,7 @@ public:
 
                 const auto f = [&](const std::vector<int>& object_indices) -> std::optional<Vector<N, T>>
                 {
-                        intersection = ray_intersection(objects_, object_indices, ray);
+                        intersection = ray_intersection(*objects_, object_indices, ray);
                         if (intersection)
                         {
                                 return ray.point(std::get<0>(*intersection));

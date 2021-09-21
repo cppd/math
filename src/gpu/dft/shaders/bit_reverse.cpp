@@ -42,7 +42,7 @@ std::vector<VkDescriptorSetLayoutBinding> BitReverseMemory::descriptor_set_layou
         return bindings;
 }
 
-BitReverseMemory::BitReverseMemory(const vulkan::Device& device, VkDescriptorSetLayout descriptor_set_layout)
+BitReverseMemory::BitReverseMemory(const VkDevice& device, VkDescriptorSetLayout descriptor_set_layout)
         : descriptors_(device, 1, descriptor_set_layout, descriptor_set_layout_bindings())
 {
 }
@@ -132,7 +132,7 @@ std::size_t BitReverseConstant::size() const
 
 //
 
-BitReverseProgram::BitReverseProgram(const vulkan::Device& device)
+BitReverseProgram::BitReverseProgram(const VkDevice& device)
         : device_(device),
           descriptor_set_layout_(
                   vulkan::create_descriptor_set_layout(device, BitReverseMemory::descriptor_set_layout_bindings())),
@@ -163,7 +163,7 @@ void BitReverseProgram::create_pipeline(uint32_t group_size, uint32_t data_size,
         constant_.set(group_size, data_size, n_mask, n_bits);
 
         vulkan::ComputePipelineCreateInfo info;
-        info.device = &device_;
+        info.device = device_;
         info.pipeline_layout = pipeline_layout_;
         info.shader = &shader_;
         info.constants = &constant_;

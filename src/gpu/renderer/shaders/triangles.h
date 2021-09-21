@@ -21,6 +21,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/numerical/vec.h>
 #include <src/vulkan/buffers.h>
 #include <src/vulkan/descriptor.h>
+#include <src/vulkan/device.h>
 #include <src/vulkan/objects.h>
 #include <src/vulkan/shader.h>
 
@@ -56,7 +57,7 @@ public:
 
 class TrianglesProgram final
 {
-        const vulkan::Device& device_;
+        const vulkan::Device* device_;
 
         vulkan::DescriptorSetLayout descriptor_set_layout_shared_;
         vulkan::DescriptorSetLayout descriptor_set_layout_mesh_;
@@ -67,7 +68,7 @@ class TrianglesProgram final
         vulkan::FragmentShader fragment_shader_;
 
 public:
-        explicit TrianglesProgram(const vulkan::Device& device);
+        explicit TrianglesProgram(const vulkan::Device* device);
 
         TrianglesProgram(const TrianglesProgram&) = delete;
         TrianglesProgram& operator=(const TrianglesProgram&) = delete;

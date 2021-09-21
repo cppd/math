@@ -38,7 +38,7 @@ public:
         static std::vector<VkDescriptorSetLayoutBinding> descriptor_set_layout_bindings();
         static unsigned set_number();
 
-        MergeMemory(const vulkan::Device& device, VkDescriptorSetLayout descriptor_set_layout);
+        MergeMemory(const VkDevice& device, VkDescriptorSetLayout descriptor_set_layout);
 
         MergeMemory(const MergeMemory&) = delete;
         MergeMemory& operator=(const MergeMemory&) = delete;
@@ -81,7 +81,7 @@ public:
 
 class MergeProgram final
 {
-        const vulkan::Device& device_;
+        VkDevice device_;
 
         vulkan::DescriptorSetLayout descriptor_set_layout_;
         vulkan::PipelineLayout pipeline_layout_;
@@ -90,7 +90,7 @@ class MergeProgram final
         vulkan::Pipeline pipeline_;
 
 public:
-        explicit MergeProgram(const vulkan::Device& device);
+        explicit MergeProgram(const VkDevice& device);
 
         MergeProgram(const MergeProgram&) = delete;
         MergeProgram& operator=(const MergeProgram&) = delete;

@@ -273,24 +273,24 @@ std::vector<VkDescriptorSetLayoutBinding> VolumeProgram::descriptor_set_layout_i
         return VolumeImageMemory::descriptor_set_layout_bindings();
 }
 
-VolumeProgram::VolumeProgram(const vulkan::Device& device)
+VolumeProgram::VolumeProgram(const vulkan::Device* device)
         : device_(device),
           descriptor_set_layout_shared_(
-                  vulkan::create_descriptor_set_layout(device, descriptor_set_layout_shared_bindings())),
+                  vulkan::create_descriptor_set_layout(*device, descriptor_set_layout_shared_bindings())),
           descriptor_set_layout_image_(
-                  vulkan::create_descriptor_set_layout(device, descriptor_set_layout_image_bindings())),
+                  vulkan::create_descriptor_set_layout(*device, descriptor_set_layout_image_bindings())),
           pipeline_layout_image_fragments_(vulkan::create_pipeline_layout(
-                  device,
+                  *device,
                   {VolumeSharedMemory::set_number(), VolumeImageMemory::set_number()},
                   {descriptor_set_layout_shared_, descriptor_set_layout_image_})),
           pipeline_layout_fragments_(vulkan::create_pipeline_layout(
-                  device,
+                  *device,
                   {VolumeSharedMemory::set_number()},
                   {descriptor_set_layout_shared_})),
-          vertex_shader_(device_, code_volume_vert(), "main"),
-          fragment_shader_image_(device_, code_volume_image_frag(), "main"),
-          fragment_shader_image_fragments_(device_, code_volume_image_fragments_frag(), "main"),
-          fragment_shader_fragments_(device_, code_volume_fragments_frag(), "main")
+          vertex_shader_(*device_, code_volume_vert(), "main"),
+          fragment_shader_image_(*device_, code_volume_image_frag(), "main"),
+          fragment_shader_image_fragments_(*device_, code_volume_image_fragments_frag(), "main"),
+          fragment_shader_fragments_(*device_, code_volume_fragments_frag(), "main")
 {
 }
 
@@ -344,7 +344,7 @@ vulkan::Pipeline VolumeProgram::create_pipeline(
 
         vulkan::GraphicsPipelineCreateInfo info;
 
-        info.device = &device_;
+        info.device = device_;
         info.render_pass = render_pass;
         info.sub_pass = 0;
         info.sample_count = sample_count;

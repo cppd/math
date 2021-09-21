@@ -193,13 +193,13 @@ std::vector<VkVertexInputAttributeDescription> Vertex::attribute_descriptions()
 
 //
 
-Program::Program(const vulkan::Device& device)
+Program::Program(const vulkan::Device* device)
         : device_(device),
           descriptor_set_layout_(
-                  vulkan::create_descriptor_set_layout(device, Memory::descriptor_set_layout_bindings())),
-          pipeline_layout_(vulkan::create_pipeline_layout(device, {Memory::set_number()}, {descriptor_set_layout_})),
-          vertex_shader_(device_, code_view_vert(), "main"),
-          fragment_shader_(device_, code_view_frag(), "main")
+                  vulkan::create_descriptor_set_layout(*device, Memory::descriptor_set_layout_bindings())),
+          pipeline_layout_(vulkan::create_pipeline_layout(*device, {Memory::set_number()}, {descriptor_set_layout_})),
+          vertex_shader_(*device_, code_view_vert(), "main"),
+          fragment_shader_(*device_, code_view_frag(), "main")
 {
 }
 
@@ -221,7 +221,7 @@ vulkan::Pipeline Program::create_pipeline(
 {
         vulkan::GraphicsPipelineCreateInfo info;
 
-        info.device = &device_;
+        info.device = device_;
         info.render_pass = render_pass;
         info.sub_pass = 0;
         info.sample_count = sample_count;

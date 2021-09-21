@@ -720,7 +720,7 @@ void test_intersection(
 }
 
 template <typename Parallelotope>
-std::unique_ptr<ShapeWrapperForIntersection<Parallelotope>> make_unique_wrapper(const Parallelotope& p)
+std::unique_ptr<ShapeWrapperForIntersection<Parallelotope>> make_unique_wrapper(const Parallelotope* p)
 {
         return std::make_unique<ShapeWrapperForIntersection<Parallelotope>>(p);
 }
@@ -748,10 +748,10 @@ void test_intersections()
                 ParallelotopeAA<N, T> p3(ORG_2, EDGES);
                 ParallelotopeAA<N, T> p_big(ORG_BIG, EDGES_BIG);
 
-                std::unique_ptr w1 = make_unique_wrapper(p1);
-                std::unique_ptr w2 = make_unique_wrapper(p2);
-                std::unique_ptr w3 = make_unique_wrapper(p3);
-                std::unique_ptr w_big = make_unique_wrapper(p_big);
+                std::unique_ptr w1 = make_unique_wrapper(&p1);
+                std::unique_ptr w2 = make_unique_wrapper(&p2);
+                std::unique_ptr w3 = make_unique_wrapper(&p3);
+                std::unique_ptr w_big = make_unique_wrapper(&p_big);
 
                 test_intersection(*w1, *w2, true, "1-2");
                 test_intersection(*w2, *w3, true, "2-3");
@@ -771,10 +771,10 @@ void test_intersections()
                 Parallelotope<N, T> p3(ORG_2, to_edge_vector(EDGES));
                 Parallelotope<N, T> p_big(ORG_BIG, to_edge_vector(EDGES_BIG));
 
-                std::unique_ptr w1 = make_unique_wrapper(p1);
-                std::unique_ptr w2 = make_unique_wrapper(p2);
-                std::unique_ptr w3 = make_unique_wrapper(p3);
-                std::unique_ptr w_big = make_unique_wrapper(p_big);
+                std::unique_ptr w1 = make_unique_wrapper(&p1);
+                std::unique_ptr w2 = make_unique_wrapper(&p2);
+                std::unique_ptr w3 = make_unique_wrapper(&p3);
+                std::unique_ptr w_big = make_unique_wrapper(&p_big);
 
                 test_intersection(*w1, *w2, true, "1-2");
                 test_intersection(*w2, *w3, true, "2-3");
@@ -837,22 +837,22 @@ void test_intersections_hyperplane()
         HyperplaneParallelotope<N, T> p11(SMALL_8, EDGES_HYPER_SMALL);
         HyperplaneParallelotope<N, T> p12(SMALL_9, EDGES_HYPER_SMALL);
 
-        std::unique_ptr w1 = make_unique_wrapper(p1);
-        std::unique_ptr w2 = make_unique_wrapper(p2);
-        std::unique_ptr w3 = make_unique_wrapper(p3);
-        std::unique_ptr w4 = make_unique_wrapper(p4);
-        std::unique_ptr w5 = make_unique_wrapper(p5);
-        std::unique_ptr w6 = make_unique_wrapper(p6);
-        std::unique_ptr w7 = make_unique_wrapper(p7);
-        std::unique_ptr w8 = make_unique_wrapper(p8);
-        std::unique_ptr w9 = make_unique_wrapper(p9);
-        std::unique_ptr w10 = make_unique_wrapper(p10);
-        std::unique_ptr w11 = make_unique_wrapper(p11);
-        std::unique_ptr w12 = make_unique_wrapper(p12);
+        std::unique_ptr w1 = make_unique_wrapper(&p1);
+        std::unique_ptr w2 = make_unique_wrapper(&p2);
+        std::unique_ptr w3 = make_unique_wrapper(&p3);
+        std::unique_ptr w4 = make_unique_wrapper(&p4);
+        std::unique_ptr w5 = make_unique_wrapper(&p5);
+        std::unique_ptr w6 = make_unique_wrapper(&p6);
+        std::unique_ptr w7 = make_unique_wrapper(&p7);
+        std::unique_ptr w8 = make_unique_wrapper(&p8);
+        std::unique_ptr w9 = make_unique_wrapper(&p9);
+        std::unique_ptr w10 = make_unique_wrapper(&p10);
+        std::unique_ptr w11 = make_unique_wrapper(&p11);
+        std::unique_ptr w12 = make_unique_wrapper(&p12);
 
         auto test = [&](const auto& parallelotope)
         {
-                std::unique_ptr w = make_unique_wrapper(parallelotope);
+                std::unique_ptr w = make_unique_wrapper(&parallelotope);
 
                 test_intersection(*w1, *w, false, "1-p");
                 test_intersection(*w2, *w, true, "2-p");

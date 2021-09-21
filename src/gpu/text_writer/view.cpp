@@ -100,8 +100,8 @@ class Impl final : public View
 
         const bool sample_shading_;
 
-        const vulkan::VulkanInstance& instance_;
-        const vulkan::Device& device_;
+        const vulkan::VulkanInstance* const instance_;
+        const vulkan::Device* const device_;
         VkCommandPool graphics_command_pool_;
 
         vulkan::ImageWithMemory glyph_texture_;
@@ -148,7 +148,7 @@ class Impl final : public View
         vulkan::CommandBuffers create_commands()
         {
                 vulkan::CommandBufferCreateInfo info;
-                info.device = device_;
+                info.device = *device_;
                 info.render_area.emplace();
                 info.render_area->offset.x = 0;
                 info.render_area->offset.y = 0;
@@ -230,7 +230,7 @@ class Impl final : public View
                         command_buffers_.reset();
 
                         vertex_buffer_.emplace(
-                                vulkan::BufferMemoryType::HOST_VISIBLE, device_,
+                                vulkan::BufferMemoryType::HOST_VISIBLE, *device_,
                                 std::vector<uint32_t>({graphics_family_index_}), VK_BUFFER_USAGE_VERTEX_BUFFER_BIT,
                                 std::max(vertex_buffer_->size() * 2, size));
 
@@ -257,21 +257,21 @@ class Impl final : public View
                 return semaphore_;
         }
 
-        Impl(const vulkan::VulkanInstance& instance,
-             const vulkan::CommandPool& graphics_command_pool,
-             const vulkan::Queue& graphics_queue,
-             const vulkan::CommandPool& /*transfer_command_pool*/,
-             const vulkan::Queue& /*transfer_queue*/,
+        Impl(const vulkan::VulkanInstance* instance,
+             const vulkan::CommandPool* graphics_command_pool,
+             const vulkan::Queue* graphics_queue,
+             const vulkan::CommandPool* /*transfer_command_pool*/,
+             const vulkan::Queue* /*transfer_queue*/,
              bool sample_shading,
              const color::Color& color,
              Glyphs&& glyphs)
                 : sample_shading_(sample_shading),
                   instance_(instance),
-                  device_(instance_.device()),
-                  graphics_command_pool_(graphics_command_pool),
+                  device_(&instance_->device()),
+                  graphics_command_pool_(*graphics_command_pool),
                   glyph_texture_(
-                          device_,
-                          std::vector<uint32_t>({graphics_queue.family_index()}),
+                          *device_,
+                          std::vector<uint32_t>({graphics_queue->family_index()}),
                           std::vector<VkFormat>(
                                   std::cbegin(GRAYSCALE_IMAGE_FORMATS),
                                   std::cend(GRAYSCALE_IMAGE_FORMATS)),
@@ -280,45 +280,45 @@ class Impl final : public View
                           vulkan::make_extent(glyphs.image().size[0], glyphs.image().size[1]),
                           VK_IMAGE_USAGE_SAMPLED_BIT | VK_IMAGE_USAGE_TRANSFER_DST_BIT,
                           VK_IMAGE_LAYOUT_UNDEFINED,
-                          graphics_command_pool,
-                          graphics_queue),
+                          *graphics_command_pool,
+                          *graphics_queue),
                   glyphs_(std::move(glyphs.glyphs())),
-                  semaphore_(device_),
-                  sampler_(create_sampler(device_)),
+                  semaphore_(*device_),
+                  sampler_(create_sampler(*device_)),
                   program_(device_),
-                  memory_(device_,
+                  memory_(*device_,
                           program_.descriptor_set_layout(),
-                          std::vector<uint32_t>({graphics_queue.family_index()}),
+                          std::vector<uint32_t>({graphics_queue->family_index()}),
                           sampler_,
                           &glyph_texture_),
                   vertex_buffer_(
                           std::in_place,
                           vulkan::BufferMemoryType::HOST_VISIBLE,
-                          device_,
-                          std::vector<uint32_t>({graphics_queue.family_index()}),
+                          *device_,
+                          std::vector<uint32_t>({graphics_queue->family_index()}),
                           VK_BUFFER_USAGE_VERTEX_BUFFER_BIT,
                           VERTEX_BUFFER_FIRST_SIZE),
                   indirect_buffer_(
                           vulkan::BufferMemoryType::HOST_VISIBLE,
-                          device_,
-                          std::vector<uint32_t>({graphics_queue.family_index()}),
+                          *device_,
+                          std::vector<uint32_t>({graphics_queue->family_index()}),
                           VK_BUFFER_USAGE_INDIRECT_BUFFER_BIT,
                           sizeof(VkDrawIndirectCommand)),
-                  graphics_family_index_(graphics_queue.family_index())
+                  graphics_family_index_(graphics_queue->family_index())
         {
                 glyph_texture_.write_pixels(
-                        graphics_command_pool, graphics_queue, VK_IMAGE_LAYOUT_UNDEFINED,
+                        *graphics_command_pool, *graphics_queue, VK_IMAGE_LAYOUT_UNDEFINED,
                         VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL, glyphs.image().color_format, glyphs.image().pixels);
 
                 set_color(color);
         }
 
 public:
-        Impl(const vulkan::VulkanInstance& instance,
-             const vulkan::CommandPool& graphics_command_pool,
-             const vulkan::Queue& graphics_queue,
-             const vulkan::CommandPool& transfer_command_pool,
-             const vulkan::Queue& transfer_queue,
+        Impl(const vulkan::VulkanInstance* instance,
+             const vulkan::CommandPool* graphics_command_pool,
+             const vulkan::Queue* graphics_queue,
+             const vulkan::CommandPool* transfer_command_pool,
+             const vulkan::Queue* transfer_queue,
              bool sample_shading,
              int size,
              const color::Color& color)
@@ -329,7 +329,7 @@ public:
                        transfer_queue,
                        sample_shading,
                        color,
-                       Glyphs(size, instance.device().properties().properties_10.limits.maxImageDimension2D))
+                       Glyphs(size, instance->device().properties().properties_10.limits.maxImageDimension2D))
         {
         }
 
@@ -339,7 +339,7 @@ public:
 
                 //
 
-                instance_.device_wait_idle_noexcept("the Vulkan text destructor");
+                instance_->device_wait_idle_noexcept("the Vulkan text destructor");
         }
 };
 }
@@ -350,11 +350,11 @@ vulkan::DeviceFeatures View::required_device_features()
 }
 
 std::unique_ptr<View> create_view(
-        const vulkan::VulkanInstance& instance,
-        const vulkan::CommandPool& graphics_command_pool,
-        const vulkan::Queue& graphics_queue,
-        const vulkan::CommandPool& transfer_command_pool,
-        const vulkan::Queue& transfer_queue,
+        const vulkan::VulkanInstance* instance,
+        const vulkan::CommandPool* graphics_command_pool,
+        const vulkan::Queue* graphics_queue,
+        const vulkan::CommandPool* transfer_command_pool,
+        const vulkan::Queue* transfer_queue,
         bool sample_shading,
         int size,
         const color::Color& color)

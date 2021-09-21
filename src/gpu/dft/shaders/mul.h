@@ -39,7 +39,7 @@ public:
         static std::vector<VkDescriptorSetLayoutBinding> descriptor_set_layout_bindings();
         static unsigned set_number();
 
-        MulMemory(const vulkan::Device& device, VkDescriptorSetLayout descriptor_set_layout);
+        MulMemory(const VkDevice& device, VkDescriptorSetLayout descriptor_set_layout);
 
         MulMemory(const MulMemory&) = delete;
         MulMemory& operator=(const MulMemory&) = delete;
@@ -86,7 +86,7 @@ public:
 
 class MulProgram final
 {
-        const vulkan::Device& device_;
+        VkDevice device_;
 
         vulkan::DescriptorSetLayout descriptor_set_layout_;
         vulkan::PipelineLayout pipeline_layout_;
@@ -102,7 +102,7 @@ class MulProgram final
         vulkan::Pipeline pipeline_columns_from_buffer_inverse_;
 
 public:
-        explicit MulProgram(const vulkan::Device& device);
+        explicit MulProgram(const VkDevice& device);
 
         MulProgram(const MulProgram&) = delete;
         MulProgram& operator=(const MulProgram&) = delete;

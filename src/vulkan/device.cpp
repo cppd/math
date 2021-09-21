@@ -25,6 +25,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "surface.h"
 
 #include <src/com/alg.h>
+#include <src/com/enum.h>
 #include <src/com/error.h>
 #include <src/com/log.h>
 #include <src/com/print.h>
@@ -148,62 +149,71 @@ std::unordered_set<std::string> find_extensions(VkPhysicalDevice device)
 
         return extension_set;
 }
-}
 
-std::vector<VkPhysicalDevice> physical_devices(VkInstance instance)
+DeviceFeatures device_features(const VkDeviceCreateInfo& create_info)
 {
-        VkResult result;
+        DeviceFeatures features;
 
-        uint32_t device_count;
-        result = vkEnumeratePhysicalDevices(instance, &device_count, nullptr);
-        if (result != VK_SUCCESS)
-        {
-                vulkan_function_error("vkEnumeratePhysicalDevices", result);
-        }
-        if (device_count < 1)
-        {
-                error("No Vulkan device found");
-        }
+        bool features_10 = false;
+        bool features_11 = false;
+        bool features_12 = false;
 
-        std::vector<VkPhysicalDevice> all_devices(device_count);
-        result = vkEnumeratePhysicalDevices(instance, &device_count, all_devices.data());
-        if (result != VK_SUCCESS)
-        {
-                vulkan_function_error("vkEnumeratePhysicalDevices", result);
-        }
+        const void* ptr = create_info.pNext;
 
-        std::vector<VkPhysicalDevice> devices;
-        for (const VkPhysicalDevice& d : all_devices)
+        while (ptr)
         {
-                VkPhysicalDeviceProperties properties;
-                vkGetPhysicalDeviceProperties(d, &properties);
-                if (properties.apiVersion < API_VERSION)
+                VkStructureType type;
+                std::memcpy(&type, ptr, sizeof(VkStructureType));
+                if (type == VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_FEATURES_2)
                 {
-                        continue;
+                        if (features_10)
+                        {
+                                error("Unique device features required");
+                        }
+                        features_10 = true;
+                        VkPhysicalDeviceFeatures2 features_2;
+                        std::memcpy(&features_2, ptr, sizeof(VkPhysicalDeviceFeatures2));
+                        ptr = features_2.pNext;
+                        features.features_10 = features_2.features;
                 }
-                devices.push_back(d);
+                else if (type == VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_VULKAN_1_1_FEATURES)
+                {
+                        if (features_11)
+                        {
+                                error("Unique device features required");
+                        }
+                        features_11 = true;
+                        std::memcpy(&features.features_11, ptr, sizeof(VkPhysicalDeviceVulkan11Features));
+                        ptr = features.features_11.pNext;
+                        features.features_11.pNext = nullptr;
+                }
+                else if (type == VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_VULKAN_1_2_FEATURES)
+                {
+                        if (features_12)
+                        {
+                                error("Unique device features required");
+                        }
+                        features_12 = true;
+                        std::memcpy(&features.features_12, ptr, sizeof(VkPhysicalDeviceVulkan12Features));
+                        ptr = features.features_12.pNext;
+                        features.features_12.pNext = nullptr;
+                }
+                else
+                {
+                        error("Unknown device create info type " + to_string(enum_to_int(type)));
+                }
         }
 
-        if (!devices.empty())
+        if (!features_10 || !features_11 || !features_12)
         {
-                return devices;
+                error("Not all device features specified for device creation");
         }
 
-        std::ostringstream oss;
-        oss << "No Vulkan physical devices found with minimum supported version ";
-        oss << API_VERSION_MAJOR << "." << API_VERSION_MINOR;
-        oss << '\n';
-        oss << "Found " << (all_devices.size() > 1 ? "devices" : "device");
-        for (const VkPhysicalDevice& d : all_devices)
-        {
-                VkPhysicalDeviceProperties properties;
-                vkGetPhysicalDeviceProperties(d, &properties);
-                oss << "\n";
-                oss << static_cast<const char*>(properties.deviceName) << "\n  API version "
-                    << VK_VERSION_MAJOR(properties.apiVersion) << "." << VK_VERSION_MINOR(properties.apiVersion);
-        }
-        error(oss.str());
+        return features;
 }
+}
+
+//
 
 PhysicalDevice::PhysicalDevice(VkPhysicalDevice physical_device, VkSurfaceKHR surface)
         : physical_device_(physical_device)
@@ -342,6 +352,125 @@ bool PhysicalDevice::queue_family_supports_presentation(uint32_t index) const
 }
 
 //
+
+Device::Device(
+        VkPhysicalDevice physical_device,
+        const DeviceProperties* physical_device_properties,
+        const VkDeviceCreateInfo& create_info)
+        : device_(physical_device, create_info),
+          physical_device_(physical_device),
+          physical_device_properties_(physical_device_properties),
+          features_(device_features(create_info))
+{
+        ASSERT(!create_info.pEnabledFeatures);
+
+        for (unsigned i = 0; i < create_info.queueCreateInfoCount; ++i)
+        {
+                uint32_t family_index = create_info.pQueueCreateInfos[i].queueFamilyIndex;
+                uint32_t queue_count = create_info.pQueueCreateInfos[i].queueCount;
+                auto [iter, inserted] = queues_.try_emplace(family_index);
+                if (!inserted)
+                {
+                        error("Non unique device queue family indices");
+                }
+                for (uint32_t queue_index = 0; queue_index < queue_count; ++queue_index)
+                {
+                        VkQueue queue;
+                        vkGetDeviceQueue(device_, family_index, queue_index, &queue);
+                        if (queue == VK_NULL_HANDLE)
+                        {
+                                error("Null queue handle");
+                        }
+                        iter->second.push_back(queue);
+                }
+        }
+}
+
+VkPhysicalDevice Device::physical_device() const
+{
+        return physical_device_;
+}
+
+const DeviceFeatures& Device::features() const
+{
+        return features_;
+}
+
+const DeviceProperties& Device::properties() const
+{
+        return *physical_device_properties_;
+}
+
+Queue Device::queue(uint32_t family_index, uint32_t queue_index) const
+{
+        const auto iter = queues_.find(family_index);
+        if (iter == queues_.cend())
+        {
+                error("Queue family index " + to_string(family_index) + " not found");
+        }
+        if (queue_index >= iter->second.size())
+        {
+                error("Queue " + to_string(queue_index) + " not found");
+        }
+        return {family_index, iter->second[queue_index]};
+}
+
+//
+
+std::vector<VkPhysicalDevice> physical_devices(VkInstance instance)
+{
+        VkResult result;
+
+        uint32_t device_count;
+        result = vkEnumeratePhysicalDevices(instance, &device_count, nullptr);
+        if (result != VK_SUCCESS)
+        {
+                vulkan_function_error("vkEnumeratePhysicalDevices", result);
+        }
+        if (device_count < 1)
+        {
+                error("No Vulkan device found");
+        }
+
+        std::vector<VkPhysicalDevice> all_devices(device_count);
+        result = vkEnumeratePhysicalDevices(instance, &device_count, all_devices.data());
+        if (result != VK_SUCCESS)
+        {
+                vulkan_function_error("vkEnumeratePhysicalDevices", result);
+        }
+
+        std::vector<VkPhysicalDevice> devices;
+        for (const VkPhysicalDevice& d : all_devices)
+        {
+                VkPhysicalDeviceProperties properties;
+                vkGetPhysicalDeviceProperties(d, &properties);
+                if (properties.apiVersion < API_VERSION)
+                {
+                        continue;
+                }
+                devices.push_back(d);
+        }
+
+        if (!devices.empty())
+        {
+                return devices;
+        }
+
+        std::ostringstream oss;
+        oss << "No Vulkan physical devices found with minimum supported version ";
+        oss << API_VERSION_MAJOR << "." << API_VERSION_MINOR;
+        oss << '\n';
+        oss << "Found " << (all_devices.size() > 1 ? "devices" : "device");
+        for (const VkPhysicalDevice& d : all_devices)
+        {
+                VkPhysicalDeviceProperties properties;
+                vkGetPhysicalDeviceProperties(d, &properties);
+                oss << "\n";
+                oss << static_cast<const char*>(properties.deviceName) << "\n  API version "
+                    << VK_VERSION_MAJOR(properties.apiVersion) << "." << VK_VERSION_MINOR(properties.apiVersion);
+        }
+        error(oss.str());
+}
 
 PhysicalDevice create_physical_device(
         VkInstance instance,

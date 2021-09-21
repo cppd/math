@@ -87,7 +87,7 @@ class SphereDistribution final
                         facets.reserve(sphere_facets.size());
                         for (const std::array<int, N>& vertex_indices : sphere_facets)
                         {
-                                facets.emplace_back(vertices, vertex_indices);
+                                facets.emplace_back(&vertices, vertex_indices);
                         }
                 }
 
@@ -193,7 +193,7 @@ class SphereDistribution final
 
 public:
         explicit SphereDistribution(ProgressRatio* progress)
-                : sphere_(), tree_(sphere_.facets, tree_max_depth(), TREE_MIN_OBJECTS_PER_BOX, progress)
+                : sphere_(), tree_(&sphere_.facets, tree_max_depth(), TREE_MIN_OBJECTS_PER_BOX, progress)
         {
         }
 

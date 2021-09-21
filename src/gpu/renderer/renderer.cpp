@@ -134,12 +134,12 @@ class Impl final : public Renderer
         std::optional<Vector4d> clip_plane_;
         bool show_normals_ = false;
 
-        const vulkan::VulkanInstance& instance_;
-        const vulkan::Device& device_;
-        const vulkan::CommandPool& graphics_command_pool_;
-        const vulkan::Queue& graphics_queue_;
-        const vulkan::CommandPool& transfer_command_pool_;
-        const vulkan::Queue& transfer_queue_;
+        const vulkan::VulkanInstance* const instance_;
+        const vulkan::Device* const device_;
+        const vulkan::CommandPool* const graphics_command_pool_;
+        const vulkan::Queue* const graphics_queue_;
+        const vulkan::CommandPool* const transfer_command_pool_;
+        const vulkan::Queue* const transfer_queue_;
 
         const RenderBuffers3D* render_buffers_ = nullptr;
         const vulkan::ImageWithMemory* object_image_ = nullptr;
@@ -317,7 +317,7 @@ class Impl final : public Renderer
                         ptr = mesh_storage_.insert(
                                 object.id(),
                                 create_mesh_object(
-                                        device_, {graphics_queue_.family_index()}, transfer_command_pool_,
+                                        device_, {graphics_queue_->family_index()}, transfer_command_pool_,
                                         transfer_queue_, mesh_renderer_.mesh_layouts(),
                                         mesh_renderer_.material_layouts(), mesh_renderer_.texture_sampler()));
 
@@ -370,7 +370,7 @@ class Impl final : public Renderer
                 {
                         ptr = volume_storage_.insert(
                                 object.id(), create_volume_object(
-                                                     device_, {graphics_queue_.family_index()}, transfer_command_pool_,
+                                                     device_, {graphics_queue_->family_index()}, transfer_command_pool_,
                                                      transfer_queue_, volume_renderer_.image_layouts(),
                                                      volume_renderer_.image_sampler(),
                                                      volume_renderer_.transfer_function_sampler()));
@@ -524,8 +524,8 @@ class Impl final : public Renderer
         {
                 ASSERT(thread_id_ == std::this_thread::get_id());
 
-                ASSERT(graphics_queue_1.family_index() == graphics_queue_.family_index());
-                ASSERT(graphics_queue_2.family_index() == graphics_queue_.family_index());
+                ASSERT(graphics_queue_1.family_index() == graphics_queue_->family_index());
+                ASSERT(graphics_queue_2.family_index() == graphics_queue_->family_index());
 
                 ASSERT(clear_command_buffers_);
                 ASSERT(index < clear_command_buffers_->count());
@@ -591,7 +591,7 @@ class Impl final : public Renderer
                 create_mesh_depth_buffers();
 
                 volume_renderer_.create_buffers(
-                        render_buffers_, graphics_command_pool_, viewport_, depth_copy_image_->image_view(),
+                        render_buffers_, *graphics_command_pool_, viewport_, depth_copy_image_->image_view(),
                         transparency_buffers_->heads(), transparency_buffers_->nodes());
 
                 create_mesh_command_buffers();
@@ -616,18 +616,18 @@ class Impl final : public Renderer
         void create_depth_image()
         {
                 depth_copy_image_ = std::make_unique<vulkan::DepthImageWithMemory>(
-                        device_, std::vector<uint32_t>({graphics_queue_.family_index()}),
+                        *device_, std::vector<uint32_t>({graphics_queue_->family_index()}),
                         std::vector<VkFormat>({render_buffers_->depth_format()}), render_buffers_->sample_count(),
                         render_buffers_->width(), render_buffers_->height(),
                         VK_IMAGE_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_SAMPLED_BIT, DEPTH_COPY_IMAGE_LAYOUT,
-                        graphics_command_pool_, graphics_queue_);
+                        *graphics_command_pool_, *graphics_queue_);
         }
 
         void create_transparency_buffers()
         {
                 transparency_buffers_ = std::make_unique<TransparencyBuffers>(
-                        device_, graphics_command_pool_, graphics_queue_,
-                        std::vector<uint32_t>({graphics_queue_.family_index()}), render_buffers_->sample_count(),
+                        *device_, *graphics_command_pool_, *graphics_queue_,
+                        std::vector<uint32_t>({graphics_queue_->family_index()}), render_buffers_->sample_count(),
                         render_buffers_->width(), render_buffers_->height(), TRANSPARENCY_NODE_BUFFER_MAX_SIZE);
 
                 LOG("Transparency node count: " + to_string_digit_groups(transparency_buffers_->node_count()));
@@ -653,8 +653,8 @@ class Impl final : public Renderer
                 delete_mesh_depth_buffers();
 
                 mesh_renderer_depth_render_buffers_ = create_depth_buffers(
-                        render_buffers_->framebuffers().size(), {graphics_queue_.family_index()},
-                        graphics_command_pool_, graphics_queue_, device_, viewport_.width(), viewport_.height(),
+                        render_buffers_->framebuffers().size(), {graphics_queue_->family_index()},
+                        *graphics_command_pool_, *graphics_queue_, *device_, viewport_.width(), viewport_.height(),
                         shadow_zoom_);
 
                 mesh_renderer_.create_depth_buffers(mesh_renderer_depth_render_buffers_.get());
@@ -666,7 +666,7 @@ class Impl final : public Renderer
 
                 vulkan::CommandBufferCreateInfo info;
 
-                info.device = device_;
+                info.device = *device_;
                 info.render_area.emplace();
                 info.render_area->offset.x = 0;
                 info.render_area->offset.y = 0;
@@ -674,7 +674,7 @@ class Impl final : public Renderer
                 info.render_area->extent.height = render_buffers_->height();
                 info.render_pass = render_buffers_->render_pass_clear();
                 info.framebuffers = &render_buffers_->framebuffers_clear();
-                info.command_pool = graphics_command_pool_;
+                info.command_pool = *graphics_command_pool_;
 
                 info.before_render_pass_commands = [this](VkCommandBuffer command_buffer)
                 {
@@ -692,7 +692,8 @@ class Impl final : public Renderer
                 mesh_renderer_.delete_render_command_buffers();
 
                 mesh_renderer_.create_render_command_buffers(
-                        mesh_storage_.visible_objects(), graphics_command_pool_, clip_plane_.has_value(), show_normals_,
+                        mesh_storage_.visible_objects(), *graphics_command_pool_, clip_plane_.has_value(),
+                        show_normals_,
                         [this](VkCommandBuffer command_buffer)
                         {
                                 transparency_buffers_->commands_init(command_buffer);
@@ -707,7 +708,7 @@ class Impl final : public Renderer
         {
                 mesh_renderer_.delete_depth_command_buffers();
                 mesh_renderer_.create_depth_command_buffers(
-                        mesh_storage_.visible_objects(), graphics_command_pool_, clip_plane_.has_value(),
+                        mesh_storage_.visible_objects(), *graphics_command_pool_, clip_plane_.has_value(),
                         show_normals_);
         }
 
@@ -735,7 +736,7 @@ class Impl final : public Renderer
                 };
                 for (VolumeObject* visible_volume : volume_storage_.visible_objects())
                 {
-                        volume_renderer_.create_command_buffers(visible_volume, graphics_command_pool_, copy_depth);
+                        volume_renderer_.create_command_buffers(visible_volume, *graphics_command_pool_, copy_depth);
                 }
         }
 
@@ -765,25 +766,25 @@ class Impl final : public Renderer
         }
 
 public:
-        Impl(const vulkan::VulkanInstance& instance,
-             const vulkan::CommandPool& graphics_command_pool,
-             const vulkan::Queue& graphics_queue,
-             const vulkan::CommandPool& transfer_command_pool,
-             const vulkan::Queue& transfer_queue,
+        Impl(const vulkan::VulkanInstance* instance,
+             const vulkan::CommandPool* graphics_command_pool,
+             const vulkan::Queue* graphics_queue,
+             const vulkan::CommandPool* transfer_command_pool,
+             const vulkan::Queue* transfer_queue,
              bool sample_shading,
              bool sampler_anisotropy)
                 : instance_(instance),
-                  device_(instance.device()),
+                  device_(&instance->device()),
                   graphics_command_pool_(graphics_command_pool),
                   graphics_queue_(graphics_queue),
                   transfer_command_pool_(transfer_command_pool),
                   transfer_queue_(transfer_queue),
-                  shader_buffers_(device_, {graphics_queue_.family_index()}),
-                  renderer_mesh_signal_semaphore_(device_),
-                  renderer_volume_signal_semaphore_(device_),
-                  mesh_renderer_depth_signal_semaphore_(device_),
+                  shader_buffers_(*device_, {graphics_queue_->family_index()}),
+                  renderer_mesh_signal_semaphore_(*device_),
+                  renderer_volume_signal_semaphore_(*device_),
+                  mesh_renderer_depth_signal_semaphore_(*device_),
                   mesh_renderer_(device_, sample_shading, sampler_anisotropy, shader_buffers_),
-                  volume_renderer_signal_semaphore_(device_),
+                  volume_renderer_signal_semaphore_(*device_),
                   volume_renderer_(device_, sample_shading, shader_buffers_),
                   mesh_storage_(
                           [this]()
@@ -795,8 +796,8 @@ public:
                           {
                                   volume_visibility_changed();
                           }),
-                  clear_signal_semaphore_(device_),
-                  render_transparent_as_opaque_signal_semaphore_(device_)
+                  clear_signal_semaphore_(*device_),
+                  render_transparent_as_opaque_signal_semaphore_(*device_)
         {
         }
 
@@ -806,7 +807,7 @@ public:
 
                 //
 
-                instance_.device_wait_idle_noexcept("the Vulkan renderer destructor");
+                instance_->device_wait_idle_noexcept("the Vulkan renderer destructor");
         }
 };
 }
@@ -817,11 +818,11 @@ vulkan::DeviceFeatures Renderer::required_device_features()
 }
 
 std::unique_ptr<Renderer> create_renderer(
-        const vulkan::VulkanInstance& instance,
-        const vulkan::CommandPool& graphics_command_pool,
-        const vulkan::Queue& graphics_queue,
-        const vulkan::CommandPool& transfer_command_pool,
-        const vulkan::Queue& transfer_queue,
+        const vulkan::VulkanInstance* instance,
+        const vulkan::CommandPool* graphics_command_pool,
+        const vulkan::Queue* graphics_queue,
+        const vulkan::CommandPool* transfer_command_pool,
+        const vulkan::Queue* transfer_queue,
         bool sample_shading,
         bool sampler_anisotropy)
 {

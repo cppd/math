@@ -42,5 +42,5 @@ struct Compute
         virtual void delete_buffers() = 0;
 };
 
-std::unique_ptr<Compute> create_compute(const vulkan::VulkanInstance& instance);
+std::unique_ptr<Compute> create_compute(const vulkan::VulkanInstance* instance);
 }

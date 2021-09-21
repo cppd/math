@@ -38,7 +38,7 @@ public:
         static std::vector<VkDescriptorSetLayoutBinding> descriptor_set_layout_bindings();
         static unsigned set_number();
 
-        FftSharedMemory(const vulkan::Device& device, VkDescriptorSetLayout descriptor_set_layout);
+        FftSharedMemory(const VkDevice& device, VkDescriptorSetLayout descriptor_set_layout);
 
         FftSharedMemory(const FftSharedMemory&) = delete;
         FftSharedMemory& operator=(const FftSharedMemory&) = delete;
@@ -92,7 +92,7 @@ public:
 
 class FftSharedProgram final
 {
-        const vulkan::Device& device_;
+        VkDevice device_;
 
         vulkan::DescriptorSetLayout descriptor_set_layout_;
         vulkan::PipelineLayout pipeline_layout_;
@@ -102,7 +102,7 @@ class FftSharedProgram final
         vulkan::Pipeline pipeline_inverse_;
 
 public:
-        explicit FftSharedProgram(const vulkan::Device& device);
+        explicit FftSharedProgram(const VkDevice& device);
 
         FftSharedProgram(const FftSharedProgram&) = delete;
         FftSharedProgram& operator=(const FftSharedProgram&) = delete;

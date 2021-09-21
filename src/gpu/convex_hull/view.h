@@ -44,8 +44,8 @@ struct View
 };
 
 std::unique_ptr<View> create_view(
-        const vulkan::VulkanInstance& instance,
-        const vulkan::CommandPool& graphics_command_pool,
-        const vulkan::Queue& graphics_queue,
+        const vulkan::VulkanInstance* instance,
+        const vulkan::CommandPool* graphics_command_pool,
+        const vulkan::Queue* graphics_queue,
         bool sample_shading);
 }

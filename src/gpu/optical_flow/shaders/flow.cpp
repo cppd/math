@@ -364,7 +364,7 @@ std::size_t FlowConstant::size() const
 
 //
 
-FlowProgram::FlowProgram(const vulkan::Device& device)
+FlowProgram::FlowProgram(const VkDevice& device)
         : device_(device),
           descriptor_set_layout_(
                   vulkan::create_descriptor_set_layout(device, FlowMemory::descriptor_set_layout_bindings())),
@@ -401,7 +401,7 @@ void FlowProgram::create_pipeline(
         constant_.set(local_size_x, local_size_y, radius, max_iteration_count, stop_move_square, min_determinant);
 
         vulkan::ComputePipelineCreateInfo info;
-        info.device = &device_;
+        info.device = device_;
         info.pipeline_layout = pipeline_layout_;
         info.shader = &shader_;
         info.constants = &constant_;

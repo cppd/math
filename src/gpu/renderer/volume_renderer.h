@@ -32,7 +32,7 @@ namespace ns::gpu::renderer
 class VolumeRenderer
 {
         const std::thread::id thread_id_ = std::this_thread::get_id();
-        const vulkan::Device& device_;
+        const VkDevice device_;
         const bool sample_shading_;
 
         const RenderBuffers3D* render_buffers_ = nullptr;
@@ -59,7 +59,7 @@ class VolumeRenderer
         void create_command_buffers_fragments(VkCommandPool graphics_command_pool);
 
 public:
-        VolumeRenderer(const vulkan::Device& device, bool sample_shading, const ShaderBuffers& buffers);
+        VolumeRenderer(const vulkan::Device* device, bool sample_shading, const ShaderBuffers& buffers);
 
         std::vector<vulkan::DescriptorSetLayoutAndBindings> image_layouts() const;
         VkSampler image_sampler() const;

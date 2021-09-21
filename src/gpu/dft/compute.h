@@ -52,11 +52,11 @@ struct ComputeVector
 };
 
 std::unique_ptr<ComputeImage> create_compute_image(
-        const vulkan::VulkanInstance& instance,
-        const vulkan::CommandPool& compute_command_pool,
-        const vulkan::Queue& compute_queue,
-        const vulkan::CommandPool& transfer_command_pool,
-        const vulkan::Queue& transfer_queue);
+        const vulkan::VulkanInstance* instance,
+        const vulkan::CommandPool* compute_command_pool,
+        const vulkan::Queue* compute_queue,
+        const vulkan::CommandPool* transfer_command_pool,
+        const vulkan::Queue* transfer_queue);
 
 std::unique_ptr<ComputeVector> create_compute_vector();
 }

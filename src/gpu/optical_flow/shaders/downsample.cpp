@@ -52,7 +52,7 @@ std::vector<VkDescriptorSetLayoutBinding> DownsampleMemory::descriptor_set_layou
         return bindings;
 }
 
-DownsampleMemory::DownsampleMemory(const vulkan::Device& device, VkDescriptorSetLayout descriptor_set_layout)
+DownsampleMemory::DownsampleMemory(const VkDevice& device, VkDescriptorSetLayout descriptor_set_layout)
         : descriptors_(device, 2, descriptor_set_layout, descriptor_set_layout_bindings())
 {
 }
@@ -147,7 +147,7 @@ std::size_t DownsampleConstant::size() const
 
 //
 
-DownsampleProgram::DownsampleProgram(const vulkan::Device& device)
+DownsampleProgram::DownsampleProgram(const VkDevice& device)
         : device_(device),
           descriptor_set_layout_(
                   vulkan::create_descriptor_set_layout(device, DownsampleMemory::descriptor_set_layout_bindings())),
@@ -178,7 +178,7 @@ void DownsampleProgram::create_pipeline(uint32_t local_size_x, uint32_t local_si
         constant_.set(local_size_x, local_size_y);
 
         vulkan::ComputePipelineCreateInfo info;
-        info.device = &device_;
+        info.device = device_;
         info.pipeline_layout = pipeline_layout_;
         info.shader = &shader_;
         info.constants = &constant_;

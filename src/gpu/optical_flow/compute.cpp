@@ -150,11 +150,11 @@ class Impl final : public Compute
 {
         const std::thread::id thread_id_ = std::this_thread::get_id();
 
-        const vulkan::VulkanInstance& instance_;
-        const vulkan::Device& device_;
+        const vulkan::VulkanInstance* const instance_;
+        const vulkan::Device* const device_;
 
-        const vulkan::CommandPool& compute_command_pool_;
-        const vulkan::Queue& compute_queue_;
+        const vulkan::CommandPool* const compute_command_pool_;
+        const vulkan::Queue* const compute_queue_;
 
         vulkan::Semaphore semaphore_first_pyramid_;
         vulkan::Semaphore semaphore_;
@@ -289,7 +289,7 @@ class Impl final : public Compute
         {
                 VkResult result;
 
-                command_buffer_first_pyramid_ = vulkan::CommandBuffer(device_, compute_command_pool_);
+                command_buffer_first_pyramid_ = vulkan::CommandBuffer(*device_, *compute_command_pool_);
 
                 VkCommandBuffer command_buffer = *command_buffer_first_pyramid_;
 
@@ -319,7 +319,7 @@ class Impl final : public Compute
         {
                 VkResult result;
 
-                command_buffers_ = vulkan::CommandBuffers(device_, compute_command_pool_, 2);
+                command_buffers_ = vulkan::CommandBuffers(*device_, *compute_command_pool_, 2);
 
                 for (int index = 0; index < 2; ++index)
                 {
@@ -360,7 +360,7 @@ class Impl final : public Compute
 
                 //
 
-                ASSERT(queue.family_index() == compute_command_pool_.family_index());
+                ASSERT(queue.family_index() == compute_command_pool_->family_index());
                 ASSERT(command_buffers_ && command_buffers_->count() == 2);
                 ASSERT(i_index_ == -1 || i_index_ == 0 || i_index_ == 1);
 
@@ -408,25 +408,25 @@ class Impl final : public Compute
                 const std::vector<Vector2i> sizes =
                         pyramid_sizes(input.width(), input.height(), BOTTOM_IMAGE_MINIMUM_SIZE);
 
-                const uint32_t family_index = compute_command_pool_.family_index();
+                const uint32_t family_index = compute_command_pool_->family_index();
 
                 images_[0] = create_images(
-                        device_, compute_command_pool_, compute_queue_, sizes, IMAGE_FORMAT, family_index,
+                        *device_, *compute_command_pool_, *compute_queue_, sizes, IMAGE_FORMAT, family_index,
                         VK_IMAGE_USAGE_STORAGE_BIT | VK_IMAGE_USAGE_SAMPLED_BIT);
 
                 images_[1] = create_images(
-                        device_, compute_command_pool_, compute_queue_, sizes, IMAGE_FORMAT, family_index,
+                        *device_, *compute_command_pool_, *compute_queue_, sizes, IMAGE_FORMAT, family_index,
                         VK_IMAGE_USAGE_STORAGE_BIT | VK_IMAGE_USAGE_SAMPLED_BIT);
 
                 dx_ = create_images(
-                        device_, compute_command_pool_, compute_queue_, sizes, IMAGE_FORMAT, family_index,
+                        *device_, *compute_command_pool_, *compute_queue_, sizes, IMAGE_FORMAT, family_index,
                         VK_IMAGE_USAGE_STORAGE_BIT);
 
                 dy_ = create_images(
-                        device_, compute_command_pool_, compute_queue_, sizes, IMAGE_FORMAT, family_index,
+                        *device_, *compute_command_pool_, *compute_queue_, sizes, IMAGE_FORMAT, family_index,
                         VK_IMAGE_USAGE_STORAGE_BIT);
 
-                flow_buffers_ = create_flow_buffers(device_, sizes, family_index);
+                flow_buffers_ = create_flow_buffers(*device_, sizes, family_index);
 
                 constexpr Vector2i GROUPS = GROUP_SIZE;
                 constexpr int GROUPS_X = GROUP_SIZE[0];
@@ -440,18 +440,19 @@ class Impl final : public Compute
                 downsample_groups_ = downsample_groups(GROUPS, sizes);
                 downsample_program_.create_pipeline(GROUPS_X, GROUPS_Y);
                 downsample_memory_ =
-                        create_downsample_memory(device_, downsample_program_.descriptor_set_layout(), images_);
+                        create_downsample_memory(*device_, downsample_program_.descriptor_set_layout(), images_);
 
                 sobel_groups_ = sobel_groups(GROUPS, sizes);
                 sobel_program_.create_pipeline(GROUPS_X, GROUPS_Y);
-                sobel_memory_ = create_sobel_memory(device_, sobel_program_.descriptor_set_layout(), images_, dx_, dy_);
+                sobel_memory_ =
+                        create_sobel_memory(*device_, sobel_program_.descriptor_set_layout(), images_, dx_, dy_);
 
                 flow_groups_ = flow_groups(GROUPS, sizes, top_point_count_x, top_point_count_y);
                 flow_program_.create_pipeline(
                         GROUPS_X, GROUPS_Y, RADIUS, MAX_ITERATION_COUNT, STOP_MOVE_SQUARE, MIN_DETERMINANT);
 
                 flow_memory_ = create_flow_memory(
-                        device_, flow_program_.descriptor_set_layout(), family_index, sampler, sizes,
+                        *device_, flow_program_.descriptor_set_layout(), family_index, sampler, sizes,
                         to_buffer_pointers(flow_buffers_), top_point_count_x, top_point_count_y, top_points, top_flow,
                         images_, dx_, dy_);
 
@@ -490,22 +491,22 @@ class Impl final : public Compute
         }
 
 public:
-        Impl(const vulkan::VulkanInstance& instance,
-             const vulkan::CommandPool& compute_command_pool,
-             const vulkan::Queue& compute_queue)
+        Impl(const vulkan::VulkanInstance* instance,
+             const vulkan::CommandPool* compute_command_pool,
+             const vulkan::Queue* compute_queue)
                 : instance_(instance),
-                  device_(instance.device()),
+                  device_(&instance->device()),
                   compute_command_pool_(compute_command_pool),
                   compute_queue_(compute_queue),
-                  semaphore_first_pyramid_(instance.device()),
-                  semaphore_(instance.device()),
-                  grayscale_program_(instance.device()),
-                  grayscale_memory_(device_, grayscale_program_.descriptor_set_layout()),
-                  downsample_program_(instance.device()),
-                  sobel_program_(instance.device()),
-                  flow_program_(instance.device())
+                  semaphore_first_pyramid_(instance->device()),
+                  semaphore_(instance->device()),
+                  grayscale_program_(instance->device()),
+                  grayscale_memory_(*device_, grayscale_program_.descriptor_set_layout()),
+                  downsample_program_(instance->device()),
+                  sobel_program_(instance->device()),
+                  flow_program_(instance->device())
         {
-                ASSERT(compute_command_pool.family_index() == compute_queue.family_index());
+                ASSERT(compute_command_pool->family_index() == compute_queue->family_index());
         }
 
         ~Impl() override
@@ -514,7 +515,7 @@ public:
 
                 //
 
-                instance_.device_wait_idle_noexcept("the Vulkan optical flow compute destructor");
+                instance_->device_wait_idle_noexcept("the Vulkan optical flow compute destructor");
         }
 };
 }
@@ -525,9 +526,9 @@ vulkan::DeviceFeatures Compute::required_device_features()
 }
 
 std::unique_ptr<Compute> create_compute(
-        const vulkan::VulkanInstance& instance,
-        const vulkan::CommandPool& compute_command_pool,
-        const vulkan::Queue& compute_queue)
+        const vulkan::VulkanInstance* instance,
+        const vulkan::CommandPool* compute_command_pool,
+        const vulkan::Queue* compute_queue)
 {
         return std::make_unique<Impl>(instance, compute_command_pool, compute_queue);
 }

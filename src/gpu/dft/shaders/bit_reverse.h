@@ -38,7 +38,7 @@ public:
         static std::vector<VkDescriptorSetLayoutBinding> descriptor_set_layout_bindings();
         static unsigned set_number();
 
-        BitReverseMemory(const vulkan::Device& device, VkDescriptorSetLayout descriptor_set_layout);
+        BitReverseMemory(const VkDevice& device, VkDescriptorSetLayout descriptor_set_layout);
 
         BitReverseMemory(const BitReverseMemory&) = delete;
         BitReverseMemory& operator=(const BitReverseMemory&) = delete;
@@ -80,7 +80,7 @@ public:
 
 class BitReverseProgram final
 {
-        const vulkan::Device& device_;
+        VkDevice device_;
 
         vulkan::DescriptorSetLayout descriptor_set_layout_;
         vulkan::PipelineLayout pipeline_layout_;
@@ -89,7 +89,7 @@ class BitReverseProgram final
         vulkan::Pipeline pipeline_;
 
 public:
-        explicit BitReverseProgram(const vulkan::Device& device);
+        explicit BitReverseProgram(const VkDevice& device);
 
         BitReverseProgram(const BitReverseProgram&) = delete;
         BitReverseProgram& operator=(const BitReverseProgram&) = delete;

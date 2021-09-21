@@ -184,7 +184,7 @@ void create_tree(
                 [&w = std::as_const(wrappers)](
                         const geometry::ParallelotopeAA<N, T>& parallelotope, const std::vector<int>& indices)
         {
-                geometry::ShapeWrapperForIntersection p(parallelotope);
+                geometry::ShapeWrapperForIntersection p(&parallelotope);
                 std::vector<int> intersections;
                 intersections.reserve(indices.size());
                 for (int object_index : indices)

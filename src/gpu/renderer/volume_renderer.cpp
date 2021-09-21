@@ -24,20 +24,20 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 namespace ns::gpu::renderer
 {
-VolumeRenderer::VolumeRenderer(const vulkan::Device& device, bool sample_shading, const ShaderBuffers& buffers)
-        : device_(device),
+VolumeRenderer::VolumeRenderer(const vulkan::Device* device, bool sample_shading, const ShaderBuffers& buffers)
+        : device_(*device),
           sample_shading_(sample_shading),
           //
           program_(device),
           shared_memory_(
-                  device,
+                  *device,
                   program_.descriptor_set_layout_shared(),
                   program_.descriptor_set_layout_shared_bindings(),
                   buffers.drawing_buffer()),
           //
-          image_sampler_(create_volume_image_sampler(device_)),
-          depth_sampler_(create_volume_depth_image_sampler(device_)),
-          transfer_function_sampler_(create_volume_transfer_function_sampler(device_))
+          image_sampler_(create_volume_image_sampler(*device)),
+          depth_sampler_(create_volume_depth_image_sampler(*device)),
+          transfer_function_sampler_(create_volume_transfer_function_sampler(*device))
 {
 }
 

@@ -87,7 +87,7 @@ class Impl final : public Compute
 {
         const std::thread::id thread_id_ = std::this_thread::get_id();
 
-        const vulkan::VulkanInstance& instance_;
+        const vulkan::VulkanInstance* const instance_;
 
         std::optional<vulkan::BufferWithMemory> lines_buffer_;
         VkBuffer points_buffer_ = VK_NULL_HANDLE;
@@ -174,7 +174,7 @@ class Impl final : public Compute
                 const int height = rectangle.height();
 
                 lines_buffer_.emplace(
-                        vulkan::BufferMemoryType::DEVICE_LOCAL, instance_.device(),
+                        vulkan::BufferMemoryType::DEVICE_LOCAL, instance_->device(),
                         std::vector<uint32_t>({family_index}), VK_BUFFER_USAGE_STORAGE_BUFFER_BIT,
                         2 * height * sizeof(int32_t));
                 points_buffer_ = points_buffer;
@@ -184,11 +184,11 @@ class Impl final : public Compute
                 prepare_memory_.set_lines(lines_buffer_->buffer());
                 prepare_group_count_ = height;
                 prepare_program_.create_pipeline(
-                        group_size_prepare(width, instance_.device().properties().properties_10.limits), rectangle);
+                        group_size_prepare(width, instance_->device().properties().properties_10.limits), rectangle);
 
                 merge_memory_.set_lines(lines_buffer_->buffer());
                 merge_program_.create_pipeline(
-                        height, group_size_merge(height, instance_.device().properties().properties_10.limits),
+                        height, group_size_merge(height, instance_->device().properties().properties_10.limits),
                         iteration_count_merge(height));
 
                 filter_memory_.set_lines(lines_buffer_->buffer());
@@ -214,14 +214,14 @@ class Impl final : public Compute
         }
 
 public:
-        explicit Impl(const vulkan::VulkanInstance& instance)
+        explicit Impl(const vulkan::VulkanInstance* instance)
                 : instance_(instance),
-                  prepare_program_(instance.device()),
-                  prepare_memory_(instance.device(), prepare_program_.descriptor_set_layout()),
-                  merge_program_(instance.device()),
-                  merge_memory_(instance.device(), merge_program_.descriptor_set_layout()),
-                  filter_program_(instance.device()),
-                  filter_memory_(instance.device(), filter_program_.descriptor_set_layout())
+                  prepare_program_(instance->device()),
+                  prepare_memory_(instance->device(), prepare_program_.descriptor_set_layout()),
+                  merge_program_(instance->device()),
+                  merge_memory_(instance->device(), merge_program_.descriptor_set_layout()),
+                  filter_program_(instance->device()),
+                  filter_memory_(instance->device(), filter_program_.descriptor_set_layout())
         {
         }
 
@@ -231,7 +231,7 @@ public:
 
                 //
 
-                instance_.device_wait_idle_noexcept("the Vulkan convex hull compute destructor");
+                instance_->device_wait_idle_noexcept("the Vulkan convex hull compute destructor");
         }
 };
 }
@@ -241,7 +241,7 @@ vulkan::DeviceFeatures Compute::required_device_features()
         return device_features();
 }
 
-std::unique_ptr<Compute> create_compute(const vulkan::VulkanInstance& instance)
+std::unique_ptr<Compute> create_compute(const vulkan::VulkanInstance* instance)
 {
         return std::make_unique<Impl>(instance);
 }

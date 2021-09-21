@@ -19,6 +19,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <src/numerical/region.h>
 #include <src/vulkan/descriptor.h>
+#include <src/vulkan/device.h>
 #include <src/vulkan/objects.h>
 #include <src/vulkan/shader.h>
 
@@ -28,7 +29,7 @@ namespace ns::gpu::renderer
 {
 class TrianglesDepthProgram final
 {
-        const vulkan::Device& device_;
+        const vulkan::Device* device_;
 
         vulkan::DescriptorSetLayout descriptor_set_layout_shared_;
         vulkan::DescriptorSetLayout descriptor_set_layout_mesh_;
@@ -36,7 +37,7 @@ class TrianglesDepthProgram final
         vulkan::VertexShader vertex_shader_;
 
 public:
-        explicit TrianglesDepthProgram(const vulkan::Device& device);
+        explicit TrianglesDepthProgram(const vulkan::Device* device);
 
         TrianglesDepthProgram(const TrianglesDepthProgram&) = delete;
         TrianglesDepthProgram& operator=(const TrianglesDepthProgram&) = delete;

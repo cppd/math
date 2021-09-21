@@ -43,7 +43,7 @@ std::vector<VkDescriptorSetLayoutBinding> MergeMemory::descriptor_set_layout_bin
         return bindings;
 }
 
-MergeMemory::MergeMemory(const vulkan::Device& device, VkDescriptorSetLayout descriptor_set_layout)
+MergeMemory::MergeMemory(const VkDevice& device, VkDescriptorSetLayout descriptor_set_layout)
         : descriptors_(device, 1, descriptor_set_layout, descriptor_set_layout_bindings())
 {
 }
@@ -132,7 +132,7 @@ std::size_t MergeConstant::size() const
 
 //
 
-MergeProgram::MergeProgram(const vulkan::Device& device)
+MergeProgram::MergeProgram(const VkDevice& device)
         : device_(device),
           descriptor_set_layout_(
                   vulkan::create_descriptor_set_layout(device, MergeMemory::descriptor_set_layout_bindings())),
@@ -149,7 +149,7 @@ void MergeProgram::create_pipeline(unsigned height, unsigned local_size_x, unsig
         constant_.set_iteration_count(iteration_count);
 
         vulkan::ComputePipelineCreateInfo info;
-        info.device = &device_;
+        info.device = device_;
         info.pipeline_layout = pipeline_layout_;
         info.shader = &shader_;
         info.constants = &constant_;

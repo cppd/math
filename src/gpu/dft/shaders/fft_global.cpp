@@ -171,7 +171,7 @@ std::size_t FftGlobalConstant::size() const
 
 //
 
-FftGlobalProgram::FftGlobalProgram(const vulkan::Device& device)
+FftGlobalProgram::FftGlobalProgram(const VkDevice& device)
         : device_(device),
           descriptor_set_layout_(
                   vulkan::create_descriptor_set_layout(device, FftGlobalMemory::descriptor_set_layout_bindings())),
@@ -209,7 +209,7 @@ void FftGlobalProgram::create_pipelines(uint32_t group_size, uint32_t data_size,
                 constant_.set(group_size, false, data_size, n);
 
                 vulkan::ComputePipelineCreateInfo info;
-                info.device = &device_;
+                info.device = device_;
                 info.pipeline_layout = pipeline_layout_;
                 info.shader = &shader_;
                 info.constants = &constant_;
@@ -219,7 +219,7 @@ void FftGlobalProgram::create_pipelines(uint32_t group_size, uint32_t data_size,
                 constant_.set(group_size, true, data_size, n);
 
                 vulkan::ComputePipelineCreateInfo info;
-                info.device = &device_;
+                info.device = device_;
                 info.pipeline_layout = pipeline_layout_;
                 info.shader = &shader_;
                 info.constants = &constant_;

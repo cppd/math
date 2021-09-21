@@ -41,7 +41,7 @@ public:
         static std::vector<VkDescriptorSetLayoutBinding> descriptor_set_layout_bindings();
         static unsigned set_number();
 
-        GrayscaleMemory(const vulkan::Device& device, VkDescriptorSetLayout descriptor_set_layout);
+        GrayscaleMemory(const VkDevice& device, VkDescriptorSetLayout descriptor_set_layout);
 
         GrayscaleMemory(const GrayscaleMemory&) = delete;
         GrayscaleMemory& operator=(const GrayscaleMemory&) = delete;
@@ -86,7 +86,7 @@ public:
 
 class GrayscaleProgram final
 {
-        const vulkan::Device& device_;
+        VkDevice device_;
 
         vulkan::DescriptorSetLayout descriptor_set_layout_;
         vulkan::PipelineLayout pipeline_layout_;
@@ -95,7 +95,7 @@ class GrayscaleProgram final
         vulkan::Pipeline pipeline_;
 
 public:
-        explicit GrayscaleProgram(const vulkan::Device& device);
+        explicit GrayscaleProgram(const VkDevice& device);
 
         GrayscaleProgram(const GrayscaleProgram&) = delete;
         GrayscaleProgram& operator=(const GrayscaleProgram&) = delete;

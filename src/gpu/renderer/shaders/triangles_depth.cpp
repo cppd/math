@@ -38,17 +38,17 @@ std::vector<VkDescriptorSetLayoutBinding> TrianglesDepthProgram::descriptor_set_
         return MeshMemory::descriptor_set_layout_bindings(VK_SHADER_STAGE_VERTEX_BIT);
 }
 
-TrianglesDepthProgram::TrianglesDepthProgram(const vulkan::Device& device)
+TrianglesDepthProgram::TrianglesDepthProgram(const vulkan::Device* device)
         : device_(device),
           descriptor_set_layout_shared_(
-                  vulkan::create_descriptor_set_layout(device, descriptor_set_layout_shared_bindings())),
+                  vulkan::create_descriptor_set_layout(*device, descriptor_set_layout_shared_bindings())),
           descriptor_set_layout_mesh_(
-                  vulkan::create_descriptor_set_layout(device, descriptor_set_layout_mesh_bindings())),
+                  vulkan::create_descriptor_set_layout(*device, descriptor_set_layout_mesh_bindings())),
           pipeline_layout_(vulkan::create_pipeline_layout(
-                  device,
+                  *device,
                   {CommonMemory::set_number(), MeshMemory::set_number()},
                   {descriptor_set_layout_shared_, descriptor_set_layout_mesh_})),
-          vertex_shader_(device_, code_triangles_depth_vert(), "main")
+          vertex_shader_(*device_, code_triangles_depth_vert(), "main")
 {
 }
 
@@ -77,7 +77,7 @@ vulkan::Pipeline TrianglesDepthProgram::create_pipeline(
 
         vulkan::GraphicsPipelineCreateInfo info;
 
-        info.device = &device_;
+        info.device = device_;
         info.render_pass = render_pass;
         info.sub_pass = 0;
         info.sample_count = sample_count;

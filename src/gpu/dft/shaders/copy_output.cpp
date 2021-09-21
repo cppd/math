@@ -52,7 +52,7 @@ std::vector<VkDescriptorSetLayoutBinding> CopyOutputMemory::descriptor_set_layou
         return bindings;
 }
 
-CopyOutputMemory::CopyOutputMemory(const vulkan::Device& device, VkDescriptorSetLayout descriptor_set_layout)
+CopyOutputMemory::CopyOutputMemory(const VkDevice& device, VkDescriptorSetLayout descriptor_set_layout)
         : descriptors_(device, 1, descriptor_set_layout, descriptor_set_layout_bindings())
 {
 }
@@ -145,7 +145,7 @@ std::size_t CopyOutputConstant::size() const
 
 //
 
-CopyOutputProgram::CopyOutputProgram(const vulkan::Device& device)
+CopyOutputProgram::CopyOutputProgram(const VkDevice& device)
         : device_(device),
           descriptor_set_layout_(
                   vulkan::create_descriptor_set_layout(device, CopyOutputMemory::descriptor_set_layout_bindings())),
@@ -176,7 +176,7 @@ void CopyOutputProgram::create_pipeline(uint32_t local_size_x, uint32_t local_si
         constant_.set(local_size_x, local_size_y, to_mul);
 
         vulkan::ComputePipelineCreateInfo info;
-        info.device = &device_;
+        info.device = device_;
         info.pipeline_layout = pipeline_layout_;
         info.shader = &shader_;
         info.constants = &constant_;

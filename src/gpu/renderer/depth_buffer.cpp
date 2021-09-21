@@ -160,10 +160,6 @@ std::string buffer_info(
 
 class Impl final : public DepthBuffers
 {
-        const vulkan::Device& device_;
-
-        //
-
         std::vector<vulkan::DepthImageWithMemory> depth_attachments_;
         vulkan::RenderPass render_pass_;
         std::vector<vulkan::Framebuffer> framebuffers_;
@@ -205,7 +201,6 @@ Impl::Impl(
         unsigned width,
         unsigned height,
         double zoom)
-        : device_(device)
 {
         ASSERT(!attachment_family_indices.empty());
 
@@ -221,7 +216,7 @@ Impl::Impl(
                         depth_formats = {depth_attachments_[0].format()};
                 }
                 depth_attachments_.emplace_back(
-                        device_, attachment_family_indices, depth_formats, SAMPLE_COUNT, width, height,
+                        device, attachment_family_indices, depth_formats, SAMPLE_COUNT, width, height,
                         VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT | VK_IMAGE_USAGE_SAMPLED_BIT, IMAGE_LAYOUT,
                         graphics_command_pool, graphics_queue);
         }
@@ -230,7 +225,7 @@ Impl::Impl(
         unsigned depth_width = depth_attachments_[0].width();
         unsigned depth_height = depth_attachments_[0].height();
 
-        render_pass_ = create_render_pass_depth(device_, depth_format);
+        render_pass_ = create_render_pass_depth(device, depth_format);
 
         std::vector<VkImageView> attachments(1);
         for (const vulkan::DepthImageWithMemory& depth_attachment : depth_attachments_)
@@ -238,7 +233,7 @@ Impl::Impl(
                 attachments[0] = depth_attachment.image_view();
 
                 framebuffers_.push_back(
-                        create_framebuffer(device_, render_pass_, depth_width, depth_height, attachments));
+                        create_framebuffer(device, render_pass_, depth_width, depth_height, attachments));
                 framebuffers_handles_.push_back(framebuffers_.back());
         }
 

@@ -26,7 +26,19 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 namespace ns::vulkan
 {
-std::vector<VkPhysicalDevice> physical_devices(VkInstance instance);
+struct DeviceFeatures final
+{
+        VkPhysicalDeviceFeatures features_10{};
+        VkPhysicalDeviceVulkan11Features features_11{};
+        VkPhysicalDeviceVulkan12Features features_12{};
+};
+
+struct DeviceProperties final
+{
+        VkPhysicalDeviceProperties properties_10;
+        VkPhysicalDeviceVulkan11Properties properties_11;
+        VkPhysicalDeviceVulkan12Properties properties_12;
+};
 
 class PhysicalDevice final
 {
@@ -44,6 +56,7 @@ public:
 
         const DeviceFeatures& features() const;
         const DeviceProperties& properties() const;
+
         const std::vector<VkQueueFamilyProperties>& queue_families() const;
         const std::unordered_set<std::string>& supported_extensions() const;
 
@@ -55,6 +68,39 @@ public:
         bool supports_extensions(const std::vector<std::string>& extensions) const;
         bool queue_family_supports_presentation(uint32_t index) const;
 };
+
+class Device final
+{
+        DeviceHandle device_;
+        VkPhysicalDevice physical_device_ = VK_NULL_HANDLE;
+        const DeviceProperties* physical_device_properties_ = nullptr;
+        DeviceFeatures features_;
+        std::unordered_map<uint32_t, std::vector<VkQueue>> queues_;
+
+public:
+        Device() = default;
+
+        Device(VkPhysicalDevice physical_device,
+               const DeviceProperties* physical_device_properties,
+               const VkDeviceCreateInfo& create_info);
+
+        operator VkDevice() const& noexcept
+        {
+                return device_;
+        }
+        operator VkDevice() const&& = delete;
+
+        VkPhysicalDevice physical_device() const;
+
+        const DeviceFeatures& features() const;
+        const DeviceProperties& properties() const;
+
+        Queue queue(uint32_t family_index, uint32_t queue_index) const;
+};
+
+//
+
+std::vector<VkPhysicalDevice> physical_devices(VkInstance instance);
 
 PhysicalDevice create_physical_device(
         VkInstance instance,

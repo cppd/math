@@ -36,7 +36,7 @@ class ShapeWrapperForIntersection final
         using Vertices = decltype(std::declval<Shape>().vertices());
         using Constraints = decltype(std::declval<Shape>().constraints());
 
-        const Shape& shape_;
+        const Shape* const shape_;
         Vertices vertices_;
         Constraints constraints_;
         //Vector<N, T> min_;
@@ -58,15 +58,15 @@ public:
         static constexpr std::size_t SHAPE_DIMENSION = Shape::SHAPE_DIMENSION;
         using DataType = T;
 
-        explicit ShapeWrapperForIntersection(const Shape& s)
-                : shape_(s), vertices_(s.vertices()), constraints_(shape_.constraints())
+        explicit ShapeWrapperForIntersection(const Shape* s)
+                : shape_(s), vertices_(s->vertices()), constraints_(shape_->constraints())
         {
                 //min_ = find_min_vector(vertices_);
         }
 
         bool inside(const Vector<N, T>& p) const
         {
-                return shape_.inside(p);
+                return shape_->inside(p);
         }
 
         const Vertices& vertices() const
@@ -94,7 +94,7 @@ requires(Shape::SPACE_DIMENSION == 3 || Shape::SPACE_DIMENSION == 2) class Shape
         using Vertices = decltype(std::declval<Shape>().vertices());
         using Edges = decltype(std::declval<Shape>().edges());
 
-        const Shape& shape_;
+        const Shape* const shape_;
         Vertices vertices_;
         Edges edges_;
 
@@ -103,18 +103,18 @@ public:
         static constexpr std::size_t SHAPE_DIMENSION = Shape::SHAPE_DIMENSION;
         using DataType = T;
 
-        explicit ShapeWrapperForIntersection(const Shape& s) : shape_(s), vertices_(s.vertices()), edges_(s.edges())
+        explicit ShapeWrapperForIntersection(const Shape* s) : shape_(s), vertices_(s->vertices()), edges_(s->edges())
         {
         }
 
         bool inside(const Vector<N, T>& p) const
         {
-                return shape_.inside(p);
+                return shape_->inside(p);
         }
 
         std::optional<T> intersect(const Ray<N, T>& r) const
         {
-                return shape_.intersect(r);
+                return shape_->intersect(r);
         }
 
         const Vertices& vertices() const

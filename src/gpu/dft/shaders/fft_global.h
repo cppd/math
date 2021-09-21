@@ -93,7 +93,7 @@ public:
 
 class FftGlobalProgram final
 {
-        const vulkan::Device& device_;
+        VkDevice device_;
 
         vulkan::DescriptorSetLayout descriptor_set_layout_;
         vulkan::PipelineLayout pipeline_layout_;
@@ -103,7 +103,7 @@ class FftGlobalProgram final
         vulkan::Pipeline pipeline_inverse_;
 
 public:
-        explicit FftGlobalProgram(const vulkan::Device& device);
+        explicit FftGlobalProgram(const VkDevice& device);
 
         FftGlobalProgram(const FftGlobalProgram&) = delete;
         FftGlobalProgram& operator=(const FftGlobalProgram&) = delete;

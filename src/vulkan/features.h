@@ -17,6 +17,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
+#include "device.h"
 #include "objects.h"
 
 namespace ns::vulkan

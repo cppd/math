@@ -53,7 +53,7 @@ std::vector<VkDescriptorSetLayoutBinding> MulDMemory::descriptor_set_layout_bind
         return bindings;
 }
 
-MulDMemory::MulDMemory(const vulkan::Device& device, VkDescriptorSetLayout descriptor_set_layout)
+MulDMemory::MulDMemory(const VkDevice& device, VkDescriptorSetLayout descriptor_set_layout)
         : descriptors_(device, 1, descriptor_set_layout, descriptor_set_layout_bindings())
 {
 }
@@ -156,7 +156,7 @@ std::size_t MulDConstant::size() const
 
 //
 
-MulDProgram::MulDProgram(const vulkan::Device& device)
+MulDProgram::MulDProgram(const VkDevice& device)
         : device_(device),
           descriptor_set_layout_(
                   vulkan::create_descriptor_set_layout(device, MulDMemory::descriptor_set_layout_bindings())),
@@ -200,7 +200,7 @@ void MulDProgram::create_pipelines(
                 constant_.set(group_size_x, group_size_y, n2, m1);
 
                 vulkan::ComputePipelineCreateInfo info;
-                info.device = &device_;
+                info.device = device_;
                 info.pipeline_layout = pipeline_layout_;
                 info.shader = &shader_;
                 info.constants = &constant_;
@@ -210,7 +210,7 @@ void MulDProgram::create_pipelines(
                 constant_.set(group_size_x, group_size_y, n1, m2);
 
                 vulkan::ComputePipelineCreateInfo info;
-                info.device = &device_;
+                info.device = device_;
                 info.pipeline_layout = pipeline_layout_;
                 info.shader = &shader_;
                 info.constants = &constant_;

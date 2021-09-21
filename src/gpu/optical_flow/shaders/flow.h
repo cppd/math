@@ -132,7 +132,7 @@ public:
 
 class FlowProgram final
 {
-        const vulkan::Device& device_;
+        VkDevice device_;
 
         vulkan::DescriptorSetLayout descriptor_set_layout_;
         vulkan::PipelineLayout pipeline_layout_;
@@ -141,7 +141,7 @@ class FlowProgram final
         vulkan::Pipeline pipeline_;
 
 public:
-        explicit FlowProgram(const vulkan::Device& device);
+        explicit FlowProgram(const VkDevice& device);
 
         FlowProgram(const FlowProgram&) = delete;
         FlowProgram& operator=(const FlowProgram&) = delete;

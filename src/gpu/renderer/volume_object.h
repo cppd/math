@@ -19,6 +19,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <src/model/volume_object.h>
 #include <src/vulkan/descriptor.h>
+#include <src/vulkan/device.h>
 #include <src/vulkan/objects.h>
 
 #include <memory>
@@ -45,10 +46,10 @@ struct VolumeObject
 };
 
 std::unique_ptr<VolumeObject> create_volume_object(
-        const vulkan::Device& device,
+        const vulkan::Device* device,
         const std::vector<uint32_t>& graphics_family_indices,
-        const vulkan::CommandPool& transfer_command_pool,
-        const vulkan::Queue& transfer_queue,
+        const vulkan::CommandPool* transfer_command_pool,
+        const vulkan::Queue* transfer_queue,
         std::vector<vulkan::DescriptorSetLayoutAndBindings> image_layouts,
         VkSampler image_sampler,
         VkSampler transfer_function_sampler);

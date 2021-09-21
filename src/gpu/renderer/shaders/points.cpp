@@ -40,19 +40,19 @@ std::vector<VkDescriptorSetLayoutBinding> PointsProgram::descriptor_set_layout_m
         return MeshMemory::descriptor_set_layout_bindings(VK_SHADER_STAGE_VERTEX_BIT);
 }
 
-PointsProgram::PointsProgram(const vulkan::Device& device)
+PointsProgram::PointsProgram(const vulkan::Device* device)
         : device_(device),
           descriptor_set_layout_shared_(
-                  vulkan::create_descriptor_set_layout(device, descriptor_set_layout_shared_bindings())),
+                  vulkan::create_descriptor_set_layout(*device, descriptor_set_layout_shared_bindings())),
           descriptor_set_layout_mesh_(
-                  vulkan::create_descriptor_set_layout(device, descriptor_set_layout_mesh_bindings())),
+                  vulkan::create_descriptor_set_layout(*device, descriptor_set_layout_mesh_bindings())),
           pipeline_layout_(vulkan::create_pipeline_layout(
-                  device,
+                  *device,
                   {CommonMemory::set_number(), MeshMemory::set_number()},
                   {descriptor_set_layout_shared_, descriptor_set_layout_mesh_})),
-          vertex_shader_0d_(device_, code_points_0d_vert(), "main"),
-          vertex_shader_1d_(device_, code_points_1d_vert(), "main"),
-          fragment_shader_(device_, code_points_frag(), "main")
+          vertex_shader_0d_(*device_, code_points_0d_vert(), "main"),
+          vertex_shader_1d_(*device_, code_points_1d_vert(), "main"),
+          fragment_shader_(*device_, code_points_frag(), "main")
 {
 }
 
@@ -80,7 +80,7 @@ vulkan::Pipeline PointsProgram::create_pipeline(
 {
         vulkan::GraphicsPipelineCreateInfo info;
 
-        info.device = &device_;
+        info.device = device_;
         info.render_pass = render_pass;
         info.sub_pass = 0;
         info.sample_count = sample_count;

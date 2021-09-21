@@ -230,7 +230,7 @@ Pipeline create_graphics_pipeline(const GraphicsPipelineCreateInfo& info)
 
 Pipeline create_compute_pipeline(const ComputePipelineCreateInfo& info)
 {
-        if (!info.device || info.pipeline_layout == VK_NULL_HANDLE || !info.shader)
+        if (info.device == VK_NULL_HANDLE || info.pipeline_layout == VK_NULL_HANDLE || !info.shader)
         {
                 error("No required data to create compute pipeline");
         }
@@ -270,6 +270,6 @@ Pipeline create_compute_pipeline(const ComputePipelineCreateInfo& info)
         create_info.stage = stage_info;
         create_info.layout = info.pipeline_layout;
 
-        return Pipeline(*info.device, create_info);
+        return Pipeline(info.device, create_info);
 }
 }

@@ -52,7 +52,7 @@ std::vector<VkDescriptorSetLayoutBinding> CopyInputMemory::descriptor_set_layout
         return bindings;
 }
 
-CopyInputMemory::CopyInputMemory(const vulkan::Device& device, VkDescriptorSetLayout descriptor_set_layout)
+CopyInputMemory::CopyInputMemory(const VkDevice& device, VkDescriptorSetLayout descriptor_set_layout)
         : descriptors_(device, 1, descriptor_set_layout, descriptor_set_layout_bindings())
 {
 }
@@ -170,7 +170,7 @@ std::size_t CopyInputConstant::size() const
 
 //
 
-CopyInputProgram::CopyInputProgram(const vulkan::Device& device)
+CopyInputProgram::CopyInputProgram(const VkDevice& device)
         : device_(device),
           descriptor_set_layout_(
                   vulkan::create_descriptor_set_layout(device, CopyInputMemory::descriptor_set_layout_bindings())),
@@ -201,7 +201,7 @@ void CopyInputProgram::create_pipeline(int32_t local_size_x, int32_t local_size_
         constant_.set(local_size_x, local_size_y, rectangle);
 
         vulkan::ComputePipelineCreateInfo info;
-        info.device = &device_;
+        info.device = device_;
         info.pipeline_layout = pipeline_layout_;
         info.shader = &shader_;
         info.constants = &constant_;

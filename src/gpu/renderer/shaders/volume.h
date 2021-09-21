@@ -99,7 +99,7 @@ public:
 
 class VolumeProgram final
 {
-        const vulkan::Device& device_;
+        const vulkan::Device* device_;
 
         vulkan::DescriptorSetLayout descriptor_set_layout_shared_;
         vulkan::DescriptorSetLayout descriptor_set_layout_image_;
@@ -124,7 +124,7 @@ public:
                 FRAGMENTS
         };
 
-        explicit VolumeProgram(const vulkan::Device& device);
+        explicit VolumeProgram(const vulkan::Device* device);
 
         VolumeProgram(const VolumeProgram&) = delete;
         VolumeProgram& operator=(const VolumeProgram&) = delete;
