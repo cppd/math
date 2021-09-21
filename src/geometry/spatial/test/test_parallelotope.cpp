@@ -15,6 +15,9 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
+#include "parallelotope_generate.h"
+#include "parallelotope_points.h"
+
 #include "../hyperplane_parallelotope.h"
 #include "../parallelotope.h"
 #include "../parallelotope_aa.h"
@@ -36,7 +39,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <random>
 #include <utility>
 
-namespace ns::geometry
+namespace ns::geometry::spatial::test
 {
 namespace
 {
@@ -45,22 +48,9 @@ constexpr bool PRINT_ALL = false;
 constexpr int POINT_COUNT = 10000;
 
 template <typename T>
-constexpr T POSITION_DELTA;
-template <>
-constexpr double POSITION_DELTA<double> = 1e-6;
-
-template <typename T>
 constexpr T EQUALITY_EPSILON;
 template <>
 constexpr double EQUALITY_EPSILON<double> = 1e-10;
-
-template <typename T>
-constexpr T MAX_DOT_PRODUCT_OF_EDGES;
-template <>
-constexpr double MAX_DOT_PRODUCT_OF_EDGES<double> = 0.9;
-
-template <typename Parallelotope>
-using VectorP = Vector<Parallelotope::SPACE_DIMENSION, typename Parallelotope::DataType>;
 
 template <typename T, std::size_t... I>
 constexpr Vector<sizeof...(I), T> last_coord_impl(T v, T last, std::integer_sequence<std::size_t, I...>&&)
@@ -69,7 +59,7 @@ constexpr Vector<sizeof...(I), T> last_coord_impl(T v, T last, std::integer_sequ
 }
 
 template <std::size_t N, typename T>
-constexpr Vector<N, T> last_coord(T v, T last)
+constexpr Vector<N, T> last_coord(const T& v, const T& last)
 {
         return last_coord_impl(v, last, std::make_integer_sequence<std::size_t, N>());
 }
@@ -91,7 +81,7 @@ void print_message(const std::string& msg)
 }
 
 template <typename T>
-bool almost_equal(T a, T b)
+bool almost_equal(const T& a, const T& b)
 {
         return std::abs(a - b) <= EQUALITY_EPSILON<T>;
 }
@@ -100,206 +90,6 @@ template <std::size_t N, typename T>
 bool almost_equal(const Vector<N, T>& a, const Vector<N, T>& b)
 {
         return (a - b).norm() <= EQUALITY_EPSILON<T>;
-}
-
-template <std::size_t N, typename T>
-bool test_edges(T edge_min_length, T edge_max_length, const std::array<Vector<N, T>, N>& edges)
-{
-        std::array<Vector<N, T>, N> unit_edges = edges;
-        for (Vector<N, T>& v : unit_edges)
-        {
-                T length = v.norm();
-                if (!(length >= edge_min_length && length <= edge_max_length))
-                {
-                        return false;
-                }
-                v /= length;
-        }
-
-        for (std::size_t i = 0; i < N; ++i)
-        {
-                for (std::size_t j = i + 1; j < N; ++j)
-                {
-                        if (!(std::abs(dot(unit_edges[i], unit_edges[j])) < MAX_DOT_PRODUCT_OF_EDGES<T>))
-                        {
-                                return false;
-                        }
-                }
-        }
-
-        return true;
-}
-
-template <std::size_t N, typename T, typename Engine>
-std::array<Vector<N, T>, N> generate_edges(T edge_min_length, T edge_max_length, Engine& engine)
-{
-        ASSERT(edge_min_length > 0 && edge_min_length <= edge_max_length);
-
-        std::uniform_real_distribution<T> urd(-edge_max_length, edge_max_length);
-
-        std::array<Vector<N, T>, N> edges;
-        do
-        {
-                for (std::size_t i = 0; i < N; ++i)
-                {
-                        for (std::size_t j = 0; j < N; ++j)
-                        {
-                                edges[i][j] = urd(engine);
-                        }
-                }
-
-        } while (!test_edges(edge_min_length, edge_max_length, edges));
-        return edges;
-}
-
-template <std::size_t N, typename T, typename Engine>
-std::array<T, N> generate_aa_edges(T edge_min_length, T edge_max_length, Engine& engine)
-{
-        ASSERT(edge_min_length > 0 && edge_min_length <= edge_max_length);
-
-        std::uniform_real_distribution<T> urd(edge_min_length, edge_max_length);
-        std::array<T, N> edges;
-        for (std::size_t i = 0; i < N; ++i)
-        {
-                edges[i] = urd(engine);
-        }
-        return edges;
-}
-
-template <std::size_t N, typename T, typename Engine>
-Vector<N, T> generate_org(T org_size, Engine& engine)
-{
-        ASSERT(org_size >= 0);
-
-        std::uniform_real_distribution<T> urd(-org_size, org_size);
-        Vector<N, T> org;
-        for (std::size_t i = 0; i < N; ++i)
-        {
-                org[i] = urd(engine);
-        }
-        return org;
-}
-
-template <typename Parallelotope, typename RandomEngine, std::size_t... I>
-std::vector<VectorP<Parallelotope>> external_points(
-        RandomEngine& engine,
-        int count,
-        const Parallelotope& p,
-        std::integer_sequence<std::size_t, I...>)
-{
-        constexpr std::size_t N = Parallelotope::SPACE_DIMENSION;
-        using T = typename Parallelotope::DataType;
-
-        static_assert(sizeof...(I) == N);
-
-        std::array<T, N> len = {p.e(I).norm()...};
-
-        std::array<std::uniform_real_distribution<T>, N> low = {
-                std::uniform_real_distribution<T>{-len[I] * 10, -POSITION_DELTA<T> * len[I]}...};
-        std::array<std::uniform_real_distribution<T>, N> high = {
-                std::uniform_real_distribution<T>{len[I] * (1 + POSITION_DELTA<T>), len[I] * 10}...};
-
-        std::uniform_int_distribution<int> rnd(0, 1);
-
-        std::array<Vector<N, T>, N> unit = {(p.e(I) / len[I])...};
-
-        std::vector<Vector<N, T>> points;
-
-        for (int i = 0; i < count; ++i)
-        {
-                Vector<N, T> v((rnd(engine) ? low[I](engine) : high[I](engine))...);
-
-                points.push_back(p.org() + ((unit[I] * v[I]) + ...));
-        }
-
-        return points;
-}
-
-template <typename Parallelotope, typename RandomEngine, std::size_t... I>
-std::vector<VectorP<Parallelotope>> internal_points(
-        RandomEngine& engine,
-        int count,
-        const Parallelotope& p,
-        std::integer_sequence<std::size_t, I...>)
-{
-        constexpr std::size_t N = Parallelotope::SPACE_DIMENSION;
-        using T = typename Parallelotope::DataType;
-
-        static_assert(sizeof...(I) == N);
-
-        std::array<T, N> len = {p.e(I).norm()...};
-
-        std::array<std::uniform_real_distribution<T>, N> internal = {
-                std::uniform_real_distribution<T>{len[I] * POSITION_DELTA<T>, len[I] * (1 - POSITION_DELTA<T>)}...};
-
-        std::array<Vector<N, T>, N> unit = {(p.e(I) / len[I])...};
-
-        std::vector<Vector<N, T>> points;
-
-        for (int i = 0; i < count; ++i)
-        {
-                Vector<N, T> v((internal[I](engine))...);
-
-                points.push_back(p.org() + ((unit[I] * v[I]) + ...));
-        }
-
-        return points;
-}
-
-template <typename Parallelotope, typename RandomEngine, std::size_t... I>
-std::vector<VectorP<Parallelotope>> cover_points(
-        RandomEngine& engine,
-        int count,
-        const Parallelotope& p,
-        std::integer_sequence<std::size_t, I...>)
-{
-        constexpr std::size_t N = Parallelotope::SPACE_DIMENSION;
-        using T = typename Parallelotope::DataType;
-
-        static_assert(sizeof...(I) == N);
-
-        std::array<T, N> len = {p.e(I).norm()...};
-
-        std::array<std::uniform_real_distribution<T>, N> cover = {
-                std::uniform_real_distribution<T>{static_cast<T>(-0.2) * len[I], len[I] * static_cast<T>(1.2)}...};
-
-        std::array<std::uniform_real_distribution<T>, N> len_random = {std::uniform_real_distribution<T>{0, len[I]}...};
-
-        std::array<Vector<N, T>, N> unit = {(p.e(I) / len[I])...};
-
-        std::vector<Vector<N, T>> points;
-
-        for (int i = 0; i < count; ++i)
-        {
-                points.push_back(p.org() + ((unit[I] * cover[I](engine)) + ...));
-
-                for (unsigned n = 0; n < N; ++n)
-                {
-                        Vector<N, T> v;
-
-                        v = p.org();
-                        for (unsigned d = 0; d < N; ++d)
-                        {
-                                if (d != n)
-                                {
-                                        v += unit[d] * len_random[d](engine);
-                                }
-                        }
-                        points.push_back(v);
-
-                        v = p.org();
-                        for (unsigned d = 0; d < N; ++d)
-                        {
-                                if (d != n)
-                                {
-                                        v += unit[d] * len_random[d](engine);
-                                }
-                        }
-                        points.push_back(v + p.e(n));
-                }
-        }
-
-        return points;
 }
 
 template <std::size_t N, typename T, typename RandomEngine>
@@ -367,7 +157,7 @@ bool point_is_in_feasible_region(const Vector<N, T>& point, const std::array<Con
 }
 
 template <typename RandomEngine, typename Parallelotope>
-void test_points(RandomEngine& engine, int point_count, const Parallelotope& p)
+void test_points(RandomEngine& engine, const int point_count, const Parallelotope& p)
 {
         constexpr std::size_t N = Parallelotope::SPACE_DIMENSION;
         using T = typename Parallelotope::DataType;
@@ -376,8 +166,7 @@ void test_points(RandomEngine& engine, int point_count, const Parallelotope& p)
 
         const Constraints<N, T, 2 * N, 0> constraints = p.constraints();
 
-        for (const Vector<N, T>& point :
-             external_points(engine, point_count, p, std::make_integer_sequence<std::size_t, N>()))
+        for (const Vector<N, T>& point : external_points(engine, point_count, p))
         {
                 if (p.inside(point))
                 {
@@ -390,8 +179,7 @@ void test_points(RandomEngine& engine, int point_count, const Parallelotope& p)
                 }
         }
 
-        for (const Vector<N, T>& origin :
-             internal_points(engine, point_count, p, std::make_integer_sequence<std::size_t, N>()))
+        for (const Vector<N, T>& origin : internal_points(engine, point_count, p))
         {
                 if (!p.inside(origin))
                 {
@@ -495,7 +283,7 @@ void verify_vectors(const std::array<Vector<N, T>, COUNT>& vectors, const std::s
 }
 
 template <typename RandomEngine, typename... Parallelotope>
-void compare_parallelotopes(RandomEngine& engine, int point_count, const Parallelotope&... p)
+void compare_parallelotopes(RandomEngine& engine, const int point_count, const Parallelotope&... p)
 {
         static_assert(sizeof...(Parallelotope) >= 2);
 
@@ -524,9 +312,7 @@ void compare_parallelotopes(RandomEngine& engine, int point_count, const Paralle
                 verify_vectors(e, "e" + to_string(i));
         }
 
-        for (Vector<N, T> origin : cover_points(
-                     engine, point_count, std::get<0>(std::make_tuple(p...)),
-                     std::make_integer_sequence<std::size_t, N>()))
+        for (Vector<N, T> origin : cover_points(engine, point_count, std::get<0>(std::make_tuple(p...))))
         {
                 std::array<bool, sizeof...(Parallelotope)> inside{p.inside(origin)...};
                 for (unsigned i = 1; i < sizeof...(Parallelotope); ++i)
@@ -594,8 +380,10 @@ constexpr std::array<Vector<N + 1, T>, N> to_edge_vector_hyper(const std::array<
 }
 
 template <std::size_t N, typename T>
-void test_points(int point_count)
+void test_points(const int point_count)
 {
+        const std::string name = "Test parallelotope points in " + space_name(N);
+
         std::mt19937_64 engine = create_engine<std::mt19937_64>();
 
         constexpr T ORG_SIZE = 10;
@@ -603,7 +391,7 @@ void test_points(int point_count)
         constexpr T MAX_LENGTH = 20;
 
         LOG("------------------------------");
-        LOG("Parallelotope points in " + space_name(N));
+        LOG(name);
 
         print_separator();
         LOG("ParallelotopeAA");
@@ -647,7 +435,7 @@ void test_points(int point_count)
         }
 
         print_separator();
-        LOG("Check passed");
+        LOG(name + " passed");
 }
 
 template <typename Parallelotope>
@@ -678,11 +466,13 @@ void test_algorithms(const Parallelotope& p)
 template <std::size_t N, typename T>
 void test_algorithms()
 {
+        const std::string name = "Test parallelotope algorithms in " + space_name(N);
+
         constexpr std::array<T, N> EDGES = make_array_value<T, N>(1);
         constexpr Vector<N, T> ORG(0);
 
         LOG("------------------------------");
-        LOG("Parallelotope algorithms in " + space_name(N));
+        LOG(name);
 
         print_separator();
         LOG("ParallelotopeAA");
@@ -701,14 +491,14 @@ void test_algorithms()
         }
 
         print_separator();
-        LOG("Check passed");
+        LOG(name + " passed");
 }
 
 template <typename Parallelotope1, typename Parallelotope2>
 void test_intersection(
         const Parallelotope1& p1,
         const Parallelotope2& p2,
-        bool with_intersection,
+        const bool with_intersection,
         const std::string& text)
 {
         if (with_intersection != shape_intersection(p1, p2))
@@ -720,7 +510,7 @@ void test_intersection(
 }
 
 template <typename Parallelotope>
-std::unique_ptr<ShapeWrapperForIntersection<Parallelotope>> make_unique_wrapper(const Parallelotope* p)
+std::unique_ptr<ShapeWrapperForIntersection<Parallelotope>> make_unique_wrapper(const Parallelotope* const p)
 {
         return std::make_unique<ShapeWrapperForIntersection<Parallelotope>>(p);
 }
@@ -728,6 +518,8 @@ std::unique_ptr<ShapeWrapperForIntersection<Parallelotope>> make_unique_wrapper(
 template <std::size_t N, typename T>
 void test_intersections()
 {
+        const std::string name = "Test parallelotope intersections in " + space_name(N);
+
         constexpr std::array<T, N> EDGES = make_array_value<T, N>(1);
         constexpr Vector<N, T> ORG_0(0.0);
         constexpr Vector<N, T> ORG_1(0.75);
@@ -737,7 +529,7 @@ void test_intersections()
         constexpr std::array<T, N> EDGES_BIG = make_array_value<T, N>(10);
 
         LOG("------------------------------");
-        LOG("Parallelotope intersections in " + space_name(N));
+        LOG(name);
 
         print_separator();
         LOG("ParallelotopeAA");
@@ -786,12 +578,14 @@ void test_intersections()
         }
 
         print_separator();
-        LOG("Check passed");
+        LOG(name + " passed");
 }
 
 template <std::size_t N, typename T>
 void test_intersections_hyperplane()
 {
+        const std::string name = "Test hyperplane parallelotope intersections in " + space_name(N);
+
         constexpr Vector<N, T> ORG(5);
         constexpr T SIZE = 1;
 
@@ -816,7 +610,7 @@ void test_intersections_hyperplane()
         constexpr Vector<N, T> SMALL_9 = last_coord<N, T>(5.5, 6.1);
 
         LOG("------------------------------");
-        LOG("Hyperplane parallelotope intersections in " + space_name(N));
+        LOG(name);
 
         constexpr std::array<Vector<N, T>, N - 1> EDGES_HYPER_BIG =
                 to_edge_vector_hyper(make_array_value<T, N - 1>(SIZE_BIG));
@@ -884,11 +678,11 @@ void test_intersections_hyperplane()
         test(Parallelotope<N, T>(ORG, to_edge_vector(EDGES)));
 
         print_separator();
-        LOG("Check passed");
+        LOG(name + " passed");
 }
 
 template <std::size_t N, typename T>
-void all_tests(int point_count)
+void all_tests(const int point_count)
 {
         test_points<N, T>(point_count);
         test_algorithms<N, T>();
