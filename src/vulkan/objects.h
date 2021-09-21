@@ -62,7 +62,6 @@ public:
         {
                 return instance_;
         }
-
         operator VkInstance() const&& noexcept = delete;
 
         bool validation_layers_enabled() const noexcept
@@ -80,7 +79,7 @@ class DebugReportCallback final
         void move(DebugReportCallback* from) noexcept;
 
 public:
-        DebugReportCallback();
+        DebugReportCallback() = default;
         DebugReportCallback(VkInstance instance, const VkDebugReportCallbackCreateInfoEXT& create_info);
         ~DebugReportCallback();
 
@@ -102,7 +101,7 @@ class DeviceHandle final
         void move(DeviceHandle* from) noexcept;
 
 public:
-        DeviceHandle();
+        DeviceHandle() = default;
         DeviceHandle(VkPhysicalDevice physical_device, const VkDeviceCreateInfo& create_info);
         ~DeviceHandle();
 
@@ -126,11 +125,13 @@ public:
         Queue(uint32_t family_index, VkQueue queue) : queue_(queue), family_index_(family_index)
         {
         }
+
         operator VkQueue() const& noexcept
         {
                 return queue_;
         }
         operator VkQueue() const&& noexcept = delete;
+
         uint32_t family_index() const noexcept
         {
                 return family_index_;
@@ -146,7 +147,7 @@ class SurfaceKHR final
         void move(SurfaceKHR* from) noexcept;
 
 public:
-        SurfaceKHR();
+        SurfaceKHR() = default;
         SurfaceKHR(VkInstance instance, const std::function<VkSurfaceKHR(VkInstance)>& create_surface);
         ~SurfaceKHR();
 
@@ -169,7 +170,7 @@ class SwapchainKHR final
         void move(SwapchainKHR* from) noexcept;
 
 public:
-        SwapchainKHR();
+        SwapchainKHR() = default;
         SwapchainKHR(VkDevice device, const VkSwapchainCreateInfoKHR& create_info);
         ~SwapchainKHR();
 
@@ -183,29 +184,6 @@ public:
         operator VkSwapchainKHR() const&& noexcept = delete;
 };
 
-class ImageView final
-{
-        VkDevice device_ = VK_NULL_HANDLE;
-        VkImageView image_view_ = VK_NULL_HANDLE;
-
-        void destroy() noexcept;
-        void move(ImageView* from) noexcept;
-
-public:
-        ImageView();
-        ImageView(VkDevice device, const VkImageViewCreateInfo& create_info);
-        ~ImageView();
-
-        ImageView(const ImageView&) = delete;
-        ImageView& operator=(const ImageView&) = delete;
-
-        ImageView(ImageView&&) noexcept;
-        ImageView& operator=(ImageView&&) noexcept;
-
-        operator VkImageView() const& noexcept;
-        operator VkImageView() const&& noexcept = delete;
-};
-
 class ShaderModule final
 {
         VkDevice device_ = VK_NULL_HANDLE;
@@ -215,7 +193,7 @@ class ShaderModule final
         void move(ShaderModule* from) noexcept;
 
 public:
-        ShaderModule();
+        ShaderModule() = default;
         ShaderModule(VkDevice device, const std::span<const uint32_t>& code);
         ~ShaderModule();
 
@@ -238,7 +216,7 @@ class RenderPass final
         void move(RenderPass* from) noexcept;
 
 public:
-        RenderPass();
+        RenderPass() = default;
         RenderPass(VkDevice device, const VkRenderPassCreateInfo& create_info);
         ~RenderPass();
 
@@ -261,7 +239,7 @@ class PipelineLayout final
         void move(PipelineLayout* from) noexcept;
 
 public:
-        PipelineLayout();
+        PipelineLayout() = default;
         PipelineLayout(VkDevice device, const VkPipelineLayoutCreateInfo& create_info);
         ~PipelineLayout();
 
@@ -284,7 +262,7 @@ class Pipeline final
         void move(Pipeline* from) noexcept;
 
 public:
-        Pipeline();
+        Pipeline() = default;
         Pipeline(VkDevice device, const VkGraphicsPipelineCreateInfo& create_info);
         Pipeline(VkDevice device, const VkComputePipelineCreateInfo& create_info);
         ~Pipeline();
@@ -308,7 +286,7 @@ class Framebuffer final
         void move(Framebuffer* from) noexcept;
 
 public:
-        Framebuffer();
+        Framebuffer() = default;
         Framebuffer(VkDevice device, const VkFramebufferCreateInfo& create_info);
         ~Framebuffer();
 
@@ -334,7 +312,7 @@ class CommandPool final
         void move(CommandPool* from) noexcept;
 
 public:
-        CommandPool();
+        CommandPool() = default;
         CommandPool(VkDevice device, const VkCommandPoolCreateInfo& create_info);
         ~CommandPool();
 
@@ -359,7 +337,7 @@ class Semaphore final
         void move(Semaphore* from) noexcept;
 
 public:
-        Semaphore();
+        Semaphore() = default;
         explicit Semaphore(VkDevice device);
         ~Semaphore();
 
@@ -382,7 +360,7 @@ class Fence final
         void move(Fence* from) noexcept;
 
 public:
-        Fence();
+        Fence() = default;
         Fence(VkDevice device, bool signaled);
         ~Fence();
 
@@ -405,7 +383,7 @@ class BufferHandle final
         void move(BufferHandle* from) noexcept;
 
 public:
-        BufferHandle();
+        BufferHandle() = default;
         BufferHandle(VkDevice device, const VkBufferCreateInfo& create_info);
         ~BufferHandle();
 
@@ -420,6 +398,7 @@ public:
                 return buffer_;
         }
         operator VkBuffer() const&& noexcept = delete;
+
         VkDevice device() const noexcept
         {
                 return device_;
@@ -434,7 +413,6 @@ class Buffer final
 
 public:
         Buffer() = default;
-
         Buffer(VkDevice device, const VkBufferCreateInfo& create_info)
                 : buffer_(device, create_info), size_(create_info.size), usage_(create_info.usage)
         {
@@ -445,6 +423,7 @@ public:
                 return buffer_;
         }
         operator VkBuffer() const&& noexcept = delete;
+
         VkDevice device() const noexcept
         {
                 return buffer_.device();
@@ -468,7 +447,7 @@ class DeviceMemory final
         void move(DeviceMemory* from) noexcept;
 
 public:
-        DeviceMemory();
+        DeviceMemory() = default;
         DeviceMemory(VkDevice device, const VkMemoryAllocateInfo& allocate_info);
         ~DeviceMemory();
 
@@ -499,7 +478,7 @@ class CommandBuffer final
         void move(CommandBuffer* from) noexcept;
 
 public:
-        CommandBuffer();
+        CommandBuffer() = default;
         CommandBuffer(VkDevice device, VkCommandPool command_pool);
         ~CommandBuffer();
 
@@ -523,7 +502,7 @@ class CommandBuffers final
         void move(CommandBuffers* from) noexcept;
 
 public:
-        CommandBuffers();
+        CommandBuffers() = default;
         CommandBuffers(VkDevice device, VkCommandPool command_pool, uint32_t count);
         ~CommandBuffers();
 
@@ -547,7 +526,7 @@ class DescriptorSetLayout final
         void move(DescriptorSetLayout* from) noexcept;
 
 public:
-        DescriptorSetLayout();
+        DescriptorSetLayout() = default;
         DescriptorSetLayout(VkDevice device, const VkDescriptorSetLayoutCreateInfo& create_info);
         ~DescriptorSetLayout();
 
@@ -570,7 +549,7 @@ class DescriptorPool final
         void move(DescriptorPool* from) noexcept;
 
 public:
-        DescriptorPool();
+        DescriptorPool() = default;
         DescriptorPool(VkDevice device, const VkDescriptorPoolCreateInfo& create_info);
         ~DescriptorPool();
 
@@ -594,7 +573,7 @@ class DescriptorSet final
         void move(DescriptorSet* from) noexcept;
 
 public:
-        DescriptorSet();
+        DescriptorSet() = default;
         DescriptorSet(VkDevice device, VkDescriptorPool descriptor_pool, VkDescriptorSetLayout descriptor_set_layout);
         ~DescriptorSet();
 
@@ -618,7 +597,7 @@ class DescriptorSets final
         void move(DescriptorSets* from) noexcept;
 
 public:
-        DescriptorSets();
+        DescriptorSets() = default;
         DescriptorSets(
                 VkDevice device,
                 VkDescriptorPool descriptor_pool,
@@ -644,7 +623,7 @@ class Image final
         void move(Image* from) noexcept;
 
 public:
-        Image();
+        Image() = default;
         Image(VkDevice device, const VkImageCreateInfo& create_info);
         ~Image();
 
@@ -658,6 +637,29 @@ public:
         operator VkImage() const&& noexcept = delete;
 };
 
+class ImageView final
+{
+        VkDevice device_ = VK_NULL_HANDLE;
+        VkImageView image_view_ = VK_NULL_HANDLE;
+
+        void destroy() noexcept;
+        void move(ImageView* from) noexcept;
+
+public:
+        ImageView() = default;
+        ImageView(VkDevice device, const VkImageViewCreateInfo& create_info);
+        ~ImageView();
+
+        ImageView(const ImageView&) = delete;
+        ImageView& operator=(const ImageView&) = delete;
+
+        ImageView(ImageView&&) noexcept;
+        ImageView& operator=(ImageView&&) noexcept;
+
+        operator VkImageView() const& noexcept;
+        operator VkImageView() const&& noexcept = delete;
+};
+
 class Sampler final
 {
         VkDevice device_ = VK_NULL_HANDLE;
@@ -667,7 +669,7 @@ class Sampler final
         void move(Sampler* from) noexcept;
 
 public:
-        Sampler();
+        Sampler() = default;
         Sampler(VkDevice device, const VkSamplerCreateInfo& create_info);
         ~Sampler();
 

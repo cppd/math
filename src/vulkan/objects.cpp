@@ -96,8 +96,6 @@ void DebugReportCallback::move(DebugReportCallback* from) noexcept
         from->callback_ = VK_NULL_HANDLE;
 }
 
-DebugReportCallback::DebugReportCallback() = default;
-
 DebugReportCallback::DebugReportCallback(VkInstance instance, const VkDebugReportCallbackCreateInfoEXT& create_info)
 {
         VkResult result = vkCreateDebugReportCallbackEXT(instance, &create_info, nullptr, &callback_);
@@ -151,8 +149,6 @@ void DeviceHandle::move(DeviceHandle* from) noexcept
         device_ = from->device_;
         from->device_ = VK_NULL_HANDLE;
 }
-
-DeviceHandle::DeviceHandle() = default;
 
 DeviceHandle::DeviceHandle(VkPhysicalDevice physical_device, const VkDeviceCreateInfo& create_info)
 {
@@ -209,8 +205,6 @@ void SurfaceKHR::move(SurfaceKHR* from) noexcept
         from->instance_ = VK_NULL_HANDLE;
         from->surface_ = VK_NULL_HANDLE;
 }
-
-SurfaceKHR::SurfaceKHR() = default;
 
 SurfaceKHR::SurfaceKHR(VkInstance instance, const std::function<VkSurfaceKHR(VkInstance)>& create_surface)
 {
@@ -271,8 +265,6 @@ void SwapchainKHR::move(SwapchainKHR* from) noexcept
         from->swapchain_ = VK_NULL_HANDLE;
 }
 
-SwapchainKHR::SwapchainKHR() = default;
-
 SwapchainKHR::SwapchainKHR(VkDevice device, const VkSwapchainCreateInfoKHR& create_info)
 {
         VkResult result = vkCreateSwapchainKHR(device, &create_info, nullptr, &swapchain_);
@@ -313,66 +305,6 @@ SwapchainKHR::operator VkSwapchainKHR() const& noexcept
 
 //
 
-void ImageView::destroy() noexcept
-{
-        if (image_view_ != VK_NULL_HANDLE)
-        {
-                ASSERT(device_ != VK_NULL_HANDLE);
-
-                vkDestroyImageView(device_, image_view_, nullptr);
-        }
-}
-
-void ImageView::move(ImageView* from) noexcept
-{
-        device_ = from->device_;
-        image_view_ = from->image_view_;
-        from->device_ = VK_NULL_HANDLE;
-        from->image_view_ = VK_NULL_HANDLE;
-}
-
-ImageView::ImageView() = default;
-
-ImageView::ImageView(VkDevice device, const VkImageViewCreateInfo& create_info)
-{
-        VkResult result = vkCreateImageView(device, &create_info, nullptr, &image_view_);
-        if (result != VK_SUCCESS)
-        {
-                vulkan_function_error("vkCreateImageView", result);
-        }
-
-        ASSERT(image_view_ != VK_NULL_HANDLE);
-
-        device_ = device;
-}
-
-ImageView::~ImageView()
-{
-        destroy();
-}
-
-ImageView::ImageView(ImageView&& from) noexcept
-{
-        move(&from);
-}
-
-ImageView& ImageView::operator=(ImageView&& from) noexcept
-{
-        if (this != &from)
-        {
-                destroy();
-                move(&from);
-        }
-        return *this;
-}
-
-ImageView::operator VkImageView() const& noexcept
-{
-        return image_view_;
-}
-
-//
-
 void ShaderModule::destroy() noexcept
 {
         if (shader_module_ != VK_NULL_HANDLE)
@@ -390,8 +322,6 @@ void ShaderModule::move(ShaderModule* from) noexcept
         from->device_ = VK_NULL_HANDLE;
         from->shader_module_ = VK_NULL_HANDLE;
 }
-
-ShaderModule::ShaderModule() = default;
 
 ShaderModule::ShaderModule(VkDevice device, const std::span<const uint32_t>& code)
 {
@@ -465,8 +395,6 @@ void RenderPass::move(RenderPass* from) noexcept
         from->render_pass_ = VK_NULL_HANDLE;
 }
 
-RenderPass::RenderPass() = default;
-
 RenderPass::RenderPass(VkDevice device, const VkRenderPassCreateInfo& create_info)
 {
         VkResult result = vkCreateRenderPass(device, &create_info, nullptr, &render_pass_);
@@ -525,8 +453,6 @@ void PipelineLayout::move(PipelineLayout* from) noexcept
         from->pipeline_layout_ = VK_NULL_HANDLE;
 }
 
-PipelineLayout::PipelineLayout() = default;
-
 PipelineLayout::PipelineLayout(VkDevice device, const VkPipelineLayoutCreateInfo& create_info)
 {
         VkResult result = vkCreatePipelineLayout(device, &create_info, nullptr, &pipeline_layout_);
@@ -584,8 +510,6 @@ void Pipeline::move(Pipeline* from) noexcept
         from->device_ = VK_NULL_HANDLE;
         from->pipeline_ = VK_NULL_HANDLE;
 }
-
-Pipeline::Pipeline() = default;
 
 Pipeline::Pipeline(VkDevice device, const VkGraphicsPipelineCreateInfo& create_info)
 {
@@ -662,8 +586,6 @@ void Framebuffer::move(Framebuffer* from) noexcept
         from->framebuffer_ = VK_NULL_HANDLE;
 }
 
-Framebuffer::Framebuffer() = default;
-
 Framebuffer::Framebuffer(VkDevice device, const VkFramebufferCreateInfo& create_info)
 {
         VkResult result = vkCreateFramebuffer(device, &create_info, nullptr, &framebuffer_);
@@ -723,8 +645,6 @@ void CommandPool::move(CommandPool* from) noexcept
         from->command_pool_ = VK_NULL_HANDLE;
         from->family_index_ = NULL_FAMILY_INDEX;
 }
-
-CommandPool::CommandPool() = default;
 
 CommandPool::CommandPool(VkDevice device, const VkCommandPoolCreateInfo& create_info)
 {
@@ -790,8 +710,6 @@ void Semaphore::move(Semaphore* from) noexcept
         from->semaphore_ = VK_NULL_HANDLE;
 }
 
-Semaphore::Semaphore() = default;
-
 Semaphore::Semaphore(VkDevice device)
 {
         VkSemaphoreCreateInfo create_info = {};
@@ -854,8 +772,6 @@ void Fence::move(Fence* from) noexcept
         from->device_ = VK_NULL_HANDLE;
         from->fence_ = VK_NULL_HANDLE;
 }
-
-Fence::Fence() = default;
 
 Fence::Fence(VkDevice device, bool signaled)
 {
@@ -924,8 +840,6 @@ void BufferHandle::move(BufferHandle* from) noexcept
         from->buffer_ = VK_NULL_HANDLE;
 }
 
-BufferHandle::BufferHandle() = default;
-
 BufferHandle::BufferHandle(VkDevice device, const VkBufferCreateInfo& create_info)
 {
         VkResult result = vkCreateBuffer(device, &create_info, nullptr, &buffer_);
@@ -978,8 +892,6 @@ void DeviceMemory::move(DeviceMemory* from) noexcept
         from->device_ = VK_NULL_HANDLE;
         from->device_memory_ = VK_NULL_HANDLE;
 }
-
-DeviceMemory::DeviceMemory() = default;
 
 DeviceMemory::DeviceMemory(VkDevice device, const VkMemoryAllocateInfo& allocate_info)
 {
@@ -1036,8 +948,6 @@ void CommandBuffer::move(CommandBuffer* from) noexcept
         from->command_pool_ = VK_NULL_HANDLE;
         from->command_buffer_ = VK_NULL_HANDLE;
 }
-
-CommandBuffer::CommandBuffer() = default;
 
 CommandBuffer::CommandBuffer(VkDevice device, VkCommandPool command_pool)
 {
@@ -1108,8 +1018,6 @@ void CommandBuffers::move(CommandBuffers* from) noexcept
         from->command_pool_ = VK_NULL_HANDLE;
         from->command_buffers_ = std::vector<VkCommandBuffer>();
 }
-
-CommandBuffers::CommandBuffers() = default;
 
 CommandBuffers::CommandBuffers(VkDevice device, VkCommandPool command_pool, uint32_t count) : command_buffers_(count)
 {
@@ -1195,8 +1103,6 @@ void DescriptorSetLayout::move(DescriptorSetLayout* from) noexcept
         from->descriptor_set_layout_ = VK_NULL_HANDLE;
 }
 
-DescriptorSetLayout::DescriptorSetLayout() = default;
-
 DescriptorSetLayout::DescriptorSetLayout(VkDevice device, const VkDescriptorSetLayoutCreateInfo& create_info)
 {
         VkResult result = vkCreateDescriptorSetLayout(device, &create_info, nullptr, &descriptor_set_layout_);
@@ -1254,8 +1160,6 @@ void DescriptorPool::move(DescriptorPool* from) noexcept
         from->device_ = VK_NULL_HANDLE;
         from->descriptor_pool_ = VK_NULL_HANDLE;
 }
-
-DescriptorPool::DescriptorPool() = default;
 
 DescriptorPool::DescriptorPool(VkDevice device, const VkDescriptorPoolCreateInfo& create_info)
 {
@@ -1321,8 +1225,6 @@ void DescriptorSet::move(DescriptorSet* from) noexcept
         from->descriptor_pool_ = VK_NULL_HANDLE;
         from->descriptor_set_ = VK_NULL_HANDLE;
 }
-
-DescriptorSet::DescriptorSet() = default;
 
 DescriptorSet::DescriptorSet(
         VkDevice device,
@@ -1403,8 +1305,6 @@ void DescriptorSets::move(DescriptorSets* from) noexcept
         from->descriptor_pool_ = VK_NULL_HANDLE;
         from->descriptor_sets_ = std::vector<VkDescriptorSet>();
 }
-
-DescriptorSets::DescriptorSets() = default;
 
 DescriptorSets::DescriptorSets(
         VkDevice device,
@@ -1497,8 +1397,6 @@ void Image::move(Image* from) noexcept
         from->image_ = VK_NULL_HANDLE;
 }
 
-Image::Image() = default;
-
 Image::Image(VkDevice device, const VkImageCreateInfo& create_info)
 {
         VkResult result = vkCreateImage(device, &create_info, nullptr, &image_);
@@ -1539,6 +1437,64 @@ Image::operator VkImage() const& noexcept
 
 //
 
+void ImageView::destroy() noexcept
+{
+        if (image_view_ != VK_NULL_HANDLE)
+        {
+                ASSERT(device_ != VK_NULL_HANDLE);
+
+                vkDestroyImageView(device_, image_view_, nullptr);
+        }
+}
+
+void ImageView::move(ImageView* from) noexcept
+{
+        device_ = from->device_;
+        image_view_ = from->image_view_;
+        from->device_ = VK_NULL_HANDLE;
+        from->image_view_ = VK_NULL_HANDLE;
+}
+
+ImageView::ImageView(VkDevice device, const VkImageViewCreateInfo& create_info)
+{
+        VkResult result = vkCreateImageView(device, &create_info, nullptr, &image_view_);
+        if (result != VK_SUCCESS)
+        {
+                vulkan_function_error("vkCreateImageView", result);
+        }
+
+        ASSERT(image_view_ != VK_NULL_HANDLE);
+
+        device_ = device;
+}
+
+ImageView::~ImageView()
+{
+        destroy();
+}
+
+ImageView::ImageView(ImageView&& from) noexcept
+{
+        move(&from);
+}
+
+ImageView& ImageView::operator=(ImageView&& from) noexcept
+{
+        if (this != &from)
+        {
+                destroy();
+                move(&from);
+        }
+        return *this;
+}
+
+ImageView::operator VkImageView() const& noexcept
+{
+        return image_view_;
+}
+
+//
+
 void Sampler::destroy() noexcept
 {
         if (sampler_ != VK_NULL_HANDLE)
@@ -1556,8 +1512,6 @@ void Sampler::move(Sampler* from) noexcept
         from->device_ = VK_NULL_HANDLE;
         from->sampler_ = VK_NULL_HANDLE;
 }
-
-Sampler::Sampler() = default;
 
 Sampler::Sampler(VkDevice device, const VkSamplerCreateInfo& create_info)
 {
