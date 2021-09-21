@@ -44,12 +44,12 @@ The projection to the n-space of the lower convex hull of the points
 
 #include "facet.h"
 #include "integer.h"
+#include "max.h"
 #include "ridge.h"
+#include "simplex.h"
 
 #include <src/com/arrays.h>
 #include <src/com/barrier.h>
-#include <src/com/bits.h>
-#include <src/com/combinatorics.h>
 #include <src/com/error.h>
 #include <src/com/log.h>
 #include <src/com/names.h>
@@ -59,12 +59,8 @@ The projection to the n-space of the lower convex hull of the points
 #include <src/com/type/concept.h>
 #include <src/com/type/find.h>
 #include <src/com/type/limit.h>
-#include <src/numerical/determinant.h>
-#include <src/numerical/difference.h>
-#include <src/numerical/vec.h>
 
 #include <algorithm>
-#include <cstdint>
 #include <random>
 #include <sstream>
 #include <unordered_map>
@@ -80,61 +76,6 @@ using ConvexHullSourceInteger = LeastSignedInteger<CONVEX_HULL_BITS>;
 using DelaunaySourceInteger = LeastSignedInteger<DELAUNAY_BITS>;
 constexpr ConvexHullSourceInteger MAX_CONVEX_HULL{(1ull << CONVEX_HULL_BITS) - 1};
 constexpr DelaunaySourceInteger MAX_DELAUNAY{(1ull << DELAUNAY_BITS) - 1};
-
-template <std::size_t N, std::size_t BITS>
-constexpr int max_determinant_paraboloid()
-{
-        // |x x x x*x+x*x+x*x|
-        // |x x x x*x+x*x+x*x|
-        // |x x x x*x+x*x+x*x|
-        // |x x x x*x+x*x+x*x|
-        // max = x * x * x * (x*x + x*x + x*x) * 4!
-        // max = (x ^ (N + 1)) * (N - 1) * N!
-
-        static_assert(N >= 2 && N <= 33);
-        static_assert(BITS > 0);
-
-        unsigned __int128 f = 1;
-        for (unsigned i = 2; i <= N; ++i)
-        {
-                f *= i;
-        }
-
-        f *= (N - 1);
-
-        return BITS * (N + 1) + bit_width(f);
-}
-
-template <std::size_t N, std::size_t BITS>
-constexpr int max_determinant()
-{
-        // |x x x x|
-        // |x x x x|
-        // |x x x x|
-        // |x x x x|
-        // max = x * x * x * x * 4!
-        // max = (x ^ N) * N!
-
-        static_assert(N >= 2 && N <= 34);
-        static_assert(BITS > 0);
-
-        unsigned __int128 f = 1;
-        for (unsigned i = 2; i <= N; ++i)
-        {
-                f *= i;
-        }
-
-        return BITS * N + bit_width(f);
-}
-
-template <std::size_t N, std::size_t BITS>
-constexpr int max_paraboloid()
-{
-        // max = x*x + x*x + x*x
-        // max = (x ^ 2) * (N - 1)
-
-        return BITS * 2 + bit_width(N - 1);
-}
 
 template <std::size_t N>
 using ConvexHullComputeType = LeastSignedInteger<max_determinant<N, CONVEX_HULL_BITS>()>;
@@ -196,9 +137,9 @@ std::string type_str() requires std::is_same_v<std::remove_cv_t<T>, mpz_class>
         return "mpz_class";
 }
 
-// Here multithreading is not always faster.
+// Here multithreading does not always speed up calculations.
 // When points are inside a sphere, multithreading speeds up calculations.
-// When points are on a sphere, multithreading slow down calculations.
+// When points are on a sphere, multithreading slows down calculations.
 // When using mpz_class, multithreading speeds up calculations.
 template <typename S, typename C>
 int thread_count_for_horizon()
@@ -264,73 +205,6 @@ public:
                 return data_.cend();
         }
 };
-
-// The T range is for determinants only, not for Gram matrix
-template <int COUNT, std::size_t N, typename T>
-bool linearly_independent(const std::array<Vector<N, T>, N>& vectors)
-{
-        static_assert(Integral<T>);
-        static_assert(N > 1);
-        static_assert(COUNT > 0 && COUNT <= N);
-
-        return std::any_of(
-                COMBINATIONS<N, COUNT>.cbegin(), COMBINATIONS<N, COUNT>.cend(),
-                [&vectors](const std::array<unsigned char, COUNT>& h_map)
-                {
-                        return numerical::determinant(vectors, SEQUENCE_UCHAR_ARRAY<COUNT>, h_map) != 0;
-                });
-}
-
-template <unsigned SIMPLEX_I, std::size_t N, typename SourceType, typename ComputeType>
-void find_simplex_points(
-        const std::vector<Vector<N, SourceType>>& points,
-        std::array<int, N + 1>* const simplex_points,
-        std::array<Vector<N, ComputeType>, N>* const simplex_vectors,
-        unsigned point_i)
-{
-        static_assert(N > 1);
-        static_assert(SIMPLEX_I <= N);
-
-        for (; point_i < points.size(); ++point_i)
-        {
-                numerical::difference(
-                        &(*simplex_vectors)[SIMPLEX_I - 1], points[point_i], points[(*simplex_points)[0]]);
-
-                if (linearly_independent<SIMPLEX_I>(*simplex_vectors))
-                {
-                        break;
-                }
-        }
-
-        if (point_i == points.size())
-        {
-                error("point " + to_string(SIMPLEX_I + 1) + " of " + to_string(N) + "-simplex not found");
-        }
-
-        (*simplex_points)[SIMPLEX_I] = point_i;
-
-        if constexpr (SIMPLEX_I + 1 < N + 1)
-        {
-                find_simplex_points<SIMPLEX_I + 1>(points, simplex_points, simplex_vectors, point_i + 1);
-        }
-}
-
-template <std::size_t N, typename SourceType, typename ComputeType>
-void find_simplex_points(const std::vector<Vector<N, SourceType>>& points, std::array<int, N + 1>* const simplex_points)
-{
-        static_assert(N > 1);
-
-        if (points.empty())
-        {
-                error("0-simplex not found");
-        }
-
-        std::array<Vector<N, ComputeType>, N> simplex_vectors;
-
-        (*simplex_points)[0] = 0;
-
-        find_simplex_points<1>(points, simplex_points, &simplex_vectors, 1);
-}
 
 template <std::size_t N, typename Facet, template <typename...> typename Map>
 void connect_facets(
