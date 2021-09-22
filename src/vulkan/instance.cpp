@@ -114,7 +114,7 @@ VulkanInstance::VulkanInstance(
           presentation_family_index_(create_surface ? physical_device_.presentation_family_index() : NO_FAMILY_INDEX),
           //
           device_(create_device(
-                  physical_device_,
+                  &physical_device_,
                   compute_queue_count(
                           {{graphics_compute_family_index_, GRAPHICS_COMPUTE_QUEUE_COUNT},
                            {compute_family_index_, COMPUTE_QUEUE_COUNT},

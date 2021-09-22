@@ -72,17 +72,14 @@ public:
 class Device final
 {
         DeviceHandle device_;
-        VkPhysicalDevice physical_device_ = VK_NULL_HANDLE;
-        const DeviceProperties* physical_device_properties_ = nullptr;
+        const PhysicalDevice* physical_device_ = nullptr;
         DeviceFeatures features_;
         std::unordered_map<uint32_t, std::vector<VkQueue>> queues_;
 
 public:
         Device() = default;
 
-        Device(VkPhysicalDevice physical_device,
-               const DeviceProperties* physical_device_properties,
-               const VkDeviceCreateInfo& create_info);
+        Device(const PhysicalDevice* physical_device, const VkDeviceCreateInfo& create_info);
 
         operator VkDevice() const& noexcept
         {
@@ -109,7 +106,7 @@ PhysicalDevice create_physical_device(
         const DeviceFeatures& required_features);
 
 Device create_device(
-        const PhysicalDevice& physical_device,
+        const PhysicalDevice* physical_device,
         const std::unordered_map<uint32_t, uint32_t>& queue_families,
         std::vector<std::string> required_extensions,
         const DeviceFeatures& required_features,

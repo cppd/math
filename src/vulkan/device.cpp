@@ -353,13 +353,9 @@ bool PhysicalDevice::queue_family_supports_presentation(uint32_t index) const
 
 //
 
-Device::Device(
-        VkPhysicalDevice physical_device,
-        const DeviceProperties* physical_device_properties,
-        const VkDeviceCreateInfo& create_info)
-        : device_(physical_device, create_info),
+Device::Device(const PhysicalDevice* physical_device, const VkDeviceCreateInfo& create_info)
+        : device_(physical_device->device(), create_info),
           physical_device_(physical_device),
-          physical_device_properties_(physical_device_properties),
           features_(device_features(create_info))
 {
         ASSERT(!create_info.pEnabledFeatures);
@@ -388,7 +384,7 @@ Device::Device(
 
 VkPhysicalDevice Device::physical_device() const
 {
-        return physical_device_;
+        return physical_device_->device();
 }
 
 const DeviceFeatures& Device::features() const
@@ -398,7 +394,7 @@ const DeviceFeatures& Device::features() const
 
 const DeviceProperties& Device::properties() const
 {
-        return *physical_device_properties_;
+        return physical_device_->properties();
 }
 
 Queue Device::queue(uint32_t family_index, uint32_t queue_index) const
@@ -537,7 +533,7 @@ PhysicalDevice create_physical_device(
 }
 
 Device create_device(
-        const PhysicalDevice& physical_device,
+        const PhysicalDevice* physical_device,
         const std::unordered_map<uint32_t, uint32_t>& queue_families,
         std::vector<std::string> required_extensions,
         const DeviceFeatures& required_features,
@@ -549,7 +545,7 @@ Device create_device(
                 queue_families.cbegin(), queue_families.cend(),
                 [&](const auto& v)
                 {
-                        return v.first < physical_device.queue_families().size();
+                        return v.first < physical_device->queue_families().size();
                 }));
         ASSERT(std::all_of(
                 queue_families.cbegin(), queue_families.cend(),
@@ -561,7 +557,7 @@ Device create_device(
                 queue_families.cbegin(), queue_families.cend(),
                 [&](const auto& v)
                 {
-                        return v.second <= physical_device.queue_families()[v.first].queueCount;
+                        return v.second <= physical_device->queue_families()[v.first].queueCount;
                 }));
 
         if (queue_families.empty())
@@ -586,7 +582,7 @@ Device create_device(
                 ++i;
         }
 
-        DeviceFeatures features = make_features(required_features, optional_features, physical_device.features());
+        DeviceFeatures features = make_features(required_features, optional_features, physical_device->features());
 
         features.features_12.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_VULKAN_1_2_FEATURES;
         features.features_12.pNext = nullptr;
@@ -610,6 +606,6 @@ Device create_device(
                 create_info.ppEnabledExtensionNames = extensions.data();
         }
 
-        return Device(physical_device.device(), &physical_device.properties(), create_info);
+        return Device(physical_device, create_info);
 }
 }
