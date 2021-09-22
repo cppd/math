@@ -77,8 +77,6 @@ class Device final
         std::unordered_map<uint32_t, std::vector<VkQueue>> queues_;
 
 public:
-        Device() = default;
-
         Device(const PhysicalDevice* physical_device, const VkDeviceCreateInfo& create_info);
 
         operator VkDevice() const& noexcept
