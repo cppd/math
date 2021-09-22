@@ -783,11 +783,15 @@ class ImageView final
         ImageViewHandle image_view_;
         VkFormat format_;
         VkImageUsageFlags usage_;
+        VkSampleCountFlagBits sample_count_;
 
 public:
         ImageView() = default;
         ImageView(const Image& image, const VkImageViewCreateInfo& create_info)
-                : image_view_(image.device(), create_info), format_(create_info.format), usage_(image.usage())
+                : image_view_(image.device(), create_info),
+                  format_(create_info.format),
+                  usage_(image.usage()),
+                  sample_count_(image.sample_count())
         {
                 ASSERT(create_info.pNext == nullptr);
                 ASSERT(image == create_info.image);
@@ -807,6 +811,10 @@ public:
         bool has_usage(VkImageUsageFlagBits flag) const noexcept
         {
                 return (usage_ & flag) == flag;
+        }
+        const VkSampleCountFlagBits& sample_count() const noexcept
+        {
+                return sample_count_;
         }
 };
 
