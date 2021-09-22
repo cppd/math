@@ -70,8 +70,8 @@ const VkDescriptorSet& PrepareMemory::descriptor_set() const
 
 void PrepareMemory::set_object_image(const vulkan::ImageWithMemory& storage_image) const
 {
-        ASSERT(storage_image.format() == VK_FORMAT_R32_UINT);
-        ASSERT(storage_image.has_usage(VK_IMAGE_USAGE_STORAGE_BIT));
+        ASSERT(storage_image.image().format() == VK_FORMAT_R32_UINT);
+        ASSERT(storage_image.image().has_usage(VK_IMAGE_USAGE_STORAGE_BIT));
 
         VkDescriptorImageInfo image_info = {};
         image_info.imageLayout = VK_IMAGE_LAYOUT_GENERAL;

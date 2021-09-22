@@ -568,8 +568,9 @@ class Impl final : public Renderer
         {
                 ASSERT(thread_id_ == std::this_thread::get_id());
 
-                ASSERT(viewport.x1() <= static_cast<int>(objects->width()));
-                ASSERT(viewport.y1() <= static_cast<int>(objects->height()));
+                ASSERT(objects->image().type() == VK_IMAGE_TYPE_2D);
+                ASSERT(viewport.x1() <= static_cast<int>(objects->image().extent().width));
+                ASSERT(viewport.y1() <= static_cast<int>(objects->image().extent().height));
 
                 render_buffers_ = render_buffers;
                 object_image_ = objects;

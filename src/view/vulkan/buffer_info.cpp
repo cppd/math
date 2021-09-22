@@ -39,7 +39,7 @@ void render_buffer_check(
                     color.cbegin(), color.cend(),
                     [&](const vulkan::ImageWithMemory& c)
                     {
-                            return c.sample_count() == color[0].sample_count();
+                            return c.image().sample_count() == color[0].image().sample_count();
                     }))
         {
                 error("Color attachments must have the same sample count");
@@ -49,7 +49,7 @@ void render_buffer_check(
                     color.cbegin(), color.cend(),
                     [&](const vulkan::ImageWithMemory& c)
                     {
-                            return c.format() == color[0].format();
+                            return c.image().format() == color[0].image().format();
                     }))
         {
                 error("Color attachments must have the same format");
@@ -59,7 +59,7 @@ void render_buffer_check(
                     depth.cbegin(), depth.cend(),
                     [&](const vulkan::DepthImageWithMemory& d)
                     {
-                            return d.sample_count() == depth[0].sample_count();
+                            return d.image().sample_count() == depth[0].image().sample_count();
                     }))
         {
                 error("Depth attachments must have the same sample count");
@@ -69,7 +69,7 @@ void render_buffer_check(
                     depth.cbegin(), depth.cend(),
                     [&](const vulkan::DepthImageWithMemory& d)
                     {
-                            return d.format() == depth[0].format();
+                            return d.image().format() == depth[0].image().format();
                     }))
         {
                 error("Depth attachments must have the same format");
@@ -79,7 +79,7 @@ void render_buffer_check(
                     color.cbegin(), color.cend(),
                     [&](const vulkan::ImageWithMemory& c)
                     {
-                            return c.sample_count() == depth[0].sample_count();
+                            return c.image().sample_count() == depth[0].image().sample_count();
                     }))
         {
                 error("Color attachment sample count is not equal to depth attachment sample count");
@@ -91,7 +91,7 @@ void render_buffer_check(
                             depth.cbegin(), depth.cend(),
                             [&](const vulkan::DepthImageWithMemory& d)
                             {
-                                    return d.sample_count() == VK_SAMPLE_COUNT_1_BIT;
+                                    return d.image().sample_count() == VK_SAMPLE_COUNT_1_BIT;
                             }))
                 {
                         error("There are no color attachments, but depth attachment sample count is not equal to 1");
@@ -102,7 +102,8 @@ void render_buffer_check(
                     color.cbegin(), color.cend(),
                     [&](const vulkan::ImageWithMemory& d)
                     {
-                            return d.width() == depth[0].width() && d.height() == depth[0].height();
+                            return d.image().extent().width == depth[0].image().extent().width
+                                   && d.image().extent().height == depth[0].image().extent().height;
                     }))
         {
                 error("Color attachments size is not equal to the required size");
@@ -112,7 +113,8 @@ void render_buffer_check(
                     depth.cbegin(), depth.cend(),
                     [&](const vulkan::DepthImageWithMemory& d)
                     {
-                            return d.width() == depth[0].width() && d.height() == depth[0].height();
+                            return d.image().extent().width == depth[0].image().extent().width
+                                   && d.image().extent().height == depth[0].image().extent().height;
                     }))
         {
                 error("Depth attachments size is not equal to the required size");
@@ -128,12 +130,14 @@ std::string render_buffer_info(
         std::ostringstream oss;
 
         oss << "Render buffers sample count = "
-            << vulkan::sample_count_flag_to_integer(!color.empty() ? color[0].sample_count() : depth[0].sample_count());
+            << vulkan::sample_count_flag_to_integer(
+                       !color.empty() ? color[0].image().sample_count() : depth[0].image().sample_count());
 
         oss << '\n';
         if (!depth.empty())
         {
-                oss << "Render buffers depth attachment format = " << vulkan::format_to_string(depth[0].format());
+                oss << "Render buffers depth attachment format = "
+                    << vulkan::format_to_string(depth[0].image().format());
         }
         else
         {
@@ -143,7 +147,8 @@ std::string render_buffer_info(
         oss << '\n';
         if (!color.empty())
         {
-                oss << "Render buffers color attachment format = " << vulkan::format_to_string(color[0].format());
+                oss << "Render buffers color attachment format = "
+                    << vulkan::format_to_string(color[0].image().format());
         }
         else
         {

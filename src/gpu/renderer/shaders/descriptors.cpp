@@ -194,8 +194,8 @@ const VkDescriptorSet& CommonMemory::descriptor_set() const
 
 void CommonMemory::set_shadow_texture(VkSampler sampler, const vulkan::DepthImageWithMemory* shadow_texture) const
 {
-        ASSERT(shadow_texture && (shadow_texture->usage() & VK_IMAGE_USAGE_SAMPLED_BIT));
-        ASSERT(shadow_texture && (shadow_texture->sample_count() == VK_SAMPLE_COUNT_1_BIT));
+        ASSERT(shadow_texture && shadow_texture->image().has_usage(VK_IMAGE_USAGE_SAMPLED_BIT));
+        ASSERT(shadow_texture && shadow_texture->image().sample_count() == VK_SAMPLE_COUNT_1_BIT);
 
         VkDescriptorImageInfo image_info = {};
         image_info.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
@@ -207,8 +207,8 @@ void CommonMemory::set_shadow_texture(VkSampler sampler, const vulkan::DepthImag
 
 void CommonMemory::set_objects_image(const vulkan::ImageWithMemory& objects) const
 {
-        ASSERT(objects.format() == VK_FORMAT_R32_UINT);
-        ASSERT(objects.has_usage(VK_IMAGE_USAGE_STORAGE_BIT));
+        ASSERT(objects.image().format() == VK_FORMAT_R32_UINT);
+        ASSERT(objects.image().has_usage(VK_IMAGE_USAGE_STORAGE_BIT));
 
         VkDescriptorImageInfo image_info = {};
         image_info.imageLayout = VK_IMAGE_LAYOUT_GENERAL;
@@ -223,10 +223,10 @@ void CommonMemory::set_transparency(
         const vulkan::Buffer& counters,
         const vulkan::Buffer& nodes) const
 {
-        ASSERT(heads.format() == VK_FORMAT_R32_UINT);
-        ASSERT(heads.has_usage(VK_IMAGE_USAGE_STORAGE_BIT));
-        ASSERT(heads_size.format() == VK_FORMAT_R32_UINT);
-        ASSERT(heads_size.has_usage(VK_IMAGE_USAGE_STORAGE_BIT));
+        ASSERT(heads.image().format() == VK_FORMAT_R32_UINT);
+        ASSERT(heads.image().has_usage(VK_IMAGE_USAGE_STORAGE_BIT));
+        ASSERT(heads_size.image().format() == VK_FORMAT_R32_UINT);
+        ASSERT(heads_size.image().has_usage(VK_IMAGE_USAGE_STORAGE_BIT));
         ASSERT(counters.has_usage(VK_BUFFER_USAGE_STORAGE_BUFFER_BIT));
         ASSERT(nodes.has_usage(VK_BUFFER_USAGE_STORAGE_BUFFER_BIT));
 

@@ -363,7 +363,7 @@ VkBuffer VolumeBuffer::buffer_coordinates() const
 
 VkDeviceSize VolumeBuffer::buffer_coordinates_size() const
 {
-        return uniform_buffer_coordinates_.size();
+        return uniform_buffer_coordinates_.buffer().size();
 }
 
 VkBuffer VolumeBuffer::buffer_volume() const
@@ -373,7 +373,7 @@ VkBuffer VolumeBuffer::buffer_volume() const
 
 VkDeviceSize VolumeBuffer::buffer_volume_size() const
 {
-        return uniform_buffer_volume_.size();
+        return uniform_buffer_volume_.buffer().size();
 }
 
 void VolumeBuffer::set_coordinates(
@@ -531,7 +531,7 @@ TransparencyBuffers::TransparencyBuffers(
         Counters counters;
         counters.transparency_node_counter = 0;
         counters.transparency_overload_counter = 0;
-        vulkan::BufferMapper mapper(init_buffer_, 0, init_buffer_.size());
+        vulkan::BufferMapper mapper(init_buffer_, 0, init_buffer_.buffer().size());
         mapper.write(counters);
 }
 

@@ -80,8 +80,8 @@ void CopyOutputMemory::set(const vulkan::Buffer& input, const vulkan::ImageWithM
                 descriptors_.update_descriptor_set(0, SRC_BINDING, buffer_info);
         }
         {
-                ASSERT(output.has_usage(VK_IMAGE_USAGE_STORAGE_BIT));
-                ASSERT(output.format() == VK_FORMAT_R32_SFLOAT);
+                ASSERT(output.image().has_usage(VK_IMAGE_USAGE_STORAGE_BIT));
+                ASSERT(output.image().format() == VK_FORMAT_R32_SFLOAT);
 
                 VkDescriptorImageInfo image_info = {};
                 image_info.imageLayout = VK_IMAGE_LAYOUT_GENERAL;

@@ -181,9 +181,12 @@ Vector3d world_volume_size(const Matrix4d& texture_to_world_matrix)
 }
 
 // in texture coordinates
-Vector3d gradient_h(const Matrix4d& texture_to_world_matrix, const vulkan::ImageWithMemory& image)
+Vector3d gradient_h(const Matrix4d& texture_to_world_matrix, const vulkan::Image& image)
 {
-        Vector3d texture_pixel_size(1.0 / image.width(), 1.0 / image.height(), 1.0 / image.depth());
+        ASSERT(image.type() == VK_IMAGE_TYPE_3D);
+
+        Vector3d texture_pixel_size(
+                1.0 / image.extent().width, 1.0 / image.extent().height, 1.0 / image.extent().depth);
 
         Vector3d world_pixel_size(texture_pixel_size * world_volume_size(texture_to_world_matrix));
 
@@ -334,9 +337,9 @@ class Impl final : public VolumeObject
                 VkImageLayout image_layout;
 
                 if (!image_ || image_formats_ != vulkan_image_formats(image.color_format)
-                    || image_->width() != static_cast<unsigned>(image.size[0])
-                    || image_->height() != static_cast<unsigned>(image.size[1])
-                    || image_->depth() != static_cast<unsigned>(image.size[2]))
+                    || image_->image().extent().width != static_cast<unsigned>(image.size[0])
+                    || image_->image().extent().height != static_cast<unsigned>(image.size[1])
+                    || image_->image().extent().depth != static_cast<unsigned>(image.size[2]))
                 {
                         *size_changed = true;
 
@@ -447,7 +450,7 @@ class Impl final : public VolumeObject
                         object_normal_to_world_normal_matrix_ =
                                 volume_object.matrix().top_left<3, 3>().inverse().transpose();
                         texture_to_world_matrix_ = volume_object.matrix() * volume_object.volume().matrix;
-                        gradient_h_ = gradient_h(texture_to_world_matrix_, *image_);
+                        gradient_h_ = gradient_h(texture_to_world_matrix_, image_->image());
 
                         buffer_set_coordinates();
                 }

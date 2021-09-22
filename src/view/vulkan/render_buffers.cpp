@@ -226,7 +226,7 @@ void Impl::create_buffers(
                 std::vector<VkFormat> formats;
                 if (!depth_attachments_.empty())
                 {
-                        formats = {depth_attachments_[0].format()};
+                        formats = {depth_attachments_[0].image().format()};
                 }
                 else
                 {
@@ -237,7 +237,7 @@ void Impl::create_buffers(
                         VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT | VK_IMAGE_USAGE_TRANSFER_SRC_BIT);
         }
 
-        const VkFormat depth_format = depth_attachments_[0].format();
+        const VkFormat depth_format = depth_attachments_[0].image().format();
 
         std::vector<VkImageView> attachments;
 
@@ -342,12 +342,12 @@ VkFormat Impl::color_format() const
 VkFormat Impl::depth_format() const
 {
         ASSERT(!depth_attachments_.empty());
-        return depth_attachments_[0].format();
+        return depth_attachments_[0].image().format();
 }
 
 VkSampleCountFlagBits Impl::sample_count() const
 {
-        return color_attachments_[0].sample_count();
+        return color_attachments_[0].image().sample_count();
 }
 
 const std::vector<VkImageView>& Impl::image_views() const
@@ -364,7 +364,7 @@ void Impl::commands_color_resolve(
         unsigned index) const
 {
         ASSERT(index < color_attachments_.size());
-        ASSERT(color_attachments_[index].sample_count() != VK_SAMPLE_COUNT_1_BIT);
+        ASSERT(color_attachments_[index].image().sample_count() != VK_SAMPLE_COUNT_1_BIT);
 
         commands_image_resolve(
                 command_buffer, VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT, VK_PIPELINE_STAGE_BOTTOM_OF_PIPE_BIT,

@@ -665,30 +665,88 @@ public:
         uint32_t count() const noexcept;
 };
 
-class Image final
+class ImageHandle final
 {
         VkDevice device_ = VK_NULL_HANDLE;
         VkImage image_ = VK_NULL_HANDLE;
 
         void destroy() noexcept;
-        void move(Image* from) noexcept;
+        void move(ImageHandle* from) noexcept;
 
 public:
-        Image() = default;
-        Image(VkDevice device, const VkImageCreateInfo& create_info);
-        ~Image();
+        ImageHandle() = default;
+        ImageHandle(VkDevice device, const VkImageCreateInfo& create_info);
+        ~ImageHandle();
 
-        Image(const Image&) = delete;
-        Image& operator=(const Image&) = delete;
+        ImageHandle(const ImageHandle&) = delete;
+        ImageHandle& operator=(const ImageHandle&) = delete;
 
-        Image(Image&&) noexcept;
-        Image& operator=(Image&&) noexcept;
+        ImageHandle(ImageHandle&&) noexcept;
+        ImageHandle& operator=(ImageHandle&&) noexcept;
 
         operator VkImage() const& noexcept
         {
                 return image_;
         }
         operator VkImage() const&& noexcept = delete;
+
+        VkDevice device() const noexcept
+        {
+                return device_;
+        }
+};
+
+class Image final
+{
+        ImageHandle image_;
+        VkFormat format_;
+        VkExtent3D extent_;
+        VkImageType type_;
+        VkSampleCountFlagBits sample_count_;
+        VkImageUsageFlags usage_;
+
+public:
+        Image() = default;
+        Image(VkDevice device, const VkImageCreateInfo& create_info)
+                : image_(device, create_info),
+                  format_(create_info.format),
+                  extent_(create_info.extent),
+                  type_(create_info.imageType),
+                  sample_count_(create_info.samples),
+                  usage_(create_info.usage)
+        {
+        }
+
+        operator VkImage() const& noexcept
+        {
+                return image_;
+        }
+        operator VkImage() const&& noexcept = delete;
+
+        VkDevice device() const noexcept
+        {
+                return image_.device();
+        }
+        const VkFormat& format() const noexcept
+        {
+                return format_;
+        }
+        const VkExtent3D& extent() const noexcept
+        {
+                return extent_;
+        }
+        const VkImageType& type() const noexcept
+        {
+                return type_;
+        }
+        const VkSampleCountFlagBits& sample_count() const noexcept
+        {
+                return sample_count_;
+        }
+        bool has_usage(VkImageUsageFlagBits flag) const noexcept
+        {
+                return (usage_ & flag) == flag;
+        }
 };
 
 class ImageView final

@@ -71,10 +71,10 @@ const VkDescriptorSet& DownsampleMemory::descriptor_set(int index) const
 void DownsampleMemory::set_big(const vulkan::ImageWithMemory& image_0, const vulkan::ImageWithMemory& image_1) const
 {
         ASSERT(&image_0 != &image_1);
-        ASSERT(image_0.has_usage(VK_IMAGE_USAGE_STORAGE_BIT));
-        ASSERT(image_0.format() == VK_FORMAT_R32_SFLOAT);
-        ASSERT(image_1.has_usage(VK_IMAGE_USAGE_STORAGE_BIT));
-        ASSERT(image_1.format() == VK_FORMAT_R32_SFLOAT);
+        ASSERT(image_0.image().has_usage(VK_IMAGE_USAGE_STORAGE_BIT));
+        ASSERT(image_0.image().format() == VK_FORMAT_R32_SFLOAT);
+        ASSERT(image_1.image().has_usage(VK_IMAGE_USAGE_STORAGE_BIT));
+        ASSERT(image_1.image().format() == VK_FORMAT_R32_SFLOAT);
 
         VkDescriptorImageInfo image_info = {};
         image_info.imageLayout = VK_IMAGE_LAYOUT_GENERAL;
@@ -88,10 +88,10 @@ void DownsampleMemory::set_big(const vulkan::ImageWithMemory& image_0, const vul
 void DownsampleMemory::set_small(const vulkan::ImageWithMemory& image_0, const vulkan::ImageWithMemory& image_1) const
 {
         ASSERT(&image_0 != &image_1);
-        ASSERT(image_0.has_usage(VK_IMAGE_USAGE_STORAGE_BIT));
-        ASSERT(image_0.format() == VK_FORMAT_R32_SFLOAT);
-        ASSERT(image_1.has_usage(VK_IMAGE_USAGE_STORAGE_BIT));
-        ASSERT(image_1.format() == VK_FORMAT_R32_SFLOAT);
+        ASSERT(image_0.image().has_usage(VK_IMAGE_USAGE_STORAGE_BIT));
+        ASSERT(image_0.image().format() == VK_FORMAT_R32_SFLOAT);
+        ASSERT(image_1.image().has_usage(VK_IMAGE_USAGE_STORAGE_BIT));
+        ASSERT(image_1.image().format() == VK_FORMAT_R32_SFLOAT);
 
         VkDescriptorImageInfo image_info = {};
         image_info.imageLayout = VK_IMAGE_LAYOUT_GENERAL;

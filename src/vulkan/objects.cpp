@@ -1289,7 +1289,7 @@ uint32_t DescriptorSets::count() const noexcept
 
 //
 
-void Image::destroy() noexcept
+void ImageHandle::destroy() noexcept
 {
         if (image_ != VK_NULL_HANDLE)
         {
@@ -1299,7 +1299,7 @@ void Image::destroy() noexcept
         }
 }
 
-void Image::move(Image* from) noexcept
+void ImageHandle::move(ImageHandle* from) noexcept
 {
         device_ = from->device_;
         image_ = from->image_;
@@ -1307,7 +1307,7 @@ void Image::move(Image* from) noexcept
         from->image_ = VK_NULL_HANDLE;
 }
 
-Image::Image(VkDevice device, const VkImageCreateInfo& create_info)
+ImageHandle::ImageHandle(VkDevice device, const VkImageCreateInfo& create_info)
 {
         VkResult result = vkCreateImage(device, &create_info, nullptr, &image_);
         if (result != VK_SUCCESS)
@@ -1320,17 +1320,17 @@ Image::Image(VkDevice device, const VkImageCreateInfo& create_info)
         device_ = device;
 }
 
-Image::~Image()
+ImageHandle::~ImageHandle()
 {
         destroy();
 }
 
-Image::Image(Image&& from) noexcept
+ImageHandle::ImageHandle(ImageHandle&& from) noexcept
 {
         move(&from);
 }
 
-Image& Image::operator=(Image&& from) noexcept
+ImageHandle& ImageHandle::operator=(ImageHandle&& from) noexcept
 {
         if (this != &from)
         {

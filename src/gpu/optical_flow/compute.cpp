@@ -401,12 +401,14 @@ class Impl final : public Compute
 
                 ASSERT(sampler != VK_NULL_HANDLE);
 
-                ASSERT(rectangle.is_positive());
-                ASSERT(rectangle.x1() <= static_cast<int>(input.width()));
-                ASSERT(rectangle.y1() <= static_cast<int>(input.height()));
+                ASSERT(input.image().type() == VK_IMAGE_TYPE_2D);
 
-                const std::vector<Vector2i> sizes =
-                        pyramid_sizes(input.width(), input.height(), BOTTOM_IMAGE_MINIMUM_SIZE);
+                ASSERT(rectangle.is_positive());
+                ASSERT(rectangle.x1() <= static_cast<int>(input.image().extent().width));
+                ASSERT(rectangle.y1() <= static_cast<int>(input.image().extent().height));
+
+                const std::vector<Vector2i> sizes = pyramid_sizes(
+                        input.image().extent().width, input.image().extent().height, BOTTOM_IMAGE_MINIMUM_SIZE);
 
                 const uint32_t family_index = compute_command_pool_->family_index();
 

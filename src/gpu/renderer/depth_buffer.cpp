@@ -102,13 +102,13 @@ void check_buffers(const std::vector<vulkan::DepthImageWithMemory>& depth)
                 depth.cbegin(), depth.cend(),
                 [](const vulkan::DepthImageWithMemory& d)
                 {
-                        return d.usage() & VK_IMAGE_USAGE_SAMPLED_BIT;
+                        return d.image().has_usage(VK_IMAGE_USAGE_SAMPLED_BIT);
                 }));
         ASSERT(std::all_of(
                 depth.cbegin(), depth.cend(),
                 [](const vulkan::DepthImageWithMemory& d)
                 {
-                        return d.sample_count() == SAMPLE_COUNT;
+                        return d.image().sample_count() == SAMPLE_COUNT;
                 }));
 
         if (depth.empty())
@@ -120,7 +120,7 @@ void check_buffers(const std::vector<vulkan::DepthImageWithMemory>& depth)
                     depth.cbegin(), depth.cend(),
                     [&](const vulkan::DepthImageWithMemory& d)
                     {
-                            return d.format() == depth[0].format();
+                            return d.image().format() == depth[0].image().format();
                     }))
         {
                 error("Depth attachments must have the same format");
@@ -130,7 +130,8 @@ void check_buffers(const std::vector<vulkan::DepthImageWithMemory>& depth)
                     depth.cbegin(), depth.cend(),
                     [&](const vulkan::DepthImageWithMemory& d)
                     {
-                            return d.width() == depth[0].width() && d.height() == depth[0].height();
+                            return d.image().extent().width == depth[0].image().extent().width
+                                   && d.image().extent().height == depth[0].image().extent().height;
                     }))
         {
                 error("Depth attachments must have the same size");
@@ -147,13 +148,14 @@ std::string buffer_info(
 
         std::ostringstream oss;
 
-        oss << "Depth buffers format " << vulkan::format_to_string(depth[0].format());
+        oss << "Depth buffers format " << vulkan::format_to_string(depth[0].image().format());
         oss << '\n';
         oss << "Depth buffers zoom = " << to_string_fixed(zoom, 5);
         oss << '\n';
         oss << "Depth buffers requested size = (" << width << ", " << height << ")";
         oss << '\n';
-        oss << "Depth buffers chosen size = (" << depth[0].width() << ", " << depth[0].height() << ")";
+        oss << "Depth buffers chosen size = (" << depth[0].image().extent().width << ", "
+            << depth[0].image().extent().height << ")";
 
         return oss.str();
 }
@@ -213,7 +215,7 @@ Impl::Impl(
         {
                 if (i == 1)
                 {
-                        depth_formats = {depth_attachments_[0].format()};
+                        depth_formats = {depth_attachments_[0].image().format()};
                 }
                 depth_attachments_.emplace_back(
                         device, attachment_family_indices, depth_formats, SAMPLE_COUNT, width, height,
@@ -221,9 +223,9 @@ Impl::Impl(
                         graphics_command_pool, graphics_queue);
         }
 
-        VkFormat depth_format = depth_attachments_[0].format();
-        unsigned depth_width = depth_attachments_[0].width();
-        unsigned depth_height = depth_attachments_[0].height();
+        VkFormat depth_format = depth_attachments_[0].image().format();
+        unsigned depth_width = depth_attachments_[0].image().extent().width;
+        unsigned depth_height = depth_attachments_[0].image().extent().height;
 
         render_pass_ = create_render_pass_depth(device, depth_format);
 
@@ -254,13 +256,13 @@ const vulkan::DepthImageWithMemory* Impl::texture(unsigned index) const
 unsigned Impl::width() const
 {
         ASSERT(!depth_attachments_.empty() && depth_attachments_.size() == framebuffers_.size());
-        return depth_attachments_[0].width();
+        return depth_attachments_[0].image().extent().width;
 }
 
 unsigned Impl::height() const
 {
         ASSERT(!depth_attachments_.empty() && depth_attachments_.size() == framebuffers_.size());
-        return depth_attachments_[0].height();
+        return depth_attachments_[0].image().extent().height;
 }
 
 VkRenderPass Impl::render_pass() const

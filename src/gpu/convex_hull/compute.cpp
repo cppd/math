@@ -164,8 +164,9 @@ class Impl final : public Compute
                 //
 
                 ASSERT(rectangle.is_positive());
-                ASSERT(rectangle.x1() <= static_cast<int>(objects.width()));
-                ASSERT(rectangle.y1() <= static_cast<int>(objects.height()));
+                ASSERT(objects.image().type() == VK_IMAGE_TYPE_2D);
+                ASSERT(rectangle.x1() <= static_cast<int>(objects.image().extent().width));
+                ASSERT(rectangle.y1() <= static_cast<int>(objects.image().extent().height));
 
                 ASSERT(points_buffer.size() == (2 * rectangle.height() + 1) * (2 * sizeof(int32_t)));
                 ASSERT(point_count_buffer.size() >= sizeof(int32_t));

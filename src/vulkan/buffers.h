@@ -43,7 +43,6 @@ class BufferWithMemory final
 {
         friend BufferMapper;
 
-        VkDevice device_;
         VkPhysicalDevice physical_device_;
         std::vector<uint32_t> family_indices_;
         Buffer buffer_;
@@ -76,9 +75,8 @@ public:
 
         void write(const CommandPool& command_pool, const Queue& queue, VkDeviceSize size, const void* data) const;
 
-        const vulkan::Buffer& buffer() const;
-        VkDeviceSize size() const;
-        bool has_usage(VkBufferUsageFlagBits flag) const;
+        const Buffer& buffer() const;
+
         VkMemoryPropertyFlags memory_properties() const;
         bool host_visible() const;
 };
@@ -170,16 +168,15 @@ inline VkExtent3D make_extent(const uint32_t width, const uint32_t height = 1, c
         return {.width = width, .height = height, .depth = depth};
 }
 
+inline VkExtent3D make_extent(const VkExtent2D& extent)
+{
+        return {.width = extent.width, .height = extent.height, .depth = 1};
+}
+
 class ImageWithMemory final
 {
-        VkExtent3D extent_;
-        VkDevice device_;
         VkPhysicalDevice physical_device_;
         std::vector<uint32_t> family_indices_;
-        VkImageType type_;
-        VkSampleCountFlagBits sample_count_;
-        VkImageUsageFlags usage_;
-        VkFormat format_;
         Image image_;
         DeviceMemory device_memory_;
         ImageView image_view_;
@@ -231,27 +228,27 @@ public:
                 image::ColorFormat* color_format,
                 std::vector<std::byte>* pixels) const;
 
-        VkImage image() const;
-        VkImageType type() const;
-        VkFormat format() const;
+        const Image& image() const;
+
         VkImageView image_view() const;
-        bool has_usage(VkImageUsageFlags usage) const;
-        VkSampleCountFlagBits sample_count() const;
-        uint32_t width() const;
-        uint32_t height() const;
-        uint32_t depth() const;
-        VkExtent3D extent() const;
 };
 
 class DepthImageWithMemory final
 {
-        VkImageUsageFlags usage_;
-        VkSampleCountFlagBits sample_count_;
-        VkFormat format_;
-        VkExtent2D extent_;
+        static const std::vector<VkFormat>& depth_formats(const std::vector<VkFormat>& formats);
+
         Image image_;
         DeviceMemory device_memory_;
         ImageView image_view_;
+
+        DepthImageWithMemory(
+                const Device& device,
+                const std::vector<uint32_t>& family_indices,
+                VkFormat format,
+                VkSampleCountFlagBits sample_count,
+                uint32_t width,
+                uint32_t height,
+                VkImageUsageFlags usage);
 
 public:
         DepthImageWithMemory(
@@ -284,13 +281,8 @@ public:
 
         //
 
-        VkImage image() const;
-        VkFormat format() const;
-        VkImageView image_view() const;
-        VkImageUsageFlags usage() const;
-        VkSampleCountFlagBits sample_count() const;
+        const Image& image() const;
 
-        uint32_t width() const;
-        uint32_t height() const;
+        VkImageView image_view() const;
 };
 }

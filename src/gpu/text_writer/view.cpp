@@ -128,7 +128,7 @@ class Impl final : public View
         {
                 ASSERT(std::this_thread::get_id() == thread_id_);
 
-                ASSERT(vertex_buffer_ && vertex_buffer_->size() > 0);
+                ASSERT(vertex_buffer_ && vertex_buffer_->buffer().size() > 0);
 
                 vkCmdBindPipeline(command_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, *pipeline_);
 
@@ -141,7 +141,7 @@ class Impl final : public View
 
                 vkCmdBindVertexBuffers(command_buffer, 0, buffers.size(), buffers.data(), offsets.data());
 
-                ASSERT(indirect_buffer_.has_usage(VK_BUFFER_USAGE_INDIRECT_BUFFER_BIT));
+                ASSERT(indirect_buffer_.buffer().has_usage(VK_BUFFER_USAGE_INDIRECT_BUFFER_BIT));
                 vkCmdDrawIndirect(command_buffer, indirect_buffer_.buffer(), 0, 1, sizeof(VkDrawIndirectCommand));
         }
 
@@ -223,7 +223,7 @@ class Impl final : public View
 
                 const std::size_t size = data_size(vertices);
 
-                if (vertex_buffer_->size() < size)
+                if (vertex_buffer_->buffer().size() < size)
                 {
                         vulkan::queue_wait_idle(queue);
 
@@ -232,7 +232,7 @@ class Impl final : public View
                         vertex_buffer_.emplace(
                                 vulkan::BufferMemoryType::HOST_VISIBLE, *device_,
                                 std::vector<uint32_t>({graphics_family_index_}), VK_BUFFER_USAGE_VERTEX_BUFFER_BIT,
-                                std::max(vertex_buffer_->size() * 2, size));
+                                std::max(vertex_buffer_->buffer().size() * 2, size));
 
                         command_buffers_ = create_commands();
                 }

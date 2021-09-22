@@ -129,7 +129,7 @@ FlowMemory::FlowMemory(
                 VkDescriptorBufferInfo buffer_info = {};
                 buffer_info.buffer = uniform_buffers_.back().buffer();
                 buffer_info.offset = 0;
-                buffer_info.range = uniform_buffers_.back().size();
+                buffer_info.range = uniform_buffers_.back().buffer().size();
 
                 infos.emplace_back(buffer_info);
 
@@ -168,8 +168,8 @@ void FlowMemory::set_data(const Data& data) const
 
 void FlowMemory::set_dx(const vulkan::ImageWithMemory& image) const
 {
-        ASSERT(image.has_usage(VK_IMAGE_USAGE_STORAGE_BIT));
-        ASSERT(image.format() == VK_FORMAT_R32_SFLOAT);
+        ASSERT(image.image().has_usage(VK_IMAGE_USAGE_STORAGE_BIT));
+        ASSERT(image.image().format() == VK_FORMAT_R32_SFLOAT);
 
         VkDescriptorImageInfo image_info = {};
         image_info.imageLayout = VK_IMAGE_LAYOUT_GENERAL;
@@ -183,8 +183,8 @@ void FlowMemory::set_dx(const vulkan::ImageWithMemory& image) const
 
 void FlowMemory::set_dy(const vulkan::ImageWithMemory& image) const
 {
-        ASSERT(image.has_usage(VK_IMAGE_USAGE_STORAGE_BIT));
-        ASSERT(image.format() == VK_FORMAT_R32_SFLOAT);
+        ASSERT(image.image().has_usage(VK_IMAGE_USAGE_STORAGE_BIT));
+        ASSERT(image.image().format() == VK_FORMAT_R32_SFLOAT);
 
         VkDescriptorImageInfo image_info = {};
         image_info.imageLayout = VK_IMAGE_LAYOUT_GENERAL;
@@ -199,10 +199,10 @@ void FlowMemory::set_dy(const vulkan::ImageWithMemory& image) const
 void FlowMemory::set_i(const vulkan::ImageWithMemory& image_0, const vulkan::ImageWithMemory& image_1) const
 {
         ASSERT(&image_0 != &image_1);
-        ASSERT(image_0.has_usage(VK_IMAGE_USAGE_STORAGE_BIT));
-        ASSERT(image_0.format() == VK_FORMAT_R32_SFLOAT);
-        ASSERT(image_1.has_usage(VK_IMAGE_USAGE_STORAGE_BIT));
-        ASSERT(image_1.format() == VK_FORMAT_R32_SFLOAT);
+        ASSERT(image_0.image().has_usage(VK_IMAGE_USAGE_STORAGE_BIT));
+        ASSERT(image_0.image().format() == VK_FORMAT_R32_SFLOAT);
+        ASSERT(image_1.image().has_usage(VK_IMAGE_USAGE_STORAGE_BIT));
+        ASSERT(image_1.image().format() == VK_FORMAT_R32_SFLOAT);
 
         VkDescriptorImageInfo image_info = {};
         image_info.imageLayout = VK_IMAGE_LAYOUT_GENERAL;
@@ -219,8 +219,8 @@ void FlowMemory::set_j(
         const vulkan::ImageWithMemory& image_1) const
 {
         ASSERT(&image_0 != &image_1);
-        ASSERT(image_0.has_usage(VK_IMAGE_USAGE_SAMPLED_BIT));
-        ASSERT(image_1.has_usage(VK_IMAGE_USAGE_SAMPLED_BIT));
+        ASSERT(image_0.image().has_usage(VK_IMAGE_USAGE_SAMPLED_BIT));
+        ASSERT(image_1.image().has_usage(VK_IMAGE_USAGE_SAMPLED_BIT));
 
         VkDescriptorImageInfo image_info = {};
         image_info.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;

@@ -24,7 +24,7 @@ void commands_init_uint32_storage_image(
         const vulkan::ImageWithMemory& image,
         uint32_t value)
 {
-        ASSERT(image.has_usage(VK_IMAGE_USAGE_STORAGE_BIT));
+        ASSERT(image.image().has_usage(VK_IMAGE_USAGE_STORAGE_BIT));
 
         VkImageMemoryBarrier barrier = {};
 
@@ -53,13 +53,13 @@ void commands_init_uint32_storage_image(
 
         VkClearColorValue clear_color;
 
-        ASSERT(image.format() == VK_FORMAT_R32_UINT);
+        ASSERT(image.image().format() == VK_FORMAT_R32_UINT);
         clear_color.uint32[0] = value;
 
         VkImageSubresourceRange range = barrier.subresourceRange;
 
         // for vkCmdClearColorImage
-        ASSERT(image.has_usage(VK_IMAGE_USAGE_TRANSFER_DST_BIT));
+        ASSERT(image.image().has_usage(VK_IMAGE_USAGE_TRANSFER_DST_BIT));
 
         vkCmdClearColorImage(
                 command_buffer, image.image(), VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, &clear_color, 1, &range);
@@ -82,12 +82,12 @@ void commands_init_buffer(
         const vulkan::BufferWithMemory& dst)
 {
         ASSERT(src.host_visible() && !dst.host_visible());
-        ASSERT(src.size() == dst.size());
+        ASSERT(src.buffer().size() == dst.buffer().size());
 
         VkBufferCopy buffer_copy = {};
         buffer_copy.srcOffset = 0;
         buffer_copy.dstOffset = 0;
-        buffer_copy.size = dst.size();
+        buffer_copy.size = dst.buffer().size();
         vkCmdCopyBuffer(command_buffer, src.buffer(), dst.buffer(), 1, &buffer_copy);
 
         VkBufferMemoryBarrier barrier = {};
@@ -111,7 +111,7 @@ void commands_read_buffer(
         const vulkan::BufferWithMemory& dst)
 {
         ASSERT(!src.host_visible() && dst.host_visible());
-        ASSERT(src.size() == dst.size());
+        ASSERT(src.buffer().size() == dst.buffer().size());
 
         VkBufferMemoryBarrier barrier = {};
         barrier.sType = VK_STRUCTURE_TYPE_BUFFER_MEMORY_BARRIER;
@@ -130,7 +130,7 @@ void commands_read_buffer(
         VkBufferCopy buffer_copy = {};
         buffer_copy.srcOffset = 0;
         buffer_copy.dstOffset = 0;
-        buffer_copy.size = dst.size();
+        buffer_copy.size = dst.buffer().size();
         vkCmdCopyBuffer(command_buffer, src.buffer(), dst.buffer(), 1, &buffer_copy);
 }
 }

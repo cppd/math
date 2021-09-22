@@ -67,7 +67,7 @@ ViewMemory::ViewMemory(
                 VkDescriptorBufferInfo buffer_info = {};
                 buffer_info.buffer = uniform_buffers_.back().buffer();
                 buffer_info.offset = 0;
-                buffer_info.range = uniform_buffers_.back().size();
+                buffer_info.range = uniform_buffers_.back().buffer().size();
 
                 infos.emplace_back(buffer_info);
 
@@ -107,7 +107,7 @@ void ViewMemory::set_brightness(float brightness) const
 
 void ViewMemory::set_image(VkSampler sampler, const vulkan::ImageWithMemory& image) const
 {
-        ASSERT(image.has_usage(VK_IMAGE_USAGE_SAMPLED_BIT));
+        ASSERT(image.image().has_usage(VK_IMAGE_USAGE_SAMPLED_BIT));
 
         VkDescriptorImageInfo image_info = {};
         image_info.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;

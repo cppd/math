@@ -308,8 +308,7 @@ BufferWithMemory::BufferWithMemory(
         const std::vector<uint32_t>& family_indices,
         const VkBufferUsageFlags usage,
         const VkDeviceSize size)
-        : device_(device),
-          physical_device_(device.physical_device()),
+        : physical_device_(device.physical_device()),
           family_indices_(sort_and_unique(family_indices)),
           buffer_(create_buffer(device, size, usage, family_indices)),
           memory_properties_(
@@ -333,11 +332,11 @@ void BufferWithMemory::write(
                 error("Offset and data size is greater than buffer size");
         }
 
-        ASSERT(data && !host_visible() && has_usage(VK_BUFFER_USAGE_TRANSFER_DST_BIT));
+        ASSERT(data && !host_visible() && buffer_.has_usage(VK_BUFFER_USAGE_TRANSFER_DST_BIT));
 
         check_family_index(command_pool, queue, family_indices_);
 
-        write_data_to_buffer(device_, physical_device_, command_pool, queue, buffer_, offset, size, data);
+        write_data_to_buffer(buffer_.device(), physical_device_, command_pool, queue, buffer_, offset, size, data);
 }
 
 void BufferWithMemory::write(
@@ -354,19 +353,9 @@ void BufferWithMemory::write(
         write(command_pool, queue, 0, size, data);
 }
 
-const vulkan::Buffer& BufferWithMemory::buffer() const
+const Buffer& BufferWithMemory::buffer() const
 {
         return buffer_;
-}
-
-VkDeviceSize BufferWithMemory::size() const
-{
-        return buffer_.size();
-}
-
-bool BufferWithMemory::has_usage(VkBufferUsageFlagBits flag) const
-{
-        return buffer_.has_usage(flag);
 }
 
 VkMemoryPropertyFlags BufferWithMemory::memory_properties() const
@@ -385,7 +374,7 @@ BufferMapper::BufferMapper(const BufferWithMemory& buffer, const VkDeviceSize of
         : device_(buffer.device_memory_.device()), device_memory_(buffer.device_memory_), size_(size)
 {
         ASSERT(buffer.host_visible());
-        ASSERT(size_ > 0 && offset + size_ <= buffer.size());
+        ASSERT(size_ > 0 && offset + size_ <= buffer.buffer().size());
 
         VkResult result = vkMapMemory(device_, device_memory_, offset, size_, 0, &pointer_);
         if (result != VK_SUCCESS)
@@ -395,7 +384,7 @@ BufferMapper::BufferMapper(const BufferWithMemory& buffer, const VkDeviceSize of
 }
 
 BufferMapper::BufferMapper(const BufferWithMemory& buffer)
-        : device_(buffer.device_memory_.device()), device_memory_(buffer.device_memory_), size_(buffer.size())
+        : device_(buffer.device_memory_.device()), device_memory_(buffer.device_memory_), size_(buffer.buffer().size())
 {
         ASSERT(buffer.host_visible());
 
@@ -422,32 +411,26 @@ ImageWithMemory::ImageWithMemory(
         const VkImageType type,
         const VkExtent3D extent,
         const VkImageUsageFlags usage)
-        : extent_(correct_image_extent(type, extent)),
-          device_(device),
-          physical_device_(device.physical_device()),
+        : physical_device_(device.physical_device()),
           family_indices_(sort_and_unique(family_indices)),
-          type_(type),
-          sample_count_(sample_count),
-          usage_(usage),
-          format_(find_supported_image_format(
-                  physical_device_,
-                  format_candidates,
-                  type_,
-                  VK_IMAGE_TILING_OPTIMAL,
-                  format_features_for_image_usage(usage_),
-                  usage_,
-                  sample_count_)),
           image_(create_image(
-                  device_,
+                  device,
                   physical_device_,
-                  type_,
-                  extent_,
-                  format_,
+                  type,
+                  correct_image_extent(type, extent),
+                  find_supported_image_format(
+                          physical_device_,
+                          format_candidates,
+                          type,
+                          VK_IMAGE_TILING_OPTIMAL,
+                          format_features_for_image_usage(usage),
+                          usage,
+                          sample_count),
                   family_indices,
-                  sample_count_,
+                  sample_count,
                   VK_IMAGE_TILING_OPTIMAL,
-                  usage_)),
-          device_memory_(create_device_memory(device_, physical_device_, image_, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT))
+                  usage)),
+          device_memory_(create_device_memory(device, physical_device_, image_, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT))
 {
         if (!std::none_of(
                     format_candidates.cbegin(), format_candidates.cend(),
@@ -461,7 +444,8 @@ ImageWithMemory::ImageWithMemory(
 
         if (has_usage_for_image_view(usage))
         {
-                image_view_ = create_image_view(device_, image_, type_, format_, VK_IMAGE_ASPECT_COLOR_BIT);
+                image_view_ = create_image_view(
+                        image_.device(), image_, image_.type(), image_.format(), VK_IMAGE_ASPECT_COLOR_BIT);
         }
         else if (!has_usage_for_transfer(usage))
         {
@@ -498,13 +482,13 @@ void ImageWithMemory::write_pixels(
         const image::ColorFormat color_format,
         const std::span<const std::byte>& pixels) const
 {
-        ASSERT((usage_ & VK_IMAGE_USAGE_TRANSFER_DST_BIT) == VK_IMAGE_USAGE_TRANSFER_DST_BIT);
+        ASSERT(image_.has_usage(VK_IMAGE_USAGE_TRANSFER_DST_BIT));
 
         check_family_index(command_pool, queue, family_indices_);
 
         write_pixels_to_image(
-                device_, physical_device_, command_pool, queue, image_, format_, extent_, VK_IMAGE_ASPECT_COLOR_BIT,
-                old_layout, new_layout, color_format, pixels);
+                image_.device(), physical_device_, command_pool, queue, image_, image_.format(), image_.extent(),
+                VK_IMAGE_ASPECT_COLOR_BIT, old_layout, new_layout, color_format, pixels);
 }
 
 void ImageWithMemory::read_pixels(
@@ -515,28 +499,18 @@ void ImageWithMemory::read_pixels(
         image::ColorFormat* const color_format,
         std::vector<std::byte>* const pixels) const
 {
-        ASSERT((usage_ & VK_IMAGE_USAGE_TRANSFER_SRC_BIT) == VK_IMAGE_USAGE_TRANSFER_SRC_BIT);
+        ASSERT(image_.has_usage(VK_IMAGE_USAGE_TRANSFER_SRC_BIT));
 
         check_family_index(command_pool, queue, family_indices_);
 
         read_pixels_from_image(
-                device_, physical_device_, command_pool, queue, image_, format_, extent_, VK_IMAGE_ASPECT_COLOR_BIT,
-                old_layout, new_layout, color_format, pixels);
+                image_.device(), physical_device_, command_pool, queue, image_, image_.format(), image_.extent(),
+                VK_IMAGE_ASPECT_COLOR_BIT, old_layout, new_layout, color_format, pixels);
 }
 
-VkImage ImageWithMemory::image() const
+const Image& ImageWithMemory::image() const
 {
         return image_;
-}
-
-VkImageType ImageWithMemory::type() const
-{
-        return type_;
-}
-
-VkFormat ImageWithMemory::format() const
-{
-        return format_;
 }
 
 VkImageView ImageWithMemory::image_view() const
@@ -545,77 +519,9 @@ VkImageView ImageWithMemory::image_view() const
         return image_view_;
 }
 
-bool ImageWithMemory::has_usage(const VkImageUsageFlags usage) const
-{
-        return (usage_ & usage) == usage;
-}
-
-VkSampleCountFlagBits ImageWithMemory::sample_count() const
-{
-        return sample_count_;
-}
-
-uint32_t ImageWithMemory::width() const
-{
-        return extent_.width;
-}
-
-uint32_t ImageWithMemory::height() const
-{
-        if (type_ == VK_IMAGE_TYPE_1D)
-        {
-                error("Image 1D has no height");
-        }
-        return extent_.height;
-}
-
-uint32_t ImageWithMemory::depth() const
-{
-        if (type_ != VK_IMAGE_TYPE_3D)
-        {
-                error("Only image 3D has depth");
-        }
-        return extent_.depth;
-}
-
-VkExtent3D ImageWithMemory::extent() const
-{
-        return extent_;
-}
-
 //
 
-DepthImageWithMemory::DepthImageWithMemory(
-        const Device& device,
-        const std::vector<uint32_t>& family_indices,
-        const std::vector<VkFormat>& formats,
-        const VkSampleCountFlagBits sample_count,
-        const uint32_t width,
-        const uint32_t height,
-        const VkImageUsageFlags usage)
-        : usage_(usage),
-          sample_count_(sample_count),
-          format_(find_supported_image_format(
-                  device.physical_device(),
-                  formats,
-                  VK_IMAGE_TYPE_2D,
-                  VK_IMAGE_TILING_OPTIMAL,
-                  format_features_for_image_usage(usage_),
-                  usage_,
-                  sample_count)),
-          extent_(max_extent_2d(width, height, device.physical_device(), format_, VK_IMAGE_TILING_OPTIMAL, usage_)),
-          image_(create_image(
-                  device,
-                  device.physical_device(),
-                  VK_IMAGE_TYPE_2D,
-                  make_extent(extent_.width, extent_.height),
-                  format_,
-                  family_indices,
-                  sample_count,
-                  VK_IMAGE_TILING_OPTIMAL,
-                  usage_)),
-          device_memory_(
-                  create_device_memory(device, device.physical_device(), image_, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT))
+const std::vector<VkFormat>& DepthImageWithMemory::depth_formats(const std::vector<VkFormat>& formats)
 {
         if (!std::all_of(
                     formats.cbegin(), formats.cend(),
@@ -626,7 +532,31 @@ DepthImageWithMemory::DepthImageWithMemory(
         {
                 error("Not a depth format: " + formats_to_sorted_string(formats, ", "));
         }
+        return formats;
+}
 
+DepthImageWithMemory::DepthImageWithMemory(
+        const Device& device,
+        const std::vector<uint32_t>& family_indices,
+        VkFormat format,
+        VkSampleCountFlagBits sample_count,
+        uint32_t width,
+        uint32_t height,
+        VkImageUsageFlags usage)
+        : image_(create_image(
+                device,
+                device.physical_device(),
+                VK_IMAGE_TYPE_2D,
+                make_extent(
+                        max_extent_2d(width, height, device.physical_device(), format, VK_IMAGE_TILING_OPTIMAL, usage)),
+                format,
+                family_indices,
+                sample_count,
+                VK_IMAGE_TILING_OPTIMAL,
+                usage)),
+          device_memory_(
+                  create_device_memory(device, device.physical_device(), image_, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT))
+{
         if ((usage & VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT) == VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT)
         {
                 error("Usage VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT for depth image");
@@ -634,12 +564,38 @@ DepthImageWithMemory::DepthImageWithMemory(
 
         if (has_usage_for_image_view(usage))
         {
-                image_view_ = create_image_view(device, image_, VK_IMAGE_TYPE_2D, format_, VK_IMAGE_ASPECT_DEPTH_BIT);
+                image_view_ = create_image_view(device, image_, VK_IMAGE_TYPE_2D, format, VK_IMAGE_ASPECT_DEPTH_BIT);
         }
         else if (!has_usage_for_transfer(usage))
         {
                 error("Unsupported image usage " + to_string_binary(usage) + " for depth image");
         }
+}
+
+DepthImageWithMemory::DepthImageWithMemory(
+        const Device& device,
+        const std::vector<uint32_t>& family_indices,
+        const std::vector<VkFormat>& formats,
+        const VkSampleCountFlagBits sample_count,
+        const uint32_t width,
+        const uint32_t height,
+        const VkImageUsageFlags usage)
+        : DepthImageWithMemory(
+                device,
+                family_indices,
+                find_supported_image_format(
+                        device.physical_device(),
+                        depth_formats(formats),
+                        VK_IMAGE_TYPE_2D,
+                        VK_IMAGE_TILING_OPTIMAL,
+                        format_features_for_image_usage(usage),
+                        usage,
+                        sample_count),
+                sample_count,
+                width,
+                height,
+                usage)
+{
 }
 
 DepthImageWithMemory::DepthImageWithMemory(
@@ -661,39 +617,14 @@ DepthImageWithMemory::DepthImageWithMemory(
         }
 }
 
-VkImage DepthImageWithMemory::image() const
+const Image& DepthImageWithMemory::image() const
 {
         return image_;
-}
-
-VkFormat DepthImageWithMemory::format() const
-{
-        return format_;
 }
 
 VkImageView DepthImageWithMemory::image_view() const
 {
         ASSERT(static_cast<VkImageView>(image_view_) != VK_NULL_HANDLE);
         return image_view_;
-}
-
-VkImageUsageFlags DepthImageWithMemory::usage() const
-{
-        return usage_;
-}
-
-VkSampleCountFlagBits DepthImageWithMemory::sample_count() const
-{
-        return sample_count_;
-}
-
-uint32_t DepthImageWithMemory::width() const
-{
-        return extent_.width;
-}
-
-uint32_t DepthImageWithMemory::height() const
-{
-        return extent_.height;
 }
 }

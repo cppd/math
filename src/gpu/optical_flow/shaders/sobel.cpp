@@ -81,10 +81,10 @@ const VkDescriptorSet& SobelMemory::descriptor_set(int index) const
 void SobelMemory::set_i(const vulkan::ImageWithMemory& image_0, const vulkan::ImageWithMemory& image_1)
 {
         ASSERT(&image_0 != &image_1);
-        ASSERT(image_0.has_usage(VK_IMAGE_USAGE_STORAGE_BIT));
-        ASSERT(image_0.format() == VK_FORMAT_R32_SFLOAT);
-        ASSERT(image_1.has_usage(VK_IMAGE_USAGE_STORAGE_BIT));
-        ASSERT(image_1.format() == VK_FORMAT_R32_SFLOAT);
+        ASSERT(image_0.image().has_usage(VK_IMAGE_USAGE_STORAGE_BIT));
+        ASSERT(image_0.image().format() == VK_FORMAT_R32_SFLOAT);
+        ASSERT(image_1.image().has_usage(VK_IMAGE_USAGE_STORAGE_BIT));
+        ASSERT(image_1.image().format() == VK_FORMAT_R32_SFLOAT);
 
         VkDescriptorImageInfo image_info = {};
         image_info.imageLayout = VK_IMAGE_LAYOUT_GENERAL;
@@ -97,8 +97,8 @@ void SobelMemory::set_i(const vulkan::ImageWithMemory& image_0, const vulkan::Im
 
 void SobelMemory::set_dx(const vulkan::ImageWithMemory& image_dx)
 {
-        ASSERT(image_dx.has_usage(VK_IMAGE_USAGE_STORAGE_BIT));
-        ASSERT(image_dx.format() == VK_FORMAT_R32_SFLOAT);
+        ASSERT(image_dx.image().has_usage(VK_IMAGE_USAGE_STORAGE_BIT));
+        ASSERT(image_dx.image().format() == VK_FORMAT_R32_SFLOAT);
 
         VkDescriptorImageInfo image_info = {};
         image_info.imageLayout = VK_IMAGE_LAYOUT_GENERAL;
@@ -112,8 +112,8 @@ void SobelMemory::set_dx(const vulkan::ImageWithMemory& image_dx)
 
 void SobelMemory::set_dy(const vulkan::ImageWithMemory& image_dy)
 {
-        ASSERT(image_dy.has_usage(VK_IMAGE_USAGE_STORAGE_BIT));
-        ASSERT(image_dy.format() == VK_FORMAT_R32_SFLOAT);
+        ASSERT(image_dy.image().has_usage(VK_IMAGE_USAGE_STORAGE_BIT));
+        ASSERT(image_dy.image().format() == VK_FORMAT_R32_SFLOAT);
 
         VkDescriptorImageInfo image_info = {};
         image_info.imageLayout = VK_IMAGE_LAYOUT_GENERAL;

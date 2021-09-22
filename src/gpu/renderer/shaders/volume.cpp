@@ -117,8 +117,8 @@ void VolumeSharedMemory::set_depth_image(VkImageView image_view, VkSampler sampl
 
 void VolumeSharedMemory::set_transparency(const vulkan::ImageWithMemory& heads, const vulkan::Buffer& nodes) const
 {
-        ASSERT(heads.format() == VK_FORMAT_R32_UINT);
-        ASSERT(heads.has_usage(VK_IMAGE_USAGE_STORAGE_BIT));
+        ASSERT(heads.image().format() == VK_FORMAT_R32_UINT);
+        ASSERT(heads.image().has_usage(VK_IMAGE_USAGE_STORAGE_BIT));
         ASSERT(nodes.has_usage(VK_BUFFER_USAGE_STORAGE_BUFFER_BIT));
 
         std::vector<std::variant<VkDescriptorBufferInfo, VkDescriptorImageInfo>> infos;

@@ -145,13 +145,19 @@ class Impl final : public Compute
                 //
 
                 ASSERT(sampler != VK_NULL_HANDLE);
-                ASSERT(input.width() == objects.width() && input.height() == objects.height());
+
+                ASSERT(input.image().type() == VK_IMAGE_TYPE_2D);
+                ASSERT(objects.image().type() == VK_IMAGE_TYPE_2D);
+                ASSERT(output.image().type() == VK_IMAGE_TYPE_2D);
+
+                ASSERT(input.image().extent().width == objects.image().extent().width);
+                ASSERT(input.image().extent().height == objects.image().extent().height);
 
                 ASSERT(rectangle.is_positive());
-                ASSERT(rectangle.width() == static_cast<int>(output.width()));
-                ASSERT(rectangle.height() == static_cast<int>(output.height()));
-                ASSERT(rectangle.x1() <= static_cast<int>(objects.width()));
-                ASSERT(rectangle.y1() <= static_cast<int>(objects.height()));
+                ASSERT(rectangle.width() == static_cast<int>(output.image().extent().width));
+                ASSERT(rectangle.height() == static_cast<int>(output.image().extent().height));
+                ASSERT(rectangle.x1() <= static_cast<int>(objects.image().extent().width));
+                ASSERT(rectangle.y1() <= static_cast<int>(objects.image().extent().height));
 
                 memory_.set_input(sampler, input);
                 memory_.set_object_image(objects);

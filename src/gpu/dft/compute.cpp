@@ -486,10 +486,13 @@ class DftImage final : public ComputeImage
         {
                 ASSERT(sampler != VK_NULL_HANDLE);
 
-                ASSERT(rectangle.width() == static_cast<int>(output.width()));
-                ASSERT(rectangle.height() == static_cast<int>(output.height()));
-                ASSERT(rectangle.x1() <= static_cast<int>(input.width()));
-                ASSERT(rectangle.y1() <= static_cast<int>(input.height()));
+                ASSERT(output.image().type() == VK_IMAGE_TYPE_2D);
+                ASSERT(input.image().type() == VK_IMAGE_TYPE_2D);
+
+                ASSERT(rectangle.width() == static_cast<int>(output.image().extent().width));
+                ASSERT(rectangle.height() == static_cast<int>(output.image().extent().height));
+                ASSERT(rectangle.x1() <= static_cast<int>(input.image().extent().width));
+                ASSERT(rectangle.y1() <= static_cast<int>(input.image().extent().height));
 
                 dft_.create_buffers(rectangle.width(), rectangle.height(), family_index);
 

@@ -79,7 +79,7 @@ Memory::Memory(
                 VkDescriptorBufferInfo buffer_info = {};
                 buffer_info.buffer = uniform_buffers_.back().buffer();
                 buffer_info.offset = 0;
-                buffer_info.range = uniform_buffers_.back().size();
+                buffer_info.range = uniform_buffers_.back().buffer().size();
 
                 infos.emplace_back(buffer_info);
 
@@ -104,7 +104,7 @@ Memory::Memory(
                 VkDescriptorBufferInfo buffer_info = {};
                 buffer_info.buffer = uniform_buffers_.back().buffer();
                 buffer_info.offset = 0;
-                buffer_info.range = uniform_buffers_.back().size();
+                buffer_info.range = uniform_buffers_.back().buffer().size();
 
                 infos.emplace_back(buffer_info);
 

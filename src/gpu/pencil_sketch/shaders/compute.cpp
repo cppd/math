@@ -79,7 +79,7 @@ const VkDescriptorSet& ComputeMemory::descriptor_set() const
 
 void ComputeMemory::set_input(VkSampler sampler, const vulkan::ImageWithMemory& image) const
 {
-        ASSERT(image.has_usage(VK_IMAGE_USAGE_SAMPLED_BIT));
+        ASSERT(image.image().has_usage(VK_IMAGE_USAGE_SAMPLED_BIT));
 
         VkDescriptorImageInfo image_info = {};
         image_info.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
@@ -91,8 +91,8 @@ void ComputeMemory::set_input(VkSampler sampler, const vulkan::ImageWithMemory& 
 
 void ComputeMemory::set_output_image(const vulkan::ImageWithMemory& image) const
 {
-        ASSERT(image.format() == VK_FORMAT_R32_SFLOAT);
-        ASSERT(image.has_usage(VK_IMAGE_USAGE_STORAGE_BIT));
+        ASSERT(image.image().format() == VK_FORMAT_R32_SFLOAT);
+        ASSERT(image.image().has_usage(VK_IMAGE_USAGE_STORAGE_BIT));
 
         VkDescriptorImageInfo image_info = {};
         image_info.imageLayout = VK_IMAGE_LAYOUT_GENERAL;
@@ -103,8 +103,8 @@ void ComputeMemory::set_output_image(const vulkan::ImageWithMemory& image) const
 
 void ComputeMemory::set_object_image(const vulkan::ImageWithMemory& image) const
 {
-        ASSERT(image.format() == VK_FORMAT_R32_UINT);
-        ASSERT(image.has_usage(VK_IMAGE_USAGE_STORAGE_BIT));
+        ASSERT(image.image().format() == VK_FORMAT_R32_UINT);
+        ASSERT(image.image().has_usage(VK_IMAGE_USAGE_STORAGE_BIT));
 
         VkDescriptorImageInfo image_info = {};
         image_info.imageLayout = VK_IMAGE_LAYOUT_GENERAL;

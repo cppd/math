@@ -86,7 +86,7 @@ class Impl final : public View
                         command_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, program_.pipeline_layout(),
                         ViewMemory::set_number(), 1, &memory_.descriptor_set(), 0, nullptr);
 
-                ASSERT(indirect_buffer_.has_usage(VK_BUFFER_USAGE_INDIRECT_BUFFER_BIT));
+                ASSERT(indirect_buffer_.buffer().has_usage(VK_BUFFER_USAGE_INDIRECT_BUFFER_BIT));
                 vkCmdDrawIndirect(command_buffer, indirect_buffer_.buffer(), 0, 1, sizeof(VkDrawIndirectCommand));
         }
 
