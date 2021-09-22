@@ -43,7 +43,10 @@ public:
         InstanceHandle(InstanceHandle&&) noexcept;
         InstanceHandle& operator=(InstanceHandle&&) noexcept;
 
-        operator VkInstance() const& noexcept;
+        operator VkInstance() const& noexcept
+        {
+                return instance_;
+        }
         operator VkInstance() const&& noexcept = delete;
 };
 
@@ -89,7 +92,10 @@ public:
         DebugReportCallback(DebugReportCallback&&) noexcept;
         DebugReportCallback& operator=(DebugReportCallback&&) noexcept;
 
-        operator VkDebugReportCallbackEXT() const& noexcept;
+        operator VkDebugReportCallbackEXT() const& noexcept
+        {
+                return callback_;
+        }
         operator VkDebugReportCallbackEXT() const&& noexcept = delete;
 };
 
@@ -111,7 +117,10 @@ public:
         DeviceHandle(DeviceHandle&&) noexcept;
         DeviceHandle& operator=(DeviceHandle&&) noexcept;
 
-        operator VkDevice() const& noexcept;
+        operator VkDevice() const& noexcept
+        {
+                return device_;
+        }
         operator VkDevice() const&& noexcept = delete;
 };
 
@@ -157,7 +166,10 @@ public:
         SurfaceKHR(SurfaceKHR&&) noexcept;
         SurfaceKHR& operator=(SurfaceKHR&&) noexcept;
 
-        operator VkSurfaceKHR() const& noexcept;
+        operator VkSurfaceKHR() const& noexcept
+        {
+                return surface_;
+        }
         operator VkSurfaceKHR() const&& noexcept = delete;
 };
 
@@ -180,7 +192,10 @@ public:
         SwapchainKHR(SwapchainKHR&&) noexcept;
         SwapchainKHR& operator=(SwapchainKHR&&) noexcept;
 
-        operator VkSwapchainKHR() const& noexcept;
+        operator VkSwapchainKHR() const& noexcept
+        {
+                return swapchain_;
+        }
         operator VkSwapchainKHR() const&& noexcept = delete;
 };
 
@@ -203,7 +218,10 @@ public:
         ShaderModule(ShaderModule&&) noexcept;
         ShaderModule& operator=(ShaderModule&&) noexcept;
 
-        operator VkShaderModule() const& noexcept;
+        operator VkShaderModule() const& noexcept
+        {
+                return shader_module_;
+        }
         operator VkShaderModule() const&& noexcept = delete;
 };
 
@@ -226,7 +244,10 @@ public:
         RenderPass(RenderPass&&) noexcept;
         RenderPass& operator=(RenderPass&&) noexcept;
 
-        operator VkRenderPass() const& noexcept;
+        operator VkRenderPass() const& noexcept
+        {
+                return render_pass_;
+        }
         operator VkRenderPass() const&& noexcept = delete;
 };
 
@@ -249,7 +270,10 @@ public:
         PipelineLayout(PipelineLayout&&) noexcept;
         PipelineLayout& operator=(PipelineLayout&&) noexcept;
 
-        operator VkPipelineLayout() const& noexcept;
+        operator VkPipelineLayout() const& noexcept
+        {
+                return pipeline_layout_;
+        }
         operator VkPipelineLayout() const&& noexcept = delete;
 };
 
@@ -273,7 +297,10 @@ public:
         Pipeline(Pipeline&&) noexcept;
         Pipeline& operator=(Pipeline&&) noexcept;
 
-        operator VkPipeline() const& noexcept;
+        operator VkPipeline() const& noexcept
+        {
+                return pipeline_;
+        }
         operator VkPipeline() const&& noexcept = delete;
 };
 
@@ -296,7 +323,10 @@ public:
         Framebuffer(Framebuffer&&) noexcept;
         Framebuffer& operator=(Framebuffer&&) noexcept;
 
-        operator VkFramebuffer() const& noexcept;
+        operator VkFramebuffer() const& noexcept
+        {
+                return framebuffer_;
+        }
         operator VkFramebuffer() const&& noexcept = delete;
 };
 
@@ -322,7 +352,10 @@ public:
         CommandPool(CommandPool&&) noexcept;
         CommandPool& operator=(CommandPool&&) noexcept;
 
-        operator VkCommandPool() const& noexcept;
+        operator VkCommandPool() const& noexcept
+        {
+                return command_pool_;
+        }
         operator VkCommandPool() const&& noexcept = delete;
 
         uint32_t family_index() const noexcept;
@@ -347,7 +380,10 @@ public:
         Semaphore(Semaphore&&) noexcept;
         Semaphore& operator=(Semaphore&&) noexcept;
 
-        operator VkSemaphore() const& noexcept;
+        operator VkSemaphore() const& noexcept
+        {
+                return semaphore_;
+        }
         operator VkSemaphore() const&& noexcept = delete;
 };
 
@@ -370,7 +406,10 @@ public:
         Fence(Fence&&) noexcept;
         Fence& operator=(Fence&&) noexcept;
 
-        operator VkFence() const& noexcept;
+        operator VkFence() const& noexcept
+        {
+                return fence_;
+        }
         operator VkFence() const&& noexcept = delete;
 };
 
@@ -462,6 +501,7 @@ public:
                 return device_memory_;
         }
         operator VkDeviceMemory() const&& noexcept = delete;
+
         VkDevice device() const noexcept
         {
                 return device_;
@@ -488,7 +528,10 @@ public:
         CommandBuffer(CommandBuffer&&) noexcept;
         CommandBuffer& operator=(CommandBuffer&&) noexcept;
 
-        operator VkCommandBuffer() const& noexcept;
+        operator VkCommandBuffer() const& noexcept
+        {
+                return command_buffer_;
+        }
         operator VkCommandBuffer() const&& noexcept = delete;
 };
 
@@ -514,7 +557,6 @@ public:
 
         const VkCommandBuffer& operator[](uint32_t index) const noexcept;
         uint32_t count() const noexcept;
-        const std::vector<VkCommandBuffer>& buffers() const noexcept;
 };
 
 class DescriptorSetLayout final
@@ -536,7 +578,10 @@ public:
         DescriptorSetLayout(DescriptorSetLayout&&) noexcept;
         DescriptorSetLayout& operator=(DescriptorSetLayout&&) noexcept;
 
-        operator VkDescriptorSetLayout() const& noexcept;
+        operator VkDescriptorSetLayout() const& noexcept
+        {
+                return descriptor_set_layout_;
+        }
         operator VkDescriptorSetLayout() const&& noexcept = delete;
 };
 
@@ -559,7 +604,10 @@ public:
         DescriptorPool(DescriptorPool&&) noexcept;
         DescriptorPool& operator=(DescriptorPool&&) noexcept;
 
-        operator VkDescriptorPool() const& noexcept;
+        operator VkDescriptorPool() const& noexcept
+        {
+                return descriptor_pool_;
+        }
         operator VkDescriptorPool() const&& noexcept = delete;
 };
 
@@ -583,7 +631,10 @@ public:
         DescriptorSet(DescriptorSet&&) noexcept;
         DescriptorSet& operator=(DescriptorSet&&) noexcept;
 
-        operator VkDescriptorSet() const& noexcept;
+        operator VkDescriptorSet() const& noexcept
+        {
+                return descriptor_set_;
+        }
         operator VkDescriptorSet() const&& noexcept = delete;
 };
 
@@ -610,8 +661,8 @@ public:
         DescriptorSets(DescriptorSets&&) noexcept;
         DescriptorSets& operator=(DescriptorSets&&) noexcept;
 
-        uint32_t count() const noexcept;
         const VkDescriptorSet& operator[](uint32_t index) const noexcept;
+        uint32_t count() const noexcept;
 };
 
 class Image final
@@ -633,7 +684,10 @@ public:
         Image(Image&&) noexcept;
         Image& operator=(Image&&) noexcept;
 
-        operator VkImage() const& noexcept;
+        operator VkImage() const& noexcept
+        {
+                return image_;
+        }
         operator VkImage() const&& noexcept = delete;
 };
 
@@ -656,7 +710,10 @@ public:
         ImageView(ImageView&&) noexcept;
         ImageView& operator=(ImageView&&) noexcept;
 
-        operator VkImageView() const& noexcept;
+        operator VkImageView() const& noexcept
+        {
+                return image_view_;
+        }
         operator VkImageView() const&& noexcept = delete;
 };
 
@@ -679,7 +736,10 @@ public:
         Sampler(Sampler&&) noexcept;
         Sampler& operator=(Sampler&&) noexcept;
 
-        operator VkSampler() const& noexcept;
+        operator VkSampler() const& noexcept
+        {
+                return sampler_;
+        }
         operator VkSampler() const&& noexcept = delete;
 };
 }
