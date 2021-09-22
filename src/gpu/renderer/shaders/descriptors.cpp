@@ -192,14 +192,14 @@ const VkDescriptorSet& CommonMemory::descriptor_set() const
         return descriptors_.descriptor_set(0);
 }
 
-void CommonMemory::set_shadow_texture(VkSampler sampler, const vulkan::DepthImageWithMemory* shadow_texture) const
+void CommonMemory::set_shadow_image(VkSampler sampler, const vulkan::ImageView& shadow_image) const
 {
-        ASSERT(shadow_texture && shadow_texture->image().has_usage(VK_IMAGE_USAGE_SAMPLED_BIT));
-        ASSERT(shadow_texture && shadow_texture->image().sample_count() == VK_SAMPLE_COUNT_1_BIT);
+        ASSERT(shadow_image.has_usage(VK_IMAGE_USAGE_SAMPLED_BIT));
+        ASSERT(shadow_image.sample_count() == VK_SAMPLE_COUNT_1_BIT);
 
         VkDescriptorImageInfo image_info = {};
         image_info.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
-        image_info.imageView = shadow_texture->image_view();
+        image_info.imageView = shadow_image;
         image_info.sampler = sampler;
 
         descriptors_.update_descriptor_set(0, SHADOW_BINDING, image_info);

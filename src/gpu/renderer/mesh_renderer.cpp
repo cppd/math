@@ -205,7 +205,7 @@ void MeshRenderer::create_depth_buffers(const DepthBuffers* depth_buffers)
 
         depth_buffers_ = depth_buffers;
 
-        triangles_common_memory_.set_shadow_texture(shadow_sampler_, depth_buffers->texture(0));
+        triangles_common_memory_.set_shadow_image(shadow_sampler_, depth_buffers->image_view(0));
 
         render_triangles_depth_pipeline_ = triangles_depth_program_.create_pipeline(
                 depth_buffers->render_pass(), depth_buffers->sample_count(),

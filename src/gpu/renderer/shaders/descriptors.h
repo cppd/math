@@ -78,7 +78,7 @@ public:
 
         const VkDescriptorSet& descriptor_set() const;
 
-        void set_shadow_texture(VkSampler sampler, const vulkan::DepthImageWithMemory* shadow_texture) const;
+        void set_shadow_image(VkSampler sampler, const vulkan::ImageView& shadow_image) const;
         void set_objects_image(const vulkan::ImageWithMemory& objects_image) const;
         void set_transparency(
                 const vulkan::ImageWithMemory& heads,

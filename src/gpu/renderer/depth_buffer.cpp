@@ -170,7 +170,7 @@ class Impl final : public DepthBuffers
 
         //
 
-        const vulkan::DepthImageWithMemory* texture(unsigned index) const override;
+        const vulkan::ImageView& image_view(unsigned index) const override;
         unsigned width() const override;
         unsigned height() const override;
         VkRenderPass render_pass() const override;
@@ -246,11 +246,11 @@ Impl::Impl(
         LOG(buffer_info(depth_attachments_, zoom, width, height));
 }
 
-const vulkan::DepthImageWithMemory* Impl::texture(unsigned index) const
+const vulkan::ImageView& Impl::image_view(unsigned index) const
 {
         ASSERT(index < depth_attachments_.size());
 
-        return &depth_attachments_[index];
+        return depth_attachments_[index].image_view();
 }
 
 unsigned Impl::width() const

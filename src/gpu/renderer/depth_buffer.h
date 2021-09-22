@@ -33,7 +33,7 @@ struct DepthBuffers
 {
         virtual ~DepthBuffers() = default;
 
-        virtual const vulkan::DepthImageWithMemory* texture(unsigned index) const = 0;
+        virtual const vulkan::ImageView& image_view(unsigned index) const = 0;
         virtual unsigned width() const = 0;
         virtual unsigned height() const = 0;
         virtual VkRenderPass render_pass() const = 0;
