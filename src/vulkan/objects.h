@@ -17,6 +17,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
+#include <src/com/error.h>
 #include <src/com/type/limit.h>
 
 #include <functional>
@@ -451,7 +452,6 @@ class Buffer final
         VkBufferUsageFlags usage_;
 
 public:
-        Buffer() = default;
         Buffer(VkDevice device, const VkBufferCreateInfo& create_info)
                 : buffer_(device, create_info), size_(create_info.size), usage_(create_info.usage)
         {
@@ -706,7 +706,6 @@ class Image final
         VkImageUsageFlags usage_;
 
 public:
-        Image() = default;
         Image(VkDevice device, const VkImageCreateInfo& create_info)
                 : image_(device, create_info),
                   format_(create_info.format),
@@ -747,32 +746,68 @@ public:
         {
                 return (usage_ & flag) == flag;
         }
+        const VkImageUsageFlags& usage() const noexcept
+        {
+                return usage_;
+        }
 };
 
-class ImageView final
+class ImageViewHandle final
 {
         VkDevice device_ = VK_NULL_HANDLE;
         VkImageView image_view_ = VK_NULL_HANDLE;
 
         void destroy() noexcept;
-        void move(ImageView* from) noexcept;
+        void move(ImageViewHandle* from) noexcept;
 
 public:
-        ImageView() = default;
-        ImageView(VkDevice device, const VkImageViewCreateInfo& create_info);
-        ~ImageView();
+        ImageViewHandle() = default;
+        ImageViewHandle(VkDevice device, const VkImageViewCreateInfo& create_info);
+        ~ImageViewHandle();
 
-        ImageView(const ImageView&) = delete;
-        ImageView& operator=(const ImageView&) = delete;
+        ImageViewHandle(const ImageViewHandle&) = delete;
+        ImageViewHandle& operator=(const ImageViewHandle&) = delete;
 
-        ImageView(ImageView&&) noexcept;
-        ImageView& operator=(ImageView&&) noexcept;
+        ImageViewHandle(ImageViewHandle&&) noexcept;
+        ImageViewHandle& operator=(ImageViewHandle&&) noexcept;
 
         operator VkImageView() const& noexcept
         {
                 return image_view_;
         }
         operator VkImageView() const&& noexcept = delete;
+};
+
+class ImageView final
+{
+        ImageViewHandle image_view_;
+        VkFormat format_;
+        VkImageUsageFlags usage_;
+
+public:
+        ImageView() = default;
+        ImageView(const Image& image, const VkImageViewCreateInfo& create_info)
+                : image_view_(image.device(), create_info), format_(create_info.format), usage_(image.usage())
+        {
+                ASSERT(create_info.pNext == nullptr);
+                ASSERT(image == create_info.image);
+                ASSERT(image.format() == create_info.format);
+        }
+
+        operator VkImageView() const& noexcept
+        {
+                return image_view_;
+        }
+        operator VkImageView() const&& noexcept = delete;
+
+        const VkFormat& format() const noexcept
+        {
+                return format_;
+        }
+        bool has_usage(VkImageUsageFlagBits flag) const noexcept
+        {
+                return (usage_ & flag) == flag;
+        }
 };
 
 class Sampler final

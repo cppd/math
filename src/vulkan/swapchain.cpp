@@ -201,7 +201,11 @@ vulkan::SwapchainKHR create_swapchain_khr(
         return vulkan::SwapchainKHR(device, create_info);
 }
 
-vulkan::ImageView create_image_view(VkDevice device, VkImage image, VkFormat format, VkImageAspectFlags aspect_flags)
+vulkan::ImageViewHandle create_image_view(
+        VkDevice device,
+        VkImage image,
+        VkFormat format,
+        VkImageAspectFlags aspect_flags)
 {
         VkImageViewCreateInfo create_info = {};
         create_info.sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO;
@@ -221,7 +225,7 @@ vulkan::ImageView create_image_view(VkDevice device, VkImage image, VkFormat for
         create_info.subresourceRange.baseArrayLayer = 0;
         create_info.subresourceRange.layerCount = 1;
 
-        return vulkan::ImageView(device, create_info);
+        return vulkan::ImageViewHandle(device, create_info);
 }
 std::string swapchain_info_string(const VkSurfaceFormatKHR& surface_format, int preferred_image_count, int image_count)
 {
@@ -328,11 +332,13 @@ Swapchain::Swapchain(
                 error("Failed to find swapchain images");
         }
 
+        image_view_handles_.reserve(images_.size());
         image_views_.reserve(images_.size());
         for (const VkImage& image : images_)
         {
-                image_views_.push_back(
+                image_view_handles_.push_back(
                         create_image_view(device, image, surface_format_.format, VK_IMAGE_ASPECT_COLOR_BIT));
+                image_views_.push_back(image_view_handles_.back());
         }
 }
 
@@ -361,7 +367,7 @@ VkColorSpaceKHR Swapchain::color_space() const
         return surface_format_.colorSpace;
 }
 
-const std::vector<ImageView>& Swapchain::image_views() const
+const std::vector<VkImageView>& Swapchain::image_views() const
 {
         return image_views_;
 }

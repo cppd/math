@@ -1342,7 +1342,7 @@ ImageHandle& ImageHandle::operator=(ImageHandle&& from) noexcept
 
 //
 
-void ImageView::destroy() noexcept
+void ImageViewHandle::destroy() noexcept
 {
         if (image_view_ != VK_NULL_HANDLE)
         {
@@ -1352,7 +1352,7 @@ void ImageView::destroy() noexcept
         }
 }
 
-void ImageView::move(ImageView* from) noexcept
+void ImageViewHandle::move(ImageViewHandle* from) noexcept
 {
         device_ = from->device_;
         image_view_ = from->image_view_;
@@ -1360,7 +1360,7 @@ void ImageView::move(ImageView* from) noexcept
         from->image_view_ = VK_NULL_HANDLE;
 }
 
-ImageView::ImageView(VkDevice device, const VkImageViewCreateInfo& create_info)
+ImageViewHandle::ImageViewHandle(VkDevice device, const VkImageViewCreateInfo& create_info)
 {
         VkResult result = vkCreateImageView(device, &create_info, nullptr, &image_view_);
         if (result != VK_SUCCESS)
@@ -1373,17 +1373,17 @@ ImageView::ImageView(VkDevice device, const VkImageViewCreateInfo& create_info)
         device_ = device;
 }
 
-ImageView::~ImageView()
+ImageViewHandle::~ImageViewHandle()
 {
         destroy();
 }
 
-ImageView::ImageView(ImageView&& from) noexcept
+ImageViewHandle::ImageViewHandle(ImageViewHandle&& from) noexcept
 {
         move(&from);
 }
 
-ImageView& ImageView::operator=(ImageView&& from) noexcept
+ImageViewHandle& ImageViewHandle::operator=(ImageViewHandle&& from) noexcept
 {
         if (this != &from)
         {

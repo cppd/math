@@ -230,7 +230,7 @@ public:
 
         const Image& image() const;
 
-        VkImageView image_view() const;
+        const ImageView& image_view() const;
 };
 
 class DepthImageWithMemory final
@@ -283,6 +283,6 @@ public:
 
         const Image& image() const;
 
-        VkImageView image_view() const;
+        const ImageView& image_view() const;
 };
 }

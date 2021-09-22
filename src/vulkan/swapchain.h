@@ -37,7 +37,8 @@ class Swapchain
         VkExtent2D extent_;
         SwapchainKHR swapchain_;
         std::vector<VkImage> images_;
-        std::vector<ImageView> image_views_;
+        std::vector<ImageViewHandle> image_view_handles_;
+        std::vector<VkImageView> image_views_;
 
 public:
         Swapchain(
@@ -63,7 +64,7 @@ public:
         uint32_t height() const;
         VkFormat format() const;
         VkColorSpaceKHR color_space() const;
-        const std::vector<ImageView>& image_views() const;
+        const std::vector<VkImageView>& image_views() const;
 };
 
 [[nodiscard]] std::optional<uint32_t> acquire_next_image(

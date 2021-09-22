@@ -154,12 +154,7 @@ void transition_image_layout(
         queue_wait_idle(queue);
 }
 
-ImageView create_image_view(
-        const VkDevice& device,
-        const VkImage& image,
-        const VkImageType& type,
-        const VkFormat& format,
-        const VkImageAspectFlags& aspect_flags)
+ImageView create_image_view(const Image& image, const VkImageAspectFlags& aspect_flags)
 {
         VkImageViewCreateInfo create_info = {};
         create_info.sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO;
@@ -168,7 +163,7 @@ ImageView create_image_view(
 
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wswitch-enum"
-        switch (type)
+        switch (image.type())
         {
         case VK_IMAGE_TYPE_1D:
                 create_info.viewType = VK_IMAGE_VIEW_TYPE_1D;
@@ -180,11 +175,11 @@ ImageView create_image_view(
                 create_info.viewType = VK_IMAGE_VIEW_TYPE_3D;
                 break;
         default:
-                error("Unknown image type " + image_type_to_string(type));
+                error("Unknown image type " + image_type_to_string(image.type()));
         }
 #pragma GCC diagnostic pop
 
-        create_info.format = format;
+        create_info.format = image.format();
 
         create_info.components.r = VK_COMPONENT_SWIZZLE_IDENTITY;
         create_info.components.g = VK_COMPONENT_SWIZZLE_IDENTITY;
@@ -197,7 +192,7 @@ ImageView create_image_view(
         create_info.subresourceRange.baseArrayLayer = 0;
         create_info.subresourceRange.layerCount = 1;
 
-        return ImageView(device, create_info);
+        return ImageView(image, create_info);
 }
 
 bool has_bits(const VkImageUsageFlags usage, const VkImageUsageFlagBits bits)
@@ -444,8 +439,7 @@ ImageWithMemory::ImageWithMemory(
 
         if (has_usage_for_image_view(usage))
         {
-                image_view_ = create_image_view(
-                        image_.device(), image_, image_.type(), image_.format(), VK_IMAGE_ASPECT_COLOR_BIT);
+                image_view_ = create_image_view(image_, VK_IMAGE_ASPECT_COLOR_BIT);
         }
         else if (!has_usage_for_transfer(usage))
         {
@@ -513,7 +507,7 @@ const Image& ImageWithMemory::image() const
         return image_;
 }
 
-VkImageView ImageWithMemory::image_view() const
+const ImageView& ImageWithMemory::image_view() const
 {
         ASSERT(static_cast<VkImageView>(image_view_) != VK_NULL_HANDLE);
         return image_view_;
@@ -564,7 +558,7 @@ DepthImageWithMemory::DepthImageWithMemory(
 
         if (has_usage_for_image_view(usage))
         {
-                image_view_ = create_image_view(device, image_, VK_IMAGE_TYPE_2D, format, VK_IMAGE_ASPECT_DEPTH_BIT);
+                image_view_ = create_image_view(image_, VK_IMAGE_ASPECT_DEPTH_BIT);
         }
         else if (!has_usage_for_transfer(usage))
         {
@@ -622,7 +616,7 @@ const Image& DepthImageWithMemory::image() const
         return image_;
 }
 
-VkImageView DepthImageWithMemory::image_view() const
+const ImageView& DepthImageWithMemory::image_view() const
 {
         ASSERT(static_cast<VkImageView>(image_view_) != VK_NULL_HANDLE);
         return image_view_;
