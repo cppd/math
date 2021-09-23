@@ -75,7 +75,7 @@ void check_image_size(
         }
 #pragma GCC diagnostic pop
 
-        const VkExtent3D max_extent = max_image_extent(physical_device, format, type, tiling, usage);
+        const VkExtent3D max_extent = find_max_image_extent(physical_device, format, type, tiling, usage);
         if (extent.width > max_extent.width)
         {
                 error("Image " + format_to_string(format) + " extent width " + to_string(extent.width)
@@ -379,5 +379,46 @@ Image create_image(
         }
 
         return Image(device, create_info);
+}
+
+ImageView create_image_view(const Image& image, const VkImageAspectFlags& aspect_flags)
+{
+        VkImageViewCreateInfo create_info = {};
+        create_info.sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO;
+
+        create_info.image = image;
+
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wswitch-enum"
+        switch (image.type())
+        {
+        case VK_IMAGE_TYPE_1D:
+                create_info.viewType = VK_IMAGE_VIEW_TYPE_1D;
+                break;
+        case VK_IMAGE_TYPE_2D:
+                create_info.viewType = VK_IMAGE_VIEW_TYPE_2D;
+                break;
+        case VK_IMAGE_TYPE_3D:
+                create_info.viewType = VK_IMAGE_VIEW_TYPE_3D;
+                break;
+        default:
+                error("Unknown image type " + image_type_to_string(image.type()));
+        }
+#pragma GCC diagnostic pop
+
+        create_info.format = image.format();
+
+        create_info.components.r = VK_COMPONENT_SWIZZLE_IDENTITY;
+        create_info.components.g = VK_COMPONENT_SWIZZLE_IDENTITY;
+        create_info.components.b = VK_COMPONENT_SWIZZLE_IDENTITY;
+        create_info.components.a = VK_COMPONENT_SWIZZLE_IDENTITY;
+
+        create_info.subresourceRange.aspectMask = aspect_flags;
+        create_info.subresourceRange.baseMipLevel = 0;
+        create_info.subresourceRange.levelCount = 1;
+        create_info.subresourceRange.baseArrayLayer = 0;
+        create_info.subresourceRange.layerCount = 1;
+
+        return ImageView(image, create_info);
 }
 }

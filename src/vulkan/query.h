@@ -25,12 +25,15 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 namespace ns::vulkan
 {
 std::unordered_set<std::string> supported_instance_extensions();
+
 std::unordered_set<std::string> supported_validation_layers();
 
 uint32_t supported_instance_api_version();
 
 void check_instance_extension_support(const std::vector<std::string>& required_extensions);
+
 void check_validation_layer_support(const std::vector<std::string>& required_layers);
+
 void check_api_version(uint32_t required_api_version);
 
 VkFormat find_supported_format(
@@ -38,6 +41,7 @@ VkFormat find_supported_format(
         const std::vector<VkFormat>& candidates,
         VkImageTiling tiling,
         VkFormatFeatureFlags features);
+
 VkFormat find_supported_image_format(
         VkPhysicalDevice physical_device,
         const std::vector<VkFormat>& candidates,
@@ -46,7 +50,8 @@ VkFormat find_supported_image_format(
         VkFormatFeatureFlags features,
         VkImageUsageFlags usage,
         VkSampleCountFlags sample_count);
-VkExtent3D max_image_extent(
+
+VkExtent3D find_max_image_extent(
         VkPhysicalDevice physical_device,
         VkFormat format,
         VkImageType image_type,
@@ -56,6 +61,7 @@ VkExtent3D max_image_extent(
 VkSampleCountFlagBits supported_color_depth_framebuffer_sample_count_flag(
         VkPhysicalDevice physical_device,
         int required_minimum_sample_count);
+
 int sample_count_flag_to_integer(VkSampleCountFlagBits sample_count);
 
 uint32_t physical_device_memory_type_index(

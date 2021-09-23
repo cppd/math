@@ -168,11 +168,6 @@ inline VkExtent3D make_extent(const uint32_t width, const uint32_t height = 1, c
         return {.width = width, .height = height, .depth = depth};
 }
 
-inline VkExtent3D make_extent(const VkExtent2D& extent)
-{
-        return {.width = extent.width, .height = extent.height, .depth = 1};
-}
-
 class ImageWithMemory final
 {
         VkPhysicalDevice physical_device_;
@@ -185,7 +180,7 @@ public:
         ImageWithMemory(
                 const Device& device,
                 const std::vector<uint32_t>& family_indices,
-                const std::vector<VkFormat>& format_candidates,
+                const std::vector<VkFormat>& formats,
                 VkSampleCountFlagBits sample_count,
                 VkImageType type,
                 VkExtent3D extent,
@@ -194,7 +189,7 @@ public:
         ImageWithMemory(
                 const Device& device,
                 const std::vector<uint32_t>& family_indices,
-                const std::vector<VkFormat>& format_candidates,
+                const std::vector<VkFormat>& formats,
                 VkSampleCountFlagBits sample_count,
                 VkImageType type,
                 VkExtent3D extent,

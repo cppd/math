@@ -81,19 +81,33 @@ VkExtent3D correct_image_extent(const VkImageType& type, const VkExtent3D& exten
 #pragma GCC diagnostic pop
 }
 
-VkExtent2D max_extent_2d(
-        const uint32_t width,
-        const uint32_t height,
-        const VkPhysicalDevice physical_device,
-        const VkFormat format,
-        const VkImageTiling tiling,
-        const VkImageUsageFlags usage)
+VkExtent3D max_image_extent(
+        const VkImageType& type,
+        const VkExtent3D& extent,
+        const VkPhysicalDevice& physical_device,
+        const VkFormat& format,
+        const VkImageTiling& tiling,
+        const VkImageUsageFlags& usage)
 {
-        VkExtent3D extent_3d = max_image_extent(physical_device, format, VK_IMAGE_TYPE_2D, tiling, usage);
-        VkExtent2D result;
-        result.width = std::min(width, extent_3d.width);
-        result.height = std::min(height, extent_3d.height);
-        return result;
+        const VkExtent3D max = find_max_image_extent(physical_device, format, type, tiling, usage);
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wswitch-enum"
+        switch (type)
+        {
+        case VK_IMAGE_TYPE_1D:
+                return {.width = std::min(extent.width, max.width), .height = 1, .depth = 1};
+        case VK_IMAGE_TYPE_2D:
+                return {.width = std::min(extent.width, max.width),
+                        .height = std::min(extent.height, max.height),
+                        .depth = 1};
+        case VK_IMAGE_TYPE_3D:
+                return {.width = std::min(extent.width, max.width),
+                        .height = std::min(extent.height, max.height),
+                        .depth = std::min(extent.depth, max.depth)};
+        default:
+                error("Unknown image type " + image_type_to_string(type));
+        }
+#pragma GCC diagnostic pop
 }
 
 void transition_image_layout(
@@ -154,48 +168,7 @@ void transition_image_layout(
         queue_wait_idle(queue);
 }
 
-ImageView create_image_view(const Image& image, const VkImageAspectFlags& aspect_flags)
-{
-        VkImageViewCreateInfo create_info = {};
-        create_info.sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO;
-
-        create_info.image = image;
-
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wswitch-enum"
-        switch (image.type())
-        {
-        case VK_IMAGE_TYPE_1D:
-                create_info.viewType = VK_IMAGE_VIEW_TYPE_1D;
-                break;
-        case VK_IMAGE_TYPE_2D:
-                create_info.viewType = VK_IMAGE_VIEW_TYPE_2D;
-                break;
-        case VK_IMAGE_TYPE_3D:
-                create_info.viewType = VK_IMAGE_VIEW_TYPE_3D;
-                break;
-        default:
-                error("Unknown image type " + image_type_to_string(image.type()));
-        }
-#pragma GCC diagnostic pop
-
-        create_info.format = image.format();
-
-        create_info.components.r = VK_COMPONENT_SWIZZLE_IDENTITY;
-        create_info.components.g = VK_COMPONENT_SWIZZLE_IDENTITY;
-        create_info.components.b = VK_COMPONENT_SWIZZLE_IDENTITY;
-        create_info.components.a = VK_COMPONENT_SWIZZLE_IDENTITY;
-
-        create_info.subresourceRange.aspectMask = aspect_flags;
-        create_info.subresourceRange.baseMipLevel = 0;
-        create_info.subresourceRange.levelCount = 1;
-        create_info.subresourceRange.baseArrayLayer = 0;
-        create_info.subresourceRange.layerCount = 1;
-
-        return ImageView(image, create_info);
-}
-
-bool has_bits(const VkImageUsageFlags usage, const VkImageUsageFlagBits bits)
+bool has_bits(const VkImageUsageFlags& usage, const VkImageUsageFlagBits& bits)
 {
         return (usage & bits) == bits;
 }
@@ -280,7 +253,7 @@ void check_family_index(
         }
 }
 
-bool has_usage_for_image_view(const VkImageUsageFlags usage)
+bool has_usage_for_image_view(const VkImageUsageFlags& usage)
 {
         return has_bits(usage, VK_IMAGE_USAGE_SAMPLED_BIT) || has_bits(usage, VK_IMAGE_USAGE_STORAGE_BIT)
                || has_bits(usage, VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT)
@@ -291,7 +264,7 @@ bool has_usage_for_image_view(const VkImageUsageFlags usage)
                || has_bits(usage, VK_IMAGE_USAGE_FRAGMENT_DENSITY_MAP_BIT_EXT);
 }
 
-bool has_usage_for_transfer(const VkImageUsageFlags usage)
+bool has_usage_for_transfer(const VkImageUsageFlags& usage)
 {
         return has_bits(usage, VK_IMAGE_USAGE_TRANSFER_SRC_BIT) || has_bits(usage, VK_IMAGE_USAGE_TRANSFER_DST_BIT);
 }
@@ -401,7 +374,7 @@ BufferMapper::~BufferMapper()
 ImageWithMemory::ImageWithMemory(
         const Device& device,
         const std::vector<uint32_t>& family_indices,
-        const std::vector<VkFormat>& format_candidates,
+        const std::vector<VkFormat>& formats,
         const VkSampleCountFlagBits sample_count,
         const VkImageType type,
         const VkExtent3D extent,
@@ -415,7 +388,7 @@ ImageWithMemory::ImageWithMemory(
                   correct_image_extent(type, extent),
                   find_supported_image_format(
                           physical_device_,
-                          format_candidates,
+                          formats,
                           type,
                           VK_IMAGE_TILING_OPTIMAL,
                           format_features_for_image_usage(usage),
@@ -428,13 +401,13 @@ ImageWithMemory::ImageWithMemory(
           device_memory_(create_device_memory(device, physical_device_, image_, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT))
 {
         if (!std::none_of(
-                    format_candidates.cbegin(), format_candidates.cend(),
+                    formats.cbegin(), formats.cend(),
                     [depth = &depth_format_set(), stencil = &stencil_format_set()](const VkFormat& format)
                     {
                             return depth->contains(format) || stencil->contains(format);
                     }))
         {
-                error("Not a color format: " + formats_to_sorted_string(format_candidates, ", "));
+                error("Not a color format: " + formats_to_sorted_string(formats, ", "));
         }
 
         if (has_usage_for_image_view(usage))
@@ -450,7 +423,7 @@ ImageWithMemory::ImageWithMemory(
 ImageWithMemory::ImageWithMemory(
         const Device& device,
         const std::vector<uint32_t>& family_indices,
-        const std::vector<VkFormat>& format_candidates,
+        const std::vector<VkFormat>& formats,
         const VkSampleCountFlagBits sample_count,
         const VkImageType type,
         const VkExtent3D extent,
@@ -458,7 +431,7 @@ ImageWithMemory::ImageWithMemory(
         const VkImageLayout layout,
         const CommandPool& command_pool,
         const Queue& queue)
-        : ImageWithMemory(device, family_indices, format_candidates, sample_count, type, extent, usage)
+        : ImageWithMemory(device, family_indices, formats, sample_count, type, extent, usage)
 {
         if (layout != VK_IMAGE_LAYOUT_UNDEFINED)
         {
@@ -541,8 +514,13 @@ DepthImageWithMemory::DepthImageWithMemory(
                 device,
                 device.physical_device(),
                 VK_IMAGE_TYPE_2D,
-                make_extent(
-                        max_extent_2d(width, height, device.physical_device(), format, VK_IMAGE_TILING_OPTIMAL, usage)),
+                max_image_extent(
+                        VK_IMAGE_TYPE_2D,
+                        make_extent(width, height),
+                        device.physical_device(),
+                        format,
+                        VK_IMAGE_TILING_OPTIMAL,
+                        usage),
                 format,
                 family_indices,
                 sample_count,

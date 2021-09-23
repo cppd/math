@@ -68,4 +68,6 @@ Image create_image(
         VkSampleCountFlagBits samples,
         VkImageTiling tiling,
         VkImageUsageFlags usage);
+
+ImageView create_image_view(const Image& image, const VkImageAspectFlags& aspect_flags);
 }

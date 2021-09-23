@@ -292,7 +292,7 @@ VkFormat find_supported_image_format(
         error(oss.str());
 }
 
-VkExtent3D max_image_extent(
+VkExtent3D find_max_image_extent(
         VkPhysicalDevice physical_device,
         VkFormat format,
         VkImageType image_type,
