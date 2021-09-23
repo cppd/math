@@ -82,8 +82,8 @@ std::vector<DownsampleMemory> create_downsample_memory(
         for (unsigned i = 1; i < images[0].size(); ++i)
         {
                 downsample_images.emplace_back(device, descriptor_set_layout);
-                downsample_images.back().set_big(images[0][i - 1], images[1][i - 1]);
-                downsample_images.back().set_small(images[0][i], images[1][i]);
+                downsample_images.back().set_big(images[0][i - 1].image_view(), images[1][i - 1].image_view());
+                downsample_images.back().set_small(images[0][i].image_view(), images[1][i].image_view());
         }
 
         return downsample_images;
@@ -105,9 +105,9 @@ std::vector<SobelMemory> create_sobel_memory(
         for (std::size_t i = 0; i < images[0].size(); ++i)
         {
                 sobel_images.emplace_back(device, descriptor_set_layout);
-                sobel_images.back().set_i(images[0][i], images[1][i]);
-                sobel_images.back().set_dx(dx[i]);
-                sobel_images.back().set_dy(dy[i]);
+                sobel_images.back().set_i(images[0][i].image_view(), images[1][i].image_view());
+                sobel_images.back().set_dx(dx[i].image_view());
+                sobel_images.back().set_dy(dy[i].image_view());
         }
 
         return sobel_images;
@@ -202,10 +202,10 @@ std::vector<FlowMemory> create_flow_memory(
                 flow_memory[i].set_flow(*flow_ptr);
                 flow_memory[i].set_flow_guess(*flow_guess_ptr);
 
-                flow_memory[i].set_dx(dx[i]);
-                flow_memory[i].set_dy(dy[i]);
-                flow_memory[i].set_i(images[0][i], images[1][i]);
-                flow_memory[i].set_j(sampler, images[1][i], images[0][i]);
+                flow_memory[i].set_dx(dx[i].image_view());
+                flow_memory[i].set_dy(dy[i].image_view());
+                flow_memory[i].set_i(images[0][i].image_view(), images[1][i].image_view());
+                flow_memory[i].set_j(sampler, images[1][i].image_view(), images[0][i].image_view());
         }
 
         return flow_memory;

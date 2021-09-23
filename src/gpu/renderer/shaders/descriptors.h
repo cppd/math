@@ -17,9 +17,9 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
-#include <src/vulkan/buffers.h>
 #include <src/vulkan/constant.h>
 #include <src/vulkan/descriptor.h>
+#include <src/vulkan/device.h>
 #include <src/vulkan/objects.h>
 
 #include <vector>
@@ -79,10 +79,10 @@ public:
         const VkDescriptorSet& descriptor_set() const;
 
         void set_shadow_image(VkSampler sampler, const vulkan::ImageView& shadow_image) const;
-        void set_objects_image(const vulkan::ImageWithMemory& objects_image) const;
+        void set_objects_image(const vulkan::ImageView& objects_image) const;
         void set_transparency(
-                const vulkan::ImageWithMemory& heads,
-                const vulkan::ImageWithMemory& heads_size,
+                const vulkan::ImageView& heads,
+                const vulkan::ImageView& heads_size,
                 const vulkan::Buffer& counters,
                 const vulkan::Buffer& nodes) const;
 };

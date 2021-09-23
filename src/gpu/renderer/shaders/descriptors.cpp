@@ -205,28 +205,28 @@ void CommonMemory::set_shadow_image(VkSampler sampler, const vulkan::ImageView& 
         descriptors_.update_descriptor_set(0, SHADOW_BINDING, image_info);
 }
 
-void CommonMemory::set_objects_image(const vulkan::ImageWithMemory& objects) const
+void CommonMemory::set_objects_image(const vulkan::ImageView& objects) const
 {
-        ASSERT(objects.image().format() == VK_FORMAT_R32_UINT);
-        ASSERT(objects.image().has_usage(VK_IMAGE_USAGE_STORAGE_BIT));
+        ASSERT(objects.format() == VK_FORMAT_R32_UINT);
+        ASSERT(objects.has_usage(VK_IMAGE_USAGE_STORAGE_BIT));
 
         VkDescriptorImageInfo image_info = {};
         image_info.imageLayout = VK_IMAGE_LAYOUT_GENERAL;
-        image_info.imageView = objects.image_view();
+        image_info.imageView = objects;
 
         descriptors_.update_descriptor_set(0, OBJECTS_BINDING, image_info);
 }
 
 void CommonMemory::set_transparency(
-        const vulkan::ImageWithMemory& heads,
-        const vulkan::ImageWithMemory& heads_size,
+        const vulkan::ImageView& heads,
+        const vulkan::ImageView& heads_size,
         const vulkan::Buffer& counters,
         const vulkan::Buffer& nodes) const
 {
-        ASSERT(heads.image().format() == VK_FORMAT_R32_UINT);
-        ASSERT(heads.image().has_usage(VK_IMAGE_USAGE_STORAGE_BIT));
-        ASSERT(heads_size.image().format() == VK_FORMAT_R32_UINT);
-        ASSERT(heads_size.image().has_usage(VK_IMAGE_USAGE_STORAGE_BIT));
+        ASSERT(heads.format() == VK_FORMAT_R32_UINT);
+        ASSERT(heads.has_usage(VK_IMAGE_USAGE_STORAGE_BIT));
+        ASSERT(heads_size.format() == VK_FORMAT_R32_UINT);
+        ASSERT(heads_size.has_usage(VK_IMAGE_USAGE_STORAGE_BIT));
         ASSERT(counters.has_usage(VK_BUFFER_USAGE_STORAGE_BUFFER_BIT));
         ASSERT(nodes.has_usage(VK_BUFFER_USAGE_STORAGE_BUFFER_BIT));
 
@@ -236,7 +236,7 @@ void CommonMemory::set_transparency(
         {
                 VkDescriptorImageInfo image_info = {};
                 image_info.imageLayout = VK_IMAGE_LAYOUT_GENERAL;
-                image_info.imageView = heads.image_view();
+                image_info.imageView = heads;
 
                 infos.emplace_back(image_info);
                 bindings.push_back(TRANSPARENCY_HEADS_BINDING);
@@ -244,7 +244,7 @@ void CommonMemory::set_transparency(
         {
                 VkDescriptorImageInfo image_info = {};
                 image_info.imageLayout = VK_IMAGE_LAYOUT_GENERAL;
-                image_info.imageView = heads_size.image_view();
+                image_info.imageView = heads_size;
 
                 infos.emplace_back(image_info);
                 bindings.push_back(TRANSPARENCY_HEADS_SIZE_BINDING);

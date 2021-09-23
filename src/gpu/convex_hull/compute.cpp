@@ -181,7 +181,7 @@ class Impl final : public Compute
                 points_buffer_ = points_buffer;
                 point_count_buffer_ = point_count_buffer;
 
-                prepare_memory_.set_object_image(objects);
+                prepare_memory_.set_object_image(objects.image_view());
                 prepare_memory_.set_lines(lines_buffer_->buffer());
                 prepare_group_count_ = height;
                 prepare_program_.create_pipeline(

@@ -17,7 +17,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
-#include <src/vulkan/buffers.h>
 #include <src/vulkan/constant.h>
 #include <src/vulkan/descriptor.h>
 #include <src/vulkan/objects.h>
@@ -56,9 +55,9 @@ public:
 
         //
 
-        void set_i(const vulkan::ImageWithMemory& image_0, const vulkan::ImageWithMemory& image_1);
-        void set_dx(const vulkan::ImageWithMemory& image_dx);
-        void set_dy(const vulkan::ImageWithMemory& image_dy);
+        void set_i(const vulkan::ImageView& image_0, const vulkan::ImageView& image_1);
+        void set_dx(const vulkan::ImageView& image_dx);
+        void set_dy(const vulkan::ImageView& image_dy);
 };
 
 class SobelConstant final : public vulkan::SpecializationConstant

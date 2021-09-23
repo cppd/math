@@ -436,8 +436,8 @@ class Impl final : public Compute
 
                 grayscale_groups_ = grayscale_groups(GROUPS, sizes);
                 grayscale_program_.create_pipeline(GROUPS_X, GROUPS_Y, rectangle);
-                grayscale_memory_.set_src(sampler, input);
-                grayscale_memory_.set_dst(images_[0][0], images_[1][0]);
+                grayscale_memory_.set_src(sampler, input.image_view());
+                grayscale_memory_.set_dst(images_[0][0].image_view(), images_[1][0].image_view());
 
                 downsample_groups_ = downsample_groups(GROUPS, sizes);
                 downsample_program_.create_pipeline(GROUPS_X, GROUPS_Y);

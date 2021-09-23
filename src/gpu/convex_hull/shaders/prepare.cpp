@@ -68,14 +68,14 @@ const VkDescriptorSet& PrepareMemory::descriptor_set() const
         return descriptors_.descriptor_set(0);
 }
 
-void PrepareMemory::set_object_image(const vulkan::ImageWithMemory& storage_image) const
+void PrepareMemory::set_object_image(const vulkan::ImageView& storage_image) const
 {
-        ASSERT(storage_image.image().format() == VK_FORMAT_R32_UINT);
-        ASSERT(storage_image.image().has_usage(VK_IMAGE_USAGE_STORAGE_BIT));
+        ASSERT(storage_image.format() == VK_FORMAT_R32_UINT);
+        ASSERT(storage_image.has_usage(VK_IMAGE_USAGE_STORAGE_BIT));
 
         VkDescriptorImageInfo image_info = {};
         image_info.imageLayout = VK_IMAGE_LAYOUT_GENERAL;
-        image_info.imageView = storage_image.image_view();
+        image_info.imageView = storage_image;
 
         descriptors_.update_descriptor_set(0, OBJECTS_BINDING, image_info);
 }

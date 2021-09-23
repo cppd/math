@@ -71,7 +71,7 @@ public:
         void set_background_color(const Vector3f& background_color) const;
         void set_foreground_color(const Vector3f& foreground_color) const;
         void set_brightness(float brightness) const;
-        void set_image(VkSampler sampler, const vulkan::ImageWithMemory& image) const;
+        void set_image(VkSampler sampler, const vulkan::ImageView& image) const;
 };
 
 struct ViewVertex

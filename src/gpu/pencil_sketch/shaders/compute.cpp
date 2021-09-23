@@ -77,38 +77,38 @@ const VkDescriptorSet& ComputeMemory::descriptor_set() const
         return descriptors_.descriptor_set(0);
 }
 
-void ComputeMemory::set_input(VkSampler sampler, const vulkan::ImageWithMemory& image) const
+void ComputeMemory::set_input(VkSampler sampler, const vulkan::ImageView& image) const
 {
-        ASSERT(image.image().has_usage(VK_IMAGE_USAGE_SAMPLED_BIT));
+        ASSERT(image.has_usage(VK_IMAGE_USAGE_SAMPLED_BIT));
 
         VkDescriptorImageInfo image_info = {};
         image_info.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
-        image_info.imageView = image.image_view();
+        image_info.imageView = image;
         image_info.sampler = sampler;
 
         descriptors_.update_descriptor_set(0, INPUT_BINDING, image_info);
 }
 
-void ComputeMemory::set_output_image(const vulkan::ImageWithMemory& image) const
+void ComputeMemory::set_output_image(const vulkan::ImageView& image) const
 {
-        ASSERT(image.image().format() == VK_FORMAT_R32_SFLOAT);
-        ASSERT(image.image().has_usage(VK_IMAGE_USAGE_STORAGE_BIT));
+        ASSERT(image.format() == VK_FORMAT_R32_SFLOAT);
+        ASSERT(image.has_usage(VK_IMAGE_USAGE_STORAGE_BIT));
 
         VkDescriptorImageInfo image_info = {};
         image_info.imageLayout = VK_IMAGE_LAYOUT_GENERAL;
-        image_info.imageView = image.image_view();
+        image_info.imageView = image;
 
         descriptors_.update_descriptor_set(0, OUTPUT_BINDING, image_info);
 }
 
-void ComputeMemory::set_object_image(const vulkan::ImageWithMemory& image) const
+void ComputeMemory::set_object_image(const vulkan::ImageView& image) const
 {
-        ASSERT(image.image().format() == VK_FORMAT_R32_UINT);
-        ASSERT(image.image().has_usage(VK_IMAGE_USAGE_STORAGE_BIT));
+        ASSERT(image.format() == VK_FORMAT_R32_UINT);
+        ASSERT(image.has_usage(VK_IMAGE_USAGE_STORAGE_BIT));
 
         VkDescriptorImageInfo image_info = {};
         image_info.imageLayout = VK_IMAGE_LAYOUT_GENERAL;
-        image_info.imageView = image.image_view();
+        image_info.imageView = image;
 
         descriptors_.update_descriptor_set(0, OBJECTS_BINDING, image_info);
 }

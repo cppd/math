@@ -68,13 +68,13 @@ const VkDescriptorSet& GrayscaleMemory::descriptor_set(int index) const
         return descriptors_.descriptor_set(index);
 }
 
-void GrayscaleMemory::set_src(VkSampler sampler, const vulkan::ImageWithMemory& image)
+void GrayscaleMemory::set_src(VkSampler sampler, const vulkan::ImageView& image)
 {
-        ASSERT(image.image().has_usage(VK_IMAGE_USAGE_SAMPLED_BIT));
+        ASSERT(image.has_usage(VK_IMAGE_USAGE_SAMPLED_BIT));
 
         VkDescriptorImageInfo image_info = {};
         image_info.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
-        image_info.imageView = image.image_view();
+        image_info.imageView = image;
         image_info.sampler = sampler;
 
         for (int s = 0; s < 2; ++s)
@@ -83,20 +83,20 @@ void GrayscaleMemory::set_src(VkSampler sampler, const vulkan::ImageWithMemory& 
         }
 }
 
-void GrayscaleMemory::set_dst(const vulkan::ImageWithMemory& image_0, const vulkan::ImageWithMemory& image_1)
+void GrayscaleMemory::set_dst(const vulkan::ImageView& image_0, const vulkan::ImageView& image_1)
 {
-        ASSERT(&image_0 != &image_1);
-        ASSERT(image_0.image().has_usage(VK_IMAGE_USAGE_STORAGE_BIT));
-        ASSERT(image_0.image().format() == VK_FORMAT_R32_SFLOAT);
-        ASSERT(image_1.image().has_usage(VK_IMAGE_USAGE_STORAGE_BIT));
-        ASSERT(image_1.image().format() == VK_FORMAT_R32_SFLOAT);
+        ASSERT(static_cast<VkImageView>(image_0) != static_cast<VkImageView>(image_1));
+        ASSERT(image_0.has_usage(VK_IMAGE_USAGE_STORAGE_BIT));
+        ASSERT(image_0.format() == VK_FORMAT_R32_SFLOAT);
+        ASSERT(image_1.has_usage(VK_IMAGE_USAGE_STORAGE_BIT));
+        ASSERT(image_1.format() == VK_FORMAT_R32_SFLOAT);
 
         VkDescriptorImageInfo image_info = {};
         image_info.imageLayout = VK_IMAGE_LAYOUT_GENERAL;
 
-        image_info.imageView = image_0.image_view();
+        image_info.imageView = image_0;
         descriptors_.update_descriptor_set(0, DST_BINDING, image_info);
-        image_info.imageView = image_1.image_view();
+        image_info.imageView = image_1;
         descriptors_.update_descriptor_set(1, DST_BINDING, image_info);
 }
 

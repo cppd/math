@@ -109,7 +109,7 @@ class Impl final : public View
                         VK_IMAGE_USAGE_STORAGE_BIT | VK_IMAGE_USAGE_SAMPLED_BIT,
                         VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL, *graphics_command_pool_, *graphics_queue_);
 
-                memory_.set_image(sampler_, *image_);
+                memory_.set_image(sampler_, image_->image_view());
 
                 pipeline_ = program_.create_pipeline(
                         render_buffers->render_pass(), render_buffers->sample_count(), draw_rectangle);

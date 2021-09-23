@@ -18,7 +18,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #pragma once
 
 #include <src/numerical/region.h>
-#include <src/vulkan/buffers.h>
 #include <src/vulkan/constant.h>
 #include <src/vulkan/descriptor.h>
 #include <src/vulkan/objects.h>
@@ -59,9 +58,9 @@ public:
 
         //
 
-        void set_input(VkSampler sampler, const vulkan::ImageWithMemory& image) const;
-        void set_output_image(const vulkan::ImageWithMemory& image) const;
-        void set_object_image(const vulkan::ImageWithMemory& image) const;
+        void set_input(VkSampler sampler, const vulkan::ImageView& image) const;
+        void set_output_image(const vulkan::ImageView& image) const;
+        void set_object_image(const vulkan::ImageView& image) const;
 };
 
 class ComputeConstant final : public vulkan::SpecializationConstant

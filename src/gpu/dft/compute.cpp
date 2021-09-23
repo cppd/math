@@ -498,13 +498,13 @@ class DftImage final : public ComputeImage
 
                 //
 
-                copy_input_memory_.set(sampler, input, dft_.buffer());
+                copy_input_memory_.set(sampler, input.image_view(), dft_.buffer());
                 copy_input_program_.create_pipeline(GROUP_SIZE_2D[0], GROUP_SIZE_2D[1], rectangle);
 
                 const int width = rectangle.width();
                 const int height = rectangle.height();
 
-                copy_output_memory_.set(dft_.buffer(), output);
+                copy_output_memory_.set(dft_.buffer(), output.image_view());
                 copy_output_program_.create_pipeline(GROUP_SIZE_2D[0], GROUP_SIZE_2D[1], 1.0 / (width * height));
 
                 copy_groups_ = group_count(width, height, GROUP_SIZE_2D);

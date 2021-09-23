@@ -64,7 +64,7 @@ Memory::Memory(
         VkDescriptorSetLayout descriptor_set_layout,
         const std::vector<uint32_t>& family_indices,
         VkSampler sampler,
-        const vulkan::ImageWithMemory* texture)
+        const VkImageView& texture)
         : descriptors_(device, 1, descriptor_set_layout, descriptor_set_layout_bindings())
 {
         std::vector<std::variant<VkDescriptorBufferInfo, VkDescriptorImageInfo>> infos;
@@ -88,7 +88,7 @@ Memory::Memory(
         {
                 VkDescriptorImageInfo image_info = {};
                 image_info.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
-                image_info.imageView = texture->image_view();
+                image_info.imageView = texture;
                 image_info.sampler = sampler;
 
                 infos.emplace_back(image_info);

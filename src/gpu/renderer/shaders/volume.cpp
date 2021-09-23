@@ -115,10 +115,10 @@ void VolumeSharedMemory::set_depth_image(VkImageView image_view, VkSampler sampl
         descriptors_.update_descriptor_set(0, DEPTH_IMAGE_BINDING, image_info);
 }
 
-void VolumeSharedMemory::set_transparency(const vulkan::ImageWithMemory& heads, const vulkan::Buffer& nodes) const
+void VolumeSharedMemory::set_transparency(const vulkan::ImageView& heads, const vulkan::Buffer& nodes) const
 {
-        ASSERT(heads.image().format() == VK_FORMAT_R32_UINT);
-        ASSERT(heads.image().has_usage(VK_IMAGE_USAGE_STORAGE_BIT));
+        ASSERT(heads.format() == VK_FORMAT_R32_UINT);
+        ASSERT(heads.has_usage(VK_IMAGE_USAGE_STORAGE_BIT));
         ASSERT(nodes.has_usage(VK_BUFFER_USAGE_STORAGE_BUFFER_BIT));
 
         std::vector<std::variant<VkDescriptorBufferInfo, VkDescriptorImageInfo>> infos;
@@ -127,7 +127,7 @@ void VolumeSharedMemory::set_transparency(const vulkan::ImageWithMemory& heads, 
         {
                 VkDescriptorImageInfo image_info = {};
                 image_info.imageLayout = VK_IMAGE_LAYOUT_GENERAL;
-                image_info.imageView = heads.image_view();
+                image_info.imageView = heads;
 
                 infos.emplace_back(image_info);
                 bindings.push_back(TRANSPARENCY_HEADS_BINDING);

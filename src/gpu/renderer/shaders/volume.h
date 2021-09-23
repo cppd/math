@@ -20,8 +20,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/color/color.h>
 #include <src/numerical/region.h>
 #include <src/numerical/vec.h>
-#include <src/vulkan/buffers.h>
 #include <src/vulkan/descriptor.h>
+#include <src/vulkan/device.h>
 #include <src/vulkan/objects.h>
 #include <src/vulkan/shader.h>
 
@@ -62,7 +62,7 @@ public:
         const VkDescriptorSet& descriptor_set() const;
 
         void set_depth_image(VkImageView image_view, VkSampler sampler) const;
-        void set_transparency(const vulkan::ImageWithMemory& heads, const vulkan::Buffer& nodes) const;
+        void set_transparency(const vulkan::ImageView& heads, const vulkan::Buffer& nodes) const;
 };
 
 class VolumeImageMemory final

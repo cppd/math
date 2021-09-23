@@ -67,14 +67,14 @@ const VkDescriptorSet& CopyInputMemory::descriptor_set() const
         return descriptors_.descriptor_set(0);
 }
 
-void CopyInputMemory::set(VkSampler sampler, const vulkan::ImageWithMemory& input, const vulkan::Buffer& output) const
+void CopyInputMemory::set(VkSampler sampler, const vulkan::ImageView& input, const vulkan::Buffer& output) const
 {
         {
-                ASSERT(input.image().has_usage(VK_IMAGE_USAGE_SAMPLED_BIT));
+                ASSERT(input.has_usage(VK_IMAGE_USAGE_SAMPLED_BIT));
 
                 VkDescriptorImageInfo image_info = {};
                 image_info.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
-                image_info.imageView = input.image_view();
+                image_info.imageView = input;
                 image_info.sampler = sampler;
 
                 descriptors_.update_descriptor_set(0, SRC_BINDING, image_info);

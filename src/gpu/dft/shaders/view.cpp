@@ -105,13 +105,13 @@ void ViewMemory::set_brightness(float brightness) const
         vulkan::map_and_write_to_buffer(uniform_buffers_[0], offsetof(Data, brightness), v);
 }
 
-void ViewMemory::set_image(VkSampler sampler, const vulkan::ImageWithMemory& image) const
+void ViewMemory::set_image(VkSampler sampler, const vulkan::ImageView& image) const
 {
-        ASSERT(image.image().has_usage(VK_IMAGE_USAGE_SAMPLED_BIT));
+        ASSERT(image.has_usage(VK_IMAGE_USAGE_SAMPLED_BIT));
 
         VkDescriptorImageInfo image_info = {};
         image_info.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
-        image_info.imageView = image.image_view();
+        image_info.imageView = image;
         image_info.sampler = sampler;
 
         descriptors_.update_descriptor_set(0, IMAGE_BINDING, image_info);

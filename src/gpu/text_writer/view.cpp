@@ -290,7 +290,7 @@ class Impl final : public View
                           program_.descriptor_set_layout(),
                           std::vector<uint32_t>({graphics_queue->family_index()}),
                           sampler_,
-                          &glyph_texture_),
+                          glyph_texture_.image_view()),
                   vertex_buffer_(
                           std::in_place,
                           vulkan::BufferMemoryType::HOST_VISIBLE,

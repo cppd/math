@@ -166,14 +166,14 @@ void FlowMemory::set_data(const Data& data) const
         vulkan::map_and_write_to_buffer(uniform_buffers_[0], buffer_data);
 }
 
-void FlowMemory::set_dx(const vulkan::ImageWithMemory& image) const
+void FlowMemory::set_dx(const vulkan::ImageView& image) const
 {
-        ASSERT(image.image().has_usage(VK_IMAGE_USAGE_STORAGE_BIT));
-        ASSERT(image.image().format() == VK_FORMAT_R32_SFLOAT);
+        ASSERT(image.has_usage(VK_IMAGE_USAGE_STORAGE_BIT));
+        ASSERT(image.format() == VK_FORMAT_R32_SFLOAT);
 
         VkDescriptorImageInfo image_info = {};
         image_info.imageLayout = VK_IMAGE_LAYOUT_GENERAL;
-        image_info.imageView = image.image_view();
+        image_info.imageView = image;
 
         for (int s = 0; s < 2; ++s)
         {
@@ -181,14 +181,14 @@ void FlowMemory::set_dx(const vulkan::ImageWithMemory& image) const
         }
 }
 
-void FlowMemory::set_dy(const vulkan::ImageWithMemory& image) const
+void FlowMemory::set_dy(const vulkan::ImageView& image) const
 {
-        ASSERT(image.image().has_usage(VK_IMAGE_USAGE_STORAGE_BIT));
-        ASSERT(image.image().format() == VK_FORMAT_R32_SFLOAT);
+        ASSERT(image.has_usage(VK_IMAGE_USAGE_STORAGE_BIT));
+        ASSERT(image.format() == VK_FORMAT_R32_SFLOAT);
 
         VkDescriptorImageInfo image_info = {};
         image_info.imageLayout = VK_IMAGE_LAYOUT_GENERAL;
-        image_info.imageView = image.image_view();
+        image_info.imageView = image;
 
         for (int s = 0; s < 2; ++s)
         {
@@ -196,39 +196,36 @@ void FlowMemory::set_dy(const vulkan::ImageWithMemory& image) const
         }
 }
 
-void FlowMemory::set_i(const vulkan::ImageWithMemory& image_0, const vulkan::ImageWithMemory& image_1) const
+void FlowMemory::set_i(const vulkan::ImageView& image_0, const vulkan::ImageView& image_1) const
 {
-        ASSERT(&image_0 != &image_1);
-        ASSERT(image_0.image().has_usage(VK_IMAGE_USAGE_STORAGE_BIT));
-        ASSERT(image_0.image().format() == VK_FORMAT_R32_SFLOAT);
-        ASSERT(image_1.image().has_usage(VK_IMAGE_USAGE_STORAGE_BIT));
-        ASSERT(image_1.image().format() == VK_FORMAT_R32_SFLOAT);
+        ASSERT(static_cast<VkImageView>(image_0) != static_cast<VkImageView>(image_1));
+        ASSERT(image_0.has_usage(VK_IMAGE_USAGE_STORAGE_BIT));
+        ASSERT(image_0.format() == VK_FORMAT_R32_SFLOAT);
+        ASSERT(image_1.has_usage(VK_IMAGE_USAGE_STORAGE_BIT));
+        ASSERT(image_1.format() == VK_FORMAT_R32_SFLOAT);
 
         VkDescriptorImageInfo image_info = {};
         image_info.imageLayout = VK_IMAGE_LAYOUT_GENERAL;
 
-        image_info.imageView = image_0.image_view();
+        image_info.imageView = image_0;
         descriptors_.update_descriptor_set(0, I_BINDING, image_info);
-        image_info.imageView = image_1.image_view();
+        image_info.imageView = image_1;
         descriptors_.update_descriptor_set(1, I_BINDING, image_info);
 }
 
-void FlowMemory::set_j(
-        VkSampler sampler,
-        const vulkan::ImageWithMemory& image_0,
-        const vulkan::ImageWithMemory& image_1) const
+void FlowMemory::set_j(VkSampler sampler, const vulkan::ImageView& image_0, const vulkan::ImageView& image_1) const
 {
-        ASSERT(&image_0 != &image_1);
-        ASSERT(image_0.image().has_usage(VK_IMAGE_USAGE_SAMPLED_BIT));
-        ASSERT(image_1.image().has_usage(VK_IMAGE_USAGE_SAMPLED_BIT));
+        ASSERT(static_cast<VkImageView>(image_0) != static_cast<VkImageView>(image_1));
+        ASSERT(image_0.has_usage(VK_IMAGE_USAGE_SAMPLED_BIT));
+        ASSERT(image_1.has_usage(VK_IMAGE_USAGE_SAMPLED_BIT));
 
         VkDescriptorImageInfo image_info = {};
         image_info.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
         image_info.sampler = sampler;
 
-        image_info.imageView = image_0.image_view();
+        image_info.imageView = image_0;
         descriptors_.update_descriptor_set(0, J_BINDING, image_info);
-        image_info.imageView = image_1.image_view();
+        image_info.imageView = image_1;
         descriptors_.update_descriptor_set(1, J_BINDING, image_info);
 }
 

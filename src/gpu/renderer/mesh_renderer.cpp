@@ -145,21 +145,25 @@ void MeshRenderer::create_render_buffers(
 
         render_buffers_ = render_buffers;
 
-        triangles_common_memory_.set_objects_image(objects_image);
+        triangles_common_memory_.set_objects_image(objects_image.image_view());
         triangles_common_memory_.set_transparency(
-                transparency_heads_image, transparency_heads_size_image, transparency_counter, transparency_nodes);
+                transparency_heads_image.image_view(), transparency_heads_size_image.image_view(), transparency_counter,
+                transparency_nodes);
 
-        triangle_lines_common_memory_.set_objects_image(objects_image);
+        triangle_lines_common_memory_.set_objects_image(objects_image.image_view());
         triangle_lines_common_memory_.set_transparency(
-                transparency_heads_image, transparency_heads_size_image, transparency_counter, transparency_nodes);
+                transparency_heads_image.image_view(), transparency_heads_size_image.image_view(), transparency_counter,
+                transparency_nodes);
 
-        points_common_memory_.set_objects_image(objects_image);
+        points_common_memory_.set_objects_image(objects_image.image_view());
         points_common_memory_.set_transparency(
-                transparency_heads_image, transparency_heads_size_image, transparency_counter, transparency_nodes);
+                transparency_heads_image.image_view(), transparency_heads_size_image.image_view(), transparency_counter,
+                transparency_nodes);
 
-        normals_common_memory_.set_objects_image(objects_image);
+        normals_common_memory_.set_objects_image(objects_image.image_view());
         normals_common_memory_.set_transparency(
-                transparency_heads_image, transparency_heads_size_image, transparency_counter, transparency_nodes);
+                transparency_heads_image.image_view(), transparency_heads_size_image.image_view(), transparency_counter,
+                transparency_nodes);
 
         for (bool transparent : {false, true})
         {

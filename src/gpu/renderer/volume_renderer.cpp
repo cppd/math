@@ -56,7 +56,7 @@ void VolumeRenderer::create_buffers(
         render_buffers_ = render_buffers;
 
         shared_memory_.set_depth_image(depth_image, depth_sampler_);
-        shared_memory_.set_transparency(transparency_heads_image, transparency_nodes);
+        shared_memory_.set_transparency(transparency_heads_image.image_view(), transparency_nodes);
 
         pipeline_image_ = program_.create_pipeline(
                 render_buffers->render_pass(), render_buffers->sample_count(), sample_shading_, viewport,

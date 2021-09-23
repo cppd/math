@@ -18,7 +18,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #pragma once
 
 #include <src/numerical/region.h>
-#include <src/vulkan/buffers.h>
 #include <src/vulkan/constant.h>
 #include <src/vulkan/descriptor.h>
 #include <src/vulkan/objects.h>
@@ -56,8 +55,8 @@ public:
 
         //
 
-        void set_src(VkSampler sampler, const vulkan::ImageWithMemory& image);
-        void set_dst(const vulkan::ImageWithMemory& image_0, const vulkan::ImageWithMemory& image_1);
+        void set_src(VkSampler sampler, const vulkan::ImageView& image);
+        void set_dst(const vulkan::ImageView& image_0, const vulkan::ImageView& image_1);
 };
 
 class GrayscaleConstant final : public vulkan::SpecializationConstant

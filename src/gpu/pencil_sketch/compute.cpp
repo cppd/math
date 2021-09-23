@@ -159,9 +159,9 @@ class Impl final : public Compute
                 ASSERT(rectangle.x1() <= static_cast<int>(objects.image().extent().width));
                 ASSERT(rectangle.y1() <= static_cast<int>(objects.image().extent().height));
 
-                memory_.set_input(sampler, input);
-                memory_.set_object_image(objects);
-                memory_.set_output_image(output);
+                memory_.set_input(sampler, input.image_view());
+                memory_.set_object_image(objects.image_view());
+                memory_.set_output_image(output.image_view());
 
                 //
 
