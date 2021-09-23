@@ -576,7 +576,7 @@ Framebuffer& Framebuffer::operator=(Framebuffer&& from) noexcept
 
 //
 
-void CommandPool::destroy() noexcept
+void CommandPoolHandle::destroy() noexcept
 {
         if (command_pool_ != VK_NULL_HANDLE)
         {
@@ -586,17 +586,15 @@ void CommandPool::destroy() noexcept
         }
 }
 
-void CommandPool::move(CommandPool* from) noexcept
+void CommandPoolHandle::move(CommandPoolHandle* from) noexcept
 {
         device_ = from->device_;
         command_pool_ = from->command_pool_;
-        family_index_ = from->family_index_;
         from->device_ = VK_NULL_HANDLE;
         from->command_pool_ = VK_NULL_HANDLE;
-        from->family_index_ = NULL_FAMILY_INDEX;
 }
 
-CommandPool::CommandPool(VkDevice device, const VkCommandPoolCreateInfo& create_info)
+CommandPoolHandle::CommandPoolHandle(VkDevice device, const VkCommandPoolCreateInfo& create_info)
 {
         VkResult result = vkCreateCommandPool(device, &create_info, nullptr, &command_pool_);
         if (result != VK_SUCCESS)
@@ -607,20 +605,19 @@ CommandPool::CommandPool(VkDevice device, const VkCommandPoolCreateInfo& create_
         ASSERT(command_pool_ != VK_NULL_HANDLE);
 
         device_ = device;
-        family_index_ = create_info.queueFamilyIndex;
 }
 
-CommandPool::~CommandPool()
+CommandPoolHandle::~CommandPoolHandle()
 {
         destroy();
 }
 
-CommandPool::CommandPool(CommandPool&& from) noexcept
+CommandPoolHandle::CommandPoolHandle(CommandPoolHandle&& from) noexcept
 {
         move(&from);
 }
 
-CommandPool& CommandPool::operator=(CommandPool&& from) noexcept
+CommandPoolHandle& CommandPoolHandle::operator=(CommandPoolHandle&& from) noexcept
 {
         if (this != &from)
         {
@@ -628,11 +625,6 @@ CommandPool& CommandPool::operator=(CommandPool&& from) noexcept
                 move(&from);
         }
         return *this;
-}
-
-uint32_t CommandPool::family_index() const noexcept
-{
-        return family_index_;
 }
 
 //

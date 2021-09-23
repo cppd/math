@@ -331,27 +331,42 @@ public:
         operator VkFramebuffer() const&& noexcept = delete;
 };
 
-class CommandPool final
+class CommandPoolHandle final
 {
-        static constexpr uint32_t NULL_FAMILY_INDEX = Limits<uint32_t>::max();
-
         VkDevice device_ = VK_NULL_HANDLE;
         VkCommandPool command_pool_ = VK_NULL_HANDLE;
-        uint32_t family_index_ = NULL_FAMILY_INDEX;
 
         void destroy() noexcept;
-        void move(CommandPool* from) noexcept;
+        void move(CommandPoolHandle* from) noexcept;
 
 public:
-        CommandPool() = default;
-        CommandPool(VkDevice device, const VkCommandPoolCreateInfo& create_info);
-        ~CommandPool();
+        CommandPoolHandle() = default;
+        CommandPoolHandle(VkDevice device, const VkCommandPoolCreateInfo& create_info);
+        ~CommandPoolHandle();
 
-        CommandPool(const CommandPool&) = delete;
-        CommandPool& operator=(const CommandPool&) = delete;
+        CommandPoolHandle(const CommandPoolHandle&) = delete;
+        CommandPoolHandle& operator=(const CommandPoolHandle&) = delete;
 
-        CommandPool(CommandPool&&) noexcept;
-        CommandPool& operator=(CommandPool&&) noexcept;
+        CommandPoolHandle(CommandPoolHandle&&) noexcept;
+        CommandPoolHandle& operator=(CommandPoolHandle&&) noexcept;
+
+        operator VkCommandPool() const& noexcept
+        {
+                return command_pool_;
+        }
+        operator VkCommandPool() const&& noexcept = delete;
+};
+
+class CommandPool final
+{
+        CommandPoolHandle command_pool_;
+        uint32_t family_index_;
+
+public:
+        CommandPool(VkDevice device, const VkCommandPoolCreateInfo& create_info)
+                : command_pool_(device, create_info), family_index_(create_info.queueFamilyIndex)
+        {
+        }
 
         operator VkCommandPool() const& noexcept
         {
@@ -359,7 +374,11 @@ public:
         }
         operator VkCommandPool() const&& noexcept = delete;
 
-        uint32_t family_index() const noexcept;
+        uint32_t family_index() const noexcept
+        {
+                ASSERT(static_cast<VkCommandPool>(command_pool_) != VK_NULL_HANDLE);
+                return family_index_;
+        }
 };
 
 class Semaphore final
@@ -782,16 +801,16 @@ class ImageView final
 {
         ImageViewHandle image_view_;
         VkFormat format_;
-        VkImageUsageFlags usage_;
         VkSampleCountFlagBits sample_count_;
+        VkImageUsageFlags usage_;
 
 public:
         ImageView() = default;
         ImageView(const Image& image, const VkImageViewCreateInfo& create_info)
                 : image_view_(image.device(), create_info),
                   format_(create_info.format),
-                  usage_(image.usage()),
-                  sample_count_(image.sample_count())
+                  sample_count_(image.sample_count()),
+                  usage_(image.usage())
         {
                 ASSERT(create_info.pNext == nullptr);
                 ASSERT(image == create_info.image);
@@ -808,13 +827,13 @@ public:
         {
                 return format_;
         }
-        bool has_usage(VkImageUsageFlagBits flag) const noexcept
-        {
-                return (usage_ & flag) == flag;
-        }
         const VkSampleCountFlagBits& sample_count() const noexcept
         {
                 return sample_count_;
+        }
+        bool has_usage(VkImageUsageFlagBits flag) const noexcept
+        {
+                return (usage_ & flag) == flag;
         }
 };
 
