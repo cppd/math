@@ -51,8 +51,7 @@ function(SetCompilerWarnings source_files)
                         -Wsuggest-final-types
                         -Wsuggest-override
                         -Wvirtual-inheritance
-                        # VK_NULL_HANDLE
-                        # -Wzero-as-null-pointer-constant
+                        -Wzero-as-null-pointer-constant
                         >
                         $<$<COMPILE_LANGUAGE:C>:
                         -Waggregate-return
