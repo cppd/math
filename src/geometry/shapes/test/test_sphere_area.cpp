@@ -32,26 +32,26 @@ namespace
 template <unsigned N>
 constexpr long double PI_POW = power<N>(PI<long double>);
 
-static_assert(compare(10, sphere_area<2>(), 2 * PI_POW<1>));
-static_assert(compare(10, sphere_area<3>(), 4 * PI_POW<1>));
-static_assert(compare(10, sphere_area<4>(), 2 * PI_POW<2>));
-static_assert(compare(10, sphere_area<5>(), 8 * PI_POW<2> / 3));
-static_assert(compare(10, sphere_area<6>(), PI_POW<3>));
-static_assert(compare(10, sphere_area<7>(), 16 * PI_POW<3> / 15));
-static_assert(compare(10, sphere_area<8>(), PI_POW<4> / 3));
-static_assert(compare(10, sphere_area<9>(), 32 * PI_POW<4> / 105));
-static_assert(compare(10, sphere_area<10>(), PI_POW<5> / 12));
-static_assert(compare(10, sphere_area<15>(), 256 * PI_POW<7> / 135135));
-static_assert(compare(10, sphere_area<20>(), PI_POW<10> / 181440));
-static_assert(compare(10, sphere_area<25>(), 8192 * PI_POW<12> / 316234143225));
-static_assert(compare(10, sphere_area<30>(), PI_POW<15> / 43589145600));
-static_assert(compare(10, sphere_area<35>(), 262144 * PI_POW<17> / 6332659870762850625));
-static_assert(compare(10, sphere_area<40>(), PI_POW<20> / 60822550204416000));
+static_assert(compare(1, sphere_area<2>(), 2 * PI_POW<1>));
+static_assert(compare(1, sphere_area<3>(), 4 * PI_POW<1>));
+static_assert(compare(1, sphere_area<4>(), 2 * PI_POW<2>));
+static_assert(compare(1, sphere_area<5>(), 8 * PI_POW<2> / 3));
+static_assert(compare(1, sphere_area<6>(), PI_POW<3>));
+static_assert(compare(1, sphere_area<7>(), 16 * PI_POW<3> / 15));
+static_assert(compare(2, sphere_area<8>(), PI_POW<4> / 3));
+static_assert(compare(1, sphere_area<9>(), 32 * PI_POW<4> / 105));
+static_assert(compare(1, sphere_area<10>(), PI_POW<5> / 12));
+static_assert(compare(3, sphere_area<15>(), 256 * PI_POW<7> / 135135));
+static_assert(compare(1, sphere_area<20>(), PI_POW<10> / 181440));
+static_assert(compare(3, sphere_area<25>(), 8192 * PI_POW<12> / 316234143225));
+static_assert(compare(3, sphere_area<30>(), PI_POW<15> / 43589145600));
+static_assert(compare(5, sphere_area<35>(), 262144 * PI_POW<17> / 6332659870762850625));
+static_assert(compare(5, sphere_area<40>(), PI_POW<20> / 60822550204416000));
 
-static_assert(compare(10, sphere_area<45>(), 1.2876986762598652169610927230442052274087372377085e-9L));
-static_assert(compare(10, sphere_area<50>(), 8.6510962291805538057726365290958840196659212205551e-12L));
-static_assert(compare(10, sphere_area<100>(), 2.3682021018828339613111743245754170110390710827884e-38L));
-static_assert(compare(10, sphere_area<111>(), 4.5744152213753183840687985785233817617533382664144e-45L));
+static_assert(compare(5, sphere_area<45>(), 1.2876986762598652169610927230442052274087372377085e-9L));
+static_assert(compare(3, sphere_area<50>(), 8.6510962291805538057726365290958840196659212205551e-12L));
+static_assert(compare(7, sphere_area<100>(), 2.3682021018828339613111743245754170110390710827884e-38L));
+static_assert(compare(8, sphere_area<111>(), 4.5744152213753183840687985785233817617533382664144e-45L));
 
 template <typename T>
 void test_sphere_relative_area_1(T precision)
