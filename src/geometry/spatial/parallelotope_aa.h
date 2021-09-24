@@ -33,6 +33,7 @@ Cambridge University Press, 2003.
 
 #include <algorithm>
 #include <array>
+#include <optional>
 #include <utility>
 
 namespace ns::geometry
