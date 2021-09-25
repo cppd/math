@@ -37,6 +37,7 @@ E. Other continuous distributions
 #pragma once
 
 #include <src/com/constant.h>
+#include <src/geometry/shapes/ball_volume.h>
 #include <src/geometry/shapes/sphere_area.h>
 #include <src/numerical/vec.h>
 
@@ -176,6 +177,13 @@ Vector<N, T> uniform_on_sphere(RandomEngine& random_engine)
         {
                 return impl::uniform_on_sphere_by_normal_distribution<N, T>(random_engine);
         }
+}
+
+template <std::size_t N, typename T>
+constexpr T uniform_in_sphere_pdf()
+{
+        constexpr T PDF = 1 / geometry::ball_volume<N>();
+        return PDF;
 }
 
 template <std::size_t N, typename T>
