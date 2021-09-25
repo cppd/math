@@ -15,8 +15,11 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
+#include "../parallelotope_uniform.h"
+#include "../sj_sampler.h"
 #include "../sphere_uniform.h"
 
+#include <src/com/error.h>
 #include <src/com/file/path.h>
 #include <src/com/log.h>
 #include <src/com/print.h>
@@ -63,8 +66,7 @@ template <std::size_t N, typename T>
 std::filesystem::path samples_file_name(const std::string_view& name)
 {
         std::ostringstream oss;
-        oss << "samples_on_sphere_" << replace_space(name) << "_" << N << "d_" << replace_space(type_name<T>())
-            << ".txt";
+        oss << "samples_" << replace_space(name) << "_" << N << "d_" << replace_space(type_name<T>()) << ".txt";
         return path_from_utf8(oss.str());
 }
 
@@ -89,17 +91,58 @@ void write_samples_to_files()
         LOG("Writing samples " + to_string(N) + "D");
 
         write_samples_to_file<N, T>(
-                "rejection", COUNT,
+                "on sphere rejection", COUNT,
                 [&]()
                 {
                         return impl::uniform_on_sphere_by_rejection<N, T>(random_engine);
                 });
 
         write_samples_to_file<N, T>(
-                "normal distribution", COUNT,
+                "on sphere normal distribution", COUNT,
                 [&]()
                 {
                         return impl::uniform_on_sphere_by_normal_distribution<N, T>(random_engine);
+                });
+
+        write_samples_to_file<N, T>(
+                "in sphere rejection", COUNT,
+                [&]()
+                {
+                        Vector<N, T> v;
+                        T v_length_square;
+                        impl::uniform_in_sphere_by_rejection(random_engine, v, v_length_square);
+                        return v;
+                });
+
+        write_samples_to_file<N, T>(
+                "in sphere normal distribution", COUNT,
+                [&]()
+                {
+                        Vector<N, T> v;
+                        T v_length_square;
+                        impl::uniform_in_sphere_by_normal_distribution(random_engine, v, v_length_square);
+                        return v;
+                });
+
+        std::vector<Vector<N, T>> samples;
+        StratifiedJitteredSampler<N, T>(0, 1, COUNT, false).generate(random_engine, &samples);
+        std::size_t sample = 0;
+        write_samples_to_file<N, T>(
+                "in parallelotope", samples.size(),
+                [&]()
+                {
+                        static constexpr std::array<Vector<N, T>, N> VECTORS = []
+                        {
+                                std::array<Vector<N, T>, N> res;
+                                for (std::size_t i = 0; i < N; ++i)
+                                {
+                                        res[i] = Vector<N, T>(0);
+                                        res[i][i] = 2;
+                                }
+                                return res;
+                        }();
+                        ASSERT(sample < samples.size());
+                        return uniform_in_parallelotope(VECTORS, samples[sample++]);
                 });
 }
 
@@ -138,6 +181,6 @@ void test()
         write_samples_to_files<std::mt19937_64>();
 }
 
-TEST_PERFORMANCE("Uniform Sphere Samples File", test)
+TEST_PERFORMANCE("Uniform Samples File", test)
 }
 }
