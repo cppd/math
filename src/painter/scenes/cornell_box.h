@@ -22,6 +22,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "../lights/point_light.h"
 #include "../objects.h"
 #include "../projectors/perspective_projector.h"
+#include "../projectors/spherical_projector.h"
 #include "../shapes/hyperplane_parallelotope.h"
 #include "../shapes/parallelotope.h"
 #include "../shapes/shape.h"
@@ -138,26 +139,43 @@ std::unique_ptr<const Scene<N, T, Color>> create_cornell_box_scene(
         //        shapes.push_back(std::move(lamp));
         //}
 
+        if ((true))
         {
-                Vector<N, T> lamp_org = center + T(0.49) * camera[N - 2];
-                Vector<N, T> lamp_direction = -camera[N - 2];
-
                 constexpr T UNIT_INTENSITY_DISTANCE = 1.5;
                 constexpr T FALLOFF_START = 80;
                 constexpr T WIDTH = 90;
 
+                Vector<N, T> lamp_org = center + T(0.49) * camera[N - 2];
+                Vector<N, T> lamp_direction = -camera[N - 2];
+
                 light_sources.push_back(std::make_unique<const SpotLight<N, T, Color>>(
                         lamp_org, lamp_direction, light, UNIT_INTENSITY_DISTANCE, FALLOFF_START, WIDTH));
         }
+        else
+        {
+                constexpr T UNIT_INTENSITY_DISTANCE = 1;
+
+                Vector<N, T> lamp_org = center + T(0.45) * camera[N - 2];
+
+                light_sources.push_back(
+                        std::make_unique<const PointLight<N, T, Color>>(lamp_org, light, UNIT_INTENSITY_DISTANCE));
+        }
 
         std::unique_ptr<Projector<N, T>> projector;
+
         {
                 const std::array<Vector<N, T>, N - 1> screen_axes = del_elem(camera, N - 1);
                 const Vector<N, T> view_point = center - CAMERA * camera[N - 1];
-                projector = std::make_unique<PerspectiveProjector<N, T>>(
-                        view_point, camera[N - 1], screen_axes, 70, screen_sizes);
-                // projector = std::make_unique<SphericalProjector<N, T>>(
-                //        view_point, camera[N - 1], screen_axes, 80, screen_sizes);
+                if ((true))
+                {
+                        projector = std::make_unique<PerspectiveProjector<N, T>>(
+                                view_point, camera[N - 1], screen_axes, 70, screen_sizes);
+                }
+                else
+                {
+                        projector = std::make_unique<SphericalProjector<N, T>>(
+                                view_point, camera[N - 1], screen_axes, 80, screen_sizes);
+                }
         }
 
         return create_storage_scene<N, T>(
