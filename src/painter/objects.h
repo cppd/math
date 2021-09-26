@@ -84,6 +84,8 @@ struct LightSource
                 const = 0;
 
         virtual T pdf(const Vector<N, T>& point, const Vector<N, T>& l) const = 0;
+
+        virtual bool is_delta() const = 0;
 };
 
 template <std::size_t N, typename T>

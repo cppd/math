@@ -51,5 +51,10 @@ public:
         {
                 return 0;
         }
+
+        bool is_delta() const override
+        {
+                return true;
+        }
 };
 }

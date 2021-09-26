@@ -66,7 +66,8 @@ public:
                 }
         }
 
-        LightSourceSample<N, T, Color> sample(const Vector<N, T>& point) const override
+        LightSourceSample<N, T, Color> sample(RandomEngine<T>& /*random_engine*/, const Vector<N, T>& point)
+                const override
         {
                 namespace impl = point_light_implementation;
 
@@ -81,6 +82,16 @@ public:
                 s.pdf = 1;
                 s.radiance = color_ * coef;
                 return s;
+        }
+
+        T pdf(const Vector<N, T>& /*point*/, const Vector<N, T>& /*l*/) const override
+        {
+                return 0;
+        }
+
+        bool is_delta() const override
+        {
+                return true;
         }
 };
 
@@ -166,6 +177,11 @@ public:
         T pdf(const Vector<N, T>& /*point*/, const Vector<N, T>& /*l*/) const override
         {
                 return 0;
+        }
+
+        bool is_delta() const override
+        {
+                return true;
         }
 };
 }
