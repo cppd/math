@@ -35,6 +35,7 @@ Elsevier, 2017.
 
 #pragma once
 
+#include "ggx.h"
 #include "sample.h"
 
 #include <src/com/constant.h>
@@ -43,7 +44,6 @@ Elsevier, 2017.
 #include <src/geometry/shapes/sphere_integral.h>
 #include <src/numerical/vec.h>
 #include <src/sampling/sphere_cosine.h>
-#include <src/shading/ggx.h>
 
 #include <cmath>
 
