@@ -157,7 +157,7 @@ void add_reflected(
 {
         const Vector<N, T>& n = normals.shading;
 
-        const shading::Sample<N, T, Color> sample = surface.sample_brdf(engine, n, v);
+        const Sample<N, T, Color> sample = surface.sample_brdf(engine, n, v);
 
         if (sample.brdf.is_black() || sample.pdf <= 0)
         {
