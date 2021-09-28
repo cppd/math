@@ -46,4 +46,17 @@ T reflected_pdf(T pdf, T cosine)
         }
         return 0;
 }
+
+template <std::size_t N, typename T>
+T area_pdf_to_solid_angle_pdf(T pdf, T cosine, T distance)
+{
+        static_assert(N >= 2);
+        static_assert(std::is_floating_point_v<T>);
+
+        if (cosine > 0)
+        {
+                return pdf * power<N - 1>(distance) / cosine;
+        }
+        return 0;
+}
 }
