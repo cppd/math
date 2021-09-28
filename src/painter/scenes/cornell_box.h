@@ -134,7 +134,7 @@ std::unique_ptr<const Scene<N, T, Color>> create_cornell_box_scene(
         //        std::unique_ptr<HyperplaneParallelotope<N, T, Color>> lamp =
         //                std::make_unique<HyperplaneParallelotope<N, T, Color>>(
         //                        METALNESS, ROUGHNESS, Color(color::rgb::WHITE), ALPHA, lamp_org, lamp_vectors);
-        //        lamp->set_light_source(Color(50, 50, 50, color::Type::Illumination));
+        //        lamp->set_light_source(Color::illuminant(50, 50, 50));
         //
         //        shapes.push_back(std::move(lamp));
         //}

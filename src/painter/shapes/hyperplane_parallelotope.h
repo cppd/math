@@ -51,7 +51,7 @@ class HyperplaneParallelotope final : public Shape<N, T, Color>
 
                 Vector<N, T> geometric_normal() const override
                 {
-                        return obj_->hyperplane_parallelotope_.normal(this->point());
+                        return obj_->hyperplane_parallelotope_.normal();
                 }
 
                 std::optional<Vector<N, T>> shading_normal() const override

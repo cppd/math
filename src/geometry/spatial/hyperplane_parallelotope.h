@@ -76,14 +76,14 @@ public:
 
         std::optional<T> intersect(const Ray<N, T>& r) const;
 
-        const Vector<N, T>& normal(const Vector<N, T>& point) const;
+        const Vector<N, T>& normal() const;
 
         std::array<Vector<N, T>, VERTEX_COUNT> vertices() const;
 
         std::array<std::array<Vector<N, T>, 2>, EDGE_COUNT> edges() const;
 
         const Vector<N, T>& org() const;
-        const Vector<N, T>& e(unsigned n) const;
+        const std::array<Vector<N, T>, N - 1>& vectors() const;
 };
 
 template <std::size_t N, typename T>
@@ -174,7 +174,7 @@ std::optional<T> HyperplaneParallelotope<N, T>::intersect(const Ray<N, T>& r) co
 }
 
 template <std::size_t N, typename T>
-const Vector<N, T>& HyperplaneParallelotope<N, T>::normal(const Vector<N, T>&) const
+const Vector<N, T>& HyperplaneParallelotope<N, T>::normal() const
 {
         return normal_;
 }
@@ -272,9 +272,8 @@ const Vector<N, T>& HyperplaneParallelotope<N, T>::org() const
 }
 
 template <std::size_t N, typename T>
-const Vector<N, T>& HyperplaneParallelotope<N, T>::e(unsigned n) const
+const std::array<Vector<N, T>, N - 1>& HyperplaneParallelotope<N, T>::vectors() const
 {
-        ASSERT(n < N - 1);
-        return vectors_[n];
+        return vectors_;
 }
 }
