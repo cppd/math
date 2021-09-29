@@ -37,6 +37,7 @@ E. Other continuous distributions
 #pragma once
 
 #include <src/com/constant.h>
+#include <src/com/exponent.h>
 #include <src/geometry/shapes/ball_volume.h>
 #include <src/geometry/shapes/sphere_area.h>
 #include <src/numerical/vec.h>
@@ -179,11 +180,28 @@ Vector<N, T> uniform_on_sphere(RandomEngine& random_engine)
         }
 }
 
+template <std::size_t N, typename T, std::size_t M, typename RandomEngine>
+Vector<N, T> uniform_in_sphere(const std::array<Vector<N, T>, M>& orthogonal_vectors, RandomEngine& random_engine)
+{
+        static_assert(N > 0 && M > 0 && M <= N);
+
+        Vector<M, T> v;
+        T v_length_square;
+        uniform_in_sphere(random_engine, v, v_length_square);
+
+        Vector<N, T> res = orthogonal_vectors[0] * v[0];
+        for (std::size_t i = 1; i < M; ++i)
+        {
+                res.multiply_add(orthogonal_vectors[i], v[i]);
+        }
+        return res;
+}
+
 template <std::size_t N, typename T>
-constexpr T uniform_in_sphere_pdf()
+constexpr T uniform_in_sphere_pdf(const T& radius)
 {
         constexpr T PDF = 1 / geometry::ball_volume<N>();
-        return PDF;
+        return PDF / power<N>(radius);
 }
 
 template <std::size_t N, typename T>
