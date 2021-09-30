@@ -26,7 +26,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/com/message.h>
 #include <src/com/min_max.h>
 #include <src/com/print.h>
-#include <src/com/spin_lock.h>
+#include <src/com/spinlock.h>
 #include <src/com/type/limit.h>
 #include <src/com/type/name.h>
 #include <src/image/format.h>
@@ -104,7 +104,7 @@ class PainterPixels final : public Pixels, public painter::Notifier<N - 1>
 
         std::vector<std::byte> pixels_r8g8b8a8_{make_initial_image(screen_size_, COLOR_FORMAT)};
         std::vector<Vector<3, float>> pixels_original_{std::size_t(global_index_.count()), Vector<3, float>(MIN)};
-        std::vector<SpinLock> pixels_lock_{pixels_original_.size()};
+        std::vector<Spinlock> pixels_lock_{pixels_original_.size()};
         float pixels_coef_ = 1;
 
         static_assert(std::atomic<float>::is_always_lock_free);

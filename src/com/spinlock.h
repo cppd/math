@@ -21,26 +21,29 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 namespace ns
 {
-class SpinLock final
+class Spinlock final
 {
-        std::atomic_flag spin_lock_;
+        std::atomic_flag flag_;
 
 public:
-        SpinLock() noexcept
+        Spinlock() noexcept
         {
-                spin_lock_.clear();
+                flag_.clear(std::memory_order_relaxed);
         }
 
         void lock() noexcept
         {
-                while (spin_lock_.test_and_set(std::memory_order_acquire))
+                while (flag_.test_and_set(std::memory_order_acquire))
                 {
+                        while (flag_.test(std::memory_order_relaxed))
+                        {
+                        }
                 }
         }
 
         void unlock() noexcept
         {
-                spin_lock_.clear(std::memory_order_release);
+                flag_.clear(std::memory_order_release);
         }
 };
 }

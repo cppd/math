@@ -27,7 +27,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/com/error.h>
 #include <src/com/global_index.h>
 #include <src/com/log.h>
-#include <src/com/spin_lock.h>
+#include <src/com/spinlock.h>
 #include <src/image/image.h>
 
 #include <array>
@@ -76,10 +76,10 @@ class Pixels final
         Notifier<N>* const notifier_;
 
         std::vector<Pixel<Color>> pixels_{static_cast<std::size_t>(global_index_.count())};
-        mutable std::vector<SpinLock> pixel_locks_{pixels_.size()};
+        mutable std::vector<Spinlock> pixel_locks_{pixels_.size()};
 
         Paintbrush<N, PaintbrushType> paintbrush_{screen_size_, PANTBRUSH_WIDTH};
-        mutable SpinLock paintbrush_lock_;
+        mutable Spinlock paintbrush_lock_;
 
         Vector<4, float> rgba_color(const Pixel<Color>& pixel) const
         {
