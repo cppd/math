@@ -79,7 +79,7 @@ class Pixels final
         mutable std::vector<Spinlock> pixel_locks_{pixels_.size()};
 
         Paintbrush<N, PaintbrushType> paintbrush_{screen_size_, PANTBRUSH_WIDTH};
-        mutable Spinlock paintbrush_lock_;
+        mutable std::mutex paintbrush_lock_;
 
         Vector<4, float> rgba_color(const Pixel<Color>& pixel) const
         {
