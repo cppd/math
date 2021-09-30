@@ -17,30 +17,21 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
+#include "error.h"
 #include "exception.h"
-#include "log.h"
-#include "print.h"
-#include "thread.h"
 
 #include <atomic>
-#include <condition_variable>
+#include <barrier>
 #include <functional>
-#include <mutex>
 #include <string>
+#include <thread>
 #include <vector>
 
 namespace ns
 {
-class ThreadPool
+class ThreadPool final
 {
-        const unsigned thread_count_;
-
-        std::mutex mutex_run_, mutex_finish_;
-        std::condition_variable cv_run_, cv_finish_;
-
-        ThreadsWithCatch threads_;
-
-        class ThreadError
+        class ThreadError final
         {
                 bool has_error_;
                 std::string error_message_;
@@ -66,80 +57,19 @@ class ThreadPool
                 }
         };
 
-        std::vector<ThreadError> thread_errors_;
+        const std::thread::id thread_id_ = std::this_thread::get_id();
 
-        bool enable_;
-        int count_;
-        long long generation_;
-        bool exit_;
+        const unsigned thread_count_;
 
-        std::function<void(unsigned, unsigned)> bound_function_;
+        std::barrier<> barrier_{thread_count_ + 1};
+        std::atomic_bool exit_{false};
 
-        bool start_in_thread() noexcept
-        {
-                try
-                {
-                        try
-                        {
-                                std::unique_lock lock(mutex_run_);
-                                cv_run_.wait(
-                                        lock,
-                                        [this]
-                                        {
-                                                return enable_ || exit_;
-                                        });
-                                return !exit_;
-                        }
-                        catch (const std::exception& e)
-                        {
-                                error_fatal(std::string("exception in thread pool start code: ") + e.what());
-                        }
-                }
-                catch (...)
-                {
-                        error_fatal("exception in thread pool start code");
-                }
-        }
+        std::vector<std::thread> threads_{thread_count_};
+        std::vector<ThreadError> thread_errors_{thread_count_};
 
-        void finish_in_thread() noexcept
-        {
-                try
-                {
-                        try
-                        {
-                                std::unique_lock lock(mutex_finish_);
+        std::function<void(unsigned, unsigned)> function_;
 
-                                long long g = generation_;
-                                --count_;
-                                if (count_ == 0)
-                                {
-                                        enable_ = false;
-                                        count_ = thread_count_;
-                                        ++generation_;
-                                        cv_finish_.notify_all();
-                                }
-                                else
-                                {
-                                        cv_finish_.wait(
-                                                lock,
-                                                [this, g]
-                                                {
-                                                        return g != generation_;
-                                                });
-                                }
-                        }
-                        catch (const std::exception& e)
-                        {
-                                error_fatal(std::string("exception in thread pool finish code: ") + e.what());
-                        }
-                }
-                catch (...)
-                {
-                        error_fatal("exception in thread pool finish code");
-                }
-        }
-
-        void process(unsigned thread_num) noexcept
+        void process(const unsigned thread_num) noexcept
         {
                 try
                 {
@@ -147,7 +77,7 @@ class ThreadPool
                         {
                                 try
                                 {
-                                        bound_function_(thread_num, thread_count_);
+                                        function_(thread_num, thread_count_);
                                 }
                                 catch (const TerminateQuietlyException&)
                                 {
@@ -158,41 +88,43 @@ class ThreadPool
                                 }
                                 catch (...)
                                 {
-                                        thread_errors_[thread_num].set("Unknown error in thread of thread pool");
+                                        thread_errors_[thread_num].set("Unknown error in a thread of thread pool");
                                 }
                         }
                         catch (const std::exception& e)
                         {
                                 error_fatal(
-                                        std::string("exception in thread pool while working with exception: ")
+                                        std::string("Exception in thread pool while working with exception: ")
                                         + e.what());
                         }
                 }
                 catch (...)
                 {
-                        error_fatal("exception in thread pool while working with exception");
+                        error_fatal("Exception in thread pool while working with exception");
                 }
         }
 
-        void thread(unsigned thread_num) noexcept
+        void thread(const unsigned thread_num) noexcept
         {
                 try
                 {
                         while (true)
                         {
-                                if (!start_in_thread())
+                                barrier_.arrive_and_wait();
+
+                                if (exit_)
                                 {
                                         return;
                                 }
 
                                 process(thread_num);
 
-                                finish_in_thread();
+                                barrier_.arrive_and_wait();
                         }
                 }
                 catch (...)
                 {
-                        error_fatal("exception in thread pool while proccessing thread");
+                        error_fatal("Exception in thread pool while proccessing thread");
                 }
         }
 
@@ -202,24 +134,8 @@ class ThreadPool
                 {
                         try
                         {
-                                long long g = generation_;
-
-                                {
-                                        std::lock_guard lg(mutex_run_);
-                                        enable_ = true;
-                                }
-
-                                cv_run_.notify_all();
-
-                                {
-                                        std::unique_lock lock(mutex_finish_);
-                                        cv_finish_.wait(
-                                                lock,
-                                                [this, g]
-                                                {
-                                                        return g != generation_;
-                                                });
-                                }
+                                barrier_.arrive_and_wait();
+                                barrier_.arrive_and_wait();
                         }
                         catch (const std::exception& e)
                         {
@@ -265,18 +181,12 @@ class ThreadPool
         }
 
 public:
-        explicit ThreadPool(unsigned thread_count)
-                : thread_count_(thread_count), threads_(thread_count_), thread_errors_(thread_count_)
+        explicit ThreadPool(const unsigned thread_count) : thread_count_(thread_count)
         {
-                enable_ = false;
-                exit_ = false;
-                generation_ = 0;
-                count_ = thread_count_;
-
                 for (unsigned i = 0; i < thread_count_; ++i)
                 {
-                        threads_.add(
-                                [&, i]()
+                        threads_[i] = std::thread(
+                                [this, i]()
                                 {
                                         thread(i);
                                 });
@@ -290,35 +200,32 @@ public:
 
         void run(std::function<void(unsigned, unsigned)>&& function)
         {
-                bound_function_ = std::move(function);
+                ASSERT(std::this_thread::get_id() == thread_id_);
+
+                function_ = std::move(function);
 
                 clear_errors();
-
                 start_and_wait();
-
                 find_errors();
         }
 
         ~ThreadPool()
         {
-                {
-                        std::lock_guard lg(mutex_run_);
-                        exit_ = true;
-                }
-
-                cv_run_.notify_all();
+                ASSERT(std::this_thread::get_id() == thread_id_);
 
                 try
                 {
-                        threads_.join();
-                }
-                catch (const std::exception& e)
-                {
-                        error_fatal(std::string("Thread pool thread(s) exited with error(s): ") + e.what());
+                        exit_ = true;
+                        barrier_.arrive_and_wait();
+
+                        for (std::thread& t : threads_)
+                        {
+                                t.join();
+                        }
                 }
                 catch (...)
                 {
-                        error_fatal("Thread pool thread(s) exited with an unknown error");
+                        error_fatal("Error in thread pool destructor");
                 }
         }
 };
