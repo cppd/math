@@ -49,18 +49,19 @@ The projection to the n-space of the lower convex hull of the points
 #include "simplex.h"
 
 #include <src/com/arrays.h>
-#include <src/com/barrier.h>
 #include <src/com/error.h>
 #include <src/com/log.h>
 #include <src/com/names.h>
 #include <src/com/print.h>
 #include <src/com/shuffle.h>
+#include <src/com/thread.h>
 #include <src/com/thread_pool.h>
 #include <src/com/type/concept.h>
 #include <src/com/type/find.h>
 #include <src/com/type/limit.h>
 
 #include <algorithm>
+#include <barrier>
 #include <random>
 #include <sstream>
 #include <unordered_map>
@@ -137,24 +138,13 @@ std::string type_str() requires std::is_same_v<std::remove_cv_t<T>, mpz_class>
         return "mpz_class";
 }
 
-// Here multithreading does not always speed up calculations.
-// When points are inside a sphere, multithreading speeds up calculations.
-// When points are on a sphere, multithreading slows down calculations.
-// When using mpz_class, multithreading speeds up calculations.
 template <typename S, typename C>
 int thread_count_for_horizon()
 {
         static_assert(Integral<S> && Integral<C>);
 
-        if constexpr (!std::is_class_v<S> && !std::is_class_v<C>)
-        {
-                return 1;
-        }
-        else
-        {
-                const int hc = hardware_concurrency();
-                return std::max(hc - 1, 1);
-        }
+        const int hc = hardware_concurrency();
+        return std::max(hc - 1, 1);
 }
 
 template <typename T>
@@ -433,7 +423,7 @@ void create_horizon_facets(
         std::vector<FacetStore<Facet<N, S, C>>>* const point_conflicts,
         std::vector<std::vector<signed char>>* const unique_points_work,
         std::vector<FacetList<Facet<N, S, C>>>* const new_facets_vector,
-        Barrier* const barrier)
+        std::barrier<>* const barrier)
 {
         try
         {
@@ -443,10 +433,10 @@ void create_horizon_facets(
         }
         catch (...)
         {
-                barrier->wait();
+                barrier->arrive_and_wait();
                 throw;
         }
-        barrier->wait();
+        barrier->arrive_and_wait();
 
         // erase first, then add.
         // this reduces the amount of searching.
@@ -472,7 +462,7 @@ void add_point_to_convex_hull(
         FacetList<Facet<N, S, C>>* const facets,
         std::vector<FacetStore<Facet<N, S, C>>>* const point_conflicts,
         ThreadPool* const thread_pool,
-        Barrier* const barrier,
+        std::barrier<>* const barrier,
         std::vector<std::vector<signed char>>* const unique_points_work)
 {
         if ((*point_conflicts)[point].size() == 0)
@@ -569,7 +559,7 @@ void create_convex_hull(
         create_init_conflict_lists(points, point_enabled, facets, &point_conflicts);
 
         ThreadPool thread_pool(thread_count_for_horizon<S, C>());
-        Barrier barrier(thread_pool.thread_count());
+        std::barrier<> barrier(thread_pool.thread_count());
 
         std::vector<std::vector<signed char>> unique_points_work(thread_pool.thread_count());
         for (std::vector<signed char>& v : unique_points_work)
