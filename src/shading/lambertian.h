@@ -77,6 +77,17 @@ Color f(const Color& color, const Vector<N, T>& n, const Vector<N, T>& l)
         return impl::f<N>(color);
 }
 
+template <std::size_t N, typename T>
+T pdf(const Vector<N, T>& n, const Vector<N, T>& l)
+{
+        static_assert(N >= 3);
+
+        ASSERT(n.is_unit());
+        ASSERT(l.is_unit());
+
+        return sampling::cosine_on_hemisphere_pdf<N>(dot(n, l));
+}
+
 template <std::size_t N, typename T, typename Color, typename RandomEngine>
 Sample<N, T, Color> sample_f(RandomEngine& random_engine, const Color& color, const Vector<N, T>& n)
 {
