@@ -85,14 +85,6 @@ Normals<N, T> compute_normals(
 }
 
 template <std::size_t N, typename T, typename Color>
-std::optional<Color> trace_path(
-        const Scene<N, T, Color>& scene,
-        bool smooth_normals,
-        const Ray<N, T>& ray,
-        int depth,
-        RandomEngine<T>& engine);
-
-template <std::size_t N, typename T, typename Color>
 void add_surface(const Surface<N, T, Color>& surface, Color* const color_sum)
 {
         const std::optional<Color> surface_light_source = surface.light_source();
@@ -101,6 +93,44 @@ void add_surface(const Surface<N, T, Color>& surface, Color* const color_sum)
                 return;
         }
         *color_sum = *surface_light_source;
+}
+
+template <std::size_t N, typename T, typename Color>
+void add_light_source(
+        const LightSource<N, T, Color>& light_source,
+        const Scene<N, T, Color>& scene,
+        const Surface<N, T, Color>& surface,
+        const Vector<N, T>& point,
+        const Vector<N, T>& v,
+        const Normals<N, T>& normals,
+        Color* const color_sum,
+        RandomEngine<T>& engine)
+{
+        const Vector<N, T>& n = normals.shading;
+
+        const LightSourceSample<N, T, Color> light_sample = light_source.sample(engine, point);
+
+        if (light_sample.radiance.is_black() || light_sample.pdf <= 0)
+        {
+                return;
+        }
+
+        const Vector<N, T>& l = light_sample.l;
+        ASSERT(l.is_unit());
+
+        const T n_l = dot(n, l);
+        if (n_l <= 0)
+        {
+                return;
+        }
+
+        if (occluded(scene, normals.geometric, normals.smooth, Ray<N, T>(point, l), light_sample.distance))
+        {
+                return;
+        }
+
+        const Color brdf = surface.brdf(n, v, l);
+        *color_sum += brdf * light_sample.radiance * (n_l / light_sample.pdf);
 }
 
 template <std::size_t N, typename T, typename Color>
@@ -113,35 +143,19 @@ void add_light_sources(
         Color* const color_sum,
         RandomEngine<T>& engine)
 {
-        const Vector<N, T>& n = normals.shading;
-
         for (const LightSource<N, T, Color>* const light_source : scene.light_sources())
         {
-                const LightSourceSample<N, T, Color> sample = light_source->sample(engine, point);
-
-                if (sample.radiance.is_black() || sample.pdf <= 0)
-                {
-                        continue;
-                }
-
-                const Vector<N, T>& l = sample.l;
-                ASSERT(l.is_unit());
-
-                const T n_l = dot(n, l);
-                if (n_l <= 0)
-                {
-                        continue;
-                }
-
-                if (occluded(scene, normals.geometric, normals.smooth, Ray<N, T>(point, l), sample.distance))
-                {
-                        continue;
-                }
-
-                const Color brdf = surface.brdf(n, v, l);
-                *color_sum += brdf * sample.radiance * (n_l / sample.pdf);
+                add_light_source(*light_source, scene, surface, point, v, normals, color_sum, engine);
         }
 }
+
+template <std::size_t N, typename T, typename Color>
+std::optional<Color> trace_path(
+        const Scene<N, T, Color>& scene,
+        bool smooth_normals,
+        const Ray<N, T>& ray,
+        int depth,
+        RandomEngine<T>& engine);
 
 template <std::size_t N, typename T, typename Color>
 void add_reflected(
