@@ -53,6 +53,11 @@ class BRDF final : public TestBRDF<N, T, Color, RandomEngine<T>>
                 return ggx_diffuse::f(metalness_, roughness_, color_, n, v, l);
         }
 
+        T pdf(const Vector<N, T>& n, const Vector<N, T>& v, const Vector<N, T>& l) const override
+        {
+                return ggx_diffuse::pdf(roughness_, n, v, l);
+        }
+
         Sample<N, T, Color> sample_f(RandomEngine<T>& random_engine, const Vector<N, T>& n, const Vector<N, T>& v)
                 const override
         {
@@ -106,26 +111,52 @@ void test_brdf_random()
         check_color_range(result);
 }
 
+template <std::size_t N, typename T, typename Color>
+void test_brdf_pdf()
+{
+        const BRDF<N, T, Color> brdf(Color(1), MIN_ROUGHNESS<T>);
+
+        LOG(std::string(Color::name()) + ", " + to_string(N) + "D, " + type_name<T>() + ", f, pdf");
+        T pdf = test_brdf_pdf(brdf, SAMPLE_COUNT);
+        if (!(pdf > 0 && pdf < T(1.01)))
+        {
+                error("BRDF error, PDF is not less than 1\n" + to_string(pdf));
+        }
+}
+
 template <typename T, typename Color>
 void test_brdf(ProgressRatio* progress)
 {
-        progress->set(0.0 / 6);
+        progress->set(0.0 / 9);
         test_brdf_white<3, T, Color>();
 
-        progress->set(1.0 / 6);
+        progress->set(1.0 / 9);
         test_brdf_random<3, T, Color>();
 
-        progress->set(2.0 / 6);
+        progress->set(2.0 / 9);
+        test_brdf_pdf<3, T, Color>();
+
+        //
+
+        progress->set(3.0 / 9);
         test_brdf_white<4, T, Color>();
 
-        progress->set(3.0 / 6);
+        progress->set(4.0 / 9);
         test_brdf_random<4, T, Color>();
 
-        progress->set(4.0 / 6);
+        progress->set(5.0 / 9);
+        test_brdf_pdf<4, T, Color>();
+
+        //
+
+        progress->set(6.0 / 9);
         test_brdf_white<5, T, Color>();
 
-        progress->set(5.0 / 6);
+        progress->set(7.0 / 9);
         test_brdf_random<5, T, Color>();
+
+        progress->set(8.0 / 9);
+        test_brdf_pdf<5, T, Color>();
 }
 
 void test_small(ProgressRatio* progress)

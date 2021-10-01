@@ -20,6 +20,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "../sample.h"
 
 #include <src/com/error.h>
+#include <src/com/print.h>
 #include <src/com/random/engine.h>
 #include <src/sampling/sphere_uniform.h>
 
@@ -59,6 +60,8 @@ protected:
 
 public:
         virtual Color f(const Vector<N, T>& n, const Vector<N, T>& v, const Vector<N, T>& l) const = 0;
+
+        virtual T pdf(const Vector<N, T>& n, const Vector<N, T>& v, const Vector<N, T>& l) const = 0;
 
         virtual Sample<N, T, Color> sample_f(RandomEngine& random_engine, const Vector<N, T>& n, const Vector<N, T>& v)
                 const = 0;
@@ -106,6 +109,45 @@ Color test_brdf_f(const TestBRDF<N, T, Color, RandomEngine>& brdf, const long lo
         }
 
         return sum / sample_count;
+}
+
+template <std::size_t N, typename T, typename Color, typename RandomEngine>
+T test_brdf_pdf(const TestBRDF<N, T, Color, RandomEngine>& brdf, const long long sample_count)
+{
+        if (sample_count <= 0)
+        {
+                error("Sample count must be positive");
+        }
+
+        static constexpr T UNIFORM_ON_HEMISPHERE_PDF = 2 * sampling::uniform_on_sphere_pdf<N, T>();
+
+        const auto [n, v] = brdf_implementation::random_n_v<N, T>();
+
+        RandomEngine random_engine = create_engine<RandomEngine>();
+
+        T sum = 0;
+        long long sample = 0;
+
+        while (sample < sample_count)
+        {
+                const Vector<N, T> l = sampling::uniform_on_sphere<N, T>(random_engine);
+                const T n_l = dot(n, l);
+
+                if (n_l <= 0)
+                {
+                        T pdf = brdf.pdf(n, v, l);
+                        if (!(pdf == 0))
+                        {
+                                error("BRDF PDF is not 0 when dot(n,l) <= 0 " + to_string(pdf));
+                        }
+                        continue;
+                }
+
+                ++sample;
+                sum += brdf.pdf(n, v, l);
+        }
+
+        return sum / (sample_count * UNIFORM_ON_HEMISPHERE_PDF);
 }
 
 template <std::size_t N, typename T, typename Color, typename RandomEngine>

@@ -49,6 +49,15 @@ class BRDF final : public TestBRDF<N, T, Color, RandomEngine<T>>
                 return lambertian::f(color_, n, l);
         }
 
+        T pdf(const Vector<N, T>& n, const Vector<N, T>& v, const Vector<N, T>& l) const override
+        {
+                if (dot(n, v) <= 0)
+                {
+                        return 0;
+                }
+                return lambertian::pdf(n, l);
+        }
+
         Sample<N, T, Color> sample_f(RandomEngine<T>& random_engine, const Vector<N, T>& n, const Vector<N, T>& v)
                 const override
         {
@@ -78,6 +87,13 @@ void test_brdf()
         LOG(std::string(Color::name()) + ", " + to_string(N) + "D, " + type_name<T>() + ", f");
         result = test_brdf_f(brdf, SAMPLE_COUNT);
         check_color_equal(result, brdf.color());
+
+        LOG(std::string(Color::name()) + ", " + to_string(N) + "D, " + type_name<T>() + ", pdf");
+        T pdf = test_brdf_pdf(brdf, SAMPLE_COUNT);
+        if (!(std::abs(pdf - 1) <= T(0.01)))
+        {
+                error("BRDF error, PDF is not equal to 1\n" + to_string(pdf));
+        }
 
         LOG(std::string(Color::name()) + ", " + to_string(N) + "D, " + type_name<T>() + ", sample f");
         result = test_brdf_sample_f(brdf, SAMPLE_COUNT);
