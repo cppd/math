@@ -53,7 +53,7 @@ namespace ggx_implementation
 {
 #if 0
 template <typename T, typename RandomEngine>
-Vector<3, T> ggx_vn(RandomEngine& random_engine, const Vector<3, T>& ve, T alpha)
+Vector<3, T> ggx_vn(RandomEngine& random_engine, const Vector<3, T>& ve, const T alpha)
 {
         // Section 3.2: transforming the view direction to the hemisphere configuration
         Vector<3, T> vh = Vector<3, T>(alpha * ve[0], alpha * ve[1], ve[2]).normalized();
@@ -96,7 +96,7 @@ Vector<3, T> ggx_vn(RandomEngine& random_engine, const Vector<3, T>& ve, T alpha
 }
 #else
 template <std::size_t N, typename T, typename RandomEngine>
-Vector<N, T> ggx_vn(RandomEngine& random_engine, const Vector<N, T>& ve, T alpha)
+Vector<N, T> ggx_vn(RandomEngine& random_engine, const Vector<N, T>& ve, const T alpha)
 {
         static_assert(N >= 3);
 
@@ -199,7 +199,7 @@ Vector<N, T> ggx_vn(RandomEngine& random_engine, const Vector<N, T>& ve, T alpha
 
 // (2), (9.37), (9.42)
 template <typename T>
-T ggx_lambda(T n_v, T alpha)
+T ggx_lambda(const T n_v, const T alpha)
 {
         T n_v_2 = square(n_v);
         T t = square(alpha) * (1 - n_v_2) / n_v_2;
@@ -209,14 +209,14 @@ T ggx_lambda(T n_v, T alpha)
 
 // (2), (9.24)
 template <typename T>
-T ggx_g1(T n_v, T alpha)
+T ggx_g1(const T n_v, const T alpha)
 {
         return 1 / (1 + ggx_lambda(n_v, alpha));
 }
 
 // (9.31)
 template <typename T>
-T ggx_g2(T n_v, T n_l, T alpha)
+T ggx_g2(const T n_v, const T n_l, const T alpha)
 {
         return 1 / (1 + ggx_lambda(n_v, alpha) + ggx_lambda(n_l, alpha));
 }
@@ -224,7 +224,7 @@ T ggx_g2(T n_v, T n_l, T alpha)
 // (9.16)
 // Schlick approximation of Fresnel reflectance
 template <typename T, typename Color>
-Color fresnel(const Color& f0, T h_l)
+Color fresnel(const Color& f0, const T h_l)
 {
         static constexpr Color WHITE(1);
         return interpolation(f0, WHITE, power<5>(1 - h_l));
@@ -236,7 +236,7 @@ Vector<N, T> ggx_visible_normals_h(
         RandomEngine& random_engine,
         const Vector<N, T>& normal,
         const Vector<N, T>& v,
-        T alpha)
+        const T alpha)
 {
         static_assert(N >= 3);
         static_assert(std::is_floating_point_v<T>);
@@ -267,7 +267,7 @@ std::tuple<Vector<N, T>, Vector<N, T>> ggx_visible_normals_h_l(
         RandomEngine& random_engine,
         const Vector<N, T>& normal,
         const Vector<N, T>& v,
-        T alpha)
+        const T alpha)
 {
         Vector<N, T> h = ggx_visible_normals_h(random_engine, normal, v, alpha);
         Vector<N, T> l = numerical::reflect_vn(v, h);
@@ -276,7 +276,7 @@ std::tuple<Vector<N, T>, Vector<N, T>> ggx_visible_normals_h_l(
 
 // (1), (9.41)
 template <std::size_t N, typename T>
-T ggx_pdf(T n_h, T alpha)
+T ggx_pdf(const T n_h, const T alpha)
 {
         static_assert(N >= 3);
         static_assert(std::is_floating_point_v<T>);
@@ -304,7 +304,7 @@ T ggx_pdf(T n_h, T alpha)
 
 // (3)
 template <std::size_t N, typename T>
-T ggx_visible_normals_h_pdf(T n_v, T n_h, T h_v, T alpha)
+T ggx_visible_normals_h_pdf(const T n_v, const T n_h, const T h_v, const T alpha)
 {
         static_assert(N >= 3);
         static_assert(std::is_floating_point_v<T>);
@@ -319,7 +319,7 @@ T ggx_visible_normals_h_pdf(T n_v, T n_h, T h_v, T alpha)
 }
 
 template <std::size_t N, typename T>
-T ggx_visible_normals_l_pdf(T n_v, T n_h, T h_v, T alpha)
+T ggx_visible_normals_l_pdf(const T n_v, const T n_h, const T h_v, const T alpha)
 {
         static_assert(N >= 3);
         static_assert(std::is_floating_point_v<T>);
@@ -330,7 +330,7 @@ T ggx_visible_normals_l_pdf(T n_v, T n_h, T h_v, T alpha)
 // (15), (18), (19)
 // BRDF * (n · l) / PDF = Fresnel * G2 / G1
 template <std::size_t N, typename T, typename Color>
-Color ggx_brdf(T roughness, const Color& f0, T n_v, T n_l, T n_h, T h_l)
+Color ggx_brdf(const T roughness, const Color& f0, const T n_v, const T n_l, const T n_h, const T h_l)
 {
         static_assert(N >= 3);
         static_assert(std::is_floating_point_v<T>);

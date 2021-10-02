@@ -125,7 +125,7 @@ void test_brdf_pdf()
 }
 
 template <typename T, typename Color>
-void test_brdf(ProgressRatio* progress)
+void test_brdf(ProgressRatio* const progress)
 {
         progress->set(0.0 / 9);
         test_brdf_white<3, T, Color>();
@@ -159,7 +159,7 @@ void test_brdf(ProgressRatio* progress)
         test_brdf_pdf<5, T, Color>();
 }
 
-void test_small(ProgressRatio* progress)
+void test_small(ProgressRatio* const progress)
 {
         LOG("Test GGX Diffuse BRDF");
 
@@ -168,7 +168,7 @@ void test_small(ProgressRatio* progress)
         LOG("Test GGX Diffuse BRDF passed");
 }
 
-void test_large(ProgressRatio* progress)
+void test_large(ProgressRatio* const progress)
 {
         LOG("Test GGX Diffuse BRDF");
 

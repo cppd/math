@@ -53,11 +53,11 @@ namespace implementation
 {
 // (9.64)
 //template <std::size_t N, typename T, typename Color>
-//Color diffuse(const Color& f0, const Color& rho_ss, T n_l, T n_v)
+//Color diffuse(const Color& f0, const Color& rho_ss, const T n_l, const T n_v)
 //{
 //        static constexpr Color WHITE = Color(1);
-//        static constexpr T K = geometry::sphere_integrate_cosine_factor_over_hemisphere(N);
-//
+//        static constexpr T K = geometry::sphere_integrate_cosine_factor_over_hemisphere<N>();
+
 //        T l = (1 - power<5>(1 - n_l));
 //        T v = (1 - power<5>(1 - n_v));
 //        T c = (21 / (20 * K)) * l * v;
@@ -66,10 +66,16 @@ namespace implementation
 
 // (9.66), (9.67) without the subsurface term
 //template <std::size_t N, typename T, typename Color>
-//Color diffuse_disney_ws(const Color& /*f0*/, const Color& rho_ss, T roughness, T n_l, T n_v, T h_l)
+//Color diffuse_disney_ws(
+//        const Color& /*f0*/,
+//        const Color& rho_ss,
+//        const T roughness,
+//        const T n_l,
+//        const T n_v,
+//        const T h_l)
 //{
-//        static constexpr T K = 1 / geometry::sphere_integrate_cosine_factor_over_hemisphere(N);
-//
+//        static constexpr T K = 1 / geometry::sphere_integrate_cosine_factor_over_hemisphere<N>();
+
 //        T l = power<5>(1 - n_l);
 //        T v = power<5>(1 - n_v);
 //        T f_d90 = T(0.5) + 2 * roughness * square(h_l);
@@ -77,7 +83,7 @@ namespace implementation
 //        return (c * K) * rho_ss;
 //}
 template <std::size_t N, typename T, typename Color>
-Color diffuse_disney_ws(const Color& f0, const Color& rho_ss, T roughness, T n_l, T n_v, T h_l)
+Color diffuse_disney_ws(const Color& f0, const Color& rho_ss, const T roughness, const T n_l, const T n_v, const T h_l)
 {
         static constexpr Color WHITE = Color(1);
         static constexpr T K = 1 / geometry::sphere_integrate_cosine_factor_over_hemisphere<N>();
@@ -90,10 +96,10 @@ Color diffuse_disney_ws(const Color& f0, const Color& rho_ss, T roughness, T n_l
 }
 // (9.66), (9.67)
 //template <std::size_t N, typename T, typename Color>
-//Color diffuse_disney(const Color& rho_ss, T roughness, T n_l, T n_v, T h_l, T k_ss)
+//Color diffuse_disney(const Color& rho_ss, const T roughness, const T n_l, const T n_v, const T h_l, const T k_ss)
 //{
-//        static constexpr T K = 1 / geometry::sphere_integrate_cosine_factor_over_hemisphere(N);
-//
+//        static constexpr T K = 1 / geometry::sphere_integrate_cosine_factor_over_hemisphere<N>();
+
 //        T l = power<5>(1 - n_l);
 //        T v = power<5>(1 - n_v);
 //        T f_ss90 = roughness * square(h_l);
@@ -105,8 +111,8 @@ Color diffuse_disney_ws(const Color& f0, const Color& rho_ss, T roughness, T n_l
 //}
 
 template <std::size_t N, typename T, typename Color>
-Color f(T metalness,
-        T roughness,
+Color f(const T metalness,
+        const T roughness,
         const Color& surface_color,
         const Vector<N, T>& n,
         const Vector<N, T>& v,
@@ -162,7 +168,7 @@ T pdf_ggx_cosine(
 template <std::size_t N, typename T, typename RandomEngine>
 std::tuple<Vector<N, T>, T> sample_ggx_cosine(
         RandomEngine& random_engine,
-        T roughness,
+        const T roughness,
         const Vector<N, T>& n,
         const Vector<N, T>& v)
 {
@@ -205,8 +211,8 @@ std::tuple<Vector<N, T>, T> sample_ggx_cosine(
 //
 
 template <std::size_t N, typename T, typename Color>
-Color f(T metalness,
-        T roughness,
+Color f(const T metalness,
+        const T roughness,
         const Color& color,
         const Vector<N, T>& n,
         const Vector<N, T>& v,
@@ -232,7 +238,7 @@ Color f(T metalness,
 }
 
 template <std::size_t N, typename T>
-T pdf(T roughness, const Vector<N, T>& n, const Vector<N, T>& v, const Vector<N, T>& l)
+T pdf(const T roughness, const Vector<N, T>& n, const Vector<N, T>& v, const Vector<N, T>& l)
 {
         static_assert(N >= 3);
         namespace impl = implementation;
@@ -258,8 +264,8 @@ T pdf(T roughness, const Vector<N, T>& n, const Vector<N, T>& v, const Vector<N,
 template <std::size_t N, typename T, typename Color, typename RandomEngine>
 Sample<N, T, Color> sample_f(
         RandomEngine& random_engine,
-        T metalness,
-        T roughness,
+        const T metalness,
+        const T roughness,
         const Color& color,
         const Vector<N, T>& n,
         const Vector<N, T>& v)

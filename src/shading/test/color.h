@@ -25,7 +25,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 namespace ns::shading::test
 {
 template <typename Color>
-void check_color(const Color& color, const char* description)
+void check_color(const Color& color, const char* const description)
 {
         if (color.is_black())
         {

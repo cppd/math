@@ -43,7 +43,7 @@ using RandomEngine = std::conditional_t<sizeof(T) <= 4, std::mt19937, std::mt199
 namespace st = sampling::testing;
 
 template <std::size_t N, typename T>
-void test_ggx(ProgressRatio* progress)
+void test_ggx(ProgressRatio* const progress)
 {
         const T alpha = []()
         {
@@ -174,7 +174,7 @@ void test_ggx(ProgressRatio* progress)
 }
 
 template <std::size_t N>
-void test_ggx(ProgressRatio* progress)
+void test_ggx(ProgressRatio* const progress)
 {
         test_ggx<N, float>(progress);
         test_ggx<N, double>(progress);
