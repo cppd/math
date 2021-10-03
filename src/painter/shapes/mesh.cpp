@@ -217,6 +217,15 @@ public:
                 return shading::ggx_diffuse::f(m.metalness, m.roughness, surface_color(m), n, v, l);
         }
 
+        T pdf(const Vector<N, T>& n, const Vector<N, T>& v, const Vector<N, T>& l) const override
+        {
+                ASSERT(facet_->material() >= 0);
+
+                const Material<T, Color>& m = mesh_->materials()[facet_->material()];
+
+                return shading::ggx_diffuse::pdf(m.roughness, n, v, l);
+        }
+
         Sample<N, T, Color> sample_brdf(RandomEngine<T>& random_engine, const Vector<N, T>& n, const Vector<N, T>& v)
                 const override
         {

@@ -68,6 +68,8 @@ public:
 
         virtual Color brdf(const Vector<N, T>& n, const Vector<N, T>& v, const Vector<N, T>& l) const = 0;
 
+        virtual T pdf(const Vector<N, T>& n, const Vector<N, T>& v, const Vector<N, T>& l) const = 0;
+
         virtual Sample<N, T, Color> sample_brdf(
                 RandomEngine<T>& random_engine,
                 const Vector<N, T>& n,

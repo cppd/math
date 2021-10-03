@@ -69,6 +69,11 @@ class HyperplaneParallelotope final : public Shape<N, T, Color>
                         return shading::ggx_diffuse::f(obj_->metalness_, obj_->roughness_, obj_->color_, n, v, l);
                 }
 
+                T pdf(const Vector<N, T>& n, const Vector<N, T>& v, const Vector<N, T>& l) const override
+                {
+                        return shading::ggx_diffuse::pdf(obj_->roughness_, n, v, l);
+                }
+
                 Sample<N, T, Color> sample_brdf(
                         RandomEngine<T>& random_engine,
                         const Vector<N, T>& n,
