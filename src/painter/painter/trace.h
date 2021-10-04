@@ -31,6 +31,8 @@ Physically Based Rendering. From theory to implementation. Third edition.
 Elsevier, 2017.
 
 13.10 Importance sampling
+13.10.1 Multiple importance sampling
+14.3.1 Estimating the direct lighting integral
 */
 
 #pragma once
@@ -40,6 +42,7 @@ Elsevier, 2017.
 #include "../objects.h"
 
 #include <src/com/error.h>
+#include <src/sampling/mis.h>
 
 namespace ns::painter
 {
@@ -96,8 +99,8 @@ void add_surface(const Surface<N, T, Color>& surface, Color* const color_sum)
 }
 
 template <std::size_t N, typename T, typename Color>
-void add_light_source(
-        const LightSource<N, T, Color>& light_source,
+void sample_light_source_with_mis(
+        const LightSource<N, T, Color>& light,
         const Scene<N, T, Color>& scene,
         const Surface<N, T, Color>& surface,
         const Vector<N, T>& point,
@@ -108,14 +111,13 @@ void add_light_source(
 {
         const Vector<N, T>& n = normals.shading;
 
-        const LightSourceSample<N, T, Color> light_sample = light_source.sample(engine, point);
-
-        if (light_sample.radiance.is_black() || light_sample.pdf <= 0)
+        const LightSourceSample<N, T, Color> sample = light.sample(engine, point);
+        if (sample.pdf <= 0 || sample.radiance.is_black())
         {
                 return;
         }
 
-        const Vector<N, T>& l = light_sample.l;
+        const Vector<N, T>& l = sample.l;
         ASSERT(l.is_unit());
 
         const T n_l = dot(n, l);
@@ -124,13 +126,77 @@ void add_light_source(
                 return;
         }
 
-        if (occluded(scene, normals.geometric, normals.smooth, Ray<N, T>(point, l), light_sample.distance))
+        if (occluded(scene, normals.geometric, normals.smooth, Ray<N, T>(point, l), sample.distance))
         {
                 return;
         }
 
         const Color brdf = surface.brdf(n, v, l);
-        *color_sum += brdf * light_sample.radiance * (n_l / light_sample.pdf);
+        if (light.is_delta())
+        {
+                *color_sum += brdf * sample.radiance * (n_l / sample.pdf);
+        }
+        else
+        {
+                const T pdf = surface.pdf(n, v, l);
+                const T weight = sampling::mis::power_heuristic(1, sample.pdf, 1, pdf);
+                *color_sum += brdf * sample.radiance * (weight * n_l / sample.pdf);
+        }
+}
+
+template <std::size_t N, typename T, typename Color>
+void sample_brdf_with_mis(
+        const LightSource<N, T, Color>& light,
+        const Scene<N, T, Color>& scene,
+        const Surface<N, T, Color>& surface,
+        const Vector<N, T>& point,
+        const Vector<N, T>& v,
+        const Normals<N, T>& normals,
+        Color* const color_sum,
+        RandomEngine<T>& engine)
+{
+        if (light.is_delta())
+        {
+                return;
+        }
+
+        const Vector<N, T>& n = normals.shading;
+
+        const Sample<N, T, Color> sample = surface.sample_brdf(engine, n, v);
+        if (sample.pdf <= 0 || sample.brdf.is_black())
+        {
+                return;
+        }
+
+        const Vector<N, T>& l = sample.l;
+        ASSERT(l.is_unit());
+
+        const T n_l = dot(n, l);
+        if (n_l <= 0)
+        {
+                return;
+        }
+
+        LightSourceInfo<T, Color> light_info = light.info(point, l);
+        if (light_info.pdf <= 0 || light_info.radiance.is_black())
+        {
+                return;
+        }
+
+        if (occluded(scene, normals.geometric, normals.smooth, Ray<N, T>(point, l), light_info.distance))
+        {
+                return;
+        }
+
+        if (sample.specular)
+        {
+                *color_sum += sample.brdf * light_info.radiance * (n_l / sample.pdf);
+        }
+        else
+        {
+                const T weight = sampling::mis::power_heuristic(1, sample.pdf, 1, light_info.pdf);
+                *color_sum += sample.brdf * light_info.radiance * (weight * n_l / sample.pdf);
+        }
 }
 
 template <std::size_t N, typename T, typename Color>
@@ -143,9 +209,10 @@ void add_light_sources(
         Color* const color_sum,
         RandomEngine<T>& engine)
 {
-        for (const LightSource<N, T, Color>* const light_source : scene.light_sources())
+        for (const LightSource<N, T, Color>* const light : scene.light_sources())
         {
-                add_light_source(*light_source, scene, surface, point, v, normals, color_sum, engine);
+                sample_light_source_with_mis(*light, scene, surface, point, v, normals, color_sum, engine);
+                sample_brdf_with_mis(*light, scene, surface, point, v, normals, color_sum, engine);
         }
 }
 
@@ -173,7 +240,7 @@ void add_reflected(
 
         const Sample<N, T, Color> sample = surface.sample_brdf(engine, n, v);
 
-        if (sample.brdf.is_black() || sample.pdf <= 0)
+        if (sample.pdf <= 0 || sample.brdf.is_black())
         {
                 return;
         }
