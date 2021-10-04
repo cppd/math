@@ -66,28 +66,35 @@ public:
                 const Vector<N, T> direction = sample_location - point;
                 const T distance = direction.norm();
                 const Vector<N, T> l = direction / distance;
+
                 const T cos = std::abs(dot(l, parallelotope_.normal()));
 
                 LightSourceSample<N, T, Color> s;
-
-                s.distance = distance;
                 s.l = l;
                 s.pdf = sampling::area_pdf_to_solid_angle_pdf<N>(pdf_, cos, distance);
                 s.radiance = color_;
-
+                s.distance = distance;
                 return s;
         }
 
-        T pdf(const Vector<N, T>& point, const Vector<N, T>& l) const override
+        LightSourceInfo<T, Color> info(const Vector<N, T>& point, const Vector<N, T>& l) const override
         {
                 const Ray<N, T> ray(point, l);
-                auto intersection = parallelotope_.intersect(ray);
+                const auto intersection = parallelotope_.intersect(ray);
                 if (!intersection)
                 {
-                        return 0;
+                        LightSourceInfo<T, Color> info;
+                        info.pdf = 0;
+                        return info;
                 }
+
                 const T cos = std::abs(dot(ray.dir(), parallelotope_.normal()));
-                return sampling::area_pdf_to_solid_angle_pdf<N>(pdf_, cos, *intersection);
+
+                LightSourceInfo<T, Color> info;
+                info.pdf = sampling::area_pdf_to_solid_angle_pdf<N>(pdf_, cos, *intersection);
+                info.radiance = color_;
+                info.distance = *intersection;
+                return info;
         }
 
         bool is_delta() const override

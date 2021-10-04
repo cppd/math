@@ -76,6 +76,18 @@ public:
                 const Vector<N, T>& v) const = 0;
 };
 
+template <typename T, typename Color>
+struct LightSourceInfo final
+{
+        T pdf;
+        Color radiance;
+        std::optional<T> distance;
+
+        LightSourceInfo()
+        {
+        }
+};
+
 template <std::size_t N, typename T, typename Color>
 struct LightSourceSample final
 {
@@ -94,10 +106,10 @@ struct LightSource
 {
         virtual ~LightSource() = default;
 
+        virtual LightSourceInfo<T, Color> info(const Vector<N, T>& point, const Vector<N, T>& l) const = 0;
+
         virtual LightSourceSample<N, T, Color> sample(RandomEngine<T>& random_engine, const Vector<N, T>& point)
                 const = 0;
-
-        virtual T pdf(const Vector<N, T>& point, const Vector<N, T>& l) const = 0;
 
         virtual bool is_delta() const = 0;
 };

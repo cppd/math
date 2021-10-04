@@ -84,9 +84,11 @@ public:
                 return s;
         }
 
-        T pdf(const Vector<N, T>& /*point*/, const Vector<N, T>& /*l*/) const override
+        LightSourceInfo<T, Color> info(const Vector<N, T>& /*point*/, const Vector<N, T>& /*l*/) const override
         {
-                return 0;
+                LightSourceInfo<T, Color> info;
+                info.pdf = 0;
+                return info;
         }
 
         bool is_delta() const override
@@ -174,9 +176,11 @@ public:
                 return s;
         }
 
-        T pdf(const Vector<N, T>& /*point*/, const Vector<N, T>& /*l*/) const override
+        LightSourceInfo<T, Color> info(const Vector<N, T>& /*point*/, const Vector<N, T>& /*l*/) const override
         {
-                return 0;
+                LightSourceInfo<T, Color> info;
+                info.pdf = 0;
+                return info;
         }
 
         bool is_delta() const override
