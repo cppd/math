@@ -42,5 +42,9 @@ static_assert(compare(3, ball_volume<15>(), 256 * PI_POW<7> / 2027025));
 static_assert(compare(1, ball_volume<20>(), PI_POW<10> / 3628800));
 static_assert(compare(2, ball_volume<25>(), 8192 * PI_POW<12> / 7905853580625));
 static_assert(compare(3, ball_volume<30>(), PI_POW<15> / 1307674368000));
+
+static_assert(compare<float>(1, ball_volume<10, float>(5), power<10>(5.0L) * PI_POW<5> / 120));
+static_assert(compare<double>(2, ball_volume<10, double>(5), power<10>(5.0L) * PI_POW<5> / 120));
+static_assert(compare<long double>(2, ball_volume<10, long double>(5), power<10>(5.0L) * PI_POW<5> / 120));
 }
 }

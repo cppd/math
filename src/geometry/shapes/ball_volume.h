@@ -19,6 +19,10 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "sphere_area.h"
 
+#include <src/com/exponent.h>
+
+#include <type_traits>
+
 namespace ns::geometry
 {
 template <unsigned N>
@@ -27,5 +31,16 @@ constexpr long double ball_volume()
         static_assert(N >= 2);
 
         return sphere_area<N>() / N;
+}
+
+template <unsigned N, typename T>
+constexpr T ball_volume(const T& radius)
+{
+        static_assert(N >= 2);
+        static_assert(std::is_floating_point_v<T>);
+
+        constexpr T VOLUME = ball_volume<N>();
+
+        return VOLUME * power<N>(radius);
 }
 }
