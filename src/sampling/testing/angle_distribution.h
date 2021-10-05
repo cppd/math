@@ -183,8 +183,8 @@ public:
                 std::vector<T> distribution_values;
                 distribution_values.reserve(buckets.size());
 
-                const long double sphere_k =
-                        geometry::sphere_area<N>() / geometry::sphere_relative_area<N, long double>(0, PI<T>);
+                const long double sphere_k = (geometry::SPHERE_AREA<N, long double>)
+                                             / geometry::sphere_relative_area<N, long double>(0, PI<T>);
 
                 long long cnt = 0;
                 for (unsigned bucket = 0; bucket < buckets.size(); ++bucket)

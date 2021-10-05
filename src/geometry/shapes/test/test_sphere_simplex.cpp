@@ -61,7 +61,7 @@ void test_integrate(ProgressRatio* progress, double progress_min, double progres
                 return result;
         }();
 
-        const T area = sphere_area<N>();
+        const T area = SPHERE_AREA<N, T>;
         const T simplex_area = sphere_simplex_area(simplex_vertices);
         const T relative_area = simplex_area / area;
 

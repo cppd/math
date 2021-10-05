@@ -30,7 +30,7 @@ constexpr long double ball_volume()
 {
         static_assert(N >= 2);
 
-        return sphere_area<N>() / N;
+        return SPHERE_AREA<N, long double> / N;
 }
 
 template <unsigned N, typename T>

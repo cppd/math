@@ -226,7 +226,7 @@ public:
 
                 check_bucket_sizes(buckets);
 
-                constexpr T UNIFORM_DENSITY = T(1) / geometry::sphere_area<N>();
+                static constexpr T UNIFORM_DENSITY = 1 / geometry::SPHERE_AREA<N, long double>;
 
                 const long long sample_count = buckets_sample_count(buckets);
                 const long long uniform_count = buckets_uniform_count(buckets);
@@ -281,7 +281,7 @@ public:
 
                         const T uniform_distribution = T(bucket.uniform_count()) / uniform_count;
                         const T uniform_density = uniform_distribution / bucket_area;
-                        const T bucket_relative_area = bucket_area / geometry::sphere_area<N>();
+                        const T bucket_relative_area = bucket_area / geometry::SPHERE_AREA<N, T>;
 
                         std::ostringstream oss;
                         oss << "sampled distribution = " << sampled_distribution << '\n';

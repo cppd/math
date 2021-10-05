@@ -24,10 +24,11 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 namespace ns::geometry
 {
-template <unsigned N>
-constexpr long double sphere_area()
+template <unsigned N, typename T>
+inline constexpr T SPHERE_AREA = []
 {
         static_assert(N >= 2);
+        static_assert(std::is_floating_point_v<T>);
 
         // 2 * pow(π, n/2) / gamma(n/2)
 
@@ -62,7 +63,7 @@ constexpr long double sphere_area()
                 res *= PI<long double>;
         }
         return res;
-}
+}();
 
 template <unsigned N, typename T>
 T sphere_relative_area(std::type_identity_t<T> a, std::type_identity_t<T> b)

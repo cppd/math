@@ -114,7 +114,7 @@ double sphere_facet_area(
         const long long uniform_count,
         const long long all_uniform_count)
 {
-        static constexpr double SPHERE_AREA = geometry::sphere_area<N>();
+        static constexpr double SPHERE_AREA = geometry::SPHERE_AREA<N, double>;
 
         double area = double(uniform_count) / all_uniform_count * SPHERE_AREA;
         if constexpr (N == 3)

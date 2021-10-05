@@ -207,7 +207,7 @@ constexpr T uniform_in_sphere_pdf(const T& radius)
 template <std::size_t N, typename T>
 constexpr T uniform_on_sphere_pdf()
 {
-        constexpr T PDF = 1 / geometry::sphere_area<N>();
+        constexpr T PDF = 1 / geometry::SPHERE_AREA<N, long double>;
         return PDF;
 }
 }

@@ -126,7 +126,7 @@ constexpr long double sphere_unit_integral_over_cosine_integral()
 template <std::size_t N>
 constexpr long double sphere_integrate_cosine_factor_over_hemisphere()
 {
-        return sphere_area<N>() / sphere_unit_integral_over_cosine_integral<N>() / 2;
+        return SPHERE_AREA<N, long double> / sphere_unit_integral_over_cosine_integral<N>() / 2;
 }
 
 /*
