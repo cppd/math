@@ -17,8 +17,10 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
+#include <src/com/exponent.h>
+#include <src/geometry/shapes/ball_volume.h>
 #include <src/numerical/vec.h>
-#include <src/painter/lights/distant_light.h>
+#include <src/painter/lights/ball_light.h>
 #include <src/painter/objects.h>
 #include <src/painter/projectors/parallel_projector.h>
 #include <src/painter/scenes/cornell_box.h>
@@ -44,13 +46,13 @@ std::unique_ptr<const painter::Projector<3, T>> create_projector(
 {
         const T scene_size = (bounding_box.max - bounding_box.min).norm();
 
-        Vector<3, T> camera_position = view_center - camera_direction * T(2) * scene_size;
-        Vector<3, T> camera_right = cross(camera_direction, camera_up);
+        const Vector<3, T> camera_position = view_center - camera_direction * T(2) * scene_size;
+        const Vector<3, T> camera_right = cross(camera_direction, camera_up);
 
-        std::array<Vector<3, T>, 2> screen_axes{camera_right, camera_up};
-        std::array<int, 2> screen_size{width, height};
+        const std::array<Vector<3, T>, 2> screen_axes{camera_right, camera_up};
+        const std::array<int, 2> screen_size{width, height};
 
-        T units_per_pixel = view_width / width;
+        const T units_per_pixel = view_width / width;
 
         return std::make_unique<const painter::ParallelProjector<3, T>>(
                 camera_position, camera_direction, screen_axes, units_per_pixel, screen_size);
@@ -58,10 +60,23 @@ std::unique_ptr<const painter::Projector<3, T>> create_projector(
 
 template <typename T, typename Color>
 std::unique_ptr<const painter::LightSource<3, T, Color>> create_light_source(
+        const painter::Shape<3, T, Color>& shape,
+        const Vector<3, T>& center,
         const Vector<3, T>& direction,
         const Color& color)
 {
-        return std::make_unique<const painter::DistantLight<3, T, Color>>(-direction, color);
+        static constexpr T DISTANCE = 100;
+        static constexpr T RADIUS = DISTANCE / 100;
+        static constexpr T INTENSITY = power<2>(DISTANCE) / geometry::ball_volume<2>(RADIUS);
+
+        const geometry::BoundingBox<3, T> bb = shape.bounding_box();
+        const T shape_size = (bb.max - bb.min).norm();
+        const T distance = shape_size * DISTANCE;
+        const T radius = shape_size * RADIUS;
+        const Vector<3, T> light_position = center - direction.normalized() * distance;
+
+        return std::make_unique<const painter::BallLight<3, T, Color>>(
+                light_position, direction, radius, INTENSITY * color);
 }
 }
 
@@ -92,7 +107,7 @@ std::unique_ptr<const painter::Scene<3, T, Color>> create_painter_scene(
                 shape->bounding_box(), camera_up, camera_direction, view_center, view_width, width, height);
 
         std::vector<std::unique_ptr<const painter::LightSource<3, T, Color>>> light_sources;
-        light_sources.push_back(impl::create_light_source(light_direction, light));
+        light_sources.push_back(impl::create_light_source(*shape, view_center, light_direction, light));
 
         std::vector<std::unique_ptr<const painter::Shape<3, T, Color>>> shapes;
         shapes.push_back(std::move(shape));
@@ -116,8 +131,6 @@ std::unique_ptr<const painter::Scene<N, T, Color>> create_painter_scene(
         {
                 return painter::create_cornell_box_scene(light, background_light, max_screen_size, std::move(shape));
         }
-
-        namespace impl = painter_scene_implementation;
 
         return painter::create_simple_scene(
                 light, background_light, min_screen_size, max_screen_size, std::move(shape));
