@@ -55,8 +55,8 @@ sqrt(π) ⋅  ------- ⋅ -----------------------
 ----------------
  (n-2) (n-4) ...
 */
-template <std::size_t N>
-constexpr long double sphere_unit_integral_over_cosine_integral()
+template <std::size_t N, typename T>
+inline constexpr T SPHERE_UNIT_INTEGRAL_OVER_COSINE_INTEGRAL = []
 {
         static_assert(N >= 2);
 
@@ -121,13 +121,11 @@ constexpr long double sphere_unit_integral_over_cosine_integral()
         }
 
         return p;
-}
+}();
 
-template <std::size_t N>
-constexpr long double sphere_integrate_cosine_factor_over_hemisphere()
-{
-        return SPHERE_AREA<N, long double> / sphere_unit_integral_over_cosine_integral<N>() / 2;
-}
+template <std::size_t N, typename T>
+inline constexpr T SPHERE_INTEGRATE_COSINE_FACTOR_OVER_HEMISPHERE =
+        SPHERE_AREA<N, long double> / SPHERE_UNIT_INTEGRAL_OVER_COSINE_INTEGRAL<N, long double> / 2;
 
 /*
 hemisphereArea[n_]:=Power[\[Pi],n/2]/Gamma[n/2];

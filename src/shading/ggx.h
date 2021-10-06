@@ -283,7 +283,7 @@ T ggx_pdf(const T n_h, const T alpha)
 
         if (n_h > 0)
         {
-                static constexpr T K = geometry::sphere_integrate_cosine_factor_over_hemisphere<N>();
+                static constexpr T K = geometry::SPHERE_INTEGRATE_COSINE_FACTOR_OVER_HEMISPHERE<N, T>;
 
                 T alpha_2 = square(alpha);
                 T v = 1 + square(n_h) * (alpha_2 - 1);

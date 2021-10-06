@@ -56,7 +56,7 @@ namespace implementation
 //Color diffuse(const Color& f0, const Color& rho_ss, const T n_l, const T n_v)
 //{
 //        static constexpr Color WHITE = Color(1);
-//        static constexpr T K = geometry::sphere_integrate_cosine_factor_over_hemisphere<N>();
+//        static constexpr T K = geometry::SPHERE_INTEGRATE_COSINE_FACTOR_OVER_HEMISPHERE<N, T>;
 
 //        T l = (1 - power<5>(1 - n_l));
 //        T v = (1 - power<5>(1 - n_v));
@@ -74,7 +74,7 @@ namespace implementation
 //        const T n_v,
 //        const T h_l)
 //{
-//        static constexpr T K = 1 / geometry::sphere_integrate_cosine_factor_over_hemisphere<N>();
+//        static constexpr T K = 1 / geometry::SPHERE_INTEGRATE_COSINE_FACTOR_OVER_HEMISPHERE<N, long double>;
 
 //        T l = power<5>(1 - n_l);
 //        T v = power<5>(1 - n_v);
@@ -86,7 +86,7 @@ template <std::size_t N, typename T, typename Color>
 Color diffuse_disney_ws(const Color& f0, const Color& rho_ss, const T roughness, const T n_l, const T n_v, const T h_l)
 {
         static constexpr Color WHITE = Color(1);
-        static constexpr T K = 1 / geometry::sphere_integrate_cosine_factor_over_hemisphere<N>();
+        static constexpr T K = 1 / geometry::SPHERE_INTEGRATE_COSINE_FACTOR_OVER_HEMISPHERE<N, long double>;
 
         T l = power<5>(1 - n_l);
         T v = power<5>(1 - n_v);
@@ -98,7 +98,7 @@ Color diffuse_disney_ws(const Color& f0, const Color& rho_ss, const T roughness,
 //template <std::size_t N, typename T, typename Color>
 //Color diffuse_disney(const Color& rho_ss, const T roughness, const T n_l, const T n_v, const T h_l, const T k_ss)
 //{
-//        static constexpr T K = 1 / geometry::sphere_integrate_cosine_factor_over_hemisphere<N>();
+//        static constexpr T K = 1 / geometry::SPHERE_INTEGRATE_COSINE_FACTOR_OVER_HEMISPHERE<N, long double>;
 
 //        T l = power<5>(1 - n_l);
 //        T v = power<5>(1 - n_v);
