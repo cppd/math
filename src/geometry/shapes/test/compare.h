@@ -27,9 +27,10 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 namespace ns::geometry::shapes::test
 {
 template <typename T>
-constexpr bool compare(int epsilon_count, T v1, T v2)
+constexpr bool compare(const int epsilon_count, const T v1, const T v2)
 {
         static_assert(std::is_floating_point_v<T>);
+
         return is_finite(v1) && is_finite(v2) && (v1 > 0) && (v2 > 0)
                && v2 > (v1 - v1 * (epsilon_count * Limits<T>::epsilon()))
                && v2 < (v1 + v1 * (epsilon_count * Limits<T>::epsilon()))
@@ -43,7 +44,7 @@ static_assert(!compare(1, 10000.100000001, 10000.100000002));
 static_assert(!compare(1, 10000.100000002, 10000.100000001));
 
 template <typename T>
-void compare(const char* name, T v1, T v2, T precision)
+void compare(const char* const name, const T v1, const T v2, const T precision)
 {
         if (!(is_finite(v1) && is_finite(v2) && ((v1 == v2) || std::abs((v1 - v2) / std::max(v1, v2)) < precision)))
         {

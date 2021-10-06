@@ -67,7 +67,7 @@ std::unique_ptr<const painter::LightSource<3, T, Color>> create_light_source(
 {
         static constexpr T DISTANCE = 100;
         static constexpr T RADIUS = DISTANCE / 100;
-        static constexpr T INTENSITY = power<2>(DISTANCE) / geometry::ball_volume<2>(RADIUS);
+        static constexpr T INTENSITY = power<2>(DISTANCE) / geometry::ball_volume<2, T>(RADIUS);
 
         const geometry::BoundingBox<3, T> bb = shape.bounding_box();
         const T shape_size = (bb.max - bb.min).norm();

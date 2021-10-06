@@ -103,7 +103,7 @@ template <std::size_t N, typename T>
 void check_facet_count(
         const std::string& name,
         const std::vector<std::array<Vector<N, T>, N>>& facets,
-        unsigned facet_count)
+        const unsigned facet_count)
 {
         if (facets.size() != facet_count)
         {
@@ -115,7 +115,7 @@ template <std::size_t N, typename T>
 void check_vertex_count(
         const std::string& name,
         const std::vector<std::array<Vector<N, T>, N>>& facets,
-        unsigned vertex_count)
+        const unsigned vertex_count)
 {
         std::unordered_set<Vector<N, T>> vertex_set;
         for (const std::array<Vector<N, T>, N>& vertices : facets)
@@ -136,8 +136,8 @@ template <std::size_t N, typename T>
 void test_polytope(
         const std::string& name,
         const std::vector<std::array<Vector<N, T>, N>>& facets,
-        unsigned facet_count,
-        unsigned vertex_count)
+        const unsigned facet_count,
+        const unsigned vertex_count)
 {
         check_facet_count(name, facets, facet_count);
         check_vertex_count(name, facets, vertex_count);

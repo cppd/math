@@ -55,10 +55,11 @@ sqrt(π) ⋅  ------- ⋅ -----------------------
 ----------------
  (n-2) (n-4) ...
 */
-template <std::size_t N, typename T>
+template <unsigned N, typename T>
 inline constexpr T SPHERE_UNIT_INTEGRAL_OVER_COSINE_INTEGRAL = []
 {
         static_assert(N >= 2);
+        static_assert(std::is_floating_point_v<T>);
 
         unsigned long long divident = 1;
         unsigned long long divisor = (N & 1) == 0 ? 2 : 1;
@@ -123,9 +124,14 @@ inline constexpr T SPHERE_UNIT_INTEGRAL_OVER_COSINE_INTEGRAL = []
         return p;
 }();
 
-template <std::size_t N, typename T>
-inline constexpr T SPHERE_INTEGRATE_COSINE_FACTOR_OVER_HEMISPHERE =
-        SPHERE_AREA<N, long double> / SPHERE_UNIT_INTEGRAL_OVER_COSINE_INTEGRAL<N, long double> / 2;
+template <unsigned N, typename T>
+inline constexpr T SPHERE_INTEGRATE_COSINE_FACTOR_OVER_HEMISPHERE = []
+{
+        static_assert(N >= 2);
+        static_assert(std::is_floating_point_v<T>);
+
+        return SPHERE_AREA<N, long double> / SPHERE_UNIT_INTEGRAL_OVER_COSINE_INTEGRAL<N, long double> / 2;
+}();
 
 /*
 hemisphereArea[n_]:=Power[\[Pi],n/2]/Gamma[n/2];
@@ -139,21 +145,24 @@ For[n=2,n<=11,++n,f=Assuming[k>=1,
 template <unsigned N, typename T>
 T sphere_integrate_power_cosine_factor_over_hemisphere(const std::type_identity_t<T> k)
 {
-        static_assert(std::is_floating_point_v<T>);
         static_assert(N >= 2);
+        static_assert(std::is_floating_point_v<T>);
 
         if constexpr (N == 3)
         {
                 return power<1>(2 * PI<T>) / (1 + k);
         }
-        if constexpr (N == 5)
+        else if constexpr (N == 5)
         {
                 return power<2>(2 * PI<T>) / ((1 + k) * (3 + k));
         }
-        if constexpr (N == 7)
+        else if constexpr (N == 7)
         {
                 return power<3>(2 * PI<T>) / ((1 + k) * (3 + k) * (5 + k));
         }
-        return std::pow(PI<T>, (N - 1) / T(2)) * std::exp(std::lgamma((k + 1) / 2) - std::lgamma((k + N) / 2));
+        else
+        {
+                return std::pow(PI<T>, T(N - 1) / T(2)) * std::exp(std::lgamma((k + 1) / 2) - std::lgamma((k + N) / 2));
+        }
 }
 }

@@ -216,7 +216,7 @@ namespace
 //        }
 //
 //        template <typename T>
-//        void divide(const Facet<N, T>& facet, std::vector<Facet<N, T>>* facets) const
+//        void divide(const Facet<N, T>& facet, std::vector<Facet<N, T>>* const facets) const
 //        {
 //                std::array<Vector<N, T>, N + MIDPOINT_COUNT> points;
 //

@@ -35,8 +35,11 @@ inline constexpr T BALL_VOLUME = []
 }();
 
 template <unsigned N, typename T>
-constexpr T ball_volume(const T& radius)
+constexpr T ball_volume(const std::type_identity_t<T> radius)
 {
+        static_assert(N >= 2);
+        static_assert(std::is_floating_point_v<T>);
+
         return BALL_VOLUME<N, T> * power<N>(radius);
 }
 }

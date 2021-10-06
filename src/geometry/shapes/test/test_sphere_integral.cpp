@@ -43,19 +43,19 @@ struct Test
         template <unsigned N>
         static constexpr long double PI_POW = power<N>(PI<long double>);
 
-        template <std::size_t N>
+        template <unsigned N>
         static constexpr bool cmp_unit_over_cosine(const T v)
         {
                 return SPHERE_UNIT_INTEGRAL_OVER_COSINE_INTEGRAL<N, T> == v;
         }
 
-        template <std::size_t N>
+        template <unsigned N>
         static constexpr bool cmp_unit_over_cosine(const int epsilon_count, const T v)
         {
                 return compare(epsilon_count, SPHERE_UNIT_INTEGRAL_OVER_COSINE_INTEGRAL<N, T>, v);
         }
 
-        template <std::size_t N>
+        template <unsigned N>
         static constexpr bool cmp_integrate(const int epsilon_count, const T v)
         {
                 return compare(epsilon_count, SPHERE_INTEGRATE_COSINE_FACTOR_OVER_HEMISPHERE<N, T>, v);
@@ -172,7 +172,7 @@ void test_integrate_power_cosine(const T& precision)
 
 //
 
-template <std::size_t N, typename T>
+template <unsigned N, typename T>
 void compare_with_gamma(const T& precision)
 {
         static constexpr T CONSTANT = SPHERE_UNIT_INTEGRAL_OVER_COSINE_INTEGRAL<N, T>;
@@ -195,8 +195,8 @@ void compare_with_gamma(const T& precision)
         }
 }
 
-template <typename T, std::size_t... I>
-void compare_with_gamma(const T& precision, std::integer_sequence<std::size_t, I...>&&)
+template <typename T, unsigned... I>
+void compare_with_gamma(const T& precision, std::integer_sequence<unsigned, I...>&&)
 {
         (compare_with_gamma<I + 2, T>(precision), ...);
 }
@@ -206,7 +206,7 @@ void compare_with_gamma(const T& precision)
 {
         LOG("Compare with gamma");
 
-        compare_with_gamma<T>(precision, std::make_integer_sequence<std::size_t, 100>());
+        compare_with_gamma<T>(precision, std::make_integer_sequence<unsigned, 100>());
 
         compare_with_gamma<1'000, T>(precision);
         compare_with_gamma<1'111, T>(precision);
@@ -216,7 +216,7 @@ void compare_with_gamma(const T& precision)
 
 //
 
-template <std::size_t N, typename T>
+template <unsigned N, typename T>
 void test_cosine(const int count, const T& precision)
 {
         static_assert(std::is_floating_point_v<T>);
@@ -253,8 +253,8 @@ void test_cosine(const int count, const T& precision)
         }
 }
 
-template <typename T, std::size_t... I>
-void test_cosine(const int count, const T& precision, std::integer_sequence<std::size_t, I...>&&)
+template <typename T, unsigned... I>
+void test_cosine(const int count, const T& precision, std::integer_sequence<unsigned, I...>&&)
 {
         (test_cosine<I + 2, T>(count, precision), ...);
 }
@@ -266,7 +266,7 @@ void test_cosine(const int count, const T& precision)
 
         LOG(name);
 
-        test_cosine<T>(count, precision, std::make_integer_sequence<std::size_t, 10>());
+        test_cosine<T>(count, precision, std::make_integer_sequence<unsigned, 10>());
 
         LOG(name + " passed");
 }

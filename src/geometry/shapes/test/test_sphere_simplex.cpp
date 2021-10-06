@@ -38,7 +38,7 @@ namespace ns::geometry::shapes::test
 namespace
 {
 template <std::size_t N, typename T>
-void test_integrate(ProgressRatio* progress, double progress_min, double progress_max)
+void test_integrate(ProgressRatio* const progress, const double progress_min, const double progress_max)
 {
         static_assert(std::is_floating_point_v<T>);
         using RandomEngine = std::conditional_t<std::is_same_v<T, float>, std::mt19937, std::mt19937_64>;
@@ -61,19 +61,19 @@ void test_integrate(ProgressRatio* progress, double progress_min, double progres
                 return result;
         }();
 
-        const T area = SPHERE_AREA<N, T>;
+        const T sphere_area = SPHERE_AREA<N, T>;
         const T simplex_area = sphere_simplex_area(simplex_vertices);
-        const T relative_area = simplex_area / area;
+        const T relative_area = simplex_area / sphere_area;
 
         if (!std::isfinite(relative_area))
         {
-                error("Relative area " + to_string(relative_area) + " is not finite, sphere area = " + to_string(area)
-                      + ", simplex area = " + to_string(simplex_area));
+                error("Relative area " + to_string(relative_area) + " is not finite, sphere area = "
+                      + to_string(sphere_area) + ", simplex area = " + to_string(simplex_area));
         }
         if (!(relative_area > 0))
         {
-                error("Relative area " + to_string(relative_area) + " is not positive, sphere area = " + to_string(area)
-                      + ", simplex area = " + to_string(simplex_area));
+                error("Relative area " + to_string(relative_area) + " is not positive, sphere area = "
+                      + to_string(sphere_area) + ", simplex area = " + to_string(simplex_area));
         }
 
         const std::array<Vector<N, T>, N - 1> simplex_vectors = [&]()
@@ -125,7 +125,7 @@ void test_integrate(ProgressRatio* progress, double progress_min, double progres
         }
 
         std::ostringstream oss;
-        oss << "Sphere area = " << area << '\n';
+        oss << "Sphere area = " << sphere_area << '\n';
         oss << "Simplex area = " << simplex_area << '\n';
         oss << "Relative area = " << relative_area << '\n';
         oss << "Coverage area = " << coverage_area << '\n';
@@ -155,13 +155,13 @@ std::array<Vector<N + 1, T>, N> add_dimension(const std::array<Vector<N, T>, N>&
 }
 
 template <typename T>
-void test_sphere_1_simplex(T precision)
+void test_sphere_1_simplex(const T precision)
 {
         LOG(std::string("Test sphere 1-simplex, ") + type_name<T>());
 
         std::mt19937 random_engine = create_engine<std::mt19937>();
 
-        const auto cmp = [&](T v1, T v2)
+        const auto cmp = [&](const T v1, const T v2)
         {
                 compare("Test sphere 1-simplex", v1, v2, precision);
         };
@@ -222,13 +222,13 @@ void test_sphere_1_simplex(T precision)
 }
 
 template <typename T>
-void test_sphere_2_simplex(T precision)
+void test_sphere_2_simplex(const T precision)
 {
         LOG(std::string("Test sphere 2-simplex, ") + type_name<T>());
 
         std::mt19937 random_engine = create_engine<std::mt19937>();
 
-        const auto cmp = [&](T v1, T v2)
+        const auto cmp = [&](const T v1, const T v2)
         {
                 compare("Test sphere 2-simplex", v1, v2, precision);
         };
@@ -321,13 +321,13 @@ void test_2()
         test_sphere_2_simplex<long double>(1e-16);
 }
 
-void test_integrate_1_simplex(ProgressRatio* progress)
+void test_integrate_1_simplex(ProgressRatio* const progress)
 {
         test_integrate<2, float>(progress, 0, 0.5);
         test_integrate<2, double>(progress, 0.5, 1.0);
 }
 
-void test_integrate_2_simplex(ProgressRatio* progress)
+void test_integrate_2_simplex(ProgressRatio* const progress)
 {
         test_integrate<3, float>(progress, 0, 0.5);
         test_integrate<3, double>(progress, 0.5, 1);

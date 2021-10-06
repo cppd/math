@@ -44,7 +44,7 @@ T curve(T x)
 }
 
 template <typename T, typename RandomEngine>
-Vector<3, T> mobius_strip_point(T width, RandomEngine& random_engine)
+Vector<3, T> mobius_strip_point(const T width, RandomEngine& random_engine)
 {
         namespace impl = mobius_strip_implementation;
 

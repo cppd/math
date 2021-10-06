@@ -114,10 +114,13 @@ double sphere_facet_area(
         const long long uniform_count,
         const long long all_uniform_count)
 {
-        static constexpr double SPHERE_AREA = geometry::SPHERE_AREA<N, double>;
+        const double area = static_cast<double>(uniform_count) / all_uniform_count * geometry::SPHERE_AREA<N, double>;
 
-        double area = double(uniform_count) / all_uniform_count * SPHERE_AREA;
-        if constexpr (N == 3)
+        if constexpr (N != 3)
+        {
+                return area;
+        }
+        else
         {
                 const double geometry_area = geometry::sphere_simplex_area(facet.vertices());
 
@@ -133,8 +136,7 @@ double sphere_facet_area(
                         error(oss.str());
                 }
 
-                area = geometry_area;
+                return geometry_area;
         }
-        return area;
 }
 }

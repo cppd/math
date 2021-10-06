@@ -28,8 +28,8 @@ namespace ns::geometry
 template <std::size_t N, typename T>
 void create_mesh(
         const std::vector<std::array<Vector<N, T>, N>>& facets,
-        std::vector<Vector<N, T>>* mesh_vertices,
-        std::vector<std::array<int, N>>* mesh_facets)
+        std::vector<Vector<N, T>>* const mesh_vertices,
+        std::vector<std::array<int, N>>* const mesh_facets)
 {
         mesh_vertices->clear();
         mesh_facets->clear();

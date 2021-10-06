@@ -63,7 +63,7 @@ std::array<Vector<N, T>, N + 1> create_simplex()
 namespace regular_polytopes_implementation
 {
 template <unsigned I, std::size_t N, typename T>
-void create_cross_polytope_facets(Vector<N, T>* point, std::vector<std::array<Vector<N, T>, N>>* facets)
+void create_cross_polytope_facets(Vector<N, T>* const point, std::vector<std::array<Vector<N, T>, N>>* const facets)
 {
         static_assert(I <= N);
         if constexpr (I == N)
