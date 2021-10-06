@@ -200,7 +200,7 @@ Vector<N, T> uniform_in_sphere(const std::array<Vector<N, T>, M>& orthogonal_vec
 template <std::size_t N, typename T>
 constexpr T uniform_in_sphere_pdf(const T& radius)
 {
-        constexpr T PDF = 1 / geometry::ball_volume<N>();
+        constexpr T PDF = 1 / geometry::BALL_VOLUME<N, long double>;
         return PDF / power<N>(radius);
 }
 

@@ -25,22 +25,18 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 namespace ns::geometry
 {
-template <unsigned N>
-constexpr long double ball_volume()
-{
-        static_assert(N >= 2);
-
-        return SPHERE_AREA<N, long double> / N;
-}
-
 template <unsigned N, typename T>
-constexpr T ball_volume(const T& radius)
+inline constexpr T BALL_VOLUME = []
 {
         static_assert(N >= 2);
         static_assert(std::is_floating_point_v<T>);
 
-        constexpr T VOLUME = ball_volume<N>();
+        return SPHERE_AREA<N, long double> / N;
+}();
 
-        return VOLUME * power<N>(radius);
+template <unsigned N, typename T>
+constexpr T ball_volume(const T& radius)
+{
+        return BALL_VOLUME<N, T> * power<N>(radius);
 }
 }
