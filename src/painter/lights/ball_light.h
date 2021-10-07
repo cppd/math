@@ -19,6 +19,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "../objects.h"
 
+#include <src/com/error.h>
+#include <src/com/print.h>
 #include <src/geometry/spatial/hyperplane_ball.h>
 #include <src/numerical/complement.h>
 #include <src/numerical/vec.h>
@@ -27,6 +29,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <array>
 #include <cmath>
+#include <optional>
 
 namespace ns::painter
 {
@@ -42,15 +45,35 @@ class BallLight final : public LightSource<N, T, Color>
         std::array<Vector<N, T>, N - 1> vectors_;
 
 public:
-        BallLight(const Vector<N, T>& center, const Vector<N, T>& normal, const T& radius, const Color& color)
+        BallLight(
+                const Vector<N, T>& center,
+                const Vector<N, T>& normal,
+                const T& radius,
+                const Color& color,
+                const std::optional<T>& distance = std::nullopt)
                 : ball_(center, normal, radius),
                   color_(color),
                   pdf_(sampling::uniform_in_sphere_pdf<std::tuple_size_v<decltype(vectors_)>>(radius)),
                   vectors_(numerical::orthogonal_complement_of_unit_vector(ball_.normal()))
         {
+                if (!(radius > 0))
+                {
+                        error("Ball light radius " + to_string(radius) + " must be positive");
+                }
+
+                if (distance && !(distance > 0))
+                {
+                        error("Ball light distance " + to_string(*distance) + " must be positive");
+                }
+
                 for (Vector<N, T>& v : vectors_)
                 {
                         v *= radius;
+                }
+
+                if (distance)
+                {
+                        color_ *= sampling::area_pdf_to_solid_angle_pdf<N>(pdf_, T(1) /*cosine*/, *distance);
                 }
         }
 
