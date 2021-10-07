@@ -18,7 +18,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #pragma once
 
 #include <src/com/exponent.h>
-#include <src/geometry/shapes/ball_volume.h>
 #include <src/numerical/vec.h>
 #include <src/painter/lights/ball_light.h>
 #include <src/painter/objects.h>
@@ -67,7 +66,6 @@ std::unique_ptr<const painter::LightSource<3, T, Color>> create_light_source(
 {
         static constexpr T DISTANCE = 100;
         static constexpr T RADIUS = DISTANCE / 100;
-        static constexpr T INTENSITY = power<2>(DISTANCE) / geometry::ball_volume<2, T>(RADIUS);
 
         const geometry::BoundingBox<3, T> bb = shape.bounding_box();
         const T shape_size = (bb.max - bb.min).norm();
@@ -76,7 +74,7 @@ std::unique_ptr<const painter::LightSource<3, T, Color>> create_light_source(
         const Vector<3, T> light_position = center - direction.normalized() * distance;
 
         return std::make_unique<const painter::BallLight<3, T, Color>>(
-                light_position, direction, radius, INTENSITY * color);
+                light_position, direction, radius, color, distance);
 }
 }
 
