@@ -71,10 +71,9 @@ std::unique_ptr<const painter::LightSource<3, T, Color>> create_light_source(
         const T shape_size = (bb.max - bb.min).norm();
         const T distance = shape_size * DISTANCE;
         const T radius = shape_size * RADIUS;
-        const Vector<3, T> light_position = center - direction.normalized() * distance;
+        const Vector<3, T> position = center - direction.normalized() * distance;
 
-        return std::make_unique<const painter::BallLight<3, T, Color>>(
-                light_position, direction, radius, color, distance);
+        return std::make_unique<const painter::BallLight<3, T, Color>>(position, direction, radius, color, distance);
 }
 }
 
