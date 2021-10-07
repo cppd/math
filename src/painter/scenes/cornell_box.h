@@ -38,31 +38,19 @@ namespace ns::painter
 namespace cornell_box_scene_implementation
 {
 template <std::size_t N, typename T, typename Color>
-std::unique_ptr<const Scene<N, T, Color>> create_cornell_box_scene(
-        const Color& light,
-        const Color& background_light,
-        const std::array<int, N - 1>& screen_sizes,
-        std::unique_ptr<const Shape<N, T, Color>>&& shape,
+void create_geometry(
         const std::array<Vector<N, T>, N>& camera,
-        const Vector<N, T>& center)
+        const Vector<N, T>& center,
+        std::vector<std::unique_ptr<const Shape<N, T, Color>>>* const shapes)
 {
-        static_assert(N >= 3);
-
-        //constexpr T LAMP_SIZE = 0.2;
         constexpr T BOX_SIZE = 0.16;
         constexpr T BOX_SPACE = 0.08;
-        constexpr T CAMERA = 0.8;
         constexpr T NEAR = 0.7;
         constexpr T DEPTH = NEAR + 0.5 + BOX_SIZE + 2 * BOX_SPACE;
 
         constexpr T ALPHA = 1;
         constexpr T METALNESS = 0;
         constexpr T ROUGHNESS = 0.35;
-
-        std::vector<std::unique_ptr<const Shape<N, T, Color>>> shapes;
-        std::vector<std::unique_ptr<const LightSource<N, T, Color>>> light_sources;
-
-        shapes.push_back(std::move(shape));
 
         Vector<N, T> org(0);
         for (unsigned i = 0; i < N - 1; ++i)
@@ -80,14 +68,14 @@ std::unique_ptr<const Scene<N, T, Color>> create_cornell_box_scene(
 
                 for (unsigned i = 0; i < N - 1; ++i)
                 {
-                        shapes.push_back(std::make_unique<HyperplaneParallelotope<N, T, Color>>(
+                        shapes->push_back(std::make_unique<HyperplaneParallelotope<N, T, Color>>(
                                 METALNESS, ROUGHNESS, Color((i >= 1) ? color::rgb::WHITE : color::rgb::RED), ALPHA, org,
                                 del_elem(walls_vectors, i)));
-                        shapes.push_back(std::make_unique<HyperplaneParallelotope<N, T, Color>>(
+                        shapes->push_back(std::make_unique<HyperplaneParallelotope<N, T, Color>>(
                                 METALNESS, ROUGHNESS, Color((i >= 1) ? color::rgb::WHITE : color::rgb::GREEN), ALPHA,
                                 org + walls_vectors[i], del_elem(walls_vectors, i)));
                 }
-                shapes.push_back(std::make_unique<HyperplaneParallelotope<N, T, Color>>(
+                shapes->push_back(std::make_unique<HyperplaneParallelotope<N, T, Color>>(
                         METALNESS, ROUGHNESS, Color(color::rgb::WHITE), ALPHA, org + walls_vectors[N - 1],
                         del_elem(walls_vectors, N - 1)));
         }
@@ -110,12 +98,47 @@ std::unique_ptr<const Scene<N, T, Color>> create_cornell_box_scene(
                 box_vectors[N - 2] = (1 - 2 * BOX_SPACE) * camera[N - 2];
                 box_vectors[N - 1] = BOX_SIZE * camera[N - 1];
 
-                shapes.push_back(std::make_unique<Parallelotope<N, T, Color>>(
+                shapes->push_back(std::make_unique<Parallelotope<N, T, Color>>(
                         METALNESS, ROUGHNESS, Color(color::rgb::MAGENTA), ALPHA, box_org, box_vectors));
         }
+}
 
-        // Lamp
+template <std::size_t N, typename T>
+std::unique_ptr<Projector<N, T>> create_projector(
+        const std::array<int, N - 1>& screen_sizes,
+        const std::array<Vector<N, T>, N>& camera,
+        const Vector<N, T>& center)
+{
+        const std::array<Vector<N, T>, N - 1> screen_axes = del_elem(camera, N - 1);
+        const Vector<N, T> view_point = center - T(0.8) * camera[N - 1];
+
+        if ((true))
+        {
+                return std::make_unique<PerspectiveProjector<N, T>>(
+                        view_point, camera[N - 1], screen_axes, 70, screen_sizes);
+        }
+        else
+        {
+                return std::make_unique<SphericalProjector<N, T>>(
+                        view_point, camera[N - 1], screen_axes, 80, screen_sizes);
+        }
+}
+
+template <std::size_t N, typename T, typename Color>
+void create_light_source(
+        const Color& light,
+        const std::array<Vector<N, T>, N>& camera,
+        const Vector<N, T>& center,
+        std::vector<std::unique_ptr<const Shape<N, T, Color>>>* const /*shapes*/,
+        std::vector<std::unique_ptr<const LightSource<N, T, Color>>>* const light_sources)
+{
         //{
+        //        constexpr T ALPHA = 1;
+        //        constexpr T METALNESS = 0;
+        //        constexpr T ROUGHNESS = 0.35;
+        //
+        //        constexpr T LAMP_SIZE = 0.2;
+        //
         //        Vector<N, T> lamp_org = center;
         //        for (unsigned i = 0; i < N - 2; ++i)
         //        {
@@ -136,7 +159,7 @@ std::unique_ptr<const Scene<N, T, Color>> create_cornell_box_scene(
         //                        METALNESS, ROUGHNESS, Color(color::rgb::WHITE), ALPHA, lamp_org, lamp_vectors);
         //        lamp->set_light_source(Color::illuminant(50, 50, 50));
         //
-        //        shapes.push_back(std::move(lamp));
+        //        shapes->push_back(std::move(lamp));
         //}
 
         if ((true))
@@ -148,7 +171,7 @@ std::unique_ptr<const Scene<N, T, Color>> create_cornell_box_scene(
                 Vector<N, T> lamp_org = center + T(0.49) * camera[N - 2];
                 Vector<N, T> lamp_direction = -camera[N - 2];
 
-                light_sources.push_back(std::make_unique<const SpotLight<N, T, Color>>(
+                light_sources->push_back(std::make_unique<const SpotLight<N, T, Color>>(
                         lamp_org, lamp_direction, light, UNIT_INTENSITY_DISTANCE, FALLOFF_START, WIDTH));
         }
         else
@@ -157,26 +180,33 @@ std::unique_ptr<const Scene<N, T, Color>> create_cornell_box_scene(
 
                 Vector<N, T> lamp_org = center + T(0.45) * camera[N - 2];
 
-                light_sources.push_back(
+                light_sources->push_back(
                         std::make_unique<const PointLight<N, T, Color>>(lamp_org, light, UNIT_INTENSITY_DISTANCE));
         }
+}
 
-        std::unique_ptr<Projector<N, T>> projector;
+template <std::size_t N, typename T, typename Color>
+std::unique_ptr<const Scene<N, T, Color>> create_cornell_box_scene(
+        const Color& light,
+        const Color& background_light,
+        const std::array<int, N - 1>& screen_sizes,
+        std::unique_ptr<const Shape<N, T, Color>>&& shape,
+        const std::array<Vector<N, T>, N>& camera,
+        const Vector<N, T>& center)
+{
+        static_assert(N >= 3);
+        static_assert(std::is_floating_point_v<T>);
 
-        {
-                const std::array<Vector<N, T>, N - 1> screen_axes = del_elem(camera, N - 1);
-                const Vector<N, T> view_point = center - CAMERA * camera[N - 1];
-                if ((true))
-                {
-                        projector = std::make_unique<PerspectiveProjector<N, T>>(
-                                view_point, camera[N - 1], screen_axes, 70, screen_sizes);
-                }
-                else
-                {
-                        projector = std::make_unique<SphericalProjector<N, T>>(
-                                view_point, camera[N - 1], screen_axes, 80, screen_sizes);
-                }
-        }
+        std::vector<std::unique_ptr<const Shape<N, T, Color>>> shapes;
+        std::vector<std::unique_ptr<const LightSource<N, T, Color>>> light_sources;
+
+        shapes.push_back(std::move(shape));
+
+        create_geometry(camera, center, &shapes);
+
+        create_light_source(light, camera, center, &shapes, &light_sources);
+
+        std::unique_ptr<Projector<N, T>> projector = create_projector(screen_sizes, camera, center);
 
         return create_storage_scene<N, T>(
                 background_light, std::move(projector), std::move(light_sources), std::move(shapes));
