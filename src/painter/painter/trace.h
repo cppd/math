@@ -98,6 +98,12 @@ void add_surface(const Surface<N, T, Color>& surface, Color* const color_sum)
         *color_sum = *surface_light_source;
 }
 
+template <typename T>
+T mis_heuristic(const int f_n, const T f_pdf, const int g_n, const T g_pdf)
+{
+        return sampling::mis::power_heuristic(f_n, f_pdf, g_n, g_pdf);
+}
+
 template <std::size_t N, typename T, typename Color>
 void sample_light_source_with_mis(
         const LightSource<N, T, Color>& light,
@@ -139,7 +145,7 @@ void sample_light_source_with_mis(
         else
         {
                 const T pdf = surface.pdf(n, v, l);
-                const T weight = sampling::mis::power_heuristic(1, sample.pdf, 1, pdf);
+                const T weight = mis_heuristic(1, sample.pdf, 1, pdf);
                 *color_sum += brdf * sample.radiance * (weight * n_l / sample.pdf);
         }
 }
@@ -194,7 +200,7 @@ void sample_brdf_with_mis(
         }
         else
         {
-                const T weight = sampling::mis::power_heuristic(1, sample.pdf, 1, light_info.pdf);
+                const T weight = mis_heuristic(1, sample.pdf, 1, light_info.pdf);
                 *color_sum += sample.brdf * light_info.radiance * (weight * n_l / sample.pdf);
         }
 }
