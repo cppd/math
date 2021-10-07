@@ -65,5 +65,10 @@ public:
         {
                 return normal_;
         }
+
+        const T& radius_squared() const
+        {
+                return radius_squared_;
+        }
 };
 }
