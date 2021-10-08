@@ -19,6 +19,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "storage_scene.h"
 
+#include "../lights/parallelotope_light.h"
 #include "../lights/point_light.h"
 #include "../objects.h"
 #include "../projectors/perspective_projector.h"
@@ -38,7 +39,7 @@ namespace ns::painter
 namespace cornell_box_scene_implementation
 {
 template <std::size_t N, typename T, typename Color>
-void create_geometry(
+void create_shapes(
         const std::array<Vector<N, T>, N>& camera,
         const Vector<N, T>& center,
         std::vector<std::unique_ptr<const Shape<N, T, Color>>>* const shapes)
@@ -52,14 +53,18 @@ void create_geometry(
         constexpr T METALNESS = 0;
         constexpr T ROUGHNESS = 0.35;
 
-        Vector<N, T> org(0);
-        for (unsigned i = 0; i < N - 1; ++i)
+        const Vector<N, T> org = [&]
         {
-                org -= camera[i];
-        }
-        org *= T(0.5);
-        org -= NEAR * camera[N - 1];
-        org += center;
+                Vector<N, T> res(0);
+                for (unsigned i = 0; i < N - 1; ++i)
+                {
+                        res -= camera[i];
+                }
+                res *= T(0.5);
+                res -= NEAR * camera[N - 1];
+                res += center;
+                return res;
+        }();
 
         // Walls
         {
@@ -112,76 +117,80 @@ std::unique_ptr<Projector<N, T>> create_projector(
         const std::array<Vector<N, T>, N - 1> screen_axes = del_elem(camera, N - 1);
         const Vector<N, T> view_point = center - T(0.8) * camera[N - 1];
 
-        if ((true))
+        switch (0)
+        {
+        case 0:
         {
                 return std::make_unique<PerspectiveProjector<N, T>>(
                         view_point, camera[N - 1], screen_axes, 70, screen_sizes);
         }
-        else
+        case 1:
         {
                 return std::make_unique<SphericalProjector<N, T>>(
                         view_point, camera[N - 1], screen_axes, 80, screen_sizes);
         }
+        }
 }
 
 template <std::size_t N, typename T, typename Color>
-void create_light_source(
+void create_light_sources(
         const Color& light,
         const std::array<Vector<N, T>, N>& camera,
         const Vector<N, T>& center,
-        std::vector<std::unique_ptr<const Shape<N, T, Color>>>* const /*shapes*/,
         std::vector<std::unique_ptr<const LightSource<N, T, Color>>>* const light_sources)
 {
-        //{
-        //        constexpr T ALPHA = 1;
-        //        constexpr T METALNESS = 0;
-        //        constexpr T ROUGHNESS = 0.35;
-        //
-        //        constexpr T LAMP_SIZE = 0.2;
-        //
-        //        Vector<N, T> lamp_org = center;
-        //        for (unsigned i = 0; i < N - 2; ++i)
-        //        {
-        //                lamp_org -= (LAMP_SIZE / 2) * camera[i];
-        //        }
-        //        lamp_org += T(0.499) * camera[N - 2];
-        //        lamp_org -= (LAMP_SIZE / 2) * camera[N - 1];
-        //
-        //        std::array<Vector<N, T>, N - 1> lamp_vectors;
-        //        for (unsigned i = 0; i < N - 2; ++i)
-        //        {
-        //                lamp_vectors[i] = LAMP_SIZE * camera[i];
-        //        }
-        //        lamp_vectors[N - 2] = LAMP_SIZE * camera[N - 1];
-        //
-        //        std::unique_ptr<HyperplaneParallelotope<N, T, Color>> lamp =
-        //                std::make_unique<HyperplaneParallelotope<N, T, Color>>(
-        //                        METALNESS, ROUGHNESS, Color(color::rgb::WHITE), ALPHA, lamp_org, lamp_vectors);
-        //        lamp->set_light_source(Color::illuminant(50, 50, 50));
-        //
-        //        shapes->push_back(std::move(lamp));
-        //}
+        switch (0)
+        {
+        case 0:
+        {
+                constexpr T SIZE = 0.1;
+                constexpr T INTENSITY = 20;
 
-        if ((true))
+                Vector<N, T> org = center;
+                for (unsigned i = 0; i < N - 2; ++i)
+                {
+                        org -= (SIZE / 2) * camera[i];
+                }
+                org += T(0.49) * camera[N - 2];
+                org -= (SIZE / 2) * camera[N - 1];
+
+                std::array<Vector<N, T>, N - 1> vectors;
+                for (unsigned i = 0; i < N - 2; ++i)
+                {
+                        vectors[i] = SIZE * camera[i];
+                }
+                vectors[N - 2] = SIZE * camera[N - 1];
+
+                light_sources->push_back(
+                        std::make_unique<const ParallelotopeLight<N, T, Color>>(org, vectors, INTENSITY * light));
+
+                break;
+        }
+        case 1:
         {
                 constexpr T UNIT_INTENSITY_DISTANCE = 1.5;
                 constexpr T FALLOFF_START = 80;
                 constexpr T WIDTH = 90;
 
-                Vector<N, T> lamp_org = center + T(0.49) * camera[N - 2];
-                Vector<N, T> lamp_direction = -camera[N - 2];
+                const Vector<N, T> org = center + T(0.49) * camera[N - 2];
+                const Vector<N, T> direction = -camera[N - 2];
 
                 light_sources->push_back(std::make_unique<const SpotLight<N, T, Color>>(
-                        lamp_org, lamp_direction, light, UNIT_INTENSITY_DISTANCE, FALLOFF_START, WIDTH));
+                        org, direction, light, UNIT_INTENSITY_DISTANCE, FALLOFF_START, WIDTH));
+
+                break;
         }
-        else
+        case 2:
         {
                 constexpr T UNIT_INTENSITY_DISTANCE = 1;
 
-                Vector<N, T> lamp_org = center + T(0.45) * camera[N - 2];
+                const Vector<N, T> org = center + T(0.45) * camera[N - 2];
 
                 light_sources->push_back(
-                        std::make_unique<const PointLight<N, T, Color>>(lamp_org, light, UNIT_INTENSITY_DISTANCE));
+                        std::make_unique<const PointLight<N, T, Color>>(org, light, UNIT_INTENSITY_DISTANCE));
+
+                break;
+        }
         }
 }
 
@@ -202,9 +211,9 @@ std::unique_ptr<const Scene<N, T, Color>> create_cornell_box_scene(
 
         shapes.push_back(std::move(shape));
 
-        create_geometry(camera, center, &shapes);
+        create_shapes(camera, center, &shapes);
 
-        create_light_source(light, camera, center, &shapes, &light_sources);
+        create_light_sources(light, camera, center, &light_sources);
 
         std::unique_ptr<Projector<N, T>> projector = create_projector(screen_sizes, camera, center);
 
