@@ -31,7 +31,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 namespace ns::painter
 {
 template <std::size_t N, typename T, typename Color>
-class PointLight final : public LightSource<N, T, Color>
+class SpotLight final : public LightSource<N, T, Color>
 {
         static_assert(N >= 2);
         static_assert(std::is_floating_point_v<T>);
@@ -50,17 +50,40 @@ class PointLight final : public LightSource<N, T, Color>
         }
 
         Vector<N, T> location_;
+        Vector<N, T> direction_;
         Color color_;
         T coef_;
+        T falloff_start_;
+        T width_;
+        T falloff_width_;
 
 public:
-        PointLight(const Vector<N, T>& location, const Color& color, std::type_identity_t<T> unit_intensity_distance)
-                : location_(location), color_(color), coef_(power<N - 1>(unit_intensity_distance))
+        SpotLight(
+                const Vector<N, T>& location,
+                const Vector<N, T>& direction,
+                const Color& color,
+                std::type_identity_t<T> unit_intensity_distance,
+                std::type_identity_t<T> falloff_start,
+                std::type_identity_t<T> width)
+                : location_(location),
+                  direction_(direction.normalized()),
+                  color_(color),
+                  coef_(power<N - 1>(unit_intensity_distance)),
+                  falloff_start_(std::cos(falloff_start * (PI<T> / 180))),
+                  width_(std::cos(width * (PI<T> / 180))),
+                  falloff_width_(falloff_start_ - width_)
         {
                 if (!(unit_intensity_distance > 0))
                 {
                         error("Error unit intensity distance " + to_string(unit_intensity_distance));
                 }
+
+                if (!(falloff_start >= 0 && width > 0 && falloff_start <= width && width <= 180))
+                {
+                        error("Error falloff start " + to_string(falloff_start) + " and width " + to_string(width));
+                }
+
+                ASSERT(falloff_start_ >= width_ && falloff_width_ >= 0);
         }
 
         LightSourceSample<N, T, Color> sample(RandomEngine<T>& /*random_engine*/, const Vector<N, T>& point)
@@ -69,13 +92,31 @@ public:
                 const Vector<N, T> direction = location_ - point;
                 const T squared_distance = direction.norm_squared();
                 const T distance = std::sqrt(squared_distance);
-                const T coef = coef_ / power_n1(squared_distance, distance);
+                const Vector<N, T> l = direction / distance;
+                const T cos = -dot(l, direction_);
 
                 LightSourceSample<N, T, Color> s;
+
                 s.distance = distance;
-                s.l = direction / distance;
+                s.l = l;
                 s.pdf = 1;
-                s.radiance = color_ * coef;
+
+                if (cos <= width_)
+                {
+                        s.radiance = Color(0);
+                        return s;
+                }
+
+                const T coef = coef_ / power_n1(squared_distance, distance);
+                if (cos >= falloff_start_)
+                {
+                        s.radiance = color_ * coef;
+                }
+                else
+                {
+                        T k = power<4>((cos - width_) / falloff_width_);
+                        s.radiance = color_ * (coef * k);
+                }
                 return s;
         }
 

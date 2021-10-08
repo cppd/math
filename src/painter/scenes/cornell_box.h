@@ -21,6 +21,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "../lights/parallelotope_light.h"
 #include "../lights/point_light.h"
+#include "../lights/spot_light.h"
 #include "../objects.h"
 #include "../projectors/perspective_projector.h"
 #include "../projectors/spherical_projector.h"
