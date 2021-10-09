@@ -223,6 +223,28 @@ void add_light_sources(
 }
 
 template <std::size_t N, typename T, typename Color>
+void add_light_sources(
+        const Scene<N, T, Color>& scene,
+        const Surface<N, T, Color>* const surface,
+        const Ray<N, T>& ray,
+        Color* const color_sum)
+{
+        for (const LightSource<N, T, Color>* const light : scene.light_sources())
+        {
+                LightSourceInfo<T, Color> light_info = light->info(ray.org(), ray.dir());
+                if (light_info.pdf <= 0 || light_info.radiance.is_black())
+                {
+                        continue;
+                }
+                if (surface_before_distance(ray.org(), surface, light_info.distance))
+                {
+                        continue;
+                }
+                *color_sum += light_info.radiance;
+        }
+}
+
+template <std::size_t N, typename T, typename Color>
 std::optional<Color> trace_path(
         const Scene<N, T, Color>& scene,
         bool smooth_normals,
@@ -278,13 +300,26 @@ std::optional<Color> trace_path(
         RandomEngine<T>& engine)
 {
         const Surface<N, T, Color>* const surface = scene.intersect(ray);
-        if (!surface)
+
+        if (depth > 0 && !surface)
         {
-                if (depth > 0)
+                return scene.background_light();
+        }
+
+        Color color_sum(0);
+
+        if (depth == 0)
+        {
+                add_light_sources(scene, surface, ray, &color_sum);
+                if (!surface)
                 {
-                        return scene.background_light();
+                        if (color_sum.is_black())
+                        {
+                                return std::nullopt;
+                        }
+                        color_sum += scene.background_light();
+                        return color_sum;
                 }
-                return std::nullopt;
         }
 
         const Vector<N, T> v = -ray.dir();
@@ -294,10 +329,8 @@ std::optional<Color> trace_path(
 
         if (dot(n, v) <= 0)
         {
-                return Color(0);
+                return color_sum;
         }
-
-        Color color_sum(0);
 
         add_surface(*surface, &color_sum);
 

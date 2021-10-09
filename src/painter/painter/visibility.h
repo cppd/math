@@ -23,16 +23,13 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 namespace ns::painter
 {
-namespace visibility_implementation
-{
 template <std::size_t N, typename T, typename Color>
-bool intersection_before(
-        const Surface<N, T, Color>* surface,
+bool surface_before_distance(
         const Vector<N, T>& point,
+        const Surface<N, T, Color>* const surface,
         const std::optional<T>& distance)
 {
         return surface && (!distance || (surface->point() - point).norm_squared() < square(*distance));
-}
 }
 
 template <std::size_t N, typename T, typename Color>
@@ -43,8 +40,6 @@ bool occluded(
         const Ray<N, T>& ray,
         const std::optional<T>& distance)
 {
-        namespace impl = visibility_implementation;
-
         const Vector<N, T> point = ray.org();
 
         const Surface<N, T, Color>* surface;
@@ -52,16 +47,16 @@ bool occluded(
         if (!smooth_normals || dot(ray.dir(), geometric_normal) >= 0)
         {
                 surface = scene.intersect(ray);
-                return impl::intersection_before(surface, point, distance);
+                return surface_before_distance(point, surface, distance);
         }
 
         surface = scene.intersect(ray);
-        if (!impl::intersection_before(surface, point, distance))
+        if (!surface_before_distance(point, surface, distance))
         {
                 return true;
         }
 
         surface = scene.intersect(Ray<N, T>(ray).set_org(surface->point()));
-        return impl::intersection_before(surface, point, distance);
+        return surface_before_distance(point, surface, distance);
 }
 }
