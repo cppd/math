@@ -72,6 +72,8 @@ public:
 
         HyperplaneParallelotope(const Vector<N, T>& org, const std::array<Vector<N, T>, N - 1>& vectors);
 
+        void set_normal_direction(const Vector<N, T>& direction);
+
         Constraints<N, T, 2 * (N - 1), 1> constraints() const;
 
         std::optional<T> intersect(const Ray<N, T>& r) const;
@@ -121,6 +123,15 @@ HyperplaneParallelotope<N, T>::HyperplaneParallelotope(
                 ASSERT(distance >= 0);
                 planes_[i].n /= distance;
                 planes_[i].d /= distance;
+        }
+}
+
+template <std::size_t N, typename T>
+void HyperplaneParallelotope<N, T>::set_normal_direction(const Vector<N, T>& direction)
+{
+        if (dot(normal_, direction) < 0)
+        {
+                normal_ = -normal_;
         }
 }
 
