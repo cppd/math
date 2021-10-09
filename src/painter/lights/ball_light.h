@@ -47,11 +47,11 @@ class BallLight final : public LightSource<N, T, Color>
 public:
         BallLight(
                 const Vector<N, T>& center,
-                const Vector<N, T>& normal,
+                const Vector<N, T>& direction,
                 const T& radius,
                 const Color& color,
                 const std::optional<T>& distance = std::nullopt)
-                : ball_(center, normal, radius),
+                : ball_(center, direction, radius),
                   color_(color),
                   pdf_(sampling::uniform_in_sphere_pdf<std::tuple_size_v<decltype(vectors_)>>(radius)),
                   vectors_(numerical::orthogonal_complement_of_unit_vector(ball_.normal()))
@@ -79,6 +79,13 @@ public:
 
         LightSourceSample<N, T, Color> sample(RandomEngine<T>& random_engine, const Vector<N, T>& point) const override
         {
+                if (dot(ball_.normal(), point - ball_.center()) <= 0)
+                {
+                        LightSourceSample<N, T, Color> sample;
+                        sample.pdf = 0;
+                        return sample;
+                }
+
                 const Vector<N, T> sample_location =
                         ball_.center() + sampling::uniform_in_sphere(vectors_, random_engine);
 
@@ -98,6 +105,13 @@ public:
 
         LightSourceInfo<T, Color> info(const Vector<N, T>& point, const Vector<N, T>& l) const override
         {
+                if (dot(ball_.normal(), point - ball_.center()) <= 0)
+                {
+                        LightSourceInfo<T, Color> info;
+                        info.pdf = 0;
+                        return info;
+                }
+
                 const Ray<N, T> ray(point, l);
                 const auto intersection = ball_.intersect(ray);
                 if (!intersection)

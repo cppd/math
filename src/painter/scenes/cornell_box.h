@@ -162,8 +162,10 @@ void create_light_sources(
                 }
                 vectors[N - 2] = SIZE * camera[N - 1];
 
-                light_sources->push_back(
-                        std::make_unique<const ParallelotopeLight<N, T, Color>>(org, vectors, INTENSITY * light));
+                Vector<N, T> direction = -camera[N - 2];
+
+                light_sources->push_back(std::make_unique<const ParallelotopeLight<N, T, Color>>(
+                        org, vectors, direction, INTENSITY * light));
 
                 break;
         }

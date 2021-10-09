@@ -36,7 +36,7 @@ class DistantLight final : public LightSource<N, T, Color>
 public:
         DistantLight(const Vector<N, T>& direction, const Color& color)
         {
-                sample_.l = direction.normalized();
+                sample_.l = -direction.normalized();
                 sample_.pdf = 1;
                 sample_.radiance = color;
         }

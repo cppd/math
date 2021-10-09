@@ -52,13 +52,25 @@ class ParallelotopeLight final : public LightSource<N, T, Color>
         }
 
 public:
-        ParallelotopeLight(const Vector<N, T>& org, const std::array<Vector<N, T>, N - 1>& vectors, const Color& color)
+        ParallelotopeLight(
+                const Vector<N, T>& org,
+                const std::array<Vector<N, T>, N - 1>& vectors,
+                const Vector<N, T>& direction,
+                const Color& color)
                 : parallelotope_(org, vectors), color_(color), pdf_(sampling::uniform_in_parallelotope_pdf(vectors))
         {
+                parallelotope_.set_normal_direction(direction);
         }
 
         LightSourceSample<N, T, Color> sample(RandomEngine<T>& random_engine, const Vector<N, T>& point) const override
         {
+                if (dot(parallelotope_.normal(), point - parallelotope_.org()) <= 0)
+                {
+                        LightSourceSample<N, T, Color> sample;
+                        sample.pdf = 0;
+                        return sample;
+                }
+
                 const Vector<N, T> sample_location =
                         parallelotope_.org()
                         + sampling::uniform_in_parallelotope(parallelotope_.vectors(), samples(random_engine));
@@ -79,6 +91,13 @@ public:
 
         LightSourceInfo<T, Color> info(const Vector<N, T>& point, const Vector<N, T>& l) const override
         {
+                if (dot(parallelotope_.normal(), point - parallelotope_.org()) <= 0)
+                {
+                        LightSourceInfo<T, Color> info;
+                        info.pdf = 0;
+                        return info;
+                }
+
                 const Ray<N, T> ray(point, l);
                 const auto intersection = parallelotope_.intersect(ray);
                 if (!intersection)

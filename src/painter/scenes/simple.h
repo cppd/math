@@ -137,7 +137,7 @@ std::unique_ptr<const painter::LightSource<N, T, Color>> create_light_source(
         const Vector<N, T> position = center + box_direction.normalized() * distance;
 
         return std::make_unique<const painter::BallLight<N, T, Color>>(
-                position, box_direction, radius, color, distance);
+                position, -box_direction, radius, color, distance);
 }
 }
 
