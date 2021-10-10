@@ -121,9 +121,10 @@ std::unique_ptr<const Projector<N, T>> create_projector(
 }
 
 template <std::size_t N, typename T, typename Color>
-std::unique_ptr<const painter::LightSource<N, T, Color>> create_light_source(
+void create_light_sources(
         const geometry::BoundingBox<N, T>& bounding_box,
-        const Color& color)
+        const Color& color,
+        std::vector<std::unique_ptr<const LightSource<N, T, Color>>>* const light_sources)
 {
         const Vector<N, T> box_direction = bounding_box.max - bounding_box.min;
         const Vector<N, T> center = bounding_box.min + box_direction / T(2);
@@ -136,8 +137,11 @@ std::unique_ptr<const painter::LightSource<N, T, Color>> create_light_source(
         const T radius = object_size * RADIUS;
         const Vector<N, T> position = center + box_direction.normalized() * distance;
 
-        return std::make_unique<const painter::BallLight<N, T, Color>>(
-                position, -box_direction, radius, color, distance);
+        auto ptr = std::make_unique<painter::BallLight<N, T, Color>>(position, -box_direction, radius, color);
+        ptr->set_color_for_distance(distance);
+
+        light_sources->clear();
+        light_sources->push_back(std::move(ptr));
 }
 }
 
@@ -161,7 +165,7 @@ std::unique_ptr<const Scene<N, T, Color>> create_simple_scene(
                 impl::create_projector(bounding_box, min_screen_size, max_screen_size);
 
         std::vector<std::unique_ptr<const LightSource<N, T, Color>>> light_sources;
-        light_sources.push_back(impl::create_light_source(bounding_box, light));
+        impl::create_light_sources(bounding_box, light, &light_sources);
 
         std::vector<std::unique_ptr<const Shape<N, T, Color>>> shapes;
         shapes.push_back(std::move(shape));

@@ -17,9 +17,10 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
+#include "common.h"
+
 #include "../objects.h"
 
-#include <src/com/constant.h>
 #include <src/com/error.h>
 #include <src/com/exponent.h>
 #include <src/com/print.h>
@@ -36,54 +37,30 @@ class SpotLight final : public LightSource<N, T, Color>
         static_assert(N >= 2);
         static_assert(std::is_floating_point_v<T>);
 
-        // power<N - 1>(distance)
-        static T power_n1(const T& squared_distance, const T& distance)
-        {
-                if constexpr ((N & 1) == 1)
-                {
-                        return power<((N - 1) / 2)>(squared_distance);
-                }
-                else
-                {
-                        return power<((N - 2) / 2)>(squared_distance) * distance;
-                }
-        }
-
         Vector<N, T> location_;
         Vector<N, T> direction_;
         Color color_;
         T coef_;
-        T falloff_start_;
-        T width_;
-        T falloff_width_;
+        lights::common::Spotlight<T> spotlight_;
 
 public:
         SpotLight(
                 const Vector<N, T>& location,
                 const Vector<N, T>& direction,
                 const Color& color,
-                std::type_identity_t<T> unit_intensity_distance,
-                std::type_identity_t<T> falloff_start,
-                std::type_identity_t<T> width)
+                const std::type_identity_t<T>& unit_intensity_distance,
+                const std::type_identity_t<T>& falloff_start,
+                const std::type_identity_t<T>& width)
                 : location_(location),
                   direction_(direction.normalized()),
                   color_(color),
                   coef_(power<N - 1>(unit_intensity_distance)),
-                  falloff_start_(std::cos(falloff_start * (PI<T> / 180))),
-                  width_(std::cos(width * (PI<T> / 180))),
-                  falloff_width_(falloff_start_ - width_)
+                  spotlight_(falloff_start, width)
         {
                 if (!(unit_intensity_distance > 0))
                 {
                         error("Error unit intensity distance " + to_string(unit_intensity_distance));
                 }
-
-                if (!(falloff_start >= 0 && width > 0 && falloff_start <= width && width <= 180))
-                {
-                        error("Error falloff start " + to_string(falloff_start) + " and width " + to_string(width));
-                }
-
-                ASSERT(falloff_start_ >= width_ && falloff_width_ >= 0);
         }
 
         LightSourceSample<N, T, Color> sample(RandomEngine<T>& /*random_engine*/, const Vector<N, T>& point)
@@ -101,22 +78,24 @@ public:
                 s.l = l;
                 s.pdf = 1;
 
-                if (cos <= width_)
+                const T spotlight_coef = spotlight_.coef(cos);
+
+                if (spotlight_coef <= 0)
                 {
                         s.radiance = Color(0);
                         return s;
                 }
 
-                const T coef = coef_ / power_n1(squared_distance, distance);
-                if (cos >= falloff_start_)
+                const T coef = coef_ / lights::common::power_n1<N>(squared_distance, distance);
+                if (spotlight_coef >= 1)
                 {
                         s.radiance = color_ * coef;
                 }
                 else
                 {
-                        T k = power<4>((cos - width_) / falloff_width_);
-                        s.radiance = color_ * (coef * k);
+                        s.radiance = color_ * (coef * spotlight_coef);
                 }
+
                 return s;
         }
 

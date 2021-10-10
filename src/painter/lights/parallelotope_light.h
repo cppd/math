@@ -17,6 +17,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
+#include "common.h"
+
 #include "../objects.h"
 
 #include <src/geometry/spatial/hyperplane_parallelotope.h>
@@ -26,6 +28,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <array>
 #include <cmath>
+#include <optional>
 #include <random>
 
 namespace ns::painter
@@ -39,6 +42,7 @@ class ParallelotopeLight final : public LightSource<N, T, Color>
         geometry::HyperplaneParallelotope<N, T> parallelotope_;
         Color color_;
         T pdf_;
+        std::optional<lights::common::Spotlight<T>> spotlight_;
 
         static Vector<N - 1, T> samples(RandomEngine<T>& random_engine)
         {
@@ -59,7 +63,35 @@ public:
                 const Color& color)
                 : parallelotope_(org, vectors), color_(color), pdf_(sampling::uniform_in_parallelotope_pdf(vectors))
         {
+                if (!std::all_of(
+                            vectors.cbegin(), vectors.cend(),
+                            [](const Vector<N, T>& v)
+                            {
+                                    return v.norm_squared() > 0;
+                            }))
+                {
+                        error("Parallelotope vectors " + to_string(vectors) + " must be non-zero");
+                }
+
                 parallelotope_.set_normal_direction(direction);
+        }
+
+        ParallelotopeLight(
+                const Vector<N, T>& org,
+                const std::array<Vector<N, T>, N - 1>& vectors,
+                const Vector<N, T>& direction,
+                const Color& color,
+                const std::type_identity_t<T>& spotlight_falloff_start,
+                const std::type_identity_t<T>& spotlight_width)
+                : ParallelotopeLight(org, vectors, direction, color)
+        {
+                if (!(spotlight_width <= 90))
+                {
+                        error("Parallolotope spotlight width " + to_string(spotlight_width)
+                              + " must be less than or equal to 90");
+                }
+
+                spotlight_.emplace(spotlight_falloff_start, spotlight_width);
         }
 
         LightSourceSample<N, T, Color> sample(RandomEngine<T>& random_engine, const Vector<N, T>& point) const override
@@ -84,7 +116,14 @@ public:
                 LightSourceSample<N, T, Color> s;
                 s.l = l;
                 s.pdf = sampling::area_pdf_to_solid_angle_pdf<N>(pdf_, cos, distance);
-                s.radiance = color_;
+                if (!spotlight_)
+                {
+                        s.radiance = color_;
+                }
+                else
+                {
+                        s.radiance = spotlight_->color(color_, cos);
+                }
                 s.distance = distance;
                 return s;
         }
@@ -111,7 +150,14 @@ public:
 
                 LightSourceInfo<T, Color> info;
                 info.pdf = sampling::area_pdf_to_solid_angle_pdf<N>(pdf_, cos, *intersection);
-                info.radiance = color_;
+                if (!spotlight_)
+                {
+                        info.radiance = color_;
+                }
+                else
+                {
+                        info.radiance = spotlight_->color(color_, cos);
+                }
                 info.distance = *intersection;
                 return info;
         }

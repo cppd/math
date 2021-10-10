@@ -17,9 +17,10 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
+#include "common.h"
+
 #include "../objects.h"
 
-#include <src/com/constant.h>
 #include <src/com/error.h>
 #include <src/com/exponent.h>
 #include <src/com/print.h>
@@ -36,25 +37,15 @@ class PointLight final : public LightSource<N, T, Color>
         static_assert(N >= 2);
         static_assert(std::is_floating_point_v<T>);
 
-        // power<N - 1>(distance)
-        static T power_n1(const T& squared_distance, const T& distance)
-        {
-                if constexpr ((N & 1) == 1)
-                {
-                        return power<((N - 1) / 2)>(squared_distance);
-                }
-                else
-                {
-                        return power<((N - 2) / 2)>(squared_distance) * distance;
-                }
-        }
-
         Vector<N, T> location_;
         Color color_;
         T coef_;
 
 public:
-        PointLight(const Vector<N, T>& location, const Color& color, std::type_identity_t<T> unit_intensity_distance)
+        PointLight(
+                const Vector<N, T>& location,
+                const Color& color,
+                const std::type_identity_t<T>& unit_intensity_distance)
                 : location_(location), color_(color), coef_(power<N - 1>(unit_intensity_distance))
         {
                 if (!(unit_intensity_distance > 0))
@@ -69,7 +60,7 @@ public:
                 const Vector<N, T> direction = location_ - point;
                 const T squared_distance = direction.norm_squared();
                 const T distance = std::sqrt(squared_distance);
-                const T coef = coef_ / power_n1(squared_distance, distance);
+                const T coef = coef_ / lights::common::power_n1<N>(squared_distance, distance);
 
                 LightSourceSample<N, T, Color> s;
                 s.distance = distance;

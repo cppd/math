@@ -17,6 +17,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
+#include "common.h"
+
 #include "../objects.h"
 
 #include <src/com/error.h>
@@ -43,14 +45,10 @@ class BallLight final : public LightSource<N, T, Color>
         Color color_;
         T pdf_;
         std::array<Vector<N, T>, N - 1> vectors_;
+        std::optional<lights::common::Spotlight<T>> spotlight_;
 
 public:
-        BallLight(
-                const Vector<N, T>& center,
-                const Vector<N, T>& direction,
-                const T& radius,
-                const Color& color,
-                const std::optional<T>& distance = std::nullopt)
+        BallLight(const Vector<N, T>& center, const Vector<N, T>& direction, const T& radius, const Color& color)
                 : ball_(center, direction, radius),
                   color_(color),
                   pdf_(sampling::uniform_in_sphere_pdf<std::tuple_size_v<decltype(vectors_)>>(radius)),
@@ -61,20 +59,38 @@ public:
                         error("Ball light radius " + to_string(radius) + " must be positive");
                 }
 
-                if (distance && !(distance > 0))
-                {
-                        error("Ball light distance " + to_string(*distance) + " must be positive");
-                }
-
                 for (Vector<N, T>& v : vectors_)
                 {
                         v *= radius;
                 }
+        }
 
-                if (distance)
+        BallLight(
+                const Vector<N, T>& center,
+                const Vector<N, T>& direction,
+                const T& radius,
+                const Color& color,
+                const std::type_identity_t<T>& spotlight_falloff_start,
+                const std::type_identity_t<T>& spotlight_width)
+                : BallLight(center, direction, radius, color)
+        {
+                if (!(spotlight_width <= 90))
                 {
-                        color_ *= sampling::area_pdf_to_solid_angle_pdf<N>(pdf_, T(1) /*cosine*/, *distance);
+                        error("Ball spotlight width " + to_string(spotlight_width)
+                              + " must be less than or equal to 90");
                 }
+
+                spotlight_.emplace(spotlight_falloff_start, spotlight_width);
+        }
+
+        void set_color_for_distance(const T& distance)
+        {
+                if (!(distance > 0))
+                {
+                        error("Ball light distance " + to_string(distance) + " must be positive");
+                }
+
+                color_ *= sampling::area_pdf_to_solid_angle_pdf<N>(pdf_, T(1) /*cosine*/, distance);
         }
 
         LightSourceSample<N, T, Color> sample(RandomEngine<T>& random_engine, const Vector<N, T>& point) const override
@@ -98,7 +114,14 @@ public:
                 LightSourceSample<N, T, Color> s;
                 s.l = l;
                 s.pdf = sampling::area_pdf_to_solid_angle_pdf<N>(pdf_, cos, distance);
-                s.radiance = color_;
+                if (!spotlight_)
+                {
+                        s.radiance = color_;
+                }
+                else
+                {
+                        s.radiance = spotlight_->color(color_, cos);
+                }
                 s.distance = distance;
                 return s;
         }
@@ -125,7 +148,14 @@ public:
 
                 LightSourceInfo<T, Color> info;
                 info.pdf = sampling::area_pdf_to_solid_angle_pdf<N>(pdf_, cos, *intersection);
-                info.radiance = color_;
+                if (!spotlight_)
+                {
+                        info.radiance = color_;
+                }
+                else
+                {
+                        info.radiance = spotlight_->color(color_, cos);
+                }
                 info.distance = *intersection;
                 return info;
         }

@@ -140,6 +140,9 @@ void create_light_sources(
         const Vector<N, T>& center,
         std::vector<std::unique_ptr<const LightSource<N, T, Color>>>* const light_sources)
 {
+        constexpr T FALLOFF_START = 80;
+        constexpr T WIDTH = 90;
+
         switch (0)
         {
         case 0:
@@ -165,15 +168,13 @@ void create_light_sources(
                 Vector<N, T> direction = -camera[N - 2];
 
                 light_sources->push_back(std::make_unique<const ParallelotopeLight<N, T, Color>>(
-                        org, vectors, direction, INTENSITY * light));
+                        org, vectors, direction, INTENSITY * light, FALLOFF_START, WIDTH));
 
                 break;
         }
         case 1:
         {
                 constexpr T UNIT_INTENSITY_DISTANCE = 1.5;
-                constexpr T FALLOFF_START = 80;
-                constexpr T WIDTH = 90;
 
                 const Vector<N, T> org = center + T(0.49) * camera[N - 2];
                 const Vector<N, T> direction = -camera[N - 2];
