@@ -33,7 +33,9 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/color/colors.h>
 #include <src/com/arrays.h>
 
+#include <array>
 #include <memory>
+#include <tuple>
 
 namespace ns::painter
 {
@@ -47,7 +49,7 @@ void create_shapes(
 {
         constexpr T BOX_SIZE = 0.16;
         constexpr T BOX_SPACE = 0.08;
-        constexpr T NEAR = 0.7;
+        constexpr T NEAR = 0.9;
         constexpr T DEPTH = NEAR + 0.5 + BOX_SIZE + 2 * BOX_SPACE;
 
         constexpr T ALPHA = 1;
@@ -57,7 +59,7 @@ void create_shapes(
         const Vector<N, T> org = [&]
         {
                 Vector<N, T> res(0);
-                for (unsigned i = 0; i < N - 1; ++i)
+                for (std::size_t i = 0; i < N - 1; ++i)
                 {
                         res -= camera[i];
                 }
@@ -72,7 +74,7 @@ void create_shapes(
                 std::array<Vector<N, T>, N> walls_vectors = camera;
                 walls_vectors[N - 1] *= DEPTH;
 
-                for (unsigned i = 0; i < N - 1; ++i)
+                for (std::size_t i = 0; i < N - 1; ++i)
                 {
                         shapes->push_back(std::make_unique<HyperplaneParallelotope<N, T, Color>>(
                                 METALNESS, ROUGHNESS, Color((i >= 1) ? color::rgb::WHITE : color::rgb::RED), ALPHA, org,
@@ -89,7 +91,7 @@ void create_shapes(
         // Box
         {
                 Vector<N, T> box_org = org;
-                for (unsigned i = 0; i < N - 2; ++i)
+                for (std::size_t i = 0; i < N - 2; ++i)
                 {
                         box_org += (1 - BOX_SPACE - BOX_SIZE) * camera[i];
                 }
@@ -97,7 +99,7 @@ void create_shapes(
                 box_org += (DEPTH - BOX_SPACE - BOX_SIZE) * camera[N - 1];
 
                 std::array<Vector<N, T>, N> box_vectors;
-                for (unsigned i = 0; i < N - 2; ++i)
+                for (std::size_t i = 0; i < N - 2; ++i)
                 {
                         box_vectors[i] = BOX_SIZE * camera[i];
                 }
@@ -116,19 +118,19 @@ std::unique_ptr<Projector<N, T>> create_projector(
         const Vector<N, T>& center)
 {
         const std::array<Vector<N, T>, N - 1> screen_axes = del_elem(camera, N - 1);
-        const Vector<N, T> view_point = center - T(0.8) * camera[N - 1];
+        const Vector<N, T> view_point = center - T(1.3) * camera[N - 1];
 
         switch (0)
         {
         case 0:
         {
                 return std::make_unique<PerspectiveProjector<N, T>>(
-                        view_point, camera[N - 1], screen_axes, 70, screen_sizes);
+                        view_point, camera[N - 1], screen_axes, 60, screen_sizes);
         }
         case 1:
         {
                 return std::make_unique<SphericalProjector<N, T>>(
-                        view_point, camera[N - 1], screen_axes, 80, screen_sizes);
+                        view_point, camera[N - 1], screen_axes, 70, screen_sizes);
         }
         }
 }
@@ -148,10 +150,10 @@ void create_light_sources(
         case 0:
         {
                 constexpr T SIZE = 0.1;
-                constexpr T INTENSITY = 20;
+                constexpr T INTENSITY = power<N - 1>(T(8));
 
                 Vector<N, T> org = center;
-                for (unsigned i = 0; i < N - 2; ++i)
+                for (std::size_t i = 0; i < N - 2; ++i)
                 {
                         org -= (SIZE / 2) * camera[i];
                 }
@@ -159,7 +161,7 @@ void create_light_sources(
                 org -= (SIZE / 2) * camera[N - 1];
 
                 std::array<Vector<N, T>, N - 1> vectors;
-                for (unsigned i = 0; i < N - 2; ++i)
+                for (std::size_t i = 0; i < N - 2; ++i)
                 {
                         vectors[i] = SIZE * camera[i];
                 }
@@ -224,63 +226,70 @@ std::unique_ptr<const Scene<N, T, Color>> create_cornell_box_scene(
         return create_storage_scene<N, T>(
                 background_light, std::move(projector), std::move(light_sources), std::move(shapes));
 }
+
+template <std::size_t N, typename T>
+std::tuple<T, Vector<N, T>> size_and_center(const geometry::BoundingBox<N, T>& bb)
+{
+        const T size = (bb.max - bb.min).norm() * T(1.5);
+
+        Vector<N, T> center = (bb.max + bb.min) * T(0.5);
+        center[N - 2] += (size - (bb.max[N - 2] - bb.min[N - 2])) * T(0.5);
+
+        return {size, center};
+}
 }
 
 template <typename T, typename Color>
 std::unique_ptr<const Scene<3, T, Color>> create_cornell_box_scene(
         const Color& light,
         const Color& background_light,
-        int width,
-        int height,
+        const int width,
+        const int height,
         std::unique_ptr<const Shape<3, T, Color>>&& shape,
         const Vector<3, T>& camera_direction,
         const Vector<3, T>& camera_up)
 {
         namespace impl = cornell_box_scene_implementation;
 
-        const geometry::BoundingBox bb = shape->bounding_box();
-        const T size = (bb.max - bb.min).norm() * T(1.1);
-        const Vector<3, T> center = (bb.max + bb.min) * T(0.5);
+        const auto [size, center] = impl::size_and_center(shape->bounding_box());
+
+        const std::array<int, 2> screen_sizes{width, height};
 
         const Vector<3, T> dir = size * camera_direction.normalized();
         const Vector<3, T> right = size * cross(camera_direction, camera_up).normalized();
         const Vector<3, T> up = size * cross(right, dir).normalized();
 
-        return impl::create_cornell_box_scene(
-                light, background_light, {width, height}, std::move(shape), {right, up, dir}, center);
+        const std::array<Vector<3, T>, 3> camera{right, up, dir};
+
+        return impl::create_cornell_box_scene(light, background_light, screen_sizes, std::move(shape), camera, center);
 }
 
 template <std::size_t N, typename T, typename Color>
 std::unique_ptr<const Scene<N, T, Color>> create_cornell_box_scene(
         const Color& light,
         const Color& background_light,
-        int screen_size,
+        const int screen_size,
         std::unique_ptr<const Shape<N, T, Color>>&& shape)
 {
+        static_assert(N >= 3);
         namespace impl = cornell_box_scene_implementation;
 
-        const geometry::BoundingBox bb = shape->bounding_box();
-        const T size = (bb.max - bb.min).norm() * T(1.1);
-        const Vector<N, T> center = (bb.max + bb.min) * T(0.5);
+        const auto [size, center] = impl::size_and_center(shape->bounding_box());
 
         std::array<int, N - 1> screen_sizes;
-        for (unsigned i = 0; i < N - 1; ++i)
+        for (std::size_t i = 0; i < N - 1; ++i)
         {
                 screen_sizes[i] = screen_size;
         }
 
         std::array<Vector<N, T>, N> camera;
-        for (unsigned i = 0; i < N; ++i)
+        for (std::size_t i = 0; i < N; ++i)
         {
-                for (unsigned n = 0; n < i; ++n)
-                {
-                        camera[i][n] = 0;
-                }
+                camera[i] = Vector<N, T>(0);
+        }
+        for (std::size_t i = 0; i < N - 1; ++i)
+        {
                 camera[i][i] = size;
-                for (unsigned n = i + 1; n < N; ++n)
-                {
-                        camera[i][n] = 0;
-                }
         }
         camera[N - 1][N - 1] = -size;
 
