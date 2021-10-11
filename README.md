@@ -131,7 +131,7 @@ Spectral rendering
 1. Daylight D65.
 1. Blackbody 12000 K.
 
-<img src="https://i.imgur.com/XU9kLAq.png" alt="image" width="23%"></img>
-<img src="https://i.imgur.com/gky1Zbg.png" alt="image" width="23%"></img>
-<img src="https://i.imgur.com/JuBq1yc.png" alt="image" width="23%"></img>
-<img src="https://i.imgur.com/yim5PU0.png" alt="image" width="23%"></img>
+<img src="https://i.imgur.com/6XJs94H.png" alt="image" width="23%"></img>
+<img src="https://i.imgur.com/55ZX2bE.png" alt="image" width="23%"></img>
+<img src="https://i.imgur.com/VBa1A6A.png" alt="image" width="23%"></img>
+<img src="https://i.imgur.com/S9YZB2N.png" alt="image" width="23%"></img>
