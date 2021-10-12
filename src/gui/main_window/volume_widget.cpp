@@ -20,12 +20,27 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "../com/support.h"
 #include "../dialogs/color_dialog.h"
 
+#include <iomanip>
+#include <sstream>
+
 namespace ns::gui::main_window
 {
 namespace
 {
 // [1/C, C]
 constexpr double VOLUME_ALPHA_COEFFICIENT = 250;
+
+void set_label(QLabel* const label, const double value)
+{
+        std::ostringstream oss;
+        oss << std::setprecision(3) << std::fixed << value;
+        label->setText(QString::fromStdString(oss.str()));
+}
+
+void set_label(QLabel* const label, QSlider* const slider)
+{
+        set_label(label, slider_position(slider));
+}
 }
 
 VolumeWidget::VolumeWidget() : QWidget(nullptr)
@@ -79,11 +94,11 @@ void VolumeWidget::set_enabled(bool enabled) const
         }
 }
 
-void VolumeWidget::on_levels_changed(double min, double max)
+void VolumeWidget::on_levels_changed(const double min, const double max)
 {
         ASSERT(std::this_thread::get_id() == thread_id_);
 
-        std::optional<storage::VolumeObject> volume_object_opt = model_tree_->current_volume();
+        const std::optional<storage::VolumeObject> volume_object_opt = model_tree_->current_volume();
         if (!volume_object_opt)
         {
                 return;
@@ -98,18 +113,18 @@ void VolumeWidget::on_levels_changed(double min, double max)
                 *volume_object_opt);
 }
 
-void VolumeWidget::on_transparency_changed(int)
+void VolumeWidget::on_transparency_changed()
 {
         ASSERT(std::this_thread::get_id() == thread_id_);
 
-        std::optional<storage::VolumeObject> volume_object_opt = model_tree_->current_volume();
+        const std::optional<storage::VolumeObject> volume_object_opt = model_tree_->current_volume();
         if (!volume_object_opt)
         {
                 return;
         }
 
-        double log_alpha_coefficient = 1.0 - 2.0 * slider_position(ui_.slider_transparency);
-        double alpha_coefficient = std::pow(VOLUME_ALPHA_COEFFICIENT, log_alpha_coefficient);
+        const double log_alpha_coefficient = 1.0 - 2.0 * slider_position(ui_.slider_transparency);
+        const double alpha_coefficient = std::pow(VOLUME_ALPHA_COEFFICIENT, log_alpha_coefficient);
 
         std::visit(
                 [&]<std::size_t N>(const std::shared_ptr<volume::VolumeObject<N>>& volume_object)
@@ -120,17 +135,17 @@ void VolumeWidget::on_transparency_changed(int)
                 *volume_object_opt);
 }
 
-void VolumeWidget::on_isosurface_transparency_changed(int)
+void VolumeWidget::on_isosurface_transparency_changed()
 {
         ASSERT(std::this_thread::get_id() == thread_id_);
 
-        std::optional<storage::VolumeObject> volume_object_opt = model_tree_->current_volume();
+        const std::optional<storage::VolumeObject> volume_object_opt = model_tree_->current_volume();
         if (!volume_object_opt)
         {
                 return;
         }
 
-        double alpha = 1.0 - slider_position(ui_.slider_isosurface_transparency);
+        const double alpha = 1.0 - slider_position(ui_.slider_isosurface_transparency);
 
         std::visit(
                 [&]<std::size_t N>(const std::shared_ptr<volume::VolumeObject<N>>& volume_object)
@@ -145,10 +160,10 @@ void VolumeWidget::on_isosurface_clicked()
 {
         ASSERT(std::this_thread::get_id() == thread_id_);
 
-        bool checked = ui_.checkBox_isosurface->isChecked();
+        const bool checked = ui_.checkBox_isosurface->isChecked();
         ui_.slider_isovalue->setEnabled(checked);
 
-        std::optional<storage::VolumeObject> volume_object_opt = model_tree_->current_volume();
+        const std::optional<storage::VolumeObject> volume_object_opt = model_tree_->current_volume();
         if (!volume_object_opt)
         {
                 return;
@@ -163,17 +178,17 @@ void VolumeWidget::on_isosurface_clicked()
                 *volume_object_opt);
 }
 
-void VolumeWidget::on_isovalue_changed(int)
+void VolumeWidget::on_isovalue_changed()
 {
         ASSERT(std::this_thread::get_id() == thread_id_);
 
-        std::optional<storage::VolumeObject> volume_object_opt = model_tree_->current_volume();
+        const std::optional<storage::VolumeObject> volume_object_opt = model_tree_->current_volume();
         if (!volume_object_opt)
         {
                 return;
         }
 
-        float isovalue = slider_position(ui_.slider_isovalue);
+        const float isovalue = slider_position(ui_.slider_isovalue);
 
         std::visit(
                 [&]<std::size_t N>(const std::shared_ptr<volume::VolumeObject<N>>& volume_object)
@@ -188,7 +203,7 @@ void VolumeWidget::on_color_clicked()
 {
         ASSERT(std::this_thread::get_id() == thread_id_);
 
-        std::optional<storage::VolumeObject> object_opt = model_tree_->current_volume();
+        const std::optional<storage::VolumeObject> object_opt = model_tree_->current_volume();
         if (!object_opt)
         {
                 return;
@@ -223,17 +238,19 @@ void VolumeWidget::on_color_clicked()
                 });
 }
 
-void VolumeWidget::on_ambient_changed(int)
+void VolumeWidget::on_ambient_changed()
 {
         ASSERT(std::this_thread::get_id() == thread_id_);
 
-        std::optional<storage::VolumeObject> object_opt = model_tree_->current_volume();
+        const std::optional<storage::VolumeObject> object_opt = model_tree_->current_volume();
         if (!object_opt)
         {
                 return;
         }
 
-        double ambient = slider_position(ui_.slider_ambient);
+        const double ambient = slider_position(ui_.slider_ambient);
+
+        set_label(ui_.label_ambient, ambient);
 
         std::visit(
                 [&]<std::size_t N>(const std::shared_ptr<volume::VolumeObject<N>>& object)
@@ -244,17 +261,19 @@ void VolumeWidget::on_ambient_changed(int)
                 *object_opt);
 }
 
-void VolumeWidget::on_metalness_changed(int)
+void VolumeWidget::on_metalness_changed()
 {
         ASSERT(std::this_thread::get_id() == thread_id_);
 
-        std::optional<storage::VolumeObject> object_opt = model_tree_->current_volume();
+        const std::optional<storage::VolumeObject> object_opt = model_tree_->current_volume();
         if (!object_opt)
         {
                 return;
         }
 
-        double metalness = slider_position(ui_.slider_metalness);
+        const double metalness = slider_position(ui_.slider_metalness);
+
+        set_label(ui_.label_metalness, metalness);
 
         std::visit(
                 [&]<std::size_t N>(const std::shared_ptr<volume::VolumeObject<N>>& object)
@@ -265,17 +284,19 @@ void VolumeWidget::on_metalness_changed(int)
                 *object_opt);
 }
 
-void VolumeWidget::on_roughness_changed(int)
+void VolumeWidget::on_roughness_changed()
 {
         ASSERT(std::this_thread::get_id() == thread_id_);
 
-        std::optional<storage::VolumeObject> object_opt = model_tree_->current_volume();
+        const std::optional<storage::VolumeObject> object_opt = model_tree_->current_volume();
         if (!object_opt)
         {
                 return;
         }
 
-        double roughness = slider_position(ui_.slider_roughness);
+        const double roughness = slider_position(ui_.slider_roughness);
+
+        set_label(ui_.label_roughness, roughness);
 
         std::visit(
                 [&]<std::size_t N>(const std::shared_ptr<volume::VolumeObject<N>>& object)
@@ -290,14 +311,14 @@ void VolumeWidget::on_model_tree_item_update()
 {
         ASSERT(std::this_thread::get_id() == thread_id_);
 
-        std::optional<ObjectId> id = model_tree_->current_item();
+        const std::optional<ObjectId> id = model_tree_->current_item();
         if (!id)
         {
                 ui_disable();
                 return;
         }
 
-        std::optional<storage::VolumeObjectConst> volume = model_tree_->volume_const_if_current(*id);
+        const std::optional<storage::VolumeObjectConst> volume = model_tree_->volume_const_if_current(*id);
         if (volume)
         {
                 ui_set(*volume);
@@ -341,14 +362,17 @@ void VolumeWidget::ui_disable()
         {
                 QSignalBlocker blocker(ui_.slider_ambient);
                 set_slider_to_middle(ui_.slider_ambient);
+                ui_.label_ambient->clear();
         }
         {
                 QSignalBlocker blocker(ui_.slider_metalness);
                 set_slider_to_middle(ui_.slider_metalness);
+                ui_.label_metalness->clear();
         }
         {
                 QSignalBlocker blocker(ui_.slider_roughness);
                 set_slider_to_middle(ui_.slider_roughness);
+                ui_.label_roughness->clear();
         }
 }
 
@@ -392,9 +416,9 @@ void VolumeWidget::ui_set(const storage::VolumeObjectConst& object)
                                 volume_alpha_coefficient = std::clamp(
                                         volume_alpha_coefficient, 1.0 / VOLUME_ALPHA_COEFFICIENT,
                                         VOLUME_ALPHA_COEFFICIENT);
-                                double log_volume_alpha_coefficient =
+                                const double log_volume_alpha_coefficient =
                                         std::log(volume_alpha_coefficient) / std::log(VOLUME_ALPHA_COEFFICIENT);
-                                double position = 0.5 * (1.0 - log_volume_alpha_coefficient);
+                                const double position = 0.5 * (1.0 - log_volume_alpha_coefficient);
                                 QSignalBlocker blocker(ui_.slider_transparency);
                                 ui_.slider_transparency->setEnabled(!isosurface);
                                 set_slider_position(ui_.slider_transparency, position);
@@ -404,7 +428,7 @@ void VolumeWidget::ui_set(const storage::VolumeObjectConst& object)
                                 ui_.checkBox_isosurface->setChecked(isosurface);
                         }
                         {
-                                double position = 1.0 - isosurface_alpha;
+                                const double position = 1.0 - isosurface_alpha;
                                 QSignalBlocker blocker(ui_.slider_isosurface_transparency);
                                 ui_.slider_isosurface_transparency->setEnabled(isosurface);
                                 set_slider_position(ui_.slider_isosurface_transparency, position);
@@ -419,19 +443,22 @@ void VolumeWidget::ui_set(const storage::VolumeObjectConst& object)
                                 set_widget_color(ui_.widget_color, color_to_qcolor(color));
                         }
                         {
-                                double position = ambient;
+                                const double position = ambient;
                                 QSignalBlocker blocker(ui_.slider_ambient);
                                 set_slider_position(ui_.slider_ambient, position);
+                                set_label(ui_.label_ambient, ui_.slider_ambient);
                         }
                         {
-                                double position = metalness;
+                                const double position = metalness;
                                 QSignalBlocker blocker(ui_.slider_metalness);
                                 set_slider_position(ui_.slider_metalness, position);
+                                set_label(ui_.label_metalness, ui_.slider_metalness);
                         }
                         {
-                                double position = roughness;
+                                const double position = roughness;
                                 QSignalBlocker blocker(ui_.slider_roughness);
                                 set_slider_position(ui_.slider_roughness, position);
+                                set_label(ui_.label_roughness, ui_.slider_roughness);
                         }
                 },
                 object);

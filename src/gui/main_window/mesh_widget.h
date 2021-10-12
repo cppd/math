@@ -39,10 +39,10 @@ private:
         std::vector<QPointer<QWidget>> widgets_;
         ModelTree* model_tree_ = nullptr;
 
-        void on_ambient_changed(int);
-        void on_metalness_changed(int);
-        void on_roughness_changed(int);
-        void on_transparency_changed(int);
+        void on_ambient_changed();
+        void on_metalness_changed();
+        void on_roughness_changed();
+        void on_transparency_changed();
         void on_color_clicked();
 
         void on_model_tree_item_update();

@@ -22,8 +22,26 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <src/com/error.h>
 
+#include <iomanip>
+#include <sstream>
+
 namespace ns::gui::main_window
 {
+namespace
+{
+void set_label(QLabel* const label, const double value)
+{
+        std::ostringstream oss;
+        oss << std::setprecision(3) << std::fixed << value;
+        label->setText(QString::fromStdString(oss.str()));
+}
+
+void set_label(QLabel* const label, QSlider* const slider)
+{
+        set_label(label, slider_position(slider));
+}
+}
+
 MeshWidget::MeshWidget() : QWidget(nullptr)
 {
         ui_.setupUi(this);
@@ -68,17 +86,19 @@ void MeshWidget::set_enabled(bool enabled) const
         }
 }
 
-void MeshWidget::on_ambient_changed(int)
+void MeshWidget::on_ambient_changed()
 {
         ASSERT(std::this_thread::get_id() == thread_id_);
 
-        std::optional<storage::MeshObject> object_opt = model_tree_->current_mesh();
+        const std::optional<storage::MeshObject> object_opt = model_tree_->current_mesh();
         if (!object_opt)
         {
                 return;
         }
 
-        double ambient = slider_position(ui_.slider_ambient);
+        const double ambient = slider_position(ui_.slider_ambient);
+
+        set_label(ui_.label_ambient, ambient);
 
         std::visit(
                 [&]<std::size_t N>(const std::shared_ptr<mesh::MeshObject<N>>& object)
@@ -89,17 +109,19 @@ void MeshWidget::on_ambient_changed(int)
                 *object_opt);
 }
 
-void MeshWidget::on_metalness_changed(int)
+void MeshWidget::on_metalness_changed()
 {
         ASSERT(std::this_thread::get_id() == thread_id_);
 
-        std::optional<storage::MeshObject> object_opt = model_tree_->current_mesh();
+        const std::optional<storage::MeshObject> object_opt = model_tree_->current_mesh();
         if (!object_opt)
         {
                 return;
         }
 
-        double metalness = slider_position(ui_.slider_metalness);
+        const double metalness = slider_position(ui_.slider_metalness);
+
+        set_label(ui_.label_metalness, metalness);
 
         std::visit(
                 [&]<std::size_t N>(const std::shared_ptr<mesh::MeshObject<N>>& object)
@@ -110,17 +132,19 @@ void MeshWidget::on_metalness_changed(int)
                 *object_opt);
 }
 
-void MeshWidget::on_roughness_changed(int)
+void MeshWidget::on_roughness_changed()
 {
         ASSERT(std::this_thread::get_id() == thread_id_);
 
-        std::optional<storage::MeshObject> object_opt = model_tree_->current_mesh();
+        const std::optional<storage::MeshObject> object_opt = model_tree_->current_mesh();
         if (!object_opt)
         {
                 return;
         }
 
-        double roughness = slider_position(ui_.slider_roughness);
+        const double roughness = slider_position(ui_.slider_roughness);
+
+        set_label(ui_.label_roughness, roughness);
 
         std::visit(
                 [&]<std::size_t N>(const std::shared_ptr<mesh::MeshObject<N>>& object)
@@ -131,17 +155,17 @@ void MeshWidget::on_roughness_changed(int)
                 *object_opt);
 }
 
-void MeshWidget::on_transparency_changed(int)
+void MeshWidget::on_transparency_changed()
 {
         ASSERT(std::this_thread::get_id() == thread_id_);
 
-        std::optional<storage::MeshObject> object_opt = model_tree_->current_mesh();
+        const std::optional<storage::MeshObject> object_opt = model_tree_->current_mesh();
         if (!object_opt)
         {
                 return;
         }
 
-        double alpha = 1.0 - slider_position(ui_.slider_transparency);
+        const double alpha = 1.0 - slider_position(ui_.slider_transparency);
 
         std::visit(
                 [&]<std::size_t N>(const std::shared_ptr<mesh::MeshObject<N>>& object)
@@ -156,7 +180,7 @@ void MeshWidget::on_color_clicked()
 {
         ASSERT(std::this_thread::get_id() == thread_id_);
 
-        std::optional<storage::MeshObject> object_opt = model_tree_->current_mesh();
+        const std::optional<storage::MeshObject> object_opt = model_tree_->current_mesh();
         if (!object_opt)
         {
                 return;
@@ -195,14 +219,14 @@ void MeshWidget::on_model_tree_item_update()
 {
         ASSERT(std::this_thread::get_id() == thread_id_);
 
-        std::optional<ObjectId> id = model_tree_->current_item();
+        const std::optional<ObjectId> id = model_tree_->current_item();
         if (!id)
         {
                 ui_disable();
                 return;
         }
 
-        std::optional<storage::MeshObjectConst> mesh = model_tree_->mesh_const_if_current(*id);
+        const std::optional<storage::MeshObjectConst> mesh = model_tree_->mesh_const_if_current(*id);
         if (mesh)
         {
                 ui_set(*mesh);
@@ -230,14 +254,17 @@ void MeshWidget::ui_disable()
         {
                 QSignalBlocker blocker(ui_.slider_ambient);
                 set_slider_to_middle(ui_.slider_ambient);
+                ui_.label_ambient->clear();
         }
         {
                 QSignalBlocker blocker(ui_.slider_metalness);
                 set_slider_to_middle(ui_.slider_metalness);
+                ui_.label_metalness->clear();
         }
         {
                 QSignalBlocker blocker(ui_.slider_roughness);
                 set_slider_to_middle(ui_.slider_roughness);
+                ui_.label_roughness->clear();
         }
 }
 
@@ -264,7 +291,7 @@ void MeshWidget::ui_set(const storage::MeshObjectConst& object)
                                 roughness = reading.roughness();
                         }
                         {
-                                double position = 1.0 - alpha;
+                                const double position = 1.0 - alpha;
                                 QSignalBlocker blocker(ui_.slider_transparency);
                                 set_slider_position(ui_.slider_transparency, position);
                         }
@@ -273,19 +300,22 @@ void MeshWidget::ui_set(const storage::MeshObjectConst& object)
                                 set_widget_color(ui_.widget_color, color_to_qcolor(color));
                         }
                         {
-                                double position = ambient;
+                                const double position = ambient;
                                 QSignalBlocker blocker(ui_.slider_ambient);
                                 set_slider_position(ui_.slider_ambient, position);
+                                set_label(ui_.label_ambient, ui_.slider_ambient);
                         }
                         {
-                                double position = metalness;
+                                const double position = metalness;
                                 QSignalBlocker blocker(ui_.slider_metalness);
                                 set_slider_position(ui_.slider_metalness, position);
+                                set_label(ui_.label_metalness, ui_.slider_metalness);
                         }
                         {
-                                double position = roughness;
+                                const double position = roughness;
                                 QSignalBlocker blocker(ui_.slider_roughness);
                                 set_slider_position(ui_.slider_roughness, position);
+                                set_label(ui_.label_roughness, ui_.slider_roughness);
                         }
                 },
                 object);

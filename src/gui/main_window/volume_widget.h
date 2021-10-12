@@ -42,14 +42,14 @@ private:
         ModelTree* model_tree_ = nullptr;
 
         void on_isosurface_clicked();
-        void on_isosurface_transparency_changed(int value);
-        void on_isovalue_changed(int value);
+        void on_isosurface_transparency_changed();
+        void on_isovalue_changed();
         void on_color_clicked();
-        void on_ambient_changed(int value);
-        void on_metalness_changed(int value);
-        void on_roughness_changed(int value);
+        void on_ambient_changed();
+        void on_metalness_changed();
+        void on_roughness_changed();
         void on_levels_changed(double, double);
-        void on_transparency_changed(int value);
+        void on_transparency_changed();
 
         void on_model_tree_item_update();
 
