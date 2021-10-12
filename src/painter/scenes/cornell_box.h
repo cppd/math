@@ -54,7 +54,7 @@ void create_shapes(
 
         constexpr T ALPHA = 1;
         constexpr T METALNESS = 0;
-        constexpr T ROUGHNESS = 0.35;
+        constexpr T ROUGHNESS = 0.25;
 
         const Vector<N, T> org = [&]
         {
@@ -113,24 +113,26 @@ void create_shapes(
 
 template <std::size_t N, typename T>
 std::unique_ptr<Projector<N, T>> create_projector(
-        const std::array<int, N - 1>& screen_sizes,
+        const std::array<int, N - 1>& screen_size,
         const std::array<Vector<N, T>, N>& camera,
         const Vector<N, T>& center)
 {
+        constexpr T POSITION = 1.3;
+
         const std::array<Vector<N, T>, N - 1> screen_axes = del_elem(camera, N - 1);
-        const Vector<N, T> view_point = center - T(1.3) * camera[N - 1];
+        const Vector<N, T> view_point = center - POSITION * camera[N - 1];
 
         switch (0)
         {
         case 0:
         {
                 return std::make_unique<PerspectiveProjector<N, T>>(
-                        view_point, camera[N - 1], screen_axes, 60, screen_sizes);
+                        view_point, camera[N - 1], screen_axes, 60, screen_size);
         }
         case 1:
         {
                 return std::make_unique<SphericalProjector<N, T>>(
-                        view_point, camera[N - 1], screen_axes, 70, screen_sizes);
+                        view_point, camera[N - 1], screen_axes, 70, screen_size);
         }
         }
 }
@@ -142,8 +144,8 @@ void create_light_sources(
         const Vector<N, T>& center,
         std::vector<std::unique_ptr<const LightSource<N, T, Color>>>* const light_sources)
 {
-        constexpr T FALLOFF_START = 80;
-        constexpr T WIDTH = 90;
+        constexpr T FALLOFF_START = 60;
+        constexpr T WIDTH = 72;
 
         switch (0)
         {
@@ -204,10 +206,10 @@ template <std::size_t N, typename T, typename Color>
 std::unique_ptr<const Scene<N, T, Color>> create_cornell_box_scene(
         const Color& light,
         const Color& background_light,
-        const std::array<int, N - 1>& screen_sizes,
-        std::unique_ptr<const Shape<N, T, Color>>&& shape,
+        const std::array<int, N - 1>& screen_size,
         const std::array<Vector<N, T>, N>& camera,
-        const Vector<N, T>& center)
+        const Vector<N, T>& center,
+        std::unique_ptr<const Shape<N, T, Color>>&& shape)
 {
         static_assert(N >= 3);
         static_assert(std::is_floating_point_v<T>);
@@ -221,66 +223,16 @@ std::unique_ptr<const Scene<N, T, Color>> create_cornell_box_scene(
 
         create_light_sources(light, camera, center, &light_sources);
 
-        std::unique_ptr<Projector<N, T>> projector = create_projector(screen_sizes, camera, center);
+        std::unique_ptr<Projector<N, T>> projector = create_projector(screen_size, camera, center);
 
         return create_storage_scene<N, T>(
                 background_light, std::move(projector), std::move(light_sources), std::move(shapes));
 }
 
 template <std::size_t N, typename T>
-std::tuple<T, Vector<N, T>> size_and_center(const geometry::BoundingBox<N, T>& bb)
+std::tuple<std::array<Vector<N, T>, N>, Vector<N, T>> camera_and_center(const geometry::BoundingBox<N, T>& bb)
 {
         const T size = (bb.max - bb.min).norm() * T(1.5);
-
-        Vector<N, T> center = (bb.max + bb.min) * T(0.5);
-        center[N - 2] += (size - (bb.max[N - 2] - bb.min[N - 2])) * T(0.5);
-
-        return {size, center};
-}
-}
-
-template <typename T, typename Color>
-std::unique_ptr<const Scene<3, T, Color>> create_cornell_box_scene(
-        const Color& light,
-        const Color& background_light,
-        const int width,
-        const int height,
-        std::unique_ptr<const Shape<3, T, Color>>&& shape,
-        const Vector<3, T>& camera_direction,
-        const Vector<3, T>& camera_up)
-{
-        namespace impl = cornell_box_scene_implementation;
-
-        const auto [size, center] = impl::size_and_center(shape->bounding_box());
-
-        const std::array<int, 2> screen_sizes{width, height};
-
-        const Vector<3, T> dir = size * camera_direction.normalized();
-        const Vector<3, T> right = size * cross(camera_direction, camera_up).normalized();
-        const Vector<3, T> up = size * cross(right, dir).normalized();
-
-        const std::array<Vector<3, T>, 3> camera{right, up, dir};
-
-        return impl::create_cornell_box_scene(light, background_light, screen_sizes, std::move(shape), camera, center);
-}
-
-template <std::size_t N, typename T, typename Color>
-std::unique_ptr<const Scene<N, T, Color>> create_cornell_box_scene(
-        const Color& light,
-        const Color& background_light,
-        const int screen_size,
-        std::unique_ptr<const Shape<N, T, Color>>&& shape)
-{
-        static_assert(N >= 3);
-        namespace impl = cornell_box_scene_implementation;
-
-        const auto [size, center] = impl::size_and_center(shape->bounding_box());
-
-        std::array<int, N - 1> screen_sizes;
-        for (std::size_t i = 0; i < N - 1; ++i)
-        {
-                screen_sizes[i] = screen_size;
-        }
 
         std::array<Vector<N, T>, N> camera;
         for (std::size_t i = 0; i < N; ++i)
@@ -293,6 +245,25 @@ std::unique_ptr<const Scene<N, T, Color>> create_cornell_box_scene(
         }
         camera[N - 1][N - 1] = -size;
 
-        return impl::create_cornell_box_scene(light, background_light, screen_sizes, std::move(shape), camera, center);
+        Vector<N, T> center = (bb.max + bb.min) * T(0.5);
+        center[N - 2] += (size - (bb.max[N - 2] - bb.min[N - 2])) * T(0.5);
+
+        return {camera, center};
+}
+}
+
+template <std::size_t N, typename T, typename Color>
+std::unique_ptr<const Scene<N, T, Color>> create_cornell_box_scene(
+        const Color& light,
+        const Color& background_light,
+        const std::array<int, N - 1>& screen_size,
+        std::unique_ptr<const Shape<N, T, Color>>&& shape)
+{
+        static_assert(N >= 3);
+        namespace impl = cornell_box_scene_implementation;
+
+        const auto [camera, center] = impl::camera_and_center(shape->bounding_box());
+
+        return impl::create_cornell_box_scene(light, background_light, screen_size, camera, center, std::move(shape));
 }
 }
