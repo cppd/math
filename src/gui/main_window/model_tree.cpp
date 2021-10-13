@@ -235,15 +235,12 @@ void ModelTree::erase_from_tree(ObjectId id)
         }
         else
         {
-                QTreeWidgetItem* parent = item->parent();
-                delete item;
-                while (parent && parent->childCount() == 0)
+                do
                 {
-                        item = parent;
-                        parent = item->parent();
-                        ASSERT(map_item_id_.count(item) == 0);
+                        QTreeWidgetItem* parent = item->parent();
                         delete item;
-                }
+                        item = parent;
+                } while (item != nullptr && item->childCount() == 0 && map_item_id_.count(item) == 0);
         }
 }
 
