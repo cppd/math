@@ -24,9 +24,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "../sphere_uniform.h"
 
 #include <src/com/error.h>
-#include <src/com/exponent.h>
 #include <src/com/print.h>
-#include <src/com/progression.h>
 #include <src/com/thread.h>
 #include <src/geometry/shapes/sphere_area.h>
 #include <src/geometry/shapes/sphere_create.h>
@@ -46,28 +44,6 @@ template <std::size_t N, typename T>
 class SphereDistribution final
 {
         static constexpr int TREE_MIN_OBJECTS_PER_BOX = 5;
-
-        static int tree_max_depth()
-        {
-                static_assert(N >= 3);
-
-                switch (N)
-                {
-                case 3:
-                        return 10;
-                case 4:
-                        return 8;
-                case 5:
-                        return 6;
-                case 6:
-                        return 5;
-                default:
-                        static constexpr double SUM = 1e9;
-                        static constexpr double RATIO = power<N>(2);
-                        const double n = geometric_progression_n(RATIO, SUM);
-                        return std::max(2.0, std::floor(n));
-                }
-        }
 
         //
 
@@ -193,7 +169,7 @@ class SphereDistribution final
 
 public:
         explicit SphereDistribution(ProgressRatio* progress)
-                : sphere_(), tree_(&sphere_.facets, tree_max_depth(), TREE_MIN_OBJECTS_PER_BOX, progress)
+                : sphere_(), tree_(&sphere_.facets, TREE_MIN_OBJECTS_PER_BOX, progress)
         {
         }
 

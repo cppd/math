@@ -19,8 +19,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <src/color/color.h>
 #include <src/com/error.h>
-#include <src/com/exponent.h>
-#include <src/com/progression.h>
 #include <src/com/type/limit.h>
 #include <src/geometry/spatial/parallelotope_aa.h>
 #include <src/geometry/spatial/shape_intersection.h>
@@ -35,29 +33,6 @@ namespace ns::painter
 namespace
 {
 constexpr int TREE_MIN_OBJECTS_PER_BOX = 10;
-
-template <std::size_t N>
-int tree_max_depth()
-{
-        static_assert(N >= 3);
-
-        switch (N)
-        {
-        case 3:
-                return 10;
-        case 4:
-                return 8;
-        case 5:
-                return 6;
-        case 6:
-                return 5;
-        default:
-                static constexpr double SUM = 1e9;
-                static constexpr double RATIO = power<N>(2);
-                const double n = geometric_progression_n(RATIO, SUM);
-                return std::max(2.0, std::floor(n));
-        }
-}
 
 template <typename P>
 std::vector<P*> to_pointers(const std::vector<std::unique_ptr<P>>& objects)
@@ -200,8 +175,7 @@ void create_tree(
         const unsigned thread_count = hardware_concurrency();
 
         tree->decompose(
-                tree_max_depth<N>(), TREE_MIN_OBJECTS_PER_BOX, wrappers.size(), bounding_box, shape_intersections,
-                thread_count, progress);
+                TREE_MIN_OBJECTS_PER_BOX, wrappers.size(), bounding_box, shape_intersections, thread_count, progress);
 }
 
 template <std::size_t N, typename T, typename Color>

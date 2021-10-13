@@ -29,6 +29,7 @@ CRC Press, 2014.
 
 #include <src/com/arrays.h>
 #include <src/com/error.h>
+#include <src/com/exponent.h>
 #include <src/com/print.h>
 #include <src/com/progression.h>
 #include <src/com/thread.h>
@@ -55,6 +56,29 @@ namespace spatial_subdivision_tree_implementation
 {
 template <std::size_t DIMENSION>
 inline constexpr int BOX_COUNT = 1u << DIMENSION;
+
+template <std::size_t N>
+int tree_max_depth()
+{
+        static_assert(N >= 3);
+
+        switch (N)
+        {
+        case 3:
+                return 10;
+        case 4:
+                return 8;
+        case 5:
+                return 6;
+        case 6:
+                return 5;
+        default:
+                static constexpr double SUM = 1e9;
+                static constexpr double RATIO = power<N>(2);
+                const double n = geometric_progression_n(RATIO, SUM);
+                return std::max(2.0, std::floor(n));
+        }
+}
 
 template <typename Parallelotope>
 class Box final
@@ -379,18 +403,18 @@ class SpatialSubdivisionTree final
 public:
         template <typename ObjectIntersections>
         void decompose(
-                const int max_depth,
                 const int min_objects_per_box,
                 const int object_count,
                 const BoundingBox<N, T>& bounding_box,
                 const ObjectIntersections& object_intersections,
                 const unsigned thread_count,
                 ProgressRatio* const progress)
-
         {
                 static_assert(BOX_COUNT_LIMIT <= (1LL << 31) - 1);
 
                 namespace impl = spatial_subdivision_tree_implementation;
+
+                const int max_depth = impl::tree_max_depth<N>();
 
                 if (!(max_depth >= 1 && max_depth <= MAX_DEPTH)
                     || !(min_objects_per_box >= MIN_OBJECTS_PER_BOX_MIN

@@ -53,7 +53,6 @@ class ObjectTree final
         }
 
         static void create_tree(
-                int max_depth,
                 int min_objects_per_box,
                 const std::vector<Object>& objects,
                 const BoundingBox<N, T>& bounding_box,
@@ -87,8 +86,8 @@ class ObjectTree final
                 const unsigned thread_count = hardware_concurrency();
 
                 tree->decompose(
-                        max_depth, min_objects_per_box, objects.size(), bounding_box, object_intersections,
-                        thread_count, progress);
+                        min_objects_per_box, objects.size(), bounding_box, object_intersections, thread_count,
+                        progress);
         }
 
         static std::optional<std::tuple<T, const Object*>> ray_intersection(
@@ -122,11 +121,11 @@ class ObjectTree final
         SpatialSubdivisionTree<TreeParallelotope> tree_;
 
 public:
-        ObjectTree(const std::vector<Object>* objects, int max_depth, int min_objects_per_box, ProgressRatio* progress)
+        ObjectTree(const std::vector<Object>* objects, int min_objects_per_box, ProgressRatio* progress)
                 : objects_(objects)
         {
                 bounding_box_ = bounding_box(*objects);
-                create_tree(max_depth, min_objects_per_box, *objects_, bounding_box_, &tree_, progress);
+                create_tree(min_objects_per_box, *objects_, bounding_box_, &tree_, progress);
         }
 
         const BoundingBox<N, T>& bounding_box() const

@@ -24,10 +24,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <src/color/color.h>
 #include <src/com/chrono.h>
-#include <src/com/exponent.h>
 #include <src/com/log.h>
 #include <src/com/memory_arena.h>
-#include <src/com/progression.h>
 #include <src/com/thread.h>
 #include <src/com/type/limit.h>
 #include <src/geometry/spatial/object_tree.h>
@@ -46,29 +44,6 @@ namespace ns::painter
 namespace
 {
 constexpr int TREE_MIN_OBJECTS_PER_BOX = 10;
-
-template <std::size_t N>
-int tree_max_depth()
-{
-        static_assert(N >= 3);
-
-        switch (N)
-        {
-        case 3:
-                return 10;
-        case 4:
-                return 8;
-        case 5:
-                return 6;
-        case 6:
-                return 5;
-        default:
-                static constexpr double SUM = 1e9;
-                static constexpr double RATIO = power<N>(2);
-                const double n = geometric_progression_n(RATIO, SUM);
-                return std::max(2.0, std::floor(n));
-        }
-}
 
 template <std::size_t N>
 std::array<int, N> add_offset(const std::array<int, N>& src, int offset, bool add)
@@ -408,7 +383,7 @@ Mesh<N, T, Color>::Mesh(const std::vector<const mesh::MeshObject<N>*>& mesh_obje
 
         progress->set_text(to_string(1 << N) + "-tree: %v of %m");
 
-        tree_.emplace(&facets_, tree_max_depth<N>(), TREE_MIN_OBJECTS_PER_BOX, progress);
+        tree_.emplace(&facets_, TREE_MIN_OBJECTS_PER_BOX, progress);
 
         LOG("Painter mesh object created, " + to_string_fixed(duration_from(start_time), 5) + " s");
 }
