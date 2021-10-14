@@ -22,7 +22,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "print.h"
 
 #include <cstddef>
-#include <cstring>
 #include <memory>
 #include <thread>
 #include <vector>
@@ -34,6 +33,7 @@ class MemoryArena
         static constexpr std::size_t ALIGN = alignof(std::max_align_t);
         static constexpr std::size_t BLOCK_SIZE = 1 << 18;
 
+        static constexpr std::size_t MAX_OBJECT_SIZE = BLOCK_SIZE / 1024;
         static constexpr std::size_t BLOCK_COUNT_WITHOUT_WARNING = 8;
 
         class Block final
@@ -55,11 +55,6 @@ class MemoryArena
                 {
                         return reinterpret_cast<std::byte*>(data_.data()) + index;
                 }
-
-                void set_zero()
-                {
-                        std::memset(data_.data(), 0, sizeof(data_[0]) * data_.size());
-                }
         };
 
         template <typename T>
@@ -76,6 +71,7 @@ class MemoryArena
         }
 
         const std::thread::id thread_id_ = std::this_thread::get_id();
+
         std::vector<std::unique_ptr<Block>> blocks_;
         std::size_t block_;
         std::size_t index_;
@@ -118,13 +114,6 @@ public:
 
                 block_ = 0;
                 index_ = 0;
-
-#if !defined(RELEASE_BUILD)
-                for (const std::unique_ptr<Block>& block_ptr : blocks_)
-                {
-                        block_ptr->set_zero();
-                }
-#endif
         }
 
         template <class T, class... Args>
@@ -136,7 +125,7 @@ public:
                 static_assert(alignof(T) <= ALIGN);
                 static_assert(ALIGN % alignof(T) == 0);
 
-                static_assert(sizeof(T) <= BLOCK_SIZE / 1024);
+                static_assert(sizeof(T) <= MAX_OBJECT_SIZE);
 
                 std::size_t index = next_index<T>(index_);
                 if (index + sizeof(T) <= BLOCK_SIZE)
@@ -156,7 +145,7 @@ public:
 
                 if (used_blocks() > BLOCK_COUNT_WITHOUT_WARNING)
                 {
-                        LOG("MemoryArena too many blocks; used blocks = " + to_string(used_blocks())
+                        LOG("MemoryArena has too many blocks; used blocks = " + to_string(used_blocks())
                             + ", used bytes = " + to_string(used_bytes()));
                 }
 
