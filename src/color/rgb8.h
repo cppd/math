@@ -23,48 +23,65 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 namespace ns
 {
-struct RGB8 final
+class RGB8 final
 {
-        unsigned char red;
-        unsigned char green;
-        unsigned char blue;
+        unsigned char red_;
+        unsigned char green_;
+        unsigned char blue_;
 
-        constexpr RGB8(unsigned char red, unsigned char green, unsigned char blue) : red(red), green(green), blue(blue)
+public:
+        constexpr RGB8(const unsigned char red, const unsigned char green, const unsigned char blue)
+                : red_(red), green_(green), blue_(blue)
         {
         }
 
         constexpr bool operator==(const RGB8& v) const
         {
-                return red == v.red && green == v.green && blue == v.blue;
+                return red_ == v.red_ && green_ == v.green_ && blue_ == v.blue_;
+        }
+
+        constexpr unsigned char red() const
+        {
+                return red_;
+        }
+
+        constexpr unsigned char green() const
+        {
+                return green_;
+        }
+
+        constexpr unsigned char blue() const
+        {
+                return blue_;
         }
 
         constexpr float linear_red() const
         {
-                return color::srgb_uint8_to_linear_float(red);
+                return color::srgb_uint8_to_linear_float(red_);
         }
 
         constexpr float linear_green() const
         {
-                return color::srgb_uint8_to_linear_float(green);
+                return color::srgb_uint8_to_linear_float(green_);
         }
 
         constexpr float linear_blue() const
         {
-                return color::srgb_uint8_to_linear_float(blue);
+                return color::srgb_uint8_to_linear_float(blue_);
         }
 
         constexpr Vector<3, float> linear_rgb() const
         {
-                return Vector<3, float>(linear_red(), linear_green(), linear_blue());
+                return {linear_red(), linear_green(), linear_blue()};
         }
 };
 
-inline RGB8 make_rgb8(float red, float green, float blue)
+inline RGB8 make_rgb8(const float red, const float green, const float blue)
 {
-        unsigned char r = color::linear_float_to_srgb_uint8(red);
-        unsigned char g = color::linear_float_to_srgb_uint8(green);
-        unsigned char b = color::linear_float_to_srgb_uint8(blue);
-        return RGB8(r, g, b);
+        const unsigned char r = color::linear_float_to_srgb_uint8(red);
+        const unsigned char g = color::linear_float_to_srgb_uint8(green);
+        const unsigned char b = color::linear_float_to_srgb_uint8(blue);
+        return {r, g, b};
 }
 
 template <typename T>

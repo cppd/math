@@ -36,27 +36,25 @@ class ObjectTree final
 
         using TreeParallelotope = ParallelotopeAA<N, T>;
 
-        static BoundingBox<N, T> bounding_box(const std::vector<Object>& objects)
+        static BoundingBox<N, T> create_bounding_box(const std::vector<Object>& objects)
         {
-                BoundingBox<N, T> bb;
-                bb.min = Vector<N, T>(Limits<T>::max());
-                bb.max = Vector<N, T>(Limits<T>::lowest());
+                Vector<N, T> mn(Limits<T>::max());
+                Vector<N, T> mx(Limits<T>::lowest());
                 for (const Object& object : objects)
                 {
                         for (const Vector<N, T>& v : object.vertices())
                         {
-                                bb.min = min(bb.min, v);
-                                bb.max = max(bb.max, v);
+                                mn = min(mn, v);
+                                mx = max(mx, v);
                         }
                 }
-                return bb;
+                return {mn, mx};
         }
 
-        static void create_tree(
+        static SpatialSubdivisionTree<TreeParallelotope> create_tree(
                 int min_objects_per_box,
                 const std::vector<Object>& objects,
                 const BoundingBox<N, T>& bounding_box,
-                SpatialSubdivisionTree<TreeParallelotope>* tree,
                 ProgressRatio* progress)
         {
                 std::vector<ShapeWrapperForIntersection<Object>> wrappers;
@@ -85,9 +83,11 @@ class ObjectTree final
 
                 const unsigned thread_count = hardware_concurrency();
 
-                tree->decompose(
+                SpatialSubdivisionTree<TreeParallelotope> tree;
+                tree.decompose(
                         min_objects_per_box, objects.size(), bounding_box, object_intersections, thread_count,
                         progress);
+                return tree;
         }
 
         static std::optional<std::tuple<T, const Object*>> ray_intersection(
@@ -122,10 +122,10 @@ class ObjectTree final
 
 public:
         ObjectTree(const std::vector<Object>* objects, int min_objects_per_box, ProgressRatio* progress)
-                : objects_(objects)
+                : objects_(objects),
+                  bounding_box_(create_bounding_box(*objects)),
+                  tree_(create_tree(min_objects_per_box, *objects_, bounding_box_, progress))
         {
-                bounding_box_ = bounding_box(*objects);
-                create_tree(min_objects_per_box, *objects_, bounding_box_, &tree_, progress);
         }
 
         const BoundingBox<N, T>& bounding_box() const

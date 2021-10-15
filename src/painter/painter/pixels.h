@@ -117,7 +117,7 @@ class Pixels final
         }
 
         void add_samples(
-                const std::array<int, N>& pixel,
+                const std::array<int, N>& region_pixel,
                 const std::array<int, N>& sample_pixel,
                 const std::vector<Vector<N, T>>& points,
                 const std::vector<std::optional<Color>>& colors)
@@ -127,7 +127,7 @@ class Pixels final
                         Vector<N, T> r;
                         for (unsigned i = 0; i < N; ++i)
                         {
-                                r[i] = (pixel[i] - sample_pixel[i]) + T(0.5);
+                                r[i] = (region_pixel[i] - sample_pixel[i]) + T(0.5);
                         }
                         return r;
                 }();
@@ -135,7 +135,7 @@ class Pixels final
                 const auto c = filter_.color_samples(center, points, colors);
                 const auto b = filter_.background_samples(center, points, colors);
 
-                const long long index = global_index_.compute(pixel);
+                const long long index = global_index_.compute(region_pixel);
                 Pixel<Color>& p = pixels_[index];
 
                 std::lock_guard lg(pixel_locks_[index]);
@@ -149,7 +149,7 @@ class Pixels final
                 {
                         p.merge_background(b->sum, b->min, b->max);
                 }
-                notifier_->pixel_set(pixel, rgb_color(p));
+                notifier_->pixel_set(region_pixel, rgb_color(p));
         }
 
 public:

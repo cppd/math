@@ -21,18 +21,25 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 namespace ns::gpu
 {
-constexpr int group_count(int size, int group_size)
+constexpr int group_count(const int size, const int group_size)
 {
         return (size + group_size - 1) / group_size;
 }
 
-constexpr Vector2i group_count(int x, int y, Vector2i group_size)
+constexpr Vector2i group_count(const int x, const int y, const Vector2i group_size)
 {
-        return Vector2i(group_count(x, group_size[0]), group_count(y, group_size[1]));
+        Vector2i res;
+        res[0] = group_count(x, group_size[0]);
+        res[1] = group_count(y, group_size[1]);
+        return res;
 }
 
-constexpr Vector3i group_count(int x, int y, int z, Vector3i group_size)
+constexpr Vector3i group_count(const int x, const int y, const int z, const Vector3i group_size)
 {
-        return Vector3i(group_count(x, group_size[0]), group_count(y, group_size[1]), group_count(z, group_size[2]));
+        Vector3i res;
+        res[0] = group_count(x, group_size[0]);
+        res[1] = group_count(y, group_size[1]);
+        res[2] = group_count(z, group_size[2]);
+        return res;
 }
 }

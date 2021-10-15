@@ -221,9 +221,7 @@ Instance create_instance(std::vector<std::string> required_extensions)
                 create_info.ppEnabledLayerNames = VALIDATION_LAYERS.data();
         }
 
-        Instance instance(create_info);
-
-        return instance;
+        return Instance(create_info);
 }
 
 //

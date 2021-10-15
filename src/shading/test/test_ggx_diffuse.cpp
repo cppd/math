@@ -64,13 +64,19 @@ class BRDF final : public TestBRDF<N, T, Color, RandomEngine<T>>
                 return ggx_diffuse::sample_f(random_engine, metalness_, roughness_, color_, n, v);
         }
 
-public:
-        BRDF(const Color& color, std::type_identity_t<T> min_roughness)
+        BRDF(const Color& color,
+             const std::type_identity_t<T>& min_roughness,
+             RandomEngine<std::mt19937_64>&& random_engine)
+                : color_(color),
+                  metalness_(std::uniform_real_distribution<T>(0, 1)(random_engine)),
+                  roughness_(std::uniform_real_distribution<T>(min_roughness, 1)(random_engine))
         {
-                color_ = color;
-                RandomEngine<std::mt19937_64> random_engine = create_engine<std::mt19937_64>();
-                roughness_ = std::uniform_real_distribution<T>(min_roughness, 1)(random_engine);
-                metalness_ = std::uniform_real_distribution<T>(0, 1)(random_engine);
+        }
+
+public:
+        BRDF(const Color& color, const std::type_identity_t<T>& min_roughness)
+                : BRDF(color, min_roughness, create_engine<std::mt19937_64>())
+        {
         }
 
         const Color& color() const

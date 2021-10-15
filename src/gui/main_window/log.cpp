@@ -33,19 +33,19 @@ RGB8 event_color(LogType type)
         {
         case LogType::NORMAL:
         {
-                return RGB8(0, 0, 0);
+                return {0, 0, 0};
         }
         case LogType::ERROR:
         {
-                return RGB8(255, 0, 0);
+                return {255, 0, 0};
         }
         case LogType::WARNING:
         {
-                return RGB8(200, 150, 0);
+                return {200, 150, 0};
         }
         case LogType::INFORMATION:
         {
-                return RGB8(0, 0, 255);
+                return {0, 0, 255};
         }
         }
         error_fatal("Unknown log event type " + to_string(enum_to_int(type)));

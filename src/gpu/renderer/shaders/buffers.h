@@ -231,7 +231,7 @@ class TransparencyBuffers
         static constexpr uint32_t HEADS_NULL_POINTER = Limits<uint32_t>::max();
 
         // (uint color_rg) + (uint color_ba) + (float depth) + (uint next)
-        static constexpr uint32_t NODE_SIZE = 16;
+        static constexpr unsigned long long NODE_SIZE = 16;
 
         const unsigned node_count_;
 

@@ -117,7 +117,7 @@ bool equal(
 Vector<3, float> random_rgb(std::mt19937_64& engine)
 {
         std::uniform_real_distribution<float> urd(0, 1);
-        return Vector<3, float>(urd(engine), urd(engine), urd(engine));
+        return {urd(engine), urd(engine), urd(engine)};
 }
 
 template <typename ColorType>

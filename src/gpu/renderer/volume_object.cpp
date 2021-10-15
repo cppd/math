@@ -22,7 +22,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "shaders/buffers.h"
 #include "shaders/volume.h"
 
-#include <src/color/conversion.h>
 #include <src/com/alg.h>
 #include <src/com/merge.h>
 #include <src/image/conversion.h>
@@ -129,14 +128,14 @@ bool is_scalar_volume(image::ColorFormat color_format)
 image::Image<1> transfer_function()
 {
         constexpr int SIZE = 256;
-        constexpr RGB8 COLOR = RGB8(230, 255, 230);
 
-        constexpr float RED = color::srgb_uint8_to_linear_float(COLOR.red);
-        constexpr float GREEN = color::srgb_uint8_to_linear_float(COLOR.green);
-        constexpr float BLUE = color::srgb_uint8_to_linear_float(COLOR.blue);
+        constexpr RGB8 COLOR = RGB8(230, 255, 230);
+        constexpr float RED = COLOR.linear_red();
+        constexpr float GREEN = COLOR.linear_green();
+        constexpr float BLUE = COLOR.linear_blue();
 
         std::vector<float> pixels;
-        pixels.reserve(4 * SIZE);
+        pixels.reserve(4ull * SIZE);
         constexpr float MAX = SIZE - 1;
         for (int i = 0; i < SIZE; ++i)
         {

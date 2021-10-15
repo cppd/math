@@ -61,7 +61,7 @@ std::vector<vulkan::BufferWithMemory> create_flow_buffers(
         const std::vector<uint32_t> family_indices({family_index});
         for (std::size_t i = 1; i < sizes.size(); ++i)
         {
-                const int buffer_size = sizes[i][0] * sizes[i][1] * sizeof(Vector2f);
+                const std::size_t buffer_size = sizeof(Vector2f) * sizes[i][0] * sizes[i][1];
                 buffers.emplace_back(
                         vulkan::BufferMemoryType::DEVICE_LOCAL, device, family_indices,
                         VK_BUFFER_USAGE_STORAGE_BUFFER_BIT, buffer_size);

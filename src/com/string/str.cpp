@@ -47,7 +47,7 @@ std::string trim(const std::string_view& s)
 {
         if (s.empty())
         {
-                return std::string();
+                return {};
         }
 
         std::size_t n = s.size();
@@ -58,7 +58,7 @@ std::string trim(const std::string_view& s)
         }
         if (i == n)
         {
-                return std::string();
+                return {};
         }
 
         std::size_t ri = s.size() - 1;

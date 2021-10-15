@@ -360,7 +360,7 @@ std::unique_ptr<vulkan::BufferWithMemory> load_point_vertices(
 {
         if (mesh.points.empty())
         {
-                return std::unique_ptr<vulkan::BufferWithMemory>();
+                return {};
         }
 
         std::vector<PointsVertex> vertices;
@@ -389,7 +389,7 @@ std::unique_ptr<vulkan::BufferWithMemory> load_line_vertices(
 {
         if (mesh.lines.empty())
         {
-                return std::unique_ptr<vulkan::BufferWithMemory>();
+                return {};
         }
 
         std::vector<PointsVertex> vertices;

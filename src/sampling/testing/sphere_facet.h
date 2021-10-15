@@ -63,9 +63,10 @@ public:
         using DataType = T;
 
         SphereFacet(const std::vector<Vector<N, T>>* vertices, const std::array<int, N>& vertex_indices)
-                : vertices_(vertices), v_(vertex_indices)
+                : vertices_(vertices),
+                  v_(vertex_indices),
+                  normal_(numerical::orthogonal_complement(*vertices_, v_).normalized())
         {
-                normal_ = numerical::orthogonal_complement(*vertices_, v_).normalized();
                 if (!is_finite(normal_))
                 {
                         error("Facet normal is not finite, facet vertices\n"

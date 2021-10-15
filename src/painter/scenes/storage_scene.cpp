@@ -53,9 +53,7 @@ geometry::BoundingBox<N, T> compute_bounding_box(const std::vector<const Shape<N
         geometry::BoundingBox<N, T> bb = shapes[0]->bounding_box();
         for (std::size_t i = 1; i < shapes.size(); ++i)
         {
-                geometry::BoundingBox<N, T> shape_bb = shapes[i]->bounding_box();
-                bb.min = min(bb.min, shape_bb.min);
-                bb.max = max(bb.max, shape_bb.max);
+                bb.merge(shapes[i]->bounding_box());
         }
         return bb;
 }
@@ -268,7 +266,7 @@ public:
 
                 const geometry::BoundingBox<N, T> bounding_box = compute_bounding_box(shape_pointers_);
 
-                const T scene_size = (bounding_box.max - bounding_box.min).norm();
+                const T scene_size = (bounding_box.max() - bounding_box.min()).norm();
                 ray_offset_ = scene_size * (RAY_OFFSET_IN_EPSILONS * Limits<T>::epsilon());
 
                 ProgressRatio progress(nullptr);

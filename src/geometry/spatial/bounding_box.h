@@ -24,14 +24,17 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 namespace ns::geometry
 {
 template <std::size_t N, typename T>
-struct BoundingBox final
+class BoundingBox final
 {
-        Vector<N, T> min;
-        Vector<N, T> max;
+        Vector<N, T> min_;
+        Vector<N, T> max_;
 
-        BoundingBox() = default;
+public:
+        BoundingBox()
+        {
+        }
 
-        BoundingBox(const Vector<N, T>& min, const Vector<N, T>& max) : min(min), max(max)
+        BoundingBox(const Vector<N, T>& min, const Vector<N, T>& max) : min_(min), max_(max)
         {
         }
 
@@ -39,13 +42,29 @@ struct BoundingBox final
         explicit BoundingBox(const std::array<Vector<N, T>, SIZE>& points)
         {
                 static_assert(SIZE > 0);
-                min = points[0];
-                max = points[0];
+                min_ = points[0];
+                max_ = points[0];
                 for (std::size_t i = 1; i < SIZE; ++i)
                 {
-                        min = ::ns::min(points[i], min);
-                        max = ::ns::max(points[i], max);
+                        min_ = ::ns::min(points[i], min_);
+                        max_ = ::ns::max(points[i], max_);
                 }
+        }
+
+        const Vector<N, T>& min() const
+        {
+                return min_;
+        }
+
+        const Vector<N, T>& max() const
+        {
+                return max_;
+        }
+
+        void merge(const geometry::BoundingBox<N, T>& bb)
+        {
+                min_ = ::ns::min(min_, bb.min_);
+                max_ = ::ns::max(max_, bb.max_);
         }
 };
 }

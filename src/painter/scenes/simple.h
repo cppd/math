@@ -56,8 +56,8 @@ std::unique_ptr<const Projector<N, T>> create_projector(
         const int min_screen_size,
         const int max_screen_size)
 {
-        const Vector<N, T> object_size = bounding_box.max - bounding_box.min;
-        const Vector<N, T> center = bounding_box.min + object_size / T(2);
+        const Vector<N, T> object_size = bounding_box.max() - bounding_box.min();
+        const Vector<N, T> center = bounding_box.min() + object_size / T(2);
 
         const T max_projected_object_size = [&]
         {
@@ -90,7 +90,7 @@ std::unique_ptr<const Projector<N, T>> create_projector(
         const Vector<N, T> camera_position = [&]
         {
                 Vector<N, T> res(center);
-                res[N - 1] = bounding_box.max[N - 1] + object_size.norm();
+                res[N - 1] = bounding_box.max()[N - 1] + object_size.norm();
                 return res;
         }();
 
@@ -126,8 +126,8 @@ void create_light_sources(
         const Color& color,
         std::vector<std::unique_ptr<const LightSource<N, T, Color>>>* const light_sources)
 {
-        const Vector<N, T> box_direction = bounding_box.max - bounding_box.min;
-        const Vector<N, T> center = bounding_box.min + box_direction / T(2);
+        const Vector<N, T> box_direction = bounding_box.max() - bounding_box.min();
+        const Vector<N, T> center = bounding_box.min() + box_direction / T(2);
         const T object_size = box_direction.norm();
 
         static constexpr T DISTANCE = 100;

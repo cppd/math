@@ -54,7 +54,7 @@ std::vector<std::complex<double>> compute_h(int n, bool inverse, double coef)
 
                 // Instead of l*l/n compute mod(l*l/n, 2) so that trigonometric
                 // functions work with numbers no more than 2π.
-                long long dividend = l * l;
+                long long dividend = static_cast<long long>(l) * l;
                 long long quotient = dividend / n;
                 long long remainder = dividend - quotient * n;
                 // factor = (quotient mod 2) + (remainder / n).

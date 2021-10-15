@@ -62,7 +62,7 @@ struct StatisticsWidget::Counters final
 
         Counters operator-(const Counters& c) const
         {
-                return Counters(pixel_count - c.pixel_count, ray_count - c.ray_count, sample_count - c.sample_count);
+                return {pixel_count - c.pixel_count, ray_count - c.ray_count, sample_count - c.sample_count};
         }
 };
 

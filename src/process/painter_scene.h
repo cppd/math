@@ -43,7 +43,7 @@ std::unique_ptr<const painter::Projector<3, T>> create_projector(
         const int width,
         const int height)
 {
-        const T scene_size = (bounding_box.max - bounding_box.min).norm();
+        const T scene_size = (bounding_box.max() - bounding_box.min()).norm();
 
         const Vector<3, T> camera_position = view_center - camera_direction * T(2) * scene_size;
         const Vector<3, T> camera_right = cross(camera_direction, camera_up);
@@ -69,7 +69,7 @@ void create_light_sources(
         static constexpr T RADIUS = DISTANCE / 100;
 
         const geometry::BoundingBox<3, T> bb = shape.bounding_box();
-        const T shape_size = (bb.max - bb.min).norm();
+        const T shape_size = (bb.max() - bb.min()).norm();
         const T distance = shape_size * DISTANCE;
         const T radius = shape_size * RADIUS;
         const Vector<3, T> position = center - direction.normalized() * distance;

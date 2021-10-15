@@ -177,7 +177,7 @@ class Impl final : public Compute
                 lines_buffer_.emplace(
                         vulkan::BufferMemoryType::DEVICE_LOCAL, instance_->device(),
                         std::vector<uint32_t>({family_index}), VK_BUFFER_USAGE_STORAGE_BUFFER_BIT,
-                        2 * height * sizeof(int32_t));
+                        sizeof(int32_t) * 2 * height);
                 points_buffer_ = points_buffer;
                 point_count_buffer_ = point_count_buffer;
 

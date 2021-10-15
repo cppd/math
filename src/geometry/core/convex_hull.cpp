@@ -79,16 +79,16 @@ constexpr ConvexHullSourceInteger MAX_CONVEX_HULL{(1ull << CONVEX_HULL_BITS) - 1
 constexpr DelaunaySourceInteger MAX_DELAUNAY{(1ull << DELAUNAY_BITS) - 1};
 
 template <std::size_t N>
-using ConvexHullComputeType = LeastSignedInteger<max_determinant<N, CONVEX_HULL_BITS>()>;
+using ConvexHullComputeType = LeastSignedInteger<MAX_DETERMINANT<N, CONVEX_HULL_BITS>>;
 template <std::size_t N>
 using ConvexHullDataType = LeastSignedInteger<CONVEX_HULL_BITS>;
 
 template <std::size_t N>
-using DelaunayParaboloidComputeType = LeastSignedInteger<max_determinant_paraboloid<N, DELAUNAY_BITS>()>;
+using DelaunayParaboloidComputeType = LeastSignedInteger<MAX_DETERMINANT_PARABOLOID<N, DELAUNAY_BITS>>;
 template <std::size_t N>
-using DelaunayParaboloidDataType = LeastSignedInteger<max_paraboloid<N, DELAUNAY_BITS>()>;
+using DelaunayParaboloidDataType = LeastSignedInteger<MAX_PARABOLOID<N, DELAUNAY_BITS>>;
 template <std::size_t N>
-using DelaunayComputeType = LeastSignedInteger<max_determinant<N, DELAUNAY_BITS>()>;
+using DelaunayComputeType = LeastSignedInteger<MAX_DETERMINANT<N, DELAUNAY_BITS>>;
 template <std::size_t N>
 using DelaunayDataType = LeastSignedInteger<DELAUNAY_BITS>;
 

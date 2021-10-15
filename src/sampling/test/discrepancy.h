@@ -54,9 +54,8 @@ class PointSearch
         std::vector<Vector<N, T>> points_;
 
 public:
-        explicit PointSearch(std::vector<Vector<N, T>> points)
+        explicit PointSearch(std::vector<Vector<N, T>> points) : points_(std::move(points))
         {
-                points_ = std::move(points);
         }
 
         int count_points(const std::array<std::array<T, 2>, N>& box) const
@@ -74,7 +73,7 @@ public:
 };
 
 template <std::size_t N, typename T>
-void check_point_range(const Vector<N, T>& p, std::type_identity_t<T> min, std::type_identity_t<T> max)
+void check_point_range(const Vector<N, T>& p, const std::type_identity_t<T>& min, const std::type_identity_t<T>& max)
 {
         for (unsigned i = 0; i < N; ++i)
         {
@@ -88,8 +87,8 @@ void check_point_range(const Vector<N, T>& p, std::type_identity_t<T> min, std::
 
 template <typename T, typename RandomEngine>
 std::array<T, 2> make_box_coordinates(
-        std::type_identity_t<T> min,
-        std::type_identity_t<T> max,
+        const std::type_identity_t<T>& min,
+        const std::type_identity_t<T>& max,
         RandomEngine& random_engine)
 {
         T v0;
@@ -104,8 +103,8 @@ std::array<T, 2> make_box_coordinates(
 
 template <std::size_t N, typename T, typename RandomEngine>
 std::array<std::array<T, 2>, N> make_random_box(
-        std::type_identity_t<T> min,
-        std::type_identity_t<T> max,
+        const std::type_identity_t<T>& min,
+        const std::type_identity_t<T>& max,
         RandomEngine& random_engine)
 {
         std::array<std::array<T, 2>, N> box;
@@ -146,10 +145,10 @@ T compute_box_volume(const std::array<std::array<T, 2>, N>& box)
 
 template <std::size_t N, typename T, typename RandomEngine>
 T compute_discrepancy(
-        std::type_identity_t<T> min,
-        std::type_identity_t<T> max,
+        const std::type_identity_t<T>& min,
+        const std::type_identity_t<T>& max,
         const std::vector<Vector<N, T>>& points,
-        int box_count,
+        const int box_count,
         RandomEngine& random_engine)
 {
         if (!(max > min))

@@ -54,7 +54,7 @@ public:
                 return vertices_;
         }
 
-        int find_index_for_point(int point) const
+        int find_index_for_point(const int point) const
         {
                 for (unsigned r = 0; r < N; ++r)
                 {
@@ -66,7 +66,7 @@ public:
                 error("local index not found for point " + to_string(point));
         }
 
-        void add_conflict_point(int point)
+        void add_conflict_point(const int point)
         {
                 conflict_points_.push_back(point);
         }
@@ -77,24 +77,24 @@ public:
 
         void set_iter(FacetIter<Derived> iter)
         {
-                facet_iter_ = iter;
+                facet_iter_ = std::move(iter);
         }
         FacetIter<Derived> iter() const
         {
                 return facet_iter_;
         }
 
-        void set_link(unsigned i, Derived* facet)
+        void set_link(const unsigned i, Derived* const facet)
         {
                 ASSERT(i < N);
                 links_[i] = facet;
         }
-        Derived* link(unsigned i) const
+        Derived* link(const unsigned i) const
         {
                 ASSERT(i < N);
                 return links_[i];
         }
-        unsigned find_link_index(const Derived* facet)
+        unsigned find_link_index(const Derived* const facet)
         {
                 for (unsigned i = 0; i < N; ++i)
                 {
@@ -126,7 +126,7 @@ class FacetInteger final : public FacetBase<N, FacetInteger<N, DataType, Compute
         static_assert(Signed<DataType> && Signed<ComputeType>);
 
         template <typename T>
-        static void negate(Vector<N, T>* v)
+        static void negate(Vector<N, T>* const v)
         {
                 for (unsigned n = 0; n < N; ++n)
                 {
@@ -152,7 +152,7 @@ class FacetInteger final : public FacetBase<N, FacetInteger<N, DataType, Compute
         Vector<N, ComputeType> ortho_;
 
         // dot(ortho, vector from facet to point)
-        ComputeType visible(const std::vector<Vector<N, DataType>>& points, int p) const
+        ComputeType visible(const std::vector<Vector<N, DataType>>& points, const int p) const
         {
                 const Vector<N, DataType>& facet_point = points[Base::vertices()[0]];
                 const Vector<N, DataType>& point = points[p];
@@ -169,15 +169,14 @@ public:
         FacetInteger(
                 const std::vector<Vector<N, DataType>>& points,
                 std::array<int, N>&& vertices,
-                int convex_hull_point,
-                const FacetInteger* convex_hull_facet)
-                : Base(std::move(vertices))
+                const int convex_hull_point,
+                const FacetInteger* const convex_hull_facet)
+                : Base(std::move(vertices)),
+                  ortho_(numerical::orthogonal_complement<N, DataType, ComputeType>(points, Base::vertices()))
         {
-                ortho_ = numerical::orthogonal_complement<N, DataType, ComputeType>(points, Base::vertices());
-
                 ASSERT(!ortho_.is_zero());
 
-                ComputeType v = visible(points, convex_hull_point);
+                const ComputeType v = visible(points, convex_hull_point);
 
                 if (v < 0)
                 {
@@ -200,7 +199,7 @@ public:
                 }
         }
 
-        bool visible_from_point(const std::vector<Vector<N, DataType>>& points, int from_point) const
+        bool visible_from_point(const std::vector<Vector<N, DataType>>& points, const int from_point) const
         {
                 // strictly greater than 0
                 return visible(points, from_point) > 0;
@@ -227,7 +226,7 @@ class FacetInteger<N, DataType, mpz_class, FacetIter> final
 
         using Base = FacetBase<N, FacetInteger, FacetIter>;
 
-        static void reduce(Vector<N, mpz_class>* ortho)
+        static void reduce(Vector<N, mpz_class>* const ortho)
         {
                 thread_local mpz_class gcd;
 
@@ -246,7 +245,7 @@ class FacetInteger<N, DataType, mpz_class, FacetIter> final
                 }
         }
 
-        static void negate(Vector<N, mpz_class>* v)
+        static void negate(Vector<N, mpz_class>* const v)
         {
                 for (unsigned n = 0; n < N; ++n)
                 {
@@ -254,7 +253,7 @@ class FacetInteger<N, DataType, mpz_class, FacetIter> final
                 }
         }
 
-        static void dot(mpz_class* d, const Vector<N, mpz_class>& v1, const Vector<N, mpz_class>& v2)
+        static void dot(mpz_class* const d, const Vector<N, mpz_class>& v1, const Vector<N, mpz_class>& v2)
         {
                 mpz_mul(d->get_mpz_t(), v1[0].get_mpz_t(), v2[0].get_mpz_t());
                 for (unsigned n = 1; n < N; ++n)
@@ -306,7 +305,7 @@ class FacetInteger<N, DataType, mpz_class, FacetIter> final
         Vector<N, mpz_class> ortho_;
 
         // sign of dot(ortho, vector from facet to point)
-        int visible(const std::vector<Vector<N, DataType>>& points, int p) const
+        int visible(const std::vector<Vector<N, DataType>>& points, const int p) const
         {
                 thread_local mpz_class d;
                 thread_local mpz_class to_point;
@@ -326,7 +325,7 @@ class FacetInteger<N, DataType, mpz_class, FacetIter> final
         }
 
         // sign of dot(ortho, vector from facet to point)
-        int visible(const std::vector<Vector<N, mpz_class>>& points, int p) const
+        int visible(const std::vector<Vector<N, mpz_class>>& points, const int p) const
         {
                 thread_local mpz_class d;
                 thread_local mpz_class to_point;
@@ -349,12 +348,11 @@ public:
         FacetInteger(
                 const std::vector<Vector<N, DataType>>& points,
                 std::array<int, N>&& vertices,
-                int convex_hull_point,
-                const FacetInteger* convex_hull_facet)
-                : Base(std::move(vertices))
+                const int convex_hull_point,
+                const FacetInteger* const convex_hull_facet)
+                : Base(std::move(vertices)),
+                  ortho_(numerical::orthogonal_complement<N, DataType, mpz_class>(points, Base::vertices()))
         {
-                ortho_ = numerical::orthogonal_complement<N, DataType, mpz_class>(points, Base::vertices());
-
                 ASSERT(!ortho_.is_zero());
 
                 if ((false))
@@ -362,7 +360,7 @@ public:
                         reduce(&ortho_);
                 }
 
-                int v = visible(points, convex_hull_point);
+                const int v = visible(points, convex_hull_point);
 
                 if (v < 0)
                 {
@@ -385,7 +383,7 @@ public:
                 }
         }
 
-        bool visible_from_point(const std::vector<Vector<N, DataType>>& points, int from_point) const
+        bool visible_from_point(const std::vector<Vector<N, DataType>>& points, const int from_point) const
         {
                 // strictly greater than 0
                 return visible(points, from_point) > 0;

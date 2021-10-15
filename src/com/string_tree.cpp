@@ -38,7 +38,7 @@ std::size_t StringTree::add(std::string s)
         return nodes_.size() - 1;
 }
 
-std::size_t StringTree::add(std::size_t parent, std::string s)
+std::size_t StringTree::add(const std::size_t parent, std::string s)
 {
         if (parent >= nodes_.size())
         {
@@ -49,7 +49,7 @@ std::size_t StringTree::add(std::size_t parent, std::string s)
         return nodes_.size() - 1;
 }
 
-std::string StringTree::text(unsigned indent) const
+std::string StringTree::text(const unsigned indent) const
 {
         std::string s;
 
@@ -67,7 +67,8 @@ std::string StringTree::text(unsigned indent) const
                         {
                                 s += '\n';
                         }
-                        s += std::string((level - 1) * indent, ' ');
+                        const unsigned level_indent = (level - 1) * indent;
+                        s += std::string(level_indent, ' ');
                         s += nodes_[index].name;
                 }
 

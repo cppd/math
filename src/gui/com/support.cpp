@@ -71,7 +71,7 @@ void append_text(QPlainTextEdit* text_edit, const std::string_view& text, const 
         {
                 QString s;
                 s += QStringLiteral("<pre><font color=\"");
-                s += QColor(color.red, color.green, color.blue).name();
+                s += QColor(color.red(), color.green(), color.blue()).name();
                 s += QStringLiteral("\">");
                 s += to_qstring(text).toHtmlEscaped();
                 s += QStringLiteral(R"(</font></pre>)");
@@ -155,16 +155,16 @@ void set_vertical_stretch(QWidget* widget, int stretch_factor)
 
 color::Color qcolor_to_color(const QColor& c)
 {
-        unsigned char r = std::clamp(c.red(), 0, 255);
-        unsigned char g = std::clamp(c.green(), 0, 255);
-        unsigned char b = std::clamp(c.blue(), 0, 255);
+        const unsigned char r = std::clamp(c.red(), 0, 255);
+        const unsigned char g = std::clamp(c.green(), 0, 255);
+        const unsigned char b = std::clamp(c.blue(), 0, 255);
         return color::Color(RGB8(r, g, b));
 }
 
 QColor color_to_qcolor(const color::Color& c)
 {
-        RGB8 srgb8 = make_rgb8(c.rgb32());
-        return QColor(srgb8.red, srgb8.green, srgb8.blue);
+        const RGB8 srgb8 = make_rgb8(c.rgb32());
+        return {srgb8.red(), srgb8.green(), srgb8.blue()};
 }
 
 void set_widget_color(QWidget* widget, const QColor& c)

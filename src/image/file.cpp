@@ -548,7 +548,8 @@ Image<2> load_rgba(const Path& path)
         image.color_format = ColorFormat::R8G8B8A8_SRGB;
         image.size[0] = q_image.width();
         image.size[1] = q_image.height();
-        image.pixels.resize(format_pixel_size_in_bytes(image.color_format) * image.size[0] * image.size[1]);
+        const std::size_t pixel_size = format_pixel_size_in_bytes(image.color_format);
+        image.pixels.resize(pixel_size * image.size[0] * image.size[1]);
 
         load_4(std::move(q_image), image.color_format, image.pixels);
 

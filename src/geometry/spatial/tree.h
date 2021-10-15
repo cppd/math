@@ -435,16 +435,16 @@ public:
                               + ", maximum box count limit " + to_string(BOX_COUNT_LIMIT));
                 }
 
-                const Vector<N, T> guard_region(GUARD_REGION_SIZE * (bounding_box.max - bounding_box.min).norm());
-                const BoundingBox<N, T> root(bounding_box.min - guard_region, bounding_box.max + guard_region);
+                const Vector<N, T> guard_region(GUARD_REGION_SIZE * (bounding_box.max() - bounding_box.min()).norm());
+                const BoundingBox<N, T> root(bounding_box.min() - guard_region, bounding_box.max() + guard_region);
 
-                ray_offset_ = std::max(root.max.norm_infinity(), root.min.norm_infinity())
+                ray_offset_ = std::max(root.max().norm_infinity(), root.min().norm_infinity())
                               * (RAY_OFFSET_IN_EPSILONS * Limits<T>::epsilon() * std::sqrt(T(N)));
 
                 const int max_box_count = std::lround(impl::maximum_box_count(BOX_COUNT_SUBDIVISION, max_depth));
 
                 BoxContainer boxes;
-                boxes.emplace_back(Parallelotope(root.min, root.max), impl::zero_based_indices(object_count));
+                boxes.emplace_back(Parallelotope(root.min(), root.max()), impl::zero_based_indices(object_count));
 
                 BoxJobs jobs(Job(&boxes.front(), 1 /*depth*/));
 

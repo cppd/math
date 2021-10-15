@@ -101,11 +101,8 @@ template <std::size_t N, typename T>
 HyperplaneParallelotope<N, T>::HyperplaneParallelotope(
         const Vector<N, T>& org,
         const std::array<Vector<N, T>, N - 1>& vectors)
+        : org_(org), vectors_(vectors), normal_(numerical::orthogonal_complement(vectors).normalized())
 {
-        org_ = org;
-        vectors_ = vectors;
-        normal_ = numerical::orthogonal_complement(vectors).normalized();
-
         for (unsigned i = 0; i < N - 1; ++i)
         {
                 std::swap(normal_, vectors_[i]);
@@ -226,8 +223,10 @@ std::array<Vector<N, T>, HyperplaneParallelotope<N, T>::VERTEX_COUNT> Hyperplane
 
 template <std::size_t N, typename T>
 template <int INDEX, typename F>
-void HyperplaneParallelotope<N, T>::edges_impl(const Vector<N, T>& p, std::array<bool, N - 1>* dimensions, const F& f)
-        const
+void HyperplaneParallelotope<N, T>::edges_impl(
+        const Vector<N, T>& p,
+        std::array<bool, N - 1>* const dimensions,
+        const F& f) const
 {
         static_assert(N <= 3);
 

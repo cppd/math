@@ -24,7 +24,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 namespace ns::geometry
 {
 template <std::size_t N, std::size_t BITS>
-constexpr int max_determinant_paraboloid()
+inline constexpr int MAX_DETERMINANT_PARABOLOID = []
 {
         // |x x x x*x+x*x+x*x|
         // |x x x x*x+x*x+x*x|
@@ -44,11 +44,11 @@ constexpr int max_determinant_paraboloid()
 
         f *= (N - 1);
 
-        return BITS * (N + 1) + bit_width(f);
-}
+        return BITS * (N + 1) + static_cast<std::size_t>(bit_width(f));
+}();
 
 template <std::size_t N, std::size_t BITS>
-constexpr int max_determinant()
+inline constexpr int MAX_DETERMINANT = []
 {
         // |x x x x|
         // |x x x x|
@@ -66,15 +66,15 @@ constexpr int max_determinant()
                 f *= i;
         }
 
-        return BITS * N + bit_width(f);
-}
+        return BITS * N + static_cast<std::size_t>(bit_width(f));
+}();
 
 template <std::size_t N, std::size_t BITS>
-constexpr int max_paraboloid()
+inline constexpr int MAX_PARABOLOID = []
 {
         // max = x*x + x*x + x*x
         // max = (x ^ 2) * (N - 1)
 
         return BITS * 2 + bit_width(N - 1);
-}
+}();
 }

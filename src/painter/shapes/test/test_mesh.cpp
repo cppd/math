@@ -51,8 +51,8 @@ constexpr bool WITH_ERROR_LOG = false;
 template <std::size_t N, typename T>
 std::vector<Ray<N, T>> create_rays_for_spherical_mesh(const geometry::BoundingBox<N, T>& bb, const int ray_count)
 {
-        const Vector<N, T> center = (bb.max + bb.min) / T(2);
-        const T radius = 2 * ((bb.max - bb.min) / T(2)).norm_infinity();
+        const Vector<N, T> center = (bb.max() + bb.min()) / T(2);
+        const T radius = 2 * ((bb.max() - bb.min()) / T(2)).norm_infinity();
 
         LOG("ray center = " + to_string(center));
         LOG("ray radius = " + to_string(radius));
@@ -117,7 +117,8 @@ void test_spherical_mesh(const Shape<N, T, Color>& mesh, const int ray_count, Pr
 {
         const geometry::BoundingBox<N, T> bb = mesh.bounding_box();
 
-        const T ray_offset = std::max(bb.min.norm_infinity(), bb.max.norm_infinity()) * (100 * Limits<T>::epsilon());
+        const T ray_offset =
+                std::max(bb.min().norm_infinity(), bb.max().norm_infinity()) * (100 * Limits<T>::epsilon());
         LOG("ray offset = " + to_string(ray_offset));
 
         const std::vector<Ray<N, T>> rays = create_rays_for_spherical_mesh(bb, ray_count);

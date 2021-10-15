@@ -45,12 +45,12 @@ namespace ns::gui::painter_window
 {
 struct Pixels
 {
-        struct Image
+        struct Image final
         {
                 image::ColorFormat color_format;
                 std::vector<std::byte> pixels;
         };
-        struct Images
+        struct Images final
         {
                 std::vector<int> size;
                 Image rgb;
@@ -119,10 +119,10 @@ class PainterPixels final : public Pixels, public painter::Notifier<N - 1>
         std::atomic_bool normalize_stop_ = false;
         std::thread normalize_thread_;
 
-        static void write_r8g8b8a8(std::byte* ptr, const Vector<3, float>& rgb)
+        static void write_r8g8b8a8(std::byte* const ptr, const Vector<3, float>& rgb)
         {
-                RGB8 rgb8 = make_rgb8(rgb);
-                std::array<uint8_t, 4> rgba8{rgb8.red, rgb8.green, rgb8.blue, ALPHA};
+                const RGB8 rgb8 = make_rgb8(rgb);
+                const std::array<uint8_t, 4> rgba8{rgb8.red(), rgb8.green(), rgb8.blue(), ALPHA};
 
                 static_assert(COLOR_FORMAT == image::ColorFormat::R8G8B8A8_SRGB);
                 static_assert(std::span(rgba8).size_bytes() == PIXEL_SIZE);
@@ -135,7 +135,7 @@ class PainterPixels final : public Pixels, public painter::Notifier<N - 1>
                 return pixel;
         }
 
-        void check_slice_number(long long slice_number) const
+        void check_slice_number(const long long slice_number) const
         {
                 if (slice_number < 0 || slice_number >= slice_count_)
                 {
@@ -199,14 +199,14 @@ class PainterPixels final : public Pixels, public painter::Notifier<N - 1>
 
         // PainterNotifier
 
-        void thread_busy(unsigned thread_number, const std::array<int, N - 1>& pixel) override
+        void thread_busy(const unsigned thread_number, const std::array<int, N - 1>& pixel) override
         {
                 long long x = pixel[0];
                 long long y = screen_size_[1] - 1 - pixel[1];
                 busy_indices_2d_[thread_number] = y * screen_size_[0] + x;
         }
 
-        void thread_free(unsigned thread_number) override
+        void thread_free(const unsigned thread_number) override
         {
                 busy_indices_2d_[thread_number] = NULL_INDEX;
         }
@@ -223,12 +223,12 @@ class PainterPixels final : public Pixels, public painter::Notifier<N - 1>
                 write_r8g8b8a8(ptr, rgb * pixels_coef_);
         }
 
-        painter::Images<N - 1>* images(long long /*pass_number*/) override
+        painter::Images<N - 1>* images(const long long /*pass_number*/) override
         {
                 return &painter_images_;
         }
 
-        void pass_done(long long /*pass_number*/) override
+        void pass_done(const long long /*pass_number*/) override
         {
                 painter_images_ready_ = true;
         }
@@ -275,7 +275,7 @@ class PainterPixels final : public Pixels, public painter::Notifier<N - 1>
                 return painter_->statistics();
         }
 
-        void set_brightness_parameter(float brightness_parameter) override
+        void set_brightness_parameter(const float brightness_parameter) override
         {
                 if (!(brightness_parameter >= 0 && brightness_parameter <= 1))
                 {
@@ -286,7 +286,7 @@ class PainterPixels final : public Pixels, public painter::Notifier<N - 1>
                 pixel_brightness_parameter_.store(brightness_parameter, std::memory_order_relaxed);
         }
 
-        std::span<const std::byte> slice_r8g8b8a8(long long slice_number) override
+        std::span<const std::byte> slice_r8g8b8a8(const long long slice_number) override
         {
                 ASSERT(std::this_thread::get_id() == thread_id_);
 
@@ -295,7 +295,7 @@ class PainterPixels final : public Pixels, public painter::Notifier<N - 1>
                 return std::span(&pixels_r8g8b8a8_[slice_number * slice_size_], slice_size_);
         }
 
-        std::optional<Images> slice(long long slice_number) const override
+        std::optional<Images> slice(const long long slice_number) const override
         {
                 if (!painter_images_ready_)
                 {
@@ -364,9 +364,9 @@ public:
         template <typename T, typename Color>
         PainterPixels(
                 std::shared_ptr<const painter::Scene<N, T, Color>> scene,
-                unsigned thread_count,
-                int samples_per_pixel,
-                bool smooth_normal)
+                const unsigned thread_count,
+                const int samples_per_pixel,
+                const bool smooth_normal)
                 : floating_point_name_(type_bit_name<T>()),
                   color_name_(Color::name()),
                   global_index_(scene->projector().screen_size()),
