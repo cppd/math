@@ -12,8 +12,8 @@ function(SetCompilerWarnings source_files)
                         -Wduplicated-branches
                         -Wduplicated-cond
                         -Wenum-compare
-                        -Wformat=2
                         -Wformat-signedness
+                        -Wformat=2
                         -Wframe-larger-than=20000
                         -Wimplicit-fallthrough=5
                         -Winit-self
@@ -77,15 +77,16 @@ function(SetCompilerWarnings source_files)
                         -Wno-float-equal
                         -Wno-padded
                         -Wno-shadow-field-in-constructor
-                        -Wno-weak-vtables
                         -Wno-weak-template-vtables
+                        -Wno-weak-vtables
 
-                        -Wno-undefined-func-template
                         -Wno-ctad-maybe-unsupported
+                        -Wno-undefined-func-template
 
                         # Qt
-                        -Wno-redundant-parens
                         -Wno-extra-semi-stmt
+                        -Wno-redundant-parens
+                        -Wno-reserved-identifier
                         >
                 >
         )
@@ -96,8 +97,8 @@ function(SetCompilerWarnings source_files)
 
                         if (${CMAKE_CXX_COMPILER_ID} STREQUAL "Clang")
                                 string(CONCAT flags
-                                        "-Wredundant-parens"
                                         " -Wextra-semi-stmt"
+                                        " -Wredundant-parens"
                                 )
                                 set_source_files_properties(${f} PROPERTIES COMPILE_FLAGS ${flags})
                         endif()
