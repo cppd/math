@@ -15,7 +15,7 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
 
-cmake_minimum_required(VERSION 3.18)
+cmake_minimum_required(VERSION 3.21)
 
 ##################################################
 
@@ -25,7 +25,7 @@ include("${CMAKE_SOURCE_DIR}/cmake/cmake_compiler_warnings.cmake")
 
 set(compilers "GNU;Clang")
 set(gcc_minimal_version "11")
-set(clang_minimal_version "12")
+set(clang_minimal_version "13")
 
 set(extensions_shaders "comp;frag;geom;vert;tesc;tese")
 set(extensions_shaders_include "glsl")
@@ -65,7 +65,7 @@ if ((${CMAKE_CXX_COMPILER_ID} STREQUAL "Clang") AND (${CMAKE_CXX_COMPILER_VERSIO
 endif()
 
 # after enable_language
-set(CMAKE_C_STANDARD 11)
+set(CMAKE_C_STANDARD 17)
 set(CMAKE_C_STANDARD_REQUIRED ON)
 set(CMAKE_C_EXTENSIONS OFF)
 set(CMAKE_CXX_STANDARD 20)
@@ -125,8 +125,6 @@ function(AddSourceFiles TARGET_TYPE)
 
         target_compile_definitions(${PROJECT_NAME} PRIVATE NDEBUG)
 
-        target_compile_options(${PROJECT_NAME} PRIVATE -march=native)
-
         if (DEBUG_BUILD AND RELEASE_BUILD)
                 message(FATAL_ERROR "DEBUG_BUILD and RELEASE_BUILD")
         elseif(DEBUG_BUILD)
@@ -139,8 +137,9 @@ function(AddSourceFiles TARGET_TYPE)
                 target_compile_options(${PROJECT_NAME} PRIVATE -O3)
         endif()
 
+        target_compile_options(${PROJECT_NAME} PRIVATE -march=native)
         target_compile_options(${PROJECT_NAME} PRIVATE $<$<COMPILE_LANGUAGE:CXX>: -fno-rtti -fstrict-enums >)
-        target_compile_options(${PROJECT_NAME} PRIVATE $<$<CXX_COMPILER_ID:Clang>: -mllvm -inline-threshold=10000 >)
+        # target_compile_options(${PROJECT_NAME} PRIVATE $<$<CXX_COMPILER_ID:Clang>: -mllvm -inline-threshold=1000 >)
 
         SetCompilerWarnings("${all_files}")
 
@@ -150,7 +149,7 @@ function(AddIncludeFiles FILE_TYPE)
 
         cmake_parse_arguments(PARSE_ARGV 1 ARG
                 ""
-                "GLSLANG_VALIDATOR;HEADER_FILE;OUTPUT_EXTENSION;OUTPUT_DIRECTORY"
+                "HEADER_FILE;OUTPUT_EXTENSION;OUTPUT_DIRECTORY"
                 "EXTENSIONS;EXTENSIONS_INCLUDE;SOURCE;INCLUDE_DIRECTORIES;MACROS")
         if (NOT ARG_OUTPUT_EXTENSION)
                 message(FATAL_ERROR "OUTPUT_EXTENSION is not specified")
@@ -186,9 +185,6 @@ function(AddIncludeFiles FILE_TYPE)
                 set(BINARY_FILES TRUE)
                 set(custom_target_prefix "custom_target_binary_files")
         elseif ("${FILE_TYPE}" STREQUAL "VULKAN_SHADERS")
-                if (NOT ARG_GLSLANG_VALIDATOR)
-                        message(FATAL_ERROR "GLSLANG_VALIDATOR is not specified")
-                endif()
                 set(VULKAN_SHADERS TRUE)
                 set(custom_target_prefix "custom_target_vulkan_shaders")
         else()
@@ -320,7 +316,7 @@ function(AddIncludeFiles FILE_TYPE)
                                                 "${PROJECT_BINARY_DIR}/create_str"
                                                 "cat" ${header} "${long_file_name}" "${output_glsl}"
                                         COMMAND
-                                                "${ARG_GLSLANG_VALIDATOR}"
+                                                Vulkan::glslangValidator
                                                 ${include_directories_list}
                                                 "-V"
                                                 ${macro_list}
@@ -372,8 +368,6 @@ AddSourceFiles(EXECUTABLE DIRECTORIES "src_str" EXTENSIONS ${extensions_all})
 
 project(math C CXX)
 
-find_program(GLSLANG_VALIDATOR "glslangValidator" REQUIRED)
-
 set(output_headers_directory "${PROJECT_BINARY_DIR}/output_headers")
 file(REMOVE_RECURSE "${output_headers_directory}")
 
@@ -398,7 +392,6 @@ AddIncludeFiles(BINARY_FILES
 
 AddIncludeFiles(VULKAN_SHADERS
                         OUTPUT_DIRECTORY "${output_headers_directory}/shaders"
-                        GLSLANG_VALIDATOR "${GLSLANG_VALIDATOR}"
                         OUTPUT_EXTENSION "spr"
                         SOURCE "src/gpu"
                         INCLUDE_DIRECTORIES "src/shading"
@@ -421,6 +414,9 @@ target_link_libraries(${PROJECT_NAME} Threads::Threads)
 
 find_package(Vulkan REQUIRED)
 target_link_libraries(${PROJECT_NAME} Vulkan::Vulkan)
+if (NOT TARGET Vulkan::glslangValidator)
+        message(FATAL_ERROR "glslangValidator not found")
+endif()
 
 set(CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/cmake/GMP")
 find_package(GMP REQUIRED)
