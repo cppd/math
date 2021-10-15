@@ -7,8 +7,9 @@ Checks:
 -*,
 
 bugprone-*,
--bugprone-narrowing-conversions,
+-bugprone-easily-swappable-parameters,
 -bugprone-macro-parentheses,
+-bugprone-narrowing-conversions,
 
 cert-*,
 
