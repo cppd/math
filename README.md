@@ -77,7 +77,7 @@ Least squares fitting a plane to points            | Principal component analysi
 Property                  | Value
 --------------------------|--------------------------------------------
 Programming languages     | C++20, GLSL 4.50
-C++ compilers             | GCC 11, Clang 12
+C++ compilers             | GCC 11, Clang 13
 Platforms                 | Linux, Windows
 Graphics and compute APIs | Vulkan 1.2
 Frameworks                | Qt 5
