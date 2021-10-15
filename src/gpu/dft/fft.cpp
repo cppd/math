@@ -27,6 +27,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/vulkan/queue.h>
 #include <src/vulkan/sync.h>
 
+#include <bit>
+
 namespace ns::gpu::dft
 {
 namespace

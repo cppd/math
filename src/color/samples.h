@@ -44,6 +44,11 @@ protected:
                 static_assert(std::is_trivially_destructible_v<Derived>);
         }
 
+        Samples(const Samples&) = default;
+        Samples& operator=(const Samples&) = default;
+        Samples(Samples&&) = default;
+        Samples& operator=(Samples&&) = default;
+
         ~Samples() = default;
 
         constexpr const Vector<N, T>& data() const
