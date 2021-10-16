@@ -60,19 +60,19 @@ public:
         {
                 std::vector<ObjectNames> names;
 
+                const auto f = [&]<std::size_t N>(const Repositories<N>& v)
+                {
+                        names.resize(names.size() + 1);
+                        names.back().dimension = N;
+                        names.back().point_mesh_names = v.meshes->point_object_names();
+                        names.back().facet_mesh_names = v.meshes->facet_object_names();
+                        names.back().volume_names = v.volumes->object_names();
+                };
+
                 std::apply(
                         [&]<std::size_t... N>(const Repositories<N>&... v)
                         {
-                                (
-                                        [&]()
-                                        {
-                                                names.resize(names.size() + 1);
-                                                names.back().dimension = N;
-                                                names.back().point_mesh_names = v.meshes->point_object_names();
-                                                names.back().facet_mesh_names = v.meshes->facet_object_names();
-                                                names.back().volume_names = v.volumes->object_names();
-                                        }(),
-                                        ...);
+                                (f(v), ...);
                         },
                         data_);
 

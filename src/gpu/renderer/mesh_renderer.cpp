@@ -213,7 +213,7 @@ void MeshRenderer::create_depth_buffers(const DepthBuffers* depth_buffers)
 
         render_triangles_depth_pipeline_ = triangles_depth_program_.create_pipeline(
                 depth_buffers->render_pass(), depth_buffers->sample_count(),
-                Region<2, int>(0, 0, depth_buffers->width(), depth_buffers->height()));
+                Region<2, int>({0, 0}, {depth_buffers->width(), depth_buffers->height()}));
 }
 
 void MeshRenderer::delete_depth_buffers()

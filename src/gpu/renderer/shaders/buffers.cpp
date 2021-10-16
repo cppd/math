@@ -56,53 +56,50 @@ Matrix<3, 4, Dst> mat3_std140(const Matrix<3, 3, Src>& m)
 
 ShaderBuffers::ShaderBuffers(const vulkan::Device& device, const std::vector<uint32_t>& family_indices)
 {
-        uniform_buffers_.emplace_back(
-                vulkan::BufferMemoryType::HOST_VISIBLE, device, family_indices, VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT,
-                sizeof(Matrices));
-        matrices_buffer_index_ = uniform_buffers_.size() - 1;
+        static_assert(MATRICES_INDEX == 0);
+        static_assert(SHADOW_MATRICES_INDEX == 1);
+        static_assert(DRAWING_INDEX == 2);
 
-        uniform_buffers_.emplace_back(
-                vulkan::BufferMemoryType::HOST_VISIBLE, device, family_indices, VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT,
-                sizeof(Matrices));
-        shadow_matrices_buffer_index_ = uniform_buffers_.size() - 1;
+        static constexpr auto MEMORY_TYPE = vulkan::BufferMemoryType::HOST_VISIBLE;
+        static constexpr auto USAGE = VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT;
 
-        uniform_buffers_.emplace_back(
-                vulkan::BufferMemoryType::HOST_VISIBLE, device, family_indices, VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT,
-                sizeof(Drawing));
-        drawing_buffer_index_ = uniform_buffers_.size() - 1;
+        uniform_buffers_.reserve(3);
+        uniform_buffers_.emplace_back(MEMORY_TYPE, device, family_indices, USAGE, sizeof(Matrices));
+        uniform_buffers_.emplace_back(MEMORY_TYPE, device, family_indices, USAGE, sizeof(Matrices));
+        uniform_buffers_.emplace_back(MEMORY_TYPE, device, family_indices, USAGE, sizeof(Drawing));
 }
 
 const vulkan::Buffer& ShaderBuffers::matrices_buffer() const
 {
-        return uniform_buffers_[matrices_buffer_index_].buffer();
+        return uniform_buffers_[MATRICES_INDEX].buffer();
 }
 
 const vulkan::Buffer& ShaderBuffers::shadow_matrices_buffer() const
 {
-        return uniform_buffers_[shadow_matrices_buffer_index_].buffer();
+        return uniform_buffers_[SHADOW_MATRICES_INDEX].buffer();
 }
 
 const vulkan::Buffer& ShaderBuffers::drawing_buffer() const
 {
-        return uniform_buffers_[drawing_buffer_index_].buffer();
+        return uniform_buffers_[DRAWING_INDEX].buffer();
 }
 
 template <typename T>
 void ShaderBuffers::copy_to_matrices_buffer(VkDeviceSize offset, const T& data) const
 {
-        vulkan::map_and_write_to_buffer(uniform_buffers_[matrices_buffer_index_], offset, data);
+        vulkan::map_and_write_to_buffer(uniform_buffers_[MATRICES_INDEX], offset, data);
 }
 
 template <typename T>
 void ShaderBuffers::copy_to_shadow_matrices_buffer(VkDeviceSize offset, const T& data) const
 {
-        vulkan::map_and_write_to_buffer(uniform_buffers_[shadow_matrices_buffer_index_], offset, data);
+        vulkan::map_and_write_to_buffer(uniform_buffers_[SHADOW_MATRICES_INDEX], offset, data);
 }
 
 template <typename T>
 void ShaderBuffers::copy_to_drawing_buffer(VkDeviceSize offset, const T& data) const
 {
-        vulkan::map_and_write_to_buffer(uniform_buffers_[drawing_buffer_index_], offset, data);
+        vulkan::map_and_write_to_buffer(uniform_buffers_[DRAWING_INDEX], offset, data);
 }
 
 void ShaderBuffers::set_matrices(
@@ -139,7 +136,7 @@ void ShaderBuffers::set_clip_plane(const Vector4d& equation, bool enabled) const
         constexpr std::size_t OFFSET = offsetof(Drawing, clip_plane_equation);
         constexpr std::size_t SIZE = sizeof(Drawing::clip_plane_equation) + sizeof(Drawing::clip_plane_enabled);
 
-        vulkan::BufferMapper map(uniform_buffers_[drawing_buffer_index_], OFFSET, SIZE);
+        vulkan::BufferMapper map(uniform_buffers_[DRAWING_INDEX], OFFSET, SIZE);
 
         decltype(Drawing().clip_plane_equation) clip_plane_equation = to_vector<float>(equation);
         decltype(Drawing().clip_plane_enabled) clip_plane_enabled = enabled ? 1 : 0;
@@ -157,7 +154,7 @@ void ShaderBuffers::set_viewport(const Vector2d& center, const Vector2d& factor)
         constexpr std::size_t OFFSET = offsetof(Drawing, viewport_center);
         constexpr std::size_t SIZE = sizeof(Drawing::viewport_center) + sizeof(Drawing::viewport_factor);
 
-        vulkan::BufferMapper map(uniform_buffers_[drawing_buffer_index_], OFFSET, SIZE);
+        vulkan::BufferMapper map(uniform_buffers_[DRAWING_INDEX], OFFSET, SIZE);
 
         decltype(Drawing().viewport_center) viewport_center = to_vector<float>(center);
         decltype(Drawing().viewport_factor) viewport_factor = to_vector<float>(factor);

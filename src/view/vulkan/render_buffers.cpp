@@ -31,8 +31,8 @@ namespace ns::view
 {
 namespace
 {
-constexpr VkImageLayout COLOR_IMAGE_LAYOUT = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
-constexpr VkImageLayout DEPTH_IMAGE_LAYOUT = VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL;
+constexpr VkImageLayout COLOR_ATTACHMENT_IMAGE_LAYOUT = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
+constexpr VkImageLayout DEPTH_ATTACHMENT_IMAGE_LAYOUT = VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL;
 
 class Impl3D : public gpu::RenderBuffers3D
 {
@@ -136,14 +136,14 @@ class Impl final : public RenderBuffers, public Impl3D, public Impl2D
         void commands_color_resolve(
                 VkCommandBuffer command_buffer,
                 VkImage image,
-                VkImageLayout layout,
+                VkImageLayout image_layout,
                 const Region<2, int>& rectangle,
                 unsigned index) const override;
 
         void commands_depth_copy(
                 VkCommandBuffer command_buffer,
                 VkImage image,
-                VkImageLayout layout,
+                VkImageLayout image_layout,
                 const Region<2, int>& rectangle,
                 unsigned index) const override;
 
@@ -359,7 +359,7 @@ const std::vector<VkImageView>& Impl::image_views() const
 void Impl::commands_color_resolve(
         VkCommandBuffer command_buffer,
         VkImage image,
-        VkImageLayout layout,
+        VkImageLayout image_layout,
         const Region<2, int>& rectangle,
         unsigned index) const
 {
@@ -369,17 +369,17 @@ void Impl::commands_color_resolve(
         commands_image_resolve(
                 command_buffer, VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT, VK_PIPELINE_STAGE_BOTTOM_OF_PIPE_BIT,
                 VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT, VK_PIPELINE_STAGE_BOTTOM_OF_PIPE_BIT, 0, 0, 0, 0,
-                color_attachments_[index].image(), COLOR_IMAGE_LAYOUT, image, layout, rectangle);
+                color_attachments_[index].image(), COLOR_ATTACHMENT_IMAGE_LAYOUT, image, image_layout, rectangle);
 }
 
 void Impl::commands_depth_copy(
         VkCommandBuffer command_buffer,
         VkImage image,
-        VkImageLayout layout,
+        VkImageLayout image_layout,
         const Region<2, int>& rectangle,
         unsigned index) const
 {
-        ASSERT(layout == VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
+        ASSERT(image_layout == VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
         ASSERT(index < depth_attachments_.size());
 
         commands_image_copy(
@@ -387,7 +387,7 @@ void Impl::commands_depth_copy(
                 VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT, VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT, 0,
                 VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_READ_BIT | VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_WRITE_BIT, 0,
                 VK_ACCESS_SHADER_READ_BIT, VK_IMAGE_ASPECT_DEPTH_BIT, depth_attachments_[index].image(),
-                DEPTH_IMAGE_LAYOUT, image, layout, rectangle);
+                DEPTH_ATTACHMENT_IMAGE_LAYOUT, image, image_layout, rectangle);
 }
 }
 

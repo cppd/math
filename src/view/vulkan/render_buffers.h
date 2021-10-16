@@ -45,7 +45,7 @@ struct RenderBuffers
         virtual void commands_color_resolve(
                 VkCommandBuffer command_buffer,
                 VkImage image,
-                VkImageLayout layout,
+                VkImageLayout image_layout,
                 const Region<2, int>& rectangle,
                 unsigned index) const = 0;
 };

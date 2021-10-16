@@ -27,6 +27,7 @@ template <std::size_t N, typename T>
 class Region final
 {
         static_assert(N >= 1);
+        static_assert(std::is_integral_v<T>);
 
         Vector<N, T> offset0_;
         Vector<N, T> extent_;
@@ -40,16 +41,6 @@ public:
         Region(const Vector<N, T>& offset, const Vector<N, T>& extent)
                 : offset0_(offset), extent_(extent), offset1_(offset0_ + extent_)
         {
-        }
-
-        // offset[0], offset[1], ..., offset[N - 1], extent[0], extent[1], ..., extent[N - 1]
-        template <typename... Types>
-        explicit Region(const Types&... v)
-        {
-                static_assert(sizeof...(Types) == 2 * N);
-                int i = -1;
-                ((++i < static_cast<int>(N) ? (offset0_[i] = v) : (extent_[i - N] = v)), ...);
-                offset1_ = offset0_ + extent_;
         }
 
         const Vector<N, T>& from() const
@@ -115,6 +106,8 @@ public:
         template <typename Type>
         bool is_inside(const Vector<N, Type>& p) const
         {
+                static_assert(std::is_integral_v<Type>);
+
                 for (unsigned i = 0; i < N; ++i)
                 {
                         if (p[i] < offset0_[i] || p[i] >= offset1_[i])
@@ -129,6 +122,8 @@ public:
         bool is_inside(const Types&... p) const
         {
                 static_assert(sizeof...(Types) == N);
+                static_assert((std::is_integral_v<Types> && ...));
+
                 int i = -1;
                 return (((++i, p >= offset0_[i] && p < offset1_[i])) && ...);
         }

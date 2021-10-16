@@ -138,7 +138,7 @@ class Impl final
         Camera camera_;
         Mouse mouse_;
 
-        Region<2, int> draw_rectangle_{Limits<int>::lowest(), Limits<int>::lowest(), 0, 0};
+        Region<2, int> draw_rectangle_{{Limits<int>::lowest(), Limits<int>::lowest()}, {0, 0}};
 
         std::optional<Matrix4d> clip_plane_view_matrix_;
 
@@ -488,7 +488,7 @@ class Impl final
 
                         const ImageResolve image(
                                 instance_->device(), instance_->graphics_compute_command_pool(), queue,
-                                *render_buffers_, Region<2, int>(0, 0, width, height), VK_IMAGE_LAYOUT_GENERAL,
+                                *render_buffers_, Region<2, int>({0, 0}, {width, height}), VK_IMAGE_LAYOUT_GENERAL,
                                 VK_IMAGE_USAGE_TRANSFER_SRC_BIT);
 
                         image.resolve(queue, semaphore, INDEX);
@@ -555,7 +555,7 @@ class Impl final
 
                 text_->create_buffers(
                         &render_buffers_->buffers_2d(),
-                        Region<2, int>(0, 0, render_buffers_->width(), render_buffers_->height()));
+                        Region<2, int>({0, 0}, {render_buffers_->width(), render_buffers_->height()}));
 
                 convex_hull_->create_buffers(&render_buffers_->buffers_2d(), *object_image_, draw_rectangle_);
 

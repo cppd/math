@@ -46,7 +46,7 @@ public:
         virtual void commands_depth_copy(
                 VkCommandBuffer command_buffer,
                 VkImage image,
-                VkImageLayout layout,
+                VkImageLayout image_layout,
                 const Region<2, int>& rectangle,
                 unsigned index) const = 0;
 };

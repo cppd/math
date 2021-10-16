@@ -47,15 +47,15 @@ std::tuple<Region<2, int>, std::optional<Region<2, int>>> window_position_and_si
                 int h = (height - 2 * frame);
                 if (w > 0 && h > 0)
                 {
-                        std::get<0>(result) = Region<2, int>(frame, frame, w, h);
-                        std::get<1>(result) = Region<2, int>(width - frame - w, frame, w, h);
+                        std::get<0>(result) = Region<2, int>({frame, frame}, {w, h});
+                        std::get<1>(result) = Region<2, int>({width - frame - w, frame}, {w, h});
                         check(std::get<0>(result), width, height);
                         check(*std::get<1>(result), width, height);
                         return result;
                 }
         }
 
-        std::get<0>(result) = Region<2, int>(0, 0, width, height);
+        std::get<0>(result) = Region<2, int>({0, 0}, {width, height});
         check(std::get<0>(result), width, height);
         return result;
 }

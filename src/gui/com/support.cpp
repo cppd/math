@@ -101,7 +101,7 @@ QWidget* parent_for_dialog()
 //        {
 //                return main_window->windowTitle().toStdString();
 //        }
-//        return std::string();
+//        return {};
 //}
 
 //void set_widgets_enabled(QLayout* layout, bool v)

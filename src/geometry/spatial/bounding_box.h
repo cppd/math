@@ -38,16 +38,17 @@ public:
         {
         }
 
+        explicit BoundingBox(const Vector<N, T>& point) : min_(point), max_(point)
+        {
+        }
+
         template <std::size_t SIZE>
-        explicit BoundingBox(const std::array<Vector<N, T>, SIZE>& points)
+        explicit BoundingBox(const std::array<Vector<N, T>, SIZE>& points) : BoundingBox(points[0])
         {
                 static_assert(SIZE > 0);
-                min_ = points[0];
-                max_ = points[0];
                 for (std::size_t i = 1; i < SIZE; ++i)
                 {
-                        min_ = ::ns::min(points[i], min_);
-                        max_ = ::ns::max(points[i], max_);
+                        merge(points[i]);
                 }
         }
 
@@ -61,10 +62,16 @@ public:
                 return max_;
         }
 
-        void merge(const geometry::BoundingBox<N, T>& bb)
+        void merge(const BoundingBox<N, T>& v)
         {
-                min_ = ::ns::min(min_, bb.min_);
-                max_ = ::ns::max(max_, bb.max_);
+                min_ = ::ns::min(min_, v.min_);
+                max_ = ::ns::max(max_, v.max_);
+        }
+
+        void merge(const Vector<N, T>& v)
+        {
+                min_ = ::ns::min(min_, v);
+                max_ = ::ns::max(max_, v);
         }
 };
 }

@@ -26,21 +26,25 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 namespace ns::gpu::renderer
 {
-class ShaderBuffers
+class ShaderBuffers final
 {
+        static constexpr unsigned MATRICES_INDEX = 0;
+        static constexpr unsigned SHADOW_MATRICES_INDEX = 1;
+        static constexpr unsigned DRAWING_INDEX = 2;
+
         std::vector<vulkan::BufferWithMemory> uniform_buffers_;
 
         // If structures are placed in one buffer then
         // VkPhysicalDeviceLimits::minUniformBufferOffsetAlignment
         // is the minimum required alignment for VkDescriptorBufferInfo::offset
 
-        struct Matrices
+        struct Matrices final
         {
                 Matrix4f vp_matrix;
                 Matrix4f shadow_vp_texture_matrix;
         };
 
-        struct Drawing
+        struct Drawing final
         {
                 alignas(sizeof(Vector4f)) Vector3f lighting_color;
                 alignas(sizeof(Vector4f)) Vector3f background_color;
@@ -62,10 +66,6 @@ class ShaderBuffers
                 alignas(sizeof(Vector2f)) Vector2f viewport_factor;
                 uint32_t transparency_max_node_count;
         };
-
-        std::size_t matrices_buffer_index_;
-        std::size_t shadow_matrices_buffer_index_;
-        std::size_t drawing_buffer_index_;
 
         template <typename T>
         void copy_to_matrices_buffer(VkDeviceSize offset, const T& data) const;
@@ -111,7 +111,7 @@ class MaterialBuffer final
         vulkan::BufferWithMemory uniform_buffer_;
 
 public:
-        struct Material
+        struct Material final
         {
                 alignas(sizeof(Vector4f)) Vector3f color;
                 uint32_t use_texture;
@@ -132,7 +132,7 @@ class MeshBuffer final
 {
         vulkan::BufferWithMemory uniform_buffer_;
 
-        struct Mesh
+        struct Mesh final
         {
                 alignas(sizeof(Vector4f)) Matrix4f model_matrix;
                 alignas(sizeof(Vector4f)) Matrix<3, 4, float> normal_matrix;
@@ -159,7 +159,7 @@ class VolumeBuffer final
         vulkan::BufferWithMemory uniform_buffer_coordinates_;
         vulkan::BufferWithMemory uniform_buffer_volume_;
 
-        struct Coordinates
+        struct Coordinates final
         {
                 alignas(sizeof(Vector4f)) Matrix4f inverse_mvp_matrix;
                 alignas(sizeof(Vector4f)) Vector4f third_row_of_mvp;
@@ -168,7 +168,7 @@ class VolumeBuffer final
                 alignas(sizeof(Vector4f)) Matrix<3, 4, float> normal_matrix;
         };
 
-        struct Volume
+        struct Volume final
         {
                 float window_offset;
                 float window_scale;
@@ -226,7 +226,7 @@ public:
                 float roughness) const;
 };
 
-class TransparencyBuffers
+class TransparencyBuffers final
 {
         static constexpr uint32_t HEADS_NULL_POINTER = Limits<uint32_t>::max();
 
@@ -243,7 +243,7 @@ class TransparencyBuffers
         vulkan::BufferWithMemory read_buffer_;
         vulkan::BufferWithMemory counters_;
 
-        struct Counters
+        struct Counters final
         {
                 uint32_t transparency_node_counter;
                 uint32_t transparency_overload_counter;

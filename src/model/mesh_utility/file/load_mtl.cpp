@@ -40,19 +40,18 @@ color::Color read_color(const char* const str)
         static constexpr float MIN = 0;
         static constexpr float MAX = 1;
 
-        float red;
-        float green;
-        float blue;
+        std::array<float, 3> rgb;
+        read_float(str, &rgb[0], &rgb[1], &rgb[2]);
 
-        read_float(str, &red, &green, &blue);
-
-        if (!(check_range(red, MIN, MAX) && check_range(green, MIN, MAX) && check_range(blue, MIN, MAX)))
+        for (int i = 0; i < 3; ++i)
         {
-                error("RGB components (" + to_string(red) + ", " + to_string(green) + ", " + to_string(blue)
-                      + ") are not in the range [0, 1]");
+                if (!(check_range(rgb[i], MIN, MAX)))
+                {
+                        error("RGB components (" + to_string(rgb) + ") are not in the range [0, 1]");
+                }
         }
 
-        return color::Color(red, green, blue);
+        return {rgb[0], rgb[1], rgb[2]};
 }
 
 template <std::size_t N>
