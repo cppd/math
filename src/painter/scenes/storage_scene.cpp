@@ -48,7 +48,7 @@ std::vector<P*> to_pointers(const std::vector<std::unique_ptr<P>>& objects)
 }
 
 template <std::size_t N, typename T, typename Color>
-geometry::BoundingBox<N, T> compute_bounding_box(const std::vector<const Shape<N, T, Color>*>& shapes)
+geometry::BoundingBox<N, T> compute_bounding_box(const std::vector<std::unique_ptr<const Shape<N, T, Color>>>& shapes)
 {
         geometry::BoundingBox<N, T> bb = shapes[0]->bounding_box();
         for (std::size_t i = 1; i < shapes.size(); ++i)
@@ -64,7 +64,8 @@ struct BoundingIntersection
         T distance;
         const Shape<N, T, Color>* shape;
 
-        BoundingIntersection(T distance, const Shape<N, T, Color>* shape) : distance(distance), shape(shape)
+        BoundingIntersection(const T& distance, const Shape<N, T, Color>* const shape)
+                : distance(distance), shape(shape)
         {
         }
 
@@ -139,12 +140,12 @@ const Surface<N, T, Color>* ray_intersect(
 }
 
 template <std::size_t N, typename T, typename Color>
-void create_tree(
+geometry::SpatialSubdivisionTree<geometry::ParallelotopeAA<N, T>> create_tree(
         const std::vector<const Shape<N, T, Color>*>& shapes,
-        const geometry::BoundingBox<N, T>& bounding_box,
-        geometry::SpatialSubdivisionTree<geometry::ParallelotopeAA<N, T>>* tree,
-        ProgressRatio* progress)
+        const geometry::BoundingBox<N, T>& bounding_box)
 {
+        ProgressRatio progress(nullptr);
+
         std::vector<std::function<bool(const geometry::ShapeWrapperForIntersection<geometry::ParallelotopeAA<N, T>>&)>>
                 wrappers;
         wrappers.reserve(shapes.size());
@@ -172,12 +173,14 @@ void create_tree(
 
         const unsigned thread_count = hardware_concurrency();
 
-        tree->decompose(
-                TREE_MIN_OBJECTS_PER_BOX, wrappers.size(), bounding_box, shape_intersections, thread_count, progress);
+        geometry::SpatialSubdivisionTree<geometry::ParallelotopeAA<N, T>> tree(
+                TREE_MIN_OBJECTS_PER_BOX, wrappers.size(), bounding_box, shape_intersections, thread_count, &progress);
+
+        return tree;
 }
 
 template <std::size_t N, typename T, typename Color>
-class SceneImpl final : public Scene<N, T, Color>
+class Impl final : public Scene<N, T, Color>
 {
         static constexpr int RAY_OFFSET_IN_EPSILONS = 1000;
 
@@ -249,28 +252,36 @@ class SceneImpl final : public Scene<N, T, Color>
                 return thread_ray_count_;
         }
 
-public:
-        SceneImpl(
-                const Color& background_light,
-                std::unique_ptr<const Projector<N, T>>&& projector,
-                std::vector<std::unique_ptr<const LightSource<N, T, Color>>>&& light_sources,
-                std::vector<std::unique_ptr<const Shape<N, T, Color>>>&& shapes)
+        Impl(const geometry::BoundingBox<N, T>& bounding_box,
+             const Color& background_light,
+             std::unique_ptr<const Projector<N, T>>&& projector,
+             std::vector<std::unique_ptr<const LightSource<N, T, Color>>>&& light_sources,
+             std::vector<std::unique_ptr<const Shape<N, T, Color>>>&& shapes)
                 : shapes_(std::move(shapes)),
                   light_sources_(std::move(light_sources)),
                   projector_(std::move(projector)),
                   background_light_(background_light),
                   shape_pointers_(to_pointers(shapes_)),
-                  light_source_pointers_(to_pointers(light_sources_))
+                  light_source_pointers_(to_pointers(light_sources_)),
+                  ray_offset_(
+                          (bounding_box.max() - bounding_box.min()).norm()
+                          * (RAY_OFFSET_IN_EPSILONS * Limits<T>::epsilon())),
+                  tree_(create_tree(shape_pointers_, bounding_box))
         {
                 ASSERT(projector_);
+        }
 
-                const geometry::BoundingBox<N, T> bounding_box = compute_bounding_box(shape_pointers_);
-
-                const T scene_size = (bounding_box.max() - bounding_box.min()).norm();
-                ray_offset_ = scene_size * (RAY_OFFSET_IN_EPSILONS * Limits<T>::epsilon());
-
-                ProgressRatio progress(nullptr);
-                create_tree(shape_pointers_, bounding_box, &tree_, &progress);
+public:
+        Impl(const Color& background_light,
+             std::unique_ptr<const Projector<N, T>>&& projector,
+             std::vector<std::unique_ptr<const LightSource<N, T, Color>>>&& light_sources,
+             std::vector<std::unique_ptr<const Shape<N, T, Color>>>&& shapes)
+                : Impl(compute_bounding_box(shapes),
+                       background_light,
+                       std::move(projector),
+                       std::move(light_sources),
+                       std::move(shapes))
+        {
         }
 };
 }
@@ -282,7 +293,7 @@ std::unique_ptr<Scene<N, T, Color>> create_storage_scene(
         std::vector<std::unique_ptr<const LightSource<N, T, Color>>>&& light_sources,
         std::vector<std::unique_ptr<const Shape<N, T, Color>>>&& shapes)
 {
-        return std::make_unique<SceneImpl<N, T, Color>>(
+        return std::make_unique<Impl<N, T, Color>>(
                 background_light, std::move(projector), std::move(light_sources), std::move(shapes));
 }
 

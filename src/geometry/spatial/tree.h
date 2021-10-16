@@ -402,7 +402,7 @@ class SpatialSubdivisionTree final
 
 public:
         template <typename ObjectIntersections>
-        void decompose(
+        SpatialSubdivisionTree(
                 const int min_objects_per_box,
                 const int object_count,
                 const BoundingBox<N, T>& bounding_box,

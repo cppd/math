@@ -226,6 +226,8 @@ class FacetInteger<N, DataType, mpz_class, FacetIter> final
 
         using Base = FacetBase<N, FacetInteger, FacetIter>;
 
+        static constexpr bool REDUCE = false;
+
         static void reduce(Vector<N, mpz_class>* const ortho)
         {
                 thread_local mpz_class gcd;
@@ -355,7 +357,7 @@ public:
         {
                 ASSERT(!ortho_.is_zero());
 
-                if ((false))
+                if constexpr (REDUCE)
                 {
                         reduce(&ortho_);
                 }

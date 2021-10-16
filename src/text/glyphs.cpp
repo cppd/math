@@ -250,9 +250,8 @@ void create_font_glyphs(
 
         image->color_format = image::ColorFormat::R8_SRGB;
 
-        if ((false))
-        {
-                image::save(path_from_utf8("font_texture.png"), image::ImageView<2>(*image));
-        }
+        //image::save(
+        //        std::filesystem::temp_directory_path() / path_from_utf8(std::string_view("font_texture.png")),
+        //        image::ImageView<2>(*image));
 }
 }

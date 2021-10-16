@@ -83,7 +83,7 @@ std::string sampler_name(const HaltonSampler<N, T>&)
 }
 
 template <std::size_t N, typename T>
-std::filesystem::path sampler_file_name(const StratifiedJitteredSampler<N, T>& sampler)
+std::string sampler_file_name(const StratifiedJitteredSampler<N, T>& sampler)
 {
         std::ostringstream oss;
         oss << "sampler_sjs_";
@@ -92,11 +92,11 @@ std::filesystem::path sampler_file_name(const StratifiedJitteredSampler<N, T>& s
                 oss << "shuffled_";
         }
         oss << to_string(N) << "d_" << replace_space(type_name<T>()) << ".txt";
-        return path_from_utf8(oss.str());
+        return oss.str();
 }
 
 template <std::size_t N, typename T>
-std::filesystem::path sampler_file_name(const LatinHypercubeSampler<N, T>& sampler)
+std::string sampler_file_name(const LatinHypercubeSampler<N, T>& sampler)
 {
         std::ostringstream oss;
         oss << "sampler_lhc_";
@@ -105,16 +105,16 @@ std::filesystem::path sampler_file_name(const LatinHypercubeSampler<N, T>& sampl
                 oss << "shuffled_";
         }
         oss << to_string(N) << "d_" << replace_space(type_name<T>()) << ".txt";
-        return path_from_utf8(oss.str());
+        return oss.str();
 }
 
 template <std::size_t N, typename T>
-std::filesystem::path sampler_file_name(const HaltonSampler<N, T>&)
+std::string sampler_file_name(const HaltonSampler<N, T>&)
 {
         std::ostringstream oss;
         oss << "sampler_halton_";
         oss << to_string(N) << "d_" << replace_space(type_name<T>()) << ".txt";
-        return path_from_utf8(oss.str());
+        return oss.str();
 }
 
 template <std::size_t N>
@@ -162,11 +162,11 @@ std::array<T, 2> min_max_for_sampler(RandomEngine& random_engine)
 template <std::size_t N, typename T>
 void write_to_file(
         const std::string& name,
-        const std::filesystem::path& file_name,
-        int grid_size,
+        const std::string& file_name,
+        const int grid_size,
         const std::vector<Vector<N, T>>& data)
 {
-        std::ofstream file(std::filesystem::temp_directory_path() / file_name);
+        std::ofstream file(std::filesystem::temp_directory_path() / path_from_utf8(file_name));
 
         file << "Name: " << name << "\n";
         file << "Grid: " << grid_size << "\n";
@@ -178,7 +178,7 @@ void write_to_file(
 }
 
 template <std::size_t N, typename T, typename RandomEngine>
-void write_to_files(bool shuffle)
+void write_to_files(const bool shuffle)
 {
         static_assert(std::is_floating_point_v<T>);
 
@@ -252,7 +252,7 @@ void write_to_files()
 }
 
 template <std::size_t N, typename T, typename RandomEngine>
-void test_performance(bool shuffle)
+void test_performance(const bool shuffle)
 {
         RandomEngine random_engine = create_engine<RandomEngine>();
 
@@ -364,7 +364,7 @@ T test_discrepancy(
 }
 
 template <std::size_t N, typename T>
-T test_discrepancy_stratified_jittered_type(int sample_count, std::type_identity_t<T> max_discrepancy)
+T test_discrepancy_stratified_jittered_type(const int sample_count, const std::type_identity_t<T> max_discrepancy)
 {
         std::mt19937_64 engine = create_engine<std::mt19937_64>();
 
@@ -381,7 +381,7 @@ T test_discrepancy_stratified_jittered_type(int sample_count, std::type_identity
 }
 
 template <std::size_t N, typename T>
-T test_discrepancy_latin_hypercube_type(int sample_count, std::type_identity_t<T> max_discrepancy)
+T test_discrepancy_latin_hypercube_type(const int sample_count, const std::type_identity_t<T> max_discrepancy)
 {
         std::mt19937_64 engine = create_engine<std::mt19937_64>();
 
@@ -398,7 +398,7 @@ T test_discrepancy_latin_hypercube_type(int sample_count, std::type_identity_t<T
 }
 
 template <std::size_t N, typename T>
-T test_discrepancy_halton_type(int sample_count, std::type_identity_t<T> max_discrepancy)
+T test_discrepancy_halton_type(const int sample_count, const std::type_identity_t<T> max_discrepancy)
 {
         std::mt19937_64 engine = create_engine<std::mt19937_64>();
 
@@ -415,7 +415,7 @@ T test_discrepancy_halton_type(int sample_count, std::type_identity_t<T> max_dis
 }
 
 template <std::size_t N>
-double test_discrepancy_stratified_jittered(int sample_count, double max_discrepancy)
+double test_discrepancy_stratified_jittered(const int sample_count, const double max_discrepancy)
 {
         double f = test_discrepancy_stratified_jittered_type<N, float>(sample_count, max_discrepancy);
         double d = test_discrepancy_stratified_jittered_type<N, double>(sample_count, max_discrepancy);
@@ -423,7 +423,7 @@ double test_discrepancy_stratified_jittered(int sample_count, double max_discrep
 }
 
 template <std::size_t N>
-double test_discrepancy_latin_hypercube(int sample_count, double max_discrepancy)
+double test_discrepancy_latin_hypercube(const int sample_count, const double max_discrepancy)
 {
         double f = test_discrepancy_latin_hypercube_type<N, float>(sample_count, max_discrepancy);
         double d = test_discrepancy_latin_hypercube_type<N, double>(sample_count, max_discrepancy);
@@ -431,7 +431,7 @@ double test_discrepancy_latin_hypercube(int sample_count, double max_discrepancy
 }
 
 template <std::size_t N>
-double test_discrepancy_halton(int sample_count, double max_discrepancy)
+double test_discrepancy_halton(const int sample_count, const double max_discrepancy)
 {
         double f = test_discrepancy_halton_type<N, float>(sample_count, max_discrepancy);
         double d = test_discrepancy_halton_type<N, double>(sample_count, max_discrepancy);

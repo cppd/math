@@ -63,17 +63,17 @@ constexpr std::string_view ENGINE_NAME = []
 }();
 
 template <std::size_t N, typename T>
-std::filesystem::path samples_file_name(const std::string_view& name)
+std::string samples_file_name(const std::string_view& name)
 {
         std::ostringstream oss;
         oss << "samples_" << replace_space(name) << "_" << N << "d_" << replace_space(type_name<T>()) << ".txt";
-        return path_from_utf8(oss.str());
+        return oss.str();
 }
 
 template <std::size_t N, typename T, typename Generator>
 void write_samples_to_file(const std::string_view& name, int count, const Generator& g)
 {
-        std::ofstream file(std::filesystem::temp_directory_path() / samples_file_name<N, T>(name));
+        std::ofstream file(std::filesystem::temp_directory_path() / path_from_utf8(samples_file_name<N, T>(name)));
 
         for (int i = 0; i < count; ++i)
         {
