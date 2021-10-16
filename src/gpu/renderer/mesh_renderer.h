@@ -28,7 +28,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "shaders/triangles.h"
 #include "shaders/triangles_depth.h"
 
-#include <src/gpu/buffers.h>
+#include <src/gpu/render_buffers.h>
 
 #include <optional>
 #include <thread>
