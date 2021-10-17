@@ -1,5 +1,6 @@
 AccessModifierOffset: -8
 AlignAfterOpenBracket: AlwaysBreak
+AlignArrayOfStructures: None
 AlignConsecutiveAssignments: None
 AlignConsecutiveBitFields: None
 AlignConsecutiveDeclarations: None
@@ -56,6 +57,7 @@ ContinuationIndentWidth: 8
 Cpp11BracedListStyle: true
 DeriveLineEnding: false
 DerivePointerAlignment: false
+EmptyLineAfterAccessModifier: Never
 EmptyLineBeforeAccessModifier: Always
 ExperimentalAutoDetectBinPacking: false
 FixNamespaceComments: false
@@ -71,6 +73,7 @@ IncludeCategories:
     Priority:        40
   - Regex:           '^<.*>$'
     Priority:        50
+IndentAccessModifiers: false
 IndentCaseBlocks: false
 IndentCaseLabels: false
 IndentExternBlock: NoIndent
@@ -80,20 +83,24 @@ IndentRequires: false
 IndentWidth: 8
 IndentWrappedFunctionNames: true
 KeepEmptyLinesAtTheStartOfBlocks: false
+LambdaBodyIndentation: Signature
 MaxEmptyLinesToKeep: 1
 NamespaceIndentation: None
-PenaltyBreakAssignment: 0
-PenaltyBreakBeforeFirstCallParameter: 19
-PenaltyBreakComment: 300
-PenaltyBreakFirstLessLess: 120
-PenaltyBreakString: 1000
-PenaltyBreakTemplateDeclaration: 0
-PenaltyExcessCharacter: 900
-PenaltyIndentedWhitespace: 0
+PPIndentWidth: -1
+# PenaltyBreakAssignment: 0
+# PenaltyBreakBeforeFirstCallParameter: 19
+# PenaltyBreakComment: 300
+# PenaltyBreakFirstLessLess: 120
+# PenaltyBreakString: 1000
+# PenaltyBreakTemplateDeclaration: 0
+# PenaltyExcessCharacter: 900
+# PenaltyIndentedWhitespace: 0
 PenaltyReturnTypeOnItsOwnLine: 1000
 PointerAlignment: Left
-ReflowComments: false
-SortIncludes: true
+ReferenceAlignment: Left
+ReflowComments: true
+ShortNamespaceLines: 1
+SortIncludes: CaseSensitive
 SortUsingDeclarations: true
 SpaceAfterCStyleCast: false
 SpaceAfterLogicalNot: false
@@ -114,6 +121,9 @@ SpacesInAngles: false
 SpacesInCStyleCastParentheses: false
 SpacesInConditionalStatement: false
 SpacesInContainerLiterals: false
+SpacesInLineCommentPrefix:
+        Minimum: 1
+        Maximum: 1
 SpacesInParentheses: false
 SpacesInSquareBrackets: false
 Standard: Latest
