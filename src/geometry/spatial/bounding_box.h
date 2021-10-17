@@ -26,19 +26,60 @@ namespace ns::geometry
 template <std::size_t N, typename T>
 class BoundingBox final
 {
+        static_assert(N >= 1);
+        static_assert(std::is_floating_point_v<T>);
+
         Vector<N, T> min_;
         Vector<N, T> max_;
 
+        template <std::size_t M>
+        static constexpr T volume(const Vector<N, T>& d)
+        {
+                static_assert(M <= N);
+                static_assert(M >= 1);
+                if constexpr (M == 1)
+                {
+                        return d[0];
+                }
+                else if constexpr (M == 2)
+                {
+                        return d[0] * d[1];
+                }
+                else if constexpr (M == 3)
+                {
+                        return d[0] * d[1] * d[2];
+                }
+                else
+                {
+                        return d[M - 1] * volume<M - 1>(d);
+                }
+        }
+
+        template <std::size_t M>
+        static constexpr T surface(const Vector<N, T>& d)
+        {
+                static_assert(M <= N);
+                static_assert(M >= 2);
+                if constexpr (M == 2)
+                {
+                        return d[0] + d[1];
+                }
+                else if constexpr (M == 3)
+                {
+                        return d[0] * d[1] + d[2] * (d[0] + d[1]);
+                }
+                else
+                {
+                        return volume<M - 1>(d) + d[M - 1] * surface<M - 1>(d);
+                }
+        }
+
 public:
-        BoundingBox()
+        BoundingBox(const Vector<N, T>& p1, const Vector<N, T>& p2) : min_(::ns::min(p1, p2)), max_(::ns::max(p1, p2))
         {
         }
 
-        BoundingBox(const Vector<N, T>& min, const Vector<N, T>& max) : min_(min), max_(max)
-        {
-        }
-
-        explicit BoundingBox(const Vector<N, T>& point) : min_(point), max_(point)
+        explicit BoundingBox(const Vector<N, T>& p) : min_(p), max_(p)
         {
         }
 
@@ -52,14 +93,34 @@ public:
                 }
         }
 
-        const Vector<N, T>& min() const
+        [[nodiscard]] const Vector<N, T>& min() const
         {
                 return min_;
         }
 
-        const Vector<N, T>& max() const
+        [[nodiscard]] const Vector<N, T>& max() const
         {
                 return max_;
+        }
+
+        [[nodiscard]] Vector<N, T> diagonal() const
+        {
+                return max_ - min_;
+        }
+
+        [[nodiscard]] Vector<N, T> center() const
+        {
+                return T(0.5) * (max_ + min_);
+        }
+
+        [[nodiscard]] T volume() const
+        {
+                return volume<N>(diagonal());
+        }
+
+        [[nodiscard]] T surface() const requires(N >= 2)
+        {
+                surface<N>(diagonal());
         }
 
         void merge(const BoundingBox<N, T>& v)
