@@ -127,21 +127,21 @@ void test_blackbody_a()
 
 void test_blackbody()
 {
-        //h = 6.62607015`30*(10^-34);
-        //kb = 1.380649`30*(10^-23);
-        //c = 299792458;
-        //sample[from_, to_, t_] :=
-        //  N[Integrate[(2*h*c*c)/((l^5)*(Exp[(h*c)/(l*kb*t)] - 1)), {l,
-        //      from*(10^-9), to*(10^-9)}], 20]/((to - from)*10^-9);
-        //samples[t_] :=
-        //  For[i = 300, i <= 900, i += 100,
-        //   Print[StringTemplate["check(s[``], ``);"][(i - 300)/100,
-        //     sample[i, i + 100, t]]]];
-        //samples[2500]
-        //Print[]
-        //samples[5000]
-        //Print[]
-        //samples[10000]
+        // h = 6.62607015`30*(10^-34);
+        // kb = 1.380649`30*(10^-23);
+        // c = 299792458;
+        // sample[from_, to_, t_] :=
+        //   N[Integrate[(2*h*c*c)/((l^5)*(Exp[(h*c)/(l*kb*t)] - 1)), {l,
+        //       from*(10^-9), to*(10^-9)}], 20]/((to - from)*10^-9);
+        // samples[t_] :=
+        //   For[i = 300, i <= 900, i += 100,
+        //    Print[StringTemplate["check(s[``], ``);"][(i - 300)/100,
+        //      sample[i, i + 100, t]]]];
+        // samples[2500]
+        // Print[]
+        // samples[5000]
+        // Print[]
+        // samples[10000]
 
         constexpr int FROM = 300;
         constexpr int TO = 1000;

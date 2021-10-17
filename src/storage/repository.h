@@ -70,11 +70,7 @@ public:
                 };
 
                 std::apply(
-                        [&]<std::size_t... N>(const Repositories<N>&... v)
-                        {
-                                (f(v), ...);
-                        },
-                        data_);
+                        [&]<std::size_t... N>(const Repositories<N>&... v) { (f(v), ...); }, data_);
 
                 return names;
         }

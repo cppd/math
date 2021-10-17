@@ -39,19 +39,19 @@ class ShapeWrapperForIntersection final
         const Shape* const shape_;
         Vertices vertices_;
         Constraints constraints_;
-        //Vector<N, T> min_;
+        // Vector<N, T> min_;
 
-        //template <std::size_t ArraySize, typename T, std::size_t N>
-        //static Vector<N, T> find_min_vector(const std::array<Vector<N, T>, ArraySize>& vectors)
-        //{
-        //        static_assert(ArraySize > 0);
-        //        Vector<N, T> min = vectors[0];
-        //        for (std::size_t i = 1; i < ArraySize; ++i)
-        //        {
-        //                min = ::ns::min(vectors[i], min);
-        //        }
-        //        return min;
-        //}
+        // template <std::size_t ArraySize, typename T, std::size_t N>
+        // static Vector<N, T> find_min_vector(const std::array<Vector<N, T>, ArraySize>& vectors)
+        // {
+        //         static_assert(ArraySize > 0);
+        //         Vector<N, T> min = vectors[0];
+        //         for (std::size_t i = 1; i < ArraySize; ++i)
+        //         {
+        //                 min = ::ns::min(vectors[i], min);
+        //         }
+        //         return min;
+        // }
 
 public:
         static constexpr std::size_t SPACE_DIMENSION = Shape::SPACE_DIMENSION;
@@ -61,7 +61,7 @@ public:
         explicit ShapeWrapperForIntersection(const Shape* s)
                 : shape_(s), vertices_(s->vertices()), constraints_(shape_->constraints())
         {
-                //min_ = find_min_vector(vertices_);
+                // min_ = find_min_vector(vertices_);
         }
 
         bool inside(const Vector<N, T>& p) const
@@ -79,10 +79,10 @@ public:
                 return constraints_;
         }
 
-        //const Vector<N, T>& min() const
-        //{
-        //        return min_;
-        //}
+        // const Vector<N, T>& min() const
+        // {
+        //         return min_;
+        // }
 };
 
 template <typename Shape>

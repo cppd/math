@@ -18,7 +18,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #pragma once
 
 #include <functional>
-//#include <string_view>
+// #include <string_view>
 
 namespace ns
 {
@@ -44,15 +44,15 @@ std::size_t compute_hash(const T& v, const Ts&... vs)
                 (combine(seed, hasher(vs)), ...);
                 return seed;
         }
-        //else if constexpr (std::has_unique_object_representations_v<T>)
-        //{
-        //        static_assert((std::is_same_v<T, Ts> && ...));
+        // else if constexpr (std::has_unique_object_representations_v<T>)
+        // {
+        //         static_assert((std::is_same_v<T, Ts> && ...));
         //
-        //        std::hash<std::string_view> hasher;
-        //        std::size_t seed = hasher({reinterpret_cast<const char*>(&v), sizeof(v)});
-        //        (combine(seed, hasher({reinterpret_cast<const char*>(&vs), sizeof(vs)})), ...);
-        //        return seed;
-        //}
+        //         std::hash<std::string_view> hasher;
+        //         std::size_t seed = hasher({reinterpret_cast<const char*>(&v), sizeof(v)});
+        //         (combine(seed, hasher({reinterpret_cast<const char*>(&vs), sizeof(vs)})), ...);
+        //         return seed;
+        // }
         else
         {
                 static_assert(sizeof...(Ts) == 0);

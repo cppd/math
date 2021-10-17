@@ -47,7 +47,7 @@ int error_handler(Display*, XErrorEvent* e)
 
 Display* g_display = nullptr;
 
-// constexpr Atom xa_atom()
+//constexpr Atom xa_atom()
 //{
 //#pragma GCC diagnostic push
 //#pragma GCC diagnostic ignored "-Wold-style-cast"
@@ -89,7 +89,7 @@ WindowInit::~WindowInit()
         XSetErrorHandler(nullptr);
 }
 
-// void move_window_to_parent(WindowID window, WindowID parent)
+//void move_window_to_parent(WindowID window, WindowID parent)
 //{
 //        // https://standards.freedesktop.org/wm-spec/wm-spec-1.5.html
 
@@ -121,7 +121,7 @@ WindowInit::~WindowInit()
 //        XMapWindow(display, window);
 //}
 
-// void make_window_fullscreen(WindowID window)
+//void make_window_fullscreen(WindowID window)
 //{
 //        // https://standards.freedesktop.org/wm-spec/wm-spec-1.5.html
 
@@ -139,14 +139,14 @@ WindowInit::~WindowInit()
 //        XMapWindow(display, window);
 //}
 
-// void set_focus(WindowID window)
+//void set_focus(WindowID window)
 //{
 //        Display* display = g_display;
 
 //        XSetInputFocus(display, window, RevertToParent, CurrentTime);
 //}
 
-// void set_size_to_parent(WindowID window, WindowID parent)
+//void set_size_to_parent(WindowID window, WindowID parent)
 //{
 //        Display* display = g_display;
 
@@ -198,7 +198,7 @@ WindowInit::~WindowInit()
 {
 }
 
-// void move_window_to_parent(WindowID window, WindowID parent)
+//void move_window_to_parent(WindowID window, WindowID parent)
 //{
 //        SetWindowLongPtr(window, GWL_STYLE, WS_CHILD | WS_VISIBLE);
 
@@ -211,12 +211,12 @@ WindowInit::~WindowInit()
 //        SetFocus(parent);
 //}
 
-// void change_window_style_not_child(WindowID window)
+//void change_window_style_not_child(WindowID window)
 //{
 //        SetWindowLongPtr(window, GWL_STYLE, WS_POPUP);
 //}
 
-// void make_window_fullscreen(WindowID window)
+//void make_window_fullscreen(WindowID window)
 //{
 //        SetWindowLongPtr(window, GWL_STYLE, WS_POPUP | WS_VISIBLE);
 
@@ -225,12 +225,12 @@ WindowInit::~WindowInit()
 //        SetWindowPos(window, HWND_TOPMOST, 0, 0, GetSystemMetrics(SM_CXSCREEN), GetSystemMetrics(SM_CYSCREEN), 0);
 //}
 
-// void set_focus(WindowID window)
+//void set_focus(WindowID window)
 //{
 //        SetFocus(window);
 //}
 
-// void set_size_to_parent(WindowID window, WindowID parent)
+//void set_size_to_parent(WindowID window, WindowID parent)
 //{
 //        RECT rect;
 //        GetClientRect(parent, &rect);

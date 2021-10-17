@@ -29,8 +29,8 @@ layout(binding = 2, r32ui) readonly uniform uimage2D img_objects;
 const ivec2 X0 = ivec2(X, Y);
 const ivec2 X1 = ivec2(X + WIDTH, Y + HEIGHT);
 
+// GaussianMatrix[{4, 3}]
 // clang-format off
-//GaussianMatrix[{4, 3}]
 const int delta = 4;
 const float Gauss[delta * 2 + 1][delta * 2 + 1] =
 {

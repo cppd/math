@@ -102,14 +102,14 @@ public:
                 return true;
         }
 
-        //T count() const
-        //{
-        //        return component_count_;
-        //}
+        // T count() const
+        // {
+        //         return component_count_;
+        // }
 
-        //bool connected(T p, T q) const
-        //{
-        //        return find_root(p) == find_root(q);
-        //}
+        // bool connected(T p, T q) const
+        // {
+        //         return find_root(p) == find_root(q);
+        // }
 };
 }

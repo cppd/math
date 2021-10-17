@@ -17,8 +17,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "function.h"
 
-//#include <src/com/log.h>
-//#include <src/com/print.h>
+// #include <src/com/log.h>
+// #include <src/com/print.h>
 
 #include "../com/groups.h"
 
@@ -59,9 +59,9 @@ std::vector<Vector2i> pyramid_sizes(int width, int height, int min_size)
         }
 
         // for (const Vector2i& v : sizes)
-        //{
-        //        LOG(to_string(v[0]) + " x " + to_string(v[1]));
-        //}
+        // {
+        //         LOG(to_string(v[0]) + " x " + to_string(v[1]));
+        // }
 
         return sizes;
 }

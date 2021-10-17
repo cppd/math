@@ -38,19 +38,19 @@ class Paintbrush final
         static_assert(Limits<T>::max() <= Limits<unsigned>::max());
 
         // Example for 2D
-        //for (int x = 0; x < screen[0]; x += paintbrush[0])
-        //{
-        //        for (int y = 0; y < screen[1]; y += paintbrush[1])
-        //        {
-        //                for (int sub_x = x; sub_x < std::min(screen[0], x + paintbrush[0]); ++sub_x)
-        //                {
-        //                        for (int sub_y = y; sub_y < std::min(paintbrush[1], y + paintbrush[1]); ++sub_y)
-        //                        {
-        //                                // pixel(sub_x, sub_y);
-        //                        }
-        //                }
-        //        }
-        //}
+        // for (int x = 0; x < screen[0]; x += paintbrush[0])
+        // {
+        //         for (int y = 0; y < screen[1]; y += paintbrush[1])
+        //         {
+        //                 for (int sub_x = x; sub_x < std::min(screen[0], x + paintbrush[0]); ++sub_x)
+        //                 {
+        //                         for (int sub_y = y; sub_y < std::min(paintbrush[1], y + paintbrush[1]); ++sub_y)
+        //                         {
+        //                                 // pixel(sub_x, sub_y);
+        //                         }
+        //                 }
+        //         }
+        // }
 
         template <std::size_t LEVEL>
         static void generate_pixels(

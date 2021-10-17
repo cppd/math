@@ -34,25 +34,25 @@ namespace ns::gui
 {
 namespace
 {
-//bool is_child_widget_of_any_layout(QLayout* layout, QWidget* widget)
-//{
-//        if (layout == nullptr || widget == nullptr)
-//        {
-//                return false;
-//        }
-//        if (layout->indexOf(widget) >= 0)
-//        {
-//                return true;
-//        }
-//        for (QObject* object : layout->children())
-//        {
-//                if (is_child_widget_of_any_layout(qobject_cast<QLayout*>(object), widget))
-//                {
-//                        return true;
-//                }
-//        }
-//        return false;
-//}
+// bool is_child_widget_of_any_layout(QLayout* layout, QWidget* widget)
+// {
+//         if (layout == nullptr || widget == nullptr)
+//         {
+//                 return false;
+//         }
+//         if (layout->indexOf(widget) >= 0)
+//         {
+//                 return true;
+//         }
+//         for (QObject* object : layout->children())
+//         {
+//                 if (is_child_widget_of_any_layout(qobject_cast<QLayout*>(object), widget))
+//                 {
+//                         return true;
+//                 }
+//         }
+//         return false;
+// }
 
 QString to_qstring(const std::string_view& text)
 {
@@ -85,42 +85,42 @@ QWidget* parent_for_dialog()
         return Application::instance()->activeWindow();
 }
 
-//std::string main_window_title()
-//{
-//        QMainWindow* main_window = nullptr;
-//        for (QWidget* widget : Application::instance()->topLevelWidgets())
-//        {
-//                QMainWindow* window = qobject_cast<QMainWindow*>(widget);
-//                if (window)
-//                {
-//                        ASSERT(!main_window);
-//                        main_window = window;
-//                }
-//        }
-//        if (main_window)
-//        {
-//                return main_window->windowTitle().toStdString();
-//        }
-//        return {};
-//}
+// std::string main_window_title()
+// {
+//         QMainWindow* main_window = nullptr;
+//         for (QWidget* widget : Application::instance()->topLevelWidgets())
+//         {
+//                 QMainWindow* window = qobject_cast<QMainWindow*>(widget);
+//                 if (window)
+//                 {
+//                         ASSERT(!main_window);
+//                         main_window = window;
+//                 }
+//         }
+//         if (main_window)
+//         {
+//                 return main_window->windowTitle().toStdString();
+//         }
+//         return {};
+// }
 
-//void set_widgets_enabled(QLayout* layout, bool v)
-//{
-//        ASSERT(layout);
-
-//        QWidget* parent_widget = layout->parentWidget();
-//        if (!parent_widget)
-//        {
-//                return;
-//        }
-//        for (QWidget* widget : parent_widget->findChildren<QWidget*>())
-//        {
-//                if (is_child_widget_of_any_layout(layout, widget))
-//                {
-//                        widget->setEnabled(v);
-//                }
-//        }
-//}
+// void set_widgets_enabled(QLayout* layout, bool v)
+// {
+//         ASSERT(layout);
+//
+//         QWidget* parent_widget = layout->parentWidget();
+//         if (!parent_widget)
+//         {
+//                 return;
+//         }
+//         for (QWidget* widget : parent_widget->findChildren<QWidget*>())
+//         {
+//                 if (is_child_widget_of_any_layout(layout, widget))
+//                 {
+//                         widget->setEnabled(v);
+//                 }
+//         }
+// }
 
 QSplitter* find_widget_splitter(QObject* object, QWidget* widget)
 {
@@ -176,14 +176,14 @@ void set_widget_color(QWidget* widget, const QColor& c)
         widget->setPalette(palette);
 }
 
-//void button_strike_out(QRadioButton* button, bool strike_out)
-//{
-//        ASSERT(button);
-
-//        QFont f = button->font();
-//        f.setStrikeOut(strike_out);
-//        button->setFont(f);
-//}
+// void button_strike_out(QRadioButton* button, bool strike_out)
+// {
+//         ASSERT(button);
+//
+//         QFont f = button->font();
+//         f.setStrikeOut(strike_out);
+//         button->setFont(f);
+// }
 
 void set_slider_to_middle(QSlider* slider)
 {

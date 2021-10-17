@@ -74,7 +74,7 @@ template <
 using SequenceRange = typename sequence_implementation::Sequence<Type, SequenceType, SequenceTypeParameters...>::
         template S<FROM, TO - FROM + 1>::T;
 
-//  Type<SequenceType<Index[0], ...>, SequenceType<index[1], ...>, SequenceType<index[2], ...>, ...>
+// Type<SequenceType<Index[0], ...>, SequenceType<index[1], ...>, SequenceType<index[2], ...>, ...>
 template <
         typename IntegerSequence,
         template <typename...>

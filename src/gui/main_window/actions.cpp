@@ -62,8 +62,8 @@ void load_point_mesh(
                 [&]()
                 {
                         WorkerThreads::Function f = process::action_load_point_mesh(repository, dimension, object_name);
-                        //model_tree->clear();
-                        //view->send(view::command::ResetView());
+                        // model_tree->clear();
+                        // view->send(view::command::ResetView());
                         return f;
                 });
 }
@@ -80,8 +80,8 @@ void load_facet_mesh(
                 [&]()
                 {
                         WorkerThreads::Function f = process::action_load_facet_mesh(repository, dimension, object_name);
-                        //model_tree->clear();
-                        //view->send(view::command::ResetView());
+                        // model_tree->clear();
+                        // view->send(view::command::ResetView());
                         return f;
                 });
 }
@@ -97,8 +97,8 @@ void load_mesh(
                 [&]()
                 {
                         WorkerThreads::Function f = process::action_load_mesh(path, use_object_selection_dialog);
-                        //model_tree->clear();
-                        //view->send(view::command::ResetView());
+                        // model_tree->clear();
+                        // view->send(view::command::ResetView());
                         return f;
                 });
 }

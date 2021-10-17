@@ -60,7 +60,7 @@ private:
 
         void clear();
 
-        //void set_current(ObjectId id);
+        // void set_current(ObjectId id);
 
         void make_menu(const QPoint& pos);
         template <typename T>

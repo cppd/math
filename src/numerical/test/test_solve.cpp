@@ -37,7 +37,7 @@ namespace
 template <typename T>
 void write(T&& /*v*/)
 {
-        //LOG(std::forward<T>(v));
+        // LOG(std::forward<T>(v));
 }
 
 // clang-format off

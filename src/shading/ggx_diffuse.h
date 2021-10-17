@@ -52,36 +52,36 @@ namespace ns::shading::ggx_diffuse
 namespace implementation
 {
 // (9.64)
-//template <std::size_t N, typename T, typename Color>
-//Color diffuse(const Color& f0, const Color& rho_ss, const T n_l, const T n_v)
-//{
-//        static constexpr Color WHITE = Color(1);
-//        static constexpr T K = geometry::SPHERE_INTEGRATE_COSINE_FACTOR_OVER_HEMISPHERE<N, T>;
-
-//        T l = (1 - power<5>(1 - n_l));
-//        T v = (1 - power<5>(1 - n_v));
-//        T c = (21 / (20 * K)) * l * v;
-//        return c * (WHITE - f0) * rho_ss;
-//}
+// template <std::size_t N, typename T, typename Color>
+// Color diffuse(const Color& f0, const Color& rho_ss, const T n_l, const T n_v)
+// {
+//         static constexpr Color WHITE = Color(1);
+//         static constexpr T K = geometry::SPHERE_INTEGRATE_COSINE_FACTOR_OVER_HEMISPHERE<N, T>;
+//
+//         T l = (1 - power<5>(1 - n_l));
+//         T v = (1 - power<5>(1 - n_v));
+//         T c = (21 / (20 * K)) * l * v;
+//         return c * (WHITE - f0) * rho_ss;
+// }
 
 // (9.66), (9.67) without the subsurface term
-//template <std::size_t N, typename T, typename Color>
-//Color diffuse_disney_ws(
-//        const Color& /*f0*/,
-//        const Color& rho_ss,
-//        const T roughness,
-//        const T n_l,
-//        const T n_v,
-//        const T h_l)
-//{
-//        static constexpr T K = 1 / geometry::SPHERE_INTEGRATE_COSINE_FACTOR_OVER_HEMISPHERE<N, long double>;
-
-//        T l = power<5>(1 - n_l);
-//        T v = power<5>(1 - n_v);
-//        T f_d90 = T(0.5) + 2 * roughness * square(h_l);
-//        T c = (1 + (f_d90 - 1) * l) * (1 + (f_d90 - 1) * v);
-//        return (c * K) * rho_ss;
-//}
+// template <std::size_t N, typename T, typename Color>
+// Color diffuse_disney_ws(
+//         const Color& /*f0*/,
+//         const Color& rho_ss,
+//         const T roughness,
+//         const T n_l,
+//         const T n_v,
+//         const T h_l)
+// {
+//         static constexpr T K = 1 / geometry::SPHERE_INTEGRATE_COSINE_FACTOR_OVER_HEMISPHERE<N, long double>;
+//
+//         T l = power<5>(1 - n_l);
+//         T v = power<5>(1 - n_v);
+//         T f_d90 = T(0.5) + 2 * roughness * square(h_l);
+//         T c = (1 + (f_d90 - 1) * l) * (1 + (f_d90 - 1) * v);
+//         return (c * K) * rho_ss;
+// }
 template <std::size_t N, typename T, typename Color>
 Color diffuse_disney_ws(const Color& f0, const Color& rho_ss, const T roughness, const T n_l, const T n_v, const T h_l)
 {
@@ -95,20 +95,20 @@ Color diffuse_disney_ws(const Color& f0, const Color& rho_ss, const T roughness,
         return (c * K) * (WHITE - f0) * rho_ss;
 }
 // (9.66), (9.67)
-//template <std::size_t N, typename T, typename Color>
-//Color diffuse_disney(const Color& rho_ss, const T roughness, const T n_l, const T n_v, const T h_l, const T k_ss)
-//{
-//        static constexpr T K = 1 / geometry::SPHERE_INTEGRATE_COSINE_FACTOR_OVER_HEMISPHERE<N, long double>;
-
-//        T l = power<5>(1 - n_l);
-//        T v = power<5>(1 - n_v);
-//        T f_ss90 = roughness * square(h_l);
-//        T f_d90 = T(0.5) + 2 * f_ss90;
-//        T f_d = (1 + (f_d90 - 1) * l) * (1 + (f_d90 - 1) * v);
-//        T f_ss = (1 / (n_l * n_v) - T(0.5)) * (1 + (f_ss90 - 1) * l) * (1 + (f_ss90 - 1) * v) + T(0.5);
-//        T c = interpolation(f_d, T(1.25) * f_ss, k_ss);
-//        return (c * K) * rho_ss;
-//}
+// template <std::size_t N, typename T, typename Color>
+// Color diffuse_disney(const Color& rho_ss, const T roughness, const T n_l, const T n_v, const T h_l, const T k_ss)
+// {
+//         static constexpr T K = 1 / geometry::SPHERE_INTEGRATE_COSINE_FACTOR_OVER_HEMISPHERE<N, long double>;
+//
+//         T l = power<5>(1 - n_l);
+//         T v = power<5>(1 - n_v);
+//         T f_ss90 = roughness * square(h_l);
+//         T f_d90 = T(0.5) + 2 * f_ss90;
+//         T f_d = (1 + (f_d90 - 1) * l) * (1 + (f_d90 - 1) * v);
+//         T f_ss = (1 / (n_l * n_v) - T(0.5)) * (1 + (f_ss90 - 1) * l) * (1 + (f_ss90 - 1) * v) + T(0.5);
+//         T c = interpolation(f_d, T(1.25) * f_ss, k_ss);
+//         return (c * K) * rho_ss;
+// }
 
 template <std::size_t N, typename T, typename Color>
 Color f(const T metalness,
@@ -136,18 +136,18 @@ Color f(const T metalness,
         return spec + diff;
 }
 
-//template <std::size_t N, typename T, typename RandomEngine>
-//std::tuple<Vector<N, T>, T> sample_cosine(RandomEngine& random_engine, const Vector<N, T>& n)
-//{
-//        Vector<N, T> l = sampling::cosine_on_hemisphere(random_engine, n);
-//        ASSERT(l.is_unit());
-//        if (dot(n, l) <= 0)
-//        {
-//                return {Vector<N, T>(0), 0};
-//        }
-//        T pdf = sampling::cosine_on_hemisphere_pdf<N>(dot(n, l));
-//        return {l, pdf};
-//}
+// template <std::size_t N, typename T, typename RandomEngine>
+// std::tuple<Vector<N, T>, T> sample_cosine(RandomEngine& random_engine, const Vector<N, T>& n)
+// {
+//         Vector<N, T> l = sampling::cosine_on_hemisphere(random_engine, n);
+//         ASSERT(l.is_unit());
+//         if (dot(n, l) <= 0)
+//         {
+//                 return {Vector<N, T>(0), 0};
+//         }
+//         T pdf = sampling::cosine_on_hemisphere_pdf<N>(dot(n, l));
+//         return {l, pdf};
+// }
 
 template <std::size_t N, typename T>
 T pdf_ggx_cosine(

@@ -171,21 +171,21 @@ void test_sphere_1_simplex(const T precision)
                 return add_dimension(a, random_engine);
         };
 
-        //arcLength[a_, b_] :=
-        //  Module[{an, bn, cn, dihedralA, dihedralB, dihedralC},
-        //   an = Normalize[a];
-        //   bn = Normalize[b];
-        //   ArcCos[Dot[an, bn]]];
-        //printVector[i_, v_] :=
-        //  Print[StringTemplate["v[``] = {``, ``};"][i, v[[1]], v[[2]]]];
-        //SeedRandom[ToString[N[Pi, 1000]]];
-        //For[i = 0, i < 10, ++i, Module[{a, b},
-        //  a = RandomInteger[{-10, 10}, 2];
-        //  b = RandomInteger[{-10, 10}, 2];
-        //  printVector[0, a];
-        //  printVector[1, b];
-        //  Print[StringTemplate["cmp(sphere_simplex_area(v), ``L);"]
-        //    [N[arcLength[a, b], 50]]]]]
+        // arcLength[a_, b_] :=
+        //   Module[{an, bn, cn, dihedralA, dihedralB, dihedralC},
+        //    an = Normalize[a];
+        //    bn = Normalize[b];
+        //    ArcCos[Dot[an, bn]]];
+        // printVector[i_, v_] :=
+        //   Print[StringTemplate["v[``] = {``, ``};"][i, v[[1]], v[[2]]]];
+        // SeedRandom[ToString[N[Pi, 1000]]];
+        // For[i = 0, i < 10, ++i, Module[{a, b},
+        //   a = RandomInteger[{-10, 10}, 2];
+        //   b = RandomInteger[{-10, 10}, 2];
+        //   printVector[0, a];
+        //   printVector[1, b];
+        //   Print[StringTemplate["cmp(sphere_simplex_area(v), ``L);"]
+        //     [N[arcLength[a, b], 50]]]]]
 
         std::array<Vector<2, T>, 2> v;
 
@@ -238,30 +238,30 @@ void test_sphere_2_simplex(const T precision)
                 return add_dimension(a, random_engine);
         };
 
-        //triangleArea[a_, b_, c_] :=
-        //  Module[{an, bn, cn, dihedralA, dihedralB, dihedralC},
-        //   an = Normalize[a];
-        //   bn = Normalize[b];
-        //   cn = Normalize[c];
-        //   dihedralA =
-        //    ArcCos[Dot[Normalize[Cross[an, bn]], Normalize[Cross[an, cn]]]];
-        //   dihedralB =
-        //    ArcCos[Dot[Normalize[Cross[bn, cn]], Normalize[Cross[bn, an]]]];
-        //   dihedralC =
-        //    ArcCos[Dot[Normalize[Cross[cn, an]], Normalize[Cross[cn, bn]]]];
-        //   dihedralA + dihedralB + dihedralC - Pi];
-        //printVector[i_, v_] :=
-        //  Print[StringTemplate["v[``] = {``, ``, ``};"][i, v[[1]], v[[2]], v[[3]]]];
-        //SeedRandom[ToString[N[Pi, 1000]]];
-        //For[i = 0, i < 10, ++i, Module[{a, b, c},
-        //  a = RandomInteger[{-10, 10}, 3];
-        //  b = RandomInteger[{-10, 10}, 3];
-        //  c = RandomInteger[{-10, 10}, 3];
-        //  printVector[0, a];
-        //  printVector[1, b];
-        //  printVector[2, c];
-        //  Print[StringTemplate["cmp(sphere_simplex_area(v), ``L);"]
-        //    [N[triangleArea[a, b, c], 50]]]]]
+        // triangleArea[a_, b_, c_] :=
+        //   Module[{an, bn, cn, dihedralA, dihedralB, dihedralC},
+        //    an = Normalize[a];
+        //    bn = Normalize[b];
+        //    cn = Normalize[c];
+        //    dihedralA =
+        //     ArcCos[Dot[Normalize[Cross[an, bn]], Normalize[Cross[an, cn]]]];
+        //    dihedralB =
+        //     ArcCos[Dot[Normalize[Cross[bn, cn]], Normalize[Cross[bn, an]]]];
+        //    dihedralC =
+        //     ArcCos[Dot[Normalize[Cross[cn, an]], Normalize[Cross[cn, bn]]]];
+        //    dihedralA + dihedralB + dihedralC - Pi];
+        // printVector[i_, v_] :=
+        //   Print[StringTemplate["v[``] = {``, ``, ``};"][i, v[[1]], v[[2]], v[[3]]]];
+        // SeedRandom[ToString[N[Pi, 1000]]];
+        // For[i = 0, i < 10, ++i, Module[{a, b, c},
+        //   a = RandomInteger[{-10, 10}, 3];
+        //   b = RandomInteger[{-10, 10}, 3];
+        //   c = RandomInteger[{-10, 10}, 3];
+        //   printVector[0, a];
+        //   printVector[1, b];
+        //   printVector[2, c];
+        //   Print[StringTemplate["cmp(sphere_simplex_area(v), ``L);"]
+        //     [N[triangleArea[a, b, c], 50]]]]]
 
         std::array<Vector<3, T>, 3> v;
 

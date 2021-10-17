@@ -29,14 +29,14 @@ namespace ns::painter
 template <std::size_t N, typename T, typename Color>
 class PixelFilter final
 {
-        //radius=1.5;
-        //width=radius/2.5;
-        //alpha=1/(2*width*width);
-        //gaussian[x_]:=Exp[-alpha*x*x];
-        //gaussianFilter[x_]:=gaussian[x]-gaussian[radius];
-        //max=gaussianFilter[0];
-        //triangle[x_]:=If[x<0,max/radius*x+max,-max/radius*x+max];
-        //Plot[{gaussianFilter[x],triangle[x]},{x,-radius,radius},PlotRange->Full]
+        // radius=1.5;
+        // width=radius/2.5;
+        // alpha=1/(2*width*width);
+        // gaussian[x_]:=Exp[-alpha*x*x];
+        // gaussianFilter[x_]:=gaussian[x]-gaussian[radius];
+        // max=gaussianFilter[0];
+        // triangle[x_]:=If[x<0,max/radius*x+max,-max/radius*x+max];
+        // Plot[{gaussianFilter[x],triangle[x]},{x,-radius,radius},PlotRange->Full]
         static constexpr T FILTER_RADIUS = 1.5;
         static constexpr T GAUSSIAN_FILTER_WIDTH = FILTER_RADIUS / 2.5;
 

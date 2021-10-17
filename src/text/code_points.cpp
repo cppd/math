@@ -103,7 +103,7 @@ std::vector<char32_t> supported_code_points()
                 code_points.push_back(code_point);
         }
 
-        //  Cyrillic
+        // Cyrillic
         for (char32_t code_point = 0x400; code_point <= 0x4FF; ++code_point)
         {
                 code_points.push_back(code_point);

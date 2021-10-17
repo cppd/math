@@ -24,7 +24,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/com/log.h>
 #include <src/com/print.h>
 
-//#include <cuda.h>
+// #include <cuda.h>
 #include <cuda_runtime.h>
 #include <cufft.h>
 #include <type_traits>

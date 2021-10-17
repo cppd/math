@@ -158,11 +158,7 @@ ModelEvents::ModelEvents(ModelTreeEvents* const tree, view::View* const view)
         };
 
         std::apply(
-                [&f]<std::size_t... N>(Events<N> & ... events)
-                {
-                        (f(events), ...);
-                },
-                events_);
+                [&f]<std::size_t... N>(Events<N> & ... events) { (f(events), ...); }, events_);
 }
 
 ModelEvents::~ModelEvents()
@@ -176,10 +172,6 @@ ModelEvents::~ModelEvents()
         };
 
         std::apply(
-                [&f]<std::size_t... N>(const Events<N>&... events)
-                {
-                        (f(events), ...);
-                },
-                events_);
+                [&f]<std::size_t... N>(const Events<N>&... events) { (f(events), ...); }, events_);
 }
 }

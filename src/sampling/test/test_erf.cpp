@@ -34,10 +34,10 @@ namespace ns::sampling::test
 {
 namespace
 {
-//For[i = 1/50, i < 1, i += 1/50,
-// Print[StringTemplate["{``L, ``L},"][i,
-//   ScientificForm[N[InverseErf[i], 50],
-//    NumberFormat -> (Row[{#1, "e", If[#3 == "", "0", #3]}] &)]]]]
+// For[i = 1/50, i < 1, i += 1/50,
+//  Print[StringTemplate["{``L, ``L},"][i,
+//    ScientificForm[N[InverseErf[i], 50],
+//     NumberFormat -> (Row[{#1, "e", If[#3 == "", "0", #3]}] &)]]]]
 
 // clang-format off
 template <typename T>

@@ -381,8 +381,6 @@ void constant_data_test(ComputeVector* dft, ProgressRatio* progress)
 
         LOG("\n----- Constant Data DFT Tests -----");
 
-        // const std::vector<complex> source_data(
-        //        {{1, 0}, {2, 0}, {30, 0}, {4, 0}}); //, {-20, 0}, {3, 0}}); //, {-5, 0}});//, {-1, 0}});
         const std::vector<Complex> source_data({{1, 0}, {2, 0}, {3, 0}, {4, 0}, {5, 0}, {6, 0}});
         const int n = source_data.size() / 3;
         const int k = source_data.size() / n;
@@ -444,8 +442,8 @@ std::array<int, 2> find_dimensions(TestSize test_size)
         }
         case TestSize::LARGE:
         {
-                int n1 = 3001; // 3001; // 61;//1001; 1009
-                int n2 = 997; // 61;//997;
+                int n1 = 3001;
+                int n2 = 997;
                 return {n1, n2};
         }
         }

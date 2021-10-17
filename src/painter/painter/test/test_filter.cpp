@@ -49,34 +49,34 @@ void compare(T width, T radius, const Vector<N, T>& p, T value, T precision)
 template <typename T>
 void test_filter(T precision)
 {
-        //gaussian[width_, x_] := Exp[-1/2*Power[ x/width, 2]];
-        //filter[width_, radius_, list_] :=
-        //  Module[{e, m}, e = gaussian[width, radius]; m = 1;
-        //   Do[m *= Max[0, gaussian[width, v] - e], {v, list}]; m];
+        // gaussian[width_, x_] := Exp[-1/2*Power[ x/width, 2]];
+        // filter[width_, radius_, list_] :=
+        //   Module[{e, m}, e = gaussian[width, radius]; m = 1;
+        //    Do[m *= Max[0, gaussian[width, v] - e], {v, list}]; m];
         //
-        //toString[x_] :=
-        //  ToString[NumberForm[N[x, 50], {50, 49},
-        //    NumberFormat -> (Row[{#1, "e", #3}] &),
-        //    ExponentFunction -> (# &)]];
-        //filterString[width_, radius_, list_] :=
-        //  StringTemplate["cmp(``, ``, Vector<``, T>``, ``L);"][width, radius,
-        //   Length[list], list, toString[filter[width, radius, list]]];
+        // toString[x_] :=
+        //   ToString[NumberForm[N[x, 50], {50, 49},
+        //     NumberFormat -> (Row[{#1, "e", #3}] &),
+        //     ExponentFunction -> (# &)]];
+        // filterString[width_, radius_, list_] :=
+        //   StringTemplate["cmp(``, ``, Vector<``, T>``, ``L);"][width, radius,
+        //    Length[list], list, toString[filter[width, radius, list]]];
         //
-        //random[x_] := RandomInteger[{-x*100, x*100}]/100;
-        //randomVector2[x_] := {random[x], random[x]};
-        //randomVector3[x_] := {random[x], random[x], random[x]};
+        // random[x_] := RandomInteger[{-x*100, x*100}]/100;
+        // randomVector2[x_] := {random[x], random[x]};
+        // randomVector3[x_] := {random[x], random[x], random[x]};
         //
-        //randomRadius[x_] := RandomInteger[{1, x*10}]/10;
-        //randomWidth[x_] := x*(1/10 + RandomInteger[{0, 100}]/100 * 9/10);
+        // randomRadius[x_] := RandomInteger[{1, x*10}]/10;
+        // randomWidth[x_] := x*(1/10 + RandomInteger[{0, 100}]/100 * 9/10);
         //
-        //SeedRandom[1234567890];
-        //maxRadius = 10;
-        //For[i = 1, i <= 10, ++i, radius = randomRadius[maxRadius];
-        // Print[filterString[randomWidth[radius], radius,
-        //   randomVector2[radius]]]]
-        //For[i = 1, i <= 10, ++i, radius = randomRadius[maxRadius];
-        // Print[filterString[randomWidth[radius], radius,
-        //   randomVector3[radius]]]]
+        // SeedRandom[1234567890];
+        // maxRadius = 10;
+        // For[i = 1, i <= 10, ++i, radius = randomRadius[maxRadius];
+        //  Print[filterString[randomWidth[radius], radius,
+        //    randomVector2[radius]]]]
+        // For[i = 1, i <= 10, ++i, radius = randomRadius[maxRadius];
+        //  Print[filterString[randomWidth[radius], radius,
+        //    randomVector3[radius]]]]
 
         const auto cmp = [&](T width, T radius, const auto& p, T value)
         {

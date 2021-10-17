@@ -302,15 +302,15 @@ std::optional<ObjectId> ModelTree::current_item() const
         return std::nullopt;
 }
 
-//void ModelTree::set_current(ObjectId id)
-//{
-//        auto iter = map_id_item_.find(id);
-//        if (iter == map_id_item_.cend())
-//        {
-//                return;
-//        }
-//        tree_->setCurrentItem(iter->second);
-//}
+// void ModelTree::set_current(ObjectId id)
+// {
+//         auto iter = map_id_item_.find(id);
+//         if (iter == map_id_item_.cend())
+//         {
+//                 return;
+//         }
+//         tree_->setCurrentItem(iter->second);
+// }
 
 std::optional<storage::MeshObject> ModelTree::current_mesh() const
 {

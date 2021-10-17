@@ -159,7 +159,7 @@ class Impl final : public Window
                 return height;
         }
 
-        // VkSurfaceKHR create_surface(VkInstance instance) override
+        //VkSurfaceKHR create_surface(VkInstance instance) override
         //{
         //        VkSurfaceKHR surface = VK_NULL_HANDLE;
         //
@@ -174,8 +174,8 @@ class Impl final : public Window
 
         void pull_and_dispath_events(WindowEvent& window_event) override
         {
-                // if (glfwWindowShouldClose(window))
-                // {
+                //if (glfwWindowShouldClose(window))
+                //{
                 //        return;
                 //}
 
@@ -235,7 +235,7 @@ void window_terminate()
 
 //
 
-// std::vector<std::string> Window::instance_extensions()
+//std::vector<std::string> Window::instance_extensions()
 //{
 //        uint32_t count;
 //        const char** extensions;

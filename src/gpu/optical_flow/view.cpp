@@ -56,9 +56,9 @@ class Impl final : public View
         const vulkan::CommandPool* const graphics_command_pool_;
         const vulkan::Queue* const graphics_queue_;
         const vulkan::CommandPool* const compute_command_pool_;
-        //const vulkan::Queue* const compute_queue_;
-        //const vulkan::CommandPool* const transfer_command_pool_;
-        //const vulkan::Queue* const transfer_queue_;
+        // const vulkan::Queue* const compute_queue_;
+        // const vulkan::CommandPool* const transfer_command_pool_;
+        // const vulkan::Queue* const transfer_queue_;
 
         vulkan::Semaphore signal_semaphore_;
         ViewProgram program_;
@@ -245,9 +245,9 @@ public:
                   graphics_command_pool_(graphics_command_pool),
                   graphics_queue_(graphics_queue),
                   compute_command_pool_(compute_command_pool),
-                  //compute_queue_(compute_queue),
-                  //transfer_command_pool_(transfer_command_pool),
-                  //transfer_queue_(transfer_queue),
+                  // compute_queue_(compute_queue),
+                  // transfer_command_pool_(transfer_command_pool),
+                  // transfer_queue_(transfer_queue),
                   signal_semaphore_(instance->device()),
                   program_(&instance->device()),
                   memory_(instance->device(), program_.descriptor_set_layout(), {graphics_queue->family_index()}),

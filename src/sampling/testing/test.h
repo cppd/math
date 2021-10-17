@@ -161,7 +161,7 @@ void test_distribution_angle(
         }
 
         buckets.template compute_distribution<RandomEngine>(count, normal, random_vector, progress);
-        //impl::log(buckets.histogram(pdf), true /*add_indent*/);
+        // impl::log(buckets.histogram(pdf), true /*add_indent*/);
         buckets.compare_with_pdf(pdf);
 }
 

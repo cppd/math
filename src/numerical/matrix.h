@@ -69,17 +69,17 @@ class Matrix final
 
         // template <std::size_t... I>
         // constexpr Vector<ROWS, T> column_impl(std::size_t column, std::integer_sequence<std::size_t, I...>) const
-        //{
-        //        static_assert(sizeof...(I) == ROWS);
-        //        static_assert(((I >= 0 && I < ROWS) && ...));
+        // {
+        //         static_assert(sizeof...(I) == ROWS);
+        //         static_assert(((I >= 0 && I < ROWS) && ...));
         //
-        //        return Vector<ROWS, T>{rows_[I][column]...};
-        //}
+        //         return Vector<ROWS, T>{rows_[I][column]...};
+        // }
         //
         // constexpr Vector<ROWES, T> column_impl(std::size_t column) const
-        //{
-        //        return column_impl(column, std::make_integer_sequence<std::size_t, ROWS>());
-        //}
+        // {
+        //         return column_impl(column, std::make_integer_sequence<std::size_t, ROWS>());
+        // }
 
 public:
         constexpr Matrix()

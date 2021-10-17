@@ -65,23 +65,23 @@ float shading_ggx_g2_combined(float alpha_2, float n_l, float n_v)
 }
 
 // (9.64)
-//vec3 shading_diffuse(vec3 f0, vec3 rho_ss, float n_l, float n_v)
-//{
-//        float l = (1 - pow(1 - n_l, 5));
-//        float v = (1 - pow(1 - n_v, 5));
-//        float c = (21 / (20 * shading_PI)) * l * v;
-//        return c * (1 - f0) * rho_ss;
-//}
+// vec3 shading_diffuse(vec3 f0, vec3 rho_ss, float n_l, float n_v)
+// {
+//         float l = (1 - pow(1 - n_l, 5));
+//         float v = (1 - pow(1 - n_v, 5));
+//         float c = (21 / (20 * shading_PI)) * l * v;
+//         return c * (1 - f0) * rho_ss;
+// }
 
 // (9.66), (9.67) without the subsurface term
-//vec3 shading_diffuse_disney_ws(vec3 /*f0*/, vec3 rho_ss, float roughness, float n_l, float n_v, float h_l)
-//{
-//        float l = pow(1 - n_l, 5);
-//        float v = pow(1 - n_v, 5);
-//        float f_d90 = 0.5 + 2 * roughness * shading_square(h_l);
-//        float c = (1 + (f_d90 - 1) * l) * (1 + (f_d90 - 1) * v);
-//        return (c * shading_PI_R) * rho_ss;
-//}
+// vec3 shading_diffuse_disney_ws(vec3 /*f0*/, vec3 rho_ss, float roughness, float n_l, float n_v, float h_l)
+// {
+//         float l = pow(1 - n_l, 5);
+//         float v = pow(1 - n_v, 5);
+//         float f_d90 = 0.5 + 2 * roughness * shading_square(h_l);
+//         float c = (1 + (f_d90 - 1) * l) * (1 + (f_d90 - 1) * v);
+//         return (c * shading_PI_R) * rho_ss;
+// }
 vec3 shading_diffuse_disney_ws(vec3 f0, vec3 rho_ss, float roughness, float n_l, float n_v, float h_l)
 {
         float l = pow(1 - n_l, 5);
@@ -91,17 +91,17 @@ vec3 shading_diffuse_disney_ws(vec3 f0, vec3 rho_ss, float roughness, float n_l,
         return (c * shading_PI_R) * (1 - f0) * rho_ss;
 }
 // (9.66), (9.67)
-//vec3 shading_diffuse_disney(vec3 rho_ss, float roughness, float n_l, float n_v, float h_l, float k_ss)
-//{
-//        float l = pow(1 - n_l, 5);
-//        float v = pow(1 - n_v, 5);
-//        float f_ss90 = roughness * shading_square(h_l);
-//        float f_d90 = 0.5 + 2 * f_ss90;
-//        float f_d = (1 + (f_d90 - 1) * l) * (1 + (f_d90 - 1) * v);
-//        float f_ss = (1 / (n_l * n_v) - 0.5) * (1 + (f_ss90 - 1) * l) * (1 + (f_ss90 - 1) * v) + 0.5;
-//        float c = mix(f_d, 1.25 * f_ss, k_ss);
-//        return (c * shading_PI_R) * rho_ss;
-//}
+// vec3 shading_diffuse_disney(vec3 rho_ss, float roughness, float n_l, float n_v, float h_l, float k_ss)
+// {
+//         float l = pow(1 - n_l, 5);
+//         float v = pow(1 - n_v, 5);
+//         float f_ss90 = roughness * shading_square(h_l);
+//         float f_d90 = 0.5 + 2 * f_ss90;
+//         float f_d = (1 + (f_d90 - 1) * l) * (1 + (f_d90 - 1) * v);
+//         float f_ss = (1 / (n_l * n_v) - 0.5) * (1 + (f_ss90 - 1) * l) * (1 + (f_ss90 - 1) * v) + 0.5;
+//         float c = mix(f_d, 1.25 * f_ss, k_ss);
+//         return (c * shading_PI_R) * rho_ss;
+// }
 
 // (9.34)
 vec3 shading_ggx_brdf(float roughness, vec3 f0, float n_v, float n_l, float n_h, float h_l)
