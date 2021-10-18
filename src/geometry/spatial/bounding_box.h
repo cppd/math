@@ -75,16 +75,17 @@ class BoundingBox final
         }
 
 public:
-        BoundingBox(const Vector<N, T>& p1, const Vector<N, T>& p2) : min_(::ns::min(p1, p2)), max_(::ns::max(p1, p2))
+        constexpr BoundingBox(const Vector<N, T>& p1, const Vector<N, T>& p2)
+                : min_(::ns::min(p1, p2)), max_(::ns::max(p1, p2))
         {
         }
 
-        explicit BoundingBox(const Vector<N, T>& p) : min_(p), max_(p)
+        explicit constexpr BoundingBox(const Vector<N, T>& p) : min_(p), max_(p)
         {
         }
 
         template <std::size_t SIZE>
-        explicit BoundingBox(const std::array<Vector<N, T>, SIZE>& points) : BoundingBox(points[0])
+        explicit constexpr BoundingBox(const std::array<Vector<N, T>, SIZE>& points) : BoundingBox(points[0])
         {
                 static_assert(SIZE > 0);
                 for (std::size_t i = 1; i < SIZE; ++i)
@@ -93,43 +94,43 @@ public:
                 }
         }
 
-        [[nodiscard]] const Vector<N, T>& min() const
+        [[nodiscard]] constexpr const Vector<N, T>& min() const
         {
                 return min_;
         }
 
-        [[nodiscard]] const Vector<N, T>& max() const
+        [[nodiscard]] constexpr const Vector<N, T>& max() const
         {
                 return max_;
         }
 
-        [[nodiscard]] Vector<N, T> diagonal() const
+        [[nodiscard]] constexpr Vector<N, T> diagonal() const
         {
                 return max_ - min_;
         }
 
-        [[nodiscard]] Vector<N, T> center() const
+        [[nodiscard]] constexpr Vector<N, T> center() const
         {
                 return T(0.5) * (max_ + min_);
         }
 
-        [[nodiscard]] T volume() const
+        [[nodiscard]] constexpr T volume() const
         {
                 return volume<N>(diagonal());
         }
 
-        [[nodiscard]] T surface() const requires(N >= 2)
+        [[nodiscard]] constexpr T surface() const requires(N >= 2)
         {
-                surface<N>(diagonal());
+                return surface<N>(diagonal());
         }
 
-        void merge(const BoundingBox<N, T>& v)
+        constexpr void merge(const BoundingBox<N, T>& v)
         {
                 min_ = ::ns::min(min_, v.min_);
                 max_ = ::ns::max(max_, v.max_);
         }
 
-        void merge(const Vector<N, T>& v)
+        constexpr void merge(const Vector<N, T>& v)
         {
                 min_ = ::ns::min(min_, v);
                 max_ = ::ns::max(max_, v);
