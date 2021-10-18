@@ -317,17 +317,17 @@ vec3 world_normal(vec3 p)
 
 bool intersect(vec3 ray_org, vec3 ray_dir, vec3 planes_min, vec3 planes_max, out float first, out float second)
 {
-        float f_max = -1e38;
-        float b_min = 1e38;
+        float near = 0;
+        float far = 1e38;
 
         // based on ParallelotopeAA functions
         for (int i = 0; i < 3; ++i)
         {
-                float s = ray_dir[i]; // dot(ray_dir, planes[i].n);
+                float s = ray_dir[i];
                 if (s == 0)
                 {
                         // parallel to the planes
-                        float d = ray_org[i]; // dot(ray_org, planes[i].n);
+                        float d = ray_org[i];
                         if (d < planes_min[i] || d > planes_max[i])
                         {
                                 // outside the planes
@@ -337,7 +337,7 @@ bool intersect(vec3 ray_org, vec3 ray_dir, vec3 planes_min, vec3 planes_max, out
                         continue;
                 }
 
-                float d = ray_org[i]; // dot(ray_org, planes[i].n);
+                float d = ray_org[i];
                 float alpha1 = (planes_min[i] - d) / s;
                 float alpha2 = (planes_max[i] - d) / s;
 
@@ -345,18 +345,18 @@ bool intersect(vec3 ray_org, vec3 ray_dir, vec3 planes_min, vec3 planes_max, out
                 {
                         // front intersection for the first plane
                         // back intersection for the second plane
-                        f_max = max(alpha1, f_max);
-                        b_min = min(alpha2, b_min);
+                        near = max(alpha1, near);
+                        far = min(alpha2, far);
                 }
                 else
                 {
-                        // back intersection for the first plane
                         // front intersection for the second plane
-                        b_min = min(alpha1, b_min);
-                        f_max = max(alpha2, f_max);
+                        // back intersection for the first plane
+                        near = max(alpha2, near);
+                        far = min(alpha1, far);
                 }
 
-                if (b_min <= 0 || b_min < f_max)
+                if (far < near)
                 {
                         return false;
                 }
@@ -385,26 +385,26 @@ bool intersect(vec3 ray_org, vec3 ray_dir, vec3 planes_min, vec3 planes_max, out
 
                         float alpha = (d - dot(ray_org, n)) / s;
 
-                        if (s < 0)
+                        if (s > 0)
                         {
-                                // front intersection
-                                f_max = max(alpha, f_max);
+                                // back intersection
+                                far = min(alpha, far);
                         }
                         else
                         {
-                                // back intersection
-                                b_min = min(alpha, b_min);
+                                // front intersection
+                                near = max(alpha, near);
                         }
 
-                        if (b_min <= 0 || b_min < f_max)
+                        if (far < near)
                         {
                                 return false;
                         }
                 } while (false);
         }
 
-        first = max(0, f_max);
-        second = b_min;
+        first = near;
+        second = far;
 
         return true;
 }

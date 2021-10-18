@@ -218,16 +218,16 @@ Constraints<N, T, 2 * N, 0> ParallelotopeAA<N, T>::constraints() const
 template <std::size_t N, typename T>
 bool ParallelotopeAA<N, T>::intersect_impl(const Ray<N, T>& r, T* first, T* second) const
 {
-        T f_max = Limits<T>::lowest();
-        T b_min = Limits<T>::max();
+        T near = 0;
+        T far = Limits<T>::max();
 
         for (unsigned i = 0; i < N; ++i)
         {
-                T s = r.dir()[i]; // dot(r.dir(), NORMALS_POSITIVE[i])
+                T s = r.dir()[i];
                 if (s == 0)
                 {
                         // parallel to the planes
-                        T d = r.org()[i]; // dot(r.org(), NORMALS_POSITIVE[i])
+                        T d = r.org()[i];
                         if (d < planes_[i].d1 || d > planes_[i].d2)
                         {
                                 // outside the planes
@@ -237,7 +237,7 @@ bool ParallelotopeAA<N, T>::intersect_impl(const Ray<N, T>& r, T* first, T* seco
                         continue;
                 }
 
-                T d = r.org()[i]; // dot(r.org(), NORMALS_POSITIVE[i])
+                T d = r.org()[i];
                 T alpha1 = (planes_[i].d1 - d) / s;
                 T alpha2 = (planes_[i].d2 - d) / s;
 
@@ -245,25 +245,25 @@ bool ParallelotopeAA<N, T>::intersect_impl(const Ray<N, T>& r, T* first, T* seco
                 {
                         // front intersection for the first plane
                         // back intersection for the second plane
-                        f_max = std::max(alpha1, f_max);
-                        b_min = std::min(alpha2, b_min);
+                        near = std::max(alpha1, near);
+                        far = std::min(alpha2, far);
                 }
                 else
                 {
-                        // back intersection for the first plane
                         // front intersection for the second plane
-                        b_min = std::min(alpha1, b_min);
-                        f_max = std::max(alpha2, f_max);
+                        // back intersection for the first plane
+                        near = std::max(alpha2, near);
+                        far = std::min(alpha1, far);
                 }
 
-                if (b_min <= 0 || b_min < f_max)
+                if (far < near)
                 {
                         return false;
                 }
         }
 
-        *first = f_max;
-        *second = b_min;
+        *first = near;
+        *second = far;
 
         return true;
 }
@@ -299,7 +299,7 @@ std::optional<T> ParallelotopeAA<N, T>::intersect_volume(const Ray<N, T>& r) con
         T second;
         if (intersect_impl(r, &first, &second))
         {
-                return std::max(first, T(0));
+                return first;
         }
         return std::nullopt;
 }

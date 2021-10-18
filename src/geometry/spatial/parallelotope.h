@@ -211,8 +211,8 @@ Constraints<N, T, 2 * N, 0> Parallelotope<N, T>::constraints() const
 template <std::size_t N, typename T>
 bool Parallelotope<N, T>::intersect_impl(const Ray<N, T>& r, T* first, T* second) const
 {
-        T f_max = Limits<T>::lowest();
-        T b_min = Limits<T>::max();
+        T near = 0;
+        T far = Limits<T>::max();
 
         for (unsigned i = 0; i < N; ++i)
         {
@@ -238,25 +238,25 @@ bool Parallelotope<N, T>::intersect_impl(const Ray<N, T>& r, T* first, T* second
                 {
                         // front intersection for the first plane
                         // back intersection for the second plane
-                        f_max = std::max(alpha1, f_max);
-                        b_min = std::min(alpha2, b_min);
+                        near = std::max(alpha1, near);
+                        far = std::min(alpha2, far);
                 }
                 else
                 {
-                        // back intersection for the first plane
                         // front intersection for the second plane
-                        b_min = std::min(alpha1, b_min);
-                        f_max = std::max(alpha2, f_max);
+                        // back intersection for the first plane
+                        near = std::max(alpha2, near);
+                        far = std::min(alpha1, far);
                 }
 
-                if (b_min <= 0 || b_min < f_max)
+                if (far < near)
                 {
                         return false;
                 }
         }
 
-        *first = f_max;
-        *second = b_min;
+        *first = near;
+        *second = far;
 
         return true;
 }
@@ -292,7 +292,7 @@ std::optional<T> Parallelotope<N, T>::intersect_volume(const Ray<N, T>& r) const
         T second;
         if (intersect_impl(r, &first, &second))
         {
-                return std::max(first, T(0));
+                return first;
         }
         return std::nullopt;
 }
