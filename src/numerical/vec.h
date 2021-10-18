@@ -137,7 +137,7 @@ public:
                 return *this;
         }
 
-        void multiply_add(const Vector<N, T>& a, const T& b)
+        constexpr void multiply_add(const Vector<N, T>& a, const T& b)
         {
                 for (std::size_t i = 0; i < N; ++i)
                 {
@@ -145,7 +145,7 @@ public:
                 }
         }
 
-        void multiply_add(const T& b, const Vector<N, T>& a)
+        constexpr void multiply_add(const T& b, const Vector<N, T>& a)
         {
                 multiply_add(a, b);
         }
@@ -363,7 +363,7 @@ template <std::size_t N, typename T>
 }
 
 template <std::size_t N, typename T>
-[[nodiscard]] Vector<N, T> max(const Vector<N, T>& a, const Vector<N, T>& b)
+[[nodiscard]] constexpr Vector<N, T> max(const Vector<N, T>& a, const Vector<N, T>& b)
 {
         Vector<N, T> res;
         for (std::size_t i = 0; i < N; ++i)
@@ -374,7 +374,7 @@ template <std::size_t N, typename T>
 }
 
 template <std::size_t N, typename T>
-[[nodiscard]] Vector<N, T> min(const Vector<N, T>& a, const Vector<N, T>& b)
+[[nodiscard]] constexpr Vector<N, T> min(const Vector<N, T>& a, const Vector<N, T>& b)
 {
         Vector<N, T> res;
         for (std::size_t i = 0; i < N; ++i)
@@ -385,7 +385,7 @@ template <std::size_t N, typename T>
 }
 
 template <std::size_t N, typename T>
-[[nodiscard]] T dot(const Vector<N, T>& a, const Vector<N, T>& b)
+[[nodiscard]] constexpr T dot(const Vector<N, T>& a, const Vector<N, T>& b)
 {
         T res = a[0] * b[0];
         for (std::size_t i = 1; i < N; ++i)
@@ -396,7 +396,7 @@ template <std::size_t N, typename T>
 }
 
 template <std::size_t N, typename T>
-[[nodiscard]] Vector<N, T> interpolation(const Vector<N, T>& a, const Vector<N, T>& b, const T& t)
+[[nodiscard]] constexpr Vector<N, T> interpolation(const Vector<N, T>& a, const Vector<N, T>& b, const T& t)
 {
         Vector<N, T> res;
         for (std::size_t i = 0; i < N; ++i)
@@ -488,13 +488,13 @@ template <std::size_t N, typename T>
 }
 
 template <typename T>
-[[nodiscard]] T cross(const Vector<2, T>& v0, const Vector<2, T>& v1)
+[[nodiscard]] constexpr T cross(const Vector<2, T>& v0, const Vector<2, T>& v1)
 {
         return v0[0] * v1[1] - v0[1] * v1[0];
 }
 
 template <typename T>
-[[nodiscard]] Vector<3, T> cross(const Vector<3, T>& v0, const Vector<3, T>& v1)
+[[nodiscard]] constexpr Vector<3, T> cross(const Vector<3, T>& v0, const Vector<3, T>& v1)
 {
         Vector<3, T> res;
         res[0] = v0[1] * v1[2] - v0[2] * v1[1];
