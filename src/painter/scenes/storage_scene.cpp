@@ -263,9 +263,7 @@ class Impl final : public Scene<N, T, Color>
                   background_light_(background_light),
                   shape_pointers_(to_pointers(shapes_)),
                   light_source_pointers_(to_pointers(light_sources_)),
-                  ray_offset_(
-                          (bounding_box.max() - bounding_box.min()).norm()
-                          * (RAY_OFFSET_IN_EPSILONS * Limits<T>::epsilon())),
+                  ray_offset_(bounding_box.diagonal().norm() * (RAY_OFFSET_IN_EPSILONS * Limits<T>::epsilon())),
                   tree_(create_tree(shape_pointers_, bounding_box))
         {
                 ASSERT(projector_);

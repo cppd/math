@@ -232,7 +232,7 @@ std::unique_ptr<const Scene<N, T, Color>> create_cornell_box_scene(
 template <std::size_t N, typename T>
 std::tuple<std::array<Vector<N, T>, N>, Vector<N, T>> camera_and_center(const geometry::BoundingBox<N, T>& bb)
 {
-        const T size = (bb.max() - bb.min()).norm() * T(1.5);
+        const T size = bb.diagonal().norm() * T(1.5);
 
         std::array<Vector<N, T>, N> camera;
         for (std::size_t i = 0; i < N; ++i)
@@ -245,7 +245,7 @@ std::tuple<std::array<Vector<N, T>, N>, Vector<N, T>> camera_and_center(const ge
         }
         camera[N - 1][N - 1] = -size;
 
-        Vector<N, T> center = (bb.max() + bb.min()) * T(0.5);
+        Vector<N, T> center = bb.center();
         center[N - 2] += (size - (bb.max()[N - 2] - bb.min()[N - 2])) * T(0.5);
 
         return {camera, center};

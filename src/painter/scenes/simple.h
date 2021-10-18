@@ -56,8 +56,8 @@ std::unique_ptr<const Projector<N, T>> create_projector(
         const int min_screen_size,
         const int max_screen_size)
 {
-        const Vector<N, T> object_size = bounding_box.max() - bounding_box.min();
-        const Vector<N, T> center = bounding_box.min() + object_size / T(2);
+        const Vector<N, T> object_size = bounding_box.diagonal();
+        const Vector<N, T> center = bounding_box.center();
 
         const T max_projected_object_size = [&]
         {
@@ -126,18 +126,18 @@ void create_light_sources(
         const Color& color,
         std::vector<std::unique_ptr<const LightSource<N, T, Color>>>* const light_sources)
 {
-        const Vector<N, T> box_direction = bounding_box.max() - bounding_box.min();
-        const Vector<N, T> center = bounding_box.min() + box_direction / T(2);
-        const T object_size = box_direction.norm();
+        const Vector<N, T> box_diagonal = bounding_box.diagonal();
+        const Vector<N, T> center = bounding_box.min() + box_diagonal / T(2);
+        const T object_size = box_diagonal.norm();
 
         static constexpr T DISTANCE = 100;
         static constexpr T RADIUS = DISTANCE / 100;
 
         const T distance = object_size * DISTANCE;
         const T radius = object_size * RADIUS;
-        const Vector<N, T> position = center + box_direction.normalized() * distance;
+        const Vector<N, T> position = center + box_diagonal.normalized() * distance;
 
-        auto ptr = std::make_unique<painter::BallLight<N, T, Color>>(position, -box_direction, radius, color);
+        auto ptr = std::make_unique<painter::BallLight<N, T, Color>>(position, -box_diagonal, radius, color);
         ptr->set_color_for_distance(distance);
 
         light_sources->clear();

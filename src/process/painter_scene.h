@@ -35,7 +35,7 @@ namespace painter_scene_implementation
 {
 template <typename T>
 std::unique_ptr<const painter::Projector<3, T>> create_projector(
-        const geometry::BoundingBox<3, T>& bounding_box,
+        const T& shape_size,
         const Vector<3, T>& camera_up,
         const Vector<3, T>& camera_direction,
         const Vector<3, T>& view_center,
@@ -43,9 +43,7 @@ std::unique_ptr<const painter::Projector<3, T>> create_projector(
         const int width,
         const int height)
 {
-        const T scene_size = (bounding_box.max() - bounding_box.min()).norm();
-
-        const Vector<3, T> camera_position = view_center - camera_direction * T(2) * scene_size;
+        const Vector<3, T> camera_position = view_center - camera_direction * T(2) * shape_size;
         const Vector<3, T> camera_right = cross(camera_direction, camera_up);
 
         const std::array<Vector<3, T>, 2> screen_axes{camera_right, camera_up};
@@ -59,7 +57,7 @@ std::unique_ptr<const painter::Projector<3, T>> create_projector(
 
 template <typename T, typename Color>
 void create_light_sources(
-        const painter::Shape<3, T, Color>& shape,
+        const T& shape_size,
         const Vector<3, T>& center,
         const Vector<3, T>& direction,
         const Color& color,
@@ -68,8 +66,6 @@ void create_light_sources(
         static constexpr T DISTANCE = 100;
         static constexpr T RADIUS = DISTANCE / 100;
 
-        const geometry::BoundingBox<3, T> bb = shape.bounding_box();
-        const T shape_size = (bb.max() - bb.min()).norm();
         const T distance = shape_size * DISTANCE;
         const T radius = shape_size * RADIUS;
         const Vector<3, T> position = center - direction.normalized() * distance;
@@ -103,12 +99,13 @@ std::unique_ptr<const painter::Scene<3, T, Color>> create_painter_scene(
 
         namespace impl = painter_scene_implementation;
 
-        std::unique_ptr<const painter::Projector<3, T>> projector;
-        projector = impl::create_projector(
-                shape->bounding_box(), camera_up, camera_direction, view_center, view_width, width, height);
+        const T shape_size = shape->bounding_box().diagonal().norm();
+
+        std::unique_ptr<const painter::Projector<3, T>> projector =
+                impl::create_projector(shape_size, camera_up, camera_direction, view_center, view_width, width, height);
 
         std::vector<std::unique_ptr<const painter::LightSource<3, T, Color>>> light_sources;
-        impl::create_light_sources(*shape, view_center, light_direction, light, &light_sources);
+        impl::create_light_sources(shape_size, view_center, light_direction, light, &light_sources);
 
         std::vector<std::unique_ptr<const painter::Shape<3, T, Color>>> shapes;
         shapes.push_back(std::move(shape));
