@@ -76,11 +76,19 @@ public:
                 return p;
         }
 
-        [[nodiscard]] Ray<N, T> reverse_ray() const
+        [[nodiscard]] Ray<N, T> reversed() const
         {
                 Ray<N, T> r;
                 r.org_ = org_;
                 r.dir_ = -dir_;
+                return r;
+        }
+
+        [[nodiscard]] Ray<N, T> moved(const T& t) const
+        {
+                Ray<N, T> r;
+                r.org_ = this->point(t);
+                r.dir_ = dir_;
                 return r;
         }
 };
