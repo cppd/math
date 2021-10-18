@@ -139,7 +139,7 @@ bool point_is_in_feasible_region(const Vector<N, T>& point, const std::array<Con
 {
         for (unsigned i = 0; i < COUNT; ++i)
         {
-                T r = dot(c[i].a, point) + c[i].b;
+                const T r = dot(c[i].a, point) + c[i].b;
 
                 if (!std::isfinite(r))
                 {
@@ -156,17 +156,30 @@ bool point_is_in_feasible_region(const Vector<N, T>& point, const std::array<Con
         return true;
 }
 
-template <typename RandomEngine, typename Parallelotope>
-void test_points(RandomEngine& engine, const int point_count, const Parallelotope& p)
+template <typename Parallelotope>
+std::array<Vector<Parallelotope::SPACE_DIMENSION, typename Parallelotope::DataType>, Parallelotope::SPACE_DIMENSION>
+        vectors(const Parallelotope& p)
 {
         constexpr std::size_t N = Parallelotope::SPACE_DIMENSION;
         using T = typename Parallelotope::DataType;
 
-        T length = p.length();
+        std::array<Vector<N, T>, N> res;
+        for (std::size_t i = 0; i < N; ++i)
+        {
+                res[i] = p.e(i);
+        }
+        return res;
+}
+
+template <typename RandomEngine, typename Parallelotope>
+void test_constraints(RandomEngine& engine, const int point_count, const Parallelotope& p)
+{
+        constexpr std::size_t N = Parallelotope::SPACE_DIMENSION;
+        using T = typename Parallelotope::DataType;
 
         const Constraints<N, T, 2 * N, 0> constraints = p.constraints();
 
-        for (const Vector<N, T>& point : external_points(engine, point_count, p))
+        for (const Vector<N, T>& point : external_points(p.org(), vectors(p), point_count, engine))
         {
                 if (p.inside(point))
                 {
@@ -179,7 +192,7 @@ void test_points(RandomEngine& engine, const int point_count, const Parallelotop
                 }
         }
 
-        for (const Vector<N, T>& origin : internal_points(engine, point_count, p))
+        for (const Vector<N, T>& origin : internal_points(p.org(), vectors(p), point_count, engine))
         {
                 if (!p.inside(origin))
                 {
@@ -190,52 +203,49 @@ void test_points(RandomEngine& engine, const int point_count, const Parallelotop
                 {
                         error("Constraints. Point must be inside\n" + to_string(origin));
                 }
+        }
+}
 
-                Vector<N, T> direction = random_direction<N, T>(engine);
+template <typename RandomEngine, typename Parallelotope>
+void test_intersections(RandomEngine& engine, const int point_count, const Parallelotope& p)
+{
+        constexpr std::size_t N = Parallelotope::SPACE_DIMENSION;
+        using T = typename Parallelotope::DataType;
 
-                Ray<N, T> ray_orig(origin, direction);
+        const T length = p.length();
 
-                std::optional<T> t;
-                Ray<N, T> ray;
+        for (const Vector<N, T>& point : internal_points(p.org(), vectors(p), point_count, engine))
+        {
+                const Ray<N, T> ray(point, random_direction<N, T>(engine));
 
-                ray = ray_orig;
-                t = p.intersect(ray);
-                if (!t)
                 {
-                        error("Ray must intersect\n" + to_string(ray));
+                        const Ray<N, T> r = ray;
+                        const auto t = p.intersect(r);
+                        if (!t)
+                        {
+                                error("Ray must intersect\n" + to_string(r));
+                        }
+                        if (!(*t < length))
+                        {
+                                error("Intersection out of parallelotope.\ndistance = " + to_string(*t) + ", "
+                                      + "max distance = " + to_string(length) + "\n" + to_string(r));
+                        }
                 }
-                if (*t >= length)
                 {
-                        error("Intersection out of parallelotope.\ndistance = " + to_string(*t) + ", "
-                              + "max distance = " + to_string(length) + "\n" + to_string(ray));
+                        const Ray<N, T> r = ray.moved(-10 * length);
+                        const auto t = p.intersect(r);
+                        if (!t)
+                        {
+                                error("Ray must intersect\n" + to_string(r));
+                        }
                 }
-
-                ray = Ray<N, T>(ray_orig.point(-10 * length), direction);
-                t = p.intersect(ray);
-                if (!t)
                 {
-                        error("Ray must intersect\n" + to_string(ray));
-                }
-
-                ray = Ray<N, T>(ray_orig.point(10 * length), -direction);
-                t = p.intersect(ray);
-                if (!t)
-                {
-                        error("Ray must intersect\n" + to_string(ray));
-                }
-
-                ray = Ray<N, T>(ray_orig.point(10 * length), direction);
-                t = p.intersect(ray);
-                if (t)
-                {
-                        error("Ray must not intersect\n" + to_string(ray));
-                }
-
-                ray = Ray<N, T>(ray_orig.point(-10 * length), -direction);
-                t = p.intersect(ray);
-                if (t)
-                {
-                        error("Ray must not intersect\n" + to_string(ray));
+                        const Ray<N, T> r = ray.moved(10 * length);
+                        const auto t = p.intersect(r);
+                        if (t)
+                        {
+                                error("Ray must not intersect\n" + to_string(r));
+                        }
                 }
         }
 }
@@ -312,42 +322,25 @@ void compare_parallelotopes(RandomEngine& engine, const int point_count, const P
                 verify_vectors(e, "e" + to_string(i));
         }
 
-        for (Vector<N, T> origin : cover_points(engine, point_count, std::get<0>(std::make_tuple(p...))))
+        const auto& parallelotope = *std::get<0>(std::make_tuple(&p...));
+        for (Vector<N, T> point : cover_points(parallelotope.org(), vectors(parallelotope), point_count, engine))
         {
-                std::array<bool, sizeof...(Parallelotope)> inside{p.inside(origin)...};
+                std::array<bool, sizeof...(Parallelotope)> inside{p.inside(point)...};
                 for (unsigned i = 1; i < sizeof...(Parallelotope); ++i)
                 {
                         if (inside[i] != inside[0])
                         {
-                                error("Error point inside\n" + to_string(origin));
+                                error("Error point inside\n" + to_string(point));
                         }
                 }
 
-                Vector<N, T> direction = random_direction_for_parallelotope_comparison<N, T>(engine);
-
-                Ray<N, T> ray_orig(origin, direction);
-
-                Ray<N, T> ray;
-
-                ray = Ray<N, T>(ray_orig.org(), direction);
+                const Ray<N, T> ray(point, random_direction_for_parallelotope_comparison<N, T>(engine));
 
                 verify_intersection(ray, p...);
-
-                ray = Ray<N, T>(ray_orig.point(-10 * lengths[0]), direction);
-
-                verify_intersection(ray, p...);
-
-                ray = Ray<N, T>(ray_orig.point(10 * lengths[0]), -direction);
-
-                verify_intersection(ray, p...);
-
-                ray = Ray<N, T>(ray_orig.point(10 * lengths[0]), direction);
-
-                verify_intersection(ray, p...);
-
-                ray = Ray<N, T>(ray_orig.point(-10 * lengths[0]), -direction);
-
-                verify_intersection(ray, p...);
+                verify_intersection(ray.moved(-10 * lengths[0]), p...);
+                verify_intersection(ray.moved(10 * lengths[0]), p...);
+                verify_intersection(ray.moved(10 * lengths[0]).reversed(), p...);
+                verify_intersection(ray.moved(-10 * lengths[0]).reversed(), p...);
         }
 }
 
@@ -403,7 +396,8 @@ void test_points(const int point_count)
 
                 print_message(to_string(p));
 
-                test_points(engine, point_count, p);
+                test_constraints(engine, point_count, p);
+                test_intersections(engine, point_count, p);
         }
 
         print_separator();
@@ -416,7 +410,8 @@ void test_points(const int point_count)
 
                 print_message(to_string(p));
 
-                test_points(engine, point_count, p);
+                test_constraints(engine, point_count, p);
+                test_intersections(engine, point_count, p);
         }
 
         print_separator();
