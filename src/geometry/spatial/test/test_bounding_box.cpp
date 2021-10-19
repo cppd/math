@@ -19,10 +19,13 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "../bounding_box.h"
 
+#include <src/com/benchmark.h>
+#include <src/com/chrono.h>
 #include <src/com/error.h>
 #include <src/com/log.h>
 #include <src/com/print.h>
 #include <src/com/random/engine.h>
+#include <src/com/type/name.h>
 #include <src/sampling/sphere_uniform.h>
 #include <src/test/test.h>
 
@@ -222,6 +225,73 @@ void test_bounding_box()
         LOG("Test bounding box passed");
 }
 
+//
+
+template <std::size_t N, typename T>
+double compute_intersections(const int point_count, std::mt19937_64& engine)
+{
+        const BoundingBox<N, T> box = create_random_box<N, T>(engine);
+
+        const T length = box.diagonal().norm();
+        const T move_distance = length;
+
+        const int ray_count = 3 * point_count;
+
+        std::vector<Ray<N, T>> rays;
+        rays.reserve(ray_count);
+        for (const Vector<N, T>& point : internal_points(box.min(), box_vectors(box), point_count, engine))
+        {
+                const Ray<N, T> ray(point, sampling::uniform_on_sphere<N, T>(engine));
+                rays.push_back(ray);
+                rays.push_back(ray.moved(-move_distance));
+                rays.push_back(ray.moved(move_distance));
+        }
+        ASSERT(rays.size() == static_cast<std::size_t>(ray_count));
+
+        Clock::time_point start_time = Clock::now();
+        for (const Ray<N, T>& ray : rays)
+        {
+                do_not_optimize(box.intersect(ray));
+        }
+        return rays.size() / duration_from(start_time);
+}
+
+template <std::size_t N, typename T>
+void test_performance()
+{
+        constexpr int POINT_COUNT = 100'000;
+        constexpr int COUNT = 100;
+
+        std::mt19937_64 engine = create_engine<std::mt19937_64>();
+
+        double sum = 0;
+        for (int i = 0; i < COUNT; ++i)
+        {
+                sum += compute_intersections<N, T>(POINT_COUNT, engine);
+        }
+        const long long average = std::lround(sum / COUNT);
+        LOG("Bounding box <" + to_string(N) + ", " + type_name<T>() + "> = " + to_string_digit_groups(average)
+            + " per second");
+}
+
+template <typename T>
+void test_performance()
+{
+        test_performance<2, T>();
+        test_performance<3, T>();
+        test_performance<4, T>();
+        test_performance<5, T>();
+}
+
+void test_bounding_box_performance()
+{
+        test_performance<float>();
+        test_performance<double>();
+}
+
+//
+
 TEST_SMALL("Bounding box", test_bounding_box)
+TEST_PERFORMANCE("Bounding box", test_bounding_box_performance)
 }
 }
