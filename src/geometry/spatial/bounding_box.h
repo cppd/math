@@ -17,9 +17,11 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
+#include <src/numerical/ray.h>
 #include <src/numerical/vec.h>
 
 #include <array>
+#include <optional>
 
 namespace ns::geometry
 {
@@ -28,9 +30,6 @@ class BoundingBox final
 {
         static_assert(N >= 1);
         static_assert(std::is_floating_point_v<T>);
-
-        Vector<N, T> min_;
-        Vector<N, T> max_;
 
         template <std::size_t M>
         static constexpr T volume(const Vector<N, T>& d)
@@ -72,6 +71,61 @@ class BoundingBox final
                 {
                         return volume<M - 1>(d) + d[M - 1] * surface<M - 1>(d);
                 }
+        }
+
+        Vector<N, T> min_;
+        Vector<N, T> max_;
+
+        bool intersect(const Ray<N, T>& r, T* const first, T* const second) const
+        {
+                T near = 0;
+                T far = Limits<T>::max();
+
+                for (unsigned i = 0; i < N; ++i)
+                {
+                        T s = r.dir()[i];
+                        if (s == 0)
+                        {
+                                // parallel to the planes
+                                T d = r.org()[i];
+                                if (d < min_[i] || d > max_[i])
+                                {
+                                        // outside the planes
+                                        return false;
+                                }
+                                // inside the planes
+                                continue;
+                        }
+
+                        T d = r.org()[i];
+                        T alpha1 = (min_[i] - d) / s;
+                        T alpha2 = (max_[i] - d) / s;
+
+                        if (s > 0)
+                        {
+                                // front intersection for the first plane
+                                // back intersection for the second plane
+                                near = std::max(alpha1, near);
+                                far = std::min(alpha2, far);
+                        }
+                        else
+                        {
+                                // front intersection for the second plane
+                                // back intersection for the first plane
+                                near = std::max(alpha2, near);
+                                far = std::min(alpha1, far);
+                        }
+
+                        if (far < near)
+                        {
+                                return false;
+                        }
+                }
+
+                *first = near;
+                *second = far;
+
+                return true;
         }
 
 public:
@@ -124,6 +178,17 @@ public:
                 return surface<N>(diagonal());
         }
 
+        [[nodiscard]] std::optional<T> intersect(const Ray<N, T>& r) const
+        {
+                T first;
+                T second;
+                if (intersect(r, &first, &second))
+                {
+                        return (first > 0) ? first : second;
+                }
+                return std::nullopt;
+        }
+
         constexpr void merge(const BoundingBox<N, T>& v)
         {
                 min_ = ::ns::min(min_, v.min_);
@@ -136,4 +201,13 @@ public:
                 max_ = ::ns::max(max_, v);
         }
 };
+}
+
+namespace ns
+{
+template <std::size_t N, typename T>
+std::string to_string(const geometry::BoundingBox<N, T>& box)
+{
+        return "(min " + to_string(box.min()) + ", max = " + to_string(box.max()) + ")";
+}
 }
