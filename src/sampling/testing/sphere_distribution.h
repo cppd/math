@@ -130,10 +130,8 @@ class SphereDistribution final
                 }
 
                 {
-                        long long intersection_count = 0;
-                        long long missed_intersection_count = 0;
-
                         std::vector<std::future<std::array<long long, 2>>> futures;
+
                         std::vector<std::thread> threads;
                         for (std::vector<SphereBucket<N, T>>& buckets : thread_buckets)
                         {
@@ -145,6 +143,9 @@ class SphereDistribution final
                         {
                                 thread.join();
                         }
+
+                        long long intersection_count = 0;
+                        long long missed_intersection_count = 0;
                         for (std::future<std::array<long long, 2>>& future : futures)
                         {
                                 const auto [intersections, missed_intersections] = future.get();

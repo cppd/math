@@ -20,6 +20,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "angle_distribution.h"
 #include "sphere_distribution.h"
 
+#include <src/com/benchmark.h>
 #include <src/com/chrono.h>
 #include <src/com/error.h>
 #include <src/com/log.h>
@@ -214,41 +215,40 @@ void test_performance(
                 impl::log(s);
         }
 
-        const auto f = [&](Vector<N, T>* sink) -> long long
+        const auto f = [&]() -> long long
         {
                 RandomEngine random_engine = create_engine<RandomEngine>();
                 const Clock::time_point start_time = Clock::now();
                 for (long long i = 0; i < count; ++i)
                 {
-                        *sink = random_vector(random_engine);
+                        do_not_optimize(random_vector(random_engine));
                 }
                 return std::lround(count / duration_from(start_time));
         };
 
-        long long performance = 0;
-
         const int max_thread_count = hardware_concurrency();
         const int thread_count = std::clamp(max_thread_count - 1, 1, 2);
 
-        std::vector<Vector<N, T>> sinks(thread_count);
         std::vector<std::future<long long>> futures;
+
         std::vector<std::thread> threads;
         for (int i = 0; i < thread_count; ++i)
         {
-                std::packaged_task<long long(Vector<N, T>*)> task(f);
+                std::packaged_task<long long()> task(f);
                 futures.emplace_back(task.get_future());
-                threads.emplace_back(std::move(task), &sinks[i]);
+                threads.emplace_back(std::move(task));
         }
         for (std::thread& thread : threads)
         {
                 thread.join();
         }
+
+        long long performance = 0;
         for (std::future<long long>& future : futures)
         {
                 performance += future.get();
         }
-
-        performance /= thread_count;
+        performance /= futures.size();
 
         impl::log("performance " + to_string_digit_groups(performance) + " per second");
 }
