@@ -24,4 +24,7 @@ void do_not_optimize(const T& v)
 {
         asm volatile("" : : "r,m"(v) : "memory");
 }
+
+template <typename T>
+void do_not_optimize(T&) = delete;
 }
