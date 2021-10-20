@@ -30,6 +30,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/test/test.h>
 
 #include <cmath>
+#include <limits>
 #include <random>
 
 namespace ns::geometry::spatial::test
@@ -99,6 +100,19 @@ BoundingBox<N, T> create_random_box(std::mt19937_64& engine)
 }
 
 template <std::size_t N, typename T>
+Vector<N, T> create_random_direction(const std::type_identity_t<T>& probability, std::mt19937_64& engine)
+{
+        if (std::bernoulli_distribution(probability)(engine))
+        {
+                return sampling::uniform_on_sphere<N, T>(engine);
+        }
+        const std::size_t n = std::uniform_int_distribution<std::size_t>(0, N - 1)(engine);
+        Vector<N, T> v(0);
+        v[n] = 1;
+        return v;
+}
+
+template <std::size_t N, typename T>
 std::array<Vector<N, T>, N> box_vectors(const BoundingBox<N, T>& box)
 {
         const Vector<N, T> diagonal = box.diagonal();
@@ -132,6 +146,98 @@ bool is_on_box(const BoundingBox<N, T>& box, const Vector<N, T>& point, const T&
 }
 
 template <std::size_t N, typename T>
+void test_intersection_1(const BoundingBox<N, T>& box, const Ray<N, T>& ray, const T& length, const T& precision)
+{
+        const Ray<N, T> r = ray;
+        const auto t = box.intersect(r);
+        if (!t)
+        {
+                std::string s;
+                s += "Ray must intersect, inside\n";
+                s += "box " + to_string(box) + "\n";
+                s += "ray " + to_string(r);
+                error(s);
+        }
+        if (!(*t > 0 && *t < length))
+        {
+                std::string s;
+                s += "Intersection out of bounding box, inside\n";
+                s += "distance = " + to_string(*t) + ", max distance = " + to_string(length) + "\n";
+                s += "box " + to_string(box) + "\n";
+                s += "ray " + to_string(r);
+                error(s);
+        }
+
+        const Vector<N, T> p = r.point(*t);
+        if (!is_on_box(box, p, precision))
+        {
+                std::string s;
+                s += "Intersection out of bounding box, inside\n";
+                s += "intersection point = " + to_string(p) + "\n";
+                s += "box " + to_string(box) + "\n";
+                s += "ray " + to_string(r);
+                error(s);
+        }
+}
+
+template <std::size_t N, typename T>
+void test_intersection_2(
+        const BoundingBox<N, T>& box,
+        const Ray<N, T>& ray,
+        const T& precision,
+        const T& move_distance,
+        const T& move_min,
+        const T& move_max)
+{
+        const Ray<N, T> r = ray.moved(-move_distance);
+        const auto t = box.intersect(r);
+        if (!t)
+        {
+                std::string s;
+                s += "Ray must intersect, outside\n";
+                s += "box " + to_string(box) + "\n";
+                s += "ray " + to_string(r);
+                error(s);
+        }
+        if (!(*t > move_min && *t < move_max))
+        {
+                std::string s;
+                s += "Intersection out of bounding box, outside\n";
+                s += "distance = " + to_string(*t) + ", " + "min distance = " + to_string(move_min)
+                     + ", max distance = " + to_string(move_max) + "\n";
+                s += "box " + to_string(box) + "\n";
+                s += "ray " + to_string(r);
+                error(s);
+        }
+
+        const Vector<N, T> p = r.point(*t);
+        if (!is_on_box(box, p, precision))
+        {
+                std::string s;
+                s += "Intersection out of bounding box, outside\n";
+                s += "intersection point = " + to_string(p) + "\n";
+                s += "box " + to_string(box) + "\n";
+                s += "ray " + to_string(r);
+                error(s);
+        }
+}
+
+template <std::size_t N, typename T>
+void test_intersection_3(const BoundingBox<N, T>& box, const Ray<N, T>& ray, const T& move_distance)
+{
+        const Ray<N, T> r = ray.moved(move_distance);
+        const auto t = box.intersect(r);
+        if (t)
+        {
+                std::string s;
+                s += "Ray must not intersect\n";
+                s += "box " + to_string(box) + "\n";
+                s += "ray " + to_string(r);
+                error(s);
+        }
+}
+
+template <std::size_t N, typename T>
 void test_intersections(
         const BoundingBox<N, T>& box,
         const int point_count,
@@ -142,72 +248,37 @@ void test_intersections(
         const T move_distance = 2 * length;
         const T move_min = length;
         const T move_max = 2 * length;
+        const T random_direction_probability = 1 - T(1) / point_count;
 
         for (const Vector<N, T>& point : internal_points(box.min(), box_vectors(box), point_count, engine))
         {
-                const Ray<N, T> ray(point, sampling::uniform_on_sphere<N, T>(engine));
+                const Ray<N, T> ray(point, create_random_direction<N, T>(random_direction_probability, engine));
 
-                {
-                        const Ray<N, T> r = ray;
-                        const auto t = box.intersect(r);
-                        if (!t)
-                        {
-                                error("Ray must intersect, inside\nbox " + to_string(box) + "\nray " + to_string(r));
-                        }
-                        if (!(*t > 0 && *t < length))
-                        {
-                                error("Intersection out of bounding box, inside\ndistance = " + to_string(*t) + ", "
-                                      + "max distance = " + to_string(length) + "\nbox " + to_string(box) + "\nray "
-                                      + to_string(r));
-                        }
-
-                        const Vector<N, T> p = r.point(*t);
-                        if (!is_on_box(box, p, precision))
-                        {
-                                error("Intersection out of bounding box, inside\nintersection point = " + to_string(p)
-                                      + "\nbox " + to_string(box) + "\nray " + to_string(r));
-                        }
-                }
-                {
-                        const Ray<N, T> r = ray.moved(-move_distance);
-                        const auto t = box.intersect(r);
-                        if (!t)
-                        {
-                                error("Ray must intersect, outside\nbox " + to_string(box) + "\nray " + to_string(r));
-                        }
-                        if (!(*t > move_min && *t < move_max))
-                        {
-                                error("Intersection out of bounding box, outside\ndistance = " + to_string(*t) + ", "
-                                      + "min distance = " + to_string(move_min) + ", " + "max distance = "
-                                      + to_string(move_max) + "\nbox " + to_string(box) + "\nray " + to_string(r));
-                        }
-                        const Vector<N, T> p = r.point(*t);
-                        if (!is_on_box(box, p, precision))
-                        {
-                                error("Intersection out of bounding box, outside\nintersection point = " + to_string(p)
-                                      + "\nbox " + to_string(box) + "\nray " + to_string(r));
-                        }
-                }
-                {
-                        const Ray<N, T> r = ray.moved(move_distance);
-                        const auto t = box.intersect(r);
-                        if (t)
-                        {
-                                error("Ray must not intersect\n" + to_string(r));
-                        }
-                }
+                test_intersection_1(box, ray, length, precision);
+                test_intersection_2(box, ray, precision, move_distance, move_min, move_max);
+                test_intersection_3(box, ray, move_distance);
         }
 }
 
 template <std::size_t N, typename T>
-void test(const int point_count, const T& precision, std::mt19937_64& engine)
+void test(const int point_count, const std::type_identity_t<T>& precision, std::mt19937_64& engine)
 {
-        test_intersections(create_random_box<N, T>(engine), point_count, precision, engine);
+        const BoundingBox<N, T> box = create_random_box<N, T>(engine);
+        test_intersections(box, point_count, precision, engine);
 }
 
 template <typename T>
-void test(const int point_count, const T& precision, std::mt19937_64& engine)
+void test(const int point_count, const std::type_identity_t<T>& precision, std::mt19937_64& engine)
 {
+        if (!(std::min<T>(1, std::numeric_limits<T>::quiet_NaN()) == 1))
+        {
+                error("std::min with NaN does not return the first argument");
+        }
+        if (!(std::max<T>(1, std::numeric_limits<T>::quiet_NaN()) == 1))
+        {
+                error("std::max with NaN does not return the first argument");
+        }
+
         test<2, T>(point_count, precision, engine);
         test<3, T>(point_count, precision, engine);
         test<4, T>(point_count, precision, engine);
