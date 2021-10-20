@@ -146,36 +146,40 @@ bool is_on_box(const BoundingBox<N, T>& box, const Vector<N, T>& point, const T&
 }
 
 template <std::size_t N, typename T>
-void test_intersection_1(const BoundingBox<N, T>& box, const Ray<N, T>& ray, const T& length, const T& precision)
+void test_intersection_1(
+        const BoundingBox<N, T>& box,
+        const Ray<N, T>& ray,
+        const std::optional<T>& t,
+        const T& length,
+        const T& precision)
 {
-        const Ray<N, T> r = ray;
-        const auto t = box.intersect(r);
         if (!t)
         {
                 std::string s;
                 s += "Ray must intersect, inside\n";
                 s += "box " + to_string(box) + "\n";
-                s += "ray " + to_string(r);
+                s += "ray " + to_string(ray);
                 error(s);
         }
+
         if (!(*t > 0 && *t < length))
         {
                 std::string s;
                 s += "Intersection out of bounding box, inside\n";
                 s += "distance = " + to_string(*t) + ", max distance = " + to_string(length) + "\n";
                 s += "box " + to_string(box) + "\n";
-                s += "ray " + to_string(r);
+                s += "ray " + to_string(ray);
                 error(s);
         }
 
-        const Vector<N, T> p = r.point(*t);
+        const Vector<N, T> p = ray.point(*t);
         if (!is_on_box(box, p, precision))
         {
                 std::string s;
                 s += "Intersection out of bounding box, inside\n";
                 s += "intersection point = " + to_string(p) + "\n";
                 s += "box " + to_string(box) + "\n";
-                s += "ray " + to_string(r);
+                s += "ray " + to_string(ray);
                 error(s);
         }
 }
@@ -184,21 +188,20 @@ template <std::size_t N, typename T>
 void test_intersection_2(
         const BoundingBox<N, T>& box,
         const Ray<N, T>& ray,
-        const T& precision,
-        const T& move_distance,
+        const std::optional<T>& t,
         const T& move_min,
-        const T& move_max)
+        const T& move_max,
+        const T& precision)
 {
-        const Ray<N, T> r = ray.moved(-move_distance);
-        const auto t = box.intersect(r);
         if (!t)
         {
                 std::string s;
                 s += "Ray must intersect, outside\n";
                 s += "box " + to_string(box) + "\n";
-                s += "ray " + to_string(r);
+                s += "ray " + to_string(ray);
                 error(s);
         }
+
         if (!(*t > move_min && *t < move_max))
         {
                 std::string s;
@@ -206,35 +209,46 @@ void test_intersection_2(
                 s += "distance = " + to_string(*t) + ", " + "min distance = " + to_string(move_min)
                      + ", max distance = " + to_string(move_max) + "\n";
                 s += "box " + to_string(box) + "\n";
-                s += "ray " + to_string(r);
+                s += "ray " + to_string(ray);
                 error(s);
         }
 
-        const Vector<N, T> p = r.point(*t);
+        const Vector<N, T> p = ray.point(*t);
         if (!is_on_box(box, p, precision))
         {
                 std::string s;
                 s += "Intersection out of bounding box, outside\n";
                 s += "intersection point = " + to_string(p) + "\n";
                 s += "box " + to_string(box) + "\n";
-                s += "ray " + to_string(r);
+                s += "ray " + to_string(ray);
                 error(s);
         }
 }
 
 template <std::size_t N, typename T>
-void test_intersection_3(const BoundingBox<N, T>& box, const Ray<N, T>& ray, const T& move_distance)
+void test_no_intersection(const BoundingBox<N, T>& box, const Ray<N, T>& ray, const std::optional<T>& t)
 {
-        const Ray<N, T> r = ray.moved(move_distance);
-        const auto t = box.intersect(r);
-        if (t)
+        if (!t)
         {
-                std::string s;
-                s += "Ray must not intersect\n";
-                s += "box " + to_string(box) + "\n";
-                s += "ray " + to_string(r);
-                error(s);
+                return;
         }
+
+        std::string s;
+        s += "Ray must not intersect\n";
+        s += "box " + to_string(box) + "\n";
+        s += "ray " + to_string(ray);
+        error(s);
+}
+
+template <std::size_t N, typename T>
+Vector<N, bool> non_negative(const Vector<N, T>& v)
+{
+        Vector<N, bool> res;
+        for (std::size_t i = 0; i < N; ++i)
+        {
+                res[i] = (v[i] >= 0);
+        }
+        return res;
 }
 
 template <std::size_t N, typename T>
@@ -254,9 +268,27 @@ void test_intersections(
         {
                 const Ray<N, T> ray(point, create_random_direction<N, T>(random_direction_probability, engine));
 
-                test_intersection_1(box, ray, length, precision);
-                test_intersection_2(box, ray, precision, move_distance, move_min, move_max);
-                test_intersection_3(box, ray, move_distance);
+                {
+                        const Ray<N, T> r = ray;
+                        test_intersection_1(box, r, box.intersect(r), length, precision);
+                        test_intersection_1(
+                                box, r, box.intersect(r.org(), reciprocal(r.dir()), non_negative(r.dir())), length,
+                                precision);
+                }
+
+                {
+                        const Ray<N, T> r = ray.moved(-move_distance);
+                        test_intersection_2(box, r, box.intersect(r), move_min, move_max, precision);
+                        test_intersection_2(
+                                box, r, box.intersect(r.org(), reciprocal(r.dir()), non_negative(r.dir())), move_min,
+                                move_max, precision);
+                }
+                {
+                        const Ray<N, T> r = ray.moved(move_distance);
+                        test_no_intersection(box, r, box.intersect(r));
+                        test_no_intersection(
+                                box, r, box.intersect(r.org(), reciprocal(r.dir()), non_negative(r.dir())));
+                }
         }
 }
 
@@ -299,15 +331,14 @@ void test_bounding_box()
 //
 
 template <std::size_t N, typename T>
-double compute_intersections(const int point_count, std::mt19937_64& engine)
+std::vector<Ray<N, T>> rays_for_intersections(
+        const BoundingBox<N, T>& box,
+        const int point_count,
+        std::mt19937_64& engine)
 {
-        const BoundingBox<N, T> box = create_random_box<N, T>(engine);
-
         const T length = box.diagonal().norm();
         const T move_distance = length;
-
         const int ray_count = 3 * point_count;
-
         std::vector<Ray<N, T>> rays;
         rays.reserve(ray_count);
         for (const Vector<N, T>& point : internal_points(box.min(), box_vectors(box), point_count, engine))
@@ -318,45 +349,152 @@ double compute_intersections(const int point_count, std::mt19937_64& engine)
                 rays.push_back(ray.moved(move_distance));
         }
         ASSERT(rays.size() == static_cast<std::size_t>(ray_count));
+        return rays;
+}
 
-        Clock::time_point start_time = Clock::now();
+template <std::size_t N, typename T>
+std::vector<Vector<N, T>> ray_orgs(const std::vector<Ray<N, T>>& rays)
+{
+        std::vector<Vector<N, T>> res;
+        res.reserve(rays.size());
         for (const Ray<N, T>& ray : rays)
         {
-                do_not_optimize(box.intersect(ray));
+                res.push_back(ray.org());
         }
+        return res;
+}
+
+template <std::size_t N, typename T>
+std::vector<Vector<N, T>> ray_reciprocal_directions(const std::vector<Ray<N, T>>& rays)
+{
+        std::vector<Vector<N, T>> res;
+        res.reserve(rays.size());
+        for (const Ray<N, T>& ray : rays)
+        {
+                res.push_back(reciprocal(ray.dir()));
+        }
+        return res;
+}
+
+template <std::size_t N, typename T>
+std::vector<Vector<N, bool>> ray_non_negative_directions(const std::vector<Ray<N, T>>& rays)
+{
+        std::vector<Vector<N, bool>> res;
+        res.reserve(rays.size());
+        for (const Ray<N, T>& ray : rays)
+        {
+                res.push_back(non_negative(ray.dir()));
+        }
+        return res;
+}
+
+template <std::size_t N, typename T>
+double compute_intersections_per_second(const int point_count, std::mt19937_64& engine)
+{
+        const BoundingBox<N, T> box = create_random_box<N, T>(engine);
+        const std::vector<Ray<N, T>> rays = rays_for_intersections(box, point_count, engine);
+        const auto f = [&]
+        {
+                for (const Ray<N, T>& ray : rays)
+                {
+                        do_not_optimize(box.intersect(ray));
+                }
+        };
+        f();
+        Clock::time_point start_time = Clock::now();
+        f();
         return rays.size() / duration_from(start_time);
+}
+
+template <std::size_t N, typename T>
+double compute_intersections_r_per_second(const int point_count, std::mt19937_64& engine)
+{
+        const BoundingBox<N, T> box = create_random_box<N, T>(engine);
+        const std::vector<Ray<N, T>> rays = rays_for_intersections(box, point_count, engine);
+        const std::vector<Vector<N, T>> orgs = ray_orgs(rays);
+        const std::vector<Vector<N, T>> r_dirs = ray_reciprocal_directions(rays);
+        const std::vector<Vector<N, bool>> non_negative = ray_non_negative_directions(rays);
+        const std::size_t n = rays.size();
+        const auto f = [&]
+        {
+                for (std::size_t i = 0; i < n; ++i)
+                {
+                        do_not_optimize(box.intersect(orgs[i], r_dirs[i], non_negative[i]));
+                }
+        };
+        f();
+        Clock::time_point start_time = Clock::now();
+        f();
+        return rays.size() / duration_from(start_time);
+}
+
+template <typename F>
+double average(const int count, const F& f)
+{
+        double sum = 0;
+        for (int i = 0; i < count; ++i)
+        {
+                sum += f();
+        }
+        return sum / count;
+}
+
+template <std::size_t N, typename T>
+double compute_intersections_per_second()
+{
+        constexpr int AVERAGE_COUNT = 100;
+        constexpr int POINT_COUNT = 100'000;
+        std::mt19937_64 engine = create_engine<std::mt19937_64>();
+        return average(
+                AVERAGE_COUNT,
+                [&]
+                {
+                        return compute_intersections_per_second<N, T>(POINT_COUNT, engine);
+                });
+}
+
+template <std::size_t N, typename T>
+double compute_intersections_r_per_second()
+{
+        constexpr int AVERAGE_COUNT = 100;
+        constexpr int POINT_COUNT = 100'000;
+        std::mt19937_64 engine = create_engine<std::mt19937_64>();
+        return average(
+                AVERAGE_COUNT,
+                [&]
+                {
+                        return compute_intersections_r_per_second<N, T>(POINT_COUNT, engine);
+                });
 }
 
 template <std::size_t N, typename T>
 void test_performance()
 {
-        constexpr int POINT_COUNT = 100'000;
-        constexpr int COUNT = 100;
+        const long long p_1 = std::lround(compute_intersections_per_second<N, T>());
+        LOG("<" + to_string(N) + ", " + type_name<T>() + ">, #1 = " + to_string_digit_groups(p_1)
+            + " intersections per second");
 
-        std::mt19937_64 engine = create_engine<std::mt19937_64>();
-
-        double sum = 0;
-        for (int i = 0; i < COUNT; ++i)
-        {
-                sum += compute_intersections<N, T>(POINT_COUNT, engine);
-        }
-        const long long average = std::lround(sum / COUNT);
-        LOG("Bounding box <" + to_string(N) + ", " + type_name<T>() + "> = " + to_string_digit_groups(average)
-            + " per second");
+        const long long p_2 = std::lround(compute_intersections_r_per_second<N, T>());
+        LOG("<" + to_string(N) + ", " + type_name<T>() + ">, #2 = " + to_string_digit_groups(p_2)
+            + " intersections per second");
 }
 
 template <typename T>
 void test_performance()
 {
         test_performance<2, T>();
+        LOG("");
         test_performance<3, T>();
+        LOG("");
         test_performance<4, T>();
+        LOG("");
         test_performance<5, T>();
 }
 
 void test_bounding_box_performance()
 {
         test_performance<float>();
+        LOG("");
         test_performance<double>();
 }
 

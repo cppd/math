@@ -86,53 +86,79 @@ class BoundingBox final
         Vector<N, T> min_;
         Vector<N, T> max_;
 
+        static_assert(Limits<T>::is_iec559());
+
+        // std::min and std::max return the first argument if the second argument is NaN
+        // if direction == 0 then alpha1 and alpha2 have values
+        //   (infinity, infinity) -> near=infinity, far=far -> return false
+        //   (NaN, infinity) -> near=near, far=far -> continue
+        //   (-infinity, infinity) -> near=near, far=far -> continue
+        //   (-infinity, NaN) -> near=near, far=far -> continue
+        //   (-infinity, -infinity) -> near=near, far=-infinity -> return false
+
         bool intersect(const Ray<N, T>& ray, T* const first, T* const second) const
         {
-                static_assert(Limits<T>::is_iec559());
-
                 T near = 0;
                 T far = Limits<T>::max();
-
                 for (std::size_t i = 0; i < N; ++i)
                 {
                         const T dir = ray.dir()[i];
-                        const T org = ray.org()[i];
+                        const T d = ray.org()[i];
                         const T r = 1 / dir;
-                        const T alpha1 = (min_[i] - org) * r;
-                        const T alpha2 = (max_[i] - org) * r;
-
-                        // std::min and std::max return the first argument if the second argument is NaN
-                        // if dir == 0 then alpha1 and alpha2 have values
-                        //   (infinity, infinity) -> near=infinity, far=far -> return false
-                        //   (NaN, infinity) -> near=near, far=far -> continue
-                        //   (-infinity, infinity) -> near=near, far=far -> continue
-                        //   (-infinity, NaN) -> near=near, far=far -> continue
-                        //   (-infinity, -infinity) -> near=near, far=-infinity -> return false
-
+                        const T alpha1 = (min_[i] - d) * r;
+                        const T alpha2 = (max_[i] - d) * r;
                         if (dir >= 0)
                         {
-                                // front intersection for the first plane
-                                // back intersection for the second plane
                                 near = std::max(near, alpha1);
                                 far = std::min(far, alpha2);
                         }
                         else
                         {
-                                // front intersection for the second plane
-                                // back intersection for the first plane
                                 near = std::max(near, alpha2);
                                 far = std::min(far, alpha1);
                         }
-
                         if (far < near)
                         {
                                 return false;
                         }
                 }
-
                 *first = near;
                 *second = far;
+                return true;
+        }
 
+        bool intersect(
+                const Vector<N, T>& org,
+                const Vector<N, T>& dir_r,
+                const Vector<N, bool>& dir_r_is_non_negative,
+                T* const first,
+                T* const second) const
+        {
+                T near = 0;
+                T far = Limits<T>::max();
+                for (std::size_t i = 0; i < N; ++i)
+                {
+                        const T d = org[i];
+                        const T r = dir_r[i];
+                        const T alpha1 = (min_[i] - d) * r;
+                        const T alpha2 = (max_[i] - d) * r;
+                        if (dir_r_is_non_negative[i])
+                        {
+                                near = std::max(near, alpha1);
+                                far = std::min(far, alpha2);
+                        }
+                        else
+                        {
+                                near = std::max(near, alpha2);
+                                far = std::min(far, alpha1);
+                        }
+                        if (far < near)
+                        {
+                                return false;
+                        }
+                }
+                *first = near;
+                *second = far;
                 return true;
         }
 
@@ -191,6 +217,20 @@ public:
                 T first;
                 T second;
                 if (intersect(r, &first, &second))
+                {
+                        return (first > 0) ? first : second;
+                }
+                return std::nullopt;
+        }
+
+        [[nodiscard]] std::optional<T> intersect(
+                const Vector<N, T>& org,
+                const Vector<N, T>& dir_r,
+                const Vector<N, bool>& dir_r_is_non_negative) const
+        {
+                T first;
+                T second;
+                if (intersect(org, dir_r, dir_r_is_non_negative, &first, &second))
                 {
                         return (first > 0) ? first : second;
                 }
