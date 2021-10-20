@@ -15,8 +15,18 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
+/*
+Matt Pharr, Wenzel Jakob, Greg Humphreys.
+Physically Based Rendering. From theory to implementation. Third edition.
+Elsevier, 2017.
+
+2.6 Bounding boxes
+3.1.2 Ray–bounds intersections
+*/
+
 #pragma once
 
+#include <src/com/type/limit.h>
 #include <src/numerical/ray.h>
 #include <src/numerical/vec.h>
 
@@ -76,44 +86,42 @@ class BoundingBox final
         Vector<N, T> min_;
         Vector<N, T> max_;
 
-        bool intersect(const Ray<N, T>& r, T* const first, T* const second) const
+        bool intersect(const Ray<N, T>& ray, T* const first, T* const second) const
         {
+                static_assert(Limits<T>::is_iec559());
+
                 T near = 0;
                 T far = Limits<T>::max();
 
-                for (unsigned i = 0; i < N; ++i)
+                for (std::size_t i = 0; i < N; ++i)
                 {
-                        T s = r.dir()[i];
-                        if (s == 0)
-                        {
-                                // parallel to the planes
-                                T d = r.org()[i];
-                                if (d < min_[i] || d > max_[i])
-                                {
-                                        // outside the planes
-                                        return false;
-                                }
-                                // inside the planes
-                                continue;
-                        }
+                        const T dir = ray.dir()[i];
+                        const T org = ray.org()[i];
+                        const T r = 1 / dir;
+                        const T alpha1 = (min_[i] - org) * r;
+                        const T alpha2 = (max_[i] - org) * r;
 
-                        T d = r.org()[i];
-                        T alpha1 = (min_[i] - d) / s;
-                        T alpha2 = (max_[i] - d) / s;
+                        // std::min and std::max return the first argument if the second argument is NaN
+                        // if dir == 0 then alpha1 and alpha2 have values
+                        //   (infinity, infinity) -> near=infinity, far=far -> return false
+                        //   (NaN, infinity) -> near=near, far=far -> continue
+                        //   (-infinity, infinity) -> near=near, far=far -> continue
+                        //   (-infinity, NaN) -> near=near, far=far -> continue
+                        //   (-infinity, -infinity) -> near=near, far=-infinity -> return false
 
-                        if (s > 0)
+                        if (dir >= 0)
                         {
                                 // front intersection for the first plane
                                 // back intersection for the second plane
-                                near = std::max(alpha1, near);
-                                far = std::min(alpha2, far);
+                                near = std::max(near, alpha1);
+                                far = std::min(far, alpha2);
                         }
                         else
                         {
                                 // front intersection for the second plane
                                 // back intersection for the first plane
-                                near = std::max(alpha2, near);
-                                far = std::min(alpha1, far);
+                                near = std::max(near, alpha2);
+                                far = std::min(far, alpha1);
                         }
 
                         if (far < near)
