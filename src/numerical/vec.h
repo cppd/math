@@ -407,6 +407,17 @@ template <std::size_t N, typename T>
 }
 
 template <std::size_t N, typename T>
+[[nodiscard]] constexpr Vector<N, T> reciprocal(const Vector<N, T>& a)
+{
+        Vector<N, T> res;
+        for (std::size_t i = 0; i < N; ++i)
+        {
+                res[i] = 1 / a[i];
+        }
+        return res;
+}
+
+template <std::size_t N, typename T>
 [[nodiscard]] bool is_finite(const Vector<N, T>& data) requires(std::is_floating_point_v<T>)
 {
         for (std::size_t i = 0; i < N; ++i)
