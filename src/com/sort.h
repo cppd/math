@@ -34,34 +34,32 @@ void swap_sort(T& a, T& b)
 }
 }
 
-template <typename T, std::size_t N>
-std::array<T, N>&& sort(std::array<T, N>&& v)
+template <typename T>
+T&& sort(T&& v) requires(std::tuple_size_v<std::remove_reference_t<T>> >= 6)
 {
-        static_assert(N >= 6);
-
         std::sort(v.begin(), v.end());
 
-        return std::move(v);
+        return std::forward<T>(v);
 }
 
 template <typename T>
-std::array<T, 1>&& sort(std::array<T, 1>&& v)
+T&& sort(T&& v) requires(std::tuple_size_v<std::remove_reference_t<T>> == 1)
 {
-        return std::move(v);
+        return std::forward<T>(v);
 }
 
 template <typename T>
-std::array<T, 2>&& sort(std::array<T, 2>&& v)
+T&& sort(T&& v) requires(std::tuple_size_v<std::remove_reference_t<T>> == 2)
 {
         namespace impl = sort_implementation;
 
         impl::swap_sort(v[0], v[1]);
 
-        return std::move(v);
+        return std::forward<T>(v);
 }
 
 template <typename T>
-std::array<T, 3>&& sort(std::array<T, 3>&& v)
+T&& sort(T&& v) requires(std::tuple_size_v<std::remove_reference_t<T>> == 3)
 {
         namespace impl = sort_implementation;
 
@@ -69,11 +67,11 @@ std::array<T, 3>&& sort(std::array<T, 3>&& v)
         impl::swap_sort(v[0], v[2]);
         impl::swap_sort(v[1], v[2]);
 
-        return std::move(v);
+        return std::forward<T>(v);
 }
 
 template <typename T>
-std::array<T, 4>&& sort(std::array<T, 4>&& v)
+T&& sort(T&& v) requires(std::tuple_size_v<std::remove_reference_t<T>> == 4)
 {
         namespace impl = sort_implementation;
 
@@ -83,11 +81,11 @@ std::array<T, 4>&& sort(std::array<T, 4>&& v)
         impl::swap_sort(v[1], v[3]);
         impl::swap_sort(v[1], v[2]);
 
-        return std::move(v);
+        return std::forward<T>(v);
 }
 
 template <typename T>
-std::array<T, 5>&& sort(std::array<T, 5>&& v)
+T&& sort(T&& v) requires(std::tuple_size_v<std::remove_reference_t<T>> == 5)
 {
         namespace impl = sort_implementation;
 
@@ -101,6 +99,6 @@ std::array<T, 5>&& sort(std::array<T, 5>&& v)
         impl::swap_sort(v[1], v[3]);
         impl::swap_sort(v[1], v[2]);
 
-        return std::move(v);
+        return std::forward<T>(v);
 }
 }
