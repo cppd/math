@@ -16,6 +16,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
 #include "../parallelotope_uniform.h"
+#include "../simplex_uniform.h"
 #include "../sj_sampler.h"
 #include "../sphere_uniform.h"
 
@@ -122,6 +123,24 @@ void write_samples_to_files()
                         T v_length_square;
                         impl::uniform_in_sphere_by_normal_distribution(random_engine, v, v_length_square);
                         return v;
+                });
+
+        write_samples_to_file<N, T>(
+                "in simplex", COUNT,
+                [&]()
+                {
+                        static const std::array<Vector<N, T>, N + 1> vertices = []
+                        {
+                                std::array<Vector<N, T>, N + 1> res;
+                                for (std::size_t i = 0; i < N; ++i)
+                                {
+                                        res[i] = Vector<N, T>(0);
+                                        res[i][i] = 1;
+                                }
+                                res[N] = Vector<N, T>(1 / std::sqrt(T(N)));
+                                return res;
+                        }();
+                        return uniform_in_simplex(vertices, random_engine);
                 });
 
         std::vector<Vector<N, T>> samples;
