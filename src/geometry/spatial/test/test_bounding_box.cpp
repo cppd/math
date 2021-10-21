@@ -241,12 +241,12 @@ void test_no_intersection(const BoundingBox<N, T>& box, const Ray<N, T>& ray, co
 }
 
 template <std::size_t N, typename T>
-Vector<N, bool> non_negative(const Vector<N, T>& v)
+Vector<N, bool> negative_directions(const Vector<N, T>& v)
 {
         Vector<N, bool> res;
         for (std::size_t i = 0; i < N; ++i)
         {
-                res[i] = (v[i] >= 0);
+                res[i] = (v[i] < 0);
         }
         return res;
 }
@@ -272,22 +272,22 @@ void test_intersections(
                         const Ray<N, T> r = ray;
                         test_intersection_1(box, r, box.intersect(r), length, precision);
                         test_intersection_1(
-                                box, r, box.intersect(r.org(), reciprocal(r.dir()), non_negative(r.dir())), length,
-                                precision);
+                                box, r, box.intersect(r.org(), reciprocal(r.dir()), negative_directions(r.dir())),
+                                length, precision);
                 }
 
                 {
                         const Ray<N, T> r = ray.moved(-move_distance);
                         test_intersection_2(box, r, box.intersect(r), move_min, move_max, precision);
                         test_intersection_2(
-                                box, r, box.intersect(r.org(), reciprocal(r.dir()), non_negative(r.dir())), move_min,
-                                move_max, precision);
+                                box, r, box.intersect(r.org(), reciprocal(r.dir()), negative_directions(r.dir())),
+                                move_min, move_max, precision);
                 }
                 {
                         const Ray<N, T> r = ray.moved(move_distance);
                         test_no_intersection(box, r, box.intersect(r));
                         test_no_intersection(
-                                box, r, box.intersect(r.org(), reciprocal(r.dir()), non_negative(r.dir())));
+                                box, r, box.intersect(r.org(), reciprocal(r.dir()), negative_directions(r.dir())));
                 }
         }
 }
@@ -377,18 +377,18 @@ std::vector<Vector<N, T>> ray_reciprocal_directions(const std::vector<Ray<N, T>>
 }
 
 template <std::size_t N, typename T>
-std::vector<Vector<N, bool>> ray_non_negative_directions(const std::vector<Ray<N, T>>& rays)
+std::vector<Vector<N, bool>> ray_negative_directions(const std::vector<Ray<N, T>>& rays)
 {
         std::vector<Vector<N, bool>> res;
         res.reserve(rays.size());
         for (const Ray<N, T>& ray : rays)
         {
-                res.push_back(non_negative(ray.dir()));
+                res.push_back(negative_directions(ray.dir()));
         }
         return res;
 }
 
-template <std::size_t N, typename T>
+template <std::size_t N, typename T, int COUNT>
 double compute_intersections_per_second(const int point_count, std::mt19937_64& engine)
 {
         const BoundingBox<N, T> box = create_random_box<N, T>(engine);
@@ -402,30 +402,36 @@ double compute_intersections_per_second(const int point_count, std::mt19937_64& 
         };
         f();
         Clock::time_point start_time = Clock::now();
-        f();
-        return rays.size() / duration_from(start_time);
+        for (int i = 0; i < COUNT; ++i)
+        {
+                f();
+        }
+        return COUNT * (rays.size() / duration_from(start_time));
 }
 
-template <std::size_t N, typename T>
+template <std::size_t N, typename T, int COUNT>
 double compute_intersections_r_per_second(const int point_count, std::mt19937_64& engine)
 {
         const BoundingBox<N, T> box = create_random_box<N, T>(engine);
         const std::vector<Ray<N, T>> rays = rays_for_intersections(box, point_count, engine);
         const std::vector<Vector<N, T>> orgs = ray_orgs(rays);
-        const std::vector<Vector<N, T>> r_dirs = ray_reciprocal_directions(rays);
-        const std::vector<Vector<N, bool>> non_negative = ray_non_negative_directions(rays);
+        const std::vector<Vector<N, T>> dirs_reciprocal = ray_reciprocal_directions(rays);
+        const std::vector<Vector<N, bool>> dirs_negative = ray_negative_directions(rays);
         const std::size_t n = rays.size();
         const auto f = [&]
         {
                 for (std::size_t i = 0; i < n; ++i)
                 {
-                        do_not_optimize(box.intersect(orgs[i], r_dirs[i], non_negative[i]));
+                        do_not_optimize(box.intersect(orgs[i], dirs_reciprocal[i], dirs_negative[i]));
                 }
         };
         f();
         Clock::time_point start_time = Clock::now();
-        f();
-        return rays.size() / duration_from(start_time);
+        for (int i = 0; i < COUNT; ++i)
+        {
+                f();
+        }
+        return COUNT * (rays.size() / duration_from(start_time));
 }
 
 template <typename F>
@@ -442,28 +448,32 @@ double average(const int count, const F& f)
 template <std::size_t N, typename T>
 double compute_intersections_per_second()
 {
-        constexpr int AVERAGE_COUNT = 100;
-        constexpr int POINT_COUNT = 100'000;
+        constexpr int POINT_COUNT = 10'000;
+        constexpr int COMPUTE_COUNT = 1000;
+        constexpr int AVERAGE_COUNT = 10;
+
         std::mt19937_64 engine = create_engine<std::mt19937_64>();
         return average(
                 AVERAGE_COUNT,
                 [&]
                 {
-                        return compute_intersections_per_second<N, T>(POINT_COUNT, engine);
+                        return compute_intersections_per_second<N, T, COMPUTE_COUNT>(POINT_COUNT, engine);
                 });
 }
 
 template <std::size_t N, typename T>
 double compute_intersections_r_per_second()
 {
-        constexpr int AVERAGE_COUNT = 100;
-        constexpr int POINT_COUNT = 100'000;
+        constexpr int POINT_COUNT = 10'000;
+        constexpr int COMPUTE_COUNT = 1000;
+        constexpr int AVERAGE_COUNT = 10;
+
         std::mt19937_64 engine = create_engine<std::mt19937_64>();
         return average(
                 AVERAGE_COUNT,
                 [&]
                 {
-                        return compute_intersections_r_per_second<N, T>(POINT_COUNT, engine);
+                        return compute_intersections_r_per_second<N, T, COMPUTE_COUNT>(POINT_COUNT, engine);
                 });
 }
 

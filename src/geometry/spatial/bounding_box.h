@@ -83,8 +83,7 @@ class BoundingBox final
                 }
         }
 
-        Vector<N, T> min_;
-        Vector<N, T> max_;
+        std::array<Vector<N, T>, 2> bounds_;
 
         static_assert(Limits<T>::is_iec559());
 
@@ -105,8 +104,8 @@ class BoundingBox final
                         const T dir = ray.dir()[i];
                         const T d = ray.org()[i];
                         const T r = 1 / dir;
-                        const T alpha1 = (min_[i] - d) * r;
-                        const T alpha2 = (max_[i] - d) * r;
+                        const T alpha1 = (bounds_[0][i] - d) * r;
+                        const T alpha2 = (bounds_[1][i] - d) * r;
                         if (dir >= 0)
                         {
                                 near = std::max(near, alpha1);
@@ -129,8 +128,8 @@ class BoundingBox final
 
         bool intersect(
                 const Vector<N, T>& org,
-                const Vector<N, T>& dir_r,
-                const Vector<N, bool>& dir_r_is_non_negative,
+                const Vector<N, T>& dir_reciprocal,
+                const Vector<N, bool>& dir_negative,
                 T* const first,
                 T* const second) const
         {
@@ -139,19 +138,11 @@ class BoundingBox final
                 for (std::size_t i = 0; i < N; ++i)
                 {
                         const T d = org[i];
-                        const T r = dir_r[i];
-                        const T alpha1 = (min_[i] - d) * r;
-                        const T alpha2 = (max_[i] - d) * r;
-                        if (dir_r_is_non_negative[i])
-                        {
-                                near = std::max(near, alpha1);
-                                far = std::min(far, alpha2);
-                        }
-                        else
-                        {
-                                near = std::max(near, alpha2);
-                                far = std::min(far, alpha1);
-                        }
+                        const T r = dir_reciprocal[i];
+                        const T alpha1 = (bounds_[dir_negative[i]][i] - d) * r;
+                        const T alpha2 = (bounds_[!dir_negative[i]][i] - d) * r;
+                        near = std::max(near, alpha1);
+                        far = std::min(far, alpha2);
                         if (far < near)
                         {
                                 return false;
@@ -164,11 +155,11 @@ class BoundingBox final
 
 public:
         constexpr BoundingBox(const Vector<N, T>& p1, const Vector<N, T>& p2)
-                : min_(::ns::min(p1, p2)), max_(::ns::max(p1, p2))
+                : bounds_{::ns::min(p1, p2), ::ns::max(p1, p2)}
         {
         }
 
-        explicit constexpr BoundingBox(const Vector<N, T>& p) : min_(p), max_(p)
+        explicit constexpr BoundingBox(const Vector<N, T>& p) : bounds_{p, p}
         {
         }
 
@@ -184,22 +175,22 @@ public:
 
         [[nodiscard]] constexpr const Vector<N, T>& min() const
         {
-                return min_;
+                return bounds_[0];
         }
 
         [[nodiscard]] constexpr const Vector<N, T>& max() const
         {
-                return max_;
+                return bounds_[1];
         }
 
         [[nodiscard]] constexpr Vector<N, T> diagonal() const
         {
-                return max_ - min_;
+                return bounds_[1] - bounds_[0];
         }
 
         [[nodiscard]] constexpr Vector<N, T> center() const
         {
-                return T(0.5) * (max_ + min_);
+                return T(0.5) * (bounds_[0] + bounds_[1]);
         }
 
         [[nodiscard]] constexpr T volume() const
@@ -225,12 +216,12 @@ public:
 
         [[nodiscard]] std::optional<T> intersect(
                 const Vector<N, T>& org,
-                const Vector<N, T>& dir_r,
-                const Vector<N, bool>& dir_r_is_non_negative) const
+                const Vector<N, T>& dir_reciprocal,
+                const Vector<N, bool>& dir_negative) const
         {
                 T first;
                 T second;
-                if (intersect(org, dir_r, dir_r_is_non_negative, &first, &second))
+                if (intersect(org, dir_reciprocal, dir_negative, &first, &second))
                 {
                         return (first > 0) ? first : second;
                 }
@@ -239,14 +230,14 @@ public:
 
         constexpr void merge(const BoundingBox<N, T>& v)
         {
-                min_ = ::ns::min(min_, v.min_);
-                max_ = ::ns::max(max_, v.max_);
+                bounds_[0] = ::ns::min(bounds_[0], v.bounds_[0]);
+                bounds_[1] = ::ns::max(bounds_[1], v.bounds_[1]);
         }
 
         constexpr void merge(const Vector<N, T>& v)
         {
-                min_ = ::ns::min(min_, v);
-                max_ = ::ns::max(max_, v);
+                bounds_[0] = ::ns::min(bounds_[0], v);
+                bounds_[1] = ::ns::max(bounds_[1], v);
         }
 };
 }
