@@ -43,20 +43,15 @@ bool equal(const T& a, const T& b, const T& precision)
 }
 
 template <std::size_t M, std::size_t N, typename T>
-void test(
-        const Vector<N, T>& vector,
-        const std::array<Vector<N, T>, N - 1>& vectors,
-        const T& volume,
-        const T& precision)
+void test(const std::array<Vector<N, T>, N>& vectors, const T& volume, const T& precision)
 {
         static_assert(M <= N);
 
         std::array<Vector<N, T>, M> v;
-        for (std::size_t i = 0; i < M - 1; ++i)
+        for (std::size_t i = 0; i < M; ++i)
         {
                 v[i] = vectors[i];
         }
-        v[M - 1] = vector;
 
         const T computed_volume = parallelotope_volume(v);
         if (!equal(computed_volume, volume, precision))
@@ -68,32 +63,30 @@ void test(
 
 template <std::size_t N, typename T, std::size_t... I>
 void test(
-        const Vector<N, T>& vector,
-        const std::array<Vector<N, T>, N - 1>& vectors,
+        const std::array<Vector<N, T>, N>& vectors,
         const T& scale,
         const T& precision,
         std::integer_sequence<std::size_t, I...>&&)
 {
         static_assert(sizeof...(I) == N);
-        (test<I + 1>(vector, vectors, power<I + 1>(scale), precision), ...);
+        (test<I + 1>(vectors, power<I + 1>(scale), precision), ...);
 }
 
 template <std::size_t N, typename T>
 void test(const T& precision, std::mt19937_64& engine)
 {
         const T scale = std::uniform_real_distribution<T>(0.1, 10)(engine);
+        const Vector<N, T> vector = sampling::uniform_on_sphere<N, T>(engine);
+        const std::array<Vector<N, T>, N - 1> complement = numerical::orthogonal_complement_of_unit_vector(vector);
 
-        Vector<N, T> vector = sampling::uniform_on_sphere<N, T>(engine);
-
-        std::array<Vector<N, T>, N - 1> complement = numerical::orthogonal_complement_of_unit_vector(vector);
-
-        vector *= scale;
+        std::array<Vector<N, T>, N> vectors;
         for (std::size_t i = 0; i < N - 1; ++i)
         {
-                complement[i] *= scale;
+                vectors[i] = complement[i] * scale;
         }
+        vectors[N - 1] = vector * scale;
 
-        test(vector, complement, scale, precision, std::make_integer_sequence<std::size_t, N>());
+        test(vectors, scale, precision, std::make_integer_sequence<std::size_t, N>());
 }
 
 template <typename T>
