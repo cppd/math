@@ -15,7 +15,7 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include "parallelotope_generate.h"
+#include "generate.h"
 #include "parallelotope_points.h"
 
 #include "../hyperplane_parallelotope.h"
@@ -379,7 +379,7 @@ void test_points(const int point_count)
 
         std::mt19937_64 engine = create_engine<std::mt19937_64>();
 
-        constexpr T ORG_SIZE = 10;
+        constexpr T ORG_INTERVAL = 10;
         constexpr T MIN_LENGTH = 0.1;
         constexpr T MAX_LENGTH = 20;
 
@@ -390,8 +390,8 @@ void test_points(const int point_count)
         LOG("ParallelotopeAA");
 
         {
-                Vector<N, T> org = generate_org<N, T>(ORG_SIZE, engine);
-                std::array<T, N> edges = generate_aa_edges<N, T>(MIN_LENGTH, MAX_LENGTH, engine);
+                Vector<N, T> org = generate_org<N, T>(ORG_INTERVAL, engine);
+                std::array<T, N> edges = generate_aa_vectors<N, T>(MIN_LENGTH, MAX_LENGTH, engine);
                 ParallelotopeAA<N, T> p(org, edges);
 
                 print_message(to_string(p));
@@ -404,8 +404,8 @@ void test_points(const int point_count)
         LOG("Parallelotope");
 
         {
-                Vector<N, T> org = generate_org<N, T>(ORG_SIZE, engine);
-                std::array<Vector<N, T>, N> edges = generate_edges<N, T>(MIN_LENGTH, MAX_LENGTH, engine);
+                Vector<N, T> org = generate_org<N, T>(ORG_INTERVAL, engine);
+                std::array<Vector<N, T>, N> edges = generate_vectors<N, N, T>(MIN_LENGTH, MAX_LENGTH, engine);
                 Parallelotope<N, T> p(org, edges);
 
                 print_message(to_string(p));
@@ -418,8 +418,8 @@ void test_points(const int point_count)
         LOG("Parallelotope comparison");
 
         {
-                Vector<N, T> org = generate_org<N, T>(ORG_SIZE, engine);
-                std::array<T, N> edges = generate_aa_edges<N, T>(MIN_LENGTH, MAX_LENGTH, engine);
+                Vector<N, T> org = generate_org<N, T>(ORG_INTERVAL, engine);
+                std::array<T, N> edges = generate_aa_vectors<N, T>(MIN_LENGTH, MAX_LENGTH, engine);
 
                 ParallelotopeAA<N, T> p_aa(org, edges);
                 Parallelotope<N, T> p(org, to_edge_vector(edges));
