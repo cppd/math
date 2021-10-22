@@ -19,6 +19,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <src/com/sort.h>
 #include <src/com/type/limit.h>
+#include <src/geometry/shapes/simplex_volume.h>
 #include <src/numerical/vec.h>
 
 #include <array>
@@ -91,5 +92,11 @@ Vector<N, T> uniform_in_simplex(const std::array<Vector<N, T>, M>& vertices, Ran
         case 2:
                 return simplex_implementation::uniform_in_simplex_2(vertices, random_engine);
         }
+}
+
+template <std::size_t N, typename T, std::size_t M>
+T uniform_in_simplex_pdf(const std::array<Vector<N, T>, M>& vertices)
+{
+        return 1 / geometry::simplex_volume(vertices);
 }
 }
