@@ -86,4 +86,20 @@ inline constexpr std::array<std::array<unsigned char, R>, BINOMIAL<N, R>> COMBIN
 
         return res;
 }();
+
+template <unsigned N>
+inline constexpr unsigned long long FACTORIAL = []
+{
+        unsigned long long m = 1;
+        for (unsigned i = 2; i <= N; ++i)
+        {
+                unsigned long long v = m * i;
+                if ((v / i) != m)
+                {
+                        error("Factorial overflow");
+                }
+                m = v;
+        }
+        return m;
+}();
 }

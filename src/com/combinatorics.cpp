@@ -54,4 +54,12 @@ static_assert(
                  {0, 1, 2, 3}
         }));
 // clang-format on
+
+static_assert(FACTORIAL<0> == 1);
+static_assert(FACTORIAL<1> == 1);
+static_assert(FACTORIAL<2> == 2);
+static_assert(FACTORIAL<3> == 6);
+static_assert(FACTORIAL<4> == 24);
+static_assert(FACTORIAL<5> == 120);
+static_assert(FACTORIAL<20> == 2432902008176640000);
 }
