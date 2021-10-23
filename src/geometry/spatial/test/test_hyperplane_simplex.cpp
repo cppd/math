@@ -236,7 +236,7 @@ void test_performance()
                                 return compute_intersections_per_second<N, T, COMPUTE_COUNT>(POINT_COUNT, engine);
                         });
 
-        LOG("<" + to_string(N) + ", " + type_name<T>() + ">, " + to_string_digit_groups(std::lround(performance))
+        LOG("<" + to_string(N) + ", " + type_name<T>() + ">, " + to_string_digit_groups(std::llround(performance))
             + " intersections per second");
 }
 
@@ -258,6 +258,6 @@ void test_hyperplane_simplex_performance()
 //
 
 TEST_SMALL("Hyperplane simplex", test_hyperplane_simplex)
-TEST_PERFORMANCE("Hyperplane simplex", test_hyperplane_simplex_performance)
+TEST_PERFORMANCE("Hyperplane simplex intersection", test_hyperplane_simplex_performance)
 }
 }
