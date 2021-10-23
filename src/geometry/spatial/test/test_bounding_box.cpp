@@ -15,6 +15,7 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
+#include "average.h"
 #include "parallelotope_points.h"
 
 #include "../bounding_box.h"
@@ -100,19 +101,6 @@ BoundingBox<N, T> create_random_box(std::mt19937_64& engine)
 }
 
 template <std::size_t N, typename T>
-Vector<N, T> create_random_direction(const std::type_identity_t<T>& probability, std::mt19937_64& engine)
-{
-        if (std::bernoulli_distribution(probability)(engine))
-        {
-                return sampling::uniform_on_sphere<N, T>(engine);
-        }
-        const std::size_t n = std::uniform_int_distribution<std::size_t>(0, N - 1)(engine);
-        Vector<N, T> v(0);
-        v[n] = 1;
-        return v;
-}
-
-template <std::size_t N, typename T>
 std::array<Vector<N, T>, N> box_vectors(const BoundingBox<N, T>& box)
 {
         const Vector<N, T> diagonal = box.diagonal();
@@ -129,7 +117,33 @@ std::array<Vector<N, T>, N> box_vectors(const BoundingBox<N, T>& box)
 }
 
 template <std::size_t N, typename T>
-bool is_on_box(const BoundingBox<N, T>& box, const Vector<N, T>& point, const T& precision)
+Vector<N, bool> negative_directions(const Vector<N, T>& v)
+{
+        Vector<N, bool> res;
+        for (std::size_t i = 0; i < N; ++i)
+        {
+                res[i] = (v[i] < 0);
+        }
+        return res;
+}
+
+//
+
+template <std::size_t N, typename T>
+Vector<N, T> create_random_direction(const std::type_identity_t<T>& probability, std::mt19937_64& engine)
+{
+        if (std::bernoulli_distribution(probability)(engine))
+        {
+                return sampling::uniform_on_sphere<N, T>(engine);
+        }
+        const std::size_t n = std::uniform_int_distribution<std::size_t>(0, N - 1)(engine);
+        Vector<N, T> v(0);
+        v[n] = 1;
+        return v;
+}
+
+template <std::size_t N, typename T>
+bool test_on_box(const BoundingBox<N, T>& box, const Vector<N, T>& point, const T& precision)
 {
         for (std::size_t i = 0; i < N; ++i)
         {
@@ -173,7 +187,7 @@ void test_intersection_1(
         }
 
         const Vector<N, T> p = ray.point(*t);
-        if (!is_on_box(box, p, precision))
+        if (!test_on_box(box, p, precision))
         {
                 std::string s;
                 s += "Intersection out of bounding box, inside\n";
@@ -214,7 +228,7 @@ void test_intersection_2(
         }
 
         const Vector<N, T> p = ray.point(*t);
-        if (!is_on_box(box, p, precision))
+        if (!test_on_box(box, p, precision))
         {
                 std::string s;
                 s += "Intersection out of bounding box, outside\n";
@@ -238,17 +252,6 @@ void test_no_intersection(const BoundingBox<N, T>& box, const Ray<N, T>& ray, co
         s += "box " + to_string(box) + "\n";
         s += "ray " + to_string(ray);
         error(s);
-}
-
-template <std::size_t N, typename T>
-Vector<N, bool> negative_directions(const Vector<N, T>& v)
-{
-        Vector<N, bool> res;
-        for (std::size_t i = 0; i < N; ++i)
-        {
-                res[i] = (v[i] < 0);
-        }
-        return res;
 }
 
 template <std::size_t N, typename T>
@@ -484,17 +487,6 @@ double compute_intersections_r_per_second(const int point_count, std::mt19937_64
         return COUNT * (rays.size() / duration_from(start_time));
 }
 
-template <typename F>
-double average(const int count, const F& f)
-{
-        double sum = 0;
-        for (int i = 0; i < count; ++i)
-        {
-                sum += f();
-        }
-        return sum / count;
-}
-
 template <std::size_t N, typename T>
 double compute_intersections_per_second()
 {
@@ -504,8 +496,7 @@ double compute_intersections_per_second()
 
         std::mt19937_64 engine = create_engine<std::mt19937_64>();
 
-        return average(
-                AVERAGE_COUNT,
+        return average<AVERAGE_COUNT>(
                 [&]
                 {
                         return compute_intersections_per_second<N, T, COMPUTE_COUNT>(POINT_COUNT, engine);
@@ -521,8 +512,7 @@ double compute_intersections_r_per_second()
 
         std::mt19937_64 engine = create_engine<std::mt19937_64>();
 
-        return average(
-                AVERAGE_COUNT,
+        return average<AVERAGE_COUNT>(
                 [&]
                 {
                         return compute_intersections_r_per_second<N, T, COMPUTE_COUNT>(POINT_COUNT, engine);
@@ -533,11 +523,11 @@ template <std::size_t N, typename T>
 void test_performance()
 {
         const long long p_1 = std::llround(compute_intersections_per_second<N, T>());
-        LOG("<" + to_string(N) + ", " + type_name<T>() + ">, #1 = " + to_string_digit_groups(p_1)
+        LOG("BoundingBox<" + to_string(N) + ", " + type_name<T>() + ">, #1 = " + to_string_digit_groups(p_1)
             + " intersections per second");
 
         const long long p_2 = std::llround(compute_intersections_r_per_second<N, T>());
-        LOG("<" + to_string(N) + ", " + type_name<T>() + ">, #2 = " + to_string_digit_groups(p_2)
+        LOG("BoundingBox<" + to_string(N) + ", " + type_name<T>() + ">, #2 = " + to_string_digit_groups(p_2)
             + " intersections per second");
 }
 

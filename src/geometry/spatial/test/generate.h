@@ -112,4 +112,23 @@ Vector<N, T> generate_org(const T& interval, Engine& engine)
         }
         return v;
 }
+
+template <std::size_t N, typename T, typename Engine>
+Vector<N, T> generate_random_direction(const T& from, const T& to, const Vector<N, T>& normal, Engine& engine)
+{
+        while (true)
+        {
+                const Vector<N, T> v = sampling::uniform_on_sphere<N, T>(engine);
+                const T d = dot(normal, v);
+                if (!(std::abs(d) >= from && std::abs(d) <= to))
+                {
+                        continue;
+                }
+                if (d < 0)
+                {
+                        return -v;
+                }
+                return v;
+        }
+}
 }

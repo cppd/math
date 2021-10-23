@@ -15,18 +15,19 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
+#include "average.h"
 #include "generate.h"
 
 #include "../hyperplane_parallelotope.h"
 
 #include <src/com/benchmark.h>
 #include <src/com/chrono.h>
+#include <src/com/error.h>
 #include <src/com/log.h>
 #include <src/com/print.h>
 #include <src/com/random/engine.h>
 #include <src/com/type/limit.h>
 #include <src/com/type/name.h>
-#include <src/numerical/complement.h>
 #include <src/sampling/parallelotope_uniform.h>
 #include <src/sampling/sphere_uniform.h>
 #include <src/test/test.h>
@@ -48,25 +49,6 @@ HyperplaneParallelotope<N, T> create_random_hyperplane_parallelotope(std::mt1993
         return HyperplaneParallelotope<N, T>(
                 generate_org<N, T>(ORG_INTERVAL, engine),
                 generate_vectors<N - 1, N, T>(MIN_LENGTH, MAX_LENGTH, engine));
-}
-
-template <std::size_t N, typename T>
-Vector<N, T> random_for_normal(const T& from, const T& to, const Vector<N, T>& normal, std::mt19937_64& engine)
-{
-        while (true)
-        {
-                const Vector<N, T> v = sampling::uniform_on_sphere<N, T>(engine);
-                const T d = dot(normal, v);
-                if (!(std::abs(d) >= from && std::abs(d) <= to))
-                {
-                        continue;
-                }
-                if (d < 0)
-                {
-                        return -v;
-                }
-                return v;
-        }
 }
 
 template <std::size_t N, typename T>
@@ -102,7 +84,7 @@ std::vector<Ray<N, T>> create_rays(
                 rays.push_back(ray.moved(-1));
                 rays.push_back(ray.moved(1).reversed());
 
-                const Vector<N, T> direction = random_for_normal(T(0), T(0.5), p.normal(), engine);
+                const Vector<N, T> direction = generate_random_direction(T(0), T(0.5), p.normal(), engine);
                 rays.push_back(Ray(ray.org() + distance * p.normal(), -direction));
         }
         ASSERT(rays.size() == static_cast<std::size_t>(ray_count));
@@ -133,6 +115,8 @@ void check_intersection_count(const HyperplaneParallelotope<N, T>& p, const std:
                 error("Error intersection count " + to_string(count) + ", expected " + to_string(expected_count));
         }
 }
+
+//
 
 template <std::size_t N, typename T>
 void test()
@@ -186,17 +170,6 @@ double compute_intersections_per_second(const int point_count, std::mt19937_64& 
         return COUNT * (rays.size() / duration_from(start_time));
 }
 
-template <typename F>
-double average(const int count, const F& f)
-{
-        double sum = 0;
-        for (int i = 0; i < count; ++i)
-        {
-                sum += f();
-        }
-        return sum / count;
-}
-
 template <std::size_t N, typename T>
 void test_performance()
 {
@@ -206,15 +179,14 @@ void test_performance()
 
         std::mt19937_64 engine = create_engine<std::mt19937_64>();
 
-        const double performance =
-                average(AVERAGE_COUNT,
-                        [&]
-                        {
-                                return compute_intersections_per_second<N, T, COMPUTE_COUNT>(POINT_COUNT, engine);
-                        });
+        const double performance = average<AVERAGE_COUNT>(
+                [&]
+                {
+                        return compute_intersections_per_second<N, T, COMPUTE_COUNT>(POINT_COUNT, engine);
+                });
 
-        LOG("<" + to_string(N) + ", " + type_name<T>() + ">, " + to_string_digit_groups(std::llround(performance))
-            + " intersections per second");
+        LOG("HyperplaneParallelotope<" + to_string(N) + ", " + type_name<T>() + ">, "
+            + to_string_digit_groups(std::llround(performance)) + " intersections per second");
 }
 
 template <typename T>

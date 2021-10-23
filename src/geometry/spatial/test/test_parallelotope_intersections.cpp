@@ -17,8 +17,9 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "average.h"
 #include "generate.h"
+#include "parallelotope_points.h"
 
-#include "../hyperplane_simplex.h"
+#include "../parallelotope.h"
 
 #include <src/com/benchmark.h>
 #include <src/com/chrono.h>
@@ -26,10 +27,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/com/log.h>
 #include <src/com/print.h>
 #include <src/com/random/engine.h>
-#include <src/com/type/limit.h>
 #include <src/com/type/name.h>
-#include <src/numerical/complement.h>
-#include <src/sampling/simplex_uniform.h>
 #include <src/sampling/sphere_uniform.h>
 #include <src/test/test.h>
 
@@ -40,98 +38,63 @@ namespace ns::geometry::spatial::test
 {
 namespace
 {
-
 template <std::size_t N, typename T>
-struct Simplex
-{
-        HyperplaneSimplex<N, T> simplex;
-        Vector<N, T> normal;
-        std::array<Vector<N, T>, N> vertices;
-};
-
-template <std::size_t N, typename T>
-Simplex<N, T> create_random_simplex(std::mt19937_64& engine)
+Parallelotope<N, T> create_random_parallelotope(std::mt19937_64& engine)
 {
         constexpr T ORG_INTERVAL = 10;
         constexpr T MIN_LENGTH = 0.1;
         constexpr T MAX_LENGTH = 10;
 
-        const std::array<Vector<N, T>, N - 1> vectors = generate_vectors<N - 1, N, T>(MIN_LENGTH, MAX_LENGTH, engine);
-        const Vector<N, T> org = generate_org<N, T>(ORG_INTERVAL, engine);
-
-        Simplex<N, T> simplex;
-
-        simplex.normal = numerical::orthogonal_complement(vectors).normalized();
-        for (std::size_t i = 0; i < N - 1; ++i)
-        {
-                simplex.vertices[i] = org + vectors[i];
-        }
-        simplex.vertices[N - 1] = org;
-        simplex.simplex.set_data(simplex.normal, simplex.vertices);
-
-        return simplex;
+        return Parallelotope<N, T>(
+                generate_org<N, T>(ORG_INTERVAL, engine), generate_vectors<N, N, T>(MIN_LENGTH, MAX_LENGTH, engine));
 }
 
 template <std::size_t N, typename T>
-T max_vertex_distance(const std::array<Vector<N, T>, N>& vertices)
+std::array<Vector<N, T>, N> vectors(const Parallelotope<N, T>& p)
 {
-        T max = Limits<T>::lowest();
+        std::array<Vector<N, T>, N> res;
         for (std::size_t i = 0; i < N; ++i)
         {
-                for (std::size_t j = i + 1; j < N; ++j)
-                {
-                        max = std::max(max, (vertices[i] - vertices[j]).norm());
-                }
+                res[i] = p.e(i);
         }
-        return max;
+        return res;
 }
 
 template <std::size_t N, typename T>
-std::vector<Ray<N, T>> create_rays(
-        const Vector<N, T>& normal,
-        const std::array<Vector<N, T>, N>& vertices,
-        const int point_count,
-        std::mt19937_64& engine)
+std::vector<Ray<N, T>> create_rays(const Parallelotope<N, T>& p, const int point_count, std::mt19937_64& engine)
 {
-        const T distance = max_vertex_distance(vertices);
-
+        const T move_distance = p.length();
         const int ray_count = 3 * point_count;
         std::vector<Ray<N, T>> rays;
         rays.reserve(ray_count);
-        for (int i = 0; i < point_count; ++i)
+        for (const Vector<N, T>& point : internal_points(p.org(), vectors(p), point_count, engine))
         {
-                const Vector<N, T> point = sampling::uniform_in_simplex(vertices, engine);
                 const Ray<N, T> ray(point, sampling::uniform_on_sphere<N, T>(engine));
-                rays.push_back(ray.moved(-1));
-                rays.push_back(ray.moved(1).reversed());
-
-                const Vector<N, T> direction = generate_random_direction(T(0), T(0.5), normal, engine);
-                rays.push_back(Ray(ray.org() + distance * normal, -direction));
+                rays.push_back(ray);
+                rays.push_back(ray.moved(-move_distance));
+                rays.push_back(ray.moved(move_distance));
         }
         ASSERT(rays.size() == static_cast<std::size_t>(ray_count));
         return rays;
 }
 
 template <std::size_t N, typename T>
-void check_intersection_count(const Simplex<N, T>& simplex, const std::vector<Ray<N, T>>& rays)
+void check_intersection_count(const Parallelotope<N, T>& p, const std::vector<Ray<N, T>>& rays)
 {
         if (!(rays.size() % 3 == 0))
         {
                 error("Ray count " + to_string(rays.size()) + " is not a multiple of 3");
         }
-
         std::size_t count = 0;
         for (const Ray<N, T>& ray : rays)
         {
-                if (simplex.simplex.intersect(ray, simplex.vertices[0], simplex.normal))
+                if (p.intersect(ray))
                 {
                         ++count;
                 }
         }
-
         const std::size_t expected_count = (rays.size() / 3) * 2;
-        const T v = T(count) / expected_count;
-        if (!(v >= T(0.999) && v <= T(1.001)))
+        if (count != expected_count)
         {
                 error("Error intersection count " + to_string(count) + ", expected " + to_string(expected_count));
         }
@@ -146,10 +109,10 @@ void test()
 
         std::mt19937_64 engine = create_engine<std::mt19937_64>();
 
-        const Simplex<N, T> simplex = create_random_simplex<N, T>(engine);
-        const std::vector<Ray<N, T>> rays = create_rays(simplex.normal, simplex.vertices, POINT_COUNT, engine);
+        const Parallelotope<N, T> p = create_random_parallelotope<N, T>(engine);
+        const std::vector<Ray<N, T>> rays = create_rays(p, POINT_COUNT, engine);
 
-        check_intersection_count(simplex, rays);
+        check_intersection_count(p, rays);
 }
 
 template <typename T>
@@ -161,13 +124,13 @@ void test()
         test<5, T>();
 }
 
-void test_hyperplane_simplex()
+void test_parallelotope()
 {
-        LOG("Test hyperplane simplex");
+        LOG("Test parallelotope");
         test<float>();
         test<double>();
         test<long double>();
-        LOG("Test hyperplane simplex passed");
+        LOG("Test parallelotope passed");
 }
 
 //
@@ -175,17 +138,17 @@ void test_hyperplane_simplex()
 template <std::size_t N, typename T, int COUNT>
 double compute_intersections_per_second(const int point_count, std::mt19937_64& engine)
 {
-        const Simplex<N, T> simplex = create_random_simplex<N, T>(engine);
-        const std::vector<Ray<N, T>> rays = create_rays(simplex.normal, simplex.vertices, point_count, engine);
+        const Parallelotope<N, T> parallelotope = create_random_parallelotope<N, T>(engine);
+        const std::vector<Ray<N, T>> rays = create_rays(parallelotope, point_count, engine);
 
-        check_intersection_count(simplex, rays);
+        check_intersection_count(parallelotope, rays);
 
         Clock::time_point start_time = Clock::now();
         for (int i = 0; i < COUNT; ++i)
         {
                 for (const Ray<N, T>& ray : rays)
                 {
-                        do_not_optimize(simplex.simplex.intersect(ray, simplex.vertices[0], simplex.normal));
+                        do_not_optimize(parallelotope.intersect(ray));
                 }
         }
         return COUNT * (rays.size() / duration_from(start_time));
@@ -206,8 +169,8 @@ void test_performance()
                         return compute_intersections_per_second<N, T, COMPUTE_COUNT>(POINT_COUNT, engine);
                 });
 
-        LOG("HyperplaneSimplex<" + to_string(N) + ", " + type_name<T>() + ">, "
-            + to_string_digit_groups(std::llround(performance)) + " intersections per second");
+        LOG("Parallelotope<" + to_string(N) + ", " + type_name<T>()
+            + ">, #1 = " + to_string_digit_groups(std::llround(performance)) + " intersections per second");
 }
 
 template <typename T>
@@ -219,15 +182,13 @@ void test_performance()
         test_performance<5, T>();
 }
 
-void test_hyperplane_simplex_performance()
+void test_parallelotope_performance()
 {
         test_performance<float>();
         test_performance<double>();
 }
 
-//
-
-TEST_SMALL("Hyperplane simplex", test_hyperplane_simplex)
-TEST_PERFORMANCE("Hyperplane simplex intersection", test_hyperplane_simplex_performance)
+TEST_SMALL("Parallelotope intersection", test_parallelotope)
+TEST_PERFORMANCE("Parallelotope intersection", test_parallelotope_performance)
 }
 }
