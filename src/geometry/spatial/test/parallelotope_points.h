@@ -21,163 +21,113 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <array>
 #include <random>
-#include <utility>
 #include <vector>
 
 namespace ns::geometry::spatial::test
 {
-namespace parallelotope_points_implementation
-{
-template <std::size_t N, typename T, typename RandomEngine, std::size_t... I>
+template <std::size_t N, typename T, typename RandomEngine>
 std::vector<Vector<N, T>> external_points(
         const Vector<N, T>& org,
         const std::array<Vector<N, T>, N>& vectors,
         const int count,
-        RandomEngine& engine,
-        std::integer_sequence<std::size_t, I...>&&)
+        RandomEngine& engine)
 {
-        static_assert(sizeof...(I) == N);
+        std::uniform_real_distribution<T> low_urd(-10, -0.01);
+        std::uniform_real_distribution<T> high_urd(1.01, 10);
+        std::bernoulli_distribution bd(0.5);
 
-        const std::array<T, N> len = {vectors[I].norm()...};
+        const auto random_point = [&]()
+        {
+                Vector<N, T> v = org;
+                for (std::size_t i = 0; i < N; ++i)
+                {
+                        const T rnd = bd(engine) ? low_urd(engine) : high_urd(engine);
+                        v.multiply_add(vectors[i], rnd);
+                }
+                return v;
+        };
 
-        std::array<std::uniform_real_distribution<T>, N> low_urd = {
-                std::uniform_real_distribution<T>{T(-10) * len[I], T(-0.01) * len[I]}...};
-
-        std::array<std::uniform_real_distribution<T>, N> high_urd = {
-                std::uniform_real_distribution<T>{T(1.01) * len[I], T(10) * len[I]}...};
-
-        const std::array<Vector<N, T>, N> unit = {(vectors[I] / len[I])...};
-
-        std::bernoulli_distribution rnd(0.5);
         std::vector<Vector<N, T>> points;
         points.reserve(count);
-
         for (int i = 0; i < count; ++i)
         {
-                Vector<N, T> v((rnd(engine) ? low_urd[I](engine) : high_urd[I](engine))...);
-
-                points.push_back(org + ((unit[I] * v[I]) + ...));
+                points.push_back(random_point());
         }
-
         return points;
 }
 
-template <std::size_t N, typename T, typename RandomEngine, std::size_t... I>
+template <std::size_t N, typename T, typename RandomEngine>
 std::vector<Vector<N, T>> internal_points(
         const Vector<N, T>& org,
         const std::array<Vector<N, T>, N>& vectors,
         const int count,
-        RandomEngine& engine,
-        std::integer_sequence<std::size_t, I...>&&)
+        RandomEngine& engine)
 {
-        static_assert(sizeof...(I) == N);
+        std::uniform_real_distribution<T> urd(0.01, 0.99);
 
-        const std::array<T, N> len = {vectors[I].norm()...};
-
-        std::array<std::uniform_real_distribution<T>, N> urd = {
-                std::uniform_real_distribution<T>{T(0.01) * len[I], T(0.99) * len[I]}...};
-
-        const std::array<Vector<N, T>, N> unit = {(vectors[I] / len[I])...};
+        const auto random_point = [&]()
+        {
+                Vector<N, T> v = org;
+                for (std::size_t i = 0; i < N; ++i)
+                {
+                        v.multiply_add(vectors[i], urd(engine));
+                }
+                return v;
+        };
 
         std::vector<Vector<N, T>> points;
         points.reserve(count);
-
         for (int i = 0; i < count; ++i)
         {
-                Vector<N, T> v((urd[I](engine))...);
-
-                points.push_back(org + ((unit[I] * v[I]) + ...));
+                points.push_back(random_point());
         }
-
         return points;
 }
 
-template <std::size_t N, typename T, typename RandomEngine, std::size_t... I>
+template <std::size_t N, typename T, typename RandomEngine>
 std::vector<Vector<N, T>> cover_points(
         const Vector<N, T>& org,
         const std::array<Vector<N, T>, N>& vectors,
         const int count,
-        RandomEngine& engine,
-        std::integer_sequence<std::size_t, I...>&&)
+        RandomEngine& engine)
 {
-        static_assert(sizeof...(I) == N);
+        std::uniform_real_distribution<T> cover_urd(-0.2, 1.2);
+        std::uniform_real_distribution<T> len_urd(0, 1);
 
-        const std::array<T, N> len = {vectors[I].norm()...};
+        const auto cover_point = [&]()
+        {
+                Vector<N, T> v = org;
+                for (std::size_t i = 0; i < N; ++i)
+                {
+                        v.multiply_add(vectors[i], cover_urd(engine));
+                }
+                return v;
+        };
 
-        std::array<std::uniform_real_distribution<T>, N> cover_urd = {
-                std::uniform_real_distribution<T>{T(-0.2) * len[I], T(1.2) * len[I]}...};
-
-        std::array<std::uniform_real_distribution<T>, N> len_urd = {std::uniform_real_distribution<T>{0, len[I]}...};
-
-        const std::array<Vector<N, T>, N> unit = {(vectors[I] / len[I])...};
+        const auto plane_point = [&](const std::size_t n)
+        {
+                Vector<N, T> v = org;
+                for (std::size_t i = 0; i < N; ++i)
+                {
+                        if (i != n)
+                        {
+                                v.multiply_add(vectors[i], len_urd(engine));
+                        }
+                }
+                return v;
+        };
 
         std::vector<Vector<N, T>> points;
         points.reserve(count * (1 + N * 2));
-
         for (int i = 0; i < count; ++i)
         {
-                points.push_back(org + ((unit[I] * cover_urd[I](engine)) + ...));
-
-                for (unsigned n = 0; n < N; ++n)
+                points.push_back(cover_point());
+                for (std::size_t n = 0; n < N; ++n)
                 {
-                        Vector<N, T> v;
-
-                        v = org;
-                        for (unsigned d = 0; d < N; ++d)
-                        {
-                                if (d != n)
-                                {
-                                        v += unit[d] * len_urd[d](engine);
-                                }
-                        }
-                        points.push_back(v);
-
-                        v = org;
-                        for (unsigned d = 0; d < N; ++d)
-                        {
-                                if (d != n)
-                                {
-                                        v += unit[d] * len_urd[d](engine);
-                                }
-                        }
-                        points.push_back(v + vectors[n]);
+                        points.push_back(plane_point(n));
+                        points.push_back(vectors[n] + plane_point(n));
                 }
         }
-
         return points;
-}
-}
-
-template <std::size_t N, typename T, typename RandomEngine>
-std::vector<Vector<N, T>> external_points(
-        const Vector<N, T>& org,
-        const std::array<Vector<N, T>, N>& vectors,
-        const int count,
-        RandomEngine& engine)
-{
-        namespace impl = parallelotope_points_implementation;
-        return impl::external_points(org, vectors, count, engine, std::make_integer_sequence<std::size_t, N>());
-}
-
-template <std::size_t N, typename T, typename RandomEngine>
-std::vector<Vector<N, T>> internal_points(
-        const Vector<N, T>& org,
-        const std::array<Vector<N, T>, N>& vectors,
-        const int count,
-        RandomEngine& engine)
-{
-        namespace impl = parallelotope_points_implementation;
-        return impl::internal_points(org, vectors, count, engine, std::make_integer_sequence<std::size_t, N>());
-}
-
-template <std::size_t N, typename T, typename RandomEngine>
-std::vector<Vector<N, T>> cover_points(
-        const Vector<N, T>& org,
-        const std::array<Vector<N, T>, N>& vectors,
-        const int count,
-        RandomEngine& engine)
-{
-        namespace impl = parallelotope_points_implementation;
-        return impl::cover_points(org, vectors, count, engine, std::make_integer_sequence<std::size_t, N>());
 }
 }

@@ -81,7 +81,7 @@ Vector<N, T> screen_dir(const std::array<Vector<N, T>, N - 1>& screen_axes, cons
         Vector<N, T> dir = screen_axes[0] * screen_point[0];
         for (unsigned i = 1; i < N - 1; ++i)
         {
-                dir += screen_axes[i] * screen_point[i];
+                dir.multiply_add(screen_axes[i], screen_point[i]);
         }
         return dir;
 }

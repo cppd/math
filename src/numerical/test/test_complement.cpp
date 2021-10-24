@@ -247,17 +247,6 @@ std::array<Vector<N, T>, N - 1> random_vectors(std::mt19937_64& random_engine)
         return vectors;
 }
 
-template <std::size_t N, typename T>
-T dot_product(const Vector<N, T>& v1, const Vector<N, T>& v2)
-{
-        T sum = 0;
-        for (std::size_t i = 0; i < N; ++i)
-        {
-                sum += v1[i] * v2[i];
-        }
-        return sum;
-}
-
 template <typename T>
 std::string type_name() requires std::is_same_v<mpz_class, T>
 {
@@ -278,7 +267,7 @@ void test_integer_impl()
         std::mt19937_64 random_engine = create_engine<std::mt19937_64>();
 
         std::array<Vector<N, T>, N - 1> vectors;
-        static Vector<N, T> complement;
+        Vector<N, T> complement;
         int i = 0;
         do
         {
@@ -288,11 +277,11 @@ void test_integer_impl()
                 }
                 vectors = random_vectors<N, T>(random_engine);
                 complement = orthogonal_complement(vectors);
-        } while (dot_product(complement, complement) == 0);
+        } while (dot(complement, complement) == 0);
 
         for (const Vector<N, T>& v : vectors)
         {
-                if (dot_product(complement, v) != 0)
+                if (dot(complement, v) != 0)
                 {
                         error("Complement is not orthogonal, " + type_name<T>());
                 }

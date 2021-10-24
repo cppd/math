@@ -254,7 +254,8 @@ std::array<Vector<N, T>, N - 1> orthogonal_complement_by_gram_schmidt(const Vect
                 Vector<N, T> sum(0);
                 for (std::size_t n = 0; n < i; ++n)
                 {
-                        sum += dot(basis[i], orthogonal_basis[n]) * orthogonal_basis[n];
+                        const T d = dot(basis[i], orthogonal_basis[n]);
+                        sum.multiply_add(d, orthogonal_basis[n]);
                 }
                 orthogonal_basis[i] = (basis[i] - sum).normalized();
         }

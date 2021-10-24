@@ -199,7 +199,7 @@ Vector<N, T> power_cosine_on_hemisphere(RandomEngine& random_engine, const Vecto
         Vector<N, T> result = coordinates[N - 1] * normal;
         for (std::size_t i = 0; i < N - 1; ++i)
         {
-                result += coordinates[i] * orthonormal_basis[i];
+                result.multiply_add(coordinates[i], orthonormal_basis[i]);
         }
 
         return result;

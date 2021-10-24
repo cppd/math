@@ -180,7 +180,7 @@ Vector<N, T> ggx_vn(RandomEngine& random_engine, const Vector<N, T>& ve, const T
                 Vector<N, T> v = vh * std::sqrt(std::max(T(0), 1 - dot(t, t)));
                 for (std::size_t i = 0; i < N - 1; ++i)
                 {
-                        v += t[i] * orthonormal_basis[i];
+                        v.multiply_add(t[i], orthonormal_basis[i]);
                 }
                 return v;
         }();
@@ -257,7 +257,7 @@ Vector<N, T> ggx_visible_normals_h(
         Vector<N, T> res = ne[N - 1] * normal;
         for (std::size_t i = 0; i < N - 1; ++i)
         {
-                res += ne[i] * basis[i];
+                res.multiply_add(ne[i], basis[i]);
         }
         return res;
 }

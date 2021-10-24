@@ -70,7 +70,7 @@ Vector<N, T> cosine_on_hemisphere(RandomEngine& random_engine, const Vector<N, T
         Vector<N, T> result = coordinates[N - 1] * normal;
         for (std::size_t i = 0; i < N - 1; ++i)
         {
-                result += coordinates[i] * orthonormal_basis[i];
+                result.multiply_add(coordinates[i], orthonormal_basis[i]);
         }
 
         return result;
