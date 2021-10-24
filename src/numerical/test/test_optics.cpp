@@ -17,20 +17,20 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "../optics.h"
 
+#include <src/com/benchmark.h>
 #include <src/com/chrono.h>
 #include <src/com/error.h>
 #include <src/com/exponent.h>
 #include <src/com/log.h>
-#include <src/com/names.h>
 #include <src/com/print.h>
 #include <src/com/random/engine.h>
 #include <src/com/type/name.h>
 #include <src/sampling/sphere_uniform.h>
 #include <src/test/test.h>
 
-#include <cstddef>
+#include <cmath>
 #include <random>
-#include <span>
+#include <sstream>
 #include <vector>
 
 namespace ns::numerical
@@ -49,76 +49,88 @@ std::vector<Vector<N, T>> random_data(int count, std::mt19937_64& engine)
         return data;
 }
 
-template <typename T>
-long long byte_sum(const T& data)
+template <int COUNT, std::size_t N, typename T, typename F>
+[[nodiscard]] double test(const std::vector<Vector<N, T>>& data, const F& f)
 {
-        long long s = 0;
-        for (std::byte v : std::as_bytes(std::span(data)))
-        {
-                s += std::to_integer<int>(v);
-        }
-        return s;
-}
-
-template <std::size_t N, typename T, typename F>
-void test(std::string text, const std::vector<Vector<N, T>> data, const F& f)
-{
-        static_assert(std::is_trivially_copyable_v<decltype(f(data[0]))>);
-        std::vector<decltype(f(data[0]))> result(data.size());
         Clock::time_point start_time = Clock::now();
-        for (std::size_t i = 0; i < data.size(); ++i)
+        for (int i = 0; i < COUNT; ++i)
         {
-                result[i] = f(data[i]);
+                for (const Vector<N, T>& v : data)
+                {
+                        do_not_optimize(f(v));
+                }
         }
-        text += ": " + to_string_fixed(duration_from(start_time), 5);
-        text += ", byte sum = " + to_string(byte_sum(result));
-        LOG(text);
-}
-
-template <std::size_t N, typename T>
-bool cmp(const Vector<N, T>& v1, const Vector<N, T>& v2, T precision)
-{
-        return (v1 - v2).norm() <= precision;
+        return duration_from(start_time);
 }
 
 template <std::size_t N, typename T>
 void test_optics_performance()
 {
-        constexpr int DATA_SIZE = 10'000'000;
+        constexpr int DATA_SIZE = 10'000;
+        constexpr int COUNT = 10'000;
         constexpr T N_1 = 1;
         constexpr T N_2 = 1.5;
         constexpr T ETA = N_1 / N_2;
-
-        LOG(space_name(N) + ", <" + type_name<T>() + ">");
 
         std::mt19937_64 engine = create_engine<std::mt19937_64>();
 
         const Vector<N, T> normal = sampling::uniform_on_sphere<N, T>(engine);
         const std::vector<Vector<N, T>> data = random_data<N, T>(DATA_SIZE, engine);
 
-        test("  reflect  ", data,
-             [&](const Vector<N, T>& v)
-             {
-                     return reflect(v, normal);
-             });
-        test("  refract  ", data,
-             [&](const Vector<N, T>& v)
-             {
-                     return refract(v, normal, ETA);
-             });
+        std::ostringstream oss;
+        oss << "<" << N << ", " << type_name<T>() << ">:";
+        oss << std::fixed << std::setprecision(5);
 
-        test("  refract 2", data,
-             [&](const Vector<N, T>& v)
-             {
-                     return refract2(v, normal, ETA);
-             });
+        double p;
+
+        p = test<COUNT>(
+                data,
+                [&](const Vector<N, T>& v)
+                {
+                        return reflect(v, normal);
+                });
+        oss << " reflect " << p << " s";
+
+        p = test<COUNT>(
+                data,
+                [&](const Vector<N, T>& v)
+                {
+                        return refract(v, normal, ETA);
+                });
+        oss << ", refract " << p << " s";
+
+        p = test<COUNT>(
+                data,
+                [&](const Vector<N, T>& v)
+                {
+                        return refract2(v, normal, ETA);
+                });
+        oss << ", refract2 " << p << " s";
+
+        LOG(oss.str());
 }
 
-template <std::size_t N>
+template <typename T>
 void test_optics_performance()
 {
-        test_optics_performance<N, float>();
-        test_optics_performance<N, double>();
+        test_optics_performance<2, T>();
+        test_optics_performance<3, T>();
+        test_optics_performance<4, T>();
+        test_optics_performance<5, T>();
+}
+
+void test_performance()
+{
+        test_optics_performance<float>();
+        test_optics_performance<double>();
+}
+
+//
+
+template <std::size_t N, typename T>
+bool cmp(const Vector<N, T>& v1, const Vector<N, T>& v2, T precision)
+{
+        return (v1 - v2).norm() <= precision;
 }
 
 template <typename T>
@@ -184,14 +196,6 @@ void test_optics()
 {
         test_optics_impl<float>(1e-7);
         test_optics_impl<double>(1e-15);
-}
-
-void test_performance()
-{
-        test_optics_performance<2>();
-        test_optics_performance<3>();
-        test_optics_performance<4>();
-        test_optics_performance<5>();
 }
 
 TEST_SMALL("Optics", test_optics)
