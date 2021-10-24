@@ -51,18 +51,6 @@ HyperplaneParallelotope<N, T> create_random_hyperplane_parallelotope(std::mt1993
 }
 
 template <std::size_t N, typename T>
-Vector<N, T> random_vector(const T& min, const T& max, std::mt19937_64& engine)
-{
-        std::uniform_real_distribution<T> urd(min, max);
-        Vector<N, T> res;
-        for (std::size_t i = 0; i < N; ++i)
-        {
-                res[i] = urd(engine);
-        }
-        return res;
-}
-
-template <std::size_t N, typename T>
 std::vector<Ray<N, T>> create_rays(
         const HyperplaneParallelotope<N, T>& p,
         const int point_count,
@@ -77,8 +65,7 @@ std::vector<Ray<N, T>> create_rays(
         rays.reserve(ray_count);
         for (int i = 0; i < point_count; ++i)
         {
-                const Vector<N - 1, T> sample = random_vector<N - 1, T>(0, 1, engine);
-                const Vector<N, T> point = p.org() + sampling::uniform_in_parallelotope(p.vectors(), sample);
+                const Vector<N, T> point = p.org() + sampling::uniform_in_parallelotope(p.vectors(), engine);
                 const Ray<N, T> ray(point, sampling::uniform_on_sphere<N, T>(engine));
                 rays.push_back(ray.moved(-1));
                 rays.push_back(ray.moved(1).reversed());

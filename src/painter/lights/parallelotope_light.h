@@ -44,17 +44,6 @@ class ParallelotopeLight final : public LightSource<N, T, Color>
         T pdf_;
         std::optional<lights::common::Spotlight<T>> spotlight_;
 
-        static Vector<N - 1, T> samples(RandomEngine<T>& random_engine)
-        {
-                std::uniform_real_distribution<T> urd(0, 1);
-                Vector<N - 1, T> samples;
-                for (std::size_t i = 0; i < N - 1; ++i)
-                {
-                        samples[i] = urd(random_engine);
-                }
-                return samples;
-        }
-
 public:
         ParallelotopeLight(
                 const Vector<N, T>& org,
@@ -105,7 +94,7 @@ public:
 
                 const Vector<N, T> sample_location =
                         parallelotope_.org()
-                        + sampling::uniform_in_parallelotope(parallelotope_.vectors(), samples(random_engine));
+                        + sampling::uniform_in_parallelotope(parallelotope_.vectors(), random_engine);
 
                 const Vector<N, T> direction = sample_location - point;
                 const T distance = direction.norm();

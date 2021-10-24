@@ -143,23 +143,31 @@ void write_samples_to_files()
                         return uniform_in_simplex(vertices, random_engine);
                 });
 
+        constexpr std::array<Vector<N, T>, N> VECTORS = []
+        {
+                std::array<Vector<N, T>, N> res;
+                for (std::size_t i = 0; i < N; ++i)
+                {
+                        res[i] = Vector<N, T>(0);
+                        res[i][i] = 2;
+                }
+                return res;
+        }();
+
+        write_samples_to_file<N, T>(
+                "in parallelotope", COUNT,
+                [&]()
+                {
+                        return uniform_in_parallelotope(VECTORS, random_engine);
+                });
+
         std::vector<Vector<N, T>> samples;
         StratifiedJitteredSampler<N, T>(0, 1, COUNT, false).generate(random_engine, &samples);
         std::size_t sample = 0;
         write_samples_to_file<N, T>(
-                "in parallelotope", samples.size(),
+                "in parallelotope with sampler", samples.size(),
                 [&]()
                 {
-                        static constexpr std::array<Vector<N, T>, N> VECTORS = []
-                        {
-                                std::array<Vector<N, T>, N> res;
-                                for (std::size_t i = 0; i < N; ++i)
-                                {
-                                        res[i] = Vector<N, T>(0);
-                                        res[i][i] = 2;
-                                }
-                                return res;
-                        }();
                         ASSERT(sample < samples.size());
                         return uniform_in_parallelotope(VECTORS, samples[sample++]);
                 });
