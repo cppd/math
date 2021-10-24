@@ -522,13 +522,16 @@ double compute_intersections_r_per_second()
 template <std::size_t N, typename T>
 void test_performance()
 {
-        const long long p_1 = std::llround(compute_intersections_per_second<N, T>());
-        LOG("BoundingBox<" + to_string(N) + ", " + type_name<T>() + ">, #1 = " + to_string_digit_groups(p_1)
-            + " intersections per second");
-
-        const long long p_2 = std::llround(compute_intersections_r_per_second<N, T>());
-        LOG("BoundingBox<" + to_string(N) + ", " + type_name<T>() + ">, #2 = " + to_string_digit_groups(p_2)
-            + " intersections per second");
+        {
+                const long long performance = std::llround(compute_intersections_per_second<N, T>());
+                LOG("BoundingBox<" + to_string(N) + ", " + type_name<T>()
+                    + ">: #1 = " + to_string_digit_groups(performance) + " intersections per second");
+        }
+        {
+                const long long performance = std::llround(compute_intersections_r_per_second<N, T>());
+                LOG("BoundingBox<" + to_string(N) + ", " + type_name<T>()
+                    + ">: #2 = " + to_string_digit_groups(performance) + " intersections per second");
+        }
 }
 
 template <typename T>

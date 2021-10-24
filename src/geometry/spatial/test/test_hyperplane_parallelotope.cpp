@@ -26,7 +26,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/com/log.h>
 #include <src/com/print.h>
 #include <src/com/random/engine.h>
-#include <src/com/type/limit.h>
 #include <src/com/type/name.h>
 #include <src/sampling/parallelotope_uniform.h>
 #include <src/sampling/sphere_uniform.h>
@@ -185,8 +184,8 @@ void test_performance()
                         return compute_intersections_per_second<N, T, COMPUTE_COUNT>(POINT_COUNT, engine);
                 });
 
-        LOG("HyperplaneParallelotope<" + to_string(N) + ", " + type_name<T>() + ">, "
-            + to_string_digit_groups(std::llround(performance)) + " intersections per second");
+        LOG("HyperplaneParallelotope<" + to_string(N) + ", " + type_name<T>()
+            + ">: " + to_string_digit_groups(std::llround(performance)) + " intersections per second");
 }
 
 template <typename T>

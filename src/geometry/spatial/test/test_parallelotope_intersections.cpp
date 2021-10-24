@@ -170,7 +170,7 @@ void test_performance()
                 });
 
         LOG("Parallelotope<" + to_string(N) + ", " + type_name<T>()
-            + ">, #1 = " + to_string_digit_groups(std::llround(performance)) + " intersections per second");
+            + ">: " + to_string_digit_groups(std::llround(performance)) + " intersections per second");
 }
 
 template <typename T>

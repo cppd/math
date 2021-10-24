@@ -33,8 +33,8 @@ Cambridge University Press, 2003.
 
 #include <algorithm>
 #include <array>
+#include <cmath>
 #include <optional>
-#include <utility>
 
 namespace ns::geometry
 {
@@ -223,7 +223,7 @@ bool ParallelotopeAA<N, T>::intersect_impl(const Ray<N, T>& r, T* first, T* seco
 
         for (unsigned i = 0; i < N; ++i)
         {
-                T s = r.dir()[i];
+                const T s = r.dir()[i];
                 if (s == 0)
                 {
                         // parallel to the planes
@@ -237,9 +237,9 @@ bool ParallelotopeAA<N, T>::intersect_impl(const Ray<N, T>& r, T* first, T* seco
                         continue;
                 }
 
-                T d = r.org()[i];
-                T alpha1 = (planes_[i].d1 - d) / s;
-                T alpha2 = (planes_[i].d2 - d) / s;
+                const T d = r.org()[i];
+                const T alpha1 = (planes_[i].d1 - d) / s;
+                const T alpha2 = (planes_[i].d2 - d) / s;
 
                 if (s > 0)
                 {
@@ -364,6 +364,7 @@ void ParallelotopeAA<N, T>::binary_division_impl(std::array<Planes, N>* p, const
                 (*p)[INDEX].d1 = planes_[INDEX].d1;
                 (*p)[INDEX].d2 = middle_d[INDEX];
                 binary_division_impl<INDEX - 1>(p, middle_d, f);
+
                 (*p)[INDEX].d1 = middle_d[INDEX];
                 (*p)[INDEX].d2 = planes_[INDEX].d2;
                 binary_division_impl<INDEX - 1>(p, middle_d, f);
@@ -387,7 +388,8 @@ std::array<ParallelotopeAA<N, T>, ParallelotopeAA<N, T>::DIVISIONS> Parallelotop
 
         unsigned count = 0;
         std::array<Planes, N> p;
-        auto f = [&count, &result, &p]()
+
+        const auto f = [&count, &result, &p]()
         {
                 ASSERT(count < result.size());
                 result[count++].planes_ = p;
@@ -424,7 +426,8 @@ std::array<Vector<N, T>, ParallelotopeAA<N, T>::VERTEX_COUNT> ParallelotopeAA<N,
 
         unsigned count = 0;
         Vector<N, T> p;
-        auto f = [&count, &result, &p]()
+
+        const auto f = [&count, &result, &p]()
         {
                 ASSERT(count < result.size());
                 result[count++] = p;
@@ -452,7 +455,8 @@ std::array<std::array<Vector<N, T>, 2>, ParallelotopeAA<N, T>::EDGE_COUNT> Paral
 
         unsigned count = 0;
         Vector<N, T> p;
-        auto f = [this, &count, &result, &p, &vectors]()
+
+        const auto f = [this, &count, &result, &p, &vectors]()
         {
                 for (unsigned i = 0; i < N; ++i)
                 {

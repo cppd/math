@@ -17,7 +17,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
-#include <src/com/type/limit.h>
 #include <src/numerical/ray.h>
 #include <src/numerical/vec.h>
 
@@ -31,10 +30,9 @@ std::optional<T> hyperplane_intersect(
         const Vector<N, T>& plane_point,
         const Vector<N, T>& plane_normal)
 {
-        T s = dot(plane_normal, ray.dir());
-        T t = dot(plane_point - ray.org(), plane_normal) / s;
-
-        if (t > T(0) && t <= Limits<T>::max())
+        const T s = dot(plane_normal, ray.dir());
+        const T t = dot(plane_point - ray.org(), plane_normal) / s;
+        if (t > 0)
         {
                 return t;
         }

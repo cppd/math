@@ -130,6 +130,7 @@ void test()
 template <typename T>
 void test()
 {
+        test<2, T>();
         test<3, T>();
         test<4, T>();
         test<5, T>();
@@ -180,13 +181,14 @@ void test_performance()
                         return compute_intersections_per_second<N, T, COMPUTE_COUNT>(POINT_COUNT, engine);
                 });
 
-        LOG("HyperplaneBall<" + to_string(N) + ", " + type_name<T>() + ">, "
-            + to_string_digit_groups(std::llround(performance)) + " intersections per second");
+        LOG("HyperplaneBall<" + to_string(N) + ", " + type_name<T>()
+            + ">: " + to_string_digit_groups(std::llround(performance)) + " intersections per second");
 }
 
 template <typename T>
 void test_performance()
 {
+        test_performance<2, T>();
         test_performance<3, T>();
         test_performance<4, T>();
         test_performance<5, T>();

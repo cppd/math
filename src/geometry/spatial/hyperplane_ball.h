@@ -42,14 +42,15 @@ public:
 
         std::optional<T> intersect(const Ray<N, T>& ray) const
         {
-                std::optional<T> t = hyperplane_intersect(ray, center_, normal_);
+                const std::optional<T> t = hyperplane_intersect(ray, center_, normal_);
                 if (!t)
                 {
                         return std::nullopt;
                 }
 
-                Vector<N, T> intersection_point = ray.point(*t);
-                if ((intersection_point - center_).norm_squared() <= radius_squared_)
+                const Vector<N, T> point = ray.point(*t);
+
+                if ((point - center_).norm_squared() < radius_squared_)
                 {
                         return t;
                 }

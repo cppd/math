@@ -25,7 +25,11 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/numerical/ray.h>
 #include <src/numerical/vec.h>
 
+#include <algorithm>
 #include <array>
+#include <cmath>
+#include <optional>
+#include <utility>
 
 namespace ns::geometry
 {
@@ -122,7 +126,7 @@ HyperplaneParallelotope<N, T>::HyperplaneParallelotope(
 
                 planes_[i].d = dot(org_, planes_[i].n);
 
-                T distance = dot(org_ + vectors_[i], planes_[i].n) - planes_[i].d;
+                const T distance = dot(org_ + vectors_[i], planes_[i].n) - planes_[i].d;
                 ASSERT(distance >= 0);
                 planes_[i].n /= distance;
                 planes_[i].d /= distance;
@@ -149,7 +153,7 @@ Constraints<N, T, 2 * (N - 1), 1> HyperplaneParallelotope<N, T>::constraints() c
         // Points are inside if n * x - d <= 0 or d + -(n * x) >= 0.
         for (unsigned i = 0, c_i = 0; i < N - 1; ++i, c_i += 2)
         {
-                T len = planes_[i].n.norm();
+                const T len = planes_[i].n.norm();
 
                 result.c[c_i].a = planes_[i].n / len;
                 result.c[c_i].b = -planes_[i].d / len;
@@ -167,23 +171,22 @@ Constraints<N, T, 2 * (N - 1), 1> HyperplaneParallelotope<N, T>::constraints() c
 template <std::size_t N, typename T>
 std::optional<T> HyperplaneParallelotope<N, T>::intersect(const Ray<N, T>& r) const
 {
-        std::optional<T> t = hyperplane_intersect(r, org_, normal_);
+        const std::optional<T> t = hyperplane_intersect(r, org_, normal_);
         if (!t)
         {
                 return std::nullopt;
         }
 
-        Vector<N, T> intersection_point = r.point(*t);
+        const Vector<N, T> point = r.point(*t);
 
         for (unsigned i = 0; i < N - 1; ++i)
         {
-                T d = dot(intersection_point, planes_[i].n) - planes_[i].d;
-                if (d <= 0 || d >= 1)
+                const T d = dot(point, planes_[i].n) - planes_[i].d;
+                if (!(d > 0 && d < 1))
                 {
                         return std::nullopt;
                 }
         }
-
         return t;
 }
 
@@ -214,6 +217,7 @@ std::array<Vector<N, T>, HyperplaneParallelotope<N, T>::VERTEX_COUNT> Hyperplane
         std::array<Vector<N, T>, VERTEX_COUNT> result;
 
         unsigned count = 0;
+
         auto f = [&count, &result](const Vector<N, T>& p)
         {
                 ASSERT(count < result.size());
@@ -260,6 +264,7 @@ std::array<std::array<Vector<N, T>, 2>, HyperplaneParallelotope<N, T>::EDGE_COUN
 
         unsigned count = 0;
         std::array<bool, N - 1> dimensions;
+
         auto f = [this, &dimensions, &count, &result](const Vector<N, T>& p)
         {
                 for (unsigned i = 0; i < N - 1; ++i)

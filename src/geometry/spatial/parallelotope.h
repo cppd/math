@@ -35,8 +35,8 @@ Cambridge University Press, 2003.
 
 #include <algorithm>
 #include <array>
+#include <cmath>
 #include <optional>
-#include <utility>
 
 namespace ns::geometry
 {
@@ -216,7 +216,7 @@ bool Parallelotope<N, T>::intersect_impl(const Ray<N, T>& r, T* first, T* second
 
         for (unsigned i = 0; i < N; ++i)
         {
-                T s = dot(r.dir(), planes_[i].n);
+                const T s = dot(r.dir(), planes_[i].n);
                 if (s == 0)
                 {
                         // parallel to the planes
@@ -230,9 +230,9 @@ bool Parallelotope<N, T>::intersect_impl(const Ray<N, T>& r, T* first, T* second
                         continue;
                 }
 
-                T d = dot(r.org(), planes_[i].n);
-                T alpha1 = (planes_[i].d1 - d) / s;
-                T alpha2 = (planes_[i].d2 - d) / s;
+                const T d = dot(r.org(), planes_[i].n);
+                const T alpha1 = (planes_[i].d1 - d) / s;
+                const T alpha2 = (planes_[i].d2 - d) / s;
 
                 if (s > 0)
                 {
@@ -307,7 +307,8 @@ Vector<N, T> Parallelotope<N, T>::normal(const Vector<N, T>& p) const
         Vector<N, T> n;
         for (unsigned i = 0; i < N; ++i)
         {
-                T d = dot(p, planes_[i].n);
+                const T d = dot(p, planes_[i].n);
+
                 T l;
 
                 l = std::abs(d - planes_[i].d1);
@@ -335,7 +336,7 @@ bool Parallelotope<N, T>::inside(const Vector<N, T>& p) const
 {
         for (unsigned i = 0; i < N; ++i)
         {
-                T d = dot(p, planes_[i].n);
+                const T d = dot(p, planes_[i].n);
 
                 if (d < planes_[i].d1)
                 {
@@ -400,7 +401,8 @@ std::array<Parallelotope<N, T>, Parallelotope<N, T>::DIVISIONS> Parallelotope<N,
         Vector<N, T> d1;
         Vector<N, T> d2;
         unsigned count = 0;
-        auto f = [&count, &result, &d1, &d2](const Vector<N, T>& org)
+
+        const auto f = [&count, &result, &d1, &d2](const Vector<N, T>& org)
         {
                 ASSERT(count < result.size());
                 result[count].org_ = org;
@@ -440,7 +442,8 @@ std::array<Vector<N, T>, Parallelotope<N, T>::VERTEX_COUNT> Parallelotope<N, T>:
         std::array<Vector<N, T>, VERTEX_COUNT> result;
 
         unsigned count = 0;
-        auto f = [&count, &result](const Vector<N, T>& p)
+
+        const auto f = [&count, &result](const Vector<N, T>& p)
         {
                 ASSERT(count < result.size());
                 result[count++] = p;
@@ -482,7 +485,8 @@ std::array<std::array<Vector<N, T>, 2>, Parallelotope<N, T>::EDGE_COUNT> Paralle
 
         unsigned count = 0;
         std::array<bool, N> dimensions;
-        auto f = [this, &dimensions, &count, &result](const Vector<N, T>& p)
+
+        const auto f = [this, &dimensions, &count, &result](const Vector<N, T>& p)
         {
                 for (unsigned i = 0; i < N; ++i)
                 {
@@ -525,7 +529,7 @@ T Parallelotope<N, T>::length() const
 
         unsigned count = 0;
 
-        auto f = [&max_squared, &count](const Vector<N, T>& d)
+        const auto f = [&max_squared, &count](const Vector<N, T>& d)
         {
                 ++count;
                 max_squared = std::max(max_squared, d.norm_squared());

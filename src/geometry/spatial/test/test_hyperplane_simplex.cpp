@@ -206,8 +206,8 @@ void test_performance()
                         return compute_intersections_per_second<N, T, COMPUTE_COUNT>(POINT_COUNT, engine);
                 });
 
-        LOG("HyperplaneSimplex<" + to_string(N) + ", " + type_name<T>() + ">, "
-            + to_string_digit_groups(std::llround(performance)) + " intersections per second");
+        LOG("HyperplaneSimplex<" + to_string(N) + ", " + type_name<T>()
+            + ">: " + to_string_digit_groups(std::llround(performance)) + " intersections per second");
 }
 
 template <typename T>
