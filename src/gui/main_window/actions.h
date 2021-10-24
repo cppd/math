@@ -45,6 +45,7 @@ public:
         Actions(const CommandLineOptions& options,
                 QStatusBar* status_bar,
                 QAction* action_self_test,
+                QAction* action_benchmark,
                 QMenu* menu_file,
                 QMenu* menu_create,
                 QMenu* menu_edit,

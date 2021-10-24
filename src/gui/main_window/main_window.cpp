@@ -279,9 +279,9 @@ void MainWindow::first_shown()
         volume_widget_->set_model_tree(model_tree_.get());
         model_events_ = std::make_unique<ModelEvents>(model_tree_->events(), view_.get());
         actions_ = std::make_unique<Actions>(
-                options, ui_.status_bar, ui_.action_self_test, ui_.menu_file, ui_.menu_create, ui_.menu_edit,
-                ui_.menu_rendering, repository_.get(), view_.get(), model_tree_.get(), lighting_widget_.get(),
-                colors_widget_.get());
+                options, ui_.status_bar, ui_.action_self_test, ui_.action_benchmark, ui_.menu_file, ui_.menu_create,
+                ui_.menu_edit, ui_.menu_rendering, repository_.get(), view_.get(), model_tree_.get(),
+                lighting_widget_.get(), colors_widget_.get());
 
         if (!ui_.menu_file->actions().empty())
         {

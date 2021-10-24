@@ -146,17 +146,17 @@ public:
 };
 
 TestSelectionParametersDialog::TestSelectionParametersDialog(
+        const std::string_view& title,
         std::vector<std::string> test_names,
         std::optional<TestSelectionParameters>& parameters)
         : QDialog(parent_for_dialog()), parameters_(parameters)
 {
         ui_.setupUi(this);
-        setWindowTitle("Select Tests");
+
+        setWindowTitle(QString::fromUtf8(title.data(), title.size()));
 
         std::sort(test_names.begin(), test_names.end());
-
         items_ = std::make_unique<Items>(test_names.size());
-
         for (std::string& name : test_names)
         {
                 std::unique_ptr<QListWidgetItem> item = std::make_unique<QListWidgetItem>(QString::fromStdString(name));
@@ -226,7 +226,7 @@ void TestSelectionParametersDialog::done(int r)
 
         if (test_names.empty())
         {
-                dialog::message_critical("No test selected");
+                dialog::message_critical("No items selected");
                 return;
         }
 
@@ -236,11 +236,13 @@ void TestSelectionParametersDialog::done(int r)
         QDialog::done(r);
 }
 
-std::optional<TestSelectionParameters> TestSelectionParametersDialog::show(std::vector<std::string> test_names)
+std::optional<TestSelectionParameters> TestSelectionParametersDialog::show(
+        const std::string_view& title,
+        std::vector<std::string> test_names)
 {
         std::optional<TestSelectionParameters> parameters;
 
-        QtObjectInDynamicMemory w(new TestSelectionParametersDialog(std::move(test_names), parameters));
+        QtObjectInDynamicMemory w(new TestSelectionParametersDialog(title, std::move(test_names), parameters));
 
         if (!w->exec() || w.isNull())
         {

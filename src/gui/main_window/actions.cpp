@@ -226,6 +226,7 @@ void create_menu(
         std::vector<Connection>* const connections,
         WorkerThreads* const threads,
         QAction* const action_self_test,
+        QAction* action_benchmark,
         QMenu* const menu_file,
         QMenu* const menu_edit,
         QMenu* const menu_rendering,
@@ -274,6 +275,14 @@ void create_menu(
                 [=]()
                 {
                         self_test(threads, process::TestType::ALL, action_name(*action));
+                }));
+
+        action = action_benchmark;
+        connections->emplace_back(QObject::connect(
+                action, &QAction::triggered,
+                [=]()
+                {
+                        self_test(threads, process::TestType::BENCHMARK, action_name(*action));
                 }));
 
         action = menu_rendering->addAction("Painter...");
@@ -437,6 +446,7 @@ Actions::Actions(
         const CommandLineOptions& options,
         QStatusBar* const status_bar,
         QAction* const action_self_test,
+        QAction* action_benchmark,
         QMenu* const menu_file,
         QMenu* const menu_create,
         QMenu* const menu_edit,
@@ -449,8 +459,8 @@ Actions::Actions(
         : worker_threads_(create_worker_threads(THREAD_ID_COUNT, SELF_TEST_THREAD_ID, status_bar))
 {
         create_menu(
-                &connections_, worker_threads_.get(), action_self_test, menu_file, menu_edit, menu_rendering, view,
-                model_tree, lighting, colors);
+                &connections_, worker_threads_.get(), action_self_test, action_benchmark, menu_file, menu_edit,
+                menu_rendering, view, model_tree, lighting, colors);
 
         create_repository_menu(&connections_, worker_threads_.get(), menu_create, repository);
 

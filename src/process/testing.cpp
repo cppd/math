@@ -39,7 +39,8 @@ std::function<void(ProgressRatioList*)> action_self_test(TestType test_type)
         case TestType::ALL:
         {
                 std::optional<gui::dialog::TestSelectionParameters> tests =
-                        gui::dialog::TestSelectionParametersDialog::show(test::Tests::instance().large_names());
+                        gui::dialog::TestSelectionParametersDialog::show(
+                                "Select tests", test::Tests::instance().large_names());
                 if (!tests || tests->test_names.empty())
                 {
                         return nullptr;
@@ -48,6 +49,20 @@ std::function<void(ProgressRatioList*)> action_self_test(TestType test_type)
                 {
                         test::Tests::instance().run_small(progress_list);
                         test::Tests::instance().run_large(tests->test_names, progress_list);
+                };
+        }
+        case TestType::BENCHMARK:
+        {
+                std::optional<gui::dialog::TestSelectionParameters> tests =
+                        gui::dialog::TestSelectionParametersDialog::show(
+                                "Select benchmarks", test::Tests::instance().performance_names());
+                if (!tests || tests->test_names.empty())
+                {
+                        return nullptr;
+                }
+                return [=](ProgressRatioList* progress_list)
+                {
+                        test::Tests::instance().run_performance(tests->test_names, progress_list);
                 };
         }
         }

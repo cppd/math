@@ -116,6 +116,7 @@
     </property>
     <addaction name="action_help"/>
     <addaction name="action_self_test"/>
+    <addaction name="action_benchmark"/>
     <addaction name="separator"/>
     <addaction name="action_about"/>
    </widget>
@@ -154,6 +155,11 @@
   <action name="action_self_test">
    <property name="text">
     <string>Self-Test...</string>
+   </property>
+  </action>
+  <action name="action_benchmark">
+   <property name="text">
+    <string>Benchmark...</string>
    </property>
   </action>
  </widget>
