@@ -70,7 +70,7 @@ Vector<N, T> random_vector(RandomEngine& engine, Distribution& distribution)
 template <typename RandomEngine, std::size_t N, typename T>
 void uniform_in_sphere_by_rejection(RandomEngine& random_engine, Vector<N, T>& v, T& v_length_square)
 {
-        static_assert(N >= 2);
+        static_assert(N >= 1);
 
         thread_local std::uniform_real_distribution<T> urd(-1, 1);
 
@@ -88,7 +88,7 @@ void uniform_in_sphere_by_rejection(RandomEngine& random_engine, Vector<N, T>& v
 template <typename RandomEngine, std::size_t N, typename T>
 void uniform_in_sphere_by_normal_distribution(RandomEngine& random_engine, Vector<N, T>& v, T& v_length_square)
 {
-        static_assert(N >= 2);
+        static_assert(N >= 1);
 
         thread_local std::normal_distribution<T> nd(0, 1);
 
