@@ -17,6 +17,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "../sphere_uniform.h"
 
+#include <src/com/benchmark.h>
 #include <src/com/chrono.h>
 #include <src/com/enum.h>
 #include <src/com/error.h>
@@ -50,64 +51,64 @@ constexpr std::string_view ENGINE_NAME = []
 }();
 
 template <std::size_t N, typename T, typename RandomEngine>
-double test_performance_on_sphere_by_rejection(int count, RandomEngine& random_engine)
+Vector<N, T> uniform_in_sphere_by_rejection(RandomEngine& random_engine)
 {
-        static Vector<N, T> v;
-
-        Clock::time_point start_time = Clock::now();
-
-        for (int i = 0; i < count; ++i)
-        {
-                v = impl::uniform_on_sphere_by_rejection<N, T>(random_engine);
-        }
-
-        return duration_from(start_time);
+        Vector<N, T> v;
+        T v_length_square;
+        impl::uniform_in_sphere_by_rejection(random_engine, v, v_length_square);
+        return v;
 }
 
 template <std::size_t N, typename T, typename RandomEngine>
-double test_performance_on_sphere_by_normal_distribution(int count, RandomEngine& random_engine)
+Vector<N, T> uniform_in_sphere_by_normal_distribution(RandomEngine& random_engine)
 {
-        static Vector<N, T> v;
+        Vector<N, T> v;
+        T v_length_square;
+        impl::uniform_in_sphere_by_normal_distribution(random_engine, v, v_length_square);
+        return v;
+}
 
-        Clock::time_point start_time = Clock::now();
-
-        for (int i = 0; i < count; ++i)
+template <int COUNT, std::size_t N, typename T, typename RandomEngine>
+double test_on_sphere_by_rejection(RandomEngine& random_engine)
+{
+        const Clock::time_point start_time = Clock::now();
+        for (int i = 0; i < COUNT; ++i)
         {
-                v = impl::uniform_on_sphere_by_normal_distribution<N, T>(random_engine);
+                do_not_optimize(impl::uniform_on_sphere_by_rejection<N, T>(random_engine));
         }
-
         return duration_from(start_time);
 }
 
-template <std::size_t N, typename T, typename RandomEngine>
-double test_performance_in_sphere_by_rejection(int count, RandomEngine& random_engine)
+template <int COUNT, std::size_t N, typename T, typename RandomEngine>
+double test_on_sphere_by_normal_distribution(RandomEngine& random_engine)
 {
-        static Vector<N, T> v;
-        static T v_length_square;
-
-        Clock::time_point start_time = Clock::now();
-
-        for (int i = 0; i < count; ++i)
+        const Clock::time_point start_time = Clock::now();
+        for (int i = 0; i < COUNT; ++i)
         {
-                impl::uniform_in_sphere_by_rejection(random_engine, v, v_length_square);
+                do_not_optimize(impl::uniform_on_sphere_by_normal_distribution<N, T>(random_engine));
         }
-
         return duration_from(start_time);
 }
 
-template <std::size_t N, typename T, typename RandomEngine>
-double test_performance_in_sphere_by_normal_distribution(int count, RandomEngine& random_engine)
+template <int COUNT, std::size_t N, typename T, typename RandomEngine>
+double test_in_sphere_by_rejection(RandomEngine& random_engine)
 {
-        static Vector<N, T> v;
-        static T v_length_square;
-
-        Clock::time_point start_time = Clock::now();
-
-        for (int i = 0; i < count; ++i)
+        const Clock::time_point start_time = Clock::now();
+        for (int i = 0; i < COUNT; ++i)
         {
-                impl::uniform_in_sphere_by_normal_distribution(random_engine, v, v_length_square);
+                do_not_optimize(uniform_in_sphere_by_rejection<N, T>(random_engine));
         }
+        return duration_from(start_time);
+}
 
+template <int COUNT, std::size_t N, typename T, typename RandomEngine>
+double test_in_sphere_by_normal_distribution(RandomEngine& random_engine)
+{
+        const Clock::time_point start_time = Clock::now();
+        for (int i = 0; i < COUNT; ++i)
+        {
+                do_not_optimize(uniform_in_sphere_by_normal_distribution<N, T>(random_engine));
+        }
         return duration_from(start_time);
 }
 
@@ -133,96 +134,73 @@ std::string type_to_string(SampleType type)
         error_fatal("Unknown type " + to_string(enum_to_int(type)));
 }
 
-std::string time_to_string(double v)
-{
-        std::ostringstream oss;
-        oss << std::fixed;
-        oss << std::setprecision(5);
-        oss << std::setw(8);
-        oss << v;
-        return oss.str();
-}
-
-template <SampleType SAMPLE_TYPE, std::size_t N, typename T, typename RandomEngine>
-void write_description()
-{
-        std::ostringstream oss;
-        oss << type_to_string(SAMPLE_TYPE) << ", " << N << "D, " << type_name<T>() << ", " << ENGINE_NAME<RandomEngine>;
-        LOG(oss.str());
-}
-
 template <SampleType SAMPLE_TYPE, std::size_t N, typename T, typename RandomEngine>
 void test_performance()
 {
         constexpr int COUNT = 5'000'000;
 
-        write_description<SAMPLE_TYPE, N, T, RandomEngine>();
+        std::ostringstream oss;
+
+        oss << std::fixed;
+        oss << std::setprecision(5);
+
+        oss << type_to_string(SAMPLE_TYPE);
+        oss << " <" << N << ", " << type_name<T>() << ", " << ENGINE_NAME<RandomEngine> << ">:";
 
         RandomEngine random_engine = create_engine<RandomEngine>();
 
-        double t;
         switch (SAMPLE_TYPE)
         {
         case SampleType::ON_SPHERE:
         {
-                t = test_performance_on_sphere_by_rejection<N, T>(COUNT, random_engine);
-                LOG("  Rejection: " + time_to_string(t));
-                t = test_performance_on_sphere_by_normal_distribution<N, T>(COUNT, random_engine);
-                LOG("  Normal   : " + time_to_string(t));
+                const double r = test_on_sphere_by_rejection<COUNT, N, T>(random_engine);
+                oss << " rejection " << r;
+                const double n = test_on_sphere_by_normal_distribution<COUNT, N, T>(random_engine);
+                oss << ", normal " << n;
+                LOG(oss.str());
                 return;
         }
         case SampleType::IN_SPHERE:
         {
-                t = test_performance_in_sphere_by_rejection<N, T>(COUNT, random_engine);
-                LOG("  Rejection: " + time_to_string(t));
-                t = test_performance_in_sphere_by_normal_distribution<N, T>(COUNT, random_engine);
-                LOG("  Normal   : " + time_to_string(t));
+                const double r = test_in_sphere_by_rejection<COUNT, N, T>(random_engine);
+                oss << " rejection " << r;
+                const double n = test_in_sphere_by_normal_distribution<COUNT, N, T>(random_engine);
+                oss << ", normal " << n;
+                LOG(oss.str());
                 return;
         }
         }
         error_fatal("Unknown type " + to_string(enum_to_int(SAMPLE_TYPE)));
 }
 
-template <SampleType SAMPLE_TYPE, std::size_t N, typename T>
-void test_performance()
-{
-        test_performance<SAMPLE_TYPE, N, T, std::mt19937>();
-        test_performance<SAMPLE_TYPE, N, T, std::mt19937_64>();
-}
-
-template <SampleType SAMPLE_TYPE, typename T>
+template <SampleType SAMPLE_TYPE, typename T, typename RandomEngine>
 void test_performance()
 {
         static_assert(std::is_floating_point_v<T>);
 
-        test_performance<SAMPLE_TYPE, 2, T>();
-        LOG("");
-        test_performance<SAMPLE_TYPE, 3, T>();
-        LOG("");
-        test_performance<SAMPLE_TYPE, 4, T>();
-        LOG("");
-        test_performance<SAMPLE_TYPE, 5, T>();
-        LOG("");
-        test_performance<SAMPLE_TYPE, 6, T>();
-        LOG("");
-        test_performance<SAMPLE_TYPE, 7, T>();
+        test_performance<SAMPLE_TYPE, 2, T, RandomEngine>();
+        test_performance<SAMPLE_TYPE, 3, T, RandomEngine>();
+        test_performance<SAMPLE_TYPE, 4, T, RandomEngine>();
+        test_performance<SAMPLE_TYPE, 5, T, RandomEngine>();
+        test_performance<SAMPLE_TYPE, 6, T, RandomEngine>();
+        test_performance<SAMPLE_TYPE, 7, T, RandomEngine>();
 }
 
 template <SampleType SAMPLE_TYPE>
 void test_performance()
 {
-        test_performance<SAMPLE_TYPE, float>();
-        LOG("");
-        test_performance<SAMPLE_TYPE, double>();
+        test_performance<SAMPLE_TYPE, float, std::mt19937>();
+        test_performance<SAMPLE_TYPE, float, std::mt19937_64>();
+        test_performance<SAMPLE_TYPE, double, std::mt19937>();
+        test_performance<SAMPLE_TYPE, double, std::mt19937_64>();
 }
 
 void test()
 {
         test_performance<SampleType::ON_SPHERE>();
-        LOG("");
         test_performance<SampleType::IN_SPHERE>();
 }
 
-TEST_PERFORMANCE("Uniform Sphere Samples", test)
+TEST_PERFORMANCE("Uniform sphere samples", test)
 }
 }

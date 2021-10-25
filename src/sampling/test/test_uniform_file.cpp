@@ -50,19 +50,6 @@ std::string replace_space(const std::string_view& s)
         return r;
 }
 
-template <typename T>
-constexpr std::string_view ENGINE_NAME = []
-{
-        if constexpr (std::is_same_v<std::remove_cv_t<T>, std::mt19937>)
-        {
-                return "std::mt19937";
-        }
-        if constexpr (std::is_same_v<std::remove_cv_t<T>, std::mt19937_64>)
-        {
-                return "std::mt19937_64";
-        }
-}();
-
 template <std::size_t N, typename T>
 std::string samples_file_name(const std::string_view& name)
 {
@@ -71,25 +58,30 @@ std::string samples_file_name(const std::string_view& name)
         return oss.str();
 }
 
-template <std::size_t N, typename T, typename Generator>
-void write_samples_to_file(const std::string_view& name, int count, const Generator& g)
+template <std::size_t N, typename T>
+std::filesystem::path samples_file_path(const std::string_view& name)
 {
-        std::ofstream file(std::filesystem::temp_directory_path() / path_from_utf8(samples_file_name<N, T>(name)));
+        return std::filesystem::temp_directory_path() / path_from_utf8(samples_file_name<N, T>(name));
+}
 
+template <std::size_t N, typename T, typename Generator>
+void write_samples_to_file(const std::string_view& name, const int count, const Generator& g)
+{
+        std::ofstream file(samples_file_path<N, T>(name));
         for (int i = 0; i < count; ++i)
         {
                 file << to_string(g()) << "\n";
         }
 }
 
-template <std::size_t N, typename T, typename RandomEngine>
+template <std::size_t N, typename T>
 void write_samples_to_files()
 {
         constexpr int COUNT = (N == 2) ? 200 : 10'000;
 
-        RandomEngine random_engine = create_engine<RandomEngine>();
+        LOG("Writing samples <" + to_string(N) + ", " + type_name<T>() + ">");
 
-        LOG("Writing samples " + to_string(N) + "D");
+        std::mt19937_64 random_engine = create_engine<std::mt19937_64>();
 
         write_samples_to_file<N, T>(
                 "on sphere rejection", COUNT,
@@ -173,41 +165,21 @@ void write_samples_to_files()
                 });
 }
 
-template <typename T, typename RandomEngine>
-void write_description()
-{
-        std::ostringstream oss;
-        oss << "Files <" << type_name<T>() << ", " << ENGINE_NAME<RandomEngine> << ">";
-        LOG(oss.str());
-}
-
-template <typename T, typename RandomEngine>
+template <typename T>
 void write_samples_to_files()
 {
-        static_assert(std::is_floating_point_v<T>);
-
-        write_description<T, RandomEngine>();
-
-        write_samples_to_files<2, T, RandomEngine>();
-        write_samples_to_files<3, T, RandomEngine>();
-        write_samples_to_files<4, T, RandomEngine>();
-}
-
-template <typename RandomEngine>
-void write_samples_to_files()
-{
-        write_samples_to_files<float, RandomEngine>();
-        LOG("");
-        write_samples_to_files<double, RandomEngine>();
-        LOG("");
-        write_samples_to_files<long double, RandomEngine>();
+        write_samples_to_files<2, T>();
+        write_samples_to_files<3, T>();
+        write_samples_to_files<4, T>();
 }
 
 void test()
 {
-        write_samples_to_files<std::mt19937_64>();
+        write_samples_to_files<float>();
+        write_samples_to_files<double>();
+        write_samples_to_files<long double>();
 }
 
-TEST_PERFORMANCE("Uniform Samples File", test)
+TEST_PERFORMANCE("Uniform samples file", test)
 }
 }

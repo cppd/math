@@ -21,6 +21,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "../lh_sampler.h"
 #include "../sj_sampler.h"
 
+#include <src/com/benchmark.h>
 #include <src/com/chrono.h>
 #include <src/com/exponent.h>
 #include <src/com/file/path.h>
@@ -256,47 +257,61 @@ void test_performance(const bool shuffle)
 {
         RandomEngine random_engine = create_engine<RandomEngine>();
 
-        constexpr int ITER_COUNT = 1'000'000;
+        constexpr int ITER_COUNT = 100'000;
         constexpr int SAMPLE_COUNT = power<N>(one_dimension_sample_count<N>());
 
-        std::vector<Vector<N, T>> data;
-
-        LOG(std::string("Testing performance, ") + (shuffle ? "shuffle, " : "") + to_string(N) + "D");
-
+        const double sjs = [&]
         {
+                std::vector<Vector<N, T>> data;
                 StratifiedJitteredSampler<N, T> sampler(0, 1, SAMPLE_COUNT, shuffle);
-                Clock::time_point start_time = Clock::now();
+                const Clock::time_point start_time = Clock::now();
                 for (int i = 0; i < ITER_COUNT; ++i)
                 {
                         sampler.generate(random_engine, &data);
                 }
-                LOG(sampler_name(sampler) + ": time = " + to_string_fixed(duration_from(start_time), 5)
-                    + " seconds, size = " + to_string(data.size()));
-        }
+                return duration_from(start_time);
+        }();
+
+        const double lhs = [&]
         {
+                std::vector<Vector<N, T>> data;
                 LatinHypercubeSampler<N, T> sampler(0, 1, SAMPLE_COUNT, shuffle);
-                Clock::time_point start_time = Clock::now();
+                const Clock::time_point start_time = Clock::now();
                 for (int i = 0; i < ITER_COUNT; ++i)
                 {
                         sampler.generate(random_engine, &data);
                 }
-                LOG(sampler_name(sampler) + ": time = " + to_string_fixed(duration_from(start_time), 5)
-                    + " seconds, size = " + to_string(data.size()));
-        }
+                return duration_from(start_time);
+        }();
+
+        const double hs = [&]
         {
                 HaltonSampler<N, T> sampler;
-                Clock::time_point start_time = Clock::now();
-                data.resize(SAMPLE_COUNT);
+                const Clock::time_point start_time = Clock::now();
                 for (int i = 0; i < ITER_COUNT; ++i)
                 {
                         for (int j = 0; j < SAMPLE_COUNT; ++j)
                         {
-                                data[j] = sampler.generate();
+                                do_not_optimize(sampler.generate());
                         }
                 }
-                LOG(sampler_name(sampler) + ": time = " + to_string_fixed(duration_from(start_time), 5)
-                    + " seconds, size = " + to_string(data.size()));
+                return duration_from(start_time);
+        }();
+
+        std::ostringstream oss;
+        oss << "<" << N << ", " << type_name<T>() << ", " << random_engine_name<RandomEngine>() << ">";
+        if (shuffle)
+        {
+                oss << ", shuffle";
         }
+        else
+        {
+                oss << "         ";
+        }
+        oss << ":";
+        oss << std::fixed << std::setprecision(5);
+        oss << " SJS " << sjs << " s, LHS " << lhs << " s, HS " << hs << " s";
+        LOG(oss.str());
 }
 
 template <std::size_t N, typename T, typename RandomEngine>
@@ -311,9 +326,6 @@ void test_performance()
 {
         static_assert(std::is_floating_point_v<T>);
 
-        LOG(std::string("Performance <") + type_name<T>() + ", " + random_engine_name<RandomEngine>() + ">");
-        LOG("");
-
         test_performance<2, T, RandomEngine>();
         test_performance<3, T, RandomEngine>();
         test_performance<4, T, RandomEngine>();
@@ -325,16 +337,13 @@ template <typename T>
 void test_performance()
 {
         test_performance<T, std::mt19937>();
-        LOG("");
         test_performance<T, std::mt19937_64>();
 }
 
 void test_sampler_performance()
 {
         test_performance<float>();
-        LOG("");
         test_performance<double>();
-        LOG("");
         test_performance<long double>();
 }
 
@@ -364,7 +373,7 @@ T test_discrepancy(
 }
 
 template <std::size_t N, typename T>
-T test_discrepancy_stratified_jittered_type(const int sample_count, const std::type_identity_t<T> max_discrepancy)
+T test_discrepancy_stratified_jittered_type(const unsigned sample_count, const std::type_identity_t<T> max_discrepancy)
 {
         std::mt19937_64 engine = create_engine<std::mt19937_64>();
 
@@ -374,6 +383,10 @@ T test_discrepancy_stratified_jittered_type(const int sample_count, const std::t
 
         std::vector<Vector<N, T>> data;
         sampler.generate(engine, &data);
+        if (data.size() != sample_count)
+        {
+                error("Error sample count " + to_string(data.size()) + ", expected " + to_string(sample_count));
+        }
 
         std::string name = sampler_name(sampler) + ", " + to_string(N) + "D, " + type_name<T>() + ", [" + to_string(min)
                            + ", " + to_string(max) + ")";
@@ -381,7 +394,7 @@ T test_discrepancy_stratified_jittered_type(const int sample_count, const std::t
 }
 
 template <std::size_t N, typename T>
-T test_discrepancy_latin_hypercube_type(const int sample_count, const std::type_identity_t<T> max_discrepancy)
+T test_discrepancy_latin_hypercube_type(const unsigned sample_count, const std::type_identity_t<T> max_discrepancy)
 {
         std::mt19937_64 engine = create_engine<std::mt19937_64>();
 
@@ -391,6 +404,10 @@ T test_discrepancy_latin_hypercube_type(const int sample_count, const std::type_
 
         std::vector<Vector<N, T>> data;
         sampler.generate(engine, &data);
+        if (data.size() != sample_count)
+        {
+                error("Error sample count " + to_string(data.size()) + ", expected " + to_string(sample_count));
+        }
 
         std::string name = sampler_name(sampler) + ", " + to_string(N) + "D, " + type_name<T>() + ", [" + to_string(min)
                            + ", " + to_string(max) + ")";

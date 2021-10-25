@@ -17,6 +17,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "../erf.h"
 
+#include <src/com/benchmark.h>
 #include <src/com/chrono.h>
 #include <src/com/error.h>
 #include <src/com/log.h>
@@ -231,26 +232,34 @@ void test_erf_inv_array(const std::type_identity_t<T>& precision)
 template <typename T>
 void test_performance()
 {
-        constexpr int COUNT = 1000000;
+        constexpr int DATA_SIZE = 10'000;
+        constexpr int COUNT = 1000;
 
-        std::mt19937_64 engine = create_engine<std::mt19937_64>();
-        std::uniform_real_distribution<T> urd(-1.0001, 1.0001);
-        std::vector<T> data(COUNT);
+        const std::vector<T> data = [&]
+        {
+                std::mt19937_64 engine = create_engine<std::mt19937_64>();
+                std::uniform_real_distribution<T> urd(-1.0001, 1.0001);
+                std::vector<T> res;
+                res.reserve(DATA_SIZE);
+                for (int i = 0; i < DATA_SIZE; ++i)
+                {
+                        res.push_back(urd(engine));
+                }
+                return res;
+        }();
+
+        const Clock::time_point time_point = Clock::now();
         for (int i = 0; i < COUNT; ++i)
         {
-                data[i] = urd(engine);
+                for (const T& v : data)
+                {
+                        do_not_optimize(erf_inv(v));
+                }
         }
-
-        std::vector<T> result(COUNT);
-        Clock::time_point time_point = Clock::now();
-        for (int i = 0; i < COUNT; ++i)
-        {
-                result[i] = erf_inv(data[i]);
-        }
-        double duration = duration_from(time_point);
+        const double duration = duration_from(time_point);
 
         LOG(std::string("erf_inv<") + type_name<T>() + "> "
-            + to_string_digit_groups(std::lround(data.size() / duration)) + " per second");
+            + to_string_digit_groups(std::lround(COUNT * data.size() / duration)) + " f/s");
 }
 
 void test_erf()
@@ -275,7 +284,7 @@ void test_erf_performance()
         test_performance<long double>();
 }
 
-TEST_SMALL("Erf Inverse", test_erf)
-TEST_PERFORMANCE("Erf Inverse", test_erf_performance)
+TEST_SMALL("Erf inverse", test_erf)
+TEST_PERFORMANCE("Erf inverse", test_erf_performance)
 }
 }
