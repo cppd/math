@@ -15,6 +15,7 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
+#include <src/com/benchmark.h>
 #include <src/com/chrono.h>
 #include <src/com/log.h>
 #include <src/com/print.h>
@@ -28,105 +29,125 @@ namespace ns
 {
 namespace
 {
-constexpr int N = 1 << 27;
+constexpr int N = 100'000;
+constexpr int COUNT = 1000;
 
 template <typename T>
-__attribute__((noinline)) double computation(std::vector<T>* v)
+double computation(const std::vector<T>& data)
 {
         constexpr T ADD = 20;
         constexpr T SUB = 30;
 
-        Clock::time_point start_time = Clock::now();
-        for (int i = 0; i < N; ++i)
+        const Clock::time_point start_time = Clock::now();
+        for (int i = 0; i < COUNT; ++i)
         {
-                (*v)[i] = ((*v)[i] + ADD) * ((*v)[i] - SUB) + ADD;
+                for (const T& v : data)
+                {
+                        do_not_optimize((v + ADD) * (v - SUB) + ADD);
+                }
         }
         return duration_from(start_time);
 }
 
-__attribute__((noinline)) double computation(std::vector<mpz_class>* v)
+double computation(const std::vector<mpz_class>& data)
 {
         const mpz_class add = 20;
         const mpz_class sub = 30;
+
         mpz_class tmp1;
         mpz_class tmp2;
 
-        Clock::time_point start_time = Clock::now();
-        for (int i = 0; i < N; ++i)
+        const Clock::time_point start_time = Clock::now();
+        for (int i = 0; i < COUNT; ++i)
         {
-                mpz_add(tmp1.get_mpz_t(), (*v)[i].get_mpz_t(), add.get_mpz_t());
-                mpz_sub(tmp2.get_mpz_t(), (*v)[i].get_mpz_t(), sub.get_mpz_t());
-                mpz_mul((*v)[i].get_mpz_t(), tmp1.get_mpz_t(), tmp2.get_mpz_t());
-                mpz_add((*v)[i].get_mpz_t(), (*v)[i].get_mpz_t(), add.get_mpz_t());
+                for (const mpz_class& v : data)
+                {
+                        mpz_add(tmp1.get_mpz_t(), v.get_mpz_t(), add.get_mpz_t());
+                        mpz_sub(tmp2.get_mpz_t(), v.get_mpz_t(), sub.get_mpz_t());
+                        mpz_mul(tmp1.get_mpz_t(), tmp1.get_mpz_t(), tmp2.get_mpz_t());
+                        mpz_add(tmp1.get_mpz_t(), tmp1.get_mpz_t(), add.get_mpz_t());
+                }
         }
         return duration_from(start_time);
 }
 
-__attribute__((noinline)) double computation(std::vector<mpf_class>* v)
+double computation(const std::vector<mpf_class>& data)
 {
         const mpf_class add = 20;
         const mpf_class sub = 30;
+
         mpf_class tmp1;
         mpf_class tmp2;
 
-        Clock::time_point start_time = Clock::now();
-        for (int i = 0; i < N; ++i)
+        const Clock::time_point start_time = Clock::now();
+        for (int i = 0; i < COUNT; ++i)
         {
-                mpf_add(tmp1.get_mpf_t(), (*v)[i].get_mpf_t(), add.get_mpf_t());
-                mpf_sub(tmp2.get_mpf_t(), (*v)[i].get_mpf_t(), sub.get_mpf_t());
-                mpf_mul((*v)[i].get_mpf_t(), tmp1.get_mpf_t(), tmp2.get_mpf_t());
-                mpf_add((*v)[i].get_mpf_t(), (*v)[i].get_mpf_t(), add.get_mpf_t());
+                for (const mpf_class& v : data)
+                {
+                        mpf_add(tmp1.get_mpf_t(), v.get_mpf_t(), add.get_mpf_t());
+                        mpf_sub(tmp2.get_mpf_t(), v.get_mpf_t(), sub.get_mpf_t());
+                        mpf_mul(tmp1.get_mpf_t(), tmp1.get_mpf_t(), tmp2.get_mpf_t());
+                        mpf_add(tmp1.get_mpf_t(), tmp1.get_mpf_t(), add.get_mpf_t());
+                }
         }
         return duration_from(start_time);
+}
+
+template <typename T>
+T max_int()
+{
+        static_assert(std::is_integral_v<T>);
+        return std::sqrt(Limits<T>::max()) / 10;
+}
+
+class MpfPrecision final
+{
+        mp_bitcnt_t precision_;
+
+public:
+        explicit MpfPrecision(const mp_bitcnt_t& precision) : precision_(mpf_get_default_prec())
+        {
+                mpf_set_default_prec(precision);
+        }
+        ~MpfPrecision()
+        {
+                mpf_set_default_prec(precision_);
+        }
+        MpfPrecision(const MpfPrecision&) = delete;
+        MpfPrecision& operator=(const MpfPrecision&) = delete;
+};
+
+template <typename T>
+void write(const char* const name, const std::vector<T>& data)
+{
+        LOG(to_string_fixed(computation(data), 5) + " " + name);
 }
 
 void compare_types()
 {
-        {
-                std::vector<mpz_class> v(N, 1e16);
-                LOG("MPZ " + to_string(computation(&v)));
-        }
-        {
-                mpf_set_default_prec(128);
-                std::vector<mpf_class> v(N, 1e12);
-                LOG("MPF " + to_string(computation(&v)));
-        }
-        {
-                std::vector<__float128> v(N, 1e12);
-                LOG("__float128 " + to_string(computation(&v)));
-        }
-        {
-                std::vector<float> v(N, 1e6);
-                LOG("float " + to_string(computation(&v)));
-        }
-        {
-                std::vector<double> v(N, 1e12);
-                LOG("double " + to_string(computation(&v)));
-        }
-        {
-                std::vector<long double> v(N, 1e12);
-                LOG("long double " + to_string(computation(&v)));
-        }
-        {
-                std::vector<int> v(N, std::sqrt(Limits<int>::max()) / 10);
-                LOG("int " + to_string(computation(&v)));
-        }
-        {
-                std::vector<long> v(N, std::sqrt(Limits<long>::max()) / 10);
-                LOG("long " + to_string(computation(&v)));
-        }
-        {
-                std::vector<long long> v(N, std::sqrt(Limits<long long>::max()) / 10);
-                LOG("long long " + to_string(computation(&v)));
-        }
-        {
-                std::vector<__int128> v(N, 1e16);
-                LOG("__int128 " + to_string(computation(&v)));
-        }
-        {
-                std::vector<unsigned __int128> v(N, 1e16);
-                LOG("unsigned __int128 " + to_string(computation(&v)));
-        }
+        MpfPrecision mpf_precision(128);
+
+        write("MPZ", std::vector<mpz_class>(N, 1e16));
+
+        write("MPF", std::vector<mpf_class>(N, 1e12));
+
+        write("__float128", std::vector<__float128>(N, 1e12));
+
+        write("float", std::vector<float>(N, 1e6));
+
+        write("double", std::vector<double>(N, 1e12));
+
+        write("long double", std::vector<long double>(N, 1e12));
+
+        write("int", std::vector<int>(N, max_int<int>()));
+
+        write("long", std::vector<long>(N, max_int<long>()));
+
+        write("long long", std::vector<long long>(N, max_int<long long>()));
+
+        write("__int128", std::vector<__int128>(N, 1e16));
+
+        write("unsigned __int128", std::vector<unsigned __int128>(N, 1e16));
 }
 
 TEST_PERFORMANCE("Compare arithmetic types", compare_types)

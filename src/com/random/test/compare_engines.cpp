@@ -17,6 +17,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "../engine.h"
 
+#include <src/com/benchmark.h>
 #include <src/com/chrono.h>
 #include <src/com/log.h>
 #include <src/com/type/name.h>
@@ -31,6 +32,8 @@ namespace ns
 {
 namespace
 {
+constexpr int MAX_NAME_LENGTH = 18;
+
 template <typename RandomEngine, typename T>
 void test_random_engine(const std::string_view& engine_name)
 {
@@ -39,18 +42,17 @@ void test_random_engine(const std::string_view& engine_name)
         RandomEngine engine = create_engine<RandomEngine>();
         std::uniform_real_distribution<T> urd(0, 1);
 
-        T sum = 0;
-        Clock::time_point start_time = Clock::now();
+        const Clock::time_point start_time = Clock::now();
         for (int i = 0; i < 100'000'000; ++i)
         {
-                sum += urd(engine);
+                do_not_optimize(urd(engine));
         }
-        double d = duration_from(start_time);
+        const double d = duration_from(start_time);
 
-        int name_length = engine_name.size();
+        const int name_length = engine_name.size();
         std::ostringstream oss;
-        oss << engine_name << std::string(std::max(0, 19 - name_length), ' ');
-        oss << ": time = " << std::setw(5) << std::lround(1000 * d) << " ms, " << sum;
+        oss << engine_name << std::string(std::max(0, MAX_NAME_LENGTH - name_length), ' ');
+        oss << " : time = " << std::setw(5) << std::lround(1000 * d) << " ms";
         LOG(oss.str());
 }
 
@@ -59,7 +61,7 @@ void test_random_engine(const std::string_view& engine_name)
 template <typename T>
 void compare_random_engines()
 {
-        LOG(type_name<T>());
+        LOG(std::string("Random engines <") + type_name<T>() + ">");
 
         TEST_RANDOM_ENGINE(std::knuth_b);
         TEST_RANDOM_ENGINE(std::minstd_rand);
@@ -79,6 +81,6 @@ void compare()
         compare_random_engines<long double>();
 }
 
-TEST_PERFORMANCE("Compare random engine performance", compare)
+TEST_PERFORMANCE("Compare random engines", compare)
 }
 }

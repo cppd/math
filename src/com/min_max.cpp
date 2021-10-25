@@ -97,52 +97,50 @@ void test_min_max_performance(Engine& engine)
         }();
 
         {
-                Clock::time_point t1 = Clock::now();
+                const Clock::time_point t1 = Clock::now();
                 const T v1 = min_value(std::span<const T>(data));
                 const double d1 = duration_from(t1);
-                LOG("       min_value" + type_str + " = " + to_string(d1) + " seconds");
 
-                Clock::time_point t2 = Clock::now();
+                const Clock::time_point t2 = Clock::now();
                 const T v2 = *std::min_element(data.cbegin(), data.cend());
                 const double d2 = duration_from(t2);
-                LOG("std::min_element" + type_str + " = " + to_string(d2) + " seconds");
 
                 check_equal<T>(v1, v2, "minimum");
+
+                LOG(type_str + ": min_value = " + to_string_fixed(d1, 5)
+                    + " s, std::min_element = " + to_string_fixed(d2, 5) + " s");
         }
         {
-                Clock::time_point t1 = Clock::now();
+                const Clock::time_point t1 = Clock::now();
                 const T v1 = max_value(std::span<const T>(data));
                 const double d1 = duration_from(t1);
-                LOG("       max_value" + type_str + " = " + to_string(d1) + " seconds");
 
-                Clock::time_point t2 = Clock::now();
+                const Clock::time_point t2 = Clock::now();
                 const T v2 = *std::max_element(data.cbegin(), data.cend());
                 const double d2 = duration_from(t2);
-                LOG("std::max_element" + type_str + " = " + to_string(d2) + " seconds");
 
                 check_equal<T>(v1, v2, "maximum");
+
+                LOG(type_str + ": max_value = " + to_string_fixed(d1, 5)
+                    + " s, std::max_element = " + to_string_fixed(d2, 5) + " s");
         }
 }
 
 void test_equal()
 {
         LOG("Test minimum and maximum");
-
         std::mt19937_64 engine = create_engine<std::mt19937_64>();
-
         for (int i = 0; i < 10; ++i)
         {
                 test_min_max<float>(engine);
                 test_min_max<double>(engine);
         }
-
         LOG("Test minimum and maximum passed");
 }
 
 void test_performance()
 {
         std::mt19937_64 engine = create_engine<std::mt19937_64>();
-
         test_min_max_performance<float>(engine);
         test_min_max_performance<double>(engine);
 }
