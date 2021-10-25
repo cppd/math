@@ -33,7 +33,7 @@ namespace ns::geometry
 namespace
 {
 template <std::size_t N>
-std::vector<Vector<N, float>> generate_random_data(bool zero, int count, bool on_sphere)
+std::vector<Vector<N, float>> random_data(const bool zero, const int count, const bool on_sphere)
 {
         std::mt19937_64 engine(count);
         std::uniform_real_distribution<double> urd(-1.0, 1.0);
@@ -72,7 +72,10 @@ std::vector<Vector<N, float>> generate_random_data(bool zero, int count, bool on
 }
 
 template <std::size_t N>
-void check_visible_from_point(const std::vector<Vector<N, float>>& points, const ConvexHullFacet<N>& facet, int point)
+void check_visible_from_point(
+        const std::vector<Vector<N, float>>& points,
+        const ConvexHullFacet<N>& facet,
+        const int point)
 {
         if (points[point] == points[facet.vertices()[0]])
         {
@@ -98,7 +101,7 @@ void check_visible_from_point(const std::vector<Vector<N, float>>& points, const
 }
 
 template <std::size_t N>
-void check_convex_hull(const std::vector<Vector<N, float>>& points, std::vector<ConvexHullFacet<N>>* facets)
+void check_convex_hull(const std::vector<Vector<N, float>>& points, std::vector<ConvexHullFacet<N>>* const facets)
 {
         {
                 if (facets->empty())
@@ -159,26 +162,30 @@ int point_count(const std::vector<ConvexHullFacet<N>>& facets)
 }
 
 template <std::size_t N>
-std::vector<ConvexHullFacet<N>> create_convex_hull(std::vector<Vector<N, float>>& points, ProgressRatio* progress)
+std::vector<ConvexHullFacet<N>> create_convex_hull(
+        const std::vector<Vector<N, float>>& points,
+        const bool write_log,
+        ProgressRatio* const progress)
 {
         std::vector<ConvexHullFacet<N>> facets;
 
         const Clock::time_point start_time = Clock::now();
-
-        compute_convex_hull(points, &facets, progress, true);
-
+        compute_convex_hull(points, &facets, progress, write_log);
         const double time = duration_from(start_time);
 
-        LOG("Convex hull created, " + to_string_fixed(time, 5) + " s, points = " + to_string(point_count(facets))
-            + ", facets = " + to_string(facets.size()));
+        LOG("Convex hull, time = " + to_string_fixed(time, 5) + " s, source points = "
+            + to_string_digit_groups(points.size()) + ", points = " + to_string_digit_groups(point_count(facets))
+            + ", facets = " + to_string_digit_groups(facets.size()));
 
         return facets;
 }
 
 template <std::size_t N>
-void test(std::size_t low, std::size_t high, ProgressRatio* progress)
+void test(const std::size_t low, const std::size_t high, ProgressRatio* const progress)
 {
         constexpr bool ON_SPHERE = false;
+        constexpr bool WRITE_LOG = true;
+
         const int size = [&]()
         {
                 std::mt19937_64 engine = create_engine<std::mt19937_64>();
@@ -187,17 +194,16 @@ void test(std::size_t low, std::size_t high, ProgressRatio* progress)
 
         const std::string name = "Test convex hull in " + space_name(N);
         LOG(name);
-        LOG("Convex hull, points = " + to_string(size));
         {
                 constexpr bool ZERO = false;
-                std::vector<Vector<N, float>> points = generate_random_data<N>(ZERO, size, ON_SPHERE);
-                std::vector<ConvexHullFacet<N>> facets = create_convex_hull(points, progress);
+                std::vector<Vector<N, float>> points = random_data<N>(ZERO, size, ON_SPHERE);
+                std::vector<ConvexHullFacet<N>> facets = create_convex_hull(points, WRITE_LOG, progress);
                 check_convex_hull(points, &facets);
         }
         {
                 constexpr bool ZERO = true;
-                std::vector<Vector<N, float>> points = generate_random_data<N>(ZERO, size, ON_SPHERE);
-                std::vector<ConvexHullFacet<N>> facets = create_convex_hull(points, progress);
+                std::vector<Vector<N, float>> points = random_data<N>(ZERO, size, ON_SPHERE);
+                std::vector<ConvexHullFacet<N>> facets = create_convex_hull(points, WRITE_LOG, progress);
                 check_convex_hull(points, &facets);
         }
         LOG(name + " passed");
@@ -210,51 +216,43 @@ void test_performance()
         constexpr std::size_t N = 4;
 
         constexpr bool ON_SPHERE = false;
-        constexpr int SIZE = 100000;
+        constexpr int SIZE = 100'000;
+        constexpr bool WRITE_LOG = false;
 
         // {{1, 1.000001}, {2, 3}, {2, 3}, {20, 3}, {4, 5}}
 
         ProgressRatio progress(nullptr);
 
-        {
-                constexpr bool ZERO = false;
-                std::vector<Vector<N, float>> points = generate_random_data<N>(ZERO, SIZE, ON_SPHERE);
-                LOG("Convex hull, point count " + to_string(points.size()));
-                create_convex_hull(points, &progress);
-        }
-        {
-                constexpr bool ZERO = true;
-                std::vector<Vector<N, float>> points = generate_random_data<N>(ZERO, SIZE, ON_SPHERE);
-                LOG("Convex hull, point count " + to_string(points.size()));
-                create_convex_hull(points, &progress);
-        }
+        create_convex_hull(random_data<N>(false /*zero*/, SIZE, ON_SPHERE), WRITE_LOG, &progress);
+        create_convex_hull(random_data<N>(true /*zero*/, SIZE, ON_SPHERE), WRITE_LOG, &progress);
 }
 
-void test_2(ProgressRatio* progress)
+void test_2(ProgressRatio* const progress)
 {
         test<2>(1000, 2000, progress);
 }
 
-void test_3(ProgressRatio* progress)
+void test_3(ProgressRatio* const progress)
 {
         test<3>(1000, 2000, progress);
 }
 
-void test_4(ProgressRatio* progress)
+void test_4(ProgressRatio* const progress)
 {
         test<4>(1000, 2000, progress);
 }
 
-void test_5(ProgressRatio* progress)
+void test_5(ProgressRatio* const progress)
 {
         test<5>(1000, 2000, progress);
 }
 
-TEST_SMALL("Convex Hull, 2-Space", test_2)
-TEST_SMALL("Convex Hull, 3-Space", test_3)
-TEST_SMALL("Convex Hull, 4-Space", test_4)
-TEST_LARGE("Convex Hull, 5-Space", test_5)
+TEST_SMALL("Convex hull, 2-Space", test_2)
+TEST_SMALL("Convex hull, 3-Space", test_3)
+TEST_SMALL("Convex hull, 4-Space", test_4)
 
-TEST_PERFORMANCE("Convex Hull", test_performance)
+TEST_LARGE("Convex hull, 5-Space", test_5)
+
+TEST_PERFORMANCE("Convex hull", test_performance)
 }
 }
