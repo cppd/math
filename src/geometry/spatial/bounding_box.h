@@ -95,7 +95,7 @@ class BoundingBox final
         //   (-infinity, NaN) -> near=near, far=far -> continue
         //   (-infinity, -infinity) -> near=near, far=-infinity -> return false
 
-        bool intersect(const Ray<N, T>& ray, T* const first, T* const second) const
+        bool intersect_impl(const Ray<N, T>& ray, T* const first, T* const second) const
         {
                 T near = 0;
                 T far = Limits<T>::max();
@@ -126,12 +126,10 @@ class BoundingBox final
                 return true;
         }
 
-        bool intersect(
+        bool intersect_impl(
                 const Vector<N, T>& org,
                 const Vector<N, T>& dir_reciprocal,
-                const Vector<N, bool>& dir_negative,
-                T* const first,
-                T* const second) const
+                const Vector<N, bool>& dir_negative) const
         {
                 T near = 0;
                 T far = Limits<T>::max();
@@ -148,8 +146,6 @@ class BoundingBox final
                                 return false;
                         }
                 }
-                *first = near;
-                *second = far;
                 return true;
         }
 
@@ -223,25 +219,19 @@ public:
         {
                 T first;
                 T second;
-                if (intersect(r, &first, &second))
+                if (intersect_impl(r, &first, &second))
                 {
                         return (first > 0) ? first : second;
                 }
                 return std::nullopt;
         }
 
-        [[nodiscard]] std::optional<T> intersect(
+        [[nodiscard]] bool intersect(
                 const Vector<N, T>& org,
                 const Vector<N, T>& dir_reciprocal,
                 const Vector<N, bool>& dir_negative) const
         {
-                T first;
-                T second;
-                if (intersect(org, dir_reciprocal, dir_negative, &first, &second))
-                {
-                        return (first > 0) ? first : second;
-                }
-                return std::nullopt;
+                return intersect_impl(org, dir_reciprocal, dir_negative);
         }
 
         constexpr void merge(const BoundingBox<N, T>& v)

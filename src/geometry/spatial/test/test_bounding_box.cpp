@@ -200,6 +200,21 @@ void test_intersection_1(
 }
 
 template <std::size_t N, typename T>
+void test_intersection_1(const BoundingBox<N, T>& box, const Ray<N, T>& ray, const bool t)
+{
+        if (t)
+        {
+                return;
+        }
+
+        std::string s;
+        s += "Ray must intersect, inside\n";
+        s += "box " + to_string(box) + "\n";
+        s += "ray " + to_string(ray);
+        error(s);
+}
+
+template <std::size_t N, typename T>
 void test_intersection_2(
         const BoundingBox<N, T>& box,
         const Ray<N, T>& ray,
@@ -241,7 +256,22 @@ void test_intersection_2(
 }
 
 template <std::size_t N, typename T>
-void test_no_intersection(const BoundingBox<N, T>& box, const Ray<N, T>& ray, const std::optional<T>& t)
+void test_intersection_2(const BoundingBox<N, T>& box, const Ray<N, T>& ray, const bool t)
+{
+        if (t)
+        {
+                return;
+        }
+
+        std::string s;
+        s += "Ray must intersect, outside\n";
+        s += "box " + to_string(box) + "\n";
+        s += "ray " + to_string(ray);
+        error(s);
+}
+
+template <std::size_t N, typename T, typename P>
+void test_no_intersection(const BoundingBox<N, T>& box, const Ray<N, T>& ray, const P& t)
 {
         if (!t)
         {
@@ -276,16 +306,14 @@ void test_intersections(
                         const Ray<N, T> r = ray;
                         test_intersection_1(box, r, box.intersect(r), length, precision);
                         test_intersection_1(
-                                box, r, box.intersect(r.org(), reciprocal(r.dir()), negative_directions(r.dir())),
-                                length, precision);
+                                box, r, box.intersect(r.org(), reciprocal(r.dir()), negative_directions(r.dir())));
                 }
 
                 {
                         const Ray<N, T> r = ray.moved(-move_distance);
                         test_intersection_2(box, r, box.intersect(r), move_min, move_max, precision);
                         test_intersection_2(
-                                box, r, box.intersect(r.org(), reciprocal(r.dir()), negative_directions(r.dir())),
-                                move_min, move_max, precision);
+                                box, r, box.intersect(r.org(), reciprocal(r.dir()), negative_directions(r.dir())));
                 }
                 {
                         const Ray<N, T> r = ray.moved(move_distance);
