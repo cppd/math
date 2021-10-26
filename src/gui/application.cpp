@@ -18,6 +18,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "application.h"
 
 #include "com/application.h"
+#include "com/application_message.h"
 #include "com/command_line.h"
 #include "com/support.h"
 #include "dialogs/message.h"
@@ -55,6 +56,8 @@ void message_event(const MessageEvent& event)
 
 int run_application(int argc, char** argv)
 {
+        ApplicationMessage application_message;
+
         Application a(argc, argv);
 
         MessageEventsObserver message_observer(
