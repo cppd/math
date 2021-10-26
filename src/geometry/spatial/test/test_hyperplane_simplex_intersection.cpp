@@ -140,7 +140,7 @@ void check_intersection_count(const Simplex<N, T>& simplex, const std::vector<Ra
 //
 
 template <std::size_t N, typename T>
-void test()
+void test_intersection()
 {
         constexpr int POINT_COUNT = 10'000;
 
@@ -153,21 +153,21 @@ void test()
 }
 
 template <typename T>
-void test()
+void test_intersection()
 {
-        test<2, T>();
-        test<3, T>();
-        test<4, T>();
-        test<5, T>();
+        test_intersection<2, T>();
+        test_intersection<3, T>();
+        test_intersection<4, T>();
+        test_intersection<5, T>();
 }
 
-void test_hyperplane_simplex()
+void test_hyperplane_simplex_intersection()
 {
-        LOG("Test hyperplane simplex");
-        test<float>();
-        test<double>();
-        test<long double>();
-        LOG("Test hyperplane simplex passed");
+        LOG("Test hyperplane simplex intersection");
+        test_intersection<float>();
+        test_intersection<double>();
+        test_intersection<long double>();
+        LOG("Test hyperplane simplex intersection passed");
 }
 
 //
@@ -192,7 +192,7 @@ double compute_intersections_per_second(const int point_count, std::mt19937_64& 
 }
 
 template <std::size_t N, typename T>
-void test_performance()
+double compute_intersections_per_second()
 {
         constexpr int POINT_COUNT = 10'000;
         constexpr int COMPUTE_COUNT = 1000;
@@ -200,14 +200,20 @@ void test_performance()
 
         std::mt19937_64 engine = create_engine<std::mt19937_64>();
 
-        const double performance = average<AVERAGE_COUNT>(
+        return average<AVERAGE_COUNT>(
                 [&]
                 {
                         return compute_intersections_per_second<N, T, COMPUTE_COUNT>(POINT_COUNT, engine);
                 });
+}
 
-        LOG("HyperplaneSimplex<" + to_string(N) + ", " + type_name<T>()
-            + ">: " + to_string_digit_groups(std::llround(performance)) + " intersections per second");
+template <std::size_t N, typename T>
+void test_performance()
+{
+        const long long performance = std::llround(compute_intersections_per_second<N, T>());
+
+        LOG("HyperplaneSimplex<" + to_string(N) + ", " + type_name<T>() + ">: " + to_string_digit_groups(performance)
+            + " i/s");
 }
 
 template <typename T>
@@ -227,7 +233,7 @@ void test_hyperplane_simplex_performance()
 
 //
 
-TEST_SMALL("Hyperplane simplex", test_hyperplane_simplex)
+TEST_SMALL("Hyperplane simplex intersection", test_hyperplane_simplex_intersection)
 TEST_PERFORMANCE("Hyperplane simplex intersection", test_hyperplane_simplex_performance)
 }
 }

@@ -17,8 +17,9 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "average.h"
 #include "generate.h"
+#include "parallelotope_points.h"
 
-#include "../hyperplane_ball.h"
+#include "../parallelotope.h"
 
 #include <src/com/benchmark.h>
 #include <src/com/chrono.h>
@@ -27,7 +28,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/com/print.h>
 #include <src/com/random/engine.h>
 #include <src/com/type/name.h>
-#include <src/numerical/complement.h>
 #include <src/sampling/sphere_uniform.h>
 #include <src/test/test.h>
 
@@ -39,74 +39,62 @@ namespace ns::geometry::spatial::test
 namespace
 {
 template <std::size_t N, typename T>
-HyperplaneBall<N, T> create_random_hyperplane_ball(std::mt19937_64& engine)
+Parallelotope<N, T> create_random_parallelotope(std::mt19937_64& engine)
 {
         constexpr T ORG_INTERVAL = 10;
-        constexpr T MIN_RADIUS = 0.1;
-        constexpr T MAX_RADIUS = 5;
+        constexpr T MIN_LENGTH = 0.1;
+        constexpr T MAX_LENGTH = 10;
 
-        return HyperplaneBall<N, T>(
-                generate_org<N, T>(ORG_INTERVAL, engine), sampling::uniform_on_sphere<N, T>(engine),
-                std::uniform_real_distribution<T>(MIN_RADIUS, MAX_RADIUS)(engine));
+        return Parallelotope<N, T>(
+                generate_org<N, T>(ORG_INTERVAL, engine), generate_vectors<N, N, T>(MIN_LENGTH, MAX_LENGTH, engine));
 }
 
 template <std::size_t N, typename T>
-std::array<Vector<N, T>, N - 1> ball_vectors(const HyperplaneBall<N, T>& ball)
+std::array<Vector<N, T>, N> vectors(const Parallelotope<N, T>& p)
 {
-        const T radius = std::sqrt(ball.radius_squared());
-        std::array<Vector<N, T>, N - 1> vectors = numerical::orthogonal_complement_of_unit_vector(ball.normal());
-        for (Vector<N, T>& v : vectors)
+        std::array<Vector<N, T>, N> res;
+        for (std::size_t i = 0; i < N; ++i)
         {
-                v *= radius;
+                res[i] = p.e(i);
         }
-        return vectors;
+        return res;
 }
 
 template <std::size_t N, typename T>
-std::vector<Ray<N, T>> create_rays(const HyperplaneBall<N, T>& ball, const int point_count, std::mt19937_64& engine)
+std::vector<Ray<N, T>> create_rays(const Parallelotope<N, T>& p, const int point_count, std::mt19937_64& engine)
 {
-        ASSERT(ball.normal().is_unit());
-
-        const T distance = 2 * std::sqrt(ball.radius_squared());
-        const std::array<Vector<N, T>, N - 1> vectors = ball_vectors(ball);
-
+        const T move_distance = p.length();
         const int ray_count = 3 * point_count;
         std::vector<Ray<N, T>> rays;
         rays.reserve(ray_count);
-        for (int i = 0; i < point_count; ++i)
+        for (const Vector<N, T>& point : internal_points(p.org(), vectors(p), point_count, engine))
         {
-                const Vector<N, T> point = ball.center() + sampling::uniform_in_sphere(vectors, engine);
                 const Ray<N, T> ray(point, sampling::uniform_on_sphere<N, T>(engine));
-                rays.push_back(ray.moved(-1));
-                rays.push_back(ray.moved(1).reversed());
-
-                const Vector<N, T> direction = generate_random_direction(T(0), T(0.5), ball.normal(), engine);
-                rays.push_back(Ray(ray.org() + distance * ball.normal(), -direction));
+                rays.push_back(ray);
+                rays.push_back(ray.moved(-move_distance));
+                rays.push_back(ray.moved(move_distance));
         }
         ASSERT(rays.size() == static_cast<std::size_t>(ray_count));
         return rays;
 }
 
 template <std::size_t N, typename T>
-void check_intersection_count(const HyperplaneBall<N, T>& ball, const std::vector<Ray<N, T>>& rays)
+void check_intersection_count(const Parallelotope<N, T>& p, const std::vector<Ray<N, T>>& rays)
 {
         if (!(rays.size() % 3 == 0))
         {
                 error("Ray count " + to_string(rays.size()) + " is not a multiple of 3");
         }
-
         std::size_t count = 0;
         for (const Ray<N, T>& ray : rays)
         {
-                if (ball.intersect(ray))
+                if (p.intersect(ray))
                 {
                         ++count;
                 }
         }
-
         const std::size_t expected_count = (rays.size() / 3) * 2;
-        const T v = T(count) / expected_count;
-        if (!(v >= T(0.999) && v <= T(1.001)))
+        if (count != expected_count)
         {
                 error("Error intersection count " + to_string(count) + ", expected " + to_string(expected_count));
         }
@@ -115,34 +103,34 @@ void check_intersection_count(const HyperplaneBall<N, T>& ball, const std::vecto
 //
 
 template <std::size_t N, typename T>
-void test()
+void test_intersection()
 {
         constexpr int POINT_COUNT = 10'000;
 
         std::mt19937_64 engine = create_engine<std::mt19937_64>();
 
-        const HyperplaneBall<N, T> ball = create_random_hyperplane_ball<N, T>(engine);
-        const std::vector<Ray<N, T>> rays = create_rays(ball, POINT_COUNT, engine);
+        const Parallelotope<N, T> p = create_random_parallelotope<N, T>(engine);
+        const std::vector<Ray<N, T>> rays = create_rays(p, POINT_COUNT, engine);
 
-        check_intersection_count(ball, rays);
+        check_intersection_count(p, rays);
 }
 
 template <typename T>
-void test()
+void test_intersection()
 {
-        test<2, T>();
-        test<3, T>();
-        test<4, T>();
-        test<5, T>();
+        test_intersection<2, T>();
+        test_intersection<3, T>();
+        test_intersection<4, T>();
+        test_intersection<5, T>();
 }
 
-void test_hyperplane_ball()
+void test_parallelotope_intersection()
 {
-        LOG("Test hyperplane ball");
-        test<float>();
-        test<double>();
-        test<long double>();
-        LOG("Test hyperplane ball passed");
+        LOG("Test parallelotope intersection");
+        test_intersection<float>();
+        test_intersection<double>();
+        test_intersection<long double>();
+        LOG("Test parallelotope intersection passed");
 }
 
 //
@@ -150,24 +138,24 @@ void test_hyperplane_ball()
 template <std::size_t N, typename T, int COUNT>
 double compute_intersections_per_second(const int point_count, std::mt19937_64& engine)
 {
-        const HyperplaneBall<N, T> ball = create_random_hyperplane_ball<N, T>(engine);
-        const std::vector<Ray<N, T>> rays = create_rays(ball, point_count, engine);
+        const Parallelotope<N, T> parallelotope = create_random_parallelotope<N, T>(engine);
+        const std::vector<Ray<N, T>> rays = create_rays(parallelotope, point_count, engine);
 
-        check_intersection_count(ball, rays);
+        check_intersection_count(parallelotope, rays);
 
         Clock::time_point start_time = Clock::now();
         for (int i = 0; i < COUNT; ++i)
         {
                 for (const Ray<N, T>& ray : rays)
                 {
-                        do_not_optimize(ball.intersect(ray));
+                        do_not_optimize(parallelotope.intersect(ray));
                 }
         }
         return COUNT * (rays.size() / duration_from(start_time));
 }
 
 template <std::size_t N, typename T>
-void test_performance()
+double compute_intersections_per_second()
 {
         constexpr int POINT_COUNT = 10'000;
         constexpr int COMPUTE_COUNT = 1000;
@@ -175,14 +163,20 @@ void test_performance()
 
         std::mt19937_64 engine = create_engine<std::mt19937_64>();
 
-        const double performance = average<AVERAGE_COUNT>(
+        return average<AVERAGE_COUNT>(
                 [&]
                 {
                         return compute_intersections_per_second<N, T, COMPUTE_COUNT>(POINT_COUNT, engine);
                 });
+}
 
-        LOG("HyperplaneBall<" + to_string(N) + ", " + type_name<T>()
-            + ">: " + to_string_digit_groups(std::llround(performance)) + " intersections per second");
+template <std::size_t N, typename T>
+void test_performance()
+{
+        const long long performance = std::llround(compute_intersections_per_second<N, T>());
+
+        LOG("Parallelotope<" + to_string(N) + ", " + type_name<T>() + ">: " + to_string_digit_groups(performance)
+            + " i/s");
 }
 
 template <typename T>
@@ -194,15 +188,13 @@ void test_performance()
         test_performance<5, T>();
 }
 
-void test_hyperplane_ball_performance()
+void test_parallelotope_performance()
 {
         test_performance<float>();
         test_performance<double>();
 }
 
-//
-
-TEST_SMALL("Hyperplane ball", test_hyperplane_ball)
-TEST_PERFORMANCE("Hyperplane ball intersection", test_hyperplane_ball_performance)
+TEST_SMALL("Parallelotope intersection", test_parallelotope_intersection)
+TEST_PERFORMANCE("Parallelotope intersection", test_parallelotope_performance)
 }
 }
