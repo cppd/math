@@ -193,6 +193,22 @@ public:
                 return T(0.5) * (bounds_[0] + bounds_[1]);
         }
 
+        [[nodiscard]] constexpr unsigned maximum_extent() const
+        {
+                const Vector<N, T> d = diagonal();
+                T max = d[0];
+                unsigned res = 0;
+                for (unsigned i = 1; i < N; ++i)
+                {
+                        if (d[i] > max)
+                        {
+                                max = d[i];
+                                res = i;
+                        }
+                }
+                return res;
+        }
+
         [[nodiscard]] constexpr T volume() const
         {
                 return volume<N>(diagonal());

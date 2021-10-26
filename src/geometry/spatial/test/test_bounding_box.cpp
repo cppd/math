@@ -48,6 +48,7 @@ struct Test
         static_assert(BOX.center() == Vector<4, T>(-2, 2, -2, 2));
         static_assert(BOX.volume() == 5760);
         static_assert(BOX.surface() == 2736);
+        static_assert(BOX.maximum_extent() == 3);
 
         static constexpr BoundingBox<4, T> BOX_MERGE_1 = []
         {
