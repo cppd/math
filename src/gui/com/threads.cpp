@@ -285,7 +285,7 @@ class Impl final : public WorkerThreads
                         {
                                 if (id == permanent_thread_id_)
                                 {
-                                        status_bar_->insertPermanentWidget(0, &(*bar));
+                                        status_bar_->addPermanentWidget(&(*bar));
                                 }
                                 else
                                 {
