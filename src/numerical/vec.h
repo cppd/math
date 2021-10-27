@@ -418,6 +418,17 @@ template <std::size_t N, typename T>
 }
 
 template <std::size_t N, typename T>
+[[nodiscard]] constexpr Vector<N, bool> negative_bool(const Vector<N, T>& v)
+{
+        Vector<N, bool> res;
+        for (std::size_t i = 0; i < N; ++i)
+        {
+                res[i] = (v[i] < 0);
+        }
+        return res;
+}
+
+template <std::size_t N, typename T>
 [[nodiscard]] bool is_finite(const Vector<N, T>& data) requires(std::is_floating_point_v<T>)
 {
         for (std::size_t i = 0; i < N; ++i)
