@@ -140,7 +140,7 @@ public:
         T length() const;
 
         Vector<N, T> org() const;
-        Vector<N, T> e(unsigned n) const;
+        std::array<Vector<N, T>, N> vectors() const;
 
         Vector<N, T> min() const;
         Vector<N, T> max() const;
@@ -500,10 +500,14 @@ Vector<N, T> ParallelotopeAA<N, T>::org() const
 }
 
 template <std::size_t N, typename T>
-Vector<N, T> ParallelotopeAA<N, T>::e(unsigned n) const
+std::array<Vector<N, T>, N> ParallelotopeAA<N, T>::vectors() const
 {
-        ASSERT(n < N);
-        return parallelotope_aa_implementation::index_vector<N, T>(n, size(n));
+        std::array<Vector<N, T>, N> res;
+        for (std::size_t i = 0; i < N; ++i)
+        {
+                res[i] = parallelotope_aa_implementation::index_vector<N, T>(i, size(i));
+        }
+        return res;
 }
 
 template <std::size_t N, typename T>
@@ -536,9 +540,11 @@ std::string to_string(const geometry::ParallelotopeAA<N, T>& p)
 {
         std::string s;
         s += "org = " + to_string(p.org()) + "\n";
+
+        const std::array<Vector<N, T>, N> vectors = p.vectors();
         for (unsigned i = 0; i < N; ++i)
         {
-                s += "edge[" + to_string(i) + "] = " + to_string(p.e(i)) + ((i < N - 1) ? "\n" : "");
+                s += "edge[" + to_string(i) + "] = " + to_string(vectors[i]) + ((i < N - 1) ? "\n" : "");
         }
         return s;
 }

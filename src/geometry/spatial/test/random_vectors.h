@@ -27,14 +27,13 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 namespace ns::geometry::spatial::test
 {
-namespace generate_implementation
+namespace random_vectors_implementation
 {
-template <typename T>
-inline constexpr T MAX_DOT_PRODUCT_OF_VECTORS = 0.9;
-
 template <std::size_t M, std::size_t N, typename T>
 bool test_vectors(const T& min_length, const T& max_length, const std::array<Vector<N, T>, M>& vectors)
 {
+        constexpr T MAX_DOT_PRODUCT = 0.9;
+
         std::array<Vector<N, T>, M> unit_vectors = vectors;
         for (Vector<N, T>& v : unit_vectors)
         {
@@ -50,7 +49,7 @@ bool test_vectors(const T& min_length, const T& max_length, const std::array<Vec
         {
                 for (std::size_t j = i + 1; j < M; ++j)
                 {
-                        if (!(std::abs(dot(unit_vectors[i], unit_vectors[j])) < MAX_DOT_PRODUCT_OF_VECTORS<T>))
+                        if (!(std::abs(dot(unit_vectors[i], unit_vectors[j])) < MAX_DOT_PRODUCT))
                         {
                                 return false;
                         }
@@ -62,11 +61,11 @@ bool test_vectors(const T& min_length, const T& max_length, const std::array<Vec
 }
 
 template <std::size_t M, std::size_t N, typename T, typename Engine>
-std::array<Vector<N, T>, M> generate_vectors(const T& min_length, const T& max_length, Engine& engine)
+std::array<Vector<N, T>, M> random_vectors(const T& min_length, const T& max_length, Engine& engine)
 {
         static_assert(M > 0 && M <= N);
 
-        namespace impl = generate_implementation;
+        namespace impl = random_vectors_implementation;
 
         ASSERT(min_length > 0 && min_length < max_length);
 
@@ -86,7 +85,7 @@ std::array<Vector<N, T>, M> generate_vectors(const T& min_length, const T& max_l
 }
 
 template <std::size_t N, typename T, typename Engine>
-std::array<T, N> generate_aa_vectors(const T& min_length, const T& max_length, Engine& engine)
+std::array<T, N> random_aa_vectors(const T& min_length, const T& max_length, Engine& engine)
 {
         ASSERT(min_length > 0 && min_length < max_length);
 
@@ -100,7 +99,7 @@ std::array<T, N> generate_aa_vectors(const T& min_length, const T& max_length, E
 }
 
 template <std::size_t N, typename T, typename Engine>
-Vector<N, T> generate_org(const T& interval, Engine& engine)
+Vector<N, T> random_org(const T& interval, Engine& engine)
 {
         ASSERT(interval >= 0);
 
@@ -114,7 +113,7 @@ Vector<N, T> generate_org(const T& interval, Engine& engine)
 }
 
 template <std::size_t N, typename T, typename Engine>
-Vector<N, T> generate_random_direction(const T& from, const T& to, const Vector<N, T>& normal, Engine& engine)
+Vector<N, T> random_direction_for_normal(const T& from, const T& to, const Vector<N, T>& normal, Engine& engine)
 {
         while (true)
         {

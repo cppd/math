@@ -15,8 +15,7 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include "bounding_box.h"
-#include "parallelotope_points.h"
+#include "random_points.h"
 
 #include "../bounding_box.h"
 
@@ -79,6 +78,23 @@ template struct Test<double>;
 template struct Test<long double>;
 
 //
+
+template <std::size_t N, typename T>
+BoundingBox<N, T> create_random_bounding_box(std::mt19937_64& engine)
+{
+        std::uniform_real_distribution<T> urd(-5, 5);
+        Vector<N, T> p1;
+        Vector<N, T> p2;
+        for (std::size_t i = 0; i < N; ++i)
+        {
+                do
+                {
+                        p1[i] = urd(engine);
+                        p2[i] = urd(engine);
+                } while (!(std::abs(p1[i] - p2[i]) >= T(0.5)));
+        }
+        return {p1, p2};
+}
 
 template <std::size_t N, typename T>
 Vector<N, T> create_random_direction(const std::type_identity_t<T>& probability, std::mt19937_64& engine)
@@ -248,7 +264,7 @@ void test_intersections(
         const T move_max = 2 * length;
         const T random_direction_probability = 1 - T(1) / point_count;
 
-        for (const Vector<N, T>& point : internal_points(box.min(), bounding_box_vectors(box), point_count, engine))
+        for (const Vector<N, T>& point : random_internal_points(box.min(), box.diagonal(), point_count, engine))
         {
                 const Ray<N, T> ray(point, create_random_direction<N, T>(random_direction_probability, engine));
 
@@ -258,8 +274,7 @@ void test_intersections(
                         test_intersection_1(box, r, box.intersect(r), length, precision);
 
                         test_intersection_1(
-                                box, r,
-                                box.intersect(r.org(), reciprocal(r.dir()), bounding_box_negative_directions(r.dir())));
+                                box, r, box.intersect(r.org(), reciprocal(r.dir()), negative_bool(r.dir())));
                 }
 
                 {
@@ -268,8 +283,7 @@ void test_intersections(
                         test_intersection_2(box, r, box.intersect(r), move_min, move_max, precision);
 
                         test_intersection_2(
-                                box, r,
-                                box.intersect(r.org(), reciprocal(r.dir()), bounding_box_negative_directions(r.dir())));
+                                box, r, box.intersect(r.org(), reciprocal(r.dir()), negative_bool(r.dir())));
                 }
                 {
                         const Ray<N, T> r = ray.moved(move_distance);
@@ -277,8 +291,7 @@ void test_intersections(
                         test_no_intersection(box, r, box.intersect(r));
 
                         test_no_intersection(
-                                box, r,
-                                box.intersect(r.org(), reciprocal(r.dir()), bounding_box_negative_directions(r.dir())));
+                                box, r, box.intersect(r.org(), reciprocal(r.dir()), negative_bool(r.dir())));
                 }
         }
 }

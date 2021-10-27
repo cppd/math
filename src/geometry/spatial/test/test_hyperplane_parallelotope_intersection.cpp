@@ -16,7 +16,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
 #include "average.h"
-#include "generate.h"
+#include "random_vectors.h"
 
 #include "../hyperplane_parallelotope.h"
 
@@ -46,8 +46,7 @@ HyperplaneParallelotope<N, T> create_random_hyperplane_parallelotope(std::mt1993
         constexpr T MAX_LENGTH = 10;
 
         return HyperplaneParallelotope<N, T>(
-                generate_org<N, T>(ORG_INTERVAL, engine),
-                generate_vectors<N - 1, N, T>(MIN_LENGTH, MAX_LENGTH, engine));
+                random_org<N, T>(ORG_INTERVAL, engine), random_vectors<N - 1, N, T>(MIN_LENGTH, MAX_LENGTH, engine));
 }
 
 template <std::size_t N, typename T>
@@ -70,7 +69,7 @@ std::vector<Ray<N, T>> create_rays(
                 rays.push_back(ray.moved(-1));
                 rays.push_back(ray.moved(1).reversed());
 
-                const Vector<N, T> direction = generate_random_direction(T(0), T(0.5), p.normal(), engine);
+                const Vector<N, T> direction = random_direction_for_normal(T(0), T(0.5), p.normal(), engine);
                 rays.push_back(Ray(ray.org() + distance * p.normal(), -direction));
         }
         ASSERT(rays.size() == static_cast<std::size_t>(ray_count));
@@ -145,7 +144,7 @@ double compute_intersections_per_second(const int point_count, std::mt19937_64& 
 
         check_intersection_count(p, rays);
 
-        Clock::time_point start_time = Clock::now();
+        const Clock::time_point start_time = Clock::now();
         for (int i = 0; i < COUNT; ++i)
         {
                 for (const Ray<N, T>& ray : rays)

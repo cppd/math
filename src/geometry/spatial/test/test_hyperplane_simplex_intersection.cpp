@@ -16,7 +16,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
 #include "average.h"
-#include "generate.h"
+#include "random_vectors.h"
 
 #include "../hyperplane_simplex.h"
 
@@ -56,8 +56,8 @@ Simplex<N, T> create_random_simplex(std::mt19937_64& engine)
         constexpr T MIN_LENGTH = 0.1;
         constexpr T MAX_LENGTH = 10;
 
-        const std::array<Vector<N, T>, N - 1> vectors = generate_vectors<N - 1, N, T>(MIN_LENGTH, MAX_LENGTH, engine);
-        const Vector<N, T> org = generate_org<N, T>(ORG_INTERVAL, engine);
+        const std::array<Vector<N, T>, N - 1> vectors = random_vectors<N - 1, N, T>(MIN_LENGTH, MAX_LENGTH, engine);
+        const Vector<N, T> org = random_org<N, T>(ORG_INTERVAL, engine);
 
         Simplex<N, T> simplex;
 
@@ -105,7 +105,7 @@ std::vector<Ray<N, T>> create_rays(
                 rays.push_back(ray.moved(-1));
                 rays.push_back(ray.moved(1).reversed());
 
-                const Vector<N, T> direction = generate_random_direction(T(0), T(0.5), normal, engine);
+                const Vector<N, T> direction = random_direction_for_normal(T(0), T(0.5), normal, engine);
                 rays.push_back(Ray(ray.org() + distance * normal, -direction));
         }
         ASSERT(rays.size() == static_cast<std::size_t>(ray_count));
@@ -180,7 +180,7 @@ double compute_intersections_per_second(const int point_count, std::mt19937_64& 
 
         check_intersection_count(simplex, rays);
 
-        Clock::time_point start_time = Clock::now();
+        const Clock::time_point start_time = Clock::now();
         for (int i = 0; i < COUNT; ++i)
         {
                 for (const Ray<N, T>& ray : rays)

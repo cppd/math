@@ -15,8 +15,8 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include "generate.h"
-#include "parallelotope_points.h"
+#include "random_points.h"
+#include "random_vectors.h"
 
 #include "../hyperplane_parallelotope.h"
 #include "../parallelotope.h"
@@ -155,21 +155,6 @@ bool point_is_in_feasible_region(const Vector<N, T>& point, const std::array<Con
         return true;
 }
 
-template <typename Parallelotope>
-std::array<Vector<Parallelotope::SPACE_DIMENSION, typename Parallelotope::DataType>, Parallelotope::SPACE_DIMENSION>
-        vectors(const Parallelotope& p)
-{
-        constexpr std::size_t N = Parallelotope::SPACE_DIMENSION;
-        using T = typename Parallelotope::DataType;
-
-        std::array<Vector<N, T>, N> res;
-        for (std::size_t i = 0; i < N; ++i)
-        {
-                res[i] = p.e(i);
-        }
-        return res;
-}
-
 template <typename RandomEngine, typename Parallelotope>
 void test_constraints(RandomEngine& engine, const int point_count, const Parallelotope& p)
 {
@@ -178,7 +163,7 @@ void test_constraints(RandomEngine& engine, const int point_count, const Paralle
 
         const Constraints<N, T, 2 * N, 0> constraints = p.constraints();
 
-        for (const Vector<N, T>& point : external_points(p.org(), vectors(p), point_count, engine))
+        for (const Vector<N, T>& point : random_external_points(p.org(), p.vectors(), point_count, engine))
         {
                 if (p.inside(point))
                 {
@@ -191,7 +176,7 @@ void test_constraints(RandomEngine& engine, const int point_count, const Paralle
                 }
         }
 
-        for (const Vector<N, T>& origin : internal_points(p.org(), vectors(p), point_count, engine))
+        for (const Vector<N, T>& origin : random_internal_points(p.org(), p.vectors(), point_count, engine))
         {
                 if (!p.inside(origin))
                 {
@@ -213,7 +198,7 @@ void test_intersections(RandomEngine& engine, const int point_count, const Paral
 
         const T length = p.length();
 
-        for (const Vector<N, T>& point : internal_points(p.org(), vectors(p), point_count, engine))
+        for (const Vector<N, T>& point : random_internal_points(p.org(), p.vectors(), point_count, engine))
         {
                 const Ray<N, T> ray(point, random_direction<N, T>(engine));
 
@@ -291,6 +276,22 @@ void verify_vectors(const std::array<Vector<N, T>, COUNT>& vectors, const std::s
         }
 }
 
+template <std::size_t N, typename T, std::size_t COUNT>
+void verify_vectors(const std::array<std::array<Vector<N, T>, N>, COUNT>& vectors, const std::string& name)
+{
+        for (unsigned i = 1; i < COUNT; ++i)
+        {
+                for (unsigned n = 0; n < N; ++n)
+                {
+                        if (!almost_equal(vectors[i][n], vectors[0][n]))
+                        {
+                                error("Error comparison of " + name + ".\n" + to_string(vectors[i][n]) + " and "
+                                      + to_string(vectors[0][n]));
+                        }
+                }
+        }
+}
+
 template <typename RandomEngine, typename... Parallelotope>
 void compare_parallelotopes(RandomEngine& engine, const int point_count, const Parallelotope&... p)
 {
@@ -315,14 +316,12 @@ void compare_parallelotopes(RandomEngine& engine, const int point_count, const P
         std::array<Vector<N, T>, sizeof...(Parallelotope)> orgs{p.org()...};
         verify_vectors(orgs, "orgs");
 
-        for (unsigned i = 0; i < N; ++i)
-        {
-                std::array<Vector<N, T>, sizeof...(Parallelotope)> e{p.e(i)...};
-                verify_vectors(e, "e" + to_string(i));
-        }
+        std::array<std::array<Vector<N, T>, N>, sizeof...(Parallelotope)> vectors{p.vectors()...};
+        verify_vectors(vectors, "vectors");
 
         const auto& parallelotope = *std::get<0>(std::make_tuple(&p...));
-        for (Vector<N, T> point : cover_points(parallelotope.org(), vectors(parallelotope), point_count, engine))
+        for (Vector<N, T> point :
+             random_cover_points(parallelotope.org(), parallelotope.vectors(), point_count, engine))
         {
                 std::array<bool, sizeof...(Parallelotope)> inside{p.inside(point)...};
                 for (unsigned i = 1; i < sizeof...(Parallelotope); ++i)
@@ -389,8 +388,8 @@ void test_points(const int point_count)
         LOG("ParallelotopeAA");
 
         {
-                Vector<N, T> org = generate_org<N, T>(ORG_INTERVAL, engine);
-                std::array<T, N> edges = generate_aa_vectors<N, T>(MIN_LENGTH, MAX_LENGTH, engine);
+                Vector<N, T> org = random_org<N, T>(ORG_INTERVAL, engine);
+                std::array<T, N> edges = random_aa_vectors<N, T>(MIN_LENGTH, MAX_LENGTH, engine);
                 ParallelotopeAA<N, T> p(org, edges);
 
                 print_message(to_string(p));
@@ -403,8 +402,8 @@ void test_points(const int point_count)
         LOG("Parallelotope");
 
         {
-                Vector<N, T> org = generate_org<N, T>(ORG_INTERVAL, engine);
-                std::array<Vector<N, T>, N> edges = generate_vectors<N, N, T>(MIN_LENGTH, MAX_LENGTH, engine);
+                Vector<N, T> org = random_org<N, T>(ORG_INTERVAL, engine);
+                std::array<Vector<N, T>, N> edges = random_vectors<N, N, T>(MIN_LENGTH, MAX_LENGTH, engine);
                 Parallelotope<N, T> p(org, edges);
 
                 print_message(to_string(p));
@@ -417,8 +416,8 @@ void test_points(const int point_count)
         LOG("Parallelotope comparison");
 
         {
-                Vector<N, T> org = generate_org<N, T>(ORG_INTERVAL, engine);
-                std::array<T, N> edges = generate_aa_vectors<N, T>(MIN_LENGTH, MAX_LENGTH, engine);
+                Vector<N, T> org = random_org<N, T>(ORG_INTERVAL, engine);
+                std::array<T, N> edges = random_aa_vectors<N, T>(MIN_LENGTH, MAX_LENGTH, engine);
 
                 ParallelotopeAA<N, T> p_aa(org, edges);
                 Parallelotope<N, T> p(org, to_edge_vector(edges));

@@ -16,7 +16,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
 #include "average.h"
-#include "generate.h"
+#include "random_vectors.h"
 
 #include "../hyperplane_ball.h"
 
@@ -46,12 +46,12 @@ HyperplaneBall<N, T> create_random_hyperplane_ball(std::mt19937_64& engine)
         constexpr T MAX_RADIUS = 5;
 
         return HyperplaneBall<N, T>(
-                generate_org<N, T>(ORG_INTERVAL, engine), sampling::uniform_on_sphere<N, T>(engine),
+                random_org<N, T>(ORG_INTERVAL, engine), sampling::uniform_on_sphere<N, T>(engine),
                 std::uniform_real_distribution<T>(MIN_RADIUS, MAX_RADIUS)(engine));
 }
 
 template <std::size_t N, typename T>
-std::array<Vector<N, T>, N - 1> ball_vectors(const HyperplaneBall<N, T>& ball)
+std::array<Vector<N, T>, N - 1> ball_plane_vectors(const HyperplaneBall<N, T>& ball)
 {
         const T radius = std::sqrt(ball.radius_squared());
         std::array<Vector<N, T>, N - 1> vectors = numerical::orthogonal_complement_of_unit_vector(ball.normal());
@@ -68,7 +68,7 @@ std::vector<Ray<N, T>> create_rays(const HyperplaneBall<N, T>& ball, const int p
         ASSERT(ball.normal().is_unit());
 
         const T distance = 2 * std::sqrt(ball.radius_squared());
-        const std::array<Vector<N, T>, N - 1> vectors = ball_vectors(ball);
+        const std::array<Vector<N, T>, N - 1> vectors = ball_plane_vectors(ball);
 
         const int ray_count = 3 * point_count;
         std::vector<Ray<N, T>> rays;
@@ -80,7 +80,7 @@ std::vector<Ray<N, T>> create_rays(const HyperplaneBall<N, T>& ball, const int p
                 rays.push_back(ray.moved(-1));
                 rays.push_back(ray.moved(1).reversed());
 
-                const Vector<N, T> direction = generate_random_direction(T(0), T(0.5), ball.normal(), engine);
+                const Vector<N, T> direction = random_direction_for_normal(T(0), T(0.5), ball.normal(), engine);
                 rays.push_back(Ray(ray.org() + distance * ball.normal(), -direction));
         }
         ASSERT(rays.size() == static_cast<std::size_t>(ray_count));
@@ -155,7 +155,7 @@ double compute_intersections_per_second(const int point_count, std::mt19937_64& 
 
         check_intersection_count(ball, rays);
 
-        Clock::time_point start_time = Clock::now();
+        const Clock::time_point start_time = Clock::now();
         for (int i = 0; i < COUNT; ++i)
         {
                 for (const Ray<N, T>& ray : rays)

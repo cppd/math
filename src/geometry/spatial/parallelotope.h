@@ -141,7 +141,7 @@ public:
         T length() const;
 
         const Vector<N, T>& org() const;
-        const Vector<N, T>& e(unsigned n) const;
+        const std::array<Vector<N, T>, N>& vectors() const;
 };
 
 template <std::size_t N, typename T>
@@ -551,10 +551,9 @@ const Vector<N, T>& Parallelotope<N, T>::org() const
 }
 
 template <std::size_t N, typename T>
-const Vector<N, T>& Parallelotope<N, T>::e(unsigned n) const
+const std::array<Vector<N, T>, N>& Parallelotope<N, T>::vectors() const
 {
-        ASSERT(n < N);
-        return vectors_[n];
+        return vectors_;
 }
 }
 
@@ -565,9 +564,11 @@ std::string to_string(const geometry::Parallelotope<N, T>& p)
 {
         std::string s;
         s += "org = " + to_string(p.org()) + "\n";
+
+        const std::array<Vector<N, T>, N>& vectors = p.vectors();
         for (unsigned i = 0; i < N; ++i)
         {
-                s += "edge[" + to_string(i) + "] = " + to_string(p.e(i)) + ((i < N - 1) ? "\n" : "");
+                s += "edge[" + to_string(i) + "] = " + to_string(vectors[i]) + ((i < N - 1) ? "\n" : "");
         }
         return s;
 }

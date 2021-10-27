@@ -26,7 +26,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 namespace ns::geometry::spatial::test
 {
 template <std::size_t N, typename T, typename RandomEngine>
-std::vector<Vector<N, T>> external_points(
+std::vector<Vector<N, T>> random_external_points(
         const Vector<N, T>& org,
         const std::array<Vector<N, T>, N>& vectors,
         const int count,
@@ -57,7 +57,7 @@ std::vector<Vector<N, T>> external_points(
 }
 
 template <std::size_t N, typename T, typename RandomEngine>
-std::vector<Vector<N, T>> internal_points(
+std::vector<Vector<N, T>> random_internal_points(
         const Vector<N, T>& org,
         const std::array<Vector<N, T>, N>& vectors,
         const int count,
@@ -85,7 +85,35 @@ std::vector<Vector<N, T>> internal_points(
 }
 
 template <std::size_t N, typename T, typename RandomEngine>
-std::vector<Vector<N, T>> cover_points(
+std::vector<Vector<N, T>> random_internal_points(
+        const Vector<N, T>& org,
+        const Vector<N, T>& diagonal,
+        const int count,
+        RandomEngine& engine)
+{
+        std::uniform_real_distribution<T> urd(0.01, 0.99);
+
+        const auto random_point = [&]()
+        {
+                Vector<N, T> v = org;
+                for (std::size_t i = 0; i < N; ++i)
+                {
+                        v[i] += diagonal[i] * urd(engine);
+                }
+                return v;
+        };
+
+        std::vector<Vector<N, T>> points;
+        points.reserve(count);
+        for (int i = 0; i < count; ++i)
+        {
+                points.push_back(random_point());
+        }
+        return points;
+}
+
+template <std::size_t N, typename T, typename RandomEngine>
+std::vector<Vector<N, T>> random_cover_points(
         const Vector<N, T>& org,
         const std::array<Vector<N, T>, N>& vectors,
         const int count,

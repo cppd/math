@@ -16,8 +16,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
 #include "average.h"
-#include "bounding_box.h"
-#include "parallelotope_points.h"
+#include "random_points.h"
 
 #include "../bounding_box.h"
 
@@ -39,6 +38,23 @@ namespace ns::geometry::spatial::test
 namespace
 {
 template <std::size_t N, typename T>
+BoundingBox<N, T> create_random_bounding_box(std::mt19937_64& engine)
+{
+        std::uniform_real_distribution<T> urd(-5, 5);
+        Vector<N, T> p1;
+        Vector<N, T> p2;
+        for (std::size_t i = 0; i < N; ++i)
+        {
+                do
+                {
+                        p1[i] = urd(engine);
+                        p2[i] = urd(engine);
+                } while (!(std::abs(p1[i] - p2[i]) >= T(0.5)));
+        }
+        return {p1, p2};
+}
+
+template <std::size_t N, typename T>
 std::vector<Ray<N, T>> rays_for_intersections(
         const BoundingBox<N, T>& box,
         const int point_count,
@@ -49,7 +65,7 @@ std::vector<Ray<N, T>> rays_for_intersections(
         const int ray_count = 3 * point_count;
         std::vector<Ray<N, T>> rays;
         rays.reserve(ray_count);
-        for (const Vector<N, T>& point : internal_points(box.min(), bounding_box_vectors(box), point_count, engine))
+        for (const Vector<N, T>& point : random_internal_points(box.min(), box.diagonal(), point_count, engine))
         {
                 const Ray<N, T> ray(point, sampling::uniform_on_sphere<N, T>(engine));
                 rays.push_back(ray);
@@ -143,7 +159,7 @@ std::vector<Vector<N, bool>> ray_negative_directions(const std::vector<Ray<N, T>
         res.reserve(rays.size());
         for (const Ray<N, T>& ray : rays)
         {
-                res.push_back(bounding_box_negative_directions(ray.dir()));
+                res.push_back(negative_bool(ray.dir()));
         }
         return res;
 }
@@ -197,7 +213,7 @@ double compute_intersections_per_second(const int point_count, std::mt19937_64& 
 
         check_intersection_count(box, rays);
 
-        Clock::time_point start_time = Clock::now();
+        const Clock::time_point start_time = Clock::now();
         for (int i = 0; i < COUNT; ++i)
         {
                 for (const Ray<N, T>& ray : rays)
@@ -222,7 +238,7 @@ double compute_intersections_r_per_second(const int point_count, std::mt19937_64
 
         const std::size_t n = rays.size();
 
-        Clock::time_point start_time = Clock::now();
+        const Clock::time_point start_time = Clock::now();
         for (int j = 0; j < COUNT; ++j)
         {
                 for (std::size_t i = 0; i < n; ++i)

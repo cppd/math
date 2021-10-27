@@ -16,8 +16,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
 #include "average.h"
-#include "generate.h"
-#include "parallelotope_points.h"
+#include "random_points.h"
+#include "random_vectors.h"
 
 #include "../parallelotope.h"
 
@@ -46,18 +46,7 @@ Parallelotope<N, T> create_random_parallelotope(std::mt19937_64& engine)
         constexpr T MAX_LENGTH = 10;
 
         return Parallelotope<N, T>(
-                generate_org<N, T>(ORG_INTERVAL, engine), generate_vectors<N, N, T>(MIN_LENGTH, MAX_LENGTH, engine));
-}
-
-template <std::size_t N, typename T>
-std::array<Vector<N, T>, N> vectors(const Parallelotope<N, T>& p)
-{
-        std::array<Vector<N, T>, N> res;
-        for (std::size_t i = 0; i < N; ++i)
-        {
-                res[i] = p.e(i);
-        }
-        return res;
+                random_org<N, T>(ORG_INTERVAL, engine), random_vectors<N, N, T>(MIN_LENGTH, MAX_LENGTH, engine));
 }
 
 template <std::size_t N, typename T>
@@ -67,7 +56,7 @@ std::vector<Ray<N, T>> create_rays(const Parallelotope<N, T>& p, const int point
         const int ray_count = 3 * point_count;
         std::vector<Ray<N, T>> rays;
         rays.reserve(ray_count);
-        for (const Vector<N, T>& point : internal_points(p.org(), vectors(p), point_count, engine))
+        for (const Vector<N, T>& point : random_internal_points(p.org(), p.vectors(), point_count, engine))
         {
                 const Ray<N, T> ray(point, sampling::uniform_on_sphere<N, T>(engine));
                 rays.push_back(ray);
@@ -143,7 +132,7 @@ double compute_intersections_per_second(const int point_count, std::mt19937_64& 
 
         check_intersection_count(parallelotope, rays);
 
-        Clock::time_point start_time = Clock::now();
+        const Clock::time_point start_time = Clock::now();
         for (int i = 0; i < COUNT; ++i)
         {
                 for (const Ray<N, T>& ray : rays)
