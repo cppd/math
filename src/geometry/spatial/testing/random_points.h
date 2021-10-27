@@ -23,7 +23,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <random>
 #include <vector>
 
-namespace ns::geometry::spatial::test
+namespace ns::geometry::spatial::testing
 {
 template <std::size_t N, typename T, typename RandomEngine>
 std::vector<Vector<N, T>> random_external_points(

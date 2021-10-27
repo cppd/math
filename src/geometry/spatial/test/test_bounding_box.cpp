@@ -15,9 +15,8 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include "random_points.h"
-
 #include "../bounding_box.h"
+#include "../testing/random_points.h"
 
 #include <src/com/error.h>
 #include <src/com/log.h>
@@ -29,7 +28,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <cmath>
 #include <random>
 
-namespace ns::geometry::spatial::test
+namespace ns::geometry::spatial
 {
 namespace
 {
@@ -264,7 +263,8 @@ void test_intersections(
         const T move_max = 2 * length;
         const T random_direction_probability = 1 - T(1) / point_count;
 
-        for (const Vector<N, T>& point : random_internal_points(box.min(), box.diagonal(), point_count, engine))
+        for (const Vector<N, T>& point :
+             testing::random_internal_points(box.min(), box.diagonal(), point_count, engine))
         {
                 const Ray<N, T> ray(point, create_random_direction<N, T>(random_direction_probability, engine));
 

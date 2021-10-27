@@ -19,14 +19,16 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <type_traits>
 
-namespace ns::geometry::spatial::test
+namespace ns::geometry::spatial::testing
 {
 template <int COUNT, typename F>
-double average(const F& f)
+auto average(const F& f)
 {
-        static_assert(std::is_same_v<double, decltype(f())>);
+        using T = std::remove_cvref_t<decltype(f())>;
+        static_assert(std::is_floating_point_v<T>);
+        static_assert(COUNT > 0);
 
-        double sum = 0;
+        T sum = 0;
         for (int i = 0; i < COUNT; ++i)
         {
                 sum += f();
