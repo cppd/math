@@ -102,20 +102,13 @@ class BoundingBox final
                 for (std::size_t i = 0; i < N; ++i)
                 {
                         const T dir = ray.dir()[i];
+                        const bool dir_negative = (dir < 0);
                         const T d = ray.org()[i];
                         const T r = 1 / dir;
-                        const T alpha1 = (bounds_[0][i] - d) * r;
-                        const T alpha2 = (bounds_[1][i] - d) * r;
-                        if (dir >= 0)
-                        {
-                                near = std::max(near, alpha1);
-                                far = std::min(far, alpha2);
-                        }
-                        else
-                        {
-                                near = std::max(near, alpha2);
-                                far = std::min(far, alpha1);
-                        }
+                        const T a1 = (bounds_[dir_negative][i] - d) * r;
+                        const T a2 = (bounds_[!dir_negative][i] - d) * r;
+                        near = a1 > near ? a1 : near;
+                        far = a2 < far ? a2 : far;
                         if (far < near)
                         {
                                 return false;
@@ -137,10 +130,10 @@ class BoundingBox final
                 {
                         const T d = org[i];
                         const T r = dir_reciprocal[i];
-                        const T alpha1 = (bounds_[dir_negative[i]][i] - d) * r;
-                        const T alpha2 = (bounds_[!dir_negative[i]][i] - d) * r;
-                        near = std::max(near, alpha1);
-                        far = std::min(far, alpha2);
+                        const T a1 = (bounds_[dir_negative[i]][i] - d) * r;
+                        const T a2 = (bounds_[!dir_negative[i]][i] - d) * r;
+                        near = a1 > near ? a1 : near;
+                        far = a2 < far ? a2 : far;
                         if (far < near)
                         {
                                 return false;

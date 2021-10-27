@@ -28,7 +28,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/test/test.h>
 
 #include <cmath>
-#include <limits>
 #include <random>
 
 namespace ns::geometry::spatial::test
@@ -294,15 +293,6 @@ void test(const int point_count, const std::type_identity_t<T>& precision, std::
 template <typename T>
 void test(const int point_count, const std::type_identity_t<T>& precision, std::mt19937_64& engine)
 {
-        if (!(std::min<T>(1, std::numeric_limits<T>::quiet_NaN()) == 1))
-        {
-                error("std::min with NaN does not return the first argument");
-        }
-        if (!(std::max<T>(1, std::numeric_limits<T>::quiet_NaN()) == 1))
-        {
-                error("std::max with NaN does not return the first argument");
-        }
-
         test<2, T>(point_count, precision, engine);
         test<3, T>(point_count, precision, engine);
         test<4, T>(point_count, precision, engine);
