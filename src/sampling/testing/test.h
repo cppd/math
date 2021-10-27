@@ -40,7 +40,10 @@ namespace ns::sampling::testing
 {
 namespace test_implementation
 {
-inline void add_description(std::string* message, const std::string_view& separator, const std::string& description)
+inline void add_description(
+        std::string* const message,
+        const std::string_view& separator,
+        const std::string& description)
 {
         if (description.empty())
         {
@@ -53,19 +56,20 @@ inline void add_description(std::string* message, const std::string_view& separa
         }
 }
 
-inline void log(const std::string& message, bool add_indent = false)
+inline void log(const std::string& message, const bool add_indent = false)
 {
         constexpr unsigned INDENT_SIZE = 2;
         const unsigned indent_size = (add_indent ? 2 : 1) * INDENT_SIZE;
+        const std::string indent(indent_size, ' ');
         std::string s;
         s.reserve(indent_size + message.size());
-        s += std::string(indent_size, ' ');
-        for (char c : message)
+        s += indent;
+        for (const char c : message)
         {
                 s += c;
                 if (c == '\n')
                 {
-                        s += std::string(indent_size, ' ');
+                        s += indent;
                 }
         }
         LOG(s);
@@ -77,7 +81,7 @@ void test_unit(
         const std::string& description,
         const long long count,
         const RandomVector& random_vector,
-        ProgressRatio* progress)
+        ProgressRatio* const progress)
 {
         namespace impl = test_implementation;
 
@@ -136,7 +140,7 @@ void test_distribution_angle(
         const Vector<N, T>& normal,
         const RandomVector& random_vector,
         const PDF& pdf,
-        ProgressRatio* progress)
+        ProgressRatio* const progress)
 {
         namespace impl = test_implementation;
 
@@ -172,7 +176,7 @@ void test_distribution_surface(
         const long long count_per_bucket,
         const RandomVector& random_vector,
         const PDF& pdf,
-        ProgressRatio* progress)
+        ProgressRatio* const progress)
 {
         namespace impl = test_implementation;
 
@@ -202,54 +206,23 @@ void test_performance(
         const std::string& description,
         const long long count,
         const RandomVector& random_vector,
-        ProgressRatio* progress)
+        ProgressRatio* const progress)
 {
         namespace impl = test_implementation;
 
         progress->set(0);
 
+        RandomEngine random_engine = create_engine<RandomEngine>();
+        const Clock::time_point start_time = Clock::now();
+        for (long long i = 0; i < count; ++i)
         {
-                std::string s = "test performance";
-                impl::add_description(&s, ", ", description);
-                s += ", count " + to_string_digit_groups(count);
-                impl::log(s);
+                do_not_optimize(random_vector(random_engine));
         }
+        const long long performance = std::llround(count / duration_from(start_time));
 
-        const auto f = [&]() -> long long
-        {
-                RandomEngine random_engine = create_engine<RandomEngine>();
-                const Clock::time_point start_time = Clock::now();
-                for (long long i = 0; i < count; ++i)
-                {
-                        do_not_optimize(random_vector(random_engine));
-                }
-                return std::lround(count / duration_from(start_time));
-        };
-
-        const int max_thread_count = hardware_concurrency();
-        const int thread_count = std::clamp(max_thread_count - 1, 1, 2);
-
-        std::vector<std::future<long long>> futures;
-
-        std::vector<std::thread> threads;
-        for (int i = 0; i < thread_count; ++i)
-        {
-                std::packaged_task<long long()> task(f);
-                futures.emplace_back(task.get_future());
-                threads.emplace_back(std::move(task));
-        }
-        for (std::thread& thread : threads)
-        {
-                thread.join();
-        }
-
-        long long performance = 0;
-        for (std::future<long long>& future : futures)
-        {
-                performance += future.get();
-        }
-        performance /= futures.size();
-
-        impl::log("performance " + to_string_digit_groups(performance) + " per second");
+        std::string s = to_string_digit_groups(performance) + " per second";
+        impl::add_description(&s, ", ", description);
+        s += ", count " + to_string_digit_groups(count);
+        impl::log(s);
 }
 }
