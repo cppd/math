@@ -35,6 +35,15 @@ namespace ns::geometry::spatial::testing::hyperplane_ball
 {
 namespace implementation
 {
+inline constexpr int POINT_COUNT = 10'000;
+inline constexpr int COMPUTE_COUNT = 100;
+inline constexpr int AVERAGE_COUNT = 100;
+
+template <typename T>
+inline constexpr T ERROR_MIN = 0.998;
+template <typename T>
+inline constexpr T ERROR_MAX = 1.002;
+
 template <std::size_t N, typename T>
 HyperplaneBall<N, T> create_random_hyperplane_ball(std::mt19937_64& engine)
 {
@@ -103,7 +112,7 @@ void check_intersection_count(const HyperplaneBall<N, T>& ball, const std::vecto
 
         const std::size_t expected_count = (rays.size() / 3) * 2;
         const T v = T(count) / expected_count;
-        if (!(v >= T(0.999) && v <= T(1.001)))
+        if (!(v >= ERROR_MIN<T> && v <= ERROR_MAX<T>))
         {
                 error("Error intersection count " + to_string(count) + ", expected " + to_string(expected_count));
         }
@@ -133,8 +142,6 @@ double compute_intersections_per_second(const int point_count, std::mt19937_64& 
 template <std::size_t N, typename T>
 void test_intersection()
 {
-        constexpr int POINT_COUNT = 10'000;
-
         std::mt19937_64 engine = create_engine<std::mt19937_64>();
 
         const HyperplaneBall<N, T> ball = create_random_hyperplane_ball<N, T>(engine);
@@ -146,10 +153,6 @@ void test_intersection()
 template <std::size_t N, typename T>
 double compute_intersections_per_second()
 {
-        constexpr int POINT_COUNT = 10'000;
-        constexpr int COMPUTE_COUNT = 1000;
-        constexpr int AVERAGE_COUNT = 10;
-
         std::mt19937_64 engine = create_engine<std::mt19937_64>();
 
         return average<AVERAGE_COUNT>(

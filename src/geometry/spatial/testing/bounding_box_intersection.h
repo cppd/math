@@ -34,6 +34,10 @@ namespace ns::geometry::spatial::testing::bounding_box
 {
 namespace implementation
 {
+inline constexpr int POINT_COUNT = 10'000;
+inline constexpr int COMPUTE_COUNT = 100;
+inline constexpr int AVERAGE_COUNT = 100;
+
 template <std::size_t N, typename T>
 BoundingBox<N, T> create_random_bounding_box(std::mt19937_64& engine)
 {
@@ -210,8 +214,6 @@ double compute_intersections_r_per_second(const int point_count, std::mt19937_64
 template <std::size_t N, typename T>
 void test_intersection()
 {
-        constexpr int POINT_COUNT = 10'000;
-
         std::mt19937_64 engine = create_engine<std::mt19937_64>();
 
         const BoundingBox<N, T> box = create_random_bounding_box<N, T>(engine);
@@ -229,10 +231,6 @@ void test_intersection()
 template <std::size_t N, typename T>
 double compute_intersections_per_second()
 {
-        constexpr int POINT_COUNT = 10'000;
-        constexpr int COMPUTE_COUNT = 1000;
-        constexpr int AVERAGE_COUNT = 10;
-
         std::mt19937_64 engine = create_engine<std::mt19937_64>();
 
         return average<AVERAGE_COUNT>(
@@ -245,10 +243,6 @@ double compute_intersections_per_second()
 template <std::size_t N, typename T>
 double compute_intersections_r_per_second()
 {
-        constexpr int POINT_COUNT = 10'000;
-        constexpr int COMPUTE_COUNT = 1000;
-        constexpr int AVERAGE_COUNT = 10;
-
         std::mt19937_64 engine = create_engine<std::mt19937_64>();
 
         return average<AVERAGE_COUNT>(

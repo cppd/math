@@ -55,32 +55,32 @@ void test_performance()
         const long long p_2 = std::llround(testing::bounding_box::compute_intersections_r_per_second<N, T>());
 
         LOG("BoundingBox<" + to_string(N) + ", " + type_name<T>() + ">: {" + to_string_digit_groups(p_1) + ", "
-            + to_string_digit_groups(p_2) + "} i/s");
+            + to_string_digit_groups(p_2) + "} o/s");
 }
 
-template <typename T, typename F>
-void test_performance(const F& f)
+template <typename T, typename Counter>
+void test_performance(const Counter& counter)
 {
-        f();
+        counter();
         test_performance<2, T>();
-        f();
+        counter();
         test_performance<3, T>();
-        f();
+        counter();
         test_performance<4, T>();
-        f();
+        counter();
         test_performance<5, T>();
 }
 
 void test_bounding_box_performance(ProgressRatio* const progress)
 {
-        constexpr int COUNT = 8;
+        constexpr int COUNT = 4 * 2;
         int i = -1;
-        const auto f = [&]
+        const auto counter = [&]
         {
                 progress->set(++i, COUNT);
         };
-        test_performance<float>(f);
-        test_performance<double>(f);
+        test_performance<float>(counter);
+        test_performance<double>(counter);
 }
 
 //

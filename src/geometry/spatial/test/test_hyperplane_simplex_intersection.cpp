@@ -53,32 +53,32 @@ void test_performance()
 {
         const long long p = std::llround(testing::hyperplane_simplex::compute_intersections_per_second<N, T>());
 
-        LOG("HyperplaneSimplex<" + to_string(N) + ", " + type_name<T>() + ">: " + to_string_digit_groups(p) + " i/s");
+        LOG("HyperplaneSimplex<" + to_string(N) + ", " + type_name<T>() + ">: " + to_string_digit_groups(p) + " o/s");
 }
 
-template <typename T, typename F>
-void test_performance(const F& f)
+template <typename T, typename Counter>
+void test_performance(const Counter& counter)
 {
-        f();
+        counter();
         test_performance<2, T>();
-        f();
+        counter();
         test_performance<3, T>();
-        f();
+        counter();
         test_performance<4, T>();
-        f();
+        counter();
         test_performance<5, T>();
 }
 
 void test_hyperplane_simplex_performance(ProgressRatio* const progress)
 {
-        constexpr int COUNT = 8;
+        constexpr int COUNT = 4 * 2;
         int i = -1;
-        const auto f = [&]
+        const auto counter = [&]
         {
                 progress->set(++i, COUNT);
         };
-        test_performance<float>(f);
-        test_performance<double>(f);
+        test_performance<float>(counter);
+        test_performance<double>(counter);
 }
 
 //
