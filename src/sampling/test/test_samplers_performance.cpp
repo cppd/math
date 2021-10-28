@@ -15,8 +15,6 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include "names.h"
-
 #include "../halton_sampler.h"
 #include "../lh_sampler.h"
 #include "../sj_sampler.h"
@@ -26,6 +24,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/com/exponent.h>
 #include <src/com/log.h>
 #include <src/com/random/engine.h>
+#include <src/com/random/name.h>
 #include <src/com/type/name.h>
 #include <src/test/test.h>
 

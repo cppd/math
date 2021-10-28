@@ -15,8 +15,6 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include "names.h"
-
 #include "../sphere_uniform.h"
 
 #include <src/com/benchmark.h>
@@ -26,6 +24,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/com/log.h>
 #include <src/com/print.h>
 #include <src/com/random/engine.h>
+#include <src/com/random/name.h>
 #include <src/com/type/name.h>
 #include <src/test/test.h>
 

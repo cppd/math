@@ -42,18 +42,4 @@ std::string_view sampler_name(const HaltonSampler<N, T>&)
 {
         return "Halton Sampler";
 }
-
-//
-
-template <typename T>
-constexpr std::string_view random_engine_name() requires std::is_same_v<std::remove_cv_t<T>, std::mt19937>
-{
-        return "std::mt19937";
-}
-
-template <typename T>
-constexpr std::string_view random_engine_name() requires std::is_same_v<std::remove_cv_t<T>, std::mt19937_64>
-{
-        return "std::mt19937_64";
-}
 }
