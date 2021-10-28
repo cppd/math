@@ -201,28 +201,30 @@ void test_distribution_surface(
         buckets.template check_distribution<RandomEngine>(count, random_vector, pdf, progress);
 }
 
-template <std::size_t N, typename T, typename RandomEngine, typename RandomVector>
-void test_performance(
-        const std::string& description,
-        const long long count,
-        const RandomVector& random_vector,
-        ProgressRatio* const progress)
+template <long long COUNT, typename RandomEngine, typename RandomVector>
+long long test_performance(const RandomVector& random_vector)
+{
+        RandomEngine random_engine = create_engine<RandomEngine>();
+        const Clock::time_point start_time = Clock::now();
+        for (long long i = 0; i < COUNT; ++i)
+        {
+                do_not_optimize(random_vector(random_engine));
+        }
+        return std::llround(COUNT / duration_from(start_time));
+}
+
+template <long long COUNT, typename RandomEngine, typename RandomVector>
+void test_performance(const std::string& description, const RandomVector& random_vector, ProgressRatio* const progress)
 {
         namespace impl = test_implementation;
 
         progress->set(0);
 
-        RandomEngine random_engine = create_engine<RandomEngine>();
-        const Clock::time_point start_time = Clock::now();
-        for (long long i = 0; i < count; ++i)
-        {
-                do_not_optimize(random_vector(random_engine));
-        }
-        const long long performance = std::llround(count / duration_from(start_time));
+        const long long performance = test_performance<COUNT, RandomEngine>(random_vector);
 
-        std::string s = to_string_digit_groups(performance) + " per second";
+        std::string s = to_string_digit_groups(performance) + " o/s";
         impl::add_description(&s, ", ", description);
-        s += ", count " + to_string_digit_groups(count);
+        s += ", count " + to_string_digit_groups(COUNT);
         impl::log(s);
 }
 }

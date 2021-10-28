@@ -27,6 +27,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <cmath>
 #include <random>
+#include <sstream>
 
 namespace ns::sampling::test
 {
@@ -40,22 +41,30 @@ constexpr long long PERFORMANCE_COUNT = 10'000'000;
 template <typename T>
 using RandomEngine = std::conditional_t<sizeof(T) <= 4, std::mt19937, std::mt19937_64>;
 
+template <typename T>
+T random_power()
+{
+        RandomEngine<T> random_engine = create_engine<RandomEngine<T>>();
+        return std::uniform_real_distribution<T>(1, 100)(random_engine);
+}
+
+template <std::size_t N, typename T>
+Vector<N, T> random_normal()
+{
+        RandomEngine<T> random_engine = create_engine<RandomEngine<T>>();
+        return uniform_on_sphere<N, T>(random_engine).normalized();
+}
+
+//
+
 template <std::size_t N, typename T>
 void test_power_cosine_on_hemisphere(ProgressRatio* progress)
 {
-        const T power = []()
-        {
-                RandomEngine<T> random_engine = create_engine<RandomEngine<T>>();
-                return std::uniform_real_distribution<T>(1, 100)(random_engine);
-        }();
+        const T power = random_power<T>();
 
         LOG("Sphere Power Cosine, " + space_name(N) + ", " + type_name<T>() + ", power " + to_string_fixed(power, 1));
 
-        const Vector<N, T> normal = []()
-        {
-                RandomEngine<T> random_engine = create_engine<RandomEngine<T>>();
-                return uniform_on_sphere<N, T>(random_engine).normalized();
-        }();
+        const Vector<N, T> normal = random_normal<N, T>();
 
         testing::test_unit<N, T, RandomEngine<T>>(
                 "", UNIT_COUNT,
@@ -89,8 +98,8 @@ void test_power_cosine_on_hemisphere(ProgressRatio* progress)
                 },
                 progress);
 
-        testing::test_performance<N, T, RandomEngine<T>>(
-                "", PERFORMANCE_COUNT,
+        testing::test_performance<PERFORMANCE_COUNT, RandomEngine<T>>(
+                "",
                 [&](RandomEngine<T>& random_engine)
                 {
                         return power_cosine_on_hemisphere(random_engine, normal, power);
@@ -99,14 +108,63 @@ void test_power_cosine_on_hemisphere(ProgressRatio* progress)
 }
 
 template <std::size_t N>
-void test_power_cosine_on_hemisphere(ProgressRatio* progress)
+void test_power_cosine_on_hemisphere(ProgressRatio* const progress)
 {
         test_power_cosine_on_hemisphere<N, float>(progress);
         test_power_cosine_on_hemisphere<N, double>(progress);
 }
 
+//
+
+template <std::size_t N, typename T>
+void test_performance()
+{
+        using Engine = RandomEngine<T>;
+
+        const T power = random_power<T>();
+        const Vector<N, T> normal = random_normal<N, T>();
+
+        const long long p = testing::test_performance<PERFORMANCE_COUNT, Engine>(
+                [&](RandomEngine<T>& random_engine)
+                {
+                        return power_cosine_on_hemisphere(random_engine, normal, power);
+                });
+
+        std::ostringstream oss;
+        oss << "Sphere power cosine <" << N << ", " << type_name<T>() << ">: ";
+        oss << to_string_digit_groups(p) << " o/s";
+        LOG(oss.str());
+}
+
+template <typename T, typename Counter>
+void test_performance(const Counter& counter)
+{
+        counter();
+        test_performance<3, T>();
+        counter();
+        test_performance<4, T>();
+        counter();
+        test_performance<5, T>();
+}
+
+void test_power_cosine_on_hemisphere_performance(ProgressRatio* const progress)
+{
+        constexpr int COUNT = 3 * 2;
+        int i = -1;
+        const auto counter = [&]
+        {
+                progress->set(++i, COUNT);
+        };
+        test_performance<float>(counter);
+        test_performance<double>(counter);
+}
+
+//
+
 TEST_LARGE("Sample Distribution, Sphere Power Cosine, 3-Space", test_power_cosine_on_hemisphere<3>)
 TEST_LARGE("Sample Distribution, Sphere Power Cosine, 4-Space", test_power_cosine_on_hemisphere<4>)
 TEST_LARGE("Sample Distribution, Sphere Power Cosine, 5-Space", test_power_cosine_on_hemisphere<5>)
+
+TEST_PERFORMANCE("Sampling, sphere power cosine", test_power_cosine_on_hemisphere_performance)
 }
 }

@@ -27,6 +27,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <cmath>
 #include <random>
+#include <sstream>
 
 namespace ns::shading::test
 {
@@ -42,22 +43,42 @@ using RandomEngine = std::conditional_t<sizeof(T) <= 4, std::mt19937, std::mt199
 
 namespace st = sampling::testing;
 
+template <typename T>
+T random_alpha()
+{
+        RandomEngine<T> random_engine = create_engine<RandomEngine<T>>();
+        return std::uniform_real_distribution<T>(0.1, 1)(random_engine);
+}
+
+template <std::size_t N, typename T>
+Vector<N, T> random_normal()
+{
+        RandomEngine<T> random_engine = create_engine<RandomEngine<T>>();
+        return sampling::uniform_on_sphere<N, T>(random_engine).normalized();
+}
+
+template <std::size_t N, typename T>
+Vector<N, T> random_v(const Vector<N, T>& normal)
+{
+        RandomEngine<T> random_engine = create_engine<RandomEngine<T>>();
+        Vector<N, T> r = sampling::uniform_on_sphere<N, T>(random_engine).normalized();
+        if (dot(r, normal) < 0)
+        {
+                return -r;
+        }
+        return r;
+}
+
+//
+
 template <std::size_t N, typename T>
 void test_ggx(ProgressRatio* const progress)
 {
-        const T alpha = []()
-        {
-                RandomEngine<T> random_engine = create_engine<RandomEngine<T>>();
-                return std::uniform_real_distribution<T>(0.1, 1)(random_engine);
-        }();
+        const T alpha = random_alpha<T>();
 
         LOG("GGX, " + space_name(N) + ", " + type_name<T>() + ", alpha " + to_string_fixed(alpha, 2));
 
-        const Vector<N, T> normal = []()
-        {
-                RandomEngine<T> random_engine = create_engine<RandomEngine<T>>();
-                return sampling::uniform_on_sphere<N, T>(random_engine).normalized();
-        }();
+        const Vector<N, T> normal = random_normal<N, T>();
 
         st::test_unit<N, T, RandomEngine<T>>(
                 "Visible Normals", UNIT_COUNT,
@@ -112,16 +133,7 @@ void test_ggx(ProgressRatio* const progress)
                 },
                 progress);
 
-        const Vector<N, T> v = [&]()
-        {
-                RandomEngine<T> random_engine = create_engine<RandomEngine<T>>();
-                Vector<N, T> r = sampling::uniform_on_sphere<N, T>(random_engine).normalized();
-                if (dot(r, normal) < 0)
-                {
-                        return -r;
-                }
-                return r;
-        }();
+        const Vector<N, T> v = random_v<N, T>(normal);
 
         const T n_v = dot(normal, v);
 
@@ -155,16 +167,16 @@ void test_ggx(ProgressRatio* const progress)
                 },
                 progress);
 
-        st::test_performance<N, T, RandomEngine<T>>(
-                "Visible Normals", PERFORMANCE_COUNT,
+        st::test_performance<PERFORMANCE_COUNT, RandomEngine<T>>(
+                "Visible Normals",
                 [&](RandomEngine<T>& random_engine)
                 {
                         return ggx_visible_normals_h(random_engine, normal, v, alpha);
                 },
                 progress);
 
-        st::test_performance<N, T, RandomEngine<T>>(
-                "Visible Normals, Reflected", PERFORMANCE_COUNT,
+        st::test_performance<PERFORMANCE_COUNT, RandomEngine<T>>(
+                "Visible Normals, Reflected",
                 [&](RandomEngine<T>& random_engine)
                 {
                         const auto [h, l] = ggx_visible_normals_h_l(random_engine, normal, v, alpha);
@@ -180,8 +192,66 @@ void test_ggx(ProgressRatio* const progress)
         test_ggx<N, double>(progress);
 }
 
+//
+
+template <std::size_t N, typename T>
+void test_performance()
+{
+        using Engine = RandomEngine<T>;
+
+        const T alpha = random_alpha<T>();
+        const Vector<N, T> normal = random_normal<N, T>();
+        const Vector<N, T> v = random_v<N, T>(normal);
+
+        const long long p_visible_normals = st::test_performance<PERFORMANCE_COUNT, Engine>(
+                [&](RandomEngine<T>& random_engine)
+                {
+                        return ggx_visible_normals_h(random_engine, normal, v, alpha);
+                });
+
+        const long long p_visible_normals_reflected = st::test_performance<PERFORMANCE_COUNT, Engine>(
+                [&](RandomEngine<T>& random_engine)
+                {
+                        const auto [h, l] = ggx_visible_normals_h_l(random_engine, normal, v, alpha);
+                        return l;
+                });
+
+        std::ostringstream oss;
+        oss << "GGX visible normals <" << N << ", " << type_name<T>() << ">: ";
+        oss << to_string_digit_groups(p_visible_normals) << " o/s, reflected ";
+        oss << to_string_digit_groups(p_visible_normals_reflected) << " o/s";
+        LOG(oss.str());
+}
+
+template <typename T, typename Counter>
+void test_performance(const Counter& counter)
+{
+        counter();
+        test_performance<3, T>();
+        counter();
+        test_performance<4, T>();
+        counter();
+        test_performance<5, T>();
+}
+
+void test_ggx_performance(ProgressRatio* const progress)
+{
+        constexpr int COUNT = 3 * 2;
+        int i = -1;
+        const auto counter = [&]
+        {
+                progress->set(++i, COUNT);
+        };
+        test_performance<float>(counter);
+        test_performance<double>(counter);
+}
+
+//
+
 TEST_LARGE("Sample Distribution, GGX, 3-Space", test_ggx<3>)
 TEST_LARGE("Sample Distribution, GGX, 4-Space", test_ggx<4>)
 TEST_LARGE("Sample Distribution, GGX, 5-Space", test_ggx<5>)
+
+TEST_PERFORMANCE("Sampling, GGX", test_ggx_performance)
 }
 }
