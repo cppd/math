@@ -99,14 +99,14 @@ std::unique_ptr<Mesh<N>> create_mesh_for_facets(
 {
         std::unique_ptr<Mesh<N>> mesh;
         {
-                Clock::time_point start_time = Clock::now();
+                const Clock::time_point start_time = Clock::now();
 
                 mesh = create_mesh(points, facets);
 
                 LOG("Facets loaded, " + to_string_fixed(duration_from(start_time), 5) + " s");
         }
         {
-                Clock::time_point start_time = Clock::now();
+                const Clock::time_point start_time = Clock::now();
 
                 compute_normals(mesh.get());
 

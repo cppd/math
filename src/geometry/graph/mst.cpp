@@ -170,13 +170,13 @@ template <std::size_t N>
 std::vector<std::array<int, 2>> minimum_spanning_tree(
         const std::vector<Vector<N, float>>& points,
         const std::vector<std::array<int, N + 1>>& delaunay_objects,
-        ProgressRatio* progress)
+        ProgressRatio* const progress)
 {
         // vector, sort and unique are faster than unordered_set
 
         LOG("Minimum spanning tree...");
         progress->set_text("Minimum spanning tree");
-        Clock::time_point start_time = Clock::now();
+        const Clock::time_point start_time = Clock::now();
 
         progress->set(0, 5);
 

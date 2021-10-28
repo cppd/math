@@ -57,7 +57,7 @@ struct MatrixWithDeterminant
 };
 
 template <std::size_t N, typename T>
-std::vector<MatrixWithDeterminant<N, T>> random_symmetric_matrices(unsigned count, T min, T max)
+std::vector<MatrixWithDeterminant<N, T>> random_symmetric_matrices(const unsigned count, const T min, const T max)
 {
         std::mt19937_64 random_engine = create_engine<std::mt19937_64>();
         std::uniform_real_distribution<T> urd(min, max);
@@ -126,7 +126,7 @@ void test_eigen_defined()
 }
 
 template <std::size_t N, typename T>
-void test_eigen_random(unsigned count)
+void test_eigen_random(const unsigned count)
 {
         constexpr T TOLERANCE = Limits<T>::epsilon() * 100;
 
@@ -166,14 +166,14 @@ void test_eigen_random(unsigned count)
 }
 
 template <typename T>
-void test_eigen_random(unsigned count)
+void test_eigen_random(const unsigned count)
 {
         test_eigen_random<3, T>(count);
         test_eigen_random<4, T>(count);
         test_eigen_random<5, T>(count);
 }
 
-void test_eigen(ProgressRatio* progress)
+void test_eigen(ProgressRatio* const progress)
 {
         LOG("Test eigenvalues and eigenvectors");
         progress->set(0);

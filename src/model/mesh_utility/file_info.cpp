@@ -32,7 +32,7 @@ int file_dimension(const std::filesystem::path& file_name)
 
 //
 
-std::string obj_file_extension(std::size_t n)
+std::string obj_file_extension(const std::size_t n)
 {
         return (n == 3) ? "obj" : "obj" + to_string(n);
 }
@@ -56,7 +56,7 @@ std::vector<std::string> obj_file_extensions(const std::set<unsigned>& dimension
         return result;
 }
 
-bool file_has_obj_extension(std::size_t n, const std::filesystem::path& file_name)
+bool file_has_obj_extension(const std::size_t n, const std::filesystem::path& file_name)
 {
         return (file_name.extension() == "." + obj_file_extension(n))
                || (file_name.extension() == ".obj" + to_string(n));
@@ -64,7 +64,7 @@ bool file_has_obj_extension(std::size_t n, const std::filesystem::path& file_nam
 
 //
 
-std::string stl_file_extension(std::size_t n)
+std::string stl_file_extension(const std::size_t n)
 {
         return (n == 3) ? "stl" : "stl" + to_string(n);
 }
@@ -88,7 +88,7 @@ std::vector<std::string> stl_file_extensions(const std::set<unsigned>& dimension
         return result;
 }
 
-bool file_has_stl_extension(std::size_t n, const std::filesystem::path& file_name)
+bool file_has_stl_extension(const std::size_t n, const std::filesystem::path& file_name)
 {
         return (file_name.extension() == "." + stl_file_extension(n))
                || (file_name.extension() == ".stl" + to_string(n));

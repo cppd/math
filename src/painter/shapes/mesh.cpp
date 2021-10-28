@@ -46,7 +46,7 @@ namespace
 constexpr int TREE_MIN_OBJECTS_PER_BOX = 10;
 
 template <std::size_t N>
-std::array<int, N> add_offset(const std::array<int, N>& src, int offset, bool add)
+std::array<int, N> add_offset(const std::array<int, N>& src, const int offset, const bool add)
 {
         std::array<int, N> r;
         if (add)
@@ -67,7 +67,7 @@ std::array<int, N> add_offset(const std::array<int, N>& src, int offset, bool ad
 }
 
 template <std::size_t N>
-std::array<int, N> add_offset(const std::array<int, N>& src, int offset)
+std::array<int, N> add_offset(const std::array<int, N>& src, const int offset)
 {
         std::array<int, N> r;
         for (unsigned i = 0; i < N; ++i)
@@ -86,7 +86,7 @@ struct Material
         T alpha;
         int image;
 
-        Material(T metalness, T roughness, const color::Color& color, int image, T alpha)
+        Material(const T metalness, const T roughness, const color::Color& color, const int image, const T alpha)
                 : metalness(std::clamp(metalness, T(0), T(1))),
                   roughness(std::clamp(roughness, T(0), T(1))),
                   color(color.to_color<Color>().clamp(0, 1)),
@@ -367,9 +367,9 @@ void Mesh<N, T, Color>::create(const std::vector<mesh::Reading<N>>& mesh_objects
 }
 
 template <std::size_t N, typename T, typename Color>
-Mesh<N, T, Color>::Mesh(const std::vector<const mesh::MeshObject<N>*>& mesh_objects, ProgressRatio* progress)
+Mesh<N, T, Color>::Mesh(const std::vector<const mesh::MeshObject<N>*>& mesh_objects, ProgressRatio* const progress)
 {
-        Clock::time_point start_time = Clock::now();
+        const Clock::time_point start_time = Clock::now();
 
         {
                 std::vector<mesh::Reading<N>> reading;
@@ -426,7 +426,7 @@ std::function<bool(const geometry::ShapeWrapperForIntersection<geometry::Paralle
 template <std::size_t N, typename T, typename Color>
 std::unique_ptr<Shape<N, T, Color>> create_mesh(
         const std::vector<const mesh::MeshObject<N>*>& mesh_objects,
-        ProgressRatio* progress)
+        ProgressRatio* const progress)
 {
         return std::make_unique<Mesh<N, T, Color>>(mesh_objects, progress);
 }

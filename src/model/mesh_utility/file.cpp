@@ -33,7 +33,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 namespace ns::mesh
 {
-std::vector<FileFormat> save_formats(unsigned dimension)
+std::vector<FileFormat> save_formats(const unsigned dimension)
 {
         std::vector<FileFormat> v(2);
 
@@ -70,7 +70,7 @@ std::vector<FileFormat> load_formats(const std::set<unsigned>& dimensions)
 //
 
 template <std::size_t N, typename Path>
-std::unique_ptr<Mesh<N>> load(const Path& file_name, ProgressRatio* progress)
+std::unique_ptr<Mesh<N>> load(const Path& file_name, ProgressRatio* const progress)
 {
         static_assert(std::is_same_v<Path, std::filesystem::path>);
 
@@ -113,7 +113,7 @@ std::filesystem::path save_to_stl(
         const Mesh<N>& mesh,
         const Path& file_name,
         const std::string_view& comment,
-        bool ascii_format)
+        const bool ascii_format)
 {
         static_assert(std::is_same_v<Path, std::filesystem::path>);
 

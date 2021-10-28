@@ -55,7 +55,7 @@ constexpr bool vectors_are_parallel(const Vector<N, T>& a, const Vector<N, T>& b
 }
 
 template <std::size_t N, typename T>
-std::vector<Vector<N, T>> random_vectors(int count)
+std::vector<Vector<N, T>> random_vectors(const int count)
 {
         std::mt19937_64 random_engine = create_engine<std::mt19937_64>();
         std::vector<Vector<N, T>> res;
@@ -73,7 +73,7 @@ std::vector<std::array<Vector<N, T>, N - 1>> complement_vectors(const std::vecto
         std::vector<std::array<Vector<N, T>, N - 1>> res;
         res.reserve(vectors.size());
 
-        Clock::time_point start_time = Clock::now();
+        const Clock::time_point start_time = Clock::now();
 
         for (const Vector<N, T>& unit_vector : vectors)
         {
@@ -151,7 +151,7 @@ void test_complement(const Vector<N, T>& unit_vector, const std::array<Vector<N,
 }
 
 template <std::size_t N, typename T, bool GRAM_SCHMIDT>
-void test_complement(int count)
+void test_complement(const int count)
 {
         ASSERT(count > 0);
 
@@ -173,14 +173,14 @@ void test_complement(int count)
 }
 
 template <std::size_t N, typename T>
-void test_complement(int vector_count)
+void test_complement(const int vector_count)
 {
         test_complement<N, T, false>(vector_count);
         test_complement<N, T, true>(vector_count);
 }
 
 template <typename T>
-void test_complement(int vector_count)
+void test_complement(const int vector_count)
 {
         test_complement<2, T>(vector_count);
         LOG("---");
@@ -193,7 +193,7 @@ void test_complement(int vector_count)
         test_complement<6, T>(vector_count);
 }
 
-void test(ProgressRatio* progress)
+void test(ProgressRatio* const progress)
 {
         progress->set(0);
         test_complement<float>(VECTOR_COUNT);
@@ -208,7 +208,7 @@ void test(ProgressRatio* progress)
 
 //
 
-void random_number(mpz_class* v, std::mt19937_64& random_engine)
+void random_number(mpz_class* const v, std::mt19937_64& random_engine)
 {
         std::array<unsigned char, 50> data;
         std::uniform_int_distribution<int> uid(0, Limits<unsigned char>::max());
@@ -223,7 +223,7 @@ void random_number(mpz_class* v, std::mt19937_64& random_engine)
         }
 }
 
-void random_number(long long* v, std::mt19937_64& random_engine)
+void random_number(long long* const v, std::mt19937_64& random_engine)
 {
         *v = std::uniform_int_distribution<long long>(-100, 100)(random_engine);
 }

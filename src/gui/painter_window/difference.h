@@ -49,8 +49,8 @@ public:
         template <typename V>
         std::tuple<T, double> compute(V&& data)
         {
-                Clock::time_point now = Clock::now();
-                Clock::time_point front_time = now - interval_;
+                const Clock::time_point now = Clock::now();
+                const Clock::time_point front_time = now - interval_;
 
                 while (!deque_.empty() && deque_.front().time < front_time)
                 {

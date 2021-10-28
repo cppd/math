@@ -106,7 +106,7 @@ void read_keyword(const Data& data, long long data_size, const std::string_view&
 template <std::size_t N>
 void read_ascii_stl(
         const std::string& file_data,
-        ProgressRatio* progress,
+        ProgressRatio* const progress,
         const std::function<void(const std::array<Vector<N, float>, N>&)>& yield_facet)
 {
         static constexpr std::string_view SOLID = "solid";
@@ -180,7 +180,7 @@ void read_ascii_stl(
 template <std::size_t N>
 void read_binary_stl(
         const std::string& file_data,
-        ProgressRatio* progress,
+        ProgressRatio* const progress,
         const std::function<void(const std::array<Vector<N, float>, N>&)>& yield_facet)
 {
         ASSERT(file_data.size() > BINARY_BEGIN_SIZE);
@@ -214,7 +214,7 @@ void read_binary_stl(
 }
 
 template <std::size_t N>
-std::unique_ptr<Mesh<N>> read_stl(const std::filesystem::path& file_name, ProgressRatio* progress)
+std::unique_ptr<Mesh<N>> read_stl(const std::filesystem::path& file_name, ProgressRatio* const progress)
 {
         std::unordered_map<Vector<N, float>, unsigned> unique_vertices;
         Mesh<N> mesh;
@@ -268,9 +268,9 @@ std::unique_ptr<Mesh<N>> read_stl(const std::filesystem::path& file_name, Progre
 }
 
 template <std::size_t N, typename Path>
-std::unique_ptr<Mesh<N>> load_from_stl_file(const Path& file_name, ProgressRatio* progress)
+std::unique_ptr<Mesh<N>> load_from_stl_file(const Path& file_name, ProgressRatio* const progress)
 {
-        Clock::time_point start_time = Clock::now();
+        const Clock::time_point start_time = Clock::now();
 
         std::unique_ptr<Mesh<N>> mesh = read_stl<N>(file_name, progress);
 

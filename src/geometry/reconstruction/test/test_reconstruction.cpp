@@ -52,7 +52,7 @@ template <std::size_t N, typename T>
 constexpr Vector<N, T> LAST_AXIS = make_last_axis<T>(1, std::make_integer_sequence<std::size_t, N - 1>());
 
 template <std::size_t N, typename T, typename RandomEngine>
-Vector<N, T> random_on_sphere(RandomEngine& engine, bool bound)
+Vector<N, T> random_on_sphere(RandomEngine& engine, const bool bound)
 {
         if (!bound)
         {
@@ -67,7 +67,7 @@ Vector<N, T> random_on_sphere(RandomEngine& engine, bool bound)
 }
 
 template <std::size_t N>
-std::vector<Vector<N, float>> points_sphere_with_notch(unsigned point_count, bool bound)
+std::vector<Vector<N, float>> points_sphere_with_notch(const unsigned point_count, const bool bound)
 {
         std::mt19937_64 engine(point_count);
 
@@ -90,7 +90,7 @@ std::vector<Vector<N, float>> points_sphere_with_notch(unsigned point_count, boo
 }
 
 template <std::size_t N>
-std::vector<Vector<N, float>> clone_object(const std::vector<Vector<N, float>>& points, unsigned clone_count)
+std::vector<Vector<N, float>> clone_object(const std::vector<Vector<N, float>>& points, const unsigned clone_count)
 {
         ASSERT(clone_count > 1 && clone_count <= (1 << N));
 
@@ -123,7 +123,7 @@ std::vector<Vector<N, float>> clone_object(const std::vector<Vector<N, float>>& 
 }
 
 template <std::size_t N>
-constexpr std::tuple<unsigned, unsigned> facet_count(unsigned point_count)
+constexpr std::tuple<unsigned, unsigned> facet_count(const unsigned point_count)
 {
         static_assert(2 <= N && N <= 4);
 
@@ -158,7 +158,7 @@ constexpr std::tuple<unsigned, unsigned> facet_count(unsigned point_count)
 }
 
 template <typename T>
-std::string min_max_to_string(T min, T max)
+std::string min_max_to_string(const T min, const T max)
 {
         if (min == max)
         {
@@ -169,10 +169,10 @@ std::string min_max_to_string(T min, T max)
 
 template <std::size_t N>
 void test_algorithms(
-        bool bounded_object,
-        unsigned object_count,
+        const bool bounded_object,
+        const unsigned object_count,
         const std::vector<Vector<N, float>>& points,
-        ProgressRatio* progress)
+        ProgressRatio* const progress)
 {
         ASSERT(points.size() > N);
         ASSERT(object_count > 0);
@@ -180,7 +180,7 @@ void test_algorithms(
 
         const auto [FACETS_MIN, FACETS_MAX] = facet_count<N>(points.size() / object_count);
 
-        Clock::time_point start_time = Clock::now();
+        const Clock::time_point start_time = Clock::now();
 
         LOG("Point count: " + to_string(points.size()));
 
@@ -238,7 +238,7 @@ void test_algorithms(
 }
 
 template <std::size_t N>
-void all_tests(bool bounded_object, std::vector<Vector<N, float>>&& points, ProgressRatio* progress)
+void all_tests(const bool bounded_object, std::vector<Vector<N, float>>&& points, ProgressRatio* const progress)
 {
         static_assert(2 <= N && N <= 4);
 
@@ -254,7 +254,7 @@ void all_tests(bool bounded_object, std::vector<Vector<N, float>>&& points, Prog
 }
 
 template <std::size_t N>
-void test(int low, int high, ProgressRatio* progress)
+void test(const int low, const int high, ProgressRatio* const progress)
 {
         const int point_count = [&]()
         {
@@ -269,17 +269,17 @@ void test(int low, int high, ProgressRatio* progress)
         all_tests<N>(true, points_sphere_with_notch<N>(point_count, true), progress);
 }
 
-void test_reconstruction_2(ProgressRatio* progress)
+void test_reconstruction_2(ProgressRatio* const progress)
 {
         test<2>(100, 1000, progress);
 }
 
-void test_reconstruction_3(ProgressRatio* progress)
+void test_reconstruction_3(ProgressRatio* const progress)
 {
         test<3>(2000, 3000, progress);
 }
 
-void test_reconstruction_4(ProgressRatio* progress)
+void test_reconstruction_4(ProgressRatio* const progress)
 {
         test<4>(20000, 25000, progress);
 }

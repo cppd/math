@@ -40,7 +40,7 @@ namespace ns::process
 namespace process_implementation
 {
 template <typename T>
-std::string bound_cocone_text_rho_alpha(T rho, T alpha)
+std::string bound_cocone_text_rho_alpha(const T rho, const T alpha)
 {
         static_assert(std::is_floating_point_v<T>);
         std::string text;
@@ -51,7 +51,7 @@ std::string bound_cocone_text_rho_alpha(T rho, T alpha)
 }
 
 template <std::size_t N>
-std::unique_ptr<const mesh::Mesh<N>> mesh_convex_hull(const mesh::Mesh<N>& mesh, ProgressRatio* progress)
+std::unique_ptr<const mesh::Mesh<N>> mesh_convex_hull(const mesh::Mesh<N>& mesh, ProgressRatio* const progress)
 {
         std::vector<Vector<N, float>> points;
         if (!mesh.facets.empty())
@@ -69,7 +69,7 @@ std::unique_ptr<const mesh::Mesh<N>> mesh_convex_hull(const mesh::Mesh<N>& mesh,
 
         std::vector<geometry::ConvexHullFacet<N>> convex_hull_facets;
 
-        Clock::time_point start_time = Clock::now();
+        const Clock::time_point start_time = Clock::now();
 
         geometry::compute_convex_hull(points, &convex_hull_facets, progress, true);
 
@@ -87,7 +87,7 @@ std::unique_ptr<const mesh::Mesh<N>> mesh_convex_hull(const mesh::Mesh<N>& mesh,
 }
 
 template <std::size_t N>
-void convex_hull(ProgressRatioList* progress_list, const mesh::Reading<N>& object)
+void convex_hull(ProgressRatioList* const progress_list, const mesh::Reading<N>& object)
 {
         std::unique_ptr<const mesh::Mesh<N>> ch_mesh;
         {
@@ -109,8 +109,8 @@ void convex_hull(ProgressRatioList* progress_list, const mesh::Reading<N>& objec
 
 template <std::size_t N>
 void cocone(
-        ProgressRatioList* progress_list,
-        ObjectId parent_id,
+        ProgressRatioList* const progress_list,
+        const ObjectId parent_id,
         const geometry::ManifoldConstructor<N>& constructor,
         const Matrix<N + 1, N + 1, double>& model_matrix)
 {
@@ -118,7 +118,7 @@ void cocone(
         {
                 ProgressRatio progress(progress_list);
 
-                Clock::time_point start_time = Clock::now();
+                const Clock::time_point start_time = Clock::now();
 
                 std::vector<Vector<N, double>> normals;
                 std::vector<std::array<int, N>> facets;
@@ -142,18 +142,18 @@ void cocone(
 
 template <std::size_t N>
 void bound_cocone(
-        ProgressRatioList* progress_list,
-        ObjectId parent_id,
+        ProgressRatioList* const progress_list,
+        const ObjectId parent_id,
         const geometry::ManifoldConstructor<N>& constructor,
         const Matrix<N + 1, N + 1, double>& model_matrix,
-        double rho,
-        double alpha)
+        const double rho,
+        const double alpha)
 {
         std::unique_ptr<const mesh::Mesh<N>> bound_cocone_mesh;
         {
                 ProgressRatio progress(progress_list);
 
-                Clock::time_point start_time = Clock::now();
+                const Clock::time_point start_time = Clock::now();
 
                 std::vector<Vector<N, double>> normals;
                 std::vector<std::array<int, N>> facets;
@@ -178,8 +178,8 @@ void bound_cocone(
 
 template <std::size_t N>
 void mst(
-        ProgressRatioList* progress_list,
-        ObjectId parent_id,
+        ProgressRatioList* const progress_list,
+        const ObjectId parent_id,
         const geometry::ManifoldConstructor<N>& constructor,
         const Matrix<N + 1, N + 1, double>& model_matrix)
 {
@@ -204,11 +204,11 @@ void mst(
 
 template <std::size_t N>
 std::unique_ptr<geometry::ManifoldConstructor<N>> create_manifold_constructor(
-        ProgressRatioList* progress_list,
+        ProgressRatioList* const progress_list,
         const std::vector<Vector<N, float>>& points)
 {
         ProgressRatio progress(progress_list);
-        Clock::time_point start_time = Clock::now();
+        const Clock::time_point start_time = Clock::now();
 
         std::unique_ptr<geometry::ManifoldConstructor<N>> manifold_constructor =
                 geometry::create_manifold_constructor(points, &progress);
@@ -220,15 +220,15 @@ std::unique_ptr<geometry::ManifoldConstructor<N>> create_manifold_constructor(
 
 template <std::size_t N>
 void manifold_constructor(
-        ProgressRatioList* progress_list,
-        bool build_cocone,
-        bool build_bound_cocone,
-        bool build_mst,
+        ProgressRatioList* const progress_list,
+        const bool build_cocone,
+        const bool build_bound_cocone,
+        const bool build_mst,
         const Matrix<N + 1, N + 1, double>& matrix,
         const ObjectId& id,
         const std::vector<Vector<N, float>>& points,
-        double rho,
-        double alpha)
+        const double rho,
+        const double alpha)
 {
         if (!build_cocone && !build_bound_cocone && !build_mst)
         {
@@ -279,14 +279,14 @@ void manifold_constructor(
 
 template <std::size_t N>
 void compute_meshes(
-        ProgressRatioList* progress_list,
-        bool build_convex_hull,
-        bool build_cocone,
-        bool build_bound_cocone,
-        bool build_mst,
+        ProgressRatioList* const progress_list,
+        const bool build_convex_hull,
+        const bool build_cocone,
+        const bool build_bound_cocone,
+        const bool build_mst,
         const mesh::MeshObject<N>& mesh_object,
-        double rho,
-        double alpha)
+        const double rho,
+        const double alpha)
 {
         namespace impl = process_implementation;
 

@@ -37,7 +37,7 @@ namespace ns::volume
 {
 namespace
 {
-int max_digit_count_zero_based(int count)
+int max_digit_count_zero_based(const int count)
 {
         const int max_number = count - 1;
         return std::floor(std::log10(std::max(max_number, 1))) + 1;
@@ -142,9 +142,9 @@ template <std::size_t N>
 void save_to_images(
         const std::filesystem::path& directory,
         const image::ImageView<N>& image_view,
-        ProgressRatio* progress,
-        unsigned* current,
-        unsigned count)
+        ProgressRatio* const progress,
+        unsigned* const current,
+        unsigned const count)
 {
         static_assert(N >= 3);
 
@@ -191,9 +191,9 @@ void load_from_images(
         const image::ColorFormat& image_format,
         const std::array<int, N>& image_size,
         const std::span<std::byte>& image_bytes,
-        ProgressRatio* progress,
-        unsigned* current,
-        unsigned count)
+        ProgressRatio* const progress,
+        unsigned* const current,
+        const unsigned count)
 {
         static_assert(N >= 3);
 
@@ -251,7 +251,7 @@ void load_from_images(
         }
 }
 
-void find_info(const std::filesystem::path& directory, std::vector<int>* size, image::ColorFormat* format)
+void find_info(const std::filesystem::path& directory, std::vector<int>* const size, image::ColorFormat* const format)
 {
         std::optional<DirectoryContent> content = read_directory_ascii_content(directory);
         if (!content || content->entries.empty())
@@ -306,7 +306,7 @@ VolumeInfo volume_info(const Path& path)
 }
 
 template <std::size_t N, typename Path>
-void save_to_images(const Path& path, const image::ImageView<N>& image_view, ProgressRatio* progress)
+void save_to_images(const Path& path, const image::ImageView<N>& image_view, ProgressRatio* const progress)
 {
         static_assert(std::is_same_v<Path, std::filesystem::path>);
 
@@ -324,7 +324,7 @@ void save_to_images(const Path& path, const image::ImageView<N>& image_view, Pro
 }
 
 template <std::size_t N, typename Path>
-image::Image<N> load(const Path& path, ProgressRatio* progress)
+image::Image<N> load(const Path& path, ProgressRatio* const progress)
 {
         static_assert(std::is_same_v<Path, std::filesystem::path>);
 

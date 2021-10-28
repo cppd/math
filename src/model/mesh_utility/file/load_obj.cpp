@@ -845,7 +845,7 @@ std::unique_ptr<Mesh<N>> read_obj_and_mtl(const std::filesystem::path& file_name
 template <std::size_t N, typename Path>
 std::unique_ptr<Mesh<N>> load_from_obj_file(const Path& file_name, ProgressRatio* const progress)
 {
-        Clock::time_point start_time = Clock::now();
+        const Clock::time_point start_time = Clock::now();
 
         std::unique_ptr<Mesh<N>> mesh = read_obj_and_mtl<N>(file_name, progress);
 

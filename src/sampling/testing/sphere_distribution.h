@@ -85,7 +85,7 @@ class SphereDistribution final
                 const long long count,
                 const RandomVector& random_vector,
                 const PDF& pdf,
-                ProgressRatio* progress) const
+                ProgressRatio* const progress) const
         {
                 const int thread_count = hardware_concurrency();
                 const long long count_per_thread = (count + thread_count - 1) / thread_count;
@@ -169,7 +169,7 @@ class SphereDistribution final
         }
 
 public:
-        explicit SphereDistribution(ProgressRatio* progress)
+        explicit SphereDistribution(ProgressRatio* const progress)
                 : sphere_(), tree_(&sphere_.facets, TREE_MIN_OBJECTS_PER_BOX, progress)
         {
         }
@@ -196,7 +196,7 @@ public:
                 const long long count,
                 const RandomVector& random_vector,
                 const PDF& pdf,
-                ProgressRatio* progress) const
+                ProgressRatio* const progress) const
         {
                 const std::vector<SphereBucket<N, T>> buckets =
                         compute_buckets<RandomEngine>(count, random_vector, pdf, progress);

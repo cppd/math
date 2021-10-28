@@ -218,7 +218,7 @@ class CudaFFT final : public DFT
 
                 cuda_device_sync();
 
-                Clock::time_point start_time = Clock::now();
+                const Clock::time_point start_time = Clock::now();
 
                 if (inverse)
                 {

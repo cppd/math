@@ -43,8 +43,8 @@ Tests& Tests::instance()
 void Tests::run(
         const Test& test,
         const std::string_view& test_name,
-        const char* type_name,
-        ProgressRatios* progress_ratios)
+        const char* const type_name,
+        ProgressRatios* const progress_ratios)
 {
         const std::string name = [&]()
         {
@@ -53,12 +53,12 @@ void Tests::run(
                 return oss.str();
         }();
         ProgressRatio progress(progress_ratios, name);
-        auto f1 = [&](void (*f)())
+        auto f1 = [&](void (*const f)())
         {
                 progress.set(0);
                 f();
         };
-        auto f2 = [&](void (*f)(ProgressRatio*))
+        auto f2 = [&](void (*const f)(ProgressRatio*))
         {
                 f(&progress);
         };
@@ -103,7 +103,7 @@ std::vector<std::string> Tests::performance_names() const
         return names;
 }
 
-void Tests::run_small(const std::string_view& name, ProgressRatios* progress_ratios) const
+void Tests::run_small(const std::string_view& name, ProgressRatios* const progress_ratios) const
 {
         auto iter = small_tests_.find(name);
         if (iter == small_tests_.cend())
@@ -115,7 +115,7 @@ void Tests::run_small(const std::string_view& name, ProgressRatios* progress_rat
         run(iter->second, iter->first, SMALL, progress_ratios);
 }
 
-void Tests::run_large(const std::string_view& name, ProgressRatios* progress_ratios) const
+void Tests::run_large(const std::string_view& name, ProgressRatios* const progress_ratios) const
 {
         auto iter = large_tests_.find(name);
         if (iter == large_tests_.cend())
@@ -127,7 +127,7 @@ void Tests::run_large(const std::string_view& name, ProgressRatios* progress_rat
         run(iter->second, iter->first, LARGE, progress_ratios);
 }
 
-void Tests::run_performance(const std::string_view& name, ProgressRatios* progress_ratios) const
+void Tests::run_performance(const std::string_view& name, ProgressRatios* const progress_ratios) const
 {
         auto iter = performance_tests_.find(name);
         if (iter == performance_tests_.cend())
@@ -139,22 +139,22 @@ void Tests::run_performance(const std::string_view& name, ProgressRatios* progre
         run(iter->second, iter->first, PERFORMANCE, progress_ratios);
 }
 
-void Tests::run_small(ProgressRatios* progress_ratios) const
+void Tests::run_small(ProgressRatios* const progress_ratios) const
 {
         run_small(small_names(), progress_ratios);
 }
 
-void Tests::run_large(ProgressRatios* progress_ratios) const
+void Tests::run_large(ProgressRatios* const progress_ratios) const
 {
         run_large(large_names(), progress_ratios);
 }
 
-void Tests::run_performance(ProgressRatios* progress_ratios) const
+void Tests::run_performance(ProgressRatios* const progress_ratios) const
 {
         run_performance(performance_names(), progress_ratios);
 }
 
-void Tests::run_small(std::vector<std::string> names, ProgressRatios* progress_ratios) const
+void Tests::run_small(std::vector<std::string> names, ProgressRatios* const progress_ratios) const
 {
         std::shuffle(names.begin(), names.end(), create_engine<std::mt19937>());
         for (const std::string& name : names)
@@ -163,7 +163,7 @@ void Tests::run_small(std::vector<std::string> names, ProgressRatios* progress_r
         }
 }
 
-void Tests::run_large(std::vector<std::string> names, ProgressRatios* progress_ratios) const
+void Tests::run_large(std::vector<std::string> names, ProgressRatios* const progress_ratios) const
 {
         std::shuffle(names.begin(), names.end(), create_engine<std::mt19937>());
         for (const std::string& name : names)
@@ -172,7 +172,7 @@ void Tests::run_large(std::vector<std::string> names, ProgressRatios* progress_r
         }
 }
 
-void Tests::run_performance(std::vector<std::string> names, ProgressRatios* progress_ratios) const
+void Tests::run_performance(std::vector<std::string> names, ProgressRatios* const progress_ratios) const
 {
         std::shuffle(names.begin(), names.end(), create_engine<std::mt19937>());
         for (const std::string& name : names)

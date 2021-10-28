@@ -38,12 +38,12 @@ namespace
 // x0 x1 x2 x3 ...
 template <std::size_t N>
 void read_points_thread(
-        unsigned thread_num,
-        unsigned thread_count,
+        const unsigned thread_num,
+        const unsigned thread_count,
         std::vector<char>* data_ptr,
         const std::vector<long long>& line_begin,
-        std::vector<Vector<N, float>>* lines,
-        ProgressRatio* progress)
+        std::vector<Vector<N, float>>* const lines,
+        ProgressRatio* const progress)
 {
         const long long line_count = line_begin.size();
         const double line_count_reciprocal = 1.0 / line_begin.size();
@@ -81,9 +81,9 @@ void read_points_thread(
 
 template <std::size_t N>
 void read_points(
-        std::vector<Vector<N, float>>* vertices,
+        std::vector<Vector<N, float>>* const vertices,
         const std::filesystem::path& file_name,
-        ProgressRatio* progress)
+        ProgressRatio* const progress)
 {
         const int thread_count = hardware_concurrency();
 
@@ -107,7 +107,7 @@ void read_points(
 }
 
 template <std::size_t N>
-std::unique_ptr<Mesh<N>> read_text(const std::filesystem::path& file_name, ProgressRatio* progress)
+std::unique_ptr<Mesh<N>> read_text(const std::filesystem::path& file_name, ProgressRatio* const progress)
 {
         progress->set_undefined();
 
@@ -133,9 +133,9 @@ std::unique_ptr<Mesh<N>> read_text(const std::filesystem::path& file_name, Progr
 }
 
 template <std::size_t N, typename Path>
-std::unique_ptr<Mesh<N>> load_from_txt_file(const Path& file_name, ProgressRatio* progress)
+std::unique_ptr<Mesh<N>> load_from_txt_file(const Path& file_name, ProgressRatio* const progress)
 {
-        Clock::time_point start_time = Clock::now();
+        const Clock::time_point start_time = Clock::now();
 
         std::unique_ptr<Mesh<N>> mesh = read_text<N>(file_name, progress);
 

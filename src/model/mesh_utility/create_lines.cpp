@@ -90,7 +90,7 @@ std::unique_ptr<Mesh<N>> create_mesh_for_lines(
         const std::vector<Vector<N, float>>& points,
         const std::vector<std::array<int, 2>>& lines)
 {
-        Clock::time_point start_time = Clock::now();
+        const Clock::time_point start_time = Clock::now();
 
         std::unique_ptr<Mesh<N>> mesh = create_mesh(points, lines);
 

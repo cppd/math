@@ -42,7 +42,7 @@ using RandomEngine = std::conditional_t<sizeof(T) <= 4, std::mt19937, std::mt199
 //
 
 template <std::size_t N, typename T>
-void test_sphere_uniform(ProgressRatio* progress)
+void test_sphere_uniform(ProgressRatio* const progress)
 {
         LOG("Sphere Uniform, " + space_name(N) + ", " + type_name<T>());
 

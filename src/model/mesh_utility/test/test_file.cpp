@@ -39,7 +39,7 @@ void test_obj_file(
         const std::string& name,
         const std::filesystem::path& directory,
         const std::string& comment,
-        ProgressRatio* progress)
+        ProgressRatio* const progress)
 {
         LOG("Saving to OBJ...");
 
@@ -94,8 +94,8 @@ void test_stl_file(
         const std::string& name,
         const std::filesystem::path& directory,
         const std::string& comment,
-        ProgressRatio* progress,
-        bool ascii_format)
+        ProgressRatio* const progress,
+        const bool ascii_format)
 {
         const std::string type_name = ascii_format ? "ASCII" : "binary";
         LOG("Saving to " + type_name + " STL...");
@@ -126,7 +126,7 @@ void test_mesh_files(
         const std::string& name,
         const std::vector<Vector<N, float>>& vertices,
         const std::vector<std::array<int, N>>& facets,
-        ProgressRatio* progress)
+        ProgressRatio* const progress)
 {
         static_assert(N >= 3);
 

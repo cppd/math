@@ -44,7 +44,7 @@ class AngleDistribution
         static constexpr T BUCKET_SIZE = PI<T> / BUCKET_COUNT;
         static constexpr T BUCKETS_PER_RADIAN = BUCKET_COUNT / PI<T>;
 
-        static T to_degrees(T angle)
+        static T to_degrees(const T angle)
         {
                 return angle * (180 / PI<T>);
         }
@@ -95,7 +95,7 @@ class AngleDistribution
                 const long long count,
                 const Vector<N, T>& normal,
                 const RandomVector& random_vector,
-                ProgressRatio* progress)
+                ProgressRatio* const progress)
         {
                 const int thread_count = hardware_concurrency();
                 const long long count_per_thread = (count + thread_count - 1) / thread_count;
@@ -172,7 +172,7 @@ public:
                 const long long count,
                 const Vector<N, T>& normal,
                 const RandomVector& random_vector,
-                ProgressRatio* progress)
+                ProgressRatio* const progress)
         {
                 const std::vector<long long> buckets =
                         compute_buckets<RandomEngine>(count, normal, random_vector, progress);

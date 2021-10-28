@@ -50,9 +50,9 @@ std::vector<Vector<N, T>> random_data(int count, std::mt19937_64& engine)
 }
 
 template <int COUNT, std::size_t N, typename T, typename F>
-[[nodiscard]] double test(const std::vector<Vector<N, T>>& data, const F& f)
+long long test(const std::vector<Vector<N, T>>& data, const F& f)
 {
-        Clock::time_point start_time = Clock::now();
+        const Clock::time_point start_time = Clock::now();
         for (int i = 0; i < COUNT; ++i)
         {
                 for (const Vector<N, T>& v : data)
@@ -60,7 +60,7 @@ template <int COUNT, std::size_t N, typename T, typename F>
                         do_not_optimize(f(v));
                 }
         }
-        return duration_from(start_time);
+        return std::llround(COUNT * (data.size() / duration_from(start_time)));
 }
 
 template <std::size_t N, typename T>
@@ -78,34 +78,35 @@ void test_optics_performance()
         const std::vector<Vector<N, T>> data = random_data<N, T>(DATA_SIZE, engine);
 
         std::ostringstream oss;
-        oss << "<" << N << ", " << type_name<T>() << ">:";
-        oss << std::fixed << std::setprecision(5);
+        oss << "Optics <" << N << ", " << type_name<T>() << ">:";
 
-        double p;
-
-        p = test<COUNT>(
-                data,
-                [&](const Vector<N, T>& v)
-                {
-                        return reflect(v, normal);
-                });
-        oss << " reflect " << p << " s";
-
-        p = test<COUNT>(
-                data,
-                [&](const Vector<N, T>& v)
-                {
-                        return refract(v, normal, ETA);
-                });
-        oss << ", refract " << p << " s";
-
-        p = test<COUNT>(
-                data,
-                [&](const Vector<N, T>& v)
-                {
-                        return refract2(v, normal, ETA);
-                });
-        oss << ", refract2 " << p << " s";
+        {
+                const auto p = test<COUNT>(
+                        data,
+                        [&](const Vector<N, T>& v)
+                        {
+                                return reflect(v, normal);
+                        });
+                oss << " reflect = " << to_string_digit_groups(p) << " o/s";
+        }
+        {
+                const auto p = test<COUNT>(
+                        data,
+                        [&](const Vector<N, T>& v)
+                        {
+                                return refract(v, normal, ETA);
+                        });
+                oss << ", refract = " << to_string_digit_groups(p) << " o/s";
+        }
+        {
+                const auto p = test<COUNT>(
+                        data,
+                        [&](const Vector<N, T>& v)
+                        {
+                                return refract2(v, normal, ETA);
+                        });
+                oss << ", refract2 = " << to_string_digit_groups(p) << " o/s";
+        }
 
         LOG(oss.str());
 }

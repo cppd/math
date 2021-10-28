@@ -74,7 +74,7 @@ void save_to_file(
         std::vector<std::byte>&& pixels_rgb,
         const image::ColorFormat color_format_rgba,
         std::vector<std::byte>&& pixels_rgba,
-        ProgressRatio* progress)
+        ProgressRatio* const progress)
 {
         static_assert(N_IMAGE >= 2);
 
@@ -135,7 +135,7 @@ void add_volume(
         std::vector<std::byte>&& pixels_rgb,
         const image::ColorFormat color_format_rgba,
         std::vector<std::byte>&& pixels_rgba,
-        ProgressRatio* progress)
+        ProgressRatio* const progress)
 {
         static_assert(N_IMAGE >= 3);
 
@@ -197,7 +197,7 @@ void save_image(
         std::vector<std::byte>&& pixels_rgb,
         const image::ColorFormat color_format_rgba,
         std::vector<std::byte>&& pixels_rgba,
-        ProgressRatio* progress)
+        ProgressRatio* const progress)
 {
         if (parameters.size() == 1)
         {

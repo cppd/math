@@ -304,7 +304,7 @@ std::filesystem::path save_to_obj_file(const Mesh<N>& mesh, const Path& file_nam
         file << std::setprecision(Limits<float>::max_digits10());
         file << std::showpoint;
 
-        Clock::time_point start_time = Clock::now();
+        const Clock::time_point start_time = Clock::now();
 
         file << std::noshowpos;
         write_comment(file, comment);

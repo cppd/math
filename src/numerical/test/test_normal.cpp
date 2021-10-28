@@ -33,7 +33,7 @@ namespace ns::numerical
 namespace
 {
 template <std::size_t N, typename T>
-void compare_normals(const Vector<N, T>& real_normal, const Vector<N, T>& computed_normal, T min_dot_product)
+void compare_normals(const Vector<N, T>& real_normal, const Vector<N, T>& computed_normal, const T min_dot_product)
 {
         const T d = std::abs(dot(real_normal, computed_normal));
         if (d < min_dot_product)
@@ -69,7 +69,7 @@ void test_normal_defined()
 }
 
 template <std::size_t N, typename T, typename RandomEngine>
-std::vector<Vector<N, T>> random_vectors(unsigned count, RandomEngine& random_engine)
+std::vector<Vector<N, T>> random_vectors(const unsigned count, RandomEngine& random_engine)
 {
         std::vector<Vector<N, T>> res;
         res.reserve(count);
@@ -81,7 +81,7 @@ std::vector<Vector<N, T>> random_vectors(unsigned count, RandomEngine& random_en
 }
 
 template <std::size_t N, typename T>
-void test_normal_random(unsigned test_count)
+void test_normal_random(const unsigned test_count)
 {
         constexpr unsigned POINT_COUNT = 100;
 
@@ -125,7 +125,7 @@ void test_normal_defined()
 }
 
 template <typename T>
-void test_normal_random(unsigned test_count)
+void test_normal_random(const unsigned test_count)
 {
         test_normal_random<2, T>(test_count);
         test_normal_random<3, T>(test_count);
@@ -138,7 +138,7 @@ void test_normal_random(unsigned test_count)
         test_normal_random<10, T>(test_count);
 }
 
-void test_normal(ProgressRatio* progress)
+void test_normal(ProgressRatio* const progress)
 {
         LOG("Test point normals");
         progress->set(0);

@@ -135,7 +135,7 @@ void compute_vulkan(ComputeVector* dft, bool inverse, int n1, int n2, std::vecto
                 dft->create_buffers(uid(engine), uid(engine));
         }
 
-        Clock::time_point start_time = Clock::now();
+        const Clock::time_point start_time = Clock::now();
 
         dft->create_buffers(n1, n2);
         dft->exec(inverse, data);
@@ -155,7 +155,7 @@ void compute_cuda(bool inverse, int n1, int n2, std::vector<Complex>* data)
                 LOG("----- cuFFT forward -----");
         }
 
-        Clock::time_point start_time = Clock::now();
+        const Clock::time_point start_time = Clock::now();
 
         std::unique_ptr<ns::dft::DFT> cufft = ns::dft::create_cufft(n1, n2);
         cufft->exec(inverse, data);
@@ -176,7 +176,7 @@ void compute_fftw(bool inverse, int n1, int n2, std::vector<Complex>* data)
                 LOG("----- FFTW forward -----");
         }
 
-        Clock::time_point start_time = Clock::now();
+        const Clock::time_point start_time = Clock::now();
 
         std::unique_ptr<ns::dft::DFT> fftw = ns::dft::create_fftw(n1, n2);
         fftw->exec(inverse, data);
@@ -198,13 +198,13 @@ struct DftData
 
 DftData run_vulkan(
         const std::string& test_name,
-        ComputeVector* dft,
+        ComputeVector* const dft,
         const int n1,
         const int n2,
         const std::vector<Complex>& source_data,
-        ProgressRatio* progress,
-        int* computation,
-        int computation_count)
+        ProgressRatio* const progress,
+        int* const computation,
+        const int computation_count)
 {
         DftData dft_data;
 
@@ -233,9 +233,9 @@ void run_cuda(
         const int n1,
         const int n2,
         const std::vector<Complex>& source_data,
-        ProgressRatio* progress,
-        int* computation,
-        int computation_count,
+        ProgressRatio* const progress,
+        int* const computation,
+        const int computation_count,
         const DftData& vulkan_data)
 {
         std::vector<Complex> data(source_data);
@@ -290,9 +290,9 @@ void run_fftw(
         const int n1,
         const int n2,
         const std::vector<Complex>& source_data,
-        ProgressRatio* progress,
-        int* computation,
-        int computation_count,
+        ProgressRatio* const progress,
+        int* const computation,
+        const int computation_count,
         const DftData& vulkan_data)
 {
         std::vector<Complex> data(source_data);
@@ -343,11 +343,11 @@ void run_fftw(
 
 void dft_test(
         const std::string& test_name,
-        ComputeVector* dft,
+        ComputeVector* const dft,
         const int n1,
         const int n2,
         const std::vector<Complex>& source_data,
-        ProgressRatio* progress)
+        ProgressRatio* const progress)
 {
         int computation_count = 2;
 
@@ -373,7 +373,7 @@ void dft_test(
 #endif
 }
 
-void constant_data_test(ComputeVector* dft, ProgressRatio* progress)
+void constant_data_test(ComputeVector* const dft, ProgressRatio* const progress)
 {
         // Fourier[{1, 2, 30}, FourierParameters -> {1, -1}]
         // 1 2 30 -> 33. + 0. I, -15. + 24.2487 I, -15. - 24.2487 I
@@ -392,7 +392,7 @@ void constant_data_test(ComputeVector* dft, ProgressRatio* progress)
         LOG("---\nDFT check passed");
 }
 
-void random_data_test(ComputeVector* dft, const std::array<int, 2>& dimensions, ProgressRatio* progress)
+void random_data_test(ComputeVector* const dft, const std::array<int, 2>& dimensions, ProgressRatio* const progress)
 {
         LOG("\n----- Random Data DFT Tests -----");
 
@@ -430,7 +430,7 @@ TestSize find_test_size()
         return small_test(engine) ? TestSize::SMALL : TestSize::LARGE;
 }
 
-std::array<int, 2> find_dimensions(TestSize test_size)
+std::array<int, 2> find_dimensions(const TestSize test_size)
 {
         switch (test_size)
         {
@@ -450,7 +450,7 @@ std::array<int, 2> find_dimensions(TestSize test_size)
         error_fatal("Unknown DFT test size");
 }
 
-void test(ProgressRatio* progress)
+void test(ProgressRatio* const progress)
 {
         ASSERT(progress);
 

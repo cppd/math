@@ -56,7 +56,7 @@ std::unique_ptr<Mesh<N>> create_mesh(T&& points)
 template <std::size_t N, typename T>
 std::unique_ptr<Mesh<N>> create_mesh_for_points_impl(T&& points)
 {
-        Clock::time_point start_time = Clock::now();
+        const Clock::time_point start_time = Clock::now();
 
         std::unique_ptr<Mesh<N>> mesh = create_mesh<N>(std::forward<T>(points));
 

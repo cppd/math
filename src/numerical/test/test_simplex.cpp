@@ -162,7 +162,7 @@ void test_feasible()
         test_feasible<long double>();
 }
 
-void test_simplex(ProgressRatio* progress)
+void test_simplex(ProgressRatio* const progress)
 {
         progress->set(0);
 

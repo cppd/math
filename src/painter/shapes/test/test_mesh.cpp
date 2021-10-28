@@ -128,7 +128,7 @@ void test_spherical_mesh(const Shape<N, T, Color>& mesh, const int ray_count, Pr
         LOG("intersections...");
         progress->set_text("Rays: %v of %m");
 
-        Clock::time_point start_time = Clock::now();
+        const Clock::time_point start_time = Clock::now();
 
         for (unsigned i = 1; i <= rays.size(); ++i)
         {
@@ -241,7 +241,7 @@ float random_radius()
 }
 
 template <std::size_t N, typename T, typename Color>
-std::unique_ptr<const Shape<N, T, Color>> create_spherical_mesh(int point_count, ProgressRatio* progress)
+std::unique_ptr<const Shape<N, T, Color>> create_spherical_mesh(const int point_count, ProgressRatio* const progress)
 {
         LOG("painter random sphere");
 
@@ -273,7 +273,12 @@ std::unique_ptr<const Shape<N, T, Color>> create_spherical_mesh(int point_count,
 }
 
 template <std::size_t N, typename T>
-void test_mesh(int point_low, int point_high, int ray_low, int ray_high, ProgressRatio* progress)
+void test_mesh(
+        const int point_low,
+        const int point_high,
+        const int ray_low,
+        const int ray_high,
+        ProgressRatio* const progress)
 {
         ASSERT(point_low <= point_high);
         ASSERT(ray_low <= ray_high);
@@ -293,22 +298,22 @@ void test_mesh(int point_low, int point_high, int ray_low, int ray_high, Progres
         test_spherical_mesh(*mesh, ray_count, progress);
 }
 
-void test_mesh_3(ProgressRatio* progress)
+void test_mesh_3(ProgressRatio* const progress)
 {
         test_mesh<3, float>(500, 1000, 90'000, 110'000, progress);
         test_mesh<3, double>(500, 1000, 90'000, 110'000, progress);
 }
-void test_mesh_4(ProgressRatio* progress)
+void test_mesh_4(ProgressRatio* const progress)
 {
         test_mesh<4, float>(500, 1000, 90'000, 110'000, progress);
         test_mesh<4, double>(500, 1000, 90'000, 110'000, progress);
 }
-void test_mesh_5(ProgressRatio* progress)
+void test_mesh_5(ProgressRatio* const progress)
 {
         test_mesh<5, float>(1000, 2000, 90'000, 110'000, progress);
         test_mesh<5, double>(1000, 2000, 90'000, 110'000, progress);
 }
-void test_mesh_6(ProgressRatio* progress)
+void test_mesh_6(ProgressRatio* const progress)
 {
         test_mesh<6, float>(1000, 2000, 90'000, 110'000, progress);
         test_mesh<6, double>(1000, 2000, 90'000, 110'000, progress);

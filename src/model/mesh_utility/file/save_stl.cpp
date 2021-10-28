@@ -295,7 +295,7 @@ std::filesystem::path save_to_stl_file(
                 file << std::showpos;
         }
 
-        Clock::time_point start_time = Clock::now();
+        const Clock::time_point start_time = Clock::now();
 
         write(ascii_format, file, mesh, comment);
 

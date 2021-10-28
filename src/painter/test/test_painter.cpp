@@ -151,7 +151,7 @@ float random_radius()
 }
 
 template <std::size_t N>
-std::unique_ptr<const mesh::Mesh<N>> sphere_mesh(int facet_count)
+std::unique_ptr<const mesh::Mesh<N>> sphere_mesh(const int facet_count)
 {
         LOG("creating sphere in " + space_name(N) + "...");
 
@@ -176,14 +176,17 @@ std::unique_ptr<const mesh::Mesh<N>> sphere_mesh(int facet_count)
 }
 
 template <std::size_t N>
-std::unique_ptr<const mesh::Mesh<N>> file_mesh(const std::string& file_name, ProgressRatio* progress)
+std::unique_ptr<const mesh::Mesh<N>> file_mesh(const std::string& file_name, ProgressRatio* const progress)
 {
         LOG("Loading geometry from file...");
         return mesh::load<N>(path_from_utf8(file_name), progress);
 }
 
 template <std::size_t N, typename T, typename Color>
-void test_painter_file(int samples_per_pixel, int thread_count, std::unique_ptr<const Scene<N, T, Color>>&& scene)
+void test_painter_file(
+        const int samples_per_pixel,
+        const int thread_count,
+        std::unique_ptr<const Scene<N, T, Color>>&& scene)
 {
         constexpr int MAX_PASS_COUNT = 1;
         constexpr bool SMOOTH_NORMAL = true;
@@ -191,7 +194,7 @@ void test_painter_file(int samples_per_pixel, int thread_count, std::unique_ptr<
         Image<N - 1> image(DIRECTORY_NAME);
 
         LOG("Painting...");
-        Clock::time_point start_time = Clock::now();
+        const Clock::time_point start_time = Clock::now();
         {
                 std::unique_ptr<Painter> painter = create_painter(
                         &image, samples_per_pixel, MAX_PASS_COUNT,
@@ -208,7 +211,10 @@ void test_painter_file(int samples_per_pixel, int thread_count, std::unique_ptr<
 }
 
 template <std::size_t N, typename T, typename Color>
-void test_painter_window(int samples_per_pixel, int thread_count, std::unique_ptr<const Scene<N, T, Color>>&& scene)
+void test_painter_window(
+        const int samples_per_pixel,
+        const int thread_count,
+        std::unique_ptr<const Scene<N, T, Color>>&& scene)
 {
         constexpr bool SMOOTH_NORMAL = true;
 
@@ -231,11 +237,11 @@ enum class OutputType
 template <OutputType OUTPUT_TYPE, std::size_t N, typename T, typename Color>
 void test_painter(
         std::unique_ptr<const mesh::Mesh<N>>&& mesh,
-        ProgressRatio* progress,
-        int min_screen_size,
-        int max_screen_size,
-        int samples_per_pixel,
-        int thread_count)
+        ProgressRatio* const progress,
+        const int min_screen_size,
+        const int max_screen_size,
+        const int samples_per_pixel,
+        const int thread_count)
 {
         std::unique_ptr<const Shape<N, T, Color>> painter_mesh;
         {
@@ -263,7 +269,11 @@ void test_painter(
 }
 
 template <std::size_t N, typename T, typename Color, OutputType OUTPUT_TYPE>
-void test_painter(int samples_per_pixel, int facet_count, int min_screen_size, int max_screen_size)
+void test_painter(
+        const int samples_per_pixel,
+        const int facet_count,
+        const int min_screen_size,
+        const int max_screen_size)
 {
         const int thread_count = hardware_concurrency();
         ProgressRatio progress(nullptr);
@@ -275,7 +285,11 @@ void test_painter(int samples_per_pixel, int facet_count, int min_screen_size, i
 }
 
 template <std::size_t N, typename T, typename Color, OutputType OUTPUT_TYPE>
-void test_painter(int samples_per_pixel, const std::string& file_name, int min_screen_size, int max_screen_size)
+void test_painter(
+        const int samples_per_pixel,
+        const std::string& file_name,
+        const int min_screen_size,
+        const int max_screen_size)
 {
         const int thread_count = hardware_concurrency();
         ProgressRatio progress(nullptr);
