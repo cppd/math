@@ -180,6 +180,6 @@ void test()
         write_samples_to_files<long double>();
 }
 
-TEST_PERFORMANCE("Uniform samples file", test)
+TEST_SMALL("Uniform samples file", test)
 }
 }

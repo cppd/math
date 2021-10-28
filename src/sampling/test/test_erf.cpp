@@ -258,8 +258,8 @@ void test_performance()
         }
         const double duration = duration_from(time_point);
 
-        LOG(std::string("erf_inv<") + type_name<T>() + "> "
-            + to_string_digit_groups(std::lround(COUNT * data.size() / duration)) + " f/s");
+        const long long p = std::llround(COUNT * data.size() / duration);
+        LOG(std::string("erf_inv<") + type_name<T>() + "> " + to_string_digit_groups(p) + " o/s");
 }
 
 void test_erf()

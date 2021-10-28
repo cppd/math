@@ -15,6 +15,8 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
+#include "names.h"
+
 #include "../sphere_uniform.h"
 
 #include <src/com/benchmark.h>
@@ -36,19 +38,6 @@ namespace ns::sampling::test
 namespace
 {
 namespace impl = sphere_implementation;
-
-template <typename T>
-constexpr std::string_view ENGINE_NAME = []
-{
-        if constexpr (std::is_same_v<std::remove_cv_t<T>, std::mt19937>)
-        {
-                return "std::mt19937";
-        }
-        if constexpr (std::is_same_v<std::remove_cv_t<T>, std::mt19937_64>)
-        {
-                return "std::mt19937_64";
-        }
-}();
 
 template <std::size_t N, typename T, typename RandomEngine>
 Vector<N, T> uniform_in_sphere_by_rejection(RandomEngine& random_engine)
@@ -137,15 +126,12 @@ std::string type_to_string(SampleType type)
 template <SampleType SAMPLE_TYPE, std::size_t N, typename T, typename RandomEngine>
 void test_performance()
 {
-        constexpr int COUNT = 5'000'000;
+        constexpr int COUNT = 3'000'000;
 
         std::ostringstream oss;
 
-        oss << std::fixed;
-        oss << std::setprecision(5);
-
         oss << type_to_string(SAMPLE_TYPE);
-        oss << " <" << N << ", " << type_name<T>() << ", " << ENGINE_NAME<RandomEngine> << ">:";
+        oss << " <" << N << ", " << type_name<T>() << ", " << random_engine_name<RandomEngine>() << ">:";
 
         RandomEngine random_engine = create_engine<RandomEngine>();
 
@@ -154,18 +140,18 @@ void test_performance()
         case SampleType::ON_SPHERE:
         {
                 const double r = test_on_sphere_by_rejection<COUNT, N, T>(random_engine);
-                oss << " rejection " << r;
+                oss << " rejection " << to_string_digit_groups(std::llround(COUNT / r)) << " o/s";
                 const double n = test_on_sphere_by_normal_distribution<COUNT, N, T>(random_engine);
-                oss << ", normal " << n;
+                oss << ", normal " << to_string_digit_groups(std::llround(COUNT / n)) << " o/s";
                 LOG(oss.str());
                 return;
         }
         case SampleType::IN_SPHERE:
         {
                 const double r = test_in_sphere_by_rejection<COUNT, N, T>(random_engine);
-                oss << " rejection " << r;
+                oss << " rejection " << to_string_digit_groups(std::llround(COUNT / r)) << " o/s";
                 const double n = test_in_sphere_by_normal_distribution<COUNT, N, T>(random_engine);
-                oss << ", normal " << n;
+                oss << ", normal " << to_string_digit_groups(std::llround(COUNT / n)) << " o/s";
                 LOG(oss.str());
                 return;
         }
@@ -173,32 +159,44 @@ void test_performance()
         error_fatal("Unknown type " + to_string(enum_to_int(SAMPLE_TYPE)));
 }
 
-template <SampleType SAMPLE_TYPE, typename T, typename RandomEngine>
-void test_performance()
+template <SampleType SAMPLE_TYPE, typename T, typename RandomEngine, typename Counter>
+void test_performance(const Counter& counter)
 {
         static_assert(std::is_floating_point_v<T>);
 
+        counter();
         test_performance<SAMPLE_TYPE, 2, T, RandomEngine>();
+        counter();
         test_performance<SAMPLE_TYPE, 3, T, RandomEngine>();
+        counter();
         test_performance<SAMPLE_TYPE, 4, T, RandomEngine>();
+        counter();
         test_performance<SAMPLE_TYPE, 5, T, RandomEngine>();
+        counter();
         test_performance<SAMPLE_TYPE, 6, T, RandomEngine>();
+        counter();
         test_performance<SAMPLE_TYPE, 7, T, RandomEngine>();
 }
 
-template <SampleType SAMPLE_TYPE>
-void test_performance()
+template <SampleType SAMPLE_TYPE, typename Counter>
+void test_performance(const Counter& counter)
 {
-        test_performance<SAMPLE_TYPE, float, std::mt19937>();
-        test_performance<SAMPLE_TYPE, float, std::mt19937_64>();
-        test_performance<SAMPLE_TYPE, double, std::mt19937>();
-        test_performance<SAMPLE_TYPE, double, std::mt19937_64>();
+        test_performance<SAMPLE_TYPE, float, std::mt19937>(counter);
+        test_performance<SAMPLE_TYPE, float, std::mt19937_64>(counter);
+        test_performance<SAMPLE_TYPE, double, std::mt19937>(counter);
+        test_performance<SAMPLE_TYPE, double, std::mt19937_64>(counter);
 }
 
-void test()
+void test(ProgressRatio* const progress)
 {
-        test_performance<SampleType::ON_SPHERE>();
-        test_performance<SampleType::IN_SPHERE>();
+        constexpr int COUNT = 6 * 4 * 2;
+        int i = -1;
+        const auto counter = [&]
+        {
+                progress->set(++i, COUNT);
+        };
+        test_performance<SampleType::ON_SPHERE>(counter);
+        test_performance<SampleType::IN_SPHERE>(counter);
 }
 
 TEST_PERFORMANCE("Uniform sphere samples", test)
