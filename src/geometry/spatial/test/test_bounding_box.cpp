@@ -44,23 +44,30 @@ struct Test
         static_assert(BOX.surface() == 2736);
         static_assert(BOX.maximum_extent() == 3);
 
-        static constexpr BoundingBox<4, T> BOX_MERGE_1 = []
+        static constexpr Vector<4, T> MERGE_POINT{Vector<4, T>(5, -5, 5, -5)};
+        static constexpr BoundingBox<4, T> BOX_MERGE_POINT = []
         {
                 BoundingBox<4, T> b(BOX);
-                b.merge(Vector<4, T>(5, -5, 5, -5));
+                b.merge(MERGE_POINT);
                 return b;
         }();
-        static_assert(BOX_MERGE_1.min() == Vector<4, T>(-5, -5, -7, -5));
-        static_assert(BOX_MERGE_1.max() == Vector<4, T>(5, 6, 5, 8));
+        static_assert(BOX_MERGE_POINT.min() == Vector<4, T>(-5, -5, -7, -5));
+        static_assert(BOX_MERGE_POINT.max() == Vector<4, T>(5, 6, 5, 8));
+        static_assert(BOX.merged(MERGE_POINT).min() == BOX_MERGE_POINT.min());
+        static_assert(BOX.merged(MERGE_POINT).max() == BOX_MERGE_POINT.max());
 
-        static constexpr BoundingBox<4, T> BOX_MERGE_2 = []
+        static constexpr BoundingBox<4, T> MERGE_BOX{
+                BoundingBox<4, T>(Vector<4, T>(4, -3, 2, -1), Vector<4, T>(-4, 5, -6, 7))};
+        static constexpr BoundingBox<4, T> BOX_MERGE_BOX = []
         {
                 BoundingBox<4, T> b(BOX);
-                b.merge(BoundingBox<4, T>(Vector<4, T>(4, -3, 2, -1), Vector<4, T>(-4, 5, -6, 7)));
+                b.merge(MERGE_BOX);
                 return b;
         }();
-        static_assert(BOX_MERGE_2.min() == Vector<4, T>(-5, -3, -7, -4));
-        static_assert(BOX_MERGE_2.max() == Vector<4, T>(4, 6, 3, 8));
+        static_assert(BOX_MERGE_BOX.min() == Vector<4, T>(-5, -3, -7, -4));
+        static_assert(BOX_MERGE_BOX.max() == Vector<4, T>(4, 6, 3, 8));
+        static_assert(BOX.merged(MERGE_BOX).min() == BOX_MERGE_BOX.min());
+        static_assert(BOX.merged(MERGE_BOX).max() == BOX_MERGE_BOX.max());
 
         static constexpr BoundingBox<4, T> BOX_POINT{Vector<4, T>(1, -2, 3, -4)};
         static_assert(BOX_POINT.min() == Vector<4, T>(1, -2, 3, -4));

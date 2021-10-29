@@ -142,6 +142,10 @@ class BoundingBox final
                 return true;
         }
 
+        constexpr BoundingBox()
+        {
+        }
+
 public:
         constexpr BoundingBox(const Vector<N, T>& p1, const Vector<N, T>& p2)
                 : bounds_{::ns::min(p1, p2), ::ns::max(p1, p2)}
@@ -233,10 +237,26 @@ public:
                 bounds_[1] = ::ns::max(bounds_[1], v.bounds_[1]);
         }
 
+        [[nodiscard]] constexpr BoundingBox<N, T> merged(const BoundingBox<N, T>& v) const
+        {
+                BoundingBox<N, T> res;
+                res.bounds_[0] = ::ns::min(bounds_[0], v.bounds_[0]);
+                res.bounds_[1] = ::ns::max(bounds_[1], v.bounds_[1]);
+                return res;
+        }
+
         constexpr void merge(const Vector<N, T>& v)
         {
                 bounds_[0] = ::ns::min(bounds_[0], v);
                 bounds_[1] = ::ns::max(bounds_[1], v);
+        }
+
+        [[nodiscard]] constexpr BoundingBox<N, T> merged(const Vector<N, T>& v) const
+        {
+                BoundingBox<N, T> res;
+                res.bounds_[0] = ::ns::min(bounds_[0], v);
+                res.bounds_[1] = ::ns::max(bounds_[1], v);
+                return res;
         }
 };
 }
