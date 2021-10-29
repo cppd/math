@@ -259,7 +259,7 @@ void test_performance()
         const double duration = duration_from(time_point);
 
         const long long p = std::llround(COUNT * data.size() / duration);
-        LOG(std::string("erf_inv<") + type_name<T>() + "> " + to_string_digit_groups(p) + " o/s");
+        LOG(std::string("Inverse error function <") + type_name<T>() + ">: " + to_string_digit_groups(p) + " o/s");
 }
 
 void test_erf()
@@ -284,7 +284,7 @@ void test_erf_performance()
         test_performance<long double>();
 }
 
-TEST_SMALL("Erf inverse", test_erf)
-TEST_PERFORMANCE("Erf inverse", test_erf_performance)
+TEST_SMALL("Inverse error function", test_erf)
+TEST_PERFORMANCE("Inverse error function", test_erf_performance)
 }
 }

@@ -118,9 +118,10 @@ public:
 };
 
 template <typename T>
-void write(const char* const name, const std::vector<T>& data)
+void write(const std::string& name, const std::vector<T>& data)
 {
-        LOG(to_string_fixed(computation(data), 5) + " " + name);
+        const long long p = COUNT * (data.size() / computation(data));
+        LOG("Compare types <" + name + ">: " + to_string_digit_groups(p) + " o/s");
 }
 
 void compare_types()

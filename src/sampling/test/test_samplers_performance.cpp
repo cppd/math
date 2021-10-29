@@ -102,7 +102,7 @@ void test_performance(const bool shuffle)
         }();
 
         std::ostringstream oss;
-        oss << "<" << N << ", " << type_name<T>() << ", " << random_engine_name<RandomEngine>() << ">";
+        oss << "Samplers <" << N << ", " << type_name<T>() << ", " << random_engine_name<RandomEngine>() << ">";
         if (shuffle)
         {
                 oss << ", shuffle";

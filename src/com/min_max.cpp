@@ -107,7 +107,7 @@ void test_min_max_performance(Engine& engine)
 
                 check_equal<T>(v1, v2, "minimum");
 
-                LOG(type_str + ": min_value = " + to_string_fixed(d1, 5)
+                LOG("Minumum value " + type_str + ": min_value = " + to_string_fixed(d1, 5)
                     + " s, std::min_element = " + to_string_fixed(d2, 5) + " s");
         }
         {
@@ -121,7 +121,7 @@ void test_min_max_performance(Engine& engine)
 
                 check_equal<T>(v1, v2, "maximum");
 
-                LOG(type_str + ": max_value = " + to_string_fixed(d1, 5)
+                LOG("Maximum value " + type_str + ": max_value = " + to_string_fixed(d1, 5)
                     + " s, std::max_element = " + to_string_fixed(d2, 5) + " s");
         }
 }

@@ -19,8 +19,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <src/com/benchmark.h>
 #include <src/com/chrono.h>
-#include <src/com/enum.h>
-#include <src/com/error.h>
 #include <src/com/log.h>
 #include <src/com/print.h>
 #include <src/com/random/engine.h>
@@ -106,20 +104,21 @@ enum class SampleType
         IN_SPHERE
 };
 
-std::string type_to_string(SampleType type)
+template <SampleType SAMPLE_TYPE>
+std::string type_to_string()
 {
-        switch (type)
+        static_assert(SAMPLE_TYPE == SampleType::ON_SPHERE || SAMPLE_TYPE == SampleType::IN_SPHERE);
+        switch (SAMPLE_TYPE)
         {
         case SampleType::ON_SPHERE:
         {
-                return "On Sphere";
+                return "on sphere";
         }
         case SampleType::IN_SPHERE:
         {
-                return "In Sphere";
+                return "in sphere";
         }
         }
-        error_fatal("Unknown type " + to_string(enum_to_int(type)));
 }
 
 template <SampleType SAMPLE_TYPE, std::size_t N, typename T, typename RandomEngine>
@@ -129,11 +128,12 @@ void test_performance()
 
         std::ostringstream oss;
 
-        oss << type_to_string(SAMPLE_TYPE);
+        oss << "Sample " << type_to_string<SAMPLE_TYPE>();
         oss << " <" << N << ", " << type_name<T>() << ", " << random_engine_name<RandomEngine>() << ">:";
 
         RandomEngine random_engine = create_engine<RandomEngine>();
 
+        static_assert(SAMPLE_TYPE == SampleType::ON_SPHERE || SAMPLE_TYPE == SampleType::IN_SPHERE);
         switch (SAMPLE_TYPE)
         {
         case SampleType::ON_SPHERE:
@@ -142,8 +142,7 @@ void test_performance()
                 oss << " rejection " << to_string_digit_groups(std::llround(COUNT / r)) << " o/s";
                 const double n = test_on_sphere_by_normal_distribution<COUNT, N, T>(random_engine);
                 oss << ", normal " << to_string_digit_groups(std::llround(COUNT / n)) << " o/s";
-                LOG(oss.str());
-                return;
+                break;
         }
         case SampleType::IN_SPHERE:
         {
@@ -151,11 +150,10 @@ void test_performance()
                 oss << " rejection " << to_string_digit_groups(std::llround(COUNT / r)) << " o/s";
                 const double n = test_in_sphere_by_normal_distribution<COUNT, N, T>(random_engine);
                 oss << ", normal " << to_string_digit_groups(std::llround(COUNT / n)) << " o/s";
-                LOG(oss.str());
-                return;
+                break;
         }
         }
-        error_fatal("Unknown type " + to_string(enum_to_int(SAMPLE_TYPE)));
+        LOG(oss.str());
 }
 
 template <SampleType SAMPLE_TYPE, typename T, typename RandomEngine, typename Counter>
