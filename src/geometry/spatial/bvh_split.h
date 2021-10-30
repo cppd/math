@@ -15,50 +15,51 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
+/*
+Matt Pharr, Wenzel Jakob, Greg Humphreys.
+Physically Based Rendering. From theory to implementation. Third edition.
+Elsevier, 2017.
+
+4.3.2 The surface area heuristic
+*/
+
 #pragma once
 
+#include "bvh_functions.h"
 #include "bvh_object.h"
-
-#include "testing/bounding_box_intersection.h"
 
 #include <src/com/error.h>
 #include <src/com/type/limit.h>
 
 #include <array>
 #include <optional>
+#include <tuple>
 #include <vector>
 
 namespace ns::geometry
 {
 namespace bvh_split_implementation
 {
-template <std::size_t BUCKET_COUNT, std::size_t N, typename T>
-class Bounds
+constexpr unsigned BUCKET_COUNT = 32;
+
+template <std::size_t N, typename T>
+class CenterBounds final
 {
         BoundingBox<N, T> box_;
         unsigned axis_;
         T length_r_;
         T min_;
-        T surface_;
 
 public:
-        Bounds(const std::vector<BvhObject<N, T>>& objects) : box_(objects[0].center)
+        CenterBounds(const std::vector<BvhObject<N, T>>& objects)
+                : box_(compute_center_bounds(objects)),
+                  axis_(box_.maximum_extent()),
+                  length_r_(1 / (box_.max()[axis_] - box_.min()[axis_])),
+                  min_(box_.min()[axis_])
         {
-                for (std::size_t i = 0; i < objects.size(); ++i)
-                {
-                        box_.merge(objects[i].center);
-                }
-                axis_ = box_.maximum_extent();
-                if (box_.min()[axis_] == box_.max()[axis_])
-                {
-                        return;
-                }
-                length_r_ = 1 / (box_.max()[axis_] - box_.min()[axis_]);
-                min_ = box_.min()[axis_];
-                surface_ = box_.surface();
         }
 
-        bool empty() const
+        bool is_point() const
         {
                 return box_.min()[axis_] == box_.max()[axis_];
         }
@@ -68,14 +69,9 @@ public:
                 return axis_;
         }
 
-        T surface() const
-        {
-                return surface_;
-        }
-
         unsigned bucket(const BvhObject<N, T>& object) const
         {
-                const std::size_t n = BUCKET_COUNT * ((object.center[axis_] - min_) * length_r_);
+                const unsigned n = BUCKET_COUNT * ((object.center[axis_] - min_) * length_r_);
                 return std::min(n, BUCKET_COUNT - 1);
         }
 };
@@ -83,161 +79,202 @@ public:
 template <std::size_t N, typename T>
 struct Bucket final
 {
-        BoundingBox<N, T> box;
+        BoundingBox<N, T> bounds;
         T cost;
-        Bucket(const BoundingBox<N, T>& box, const T& cost) : box(box), cost(cost)
+
+        Bucket()
+        {
+        }
+
+        Bucket(const BoundingBox<N, T>& bounds, const T& cost) : bounds(bounds), cost(cost)
         {
         }
 };
 
-template <std::size_t BUCKET_COUNT, std::size_t N, typename T>
+template <std::size_t N, typename T>
 std::array<std::optional<Bucket<N, T>>, BUCKET_COUNT> compute_buckets(
         const std::vector<BvhObject<N, T>>& objects,
-        const Bounds<BUCKET_COUNT, N, T>& bounds)
+        const CenterBounds<N, T>& center_bounds)
 {
         static_assert(BUCKET_COUNT >= 2);
 
         std::array<std::optional<Bucket<N, T>>, BUCKET_COUNT> buckets;
         for (const BvhObject<N, T>& object : objects)
         {
-                const unsigned bucket = bounds.bucket(object);
+                const unsigned bucket = center_bounds.bucket(object);
                 if (buckets[bucket])
                 {
-                        buckets[bucket]->box.merge(object.box);
+                        buckets[bucket]->bounds.merge(object.bounds);
                         buckets[bucket]->cost += object.intersection_cost;
                 }
                 else
                 {
-                        buckets[bucket].emplace(object.box, object.intersection_cost);
+                        buckets[bucket].emplace(object.bounds, object.intersection_cost);
                 }
         }
+        ASSERT(buckets.front());
+        ASSERT(buckets.back());
         return buckets;
 }
 
-template <std::size_t BUCKET_COUNT, std::size_t N, typename T>
-std::array<std::optional<Bucket<N, T>>, BUCKET_COUNT - 1> bucket_sum_low(
+template <std::size_t N, typename T>
+std::array<Bucket<N, T>, BUCKET_COUNT - 1> incremental_bucket_sum_forward(
         const std::array<std::optional<Bucket<N, T>>, BUCKET_COUNT>& buckets)
 {
         static_assert(BUCKET_COUNT >= 2);
 
-        std::array<std::optional<Bucket<N, T>>, BUCKET_COUNT - 1> res;
-        res.front() = buckets.front();
+        std::array<Bucket<N, T>, BUCKET_COUNT - 1> res;
+        ASSERT(buckets.front());
+        res.front() = *buckets.front();
         for (unsigned i = 1; i < BUCKET_COUNT - 1; ++i)
         {
                 const std::optional<Bucket<N, T>>& bucket = buckets[i];
-                const std::optional<Bucket<N, T>>& previous = res[i - 1];
-                std::optional<Bucket<N, T>>& current = res[i];
+                const Bucket<N, T>& previous = res[i - 1];
+                Bucket<N, T>& current = res[i];
                 if (!bucket)
                 {
                         current = previous;
+                        continue;
                 }
-                else if (!previous)
-                {
-                        current = bucket;
-                }
-                else
-                {
-                        current.emplace(bucket->box.merged(previous->box), bucket->cost + previous->cost);
-                }
+                current = Bucket<N, T>(previous.bounds.merged(bucket->bounds), previous.cost + bucket->cost);
         }
         return res;
 }
 
-template <std::size_t BUCKET_COUNT, std::size_t N, typename T>
-std::array<std::optional<Bucket<N, T>>, BUCKET_COUNT - 1> bucket_sum_high(
+template <std::size_t N, typename T>
+std::array<Bucket<N, T>, BUCKET_COUNT - 1> incremental_bucket_sum_backward(
         const std::array<std::optional<Bucket<N, T>>, BUCKET_COUNT>& buckets)
 {
         static_assert(BUCKET_COUNT >= 2);
 
-        std::array<std::optional<Bucket<N, T>>, BUCKET_COUNT - 1> res;
-        res.back() = buckets.back();
+        std::array<Bucket<N, T>, BUCKET_COUNT - 1> res;
+        ASSERT(buckets.back());
+        res.back() = *buckets.back();
         for (unsigned i = BUCKET_COUNT - 2; i > 0; --i)
         {
                 const std::optional<Bucket<N, T>>& bucket = buckets[i];
-                const std::optional<Bucket<N, T>>& previous = res[i];
-                std::optional<Bucket<N, T>>& current = res[i - 1];
+                const Bucket<N, T>& previous = res[i];
+                Bucket<N, T>& current = res[i - 1];
                 if (!bucket)
                 {
                         current = previous;
+                        continue;
                 }
-                else if (!previous)
-                {
-                        current = bucket;
-                }
-                else
-                {
-                        current.emplace(bucket->box.merged(previous->box), bucket->cost + previous->cost);
-                }
+                current = Bucket<N, T>(previous.bounds.merged(bucket->bounds), previous.cost + bucket->cost);
         }
         return res;
+}
+
+template <std::size_t N, typename T>
+bool compare_cost(
+        const T& cost,
+        const std::array<Bucket<N, T>, BUCKET_COUNT - 1>& forward_sum,
+        const std::array<Bucket<N, T>, BUCKET_COUNT - 1>& backward_sum)
+{
+        for (unsigned i = 0; i < forward_sum.size(); ++i)
+        {
+                const T relative_error = std::abs(1 - (forward_sum[i].cost + backward_sum[i].cost) / cost);
+                if (!(relative_error < T(1e-3)))
+                {
+                        return false;
+                }
+        }
+        return true;
+}
+
+template <std::size_t N, typename T>
+std::tuple<T, unsigned> minimum_surface_area_heuristic_split(
+        const BoundingBox<N, T>& bounds,
+        const T& interior_node_traversal_cost,
+        const std::array<Bucket<N, T>, BUCKET_COUNT - 1>& forward_sum,
+        const std::array<Bucket<N, T>, BUCKET_COUNT - 1>& backward_sum)
+{
+        const T surface_r = 1 / bounds.surface();
+
+        T split_cost = Limits<T>::max();
+        unsigned index = Limits<unsigned>::max();
+        for (unsigned i = 0; i < forward_sum.size(); ++i)
+        {
+                const T f = forward_sum[i].cost * forward_sum[i].bounds.surface();
+                const T b = backward_sum[i].cost * backward_sum[i].bounds.surface();
+                const T cost = interior_node_traversal_cost + (f + b) * surface_r;
+                if (cost < split_cost)
+                {
+                        split_cost = cost;
+                        index = i;
+                }
+        }
+        ASSERT(index < forward_sum.size());
+        return {split_cost, index};
 }
 }
 
 template <std::size_t N, typename T>
-void split(
+struct BvhSplit final
+{
+        std::vector<BvhObject<N, T>> objects_min;
+        std::vector<BvhObject<N, T>> objects_max;
+        BoundingBox<N, T> bounds_min;
+        BoundingBox<N, T> bounds_max;
+        unsigned axis;
+};
+
+template <std::size_t N, typename T>
+std::optional<BvhSplit<N, T>> split(
         const std::vector<BvhObject<N, T>>& objects,
-        unsigned* const axis,
-        std::vector<BvhObject<N, T>>* const objects_min,
-        std::vector<BvhObject<N, T>>* const objects_max)
+        const BoundingBox<N, T>& bounds,
+        const T& interior_node_traversal_cost)
 {
         namespace impl = bvh_split_implementation;
-
-        constexpr unsigned BUCKET_COUNT = 16;
 
         if (objects.empty())
         {
                 error("No BVH objects to split");
         }
 
-        objects_min->clear();
-        objects_max->clear();
-
-        impl::Bounds<BUCKET_COUNT, N, T> bounds(objects);
-        if (bounds.empty())
+        if (objects.size() == 1)
         {
-                return;
+                return {};
         }
 
-        const std::array<std::optional<impl::Bucket<N, T>>, BUCKET_COUNT> buckets =
-                impl::compute_buckets(objects, bounds);
-
-        const std::array<std::optional<impl::Bucket<N, T>>, BUCKET_COUNT - 1> low = impl::bucket_sum_low(buckets);
-        const std::array<std::optional<impl::Bucket<N, T>>, BUCKET_COUNT - 1> high = impl::bucket_sum_high(buckets);
-
-        static const T bounding_box_cost =
-                2 * spatial::testing::bounding_box::compute_intersections_r_per_second<N, T>();
-
-        T min_cost = Limits<T>::max();
-        unsigned min_index = Limits<unsigned>::max();
-        for (unsigned i = 0; i < BUCKET_COUNT - 1; ++i)
+        const impl::CenterBounds<N, T> center_bounds(objects);
+        if (center_bounds.is_point())
         {
-                ASSERT(low[i] || high[i]);
-                if (!low[i] || !high[i])
-                {
-                        continue;
-                }
-                const T ls = low[i]->cost * low[i]->box.surface();
-                const T hs = low[i]->cost * low[i]->box.surface();
-                const T cost = bounding_box_cost + (ls + hs) / bounds.surface();
-                if (cost < min_cost)
-                {
-                        min_cost = cost;
-                        min_index = i;
-                }
+                return {};
         }
-        ASSERT(min_index < Limits<unsigned>::max());
 
-        *axis = bounds.axis();
+        const auto buckets = impl::compute_buckets(objects, center_bounds);
+        const auto forward_sum = impl::incremental_bucket_sum_forward(buckets);
+        const auto backward_sum = impl::incremental_bucket_sum_backward(buckets);
+
+        const T cost = compute_cost(objects);
+
+        ASSERT(impl::compare_cost(cost, forward_sum, backward_sum));
+
+        const auto [split_cost, split_index] = impl::minimum_surface_area_heuristic_split(
+                bounds, interior_node_traversal_cost, forward_sum, backward_sum);
+        if (split_cost >= cost)
+        {
+                return {};
+        }
+
+        BvhSplit<N, T> res;
+        res.axis = center_bounds.axis();
+        res.bounds_min = forward_sum[split_index].bounds;
+        res.bounds_max = backward_sum[split_index].bounds;
         for (const BvhObject<N, T>& object : objects)
         {
-                if (bounds.bucket(object) <= min_index)
+                if (center_bounds.bucket(object) <= split_index)
                 {
-                        objects_min->push_back(object);
+                        res.objects_min.push_back(object);
                 }
                 else
                 {
-                        objects_max->push_back(object);
+                        res.objects_max.push_back(object);
                 }
         }
+        ASSERT(!res.objects_min.empty());
+        ASSERT(!res.objects_max.empty());
+        return res;
 }
 }

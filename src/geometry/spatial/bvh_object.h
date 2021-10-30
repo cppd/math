@@ -24,7 +24,7 @@ namespace ns::geometry
 template <std::size_t N, typename T>
 struct BvhObject final
 {
-        BoundingBox<N, T> box;
+        BoundingBox<N, T> bounds;
         Vector<N, T> center;
         T intersection_cost;
         unsigned index;
