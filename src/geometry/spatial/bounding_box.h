@@ -142,11 +142,11 @@ class BoundingBox final
                 return true;
         }
 
+public:
         constexpr BoundingBox()
         {
         }
 
-public:
         constexpr BoundingBox(const Vector<N, T>& p1, const Vector<N, T>& p2)
                 : bounds_{::ns::min(p1, p2), ::ns::max(p1, p2)}
         {
