@@ -147,4 +147,13 @@ template <std::size_t N, typename T>
 {
         return implementation::compute_intersections_per_second<N, T>();
 }
+
+//
+
+template <std::size_t N, typename T>
+[[nodiscard]] T intersection_cost()
+{
+        static const T cost = 1 / compute_intersections_per_second<N, T>();
+        return cost;
+}
 }
