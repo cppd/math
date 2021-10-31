@@ -251,12 +251,12 @@ public:
                 run();
         }
 
-        std::vector<unsigned>& object_indices()
+        const std::vector<unsigned>& object_indices() const
         {
                 return object_indices_;
         }
 
-        std::vector<BvhBuildNode<N, T>>& nodes()
+        const std::vector<BvhBuildNode<N, T>>& nodes() const
         {
                 return nodes_;
         }
