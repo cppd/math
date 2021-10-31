@@ -31,10 +31,11 @@ Elsevier, 2017.
 #include <src/com/error.h>
 #include <src/com/type/limit.h>
 
+#include <algorithm>
 #include <array>
 #include <optional>
+#include <span>
 #include <tuple>
-#include <vector>
 
 namespace ns::geometry
 {
@@ -51,7 +52,7 @@ class CenterBounds final
         T min_;
 
 public:
-        CenterBounds(const std::vector<BvhObject<N, T>>& objects)
+        CenterBounds(const std::span<const BvhObject<N, T>>& objects)
                 : box_(compute_center_bounds(objects)),
                   axis_(box_.maximum_extent()),
                   length_r_(1 / (box_.max()[axis_] - box_.min()[axis_])),
@@ -93,7 +94,7 @@ struct Bucket final
 
 template <std::size_t N, typename T>
 std::array<std::optional<Bucket<N, T>>, BUCKET_COUNT> compute_buckets(
-        const std::vector<BvhObject<N, T>>& objects,
+        const std::span<const BvhObject<N, T>>& objects,
         const CenterBounds<N, T>& center_bounds)
 {
         static_assert(BUCKET_COUNT >= 2);
@@ -207,13 +208,30 @@ std::tuple<T, unsigned> minimum_surface_area_heuristic_split(
         ASSERT(index < forward_sum.size());
         return {split_cost, index};
 }
+
+template <std::size_t N, typename T>
+auto partition(
+        const std::span<BvhObject<N, T>>& objects,
+        const CenterBounds<N, T>& center_bounds,
+        const unsigned split_index)
+{
+        const auto p = std::partition(
+                objects.begin(), objects.end(),
+                [&](const BvhObject<N, T>& object)
+                {
+                        return center_bounds.bucket(object) <= split_index;
+                });
+        ASSERT(p != objects.begin());
+        ASSERT(p != objects.end());
+        return p;
+}
 }
 
 template <std::size_t N, typename T>
 struct BvhSplit final
 {
-        std::vector<BvhObject<N, T>> objects_min;
-        std::vector<BvhObject<N, T>> objects_max;
+        std::span<BvhObject<N, T>> objects_min;
+        std::span<BvhObject<N, T>> objects_max;
         BoundingBox<N, T> bounds_min;
         BoundingBox<N, T> bounds_max;
         unsigned axis;
@@ -221,7 +239,7 @@ struct BvhSplit final
 
 template <std::size_t N, typename T>
 std::optional<BvhSplit<N, T>> split(
-        const std::vector<BvhObject<N, T>>& objects,
+        const std::span<BvhObject<N, T>>& objects,
         const BoundingBox<N, T>& bounds,
         const T& interior_node_traversal_cost)
 {
@@ -243,7 +261,7 @@ std::optional<BvhSplit<N, T>> split(
                 return {};
         }
 
-        const auto buckets = impl::compute_buckets(objects, center_bounds);
+        const auto buckets = impl::compute_buckets<N, T>(objects, center_bounds);
         const auto forward_sum = impl::incremental_bucket_sum_forward(buckets);
         const auto backward_sum = impl::incremental_bucket_sum_backward(buckets);
 
@@ -258,23 +276,13 @@ std::optional<BvhSplit<N, T>> split(
                 return {};
         }
 
-        BvhSplit<N, T> res;
-        res.axis = center_bounds.axis();
-        res.bounds_min = forward_sum[split_index].bounds;
-        res.bounds_max = backward_sum[split_index].bounds;
-        for (const BvhObject<N, T>& object : objects)
-        {
-                if (center_bounds.bucket(object) <= split_index)
-                {
-                        res.objects_min.push_back(object);
-                }
-                else
-                {
-                        res.objects_max.push_back(object);
-                }
-        }
-        ASSERT(!res.objects_min.empty());
-        ASSERT(!res.objects_max.empty());
-        return res;
+        const auto p = impl::partition(objects, center_bounds, split_index);
+
+        return BvhSplit<N, T>{
+                .objects_min = std::span(std::to_address(objects.begin()), p - objects.begin()),
+                .objects_max = std::span(std::to_address(p), objects.end() - p),
+                .bounds_min = forward_sum[split_index].bounds,
+                .bounds_max = backward_sum[split_index].bounds,
+                .axis = center_bounds.axis()};
 }
 }

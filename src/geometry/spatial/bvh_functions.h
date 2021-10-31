@@ -21,42 +21,57 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <src/com/error.h>
 
-#include <vector>
-
 namespace ns::geometry
 {
-template <std::size_t N, typename T>
-BoundingBox<N, T> compute_bounds(const std::vector<BvhObject<N, T>>& objects)
+namespace bvh_functions_implementation
 {
+template <std::size_t N, typename T>
+const BvhObject<N, T>& bvh_object(const BvhObject<N, T>& v)
+{
+        return v;
+};
+template <std::size_t N, typename T>
+BvhObject<N, T>&& bvh_object(BvhObject<N, T>&& v)
+{
+        return std::move(v);
+}
+}
+
+template <typename T>
+auto compute_bounds(const T& objects)
+{
+        namespace impl = bvh_functions_implementation;
         ASSERT(!objects.empty());
-        BoundingBox<N, T> box = BoundingBox<N, T>(objects.front().bounds);
-        for (auto i = std::next(objects.cbegin()); i != objects.cend(); ++i)
+        BoundingBox box = impl::bvh_object(objects.front()).bounds;
+        for (auto i = std::next(objects.begin()); i != objects.end(); ++i)
         {
-                box.merge(i->bounds);
+                box.merge(impl::bvh_object(*i).bounds);
         }
         return box;
 }
 
-template <std::size_t N, typename T>
-BoundingBox<N, T> compute_center_bounds(const std::vector<BvhObject<N, T>>& objects)
+template <typename T>
+auto compute_center_bounds(const T& objects)
 {
+        namespace impl = bvh_functions_implementation;
         ASSERT(!objects.empty());
-        BoundingBox<N, T> box = BoundingBox<N, T>(objects.front().center);
-        for (auto i = std::next(objects.cbegin()); i != objects.cend(); ++i)
+        BoundingBox box = BoundingBox(impl::bvh_object(objects.front()).center);
+        for (auto i = std::next(objects.begin()); i != objects.end(); ++i)
         {
-                box.merge(i->center);
+                box.merge(impl::bvh_object(*i).center);
         }
         return box;
 }
 
-template <std::size_t N, typename T>
-T compute_cost(const std::vector<BvhObject<N, T>>& objects)
+template <typename T>
+auto compute_cost(const T& objects)
 {
+        namespace impl = bvh_functions_implementation;
         ASSERT(!objects.empty());
-        T cost = objects.front().intersection_cost;
-        for (auto i = std::next(objects.cbegin()); i != objects.cend(); ++i)
+        auto cost = impl::bvh_object(objects.front()).intersection_cost;
+        for (auto i = std::next(objects.begin()); i != objects.end(); ++i)
         {
-                cost += i->intersection_cost;
+                cost += impl::bvh_object(*i).intersection_cost;
         }
         return cost;
 }
