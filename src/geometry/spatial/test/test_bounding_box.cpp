@@ -279,26 +279,39 @@ void test_intersections(
                         const Ray<N, T> r = ray;
 
                         test_intersection_1(box, r, box.intersect(r), length, precision);
-
                         test_intersection_1(
                                 box, r, box.intersect(r.org(), reciprocal(r.dir()), negative_bool(r.dir())));
-                }
 
+                        test_intersection_1(box, r, box.intersect(r, move_distance), length, precision);
+                        test_intersection_1(
+                                box, r,
+                                box.intersect(r.org(), reciprocal(r.dir()), negative_bool(r.dir()), move_distance));
+                }
                 {
                         const Ray<N, T> r = ray.moved(-move_distance);
 
                         test_intersection_2(box, r, box.intersect(r), move_min, move_max, precision);
+                        test_intersection_2(box, r, box.intersect(r, move_distance), move_min, move_max, precision);
 
                         test_intersection_2(
                                 box, r, box.intersect(r.org(), reciprocal(r.dir()), negative_bool(r.dir())));
+                        test_intersection_2(
+                                box, r,
+                                box.intersect(r.org(), reciprocal(r.dir()), negative_bool(r.dir()), move_distance));
+
+                        test_no_intersection(box, r, box.intersect(r, length));
+                        test_no_intersection(
+                                box, r, box.intersect(r.org(), reciprocal(r.dir()), negative_bool(r.dir()), length));
                 }
                 {
                         const Ray<N, T> r = ray.moved(move_distance);
 
                         test_no_intersection(box, r, box.intersect(r));
-
+                        test_no_intersection(box, r, box.intersect(r, length));
                         test_no_intersection(
                                 box, r, box.intersect(r.org(), reciprocal(r.dir()), negative_bool(r.dir())));
+                        test_no_intersection(
+                                box, r, box.intersect(r.org(), reciprocal(r.dir()), negative_bool(r.dir()), length));
                 }
         }
 }

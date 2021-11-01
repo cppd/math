@@ -95,10 +95,10 @@ class BoundingBox final
         //   (-infinity, NaN) -> near=near, far=far -> continue
         //   (-infinity, -infinity) -> near=near, far=-infinity -> return false
 
-        bool intersect_impl(const Ray<N, T>& ray, T* const first, T* const second) const
+        bool intersect_impl(const Ray<N, T>& ray, const T max_distance, T* const first, T* const second) const
         {
                 T near = 0;
-                T far = Limits<T>::max();
+                T far = max_distance;
                 for (std::size_t i = 0; i < N; ++i)
                 {
                         const T dir = ray.dir()[i];
@@ -122,10 +122,11 @@ class BoundingBox final
         bool intersect_impl(
                 const Vector<N, T>& org,
                 const Vector<N, T>& dir_reciprocal,
-                const Vector<N, bool>& dir_negative) const
+                const Vector<N, bool>& dir_negative,
+                const T max_distance) const
         {
                 T near = 0;
-                T far = Limits<T>::max();
+                T far = max_distance;
                 for (std::size_t i = 0; i < N; ++i)
                 {
                         const T d = org[i];
@@ -212,11 +213,11 @@ public:
                 return surface<N>(diagonal());
         }
 
-        [[nodiscard]] std::optional<T> intersect(const Ray<N, T>& r) const
+        [[nodiscard]] std::optional<T> intersect(const Ray<N, T>& r, const T max_distance = Limits<T>::max()) const
         {
                 T first;
                 T second;
-                if (intersect_impl(r, &first, &second))
+                if (intersect_impl(r, max_distance, &first, &second))
                 {
                         return (first > 0) ? first : second;
                 }
@@ -226,9 +227,10 @@ public:
         [[nodiscard]] bool intersect(
                 const Vector<N, T>& org,
                 const Vector<N, T>& dir_reciprocal,
-                const Vector<N, bool>& dir_negative) const
+                const Vector<N, bool>& dir_negative,
+                const T max_distance = Limits<T>::max()) const
         {
-                return intersect_impl(org, dir_reciprocal, dir_negative);
+                return intersect_impl(org, dir_reciprocal, dir_negative, max_distance);
         }
 
         constexpr void merge(const BoundingBox<N, T>& v)
