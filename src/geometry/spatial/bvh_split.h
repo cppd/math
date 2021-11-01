@@ -72,7 +72,7 @@ public:
 
         unsigned bucket(const BvhObject<N, T>& object) const
         {
-                const unsigned n = BUCKET_COUNT * ((object.center[axis_] - min_) * length_r_);
+                const unsigned n = BUCKET_COUNT * ((object.center()[axis_] - min_) * length_r_);
                 return std::min(n, BUCKET_COUNT - 1);
         }
 };
@@ -105,12 +105,12 @@ std::array<std::optional<Bucket<N, T>>, BUCKET_COUNT> compute_buckets(
                 const unsigned bucket = center_bounds.bucket(object);
                 if (buckets[bucket])
                 {
-                        buckets[bucket]->bounds.merge(object.bounds);
-                        buckets[bucket]->cost += object.intersection_cost;
+                        buckets[bucket]->bounds.merge(object.bounds());
+                        buckets[bucket]->cost += object.intersection_cost();
                 }
                 else
                 {
-                        buckets[bucket].emplace(object.bounds, object.intersection_cost);
+                        buckets[bucket].emplace(object.bounds(), object.intersection_cost());
                 }
         }
         ASSERT(buckets.front());

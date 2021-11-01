@@ -42,10 +42,10 @@ auto compute_bounds(const T& objects)
 {
         namespace impl = bvh_functions_implementation;
         ASSERT(!objects.empty());
-        BoundingBox box = impl::bvh_object(objects.front()).bounds;
+        BoundingBox box = impl::bvh_object(objects.front()).bounds();
         for (auto i = std::next(objects.begin()); i != objects.end(); ++i)
         {
-                box.merge(impl::bvh_object(*i).bounds);
+                box.merge(impl::bvh_object(*i).bounds());
         }
         return box;
 }
@@ -55,10 +55,10 @@ auto compute_center_bounds(const T& objects)
 {
         namespace impl = bvh_functions_implementation;
         ASSERT(!objects.empty());
-        BoundingBox box = BoundingBox(impl::bvh_object(objects.front()).center);
+        BoundingBox box = BoundingBox(impl::bvh_object(objects.front()).center());
         for (auto i = std::next(objects.begin()); i != objects.end(); ++i)
         {
-                box.merge(impl::bvh_object(*i).center);
+                box.merge(impl::bvh_object(*i).center());
         }
         return box;
 }
@@ -68,10 +68,10 @@ auto compute_cost(const T& objects)
 {
         namespace impl = bvh_functions_implementation;
         ASSERT(!objects.empty());
-        auto cost = impl::bvh_object(objects.front()).intersection_cost;
+        auto cost = impl::bvh_object(objects.front()).intersection_cost();
         for (auto i = std::next(objects.begin()); i != objects.end(); ++i)
         {
-                cost += impl::bvh_object(*i).intersection_cost;
+                cost += impl::bvh_object(*i).intersection_cost();
         }
         return cost;
 }

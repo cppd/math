@@ -188,7 +188,7 @@ class BvhBuild final
                         unsigned offset = create_indices(task.objects.size());
                         for (const BvhObject<N, T>& object : task.objects)
                         {
-                                object_indices_[offset++] = object.index;
+                                object_indices_[offset++] = object.index();
                         }
                         nodes_[task.node_index] = BvhBuildNode<N, T>(task.bounds, offset, task.objects.size());
                 }
