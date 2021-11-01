@@ -21,17 +21,46 @@ Physically Based Rendering. From theory to implementation. Third edition.
 Elsevier, 2017.
 
 4.3 Bounding volume hierarchies
-4.3.4 Compact BVH for traversal
 */
 
 #pragma once
 
 #include "bvh_build.h"
 
+#include <src/com/error.h>
+
+#include <array>
+#include <utility>
 #include <vector>
 
 namespace ns::geometry
 {
+namespace bvh_tree_implementation
+{
+template <std::size_t N, typename T>
+class Stack final
+{
+        static_assert(N > 0);
+
+        std::array<T, N> stack_;
+        int next_ = 0;
+
+public:
+        void push(const T& v)
+        {
+                stack_[next_++] = v;
+        }
+        T pop()
+        {
+                return stack_[--next_];
+        }
+        bool empty() const
+        {
+                return next_ == 0;
+        }
+};
+}
+
 template <std::size_t N, typename T>
 class BvhTree final
 {
@@ -97,6 +126,72 @@ public:
 
                 ASSERT(object_indices_.size() == build.object_indices().size());
                 ASSERT(nodes_.size() == build.nodes().size());
+        }
+
+        // The signature of the object_intersect function
+        // struct Info
+        // {
+        //     T distance;
+        //     ...
+        // };
+        // std::optional<Info> f(const std::span<const unsigned>& object_indices, const T& max_distance);
+        template <typename ObjectIntersect>
+        std::invoke_result_t<ObjectIntersect, std::span<const unsigned>&&, const T&> intersect(
+                const Ray<N, T>& ray,
+                const T& max_distance,
+                const ObjectIntersect& object_intersect) const
+        {
+                namespace impl = bvh_tree_implementation;
+
+                const Vector<N, T> dir_reciprocal = reciprocal(ray.dir());
+                const Vector<N, bool> dir_negative = negative_bool(ray.dir());
+
+                std::invoke_result_t<ObjectIntersect, std::span<const unsigned>&&, const T&> result;
+
+                impl::Stack<64, unsigned> stack;
+                T distance = max_distance;
+                unsigned node_index = 0;
+
+                while (true)
+                {
+                        const Node& node = nodes_[node_index];
+                        if (node.bounds.intersect(ray.org(), dir_reciprocal, dir_negative, distance))
+                        {
+                                if (node.object_count == 0)
+                                {
+                                        if (dir_negative[node.axis])
+                                        {
+                                                stack.push(node_index + 1);
+                                                node_index = node.second_child_offset;
+                                        }
+                                        else
+                                        {
+                                                stack.push(node.second_child_offset);
+                                                ++node_index;
+                                        }
+                                        continue;
+                                }
+                                auto info = object_intersect(
+                                        std::span<const unsigned>(
+                                                std::to_address(object_indices_.cbegin() + node.object_offset),
+                                                node.object_count),
+                                        std::as_const(distance));
+                                static_assert(std::is_same_v<decltype(info), decltype(result)>);
+                                static_assert(std::is_same_v<T, decltype(info->distance)>);
+                                if (info)
+                                {
+                                        ASSERT(info->distance < distance);
+                                        distance = info->distance;
+                                        result = std::move(info);
+                                }
+                        }
+                        if (stack.empty())
+                        {
+                                break;
+                        }
+                        node_index = stack.pop();
+                }
+                return result;
         }
 };
 }
