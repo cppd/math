@@ -33,6 +33,7 @@ CRC Press, 2014.
 #include <src/com/print.h>
 #include <src/com/progression.h>
 #include <src/com/thread.h>
+#include <src/com/thread_tasks.h>
 #include <src/com/type/limit.h>
 #include <src/numerical/ray.h>
 #include <src/numerical/vec.h>
@@ -46,7 +47,6 @@ CRC Press, 2014.
 #include <mutex>
 #include <numeric>
 #include <optional>
-#include <stack>
 #include <tuple>
 #include <vector>
 
@@ -177,79 +177,12 @@ std::vector<Box<Parallelotope>> move_boxes_to_vector(Container<Box<Parallelotope
 }
 
 template <typename Box>
-struct Job final
+struct Task final
 {
         Box* box;
         int depth;
-        Job(Box* box, int depth) : box(box), depth(depth)
+        Task(Box* box, int depth) : box(box), depth(depth)
         {
-        }
-};
-
-template <typename Box>
-class Jobs final
-{
-        // If there are no jobs and all thread do nothing, then there will be no more jobs.
-        // If there are no jobs and a thread do something, then new jobs can be created.
-        // Instead of counting jobs for each thread, the sum of jobs across all threads is used.
-        // A thread requires a new jobs without having a job - the sum is the same.
-        // A thread requires a new jobs having a job - the sum decreases by 1.
-        // A thread gets a new jobs - the sum increases by 1.
-        int job_count_ = 0;
-
-        std::stack<Job<Box>, std::vector<Job<Box>>> jobs_;
-        std::mutex lock_;
-
-        bool stop_all_ = false;
-
-public:
-        explicit Jobs(const Job<Box>& job) : jobs_({job})
-        {
-        }
-
-        void stop_all()
-        {
-                std::lock_guard lg(lock_);
-
-                stop_all_ = true;
-        }
-
-        void push(const Job<Box>& job)
-        {
-                std::lock_guard lg(lock_);
-
-                jobs_.push(job);
-        }
-
-        bool pop(Job<Box>* const job)
-        {
-                std::lock_guard lg(lock_);
-
-                if (stop_all_)
-                {
-                        return false;
-                }
-
-                if (job->box)
-                {
-                        --job_count_;
-                }
-
-                if (!jobs_.empty())
-                {
-                        *job = jobs_.top();
-                        jobs_.pop();
-                        ++job_count_;
-                        return true;
-                }
-
-                if (job_count_ > 0)
-                {
-                        job->box = nullptr;
-                        return true;
-                }
-
-                return false;
         }
 };
 
@@ -279,10 +212,9 @@ void extend(
         const int max_boxes,
         std::mutex* const boxes_lock,
         Container<Box<Parallelotope>>* const boxes,
-        Jobs<Box<Parallelotope>>* const jobs,
+        ThreadTaskManager<Task<Box<Parallelotope>>>* const task_manager,
         const ObjectIntersections& object_intersections,
         ProgressRatio* const progress)
-try
 {
         static_assert(
                 (std::is_same_v<Container<Box<Parallelotope>>, std::deque<Box<Parallelotope>>>)
@@ -291,24 +223,17 @@ try
         constexpr auto INTEGER_SEQUENCE_N =
                 std::make_integer_sequence<int, BOX_COUNT<Parallelotope::SPACE_DIMENSION>>();
 
-        Job<Box<Parallelotope>> job(nullptr, 0); // nullptr - no previous job
-
-        while (jobs->pop(&job))
+        while (const auto task = task_manager->get())
         {
-                if (!job.box)
-                {
-                        continue;
-                }
-
-                if (job.depth >= max_depth || job.box->object_index_count() <= min_objects)
+                if (task->depth >= max_depth || task->box->object_index_count() <= min_objects)
                 {
                         continue;
                 }
 
                 for (const auto& [i, child_box, child_box_index] :
-                     create_child_boxes(boxes_lock, boxes, job.box->parallelotope(), INTEGER_SEQUENCE_N))
+                     create_child_boxes(boxes_lock, boxes, task->box->parallelotope(), INTEGER_SEQUENCE_N))
                 {
-                        job.box->set_child(i, child_box_index);
+                        task->box->set_child(i, child_box_index);
 
                         if ((child_box_index & 0xfff) == 0xfff)
                         {
@@ -316,21 +241,16 @@ try
                         }
 
                         for (int object_index :
-                             object_intersections(child_box->parallelotope(), job.box->object_indices()))
+                             object_intersections(child_box->parallelotope(), task->box->object_indices()))
                         {
                                 child_box->add_object_index(object_index);
                         }
 
-                        jobs->push(Job(child_box, job.depth + 1));
+                        task_manager->emplace(child_box, task->depth + 1);
                 }
 
-                job.box->delete_all_objects();
+                task->box->delete_all_objects();
         }
-}
-catch (...)
-{
-        jobs->stop_all();
-        throw;
 }
 
 inline double maximum_box_count(const int box_count, const int max_depth)
@@ -343,8 +263,7 @@ template <typename Parallelotope>
 class SpatialSubdivisionTree final
 {
         using Box = spatial_subdivision_tree_implementation::Box<Parallelotope>;
-        using Job = spatial_subdivision_tree_implementation::Job<Box>;
-        using BoxJobs = spatial_subdivision_tree_implementation::Jobs<Box>;
+        using Task = spatial_subdivision_tree_implementation::Task<Box>;
 
         static constexpr int N = Parallelotope::SPACE_DIMENSION;
         using T = typename Parallelotope::DataType;
@@ -443,22 +362,33 @@ public:
 
                 const int max_box_count = std::lround(impl::maximum_box_count(BOX_COUNT_SUBDIVISION, max_depth));
 
+                std::mutex boxes_lock;
+
                 BoxContainer boxes;
                 boxes.emplace_back(Parallelotope(root.min(), root.max()), impl::zero_based_indices(object_count));
 
-                BoxJobs jobs(Job(&boxes.front(), 1 /*depth*/));
+                ThreadTasks<Task> tasks;
+                tasks.emplace(&boxes.front(), 1 /*depth*/);
 
-                std::mutex boxes_lock;
+                const auto f = [&]()
+                {
+                        try
+                        {
+                                ThreadTaskManager<Task> task_manager(&tasks);
+                                extend(max_depth, min_objects_per_box, max_box_count, &boxes_lock, &boxes,
+                                       &task_manager, object_intersections, progress);
+                        }
+                        catch (...)
+                        {
+                                tasks.stop();
+                                throw;
+                        }
+                };
 
                 ThreadsWithCatch threads(thread_count);
                 for (unsigned i = 0; i < thread_count; ++i)
                 {
-                        threads.add(
-                                [&]()
-                                {
-                                        extend(max_depth, min_objects_per_box, max_box_count, &boxes_lock, &boxes,
-                                               &jobs, object_intersections, progress);
-                                });
+                        threads.add(f);
                 }
                 threads.join();
 
