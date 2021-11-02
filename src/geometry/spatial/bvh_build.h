@@ -25,6 +25,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <src/com/error.h>
 #include <src/com/thread.h>
+#include <src/com/thread_tasks.h>
 
 #include <array>
 #include <future>
@@ -36,77 +37,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 namespace ns::geometry
 {
-namespace bvh_build_implementation
-{
-template <std::size_t N, typename T>
-struct Task final
-{
-        std::span<BvhObject<N, T>> objects;
-        BoundingBox<N, T> bounds;
-        unsigned node_index;
-
-        Task()
-        {
-        }
-
-        Task(const std::span<BvhObject<N, T>>& objects, const BoundingBox<N, T>& bounds, const unsigned node_index)
-                : objects(objects), bounds(bounds), node_index(node_index)
-        {
-        }
-};
-
-template <std::size_t N, typename T>
-class Tasks final
-{
-        std::stack<Task<N, T>, std::vector<Task<N, T>>> tasks_;
-        std::mutex lock_;
-
-        // If there are no tasks and all thread do nothing, then there will be no more tasks.
-        // If there are no tasks and a thread do something, then new tasks can be created.
-        // Instead of counting tasks for each thread, the sum of tasks across all threads is used.
-        // A thread requires a new tasks without having a task - the sum is the same.
-        // A thread requires a new tasks having a task - the sum decreases by 1.
-        // A thread gets a new tasks - the sum increases by 1.
-        int task_count_ = 0;
-
-public:
-        template <typename... Ts>
-        void push(Ts&&... vs)
-        {
-                std::lock_guard lg(lock_);
-                tasks_.emplace(std::forward<Ts>(vs)...);
-        }
-
-        enum Action
-        {
-                EXIT,
-                PERFORM,
-                WAIT
-        };
-
-        Action pop(Task<N, T>* const task)
-        {
-                std::lock_guard lg(lock_);
-                if (!task->objects.empty())
-                {
-                        --task_count_;
-                }
-                if (!tasks_.empty())
-                {
-                        *task = std::move(tasks_.top());
-                        tasks_.pop();
-                        ++task_count_;
-                        return PERFORM;
-                }
-                if (task_count_ > 0)
-                {
-                        return WAIT;
-                }
-                return EXIT;
-        }
-};
-}
-
 template <std::size_t N, typename T>
 struct BvhBuildNode final
 {
@@ -144,8 +74,19 @@ struct BvhBuildNode final
 template <std::size_t N, typename T>
 class BvhBuild final
 {
-        using Task = bvh_build_implementation::Task<N, T>;
-        using Tasks = bvh_build_implementation::Tasks<N, T>;
+        struct Task final
+        {
+                std::span<BvhObject<N, T>> objects;
+                BoundingBox<N, T> bounds;
+                unsigned node_index;
+
+                Task(const std::span<BvhObject<N, T>>& objects,
+                     const BoundingBox<N, T>& bounds,
+                     const unsigned node_index)
+                        : objects(objects), bounds(bounds), node_index(node_index)
+                {
+                }
+        };
 
         const T interior_node_traversal_cost_ = 2 * spatial::testing::bounding_box::intersection_r_cost<N, T>();
 
@@ -154,8 +95,6 @@ class BvhBuild final
 
         std::vector<BvhBuildNode<N, T>> nodes_;
         std::mutex nodes_lock_;
-
-        Tasks tasks_;
 
         unsigned create_indices(const unsigned count)
         {
@@ -174,68 +113,29 @@ class BvhBuild final
                 return {offset, offset + 1};
         }
 
-        void perform(const Task& task)
+        void build(ThreadTaskManager<Task>* const task_manager)
         {
-                if (std::optional<BvhSplit<N, T>> s = split(task.objects, task.bounds, interior_node_traversal_cost_))
+                while (const auto task = task_manager->get())
                 {
-                        const std::array<unsigned, 2> childs = create_nodes();
-                        nodes_[task.node_index] = BvhBuildNode<N, T>(task.bounds, s->axis, childs[0], childs[1]);
-                        tasks_.push(s->objects_min, s->bounds_min, childs[0]);
-                        tasks_.push(s->objects_max, s->bounds_max, childs[1]);
-                }
-                else
-                {
-                        unsigned offset = create_indices(task.objects.size());
-                        for (const BvhObject<N, T>& object : task.objects)
+                        if (std::optional<BvhSplit<N, T>> s =
+                                    split(task->objects, task->bounds, interior_node_traversal_cost_))
                         {
-                                object_indices_[offset++] = object.index();
+                                const std::array<unsigned, 2> childs = create_nodes();
+                                nodes_[task->node_index] =
+                                        BvhBuildNode<N, T>(task->bounds, s->axis, childs[0], childs[1]);
+                                task_manager->emplace(s->objects_min, s->bounds_min, childs[0]);
+                                task_manager->emplace(s->objects_max, s->bounds_max, childs[1]);
                         }
-                        nodes_[task.node_index] = BvhBuildNode<N, T>(task.bounds, offset, task.objects.size());
-                }
-        }
-
-        void build()
-        {
-                Task task;
-                while (true)
-                {
-                        switch (tasks_.pop(&task))
+                        else
                         {
-                        case Tasks::EXIT:
-                                return;
-                        case Tasks::WAIT:
-                                break;
-                        case Tasks::PERFORM:
-                                perform(task);
-                                break;
+                                unsigned offset = create_indices(task->objects.size());
+                                for (const BvhObject<N, T>& object : task->objects)
+                                {
+                                        object_indices_[offset++] = object.index();
+                                }
+                                nodes_[task->node_index] =
+                                        BvhBuildNode<N, T>(task->bounds, offset, task->objects.size());
                         }
-                }
-        }
-
-        void run()
-        {
-                const auto f = [this]
-                {
-                        build();
-                };
-
-                const int thread_count = hardware_concurrency();
-
-                std::vector<std::future<void>> futures;
-                std::vector<std::thread> threads;
-                for (int i = 0; i < thread_count; ++i)
-                {
-                        std::packaged_task<void()> task(f);
-                        futures.emplace_back(task.get_future());
-                        threads.emplace_back(std::move(task));
-                }
-                for (std::thread& thread : threads)
-                {
-                        thread.join();
-                }
-                for (std::future<void>& future : futures)
-                {
-                        future.get();
                 }
         }
 
@@ -244,11 +144,34 @@ public:
         {
                 object_indices_.reserve(objects.size());
 
-                nodes_.emplace_back();
                 constexpr unsigned ROOT = 0;
-                tasks_.push(objects, compute_bounds(objects), ROOT);
+                nodes_.emplace_back();
 
-                run();
+                ThreadTasks<Task> tasks;
+                tasks.emplace(objects, compute_bounds(objects), ROOT);
+
+                const auto f = [&]
+                {
+                        try
+                        {
+                                ThreadTaskManager task_manager(&tasks);
+                                build(&task_manager);
+                        }
+                        catch (...)
+                        {
+                                tasks.stop();
+                                throw;
+                        }
+                };
+
+                const unsigned thread_count = hardware_concurrency();
+
+                ThreadsWithCatch threads(thread_count);
+                for (unsigned i = 0; i < thread_count; ++i)
+                {
+                        threads.add(f);
+                }
+                threads.join();
         }
 
         const std::vector<unsigned>& object_indices() const
