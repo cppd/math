@@ -28,11 +28,9 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/com/thread_tasks.h>
 
 #include <array>
-#include <future>
+#include <deque>
 #include <mutex>
-#include <stack>
-#include <thread>
-#include <utility>
+#include <span>
 #include <vector>
 
 namespace ns::geometry
@@ -78,12 +76,12 @@ class BvhBuild final
         {
                 std::span<BvhObject<N, T>> objects;
                 BoundingBox<N, T> bounds;
-                unsigned node_index;
+                BvhBuildNode<N, T>* node;
 
                 Task(const std::span<BvhObject<N, T>>& objects,
                      const BoundingBox<N, T>& bounds,
-                     const unsigned node_index)
-                        : objects(objects), bounds(bounds), node_index(node_index)
+                     BvhBuildNode<N, T>* const node)
+                        : objects(objects), bounds(bounds), node(node)
                 {
                 }
         };
@@ -91,26 +89,35 @@ class BvhBuild final
         const T interior_node_traversal_cost_ = 2 * spatial::testing::bounding_box::intersection_r_cost<N, T>();
 
         std::vector<unsigned> object_indices_;
+        unsigned object_indices_size_ = 0;
         std::mutex object_indices_lock_;
 
-        std::vector<BvhBuildNode<N, T>> nodes_;
+        // std::deque to keep object addreses unchanged when inserting
+        std::deque<BvhBuildNode<N, T>> nodes_;
         std::mutex nodes_lock_;
 
         unsigned create_indices(const unsigned count)
         {
                 std::lock_guard lg(object_indices_lock_);
-                const unsigned offset = object_indices_.size();
-                object_indices_.resize(offset + count);
+                const unsigned offset = object_indices_size_;
+                object_indices_size_ += count;
                 return offset;
         }
 
-        std::array<unsigned, 2> create_nodes()
+        struct ChildNode final
         {
+                BvhBuildNode<N, T>* node;
+                unsigned index;
+        };
+
+        std::array<ChildNode, 2> create_child_nodes()
+        {
+                std::array<ChildNode, 2> res;
                 std::lock_guard lg(nodes_lock_);
                 const unsigned offset = nodes_.size();
-                nodes_.emplace_back();
-                nodes_.emplace_back();
-                return {offset, offset + 1};
+                res[0] = {.node = &nodes_.emplace_back(), .index = offset};
+                res[1] = {.node = &nodes_.emplace_back(), .index = offset + 1};
+                return res;
         }
 
         void build(ThreadTaskManager<Task>* const task_manager)
@@ -120,11 +127,10 @@ class BvhBuild final
                         if (std::optional<BvhSplit<N, T>> s =
                                     split(task->objects, task->bounds, interior_node_traversal_cost_))
                         {
-                                const std::array<unsigned, 2> childs = create_nodes();
-                                nodes_[task->node_index] =
-                                        BvhBuildNode<N, T>(task->bounds, s->axis, childs[0], childs[1]);
-                                task_manager->emplace(s->objects_min, s->bounds_min, childs[0]);
-                                task_manager->emplace(s->objects_max, s->bounds_max, childs[1]);
+                                const auto [min, max] = create_child_nodes();
+                                *task->node = BvhBuildNode<N, T>(task->bounds, s->axis, min.index, max.index);
+                                task_manager->emplace(s->objects_min, s->bounds_min, min.node);
+                                task_manager->emplace(s->objects_max, s->bounds_max, max.node);
                         }
                         else
                         {
@@ -133,8 +139,7 @@ class BvhBuild final
                                 {
                                         object_indices_[offset++] = object.index();
                                 }
-                                nodes_[task->node_index] =
-                                        BvhBuildNode<N, T>(task->bounds, offset, task->objects.size());
+                                *task->node = BvhBuildNode<N, T>(task->bounds, offset, task->objects.size());
                         }
                 }
         }
@@ -142,13 +147,12 @@ class BvhBuild final
 public:
         BvhBuild(const std::span<BvhObject<N, T>>& objects)
         {
-                object_indices_.reserve(objects.size());
+                object_indices_.resize(objects.size());
 
-                constexpr unsigned ROOT = 0;
                 nodes_.emplace_back();
 
                 ThreadTasks<Task> tasks;
-                tasks.emplace(objects, compute_bounds(objects), ROOT);
+                tasks.emplace(objects, compute_bounds(objects), &nodes_.front());
 
                 const auto f = [&]
                 {
@@ -172,6 +176,8 @@ public:
                         threads.add(f);
                 }
                 threads.join();
+
+                ASSERT(object_indices_size_ == objects.size());
         }
 
         const std::vector<unsigned>& object_indices() const
@@ -179,7 +185,7 @@ public:
                 return object_indices_;
         }
 
-        const std::vector<BvhBuildNode<N, T>>& nodes() const
+        const std::deque<BvhBuildNode<N, T>>& nodes() const
         {
                 return nodes_;
         }
