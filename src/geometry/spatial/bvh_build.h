@@ -145,7 +145,7 @@ class BvhBuild final
         }
 
 public:
-        BvhBuild(const std::span<BvhObject<N, T>>& objects)
+        explicit BvhBuild(const std::span<BvhObject<N, T>>& objects)
         {
                 object_indices_.resize(objects.size());
 

@@ -52,7 +52,7 @@ class CenterBounds final
         T min_;
 
 public:
-        CenterBounds(const std::span<const BvhObject<N, T>>& objects)
+        explicit CenterBounds(const std::span<const BvhObject<N, T>>& objects)
                 : box_(compute_center_bounds(objects)),
                   axis_(box_.maximum_extent()),
                   length_r_(1 / (box_.max()[axis_] - box_.min()[axis_])),
