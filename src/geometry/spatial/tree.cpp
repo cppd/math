@@ -32,7 +32,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <cmath>
 #include <deque>
 #include <mutex>
-#include <tuple>
 
 namespace ns::geometry
 {
@@ -89,21 +88,28 @@ double maximum_box_count(const unsigned box_count, const unsigned max_depth)
         return geometric_progression_sum(box_count, max_depth);
 }
 
+template <typename Box>
+struct ChildBox final
+{
+        Box* box;
+        int index;
+};
+
 template <typename Box, typename Parallelotope>
-std::array<std::tuple<int, Box*, int>, BOX_COUNT<Parallelotope::SPACE_DIMENSION>> create_child_boxes(
+std::array<ChildBox<Box>, BOX_COUNT<Parallelotope::SPACE_DIMENSION>> create_child_boxes(
         const Parallelotope& parallelotope,
         std::mutex* const boxes_lock,
         std::deque<Box>* const boxes)
 {
         constexpr int N = BOX_COUNT<Parallelotope::SPACE_DIMENSION>;
         std::array<Parallelotope, N> child_parallelotopes = parallelotope.binary_division();
-        std::array<std::tuple<int, Box*, int>, N> res;
+        std::array<ChildBox<Box>, N> res;
 
         std::lock_guard lg(*boxes_lock);
         for (int i = 0, index = boxes->size(); i < N; ++i, ++index)
         {
-                Box* const box = &boxes->emplace_back(std::move(child_parallelotopes[i]));
-                res[i] = std::make_tuple(i, box, index);
+                res[i].box = &boxes->emplace_back(std::move(child_parallelotopes[i]));
+                res[i].index = index;
         }
         return res;
 }
@@ -137,15 +143,17 @@ void extend(
                         continue;
                 }
 
-                for (const auto& [i, child_box, child_box_index] :
-                     create_child_boxes(task->box->parallelotope, boxes_lock, boxes))
+                const std::array child_boxes = create_child_boxes(task->box->parallelotope, boxes_lock, boxes);
+                for (std::size_t i = 0; i < child_boxes.size(); ++i)
                 {
-                        if ((child_box_index & 0xfff) == 0xfff)
+                        if ((child_boxes[i].index & 0xfff) == 0xfff)
                         {
-                                progress->set(child_box_index, max_boxes);
+                                progress->set(child_boxes[i].index, max_boxes);
                         }
 
-                        task->box->childs[i] = child_box_index;
+                        task->box->childs[i] = child_boxes[i].index;
+
+                        Box* const child_box = child_boxes[i].box;
 
                         {
                                 const std::vector<int> indices = object_intersections.indices(
