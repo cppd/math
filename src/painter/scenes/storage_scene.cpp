@@ -19,6 +19,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <src/color/color.h>
 #include <src/com/error.h>
+#include <src/com/thread.h>
 #include <src/com/type/limit.h>
 #include <src/geometry/spatial/parallelotope_aa.h>
 #include <src/geometry/spatial/shape_intersection.h>
@@ -33,6 +34,12 @@ namespace ns::painter
 namespace
 {
 constexpr int TREE_MIN_OBJECTS_PER_BOX = 10;
+
+template <std::size_t N, typename T>
+using TreeParallelotope = geometry::ParallelotopeAA<N, T>;
+
+template <std::size_t N, typename T>
+using Tree = geometry::SpatialSubdivisionTree<TreeParallelotope<N, T>>;
 
 template <typename P>
 std::vector<P*> to_pointers(const std::vector<std::unique_ptr<P>>& objects)
@@ -140,41 +147,49 @@ const Surface<N, T, Color>* ray_intersect(
 }
 
 template <std::size_t N, typename T, typename Color>
-geometry::SpatialSubdivisionTree<geometry::ParallelotopeAA<N, T>> create_tree(
-        const std::vector<const Shape<N, T, Color>*>& shapes,
-        const geometry::BoundingBox<N, T>& bounding_box)
+class Intersections final : public Tree<N, T>::ObjectIntersections
 {
-        ProgressRatio progress(nullptr);
+        std::vector<std::function<bool(const geometry::ShapeWrapperForIntersection<TreeParallelotope<N, T>>&)>>
+                wrappers_;
 
-        std::vector<std::function<bool(const geometry::ShapeWrapperForIntersection<geometry::ParallelotopeAA<N, T>>&)>>
-                wrappers;
-        wrappers.reserve(shapes.size());
-        for (const Shape<N, T, Color>* s : shapes)
-        {
-                wrappers.push_back(s->intersection_function());
-        }
-
-        const auto shape_intersections =
-                [&w = std::as_const(wrappers)](
-                        const geometry::ParallelotopeAA<N, T>& parallelotope, const std::vector<int>& indices)
+        std::vector<int> indices(const TreeParallelotope<N, T>& parallelotope, const std::vector<int>& indices)
+                const override
         {
                 geometry::ShapeWrapperForIntersection p(&parallelotope);
                 std::vector<int> intersections;
                 intersections.reserve(indices.size());
                 for (int object_index : indices)
                 {
-                        if (w[object_index](p))
+                        if (wrappers_[object_index](p))
                         {
                                 intersections.push_back(object_index);
                         }
                 }
                 return intersections;
-        };
+        }
+
+public:
+        explicit Intersections(const std::vector<const Shape<N, T, Color>*>& shapes)
+        {
+                wrappers_.reserve(shapes.size());
+                for (const Shape<N, T, Color>* s : shapes)
+                {
+                        wrappers_.push_back(s->intersection_function());
+                }
+        }
+};
+
+template <std::size_t N, typename T, typename Color>
+Tree<N, T> create_tree(
+        const std::vector<const Shape<N, T, Color>*>& shapes,
+        const geometry::BoundingBox<N, T>& bounding_box)
+{
+        ProgressRatio progress(nullptr);
 
         const unsigned thread_count = hardware_concurrency();
 
-        geometry::SpatialSubdivisionTree<geometry::ParallelotopeAA<N, T>> tree(
-                TREE_MIN_OBJECTS_PER_BOX, wrappers.size(), bounding_box, shape_intersections, thread_count, &progress);
+        Tree<N, T> tree(
+                TREE_MIN_OBJECTS_PER_BOX, shapes.size(), bounding_box, Intersections(shapes), thread_count, &progress);
 
         return tree;
 }
@@ -198,7 +213,7 @@ class Impl final : public Scene<N, T, Color>
 
         T ray_offset_;
 
-        geometry::SpatialSubdivisionTree<geometry::ParallelotopeAA<N, T>> tree_;
+        Tree<N, T> tree_;
 
         const Surface<N, T, Color>* intersect(const Ray<N, T>& ray) const override
         {
@@ -212,24 +227,28 @@ class Impl final : public Scene<N, T, Color>
                         return nullptr;
                 }
 
-                const Surface<N, T, Color>* surface;
-
-                const auto f = [&](const std::vector<int>& shape_indices) -> std::optional<Vector<N, T>>
+                struct Info
                 {
-                        surface = ray_intersect(shape_pointers_, shape_indices, ray_with_offset);
-                        if (surface)
+                        Vector<N, T> point;
+                        const Surface<N, T, Color>* surface;
+                        explicit Info(const Surface<N, T, Color>* const surface) : surface(surface)
                         {
-                                return surface->point();
+                        }
+                };
+
+                const auto f = [&](const std::vector<int>& shape_indices) -> std::optional<Info>
+                {
+                        Info info(ray_intersect(shape_pointers_, shape_indices, ray_with_offset));
+                        if (info.surface)
+                        {
+                                info.point = info.surface->point();
+                                return info;
                         }
                         return std::nullopt;
                 };
 
-                if (tree_.trace_ray(ray_with_offset, *root, f))
-                {
-                        return surface;
-                }
-
-                return nullptr;
+                const auto info = tree_.trace_ray(ray_with_offset, *root, f);
+                return info ? info->surface : nullptr;
         }
 
         const std::vector<const LightSource<N, T, Color>*>& light_sources() const override

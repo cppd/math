@@ -35,6 +35,38 @@ class ObjectTree final
         using T = typename Object::DataType;
 
         using TreeParallelotope = ParallelotopeAA<N, T>;
+        using Tree = SpatialSubdivisionTree<TreeParallelotope>;
+
+        class Intersections final : public Tree::ObjectIntersections
+        {
+                std::vector<ShapeWrapperForIntersection<Object>> wrappers_;
+
+                std::vector<int> indices(const TreeParallelotope& parallelotope, const std::vector<int>& indices)
+                        const override
+                {
+                        ShapeWrapperForIntersection p(&parallelotope);
+                        std::vector<int> intersections;
+                        intersections.reserve(indices.size());
+                        for (int object_index : indices)
+                        {
+                                if (shape_intersection(p, wrappers_[object_index]))
+                                {
+                                        intersections.push_back(object_index);
+                                }
+                        }
+                        return intersections;
+                }
+
+        public:
+                explicit Intersections(const std::vector<Object>& objects)
+                {
+                        wrappers_.reserve(objects.size());
+                        for (const Object& t : objects)
+                        {
+                                wrappers_.emplace_back(&t);
+                        }
+                }
+        };
 
         static BoundingBox<N, T> create_bounding_box(const std::vector<Object>& objects)
         {
@@ -51,40 +83,16 @@ class ObjectTree final
                 return {mn, mx};
         }
 
-        static SpatialSubdivisionTree<TreeParallelotope> create_tree(
+        static Tree create_tree(
                 const int min_objects_per_box,
                 const std::vector<Object>& objects,
                 const BoundingBox<N, T>& bounding_box,
                 ProgressRatio* const progress)
         {
-                std::vector<ShapeWrapperForIntersection<Object>> wrappers;
-                wrappers.reserve(objects.size());
-                for (const Object& t : objects)
-                {
-                        wrappers.emplace_back(&t);
-                }
-
-                const auto object_intersections =
-                        [&w = std::as_const(wrappers)](
-                                const TreeParallelotope& parallelotope, const std::vector<int>& indices)
-                {
-                        ShapeWrapperForIntersection p(&parallelotope);
-                        std::vector<int> intersections;
-                        intersections.reserve(indices.size());
-                        for (int object_index : indices)
-                        {
-                                if (shape_intersection(p, w[object_index]))
-                                {
-                                        intersections.push_back(object_index);
-                                }
-                        }
-                        return intersections;
-                };
-
                 const unsigned thread_count = hardware_concurrency();
 
-                SpatialSubdivisionTree<TreeParallelotope> tree(
-                        min_objects_per_box, objects.size(), bounding_box, object_intersections, thread_count,
+                Tree tree(
+                        min_objects_per_box, objects.size(), bounding_box, Intersections(objects), thread_count,
                         progress);
 
                 return tree;
@@ -118,7 +126,7 @@ class ObjectTree final
 
         const std::vector<Object>* const objects_;
         BoundingBox<N, T> bounding_box_;
-        SpatialSubdivisionTree<TreeParallelotope> tree_;
+        Tree tree_;
 
 public:
         ObjectTree(const std::vector<Object>* objects, const int min_objects_per_box, ProgressRatio* const progress)
@@ -145,23 +153,32 @@ public:
 
         std::optional<std::tuple<T, const Object*>> intersect(const Ray<N, T>& ray, const T& root_distance) const
         {
-                std::optional<std::tuple<T, const Object*>> intersection;
-
-                const auto f = [&](const std::vector<int>& object_indices) -> std::optional<Vector<N, T>>
+                struct Info
                 {
-                        intersection = ray_intersection(*objects_, object_indices, ray);
-                        if (intersection)
+                        Vector<N, T> point;
+                        std::optional<std::tuple<T, const Object*>> intersection;
+                        explicit Info(std::optional<std::tuple<T, const Object*>>&& intersection)
+                                : intersection(intersection)
                         {
-                                return ray.point(std::get<0>(*intersection));
+                        }
+                };
+
+                const auto f = [&](const std::vector<int>& object_indices) -> std::optional<Info>
+                {
+                        Info info(ray_intersection(*objects_, object_indices, ray));
+                        if (info.intersection)
+                        {
+                                info.point = ray.point(std::get<0>(*info.intersection));
+                                return info;
                         }
                         return std::nullopt;
                 };
 
-                if (tree_.trace_ray(ray, root_distance, f))
+                const auto info = tree_.trace_ray(ray, root_distance, f);
+                if (info)
                 {
-                        return intersection;
+                        return info->intersection;
                 }
-
                 return std::nullopt;
         }
 };
