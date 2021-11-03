@@ -119,6 +119,7 @@ void check_convex_hull(const std::vector<Vector<N, float>>& points, const std::v
 
         {
                 std::vector<std::array<int, N>> array_facets;
+                array_facets.reserve(facets.size());
                 for (const ConvexHullFacet<N>& facet : facets)
                 {
                         array_facets.push_back(facet.vertices());
