@@ -25,45 +25,43 @@ Elsevier, 2017.
 
 #pragma once
 
-#include "bvh_build.h"
+#include "bounding_box.h"
+#include "bvh_object.h"
 
 #include <src/com/error.h>
 
 #include <array>
+#include <span>
 #include <utility>
 #include <vector>
 
 namespace ns::geometry
 {
-namespace bvh_tree_implementation
-{
-template <std::size_t N, typename T>
-class Stack final
-{
-        static_assert(N > 0);
-
-        std::array<T, N> stack_;
-        int next_ = 0;
-
-public:
-        void push(const T& v)
-        {
-                stack_[next_++] = v;
-        }
-        T pop()
-        {
-                return stack_[--next_];
-        }
-        bool empty() const
-        {
-                return next_ == 0;
-        }
-};
-}
-
 template <std::size_t N, typename T>
 class BvhTree final
 {
+        static constexpr unsigned STACK_SIZE = 64;
+
+        class Stack final
+        {
+                std::array<unsigned, STACK_SIZE> stack_;
+                int next_ = 0;
+
+        public:
+                void push(const unsigned v)
+                {
+                        stack_[next_++] = v;
+                }
+                unsigned pop()
+                {
+                        return stack_[--next_];
+                }
+                bool empty() const
+                {
+                        return next_ == 0;
+                }
+        };
+
         struct Node final
         {
                 BoundingBox<N, T> bounds;
@@ -76,57 +74,13 @@ class BvhTree final
                 uint8_t axis;
         };
 
-        static_assert(
-                N != 3 || !std::is_same_v<float, T> || sizeof(float) != sizeof(uint32_t)
-                || sizeof(Node) == 8 * sizeof(uint32_t));
+        static_assert(N != 3 || !std::is_same_v<float, T> || sizeof(Node) == 6 * sizeof(float) + 2 * sizeof(uint32_t));
 
         std::vector<unsigned> object_indices_;
         std::vector<Node> nodes_;
 
-        unsigned make_depth_first_order(const BvhBuild<N, T>& build, const unsigned src_index)
-        {
-                const unsigned dst_index = nodes_.size();
-                Node& dst = nodes_.emplace_back();
-
-                const BvhBuildNode<N, T>& src = build.nodes()[src_index];
-
-                dst.bounds = src.bounds;
-                if (src.object_index_count == 0)
-                {
-                        dst.object_count = 0;
-                        dst.axis = src.axis;
-                        make_depth_first_order(build, src.children[0]);
-                        dst.second_child_offset = make_depth_first_order(build, src.children[1]);
-                }
-                else
-                {
-                        dst.object_offset = object_indices_.size();
-                        dst.object_count = src.object_index_count;
-                        const auto begin = build.object_indices().cbegin() + src.object_index_offset;
-                        const auto end = begin + src.object_index_count;
-                        for (auto i = begin; i != end; ++i)
-                        {
-                                object_indices_.push_back(*i);
-                        }
-                }
-                return dst_index;
-        }
-
 public:
-        BvhTree(const std::span<BvhObject<N, T>>& objects)
-        {
-                BvhBuild build(objects);
-                ASSERT(!build.object_indices().empty());
-                ASSERT(!build.nodes().empty());
-
-                object_indices_.reserve(build.object_indices().size());
-                nodes_.reserve(build.nodes().size());
-
-                make_depth_first_order(build, 0);
-
-                ASSERT(object_indices_.size() == build.object_indices().size());
-                ASSERT(nodes_.size() == build.nodes().size());
-        }
+        explicit BvhTree(const std::span<BvhObject<N, T>>& objects);
 
         // The signature of the object_intersect function
         // struct Info
@@ -141,14 +95,12 @@ public:
                 const T& max_distance,
                 const ObjectIntersect& object_intersect) const
         {
-                namespace impl = bvh_tree_implementation;
-
                 const Vector<N, T> dir_reciprocal = reciprocal(ray.dir());
                 const Vector<N, bool> dir_negative = negative_bool(ray.dir());
 
                 std::invoke_result_t<ObjectIntersect, std::span<const unsigned>&&, const T&> result;
 
-                impl::Stack<64, unsigned> stack;
+                Stack stack;
                 T distance = max_distance;
                 unsigned node_index = 0;
 
