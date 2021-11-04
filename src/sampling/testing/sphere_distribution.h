@@ -28,6 +28,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/com/thread.h>
 #include <src/geometry/shapes/sphere_area.h>
 #include <src/geometry/shapes/sphere_create.h>
+#include <src/geometry/spatial/bounding_box.h>
 #include <src/geometry/spatial/object_tree.h>
 #include <src/numerical/vec.h>
 #include <src/progress/progress.h>
@@ -72,6 +73,20 @@ class SphereDistribution final
                 Sphere& operator=(const Sphere&) = delete;
                 Sphere& operator=(Sphere&&) = delete;
         };
+
+        static geometry::BoundingBox<N, T> compute_bounding_box(const Sphere& sphere)
+        {
+                if (sphere.facets.empty())
+                {
+                        error("No sphere facets");
+                }
+                geometry::BoundingBox<N, T> box = sphere.facets[0].bounding_box();
+                for (std::size_t i = 1; i < sphere.facets.size(); ++i)
+                {
+                        box.merge(sphere.facets[i].bounding_box());
+                }
+                return box;
+        }
 
         //
 
@@ -170,7 +185,7 @@ class SphereDistribution final
 
 public:
         explicit SphereDistribution(ProgressRatio* const progress)
-                : sphere_(), tree_(&sphere_.facets, TREE_MIN_OBJECTS_PER_BOX, progress)
+                : sphere_(), tree_(&sphere_.facets, compute_bounding_box(sphere_), TREE_MIN_OBJECTS_PER_BOX, progress)
         {
         }
 

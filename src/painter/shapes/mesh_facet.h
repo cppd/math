@@ -20,6 +20,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/com/alg.h>
 #include <src/com/combinatorics.h>
 #include <src/com/error.h>
+#include <src/geometry/spatial/bounding_box.h>
 #include <src/geometry/spatial/constraint.h>
 #include <src/geometry/spatial/hyperplane_simplex.h>
 #include <src/numerical/complement.h>
@@ -276,6 +277,11 @@ public:
                 }
                 ASSERT(n == EDGE_COUNT);
                 return result;
+        }
+
+        geometry::BoundingBox<N, T> bounding_box() const
+        {
+                return geometry::BoundingBox<N, T>(vertices());
         }
 };
 }

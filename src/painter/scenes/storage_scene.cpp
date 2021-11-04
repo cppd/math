@@ -23,7 +23,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/com/type/limit.h>
 #include <src/geometry/spatial/parallelotope_aa.h>
 #include <src/geometry/spatial/shape_intersection.h>
-#include <src/geometry/spatial/shape_wrapper.h>
 #include <src/geometry/spatial/tree.h>
 
 #include <algorithm>
@@ -148,13 +147,12 @@ ShapeIntersection<N, T, Color> ray_intersect(
 template <std::size_t N, typename T, typename Color>
 class Intersections final : public Tree<N, T>::ObjectIntersections
 {
-        std::vector<std::function<bool(const geometry::ShapeWrapperForIntersection<TreeParallelotope<N, T>>&)>>
-                wrappers_;
+        std::vector<std::function<bool(const geometry::ShapeIntersection<TreeParallelotope<N, T>>&)>> wrappers_;
 
         std::vector<int> indices(const TreeParallelotope<N, T>& parallelotope, const std::vector<int>& indices)
                 const override
         {
-                geometry::ShapeWrapperForIntersection p(&parallelotope);
+                geometry::ShapeIntersection p(&parallelotope);
                 std::vector<int> intersections;
                 intersections.reserve(indices.size());
                 for (int object_index : indices)

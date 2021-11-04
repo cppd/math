@@ -135,11 +135,11 @@ public:
                 return geometry::BoundingBox<N, T>(hyperplane_parallelotope_.vertices());
         }
 
-        std::function<bool(const geometry::ShapeWrapperForIntersection<geometry::ParallelotopeAA<N, T>>&)>
-                intersection_function() const override
+        std::function<bool(const geometry::ShapeIntersection<geometry::ParallelotopeAA<N, T>>&)> intersection_function()
+                const override
         {
-                return [w = geometry::ShapeWrapperForIntersection(&hyperplane_parallelotope_)](
-                               const geometry::ShapeWrapperForIntersection<geometry::ParallelotopeAA<N, T>>& p)
+                return [w = geometry::ShapeIntersection(&hyperplane_parallelotope_)](
+                               const geometry::ShapeIntersection<geometry::ParallelotopeAA<N, T>>& p)
                 {
                         return geometry::shape_intersection(w, p);
                 };

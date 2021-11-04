@@ -322,8 +322,112 @@ void static_checks(const Shape1& shape_1, const Shape2& shape_2)
 }
 }
 
+template <typename Shape>
+class ShapeIntersection final
+{
+        static_assert(Shape::SPACE_DIMENSION >= 4);
+
+        static constexpr std::size_t N = Shape::SPACE_DIMENSION;
+
+        using T = typename Shape::DataType;
+        using Vertices = decltype(std::declval<Shape>().vertices());
+        using Constraints = decltype(std::declval<Shape>().constraints());
+
+        const Shape* shape_;
+        Vertices vertices_;
+        Constraints constraints_;
+        // Vector<N, T> min_;
+
+        // template <std::size_t ArraySize, typename T, std::size_t N>
+        // static Vector<N, T> find_min_vector(const std::array<Vector<N, T>, ArraySize>& vectors)
+        // {
+        //         static_assert(ArraySize > 0);
+        //         Vector<N, T> min = vectors[0];
+        //         for (std::size_t i = 1; i < ArraySize; ++i)
+        //         {
+        //                 min = ::ns::min(vectors[i], min);
+        //         }
+        //         return min;
+        // }
+
+public:
+        static constexpr std::size_t SPACE_DIMENSION = Shape::SPACE_DIMENSION;
+        static constexpr std::size_t SHAPE_DIMENSION = Shape::SHAPE_DIMENSION;
+        using DataType = T;
+
+        explicit ShapeIntersection(const Shape* const shape)
+                : shape_(shape), vertices_(shape->vertices()), constraints_(shape_->constraints())
+        {
+                // min_ = find_min_vector(vertices_);
+        }
+
+        bool inside(const Vector<N, T>& p) const
+        {
+                return shape_->inside(p);
+        }
+
+        const Vertices& vertices() const
+        {
+                return vertices_;
+        }
+
+        const Constraints& constraints() const
+        {
+                return constraints_;
+        }
+
+        // const Vector<N, T>& min() const
+        // {
+        //         return min_;
+        // }
+};
+
+template <typename Shape>
+requires(Shape::SPACE_DIMENSION == 3 || Shape::SPACE_DIMENSION == 2) class ShapeIntersection<Shape> final
+{
+        static constexpr std::size_t N = Shape::SPACE_DIMENSION;
+
+        using T = typename Shape::DataType;
+        using Vertices = decltype(std::declval<Shape>().vertices());
+        using Edges = decltype(std::declval<Shape>().edges());
+
+        const Shape* shape_;
+        Vertices vertices_;
+        Edges edges_;
+
+public:
+        static constexpr std::size_t SPACE_DIMENSION = Shape::SPACE_DIMENSION;
+        static constexpr std::size_t SHAPE_DIMENSION = Shape::SHAPE_DIMENSION;
+        using DataType = T;
+
+        explicit ShapeIntersection(const Shape* const shape)
+                : shape_(shape), vertices_(shape->vertices()), edges_(shape->edges())
+        {
+        }
+
+        bool inside(const Vector<N, T>& p) const
+        {
+                return shape_->inside(p);
+        }
+
+        std::optional<T> intersect(const Ray<N, T>& r) const
+        {
+                return shape_->intersect(r);
+        }
+
+        const Vertices& vertices() const
+        {
+                return vertices_;
+        }
+
+        const Edges& edges() const
+        {
+                return edges_;
+        }
+};
+
 template <typename Shape1, typename Shape2>
-bool shape_intersection(const Shape1& shape_1, const Shape2& shape_2)
+bool shape_intersection(const ShapeIntersection<Shape1>& shape_1, const ShapeIntersection<Shape2>& shape_2)
 {
         namespace impl = shape_intersection_implementation;
 

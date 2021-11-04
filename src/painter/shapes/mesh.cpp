@@ -77,6 +77,21 @@ std::array<int, N> add_offset(const std::array<int, N>& src, const int offset)
         return r;
 }
 
+template <std::size_t N, typename T>
+geometry::BoundingBox<N, T> compute_bounding_box(const std::vector<MeshFacet<N, T>>& facets)
+{
+        if (facets.empty())
+        {
+                error("No mesh facets");
+        }
+        geometry::BoundingBox<N, T> box = facets[0].bounding_box();
+        for (std::size_t i = 1; i < facets.size(); ++i)
+        {
+                box.merge(facets[i].bounding_box());
+        }
+        return box;
+}
+
 template <typename T, typename Color>
 struct Material
 {
@@ -106,6 +121,7 @@ class Mesh final : public Shape<N, T, Color>
         std::vector<MeshTexture<N - 1>> images_;
         std::vector<MeshFacet<N, T>> facets_;
 
+        geometry::BoundingBox<N, T> bounding_box_;
         std::optional<geometry::ObjectTree<MeshFacet<N, T>>> tree_;
 
         //
@@ -121,8 +137,8 @@ class Mesh final : public Shape<N, T, Color>
 
         geometry::BoundingBox<N, T> bounding_box() const override;
 
-        std::function<bool(const geometry::ShapeWrapperForIntersection<geometry::ParallelotopeAA<N, T>>&)>
-                intersection_function() const override;
+        std::function<bool(const geometry::ShapeIntersection<geometry::ParallelotopeAA<N, T>>&)> intersection_function()
+                const override;
 
         //
 
@@ -353,17 +369,17 @@ void Mesh<N, T, Color>::create(const std::vector<mesh::Reading<N>>& mesh_objects
                 create(mesh_object);
         }
 
-        if (vertices_.empty() || facets_.empty())
-        {
-                error("No visible geometry found in meshes");
-        }
-
         ASSERT(vertex_count == vertices_.size());
         ASSERT(normal_count == normals_.size());
         ASSERT(texcoord_count == texcoords_.size());
         ASSERT(material_count == materials_.size());
         ASSERT(image_count == images_.size());
         ASSERT(facet_count == facets_.size());
+
+        if (facets_.empty())
+        {
+                error("No facets found in meshes");
+        }
 }
 
 template <std::size_t N, typename T, typename Color>
@@ -381,9 +397,11 @@ Mesh<N, T, Color>::Mesh(const std::vector<const mesh::MeshObject<N>*>& mesh_obje
                 create(reading);
         }
 
+        bounding_box_ = compute_bounding_box(facets_);
+
         progress->set_text(to_string(1 << N) + "-tree: %v of %m");
 
-        tree_.emplace(&facets_, TREE_MIN_OBJECTS_PER_BOX, progress);
+        tree_.emplace(&facets_, bounding_box_, TREE_MIN_OBJECTS_PER_BOX, progress);
 
         LOG("Painter mesh object created, " + to_string_fixed(duration_from(start_time), 5) + " s");
 }
@@ -412,15 +430,16 @@ ShapeIntersection<N, T, Color> Mesh<N, T, Color>::intersect(const Ray<N, T>& ray
 template <std::size_t N, typename T, typename Color>
 geometry::BoundingBox<N, T> Mesh<N, T, Color>::bounding_box() const
 {
-        return tree_->bounding_box();
+        return bounding_box_;
 }
 
 template <std::size_t N, typename T, typename Color>
-std::function<bool(const geometry::ShapeWrapperForIntersection<geometry::ParallelotopeAA<N, T>>&)> Mesh<N, T, Color>::
+std::function<bool(const geometry::ShapeIntersection<geometry::ParallelotopeAA<N, T>>&)> Mesh<N, T, Color>::
         intersection_function() const
 {
-        return [w = geometry::ShapeWrapperForIntersection(&tree_->root())](
-                       const geometry::ShapeWrapperForIntersection<geometry::ParallelotopeAA<N, T>>& p)
+        auto root = std::make_shared<geometry::ParallelotopeAA<N, T>>(bounding_box_.min(), bounding_box_.max());
+        return [root, w = geometry::ShapeIntersection(root.get())](
+                       const geometry::ShapeIntersection<geometry::ParallelotopeAA<N, T>>& p)
         {
                 return geometry::shape_intersection(w, p);
         };
