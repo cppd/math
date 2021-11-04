@@ -69,7 +69,7 @@ std::vector<Ray<N, T>> create_rays_for_spherical_mesh(const geometry::BoundingBo
 }
 
 template <std::size_t N, typename T, typename Color>
-const Surface<N, T, Color>* intersect_mesh(
+ShapeIntersection<N, T, Color> intersect_mesh(
         const char* const name_1,
         const char* const name_2,
         const Shape<N, T, Color>& mesh,
@@ -86,15 +86,15 @@ const Surface<N, T, Color>* intersect_mesh(
                             + "\n" + to_string(ray));
                 }
                 ++(*error_count);
-                return nullptr;
+                return ShapeIntersection<N, T, Color>(nullptr);
         }
         if (WITH_RAY_LOG)
         {
                 LOG(std::string(name_2) + "_a == " + to_string(*bounding_distance));
         }
 
-        const Surface<N, T, Color>* const surface = mesh.intersect(ray, *bounding_distance);
-        if (!surface)
+        const ShapeIntersection<N, T, Color> intersection = mesh.intersect(ray, *bounding_distance);
+        if (!intersection.surface)
         {
                 if (WITH_ERROR_LOG)
                 {
@@ -102,14 +102,14 @@ const Surface<N, T, Color>* intersect_mesh(
                             + "bounding distance " + to_string(*bounding_distance) + "\n" + to_string(ray));
                 }
                 ++(*error_count);
-                return nullptr;
+                return ShapeIntersection<N, T, Color>(nullptr);
         }
         if (WITH_RAY_LOG)
         {
-                LOG(std::string(name_2) + "_p == " + to_string((surface->point() - ray.org()).norm()));
+                LOG(std::string(name_2) + "_p == " + to_string(intersection.distance));
         }
 
-        return surface;
+        return intersection;
 }
 
 template <std::size_t N, typename T, typename Color>
@@ -147,36 +147,40 @@ void test_spherical_mesh(const Shape<N, T, Color>& mesh, const int ray_count, Pr
                         LOG("ray #" + to_string(i) + " in " + space_name(N));
                 }
 
-                const Surface<N, T, Color>* surface;
+                ShapeIntersection<N, T, Color> intersection;
 
-                surface = intersect_mesh("the first", "t1", mesh, ray, i, &error_count);
-                if (!surface)
+                intersection = intersect_mesh("the first", "t1", mesh, ray, i, &error_count);
+                if (!intersection.surface)
                 {
                         continue;
                 }
 
-                ray.set_org(surface->point());
+                ray.set_org(intersection.surface->point());
                 ray.move(ray_offset);
 
-                surface = intersect_mesh("the second", "t2", mesh, ray, i, &error_count);
-                if (!surface)
+                intersection = intersect_mesh("the second", "t2", mesh, ray, i, &error_count);
+                if (!intersection.surface)
                 {
                         continue;
                 }
 
-                ray.set_org(surface->point());
+                ray.set_org(intersection.surface->point());
                 ray.move(ray_offset);
 
                 const std::optional<T> bounding_distance = mesh.intersect_bounding(ray);
-                if (bounding_distance && (surface = mesh.intersect(ray, *bounding_distance)))
+                if (bounding_distance)
                 {
-                        if (WITH_ERROR_LOG)
+                        intersection = mesh.intersect(ray, *bounding_distance);
+                        if (intersection.surface)
                         {
-                                LOG("The third intersection with ray #" + to_string(i) + "\n" + to_string(ray) + "\n"
-                                    + "at point " + to_string((surface->point() - ray.org()).norm()));
+                                if (WITH_ERROR_LOG)
+                                {
+                                        LOG("The third intersection with ray #" + to_string(i) + "\n" + to_string(ray)
+                                            + "\n" + "at point " + to_string(intersection.distance));
+                                }
+                                ++error_count;
+                                continue;
                         }
-                        ++error_count;
-                        continue;
                 }
         }
 

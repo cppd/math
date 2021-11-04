@@ -30,13 +30,28 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 namespace ns::painter
 {
 template <std::size_t N, typename T, typename Color>
+struct ShapeIntersection final
+{
+        T distance;
+        const Surface<N, T, Color>* surface;
+
+        ShapeIntersection()
+        {
+        }
+
+        explicit ShapeIntersection(std::nullptr_t) : surface(nullptr)
+        {
+        }
+};
+
+template <std::size_t N, typename T, typename Color>
 struct Shape
 {
         virtual ~Shape() = default;
 
         virtual std::optional<T> intersect_bounding(const Ray<N, T>& ray) const = 0;
 
-        virtual const Surface<N, T, Color>* intersect(const Ray<N, T>& ray, T bounding_distance) const = 0;
+        virtual ShapeIntersection<N, T, Color> intersect(const Ray<N, T>& ray, T bounding_distance) const = 0;
 
         virtual geometry::BoundingBox<N, T> bounding_box() const = 0;
 

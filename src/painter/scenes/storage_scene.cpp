@@ -83,7 +83,7 @@ struct BoundingIntersection
 };
 
 template <std::size_t N, typename T, typename Color>
-const Surface<N, T, Color>* ray_intersect(
+ShapeIntersection<N, T, Color> ray_intersect(
         const std::vector<const Shape<N, T, Color>*>& shapes,
         const std::vector<int>& indices,
         const Ray<N, T>& ray)
@@ -95,7 +95,7 @@ const Surface<N, T, Color>* ray_intersect(
                 {
                         return shapes[indices.front()]->intersect(ray, *distance);
                 }
-                return nullptr;
+                return ShapeIntersection<N, T, Color>(nullptr);
         }
 
         thread_local std::vector<BoundingIntersection<N, T, Color>> intersections;
@@ -111,31 +111,30 @@ const Surface<N, T, Color>* ray_intersect(
         }
         if (intersections.empty())
         {
-                return nullptr;
+                return ShapeIntersection<N, T, Color>(nullptr);
         }
 
         std::make_heap(intersections.begin(), intersections.end());
 
-        T min_distance_squared = Limits<T>::max();
-        const Surface<N, T, Color>* closest_surface = nullptr;
+        T min_distance = Limits<T>::max();
+        ShapeIntersection<N, T, Color> closest_intersection(nullptr);
 
         do
         {
                 const BoundingIntersection<N, T, Color>& bounding = intersections.front();
 
-                if (min_distance_squared < square(bounding.distance))
+                if (min_distance < bounding.distance)
                 {
                         break;
                 }
 
-                const Surface<N, T, Color>* surface = bounding.shape->intersect(ray, bounding.distance);
-                if (surface)
+                const ShapeIntersection<N, T, Color> intersection = bounding.shape->intersect(ray, bounding.distance);
+                if (intersection.surface)
                 {
-                        T distance_squared = (surface->point() - ray.org()).norm_squared();
-                        if (distance_squared < min_distance_squared)
+                        if (intersection.distance < min_distance)
                         {
-                                min_distance_squared = distance_squared;
-                                closest_surface = surface;
+                                min_distance = intersection.distance;
+                                closest_intersection = intersection;
                         }
                 }
 
@@ -143,7 +142,7 @@ const Surface<N, T, Color>* ray_intersect(
                 intersections.pop_back();
         } while (!intersections.empty());
 
-        return closest_surface;
+        return closest_intersection;
 }
 
 template <std::size_t N, typename T, typename Color>
@@ -231,7 +230,8 @@ class Impl final : public Scene<N, T, Color>
                 {
                         Vector<N, T> point;
                         const Surface<N, T, Color>* surface;
-                        explicit Info(const Surface<N, T, Color>* const surface) : surface(surface)
+                        explicit Info(const ShapeIntersection<N, T, Color>& intersection)
+                                : surface(intersection.surface)
                         {
                         }
                 };

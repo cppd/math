@@ -39,12 +39,12 @@ class Parallelotope final : public Shape<N, T, Color>
         const T alpha_;
         const bool alpha_nonzero_ = alpha_ > 0;
 
-        class IntersectionImpl final : public Surface<N, T, Color>
+        class SurfaceImpl final : public Surface<N, T, Color>
         {
                 const Parallelotope* obj_;
 
         public:
-                IntersectionImpl(const Vector<N, T>& point, const Parallelotope* obj)
+                SurfaceImpl(const Vector<N, T>& point, const Parallelotope* obj)
                         : Surface<N, T, Color>(point), obj_(obj)
                 {
                 }
@@ -122,9 +122,12 @@ public:
                 return std::nullopt;
         }
 
-        const Surface<N, T, Color>* intersect(const Ray<N, T>& ray, const T bounding_distance) const override
+        ShapeIntersection<N, T, Color> intersect(const Ray<N, T>& ray, const T bounding_distance) const override
         {
-                return make_arena_ptr<IntersectionImpl>(ray.point(bounding_distance), this);
+                ShapeIntersection<N, T, Color> intersection;
+                intersection.distance = bounding_distance;
+                intersection.surface = make_arena_ptr<SurfaceImpl>(ray.point(bounding_distance), this);
+                return intersection;
         }
 
         geometry::BoundingBox<N, T> bounding_box() const override

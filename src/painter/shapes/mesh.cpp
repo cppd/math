@@ -117,7 +117,7 @@ class Mesh final : public Shape<N, T, Color>
 
         std::optional<T> intersect_bounding(const Ray<N, T>& r) const override;
 
-        const Surface<N, T, Color>* intersect(const Ray<N, T>&, T bounding_distance) const override;
+        ShapeIntersection<N, T, Color> intersect(const Ray<N, T>&, T bounding_distance) const override;
 
         geometry::BoundingBox<N, T> bounding_box() const override;
 
@@ -147,7 +147,7 @@ public:
 };
 
 template <std::size_t N, typename T, typename Color>
-class IntersectionImpl final : public Surface<N, T, Color>
+class SurfaceImpl final : public Surface<N, T, Color>
 {
         const Mesh<N, T, Color>* mesh_;
         const MeshFacet<N, T>* facet_;
@@ -163,7 +163,7 @@ class IntersectionImpl final : public Surface<N, T, Color>
         }
 
 public:
-        IntersectionImpl(const Vector<N, T>& point, const Mesh<N, T, Color>* mesh, const MeshFacet<N, T>* facet)
+        SurfaceImpl(const Vector<N, T>& point, const Mesh<N, T, Color>* mesh, const MeshFacet<N, T>* facet)
                 : Surface<N, T, Color>(point), mesh_(mesh), facet_(facet)
         {
         }
@@ -395,14 +395,18 @@ std::optional<T> Mesh<N, T, Color>::intersect_bounding(const Ray<N, T>& r) const
 }
 
 template <std::size_t N, typename T, typename Color>
-const Surface<N, T, Color>* Mesh<N, T, Color>::intersect(const Ray<N, T>& ray, const T bounding_distance) const
+ShapeIntersection<N, T, Color> Mesh<N, T, Color>::intersect(const Ray<N, T>& ray, const T bounding_distance) const
 {
         std::optional<std::tuple<T, const MeshFacet<N, T>*>> v = tree_->intersect(ray, bounding_distance);
         if (!v)
         {
-                return nullptr;
+                return ShapeIntersection<N, T, Color>(nullptr);
         }
-        return make_arena_ptr<IntersectionImpl<N, T, Color>>(ray.point(std::get<0>(*v)), this, std::get<1>(*v));
+        const Vector<N, T> point = ray.point(std::get<0>(*v));
+        ShapeIntersection<N, T, Color> intersection;
+        intersection.distance = std::get<0>(*v);
+        intersection.surface = make_arena_ptr<SurfaceImpl<N, T, Color>>(point, this, std::get<1>(*v));
+        return intersection;
 }
 
 template <std::size_t N, typename T, typename Color>
