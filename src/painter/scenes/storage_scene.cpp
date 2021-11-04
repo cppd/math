@@ -17,6 +17,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "storage_scene.h"
 
+#include "ray_intersection.h"
+
 #include <src/color/color.h>
 #include <src/com/error.h>
 #include <src/com/thread.h>
@@ -25,8 +27,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/geometry/spatial/shape_intersection.h>
 #include <src/geometry/spatial/tree.h>
 
-#include <algorithm>
-#include <cmath>
+#include <optional>
 
 namespace ns::painter
 {
@@ -62,86 +63,6 @@ geometry::BoundingBox<N, T> compute_bounding_box(const std::vector<std::unique_p
                 bb.merge(shapes[i]->bounding_box());
         }
         return bb;
-}
-
-template <std::size_t N, typename T, typename Color>
-struct BoundingIntersection
-{
-        T distance;
-        const Shape<N, T, Color>* shape;
-
-        BoundingIntersection(const T& distance, const Shape<N, T, Color>* const shape)
-                : distance(distance), shape(shape)
-        {
-        }
-
-        bool operator<(const BoundingIntersection& b) const
-        {
-                return distance < b.distance;
-        }
-};
-
-template <std::size_t N, typename T, typename Color>
-ShapeIntersection<N, T, Color> ray_intersect(
-        const std::vector<const Shape<N, T, Color>*>& shapes,
-        const std::vector<int>& indices,
-        const Ray<N, T>& ray)
-{
-        if (indices.size() == 1)
-        {
-                std::optional<T> distance = shapes[indices.front()]->intersect_bounding(ray);
-                if (distance)
-                {
-                        return shapes[indices.front()]->intersect(ray, *distance);
-                }
-                return ShapeIntersection<N, T, Color>(nullptr);
-        }
-
-        thread_local std::vector<BoundingIntersection<N, T, Color>> intersections;
-        intersections.clear();
-        intersections.reserve(indices.size());
-        for (int index : indices)
-        {
-                std::optional<T> distance = shapes[index]->intersect_bounding(ray);
-                if (distance)
-                {
-                        intersections.emplace_back(*distance, shapes[index]);
-                }
-        }
-        if (intersections.empty())
-        {
-                return ShapeIntersection<N, T, Color>(nullptr);
-        }
-
-        std::make_heap(intersections.begin(), intersections.end());
-
-        T min_distance = Limits<T>::max();
-        ShapeIntersection<N, T, Color> closest_intersection(nullptr);
-
-        do
-        {
-                const BoundingIntersection<N, T, Color>& bounding = intersections.front();
-
-                if (min_distance < bounding.distance)
-                {
-                        break;
-                }
-
-                const ShapeIntersection<N, T, Color> intersection = bounding.shape->intersect(ray, bounding.distance);
-                if (intersection.surface)
-                {
-                        if (intersection.distance < min_distance)
-                        {
-                                min_distance = intersection.distance;
-                                closest_intersection = intersection;
-                        }
-                }
-
-                std::pop_heap(intersections.begin(), intersections.end());
-                intersections.pop_back();
-        } while (!intersections.empty());
-
-        return closest_intersection;
 }
 
 template <std::size_t N, typename T, typename Color>
@@ -236,7 +157,7 @@ class Impl final : public Scene<N, T, Color>
 
                 const auto f = [&](const std::vector<int>& shape_indices) -> std::optional<Info>
                 {
-                        Info info(ray_intersect(shape_pointers_, shape_indices, ray_with_offset));
+                        Info info(ray_intersection(shape_pointers_, shape_indices, ray_with_offset));
                         if (info.surface)
                         {
                                 info.point = info.surface->point();
