@@ -18,6 +18,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #pragma once
 
 #include "parallelotope_aa.h"
+#include "ray_intersection.h"
 #include "shape_intersection.h"
 #include "tree.h"
 
@@ -82,32 +83,6 @@ class ObjectTree final
                         progress);
 
                 return tree;
-        }
-
-        static std::optional<std::tuple<T, const Object*>> ray_intersection(
-                const std::vector<Object>& objects,
-                const std::vector<int>& indices,
-                const Ray<N, T>& ray)
-        {
-                T min = Limits<T>::max();
-                const Object* object = nullptr;
-
-                for (int index : indices)
-                {
-                        std::optional<T> distance = objects[index].intersect(ray);
-                        if (distance && *distance < min)
-                        {
-                                min = *distance;
-                                object = &objects[index];
-                        }
-                }
-
-                if (object)
-                {
-                        return std::make_tuple(min, object);
-                }
-
-                return std::nullopt;
         }
 
         const std::vector<Object>* const objects_;
