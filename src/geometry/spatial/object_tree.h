@@ -70,21 +70,6 @@ class ObjectTree final
                 }
         };
 
-        static Tree create_tree(
-                const int min_objects_per_box,
-                const std::vector<Object>& objects,
-                const BoundingBox<N, T>& bounding_box,
-                ProgressRatio* const progress)
-        {
-                const unsigned thread_count = hardware_concurrency();
-
-                Tree tree(
-                        min_objects_per_box, objects.size(), bounding_box, Intersections(objects), thread_count,
-                        progress);
-
-                return tree;
-        }
-
         const std::vector<Object>* const objects_;
         Tree tree_;
 
@@ -94,7 +79,13 @@ public:
                 const BoundingBox<N, T>& bounding_box,
                 const int min_objects_per_box,
                 ProgressRatio* const progress)
-                : objects_(objects), tree_(create_tree(min_objects_per_box, *objects_, bounding_box, progress))
+                : objects_(objects),
+                  tree_(min_objects_per_box,
+                        objects->size(),
+                        bounding_box,
+                        Intersections(*objects),
+                        hardware_concurrency(),
+                        progress)
         {
         }
 
