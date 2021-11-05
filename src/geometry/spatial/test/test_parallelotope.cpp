@@ -18,7 +18,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "../hyperplane_parallelotope.h"
 #include "../parallelotope.h"
 #include "../parallelotope_aa.h"
-#include "../shape_intersection.h"
+#include "../shape_overlap.h"
 #include "../testing/random_points.h"
 #include "../testing/random_vectors.h"
 
@@ -189,7 +189,7 @@ void test_constraints(RandomEngine& engine, const int point_count, const Paralle
 }
 
 template <typename RandomEngine, typename Parallelotope>
-void test_intersections(RandomEngine& engine, const int point_count, const Parallelotope& p)
+void test_overlap(RandomEngine& engine, const int point_count, const Parallelotope& p)
 {
         constexpr std::size_t N = Parallelotope::SPACE_DIMENSION;
         using T = typename Parallelotope::DataType;
@@ -393,7 +393,7 @@ void test_points(const int point_count)
                 print_message(to_string(p));
 
                 test_constraints(engine, point_count, p);
-                test_intersections(engine, point_count, p);
+                test_overlap(engine, point_count, p);
         }
 
         print_separator();
@@ -407,7 +407,7 @@ void test_points(const int point_count)
                 print_message(to_string(p));
 
                 test_constraints(engine, point_count, p);
-                test_intersections(engine, point_count, p);
+                test_overlap(engine, point_count, p);
         }
 
         print_separator();
@@ -486,30 +486,26 @@ void test_algorithms()
 }
 
 template <typename Parallelotope1, typename Parallelotope2>
-void test_intersection(
-        const Parallelotope1& p1,
-        const Parallelotope2& p2,
-        const bool with_intersection,
-        const std::string& text)
+void test_overlap(const Parallelotope1& p1, const Parallelotope2& p2, const bool overlap, const std::string& text)
 {
-        if (with_intersection != shape_intersection(p1, p2))
+        if (overlap != shapes_overlap(p1, p2))
         {
-                error("Error intersection " + text);
+                error("Error overlap " + text);
         }
 
-        print_message("intersection " + text);
+        print_message("overlap " + text);
 }
 
 template <typename Parallelotope>
-std::unique_ptr<ShapeIntersection<Parallelotope>> make_unique_wrapper(const Parallelotope* const p)
+std::unique_ptr<ShapeOverlap<Parallelotope>> make_shape_overlap(const Parallelotope* const p)
 {
-        return std::make_unique<ShapeIntersection<Parallelotope>>(p);
+        return std::make_unique<ShapeOverlap<Parallelotope>>(p);
 }
 
 template <std::size_t N, typename T>
-void test_intersections()
+void test_overlap()
 {
-        const std::string name = "Test parallelotope intersections in " + space_name(N);
+        const std::string name = "Test parallelotope overlap in " + space_name(N);
 
         constexpr std::array<T, N> EDGES = make_array_value<T, N>(1);
         constexpr Vector<N, T> ORG_0(0.0);
@@ -531,18 +527,18 @@ void test_intersections()
                 ParallelotopeAA<N, T> p3(ORG_2, EDGES);
                 ParallelotopeAA<N, T> p_big(ORG_BIG, EDGES_BIG);
 
-                std::unique_ptr w1 = make_unique_wrapper(&p1);
-                std::unique_ptr w2 = make_unique_wrapper(&p2);
-                std::unique_ptr w3 = make_unique_wrapper(&p3);
-                std::unique_ptr w_big = make_unique_wrapper(&p_big);
+                std::unique_ptr w1 = make_shape_overlap(&p1);
+                std::unique_ptr w2 = make_shape_overlap(&p2);
+                std::unique_ptr w3 = make_shape_overlap(&p3);
+                std::unique_ptr w_big = make_shape_overlap(&p_big);
 
-                test_intersection(*w1, *w2, true, "1-2");
-                test_intersection(*w2, *w3, true, "2-3");
-                test_intersection(*w1, *w3, false, "1-3");
+                test_overlap(*w1, *w2, true, "1-2");
+                test_overlap(*w2, *w3, true, "2-3");
+                test_overlap(*w1, *w3, false, "1-3");
 
-                test_intersection(*w1, *w_big, true, "1-big");
-                test_intersection(*w2, *w_big, true, "2-big");
-                test_intersection(*w3, *w_big, true, "3-big");
+                test_overlap(*w1, *w_big, true, "1-big");
+                test_overlap(*w2, *w_big, true, "2-big");
+                test_overlap(*w3, *w_big, true, "3-big");
         }
 
         print_separator();
@@ -554,18 +550,18 @@ void test_intersections()
                 Parallelotope<N, T> p3(ORG_2, to_edge_vector(EDGES));
                 Parallelotope<N, T> p_big(ORG_BIG, to_edge_vector(EDGES_BIG));
 
-                std::unique_ptr w1 = make_unique_wrapper(&p1);
-                std::unique_ptr w2 = make_unique_wrapper(&p2);
-                std::unique_ptr w3 = make_unique_wrapper(&p3);
-                std::unique_ptr w_big = make_unique_wrapper(&p_big);
+                std::unique_ptr w1 = make_shape_overlap(&p1);
+                std::unique_ptr w2 = make_shape_overlap(&p2);
+                std::unique_ptr w3 = make_shape_overlap(&p3);
+                std::unique_ptr w_big = make_shape_overlap(&p_big);
 
-                test_intersection(*w1, *w2, true, "1-2");
-                test_intersection(*w2, *w3, true, "2-3");
-                test_intersection(*w1, *w3, false, "1-3");
+                test_overlap(*w1, *w2, true, "1-2");
+                test_overlap(*w2, *w3, true, "2-3");
+                test_overlap(*w1, *w3, false, "1-3");
 
-                test_intersection(*w1, *w_big, true, "1-big");
-                test_intersection(*w2, *w_big, true, "2-big");
-                test_intersection(*w3, *w_big, true, "3-big");
+                test_overlap(*w1, *w_big, true, "1-big");
+                test_overlap(*w2, *w_big, true, "2-big");
+                test_overlap(*w3, *w_big, true, "3-big");
         }
 
         print_separator();
@@ -573,9 +569,9 @@ void test_intersections()
 }
 
 template <std::size_t N, typename T>
-void test_intersections_hyperplane()
+void test_overlap_hyperplane()
 {
-        const std::string name = "Test hyperplane parallelotope intersections in " + space_name(N);
+        const std::string name = "Test hyperplane parallelotope overlap in " + space_name(N);
 
         constexpr Vector<N, T> ORG(5);
         constexpr T SIZE = 1;
@@ -622,38 +618,38 @@ void test_intersections_hyperplane()
         HyperplaneParallelotope<N, T> p11(SMALL_8, EDGES_HYPER_SMALL);
         HyperplaneParallelotope<N, T> p12(SMALL_9, EDGES_HYPER_SMALL);
 
-        std::unique_ptr w1 = make_unique_wrapper(&p1);
-        std::unique_ptr w2 = make_unique_wrapper(&p2);
-        std::unique_ptr w3 = make_unique_wrapper(&p3);
-        std::unique_ptr w4 = make_unique_wrapper(&p4);
-        std::unique_ptr w5 = make_unique_wrapper(&p5);
-        std::unique_ptr w6 = make_unique_wrapper(&p6);
-        std::unique_ptr w7 = make_unique_wrapper(&p7);
-        std::unique_ptr w8 = make_unique_wrapper(&p8);
-        std::unique_ptr w9 = make_unique_wrapper(&p9);
-        std::unique_ptr w10 = make_unique_wrapper(&p10);
-        std::unique_ptr w11 = make_unique_wrapper(&p11);
-        std::unique_ptr w12 = make_unique_wrapper(&p12);
+        std::unique_ptr w1 = make_shape_overlap(&p1);
+        std::unique_ptr w2 = make_shape_overlap(&p2);
+        std::unique_ptr w3 = make_shape_overlap(&p3);
+        std::unique_ptr w4 = make_shape_overlap(&p4);
+        std::unique_ptr w5 = make_shape_overlap(&p5);
+        std::unique_ptr w6 = make_shape_overlap(&p6);
+        std::unique_ptr w7 = make_shape_overlap(&p7);
+        std::unique_ptr w8 = make_shape_overlap(&p8);
+        std::unique_ptr w9 = make_shape_overlap(&p9);
+        std::unique_ptr w10 = make_shape_overlap(&p10);
+        std::unique_ptr w11 = make_shape_overlap(&p11);
+        std::unique_ptr w12 = make_shape_overlap(&p12);
 
         auto test = [&](const auto& parallelotope)
         {
-                std::unique_ptr w = make_unique_wrapper(&parallelotope);
+                std::unique_ptr w = make_shape_overlap(&parallelotope);
 
-                test_intersection(*w1, *w, false, "1-p");
-                test_intersection(*w2, *w, true, "2-p");
-                test_intersection(*w3, *w, false, "3-p");
+                test_overlap(*w1, *w, false, "1-p");
+                test_overlap(*w2, *w, true, "2-p");
+                test_overlap(*w3, *w, false, "3-p");
 
-                test_intersection(*w4, *w, false, "4-p");
-                test_intersection(*w5, *w, true, "5-p");
-                test_intersection(*w6, *w, false, "6-p");
+                test_overlap(*w4, *w, false, "4-p");
+                test_overlap(*w5, *w, true, "5-p");
+                test_overlap(*w6, *w, false, "6-p");
 
-                test_intersection(*w7, *w, false, "7-p");
-                test_intersection(*w8, *w, false, "8-p");
-                test_intersection(*w9, *w, false, "9-p");
+                test_overlap(*w7, *w, false, "7-p");
+                test_overlap(*w8, *w, false, "8-p");
+                test_overlap(*w9, *w, false, "9-p");
 
-                test_intersection(*w10, *w, false, "10-p");
-                test_intersection(*w11, *w, true, "11-p");
-                test_intersection(*w12, *w, false, "12-p");
+                test_overlap(*w10, *w, false, "10-p");
+                test_overlap(*w11, *w, true, "11-p");
+                test_overlap(*w12, *w, false, "12-p");
         };
 
         constexpr std::array<T, N> EDGES = make_array_value<T, N>(SIZE);
@@ -679,8 +675,8 @@ void all_tests()
 
         test_points<N, T>(POINT_COUNT);
         test_algorithms<N, T>();
-        test_intersections<N, T>();
-        test_intersections_hyperplane<N, T>();
+        test_overlap<N, T>();
+        test_overlap_hyperplane<N, T>();
 }
 
 template <typename T>

@@ -21,7 +21,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <src/com/thread.h>
 #include <src/geometry/spatial/parallelotope_aa.h>
-#include <src/geometry/spatial/shape_intersection.h>
+#include <src/geometry/spatial/shape_overlap.h>
 #include <src/geometry/spatial/tree.h>
 
 namespace ns::painter
@@ -36,19 +36,19 @@ class ObjectTree final
 
         class Intersections final : public Tree::ObjectIntersections
         {
-                std::vector<std::function<bool(const geometry::ShapeIntersection<TreeParallelotope>&)>> wrappers_;
+                std::vector<std::function<bool(const geometry::ShapeOverlap<TreeParallelotope>&)>> overlap_functions_;
 
                 std::vector<int> indices(const TreeParallelotope& parallelotope, const std::vector<int>& indices)
                         const override
                 {
-                        geometry::ShapeIntersection p(&parallelotope);
+                        geometry::ShapeOverlap p(&parallelotope);
                         std::vector<int> intersections;
                         intersections.reserve(indices.size());
-                        for (int object_index : indices)
+                        for (const int index : indices)
                         {
-                                if (wrappers_[object_index](p))
+                                if (overlap_functions_[index](p))
                                 {
-                                        intersections.push_back(object_index);
+                                        intersections.push_back(index);
                                 }
                         }
                         return intersections;
@@ -57,10 +57,10 @@ class ObjectTree final
         public:
                 explicit Intersections(const std::vector<const Shape<N, T, Color>*>& objects)
                 {
-                        wrappers_.reserve(objects.size());
-                        for (const Shape<N, T, Color>* s : objects)
+                        overlap_functions_.reserve(objects.size());
+                        for (const Shape<N, T, Color>* const object : objects)
                         {
-                                wrappers_.push_back(s->intersection_function());
+                                overlap_functions_.push_back(object->overlap_function());
                         }
                 }
         };
@@ -112,7 +112,7 @@ public:
                         return std::nullopt;
                 };
 
-                const auto info = tree_.trace_ray(ray, *root_distance, f);
+                const auto info = tree_.intersect(ray, *root_distance, f);
                 return info ? info->surface : nullptr;
         }
 };

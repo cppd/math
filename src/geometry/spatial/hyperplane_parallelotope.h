@@ -19,6 +19,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "constraint.h"
 #include "hyperplane.h"
+#include "parallelotope_aa.h"
+#include "shape_overlap.h"
 
 #include <src/com/error.h>
 #include <src/numerical/complement.h>
@@ -96,6 +98,8 @@ public:
 
         const Vector<N, T>& org() const;
         const std::array<Vector<N, T>, N - 1>& vectors() const;
+
+        auto overlap_function() const;
 };
 
 template <std::size_t N, typename T>
@@ -333,5 +337,14 @@ template <std::size_t N, typename T>
 const std::array<Vector<N, T>, N - 1>& HyperplaneParallelotope<N, T>::vectors() const
 {
         return vectors_;
+}
+
+template <std::size_t N, typename T>
+auto HyperplaneParallelotope<N, T>::overlap_function() const
+{
+        return [s = geometry::ShapeOverlap(this)](const geometry::ShapeOverlap<geometry::ParallelotopeAA<N, T>>& p)
+        {
+                return geometry::shapes_overlap(s, p);
+        };
 }
 }

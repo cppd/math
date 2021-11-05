@@ -21,7 +21,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <src/geometry/spatial/bounding_box.h>
 #include <src/geometry/spatial/parallelotope_aa.h>
-#include <src/geometry/spatial/shape_intersection.h>
+#include <src/geometry/spatial/shape_overlap.h>
 #include <src/numerical/ray.h>
 
 #include <functional>
@@ -55,7 +55,7 @@ struct Shape
 
         virtual geometry::BoundingBox<N, T> bounding_box() const = 0;
 
-        virtual std::function<bool(const geometry::ShapeIntersection<geometry::ParallelotopeAA<N, T>>&)>
-                intersection_function() const = 0;
+        virtual std::function<bool(const geometry::ShapeOverlap<geometry::ParallelotopeAA<N, T>>&)> overlap_function()
+                const = 0;
 };
 }

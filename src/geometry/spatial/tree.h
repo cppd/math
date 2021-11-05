@@ -127,7 +127,7 @@ public:
         // };
         // std::optional<Info> f(const std::vector<int>& object_indices);
         template <typename ObjectIntersect>
-        std::invoke_result_t<ObjectIntersect, const std::vector<int>&> trace_ray(
+        std::invoke_result_t<ObjectIntersect, const std::vector<int>&> intersect(
                 Ray<N, T> ray,
                 const T root_t,
                 const ObjectIntersect& object_intersect) const

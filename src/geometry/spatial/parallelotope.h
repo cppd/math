@@ -24,6 +24,8 @@ Cambridge University Press, 2003.
 #pragma once
 
 #include "constraint.h"
+#include "parallelotope_aa.h"
+#include "shape_overlap.h"
 
 #include <src/com/arrays.h>
 #include <src/com/error.h>
@@ -142,6 +144,8 @@ public:
 
         const Vector<N, T>& org() const;
         const std::array<Vector<N, T>, N>& vectors() const;
+
+        auto overlap_function() const;
 };
 
 template <std::size_t N, typename T>
@@ -554,6 +558,15 @@ template <std::size_t N, typename T>
 const std::array<Vector<N, T>, N>& Parallelotope<N, T>::vectors() const
 {
         return vectors_;
+}
+
+template <std::size_t N, typename T>
+auto Parallelotope<N, T>::overlap_function() const
+{
+        return [s = geometry::ShapeOverlap(this)](const geometry::ShapeOverlap<geometry::ParallelotopeAA<N, T>>& p)
+        {
+                return geometry::shapes_overlap(s, p);
+        };
 }
 }
 

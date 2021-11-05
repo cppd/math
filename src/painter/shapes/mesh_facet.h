@@ -23,6 +23,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/geometry/spatial/bounding_box.h>
 #include <src/geometry/spatial/constraint.h>
 #include <src/geometry/spatial/hyperplane_simplex.h>
+#include <src/geometry/spatial/parallelotope_aa.h>
+#include <src/geometry/spatial/shape_overlap.h>
 #include <src/numerical/complement.h>
 #include <src/numerical/ray.h>
 #include <src/numerical/vec.h>
@@ -277,6 +279,15 @@ public:
                 }
                 ASSERT(n == EDGE_COUNT);
                 return result;
+        }
+
+        auto overlap_function() const
+        {
+                return [s = geometry::ShapeOverlap(this)](
+                               const geometry::ShapeOverlap<geometry::ParallelotopeAA<N, T>>& p)
+                {
+                        return geometry::shapes_overlap(s, p);
+                };
         }
 
         geometry::BoundingBox<N, T> bounding_box() const

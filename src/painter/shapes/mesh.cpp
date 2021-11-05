@@ -26,7 +26,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/com/log.h>
 #include <src/com/memory_arena.h>
 #include <src/geometry/spatial/object_tree.h>
-#include <src/geometry/spatial/shape_intersection.h>
+#include <src/geometry/spatial/parallelotope_aa.h>
 #include <src/shading/ggx_diffuse.h>
 
 namespace ns::painter
@@ -147,14 +147,14 @@ class Mesh final : public Shape<N, T, Color>
                 return bounding_box_;
         }
 
-        std::function<bool(const geometry::ShapeIntersection<geometry::ParallelotopeAA<N, T>>&)> intersection_function()
+        std::function<bool(const geometry::ShapeOverlap<geometry::ParallelotopeAA<N, T>>&)> overlap_function()
                 const override
         {
                 auto root = std::make_shared<geometry::ParallelotopeAA<N, T>>(bounding_box_.min(), bounding_box_.max());
-                return [root, w = geometry::ShapeIntersection(root.get())](
-                               const geometry::ShapeIntersection<geometry::ParallelotopeAA<N, T>>& p)
+                return [root = root, overlap_function = root->overlap_function()](
+                               const geometry::ShapeOverlap<geometry::ParallelotopeAA<N, T>>& p)
                 {
-                        return geometry::shape_intersection(w, p);
+                        return overlap_function(p);
                 };
         }
 

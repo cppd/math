@@ -31,7 +31,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 namespace ns::geometry
 {
-namespace shape_intersection_implementation
+namespace shape_overlap_implementation
 {
 template <typename T>
 constexpr std::size_t size()
@@ -40,7 +40,7 @@ constexpr std::size_t size()
 }
 
 template <typename Shape1, typename Shape2>
-bool shapes_intersect_by_vertices(const Shape1& shape_1, const Shape2& shape_2)
+bool shapes_overlap_by_vertices(const Shape1& shape_1, const Shape2& shape_2)
 {
         constexpr std::size_t N = Shape1::SPACE_DIMENSION;
         using T = typename Shape1::DataType;
@@ -82,7 +82,7 @@ bool line_segment_intersects_shape(const Vector<N, T>& org, const Vector<N, T>& 
 }
 
 template <typename Shape1, typename Shape2>
-bool shapes_intersect_by_edges(const Shape1& shape_1, const Shape2& shape_2)
+bool shapes_overlap_by_edges(const Shape1& shape_1, const Shape2& shape_2)
 {
         constexpr std::size_t N = Shape1::SPACE_DIMENSION;
         using T = typename Shape1::DataType;
@@ -138,7 +138,7 @@ bool all_vertices_are_only_on_one_side(const std::array<Vector<N, T>, V>& vertic
 }
 
 template <typename Shape1, typename Shape2>
-bool shapes_not_intersect_by_planes(const Shape1& shape_1, const Shape2& shape_2)
+bool shapes_not_overlap_by_planes(const Shape1& shape_1, const Shape2& shape_2)
 {
         constexpr std::size_t N = Shape1::SPACE_DIMENSION;
         using T = typename Shape1::DataType;
@@ -224,7 +224,7 @@ bool shapes_not_intersect_by_planes(const Shape1& shape_1, const Shape2& shape_2
 // }
 
 // template <typename Shape1, typename Shape2>
-// bool shapes_intersect_by_spaces(const Shape1& shape_1, const Shape2& shape_2)
+// bool shapes_overlap_by_spaces(const Shape1& shape_1, const Shape2& shape_2)
 // {
 //         constexpr std::size_t N = Shape1::SPACE_DIMENSION;
 //         using T = typename Shape1::DataType;
@@ -323,7 +323,7 @@ void static_checks(const Shape1& shape_1, const Shape2& shape_2)
 }
 
 template <typename Shape>
-class ShapeIntersection final
+class ShapeOverlap final
 {
         static_assert(Shape::SPACE_DIMENSION >= 4);
 
@@ -355,7 +355,7 @@ public:
         static constexpr std::size_t SHAPE_DIMENSION = Shape::SHAPE_DIMENSION;
         using DataType = T;
 
-        explicit ShapeIntersection(const Shape* const shape)
+        explicit ShapeOverlap(const Shape* const shape)
                 : shape_(shape), vertices_(shape->vertices()), constraints_(shape_->constraints())
         {
                 // min_ = find_min_vector(vertices_);
@@ -383,7 +383,7 @@ public:
 };
 
 template <typename Shape>
-requires(Shape::SPACE_DIMENSION == 3 || Shape::SPACE_DIMENSION == 2) class ShapeIntersection<Shape> final
+requires(Shape::SPACE_DIMENSION == 3 || Shape::SPACE_DIMENSION == 2) class ShapeOverlap<Shape> final
 {
         static constexpr std::size_t N = Shape::SPACE_DIMENSION;
 
@@ -400,7 +400,7 @@ public:
         static constexpr std::size_t SHAPE_DIMENSION = Shape::SHAPE_DIMENSION;
         using DataType = T;
 
-        explicit ShapeIntersection(const Shape* const shape)
+        explicit ShapeOverlap(const Shape* const shape)
                 : shape_(shape), vertices_(shape->vertices()), edges_(shape->edges())
         {
         }
@@ -427,32 +427,32 @@ public:
 };
 
 template <typename Shape1, typename Shape2>
-bool shape_intersection(const ShapeIntersection<Shape1>& shape_1, const ShapeIntersection<Shape2>& shape_2)
+bool shapes_overlap(const ShapeOverlap<Shape1>& shape_1, const ShapeOverlap<Shape2>& shape_2)
 {
-        namespace impl = shape_intersection_implementation;
+        namespace impl = shape_overlap_implementation;
 
         impl::static_checks(shape_1, shape_2);
 
         constexpr std::size_t N = Shape1::SPACE_DIMENSION;
 
-        if (impl::shapes_intersect_by_vertices(shape_1, shape_2))
+        if (impl::shapes_overlap_by_vertices(shape_1, shape_2))
         {
                 return true;
         }
 
         if constexpr (N <= 3)
         {
-                return impl::shapes_intersect_by_edges(shape_1, shape_2);
+                return impl::shapes_overlap_by_edges(shape_1, shape_2);
         }
         else
         {
-                return !impl::shapes_not_intersect_by_planes(shape_1, shape_2);
-                // if (impl::shapes_not_intersect_by_planes(shape_1, shape_2))
+                return !impl::shapes_not_overlap_by_planes(shape_1, shape_2);
+                // if (impl::shapes_not_overlap_by_planes(shape_1, shape_2))
                 // {
                 //         return false;
                 // }
                 //
-                // return (impl::shapes_intersect_by_spaces(shape_1, shape_2));
+                // return (impl::shapes_overlap_by_spaces(shape_1, shape_2));
         }
 }
 }

@@ -19,7 +19,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "parallelotope_aa.h"
 #include "ray_intersection.h"
-#include "shape_intersection.h"
+#include "shape_overlap.h"
 #include "tree.h"
 
 #include <src/com/thread.h>
@@ -41,19 +41,20 @@ class ObjectTree final
 
         class Intersections final : public Tree::ObjectIntersections
         {
-                std::vector<ShapeIntersection<Object>> wrappers_;
+                std::vector<std::remove_cvref_t<decltype(std::declval<Object>().overlap_function())>>
+                        overlap_functions_;
 
                 std::vector<int> indices(const TreeParallelotope& parallelotope, const std::vector<int>& indices)
                         const override
                 {
-                        ShapeIntersection p(&parallelotope);
+                        geometry::ShapeOverlap p(&parallelotope);
                         std::vector<int> intersections;
                         intersections.reserve(indices.size());
-                        for (int object_index : indices)
+                        for (const int index : indices)
                         {
-                                if (shape_intersection(p, wrappers_[object_index]))
+                                if (overlap_functions_[index](p))
                                 {
-                                        intersections.push_back(object_index);
+                                        intersections.push_back(index);
                                 }
                         }
                         return intersections;
@@ -62,10 +63,10 @@ class ObjectTree final
         public:
                 explicit Intersections(const std::vector<Object>& objects)
                 {
-                        wrappers_.reserve(objects.size());
-                        for (const Object& t : objects)
+                        overlap_functions_.reserve(objects.size());
+                        for (const Object& object : objects)
                         {
-                                wrappers_.emplace_back(&t);
+                                overlap_functions_.push_back(object.overlap_function());
                         }
                 }
         };
@@ -117,7 +118,7 @@ public:
                         return std::nullopt;
                 };
 
-                const auto info = tree_.trace_ray(ray, root_distance, f);
+                const auto info = tree_.intersect(ray, root_distance, f);
                 if (info)
                 {
                         return info->intersection;
