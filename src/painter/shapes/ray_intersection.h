@@ -17,7 +17,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
-#include "../shapes/shape.h"
+#include "shape.h"
 
 #include <src/com/type/limit.h>
 #include <src/numerical/ray.h>

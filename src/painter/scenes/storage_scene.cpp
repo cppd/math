@@ -17,15 +17,11 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "storage_scene.h"
 
-#include "ray_intersection.h"
+#include "../shapes/object_tree.h"
 
 #include <src/color/color.h>
 #include <src/com/error.h>
-#include <src/com/thread.h>
 #include <src/com/type/limit.h>
-#include <src/geometry/spatial/parallelotope_aa.h>
-#include <src/geometry/spatial/shape_intersection.h>
-#include <src/geometry/spatial/tree.h>
 
 #include <optional>
 
@@ -33,14 +29,6 @@ namespace ns::painter
 {
 namespace
 {
-constexpr int TREE_MIN_OBJECTS_PER_BOX = 10;
-
-template <std::size_t N, typename T>
-using TreeParallelotope = geometry::ParallelotopeAA<N, T>;
-
-template <std::size_t N, typename T>
-using Tree = geometry::SpatialSubdivisionTree<TreeParallelotope<N, T>>;
-
 template <typename P>
 std::vector<P*> to_pointers(const std::vector<std::unique_ptr<P>>& objects)
 {
@@ -66,53 +54,6 @@ geometry::BoundingBox<N, T> compute_bounding_box(const std::vector<std::unique_p
 }
 
 template <std::size_t N, typename T, typename Color>
-class Intersections final : public Tree<N, T>::ObjectIntersections
-{
-        std::vector<std::function<bool(const geometry::ShapeIntersection<TreeParallelotope<N, T>>&)>> wrappers_;
-
-        std::vector<int> indices(const TreeParallelotope<N, T>& parallelotope, const std::vector<int>& indices)
-                const override
-        {
-                geometry::ShapeIntersection p(&parallelotope);
-                std::vector<int> intersections;
-                intersections.reserve(indices.size());
-                for (int object_index : indices)
-                {
-                        if (wrappers_[object_index](p))
-                        {
-                                intersections.push_back(object_index);
-                        }
-                }
-                return intersections;
-        }
-
-public:
-        explicit Intersections(const std::vector<const Shape<N, T, Color>*>& shapes)
-        {
-                wrappers_.reserve(shapes.size());
-                for (const Shape<N, T, Color>* s : shapes)
-                {
-                        wrappers_.push_back(s->intersection_function());
-                }
-        }
-};
-
-template <std::size_t N, typename T, typename Color>
-Tree<N, T> create_tree(
-        const std::vector<const Shape<N, T, Color>*>& shapes,
-        const geometry::BoundingBox<N, T>& bounding_box)
-{
-        ProgressRatio progress(nullptr);
-
-        const unsigned thread_count = hardware_concurrency();
-
-        Tree<N, T> tree(
-                TREE_MIN_OBJECTS_PER_BOX, shapes.size(), bounding_box, Intersections(shapes), thread_count, &progress);
-
-        return tree;
-}
-
-template <std::size_t N, typename T, typename Color>
 class Impl final : public Scene<N, T, Color>
 {
         static constexpr int RAY_OFFSET_IN_EPSILONS = 1000;
@@ -121,53 +62,20 @@ class Impl final : public Scene<N, T, Color>
 
         std::vector<std::unique_ptr<const Shape<N, T, Color>>> shapes_;
         std::vector<std::unique_ptr<const LightSource<N, T, Color>>> light_sources_;
-
         std::unique_ptr<const Projector<N, T>> projector_;
-
         Color background_light_;
 
         std::vector<const Shape<N, T, Color>*> shape_pointers_;
         std::vector<const LightSource<N, T, Color>*> light_source_pointers_;
 
         T ray_offset_;
-
-        Tree<N, T> tree_;
+        ObjectTree<N, T, Color> tree_;
 
         const Surface<N, T, Color>* intersect(const Ray<N, T>& ray) const override
         {
                 ++thread_ray_count_;
 
-                const Ray<N, T> ray_with_offset = Ray<N, T>(ray).move(ray_offset_);
-
-                std::optional<T> root = tree_.intersect_root(ray_with_offset);
-                if (!root)
-                {
-                        return nullptr;
-                }
-
-                struct Info
-                {
-                        Vector<N, T> point;
-                        const Surface<N, T, Color>* surface;
-                        explicit Info(const ShapeIntersection<N, T, Color>& intersection)
-                                : surface(intersection.surface)
-                        {
-                        }
-                };
-
-                const auto f = [&](const std::vector<int>& shape_indices) -> std::optional<Info>
-                {
-                        Info info(ray_intersection(shape_pointers_, shape_indices, ray_with_offset));
-                        if (info.surface)
-                        {
-                                info.point = info.surface->point();
-                                return info;
-                        }
-                        return std::nullopt;
-                };
-
-                const auto info = tree_.trace_ray(ray_with_offset, *root, f);
-                return info ? info->surface : nullptr;
+                return tree_.intersect(Ray<N, T>(ray).move(ray_offset_));
         }
 
         const std::vector<const LightSource<N, T, Color>*>& light_sources() const override
@@ -191,6 +99,7 @@ class Impl final : public Scene<N, T, Color>
         }
 
         Impl(const geometry::BoundingBox<N, T>& bounding_box,
+             ProgressRatio&& progress,
              const Color& background_light,
              std::unique_ptr<const Projector<N, T>>&& projector,
              std::vector<std::unique_ptr<const LightSource<N, T, Color>>>&& light_sources,
@@ -202,7 +111,7 @@ class Impl final : public Scene<N, T, Color>
                   shape_pointers_(to_pointers(shapes_)),
                   light_source_pointers_(to_pointers(light_sources_)),
                   ray_offset_(bounding_box.diagonal().norm() * (RAY_OFFSET_IN_EPSILONS * Limits<T>::epsilon())),
-                  tree_(create_tree(shape_pointers_, bounding_box))
+                  tree_(&shape_pointers_, bounding_box, &progress)
         {
                 ASSERT(projector_);
         }
@@ -213,6 +122,7 @@ public:
              std::vector<std::unique_ptr<const LightSource<N, T, Color>>>&& light_sources,
              std::vector<std::unique_ptr<const Shape<N, T, Color>>>&& shapes)
                 : Impl(compute_bounding_box(shapes),
+                       ProgressRatio(nullptr),
                        background_light,
                        std::move(projector),
                        std::move(light_sources),
