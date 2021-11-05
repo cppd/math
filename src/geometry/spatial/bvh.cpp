@@ -15,7 +15,7 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include "bvh_tree.h"
+#include "bvh.h"
 
 #include "bvh_build.h"
 
@@ -59,7 +59,7 @@ unsigned make_depth_first_order(
 }
 
 template <std::size_t N, typename T>
-BvhTree<N, T>::BvhTree(const std::span<BvhObject<N, T>>& objects)
+Bvh<N, T>::Bvh(const std::span<BvhObject<N, T>>& objects)
 {
         BvhBuild build(objects);
         ASSERT(!build.object_indices().empty());
@@ -75,7 +75,7 @@ BvhTree<N, T>::BvhTree(const std::span<BvhObject<N, T>>& objects)
         ASSERT(nodes_.size() == build.nodes().size());
 }
 
-#define BVH_TREE_INSTANTIATION_N_T(N, T) template class BvhTree<(N), T>;
+#define BVH_TREE_INSTANTIATION_N_T(N, T) template class Bvh<(N), T>;
 
 #define BVH_TREE_INSTANTIATION_N(N)            \
         BVH_TREE_INSTANTIATION_N_T((N), float) \

@@ -38,7 +38,7 @@ Elsevier, 2017.
 namespace ns::geometry
 {
 template <std::size_t N, typename T>
-class BvhTree final
+class Bvh final
 {
         static constexpr unsigned STACK_SIZE = 64;
 
@@ -80,7 +80,7 @@ class BvhTree final
         std::vector<Node> nodes_;
 
 public:
-        explicit BvhTree(const std::span<BvhObject<N, T>>& objects);
+        explicit Bvh(const std::span<BvhObject<N, T>>& objects);
 
         // The signature of the object_intersect function
         // struct Info
