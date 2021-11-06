@@ -23,10 +23,12 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <src/color/color.h>
 #include <src/com/chrono.h>
+#include <src/com/error.h>
 #include <src/com/log.h>
 #include <src/com/memory_arena.h>
-#include <src/geometry/spatial/object_tree.h>
-#include <src/geometry/spatial/parallelotope_aa.h>
+#include <src/com/print.h>
+#include <src/com/type/limit.h>
+#include <src/geometry/spatial/object_bvh.h>
 #include <src/shading/ggx_diffuse.h>
 
 namespace ns::painter
@@ -112,25 +114,37 @@ public:
         }
 };
 
-template <std::size_t N, typename T, typename Color>
-class Mesh final : public Shape<N, T, Color>
+template <std::size_t N, typename T>
+geometry::ObjectBvh<N, T, MeshFacet<N, T>> create_object_bvh(
+        const std::vector<MeshFacet<N, T>>* const facets,
+        ProgressRatio* const progress)
 {
-        static constexpr int TREE_MIN_OBJECTS_PER_BOX = 10;
+        progress->set_text("Creating painter mesh BVH");
 
+        const Clock::time_point start_time = Clock::now();
+
+        geometry::ObjectBvh<N, T, MeshFacet<N, T>> object_bvh(facets, progress);
+
+        LOG("Painter mesh BVH created, " + to_string_fixed(duration_from(start_time), 5) + " s");
+
+        return object_bvh;
+}
+
+template <std::size_t N, typename T, typename Color>
+class ShapeImpl final : public Shape<N, T, Color>
+{
         MeshData<N, T, Color> mesh_data_;
+        std::optional<geometry::ObjectBvh<N, T, MeshFacet<N, T>>> object_bvh_;
         geometry::BoundingBox<N, T> bounding_box_;
-        std::optional<geometry::ObjectTree<N, T, MeshFacet<N, T>>> tree_;
-
-        //
 
         std::optional<T> intersect_bounding(const Ray<N, T>& ray) const override
         {
-                return tree_->intersect_root(ray);
+                return object_bvh_->intersect_root(ray, Limits<T>::max());
         }
 
-        ShapeIntersection<N, T, Color> intersect(const Ray<N, T>& ray, const T bounding_distance) const override
+        ShapeIntersection<N, T, Color> intersect(const Ray<N, T>& ray, const T /*bounding_distance*/) const override
         {
-                std::optional<std::tuple<T, const MeshFacet<N, T>*>> v = tree_->intersect(ray, bounding_distance);
+                std::optional<std::tuple<T, const MeshFacet<N, T>*>> v = object_bvh_->intersect(ray, Limits<T>::max());
                 if (!v)
                 {
                         return ShapeIntersection<N, T, Color>(nullptr);
@@ -159,16 +173,11 @@ class Mesh final : public Shape<N, T, Color>
         }
 
 public:
-        Mesh(const std::vector<const mesh::MeshObject<N>*>& mesh_objects, ProgressRatio* const progress)
-                : mesh_data_(mesh_objects), bounding_box_(compute_bounding_box(mesh_data_))
+        ShapeImpl(const std::vector<const mesh::MeshObject<N>*>& mesh_objects, ProgressRatio* const progress)
+                : mesh_data_(mesh_objects),
+                  object_bvh_(create_object_bvh(&mesh_data_.facets(), progress)),
+                  bounding_box_(object_bvh_->bounding_box())
         {
-                progress->set_text(to_string(1 << N) + "-tree: %v of %m");
-
-                const Clock::time_point start_time = Clock::now();
-
-                tree_.emplace(&mesh_data_.facets(), bounding_box_, TREE_MIN_OBJECTS_PER_BOX, progress);
-
-                LOG("Painter mesh tree created, " + to_string_fixed(duration_from(start_time), 5) + " s");
         }
 };
 }
@@ -178,7 +187,7 @@ std::unique_ptr<Shape<N, T, Color>> create_mesh(
         const std::vector<const mesh::MeshObject<N>*>& mesh_objects,
         ProgressRatio* const progress)
 {
-        return std::make_unique<Mesh<N, T, Color>>(mesh_objects, progress);
+        return std::make_unique<ShapeImpl<N, T, Color>>(mesh_objects, progress);
 }
 
 #define CREATE_MESH_INSTANTIATION_N_T_C(N, T, C)                \

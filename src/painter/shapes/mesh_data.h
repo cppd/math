@@ -20,14 +20,12 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "mesh_facet.h"
 #include "mesh_texture.h"
 
-#include <src/color/color.h>
 #include <src/com/chrono.h>
 #include <src/com/error.h>
 #include <src/com/log.h>
 #include <src/com/print.h>
 #include <src/model/mesh_object.h>
 #include <src/numerical/transform.h>
-#include <src/progress/progress.h>
 
 #include <algorithm>
 #include <vector>
@@ -288,22 +286,4 @@ public:
                 return facets_;
         }
 };
-
-template <std::size_t N, typename T, typename Color>
-geometry::BoundingBox<N, T> compute_bounding_box(const MeshData<N, T, Color>& mesh_data)
-{
-        const std::vector<MeshFacet<N, T>>& facets = mesh_data.facets();
-
-        if (facets.empty())
-        {
-                error("No mesh facets for bounding box computing");
-        }
-
-        geometry::BoundingBox<N, T> box = facets[0].bounding_box();
-        for (std::size_t i = 1; i < facets.size(); ++i)
-        {
-                box.merge(facets[i].bounding_box());
-        }
-        return box;
-}
 }

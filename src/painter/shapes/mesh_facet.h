@@ -150,16 +150,6 @@ public:
                 error("Mesh facet texture coordinates request when there are no texture coordinates");
         }
 
-        std::optional<T> intersect(const Ray<N, T>& ray) const
-        {
-                return simplex_.intersect(ray);
-        }
-
-        const Vector<N, T>& geometric_normal() const
-        {
-                return simplex_.normal();
-        }
-
         Vector<N, T> shading_normal(const Vector<N, T>& point) const
         {
                 switch (normal_type_)
@@ -190,9 +180,21 @@ public:
                 error_fatal("Unknown mesh facet normal type " + to_string(enum_to_int(normal_type_)));
         }
 
-        decltype(auto) overlap_function() const
+        //
+
+        static decltype(auto) intersection_cost()
         {
-                return simplex_.overlap_function();
+                return decltype(simplex_)::intersection_cost();
+        }
+
+        decltype(auto) intersect(const Ray<N, T>& ray) const
+        {
+                return simplex_.intersect(ray);
+        }
+
+        decltype(auto) geometric_normal() const
+        {
+                return simplex_.normal();
         }
 
         decltype(auto) bounding_box() const
