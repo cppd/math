@@ -17,7 +17,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
-#include <src/com/type/limit.h>
 #include <src/numerical/ray.h>
 
 #include <optional>
@@ -29,9 +28,10 @@ template <std::size_t N, typename T, typename Object, typename Indices>
 std::optional<std::tuple<T, const Object*>> ray_intersection(
         const std::vector<Object>& objects,
         const Indices& indices,
-        const Ray<N, T>& ray)
+        const Ray<N, T>& ray,
+        const T& max_distance)
 {
-        T min_distance = Limits<T>::max();
+        T min_distance = max_distance;
         const Object* closest_object = nullptr;
 
         for (const auto index : indices)

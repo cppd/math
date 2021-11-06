@@ -23,6 +23,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "tree.h"
 
 #include <src/com/thread.h>
+#include <src/com/type/limit.h>
 
 #include <optional>
 #include <tuple>
@@ -106,7 +107,7 @@ public:
 
                 const auto f = [&](const std::vector<int>& object_indices) -> std::optional<Info>
                 {
-                        Info info(ray_intersection(*objects_, object_indices, ray));
+                        Info info(ray_intersection(*objects_, object_indices, ray, Limits<T>::max()));
                         if (info.intersection)
                         {
                                 info.point = ray.point(std::get<0>(*info.intersection));
