@@ -18,7 +18,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #pragma once
 
 #include "sphere_bucket.h"
-#include "sphere_facet.h"
 #include "sphere_intersection.h"
 
 #include "../sphere_uniform.h"
@@ -28,7 +27,9 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/com/thread.h>
 #include <src/geometry/shapes/sphere_area.h>
 #include <src/geometry/shapes/sphere_create.h>
+#include <src/geometry/shapes/sphere_simplex.h>
 #include <src/geometry/spatial/bounding_box.h>
+#include <src/geometry/spatial/hyperplane_mesh_simplex.h>
 #include <src/geometry/spatial/object_tree.h>
 #include <src/numerical/vec.h>
 #include <src/progress/progress.h>
@@ -53,7 +54,7 @@ class SphereDistribution final
         struct Sphere final
         {
                 std::vector<Vector<N, T>> vertices;
-                std::vector<SphereFacet<N, T>> facets;
+                std::vector<geometry::HyperplaneMeshSimplex<N, T>> facets;
 
                 Sphere()
                 {
@@ -88,10 +89,42 @@ class SphereDistribution final
                 return box;
         }
 
+        static double sphere_facet_area(
+                const std::array<Vector<N, T>, N>& vertices,
+                const long long uniform_count,
+                const long long all_uniform_count)
+        {
+                const double area =
+                        static_cast<double>(uniform_count) / all_uniform_count * geometry::SPHERE_AREA<N, double>;
+
+                if constexpr (N != 3)
+                {
+                        return area;
+                }
+                else
+                {
+                        const double geometry_area = geometry::sphere_simplex_area(vertices);
+
+                        const double relative_error = std::abs(area - geometry_area) / std::max(geometry_area, area);
+                        if (!(relative_error < 0.025))
+                        {
+                                std::ostringstream oss;
+                                oss << "sphere area relative error = " << relative_error << '\n';
+                                oss << "sphere area = " << area << '\n';
+                                oss << "geometry sphere area = " << geometry_area << '\n';
+                                oss << "uniform count = " << uniform_count << '\n';
+                                oss << "all uniform count = " << all_uniform_count;
+                                error(oss.str());
+                        }
+
+                        return geometry_area;
+                }
+        }
+
         //
 
         Sphere sphere_;
-        geometry::ObjectTree<SphereFacet<N, T>> tree_;
+        geometry::ObjectTree<N, T, geometry::HyperplaneMeshSimplex<N, T>> tree_;
 
         //
 
@@ -233,7 +266,7 @@ public:
                         const SphereBucket<N, T>& bucket = buckets[i];
 
                         const T bucket_area =
-                                sphere_facet_area(sphere_.facets[i], bucket.uniform_count(), uniform_count);
+                                sphere_facet_area(sphere_.facets[i].vertices(), bucket.uniform_count(), uniform_count);
                         const T sampled_distribution = T(bucket.sample_count()) / sample_count;
                         const T sampled_density = sampled_distribution / bucket_area;
                         const T expected_density = bucket.pdf();

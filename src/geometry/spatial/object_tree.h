@@ -30,12 +30,9 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 namespace ns::geometry
 {
-template <typename Object>
+template <std::size_t N, typename T, typename Object>
 class ObjectTree final
 {
-        static constexpr std::size_t N = Object::SPACE_DIMENSION;
-        using T = typename Object::DataType;
-
         using TreeParallelotope = ParallelotopeAA<N, T>;
         using Tree = SpatialSubdivisionTree<TreeParallelotope>;
 

@@ -17,10 +17,9 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
-#include "sphere_facet.h"
-
 #include <src/com/error.h>
 #include <src/com/random/engine.h>
+#include <src/geometry/spatial/hyperplane_mesh_simplex.h>
 #include <src/geometry/spatial/object_tree.h>
 
 #include <sstream>
@@ -31,8 +30,8 @@ namespace ns::sampling::testing
 template <std::size_t N, typename T, typename RandomEngine>
 class SphereIntersection final
 {
-        const geometry::ObjectTree<SphereFacet<N, T>>* const tree_;
-        const std::vector<SphereFacet<N, T>>* const facets_;
+        const geometry::ObjectTree<N, T, geometry::HyperplaneMeshSimplex<N, T>>* const tree_;
+        const std::vector<geometry::HyperplaneMeshSimplex<N, T>>* const facets_;
 
         RandomEngine random_engine_ = create_engine<RandomEngine>();
         long long intersection_count_ = 0;
@@ -40,8 +39,8 @@ class SphereIntersection final
 
 public:
         SphereIntersection(
-                const geometry::ObjectTree<SphereFacet<N, T>>* tree,
-                const std::vector<SphereFacet<N, T>>* facets)
+                const geometry::ObjectTree<N, T, geometry::HyperplaneMeshSimplex<N, T>>* tree,
+                const std::vector<geometry::HyperplaneMeshSimplex<N, T>>* facets)
                 : tree_(tree), facets_(facets)
         {
         }
@@ -56,7 +55,7 @@ public:
                         const std::optional<T> root_distance = tree_->intersect_root(ray);
                         ASSERT(root_distance && *root_distance == 0);
 
-                        const std::optional<std::tuple<T, const SphereFacet<N, T>*>> v =
+                        const std::optional<std::tuple<T, const geometry::HyperplaneMeshSimplex<N, T>*>> v =
                                 tree_->intersect(ray, *root_distance);
                         if (v)
                         {

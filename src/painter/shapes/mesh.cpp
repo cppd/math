@@ -119,7 +119,7 @@ class Mesh final : public Shape<N, T, Color>
 
         MeshData<N, T, Color> mesh_data_;
         geometry::BoundingBox<N, T> bounding_box_;
-        std::optional<geometry::ObjectTree<MeshFacet<N, T>>> tree_;
+        std::optional<geometry::ObjectTree<N, T, MeshFacet<N, T>>> tree_;
 
         //
 
