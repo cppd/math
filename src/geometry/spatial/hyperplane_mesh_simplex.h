@@ -23,6 +23,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "parallelotope_aa.h"
 #include "shape_overlap.h"
 
+#include "testing/hyperplane_simplex_intersection.h"
+
 #include <src/com/combinatorics.h>
 #include <src/com/error.h>
 #include <src/com/print.h>
@@ -64,6 +66,11 @@ public:
         static constexpr std::size_t SHAPE_DIMENSION = N - 1;
 
         using DataType = T;
+
+        static T intersection_cost()
+        {
+                return spatial::testing::hyperplane_simplex::intersection_cost<N, T>();
+        }
 
         HyperplaneMeshSimplex(const std::vector<Vector<N, T>>* const vertices, const std::array<int, N>& vertex_indices)
                 : vertices_(vertices),
