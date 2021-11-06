@@ -134,12 +134,14 @@ class BvhBuild final
                         }
                         else
                         {
-                                unsigned offset = create_indices(task->objects.size());
-                                for (const BvhObject<N, T>& object : task->objects)
+                                const unsigned count = task->objects.size();
+                                const unsigned offset = create_indices(count);
+                                *task->node = BvhBuildNode<N, T>(task->bounds, offset, count);
+                                for (auto iter = object_indices_.begin() + offset;
+                                     const BvhObject<N, T>& object : task->objects)
                                 {
-                                        object_indices_[offset++] = object.index();
+                                        *iter++ = object.index();
                                 }
-                                *task->node = BvhBuildNode<N, T>(task->bounds, offset, task->objects.size());
                         }
                 }
         }

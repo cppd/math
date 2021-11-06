@@ -49,9 +49,9 @@ unsigned make_depth_first_order(
                 dst.object_count = src.object_index_count;
                 const auto begin = build.object_indices().cbegin() + src.object_index_offset;
                 const auto end = begin + src.object_index_count;
-                for (auto i = begin; i != end; ++i)
+                for (auto iter = begin; iter != end; ++iter)
                 {
-                        object_indices->push_back(*i);
+                        object_indices->push_back(*iter);
                 }
         }
         return dst_index;
@@ -59,9 +59,10 @@ unsigned make_depth_first_order(
 }
 
 template <std::size_t N, typename T>
-Bvh<N, T>::Bvh(const std::span<BvhObject<N, T>>& objects)
+Bvh<N, T>::Bvh(std::vector<BvhObject<N, T>>&& objects, ProgressRatio* /*progress*/)
 {
-        BvhBuild build(objects);
+        BvhBuild build(std::span(std::data(objects), std::size(objects)));
+
         ASSERT(!build.object_indices().empty());
         ASSERT(!build.nodes().empty());
 

@@ -29,6 +29,7 @@ Elsevier, 2017.
 #include "bvh_object.h"
 
 #include <src/com/error.h>
+#include <src/progress/progress.h>
 
 #include <array>
 #include <span>
@@ -80,7 +81,17 @@ class Bvh final
         std::vector<Node> nodes_;
 
 public:
-        explicit Bvh(const std::span<BvhObject<N, T>>& objects);
+        explicit Bvh(std::vector<BvhObject<N, T>>&& objects, ProgressRatio* progress);
+
+        const BoundingBox<N, T>& bounding_box() const
+        {
+                return nodes_[0].bounds;
+        }
+
+        std::optional<T> intersect_root(const Ray<N, T>& ray, const T& max_distance) const
+        {
+                return nodes_[0].bounds.intersect(ray, max_distance);
+        }
 
         // The signature of the object_intersect function
         // struct Info
@@ -124,9 +135,7 @@ public:
                                         continue;
                                 }
                                 auto info = object_intersect(
-                                        std::span<const unsigned>(
-                                                std::to_address(object_indices_.cbegin() + node.object_offset),
-                                                node.object_count),
+                                        std::span(object_indices_.data() + node.object_offset, node.object_count),
                                         std::as_const(distance));
                                 static_assert(std::is_same_v<decltype(info), decltype(result)>);
                                 static_assert(std::is_same_v<T, decltype(info->distance)>);
