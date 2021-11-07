@@ -19,6 +19,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "sphere_bucket.h"
 #include "sphere_intersection.h"
+#include "sphere_mesh.h"
 
 #include "../sphere_uniform.h"
 
@@ -26,15 +27,11 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/com/print.h>
 #include <src/com/thread.h>
 #include <src/geometry/shapes/sphere_area.h>
-#include <src/geometry/shapes/sphere_create.h>
 #include <src/geometry/shapes/sphere_simplex.h>
-#include <src/geometry/spatial/bounding_box.h>
-#include <src/geometry/spatial/hyperplane_mesh_simplex.h>
-#include <src/geometry/spatial/object_tree.h>
-#include <src/numerical/vec.h>
 #include <src/progress/progress.h>
 
 #include <array>
+#include <atomic>
 #include <cmath>
 #include <future>
 #include <sstream>
@@ -45,136 +42,54 @@ namespace ns::sampling::testing
 template <std::size_t N, typename T>
 class SphereDistribution final
 {
-        static constexpr int TREE_MIN_OBJECTS_PER_BOX = 5;
-
-        //
-
         static constexpr unsigned BUCKET_MIN_COUNT = 100 * (1 << N);
 
-        struct Sphere final
-        {
-                std::vector<Vector<N, T>> vertices;
-                std::vector<geometry::HyperplaneMeshSimplex<N, T>> facets;
+        SphereMesh<N, T> sphere_mesh_;
 
-                Sphere()
-                {
-                        std::vector<std::array<int, N>> sphere_facets;
-                        geometry::create_sphere(BUCKET_MIN_COUNT, &vertices, &sphere_facets);
-                        ASSERT(sphere_facets.size() >= BUCKET_MIN_COUNT);
-
-                        facets.reserve(sphere_facets.size());
-                        for (const std::array<int, N>& vertex_indices : sphere_facets)
-                        {
-                                facets.emplace_back(&vertices, vertex_indices);
-                        }
-                }
-
-                Sphere(const Sphere&) = delete;
-                Sphere(Sphere&&) = delete;
-                Sphere& operator=(const Sphere&) = delete;
-                Sphere& operator=(Sphere&&) = delete;
-        };
-
-        static geometry::BoundingBox<N, T> compute_bounding_box(const Sphere& sphere)
-        {
-                if (sphere.facets.empty())
-                {
-                        error("No sphere facets");
-                }
-                geometry::BoundingBox<N, T> box = sphere.facets[0].bounding_box();
-                for (std::size_t i = 1; i < sphere.facets.size(); ++i)
-                {
-                        box.merge(sphere.facets[i].bounding_box());
-                }
-                return box;
-        }
-
-        static double sphere_facet_area(
-                const std::array<Vector<N, T>, N>& vertices,
+        double sphere_facet_area(
+                const unsigned facet_index,
                 const long long uniform_count,
-                const long long all_uniform_count)
+                const long long all_uniform_count) const
         {
                 const double area =
                         static_cast<double>(uniform_count) / all_uniform_count * geometry::SPHERE_AREA<N, double>;
 
-                if constexpr (N != 3)
+                constexpr bool FUNCTION = requires
                 {
-                        return area;
-                }
-                else
-                {
-                        const double geometry_area = geometry::sphere_simplex_area(vertices);
+                        geometry::sphere_simplex_area(sphere_mesh_.facet_vertices(facet_index));
+                };
+                static_assert(FUNCTION || N >= 4);
 
+                if constexpr (FUNCTION)
+                {
+                        const std::array<Vector<N, T>, N> vertices = sphere_mesh_.facet_vertices(facet_index);
+                        const double geometry_area = geometry::sphere_simplex_area(vertices);
                         const double relative_error = std::abs(area - geometry_area) / std::max(geometry_area, area);
-                        if (!(relative_error < 0.025))
+
+                        if (relative_error < 0.025)
                         {
-                                std::ostringstream oss;
-                                oss << "sphere area relative error = " << relative_error << '\n';
-                                oss << "sphere area = " << area << '\n';
-                                oss << "geometry sphere area = " << geometry_area << '\n';
-                                oss << "uniform count = " << uniform_count << '\n';
-                                oss << "all uniform count = " << all_uniform_count;
-                                error(oss.str());
+                                return geometry_area;
                         }
 
-                        return geometry_area;
+                        std::ostringstream oss;
+                        oss << "sphere area relative error = " << relative_error << '\n';
+                        oss << "sphere area = " << area << '\n';
+                        oss << "geometry sphere area = " << geometry_area << '\n';
+                        oss << "uniform count = " << uniform_count << '\n';
+                        oss << "all uniform count = " << all_uniform_count;
+                        error(oss.str());
                 }
+
+                return area;
         }
 
-        //
-
-        Sphere sphere_;
-        geometry::ObjectTree<N, T, geometry::HyperplaneMeshSimplex<N, T>> tree_;
-
-        //
-
-        template <typename RandomEngine, typename RandomVector, typename PDF>
-        std::vector<SphereBucket<N, T>> compute_buckets(
-                const long long count,
-                const RandomVector& random_vector,
-                const PDF& pdf,
-                ProgressRatio* const progress) const
+        template <typename F>
+        std::vector<SphereBucket<N, T>> compute_buckets_threads(const unsigned thread_count, const F& f) const
         {
-                const int thread_count = hardware_concurrency();
-                const long long count_per_thread = (count + thread_count - 1) / thread_count;
-                const double count_per_thread_reciprocal = 1.0 / count_per_thread;
-
-                progress->set(0);
-
-                const auto f = [&](std::vector<SphereBucket<N, T>>* buckets) -> std::array<long long, 2>
-                {
-                        ASSERT(buckets->size() == sphere_.facets.size());
-                        SphereIntersection<N, T, RandomEngine> facet_finder(&tree_, &sphere_.facets);
-                        for (long long i = 0; i < count_per_thread; ++i)
-                        {
-                                if ((i & 0xfff) == 0xfff)
-                                {
-                                        progress->set(i * count_per_thread_reciprocal);
-                                }
-                                {
-                                        const auto [index, dir] = facet_finder.find(random_vector);
-                                        (*buckets)[index].add_sample();
-                                }
-                                {
-                                        const auto [index, dir] =
-                                                facet_finder.find(uniform_on_sphere<N, T, RandomEngine>);
-                                        (*buckets)[index].add_pdf(pdf(dir));
-                                        (*buckets)[index].add_uniform();
-                                }
-                                for (int j = 0; j < 3; ++j)
-                                {
-                                        const auto [index, dir] =
-                                                facet_finder.find(uniform_on_sphere<N, T, RandomEngine>);
-                                        (*buckets)[index].add_uniform();
-                                }
-                        }
-                        return {facet_finder.intersection_count(), facet_finder.missed_intersection_count()};
-                };
-
                 std::vector<std::vector<SphereBucket<N, T>>> thread_buckets(thread_count);
                 for (std::vector<SphereBucket<N, T>>& buckets : thread_buckets)
                 {
-                        buckets.resize(sphere_.facets.size());
+                        buckets.resize(sphere_mesh_.facet_count());
                 }
 
                 {
@@ -204,11 +119,11 @@ class SphereDistribution final
                         check_sphere_intersections(intersection_count, missed_intersection_count);
                 }
 
-                std::vector<SphereBucket<N, T>> result(sphere_.facets.size());
+                std::vector<SphereBucket<N, T>> result(sphere_mesh_.facet_count());
                 for (const std::vector<SphereBucket<N, T>>& buckets : thread_buckets)
                 {
-                        ASSERT(buckets.size() == sphere_.facets.size());
-                        for (std::size_t i = 0; i < sphere_.facets.size(); ++i)
+                        ASSERT(buckets.size() == result.size());
+                        for (std::size_t i = 0; i < result.size(); ++i)
                         {
                                 result[i].merge(buckets[i]);
                         }
@@ -216,20 +131,85 @@ class SphereDistribution final
                 return result;
         }
 
+        template <typename RandomEngine, typename RandomVector, typename PDF>
+        std::vector<SphereBucket<N, T>> compute_buckets(
+                const long long count,
+                const RandomVector& random_vector,
+                const PDF& pdf,
+                ProgressRatio* const progress) const
+        {
+                progress->set(0);
+
+                constexpr long long GROUP_SIZE = 1 << 16;
+
+                const int thread_count = hardware_concurrency();
+                const long long count_per_thread = [&]
+                {
+                        const long long min_count_per_thread = (count + thread_count - 1) / thread_count;
+                        const long long group_count = (min_count_per_thread + GROUP_SIZE - 1) / GROUP_SIZE;
+                        return group_count * GROUP_SIZE;
+                }();
+                const long long all_count = count_per_thread * thread_count;
+                const double all_count_reciprocal = 1.0 / all_count;
+
+                ASSERT(all_count >= count);
+                ASSERT(count_per_thread % GROUP_SIZE == 0);
+
+                std::atomic<long long> counter = 0;
+
+                const auto f = [&](std::vector<SphereBucket<N, T>>* const buckets)
+                {
+                        ASSERT(buckets->size() == sphere_mesh_.facet_count());
+
+                        SphereIntersection<N, T, RandomEngine> intersections(&sphere_mesh_);
+
+                        const auto add_data = [&]
+                        {
+                                {
+                                        const auto [index, dir] = intersections.find(random_vector);
+                                        (*buckets)[index].add_sample();
+                                }
+                                {
+                                        const auto [index, dir] =
+                                                intersections.find(uniform_on_sphere<N, T, RandomEngine>);
+                                        (*buckets)[index].add_pdf(pdf(dir));
+                                        (*buckets)[index].add_uniform();
+                                }
+                                for (int i = 0; i < 3; ++i)
+                                {
+                                        const auto [index, dir] =
+                                                intersections.find(uniform_on_sphere<N, T, RandomEngine>);
+                                        (*buckets)[index].add_uniform();
+                                }
+                        };
+
+                        for (long long i = 0; i < count_per_thread; i += GROUP_SIZE)
+                        {
+                                for (long long j = 0; j < GROUP_SIZE; ++j)
+                                {
+                                        add_data();
+                                }
+                                counter += GROUP_SIZE;
+                                progress->set(counter * all_count_reciprocal);
+                        }
+
+                        std::array<long long, 2> res;
+                        res[0] = intersections.intersection_count();
+                        res[1] = intersections.missed_intersection_count();
+                        return res;
+                };
+
+                return compute_buckets_threads(thread_count, f);
+        }
+
 public:
-        explicit SphereDistribution(ProgressRatio* const progress)
-                : sphere_(), tree_(&sphere_.facets, compute_bounding_box(sphere_), TREE_MIN_OBJECTS_PER_BOX, progress)
+        explicit SphereDistribution(ProgressRatio* const progress) : sphere_mesh_(BUCKET_MIN_COUNT, progress)
         {
         }
 
-        SphereDistribution(const SphereDistribution&) = delete;
-        SphereDistribution(SphereDistribution&&) = delete;
-        SphereDistribution& operator=(const SphereDistribution&) = delete;
-        SphereDistribution& operator=(SphereDistribution&&) = delete;
-
-        std::size_t bucket_count() const
+        unsigned bucket_count() const
         {
-                return sphere_.facets.size();
+                return sphere_mesh_.facet_count();
         }
 
         long long distribution_count(const long long uniform_min_count_per_bucket) const
@@ -260,13 +240,12 @@ public:
                 long double sum_expected = 0;
                 long double sum_error = 0;
 
-                ASSERT(buckets.size() == sphere_.facets.size());
+                ASSERT(buckets.size() == sphere_mesh_.facet_count());
                 for (std::size_t i = 0; i < buckets.size(); ++i)
                 {
                         const SphereBucket<N, T>& bucket = buckets[i];
 
-                        const T bucket_area =
-                                sphere_facet_area(sphere_.facets[i].vertices(), bucket.uniform_count(), uniform_count);
+                        const T bucket_area = sphere_facet_area(i, bucket.uniform_count(), uniform_count);
                         const T sampled_distribution = T(bucket.sample_count()) / sample_count;
                         const T sampled_density = sampled_distribution / bucket_area;
                         const T expected_density = bucket.pdf();

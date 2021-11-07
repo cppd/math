@@ -68,7 +68,7 @@ public:
                 return uniform_count_;
         }
 
-        void add_pdf(double pdf)
+        void add_pdf(const double pdf)
         {
                 pdf_count_ += 1;
                 pdf_sum_ += pdf;

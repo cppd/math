@@ -90,32 +90,9 @@ class AngleDistribution
                 return std::clamp(bucket, 0, BUCKET_COUNT - 1);
         }
 
-        template <typename RandomEngine, typename RandomVector>
-        static std::vector<long long> compute_buckets(
-                const long long count,
-                const Vector<N, T>& normal,
-                const RandomVector& random_vector,
-                ProgressRatio* const progress)
+        template <typename F>
+        static std::vector<long long> compute_buckets_threads(const unsigned thread_count, const F& f)
         {
-                const int thread_count = hardware_concurrency();
-                const long long count_per_thread = (count + thread_count - 1) / thread_count;
-                const double count_per_thread_reciprocal = 1.0 / count_per_thread;
-
-                const auto f = [&](std::vector<long long>* buckets)
-                {
-                        ASSERT(buckets->size() == BUCKET_COUNT);
-                        RandomEngine random_engine = create_engine<RandomEngine>();
-                        for (long long i = 0; i < count_per_thread; ++i)
-                        {
-                                if ((i & 0xfff) == 0xfff)
-                                {
-                                        progress->set(i * count_per_thread_reciprocal);
-                                }
-                                int bucket = sample_bucket(random_engine, normal, random_vector);
-                                ++(*buckets)[bucket];
-                        }
-                };
-
                 std::vector<std::vector<long long>> thread_buckets(thread_count);
                 for (std::vector<long long>& buckets : thread_buckets)
                 {
@@ -151,6 +128,55 @@ class AngleDistribution
                         }
                 }
                 return result;
+        }
+
+        template <typename RandomEngine, typename RandomVector>
+        static std::vector<long long> compute_buckets(
+                const long long count,
+                const Vector<N, T>& normal,
+                const RandomVector& random_vector,
+                ProgressRatio* const progress)
+        {
+                constexpr long long GROUP_SIZE = 1 << 16;
+
+                const int thread_count = hardware_concurrency();
+                const long long count_per_thread = [&]
+                {
+                        const long long min_count_per_thread = (count + thread_count - 1) / thread_count;
+                        const long long group_count = (min_count_per_thread + GROUP_SIZE - 1) / GROUP_SIZE;
+                        return group_count * GROUP_SIZE;
+                }();
+                const long long all_count = count_per_thread * thread_count;
+                const double all_count_reciprocal = 1.0 / all_count;
+
+                ASSERT(all_count >= count);
+                ASSERT(count_per_thread % GROUP_SIZE == 0);
+
+                std::atomic<long long> counter = 0;
+
+                const auto f = [&](std::vector<long long>* buckets)
+                {
+                        ASSERT(buckets->size() == BUCKET_COUNT);
+                        RandomEngine random_engine = create_engine<RandomEngine>();
+
+                        const auto add_data = [&]
+                        {
+                                const int bucket = sample_bucket(random_engine, normal, random_vector);
+                                ++(*buckets)[bucket];
+                        };
+
+                        for (long long i = 0; i < count_per_thread; i += GROUP_SIZE)
+                        {
+                                for (long long j = 0; j < GROUP_SIZE; ++j)
+                                {
+                                        add_data();
+                                }
+                                counter += GROUP_SIZE;
+                                progress->set(counter * all_count_reciprocal);
+                        }
+                };
+
+                return compute_buckets_threads(thread_count, f);
         }
 
         std::vector<Distribution> distribution_;

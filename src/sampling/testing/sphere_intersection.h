@@ -17,10 +17,10 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
+#include "sphere_mesh.h"
+
 #include <src/com/error.h>
 #include <src/com/random/engine.h>
-#include <src/geometry/spatial/hyperplane_mesh_simplex.h>
-#include <src/geometry/spatial/object_tree.h>
 
 #include <sstream>
 #include <vector>
@@ -30,39 +30,28 @@ namespace ns::sampling::testing
 template <std::size_t N, typename T, typename RandomEngine>
 class SphereIntersection final
 {
-        const geometry::ObjectTree<N, T, geometry::HyperplaneMeshSimplex<N, T>>* const tree_;
-        const std::vector<geometry::HyperplaneMeshSimplex<N, T>>* const facets_;
+        const SphereMesh<N, T>* const sphere_mesh_;
 
         RandomEngine random_engine_ = create_engine<RandomEngine>();
         long long intersection_count_ = 0;
         long long missed_intersection_count_ = 0;
 
 public:
-        SphereIntersection(
-                const geometry::ObjectTree<N, T, geometry::HyperplaneMeshSimplex<N, T>>* tree,
-                const std::vector<geometry::HyperplaneMeshSimplex<N, T>>* facets)
-                : tree_(tree), facets_(facets)
+        explicit SphereIntersection(const SphereMesh<N, T>* const sphere_mesh) : sphere_mesh_(sphere_mesh)
         {
         }
 
         template <typename RandomVector>
-        std::tuple<std::size_t, Vector<N, T>> find(const RandomVector& random_vector)
+        std::tuple<unsigned, Vector<N, T>> find(const RandomVector& random_vector)
         {
                 while (true)
                 {
                         const Ray<N, T> ray(Vector<N, T>(0), random_vector(random_engine_));
-
-                        const std::optional<T> root_distance = tree_->intersect_root(ray);
-                        ASSERT(root_distance && *root_distance == 0);
-
-                        const std::optional<std::tuple<T, const geometry::HyperplaneMeshSimplex<N, T>*>> v =
-                                tree_->intersect(ray, *root_distance);
-                        if (v)
+                        const auto index = sphere_mesh_->intersect(ray);
+                        if (index)
                         {
                                 ++intersection_count_;
-                                const std::size_t index = std::get<1>(*v) - facets_->data();
-                                ASSERT(index < facets_->size());
-                                return {index, ray.dir()};
+                                return {*index, ray.dir()};
                         }
                         ++missed_intersection_count_;
                 }
@@ -79,7 +68,7 @@ public:
         }
 };
 
-inline void check_sphere_intersections(long long intersection_count, long long missed_intersection_count)
+inline void check_sphere_intersections(const long long intersection_count, const long long missed_intersection_count)
 {
         const long long sample_count = intersection_count + missed_intersection_count;
         if (sample_count < 1'000'000)
