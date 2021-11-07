@@ -47,7 +47,7 @@ class ThreadData
                 WITH_MESSAGE
         };
 
-        void terminate(TerminateType terminate_type) noexcept
+        void terminate(const TerminateType terminate_type) noexcept
         {
                 try
                 {
@@ -152,19 +152,22 @@ class Impl final : public WorkerThreads
         std::deque<ThreadData> threads_;
         std::vector<Progress> progress_;
 
-        ThreadData& thread_data(unsigned id)
+        ThreadData& thread_data(const unsigned id)
         {
                 ASSERT(id < threads_.size());
                 return threads_[id];
         }
 
-        const ThreadData& thread_data(unsigned id) const
+        const ThreadData& thread_data(const unsigned id) const
         {
                 ASSERT(id < threads_.size());
                 return threads_[id];
         }
 
-        void start(unsigned id, const std::string& description, std::function<void(ProgressRatioList*)>&& function)
+        void start(
+                const unsigned id,
+                const std::string& description,
+                std::function<void(ProgressRatioList*)>&& function)
         {
                 ASSERT(std::this_thread::get_id() == thread_id_);
 
@@ -176,7 +179,7 @@ class Impl final : public WorkerThreads
                 thread_data(id).start(description, std::move(function));
         }
 
-        bool terminate_with_dialog(unsigned id)
+        bool terminate_with_dialog(const unsigned id)
         {
                 ASSERT(std::this_thread::get_id() == thread_id_);
 
@@ -195,29 +198,31 @@ class Impl final : public WorkerThreads
                 return true;
         }
 
-        bool is_working(unsigned id) const
+        bool is_working(const unsigned id) const
         {
                 ASSERT(std::this_thread::get_id() == thread_id_);
 
                 return thread_data(id).working();
         }
 
-        void terminate_quietly(unsigned id)
+        void terminate_quietly(const unsigned id)
         {
                 ASSERT(std::this_thread::get_id() == thread_id_);
 
                 thread_data(id).terminate_quietly();
         }
 
-        void terminate_with_message(unsigned id) override
+        void terminate_with_message(const unsigned id) override
         {
                 ASSERT(std::this_thread::get_id() == thread_id_);
 
                 thread_data(id).terminate_with_message();
         }
 
-        bool terminate_and_start(unsigned id, const std::string& description, std::function<Function()>&& function)
-                override
+        bool terminate_and_start(
+                const unsigned id,
+                const std::string& description,
+                std::function<Function()>&& function) override
         {
                 bool result = false;
                 catch_all(
@@ -249,11 +254,14 @@ class Impl final : public WorkerThreads
                 return threads_.size();
         }
 
-        void set_progress(unsigned id, const ProgressRatioList* progress_list, std::list<QProgressBar>* progress_bars)
+        void set_progress(
+                const unsigned id,
+                const ProgressRatioList* const progress_list,
+                std::list<QProgressBar>* const progress_bars)
         {
                 constexpr unsigned MAX_INT{Limits<int>::max()};
 
-                std::vector<std::tuple<unsigned, unsigned, std::string>> ratios = progress_list->ratios();
+                const std::vector<std::tuple<unsigned, unsigned, std::string>> ratios = progress_list->ratios();
 
                 while (ratios.size() > progress_bars->size())
                 {
@@ -296,16 +304,22 @@ class Impl final : public WorkerThreads
 
                         bar->setFormat(QString::fromStdString(std::get<2>(ratios[i])));
 
-                        unsigned v = std::get<0>(ratios[i]);
-                        unsigned m = std::get<1>(ratios[i]);
+                        const unsigned maximum = std::get<1>(ratios[i]);
 
-                        if (m > 0)
+                        if (maximum > 0)
                         {
-                                m = std::min(m, MAX_INT);
-                                v = std::min(v, m);
+                                const unsigned value = std::min(maximum, std::get<0>(ratios[i]));
 
-                                bar->setMaximum(m);
-                                bar->setValue(v);
+                                if (maximum <= MAX_INT)
+                                {
+                                        bar->setMaximum(maximum);
+                                        bar->setValue(value);
+                                }
+                                else
+                                {
+                                        bar->setMaximum(MAX_INT);
+                                        bar->setValue(std::lround((static_cast<double>(value) / maximum) * MAX_INT));
+                                }
                         }
                         else
                         {
@@ -330,7 +344,9 @@ class Impl final : public WorkerThreads
         }
 
 public:
-        Impl(unsigned thread_count, const std::optional<unsigned>& permanent_thread_id, QStatusBar* status_bar)
+        Impl(const unsigned thread_count,
+             const std::optional<unsigned>& permanent_thread_id,
+             QStatusBar* const status_bar)
                 : permanent_thread_id_(permanent_thread_id), status_bar_(status_bar)
         {
                 ASSERT(thread_count > 0);
@@ -366,9 +382,9 @@ public:
 }
 
 std::unique_ptr<WorkerThreads> create_worker_threads(
-        unsigned thread_count,
+        const unsigned thread_count,
         const std::optional<unsigned>& permanent_thread_id,
-        QStatusBar* status_bar)
+        QStatusBar* const status_bar)
 {
         return std::make_unique<Impl>(thread_count, permanent_thread_id, status_bar);
 }
