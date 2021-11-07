@@ -62,17 +62,4 @@ auto compute_center_bounds(const T& objects)
         }
         return box;
 }
-
-template <typename T>
-auto compute_cost(const T& objects)
-{
-        namespace impl = bvh_functions_implementation;
-        ASSERT(!objects.empty());
-        auto cost = impl::bvh_object(objects.front()).intersection_cost();
-        for (auto i = std::next(objects.begin()); i != objects.end(); ++i)
-        {
-                cost += impl::bvh_object(*i).intersection_cost();
-        }
-        return cost;
-}
 }

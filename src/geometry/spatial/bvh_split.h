@@ -93,29 +93,47 @@ struct Bucket final
 };
 
 template <std::size_t N, typename T>
-std::array<std::optional<Bucket<N, T>>, BUCKET_COUNT> compute_buckets(
+std::tuple<std::array<std::optional<Bucket<N, T>>, BUCKET_COUNT>, T> compute_buckets_and_cost(
         const std::span<const BvhObject<N, T>>& objects,
         const CenterBounds<N, T>& center_bounds)
 {
         static_assert(BUCKET_COUNT >= 2);
 
+        using SumType = std::common_type_t<double, T>;
+        static_assert(Limits<SumType>::epsilon() < 1e-15L);
+
+        std::array<SumType, BUCKET_COUNT> sum;
+        SumType cost = 0;
+
         std::array<std::optional<Bucket<N, T>>, BUCKET_COUNT> buckets;
         for (const BvhObject<N, T>& object : objects)
         {
+                cost += object.intersection_cost();
                 const unsigned bucket = center_bounds.bucket(object);
                 if (buckets[bucket])
                 {
                         buckets[bucket]->bounds.merge(object.bounds());
-                        buckets[bucket]->cost += object.intersection_cost();
+                        sum[bucket] += object.intersection_cost();
                 }
                 else
                 {
-                        buckets[bucket].emplace(object.bounds(), object.intersection_cost());
+                        buckets[bucket].emplace();
+                        buckets[bucket]->bounds = object.bounds();
+                        sum[bucket] = object.intersection_cost();
                 }
         }
         ASSERT(buckets.front());
         ASSERT(buckets.back());
-        return buckets;
+
+        for (std::size_t i = 0; i < BUCKET_COUNT; ++i)
+        {
+                if (buckets[i])
+                {
+                        buckets[i]->cost = sum[i];
+                }
+        }
+
+        return {buckets, cost};
 }
 
 template <std::size_t N, typename T>
@@ -175,7 +193,7 @@ bool compare_cost(
         for (unsigned i = 0; i < forward_sum.size(); ++i)
         {
                 const T relative_error = std::abs(1 - (forward_sum[i].cost + backward_sum[i].cost) / cost);
-                if (!(relative_error < T(1e-3)))
+                if (!(relative_error < T(1e-5)))
                 {
                         return false;
                 }
@@ -261,11 +279,9 @@ std::optional<BvhSplit<N, T>> split(
                 return {};
         }
 
-        const auto buckets = impl::compute_buckets<N, T>(objects, center_bounds);
+        const auto [buckets, cost] = impl::compute_buckets_and_cost<N, T>(objects, center_bounds);
         const auto forward_sum = impl::incremental_bucket_sum_forward(buckets);
         const auto backward_sum = impl::incremental_bucket_sum_backward(buckets);
-
-        const T cost = compute_cost(objects);
 
         ASSERT(impl::compare_cost(cost, forward_sum, backward_sum));
 
