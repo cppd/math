@@ -38,6 +38,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <array>
 #include <cmath>
 #include <random>
+#include <sstream>
 #include <tuple>
 #include <vector>
 
@@ -113,8 +114,64 @@ ShapeIntersection<N, T, Color> intersect_mesh(
 }
 
 template <std::size_t N, typename T, typename Color>
+void intersect_mesh(
+        const Shape<N, T, Color>& mesh,
+        Ray<N, T> ray,
+        const T ray_offset,
+        const unsigned ray_number,
+        int* const error_count)
+{
+        if (WITH_RAY_LOG)
+        {
+                LOG("");
+                LOG("ray #" + to_string(ray_number) + " in " + space_name(N));
+        }
+
+        {
+                const ShapeIntersection<N, T, Color> intersection =
+                        intersect_mesh("the first", "t1", mesh, ray, ray_number, error_count);
+                if (!intersection.surface)
+                {
+                        return;
+                }
+
+                ray.set_org(intersection.surface->point());
+                ray.move(ray_offset);
+        }
+        {
+                const ShapeIntersection<N, T, Color> intersection =
+                        intersect_mesh("the second", "t2", mesh, ray, ray_number, error_count);
+                if (!intersection.surface)
+                {
+                        return;
+                }
+
+                ray.set_org(intersection.surface->point());
+                ray.move(ray_offset);
+        }
+
+        const std::optional<T> bounding_distance = mesh.intersect_bounding(ray);
+        if (bounding_distance)
+        {
+                const ShapeIntersection<N, T, Color> intersection = mesh.intersect(ray, *bounding_distance);
+                if (intersection.surface)
+                {
+                        if (WITH_ERROR_LOG)
+                        {
+                                LOG("The third intersection with ray #" + to_string(ray_number) + "\n" + to_string(ray)
+                                    + "\n" + "at point " + to_string(intersection.distance));
+                        }
+                        ++(*error_count);
+                        return;
+                }
+        }
+}
+
+template <std::size_t N, typename T, typename Color>
 void test_spherical_mesh(const Shape<N, T, Color>& mesh, const int ray_count, ProgressRatio* const progress)
 {
+        constexpr std::size_t GROUP_SIZE = 0x1000;
+
         const geometry::BoundingBox<N, T> bb = mesh.bounding_box();
 
         const T ray_offset =
@@ -122,79 +179,39 @@ void test_spherical_mesh(const Shape<N, T, Color>& mesh, const int ray_count, Pr
         LOG("ray offset = " + to_string(ray_offset));
 
         const std::vector<Ray<N, T>> rays = create_rays_for_spherical_mesh(bb, ray_count);
+        const double rays_size_reciprocal = 1.0 / rays.size();
+
+        LOG("intersections...");
+        progress->set_text(std::string("Ray intersections, ") + type_name<T>());
 
         int error_count = 0;
 
-        LOG("intersections...");
-        progress->set_text("Rays: %v of %m");
-
         const Clock::time_point start_time = Clock::now();
-
-        for (unsigned i = 1; i <= rays.size(); ++i)
+        for (std::size_t i = 0; i < rays.size();)
         {
-                MemoryArena::thread_local_instance().clear();
-
-                if ((i & 0xfff) == 0xfff)
+                const std::size_t r = rays.size() - i;
+                const std::size_t c = (r >= GROUP_SIZE) ? i + GROUP_SIZE : rays.size();
+                for (; i < c; ++i)
                 {
-                        progress->set(i, rays.size());
+                        MemoryArena::thread_local_instance().clear();
+                        intersect_mesh(mesh, rays[i], ray_offset, i + 1, &error_count);
                 }
-
-                Ray<N, T> ray = rays[i - 1];
-
-                if (WITH_RAY_LOG)
-                {
-                        LOG("");
-                        LOG("ray #" + to_string(i) + " in " + space_name(N));
-                }
-
-                ShapeIntersection<N, T, Color> intersection;
-
-                intersection = intersect_mesh("the first", "t1", mesh, ray, i, &error_count);
-                if (!intersection.surface)
-                {
-                        continue;
-                }
-
-                ray.set_org(intersection.surface->point());
-                ray.move(ray_offset);
-
-                intersection = intersect_mesh("the second", "t2", mesh, ray, i, &error_count);
-                if (!intersection.surface)
-                {
-                        continue;
-                }
-
-                ray.set_org(intersection.surface->point());
-                ray.move(ray_offset);
-
-                const std::optional<T> bounding_distance = mesh.intersect_bounding(ray);
-                if (bounding_distance)
-                {
-                        intersection = mesh.intersect(ray, *bounding_distance);
-                        if (intersection.surface)
-                        {
-                                if (WITH_ERROR_LOG)
-                                {
-                                        LOG("The third intersection with ray #" + to_string(i) + "\n" + to_string(ray)
-                                            + "\n" + "at point " + to_string(intersection.distance));
-                                }
-                                ++error_count;
-                                continue;
-                        }
-                }
+                progress->set(i * rays_size_reciprocal);
         }
-
-        const double error_percent = 100.0 * error_count / rays.size();
-
         LOG("intersections " + to_string_fixed(duration_from(start_time), 5) + " s");
+
+        const double relative_error = static_cast<double>(error_count) / rays.size();
+        std::ostringstream oss;
+        oss << std::scientific << std::setprecision(3);
+        oss << "error count = " << error_count << ", ray count = " << rays.size()
+            << ", relative error = " << relative_error;
         LOG("");
-        LOG(to_string(error_count) + " errors, " + to_string(rays.size()) + " rays, "
-            + to_string_fixed(error_percent, 5) + "%");
+        LOG(oss.str());
         LOG("");
 
-        if (!(error_percent < 0.005))
+        if (!(relative_error < 5e-5))
         {
-                error("Too many errors, " + to_string_fixed(error_percent, 5) + "%");
+                error("Too many errors, " + oss.str());
         }
 }
 
@@ -261,11 +278,13 @@ std::unique_ptr<const Shape<N, T, Color>> create_spherical_mesh(const int point_
         std::vector<std::array<int, N>> facets;
         create_spherical_mesh(center, radius, point_count, &points, &facets, progress);
 
+        progress->set_text(std::string("Mesh, ") + type_name<T>());
+        progress->set(0);
         LOG("facet count = " + to_string(facets.size()));
         LOG("mesh...");
         std::unique_ptr<const mesh::Mesh<N>> mesh(mesh::create_mesh_for_facets(points, facets));
 
-        LOG("painter mesh...");
+        LOG("painter mesh <" + to_string(N) + ", " + type_name<T>() + ">...");
         mesh::MeshObject<N> mesh_object(std::move(mesh), Matrix<N + 1, N + 1, double>(1), "");
         std::vector<const mesh::MeshObject<N>*> mesh_objects;
         mesh_objects.push_back(&mesh_object);
