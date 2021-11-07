@@ -26,8 +26,10 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/com/error.h>
 #include <src/com/log.h>
 #include <src/com/memory_arena.h>
+#include <src/com/names.h>
 #include <src/com/print.h>
 #include <src/com/type/limit.h>
+#include <src/com/type/name.h>
 #include <src/geometry/spatial/object_bvh.h>
 #include <src/shading/ggx_diffuse.h>
 
@@ -119,13 +121,14 @@ geometry::ObjectBvh<N, T, MeshFacet<N, T>> create_object_bvh(
         const std::vector<MeshFacet<N, T>>* const facets,
         ProgressRatio* const progress)
 {
-        progress->set_text("Creating painter mesh BVH");
+        progress->set_text("Painter mesh, " + space_name(N) + ", " + type_name<T>());
+        progress->set(0);
 
         const Clock::time_point start_time = Clock::now();
 
         geometry::ObjectBvh<N, T, MeshFacet<N, T>> object_bvh(facets, progress);
 
-        LOG("Painter mesh BVH created, " + to_string_fixed(duration_from(start_time), 5) + " s");
+        LOG("Painter mesh created, " + to_string_fixed(duration_from(start_time), 5) + " s");
 
         return object_bvh;
 }
