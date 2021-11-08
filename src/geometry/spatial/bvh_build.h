@@ -26,6 +26,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/com/error.h>
 #include <src/com/thread.h>
 #include <src/com/thread_tasks.h>
+#include <src/progress/progress.h>
 
 #include <array>
 #include <deque>
@@ -72,6 +73,14 @@ struct BvhBuildNode final
 template <std::size_t N, typename T>
 class BvhBuild final
 {
+        static std::size_t max_interior_node_count(const std::size_t object_count)
+        {
+                // Maximum when each leaf node contains only one object.
+                // In this case, interior nodes are a full binary tree
+                // with 2 * object_count - 1 nodes.
+                return 2 * object_count - 1;
+        }
+
         struct Task final
         {
                 std::span<BvhObject<N, T>> objects;
@@ -87,6 +96,7 @@ class BvhBuild final
         };
 
         const T interior_node_traversal_cost_ = 2 * spatial::testing::bounding_box::intersection_r_cost<N, T>();
+        const double max_interior_node_count_reciprocal_;
 
         std::vector<unsigned> object_indices_;
         unsigned object_indices_size_ = 0;
@@ -120,7 +130,7 @@ class BvhBuild final
                 return res;
         }
 
-        void build(ThreadTaskManager<Task>* const task_manager)
+        void build(ThreadTaskManager<Task>* const task_manager, ProgressRatio* const progress)
         {
                 while (const auto task = task_manager->get())
                 {
@@ -128,6 +138,10 @@ class BvhBuild final
                                     split(task->objects, task->bounds, interior_node_traversal_cost_))
                         {
                                 const auto [min, max] = create_child_nodes();
+                                if ((min.index & 0xfffe) == 0xfffe)
+                                {
+                                        progress->set(min.index * max_interior_node_count_reciprocal_);
+                                }
                                 *task->node = BvhBuildNode<N, T>(task->bounds, s->axis, min.index, max.index);
                                 task_manager->emplace(s->objects_min, s->bounds_min, min.node);
                                 task_manager->emplace(s->objects_max, s->bounds_max, max.node);
@@ -147,8 +161,14 @@ class BvhBuild final
         }
 
 public:
-        explicit BvhBuild(const std::span<BvhObject<N, T>>& objects)
+        explicit BvhBuild(const std::span<BvhObject<N, T>>& objects, ProgressRatio* const progress)
+                : max_interior_node_count_reciprocal_(1.0 / max_interior_node_count(objects.size()))
         {
+                if (objects.empty())
+                {
+                        error("No objects to build BVH");
+                }
+
                 object_indices_.resize(objects.size());
 
                 nodes_.emplace_back();
@@ -161,7 +181,7 @@ public:
                         try
                         {
                                 ThreadTaskManager task_manager(&tasks);
-                                build(&task_manager);
+                                build(&task_manager, progress);
                         }
                         catch (...)
                         {
