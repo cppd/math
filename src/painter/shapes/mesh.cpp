@@ -28,7 +28,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/com/memory_arena.h>
 #include <src/com/names.h>
 #include <src/com/print.h>
-#include <src/com/type/limit.h>
 #include <src/com/type/name.h>
 #include <src/geometry/spatial/object_bvh.h>
 #include <src/shading/ggx_diffuse.h>
@@ -140,14 +139,17 @@ class ShapeImpl final : public Shape<N, T, Color>
         std::optional<geometry::ObjectBvh<N, T, MeshFacet<N, T>>> object_bvh_;
         geometry::BoundingBox<N, T> bounding_box_;
 
-        std::optional<T> intersect_bounding(const Ray<N, T>& ray) const override
+        std::optional<T> intersect_bounding(const Ray<N, T>& ray, const T max_distance) const override
         {
-                return object_bvh_->intersect_root(ray, Limits<T>::max());
+                return object_bvh_->intersect_root(ray, max_distance);
         }
 
-        ShapeIntersection<N, T, Color> intersect(const Ray<N, T>& ray, const T /*bounding_distance*/) const override
+        ShapeIntersection<N, T, Color> intersect(
+                const Ray<N, T>& ray,
+                const T max_distance,
+                const T /*bounding_distance*/) const override
         {
-                std::optional<std::tuple<T, const MeshFacet<N, T>*>> v = object_bvh_->intersect(ray, Limits<T>::max());
+                std::optional<std::tuple<T, const MeshFacet<N, T>*>> v = object_bvh_->intersect(ray, max_distance);
                 if (!v)
                 {
                         return ShapeIntersection<N, T, Color>(nullptr);

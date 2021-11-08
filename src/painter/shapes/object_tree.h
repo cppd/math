@@ -20,6 +20,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "ray_intersection.h"
 
 #include <src/com/thread.h>
+#include <src/com/type/limit.h>
 #include <src/geometry/spatial/parallelotope_aa.h>
 #include <src/geometry/spatial/shape_overlap.h>
 #include <src/geometry/spatial/tree.h>
@@ -103,7 +104,7 @@ public:
 
                 const auto f = [&](const std::vector<int>& shape_indices) -> std::optional<Info>
                 {
-                        Info info(ray_intersection(*objects_, shape_indices, ray));
+                        Info info(ray_intersection(*objects_, shape_indices, ray, Limits<T>::max()));
                         if (info.surface)
                         {
                                 info.point = info.surface->point();

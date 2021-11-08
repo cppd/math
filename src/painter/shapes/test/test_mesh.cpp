@@ -78,7 +78,7 @@ ShapeIntersection<N, T, Color> intersect_mesh(
         const unsigned ray_number,
         int* const error_count)
 {
-        const std::optional<T> bounding_distance = mesh.intersect_bounding(ray);
+        const std::optional<T> bounding_distance = mesh.intersect_bounding(ray, Limits<T>::max());
         if (!bounding_distance)
         {
                 if (WITH_ERROR_LOG)
@@ -94,7 +94,7 @@ ShapeIntersection<N, T, Color> intersect_mesh(
                 LOG(std::string(name_2) + "_a == " + to_string(*bounding_distance));
         }
 
-        const ShapeIntersection<N, T, Color> intersection = mesh.intersect(ray, *bounding_distance);
+        const ShapeIntersection<N, T, Color> intersection = mesh.intersect(ray, Limits<T>::max(), *bounding_distance);
         if (!intersection.surface)
         {
                 if (WITH_ERROR_LOG)
@@ -150,10 +150,11 @@ void intersect_mesh(
                 ray.move(ray_offset);
         }
 
-        const std::optional<T> bounding_distance = mesh.intersect_bounding(ray);
+        const std::optional<T> bounding_distance = mesh.intersect_bounding(ray, Limits<T>::max());
         if (bounding_distance)
         {
-                const ShapeIntersection<N, T, Color> intersection = mesh.intersect(ray, *bounding_distance);
+                const ShapeIntersection<N, T, Color> intersection =
+                        mesh.intersect(ray, Limits<T>::max(), *bounding_distance);
                 if (intersection.surface)
                 {
                         if (WITH_ERROR_LOG)

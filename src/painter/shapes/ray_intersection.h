@@ -19,7 +19,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "shape.h"
 
-#include <src/com/type/limit.h>
+#include <src/com/error.h>
 #include <src/numerical/ray.h>
 
 #include <algorithm>
@@ -51,16 +51,17 @@ template <std::size_t N, typename T, typename Color, typename Indices>
 ShapeIntersection<N, T, Color> ray_intersection(
         const std::vector<const Shape<N, T, Color>*>& shapes,
         const Indices& indices,
-        const Ray<N, T>& ray)
+        const Ray<N, T>& ray,
+        const T max_distance)
 {
         namespace impl = ray_intersection_implementation;
 
         if (indices.size() == 1)
         {
-                const std::optional<T> distance = shapes[indices.front()]->intersect_bounding(ray);
+                const std::optional<T> distance = shapes[indices.front()]->intersect_bounding(ray, max_distance);
                 if (distance)
                 {
-                        return shapes[indices.front()]->intersect(ray, *distance);
+                        return shapes[indices.front()]->intersect(ray, max_distance, *distance);
                 }
                 return ShapeIntersection<N, T, Color>(nullptr);
         }
@@ -70,9 +71,10 @@ ShapeIntersection<N, T, Color> ray_intersection(
         intersections.reserve(indices.size());
         for (const auto index : indices)
         {
-                const std::optional<T> distance = shapes[index]->intersect_bounding(ray);
+                const std::optional<T> distance = shapes[index]->intersect_bounding(ray, max_distance);
                 if (distance)
                 {
+                        ASSERT(*distance < max_distance);
                         intersections.emplace_back(*distance, shapes[index]);
                 }
         }
@@ -83,7 +85,7 @@ ShapeIntersection<N, T, Color> ray_intersection(
 
         std::make_heap(intersections.begin(), intersections.end());
 
-        T min_distance = Limits<T>::max();
+        T min_distance = max_distance;
         ShapeIntersection<N, T, Color> closest_intersection(nullptr);
 
         do
@@ -95,14 +97,13 @@ ShapeIntersection<N, T, Color> ray_intersection(
                         break;
                 }
 
-                const ShapeIntersection<N, T, Color> intersection = bounding.shape->intersect(ray, bounding.distance);
+                const ShapeIntersection<N, T, Color> intersection =
+                        bounding.shape->intersect(ray, min_distance, bounding.distance);
                 if (intersection.surface)
                 {
-                        if (intersection.distance < min_distance)
-                        {
-                                min_distance = intersection.distance;
-                                closest_intersection = intersection;
-                        }
+                        ASSERT(intersection.distance < min_distance);
+                        min_distance = intersection.distance;
+                        closest_intersection = intersection;
                 }
 
                 std::pop_heap(intersections.begin(), intersections.end());
