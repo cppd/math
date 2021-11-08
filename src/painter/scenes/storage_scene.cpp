@@ -17,7 +17,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "storage_scene.h"
 
-#include "../shapes/object_tree.h"
+#include "../shapes/object_bvh.h"
 
 #include <src/color/color.h>
 #include <src/com/error.h>
@@ -43,17 +43,6 @@ std::vector<P*> to_pointers(const std::vector<std::unique_ptr<P>>& objects)
 }
 
 template <std::size_t N, typename T, typename Color>
-geometry::BoundingBox<N, T> compute_bounding_box(const std::vector<std::unique_ptr<const Shape<N, T, Color>>>& shapes)
-{
-        geometry::BoundingBox<N, T> bb = shapes[0]->bounding_box();
-        for (std::size_t i = 1; i < shapes.size(); ++i)
-        {
-                bb.merge(shapes[i]->bounding_box());
-        }
-        return bb;
-}
-
-template <std::size_t N, typename T, typename Color>
 class Impl final : public Scene<N, T, Color>
 {
         static constexpr int RAY_OFFSET_IN_EPSILONS = 1000;
@@ -68,14 +57,14 @@ class Impl final : public Scene<N, T, Color>
         std::vector<const Shape<N, T, Color>*> shape_pointers_;
         std::vector<const LightSource<N, T, Color>*> light_source_pointers_;
 
+        ObjectBvh<N, T, Color> bvh_;
         T ray_offset_;
-        ObjectTree<N, T, Color> tree_;
 
         const Surface<N, T, Color>* intersect(const Ray<N, T>& ray) const override
         {
                 ++thread_ray_count_;
 
-                return tree_.intersect(Ray<N, T>(ray).move(ray_offset_));
+                return bvh_.intersect(Ray<N, T>(ray).move(ray_offset_));
         }
 
         const std::vector<const LightSource<N, T, Color>*>& light_sources() const override
@@ -98,8 +87,7 @@ class Impl final : public Scene<N, T, Color>
                 return thread_ray_count_;
         }
 
-        Impl(const geometry::BoundingBox<N, T>& bounding_box,
-             ProgressRatio&& progress,
+        Impl(ProgressRatio&& progress,
              const Color& background_light,
              std::unique_ptr<const Projector<N, T>>&& projector,
              std::vector<std::unique_ptr<const LightSource<N, T, Color>>>&& light_sources,
@@ -110,8 +98,8 @@ class Impl final : public Scene<N, T, Color>
                   background_light_(background_light),
                   shape_pointers_(to_pointers(shapes_)),
                   light_source_pointers_(to_pointers(light_sources_)),
-                  ray_offset_(bounding_box.diagonal().norm() * (RAY_OFFSET_IN_EPSILONS * Limits<T>::epsilon())),
-                  tree_(&shape_pointers_, bounding_box, &progress)
+                  bvh_(&shape_pointers_, &progress),
+                  ray_offset_(bvh_.bounding_box().diagonal().norm() * (RAY_OFFSET_IN_EPSILONS * Limits<T>::epsilon()))
         {
                 ASSERT(projector_);
         }
@@ -121,8 +109,7 @@ public:
              std::unique_ptr<const Projector<N, T>>&& projector,
              std::vector<std::unique_ptr<const LightSource<N, T, Color>>>&& light_sources,
              std::vector<std::unique_ptr<const Shape<N, T, Color>>>&& shapes)
-                : Impl(compute_bounding_box(shapes),
-                       ProgressRatio(nullptr),
+                : Impl(ProgressRatio(nullptr),
                        background_light,
                        std::move(projector),
                        std::move(light_sources),
