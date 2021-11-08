@@ -138,6 +138,12 @@ class ShapeImpl final : public Shape<N, T, Color>
         MeshData<N, T, Color> mesh_data_;
         std::optional<geometry::ObjectBvh<N, T, MeshFacet<N, T>>> object_bvh_;
         geometry::BoundingBox<N, T> bounding_box_;
+        T intersection_cost_;
+
+        T intersection_cost() const override
+        {
+                return intersection_cost_;
+        }
 
         std::optional<T> intersect_bounding(const Ray<N, T>& ray, const T max_distance) const override
         {
@@ -181,7 +187,8 @@ public:
         ShapeImpl(const std::vector<const mesh::MeshObject<N>*>& mesh_objects, ProgressRatio* const progress)
                 : mesh_data_(mesh_objects),
                   object_bvh_(create_object_bvh(&mesh_data_.facets(), progress)),
-                  bounding_box_(object_bvh_->bounding_box())
+                  bounding_box_(object_bvh_->bounding_box()),
+                  intersection_cost_(mesh_data_.facets().size() * MeshFacet<N, T>::intersection_cost())
         {
         }
 };
