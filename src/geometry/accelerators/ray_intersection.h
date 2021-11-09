@@ -19,13 +19,13 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <src/numerical/ray.h>
 
-#include <optional>
 #include <tuple>
+#include <vector>
 
 namespace ns::geometry
 {
 template <std::size_t N, typename T, typename Object, typename Indices>
-std::optional<std::tuple<T, const Object*>> ray_intersection(
+std::tuple<T, const Object*> ray_intersection(
         const std::vector<Object>& objects,
         const Indices& indices,
         const Ray<N, T>& ray,
@@ -36,7 +36,8 @@ std::optional<std::tuple<T, const Object*>> ray_intersection(
 
         for (const auto index : indices)
         {
-                const std::optional<T> distance = objects[index].intersect(ray);
+                const auto distance = objects[index].intersect(ray);
+                static_assert(std::is_same_v<T, std::remove_cvref_t<decltype(*distance)>>);
                 if (distance && *distance < min_distance)
                 {
                         min_distance = *distance;
@@ -44,10 +45,6 @@ std::optional<std::tuple<T, const Object*>> ray_intersection(
                 }
         }
 
-        if (closest_object)
-        {
-                return std::make_tuple(min_distance, closest_object);
-        }
-        return std::nullopt;
+        return {min_distance, closest_object};
 }
 }

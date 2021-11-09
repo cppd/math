@@ -94,14 +94,13 @@ public:
                 return tree_.intersect_root(ray);
         }
 
-        std::optional<std::tuple<T, const Object*>> intersect(const Ray<N, T>& ray, const T& root_distance) const
+        std::tuple<T, const Object*> intersect(const Ray<N, T>& ray, const T& root_distance) const
         {
                 struct Info
                 {
                         Vector<N, T> point;
-                        std::optional<std::tuple<T, const Object*>> intersection;
-                        explicit Info(std::optional<std::tuple<T, const Object*>>&& intersection)
-                                : intersection(intersection)
+                        std::tuple<T, const Object*> intersection;
+                        explicit Info(const std::tuple<T, const Object*>& intersection) : intersection(intersection)
                         {
                         }
                 };
@@ -109,9 +108,9 @@ public:
                 const auto f = [&](const std::vector<int>& object_indices) -> std::optional<Info>
                 {
                         Info info(ray_intersection(*objects_, object_indices, ray, Limits<T>::max()));
-                        if (info.intersection)
+                        if (std::get<1>(info.intersection))
                         {
-                                info.point = ray.point(std::get<0>(*info.intersection));
+                                info.point = ray.point(std::get<0>(info.intersection));
                                 return info;
                         }
                         return std::nullopt;
@@ -122,7 +121,7 @@ public:
                 {
                         return info->intersection;
                 }
-                return std::nullopt;
+                return {0, nullptr};
         }
 };
 }

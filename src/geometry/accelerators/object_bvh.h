@@ -62,7 +62,7 @@ public:
                 return bvh_.intersect_root(ray, max_distance);
         }
 
-        std::optional<std::tuple<T, const Object*>> intersect(const Ray<N, T>& ray, const T& max_distance) const
+        std::tuple<T, const Object*> intersect(const Ray<N, T>& ray, const T& max_distance) const
         {
                 struct Info
                 {
@@ -77,11 +77,10 @@ public:
                 const auto f = [&](const std::span<const unsigned>& object_indices,
                                    const T& distance) -> std::optional<Info>
                 {
-                        std::optional<std::tuple<T, const Object*>> intersection =
-                                ray_intersection(*objects_, object_indices, ray, distance);
-                        if (intersection)
+                        Info info(ray_intersection(*objects_, object_indices, ray, distance));
+                        if (info.object)
                         {
-                                return Info(*intersection);
+                                return info;
                         }
                         return std::nullopt;
                 };
@@ -89,9 +88,9 @@ public:
                 const auto info = bvh_.intersect(ray, max_distance, f);
                 if (info)
                 {
-                        return std::make_tuple(info->distance, info->object);
+                        return {info->distance, info->object};
                 }
-                return std::nullopt;
+                return {0, nullptr};
         }
 };
 }

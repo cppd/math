@@ -78,11 +78,10 @@ public:
 
         std::optional<unsigned> intersect(const Ray<N, T>& ray) const
         {
-                const std::optional<std::tuple<T, const geometry::HyperplaneMeshSimplex<N, T>*>> v =
-                        bvh_.intersect(ray, Limits<T>::max());
-                if (v)
+                const auto [_, facet] = bvh_.intersect(ray, Limits<T>::max());
+                if (facet)
                 {
-                        const std::size_t index = std::get<1>(*v) - sphere_.facets.data();
+                        const std::size_t index = facet - sphere_.facets.data();
                         ASSERT(index < facet_count());
                         return index;
                 }

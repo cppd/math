@@ -155,15 +155,15 @@ class ShapeImpl final : public Shape<N, T, Color>
                 const T max_distance,
                 const T /*bounding_distance*/) const override
         {
-                std::optional<std::tuple<T, const MeshFacet<N, T>*>> v = object_bvh_->intersect(ray, max_distance);
-                if (!v)
+                const auto [distance, facet] = object_bvh_->intersect(ray, max_distance);
+                if (!facet)
                 {
                         return ShapeIntersection<N, T, Color>(nullptr);
                 }
-                const Vector<N, T> point = ray.point(std::get<0>(*v));
+                const Vector<N, T> point = ray.point(distance);
                 ShapeIntersection<N, T, Color> intersection;
-                intersection.distance = std::get<0>(*v);
-                intersection.surface = make_arena_ptr<SurfaceImpl<N, T, Color>>(point, &mesh_data_, std::get<1>(*v));
+                intersection.distance = distance;
+                intersection.surface = make_arena_ptr<SurfaceImpl<N, T, Color>>(point, &mesh_data_, facet);
                 return intersection;
         }
 
