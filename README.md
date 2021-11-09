@@ -98,31 +98,29 @@ on the 3-torus T<sup>3</sup> (S<sup>1</sup>×S<sup>1</sup>×S<sup>1</sup>).
   * 4-simplex facets.
 * 4-space
   * 3-simplex mesh without boundary.
-  * 16-tree.
-  * 4-parallelotopes.
+  * 4-parallelotope hierarchy.
   * 4-dimensional microfacet BRDF.
-  * Distant light source.
+  * 3-ball light source.
+  * 4D soft shadows.
   * Parallel projection onto 3D screen.
 
 Volumetric rendering
 
-<img src="https://i.imgur.com/RnHpwiM.png" alt="image" width="23%"></img>
-<img src="https://i.imgur.com/PcCwmHa.png" alt="image" width="23%"></img>
-<img src="https://i.imgur.com/luG592X.png" alt="image" width="23%"></img>
-<img src="https://i.imgur.com/QG97hys.png" alt="image" width="23%"></img>
-<img src="https://i.imgur.com/XaYJKYV.png" alt="image" width="23%"></img>
-<img src="https://i.imgur.com/JHW8tuq.png" alt="image" width="23%"></img>
-<img src="https://i.imgur.com/wZ4mI7Z.png" alt="image" width="23%"></img>
-<img src="https://i.imgur.com/eiPHeBq.png" alt="image" width="23%"></img>
-<img src="https://i.imgur.com/dTi3yJ4.png" alt="image" width="23%"></img>
-<img src="https://i.imgur.com/eU2aCKe.png" alt="image" width="23%"></img>
-<img src="https://i.imgur.com/vijRFub.png" alt="image" width="23%"></img>
-<img src="https://i.imgur.com/cpmDWWm.png" alt="image" width="23%"></img>
-<img src="https://i.imgur.com/WRD4cu1.png" alt="image" width="23%"></img>
-<img src="https://i.imgur.com/phXLjNI.png" alt="image" width="23%"></img>
-<img src="https://i.imgur.com/eIpFdI7.png" alt="image" width="23%"></img>
-<img src="https://i.imgur.com/jNuOc1b.png" alt="image" width="23%"></img>
-
+<img src="https://i.imgur.com/2sEU0r9.png" alt="image" width="19%"></img>
+<img src="https://i.imgur.com/iQY6ACw.png" alt="image" width="19%"></img>
+<img src="https://i.imgur.com/w95fl6j.png" alt="image" width="19%"></img>
+<img src="https://i.imgur.com/4PpADsU.png" alt="image" width="19%"></img>
+<img src="https://i.imgur.com/E3nUHLm.png" alt="image" width="19%"></img>
+<img src="https://i.imgur.com/ingQCst.png" alt="image" width="19%"></img>
+<img src="https://i.imgur.com/l9GsQ0K.png" alt="image" width="19%"></img>
+<img src="https://i.imgur.com/QbAgg4D.png" alt="image" width="19%"></img>
+<img src="https://i.imgur.com/t6Hb7xC.png" alt="image" width="19%"></img>
+<img src="https://i.imgur.com/v4YNeDa.png" alt="image" width="19%"></img>
+<img src="https://i.imgur.com/ZVVmvXR.png" alt="image" width="19%"></img>
+<img src="https://i.imgur.com/EoJeL0V.png" alt="image" width="19%"></img>
+<img src="https://i.imgur.com/XL8NzRJ.png" alt="image" width="19%"></img>
+<img src="https://i.imgur.com/7rgjaqb.png" alt="image" width="19%"></img>
+<img src="https://i.imgur.com/FQH6ULO.png" alt="image" width="19%"></img>
 
 ### 3D model
 
