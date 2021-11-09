@@ -17,10 +17,11 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
-#include "parallelotope_aa.h"
 #include "ray_intersection.h"
-#include "shape_overlap.h"
 #include "tree.h"
+
+#include "../spatial/parallelotope_aa.h"
+#include "../spatial/shape_overlap.h"
 
 #include <src/com/thread.h>
 #include <src/com/type/limit.h>

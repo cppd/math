@@ -25,7 +25,7 @@ CRC Press, 2014.
 
 #pragma once
 
-#include "bounding_box.h"
+#include "../spatial/bounding_box.h"
 
 #include <src/numerical/ray.h>
 #include <src/numerical/vec.h>

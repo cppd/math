@@ -19,9 +19,9 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <src/com/error.h>
 #include <src/com/type/limit.h>
+#include <src/geometry/accelerators/object_bvh.h>
 #include <src/geometry/shapes/sphere_create.h>
 #include <src/geometry/spatial/hyperplane_mesh_simplex.h>
-#include <src/geometry/spatial/object_bvh.h>
 #include <src/progress/progress.h>
 
 #include <array>

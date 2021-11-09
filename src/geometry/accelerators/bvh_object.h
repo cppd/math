@@ -17,7 +17,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
-#include "bounding_box.h"
+#include "../spatial/bounding_box.h"
 
 namespace ns::geometry
 {

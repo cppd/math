@@ -20,7 +20,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "ray_intersection.h"
 
 #include <src/com/type/limit.h>
-#include <src/geometry/spatial/bvh.h>
+#include <src/geometry/accelerators/bvh.h>
 
 namespace ns::painter
 {

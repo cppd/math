@@ -17,8 +17,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "tree.h"
 
-#include "parallelotope.h"
-#include "parallelotope_aa.h"
+#include "../spatial/parallelotope.h"
+#include "../spatial/parallelotope_aa.h"
 
 #include <src/com/error.h>
 #include <src/com/exponent.h>

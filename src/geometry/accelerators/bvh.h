@@ -25,8 +25,9 @@ Elsevier, 2017.
 
 #pragma once
 
-#include "bounding_box.h"
 #include "bvh_object.h"
+
+#include "../spatial/bounding_box.h"
 
 #include <src/com/error.h>
 #include <src/progress/progress.h>

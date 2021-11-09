@@ -29,7 +29,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/com/names.h>
 #include <src/com/print.h>
 #include <src/com/type/name.h>
-#include <src/geometry/spatial/object_bvh.h>
+#include <src/geometry/accelerators/object_bvh.h>
 #include <src/shading/ggx_diffuse.h>
 
 namespace ns::painter

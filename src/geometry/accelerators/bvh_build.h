@@ -21,7 +21,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "bvh_object.h"
 #include "bvh_split.h"
 
-#include "testing/bounding_box_intersection.h"
+#include "../spatial/testing/bounding_box_intersection.h"
 
 #include <src/com/error.h>
 #include <src/com/thread.h>
