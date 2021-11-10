@@ -100,7 +100,7 @@ class Parallelotope final : public Shape<N, T, Color>
                 return geometry::spatial::testing::parallelotope::intersection_cost<N, T>();
         }
 
-        std::optional<T> intersect_bounding(const Ray<N, T>& r, const T max_distance) const override
+        std::optional<T> intersect_bounds(const Ray<N, T>& r, const T max_distance) const override
         {
                 if (alpha_nonzero_ || light_source_)
                 {

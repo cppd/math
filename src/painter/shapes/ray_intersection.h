@@ -31,7 +31,7 @@ namespace ray_intersection_implementation
 template <typename Result, typename Shape, std::size_t N, typename T>
 Result ray_intersection(const Shape& shape, const Ray<N, T>& ray, const T max_distance)
 {
-        const auto distance = shape.intersect_bounding(ray, max_distance);
+        const auto distance = shape.intersect_bounds(ray, max_distance);
         if (distance)
         {
                 return shape.intersect(ray, max_distance, *distance);
@@ -63,7 +63,7 @@ Result ray_intersection(const Shapes& shapes, const Indices& indices, const Ray<
         for (const auto index : indices)
         {
                 const auto& shape = to_ref(shapes[index]);
-                const auto distance = shape.intersect_bounding(ray, max_distance);
+                const auto distance = shape.intersect_bounds(ray, max_distance);
                 if (distance)
                 {
                         ASSERT(*distance < max_distance);

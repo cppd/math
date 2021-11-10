@@ -145,7 +145,7 @@ class ShapeImpl final : public Shape<N, T, Color>
                 return intersection_cost_;
         }
 
-        std::optional<T> intersect_bounding(const Ray<N, T>& ray, const T max_distance) const override
+        std::optional<T> intersect_bounds(const Ray<N, T>& ray, const T max_distance) const override
         {
                 return object_bvh_->intersect_root(ray, max_distance);
         }

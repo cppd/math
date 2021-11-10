@@ -19,31 +19,36 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "ray_intersection.h"
 
+#include <src/com/reference.h>
 #include <src/com/type/limit.h>
 #include <src/geometry/accelerators/bvh.h>
 
+#include <optional>
+#include <span>
+#include <vector>
+
 namespace ns::painter
 {
-template <std::size_t N, typename T, typename Color>
+template <std::size_t N, typename T, typename Shapes>
 class ObjectBvh final
 {
-        std::vector<geometry::BvhObject<N, T>> bvh_objects(const std::vector<const Shape<N, T, Color>*>& objects)
+        std::vector<geometry::BvhObject<N, T>> bvh_objects(const Shapes& shapes)
         {
                 std::vector<geometry::BvhObject<N, T>> res;
-                res.reserve(objects.size());
-                for (std::size_t i = 0; i < objects.size(); ++i)
+                res.reserve(shapes.size());
+                for (std::size_t i = 0; i < shapes.size(); ++i)
                 {
-                        res.emplace_back(objects[i]->bounding_box(), objects[i]->intersection_cost(), i);
+                        res.emplace_back(to_ref(shapes[i]).bounding_box(), to_ref(shapes[i]).intersection_cost(), i);
                 }
                 return res;
         }
 
-        const std::vector<const Shape<N, T, Color>*>* const objects_;
+        const Shapes* const shapes_;
         geometry::Bvh<N, T> bvh_;
 
 public:
-        ObjectBvh(const std::vector<const Shape<N, T, Color>*>* const objects, ProgressRatio* const progress)
-                : objects_(objects), bvh_(bvh_objects(*objects), progress)
+        ObjectBvh(const Shapes* const shapes, ProgressRatio* const progress)
+                : shapes_(shapes), bvh_(bvh_objects(*shapes), progress)
         {
         }
 
@@ -52,14 +57,16 @@ public:
                 return bvh_.bounding_box();
         }
 
-        const Surface<N, T, Color>* intersect(const Ray<N, T>& ray) const
+        const auto* intersect(const Ray<N, T>& ray) const
         {
+                using Surface =
+                        std::remove_pointer_t<decltype(to_ref(shapes_->front()).intersect(ray, T(), T()).surface)>;
+
                 struct Info
                 {
                         T distance;
-                        const Surface<N, T, Color>* surface;
-                        explicit Info(const ShapeIntersection<N, T, Color>& intersection)
-                                : distance(intersection.distance), surface(intersection.surface)
+                        const Surface* surface;
+                        explicit Info(const T& distance, const Surface* surface) : distance(distance), surface(surface)
                         {
                         }
                 };
@@ -67,11 +74,10 @@ public:
                 const auto f = [&](const std::span<const unsigned>& object_indices,
                                    const T& distance) -> std::optional<Info>
                 {
-                        ShapeIntersection<N, T, Color> intersection =
-                                ray_intersection(*objects_, object_indices, ray, distance);
+                        auto intersection = ray_intersection(*shapes_, object_indices, ray, distance);
                         if (intersection.surface)
                         {
-                                return Info(intersection);
+                                return Info(intersection.distance, intersection.surface);
                         }
                         return std::nullopt;
                 };

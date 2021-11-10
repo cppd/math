@@ -51,7 +51,7 @@ struct Shape
 
         virtual T intersection_cost() const = 0;
 
-        virtual std::optional<T> intersect_bounding(const Ray<N, T>& ray, T max_distance) const = 0;
+        virtual std::optional<T> intersect_bounds(const Ray<N, T>& ray, T max_distance) const = 0;
 
         virtual ShapeIntersection<N, T, Color> intersect(const Ray<N, T>& ray, T max_distance, T bounding_distance)
                 const = 0;

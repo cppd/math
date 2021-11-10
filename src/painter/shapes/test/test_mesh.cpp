@@ -78,8 +78,8 @@ ShapeIntersection<N, T, Color> intersect_mesh(
         const unsigned ray_number,
         int* const error_count)
 {
-        const std::optional<T> bounding_distance = mesh.intersect_bounding(ray, Limits<T>::max());
-        if (!bounding_distance)
+        const std::optional<T> bounds_distance = mesh.intersect_bounds(ray, Limits<T>::max());
+        if (!bounds_distance)
         {
                 if (WITH_ERROR_LOG)
                 {
@@ -91,16 +91,16 @@ ShapeIntersection<N, T, Color> intersect_mesh(
         }
         if (WITH_RAY_LOG)
         {
-                LOG(std::string(name_2) + "_a == " + to_string(*bounding_distance));
+                LOG(std::string(name_2) + "_a == " + to_string(*bounds_distance));
         }
 
-        const ShapeIntersection<N, T, Color> intersection = mesh.intersect(ray, Limits<T>::max(), *bounding_distance);
+        const ShapeIntersection<N, T, Color> intersection = mesh.intersect(ray, Limits<T>::max(), *bounds_distance);
         if (!intersection.surface)
         {
                 if (WITH_ERROR_LOG)
                 {
                         LOG(std::string("No ") + name_1 + " intersection with ray #" + to_string(ray_number) + "\n"
-                            + "bounding distance " + to_string(*bounding_distance) + "\n" + to_string(ray));
+                            + "bounding distance " + to_string(*bounds_distance) + "\n" + to_string(ray));
                 }
                 ++(*error_count);
                 return ShapeIntersection<N, T, Color>(nullptr);
@@ -150,11 +150,11 @@ void intersect_mesh(
                 ray.move(ray_offset);
         }
 
-        const std::optional<T> bounding_distance = mesh.intersect_bounding(ray, Limits<T>::max());
-        if (bounding_distance)
+        const std::optional<T> bounds_distance = mesh.intersect_bounds(ray, Limits<T>::max());
+        if (bounds_distance)
         {
                 const ShapeIntersection<N, T, Color> intersection =
-                        mesh.intersect(ray, Limits<T>::max(), *bounding_distance);
+                        mesh.intersect(ray, Limits<T>::max(), *bounds_distance);
                 if (intersection.surface)
                 {
                         if (WITH_ERROR_LOG)

@@ -54,10 +54,9 @@ class Impl final : public Scene<N, T, Color>
         std::unique_ptr<const Projector<N, T>> projector_;
         Color background_light_;
 
-        std::vector<const Shape<N, T, Color>*> shape_pointers_;
         std::vector<const LightSource<N, T, Color>*> light_source_pointers_;
 
-        ObjectBvh<N, T, Color> bvh_;
+        ObjectBvh<N, T, decltype(shapes_)> bvh_;
         T ray_offset_;
 
         const Surface<N, T, Color>* intersect(const Ray<N, T>& ray) const override
@@ -96,9 +95,8 @@ class Impl final : public Scene<N, T, Color>
                   light_sources_(std::move(light_sources)),
                   projector_(std::move(projector)),
                   background_light_(background_light),
-                  shape_pointers_(to_pointers(shapes_)),
                   light_source_pointers_(to_pointers(light_sources_)),
-                  bvh_(&shape_pointers_, &progress),
+                  bvh_(&shapes_, &progress),
                   ray_offset_(bvh_.bounding_box().diagonal().norm() * (RAY_OFFSET_IN_EPSILONS * Limits<T>::epsilon()))
         {
                 ASSERT(projector_);
