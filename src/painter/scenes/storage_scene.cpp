@@ -17,11 +17,12 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "storage_scene.h"
 
-#include "../shapes/object_bvh.h"
+#include "../shapes/ray_intersection.h"
 
 #include <src/color/color.h>
 #include <src/com/error.h>
 #include <src/com/type/limit.h>
+#include <src/geometry/accelerators/object_bvh.h>
 
 #include <optional>
 
@@ -56,14 +57,21 @@ class Impl final : public Scene<N, T, Color>
 
         std::vector<const LightSource<N, T, Color>*> light_source_pointers_;
 
-        ObjectBvh<N, T, decltype(shapes_)> bvh_;
+        geometry::ObjectBvh<N, T> bvh_;
         T ray_offset_;
 
         std::tuple<T, const Surface<N, T, Color>*> intersect(const Ray<N, T>& ray) const override
         {
                 ++thread_ray_count_;
 
-                return bvh_.intersect(Ray<N, T>(ray).move(ray_offset_), Limits<T>::max());
+                const Ray<N, T> ray_moved = Ray<N, T>(ray).move(ray_offset_);
+
+                return bvh_.intersect(
+                        ray_moved, Limits<T>::max(),
+                        [shapes = &shapes_, &ray_moved](const auto& indices, const auto& local_max_distance)
+                        {
+                                return ray_intersection(*shapes, indices, ray_moved, local_max_distance);
+                        });
         }
 
         const std::vector<const LightSource<N, T, Color>*>& light_sources() const override
@@ -96,7 +104,7 @@ class Impl final : public Scene<N, T, Color>
                   projector_(std::move(projector)),
                   background_light_(background_light),
                   light_source_pointers_(to_pointers(light_sources_)),
-                  bvh_(&shapes_, &progress),
+                  bvh_(shapes_, &progress),
                   ray_offset_(bvh_.bounding_box().diagonal().norm() * (RAY_OFFSET_IN_EPSILONS * Limits<T>::epsilon()))
         {
                 ASSERT(projector_);

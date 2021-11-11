@@ -18,8 +18,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #pragma once
 
 #include "bvh.h"
-#include "ray_intersection.h"
 
+#include <src/com/reference.h>
 #include <src/progress/progress.h>
 
 #include <optional>
@@ -28,27 +28,26 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 namespace ns::geometry
 {
-template <std::size_t N, typename T, typename Object>
+template <std::size_t N, typename T>
 class ObjectBvh final
 {
-        std::vector<BvhObject<N, T>> bvh_objects(const std::vector<Object>& objects)
+        template <typename Objects>
+        std::vector<BvhObject<N, T>> bvh_objects(const Objects& objects)
         {
-                const T intersection_cost = Object::intersection_cost();
                 std::vector<BvhObject<N, T>> res;
                 res.reserve(objects.size());
                 for (std::size_t i = 0; i < objects.size(); ++i)
                 {
-                        res.emplace_back(objects[i].bounding_box(), intersection_cost, i);
+                        res.emplace_back(to_ref(objects[i]).bounding_box(), to_ref(objects[i]).intersection_cost(), i);
                 }
                 return res;
         }
 
-        const std::vector<Object>* const objects_;
         Bvh<N, T> bvh_;
 
 public:
-        ObjectBvh(const std::vector<Object>* const objects, ProgressRatio* progress)
-                : objects_(objects), bvh_(bvh_objects(*objects), progress)
+        template <typename Objects>
+        ObjectBvh(const Objects& objects, ProgressRatio* const progress) : bvh_(bvh_objects(objects), progress)
         {
         }
 
@@ -62,8 +61,17 @@ public:
                 return bvh_.intersect_root(ray, max_distance);
         }
 
-        std::tuple<T, const Object*> intersect(const Ray<N, T>& ray, const T& max_distance) const
+        template <typename RayIntersection>
+        auto intersect(const Ray<N, T>& ray, const T& max_distance, const RayIntersection& ray_intersection) const
+                -> decltype(ray_intersection(std::vector<unsigned>(), T()))
         {
+                using Tuple = decltype(ray_intersection(std::vector<unsigned>(), T()));
+                static_assert(2 == std::tuple_size_v<Tuple>);
+                static_assert(std::is_same_v<T, std::tuple_element_t<0, Tuple>>);
+                static_assert(std::is_pointer_v<std::tuple_element_t<1, Tuple>>);
+
+                using Object = std::remove_pointer_t<std::tuple_element_t<1, Tuple>>;
+
                 struct Info
                 {
                         T distance;
@@ -74,10 +82,9 @@ public:
                         }
                 };
 
-                const auto f = [&](const std::span<const unsigned>& object_indices,
-                                   const T& distance) -> std::optional<Info>
+                const auto f = [&ray_intersection](const auto& object_indices, const T& distance) -> std::optional<Info>
                 {
-                        Info info(ray_intersection(*objects_, object_indices, ray, distance));
+                        Info info(ray_intersection(object_indices, distance));
                         if (info.object)
                         {
                                 return info;

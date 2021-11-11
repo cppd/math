@@ -22,6 +22,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/geometry/accelerators/object_bvh.h>
 #include <src/geometry/shapes/sphere_create.h>
 #include <src/geometry/spatial/hyperplane_mesh_simplex.h>
+#include <src/geometry/spatial/ray_intersection.h>
 #include <src/progress/progress.h>
 
 #include <array>
@@ -57,11 +58,11 @@ class SphereMesh final
         };
 
         Sphere sphere_;
-        geometry::ObjectBvh<N, T, geometry::HyperplaneMeshSimplex<N, T>> bvh_;
+        geometry::ObjectBvh<N, T> bvh_;
 
 public:
         SphereMesh(const unsigned facet_min_count, ProgressRatio* const progress)
-                : sphere_(facet_min_count), bvh_(&sphere_.facets, progress)
+                : sphere_(facet_min_count), bvh_(sphere_.facets, progress)
         {
         }
 
@@ -78,7 +79,12 @@ public:
 
         std::optional<unsigned> intersect(const Ray<N, T>& ray) const
         {
-                const auto [_, facet] = bvh_.intersect(ray, Limits<T>::max());
+                const auto [_, facet] = bvh_.intersect(
+                        ray, Limits<T>::max(),
+                        [facets = &sphere_.facets, &ray](const auto& indices, const auto& local_max_distance)
+                        {
+                                return geometry::ray_intersection(*facets, indices, ray, local_max_distance);
+                        });
                 if (facet)
                 {
                         const std::size_t index = facet - sphere_.facets.data();

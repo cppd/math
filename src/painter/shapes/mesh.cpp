@@ -30,6 +30,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/com/print.h>
 #include <src/com/type/name.h>
 #include <src/geometry/accelerators/object_bvh.h>
+#include <src/geometry/spatial/ray_intersection.h>
 #include <src/shading/ggx_diffuse.h>
 
 namespace ns::painter
@@ -116,7 +117,7 @@ public:
 };
 
 template <std::size_t N, typename T>
-geometry::ObjectBvh<N, T, MeshFacet<N, T>> create_object_bvh(
+geometry::ObjectBvh<N, T> create_object_bvh(
         const std::vector<MeshFacet<N, T>>* const facets,
         ProgressRatio* const progress)
 {
@@ -125,7 +126,7 @@ geometry::ObjectBvh<N, T, MeshFacet<N, T>> create_object_bvh(
 
         const Clock::time_point start_time = Clock::now();
 
-        geometry::ObjectBvh<N, T, MeshFacet<N, T>> object_bvh(facets, progress);
+        geometry::ObjectBvh<N, T> object_bvh(*facets, progress);
 
         LOG("Painter mesh created, " + to_string_fixed(duration_from(start_time), 5) + " s");
 
@@ -136,7 +137,7 @@ template <std::size_t N, typename T, typename Color>
 class ShapeImpl final : public Shape<N, T, Color>
 {
         MeshData<N, T, Color> mesh_data_;
-        std::optional<geometry::ObjectBvh<N, T, MeshFacet<N, T>>> object_bvh_;
+        std::optional<geometry::ObjectBvh<N, T>> object_bvh_;
         geometry::BoundingBox<N, T> bounding_box_;
         T intersection_cost_;
 
@@ -155,7 +156,12 @@ class ShapeImpl final : public Shape<N, T, Color>
                 const T max_distance,
                 const T /*bounding_distance*/) const override
         {
-                const auto [distance, facet] = object_bvh_->intersect(ray, max_distance);
+                const auto [distance, facet] = object_bvh_->intersect(
+                        ray, max_distance,
+                        [facets = &mesh_data_.facets(), &ray](const auto& indices, const auto& local_max_distance)
+                        {
+                                return geometry::ray_intersection(*facets, indices, ray, local_max_distance);
+                        });
                 if (!facet)
                 {
                         return {0, nullptr};

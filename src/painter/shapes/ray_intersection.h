@@ -115,8 +115,12 @@ auto ray_intersection(const Shapes& shapes, const Indices& indices, const Ray<N,
 {
         namespace impl = ray_intersection_implementation;
 
-        using Object = std::remove_pointer_t<
-                std::remove_reference_t<decltype(std::get<1>(to_ref(shapes.front()).intersect(ray, T(), T())))>>;
+        using Tuple = decltype(to_ref(shapes.front()).intersect(ray, T(), T()));
+        static_assert(2 == std::tuple_size_v<Tuple>);
+        static_assert(std::is_same_v<T, std::tuple_element_t<0, Tuple>>);
+        static_assert(std::is_pointer_v<std::tuple_element_t<1, Tuple>>);
+
+        using Object = std::remove_pointer_t<std::tuple_element_t<1, Tuple>>;
 
         if (indices.size() == 1)
         {
