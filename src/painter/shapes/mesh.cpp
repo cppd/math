@@ -126,7 +126,14 @@ geometry::ObjectBvh<N, T> create_object_bvh(
 
         const Clock::time_point start_time = Clock::now();
 
-        geometry::ObjectBvh<N, T> object_bvh(*facets, progress);
+        std::vector<geometry::BvhObject<N, T>> bvh_objects;
+        bvh_objects.reserve(facets->size());
+        for (std::size_t i = 0; i < facets->size(); ++i)
+        {
+                bvh_objects.emplace_back((*facets)[i].bounding_box(), MeshFacet<N, T>::intersection_cost(), i);
+        }
+
+        geometry::ObjectBvh<N, T> object_bvh(std::move(bvh_objects), progress);
 
         LOG("Painter mesh created, " + to_string_fixed(duration_from(start_time), 5) + " s");
 

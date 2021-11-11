@@ -19,7 +19,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "bvh.h"
 
-#include <src/com/reference.h>
 #include <src/progress/progress.h>
 
 #include <optional>
@@ -31,23 +30,11 @@ namespace ns::geometry
 template <std::size_t N, typename T>
 class ObjectBvh final
 {
-        template <typename Objects>
-        std::vector<BvhObject<N, T>> bvh_objects(const Objects& objects)
-        {
-                std::vector<BvhObject<N, T>> res;
-                res.reserve(objects.size());
-                for (std::size_t i = 0; i < objects.size(); ++i)
-                {
-                        res.emplace_back(to_ref(objects[i]).bounding_box(), to_ref(objects[i]).intersection_cost(), i);
-                }
-                return res;
-        }
-
         Bvh<N, T> bvh_;
 
 public:
-        template <typename Objects>
-        ObjectBvh(const Objects& objects, ProgressRatio* const progress) : bvh_(bvh_objects(objects), progress)
+        ObjectBvh(std::vector<BvhObject<N, T>>&& objects, ProgressRatio* const progress)
+                : bvh_(std::move(objects), progress)
         {
         }
 

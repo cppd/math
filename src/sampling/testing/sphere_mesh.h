@@ -57,12 +57,24 @@ class SphereMesh final
                 Sphere& operator=(Sphere&&) = delete;
         };
 
+        static std::vector<geometry::BvhObject<N, T>> bvh_objects(
+                const std::vector<geometry::HyperplaneMeshSimplex<N, T>>& objects)
+        {
+                std::vector<geometry::BvhObject<N, T>> bvh_objects;
+                bvh_objects.reserve(objects.size());
+                for (std::size_t i = 0; i < objects.size(); ++i)
+                {
+                        bvh_objects.emplace_back(objects[i].bounding_box(), objects[i].intersection_cost(), i);
+                }
+                return bvh_objects;
+        }
+
         Sphere sphere_;
         geometry::ObjectBvh<N, T> bvh_;
 
 public:
         SphereMesh(const unsigned facet_min_count, ProgressRatio* const progress)
-                : sphere_(facet_min_count), bvh_(sphere_.facets, progress)
+                : sphere_(facet_min_count), bvh_(bvh_objects(sphere_.facets), progress)
         {
         }
 
