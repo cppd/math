@@ -113,15 +113,12 @@ class Parallelotope final : public Shape<N, T, Color>
                 return std::nullopt;
         }
 
-        ShapeIntersection<N, T, Color> intersect(
+        std::tuple<T, const Surface<N, T, Color>*> intersect(
                 const Ray<N, T>& ray,
                 const T /*max_distance*/,
                 const T bounding_distance) const override
         {
-                ShapeIntersection<N, T, Color> intersection;
-                intersection.distance = bounding_distance;
-                intersection.surface = make_arena_ptr<SurfaceImpl>(ray.point(bounding_distance), this);
-                return intersection;
+                return {bounding_distance, make_arena_ptr<SurfaceImpl>(ray.point(bounding_distance), this)};
         }
 
         geometry::BoundingBox<N, T> bounding_box() const override

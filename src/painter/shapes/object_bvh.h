@@ -20,19 +20,18 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "ray_intersection.h"
 
 #include <src/com/reference.h>
-#include <src/com/type/limit.h>
 #include <src/geometry/accelerators/bvh.h>
 
 #include <optional>
-#include <span>
+#include <tuple>
 #include <vector>
 
 namespace ns::painter
 {
-template <std::size_t N, typename T, typename Shapes>
+template <std::size_t N, typename T, typename Objects>
 class ObjectBvh final
 {
-        std::vector<geometry::BvhObject<N, T>> bvh_objects(const Shapes& shapes)
+        std::vector<geometry::BvhObject<N, T>> bvh_objects(const Objects& shapes)
         {
                 std::vector<geometry::BvhObject<N, T>> res;
                 res.reserve(shapes.size());
@@ -43,12 +42,15 @@ class ObjectBvh final
                 return res;
         }
 
-        const Shapes* const shapes_;
+        const Objects* const objects_;
         geometry::Bvh<N, T> bvh_;
 
+        using Object = std::remove_pointer_t<std::remove_reference_t<decltype(std::get<1>(
+                ray_intersection(*objects_, std::vector<unsigned>(), Ray<N, T>(), T())))>>;
+
 public:
-        ObjectBvh(const Shapes* const shapes, ProgressRatio* const progress)
-                : shapes_(shapes), bvh_(bvh_objects(*shapes), progress)
+        ObjectBvh(const Objects* const shapes, ProgressRatio* const progress)
+                : objects_(shapes), bvh_(bvh_objects(*shapes), progress)
         {
         }
 
@@ -57,33 +59,34 @@ public:
                 return bvh_.bounding_box();
         }
 
-        const auto* intersect(const Ray<N, T>& ray) const
+        std::tuple<T, const Object*> intersect(const Ray<N, T>& ray, const T& max_distance) const
         {
-                using Surface =
-                        std::remove_pointer_t<decltype(to_ref(shapes_->front()).intersect(ray, T(), T()).surface)>;
-
                 struct Info
                 {
                         T distance;
-                        const Surface* surface;
-                        explicit Info(const T& distance, const Surface* surface) : distance(distance), surface(surface)
+                        const Object* object;
+                        explicit Info(const std::tuple<T, const Object*>& intersection)
+                                : distance(std::get<0>(intersection)), object(std::get<1>(intersection))
                         {
                         }
                 };
 
-                const auto f = [&](const std::span<const unsigned>& object_indices,
-                                   const T& distance) -> std::optional<Info>
+                const auto f = [&](const auto& object_indices, const T& distance) -> std::optional<Info>
                 {
-                        auto intersection = ray_intersection(*shapes_, object_indices, ray, distance);
-                        if (intersection.surface)
+                        Info info(ray_intersection(*objects_, object_indices, ray, distance));
+                        if (info.object)
                         {
-                                return Info(intersection.distance, intersection.surface);
+                                return info;
                         }
                         return std::nullopt;
                 };
 
-                const auto info = bvh_.intersect(ray, Limits<T>::max(), f);
-                return info ? info->surface : nullptr;
+                const auto info = bvh_.intersect(ray, max_distance, f);
+                if (info)
+                {
+                        return {info->distance, info->object};
+                }
+                return {0, nullptr};
         }
 };
 }

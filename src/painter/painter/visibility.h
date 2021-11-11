@@ -42,21 +42,19 @@ bool occluded(
 {
         const Vector<N, T> point = ray.org();
 
-        const Surface<N, T, Color>* surface;
-
         if (!smooth_normals || dot(ray.dir(), geometric_normal) >= 0)
         {
-                surface = scene.intersect(ray);
+                const auto [_, surface] = scene.intersect(ray);
                 return surface_before_distance(point, surface, distance);
         }
 
-        surface = scene.intersect(ray);
-        if (!surface_before_distance(point, surface, distance))
+        const auto [distance_1, surface_1] = scene.intersect(ray);
+        if (!surface_before_distance(point, surface_1, distance))
         {
                 return true;
         }
 
-        surface = scene.intersect(Ray<N, T>(ray).set_org(surface->point()));
-        return surface_before_distance(point, surface, distance);
+        const auto [distance_2, surface_2] = scene.intersect(Ray<N, T>(ray).set_org(surface_1->point()));
+        return surface_before_distance(point, surface_2, distance);
 }
 }

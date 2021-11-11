@@ -70,7 +70,7 @@ std::vector<Ray<N, T>> create_rays_for_spherical_mesh(const geometry::BoundingBo
 }
 
 template <std::size_t N, typename T, typename Color>
-ShapeIntersection<N, T, Color> intersect_mesh(
+std::tuple<T, const Surface<N, T, Color>*> intersect_mesh(
         const char* const name_1,
         const char* const name_2,
         const Shape<N, T, Color>& mesh,
@@ -87,15 +87,15 @@ ShapeIntersection<N, T, Color> intersect_mesh(
                             + "\n" + to_string(ray));
                 }
                 ++(*error_count);
-                return ShapeIntersection<N, T, Color>(nullptr);
+                return {0, nullptr};
         }
         if (WITH_RAY_LOG)
         {
                 LOG(std::string(name_2) + "_a == " + to_string(*bounds_distance));
         }
 
-        const ShapeIntersection<N, T, Color> intersection = mesh.intersect(ray, Limits<T>::max(), *bounds_distance);
-        if (!intersection.surface)
+        const auto [distance, surface] = mesh.intersect(ray, Limits<T>::max(), *bounds_distance);
+        if (!surface)
         {
                 if (WITH_ERROR_LOG)
                 {
@@ -103,14 +103,14 @@ ShapeIntersection<N, T, Color> intersect_mesh(
                             + "bounding distance " + to_string(*bounds_distance) + "\n" + to_string(ray));
                 }
                 ++(*error_count);
-                return ShapeIntersection<N, T, Color>(nullptr);
+                return {0, nullptr};
         }
         if (WITH_RAY_LOG)
         {
-                LOG(std::string(name_2) + "_p == " + to_string(intersection.distance));
+                LOG(std::string(name_2) + "_p == " + to_string(distance));
         }
 
-        return intersection;
+        return {distance, surface};
 }
 
 template <std::size_t N, typename T, typename Color>
@@ -128,39 +128,36 @@ void intersect_mesh(
         }
 
         {
-                const ShapeIntersection<N, T, Color> intersection =
-                        intersect_mesh("the first", "t1", mesh, ray, ray_number, error_count);
-                if (!intersection.surface)
+                const auto [distance, surface] = intersect_mesh("the first", "t1", mesh, ray, ray_number, error_count);
+                if (!surface)
                 {
                         return;
                 }
 
-                ray.set_org(intersection.surface->point());
+                ray.set_org(surface->point());
                 ray.move(ray_offset);
         }
         {
-                const ShapeIntersection<N, T, Color> intersection =
-                        intersect_mesh("the second", "t2", mesh, ray, ray_number, error_count);
-                if (!intersection.surface)
+                const auto [distance, surface] = intersect_mesh("the second", "t2", mesh, ray, ray_number, error_count);
+                if (!surface)
                 {
                         return;
                 }
 
-                ray.set_org(intersection.surface->point());
+                ray.set_org(surface->point());
                 ray.move(ray_offset);
         }
 
         const std::optional<T> bounds_distance = mesh.intersect_bounds(ray, Limits<T>::max());
         if (bounds_distance)
         {
-                const ShapeIntersection<N, T, Color> intersection =
-                        mesh.intersect(ray, Limits<T>::max(), *bounds_distance);
-                if (intersection.surface)
+                const auto [distance, surface] = mesh.intersect(ray, Limits<T>::max(), *bounds_distance);
+                if (surface)
                 {
                         if (WITH_ERROR_LOG)
                         {
                                 LOG("The third intersection with ray #" + to_string(ray_number) + "\n" + to_string(ray)
-                                    + "\n" + "at point " + to_string(intersection.distance));
+                                    + "\n" + "at point " + to_string(distance));
                         }
                         ++(*error_count);
                         return;

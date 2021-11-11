@@ -26,24 +26,10 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <functional>
 #include <optional>
+#include <tuple>
 
 namespace ns::painter
 {
-template <std::size_t N, typename T, typename Color>
-struct ShapeIntersection final
-{
-        T distance;
-        const Surface<N, T, Color>* surface;
-
-        ShapeIntersection()
-        {
-        }
-
-        explicit ShapeIntersection(std::nullptr_t) : surface(nullptr)
-        {
-        }
-};
-
 template <std::size_t N, typename T, typename Color>
 struct Shape
 {
@@ -53,8 +39,10 @@ struct Shape
 
         virtual std::optional<T> intersect_bounds(const Ray<N, T>& ray, T max_distance) const = 0;
 
-        virtual ShapeIntersection<N, T, Color> intersect(const Ray<N, T>& ray, T max_distance, T bounding_distance)
-                const = 0;
+        virtual std::tuple<T, const Surface<N, T, Color>*> intersect(
+                const Ray<N, T>& ray,
+                T max_distance,
+                T bounding_distance) const = 0;
 
         virtual geometry::BoundingBox<N, T> bounding_box() const = 0;
 

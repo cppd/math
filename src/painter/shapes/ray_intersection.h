@@ -28,19 +28,23 @@ namespace ns::painter
 {
 namespace ray_intersection_implementation
 {
-template <typename Result, typename Shape, std::size_t N, typename T>
-Result ray_intersection(const Shape& shape, const Ray<N, T>& ray, const T max_distance)
+template <typename Object, typename Shape, std::size_t N, typename T>
+std::tuple<T, const Object*> ray_intersection(const Shape& shape, const Ray<N, T>& ray, const T max_distance)
 {
         const auto distance = shape.intersect_bounds(ray, max_distance);
         if (distance)
         {
                 return shape.intersect(ray, max_distance, *distance);
         }
-        return Result(nullptr);
+        return {0, nullptr};
 }
 
-template <typename Result, std::size_t N, typename T, typename Shapes, typename Indices>
-Result ray_intersection(const Shapes& shapes, const Indices& indices, const Ray<N, T>& ray, const T max_distance)
+template <typename Object, std::size_t N, typename T, typename Shapes, typename Indices>
+std::tuple<T, const Object*> ray_intersection(
+        const Shapes& shapes,
+        const Indices& indices,
+        const Ray<N, T>& ray,
+        const T max_distance)
 {
         using Shape = std::remove_reference_t<decltype(to_ref(shapes.front()))>;
 
@@ -72,36 +76,36 @@ Result ray_intersection(const Shapes& shapes, const Indices& indices, const Ray<
         }
         if (intersections.empty())
         {
-                return Result(nullptr);
+                return {0, nullptr};
         }
 
         std::make_heap(intersections.begin(), intersections.end());
 
-        Result min;
-        min.distance = max_distance;
-        min.surface = nullptr;
+        T min_distance = max_distance;
+        const Object* closest_object = nullptr;
 
         do
         {
                 const Intersection& bounding = intersections.front();
 
-                if (min.distance < bounding.distance)
+                if (min_distance < bounding.distance)
                 {
                         break;
                 }
 
-                const Result intersection = bounding.shape->intersect(ray, min.distance, bounding.distance);
-                if (intersection.surface)
+                const auto [distance, object] = bounding.shape->intersect(ray, min_distance, bounding.distance);
+                if (object)
                 {
-                        ASSERT(intersection.distance < min.distance);
-                        min = intersection;
+                        ASSERT(distance < min_distance);
+                        min_distance = distance;
+                        closest_object = object;
                 }
 
                 std::pop_heap(intersections.begin(), intersections.end());
                 intersections.pop_back();
         } while (!intersections.empty());
 
-        return min;
+        return {min_distance, closest_object};
 }
 }
 
@@ -111,13 +115,14 @@ auto ray_intersection(const Shapes& shapes, const Indices& indices, const Ray<N,
 {
         namespace impl = ray_intersection_implementation;
 
-        using Result = decltype(to_ref(shapes.front()).intersect(ray, T(), T()));
+        using Object = std::remove_pointer_t<
+                std::remove_reference_t<decltype(std::get<1>(to_ref(shapes.front()).intersect(ray, T(), T())))>>;
 
         if (indices.size() == 1)
         {
-                return impl::ray_intersection<Result>(to_ref(shapes[indices.front()]), ray, max_distance);
+                return impl::ray_intersection<Object>(to_ref(shapes[indices.front()]), ray, max_distance);
         }
 
-        return impl::ray_intersection<Result>(shapes, indices, ray, max_distance);
+        return impl::ray_intersection<Object>(shapes, indices, ray, max_distance);
 }
 }

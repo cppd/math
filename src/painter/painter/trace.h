@@ -299,7 +299,7 @@ std::optional<Color> trace_path(
         const int depth,
         RandomEngine<T>& engine)
 {
-        const Surface<N, T, Color>* const surface = scene.intersect(ray);
+        const auto [distance, surface] = scene.intersect(ray);
 
         if (depth > 0 && !surface)
         {

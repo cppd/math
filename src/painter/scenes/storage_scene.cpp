@@ -59,11 +59,11 @@ class Impl final : public Scene<N, T, Color>
         ObjectBvh<N, T, decltype(shapes_)> bvh_;
         T ray_offset_;
 
-        const Surface<N, T, Color>* intersect(const Ray<N, T>& ray) const override
+        std::tuple<T, const Surface<N, T, Color>*> intersect(const Ray<N, T>& ray) const override
         {
                 ++thread_ray_count_;
 
-                return bvh_.intersect(Ray<N, T>(ray).move(ray_offset_));
+                return bvh_.intersect(Ray<N, T>(ray).move(ray_offset_), Limits<T>::max());
         }
 
         const std::vector<const LightSource<N, T, Color>*>& light_sources() const override

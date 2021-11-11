@@ -150,7 +150,7 @@ class ShapeImpl final : public Shape<N, T, Color>
                 return object_bvh_->intersect_root(ray, max_distance);
         }
 
-        ShapeIntersection<N, T, Color> intersect(
+        std::tuple<T, const Surface<N, T, Color>*> intersect(
                 const Ray<N, T>& ray,
                 const T max_distance,
                 const T /*bounding_distance*/) const override
@@ -158,13 +158,9 @@ class ShapeImpl final : public Shape<N, T, Color>
                 const auto [distance, facet] = object_bvh_->intersect(ray, max_distance);
                 if (!facet)
                 {
-                        return ShapeIntersection<N, T, Color>(nullptr);
+                        return {0, nullptr};
                 }
-                const Vector<N, T> point = ray.point(distance);
-                ShapeIntersection<N, T, Color> intersection;
-                intersection.distance = distance;
-                intersection.surface = make_arena_ptr<SurfaceImpl<N, T, Color>>(point, &mesh_data_, facet);
-                return intersection;
+                return {distance, make_arena_ptr<SurfaceImpl<N, T, Color>>(ray.point(distance), &mesh_data_, facet)};
         }
 
         geometry::BoundingBox<N, T> bounding_box() const override

@@ -23,6 +23,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <array>
 #include <optional>
 #include <random>
+#include <tuple>
 #include <vector>
 
 namespace ns::painter
@@ -129,7 +130,7 @@ struct Scene
 {
         virtual ~Scene() = default;
 
-        virtual const Surface<N, T, Color>* intersect(const Ray<N, T>& ray) const = 0;
+        virtual std::tuple<T, const Surface<N, T, Color>*> intersect(const Ray<N, T>& ray) const = 0;
 
         virtual const std::vector<const LightSource<N, T, Color>*>& light_sources() const = 0;
 
