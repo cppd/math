@@ -25,17 +25,14 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 namespace ns::geometry
 {
 template <std::size_t N, typename T>
-std::optional<T> hyperplane_intersect(
-        const Ray<N, T>& ray,
-        const Vector<N, T>& plane_point,
-        const Vector<N, T>& plane_normal)
+std::optional<T> hyperplane_intersect(const Ray<N, T>& ray, const Vector<N, T>& plane_n, const T& plane_d)
 {
-        const T s = dot(plane_normal, ray.dir());
-        const T t = dot(plane_point - ray.org(), plane_normal) / s;
+        const T t = (plane_d - dot(plane_n, ray.org())) / dot(plane_n, ray.dir());
         if (t > 0)
         {
                 return t;
         }
         return std::nullopt;
 }
+
 }

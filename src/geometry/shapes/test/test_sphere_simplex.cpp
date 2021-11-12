@@ -86,12 +86,13 @@ void test_integrate(ProgressRatio* const progress, const double progress_min, co
                 return result;
         }();
 
-        const Vector<N, T> simplex_normal = numerical::orthogonal_complement(simplex_vectors);
+        const Vector<N, T> plane_n = numerical::orthogonal_complement(simplex_vectors);
+        const T plane_d = dot(plane_n, simplex_vertices[0]);
 
         const HyperplaneSimplex<N, T> simplex = [&]()
         {
                 HyperplaneSimplex<N, T> result;
-                result.set_data(simplex_normal, simplex_vertices);
+                result.set_data(plane_n, simplex_vertices);
                 return result;
         }();
 
@@ -105,7 +106,7 @@ void test_integrate(ProgressRatio* const progress, const double progress_min, co
                         progress->set(std::lerp(progress_min, progress_max, i * RAY_COUNT_R));
                 }
                 const Ray<N, T> ray(Vector<N, T>(0), sampling::uniform_on_sphere<N, T>(random_engine));
-                if (simplex.intersect(ray, simplex_vertices[0], simplex_normal))
+                if (simplex.intersect(ray, plane_n, plane_d))
                 {
                         ++intersect_count;
                 }

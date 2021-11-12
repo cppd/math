@@ -150,12 +150,9 @@ public:
                 return result;
         }
 
-        std::optional<T> intersect(
-                const Ray<N, T>& ray,
-                const Vector<N, T>& plane_point,
-                const Vector<N, T>& plane_normal) const
+        std::optional<T> intersect(const Ray<N, T>& ray, const Vector<N, T>& plane_n, const T& plane_d) const
         {
-                const std::optional<T> t = hyperplane_intersect(ray, plane_point, plane_normal);
+                const std::optional<T> t = hyperplane_intersect(ray, plane_n, plane_d);
                 if (!t)
                 {
                         return std::nullopt;

@@ -57,7 +57,8 @@ class HyperplaneMeshSimplex
         static constexpr int EDGE_COUNT = BINOMIAL<N, 2>;
 
         const std::vector<Vector<N, T>>* vertices_;
-        Vector<N, T> normal_;
+        Vector<N, T> plane_n_;
+        T plane_d_;
         HyperplaneSimplex<N, T> geometry_;
         std::array<int, N> v_;
 
@@ -74,20 +75,22 @@ public:
 
         HyperplaneMeshSimplex(const std::vector<Vector<N, T>>* const vertices, const std::array<int, N>& vertex_indices)
                 : vertices_(vertices),
-                  normal_(numerical::orthogonal_complement(*vertices, vertex_indices).normalized()),
+                  plane_n_(numerical::orthogonal_complement(*vertices, vertex_indices).normalized()),
+                  plane_d_(dot(plane_n_, (*vertices)[vertex_indices[0]])),
                   v_(vertex_indices)
         {
-                if (!is_finite(normal_))
+                if (!is_finite(plane_n_))
                 {
-                        error("Hyperplane mesh simplex normal " + to_string(normal_) + " is not finite, vertices "
+                        error("Hyperplane mesh simplex normal " + to_string(plane_n_) + " is not finite, vertices "
                               + to_string(vertices_to_array(*vertices_, v_)));
                 }
-                geometry_.set_data(normal_, vertices_to_array(*vertices_, v_));
+                geometry_.set_data(plane_n_, vertices_to_array(*vertices_, v_));
         }
 
         void reverse_normal()
         {
-                normal_ = -normal_;
+                plane_n_ = -plane_n_;
+                plane_d_ = -plane_d_;
         }
 
         template <std::size_t M>
@@ -98,12 +101,12 @@ public:
 
         std::optional<T> intersect(const Ray<N, T>& r) const
         {
-                return geometry_.intersect(r, (*vertices_)[v_[0]], normal_);
+                return geometry_.intersect(r, plane_n_, plane_d_);
         }
 
         const Vector<N, T>& normal() const
         {
-                return normal_;
+                return plane_n_;
         }
 
         std::array<Vector<N, T>, N> vertices() const
@@ -113,7 +116,7 @@ public:
 
         Constraints<N, T, N, 1> constraints() const
         {
-                return geometry_.constraints(normal_, vertices_to_array(*vertices_, v_));
+                return geometry_.constraints(plane_n_, vertices_to_array(*vertices_, v_));
         }
 
         std::array<std::array<Vector<N, T>, 2>, EDGE_COUNT> edges() const

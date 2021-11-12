@@ -31,18 +31,22 @@ template <std::size_t N, typename T>
 class HyperplaneBall final
 {
         Vector<N, T> center_;
-        Vector<N, T> normal_;
+        Vector<N, T> plane_n_;
+        T plane_d_;
         T radius_squared_;
 
 public:
         HyperplaneBall(const Vector<N, T>& center, const Vector<N, T>& normal, const T& radius)
-                : center_(center), normal_(normal.normalized()), radius_squared_(square(radius))
+                : center_(center),
+                  plane_n_(normal.normalized()),
+                  plane_d_(dot(plane_n_, center_)),
+                  radius_squared_(square(radius))
         {
         }
 
         std::optional<T> intersect(const Ray<N, T>& ray) const
         {
-                const std::optional<T> t = hyperplane_intersect(ray, center_, normal_);
+                const std::optional<T> t = hyperplane_intersect(ray, plane_n_, plane_d_);
                 if (!t)
                 {
                         return std::nullopt;
@@ -64,7 +68,7 @@ public:
 
         const Vector<N, T>& normal() const
         {
-                return normal_;
+                return plane_n_;
         }
 
         const T& radius_squared() const
