@@ -43,8 +43,7 @@ constexpr int BOX_COUNT = 1u << N;
 template <typename T>
 constexpr T GUARD_REGION_SIZE = 1e-4;
 
-constexpr int MIN_OBJECTS_PER_BOX_MIN = 2;
-constexpr int MIN_OBJECTS_PER_BOX_MAX = 100;
+constexpr int MIN_OBJECTS_PER_BOX = 10;
 constexpr int MAX_DEPTH = 10;
 constexpr int BOX_COUNT_LIMIT = (1u << 31) - 1;
 constexpr int RAY_OFFSET_IN_EPSILONS = 10;
@@ -124,7 +123,7 @@ struct Task final
         }
 };
 
-template <typename Box, typename ObjectIntersections>
+template <typename Box, typename Objects>
 void extend(
         const unsigned max_depth,
         const unsigned min_objects,
@@ -132,7 +131,7 @@ void extend(
         std::mutex* const boxes_lock,
         std::deque<Box>* const boxes,
         ThreadTaskManager<Task<Box>>* const task_manager,
-        const ObjectIntersections& object_intersections,
+        const Objects& objects,
         ProgressRatio* const progress)
 {
         while (const auto task = task_manager->get())
@@ -156,7 +155,7 @@ void extend(
                         Box* const child_box = child_boxes[i].box;
 
                         {
-                                const std::vector<int> indices = object_intersections.indices(
+                                const std::vector<int> indices = objects.intersection_indices(
                                         child_box->parallelotope, task->box->object_indices);
                                 child_box->object_indices.reserve(indices.size());
                                 for (const int index : indices)
@@ -174,20 +173,12 @@ void extend(
 }
 
 template <std::size_t N>
-void check(const int min_objects_per_box, const int max_depth)
+void check_max_depth(const int max_depth)
 {
         if (!(max_depth >= 1 && max_depth <= MAX_DEPTH))
         {
                 error("Error limits for spatial subdivision " + to_string(BOX_COUNT<N>) + "-tree. Maximum depth ("
                       + to_string(max_depth) + ") must be in the interval [1, " + to_string(MAX_DEPTH) + "].");
-        }
-
-        if (!(min_objects_per_box >= MIN_OBJECTS_PER_BOX_MIN && min_objects_per_box <= MIN_OBJECTS_PER_BOX_MAX))
-        {
-                error("Error limits for spatial subdivision " + to_string(BOX_COUNT<N>)
-                      + "-tree. Minimum objects per box (" + to_string(min_objects_per_box)
-                      + ") must be in the interval [" + to_string(MIN_OBJECTS_PER_BOX_MIN) + ", "
-                      + to_string(MIN_OBJECTS_PER_BOX_MAX) + "].");
         }
 
         if (!(maximum_box_count(BOX_COUNT<N>, max_depth) <= BOX_COUNT_LIMIT))
@@ -201,22 +192,17 @@ void check(const int min_objects_per_box, const int max_depth)
 }
 
 template <typename Parallelotope>
-SpatialSubdivisionTree<Parallelotope>::SpatialSubdivisionTree(
-        const int min_objects_per_box,
-        const int object_count,
-        const BoundingBox<N, T>& bounding_box,
-        const ObjectIntersections& object_intersections,
-        const unsigned thread_count,
-        ProgressRatio* const progress)
+SpatialSubdivisionTree<Parallelotope>::SpatialSubdivisionTree(const Objects& objects, ProgressRatio* const progress)
 {
         static_assert(BOX_COUNT_LIMIT <= (1LL << 31) - 1);
 
         const int max_depth = tree_max_depth<N>();
 
-        check<N>(min_objects_per_box, max_depth);
+        check_max_depth<N>(max_depth);
 
-        const Vector<N, T> guard_region(GUARD_REGION_SIZE<T> * bounding_box.diagonal().norm());
-        const BoundingBox<N, T> root(bounding_box.min() - guard_region, bounding_box.max() + guard_region);
+        const Vector<N, T> guard_region{GUARD_REGION_SIZE<T> * objects.bounding_box().diagonal().norm()};
+        const BoundingBox<N, T> root{
+                objects.bounding_box().min() - guard_region, objects.bounding_box().max() + guard_region};
         const int max_box_count = std::lround(maximum_box_count(BOX_COUNT<N>, max_depth));
 
         std::mutex boxes_lock;
@@ -224,7 +210,7 @@ SpatialSubdivisionTree<Parallelotope>::SpatialSubdivisionTree(
         // std::deque to keep object addreses unchanged when inserting
         std::deque<Box> boxes;
         boxes.emplace_back(Parallelotope(root.min(), root.max()));
-        boxes.back().object_indices = zero_based_indices(object_count);
+        boxes.back().object_indices = zero_based_indices(objects.count());
 
         ThreadTasks<Task<Box>> tasks;
         tasks.emplace(&boxes.front(), 1 /*depth*/);
@@ -234,8 +220,8 @@ SpatialSubdivisionTree<Parallelotope>::SpatialSubdivisionTree(
                 try
                 {
                         ThreadTaskManager<Task<Box>> task_manager(&tasks);
-                        extend(max_depth, min_objects_per_box, max_box_count, &boxes_lock, &boxes, &task_manager,
-                               object_intersections, progress);
+                        extend(max_depth, MIN_OBJECTS_PER_BOX, max_box_count, &boxes_lock, &boxes, &task_manager,
+                               objects, progress);
                 }
                 catch (...)
                 {
@@ -243,6 +229,8 @@ SpatialSubdivisionTree<Parallelotope>::SpatialSubdivisionTree(
                         throw;
                 }
         };
+
+        const unsigned thread_count = hardware_concurrency();
 
         ThreadsWithCatch threads(thread_count);
         for (unsigned i = 0; i < thread_count; ++i)
@@ -256,7 +244,8 @@ SpatialSubdivisionTree<Parallelotope>::SpatialSubdivisionTree(
         {
                 boxes_.push_back(std::move(v));
         }
-        ray_offset_ = std::max(root.max().norm_infinity(), root.min().norm_infinity())
+
+        ray_offset_ = std::max(root.min().norm_infinity(), root.max().norm_infinity())
                       * (RAY_OFFSET_IN_EPSILONS * Limits<T>::epsilon() * std::sqrt(T(N)));
 }
 

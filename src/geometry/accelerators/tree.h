@@ -87,24 +87,20 @@ class SpatialSubdivisionTree final
         }
 
 public:
-        class ObjectIntersections
+        class Objects
         {
         protected:
-                ~ObjectIntersections() = default;
+                ~Objects() = default;
 
         public:
-                virtual std::vector<int> indices(
+                virtual int count() const = 0;
+                virtual const BoundingBox<N, T>& bounding_box() const = 0;
+                virtual std::vector<int> intersection_indices(
                         const Parallelotope& parallelotope,
                         const std::vector<int>& object_indices) const = 0;
         };
 
-        SpatialSubdivisionTree(
-                int min_objects_per_box,
-                int object_count,
-                const BoundingBox<N, T>& bounding_box,
-                const ObjectIntersections& object_intersections,
-                unsigned thread_count,
-                ProgressRatio* progress);
+        SpatialSubdivisionTree(const Objects& objects, ProgressRatio* progress);
 
         const Parallelotope& root() const
         {
