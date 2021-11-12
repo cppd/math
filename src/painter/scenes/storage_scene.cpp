@@ -22,6 +22,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/color/color.h>
 #include <src/com/error.h>
 #include <src/com/type/limit.h>
+#include <src/geometry/accelerators/bvh_objects.h>
 #include <src/geometry/accelerators/object_bvh.h>
 
 #include <optional>
@@ -41,18 +42,6 @@ std::vector<P*> to_pointers(const std::vector<std::unique_ptr<P>>& objects)
                 result.push_back(p.get());
         }
         return result;
-}
-
-template <std::size_t N, typename T, typename P>
-std::vector<geometry::BvhObject<N, T>> bvh_objects(const std::vector<std::unique_ptr<P>>& objects)
-{
-        std::vector<geometry::BvhObject<N, T>> bvh_objects;
-        bvh_objects.reserve(objects.size());
-        for (std::size_t i = 0; i < objects.size(); ++i)
-        {
-                bvh_objects.emplace_back(objects[i]->bounding_box(), objects[i]->intersection_cost(), i);
-        }
-        return bvh_objects;
 }
 
 template <std::size_t N, typename T, typename Color>
@@ -116,7 +105,7 @@ class Impl final : public Scene<N, T, Color>
                   projector_(std::move(projector)),
                   background_light_(background_light),
                   light_source_pointers_(to_pointers(light_sources_)),
-                  bvh_(bvh_objects<N, T>(shapes_), &progress),
+                  bvh_(geometry::bvh_objects(shapes_), &progress),
                   ray_offset_(bvh_.bounding_box().diagonal().norm() * (RAY_OFFSET_IN_EPSILONS * Limits<T>::epsilon()))
         {
                 ASSERT(projector_);

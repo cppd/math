@@ -29,6 +29,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/com/names.h>
 #include <src/com/print.h>
 #include <src/com/type/name.h>
+#include <src/geometry/accelerators/bvh_objects.h>
 #include <src/geometry/accelerators/object_bvh.h>
 #include <src/geometry/spatial/ray_intersection.h>
 #include <src/shading/ggx_diffuse.h>
@@ -126,14 +127,7 @@ geometry::ObjectBvh<N, T> create_object_bvh(
 
         const Clock::time_point start_time = Clock::now();
 
-        std::vector<geometry::BvhObject<N, T>> bvh_objects;
-        bvh_objects.reserve(facets->size());
-        for (std::size_t i = 0; i < facets->size(); ++i)
-        {
-                bvh_objects.emplace_back((*facets)[i].bounding_box(), MeshFacet<N, T>::intersection_cost(), i);
-        }
-
-        geometry::ObjectBvh<N, T> object_bvh(std::move(bvh_objects), progress);
+        geometry::ObjectBvh<N, T> object_bvh(geometry::bvh_objects(*facets), progress);
 
         LOG("Painter mesh created, " + to_string_fixed(duration_from(start_time), 5) + " s");
 
