@@ -116,27 +116,23 @@ public:
         // root_t is the intersection found by intersect_root.
         //
         // The signature of the object_intersect function
-        // struct Info
-        // {
-        //     Vector<N, T> point;
-        //     ...
-        // };
-        // std::optional<Info> f(const std::vector<int>& object_indices);
+        // std::optional<std::tuple<T, ...> f(const auto& indices);
         template <typename ObjectIntersect>
         std::invoke_result_t<ObjectIntersect, const std::vector<int>&> intersect(
-                Ray<N, T> ray,
-                const T root_t,
+                const Ray<N, T>& ray,
+                const T& root_t,
                 const ObjectIntersect& object_intersect) const
         {
                 const Box* box;
                 Vector<N, T> point;
 
-                point = ray.point(root_t);
-                ray.set_org(point);
+                Ray<N, T> local_ray = ray;
+                point = local_ray.point(root_t);
+                local_ray.set_org(point);
                 box = find_box_for_point(point);
                 if (!box)
                 {
-                        box = find_box_for_point(ray.point(ray_offset_));
+                        box = find_box_for_point(local_ray.point(ray_offset_));
                         if (!box)
                         {
                                 return std::nullopt;
@@ -147,26 +143,22 @@ public:
                 {
                         if (!box->object_indices.empty())
                         {
-                                auto info = object_intersect(box->object_indices);
-                                if (info && box->parallelotope.inside(info->point))
+                                const auto info = object_intersect(box->object_indices);
+                                if (info && box->parallelotope.inside(ray.point(std::get<0>(*info))))
                                 {
                                         return info;
                                 }
                         }
 
-                        std::optional<T> next = box->parallelotope.intersect_farthest(ray);
-                        if (!next)
-                        {
-                                next = 0;
-                        }
+                        const T next = box->parallelotope.intersect_farthest(local_ray).value_or(0);
 
-                        ray.set_org(ray.point(*next));
+                        local_ray.set_org(local_ray.point(next));
 
                         T offset = ray_offset_;
                         T k = 1;
                         while (true)
                         {
-                                point = ray.point(offset);
+                                point = local_ray.point(offset);
                                 const Box* next_box = find_box_for_point(point);
                                 if (!next_box)
                                 {
@@ -175,7 +167,7 @@ public:
                                 if (next_box != box)
                                 {
                                         box = next_box;
-                                        ray.set_org(point);
+                                        local_ray.set_org(point);
                                         break;
                                 }
 
