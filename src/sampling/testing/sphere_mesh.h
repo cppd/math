@@ -19,8 +19,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <src/com/error.h>
 #include <src/com/type/limit.h>
+#include <src/geometry/accelerators/bvh.h>
 #include <src/geometry/accelerators/bvh_objects.h>
-#include <src/geometry/accelerators/object_bvh.h>
 #include <src/geometry/shapes/sphere_create.h>
 #include <src/geometry/spatial/hyperplane_mesh_simplex.h>
 #include <src/geometry/spatial/ray_intersection.h>
@@ -59,7 +59,7 @@ class SphereMesh final
         };
 
         Sphere sphere_;
-        geometry::ObjectBvh<N, T> bvh_;
+        geometry::Bvh<N, T> bvh_;
 
 public:
         SphereMesh(const unsigned facet_min_count, ProgressRatio* const progress)
@@ -80,15 +80,22 @@ public:
 
         std::optional<unsigned> intersect(const Ray<N, T>& ray) const
         {
-                const auto [_, facet] = bvh_.intersect(
+                const auto intersection = bvh_.intersect(
                         ray, Limits<T>::max(),
-                        [facets = &sphere_.facets, &ray](const auto& indices, const auto& local_max_distance)
+                        [facets = &sphere_.facets, &ray](const auto& indices, const auto& max_distance)
+                                -> std::optional<std::tuple<T, const geometry::HyperplaneMeshSimplex<N, T>*>>
                         {
-                                return geometry::ray_intersection(*facets, indices, ray, local_max_distance);
+                                const std::tuple<T, const geometry::HyperplaneMeshSimplex<N, T>*> info =
+                                        geometry::ray_intersection(*facets, indices, ray, max_distance);
+                                if (std::get<1>(info) != nullptr)
+                                {
+                                        return info;
+                                }
+                                return std::nullopt;
                         });
-                if (facet)
+                if (intersection)
                 {
-                        const std::size_t index = facet - sphere_.facets.data();
+                        const std::size_t index = std::get<1>(*intersection) - sphere_.facets.data();
                         ASSERT(index < facet_count());
                         return index;
                 }

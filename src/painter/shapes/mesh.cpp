@@ -29,8 +29,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/com/names.h>
 #include <src/com/print.h>
 #include <src/com/type/name.h>
+#include <src/geometry/accelerators/bvh.h>
 #include <src/geometry/accelerators/bvh_objects.h>
-#include <src/geometry/accelerators/object_bvh.h>
 #include <src/geometry/spatial/ray_intersection.h>
 #include <src/shading/ggx_diffuse.h>
 
@@ -118,16 +118,14 @@ public:
 };
 
 template <std::size_t N, typename T>
-geometry::ObjectBvh<N, T> create_object_bvh(
-        const std::vector<MeshFacet<N, T>>* const facets,
-        ProgressRatio* const progress)
+geometry::Bvh<N, T> create_bvh(const std::vector<MeshFacet<N, T>>* const facets, ProgressRatio* const progress)
 {
         progress->set_text("Painter mesh, " + space_name(N) + ", " + type_name<T>());
         progress->set(0);
 
         const Clock::time_point start_time = Clock::now();
 
-        geometry::ObjectBvh<N, T> object_bvh(geometry::bvh_objects(*facets), progress);
+        geometry::Bvh<N, T> object_bvh(geometry::bvh_objects(*facets), progress);
 
         LOG("Painter mesh created, " + to_string_fixed(duration_from(start_time), 5) + " s");
 
@@ -138,7 +136,7 @@ template <std::size_t N, typename T, typename Color>
 class ShapeImpl final : public Shape<N, T, Color>
 {
         MeshData<N, T, Color> mesh_data_;
-        std::optional<geometry::ObjectBvh<N, T>> object_bvh_;
+        geometry::Bvh<N, T> bvh_;
         geometry::BoundingBox<N, T> bounding_box_;
         T intersection_cost_;
 
@@ -149,7 +147,7 @@ class ShapeImpl final : public Shape<N, T, Color>
 
         std::optional<T> intersect_bounds(const Ray<N, T>& ray, const T max_distance) const override
         {
-                return object_bvh_->intersect_root(ray, max_distance);
+                return bvh_.intersect_root(ray, max_distance);
         }
 
         std::tuple<T, const Surface<N, T, Color>*> intersect(
@@ -157,16 +155,24 @@ class ShapeImpl final : public Shape<N, T, Color>
                 const T max_distance,
                 const T /*bounding_distance*/) const override
         {
-                const auto [distance, facet] = object_bvh_->intersect(
+                const auto intersection = bvh_.intersect(
                         ray, max_distance,
                         [facets = &mesh_data_.facets(), &ray](const auto& indices, const auto& local_max_distance)
+                                -> std::optional<std::tuple<T, const MeshFacet<N, T>*>>
                         {
-                                return geometry::ray_intersection(*facets, indices, ray, local_max_distance);
+                                const std::tuple<T, const MeshFacet<N, T>*> info =
+                                        geometry::ray_intersection(*facets, indices, ray, local_max_distance);
+                                if (std::get<1>(info) != nullptr)
+                                {
+                                        return info;
+                                }
+                                return std::nullopt;
                         });
-                if (!facet)
+                if (!intersection)
                 {
                         return {0, nullptr};
                 }
+                const auto& [distance, facet] = *intersection;
                 return {distance, make_arena_ptr<SurfaceImpl<N, T, Color>>(ray.point(distance), &mesh_data_, facet)};
         }
 
@@ -189,8 +195,8 @@ class ShapeImpl final : public Shape<N, T, Color>
 public:
         ShapeImpl(const std::vector<const mesh::MeshObject<N>*>& mesh_objects, ProgressRatio* const progress)
                 : mesh_data_(mesh_objects),
-                  object_bvh_(create_object_bvh(&mesh_data_.facets(), progress)),
-                  bounding_box_(object_bvh_->bounding_box()),
+                  bvh_(create_bvh(&mesh_data_.facets(), progress)),
+                  bounding_box_(bvh_.bounding_box()),
                   intersection_cost_(mesh_data_.facets().size() * MeshFacet<N, T>::intersection_cost())
         {
         }

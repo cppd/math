@@ -22,8 +22,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/color/color.h>
 #include <src/com/error.h>
 #include <src/com/type/limit.h>
+#include <src/geometry/accelerators/bvh.h>
 #include <src/geometry/accelerators/bvh_objects.h>
-#include <src/geometry/accelerators/object_bvh.h>
 
 #include <optional>
 
@@ -58,7 +58,7 @@ class Impl final : public Scene<N, T, Color>
 
         std::vector<const LightSource<N, T, Color>*> light_source_pointers_;
 
-        geometry::ObjectBvh<N, T> bvh_;
+        geometry::Bvh<N, T> bvh_;
         T ray_offset_;
 
         std::tuple<T, const Surface<N, T, Color>*> intersect(const Ray<N, T>& ray) const override
@@ -67,12 +67,24 @@ class Impl final : public Scene<N, T, Color>
 
                 const Ray<N, T> ray_moved = Ray<N, T>(ray).move(ray_offset_);
 
-                return bvh_.intersect(
+                const auto intersection = bvh_.intersect(
                         ray_moved, Limits<T>::max(),
-                        [shapes = &shapes_, &ray_moved](const auto& indices, const auto& local_max_distance)
+                        [shapes = &shapes_, &ray_moved](const auto& indices, const auto& max_distance)
+                                -> std::optional<std::tuple<T, const Surface<N, T, Color>*>>
                         {
-                                return ray_intersection(*shapes, indices, ray_moved, local_max_distance);
+                                const std::tuple<T, const Surface<N, T, Color>*> info =
+                                        ray_intersection(*shapes, indices, ray_moved, max_distance);
+                                if (std::get<1>(info) != nullptr)
+                                {
+                                        return info;
+                                }
+                                return std::nullopt;
                         });
+                if (intersection)
+                {
+                        return *intersection;
+                }
+                return {0, nullptr};
         }
 
         const std::vector<const LightSource<N, T, Color>*>& light_sources() const override

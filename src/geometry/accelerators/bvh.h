@@ -95,12 +95,7 @@ public:
         }
 
         // The signature of the object_intersect function
-        // struct Info
-        // {
-        //     T distance;
-        //     ...
-        // };
-        // std::optional<Info> f(const std::span<const unsigned>& object_indices, const T& max_distance);
+        // std::optional<std::tuple<T, ...> f(const auto& indices, const auto& max_distance);
         template <typename ObjectIntersect>
         std::invoke_result_t<ObjectIntersect, std::span<const unsigned>&&, const T&> intersect(
                 const Ray<N, T>& ray,
@@ -139,12 +134,12 @@ public:
                                         std::span(object_indices_.data() + node.object_offset, node.object_count),
                                         std::as_const(distance));
                                 static_assert(std::is_same_v<decltype(info), decltype(result)>);
-                                static_assert(std::is_same_v<T, decltype(info->distance)>);
+                                static_assert(std::is_same_v<T, std::remove_reference_t<decltype(std::get<0>(*info))>>);
                                 if (info)
                                 {
-                                        ASSERT(info->distance < distance);
-                                        distance = info->distance;
-                                        result = std::move(info);
+                                        ASSERT(std::get<0>(*info) < distance);
+                                        distance = std::get<0>(*info);
+                                        result = std::move(*info);
                                 }
                         }
                         if (stack.empty())
