@@ -44,11 +44,11 @@ class SurfaceImpl final : public Surface<N, T, Color>
         const MeshData<N, T, Color>* mesh_data_;
         const MeshFacet<N, T>* facet_;
 
-        Color surface_color(const Material<T, Color>& m) const
+        Color surface_color(const Vector<N, T>& point, const Material<T, Color>& m) const
         {
                 if (facet_->has_texcoord() && m.image >= 0)
                 {
-                        Vector<3, float> rgb = mesh_data_->images()[m.image].color(facet_->texcoord(this->point()));
+                        Vector<3, float> rgb = mesh_data_->images()[m.image].color(facet_->texcoord(point));
                         return Color(rgb[0], rgb[1], rgb[2]);
                 }
                 return m.color;
@@ -56,14 +56,19 @@ class SurfaceImpl final : public Surface<N, T, Color>
 
         //
 
-        Vector<N, T> geometric_normal() const override
+        Vector<N, T> point(const Ray<N, T>& ray, const T& distance) const override
+        {
+                return ray.point(distance);
+        }
+
+        Vector<N, T> geometric_normal(const Vector<N, T>& /*point*/) const override
         {
                 return facet_->geometric_normal();
         }
 
-        std::optional<Vector<N, T>> shading_normal() const override
+        std::optional<Vector<N, T>> shading_normal(const Vector<N, T>& point) const override
         {
-                return facet_->shading_normal(this->point());
+                return facet_->shading_normal(point);
         }
 
         std::optional<Color> light_source() const override
@@ -71,16 +76,20 @@ class SurfaceImpl final : public Surface<N, T, Color>
                 return std::nullopt;
         }
 
-        Color brdf(const Vector<N, T>& n, const Vector<N, T>& v, const Vector<N, T>& l) const override
+        Color brdf(const Vector<N, T>& point, const Vector<N, T>& n, const Vector<N, T>& v, const Vector<N, T>& l)
+                const override
         {
                 ASSERT(facet_->material() >= 0);
 
                 const Material<T, Color>& m = mesh_data_->materials()[facet_->material()];
 
-                return shading::ggx_diffuse::f(m.metalness, m.roughness, surface_color(m), n, v, l);
+                return shading::ggx_diffuse::f(m.metalness, m.roughness, surface_color(point, m), n, v, l);
         }
 
-        T pdf(const Vector<N, T>& n, const Vector<N, T>& v, const Vector<N, T>& l) const override
+        T pdf(const Vector<N, T>& /*point*/,
+              const Vector<N, T>& n,
+              const Vector<N, T>& v,
+              const Vector<N, T>& l) const override
         {
                 ASSERT(facet_->material() >= 0);
 
@@ -89,15 +98,18 @@ class SurfaceImpl final : public Surface<N, T, Color>
                 return shading::ggx_diffuse::pdf(m.roughness, n, v, l);
         }
 
-        Sample<N, T, Color> sample_brdf(RandomEngine<T>& random_engine, const Vector<N, T>& n, const Vector<N, T>& v)
-                const override
+        Sample<N, T, Color> sample_brdf(
+                RandomEngine<T>& random_engine,
+                const Vector<N, T>& point,
+                const Vector<N, T>& n,
+                const Vector<N, T>& v) const override
         {
                 ASSERT(facet_->material() >= 0);
 
                 const Material<T, Color>& m = mesh_data_->materials()[facet_->material()];
 
-                shading::Sample<N, T, Color> sample =
-                        shading::ggx_diffuse::sample_f(random_engine, m.metalness, m.roughness, surface_color(m), n, v);
+                shading::Sample<N, T, Color> sample = shading::ggx_diffuse::sample_f(
+                        random_engine, m.metalness, m.roughness, surface_color(point, m), n, v);
 
                 Sample<N, T, Color> s;
                 s.l = sample.l;
@@ -108,11 +120,8 @@ class SurfaceImpl final : public Surface<N, T, Color>
         }
 
 public:
-        SurfaceImpl(
-                const Vector<N, T>& point,
-                const MeshData<N, T, Color>* const mesh_data,
-                const MeshFacet<N, T>* const facet)
-                : Surface<N, T, Color>(point), mesh_data_(mesh_data), facet_(facet)
+        SurfaceImpl(const MeshData<N, T, Color>* const mesh_data, const MeshFacet<N, T>* const facet)
+                : mesh_data_(mesh_data), facet_(facet)
         {
         }
 };
@@ -173,7 +182,7 @@ class ShapeImpl final : public Shape<N, T, Color>
                         return {0, nullptr};
                 }
                 const auto& [distance, facet] = *intersection;
-                return {distance, make_arena_ptr<SurfaceImpl<N, T, Color>>(ray.point(distance), &mesh_data_, facet)};
+                return {distance, make_arena_ptr<SurfaceImpl<N, T, Color>>(&mesh_data_, facet)};
         }
 
         geometry::BoundingBox<N, T> bounding_box() const override

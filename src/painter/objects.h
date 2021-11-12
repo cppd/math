@@ -47,32 +47,29 @@ struct Sample final
 template <std::size_t N, typename T, typename Color>
 class Surface
 {
-        Vector<N, T> point_;
-
 protected:
         ~Surface() = default;
 
 public:
-        explicit Surface(const Vector<N, T>& point) : point_(point)
-        {
-        }
+        virtual Vector<N, T> point(const Ray<N, T>& ray, const T& distance) const = 0;
 
-        const Vector<N, T>& point() const
-        {
-                return point_;
-        }
-
-        virtual Vector<N, T> geometric_normal() const = 0;
-        virtual std::optional<Vector<N, T>> shading_normal() const = 0;
+        virtual Vector<N, T> geometric_normal(const Vector<N, T>& point) const = 0;
+        virtual std::optional<Vector<N, T>> shading_normal(const Vector<N, T>& point) const = 0;
 
         virtual std::optional<Color> light_source() const = 0;
 
-        virtual Color brdf(const Vector<N, T>& n, const Vector<N, T>& v, const Vector<N, T>& l) const = 0;
+        virtual Color brdf(
+                const Vector<N, T>& point,
+                const Vector<N, T>& n,
+                const Vector<N, T>& v,
+                const Vector<N, T>& l) const = 0;
 
-        virtual T pdf(const Vector<N, T>& n, const Vector<N, T>& v, const Vector<N, T>& l) const = 0;
+        virtual T pdf(const Vector<N, T>& point, const Vector<N, T>& n, const Vector<N, T>& v, const Vector<N, T>& l)
+                const = 0;
 
         virtual Sample<N, T, Color> sample_brdf(
                 RandomEngine<T>& random_engine,
+                const Vector<N, T>& point,
                 const Vector<N, T>& n,
                 const Vector<N, T>& v) const = 0;
 };

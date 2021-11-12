@@ -134,7 +134,7 @@ void intersect_mesh(
                         return;
                 }
 
-                ray.set_org(surface->point());
+                ray.set_org(surface->point(ray, distance));
                 ray.move(ray_offset);
         }
         {
@@ -144,7 +144,7 @@ void intersect_mesh(
                         return;
                 }
 
-                ray.set_org(surface->point());
+                ray.set_org(surface->point(ray, distance));
                 ray.move(ray_offset);
         }
 

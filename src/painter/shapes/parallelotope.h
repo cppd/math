@@ -45,12 +45,17 @@ class Parallelotope final : public Shape<N, T, Color>
         {
                 const Parallelotope* obj_;
 
-                Vector<N, T> geometric_normal() const override
+                Vector<N, T> point(const Ray<N, T>& ray, const T& distance) const override
                 {
-                        return obj_->parallelotope_.normal(this->point());
+                        return ray.point(distance);
                 }
 
-                std::optional<Vector<N, T>> shading_normal() const override
+                Vector<N, T> geometric_normal(const Vector<N, T>& point) const override
+                {
+                        return obj_->parallelotope_.normal(point);
+                }
+
+                std::optional<Vector<N, T>> shading_normal(const Vector<N, T>& /*point*/) const override
                 {
                         return std::nullopt;
                 }
@@ -60,18 +65,26 @@ class Parallelotope final : public Shape<N, T, Color>
                         return obj_->light_source_;
                 }
 
-                Color brdf(const Vector<N, T>& n, const Vector<N, T>& v, const Vector<N, T>& l) const override
+                Color brdf(
+                        const Vector<N, T>& /*point*/,
+                        const Vector<N, T>& n,
+                        const Vector<N, T>& v,
+                        const Vector<N, T>& l) const override
                 {
                         return shading::ggx_diffuse::f(obj_->metalness_, obj_->roughness_, obj_->color_, n, v, l);
                 }
 
-                T pdf(const Vector<N, T>& n, const Vector<N, T>& v, const Vector<N, T>& l) const override
+                T pdf(const Vector<N, T>& /*point*/,
+                      const Vector<N, T>& n,
+                      const Vector<N, T>& v,
+                      const Vector<N, T>& l) const override
                 {
                         return shading::ggx_diffuse::pdf(obj_->roughness_, n, v, l);
                 }
 
                 Sample<N, T, Color> sample_brdf(
                         RandomEngine<T>& random_engine,
+                        const Vector<N, T>& /*point*/,
                         const Vector<N, T>& n,
                         const Vector<N, T>& v) const override
                 {
@@ -87,8 +100,7 @@ class Parallelotope final : public Shape<N, T, Color>
                 }
 
         public:
-                SurfaceImpl(const Vector<N, T>& point, const Parallelotope* obj)
-                        : Surface<N, T, Color>(point), obj_(obj)
+                SurfaceImpl(const Parallelotope* obj) : obj_(obj)
                 {
                 }
         };
@@ -114,11 +126,11 @@ class Parallelotope final : public Shape<N, T, Color>
         }
 
         std::tuple<T, const Surface<N, T, Color>*> intersect(
-                const Ray<N, T>& ray,
+                const Ray<N, T>& /*ray*/,
                 const T /*max_distance*/,
                 const T bounding_distance) const override
         {
-                return {bounding_distance, make_arena_ptr<SurfaceImpl>(ray.point(bounding_distance), this)};
+                return {bounding_distance, make_arena_ptr<SurfaceImpl>(this)};
         }
 
         geometry::BoundingBox<N, T> bounding_box() const override

@@ -61,30 +61,24 @@ struct Normals final
 template <std::size_t N, typename T, typename Color>
 Normals<N, T> compute_normals(
         const bool smooth_normals,
+        const Vector<N, T>& point,
         const Surface<N, T, Color>* const surface,
         const Vector<N, T>& v)
 {
-        const Vector<N, T> g_normal = surface->geometric_normal();
+        const Vector<N, T> g_normal = surface->geometric_normal(point);
         ASSERT(g_normal.is_unit());
-
-        const std::optional<Vector<N, T>> s_normal = surface->shading_normal();
-
-        const bool smooth = smooth_normals && s_normal.has_value();
-
         const bool flip = dot(v, g_normal) < 0;
-
         const Vector<N, T> geometric = flip ? -g_normal : g_normal;
-        const Vector<N, T> shading = [&]
+        if (smooth_normals)
         {
-                if (smooth)
+                const auto s_normal = surface->shading_normal(point);
+                if (s_normal)
                 {
                         ASSERT(s_normal->is_unit());
-                        return flip ? -*s_normal : *s_normal;
+                        return {.geometric = geometric, .shading = (flip ? -*s_normal : *s_normal), .smooth = true};
                 }
-                return geometric;
-        }();
-
-        return {.geometric = geometric, .shading = shading, .smooth = smooth};
+        }
+        return {.geometric = geometric, .shading = geometric, .smooth = false};
 }
 
 template <std::size_t N, typename T, typename Color>
@@ -137,14 +131,14 @@ void sample_light_source_with_mis(
                 return;
         }
 
-        const Color brdf = surface.brdf(n, v, l);
+        const Color brdf = surface.brdf(point, n, v, l);
         if (light.is_delta())
         {
                 *color_sum += brdf * sample.radiance * (n_l / sample.pdf);
         }
         else
         {
-                const T pdf = surface.pdf(n, v, l);
+                const T pdf = surface.pdf(point, n, v, l);
                 const T weight = mis_heuristic(1, sample.pdf, 1, pdf);
                 *color_sum += brdf * sample.radiance * (weight * n_l / sample.pdf);
         }
@@ -168,7 +162,7 @@ void sample_brdf_with_mis(
 
         const Vector<N, T>& n = normals.shading;
 
-        const Sample<N, T, Color> sample = surface.sample_brdf(engine, n, v);
+        const Sample<N, T, Color> sample = surface.sample_brdf(engine, point, n, v);
         if (sample.pdf <= 0 || sample.brdf.is_black())
         {
                 return;
@@ -225,6 +219,7 @@ void add_light_sources(
 template <std::size_t N, typename T, typename Color>
 void add_light_sources(
         const Scene<N, T, Color>& scene,
+        const T& distance,
         const Surface<N, T, Color>* const surface,
         const Ray<N, T>& ray,
         Color* const color_sum)
@@ -236,7 +231,7 @@ void add_light_sources(
                 {
                         continue;
                 }
-                if (surface_before_distance(ray.org(), surface, light_info.distance))
+                if (surface_before_distance(distance, surface, light_info.distance))
                 {
                         continue;
                 }
@@ -266,7 +261,7 @@ void add_reflected(
 {
         const Vector<N, T>& n = normals.shading;
 
-        const Sample<N, T, Color> sample = surface.sample_brdf(engine, n, v);
+        const Sample<N, T, Color> sample = surface.sample_brdf(engine, point, n, v);
 
         if (sample.pdf <= 0 || sample.brdf.is_black())
         {
@@ -310,7 +305,7 @@ std::optional<Color> trace_path(
 
         if (depth == 0)
         {
-                add_light_sources(scene, surface, ray, &color_sum);
+                add_light_sources(scene, distance, surface, ray, &color_sum);
                 if (!surface)
                 {
                         if (color_sum.is_black())
@@ -323,8 +318,8 @@ std::optional<Color> trace_path(
         }
 
         const Vector<N, T> v = -ray.dir();
-        const Vector<N, T>& point = surface->point();
-        const Normals<N, T> normals = compute_normals(smooth_normals, surface, v);
+        const Vector<N, T> point = surface->point(ray, distance);
+        const Normals<N, T> normals = compute_normals(smooth_normals, point, surface, v);
         const Vector<N, T>& n = normals.shading;
 
         if (dot(n, v) <= 0)
