@@ -312,29 +312,31 @@ Vector<N, T> ParallelotopeAA<N, T>::normal(const Vector<N, T>& p) const
 {
         // the normal of the plane closest to the point
 
-        T min = Limits<T>::max();
+        T min_distance = Limits<T>::max();
 
         Vector<N, T> n;
         for (unsigned i = 0; i < N; ++i)
         {
-                T l;
-
-                l = std::abs(p[i] - planes_[i].d1);
-                if (l < min)
                 {
-                        min = l;
-                        n = NORMALS_NEGATIVE[i];
+                        const T distance = std::abs(p[i] - planes_[i].d1);
+                        if (distance < min_distance)
+                        {
+                                min_distance = distance;
+                                n = NORMALS_NEGATIVE[i];
+                        }
                 }
 
-                l = std::abs(p[i] - planes_[i].d2);
-                if (l < min)
                 {
-                        min = l;
-                        n = NORMALS_POSITIVE[i];
+                        const T distance = std::abs(p[i] - planes_[i].d2);
+                        if (distance < min_distance)
+                        {
+                                min_distance = distance;
+                                n = NORMALS_POSITIVE[i];
+                        }
                 }
         }
 
-        ASSERT(min < Limits<T>::max());
+        ASSERT(min_distance < Limits<T>::max());
 
         return n;
 }
@@ -538,9 +540,9 @@ Vector<N, T> ParallelotopeAA<N, T>::max() const
 template <std::size_t N, typename T>
 auto ParallelotopeAA<N, T>::overlap_function() const
 {
-        return [s = geometry::ShapeOverlap(this)](const geometry::ShapeOverlap<geometry::ParallelotopeAA<N, T>>& p)
+        return [s = ShapeOverlap(this)](const ShapeOverlap<ParallelotopeAA<N, T>>& p)
         {
-                return geometry::shapes_overlap(s, p);
+                return shapes_overlap(s, p);
         };
 }
 }

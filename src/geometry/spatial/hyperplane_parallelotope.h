@@ -135,7 +135,7 @@ HyperplaneParallelotope<N, T>::HyperplaneParallelotope(
 
                 planes_[i].d = dot(org_, planes_[i].n);
 
-                const T distance = dot(org_ + vectors_[i], planes_[i].n) - planes_[i].d;
+                const T distance = planes_[i].distance(org_ + vectors_[i]);
                 ASSERT(distance >= 0);
                 planes_[i].n /= distance;
                 planes_[i].d /= distance;
@@ -190,7 +190,7 @@ std::optional<T> HyperplaneParallelotope<N, T>::intersect(const Ray<N, T>& ray) 
 
         for (unsigned i = 0; i < N - 1; ++i)
         {
-                const T d = dot(point, planes_[i].n) - planes_[i].d;
+                const T d = planes_[i].distance(point);
                 if (!(d > 0 && d < 1))
                 {
                         return std::nullopt;
@@ -347,9 +347,9 @@ const std::array<Vector<N, T>, N - 1>& HyperplaneParallelotope<N, T>::vectors() 
 template <std::size_t N, typename T>
 auto HyperplaneParallelotope<N, T>::overlap_function() const
 {
-        return [s = geometry::ShapeOverlap(this)](const geometry::ShapeOverlap<geometry::ParallelotopeAA<N, T>>& p)
+        return [s = ShapeOverlap(this)](const ShapeOverlap<ParallelotopeAA<N, T>>& p)
         {
-                return geometry::shapes_overlap(s, p);
+                return shapes_overlap(s, p);
         };
 }
 }

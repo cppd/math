@@ -53,8 +53,7 @@ class HyperplaneSimplex final
 
         T barycentric_coordinate(const Vector<N, T>& point, const std::size_t i) const
         {
-                // The distance from the ridge to the point is the barycentric coordinate.
-                return dot(point, planes_[i].n) - planes_[i].d;
+                return planes_[i].distance(point);
         }
 
         Vector<N, T> barycentric_coordinates(const Vector<N, T>& point) const
@@ -109,7 +108,7 @@ public:
                         // org = vertices[N - 1]
                         planes_[i].d = dot(vertices[N - 1], planes_[i].n);
 
-                        const T distance = dot(vertices[i], planes_[i].n) - planes_[i].d;
+                        const T distance = planes_[i].distance(vertices[i]);
                         planes_[i].n /= distance;
                         planes_[i].d /= distance;
                 }
