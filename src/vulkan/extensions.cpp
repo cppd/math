@@ -21,14 +21,14 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 namespace ns::vulkan
 {
-PFN_vkVoidFunction proc_addr(VkInstance instance, const char* name)
+PFN_vkVoidFunction proc_addr(const VkInstance instance, const char* const name)
 {
         ASSERT(instance != VK_NULL_HANDLE);
-        PFN_vkVoidFunction addr = vkGetInstanceProcAddr(instance, name);
-        if (addr == nullptr)
+        const PFN_vkVoidFunction addr = vkGetInstanceProcAddr(instance, name);
+        if (addr != nullptr)
         {
-                error(std::string("Failed to find address of ").append(name));
+                return addr;
         }
-        return addr;
+        error(std::string("Failed to find address of ").append(name));
 }
 }

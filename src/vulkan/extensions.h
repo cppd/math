@@ -15,6 +15,9 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
+#pragma once
+
+#include <utility>
 #include <vulkan/vulkan.h>
 
 namespace ns::vulkan
@@ -22,38 +25,14 @@ namespace ns::vulkan
 PFN_vkVoidFunction proc_addr(VkInstance instance, const char* name);
 }
 
-inline VkResult vkCreateDebugReportCallbackEXT(
-        VkInstance instance,
-        const VkDebugReportCallbackCreateInfoEXT* pCreateInfo,
-        const VkAllocationCallbacks* pAllocator,
-        VkDebugReportCallbackEXT* pCallback)
-{
-        auto a = ns::vulkan::proc_addr(instance, "vkCreateDebugReportCallbackEXT");
-        auto f = reinterpret_cast<PFN_vkCreateDebugReportCallbackEXT>(a);
-        return f(instance, pCreateInfo, pAllocator, pCallback);
-}
+#define VULKAN_EXTENSION_FUNCTION(name)                                 \
+        template <typename... T>                                        \
+        inline decltype(auto) name(const VkInstance instance, T&&... v) \
+        {                                                               \
+                const auto p = ns::vulkan::proc_addr(instance, #name);  \
+                const auto f = reinterpret_cast<PFN_##name>(p);         \
+                return f(instance, std::forward<T>(v)...);              \
+        }
 
-inline void vkDestroyDebugReportCallbackEXT(
-        VkInstance instance,
-        VkDebugReportCallbackEXT callback,
-        const VkAllocationCallbacks* pAllocator)
-{
-        auto a = ns::vulkan::proc_addr(instance, "vkDestroyDebugReportCallbackEXT");
-        auto f = reinterpret_cast<PFN_vkDestroyDebugReportCallbackEXT>(a);
-        f(instance, callback, pAllocator);
-}
-
-inline void vkDebugReportMessageEXT(
-        VkInstance instance,
-        VkDebugReportFlagsEXT flags,
-        VkDebugReportObjectTypeEXT objectType,
-        uint64_t object,
-        size_t location,
-        int32_t messageCode,
-        const char* pLayerPrefix,
-        const char* pMessage)
-{
-        auto a = ns::vulkan::proc_addr(instance, "vkDebugReportMessageEXT");
-        auto f = reinterpret_cast<PFN_vkDebugReportMessageEXT>(a);
-        f(instance, flags, objectType, object, location, messageCode, pLayerPrefix, pMessage);
-}
+VULKAN_EXTENSION_FUNCTION(vkCreateDebugReportCallbackEXT)
+VULKAN_EXTENSION_FUNCTION(vkDestroyDebugReportCallbackEXT)
