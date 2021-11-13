@@ -70,6 +70,8 @@ class HyperplaneSimplex final
         }
 
 public:
+        static T intersection_cost();
+
         HyperplaneSimplex()
         {
         }

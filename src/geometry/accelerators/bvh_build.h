@@ -95,7 +95,7 @@ class BvhBuild final
                 }
         };
 
-        const T interior_node_traversal_cost_ = 2 * spatial::testing::bounding_box::intersection_r_cost<N, T>();
+        const T interior_node_traversal_cost_ = 2 * BoundingBox<N, T>::intersection_r_cost();
         const double max_interior_node_count_reciprocal_;
 
         std::vector<unsigned> object_indices_;

@@ -117,6 +117,8 @@ public:
 
         using DataType = T;
 
+        static T intersection_cost();
+
         Parallelotope() = default;
 
         template <typename... P>

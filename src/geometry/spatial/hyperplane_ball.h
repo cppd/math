@@ -36,6 +36,8 @@ class HyperplaneBall final
         T radius_squared_;
 
 public:
+        static T intersection_cost();
+
         HyperplaneBall(const Vector<N, T>& center, const Vector<N, T>& normal, const T& radius)
                 : center_(center), radius_squared_(square(radius))
         {

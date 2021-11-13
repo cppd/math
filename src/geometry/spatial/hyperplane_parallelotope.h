@@ -72,6 +72,8 @@ public:
 
         using DataType = T;
 
+        static T intersection_cost();
+
         template <typename... P>
         explicit HyperplaneParallelotope(const Vector<N, T>& org, const P&... vectors);
 

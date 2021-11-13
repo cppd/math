@@ -206,7 +206,9 @@ public:
                 : mesh_data_(mesh_objects),
                   bvh_(create_bvh(&mesh_data_.facets(), progress)),
                   bounding_box_(bvh_.bounding_box()),
-                  intersection_cost_(mesh_data_.facets().size() * MeshFacet<N, T>::intersection_cost())
+                  intersection_cost_(
+                          mesh_data_.facets().size()
+                          * std::remove_reference_t<decltype(mesh_data_.facets().front())>::intersection_cost())
         {
         }
 };

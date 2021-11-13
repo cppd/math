@@ -23,7 +23,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <src/com/memory_arena.h>
 #include <src/geometry/spatial/parallelotope.h>
-#include <src/geometry/spatial/testing/parallelotope_intersection.h>
 #include <src/shading/ggx_diffuse.h>
 
 namespace ns::painter
@@ -109,7 +108,7 @@ class Parallelotope final : public Shape<N, T, Color>
 
         T intersection_cost() const override
         {
-                return geometry::spatial::testing::parallelotope::intersection_cost<N, T>();
+                return decltype(parallelotope_)::intersection_cost();
         }
 
         std::optional<T> intersect_bounds(const Ray<N, T>& r, const T max_distance) const override

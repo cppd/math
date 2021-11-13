@@ -144,6 +144,9 @@ class BoundingBox final
         }
 
 public:
+        static T intersection_cost();
+        static T intersection_r_cost();
+
         constexpr BoundingBox()
         {
         }
