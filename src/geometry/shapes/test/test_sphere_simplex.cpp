@@ -25,7 +25,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/com/random/engine.h>
 #include <src/com/type/name.h>
 #include <src/geometry/spatial/hyperplane_simplex.h>
-#include <src/numerical/complement.h>
 #include <src/sampling/sphere_uniform.h>
 #include <src/test/test.h>
 
@@ -76,25 +75,7 @@ void test_integrate(ProgressRatio* const progress, const double progress_min, co
                       + to_string(sphere_area) + ", simplex area = " + to_string(simplex_area));
         }
 
-        const std::array<Vector<N, T>, N - 1> simplex_vectors = [&]()
-        {
-                std::array<Vector<N, T>, N - 1> result;
-                for (unsigned i = 0; i < N - 1; ++i)
-                {
-                        result[i] = simplex_vertices[i + 1] - simplex_vertices[0];
-                }
-                return result;
-        }();
-
-        const Vector<N, T> plane_n = numerical::orthogonal_complement(simplex_vectors);
-        const T plane_d = dot(plane_n, simplex_vertices[0]);
-
-        const HyperplaneSimplex<N, T> simplex = [&]()
-        {
-                HyperplaneSimplex<N, T> result;
-                result.set_data(plane_n, simplex_vertices);
-                return result;
-        }();
+        const HyperplaneSimplex<N, T> simplex(simplex_vertices);
 
         constexpr double RAY_COUNT_R = 1.0 / RAY_COUNT;
         unsigned intersect_count = 0;
@@ -106,7 +87,7 @@ void test_integrate(ProgressRatio* const progress, const double progress_min, co
                         progress->set(std::lerp(progress_min, progress_max, i * RAY_COUNT_R));
                 }
                 const Ray<N, T> ray(Vector<N, T>(0), sampling::uniform_on_sphere<N, T>(random_engine));
-                if (simplex.intersect(ray, plane_n, plane_d))
+                if (simplex.intersect(ray))
                 {
                         ++intersect_count;
                 }

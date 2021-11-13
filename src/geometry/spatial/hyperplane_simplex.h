@@ -26,13 +26,15 @@ Cambridge University Press, 2003.
 #include "constraint.h"
 #include "hyperplane.h"
 
+#include <src/com/error.h>
+#include <src/com/math.h>
+#include <src/com/print.h>
 #include <src/numerical/complement.h>
 #include <src/numerical/ray.h>
 #include <src/numerical/vec.h>
 
 #include <array>
 #include <optional>
-#include <utility>
 
 namespace ns::geometry
 {
@@ -42,19 +44,20 @@ class HyperplaneSimplex final
         static_assert(N >= 2);
         static_assert(std::is_floating_point_v<T>);
 
-        // (N-1)-dimensional planes
-        // They are orthogonal to (N-1)-simplex and passing
-        // through its ridges except for one ridge.
-        // Only planes are stored. Simplex normal and vertices are passed
-        // in function parameters so as not to duplicate data.
         struct Plane
         {
                 Vector<N, T> n;
                 T d;
         };
+
+        // (N-1)-dimensional simplex plane.
+        Plane plane_;
+
+        // (N-1)-dimensional planes orthogonal to the simplex
+        // and passing through its ridges except for one ridge.
         std::array<Plane, N - 1> planes_;
 
-        T barycentric_coordinate(const Vector<N, T>& point, const unsigned i) const
+        T barycentric_coordinate(const Vector<N, T>& point, const std::size_t i) const
         {
                 // The distance from the ridge to the point is the barycentric coordinate.
                 return dot(point, planes_[i].n) - planes_[i].d;
@@ -73,7 +76,16 @@ class HyperplaneSimplex final
         }
 
 public:
-        void set_data(Vector<N, T> normal, const std::array<Vector<N, T>, N>& vertices)
+        HyperplaneSimplex()
+        {
+        }
+
+        explicit HyperplaneSimplex(const std::array<Vector<N, T>, N>& vertices)
+        {
+                set(vertices);
+        }
+
+        void set(const std::array<Vector<N, T>, N>& vertices)
         {
                 std::array<Vector<N, T>, N - 1> vectors;
                 for (std::size_t i = 0; i < N - 1; ++i)
@@ -81,15 +93,21 @@ public:
                         vectors[i] = vertices[i] - vertices[N - 1];
                 }
 
-                // normal must be equal to orthogonal_complement(vectors)
+                plane_.n = numerical::orthogonal_complement(vectors).normalized();
+                if (!is_finite(plane_.n))
+                {
+                        error("Hyperplane simplex normal " + to_string(plane_.n) + " is not finite, vertices "
+                              + to_string(vertices));
+                }
+                plane_.d = dot(plane_.n, vertices[N - 1]);
 
                 // create N - 1 planes that pass through vertex N - 1,
                 // through simples ridges, and that are orthogonal to the simplex.
                 for (std::size_t i = 0; i < N - 1; ++i)
                 {
-                        std::swap(normal, vectors[i]);
+                        std::swap(plane_.n, vectors[i]);
                         planes_[i].n = numerical::orthogonal_complement(vectors);
-                        std::swap(normal, vectors[i]);
+                        std::swap(plane_.n, vectors[i]);
 
                         // dot(p - org, normal) = dot(p, normal) - dot(org, normal) = dot(p, normal) - d
                         // org = vertices[N - 1]
@@ -101,11 +119,21 @@ public:
                 }
         }
 
+        void reverse_normal()
+        {
+                plane_.n = -plane_.n;
+                plane_.d = -plane_.d;
+        }
+
+        const Vector<N, T>& normal() const
+        {
+                return plane_.n;
+        }
+
         // N constraints b + a * x >= 0
         // one constraint b + a * x = 0
-        // normal and vertices are the same as in set_data function
-        Constraints<N, T, N, 1> constraints(const Vector<N, T>& normal, const std::array<Vector<N, T>, N>& vertices)
-                const
+        // vertices must be the same as in the set function
+        Constraints<N, T, N, 1> constraints(const std::array<Vector<N, T>, N>& vertices) const
         {
                 Constraints<N, T, N, 1> result;
 
@@ -122,15 +150,12 @@ public:
 
                 {
                         // Create a plane that do not pass through vertex N - 1
-                        // Based on set_data function.
-
                         std::array<Vector<N, T>, N - 1> vectors;
                         for (std::size_t i = 0; i < N - 2; ++i)
                         {
                                 vectors[i] = vertices[i + 1] - vertices[0];
                         }
-                        vectors[N - 2] = normal;
-
+                        vectors[N - 2] = plane_.n;
                         const Vector<N, T> n = numerical::orthogonal_complement(vectors).normalized();
                         const T d = dot(vertices[0], n);
 
@@ -140,19 +165,15 @@ public:
                         result.c[N - 1].b = to_vertex ? -d : d;
                 }
 
-                {
-                        // based on the simplex plane equation n * x - d = 0
-                        const T d = dot(vertices[0], normal);
-                        result.c_eq[0].a = normal;
-                        result.c_eq[0].b = -d;
-                }
+                result.c_eq[0].a = plane_.n;
+                result.c_eq[0].b = -plane_.d;
 
                 return result;
         }
 
-        std::optional<T> intersect(const Ray<N, T>& ray, const Vector<N, T>& plane_n, const T& plane_d) const
+        std::optional<T> intersect(const Ray<N, T>& ray) const
         {
-                const std::optional<T> t = hyperplane_intersect(ray, plane_n, plane_d);
+                const std::optional<T> t = hyperplane_intersect(ray, plane_.n, plane_.d);
                 if (!t)
                 {
                         return std::nullopt;

@@ -18,7 +18,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #pragma once
 
 #include "bounding_box.h"
-#include "constraint.h"
 #include "hyperplane_simplex.h"
 #include "parallelotope_aa.h"
 #include "shape_overlap.h"
@@ -27,8 +26,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <src/com/combinatorics.h>
 #include <src/com/error.h>
-#include <src/com/print.h>
-#include <src/numerical/complement.h>
 #include <src/numerical/ray.h>
 #include <src/numerical/vec.h>
 
@@ -40,27 +37,23 @@ namespace ns::geometry
 template <std::size_t N, typename T>
 class HyperplaneMeshSimplex
 {
-        static_assert(N >= 3);
-
         static std::array<Vector<N, T>, N> vertices_to_array(
                 const std::vector<Vector<N, T>>& vertices,
-                const std::array<int, N>& v)
+                const std::array<int, N>& indices)
         {
                 std::array<Vector<N, T>, N> res;
-                for (unsigned i = 0; i < N; ++i)
+                for (std::size_t i = 0; i < N; ++i)
                 {
-                        res[i] = vertices[v[i]];
+                        res[i] = vertices[indices[i]];
                 }
                 return res;
         }
 
-        static constexpr int EDGE_COUNT = BINOMIAL<N, 2>;
+        static constexpr std::size_t EDGE_COUNT = BINOMIAL<N, 2>;
 
+        HyperplaneSimplex<N, T> simplex_;
         const std::vector<Vector<N, T>>* vertices_;
-        Vector<N, T> plane_n_;
-        T plane_d_;
-        HyperplaneSimplex<N, T> geometry_;
-        std::array<int, N> v_;
+        std::array<int, N> indices_;
 
 public:
         static constexpr std::size_t SPACE_DIMENSION = N;
@@ -73,67 +66,59 @@ public:
                 return spatial::testing::hyperplane_simplex::intersection_cost<N, T>();
         }
 
-        HyperplaneMeshSimplex(const std::vector<Vector<N, T>>* const vertices, const std::array<int, N>& vertex_indices)
-                : vertices_(vertices),
-                  plane_n_(numerical::orthogonal_complement(*vertices, vertex_indices).normalized()),
-                  plane_d_(dot(plane_n_, (*vertices)[vertex_indices[0]])),
-                  v_(vertex_indices)
+        HyperplaneMeshSimplex(const std::vector<Vector<N, T>>* const vertices, const std::array<int, N>& indices)
+                : simplex_(vertices_to_array(*vertices, indices)), vertices_(vertices), indices_(indices)
         {
-                if (!is_finite(plane_n_))
-                {
-                        error("Hyperplane mesh simplex normal " + to_string(plane_n_) + " is not finite, vertices "
-                              + to_string(vertices_to_array(*vertices_, v_)));
-                }
-                geometry_.set_data(plane_n_, vertices_to_array(*vertices_, v_));
         }
 
         void reverse_normal()
         {
-                plane_n_ = -plane_n_;
-                plane_d_ = -plane_d_;
+                simplex_.reverse_normal();
         }
 
         template <std::size_t M>
-        Vector<M, T> interpolate(const Vector<N, T>& point, const std::array<Vector<M, T>, N>& data) const
+        decltype(auto) interpolate(const Vector<N, T>& point, const std::array<Vector<M, T>, N>& data) const
         {
-                return geometry_.interpolate(point, data);
+                return simplex_.interpolate(point, data);
         }
 
-        std::optional<T> intersect(const Ray<N, T>& r) const
+        decltype(auto) intersect(const Ray<N, T>& ray) const
         {
-                return geometry_.intersect(r, plane_n_, plane_d_);
+                return simplex_.intersect(ray);
         }
 
-        const Vector<N, T>& normal() const
+        decltype(auto) normal() const
         {
-                return plane_n_;
+                return simplex_.normal();
+        }
+
+        decltype(auto) constraints() const
+        {
+                return simplex_.constraints(vertices());
         }
 
         std::array<Vector<N, T>, N> vertices() const
         {
-                return vertices_to_array(*vertices_, v_);
-        }
-
-        Constraints<N, T, N, 1> constraints() const
-        {
-                return geometry_.constraints(plane_n_, vertices_to_array(*vertices_, v_));
+                return vertices_to_array(*vertices_, indices_);
         }
 
         std::array<std::array<Vector<N, T>, 2>, EDGE_COUNT> edges() const
         {
                 static_assert(N <= 3);
 
-                std::array<std::array<Vector<N, T>, 2>, EDGE_COUNT> result;
-                unsigned n = 0;
-                for (unsigned i = 0; i < N - 1; ++i)
+                const std::array<Vector<N, T>, N> v = vertices();
+
+                std::array<std::array<Vector<N, T>, 2>, EDGE_COUNT> res;
+                std::size_t n = 0;
+                for (std::size_t i = 0; i < N - 1; ++i)
                 {
-                        for (unsigned j = i + 1; j < N; ++j)
+                        for (std::size_t j = i + 1; j < N; ++j)
                         {
-                                result[n++] = {(*vertices_)[v_[i]], (*vertices_)[v_[j]] - (*vertices_)[v_[i]]};
+                                res[n++] = {v[i], v[j] - v[i]};
                         }
                 }
                 ASSERT(n == EDGE_COUNT);
-                return result;
+                return res;
         }
 
         auto overlap_function() const

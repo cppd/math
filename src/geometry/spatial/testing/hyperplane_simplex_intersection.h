@@ -26,7 +26,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/com/print.h>
 #include <src/com/random/engine.h>
 #include <src/com/type/limit.h>
-#include <src/numerical/complement.h>
 #include <src/sampling/simplex_uniform.h>
 #include <src/sampling/sphere_uniform.h>
 
@@ -47,12 +46,14 @@ template <typename T>
 inline constexpr T ERROR_MAX = 1.002;
 
 template <std::size_t N, typename T>
-struct Simplex
+struct Simplex final
 {
         HyperplaneSimplex<N, T> simplex;
-        Vector<N, T> plane_n;
-        T plane_d;
         std::array<Vector<N, T>, N> vertices;
+
+        explicit Simplex(const std::array<Vector<N, T>, N>& vertices) : simplex(vertices), vertices(vertices)
+        {
+        }
 };
 
 template <std::size_t N, typename T>
@@ -65,49 +66,43 @@ Simplex<N, T> create_random_simplex(std::mt19937_64& engine)
         const std::array<Vector<N, T>, N - 1> vectors = random_vectors<N - 1, N, T>(MIN_LENGTH, MAX_LENGTH, engine);
         const Vector<N, T> org = random_org<N, T>(ORG_INTERVAL, engine);
 
-        Simplex<N, T> simplex;
-
-        simplex.plane_n = numerical::orthogonal_complement(vectors).normalized();
-        simplex.plane_d = dot(simplex.plane_n, org);
+        std::array<Vector<N, T>, N> vertices;
         for (std::size_t i = 0; i < N - 1; ++i)
         {
-                simplex.vertices[i] = org + vectors[i];
+                vertices[i] = org + vectors[i];
         }
-        simplex.vertices[N - 1] = org;
-        simplex.simplex.set_data(simplex.plane_n, simplex.vertices);
+        vertices[N - 1] = org;
 
-        return simplex;
+        return Simplex(vertices);
 }
 
 template <std::size_t N, typename T>
-T max_vertex_distance(const std::array<Vector<N, T>, N>& vertices)
+T max_vertex_distance(const Simplex<N, T>& simplex)
 {
         T max = Limits<T>::lowest();
         for (std::size_t i = 0; i < N; ++i)
         {
                 for (std::size_t j = i + 1; j < N; ++j)
                 {
-                        max = std::max(max, (vertices[i] - vertices[j]).norm());
+                        max = std::max(max, (simplex.vertices[i] - simplex.vertices[j]).norm());
                 }
         }
         return max;
 }
 
 template <std::size_t N, typename T>
-std::vector<Ray<N, T>> create_rays(
-        const Vector<N, T>& normal,
-        const std::array<Vector<N, T>, N>& vertices,
-        const int point_count,
-        std::mt19937_64& engine)
+std::vector<Ray<N, T>> create_rays(const Simplex<N, T>& simplex, const int point_count, std::mt19937_64& engine)
 {
-        const T distance = max_vertex_distance(vertices);
+        const Vector<N, T>& normal = simplex.simplex.normal();
+
+        const T distance = max_vertex_distance(simplex);
 
         const int ray_count = 3 * point_count;
         std::vector<Ray<N, T>> rays;
         rays.reserve(ray_count);
         for (int i = 0; i < point_count; ++i)
         {
-                const Vector<N, T> point = sampling::uniform_in_simplex(vertices, engine);
+                const Vector<N, T> point = sampling::uniform_in_simplex(simplex.vertices, engine);
                 const Ray<N, T> ray(point, sampling::uniform_on_sphere<N, T>(engine));
                 rays.push_back(ray.moved(-1));
                 rays.push_back(ray.moved(1).reversed());
@@ -130,7 +125,7 @@ void check_intersection_count(const Simplex<N, T>& simplex, const std::vector<Ra
         std::size_t count = 0;
         for (const Ray<N, T>& ray : rays)
         {
-                if (simplex.simplex.intersect(ray, simplex.plane_n, simplex.plane_d))
+                if (simplex.simplex.intersect(ray))
                 {
                         ++count;
                 }
@@ -148,7 +143,7 @@ template <std::size_t N, typename T, int COUNT>
 double compute_intersections_per_second(const int point_count, std::mt19937_64& engine)
 {
         const Simplex<N, T> simplex = create_random_simplex<N, T>(engine);
-        const std::vector<Ray<N, T>> rays = create_rays(simplex.plane_n, simplex.vertices, point_count, engine);
+        const std::vector<Ray<N, T>> rays = create_rays(simplex, point_count, engine);
 
         check_intersection_count(simplex, rays);
 
@@ -157,7 +152,7 @@ double compute_intersections_per_second(const int point_count, std::mt19937_64& 
         {
                 for (const Ray<N, T>& ray : rays)
                 {
-                        do_not_optimize(simplex.simplex.intersect(ray, simplex.plane_n, simplex.plane_d));
+                        do_not_optimize(simplex.simplex.intersect(ray));
                 }
         }
         return COUNT * (rays.size() / duration_from(start_time));
@@ -171,7 +166,7 @@ void test_intersection()
         std::mt19937_64 engine = create_engine<std::mt19937_64>();
 
         const Simplex<N, T> simplex = create_random_simplex<N, T>(engine);
-        const std::vector<Ray<N, T>> rays = create_rays(simplex.plane_n, simplex.vertices, POINT_COUNT, engine);
+        const std::vector<Ray<N, T>> rays = create_rays(simplex, POINT_COUNT, engine);
 
         check_intersection_count(simplex, rays);
 }
