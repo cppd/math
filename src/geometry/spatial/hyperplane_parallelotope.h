@@ -46,22 +46,16 @@ class HyperplaneParallelotope final
         static constexpr int DIAGONAL_COUNT = 1 << (N - 2);
         static constexpr int VERTEX_COUNT = 1 << (N - 1);
 
-        // vertex count 2 ^ (N-1) multiplied by vertex dimension
-        // count (N-1) and divided by 2 for uniqueness
-        // ((2 ^ (N-1)) * (N-1)) / 2 = (2 ^ (N-2)) * (N-1)
+        // vertex count 2 ^ (N - 1) multiplied by vertex dimension
+        // count (N - 1) and divided by 2 for uniqueness
+        // ((2 ^ (N - 1)) * (N - 1)) / 2 = (2 ^ (N - 2)) * (N - 1)
         static constexpr int EDGE_COUNT = (1 << (N - 2)) * (N - 1);
 
-        struct Planes
-        {
-                Vector<N, T> n;
-                T d;
-        };
-        std::array<Planes, N - 1> planes_;
+        Hyperplane<N, T> plane_;
+        std::array<Hyperplane<N, T>, N - 1> planes_;
 
         Vector<N, T> org_;
         std::array<Vector<N, T>, N - 1> vectors_;
-        Vector<N, T> plane_n_;
-        T plane_d_;
 
         template <int INDEX, typename F>
         void vertices_impl(const Vector<N, T>& p, const F& f) const;
@@ -116,16 +110,21 @@ template <std::size_t N, typename T>
 HyperplaneParallelotope<N, T>::HyperplaneParallelotope(
         const Vector<N, T>& org,
         const std::array<Vector<N, T>, N - 1>& vectors)
-        : org_(org),
-          vectors_(vectors),
-          plane_n_(numerical::orthogonal_complement(vectors).normalized()),
-          plane_d_(dot(plane_n_, org_))
+        : org_(org), vectors_(vectors)
 {
+        plane_.n = numerical::orthogonal_complement(vectors).normalized();
+        if (!is_finite(plane_.n))
+        {
+                error("Hyperplane parallelotope normal " + to_string(plane_.n) + " is not finite, vectors "
+                      + to_string(vectors));
+        }
+        plane_.d = dot(plane_.n, org_);
+
         for (unsigned i = 0; i < N - 1; ++i)
         {
-                std::swap(plane_n_, vectors_[i]);
+                std::swap(plane_.n, vectors_[i]);
                 planes_[i].n = numerical::orthogonal_complement(vectors_);
-                std::swap(plane_n_, vectors_[i]);
+                std::swap(plane_.n, vectors_[i]);
 
                 if (dot(planes_[i].n, vectors_[i]) < 0)
                 {
@@ -144,14 +143,13 @@ HyperplaneParallelotope<N, T>::HyperplaneParallelotope(
 template <std::size_t N, typename T>
 void HyperplaneParallelotope<N, T>::set_normal_direction(const Vector<N, T>& direction)
 {
-        if (dot(plane_n_, direction) < 0)
+        if (dot(plane_.n, direction) < 0)
         {
-                plane_n_ = -plane_n_;
-                plane_d_ = -plane_d_;
+                plane_.reverse_normal();
         }
 }
 
-// 2*(N-1) constraints b + a * x >= 0
+// 2 * (N - 1) constraints b + a * x >= 0
 // one constraint b + a * x = 0
 template <std::size_t N, typename T>
 Constraints<N, T, 2 * (N - 1), 1> HyperplaneParallelotope<N, T>::constraints() const
@@ -171,22 +169,22 @@ Constraints<N, T, 2 * (N - 1), 1> HyperplaneParallelotope<N, T>::constraints() c
                 result.c[c_i + 1].b = dot(org_ + vectors_[i], planes_[i].n) / len;
         }
 
-        result.c_eq[0].a = plane_n_;
-        result.c_eq[0].b = -dot(org_, plane_n_);
+        result.c_eq[0].a = plane_.n;
+        result.c_eq[0].b = -plane_.d;
 
         return result;
 }
 
 template <std::size_t N, typename T>
-std::optional<T> HyperplaneParallelotope<N, T>::intersect(const Ray<N, T>& r) const
+std::optional<T> HyperplaneParallelotope<N, T>::intersect(const Ray<N, T>& ray) const
 {
-        const std::optional<T> t = hyperplane_intersect(r, plane_n_, plane_d_);
-        if (!t)
+        const T t = plane_.intersect(ray);
+        if (!(t > 0))
         {
                 return std::nullopt;
         }
 
-        const Vector<N, T> point = r.point(*t);
+        const Vector<N, T> point = ray.point(t);
 
         for (unsigned i = 0; i < N - 1; ++i)
         {
@@ -202,7 +200,7 @@ std::optional<T> HyperplaneParallelotope<N, T>::intersect(const Ray<N, T>& r) co
 template <std::size_t N, typename T>
 const Vector<N, T>& HyperplaneParallelotope<N, T>::normal() const
 {
-        return plane_n_;
+        return plane_.n;
 }
 
 template <std::size_t N, typename T>

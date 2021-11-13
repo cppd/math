@@ -20,19 +20,42 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/numerical/ray.h>
 #include <src/numerical/vec.h>
 
-#include <optional>
-
 namespace ns::geometry
 {
 template <std::size_t N, typename T>
-std::optional<T> hyperplane_intersect(const Ray<N, T>& ray, const Vector<N, T>& plane_n, const T& plane_d)
+struct Hyperplane final
 {
-        const T t = (plane_d - dot(plane_n, ray.org())) / dot(plane_n, ray.dir());
-        if (t > 0)
-        {
-                return t;
-        }
-        return std::nullopt;
-}
+        // n * x - d = 0
+        Vector<N, T> n;
+        T d;
 
+        Hyperplane()
+        {
+        }
+
+        Hyperplane(const Vector<N, T>& n, const T& d) : n(n), d(d)
+        {
+        }
+
+        void reverse_normal()
+        {
+                n = -n;
+                d = -d;
+        }
+
+        [[nodiscard]] T intersect(const Ray<N, T>& ray) const
+        {
+                return (d - dot(n, ray.org())) / dot(n, ray.dir());
+        }
+
+        [[nodiscard]] T distance(const Vector<N, T>& point) const
+        {
+                return dot(n, point) - d;
+        }
+
+        [[nodiscard]] Vector<N, T> project(const Vector<N, T>& point) const
+        {
+                return point - n * distance(point);
+        }
+};
 }

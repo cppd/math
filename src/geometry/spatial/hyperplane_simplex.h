@@ -44,18 +44,12 @@ class HyperplaneSimplex final
         static_assert(N >= 2);
         static_assert(std::is_floating_point_v<T>);
 
-        struct Plane
-        {
-                Vector<N, T> n;
-                T d;
-        };
+        // (N - 1)-dimensional simplex plane.
+        Hyperplane<N, T> plane_;
 
-        // (N-1)-dimensional simplex plane.
-        Plane plane_;
-
-        // (N-1)-dimensional planes orthogonal to the simplex
+        // (N - 1)-dimensional planes orthogonal to the simplex
         // and passing through its ridges except for one ridge.
-        std::array<Plane, N - 1> planes_;
+        std::array<Hyperplane<N, T>, N - 1> planes_;
 
         T barycentric_coordinate(const Vector<N, T>& point, const std::size_t i) const
         {
@@ -121,8 +115,7 @@ public:
 
         void reverse_normal()
         {
-                plane_.n = -plane_.n;
-                plane_.d = -plane_.d;
+                plane_.reverse_normal();
         }
 
         const Vector<N, T>& normal() const
@@ -173,13 +166,13 @@ public:
 
         std::optional<T> intersect(const Ray<N, T>& ray) const
         {
-                const std::optional<T> t = hyperplane_intersect(ray, plane_.n, plane_.d);
-                if (!t)
+                const T t = plane_.intersect(ray);
+                if (!(t > 0))
                 {
                         return std::nullopt;
                 }
 
-                const Vector<N, T> point = ray.point(*t);
+                const Vector<N, T> point = ray.point(t);
 
                 Vector<N - 1, T> bc;
                 for (std::size_t i = 0; i < N - 1; ++i)

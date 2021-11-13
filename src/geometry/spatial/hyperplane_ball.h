@@ -19,6 +19,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "hyperplane.h"
 
+#include <src/com/error.h>
 #include <src/com/exponent.h>
 #include <src/numerical/ray.h>
 #include <src/numerical/vec.h>
@@ -30,29 +31,31 @@ namespace ns::geometry
 template <std::size_t N, typename T>
 class HyperplaneBall final
 {
+        Hyperplane<N, T> plane_;
         Vector<N, T> center_;
-        Vector<N, T> plane_n_;
-        T plane_d_;
         T radius_squared_;
 
 public:
         HyperplaneBall(const Vector<N, T>& center, const Vector<N, T>& normal, const T& radius)
-                : center_(center),
-                  plane_n_(normal.normalized()),
-                  plane_d_(dot(plane_n_, center_)),
-                  radius_squared_(square(radius))
+                : center_(center), radius_squared_(square(radius))
         {
+                plane_.n = normal.normalized();
+                if (!is_finite(plane_.n))
+                {
+                        error("Hyperplane ball normal " + to_string(plane_.n) + " is not finite");
+                }
+                plane_.d = dot(plane_.n, center_);
         }
 
         std::optional<T> intersect(const Ray<N, T>& ray) const
         {
-                const std::optional<T> t = hyperplane_intersect(ray, plane_n_, plane_d_);
-                if (!t)
+                const T t = plane_.intersect(ray);
+                if (!(t > 0))
                 {
                         return std::nullopt;
                 }
 
-                const Vector<N, T> point = ray.point(*t);
+                const Vector<N, T> point = ray.point(t);
 
                 if ((point - center_).norm_squared() < radius_squared_)
                 {
@@ -68,7 +71,7 @@ public:
 
         const Vector<N, T>& normal() const
         {
-                return plane_n_;
+                return plane_.n;
         }
 
         const T& radius_squared() const
