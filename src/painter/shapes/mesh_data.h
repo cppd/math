@@ -262,7 +262,9 @@ public:
                 }
                 create(reading);
 
-                LOG("Painter mesh data created, " + to_string_fixed(duration_from(start_time), 5) + " s");
+                LOG("Painter mesh data created, " + to_string_fixed(duration_from(start_time), 5)
+                    + " s, vertex count = " + to_string_digit_groups(vertices_.size())
+                    + ", facet count = " + to_string_digit_groups(facets_.size()));
         }
 
         // Mesh facets store pointers to vertices_, normals_, texcoords_
