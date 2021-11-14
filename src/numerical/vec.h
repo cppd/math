@@ -412,7 +412,8 @@ template <std::size_t N, typename T>
         Vector<N, T> res;
         for (std::size_t i = 0; i < N; ++i)
         {
-                res[i] = 1 / a[i];
+                // 1 / -0 == -infinity
+                res[i] = (a[i] == 0) ? std::numeric_limits<T>::infinity() : (1 / a[i]);
         }
         return res;
 }
