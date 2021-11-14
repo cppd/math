@@ -209,7 +209,8 @@ std::unique_ptr<const Scene<N, T, Color>> create_cornell_box_scene(
         const std::array<int, N - 1>& screen_size,
         const std::array<Vector<N, T>, N>& camera,
         const Vector<N, T>& center,
-        std::unique_ptr<const Shape<N, T, Color>>&& shape)
+        std::unique_ptr<const Shape<N, T, Color>>&& shape,
+        ProgressRatio* const progress)
 {
         static_assert(N >= 3);
         static_assert(std::is_floating_point_v<T>);
@@ -226,7 +227,7 @@ std::unique_ptr<const Scene<N, T, Color>> create_cornell_box_scene(
         std::unique_ptr<Projector<N, T>> projector = create_projector(screen_size, camera, center);
 
         return create_storage_scene<N, T>(
-                background_light, std::move(projector), std::move(light_sources), std::move(shapes));
+                background_light, std::move(projector), std::move(light_sources), std::move(shapes), progress);
 }
 
 template <std::size_t N, typename T>
@@ -257,13 +258,15 @@ std::unique_ptr<const Scene<N, T, Color>> create_cornell_box_scene(
         const Color& light,
         const Color& background_light,
         const std::array<int, N - 1>& screen_size,
-        std::unique_ptr<const Shape<N, T, Color>>&& shape)
+        std::unique_ptr<const Shape<N, T, Color>>&& shape,
+        ProgressRatio* const progress)
 {
         static_assert(N >= 3);
         namespace impl = cornell_box_scene_implementation;
 
         const auto [camera, center] = impl::camera_and_center(shape->bounding_box());
 
-        return impl::create_cornell_box_scene(light, background_light, screen_size, camera, center, std::move(shape));
+        return impl::create_cornell_box_scene(
+                light, background_light, screen_size, camera, center, std::move(shape), progress);
 }
 }

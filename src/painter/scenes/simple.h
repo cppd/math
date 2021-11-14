@@ -151,7 +151,8 @@ std::unique_ptr<const Scene<N, T, Color>> create_simple_scene(
         const Color& background_light,
         const int min_screen_size,
         const int max_screen_size,
-        std::unique_ptr<const Shape<N, T, Color>>&& shape)
+        std::unique_ptr<const Shape<N, T, Color>>&& shape,
+        ProgressRatio* const progress)
 {
         namespace impl = simple_scene_implementation;
 
@@ -171,6 +172,6 @@ std::unique_ptr<const Scene<N, T, Color>> create_simple_scene(
         shapes.push_back(std::move(shape));
 
         return create_storage_scene<N, T, Color>(
-                background_light, std::move(projector), std::move(light_sources), std::move(shapes));
+                background_light, std::move(projector), std::move(light_sources), std::move(shapes), progress);
 }
 }

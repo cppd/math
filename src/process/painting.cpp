@@ -84,17 +84,19 @@ void thread_function(
         std::unique_ptr<const painter::Scene<N, T, Color>> scene;
         if constexpr (N == 3)
         {
+                ProgressRatio progress(nullptr);
                 scene = create_painter_scene(
                         std::move(shape), to_vector<T>(camera.up), to_vector<T>(camera.forward),
                         to_vector<T>(camera.lighting), to_vector<T>(camera.view_center), camera.view_width,
                         dimension_parameters.width, dimension_parameters.height, parameters.cornell_box, light,
-                        background_light);
+                        background_light, &progress);
         }
         else
         {
+                ProgressRatio progress(nullptr);
                 scene = create_painter_scene(
                         std::move(shape), dimension_parameters.min_size, dimension_parameters.max_size,
-                        parameters.cornell_box, light, background_light);
+                        parameters.cornell_box, light, background_light, &progress);
         }
         ASSERT(scene);
 

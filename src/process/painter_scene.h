@@ -90,11 +90,13 @@ std::unique_ptr<const painter::Scene<3, T, Color>> create_painter_scene(
         const int height,
         const bool cornell_box,
         const Color& light,
-        const Color& background_light)
+        const Color& background_light,
+        ProgressRatio* const progress)
 {
         if (cornell_box)
         {
-                return painter::create_cornell_box_scene(light, background_light, {width, height}, std::move(shape));
+                return painter::create_cornell_box_scene(
+                        light, background_light, {width, height}, std::move(shape), progress);
         }
 
         namespace impl = painter_scene_implementation;
@@ -111,7 +113,7 @@ std::unique_ptr<const painter::Scene<3, T, Color>> create_painter_scene(
         shapes.push_back(std::move(shape));
 
         return painter::create_storage_scene(
-                background_light, std::move(projector), std::move(light_sources), std::move(shapes));
+                background_light, std::move(projector), std::move(light_sources), std::move(shapes), progress);
 }
 
 template <std::size_t N, typename T, typename Color>
@@ -121,7 +123,8 @@ std::unique_ptr<const painter::Scene<N, T, Color>> create_painter_scene(
         const int max_screen_size,
         const bool cornell_box,
         const Color& light,
-        const Color& background_light)
+        const Color& background_light,
+        ProgressRatio* const progress)
 {
         static_assert(N >= 4);
 
@@ -132,10 +135,11 @@ std::unique_ptr<const painter::Scene<N, T, Color>> create_painter_scene(
                 {
                         screen_size[i] = max_screen_size;
                 }
-                return painter::create_cornell_box_scene(light, background_light, screen_size, std::move(shape));
+                return painter::create_cornell_box_scene(
+                        light, background_light, screen_size, std::move(shape), progress);
         }
 
         return painter::create_simple_scene(
-                light, background_light, min_screen_size, max_screen_size, std::move(shape));
+                light, background_light, min_screen_size, max_screen_size, std::move(shape), progress);
 }
 }

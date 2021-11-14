@@ -20,7 +20,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "../shapes/ray_intersection.h"
 
 #include <src/color/color.h>
-#include <src/com/error.h>
 #include <src/com/type/limit.h>
 #include <src/geometry/accelerators/bvh.h>
 #include <src/geometry/accelerators/bvh_objects.h>
@@ -38,7 +37,6 @@ std::vector<P*> to_pointers(const std::vector<std::unique_ptr<P>>& objects)
         result.reserve(objects.size());
         for (const std::unique_ptr<P>& p : objects)
         {
-                ASSERT(p);
                 result.push_back(p.get());
         }
         return result;
@@ -107,32 +105,19 @@ class Impl final : public Scene<N, T, Color>
                 return thread_ray_count_;
         }
 
-        Impl(ProgressRatio&& progress,
-             const Color& background_light,
+public:
+        Impl(const Color& background_light,
              std::unique_ptr<const Projector<N, T>>&& projector,
              std::vector<std::unique_ptr<const LightSource<N, T, Color>>>&& light_sources,
-             std::vector<std::unique_ptr<const Shape<N, T, Color>>>&& shapes)
+             std::vector<std::unique_ptr<const Shape<N, T, Color>>>&& shapes,
+             ProgressRatio* const progress)
                 : shapes_(std::move(shapes)),
                   light_sources_(std::move(light_sources)),
                   projector_(std::move(projector)),
                   background_light_(background_light),
                   light_source_pointers_(to_pointers(light_sources_)),
-                  bvh_(geometry::bvh_objects(shapes_), &progress),
+                  bvh_(geometry::bvh_objects(shapes_), progress),
                   ray_offset_(bvh_.bounding_box().diagonal().norm() * (RAY_OFFSET_IN_EPSILONS * Limits<T>::epsilon()))
-        {
-                ASSERT(projector_);
-        }
-
-public:
-        Impl(const Color& background_light,
-             std::unique_ptr<const Projector<N, T>>&& projector,
-             std::vector<std::unique_ptr<const LightSource<N, T, Color>>>&& light_sources,
-             std::vector<std::unique_ptr<const Shape<N, T, Color>>>&& shapes)
-                : Impl(ProgressRatio(nullptr),
-                       background_light,
-                       std::move(projector),
-                       std::move(light_sources),
-                       std::move(shapes))
         {
         }
 };
@@ -143,17 +128,18 @@ std::unique_ptr<Scene<N, T, Color>> create_storage_scene(
         const Color& background_light,
         std::unique_ptr<const Projector<N, T>>&& projector,
         std::vector<std::unique_ptr<const LightSource<N, T, Color>>>&& light_sources,
-        std::vector<std::unique_ptr<const Shape<N, T, Color>>>&& shapes)
+        std::vector<std::unique_ptr<const Shape<N, T, Color>>>&& shapes,
+        ProgressRatio* const progress)
 {
         return std::make_unique<Impl<N, T, Color>>(
-                background_light, std::move(projector), std::move(light_sources), std::move(shapes));
+                background_light, std::move(projector), std::move(light_sources), std::move(shapes), progress);
 }
 
 #define CREATE_STORAGE_SCENE_INSTANTIATION_N_T_C(N, T, C)                     \
         template std::unique_ptr<Scene<(N), T, C>> create_storage_scene(      \
                 const C&, std::unique_ptr<const Projector<(N), T>>&&,         \
                 std::vector<std::unique_ptr<const LightSource<(N), T, C>>>&&, \
-                std::vector<std::unique_ptr<const Shape<(N), T, C>>>&&);
+                std::vector<std::unique_ptr<const Shape<(N), T, C>>>&&, ProgressRatio*);
 
 #define CREATE_STORAGE_SCENE_INSTANTIATION_N_T(N, T)                   \
         CREATE_STORAGE_SCENE_INSTANTIATION_N_T_C((N), T, color::Color) \

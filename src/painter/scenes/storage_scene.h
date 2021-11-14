@@ -20,6 +20,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "../objects.h"
 #include "../shapes/shape.h"
 
+#include <src/progress/progress.h>
+
 #include <memory>
 #include <vector>
 
@@ -30,5 +32,6 @@ std::unique_ptr<Scene<N, T, Color>> create_storage_scene(
         const Color& background_light,
         std::unique_ptr<const Projector<N, T>>&& projector,
         std::vector<std::unique_ptr<const LightSource<N, T, Color>>>&& light_sources,
-        std::vector<std::unique_ptr<const Shape<N, T, Color>>>&& shapes);
+        std::vector<std::unique_ptr<const Shape<N, T, Color>>>&& shapes,
+        ProgressRatio* progress);
 }
