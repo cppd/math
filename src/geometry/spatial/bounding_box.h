@@ -104,7 +104,8 @@ class BoundingBox final
                         const T dir = ray.dir()[i];
                         const bool dir_negative = (dir < 0);
                         const T d = ray.org()[i];
-                        const T r = 1 / dir;
+                        // 1 / -0 == -infinity
+                        const T r = (dir == 0) ? std::numeric_limits<T>::infinity() : (1 / dir);
                         const T a1 = (bounds_[dir_negative][i] - d) * r;
                         const T a2 = (bounds_[!dir_negative][i] - d) * r;
                         near = a1 > near ? a1 : near;

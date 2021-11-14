@@ -112,7 +112,7 @@ Vector<N, T> create_random_direction(const std::type_identity_t<T>& probability,
         const std::size_t n = std::uniform_int_distribution<std::size_t>(0, N - 1)(engine);
         Vector<N, T> v(0);
         v[n] = 1;
-        return v;
+        return std::bernoulli_distribution(0.5)(engine) ? v : -v;
 }
 
 template <std::size_t N, typename T>
@@ -268,7 +268,7 @@ void test_intersections(
         const T move_distance = 2 * length;
         const T move_min = length;
         const T move_max = 2 * length;
-        const T random_direction_probability = 1 - T(1) / point_count;
+        const T random_direction_probability = 0.99;
 
         for (const Vector<N, T>& point :
              testing::random_internal_points(box.min(), box.diagonal(), point_count, engine))
