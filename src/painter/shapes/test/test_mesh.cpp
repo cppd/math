@@ -15,7 +15,7 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include "../mesh.h"
+#include "spherical_mesh.h"
 
 #include <src/com/chrono.h>
 #include <src/com/error.h>
@@ -26,109 +26,46 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/com/random/engine.h>
 #include <src/com/type/limit.h>
 #include <src/com/type/name.h>
-#include <src/geometry/core/convex_hull.h>
-#include <src/geometry/spatial/bounding_box.h>
-#include <src/model/mesh_utility.h>
 #include <src/numerical/ray.h>
 #include <src/numerical/vec.h>
-#include <src/sampling/sphere_uniform.h>
 #include <src/test/test.h>
 
-#include <algorithm>
-#include <array>
-#include <cmath>
 #include <random>
 #include <sstream>
-#include <tuple>
 #include <vector>
 
 namespace ns::painter
 {
 namespace
 {
-constexpr bool WITH_RAY_LOG = false;
-constexpr bool WITH_ERROR_LOG = false;
-
-template <std::size_t N, typename T>
-std::vector<Ray<N, T>> create_rays_for_spherical_mesh(const geometry::BoundingBox<N, T>& bb, const int ray_count)
-{
-        const Vector<N, T> center = bb.center();
-        const T radius = 2 * (bb.diagonal() / T(2)).norm_infinity();
-
-        LOG("ray center = " + to_string(center));
-        LOG("ray radius = " + to_string(radius));
-
-        std::mt19937_64 random_engine(ray_count);
-        std::vector<Ray<N, T>> rays;
-        rays.resize(ray_count);
-        for (Ray<N, T>& ray : rays)
-        {
-                Vector<N, T> v = sampling::uniform_on_sphere<N, T>(random_engine);
-                ray = Ray<N, T>(radius * v + center, -v);
-        }
-        return rays;
-}
-
 template <std::size_t N, typename T, typename Color>
 std::tuple<T, const Surface<N, T, Color>*> intersect_mesh(
-        const char* const name_1,
-        const char* const name_2,
         const Shape<N, T, Color>& mesh,
         const Ray<N, T>& ray,
-        const unsigned ray_number,
         int* const error_count)
 {
         const std::optional<T> bounds_distance = mesh.intersect_bounds(ray, Limits<T>::max());
         if (!bounds_distance)
         {
-                if (WITH_ERROR_LOG)
-                {
-                        LOG(std::string("No ") + name_1 + " bounding intersection with ray #" + to_string(ray_number)
-                            + "\n" + to_string(ray));
-                }
                 ++(*error_count);
                 return {0, nullptr};
-        }
-        if (WITH_RAY_LOG)
-        {
-                LOG(std::string(name_2) + "_a == " + to_string(*bounds_distance));
         }
 
         const auto [distance, surface] = mesh.intersect(ray, Limits<T>::max(), *bounds_distance);
         if (!surface)
         {
-                if (WITH_ERROR_LOG)
-                {
-                        LOG(std::string("No ") + name_1 + " intersection with ray #" + to_string(ray_number) + "\n"
-                            + "bounding distance " + to_string(*bounds_distance) + "\n" + to_string(ray));
-                }
                 ++(*error_count);
                 return {0, nullptr};
-        }
-        if (WITH_RAY_LOG)
-        {
-                LOG(std::string(name_2) + "_p == " + to_string(distance));
         }
 
         return {distance, surface};
 }
 
 template <std::size_t N, typename T, typename Color>
-void intersect_mesh(
-        const Shape<N, T, Color>& mesh,
-        Ray<N, T> ray,
-        const T ray_offset,
-        const unsigned ray_number,
-        int* const error_count)
+void intersect_mesh(const Shape<N, T, Color>& mesh, Ray<N, T> ray, const T ray_offset, int* const error_count)
 {
-        if (WITH_RAY_LOG)
         {
-                LOG("");
-                LOG("ray #" + to_string(ray_number) + " in " + space_name(N));
-        }
-
-        {
-                const auto [distance, surface] = intersect_mesh("the first", "t1", mesh, ray, ray_number, error_count);
+                const auto [distance, surface] = intersect_mesh(mesh, ray, error_count);
                 if (!surface)
                 {
                         return;
@@ -138,7 +75,7 @@ void intersect_mesh(
                 ray.move(ray_offset);
         }
         {
-                const auto [distance, surface] = intersect_mesh("the second", "t2", mesh, ray, ray_number, error_count);
+                const auto [distance, surface] = intersect_mesh(mesh, ray, error_count);
                 if (!surface)
                 {
                         return;
@@ -154,30 +91,42 @@ void intersect_mesh(
                 const auto [distance, surface] = mesh.intersect(ray, Limits<T>::max(), *bounds_distance);
                 if (surface)
                 {
-                        if (WITH_ERROR_LOG)
-                        {
-                                LOG("The third intersection with ray #" + to_string(ray_number) + "\n" + to_string(ray)
-                                    + "\n" + "at point " + to_string(distance));
-                        }
                         ++(*error_count);
                         return;
                 }
         }
 }
 
+void check_intersections(const int ray_count, const int error_count)
+{
+        const double relative_error = static_cast<double>(error_count) / ray_count;
+
+        std::ostringstream oss;
+        oss << std::scientific << std::setprecision(3);
+        oss << "error count = " << error_count << ", ray count = " << ray_count
+            << ", relative error = " << relative_error;
+        LOG(oss.str());
+
+        if (!(relative_error < 5e-5))
+        {
+                error("Too many errors, " + oss.str());
+        }
+}
+
 template <std::size_t N, typename T, typename Color>
-void test_spherical_mesh(const Shape<N, T, Color>& mesh, const int ray_count, ProgressRatio* const progress)
+void test_spherical_mesh(
+        const Shape<N, T, Color>& mesh,
+        const std::vector<Ray<N, T>>& rays,
+        ProgressRatio* const progress)
 {
         constexpr std::size_t GROUP_SIZE = 0x1000;
 
-        const geometry::BoundingBox<N, T> bb = mesh.bounding_box();
+        const double rays_size_reciprocal = 1.0 / rays.size();
 
+        const geometry::BoundingBox<N, T> bb = mesh.bounding_box();
         const T ray_offset =
                 std::max(bb.min().norm_infinity(), bb.max().norm_infinity()) * (100 * Limits<T>::epsilon());
         LOG("ray offset = " + to_string(ray_offset));
-
-        const std::vector<Ray<N, T>> rays = create_rays_for_spherical_mesh(bb, ray_count);
-        const double rays_size_reciprocal = 1.0 / rays.size();
 
         LOG("intersections...");
         progress->set_text(std::string("Ray intersections, ") + type_name<T>());
@@ -187,110 +136,19 @@ void test_spherical_mesh(const Shape<N, T, Color>& mesh, const int ray_count, Pr
         const Clock::time_point start_time = Clock::now();
         for (std::size_t i = 0; i < rays.size();)
         {
+                MemoryArena::thread_local_instance().clear();
+
                 const std::size_t r = rays.size() - i;
                 const std::size_t c = (r >= GROUP_SIZE) ? i + GROUP_SIZE : rays.size();
                 for (; i < c; ++i)
                 {
-                        MemoryArena::thread_local_instance().clear();
-                        intersect_mesh(mesh, rays[i], ray_offset, i + 1, &error_count);
+                        intersect_mesh(mesh, rays[i], ray_offset, &error_count);
                 }
                 progress->set(i * rays_size_reciprocal);
         }
         LOG("intersections " + to_string_fixed(duration_from(start_time), 5) + " s");
 
-        const double relative_error = static_cast<double>(error_count) / rays.size();
-        std::ostringstream oss;
-        oss << std::scientific << std::setprecision(3);
-        oss << "error count = " << error_count << ", ray count = " << rays.size()
-            << ", relative error = " << relative_error;
-        LOG("");
-        LOG(oss.str());
-        LOG("");
-
-        if (!(relative_error < 5e-5))
-        {
-                error("Too many errors, " + oss.str());
-        }
-}
-
-template <std::size_t N>
-void create_spherical_mesh(
-        const Vector<N, float>& center,
-        const float radius,
-        const int point_count,
-        std::vector<Vector<N, float>>* const points,
-        std::vector<std::array<int, N>>* const facets,
-        ProgressRatio* const progress)
-{
-        std::mt19937_64 random_engine(point_count);
-        points->resize(point_count);
-        for (Vector<N, float>& p : *points)
-        {
-                p = radius * sampling::uniform_on_sphere<N, float>(random_engine) + center;
-        }
-
-        progress->set_text("Data: %v of %m");
-        std::vector<geometry::ConvexHullFacet<N>> ch_facets;
-        geometry::compute_convex_hull(*points, &ch_facets, progress, true);
-
-        facets->clear();
-        facets->reserve(ch_facets.size());
-        for (const geometry::ConvexHullFacet<N>& ch_facet : ch_facets)
-        {
-                facets->push_back(ch_facet.vertices());
-        }
-}
-
-template <std::size_t N, typename T>
-float random_radius()
-{
-        static_assert(std::is_same_v<T, float> || std::is_same_v<T, double>);
-
-        static constexpr std::array EXPONENTS =
-                std::is_same_v<T, float>
-                        ? std::to_array<std::array<int, 2>>({{-7, 10}, {-4, 6}, {-3, 5}, {-2, 3}})
-                        : std::to_array<std::array<int, 2>>({{-22, 37}, {-22, 37}, {-22, 37}, {-22, 30}});
-
-        static_assert(N >= 3 && N < 3 + EXPONENTS.size());
-        static constexpr std::array<int, 2> MIN_MAX = EXPONENTS[N - 3];
-
-        std::mt19937 random_engine = create_engine<std::mt19937>();
-        const float exponent = std::uniform_real_distribution<float>(MIN_MAX[0], MIN_MAX[1])(random_engine);
-        return std::pow(10.0f, exponent);
-}
-
-template <std::size_t N, typename T, typename Color>
-std::unique_ptr<const Shape<N, T, Color>> create_spherical_mesh(const int point_count, ProgressRatio* const progress)
-{
-        LOG("painter random sphere");
-
-        const float radius = random_radius<N, T>();
-        const Vector<N, float> center(-radius / 2);
-
-        LOG("mesh radius = " + to_string(radius));
-        LOG("mesh center = " + to_string(center));
-        LOG("point count " + to_string(point_count));
-
-        LOG("spherical mesh in " + space_name(N) + "...");
-        std::vector<Vector<N, float>> points;
-        std::vector<std::array<int, N>> facets;
-        create_spherical_mesh(center, radius, point_count, &points, &facets, progress);
-
-        progress->set_text(std::string("Mesh, ") + type_name<T>());
-        progress->set(0);
-        LOG("facet count = " + to_string(facets.size()));
-        LOG("mesh...");
-        std::unique_ptr<const mesh::Mesh<N>> mesh(mesh::create_mesh_for_facets(points, facets));
-
-        LOG("painter mesh <" + to_string(N) + ", " + type_name<T>() + ">...");
-        mesh::MeshObject<N> mesh_object(std::move(mesh), Matrix<N + 1, N + 1, double>(1), "");
-        std::vector<const mesh::MeshObject<N>*> mesh_objects;
-        mesh_objects.push_back(&mesh_object);
-        std::unique_ptr<const Shape<N, T, Color>> painter_mesh = create_mesh<N, T, Color>(mesh_objects, progress);
-
-        LOG("painter random sphere created");
-
-        return painter_mesh;
+        check_intersections(rays.size(), error_count);
 }
 
 template <std::size_t N, typename T>
@@ -301,42 +159,53 @@ void test_mesh(
         const int ray_high,
         ProgressRatio* const progress)
 {
+        using Color = color::Spectrum;
+
         ASSERT(point_low <= point_high);
         ASSERT(ray_low <= ray_high);
 
         LOG("----------- " + space_name(N) + ", " + type_name<T>() + " -----------");
 
-        const auto [point_count, ray_count] = [&]()
-        {
-                std::mt19937 random_engine = create_engine<std::mt19937>();
-                return std::make_tuple(
-                        std::uniform_int_distribution<int>(point_low, point_high)(random_engine),
-                        std::uniform_int_distribution<int>(ray_low, ray_high)(random_engine));
-        }();
+        std::mt19937_64 random_engine = create_engine<std::mt19937_64>();
 
-        std::unique_ptr mesh = create_spherical_mesh<N, T, color::Spectrum>(point_count, progress);
+        const int point_count = std::uniform_int_distribution<int>(point_low, point_high)(random_engine);
+        std::unique_ptr<const Shape<N, T, Color>> mesh =
+                test::create_spherical_mesh<N, T, Color>(point_count, random_engine, progress);
 
-        test_spherical_mesh(*mesh, ray_count, progress);
+        const int ray_count = std::uniform_int_distribution<int>(ray_low, ray_high)(random_engine);
+        const std::vector<Ray<N, T>> rays =
+                test::create_rays_for_spherical_mesh(mesh->bounding_box(), ray_count, random_engine);
+
+        test_spherical_mesh(*mesh, rays, progress);
 }
+
+//
 
 void test_mesh_3(ProgressRatio* const progress)
 {
         test_mesh<3, float>(500, 1000, 90'000, 110'000, progress);
+        LOG("");
         test_mesh<3, double>(500, 1000, 90'000, 110'000, progress);
 }
+
 void test_mesh_4(ProgressRatio* const progress)
 {
         test_mesh<4, float>(500, 1000, 90'000, 110'000, progress);
+        LOG("");
         test_mesh<4, double>(500, 1000, 90'000, 110'000, progress);
 }
+
 void test_mesh_5(ProgressRatio* const progress)
 {
         test_mesh<5, float>(1000, 2000, 90'000, 110'000, progress);
+        LOG("");
         test_mesh<5, double>(1000, 2000, 90'000, 110'000, progress);
 }
+
 void test_mesh_6(ProgressRatio* const progress)
 {
         test_mesh<6, float>(1000, 2000, 90'000, 110'000, progress);
+        LOG("");
         test_mesh<6, double>(1000, 2000, 90'000, 110'000, progress);
 }
 
