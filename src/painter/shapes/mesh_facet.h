@@ -201,5 +201,10 @@ public:
         {
                 return simplex_.bounding_box();
         }
+
+        decltype(auto) project(const Vector<N, T>& point) const
+        {
+                return simplex_.project(point);
+        }
 };
 }
