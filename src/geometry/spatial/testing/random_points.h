@@ -57,6 +57,37 @@ std::vector<Vector<N, T>> random_external_points(
 }
 
 template <std::size_t N, typename T, typename RandomEngine>
+std::vector<Vector<N, T>> random_external_points(
+        const Vector<N, T>& org,
+        const Vector<N, T>& diagonal,
+        const int count,
+        RandomEngine& engine)
+{
+        std::uniform_real_distribution<T> low_urd(-10, -0.01);
+        std::uniform_real_distribution<T> high_urd(1.01, 10);
+        std::bernoulli_distribution bd(0.5);
+
+        const auto random_point = [&]()
+        {
+                Vector<N, T> v = org;
+                for (std::size_t i = 0; i < N; ++i)
+                {
+                        const T rnd = bd(engine) ? low_urd(engine) : high_urd(engine);
+                        v[i] += diagonal[i] * rnd;
+                }
+                return v;
+        };
+
+        std::vector<Vector<N, T>> points;
+        points.reserve(count);
+        for (int i = 0; i < count; ++i)
+        {
+                points.push_back(random_point());
+        }
+        return points;
+}
+
+template <std::size_t N, typename T, typename RandomEngine>
 std::vector<Vector<N, T>> random_internal_points(
         const Vector<N, T>& org,
         const std::array<Vector<N, T>, N>& vectors,

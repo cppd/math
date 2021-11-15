@@ -116,6 +116,15 @@ Vector<N, T> create_random_direction(const std::type_identity_t<T>& probability,
 }
 
 template <std::size_t N, typename T>
+Vector<N, T> create_random_aa_direction(std::mt19937_64& engine)
+{
+        const std::size_t n = std::uniform_int_distribution<std::size_t>(0, N - 1)(engine);
+        Vector<N, T> v(1);
+        v[n] = 0;
+        return std::bernoulli_distribution(0.5)(engine) ? v : -v;
+}
+
+template <std::size_t N, typename T>
 bool test_on_box(const BoundingBox<N, T>& box, const Vector<N, T>& point, const T& precision)
 {
         for (std::size_t i = 0; i < N; ++i)
@@ -317,10 +326,25 @@ void test_intersections(
 }
 
 template <std::size_t N, typename T>
+void test_external(const BoundingBox<N, T>& box, const int point_count, std::mt19937_64& engine)
+{
+        for (const Vector<N, T>& point :
+             testing::random_external_points(box.min(), box.diagonal(), point_count, engine))
+        {
+                const Ray<N, T> ray(point, create_random_aa_direction<N, T>(engine));
+
+                test_no_intersection(box, ray, box.intersect(ray));
+                test_no_intersection(
+                        box, ray, box.intersect(ray.org(), reciprocal(ray.dir()), negative_bool(ray.dir())));
+        }
+}
+
+template <std::size_t N, typename T>
 void test(const int point_count, const std::type_identity_t<T>& precision, std::mt19937_64& engine)
 {
         const BoundingBox<N, T> box = create_random_bounding_box<N, T>(engine);
         test_intersections(box, point_count, precision, engine);
+        test_external(box, std::max(1, point_count / 10), engine);
 }
 
 template <typename T>
