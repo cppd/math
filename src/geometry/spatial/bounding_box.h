@@ -87,39 +87,43 @@ class BoundingBox final
 
         static_assert(Limits<T>::is_iec559());
 
-        // std::min and std::max return the first argument if the second argument is NaN
-        // if direction == 0 then alpha1 and alpha2 have values
-        //   (infinity, infinity) -> near=infinity, far=far -> return false
-        //   (NaN, infinity) -> near=near, far=far -> continue
-        //   (-infinity, infinity) -> near=near, far=far -> continue
-        //   (-infinity, NaN) -> near=near, far=far -> continue
-        //   (-infinity, -infinity) -> near=near, far=-infinity -> return false
-
-        bool intersect_impl(const Ray<N, T>& ray, const T max_distance, T* const first, T* const second) const
+        std::optional<T> intersect_impl(const Ray<N, T>& ray, const T max_distance) const
         {
                 T near = 0;
                 T far = max_distance;
                 for (std::size_t i = 0; i < N; ++i)
                 {
                         const T dir = ray.dir()[i];
-                        const bool dir_negative = (dir < 0);
                         const T d = ray.org()[i];
-                        // 1 / -0 == -infinity
-                        const T r = (dir == 0) ? std::numeric_limits<T>::infinity() : (1 / dir);
+                        if (dir == 0)
+                        {
+                                if (d < bounds_[0][i] || d > bounds_[1][i])
+                                {
+                                        return {};
+                                }
+                                continue;
+                        }
+                        const bool dir_negative = (dir < 0);
+                        const T r = 1 / dir;
                         const T a1 = (bounds_[dir_negative][i] - d) * r;
                         const T a2 = (bounds_[!dir_negative][i] - d) * r;
                         near = a1 > near ? a1 : near;
                         far = a2 < far ? a2 : far;
                         if (far < near)
                         {
-                                return false;
+                                return {};
                         }
                 }
-                *first = near;
-                *second = far;
-                return true;
+                return near > 0 ? near : far;
         }
 
+        // if direction is +0 or -0, then dir_reciprocal must be +infinity.
+        // In this case, a1 and a2 have values
+        //   (infinity, infinity) -> near=infinity, far=far -> return false
+        //   (NaN, infinity) -> near=near, far=far -> continue
+        //   (-infinity, infinity) -> near=near, far=far -> continue
+        //   (-infinity, NaN) -> near=near, far=far -> continue
+        //   (-infinity, -infinity) -> near=near, far=-infinity -> return false
         bool intersect_impl(
                 const Vector<N, T>& org,
                 const Vector<N, T>& dir_reciprocal,
@@ -219,13 +223,7 @@ public:
 
         [[nodiscard]] std::optional<T> intersect(const Ray<N, T>& r, const T max_distance = Limits<T>::max()) const
         {
-                T first;
-                T second;
-                if (intersect_impl(r, max_distance, &first, &second))
-                {
-                        return (first > 0) ? first : second;
-                }
-                return std::nullopt;
+                return intersect_impl(r, max_distance);
         }
 
         [[nodiscard]] bool intersect(
