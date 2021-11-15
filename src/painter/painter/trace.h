@@ -61,17 +61,16 @@ struct Normals final
 template <std::size_t N, typename T, typename Color>
 Normals<N, T> compute_normals(
         const bool smooth_normals,
-        const Vector<N, T>& point,
-        const Surface<N, T, Color>* const surface,
+        const SurfacePoint<N, T, Color>& surface,
         const Vector<N, T>& v)
 {
-        const Vector<N, T> g_normal = surface->geometric_normal(point);
+        const Vector<N, T> g_normal = surface.geometric_normal();
         ASSERT(g_normal.is_unit());
         const bool flip = dot(v, g_normal) < 0;
         const Vector<N, T> geometric = flip ? -g_normal : g_normal;
         if (smooth_normals)
         {
-                const auto s_normal = surface->shading_normal(point);
+                const auto s_normal = surface.shading_normal();
                 if (s_normal)
                 {
                         ASSERT(s_normal->is_unit());
@@ -82,7 +81,7 @@ Normals<N, T> compute_normals(
 }
 
 template <std::size_t N, typename T, typename Color>
-void add_surface(const Surface<N, T, Color>& surface, Color* const color_sum)
+void add_surface(const SurfacePoint<N, T, Color>& surface, Color* const color_sum)
 {
         const std::optional<Color> surface_light_source = surface.light_source();
         if (!surface_light_source)
@@ -102,8 +101,7 @@ template <std::size_t N, typename T, typename Color>
 void sample_light_source_with_mis(
         const LightSource<N, T, Color>& light,
         const Scene<N, T, Color>& scene,
-        const Surface<N, T, Color>& surface,
-        const Vector<N, T>& point,
+        const SurfacePoint<N, T, Color>& surface,
         const Vector<N, T>& v,
         const Normals<N, T>& normals,
         Color* const color_sum,
@@ -111,7 +109,7 @@ void sample_light_source_with_mis(
 {
         const Vector<N, T>& n = normals.shading;
 
-        const LightSourceSample<N, T, Color> sample = light.sample(engine, point);
+        const LightSourceSample<N, T, Color> sample = light.sample(engine, surface.point());
         if (sample.pdf <= 0 || sample.radiance.is_black())
         {
                 return;
@@ -126,19 +124,19 @@ void sample_light_source_with_mis(
                 return;
         }
 
-        if (occluded(scene, normals.geometric, normals.smooth, Ray<N, T>(point, l), sample.distance))
+        if (occluded(scene, normals.geometric, normals.smooth, Ray<N, T>(surface.point(), l), sample.distance))
         {
                 return;
         }
 
-        const Color brdf = surface.brdf(point, n, v, l);
+        const Color brdf = surface.brdf(n, v, l);
         if (light.is_delta())
         {
                 *color_sum += brdf * sample.radiance * (n_l / sample.pdf);
         }
         else
         {
-                const T pdf = surface.pdf(point, n, v, l);
+                const T pdf = surface.pdf(n, v, l);
                 const T weight = mis_heuristic(1, sample.pdf, 1, pdf);
                 *color_sum += brdf * sample.radiance * (weight * n_l / sample.pdf);
         }
@@ -148,8 +146,7 @@ template <std::size_t N, typename T, typename Color>
 void sample_brdf_with_mis(
         const LightSource<N, T, Color>& light,
         const Scene<N, T, Color>& scene,
-        const Surface<N, T, Color>& surface,
-        const Vector<N, T>& point,
+        const SurfacePoint<N, T, Color>& surface,
         const Vector<N, T>& v,
         const Normals<N, T>& normals,
         Color* const color_sum,
@@ -162,7 +159,7 @@ void sample_brdf_with_mis(
 
         const Vector<N, T>& n = normals.shading;
 
-        const Sample<N, T, Color> sample = surface.sample_brdf(engine, point, n, v);
+        const Sample<N, T, Color> sample = surface.sample_brdf(engine, n, v);
         if (sample.pdf <= 0 || sample.brdf.is_black())
         {
                 return;
@@ -177,13 +174,13 @@ void sample_brdf_with_mis(
                 return;
         }
 
-        LightSourceInfo<T, Color> light_info = light.info(point, l);
+        LightSourceInfo<T, Color> light_info = light.info(surface.point(), l);
         if (light_info.pdf <= 0 || light_info.radiance.is_black())
         {
                 return;
         }
 
-        if (occluded(scene, normals.geometric, normals.smooth, Ray<N, T>(point, l), light_info.distance))
+        if (occluded(scene, normals.geometric, normals.smooth, Ray<N, T>(surface.point(), l), light_info.distance))
         {
                 return;
         }
@@ -202,8 +199,7 @@ void sample_brdf_with_mis(
 template <std::size_t N, typename T, typename Color>
 void add_light_sources(
         const Scene<N, T, Color>& scene,
-        const Surface<N, T, Color>& surface,
-        const Vector<N, T>& point,
+        const SurfacePoint<N, T, Color>& surface,
         const Vector<N, T>& v,
         const Normals<N, T>& normals,
         Color* const color_sum,
@@ -211,16 +207,15 @@ void add_light_sources(
 {
         for (const LightSource<N, T, Color>* const light : scene.light_sources())
         {
-                sample_light_source_with_mis(*light, scene, surface, point, v, normals, color_sum, engine);
-                sample_brdf_with_mis(*light, scene, surface, point, v, normals, color_sum, engine);
+                sample_light_source_with_mis(*light, scene, surface, v, normals, color_sum, engine);
+                sample_brdf_with_mis(*light, scene, surface, v, normals, color_sum, engine);
         }
 }
 
 template <std::size_t N, typename T, typename Color>
 void add_light_sources(
         const Scene<N, T, Color>& scene,
-        const T& distance,
-        const Surface<N, T, Color>* const surface,
+        const SurfacePoint<N, T, Color>& surface,
         const Ray<N, T>& ray,
         Color* const color_sum)
 {
@@ -231,7 +226,7 @@ void add_light_sources(
                 {
                         continue;
                 }
-                if (surface_before_distance(distance, surface, light_info.distance))
+                if (surface_before_distance(ray.org(), surface, light_info.distance))
                 {
                         continue;
                 }
@@ -252,8 +247,7 @@ void add_reflected(
         const Scene<N, T, Color>& scene,
         const bool smooth_normals,
         const int depth,
-        const Surface<N, T, Color>& surface,
-        const Vector<N, T>& point,
+        const SurfacePoint<N, T, Color>& surface,
         const Vector<N, T>& v,
         const Normals<N, T>& normals,
         Color* const color_sum,
@@ -261,7 +255,7 @@ void add_reflected(
 {
         const Vector<N, T>& n = normals.shading;
 
-        const Sample<N, T, Color> sample = surface.sample_brdf(engine, point, n, v);
+        const Sample<N, T, Color> sample = surface.sample_brdf(engine, n, v);
 
         if (sample.pdf <= 0 || sample.brdf.is_black())
         {
@@ -282,7 +276,8 @@ void add_reflected(
                 return;
         }
 
-        const Color radiance = *trace_path<N, T, Color>(scene, smooth_normals, Ray<N, T>(point, l), depth + 1, engine);
+        const Color radiance =
+                *trace_path<N, T, Color>(scene, smooth_normals, Ray<N, T>(surface.point(), l), depth + 1, engine);
         *color_sum += sample.brdf * radiance * (n_l / sample.pdf);
 }
 
@@ -294,7 +289,7 @@ std::optional<Color> trace_path(
         const int depth,
         RandomEngine<T>& engine)
 {
-        const auto [distance, surface] = scene.intersect(ray);
+        const SurfacePoint surface = scene.intersect(ray);
 
         if (depth > 0 && !surface)
         {
@@ -305,7 +300,7 @@ std::optional<Color> trace_path(
 
         if (depth == 0)
         {
-                add_light_sources(scene, distance, surface, ray, &color_sum);
+                add_light_sources(scene, surface, ray, &color_sum);
                 if (!surface)
                 {
                         if (color_sum.is_black())
@@ -318,8 +313,7 @@ std::optional<Color> trace_path(
         }
 
         const Vector<N, T> v = -ray.dir();
-        const Vector<N, T> point = surface->point(ray, distance);
-        const Normals<N, T> normals = compute_normals(smooth_normals, point, surface, v);
+        const Normals<N, T> normals = compute_normals(smooth_normals, surface, v);
         const Vector<N, T>& n = normals.shading;
 
         if (dot(n, v) <= 0)
@@ -327,16 +321,16 @@ std::optional<Color> trace_path(
                 return color_sum;
         }
 
-        add_surface(*surface, &color_sum);
+        add_surface(surface, &color_sum);
 
-        add_light_sources(scene, *surface, point, v, normals, &color_sum, engine);
+        add_light_sources(scene, surface, v, normals, &color_sum, engine);
 
         if (depth >= MAX_DEPTH)
         {
                 return color_sum;
         }
 
-        add_reflected(scene, smooth_normals, depth, *surface, point, v, normals, &color_sum, engine);
+        add_reflected(scene, smooth_normals, depth, surface, v, normals, &color_sum, engine);
 
         return color_sum;
 }

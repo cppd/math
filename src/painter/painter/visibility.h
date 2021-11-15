@@ -17,6 +17,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
+#include <src/com/exponent.h>
 #include <src/numerical/ray.h>
 #include <src/numerical/vec.h>
 
@@ -24,10 +25,10 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 namespace ns::painter
 {
-template <typename T, typename Surface>
-bool surface_before_distance(const T& distance, const Surface* const surface, const std::optional<T>& max_distance)
+template <std::size_t N, typename T, typename SurfacePoint>
+bool surface_before_distance(const Vector<N, T>& org, const SurfacePoint& surface, const std::optional<T>& distance)
 {
-        return surface && (!max_distance || distance < *max_distance);
+        return surface && (!distance || (org - surface.point()).norm_squared() < square(*distance));
 }
 
 template <std::size_t N, typename T, typename Scene>
@@ -36,22 +37,21 @@ bool occluded(
         const Vector<N, T>& geometric_normal,
         const bool smooth_normals,
         const Ray<N, T>& ray,
-        const std::optional<T>& max_distance)
+        const std::optional<T>& distance)
 {
         if (!smooth_normals || dot(ray.dir(), geometric_normal) >= 0)
         {
-                const auto [distance, surface] = scene.intersect(ray);
-                return surface_before_distance(distance, surface, max_distance);
+                const auto surface = scene.intersect(ray);
+                return surface_before_distance(ray.org(), surface, distance);
         }
 
-        const auto [distance_1, surface_1] = scene.intersect(ray);
-        if (!surface_before_distance(distance_1, surface_1, max_distance))
+        const auto surface_1 = scene.intersect(ray);
+        if (!surface_before_distance(ray.org(), surface_1, distance))
         {
                 return true;
         }
 
-        const Vector<N, T> point = surface_1->point(ray, distance_1);
-        const auto [distance_2, surface_2] = scene.intersect(Ray<N, T>(ray).set_org(point));
-        return surface_before_distance(distance_2, surface_2, max_distance);
+        const auto surface_2 = scene.intersect(Ray<N, T>(ray).set_org(surface_1.point()));
+        return surface_before_distance(ray.org(), surface_2, distance);
 }
 }

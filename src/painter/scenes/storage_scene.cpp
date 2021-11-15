@@ -59,7 +59,7 @@ class Impl final : public Scene<N, T, Color>
         geometry::Bvh<N, T> bvh_;
         T ray_offset_;
 
-        std::tuple<T, const Surface<N, T, Color>*> intersect(const Ray<N, T>& ray) const override
+        SurfacePoint<N, T, Color> intersect(const Ray<N, T>& ray) const override
         {
                 ++thread_ray_count_;
 
@@ -80,9 +80,9 @@ class Impl final : public Scene<N, T, Color>
                         });
                 if (intersection)
                 {
-                        return *intersection;
+                        return {std::get<1>(*intersection), ray_moved, std::get<0>(*intersection)};
                 }
-                return {0, nullptr};
+                return {};
         }
 
         const std::vector<const LightSource<N, T, Color>*>& light_sources() const override

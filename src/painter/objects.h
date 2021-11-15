@@ -74,6 +74,63 @@ public:
                 const Vector<N, T>& v) const = 0;
 };
 
+template <std::size_t N, typename T, typename Color>
+class SurfacePoint final
+{
+        const Surface<N, T, Color>* surface_;
+        Vector<N, T> point_;
+
+public:
+        SurfacePoint() : surface_(nullptr)
+        {
+        }
+
+        SurfacePoint(const Surface<N, T, Color>* const surface, const Ray<N, T>& ray, const T& distance)
+                : surface_(surface), point_(surface->point(ray, distance))
+        {
+        }
+
+        operator bool() const
+        {
+                return surface_ != nullptr;
+        }
+
+        const Vector<N, T>& point() const
+        {
+                return point_;
+        }
+
+        decltype(auto) geometric_normal() const
+        {
+                return surface_->geometric_normal(point_);
+        }
+
+        decltype(auto) shading_normal() const
+        {
+                return surface_->shading_normal(point_);
+        }
+
+        decltype(auto) light_source() const
+        {
+                return surface_->light_source();
+        }
+
+        decltype(auto) brdf(const Vector<N, T>& n, const Vector<N, T>& v, const Vector<N, T>& l) const
+        {
+                return surface_->brdf(point_, n, v, l);
+        }
+
+        decltype(auto) pdf(const Vector<N, T>& n, const Vector<N, T>& v, const Vector<N, T>& l) const
+        {
+                return surface_->pdf(point_, n, v, l);
+        }
+
+        decltype(auto) sample_brdf(RandomEngine<T>& engine, const Vector<N, T>& n, const Vector<N, T>& v) const
+        {
+                return surface_->sample_brdf(engine, point_, n, v);
+        }
+};
+
 template <typename T, typename Color>
 struct LightSourceInfo final
 {
@@ -127,7 +184,7 @@ struct Scene
 {
         virtual ~Scene() = default;
 
-        virtual std::tuple<T, const Surface<N, T, Color>*> intersect(const Ray<N, T>& ray) const = 0;
+        virtual SurfacePoint<N, T, Color> intersect(const Ray<N, T>& ray) const = 0;
 
         virtual const std::vector<const LightSource<N, T, Color>*>& light_sources() const = 0;
 
