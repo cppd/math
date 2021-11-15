@@ -136,6 +136,8 @@ public:
 
         Vector<N, T> normal(const Vector<N, T>& p) const;
 
+        Vector<N, T> project(const Vector<N, T>& p) const;
+
         std::array<Parallelotope<N, T>, DIVISIONS> binary_division() const;
 
         std::array<Vector<N, T>, VERTEX_COUNT> vertices() const;
@@ -337,6 +339,45 @@ Vector<N, T> Parallelotope<N, T>::normal(const Vector<N, T>& p) const
         ASSERT(min_distance < Limits<T>::max());
 
         return n;
+}
+
+template <std::size_t N, typename T>
+Vector<N, T> Parallelotope<N, T>::project(const Vector<N, T>& p) const
+{
+        T min_distance = Limits<T>::max();
+
+        unsigned plane_index = Limits<unsigned>::max();
+        T plane_distance = Limits<T>::max();
+        for (unsigned i = 0; i < N; ++i)
+        {
+                const T d = dot(p, planes_[i].n);
+
+                {
+                        const T distance = d - planes_[i].d1;
+                        const T abs_distance = std::abs(distance);
+                        if (abs_distance < min_distance)
+                        {
+                                min_distance = abs_distance;
+                                plane_index = i;
+                                plane_distance = distance;
+                        }
+                }
+
+                {
+                        const T distance = d - planes_[i].d2;
+                        const T abs_distance = std::abs(distance);
+                        if (abs_distance < min_distance)
+                        {
+                                min_distance = abs_distance;
+                                plane_index = i;
+                                plane_distance = distance;
+                        }
+                }
+        }
+
+        ASSERT(min_distance < Limits<T>::max());
+
+        return p - planes_[plane_index].n * plane_distance;
 }
 
 template <std::size_t N, typename T>

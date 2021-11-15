@@ -124,6 +124,11 @@ public:
                 return plane_.n;
         }
 
+        Vector<N, T> project(const Vector<N, T>& point) const
+        {
+                return plane_.project(point);
+        }
+
         // N constraints b + a * x >= 0
         // one constraint b + a * x = 0
         // vertices must be the same as in the set function

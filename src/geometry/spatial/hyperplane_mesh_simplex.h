@@ -90,6 +90,11 @@ public:
                 return simplex_.normal();
         }
 
+        decltype(auto) project(const Vector<N, T>& point) const
+        {
+                return simplex_.project(point);
+        }
+
         decltype(auto) constraints() const
         {
                 return simplex_.constraints(vertices());

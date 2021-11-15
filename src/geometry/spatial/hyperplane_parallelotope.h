@@ -87,6 +87,8 @@ public:
 
         const Vector<N, T>& normal() const;
 
+        Vector<N, T> project(const Vector<N, T>& point) const;
+
         std::array<Vector<N, T>, VERTEX_COUNT> vertices() const;
 
         std::array<std::array<Vector<N, T>, 2>, EDGE_COUNT> edges() const;
@@ -203,6 +205,12 @@ template <std::size_t N, typename T>
 const Vector<N, T>& HyperplaneParallelotope<N, T>::normal() const
 {
         return plane_.n;
+}
+
+template <std::size_t N, typename T>
+Vector<N, T> HyperplaneParallelotope<N, T>::project(const Vector<N, T>& point) const
+{
+        return plane_.project(point);
 }
 
 template <std::size_t N, typename T>
