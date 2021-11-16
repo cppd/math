@@ -30,6 +30,25 @@ namespace ns::painter
 {
 namespace
 {
+template <typename T>
+constexpr T RAY_OFFSET = 64 * Limits<T>::epsilon();
+
+template <std::size_t N, typename T>
+Vector<N, T> ray_org(const std::optional<Vector<N, T>>& geometric_normal, const Ray<N, T>& ray)
+{
+        if (!geometric_normal)
+        {
+                return ray.org();
+        }
+        const T ray_offset = (dot(*geometric_normal, ray.dir()) < 0) ? -RAY_OFFSET<T> : RAY_OFFSET<T>;
+        Vector<N, T> org;
+        for (std::size_t i = 0; i < N; ++i)
+        {
+                org[i] = ray.org()[i] + std::abs(ray.org()[i]) * ray_offset * (*geometric_normal)[i];
+        }
+        return org;
+}
+
 template <typename P>
 std::vector<P*> to_pointers(const std::vector<std::unique_ptr<P>>& objects)
 {
@@ -45,8 +64,6 @@ std::vector<P*> to_pointers(const std::vector<std::unique_ptr<P>>& objects)
 template <std::size_t N, typename T, typename Color>
 class Impl final : public Scene<N, T, Color>
 {
-        static constexpr int RAY_OFFSET_IN_EPSILONS = 1000;
-
         inline static thread_local std::int_fast64_t thread_ray_count_ = 0;
 
         std::vector<std::unique_ptr<const Shape<N, T, Color>>> shapes_;
@@ -57,13 +74,13 @@ class Impl final : public Scene<N, T, Color>
         std::vector<const LightSource<N, T, Color>*> light_source_pointers_;
 
         geometry::Bvh<N, T> bvh_;
-        T ray_offset_;
 
-        SurfacePoint<N, T, Color> intersect(const Ray<N, T>& ray) const override
+        SurfacePoint<N, T, Color> intersect(const std::optional<Vector<N, T>>& geometric_normal, const Ray<N, T>& ray)
+                const override
         {
                 ++thread_ray_count_;
 
-                const Ray<N, T> ray_moved = Ray<N, T>(ray).move(ray_offset_);
+                const Ray<N, T> ray_moved = Ray<N, T>(ray).set_org(ray_org(geometric_normal, ray));
 
                 const auto intersection = bvh_.intersect(
                         ray_moved, Limits<T>::max(),
@@ -116,8 +133,7 @@ public:
                   projector_(std::move(projector)),
                   background_light_(background_light),
                   light_source_pointers_(to_pointers(light_sources_)),
-                  bvh_(geometry::bvh_objects(shapes_), progress),
-                  ray_offset_(bvh_.bounding_box().diagonal().norm() * (RAY_OFFSET_IN_EPSILONS * Limits<T>::epsilon()))
+                  bvh_(geometry::bvh_objects(shapes_), progress)
         {
         }
 };

@@ -41,16 +41,23 @@ namespace
 template <std::size_t N, typename T, typename Color>
 bool intersections(const Scene<N, T, Color>& scene, Ray<N, T> ray)
 {
-        for (int i = 0; i < 2; ++i)
+        static constexpr std::optional<Vector<N, T>> GEOMETRIC_NORMAL;
+
+        const SurfacePoint surface_1 = scene.intersect(GEOMETRIC_NORMAL, ray);
+        if (!surface_1)
         {
-                const SurfacePoint surface = scene.intersect(ray);
-                if (!surface)
-                {
-                        return false;
-                }
-                ray.set_org(surface.point());
+                return false;
         }
-        return !scene.intersect(ray);
+        ray.set_org(surface_1.point());
+
+        const SurfacePoint surface_2 = scene.intersect(surface_1.geometric_normal(), ray);
+        if (!surface_2)
+        {
+                return false;
+        }
+        ray.set_org(surface_2.point());
+
+        return !scene.intersect(surface_2.geometric_normal(), ray);
 }
 
 void check_intersections(const int ray_count, const int error_count)

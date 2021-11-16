@@ -184,7 +184,9 @@ struct Scene
 {
         virtual ~Scene() = default;
 
-        virtual SurfacePoint<N, T, Color> intersect(const Ray<N, T>& ray) const = 0;
+        virtual SurfacePoint<N, T, Color> intersect(
+                const std::optional<Vector<N, T>>& geometric_normal,
+                const Ray<N, T>& ray) const = 0;
 
         virtual const std::vector<const LightSource<N, T, Color>*>& light_sources() const = 0;
 

@@ -238,6 +238,7 @@ template <std::size_t N, typename T, typename Color>
 std::optional<Color> trace_path(
         const Scene<N, T, Color>& scene,
         bool smooth_normals,
+        const std::optional<Vector<N, T>>& geometric_normal,
         const Ray<N, T>& ray,
         int depth,
         RandomEngine<T>& engine);
@@ -276,8 +277,8 @@ void add_reflected(
                 return;
         }
 
-        const Color radiance =
-                *trace_path<N, T, Color>(scene, smooth_normals, Ray<N, T>(surface.point(), l), depth + 1, engine);
+        const Color radiance = *trace_path<N, T, Color>(
+                scene, smooth_normals, normals.geometric, Ray<N, T>(surface.point(), l), depth + 1, engine);
         *color_sum += sample.brdf * radiance * (n_l / sample.pdf);
 }
 
@@ -285,11 +286,12 @@ template <std::size_t N, typename T, typename Color>
 std::optional<Color> trace_path(
         const Scene<N, T, Color>& scene,
         const bool smooth_normals,
+        const std::optional<Vector<N, T>>& geometric_normal,
         const Ray<N, T>& ray,
         const int depth,
         RandomEngine<T>& engine)
 {
-        const SurfacePoint surface = scene.intersect(ray);
+        const SurfacePoint surface = scene.intersect(geometric_normal, ray);
 
         if (depth > 0 && !surface)
         {
@@ -343,6 +345,10 @@ std::optional<Color> trace_path(
         const Ray<N, T>& ray,
         RandomEngine<T>& random_engine)
 {
-        return trace_implementation::trace_path<N, T, Color>(scene, smooth_normals, ray, 0 /*depth*/, random_engine);
+        static constexpr int DEPTH{0};
+        static constexpr std::optional<Vector<N, T>> GEOMETRIC_NORMAL;
+
+        return trace_implementation::trace_path<N, T, Color>(
+                scene, smooth_normals, GEOMETRIC_NORMAL, ray, DEPTH, random_engine);
 }
 }
