@@ -39,7 +39,17 @@ bool occluded(
         const Ray<N, T>& ray,
         const std::optional<T>& distance)
 {
-        if (!smooth_normals || dot(ray.dir(), geometric_normal) >= 0)
+        if (!smooth_normals)
+        {
+                if (dot(ray.dir(), geometric_normal) <= 0)
+                {
+                        return true;
+                }
+                const auto surface = scene.intersect(ray);
+                return surface_before_distance(ray.org(), surface, distance);
+        }
+
+        if (dot(ray.dir(), geometric_normal) >= 0)
         {
                 const auto surface = scene.intersect(ray);
                 return surface_before_distance(ray.org(), surface, distance);
