@@ -36,12 +36,15 @@ namespace ns::painter
 {
 namespace
 {
+template <std::size_t N, typename T>
+constexpr std::optional<Vector<N, T>> EMPTY_GEOMETRIC_NORMAL;
+
+constexpr std::size_t GROUP_SIZE = 0x1000;
+
 template <std::size_t N, typename T, typename Color>
 bool intersections(const Scene<N, T, Color>& scene, Ray<N, T> ray)
 {
-        static constexpr std::optional<Vector<N, T>> GEOMETRIC_NORMAL;
-
-        const SurfacePoint surface_1 = scene.intersect(GEOMETRIC_NORMAL, ray);
+        const SurfacePoint surface_1 = scene.intersect(EMPTY_GEOMETRIC_NORMAL<N, T>, ray);
         if (!surface_1)
         {
                 return false;
@@ -59,19 +62,19 @@ bool intersections(const Scene<N, T, Color>& scene, Ray<N, T> ray)
 }
 
 template <std::size_t N, typename T, typename Color>
-void test(
-        const Scene<N, T, Color>& scene,
+void test_intersections(
+        const test::SphericalMesh<N, T, Color>& mesh,
         const std::vector<Ray<N, T>>& rays,
-        const std::size_t facet_count,
         ProgressRatio* const progress)
 {
-        constexpr std::size_t GROUP_SIZE = 0x1000;
-
         const double rays_size_reciprocal = 1.0 / rays.size();
 
+        progress->set(0);
         progress->set_text(std::string("Ray intersections, ") + type_name<T>());
 
         int error_count = 0;
+
+        const long long start_ray_count = mesh.scene->thread_ray_count();
 
         const Clock::time_point start_time = Clock::now();
 
@@ -83,7 +86,7 @@ void test(
                 const std::size_t c = (r >= GROUP_SIZE) ? i + GROUP_SIZE : rays.size();
                 for (; i < c; ++i)
                 {
-                        if (!intersections(scene, rays[i]))
+                        if (!intersections(*mesh.scene, rays[i]))
                         {
                                 ++error_count;
                         }
@@ -100,10 +103,65 @@ void test(
         {
                 error("Too many intersection errors, " + s);
         }
-        s += ", facet count = " + to_string_digit_groups(facet_count);
-        s += "\n" + to_string_digit_groups(std::llround(scene.thread_ray_count() / duration))
-             + " intersections / second";
-        s += "\n" + to_string_digit_groups(std::llround((scene.thread_ray_count() / duration) * facet_count))
+        const long long ray_count = mesh.scene->thread_ray_count() - start_ray_count;
+        s += ", facet count = " + to_string_digit_groups(mesh.facet_count);
+        s += "\n" + to_string_digit_groups(std::llround(ray_count / duration)) + " intersections / second";
+        s += "\n" + to_string_digit_groups(std::llround((ray_count / duration) * mesh.facet_count))
+             + " intersections * facets / second";
+        LOG(s);
+}
+
+template <std::size_t N, typename T, typename Color>
+void test_surface_ratio(
+        const test::SphericalMesh<N, T, Color>& mesh,
+        const std::vector<Ray<N, T>>& rays,
+        ProgressRatio* const progress)
+{
+        const double rays_size_reciprocal = 1.0 / rays.size();
+
+        progress->set(0);
+        progress->set_text(std::string("Ray intersections, ") + type_name<T>());
+
+        int mesh_intersections = 0;
+
+        const long long start_ray_count = mesh.scene->thread_ray_count();
+
+        const Clock::time_point start_time = Clock::now();
+
+        for (std::size_t i = 0; i < rays.size();)
+        {
+                MemoryArena::thread_local_instance().clear();
+
+                const std::size_t r = rays.size() - i;
+                const std::size_t c = (r >= GROUP_SIZE) ? i + GROUP_SIZE : rays.size();
+                for (; i < c; ++i)
+                {
+                        if (mesh.scene->intersect(EMPTY_GEOMETRIC_NORMAL<N, T>, rays[i]))
+                        {
+                                ++mesh_intersections;
+                        }
+                }
+                progress->set(i * rays_size_reciprocal);
+        }
+
+        const double duration = duration_from(start_time);
+
+        const T intersection_ratio = static_cast<T>(mesh_intersections) / rays.size();
+        const T surface_ratio = mesh.surface / mesh.bounding_box.surface();
+
+        const T relative_error = std::abs(intersection_ratio - surface_ratio)
+                                 / std::max(std::abs(intersection_ratio), std::abs(surface_ratio));
+
+        std::string s;
+        s += "intersection ratio = " + to_string(intersection_ratio);
+        s += ", area ratio = " + to_string(surface_ratio);
+        if (!(relative_error < 0.05))
+        {
+                error("Intersection error, " + s + ", relative error " + to_string(relative_error));
+        }
+        const long long ray_count = mesh.scene->thread_ray_count() - start_ray_count;
+        s += "\n" + to_string_digit_groups(std::llround(ray_count / duration)) + " intersections / second";
+        s += "\n" + to_string_digit_groups(std::llround((ray_count / duration) * mesh.facet_count))
              + " intersections * facets / second";
         LOG(s);
 }
@@ -122,10 +180,11 @@ void test(const int point_count, const int ray_count, ProgressRatio* const progr
         test::SphericalMesh<N, T, Color> mesh =
                 test::create_spherical_mesh_scene<N, T, Color>(point_count, random_engine, progress);
 
-        const std::vector<Ray<N, T>> rays =
-                test::create_spherical_mesh_center_rays(mesh.bounding_box, ray_count, random_engine);
+        test_intersections(
+                mesh, test::create_spherical_mesh_center_rays(mesh.bounding_box, ray_count, random_engine), progress);
 
-        test(*mesh.scene, rays, mesh.facet_count, progress);
+        test_surface_ratio(
+                mesh, test::create_random_intersections_rays(mesh.bounding_box, ray_count, random_engine), progress);
 
         LOG(name + " passed");
 }

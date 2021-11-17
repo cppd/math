@@ -25,6 +25,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/com/print.h>
 #include <src/com/type/name.h>
 #include <src/geometry/core/convex_hull.h>
+#include <src/geometry/shapes/simplex_volume.h>
 #include <src/model/mesh.h>
 #include <src/model/mesh_utility.h>
 #include <src/sampling/sphere_uniform.h>
@@ -94,6 +95,7 @@ struct SphericalMesh
         std::size_t facet_count;
         geometry::BoundingBox<N, T> bounding_box;
         std::unique_ptr<const Scene<N, T, Color>> scene;
+        T surface;
 };
 
 template <std::size_t N, typename T, typename Color>
@@ -110,6 +112,17 @@ SphericalMesh<N, T, Color> create_spherical_mesh_scene(
                 impl::random_radius<N, T>(random_engine), point_count, random_engine, progress);
 
         res.facet_count = mesh->facets.size();
+
+        res.surface = 0;
+        for (const typename mesh::Mesh<N>::Facet& facet : mesh->facets)
+        {
+                std::array<Vector<N, T>, N> vertices;
+                for (std::size_t i = 0; i < N; ++i)
+                {
+                        vertices[i] = to_vector<T>(mesh->vertices[facet.vertices[i]]);
+                }
+                res.surface += geometry::simplex_volume(vertices);
+        }
 
         mesh::MeshObject<N> mesh_object(std::move(mesh), Matrix<N + 1, N + 1, double>(1), "");
 
@@ -142,6 +155,39 @@ std::vector<Ray<N, T>> create_spherical_mesh_center_rays(
         {
                 Vector<N, T> v = sampling::uniform_on_sphere<N, T>(random_engine);
                 ray = Ray<N, T>(radius * v + center, -v);
+        }
+        return rays;
+}
+
+template <std::size_t N, typename T, typename RandomEngine>
+std::vector<Ray<N, T>> create_random_intersections_rays(
+        const geometry::BoundingBox<N, T>& bb,
+        const int ray_count,
+        RandomEngine& engine)
+{
+        const Vector<N, T> diagonal = bb.diagonal();
+
+        std::uniform_real_distribution<T> urd(-1, 2);
+        const auto random_cover_point = [&]()
+        {
+                Vector<N, T> v = bb.min();
+                for (std::size_t i = 0; i < N; ++i)
+                {
+                        v[i] += diagonal[i] * urd(engine);
+                }
+                return v;
+        };
+
+        std::vector<Ray<N, T>> rays;
+        rays.reserve(ray_count);
+        for (int i = 0; i < ray_count; ++i)
+        {
+                Ray<N, T> ray;
+                do
+                {
+                        ray = Ray<N, T>(random_cover_point(), sampling::uniform_on_sphere<N, T>(engine));
+                } while (!bb.intersect(ray));
+                rays.push_back(ray);
         }
         return rays;
 }
