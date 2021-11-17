@@ -41,7 +41,7 @@ struct Test
         static_assert(BOX.diagonal() == Vector<4, T>(6, 8, 10, 12));
         static_assert(BOX.center() == Vector<4, T>(-2, 2, -2, 2));
         static_assert(BOX.volume() == 5760);
-        static_assert(BOX.surface() == 2736);
+        static_assert(BOX.surface() == 5472);
         static_assert(BOX.maximum_extent() == 3);
 
         static constexpr Vector<4, T> MERGE_POINT{Vector<4, T>(5, -5, 5, -5)};
