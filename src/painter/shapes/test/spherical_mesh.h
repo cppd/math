@@ -17,6 +17,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
+#include "../../scenes/storage_scene.h"
 #include "../mesh.h"
 
 #include <src/com/log.h>
@@ -43,8 +44,7 @@ std::unique_ptr<const mesh::Mesh<N>> create_spherical_mesh(
 {
         const Vector<N, float> center(-radius / 2);
 
-        LOG("radius = " + to_string(radius) + ", center = " + to_string(center)
-            + ", point count = " + to_string(point_count));
+        LOG("radius = " + to_string(radius) + ", center = " + to_string(center));
 
         std::vector<Vector<N, float>> points;
         points.resize(point_count);
@@ -89,17 +89,27 @@ float random_radius(std::mt19937_64& random_engine)
 }
 
 template <std::size_t N, typename T, typename Color>
-std::unique_ptr<const Shape<N, T, Color>> create_spherical_mesh(
+struct SphericalMesh
+{
+        std::size_t facet_count;
+        geometry::BoundingBox<N, T> bounding_box;
+        std::unique_ptr<const Scene<N, T, Color>> scene;
+};
+
+template <std::size_t N, typename T, typename Color>
+SphericalMesh<N, T, Color> create_spherical_mesh_scene(
         const int point_count,
         std::mt19937_64& random_engine,
         ProgressRatio* const progress)
 {
         namespace impl = spherical_mesh_implementation;
 
-        LOG("painter random sphere <" + to_string(N) + ", " + type_name<T>() + ">");
+        SphericalMesh<N, T, Color> res;
 
         std::unique_ptr<const mesh::Mesh<N>> mesh = impl::create_spherical_mesh<N>(
                 impl::random_radius<N, T>(random_engine), point_count, random_engine, progress);
+
+        res.facet_count = mesh->facets.size();
 
         mesh::MeshObject<N> mesh_object(std::move(mesh), Matrix<N + 1, N + 1, double>(1), "");
 
@@ -107,21 +117,24 @@ std::unique_ptr<const Shape<N, T, Color>> create_spherical_mesh(
         mesh_objects.push_back(&mesh_object);
         std::unique_ptr<const Shape<N, T, Color>> painter_mesh = create_mesh<N, T, Color>(mesh_objects, progress);
 
-        LOG("painter random sphere created");
+        res.bounding_box = painter_mesh->bounding_box();
 
-        return painter_mesh;
+        std::vector<std::unique_ptr<const Shape<N, T, Color>>> meshes;
+        meshes.push_back(std::move(painter_mesh));
+
+        res.scene = create_storage_scene(Color(), {}, {}, std::move(meshes), progress);
+
+        return res;
 }
 
 template <std::size_t N, typename T>
-std::vector<Ray<N, T>> create_rays_for_spherical_mesh(
+std::vector<Ray<N, T>> create_spherical_mesh_center_rays(
         const geometry::BoundingBox<N, T>& bb,
         const int ray_count,
         std::mt19937_64& random_engine)
 {
         const Vector<N, T> center = bb.center();
-        const T radius = 2 * (bb.diagonal() / T(2)).norm_infinity();
-
-        LOG("rays, center = " + to_string(center) + ", radius = " + to_string(radius));
+        const T radius = bb.diagonal().norm() / 2;
 
         std::vector<Ray<N, T>> rays;
         rays.resize(ray_count);
