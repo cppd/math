@@ -71,15 +71,15 @@ class BoundingBox final
                 static_assert(M >= 2);
                 if constexpr (M == 2)
                 {
-                        return 2 * (d[0] + d[1]);
+                        return d[0] + d[1];
                 }
                 else if constexpr (M == 3)
                 {
-                        return 2 * (d[0] * d[1] + d[2] * (d[0] + d[1]));
+                        return d[0] * d[1] + d[2] * (d[0] + d[1]);
                 }
                 else
                 {
-                        return 2 * volume<M - 1>(d) + d[M - 1] * surface<M - 1>(d);
+                        return volume<M - 1>(d) + d[M - 1] * surface<M - 1>(d);
                 }
         }
 
@@ -218,7 +218,7 @@ public:
 
         [[nodiscard]] constexpr T surface() const requires(N >= 2)
         {
-                return surface<N>(diagonal());
+                return 2 * surface<N>(diagonal());
         }
 
         [[nodiscard]] std::optional<T> intersect(const Ray<N, T>& r, const T max_distance = Limits<T>::max()) const
