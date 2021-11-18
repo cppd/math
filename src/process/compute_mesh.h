@@ -39,6 +39,8 @@ namespace ns::process
 {
 namespace process_implementation
 {
+inline constexpr bool WRITE_LOG = true;
+
 template <typename T>
 std::string bound_cocone_text_rho_alpha(const T rho, const T alpha)
 {
@@ -83,7 +85,7 @@ std::unique_ptr<const mesh::Mesh<N>> mesh_convex_hull(const mesh::Mesh<N>& mesh,
                 facets.push_back(f.vertices());
         }
 
-        return mesh::create_mesh_for_facets(points, facets);
+        return mesh::create_mesh_for_facets(points, facets, WRITE_LOG);
 }
 
 template <std::size_t N>
@@ -125,7 +127,7 @@ void cocone(
 
                 constructor.cocone(&normals, &facets, &progress);
 
-                cocone_mesh = mesh::create_mesh_for_facets(constructor.points(), facets);
+                cocone_mesh = mesh::create_mesh_for_facets(constructor.points(), facets, WRITE_LOG);
 
                 LOG("Manifold reconstruction second phase, " + to_string_fixed(duration_from(start_time), 5) + " s");
         }
@@ -160,7 +162,7 @@ void bound_cocone(
 
                 constructor.bound_cocone(rho, alpha, &normals, &facets, &progress);
 
-                bound_cocone_mesh = mesh::create_mesh_for_facets(constructor.points(), facets);
+                bound_cocone_mesh = mesh::create_mesh_for_facets(constructor.points(), facets, WRITE_LOG);
 
                 LOG("Manifold reconstruction second phase, " + to_string_fixed(duration_from(start_time), 5) + " s");
         }

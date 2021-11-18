@@ -30,5 +30,6 @@ namespace ns::painter
 template <std::size_t N, typename T, typename Color>
 std::unique_ptr<Shape<N, T, Color>> create_mesh(
         const std::vector<const mesh::MeshObject<N>*>& mesh_objects,
+        bool write_log,
         ProgressRatio* progress);
 }

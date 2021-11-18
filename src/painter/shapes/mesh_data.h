@@ -250,7 +250,7 @@ class MeshData final
         }
 
 public:
-        explicit MeshData(const std::vector<const mesh::MeshObject<N>*>& mesh_objects)
+        MeshData(const std::vector<const mesh::MeshObject<N>*>& mesh_objects, const bool write_log)
         {
                 const Clock::time_point start_time = Clock::now();
 
@@ -262,9 +262,14 @@ public:
                 }
                 create(reading);
 
-                LOG("Painter mesh data created, " + to_string_fixed(duration_from(start_time), 5)
-                    + " s, vertex count = " + to_string_digit_groups(vertices_.size())
-                    + ", facet count = " + to_string_digit_groups(facets_.size()));
+                const double duration = duration_from(start_time);
+
+                if (write_log)
+                {
+                        LOG("Painter mesh data created, " + to_string_fixed(duration, 5)
+                            + " s, vertex count = " + to_string_digit_groups(vertices_.size())
+                            + ", facet count = " + to_string_digit_groups(facets_.size()));
+                }
         }
 
         // Mesh facets store pointers to vertices_, normals_, texcoords_

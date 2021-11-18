@@ -95,7 +95,8 @@ std::unique_ptr<Mesh<N>> create_mesh(
 template <std::size_t N>
 std::unique_ptr<Mesh<N>> create_mesh_for_facets(
         const std::vector<Vector<N, float>>& points,
-        const std::vector<std::array<int, N>>& facets)
+        const std::vector<std::array<int, N>>& facets,
+        const bool write_log)
 {
         std::unique_ptr<Mesh<N>> mesh;
         {
@@ -103,21 +104,27 @@ std::unique_ptr<Mesh<N>> create_mesh_for_facets(
 
                 mesh = create_mesh(points, facets);
 
-                LOG("Facets loaded, " + to_string_fixed(duration_from(start_time), 5) + " s");
+                if (write_log)
+                {
+                        LOG("Mesh created, " + to_string_fixed(duration_from(start_time), 5) + " s");
+                }
         }
         {
                 const Clock::time_point start_time = Clock::now();
 
                 compute_normals(mesh.get());
 
-                LOG("Normals computed, " + to_string_fixed(duration_from(start_time), 5) + " s");
+                if (write_log)
+                {
+                        LOG("Mesh normals computed, " + to_string_fixed(duration_from(start_time), 5) + " s");
+                }
         }
         return mesh;
 }
 
 #define CREATE_MESH_FOR_FACETS_INSTANTIATION(N)                     \
         template std::unique_ptr<Mesh<(N)>> create_mesh_for_facets( \
-                const std::vector<Vector<(N), float>>&, const std::vector<std::array<int, (N)>>&);
+                const std::vector<Vector<(N), float>>&, const std::vector<std::array<int, (N)>>&, bool);
 
 CREATE_MESH_FOR_FACETS_INSTANTIATION(3)
 CREATE_MESH_FOR_FACETS_INSTANTIATION(4)

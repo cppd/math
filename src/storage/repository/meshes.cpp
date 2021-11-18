@@ -300,7 +300,9 @@ std::unique_ptr<mesh::Mesh<N>> sphere(unsigned facet_count)
         std::vector<Vector<N, float>> points;
         std::vector<std::array<int, N>> facets;
         geometry::create_sphere(facet_count, &points, &facets);
-        return mesh::create_mesh_for_facets(points, facets);
+
+        constexpr bool WRITE_LOG = true;
+        return mesh::create_mesh_for_facets(points, facets, WRITE_LOG);
 }
 
 //

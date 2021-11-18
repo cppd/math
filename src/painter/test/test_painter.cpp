@@ -49,6 +49,8 @@ constexpr float LIGHTING_INTENSITY = 1;
 constexpr std::string_view DIRECTORY_NAME = "painter_test";
 constexpr image::ColorFormat PIXEL_COLOR_FORMAT = image::ColorFormat::R8G8B8_SRGB;
 
+constexpr bool WRITE_LOG = false;
+
 template <std::size_t N>
 void save_image(const std::filesystem::path& path, image::Image<N>&& image)
 {
@@ -172,7 +174,7 @@ std::unique_ptr<const mesh::Mesh<N>> sphere_mesh(const int facet_count)
         }
 
         LOG("creating mesh...");
-        return mesh::create_mesh_for_facets(vertices, facets);
+        return mesh::create_mesh_for_facets(vertices, facets, WRITE_LOG);
 }
 
 template <std::size_t N>
@@ -248,7 +250,8 @@ void test_painter(
                 mesh::MeshObject<N> mesh_object(std::move(mesh), Matrix<N + 1, N + 1, double>(1), "");
                 std::vector<const mesh::MeshObject<N>*> mesh_objects;
                 mesh_objects.push_back(&mesh_object);
-                painter_mesh = create_mesh<N, T, Color>(mesh_objects, progress);
+
+                painter_mesh = create_mesh<N, T, Color>(mesh_objects, WRITE_LOG, progress);
         }
 
         std::unique_ptr<const Scene<N, T, Color>> scene = create_simple_scene(

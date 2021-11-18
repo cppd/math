@@ -33,6 +33,8 @@ namespace ns::painter::test
 {
 namespace spherical_mesh_implementation
 {
+inline constexpr bool WRITE_LOG = false;
+
 template <std::size_t N, typename T>
 Vector<N, T> random_center(const T radius, std::mt19937_64& random_engine)
 {
@@ -67,7 +69,6 @@ std::unique_ptr<const mesh::Mesh<N>> create_spherical_mesh(
 
         progress->set_text("Data: %v of %m");
         std::vector<geometry::ConvexHullFacet<N>> ch_facets;
-        constexpr bool WRITE_LOG = false;
         geometry::compute_convex_hull(points, &ch_facets, progress, WRITE_LOG);
 
         std::vector<std::array<int, N>> facets;
@@ -79,7 +80,7 @@ std::unique_ptr<const mesh::Mesh<N>> create_spherical_mesh(
 
         progress->set_text("Mesh");
         progress->set(0);
-        return mesh::create_mesh_for_facets(points, facets);
+        return mesh::create_mesh_for_facets(points, facets, WRITE_LOG);
 }
 
 template <std::size_t N, typename T>
@@ -139,7 +140,9 @@ SphericalMesh<N, T, Color> create_spherical_mesh_scene(
 
         std::vector<const mesh::MeshObject<N>*> mesh_objects;
         mesh_objects.push_back(&mesh_object);
-        std::unique_ptr<const Shape<N, T, Color>> painter_mesh = create_mesh<N, T, Color>(mesh_objects, progress);
+
+        std::unique_ptr<const Shape<N, T, Color>> painter_mesh =
+                create_mesh<N, T, Color>(mesh_objects, impl::WRITE_LOG, progress);
 
         res.bounding_box = painter_mesh->bounding_box();
 

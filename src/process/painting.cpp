@@ -73,7 +73,8 @@ void thread_function(
                         meshes.push_back(mesh_object.get());
                 }
                 ProgressRatio progress(progress_list);
-                return painter::create_mesh<N, T, Color>(meshes, &progress);
+                constexpr bool WRITE_LOG = true;
+                return painter::create_mesh<N, T, Color>(meshes, WRITE_LOG, &progress);
         }();
         if (!shape)
         {

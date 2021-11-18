@@ -127,7 +127,10 @@ public:
 };
 
 template <std::size_t N, typename T>
-geometry::Bvh<N, T> create_bvh(const std::vector<MeshFacet<N, T>>* const facets, ProgressRatio* const progress)
+geometry::Bvh<N, T> create_bvh(
+        const std::vector<MeshFacet<N, T>>* const facets,
+        const bool write_log,
+        ProgressRatio* const progress)
 {
         progress->set_text("Painter mesh, " + space_name(N) + ", " + type_name<T>());
         progress->set(0);
@@ -136,7 +139,10 @@ geometry::Bvh<N, T> create_bvh(const std::vector<MeshFacet<N, T>>* const facets,
 
         geometry::Bvh<N, T> object_bvh(geometry::bvh_objects(*facets), progress);
 
-        LOG("Painter mesh created, " + to_string_fixed(duration_from(start_time), 5) + " s");
+        if (write_log)
+        {
+                LOG("Painter mesh created, " + to_string_fixed(duration_from(start_time), 5) + " s");
+        }
 
         return object_bvh;
 }
@@ -202,9 +208,12 @@ class ShapeImpl final : public Shape<N, T, Color>
         }
 
 public:
-        ShapeImpl(const std::vector<const mesh::MeshObject<N>*>& mesh_objects, ProgressRatio* const progress)
-                : mesh_data_(mesh_objects),
-                  bvh_(create_bvh(&mesh_data_.facets(), progress)),
+        ShapeImpl(
+                const std::vector<const mesh::MeshObject<N>*>& mesh_objects,
+                const bool write_log,
+                ProgressRatio* const progress)
+                : mesh_data_(mesh_objects, write_log),
+                  bvh_(create_bvh(&mesh_data_.facets(), write_log, progress)),
                   bounding_box_(bvh_.bounding_box()),
                   intersection_cost_(
                           mesh_data_.facets().size()
@@ -217,14 +226,15 @@ public:
 template <std::size_t N, typename T, typename Color>
 std::unique_ptr<Shape<N, T, Color>> create_mesh(
         const std::vector<const mesh::MeshObject<N>*>& mesh_objects,
+        const bool write_log,
         ProgressRatio* const progress)
 {
-        return std::make_unique<ShapeImpl<N, T, Color>>(mesh_objects, progress);
+        return std::make_unique<ShapeImpl<N, T, Color>>(mesh_objects, write_log, progress);
 }
 
 #define CREATE_MESH_INSTANTIATION_N_T_C(N, T, C)                \
         template std::unique_ptr<Shape<(N), T, C>> create_mesh( \
-                const std::vector<const mesh::MeshObject<(N)>*>&, ProgressRatio*);
+                const std::vector<const mesh::MeshObject<(N)>*>&, bool, ProgressRatio*);
 
 #define CREATE_MESH_INSTANTIATION_N_T(N, T)                   \
         CREATE_MESH_INSTANTIATION_N_T_C((N), T, color::Color) \

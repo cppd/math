@@ -30,5 +30,6 @@ namespace ns::mesh
 template <std::size_t N>
 std::unique_ptr<Mesh<N>> create_mesh_for_facets(
         const std::vector<Vector<N, float>>& points,
-        const std::vector<std::array<int, N>>& facets);
+        const std::vector<std::array<int, N>>& facets,
+        bool write_log);
 }
