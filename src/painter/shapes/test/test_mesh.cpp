@@ -17,7 +17,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "spherical_mesh.h"
 
-#include <src/com/chrono.h>
 #include <src/com/error.h>
 #include <src/com/log.h>
 #include <src/com/memory_arena.h>
@@ -74,10 +73,6 @@ void test_intersections(
 
         int error_count = 0;
 
-        const long long start_ray_count = mesh.scene->thread_ray_count();
-
-        const Clock::time_point start_time = Clock::now();
-
         for (std::size_t i = 0; i < rays.size();)
         {
                 MemoryArena::thread_local_instance().clear();
@@ -94,8 +89,6 @@ void test_intersections(
                 progress->set(i * rays_size_reciprocal);
         }
 
-        const double duration = duration_from(start_time);
-
         std::string s;
         s += "error count = " + to_string_digit_groups(error_count);
         s += ", ray count = " + to_string_digit_groups(rays.size());
@@ -103,11 +96,6 @@ void test_intersections(
         {
                 error("Too many intersection errors, " + s);
         }
-        const long long ray_count = mesh.scene->thread_ray_count() - start_ray_count;
-        s += ", facet count = " + to_string_digit_groups(mesh.facet_count);
-        s += "\n" + to_string_digit_groups(std::llround(ray_count / duration)) + " intersections / second";
-        s += "\n" + to_string_digit_groups(std::llround((ray_count / duration) * mesh.facet_count))
-             + " intersections * facets / second";
         LOG(s);
 }
 
@@ -123,10 +111,6 @@ void test_surface_ratio(
         progress->set_text(std::string("Ray intersections, ") + type_name<T>());
 
         int mesh_intersections = 0;
-
-        const long long start_ray_count = mesh.scene->thread_ray_count();
-
-        const Clock::time_point start_time = Clock::now();
 
         for (std::size_t i = 0; i < rays.size();)
         {
@@ -144,8 +128,6 @@ void test_surface_ratio(
                 progress->set(i * rays_size_reciprocal);
         }
 
-        const double duration = duration_from(start_time);
-
         const T intersection_ratio = static_cast<T>(mesh_intersections) / rays.size();
         const T surface_ratio = mesh.surface / mesh.bounding_box.surface();
 
@@ -159,10 +141,6 @@ void test_surface_ratio(
         {
                 error("Intersection error, " + s + ", relative error " + to_string(relative_error));
         }
-        const long long ray_count = mesh.scene->thread_ray_count() - start_ray_count;
-        s += "\n" + to_string_digit_groups(std::llround(ray_count / duration)) + " intersections / second";
-        s += "\n" + to_string_digit_groups(std::llround((ray_count / duration) * mesh.facet_count))
-             + " intersections * facets / second";
         LOG(s);
 }
 

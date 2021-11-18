@@ -20,22 +20,35 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "../../scenes/storage_scene.h"
 #include "../mesh.h"
 
-#include <src/com/log.h>
-#include <src/com/names.h>
-#include <src/com/print.h>
-#include <src/com/type/name.h>
 #include <src/geometry/core/convex_hull.h>
 #include <src/geometry/shapes/simplex_volume.h>
-#include <src/model/mesh.h>
 #include <src/model/mesh_utility.h>
 #include <src/sampling/sphere_uniform.h>
 
+#include <array>
+#include <cmath>
 #include <random>
 
 namespace ns::painter::test
 {
 namespace spherical_mesh_implementation
 {
+template <std::size_t N, typename T>
+Vector<N, T> random_center(const T radius, std::mt19937_64& random_engine)
+{
+        static_assert(N >= 3);
+
+        const T v = radius / std::sqrt(static_cast<T>(N));
+
+        std::bernoulli_distribution bd(0.5);
+        Vector<N, T> res;
+        for (std::size_t i = 0; i < N; ++i)
+        {
+                res[i] = bd(random_engine) ? v : -v;
+        }
+        return res;
+}
+
 template <std::size_t N>
 std::unique_ptr<const mesh::Mesh<N>> create_spherical_mesh(
         const float radius,
@@ -43,9 +56,7 @@ std::unique_ptr<const mesh::Mesh<N>> create_spherical_mesh(
         std::mt19937_64& random_engine,
         ProgressRatio* const progress)
 {
-        const Vector<N, float> center(-radius / 2);
-
-        LOG("radius = " + to_string(radius) + ", center = " + to_string(center));
+        const Vector<N, float> center = random_center<N>(radius, random_engine);
 
         std::vector<Vector<N, float>> points;
         points.resize(point_count);
@@ -82,9 +93,9 @@ float random_radius(std::mt19937_64& random_engine)
                         : std::to_array<std::array<int, 2>>({{-22, 37}, {-22, 37}, {-22, 37}, {-22, 30}});
 
         static_assert(N >= 3 && N < 3 + EXPONENTS.size());
-        static constexpr std::array<int, 2> MIN_MAX = EXPONENTS[N - 3];
+        static constexpr std::array<int, 2> EXPONENT = EXPONENTS[N - 3];
 
-        const float exponent = std::uniform_real_distribution<float>(MIN_MAX[0], MIN_MAX[1])(random_engine);
+        const float exponent = std::uniform_real_distribution<float>(EXPONENT[0], EXPONENT[1])(random_engine);
         return std::pow(10.0f, exponent);
 }
 }
