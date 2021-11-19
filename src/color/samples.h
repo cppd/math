@@ -77,6 +77,11 @@ public:
                 data_.multiply_add(a.data_, b);
         }
 
+        void multiply_add(const Derived& a, const Derived& b)
+        {
+                data_.multiply_add(a.data_, b.data_);
+        }
+
         void multiply_add(const T& b, const Derived& a)
         {
                 multiply_add(a, b);

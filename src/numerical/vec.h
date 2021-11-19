@@ -145,6 +145,14 @@ public:
                 }
         }
 
+        constexpr void multiply_add(const Vector<N, T>& a, const Vector<N, T>& b)
+        {
+                for (std::size_t i = 0; i < N; ++i)
+                {
+                        data_[i] += a[i] * b[i];
+                }
+        }
+
         constexpr void multiply_add(const T& b, const Vector<N, T>& a)
         {
                 multiply_add(a, b);
