@@ -62,15 +62,15 @@ std::unique_ptr<const Projector<N, T>> create_projector(
         const T max_projected_object_size = [&]
         {
                 static_assert(N >= 2);
-                T res = object_size[0];
+                T res = 0;
                 // excluding camera direction N - 1
-                for (unsigned i = 1; i < N - 1; ++i)
+                for (unsigned i = 0; i < N - 1; ++i)
                 {
+                        if (!(object_size[i] > 0))
+                        {
+                                error("Object projection size " + to_string(object_size[i]) + " is not positive");
+                        }
                         res = std::max(object_size[i], res);
-                }
-                if (!(res > 0))
-                {
-                        error("Object maximum projection size " + to_string(res) + " is not positive");
                 }
                 return res;
         }();
@@ -80,9 +80,10 @@ std::unique_ptr<const Projector<N, T>> create_projector(
                 std::array<int, N - 1> res;
                 for (unsigned i = 0; i < N - 1; ++i)
                 {
-                        int size_in_pixels =
-                                std::lround((object_size[i] / max_projected_object_size) * max_screen_size);
-                        res[i] = std::clamp(size_in_pixels, min_screen_size, max_screen_size);
+                        const int size_in_pixels =
+                                std::ceil((object_size[i] / max_projected_object_size) * max_screen_size);
+                        ASSERT(size_in_pixels <= max_screen_size);
+                        res[i] = std::max(min_screen_size, size_in_pixels);
                 }
                 return res;
         }();
@@ -114,7 +115,7 @@ std::unique_ptr<const Projector<N, T>> create_projector(
                 return res;
         }();
 
-        const T units_per_pixel = max_projected_object_size / max_screen_size;
+        const T units_per_pixel = max_projected_object_size / (max_screen_size - 2);
 
         return std::make_unique<const ParallelProjector<N, T>>(
                 camera_position, camera_direction, screen_axes, units_per_pixel, screen_size);
