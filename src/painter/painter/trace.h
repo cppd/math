@@ -33,6 +33,7 @@ Elsevier, 2017.
 13.10 Importance sampling
 13.10.1 Multiple importance sampling
 14.3.1 Estimating the direct lighting integral
+14.5 Path tracing
 */
 
 #pragma once
@@ -44,12 +45,12 @@ Elsevier, 2017.
 #include <src/com/error.h>
 #include <src/sampling/mis.h>
 
+#include <random>
+
 namespace ns::painter
 {
 namespace trace_implementation
 {
-constexpr int MAX_DEPTH = 5;
-
 template <std::size_t N, typename T>
 struct Normals final
 {
@@ -122,12 +123,9 @@ std::optional<Color> sample_light_source_with_mis(
         {
                 return brdf * sample.radiance * (n_l / sample.pdf);
         }
-        else
-        {
-                const T pdf = surface.pdf(n, v, l);
-                const T weight = mis_heuristic(1, sample.pdf, 1, pdf);
-                return brdf * sample.radiance * (weight * n_l / sample.pdf);
-        }
+        const T pdf = surface.pdf(n, v, l);
+        const T weight = mis_heuristic(1, sample.pdf, 1, pdf);
+        return brdf * sample.radiance * (weight * n_l / sample.pdf);
 }
 
 template <std::size_t N, typename T, typename Color>
@@ -176,11 +174,8 @@ std::optional<Color> sample_brdf_with_mis(
         {
                 return sample.brdf * light_info.radiance * (n_l / sample.pdf);
         }
-        else
-        {
-                const T weight = mis_heuristic(1, sample.pdf, 1, light_info.pdf);
-                return sample.brdf * light_info.radiance * (weight * n_l / sample.pdf);
-        }
+        const T weight = mis_heuristic(1, sample.pdf, 1, light_info.pdf);
+        return sample.brdf * light_info.radiance * (weight * n_l / sample.pdf);
 }
 
 template <std::size_t N, typename T, typename Color>
@@ -245,19 +240,7 @@ std::optional<Color> directly_visible_light_sources(
 }
 
 template <std::size_t N, typename T, typename Color>
-std::optional<Color> trace_path(
-        const Scene<N, T, Color>& scene,
-        bool smooth_normals,
-        const std::optional<Vector<N, T>>& geometric_normal,
-        const Ray<N, T>& ray,
-        int depth,
-        RandomEngine<T>& engine);
-
-template <std::size_t N, typename T, typename Color>
-std::optional<Color> reflected(
-        const Scene<N, T, Color>& scene,
-        const bool smooth_normals,
-        const int depth,
+std::optional<std::tuple<Color, Vector<N, T>>> sample_brdf(
         const SurfacePoint<N, T, Color>& surface,
         const Vector<N, T>& v,
         const Normals<N, T>& normals,
@@ -286,73 +269,94 @@ std::optional<Color> reflected(
                 return {};
         }
 
-        const Color radiance = *trace_path<N, T, Color>(
-                scene, smooth_normals, normals.geometric, Ray<N, T>(surface.point(), l), depth + 1, engine);
-        return sample.brdf * radiance * (n_l / sample.pdf);
+        std::optional<std::tuple<Color, Vector<N, T>>> res;
+        res.emplace(sample.brdf * (n_l / sample.pdf), l);
+        return res;
+}
+
+template <typename Color>
+auto termination_probability(const Color& beta)
+{
+        const auto luminance = beta.luminance();
+        return std::max(static_cast<decltype(luminance)>(0.05), 1 - luminance);
 }
 
 template <std::size_t N, typename T, typename Color>
 std::optional<Color> trace_path(
         const Scene<N, T, Color>& scene,
         const bool smooth_normals,
-        const std::optional<Vector<N, T>>& geometric_normal,
-        const Ray<N, T>& ray,
-        const int depth,
+        Ray<N, T> ray,
         RandomEngine<T>& engine)
 {
-        const SurfacePoint surface = scene.intersect(geometric_normal, ray);
-
-        if (depth > 0 && !surface)
+        SurfacePoint surface = [&]
         {
-                return scene.background_light();
+                static constexpr std::optional<Vector<N, T>> GEOMETRIC_NORMAL;
+                return scene.intersect(GEOMETRIC_NORMAL, ray);
+        }();
+
+        if (!surface)
+        {
+                if (const auto c = directly_visible_light_sources(scene, surface, ray))
+                {
+                        return *c + scene.background_light();
+                }
+                return {};
         }
 
         Color color(0);
 
-        if (depth == 0)
+        if (const auto c = directly_visible_light_sources(scene, surface, ray))
         {
-                if (const auto c = directly_visible_light_sources(scene, surface, ray))
+                color = *c;
+        }
+
+        Color beta(1);
+
+        for (int depth = 0;; ++depth)
+        {
+                const Vector<N, T> v = -ray.dir();
+                const Normals<N, T> normals = compute_normals(smooth_normals, surface, v);
+
+                if (dot(normals.shading, v) <= 0)
                 {
-                        color += *c;
+                        break;
                 }
+
+                if (const auto& c = surface.light_source())
+                {
+                        color.multiply_add(beta, *c);
+                }
+
+                if (const auto c = light_sources(scene, surface, v, normals, engine))
+                {
+                        color.multiply_add(beta, *c);
+                }
+
+                const auto sample = sample_brdf(surface, v, normals, engine);
+                if (!sample)
+                {
+                        break;
+                }
+
+                beta *= std::get<0>(*sample);
+
+                if (depth >= 4)
+                {
+                        const auto p = termination_probability(beta);
+                        if (std::bernoulli_distribution(p)(engine))
+                        {
+                                break;
+                        }
+                        beta /= 1 - p;
+                }
+
+                ray = Ray<N, T>(surface.point(), std::get<1>(*sample));
+                surface = scene.intersect(normals.geometric, ray);
                 if (!surface)
                 {
-                        if (color.is_black())
-                        {
-                                return std::nullopt;
-                        }
-                        color += scene.background_light();
-                        return color;
+                        color.multiply_add(beta, scene.background_light());
+                        break;
                 }
-        }
-
-        const Vector<N, T> v = -ray.dir();
-        const Normals<N, T> normals = compute_normals(smooth_normals, surface, v);
-        const Vector<N, T>& n = normals.shading;
-
-        if (dot(n, v) <= 0)
-        {
-                return color;
-        }
-
-        if (const auto& c = surface.light_source())
-        {
-                color += *c;
-        }
-
-        if (const auto& c = light_sources(scene, surface, v, normals, engine))
-        {
-                color += *c;
-        }
-
-        if (depth >= MAX_DEPTH)
-        {
-                return color;
-        }
-
-        if (const auto& c = reflected(scene, smooth_normals, depth, surface, v, normals, engine))
-        {
-                color += *c;
         }
 
         return color;
@@ -366,10 +370,6 @@ std::optional<Color> trace_path(
         const Ray<N, T>& ray,
         RandomEngine<T>& random_engine)
 {
-        static constexpr int DEPTH{0};
-        static constexpr std::optional<Vector<N, T>> GEOMETRIC_NORMAL;
-
-        return trace_implementation::trace_path<N, T, Color>(
-                scene, smooth_normals, GEOMETRIC_NORMAL, ray, DEPTH, random_engine);
+        return trace_implementation::trace_path<N, T, Color>(scene, smooth_normals, ray, random_engine);
 }
 }
