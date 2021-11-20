@@ -30,35 +30,26 @@ Matt Pharr, Wenzel Jakob, Greg Humphreys.
 Physically Based Rendering. From theory to implementation. Third edition.
 Elsevier, 2017.
 
-13.10 Importance sampling
-13.10.1 Multiple importance sampling
-14.3.1 Estimating the direct lighting integral
 14.5 Path tracing
 */
 
 #pragma once
 
-#include "visibility.h"
+#include "direct_lighting.h"
+#include "normals.h"
 
 #include "../objects.h"
 
 #include <src/com/error.h>
-#include <src/sampling/mis.h>
 
+#include <optional>
 #include <random>
+#include <tuple>
 
 namespace ns::painter
 {
 namespace trace_implementation
 {
-template <std::size_t N, typename T>
-struct Normals final
-{
-        Vector<N, T> geometric;
-        Vector<N, T> shading;
-        bool smooth;
-};
-
 template <std::size_t N, typename T, typename Color>
 Normals<N, T> compute_normals(
         const bool smooth_normals,
@@ -79,164 +70,6 @@ Normals<N, T> compute_normals(
                 }
         }
         return {.geometric = geometric, .shading = geometric, .smooth = false};
-}
-
-template <typename T>
-T mis_heuristic(const int f_n, const T f_pdf, const int g_n, const T g_pdf)
-{
-        return sampling::mis::power_heuristic(f_n, f_pdf, g_n, g_pdf);
-}
-
-template <std::size_t N, typename T, typename Color>
-std::optional<Color> sample_light_source_with_mis(
-        const LightSource<N, T, Color>& light,
-        const Scene<N, T, Color>& scene,
-        const SurfacePoint<N, T, Color>& surface,
-        const Vector<N, T>& v,
-        const Normals<N, T>& normals,
-        RandomEngine<T>& engine)
-{
-        const Vector<N, T>& n = normals.shading;
-
-        const LightSourceSample<N, T, Color> sample = light.sample(engine, surface.point());
-        if (sample.pdf <= 0 || sample.radiance.is_black())
-        {
-                return {};
-        }
-
-        const Vector<N, T>& l = sample.l;
-        ASSERT(l.is_unit());
-
-        const T n_l = dot(n, l);
-        if (n_l <= 0)
-        {
-                return {};
-        }
-
-        if (occluded(scene, normals.geometric, normals.smooth, Ray<N, T>(surface.point(), l), sample.distance))
-        {
-                return {};
-        }
-
-        const Color brdf = surface.brdf(n, v, l);
-        if (light.is_delta())
-        {
-                return brdf * sample.radiance * (n_l / sample.pdf);
-        }
-        const T pdf = surface.pdf(n, v, l);
-        const T weight = mis_heuristic(1, sample.pdf, 1, pdf);
-        return brdf * sample.radiance * (weight * n_l / sample.pdf);
-}
-
-template <std::size_t N, typename T, typename Color>
-std::optional<Color> sample_brdf_with_mis(
-        const LightSource<N, T, Color>& light,
-        const Scene<N, T, Color>& scene,
-        const SurfacePoint<N, T, Color>& surface,
-        const Vector<N, T>& v,
-        const Normals<N, T>& normals,
-        RandomEngine<T>& engine)
-{
-        if (light.is_delta())
-        {
-                return {};
-        }
-
-        const Vector<N, T>& n = normals.shading;
-
-        const Sample<N, T, Color> sample = surface.sample_brdf(engine, n, v);
-        if (sample.pdf <= 0 || sample.brdf.is_black())
-        {
-                return {};
-        }
-
-        const Vector<N, T>& l = sample.l;
-        ASSERT(l.is_unit());
-
-        const T n_l = dot(n, l);
-        if (n_l <= 0)
-        {
-                return {};
-        }
-
-        LightSourceInfo<T, Color> light_info = light.info(surface.point(), l);
-        if (light_info.pdf <= 0 || light_info.radiance.is_black())
-        {
-                return {};
-        }
-
-        if (occluded(scene, normals.geometric, normals.smooth, Ray<N, T>(surface.point(), l), light_info.distance))
-        {
-                return {};
-        }
-
-        if (sample.specular)
-        {
-                return sample.brdf * light_info.radiance * (n_l / sample.pdf);
-        }
-        const T weight = mis_heuristic(1, sample.pdf, 1, light_info.pdf);
-        return sample.brdf * light_info.radiance * (weight * n_l / sample.pdf);
-}
-
-template <std::size_t N, typename T, typename Color>
-std::optional<Color> light_sources(
-        const Scene<N, T, Color>& scene,
-        const SurfacePoint<N, T, Color>& surface,
-        const Vector<N, T>& v,
-        const Normals<N, T>& normals,
-        RandomEngine<T>& engine)
-{
-        std::optional<Color> res;
-        const auto add = [&res](const auto& color)
-        {
-                if (color)
-                {
-                        if (res)
-                        {
-                                *res += *color;
-                        }
-                        else
-                        {
-                                res = *color;
-                        }
-                }
-        };
-        for (const LightSource<N, T, Color>* const light : scene.light_sources())
-        {
-                add(sample_light_source_with_mis(*light, scene, surface, v, normals, engine));
-                add(sample_brdf_with_mis(*light, scene, surface, v, normals, engine));
-        }
-        return res;
-}
-
-template <std::size_t N, typename T, typename Color>
-std::optional<Color> directly_visible_light_sources(
-        const Scene<N, T, Color>& scene,
-        const SurfacePoint<N, T, Color>& surface,
-        const Ray<N, T>& ray)
-{
-        std::optional<Color> res;
-        for (const LightSource<N, T, Color>* const light : scene.light_sources())
-        {
-                LightSourceInfo<T, Color> light_info = light->info(ray.org(), ray.dir());
-                if (light_info.pdf <= 0 || light_info.radiance.is_black())
-                {
-                        continue;
-                }
-                if (surface_before_distance(ray.org(), surface, light_info.distance))
-                {
-                        continue;
-                }
-                if (res)
-                {
-                        *res += light_info.radiance;
-                }
-                else
-                {
-                        res = light_info.radiance;
-                }
-        }
-        return res;
 }
 
 template <std::size_t N, typename T, typename Color>
@@ -274,11 +107,29 @@ std::optional<std::tuple<Color, Vector<N, T>>> sample_brdf(
         return res;
 }
 
-template <typename Color>
-auto termination_probability(const Color& beta)
+template <typename Color, typename RandomEngine>
+bool terminate(RandomEngine& engine, const int depth, Color* const beta)
 {
-        const auto luminance = beta.luminance();
-        return std::max(static_cast<decltype(luminance)>(0.05), 1 - luminance);
+        if (depth < 4)
+        {
+                return false;
+        }
+
+        const auto luminance = beta->luminance();
+        if (luminance > 0)
+        {
+                using T = decltype(luminance);
+                static constexpr T MIN = 0.05;
+                static constexpr T MAX = 0.95;
+                const T p = std::clamp(1 - luminance, MIN, MAX);
+                if (std::bernoulli_distribution(p)(engine))
+                {
+                        return true;
+                }
+                *beta /= 1 - p;
+                return false;
+        }
+        return true;
 }
 
 template <std::size_t N, typename T, typename Color>
@@ -327,7 +178,7 @@ std::optional<Color> trace_path(
                         color.multiply_add(beta, *c);
                 }
 
-                if (const auto c = light_sources(scene, surface, v, normals, engine))
+                if (const auto c = direct_lighting(scene, surface, v, normals, engine))
                 {
                         color.multiply_add(beta, *c);
                 }
@@ -340,14 +191,9 @@ std::optional<Color> trace_path(
 
                 beta *= std::get<0>(*sample);
 
-                if (depth >= 4)
+                if (terminate(engine, depth, &beta))
                 {
-                        const auto p = termination_probability(beta);
-                        if (std::bernoulli_distribution(p)(engine))
-                        {
-                                break;
-                        }
-                        beta /= 1 - p;
+                        break;
                 }
 
                 ray = Ray<N, T>(surface.point(), std::get<1>(*sample));

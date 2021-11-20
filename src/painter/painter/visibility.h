@@ -17,6 +17,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
+#include "normals.h"
+
 #include "../objects.h"
 
 #include <src/com/exponent.h>
@@ -27,8 +29,11 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 namespace ns::painter
 {
-template <std::size_t N, typename T, typename SurfacePoint>
-bool surface_before_distance(const Vector<N, T>& org, const SurfacePoint& surface, const std::optional<T>& distance)
+template <std::size_t N, typename T, typename Color>
+bool surface_before_distance(
+        const Vector<N, T>& org,
+        const SurfacePoint<N, T, Color>& surface,
+        const std::optional<T>& distance)
 {
         return surface && (!distance || (org - surface.point()).norm_squared() < square(*distance));
 }
@@ -36,28 +41,27 @@ bool surface_before_distance(const Vector<N, T>& org, const SurfacePoint& surfac
 template <std::size_t N, typename T, typename Color>
 bool occluded(
         const Scene<N, T, Color>& scene,
-        const Vector<N, T>& geometric_normal,
-        const bool smooth_normals,
+        const Normals<N, T>& normals,
         const Ray<N, T>& ray,
         const std::optional<T>& distance)
 {
-        if (!smooth_normals)
+        if (!normals.smooth)
         {
-                if (dot(ray.dir(), geometric_normal) <= 0)
+                if (dot(ray.dir(), normals.geometric) <= 0)
                 {
                         return true;
                 }
-                const auto surface = scene.intersect(geometric_normal, ray);
+                const auto surface = scene.intersect(normals.geometric, ray);
                 return surface_before_distance(ray.org(), surface, distance);
         }
 
-        if (dot(ray.dir(), geometric_normal) >= 0)
+        if (dot(ray.dir(), normals.geometric) >= 0)
         {
-                const auto surface = scene.intersect(geometric_normal, ray);
+                const auto surface = scene.intersect(normals.geometric, ray);
                 return surface_before_distance(ray.org(), surface, distance);
         }
 
-        const auto surface_1 = scene.intersect(geometric_normal, ray);
+        const auto surface_1 = scene.intersect(normals.geometric, ray);
         if (!surface_before_distance(ray.org(), surface_1, distance))
         {
                 return true;
