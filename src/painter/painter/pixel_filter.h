@@ -20,6 +20,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "filter.h"
 
 #include <src/com/error.h>
+#include <src/com/math.h>
 #include <src/com/type/limit.h>
 
 #include <optional>
@@ -40,12 +41,15 @@ class PixelFilter final
         static constexpr T FILTER_RADIUS = 1.5;
         static constexpr T GAUSSIAN_FILTER_WIDTH = FILTER_RADIUS / 2.5;
 
+        static constexpr int INTEGER_RADIUS = integral_ceil<int>(std::max(T(0), FILTER_RADIUS - T(0.5)));
+        static_assert(INTEGER_RADIUS == 1);
+
         const GaussianFilter<T> filter_{GAUSSIAN_FILTER_WIDTH, FILTER_RADIUS};
 
 public:
-        static T radius()
+        static constexpr int integer_radius()
         {
-                return FILTER_RADIUS;
+                return INTEGER_RADIUS;
         }
 
         static T contribution(const Color& sample)

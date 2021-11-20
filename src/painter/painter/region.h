@@ -25,22 +25,6 @@ namespace ns::painter
 template <std::size_t N>
 class Region final
 {
-        // ceil(radius - 0.5)
-        template <typename T>
-        static constexpr int integer_radius(T radius)
-        {
-                static_assert(std::is_floating_point_v<T>);
-
-                const T t = std::max(T(0), radius - T(0.5));
-                const int t_int = t;
-                return (t == t_int) ? t_int : t_int + 1;
-        }
-        static_assert(integer_radius(0.5) == 0);
-        static_assert(integer_radius(1.0) == 1);
-        static_assert(integer_radius(1.4) == 1);
-        static_assert(integer_radius(1.5) == 1);
-        static_assert(integer_radius(1.6) == 2);
-
         static std::array<int, N> max_values_for_size(const std::array<int, N>& size)
         {
                 std::array<int, N> max;
@@ -76,9 +60,8 @@ class Region final
         int integer_radius_;
 
 public:
-        template <typename T>
-        Region(const std::array<int, N>& size, T radius)
-                : max_(max_values_for_size(size)), integer_radius_(integer_radius(radius))
+        Region(const std::array<int, N>& size, const int integer_radius)
+                : max_(max_values_for_size(size)), integer_radius_(integer_radius)
         {
         }
 

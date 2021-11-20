@@ -67,7 +67,7 @@ class Pixels final
 
         const std::array<int, N> screen_size_;
         const GlobalIndex<N, long long> global_index_{screen_size_};
-        const Region<N> filter_region_{screen_size_, filter_.radius()};
+        const Region<N> filter_region_{screen_size_, filter_.integer_radius()};
 
         const Color background_;
         const Vector<3, float> background_rgb32_ = background_.rgb32();
