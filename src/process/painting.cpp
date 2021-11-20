@@ -46,7 +46,7 @@ constexpr int PAINTER_MAXIMUM_SCREEN_SIZE_3D = 10000;
 constexpr int PAINTER_MINIMUM_SCREEN_SIZE_ND = 50;
 constexpr int PAINTER_MAXIMUM_SCREEN_SIZE_ND = 5000;
 template <std::size_t N>
-constexpr int PAINTER_DEFAULT_SCREEN_SIZE_ND = (N == 4) ? 500 : ((N == 5) ? 100 : PAINTER_MINIMUM_SCREEN_SIZE_ND);
+constexpr int PAINTER_DEFAULT_SCREEN_SIZE_ND = (N == 4) ? 300 : ((N == 5) ? 100 : PAINTER_MINIMUM_SCREEN_SIZE_ND);
 
 using Precisions = std::tuple<double, float>;
 constexpr std::size_t DEFAULT_PRECISION_INDEX = 0;
@@ -96,8 +96,8 @@ void thread_function(
         {
                 ProgressRatio progress(nullptr);
                 scene = create_painter_scene(
-                        std::move(shape), dimension_parameters.min_size, dimension_parameters.max_size,
-                        parameters.cornell_box, light, background_light, &progress);
+                        std::move(shape), dimension_parameters.max_size, parameters.cornell_box, light,
+                        background_light, &progress);
         }
         ASSERT(scene);
 

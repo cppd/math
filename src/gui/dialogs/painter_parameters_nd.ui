@@ -51,16 +51,6 @@
        <item row="0" column="1">
         <widget class="QSpinBox" name="spinBox_max_size"/>
        </item>
-       <item row="1" column="0">
-        <widget class="QLabel" name="label_3">
-         <property name="text">
-          <string>Min Size:</string>
-         </property>
-        </widget>
-       </item>
-       <item row="1" column="1">
-        <widget class="QSpinBox" name="spinBox_min_size"/>
-       </item>
       </layout>
      </item>
      <item>

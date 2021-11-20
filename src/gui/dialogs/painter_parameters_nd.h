@@ -29,7 +29,6 @@ namespace ns::gui::dialog
 {
 struct PainterParametersNd final
 {
-        int min_size;
         int max_size;
 };
 
@@ -60,9 +59,6 @@ private:
                 const std::array<const char*, 2>& colors,
                 int default_color_index,
                 std::optional<std::tuple<PainterParameters, PainterParametersNd>>& parameters);
-
-        void on_min_size_changed(int);
-        void on_max_size_changed(int);
 
         void done(int r) override;
 

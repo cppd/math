@@ -240,7 +240,6 @@ template <OutputType OUTPUT_TYPE, std::size_t N, typename T, typename Color>
 void test_painter(
         std::unique_ptr<const mesh::Mesh<N>>&& mesh,
         ProgressRatio* const progress,
-        const int min_screen_size,
         const int max_screen_size,
         const int samples_per_pixel,
         const int thread_count)
@@ -256,8 +255,7 @@ void test_painter(
 
         std::unique_ptr<const Scene<N, T, Color>> scene = create_simple_scene(
                 Color::illuminant(LIGHTING_INTENSITY, LIGHTING_INTENSITY, LIGHTING_INTENSITY),
-                Color::illuminant(BACKGROUND_LIGHT), min_screen_size, max_screen_size, std::move(painter_mesh),
-                progress);
+                Color::illuminant(BACKGROUND_LIGHT), max_screen_size, std::move(painter_mesh), progress);
 
         static_assert(OUTPUT_TYPE == OutputType::FILE || OUTPUT_TYPE == OutputType::WINDOW);
 
@@ -273,11 +271,7 @@ void test_painter(
 }
 
 template <std::size_t N, typename T, typename Color, OutputType OUTPUT_TYPE>
-void test_painter(
-        const int samples_per_pixel,
-        const int facet_count,
-        const int min_screen_size,
-        const int max_screen_size)
+void test_painter(const int samples_per_pixel, const int facet_count, const int max_screen_size)
 {
         const int thread_count = hardware_concurrency();
         ProgressRatio progress(nullptr);
@@ -285,15 +279,11 @@ void test_painter(
         std::unique_ptr<const mesh::Mesh<N>> mesh = sphere_mesh<N>(facet_count);
 
         test_painter<OUTPUT_TYPE, N, T, Color>(
-                std::move(mesh), &progress, min_screen_size, max_screen_size, samples_per_pixel, thread_count);
+                std::move(mesh), &progress, max_screen_size, samples_per_pixel, thread_count);
 }
 
 template <std::size_t N, typename T, typename Color, OutputType OUTPUT_TYPE>
-void test_painter(
-        const int samples_per_pixel,
-        const std::string& file_name,
-        const int min_screen_size,
-        const int max_screen_size)
+void test_painter(const int samples_per_pixel, const std::string& file_name, const int max_screen_size)
 {
         const int thread_count = hardware_concurrency();
         ProgressRatio progress(nullptr);
@@ -301,7 +291,7 @@ void test_painter(
         std::unique_ptr<const mesh::Mesh<N>> mesh = file_mesh<N>(file_name, &progress);
 
         test_painter<OUTPUT_TYPE, N, T, Color>(
-                std::move(mesh), &progress, min_screen_size, max_screen_size, samples_per_pixel, thread_count);
+                std::move(mesh), &progress, max_screen_size, samples_per_pixel, thread_count);
 }
 }
 
@@ -309,27 +299,27 @@ void test_painter_file()
 {
         constexpr unsigned N = 4;
         constexpr int SAMPLES_PER_PIXEL = 25;
-        test_painter<N, double, color::Spectrum, OutputType::FILE>(SAMPLES_PER_PIXEL, 1000, 10, 100);
+        test_painter<N, double, color::Spectrum, OutputType::FILE>(SAMPLES_PER_PIXEL, 1000, 100);
 }
 
 void test_painter_file(const std::string& file_name)
 {
         constexpr unsigned N = 4;
         constexpr int SAMPLES_PER_PIXEL = 25;
-        test_painter<N, double, color::Spectrum, OutputType::FILE>(SAMPLES_PER_PIXEL, file_name, 10, 100);
+        test_painter<N, double, color::Spectrum, OutputType::FILE>(SAMPLES_PER_PIXEL, file_name, 100);
 }
 
 void test_painter_window()
 {
         constexpr unsigned N = 4;
         constexpr int SAMPLES_PER_PIXEL = 25;
-        test_painter<N, double, color::Spectrum, OutputType::WINDOW>(SAMPLES_PER_PIXEL, 1000, 50, 500);
+        test_painter<N, double, color::Spectrum, OutputType::WINDOW>(SAMPLES_PER_PIXEL, 1000, 500);
 }
 
 void test_painter_window(const std::string& file_name)
 {
         constexpr unsigned N = 4;
         constexpr int SAMPLES_PER_PIXEL = 25;
-        test_painter<N, double, color::Spectrum, OutputType::WINDOW>(SAMPLES_PER_PIXEL, file_name, 50, 500);
+        test_painter<N, double, color::Spectrum, OutputType::WINDOW>(SAMPLES_PER_PIXEL, file_name, 500);
 }
 }

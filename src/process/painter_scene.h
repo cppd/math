@@ -119,7 +119,6 @@ std::unique_ptr<const painter::Scene<3, T, Color>> create_painter_scene(
 template <std::size_t N, typename T, typename Color>
 std::unique_ptr<const painter::Scene<N, T, Color>> create_painter_scene(
         std::unique_ptr<const painter::Shape<N, T, Color>>&& shape,
-        const int min_screen_size,
         const int max_screen_size,
         const bool cornell_box,
         const Color& light,
@@ -139,7 +138,6 @@ std::unique_ptr<const painter::Scene<N, T, Color>> create_painter_scene(
                         light, background_light, screen_size, std::move(shape), progress);
         }
 
-        return painter::create_simple_scene(
-                light, background_light, min_screen_size, max_screen_size, std::move(shape), progress);
+        return painter::create_simple_scene(light, background_light, max_screen_size, std::move(shape), progress);
 }
 }

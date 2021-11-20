@@ -36,41 +36,36 @@ namespace ns::painter
 {
 namespace simple_scene_implementation
 {
-inline void check_screen_size(const int min_screen_size, const int max_screen_size)
-{
-        if (min_screen_size < 3)
-        {
-                error("Min screen size (" + to_string(min_screen_size) + ") is too small");
-        }
-
-        if (min_screen_size > max_screen_size)
-        {
-                error("Wrong min and max screen sizes: min = " + to_string(min_screen_size)
-                      + ", max = " + to_string(max_screen_size));
-        }
-}
-
 template <std::size_t N, typename T>
 std::unique_ptr<const Projector<N, T>> create_projector(
         const geometry::BoundingBox<N, T>& bounding_box,
-        const int min_screen_size,
         const int max_screen_size)
 {
-        const Vector<N, T> object_size = bounding_box.diagonal();
+        constexpr int BORDER_SIZE = 1;
+
+        if (max_screen_size <= 2 * BORDER_SIZE)
+        {
+                error("Maximum screen size (" + to_string(max_screen_size) + ") must be greater than or equal to "
+                      + to_string(1 + 2 * BORDER_SIZE));
+        }
+
+        const int max_object_size = max_screen_size - 2 * BORDER_SIZE;
+
+        const Vector<N, T> size = bounding_box.diagonal();
         const Vector<N, T> center = bounding_box.center();
 
-        const T max_projected_object_size = [&]
+        const T max_size = [&]
         {
                 static_assert(N >= 2);
                 T res = 0;
                 // excluding camera direction N - 1
                 for (unsigned i = 0; i < N - 1; ++i)
                 {
-                        if (!(object_size[i] > 0))
+                        if (!(size[i] > 0))
                         {
-                                error("Object projection size " + to_string(object_size[i]) + " is not positive");
+                                error("Object projection size " + to_string(size[i]) + " is not positive");
                         }
-                        res = std::max(object_size[i], res);
+                        res = std::max(size[i], res);
                 }
                 return res;
         }();
@@ -80,10 +75,9 @@ std::unique_ptr<const Projector<N, T>> create_projector(
                 std::array<int, N - 1> res;
                 for (unsigned i = 0; i < N - 1; ++i)
                 {
-                        const int size_in_pixels =
-                                std::ceil((object_size[i] / max_projected_object_size) * max_screen_size);
-                        ASSERT(size_in_pixels <= max_screen_size);
-                        res[i] = std::max(min_screen_size, size_in_pixels);
+                        const int size_in_pixels = std::ceil((size[i] / max_size) * max_object_size);
+                        ASSERT(size_in_pixels <= max_object_size);
+                        res[i] = std::max(1, size_in_pixels) + 2 * BORDER_SIZE;
                 }
                 return res;
         }();
@@ -91,7 +85,7 @@ std::unique_ptr<const Projector<N, T>> create_projector(
         const Vector<N, T> camera_position = [&]
         {
                 Vector<N, T> res(center);
-                res[N - 1] = bounding_box.max()[N - 1] + object_size.norm();
+                res[N - 1] = bounding_box.max()[N - 1] + size.norm();
                 return res;
         }();
 
@@ -115,7 +109,7 @@ std::unique_ptr<const Projector<N, T>> create_projector(
                 return res;
         }();
 
-        const T units_per_pixel = max_projected_object_size / (max_screen_size - 2);
+        const T units_per_pixel = max_size / max_object_size;
 
         return std::make_unique<const ParallelProjector<N, T>>(
                 camera_position, camera_direction, screen_axes, units_per_pixel, screen_size);
@@ -150,7 +144,6 @@ template <std::size_t N, typename T, typename Color>
 std::unique_ptr<const Scene<N, T, Color>> create_simple_scene(
         const Color& light,
         const Color& background_light,
-        const int min_screen_size,
         const int max_screen_size,
         std::unique_ptr<const Shape<N, T, Color>>&& shape,
         ProgressRatio* const progress)
@@ -159,12 +152,9 @@ std::unique_ptr<const Scene<N, T, Color>> create_simple_scene(
 
         ASSERT(shape);
 
-        impl::check_screen_size(min_screen_size, max_screen_size);
-
         const geometry::BoundingBox<N, T> bounding_box = shape->bounding_box();
 
-        std::unique_ptr<const Projector<N, T>> projector =
-                impl::create_projector(bounding_box, min_screen_size, max_screen_size);
+        std::unique_ptr<const Projector<N, T>> projector = impl::create_projector(bounding_box, max_screen_size);
 
         std::vector<std::unique_ptr<const LightSource<N, T, Color>>> light_sources;
         impl::create_light_sources(bounding_box, light, &light_sources);
