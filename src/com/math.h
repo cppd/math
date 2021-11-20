@@ -50,4 +50,22 @@ constexpr bool is_finite(const T& v) requires(std::is_floating_point_v<T>)
         }
         return std::isfinite(v);
 }
+
+template <typename I, typename T>
+constexpr I integral_floor(const T& v)
+{
+        static_assert(std::is_integral_v<I> && std::is_signed_v<I>);
+        static_assert(std::is_floating_point_v<T>);
+        const I i = v;
+        return v < i ? i - 1 : i;
+}
+
+template <typename I, typename T>
+constexpr I integral_ceil(const T& v)
+{
+        static_assert(std::is_integral_v<I> && std::is_signed_v<I>);
+        static_assert(std::is_floating_point_v<T>);
+        const I i = v;
+        return v > i ? i + 1 : i;
+}
 }
