@@ -23,7 +23,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 namespace ns::painter
 {
 template <std::size_t N>
-class Region final
+class PixelRegion final
 {
         static std::array<int, N> max_values_for_size(const std::array<int, N>& size)
         {
@@ -60,7 +60,7 @@ class Region final
         int integer_radius_;
 
 public:
-        Region(const std::array<int, N>& size, const int integer_radius)
+        PixelRegion(const std::array<int, N>& size, const int integer_radius)
                 : max_(max_values_for_size(size)), integer_radius_(integer_radius)
         {
         }

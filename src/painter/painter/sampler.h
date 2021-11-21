@@ -41,7 +41,7 @@ class SamplerHalton final
         }
 
 public:
-        explicit SamplerHalton(int samples_per_pixel) : samples_per_pixel_(samples_per_pixel)
+        explicit SamplerHalton(const int samples_per_pixel) : samples_per_pixel_(samples_per_pixel)
         {
                 if (samples_per_pixel <= 0)
                 {
@@ -52,7 +52,7 @@ public:
         }
 
         template <typename RandomEngine>
-        void generate(RandomEngine&, std::vector<Vector<N, T>>* samples) const
+        void generate(RandomEngine&, std::vector<Vector<N, T>>* const samples) const
         {
                 *samples = samples_;
         }
@@ -73,12 +73,12 @@ class SamplerStratifiedJittered final
         sampling::StratifiedJitteredSampler<N, T> sampler_;
 
 public:
-        explicit SamplerStratifiedJittered(int samples_per_pixel) : sampler_(MIN, MAX, samples_per_pixel, SHUFFLE)
+        explicit SamplerStratifiedJittered(const int samples_per_pixel) : sampler_(MIN, MAX, samples_per_pixel, SHUFFLE)
         {
         }
 
         template <typename RandomEngine>
-        void generate(RandomEngine& random_engine, std::vector<Vector<N, T>>* samples) const
+        void generate(RandomEngine& random_engine, std::vector<Vector<N, T>>* const samples) const
         {
                 sampler_.generate(random_engine, samples);
         }

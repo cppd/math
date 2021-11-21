@@ -58,7 +58,7 @@ class ImagesWriting final
         std::unique_lock<std::shared_mutex> lock_;
 
 public:
-        explicit ImagesWriting(Images<N>* images) : images_(images), lock_(images_->mutex_)
+        explicit ImagesWriting(Images<N>* const images) : images_(images), lock_(images_->mutex_)
         {
         }
 
@@ -79,7 +79,7 @@ class ImagesReading final
         std::shared_lock<std::shared_mutex> lock_;
 
 public:
-        explicit ImagesReading(const Images<N>* images) : images_(images), lock_(images_->mutex_)
+        explicit ImagesReading(const Images<N>* const images) : images_(images), lock_(images_->mutex_)
         {
         }
 

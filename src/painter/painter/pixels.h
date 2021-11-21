@@ -20,8 +20,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "paintbrush.h"
 #include "pixel.h"
 #include "pixel_filter.h"
+#include "pixel_region.h"
 #include "pixel_samples.h"
-#include "region.h"
 
 #include "../painter.h"
 
@@ -68,7 +68,7 @@ class Pixels final
 
         const std::array<int, N> screen_size_;
         const GlobalIndex<N, long long> global_index_{screen_size_};
-        const Region<N> filter_region_{screen_size_, filter_.integer_radius()};
+        const PixelRegion<N> pixel_region_{screen_size_, filter_.integer_radius()};
 
         const Color background_;
         const Vector<3, float> background_rgb32_ = background_.rgb32();
@@ -135,7 +135,7 @@ class Pixels final
 
                 thread_local std::vector<T> weights;
 
-                filter_.point_weights(center, points, &weights);
+                filter_.compute_weights(center, points, &weights);
 
                 const auto color_samples = make_color_samples(colors, weights);
                 const auto background_samples = make_background_samples(colors, weights);
@@ -158,7 +158,7 @@ class Pixels final
 public:
         Pixels(const std::array<int, N>& screen_size,
                const std::type_identity_t<Color>& background,
-               Notifier<N>* notifier)
+               Notifier<N>* const notifier)
                 : screen_size_(screen_size), background_(background.max_n(0)), notifier_(notifier)
         {
                 if (!background.is_finite())
@@ -203,7 +203,7 @@ public:
                         }
                 }
 
-                filter_region_.traverse(
+                pixel_region_.traverse(
                         pixel,
                         [&](const std::array<int, N>& region_pixel)
                         {
@@ -211,7 +211,7 @@ public:
                         });
         }
 
-        void images(image::Image<N>* image_rgb, image::Image<N>* image_rgba) const
+        void images(image::Image<N>* const image_rgb, image::Image<N>* const image_rgba) const
         {
                 namespace impl = pixels_implementation;
 

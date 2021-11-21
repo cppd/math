@@ -45,7 +45,7 @@ class GaussianFilter final
         T exp_;
 
 public:
-        GaussianFilter(std::type_identity_t<T> width, std::type_identity_t<T> radius)
+        GaussianFilter(const std::type_identity_t<T> width, const std::type_identity_t<T> radius)
         {
                 if (!(width > 0))
                 {

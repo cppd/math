@@ -17,7 +17,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
-#include "filter.h"
+#include "gaussian_filter.h"
 
 #include <src/com/error.h>
 #include <src/com/math.h>
@@ -51,7 +51,7 @@ public:
                 return INTEGER_RADIUS;
         }
 
-        void point_weights(
+        void compute_weights(
                 const Vector<N, T>& center,
                 const std::vector<Vector<N, T>>& points,
                 std::vector<T>* const weights) const

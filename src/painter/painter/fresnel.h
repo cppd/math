@@ -36,7 +36,7 @@ namespace ns::painter
 namespace fresnel_implementation
 {
 template <std::size_t N, typename T>
-std::optional<std::array<T, 2>> cos1_cos2(const Vector<N, T>& v, const Vector<N, T>& normal, T eta)
+std::optional<std::array<T, 2>> cos1_cos2(const Vector<N, T>& v, const Vector<N, T>& normal, const T eta)
 {
         T dot1 = dot(normal, v);
 
@@ -58,12 +58,18 @@ struct FresnelDielectric
 {
         T reflected;
         T transmitted;
-        FresnelDielectric(T reflected, T transmitted) : reflected(reflected), transmitted(transmitted)
+        FresnelDielectric(const std::type_identity_t<T>& reflected, const std::type_identity_t<T>& transmitted)
+                : reflected(reflected), transmitted(transmitted)
         {
         }
 };
+
 template <std::size_t N, typename T>
-std::optional<FresnelDielectric<T>> fresnel_dielectric(const Vector<N, T>& v, const Vector<N, T>& normal, T n1, T n2)
+std::optional<FresnelDielectric<T>> fresnel_dielectric(
+        const Vector<N, T>& v,
+        const Vector<N, T>& normal,
+        const T& n1,
+        const T& n2)
 {
         static_assert(std::is_floating_point_v<T>);
 
@@ -89,7 +95,7 @@ std::optional<FresnelDielectric<T>> fresnel_dielectric(const Vector<N, T>& v, co
 // Physically Based Rendering, 8.2.1 Fresnel reflectance.
 // η — the index of refraction of the conductor, k — its absorption coefficient.
 template <std::size_t N, typename T>
-T fresnel_conductor(const Vector<N, T>& v, const Vector<N, T>& normal, T eta, T k)
+T fresnel_conductor(const Vector<N, T>& v, const Vector<N, T>& normal, const T& eta, const T& k)
 {
         static_assert(std::is_floating_point_v<T>);
 

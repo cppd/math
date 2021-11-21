@@ -59,7 +59,7 @@ class Paintbrush final
                 std::array<T, N>& pixel,
                 std::array<int, N>& min,
                 std::array<int, N>& max,
-                std::vector<std::array<T, N>>* pixels)
+                std::vector<std::array<T, N>>* const pixels)
         {
                 static_assert(LEVEL < 2 * N);
 
@@ -132,7 +132,7 @@ class Paintbrush final
                 return pixels;
         }
 
-        static std::vector<std::array<T, N>> generate_pixels(std::array<int, N> screen_size, int paint_height)
+        static std::vector<std::array<T, N>> generate_pixels(std::array<int, N> screen_size, const int paint_height)
         {
                 for (std::size_t i = 0; i < N; ++i)
                 {
@@ -184,7 +184,7 @@ class Paintbrush final
         }
 
 public:
-        Paintbrush(const std::array<int, N>& screen_size, int paint_height)
+        Paintbrush(const std::array<int, N>& screen_size, const int paint_height)
                 : pixels_(generate_pixels(screen_size, paint_height))
         {
                 init();

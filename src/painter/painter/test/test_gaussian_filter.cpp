@@ -15,7 +15,7 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include "../filter.h"
+#include "../gaussian_filter.h"
 
 #include <src/com/error.h>
 #include <src/com/print.h>
@@ -26,7 +26,7 @@ namespace ns::painter
 namespace
 {
 template <typename T>
-void compare(T a, T b, T precision)
+void compare(const T& a, const T& b, const T& precision)
 {
         if (a == b)
         {
@@ -41,13 +41,13 @@ void compare(T a, T b, T precision)
 }
 
 template <typename T, std::size_t N>
-void compare(T width, T radius, const Vector<N, T>& p, T value, T precision)
+void compare(const T& width, const T& radius, const Vector<N, T>& p, const T& value, const T& precision)
 {
         compare(GaussianFilter<T>(width, radius).compute(p), value, precision);
 }
 
 template <typename T>
-void test_filter(T precision)
+void test_filter(const T& precision)
 {
         // gaussian[width_, x_] := Exp[-1/2*Power[ x/width, 2]];
         // filter[width_, radius_, list_] :=
@@ -78,7 +78,7 @@ void test_filter(T precision)
         //  Print[filterString[randomWidth[radius], radius,
         //    randomVector3[radius]]]]
 
-        const auto cmp = [&](T width, T radius, const auto& p, T value)
+        const auto cmp = [&](const auto& width, const auto& radius, const auto& p, const auto& value)
         {
                 compare<T>(width, radius, p, value, precision);
         };

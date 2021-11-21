@@ -44,7 +44,7 @@ class PaintingStatistics
         mutable std::mutex lock_;
 
 public:
-        explicit PaintingStatistics(long long screen_pixel_count) : screen_pixel_count_(screen_pixel_count)
+        explicit PaintingStatistics(const long long screen_pixel_count) : screen_pixel_count_(screen_pixel_count)
         {
                 init();
         }
@@ -63,7 +63,7 @@ public:
                 previous_pass_duration_ = 0;
         }
 
-        void pixel_done(int ray_count, int sample_count)
+        void pixel_done(const int ray_count, const int sample_count)
         {
                 pixel_counter_.fetch_add(1, std::memory_order_relaxed);
                 ray_counter_.fetch_add(ray_count, std::memory_order_relaxed);
