@@ -85,7 +85,11 @@ std::filesystem::path file_name_with_extension(std::filesystem::path path)
         return path.replace_extension(WRITE_FORMAT);
 }
 
-void check_size(std::size_t width, std::size_t height, ColorFormat format, std::size_t byte_count)
+void check_size(
+        const std::size_t width,
+        const std::size_t height,
+        const ColorFormat format,
+        const std::size_t byte_count)
 {
         if (byte_count != format_pixel_size_in_bytes(format) * width * height)
         {
@@ -95,10 +99,10 @@ void check_size(std::size_t width, std::size_t height, ColorFormat format, std::
 }
 
 void save_image(
-        std::size_t width,
-        std::size_t height,
-        QImage::Format q_format,
-        ColorFormat color_format,
+        const std::size_t width,
+        const std::size_t height,
+        const QImage::Format q_format,
+        const ColorFormat color_format,
         const std::span<const std::byte>& bytes,
         const std::string& file_name)
 {
@@ -123,10 +127,10 @@ void save_image(
 }
 
 void save_image_alpha(
-        std::size_t width,
-        std::size_t height,
-        QImage::Format q_format,
-        ColorFormat color_format,
+        const std::size_t width,
+        const std::size_t height,
+        const QImage::Format q_format,
+        const ColorFormat color_format,
         const std::span<const std::byte>& bytes,
         const std::string& file_name)
 {
@@ -251,7 +255,7 @@ void save(const std::string& file_name, const ImageView<2>& image_view)
         error("Unknown format " + format_to_string(image_view.color_format) + " for saving image");
 }
 
-void load_image(QImage* image, ColorFormat color_format, const std::span<std::byte>& bytes)
+void load_image(QImage* const image, const ColorFormat color_format, const std::span<std::byte>& bytes)
 {
         check_size(image->width(), image->height(), color_format, bytes.size());
 
@@ -266,7 +270,7 @@ void load_image(QImage* image, ColorFormat color_format, const std::span<std::by
         }
 }
 
-void load_image_alpha(QImage* image, ColorFormat color_format, const std::span<std::byte>& bytes)
+void load_image_alpha(QImage* const image, const ColorFormat color_format, const std::span<std::byte>& bytes)
 {
         ASSERT(color_format == ColorFormat::R16G16B16_SRGB);
 
@@ -292,7 +296,7 @@ void load_image_alpha(QImage* image, ColorFormat color_format, const std::span<s
         }
 }
 
-void load_1(QImage&& image, ColorFormat color_format, const std::span<std::byte>& bytes)
+void load_1(QImage&& image, const ColorFormat color_format, const std::span<std::byte>& bytes)
 {
         check_size(image.width(), image.height(), color_format, bytes.size());
 
@@ -318,7 +322,7 @@ void load_1(QImage&& image, ColorFormat color_format, const std::span<std::byte>
         }
 }
 
-void load_3(QImage&& image, ColorFormat color_format, const std::span<std::byte>& bytes)
+void load_3(QImage&& image, const ColorFormat color_format, const std::span<std::byte>& bytes)
 {
         check_size(image.width(), image.height(), color_format, bytes.size());
 
@@ -344,7 +348,7 @@ void load_3(QImage&& image, ColorFormat color_format, const std::span<std::byte>
         }
 }
 
-void load_4(QImage&& image, ColorFormat color_format, const std::span<std::byte>& bytes)
+void load_4(QImage&& image, const ColorFormat color_format, const std::span<std::byte>& bytes)
 {
         check_size(image.width(), image.height(), color_format, bytes.size());
 
@@ -442,7 +446,7 @@ std::unordered_map<ColorFormat, std::unordered_set<QImage::Format>> color_format
         return map;
 }
 
-ColorFormat q_format_to_color_format(QImage::Format format)
+ColorFormat q_format_to_color_format(const QImage::Format format)
 {
         static const std::unordered_map<QImage::Format, ColorFormat> map = q_image_format_to_color_format_map();
         auto iter = map.find(format);
@@ -453,7 +457,7 @@ ColorFormat q_format_to_color_format(QImage::Format format)
         error("Error finding color format: unsupported QImage format " + to_string(enum_to_int(format)));
 }
 
-const std::unordered_set<QImage::Format>& color_format_to_q_format(ColorFormat format)
+const std::unordered_set<QImage::Format>& color_format_to_q_format(const ColorFormat format)
 {
         static const std::unordered_map<ColorFormat, std::unordered_set<QImage::Format>> map =
                 color_format_to_q_image_format_map();
@@ -497,7 +501,7 @@ Info file_info(const Path& path)
 template <typename Path>
 void load(
         const Path& path,
-        ColorFormat color_format,
+        const ColorFormat color_format,
         const std::array<int, 2>& size,
         const std::span<std::byte>& pixels)
 {

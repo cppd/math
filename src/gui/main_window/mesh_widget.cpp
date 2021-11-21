@@ -61,7 +61,7 @@ MeshWidget::MeshWidget() : QWidget(nullptr)
         connect(ui_.toolButton_color, &QToolButton::clicked, this, &MeshWidget::on_color_clicked);
 }
 
-void MeshWidget::set_model_tree(ModelTree* model_tree)
+void MeshWidget::set_model_tree(ModelTree* const model_tree)
 {
         ASSERT(std::this_thread::get_id() == thread_id_);
 
@@ -77,7 +77,7 @@ void MeshWidget::set_model_tree(ModelTree* model_tree)
         }
 }
 
-void MeshWidget::set_enabled(bool enabled) const
+void MeshWidget::set_enabled(const bool enabled) const
 {
         for (const QPointer<QWidget>& widget : widgets_)
         {

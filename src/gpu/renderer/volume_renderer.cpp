@@ -24,7 +24,10 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 namespace ns::gpu::renderer
 {
-VolumeRenderer::VolumeRenderer(const vulkan::Device* device, bool sample_shading, const ShaderBuffers& buffers)
+VolumeRenderer::VolumeRenderer(
+        const vulkan::Device* const device,
+        const bool sample_shading,
+        const ShaderBuffers& buffers)
         : device_(*device),
           sample_shading_(sample_shading),
           //
@@ -42,10 +45,10 @@ VolumeRenderer::VolumeRenderer(const vulkan::Device* device, bool sample_shading
 }
 
 void VolumeRenderer::create_buffers(
-        const RenderBuffers3D* render_buffers,
-        VkCommandPool graphics_command_pool,
+        const RenderBuffers3D* const render_buffers,
+        const VkCommandPool graphics_command_pool,
         const Region<2, int>& viewport,
-        VkImageView depth_image,
+        const VkImageView depth_image,
         const vulkan::ImageWithMemory& transparency_heads_image,
         const vulkan::Buffer& transparency_nodes)
 {
@@ -104,7 +107,7 @@ VkSampler VolumeRenderer::transfer_function_sampler() const
         return transfer_function_sampler_;
 }
 
-void VolumeRenderer::draw_commands_fragments(VkCommandBuffer command_buffer) const
+void VolumeRenderer::draw_commands_fragments(const VkCommandBuffer command_buffer) const
 {
         ASSERT(thread_id_ == std::this_thread::get_id());
 
@@ -120,7 +123,7 @@ void VolumeRenderer::draw_commands_fragments(VkCommandBuffer command_buffer) con
         vkCmdDraw(command_buffer, 3, 1, 0, 0);
 }
 
-void VolumeRenderer::draw_commands_image(const VolumeObject* volume, VkCommandBuffer command_buffer) const
+void VolumeRenderer::draw_commands_image(const VolumeObject* const volume, const VkCommandBuffer command_buffer) const
 {
         ASSERT(thread_id_ == std::this_thread::get_id());
 
@@ -142,7 +145,9 @@ void VolumeRenderer::draw_commands_image(const VolumeObject* volume, VkCommandBu
         vkCmdDraw(command_buffer, 3, 1, 0, 0);
 }
 
-void VolumeRenderer::draw_commands_image_fragments(const VolumeObject* volume, VkCommandBuffer command_buffer) const
+void VolumeRenderer::draw_commands_image_fragments(
+        const VolumeObject* const volume,
+        const VkCommandBuffer command_buffer) const
 {
         ASSERT(thread_id_ == std::this_thread::get_id());
 
@@ -164,7 +169,7 @@ void VolumeRenderer::draw_commands_image_fragments(const VolumeObject* volume, V
         vkCmdDraw(command_buffer, 3, 1, 0, 0);
 }
 
-void VolumeRenderer::create_command_buffers_fragments(VkCommandPool graphics_command_pool)
+void VolumeRenderer::create_command_buffers_fragments(const VkCommandPool graphics_command_pool)
 {
         ASSERT(thread_id_ == std::this_thread::get_id());
 
@@ -194,8 +199,8 @@ void VolumeRenderer::create_command_buffers_fragments(VkCommandPool graphics_com
 }
 
 void VolumeRenderer::create_command_buffers(
-        const VolumeObject* volume,
-        VkCommandPool graphics_command_pool,
+        const VolumeObject* const volume,
+        const VkCommandPool graphics_command_pool,
         const std::function<void(VkCommandBuffer command_buffer)>& before_render_pass_commands)
 {
         ASSERT(thread_id_ == std::this_thread::get_id());
@@ -250,7 +255,7 @@ bool VolumeRenderer::has_volume() const
         return command_buffers_image_.has_value();
 }
 
-std::optional<VkCommandBuffer> VolumeRenderer::command_buffer(unsigned index, bool with_fragments) const
+std::optional<VkCommandBuffer> VolumeRenderer::command_buffer(const unsigned index, const bool with_fragments) const
 {
         if (has_volume())
         {

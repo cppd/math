@@ -28,17 +28,17 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 namespace ns::gui::dialog
 {
 PainterParametersNdDialog::PainterParametersNdDialog(
-        int dimension,
-        int max_thread_count,
-        int default_screen_size,
-        int min_screen_size,
-        int max_screen_size,
-        int default_samples_per_pixel,
-        int max_samples_per_pixel,
+        const int dimension,
+        const int max_thread_count,
+        const int default_screen_size,
+        const int min_screen_size,
+        const int max_screen_size,
+        const int default_samples_per_pixel,
+        const int max_samples_per_pixel,
         const std::array<const char*, 2>& precisions,
-        int default_precision_index,
+        const int default_precision_index,
         const std::array<const char*, 2>& colors,
-        int default_color_index,
+        const int default_color_index,
         std::optional<std::tuple<PainterParameters, PainterParametersNd>>& parameters)
         : QDialog(parent_for_dialog()),
           parameters_widget_(new PainterParametersWidget(
@@ -89,7 +89,7 @@ PainterParametersNdDialog::PainterParametersNdDialog(
         ui_.verticalLayout_parameters->addWidget(parameters_widget_);
 }
 
-void PainterParametersNdDialog::done(int r)
+void PainterParametersNdDialog::done(const int r)
 {
         if (r != QDialog::Accepted)
         {
@@ -102,7 +102,7 @@ void PainterParametersNdDialog::done(int r)
                 return;
         }
 
-        int max_size = ui_.spinBox_max_size->value();
+        const int max_size = ui_.spinBox_max_size->value();
         if (!(max_size >= min_screen_size_ && max_size <= max_screen_size_))
         {
                 std::string msg = "Maximum screen size must be in the range [" + to_string(min_screen_size_) + ", "
@@ -120,17 +120,17 @@ void PainterParametersNdDialog::done(int r)
 }
 
 std::optional<std::tuple<PainterParameters, PainterParametersNd>> PainterParametersNdDialog::show(
-        int dimension,
-        int max_thread_count,
-        int default_screen_size,
-        int min_screen_size,
-        int max_screen_size,
-        int default_samples_per_pixel,
-        int max_samples_per_pixel,
+        const int dimension,
+        const int max_thread_count,
+        const int default_screen_size,
+        const int min_screen_size,
+        const int max_screen_size,
+        const int default_samples_per_pixel,
+        const int max_samples_per_pixel,
         const std::array<const char*, 2>& precisions,
-        int default_precision_index,
+        const int default_precision_index,
         const std::array<const char*, 2>& colors,
-        int default_color_index)
+        const int default_color_index)
 {
         std::optional<std::tuple<PainterParameters, PainterParametersNd>> parameters;
 

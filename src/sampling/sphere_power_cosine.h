@@ -93,7 +93,7 @@ class PowerCosineOnHemisphere
         std::normal_distribution<T> normal_distribution_;
         std::uniform_real_distribution<T> urd_;
 
-        explicit PowerCosineOnHemisphere(std::type_identity_t<T> power)
+        explicit PowerCosineOnHemisphere(const std::type_identity_t<T> power)
         {
                 if (!(power >= 1))
                 {
@@ -146,7 +146,7 @@ public:
                 return coordinates;
         }
 
-        static PowerCosineOnHemisphere& instance(T power)
+        static PowerCosineOnHemisphere& instance(const T power)
         {
                 thread_local std::unordered_map<T, PowerCosineOnHemisphere<N, T>> map;
                 auto iter = map.find(power);
@@ -160,7 +160,8 @@ public:
 }
 
 template <std::size_t N, typename T, typename RandomEngine>
-requires(N > 3) Vector<N, T> power_cosine_on_hemisphere(RandomEngine& random_engine, std::type_identity_t<T> power)
+requires(
+        N > 3) Vector<N, T> power_cosine_on_hemisphere(RandomEngine& random_engine, const std::type_identity_t<T> power)
 {
         namespace impl = sphere_power_cosine_implementation;
 
@@ -168,7 +169,8 @@ requires(N > 3) Vector<N, T> power_cosine_on_hemisphere(RandomEngine& random_eng
 }
 
 template <std::size_t N, typename T, typename RandomEngine>
-requires(N == 3) Vector<N, T> power_cosine_on_hemisphere(RandomEngine& random_engine, std::type_identity_t<T> power)
+requires(N == 3)
+        Vector<N, T> power_cosine_on_hemisphere(RandomEngine& random_engine, const std::type_identity_t<T> power)
 {
         Vector<N - 1, T> v;
         T v_length_square;
@@ -190,7 +192,7 @@ requires(N == 3) Vector<N, T> power_cosine_on_hemisphere(RandomEngine& random_en
 }
 
 template <std::size_t N, typename T, typename RandomEngine>
-Vector<N, T> power_cosine_on_hemisphere(RandomEngine& random_engine, const Vector<N, T>& normal, T power)
+Vector<N, T> power_cosine_on_hemisphere(RandomEngine& random_engine, const Vector<N, T>& normal, const T power)
 {
         std::array<Vector<N, T>, N - 1> orthonormal_basis = numerical::orthogonal_complement_of_unit_vector(normal);
 
@@ -206,7 +208,7 @@ Vector<N, T> power_cosine_on_hemisphere(RandomEngine& random_engine, const Vecto
 }
 
 template <std::size_t N, typename T>
-T power_cosine_on_hemisphere_pdf(T n_v, std::type_identity_t<T> power)
+T power_cosine_on_hemisphere_pdf(const T& n_v, const std::type_identity_t<T>& power)
 {
         if (n_v > 0)
         {

@@ -67,7 +67,7 @@ void check_facet_dimension(
 }
 
 template <std::size_t N>
-void check_manifoldness(const std::string& name, const std::vector<std::array<int, N>>& facets, bool has_boundary)
+void check_manifoldness(const std::string& name, const std::vector<std::array<int, N>>& facets, const bool has_boundary)
 {
         struct Hash
         {
@@ -113,7 +113,7 @@ template <std::size_t N>
 void check_euler_characteristic(
         const std::string& name,
         const std::vector<std::array<int, N>>& facets,
-        int expected_euler_characteristic)
+        const int expected_euler_characteristic)
 {
         const int mesh_euler_characteristic = euler_characteristic(facets);
 
@@ -142,7 +142,7 @@ void check_mesh(
         const std::string& name,
         const std::vector<Vector<N, T>>& vertices,
         const std::vector<std::array<int, N>>& facets,
-        bool has_boundary,
+        const bool has_boundary,
         const std::optional<int>& expected_euler_characteristic)
 {
         namespace impl = check_implementation;

@@ -84,7 +84,7 @@ void ObjectSelectionParametersDialog::set_all(bool checked)
         ui_.checkBox_bound_cocone->setChecked(checked);
 }
 
-void ObjectSelectionParametersDialog::done(int r)
+void ObjectSelectionParametersDialog::done(const int r)
 {
         if (r != QDialog::Accepted)
         {

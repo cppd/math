@@ -35,7 +35,7 @@ constexpr double PLANCK_CONSTANT = 6.62607015e-34;
 constexpr double BOLTZMANN_CONSTANT = 1.380649e-23;
 constexpr double SPEED_OF_LIGHT = 299792458;
 
-double plank(double l, double t)
+double plank(double l, const double t)
 {
         l *= 1e-9;
         return (2 * PLANCK_CONSTANT * SPEED_OF_LIGHT * SPEED_OF_LIGHT)
@@ -50,7 +50,7 @@ double plank_a(double l)
 }
 
 template <typename F>
-std::vector<double> create_samples(int from, int to, int count, const F& f)
+std::vector<double> create_samples(const int from, const int to, const int count, const F& f)
 {
         if (!(from < to))
         {
@@ -88,7 +88,7 @@ std::vector<double> create_samples(int from, int to, int count, const F& f)
 }
 }
 
-std::vector<double> blackbody_a_samples(int from, int to, int count)
+std::vector<double> blackbody_a_samples(const int from, const int to, const int count)
 {
         return create_samples(
                 from, to, count,
@@ -98,7 +98,7 @@ std::vector<double> blackbody_a_samples(int from, int to, int count)
                 });
 }
 
-std::vector<double> blackbody_samples(double t, int from, int to, int count)
+std::vector<double> blackbody_samples(const double t, const int from, const int to, const int count)
 {
         if (!(t > 0))
         {

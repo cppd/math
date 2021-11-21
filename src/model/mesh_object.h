@@ -54,7 +54,7 @@ template <std::size_t N>
 struct Erase final
 {
         ObjectId id;
-        explicit Erase(ObjectId id) : id(id)
+        explicit Erase(const ObjectId id) : id(id)
         {
         }
 };
@@ -73,7 +73,7 @@ struct Visibility final
 {
         ObjectId id;
         bool visible;
-        Visibility(ObjectId id, bool visible) : id(id), visible(visible)
+        Visibility(const ObjectId id, const bool visible) : id(id), visible(visible)
         {
         }
 };
@@ -184,7 +184,7 @@ class MeshObject final : public std::enable_shared_from_this<MeshObject<N>>
                 return alpha_;
         }
 
-        void set_alpha(float alpha)
+        void set_alpha(const float alpha)
         {
                 alpha_ = alpha;
         }
@@ -204,7 +204,7 @@ class MeshObject final : public std::enable_shared_from_this<MeshObject<N>>
                 return ambient_;
         }
 
-        void set_ambient(float ambient)
+        void set_ambient(const float ambient)
         {
                 ambient_ = ambient;
         }
@@ -214,7 +214,7 @@ class MeshObject final : public std::enable_shared_from_this<MeshObject<N>>
                 return metalness_;
         }
 
-        void set_metalness(float metalness)
+        void set_metalness(const float metalness)
         {
                 metalness_ = metalness;
         }
@@ -224,12 +224,12 @@ class MeshObject final : public std::enable_shared_from_this<MeshObject<N>>
                 return roughness_;
         }
 
-        void set_roughness(float roughness)
+        void set_roughness(const float roughness)
         {
                 roughness_ = roughness;
         }
 
-        Updates updates(std::optional<int>* version) const
+        Updates updates(std::optional<int>* const version) const
         {
                 return versions_.updates(version);
         }
@@ -301,7 +301,7 @@ public:
                 return visible_;
         }
 
-        void set_visible(bool visible)
+        void set_visible(const bool visible)
         {
                 std::unique_lock lock(mutex_);
                 if (visible_ == visible)
@@ -391,7 +391,7 @@ public:
                 return object_->alpha();
         }
 
-        void set_alpha(float alpha)
+        void set_alpha(const float alpha)
         {
                 updates_.set(UPDATE_ALPHA);
                 object_->set_alpha(alpha);
@@ -413,7 +413,7 @@ public:
                 return object_->ambient();
         }
 
-        void set_ambient(float ambient)
+        void set_ambient(const float ambient)
         {
                 updates_.set(UPDATE_AMBIENT);
                 object_->set_ambient(ambient);
@@ -424,7 +424,7 @@ public:
                 return object_->metalness();
         }
 
-        void set_metalness(float metalness)
+        void set_metalness(const float metalness)
         {
                 updates_.set(UPDATE_METALNESS);
                 object_->set_metalness(metalness);
@@ -435,7 +435,7 @@ public:
                 return object_->roughness();
         }
 
-        void set_roughness(float roughness)
+        void set_roughness(const float roughness)
         {
                 updates_.set(UPDATE_ROUGHNESS);
                 object_->set_roughness(roughness);
@@ -453,7 +453,7 @@ public:
         {
         }
 
-        Updates updates(std::optional<int>* version) const
+        Updates updates(std::optional<int>* const version) const
         {
                 return object_->updates(version);
         }

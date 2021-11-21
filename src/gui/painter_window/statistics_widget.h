@@ -39,7 +39,7 @@ private:
         std::unique_ptr<Difference<Counters>> difference_;
 
 public:
-        explicit StatisticsWidget(std::chrono::milliseconds update_interval);
+        explicit StatisticsWidget(const std::chrono::milliseconds& update_interval);
         ~StatisticsWidget() override;
 
         void update(const painter::Statistics& statistics, const std::optional<float>& pixel_max);

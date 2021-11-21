@@ -40,7 +40,7 @@ template <std::size_t N, typename T>
 T facet_normat_weight_at_vertex(
         const std::vector<Vector<N, T>>& points,
         const std::array<int, N>& facet,
-        int facet_vertex_index)
+        const int facet_vertex_index)
 {
         if constexpr (N >= 5)
         {
@@ -91,7 +91,7 @@ Vector<N, T> compute_normal(
         const std::vector<Vector<N, T>>& vertices,
         const std::vector<Vector<N, T>>& facet_normals,
         const std::vector<typename Mesh<N>::Facet>& mesh_facets,
-        std::size_t vertex_index,
+        const std::size_t vertex_index,
         const std::vector<VertexFacet>& vertex_facets)
 {
         thread_local std::vector<int> vicinity_int;
@@ -138,7 +138,7 @@ Vector<N, T> compute_normal(
 }
 
 template <std::size_t N>
-void compute_normals(Mesh<N>* mesh)
+void compute_normals(Mesh<N>* const mesh)
 {
         using ComputeType = double;
 

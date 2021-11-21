@@ -81,7 +81,7 @@ bool is_binary(const std::string& data)
 }
 
 template <typename Data>
-void read_keyword(const Data& data, long long data_size, const std::string_view& word, long long* i)
+void read_keyword(const Data& data, const long long data_size, const std::string_view& word, long long* const i)
 {
         if (*i + static_cast<long long>(word.size()) > data_size)
         {

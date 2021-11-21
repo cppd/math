@@ -61,7 +61,7 @@ float linear_32_to_grayscale(const std::array<float, 3>& rgb)
 }
 
 template <typename T, typename F>
-void make_grayscale(ColorFormat color_format, const std::span<std::byte>& bytes, const F& rgb_to_grayscale)
+void make_grayscale(const ColorFormat color_format, const std::span<std::byte>& bytes, const F& rgb_to_grayscale)
 {
         int component_count = format_component_count(color_format);
         if (component_count < 3)
@@ -96,7 +96,7 @@ void make_grayscale(ColorFormat color_format, const std::span<std::byte>& bytes,
 
 template <typename T>
 void convert_to_r_component_format(
-        ColorFormat color_format,
+        const ColorFormat color_format,
         const std::span<const std::byte>& bytes_color,
         const std::span<std::byte>& bytes_r)
 {
@@ -137,7 +137,9 @@ void convert_to_r_component_format(
 }
 
 template <typename T>
-std::vector<std::byte> convert_to_r_component_format(ColorFormat color_format, const std::span<const std::byte>& bytes)
+std::vector<std::byte> convert_to_r_component_format(
+        const ColorFormat color_format,
+        const std::span<const std::byte>& bytes)
 {
         std::vector<std::byte> bytes_r;
         bytes_r.resize(bytes.size() / format_component_count(color_format));
@@ -145,7 +147,9 @@ std::vector<std::byte> convert_to_r_component_format(ColorFormat color_format, c
         return bytes_r;
 }
 
-std::vector<std::byte> convert_to_r_component_format(ColorFormat color_format, const std::span<const std::byte>& bytes)
+std::vector<std::byte> convert_to_r_component_format(
+        const ColorFormat color_format,
+        const std::span<const std::byte>& bytes)
 {
         switch (color_format)
         {
@@ -173,7 +177,7 @@ std::vector<std::byte> convert_to_r_component_format(ColorFormat color_format, c
 }
 }
 
-void make_grayscale(ColorFormat color_format, const std::span<std::byte>& bytes)
+void make_grayscale(const ColorFormat color_format, const std::span<std::byte>& bytes)
 {
         switch (color_format)
         {

@@ -40,6 +40,7 @@ public:
         {
                 ASSERT(std::is_sorted(vertices.cbegin(), vertices.cend()));
         }
+
         bool operator==(const Ridge& a) const
         {
                 for (unsigned i = 0; i < N - 1; ++i)
@@ -51,6 +52,7 @@ public:
                 }
                 return true;
         }
+
         bool operator<(const Ridge& a) const
         {
                 for (unsigned i = 0; i < N - 1; ++i)
@@ -66,6 +68,7 @@ public:
                 }
                 return false;
         }
+
         const std::array<int, N - 1>& vertices() const
         {
                 return vertices_;
@@ -88,21 +91,27 @@ public:
         {
                 reset();
         }
-        RidgeDataElement(const Facet* f, int p) : facet_(f), external_vertex_index_(p)
+
+        RidgeDataElement(const Facet* const facet, const int external_vertex_index)
+                : facet_(facet), external_vertex_index_(external_vertex_index)
         {
         }
+
         int point() const
         {
                 return facet_->vertices()[external_vertex_index_];
         }
+
         int vertex_index() const
         {
                 return external_vertex_index_;
         }
+
         const Facet* facet() const
         {
                 return facet_;
         }
+
         void reset()
         {
                 facet_ = nullptr;
@@ -118,11 +127,12 @@ class RidgeDataC
         int size_;
 
 public:
-        RidgeDataC(const Facet* facet, int external_point_index) : data_{{{facet, external_point_index}, {}}}, size_(1)
+        RidgeDataC(const Facet* const facet, const int external_point_index)
+                : data_{{{facet, external_point_index}, {}}}, size_(1)
         {
         }
 
-        void add(const Facet* facet, int external_point_index)
+        void add(const Facet* const facet, const int external_point_index)
         {
                 for (int i = 0; i < MAX_SIZE; ++i)
                 {
@@ -139,7 +149,7 @@ public:
                       + to_string(facet->vertices()[external_point_index]));
         }
 
-        void remove(const Facet* facet)
+        void remove(const Facet* const facet)
         {
                 for (int i = 0; i < MAX_SIZE; ++i)
                 {
@@ -158,12 +168,13 @@ public:
         {
                 return size_ == 0;
         }
+
         int size() const
         {
                 return size_;
         }
 
-        const RidgeDataElement<Facet>& operator[](unsigned i) const
+        const RidgeDataElement<Facet>& operator[](const unsigned i) const
         {
                 ASSERT(i < MAX_SIZE);
                 return data_[i];
@@ -179,15 +190,17 @@ class RidgeDataN
         std::list<RidgeDataElement<Facet>> data_;
 
 public:
-        RidgeDataN(const Facet* facet, int external_point_index)
+        RidgeDataN(const Facet* const facet, const int external_point_index)
         {
                 data_.emplace_back(facet, external_point_index);
         }
-        void add(const Facet* facet, int external_point_index)
+
+        void add(const Facet* const facet, const int external_point_index)
         {
                 data_.emplace_back(facet, external_point_index);
         }
-        void remove(const Facet* facet)
+
+        void remove(const Facet* const facet)
         {
                 for (auto iter = data_.cbegin(); iter != data_.cend(); ++iter)
                 {
@@ -199,10 +212,12 @@ public:
                 }
                 error("Remove ridge facet: facet not found in the link: facet " + to_string(facet->vertices()));
         }
+
         auto cbegin() const
         {
                 return data_.cbegin();
         }
+
         auto cend() const
         {
                 return data_.cend();
@@ -212,6 +227,7 @@ public:
         {
                 return data_.empty();
         }
+
         int size() const
         {
                 return data_.size();
@@ -219,51 +235,50 @@ public:
 };
 
 template <std::size_t N, typename Facet, template <typename...> typename Map, typename MapData>
-void add_to_ridges(const Facet& facet, Map<Ridge<N>, MapData>* m)
+void add_to_ridges(const Facet& facet, Map<Ridge<N>, MapData>* const map)
 {
-        for (unsigned r = 0; r < N; ++r)
+        for (unsigned i = 0; i < N; ++i)
         {
-                Ridge<N> ridge(sort(del_elem(facet.vertices(), r)));
+                Ridge<N> ridge(sort(del_elem(facet.vertices(), i)));
 
-                auto f = m->find(ridge);
-                if (f == m->end())
+                const auto iter = map->find(ridge);
+                if (iter == map->end())
                 {
-                        m->emplace(std::move(ridge), MapData(&facet, r));
+                        map->emplace(std::move(ridge), MapData(&facet, i));
                 }
                 else
                 {
-                        f->second.add(&facet, r);
+                        iter->second.add(&facet, i);
                 }
         }
 }
 
 template <std::size_t N, typename Facet, template <typename...> typename Map, typename MapData>
-void remove_from_ridges(const Facet& facet, Map<Ridge<N>, MapData>* m)
+void remove_from_ridges(const Facet& facet, Map<Ridge<N>, MapData>* const map)
 {
-        for (unsigned r = 0; r < N; ++r)
+        for (unsigned i = 0; i < N; ++i)
         {
-                auto f = m->find(Ridge<N>(sort(del_elem(facet.vertices(), r))));
+                const auto iter = map->find(Ridge<N>(sort(del_elem(facet.vertices(), i))));
+                ASSERT(iter != map->end());
 
-                ASSERT(f != m->end());
-
-                f->second.remove(&facet);
-
-                if (f->second.empty())
+                iter->second.remove(&facet);
+                if (iter->second.empty())
                 {
-                        m->erase(f);
+                        map->erase(iter);
                 }
         }
 }
 
 template <std::size_t N, typename Facet, template <typename...> typename Set>
-void add_to_ridges(const Facet& facet, int exclude_point, Set<Ridge<N>>* ridges)
+void add_to_ridges(const Facet& facet, const int exclude_point, Set<Ridge<N>>* const ridges)
 {
         const std::array<int, N>& vertices = facet.vertices();
-        for (unsigned r = 0; r < N; ++r)
+
+        for (unsigned i = 0; i < N; ++i)
         {
-                if (vertices[r] != exclude_point)
+                if (vertices[i] != exclude_point)
                 {
-                        ridges->emplace(sort(del_elem(vertices, r)));
+                        ridges->emplace(sort(del_elem(vertices, i)));
                 }
         }
 }

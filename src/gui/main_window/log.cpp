@@ -27,7 +27,7 @@ namespace ns::gui::main_window
 {
 namespace
 {
-RGB8 event_color(LogType type)
+RGB8 event_color(const LogType type)
 {
         switch (type)
         {
@@ -58,7 +58,7 @@ class Switcher final
         S* const src_;
 
 public:
-        Switcher(std::atomic<D*>* dst, S* src) : dst_(dst), src_(src)
+        Switcher(std::atomic<D*>* const dst, S* const src) : dst_(dst), src_(src)
         {
         }
         ~Switcher()
@@ -73,7 +73,7 @@ public:
 };
 }
 
-Log::Log(QPlainTextEdit* text_edit)
+Log::Log(QPlainTextEdit* const text_edit)
         : text_edit_(text_edit),
           messages_ptr_(&messages_[0]),
           observer_(

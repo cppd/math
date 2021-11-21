@@ -172,6 +172,7 @@ class Impl final : public Renderer
 
                 shader_buffers_.set_lighting_color(color.rgb32().max_n(0));
         }
+
         void set_background_color(const color::Color& color) override
         {
                 ASSERT(thread_id_ == std::this_thread::get_id());
@@ -181,68 +182,79 @@ class Impl final : public Renderer
 
                 create_clear_command_buffers();
         }
+
         void set_wireframe_color(const color::Color& color) override
         {
                 ASSERT(thread_id_ == std::this_thread::get_id());
 
                 shader_buffers_.set_wireframe_color(color.rgb32().clamp(0, 1));
         }
+
         void set_clip_plane_color(const color::Color& color) override
         {
                 ASSERT(thread_id_ == std::this_thread::get_id());
 
                 shader_buffers_.set_clip_plane_color(color.rgb32().clamp(0, 1));
         }
-        void set_normal_length(float length) override
+
+        void set_normal_length(const float length) override
         {
                 ASSERT(thread_id_ == std::this_thread::get_id());
 
                 shader_buffers_.set_normal_length(length);
         }
+
         void set_normal_color_positive(const color::Color& color) override
         {
                 ASSERT(thread_id_ == std::this_thread::get_id());
 
                 shader_buffers_.set_normal_color_positive(color.rgb32().clamp(0, 1));
         }
+
         void set_normal_color_negative(const color::Color& color) override
         {
                 ASSERT(thread_id_ == std::this_thread::get_id());
 
                 shader_buffers_.set_normal_color_negative(color.rgb32().clamp(0, 1));
         }
-        void set_show_smooth(bool show) override
+
+        void set_show_smooth(const bool show) override
         {
                 ASSERT(thread_id_ == std::this_thread::get_id());
 
                 shader_buffers_.set_show_smooth(show);
         }
-        void set_show_wireframe(bool show) override
+
+        void set_show_wireframe(const bool show) override
         {
                 ASSERT(thread_id_ == std::this_thread::get_id());
 
                 shader_buffers_.set_show_wireframe(show);
         }
-        void set_show_shadow(bool show) override
+
+        void set_show_shadow(const bool show) override
         {
                 ASSERT(thread_id_ == std::this_thread::get_id());
 
                 shader_buffers_.set_show_shadow(show);
                 show_shadow_ = show;
         }
-        void set_show_fog(bool show) override
+
+        void set_show_fog(const bool show) override
         {
                 ASSERT(thread_id_ == std::this_thread::get_id());
 
                 shader_buffers_.set_show_fog(show);
         }
-        void set_show_materials(bool show) override
+
+        void set_show_materials(const bool show) override
         {
                 ASSERT(thread_id_ == std::this_thread::get_id());
 
                 shader_buffers_.set_show_materials(show);
         }
-        void set_show_normals(bool show) override
+
+        void set_show_normals(const bool show) override
         {
                 ASSERT(thread_id_ == std::this_thread::get_id());
 
@@ -252,7 +264,8 @@ class Impl final : public Renderer
                         create_mesh_render_command_buffers();
                 }
         }
-        void set_shadow_zoom(double zoom) override
+
+        void set_shadow_zoom(const double zoom) override
         {
                 ASSERT(thread_id_ == std::this_thread::get_id());
 
@@ -261,6 +274,7 @@ class Impl final : public Renderer
                 create_mesh_depth_buffers();
                 create_mesh_command_buffers();
         }
+
         void set_camera(const CameraInfo& c) override
         {
                 ASSERT(thread_id_ == std::this_thread::get_id());
@@ -410,7 +424,7 @@ class Impl final : public Renderer
                 }
         }
 
-        void object_delete(ObjectId id) override
+        void object_delete(const ObjectId id) override
         {
                 ASSERT(thread_id_ == std::this_thread::get_id());
 
@@ -432,7 +446,7 @@ class Impl final : public Renderer
                 volume_storage_.clear();
         }
 
-        void object_show(ObjectId id, bool show) override
+        void object_show(const ObjectId id, const bool show) override
         {
                 ASSERT(thread_id_ == std::this_thread::get_id());
 
@@ -562,8 +576,8 @@ class Impl final : public Renderer
         }
 
         void create_buffers(
-                RenderBuffers3D* render_buffers,
-                const vulkan::ImageWithMemory* objects,
+                RenderBuffers3D* const render_buffers,
+                const vulkan::ImageWithMemory* const objects,
                 const Region<2, int>& viewport) override
         {
                 ASSERT(thread_id_ == std::this_thread::get_id());
@@ -767,13 +781,13 @@ class Impl final : public Renderer
         }
 
 public:
-        Impl(const vulkan::VulkanInstance* instance,
-             const vulkan::CommandPool* graphics_command_pool,
-             const vulkan::Queue* graphics_queue,
-             const vulkan::CommandPool* transfer_command_pool,
-             const vulkan::Queue* transfer_queue,
-             bool sample_shading,
-             bool sampler_anisotropy)
+        Impl(const vulkan::VulkanInstance* const instance,
+             const vulkan::CommandPool* const graphics_command_pool,
+             const vulkan::Queue* const graphics_queue,
+             const vulkan::CommandPool* const transfer_command_pool,
+             const vulkan::Queue* const transfer_queue,
+             const bool sample_shading,
+             const bool sampler_anisotropy)
                 : instance_(instance),
                   device_(&instance->device()),
                   graphics_command_pool_(graphics_command_pool),
@@ -819,13 +833,13 @@ vulkan::DeviceFeatures Renderer::required_device_features()
 }
 
 std::unique_ptr<Renderer> create_renderer(
-        const vulkan::VulkanInstance* instance,
-        const vulkan::CommandPool* graphics_command_pool,
-        const vulkan::Queue* graphics_queue,
-        const vulkan::CommandPool* transfer_command_pool,
-        const vulkan::Queue* transfer_queue,
-        bool sample_shading,
-        bool sampler_anisotropy)
+        const vulkan::VulkanInstance* const instance,
+        const vulkan::CommandPool* const graphics_command_pool,
+        const vulkan::Queue* const graphics_queue,
+        const vulkan::CommandPool* const transfer_command_pool,
+        const vulkan::Queue* const transfer_queue,
+        const bool sample_shading,
+        const bool sampler_anisotropy)
 {
         return std::make_unique<Impl>(
                 instance, graphics_command_pool, graphics_queue, transfer_command_pool, transfer_queue, sample_shading,

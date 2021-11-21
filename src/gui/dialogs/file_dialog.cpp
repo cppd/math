@@ -28,7 +28,7 @@ namespace ns::gui::dialog
 {
 namespace
 {
-std::optional<std::string> exec_dialog_for_single_file(QtObjectInDynamicMemory<QFileDialog>* w)
+std::optional<std::string> exec_dialog_for_single_file(QtObjectInDynamicMemory<QFileDialog>* const w)
 {
         ASSERT(!w->isNull());
 
@@ -46,7 +46,7 @@ std::optional<std::string> exec_dialog_for_single_file(QtObjectInDynamicMemory<Q
         return list[0].toStdString();
 }
 
-QFileDialog::Options make_options(bool read_only)
+QFileDialog::Options make_options(const bool read_only)
 {
         QFileDialog::Options options = QFileDialog::DontUseNativeDialog;
 
@@ -129,9 +129,9 @@ void check_filter(const FileFilter& filter)
 
 std::optional<std::string> save_file(
         const std::string& caption,
-        const std::string* file_name,
+        const std::string* const file_name,
         const std::vector<FileFilter>& filters,
-        bool read_only)
+        const bool read_only)
 {
         std::map<QString, QString> map;
         std::vector<QString> dialog_filters;
@@ -172,7 +172,10 @@ std::optional<std::string> save_file(
 }
 }
 
-std::optional<std::string> save_file(const std::string& caption, const std::vector<FileFilter>& filters, bool read_only)
+std::optional<std::string> save_file(
+        const std::string& caption,
+        const std::vector<FileFilter>& filters,
+        const bool read_only)
 {
         return save_file(caption, nullptr, filters, read_only);
 }
@@ -186,7 +189,10 @@ std::optional<std::string> save_file(
         return save_file(caption, &file_name, filters, read_only);
 }
 
-std::optional<std::string> open_file(const std::string& caption, const std::vector<FileFilter>& filters, bool read_only)
+std::optional<std::string> open_file(
+        const std::string& caption,
+        const std::vector<FileFilter>& filters,
+        const bool read_only)
 {
         std::vector<QString> dialog_filters;
         for (const FileFilter& v : filters)
@@ -205,7 +211,7 @@ std::optional<std::string> open_file(const std::string& caption, const std::vect
         return exec_dialog_for_single_file(&w);
 }
 
-std::optional<std::string> select_directory(const std::string& caption, bool read_only)
+std::optional<std::string> select_directory(const std::string& caption, const bool read_only)
 {
         QtObjectInDynamicMemory<QFileDialog> w(parent_for_dialog(), QString::fromStdString(caption));
 

@@ -37,7 +37,7 @@ SlidersWidget::SlidersWidget(const std::vector<int>& screen_size)
 
         const std::vector<int> positions(slider_count, 0);
 
-        QGridLayout* layout = new QGridLayout(this);
+        QGridLayout* const layout = new QGridLayout(this);
         layout->setContentsMargins(5, 5, 5, 5);
 
         sliders_.reserve(slider_count);
@@ -49,19 +49,19 @@ SlidersWidget::SlidersWidget(const std::vector<int>& screen_size)
 
                 ASSERT(positions[number] >= 0 && positions[number] <= dimension_max_value);
 
-                QSlider* slider = new QSlider(this);
+                QSlider* const slider = new QSlider(this);
                 slider->setOrientation(Qt::Horizontal);
                 slider->setMinimum(0);
                 slider->setMaximum(dimension_max_value);
                 slider->setValue(positions[number]);
 
-                QLabel* label = new QLabel(this);
+                QLabel* const label = new QLabel(this);
                 set_label_minimum_width_for_text(label, to_string_digit_groups(dimension_max_value));
                 label->setText(QString::fromStdString(to_string_digit_groups(positions[number])));
 
-                QString label_d_text = QString::fromStdString("d[" + to_string(dimension + 1) + "]");
-                QLabel* label_d = new QLabel(label_d_text, this);
-                QLabel* label_e = new QLabel("=", this);
+                const QString label_d_text = QString::fromStdString("d[" + to_string(dimension + 1) + "]");
+                QLabel* const label_d = new QLabel(label_d_text, this);
+                QLabel* const label_e = new QLabel("=", this);
 
                 layout->addWidget(label_d, number, 0);
                 layout->addWidget(label_e, number, 1);

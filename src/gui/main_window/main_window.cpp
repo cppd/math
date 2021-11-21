@@ -184,7 +184,7 @@ MainWindow::~MainWindow()
         terminate_all_threads();
 }
 
-void MainWindow::closeEvent(QCloseEvent* event)
+void MainWindow::closeEvent(QCloseEvent* const event)
 {
         ASSERT(std::this_thread::get_id() == thread_id_);
 
@@ -224,7 +224,7 @@ void MainWindow::terminate_all_threads()
         view_.reset();
 }
 
-void MainWindow::showEvent(QShowEvent* /*event*/)
+void MainWindow::showEvent(QShowEvent* const /*event*/)
 {
         if (!first_show_)
         {
@@ -298,7 +298,7 @@ void MainWindow::on_timer()
         actions_->set_progresses();
 }
 
-void MainWindow::on_graphics_widget_mouse_wheel(QWheelEvent* e)
+void MainWindow::on_graphics_widget_mouse_wheel(QWheelEvent* const e)
 {
         if (view_)
         {
@@ -307,7 +307,7 @@ void MainWindow::on_graphics_widget_mouse_wheel(QWheelEvent* e)
         }
 }
 
-void MainWindow::on_graphics_widget_mouse_move(QMouseEvent* e)
+void MainWindow::on_graphics_widget_mouse_move(QMouseEvent* const e)
 {
         if (view_)
         {
@@ -315,7 +315,7 @@ void MainWindow::on_graphics_widget_mouse_move(QMouseEvent* e)
         }
 }
 
-void MainWindow::on_graphics_widget_mouse_press(QMouseEvent* e)
+void MainWindow::on_graphics_widget_mouse_press(QMouseEvent* const e)
 {
         if (view_)
         {
@@ -332,7 +332,7 @@ void MainWindow::on_graphics_widget_mouse_press(QMouseEvent* e)
         }
 }
 
-void MainWindow::on_graphics_widget_mouse_release(QMouseEvent* e)
+void MainWindow::on_graphics_widget_mouse_release(QMouseEvent* const e)
 {
         if (view_)
         {
@@ -349,7 +349,7 @@ void MainWindow::on_graphics_widget_mouse_release(QMouseEvent* e)
         }
 }
 
-void MainWindow::on_graphics_widget_resize(QResizeEvent* e)
+void MainWindow::on_graphics_widget_resize(QResizeEvent* const e)
 {
         if (view_)
         {

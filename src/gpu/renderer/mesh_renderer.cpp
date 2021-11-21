@@ -29,8 +29,8 @@ namespace
 template <template <typename...> typename T>
 void find_opaque_and_transparent(
         const T<const MeshObject*>& meshes,
-        std::vector<const MeshObject*>* opaque_meshes,
-        std::vector<const MeshObject*>* transparent_meshes)
+        std::vector<const MeshObject*>* const opaque_meshes,
+        std::vector<const MeshObject*>* const transparent_meshes)
 {
         const unsigned transparent_count = std::count_if(
                 meshes.cbegin(), meshes.cend(),
@@ -45,7 +45,7 @@ void find_opaque_and_transparent(
         transparent_meshes->clear();
         transparent_meshes->reserve(transparent_count);
 
-        for (const MeshObject* mesh : meshes)
+        for (const MeshObject* const mesh : meshes)
         {
                 if (mesh->transparent())
                 {
@@ -60,9 +60,9 @@ void find_opaque_and_transparent(
 }
 
 MeshRenderer::MeshRenderer(
-        const vulkan::Device* device,
-        bool sample_shading,
-        bool sampler_anisotropy,
+        const vulkan::Device* const device,
+        const bool sample_shading,
+        const bool sampler_anisotropy,
         const ShaderBuffers& buffers)
         : device_(*device),
           sample_shading_(sample_shading),
@@ -112,7 +112,7 @@ MeshRenderer::MeshRenderer(
 {
 }
 
-const MeshRenderer::Pipelines& MeshRenderer::render_pipelines(bool transparent) const
+const MeshRenderer::Pipelines& MeshRenderer::render_pipelines(const bool transparent) const
 {
         if (transparent)
         {
@@ -121,7 +121,7 @@ const MeshRenderer::Pipelines& MeshRenderer::render_pipelines(bool transparent) 
         return render_pipelines_opaque_;
 }
 
-MeshRenderer::Pipelines& MeshRenderer::render_pipelines(bool transparent)
+MeshRenderer::Pipelines& MeshRenderer::render_pipelines(const bool transparent)
 {
         if (transparent)
         {
@@ -131,7 +131,7 @@ MeshRenderer::Pipelines& MeshRenderer::render_pipelines(bool transparent)
 }
 
 void MeshRenderer::create_render_buffers(
-        const RenderBuffers3D* render_buffers,
+        const RenderBuffers3D* const render_buffers,
         const vulkan::ImageWithMemory& objects_image,
         const vulkan::ImageWithMemory& transparency_heads_image,
         const vulkan::ImageWithMemory& transparency_heads_size_image,
@@ -201,7 +201,7 @@ void MeshRenderer::delete_render_buffers()
         }
 }
 
-void MeshRenderer::create_depth_buffers(const DepthBuffers* depth_buffers)
+void MeshRenderer::create_depth_buffers(const DepthBuffers* const depth_buffers)
 {
         ASSERT(thread_id_ == std::this_thread::get_id());
 
@@ -269,11 +269,11 @@ VkSampler MeshRenderer::texture_sampler() const
 template <template <typename...> typename T>
 void MeshRenderer::draw_commands(
         const T<const MeshObject*>& meshes,
-        VkCommandBuffer command_buffer,
-        bool clip_plane,
-        bool normals,
-        bool depth,
-        bool transparent) const
+        const VkCommandBuffer command_buffer,
+        const bool clip_plane,
+        const bool normals,
+        const bool depth,
+        const bool transparent) const
 {
         ASSERT(thread_id_ == std::this_thread::get_id());
 
@@ -450,9 +450,9 @@ void MeshRenderer::draw_commands(
 
 void MeshRenderer::create_render_command_buffers(
         const std::unordered_set<const MeshObject*>& meshes,
-        VkCommandPool graphics_command_pool,
-        bool clip_plane,
-        bool normals,
+        const VkCommandPool graphics_command_pool,
+        const bool clip_plane,
+        const bool normals,
         const std::function<void(VkCommandBuffer command_buffer)>& before_transparency_render_pass_commands,
         const std::function<void(VkCommandBuffer command_buffer)>& after_transparency_render_pass_commands)
 {
@@ -528,9 +528,9 @@ void MeshRenderer::delete_render_command_buffers()
 
 void MeshRenderer::create_depth_command_buffers(
         const std::unordered_set<const MeshObject*>& meshes,
-        VkCommandPool graphics_command_pool,
-        bool clip_plane,
-        bool normals)
+        const VkCommandPool graphics_command_pool,
+        const bool clip_plane,
+        const bool normals)
 {
         ASSERT(thread_id_ == std::this_thread::get_id());
 
@@ -581,7 +581,7 @@ bool MeshRenderer::has_transparent_meshes() const
         return render_command_buffers_transparent_as_opaque_.has_value();
 }
 
-std::optional<VkCommandBuffer> MeshRenderer::render_command_buffer_all(unsigned index) const
+std::optional<VkCommandBuffer> MeshRenderer::render_command_buffer_all(const unsigned index) const
 {
         if (render_command_buffers_all_)
         {
@@ -591,7 +591,7 @@ std::optional<VkCommandBuffer> MeshRenderer::render_command_buffer_all(unsigned 
         return std::nullopt;
 }
 
-std::optional<VkCommandBuffer> MeshRenderer::render_command_buffer_transparent_as_opaque(unsigned index) const
+std::optional<VkCommandBuffer> MeshRenderer::render_command_buffer_transparent_as_opaque(const unsigned index) const
 {
         if (render_command_buffers_transparent_as_opaque_)
         {
@@ -601,7 +601,7 @@ std::optional<VkCommandBuffer> MeshRenderer::render_command_buffer_transparent_a
         return std::nullopt;
 }
 
-std::optional<VkCommandBuffer> MeshRenderer::depth_command_buffer(unsigned index) const
+std::optional<VkCommandBuffer> MeshRenderer::depth_command_buffer(const unsigned index) const
 {
         if (render_depth_command_buffers_)
         {

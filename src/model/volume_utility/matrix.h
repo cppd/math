@@ -42,7 +42,7 @@ Matrix<N + 1, N + 1, double> matrix_for_image_size(const std::array<int, N>& siz
 template <std::size_t N>
 Matrix<N + 1, N + 1, double> model_matrix_for_size_and_position(
         const Volume<N>& volume,
-        double size,
+        const double size,
         const Vector<N, double>& position)
 {
         Vector<N, double> center;

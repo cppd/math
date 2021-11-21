@@ -26,7 +26,7 @@ void error(std::string text)
         throw ErrorException(std::move(text));
 }
 
-void error_fatal(const char* text) noexcept
+void error_fatal(const char* const text) noexcept
 {
         // no call to other functions because of a possible recursion
         static_assert(noexcept(write_log_fatal_error_and_exit(text)));
@@ -40,7 +40,7 @@ void error_fatal(const std::string& text) noexcept
 
 namespace error_implementation
 {
-void error_assert(const char* expr, const char* file, int line) noexcept
+void error_assert(const char* const expr, const char* const file, const int line) noexcept
 {
         try
         {

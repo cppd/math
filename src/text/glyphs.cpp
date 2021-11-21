@@ -57,7 +57,7 @@ template <std::size_t N>
 
 template <typename T>
 void copy_image(
-        std::vector<T>* dst,
+        std::vector<T>* const dst,
         const std::array<int, 2>& dst_size,
         const std::array<int, 2>& dst_offset,
         const std::vector<T>& src,
@@ -87,7 +87,7 @@ void copy_image(
 
 template <typename T>
 void copy_image(
-        std::vector<T>* dst,
+        std::vector<T>* const dst,
         const std::array<int, 2>& dst_size,
         const std::array<int, 2>& dst_offset,
         const std::vector<T>& src,
@@ -99,8 +99,8 @@ void copy_image(
 void render_glyphs(
         const std::vector<char32_t>& code_points,
         const Font& font,
-        std::unordered_map<char32_t, FontGlyph>* font_glyphs,
-        std::unordered_map<char32_t, std::vector<std::byte>>* glyph_pixels)
+        std::unordered_map<char32_t, FontGlyph>* const font_glyphs,
+        std::unordered_map<char32_t, std::vector<std::byte>>* const glyph_pixels)
 {
         font_glyphs->clear();
         glyph_pixels->clear();
@@ -145,11 +145,11 @@ void render_glyphs(
 template <typename Key, typename Value>
 void place_rectangles_on_rectangle(
         const std::unordered_map<Key, Value>& rectangles,
-        int max_rectangle_width,
-        int max_rectangle_height,
-        int* rectangle_width,
-        int* rectangle_height,
-        std::unordered_map<Key, std::array<int, 2>>* rectangle_coordinates)
+        const int max_rectangle_width,
+        const int max_rectangle_height,
+        int* const rectangle_width,
+        int* const rectangle_height,
+        std::unordered_map<Key, std::array<int, 2>>* const rectangle_coordinates)
 {
         rectangle_coordinates->clear();
         rectangle_coordinates->reserve(rectangles.size());
@@ -194,12 +194,12 @@ void place_rectangles_on_rectangle(
 }
 
 void fill_texture_pixels_and_texture_coordinates(
-        int texture_width,
-        int texture_height,
+        const int texture_width,
+        const int texture_height,
         const std::unordered_map<char32_t, std::vector<std::byte>>& glyph_pixels,
         const std::unordered_map<char32_t, std::array<int, 2>>& glyph_coordinates,
-        std::unordered_map<char32_t, FontGlyph>* font_glyphs,
-        std::vector<std::byte>* texture_pixels)
+        std::unordered_map<char32_t, FontGlyph>* const font_glyphs,
+        std::vector<std::byte>* const texture_pixels)
 {
         texture_pixels->clear();
         texture_pixels->resize(1ull * texture_width * texture_height);
@@ -231,10 +231,10 @@ void fill_texture_pixels_and_texture_coordinates(
 
 void create_font_glyphs(
         const Font& font,
-        int max_width,
-        int max_height,
-        std::unordered_map<char32_t, FontGlyph>* font_glyphs,
-        image::Image<2>* image)
+        const int max_width,
+        const int max_height,
+        std::unordered_map<char32_t, FontGlyph>* const font_glyphs,
+        image::Image<2>* const image)
 {
         std::unordered_map<char32_t, std::vector<std::byte>> glyph_pixels;
 

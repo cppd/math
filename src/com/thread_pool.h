@@ -37,7 +37,7 @@ class ThreadPool final
                 std::string error_message_;
 
         public:
-                void set(const char* s)
+                void set(const char* const s)
                 {
                         has_error_ = true;
                         error_message_ = s;

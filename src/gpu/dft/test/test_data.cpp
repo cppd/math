@@ -27,7 +27,11 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 namespace ns::gpu::dft
 {
 template <typename T>
-void load_data(const std::filesystem::path& file_name, int* n1, int* n2, std::vector<std::complex<T>>* data)
+void load_data(
+        const std::filesystem::path& file_name,
+        int* const n1,
+        int* const n2,
+        std::vector<std::complex<T>>* const data)
 {
         constexpr int MAX_DIMENSION_SIZE = 1e9;
 
@@ -91,7 +95,7 @@ void save_data(const std::filesystem::path& file_name, const std::vector<std::co
 }
 
 template <typename T>
-void generate_random_data(const std::filesystem::path& file_name, int n1, int n2)
+void generate_random_data(const std::filesystem::path& file_name, const int n1, const int n2)
 {
         if (n1 < 1 || n2 < 1)
         {

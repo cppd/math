@@ -45,13 +45,14 @@ namespace ns::geometry
 namespace parallelotope_implementation
 {
 template <std::size_t N, typename T, std::size_t... I>
-std::array<Vector<N, T>, N> make_vectors_impl(const Vector<N, T>& d, std::integer_sequence<std::size_t, I...>)
+std::array<Vector<N, T>, N> make_vectors_impl(const Vector<N, T>& d, std::integer_sequence<std::size_t, I...>&&)
 {
         static_assert(N == sizeof...(I));
         std::array<Vector<N, T>, N> vectors{(static_cast<void>(I), Vector<N, T>(0))...};
         ((vectors[I][I] = d[I]), ...);
         return vectors;
 }
+
 // Diagonal matrix NxN
 template <std::size_t N, typename T>
 std::array<Vector<N, T>, N> make_vectors(const Vector<N, T>& d)
@@ -130,13 +131,13 @@ public:
 
         bool inside(const Vector<N, T>& p) const;
 
-        std::optional<T> intersect(const Ray<N, T>& r) const;
-        std::optional<T> intersect_farthest(const Ray<N, T>& r) const;
-        std::optional<T> intersect_volume(const Ray<N, T>& r) const;
+        std::optional<T> intersect(const Ray<N, T>& ray) const;
+        std::optional<T> intersect_farthest(const Ray<N, T>& ray) const;
+        std::optional<T> intersect_volume(const Ray<N, T>& ray) const;
 
-        Vector<N, T> normal(const Vector<N, T>& p) const;
+        Vector<N, T> normal(const Vector<N, T>& point) const;
 
-        Vector<N, T> project(const Vector<N, T>& p) const;
+        Vector<N, T> project(const Vector<N, T>& point) const;
 
         std::array<Parallelotope<N, T>, DIVISIONS> binary_division() const;
 
@@ -217,7 +218,7 @@ Constraints<N, T, 2 * N, 0> Parallelotope<N, T>::constraints() const
 }
 
 template <std::size_t N, typename T>
-bool Parallelotope<N, T>::intersect_impl(const Ray<N, T>& r, T* first, T* second) const
+bool Parallelotope<N, T>::intersect_impl(const Ray<N, T>& r, T* const first, T* const second) const
 {
         T near = 0;
         T far = Limits<T>::max();
@@ -270,11 +271,11 @@ bool Parallelotope<N, T>::intersect_impl(const Ray<N, T>& r, T* first, T* second
 }
 
 template <std::size_t N, typename T>
-std::optional<T> Parallelotope<N, T>::intersect(const Ray<N, T>& r) const
+std::optional<T> Parallelotope<N, T>::intersect(const Ray<N, T>& ray) const
 {
         T first;
         T second;
-        if (intersect_impl(r, &first, &second))
+        if (intersect_impl(ray, &first, &second))
         {
                 return (first > 0) ? first : second;
         }
@@ -282,11 +283,11 @@ std::optional<T> Parallelotope<N, T>::intersect(const Ray<N, T>& r) const
 }
 
 template <std::size_t N, typename T>
-std::optional<T> Parallelotope<N, T>::intersect_farthest(const Ray<N, T>& r) const
+std::optional<T> Parallelotope<N, T>::intersect_farthest(const Ray<N, T>& ray) const
 {
         T first;
         T second;
-        if (intersect_impl(r, &first, &second))
+        if (intersect_impl(ray, &first, &second))
         {
                 return second;
         }
@@ -294,11 +295,11 @@ std::optional<T> Parallelotope<N, T>::intersect_farthest(const Ray<N, T>& r) con
 }
 
 template <std::size_t N, typename T>
-std::optional<T> Parallelotope<N, T>::intersect_volume(const Ray<N, T>& r) const
+std::optional<T> Parallelotope<N, T>::intersect_volume(const Ray<N, T>& ray) const
 {
         T first;
         T second;
-        if (intersect_impl(r, &first, &second))
+        if (intersect_impl(ray, &first, &second))
         {
                 return first;
         }
@@ -306,7 +307,7 @@ std::optional<T> Parallelotope<N, T>::intersect_volume(const Ray<N, T>& r) const
 }
 
 template <std::size_t N, typename T>
-Vector<N, T> Parallelotope<N, T>::normal(const Vector<N, T>& p) const
+Vector<N, T> Parallelotope<N, T>::normal(const Vector<N, T>& point) const
 {
         // the normal of the plane closest to the point
 
@@ -315,7 +316,7 @@ Vector<N, T> Parallelotope<N, T>::normal(const Vector<N, T>& p) const
         Vector<N, T> n;
         for (unsigned i = 0; i < N; ++i)
         {
-                const T d = dot(p, planes_[i].n);
+                const T d = dot(point, planes_[i].n);
 
                 {
                         const T distance = std::abs(d - planes_[i].d1);
@@ -342,7 +343,7 @@ Vector<N, T> Parallelotope<N, T>::normal(const Vector<N, T>& p) const
 }
 
 template <std::size_t N, typename T>
-Vector<N, T> Parallelotope<N, T>::project(const Vector<N, T>& p) const
+Vector<N, T> Parallelotope<N, T>::project(const Vector<N, T>& point) const
 {
         T min_distance = Limits<T>::max();
 
@@ -350,7 +351,7 @@ Vector<N, T> Parallelotope<N, T>::project(const Vector<N, T>& p) const
         T plane_distance = Limits<T>::max();
         for (unsigned i = 0; i < N; ++i)
         {
-                const T d = dot(p, planes_[i].n);
+                const T d = dot(point, planes_[i].n);
 
                 {
                         const T distance = d - planes_[i].d1;
@@ -377,15 +378,15 @@ Vector<N, T> Parallelotope<N, T>::project(const Vector<N, T>& p) const
 
         ASSERT(min_distance < Limits<T>::max());
 
-        return p - planes_[plane_index].n * plane_distance;
+        return point - planes_[plane_index].n * plane_distance;
 }
 
 template <std::size_t N, typename T>
-bool Parallelotope<N, T>::inside(const Vector<N, T>& p) const
+bool Parallelotope<N, T>::inside(const Vector<N, T>& point) const
 {
         for (unsigned i = 0; i < N; ++i)
         {
-                const T d = dot(p, planes_[i].n);
+                const T d = dot(point, planes_[i].n);
 
                 if (d < planes_[i].d1)
                 {
@@ -404,8 +405,8 @@ template <std::size_t N, typename T>
 template <int INDEX, typename F>
 void Parallelotope<N, T>::binary_division_impl(
         const Vector<N, T>& org,
-        Vector<N, T>* d1,
-        Vector<N, T>* d2,
+        Vector<N, T>* const d1,
+        Vector<N, T>* const d2,
         const std::array<Vector<N, T>, N>& half_vectors,
         const Vector<N, T>& middle_d,
         const F& f) const
@@ -507,7 +508,7 @@ std::array<Vector<N, T>, Parallelotope<N, T>::VERTEX_COUNT> Parallelotope<N, T>:
 
 template <std::size_t N, typename T>
 template <int INDEX, typename F>
-void Parallelotope<N, T>::edges_impl(const Vector<N, T>& p, std::array<bool, N>* dimensions, const F& f) const
+void Parallelotope<N, T>::edges_impl(const Vector<N, T>& p, std::array<bool, N>* const dimensions, const F& f) const
 {
         static_assert(N <= 3);
 

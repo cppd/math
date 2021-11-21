@@ -60,7 +60,7 @@ PainterWindow::~PainterWindow()
         pixels_.reset();
 }
 
-void PainterWindow::closeEvent(QCloseEvent* event)
+void PainterWindow::closeEvent(QCloseEvent* const event)
 {
         ASSERT(std::this_thread::get_id() == thread_id_);
 
@@ -174,7 +174,7 @@ void PainterWindow::create_actions()
         connect(menu->addAction("Exit..."), &QAction::triggered, this, &PainterWindow::close);
 }
 
-void PainterWindow::showEvent(QShowEvent* /*event*/)
+void PainterWindow::showEvent(QShowEvent* const /*event*/)
 {
         ASSERT(std::this_thread::get_id() == thread_id_);
 

@@ -44,11 +44,13 @@ namespace ns
 {
 namespace mpz_implementation
 {
-inline void mpz_from_llong(mpz_t z, unsigned long long v)
+
+inline void mpz_from_llong(mpz_t z, const unsigned long long v)
 {
         mpz_import(z, 1, -1, sizeof(v), 0, 0, &v);
 }
-inline void mpz_from_llong(mpz_t z, long long v)
+
+inline void mpz_from_llong(mpz_t z, const long long v)
 {
         if (v >= 0)
         {
@@ -61,11 +63,12 @@ inline void mpz_from_llong(mpz_t z, long long v)
         }
 }
 
-inline void mpz_from_int128(mpz_t z, unsigned __int128 v)
+inline void mpz_from_int128(mpz_t z, const unsigned __int128 v)
 {
         mpz_import(z, 1, -1, sizeof(v), 0, 0, &v);
 }
-inline void mpz_from_int128(mpz_t z, __int128 v)
+
+inline void mpz_from_int128(mpz_t z, const __int128 v)
 {
         if (v >= 0)
         {
@@ -80,23 +83,27 @@ inline void mpz_from_int128(mpz_t z, __int128 v)
 }
 
 template <typename T>
-void mpz_from_any(mpz_class* z, T v)
+void mpz_from_any(mpz_class* const z, const T& v)
 {
         *z = v;
 }
-inline void mpz_from_any(mpz_class* z, unsigned __int128 v)
+
+inline void mpz_from_any(mpz_class* const z, const unsigned __int128 v)
 {
         mpz_implementation::mpz_from_int128(z->get_mpz_t(), v);
 }
-inline void mpz_from_any(mpz_class* z, __int128 v)
+
+inline void mpz_from_any(mpz_class* const z, const __int128 v)
 {
         mpz_implementation::mpz_from_int128(z->get_mpz_t(), v);
 }
-inline void mpz_from_any(mpz_class* z, unsigned long long v)
+
+inline void mpz_from_any(mpz_class* const z, const unsigned long long v)
 {
         mpz_implementation::mpz_from_llong(z->get_mpz_t(), v);
 }
-inline void mpz_from_any(mpz_class* z, long long v)
+
+inline void mpz_from_any(mpz_class* const z, const long long v)
 {
         mpz_implementation::mpz_from_llong(z->get_mpz_t(), v);
 }
@@ -116,11 +123,11 @@ public:
         MPZ(T&&... v) : mpz_class(std::forward<T>(v)...)
         {
         }
-        MPZ(unsigned long long v)
+        MPZ(const unsigned long long v)
         {
                 *this = v;
         }
-        MPZ(long long v)
+        MPZ(const long long v)
         {
                 *this = v;
         }
@@ -131,12 +138,12 @@ public:
                 *(static_cast<mpz_class*>(this)) = std::forward<T>(v);
                 return *this;
         }
-        MPZ& operator=(unsigned long long v)
+        MPZ& operator=(const unsigned long long v)
         {
                 mpz_from_any(this, v);
                 return *this;
         }
-        MPZ& operator=(long long v)
+        MPZ& operator=(const long long v)
         {
                 mpz_from_any(this, v);
                 return *this;

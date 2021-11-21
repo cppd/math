@@ -43,8 +43,8 @@ public:
         DelaunayFacet(
                 const std::array<int, N>& vertices,
                 const Vector<N, double>& ortho,
-                int delaunay_0,
-                int delaunay_1)
+                const int delaunay_0,
+                const int delaunay_1)
                 : vertices_(vertices), ortho_(ortho), delaunay_{delaunay_0, delaunay_1}
         {
         }
@@ -60,7 +60,7 @@ public:
         {
                 return ortho_;
         }
-        int delaunay(unsigned i) const
+        int delaunay(const unsigned i) const
         {
                 ASSERT(i == 0 || (i == 1 && delaunay_[1] >= 0));
                 return delaunay_[i];
@@ -92,8 +92,8 @@ template <std::size_t N>
 void create_delaunay_objects_and_facets(
         const std::vector<Vector<N, double>>& points,
         const std::vector<DelaunaySimplex<N>>& simplices,
-        std::vector<DelaunayObject<N>>* delaunay_objects,
-        std::vector<DelaunayFacet<N>>* delaunay_facets)
+        std::vector<DelaunayObject<N>>* const delaunay_objects,
+        std::vector<DelaunayFacet<N>>* const delaunay_facets)
 {
         static constexpr int NULL_INDEX = -1;
 
@@ -109,7 +109,7 @@ void create_delaunay_objects_and_facets(
                 simplex_to_delaunay.emplace(&simplex, i++);
         }
 
-        const auto delaunay_index_for_simplex = [&simplex_to_delaunay](const DelaunaySimplex<N>* simplex)
+        const auto delaunay_index_for_simplex = [&simplex_to_delaunay](const DelaunaySimplex<N>* const simplex)
         {
                 auto iter = simplex_to_delaunay.find(simplex);
                 ASSERT(iter != simplex_to_delaunay.cend());
@@ -133,19 +133,19 @@ void create_delaunay_objects_and_facets(
 
                 if (facet_data.size() == 1)
                 {
-                        int index = facet_data[0].facet() ? 0 : 1;
-                        const DelaunaySimplex<N>* simplex = facet_data[index].facet();
-                        Vector<N, double> ortho = simplex->ortho(facet_data[index].vertex_index());
+                        const int index = facet_data[0].facet() ? 0 : 1;
+                        const DelaunaySimplex<N>* const simplex = facet_data[index].facet();
+                        const Vector<N, double> ortho = simplex->ortho(facet_data[index].vertex_index());
 
                         delaunay_facets->emplace_back(
                                 facet.vertices(), ortho, delaunay_index_for_simplex(simplex), NULL_INDEX);
                 }
                 else
                 {
-                        const DelaunaySimplex<N>* simplex_0 = facet_data[0].facet();
-                        const DelaunaySimplex<N>* simplex_1 = facet_data[1].facet();
+                        const DelaunaySimplex<N>* const simplex_0 = facet_data[0].facet();
+                        const DelaunaySimplex<N>* const simplex_1 = facet_data[1].facet();
 
-                        Vector<N, double> ortho = simplex_0->ortho(facet_data[0].vertex_index());
+                        const Vector<N, double> ortho = simplex_0->ortho(facet_data[0].vertex_index());
                         ASSERT(ortho == -simplex_1->ortho(facet_data[1].vertex_index()));
 
                         delaunay_facets->emplace_back(

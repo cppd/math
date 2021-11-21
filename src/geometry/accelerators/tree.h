@@ -159,7 +159,7 @@ public:
                         while (true)
                         {
                                 point = local_ray.point(offset);
-                                const Box* next_box = find_box_for_point(point);
+                                const Box* const next_box = find_box_for_point(point);
                                 if (!next_box)
                                 {
                                         return std::nullopt;

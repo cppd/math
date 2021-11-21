@@ -102,19 +102,19 @@ std::vector<double> create_samples(const ComputeType& from, const ComputeType& t
 }
 
 template <XYZ TYPE>
-std::vector<double> cie_x_samples(int from, int to, int count)
+std::vector<double> cie_x_samples(const int from, const int to, const int count)
 {
         return create_samples<TYPE, Function::X>(from, to, count);
 }
 
 template <XYZ TYPE>
-std::vector<double> cie_y_samples(int from, int to, int count)
+std::vector<double> cie_y_samples(const int from, const int to, const int count)
 {
         return create_samples<TYPE, Function::Y>(from, to, count);
 }
 
 template <XYZ TYPE>
-std::vector<double> cie_z_samples(int from, int to, int count)
+std::vector<double> cie_z_samples(const int from, const int to, const int count)
 {
         return create_samples<TYPE, Function::Z>(from, to, count);
 }

@@ -29,7 +29,8 @@ class GraphicsWidget final : public QWidget
         Q_OBJECT
 
 public:
-        explicit GraphicsWidget(QWidget* parent = nullptr, Qt::WindowFlags = Qt::WindowFlags()) : QWidget(parent)
+        explicit GraphicsWidget(QWidget* const parent = nullptr, const Qt::WindowFlags = Qt::WindowFlags())
+                : QWidget(parent)
         {
                 // setMouseTracking(true);
         }
@@ -42,27 +43,27 @@ Q_SIGNALS:
         void widget_resize(QResizeEvent* e);
 
 protected:
-        void wheelEvent(QWheelEvent* e) override
+        void wheelEvent(QWheelEvent* const e) override
         {
                 Q_EMIT mouse_wheel(e);
         }
 
-        void mouseMoveEvent(QMouseEvent* e) override
+        void mouseMoveEvent(QMouseEvent* const e) override
         {
                 Q_EMIT mouse_move(e);
         }
 
-        void mousePressEvent(QMouseEvent* e) override
+        void mousePressEvent(QMouseEvent* const e) override
         {
                 Q_EMIT mouse_press(e);
         }
 
-        void mouseReleaseEvent(QMouseEvent* e) override
+        void mouseReleaseEvent(QMouseEvent* const e) override
         {
                 Q_EMIT mouse_release(e);
         }
 
-        void resizeEvent(QResizeEvent* e) override
+        void resizeEvent(QResizeEvent* const e) override
         {
                 Q_EMIT widget_resize(e);
         }

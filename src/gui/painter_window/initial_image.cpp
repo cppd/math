@@ -26,7 +26,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 namespace ns::gui::painter_window
 {
-std::vector<std::byte> make_initial_image(const std::vector<int>& screen_size, image::ColorFormat color_format)
+std::vector<std::byte> make_initial_image(const std::vector<int>& screen_size, const image::ColorFormat color_format)
 {
         constexpr std::array<uint8_t, 4> LIGHT = {100, 150, 200, 255};
         constexpr std::array<uint8_t, 4> DARK = {0, 0, 0, 255};

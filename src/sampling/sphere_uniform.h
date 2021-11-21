@@ -54,7 +54,7 @@ template <typename T, typename RandomEngine, typename Distribution, std::size_t.
 Vector<sizeof...(I), T> random_vector(
         RandomEngine& engine,
         Distribution& distribution,
-        std::integer_sequence<std::size_t, I...>)
+        std::integer_sequence<std::size_t, I...>&&)
 {
         return Vector<sizeof...(I), T>((static_cast<void>(I), distribution(engine))...);
 }

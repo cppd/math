@@ -85,19 +85,19 @@ const vulkan::Buffer& ShaderBuffers::drawing_buffer() const
 }
 
 template <typename T>
-void ShaderBuffers::copy_to_matrices_buffer(VkDeviceSize offset, const T& data) const
+void ShaderBuffers::copy_to_matrices_buffer(const VkDeviceSize offset, const T& data) const
 {
         vulkan::map_and_write_to_buffer(uniform_buffers_[MATRICES_INDEX], offset, data);
 }
 
 template <typename T>
-void ShaderBuffers::copy_to_shadow_matrices_buffer(VkDeviceSize offset, const T& data) const
+void ShaderBuffers::copy_to_shadow_matrices_buffer(const VkDeviceSize offset, const T& data) const
 {
         vulkan::map_and_write_to_buffer(uniform_buffers_[SHADOW_MATRICES_INDEX], offset, data);
 }
 
 template <typename T>
-void ShaderBuffers::copy_to_drawing_buffer(VkDeviceSize offset, const T& data) const
+void ShaderBuffers::copy_to_drawing_buffer(const VkDeviceSize offset, const T& data) const
 {
         vulkan::map_and_write_to_buffer(uniform_buffers_[DRAWING_INDEX], offset, data);
 }
@@ -121,13 +121,13 @@ void ShaderBuffers::set_matrices(
         }
 }
 
-void ShaderBuffers::set_transparency_max_node_count(uint32_t count) const
+void ShaderBuffers::set_transparency_max_node_count(const uint32_t count) const
 {
         decltype(Drawing().transparency_max_node_count) c = count;
         copy_to_drawing_buffer(offsetof(Drawing, transparency_max_node_count), c);
 }
 
-void ShaderBuffers::set_clip_plane(const Vector4d& equation, bool enabled) const
+void ShaderBuffers::set_clip_plane(const Vector4d& equation, const bool enabled) const
 {
         static_assert(
                 offsetof(Drawing, clip_plane_equation) + sizeof(Drawing::clip_plane_equation)
@@ -199,37 +199,37 @@ void ShaderBuffers::set_normal_color_negative(const Vector3f& color) const
         copy_to_drawing_buffer(offsetof(Drawing, normal_color_negative), c);
 }
 
-void ShaderBuffers::set_normal_length(float length) const
+void ShaderBuffers::set_normal_length(const float length) const
 {
         decltype(Drawing().normal_length) l = length;
         copy_to_drawing_buffer(offsetof(Drawing, normal_length), l);
 }
 
-void ShaderBuffers::set_show_materials(bool show) const
+void ShaderBuffers::set_show_materials(const bool show) const
 {
         decltype(Drawing().show_materials) s = show ? 1 : 0;
         copy_to_drawing_buffer(offsetof(Drawing, show_materials), s);
 }
 
-void ShaderBuffers::set_show_wireframe(bool show) const
+void ShaderBuffers::set_show_wireframe(const bool show) const
 {
         decltype(Drawing().show_wireframe) s = show ? 1 : 0;
         copy_to_drawing_buffer(offsetof(Drawing, show_wireframe), s);
 }
 
-void ShaderBuffers::set_show_shadow(bool show) const
+void ShaderBuffers::set_show_shadow(const bool show) const
 {
         decltype(Drawing().show_shadow) s = show ? 1 : 0;
         copy_to_drawing_buffer(offsetof(Drawing, show_shadow), s);
 }
 
-void ShaderBuffers::set_show_fog(bool show) const
+void ShaderBuffers::set_show_fog(const bool show) const
 {
         decltype(Drawing().show_fog) s = show ? 1 : 0;
         copy_to_drawing_buffer(offsetof(Drawing, show_fog), s);
 }
 
-void ShaderBuffers::set_show_smooth(bool show) const
+void ShaderBuffers::set_show_smooth(const bool show) const
 {
         decltype(Drawing().show_smooth) s = show ? 1 : 0;
         copy_to_drawing_buffer(offsetof(Drawing, show_smooth), s);
@@ -309,13 +309,13 @@ void MeshBuffer::set_color(const Vector3f& color) const
         vulkan::map_and_write_to_buffer(uniform_buffer_, offsetof(Mesh, color), c);
 }
 
-void MeshBuffer::set_alpha(float alpha) const
+void MeshBuffer::set_alpha(const float alpha) const
 {
         decltype(Mesh().alpha) a = alpha;
         vulkan::map_and_write_to_buffer(uniform_buffer_, offsetof(Mesh, alpha), a);
 }
 
-void MeshBuffer::set_lighting(float ambient, float metalness, float roughness) const
+void MeshBuffer::set_lighting(const float ambient, const float metalness, const float roughness) const
 {
         static_assert(offsetof(Mesh, roughness) - offsetof(Mesh, ambient) == 2 * sizeof(float));
 
@@ -399,12 +399,12 @@ void VolumeBuffer::set_clip_plane(const Vector4d& clip_plane_equation) const
 void VolumeBuffer::set_parameters(
         const vulkan::CommandPool& command_pool,
         const vulkan::Queue& queue,
-        float window_offset,
-        float window_scale,
-        float volume_alpha_coefficient,
-        float isosurface_alpha,
-        bool isosurface,
-        float isovalue,
+        const float window_offset,
+        const float window_scale,
+        const float volume_alpha_coefficient,
+        const float isosurface_alpha,
+        const bool isosurface,
+        const float isovalue,
         const Vector3f& color) const
 {
         ASSERT(window_offset >= 0);
@@ -435,7 +435,7 @@ void VolumeBuffer::set_parameters(
 void VolumeBuffer::set_color_volume(
         const vulkan::CommandPool& command_pool,
         const vulkan::Queue& queue,
-        bool color_volume) const
+        const bool color_volume) const
 {
         decltype(Volume().color_volume) v = color_volume ? 1 : 0;
         uniform_buffer_volume_.write(
@@ -445,9 +445,9 @@ void VolumeBuffer::set_color_volume(
 void VolumeBuffer::set_lighting(
         const vulkan::CommandPool& command_pool,
         const vulkan::Queue& queue,
-        float ambient,
-        float metalness,
-        float roughness) const
+        const float ambient,
+        const float metalness,
+        const float roughness) const
 {
         static_assert(offsetof(Volume, roughness) - offsetof(Volume, ambient) == 2 * sizeof(float));
 
@@ -469,10 +469,10 @@ TransparencyBuffers::TransparencyBuffers(
         const vulkan::CommandPool& command_pool,
         const vulkan::Queue& queue,
         const std::vector<uint32_t>& family_indices,
-        VkSampleCountFlagBits sample_count,
-        unsigned width,
-        unsigned height,
-        unsigned long long max_node_buffer_size)
+        const VkSampleCountFlagBits sample_count,
+        const unsigned width,
+        const unsigned height,
+        const unsigned long long max_node_buffer_size)
         : node_count_(
                 std::min(
                         max_node_buffer_size,
@@ -557,19 +557,19 @@ unsigned TransparencyBuffers::node_count() const
         return node_count_;
 }
 
-void TransparencyBuffers::commands_init(VkCommandBuffer command_buffer) const
+void TransparencyBuffers::commands_init(const VkCommandBuffer command_buffer) const
 {
         commands_init_uint32_storage_image(command_buffer, heads_, HEADS_NULL_POINTER);
         commands_init_uint32_storage_image(command_buffer, heads_size_, 0);
         commands_init_buffer(command_buffer, init_buffer_, counters_);
 }
 
-void TransparencyBuffers::commands_read(VkCommandBuffer command_buffer) const
+void TransparencyBuffers::commands_read(const VkCommandBuffer command_buffer) const
 {
         commands_read_buffer(command_buffer, counters_, read_buffer_);
 }
 
-void TransparencyBuffers::read(unsigned long long* required_node_memory, unsigned* overload_counter) const
+void TransparencyBuffers::read(unsigned long long* const required_node_memory, unsigned* const overload_counter) const
 {
         vulkan::BufferMapper mapper(read_buffer_);
         Counters counters;

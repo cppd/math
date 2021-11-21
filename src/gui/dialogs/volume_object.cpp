@@ -28,11 +28,11 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 namespace ns::gui::dialog
 {
 VolumeObjectParametersDialog::VolumeObjectParametersDialog(
-        int dimension,
+        const int dimension,
         const std::string& object_name,
-        int default_image_size,
-        int min_image_size,
-        int max_image_size,
+        const int default_image_size,
+        const int min_image_size,
+        const int max_image_size,
         std::optional<VolumeObjectParameters>& parameters)
         : QDialog(parent_for_dialog()),
           min_image_size_(min_image_size),
@@ -46,19 +46,23 @@ VolumeObjectParametersDialog::VolumeObjectParametersDialog(
         {
                 error("Error dimension parameter: " + to_string(dimension));
         }
+
         if (object_name.empty())
         {
                 error("No volume object name parameter");
         }
+
         if (!(1 <= min_image_size))
         {
                 error("Minumum image size " + to_string(min_image_size) + " must be greater than or equal to 1");
         }
+
         if (!(min_image_size <= max_image_size))
         {
                 error("Maximum image size " + to_string(max_image_size)
                       + " must be greater than or equal to minimum image size " + to_string(min_image_size));
         }
+
         if (!(min_image_size <= default_image_size && default_image_size <= max_image_size))
         {
                 error("Initial image size must be in the range [" + to_string(min_image_size) + ", "
@@ -74,7 +78,7 @@ VolumeObjectParametersDialog::VolumeObjectParametersDialog(
         ui_.spinBox_image_size->setSingleStep(std::max(1, max_image_size / 1000));
 }
 
-void VolumeObjectParametersDialog::done(int r)
+void VolumeObjectParametersDialog::done(const int r)
 {
         if (r != QDialog::Accepted)
         {
@@ -82,7 +86,7 @@ void VolumeObjectParametersDialog::done(int r)
                 return;
         }
 
-        int image_size = ui_.spinBox_image_size->value();
+        const int image_size = ui_.spinBox_image_size->value();
         if (!(image_size >= min_image_size_ && image_size <= max_image_size_))
         {
                 std::string msg = "Error image size. It must be in the range [" + to_string(min_image_size_) + ", "
@@ -98,11 +102,11 @@ void VolumeObjectParametersDialog::done(int r)
 }
 
 std::optional<VolumeObjectParameters> VolumeObjectParametersDialog::show(
-        int dimension,
+        const int dimension,
         const std::string& object_name,
-        int default_image_size,
-        int min_image_size,
-        int max_image_size)
+        const int default_image_size,
+        const int min_image_size,
+        const int max_image_size)
 {
         std::optional<VolumeObjectParameters> parameters;
 

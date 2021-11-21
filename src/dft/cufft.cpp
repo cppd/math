@@ -85,7 +85,7 @@ class CudaPlan2D final
         cufftHandle plan_;
 
 public:
-        CudaPlan2D(int x, int y)
+        CudaPlan2D(const int x, const int y)
         {
                 // y, x
                 if (cufftPlan2d(&plan_, y, x, CUFFT_C2C) != CUFFT_SUCCESS)
@@ -117,7 +117,7 @@ class CudaMemory final
         T* memory_;
 
 public:
-        explicit CudaMemory(std::size_t size) : size_(size)
+        explicit CudaMemory(const std::size_t size) : size_(size)
         {
                 if (size_ < 1)
                 {
@@ -126,7 +126,7 @@ public:
 
                 cuda_check_errors();
 
-                cudaError_t r = cudaMalloc(&memory_, size_ * sizeof(T));
+                const cudaError_t r = cudaMalloc(&memory_, size_ * sizeof(T));
                 if (r != cudaSuccess)
                 {
                         error("Error CUDA malloc " + to_string(size_ * sizeof(T)) + " bytes: " + cudaGetErrorString(r));
@@ -177,7 +177,7 @@ void cuda_memory_copy(CudaMemory<M>& memory, const std::vector<T>& src)
 }
 
 template <typename M, typename T>
-void cuda_memory_copy(std::vector<T>* dst, const CudaMemory<M>& memory)
+void cuda_memory_copy(std::vector<T>* const dst, const CudaMemory<M>& memory)
 {
         if (memory.bytes() != dst->size() * sizeof(T))
         {
@@ -187,7 +187,7 @@ void cuda_memory_copy(std::vector<T>* dst, const CudaMemory<M>& memory)
 
         cuda_check_errors();
 
-        cudaError_t r = cudaMemcpy(dst->data(), memory.data(), memory.bytes(), cudaMemcpyDeviceToHost);
+        const cudaError_t r = cudaMemcpy(dst->data(), memory.data(), memory.bytes(), cudaMemcpyDeviceToHost);
         if (r != cudaSuccess)
         {
                 error("CUDA copy from device error: " + std::string(cudaGetErrorString(r)));
@@ -207,7 +207,7 @@ class CudaFFT final : public DFT
         CudaMemory<cufftComplex> memory_;
         const float inv_k_;
 
-        void exec(bool inverse, std::vector<std::complex<float>>* data) override
+        void exec(const bool inverse, std::vector<std::complex<float>>* const data) override
         {
                 if (data->size() != memory_.size())
                 {
@@ -255,13 +255,13 @@ class CudaFFT final : public DFT
         }
 
 public:
-        CudaFFT(int x, int y) : plan_(x, y), memory_(1ull * x * y), inv_k_(1.0f / (1ull * x * y))
+        CudaFFT(const int x, const int y) : plan_(x, y), memory_(1ull * x * y), inv_k_(1.0f / (1ull * x * y))
         {
         }
 };
 }
 
-std::unique_ptr<DFT> create_cufft(int x, int y)
+std::unique_ptr<DFT> create_cufft(const int x, const int y)
 {
         cuda_select_device();
         return std::make_unique<CudaFFT>(x, y);

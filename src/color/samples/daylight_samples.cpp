@@ -203,12 +203,12 @@ static_assert(WAVES.size() == COMPONENTS.size());
 static_assert(WAVES.size() == D65.size());
 }
 
-std::vector<double> daylight_d65_samples(int from, int to, int count)
+std::vector<double> daylight_d65_samples(const int from, const int to, const int count)
 {
         return average<double>(WAVES, D65, from, to, count);
 }
 
-std::vector<double> daylight_samples(double cct, int from, int to, int count)
+std::vector<double> daylight_samples(const double cct, const int from, const int to, const int count)
 {
         const double xd = [&cct]
         {

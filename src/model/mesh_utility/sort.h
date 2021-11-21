@@ -38,9 +38,9 @@ namespace ns::mesh
 template <std::size_t N>
 void sort_facets_by_material(
         const Mesh<N>& mesh,
-        std::vector<int>* sorted_facet_indices,
-        std::vector<int>* facet_offset,
-        std::vector<int>* facet_count)
+        std::vector<int>* const sorted_facet_indices,
+        std::vector<int>* const facet_offset,
+        std::vector<int>* const facet_count)
 {
         ASSERT(std::all_of(
                 std::cbegin(mesh.facets), std::cend(mesh.facets),
@@ -50,10 +50,10 @@ void sort_facets_by_material(
                 }));
 
         // for facets without material there is an additional material at the end
-        int max_material_index = mesh.materials.size();
-        int new_material_size = mesh.materials.size() + 1;
+        const int max_material_index = mesh.materials.size();
+        const int new_material_size = mesh.materials.size() + 1;
 
-        auto material_index = [&](int i)
+        const auto material_index = [&](int i)
         {
                 return i >= 0 ? i : max_material_index;
         };
@@ -76,7 +76,7 @@ void sort_facets_by_material(
         std::vector<int> starting_indices = *facet_offset;
         for (std::size_t i = 0; i < mesh.facets.size(); ++i)
         {
-                int m = material_index(mesh.facets[i].material);
+                const int m = material_index(mesh.facets[i].material);
                 (*sorted_facet_indices)[starting_indices[m]++] = i;
         }
 

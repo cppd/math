@@ -46,30 +46,30 @@ constexpr std::string_view BLACKBODY_T = "Blackbody %1K";
 
 constexpr double TEMPERATURE_ROUND = 10;
 
-double ceil(double v, int t)
+double ceil(const double v, const int t)
 {
         return std::ceil(v / t) * t;
 }
 
-double floor(double v, int t)
+double floor(const double v, const int t)
 {
         return std::floor(v / t) * t;
 }
 
-double position_to_intensity(double position)
+double position_to_intensity(const double position)
 {
         const double v = 2 * position - 1;
         const double intensity = std::pow(MAXIMUM_LIGHTING_INTENSITY, v);
         return std::clamp(intensity, 1 / MAXIMUM_LIGHTING_INTENSITY, MAXIMUM_LIGHTING_INTENSITY);
 }
 
-double intensity_to_position(double intensity)
+double intensity_to_position(const double intensity)
 {
         const double position = std::log(intensity) / std::log(MAXIMUM_LIGHTING_INTENSITY);
         return std::clamp((position + 1) / 2, 0.0, 1.0);
 }
 
-int position_to_temperature(double position, double min, double max)
+int position_to_temperature(const double position, const double min, const double max)
 {
         ASSERT(min > 0 && min < max);
         double t = min * std::pow(max / min, position);
@@ -132,7 +132,7 @@ LightingWidget::LightingWidget()
         connect(ui_.radioButton_blackbody, &QRadioButton::toggled, this, &LightingWidget::on_blackbody_toggled);
 }
 
-void LightingWidget::set_view(view::View* view)
+void LightingWidget::set_view(view::View* const view)
 {
         view_ = view;
 }

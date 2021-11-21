@@ -92,7 +92,7 @@ std::optional<T> max(const std::span<const std::byte>& bytes)
 }
 }
 
-std::optional<double> max(ColorFormat color_format, const std::span<const std::byte>& bytes)
+std::optional<double> max(const ColorFormat color_format, const std::span<const std::byte>& bytes)
 {
         switch (color_format)
         {

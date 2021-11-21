@@ -30,7 +30,7 @@ namespace ns::process
 {
 template <std::size_t DIMENSION, std::size_t N>
 void compute_slice(
-        ProgressRatioList* /*progress_list*/,
+        ProgressRatioList* const /*progress_list*/,
         const volume::VolumeObject<N>& volume_object,
         const std::vector<std::optional<int>>& slice_coordinates)
 {
@@ -75,7 +75,7 @@ void compute_slice(
 
         volume->matrix = volume::matrix_for_image_size(volume->image.size);
 
-        std::shared_ptr<volume::VolumeObject<DIMENSION>> obj = std::make_shared<volume::VolumeObject<DIMENSION>>(
+        const std::shared_ptr<volume::VolumeObject<DIMENSION>> obj = std::make_shared<volume::VolumeObject<DIMENSION>>(
                 std::move(volume),
                 volume::model_matrix_for_size_and_position(*volume, SCENE_SIZE, SCENE_CENTER<DIMENSION, double>),
                 "Slice " + object_name);

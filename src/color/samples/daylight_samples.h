@@ -21,11 +21,11 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 namespace ns::color
 {
-constexpr int DAYLIGHT_SAMPLES_MIN_WAVELENGTH = 300;
-constexpr int DAYLIGHT_SAMPLES_MAX_WAVELENGTH = 830;
+inline constexpr int DAYLIGHT_SAMPLES_MIN_WAVELENGTH = 300;
+inline constexpr int DAYLIGHT_SAMPLES_MAX_WAVELENGTH = 830;
 
-constexpr double DAYLIGHT_SAMPLES_MIN_CCT = 4000;
-constexpr double DAYLIGHT_SAMPLES_MAX_CCT = 25000;
+inline constexpr double DAYLIGHT_SAMPLES_MIN_CCT = 4000;
+inline constexpr double DAYLIGHT_SAMPLES_MAX_CCT = 25000;
 
 std::vector<double> daylight_d65_samples(int from, int to, int count);
 std::vector<double> daylight_samples(double cct, int from, int to, int count);

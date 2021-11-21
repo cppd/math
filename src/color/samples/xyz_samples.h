@@ -27,8 +27,8 @@ enum XYZ
         XYZ_64
 };
 
-constexpr int XYZ_SAMPLES_MIN_WAVELENGTH = 380;
-constexpr int XYZ_SAMPLES_MAX_WAVELENGTH = 780;
+inline constexpr int XYZ_SAMPLES_MIN_WAVELENGTH = 380;
+inline constexpr int XYZ_SAMPLES_MAX_WAVELENGTH = 780;
 
 template <XYZ TYPE>
 std::vector<double> cie_x_samples(int from, int to, int count);

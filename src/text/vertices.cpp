@@ -28,7 +28,7 @@ namespace
 constexpr char32_t DEFAULT_CHARACTER = unicode::SPACE;
 
 template <typename T>
-const FontGlyph& code_point_glyph(const std::unordered_map<T, FontGlyph>& glyphs, T code_point)
+const FontGlyph& code_point_glyph(const std::unordered_map<T, FontGlyph>& glyphs, const T code_point)
 {
         static_assert(std::is_same_v<T, char32_t>);
 
@@ -47,12 +47,12 @@ const FontGlyph& code_point_glyph(const std::unordered_map<T, FontGlyph>& glyphs
 
 void text_vertices(
         const std::unordered_map<char32_t, FontGlyph>& glyphs,
-        int step_y,
-        int start_x,
+        const int step_y,
+        const int start_x,
         const std::string& text,
-        int* x,
-        int* y,
-        std::vector<TextVertex>* vertices)
+        int* const x,
+        int* const y,
+        std::vector<TextVertex>* const vertices)
 {
         std::size_t i = 0;
         while (i < text.size())
@@ -90,7 +90,7 @@ void text_vertices(
 void text_vertices(
         const std::unordered_map<char32_t, FontGlyph>& glyphs,
         const TextData& text_data,
-        std::vector<TextVertex>* vertices)
+        std::vector<TextVertex>* const vertices)
 {
         vertices->clear();
 

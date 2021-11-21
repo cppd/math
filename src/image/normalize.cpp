@@ -29,7 +29,7 @@ namespace ns::image
 namespace
 {
 template <std::size_t N, std::size_t COMPONENT_COUNT>
-void normalize(std::vector<std::byte>* bytes)
+void normalize(std::vector<std::byte>* const bytes)
 {
         static_assert(N > 0 && N <= COMPONENT_COUNT);
 
@@ -88,7 +88,7 @@ void normalize(std::vector<std::byte>* bytes)
 }
 }
 
-void normalize(ColorFormat color_format, std::vector<std::byte>* bytes)
+void normalize(const ColorFormat color_format, std::vector<std::byte>* const bytes)
 {
         switch (color_format)
         {

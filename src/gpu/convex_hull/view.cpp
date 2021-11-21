@@ -76,7 +76,7 @@ class Impl final : public View
                 start_time_ = Clock::now();
         }
 
-        void draw_commands(VkCommandBuffer command_buffer) const
+        void draw_commands(const VkCommandBuffer command_buffer) const
         {
                 ASSERT(std::this_thread::get_id() == thread_id_);
 
@@ -91,7 +91,7 @@ class Impl final : public View
         }
 
         void create_buffers(
-                RenderBuffers2D* render_buffers,
+                RenderBuffers2D* const render_buffers,
                 const vulkan::ImageWithMemory& objects,
                 const Region<2, int>& rectangle) override
         {
@@ -156,7 +156,7 @@ class Impl final : public View
                 points_.reset();
         }
 
-        VkSemaphore draw(const vulkan::Queue& queue, VkSemaphore wait_semaphore, unsigned index) override
+        VkSemaphore draw(const vulkan::Queue& queue, const VkSemaphore wait_semaphore, const unsigned index) override
         {
                 ASSERT(std::this_thread::get_id() == thread_id_);
 
@@ -188,10 +188,10 @@ class Impl final : public View
         }
 
 public:
-        Impl(const vulkan::VulkanInstance* instance,
-             const vulkan::CommandPool* graphics_command_pool,
-             const vulkan::Queue* graphics_queue,
-             bool sample_shading)
+        Impl(const vulkan::VulkanInstance* const instance,
+             const vulkan::CommandPool* const graphics_command_pool,
+             const vulkan::Queue* const graphics_queue,
+             const bool sample_shading)
                 : sample_shading_(sample_shading),
                   family_index_(graphics_command_pool->family_index()),
                   instance_(instance),
@@ -232,10 +232,10 @@ vulkan::DeviceFeatures View::required_device_features()
 }
 
 std::unique_ptr<View> create_view(
-        const vulkan::VulkanInstance* instance,
-        const vulkan::CommandPool* graphics_command_pool,
-        const vulkan::Queue* graphics_queue,
-        bool sample_shading)
+        const vulkan::VulkanInstance* const instance,
+        const vulkan::CommandPool* const graphics_command_pool,
+        const vulkan::Queue* const graphics_queue,
+        const bool sample_shading)
 {
         return std::make_unique<Impl>(instance, graphics_command_pool, graphics_queue, sample_shading);
 }

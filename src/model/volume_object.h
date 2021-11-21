@@ -54,7 +54,7 @@ template <std::size_t N>
 struct Erase final
 {
         ObjectId id;
-        explicit Erase(ObjectId id) : id(id)
+        explicit Erase(const ObjectId id) : id(id)
         {
         }
 };
@@ -73,7 +73,7 @@ struct Visibility final
 {
         ObjectId id;
         bool visible;
-        Visibility(ObjectId id, bool visible) : id(id), visible(visible)
+        Visibility(const ObjectId id, const bool visible) : id(id), visible(visible)
         {
         }
 };
@@ -200,7 +200,7 @@ class VolumeObject final : public std::enable_shared_from_this<VolumeObject<N>>
                 return level_max_;
         }
 
-        void set_levels(float min, float max)
+        void set_levels(const float min, const float max)
         {
                 level_min_ = min;
                 level_max_ = max;
@@ -211,7 +211,7 @@ class VolumeObject final : public std::enable_shared_from_this<VolumeObject<N>>
                 return volume_alpha_coefficient_;
         }
 
-        void set_volume_alpha_coefficient(float coefficient)
+        void set_volume_alpha_coefficient(const float coefficient)
         {
                 volume_alpha_coefficient_ = coefficient;
         }
@@ -221,7 +221,7 @@ class VolumeObject final : public std::enable_shared_from_this<VolumeObject<N>>
                 return isosurface_alpha_;
         }
 
-        void set_isosurface_alpha(float alpha)
+        void set_isosurface_alpha(const float alpha)
         {
                 isosurface_alpha_ = alpha;
         }
@@ -231,7 +231,7 @@ class VolumeObject final : public std::enable_shared_from_this<VolumeObject<N>>
                 return isosurface_;
         }
 
-        void set_isosurface(bool enabled)
+        void set_isosurface(const bool enabled)
         {
                 isosurface_ = enabled;
         }
@@ -241,7 +241,7 @@ class VolumeObject final : public std::enable_shared_from_this<VolumeObject<N>>
                 return isovalue_;
         }
 
-        void set_isovalue(float value)
+        void set_isovalue(const float value)
         {
                 isovalue_ = value;
         }
@@ -261,7 +261,7 @@ class VolumeObject final : public std::enable_shared_from_this<VolumeObject<N>>
                 return ambient_;
         }
 
-        void set_ambient(float ambient)
+        void set_ambient(const float ambient)
         {
                 ambient_ = ambient;
         }
@@ -271,7 +271,7 @@ class VolumeObject final : public std::enable_shared_from_this<VolumeObject<N>>
                 return metalness_;
         }
 
-        void set_metalness(float metalness)
+        void set_metalness(const float metalness)
         {
                 metalness_ = metalness;
         }
@@ -281,12 +281,12 @@ class VolumeObject final : public std::enable_shared_from_this<VolumeObject<N>>
                 return roughness_;
         }
 
-        void set_roughness(float roughness)
+        void set_roughness(const float roughness)
         {
                 roughness_ = roughness;
         }
 
-        Updates updates(std::optional<int>* version) const
+        Updates updates(std::optional<int>* const version) const
         {
                 return versions_.updates(version);
         }
@@ -363,7 +363,7 @@ public:
                 return visible_;
         }
 
-        void set_visible(bool visible)
+        void set_visible(const bool visible)
         {
                 std::unique_lock lock(mutex_);
                 if (visible_ == visible)
@@ -386,7 +386,7 @@ class Writing final
         Updates updates_;
 
 public:
-        explicit Writing(VolumeObject<N>* object) : object_(object), lock_(object_->mutex_)
+        explicit Writing(VolumeObject<N>* const object) : object_(object), lock_(object_->mutex_)
         {
         }
 
@@ -445,7 +445,7 @@ public:
                 return object_->level_max();
         }
 
-        void set_levels(float min, float max)
+        void set_levels(const float min, const float max)
         {
                 updates_.set(UPDATE_LEVELS);
                 object_->set_levels(min, max);
@@ -456,7 +456,7 @@ public:
                 return object_->volume_alpha_coefficient();
         }
 
-        void set_volume_alpha_coefficient(float coefficient)
+        void set_volume_alpha_coefficient(const float coefficient)
         {
                 updates_.set(UPDATE_VOLUME_ALPHA_COEFFICIENT);
                 object_->set_volume_alpha_coefficient(coefficient);
@@ -467,7 +467,7 @@ public:
                 return object_->isosurface_alpha();
         }
 
-        void set_isosurface_alpha(float alpha)
+        void set_isosurface_alpha(const float alpha)
         {
                 updates_.set(UPDATE_ISOSURFACE_ALPHA);
                 object_->set_isosurface_alpha(alpha);
@@ -478,7 +478,7 @@ public:
                 return object_->isosurface();
         }
 
-        void set_isosurface(bool enabled)
+        void set_isosurface(const bool enabled)
         {
                 updates_.set(UPDATE_ISOVALUE);
                 object_->set_isosurface(enabled);
@@ -489,7 +489,7 @@ public:
                 return object_->isovalue();
         }
 
-        void set_isovalue(float value)
+        void set_isovalue(const float value)
         {
                 updates_.set(UPDATE_ISOVALUE);
                 object_->set_isovalue(value);
@@ -511,7 +511,7 @@ public:
                 return object_->ambient();
         }
 
-        void set_ambient(float ambient)
+        void set_ambient(const float ambient)
         {
                 updates_.set(UPDATE_AMBIENT);
                 object_->set_ambient(ambient);
@@ -522,7 +522,7 @@ public:
                 return object_->metalness();
         }
 
-        void set_metalness(float metalness)
+        void set_metalness(const float metalness)
         {
                 updates_.set(UPDATE_METALNESS);
                 object_->set_metalness(metalness);
@@ -533,7 +533,7 @@ public:
                 return object_->roughness();
         }
 
-        void set_roughness(float roughness)
+        void set_roughness(const float roughness)
         {
                 updates_.set(UPDATE_ROUGHNESS);
                 object_->set_roughness(roughness);
@@ -551,7 +551,7 @@ public:
         {
         }
 
-        Updates updates(std::optional<int>* version) const
+        Updates updates(std::optional<int>* const version) const
         {
                 return object_->updates(version);
         }

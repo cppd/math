@@ -51,21 +51,21 @@ class MemoryArena
                         data_.resize(BLOCK_SIZE / ALIGN);
                 }
 
-                std::byte* data(std::size_t index)
+                std::byte* data(const std::size_t index)
                 {
                         return reinterpret_cast<std::byte*>(data_.data()) + index;
                 }
         };
 
         template <typename T>
-        static std::size_t next_index(std::size_t index)
+        static std::size_t next_index(const std::size_t index)
         {
                 // (index + alignof(T) - 1) & (~(alignof(T) - 1));
                 return ((index + alignof(T) - 1) / alignof(T)) * alignof(T);
         }
 
         template <class T, class... Args>
-        static T* create_object(Block* block, std::size_t index, Args&&... args)
+        static T* create_object(Block* const block, const std::size_t index, Args&&... args)
         {
                 return new (block->data(index)) T(std::forward<Args>(args)...);
         }

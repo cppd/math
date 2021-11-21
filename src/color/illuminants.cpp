@@ -68,10 +68,10 @@ double daylight_max_cct()
         return DAYLIGHT_SAMPLES_MAX_CCT;
 }
 
-Spectrum daylight(double cct)
+Spectrum daylight(const double cct)
 {
         return create_spectrum(
-                [&](int from, int to, int count)
+                [&](const int from, const int to, const int count)
                 {
                         return daylight_samples(cct, from, to, count);
                 });
@@ -80,7 +80,7 @@ Spectrum daylight(double cct)
 const Spectrum& blackbody_a()
 {
         static const Spectrum spectrum = create_spectrum(
-                [](int from, int to, int count)
+                [](const int from, const int to, const int count)
                 {
                         return blackbody_a_samples(from, to, count);
                 });
@@ -88,10 +88,10 @@ const Spectrum& blackbody_a()
         return spectrum;
 }
 
-Spectrum blackbody(double t)
+Spectrum blackbody(const double t)
 {
         return create_spectrum(
-                [&](int from, int to, int count)
+                [&](const int from, const int to, const int count)
                 {
                         return blackbody_samples(t, from, to, count);
                 });

@@ -361,8 +361,8 @@ void find_vertex_and_facet_data(
         const std::vector<Vector<N, double>>& points,
         const std::vector<DelaunayObject<N>>& objects,
         const std::vector<DelaunayFacet<N>>& facets,
-        std::vector<ManifoldVertex<N>>* vertex_data,
-        std::vector<ManifoldFacet<N>>* facet_data)
+        std::vector<ManifoldVertex<N>>* const vertex_data,
+        std::vector<ManifoldFacet<N>>* const facet_data)
 {
         const std::vector<VertexConnections> connections = vertex_connections(points.size(), objects, facets);
 

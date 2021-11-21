@@ -33,16 +33,16 @@ constexpr int DIMENSION = 3;
 }
 
 PainterParameters3dDialog::PainterParameters3dDialog(
-        int max_thread_count,
-        int width,
-        int height,
-        int max_screen_size,
-        int default_samples_per_pixel,
-        int max_samples_per_pixel,
+        const int max_thread_count,
+        const int width,
+        const int height,
+        const int max_screen_size,
+        const int default_samples_per_pixel,
+        const int max_samples_per_pixel,
         const std::array<const char*, 2>& precisions,
-        int default_precision_index,
+        const int default_precision_index,
         const std::array<const char*, 2>& colors,
-        int default_color_index,
+        const int default_color_index,
         std::optional<std::tuple<PainterParameters, PainterParameters3d>>& parameters)
         : QDialog(parent_for_dialog()),
           parameters_widget_(new PainterParametersWidget(
@@ -112,7 +112,7 @@ void PainterParameters3dDialog::on_height_value_changed(int)
         ui_.spinBox_width->setValue(std::clamp(width, min_width_, max_width_));
 }
 
-void PainterParameters3dDialog::done(int r)
+void PainterParameters3dDialog::done(const int r)
 {
         if (r != QDialog::Accepted)
         {
@@ -125,7 +125,7 @@ void PainterParameters3dDialog::done(int r)
                 return;
         }
 
-        int width = ui_.spinBox_width->value();
+        const int width = ui_.spinBox_width->value();
         if (!(min_width_ <= width && width <= max_width_))
         {
                 std::string msg =
@@ -134,7 +134,7 @@ void PainterParameters3dDialog::done(int r)
                 return;
         }
 
-        int height = ui_.spinBox_height->value();
+        const int height = ui_.spinBox_height->value();
         if (!(min_height_ <= height && height <= max_height_))
         {
                 std::string msg =
@@ -153,16 +153,16 @@ void PainterParameters3dDialog::done(int r)
 }
 
 std::optional<std::tuple<PainterParameters, PainterParameters3d>> PainterParameters3dDialog::show(
-        int max_thread_count,
-        int width,
-        int height,
-        int max_screen_size,
-        int default_samples_per_pixel,
-        int max_samples_per_pixel,
+        const int max_thread_count,
+        const int width,
+        const int height,
+        const int max_screen_size,
+        const int default_samples_per_pixel,
+        const int max_samples_per_pixel,
         const std::array<const char*, 2>& precisions,
-        int default_precision_index,
+        const int default_precision_index,
         const std::array<const char*, 2>& colors,
-        int default_color_index)
+        const int default_color_index)
 {
         std::optional<std::tuple<PainterParameters, PainterParameters3d>> parameters;
 

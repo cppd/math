@@ -58,9 +58,9 @@ namespace implementation
 //         static constexpr Color WHITE = Color(1);
 //         static constexpr T K = geometry::SPHERE_INTEGRATE_COSINE_FACTOR_OVER_HEMISPHERE<N, T>;
 //
-//         T l = (1 - power<5>(1 - n_l));
-//         T v = (1 - power<5>(1 - n_v));
-//         T c = (21 / (20 * K)) * l * v;
+//         const T l = (1 - power<5>(1 - n_l));
+//         const T v = (1 - power<5>(1 - n_v));
+//         const T c = (21 / (20 * K)) * l * v;
 //         return c * (WHITE - f0) * rho_ss;
 // }
 
@@ -76,10 +76,10 @@ namespace implementation
 // {
 //         static constexpr T K = 1 / geometry::SPHERE_INTEGRATE_COSINE_FACTOR_OVER_HEMISPHERE<N, long double>;
 //
-//         T l = power<5>(1 - n_l);
-//         T v = power<5>(1 - n_v);
-//         T f_d90 = T(0.5) + 2 * roughness * square(h_l);
-//         T c = (1 + (f_d90 - 1) * l) * (1 + (f_d90 - 1) * v);
+//         const T l = power<5>(1 - n_l);
+//         const T v = power<5>(1 - n_v);
+//         const T f_d90 = T(0.5) + 2 * roughness * square(h_l);
+//         const T c = (1 + (f_d90 - 1) * l) * (1 + (f_d90 - 1) * v);
 //         return (c * K) * rho_ss;
 // }
 template <std::size_t N, typename T, typename Color>
@@ -88,10 +88,10 @@ Color diffuse_disney_ws(const Color& f0, const Color& rho_ss, const T roughness,
         static constexpr Color WHITE = Color(1);
         static constexpr T K = 1 / geometry::SPHERE_INTEGRATE_COSINE_FACTOR_OVER_HEMISPHERE<N, long double>;
 
-        T l = power<5>(1 - n_l);
-        T v = power<5>(1 - n_v);
-        T f_d90 = 2 * roughness * square(h_l);
-        T c = (1 + (f_d90 - 1) * l) * (1 + (f_d90 - 1) * v);
+        const T l = power<5>(1 - n_l);
+        const T v = power<5>(1 - n_v);
+        const T f_d90 = 2 * roughness * square(h_l);
+        const T c = (1 + (f_d90 - 1) * l) * (1 + (f_d90 - 1) * v);
         return (c * K) * (WHITE - f0) * rho_ss;
 }
 // (9.66), (9.67)
@@ -100,13 +100,13 @@ Color diffuse_disney_ws(const Color& f0, const Color& rho_ss, const T roughness,
 // {
 //         static constexpr T K = 1 / geometry::SPHERE_INTEGRATE_COSINE_FACTOR_OVER_HEMISPHERE<N, long double>;
 //
-//         T l = power<5>(1 - n_l);
-//         T v = power<5>(1 - n_v);
-//         T f_ss90 = roughness * square(h_l);
-//         T f_d90 = T(0.5) + 2 * f_ss90;
-//         T f_d = (1 + (f_d90 - 1) * l) * (1 + (f_d90 - 1) * v);
-//         T f_ss = (1 / (n_l * n_v) - T(0.5)) * (1 + (f_ss90 - 1) * l) * (1 + (f_ss90 - 1) * v) + T(0.5);
-//         T c = interpolation(f_d, T(1.25) * f_ss, k_ss);
+//         const T l = power<5>(1 - n_l);
+//         const T v = power<5>(1 - n_v);
+//         const T f_ss90 = roughness * square(h_l);
+//         const T f_d90 = T(0.5) + 2 * f_ss90;
+//         const T f_d = (1 + (f_d90 - 1) * l) * (1 + (f_d90 - 1) * v);
+//         const T f_ss = (1 / (n_l * n_v) - T(0.5)) * (1 + (f_ss90 - 1) * l) * (1 + (f_ss90 - 1) * v) + T(0.5);
+//         const T c = interpolation(f_d, T(1.25) * f_ss, k_ss);
 //         return (c * K) * rho_ss;
 // }
 
@@ -120,18 +120,18 @@ Color f(const T metalness,
 {
         Vector<N, T> h = (l + v).normalized();
 
-        T n_l = dot(n, l);
-        T h_l = dot(h, l);
-        T n_v = dot(n, v);
-        T n_h = dot(n, h);
+        const T n_l = dot(n, l);
+        const T h_l = dot(h, l);
+        const T n_v = dot(n, v);
+        const T n_h = dot(n, h);
 
         static constexpr Color F0(0.05);
         static constexpr Color BLACK(0);
         const Color f0 = interpolation(F0, surface_color, metalness);
         const Color rho_ss = interpolation(surface_color, BLACK, metalness);
 
-        Color spec = ggx_brdf<N>(roughness, f0, n_v, n_l, n_h, h_l);
-        Color diff = diffuse_disney_ws<N>(f0, rho_ss, roughness, n_l, n_v, h_l);
+        const Color spec = ggx_brdf<N>(roughness, f0, n_v, n_l, n_h, h_l);
+        const Color diff = diffuse_disney_ws<N>(f0, rho_ss, roughness, n_l, n_v, h_l);
 
         return spec + diff;
 }
@@ -139,13 +139,13 @@ Color f(const T metalness,
 // template <std::size_t N, typename T, typename RandomEngine>
 // std::tuple<Vector<N, T>, T> sample_cosine(RandomEngine& random_engine, const Vector<N, T>& n)
 // {
-//         Vector<N, T> l = sampling::cosine_on_hemisphere(random_engine, n);
+//         const Vector<N, T> l = sampling::cosine_on_hemisphere(random_engine, n);
 //         ASSERT(l.is_unit());
 //         if (dot(n, l) <= 0)
 //         {
 //                 return {Vector<N, T>(0), 0};
 //         }
-//         T pdf = sampling::cosine_on_hemisphere_pdf<N>(dot(n, l));
+//         const T pdf = sampling::cosine_on_hemisphere_pdf<N>(dot(n, l));
 //         return {l, pdf};
 // }
 
@@ -157,10 +157,10 @@ T pdf_ggx_cosine(
         const Vector<N, T>& l,
         const Vector<N, T>& h)
 {
-        T pdf_cosine = sampling::cosine_on_hemisphere_pdf<N>(dot(n, l));
-        T pdf_ggx = ggx_visible_normals_l_pdf<N>(dot(n, v), dot(n, h), dot(h, l), alpha);
+        const T pdf_cosine = sampling::cosine_on_hemisphere_pdf<N>(dot(n, l));
+        const T pdf_ggx = ggx_visible_normals_l_pdf<N>(dot(n, v), dot(n, h), dot(h, l), alpha);
 
-        T pdf = T(0.5) * (pdf_cosine + pdf_ggx);
+        const T pdf = T(0.5) * (pdf_cosine + pdf_ggx);
 
         return pdf;
 }
@@ -202,7 +202,7 @@ std::tuple<Vector<N, T>, T> sample_ggx_cosine(
                 ASSERT(h.is_unit());
         }
 
-        T pdf = pdf_ggx_cosine(alpha, n, v, l, h);
+        const T pdf = pdf_ggx_cosine(alpha, n, v, l, h);
 
         return {l, pdf};
 }

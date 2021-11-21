@@ -22,14 +22,14 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 namespace ns::gpu::optical_flow
 {
-constexpr Vector2i GROUP_SIZE(16, 16);
+inline constexpr Vector2i GROUP_SIZE(16, 16);
 
-constexpr int BOTTOM_IMAGE_MINIMUM_SIZE = 16;
+inline constexpr int BOTTOM_IMAGE_MINIMUM_SIZE = 16;
 
-constexpr int RADIUS = 6;
-constexpr int MAX_ITERATION_COUNT = 10;
-constexpr float STOP_MOVE_SQUARE = square(1e-3f);
-constexpr float MIN_DETERMINANT = 1;
+inline constexpr int RADIUS = 6;
+inline constexpr int MAX_ITERATION_COUNT = 10;
+inline constexpr float STOP_MOVE_SQUARE = square(1e-3f);
+inline constexpr float MIN_DETERMINANT = 1;
 
-constexpr double DISTANCE_BETWEEN_POINTS_IN_MM = 2;
+inline constexpr double DISTANCE_BETWEEN_POINTS_IN_MM = 2;
 }

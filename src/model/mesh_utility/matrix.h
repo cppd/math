@@ -28,7 +28,7 @@ namespace ns::mesh
 template <std::size_t N>
 Matrix<N + 1, N + 1, double> model_matrix_for_size_and_position(
         const Mesh<N>& mesh,
-        double size,
+        const double size,
         const Vector<N, double>& position)
 {
         Matrix<N + 1, N + 1, double> t1 = matrix::translate(to_vector<double>(-mesh.center));

@@ -28,7 +28,7 @@ namespace ns::image
 namespace
 {
 template <typename T>
-std::vector<std::byte> add_alpha(const std::span<const std::byte>& bytes, T alpha)
+std::vector<std::byte> add_alpha(const std::span<const std::byte>& bytes, const T alpha)
 {
         static_assert(std::is_integral_v<T> || std::is_floating_point_v<T>);
 
@@ -82,7 +82,7 @@ std::vector<std::byte> delete_alpha(const std::span<const std::byte>& bytes)
 }
 
 template <typename T>
-void set_alpha(const std::span<std::byte>& bytes, T alpha)
+void set_alpha(const std::span<std::byte>& bytes, const T alpha)
 {
         static_assert(std::is_integral_v<T> || std::is_floating_point_v<T>);
 
@@ -460,7 +460,7 @@ void blend_alpha_r32g32b32a32_premultiplied(const std::span<std::byte>& bytes, c
 }
 }
 
-void blend_alpha(ColorFormat* color_format, const std::span<std::byte>& bytes, Vector<3, float> rgb)
+void blend_alpha(ColorFormat* const color_format, const std::span<std::byte>& bytes, Vector<3, float> rgb)
 {
         rgb[0] = std::clamp<float>(rgb[0], 0, 1);
         rgb[1] = std::clamp<float>(rgb[1], 0, 1);
@@ -505,7 +505,7 @@ void blend_alpha(ColorFormat* color_format, const std::span<std::byte>& bytes, V
         error("Unsupported image format " + format_to_string(*color_format) + " for blending alpha");
 }
 
-void set_alpha(ColorFormat color_format, const std::span<std::byte>& bytes, float alpha)
+void set_alpha(const ColorFormat color_format, const std::span<std::byte>& bytes, float alpha)
 {
         alpha = std::clamp<float>(alpha, 0, 1);
 

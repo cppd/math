@@ -25,7 +25,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 namespace ns::image
 {
 template <std::size_t N>
-void flip_vertically(Image<N>* image)
+void flip_vertically(Image<N>* const image)
 {
         if (image->size[0] < 1 || image->size[1] < 1)
         {

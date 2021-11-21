@@ -41,7 +41,7 @@ class LatinHypercubeSampler
         static_assert(std::is_floating_point_v<T>);
         static_assert(N >= 2);
 
-        static std::vector<T> make_offsets(T min, T max, int sample_count)
+        static std::vector<T> make_offsets(const T min, const T max, const int sample_count)
         {
                 if (!(min < max))
                 {
@@ -90,7 +90,11 @@ class LatinHypercubeSampler
         bool shuffle_;
 
 public:
-        LatinHypercubeSampler(std::type_identity_t<T> min, std::type_identity_t<T> max, int sample_count, bool shuffle)
+        LatinHypercubeSampler(
+                const std::type_identity_t<T> min,
+                const std::type_identity_t<T> max,
+                const int sample_count,
+                const bool shuffle)
                 : offsets_(make_offsets(min, max, sample_count)),
                   initial_shuffle_dimension_(shuffle ? 0 : 1),
                   sample_count_(sample_count),
@@ -116,7 +120,7 @@ public:
         }
 
         template <typename RandomEngine>
-        void generate(RandomEngine& random_engine, std::vector<Vector<N, T>>* samples) const
+        void generate(RandomEngine& random_engine, std::vector<Vector<N, T>>* const samples) const
         {
                 constexpr bool IS_FLOAT = std::is_same_v<std::remove_cvref_t<T>, float>;
 

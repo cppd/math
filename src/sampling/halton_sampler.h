@@ -41,7 +41,7 @@ class HaltonSampler final
         unsigned sample_ = 0;
 
         template <std::size_t... I>
-        static Vector<N, T> generate(unsigned sample, std::integer_sequence<std::size_t, I...>)
+        static Vector<N, T> generate(const unsigned sample, std::integer_sequence<std::size_t, I...>&&)
         {
                 static_assert(N <= std::size(PRIMES));
                 static_assert(sizeof...(I) == N);

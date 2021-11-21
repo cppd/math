@@ -133,7 +133,13 @@ void print_simplex_algorithm_data(
 // 29.3 The simplex algorithm.
 // Pivoting.
 template <std::size_t N, std::size_t M, typename T>
-void pivot(std::array<T, M>& b, std::array<Vector<N, T>, M>& a, T& v, Vector<N, T>& c, unsigned l, unsigned e)
+void pivot(
+        std::array<T, M>& b,
+        std::array<Vector<N, T>, M>& a,
+        T& v,
+        Vector<N, T>& c,
+        const unsigned l,
+        const unsigned e)
 {
         static_assert(FloatingPoint<T>);
 
@@ -185,12 +191,12 @@ void pivot(std::array<T, M>& b, std::array<Vector<N, T>, M>& a, T& v, Vector<N, 
 template <std::size_t N_SOURCE, std::size_t M, typename T>
 void make_aux_and_maps(
         const std::array<Vector<N_SOURCE, T>, M>& a_input,
-        std::array<T, M>* b,
-        std::array<Vector<N_SOURCE + 1, T>, M>* a,
-        T* v,
-        Vector<N_SOURCE + 1, T>* c,
-        std::array<unsigned, N_SOURCE + 1>* map_n,
-        std::array<unsigned, M>* map_m)
+        std::array<T, M>* const b,
+        std::array<Vector<N_SOURCE + 1, T>, M>* const a,
+        T* const v,
+        Vector<N_SOURCE + 1, T>* const c,
+        std::array<unsigned, N_SOURCE + 1>* const map_n,
+        std::array<unsigned, M>* const map_m)
 {
         for (unsigned m = 0; m < M; ++m)
         {
@@ -264,7 +270,7 @@ bool variable_x0_is_zero(
 }
 
 template <std::size_t N, typename T>
-bool find_positive_index(const Vector<N, T>& c, unsigned* e)
+bool find_positive_index(const Vector<N, T>& c, unsigned* const e)
 {
         T max_abs_c = std::abs(c[0]);
         for (unsigned i = 1; i < N; ++i)

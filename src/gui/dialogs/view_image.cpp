@@ -143,7 +143,7 @@ ViewImageDialog::ViewImageDialog(
         this->adjustSize();
 }
 
-void ViewImageDialog::done(int r)
+void ViewImageDialog::done(const int r)
 {
         if (r != QDialog::Accepted)
         {

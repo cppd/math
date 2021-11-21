@@ -22,7 +22,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 namespace ns::numerical
 {
 template <typename T>
-[[nodiscard]] bool quadratic_equation(const T& a, const T& b, const T& c, T* r1, T* r2)
+[[nodiscard]] bool quadratic_equation(const T& a, const T& b, const T& c, T* const r1, T* const r2)
 {
         static_assert(std::is_floating_point_v<T>);
 

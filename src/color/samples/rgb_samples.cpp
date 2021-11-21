@@ -333,7 +333,7 @@ static_assert(WAVES.front() == RGB_SAMPLES_MIN_WAVELENGTH);
 static_assert(WAVES.back() == RGB_SAMPLES_MAX_WAVELENGTH);
 
 template <std::size_t N>
-std::vector<double> rgb_samples(const std::array<double, N>& samples, int from, int to, int count)
+std::vector<double> rgb_samples(const std::array<double, N>& samples, const int from, const int to, const int count)
 {
         static_assert(N == WAVES.size());
         static_assert(std::is_same_v<double, decltype(WAVES)::value_type>);
@@ -341,72 +341,72 @@ std::vector<double> rgb_samples(const std::array<double, N>& samples, int from, 
 }
 }
 
-std::vector<double> rgb_reflectance_white_samples(int from, int to, int count)
+std::vector<double> rgb_reflectance_white_samples(const int from, const int to, const int count)
 {
         return rgb_samples(REFLECTANCE_WHITE, from, to, count);
 }
 
-std::vector<double> rgb_reflectance_cyan_samples(int from, int to, int count)
+std::vector<double> rgb_reflectance_cyan_samples(const int from, const int to, const int count)
 {
         return rgb_samples(REFLECTANCE_CYAN, from, to, count);
 }
 
-std::vector<double> rgb_reflectance_magenta_samples(int from, int to, int count)
+std::vector<double> rgb_reflectance_magenta_samples(const int from, const int to, const int count)
 {
         return rgb_samples(REFLECTANCE_MAGENTA, from, to, count);
 }
 
-std::vector<double> rgb_reflectance_yellow_samples(int from, int to, int count)
+std::vector<double> rgb_reflectance_yellow_samples(const int from, const int to, const int count)
 {
         return rgb_samples(REFLECTANCE_YELLOW, from, to, count);
 }
 
-std::vector<double> rgb_reflectance_red_samples(int from, int to, int count)
+std::vector<double> rgb_reflectance_red_samples(const int from, const int to, const int count)
 {
         return rgb_samples(REFLECTANCE_RED, from, to, count);
 }
 
-std::vector<double> rgb_reflectance_green_samples(int from, int to, int count)
+std::vector<double> rgb_reflectance_green_samples(const int from, const int to, const int count)
 {
         return rgb_samples(REFLECTANCE_GREEN, from, to, count);
 }
 
-std::vector<double> rgb_reflectance_blue_samples(int from, int to, int count)
+std::vector<double> rgb_reflectance_blue_samples(const int from, const int to, const int count)
 {
         return rgb_samples(REFLECTANCE_BLUE, from, to, count);
 }
 
-std::vector<double> rgb_illumination_d65_white_samples(int from, int to, int count)
+std::vector<double> rgb_illumination_d65_white_samples(const int from, const int to, const int count)
 {
         return rgb_samples(ILLUMINATION_D65_WHITE, from, to, count);
 }
 
-std::vector<double> rgb_illumination_d65_cyan_samples(int from, int to, int count)
+std::vector<double> rgb_illumination_d65_cyan_samples(const int from, const int to, const int count)
 {
         return rgb_samples(ILLUMINATION_D65_CYAN, from, to, count);
 }
 
-std::vector<double> rgb_illumination_d65_magenta_samples(int from, int to, int count)
+std::vector<double> rgb_illumination_d65_magenta_samples(const int from, const int to, const int count)
 {
         return rgb_samples(ILLUMINATION_D65_MAGENTA, from, to, count);
 }
 
-std::vector<double> rgb_illumination_d65_yellow_samples(int from, int to, int count)
+std::vector<double> rgb_illumination_d65_yellow_samples(const int from, const int to, const int count)
 {
         return rgb_samples(ILLUMINATION_D65_YELLOW, from, to, count);
 }
 
-std::vector<double> rgb_illumination_d65_red_samples(int from, int to, int count)
+std::vector<double> rgb_illumination_d65_red_samples(const int from, const int to, const int count)
 {
         return rgb_samples(ILLUMINATION_D65_RED, from, to, count);
 }
 
-std::vector<double> rgb_illumination_d65_green_samples(int from, int to, int count)
+std::vector<double> rgb_illumination_d65_green_samples(const int from, const int to, const int count)
 {
         return rgb_samples(ILLUMINATION_D65_GREEN, from, to, count);
 }
 
-std::vector<double> rgb_illumination_d65_blue_samples(int from, int to, int count)
+std::vector<double> rgb_illumination_d65_blue_samples(const int from, const int to, const int count)
 {
         return rgb_samples(ILLUMINATION_D65_BLUE, from, to, count);
 }

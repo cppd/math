@@ -77,7 +77,7 @@ Vector<N, T> cosine_on_hemisphere(RandomEngine& random_engine, const Vector<N, T
 }
 
 template <std::size_t N, typename T>
-T cosine_on_hemisphere_pdf(T n_v)
+T cosine_on_hemisphere_pdf(const T& n_v)
 {
         if (n_v > 0)
         {

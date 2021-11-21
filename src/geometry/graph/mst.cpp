@@ -58,7 +58,7 @@ public:
                 return weight_;
         }
 
-        int vertex(int i) const
+        int vertex(const int i) const
         {
                 return edge_.vertices()[i];
         }
@@ -112,8 +112,8 @@ std::vector<WeightedEdge> weight_edges(const std::vector<Vector<N, float>>& poin
 }
 
 std::vector<std::array<int, 2>> kruskal(
-        int point_count,
-        int vertex_count,
+        const int point_count,
+        const int vertex_count,
         const std::vector<WeightedEdge>& sorted_edges)
 {
         ASSERT(point_count > 1 && vertex_count > 1);

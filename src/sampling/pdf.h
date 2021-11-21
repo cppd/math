@@ -24,7 +24,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 namespace ns::sampling
 {
 template <std::size_t N, typename T>
-T reflected_pdf(T pdf, T cosine)
+T reflected_pdf(const T pdf, const T cosine)
 {
         static_assert(N >= 2);
         static_assert(std::is_floating_point_v<T>);
@@ -48,7 +48,7 @@ T reflected_pdf(T pdf, T cosine)
 }
 
 template <std::size_t N, typename T>
-T area_pdf_to_solid_angle_pdf(T pdf, T cosine, T distance)
+T area_pdf_to_solid_angle_pdf(const T pdf, const T cosine, const T distance)
 {
         static_assert(N >= 2);
         static_assert(std::is_floating_point_v<T>);

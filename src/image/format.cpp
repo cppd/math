@@ -23,12 +23,12 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 namespace ns::image
 {
-[[noreturn]] void unknown_color_format_error(ColorFormat format)
+[[noreturn]] void unknown_color_format_error(const ColorFormat format)
 {
         error_fatal("Unknown color format " + to_string(enum_to_int(format)));
 }
 
-std::string format_to_string(ColorFormat format)
+std::string format_to_string(const ColorFormat format)
 {
         switch (format)
         {

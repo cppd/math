@@ -112,7 +112,12 @@ void log_data(const std::vector<Complex>& data)
         LOG(s);
 }
 
-void compute_vulkan(ComputeVector* dft, bool inverse, int n1, int n2, std::vector<Complex>* data)
+void compute_vulkan(
+        ComputeVector* const dft,
+        const bool inverse,
+        const int n1,
+        const int n2,
+        std::vector<Complex>* const data)
 {
         if (inverse)
         {
@@ -144,7 +149,7 @@ void compute_vulkan(ComputeVector* dft, bool inverse, int n1, int n2, std::vecto
 }
 
 #if defined(CUDA_FOUND)
-void compute_cuda(bool inverse, int n1, int n2, std::vector<Complex>* data)
+void compute_cuda(const bool inverse, const int n1, const int n2, std::vector<Complex>* const data)
 {
         if (inverse)
         {
@@ -165,7 +170,7 @@ void compute_cuda(bool inverse, int n1, int n2, std::vector<Complex>* data)
 #endif
 
 #if defined(FFTW_FOUND)
-void compute_fftw(bool inverse, int n1, int n2, std::vector<Complex>* data)
+void compute_fftw(const bool inverse, const int n1, const int n2, std::vector<Complex>* const data)
 {
         if (inverse)
         {

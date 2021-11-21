@@ -80,7 +80,7 @@ ViewWidget::ViewWidget() : QWidget(nullptr)
         connect(ui_.slider_shadow_quality, &QSlider::valueChanged, this, &ViewWidget::on_shadow_quality_changed);
 }
 
-void ViewWidget::set_view(view::View* view)
+void ViewWidget::set_view(view::View* const view)
 {
         view_ = view;
 }

@@ -32,7 +32,7 @@ namespace ns::color
 namespace xyz_functions_implementation
 {
 template <typename T>
-T g(T wave, T m, T t1, T t2)
+T g(const T wave, const T m, const T t1, const T t2)
 {
         T v = (wave - m) * (wave < m ? t1 : t2);
         return std::exp(T(-0.5) * v * v);
@@ -40,7 +40,7 @@ T g(T wave, T m, T t1, T t2)
 
 // Integrate[Exp[-1/2*(t*(x-m))^2],{x,a,b}]
 template <typename T>
-T g_integral(T wave_1, T wave_2, T m, T t)
+T g_integral(const T wave_1, const T wave_2, const T m, const T t)
 {
         // sqrt(2)
         static constexpr T SQRT_2 = 1.4142135623730950488016887242096980785696718753769L;
@@ -52,7 +52,7 @@ T g_integral(T wave_1, T wave_2, T m, T t)
 }
 
 template <typename T>
-T g_integral(T wave_1, T wave_2, T m, T t1, T t2)
+T g_integral(const T wave_1, const T wave_2, const T m, const T t1, const T t2)
 {
         ASSERT(wave_1 < wave_2);
         if (wave_2 <= m)
@@ -70,7 +70,7 @@ T g_integral(T wave_1, T wave_2, T m, T t1, T t2)
 //
 
 template <typename T>
-T cie_x_31(T wave)
+T cie_x_31(const T wave)
 {
         static_assert(std::is_floating_point_v<T>);
         namespace impl = xyz_functions_implementation;
@@ -82,7 +82,7 @@ T cie_x_31(T wave)
 }
 
 template <typename T>
-T cie_x_31_integral(T wave_1, T wave_2)
+T cie_x_31_integral(const T wave_1, const T wave_2)
 {
         static_assert(std::is_floating_point_v<T>);
         namespace impl = xyz_functions_implementation;
@@ -96,7 +96,7 @@ T cie_x_31_integral(T wave_1, T wave_2)
 //
 
 template <typename T>
-T cie_y_31(T wave)
+T cie_y_31(const T wave)
 {
         static_assert(std::is_floating_point_v<T>);
         namespace impl = xyz_functions_implementation;
@@ -107,7 +107,7 @@ T cie_y_31(T wave)
 }
 
 template <typename T>
-T cie_y_31_integral(T wave_1, T wave_2)
+T cie_y_31_integral(const T wave_1, const T wave_2)
 {
         static_assert(std::is_floating_point_v<T>);
         namespace impl = xyz_functions_implementation;
@@ -120,7 +120,7 @@ T cie_y_31_integral(T wave_1, T wave_2)
 //
 
 template <typename T>
-T cie_z_31(T wave)
+T cie_z_31(const T wave)
 {
         static_assert(std::is_floating_point_v<T>);
         namespace impl = xyz_functions_implementation;
@@ -131,7 +131,7 @@ T cie_z_31(T wave)
 }
 
 template <typename T>
-T cie_z_31_integral(T wave_1, T wave_2)
+T cie_z_31_integral(const T wave_1, const T wave_2)
 {
         static_assert(std::is_floating_point_v<T>);
         namespace impl = xyz_functions_implementation;
@@ -144,7 +144,7 @@ T cie_z_31_integral(T wave_1, T wave_2)
 //
 
 template <typename T>
-T cie_x_64(T wave)
+T cie_x_64(const T wave)
 {
         static_assert(std::is_floating_point_v<T>);
 
@@ -164,7 +164,7 @@ Simplify[Integrate[0.398`30*Exp[-1250*Log[(x+570.1`30)/1014]^2],x]]
 Simplify[Integrate[1.132`30*Exp[-234*Log[(1338 - x)/743.5`30]^2], x]]
 */
 template <typename T>
-T cie_x_64_integral(T wave_1, T wave_2)
+T cie_x_64_integral(const T wave_1, const T wave_2)
 {
         static_assert(std::is_floating_point_v<T>);
 
@@ -191,7 +191,7 @@ T cie_x_64_integral(T wave_1, T wave_2)
 //
 
 template <typename T>
-T cie_y_64(T wave)
+T cie_y_64(const T wave)
 {
         static_assert(std::is_floating_point_v<T>);
 
@@ -206,7 +206,7 @@ Integrate[Exp[-1/2*((x-m)/t)^2],x]
 Integrate[1.011`30*Exp[-1/2*((x-556.1`30)/46.14`30)^2],x]
 */
 template <typename T>
-T cie_y_64_integral(T wave_1, T wave_2)
+T cie_y_64_integral(const T wave_1, const T wave_2)
 {
         static_assert(std::is_floating_point_v<T>);
 
@@ -221,7 +221,7 @@ T cie_y_64_integral(T wave_1, T wave_2)
 //
 
 template <typename T>
-T cie_z_64(T wave)
+T cie_z_64(const T wave)
 {
         static_assert(std::is_floating_point_v<T>);
 
@@ -236,7 +236,7 @@ Integrate[Exp[t1*Log[(x-m)/t2]^2],x]
 Simplify[Integrate[2.06`30*Exp[-32*Log[(x-265.8`30)/180.4`30]^2],x]]
 */
 template <typename T>
-T cie_z_64_integral(T wave_1, T wave_2)
+T cie_z_64_integral(const T wave_1, const T wave_2)
 {
         static_assert(std::is_floating_point_v<T>);
 

@@ -59,7 +59,7 @@ ColorsWidget::ColorsWidget() : QWidget(nullptr)
         connect(ui_.toolButton_wireframe_color, &QToolButton::clicked, this, &ColorsWidget::on_wireframe_color_clicked);
 }
 
-void ColorsWidget::set_view(view::View* view)
+void ColorsWidget::set_view(view::View* const view)
 {
         view_ = view;
 }

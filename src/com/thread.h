@@ -53,7 +53,7 @@ class ThreadsWithCatch
                         thread_.join();
                 }
 
-                void set_error(const char* s)
+                void set_error(const char* const s)
                 {
                         has_error_ = true;
                         error_message_ = s;
@@ -74,7 +74,7 @@ class ThreadsWithCatch
 
         std::vector<ThreadData> threads_;
 
-        void join(bool* there_is_error, std::string* error_message) noexcept
+        void join(bool* const there_is_error, std::string* const error_message) noexcept
         {
                 try
                 {
@@ -111,7 +111,7 @@ class ThreadsWithCatch
         }
 
 public:
-        explicit ThreadsWithCatch(unsigned thread_count)
+        explicit ThreadsWithCatch(const unsigned thread_count)
         {
                 threads_.reserve(thread_count);
         }
@@ -190,7 +190,7 @@ public:
         }
 };
 
-inline void run_in_threads(const std::function<void(std::atomic_size_t&)>& function, std::size_t count)
+inline void run_in_threads(const std::function<void(std::atomic_size_t&)>& function, const std::size_t count)
 {
         std::size_t concurrency = hardware_concurrency();
         unsigned thread_count = std::min(count, concurrency);

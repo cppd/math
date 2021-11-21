@@ -438,13 +438,13 @@ class Impl final : public MeshObject
         }
 
 public:
-        Impl(const vulkan::Device* device,
+        Impl(const vulkan::Device* const device,
              const std::vector<uint32_t>& graphics_family_indices,
-             const vulkan::CommandPool* transfer_command_pool,
-             const vulkan::Queue* transfer_queue,
+             const vulkan::CommandPool* const transfer_command_pool,
+             const vulkan::Queue* const transfer_queue,
              std::vector<vulkan::DescriptorSetLayoutAndBindings> mesh_layouts,
              std::vector<vulkan::DescriptorSetLayoutAndBindings> material_layouts,
-             VkSampler texture_sampler)
+             const VkSampler texture_sampler)
                 : device_(device),
                   transfer_command_pool_(transfer_command_pool),
                   transfer_queue_(transfer_queue),
@@ -463,13 +463,13 @@ public:
 }
 
 std::unique_ptr<MeshObject> create_mesh_object(
-        const vulkan::Device* device,
+        const vulkan::Device* const device,
         const std::vector<uint32_t>& graphics_family_indices,
-        const vulkan::CommandPool* transfer_command_pool,
-        const vulkan::Queue* transfer_queue,
+        const vulkan::CommandPool* const transfer_command_pool,
+        const vulkan::Queue* const transfer_queue,
         std::vector<vulkan::DescriptorSetLayoutAndBindings> mesh_layouts,
         std::vector<vulkan::DescriptorSetLayoutAndBindings> material_layouts,
-        VkSampler texture_sampler)
+        const VkSampler texture_sampler)
 {
         return std::make_unique<Impl>(
                 device, graphics_family_indices, transfer_command_pool, transfer_queue, std::move(mesh_layouts),

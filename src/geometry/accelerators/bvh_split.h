@@ -41,7 +41,7 @@ namespace ns::geometry
 {
 namespace bvh_split_implementation
 {
-constexpr unsigned BUCKET_COUNT = 32;
+inline constexpr unsigned BUCKET_COUNT = 32;
 
 template <std::size_t N, typename T>
 class CenterBounds final

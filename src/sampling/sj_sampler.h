@@ -44,7 +44,7 @@ class StratifiedJitteredSampler
         static_assert(std::is_floating_point_v<T>);
         static_assert(N >= 2);
 
-        static int one_dimension_size(int sample_count)
+        static int one_dimension_size(const int sample_count)
         {
                 if (sample_count < 1)
                 {
@@ -68,7 +68,7 @@ class StratifiedJitteredSampler
                       + to_string(sample_count) + " samples in " + space_name(N));
         }
 
-        static std::vector<T> make_offsets(T min, T max, int sample_count)
+        static std::vector<T> make_offsets(const T min, const T max, const int sample_count)
         {
                 if (!(min < max))
                 {
@@ -110,7 +110,10 @@ class StratifiedJitteredSampler
         }
 
         template <std::size_t M>
-        static void product(int count, std::array<int, N>* tuple, std::vector<std::array<int, N>>* result)
+        static void product(
+                const int count,
+                std::array<int, N>* const tuple,
+                std::vector<std::array<int, N>>* const result)
         {
                 static_assert(N > 0 && M >= 0 && M < N);
 
@@ -128,7 +131,7 @@ class StratifiedJitteredSampler
                 }
         }
 
-        static std::vector<std::array<int, N>> product(int count)
+        static std::vector<std::array<int, N>> product(const int count)
         {
                 ASSERT(count >= 1);
 
@@ -149,10 +152,10 @@ class StratifiedJitteredSampler
 
 public:
         StratifiedJitteredSampler(
-                std::type_identity_t<T> min,
-                std::type_identity_t<T> max,
-                int sample_count,
-                bool shuffle)
+                const std::type_identity_t<T> min,
+                const std::type_identity_t<T> max,
+                const int sample_count,
+                const bool shuffle)
                 : offsets_(make_offsets(min, max, one_dimension_size(sample_count))),
                   indices_(product(offsets_.size() - 1)),
                   min_(min),
@@ -177,7 +180,7 @@ public:
         }
 
         template <typename RandomEngine>
-        void generate(RandomEngine& random_engine, std::vector<Vector<N, T>>* samples) const
+        void generate(RandomEngine& random_engine, std::vector<Vector<N, T>>* const samples) const
         {
                 constexpr bool IS_FLOAT = std::is_same_v<std::remove_cvref_t<T>, float>;
 

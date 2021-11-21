@@ -29,7 +29,7 @@ constexpr bool SHOW_THREADS = true;
 constexpr long long PIXEL_SIZE_BYTES = 4;
 }
 
-ImageWidget::ImageWidget(int width, int height, QMenu* menu)
+ImageWidget::ImageWidget(const int width, const int height, QMenu* const menu)
         : QWidget(nullptr),
           image_2d_pixel_count_(1ull * width * height),
           image_2d_byte_count_(PIXEL_SIZE_BYTES * image_2d_pixel_count_),

@@ -25,7 +25,7 @@ namespace ns::color
 {
 namespace
 {
-void compare(const Spectrum& s, const RGB<float>& c, const char* text)
+void compare(const Spectrum& s, const RGB<float>& c, const char* const text)
 {
         const RGB<float> rgb = s.to_color<RGB<float>>();
         if (!rgb.equal_to_relative(c, 1e-4))

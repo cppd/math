@@ -59,26 +59,26 @@ class RowMatrix final
         std::array<Vector<C, T>*, R> rows_;
 
 public:
-        explicit constexpr RowMatrix(std::array<Vector<C, T>, R>* rows)
+        explicit constexpr RowMatrix(std::array<Vector<C, T>, R>* const rows)
         {
                 for (std::size_t i = 0; i < R; ++i)
                 {
                         rows_[i] = rows->data() + i;
                 }
         }
-        [[nodiscard]] constexpr const T& operator()(int r, int c) const&
+        [[nodiscard]] constexpr const T& operator()(const int r, const int c) const&
         {
                 return (*rows_[r])[c];
         }
-        [[nodiscard]] constexpr T& operator()(int r, int c) &
+        [[nodiscard]] constexpr T& operator()(const int r, const int c) &
         {
                 return (*rows_[r])[c];
         }
-        [[nodiscard]] constexpr Vector<C, T>& row(int r) &
+        [[nodiscard]] constexpr Vector<C, T>& row(const int r) &
         {
                 return *rows_[r];
         }
-        constexpr void swap(int row_1, int row_2) &
+        constexpr void swap(const int row_1, const int row_2) &
         {
                 std::swap(rows_[row_1], rows_[row_2]);
         }

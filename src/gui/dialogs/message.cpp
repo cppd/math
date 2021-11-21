@@ -25,7 +25,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 namespace ns::gui::dialog
 {
-void message_critical(const std::string& message, bool with_parent)
+void message_critical(const std::string& message, const bool with_parent)
 {
         QtObjectInDynamicMemory<QMessageBox> w(
                 QMessageBox::Critical, settings::APPLICATION_NAME, QString::fromStdString(message), QMessageBox::Ok,

@@ -130,7 +130,7 @@ public:
                 }
         }
 
-        void set(unsigned value, unsigned maximum)
+        void set(const unsigned value, const unsigned maximum)
         {
                 terminate_.check_terminate();
 
@@ -164,7 +164,7 @@ public:
                 terminate_.set_terminate_with_message();
         }
 
-        void get(unsigned* value, unsigned* maximum) const override
+        void get(unsigned* const value, unsigned* const maximum) const override
         {
                 CounterType c = counter_;
                 *value = c & MAX;
@@ -198,11 +198,11 @@ ProgressRatio::ProgressRatio(ProgressRatios* const ratios, const std::string& pe
 {
 }
 ProgressRatio::~ProgressRatio() = default;
-void ProgressRatio::set(unsigned value, unsigned maximum)
+void ProgressRatio::set(const unsigned value, const unsigned maximum)
 {
         progress_->set(value, maximum);
 }
-void ProgressRatio::set(double v)
+void ProgressRatio::set(const double v)
 {
         progress_->set(v);
 }

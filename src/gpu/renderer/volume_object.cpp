@@ -460,11 +460,11 @@ class Impl final : public VolumeObject
 public:
         Impl(const vulkan::Device* device,
              const std::vector<uint32_t>& graphics_family_indices,
-             const vulkan::CommandPool* transfer_command_pool,
-             const vulkan::Queue* transfer_queue,
+             const vulkan::CommandPool* const transfer_command_pool,
+             const vulkan::Queue* const transfer_queue,
              std::vector<vulkan::DescriptorSetLayoutAndBindings> image_layouts,
-             VkSampler image_sampler,
-             VkSampler transfer_function_sampler)
+             const VkSampler image_sampler,
+             const VkSampler transfer_function_sampler)
                 : device_(device),
                   transfer_command_pool_(transfer_command_pool),
                   transfer_queue_(transfer_queue),
@@ -481,13 +481,13 @@ public:
 }
 
 std::unique_ptr<VolumeObject> create_volume_object(
-        const vulkan::Device* device,
+        const vulkan::Device* const device,
         const std::vector<uint32_t>& graphics_family_indices,
-        const vulkan::CommandPool* transfer_command_pool,
-        const vulkan::Queue* transfer_queue,
+        const vulkan::CommandPool* const transfer_command_pool,
+        const vulkan::Queue* const transfer_queue,
         std::vector<vulkan::DescriptorSetLayoutAndBindings> image_layouts,
-        VkSampler image_sampler,
-        VkSampler transfer_function_sampler)
+        const VkSampler image_sampler,
+        const VkSampler transfer_function_sampler)
 {
         return std::make_unique<Impl>(
                 device, graphics_family_indices, transfer_command_pool, transfer_queue, std::move(image_layouts),

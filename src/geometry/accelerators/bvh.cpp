@@ -27,8 +27,8 @@ template <std::size_t N, typename T, typename Node>
 unsigned make_depth_first_order(
         const BvhBuild<N, T>& build,
         const unsigned src_index,
-        std::vector<unsigned>* object_indices,
-        std::vector<Node>* nodes)
+        std::vector<unsigned>* const object_indices,
+        std::vector<Node>* const nodes)
 {
         const unsigned dst_index = nodes->size();
         Node& dst = nodes->emplace_back();

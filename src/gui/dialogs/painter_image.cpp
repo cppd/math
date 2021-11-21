@@ -32,8 +32,8 @@ namespace ns::gui::dialog
 {
 PainterImageDialog::PainterImageDialog(
         const std::string& title,
-        PainterImagePathType path_type,
-        bool use_all,
+        const PainterImagePathType path_type,
+        const bool use_all,
         std::optional<PainterImageParameters>& parameters)
         : QDialog(parent_for_dialog()), path_type_(path_type), parameters_(parameters)
 {
@@ -71,7 +71,7 @@ void PainterImageDialog::set_path()
         error("Unknown path type " + to_string(enum_to_int(path_type_)));
 }
 
-void PainterImageDialog::set_checkboxes(bool use_all)
+void PainterImageDialog::set_checkboxes(const bool use_all)
 {
         if (use_all)
         {
@@ -84,7 +84,7 @@ void PainterImageDialog::set_checkboxes(bool use_all)
         }
 }
 
-void PainterImageDialog::done(int r)
+void PainterImageDialog::done(const int r)
 {
         if (r != QDialog::Accepted)
         {
@@ -189,8 +189,8 @@ void PainterImageDialog::on_all_toggled()
 
 std::optional<PainterImageParameters> PainterImageDialog::show(
         const std::string& title,
-        PainterImagePathType path_type,
-        bool use_all)
+        const PainterImagePathType path_type,
+        const bool use_all)
 {
         std::optional<PainterImageParameters> parameters;
 

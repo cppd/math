@@ -306,6 +306,7 @@ void check_rho_and_aplha(const double rho, const double alpha)
                 std::string interval = "(" + to_string(RHO_MIN) + ", " + to_string(RHO_MAX) + ")";
                 error("Rho must be in the interval " + interval + ", but rho = " + to_string(rho, 10));
         }
+
         if (!(alpha > ALPHA_MIN && alpha < ALPHA_MAX))
         {
                 std::string interval = "(" + to_string(ALPHA_MIN) + ", " + to_string(ALPHA_MAX) + ")";

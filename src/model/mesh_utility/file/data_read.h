@@ -32,7 +32,7 @@ namespace ns::mesh::file
 namespace data_read_implementation
 {
 template <typename Integer, typename T>
-Integer digits_to_integer(const T& data, long long begin, long long end)
+Integer digits_to_integer(const T& data, const long long begin, long long end)
 {
         static_assert(std::is_integral_v<Integer>);
 
@@ -56,23 +56,23 @@ Integer digits_to_integer(const T& data, long long begin, long long end)
 }
 
 template <typename T>
-T str_to_floating_point(const char* str, char** end) requires(std::is_same_v<T, float>)
+T str_to_floating_point(const char* const str, char** const end) requires(std::is_same_v<T, float>)
 {
         return std::strtof(str, end);
 }
 template <typename T>
-T str_to_floating_point(const char* str, char** end) requires(std::is_same_v<T, double>)
+T str_to_floating_point(const char* const str, char** const end) requires(std::is_same_v<T, double>)
 {
         return std::strtod(str, end);
 }
 template <typename T>
-T str_to_floating_point(const char* str, char** end) requires(std::is_same_v<T, long double>)
+T str_to_floating_point(const char* const str, char** const end) requires(std::is_same_v<T, long double>)
 {
         return std::strtold(str, end);
 }
 
 template <typename T>
-bool read_one_float_from_string(const char** str, T* p)
+bool read_one_float_from_string(const char** const str, T* const p)
 {
         char* end;
         T value = str_to_floating_point<T>(*str, &end);
@@ -92,7 +92,7 @@ bool read_one_float_from_string(const char** str, T* p)
 }
 
 template <typename... T>
-int string_to_floats(const char** str, T*... floats)
+int string_to_floats(const char** const str, T* const... floats)
 {
         static_assert(sizeof...(T) > 0);
         static_assert(((std::is_same_v<T, float> || std::is_same_v<T, double> || std::is_same_v<T, long double>)&&...));
@@ -106,14 +106,14 @@ int string_to_floats(const char** str, T*... floats)
 }
 
 template <std::size_t N, typename T, unsigned... I>
-int read_vector(const char** str, Vector<N, T>* v, std::integer_sequence<unsigned, I...>&&)
+int read_vector(const char** const str, Vector<N, T>* const v, std::integer_sequence<unsigned, I...>&&)
 {
         static_assert(N == sizeof...(I));
         return string_to_floats(str, &(*v)[I]...);
 }
 
 template <std::size_t N, typename T, unsigned... I>
-int read_vector(const char** str, Vector<N, T>* v, T* n, std::integer_sequence<unsigned, I...>&&)
+int read_vector(const char** const str, Vector<N, T>* const v, T* const n, std::integer_sequence<unsigned, I...>&&)
 {
         static_assert(N == sizeof...(I));
         return string_to_floats(str, &(*v)[I]..., n);
@@ -205,7 +205,7 @@ bool check_range(const T1& v, const T2& min, const T3& max)
 }
 
 template <typename Data, typename Op>
-void read(const Data& data, long long size, const Op& op, long long* i)
+void read(const Data& data, const long long size, const Op& op, long long* const i)
 {
         while (*i < size && op(data[*i]))
         {
@@ -214,7 +214,7 @@ void read(const Data& data, long long size, const Op& op, long long* i)
 }
 
 template <typename T, typename Integer>
-bool read_integer(const T& data, long long size, long long* pos, Integer* value)
+bool read_integer(const T& data, const long long size, long long* const pos, Integer* const value)
 {
         static_assert(std::is_signed_v<Integer>);
         namespace impl = data_read_implementation;
@@ -243,20 +243,20 @@ bool read_integer(const T& data, long long size, long long* pos, Integer* value)
 }
 
 template <std::size_t N, typename T>
-[[nodiscard]] std::pair<int, const char*> read_float(const char* str, Vector<N, T>* v, T* n)
+[[nodiscard]] std::pair<int, const char*> read_float(const char* str, Vector<N, T>* const v, T* const n)
 {
         namespace impl = data_read_implementation;
 
-        int cnt = impl::read_vector(&str, v, n, std::make_integer_sequence<unsigned, N>());
+        const int cnt = impl::read_vector(&str, v, n, std::make_integer_sequence<unsigned, N>());
         return {cnt, str};
 }
 
 template <std::size_t N, typename T>
-const char* read_float(const char* str, Vector<N, T>* v)
+const char* read_float(const char* str, Vector<N, T>* const v)
 {
         namespace impl = data_read_implementation;
 
-        int cnt = impl::read_vector(&str, v, std::make_integer_sequence<unsigned, N>());
+        const int cnt = impl::read_vector(&str, v, std::make_integer_sequence<unsigned, N>());
         if (N != cnt)
         {
                 error("Error reading " + std::to_string(N) + " floating point numbers of " + type_name<T>()
@@ -266,7 +266,7 @@ const char* read_float(const char* str, Vector<N, T>* v)
 }
 
 template <typename... Args>
-const char* read_float(const char* str, Args*... args) requires(
+const char* read_float(const char* str, Args* const... args) requires(
         (sizeof...(Args) > 0) && (std::is_floating_point_v<Args> && ...))
 {
         namespace impl = data_read_implementation;
@@ -277,7 +277,7 @@ const char* read_float(const char* str, Args*... args) requires(
         static_assert((std::is_floating_point_v<Args> && ...));
         static_assert((std::is_same_v<T, Args> && ...));
 
-        int cnt = impl::string_to_floats(&str, args...);
+        const int cnt = impl::string_to_floats(&str, args...);
         if (N != cnt)
         {
                 error("Error reading " + std::to_string(N) + " floating point numbers of " + type_name<T>()

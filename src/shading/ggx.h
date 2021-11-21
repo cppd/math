@@ -101,7 +101,7 @@ Vector<N, T> ggx_vn(RandomEngine& random_engine, const Vector<N, T>& ve, const T
         static_assert(N >= 3);
 
         // Section 3.2: transforming the view direction to the hemisphere configuration
-        Vector<N, T> vh = [&]
+        const Vector<N, T> vh = [&]
         {
                 Vector<N, T> t;
                 for (std::size_t i = 0; i < N - 1; ++i)
@@ -162,8 +162,8 @@ Vector<N, T> ggx_vn(RandomEngine& random_engine, const Vector<N, T>& ve, const T
                 sampling::uniform_in_sphere(random_engine, vector, vector_length_square);
                 return vector;
         }();
-        T s = T(0.5) * (T(1) + vh[N - 1]);
-        T a = [&]
+        const T s = T(0.5) * (T(1) + vh[N - 1]);
+        const T a = [&]
         {
                 T sum = 0;
                 for (std::size_t i = 0; i < N - 2; ++i)
@@ -175,7 +175,7 @@ Vector<N, T> ggx_vn(RandomEngine& random_engine, const Vector<N, T>& ve, const T
         t[N - 2] = interpolation(a, t[N - 2], s);
 
         // Section 4.3: reprojection onto hemisphere
-        Vector<N, T> nh = [&]
+        const Vector<N, T> nh = [&]
         {
                 Vector<N, T> v = vh * std::sqrt(std::max(T(0), 1 - dot(t, t)));
                 for (std::size_t i = 0; i < N - 1; ++i)
@@ -201,8 +201,8 @@ Vector<N, T> ggx_vn(RandomEngine& random_engine, const Vector<N, T>& ve, const T
 template <typename T>
 T ggx_lambda(const T n_v, const T alpha)
 {
-        T n_v_2 = square(n_v);
-        T t = square(alpha) * (1 - n_v_2) / n_v_2;
+        const T n_v_2 = square(n_v);
+        const T t = square(alpha) * (1 - n_v_2) / n_v_2;
 
         return (std::sqrt(1 + t) - 1) / 2;
 }
@@ -252,7 +252,7 @@ Vector<N, T> ggx_visible_normals_h(
         }
         ve[N - 1] = dot(v, normal);
 
-        Vector<N, T> ne = impl::ggx_vn(random_engine, ve, alpha);
+        const Vector<N, T> ne = impl::ggx_vn(random_engine, ve, alpha);
 
         Vector<N, T> res = ne[N - 1] * normal;
         for (std::size_t i = 0; i < N - 1; ++i)
@@ -269,8 +269,8 @@ std::tuple<Vector<N, T>, Vector<N, T>> ggx_visible_normals_h_l(
         const Vector<N, T>& v,
         const T alpha)
 {
-        Vector<N, T> h = ggx_visible_normals_h(random_engine, normal, v, alpha);
-        Vector<N, T> l = numerical::reflect_vn(v, h);
+        const Vector<N, T> h = ggx_visible_normals_h(random_engine, normal, v, alpha);
+        const Vector<N, T> l = numerical::reflect_vn(v, h);
         return {h, l};
 }
 
@@ -285,8 +285,8 @@ T ggx_pdf(const T n_h, const T alpha)
         {
                 static constexpr T K = geometry::SPHERE_INTEGRATE_COSINE_FACTOR_OVER_HEMISPHERE<N, T>;
 
-                T alpha_2 = square(alpha);
-                T v = 1 + square(n_h) * (alpha_2 - 1);
+                const T alpha_2 = square(alpha);
+                const T v = 1 + square(n_h) * (alpha_2 - 1);
                 // GGX<3> * pow(sin(hemisphere) / sin(ellipsoid), N - 3)
                 //   sin(hemisphere) / sin(ellipsoid) = 1 / sqrt(v)
                 // GGX<3> / pow(sqrt(v), N - 3)
@@ -339,11 +339,11 @@ Color ggx_brdf(const T roughness, const Color& f0, const T n_v, const T n_l, con
 
         if (n_v > 0 && n_l > 0 && h_l > 0)
         {
-                T alpha = square(roughness);
+                const T alpha = square(roughness);
 
-                T pdf = ggx_pdf<N>(n_h, alpha);
-                T g2 = impl::ggx_g2(n_v, n_l, alpha);
-                T divisor = (n_v * n_l * (1 << (N - 1)) * power<N - 3>(h_l));
+                const T pdf = ggx_pdf<N>(n_h, alpha);
+                const T g2 = impl::ggx_g2(n_v, n_l, alpha);
+                const T divisor = (n_v * n_l * (1 << (N - 1)) * power<N - 3>(h_l));
 
                 return impl::fresnel(f0, h_l) * (pdf * g2 / divisor);
         }

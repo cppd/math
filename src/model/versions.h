@@ -50,7 +50,7 @@ public:
                 versions_.emplace_back(versions_.back().version + 1, updates);
         }
 
-        std::bitset<N> updates(std::optional<int>* version) const
+        std::bitset<N> updates(std::optional<int>* const version) const
         {
                 ASSERT(version);
                 ASSERT(!versions_.empty());

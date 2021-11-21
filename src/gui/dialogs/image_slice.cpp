@@ -33,7 +33,7 @@ namespace ns::gui::dialog
 {
 ImageSliceDialog::ImageSliceDialog(
         const std::vector<int>& size,
-        int slice_dimension,
+        const int slice_dimension,
         std::optional<ImageSliceParameters>& parameters)
         : QDialog(parent_for_dialog()), slice_dimension_(slice_dimension), parameters_(parameters)
 {
@@ -63,8 +63,8 @@ ImageSliceDialog::ImageSliceDialog(
 
         const int max_size = *std::max_element(size.cbegin(), size.cend());
 
-        QWidget* widget = new QWidget(this);
-        QGridLayout* layout = new QGridLayout(widget);
+        QWidget* const widget = new QWidget(this);
+        QGridLayout* const layout = new QGridLayout(widget);
         layout->setContentsMargins(5, 5, 5, 5);
 
         slices_.resize(size.size());
@@ -133,7 +133,7 @@ ImageSliceDialog::ImageSliceDialog(
         this->adjustSize();
 }
 
-void ImageSliceDialog::done(int r)
+void ImageSliceDialog::done(const int r)
 {
         if (r != QDialog::Accepted)
         {
@@ -163,7 +163,7 @@ void ImageSliceDialog::done(int r)
         QDialog::done(r);
 }
 
-std::optional<ImageSliceParameters> ImageSliceDialog::show(const std::vector<int>& size, int slice_dimension)
+std::optional<ImageSliceParameters> ImageSliceDialog::show(const std::vector<int>& size, const int slice_dimension)
 {
         std::optional<ImageSliceParameters> parameters;
 

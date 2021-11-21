@@ -21,8 +21,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 namespace ns::color
 {
-constexpr int RGB_SAMPLES_MIN_WAVELENGTH = 380;
-constexpr int RGB_SAMPLES_MAX_WAVELENGTH = 720;
+inline constexpr int RGB_SAMPLES_MIN_WAVELENGTH = 380;
+inline constexpr int RGB_SAMPLES_MAX_WAVELENGTH = 720;
 
 std::vector<double> rgb_reflectance_white_samples(int from, int to, int count);
 std::vector<double> rgb_reflectance_cyan_samples(int from, int to, int count);

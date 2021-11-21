@@ -27,7 +27,7 @@ namespace ns::mesh::file
 namespace
 {
 template <typename T>
-void find_line_begin(const T& s, std::vector<long long>* line_begin)
+void find_line_begin(const T& s, std::vector<long long>* const line_begin)
 {
         static_assert(std::is_same_v<T, std::string> || std::is_same_v<T, std::vector<char>>);
 
@@ -64,7 +64,7 @@ void find_line_begin(const T& s, std::vector<long long>* line_begin)
 }
 
 template <typename T, typename Path>
-void read_file_lines(const Path& file_name, T* file_data, std::vector<long long>* line_begin)
+void read_file_lines(const Path& file_name, T* const file_data, std::vector<long long>* const line_begin)
 {
         static_assert(std::is_same_v<Path, std::filesystem::path>);
         static_assert(std::is_same_v<T, std::string> || std::is_same_v<T, std::vector<char>>);

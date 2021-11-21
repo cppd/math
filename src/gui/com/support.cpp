@@ -34,7 +34,7 @@ namespace ns::gui
 {
 namespace
 {
-// bool is_child_widget_of_any_layout(QLayout* layout, QWidget* widget)
+// bool is_child_widget_of_any_layout(QLayout* const layout, QWidget* const widget)
 // {
 //         if (layout == nullptr || widget == nullptr)
 //         {
@@ -44,7 +44,7 @@ namespace
 //         {
 //                 return true;
 //         }
-//         for (QObject* object : layout->children())
+//         for (QObject* const object : layout->children())
 //         {
 //                 if (is_child_widget_of_any_layout(qobject_cast<QLayout*>(object), widget))
 //                 {
@@ -59,7 +59,7 @@ QString to_qstring(const std::string_view& text)
         return QString::fromUtf8(text.data(), text.size());
 }
 
-void append_text(QPlainTextEdit* text_edit, const std::string_view& text, const RGB8& color)
+void append_text(QPlainTextEdit* const text_edit, const std::string_view& text, const RGB8& color)
 {
         // text_edit->moveCursor(QTextCursor::End);
 
@@ -104,7 +104,7 @@ QWidget* parent_for_dialog()
 //         return {};
 // }
 
-// void set_widgets_enabled(QLayout* layout, bool v)
+// void set_widgets_enabled(QLayout* const layout, const bool v)
 // {
 //         ASSERT(layout);
 //
@@ -122,16 +122,16 @@ QWidget* parent_for_dialog()
 //         }
 // }
 
-QSplitter* find_widget_splitter(QObject* object, QWidget* widget)
+QSplitter* find_widget_splitter(QObject* const object, QWidget* const widget)
 {
-        QSplitter* splitter = qobject_cast<QSplitter*>(object);
+        QSplitter* const splitter = qobject_cast<QSplitter*>(object);
         if (splitter && splitter->indexOf(widget) >= 0)
         {
                 return splitter;
         }
-        for (QObject* child : object->children())
+        for (QObject* const child : object->children())
         {
-                if (QSplitter* s = find_widget_splitter(child, widget); s != nullptr)
+                if (QSplitter* const s = find_widget_splitter(child, widget); s != nullptr)
                 {
                         return s;
                 }
@@ -139,14 +139,14 @@ QSplitter* find_widget_splitter(QObject* object, QWidget* widget)
         return nullptr;
 }
 
-void set_horizontal_stretch(QWidget* widget, int stretch_factor)
+void set_horizontal_stretch(QWidget* const widget, const int stretch_factor)
 {
         QSizePolicy sp = widget->sizePolicy();
         sp.setHorizontalStretch(stretch_factor);
         widget->setSizePolicy(sp);
 }
 
-void set_vertical_stretch(QWidget* widget, int stretch_factor)
+void set_vertical_stretch(QWidget* const widget, const int stretch_factor)
 {
         QSizePolicy sp = widget->sizePolicy();
         sp.setVerticalStretch(stretch_factor);
@@ -167,7 +167,7 @@ QColor color_to_qcolor(const color::Color& c)
         return {srgb8.red(), srgb8.green(), srgb8.blue()};
 }
 
-void set_widget_color(QWidget* widget, const QColor& c)
+void set_widget_color(QWidget* const widget, const QColor& c)
 {
         ASSERT(widget);
 
@@ -185,12 +185,12 @@ void set_widget_color(QWidget* widget, const QColor& c)
 //         button->setFont(f);
 // }
 
-void set_slider_to_middle(QSlider* slider)
+void set_slider_to_middle(QSlider* const slider)
 {
         slider->setValue(slider->minimum() + (slider->maximum() - slider->minimum()) / 2);
 }
 
-void append_to_text_edit(QPlainTextEdit* text_edit, const std::string_view& text, const RGB8& color) noexcept
+void append_to_text_edit(QPlainTextEdit* const text_edit, const std::string_view& text, const RGB8& color) noexcept
 {
         try
         {
@@ -231,7 +231,7 @@ void append_to_text_edit(QPlainTextEdit* text_edit, const std::string_view& text
 }
 
 #if 0
-void disable_radio_button(QRadioButton* button)
+void disable_radio_button(QRadioButton* const button)
 {
         ASSERT(button && button->group());
 
@@ -244,7 +244,7 @@ void disable_radio_button(QRadioButton* button)
 }
 #endif
 
-window::WindowID widget_window_id(const QWidget* widget)
+window::WindowID widget_window_id(const QWidget* const widget)
 {
         ASSERT(widget);
 
@@ -258,7 +258,7 @@ window::WindowID widget_window_id(const QWidget* widget)
         return window_id;
 }
 
-double widget_pixels_per_inch(const QWidget* widget)
+double widget_pixels_per_inch(const QWidget* const widget)
 {
 #if 0
         int n = QApplication::desktop()->screenNumber(widget);
@@ -273,7 +273,7 @@ double widget_pixels_per_inch(const QWidget* widget)
 #endif
 }
 
-void move_window_to_desktop_center(QMainWindow* window)
+void move_window_to_desktop_center(QMainWindow* const window)
 {
         ASSERT(window);
 
@@ -283,7 +283,7 @@ void move_window_to_desktop_center(QMainWindow* window)
                 (QDesktopWidget().availableGeometry(window).height() - window->frameGeometry().height()) / 2);
 }
 
-void resize_window_frame(QMainWindow* window, const QSize& frame_size)
+void resize_window_frame(QMainWindow* const window, const QSize& frame_size)
 {
         ASSERT(window);
 
@@ -291,7 +291,7 @@ void resize_window_frame(QMainWindow* window, const QSize& frame_size)
         window->resize(frame_size - window->frameGeometry().size() + window->geometry().size());
 }
 
-void resize_window_widget(QMainWindow* window, QWidget* widget, const QSize& widget_size)
+void resize_window_widget(QMainWindow* const window, QWidget* const widget, const QSize& widget_size)
 {
         ASSERT(window && widget);
 
@@ -299,7 +299,7 @@ void resize_window_widget(QMainWindow* window, QWidget* widget, const QSize& wid
         window->resize(widget_size - widget->size() + window->geometry().size());
 }
 
-double slider_position(const QSlider* slider)
+double slider_position(const QSlider* const slider)
 {
         double v = slider->value();
         double min = slider->minimum();
@@ -308,7 +308,7 @@ double slider_position(const QSlider* slider)
         return (v - min) / (max - min);
 }
 
-void set_slider_position(QSlider* slider, double v)
+void set_slider_position(QSlider* const slider, const double v)
 {
         double min = slider->minimum();
         double max = slider->maximum();
@@ -316,7 +316,7 @@ void set_slider_position(QSlider* slider, double v)
         slider->setValue(std::lround(std::lerp(min, max, std::clamp(v, 0.0, 1.0))));
 }
 
-void add_widget(QWidget* dst, QWidget* src)
+void add_widget(QWidget* const dst, QWidget* const src)
 {
         if (dst->layout())
         {
@@ -327,12 +327,12 @@ void add_widget(QWidget* dst, QWidget* src)
         l->addWidget(src);
 }
 
-void set_label_minimum_width_for_text(QLabel* label, const std::string_view& text)
+void set_label_minimum_width_for_text(QLabel* const label, const std::string_view& text)
 {
         label->setMinimumWidth(label->fontMetrics().boundingRect(to_qstring(text)).width());
 }
 
-void set_label_text_and_minimum_width(QLabel* label, const std::string_view& text)
+void set_label_text_and_minimum_width(QLabel* const label, const std::string_view& text)
 {
         QString s = to_qstring(text);
         label->setText(s);

@@ -54,7 +54,11 @@ T threshold(const Matrix<N, N, T>& a)
 }
 
 template <std::size_t N, typename T>
-void rotate(unsigned k, unsigned l, Matrix<N, N, T>* m, std::array<Vector<N, T>, N>* eigenvectors)
+void rotate(
+        const unsigned k,
+        const unsigned l,
+        Matrix<N, N, T>* const m,
+        std::array<Vector<N, T>, N>* const eigenvectors)
 {
         Matrix<N, N, T>& a = *m;
 
@@ -90,6 +94,7 @@ void rotate(unsigned k, unsigned l, Matrix<N, N, T>* m, std::array<Vector<N, T>,
                 a(i, k) = a_ik - s * (a_il + tau * a_ik);
                 a(i, l) = a_il + s * (a_ik - tau * a_il);
         }
+
         for (unsigned i = k + 1; i < l; ++i)
         {
                 T a_ki = a(k, i);
@@ -97,6 +102,7 @@ void rotate(unsigned k, unsigned l, Matrix<N, N, T>* m, std::array<Vector<N, T>,
                 a(k, i) = a_ki - s * (a_il + tau * a_ki);
                 a(i, l) = a_il + s * (a_ki - tau * a_il);
         }
+
         for (unsigned i = l + 1; i < N; ++i)
         {
                 T a_ki = a(k, i);
@@ -104,6 +110,7 @@ void rotate(unsigned k, unsigned l, Matrix<N, N, T>* m, std::array<Vector<N, T>,
                 a(k, i) = a_ki - s * (a_li + tau * a_ki);
                 a(l, i) = a_li + s * (a_ki - tau * a_li);
         }
+
         for (unsigned i = 0; i < N; ++i)
         {
                 T p_ik = (*eigenvectors)[k][i];
@@ -128,9 +135,9 @@ public:
 template <std::size_t N, typename T>
 void eigen_symmetric_upper_triangular(
         Matrix<N, N, T> a,
-        T tolerance,
-        Vector<N, T>* eigenvalues,
-        std::array<Vector<N, T>, N>* eigenvectors)
+        const T& tolerance,
+        Vector<N, T>* const eigenvalues,
+        std::array<Vector<N, T>, N>* const eigenvectors)
 {
         static_assert(std::is_floating_point_v<T>);
         namespace impl = jacobi_method_implementation;

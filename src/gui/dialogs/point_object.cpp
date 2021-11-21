@@ -28,11 +28,11 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 namespace ns::gui::dialog
 {
 PointObjectParametersDialog::PointObjectParametersDialog(
-        int dimension,
+        const int dimension,
         const std::string& object_name,
-        int default_point_count,
-        int min_point_count,
-        int max_point_count,
+        const int default_point_count,
+        const int min_point_count,
+        const int max_point_count,
         std::optional<PointObjectParameters>& parameters)
         : QDialog(parent_for_dialog()),
           min_point_count_(min_point_count),
@@ -46,19 +46,23 @@ PointObjectParametersDialog::PointObjectParametersDialog(
         {
                 error("Dimension " + to_string(dimension) + " must be greater than or equal to 2");
         }
+
         if (object_name.empty())
         {
                 error("No point object name parameter");
         }
+
         if (!(1 <= min_point_count))
         {
                 error("Minumum point count " + to_string(min_point_count) + " must be greater than or equal to 1");
         }
+
         if (!(min_point_count <= max_point_count))
         {
                 error("Maximum point count " + to_string(max_point_count)
                       + " must be greater than or equal to minimum point count " + to_string(min_point_count));
         }
+
         if (!(min_point_count <= default_point_count && default_point_count <= max_point_count))
         {
                 error("Initial point count must be in the range [" + to_string(min_point_count) + ", "
@@ -74,7 +78,7 @@ PointObjectParametersDialog::PointObjectParametersDialog(
         ui_.spinBox_point_count->setSingleStep(std::max(1, max_point_count / 1000));
 }
 
-void PointObjectParametersDialog::done(int r)
+void PointObjectParametersDialog::done(const int r)
 {
         if (r != QDialog::Accepted)
         {
@@ -82,7 +86,7 @@ void PointObjectParametersDialog::done(int r)
                 return;
         }
 
-        int point_count = ui_.spinBox_point_count->value();
+        const int point_count = ui_.spinBox_point_count->value();
         if (!(point_count >= min_point_count_ && point_count <= max_point_count_))
         {
                 std::string msg = "Point count must be in the range [" + to_string(min_point_count_) + ", "
@@ -98,11 +102,11 @@ void PointObjectParametersDialog::done(int r)
 }
 
 std::optional<PointObjectParameters> PointObjectParametersDialog::show(
-        int dimension,
+        const int dimension,
         const std::string& object_name,
-        int default_point_count,
-        int min_point_count,
-        int max_point_count)
+        const int default_point_count,
+        const int min_point_count,
+        const int max_point_count)
 {
         std::optional<PointObjectParameters> parameters;
 

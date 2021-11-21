@@ -54,7 +54,7 @@ void message_event(const MessageEvent& event)
 }
 }
 
-int run_application(int argc, char** argv)
+int run_application(int argc, char** const argv)
 {
         ApplicationMessage application_message;
 
@@ -74,7 +74,7 @@ int run_application(int argc, char** argv)
 
         create_delete_on_close_window<gui::main_window::MainWindow>()->show();
 
-        int r = Application::exec();
+        const int r = Application::exec();
 
         return r;
 }

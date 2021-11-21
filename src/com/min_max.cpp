@@ -48,7 +48,7 @@ static_assert(static_test<float>());
 static_assert(static_test<double>());
 
 template <typename T>
-void check_equal(const T& v1, const T& v2, const char* text)
+void check_equal(const T& v1, const T& v2, const char* const text)
 {
         if (!(v1 == v2))
         {

@@ -328,7 +328,7 @@ void set_features(
 }
 }
 
-void add_features(DeviceFeatures* dst, const DeviceFeatures& src)
+void add_features(DeviceFeatures* const dst, const DeviceFeatures& src)
 {
         add_features(&dst->features_10, src.features_10);
         add_features(&dst->features_11, src.features_11);

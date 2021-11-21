@@ -56,12 +56,15 @@ public:
         {
         }
 
-        constexpr explicit RGB(std::type_identity_t<T> v) : Base(std::max(T(0), v))
+        constexpr explicit RGB(const std::type_identity_t<T> v) : Base(std::max(T(0), v))
         {
                 ASSERT(is_finite(v));
         }
 
-        constexpr RGB(std::type_identity_t<T> red, std::type_identity_t<T> green, std::type_identity_t<T> blue)
+        constexpr RGB(
+                const std::type_identity_t<T> red,
+                const std::type_identity_t<T> green,
+                const std::type_identity_t<T> blue)
                 : Base(make_rgb(red, green, blue))
         {
         }
@@ -70,7 +73,7 @@ public:
         {
         }
 
-        [[nodiscard]] static RGB illuminant(T red, T green, T blue)
+        [[nodiscard]] static RGB illuminant(const T red, const T green, const T blue)
         {
                 return RGB(red, green, blue);
         }
@@ -157,7 +160,7 @@ class SpectrumSamples final : public Samples<SpectrumSamples<T, N>, N, T>
 
         static Functions create_functions()
         {
-                const auto copy = []<typename SourceType>(Vector<N, T>* dst, const std::vector<SourceType>& src)
+                const auto copy = []<typename SourceType>(Vector<N, T>* const dst, const std::vector<SourceType>& src)
                 {
                         static_assert(std::is_floating_point_v<SourceType>);
                         ASSERT(src.size() == N);
@@ -300,7 +303,7 @@ public:
         {
         }
 
-        constexpr explicit SpectrumSamples(std::type_identity_t<T> v) : Base(std::max(T(0), v))
+        constexpr explicit SpectrumSamples(const std::type_identity_t<T> v) : Base(std::max(T(0), v))
         {
                 ASSERT(is_finite(v));
         }
@@ -311,7 +314,10 @@ public:
                 ASSERT(is_finite(samples));
         }
 
-        SpectrumSamples(std::type_identity_t<T> red, std::type_identity_t<T> green, std::type_identity_t<T> blue)
+        SpectrumSamples(
+                const std::type_identity_t<T> red,
+                const std::type_identity_t<T> green,
+                const std::type_identity_t<T> blue)
                 : Base(rgb_to_spectrum(red, green, blue, functions().reflectance))
         {
         }
@@ -320,7 +326,7 @@ public:
         {
         }
 
-        [[nodiscard]] static SpectrumSamples illuminant(T red, T green, T blue)
+        [[nodiscard]] static SpectrumSamples illuminant(const T red, const T green, const T blue)
         {
                 return SpectrumSamples(rgb_to_spectrum(red, green, blue, functions().illumination));
         }

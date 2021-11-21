@@ -27,14 +27,14 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 namespace ns
 {
 template <typename T>
-void sort_and_unique(T* v)
+void sort_and_unique(T* const v)
 {
         std::sort(v->begin(), v->end());
         v->erase(std::unique(v->begin(), v->end()), v->end());
 }
 
 template <typename T, typename Less, typename Equal>
-void sort_and_unique(T* v, Less less, Equal equal)
+void sort_and_unique(T* const v, const Less& less, const Equal& equal)
 {
         std::sort(v->begin(), v->end(), less);
         v->erase(std::unique(v->begin(), v->end(), equal), v->end());

@@ -81,8 +81,8 @@ public:
 
                 static_assert(sizeof(fftwf_complex) == sizeof(std::complex<float>));
                 static_assert(alignof(fftwf_complex) == alignof(std::complex<float>));
-                fftwf_complex* in_fftw = reinterpret_cast<fftwf_complex*>(in->data());
-                fftwf_complex* out_fftw = reinterpret_cast<fftwf_complex*>(out->data());
+                fftwf_complex* const in_fftw = reinterpret_cast<fftwf_complex*>(in->data());
+                fftwf_complex* const out_fftw = reinterpret_cast<fftwf_complex*>(out->data());
 
                 if (inverse)
                 {

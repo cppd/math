@@ -30,7 +30,7 @@ namespace
 {
 constexpr int DIFFERENCE_INTERVAL_IN_UPDATES = 10;
 
-std::string progress_to_string(double progress)
+std::string progress_to_string(const double progress)
 {
         const int percent = std::clamp(static_cast<int>(progress * 100), 0, 100);
         std::string str;
@@ -55,7 +55,7 @@ struct StatisticsWidget::Counters final
         long long ray_count;
         long long sample_count;
 
-        Counters(long long pixel_count, long long ray_count, long long sample_count)
+        Counters(const long long pixel_count, const long long ray_count, const long long sample_count)
                 : pixel_count(pixel_count), ray_count(ray_count), sample_count(sample_count)
         {
         }
@@ -66,7 +66,7 @@ struct StatisticsWidget::Counters final
         }
 };
 
-StatisticsWidget::StatisticsWidget(std::chrono::milliseconds update_interval)
+StatisticsWidget::StatisticsWidget(const std::chrono::milliseconds& update_interval)
         : QWidget(nullptr),
           difference_(std::make_unique<Difference<Counters>>(DIFFERENCE_INTERVAL_IN_UPDATES * update_interval))
 {

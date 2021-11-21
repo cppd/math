@@ -78,16 +78,18 @@ class Glyphs
         std::unordered_map<char32_t, text::FontGlyph> glyphs_;
 
 public:
-        Glyphs(int size, unsigned max_image_dimension)
+        Glyphs(const int size, const unsigned max_image_dimension)
         {
                 text::Font font(size, font_data());
 
                 create_font_glyphs(font, max_image_dimension, max_image_dimension, &glyphs_, &image_);
         }
+
         std::unordered_map<char32_t, text::FontGlyph>& glyphs()
         {
                 return glyphs_;
         }
+
         const image::Image<2>& image() const
         {
                 return image_;
@@ -124,7 +126,7 @@ class Impl final : public View
                 memory_.set_color(color.rgb32().clamp(0, 1));
         }
 
-        void draw_commands(VkCommandBuffer command_buffer) const
+        void draw_commands(const VkCommandBuffer command_buffer) const
         {
                 ASSERT(std::this_thread::get_id() == thread_id_);
 
@@ -164,7 +166,7 @@ class Impl final : public View
                 return vulkan::create_command_buffers(info);
         }
 
-        void create_buffers(RenderBuffers2D* render_buffers, const Region<2, int>& viewport) override
+        void create_buffers(RenderBuffers2D* const render_buffers, const Region<2, int>& viewport) override
         {
                 ASSERT(thread_id_ == std::this_thread::get_id());
 
@@ -199,8 +201,8 @@ class Impl final : public View
 
         VkSemaphore draw(
                 const vulkan::Queue& queue,
-                VkSemaphore wait_semaphore,
-                unsigned index,
+                const VkSemaphore wait_semaphore,
+                const unsigned index,
                 const text::TextData& text_data) override
         {
                 ASSERT(std::this_thread::get_id() == thread_id_);
@@ -257,12 +259,12 @@ class Impl final : public View
                 return semaphore_;
         }
 
-        Impl(const vulkan::VulkanInstance* instance,
-             const vulkan::CommandPool* graphics_command_pool,
-             const vulkan::Queue* graphics_queue,
-             const vulkan::CommandPool* /*transfer_command_pool*/,
-             const vulkan::Queue* /*transfer_queue*/,
-             bool sample_shading,
+        Impl(const vulkan::VulkanInstance* const instance,
+             const vulkan::CommandPool* const graphics_command_pool,
+             const vulkan::Queue* const graphics_queue,
+             const vulkan::CommandPool* const /*transfer_command_pool*/,
+             const vulkan::Queue* const /*transfer_queue*/,
+             const bool sample_shading,
              const color::Color& color,
              Glyphs&& glyphs)
                 : sample_shading_(sample_shading),
@@ -314,13 +316,13 @@ class Impl final : public View
         }
 
 public:
-        Impl(const vulkan::VulkanInstance* instance,
-             const vulkan::CommandPool* graphics_command_pool,
-             const vulkan::Queue* graphics_queue,
-             const vulkan::CommandPool* transfer_command_pool,
-             const vulkan::Queue* transfer_queue,
-             bool sample_shading,
-             int size,
+        Impl(const vulkan::VulkanInstance* const instance,
+             const vulkan::CommandPool* const graphics_command_pool,
+             const vulkan::Queue* const graphics_queue,
+             const vulkan::CommandPool* const transfer_command_pool,
+             const vulkan::Queue* const transfer_queue,
+             const bool sample_shading,
+             const int size,
              const color::Color& color)
                 : Impl(instance,
                        graphics_command_pool,
@@ -350,13 +352,13 @@ vulkan::DeviceFeatures View::required_device_features()
 }
 
 std::unique_ptr<View> create_view(
-        const vulkan::VulkanInstance* instance,
-        const vulkan::CommandPool* graphics_command_pool,
-        const vulkan::Queue* graphics_queue,
-        const vulkan::CommandPool* transfer_command_pool,
-        const vulkan::Queue* transfer_queue,
-        bool sample_shading,
-        int size,
+        const vulkan::VulkanInstance* const instance,
+        const vulkan::CommandPool* const graphics_command_pool,
+        const vulkan::Queue* const graphics_queue,
+        const vulkan::CommandPool* const transfer_command_pool,
+        const vulkan::Queue* const transfer_queue,
+        const bool sample_shading,
+        const int size,
         const color::Color& color)
 {
         return std::make_unique<Impl>(

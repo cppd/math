@@ -425,7 +425,7 @@ void check_facet_indices(const Mesh<N>& mesh)
 }
 
 template <std::size_t N>
-bool remove_facets_with_incorrect_dimension([[maybe_unused]] Mesh<N>* mesh)
+bool remove_facets_with_incorrect_dimension([[maybe_unused]] Mesh<N>* const mesh)
 {
         if constexpr (N != 3)
         {

@@ -34,7 +34,7 @@ class TestSelectionParametersDialog::Items final
                 QListWidgetItem* item;
                 std::string lower_text;
 
-                Item(std::string&& name, QListWidgetItem* item)
+                Item(std::string&& name, QListWidgetItem* const item)
                         : name(std::move(name)), item(item), lower_text(item->text().toLower().toStdString())
                 {
                 }
@@ -43,18 +43,18 @@ class TestSelectionParametersDialog::Items final
         std::vector<Item> items_;
 
 public:
-        explicit Items(std::size_t count)
+        explicit Items(const std::size_t count)
         {
                 items_.reserve(count);
         }
 
-        void add(std::string&& name, QListWidgetItem* item)
+        void add(std::string&& name, QListWidgetItem* const item)
         {
                 item->setCheckState(Qt::Checked);
                 items_.emplace_back(std::move(name), item);
         }
 
-        void check(bool checked)
+        void check(const bool checked)
         {
                 const Qt::CheckState check_state = checked ? Qt::Checked : Qt::Unchecked;
                 for (Item& item : items_)
@@ -214,7 +214,7 @@ void TestSelectionParametersDialog::filter(const QString& text)
         ui_.lineEdit_filter->setStyleSheet(style);
 }
 
-void TestSelectionParametersDialog::done(int r)
+void TestSelectionParametersDialog::done(const int r)
 {
         if (r != QDialog::Accepted)
         {

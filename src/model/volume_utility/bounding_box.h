@@ -36,7 +36,7 @@ struct BoundingBox
 namespace bounding_box_implementation
 {
 template <std::size_t N, typename T>
-void init_min_max(Vector<N, T>* min, Vector<N, T>* max)
+void init_min_max(Vector<N, T>* const min, Vector<N, T>* const max)
 {
         *min = Vector<N, T>(Limits<T>::max());
         *max = Vector<N, T>(Limits<T>::lowest());

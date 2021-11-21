@@ -77,7 +77,7 @@ void compare_data(const std::vector<const Interface<T>*>& pointers, std::mt19937
         {
                 error("No pointer data");
         }
-        for (const Interface<T>* pointer : pointers)
+        for (const Interface<T>* const pointer : pointers)
         {
                 const T v = d(engine);
                 const T p = pointer->value();
@@ -131,7 +131,7 @@ void check_arena(const std::size_t object_count)
 }
 
 template <typename T, typename Distribution>
-void test_arena(std::size_t object_count, const Distribution d)
+void test_arena(const std::size_t object_count, const Distribution d)
 {
         MemoryArena::thread_local_instance().clear();
 

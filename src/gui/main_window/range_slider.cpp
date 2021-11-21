@@ -33,7 +33,7 @@ constexpr int MAX = 500;
 static_assert(MIN >= 0 && MIN < MAX);
 }
 
-RangeSlider::RangeSlider(QSlider* slider_min, QSlider* slider_max)
+RangeSlider::RangeSlider(QSlider* const slider_min, QSlider* const slider_max)
         : slider_min_(slider_min),
           slider_max_(slider_max),
           last_min_(Limits<decltype(last_min_)>::lowest()),
@@ -101,12 +101,12 @@ int RangeSlider::max_value() const
         return slider_max_->value();
 }
 
-void RangeSlider::set_min_value(int value)
+void RangeSlider::set_min_value(const int value)
 {
         slider_min_->setValue(slider_min_->maximum() - value);
 }
 
-void RangeSlider::set_max_value(int value)
+void RangeSlider::set_max_value(const int value)
 {
         slider_max_->setValue(value);
 }

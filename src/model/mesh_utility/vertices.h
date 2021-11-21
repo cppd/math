@@ -28,17 +28,17 @@ namespace ns::mesh
 template <std::size_t N>
 std::vector<Vector<N, float>> normalize_vertices(const Mesh<N>& mesh, const BoundingBox<N>& box)
 {
-        Vector<N, float> extent = box.max - box.min;
+        const Vector<N, float> extent = box.max - box.min;
 
-        float max_extent = extent.norm_infinity();
+        const float max_extent = extent.norm_infinity();
 
         if (max_extent == 0)
         {
                 error("Mesh vertices are equal to each other");
         }
 
-        float scale_factor = 2 / max_extent;
-        Vector<N, float> center = box.min + 0.5f * extent;
+        const float scale_factor = 2 / max_extent;
+        const Vector<N, float> center = box.min + 0.5f * extent;
 
         std::vector<Vector<N, float>> normalized_vertices;
         normalized_vertices.reserve(mesh.vertices.size());
@@ -46,7 +46,6 @@ std::vector<Vector<N, float>> normalize_vertices(const Mesh<N>& mesh, const Boun
         for (const Vector<N, float>& v : mesh.vertices)
         {
                 Vector<N, float> vertex = (v - center) * scale_factor;
-
                 normalized_vertices.push_back(vertex);
         }
 

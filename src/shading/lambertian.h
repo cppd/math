@@ -98,17 +98,17 @@ Sample<N, T, Color> sample_f(RandomEngine& random_engine, const Color& color, co
 
         ASSERT(n.is_unit());
 
-        Vector<N, T> l = sampling::cosine_on_hemisphere(random_engine, n);
+        const Vector<N, T> l = sampling::cosine_on_hemisphere(random_engine, n);
 
         ASSERT(l.is_unit());
 
-        T n_l = dot(n, l);
+        const T n_l = dot(n, l);
         if (n_l <= 0)
         {
                 return BLACK;
         }
 
-        T pdf = sampling::cosine_on_hemisphere_pdf<N>(n_l);
+        const T pdf = sampling::cosine_on_hemisphere_pdf<N>(n_l);
         if (pdf <= 0)
         {
                 return BLACK;

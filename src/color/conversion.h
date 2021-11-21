@@ -29,7 +29,7 @@ namespace ns::color
 namespace conversion_implementation
 {
 template <typename UInt>
-constexpr float uint_to_float(UInt c)
+constexpr float uint_to_float(const UInt c)
 {
         static_assert(std::is_same_v<UInt, std::uint8_t> || std::is_same_v<UInt, std::uint16_t>);
 
@@ -38,7 +38,7 @@ constexpr float uint_to_float(UInt c)
 }
 
 template <typename UInt, typename T>
-constexpr UInt float_to_uint(T c)
+constexpr UInt float_to_uint(const T c)
 {
         static_assert(std::is_same_v<UInt, std::uint8_t> || std::is_same_v<UInt, std::uint16_t>);
         static_assert(std::is_same_v<T, float>);
@@ -48,7 +48,7 @@ constexpr UInt float_to_uint(T c)
 }
 
 template <typename UInt, typename T>
-constexpr UInt float_clamp_to_uint(T c)
+constexpr UInt float_clamp_to_uint(const T c)
 {
         static_assert(std::is_same_v<UInt, std::uint8_t> || std::is_same_v<UInt, std::uint16_t>);
         static_assert(std::is_same_v<T, float>);
@@ -138,7 +138,7 @@ inline constexpr std::array<float, 256> SRGB_UINT8_TO_RGB_FLOAT =
 //
 
 template <typename T>
-T linear_float_to_srgb_float(T c)
+T linear_float_to_srgb_float(const T c)
 {
         static_assert(std::is_same_v<T, float>);
 
@@ -158,7 +158,7 @@ T linear_float_to_srgb_float(T c)
 }
 
 template <typename T>
-T srgb_float_to_linear_float(T c)
+T srgb_float_to_linear_float(const T c)
 {
         static_assert(std::is_same_v<T, float>);
 
@@ -180,7 +180,7 @@ T srgb_float_to_linear_float(T c)
 //
 
 template <typename UInt8>
-constexpr float srgb_uint8_to_linear_float(UInt8 c)
+constexpr float srgb_uint8_to_linear_float(const UInt8 c)
 {
         namespace impl = conversion_implementation;
 
@@ -191,7 +191,7 @@ constexpr float srgb_uint8_to_linear_float(UInt8 c)
 }
 
 template <typename UInt8>
-constexpr float linear_uint8_to_linear_float(UInt8 c)
+constexpr float linear_uint8_to_linear_float(const UInt8 c)
 {
         static_assert(std::is_same_v<UInt8, std::uint8_t>);
 
@@ -199,7 +199,7 @@ constexpr float linear_uint8_to_linear_float(UInt8 c)
 }
 
 template <typename T>
-std::uint8_t linear_float_to_srgb_uint8(T c)
+std::uint8_t linear_float_to_srgb_uint8(const T c)
 {
         static_assert(std::is_same_v<T, float>);
 
@@ -207,7 +207,7 @@ std::uint8_t linear_float_to_srgb_uint8(T c)
 }
 
 template <typename T>
-constexpr std::uint8_t linear_float_to_linear_uint8(T c)
+constexpr std::uint8_t linear_float_to_linear_uint8(const T c)
 {
         static_assert(std::is_same_v<T, float>);
 
@@ -217,7 +217,7 @@ constexpr std::uint8_t linear_float_to_linear_uint8(T c)
 //
 
 template <typename T>
-float srgb_uint16_to_linear_float(T c)
+float srgb_uint16_to_linear_float(const T c)
 {
         static_assert(std::is_same_v<T, std::uint16_t>);
 
@@ -225,7 +225,7 @@ float srgb_uint16_to_linear_float(T c)
 }
 
 template <typename T>
-constexpr float linear_uint16_to_linear_float(T c)
+constexpr float linear_uint16_to_linear_float(const T c)
 {
         static_assert(std::is_same_v<T, std::uint16_t>);
 
@@ -233,7 +233,7 @@ constexpr float linear_uint16_to_linear_float(T c)
 }
 
 template <typename T>
-std::uint16_t linear_float_to_srgb_uint16(T c)
+std::uint16_t linear_float_to_srgb_uint16(const T c)
 {
         static_assert(std::is_same_v<T, float>);
 
@@ -241,7 +241,7 @@ std::uint16_t linear_float_to_srgb_uint16(T c)
 }
 
 template <typename T>
-constexpr std::uint16_t linear_float_to_linear_uint16(T c)
+constexpr std::uint16_t linear_float_to_linear_uint16(const T c)
 {
         static_assert(std::is_same_v<T, float>);
 
@@ -251,7 +251,7 @@ constexpr std::uint16_t linear_float_to_linear_uint16(T c)
 //
 
 template <typename T>
-constexpr T linear_float_to_linear_luminance(T red, T green, T blue)
+constexpr T linear_float_to_linear_luminance(const T red, const T green, const T blue)
 {
         static_assert(std::is_floating_point_v<T>);
 
@@ -261,7 +261,7 @@ constexpr T linear_float_to_linear_luminance(T red, T green, T blue)
 //
 
 template <typename T>
-constexpr Vector<3, T> xyz_to_linear_srgb(T x, T y, T z)
+constexpr Vector<3, T> xyz_to_linear_srgb(const T x, const T y, const T z)
 {
         static_assert(std::is_floating_point_v<T>);
 
@@ -275,7 +275,7 @@ constexpr Vector<3, T> xyz_to_linear_srgb(T x, T y, T z)
 }
 
 template <typename T>
-constexpr Vector<3, T> linear_srgb_to_xyz(T r, T g, T b)
+constexpr Vector<3, T> linear_srgb_to_xyz(const T r, const T g, const T b)
 {
         static_assert(std::is_floating_point_v<T>);
 

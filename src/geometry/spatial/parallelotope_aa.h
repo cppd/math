@@ -42,13 +42,14 @@ namespace ns::geometry
 namespace parallelotope_aa_implementation
 {
 template <std::size_t N, typename T, std::size_t... I>
-constexpr std::array<Vector<N, T>, N> make_vectors_impl(const T& v, std::integer_sequence<std::size_t, I...>)
+constexpr std::array<Vector<N, T>, N> make_vectors_impl(const T& v, std::integer_sequence<std::size_t, I...>&&)
 {
         static_assert(N == sizeof...(I));
         std::array<Vector<N, T>, N> vectors{(static_cast<void>(I), Vector<N, T>(0))...};
         ((vectors[I][I] = v), ...);
         return vectors;
 }
+
 // Diagonal matrix NxN
 template <std::size_t N, typename T, std::size_t... I>
 constexpr std::array<Vector<N, T>, N> make_vectors(const T& v)
@@ -57,7 +58,7 @@ constexpr std::array<Vector<N, T>, N> make_vectors(const T& v)
 }
 
 template <std::size_t N, typename T>
-constexpr Vector<N, T> index_vector(unsigned index, T value)
+constexpr Vector<N, T> index_vector(const unsigned index, const T& value)
 {
         Vector<N, T> v(0);
         v[index] = value;
@@ -99,7 +100,7 @@ class ParallelotopeAA final
         void set_data(const Vector<N, T>& org, const std::array<Vector<N, T>, N>& vectors);
         void set_data(const Vector<N, T>& org, const std::array<T, N>& sizes);
 
-        bool intersect_impl(const Ray<N, T>& r, T* first, T* second) const;
+        bool intersect_impl(const Ray<N, T>& ray, T* first, T* second) const;
 
         T size(unsigned i) const;
 
@@ -124,13 +125,13 @@ public:
 
         Constraints<N, T, 2 * N, 0> constraints() const;
 
-        bool inside(const Vector<N, T>& p) const;
+        bool inside(const Vector<N, T>& point) const;
 
-        std::optional<T> intersect(const Ray<N, T>& r) const;
-        std::optional<T> intersect_farthest(const Ray<N, T>& r) const;
-        std::optional<T> intersect_volume(const Ray<N, T>& r) const;
+        std::optional<T> intersect(const Ray<N, T>& ray) const;
+        std::optional<T> intersect_farthest(const Ray<N, T>& ray) const;
+        std::optional<T> intersect_volume(const Ray<N, T>& ray) const;
 
-        Vector<N, T> normal(const Vector<N, T>& p) const;
+        Vector<N, T> normal(const Vector<N, T>& point) const;
 
         std::array<ParallelotopeAA<N, T>, DIVISIONS> binary_division() const;
 
@@ -193,7 +194,7 @@ ParallelotopeAA<N, T>::ParallelotopeAA(const Vector<N, T>& min, const Vector<N, 
 }
 
 template <std::size_t N, typename T>
-T ParallelotopeAA<N, T>::size(unsigned i) const
+T ParallelotopeAA<N, T>::size(const unsigned i) const
 {
         return planes_[i].d2 - planes_[i].d1;
 }
@@ -219,18 +220,18 @@ Constraints<N, T, 2 * N, 0> ParallelotopeAA<N, T>::constraints() const
 }
 
 template <std::size_t N, typename T>
-bool ParallelotopeAA<N, T>::intersect_impl(const Ray<N, T>& r, T* first, T* second) const
+bool ParallelotopeAA<N, T>::intersect_impl(const Ray<N, T>& ray, T* const first, T* const second) const
 {
         T near = 0;
         T far = Limits<T>::max();
 
         for (unsigned i = 0; i < N; ++i)
         {
-                const T s = r.dir()[i];
+                const T s = ray.dir()[i];
                 if (s == 0)
                 {
                         // parallel to the planes
-                        T d = r.org()[i];
+                        T d = ray.org()[i];
                         if (d < planes_[i].d1 || d > planes_[i].d2)
                         {
                                 // outside the planes
@@ -240,7 +241,7 @@ bool ParallelotopeAA<N, T>::intersect_impl(const Ray<N, T>& r, T* first, T* seco
                         continue;
                 }
 
-                const T d = r.org()[i];
+                const T d = ray.org()[i];
                 const T alpha1 = (planes_[i].d1 - d) / s;
                 const T alpha2 = (planes_[i].d2 - d) / s;
 
@@ -272,11 +273,11 @@ bool ParallelotopeAA<N, T>::intersect_impl(const Ray<N, T>& r, T* first, T* seco
 }
 
 template <std::size_t N, typename T>
-std::optional<T> ParallelotopeAA<N, T>::intersect(const Ray<N, T>& r) const
+std::optional<T> ParallelotopeAA<N, T>::intersect(const Ray<N, T>& ray) const
 {
         T first;
         T second;
-        if (intersect_impl(r, &first, &second))
+        if (intersect_impl(ray, &first, &second))
         {
                 return (first > 0) ? first : second;
         }
@@ -284,11 +285,11 @@ std::optional<T> ParallelotopeAA<N, T>::intersect(const Ray<N, T>& r) const
 }
 
 template <std::size_t N, typename T>
-std::optional<T> ParallelotopeAA<N, T>::intersect_farthest(const Ray<N, T>& r) const
+std::optional<T> ParallelotopeAA<N, T>::intersect_farthest(const Ray<N, T>& ray) const
 {
         T first;
         T second;
-        if (intersect_impl(r, &first, &second))
+        if (intersect_impl(ray, &first, &second))
         {
                 return second;
         }
@@ -296,11 +297,11 @@ std::optional<T> ParallelotopeAA<N, T>::intersect_farthest(const Ray<N, T>& r) c
 }
 
 template <std::size_t N, typename T>
-std::optional<T> ParallelotopeAA<N, T>::intersect_volume(const Ray<N, T>& r) const
+std::optional<T> ParallelotopeAA<N, T>::intersect_volume(const Ray<N, T>& ray) const
 {
         T first;
         T second;
-        if (intersect_impl(r, &first, &second))
+        if (intersect_impl(ray, &first, &second))
         {
                 return first;
         }
@@ -308,7 +309,7 @@ std::optional<T> ParallelotopeAA<N, T>::intersect_volume(const Ray<N, T>& r) con
 }
 
 template <std::size_t N, typename T>
-Vector<N, T> ParallelotopeAA<N, T>::normal(const Vector<N, T>& p) const
+Vector<N, T> ParallelotopeAA<N, T>::normal(const Vector<N, T>& point) const
 {
         // the normal of the plane closest to the point
 
@@ -318,7 +319,7 @@ Vector<N, T> ParallelotopeAA<N, T>::normal(const Vector<N, T>& p) const
         for (unsigned i = 0; i < N; ++i)
         {
                 {
-                        const T distance = std::abs(p[i] - planes_[i].d1);
+                        const T distance = std::abs(point[i] - planes_[i].d1);
                         if (distance < min_distance)
                         {
                                 min_distance = distance;
@@ -327,7 +328,7 @@ Vector<N, T> ParallelotopeAA<N, T>::normal(const Vector<N, T>& p) const
                 }
 
                 {
-                        const T distance = std::abs(p[i] - planes_[i].d2);
+                        const T distance = std::abs(point[i] - planes_[i].d2);
                         if (distance < min_distance)
                         {
                                 min_distance = distance;
@@ -342,16 +343,16 @@ Vector<N, T> ParallelotopeAA<N, T>::normal(const Vector<N, T>& p) const
 }
 
 template <std::size_t N, typename T>
-bool ParallelotopeAA<N, T>::inside(const Vector<N, T>& p) const
+bool ParallelotopeAA<N, T>::inside(const Vector<N, T>& point) const
 {
         for (unsigned i = 0; i < N; ++i)
         {
-                if (p[i] < planes_[i].d1)
+                if (point[i] < planes_[i].d1)
                 {
                         return false;
                 }
 
-                if (p[i] > planes_[i].d2)
+                if (point[i] > planes_[i].d2)
                 {
                         return false;
                 }
@@ -361,8 +362,10 @@ bool ParallelotopeAA<N, T>::inside(const Vector<N, T>& p) const
 
 template <std::size_t N, typename T>
 template <int INDEX, typename F>
-void ParallelotopeAA<N, T>::binary_division_impl(std::array<Planes, N>* p, const Vector<N, T>& middle_d, const F& f)
-        const
+void ParallelotopeAA<N, T>::binary_division_impl(
+        std::array<Planes, N>* const p,
+        const Vector<N, T>& middle_d,
+        const F& f) const
 {
         if constexpr (INDEX >= 0)
         {
@@ -409,7 +412,7 @@ std::array<ParallelotopeAA<N, T>, ParallelotopeAA<N, T>::DIVISIONS> Parallelotop
 
 template <std::size_t N, typename T>
 template <int INDEX, typename F>
-void ParallelotopeAA<N, T>::vertices_impl(Vector<N, T>* p, const F& f) const
+void ParallelotopeAA<N, T>::vertices_impl(Vector<N, T>* const p, const F& f) const
 {
         if constexpr (INDEX >= 0)
         {

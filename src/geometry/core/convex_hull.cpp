@@ -372,8 +372,8 @@ void create_facets_for_point_and_horizon(
         ASSERT(new_facets_vector->size() == thread_count);
         ASSERT(unique_points_work->size() == thread_count);
 
-        std::vector<signed char>* unique_points = &(*unique_points_work)[thread_id];
-        FacetList<Facet>* new_facets = &(*new_facets_vector)[thread_id];
+        std::vector<signed char>* const unique_points = &(*unique_points_work)[thread_id];
+        FacetList<Facet>* const new_facets = &(*new_facets_vector)[thread_id];
 
         new_facets->clear();
 

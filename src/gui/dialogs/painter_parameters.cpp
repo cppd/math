@@ -25,14 +25,14 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 namespace ns::gui::dialog
 {
 PainterParametersWidget::PainterParametersWidget(
-        QWidget* parent,
-        int max_thread_count,
-        int default_samples_per_pixel,
-        int max_samples_per_pixel,
+        QWidget* const parent,
+        const int max_thread_count,
+        const int default_samples_per_pixel,
+        const int max_samples_per_pixel,
         const std::array<const char*, 2>& precisions,
-        int default_precision_index,
+        const int default_precision_index,
         const std::array<const char*, 2>& colors,
-        int default_color_index)
+        const int default_color_index)
         : QWidget(parent)
 {
         if (!(max_thread_count >= 1))
@@ -125,18 +125,18 @@ PainterParametersWidget::PainterParametersWidget(
 
 bool PainterParametersWidget::check()
 {
-        int thread_count = ui_.spinBox_threads->value();
+        const int thread_count = ui_.spinBox_threads->value();
         if (!(thread_count >= 1 && thread_count <= max_thread_count_))
         {
-                std::string msg = "Thread count must be in the range [1, " + to_string(max_thread_count_) + "].";
+                const std::string msg = "Thread count must be in the range [1, " + to_string(max_thread_count_) + "].";
                 dialog::message_critical(msg);
                 return false;
         }
 
-        int samples_per_pixel = ui_.spinBox_samples_per_pixel->value();
+        const int samples_per_pixel = ui_.spinBox_samples_per_pixel->value();
         if (!(samples_per_pixel >= 1 && samples_per_pixel <= max_samples_per_pixel_))
         {
-                std::string msg =
+                const std::string msg =
                         "Samples per pixel must be in the range [1, " + to_string(max_samples_per_pixel_) + "].";
                 dialog::message_critical(msg);
                 return false;

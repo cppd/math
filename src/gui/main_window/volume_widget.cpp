@@ -69,7 +69,7 @@ VolumeWidget::VolumeWidget() : QWidget(nullptr)
         connect(slider_levels_.get(), &RangeSlider::changed, this, &VolumeWidget::on_levels_changed);
 }
 
-void VolumeWidget::set_model_tree(ModelTree* model_tree)
+void VolumeWidget::set_model_tree(ModelTree* const model_tree)
 {
         ASSERT(std::this_thread::get_id() == thread_id_);
 
@@ -85,7 +85,7 @@ void VolumeWidget::set_model_tree(ModelTree* model_tree)
         }
 }
 
-void VolumeWidget::set_enabled(bool enabled) const
+void VolumeWidget::set_enabled(const bool enabled) const
 {
         for (const QPointer<QWidget>& widget : widgets_)
         {

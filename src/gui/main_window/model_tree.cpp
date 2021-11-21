@@ -31,7 +31,7 @@ namespace
 constexpr QColor COLOR_VISIBLE(0, 0, 0);
 constexpr QColor COLOR_HIDDEN(128, 128, 128);
 
-void set_item_color(QTreeWidgetItem* item, bool visible)
+void set_item_color(QTreeWidgetItem* const item, const bool visible)
 {
         item->setForeground(0, visible ? COLOR_VISIBLE : COLOR_HIDDEN);
 }
@@ -117,7 +117,7 @@ void ModelTree::insert(storage::VolumeObject&& object, const std::optional<Objec
                 });
 }
 
-void ModelTree::erase(ObjectId id)
+void ModelTree::erase(const ObjectId id)
 {
         thread_queue_.push(
                 [this, id]()
@@ -129,7 +129,7 @@ void ModelTree::erase(ObjectId id)
                 });
 }
 
-void ModelTree::update(ObjectId id)
+void ModelTree::update(const ObjectId id)
 {
         thread_queue_.push(
                 [this, id]()
@@ -149,7 +149,7 @@ void ModelTree::update(ObjectId id)
                 });
 }
 
-void ModelTree::show(ObjectId id, bool visible)
+void ModelTree::show(const ObjectId id, const bool visible)
 {
         thread_queue_.push(
                 [this, id, visible]()
@@ -166,10 +166,10 @@ void ModelTree::show(ObjectId id, bool visible)
 }
 
 void ModelTree::insert_into_tree(
-        ObjectId id,
-        unsigned dimension,
+        const ObjectId id,
+        const unsigned dimension,
         const std::string& name,
-        bool visible,
+        const bool visible,
         const std::optional<ObjectId>& parent_object_id)
 {
         ASSERT(std::this_thread::get_id() == thread_id_);
@@ -201,7 +201,7 @@ void ModelTree::insert_into_tree(
                 item = new QTreeWidgetItem(ui_.model_tree);
         }
 
-        QString s = QString("(%1D) %2").arg(dimension).arg(QString::fromStdString(name));
+        const QString s = QString("(%1D) %2").arg(dimension).arg(QString::fromStdString(name));
         item->setText(0, s);
         item->setToolTip(0, s);
 
@@ -211,7 +211,7 @@ void ModelTree::insert_into_tree(
         map_id_item_[id] = item;
 }
 
-void ModelTree::erase_from_tree(ObjectId id)
+void ModelTree::erase_from_tree(const ObjectId id)
 {
         ASSERT(std::this_thread::get_id() == thread_id_);
 
@@ -244,7 +244,7 @@ void ModelTree::erase_from_tree(ObjectId id)
         }
 }
 
-void ModelTree::show_object(ObjectId id, bool show)
+void ModelTree::show_object(const ObjectId id, const bool show)
 {
         ASSERT(std::this_thread::get_id() == thread_id_);
 
@@ -276,7 +276,7 @@ void ModelTree::show_object(ObjectId id, bool show)
         }
 }
 
-void ModelTree::show_only_this_object(ObjectId id)
+void ModelTree::show_only_this_object(const ObjectId id)
 {
         ASSERT(std::this_thread::get_id() == thread_id_);
 
@@ -346,7 +346,7 @@ std::optional<storage::MeshObjectConst> ModelTree::current_mesh_const() const
         return object;
 }
 
-std::optional<storage::MeshObjectConst> ModelTree::mesh_const_if_current(ObjectId id) const
+std::optional<storage::MeshObjectConst> ModelTree::mesh_const_if_current(const ObjectId id) const
 {
         ASSERT(std::this_thread::get_id() == thread_id_);
 
@@ -363,7 +363,7 @@ std::optional<storage::MeshObjectConst> ModelTree::mesh_const_if_current(ObjectI
         return object;
 }
 
-std::optional<storage::MeshObject> ModelTree::mesh_if_current(ObjectId id) const
+std::optional<storage::MeshObject> ModelTree::mesh_if_current(const ObjectId id) const
 {
         ASSERT(std::this_thread::get_id() == thread_id_);
 
@@ -414,7 +414,7 @@ std::optional<storage::VolumeObjectConst> ModelTree::current_volume_const() cons
         return object;
 }
 
-std::optional<storage::VolumeObjectConst> ModelTree::volume_const_if_current(ObjectId id) const
+std::optional<storage::VolumeObjectConst> ModelTree::volume_const_if_current(const ObjectId id) const
 {
         ASSERT(std::this_thread::get_id() == thread_id_);
 
@@ -431,7 +431,7 @@ std::optional<storage::VolumeObjectConst> ModelTree::volume_const_if_current(Obj
         return object;
 }
 
-std::optional<storage::VolumeObject> ModelTree::volume_if_current(ObjectId id) const
+std::optional<storage::VolumeObject> ModelTree::volume_if_current(const ObjectId id) const
 {
         ASSERT(std::this_thread::get_id() == thread_id_);
 
@@ -459,12 +459,12 @@ std::vector<storage::VolumeObjectConst> ModelTree::const_volume_objects() const
 }
 
 template <typename T>
-void ModelTree::make_menu_for_object(QMenu* menu, const std::shared_ptr<T>& object)
+void ModelTree::make_menu_for_object(QMenu* const menu, const std::shared_ptr<T>& object)
 {
         ASSERT(std::this_thread::get_id() == thread_id_);
 
         {
-                QAction* action = menu->addAction("Show only it");
+                QAction* const action = menu->addAction("Show only it");
                 QObject::connect(
                         action, &QAction::triggered,
                         [&]()
@@ -473,8 +473,8 @@ void ModelTree::make_menu_for_object(QMenu* menu, const std::shared_ptr<T>& obje
                         });
         }
         {
-                bool visible = object->visible();
-                QAction* action = visible ? menu->addAction("Hide") : menu->addAction("Show");
+                const bool visible = object->visible();
+                QAction* const action = visible ? menu->addAction("Hide") : menu->addAction("Show");
                 QObject::connect(
                         action, &QAction::triggered,
                         [&, visible]()
@@ -484,7 +484,7 @@ void ModelTree::make_menu_for_object(QMenu* menu, const std::shared_ptr<T>& obje
         }
         menu->addSeparator();
         {
-                QAction* action = menu->addAction("Delete");
+                QAction* const action = menu->addAction("Delete");
                 QObject::connect(
                         action, &QAction::triggered,
                         [&]()
@@ -497,7 +497,7 @@ void ModelTree::make_menu_for_object(QMenu* menu, const std::shared_ptr<T>& obje
                         });
         }
         {
-                QAction* action = menu->addAction("Delete All");
+                QAction* const action = menu->addAction("Delete All");
                 QObject::connect(
                         action, &QAction::triggered,
                         [&]()
@@ -515,7 +515,7 @@ void ModelTree::make_menu(const QPoint& pos)
 {
         ASSERT(std::this_thread::get_id() == thread_id_);
 
-        QTreeWidgetItem* item = ui_.model_tree->itemAt(pos);
+        QTreeWidgetItem* const item = ui_.model_tree->itemAt(pos);
         if (item != ui_.model_tree->currentItem())
         {
                 return;
@@ -529,7 +529,7 @@ void ModelTree::make_menu(const QPoint& pos)
                 return;
         }
 
-        std::unique_ptr<QMenu> menu = std::make_unique<QMenu>();
+        const std::unique_ptr<QMenu> menu = std::make_unique<QMenu>();
 
         if (volume)
         {
