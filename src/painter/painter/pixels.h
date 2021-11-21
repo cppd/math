@@ -20,6 +20,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "paintbrush.h"
 #include "pixel.h"
 #include "pixel_filter.h"
+#include "pixel_samples.h"
 #include "region.h"
 
 #include "../painter.h"
@@ -63,7 +64,7 @@ class Pixels final
 
         static constexpr int PANTBRUSH_WIDTH = 20;
 
-        const PixelFilter<N, T, Color> filter_;
+        const PixelFilter<N, T> filter_;
 
         const std::array<int, N> screen_size_;
         const GlobalIndex<N, long long> global_index_{screen_size_};
@@ -71,7 +72,7 @@ class Pixels final
 
         const Color background_;
         const Vector<3, float> background_rgb32_ = background_.rgb32();
-        const T background_contribution_ = filter_.contribution(background_);
+        const T background_contribution_ = pixel_samples_color_contribution(background_);
 
         Notifier<N>* const notifier_;
 
@@ -132,22 +133,24 @@ class Pixels final
                         return r;
                 }();
 
-                const auto c = filter_.color_samples(center, points, colors);
-                const auto b = filter_.background_samples(center, points, colors);
+                thread_local std::vector<T> weights;
+
+                filter_.point_weights(center, points, &weights);
+
+                const auto color_samples = make_color_samples(colors, weights);
+                const auto background_samples = make_background_samples(colors, weights);
 
                 const long long index = global_index_.compute(region_pixel);
                 Pixel<Color>& p = pixels_[index];
 
                 std::lock_guard lg(pixel_locks_[index]);
-                if (c)
+                if (color_samples)
                 {
-                        p.merge_color(
-                                c->sum_color, c->sum_weight, c->min_color, c->min_contribution, c->min_weight,
-                                c->max_color, c->max_contribution, c->max_weight);
+                        p.merge(*color_samples);
                 }
-                if (b)
+                if (background_samples)
                 {
-                        p.merge_background(b->sum, b->min, b->max);
+                        p.merge(*background_samples);
                 }
                 notifier_->pixel_set(region_pixel, rgb_color(p));
         }

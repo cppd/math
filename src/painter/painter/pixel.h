@@ -17,7 +17,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
-#include <src/com/type/limit.h>
+#include "pixel_samples.h"
 
 #include <optional>
 #include <tuple>
@@ -29,158 +29,62 @@ class Pixel final
 {
         using T = typename Color::DataType;
 
-        Color color_sum_{0};
-        Color color_min_{0};
-        Color color_max_{0};
-
-        T color_weight_sum_{0};
-        T color_min_contribution_{Limits<T>::max()};
-        T color_min_weight_{0};
-        T color_max_contribution_{Limits<T>::lowest()};
-        T color_max_weight_{0};
-
-        T background_weight_sum_{0};
-        T background_min_weight_{Limits<T>::max()};
-        T background_max_weight_{Limits<T>::lowest()};
-
-        struct Data final
-        {
-                Color c;
-                T c_w;
-                T b_w;
-        };
-
-        Data color_data(const T& background_contribution) const
-        {
-                Data r{.c = color_sum_, .c_w = color_weight_sum_, .b_w = background_weight_sum_};
-
-                if (background_min_weight_ * background_contribution < color_min_contribution_)
-                {
-                        r.c += color_min_;
-                        r.c_w += color_min_weight_;
-                }
-                else
-                {
-                        r.b_w += background_min_weight_;
-                }
-
-                if (background_max_weight_ * background_contribution > color_max_contribution_)
-                {
-                        r.c += color_max_;
-                        r.c_w += color_max_weight_;
-                }
-                else
-                {
-                        r.b_w += background_max_weight_;
-                }
-
-                return r;
-        }
+        ColorSamples<Color> color_;
+        BackgroundSamples<Color> background_;
 
 public:
-        void merge_color(
-                const Color& sum_color,
-                const T& sum_weight,
-                const Color& min_color,
-                const T& min_contribution,
-                const T& min_weight,
-                const Color& max_color,
-                const T& max_contribution,
-                const T& max_weight)
+        Pixel()
         {
-                color_sum_ += sum_color;
-                color_weight_sum_ += sum_weight;
-
-                if (min_contribution < color_min_contribution_)
-                {
-                        color_sum_ += color_min_;
-                        color_weight_sum_ += color_min_weight_;
-                        color_min_ = min_color;
-                        color_min_contribution_ = min_contribution;
-                        color_min_weight_ = min_weight;
-                }
-                else
-                {
-                        color_sum_ += min_color;
-                        color_weight_sum_ += min_weight;
-                }
-
-                if (max_contribution > color_max_contribution_)
-                {
-                        color_sum_ += color_max_;
-                        color_weight_sum_ += color_max_weight_;
-                        color_max_ = max_color;
-                        color_max_contribution_ = max_contribution;
-                        color_max_weight_ = max_weight;
-                }
-                else
-                {
-                        color_sum_ += max_color;
-                        color_weight_sum_ += max_weight;
-                }
+                color_.init();
+                background_.init();
         }
 
-        void merge_background(const T& sum_weight, const T& min_weight, const T& max_weight)
+        void merge(const ColorSamples<Color>& samples)
         {
-                background_weight_sum_ += sum_weight;
+                color_.merge(samples);
+        }
 
-                if (min_weight < background_min_weight_)
-                {
-                        background_weight_sum_ += background_min_weight_;
-                        background_min_weight_ = min_weight;
-                }
-                else
-                {
-                        background_weight_sum_ += min_weight;
-                }
-
-                if (max_weight > background_max_weight_)
-                {
-                        background_weight_sum_ += background_max_weight_;
-                        background_max_weight_ = max_weight;
-                }
-                else
-                {
-                        background_weight_sum_ += max_weight;
-                }
+        void merge(const BackgroundSamples<Color>& samples)
+        {
+                background_.merge(samples);
         }
 
         std::optional<Color> color(const Color& background_color, const T& background_contribution) const
         {
-                const Data data = color_data(background_contribution);
+                const PixelSamples<Color> p = merge_color_and_background(color_, background_, background_contribution);
 
-                const T sum = data.c_w + data.b_w;
+                const T sum = p.color_weight + p.background_weight;
 
-                if (sum == data.b_w)
+                if (sum == p.background_weight)
                 {
                         return std::nullopt;
                 }
 
-                if (data.c_w == sum || (data.c_w / sum) == 1)
+                if (p.color_weight == sum || (p.color_weight / sum) == 1)
                 {
-                        return data.c / sum;
+                        return p.color / sum;
                 }
 
-                return (data.c + data.b_w * background_color) / sum;
+                return (p.color + p.background_weight * background_color) / sum;
         }
 
         std::optional<std::tuple<Color, T>> color_alpha(const T& background_contribution) const
         {
-                const Data data = color_data(background_contribution);
+                const PixelSamples<Color> p = merge_color_and_background(color_, background_, background_contribution);
 
-                const T sum = data.c_w + data.b_w;
+                const T sum = p.color_weight + p.background_weight;
 
-                if (sum == data.b_w)
+                if (sum == p.background_weight)
                 {
                         return std::nullopt;
                 }
 
-                if (data.c_w == sum || (data.c_w / sum) == 1)
+                if (p.color_weight == sum || (p.color_weight / sum) == 1)
                 {
-                        return std::make_tuple(data.c / sum, T(1));
+                        return std::make_tuple(p.color / sum, T(1));
                 }
 
-                return std::make_tuple(data.c / sum, data.c_w / sum);
+                return std::make_tuple(p.color / sum, p.color_weight / sum);
         }
 };
 }

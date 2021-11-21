@@ -21,13 +21,12 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <src/com/error.h>
 #include <src/com/math.h>
-#include <src/com/type/limit.h>
 
-#include <optional>
+#include <algorithm>
 
 namespace ns::painter
 {
-template <std::size_t N, typename T, typename Color>
+template <std::size_t N, typename T>
 class PixelFilter final
 {
         // radius=1.5;
@@ -52,190 +51,18 @@ public:
                 return INTEGER_RADIUS;
         }
 
-        static T contribution(const Color& sample)
-        {
-                return sample.luminance();
-        }
-
-        struct ColorSamples final
-        {
-                Color sum_color{0};
-                T sum_weight{0};
-                Color min_color;
-                T min_contribution;
-                T min_weight;
-                Color max_color;
-                T max_contribution;
-                T max_weight;
-
-                ColorSamples()
-                {
-                }
-        };
-
-        std::optional<ColorSamples> color_samples(
+        void point_weights(
                 const Vector<N, T>& center,
                 const std::vector<Vector<N, T>>& points,
-                const std::vector<std::optional<Color>>& colors) const
+                std::vector<T>* const weights) const
         {
-                thread_local std::vector<Color> samples;
-                thread_local std::vector<T> contributions;
-                thread_local std::vector<T> weights;
-
-                samples.clear();
-                contributions.clear();
-                weights.clear();
-
-                T min = Limits<T>::max();
-                T max = Limits<T>::lowest();
-                std::size_t min_i = Limits<std::size_t>::max();
-                std::size_t max_i = Limits<std::size_t>::max();
-
+                weights->resize(points.size());
                 for (std::size_t i = 0; i < points.size(); ++i)
                 {
-                        if (!colors[i])
-                        {
-                                continue;
-                        }
-
                         const T weight = filter_.compute(center - points[i]);
                         ASSERT(weight >= 0);
-
-                        if (!(weight > 0))
-                        {
-                                continue;
-                        }
-
-                        samples.push_back(weight * (*colors[i]));
-                        contributions.push_back(contribution(samples.back()));
-                        weights.push_back(weight);
-
-                        if (contributions.back() < min)
-                        {
-                                min = contributions.back();
-                                min_i = samples.size() - 1;
-                        }
-
-                        if (contributions.back() > max)
-                        {
-                                max = contributions.back();
-                                max_i = samples.size() - 1;
-                        }
+                        (*weights)[i] = weight;
                 }
-
-                if (samples.empty())
-                {
-                        return std::nullopt;
-                }
-
-                ASSERT(min_i < samples.size());
-                ASSERT(max_i < samples.size());
-
-                std::optional<ColorSamples> r(std::in_place);
-
-                r->min_color = samples[min_i];
-                r->min_contribution = contributions[min_i];
-                r->min_weight = weights[min_i];
-
-                r->max_color = samples[max_i];
-                r->max_contribution = contributions[max_i];
-                r->max_weight = weights[max_i];
-
-                if (samples.size() > 2)
-                {
-                        for (std::size_t i = 0; i < samples.size(); ++i)
-                        {
-                                if (i != min_i && i != max_i)
-                                {
-                                        r->sum_color += samples[i];
-                                        r->sum_weight += weights[i];
-                                }
-                        }
-                }
-
-                return r;
-        }
-
-        struct BackgroundSamples final
-        {
-                T sum{0};
-                T min;
-                T max;
-
-                BackgroundSamples()
-                {
-                }
-        };
-
-        std::optional<BackgroundSamples> background_samples(
-                const Vector<N, T>& center,
-                const std::vector<Vector<N, T>>& points,
-                const std::vector<std::optional<Color>>& colors) const
-        {
-                thread_local std::vector<T> weights;
-
-                weights.clear();
-
-                T min = Limits<T>::max();
-                T max = Limits<T>::lowest();
-                std::size_t min_i = Limits<std::size_t>::max();
-                std::size_t max_i = Limits<std::size_t>::max();
-
-                for (std::size_t i = 0; i < points.size(); ++i)
-                {
-                        if (colors[i])
-                        {
-                                continue;
-                        }
-
-                        const T weight = filter_.compute(center - points[i]);
-                        ASSERT(weight >= 0);
-
-                        if (!(weight > 0))
-                        {
-                                continue;
-                        }
-
-                        weights.push_back(weight);
-
-                        if (weight < min)
-                        {
-                                min = weight;
-                                min_i = weights.size() - 1;
-                        }
-
-                        if (weight > max)
-                        {
-                                max = weight;
-                                max_i = weights.size() - 1;
-                        }
-                }
-
-                if (weights.empty())
-                {
-                        return std::nullopt;
-                }
-
-                ASSERT(min_i < weights.size());
-                ASSERT(max_i < weights.size());
-
-                std::optional<BackgroundSamples> r(std::in_place);
-
-                r->min = weights[min_i];
-                r->max = weights[max_i];
-
-                if (weights.size() > 2)
-                {
-                        for (std::size_t i = 0; i < weights.size(); ++i)
-                        {
-                                if (i != min_i && i != max_i)
-                                {
-                                        r->sum += weights[i];
-                                }
-                        }
-                }
-
-                return r;
         }
 };
 }

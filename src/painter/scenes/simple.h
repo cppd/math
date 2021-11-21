@@ -25,7 +25,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "../projectors/parallel_projector.h"
 #include "../shapes/shape.h"
 
-#include <src/color/color.h>
 #include <src/com/error.h>
 #include <src/com/print.h>
 
@@ -37,12 +36,12 @@ namespace ns::painter
 {
 namespace simple_scene_implementation
 {
-template <std::size_t N, typename T, typename Color>
+template <std::size_t N, typename T>
 std::unique_ptr<const Projector<N, T>> create_projector(
         const geometry::BoundingBox<N, T>& bounding_box,
         const int max_screen_size)
 {
-        static constexpr int BORDER_SIZE = PixelFilter<N, T, Color>::integer_radius();
+        static constexpr int BORDER_SIZE = PixelFilter<N, T>::integer_radius();
 
         if (max_screen_size <= 2 * BORDER_SIZE)
         {
@@ -155,8 +154,7 @@ std::unique_ptr<const Scene<N, T, Color>> create_simple_scene(
 
         const geometry::BoundingBox<N, T> bounding_box = shape->bounding_box();
 
-        std::unique_ptr<const Projector<N, T>> projector =
-                impl::create_projector<N, T, Color>(bounding_box, max_screen_size);
+        std::unique_ptr<const Projector<N, T>> projector = impl::create_projector(bounding_box, max_screen_size);
 
         std::vector<std::unique_ptr<const LightSource<N, T, Color>>> light_sources;
         impl::create_light_sources(bounding_box, light, &light_sources);
