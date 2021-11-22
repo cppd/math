@@ -20,9 +20,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/com/error.h>
 #include <src/com/type/limit.h>
 #include <src/geometry/accelerators/bvh.h>
-#include <src/geometry/accelerators/bvh_objects.h>
 #include <src/geometry/shapes/sphere_create.h>
-#include <src/geometry/spatial/hyperplane_mesh_simplex.h>
+#include <src/geometry/spatial/hyperplane_simplex.h>
 #include <src/geometry/spatial/ray_intersection.h>
 #include <src/progress/progress.h>
 
@@ -34,28 +33,60 @@ namespace ns::sampling::testing
 template <std::size_t N, typename T>
 class SphereMesh final
 {
-        struct Sphere final
+        static std::array<Vector<N, T>, N> vertices_to_array(
+                const std::vector<Vector<N, T>>& vertices,
+                const std::array<int, N>& indices)
         {
-                std::vector<Vector<N, T>> vertices;
-                std::vector<geometry::HyperplaneMeshSimplex<N, T>> facets;
+                std::array<Vector<N, T>, N> res;
+                for (std::size_t i = 0; i < N; ++i)
+                {
+                        res[i] = vertices[indices[i]];
+                }
+                return res;
+        }
 
+        class Sphere final
+        {
+                std::vector<Vector<N, T>> vertices_;
+                std::vector<std::array<int, N>> facets_;
+                std::vector<geometry::HyperplaneSimplex<N, T>> simplices_;
+
+        public:
                 explicit Sphere(const unsigned facet_min_count)
                 {
-                        std::vector<std::array<int, N>> sphere_facets;
-                        geometry::create_sphere(facet_min_count, &vertices, &sphere_facets);
-                        ASSERT(sphere_facets.size() >= facet_min_count);
+                        geometry::create_sphere(facet_min_count, &vertices_, &facets_);
+                        ASSERT(facets_.size() >= facet_min_count);
 
-                        facets.reserve(sphere_facets.size());
-                        for (const std::array<int, N>& vertex_indices : sphere_facets)
+                        simplices_.reserve(facets_.size());
+                        for (const std::array<int, N>& indices : facets_)
                         {
-                                facets.emplace_back(&vertices, vertex_indices);
+                                simplices_.emplace_back(vertices_to_array(vertices_, indices));
                         }
                 }
 
-                Sphere(const Sphere&) = delete;
-                Sphere(Sphere&&) = delete;
-                Sphere& operator=(const Sphere&) = delete;
-                Sphere& operator=(Sphere&&) = delete;
+                const std::vector<geometry::HyperplaneSimplex<N, T>>& simplices() const
+                {
+                        return simplices_;
+                }
+
+                std::array<Vector<N, T>, N> facet_vertices(const std::size_t index) const
+                {
+                        ASSERT(index < facets_.size());
+                        return vertices_to_array(vertices_, facets_[index]);
+                }
+
+                std::vector<geometry::BvhObject<N, T>> bvh_objects() const
+                {
+                        ASSERT(facets_.size() == simplices_.size());
+                        const auto intersection_cost = decltype(simplices_)::value_type::intersection_cost();
+                        std::vector<geometry::BvhObject<N, T>> res;
+                        res.reserve(simplices_.size());
+                        for (std::size_t i = 0; i < simplices_.size(); ++i)
+                        {
+                                res.emplace_back(geometry::BoundingBox(vertices_, facets_[i]), intersection_cost, i);
+                        }
+                        return res;
+                }
         };
 
         Sphere sphere_;
@@ -63,29 +94,28 @@ class SphereMesh final
 
 public:
         SphereMesh(const unsigned facet_min_count, ProgressRatio* const progress)
-                : sphere_(facet_min_count), bvh_(geometry::bvh_objects(sphere_.facets), progress)
+                : sphere_(facet_min_count), bvh_(sphere_.bvh_objects(), progress)
         {
         }
 
-        unsigned facet_count() const
+        decltype(auto) facet_count() const
         {
-                return sphere_.facets.size();
+                return sphere_.simplices().size();
         }
 
-        decltype(auto) facet_vertices(unsigned index) const
+        decltype(auto) facet_vertices(const std::size_t index) const
         {
-                ASSERT(index < facet_count());
-                return sphere_.facets[index].vertices();
+                return sphere_.facet_vertices(index);
         }
 
         std::optional<unsigned> intersect(const Ray<N, T>& ray) const
         {
                 const auto intersection = bvh_.intersect(
                         ray, Limits<T>::max(),
-                        [facets = &sphere_.facets, &ray](const auto& indices, const auto& max_distance)
-                                -> std::optional<std::tuple<T, const geometry::HyperplaneMeshSimplex<N, T>*>>
+                        [facets = &sphere_.simplices(), &ray](const auto& indices, const auto& max_distance)
+                                -> std::optional<std::tuple<T, const geometry::HyperplaneSimplex<N, T>*>>
                         {
-                                const std::tuple<T, const geometry::HyperplaneMeshSimplex<N, T>*> info =
+                                const std::tuple<T, const geometry::HyperplaneSimplex<N, T>*> info =
                                         geometry::ray_intersection(*facets, indices, ray, max_distance);
                                 if (std::get<1>(info) != nullptr)
                                 {
@@ -95,7 +125,7 @@ public:
                         });
                 if (intersection)
                 {
-                        const std::size_t index = std::get<1>(*intersection) - sphere_.facets.data();
+                        const std::size_t index = std::get<1>(*intersection) - sphere_.simplices().data();
                         ASSERT(index < facet_count());
                         return index;
                 }
