@@ -175,6 +175,17 @@ public:
                 }
         }
 
+        template <std::size_t SIZE>
+        BoundingBox(const std::vector<Vector<N, T>>& points, const std::array<int, SIZE>& indices)
+                : BoundingBox(points[indices[0]])
+        {
+                static_assert(SIZE > 0);
+                for (std::size_t i = 1; i < SIZE; ++i)
+                {
+                        merge(points[indices[i]]);
+                }
+        }
+
         [[nodiscard]] constexpr const Vector<N, T>& min() const
         {
                 return bounds_[0];
