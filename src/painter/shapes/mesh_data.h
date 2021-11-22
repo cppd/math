@@ -24,6 +24,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/com/error.h>
 #include <src/com/log.h>
 #include <src/com/print.h>
+#include <src/geometry/spatial/bounding_box.h>
 #include <src/model/mesh_object.h>
 #include <src/numerical/transform.h>
 
@@ -65,6 +66,19 @@ std::array<int, N> add_offset(const std::array<int, N>& src, const int offset)
         }
         return r;
 }
+
+template <std::size_t N, typename T>
+std::array<Vector<N, T>, N> vertices_to_array(
+        const std::vector<Vector<N, T>>& vertices,
+        const std::array<int, N>& indices)
+{
+        std::array<Vector<N, T>, N> res;
+        for (std::size_t i = 0; i < N; ++i)
+        {
+                res[i] = vertices[indices[i]];
+        }
+        return res;
+}
 }
 
 template <typename T, typename Color>
@@ -95,6 +109,7 @@ class MeshData final
         std::vector<Material<T, Color>> materials_;
         std::vector<MeshTexture<N - 1>> images_;
         std::vector<MeshFacet<N, T>> facets_;
+        std::vector<std::array<int, N>> facet_vertex_indices_;
 
         void create(const mesh::Reading<N>& mesh_object)
         {
@@ -161,8 +176,9 @@ class MeshData final
                         const int material = facet_material + materials_offset;
 
                         facets_.emplace_back(
-                                &vertices_, &normals_, &texcoords_, vertices, facet.has_normal, normals,
+                                impl::vertices_to_array(vertices_, vertices), normals_, facet.has_normal, normals,
                                 facet.has_texcoord, texcoords, material);
+                        facet_vertex_indices_.push_back(vertices);
 
                         facets_without_material = facets_without_material || no_material;
                 }
@@ -272,11 +288,15 @@ public:
                 }
         }
 
-        // Mesh facets store pointers to vertices_, normals_, texcoords_
-        MeshData(const MeshData&) = delete;
-        MeshData(MeshData&&) = delete;
-        MeshData& operator=(const MeshData&) = delete;
-        MeshData& operator=(MeshData&&) = delete;
+        const std::vector<Vector<N, T>>& normals() const
+        {
+                return normals_;
+        }
+
+        const std::vector<Vector<N - 1, T>>& texcoords() const
+        {
+                return texcoords_;
+        }
 
         const std::vector<Material<T, Color>>& materials() const
         {
@@ -291,6 +311,12 @@ public:
         const std::vector<MeshFacet<N, T>>& facets() const
         {
                 return facets_;
+        }
+
+        geometry::BoundingBox<N, T> facet_bounding_box(const std::size_t facet_index) const
+        {
+                ASSERT(facet_index < facet_vertex_indices_.size());
+                return geometry::BoundingBox(vertices_, facet_vertex_indices_[facet_index]);
         }
 };
 }

@@ -21,7 +21,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/com/enum.h>
 #include <src/com/error.h>
 #include <src/com/print.h>
-#include <src/geometry/spatial/hyperplane_mesh_simplex.h>
+#include <src/geometry/spatial/hyperplane_simplex.h>
 #include <src/numerical/ray.h>
 #include <src/numerical/vec.h>
 
@@ -45,10 +45,7 @@ class MeshFacet
                 REVERSE
         };
 
-        geometry::HyperplaneMeshSimplex<N, T> simplex_;
-
-        const std::vector<Vector<N, T>>* normals_;
-        const std::vector<Vector<N - 1, T>>* texcoords_;
+        geometry::HyperplaneSimplex<N, T> simplex_;
         std::array<int, N> n_;
         std::array<int, N> t_;
         int material_;
@@ -57,16 +54,14 @@ class MeshFacet
 
 public:
         MeshFacet(
-                const std::vector<Vector<N, T>>* const vertices,
-                const std::vector<Vector<N, T>>* const normals,
-                const std::vector<Vector<N - 1, T>>* const texcoords,
-                const std::array<int, N>& vertex_indices,
+                const std::array<Vector<N, T>, N>& vertices,
+                const std::vector<Vector<N, T>>& normals,
                 const bool has_normals,
                 const std::array<int, N>& normal_indices,
                 const bool has_texcoords,
                 const std::array<int, N>& texcoord_indices,
                 const int material)
-                : simplex_(vertices, vertex_indices), normals_(normals), texcoords_(texcoords), material_(material)
+                : simplex_(vertices), material_(material)
         {
                 ASSERT((has_normals && all_non_negative(normal_indices)) || !has_normals);
                 ASSERT((has_texcoords && all_non_negative(texcoord_indices)) || !has_texcoords);
@@ -91,7 +86,7 @@ public:
                 std::array<T, N> dots;
                 for (unsigned i = 0; i < N; ++i)
                 {
-                        dots[i] = dot((*normals_)[n_[i]], simplex_.normal());
+                        dots[i] = dot(normals[n_[i]], simplex_.normal());
                 }
 
                 if (!std::all_of(
@@ -136,21 +131,21 @@ public:
                 return t_[0] >= 0;
         }
 
-        Vector<N - 1, T> texcoord(const Vector<N, T>& point) const
+        Vector<N - 1, T> texcoord(const std::vector<Vector<N - 1, T>>& mesh_texcoords, const Vector<N, T>& point) const
         {
                 if (has_texcoord())
                 {
                         std::array<Vector<N - 1, T>, N> texcoords;
                         for (unsigned i = 0; i < N; ++i)
                         {
-                                texcoords[i] = (*texcoords_)[t_[i]];
+                                texcoords[i] = mesh_texcoords[t_[i]];
                         }
                         return simplex_.interpolate(point, texcoords);
                 }
                 error("Mesh facet texture coordinates request when there are no texture coordinates");
         }
 
-        Vector<N, T> shading_normal(const Vector<N, T>& point) const
+        Vector<N, T> shading_normal(const std::vector<Vector<N, T>>& mesh_normals, const Vector<N, T>& point) const
         {
                 switch (normal_type_)
                 {
@@ -163,7 +158,7 @@ public:
                         std::array<Vector<N, T>, N> normals;
                         for (unsigned i = 0; i < N; ++i)
                         {
-                                normals[i] = (*normals_)[n_[i]];
+                                normals[i] = mesh_normals[n_[i]];
                         }
                         return simplex_.interpolate(point, normals).normalized();
                 }
@@ -172,7 +167,7 @@ public:
                         std::array<Vector<N, T>, N> normals;
                         for (unsigned i = 0; i < N; ++i)
                         {
-                                normals[i] = reverse_normal_[i] ? -(*normals_)[n_[i]] : (*normals_)[n_[i]];
+                                normals[i] = reverse_normal_[i] ? -mesh_normals[n_[i]] : mesh_normals[n_[i]];
                         }
                         return simplex_.interpolate(point, normals).normalized();
                 }
@@ -195,11 +190,6 @@ public:
         decltype(auto) geometric_normal() const
         {
                 return simplex_.normal();
-        }
-
-        decltype(auto) bounding_box() const
-        {
-                return simplex_.bounding_box();
         }
 
         decltype(auto) project(const Vector<N, T>& point) const

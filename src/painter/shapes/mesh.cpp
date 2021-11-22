@@ -30,7 +30,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/com/print.h>
 #include <src/com/type/name.h>
 #include <src/geometry/accelerators/bvh.h>
-#include <src/geometry/accelerators/bvh_objects.h>
 #include <src/geometry/spatial/ray_intersection.h>
 #include <src/shading/ggx_diffuse.h>
 
@@ -48,7 +47,8 @@ class SurfaceImpl final : public Surface<N, T, Color>
         {
                 if (facet_->has_texcoord() && m.image >= 0)
                 {
-                        Vector<3, float> rgb = mesh_data_->images()[m.image].color(facet_->texcoord(point));
+                        const Vector<3, float> rgb =
+                                mesh_data_->images()[m.image].color(facet_->texcoord(mesh_data_->texcoords(), point));
                         return Color(rgb[0], rgb[1], rgb[2]);
                 }
                 return m.color;
@@ -68,7 +68,7 @@ class SurfaceImpl final : public Surface<N, T, Color>
 
         std::optional<Vector<N, T>> shading_normal(const Vector<N, T>& point) const override
         {
-                return facet_->shading_normal(point);
+                return facet_->shading_normal(mesh_data_->normals(), point);
         }
 
         std::optional<Color> light_source() const override
@@ -126,9 +126,22 @@ public:
         }
 };
 
-template <std::size_t N, typename T>
+template <std::size_t N, typename T, typename Color>
+std::vector<geometry::BvhObject<N, T>> bvh_objects(const MeshData<N, T, Color>& mesh_data)
+{
+        const std::vector<MeshFacet<N, T>>& facets = mesh_data.facets();
+        std::vector<geometry::BvhObject<N, T>> res;
+        res.reserve(facets.size());
+        for (std::size_t i = 0; i < facets.size(); ++i)
+        {
+                res.emplace_back(mesh_data.facet_bounding_box(i), facets[i].intersection_cost(), i);
+        }
+        return res;
+}
+
+template <std::size_t N, typename T, typename Color>
 geometry::Bvh<N, T> create_bvh(
-        const std::vector<MeshFacet<N, T>>* const facets,
+        const MeshData<N, T, Color>& mesh_data,
         const bool write_log,
         ProgressRatio* const progress)
 {
@@ -137,14 +150,14 @@ geometry::Bvh<N, T> create_bvh(
 
         const Clock::time_point start_time = Clock::now();
 
-        geometry::Bvh<N, T> object_bvh(geometry::bvh_objects(*facets), progress);
+        geometry::Bvh<N, T> bvh(bvh_objects(mesh_data), progress);
 
         if (write_log)
         {
                 LOG("Painter mesh created, " + to_string_fixed(duration_from(start_time), 5) + " s");
         }
 
-        return object_bvh;
+        return bvh;
 }
 
 template <std::size_t N, typename T, typename Color>
@@ -213,7 +226,7 @@ public:
                 const bool write_log,
                 ProgressRatio* const progress)
                 : mesh_data_(mesh_objects, write_log),
-                  bvh_(create_bvh(&mesh_data_.facets(), write_log, progress)),
+                  bvh_(create_bvh(mesh_data_, write_log, progress)),
                   bounding_box_(bvh_.bounding_box()),
                   intersection_cost_(
                           mesh_data_.facets().size()
