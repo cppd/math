@@ -20,6 +20,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "constraint.h"
 #include "hyperplane.h"
 #include "parallelotope_aa.h"
+#include "parallelotope_edges.h"
+#include "parallelotope_length.h"
 #include "shape_overlap.h"
 
 #include <src/com/error.h>
@@ -43,13 +45,7 @@ class HyperplaneParallelotope final
 
         static_assert(N <= 30);
 
-        static constexpr int DIAGONAL_COUNT = 1 << (N - 2);
         static constexpr int VERTEX_COUNT = 1 << (N - 1);
-
-        // vertex count 2 ^ (N - 1) multiplied by vertex dimension
-        // count (N - 1) and divided by 2 for uniqueness
-        // ((2 ^ (N - 1)) * (N - 1)) / 2 = (2 ^ (N - 2)) * (N - 1)
-        static constexpr int EDGE_COUNT = (1 << (N - 2)) * (N - 1);
 
         Hyperplane<N, T> plane_;
         std::array<Hyperplane<N, T>, N - 1> planes_;
@@ -59,12 +55,6 @@ class HyperplaneParallelotope final
 
         template <int INDEX, typename F>
         void vertices_impl(const Vector<N, T>& p, const F& f) const;
-
-        template <int INDEX, typename F>
-        void edges_impl(const Vector<N, T>& p, std::array<bool, N - 1>* dimensions, const F& f) const;
-
-        template <int INDEX, typename F>
-        void length_impl(const Vector<N, T>& sum, const F& f) const;
 
 public:
         static constexpr std::size_t SPACE_DIMENSION = N;
@@ -91,9 +81,15 @@ public:
 
         std::array<Vector<N, T>, VERTEX_COUNT> vertices() const;
 
-        std::array<std::array<Vector<N, T>, 2>, EDGE_COUNT> edges() const;
+        decltype(auto) edges() const
+        {
+                return parallelotope_edges(org_, vectors_);
+        }
 
-        T length() const;
+        decltype(auto) length() const
+        {
+                return parallelotope_length(vectors_);
+        }
 
         const Vector<N, T>& org() const;
         const std::array<Vector<N, T>, N - 1>& vectors() const;
@@ -246,98 +242,6 @@ std::array<Vector<N, T>, HyperplaneParallelotope<N, T>::VERTEX_COUNT> Hyperplane
         ASSERT(count == result.size());
 
         return result;
-}
-
-template <std::size_t N, typename T>
-template <int INDEX, typename F>
-void HyperplaneParallelotope<N, T>::edges_impl(
-        const Vector<N, T>& p,
-        std::array<bool, N - 1>* const dimensions,
-        const F& f) const
-{
-        static_assert(N <= 3);
-
-        if constexpr (INDEX >= 0)
-        {
-                (*dimensions)[INDEX] = true;
-                edges_impl<INDEX - 1>(p, dimensions, f);
-
-                (*dimensions)[INDEX] = false;
-                edges_impl<INDEX - 1>(p + vectors_[INDEX], dimensions, f);
-        }
-        else
-        {
-                f(p);
-        }
-}
-
-template <std::size_t N, typename T>
-std::array<std::array<Vector<N, T>, 2>, HyperplaneParallelotope<N, T>::EDGE_COUNT> HyperplaneParallelotope<N, T>::
-        edges() const
-{
-        static_assert(N <= 3);
-
-        std::array<std::array<Vector<N, T>, 2>, EDGE_COUNT> result;
-
-        unsigned count = 0;
-        std::array<bool, N - 1> dimensions;
-
-        auto f = [this, &dimensions, &count, &result](const Vector<N, T>& p)
-        {
-                for (unsigned i = 0; i < N - 1; ++i)
-                {
-                        if (dimensions[i])
-                        {
-                                ASSERT(count < result.size());
-                                result[count][0] = p;
-                                result[count][1] = vectors_[i];
-                                ++count;
-                        }
-                }
-        };
-
-        edges_impl<N - 2>(org_, &dimensions, f);
-
-        ASSERT(count == result.size());
-
-        return result;
-}
-
-template <std::size_t N, typename T>
-template <int INDEX, typename F>
-void HyperplaneParallelotope<N, T>::length_impl(const Vector<N, T>& sum, const F& f) const
-{
-        if constexpr (INDEX >= 0)
-        {
-                length_impl<INDEX - 1>(sum + vectors_[INDEX], f);
-                length_impl<INDEX - 1>(sum - vectors_[INDEX], f);
-        }
-        else
-        {
-                f(sum);
-        }
-}
-
-template <std::size_t N, typename T>
-T HyperplaneParallelotope<N, T>::length() const
-{
-        T max_squared = Limits<T>::lowest();
-
-        unsigned count = 0;
-
-        auto f = [&max_squared, &count](const Vector<N, T>& d)
-        {
-                ++count;
-                max_squared = std::max(max_squared, d.norm_squared());
-        };
-
-        // compute all diagonals and find the diagonal with the maximum length
-        constexpr int LAST_INDEX = N - 2;
-        length_impl<LAST_INDEX - 1>(vectors_[LAST_INDEX], f);
-
-        ASSERT(count == DIAGONAL_COUNT);
-
-        return std::sqrt(max_squared);
 }
 
 template <std::size_t N, typename T>

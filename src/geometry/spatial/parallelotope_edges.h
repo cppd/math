@@ -1,0 +1,93 @@
+/*
+Copyright (C) 2017-2021 Topological Manifold
+
+This program is free software: you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with this program.  If not, see <http://www.gnu.org/licenses/>.
+*/
+
+#pragma once
+
+#include <src/com/error.h>
+#include <src/numerical/vec.h>
+
+#include <array>
+
+namespace ns::geometry
+{
+namespace parallelotope_edges_implementation
+{
+// Vertex count 2 ^ N multiplied by vertex dimension
+// count N and divided by 2 for uniqueness
+// ((2 ^ N) * N) / 2 = (2 ^ (N - 1)) * N
+template <std::size_t N>
+inline constexpr int EDGE_COUNT = (1 << (N - 1)) * N;
+
+template <int INDEX, std::size_t N, std::size_t M, typename T, typename F>
+void parallelotope_edges(
+        const Vector<N, T>& p,
+        const std::array<Vector<N, T>, M>& vectors,
+        std::array<bool, M>* const dimensions,
+        const F& f)
+{
+        if constexpr (INDEX >= 0)
+        {
+                (*dimensions)[INDEX] = true;
+                parallelotope_edges<INDEX - 1>(p, vectors, dimensions, f);
+
+                (*dimensions)[INDEX] = false;
+                parallelotope_edges<INDEX - 1>(p + vectors[INDEX], vectors, dimensions, f);
+        }
+        else
+        {
+                f(p);
+        }
+}
+}
+
+template <std::size_t N, typename T, std::size_t M>
+std::array<std::array<Vector<N, T>, 2>, parallelotope_edges_implementation::EDGE_COUNT<M>> parallelotope_edges(
+        const Vector<N, T>& org,
+        const std::array<Vector<N, T>, M>& vectors)
+{
+        namespace impl = parallelotope_edges_implementation;
+
+        static_assert(M > 0 && M <= N);
+        static_assert(N <= 3);
+
+        static constexpr std::size_t EDGE_COUNT = impl::EDGE_COUNT<M>;
+
+        std::array<std::array<Vector<N, T>, 2>, EDGE_COUNT> result;
+
+        unsigned count = 0;
+        std::array<bool, M> dimensions;
+
+        const auto f = [&](const Vector<N, T>& p)
+        {
+                for (std::size_t i = 0; i < M; ++i)
+                {
+                        if (dimensions[i])
+                        {
+                                ASSERT(count < result.size());
+                                result[count][0] = p;
+                                result[count][1] = vectors[i];
+                                ++count;
+                        }
+                }
+        };
+
+        impl::parallelotope_edges<M - 1>(org, vectors, &dimensions, f);
+        ASSERT(count == result.size());
+
+        return result;
+}
+}

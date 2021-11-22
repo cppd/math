@@ -24,6 +24,7 @@ Cambridge University Press, 2003.
 #pragma once
 
 #include "constraint.h"
+#include "parallelotope_edges.h"
 #include "shape_overlap.h"
 
 #include <src/com/error.h>
@@ -86,11 +87,6 @@ class ParallelotopeAA final
 
         static constexpr int VERTEX_COUNT = 1 << N;
 
-        // Vertex count 2 ^ N multiplied by vertex dimension
-        // count N and divided by 2 for uniqueness
-        // ((2 ^ N) * N) / 2 = (2 ^ (N - 1)) * N
-        static constexpr int EDGE_COUNT = (1 << (N - 1)) * N;
-
         struct Planes
         {
                 T d1, d2;
@@ -137,7 +133,10 @@ public:
 
         std::array<Vector<N, T>, VERTEX_COUNT> vertices() const;
 
-        std::array<std::array<Vector<N, T>, 2>, EDGE_COUNT> edges() const;
+        decltype(auto) edges() const
+        {
+                return parallelotope_edges(org(), vectors());
+        }
 
         T length() const;
 
@@ -439,43 +438,6 @@ std::array<Vector<N, T>, ParallelotopeAA<N, T>::VERTEX_COUNT> ParallelotopeAA<N,
         {
                 ASSERT(count < result.size());
                 result[count++] = p;
-        };
-
-        vertices_impl<N - 1>(&p, f);
-
-        ASSERT(count == result.size());
-
-        return result;
-}
-
-template <std::size_t N, typename T>
-std::array<std::array<Vector<N, T>, 2>, ParallelotopeAA<N, T>::EDGE_COUNT> ParallelotopeAA<N, T>::edges() const
-{
-        static_assert(N <= 3);
-
-        std::array<std::array<Vector<N, T>, 2>, EDGE_COUNT> result;
-
-        std::array<Vector<N, T>, N> vectors;
-        for (unsigned i = 0; i < N; ++i)
-        {
-                vectors[i] = parallelotope_aa_implementation::index_vector<N, T>(i, planes_[i].d2 - planes_[i].d1);
-        }
-
-        unsigned count = 0;
-        Vector<N, T> p;
-
-        const auto f = [this, &count, &result, &p, &vectors]()
-        {
-                for (unsigned i = 0; i < N; ++i)
-                {
-                        if (p[i] == planes_[i].d1)
-                        {
-                                ASSERT(count < result.size());
-                                result[count][0] = p;
-                                result[count][1] = vectors[i];
-                                ++count;
-                        }
-                }
         };
 
         vertices_impl<N - 1>(&p, f);
