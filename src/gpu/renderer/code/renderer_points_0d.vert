@@ -31,11 +31,11 @@ out gl_PerVertex
 
 void main(void)
 {
-        vec4 pos = matrices.vp_matrix * (mesh.model_matrix * vec4(position, 1.0));
+        const vec4 pos = matrices.vp_matrix * (mesh.model_matrix * vec4(position, 1.0));
         gl_Position = pos;
         if (drawing.clip_plane_enabled)
         {
-                vec4 world = mesh.model_matrix * vec4(position, 1.0);
+                const vec4 world = mesh.model_matrix * vec4(position, 1.0);
                 gl_ClipDistance[0] = dot(drawing.clip_plane_equation, world);
         }
         else

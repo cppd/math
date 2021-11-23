@@ -141,17 +141,17 @@ void color_set()
 {
         out_color = vec4(g_color, g_transparency);
 }
-bool color_add(vec4 c)
+bool color_add(const vec4 c)
 {
         g_color += (g_transparency * c.a) * c.rgb;
         g_transparency *= 1.0 - c.a;
         return g_transparency < MIN_TRANSPARENCY;
 }
-bool color_add(Fragment fragment)
+bool color_add(const Fragment fragment)
 {
-        vec2 rg = unpackUnorm2x16(fragment.color_rg);
-        vec2 ba = unpackUnorm2x16(fragment.color_ba);
-        vec4 c = vec4(rg, ba);
+        const vec2 rg = unpackUnorm2x16(fragment.color_rg);
+        const vec2 ba = unpackUnorm2x16(fragment.color_ba);
+        const vec4 c = vec4(rg, ba);
         g_color += (g_transparency * c.a) * c.rgb;
         g_transparency *= 1.0 - c.a;
         return g_transparency < MIN_TRANSPARENCY;
@@ -188,16 +188,16 @@ Fragment fragments_top()
 Fragment g_fragments[TRANSPARENCY_MAX_NODES];
 int g_fragments_count;
 
-int fragments_min_heapify_impl(int i)
+int fragments_min_heapify_impl(const int i)
 {
-        int left = 2 * i + 1;
-        int right = left + 1;
+        const int left = 2 * i + 1;
+        const int right = left + 1;
         int m;
         m = (left < g_fragments_count && g_fragments[left].depth < g_fragments[i].depth) ? left : i;
         m = (right < g_fragments_count && g_fragments[right].depth < g_fragments[m].depth) ? right : m;
         if (m != i)
         {
-                Fragment t = g_fragments[i];
+                const Fragment t = g_fragments[i];
                 g_fragments[i] = g_fragments[m];
                 g_fragments[m] = t;
                 return m;
@@ -270,14 +270,14 @@ void fragments_build()
 
 #if defined(IMAGE)
 
-float scalar_volume_value(vec3 p)
+float scalar_volume_value(const vec3 p)
 {
         float value = texture(image, p).r;
         value = (value - volume.window_offset) * volume.window_scale;
         return clamp(value, 0, 1);
 }
 
-vec4 volume_color(vec3 p)
+vec4 volume_color(const vec3 p)
 {
         if (volume.color_volume)
         {
@@ -286,15 +286,15 @@ vec4 volume_color(vec3 p)
                 color.a = clamp(color.a * volume.volume_alpha_coefficient, 0, 1);
                 return color;
         }
-        float value = scalar_volume_value(p);
+        const float value = scalar_volume_value(p);
         // vec4 color = texture(transfer_function, value);
-        vec3 color3 = volume.color * drawing.lighting_color * volume.ambient;
+        const vec3 color3 = volume.color * drawing.lighting_color * volume.ambient;
         vec4 color = vec4(color3, value);
         color.a = clamp(color.a * volume.volume_alpha_coefficient, 0, 1);
         return color;
 }
 
-vec3 gradient(vec3 p)
+vec3 gradient(const vec3 p)
 {
         vec3 s1;
         vec3 s2;
@@ -311,12 +311,12 @@ vec3 gradient(vec3 p)
         return s2 - s1;
 }
 
-vec3 world_normal(vec3 p)
+vec3 world_normal(const vec3 p)
 {
         return normalize(coordinates.normal_matrix * gradient(p));
 }
 
-vec3 find_isosurface(vec3 a, vec3 b, float sign_a)
+vec3 find_isosurface(vec3 a, vec3 b, const float sign_a)
 {
         for (int i = 0; i < ISOSURFACE_ITERATION_COUNT; ++i)
         {
@@ -333,7 +333,7 @@ vec3 find_isosurface(vec3 a, vec3 b, float sign_a)
         return 0.5 * (a + b);
 }
 
-vec4 find_isosurface(vec4 a, vec4 b, float sign_a)
+vec4 find_isosurface(vec4 a, vec4 b, const float sign_a)
 {
         for (int i = 0; i < ISOSURFACE_ITERATION_COUNT; ++i)
         {
@@ -350,27 +350,27 @@ vec4 find_isosurface(vec4 a, vec4 b, float sign_a)
         return 0.5 * (a + b);
 }
 
-vec3 shade(vec3 p)
+vec3 shade(const vec3 p)
 {
-        vec3 wn = world_normal(p);
+        const vec3 wn = world_normal(p);
 
-        vec3 n = faceforward(wn, -drawing.direction_to_camera, wn);
-        vec3 v = drawing.direction_to_camera;
-        vec3 l = drawing.direction_to_light;
+        const vec3 n = faceforward(wn, -drawing.direction_to_camera, wn);
+        const vec3 v = drawing.direction_to_camera;
+        const vec3 l = drawing.direction_to_light;
 
-        vec3 s = shading_ggx_diffuse(volume.metalness, volume.roughness, volume.color, n, v, l);
+        const vec3 s = shading_ggx_diffuse(volume.metalness, volume.roughness, volume.color, n, v, l);
 
         return drawing.lighting_color * s;
 }
 
-vec4 isosurface_color(vec3 p)
+vec4 isosurface_color(const vec3 p)
 {
         vec3 color = volume.ambient * volume.color;
         color += shade(p);
         return vec4(color, volume.isosurface_alpha);
 }
 
-void draw_image_as_volume(vec3 image_dir, vec3 image_org, float depth_dir, float depth_org)
+void draw_image_as_volume(vec3 image_dir, const vec3 image_org, float depth_dir, const float depth_org)
 {
         const float length_in_samples = length(textureSize(image, 0) * image_dir);
         const float sample_end = length_in_samples;
@@ -432,7 +432,7 @@ void draw_image_as_volume(vec3 image_dir, vec3 image_org, float depth_dir, float
         }
 }
 
-void draw_image_as_isosurface(vec3 image_dir, vec3 image_org, float depth_dir, float depth_org)
+void draw_image_as_isosurface(vec3 image_dir, const vec3 image_org, float depth_dir, const float depth_org)
 {
         const float length_in_samples = ceil(length(textureSize(image, 0) * image_dir));
         const float sample_end = length_in_samples + 1;
@@ -579,7 +579,13 @@ void draw_fragments()
 
 #if defined(IMAGE)
 
-bool intersect(vec3 ray_org, vec3 ray_dir, vec3 planes_min, vec3 planes_max, out float near, out float far)
+bool intersect(
+        const vec3 ray_org,
+        const vec3 ray_dir,
+        const vec3 planes_min,
+        const vec3 planes_max,
+        out float near,
+        out float far)
 {
         if (!volume_intersect(ray_org, ray_dir, planes_min, planes_max, near, far))
         {
@@ -595,13 +601,13 @@ bool intersect(vec3 ray_org, vec3 ray_dir, vec3 planes_min, vec3 planes_max, out
         return true;
 }
 
-bool intersect(bool exact, vec3 ray_org, vec3 ray_dir, out float first, out float second)
+bool intersect(const bool exact, const vec3 ray_org, const vec3 ray_dir, out float first, out float second)
 {
         if (exact)
         {
                 return intersect(ray_org, ray_dir, vec3(0), vec3(1), first, second);
         }
-        vec3 region = vec3(0.5) / textureSize(image, 0);
+        const vec3 region = vec3(0.5) / textureSize(image, 0);
         return intersect(ray_org, ray_dir, -region, vec3(1) + region, first, second);
 }
 

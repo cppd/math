@@ -38,13 +38,13 @@ out gl_PerVertex
 
 //
 
-void line(int i0, int i1, int i2, float d0, float d1, float d2)
+void line(const int i0, const int i1, const int i2, const float d0, const float d1, const float d2)
 {
-        vec4 from = mix(vs[i0].world_position, vs[i1].world_position, d0 / (d0 - d1));
+        const vec4 from = mix(vs[i0].world_position, vs[i1].world_position, d0 / (d0 - d1));
         gl_Position = matrices.vp_matrix * from;
         EmitVertex();
 
-        vec4 to = mix(vs[i0].world_position, vs[i2].world_position, d0 / (d0 - d2));
+        const vec4 to = mix(vs[i0].world_position, vs[i2].world_position, d0 / (d0 - d2));
         gl_Position = matrices.vp_matrix * to;
         EmitVertex();
 

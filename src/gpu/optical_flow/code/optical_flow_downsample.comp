@@ -35,17 +35,17 @@ const float filter_2d[5][5] =
 const float filter_1d[5] = {0.05088, 0.21184, 0.47456, 0.21184, 0.05088};
 // clang-format on
 
-bool point_inside_big(ivec2 p)
+bool point_inside_big(const ivec2 p)
 {
         return all(lessThanEqual(ivec2(0), p)) && all(lessThan(p, imageSize(image_big)));
 }
 
-float get_big(ivec2 p)
+float get_big(const ivec2 p)
 {
         return imageLoad(image_big, p).r;
 }
 
-void set_small(ivec2 p, float v)
+void set_small(const ivec2 p, const float v)
 {
         imageStore(image_small, p, vec4(v, v, v, 1));
 }
@@ -59,8 +59,8 @@ void main(void)
                 return;
         }
 
-        int kx = imageSize(image_big).x > imageSize(image_small).x ? 2 : 1;
-        int ky = imageSize(image_big).y > imageSize(image_small).y ? 2 : 1;
+        const int kx = imageSize(image_big).x > imageSize(image_small).x ? 2 : 1;
+        const int ky = imageSize(image_big).y > imageSize(image_small).y ? 2 : 1;
 
         const ivec2 p_big = ivec2(p_small.x * kx, p_small.y * ky);
 
@@ -73,10 +73,10 @@ void main(void)
                 {
                         for (int i = -delta; i <= delta; ++i)
                         {
-                                ivec2 pd = ivec2(p_big.x + i, p_big.y + j);
+                                const ivec2 pd = ivec2(p_big.x + i, p_big.y + j);
                                 if (point_inside_big(pd))
                                 {
-                                        float m = filter_2d[j + delta][i + delta];
+                                        const float m = filter_2d[j + delta][i + delta];
                                         sum_image += get_big(pd) * m;
                                         sum_filter += m;
                                 }
@@ -87,10 +87,10 @@ void main(void)
         {
                 for (int i = -delta; i <= delta; ++i)
                 {
-                        ivec2 pd = ivec2(p_big.x + i, p_big.y);
+                        const ivec2 pd = ivec2(p_big.x + i, p_big.y);
                         if (point_inside_big(pd))
                         {
-                                float m = filter_1d[i + delta];
+                                const float m = filter_1d[i + delta];
                                 sum_image += get_big(pd) * m;
                                 sum_filter += m;
                         }
@@ -100,10 +100,10 @@ void main(void)
         {
                 for (int i = -delta; i <= delta; ++i)
                 {
-                        ivec2 pd = ivec2(p_big.x, p_big.y + i);
+                        const ivec2 pd = ivec2(p_big.x, p_big.y + i);
                         if (point_inside_big(pd))
                         {
-                                float m = filter_1d[i + delta];
+                                const float m = filter_1d[i + delta];
                                 sum_image += get_big(pd) * m;
                                 sum_filter += m;
                         }

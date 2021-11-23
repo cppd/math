@@ -39,12 +39,12 @@ const uint N_MAX = (N <= SHARED_SIZE) ? N : SHARED_SIZE;
 
 shared vec2 shared_data[SHARED_SIZE];
 
-uint bit_reverse(uint i, uint bits)
+uint bit_reverse(const uint i, const uint bits)
 {
         return bitfieldReverse(i) >> (32 - bits);
 }
 
-vec2 complex_mul(vec2 a, vec2 b)
+vec2 complex_mul(const vec2 a, const vec2 b)
 {
         return vec2(a.x * b.x - a.y * b.y, a.x * b.y + a.y * b.x);
 }
@@ -56,7 +56,7 @@ void copy_global_to_shared()
         {
                 if (REVERSE_INPUT)
                 {
-                        uint i = global & N_MASK;
+                        const uint i = global & N_MASK;
                         shared_data[local] = global_data[global - i + bit_reverse(i, N_BITS)];
                 }
                 else
@@ -100,7 +100,7 @@ void main()
         copy_global_to_shared();
 
         // One thread for 2 elements, so use >> 1
-        uint max_local = min(SHARED_SIZE, DATA_SIZE - gl_WorkGroupID.x * SHARED_SIZE) >> 1;
+        const uint max_local = min(SHARED_SIZE, DATA_SIZE - gl_WorkGroupID.x * SHARED_SIZE) >> 1;
 
         // Starts with M = 2, so use PI
         float two_pi_div_m = INVERSE ? PI : -PI;
@@ -111,18 +111,18 @@ void main()
 
                 for (uint local = gl_LocalInvocationID.x; local < max_local; local += gl_WorkGroupSize.x)
                 {
-                        uint idx = local & (m_div_2 - 1); // local % m_div_2
-                        uint base = (local - idx) << 1;
+                        const uint idx = local & (m_div_2 - 1); // local % m_div_2
+                        const uint base = (local - idx) << 1;
 
-                        uint index_t = base + idx;
-                        uint index_u = index_t + m_div_2;
+                        const uint index_t = base + idx;
+                        const uint index_u = index_t + m_div_2;
 
-                        vec2 v_t = shared_data[index_t];
-                        vec2 v_u = shared_data[index_u];
+                        const vec2 v_t = shared_data[index_t];
+                        const vec2 v_u = shared_data[index_u];
 
-                        vec2 twiddle_factor = vec2(cos(two_pi_div_m * idx), sin(two_pi_div_m * idx));
+                        const vec2 twiddle_factor = vec2(cos(two_pi_div_m * idx), sin(two_pi_div_m * idx));
 
-                        vec2 k = complex_mul(twiddle_factor, v_u);
+                        const vec2 k = complex_mul(twiddle_factor, v_u);
 
                         shared_data[index_t] = v_t + k;
                         shared_data[index_u] = v_t - k;

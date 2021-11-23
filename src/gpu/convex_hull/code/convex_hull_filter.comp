@@ -47,7 +47,7 @@ void main(void)
 
         for (int y = 0; y < LINE_SIZE; ++y)
         {
-                int s = lines[y];
+                const int s = lines[y];
                 if (s >= 0)
                 {
                         points[count] = ivec2(s, y);
@@ -57,7 +57,7 @@ void main(void)
 
         for (int y = LINE_SIZE - 1; y >= 0; --y)
         {
-                int s = lines[y + LINE_SIZE];
+                const int s = lines[y + LINE_SIZE];
                 if (s >= 0)
                 {
                         points[count] = ivec2(s, y);

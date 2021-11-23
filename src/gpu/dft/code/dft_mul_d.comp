@@ -35,22 +35,22 @@ layout(std430, binding = 1) restrict buffer BufferData
         vec2 data[];
 };
 
-vec2 complex_mul(vec2 a, vec2 b)
+vec2 complex_mul(const vec2 a, const vec2 b)
 {
         return vec2(a.x * b.x - a.y * b.y, a.x * b.y + a.y * b.x);
 }
 
 void main()
 {
-        int i = int(gl_GlobalInvocationID.x);
-        int j = int(gl_GlobalInvocationID.y);
+        const int i = int(gl_GlobalInvocationID.x);
+        const int j = int(gl_GlobalInvocationID.y);
 
         if (i >= COLUMNS || j >= ROWS)
         {
                 return;
         }
 
-        vec2 d = diagonal[i];
-        vec2 y = data[j * COLUMNS + i];
+        const vec2 d = diagonal[i];
+        const vec2 y = data[j * COLUMNS + i];
         data[j * COLUMNS + i] = complex_mul(d, y);
 }

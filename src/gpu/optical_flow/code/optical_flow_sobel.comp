@@ -39,28 +39,28 @@ const float sobel_dy[3][3] =
 };
 // clang-format on
 
-float get_sobel_dx(int x, int y)
+float get_sobel_dx(const int x, const int y)
 {
         return sobel_dx[y + SOBEL_DELTA][x + SOBEL_DELTA];
 }
 
-float get_sobel_dy(int x, int y)
+float get_sobel_dy(const int x, const int y)
 {
         return sobel_dy[y + SOBEL_DELTA][x + SOBEL_DELTA];
 }
 
-float get_pixel(int x, int y)
+float get_pixel(const int x, const int y)
 {
-        ivec2 p = clamp(ivec2(x, y), ivec2(0), imageSize(image_i) - 1);
+        const ivec2 p = clamp(ivec2(x, y), ivec2(0), imageSize(image_i) - 1);
         return imageLoad(image_i, p).r;
 }
 
-void set_dx(ivec2 p, float v)
+void set_dx(const ivec2 p, const float v)
 {
         imageStore(image_dx, p, vec4(v, v, v, 1));
 }
 
-void set_dy(ivec2 p, float v)
+void set_dy(const ivec2 p, const float v)
 {
         imageStore(image_dy, p, vec4(v, v, v, 1));
 }
@@ -81,7 +81,7 @@ void main(void)
         {
                 for (int x = -SOBEL_DELTA; x <= SOBEL_DELTA; ++x)
                 {
-                        float v = get_pixel(p.x + x, p.y + y);
+                        const float v = get_pixel(p.x + x, p.y + y);
 
                         sum_x += v * get_sobel_dx(x, y);
                         sum_y += v * get_sobel_dy(x, y);

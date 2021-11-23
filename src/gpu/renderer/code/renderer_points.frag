@@ -22,22 +22,22 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #extension GL_GOOGLE_include_directive : enable
 #include "common.glsl"
 
-vec3 fog(vec3 fog_color, vec3 fragment_color)
+vec3 fog(const vec3 fog_color, const vec3 fragment_color)
 {
-        float fog_density = 2;
+        const float fog_density = 2;
 
-        float fog_start = 0;
-        float fog_end = 1;
+        const float fog_start = 0;
+        const float fog_end = 1;
 
-        float fog_distance = clamp(gl_FragCoord.z - fog_start, 0, fog_end - fog_start);
-        float fog_blending_factor = exp(-fog_density * fog_distance);
+        const float fog_distance = clamp(gl_FragCoord.z - fog_start, 0, fog_end - fog_start);
+        const float fog_blending_factor = exp(-fog_density * fog_distance);
 
         return mix(fog_color, fragment_color, fog_blending_factor);
 }
 
 void main(void)
 {
-        vec3 color = mesh.color * drawing.lighting_color * mesh.ambient;
+        const vec3 color = mesh.color * drawing.lighting_color * mesh.ambient;
 
         set_fragment_color(drawing.show_fog ? fog(drawing.background_color, color) : color);
 }

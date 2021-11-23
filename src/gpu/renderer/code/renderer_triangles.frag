@@ -47,7 +47,7 @@ gs;
 
 float shadow_weight()
 {
-        float d = texture(shadow_texture, gs.shadow_position.xy).r;
+        const float d = texture(shadow_texture, gs.shadow_position.xy).r;
         return d <= gs.shadow_position.z ? 1 : 0;
 }
 
@@ -58,29 +58,29 @@ bool has_texture_coordinates()
 
 float edge_factor()
 {
-        vec3 d = 0.5 * fwidth(gs.baricentric);
-        vec3 a = smoothstep(vec3(0), d, gs.baricentric);
+        const vec3 d = 0.5 * fwidth(gs.baricentric);
+        const vec3 a = smoothstep(vec3(0), d, gs.baricentric);
         return min(min(a.x, a.y), a.z);
 }
 
-vec3 shade_light(vec3 color, vec3 n, vec3 v)
+vec3 shade_light(const vec3 color, const vec3 n, const vec3 v)
 {
-        vec3 l = drawing.direction_to_light;
-        vec3 s = shading_ggx_diffuse(mesh.metalness, mesh.roughness, color, n, v, l);
+        const vec3 l = drawing.direction_to_light;
+        const vec3 s = shading_ggx_diffuse(mesh.metalness, mesh.roughness, color, n, v, l);
         return s;
 }
 
-vec3 shade_camera(vec3 color, vec3 n, vec3 v)
+vec3 shade_camera(const vec3 color, const vec3 n, const vec3 v)
 {
-        vec3 l = v;
-        vec3 s = shading_ggx_diffuse(mesh.metalness, mesh.roughness, color, n, v, l);
+        const vec3 l = v;
+        const vec3 s = shading_ggx_diffuse(mesh.metalness, mesh.roughness, color, n, v, l);
         return s;
 }
 
-vec3 shade(vec3 color)
+vec3 shade(const vec3 color)
 {
-        vec3 n = normalize(gs.world_normal);
-        vec3 v = drawing.direction_to_camera;
+        const vec3 n = normalize(gs.world_normal);
+        const vec3 v = drawing.direction_to_camera;
 
         if (!drawing.show_shadow)
         {
@@ -89,7 +89,7 @@ vec3 shade(vec3 color)
 
         vec3 s = 0.2 * shade_camera(color, n, v);
 
-        float c = (1 - shadow_weight());
+        const float c = (1 - shadow_weight());
         if (c > 0)
         {
                 s += c * 0.8 * shade_light(color, n, v);

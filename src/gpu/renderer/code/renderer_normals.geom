@@ -46,7 +46,7 @@ gs;
 
 //
 
-void line(vec3 world_from, vec3 world_to)
+void line(const vec3 world_from, const vec3 world_to)
 {
         const vec4 from = matrices.vp_matrix * vec4(world_from, 1.0);
         gl_Position = from;

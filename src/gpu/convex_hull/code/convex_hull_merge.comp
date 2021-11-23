@@ -32,7 +32,7 @@ shared float shared_buffer[LINE_SIZE];
 
 void copy_to_buffer()
 {
-        int offset = int(gl_WorkGroupID.x) * LINE_SIZE;
+        const int offset = int(gl_WorkGroupID.x) * LINE_SIZE;
         for (int i = int(gl_LocalInvocationID.x); i < LINE_SIZE; i += int(gl_WorkGroupSize.x))
         {
                 shared_buffer[i] = lines[offset + i];
@@ -41,7 +41,7 @@ void copy_to_buffer()
 
 void copy_from_buffer()
 {
-        int offset = int(gl_WorkGroupID.x) * LINE_SIZE;
+        const int offset = int(gl_WorkGroupID.x) * LINE_SIZE;
         for (int i = int(gl_LocalInvocationID.x); i < LINE_SIZE; i += int(gl_WorkGroupSize.x))
         {
                 lines[offset + i] = int(shared_buffer[i]);
@@ -51,14 +51,14 @@ void copy_from_buffer()
 // cross product (b-a)⨯(c-a)
 // if positive then a, b and c form a left turn
 // if negative then a, b and c form a right turn
-bool convex_ok(vec2 a, vec2 b, vec2 c)
+bool convex_ok(const vec2 a, const vec2 b, const vec2 c)
 {
-        vec2 ab = b - a, ac = c - a;
-        float v = ab.x * ac.y - ab.y * ac.x;
+        const vec2 ab = b - a, ac = c - a;
+        const float v = ab.x * ac.y - ab.y * ac.x;
         return (gl_WorkGroupID.x == 0) ? v >= 0 : v <= 0;
 }
 
-bool find_forward(int high, inout int idx, inout float val)
+bool find_forward(const int high, inout int idx, inout float val)
 {
         while (idx < high && (val = shared_buffer[idx]) < 0)
         {
@@ -66,7 +66,8 @@ bool find_forward(int high, inout int idx, inout float val)
         }
         return (idx < high);
 }
-bool find_backward(int low, inout int idx, inout float val)
+
+bool find_backward(const int low, inout int idx, inout float val)
 {
         while (idx >= low && (val = shared_buffer[idx]) < 0)
         {
@@ -75,7 +76,7 @@ bool find_backward(int low, inout int idx, inout float val)
         return (idx >= low);
 }
 
-bool merge_forward(int a_i, float a, inout int b_i, inout float b, int high)
+bool merge_forward(const int a_i, const float a, inout int b_i, inout float b, const int high)
 {
         bool merged = false;
         for (;;)
@@ -99,7 +100,7 @@ bool merge_forward(int a_i, float a, inout int b_i, inout float b, int high)
         }
 }
 
-bool merge_backward(int low, inout int a_i, inout float a, int b_i, float b)
+bool merge_backward(const int low, inout int a_i, inout float a, const int b_i, const float b)
 {
         bool merged = false;
         for (;;)
@@ -124,9 +125,9 @@ bool merge_backward(int low, inout int a_i, inout float a, int b_i, float b)
 }
 
 // low <= x < high
-void process(int low, int right, int high)
+void process(const int low, const int right, const int high)
 {
-        int left = right - 1;
+        const int left = right - 1;
 
         float a;
         int a_i = left;

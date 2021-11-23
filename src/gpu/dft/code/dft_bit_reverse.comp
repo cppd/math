@@ -29,29 +29,29 @@ layout(std430, binding = 0) buffer Buffer
         vec2 data[];
 };
 
-uint bit_reverse(uint i, uint bits)
+uint bit_reverse(const uint i, const uint bits)
 {
         return bitfieldReverse(i) >> (32 - bits);
 }
 
 void main()
 {
-        uint thread_id = gl_GlobalInvocationID.x;
+        const uint thread_id = gl_GlobalInvocationID.x;
 
         if (thread_id >= DATA_SIZE)
         {
                 return;
         }
 
-        uint i = thread_id & N_MASK;
-        uint n_base = thread_id - i;
-        uint r = bit_reverse(i, N_BITS);
+        const uint i = thread_id & N_MASK;
+        const uint n_base = thread_id - i;
+        const uint r = bit_reverse(i, N_BITS);
 
         if (i < r)
         {
-                uint i_index = n_base + i;
-                uint r_index = n_base + r;
-                vec2 t = data[i_index];
+                const uint i_index = n_base + i;
+                const uint r_index = n_base + r;
+                const vec2 t = data[i_index];
                 data[i_index] = data[r_index];
                 data[r_index] = t;
         }

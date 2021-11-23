@@ -48,28 +48,28 @@ const float Gauss[delta * 2 + 1][delta * 2 + 1] =
 
 const float background_value = 0;
 
-float luminance_of_rgb(vec4 c)
+float luminance_of_rgb(const vec4 c)
 {
         return 0.2126 * c.r + 0.7152 * c.g + 0.0722 * c.b;
 }
 
-bool is_background(ivec2 p)
+bool is_background(const ivec2 p)
 {
-        uvec4 s = imageLoad(img_objects, p);
+        const uvec4 s = imageLoad(img_objects, p);
         return s.r == 0;
 }
 
-float read_pixel(ivec2 p)
+float read_pixel(const ivec2 p)
 {
         return luminance_of_rgb(texelFetch(src, p, 0));
 }
 
-void save_pixel(ivec2 p, float v)
+void save_pixel(const ivec2 p, const float v)
 {
         imageStore(img_output, p - X0, vec4(v, v, v, 1));
 }
 
-bool point_inside(ivec2 p)
+bool point_inside(const ivec2 p)
 {
         return all(lessThanEqual(X0, p)) && all(lessThan(p, X1));
 }

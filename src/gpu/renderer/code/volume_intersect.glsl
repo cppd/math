@@ -54,8 +54,8 @@ bool clip_plane_intersect(
         const vec3 ray_org,
         const vec3 ray_dir,
         const vec4 clip_plane,
-        in out float near,
-        in out float far)
+        inout float near,
+        inout float far)
 {
         const vec3 plane_n = clip_plane.xyz;
         const float plane_d = clip_plane.w;

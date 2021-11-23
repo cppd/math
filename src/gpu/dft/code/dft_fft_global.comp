@@ -38,42 +38,42 @@ layout(std430, binding = 1) buffer Buffer
         vec2 data[];
 };
 
-vec2 complex_mul(vec2 a, vec2 b)
+vec2 complex_mul(const vec2 a, const vec2 b)
 {
         return vec2(a.x * b.x - a.y * b.y, a.x * b.y + a.y * b.x);
 }
 
 void main()
 {
-        uint thread_id = gl_GlobalInvocationID.x;
+        const uint thread_id = gl_GlobalInvocationID.x;
         if (thread_id >= data_size)
         {
                 return;
         }
 
-        uint i = thread_id & n_div_2_mask;
-        uint n_base = (thread_id - i) << 1;
+        const uint i = thread_id & n_div_2_mask;
+        const uint n_base = (thread_id - i) << 1;
 
-        uint idx = i & (m_div_2 - 1);
-        uint base = (i - idx) << 1;
+        const uint idx = i & (m_div_2 - 1);
+        const uint base = (i - idx) << 1;
 
-        uint index_t = n_base + base + idx;
-        uint index_u = index_t + m_div_2;
+        const uint index_t = n_base + base + idx;
+        const uint index_u = index_t + m_div_2;
 
-        vec2 v_t = data[index_t];
-        vec2 v_u = data[index_u];
+        const vec2 v_t = data[index_t];
+        const vec2 v_u = data[index_u];
 
         if (!INVERSE)
         {
-                vec2 twiddle_factor = vec2(cos(two_pi_div_m * idx), -sin(two_pi_div_m * idx));
-                vec2 k = complex_mul(twiddle_factor, v_u);
+                const vec2 twiddle_factor = vec2(cos(two_pi_div_m * idx), -sin(two_pi_div_m * idx));
+                const vec2 k = complex_mul(twiddle_factor, v_u);
                 data[index_t] = v_t + k;
                 data[index_u] = v_t - k;
         }
         else
         {
-                vec2 twiddle_factor = vec2(cos(two_pi_div_m * idx), sin(two_pi_div_m * idx));
-                vec2 k = complex_mul(twiddle_factor, v_u);
+                const vec2 twiddle_factor = vec2(cos(two_pi_div_m * idx), sin(two_pi_div_m * idx));
+                const vec2 k = complex_mul(twiddle_factor, v_u);
                 data[index_t] = (v_t + k) * 0.5;
                 data[index_u] = (v_t - k) * 0.5;
         }

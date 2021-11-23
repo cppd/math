@@ -40,7 +40,7 @@ void main(void)
 {
         const int vertex_index = gl_VertexIndex;
 
-        uint point_number = vertex_index >> 1;
+        const uint point_number = vertex_index >> 1;
 
         vec2 s;
         if ((vertex_index & 1) == 0)

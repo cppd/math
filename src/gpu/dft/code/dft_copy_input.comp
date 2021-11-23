@@ -33,7 +33,7 @@ layout(std430, binding = 0) writeonly restrict buffer Buffer
         vec2 dst[];
 };
 
-float luminance_of_rgb(vec4 c)
+float luminance_of_rgb(const vec4 c)
 {
         return 0.2126 * c.r + 0.7152 * c.g + 0.0722 * c.b;
 }
@@ -47,7 +47,7 @@ void main()
                 return;
         }
 
-        vec4 pixel = texelFetch(src, ivec2(p) + ivec2(X, Y), 0);
-        float l = luminance_of_rgb(pixel);
+        const vec4 pixel = texelFetch(src, ivec2(p) + ivec2(X, Y), 0);
+        const float l = luminance_of_rgb(pixel);
         dst[p.y * WIDTH + p.x] = vec2(l, 0);
 }

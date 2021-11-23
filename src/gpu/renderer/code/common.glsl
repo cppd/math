@@ -92,7 +92,7 @@ layout(early_fragment_tests) in;
 
 layout(location = 0) out vec4 out_color;
 
-void set_fragment_color(vec3 color)
+void set_fragment_color(const vec3 color)
 {
         imageStore(object_image, ivec2(gl_FragCoord.xy), uvec4(1));
 
@@ -102,13 +102,13 @@ void set_fragment_color(vec3 color)
         }
         else
         {
-                uint heads_size = imageAtomicAdd(transparency_heads_size, ivec2(gl_FragCoord.xy), gl_SampleID, 1);
+                const uint heads_size = imageAtomicAdd(transparency_heads_size, ivec2(gl_FragCoord.xy), gl_SampleID, 1);
                 if (heads_size < TRANSPARENCY_MAX_NODES)
                 {
-                        uint index = atomicAdd(transparency_node_counter, 1);
+                        const uint index = atomicAdd(transparency_node_counter, 1);
                         if (index < drawing.transparency_max_node_count)
                         {
-                                uint prev_head = imageAtomicExchange(
+                                const uint prev_head = imageAtomicExchange(
                                         transparency_heads, ivec2(gl_FragCoord.xy), gl_SampleID, index);
 
                                 TransparencyNode node;

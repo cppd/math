@@ -51,7 +51,7 @@ layout(std140, binding = 3) uniform Data
         int guess_width;
 };
 
-vec2 pixel_to_texture(vec2 pixel)
+vec2 pixel_to_texture(const vec2 pixel)
 {
         return vec2(pixel.x + 0.5, pixel.y + 0.5) / imageSize(image_dx);
 }
@@ -73,7 +73,7 @@ float get_j(vec2 p)
         return texture(texture_j, pixel_to_texture(p)).r;
 }
 
-bool compute_g_inv(ivec2 p, out mat2 g_inv)
+bool compute_g_inv(const ivec2 p, out mat2 g_inv)
 {
         float sum_x2 = 0;
         float sum_y2 = 0;
@@ -93,9 +93,9 @@ bool compute_g_inv(ivec2 p, out mat2 g_inv)
                 }
         }
 
-        mat2 g = mat2(sum_x2, sum_xy, sum_xy, sum_y2);
+        const mat2 g = mat2(sum_x2, sum_xy, sum_xy, sum_y2);
 
-        float det = determinant(g);
+        const float det = determinant(g);
         if (abs(det) < MIN_DETERMINANT)
         {
                 return false;
@@ -106,10 +106,10 @@ bool compute_g_inv(ivec2 p, out mat2 g_inv)
         return true;
 }
 
-vec2 get_guess(ivec2 p_screen)
+vec2 get_guess(const ivec2 p_screen)
 {
-        int guess_index = (p_screen.y / guess_ky) * guess_width + p_screen.x / guess_kx;
-        vec2 flow = points_flow_guess[guess_index];
+        const int guess_index = (p_screen.y / guess_ky) * guess_width + p_screen.x / guess_kx;
+        const vec2 flow = points_flow_guess[guess_index];
         return vec2(flow.x * guess_kx, flow.y * guess_ky);
 }
 
@@ -120,7 +120,7 @@ void main(void)
                 return;
         }
 
-        int point_index = int(gl_GlobalInvocationID.y * point_count_x + gl_GlobalInvocationID.x);
+        const int point_index = int(gl_GlobalInvocationID.y * point_count_x + gl_GlobalInvocationID.x);
 
         const ivec2 p = use_all_points ? ivec2(gl_GlobalInvocationID.xy) : top_points[point_index];
 
@@ -132,9 +132,9 @@ void main(void)
                 return;
         }
 
-        vec2 v = vec2(0, 0);
+        const vec2 guess = use_guess ? get_guess(p) : vec2(0, 0);
 
-        vec2 guess = use_guess ? get_guess(p) : vec2(0, 0);
+        vec2 v = vec2(0, 0);
 
         for (int i = 0; i < MAX_ITERATION_COUNT; ++i)
         {
@@ -152,7 +152,7 @@ void main(void)
                         }
                 }
 
-                vec2 n = g_inv * b;
+                const vec2 n = g_inv * b;
 
                 if (dot(n, n) < STOP_MOVE_SQUARE)
                 {
@@ -162,7 +162,7 @@ void main(void)
                 v += n;
         }
 
-        vec2 res = v + guess;
+        const vec2 res = v + guess;
 
         points_flow[point_index] = res;
 }
