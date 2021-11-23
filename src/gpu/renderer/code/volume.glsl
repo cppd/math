@@ -42,6 +42,7 @@ The MIT Press, 2009.
 #extension GL_GOOGLE_include_directive : enable
 #include "shading_ggx_diffuse.glsl"
 #include "transparency.glsl"
+#include "volume_intersect.glsl"
 
 const float MIN_TRANSPARENCY = 1.0 / 256;
 const int ISOSURFACE_ITERATION_COUNT = 5;
@@ -315,100 +316,6 @@ vec3 world_normal(vec3 p)
         return normalize(coordinates.normal_matrix * gradient(p));
 }
 
-bool intersect(vec3 ray_org, vec3 ray_dir, vec3 planes_min, vec3 planes_max, out float first, out float second)
-{
-        float near = 0;
-        float far = 1e38;
-
-        // based on ParallelotopeAA functions
-        for (int i = 0; i < 3; ++i)
-        {
-                float s = ray_dir[i];
-                if (s == 0)
-                {
-                        // parallel to the planes
-                        float d = ray_org[i];
-                        if (d < planes_min[i] || d > planes_max[i])
-                        {
-                                // outside the planes
-                                return false;
-                        }
-                        // inside the planes
-                        continue;
-                }
-
-                float d = ray_org[i];
-                float alpha1 = (planes_min[i] - d) / s;
-                float alpha2 = (planes_max[i] - d) / s;
-
-                if (s > 0)
-                {
-                        // front intersection for the first plane
-                        // back intersection for the second plane
-                        near = max(alpha1, near);
-                        far = min(alpha2, far);
-                }
-                else
-                {
-                        // front intersection for the second plane
-                        // back intersection for the first plane
-                        near = max(alpha2, near);
-                        far = min(alpha1, far);
-                }
-
-                if (far < near)
-                {
-                        return false;
-                }
-        }
-
-        // based on Parallelotope functions
-        if (drawing.clip_plane_enabled)
-        {
-                do
-                {
-                        vec3 n = coordinates.clip_plane_equation.xyz;
-                        float d = coordinates.clip_plane_equation.w;
-
-                        float s = dot(ray_dir, n);
-                        if (s == 0)
-                        {
-                                // parallel to the plane
-                                if (dot(ray_org, n) > d)
-                                {
-                                        // outside the plane
-                                        return false;
-                                }
-                                // inside the plane
-                                continue;
-                        }
-
-                        float alpha = (d - dot(ray_org, n)) / s;
-
-                        if (s > 0)
-                        {
-                                // back intersection
-                                far = min(alpha, far);
-                        }
-                        else
-                        {
-                                // front intersection
-                                near = max(alpha, near);
-                        }
-
-                        if (far < near)
-                        {
-                                return false;
-                        }
-                } while (false);
-        }
-
-        first = near;
-        second = far;
-
-        return true;
-}
-
 vec3 find_isosurface(vec3 a, vec3 b, float sign_a)
 {
         for (int i = 0; i < ISOSURFACE_ITERATION_COUNT; ++i)
@@ -671,6 +578,22 @@ void draw_fragments()
 #endif
 
 #if defined(IMAGE)
+
+bool intersect(vec3 ray_org, vec3 ray_dir, vec3 planes_min, vec3 planes_max, out float near, out float far)
+{
+        if (!volume_intersect(ray_org, ray_dir, planes_min, planes_max, near, far))
+        {
+                return false;
+        }
+        if (drawing.clip_plane_enabled)
+        {
+                if (!clip_plane_intersect(ray_org, ray_dir, coordinates.clip_plane_equation, near, far))
+                {
+                        return false;
+                }
+        }
+        return true;
+}
 
 bool intersect(bool exact, vec3 ray_org, vec3 ray_dir, out float first, out float second)
 {
