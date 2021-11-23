@@ -15,12 +15,6 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-/*
-Samuel R. Buss.
-3D Computer Graphics. A Mathematical Introduction with OpenGL.
-Cambridge University Press, 2003.
-*/
-
 #pragma once
 
 #include "constraint.h"
@@ -45,25 +39,6 @@ Cambridge University Press, 2003.
 
 namespace ns::geometry
 {
-namespace parallelotope_implementation
-{
-template <std::size_t N, typename T, std::size_t... I>
-std::array<Vector<N, T>, N> make_vectors_impl(const Vector<N, T>& d, std::integer_sequence<std::size_t, I...>&&)
-{
-        static_assert(N == sizeof...(I));
-        std::array<Vector<N, T>, N> vectors{(static_cast<void>(I), Vector<N, T>(0))...};
-        ((vectors[I][I] = d[I]), ...);
-        return vectors;
-}
-
-// Diagonal matrix NxN
-template <std::size_t N, typename T>
-std::array<Vector<N, T>, N> make_vectors(const Vector<N, T>& d)
-{
-        return make_vectors_impl(d, std::make_integer_sequence<std::size_t, N>());
-}
-}
-
 template <std::size_t N, typename T>
 class Parallelotope final
 {
@@ -127,6 +102,11 @@ public:
 
         std::array<Parallelotope<N, T>, DIVISIONS> binary_division() const;
 
+        const Vector<N, T>& org() const;
+        const std::array<Vector<N, T>, N>& vectors() const;
+
+        auto overlap_function() const;
+
         decltype(auto) edges() const
         {
                 return parallelotope_edges(org_, vectors_);
@@ -141,11 +121,6 @@ public:
         {
                 return parallelotope_vertices(org_, vectors_);
         }
-
-        const Vector<N, T>& org() const;
-        const std::array<Vector<N, T>, N>& vectors() const;
-
-        auto overlap_function() const;
 };
 
 template <std::size_t N, typename T>
@@ -167,7 +142,13 @@ Parallelotope<N, T>::Parallelotope(const Vector<N, T>& org, const std::array<Vec
 template <std::size_t N, typename T>
 Parallelotope<N, T>::Parallelotope(const Vector<N, T>& min, const Vector<N, T>& max)
 {
-        set_data(min, parallelotope_implementation::make_vectors(max - min));
+        std::array<Vector<N, T>, N> vectors;
+        for (std::size_t i = 0; i < N; ++i)
+        {
+                vectors[i] = Vector<N, T>(0);
+                vectors[i][i] = max[i] - min[i];
+        }
+        set_data(min, vectors);
 }
 
 template <std::size_t N, typename T>
@@ -213,46 +194,28 @@ Constraints<N, T, 2 * N, 0> Parallelotope<N, T>::constraints() const
 }
 
 template <std::size_t N, typename T>
-bool Parallelotope<N, T>::intersect_impl(const Ray<N, T>& r, T* const first, T* const second) const
+bool Parallelotope<N, T>::intersect_impl(const Ray<N, T>& ray, T* const first, T* const second) const
 {
         T near = 0;
         T far = Limits<T>::max();
 
         for (unsigned i = 0; i < N; ++i)
         {
-                const T s = dot(r.dir(), planes_[i].n);
+                const T s = dot(ray.dir(), planes_[i].n);
+                const T d = dot(ray.org(), planes_[i].n);
                 if (s == 0)
                 {
-                        // parallel to the planes
-                        T d = dot(r.org(), planes_[i].n);
                         if (d < planes_[i].d1 || d > planes_[i].d2)
                         {
-                                // outside the planes
                                 return false;
                         }
-                        // inside the planes
                         continue;
                 }
-
-                const T d = dot(r.org(), planes_[i].n);
-                const T alpha1 = (planes_[i].d1 - d) / s;
-                const T alpha2 = (planes_[i].d2 - d) / s;
-
-                if (s > 0)
-                {
-                        // front intersection for the first plane
-                        // back intersection for the second plane
-                        near = std::max(alpha1, near);
-                        far = std::min(alpha2, far);
-                }
-                else
-                {
-                        // front intersection for the second plane
-                        // back intersection for the first plane
-                        near = std::max(alpha2, near);
-                        far = std::min(alpha1, far);
-                }
-
+                const bool dir_negative = (s < 0);
+                const T r = 1 / s;
+                const std::array<T, 2> a{(planes_[i].d1 - d) * r, (planes_[i].d2 - d) * r};
+                near = std::max(near, a[dir_negative]);
+                far = std::min(far, a[!dir_negative]);
                 if (far < near)
                 {
                         return false;
