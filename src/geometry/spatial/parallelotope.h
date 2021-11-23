@@ -27,6 +27,7 @@ Cambridge University Press, 2003.
 #include "parallelotope_aa.h"
 #include "parallelotope_edges.h"
 #include "parallelotope_length.h"
+#include "parallelotope_vertices.h"
 #include "shape_overlap.h"
 
 #include <src/com/arrays.h>
@@ -74,8 +75,6 @@ class Parallelotope final
         // Object count after binary division
         static constexpr int DIVISIONS = 1 << N;
 
-        static constexpr int VERTEX_COUNT = 1 << N;
-
         struct Planes
         {
                 Vector<N, T> n;
@@ -98,9 +97,6 @@ class Parallelotope final
                 const std::array<Vector<N, T>, N>& half_vectors,
                 const Vector<N, T>& middle_d,
                 const F& f) const;
-
-        template <int INDEX, typename F>
-        void vertices_impl(const Vector<N, T>& p, const F& f) const;
 
 public:
         static constexpr std::size_t SPACE_DIMENSION = N;
@@ -131,8 +127,6 @@ public:
 
         std::array<Parallelotope<N, T>, DIVISIONS> binary_division() const;
 
-        std::array<Vector<N, T>, VERTEX_COUNT> vertices() const;
-
         decltype(auto) edges() const
         {
                 return parallelotope_edges(org_, vectors_);
@@ -141,6 +135,11 @@ public:
         decltype(auto) length() const
         {
                 return parallelotope_length(vectors_);
+        }
+
+        decltype(auto) vertices() const
+        {
+                return parallelotope_vertices(org_, vectors_);
         }
 
         const Vector<N, T>& org() const;
@@ -461,41 +460,6 @@ std::array<Parallelotope<N, T>, Parallelotope<N, T>::DIVISIONS> Parallelotope<N,
         };
 
         binary_division_impl<N - 1>(org_, &d1, &d2, half_vectors, middle_d, f);
-
-        ASSERT(count == result.size());
-
-        return result;
-}
-
-template <std::size_t N, typename T>
-template <int INDEX, typename F>
-void Parallelotope<N, T>::vertices_impl(const Vector<N, T>& p, const F& f) const
-{
-        if constexpr (INDEX >= 0)
-        {
-                vertices_impl<INDEX - 1>(p, f);
-                vertices_impl<INDEX - 1>(p + vectors_[INDEX], f);
-        }
-        else
-        {
-                f(p);
-        }
-}
-
-template <std::size_t N, typename T>
-std::array<Vector<N, T>, Parallelotope<N, T>::VERTEX_COUNT> Parallelotope<N, T>::vertices() const
-{
-        std::array<Vector<N, T>, VERTEX_COUNT> result;
-
-        unsigned count = 0;
-
-        const auto f = [&count, &result](const Vector<N, T>& p)
-        {
-                ASSERT(count < result.size());
-                result[count++] = p;
-        };
-
-        vertices_impl<N - 1>(org_, f);
 
         ASSERT(count == result.size());
 

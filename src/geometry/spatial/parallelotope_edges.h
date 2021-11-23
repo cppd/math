@@ -33,7 +33,7 @@ template <std::size_t N>
 inline constexpr int EDGE_COUNT = (1 << (N - 1)) * N;
 
 template <int INDEX, std::size_t N, std::size_t M, typename T, typename F>
-void parallelotope_edges(
+void edges(
         const Vector<N, T>& p,
         const std::array<Vector<N, T>, M>& vectors,
         std::array<bool, M>* const dimensions,
@@ -42,14 +42,38 @@ void parallelotope_edges(
         if constexpr (INDEX >= 0)
         {
                 (*dimensions)[INDEX] = true;
-                parallelotope_edges<INDEX - 1>(p, vectors, dimensions, f);
+                edges<INDEX - 1>(p, vectors, dimensions, f);
 
                 (*dimensions)[INDEX] = false;
-                parallelotope_edges<INDEX - 1>(p + vectors[INDEX], vectors, dimensions, f);
+                edges<INDEX - 1>(p + vectors[INDEX], vectors, dimensions, f);
         }
         else
         {
                 f(p);
+        }
+}
+
+template <int INDEX, std::size_t N, typename T, typename F>
+void edges(
+        const Vector<N, T>& min,
+        const Vector<N, T>& max,
+        Vector<N, T>* const p,
+        std::array<bool, N>* const dimensions,
+        const F& f)
+{
+        if constexpr (INDEX >= 0)
+        {
+                (*dimensions)[INDEX] = true;
+                (*p)[INDEX] = min[INDEX];
+                edges<INDEX - 1>(min, max, p, dimensions, f);
+
+                (*dimensions)[INDEX] = false;
+                (*p)[INDEX] = max[INDEX];
+                edges<INDEX - 1>(min, max, p, dimensions, f);
+        }
+        else
+        {
+                f();
         }
 }
 }
@@ -59,10 +83,10 @@ std::array<std::array<Vector<N, T>, 2>, parallelotope_edges_implementation::EDGE
         const Vector<N, T>& org,
         const std::array<Vector<N, T>, M>& vectors)
 {
-        namespace impl = parallelotope_edges_implementation;
-
+        static_assert(N > 0 && N <= 3);
         static_assert(M > 0 && M <= N);
-        static_assert(N <= 3);
+
+        namespace impl = parallelotope_edges_implementation;
 
         static constexpr std::size_t EDGE_COUNT = impl::EDGE_COUNT<M>;
 
@@ -85,7 +109,47 @@ std::array<std::array<Vector<N, T>, 2>, parallelotope_edges_implementation::EDGE
                 }
         };
 
-        impl::parallelotope_edges<M - 1>(org, vectors, &dimensions, f);
+        impl::edges<M - 1>(org, vectors, &dimensions, f);
+        ASSERT(count == result.size());
+
+        return result;
+}
+
+template <std::size_t N, typename T>
+std::array<std::array<Vector<N, T>, 2>, parallelotope_edges_implementation::EDGE_COUNT<N>> parallelotope_edges(
+        const Vector<N, T>& min,
+        const Vector<N, T>& max)
+{
+        static_assert(N > 0 && N <= 3);
+
+        namespace impl = parallelotope_edges_implementation;
+
+        static constexpr std::size_t EDGE_COUNT = impl::EDGE_COUNT<N>;
+
+        const Vector<N, T> diagonal = max - min;
+
+        std::array<std::array<Vector<N, T>, 2>, EDGE_COUNT> result;
+
+        unsigned count = 0;
+        Vector<N, T> p;
+        std::array<bool, N> dimensions;
+
+        const auto f = [&]()
+        {
+                for (std::size_t i = 0; i < N; ++i)
+                {
+                        if (dimensions[i])
+                        {
+                                ASSERT(count < result.size());
+                                result[count][0] = p;
+                                result[count][1] = Vector<N, T>(0);
+                                result[count][1][i] = diagonal[i];
+                                ++count;
+                        }
+                }
+        };
+
+        impl::edges<N - 1>(min, max, &p, &dimensions, f);
         ASSERT(count == result.size());
 
         return result;

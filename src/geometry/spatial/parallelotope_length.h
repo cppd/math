@@ -22,6 +22,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/numerical/vec.h>
 
 #include <algorithm>
+#include <array>
 
 namespace ns::geometry
 {
@@ -48,6 +49,7 @@ void length(const Vector<N, T>& sum, const std::array<Vector<N, T>, M>& vectors,
 template <std::size_t N, typename T, std::size_t M>
 T parallelotope_length(const std::array<Vector<N, T>, M>& vectors)
 {
+        static_assert(N > 0);
         static_assert(M > 0 && M <= N);
 
         namespace impl = parallelotope_length_implementation;

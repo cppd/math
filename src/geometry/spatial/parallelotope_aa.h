@@ -25,6 +25,7 @@ Cambridge University Press, 2003.
 
 #include "constraint.h"
 #include "parallelotope_edges.h"
+#include "parallelotope_vertices.h"
 #include "shape_overlap.h"
 
 #include <src/com/error.h>
@@ -57,14 +58,6 @@ constexpr std::array<Vector<N, T>, N> make_vectors(const T& v)
 {
         return make_vectors_impl<N, T>(v, std::make_integer_sequence<std::size_t, N>());
 }
-
-template <std::size_t N, typename T>
-constexpr Vector<N, T> index_vector(const unsigned index, const T& value)
-{
-        Vector<N, T> v(0);
-        v[index] = value;
-        return v;
-}
 }
 
 template <std::size_t N, typename T>
@@ -85,8 +78,6 @@ class ParallelotopeAA final
         // Object count after binary division
         static constexpr int DIVISIONS = 1 << N;
 
-        static constexpr int VERTEX_COUNT = 1 << N;
-
         struct Planes
         {
                 T d1, d2;
@@ -98,13 +89,8 @@ class ParallelotopeAA final
 
         bool intersect_impl(const Ray<N, T>& ray, T* first, T* second) const;
 
-        T size(unsigned i) const;
-
         template <int INDEX, typename F>
         void binary_division_impl(std::array<Planes, N>* p, const Vector<N, T>& middle_d, const F& f) const;
-
-        template <int INDEX, typename F>
-        void vertices_impl(Vector<N, T>* p, const F& f) const;
 
 public:
         static constexpr std::size_t SPACE_DIMENSION = N;
@@ -131,14 +117,17 @@ public:
 
         std::array<ParallelotopeAA<N, T>, DIVISIONS> binary_division() const;
 
-        std::array<Vector<N, T>, VERTEX_COUNT> vertices() const;
-
         decltype(auto) edges() const
         {
-                return parallelotope_edges(org(), vectors());
+                return parallelotope_edges(min(), max());
         }
 
         T length() const;
+
+        decltype(auto) vertices() const
+        {
+                return parallelotope_vertices(min(), max());
+        }
 
         Vector<N, T> org() const;
         std::array<Vector<N, T>, N> vectors() const;
@@ -190,12 +179,6 @@ ParallelotopeAA<N, T>::ParallelotopeAA(const Vector<N, T>& min, const Vector<N, 
                 planes_[i].d1 = min[i];
                 planes_[i].d2 = max[i];
         }
-}
-
-template <std::size_t N, typename T>
-T ParallelotopeAA<N, T>::size(const unsigned i) const
-{
-        return planes_[i].d2 - planes_[i].d1;
 }
 
 // 2 * N constraints b + a * x >= 0
@@ -410,44 +393,6 @@ std::array<ParallelotopeAA<N, T>, ParallelotopeAA<N, T>::DIVISIONS> Parallelotop
 }
 
 template <std::size_t N, typename T>
-template <int INDEX, typename F>
-void ParallelotopeAA<N, T>::vertices_impl(Vector<N, T>* const p, const F& f) const
-{
-        if constexpr (INDEX >= 0)
-        {
-                (*p)[INDEX] = planes_[INDEX].d1;
-                vertices_impl<INDEX - 1>(p, f);
-                (*p)[INDEX] = planes_[INDEX].d2;
-                vertices_impl<INDEX - 1>(p, f);
-        }
-        else
-        {
-                f();
-        }
-}
-
-template <std::size_t N, typename T>
-std::array<Vector<N, T>, ParallelotopeAA<N, T>::VERTEX_COUNT> ParallelotopeAA<N, T>::vertices() const
-{
-        std::array<Vector<N, T>, VERTEX_COUNT> result;
-
-        unsigned count = 0;
-        Vector<N, T> p;
-
-        const auto f = [&count, &result, &p]()
-        {
-                ASSERT(count < result.size());
-                result[count++] = p;
-        };
-
-        vertices_impl<N - 1>(&p, f);
-
-        ASSERT(count == result.size());
-
-        return result;
-}
-
-template <std::size_t N, typename T>
 T ParallelotopeAA<N, T>::length() const
 {
         Vector<N, T> s;
@@ -475,7 +420,8 @@ std::array<Vector<N, T>, N> ParallelotopeAA<N, T>::vectors() const
         std::array<Vector<N, T>, N> res;
         for (std::size_t i = 0; i < N; ++i)
         {
-                res[i] = parallelotope_aa_implementation::index_vector<N, T>(i, size(i));
+                res[i] = Vector<N, T>(0);
+                res[i][i] = planes_[i].d2 - planes_[i].d1;
         }
         return res;
 }
