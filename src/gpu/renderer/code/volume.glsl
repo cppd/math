@@ -122,13 +122,6 @@ layout(location = 0) out vec4 out_color;
 
 //
 
-struct Fragment
-{
-        uint color_rg;
-        uint color_ba;
-        float depth;
-};
-
 // transparency = 1 - α
 float g_transparency;
 vec3 g_color;
@@ -147,15 +140,6 @@ bool color_add(const vec4 c)
         g_transparency *= 1.0 - c.a;
         return g_transparency < MIN_TRANSPARENCY;
 }
-bool color_add(const Fragment fragment)
-{
-        const vec2 rg = unpackUnorm2x16(fragment.color_rg);
-        const vec2 ba = unpackUnorm2x16(fragment.color_ba);
-        const vec4 c = vec4(rg, ba);
-        g_color += (g_transparency * c.a) * c.rgb;
-        g_transparency *= 1.0 - c.a;
-        return g_transparency < MIN_TRANSPARENCY;
-}
 #define COLOR_ADD(c)                \
         do                          \
         {                           \
@@ -164,6 +148,22 @@ bool color_add(const Fragment fragment)
                         return;     \
                 }                   \
         } while (false)
+
+//
+
+struct Fragment
+{
+        uint color_rg;
+        uint color_ba;
+        float depth;
+};
+
+vec4 fragment_color(const Fragment fragment)
+{
+        const vec2 rg = unpackUnorm2x16(fragment.color_rg);
+        const vec2 ba = unpackUnorm2x16(fragment.color_ba);
+        return vec4(rg, ba);
+}
 
 #if !defined(FRAGMENTS)
 
@@ -277,19 +277,21 @@ float scalar_volume_value(const vec3 p)
         return clamp(value, 0, 1);
 }
 
-vec4 volume_color(const vec3 p)
+vec4 color_volume_value(const vec3 p)
 {
         if (volume.color_volume)
         {
-                vec4 color = texture(image, p);
-                color.rgb *= drawing.lighting_color * volume.ambient;
-                color.a = clamp(color.a * volume.volume_alpha_coefficient, 0, 1);
-                return color;
+                return texture(image, p);
         }
         const float value = scalar_volume_value(p);
-        // vec4 color = texture(transfer_function, value);
-        const vec3 color3 = volume.color * drawing.lighting_color * volume.ambient;
-        vec4 color = vec4(color3, value);
+        // return texture(transfer_function, value);
+        return vec4(volume.color, value);
+}
+
+vec4 volume_color(const vec3 p)
+{
+        vec4 color = color_volume_value(p);
+        color.rgb *= drawing.lighting_color * volume.ambient;
         color.a = clamp(color.a * volume.volume_alpha_coefficient, 0, 1);
         return color;
 }
@@ -405,7 +407,7 @@ void draw_image_as_volume(vec3 image_dir, const vec3 image_org, float depth_dir,
 
                         while (fragment.depth <= volume_depth)
                         {
-                                COLOR_ADD(fragment);
+                                COLOR_ADD(fragment_color(fragment));
                                 if (fragments_pop(), fragments_empty())
                                 {
                                         break;
@@ -428,7 +430,7 @@ void draw_image_as_volume(vec3 image_dir, const vec3 image_org, float depth_dir,
 
         for (; !fragments_empty(); fragments_pop())
         {
-                COLOR_ADD(fragments_top());
+                COLOR_ADD(fragment_color(fragments_top()));
         }
 }
 
@@ -448,7 +450,7 @@ void draw_image_as_isosurface(vec3 image_dir, const vec3 image_org, float depth_
 
                 while (fragment.depth <= depth_org)
                 {
-                        COLOR_ADD(fragment);
+                        COLOR_ADD(fragment_color(fragment));
                         if (fragments_pop(), fragments_empty())
                         {
                                 break;
@@ -503,7 +505,7 @@ void draw_image_as_isosurface(vec3 image_dir, const vec3 image_org, float depth_
 
                                 while (fragment.depth <= v.w)
                                 {
-                                        COLOR_ADD(fragment);
+                                        COLOR_ADD(fragment_color(fragment));
                                         if (fragments_pop(), fragments_empty())
                                         {
                                                 break;
@@ -518,7 +520,7 @@ void draw_image_as_isosurface(vec3 image_dir, const vec3 image_org, float depth_
                         {
                                 while (fragment.depth <= volume_depth)
                                 {
-                                        COLOR_ADD(fragment);
+                                        COLOR_ADD(fragment_color(fragment));
                                         if (fragments_pop(), fragments_empty())
                                         {
                                                 break;
@@ -543,7 +545,7 @@ void draw_image_as_isosurface(vec3 image_dir, const vec3 image_org, float depth_
 
         for (; !fragments_empty(); fragments_pop())
         {
-                COLOR_ADD(fragments_top());
+                COLOR_ADD(fragment_color(fragments_top()));
         }
 
         for (; s < sample_end; ++s)
@@ -571,7 +573,7 @@ void draw_fragments()
 {
         for (; !fragments_empty(); fragments_pop())
         {
-                COLOR_ADD(fragments_top());
+                COLOR_ADD(fragment_color(fragments_top()));
         }
 }
 
@@ -611,14 +613,25 @@ bool intersect(const bool exact, const vec3 ray_org, const vec3 ray_dir, out flo
         return intersect(ray_org, ray_dir, -region, vec3(1) + region, first, second);
 }
 
+void draw_without_volume()
+{
+#if defined(FRAGMENTS)
+        color_init();
+        draw_fragments();
+        color_set();
+#else
+        out_color = vec4(vec3(0), 1);
+#endif
+}
+
 void main(void)
 {
         fragments_build();
 
-        vec2 device_coordinates = (gl_FragCoord.xy - drawing.viewport_center) * drawing.viewport_factor;
+        const vec2 device_coordinates = (gl_FragCoord.xy - drawing.viewport_center) * drawing.viewport_factor;
 
-        vec3 ray_org = (coordinates.inverse_mvp_matrix * vec4(device_coordinates, 0, 1)).xyz;
-        vec3 ray_dir = normalize(mat3(coordinates.inverse_mvp_matrix) * vec3(0, 0, 1));
+        const vec3 ray_org = (coordinates.inverse_mvp_matrix * vec4(device_coordinates, 0, 1)).xyz;
+        const vec3 ray_dir = normalize(mat3(coordinates.inverse_mvp_matrix) * vec3(0, 0, 1));
 
         const bool draw_as_volume = volume.color_volume || !volume.isosurface;
 
@@ -626,37 +639,22 @@ void main(void)
         float second;
         if (!intersect(draw_as_volume, ray_org, ray_dir, first, second))
         {
-#if defined(FRAGMENTS)
-                color_init();
-                draw_fragments();
-                color_set();
+                draw_without_volume();
                 return;
-#else
-                out_color = vec4(vec3(0), 1);
+        }
+
+        const vec3 image_org = ray_org + ray_dir * first;
+        const float depth_org = dot(coordinates.third_row_of_mvp, vec4(image_org, 1));
+        const float depth_limit = texelFetch(depth_image, ivec2(gl_FragCoord.xy), gl_SampleID).r;
+        const float depth_dir_limit = depth_limit - depth_org;
+        if (depth_dir_limit <= 0)
+        {
+                draw_without_volume();
                 return;
-#endif
         }
 
         vec3 image_dir = ray_dir * (second - first);
-        vec3 image_org = ray_org + ray_dir * first;
-
-        float depth_org = dot(coordinates.third_row_of_mvp, vec4(image_org, 1));
-        float depth_limit = texelFetch(depth_image, ivec2(gl_FragCoord.xy), gl_SampleID).r;
-        float depth_dir_limit = depth_limit - depth_org;
-        if (depth_dir_limit <= 0)
-        {
-#if defined(FRAGMENTS)
-                color_init();
-                draw_fragments();
-                color_set();
-                return;
-#else
-                out_color = vec4(vec3(0), 1);
-                return;
-#endif
-        }
         float depth_dir = dot(coordinates.third_row_of_mvp.xyz, image_dir);
-
         if (depth_dir > depth_dir_limit)
         {
                 image_dir *= depth_dir_limit / depth_dir;
