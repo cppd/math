@@ -20,6 +20,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "data_read.h"
 #include "file_lines.h"
 #include "load_mtl.h"
+#include "mesh_facet.h"
+#include "obj_facet.h"
 
 #include "../position.h"
 
@@ -30,7 +32,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/com/print.h>
 #include <src/com/string/ascii.h>
 #include <src/com/thread.h>
-#include <src/com/type/name.h>
 
 #include <filesystem>
 #include <latch>
@@ -69,175 +70,6 @@ std::string map_keys_to_string(const std::map<std::string, T>& m)
                 }
         }
         return names;
-}
-
-// "x/x/x"
-// "x//x"
-// "x//"
-// "x/x/"
-// "x/x"
-// "x"
-template <typename T, std::size_t GROUP_SIZE, typename IndexType>
-void read_digit_group(
-        const T& line,
-        const long long end,
-        long long* const from,
-        std::array<IndexType, GROUP_SIZE>* const group_indices)
-{
-        // vertex
-        if (read_integer(line, end, from, &(*group_indices)[0]))
-        {
-                if ((*group_indices)[0] == 0)
-                {
-                        error("Zero facet index");
-                }
-        }
-        else
-        {
-                error("Error read facet vertex first number");
-        }
-
-        // texture and normal
-        for (int a = 1; a < static_cast<int>(group_indices->size()); ++a)
-        {
-                if (*from == end || ascii::is_space(line[*from]))
-                {
-                        (*group_indices)[a] = 0;
-                        continue;
-                }
-
-                if (line[*from] != '/')
-                {
-                        error(std::string("Error read facet number, expected '/', found '") + line[*from] + "'");
-                }
-
-                ++(*from);
-
-                if (*from == end || ascii::is_space(line[*from]))
-                {
-                        (*group_indices)[a] = 0;
-                        continue;
-                }
-
-                if (read_integer(line, end, from, &(*group_indices)[a]))
-                {
-                        if ((*group_indices)[a] == 0)
-                        {
-                                error("Zero facet index");
-                        }
-                }
-                else
-                {
-                        (*group_indices)[a] = 0;
-                }
-        }
-}
-
-template <typename T, std::size_t MAX_GROUP_COUNT, std::size_t GROUP_SIZE, typename IndexType>
-void read_digit_groups(
-        const T& line,
-        const long long begin,
-        const long long end,
-        std::array<std::array<IndexType, GROUP_SIZE>, MAX_GROUP_COUNT>* const group_ptr,
-        int* const group_count)
-{
-        int group_index = -1;
-
-        long long i = begin;
-
-        while (true)
-        {
-                ++group_index;
-
-                read(line, end, ascii::is_space, &i);
-
-                if (i == end)
-                {
-                        *group_count = group_index;
-                        return;
-                }
-
-                if (group_index >= static_cast<int>(group_ptr->size()))
-                {
-                        error("Found too many facet vertices " + to_string(group_index + 1)
-                              + " (max supported = " + to_string(group_ptr->size()) + ")");
-                }
-
-                read_digit_group(line, end, &i, &(*group_ptr)[group_index]);
-        }
-}
-
-template <typename T, std::size_t MAX_GROUP_COUNT>
-void check_index_consistent(const std::array<std::array<T, 3>, MAX_GROUP_COUNT>& groups, const int group_count)
-{
-        // 0 means there is no index.
-        // index order: facet, texture, normal.
-
-        ASSERT(group_count <= static_cast<int>(groups.size()));
-
-        int texture = 0;
-        int normal = 0;
-
-        for (int i = 0; i < group_count; ++i)
-        {
-                texture += (groups[i][1] != 0) ? 1 : 0;
-                normal += (groups[i][2] != 0) ? 1 : 0;
-        }
-
-        if (!(texture == 0 || texture == group_count))
-        {
-                error("Inconsistent facet texture indices");
-        }
-
-        if (!(normal == 0 || normal == group_count))
-        {
-                error("Inconsistent facet normal indices");
-        }
-}
-
-template <std::size_t N, typename T>
-void read_facets(
-        const T& data,
-        const long long begin,
-        const long long end,
-        std::array<typename Mesh<N>::Facet, MAX_FACETS_PER_LINE<N>>* const facets,
-        int* const facet_count)
-{
-        static_assert(N >= 3);
-
-        constexpr int MAX_GROUP_COUNT = MAX_FACETS_PER_LINE<N> + N - 1;
-
-        std::array<std::array<int, 3>, MAX_GROUP_COUNT> groups;
-
-        int group_count;
-
-        read_digit_groups(data, begin, end, &groups, &group_count);
-
-        if (group_count < static_cast<int>(N))
-        {
-                error("Error facet vertex count " + to_string(group_count) + " (min = " + to_string(N) + ")");
-        }
-
-        check_index_consistent(groups, group_count);
-
-        *facet_count = group_count - (N - 1);
-
-        for (int i = 0; i < *facet_count; ++i)
-        {
-                (*facets)[i].has_texcoord = !(groups[0][1] == 0);
-                (*facets)[i].has_normal = !(groups[0][2] == 0);
-
-                (*facets)[i].vertices[0] = groups[0][0];
-                (*facets)[i].texcoords[0] = groups[0][1];
-                (*facets)[i].normals[0] = groups[0][2];
-
-                for (unsigned n = 1; n < N; ++n)
-                {
-                        (*facets)[i].vertices[n] = groups[i + n][0];
-                        (*facets)[i].texcoords[n] = groups[i + n][1];
-                        (*facets)[i].normals[n] = groups[i + n][2];
-                }
-        }
 }
 
 template <std::size_t N, typename T>
@@ -297,32 +129,6 @@ void read_library_names(
         }
 }
 
-template <std::size_t N>
-bool facet_dimension_is_correct(const std::vector<Vector<N, float>>& vertices, const std::array<int, N>& indices)
-{
-        static_assert(N == 3);
-
-        Vector<3, double> e0 = to_vector<double>(vertices[indices[1]] - vertices[indices[0]]);
-        Vector<3, double> e1 = to_vector<double>(vertices[indices[2]] - vertices[indices[0]]);
-
-        if (e0[1] * e1[2] - e0[2] * e1[1] != 0)
-        {
-                return true;
-        }
-
-        if (e0[0] * e1[2] - e0[2] * e1[0] != 0)
-        {
-                return true;
-        }
-
-        if (e0[0] * e1[1] - e0[1] * e1[0] != 0)
-        {
-                return true;
-        }
-
-        return false;
-}
-
 enum class ObjLineType
 {
         V,
@@ -361,112 +167,6 @@ struct Counters
                 facet += counters.facet;
         }
 };
-
-template <std::size_t N>
-void check_facet_indices(
-        const int vertex_count,
-        const int texcoord_count,
-        const int normal_count,
-        const typename Mesh<N>::Facet& facet)
-{
-        for (unsigned i = 0; i < N; ++i)
-        {
-                if (facet.vertices[i] < 0 || facet.vertices[i] >= vertex_count)
-                {
-                        error("Vertex index " + to_string(facet.vertices[i]) + " is out of bounds [0, "
-                              + to_string(vertex_count) + ")");
-                }
-
-                if (facet.has_texcoord)
-                {
-                        if (facet.texcoords[i] < 0 || facet.texcoords[i] >= texcoord_count)
-                        {
-                                error("Texture coordinate index " + to_string(facet.texcoords[i])
-                                      + " is out of bounds [0, " + to_string(texcoord_count) + ")");
-                        }
-                }
-                else
-                {
-                        if (facet.texcoords[i] != -1)
-                        {
-                                error("No texture but texture coordinate index is not set to -1");
-                        }
-                }
-
-                if (facet.has_normal)
-                {
-                        if (facet.normals[i] < 0 || facet.normals[i] >= normal_count)
-                        {
-                                error("Normal index " + to_string(facet.normals[i]) + " is out of bounds [0, "
-                                      + to_string(normal_count) + ")");
-                        }
-                }
-                else
-                {
-                        if (facet.normals[i] != -1)
-                        {
-                                error("No normals but normal coordinate index is not set to -1");
-                        }
-                }
-        }
-}
-
-template <std::size_t N>
-void check_facet_indices(const Mesh<N>& mesh)
-{
-        const int vertex_count = mesh.vertices.size();
-        const int texcoord_count = mesh.texcoords.size();
-        const int normal_count = mesh.normals.size();
-
-        for (const typename Mesh<N>::Facet& facet : mesh.facets)
-        {
-                check_facet_indices<N>(vertex_count, texcoord_count, normal_count, facet);
-        }
-}
-
-template <std::size_t N>
-bool remove_facets_with_incorrect_dimension([[maybe_unused]] Mesh<N>* const mesh)
-{
-        if constexpr (N != 3)
-        {
-                return false;
-        }
-        else
-        {
-                std::vector<bool> wrong_facets(mesh->facets.size(), false);
-
-                int wrong_facet_count = 0;
-
-                for (std::size_t i = 0; i < mesh->facets.size(); ++i)
-                {
-                        if (!facet_dimension_is_correct(mesh->vertices, mesh->facets[i].vertices))
-                        {
-                                wrong_facets[i] = true;
-                                ++wrong_facet_count;
-                        }
-                }
-
-                if (wrong_facet_count == 0)
-                {
-                        return false;
-                }
-
-                std::vector<typename Mesh<N>::Facet> facets;
-                facets.reserve(mesh->facets.size() - wrong_facet_count);
-
-                for (std::size_t i = 0; i < mesh->facets.size(); ++i)
-                {
-                        if (!wrong_facets[i])
-                        {
-                                facets.push_back(mesh->facets[i]);
-                        }
-                }
-
-                mesh->facets = std::move(facets);
-
-                return true;
-        }
-}
 
 template <std::size_t N>
 void read_obj_line(
@@ -823,18 +523,8 @@ std::unique_ptr<Mesh<N>> read_obj_and_mtl(const std::filesystem::path& file_name
                 error("No facets found in OBJ file");
         }
 
-        check_facet_indices(mesh);
-
+        check_and_correct_mesh_facets(&mesh);
         set_center_and_length(&mesh);
-
-        if (remove_facets_with_incorrect_dimension(&mesh))
-        {
-                if (mesh.facets.empty())
-                {
-                        error("No " + to_string(N - 1) + "-facets found in " + obj_type_name(N) + " file");
-                }
-                set_center_and_length(&mesh);
-        }
 
         read_libs(file_name.parent_path(), progress, &material_index, library_names, &mesh);
 

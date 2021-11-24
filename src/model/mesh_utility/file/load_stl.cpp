@@ -18,6 +18,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "load_stl.h"
 
 #include "data_read.h"
+#include "mesh_facet.h"
 
 #include "../position.h"
 
@@ -261,6 +262,7 @@ std::unique_ptr<Mesh<N>> read_stl(const std::filesystem::path& file_name, Progre
                 read_ascii_stl<N>(file_data, progress, yield_facet);
         }
 
+        check_and_correct_mesh_facets(&mesh);
         set_center_and_length(&mesh);
 
         return std::make_unique<Mesh<N>>(std::move(mesh));

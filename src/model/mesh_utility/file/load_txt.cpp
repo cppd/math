@@ -19,6 +19,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "data_read.h"
 #include "file_lines.h"
+#include "mesh_facet.h"
 
 #include "../position.h"
 
@@ -126,6 +127,7 @@ std::unique_ptr<Mesh<N>> read_text(const std::filesystem::path& file_name, Progr
                 mesh->points[i].vertex = i;
         }
 
+        check_and_correct_mesh_facets(mesh.get());
         set_center_and_length(mesh.get());
 
         return mesh;
