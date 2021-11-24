@@ -32,22 +32,15 @@ Klaus Engel, Markus Hadwiger, Joe M. Kniss,
 Christof Rezk-Salama, Daniel Weiskopf.
 Real-Time Volume Graphics.
 A K Peters, Ltd, 2006.
-
-Thomas H. Cormen, Charles E. Leiserson, Ronald L. Rivest, Clifford Stein.
-Introduction to Algorithms. Third Edition.
-The MIT Press, 2009.
-6. Heapsort
 */
 
 #extension GL_GOOGLE_include_directive : enable
 #include "shading_ggx_diffuse.glsl"
-#include "transparency.glsl"
+#include "volume_fragments.glsl"
 #include "volume_intersect.glsl"
 
 const float MIN_TRANSPARENCY = 1.0 / 256;
 const int ISOSURFACE_ITERATION_COUNT = 5;
-
-const uint TRANSPARENCY_NULL_POINTER = 0xffffffff;
 
 layout(set = 0, binding = 0, std140) uniform Drawing
 {
@@ -74,12 +67,6 @@ layout(set = 0, binding = 0, std140) uniform Drawing
 drawing;
 
 layout(set = 0, binding = 1) uniform sampler2DMS depth_image;
-
-layout(set = 0, binding = 2, r32ui) uniform restrict readonly uimage2DMS transparency_heads;
-layout(set = 0, binding = 3, std430) restrict readonly buffer TransparencyNodes
-{
-        TransparencyNode transparency_nodes[];
-};
 
 #if defined(IMAGE)
 
@@ -151,119 +138,14 @@ bool color_add(const vec4 c)
 
 //
 
-struct Fragment
-{
-        uint color_rg;
-        uint color_ba;
-        float depth;
-};
+#if defined(FRAGMENTS)
 
-vec4 fragment_color(const Fragment fragment)
+void draw_fragments()
 {
-        const vec2 rg = unpackUnorm2x16(fragment.color_rg);
-        const vec2 ba = unpackUnorm2x16(fragment.color_ba);
-        return vec4(rg, ba);
-}
-
-#if !defined(FRAGMENTS)
-
-void fragments_build()
-{
-}
-bool fragments_empty()
-{
-        return true;
-}
-void fragments_pop()
-{
-}
-Fragment fragments_top()
-{
-        Fragment f;
-        return f;
-}
-
-#else
-
-Fragment g_fragments[TRANSPARENCY_MAX_NODES];
-int g_fragments_count;
-
-int fragments_min_heapify_impl(const int i)
-{
-        const int left = 2 * i + 1;
-        const int right = left + 1;
-        int m;
-        m = (left < g_fragments_count && g_fragments[left].depth < g_fragments[i].depth) ? left : i;
-        m = (right < g_fragments_count && g_fragments[right].depth < g_fragments[m].depth) ? right : m;
-        if (m != i)
+        for (; !fragments_empty(); fragments_pop())
         {
-                const Fragment t = g_fragments[i];
-                g_fragments[i] = g_fragments[m];
-                g_fragments[m] = t;
-                return m;
+                COLOR_ADD(fragment_color(fragments_top()));
         }
-        return -1;
-}
-
-void fragments_min_heapify(int i)
-{
-        do
-        {
-                i = fragments_min_heapify_impl(i);
-        } while (i >= 0);
-}
-
-void fragments_build_min_heap()
-{
-        for (int i = g_fragments_count / 2 - 1; i >= 0; --i)
-        {
-                fragments_min_heapify(i);
-        }
-}
-
-void fragments_pop()
-{
-        if (g_fragments_count > 1)
-        {
-                --g_fragments_count;
-                g_fragments[0] = g_fragments[g_fragments_count];
-                fragments_min_heapify(0);
-                return;
-        }
-        g_fragments_count = 0;
-}
-
-bool fragments_empty()
-{
-        return g_fragments_count <= 0;
-}
-
-Fragment fragments_top()
-{
-        return g_fragments[0];
-}
-
-void fragments_build()
-{
-        g_fragments_count = 0;
-
-        uint pointer = imageLoad(transparency_heads, ivec2(gl_FragCoord.xy), gl_SampleID).r;
-
-        if (pointer == TRANSPARENCY_NULL_POINTER)
-        {
-                return;
-        }
-
-        while (pointer != TRANSPARENCY_NULL_POINTER && g_fragments_count < TRANSPARENCY_MAX_NODES)
-        {
-                g_fragments[g_fragments_count].color_rg = transparency_nodes[pointer].color_rg;
-                g_fragments[g_fragments_count].color_ba = transparency_nodes[pointer].color_ba;
-                g_fragments[g_fragments_count].depth = transparency_nodes[pointer].depth;
-                pointer = transparency_nodes[pointer].next;
-                ++g_fragments_count;
-        }
-
-        fragments_build_min_heap();
 }
 
 #endif
@@ -288,14 +170,6 @@ vec4 color_volume_value(const vec3 p)
         return vec4(volume.color, value);
 }
 
-vec4 volume_color(const vec3 p)
-{
-        vec4 color = color_volume_value(p);
-        color.rgb *= drawing.lighting_color * volume.ambient;
-        color.a = clamp(color.a * volume.volume_alpha_coefficient, 0, 1);
-        return color;
-}
-
 vec3 gradient(const vec3 p)
 {
         vec3 s1;
@@ -316,6 +190,34 @@ vec3 gradient(const vec3 p)
 vec3 world_normal(const vec3 p)
 {
         return normalize(coordinates.normal_matrix * gradient(p));
+}
+
+vec3 shade(const vec3 p)
+{
+        const vec3 wn = world_normal(p);
+
+        const vec3 n = faceforward(wn, -drawing.direction_to_camera, wn);
+        const vec3 v = drawing.direction_to_camera;
+        const vec3 l = drawing.direction_to_light;
+
+        const vec3 s = shading_ggx_diffuse(volume.metalness, volume.roughness, volume.color, n, v, l);
+
+        return drawing.lighting_color * s;
+}
+
+vec4 volume_color(const vec3 p)
+{
+        vec4 color = color_volume_value(p);
+        color.rgb *= drawing.lighting_color * volume.ambient;
+        color.a = clamp(color.a * volume.volume_alpha_coefficient, 0, 1);
+        return color;
+}
+
+vec4 isosurface_color(const vec3 p)
+{
+        vec3 color = volume.ambient * volume.color;
+        color += shade(p);
+        return vec4(color, volume.isosurface_alpha);
 }
 
 vec3 find_isosurface(vec3 a, vec3 b, const float sign_a)
@@ -350,26 +252,6 @@ vec4 find_isosurface(vec4 a, vec4 b, const float sign_a)
                 }
         }
         return 0.5 * (a + b);
-}
-
-vec3 shade(const vec3 p)
-{
-        const vec3 wn = world_normal(p);
-
-        const vec3 n = faceforward(wn, -drawing.direction_to_camera, wn);
-        const vec3 v = drawing.direction_to_camera;
-        const vec3 l = drawing.direction_to_light;
-
-        const vec3 s = shading_ggx_diffuse(volume.metalness, volume.roughness, volume.color, n, v, l);
-
-        return drawing.lighting_color * s;
-}
-
-vec4 isosurface_color(const vec3 p)
-{
-        vec3 color = volume.ambient * volume.color;
-        color += shade(p);
-        return vec4(color, volume.isosurface_alpha);
 }
 
 void draw_image_as_volume(vec3 image_dir, const vec3 image_org, float depth_dir, const float depth_org)
@@ -564,22 +446,6 @@ void draw_image_as_isosurface(vec3 image_dir, const vec3 image_org, float depth_
                 COLOR_ADD(isosurface_color(p));
         }
 }
-
-#endif
-
-#if defined(FRAGMENTS)
-
-void draw_fragments()
-{
-        for (; !fragments_empty(); fragments_pop())
-        {
-                COLOR_ADD(fragment_color(fragments_top()));
-        }
-}
-
-#endif
-
-#if defined(IMAGE)
 
 bool intersect(
         const vec3 ray_org,
