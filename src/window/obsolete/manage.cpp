@@ -170,7 +170,7 @@ VkSurfaceKHR vulkan_create_surface(WindowID window, VkInstance instance)
         info.window = window;
 
         VkSurfaceKHR surface;
-        VkResult result = vkCreateXlibSurfaceKHR(instance, &info, nullptr, &surface);
+        const VkResult result = vkCreateXlibSurfaceKHR(instance, &info, nullptr, &surface);
         if (result != VK_SUCCESS)
         {
                 vulkan::vulkan_function_error("vkCreateXlibSurfaceKHR", result);
@@ -250,7 +250,7 @@ VkSurfaceKHR vulkan_create_surface(WindowID window, VkInstance instance)
         info.hwnd = window;
 
         VkSurfaceKHR surface;
-        VkResult result = vkCreateWin32SurfaceKHR(instance, &info, nullptr, &surface);
+        const VkResult result = vkCreateWin32SurfaceKHR(instance, &info, nullptr, &surface);
         if (result != VK_SUCCESS)
         {
                 vulkan::vulkan_function_error("vkCreateWin32SurfaceKHR", result);

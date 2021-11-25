@@ -39,7 +39,7 @@ DeviceMemory create_device_memory(
 
         DeviceMemory device_memory(device, allocate_info);
 
-        VkResult result = vkBindBufferMemory(device, buffer, device_memory, 0);
+        const VkResult result = vkBindBufferMemory(device, buffer, device_memory, 0);
         if (result != VK_SUCCESS)
         {
                 vulkan_function_error("vkBindBufferMemory", result);
@@ -65,7 +65,7 @@ DeviceMemory create_device_memory(
 
         DeviceMemory device_memory(device, allocate_info);
 
-        VkResult result = vkBindImageMemory(device, image, device_memory, 0);
+        const VkResult result = vkBindImageMemory(device, image, device_memory, 0);
         if (result != VK_SUCCESS)
         {
                 vulkan_function_error("vkBindImageMemory", result);

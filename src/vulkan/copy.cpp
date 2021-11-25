@@ -65,7 +65,7 @@ void copy_host_to_device(
 {
         void* map_memory_data;
 
-        VkResult result = vkMapMemory(device_memory.device(), device_memory, offset, size, 0, &map_memory_data);
+        const VkResult result = vkMapMemory(device_memory.device(), device_memory, offset, size, 0, &map_memory_data);
         if (result != VK_SUCCESS)
         {
                 vulkan_function_error("vkMapMemory", result);
@@ -86,7 +86,7 @@ void copy_device_to_host(
 {
         void* map_memory_data;
 
-        VkResult result = vkMapMemory(device_memory.device(), device_memory, offset, size, 0, &map_memory_data);
+        const VkResult result = vkMapMemory(device_memory.device(), device_memory, offset, size, 0, &map_memory_data);
         if (result != VK_SUCCESS)
         {
                 vulkan_function_error("vkMapMemory", result);
@@ -217,13 +217,11 @@ void cmd_copy_image_to_buffer(
 
 void begin_commands(const VkCommandBuffer& command_buffer)
 {
-        VkResult result;
-
         VkCommandBufferBeginInfo command_buffer_info = {};
         command_buffer_info.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
         command_buffer_info.flags = VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT;
 
-        result = vkBeginCommandBuffer(command_buffer, &command_buffer_info);
+        const VkResult result = vkBeginCommandBuffer(command_buffer, &command_buffer_info);
         if (result != VK_SUCCESS)
         {
                 vulkan_function_error("vkBeginCommandBuffer", result);
@@ -232,9 +230,7 @@ void begin_commands(const VkCommandBuffer& command_buffer)
 
 void end_commands(const VkQueue& queue, const VkCommandBuffer& command_buffer)
 {
-        VkResult result;
-
-        result = vkEndCommandBuffer(command_buffer);
+        const VkResult result = vkEndCommandBuffer(command_buffer);
         if (result != VK_SUCCESS)
         {
                 vulkan_function_error("vkEndCommandBuffer", result);

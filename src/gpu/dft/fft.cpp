@@ -49,13 +49,10 @@ int group_size(const int dft_size, const VkPhysicalDeviceLimits& limits)
 
 void begin_commands(const VkCommandBuffer command_buffer)
 {
-        VkResult result;
-
         VkCommandBufferBeginInfo command_buffer_info = {};
         command_buffer_info.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
         command_buffer_info.flags = VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT;
-
-        result = vkBeginCommandBuffer(command_buffer, &command_buffer_info);
+        const VkResult result = vkBeginCommandBuffer(command_buffer, &command_buffer_info);
         if (result != VK_SUCCESS)
         {
                 vulkan::vulkan_function_error("vkBeginCommandBuffer", result);
@@ -64,9 +61,7 @@ void begin_commands(const VkCommandBuffer command_buffer)
 
 void end_commands(const VkQueue queue, const VkCommandBuffer command_buffer)
 {
-        VkResult result;
-
-        result = vkEndCommandBuffer(command_buffer);
+        const VkResult result = vkEndCommandBuffer(command_buffer);
         if (result != VK_SUCCESS)
         {
                 vulkan::vulkan_function_error("vkEndCommandBuffer", result);

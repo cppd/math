@@ -163,7 +163,7 @@ class Impl final : public Window
         //{
         //        VkSurfaceKHR surface = VK_NULL_HANDLE;
         //
-        //        VkResult result = glfwCreateWindowSurface(instance, window_, nullptr, &surface);
+        //        const VkResult result = glfwCreateWindowSurface(instance, window_, nullptr, &surface);
         //        if (result != VK_SUCCESS || surface == VK_NULL_HANDLE)
         //        {
         //                error("Failed to create Vulkan GLFW window surface");

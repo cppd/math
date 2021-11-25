@@ -23,6 +23,32 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 namespace ns::vulkan
 {
+namespace
+{
+void begin_command_buffer(const VkCommandBuffer command_buffer)
+{
+        VkCommandBufferBeginInfo command_buffer_info = {};
+        command_buffer_info.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
+        command_buffer_info.flags = VK_COMMAND_BUFFER_USAGE_SIMULTANEOUS_USE_BIT;
+        // command_buffer_info.pInheritanceInfo = nullptr;
+
+        const VkResult result = vkBeginCommandBuffer(command_buffer, &command_buffer_info);
+        if (result != VK_SUCCESS)
+        {
+                vulkan_function_error("vkBeginCommandBuffer", result);
+        }
+}
+
+void end_command_buffer(const VkCommandBuffer command_buffer)
+{
+        const VkResult result = vkEndCommandBuffer(command_buffer);
+        if (result != VK_SUCCESS)
+        {
+                vulkan_function_error("vkEndCommandBuffer", result);
+        }
+}
+}
+
 CommandBuffers create_command_buffers(const CommandBufferCreateInfo& info)
 {
         if (!info.device || !info.render_area || !info.render_pass || !info.framebuffers || !info.command_pool)
@@ -30,22 +56,11 @@ CommandBuffers create_command_buffers(const CommandBufferCreateInfo& info)
                 error("No required data to create command buffers");
         }
 
-        VkResult result;
-
         CommandBuffers command_buffers(info.device.value(), info.command_pool.value(), info.framebuffers->size());
 
         for (uint32_t i = 0; i < command_buffers.count(); ++i)
         {
-                VkCommandBufferBeginInfo command_buffer_info = {};
-                command_buffer_info.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
-                command_buffer_info.flags = VK_COMMAND_BUFFER_USAGE_SIMULTANEOUS_USE_BIT;
-                // command_buffer_info.pInheritanceInfo = nullptr;
-
-                result = vkBeginCommandBuffer(command_buffers[i], &command_buffer_info);
-                if (result != VK_SUCCESS)
-                {
-                        vulkan_function_error("vkBeginCommandBuffer", result);
-                }
+                begin_command_buffer(command_buffers[i]);
 
                 if (info.before_render_pass_commands)
                 {
@@ -86,11 +101,7 @@ CommandBuffers create_command_buffers(const CommandBufferCreateInfo& info)
                         info.after_render_pass_commands(command_buffers[i]);
                 }
 
-                result = vkEndCommandBuffer(command_buffers[i]);
-                if (result != VK_SUCCESS)
-                {
-                        vulkan_function_error("vkEndCommandBuffer", result);
-                }
+                end_command_buffer(command_buffers[i]);
         }
 
         return command_buffers;

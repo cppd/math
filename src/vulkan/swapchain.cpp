@@ -123,17 +123,20 @@ uint32_t choose_image_count(const VkSurfaceCapabilitiesKHR& capabilities, int im
         return image_count;
 }
 
-std::vector<VkImage> swapchain_images(VkDevice device, VkSwapchainKHR swapchain)
+uint32_t find_image_count(VkDevice device, VkSwapchainKHR swapchain)
 {
         uint32_t image_count;
-        VkResult result;
-
-        result = vkGetSwapchainImagesKHR(device, swapchain, &image_count, nullptr);
+        const VkResult result = vkGetSwapchainImagesKHR(device, swapchain, &image_count, nullptr);
         if (result != VK_SUCCESS)
         {
                 vulkan::vulkan_function_error("vkGetSwapchainImagesKHR", result);
         }
+        return image_count;
+}
 
+std::vector<VkImage> swapchain_images(VkDevice device, VkSwapchainKHR swapchain)
+{
+        uint32_t image_count = find_image_count(device, swapchain);
         if (image_count < 1)
         {
                 return {};
@@ -141,7 +144,7 @@ std::vector<VkImage> swapchain_images(VkDevice device, VkSwapchainKHR swapchain)
 
         std::vector<VkImage> images(image_count);
 
-        result = vkGetSwapchainImagesKHR(device, swapchain, &image_count, images.data());
+        const VkResult result = vkGetSwapchainImagesKHR(device, swapchain, &image_count, images.data());
         if (result != VK_SUCCESS)
         {
                 vulkan::vulkan_function_error("vkGetSwapchainImagesKHR", result);
@@ -249,17 +252,19 @@ std::optional<uint32_t> acquire_next_image(VkDevice device, VkSwapchainKHR swapc
 
         uint32_t image_index;
 
-        VkResult result =
+        const VkResult result =
                 vkAcquireNextImageKHR(device, swapchain, TIMEOUT, semaphore, VK_NULL_HANDLE /*fence*/, &image_index);
 
         if (result == VK_SUCCESS)
         {
                 return image_index;
         }
+
         if (result == VK_ERROR_OUT_OF_DATE_KHR)
         {
                 return std::nullopt;
         }
+
         if (result == VK_SUBOPTIMAL_KHR)
         {
                 return image_index;
@@ -279,16 +284,18 @@ bool queue_present(VkSemaphore wait_semaphore, VkSwapchainKHR swapchain, uint32_
         present_info.pImageIndices = &image_index;
         // present_info.pResults = nullptr;
 
-        VkResult result = vkQueuePresentKHR(queue, &present_info);
+        const VkResult result = vkQueuePresentKHR(queue, &present_info);
 
         if (result == VK_SUCCESS)
         {
                 return true;
         }
+
         if (result == VK_ERROR_OUT_OF_DATE_KHR)
         {
                 return false;
         }
+
         if (result == VK_SUBOPTIMAL_KHR)
         {
                 return false;

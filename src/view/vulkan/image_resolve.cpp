@@ -22,6 +22,30 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 namespace ns::view
 {
+namespace
+{
+void begin_command_buffer(const VkCommandBuffer command_buffer)
+{
+        VkCommandBufferBeginInfo command_buffer_info = {};
+        command_buffer_info.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
+        command_buffer_info.flags = VK_COMMAND_BUFFER_USAGE_SIMULTANEOUS_USE_BIT;
+        const VkResult result = vkBeginCommandBuffer(command_buffer, &command_buffer_info);
+        if (result != VK_SUCCESS)
+        {
+                vulkan::vulkan_function_error("vkBeginCommandBuffer", result);
+        }
+}
+
+void end_command_buffer(const VkCommandBuffer command_buffer)
+{
+        const VkResult result = vkEndCommandBuffer(command_buffer);
+        if (result != VK_SUCCESS)
+        {
+                vulkan::vulkan_function_error("vkEndCommandBuffer", result);
+        }
+}
+}
+
 ImageResolve::ImageResolve(
         const vulkan::Device& device,
         const vulkan::CommandPool& command_pool,
@@ -49,26 +73,12 @@ ImageResolve::ImageResolve(
 
                 signal_semaphores_.emplace_back(device);
 
-                VkCommandBufferBeginInfo command_buffer_info = {};
-                command_buffer_info.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
-                command_buffer_info.flags = VK_COMMAND_BUFFER_USAGE_SIMULTANEOUS_USE_BIT;
-
-                VkResult result;
-
-                result = vkBeginCommandBuffer(command_buffers_[i], &command_buffer_info);
-                if (result != VK_SUCCESS)
-                {
-                        vulkan::vulkan_function_error("vkBeginCommandBuffer", result);
-                }
+                begin_command_buffer(command_buffers_[i]);
 
                 render_buffers.commands_color_resolve(
                         command_buffers_[i], images_[i].image(), image_layout, rectangle, i);
 
-                result = vkEndCommandBuffer(command_buffers_[i]);
-                if (result != VK_SUCCESS)
-                {
-                        vulkan::vulkan_function_error("vkEndCommandBuffer", result);
-                }
+                end_command_buffer(command_buffers_[i]);
         }
 }
 

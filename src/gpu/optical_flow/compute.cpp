@@ -146,6 +146,27 @@ std::vector<const vulkan::Buffer*> to_buffer_pointers(const std::vector<vulkan::
         return result;
 }
 
+void begin_command_buffer(const VkCommandBuffer command_buffer)
+{
+        VkCommandBufferBeginInfo command_buffer_info = {};
+        command_buffer_info.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
+        command_buffer_info.flags = VK_COMMAND_BUFFER_USAGE_SIMULTANEOUS_USE_BIT;
+        const VkResult result = vkBeginCommandBuffer(command_buffer, &command_buffer_info);
+        if (result != VK_SUCCESS)
+        {
+                vulkan::vulkan_function_error("vkBeginCommandBuffer", result);
+        }
+}
+
+void end_command_buffer(const VkCommandBuffer command_buffer)
+{
+        const VkResult result = vkEndCommandBuffer(command_buffer);
+        if (result != VK_SUCCESS)
+        {
+                vulkan::vulkan_function_error("vkEndCommandBuffer", result);
+        }
+}
+
 class Impl final : public Compute
 {
         const std::thread::id thread_id_ = std::this_thread::get_id();
@@ -287,54 +308,26 @@ class Impl final : public Compute
 
         void create_command_buffer_first_pyramid()
         {
-                VkResult result;
-
                 command_buffer_first_pyramid_ = vulkan::CommandBuffer(*device_, *compute_command_pool_);
 
-                VkCommandBuffer command_buffer = *command_buffer_first_pyramid_;
+                const VkCommandBuffer command_buffer = *command_buffer_first_pyramid_;
 
-                VkCommandBufferBeginInfo command_buffer_info = {};
-                command_buffer_info.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
-                command_buffer_info.flags = VK_COMMAND_BUFFER_USAGE_SIMULTANEOUS_USE_BIT;
-                result = vkBeginCommandBuffer(command_buffer, &command_buffer_info);
-                if (result != VK_SUCCESS)
-                {
-                        vulkan::vulkan_function_error("vkBeginCommandBuffer", result);
-                }
-
-                //
+                begin_command_buffer(command_buffer);
 
                 commands_compute_image_pyramid(0, command_buffer);
 
-                //
-
-                result = vkEndCommandBuffer(command_buffer);
-                if (result != VK_SUCCESS)
-                {
-                        vulkan::vulkan_function_error("vkEndCommandBuffer", result);
-                }
+                end_command_buffer(command_buffer);
         }
 
         void create_command_buffers(VkBuffer top_flow)
         {
-                VkResult result;
-
                 command_buffers_ = vulkan::CommandBuffers(*device_, *compute_command_pool_, 2);
 
                 for (int index = 0; index < 2; ++index)
                 {
-                        VkCommandBuffer command_buffer = (*command_buffers_)[index];
+                        const VkCommandBuffer command_buffer = (*command_buffers_)[index];
 
-                        VkCommandBufferBeginInfo command_buffer_info = {};
-                        command_buffer_info.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
-                        command_buffer_info.flags = VK_COMMAND_BUFFER_USAGE_SIMULTANEOUS_USE_BIT;
-                        result = vkBeginCommandBuffer(command_buffer, &command_buffer_info);
-                        if (result != VK_SUCCESS)
-                        {
-                                vulkan::vulkan_function_error("vkBeginCommandBuffer", result);
-                        }
-
-                        //
+                        begin_command_buffer(command_buffer);
 
                         // i — previous image, 1-i — current image
                         commands_compute_image_pyramid(1 - index, command_buffer);
@@ -344,13 +337,7 @@ class Impl final : public Compute
                         commands_compute_optical_flow(index, command_buffer, top_flow);
                         commands_images_to_general_layout(1 - index, command_buffer);
 
-                        //
-
-                        result = vkEndCommandBuffer(command_buffer);
-                        if (result != VK_SUCCESS)
-                        {
-                                vulkan::vulkan_function_error("vkEndCommandBuffer", result);
-                        }
+                        end_command_buffer(command_buffer);
                 }
         }
 

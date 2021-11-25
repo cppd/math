@@ -110,6 +110,27 @@ VkExtent3D max_image_extent(
 #pragma GCC diagnostic pop
 }
 
+void begin_command_buffer(const VkCommandBuffer command_buffer)
+{
+        VkCommandBufferBeginInfo command_buffer_info = {};
+        command_buffer_info.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
+        command_buffer_info.flags = VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT;
+        const VkResult result = vkBeginCommandBuffer(command_buffer, &command_buffer_info);
+        if (result != VK_SUCCESS)
+        {
+                vulkan_function_error("vkBeginCommandBuffer", result);
+        }
+}
+
+void end_command_buffer(const VkCommandBuffer command_buffer)
+{
+        const VkResult result = vkEndCommandBuffer(command_buffer);
+        if (result != VK_SUCCESS)
+        {
+                vulkan_function_error("vkEndCommandBuffer", result);
+        }
+}
+
 void transition_image_layout(
         const VkImageAspectFlags& aspect_flags,
         const VkDevice& device,
@@ -144,25 +165,11 @@ void transition_image_layout(
 
         const CommandBuffer command_buffer(device, command_pool);
 
-        VkCommandBufferBeginInfo command_buffer_info = {};
-        command_buffer_info.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
-        command_buffer_info.flags = VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT;
-
-        VkResult result;
-
-        result = vkBeginCommandBuffer(command_buffer, &command_buffer_info);
-        if (result != VK_SUCCESS)
-        {
-                vulkan_function_error("vkBeginCommandBuffer", result);
-        }
+        begin_command_buffer(command_buffer);
 
         vkCmdPipelineBarrier(command_buffer, src_stage, dst_stage, 0, 0, nullptr, 0, nullptr, 1, &barrier);
 
-        result = vkEndCommandBuffer(command_buffer);
-        if (result != VK_SUCCESS)
-        {
-                vulkan_function_error("vkEndCommandBuffer", result);
-        }
+        end_command_buffer(command_buffer);
 
         queue_submit(command_buffer, queue);
         queue_wait_idle(queue);
@@ -344,7 +351,7 @@ BufferMapper::BufferMapper(const BufferWithMemory& buffer, const VkDeviceSize of
         ASSERT(buffer.host_visible());
         ASSERT(size_ > 0 && offset + size_ <= buffer.buffer().size());
 
-        VkResult result = vkMapMemory(device_, device_memory_, offset, size_, 0, &pointer_);
+        const VkResult result = vkMapMemory(device_, device_memory_, offset, size_, 0, &pointer_);
         if (result != VK_SUCCESS)
         {
                 vulkan_function_error("vkMapMemory", result);
@@ -356,7 +363,7 @@ BufferMapper::BufferMapper(const BufferWithMemory& buffer)
 {
         ASSERT(buffer.host_visible());
 
-        VkResult result = vkMapMemory(device_, device_memory_, 0, VK_WHOLE_SIZE, 0, &pointer_);
+        const VkResult result = vkMapMemory(device_, device_memory_, 0, VK_WHOLE_SIZE, 0, &pointer_);
         if (result != VK_SUCCESS)
         {
                 vulkan_function_error("vkMapMemory", result);

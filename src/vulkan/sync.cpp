@@ -25,7 +25,7 @@ namespace ns::vulkan
 {
 void reset_fence(VkDevice device, VkFence fence)
 {
-        VkResult result = vkResetFences(device, 1, &fence);
+        const VkResult result = vkResetFences(device, 1, &fence);
         if (result != VK_SUCCESS)
         {
                 vulkan::vulkan_function_error("vkResetFences", result);
@@ -36,21 +36,24 @@ bool wait_for_fence(VkDevice device, VkFence fence, uint64_t timeout_nanoseconds
 {
         static constexpr VkBool32 WAIT_ALL = VK_TRUE;
 
-        VkResult result = vkWaitForFences(device, 1, &fence, WAIT_ALL, timeout_nanoseconds);
+        const VkResult result = vkWaitForFences(device, 1, &fence, WAIT_ALL, timeout_nanoseconds);
+
         if (result == VK_SUCCESS)
         {
                 return true;
         }
+
         if (result == VK_TIMEOUT)
         {
                 return false;
         }
+
         vulkan::vulkan_function_error("vkWaitForFences", result);
 }
 
 void queue_wait_idle(VkQueue queue)
 {
-        VkResult result = vkQueueWaitIdle(queue);
+        const VkResult result = vkQueueWaitIdle(queue);
         if (result != VK_SUCCESS)
         {
                 vulkan::vulkan_function_error("vkQueueWaitIdle", result);

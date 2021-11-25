@@ -86,7 +86,7 @@ std::vector<bool> find_presentation_support(
 
                 VkBool32 supported;
 
-                VkResult result = vkGetPhysicalDeviceSurfaceSupportKHR(device, i, surface, &supported);
+                const VkResult result = vkGetPhysicalDeviceSurfaceSupportKHR(device, i, surface, &supported);
                 if (result != VK_SUCCESS)
                 {
                         vulkan_function_error("vkGetPhysicalDeviceSurfaceSupportKHR", result);
@@ -116,17 +116,20 @@ std::vector<VkQueueFamilyProperties> find_queue_families(VkPhysicalDevice device
         return queue_families;
 }
 
-std::unordered_set<std::string> find_extensions(VkPhysicalDevice device)
+uint32_t find_extension_count(VkPhysicalDevice device)
 {
         uint32_t extension_count;
-        VkResult result;
-
-        result = vkEnumerateDeviceExtensionProperties(device, nullptr, &extension_count, nullptr);
+        const VkResult result = vkEnumerateDeviceExtensionProperties(device, nullptr, &extension_count, nullptr);
         if (result != VK_SUCCESS)
         {
                 vulkan_function_error("vkEnumerateDeviceExtensionProperties", result);
         }
+        return extension_count;
+}
 
+std::unordered_set<std::string> find_extensions(VkPhysicalDevice device)
+{
+        uint32_t extension_count = find_extension_count(device);
         if (extension_count < 1)
         {
                 return {};
@@ -134,19 +137,18 @@ std::unordered_set<std::string> find_extensions(VkPhysicalDevice device)
 
         std::vector<VkExtensionProperties> extensions(extension_count);
 
-        result = vkEnumerateDeviceExtensionProperties(device, nullptr, &extension_count, extensions.data());
+        const VkResult result =
+                vkEnumerateDeviceExtensionProperties(device, nullptr, &extension_count, extensions.data());
         if (result != VK_SUCCESS)
         {
                 vulkan_function_error("vkEnumerateDeviceExtensionProperties", result);
         }
 
         std::unordered_set<std::string> extension_set;
-
         for (const VkExtensionProperties& e : extensions)
         {
                 extension_set.emplace(e.extensionName);
         }
-
         return extension_set;
 }
 
@@ -210,6 +212,17 @@ DeviceFeatures device_features(const VkDeviceCreateInfo& create_info)
         }
 
         return features;
+}
+
+uint32_t find_physical_device_count(VkInstance instance)
+{
+        uint32_t device_count;
+        const VkResult result = vkEnumeratePhysicalDevices(instance, &device_count, nullptr);
+        if (result != VK_SUCCESS)
+        {
+                vulkan_function_error("vkEnumeratePhysicalDevices", result);
+        }
+        return device_count;
 }
 }
 
@@ -415,21 +428,14 @@ Queue Device::queue(uint32_t family_index, uint32_t queue_index) const
 
 std::vector<VkPhysicalDevice> physical_devices(VkInstance instance)
 {
-        VkResult result;
-
-        uint32_t device_count;
-        result = vkEnumeratePhysicalDevices(instance, &device_count, nullptr);
-        if (result != VK_SUCCESS)
-        {
-                vulkan_function_error("vkEnumeratePhysicalDevices", result);
-        }
+        uint32_t device_count = find_physical_device_count(instance);
         if (device_count < 1)
         {
                 error("No Vulkan device found");
         }
 
         std::vector<VkPhysicalDevice> all_devices(device_count);
-        result = vkEnumeratePhysicalDevices(instance, &device_count, all_devices.data());
+        const VkResult result = vkEnumeratePhysicalDevices(instance, &device_count, all_devices.data());
         if (result != VK_SUCCESS)
         {
                 vulkan_function_error("vkEnumeratePhysicalDevices", result);

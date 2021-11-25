@@ -40,7 +40,7 @@ void queue_submit(
         info.signalSemaphoreCount = 1;
         info.pSignalSemaphores = &signal_semaphore;
 
-        VkResult result = vkQueueSubmit(queue, 1, &info, VK_NULL_HANDLE);
+        const VkResult result = vkQueueSubmit(queue, 1, &info, VK_NULL_HANDLE);
         if (result != VK_SUCCESS)
         {
                 vulkan_function_error("vkQueueSubmit", result);
@@ -65,7 +65,7 @@ void queue_submit(
         info.signalSemaphoreCount = 1;
         info.pSignalSemaphores = &signal_semaphore;
 
-        VkResult result = vkQueueSubmit(queue, 1, &info, VK_NULL_HANDLE);
+        const VkResult result = vkQueueSubmit(queue, 1, &info, VK_NULL_HANDLE);
         if (result != VK_SUCCESS)
         {
                 vulkan_function_error("vkQueueSubmit", result);
@@ -87,7 +87,7 @@ void queue_submit(
         info.commandBufferCount = 1;
         info.pCommandBuffers = &command_buffer;
 
-        VkResult result = vkQueueSubmit(queue, 1, &info, VK_NULL_HANDLE);
+        const VkResult result = vkQueueSubmit(queue, 1, &info, VK_NULL_HANDLE);
         if (result != VK_SUCCESS)
         {
                 vulkan_function_error("vkQueueSubmit", result);
@@ -104,7 +104,7 @@ void queue_submit(VkCommandBuffer command_buffer, VkSemaphore signal_semaphore, 
         info.signalSemaphoreCount = 1;
         info.pSignalSemaphores = &signal_semaphore;
 
-        VkResult result = vkQueueSubmit(queue, 1, &info, VK_NULL_HANDLE);
+        const VkResult result = vkQueueSubmit(queue, 1, &info, VK_NULL_HANDLE);
         if (result != VK_SUCCESS)
         {
                 vulkan_function_error("vkQueueSubmit", result);
@@ -119,7 +119,7 @@ void queue_submit(VkCommandBuffer command_buffer, VkQueue queue)
         info.commandBufferCount = 1;
         info.pCommandBuffers = &command_buffer;
 
-        VkResult result = vkQueueSubmit(queue, 1, &info, VK_NULL_HANDLE);
+        const VkResult result = vkQueueSubmit(queue, 1, &info, VK_NULL_HANDLE);
         if (result != VK_SUCCESS)
         {
                 vulkan_function_error("vkQueueSubmit", result);
@@ -128,7 +128,7 @@ void queue_submit(VkCommandBuffer command_buffer, VkQueue queue)
 
 void queue_submit(VkQueue queue, VkFence fence)
 {
-        VkResult result = vkQueueSubmit(queue, 0, nullptr, fence);
+        const VkResult result = vkQueueSubmit(queue, 0, nullptr, fence);
         if (result != VK_SUCCESS)
         {
                 vulkan_function_error("vkQueueSubmit", result);

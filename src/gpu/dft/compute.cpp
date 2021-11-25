@@ -161,6 +161,27 @@ void image_barrier_after(const VkCommandBuffer command_buffer, const VkImage ima
                 VK_DEPENDENCY_BY_REGION_BIT, 0, nullptr, 0, nullptr, 1, &barrier);
 }
 
+void begin_command_buffer(const VkCommandBuffer command_buffer)
+{
+        VkCommandBufferBeginInfo command_buffer_info = {};
+        command_buffer_info.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
+        command_buffer_info.flags = VK_COMMAND_BUFFER_USAGE_SIMULTANEOUS_USE_BIT;
+        const VkResult result = vkBeginCommandBuffer(command_buffer, &command_buffer_info);
+        if (result != VK_SUCCESS)
+        {
+                vulkan::vulkan_function_error("vkBeginCommandBuffer", result);
+        }
+}
+
+void end_command_buffer(const VkCommandBuffer command_buffer)
+{
+        const VkResult result = vkEndCommandBuffer(command_buffer);
+        if (result != VK_SUCCESS)
+        {
+                vulkan::vulkan_function_error("vkEndCommandBuffer", result);
+        }
+}
+
 class Dft final
 {
         const std::thread::id thread_id_ = std::this_thread::get_id();
@@ -607,32 +628,17 @@ class DftVector final : public ComputeVector
                 dft_.create_buffers(width, height, instance_.compute_queue().family_index());
 
                 command_buffers_ = vulkan::CommandBuffers(instance_.device(), instance_.compute_command_pool(), 2);
-                VkResult result;
-                for (int index : {DftType::FORWARD, DftType::INVERSE})
+
+                for (const int index : {DftType::FORWARD, DftType::INVERSE})
                 {
-                        VkCommandBuffer command_buffer = (*command_buffers_)[index];
+                        const VkCommandBuffer command_buffer = (*command_buffers_)[index];
 
-                        VkCommandBufferBeginInfo command_buffer_info = {};
-                        command_buffer_info.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
-                        command_buffer_info.flags = VK_COMMAND_BUFFER_USAGE_SIMULTANEOUS_USE_BIT;
-                        result = vkBeginCommandBuffer(command_buffer, &command_buffer_info);
-                        if (result != VK_SUCCESS)
-                        {
-                                vulkan::vulkan_function_error("vkBeginCommandBuffer", result);
-                        }
-
-                        //
+                        begin_command_buffer(command_buffer);
 
                         const bool inverse = (index == DftType::INVERSE);
                         dft_.compute_commands(command_buffer, inverse);
 
-                        //
-
-                        result = vkEndCommandBuffer(command_buffer);
-                        if (result != VK_SUCCESS)
-                        {
-                                vulkan::vulkan_function_error("vkEndCommandBuffer", result);
-                        }
+                        end_command_buffer(command_buffer);
                 }
 
                 width_ = width;

@@ -45,19 +45,33 @@ std::string vulkan_formats_to_string(const std::vector<VkFormat>& formats)
         }
         return s;
 }
-}
 
-std::unordered_set<std::string> supported_instance_extensions()
+uint32_t find_extension_count()
 {
         uint32_t extension_count;
-        VkResult result;
-
-        result = vkEnumerateInstanceExtensionProperties(nullptr, &extension_count, nullptr);
+        const VkResult result = vkEnumerateInstanceExtensionProperties(nullptr, &extension_count, nullptr);
         if (result != VK_SUCCESS)
         {
                 vulkan_function_error("vkEnumerateInstanceExtensionProperties", result);
         }
+        return extension_count;
+}
 
+uint32_t find_layer_count()
+{
+        uint32_t layer_count;
+        const VkResult result = vkEnumerateInstanceLayerProperties(&layer_count, nullptr);
+        if (result != VK_SUCCESS)
+        {
+                vulkan_function_error("vkEnumerateInstanceLayerProperties", result);
+        }
+        return layer_count;
+}
+}
+
+std::unordered_set<std::string> supported_instance_extensions()
+{
+        uint32_t extension_count = find_extension_count();
         if (extension_count < 1)
         {
                 return {};
@@ -65,33 +79,23 @@ std::unordered_set<std::string> supported_instance_extensions()
 
         std::vector<VkExtensionProperties> extensions(extension_count);
 
-        result = vkEnumerateInstanceExtensionProperties(nullptr, &extension_count, extensions.data());
+        const VkResult result = vkEnumerateInstanceExtensionProperties(nullptr, &extension_count, extensions.data());
         if (result != VK_SUCCESS)
         {
                 vulkan_function_error("vkEnumerateInstanceExtensionProperties", result);
         }
 
         std::unordered_set<std::string> extension_set;
-
         for (const VkExtensionProperties& e : extensions)
         {
                 extension_set.emplace(e.extensionName);
         }
-
         return extension_set;
 }
 
 std::unordered_set<std::string> supported_validation_layers()
 {
-        uint32_t layer_count;
-        VkResult result;
-
-        result = vkEnumerateInstanceLayerProperties(&layer_count, nullptr);
-        if (result != VK_SUCCESS)
-        {
-                vulkan_function_error("vkEnumerateInstanceLayerProperties", result);
-        }
-
+        uint32_t layer_count = find_layer_count();
         if (layer_count < 1)
         {
                 return {};
@@ -99,19 +103,17 @@ std::unordered_set<std::string> supported_validation_layers()
 
         std::vector<VkLayerProperties> layers(layer_count);
 
-        result = vkEnumerateInstanceLayerProperties(&layer_count, layers.data());
+        const VkResult result = vkEnumerateInstanceLayerProperties(&layer_count, layers.data());
         if (result != VK_SUCCESS)
         {
                 vulkan_function_error("vkEnumerateInstanceLayerProperties", result);
         }
 
         std::unordered_set<std::string> layer_set;
-
         for (const VkLayerProperties& l : layers)
         {
                 layer_set.emplace(l.layerName);
         }
-
         return layer_set;
 }
 
@@ -126,7 +128,7 @@ uint32_t supported_instance_api_version()
         }
 
         uint32_t api_version;
-        VkResult result = f(&api_version);
+        const VkResult result = f(&api_version);
         if (result != VK_SUCCESS)
         {
                 vulkan_function_error("vkEnumerateInstanceVersion", result);
@@ -262,7 +264,7 @@ VkFormat find_supported_image_format(
                 }
 
                 VkImageFormatProperties image_properties;
-                VkResult result = vkGetPhysicalDeviceImageFormatProperties(
+                const VkResult result = vkGetPhysicalDeviceImageFormatProperties(
                         physical_device, format, image_type, tiling, usage, 0 /*VkImageCreateFlags*/,
                         &image_properties);
                 if (result != VK_SUCCESS)
@@ -301,7 +303,7 @@ VkExtent3D find_max_image_extent(
 {
         VkImageFormatProperties image_properties;
 
-        VkResult result = vkGetPhysicalDeviceImageFormatProperties(
+        const VkResult result = vkGetPhysicalDeviceImageFormatProperties(
                 physical_device, format, image_type, tiling, usage, 0 /*VkImageCreateFlags*/, &image_properties);
         if (result != VK_SUCCESS)
         {
