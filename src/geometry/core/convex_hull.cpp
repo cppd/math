@@ -42,9 +42,10 @@ The projection to the n-space of the lower convex hull of the points
 
 #include "convex_hull.h"
 
-#include "facet.h"
-#include "integer.h"
-#include "max.h"
+#include "facet_integer.h"
+#include "facet_storage.h"
+#include "integer_convert.h"
+#include "integer_types.h"
 #include "ridge.h"
 #include "simplex.h"
 
@@ -57,65 +58,17 @@ The projection to the n-space of the lower convex hull of the points
 #include <src/com/thread.h>
 #include <src/com/thread_pool.h>
 #include <src/com/type/concept.h>
-#include <src/com/type/find.h>
-#include <src/com/type/limit.h>
 
 #include <algorithm>
 #include <barrier>
+#include <list>
 #include <random>
-#include <sstream>
 #include <unordered_map>
 
 namespace ns::geometry
 {
 namespace
 {
-constexpr int CONVEX_HULL_BITS = 30;
-constexpr int DELAUNAY_BITS = 24;
-
-using ConvexHullSourceInteger = LeastSignedInteger<CONVEX_HULL_BITS>;
-using DelaunaySourceInteger = LeastSignedInteger<DELAUNAY_BITS>;
-constexpr ConvexHullSourceInteger MAX_CONVEX_HULL{(1ull << CONVEX_HULL_BITS) - 1};
-constexpr DelaunaySourceInteger MAX_DELAUNAY{(1ull << DELAUNAY_BITS) - 1};
-
-template <std::size_t N>
-using ConvexHullComputeType = LeastSignedInteger<MAX_DETERMINANT<N, CONVEX_HULL_BITS>>;
-template <std::size_t N>
-using ConvexHullDataType = LeastSignedInteger<CONVEX_HULL_BITS>;
-
-template <std::size_t N>
-using DelaunayParaboloidComputeType = LeastSignedInteger<MAX_DETERMINANT_PARABOLOID<N, DELAUNAY_BITS>>;
-template <std::size_t N>
-using DelaunayParaboloidDataType = LeastSignedInteger<MAX_PARABOLOID<N, DELAUNAY_BITS>>;
-template <std::size_t N>
-using DelaunayComputeType = LeastSignedInteger<MAX_DETERMINANT<N, DELAUNAY_BITS>>;
-template <std::size_t N>
-using DelaunayDataType = LeastSignedInteger<DELAUNAY_BITS>;
-
-template <std::size_t N, bool CHECK_NON_CLASS>
-struct CheckTypes final
-{
-        static_assert(!CHECK_NON_CLASS || !std::is_class_v<ConvexHullDataType<N>>);
-        static_assert(!CHECK_NON_CLASS || !std::is_class_v<ConvexHullComputeType<N>>);
-        static_assert(!CHECK_NON_CLASS || !std::is_class_v<DelaunayParaboloidDataType<N>>);
-        static_assert(!CHECK_NON_CLASS || !std::is_class_v<DelaunayParaboloidComputeType<N>>);
-        static_assert(!CHECK_NON_CLASS || !std::is_class_v<DelaunayDataType<N>>);
-        static_assert(!CHECK_NON_CLASS || !std::is_class_v<DelaunayComputeType<N>>);
-        static_assert(Integral<ConvexHullDataType<N>>);
-        static_assert(Integral<ConvexHullComputeType<N>>);
-        static_assert(Integral<DelaunayParaboloidDataType<N>>);
-        static_assert(Integral<DelaunayParaboloidComputeType<N>>);
-        static_assert(Integral<DelaunayDataType<N>>);
-        static_assert(Integral<DelaunayComputeType<N>>);
-};
-template struct CheckTypes<2, true>;
-template struct CheckTypes<3, true>;
-template struct CheckTypes<4, true>;
-template struct CheckTypes<5, false>;
-template struct CheckTypes<6, false>;
-
-//
-
 template <typename F>
 using FacetList = std::list<F>;
 
@@ -125,19 +78,6 @@ using FacetListConstIterator = typename FacetList<F>::const_iterator;
 template <std::size_t N, typename DataType, typename ComputeType>
 using Facet = FacetInteger<N, DataType, ComputeType, FacetListConstIterator>;
 
-template <typename T>
-std::string type_str() requires(!std::is_same_v<std::remove_cv_t<T>, mpz_class>)
-{
-        static_assert(Integral<T>);
-        return to_string(Limits<T>::digits()) + " bits";
-}
-
-template <typename T>
-std::string type_str() requires std::is_same_v<std::remove_cv_t<T>, mpz_class>
-{
-        return "mpz_class";
-}
-
 template <typename S, typename C>
 int thread_count_for_horizon()
 {
@@ -146,55 +86,6 @@ int thread_count_for_horizon()
         const int hc = hardware_concurrency();
         return std::max(hc - 1, 1);
 }
-
-template <typename T>
-class FacetStore final
-{
-        // std::vector is faster than std::forward_list, std::list, std::set, std::unordered_set
-        std::vector<const T*> data_;
-
-public:
-        void insert(const T* const f)
-        {
-                data_.push_back(f);
-        }
-
-        void erase(const T* const f)
-        {
-                const int size = data_.size();
-                for (int i = 0; i < size; ++i)
-                {
-                        if (data_[i] != f)
-                        {
-                                continue;
-                        }
-                        data_[i] = data_[size - 1];
-                        data_.resize(size - 1);
-                        return;
-                }
-                error("facet not found in facets of point");
-        }
-
-        std::size_t size() const noexcept
-        {
-                return data_.size();
-        }
-
-        void clear()
-        {
-                data_.clear();
-        }
-
-        auto begin() const noexcept
-        {
-                return data_.cbegin();
-        }
-
-        auto end() const noexcept
-        {
-                return data_.cend();
-        }
-};
 
 template <std::size_t N, typename Facet, template <typename...> typename Map>
 void connect_facets(
@@ -215,15 +106,15 @@ void connect_facets(
 
                 Ridge<N> ridge(del_elem(vertices, r));
 
-                auto search_iter = search_map->find(ridge);
+                const auto search_iter = search_map->find(ridge);
                 if (search_iter == search_map->end())
                 {
                         search_map->emplace(std::move(ridge), std::make_tuple(facet, r));
                 }
                 else
                 {
-                        Facet* link_facet = std::get<0>(search_iter->second);
-                        unsigned link_r = std::get<1>(search_iter->second);
+                        Facet* const link_facet = std::get<0>(search_iter->second);
+                        const unsigned link_r = std::get<1>(search_iter->second);
 
                         facet->set_link(r, link_facet);
                         link_facet->set_link(link_r, facet);
@@ -236,7 +127,7 @@ void connect_facets(
 }
 
 template <std::size_t N, typename S, typename C>
-void create_init_convex_hull(
+void create_initial_convex_hull(
         const std::vector<Vector<N, S>>& points,
         std::array<int, N + 1>* const vertices,
         FacetList<Facet<N, S, C>>* const facets)
@@ -263,11 +154,11 @@ void create_init_convex_hull(
 }
 
 template <typename Point, typename Facet>
-void create_init_conflict_lists(
+void create_initial_conflict_lists(
         const std::vector<Point>& points,
         const std::vector<unsigned char>& enabled,
         FacetList<Facet>* const facets,
-        std::vector<FacetStore<Facet>>* const point_conflicts)
+        std::vector<FacetStorage<Facet>>* const point_conflicts)
 {
         for (Facet& facet : *facets)
         {
@@ -291,7 +182,7 @@ void add_conflict_points_to_new_facet(
         const Facet* const facet_1,
         Facet* const new_facet)
 {
-        for (int p : facet_0->conflict_points())
+        for (const int p : facet_0->conflict_points())
         {
                 (*unique_points)[p] = 1;
 
@@ -300,7 +191,8 @@ void add_conflict_points_to_new_facet(
                         new_facet->add_conflict_point(p);
                 }
         }
-        for (int p : facet_1->conflict_points())
+
+        for (const int p : facet_1->conflict_points())
         {
                 if ((*unique_points)[p] != 0)
                 {
@@ -312,7 +204,8 @@ void add_conflict_points_to_new_facet(
                         new_facet->add_conflict_point(p);
                 }
         }
-        for (int p : facet_0->conflict_points())
+
+        for (const int p : facet_0->conflict_points())
         {
                 (*unique_points)[p] = 0;
         }
@@ -322,12 +215,12 @@ template <typename Facet>
 void erase_visible_facets_from_conflict_points(
         const unsigned thread_id,
         const unsigned thread_count,
-        std::vector<FacetStore<Facet>>* const point_conflicts,
+        std::vector<FacetStorage<Facet>>* const point_conflicts,
         const int point)
 {
-        for (const Facet* facet : (*point_conflicts)[point])
+        for (const Facet* const facet : (*point_conflicts)[point])
         {
-                for (int p : facet->conflict_points())
+                for (const int p : facet->conflict_points())
                 {
                         if (p != point && (p % thread_count) == thread_id)
                         {
@@ -342,13 +235,13 @@ void add_new_facets_to_conflict_points(
         const unsigned thread_id,
         const unsigned thread_count,
         std::vector<FacetList<Facet>>* const new_facets_vector,
-        std::vector<FacetStore<Facet>>* const point_conflicts)
+        std::vector<FacetStorage<Facet>>* const point_conflicts)
 {
         for (unsigned i = 0; i < new_facets_vector->size(); ++i)
         {
                 for (const Facet& facet : (*new_facets_vector)[i])
                 {
-                        for (int p : facet.conflict_points())
+                        for (const int p : facet.conflict_points())
                         {
                                 if ((p % thread_count) == thread_id)
                                 {
@@ -365,7 +258,7 @@ void create_facets_for_point_and_horizon(
         const unsigned thread_count,
         const std::vector<Point>& points,
         const int point,
-        const std::vector<FacetStore<Facet>>& point_conflicts,
+        const std::vector<FacetStorage<Facet>>& point_conflicts,
         std::vector<std::vector<signed char>>* const unique_points_work,
         std::vector<FacetList<Facet>>* const new_facets_vector)
 {
@@ -379,25 +272,27 @@ void create_facets_for_point_and_horizon(
 
         unsigned ridge_count = 0;
         unsigned index = thread_id;
-        for (const Facet* facet : point_conflicts[point])
+        for (const Facet* const facet : point_conflicts[point])
         {
                 for (unsigned r = 0; r < facet->vertices().size(); ++r)
                 {
-                        Facet* link_facet = facet->link(r);
+                        Facet* const link_facet = facet->link(r);
 
                         if (link_facet->marked_as_visible())
                         {
                                 continue;
                         }
+
                         if (ridge_count != index)
                         {
                                 ++ridge_count;
                                 continue;
                         }
+
                         ++ridge_count;
                         index += thread_count;
 
-                        int link_index = link_facet->find_link_index(facet);
+                        const int link_index = link_facet->find_link_index(facet);
 
                         new_facets->emplace_back(
                                 points, set_elem(facet->vertices(), r, point), link_facet->vertices()[link_index],
@@ -420,7 +315,7 @@ void create_horizon_facets(
         const unsigned thread_count,
         const std::vector<Vector<N, S>>& points,
         const int point,
-        std::vector<FacetStore<Facet<N, S, C>>>* const point_conflicts,
+        std::vector<FacetStorage<Facet<N, S, C>>>* const point_conflicts,
         std::vector<std::vector<signed char>>* const unique_points_work,
         std::vector<FacetList<Facet<N, S, C>>>* const new_facets_vector,
         std::barrier<>* const barrier)
@@ -460,7 +355,7 @@ void add_point_to_convex_hull(
         const std::vector<Vector<N, S>>& points,
         const int point,
         FacetList<Facet<N, S, C>>* const facets,
-        std::vector<FacetStore<Facet<N, S, C>>>* const point_conflicts,
+        std::vector<FacetStorage<Facet<N, S, C>>>* const point_conflicts,
         ThreadPool* const thread_pool,
         std::barrier<>* const barrier,
         std::vector<std::vector<signed char>>* const unique_points_work)
@@ -507,8 +402,8 @@ void add_point_to_convex_hull(
 
         (*point_conflicts)[point].clear();
 
-        int facet_count = calculate_facet_count(new_facets);
-        int ridge_count = (N - 1) * facet_count / 2;
+        const int facet_count = calculate_facet_count(new_facets);
+        const int ridge_count = (N - 1) * facet_count / 2;
 
         // Connect facets, excluding horizon facets
         int ridges = 0;
@@ -544,19 +439,19 @@ void create_convex_hull(
 
         facets->clear();
 
-        std::array<int, N + 1> init_vertices;
+        std::array<int, N + 1> initial_vertices;
 
-        create_init_convex_hull(points, &init_vertices, facets);
+        create_initial_convex_hull(points, &initial_vertices, facets);
 
         std::vector<unsigned char> point_enabled(points.size(), true);
-        for (int v : init_vertices)
+        for (const int v : initial_vertices)
         {
                 point_enabled[v] = false;
         }
 
-        std::vector<FacetStore<Facet<N, S, C>>> point_conflicts(points.size());
+        std::vector<FacetStorage<Facet<N, S, C>>> point_conflicts(points.size());
 
-        create_init_conflict_lists(points, point_enabled, facets, &point_conflicts);
+        create_initial_conflict_lists(points, point_enabled, facets, &point_conflicts);
 
         ThreadPool thread_pool(thread_count_for_horizon<S, C>());
         std::barrier<> barrier(thread_pool.thread_count());
@@ -702,32 +597,6 @@ void compute_convex_hull(
                 facets->emplace_back(restore_indices(facet.vertices(), points_map), facet.double_ortho());
         }
 }
-
-template <std::size_t N>
-std::string delaunay_description()
-{
-        std::ostringstream oss;
-        oss << "Delaunay" << '\n';
-        oss << "  Convex hull " << space_name(N + 1) << '\n';
-        oss << "    Max: " << DELAUNAY_BITS << '\n';
-        oss << "    Data: " << type_str<DelaunayParaboloidDataType<N + 1>>() << '\n';
-        oss << "    Compute: " << type_str<DelaunayParaboloidComputeType<N + 1>>() << '\n';
-        oss << "  " << space_name(N) << '\n';
-        oss << "    Data: " << type_str<DelaunayDataType<N>>() << '\n';
-        oss << "    Compute: " << type_str<DelaunayComputeType<N>>();
-        return oss.str();
-}
-
-template <std::size_t N>
-std::string convex_hull_description()
-{
-        std::ostringstream oss;
-        oss << "Convex hull " << space_name(N) << '\n';
-        oss << "  Max: " << CONVEX_HULL_BITS << '\n';
-        oss << "  Data: " << type_str<ConvexHullDataType<N>>() << '\n';
-        oss << "  Compute: " << type_str<ConvexHullComputeType<N>>();
-        return oss.str();
-}
 }
 
 template <std::size_t N>
@@ -757,7 +626,7 @@ void compute_delaunay(
 
         if (write_log)
         {
-                LOG(delaunay_description<N>());
+                LOG(delaunay_type_description<N>());
         }
 
         compute_delaunay(convex_hull_points, points_map, simplices, progress);
@@ -801,7 +670,7 @@ void compute_convex_hull(
 
         if (write_log)
         {
-                LOG(convex_hull_description<N>());
+                LOG(convex_hull_type_description<N>());
         }
 
         compute_convex_hull(convex_hull_points, points_map, facets, progress);
