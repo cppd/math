@@ -17,17 +17,16 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
-#include <array>
+#include "print/color_space.h"
+#include "print/format.h"
+#include "print/image_layout.h"
+#include "print/image_type.h"
+#include "print/physical_device_type.h"
+#include "print/result.h"
+
 #include <string>
-#include <vulkan/vulkan.h>
 
 namespace ns::vulkan
 {
 std::string api_version_to_string(uint32_t api_version);
-std::array<std::string, 2> result_to_strings(VkResult code);
-std::string physical_device_type_to_string(VkPhysicalDeviceType type);
-std::string format_to_string(VkFormat format);
-std::string color_space_to_string(VkColorSpaceKHR color_space);
-std::string image_type_to_string(VkImageType image_type);
-std::string image_layout_to_string(VkImageLayout image_layout);
 }
