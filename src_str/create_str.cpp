@@ -35,9 +35,9 @@ constexpr std::string_view COMMAND_CAT = "cat";
 
 // SPIR-V Specification
 // 3.1 Magic Number
-constexpr uint32_t SPR_MAGIC_NUMBER = 0x07230203;
+constexpr std::uint32_t SPR_MAGIC_NUMBER = 0x07230203;
 
-constexpr uint32_t bswap32(uint32_t n)
+constexpr std::uint32_t bswap32(std::uint32_t n)
 {
         return __builtin_bswap32(n);
 }
@@ -159,12 +159,12 @@ void bin(const char* const input_name, const char* const output_name)
 
 void spr(const char* const input_name, const char* const output_name)
 {
-        const auto read = [](std::ifstream& ifs, uint32_t* n)
+        const auto read = [](std::ifstream& ifs, std::uint32_t* n)
         {
                 return static_cast<bool>(ifs.read(reinterpret_cast<char*>(n), sizeof(*n)));
         };
 
-        const auto write = [](std::ofstream& ofs, bool reverse_byte_order, const uint32_t n)
+        const auto write = [](std::ofstream& ofs, bool reverse_byte_order, const std::uint32_t n)
         {
                 ofs << "0x" << std::setw(8) << (!reverse_byte_order ? n : bswap32(n));
         };
@@ -175,7 +175,7 @@ void spr(const char* const input_name, const char* const output_name)
 
         bool reverse_byte_order = false;
 
-        uint32_t n;
+        std::uint32_t n;
 
         if (read(ifs, &n))
         {
