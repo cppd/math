@@ -49,14 +49,15 @@ void end_command_buffer(const VkCommandBuffer command_buffer)
 }
 }
 
-CommandBuffers create_command_buffers(const CommandBufferCreateInfo& info)
+handle::CommandBuffers create_command_buffers(const CommandBufferCreateInfo& info)
 {
         if (!info.device || !info.render_area || !info.render_pass || !info.framebuffers || !info.command_pool)
         {
                 error("No required data to create command buffers");
         }
 
-        CommandBuffers command_buffers(info.device.value(), info.command_pool.value(), info.framebuffers->size());
+        handle::CommandBuffers command_buffers(
+                info.device.value(), info.command_pool.value(), info.framebuffers->size());
 
         for (uint32_t i = 0; i < command_buffers.count(); ++i)
         {

@@ -153,7 +153,7 @@ std::vector<VkImage> swapchain_images(VkDevice device, VkSwapchainKHR swapchain)
         return images;
 }
 
-vulkan::SwapchainKHR create_swapchain_khr(
+vulkan::handle::SwapchainKHR create_swapchain_khr(
         VkDevice device,
         VkSurfaceKHR surface,
         VkSurfaceFormatKHR surface_format,
@@ -201,10 +201,10 @@ vulkan::SwapchainKHR create_swapchain_khr(
 
         create_info.oldSwapchain = VK_NULL_HANDLE;
 
-        return vulkan::SwapchainKHR(device, create_info);
+        return vulkan::handle::SwapchainKHR(device, create_info);
 }
 
-vulkan::ImageViewHandle create_image_view(
+vulkan::handle::ImageView create_image_view(
         VkDevice device,
         VkImage image,
         VkFormat format,
@@ -228,7 +228,7 @@ vulkan::ImageViewHandle create_image_view(
         create_info.subresourceRange.baseArrayLayer = 0;
         create_info.subresourceRange.layerCount = 1;
 
-        return vulkan::ImageViewHandle(device, create_info);
+        return vulkan::handle::ImageView(device, create_info);
 }
 std::string swapchain_info_string(const VkSurfaceFormatKHR& surface_format, int preferred_image_count, int image_count)
 {

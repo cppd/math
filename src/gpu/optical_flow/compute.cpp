@@ -177,11 +177,11 @@ class Impl final : public Compute
         const vulkan::CommandPool* const compute_command_pool_;
         const vulkan::Queue* const compute_queue_;
 
-        vulkan::Semaphore semaphore_first_pyramid_;
-        vulkan::Semaphore semaphore_;
+        vulkan::handle::Semaphore semaphore_first_pyramid_;
+        vulkan::handle::Semaphore semaphore_;
 
-        std::optional<vulkan::CommandBuffer> command_buffer_first_pyramid_;
-        std::optional<vulkan::CommandBuffers> command_buffers_;
+        std::optional<vulkan::handle::CommandBuffer> command_buffer_first_pyramid_;
+        std::optional<vulkan::handle::CommandBuffers> command_buffers_;
 
         std::array<std::vector<vulkan::ImageWithMemory>, 2> images_;
         std::vector<vulkan::ImageWithMemory> dx_;
@@ -308,7 +308,7 @@ class Impl final : public Compute
 
         void create_command_buffer_first_pyramid()
         {
-                command_buffer_first_pyramid_ = vulkan::CommandBuffer(*device_, *compute_command_pool_);
+                command_buffer_first_pyramid_ = vulkan::handle::CommandBuffer(*device_, *compute_command_pool_);
 
                 const VkCommandBuffer command_buffer = *command_buffer_first_pyramid_;
 
@@ -321,7 +321,7 @@ class Impl final : public Compute
 
         void create_command_buffers(VkBuffer top_flow)
         {
-                command_buffers_ = vulkan::CommandBuffers(*device_, *compute_command_pool_, 2);
+                command_buffers_ = vulkan::handle::CommandBuffers(*device_, *compute_command_pool_, 2);
 
                 for (int index = 0; index < 2; ++index)
                 {

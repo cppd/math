@@ -316,7 +316,7 @@ VkPipelineLayout VolumeProgram::pipeline_layout(PipelineLayoutType type) const
         error_fatal("Unknown volume pipeline layout type");
 }
 
-vulkan::Pipeline VolumeProgram::create_pipeline(
+vulkan::handle::Pipeline VolumeProgram::create_pipeline(
         VkRenderPass render_pass,
         VkSampleCountFlagBits sample_count,
         bool sample_shading,

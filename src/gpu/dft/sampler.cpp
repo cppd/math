@@ -19,7 +19,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 namespace ns::gpu::dft
 {
-vulkan::Sampler create_sampler(VkDevice device)
+vulkan::handle::Sampler create_sampler(VkDevice device)
 {
         VkSamplerCreateInfo create_info = {};
         create_info.sType = VK_STRUCTURE_TYPE_SAMPLER_CREATE_INFO;
@@ -42,6 +42,6 @@ vulkan::Sampler create_sampler(VkDevice device)
         create_info.minLod = 0.0f;
         create_info.maxLod = 0.0f;
 
-        return vulkan::Sampler(device, create_info);
+        return vulkan::handle::Sampler(device, create_info);
 }
 }

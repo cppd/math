@@ -21,5 +21,5 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 namespace ns::vulkan
 {
-DebugReportCallback create_debug_report_callback(VkInstance instance);
+handle::DebugReportCallback create_debug_report_callback(VkInstance instance);
 }

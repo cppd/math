@@ -84,11 +84,11 @@ class SobelProgram final
 {
         VkDevice device_;
 
-        vulkan::DescriptorSetLayout descriptor_set_layout_;
-        vulkan::PipelineLayout pipeline_layout_;
+        vulkan::handle::DescriptorSetLayout descriptor_set_layout_;
+        vulkan::handle::PipelineLayout pipeline_layout_;
         SobelConstant constant_;
         vulkan::ComputeShader shader_;
-        vulkan::Pipeline pipeline_;
+        vulkan::handle::Pipeline pipeline_;
 
 public:
         explicit SobelProgram(const VkDevice& device);

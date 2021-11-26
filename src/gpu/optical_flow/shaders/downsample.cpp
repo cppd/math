@@ -187,6 +187,6 @@ void DownsampleProgram::create_pipeline(uint32_t local_size_x, uint32_t local_si
 
 void DownsampleProgram::delete_pipeline()
 {
-        pipeline_ = vulkan::Pipeline();
+        pipeline_ = vulkan::handle::Pipeline();
 }
 }

@@ -25,7 +25,7 @@ namespace ns::vulkan
 {
 namespace
 {
-vulkan::DescriptorPool create_descriptor_pool(
+vulkan::handle::DescriptorPool create_descriptor_pool(
         VkDevice device,
         const std::vector<VkDescriptorSetLayoutBinding>& descriptor_set_layout_bindings,
         uint32_t max_sets,
@@ -57,7 +57,7 @@ vulkan::DescriptorPool create_descriptor_pool(
         create_info.maxSets = max_sets;
         create_info.flags = flags;
 
-        return vulkan::DescriptorPool(device, create_info);
+        return vulkan::handle::DescriptorPool(device, create_info);
 }
 
 VkWriteDescriptorSet create_write_descriptor_set(
@@ -109,7 +109,7 @@ std::unordered_map<uint32_t, uint32_t> create_binding_map(const std::vector<VkDe
 }
 }
 
-DescriptorSetLayout create_descriptor_set_layout(
+handle::DescriptorSetLayout create_descriptor_set_layout(
         VkDevice device,
         const std::vector<VkDescriptorSetLayoutBinding>& bindings)
 {
@@ -118,7 +118,7 @@ DescriptorSetLayout create_descriptor_set_layout(
         create_info.bindingCount = bindings.size();
         create_info.pBindings = bindings.data();
 
-        return DescriptorSetLayout(device, create_info);
+        return handle::DescriptorSetLayout(device, create_info);
 }
 
 Descriptors::Descriptors(

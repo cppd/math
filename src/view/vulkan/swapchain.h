@@ -28,10 +28,10 @@ namespace ns::view
 class Swapchain
 {
         const uint32_t family_index_;
-        const vulkan::RenderPass render_pass_;
-        std::vector<vulkan::Framebuffer> framebuffers_;
-        vulkan::CommandBuffers command_buffers_;
-        std::vector<vulkan::Semaphore> signal_semaphores_;
+        const vulkan::handle::RenderPass render_pass_;
+        std::vector<vulkan::handle::Framebuffer> framebuffers_;
+        vulkan::handle::CommandBuffers command_buffers_;
+        std::vector<vulkan::handle::Semaphore> signal_semaphores_;
 
 public:
         Swapchain(

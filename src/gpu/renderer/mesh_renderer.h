@@ -62,22 +62,22 @@ class MeshRenderer
 
         struct Pipelines
         {
-                std::optional<vulkan::Pipeline> triangles;
-                std::optional<vulkan::Pipeline> triangle_lines;
-                std::optional<vulkan::Pipeline> normals;
-                std::optional<vulkan::Pipeline> points;
-                std::optional<vulkan::Pipeline> lines;
+                std::optional<vulkan::handle::Pipeline> triangles;
+                std::optional<vulkan::handle::Pipeline> triangle_lines;
+                std::optional<vulkan::handle::Pipeline> normals;
+                std::optional<vulkan::handle::Pipeline> points;
+                std::optional<vulkan::handle::Pipeline> lines;
         };
         Pipelines render_pipelines_opaque_;
         Pipelines render_pipelines_transparent_;
-        std::optional<vulkan::CommandBuffers> render_command_buffers_all_;
-        std::optional<vulkan::CommandBuffers> render_command_buffers_transparent_as_opaque_;
+        std::optional<vulkan::handle::CommandBuffers> render_command_buffers_all_;
+        std::optional<vulkan::handle::CommandBuffers> render_command_buffers_transparent_as_opaque_;
 
-        std::optional<vulkan::Pipeline> render_triangles_depth_pipeline_;
-        std::optional<vulkan::CommandBuffers> render_depth_command_buffers_;
+        std::optional<vulkan::handle::Pipeline> render_triangles_depth_pipeline_;
+        std::optional<vulkan::handle::CommandBuffers> render_depth_command_buffers_;
 
-        vulkan::Sampler texture_sampler_;
-        vulkan::Sampler shadow_sampler_;
+        vulkan::handle::Sampler texture_sampler_;
+        vulkan::handle::Sampler shadow_sampler_;
 
         const Pipelines& render_pipelines(bool transparent) const;
         Pipelines& render_pipelines(bool transparent);

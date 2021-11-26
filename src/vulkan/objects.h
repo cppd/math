@@ -28,7 +28,7 @@ namespace ns::vulkan
 {
 class Instance final
 {
-        InstanceHandle instance_;
+        handle::Instance instance_;
         bool validation_layers_enabled_;
 
 public:
@@ -74,7 +74,7 @@ public:
 
 class CommandPool final
 {
-        CommandPoolHandle command_pool_;
+        handle::CommandPool command_pool_;
         uint32_t family_index_;
 
 public:
@@ -98,7 +98,7 @@ public:
 
 class Buffer final
 {
-        BufferHandle buffer_;
+        handle::Buffer buffer_;
         VkDeviceSize size_;
         VkBufferUsageFlags usage_;
 
@@ -130,7 +130,7 @@ public:
 
 class Image final
 {
-        ImageHandle image_;
+        handle::Image image_;
         VkFormat format_;
         VkExtent3D extent_;
         VkImageType type_;
@@ -186,7 +186,7 @@ public:
 
 class ImageView final
 {
-        ImageViewHandle image_view_;
+        handle::ImageView image_view_;
         VkFormat format_;
         VkSampleCountFlagBits sample_count_;
         VkImageUsageFlags usage_;

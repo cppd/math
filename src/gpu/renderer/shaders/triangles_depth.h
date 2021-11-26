@@ -31,9 +31,9 @@ class TrianglesDepthProgram final
 {
         const vulkan::Device* device_;
 
-        vulkan::DescriptorSetLayout descriptor_set_layout_shared_;
-        vulkan::DescriptorSetLayout descriptor_set_layout_mesh_;
-        vulkan::PipelineLayout pipeline_layout_;
+        vulkan::handle::DescriptorSetLayout descriptor_set_layout_shared_;
+        vulkan::handle::DescriptorSetLayout descriptor_set_layout_mesh_;
+        vulkan::handle::PipelineLayout pipeline_layout_;
         vulkan::VertexShader vertex_shader_;
 
 public:
@@ -46,7 +46,7 @@ public:
         TrianglesDepthProgram(TrianglesDepthProgram&&) = default;
         ~TrianglesDepthProgram() = default;
 
-        vulkan::Pipeline create_pipeline(
+        vulkan::handle::Pipeline create_pipeline(
                 VkRenderPass render_pass,
                 VkSampleCountFlagBits sample_count,
                 const Region<2, int>& viewport) const;

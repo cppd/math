@@ -41,16 +41,16 @@ class VolumeRenderer
 
         VolumeSharedMemory shared_memory_;
 
-        std::optional<vulkan::Pipeline> pipeline_image_;
-        std::optional<vulkan::Pipeline> pipeline_image_fragments_;
-        std::optional<vulkan::Pipeline> pipeline_fragments_;
-        std::optional<vulkan::CommandBuffers> command_buffers_image_;
-        std::optional<vulkan::CommandBuffers> command_buffers_image_fragments_;
-        std::optional<vulkan::CommandBuffers> command_buffers_fragments_;
+        std::optional<vulkan::handle::Pipeline> pipeline_image_;
+        std::optional<vulkan::handle::Pipeline> pipeline_image_fragments_;
+        std::optional<vulkan::handle::Pipeline> pipeline_fragments_;
+        std::optional<vulkan::handle::CommandBuffers> command_buffers_image_;
+        std::optional<vulkan::handle::CommandBuffers> command_buffers_image_fragments_;
+        std::optional<vulkan::handle::CommandBuffers> command_buffers_fragments_;
 
-        vulkan::Sampler image_sampler_;
-        vulkan::Sampler depth_sampler_;
-        vulkan::Sampler transfer_function_sampler_;
+        vulkan::handle::Sampler image_sampler_;
+        vulkan::handle::Sampler depth_sampler_;
+        vulkan::handle::Sampler transfer_function_sampler_;
 
         void draw_commands_fragments(VkCommandBuffer command_buffer) const;
         void draw_commands_image(const VolumeObject* volume, VkCommandBuffer command_buffer) const;

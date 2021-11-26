@@ -600,7 +600,7 @@ class DftVector final : public ComputeVector
 
         Dft dft_;
 
-        std::optional<vulkan::CommandBuffers> command_buffers_;
+        std::optional<vulkan::handle::CommandBuffers> command_buffers_;
         unsigned width_ = 0;
         unsigned height_ = 0;
 
@@ -627,7 +627,8 @@ class DftVector final : public ComputeVector
 
                 dft_.create_buffers(width, height, instance_.compute_queue().family_index());
 
-                command_buffers_ = vulkan::CommandBuffers(instance_.device(), instance_.compute_command_pool(), 2);
+                command_buffers_ =
+                        vulkan::handle::CommandBuffers(instance_.device(), instance_.compute_command_pool(), 2);
 
                 for (const int index : {DftType::FORWARD, DftType::INVERSE})
                 {

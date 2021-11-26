@@ -109,15 +109,15 @@ class Impl final : public View
         vulkan::ImageWithMemory glyph_texture_;
         std::unordered_map<char32_t, text::FontGlyph> glyphs_;
 
-        vulkan::Semaphore semaphore_;
-        vulkan::Sampler sampler_;
+        vulkan::handle::Semaphore semaphore_;
+        vulkan::handle::Sampler sampler_;
         Program program_;
         Memory memory_;
         std::optional<vulkan::BufferWithMemory> vertex_buffer_;
         vulkan::BufferWithMemory indirect_buffer_;
         RenderBuffers2D* render_buffers_ = nullptr;
-        std::optional<vulkan::Pipeline> pipeline_;
-        std::optional<vulkan::CommandBuffers> command_buffers_;
+        std::optional<vulkan::handle::Pipeline> pipeline_;
+        std::optional<vulkan::handle::CommandBuffers> command_buffers_;
 
         uint32_t graphics_family_index_;
 
@@ -147,7 +147,7 @@ class Impl final : public View
                 vkCmdDrawIndirect(command_buffer, indirect_buffer_.buffer(), 0, 1, sizeof(VkDrawIndirectCommand));
         }
 
-        vulkan::CommandBuffers create_commands()
+        vulkan::handle::CommandBuffers create_commands()
         {
                 vulkan::CommandBufferCreateInfo info;
                 info.device = *device_;

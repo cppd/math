@@ -24,9 +24,9 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <algorithm>
 
-namespace ns::vulkan
+namespace ns::vulkan::handle
 {
-void InstanceHandle::destroy() noexcept
+void Instance::destroy() noexcept
 {
         if (instance_ != VK_NULL_HANDLE)
         {
@@ -34,13 +34,13 @@ void InstanceHandle::destroy() noexcept
         }
 }
 
-void InstanceHandle::move(InstanceHandle* const from) noexcept
+void Instance::move(Instance* const from) noexcept
 {
         instance_ = from->instance_;
         from->instance_ = VK_NULL_HANDLE;
 }
 
-InstanceHandle::InstanceHandle(const VkInstanceCreateInfo& create_info)
+Instance::Instance(const VkInstanceCreateInfo& create_info)
 {
         const VkResult result = vkCreateInstance(&create_info, nullptr, &instance_);
         if (result != VK_SUCCESS)
@@ -50,17 +50,17 @@ InstanceHandle::InstanceHandle(const VkInstanceCreateInfo& create_info)
         ASSERT(instance_ != VK_NULL_HANDLE);
 }
 
-InstanceHandle::~InstanceHandle()
+Instance::~Instance()
 {
         destroy();
 }
 
-InstanceHandle::InstanceHandle(InstanceHandle&& from) noexcept
+Instance::Instance(Instance&& from) noexcept
 {
         move(&from);
 }
 
-InstanceHandle& InstanceHandle::operator=(InstanceHandle&& from) noexcept
+Instance& Instance::operator=(Instance&& from) noexcept
 {
         if (this != &from)
         {
@@ -124,7 +124,7 @@ DebugReportCallback& DebugReportCallback::operator=(DebugReportCallback&& from) 
 
 //
 
-void DeviceHandle::destroy() noexcept
+void Device::destroy() noexcept
 {
         if (device_ != VK_NULL_HANDLE)
         {
@@ -132,13 +132,13 @@ void DeviceHandle::destroy() noexcept
         }
 }
 
-void DeviceHandle::move(DeviceHandle* const from) noexcept
+void Device::move(Device* const from) noexcept
 {
         device_ = from->device_;
         from->device_ = VK_NULL_HANDLE;
 }
 
-DeviceHandle::DeviceHandle(const VkPhysicalDevice physical_device, const VkDeviceCreateInfo& create_info)
+Device::Device(const VkPhysicalDevice physical_device, const VkDeviceCreateInfo& create_info)
 {
         const VkResult result = vkCreateDevice(physical_device, &create_info, nullptr, &device_);
         if (result != VK_SUCCESS)
@@ -148,17 +148,17 @@ DeviceHandle::DeviceHandle(const VkPhysicalDevice physical_device, const VkDevic
         ASSERT(device_ != VK_NULL_HANDLE);
 }
 
-DeviceHandle::~DeviceHandle()
+Device::~Device()
 {
         destroy();
 }
 
-DeviceHandle::DeviceHandle(DeviceHandle&& from) noexcept
+Device::Device(Device&& from) noexcept
 {
         move(&from);
 }
 
-DeviceHandle& DeviceHandle::operator=(DeviceHandle&& from) noexcept
+Device& Device::operator=(Device&& from) noexcept
 {
         if (this != &from)
         {
@@ -547,7 +547,7 @@ Framebuffer& Framebuffer::operator=(Framebuffer&& from) noexcept
 
 //
 
-void CommandPoolHandle::destroy() noexcept
+void CommandPool::destroy() noexcept
 {
         if (command_pool_ != VK_NULL_HANDLE)
         {
@@ -556,7 +556,7 @@ void CommandPoolHandle::destroy() noexcept
         }
 }
 
-void CommandPoolHandle::move(CommandPoolHandle* const from) noexcept
+void CommandPool::move(CommandPool* const from) noexcept
 {
         device_ = from->device_;
         command_pool_ = from->command_pool_;
@@ -564,7 +564,7 @@ void CommandPoolHandle::move(CommandPoolHandle* const from) noexcept
         from->command_pool_ = VK_NULL_HANDLE;
 }
 
-CommandPoolHandle::CommandPoolHandle(const VkDevice device, const VkCommandPoolCreateInfo& create_info)
+CommandPool::CommandPool(const VkDevice device, const VkCommandPoolCreateInfo& create_info)
 {
         const VkResult result = vkCreateCommandPool(device, &create_info, nullptr, &command_pool_);
         if (result != VK_SUCCESS)
@@ -575,17 +575,17 @@ CommandPoolHandle::CommandPoolHandle(const VkDevice device, const VkCommandPoolC
         device_ = device;
 }
 
-CommandPoolHandle::~CommandPoolHandle()
+CommandPool::~CommandPool()
 {
         destroy();
 }
 
-CommandPoolHandle::CommandPoolHandle(CommandPoolHandle&& from) noexcept
+CommandPool::CommandPool(CommandPool&& from) noexcept
 {
         move(&from);
 }
 
-CommandPoolHandle& CommandPoolHandle::operator=(CommandPoolHandle&& from) noexcept
+CommandPool& CommandPool::operator=(CommandPool&& from) noexcept
 {
         if (this != &from)
         {
@@ -707,7 +707,7 @@ Fence& Fence::operator=(Fence&& from) noexcept
 
 //
 
-void BufferHandle::destroy() noexcept
+void Buffer::destroy() noexcept
 {
         if (buffer_ != VK_NULL_HANDLE)
         {
@@ -716,7 +716,7 @@ void BufferHandle::destroy() noexcept
         }
 }
 
-void BufferHandle::move(BufferHandle* const from) noexcept
+void Buffer::move(Buffer* const from) noexcept
 {
         device_ = from->device_;
         buffer_ = from->buffer_;
@@ -724,7 +724,7 @@ void BufferHandle::move(BufferHandle* const from) noexcept
         from->buffer_ = VK_NULL_HANDLE;
 }
 
-BufferHandle::BufferHandle(const VkDevice device, const VkBufferCreateInfo& create_info)
+Buffer::Buffer(const VkDevice device, const VkBufferCreateInfo& create_info)
 {
         const VkResult result = vkCreateBuffer(device, &create_info, nullptr, &buffer_);
         if (result != VK_SUCCESS)
@@ -735,17 +735,17 @@ BufferHandle::BufferHandle(const VkDevice device, const VkBufferCreateInfo& crea
         device_ = device;
 }
 
-BufferHandle::~BufferHandle()
+Buffer::~Buffer()
 {
         destroy();
 }
 
-BufferHandle::BufferHandle(BufferHandle&& from) noexcept
+Buffer::Buffer(Buffer&& from) noexcept
 {
         move(&from);
 }
 
-BufferHandle& BufferHandle::operator=(BufferHandle&& from) noexcept
+Buffer& Buffer::operator=(Buffer&& from) noexcept
 {
         if (this != &from)
         {
@@ -1214,7 +1214,7 @@ uint32_t DescriptorSets::count() const noexcept
 
 //
 
-void ImageHandle::destroy() noexcept
+void Image::destroy() noexcept
 {
         if (image_ != VK_NULL_HANDLE)
         {
@@ -1223,7 +1223,7 @@ void ImageHandle::destroy() noexcept
         }
 }
 
-void ImageHandle::move(ImageHandle* const from) noexcept
+void Image::move(Image* const from) noexcept
 {
         device_ = from->device_;
         image_ = from->image_;
@@ -1231,7 +1231,7 @@ void ImageHandle::move(ImageHandle* const from) noexcept
         from->image_ = VK_NULL_HANDLE;
 }
 
-ImageHandle::ImageHandle(const VkDevice device, const VkImageCreateInfo& create_info)
+Image::Image(const VkDevice device, const VkImageCreateInfo& create_info)
 {
         const VkResult result = vkCreateImage(device, &create_info, nullptr, &image_);
         if (result != VK_SUCCESS)
@@ -1242,17 +1242,17 @@ ImageHandle::ImageHandle(const VkDevice device, const VkImageCreateInfo& create_
         device_ = device;
 }
 
-ImageHandle::~ImageHandle()
+Image::~Image()
 {
         destroy();
 }
 
-ImageHandle::ImageHandle(ImageHandle&& from) noexcept
+Image::Image(Image&& from) noexcept
 {
         move(&from);
 }
 
-ImageHandle& ImageHandle::operator=(ImageHandle&& from) noexcept
+Image& Image::operator=(Image&& from) noexcept
 {
         if (this != &from)
         {
@@ -1264,7 +1264,7 @@ ImageHandle& ImageHandle::operator=(ImageHandle&& from) noexcept
 
 //
 
-void ImageViewHandle::destroy() noexcept
+void ImageView::destroy() noexcept
 {
         if (image_view_ != VK_NULL_HANDLE)
         {
@@ -1273,7 +1273,7 @@ void ImageViewHandle::destroy() noexcept
         }
 }
 
-void ImageViewHandle::move(ImageViewHandle* const from) noexcept
+void ImageView::move(ImageView* const from) noexcept
 {
         device_ = from->device_;
         image_view_ = from->image_view_;
@@ -1281,7 +1281,7 @@ void ImageViewHandle::move(ImageViewHandle* const from) noexcept
         from->image_view_ = VK_NULL_HANDLE;
 }
 
-ImageViewHandle::ImageViewHandle(const VkDevice device, const VkImageViewCreateInfo& create_info)
+ImageView::ImageView(const VkDevice device, const VkImageViewCreateInfo& create_info)
 {
         const VkResult result = vkCreateImageView(device, &create_info, nullptr, &image_view_);
         if (result != VK_SUCCESS)
@@ -1292,17 +1292,17 @@ ImageViewHandle::ImageViewHandle(const VkDevice device, const VkImageViewCreateI
         device_ = device;
 }
 
-ImageViewHandle::~ImageViewHandle()
+ImageView::~ImageView()
 {
         destroy();
 }
 
-ImageViewHandle::ImageViewHandle(ImageViewHandle&& from) noexcept
+ImageView::ImageView(ImageView&& from) noexcept
 {
         move(&from);
 }
 
-ImageViewHandle& ImageViewHandle::operator=(ImageViewHandle&& from) noexcept
+ImageView& ImageView::operator=(ImageView&& from) noexcept
 {
         if (this != &from)
         {

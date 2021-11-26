@@ -238,7 +238,7 @@ vulkan::RenderPass render_pass_swapchain_color_depth(VkDevice device, VkFormat c
 }
 #endif
 
-vulkan::RenderPass render_pass_swapchain_color(
+vulkan::handle::RenderPass render_pass_swapchain_color(
         VkDevice device,
         VkFormat color_format,
         VkSampleCountFlagBits sample_count)
@@ -297,10 +297,10 @@ vulkan::RenderPass render_pass_swapchain_color(
         create_info.dependencyCount = subpass_dependencies.size();
         create_info.pDependencies = subpass_dependencies.data();
 
-        return vulkan::RenderPass(device, create_info);
+        return vulkan::handle::RenderPass(device, create_info);
 }
 
-vulkan::RenderPass render_pass_color_depth(
+vulkan::handle::RenderPass render_pass_color_depth(
         VkDevice device,
         VkFormat color_format,
         VkFormat depth_format,
@@ -384,10 +384,10 @@ vulkan::RenderPass render_pass_color_depth(
         create_info.dependencyCount = subpass_dependencies.size();
         create_info.pDependencies = subpass_dependencies.data();
 
-        return vulkan::RenderPass(device, create_info);
+        return vulkan::handle::RenderPass(device, create_info);
 }
 
-vulkan::RenderPass render_pass_color(VkDevice device, VkFormat color_format, VkSampleCountFlagBits sample_count)
+vulkan::handle::RenderPass render_pass_color(VkDevice device, VkFormat color_format, VkSampleCountFlagBits sample_count)
 {
         std::array<VkAttachmentDescription, 1> attachments = {};
 
@@ -428,6 +428,6 @@ vulkan::RenderPass render_pass_color(VkDevice device, VkFormat color_format, VkS
         create_info.dependencyCount = subpass_dependencies.size();
         create_info.pDependencies = subpass_dependencies.data();
 
-        return vulkan::RenderPass(device, create_info);
+        return vulkan::handle::RenderPass(device, create_info);
 }
 }

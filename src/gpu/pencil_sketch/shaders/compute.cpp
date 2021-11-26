@@ -223,6 +223,6 @@ void ComputeProgram::create_pipeline(unsigned group_size, const Region<2, int>& 
 
 void ComputeProgram::delete_pipeline()
 {
-        pipeline_ = vulkan::Pipeline();
+        pipeline_ = vulkan::handle::Pipeline();
 }
 }

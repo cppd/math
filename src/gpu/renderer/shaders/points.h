@@ -34,9 +34,9 @@ class PointsProgram final
 {
         const vulkan::Device* device_;
 
-        vulkan::DescriptorSetLayout descriptor_set_layout_shared_;
-        vulkan::DescriptorSetLayout descriptor_set_layout_mesh_;
-        vulkan::PipelineLayout pipeline_layout_;
+        vulkan::handle::DescriptorSetLayout descriptor_set_layout_shared_;
+        vulkan::handle::DescriptorSetLayout descriptor_set_layout_mesh_;
+        vulkan::handle::PipelineLayout pipeline_layout_;
         vulkan::VertexShader vertex_shader_0d_;
         vulkan::VertexShader vertex_shader_1d_;
         vulkan::FragmentShader fragment_shader_;
@@ -51,7 +51,7 @@ public:
         PointsProgram(PointsProgram&&) = default;
         ~PointsProgram() = default;
 
-        vulkan::Pipeline create_pipeline(
+        vulkan::handle::Pipeline create_pipeline(
                 VkRenderPass render_pass,
                 VkSampleCountFlagBits sample_count,
                 VkPrimitiveTopology primitive_topology,

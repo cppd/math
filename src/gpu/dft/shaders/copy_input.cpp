@@ -210,6 +210,6 @@ void CopyInputProgram::create_pipeline(int32_t local_size_x, int32_t local_size_
 
 void CopyInputProgram::delete_pipeline()
 {
-        pipeline_ = vulkan::Pipeline();
+        pipeline_ = vulkan::handle::Pipeline();
 }
 }

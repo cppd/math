@@ -27,8 +27,8 @@ class ImageResolve
 {
         const uint32_t family_index_;
         std::vector<vulkan::ImageWithMemory> images_;
-        vulkan::CommandBuffers command_buffers_;
-        std::vector<vulkan::Semaphore> signal_semaphores_;
+        vulkan::handle::CommandBuffers command_buffers_;
+        std::vector<vulkan::handle::Semaphore> signal_semaphores_;
 
 public:
         ImageResolve(

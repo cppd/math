@@ -54,12 +54,12 @@ Swapchain::Swapchain(
 
         std::vector<VkFramebuffer> framebuffers;
         framebuffers.reserve(framebuffers_.size());
-        for (const vulkan::Framebuffer& framebuffer : framebuffers_)
+        for (const vulkan::handle::Framebuffer& framebuffer : framebuffers_)
         {
                 framebuffers.push_back(framebuffer);
         }
 
-        command_buffers_ = vulkan::CommandBuffers();
+        command_buffers_ = vulkan::handle::CommandBuffers();
 
         vulkan::CommandBufferCreateInfo info;
         info.device = device;

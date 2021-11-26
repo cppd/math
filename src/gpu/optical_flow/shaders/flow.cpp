@@ -407,6 +407,6 @@ void FlowProgram::create_pipeline(
 
 void FlowProgram::delete_pipeline()
 {
-        pipeline_ = vulkan::Pipeline();
+        pipeline_ = vulkan::handle::Pipeline();
 }
 }

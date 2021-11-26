@@ -61,7 +61,7 @@ ImageResolve::ImageResolve(
         images_.reserve(count);
         signal_semaphores_.reserve(count);
 
-        command_buffers_ = vulkan::CommandBuffers(device, command_pool, count);
+        command_buffers_ = vulkan::handle::CommandBuffers(device, command_pool, count);
 
         for (unsigned i = 0; i < count; ++i)
         {

@@ -219,6 +219,6 @@ void GrayscaleProgram::create_pipeline(uint32_t local_size_x, uint32_t local_siz
 
 void GrayscaleProgram::delete_pipeline()
 {
-        pipeline_ = vulkan::Pipeline();
+        pipeline_ = vulkan::handle::Pipeline();
 }
 }

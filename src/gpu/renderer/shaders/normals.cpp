@@ -69,7 +69,7 @@ VkPipelineLayout NormalsProgram::pipeline_layout() const
         return pipeline_layout_;
 }
 
-vulkan::Pipeline NormalsProgram::create_pipeline(
+vulkan::handle::Pipeline NormalsProgram::create_pipeline(
         VkRenderPass render_pass,
         VkSampleCountFlagBits sample_count,
         bool sample_shading,

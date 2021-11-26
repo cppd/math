@@ -94,9 +94,9 @@ void check_image_size(
 }
 }
 
-std::vector<Semaphore> create_semaphores(VkDevice device, int count)
+std::vector<handle::Semaphore> create_semaphores(VkDevice device, int count)
 {
-        std::vector<Semaphore> res;
+        std::vector<handle::Semaphore> res;
         res.reserve(count);
         for (int i = 0; i < count; ++i)
         {
@@ -105,9 +105,9 @@ std::vector<Semaphore> create_semaphores(VkDevice device, int count)
         return res;
 }
 
-std::vector<Fence> create_fences(VkDevice device, int count, bool signaled_state)
+std::vector<handle::Fence> create_fences(VkDevice device, int count, bool signaled_state)
 {
-        std::vector<Fence> res;
+        std::vector<handle::Fence> res;
         res.reserve(count);
         for (int i = 0; i < count; ++i)
         {
@@ -118,7 +118,9 @@ std::vector<Fence> create_fences(VkDevice device, int count, bool signaled_state
 
 //
 
-PipelineLayout create_pipeline_layout(VkDevice device, const std::vector<VkDescriptorSetLayout>& descriptor_set_layouts)
+handle::PipelineLayout create_pipeline_layout(
+        VkDevice device,
+        const std::vector<VkDescriptorSetLayout>& descriptor_set_layouts)
 {
         VkPipelineLayoutCreateInfo create_info = {};
         create_info.sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO;
@@ -127,10 +129,10 @@ PipelineLayout create_pipeline_layout(VkDevice device, const std::vector<VkDescr
         // create_info.pushConstantRangeCount = 0;
         // create_info.pPushConstantRanges = nullptr;
 
-        return PipelineLayout(device, create_info);
+        return handle::PipelineLayout(device, create_info);
 }
 
-PipelineLayout create_pipeline_layout(
+handle::PipelineLayout create_pipeline_layout(
         VkDevice device,
         const std::vector<unsigned>& set_numbers,
         const std::vector<VkDescriptorSetLayout>& set_layouts)
@@ -226,7 +228,7 @@ Instance create_instance(std::vector<std::string> required_extensions)
 
 //
 
-Framebuffer create_framebuffer(
+handle::Framebuffer create_framebuffer(
         VkDevice device,
         VkRenderPass render_pass,
         uint32_t width,
@@ -242,7 +244,7 @@ Framebuffer create_framebuffer(
         create_info.height = height;
         create_info.layers = 1;
 
-        return Framebuffer(device, create_info);
+        return handle::Framebuffer(device, create_info);
 }
 
 //

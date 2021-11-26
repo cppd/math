@@ -220,7 +220,7 @@ void MulDProgram::create_pipelines(
 
 void MulDProgram::delete_pipelines()
 {
-        pipeline_rows_ = vulkan::Pipeline();
-        pipeline_columns_ = vulkan::Pipeline();
+        pipeline_rows_ = vulkan::handle::Pipeline();
+        pipeline_columns_ = vulkan::handle::Pipeline();
 }
 }

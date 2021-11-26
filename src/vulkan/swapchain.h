@@ -35,9 +35,9 @@ class Swapchain
 {
         VkSurfaceFormatKHR surface_format_;
         VkExtent2D extent_;
-        SwapchainKHR swapchain_;
+        handle::SwapchainKHR swapchain_;
         std::vector<VkImage> images_;
-        std::vector<ImageViewHandle> image_view_handles_;
+        std::vector<handle::ImageView> image_view_handles_;
         std::vector<VkImageView> image_views_;
 
 public:

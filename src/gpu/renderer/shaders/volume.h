@@ -101,10 +101,10 @@ class VolumeProgram final
 {
         const vulkan::Device* device_;
 
-        vulkan::DescriptorSetLayout descriptor_set_layout_shared_;
-        vulkan::DescriptorSetLayout descriptor_set_layout_image_;
-        vulkan::PipelineLayout pipeline_layout_image_fragments_;
-        vulkan::PipelineLayout pipeline_layout_fragments_;
+        vulkan::handle::DescriptorSetLayout descriptor_set_layout_shared_;
+        vulkan::handle::DescriptorSetLayout descriptor_set_layout_image_;
+        vulkan::handle::PipelineLayout pipeline_layout_image_fragments_;
+        vulkan::handle::PipelineLayout pipeline_layout_fragments_;
         vulkan::VertexShader vertex_shader_;
         vulkan::FragmentShader fragment_shader_image_;
         vulkan::FragmentShader fragment_shader_image_fragments_;
@@ -133,7 +133,7 @@ public:
         VolumeProgram(VolumeProgram&&) = default;
         ~VolumeProgram() = default;
 
-        vulkan::Pipeline create_pipeline(
+        vulkan::handle::Pipeline create_pipeline(
                 VkRenderPass render_pass,
                 VkSampleCountFlagBits sample_count,
                 bool sample_shading,

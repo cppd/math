@@ -163,7 +163,7 @@ void transition_image_layout(
         const VkPipelineStageFlags src_stage = VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT;
         const VkPipelineStageFlags dst_stage = VK_PIPELINE_STAGE_BOTTOM_OF_PIPE_BIT;
 
-        const CommandBuffer command_buffer(device, command_pool);
+        const handle::CommandBuffer command_buffer(device, command_pool);
 
         begin_command_buffer(command_buffer);
 

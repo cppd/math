@@ -58,7 +58,7 @@ void check_pixel_buffer_size(
 }
 
 void copy_host_to_device(
-        const DeviceMemory& device_memory,
+        const handle::DeviceMemory& device_memory,
         const VkDeviceSize& offset,
         const VkDeviceSize& size,
         const void* const data)
@@ -79,7 +79,7 @@ void copy_host_to_device(
 }
 
 void copy_device_to_host(
-        const DeviceMemory& device_memory,
+        const handle::DeviceMemory& device_memory,
         const VkDeviceSize& offset,
         const VkDeviceSize& size,
         void* const data)
@@ -258,7 +258,7 @@ void staging_image_write(
 
         Buffer staging_buffer(create_buffer(device, size, VK_BUFFER_USAGE_TRANSFER_SRC_BIT, {queue.family_index()}));
 
-        DeviceMemory staging_device_memory(create_device_memory(
+        handle::DeviceMemory staging_device_memory(create_device_memory(
                 device, physical_device, staging_buffer,
                 VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT));
 
@@ -268,7 +268,7 @@ void staging_image_write(
 
         //
 
-        CommandBuffer command_buffer(device, command_pool);
+        handle::CommandBuffer command_buffer(device, command_pool);
         begin_commands(command_buffer);
 
         cmd_transition_image_layout(
@@ -300,13 +300,13 @@ void staging_image_read(
 
         Buffer staging_buffer(create_buffer(device, size, VK_BUFFER_USAGE_TRANSFER_DST_BIT, {queue.family_index()}));
 
-        DeviceMemory staging_device_memory(create_device_memory(
+        handle::DeviceMemory staging_device_memory(create_device_memory(
                 device, physical_device, staging_buffer,
                 VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT));
 
         //
 
-        CommandBuffer command_buffer(device, command_pool);
+        handle::CommandBuffer command_buffer(device, command_pool);
         begin_commands(command_buffer);
 
         cmd_transition_image_layout(
@@ -339,7 +339,7 @@ void write_data_to_buffer(
 
         Buffer staging_buffer(create_buffer(device, size, VK_BUFFER_USAGE_TRANSFER_SRC_BIT, {queue.family_index()}));
 
-        DeviceMemory staging_device_memory(create_device_memory(
+        handle::DeviceMemory staging_device_memory(create_device_memory(
                 device, physical_device, staging_buffer,
                 VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT));
 
@@ -347,7 +347,7 @@ void write_data_to_buffer(
 
         copy_host_to_device(staging_device_memory, 0, size, data);
 
-        CommandBuffer command_buffer(device, command_pool);
+        handle::CommandBuffer command_buffer(device, command_pool);
         begin_commands(command_buffer);
 
         VkBufferCopy copy = {};

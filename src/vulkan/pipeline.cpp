@@ -65,7 +65,7 @@ void pipeline_shader_stage_create_info(
 }
 }
 
-Pipeline create_graphics_pipeline(const GraphicsPipelineCreateInfo& info)
+handle::Pipeline create_graphics_pipeline(const GraphicsPipelineCreateInfo& info)
 {
         if (!info.device || !info.render_pass || !info.sub_pass || !info.sample_count || !info.sample_shading
             || !info.pipeline_layout || !info.viewport || !info.primitive_topology || !info.shaders || !info.constants
@@ -225,10 +225,10 @@ Pipeline create_graphics_pipeline(const GraphicsPipelineCreateInfo& info)
         // create_info.basePipelineHandle = VK_NULL_HANDLE;
         // create_info.basePipelineIndex = -1;
 
-        return Pipeline(*info.device, create_info);
+        return handle::Pipeline(*info.device, create_info);
 }
 
-Pipeline create_compute_pipeline(const ComputePipelineCreateInfo& info)
+handle::Pipeline create_compute_pipeline(const ComputePipelineCreateInfo& info)
 {
         if (info.device == VK_NULL_HANDLE || info.pipeline_layout == VK_NULL_HANDLE || !info.shader)
         {
@@ -270,6 +270,6 @@ Pipeline create_compute_pipeline(const ComputePipelineCreateInfo& info)
         create_info.stage = stage_info;
         create_info.layout = info.pipeline_layout;
 
-        return Pipeline(info.device, create_info);
+        return handle::Pipeline(info.device, create_info);
 }
 }

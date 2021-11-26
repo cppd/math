@@ -21,7 +21,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 namespace ns::gpu::renderer
 {
-vulkan::Sampler create_volume_image_sampler(VkDevice device);
-vulkan::Sampler create_volume_depth_image_sampler(VkDevice device);
-vulkan::Sampler create_volume_transfer_function_sampler(VkDevice device);
+vulkan::handle::Sampler create_volume_image_sampler(VkDevice device);
+vulkan::handle::Sampler create_volume_depth_image_sampler(VkDevice device);
+vulkan::handle::Sampler create_volume_transfer_function_sampler(VkDevice device);
 }

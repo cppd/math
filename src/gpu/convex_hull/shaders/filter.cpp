@@ -172,7 +172,7 @@ void FilterProgram::create_pipeline(unsigned height)
 
 void FilterProgram::delete_pipeline()
 {
-        pipeline_ = vulkan::Pipeline();
+        pipeline_ = vulkan::handle::Pipeline();
 }
 
 VkDescriptorSetLayout FilterProgram::descriptor_set_layout() const

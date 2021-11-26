@@ -59,14 +59,14 @@ class Impl final : public View
         // const vulkan::Queue* const transfer_queue_;
         uint32_t graphics_family_index_;
 
-        vulkan::Semaphore signal_semaphore_;
+        vulkan::handle::Semaphore signal_semaphore_;
         ViewProgram program_;
         ViewMemory memory_;
         std::unique_ptr<vulkan::BufferWithMemory> vertices_;
-        vulkan::Sampler sampler_;
+        vulkan::handle::Sampler sampler_;
         std::unique_ptr<vulkan::ImageWithMemory> image_;
-        std::optional<vulkan::Pipeline> pipeline_;
-        std::optional<vulkan::CommandBuffers> command_buffers_;
+        std::optional<vulkan::handle::Pipeline> pipeline_;
+        std::optional<vulkan::handle::CommandBuffers> command_buffers_;
 
         std::unique_ptr<ComputeImage> compute_;
 

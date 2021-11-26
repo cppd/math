@@ -67,7 +67,7 @@ VkPipelineLayout TrianglesDepthProgram::pipeline_layout() const
         return pipeline_layout_;
 }
 
-vulkan::Pipeline TrianglesDepthProgram::create_pipeline(
+vulkan::handle::Pipeline TrianglesDepthProgram::create_pipeline(
         VkRenderPass render_pass,
         VkSampleCountFlagBits sample_count,
         const Region<2, int>& viewport) const

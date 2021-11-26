@@ -98,8 +98,8 @@ class Program final
 {
         const vulkan::Device* device_;
 
-        vulkan::DescriptorSetLayout descriptor_set_layout_;
-        vulkan::PipelineLayout pipeline_layout_;
+        vulkan::handle::DescriptorSetLayout descriptor_set_layout_;
+        vulkan::handle::PipelineLayout pipeline_layout_;
         vulkan::VertexShader vertex_shader_;
         vulkan::FragmentShader fragment_shader_;
 
@@ -113,7 +113,7 @@ public:
         Program(Program&&) = default;
         ~Program() = default;
 
-        vulkan::Pipeline create_pipeline(
+        vulkan::handle::Pipeline create_pipeline(
                 VkRenderPass render_pass,
                 VkSampleCountFlagBits sample_count,
                 bool sample_shading,

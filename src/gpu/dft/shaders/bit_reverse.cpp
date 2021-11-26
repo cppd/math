@@ -172,6 +172,6 @@ void BitReverseProgram::create_pipeline(uint32_t group_size, uint32_t data_size,
 
 void BitReverseProgram::delete_pipeline()
 {
-        pipeline_ = vulkan::Pipeline();
+        pipeline_ = vulkan::handle::Pipeline();
 }
 }

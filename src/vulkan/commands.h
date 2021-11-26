@@ -41,5 +41,5 @@ struct CommandBufferCreateInfo
         std::function<void(VkCommandBuffer command_buffer)> after_render_pass_commands;
 };
 
-CommandBuffers create_command_buffers(const CommandBufferCreateInfo& info);
+handle::CommandBuffers create_command_buffers(const CommandBufferCreateInfo& info);
 }

@@ -71,7 +71,7 @@ VkPipelineLayout PointsProgram::pipeline_layout() const
         return pipeline_layout_;
 }
 
-vulkan::Pipeline PointsProgram::create_pipeline(
+vulkan::handle::Pipeline PointsProgram::create_pipeline(
         VkRenderPass render_pass,
         VkSampleCountFlagBits sample_count,
         VkPrimitiveTopology primitive_topology,

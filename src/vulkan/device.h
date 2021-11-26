@@ -71,7 +71,7 @@ public:
 
 class Device final
 {
-        DeviceHandle device_;
+        handle::Device device_;
         const PhysicalDevice* physical_device_ = nullptr;
         DeviceFeatures features_;
         std::unordered_map<uint32_t, std::vector<VkQueue>> queues_;

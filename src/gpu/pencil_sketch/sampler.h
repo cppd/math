@@ -21,5 +21,5 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 namespace ns::gpu::pencil_sketch
 {
-vulkan::Sampler create_sampler(VkDevice device);
+vulkan::handle::Sampler create_sampler(VkDevice device);
 }

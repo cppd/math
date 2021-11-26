@@ -61,13 +61,13 @@ class Impl final : public View
         const vulkan::VulkanInstance* const instance_;
         VkCommandPool graphics_command_pool_;
 
-        vulkan::Semaphore semaphore_;
+        vulkan::handle::Semaphore semaphore_;
         ViewProgram program_;
         ViewMemory memory_;
         std::optional<vulkan::BufferWithMemory> points_;
         vulkan::BufferWithMemory indirect_buffer_;
-        std::optional<vulkan::Pipeline> pipeline_;
-        std::optional<vulkan::CommandBuffers> command_buffers_;
+        std::optional<vulkan::handle::Pipeline> pipeline_;
+        std::optional<vulkan::handle::CommandBuffers> command_buffers_;
 
         std::unique_ptr<Compute> compute_;
 

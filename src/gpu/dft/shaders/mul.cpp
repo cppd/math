@@ -301,13 +301,13 @@ void MulProgram::create_pipelines(
 
 void MulProgram::delete_pipelines()
 {
-        pipeline_rows_to_buffer_forward_ = vulkan::Pipeline();
-        pipeline_rows_to_buffer_inverse_ = vulkan::Pipeline();
-        pipeline_rows_from_buffer_forward_ = vulkan::Pipeline();
-        pipeline_rows_from_buffer_inverse_ = vulkan::Pipeline();
-        pipeline_columns_to_buffer_forward_ = vulkan::Pipeline();
-        pipeline_columns_to_buffer_inverse_ = vulkan::Pipeline();
-        pipeline_columns_from_buffer_forward_ = vulkan::Pipeline();
-        pipeline_columns_from_buffer_inverse_ = vulkan::Pipeline();
+        pipeline_rows_to_buffer_forward_ = vulkan::handle::Pipeline();
+        pipeline_rows_to_buffer_inverse_ = vulkan::handle::Pipeline();
+        pipeline_rows_from_buffer_forward_ = vulkan::handle::Pipeline();
+        pipeline_rows_from_buffer_inverse_ = vulkan::handle::Pipeline();
+        pipeline_columns_to_buffer_forward_ = vulkan::handle::Pipeline();
+        pipeline_columns_to_buffer_inverse_ = vulkan::handle::Pipeline();
+        pipeline_columns_from_buffer_forward_ = vulkan::handle::Pipeline();
+        pipeline_columns_from_buffer_inverse_ = vulkan::handle::Pipeline();
 }
 }

@@ -22,7 +22,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 namespace ns::vulkan
 {
-DeviceMemory create_device_memory(
+handle::DeviceMemory create_device_memory(
         const VkDevice& device,
         const VkPhysicalDevice& physical_device,
         const VkBuffer& buffer,
@@ -37,7 +37,7 @@ DeviceMemory create_device_memory(
         allocate_info.memoryTypeIndex =
                 physical_device_memory_type_index(physical_device, memory_requirements.memoryTypeBits, properties);
 
-        DeviceMemory device_memory(device, allocate_info);
+        handle::DeviceMemory device_memory(device, allocate_info);
 
         const VkResult result = vkBindBufferMemory(device, buffer, device_memory, 0);
         if (result != VK_SUCCESS)
@@ -48,7 +48,7 @@ DeviceMemory create_device_memory(
         return device_memory;
 }
 
-DeviceMemory create_device_memory(
+handle::DeviceMemory create_device_memory(
         const VkDevice& device,
         const VkPhysicalDevice& physical_device,
         const VkImage& image,
@@ -63,7 +63,7 @@ DeviceMemory create_device_memory(
         allocate_info.memoryTypeIndex =
                 physical_device_memory_type_index(physical_device, memory_requirements.memoryTypeBits, properties);
 
-        DeviceMemory device_memory(device, allocate_info);
+        handle::DeviceMemory device_memory(device, allocate_info);
 
         const VkResult result = vkBindImageMemory(device, image, device_memory, 0);
         if (result != VK_SUCCESS)

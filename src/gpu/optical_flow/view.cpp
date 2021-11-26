@@ -60,15 +60,15 @@ class Impl final : public View
         // const vulkan::CommandPool* const transfer_command_pool_;
         // const vulkan::Queue* const transfer_queue_;
 
-        vulkan::Semaphore signal_semaphore_;
+        vulkan::handle::Semaphore signal_semaphore_;
         ViewProgram program_;
         ViewMemory memory_;
-        vulkan::Sampler sampler_;
+        vulkan::handle::Sampler sampler_;
         std::optional<vulkan::BufferWithMemory> top_points_;
         std::optional<vulkan::BufferWithMemory> top_flow_;
-        std::optional<vulkan::Pipeline> pipeline_points_;
-        std::optional<vulkan::Pipeline> pipeline_lines_;
-        std::optional<vulkan::CommandBuffers> command_buffers_;
+        std::optional<vulkan::handle::Pipeline> pipeline_points_;
+        std::optional<vulkan::handle::Pipeline> pipeline_lines_;
+        std::optional<vulkan::handle::CommandBuffers> command_buffers_;
 
         int top_point_count_;
 

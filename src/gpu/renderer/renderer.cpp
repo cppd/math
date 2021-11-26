@@ -145,26 +145,26 @@ class Impl final : public Renderer
         const vulkan::ImageWithMemory* object_image_ = nullptr;
 
         ShaderBuffers shader_buffers_;
-        vulkan::Semaphore renderer_mesh_signal_semaphore_;
-        vulkan::Semaphore renderer_volume_signal_semaphore_;
+        vulkan::handle::Semaphore renderer_mesh_signal_semaphore_;
+        vulkan::handle::Semaphore renderer_volume_signal_semaphore_;
 
         std::unique_ptr<vulkan::DepthImageWithMemory> depth_copy_image_;
 
         std::unique_ptr<DepthBuffers> mesh_renderer_depth_render_buffers_;
-        vulkan::Semaphore mesh_renderer_depth_signal_semaphore_;
+        vulkan::handle::Semaphore mesh_renderer_depth_signal_semaphore_;
         MeshRenderer mesh_renderer_;
 
-        vulkan::Semaphore volume_renderer_signal_semaphore_;
+        vulkan::handle::Semaphore volume_renderer_signal_semaphore_;
         VolumeRenderer volume_renderer_;
 
         ObjectStorage<MeshObject> mesh_storage_;
         ObjectStorage<VolumeObject> volume_storage_;
 
-        std::optional<vulkan::CommandBuffers> clear_command_buffers_;
-        vulkan::Semaphore clear_signal_semaphore_;
+        std::optional<vulkan::handle::CommandBuffers> clear_command_buffers_;
+        vulkan::handle::Semaphore clear_signal_semaphore_;
 
         std::unique_ptr<TransparencyBuffers> transparency_buffers_;
-        vulkan::Semaphore render_transparent_as_opaque_signal_semaphore_;
+        vulkan::handle::Semaphore render_transparent_as_opaque_signal_semaphore_;
 
         void set_lighting_color(const color::Color& color) override
         {

@@ -83,12 +83,12 @@ class MulDProgram final
 {
         VkDevice device_;
 
-        vulkan::DescriptorSetLayout descriptor_set_layout_;
-        vulkan::PipelineLayout pipeline_layout_;
+        vulkan::handle::DescriptorSetLayout descriptor_set_layout_;
+        vulkan::handle::PipelineLayout pipeline_layout_;
         MulDConstant constant_;
         vulkan::ComputeShader shader_;
-        vulkan::Pipeline pipeline_rows_;
-        vulkan::Pipeline pipeline_columns_;
+        vulkan::handle::Pipeline pipeline_rows_;
+        vulkan::handle::Pipeline pipeline_columns_;
 
 public:
         explicit MulDProgram(const VkDevice& device);

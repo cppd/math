@@ -47,7 +47,7 @@ class BufferWithMemory final
         std::vector<uint32_t> family_indices_;
         Buffer buffer_;
         VkMemoryPropertyFlags memory_properties_;
-        DeviceMemory device_memory_;
+        handle::DeviceMemory device_memory_;
 
 public:
         BufferWithMemory(
@@ -173,7 +173,7 @@ class ImageWithMemory final
         VkPhysicalDevice physical_device_;
         std::vector<uint32_t> family_indices_;
         Image image_;
-        DeviceMemory device_memory_;
+        handle::DeviceMemory device_memory_;
         ImageView image_view_;
 
 public:
@@ -233,7 +233,7 @@ class DepthImageWithMemory final
         static const std::vector<VkFormat>& depth_formats(const std::vector<VkFormat>& formats);
 
         Image image_;
-        DeviceMemory device_memory_;
+        handle::DeviceMemory device_memory_;
         ImageView image_view_;
 
         DepthImageWithMemory(

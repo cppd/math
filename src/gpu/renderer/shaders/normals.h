@@ -31,9 +31,9 @@ class NormalsProgram final
 {
         const vulkan::Device* device_;
 
-        vulkan::DescriptorSetLayout descriptor_set_layout_shared_;
-        vulkan::DescriptorSetLayout descriptor_set_layout_mesh_;
-        vulkan::PipelineLayout pipeline_layout_;
+        vulkan::handle::DescriptorSetLayout descriptor_set_layout_shared_;
+        vulkan::handle::DescriptorSetLayout descriptor_set_layout_mesh_;
+        vulkan::handle::PipelineLayout pipeline_layout_;
         vulkan::VertexShader vertex_shader_;
         vulkan::GeometryShader geometry_shader_;
         vulkan::FragmentShader fragment_shader_;
@@ -48,7 +48,7 @@ public:
         NormalsProgram(NormalsProgram&&) = default;
         ~NormalsProgram() = default;
 
-        vulkan::Pipeline create_pipeline(
+        vulkan::handle::Pipeline create_pipeline(
                 VkRenderPass render_pass,
                 VkSampleCountFlagBits sample_count,
                 bool sample_shading,

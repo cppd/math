@@ -229,7 +229,7 @@ void FftGlobalProgram::create_pipelines(uint32_t group_size, uint32_t data_size,
 
 void FftGlobalProgram::delete_pipelines()
 {
-        pipeline_forward_ = vulkan::Pipeline();
-        pipeline_inverse_ = vulkan::Pipeline();
+        pipeline_forward_ = vulkan::handle::Pipeline();
+        pipeline_inverse_ = vulkan::handle::Pipeline();
 }
 }

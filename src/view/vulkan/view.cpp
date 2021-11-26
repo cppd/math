@@ -159,7 +159,7 @@ class Impl final
         std::unique_ptr<gpu::dft::View> dft_;
         std::unique_ptr<gpu::optical_flow::View> optical_flow_;
 
-        const vulkan::Semaphore swapchain_image_semaphore_{instance_->device()};
+        const vulkan::handle::Semaphore swapchain_image_semaphore_{instance_->device()};
         std::unique_ptr<vulkan::Swapchain> swapchain_;
         std::unique_ptr<Swapchain> swapchain_resolve_;
 

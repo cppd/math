@@ -94,12 +94,12 @@ class FftSharedProgram final
 {
         VkDevice device_;
 
-        vulkan::DescriptorSetLayout descriptor_set_layout_;
-        vulkan::PipelineLayout pipeline_layout_;
+        vulkan::handle::DescriptorSetLayout descriptor_set_layout_;
+        vulkan::handle::PipelineLayout pipeline_layout_;
         FftSharedConstant constant_;
         vulkan::ComputeShader shader_;
-        vulkan::Pipeline pipeline_forward_;
-        vulkan::Pipeline pipeline_inverse_;
+        vulkan::handle::Pipeline pipeline_forward_;
+        vulkan::handle::Pipeline pipeline_inverse_;
 
 public:
         explicit FftSharedProgram(const VkDevice& device);

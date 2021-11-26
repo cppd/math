@@ -26,13 +26,13 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 namespace ns::vulkan
 {
-std::vector<Semaphore> create_semaphores(VkDevice device, int count);
-std::vector<Fence> create_fences(VkDevice device, int count, bool signaled_state);
+std::vector<handle::Semaphore> create_semaphores(VkDevice device, int count);
+std::vector<handle::Fence> create_fences(VkDevice device, int count, bool signaled_state);
 
-PipelineLayout create_pipeline_layout(
+handle::PipelineLayout create_pipeline_layout(
         VkDevice device,
         const std::vector<VkDescriptorSetLayout>& descriptor_set_layouts);
-PipelineLayout create_pipeline_layout(
+handle::PipelineLayout create_pipeline_layout(
         VkDevice device,
         const std::vector<unsigned>& set_numbers,
         const std::vector<VkDescriptorSetLayout>& set_layouts);
@@ -42,7 +42,7 @@ CommandPool create_transient_command_pool(VkDevice device, uint32_t queue_family
 
 Instance create_instance(std::vector<std::string> required_extensions);
 
-Framebuffer create_framebuffer(
+handle::Framebuffer create_framebuffer(
         VkDevice device,
         VkRenderPass render_pass,
         uint32_t width,

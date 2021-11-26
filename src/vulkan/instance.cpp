@@ -89,7 +89,7 @@ VulkanInstance::VulkanInstance(
           callback_(
                   instance_.validation_layers_enabled() ? std::make_optional(create_debug_report_callback(instance_))
                                                         : std::nullopt),
-          surface_(create_surface ? std::optional(SurfaceKHR(instance_, create_surface)) : std::nullopt),
+          surface_(create_surface ? std::optional(handle::SurfaceKHR(instance_, create_surface)) : std::nullopt),
           //
           physical_device_(create_physical_device(
                   instance_,

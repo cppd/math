@@ -105,15 +105,15 @@ class Impl final : public RenderBuffers, public Impl3D, public Impl2D
 
         std::vector<VkImageView> color_attachment_image_views_;
 
-        vulkan::RenderPass render_pass_3d_;
-        vulkan::RenderPass render_pass_clear_3d_;
-        std::vector<vulkan::Framebuffer> framebuffers_3d_;
-        std::vector<vulkan::Framebuffer> framebuffers_clear_3d_;
+        vulkan::handle::RenderPass render_pass_3d_;
+        vulkan::handle::RenderPass render_pass_clear_3d_;
+        std::vector<vulkan::handle::Framebuffer> framebuffers_3d_;
+        std::vector<vulkan::handle::Framebuffer> framebuffers_clear_3d_;
         std::vector<VkFramebuffer> framebuffers_handles_3d_;
         std::vector<VkFramebuffer> framebuffers_handles_clear_3d_;
 
-        vulkan::RenderPass render_pass_2d_;
-        std::vector<vulkan::Framebuffer> framebuffers_2d_;
+        vulkan::handle::RenderPass render_pass_2d_;
+        std::vector<vulkan::handle::Framebuffer> framebuffers_2d_;
         std::vector<VkFramebuffer> framebuffers_handles_2d_;
 
         void create_buffers(

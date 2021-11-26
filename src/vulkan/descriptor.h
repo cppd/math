@@ -25,7 +25,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 namespace ns::vulkan
 {
-DescriptorSetLayout create_descriptor_set_layout(
+handle::DescriptorSetLayout create_descriptor_set_layout(
         VkDevice device,
         const std::vector<VkDescriptorSetLayoutBinding>& bindings);
 
@@ -49,9 +49,9 @@ class Descriptors final
 {
         VkDevice device_;
         VkDescriptorSetLayout descriptor_set_layout_;
-        DescriptorPool descriptor_pool_;
+        handle::DescriptorPool descriptor_pool_;
         std::vector<VkDescriptorSetLayoutBinding> descriptor_set_layout_bindings_;
-        DescriptorSets descriptor_sets_;
+        handle::DescriptorSets descriptor_sets_;
 
         // VkDescriptorSetLayoutBinding::binding -> descriptor_set_layout_bindings_ index
         std::unordered_map<uint32_t, uint32_t> binding_map_;

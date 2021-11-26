@@ -241,7 +241,7 @@ void FftSharedProgram::create_pipelines(
 
 void FftSharedProgram::delete_pipelines()
 {
-        pipeline_forward_ = vulkan::Pipeline();
-        pipeline_inverse_ = vulkan::Pipeline();
+        pipeline_forward_ = vulkan::handle::Pipeline();
+        pipeline_inverse_ = vulkan::handle::Pipeline();
 }
 }

@@ -22,24 +22,24 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <vector>
 #include <vulkan/vulkan.h>
 
-namespace ns::vulkan
+namespace ns::vulkan::handle
 {
-class InstanceHandle final
+class Instance final
 {
         VkInstance instance_ = VK_NULL_HANDLE;
 
         void destroy() noexcept;
-        void move(InstanceHandle* from) noexcept;
+        void move(Instance* from) noexcept;
 
 public:
-        explicit InstanceHandle(const VkInstanceCreateInfo& create_info);
-        ~InstanceHandle();
+        explicit Instance(const VkInstanceCreateInfo& create_info);
+        ~Instance();
 
-        InstanceHandle(const InstanceHandle&) = delete;
-        InstanceHandle& operator=(const InstanceHandle&) = delete;
+        Instance(const Instance&) = delete;
+        Instance& operator=(const Instance&) = delete;
 
-        InstanceHandle(InstanceHandle&&) noexcept;
-        InstanceHandle& operator=(InstanceHandle&&) noexcept;
+        Instance(Instance&&) noexcept;
+        Instance& operator=(Instance&&) noexcept;
 
         operator VkInstance() const& noexcept
         {
@@ -74,23 +74,23 @@ public:
         operator VkDebugReportCallbackEXT() const&& noexcept = delete;
 };
 
-class DeviceHandle final
+class Device final
 {
         VkDevice device_ = VK_NULL_HANDLE;
 
         void destroy() noexcept;
-        void move(DeviceHandle* from) noexcept;
+        void move(Device* from) noexcept;
 
 public:
-        DeviceHandle() = default;
-        DeviceHandle(VkPhysicalDevice physical_device, const VkDeviceCreateInfo& create_info);
-        ~DeviceHandle();
+        Device() = default;
+        Device(VkPhysicalDevice physical_device, const VkDeviceCreateInfo& create_info);
+        ~Device();
 
-        DeviceHandle(const DeviceHandle&) = delete;
-        DeviceHandle& operator=(const DeviceHandle&) = delete;
+        Device(const Device&) = delete;
+        Device& operator=(const Device&) = delete;
 
-        DeviceHandle(DeviceHandle&&) noexcept;
-        DeviceHandle& operator=(DeviceHandle&&) noexcept;
+        Device(Device&&) noexcept;
+        Device& operator=(Device&&) noexcept;
 
         operator VkDevice() const& noexcept
         {
@@ -282,24 +282,24 @@ public:
         operator VkFramebuffer() const&& noexcept = delete;
 };
 
-class CommandPoolHandle final
+class CommandPool final
 {
         VkDevice device_ = VK_NULL_HANDLE;
         VkCommandPool command_pool_ = VK_NULL_HANDLE;
 
         void destroy() noexcept;
-        void move(CommandPoolHandle* from) noexcept;
+        void move(CommandPool* from) noexcept;
 
 public:
-        CommandPoolHandle() = default;
-        CommandPoolHandle(VkDevice device, const VkCommandPoolCreateInfo& create_info);
-        ~CommandPoolHandle();
+        CommandPool() = default;
+        CommandPool(VkDevice device, const VkCommandPoolCreateInfo& create_info);
+        ~CommandPool();
 
-        CommandPoolHandle(const CommandPoolHandle&) = delete;
-        CommandPoolHandle& operator=(const CommandPoolHandle&) = delete;
+        CommandPool(const CommandPool&) = delete;
+        CommandPool& operator=(const CommandPool&) = delete;
 
-        CommandPoolHandle(CommandPoolHandle&&) noexcept;
-        CommandPoolHandle& operator=(CommandPoolHandle&&) noexcept;
+        CommandPool(CommandPool&&) noexcept;
+        CommandPool& operator=(CommandPool&&) noexcept;
 
         operator VkCommandPool() const& noexcept
         {
@@ -360,24 +360,24 @@ public:
         operator VkFence() const&& noexcept = delete;
 };
 
-class BufferHandle final
+class Buffer final
 {
         VkDevice device_ = VK_NULL_HANDLE;
         VkBuffer buffer_ = VK_NULL_HANDLE;
 
         void destroy() noexcept;
-        void move(BufferHandle* from) noexcept;
+        void move(Buffer* from) noexcept;
 
 public:
-        BufferHandle() = default;
-        BufferHandle(VkDevice device, const VkBufferCreateInfo& create_info);
-        ~BufferHandle();
+        Buffer() = default;
+        Buffer(VkDevice device, const VkBufferCreateInfo& create_info);
+        ~Buffer();
 
-        BufferHandle(const BufferHandle&) = delete;
-        BufferHandle& operator=(const BufferHandle&) = delete;
+        Buffer(const Buffer&) = delete;
+        Buffer& operator=(const Buffer&) = delete;
 
-        BufferHandle(BufferHandle&&) noexcept;
-        BufferHandle& operator=(BufferHandle&&) noexcept;
+        Buffer(Buffer&&) noexcept;
+        Buffer& operator=(Buffer&&) noexcept;
 
         operator VkBuffer() const& noexcept
         {
@@ -579,24 +579,24 @@ public:
         uint32_t count() const noexcept;
 };
 
-class ImageHandle final
+class Image final
 {
         VkDevice device_ = VK_NULL_HANDLE;
         VkImage image_ = VK_NULL_HANDLE;
 
         void destroy() noexcept;
-        void move(ImageHandle* from) noexcept;
+        void move(Image* from) noexcept;
 
 public:
-        ImageHandle() = default;
-        ImageHandle(VkDevice device, const VkImageCreateInfo& create_info);
-        ~ImageHandle();
+        Image() = default;
+        Image(VkDevice device, const VkImageCreateInfo& create_info);
+        ~Image();
 
-        ImageHandle(const ImageHandle&) = delete;
-        ImageHandle& operator=(const ImageHandle&) = delete;
+        Image(const Image&) = delete;
+        Image& operator=(const Image&) = delete;
 
-        ImageHandle(ImageHandle&&) noexcept;
-        ImageHandle& operator=(ImageHandle&&) noexcept;
+        Image(Image&&) noexcept;
+        Image& operator=(Image&&) noexcept;
 
         operator VkImage() const& noexcept
         {
@@ -610,24 +610,24 @@ public:
         }
 };
 
-class ImageViewHandle final
+class ImageView final
 {
         VkDevice device_ = VK_NULL_HANDLE;
         VkImageView image_view_ = VK_NULL_HANDLE;
 
         void destroy() noexcept;
-        void move(ImageViewHandle* from) noexcept;
+        void move(ImageView* from) noexcept;
 
 public:
-        ImageViewHandle() = default;
-        ImageViewHandle(VkDevice device, const VkImageViewCreateInfo& create_info);
-        ~ImageViewHandle();
+        ImageView() = default;
+        ImageView(VkDevice device, const VkImageViewCreateInfo& create_info);
+        ~ImageView();
 
-        ImageViewHandle(const ImageViewHandle&) = delete;
-        ImageViewHandle& operator=(const ImageViewHandle&) = delete;
+        ImageView(const ImageView&) = delete;
+        ImageView& operator=(const ImageView&) = delete;
 
-        ImageViewHandle(ImageViewHandle&&) noexcept;
-        ImageViewHandle& operator=(ImageViewHandle&&) noexcept;
+        ImageView(ImageView&&) noexcept;
+        ImageView& operator=(ImageView&&) noexcept;
 
         operator VkImageView() const& noexcept
         {

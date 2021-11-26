@@ -26,7 +26,7 @@ namespace ns::vulkan
 {
 class Shader
 {
-        ShaderModule module_;
+        handle::ShaderModule module_;
         VkShaderStageFlagBits stage_;
         std::string entry_point_name_;
 

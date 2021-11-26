@@ -22,6 +22,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 namespace ns::gpu::renderer
 {
-vulkan::Sampler create_mesh_texture_sampler(const vulkan::Device& device, bool anisotropy);
-vulkan::Sampler create_mesh_shadow_sampler(VkDevice device);
+vulkan::handle::Sampler create_mesh_texture_sampler(const vulkan::Device& device, bool anisotropy);
+vulkan::handle::Sampler create_mesh_shadow_sampler(VkDevice device);
 }

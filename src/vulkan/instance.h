@@ -38,9 +38,9 @@ class VulkanInstance final
         static constexpr unsigned PRESENTATION_QUEUE_COUNT = 1;
 
         const Instance instance_;
-        const std::optional<DebugReportCallback> callback_;
+        const std::optional<handle::DebugReportCallback> callback_;
 
-        const std::optional<SurfaceKHR> surface_;
+        const std::optional<handle::SurfaceKHR> surface_;
 
         const PhysicalDevice physical_device_;
 

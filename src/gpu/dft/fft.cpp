@@ -207,7 +207,7 @@ class Impl final : public Fft
 
                 set_data(data);
 
-                vulkan::CommandBuffer command_buffer(device, pool);
+                vulkan::handle::CommandBuffer command_buffer(device, pool);
                 begin_commands(command_buffer);
 
                 commands(command_buffer, inverse);

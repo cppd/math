@@ -170,7 +170,7 @@ VkPipelineLayout TrianglesProgram::pipeline_layout() const
         return pipeline_layout_;
 }
 
-vulkan::Pipeline TrianglesProgram::create_pipeline(
+vulkan::handle::Pipeline TrianglesProgram::create_pipeline(
         VkRenderPass render_pass,
         VkSampleCountFlagBits sample_count,
         bool sample_shading,

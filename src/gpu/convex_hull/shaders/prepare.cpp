@@ -195,7 +195,7 @@ void PrepareProgram::create_pipeline(unsigned buffer_and_group_size, const Regio
 
 void PrepareProgram::delete_pipeline()
 {
-        pipeline_ = vulkan::Pipeline();
+        pipeline_ = vulkan::handle::Pipeline();
 }
 
 VkDescriptorSetLayout PrepareProgram::descriptor_set_layout() const

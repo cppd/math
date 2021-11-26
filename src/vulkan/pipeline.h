@@ -53,7 +53,7 @@ struct GraphicsPipelineCreateInfo
         std::optional<VkPipelineColorBlendAttachmentState> color_blend;
 };
 
-Pipeline create_graphics_pipeline(const GraphicsPipelineCreateInfo& info);
+handle::Pipeline create_graphics_pipeline(const GraphicsPipelineCreateInfo& info);
 
 struct ComputePipelineCreateInfo
 {
@@ -66,5 +66,5 @@ struct ComputePipelineCreateInfo
         const SpecializationConstant* constants = nullptr;
 };
 
-Pipeline create_compute_pipeline(const ComputePipelineCreateInfo& info);
+handle::Pipeline create_compute_pipeline(const ComputePipelineCreateInfo& info);
 }
