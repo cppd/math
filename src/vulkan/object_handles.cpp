@@ -50,26 +50,6 @@ Instance::Instance(const VkInstanceCreateInfo& create_info)
         ASSERT(instance_ != VK_NULL_HANDLE);
 }
 
-Instance::~Instance()
-{
-        destroy();
-}
-
-Instance::Instance(Instance&& from) noexcept
-{
-        move(&from);
-}
-
-Instance& Instance::operator=(Instance&& from) noexcept
-{
-        if (this != &from)
-        {
-                destroy();
-                move(&from);
-        }
-        return *this;
-}
-
 //
 
 void DebugReportCallback::destroy() noexcept
@@ -102,26 +82,6 @@ DebugReportCallback::DebugReportCallback(
         instance_ = instance;
 }
 
-DebugReportCallback::~DebugReportCallback()
-{
-        destroy();
-}
-
-DebugReportCallback::DebugReportCallback(DebugReportCallback&& from) noexcept
-{
-        move(&from);
-}
-
-DebugReportCallback& DebugReportCallback::operator=(DebugReportCallback&& from) noexcept
-{
-        if (this != &from)
-        {
-                destroy();
-                move(&from);
-        }
-        return *this;
-}
-
 //
 
 void Device::destroy() noexcept
@@ -146,26 +106,6 @@ Device::Device(const VkPhysicalDevice physical_device, const VkDeviceCreateInfo&
                 vulkan_function_error("vkCreateDevice", result);
         }
         ASSERT(device_ != VK_NULL_HANDLE);
-}
-
-Device::~Device()
-{
-        destroy();
-}
-
-Device::Device(Device&& from) noexcept
-{
-        move(&from);
-}
-
-Device& Device::operator=(Device&& from) noexcept
-{
-        if (this != &from)
-        {
-                destroy();
-                move(&from);
-        }
-        return *this;
 }
 
 //
@@ -198,26 +138,6 @@ SurfaceKHR::SurfaceKHR(const VkInstance instance, const std::function<VkSurfaceK
         instance_ = instance;
 }
 
-SurfaceKHR::~SurfaceKHR()
-{
-        destroy();
-}
-
-SurfaceKHR::SurfaceKHR(SurfaceKHR&& from) noexcept
-{
-        move(&from);
-}
-
-SurfaceKHR& SurfaceKHR::operator=(SurfaceKHR&& from) noexcept
-{
-        if (this != &from)
-        {
-                destroy();
-                move(&from);
-        }
-        return *this;
-}
-
 //
 
 void SwapchainKHR::destroy() noexcept
@@ -246,26 +166,6 @@ SwapchainKHR::SwapchainKHR(const VkDevice device, const VkSwapchainCreateInfoKHR
         }
         ASSERT(swapchain_ != VK_NULL_HANDLE);
         device_ = device;
-}
-
-SwapchainKHR::~SwapchainKHR()
-{
-        destroy();
-}
-
-SwapchainKHR::SwapchainKHR(SwapchainKHR&& from) noexcept
-{
-        move(&from);
-}
-
-SwapchainKHR& SwapchainKHR::operator=(SwapchainKHR&& from) noexcept
-{
-        if (this != &from)
-        {
-                destroy();
-                move(&from);
-        }
-        return *this;
 }
 
 //
@@ -310,26 +210,6 @@ ShaderModule::ShaderModule(const VkDevice device, const std::span<const uint32_t
         device_ = device;
 }
 
-ShaderModule::~ShaderModule()
-{
-        destroy();
-}
-
-ShaderModule::ShaderModule(ShaderModule&& from) noexcept
-{
-        move(&from);
-}
-
-ShaderModule& ShaderModule::operator=(ShaderModule&& from) noexcept
-{
-        if (this != &from)
-        {
-                destroy();
-                move(&from);
-        }
-        return *this;
-}
-
 //
 
 void RenderPass::destroy() noexcept
@@ -360,26 +240,6 @@ RenderPass::RenderPass(const VkDevice device, const VkRenderPassCreateInfo& crea
         device_ = device;
 }
 
-RenderPass::~RenderPass()
-{
-        destroy();
-}
-
-RenderPass::RenderPass(RenderPass&& from) noexcept
-{
-        move(&from);
-}
-
-RenderPass& RenderPass::operator=(RenderPass&& from) noexcept
-{
-        if (this != &from)
-        {
-                destroy();
-                move(&from);
-        }
-        return *this;
-}
-
 //
 
 void PipelineLayout::destroy() noexcept
@@ -408,26 +268,6 @@ PipelineLayout::PipelineLayout(const VkDevice device, const VkPipelineLayoutCrea
         }
         ASSERT(pipeline_layout_ != VK_NULL_HANDLE);
         device_ = device;
-}
-
-PipelineLayout::~PipelineLayout()
-{
-        destroy();
-}
-
-PipelineLayout::PipelineLayout(PipelineLayout&& from) noexcept
-{
-        move(&from);
-}
-
-PipelineLayout& PipelineLayout::operator=(PipelineLayout&& from) noexcept
-{
-        if (this != &from)
-        {
-                destroy();
-                move(&from);
-        }
-        return *this;
 }
 
 //
@@ -475,26 +315,6 @@ Pipeline::Pipeline(const VkDevice device, const VkComputePipelineCreateInfo& cre
         device_ = device;
 }
 
-Pipeline::~Pipeline()
-{
-        destroy();
-}
-
-Pipeline::Pipeline(Pipeline&& from) noexcept
-{
-        move(&from);
-}
-
-Pipeline& Pipeline::operator=(Pipeline&& from) noexcept
-{
-        if (this != &from)
-        {
-                destroy();
-                move(&from);
-        }
-        return *this;
-}
-
 //
 
 void Framebuffer::destroy() noexcept
@@ -525,26 +345,6 @@ Framebuffer::Framebuffer(const VkDevice device, const VkFramebufferCreateInfo& c
         device_ = device;
 }
 
-Framebuffer::~Framebuffer()
-{
-        destroy();
-}
-
-Framebuffer::Framebuffer(Framebuffer&& from) noexcept
-{
-        move(&from);
-}
-
-Framebuffer& Framebuffer::operator=(Framebuffer&& from) noexcept
-{
-        if (this != &from)
-        {
-                destroy();
-                move(&from);
-        }
-        return *this;
-}
-
 //
 
 void CommandPool::destroy() noexcept
@@ -573,26 +373,6 @@ CommandPool::CommandPool(const VkDevice device, const VkCommandPoolCreateInfo& c
         }
         ASSERT(command_pool_ != VK_NULL_HANDLE);
         device_ = device;
-}
-
-CommandPool::~CommandPool()
-{
-        destroy();
-}
-
-CommandPool::CommandPool(CommandPool&& from) noexcept
-{
-        move(&from);
-}
-
-CommandPool& CommandPool::operator=(CommandPool&& from) noexcept
-{
-        if (this != &from)
-        {
-                destroy();
-                move(&from);
-        }
-        return *this;
 }
 
 //
@@ -626,26 +406,6 @@ Semaphore::Semaphore(VkDevice device)
         }
         ASSERT(semaphore_ != VK_NULL_HANDLE);
         device_ = device;
-}
-
-Semaphore::~Semaphore()
-{
-        destroy();
-}
-
-Semaphore::Semaphore(Semaphore&& from) noexcept
-{
-        move(&from);
-}
-
-Semaphore& Semaphore::operator=(Semaphore&& from) noexcept
-{
-        if (this != &from)
-        {
-                destroy();
-                move(&from);
-        }
-        return *this;
 }
 
 //
@@ -685,26 +445,6 @@ Fence::Fence(const VkDevice device, const bool signaled)
         device_ = device;
 }
 
-Fence::~Fence()
-{
-        destroy();
-}
-
-Fence::Fence(Fence&& from) noexcept
-{
-        move(&from);
-}
-
-Fence& Fence::operator=(Fence&& from) noexcept
-{
-        if (this != &from)
-        {
-                destroy();
-                move(&from);
-        }
-        return *this;
-}
-
 //
 
 void Buffer::destroy() noexcept
@@ -735,26 +475,6 @@ Buffer::Buffer(const VkDevice device, const VkBufferCreateInfo& create_info)
         device_ = device;
 }
 
-Buffer::~Buffer()
-{
-        destroy();
-}
-
-Buffer::Buffer(Buffer&& from) noexcept
-{
-        move(&from);
-}
-
-Buffer& Buffer::operator=(Buffer&& from) noexcept
-{
-        if (this != &from)
-        {
-                destroy();
-                move(&from);
-        }
-        return *this;
-}
-
 //
 
 void DeviceMemory::destroy() noexcept
@@ -783,26 +503,6 @@ DeviceMemory::DeviceMemory(const VkDevice device, const VkMemoryAllocateInfo& al
         }
         ASSERT(device_memory_ != VK_NULL_HANDLE);
         device_ = device;
-}
-
-DeviceMemory::~DeviceMemory()
-{
-        destroy();
-}
-
-DeviceMemory::DeviceMemory(DeviceMemory&& from) noexcept
-{
-        move(&from);
-}
-
-DeviceMemory& DeviceMemory::operator=(DeviceMemory&& from) noexcept
-{
-        if (this != &from)
-        {
-                destroy();
-                move(&from);
-        }
-        return *this;
 }
 
 //
@@ -843,26 +543,6 @@ CommandBuffer::CommandBuffer(const VkDevice device, const VkCommandPool command_
         ASSERT(command_buffer_ != VK_NULL_HANDLE);
         device_ = device;
         command_pool_ = command_pool;
-}
-
-CommandBuffer::~CommandBuffer()
-{
-        destroy();
-}
-
-CommandBuffer::CommandBuffer(CommandBuffer&& from) noexcept
-{
-        move(&from);
-}
-
-CommandBuffer& CommandBuffer::operator=(CommandBuffer&& from) noexcept
-{
-        if (this != &from)
-        {
-                destroy();
-                move(&from);
-        }
-        return *this;
 }
 
 //
@@ -913,26 +593,6 @@ CommandBuffers::CommandBuffers(const VkDevice device, const VkCommandPool comman
         command_pool_ = command_pool;
 }
 
-CommandBuffers::~CommandBuffers()
-{
-        destroy();
-}
-
-CommandBuffers::CommandBuffers(CommandBuffers&& from) noexcept
-{
-        move(&from);
-}
-
-CommandBuffers& CommandBuffers::operator=(CommandBuffers&& from) noexcept
-{
-        if (this != &from)
-        {
-                destroy();
-                move(&from);
-        }
-        return *this;
-}
-
 const VkCommandBuffer& CommandBuffers::operator[](const uint32_t index) const noexcept
 {
         ASSERT(index < command_buffers_.size());
@@ -974,26 +634,6 @@ DescriptorSetLayout::DescriptorSetLayout(const VkDevice device, const VkDescript
         device_ = device;
 }
 
-DescriptorSetLayout::~DescriptorSetLayout()
-{
-        destroy();
-}
-
-DescriptorSetLayout::DescriptorSetLayout(DescriptorSetLayout&& from) noexcept
-{
-        move(&from);
-}
-
-DescriptorSetLayout& DescriptorSetLayout::operator=(DescriptorSetLayout&& from) noexcept
-{
-        if (this != &from)
-        {
-                destroy();
-                move(&from);
-        }
-        return *this;
-}
-
 //
 
 void DescriptorPool::destroy() noexcept
@@ -1022,26 +662,6 @@ DescriptorPool::DescriptorPool(const VkDevice device, const VkDescriptorPoolCrea
         }
         ASSERT(descriptor_pool_ != VK_NULL_HANDLE);
         device_ = device;
-}
-
-DescriptorPool::~DescriptorPool()
-{
-        destroy();
-}
-
-DescriptorPool::DescriptorPool(DescriptorPool&& from) noexcept
-{
-        move(&from);
-}
-
-DescriptorPool& DescriptorPool::operator=(DescriptorPool&& from) noexcept
-{
-        if (this != &from)
-        {
-                destroy();
-                move(&from);
-        }
-        return *this;
 }
 
 //
@@ -1093,26 +713,6 @@ DescriptorSet::DescriptorSet(
         ASSERT(descriptor_set_ != VK_NULL_HANDLE);
         device_ = device;
         descriptor_pool_ = descriptor_pool;
-}
-
-DescriptorSet::~DescriptorSet()
-{
-        destroy();
-}
-
-DescriptorSet::DescriptorSet(DescriptorSet&& from) noexcept
-{
-        move(&from);
-}
-
-DescriptorSet& DescriptorSet::operator=(DescriptorSet&& from) noexcept
-{
-        if (this != &from)
-        {
-                destroy();
-                move(&from);
-        }
-        return *this;
 }
 
 //
@@ -1181,26 +781,6 @@ DescriptorSets::DescriptorSets(
         descriptor_pool_ = descriptor_pool;
 }
 
-DescriptorSets::~DescriptorSets()
-{
-        destroy();
-}
-
-DescriptorSets::DescriptorSets(DescriptorSets&& from) noexcept
-{
-        move(&from);
-}
-
-DescriptorSets& DescriptorSets::operator=(DescriptorSets&& from) noexcept
-{
-        if (this != &from)
-        {
-                destroy();
-                move(&from);
-        }
-        return *this;
-}
-
 const VkDescriptorSet& DescriptorSets::operator[](const uint32_t index) const noexcept
 {
         ASSERT(index < descriptor_sets_.size());
@@ -1242,26 +822,6 @@ Image::Image(const VkDevice device, const VkImageCreateInfo& create_info)
         device_ = device;
 }
 
-Image::~Image()
-{
-        destroy();
-}
-
-Image::Image(Image&& from) noexcept
-{
-        move(&from);
-}
-
-Image& Image::operator=(Image&& from) noexcept
-{
-        if (this != &from)
-        {
-                destroy();
-                move(&from);
-        }
-        return *this;
-}
-
 //
 
 void ImageView::destroy() noexcept
@@ -1292,26 +852,6 @@ ImageView::ImageView(const VkDevice device, const VkImageViewCreateInfo& create_
         device_ = device;
 }
 
-ImageView::~ImageView()
-{
-        destroy();
-}
-
-ImageView::ImageView(ImageView&& from) noexcept
-{
-        move(&from);
-}
-
-ImageView& ImageView::operator=(ImageView&& from) noexcept
-{
-        if (this != &from)
-        {
-                destroy();
-                move(&from);
-        }
-        return *this;
-}
-
 //
 
 void Sampler::destroy() noexcept
@@ -1340,25 +880,5 @@ Sampler::Sampler(const VkDevice device, const VkSamplerCreateInfo& create_info)
         }
         ASSERT(sampler_ != VK_NULL_HANDLE);
         device_ = device;
-}
-
-Sampler::~Sampler()
-{
-        destroy();
-}
-
-Sampler::Sampler(Sampler&& from) noexcept
-{
-        move(&from);
-}
-
-Sampler& Sampler::operator=(Sampler&& from) noexcept
-{
-        if (this != &from)
-        {
-                destroy();
-                move(&from);
-        }
-        return *this;
 }
 }

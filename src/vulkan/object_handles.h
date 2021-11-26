@@ -22,6 +22,27 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <vector>
 #include <vulkan/vulkan.h>
 
+#define VULKAN_HANDLE_SPECIAL_FUNCTIONS(name)  \
+        name(const name&) = delete;            \
+        name& operator=(const name&) = delete; \
+        ~name()                                \
+        {                                      \
+                destroy();                     \
+        }                                      \
+        name(name&& from) noexcept             \
+        {                                      \
+                move(&from);                   \
+        }                                      \
+        name& operator=(name&& from) noexcept  \
+        {                                      \
+                if (this != &from)             \
+                {                              \
+                        destroy();             \
+                        move(&from);           \
+                }                              \
+                return *this;                  \
+        }
+
 namespace ns::vulkan::handle
 {
 class Instance final
@@ -32,14 +53,9 @@ class Instance final
         void move(Instance* from) noexcept;
 
 public:
+        VULKAN_HANDLE_SPECIAL_FUNCTIONS(Instance)
+
         explicit Instance(const VkInstanceCreateInfo& create_info);
-        ~Instance();
-
-        Instance(const Instance&) = delete;
-        Instance& operator=(const Instance&) = delete;
-
-        Instance(Instance&&) noexcept;
-        Instance& operator=(Instance&&) noexcept;
 
         operator VkInstance() const& noexcept
         {
@@ -57,15 +73,10 @@ class DebugReportCallback final
         void move(DebugReportCallback* from) noexcept;
 
 public:
+        VULKAN_HANDLE_SPECIAL_FUNCTIONS(DebugReportCallback)
+
         DebugReportCallback() = default;
         DebugReportCallback(VkInstance instance, const VkDebugReportCallbackCreateInfoEXT& create_info);
-        ~DebugReportCallback();
-
-        DebugReportCallback(const DebugReportCallback&) = delete;
-        DebugReportCallback& operator=(const DebugReportCallback&) = delete;
-
-        DebugReportCallback(DebugReportCallback&&) noexcept;
-        DebugReportCallback& operator=(DebugReportCallback&&) noexcept;
 
         operator VkDebugReportCallbackEXT() const& noexcept
         {
@@ -82,15 +93,10 @@ class Device final
         void move(Device* from) noexcept;
 
 public:
+        VULKAN_HANDLE_SPECIAL_FUNCTIONS(Device)
+
         Device() = default;
         Device(VkPhysicalDevice physical_device, const VkDeviceCreateInfo& create_info);
-        ~Device();
-
-        Device(const Device&) = delete;
-        Device& operator=(const Device&) = delete;
-
-        Device(Device&&) noexcept;
-        Device& operator=(Device&&) noexcept;
 
         operator VkDevice() const& noexcept
         {
@@ -108,15 +114,10 @@ class SurfaceKHR final
         void move(SurfaceKHR* from) noexcept;
 
 public:
+        VULKAN_HANDLE_SPECIAL_FUNCTIONS(SurfaceKHR)
+
         SurfaceKHR() = default;
         SurfaceKHR(VkInstance instance, const std::function<VkSurfaceKHR(VkInstance)>& create_surface);
-        ~SurfaceKHR();
-
-        SurfaceKHR(const SurfaceKHR&) = delete;
-        SurfaceKHR& operator=(const SurfaceKHR&) = delete;
-
-        SurfaceKHR(SurfaceKHR&&) noexcept;
-        SurfaceKHR& operator=(SurfaceKHR&&) noexcept;
 
         operator VkSurfaceKHR() const& noexcept
         {
@@ -134,15 +135,10 @@ class SwapchainKHR final
         void move(SwapchainKHR* from) noexcept;
 
 public:
+        VULKAN_HANDLE_SPECIAL_FUNCTIONS(SwapchainKHR)
+
         SwapchainKHR() = default;
         SwapchainKHR(VkDevice device, const VkSwapchainCreateInfoKHR& create_info);
-        ~SwapchainKHR();
-
-        SwapchainKHR(const SwapchainKHR&) = delete;
-        SwapchainKHR& operator=(const SwapchainKHR&) = delete;
-
-        SwapchainKHR(SwapchainKHR&&) noexcept;
-        SwapchainKHR& operator=(SwapchainKHR&&) noexcept;
 
         operator VkSwapchainKHR() const& noexcept
         {
@@ -160,15 +156,10 @@ class ShaderModule final
         void move(ShaderModule* from) noexcept;
 
 public:
+        VULKAN_HANDLE_SPECIAL_FUNCTIONS(ShaderModule)
+
         ShaderModule() = default;
         ShaderModule(VkDevice device, const std::span<const uint32_t>& code);
-        ~ShaderModule();
-
-        ShaderModule(const ShaderModule&) = delete;
-        ShaderModule& operator=(const ShaderModule&) = delete;
-
-        ShaderModule(ShaderModule&&) noexcept;
-        ShaderModule& operator=(ShaderModule&&) noexcept;
 
         operator VkShaderModule() const& noexcept
         {
@@ -186,15 +177,10 @@ class RenderPass final
         void move(RenderPass* from) noexcept;
 
 public:
+        VULKAN_HANDLE_SPECIAL_FUNCTIONS(RenderPass)
+
         RenderPass() = default;
         RenderPass(VkDevice device, const VkRenderPassCreateInfo& create_info);
-        ~RenderPass();
-
-        RenderPass(const RenderPass&) = delete;
-        RenderPass& operator=(const RenderPass&) = delete;
-
-        RenderPass(RenderPass&&) noexcept;
-        RenderPass& operator=(RenderPass&&) noexcept;
 
         operator VkRenderPass() const& noexcept
         {
@@ -212,15 +198,10 @@ class PipelineLayout final
         void move(PipelineLayout* from) noexcept;
 
 public:
+        VULKAN_HANDLE_SPECIAL_FUNCTIONS(PipelineLayout)
+
         PipelineLayout() = default;
         PipelineLayout(VkDevice device, const VkPipelineLayoutCreateInfo& create_info);
-        ~PipelineLayout();
-
-        PipelineLayout(const PipelineLayout&) = delete;
-        PipelineLayout& operator=(const PipelineLayout&) = delete;
-
-        PipelineLayout(PipelineLayout&&) noexcept;
-        PipelineLayout& operator=(PipelineLayout&&) noexcept;
 
         operator VkPipelineLayout() const& noexcept
         {
@@ -238,16 +219,11 @@ class Pipeline final
         void move(Pipeline* from) noexcept;
 
 public:
+        VULKAN_HANDLE_SPECIAL_FUNCTIONS(Pipeline)
+
         Pipeline() = default;
         Pipeline(VkDevice device, const VkGraphicsPipelineCreateInfo& create_info);
         Pipeline(VkDevice device, const VkComputePipelineCreateInfo& create_info);
-        ~Pipeline();
-
-        Pipeline(const Pipeline&) = delete;
-        Pipeline& operator=(const Pipeline&) = delete;
-
-        Pipeline(Pipeline&&) noexcept;
-        Pipeline& operator=(Pipeline&&) noexcept;
 
         operator VkPipeline() const& noexcept
         {
@@ -265,15 +241,10 @@ class Framebuffer final
         void move(Framebuffer* from) noexcept;
 
 public:
+        VULKAN_HANDLE_SPECIAL_FUNCTIONS(Framebuffer)
+
         Framebuffer() = default;
         Framebuffer(VkDevice device, const VkFramebufferCreateInfo& create_info);
-        ~Framebuffer();
-
-        Framebuffer(const Framebuffer&) = delete;
-        Framebuffer& operator=(const Framebuffer&) = delete;
-
-        Framebuffer(Framebuffer&&) noexcept;
-        Framebuffer& operator=(Framebuffer&&) noexcept;
 
         operator VkFramebuffer() const& noexcept
         {
@@ -291,15 +262,10 @@ class CommandPool final
         void move(CommandPool* from) noexcept;
 
 public:
+        VULKAN_HANDLE_SPECIAL_FUNCTIONS(CommandPool)
+
         CommandPool() = default;
         CommandPool(VkDevice device, const VkCommandPoolCreateInfo& create_info);
-        ~CommandPool();
-
-        CommandPool(const CommandPool&) = delete;
-        CommandPool& operator=(const CommandPool&) = delete;
-
-        CommandPool(CommandPool&&) noexcept;
-        CommandPool& operator=(CommandPool&&) noexcept;
 
         operator VkCommandPool() const& noexcept
         {
@@ -317,15 +283,10 @@ class Semaphore final
         void move(Semaphore* from) noexcept;
 
 public:
+        VULKAN_HANDLE_SPECIAL_FUNCTIONS(Semaphore)
+
         Semaphore() = default;
         explicit Semaphore(VkDevice device);
-        ~Semaphore();
-
-        Semaphore(const Semaphore&) = delete;
-        Semaphore& operator=(const Semaphore&) = delete;
-
-        Semaphore(Semaphore&&) noexcept;
-        Semaphore& operator=(Semaphore&&) noexcept;
 
         operator VkSemaphore() const& noexcept
         {
@@ -343,15 +304,10 @@ class Fence final
         void move(Fence* from) noexcept;
 
 public:
+        VULKAN_HANDLE_SPECIAL_FUNCTIONS(Fence)
+
         Fence() = default;
         Fence(VkDevice device, bool signaled);
-        ~Fence();
-
-        Fence(const Fence&) = delete;
-        Fence& operator=(const Fence&) = delete;
-
-        Fence(Fence&&) noexcept;
-        Fence& operator=(Fence&&) noexcept;
 
         operator VkFence() const& noexcept
         {
@@ -369,15 +325,10 @@ class Buffer final
         void move(Buffer* from) noexcept;
 
 public:
+        VULKAN_HANDLE_SPECIAL_FUNCTIONS(Buffer)
+
         Buffer() = default;
         Buffer(VkDevice device, const VkBufferCreateInfo& create_info);
-        ~Buffer();
-
-        Buffer(const Buffer&) = delete;
-        Buffer& operator=(const Buffer&) = delete;
-
-        Buffer(Buffer&&) noexcept;
-        Buffer& operator=(Buffer&&) noexcept;
 
         operator VkBuffer() const& noexcept
         {
@@ -400,15 +351,10 @@ class DeviceMemory final
         void move(DeviceMemory* from) noexcept;
 
 public:
+        VULKAN_HANDLE_SPECIAL_FUNCTIONS(DeviceMemory)
+
         DeviceMemory() = default;
         DeviceMemory(VkDevice device, const VkMemoryAllocateInfo& allocate_info);
-        ~DeviceMemory();
-
-        DeviceMemory(const DeviceMemory&) = delete;
-        DeviceMemory& operator=(const DeviceMemory&) = delete;
-
-        DeviceMemory(DeviceMemory&&) noexcept;
-        DeviceMemory& operator=(DeviceMemory&&) noexcept;
 
         operator VkDeviceMemory() const& noexcept
         {
@@ -432,15 +378,10 @@ class CommandBuffer final
         void move(CommandBuffer* from) noexcept;
 
 public:
+        VULKAN_HANDLE_SPECIAL_FUNCTIONS(CommandBuffer)
+
         CommandBuffer() = default;
         CommandBuffer(VkDevice device, VkCommandPool command_pool);
-        ~CommandBuffer();
-
-        CommandBuffer(const CommandBuffer&) = delete;
-        CommandBuffer& operator=(const CommandBuffer&) = delete;
-
-        CommandBuffer(CommandBuffer&&) noexcept;
-        CommandBuffer& operator=(CommandBuffer&&) noexcept;
 
         operator VkCommandBuffer() const& noexcept
         {
@@ -459,15 +400,10 @@ class CommandBuffers final
         void move(CommandBuffers* from) noexcept;
 
 public:
+        VULKAN_HANDLE_SPECIAL_FUNCTIONS(CommandBuffers)
+
         CommandBuffers() = default;
         CommandBuffers(VkDevice device, VkCommandPool command_pool, uint32_t count);
-        ~CommandBuffers();
-
-        CommandBuffers(const CommandBuffers&) = delete;
-        CommandBuffers& operator=(const CommandBuffers&) = delete;
-
-        CommandBuffers(CommandBuffers&&) noexcept;
-        CommandBuffers& operator=(CommandBuffers&&) noexcept;
 
         const VkCommandBuffer& operator[](uint32_t index) const noexcept;
         uint32_t count() const noexcept;
@@ -482,15 +418,10 @@ class DescriptorSetLayout final
         void move(DescriptorSetLayout* from) noexcept;
 
 public:
+        VULKAN_HANDLE_SPECIAL_FUNCTIONS(DescriptorSetLayout)
+
         DescriptorSetLayout() = default;
         DescriptorSetLayout(VkDevice device, const VkDescriptorSetLayoutCreateInfo& create_info);
-        ~DescriptorSetLayout();
-
-        DescriptorSetLayout(const DescriptorSetLayout&) = delete;
-        DescriptorSetLayout& operator=(const DescriptorSetLayout&) = delete;
-
-        DescriptorSetLayout(DescriptorSetLayout&&) noexcept;
-        DescriptorSetLayout& operator=(DescriptorSetLayout&&) noexcept;
 
         operator VkDescriptorSetLayout() const& noexcept
         {
@@ -508,15 +439,10 @@ class DescriptorPool final
         void move(DescriptorPool* from) noexcept;
 
 public:
+        VULKAN_HANDLE_SPECIAL_FUNCTIONS(DescriptorPool)
+
         DescriptorPool() = default;
         DescriptorPool(VkDevice device, const VkDescriptorPoolCreateInfo& create_info);
-        ~DescriptorPool();
-
-        DescriptorPool(const DescriptorPool&) = delete;
-        DescriptorPool& operator=(const DescriptorPool&) = delete;
-
-        DescriptorPool(DescriptorPool&&) noexcept;
-        DescriptorPool& operator=(DescriptorPool&&) noexcept;
 
         operator VkDescriptorPool() const& noexcept
         {
@@ -535,15 +461,10 @@ class DescriptorSet final
         void move(DescriptorSet* from) noexcept;
 
 public:
+        VULKAN_HANDLE_SPECIAL_FUNCTIONS(DescriptorSet)
+
         DescriptorSet() = default;
         DescriptorSet(VkDevice device, VkDescriptorPool descriptor_pool, VkDescriptorSetLayout descriptor_set_layout);
-        ~DescriptorSet();
-
-        DescriptorSet(const DescriptorSet&) = delete;
-        DescriptorSet& operator=(const DescriptorSet&) = delete;
-
-        DescriptorSet(DescriptorSet&&) noexcept;
-        DescriptorSet& operator=(DescriptorSet&&) noexcept;
 
         operator VkDescriptorSet() const& noexcept
         {
@@ -562,18 +483,13 @@ class DescriptorSets final
         void move(DescriptorSets* from) noexcept;
 
 public:
+        VULKAN_HANDLE_SPECIAL_FUNCTIONS(DescriptorSets)
+
         DescriptorSets() = default;
         DescriptorSets(
                 VkDevice device,
                 VkDescriptorPool descriptor_pool,
                 const std::vector<VkDescriptorSetLayout>& descriptor_set_layouts);
-        ~DescriptorSets();
-
-        DescriptorSets(const DescriptorSets&) = delete;
-        DescriptorSets& operator=(const DescriptorSets&) = delete;
-
-        DescriptorSets(DescriptorSets&&) noexcept;
-        DescriptorSets& operator=(DescriptorSets&&) noexcept;
 
         const VkDescriptorSet& operator[](uint32_t index) const noexcept;
         uint32_t count() const noexcept;
@@ -588,15 +504,10 @@ class Image final
         void move(Image* from) noexcept;
 
 public:
+        VULKAN_HANDLE_SPECIAL_FUNCTIONS(Image)
+
         Image() = default;
         Image(VkDevice device, const VkImageCreateInfo& create_info);
-        ~Image();
-
-        Image(const Image&) = delete;
-        Image& operator=(const Image&) = delete;
-
-        Image(Image&&) noexcept;
-        Image& operator=(Image&&) noexcept;
 
         operator VkImage() const& noexcept
         {
@@ -619,15 +530,10 @@ class ImageView final
         void move(ImageView* from) noexcept;
 
 public:
+        VULKAN_HANDLE_SPECIAL_FUNCTIONS(ImageView)
+
         ImageView() = default;
         ImageView(VkDevice device, const VkImageViewCreateInfo& create_info);
-        ~ImageView();
-
-        ImageView(const ImageView&) = delete;
-        ImageView& operator=(const ImageView&) = delete;
-
-        ImageView(ImageView&&) noexcept;
-        ImageView& operator=(ImageView&&) noexcept;
 
         operator VkImageView() const& noexcept
         {
@@ -645,15 +551,10 @@ class Sampler final
         void move(Sampler* from) noexcept;
 
 public:
+        VULKAN_HANDLE_SPECIAL_FUNCTIONS(Sampler)
+
         Sampler() = default;
         Sampler(VkDevice device, const VkSamplerCreateInfo& create_info);
-        ~Sampler();
-
-        Sampler(const Sampler&) = delete;
-        Sampler& operator=(const Sampler&) = delete;
-
-        Sampler(Sampler&&) noexcept;
-        Sampler& operator=(Sampler&&) noexcept;
 
         operator VkSampler() const& noexcept
         {
