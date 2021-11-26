@@ -121,7 +121,7 @@ class Impl final : public RenderBuffers, public Impl3D, public Impl2D
                 const std::span<const VkFormat>& depth_formats,
                 unsigned buffer_count,
                 VkSampleCountFlagBits sample_count,
-                const std::vector<uint32_t>& attachment_family_indices);
+                const std::vector<std::uint32_t>& attachment_family_indices);
 
         RenderBuffers3D& buffers_3d() override;
         RenderBuffers2D& buffers_2d() override;
@@ -164,7 +164,7 @@ public:
              const std::span<const VkFormat>& depth_formats,
              unsigned width,
              unsigned height,
-             const std::vector<uint32_t>& family_indices,
+             const std::vector<std::uint32_t>& family_indices,
              const vulkan::Device& device,
              int required_minimum_sample_count);
 
@@ -180,7 +180,7 @@ Impl::Impl(
         const std::span<const VkFormat>& depth_formats,
         const unsigned width,
         const unsigned height,
-        const std::vector<uint32_t>& family_indices,
+        const std::vector<std::uint32_t>& family_indices,
         const vulkan::Device& device,
         const int required_minimum_sample_count)
         : format_(color_format), width_(width), height_(height)
@@ -211,7 +211,7 @@ void Impl::create_buffers(
         const std::span<const VkFormat>& depth_formats,
         const unsigned buffer_count,
         const VkSampleCountFlagBits sample_count,
-        const std::vector<uint32_t>& family_indices)
+        const std::vector<std::uint32_t>& family_indices)
 {
         const std::vector<VkFormat> color_format = {format_};
 
@@ -397,7 +397,7 @@ std::unique_ptr<RenderBuffers> create_render_buffers(
         const std::span<const VkFormat>& depth_formats,
         const unsigned width,
         const unsigned height,
-        const std::vector<uint32_t>& family_indices,
+        const std::vector<std::uint32_t>& family_indices,
         const vulkan::Device& device,
         const int required_minimum_sample_count)
 {

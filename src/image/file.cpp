@@ -138,7 +138,7 @@ void save_image_alpha(
 
         check_size(width, height, color_format, bytes.size());
 
-        constexpr uint16_t ALPHA = 65535;
+        constexpr std::uint16_t ALPHA = 65535;
 
         QImage image(width, height, q_format);
 
@@ -277,7 +277,7 @@ void load_image_alpha(QImage* const image, const ColorFormat color_format, const
         check_size(image->width(), image->height(), color_format, bytes.size());
 
         const std::size_t pixel_size = format_pixel_size_in_bytes(color_format);
-        const std::size_t image_pixel_size = pixel_size + sizeof(uint16_t);
+        const std::size_t image_pixel_size = pixel_size + sizeof(std::uint16_t);
         ASSERT(image_pixel_size * image->width() <= static_cast<std::size_t>(image->bytesPerLine()));
 
         int width = image->width();

@@ -97,21 +97,21 @@ std::optional<double> max(const ColorFormat color_format, const std::span<const 
         switch (color_format)
         {
         case ColorFormat::R8_SRGB:
-                return max<uint8_t, 1, 0>(bytes);
+                return max<std::uint8_t, 1, 0>(bytes);
         case ColorFormat::R8G8B8_SRGB:
-                return max<uint8_t, 3, 0>(bytes);
+                return max<std::uint8_t, 3, 0>(bytes);
         case ColorFormat::R8G8B8A8_SRGB:
         case ColorFormat::R8G8B8A8_SRGB_PREMULTIPLIED:
-                return max<uint8_t, 3, 1>(bytes);
+                return max<std::uint8_t, 3, 1>(bytes);
         case ColorFormat::R16:
-                return max<uint16_t, 1, 0>(bytes);
+                return max<std::uint16_t, 1, 0>(bytes);
         case ColorFormat::R16G16B16:
         case ColorFormat::R16G16B16_SRGB:
-                return max<uint16_t, 3, 0>(bytes);
+                return max<std::uint16_t, 3, 0>(bytes);
         case ColorFormat::R16G16B16A16:
         case ColorFormat::R16G16B16A16_SRGB:
         case ColorFormat::R16G16B16A16_PREMULTIPLIED:
-                return max<uint16_t, 3, 1>(bytes);
+                return max<std::uint16_t, 3, 1>(bytes);
         case ColorFormat::R32:
                 return max<float, 1, 0>(bytes);
         case ColorFormat::R32G32B32:

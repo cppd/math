@@ -20,7 +20,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "object_handles.h"
 
 #include <src/com/error.h>
-#include <src/com/type/limit.h>
 
 #include <vulkan/vulkan.h>
 
@@ -52,11 +51,12 @@ public:
 class Queue final
 {
         VkQueue queue_ = VK_NULL_HANDLE;
-        uint32_t family_index_ = Limits<uint32_t>::max();
+        uint32_t family_index_ = -1;
 
 public:
         Queue() = default;
-        Queue(uint32_t family_index, VkQueue queue) : queue_(queue), family_index_(family_index)
+
+        Queue(const uint32_t family_index, const VkQueue queue) : queue_(queue), family_index_(family_index)
         {
         }
 
@@ -78,7 +78,7 @@ class CommandPool final
         uint32_t family_index_;
 
 public:
-        CommandPool(VkDevice device, const VkCommandPoolCreateInfo& create_info)
+        CommandPool(const VkDevice device, const VkCommandPoolCreateInfo& create_info)
                 : command_pool_(device, create_info), family_index_(create_info.queueFamilyIndex)
         {
         }
@@ -91,7 +91,6 @@ public:
 
         uint32_t family_index() const noexcept
         {
-                ASSERT(static_cast<VkCommandPool>(command_pool_) != VK_NULL_HANDLE);
                 return family_index_;
         }
 };
@@ -103,7 +102,7 @@ class Buffer final
         VkBufferUsageFlags usage_;
 
 public:
-        Buffer(VkDevice device, const VkBufferCreateInfo& create_info)
+        Buffer(const VkDevice device, const VkBufferCreateInfo& create_info)
                 : buffer_(device, create_info), size_(create_info.size), usage_(create_info.usage)
         {
         }
@@ -118,11 +117,13 @@ public:
         {
                 return buffer_.device();
         }
+
         VkDeviceSize size() const noexcept
         {
                 return size_;
         }
-        bool has_usage(VkBufferUsageFlagBits flag) const noexcept
+
+        bool has_usage(const VkBufferUsageFlagBits flag) const noexcept
         {
                 return (usage_ & flag) == flag;
         }
@@ -138,7 +139,7 @@ class Image final
         VkImageUsageFlags usage_;
 
 public:
-        Image(VkDevice device, const VkImageCreateInfo& create_info)
+        Image(const VkDevice device, const VkImageCreateInfo& create_info)
                 : image_(device, create_info),
                   format_(create_info.format),
                   extent_(create_info.extent),
@@ -158,26 +159,32 @@ public:
         {
                 return image_.device();
         }
+
         const VkFormat& format() const noexcept
         {
                 return format_;
         }
+
         const VkExtent3D& extent() const noexcept
         {
                 return extent_;
         }
+
         const VkImageType& type() const noexcept
         {
                 return type_;
         }
+
         const VkSampleCountFlagBits& sample_count() const noexcept
         {
                 return sample_count_;
         }
-        bool has_usage(VkImageUsageFlagBits flag) const noexcept
+
+        bool has_usage(const VkImageUsageFlagBits flag) const noexcept
         {
                 return (usage_ & flag) == flag;
         }
+
         const VkImageUsageFlags& usage() const noexcept
         {
                 return usage_;
@@ -193,6 +200,7 @@ class ImageView final
 
 public:
         ImageView() = default;
+
         ImageView(const Image& image, const VkImageViewCreateInfo& create_info)
                 : image_view_(image.device(), create_info),
                   format_(create_info.format),
@@ -214,11 +222,13 @@ public:
         {
                 return format_;
         }
+
         const VkSampleCountFlagBits& sample_count() const noexcept
         {
                 return sample_count_;
         }
-        bool has_usage(VkImageUsageFlagBits flag) const noexcept
+
+        bool has_usage(const VkImageUsageFlagBits flag) const noexcept
         {
                 return (usage_ & flag) == flag;
         }

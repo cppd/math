@@ -31,6 +31,7 @@ public:
         explicit ErrorException(std::string&& text) : text_(std::move(text))
         {
         }
+
         const char* what() const noexcept override
         {
                 return text_.c_str();
@@ -49,8 +50,9 @@ namespace error_implementation
 }
 
 #if !defined(RELEASE_BUILD)
-#define ASSERT(expr) \
-        (static_cast<bool>(expr) ? static_cast<void>(0) : error_implementation::error_assert(#expr, __FILE__, __LINE__))
+#define ASSERT(expr)                                    \
+        (static_cast<bool>(expr) ? static_cast<void>(0) \
+                                 : ::ns::error_implementation::error_assert(#expr, __FILE__, __LINE__))
 #else
 #define ASSERT(expr) (static_cast<void>(0))
 #endif

@@ -29,7 +29,7 @@ namespace ns
 namespace bit_reverse_implementation
 {
 // clang-format off
-inline constexpr std::array<uint8_t, 256> BIT_REVERSE_TABLE =
+inline constexpr std::array<std::uint8_t, 256> BIT_REVERSE_TABLE =
 {
         0x00, 0x80, 0x40, 0xc0, 0x20, 0xa0, 0x60, 0xe0,
         0x10, 0x90, 0x50, 0xd0, 0x30, 0xb0, 0x70, 0xf0,
@@ -81,39 +81,39 @@ constexpr T bit_reverse(const int bit_count, T v)
         return r;
 }
 
-constexpr uint8_t bit_reverse_8(uint8_t v)
+constexpr std::uint8_t bit_reverse_8(std::uint8_t v)
 {
         namespace impl = bit_reverse_implementation;
         return impl::BIT_REVERSE_TABLE[v];
 }
 
-constexpr uint16_t bit_reverse_16(uint16_t v)
+constexpr std::uint16_t bit_reverse_16(std::uint16_t v)
 {
         namespace impl = bit_reverse_implementation;
-        return (static_cast<uint16_t>(impl::BIT_REVERSE_TABLE[v & 0xff]) << 8)
-               | (static_cast<uint16_t>(impl::BIT_REVERSE_TABLE[(v >> 8) & 0xff]));
+        return (static_cast<std::uint16_t>(impl::BIT_REVERSE_TABLE[v & 0xff]) << 8)
+               | (static_cast<std::uint16_t>(impl::BIT_REVERSE_TABLE[(v >> 8) & 0xff]));
 }
 
-constexpr uint32_t bit_reverse_32(uint32_t v)
+constexpr std::uint32_t bit_reverse_32(std::uint32_t v)
 {
         namespace impl = bit_reverse_implementation;
-        return (static_cast<uint32_t>(impl::BIT_REVERSE_TABLE[v & 0xff]) << 24)
-               | (static_cast<uint32_t>(impl::BIT_REVERSE_TABLE[(v >> 8) & 0xff]) << 16)
-               | (static_cast<uint32_t>(impl::BIT_REVERSE_TABLE[(v >> 16) & 0xff]) << 8)
-               | (static_cast<uint32_t>(impl::BIT_REVERSE_TABLE[(v >> 24) & 0xff]));
+        return (static_cast<std::uint32_t>(impl::BIT_REVERSE_TABLE[v & 0xff]) << 24)
+               | (static_cast<std::uint32_t>(impl::BIT_REVERSE_TABLE[(v >> 8) & 0xff]) << 16)
+               | (static_cast<std::uint32_t>(impl::BIT_REVERSE_TABLE[(v >> 16) & 0xff]) << 8)
+               | (static_cast<std::uint32_t>(impl::BIT_REVERSE_TABLE[(v >> 24) & 0xff]));
 }
 
-constexpr uint64_t bit_reverse_64(uint64_t v)
+constexpr std::uint64_t bit_reverse_64(std::uint64_t v)
 {
         namespace impl = bit_reverse_implementation;
-        return (static_cast<uint64_t>(impl::BIT_REVERSE_TABLE[v & 0xff]) << 56)
-               | (static_cast<uint64_t>(impl::BIT_REVERSE_TABLE[(v >> 8) & 0xff]) << 48)
-               | (static_cast<uint64_t>(impl::BIT_REVERSE_TABLE[(v >> 16) & 0xff]) << 40)
-               | (static_cast<uint64_t>(impl::BIT_REVERSE_TABLE[(v >> 24) & 0xff]) << 32)
-               | (static_cast<uint64_t>(impl::BIT_REVERSE_TABLE[(v >> 32) & 0xff]) << 24)
-               | (static_cast<uint64_t>(impl::BIT_REVERSE_TABLE[(v >> 40) & 0xff]) << 16)
-               | (static_cast<uint64_t>(impl::BIT_REVERSE_TABLE[(v >> 48) & 0xff]) << 8)
-               | (static_cast<uint64_t>(impl::BIT_REVERSE_TABLE[(v >> 56) & 0xff]));
+        return (static_cast<std::uint64_t>(impl::BIT_REVERSE_TABLE[v & 0xff]) << 56)
+               | (static_cast<std::uint64_t>(impl::BIT_REVERSE_TABLE[(v >> 8) & 0xff]) << 48)
+               | (static_cast<std::uint64_t>(impl::BIT_REVERSE_TABLE[(v >> 16) & 0xff]) << 40)
+               | (static_cast<std::uint64_t>(impl::BIT_REVERSE_TABLE[(v >> 24) & 0xff]) << 32)
+               | (static_cast<std::uint64_t>(impl::BIT_REVERSE_TABLE[(v >> 32) & 0xff]) << 24)
+               | (static_cast<std::uint64_t>(impl::BIT_REVERSE_TABLE[(v >> 40) & 0xff]) << 16)
+               | (static_cast<std::uint64_t>(impl::BIT_REVERSE_TABLE[(v >> 48) & 0xff]) << 8)
+               | (static_cast<std::uint64_t>(impl::BIT_REVERSE_TABLE[(v >> 56) & 0xff]));
 }
 
 inline void create_bit_reverse_lookup_table(const int size, std::vector<int>* const data)

@@ -534,7 +534,7 @@ class Impl final
 
                 object_image_ = std::make_unique<vulkan::ImageWithMemory>(
                         instance_->device(),
-                        std::vector<uint32_t>({instance_->graphics_compute_queues()[0].family_index()}),
+                        std::vector<std::uint32_t>({instance_->graphics_compute_queues()[0].family_index()}),
                         std::vector<VkFormat>({OBJECT_IMAGE_FORMAT}), VK_SAMPLE_COUNT_1_BIT, VK_IMAGE_TYPE_2D,
                         vulkan::make_extent(render_buffers_->width(), render_buffers_->height()),
                         VK_IMAGE_USAGE_STORAGE_BIT | VK_IMAGE_USAGE_TRANSFER_DST_BIT, VK_IMAGE_LAYOUT_GENERAL,
@@ -652,7 +652,7 @@ class Impl final
 
                 swapchain_ = std::make_unique<vulkan::Swapchain>(
                         instance_->surface(), instance_->device(),
-                        std::vector<uint32_t>{
+                        std::vector<std::uint32_t>{
                                 instance_->graphics_compute_queues()[0].family_index(),
                                 instance_->presentation_queue().family_index()},
                         SWAPCHAIN_SURFACE_FORMAT, SWAPCHAIN_PREFERRED_IMAGE_COUNT, present_mode_);
@@ -662,7 +662,7 @@ class Impl final
 
         [[nodiscard]] bool render_swapchain() const
         {
-                const std::optional<uint32_t> image_index = vulkan::acquire_next_image(
+                const std::optional<std::uint32_t> image_index = vulkan::acquire_next_image(
                         instance_->device(), swapchain_->swapchain(), swapchain_image_semaphore_);
 
                 if (!image_index)

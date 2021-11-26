@@ -27,7 +27,7 @@ namespace ns::image::conv
 {
 void r8_srgb_to_r32(const std::span<const std::byte>& bytes, std::vector<float>* const floats)
 {
-        using From = uint8_t;
+        using From = std::uint8_t;
 
         const unsigned component_count = bytes.size() / sizeof(From);
         ASSERT(bytes.size() == (component_count * sizeof(From)));
@@ -50,7 +50,7 @@ void r8_srgb_to_r32(const std::span<const std::byte>& bytes, std::vector<float>*
 
 void r16_to_r32(const std::span<const std::byte>& bytes, std::vector<float>* const floats)
 {
-        using From = uint16_t;
+        using From = std::uint16_t;
 
         const unsigned component_count = bytes.size() / sizeof(From);
         ASSERT(bytes.size() == (component_count * sizeof(From)));
@@ -73,7 +73,7 @@ void r16_to_r32(const std::span<const std::byte>& bytes, std::vector<float>* con
 
 void r8g8b8_srgb_to_r32g32b32(const std::span<const std::byte>& bytes, std::vector<float>* const floats)
 {
-        using From = uint8_t;
+        using From = std::uint8_t;
 
         const unsigned component_count = bytes.size() / sizeof(From);
         ASSERT(bytes.size() == (component_count * sizeof(From)));
@@ -106,7 +106,7 @@ void r8g8b8_srgb_to_r32g32b32(const std::span<const std::byte>& bytes, std::vect
 
 void r16g16b16_to_r32g32b32(const std::span<const std::byte>& bytes, std::vector<float>* const floats)
 {
-        using From = uint16_t;
+        using From = std::uint16_t;
 
         const unsigned component_count = bytes.size() / sizeof(From);
         ASSERT(bytes.size() == (component_count * sizeof(From)));
@@ -139,7 +139,7 @@ void r16g16b16_to_r32g32b32(const std::span<const std::byte>& bytes, std::vector
 
 void r16g16b16_srgb_to_r32g32b32(const std::span<const std::byte>& bytes, std::vector<float>* const floats)
 {
-        using From = uint16_t;
+        using From = std::uint16_t;
 
         const unsigned component_count = bytes.size() / sizeof(From);
         ASSERT(bytes.size() == (component_count * sizeof(From)));
@@ -172,7 +172,7 @@ void r16g16b16_srgb_to_r32g32b32(const std::span<const std::byte>& bytes, std::v
 
 void r8g8b8a8_srgb_to_r32g32b32a32(const std::span<const std::byte>& bytes, std::vector<float>* const floats)
 {
-        using From = uint8_t;
+        using From = std::uint8_t;
 
         const unsigned component_count = bytes.size() / sizeof(From);
         ASSERT(bytes.size() == (component_count * sizeof(From)));
@@ -210,7 +210,7 @@ void r8g8b8a8_srgb_to_r32g32b32a32(const std::span<const std::byte>& bytes, std:
 
 void r16g16b16a16_to_r32g32b32a32(const std::span<const std::byte>& bytes, std::vector<float>* const floats)
 {
-        using From = uint16_t;
+        using From = std::uint16_t;
 
         const unsigned component_count = bytes.size() / sizeof(From);
         ASSERT(bytes.size() == (component_count * sizeof(From)));
@@ -248,7 +248,7 @@ void r16g16b16a16_to_r32g32b32a32(const std::span<const std::byte>& bytes, std::
 
 void r16g16b16a16_srgb_to_r32g32b32a32(const std::span<const std::byte>& bytes, std::vector<float>* const floats)
 {
-        using From = uint16_t;
+        using From = std::uint16_t;
 
         const unsigned component_count = bytes.size() / sizeof(From);
         ASSERT(bytes.size() == (component_count * sizeof(From)));
@@ -299,7 +299,7 @@ void copy(const std::span<const std::byte>& bytes, std::vector<float>* const flo
 
 void r32_to_r8_srgb(const std::vector<float>& floats, const std::span<std::byte>& bytes)
 {
-        using To = uint8_t;
+        using To = std::uint8_t;
 
         ASSERT(bytes.size() == floats.size() * sizeof(To));
 
@@ -317,7 +317,7 @@ void r32_to_r8_srgb(const std::vector<float>& floats, const std::span<std::byte>
 
 void r32_to_r16(const std::vector<float>& floats, const std::span<std::byte>& bytes)
 {
-        using To = uint16_t;
+        using To = std::uint16_t;
 
         ASSERT(bytes.size() == floats.size() * sizeof(To));
 
@@ -335,7 +335,7 @@ void r32_to_r16(const std::vector<float>& floats, const std::span<std::byte>& by
 
 void r32g32b32_to_r8g8b8_srgb(const std::vector<float>& floats, const std::span<std::byte>& bytes)
 {
-        using To = uint8_t;
+        using To = std::uint8_t;
 
         ASSERT((floats.size() % 3) == 0);
         ASSERT(bytes.size() == floats.size() * sizeof(To));
@@ -362,7 +362,7 @@ void r32g32b32_to_r8g8b8_srgb(const std::vector<float>& floats, const std::span<
 
 void r32g32b32_to_r8g8b8a8_srgb(const std::vector<float>& floats, const std::span<std::byte>& bytes)
 {
-        using To = uint8_t;
+        using To = std::uint8_t;
 
         ASSERT((floats.size() % 3) == 0);
         ASSERT(bytes.size() == (floats.size() / 3) * 4 * sizeof(To));
@@ -393,7 +393,7 @@ void r32g32b32_to_r8g8b8a8_srgb(const std::vector<float>& floats, const std::spa
 
 void r32g32b32_to_r16g16b16(const std::vector<float>& floats, const std::span<std::byte>& bytes)
 {
-        using To = uint16_t;
+        using To = std::uint16_t;
 
         ASSERT((floats.size() % 3) == 0);
         ASSERT(bytes.size() == floats.size() * sizeof(To));
@@ -420,7 +420,7 @@ void r32g32b32_to_r16g16b16(const std::vector<float>& floats, const std::span<st
 
 void r32g32b32_to_r16g16b16_srgb(const std::vector<float>& floats, const std::span<std::byte>& bytes)
 {
-        using To = uint16_t;
+        using To = std::uint16_t;
 
         ASSERT((floats.size() % 3) == 0);
         ASSERT(bytes.size() == floats.size() * sizeof(To));
@@ -447,7 +447,7 @@ void r32g32b32_to_r16g16b16_srgb(const std::vector<float>& floats, const std::sp
 
 void r32g32b32_to_r16g16b16a16(const std::vector<float>& floats, const std::span<std::byte>& bytes)
 {
-        using To = uint16_t;
+        using To = std::uint16_t;
 
         ASSERT((floats.size() % 3) == 0);
         ASSERT(bytes.size() == (floats.size() / 3) * 4 * sizeof(To));
@@ -478,7 +478,7 @@ void r32g32b32_to_r16g16b16a16(const std::vector<float>& floats, const std::span
 
 void r32g32b32_to_r16g16b16a16_srgb(const std::vector<float>& floats, const std::span<std::byte>& bytes)
 {
-        using To = uint16_t;
+        using To = std::uint16_t;
 
         ASSERT((floats.size() % 3) == 0);
         ASSERT(bytes.size() == (floats.size() / 3) * 4 * sizeof(To));
@@ -532,7 +532,7 @@ void r32g32b32_to_r32g32b32a32(const std::vector<float>& floats, const std::span
 
 void r32g32b32a32_to_r8g8b8a8_srgb(const std::vector<float>& floats, const std::span<std::byte>& bytes)
 {
-        using To = uint8_t;
+        using To = std::uint8_t;
 
         ASSERT((floats.size() % 4) == 0);
         ASSERT(bytes.size() == floats.size() * sizeof(To));
@@ -563,7 +563,7 @@ void r32g32b32a32_to_r8g8b8a8_srgb(const std::vector<float>& floats, const std::
 
 void r32g32b32a32_to_r8g8b8_srgb(const std::vector<float>& floats, const std::span<std::byte>& bytes)
 {
-        using To = uint8_t;
+        using To = std::uint8_t;
 
         ASSERT((floats.size() % 4) == 0);
         ASSERT(bytes.size() == (floats.size() / 4) * 3 * sizeof(To));
@@ -592,7 +592,7 @@ void r32g32b32a32_to_r8g8b8_srgb(const std::vector<float>& floats, const std::sp
 
 void r32g32b32a32_to_r16g16b16a16(const std::vector<float>& floats, const std::span<std::byte>& bytes)
 {
-        using To = uint16_t;
+        using To = std::uint16_t;
 
         ASSERT((floats.size() % 4) == 0);
         ASSERT(bytes.size() == floats.size() * sizeof(To));
@@ -623,7 +623,7 @@ void r32g32b32a32_to_r16g16b16a16(const std::vector<float>& floats, const std::s
 
 void r32g32b32a32_to_r16g16b16a16_srgb(const std::vector<float>& floats, const std::span<std::byte>& bytes)
 {
-        using To = uint16_t;
+        using To = std::uint16_t;
 
         ASSERT((floats.size() % 4) == 0);
         ASSERT(bytes.size() == floats.size() * sizeof(To));
@@ -654,7 +654,7 @@ void r32g32b32a32_to_r16g16b16a16_srgb(const std::vector<float>& floats, const s
 
 void r32g32b32a32_to_r16g16b16(const std::vector<float>& floats, const std::span<std::byte>& bytes)
 {
-        using To = uint16_t;
+        using To = std::uint16_t;
 
         ASSERT((floats.size() % 4) == 0);
         ASSERT(bytes.size() == (floats.size() / 4) * 3 * sizeof(To));
@@ -683,7 +683,7 @@ void r32g32b32a32_to_r16g16b16(const std::vector<float>& floats, const std::span
 
 void r32g32b32a32_to_r16g16b16_srgb(const std::vector<float>& floats, const std::span<std::byte>& bytes)
 {
-        using To = uint16_t;
+        using To = std::uint16_t;
 
         ASSERT((floats.size() % 4) == 0);
         ASSERT(bytes.size() == (floats.size() / 4) * 3 * sizeof(To));

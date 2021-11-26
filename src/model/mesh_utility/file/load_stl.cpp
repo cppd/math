@@ -39,8 +39,8 @@ namespace
 {
 static_assert(std::endian::native == std::endian::little, "Binary STL numbers must be little-endian");
 
-constexpr std::uintmax_t BINARY_HEADER_SIZE = 80 * sizeof(uint8_t);
-constexpr std::uintmax_t BINARY_NUMBER_OF_TRIANGLES_SIZE = sizeof(uint32_t);
+constexpr std::uintmax_t BINARY_HEADER_SIZE = 80 * sizeof(std::uint8_t);
+constexpr std::uintmax_t BINARY_NUMBER_OF_TRIANGLES_SIZE = sizeof(std::uint32_t);
 constexpr std::uintmax_t BINARY_BEGIN_SIZE = BINARY_HEADER_SIZE + BINARY_NUMBER_OF_TRIANGLES_SIZE;
 template <std::size_t N>
 constexpr std::uintmax_t BINARY_NORMAL_SIZE = N * sizeof(float);
@@ -55,7 +55,7 @@ bool is_binary(const std::string& data)
                 return false;
         }
 
-        uint32_t number_of_triangles;
+        std::uint32_t number_of_triangles;
         std::memcpy(&number_of_triangles, &data[BINARY_HEADER_SIZE], sizeof(number_of_triangles));
 
         const std::uintmax_t required_binary_size =
@@ -66,7 +66,7 @@ bool is_binary(const std::string& data)
                 return false;
         }
 
-        constexpr std::uintmax_t END_SIZE = sizeof(uint16_t);
+        constexpr std::uintmax_t END_SIZE = sizeof(std::uint16_t);
 
         if (data.size() > required_binary_size + END_SIZE)
         {
@@ -186,7 +186,7 @@ void read_binary_stl(
 {
         ASSERT(file_data.size() > BINARY_BEGIN_SIZE);
 
-        uint32_t facet_count;
+        std::uint32_t facet_count;
         std::memcpy(&facet_count, &file_data[BINARY_HEADER_SIZE], sizeof(facet_count));
 
         ASSERT(BINARY_BEGIN_SIZE + facet_count * (BINARY_NORMAL_SIZE<N> + BINARY_FACETS_SIZE<N>) <= file_data.size());

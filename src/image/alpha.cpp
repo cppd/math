@@ -103,7 +103,7 @@ void set_alpha(const std::span<std::byte>& bytes, const T alpha)
 
 void blend_alpha_r8g8b8a8(const std::span<std::byte>& bytes, const Vector<3, float>& rgb)
 {
-        using T = uint8_t;
+        using T = std::uint8_t;
 
         static constexpr std::size_t PIXEL_SIZE = 4 * sizeof(T);
         static constexpr T DST_ALPHA = Limits<T>::max();
@@ -154,7 +154,7 @@ void blend_alpha_r8g8b8a8(const std::span<std::byte>& bytes, const Vector<3, flo
 
 void blend_alpha_r8g8b8a8_premultiplied(const std::span<std::byte>& bytes, const Vector<3, float>& rgb)
 {
-        using T = uint8_t;
+        using T = std::uint8_t;
 
         static constexpr std::size_t PIXEL_SIZE = 4 * sizeof(T);
         static constexpr T DST_ALPHA = Limits<T>::max();
@@ -206,7 +206,7 @@ void blend_alpha_r8g8b8a8_premultiplied(const std::span<std::byte>& bytes, const
 
 void blend_alpha_r16g16b16a16(const std::span<std::byte>& bytes, const Vector<3, float>& rgb)
 {
-        using T = uint16_t;
+        using T = std::uint16_t;
 
         static constexpr std::size_t PIXEL_SIZE = 4 * sizeof(T);
         static constexpr T DST_ALPHA = Limits<T>::max();
@@ -257,7 +257,7 @@ void blend_alpha_r16g16b16a16(const std::span<std::byte>& bytes, const Vector<3,
 
 void blend_alpha_r16g16b16a16_srgb(const std::span<std::byte>& bytes, const Vector<3, float>& rgb)
 {
-        using T = uint16_t;
+        using T = std::uint16_t;
 
         static constexpr std::size_t PIXEL_SIZE = 4 * sizeof(T);
         static constexpr T DST_ALPHA = Limits<T>::max();
@@ -308,7 +308,7 @@ void blend_alpha_r16g16b16a16_srgb(const std::span<std::byte>& bytes, const Vect
 
 void blend_alpha_r16g16b16a16_premultiplied(const std::span<std::byte>& bytes, const Vector<3, float>& rgb)
 {
-        using T = uint16_t;
+        using T = std::uint16_t;
 
         static constexpr std::size_t PIXEL_SIZE = 4 * sizeof(T);
         static constexpr T DST_ALPHA = Limits<T>::max();
@@ -512,11 +512,11 @@ void set_alpha(const ColorFormat color_format, const std::span<std::byte>& bytes
         switch (color_format)
         {
         case ColorFormat::R8G8B8A8_SRGB:
-                set_alpha<uint8_t>(bytes, std::lround(alpha * Limits<uint8_t>::max()));
+                set_alpha<std::uint8_t>(bytes, std::lround(alpha * Limits<std::uint8_t>::max()));
                 return;
         case ColorFormat::R16G16B16A16:
         case ColorFormat::R16G16B16A16_SRGB:
-                set_alpha<uint16_t>(bytes, std::lround(alpha * Limits<uint16_t>::max()));
+                set_alpha<std::uint16_t>(bytes, std::lround(alpha * Limits<std::uint16_t>::max()));
                 return;
         case ColorFormat::R32G32B32A32:
                 set_alpha<float>(bytes, alpha);
@@ -550,15 +550,17 @@ Image<N> add_alpha(const Image<N>& image, float alpha)
         {
         case ColorFormat::R8G8B8_SRGB:
                 result.color_format = ColorFormat::R8G8B8A8_SRGB;
-                result.pixels = add_alpha<uint8_t>(image.pixels, std::lround(alpha * Limits<uint8_t>::max()));
+                result.pixels = add_alpha<std::uint8_t>(image.pixels, std::lround(alpha * Limits<std::uint8_t>::max()));
                 return result;
         case ColorFormat::R16G16B16:
                 result.color_format = ColorFormat::R16G16B16A16;
-                result.pixels = add_alpha<uint16_t>(image.pixels, std::lround(alpha * Limits<uint16_t>::max()));
+                result.pixels =
+                        add_alpha<std::uint16_t>(image.pixels, std::lround(alpha * Limits<std::uint16_t>::max()));
                 return result;
         case ColorFormat::R16G16B16_SRGB:
                 result.color_format = ColorFormat::R16G16B16A16_SRGB;
-                result.pixels = add_alpha<uint16_t>(image.pixels, std::lround(alpha * Limits<uint16_t>::max()));
+                result.pixels =
+                        add_alpha<std::uint16_t>(image.pixels, std::lround(alpha * Limits<std::uint16_t>::max()));
                 return result;
         case ColorFormat::R32G32B32:
                 result.color_format = ColorFormat::R32G32B32A32;
@@ -591,15 +593,15 @@ Image<N> delete_alpha(const Image<N>& image)
         {
         case ColorFormat::R8G8B8A8_SRGB:
                 result.color_format = ColorFormat::R8G8B8_SRGB;
-                result.pixels = delete_alpha<uint8_t>(image.pixels);
+                result.pixels = delete_alpha<std::uint8_t>(image.pixels);
                 return result;
         case ColorFormat::R16G16B16A16:
                 result.color_format = ColorFormat::R16G16B16;
-                result.pixels = delete_alpha<uint16_t>(image.pixels);
+                result.pixels = delete_alpha<std::uint16_t>(image.pixels);
                 return result;
         case ColorFormat::R16G16B16A16_SRGB:
                 result.color_format = ColorFormat::R16G16B16_SRGB;
-                result.pixels = delete_alpha<uint16_t>(image.pixels);
+                result.pixels = delete_alpha<std::uint16_t>(image.pixels);
                 return result;
         case ColorFormat::R32G32B32A32:
                 result.color_format = ColorFormat::R32G32B32;

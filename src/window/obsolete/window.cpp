@@ -237,7 +237,7 @@ void window_terminate()
 
 //std::vector<std::string> Window::instance_extensions()
 //{
-//        uint32_t count;
+//        std::uint32_t count;
 //        const char** extensions;
 
 //        extensions = glfwGetRequiredInstanceExtensions(&count);

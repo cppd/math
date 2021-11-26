@@ -69,14 +69,15 @@ class Bvh final
                 BoundingBox<N, T> bounds;
                 union
                 {
-                        uint32_t object_offset;
-                        uint32_t second_child_offset;
+                        std::uint32_t object_offset;
+                        std::uint32_t second_child_offset;
                 };
-                uint16_t object_count;
-                uint8_t axis;
+                std::uint16_t object_count;
+                std::uint8_t axis;
         };
 
-        static_assert(N != 3 || !std::is_same_v<float, T> || sizeof(Node) == 6 * sizeof(float) + 2 * sizeof(uint32_t));
+        static_assert(
+                N != 3 || !std::is_same_v<float, T> || sizeof(Node) == 6 * sizeof(float) + 2 * sizeof(std::uint32_t));
 
         std::vector<unsigned> object_indices_;
         std::vector<Node> nodes_;

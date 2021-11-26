@@ -28,7 +28,7 @@ namespace ns::image
 {
 namespace
 {
-static_assert(sizeof(float) == sizeof(uint32_t));
+static_assert(sizeof(float) == sizeof(std::uint32_t));
 
 [[noreturn]] void conversion_error(const ColorFormat from_format, const ColorFormat to_format)
 {

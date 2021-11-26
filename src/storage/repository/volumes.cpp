@@ -98,7 +98,7 @@ template <typename I, typename F>
 I float_to_uint(F v)
 {
         static_assert(std::is_same_v<F, float>);
-        static_assert(std::is_same_v<I, uint8_t> || std::is_same_v<I, uint16_t>);
+        static_assert(std::is_same_v<I, std::uint8_t> || std::is_same_v<I, std::uint16_t>);
         return v * F(Limits<I>::max()) + F(0.5);
 }
 
@@ -155,7 +155,7 @@ template <std::size_t N>
 std::unique_ptr<volume::Volume<N>> scalar_ellipsoid(unsigned size)
 {
         constexpr image::ColorFormat COLOR_FORMAT = image::ColorFormat::R16;
-        using Type = uint16_t;
+        using Type = std::uint16_t;
 
         static_assert(format_pixel_size_in_bytes(COLOR_FORMAT) == sizeof(Type));
 
@@ -216,7 +216,7 @@ std::unique_ptr<volume::Volume<N>> color_cube(unsigned size)
         init_volume(sizes, COLOR_FORMAT, &volume);
 
         std::array<std::uint8_t, 4> color;
-        uint8_t alpha = std::max(uint8_t(1), float_to_uint<uint8_t>(1.0f / size));
+        std::uint8_t alpha = std::max(std::uint8_t(1), float_to_uint<std::uint8_t>(1.0f / size));
         color[3] = alpha;
 
         std::byte* ptr = volume.image.pixels.data();
@@ -228,7 +228,7 @@ std::unique_ptr<volume::Volume<N>> color_cube(unsigned size)
                         for (std::size_t n = 0; n < N; ++n)
                         {
                                 float c = coordinates[n] / (1 << (n / 3));
-                                color[n % 3] = float_to_uint<uint8_t>(c);
+                                color[n % 3] = float_to_uint<std::uint8_t>(c);
                         }
                         std::memcpy(ptr, color.data(), color.size());
                         ptr += color.size();

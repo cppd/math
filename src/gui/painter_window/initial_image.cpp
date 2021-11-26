@@ -28,8 +28,8 @@ namespace ns::gui::painter_window
 {
 std::vector<std::byte> make_initial_image(const std::vector<int>& screen_size, const image::ColorFormat color_format)
 {
-        constexpr std::array<uint8_t, 4> LIGHT = {100, 150, 200, 255};
-        constexpr std::array<uint8_t, 4> DARK = {0, 0, 0, 255};
+        constexpr std::array<std::uint8_t, 4> LIGHT = {100, 150, 200, 255};
+        constexpr std::array<std::uint8_t, 4> DARK = {0, 0, 0, 255};
 
         const std::size_t pixel_size = image::format_pixel_size_in_bytes(color_format);
 

@@ -45,7 +45,7 @@ std::string lookup_table_bit_reverse()
         std::ostringstream oss;
         oss << std::hex << std::setfill('0');
         oss << "// clang-format off\n";
-        oss << "inline constexpr std::array<uint8_t, 256> BIT_REVERSE_TABLE =\n";
+        oss << "inline constexpr std::array<std::uint8_t, 256> BIT_REVERSE_TABLE =\n";
         oss << "{";
         for (int i = 0; i <= 255; ++i)
         {

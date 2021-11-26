@@ -86,7 +86,7 @@ class PainterPixels final : public Pixels, public painter::Notifier<N - 1>
 
         static constexpr image::ColorFormat COLOR_FORMAT = image::ColorFormat::R8G8B8A8_SRGB;
         static constexpr std::size_t PIXEL_SIZE = image::format_pixel_size_in_bytes(COLOR_FORMAT);
-        static constexpr uint8_t ALPHA = Limits<uint8_t>::max();
+        static constexpr std::uint8_t ALPHA = Limits<std::uint8_t>::max();
 
         static constexpr float MIN = Limits<float>::lowest();
 
@@ -122,7 +122,7 @@ class PainterPixels final : public Pixels, public painter::Notifier<N - 1>
         static void write_r8g8b8a8(std::byte* const ptr, const Vector<3, float>& rgb)
         {
                 const RGB8 rgb8 = make_rgb8(rgb);
-                const std::array<uint8_t, 4> rgba8{rgb8.red(), rgb8.green(), rgb8.blue(), ALPHA};
+                const std::array<std::uint8_t, 4> rgba8{rgb8.red(), rgb8.green(), rgb8.blue(), ALPHA};
 
                 static_assert(COLOR_FORMAT == image::ColorFormat::R8G8B8A8_SRGB);
                 static_assert(std::span(rgba8).size_bytes() == PIXEL_SIZE);
