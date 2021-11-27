@@ -84,11 +84,11 @@ VKAPI_ATTR VkBool32 VKAPI_CALL debug_callback(
 }
 }
 
-handle::DebugReportCallback create_debug_report_callback(const VkInstance instance)
+handle::DebugReportCallbackEXT create_debug_report_callback(const VkInstance instance)
 {
         if (instance == VK_NULL_HANDLE)
         {
-                error("No VkInstance for DebugReportCallback");
+                error("No VkInstance for DebugReportCallbackEXT");
         }
 
         VkDebugReportCallbackCreateInfoEXT create_info = {};
@@ -104,6 +104,6 @@ handle::DebugReportCallback create_debug_report_callback(const VkInstance instan
 
         create_info.pfnCallback = debug_callback;
 
-        return handle::DebugReportCallback(instance, create_info);
+        return handle::DebugReportCallbackEXT(instance, create_info);
 }
 }

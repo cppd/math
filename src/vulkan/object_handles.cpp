@@ -45,7 +45,7 @@ Instance::Instance(const VkInstanceCreateInfo& create_info)
 
 //
 
-void DebugReportCallback::destroy() noexcept
+void DebugReportCallbackEXT::destroy() noexcept
 {
         if (callback_ != VK_NULL_HANDLE)
         {
@@ -54,7 +54,7 @@ void DebugReportCallback::destroy() noexcept
         }
 }
 
-void DebugReportCallback::move(DebugReportCallback* const from) noexcept
+void DebugReportCallbackEXT::move(DebugReportCallbackEXT* const from) noexcept
 {
         instance_ = from->instance_;
         callback_ = from->callback_;
@@ -62,7 +62,7 @@ void DebugReportCallback::move(DebugReportCallback* const from) noexcept
         from->callback_ = VK_NULL_HANDLE;
 }
 
-DebugReportCallback::DebugReportCallback(
+DebugReportCallbackEXT::DebugReportCallbackEXT(
         const VkInstance instance,
         const VkDebugReportCallbackCreateInfoEXT& create_info)
         : instance_(instance)
@@ -111,14 +111,17 @@ void SurfaceKHR::move(SurfaceKHR* const from) noexcept
 }
 
 SurfaceKHR::SurfaceKHR(const VkInstance instance, const std::function<VkSurfaceKHR(VkInstance)>& create_surface)
+        : instance_(instance)
 {
         if (instance == VK_NULL_HANDLE)
         {
                 error("No VkInstance for VkSurfaceKHR creation");
         }
         surface_ = create_surface(instance);
-        ASSERT(surface_ != VK_NULL_HANDLE);
-        instance_ = instance;
+        if (surface_ == VK_NULL_HANDLE)
+        {
+                error("VkSurfaceKHR not created");
+        }
 }
 
 //
@@ -479,17 +482,6 @@ CommandBuffers::CommandBuffers(const VkDevice device, const VkCommandPool comman
         VULKAN_CHECK(vkAllocateCommandBuffers(device, &allocate_info, command_buffers_.data()));
 }
 
-const VkCommandBuffer& CommandBuffers::operator[](const std::uint32_t index) const noexcept
-{
-        ASSERT(index < command_buffers_.size());
-        return command_buffers_[index];
-}
-
-std::uint32_t CommandBuffers::count() const noexcept
-{
-        return command_buffers_.size();
-}
-
 //
 
 void DescriptorSetLayout::destroy() noexcept
@@ -624,17 +616,6 @@ DescriptorSets::DescriptorSets(
         allocate_info.descriptorSetCount = descriptor_set_layouts.size();
         allocate_info.pSetLayouts = descriptor_set_layouts.data();
         VULKAN_CHECK(vkAllocateDescriptorSets(device, &allocate_info, descriptor_sets_.data()));
-}
-
-const VkDescriptorSet& DescriptorSets::operator[](const std::uint32_t index) const noexcept
-{
-        ASSERT(index < descriptor_sets_.size());
-        return descriptor_sets_[index];
-}
-
-std::uint32_t DescriptorSets::count() const noexcept
-{
-        return descriptor_sets_.size();
 }
 
 //
