@@ -46,9 +46,9 @@ std::string vulkan_formats_to_string(const std::vector<VkFormat>& formats)
         return s;
 }
 
-uint32_t find_extension_count()
+std::uint32_t find_extension_count()
 {
-        uint32_t extension_count;
+        std::uint32_t extension_count;
         const VkResult result = vkEnumerateInstanceExtensionProperties(nullptr, &extension_count, nullptr);
         if (result != VK_SUCCESS)
         {
@@ -57,9 +57,9 @@ uint32_t find_extension_count()
         return extension_count;
 }
 
-uint32_t find_layer_count()
+std::uint32_t find_layer_count()
 {
-        uint32_t layer_count;
+        std::uint32_t layer_count;
         const VkResult result = vkEnumerateInstanceLayerProperties(&layer_count, nullptr);
         if (result != VK_SUCCESS)
         {
@@ -71,7 +71,7 @@ uint32_t find_layer_count()
 
 std::unordered_set<std::string> supported_instance_extensions()
 {
-        uint32_t extension_count = find_extension_count();
+        std::uint32_t extension_count = find_extension_count();
         if (extension_count < 1)
         {
                 return {};
@@ -95,7 +95,7 @@ std::unordered_set<std::string> supported_instance_extensions()
 
 std::unordered_set<std::string> supported_validation_layers()
 {
-        uint32_t layer_count = find_layer_count();
+        std::uint32_t layer_count = find_layer_count();
         if (layer_count < 1)
         {
                 return {};
@@ -117,7 +117,7 @@ std::unordered_set<std::string> supported_validation_layers()
         return layer_set;
 }
 
-uint32_t supported_instance_api_version()
+std::uint32_t supported_instance_api_version()
 {
         PFN_vkEnumerateInstanceVersion f = reinterpret_cast<PFN_vkEnumerateInstanceVersion>(
                 vkGetInstanceProcAddr(nullptr, "vkEnumerateInstanceVersion"));
@@ -127,7 +127,7 @@ uint32_t supported_instance_api_version()
                 return VK_MAKE_VERSION(1, 0, 0);
         }
 
-        uint32_t api_version;
+        std::uint32_t api_version;
         const VkResult result = f(&api_version);
         if (result != VK_SUCCESS)
         {
@@ -173,9 +173,9 @@ void check_validation_layer_support(const std::vector<std::string>& required_lay
         }
 }
 
-void check_api_version(uint32_t required_api_version)
+void check_api_version(std::uint32_t required_api_version)
 {
-        uint32_t api_version = supported_instance_api_version();
+        std::uint32_t api_version = supported_instance_api_version();
 
         if (required_api_version > api_version)
         {
@@ -400,9 +400,9 @@ int sample_count_flag_to_integer(VkSampleCountFlagBits sample_count)
         error("Unknown sample count flag " + to_string(enum_to_int(sample_count)));
 }
 
-uint32_t physical_device_memory_type_index(
+std::uint32_t physical_device_memory_type_index(
         VkPhysicalDevice physical_device,
-        uint32_t memory_type_bits,
+        std::uint32_t memory_type_bits,
         VkMemoryPropertyFlags memory_property_flags)
 {
         ASSERT(physical_device != VK_NULL_HANDLE);
@@ -410,14 +410,14 @@ uint32_t physical_device_memory_type_index(
         VkPhysicalDeviceMemoryProperties memory_properties;
         vkGetPhysicalDeviceMemoryProperties(physical_device, &memory_properties);
 
-        if (memory_properties.memoryTypeCount >= static_cast<unsigned>(Limits<uint32_t>::digits()))
+        if (memory_properties.memoryTypeCount >= static_cast<unsigned>(Limits<std::uint32_t>::digits()))
         {
                 error("memoryTypeCount >= memory_type_bits bit count");
         }
 
-        for (uint32_t i = 0; i < memory_properties.memoryTypeCount; ++i)
+        for (std::uint32_t i = 0; i < memory_properties.memoryTypeCount; ++i)
         {
-                if ((memory_type_bits & (static_cast<uint32_t>(1) << i))
+                if ((memory_type_bits & (static_cast<std::uint32_t>(1) << i))
                     && (memory_properties.memoryTypes[i].propertyFlags & memory_property_flags)
                                == memory_property_flags)
                 {

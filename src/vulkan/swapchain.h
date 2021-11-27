@@ -44,7 +44,7 @@ public:
         Swapchain(
                 VkSurfaceKHR surface,
                 const Device& device,
-                const std::vector<uint32_t>& family_indices,
+                const std::vector<std::uint32_t>& family_indices,
                 const VkSurfaceFormatKHR& required_surface_format,
                 int preferred_image_count,
                 PresentMode preferred_present_mode);
@@ -60,14 +60,14 @@ public:
 
         VkSwapchainKHR swapchain() const;
 
-        uint32_t width() const;
-        uint32_t height() const;
+        std::uint32_t width() const;
+        std::uint32_t height() const;
         VkFormat format() const;
         VkColorSpaceKHR color_space() const;
         const std::vector<VkImageView>& image_views() const;
 };
 
-[[nodiscard]] std::optional<uint32_t> acquire_next_image(
+[[nodiscard]] std::optional<std::uint32_t> acquire_next_image(
         VkDevice device,
         VkSwapchainKHR swapchain,
         VkSemaphore semaphore);
@@ -75,6 +75,6 @@ public:
 [[nodiscard]] bool queue_present(
         VkSemaphore wait_semaphore,
         VkSwapchainKHR swapchain,
-        uint32_t image_index,
+        std::uint32_t image_index,
         VkQueue queue);
 }

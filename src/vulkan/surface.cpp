@@ -25,9 +25,9 @@ namespace ns::vulkan
 {
 namespace
 {
-uint32_t find_format_count(VkPhysicalDevice physical_device, VkSurfaceKHR surface)
+std::uint32_t find_format_count(VkPhysicalDevice physical_device, VkSurfaceKHR surface)
 {
-        uint32_t format_count;
+        std::uint32_t format_count;
         const VkResult result = vkGetPhysicalDeviceSurfaceFormatsKHR(physical_device, surface, &format_count, nullptr);
         if (result != VK_SUCCESS)
         {
@@ -36,9 +36,9 @@ uint32_t find_format_count(VkPhysicalDevice physical_device, VkSurfaceKHR surfac
         return format_count;
 }
 
-uint32_t find_present_mode_count(VkPhysicalDevice physical_device, VkSurfaceKHR surface)
+std::uint32_t find_present_mode_count(VkPhysicalDevice physical_device, VkSurfaceKHR surface)
 {
-        uint32_t mode_count;
+        std::uint32_t mode_count;
         const VkResult result =
                 vkGetPhysicalDeviceSurfacePresentModesKHR(physical_device, surface, &mode_count, nullptr);
         if (result != VK_SUCCESS)
@@ -50,7 +50,7 @@ uint32_t find_present_mode_count(VkPhysicalDevice physical_device, VkSurfaceKHR 
 
 std::vector<VkSurfaceFormatKHR> find_surface_formats(VkPhysicalDevice physical_device, VkSurfaceKHR surface)
 {
-        uint32_t format_count = find_format_count(physical_device, surface);
+        std::uint32_t format_count = find_format_count(physical_device, surface);
         if (format_count < 1)
         {
                 return {};
@@ -70,7 +70,7 @@ std::vector<VkSurfaceFormatKHR> find_surface_formats(VkPhysicalDevice physical_d
 
 std::vector<VkPresentModeKHR> find_present_modes(VkPhysicalDevice physical_device, VkSurfaceKHR surface)
 {
-        uint32_t mode_count = find_present_mode_count(physical_device, surface);
+        std::uint32_t mode_count = find_present_mode_count(physical_device, surface);
         if (mode_count < 1)
         {
                 return {};

@@ -27,13 +27,13 @@ std::vector<vulkan::ImageWithMemory> create_images(
         const vulkan::Queue& compute_queue,
         const std::vector<Vector2i>& sizes,
         VkFormat format,
-        uint32_t family_index,
+        std::uint32_t family_index,
         VkImageUsageFlags usage)
 {
         std::vector<vulkan::ImageWithMemory> images;
         images.reserve(sizes.size());
 
-        const std::vector<uint32_t> family_indices({compute_command_pool.family_index(), family_index});
+        const std::vector<std::uint32_t> family_indices({compute_command_pool.family_index(), family_index});
         const std::vector<VkFormat> formats({format});
         for (const Vector2i& s : sizes)
         {
@@ -49,7 +49,7 @@ std::vector<vulkan::ImageWithMemory> create_images(
 std::vector<vulkan::BufferWithMemory> create_flow_buffers(
         const vulkan::Device& device,
         const std::vector<Vector2i>& sizes,
-        uint32_t family_index)
+        std::uint32_t family_index)
 {
         std::vector<vulkan::BufferWithMemory> buffers;
         if (sizes.size() <= 1)
@@ -58,7 +58,7 @@ std::vector<vulkan::BufferWithMemory> create_flow_buffers(
         }
         buffers.reserve(sizes.size() - 1);
 
-        const std::vector<uint32_t> family_indices({family_index});
+        const std::vector<std::uint32_t> family_indices({family_index});
         for (std::size_t i = 1; i < sizes.size(); ++i)
         {
                 const std::size_t buffer_size = sizeof(Vector2f) * sizes[i][0] * sizes[i][1];
@@ -116,7 +116,7 @@ std::vector<SobelMemory> create_sobel_memory(
 std::vector<FlowMemory> create_flow_memory(
         const vulkan::Device& device,
         VkDescriptorSetLayout descriptor_set_layout,
-        uint32_t family_index,
+        std::uint32_t family_index,
         VkSampler sampler,
         const std::vector<Vector2i>& sizes,
         const std::vector<const vulkan::Buffer*>& flow_buffers,
@@ -147,7 +147,7 @@ std::vector<FlowMemory> create_flow_memory(
                 return i - 1; // buffers start at level 1
         };
 
-        const std::vector<uint32_t> family_indices{family_index};
+        const std::vector<std::uint32_t> family_indices{family_index};
 
         std::vector<FlowMemory> flow_memory;
 

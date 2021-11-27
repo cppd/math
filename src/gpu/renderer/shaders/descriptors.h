@@ -30,7 +30,7 @@ class CommonConstants final : public vulkan::SpecializationConstant
 {
         struct Data
         {
-                uint32_t transparency_drawing;
+                std::uint32_t transparency_drawing;
         } data_;
 
         std::vector<VkSpecializationMapEntry> entries_;

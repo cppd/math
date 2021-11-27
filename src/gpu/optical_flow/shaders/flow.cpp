@@ -115,11 +115,11 @@ std::vector<VkDescriptorSetLayoutBinding> FlowMemory::descriptor_set_layout_bind
 FlowMemory::FlowMemory(
         const vulkan::Device& device,
         VkDescriptorSetLayout descriptor_set_layout,
-        const std::vector<uint32_t>& family_indices)
+        const std::vector<std::uint32_t>& family_indices)
         : descriptors_(device, 2, descriptor_set_layout, descriptor_set_layout_bindings())
 {
         std::vector<std::variant<VkDescriptorBufferInfo, VkDescriptorImageInfo>> infos;
-        std::vector<uint32_t> bindings;
+        std::vector<std::uint32_t> bindings;
 
         {
                 uniform_buffers_.emplace_back(
@@ -323,10 +323,10 @@ FlowConstant::FlowConstant()
 }
 
 void FlowConstant::set(
-        uint32_t local_size_x,
-        uint32_t local_size_y,
-        int32_t radius,
-        int32_t max_iteration_count,
+        std::uint32_t local_size_x,
+        std::uint32_t local_size_y,
+        std::int32_t radius,
+        std::int32_t max_iteration_count,
         float stop_move_square,
         float min_determinant)
 {
@@ -388,10 +388,10 @@ VkPipeline FlowProgram::pipeline() const
 }
 
 void FlowProgram::create_pipeline(
-        uint32_t local_size_x,
-        uint32_t local_size_y,
-        int32_t radius,
-        int32_t max_iteration_count,
+        std::uint32_t local_size_x,
+        std::uint32_t local_size_y,
+        std::int32_t radius,
+        std::int32_t max_iteration_count,
         float stop_move_square,
         float min_determinant)
 {

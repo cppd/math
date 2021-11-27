@@ -157,7 +157,7 @@ class Impl final : public Compute
                 const Region<2, int>& rectangle,
                 const vulkan::Buffer& points_buffer,
                 const vulkan::Buffer& point_count_buffer,
-                uint32_t family_index) override
+                std::uint32_t family_index) override
         {
                 ASSERT(thread_id_ == std::this_thread::get_id());
 
@@ -168,16 +168,16 @@ class Impl final : public Compute
                 ASSERT(rectangle.x1() <= static_cast<int>(objects.image().extent().width));
                 ASSERT(rectangle.y1() <= static_cast<int>(objects.image().extent().height));
 
-                ASSERT(points_buffer.size() == (2 * rectangle.height() + 1) * (2 * sizeof(int32_t)));
-                ASSERT(point_count_buffer.size() >= sizeof(int32_t));
+                ASSERT(points_buffer.size() == (2 * rectangle.height() + 1) * (2 * sizeof(std::int32_t)));
+                ASSERT(point_count_buffer.size() >= sizeof(std::int32_t));
 
                 const int width = rectangle.width();
                 const int height = rectangle.height();
 
                 lines_buffer_.emplace(
                         vulkan::BufferMemoryType::DEVICE_LOCAL, instance_->device(),
-                        std::vector<uint32_t>({family_index}), VK_BUFFER_USAGE_STORAGE_BUFFER_BIT,
-                        sizeof(int32_t) * 2 * height);
+                        std::vector<std::uint32_t>({family_index}), VK_BUFFER_USAGE_STORAGE_BUFFER_BIT,
+                        sizeof(std::int32_t) * 2 * height);
                 points_buffer_ = points_buffer;
                 point_count_buffer_ = point_count_buffer;
 

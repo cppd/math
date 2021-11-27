@@ -21,6 +21,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <src/com/error.h>
 
+#include <cstdint>
 #include <vulkan/vulkan.h>
 
 namespace ns::vulkan
@@ -51,12 +52,12 @@ public:
 class Queue final
 {
         VkQueue queue_ = VK_NULL_HANDLE;
-        uint32_t family_index_ = -1;
+        std::uint32_t family_index_ = -1;
 
 public:
         Queue() = default;
 
-        Queue(const uint32_t family_index, const VkQueue queue) : queue_(queue), family_index_(family_index)
+        Queue(const std::uint32_t family_index, const VkQueue queue) : queue_(queue), family_index_(family_index)
         {
         }
 
@@ -66,7 +67,7 @@ public:
         }
         operator VkQueue() const&& noexcept = delete;
 
-        uint32_t family_index() const noexcept
+        std::uint32_t family_index() const noexcept
         {
                 return family_index_;
         }
@@ -75,7 +76,7 @@ public:
 class CommandPool final
 {
         handle::CommandPool command_pool_;
-        uint32_t family_index_;
+        std::uint32_t family_index_;
 
 public:
         CommandPool(const VkDevice device, const VkCommandPoolCreateInfo& create_info)
@@ -89,7 +90,7 @@ public:
         }
         operator VkCommandPool() const&& noexcept = delete;
 
-        uint32_t family_index() const noexcept
+        std::uint32_t family_index() const noexcept
         {
                 return family_index_;
         }

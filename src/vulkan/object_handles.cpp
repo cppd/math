@@ -187,9 +187,9 @@ void ShaderModule::move(ShaderModule* const from) noexcept
         from->shader_module_ = VK_NULL_HANDLE;
 }
 
-ShaderModule::ShaderModule(const VkDevice device, const std::span<const uint32_t>& code)
+ShaderModule::ShaderModule(const VkDevice device, const std::span<const std::uint32_t>& code)
 {
-        static_assert(sizeof(uint32_t) == 4);
+        static_assert(sizeof(std::uint32_t) == 4);
 
         if (code.empty())
         {
@@ -567,7 +567,7 @@ void CommandBuffers::move(CommandBuffers* const from) noexcept
         from->command_buffers_ = std::vector<VkCommandBuffer>();
 }
 
-CommandBuffers::CommandBuffers(const VkDevice device, const VkCommandPool command_pool, const uint32_t count)
+CommandBuffers::CommandBuffers(const VkDevice device, const VkCommandPool command_pool, const std::uint32_t count)
         : command_buffers_(count)
 {
         VkCommandBufferAllocateInfo allocate_info = {};
@@ -593,13 +593,13 @@ CommandBuffers::CommandBuffers(const VkDevice device, const VkCommandPool comman
         command_pool_ = command_pool;
 }
 
-const VkCommandBuffer& CommandBuffers::operator[](const uint32_t index) const noexcept
+const VkCommandBuffer& CommandBuffers::operator[](const std::uint32_t index) const noexcept
 {
         ASSERT(index < command_buffers_.size());
         return command_buffers_[index];
 }
 
-uint32_t CommandBuffers::count() const noexcept
+std::uint32_t CommandBuffers::count() const noexcept
 {
         return command_buffers_.size();
 }
@@ -781,13 +781,13 @@ DescriptorSets::DescriptorSets(
         descriptor_pool_ = descriptor_pool;
 }
 
-const VkDescriptorSet& DescriptorSets::operator[](const uint32_t index) const noexcept
+const VkDescriptorSet& DescriptorSets::operator[](const std::uint32_t index) const noexcept
 {
         ASSERT(index < descriptor_sets_.size());
         return descriptor_sets_[index];
 }
 
-uint32_t DescriptorSets::count() const noexcept
+std::uint32_t DescriptorSets::count() const noexcept
 {
         return descriptor_sets_.size();
 }

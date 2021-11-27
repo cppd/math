@@ -44,7 +44,7 @@ struct DepthBuffers
 
 std::unique_ptr<DepthBuffers> create_depth_buffers(
         unsigned buffer_count,
-        const std::vector<uint32_t>& attachment_family_indices,
+        const std::vector<std::uint32_t>& attachment_family_indices,
         VkCommandPool graphics_command_pool,
         VkQueue graphics_queue,
         const vulkan::Device& device,

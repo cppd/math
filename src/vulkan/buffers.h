@@ -44,7 +44,7 @@ class BufferWithMemory final
         friend BufferMapper;
 
         VkPhysicalDevice physical_device_;
-        std::vector<uint32_t> family_indices_;
+        std::vector<std::uint32_t> family_indices_;
         Buffer buffer_;
         VkMemoryPropertyFlags memory_properties_;
         handle::DeviceMemory device_memory_;
@@ -53,7 +53,7 @@ public:
         BufferWithMemory(
                 BufferMemoryType memory_type,
                 const Device& device,
-                const std::vector<uint32_t>& family_indices,
+                const std::vector<std::uint32_t>& family_indices,
                 VkBufferUsageFlags usage,
                 VkDeviceSize size);
 
@@ -163,7 +163,7 @@ void map_and_read_from_buffer(const BufferWithMemory& buffer, T* const data)
 
 //
 
-inline VkExtent3D make_extent(const uint32_t width, const uint32_t height = 1, const uint32_t depth = 1)
+inline VkExtent3D make_extent(const std::uint32_t width, const std::uint32_t height = 1, const std::uint32_t depth = 1)
 {
         return {.width = width, .height = height, .depth = depth};
 }
@@ -171,7 +171,7 @@ inline VkExtent3D make_extent(const uint32_t width, const uint32_t height = 1, c
 class ImageWithMemory final
 {
         VkPhysicalDevice physical_device_;
-        std::vector<uint32_t> family_indices_;
+        std::vector<std::uint32_t> family_indices_;
         Image image_;
         handle::DeviceMemory device_memory_;
         ImageView image_view_;
@@ -179,7 +179,7 @@ class ImageWithMemory final
 public:
         ImageWithMemory(
                 const Device& device,
-                const std::vector<uint32_t>& family_indices,
+                const std::vector<std::uint32_t>& family_indices,
                 const std::vector<VkFormat>& formats,
                 VkSampleCountFlagBits sample_count,
                 VkImageType type,
@@ -188,7 +188,7 @@ public:
 
         ImageWithMemory(
                 const Device& device,
-                const std::vector<uint32_t>& family_indices,
+                const std::vector<std::uint32_t>& family_indices,
                 const std::vector<VkFormat>& formats,
                 VkSampleCountFlagBits sample_count,
                 VkImageType type,
@@ -238,30 +238,30 @@ class DepthImageWithMemory final
 
         DepthImageWithMemory(
                 const Device& device,
-                const std::vector<uint32_t>& family_indices,
+                const std::vector<std::uint32_t>& family_indices,
                 VkFormat format,
                 VkSampleCountFlagBits sample_count,
-                uint32_t width,
-                uint32_t height,
+                std::uint32_t width,
+                std::uint32_t height,
                 VkImageUsageFlags usage);
 
 public:
         DepthImageWithMemory(
                 const Device& device,
-                const std::vector<uint32_t>& family_indices,
+                const std::vector<std::uint32_t>& family_indices,
                 const std::vector<VkFormat>& formats,
                 VkSampleCountFlagBits sample_count,
-                uint32_t width,
-                uint32_t height,
+                std::uint32_t width,
+                std::uint32_t height,
                 VkImageUsageFlags usage);
 
         DepthImageWithMemory(
                 const Device& device,
-                const std::vector<uint32_t>& family_indices,
+                const std::vector<std::uint32_t>& family_indices,
                 const std::vector<VkFormat>& formats,
                 VkSampleCountFlagBits sample_count,
-                uint32_t width,
-                uint32_t height,
+                std::uint32_t width,
+                std::uint32_t height,
                 VkImageUsageFlags usage,
                 VkImageLayout layout,
                 VkCommandPool command_pool,

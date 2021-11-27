@@ -28,7 +28,7 @@ namespace
 vulkan::handle::DescriptorPool create_descriptor_pool(
         VkDevice device,
         const std::vector<VkDescriptorSetLayoutBinding>& descriptor_set_layout_bindings,
-        uint32_t max_sets,
+        std::uint32_t max_sets,
         VkDescriptorPoolCreateFlags flags)
 {
         std::vector<VkDescriptorPoolSize> pool_sizes;
@@ -94,9 +94,10 @@ VkWriteDescriptorSet create_write_descriptor_set(
         // write.pTexelBufferView = nullptr;
 }
 
-std::unordered_map<uint32_t, uint32_t> create_binding_map(const std::vector<VkDescriptorSetLayoutBinding>& bindings)
+std::unordered_map<std::uint32_t, std::uint32_t> create_binding_map(
+        const std::vector<VkDescriptorSetLayoutBinding>& bindings)
 {
-        std::unordered_map<uint32_t, uint32_t> map;
+        std::unordered_map<std::uint32_t, std::uint32_t> map;
         for (std::size_t index = 0; index < bindings.size(); ++index)
         {
                 if (!map.emplace(bindings[index].binding, index).second)
@@ -123,7 +124,7 @@ handle::DescriptorSetLayout create_descriptor_set_layout(
 
 Descriptors::Descriptors(
         VkDevice device,
-        uint32_t max_sets,
+        std::uint32_t max_sets,
         VkDescriptorSetLayout descriptor_set_layout,
         const std::vector<VkDescriptorSetLayoutBinding>& bindings)
         : device_(device),
@@ -142,7 +143,7 @@ Descriptors::Descriptors(
 {
 }
 
-const VkDescriptorSetLayoutBinding& Descriptors::layout_binding(uint32_t binding) const
+const VkDescriptorSetLayoutBinding& Descriptors::layout_binding(std::uint32_t binding) const
 {
         auto i = binding_map_.find(binding);
         if (i == binding_map_.cend())
@@ -160,12 +161,12 @@ VkDescriptorSetLayout Descriptors::descriptor_set_layout() const noexcept
         return descriptor_set_layout_;
 }
 
-uint32_t Descriptors::descriptor_set_count() const
+std::uint32_t Descriptors::descriptor_set_count() const
 {
         return descriptor_sets_.count();
 }
 
-const VkDescriptorSet& Descriptors::descriptor_set(uint32_t index) const
+const VkDescriptorSet& Descriptors::descriptor_set(std::uint32_t index) const
 {
         ASSERT(index < descriptor_sets_.count());
 
@@ -173,8 +174,8 @@ const VkDescriptorSet& Descriptors::descriptor_set(uint32_t index) const
 }
 
 void Descriptors::update_descriptor_set(
-        uint32_t index,
-        uint32_t binding,
+        std::uint32_t index,
+        std::uint32_t binding,
         const std::variant<VkDescriptorBufferInfo, VkDescriptorImageInfo>& info) const
 {
         ASSERT(index < descriptor_sets_.count());
@@ -186,8 +187,8 @@ void Descriptors::update_descriptor_set(
 }
 
 void Descriptors::update_descriptor_set(
-        uint32_t index,
-        const std::vector<uint32_t>& bindings,
+        std::uint32_t index,
+        const std::vector<std::uint32_t>& bindings,
         const std::vector<std::variant<VkDescriptorBufferInfo, VkDescriptorImageInfo>>& descriptor_infos) const
 {
         ASSERT(bindings.size() == descriptor_infos.size());

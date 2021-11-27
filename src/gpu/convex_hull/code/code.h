@@ -22,9 +22,9 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 namespace ns::gpu::convex_hull
 {
-std::vector<uint32_t> code_prepare_comp();
-std::vector<uint32_t> code_merge_comp();
-std::vector<uint32_t> code_filter_comp();
-std::vector<uint32_t> code_view_frag();
-std::vector<uint32_t> code_view_vert();
+std::vector<std::uint32_t> code_prepare_comp();
+std::vector<std::uint32_t> code_merge_comp();
+std::vector<std::uint32_t> code_filter_comp();
+std::vector<std::uint32_t> code_view_frag();
+std::vector<std::uint32_t> code_view_vert();
 }

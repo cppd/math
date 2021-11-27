@@ -139,7 +139,7 @@ CopyInputConstant::CopyInputConstant()
         }
 }
 
-void CopyInputConstant::set(int32_t local_size_x, int32_t local_size_y, const Region<2, int>& rectangle)
+void CopyInputConstant::set(std::int32_t local_size_x, std::int32_t local_size_y, const Region<2, int>& rectangle)
 {
         static_assert(std::is_same_v<decltype(data_.local_size_x), decltype(local_size_x)>);
         data_.local_size_x = local_size_x;
@@ -196,7 +196,10 @@ VkPipeline CopyInputProgram::pipeline() const
         return pipeline_;
 }
 
-void CopyInputProgram::create_pipeline(int32_t local_size_x, int32_t local_size_y, const Region<2, int>& rectangle)
+void CopyInputProgram::create_pipeline(
+        std::int32_t local_size_x,
+        std::int32_t local_size_y,
+        const Region<2, int>& rectangle)
 {
         constant_.set(local_size_x, local_size_y, rectangle);
 

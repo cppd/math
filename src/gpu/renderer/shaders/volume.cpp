@@ -79,7 +79,7 @@ VolumeSharedMemory::VolumeSharedMemory(
         : descriptors_(device, 1, descriptor_set_layout, descriptor_set_layout_bindings)
 {
         std::vector<std::variant<VkDescriptorBufferInfo, VkDescriptorImageInfo>> infos;
-        std::vector<uint32_t> bindings;
+        std::vector<std::uint32_t> bindings;
 
         {
                 VkDescriptorBufferInfo buffer_info = {};
@@ -122,7 +122,7 @@ void VolumeSharedMemory::set_transparency(const vulkan::ImageView& heads, const 
         ASSERT(nodes.has_usage(VK_BUFFER_USAGE_STORAGE_BUFFER_BIT));
 
         std::vector<std::variant<VkDescriptorBufferInfo, VkDescriptorImageInfo>> infos;
-        std::vector<uint32_t> bindings;
+        std::vector<std::uint32_t> bindings;
 
         {
                 VkDescriptorImageInfo image_info = {};
@@ -208,7 +208,7 @@ vulkan::Descriptors VolumeImageMemory::create(
                 vulkan::Descriptors(device, 1, descriptor_set_layout, descriptor_set_layout_bindings));
 
         std::vector<std::variant<VkDescriptorBufferInfo, VkDescriptorImageInfo>> infos;
-        std::vector<uint32_t> bindings;
+        std::vector<std::uint32_t> bindings;
 
         {
                 VkDescriptorBufferInfo buffer_info = {};

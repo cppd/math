@@ -44,8 +44,8 @@ namespace ns::gpu::renderer
 namespace
 {
 constexpr VkImageLayout DEPTH_COPY_IMAGE_LAYOUT = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
-constexpr uint32_t OBJECTS_CLEAR_VALUE = 0;
-constexpr uint32_t TRANSPARENCY_NODE_BUFFER_MAX_SIZE = (1ull << 30);
+constexpr std::uint32_t OBJECTS_CLEAR_VALUE = 0;
+constexpr std::uint32_t TRANSPARENCY_NODE_BUFFER_MAX_SIZE = (1ull << 30);
 
 vulkan::DeviceFeatures device_features()
 {
@@ -631,7 +631,7 @@ class Impl final : public Renderer
         void create_depth_image()
         {
                 depth_copy_image_ = std::make_unique<vulkan::DepthImageWithMemory>(
-                        *device_, std::vector<uint32_t>({graphics_queue_->family_index()}),
+                        *device_, std::vector<std::uint32_t>({graphics_queue_->family_index()}),
                         std::vector<VkFormat>({render_buffers_->depth_format()}), render_buffers_->sample_count(),
                         render_buffers_->width(), render_buffers_->height(),
                         VK_IMAGE_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_SAMPLED_BIT, DEPTH_COPY_IMAGE_LAYOUT,
@@ -642,7 +642,7 @@ class Impl final : public Renderer
         {
                 transparency_buffers_ = std::make_unique<TransparencyBuffers>(
                         *device_, *graphics_command_pool_, *graphics_queue_,
-                        std::vector<uint32_t>({graphics_queue_->family_index()}), render_buffers_->sample_count(),
+                        std::vector<std::uint32_t>({graphics_queue_->family_index()}), render_buffers_->sample_count(),
                         render_buffers_->width(), render_buffers_->height(), TRANSPARENCY_NODE_BUFFER_MAX_SIZE);
 
                 LOG("Transparency node count: " + to_string_digit_groups(transparency_buffers_->node_count()));

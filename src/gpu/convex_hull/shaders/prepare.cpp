@@ -140,7 +140,7 @@ PrepareConstant::PrepareConstant()
         }
 }
 
-void PrepareConstant::set(int32_t local_size_x, int32_t buffer_size, const Region<2, int>& rectangle)
+void PrepareConstant::set(std::int32_t local_size_x, std::int32_t buffer_size, const Region<2, int>& rectangle)
 {
         static_assert(std::is_same_v<decltype(data_.local_size_x), decltype(local_size_x)>);
         data_.local_size_x = local_size_x;

@@ -24,7 +24,7 @@ namespace ns::vulkan
 {
 inline constexpr int API_VERSION_MAJOR = 1;
 inline constexpr int API_VERSION_MINOR = 2;
-inline constexpr uint32_t API_VERSION = VK_MAKE_VERSION(API_VERSION_MAJOR, API_VERSION_MINOR, 0);
+inline constexpr std::uint32_t API_VERSION = VK_MAKE_VERSION(API_VERSION_MAJOR, API_VERSION_MINOR, 0);
 
 inline constexpr std::array VALIDATION_LAYERS = std::to_array<const char*>({"VK_LAYER_KHRONOS_validation"});
 }

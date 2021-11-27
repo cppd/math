@@ -64,7 +64,7 @@ public:
 
         Memory(const vulkan::Device& device,
                VkDescriptorSetLayout descriptor_set_layout,
-               const std::vector<uint32_t>& family_indices,
+               const std::vector<std::uint32_t>& family_indices,
                VkSampler sampler,
                const VkImageView& texture);
 
@@ -87,7 +87,7 @@ public:
 
 struct Vertex
 {
-        Vector<2, int32_t> window_coordinates;
+        Vector<2, std::int32_t> window_coordinates;
         Vector<2, float> texture_coordinates;
 
         static std::vector<VkVertexInputBindingDescription> binding_descriptions();

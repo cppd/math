@@ -24,7 +24,7 @@ namespace ns::gpu::renderer
 void commands_init_uint32_storage_image(
         VkCommandBuffer command_buffer,
         const vulkan::ImageWithMemory& image,
-        uint32_t value);
+        std::uint32_t value);
 
 void commands_init_buffer(
         VkCommandBuffer command_buffer,

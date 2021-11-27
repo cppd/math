@@ -60,14 +60,14 @@ class FftSharedConstant final : public vulkan::SpecializationConstant
 {
         struct Data
         {
-                uint32_t inverse;
-                uint32_t data_size;
-                uint32_t n;
-                uint32_t n_mask;
-                uint32_t n_bits;
-                uint32_t shared_size;
-                uint32_t reverse_input;
-                uint32_t group_size;
+                std::uint32_t inverse;
+                std::uint32_t data_size;
+                std::uint32_t n;
+                std::uint32_t n_mask;
+                std::uint32_t n_bits;
+                std::uint32_t shared_size;
+                std::uint32_t reverse_input;
+                std::uint32_t group_size;
         } data_;
 
         std::vector<VkSpecializationMapEntry> entries_;
@@ -81,13 +81,13 @@ public:
 
         void set(
                 bool inverse,
-                uint32_t data_size,
-                uint32_t n,
-                uint32_t n_mask,
-                uint32_t n_bits,
-                uint32_t shared_size,
+                std::uint32_t data_size,
+                std::uint32_t n,
+                std::uint32_t n_mask,
+                std::uint32_t n_bits,
+                std::uint32_t shared_size,
                 bool reverse_input,
-                uint32_t group_size);
+                std::uint32_t group_size);
 };
 
 class FftSharedProgram final
@@ -112,13 +112,13 @@ public:
         ~FftSharedProgram() = default;
 
         void create_pipelines(
-                uint32_t data_size,
-                uint32_t n,
-                uint32_t n_mask,
-                uint32_t n_bits,
-                uint32_t shared_size,
+                std::uint32_t data_size,
+                std::uint32_t n,
+                std::uint32_t n_mask,
+                std::uint32_t n_bits,
+                std::uint32_t shared_size,
                 bool reverse_input,
-                uint32_t group_size);
+                std::uint32_t group_size);
         void delete_pipelines();
 
         VkDescriptorSetLayout descriptor_set_layout() const;

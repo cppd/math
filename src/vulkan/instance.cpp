@@ -34,13 +34,13 @@ namespace ns::vulkan
 {
 namespace
 {
-constexpr uint32_t NO_FAMILY_INDEX = Limits<uint32_t>::max();
+constexpr std::uint32_t NO_FAMILY_INDEX = Limits<std::uint32_t>::max();
 
-std::unordered_map<uint32_t, uint32_t> compute_queue_count(
-        const std::vector<std::tuple<uint32_t, uint32_t>>& family_index_and_count,
+std::unordered_map<std::uint32_t, std::uint32_t> compute_queue_count(
+        const std::vector<std::tuple<std::uint32_t, std::uint32_t>>& family_index_and_count,
         const std::vector<VkQueueFamilyProperties>& queue_family_properties)
 {
-        std::unordered_map<uint32_t, uint32_t> queues;
+        std::unordered_map<std::uint32_t, std::uint32_t> queues;
         for (const auto& [index, count] : family_index_and_count)
         {
                 if (index != NO_FAMILY_INDEX)
@@ -133,8 +133,8 @@ VulkanInstance::VulkanInstance(
           transfer_command_pool_(create_transient_command_pool(device_, transfer_family_index_))
 {
         std::string s;
-        std::unordered_map<uint32_t, uint32_t> queue_count;
-        uint32_t index;
+        std::unordered_map<std::uint32_t, std::uint32_t> queue_count;
+        std::uint32_t index;
 
         index = graphics_compute_family_index_;
         s += "Graphics compute queues, family index = " + to_string(index);

@@ -103,7 +103,11 @@ BitReverseConstant::BitReverseConstant()
         }
 }
 
-void BitReverseConstant::set(uint32_t group_size, uint32_t data_size, uint32_t n_mask, uint32_t n_bits)
+void BitReverseConstant::set(
+        std::uint32_t group_size,
+        std::uint32_t data_size,
+        std::uint32_t n_mask,
+        std::uint32_t n_bits)
 {
         static_assert(std::is_same_v<decltype(data_.group_size), decltype(group_size)>);
         data_.group_size = group_size;
@@ -158,7 +162,11 @@ VkPipeline BitReverseProgram::pipeline() const
         return pipeline_;
 }
 
-void BitReverseProgram::create_pipeline(uint32_t group_size, uint32_t data_size, uint32_t n_mask, uint32_t n_bits)
+void BitReverseProgram::create_pipeline(
+        std::uint32_t group_size,
+        std::uint32_t data_size,
+        std::uint32_t n_mask,
+        std::uint32_t n_bits)
 {
         constant_.set(group_size, data_size, n_mask, n_bits);
 

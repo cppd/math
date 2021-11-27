@@ -44,10 +44,10 @@ class VulkanInstance final
 
         const PhysicalDevice physical_device_;
 
-        const uint32_t graphics_compute_family_index_;
-        const uint32_t compute_family_index_;
-        const uint32_t transfer_family_index_;
-        const uint32_t presentation_family_index_;
+        const std::uint32_t graphics_compute_family_index_;
+        const std::uint32_t compute_family_index_;
+        const std::uint32_t transfer_family_index_;
+        const std::uint32_t presentation_family_index_;
 
         const Device device_;
 

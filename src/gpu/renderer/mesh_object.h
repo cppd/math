@@ -69,7 +69,7 @@ struct MeshObject
 
 std::unique_ptr<MeshObject> create_mesh_object(
         const vulkan::Device* device,
-        const std::vector<uint32_t>& graphics_family_indices,
+        const std::vector<std::uint32_t>& graphics_family_indices,
         const vulkan::CommandPool* transfer_command_pool,
         const vulkan::Queue* transfer_queue,
         std::vector<vulkan::DescriptorSetLayoutAndBindings> mesh_layouts,

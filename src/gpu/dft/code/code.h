@@ -22,13 +22,13 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 namespace ns::gpu::dft
 {
-std::vector<uint32_t> code_fft_global_comp();
-std::vector<uint32_t> code_fft_shared_comp();
-std::vector<uint32_t> code_bit_reverse_comp();
-std::vector<uint32_t> code_copy_input_comp();
-std::vector<uint32_t> code_copy_output_comp();
-std::vector<uint32_t> code_mul_comp();
-std::vector<uint32_t> code_mul_d_comp();
-std::vector<uint32_t> code_view_vert();
-std::vector<uint32_t> code_view_frag();
+std::vector<std::uint32_t> code_fft_global_comp();
+std::vector<std::uint32_t> code_fft_shared_comp();
+std::vector<std::uint32_t> code_bit_reverse_comp();
+std::vector<std::uint32_t> code_copy_input_comp();
+std::vector<std::uint32_t> code_copy_output_comp();
+std::vector<std::uint32_t> code_mul_comp();
+std::vector<std::uint32_t> code_mul_d_comp();
+std::vector<std::uint32_t> code_view_vert();
+std::vector<std::uint32_t> code_view_frag();
 }

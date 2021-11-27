@@ -60,9 +60,9 @@ class MergeConstant final : public vulkan::SpecializationConstant
 {
         struct Data
         {
-                int32_t line_size;
-                int32_t iteration_count;
-                int32_t local_size_x;
+                std::int32_t line_size;
+                std::int32_t iteration_count;
+                std::int32_t local_size_x;
         } data_;
 
         std::vector<VkSpecializationMapEntry> entries_;
@@ -74,9 +74,9 @@ class MergeConstant final : public vulkan::SpecializationConstant
 public:
         MergeConstant();
 
-        void set_line_size(int32_t v);
-        void set_iteration_count(int32_t v);
-        void set_local_size_x(int32_t v);
+        void set_line_size(std::int32_t v);
+        void set_iteration_count(std::int32_t v);
+        void set_local_size_x(std::int32_t v);
 };
 
 class MergeProgram final

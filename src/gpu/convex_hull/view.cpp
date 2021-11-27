@@ -56,7 +56,7 @@ class Impl final : public View
         const bool sample_shading_;
         Clock::time_point start_time_ = Clock::now();
 
-        const uint32_t family_index_;
+        const std::uint32_t family_index_;
 
         const vulkan::VulkanInstance* const instance_;
         VkCommandPool graphics_command_pool_;
@@ -101,7 +101,7 @@ class Impl final : public View
 
                 points_.emplace(
                         vulkan::BufferMemoryType::DEVICE_LOCAL, instance_->device(),
-                        std::vector<uint32_t>({family_index_}), VK_BUFFER_USAGE_STORAGE_BUFFER_BIT,
+                        std::vector<std::uint32_t>({family_index_}), VK_BUFFER_USAGE_STORAGE_BUFFER_BIT,
                         points_buffer_size(rectangle.height()));
 
                 memory_.set_points(points_->buffer());

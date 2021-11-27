@@ -22,6 +22,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 namespace ns::gpu::text_writer
 {
-std::vector<uint32_t> code_view_vert();
-std::vector<uint32_t> code_view_frag();
+std::vector<std::uint32_t> code_view_vert();
+std::vector<std::uint32_t> code_view_frag();
 }

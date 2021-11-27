@@ -22,7 +22,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 namespace ns::vulkan
 {
-std::string api_version_to_string(const uint32_t api_version)
+std::string api_version_to_string(const std::uint32_t api_version)
 {
         std::ostringstream oss;
         oss << VK_VERSION_MAJOR(api_version);

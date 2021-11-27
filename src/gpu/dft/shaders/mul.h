@@ -61,14 +61,14 @@ class MulConstant final : public vulkan::SpecializationConstant
 {
         struct Data
         {
-                int32_t function_index;
-                int32_t n1;
-                int32_t n2;
-                int32_t m1;
-                int32_t m2;
-                uint32_t inverse;
-                uint32_t group_size_x;
-                uint32_t group_size_y;
+                std::int32_t function_index;
+                std::int32_t n1;
+                std::int32_t n2;
+                std::int32_t m1;
+                std::int32_t m2;
+                std::uint32_t inverse;
+                std::uint32_t group_size_x;
+                std::uint32_t group_size_y;
         } data_;
 
         std::vector<VkSpecializationMapEntry> entries_;
@@ -80,8 +80,14 @@ class MulConstant final : public vulkan::SpecializationConstant
 public:
         MulConstant();
 
-        void set_data(int32_t n1, int32_t n2, int32_t m1, int32_t m2, uint32_t group_size_x, uint32_t group_size_y);
-        void set_function(int32_t function_index, bool inverse);
+        void set_data(
+                std::int32_t n1,
+                std::int32_t n2,
+                std::int32_t m1,
+                std::int32_t m2,
+                std::uint32_t group_size_x,
+                std::uint32_t group_size_y);
+        void set_function(std::int32_t function_index, bool inverse);
 };
 
 class MulProgram final
@@ -112,12 +118,12 @@ public:
         ~MulProgram() = default;
 
         void create_pipelines(
-                int32_t n1,
-                int32_t n2,
-                int32_t m1,
-                int32_t m2,
-                uint32_t group_size_x,
-                uint32_t group_size_y);
+                std::int32_t n1,
+                std::int32_t n2,
+                std::int32_t m1,
+                std::int32_t m2,
+                std::uint32_t group_size_x,
+                std::uint32_t group_size_y);
         void delete_pipelines();
 
         VkDescriptorSetLayout descriptor_set_layout() const;

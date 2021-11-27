@@ -52,19 +52,19 @@ class ShaderBuffers final
                 alignas(sizeof(Vector4f)) Vector3f normal_color_positive;
                 alignas(sizeof(Vector4f)) Vector3f normal_color_negative;
                 float normal_length;
-                uint32_t show_materials;
-                uint32_t show_wireframe;
-                uint32_t show_shadow;
-                uint32_t show_fog;
-                uint32_t show_smooth;
+                std::uint32_t show_materials;
+                std::uint32_t show_wireframe;
+                std::uint32_t show_shadow;
+                std::uint32_t show_fog;
+                std::uint32_t show_smooth;
                 alignas(sizeof(Vector4f)) Vector3f clip_plane_color;
                 alignas(sizeof(Vector4f)) Vector4f clip_plane_equation;
-                uint32_t clip_plane_enabled;
+                std::uint32_t clip_plane_enabled;
                 alignas(sizeof(Vector4f)) Vector3f direction_to_light;
                 alignas(sizeof(Vector4f)) Vector3f direction_to_camera;
                 alignas(sizeof(Vector2f)) Vector2f viewport_center;
                 alignas(sizeof(Vector2f)) Vector2f viewport_factor;
-                uint32_t transparency_max_node_count;
+                std::uint32_t transparency_max_node_count;
         };
 
         template <typename T>
@@ -75,7 +75,7 @@ class ShaderBuffers final
         void copy_to_drawing_buffer(VkDeviceSize offset, const T& data) const;
 
 public:
-        ShaderBuffers(const vulkan::Device& device, const std::vector<uint32_t>& family_indices);
+        ShaderBuffers(const vulkan::Device& device, const std::vector<std::uint32_t>& family_indices);
 
         const vulkan::Buffer& matrices_buffer() const;
         const vulkan::Buffer& shadow_matrices_buffer() const;
@@ -86,7 +86,7 @@ public:
                 const Matrix4d& shadow_vp_matrix,
                 const Matrix4d& shadow_vp_texture_matrix) const;
 
-        void set_transparency_max_node_count(uint32_t count) const;
+        void set_transparency_max_node_count(std::uint32_t count) const;
 
         void set_lighting_color(const Vector3f& color) const;
         void set_background_color(const Vector3f& color) const;
@@ -114,15 +114,15 @@ public:
         struct Material final
         {
                 alignas(sizeof(Vector4f)) Vector3f color;
-                uint32_t use_texture;
-                uint32_t use_material;
+                std::uint32_t use_texture;
+                std::uint32_t use_material;
         };
 
         MaterialBuffer(
                 const vulkan::Device& device,
                 const vulkan::CommandPool& command_pool,
                 const vulkan::Queue& queue,
-                const std::vector<uint32_t>& family_indices,
+                const std::vector<std::uint32_t>& family_indices,
                 const Material& material);
 
         const vulkan::Buffer& buffer() const;
@@ -144,7 +144,7 @@ class MeshBuffer final
         };
 
 public:
-        MeshBuffer(const vulkan::Device& device, const std::vector<uint32_t>& family_indices);
+        MeshBuffer(const vulkan::Device& device, const std::vector<std::uint32_t>& family_indices);
 
         const vulkan::Buffer& buffer() const;
 
@@ -174,10 +174,10 @@ class VolumeBuffer final
                 float window_scale;
                 float volume_alpha_coefficient;
                 float isosurface_alpha;
-                uint32_t isosurface;
+                std::uint32_t isosurface;
                 float isovalue;
                 alignas(sizeof(Vector4f)) Vector3f color;
-                uint32_t color_volume;
+                std::uint32_t color_volume;
                 float ambient;
                 float metalness;
                 float roughness;
@@ -186,8 +186,8 @@ class VolumeBuffer final
 public:
         VolumeBuffer(
                 const vulkan::Device& device,
-                const std::vector<uint32_t>& graphics_family_indices,
-                const std::vector<uint32_t>& transfer_family_indices);
+                const std::vector<std::uint32_t>& graphics_family_indices,
+                const std::vector<std::uint32_t>& transfer_family_indices);
 
         VkBuffer buffer_coordinates() const;
         VkDeviceSize buffer_coordinates_size() const;
@@ -228,7 +228,7 @@ public:
 
 class TransparencyBuffers final
 {
-        static constexpr uint32_t HEADS_NULL_POINTER = Limits<uint32_t>::max();
+        static constexpr std::uint32_t HEADS_NULL_POINTER = Limits<std::uint32_t>::max();
 
         // (uint color_rg) + (uint color_ba) + (float depth) + (uint next)
         static constexpr unsigned long long NODE_SIZE = 16;
@@ -245,8 +245,8 @@ class TransparencyBuffers final
 
         struct Counters final
         {
-                uint32_t transparency_node_counter;
-                uint32_t transparency_overload_counter;
+                std::uint32_t transparency_node_counter;
+                std::uint32_t transparency_overload_counter;
         };
 
 public:
@@ -254,7 +254,7 @@ public:
                 const vulkan::Device& device,
                 const vulkan::CommandPool& command_pool,
                 const vulkan::Queue& queue,
-                const std::vector<uint32_t>& family_indices,
+                const std::vector<std::uint32_t>& family_indices,
                 VkSampleCountFlagBits sample_count,
                 unsigned width,
                 unsigned height,

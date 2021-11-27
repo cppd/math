@@ -104,18 +104,18 @@ VkExtent2D choose_extent(const VkSurfaceCapabilitiesKHR& capabilities)
 #endif
 }
 
-uint32_t choose_image_count(const VkSurfaceCapabilitiesKHR& capabilities, int image_count)
+std::uint32_t choose_image_count(const VkSurfaceCapabilitiesKHR& capabilities, int image_count)
 {
         if (image_count <= 0)
         {
                 error("Requested image count <= 0");
         }
 
-        if (static_cast<uint32_t>(image_count) <= capabilities.minImageCount)
+        if (static_cast<std::uint32_t>(image_count) <= capabilities.minImageCount)
         {
                 return capabilities.minImageCount;
         }
-        if (capabilities.maxImageCount > 0 && static_cast<uint32_t>(image_count) >= capabilities.maxImageCount)
+        if (capabilities.maxImageCount > 0 && static_cast<std::uint32_t>(image_count) >= capabilities.maxImageCount)
         {
                 return capabilities.maxImageCount;
         }
@@ -123,9 +123,9 @@ uint32_t choose_image_count(const VkSurfaceCapabilitiesKHR& capabilities, int im
         return image_count;
 }
 
-uint32_t find_image_count(VkDevice device, VkSwapchainKHR swapchain)
+std::uint32_t find_image_count(VkDevice device, VkSwapchainKHR swapchain)
 {
-        uint32_t image_count;
+        std::uint32_t image_count;
         const VkResult result = vkGetSwapchainImagesKHR(device, swapchain, &image_count, nullptr);
         if (result != VK_SUCCESS)
         {
@@ -136,7 +136,7 @@ uint32_t find_image_count(VkDevice device, VkSwapchainKHR swapchain)
 
 std::vector<VkImage> swapchain_images(VkDevice device, VkSwapchainKHR swapchain)
 {
-        uint32_t image_count = find_image_count(device, swapchain);
+        std::uint32_t image_count = find_image_count(device, swapchain);
         if (image_count < 1)
         {
                 return {};
@@ -159,9 +159,9 @@ vulkan::handle::SwapchainKHR create_swapchain_khr(
         VkSurfaceFormatKHR surface_format,
         VkPresentModeKHR present_mode,
         VkExtent2D extent,
-        uint32_t image_count,
+        std::uint32_t image_count,
         VkSurfaceTransformFlagBitsKHR transform,
-        std::vector<uint32_t> family_indices)
+        std::vector<std::uint32_t> family_indices)
 {
         if (family_indices.empty())
         {
@@ -246,11 +246,11 @@ std::string swapchain_info_string(const VkSurfaceFormatKHR& surface_format, int 
 }
 }
 
-std::optional<uint32_t> acquire_next_image(VkDevice device, VkSwapchainKHR swapchain, VkSemaphore semaphore)
+std::optional<std::uint32_t> acquire_next_image(VkDevice device, VkSwapchainKHR swapchain, VkSemaphore semaphore)
 {
-        static constexpr uint64_t TIMEOUT = Limits<uint64_t>::max();
+        static constexpr std::uint64_t TIMEOUT = Limits<std::uint64_t>::max();
 
-        uint32_t image_index;
+        std::uint32_t image_index;
 
         const VkResult result =
                 vkAcquireNextImageKHR(device, swapchain, TIMEOUT, semaphore, VK_NULL_HANDLE /*fence*/, &image_index);
@@ -273,7 +273,7 @@ std::optional<uint32_t> acquire_next_image(VkDevice device, VkSwapchainKHR swapc
         vulkan::vulkan_function_error("vkAcquireNextImageKHR", result);
 }
 
-bool queue_present(VkSemaphore wait_semaphore, VkSwapchainKHR swapchain, uint32_t image_index, VkQueue queue)
+bool queue_present(VkSemaphore wait_semaphore, VkSwapchainKHR swapchain, std::uint32_t image_index, VkQueue queue)
 {
         VkPresentInfoKHR present_info = {};
         present_info.sType = VK_STRUCTURE_TYPE_PRESENT_INFO_KHR;
@@ -307,7 +307,7 @@ bool queue_present(VkSemaphore wait_semaphore, VkSwapchainKHR swapchain, uint32_
 Swapchain::Swapchain(
         VkSurfaceKHR surface,
         const Device& device,
-        const std::vector<uint32_t>& family_indices,
+        const std::vector<std::uint32_t>& family_indices,
         const VkSurfaceFormatKHR& required_surface_format,
         int preferred_image_count,
         PresentMode preferred_present_mode)
@@ -325,7 +325,7 @@ Swapchain::Swapchain(
         surface_format_ = choose_surface_format(required_surface_format, surface_formats);
         extent_ = choose_extent(surface_capabilities);
         VkPresentModeKHR present_mode = choose_present_mode(present_modes, preferred_present_mode);
-        uint32_t image_count = choose_image_count(surface_capabilities, preferred_image_count);
+        std::uint32_t image_count = choose_image_count(surface_capabilities, preferred_image_count);
 
         LOG(swapchain_info_string(surface_format_, preferred_image_count, image_count));
 
@@ -354,12 +354,12 @@ VkSwapchainKHR Swapchain::swapchain() const
         return swapchain_;
 }
 
-uint32_t Swapchain::width() const
+std::uint32_t Swapchain::width() const
 {
         return extent_.width;
 }
 
-uint32_t Swapchain::height() const
+std::uint32_t Swapchain::height() const
 {
         return extent_.height;
 }

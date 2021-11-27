@@ -52,7 +52,7 @@ public:
         ViewMemory(
                 const vulkan::Device& device,
                 VkDescriptorSetLayout descriptor_set_layout,
-                const std::vector<uint32_t>& family_indices);
+                const std::vector<std::uint32_t>& family_indices);
 
         ViewMemory(const ViewMemory&) = delete;
         ViewMemory& operator=(const ViewMemory&) = delete;

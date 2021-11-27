@@ -22,7 +22,7 @@ namespace ns::gpu::renderer
 void commands_init_uint32_storage_image(
         VkCommandBuffer command_buffer,
         const vulkan::ImageWithMemory& image,
-        uint32_t value)
+        std::uint32_t value)
 {
         ASSERT(image.image().has_usage(VK_IMAGE_USAGE_STORAGE_BIT));
 

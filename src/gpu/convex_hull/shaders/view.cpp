@@ -53,11 +53,11 @@ std::vector<VkDescriptorSetLayoutBinding> ViewMemory::descriptor_set_layout_bind
 ViewMemory::ViewMemory(
         const vulkan::Device& device,
         VkDescriptorSetLayout descriptor_set_layout,
-        const std::vector<uint32_t>& family_indices)
+        const std::vector<std::uint32_t>& family_indices)
         : descriptors_(device, 1, descriptor_set_layout, descriptor_set_layout_bindings())
 {
         std::vector<std::variant<VkDescriptorBufferInfo, VkDescriptorImageInfo>> infos;
-        std::vector<uint32_t> bindings;
+        std::vector<std::uint32_t> bindings;
 
         {
                 uniform_buffers_.emplace_back(

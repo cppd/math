@@ -118,7 +118,7 @@ CopyOutputConstant::CopyOutputConstant()
         }
 }
 
-void CopyOutputConstant::set(uint32_t local_size_x, uint32_t local_size_y, float to_mul)
+void CopyOutputConstant::set(std::uint32_t local_size_x, std::uint32_t local_size_y, float to_mul)
 {
         static_assert(std::is_same_v<decltype(data_.local_size_x), decltype(local_size_x)>);
         data_.local_size_x = local_size_x;
@@ -171,7 +171,7 @@ VkPipeline CopyOutputProgram::pipeline() const
         return pipeline_;
 }
 
-void CopyOutputProgram::create_pipeline(uint32_t local_size_x, uint32_t local_size_y, float to_mul)
+void CopyOutputProgram::create_pipeline(std::uint32_t local_size_x, std::uint32_t local_size_y, float to_mul)
 {
         constant_.set(local_size_x, local_size_y, to_mul);
 

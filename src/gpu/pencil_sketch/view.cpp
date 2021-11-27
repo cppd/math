@@ -57,7 +57,7 @@ class Impl final : public View
         const vulkan::Queue* const graphics_queue_;
         // const vulkan::CommandPool* const transfer_command_pool_;
         // const vulkan::Queue* const transfer_queue_;
-        uint32_t graphics_family_index_;
+        std::uint32_t graphics_family_index_;
 
         vulkan::handle::Semaphore signal_semaphore_;
         ViewProgram program_;
@@ -100,7 +100,7 @@ class Impl final : public View
                 //
 
                 image_ = std::make_unique<vulkan::ImageWithMemory>(
-                        *device_, std::vector<uint32_t>({graphics_family_index_}),
+                        *device_, std::vector<std::uint32_t>({graphics_family_index_}),
                         std::vector<VkFormat>({IMAGE_FORMAT}), VK_SAMPLE_COUNT_1_BIT, VK_IMAGE_TYPE_2D,
                         vulkan::make_extent(rectangle.width(), rectangle.height()),
                         VK_IMAGE_USAGE_STORAGE_BIT | VK_IMAGE_USAGE_SAMPLED_BIT,
@@ -175,7 +175,8 @@ class Impl final : public View
                 vertices_.reset();
                 vertices_ = std::make_unique<vulkan::BufferWithMemory>(
                         vulkan::BufferMemoryType::DEVICE_LOCAL, *device_,
-                        std::vector<uint32_t>({graphics_queue_->family_index() /*, transfer_queue_.family_index()*/}),
+                        std::vector<std::uint32_t>(
+                                {graphics_queue_->family_index() /*, transfer_queue_.family_index()*/}),
                         VK_BUFFER_USAGE_VERTEX_BUFFER_BIT | VK_BUFFER_USAGE_TRANSFER_DST_BIT, data_size(vertices));
                 vertices_->write(
                         *graphics_command_pool_, *graphics_queue_, data_size(vertices), data_pointer(vertices));

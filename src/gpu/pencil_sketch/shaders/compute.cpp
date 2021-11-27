@@ -154,7 +154,7 @@ ComputeConstant::ComputeConstant()
         }
 }
 
-void ComputeConstant::set(int32_t local_size, const Region<2, int>& rectangle)
+void ComputeConstant::set(std::int32_t local_size, const Region<2, int>& rectangle)
 {
         static_assert(std::is_same_v<decltype(data_.local_size), decltype(local_size)>);
         data_.local_size = local_size;

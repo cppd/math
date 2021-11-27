@@ -397,7 +397,7 @@ class Impl final : public Compute
                 const std::vector<Vector2i> sizes = pyramid_sizes(
                         input.image().extent().width, input.image().extent().height, BOTTOM_IMAGE_MINIMUM_SIZE);
 
-                const uint32_t family_index = compute_command_pool_->family_index();
+                const std::uint32_t family_index = compute_command_pool_->family_index();
 
                 images_[0] = create_images(
                         *device_, *compute_command_pool_, *compute_queue_, sizes, IMAGE_FORMAT, family_index,

@@ -125,7 +125,7 @@ FilterConstant::FilterConstant()
         }
 }
 
-void FilterConstant::set_line_size(int32_t v)
+void FilterConstant::set_line_size(std::int32_t v)
 {
         static_assert(std::is_same_v<decltype(data_.line_size), decltype(v)>);
         data_.line_size = v;

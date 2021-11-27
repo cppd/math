@@ -64,8 +64,8 @@ class SobelConstant final : public vulkan::SpecializationConstant
 {
         struct Data
         {
-                uint32_t local_size_x;
-                uint32_t local_size_y;
+                std::uint32_t local_size_x;
+                std::uint32_t local_size_y;
         } data_;
 
         std::vector<VkSpecializationMapEntry> entries_;
@@ -77,7 +77,7 @@ class SobelConstant final : public vulkan::SpecializationConstant
 public:
         SobelConstant();
 
-        void set(uint32_t local_size_x, uint32_t local_size_y);
+        void set(std::uint32_t local_size_x, std::uint32_t local_size_y);
 };
 
 class SobelProgram final
@@ -100,7 +100,7 @@ public:
         SobelProgram(SobelProgram&&) = default;
         ~SobelProgram() = default;
 
-        void create_pipeline(uint32_t local_size_x, uint32_t local_size_y);
+        void create_pipeline(std::uint32_t local_size_x, std::uint32_t local_size_y);
         void delete_pipeline();
 
         VkDescriptorSetLayout descriptor_set_layout() const;

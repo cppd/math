@@ -95,9 +95,6 @@ std::string utf32_to_number_string(T code_point)
 {
         static_assert(std::is_same_v<T, char32_t>);
 
-        // C++17, 6.9.1.5
-        // Types char16_t and char32_t denote distinct types with the same size, signedness, and alignment
-        // as uint_least16_t and uint_least32_t, respectively, in <cstdint>, called the underlying types.
         std::ostringstream oss;
         oss << "U+";
         oss << std::uppercase << std::hex << std::setfill('0');

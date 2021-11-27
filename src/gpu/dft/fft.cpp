@@ -217,7 +217,7 @@ class Impl final : public Fft
 
 public:
         Impl(const vulkan::Device& device,
-             const std::vector<uint32_t>& family_indices,
+             const std::vector<std::uint32_t>& family_indices,
              const unsigned count,
              const unsigned n)
                 : n_(n)
@@ -240,8 +240,8 @@ public:
                 n_shared_ = shared_size(n, device.properties().properties_10.limits);
                 only_shared_ = n_ <= n_shared_;
 
-                const uint32_t n_mask = n - 1;
-                const uint32_t n_bits = std::bit_width(n) - 1;
+                const std::uint32_t n_mask = n - 1;
+                const std::uint32_t n_bits = std::bit_width(n) - 1;
 
                 //
 
@@ -286,7 +286,7 @@ public:
 
 std::unique_ptr<Fft> create_fft(
         const vulkan::Device& device,
-        const std::vector<uint32_t>& family_indices,
+        const std::vector<std::uint32_t>& family_indices,
         const unsigned count,
         const unsigned n)
 {

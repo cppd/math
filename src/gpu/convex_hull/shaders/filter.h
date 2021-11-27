@@ -64,7 +64,7 @@ class FilterConstant final : public vulkan::SpecializationConstant
 {
         struct Data
         {
-                int32_t line_size;
+                std::int32_t line_size;
         } data_;
 
         std::vector<VkSpecializationMapEntry> entries_;
@@ -76,7 +76,7 @@ class FilterConstant final : public vulkan::SpecializationConstant
 public:
         FilterConstant();
 
-        void set_line_size(int32_t v);
+        void set_line_size(std::int32_t v);
 };
 
 class FilterProgram final

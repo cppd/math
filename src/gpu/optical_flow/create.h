@@ -35,13 +35,13 @@ std::vector<vulkan::ImageWithMemory> create_images(
         const vulkan::Queue& compute_queue,
         const std::vector<Vector2i>& sizes,
         VkFormat format,
-        uint32_t family_index,
+        std::uint32_t family_index,
         VkImageUsageFlags usage);
 
 std::vector<vulkan::BufferWithMemory> create_flow_buffers(
         const vulkan::Device& device,
         const std::vector<Vector2i>& sizes,
-        uint32_t family_index);
+        std::uint32_t family_index);
 
 std::vector<DownsampleMemory> create_downsample_memory(
         const vulkan::Device& device,
@@ -58,7 +58,7 @@ std::vector<SobelMemory> create_sobel_memory(
 std::vector<FlowMemory> create_flow_memory(
         const vulkan::Device& device,
         VkDescriptorSetLayout descriptor_set_layout,
-        uint32_t family_index,
+        std::uint32_t family_index,
         VkSampler sampler,
         const std::vector<Vector2i>& sizes,
         const std::vector<const vulkan::Buffer*>& flow_buffers,

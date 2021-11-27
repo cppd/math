@@ -54,11 +54,11 @@ std::vector<VkDescriptorSetLayoutBinding> FftGlobalMemory::descriptor_set_layout
 FftGlobalMemory::FftGlobalMemory(
         const vulkan::Device& device,
         VkDescriptorSetLayout descriptor_set_layout,
-        const std::vector<uint32_t>& family_indices)
+        const std::vector<std::uint32_t>& family_indices)
         : descriptors_(device, 1, descriptor_set_layout, descriptor_set_layout_bindings())
 {
         std::vector<std::variant<VkDescriptorBufferInfo, VkDescriptorImageInfo>> infos;
-        std::vector<uint32_t> bindings;
+        std::vector<std::uint32_t> bindings;
 
         {
                 uniform_buffers_.emplace_back(
@@ -142,11 +142,11 @@ FftGlobalConstant::FftGlobalConstant()
         }
 }
 
-void FftGlobalConstant::set(uint32_t group_size, bool inverse, uint32_t data_size, uint32_t n)
+void FftGlobalConstant::set(std::uint32_t group_size, bool inverse, std::uint32_t data_size, std::uint32_t n)
 {
         static_assert(std::is_same_v<decltype(data_.group_size), decltype(group_size)>);
         data_.group_size = group_size;
-        static_assert(std::is_same_v<decltype(data_.inverse), uint32_t>);
+        static_assert(std::is_same_v<decltype(data_.inverse), std::uint32_t>);
         data_.inverse = inverse ? 1 : 0;
         static_assert(std::is_same_v<decltype(data_.data_size), decltype(data_size)>);
         data_.data_size = data_size;
@@ -203,7 +203,7 @@ VkPipeline FftGlobalProgram::pipeline(bool inverse) const
         return pipeline_forward_;
 }
 
-void FftGlobalProgram::create_pipelines(uint32_t group_size, uint32_t data_size, uint32_t n)
+void FftGlobalProgram::create_pipelines(std::uint32_t group_size, std::uint32_t data_size, std::uint32_t n)
 {
         {
                 constant_.set(group_size, false, data_size, n);

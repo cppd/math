@@ -22,7 +22,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 namespace ns::gpu::pencil_sketch
 {
-std::vector<uint32_t> code_compute_comp();
-std::vector<uint32_t> code_view_vert();
-std::vector<uint32_t> code_view_frag();
+std::vector<std::uint32_t> code_compute_comp();
+std::vector<std::uint32_t> code_view_vert();
+std::vector<std::uint32_t> code_view_frag();
 }

@@ -127,7 +127,7 @@ MulDConstant::MulDConstant()
         }
 }
 
-void MulDConstant::set(uint32_t group_size_x, uint32_t group_size_y, int32_t rows, int32_t columns)
+void MulDConstant::set(std::uint32_t group_size_x, std::uint32_t group_size_y, std::int32_t rows, std::int32_t columns)
 {
         static_assert(std::is_same_v<decltype(data_.group_size_x), decltype(group_size_x)>);
         data_.group_size_x = group_size_x;
@@ -189,12 +189,12 @@ VkPipeline MulDProgram::pipeline_columns() const
 }
 
 void MulDProgram::create_pipelines(
-        uint32_t n1,
-        uint32_t n2,
-        uint32_t m1,
-        uint32_t m2,
-        uint32_t group_size_x,
-        uint32_t group_size_y)
+        std::uint32_t n1,
+        std::uint32_t n2,
+        std::uint32_t m1,
+        std::uint32_t m2,
+        std::uint32_t group_size_x,
+        std::uint32_t group_size_y)
 {
         {
                 constant_.set(group_size_x, group_size_y, n2, m1);

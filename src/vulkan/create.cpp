@@ -157,7 +157,7 @@ handle::PipelineLayout create_pipeline_layout(
 
 //
 
-CommandPool create_command_pool(VkDevice device, uint32_t queue_family_index)
+CommandPool create_command_pool(VkDevice device, std::uint32_t queue_family_index)
 {
         VkCommandPoolCreateInfo create_info = {};
         create_info.sType = VK_STRUCTURE_TYPE_COMMAND_POOL_CREATE_INFO;
@@ -166,7 +166,7 @@ CommandPool create_command_pool(VkDevice device, uint32_t queue_family_index)
         return CommandPool(device, create_info);
 }
 
-CommandPool create_transient_command_pool(VkDevice device, uint32_t queue_family_index)
+CommandPool create_transient_command_pool(VkDevice device, std::uint32_t queue_family_index)
 {
         VkCommandPoolCreateInfo create_info = {};
         create_info.sType = VK_STRUCTURE_TYPE_COMMAND_POOL_CREATE_INFO;
@@ -231,8 +231,8 @@ Instance create_instance(std::vector<std::string> required_extensions)
 handle::Framebuffer create_framebuffer(
         VkDevice device,
         VkRenderPass render_pass,
-        uint32_t width,
-        uint32_t height,
+        std::uint32_t width,
+        std::uint32_t height,
         const std::vector<VkImageView>& attachments)
 {
         VkFramebufferCreateInfo create_info = {};
@@ -299,7 +299,7 @@ Buffer create_buffer(
         const VkDevice device,
         const VkDeviceSize size,
         const VkBufferUsageFlags usage,
-        std::vector<uint32_t> family_indices)
+        std::vector<std::uint32_t> family_indices)
 {
         if (size <= 0)
         {
@@ -339,7 +339,7 @@ Image create_image(
         const VkImageType type,
         const VkExtent3D extent,
         const VkFormat format,
-        std::vector<uint32_t> family_indices,
+        std::vector<std::uint32_t> family_indices,
         const VkSampleCountFlagBits samples,
         const VkImageTiling tiling,
         const VkImageUsageFlags usage)

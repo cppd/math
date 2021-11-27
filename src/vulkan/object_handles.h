@@ -17,6 +17,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
+#include <cstdint>
 #include <functional>
 #include <span>
 #include <vector>
@@ -159,7 +160,7 @@ public:
         VULKAN_HANDLE_SPECIAL_FUNCTIONS(ShaderModule)
 
         ShaderModule() = default;
-        ShaderModule(VkDevice device, const std::span<const uint32_t>& code);
+        ShaderModule(VkDevice device, const std::span<const std::uint32_t>& code);
 
         operator VkShaderModule() const& noexcept
         {
@@ -403,10 +404,10 @@ public:
         VULKAN_HANDLE_SPECIAL_FUNCTIONS(CommandBuffers)
 
         CommandBuffers() = default;
-        CommandBuffers(VkDevice device, VkCommandPool command_pool, uint32_t count);
+        CommandBuffers(VkDevice device, VkCommandPool command_pool, std::uint32_t count);
 
-        const VkCommandBuffer& operator[](uint32_t index) const noexcept;
-        uint32_t count() const noexcept;
+        const VkCommandBuffer& operator[](std::uint32_t index) const noexcept;
+        std::uint32_t count() const noexcept;
 };
 
 class DescriptorSetLayout final
@@ -491,8 +492,8 @@ public:
                 VkDescriptorPool descriptor_pool,
                 const std::vector<VkDescriptorSetLayout>& descriptor_set_layouts);
 
-        const VkDescriptorSet& operator[](uint32_t index) const noexcept;
-        uint32_t count() const noexcept;
+        const VkDescriptorSet& operator[](std::uint32_t index) const noexcept;
+        std::uint32_t count() const noexcept;
 };
 
 class Image final

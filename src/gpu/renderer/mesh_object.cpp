@@ -79,7 +79,7 @@ class Impl final : public MeshObject
         const vulkan::CommandPool* const transfer_command_pool_;
         const vulkan::Queue* const transfer_queue_;
 
-        const std::vector<uint32_t> family_indices_;
+        const std::vector<std::uint32_t> family_indices_;
 
         MeshBuffer mesh_buffer_;
         std::unordered_map<VkDescriptorSetLayout, vulkan::Descriptors> mesh_descriptor_sets_;
@@ -439,7 +439,7 @@ class Impl final : public MeshObject
 
 public:
         Impl(const vulkan::Device* const device,
-             const std::vector<uint32_t>& graphics_family_indices,
+             const std::vector<std::uint32_t>& graphics_family_indices,
              const vulkan::CommandPool* const transfer_command_pool,
              const vulkan::Queue* const transfer_queue,
              std::vector<vulkan::DescriptorSetLayoutAndBindings> mesh_layouts,
@@ -449,7 +449,7 @@ public:
                   transfer_command_pool_(transfer_command_pool),
                   transfer_queue_(transfer_queue),
                   family_indices_(sort_and_unique(
-                          merge<std::vector<uint32_t>>(graphics_family_indices, transfer_queue->family_index()))),
+                          merge<std::vector<std::uint32_t>>(graphics_family_indices, transfer_queue->family_index()))),
                   mesh_buffer_(*device, graphics_family_indices),
                   mesh_layouts_(std::move(mesh_layouts)),
                   material_layouts_(std::move(material_layouts)),
@@ -464,7 +464,7 @@ public:
 
 std::unique_ptr<MeshObject> create_mesh_object(
         const vulkan::Device* const device,
-        const std::vector<uint32_t>& graphics_family_indices,
+        const std::vector<std::uint32_t>& graphics_family_indices,
         const vulkan::CommandPool* const transfer_command_pool,
         const vulkan::Queue* const transfer_queue,
         std::vector<vulkan::DescriptorSetLayoutAndBindings> mesh_layouts,

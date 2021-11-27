@@ -62,12 +62,12 @@ class CopyInputConstant final : public vulkan::SpecializationConstant
 {
         struct Data
         {
-                int32_t local_size_x;
-                int32_t local_size_y;
-                int32_t x;
-                int32_t y;
-                int32_t width;
-                int32_t height;
+                std::int32_t local_size_x;
+                std::int32_t local_size_y;
+                std::int32_t x;
+                std::int32_t y;
+                std::int32_t width;
+                std::int32_t height;
         } data_;
 
         std::vector<VkSpecializationMapEntry> entries_;
@@ -79,7 +79,7 @@ class CopyInputConstant final : public vulkan::SpecializationConstant
 public:
         CopyInputConstant();
 
-        void set(int32_t local_size_x, int32_t local_size_y, const Region<2, int>& rectangle);
+        void set(std::int32_t local_size_x, std::int32_t local_size_y, const Region<2, int>& rectangle);
 };
 
 class CopyInputProgram final
@@ -102,7 +102,7 @@ public:
         CopyInputProgram(CopyInputProgram&&) = default;
         ~CopyInputProgram() = default;
 
-        void create_pipeline(int32_t local_size_x, int32_t local_size_y, const Region<2, int>& rectangle);
+        void create_pipeline(std::int32_t local_size_x, std::int32_t local_size_y, const Region<2, int>& rectangle);
         void delete_pipeline();
 
         VkDescriptorSetLayout descriptor_set_layout() const;

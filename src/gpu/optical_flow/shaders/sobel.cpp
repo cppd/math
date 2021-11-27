@@ -145,7 +145,7 @@ SobelConstant::SobelConstant()
         }
 }
 
-void SobelConstant::set(uint32_t local_size_x, uint32_t local_size_y)
+void SobelConstant::set(std::uint32_t local_size_x, std::uint32_t local_size_y)
 {
         static_assert(std::is_same_v<decltype(data_.local_size_x), decltype(local_size_x)>);
         data_.local_size_x = local_size_x;
@@ -196,7 +196,7 @@ VkPipeline SobelProgram::pipeline() const
         return pipeline_;
 }
 
-void SobelProgram::create_pipeline(uint32_t local_size_x, uint32_t local_size_y)
+void SobelProgram::create_pipeline(std::uint32_t local_size_x, std::uint32_t local_size_y)
 {
         constant_.set(local_size_x, local_size_y);
 

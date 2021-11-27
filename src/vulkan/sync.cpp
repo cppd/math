@@ -32,7 +32,7 @@ void reset_fence(VkDevice device, VkFence fence)
         }
 }
 
-bool wait_for_fence(VkDevice device, VkFence fence, uint64_t timeout_nanoseconds)
+bool wait_for_fence(VkDevice device, VkFence fence, std::uint64_t timeout_nanoseconds)
 {
         static constexpr VkBool32 WAIT_ALL = VK_TRUE;
 

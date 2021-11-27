@@ -60,13 +60,13 @@ public:
         const std::vector<VkQueueFamilyProperties>& queue_families() const;
         const std::unordered_set<std::string>& supported_extensions() const;
 
-        uint32_t family_index(
+        std::uint32_t family_index(
                 VkQueueFlags set_flags,
                 VkQueueFlags not_set_flags,
                 const std::vector<VkQueueFlags>& default_flags) const;
-        uint32_t presentation_family_index() const;
+        std::uint32_t presentation_family_index() const;
         bool supports_extensions(const std::vector<std::string>& extensions) const;
-        bool queue_family_supports_presentation(uint32_t index) const;
+        bool queue_family_supports_presentation(std::uint32_t index) const;
 };
 
 class Device final
@@ -74,7 +74,7 @@ class Device final
         handle::Device device_;
         const PhysicalDevice* physical_device_ = nullptr;
         DeviceFeatures features_;
-        std::unordered_map<uint32_t, std::vector<VkQueue>> queues_;
+        std::unordered_map<std::uint32_t, std::vector<VkQueue>> queues_;
 
 public:
         Device(const PhysicalDevice* physical_device, const VkDeviceCreateInfo& create_info);
@@ -90,7 +90,7 @@ public:
         const DeviceFeatures& features() const;
         const DeviceProperties& properties() const;
 
-        Queue queue(uint32_t family_index, uint32_t queue_index) const;
+        Queue queue(std::uint32_t family_index, std::uint32_t queue_index) const;
 };
 
 //
@@ -105,7 +105,7 @@ PhysicalDevice create_physical_device(
 
 Device create_device(
         const PhysicalDevice* physical_device,
-        const std::unordered_map<uint32_t, uint32_t>& queue_families,
+        const std::unordered_map<std::uint32_t, std::uint32_t>& queue_families,
         std::vector<std::string> required_extensions,
         const DeviceFeatures& required_features,
         const DeviceFeatures& optional_features);

@@ -133,15 +133,15 @@ FftSharedConstant::FftSharedConstant()
 
 void FftSharedConstant::set(
         bool inverse,
-        uint32_t data_size,
-        uint32_t n,
-        uint32_t n_mask,
-        uint32_t n_bits,
-        uint32_t shared_size,
+        std::uint32_t data_size,
+        std::uint32_t n,
+        std::uint32_t n_mask,
+        std::uint32_t n_bits,
+        std::uint32_t shared_size,
         bool reverse_input,
-        uint32_t group_size)
+        std::uint32_t group_size)
 {
-        static_assert(std::is_same_v<decltype(data_.inverse), uint32_t>);
+        static_assert(std::is_same_v<decltype(data_.inverse), std::uint32_t>);
         data_.inverse = inverse ? 1 : 0;
         static_assert(std::is_same_v<decltype(data_.data_size), decltype(data_size)>);
         data_.data_size = data_size;
@@ -153,7 +153,7 @@ void FftSharedConstant::set(
         data_.n_bits = n_bits;
         static_assert(std::is_same_v<decltype(data_.shared_size), decltype(shared_size)>);
         data_.shared_size = shared_size;
-        static_assert(std::is_same_v<decltype(data_.reverse_input), uint32_t>);
+        static_assert(std::is_same_v<decltype(data_.reverse_input), std::uint32_t>);
         data_.reverse_input = reverse_input ? 1 : 0;
         static_assert(std::is_same_v<decltype(data_.group_size), decltype(group_size)>);
         data_.group_size = group_size;
@@ -209,13 +209,13 @@ VkPipeline FftSharedProgram::pipeline(bool inverse) const
 }
 
 void FftSharedProgram::create_pipelines(
-        uint32_t data_size,
-        uint32_t n,
-        uint32_t n_mask,
-        uint32_t n_bits,
-        uint32_t shared_size,
+        std::uint32_t data_size,
+        std::uint32_t n,
+        std::uint32_t n_mask,
+        std::uint32_t n_bits,
+        std::uint32_t shared_size,
         bool reverse_input,
-        uint32_t group_size)
+        std::uint32_t group_size)
 {
         {
                 constant_.set(false, data_size, n, n_mask, n_bits, shared_size, reverse_input, group_size);

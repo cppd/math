@@ -28,5 +28,5 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 namespace ns::vulkan
 {
-std::string api_version_to_string(uint32_t api_version);
+std::string api_version_to_string(std::uint32_t api_version);
 }

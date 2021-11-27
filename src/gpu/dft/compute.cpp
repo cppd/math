@@ -304,7 +304,7 @@ class Dft final
                 buffer_barrier(command_buffer, x_d_->buffer());
         }
 
-        void create_diagonals(const uint32_t family_index)
+        void create_diagonals(const std::uint32_t family_index)
         {
                 // Compute the diagonal D in Lemma 13.2: use the radix-2 FFT
                 // 13.13, 13.26.
@@ -320,7 +320,7 @@ class Dft final
 
                 //
 
-                const std::vector<uint32_t> family_indices = {
+                const std::vector<std::uint32_t> family_indices = {
                         family_index, compute_command_pool_->family_index(), transfer_command_pool_->family_index()};
 
                 d1_fwd_.emplace(*device_, *transfer_command_pool_, *transfer_queue_, family_indices, d1_fwd);
@@ -343,7 +343,7 @@ class Dft final
         }
 
 public:
-        void create_buffers(const unsigned width, const unsigned height, const uint32_t family_index)
+        void create_buffers(const unsigned width, const unsigned height, const std::uint32_t family_index)
         {
                 ASSERT(thread_id_ == std::this_thread::get_id());
 
@@ -358,7 +358,7 @@ public:
 
                 create_diagonals(family_index);
 
-                const std::vector<uint32_t> family_indices = {family_index};
+                const std::vector<std::uint32_t> family_indices = {family_index};
 
                 x_d_.emplace(*device_, family_indices, n1_ * n2_, buffer_memory_type_);
                 buffer_.emplace(
@@ -503,7 +503,7 @@ class DftImage final : public ComputeImage
                 const vulkan::ImageWithMemory& input,
                 const vulkan::ImageWithMemory& output,
                 const Region<2, int>& rectangle,
-                const uint32_t family_index) override
+                const std::uint32_t family_index) override
         {
                 ASSERT(sampler != VK_NULL_HANDLE);
 

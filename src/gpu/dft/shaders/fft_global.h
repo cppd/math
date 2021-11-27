@@ -39,7 +39,7 @@ class FftGlobalMemory final
 
         struct Data
         {
-                uint32_t m_div_2;
+                std::uint32_t m_div_2;
                 float two_pi_div_m;
         };
 
@@ -50,7 +50,7 @@ public:
         FftGlobalMemory(
                 const vulkan::Device& device,
                 VkDescriptorSetLayout descriptor_set_layout,
-                const std::vector<uint32_t>& family_indices);
+                const std::vector<std::uint32_t>& family_indices);
 
         FftGlobalMemory(const FftGlobalMemory&) = delete;
         FftGlobalMemory& operator=(const FftGlobalMemory&) = delete;
@@ -73,10 +73,10 @@ class FftGlobalConstant final : public vulkan::SpecializationConstant
 {
         struct Data
         {
-                uint32_t group_size;
-                uint32_t inverse;
-                uint32_t data_size;
-                uint32_t n;
+                std::uint32_t group_size;
+                std::uint32_t inverse;
+                std::uint32_t data_size;
+                std::uint32_t n;
         } data_;
 
         std::vector<VkSpecializationMapEntry> entries_;
@@ -88,7 +88,7 @@ class FftGlobalConstant final : public vulkan::SpecializationConstant
 public:
         FftGlobalConstant();
 
-        void set(uint32_t group_size, bool inverse, uint32_t data_size, uint32_t n);
+        void set(std::uint32_t group_size, bool inverse, std::uint32_t data_size, std::uint32_t n);
 };
 
 class FftGlobalProgram final
@@ -112,7 +112,7 @@ public:
         FftGlobalProgram(FftGlobalProgram&&) = default;
         ~FftGlobalProgram() = default;
 
-        void create_pipelines(uint32_t group_size, uint32_t data_size, uint32_t n);
+        void create_pipelines(std::uint32_t group_size, std::uint32_t data_size, std::uint32_t n);
         void delete_pipelines();
 
         VkDescriptorSetLayout descriptor_set_layout() const;

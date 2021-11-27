@@ -97,19 +97,19 @@ MergeConstant::MergeConstant()
         }
 }
 
-void MergeConstant::set_line_size(int32_t v)
+void MergeConstant::set_line_size(std::int32_t v)
 {
         static_assert(std::is_same_v<decltype(data_.line_size), decltype(v)>);
         data_.line_size = v;
 }
 
-void MergeConstant::set_iteration_count(int32_t v)
+void MergeConstant::set_iteration_count(std::int32_t v)
 {
         static_assert(std::is_same_v<decltype(data_.iteration_count), decltype(v)>);
         data_.iteration_count = v;
 }
 
-void MergeConstant::set_local_size_x(int32_t v)
+void MergeConstant::set_local_size_x(std::int32_t v)
 {
         static_assert(std::is_same_v<decltype(data_.local_size_x), decltype(v)>);
         data_.local_size_x = v;

@@ -148,7 +148,7 @@ GrayscaleConstant::GrayscaleConstant()
         }
 }
 
-void GrayscaleConstant::set(uint32_t local_size_x, uint32_t local_size_y, const Region<2, int>& rectangle)
+void GrayscaleConstant::set(std::uint32_t local_size_x, std::uint32_t local_size_y, const Region<2, int>& rectangle)
 {
         static_assert(std::is_same_v<decltype(data_.local_size_x), decltype(local_size_x)>);
         data_.local_size_x = local_size_x;
@@ -205,7 +205,10 @@ VkPipeline GrayscaleProgram::pipeline() const
         return pipeline_;
 }
 
-void GrayscaleProgram::create_pipeline(uint32_t local_size_x, uint32_t local_size_y, const Region<2, int>& rectangle)
+void GrayscaleProgram::create_pipeline(
+        std::uint32_t local_size_x,
+        std::uint32_t local_size_y,
+        const Region<2, int>& rectangle)
 {
         constant_.set(local_size_x, local_size_y, rectangle);
 

@@ -42,7 +42,7 @@ bool find_family(
         const std::vector<VkQueueFamilyProperties>& families,
         VkQueueFlags flags,
         VkQueueFlags no_flags,
-        uint32_t* index)
+        std::uint32_t* index)
 {
         ASSERT(flags != 0);
         ASSERT((flags & no_flags) == 0);
@@ -77,7 +77,7 @@ std::vector<bool> find_presentation_support(
 
         std::vector<bool> presentation_supported(queue_families.size());
 
-        for (uint32_t i = 0; i < queue_families.size(); ++i)
+        for (std::uint32_t i = 0; i < queue_families.size(); ++i)
         {
                 if (queue_families[i].queueCount < 1)
                 {
@@ -100,7 +100,7 @@ std::vector<bool> find_presentation_support(
 
 std::vector<VkQueueFamilyProperties> find_queue_families(VkPhysicalDevice device)
 {
-        uint32_t queue_family_count;
+        std::uint32_t queue_family_count;
 
         vkGetPhysicalDeviceQueueFamilyProperties(device, &queue_family_count, nullptr);
 
@@ -116,9 +116,9 @@ std::vector<VkQueueFamilyProperties> find_queue_families(VkPhysicalDevice device
         return queue_families;
 }
 
-uint32_t find_extension_count(VkPhysicalDevice device)
+std::uint32_t find_extension_count(VkPhysicalDevice device)
 {
-        uint32_t extension_count;
+        std::uint32_t extension_count;
         const VkResult result = vkEnumerateDeviceExtensionProperties(device, nullptr, &extension_count, nullptr);
         if (result != VK_SUCCESS)
         {
@@ -129,7 +129,7 @@ uint32_t find_extension_count(VkPhysicalDevice device)
 
 std::unordered_set<std::string> find_extensions(VkPhysicalDevice device)
 {
-        uint32_t extension_count = find_extension_count(device);
+        std::uint32_t extension_count = find_extension_count(device);
         if (extension_count < 1)
         {
                 return {};
@@ -214,9 +214,9 @@ DeviceFeatures device_features(const VkDeviceCreateInfo& create_info)
         return features;
 }
 
-uint32_t find_physical_device_count(VkInstance instance)
+std::uint32_t find_physical_device_count(VkInstance instance)
 {
-        uint32_t device_count;
+        std::uint32_t device_count;
         const VkResult result = vkEnumeratePhysicalDevices(instance, &device_count, nullptr);
         if (result != VK_SUCCESS)
         {
@@ -314,12 +314,12 @@ const std::unordered_set<std::string>& PhysicalDevice::supported_extensions() co
         return supported_extensions_;
 }
 
-uint32_t PhysicalDevice::family_index(
+std::uint32_t PhysicalDevice::family_index(
         VkQueueFlags set_flags,
         VkQueueFlags not_set_flags,
         const std::vector<VkQueueFlags>& default_flags) const
 {
-        uint32_t index;
+        std::uint32_t index;
         if (set_flags && find_family(queue_families_, set_flags, not_set_flags, &index))
         {
                 return index;
@@ -335,7 +335,7 @@ uint32_t PhysicalDevice::family_index(
               + "; default " + to_string(default_flags));
 }
 
-uint32_t PhysicalDevice::presentation_family_index() const
+std::uint32_t PhysicalDevice::presentation_family_index() const
 {
         for (std::size_t i = 0; i < presentation_supported_.size(); ++i)
         {
@@ -357,7 +357,7 @@ bool PhysicalDevice::supports_extensions(const std::vector<std::string>& extensi
                 });
 }
 
-bool PhysicalDevice::queue_family_supports_presentation(uint32_t index) const
+bool PhysicalDevice::queue_family_supports_presentation(std::uint32_t index) const
 {
         ASSERT(index < presentation_supported_.size());
 
@@ -375,14 +375,14 @@ Device::Device(const PhysicalDevice* physical_device, const VkDeviceCreateInfo& 
 
         for (unsigned i = 0; i < create_info.queueCreateInfoCount; ++i)
         {
-                uint32_t family_index = create_info.pQueueCreateInfos[i].queueFamilyIndex;
-                uint32_t queue_count = create_info.pQueueCreateInfos[i].queueCount;
+                std::uint32_t family_index = create_info.pQueueCreateInfos[i].queueFamilyIndex;
+                std::uint32_t queue_count = create_info.pQueueCreateInfos[i].queueCount;
                 auto [iter, inserted] = queues_.try_emplace(family_index);
                 if (!inserted)
                 {
                         error("Non unique device queue family indices");
                 }
-                for (uint32_t queue_index = 0; queue_index < queue_count; ++queue_index)
+                for (std::uint32_t queue_index = 0; queue_index < queue_count; ++queue_index)
                 {
                         VkQueue queue;
                         vkGetDeviceQueue(device_, family_index, queue_index, &queue);
@@ -410,7 +410,7 @@ const DeviceProperties& Device::properties() const
         return physical_device_->properties();
 }
 
-Queue Device::queue(uint32_t family_index, uint32_t queue_index) const
+Queue Device::queue(std::uint32_t family_index, std::uint32_t queue_index) const
 {
         const auto iter = queues_.find(family_index);
         if (iter == queues_.cend())
@@ -428,7 +428,7 @@ Queue Device::queue(uint32_t family_index, uint32_t queue_index) const
 
 std::vector<VkPhysicalDevice> physical_devices(VkInstance instance)
 {
-        uint32_t device_count = find_physical_device_count(instance);
+        std::uint32_t device_count = find_physical_device_count(instance);
         if (device_count < 1)
         {
                 error("No Vulkan device found");
@@ -540,7 +540,7 @@ PhysicalDevice create_physical_device(
 
 Device create_device(
         const PhysicalDevice* physical_device,
-        const std::unordered_map<uint32_t, uint32_t>& queue_families,
+        const std::unordered_map<std::uint32_t, std::uint32_t>& queue_families,
         std::vector<std::string> required_extensions,
         const DeviceFeatures& required_features,
         const DeviceFeatures& optional_features)

@@ -19,65 +19,65 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 namespace ns::gpu::optical_flow
 {
-std::vector<uint32_t> code_sobel_comp()
+std::vector<std::uint32_t> code_sobel_comp()
 {
-        static constexpr uint32_t CODE[] = {
+        static constexpr std::uint32_t CODE[] = {
 #include "optical_flow_sobel.comp.spr"
         };
         return {std::cbegin(CODE), std::cend(CODE)};
 }
 
-std::vector<uint32_t> code_flow_comp()
+std::vector<std::uint32_t> code_flow_comp()
 {
-        static constexpr uint32_t CODE[] = {
+        static constexpr std::uint32_t CODE[] = {
 #include "optical_flow_flow.comp.spr"
         };
         return {std::cbegin(CODE), std::cend(CODE)};
 }
 
-std::vector<uint32_t> code_downsample_comp()
+std::vector<std::uint32_t> code_downsample_comp()
 {
-        static constexpr uint32_t CODE[] = {
+        static constexpr std::uint32_t CODE[] = {
 #include "optical_flow_downsample.comp.spr"
         };
         return {std::cbegin(CODE), std::cend(CODE)};
 }
 
-std::vector<uint32_t> code_grayscale_comp()
+std::vector<std::uint32_t> code_grayscale_comp()
 {
-        static constexpr uint32_t CODE[] = {
+        static constexpr std::uint32_t CODE[] = {
 #include "optical_flow_grayscale.comp.spr"
         };
         return {std::cbegin(CODE), std::cend(CODE)};
 }
 
-std::vector<uint32_t> code_view_vert()
+std::vector<std::uint32_t> code_view_vert()
 {
-        static constexpr uint32_t CODE[] = {
+        static constexpr std::uint32_t CODE[] = {
 #include "optical_flow_view.vert.spr"
         };
         return {std::cbegin(CODE), std::cend(CODE)};
 }
 
-std::vector<uint32_t> code_view_frag()
+std::vector<std::uint32_t> code_view_frag()
 {
-        static constexpr uint32_t CODE[] = {
+        static constexpr std::uint32_t CODE[] = {
 #include "optical_flow_view.frag.spr"
         };
         return {std::cbegin(CODE), std::cend(CODE)};
 }
 
-std::vector<uint32_t> code_view_debug_vert()
+std::vector<std::uint32_t> code_view_debug_vert()
 {
-        static constexpr uint32_t CODE[] = {
+        static constexpr std::uint32_t CODE[] = {
 #include "optical_flow_view_debug.vert.spr"
         };
         return {std::cbegin(CODE), std::cend(CODE)};
 }
 
-std::vector<uint32_t> code_view_debug_frag()
+std::vector<std::uint32_t> code_view_debug_frag()
 {
-        static constexpr uint32_t CODE[] = {
+        static constexpr std::uint32_t CODE[] = {
 #include "optical_flow_view_debug.frag.spr"
         };
         return {std::cbegin(CODE), std::cend(CODE)};

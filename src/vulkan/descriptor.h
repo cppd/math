@@ -54,15 +54,15 @@ class Descriptors final
         handle::DescriptorSets descriptor_sets_;
 
         // VkDescriptorSetLayoutBinding::binding -> descriptor_set_layout_bindings_ index
-        std::unordered_map<uint32_t, uint32_t> binding_map_;
+        std::unordered_map<std::uint32_t, std::uint32_t> binding_map_;
 
         // VkDescriptorSetLayoutBinding::binding -> const VkDescriptorSetLayoutBinding&
-        const VkDescriptorSetLayoutBinding& layout_binding(uint32_t binding) const;
+        const VkDescriptorSetLayoutBinding& layout_binding(std::uint32_t binding) const;
 
 public:
         Descriptors(
                 VkDevice device,
-                uint32_t max_sets,
+                std::uint32_t max_sets,
                 VkDescriptorSetLayout descriptor_set_layout,
                 const std::vector<VkDescriptorSetLayoutBinding>& bindings);
 
@@ -77,17 +77,17 @@ public:
 
         VkDescriptorSetLayout descriptor_set_layout() const noexcept;
 
-        uint32_t descriptor_set_count() const;
-        const VkDescriptorSet& descriptor_set(uint32_t index) const;
+        std::uint32_t descriptor_set_count() const;
+        const VkDescriptorSet& descriptor_set(std::uint32_t index) const;
 
         void update_descriptor_set(
-                uint32_t index,
-                const std::vector<uint32_t>& bindings,
+                std::uint32_t index,
+                const std::vector<std::uint32_t>& bindings,
                 const std::vector<std::variant<VkDescriptorBufferInfo, VkDescriptorImageInfo>>& descriptor_infos) const;
 
         void update_descriptor_set(
-                uint32_t index,
-                uint32_t binding,
+                std::uint32_t index,
+                std::uint32_t binding,
                 const std::variant<VkDescriptorBufferInfo, VkDescriptorImageInfo>& info) const;
 };
 }

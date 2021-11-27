@@ -51,8 +51,8 @@ constexpr std::array COLOR_IMAGE_FORMATS = std::to_array<VkFormat>
 
 using VertexIndexType = std::conditional_t<
         VERTEX_INDEX_TYPE == VK_INDEX_TYPE_UINT32,
-        uint32_t,
-        std::conditional_t<VERTEX_INDEX_TYPE == VK_INDEX_TYPE_UINT16, uint16_t, void>>;
+        std::uint32_t,
+        std::conditional_t<VERTEX_INDEX_TYPE == VK_INDEX_TYPE_UINT16, std::uint16_t, void>>;
 
 std::string time_string(double time)
 {
@@ -260,7 +260,7 @@ void load_mesh_to_buffers(
         const vulkan::Device& device,
         const vulkan::CommandPool& command_pool,
         const vulkan::Queue& queue,
-        const std::vector<uint32_t>& family_indices,
+        const std::vector<std::uint32_t>& family_indices,
         const BufferMesh& mesh,
         std::unique_ptr<vulkan::BufferWithMemory>* const vertex_buffer,
         std::unique_ptr<vulkan::BufferWithMemory>* const index_buffer)
@@ -301,7 +301,7 @@ void load_vertices(
         const vulkan::Device& device,
         const vulkan::CommandPool& command_pool,
         const vulkan::Queue& queue,
-        const std::vector<uint32_t>& family_indices,
+        const std::vector<std::uint32_t>& family_indices,
         const mesh::Mesh<3>& mesh,
         const std::vector<int>& sorted_face_indices,
         std::unique_ptr<vulkan::BufferWithMemory>* const vertex_buffer,
@@ -355,7 +355,7 @@ std::unique_ptr<vulkan::BufferWithMemory> load_point_vertices(
         const vulkan::Device& device,
         const vulkan::CommandPool& command_pool,
         const vulkan::Queue& queue,
-        const std::vector<uint32_t>& family_indices,
+        const std::vector<std::uint32_t>& family_indices,
         const mesh::Mesh<3>& mesh)
 {
         if (mesh.points.empty())
@@ -384,7 +384,7 @@ std::unique_ptr<vulkan::BufferWithMemory> load_line_vertices(
         const vulkan::Device& device,
         const vulkan::CommandPool& command_pool,
         const vulkan::Queue& queue,
-        const std::vector<uint32_t>& family_indices,
+        const std::vector<std::uint32_t>& family_indices,
         const mesh::Mesh<3>& mesh)
 {
         if (mesh.lines.empty())
@@ -416,7 +416,7 @@ std::vector<vulkan::ImageWithMemory> load_textures(
         const vulkan::Device& device,
         const vulkan::CommandPool& command_pool,
         const vulkan::Queue& queue,
-        const std::vector<uint32_t>& family_indices,
+        const std::vector<std::uint32_t>& family_indices,
         const mesh::Mesh<3>& mesh)
 {
         const std::vector<VkFormat> formats(std::cbegin(COLOR_IMAGE_FORMATS), std::cend(COLOR_IMAGE_FORMATS));
@@ -447,7 +447,7 @@ std::vector<MaterialBuffer> load_materials(
         const vulkan::Device& device,
         const vulkan::CommandPool& command_pool,
         const vulkan::Queue& queue,
-        const std::vector<uint32_t>& family_indices,
+        const std::vector<std::uint32_t>& family_indices,
         const mesh::Mesh<3>& mesh)
 {
         std::vector<MaterialBuffer> buffers;

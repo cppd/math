@@ -59,7 +59,7 @@ handle::CommandBuffers create_command_buffers(const CommandBufferCreateInfo& inf
         handle::CommandBuffers command_buffers(
                 info.device.value(), info.command_pool.value(), info.framebuffers->size());
 
-        for (uint32_t i = 0; i < command_buffers.count(); ++i)
+        for (std::uint32_t i = 0; i < command_buffers.count(); ++i)
         {
                 begin_command_buffer(command_buffers[i]);
 

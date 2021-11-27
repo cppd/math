@@ -28,13 +28,13 @@ std::unordered_set<std::string> supported_instance_extensions();
 
 std::unordered_set<std::string> supported_validation_layers();
 
-uint32_t supported_instance_api_version();
+std::uint32_t supported_instance_api_version();
 
 void check_instance_extension_support(const std::vector<std::string>& required_extensions);
 
 void check_validation_layer_support(const std::vector<std::string>& required_layers);
 
-void check_api_version(uint32_t required_api_version);
+void check_api_version(std::uint32_t required_api_version);
 
 VkFormat find_supported_format(
         VkPhysicalDevice physical_device,
@@ -64,8 +64,8 @@ VkSampleCountFlagBits supported_color_depth_framebuffer_sample_count_flag(
 
 int sample_count_flag_to_integer(VkSampleCountFlagBits sample_count);
 
-uint32_t physical_device_memory_type_index(
+std::uint32_t physical_device_memory_type_index(
         VkPhysicalDevice physical_device,
-        uint32_t memory_type_bits,
+        std::uint32_t memory_type_bits,
         VkMemoryPropertyFlags memory_property_flags);
 }

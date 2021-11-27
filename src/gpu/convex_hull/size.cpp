@@ -30,7 +30,7 @@ namespace ns::gpu::convex_hull
 int points_buffer_size(const int height)
 {
         // 2 lines + 1 point, GLSL ivec2
-        return (2 * height + 1) * (2 * sizeof(int32_t));
+        return (2 * height + 1) * (2 * sizeof(std::int32_t));
 }
 
 int group_size_prepare(
@@ -39,7 +39,7 @@ int group_size_prepare(
         const unsigned max_group_invocations,
         const unsigned max_shared_memory_size)
 {
-        constexpr unsigned SHARED_SIZE_PER_THREAD = 2 * sizeof(int32_t); // GLSL ivec2
+        constexpr unsigned SHARED_SIZE_PER_THREAD = 2 * sizeof(std::int32_t); // GLSL ivec2
 
         unsigned max_group_size_limit = std::min(max_group_size_x, max_group_invocations);
         unsigned max_group_size_memory = max_shared_memory_size / SHARED_SIZE_PER_THREAD;

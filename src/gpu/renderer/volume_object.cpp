@@ -212,7 +212,7 @@ class Impl final : public VolumeObject
         const vulkan::CommandPool* const transfer_command_pool_;
         const vulkan::Queue* const transfer_queue_;
 
-        const std::vector<uint32_t> family_indices_;
+        const std::vector<std::uint32_t> family_indices_;
 
         Matrix4d vp_matrix_ = Matrix4d(1);
         std::optional<Vector4d> world_clip_plane_equation_;
@@ -459,7 +459,7 @@ class Impl final : public VolumeObject
 
 public:
         Impl(const vulkan::Device* device,
-             const std::vector<uint32_t>& graphics_family_indices,
+             const std::vector<std::uint32_t>& graphics_family_indices,
              const vulkan::CommandPool* const transfer_command_pool,
              const vulkan::Queue* const transfer_queue,
              std::vector<vulkan::DescriptorSetLayoutAndBindings> image_layouts,
@@ -469,7 +469,7 @@ public:
                   transfer_command_pool_(transfer_command_pool),
                   transfer_queue_(transfer_queue),
                   family_indices_(sort_and_unique(
-                          merge<std::vector<uint32_t>>(graphics_family_indices, transfer_queue->family_index()))),
+                          merge<std::vector<std::uint32_t>>(graphics_family_indices, transfer_queue->family_index()))),
                   buffer_(*device_, graphics_family_indices, {transfer_queue->family_index()}),
                   image_layouts_(std::move(image_layouts)),
                   image_sampler_(image_sampler),
@@ -482,7 +482,7 @@ public:
 
 std::unique_ptr<VolumeObject> create_volume_object(
         const vulkan::Device* const device,
-        const std::vector<uint32_t>& graphics_family_indices,
+        const std::vector<std::uint32_t>& graphics_family_indices,
         const vulkan::CommandPool* const transfer_command_pool,
         const vulkan::Queue* const transfer_queue,
         std::vector<vulkan::DescriptorSetLayoutAndBindings> image_layouts,

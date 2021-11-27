@@ -156,7 +156,7 @@ CommonMemory::CommonMemory(
         : descriptors_(device, 1, descriptor_set_layout, descriptor_set_layout_bindings)
 {
         std::vector<std::variant<VkDescriptorBufferInfo, VkDescriptorImageInfo>> infos;
-        std::vector<uint32_t> bindings;
+        std::vector<std::uint32_t> bindings;
 
         {
                 VkDescriptorBufferInfo buffer_info = {};
@@ -231,7 +231,7 @@ void CommonMemory::set_transparency(
         ASSERT(nodes.has_usage(VK_BUFFER_USAGE_STORAGE_BUFFER_BIT));
 
         std::vector<std::variant<VkDescriptorBufferInfo, VkDescriptorImageInfo>> infos;
-        std::vector<uint32_t> bindings;
+        std::vector<std::uint32_t> bindings;
 
         {
                 VkDescriptorImageInfo image_info = {};
@@ -311,7 +311,7 @@ vulkan::Descriptors MeshMemory::create(
                 vulkan::Descriptors(device, coordinates.size(), descriptor_set_layout, descriptor_set_layout_bindings));
 
         std::vector<std::variant<VkDescriptorBufferInfo, VkDescriptorImageInfo>> infos;
-        std::vector<uint32_t> bindings;
+        std::vector<std::uint32_t> bindings;
 
         for (std::size_t i = 0; i < coordinates.size(); ++i)
         {

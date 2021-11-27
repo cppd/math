@@ -154,7 +154,13 @@ MulConstant::MulConstant()
         }
 }
 
-void MulConstant::set_data(int32_t n1, int32_t n2, int32_t m1, int32_t m2, uint32_t group_size_x, uint32_t group_size_y)
+void MulConstant::set_data(
+        std::int32_t n1,
+        std::int32_t n2,
+        std::int32_t m1,
+        std::int32_t m2,
+        std::uint32_t group_size_x,
+        std::uint32_t group_size_y)
 {
         static_assert(std::is_same_v<decltype(data_.n1), decltype(n1)>);
         data_.n1 = n1;
@@ -170,11 +176,11 @@ void MulConstant::set_data(int32_t n1, int32_t n2, int32_t m1, int32_t m2, uint3
         data_.group_size_y = group_size_y;
 }
 
-void MulConstant::set_function(int32_t function_index, bool inverse)
+void MulConstant::set_function(std::int32_t function_index, bool inverse)
 {
-        static_assert(std::is_same_v<decltype(data_.function_index), int32_t>);
+        static_assert(std::is_same_v<decltype(data_.function_index), std::int32_t>);
         data_.function_index = function_index;
-        static_assert(std::is_same_v<decltype(data_.inverse), uint32_t>);
+        static_assert(std::is_same_v<decltype(data_.inverse), std::uint32_t>);
         data_.inverse = inverse ? 1 : 0;
 }
 
@@ -263,12 +269,12 @@ VkPipeline MulProgram::pipeline_columns_from_buffer(bool inverse) const
 }
 
 void MulProgram::create_pipelines(
-        int32_t n1,
-        int32_t n2,
-        int32_t m1,
-        int32_t m2,
-        uint32_t group_size_x,
-        uint32_t group_size_y)
+        std::int32_t n1,
+        std::int32_t n2,
+        std::int32_t m1,
+        std::int32_t m2,
+        std::uint32_t group_size_x,
+        std::uint32_t group_size_y)
 {
         constant_.set_data(n1, n2, m1, m2, group_size_x, group_size_y);
 

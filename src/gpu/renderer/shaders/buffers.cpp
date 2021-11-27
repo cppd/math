@@ -54,7 +54,7 @@ Matrix<3, 4, Dst> mat3_std140(const Matrix<3, 3, Src>& m)
 }
 }
 
-ShaderBuffers::ShaderBuffers(const vulkan::Device& device, const std::vector<uint32_t>& family_indices)
+ShaderBuffers::ShaderBuffers(const vulkan::Device& device, const std::vector<std::uint32_t>& family_indices)
 {
         static_assert(MATRICES_INDEX == 0);
         static_assert(SHADOW_MATRICES_INDEX == 1);
@@ -121,7 +121,7 @@ void ShaderBuffers::set_matrices(
         }
 }
 
-void ShaderBuffers::set_transparency_max_node_count(const uint32_t count) const
+void ShaderBuffers::set_transparency_max_node_count(const std::uint32_t count) const
 {
         decltype(Drawing().transparency_max_node_count) c = count;
         copy_to_drawing_buffer(offsetof(Drawing, transparency_max_node_count), c);
@@ -253,7 +253,7 @@ MaterialBuffer::MaterialBuffer(
         const vulkan::Device& device,
         const vulkan::CommandPool& command_pool,
         const vulkan::Queue& queue,
-        const std::vector<uint32_t>& family_indices,
+        const std::vector<std::uint32_t>& family_indices,
         const Material& material)
         : uniform_buffer_(
                 vulkan::BufferMemoryType::DEVICE_LOCAL,
@@ -272,7 +272,7 @@ const vulkan::Buffer& MaterialBuffer::buffer() const
 
 //
 
-MeshBuffer::MeshBuffer(const vulkan::Device& device, const std::vector<uint32_t>& family_indices)
+MeshBuffer::MeshBuffer(const vulkan::Device& device, const std::vector<std::uint32_t>& family_indices)
         : uniform_buffer_(
                 vulkan::BufferMemoryType::HOST_VISIBLE,
                 device,
@@ -336,8 +336,8 @@ void MeshBuffer::set_lighting(const float ambient, const float metalness, const 
 
 VolumeBuffer::VolumeBuffer(
         const vulkan::Device& device,
-        const std::vector<uint32_t>& graphics_family_indices,
-        const std::vector<uint32_t>& transfer_family_indices)
+        const std::vector<std::uint32_t>& graphics_family_indices,
+        const std::vector<std::uint32_t>& transfer_family_indices)
         : uniform_buffer_coordinates_(
                 vulkan::BufferMemoryType::HOST_VISIBLE,
                 device,
@@ -347,7 +347,7 @@ VolumeBuffer::VolumeBuffer(
           uniform_buffer_volume_(
                   vulkan::BufferMemoryType::DEVICE_LOCAL,
                   device,
-                  merge<std::vector<uint32_t>>(graphics_family_indices, transfer_family_indices),
+                  merge<std::vector<std::uint32_t>>(graphics_family_indices, transfer_family_indices),
                   VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT | VK_BUFFER_USAGE_TRANSFER_DST_BIT,
                   sizeof(Volume))
 {
@@ -468,7 +468,7 @@ TransparencyBuffers::TransparencyBuffers(
         const vulkan::Device& device,
         const vulkan::CommandPool& command_pool,
         const vulkan::Queue& queue,
-        const std::vector<uint32_t>& family_indices,
+        const std::vector<std::uint32_t>& family_indices,
         const VkSampleCountFlagBits sample_count,
         const unsigned width,
         const unsigned height,

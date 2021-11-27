@@ -37,16 +37,16 @@ handle::PipelineLayout create_pipeline_layout(
         const std::vector<unsigned>& set_numbers,
         const std::vector<VkDescriptorSetLayout>& set_layouts);
 
-CommandPool create_command_pool(VkDevice device, uint32_t queue_family_index);
-CommandPool create_transient_command_pool(VkDevice device, uint32_t queue_family_index);
+CommandPool create_command_pool(VkDevice device, std::uint32_t queue_family_index);
+CommandPool create_transient_command_pool(VkDevice device, std::uint32_t queue_family_index);
 
 Instance create_instance(std::vector<std::string> required_extensions);
 
 handle::Framebuffer create_framebuffer(
         VkDevice device,
         VkRenderPass render_pass,
-        uint32_t width,
-        uint32_t height,
+        std::uint32_t width,
+        std::uint32_t height,
         const std::vector<VkImageView>& attachments);
 
 VkClearValue create_color_clear_value(VkFormat format, const Vector<3, float>& rgb);
@@ -56,7 +56,7 @@ Buffer create_buffer(
         VkDevice device,
         VkDeviceSize size,
         VkBufferUsageFlags usage,
-        std::vector<uint32_t> family_indices);
+        std::vector<std::uint32_t> family_indices);
 
 Image create_image(
         VkDevice device,
@@ -64,7 +64,7 @@ Image create_image(
         VkImageType type,
         VkExtent3D extent,
         VkFormat format,
-        std::vector<uint32_t> family_indices,
+        std::vector<std::uint32_t> family_indices,
         VkSampleCountFlagBits samples,
         VkImageTiling tiling,
         VkImageUsageFlags usage);

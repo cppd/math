@@ -43,7 +43,7 @@ struct Fft
 
 std::unique_ptr<Fft> create_fft(
         const vulkan::Device& device,
-        const std::vector<uint32_t>& family_indices,
+        const std::vector<std::uint32_t>& family_indices,
         unsigned count,
         unsigned n);
 }

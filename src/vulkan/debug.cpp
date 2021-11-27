@@ -41,9 +41,9 @@ bool bits(const VkDebugReportFlagsEXT flags, const VkDebugReportFlagBitsEXT bits
 VKAPI_ATTR VkBool32 VKAPI_CALL debug_callback(
         const VkDebugReportFlagsEXT flags,
         const VkDebugReportObjectTypeEXT /*object_type*/,
-        const uint64_t /*object*/,
+        const std::uint64_t /*object*/,
         const std::size_t /*location*/,
-        const int32_t /*message_code*/,
+        const std::int32_t /*message_code*/,
         const char* const /*layer_prefix*/,
         const char* const message,
         void* const /*user_data*/)

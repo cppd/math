@@ -67,11 +67,11 @@ class ComputeConstant final : public vulkan::SpecializationConstant
 {
         struct Data
         {
-                int32_t local_size;
-                int32_t x;
-                int32_t y;
-                int32_t width;
-                int32_t height;
+                std::int32_t local_size;
+                std::int32_t x;
+                std::int32_t y;
+                std::int32_t width;
+                std::int32_t height;
 
         } data_;
 
@@ -84,7 +84,7 @@ class ComputeConstant final : public vulkan::SpecializationConstant
 public:
         ComputeConstant();
 
-        void set(int32_t local_size, const Region<2, int>& rectangle);
+        void set(std::int32_t local_size, const Region<2, int>& rectangle);
 };
 
 class ComputeProgram final

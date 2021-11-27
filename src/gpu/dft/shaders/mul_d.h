@@ -61,10 +61,10 @@ class MulDConstant final : public vulkan::SpecializationConstant
 {
         struct Data
         {
-                uint32_t group_size_x;
-                uint32_t group_size_y;
-                int32_t rows;
-                int32_t columns;
+                std::uint32_t group_size_x;
+                std::uint32_t group_size_y;
+                std::int32_t rows;
+                std::int32_t columns;
         } data_;
 
         std::vector<VkSpecializationMapEntry> entries_;
@@ -76,7 +76,7 @@ class MulDConstant final : public vulkan::SpecializationConstant
 public:
         MulDConstant();
 
-        void set(uint32_t group_size_x, uint32_t group_size_y, int32_t rows, int32_t columns);
+        void set(std::uint32_t group_size_x, std::uint32_t group_size_y, std::int32_t rows, std::int32_t columns);
 };
 
 class MulDProgram final
@@ -101,12 +101,12 @@ public:
         ~MulDProgram() = default;
 
         void create_pipelines(
-                uint32_t n1,
-                uint32_t n2,
-                uint32_t m1,
-                uint32_t m2,
-                uint32_t group_size_x,
-                uint32_t group_size_y);
+                std::uint32_t n1,
+                std::uint32_t n2,
+                std::uint32_t m1,
+                std::uint32_t m2,
+                std::uint32_t group_size_x,
+                std::uint32_t group_size_y);
         void delete_pipelines();
 
         VkDescriptorSetLayout descriptor_set_layout() const;

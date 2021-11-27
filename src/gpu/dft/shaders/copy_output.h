@@ -61,8 +61,8 @@ class CopyOutputConstant final : public vulkan::SpecializationConstant
 {
         struct Data
         {
-                uint32_t local_size_x;
-                uint32_t local_size_y;
+                std::uint32_t local_size_x;
+                std::uint32_t local_size_y;
                 float to_mul;
         } data_;
 
@@ -75,7 +75,7 @@ class CopyOutputConstant final : public vulkan::SpecializationConstant
 public:
         CopyOutputConstant();
 
-        void set(uint32_t local_size_x, uint32_t local_size_y, float to_mul);
+        void set(std::uint32_t local_size_x, std::uint32_t local_size_y, float to_mul);
 };
 
 class CopyOutputProgram final
@@ -98,7 +98,7 @@ public:
         CopyOutputProgram(CopyOutputProgram&&) = default;
         ~CopyOutputProgram() = default;
 
-        void create_pipeline(uint32_t local_size_x, uint32_t local_size_y, float to_mul);
+        void create_pipeline(std::uint32_t local_size_x, std::uint32_t local_size_y, float to_mul);
         void delete_pipeline();
 
         VkDescriptorSetLayout descriptor_set_layout() const;

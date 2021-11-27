@@ -60,10 +60,10 @@ class BitReverseConstant final : public vulkan::SpecializationConstant
 {
         struct Data
         {
-                uint32_t group_size;
-                uint32_t data_size;
-                uint32_t n_mask;
-                uint32_t n_bits;
+                std::uint32_t group_size;
+                std::uint32_t data_size;
+                std::uint32_t n_mask;
+                std::uint32_t n_bits;
         } data_;
 
         std::vector<VkSpecializationMapEntry> entries_;
@@ -75,7 +75,7 @@ class BitReverseConstant final : public vulkan::SpecializationConstant
 public:
         BitReverseConstant();
 
-        void set(uint32_t group_size, uint32_t data_size, uint32_t n_mask, uint32_t n_bits);
+        void set(std::uint32_t group_size, std::uint32_t data_size, std::uint32_t n_mask, std::uint32_t n_bits);
 };
 
 class BitReverseProgram final
@@ -98,7 +98,11 @@ public:
         BitReverseProgram(BitReverseProgram&&) = default;
         ~BitReverseProgram() = default;
 
-        void create_pipeline(uint32_t group_size, uint32_t data_size, uint32_t n_mask, uint32_t n_bits);
+        void create_pipeline(
+                std::uint32_t group_size,
+                std::uint32_t data_size,
+                std::uint32_t n_mask,
+                std::uint32_t n_bits);
         void delete_pipeline();
 
         VkDescriptorSetLayout descriptor_set_layout() const;

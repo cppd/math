@@ -19,17 +19,17 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 namespace ns::gpu::text_writer
 {
-std::vector<uint32_t> code_view_vert()
+std::vector<std::uint32_t> code_view_vert()
 {
-        static constexpr uint32_t CODE[] = {
+        static constexpr std::uint32_t CODE[] = {
 #include "text_writer_view.vert.spr"
         };
         return {std::cbegin(CODE), std::cend(CODE)};
 }
 
-std::vector<uint32_t> code_view_frag()
+std::vector<std::uint32_t> code_view_frag()
 {
-        static constexpr uint32_t CODE[] = {
+        static constexpr std::uint32_t CODE[] = {
 #include "text_writer_view.frag.spr"
         };
         return {std::cbegin(CODE), std::cend(CODE)};

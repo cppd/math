@@ -45,13 +45,13 @@ class FlowMemory final
 
         struct BufferData
         {
-                int32_t point_count_x;
-                int32_t point_count_y;
-                uint32_t use_all_points;
-                uint32_t use_guess;
-                int32_t guess_kx;
-                int32_t guess_ky;
-                int32_t guess_width;
+                std::int32_t point_count_x;
+                std::int32_t point_count_y;
+                std::uint32_t use_all_points;
+                std::uint32_t use_guess;
+                std::int32_t guess_kx;
+                std::int32_t guess_ky;
+                std::int32_t guess_width;
         };
 
 public:
@@ -61,7 +61,7 @@ public:
         FlowMemory(
                 const vulkan::Device& device,
                 VkDescriptorSetLayout descriptor_set_layout,
-                const std::vector<uint32_t>& family_indices);
+                const std::vector<std::uint32_t>& family_indices);
 
         FlowMemory(const FlowMemory&) = delete;
         FlowMemory& operator=(const FlowMemory&) = delete;
@@ -103,10 +103,10 @@ class FlowConstant final : public vulkan::SpecializationConstant
 {
         struct Data
         {
-                uint32_t local_size_x;
-                uint32_t local_size_y;
-                int32_t radius;
-                int32_t max_iteration_count;
+                std::uint32_t local_size_x;
+                std::uint32_t local_size_y;
+                std::int32_t radius;
+                std::int32_t max_iteration_count;
                 float stop_move_square;
                 float min_determinant;
         } data_;
@@ -121,10 +121,10 @@ public:
         FlowConstant();
 
         void set(
-                uint32_t local_size_x,
-                uint32_t local_size_y,
-                int32_t radius,
-                int32_t max_iteration_count,
+                std::uint32_t local_size_x,
+                std::uint32_t local_size_y,
+                std::int32_t radius,
+                std::int32_t max_iteration_count,
                 float stop_move_square,
                 float min_determinant);
 };
@@ -150,10 +150,10 @@ public:
         ~FlowProgram() = default;
 
         void create_pipeline(
-                uint32_t local_size_x,
-                uint32_t local_size_y,
-                int32_t radius,
-                int32_t max_iteration_count,
+                std::uint32_t local_size_x,
+                std::uint32_t local_size_y,
+                std::int32_t radius,
+                std::int32_t max_iteration_count,
                 float stop_move_square,
                 float min_determinant);
         void delete_pipeline();

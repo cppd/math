@@ -248,7 +248,7 @@ std::string formats_to_sorted_string(const T& formats, const std::string_view& s
 void check_family_index(
         const CommandPool& command_pool,
         const Queue& queue,
-        const std::vector<uint32_t>& family_indices)
+        const std::vector<std::uint32_t>& family_indices)
 {
         if (command_pool.family_index() != queue.family_index())
         {
@@ -280,7 +280,7 @@ bool has_usage_for_transfer(const VkImageUsageFlags& usage)
 BufferWithMemory::BufferWithMemory(
         BufferMemoryType memory_type,
         const Device& device,
-        const std::vector<uint32_t>& family_indices,
+        const std::vector<std::uint32_t>& family_indices,
         const VkBufferUsageFlags usage,
         const VkDeviceSize size)
         : physical_device_(device.physical_device()),
@@ -380,7 +380,7 @@ BufferMapper::~BufferMapper()
 
 ImageWithMemory::ImageWithMemory(
         const Device& device,
-        const std::vector<uint32_t>& family_indices,
+        const std::vector<std::uint32_t>& family_indices,
         const std::vector<VkFormat>& formats,
         const VkSampleCountFlagBits sample_count,
         const VkImageType type,
@@ -429,7 +429,7 @@ ImageWithMemory::ImageWithMemory(
 
 ImageWithMemory::ImageWithMemory(
         const Device& device,
-        const std::vector<uint32_t>& family_indices,
+        const std::vector<std::uint32_t>& family_indices,
         const std::vector<VkFormat>& formats,
         const VkSampleCountFlagBits sample_count,
         const VkImageType type,
@@ -511,11 +511,11 @@ const std::vector<VkFormat>& DepthImageWithMemory::depth_formats(const std::vect
 
 DepthImageWithMemory::DepthImageWithMemory(
         const Device& device,
-        const std::vector<uint32_t>& family_indices,
+        const std::vector<std::uint32_t>& family_indices,
         VkFormat format,
         VkSampleCountFlagBits sample_count,
-        uint32_t width,
-        uint32_t height,
+        std::uint32_t width,
+        std::uint32_t height,
         VkImageUsageFlags usage)
         : image_(create_image(
                 device,
@@ -553,11 +553,11 @@ DepthImageWithMemory::DepthImageWithMemory(
 
 DepthImageWithMemory::DepthImageWithMemory(
         const Device& device,
-        const std::vector<uint32_t>& family_indices,
+        const std::vector<std::uint32_t>& family_indices,
         const std::vector<VkFormat>& formats,
         const VkSampleCountFlagBits sample_count,
-        const uint32_t width,
-        const uint32_t height,
+        const std::uint32_t width,
+        const std::uint32_t height,
         const VkImageUsageFlags usage)
         : DepthImageWithMemory(
                 device,
@@ -579,11 +579,11 @@ DepthImageWithMemory::DepthImageWithMemory(
 
 DepthImageWithMemory::DepthImageWithMemory(
         const Device& device,
-        const std::vector<uint32_t>& family_indices,
+        const std::vector<std::uint32_t>& family_indices,
         const std::vector<VkFormat>& formats,
         const VkSampleCountFlagBits sample_count,
-        const uint32_t width,
-        const uint32_t height,
+        const std::uint32_t width,
+        const std::uint32_t height,
         const VkImageUsageFlags usage,
         const VkImageLayout layout,
         const VkCommandPool command_pool,

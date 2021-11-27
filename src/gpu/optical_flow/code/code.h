@@ -22,12 +22,12 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 namespace ns::gpu::optical_flow
 {
-std::vector<uint32_t> code_sobel_comp();
-std::vector<uint32_t> code_flow_comp();
-std::vector<uint32_t> code_downsample_comp();
-std::vector<uint32_t> code_grayscale_comp();
-std::vector<uint32_t> code_view_vert();
-std::vector<uint32_t> code_view_frag();
-std::vector<uint32_t> code_view_debug_vert();
-std::vector<uint32_t> code_view_debug_frag();
+std::vector<std::uint32_t> code_sobel_comp();
+std::vector<std::uint32_t> code_flow_comp();
+std::vector<std::uint32_t> code_downsample_comp();
+std::vector<std::uint32_t> code_grayscale_comp();
+std::vector<std::uint32_t> code_view_vert();
+std::vector<std::uint32_t> code_view_frag();
+std::vector<std::uint32_t> code_view_debug_vert();
+std::vector<std::uint32_t> code_view_debug_frag();
 }
