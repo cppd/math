@@ -57,7 +57,6 @@ There are errors in chapter 13 when calculating H2
 #include <src/com/error.h>
 #include <src/vulkan/error.h>
 #include <src/vulkan/queue.h>
-#include <src/vulkan/sync.h>
 
 #include <optional>
 #include <thread>
@@ -166,20 +165,12 @@ void begin_command_buffer(const VkCommandBuffer command_buffer)
         VkCommandBufferBeginInfo command_buffer_info = {};
         command_buffer_info.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
         command_buffer_info.flags = VK_COMMAND_BUFFER_USAGE_SIMULTANEOUS_USE_BIT;
-        const VkResult result = vkBeginCommandBuffer(command_buffer, &command_buffer_info);
-        if (result != VK_SUCCESS)
-        {
-                vulkan::vulkan_function_error("vkBeginCommandBuffer", result);
-        }
+        VULKAN_CHECK(vkBeginCommandBuffer(command_buffer, &command_buffer_info));
 }
 
 void end_command_buffer(const VkCommandBuffer command_buffer)
 {
-        const VkResult result = vkEndCommandBuffer(command_buffer);
-        if (result != VK_SUCCESS)
-        {
-                vulkan::vulkan_function_error("vkEndCommandBuffer", result);
-        }
+        VULKAN_CHECK(vkEndCommandBuffer(command_buffer));
 }
 
 class Dft final
@@ -665,7 +656,7 @@ class DftVector final : public ComputeVector
 
                 vulkan::queue_submit(
                         (*command_buffers_)[inverse ? DftType::INVERSE : DftType::FORWARD], instance_.compute_queue());
-                vulkan::queue_wait_idle(instance_.compute_queue());
+                VULKAN_CHECK(vkQueueWaitIdle(instance_.compute_queue()));
 
                 {
                         vulkan::BufferMapper mapper(dft_.buffer_with_memory());

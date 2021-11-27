@@ -151,20 +151,13 @@ void begin_command_buffer(const VkCommandBuffer command_buffer)
         VkCommandBufferBeginInfo command_buffer_info = {};
         command_buffer_info.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
         command_buffer_info.flags = VK_COMMAND_BUFFER_USAGE_SIMULTANEOUS_USE_BIT;
-        const VkResult result = vkBeginCommandBuffer(command_buffer, &command_buffer_info);
-        if (result != VK_SUCCESS)
-        {
-                vulkan::vulkan_function_error("vkBeginCommandBuffer", result);
-        }
+
+        VULKAN_CHECK(vkBeginCommandBuffer(command_buffer, &command_buffer_info));
 }
 
 void end_command_buffer(const VkCommandBuffer command_buffer)
 {
-        const VkResult result = vkEndCommandBuffer(command_buffer);
-        if (result != VK_SUCCESS)
-        {
-                vulkan::vulkan_function_error("vkEndCommandBuffer", result);
-        }
+        VULKAN_CHECK(vkEndCommandBuffer(command_buffer));
 }
 
 class Impl final : public Compute

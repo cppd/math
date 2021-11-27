@@ -21,32 +21,42 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <src/com/error.h>
 
-namespace ns::vulkan
-{
-[[noreturn]] void vulkan_function_error(const std::string_view& function_name, VkResult code)
-{
-        std::string result;
+#include <sstream>
 
-        if (!function_name.empty())
-        {
-                result = function_name;
-        }
-        else
-        {
-                result = "Vulkan function";
-        }
-        result += " has failed.";
+namespace ns::vulkan::error_implementation
+{
+namespace
+{
+[[noreturn]] void vulkan_error(const VkResult code, const std::string& msg)
+{
+        ASSERT(code != VK_SUCCESS);
 
+        std::ostringstream oss;
+
+        oss << "Vulkan function has failed.";
+        if (!msg.empty())
+        {
+                oss << ' ' << msg;
+        }
         for (const std::string& s : vulkan::result_to_strings(code))
         {
                 if (!s.empty())
                 {
-                        result += ' ';
-                        result += s;
-                        result += '.';
+                        oss << ' ' << s << '.';
                 }
         }
 
-        error(result);
+        error(oss.str());
+}
+}
+
+[[noreturn]] void vulkan_function_error(const VkResult code)
+{
+        vulkan_error(code, {});
+}
+
+[[noreturn]] void vulkan_function_error(const VkResult code, const char* const file, const int line)
+{
+        vulkan_error(code, std::string(file) + ':' + std::to_string(line) + '.');
 }
 }

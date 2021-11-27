@@ -22,7 +22,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "memory.h"
 #include "print.h"
 #include "queue.h"
-#include "sync.h"
 
 #include <src/com/container.h>
 #include <src/com/error.h>
@@ -65,11 +64,7 @@ void copy_host_to_device(
 {
         void* map_memory_data;
 
-        const VkResult result = vkMapMemory(device_memory.device(), device_memory, offset, size, 0, &map_memory_data);
-        if (result != VK_SUCCESS)
-        {
-                vulkan_function_error("vkMapMemory", result);
-        }
+        VULKAN_CHECK(vkMapMemory(device_memory.device(), device_memory, offset, size, 0, &map_memory_data));
 
         std::memcpy(map_memory_data, data, size);
 
@@ -86,11 +81,7 @@ void copy_device_to_host(
 {
         void* map_memory_data;
 
-        const VkResult result = vkMapMemory(device_memory.device(), device_memory, offset, size, 0, &map_memory_data);
-        if (result != VK_SUCCESS)
-        {
-                vulkan_function_error("vkMapMemory", result);
-        }
+        VULKAN_CHECK(vkMapMemory(device_memory.device(), device_memory, offset, size, 0, &map_memory_data));
 
         std::memcpy(data, map_memory_data, size);
 
@@ -221,23 +212,15 @@ void begin_commands(const VkCommandBuffer& command_buffer)
         command_buffer_info.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
         command_buffer_info.flags = VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT;
 
-        const VkResult result = vkBeginCommandBuffer(command_buffer, &command_buffer_info);
-        if (result != VK_SUCCESS)
-        {
-                vulkan_function_error("vkBeginCommandBuffer", result);
-        }
+        VULKAN_CHECK(vkBeginCommandBuffer(command_buffer, &command_buffer_info));
 }
 
 void end_commands(const VkQueue& queue, const VkCommandBuffer& command_buffer)
 {
-        const VkResult result = vkEndCommandBuffer(command_buffer);
-        if (result != VK_SUCCESS)
-        {
-                vulkan_function_error("vkEndCommandBuffer", result);
-        }
+        VULKAN_CHECK(vkEndCommandBuffer(command_buffer));
 
         queue_submit(command_buffer, queue);
-        queue_wait_idle(queue);
+        VULKAN_CHECK(vkQueueWaitIdle(queue));
 }
 
 void staging_image_write(

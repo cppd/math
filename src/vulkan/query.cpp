@@ -49,22 +49,14 @@ std::string vulkan_formats_to_string(const std::vector<VkFormat>& formats)
 std::uint32_t find_extension_count()
 {
         std::uint32_t extension_count;
-        const VkResult result = vkEnumerateInstanceExtensionProperties(nullptr, &extension_count, nullptr);
-        if (result != VK_SUCCESS)
-        {
-                vulkan_function_error("vkEnumerateInstanceExtensionProperties", result);
-        }
+        VULKAN_CHECK(vkEnumerateInstanceExtensionProperties(nullptr, &extension_count, nullptr));
         return extension_count;
 }
 
 std::uint32_t find_layer_count()
 {
         std::uint32_t layer_count;
-        const VkResult result = vkEnumerateInstanceLayerProperties(&layer_count, nullptr);
-        if (result != VK_SUCCESS)
-        {
-                vulkan_function_error("vkEnumerateInstanceLayerProperties", result);
-        }
+        VULKAN_CHECK(vkEnumerateInstanceLayerProperties(&layer_count, nullptr));
         return layer_count;
 }
 }
@@ -78,12 +70,7 @@ std::unordered_set<std::string> supported_instance_extensions()
         }
 
         std::vector<VkExtensionProperties> extensions(extension_count);
-
-        const VkResult result = vkEnumerateInstanceExtensionProperties(nullptr, &extension_count, extensions.data());
-        if (result != VK_SUCCESS)
-        {
-                vulkan_function_error("vkEnumerateInstanceExtensionProperties", result);
-        }
+        VULKAN_CHECK(vkEnumerateInstanceExtensionProperties(nullptr, &extension_count, extensions.data()));
 
         std::unordered_set<std::string> extension_set;
         for (const VkExtensionProperties& e : extensions)
@@ -102,12 +89,7 @@ std::unordered_set<std::string> supported_validation_layers()
         }
 
         std::vector<VkLayerProperties> layers(layer_count);
-
-        const VkResult result = vkEnumerateInstanceLayerProperties(&layer_count, layers.data());
-        if (result != VK_SUCCESS)
-        {
-                vulkan_function_error("vkEnumerateInstanceLayerProperties", result);
-        }
+        VULKAN_CHECK(vkEnumerateInstanceLayerProperties(&layer_count, layers.data()));
 
         std::unordered_set<std::string> layer_set;
         for (const VkLayerProperties& l : layers)
@@ -119,20 +101,16 @@ std::unordered_set<std::string> supported_validation_layers()
 
 std::uint32_t supported_instance_api_version()
 {
-        PFN_vkEnumerateInstanceVersion f = reinterpret_cast<PFN_vkEnumerateInstanceVersion>(
+        PFN_vkEnumerateInstanceVersion enumerate_instance_version = reinterpret_cast<PFN_vkEnumerateInstanceVersion>(
                 vkGetInstanceProcAddr(nullptr, "vkEnumerateInstanceVersion"));
 
-        if (!f)
+        if (!enumerate_instance_version)
         {
                 return VK_MAKE_VERSION(1, 0, 0);
         }
 
         std::uint32_t api_version;
-        const VkResult result = f(&api_version);
-        if (result != VK_SUCCESS)
-        {
-                vulkan_function_error("vkEnumerateInstanceVersion", result);
-        }
+        VULKAN_CHECK(enumerate_instance_version(&api_version));
 
         return api_version;
 }
@@ -264,13 +242,9 @@ VkFormat find_supported_image_format(
                 }
 
                 VkImageFormatProperties image_properties;
-                const VkResult result = vkGetPhysicalDeviceImageFormatProperties(
+                VULKAN_CHECK(vkGetPhysicalDeviceImageFormatProperties(
                         physical_device, format, image_type, tiling, usage, 0 /*VkImageCreateFlags*/,
-                        &image_properties);
-                if (result != VK_SUCCESS)
-                {
-                        vulkan_function_error("vkGetPhysicalDeviceImageFormatProperties", result);
-                }
+                        &image_properties));
 
                 if ((image_properties.sampleCounts & sample_count) != sample_count)
                 {
@@ -302,14 +276,8 @@ VkExtent3D find_max_image_extent(
         VkImageUsageFlags usage)
 {
         VkImageFormatProperties image_properties;
-
-        const VkResult result = vkGetPhysicalDeviceImageFormatProperties(
-                physical_device, format, image_type, tiling, usage, 0 /*VkImageCreateFlags*/, &image_properties);
-        if (result != VK_SUCCESS)
-        {
-                vulkan_function_error("vkGetPhysicalDeviceImageFormatProperties", result);
-        }
-
+        VULKAN_CHECK(vkGetPhysicalDeviceImageFormatProperties(
+                physical_device, format, image_type, tiling, usage, 0 /*VkImageCreateFlags*/, &image_properties));
         return image_properties.maxExtent;
 }
 

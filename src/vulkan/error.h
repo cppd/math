@@ -17,10 +17,59 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
-#include <string_view>
+#include <type_traits>
 #include <vulkan/vulkan.h>
 
-namespace ns::vulkan
+namespace ns::vulkan::error_implementation
 {
-[[noreturn]] void vulkan_function_error(const std::string_view& function_name, VkResult code);
+[[noreturn]] void vulkan_function_error(VkResult code);
+[[noreturn]] void vulkan_function_error(VkResult code, const char* file, int line);
+
+template <typename T>
+void check_code(const T code)
+{
+        static_assert(std::is_same_v<T, VkResult>);
+        if (code == VK_SUCCESS)
+        {
+                return;
+        }
+        error_implementation::vulkan_function_error(code);
 }
+
+template <typename T>
+void check_code(const T code, const char* const file, const int line)
+{
+        static_assert(std::is_same_v<T, VkResult>);
+        if (code == VK_SUCCESS)
+        {
+                return;
+        }
+        vulkan_function_error(code, file, line);
+}
+
+template <typename T>
+[[noreturn]] void error_code(const T code)
+{
+        static_assert(std::is_same_v<T, VkResult>);
+        vulkan_function_error(code);
+}
+
+template <typename T>
+[[noreturn]] void error_code(const T code, const char* const file, const int line)
+{
+        static_assert(std::is_same_v<T, VkResult>);
+        vulkan_function_error(code, file, line);
+}
+}
+
+#if !defined(RELEASE_BUILD)
+#define VULKAN_CHECK(code) ns::vulkan::error_implementation::check_code((code), __FILE__, __LINE__)
+#else
+#define VULKAN_CHECK(code) ns::vulkan::error_implementation::check_code((code))
+#endif
+
+#if !defined(RELEASE_BUILD)
+#define VULKAN_ERROR(code) ns::vulkan::error_implementation::error_code((code), __FILE__, __LINE__)
+#else
+#define VULKAN_CHECK(code) ns::vulkan::error_implementation::error_code((code))
+#endif

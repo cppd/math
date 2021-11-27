@@ -210,11 +210,7 @@ void VulkanInstance::device_wait_idle() const
 {
         ASSERT(device_ != VK_NULL_HANDLE);
 
-        const VkResult result = vkDeviceWaitIdle(device_);
-        if (result != VK_SUCCESS)
-        {
-                vulkan_function_error("vkDeviceWaitIdle", result);
-        }
+        VULKAN_CHECK(vkDeviceWaitIdle(device_));
 }
 
 void VulkanInstance::device_wait_idle_noexcept(const char* msg) const noexcept

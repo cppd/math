@@ -24,7 +24,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "print.h"
 #include "query.h"
 #include "queue.h"
-#include "sync.h"
 
 #include <src/com/alg.h>
 #include <src/com/print.h>
@@ -115,20 +114,13 @@ void begin_command_buffer(const VkCommandBuffer command_buffer)
         VkCommandBufferBeginInfo command_buffer_info = {};
         command_buffer_info.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
         command_buffer_info.flags = VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT;
-        const VkResult result = vkBeginCommandBuffer(command_buffer, &command_buffer_info);
-        if (result != VK_SUCCESS)
-        {
-                vulkan_function_error("vkBeginCommandBuffer", result);
-        }
+
+        VULKAN_CHECK(vkBeginCommandBuffer(command_buffer, &command_buffer_info));
 }
 
 void end_command_buffer(const VkCommandBuffer command_buffer)
 {
-        const VkResult result = vkEndCommandBuffer(command_buffer);
-        if (result != VK_SUCCESS)
-        {
-                vulkan_function_error("vkEndCommandBuffer", result);
-        }
+        VULKAN_CHECK(vkEndCommandBuffer(command_buffer));
 }
 
 void transition_image_layout(
@@ -172,7 +164,7 @@ void transition_image_layout(
         end_command_buffer(command_buffer);
 
         queue_submit(command_buffer, queue);
-        queue_wait_idle(queue);
+        VULKAN_CHECK(vkQueueWaitIdle(queue));
 }
 
 bool has_bits(const VkImageUsageFlags& usage, const VkImageUsageFlagBits& bits)
@@ -351,11 +343,7 @@ BufferMapper::BufferMapper(const BufferWithMemory& buffer, const VkDeviceSize of
         ASSERT(buffer.host_visible());
         ASSERT(size_ > 0 && offset + size_ <= buffer.buffer().size());
 
-        const VkResult result = vkMapMemory(device_, device_memory_, offset, size_, 0, &pointer_);
-        if (result != VK_SUCCESS)
-        {
-                vulkan_function_error("vkMapMemory", result);
-        }
+        VULKAN_CHECK(vkMapMemory(device_, device_memory_, offset, size_, 0, &pointer_));
 }
 
 BufferMapper::BufferMapper(const BufferWithMemory& buffer)
@@ -363,11 +351,7 @@ BufferMapper::BufferMapper(const BufferWithMemory& buffer)
 {
         ASSERT(buffer.host_visible());
 
-        const VkResult result = vkMapMemory(device_, device_memory_, 0, VK_WHOLE_SIZE, 0, &pointer_);
-        if (result != VK_SUCCESS)
-        {
-                vulkan_function_error("vkMapMemory", result);
-        }
+        VULKAN_CHECK(vkMapMemory(device_, device_memory_, 0, VK_WHOLE_SIZE, 0, &pointer_));
 }
 
 BufferMapper::~BufferMapper()

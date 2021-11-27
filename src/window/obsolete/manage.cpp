@@ -170,11 +170,7 @@ VkSurfaceKHR vulkan_create_surface(WindowID window, VkInstance instance)
         info.window = window;
 
         VkSurfaceKHR surface;
-        const VkResult result = vkCreateXlibSurfaceKHR(instance, &info, nullptr, &surface);
-        if (result != VK_SUCCESS)
-        {
-                vulkan::vulkan_function_error("vkCreateXlibSurfaceKHR", result);
-        }
+        VULKAN_CHECK(vkCreateXlibSurfaceKHR(instance, &info, nullptr, &surface));
         return surface;
 }
 }
@@ -250,11 +246,7 @@ VkSurfaceKHR vulkan_create_surface(WindowID window, VkInstance instance)
         info.hwnd = window;
 
         VkSurfaceKHR surface;
-        const VkResult result = vkCreateWin32SurfaceKHR(instance, &info, nullptr, &surface);
-        if (result != VK_SUCCESS)
-        {
-                vulkan::vulkan_function_error("vkCreateWin32SurfaceKHR", result);
-        }
+        VULKAN_CHECK(vkCreateWin32SurfaceKHR(instance, &info, nullptr, &surface));
         return surface;
 }
 }

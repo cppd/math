@@ -126,11 +126,7 @@ std::uint32_t choose_image_count(const VkSurfaceCapabilitiesKHR& capabilities, i
 std::uint32_t find_image_count(VkDevice device, VkSwapchainKHR swapchain)
 {
         std::uint32_t image_count;
-        const VkResult result = vkGetSwapchainImagesKHR(device, swapchain, &image_count, nullptr);
-        if (result != VK_SUCCESS)
-        {
-                vulkan::vulkan_function_error("vkGetSwapchainImagesKHR", result);
-        }
+        VULKAN_CHECK(vkGetSwapchainImagesKHR(device, swapchain, &image_count, nullptr));
         return image_count;
 }
 
@@ -143,13 +139,7 @@ std::vector<VkImage> swapchain_images(VkDevice device, VkSwapchainKHR swapchain)
         }
 
         std::vector<VkImage> images(image_count);
-
-        const VkResult result = vkGetSwapchainImagesKHR(device, swapchain, &image_count, images.data());
-        if (result != VK_SUCCESS)
-        {
-                vulkan::vulkan_function_error("vkGetSwapchainImagesKHR", result);
-        }
-
+        VULKAN_CHECK(vkGetSwapchainImagesKHR(device, swapchain, &image_count, images.data()));
         return images;
 }
 
@@ -270,7 +260,7 @@ std::optional<std::uint32_t> acquire_next_image(VkDevice device, VkSwapchainKHR 
                 return image_index;
         }
 
-        vulkan::vulkan_function_error("vkAcquireNextImageKHR", result);
+        VULKAN_ERROR(result);
 }
 
 bool queue_present(VkSemaphore wait_semaphore, VkSwapchainKHR swapchain, std::uint32_t image_index, VkQueue queue)
@@ -301,7 +291,7 @@ bool queue_present(VkSemaphore wait_semaphore, VkSwapchainKHR swapchain, std::ui
                 return false;
         }
 
-        vulkan::vulkan_function_error("vkQueuePresentKHR", result);
+        VULKAN_ERROR(result);
 }
 
 Swapchain::Swapchain(

@@ -24,5 +24,4 @@ namespace ns::vulkan
 {
 void reset_fence(VkDevice device, VkFence fence);
 bool wait_for_fence(VkDevice device, VkFence fence, std::uint64_t timeout_nanoseconds);
-void queue_wait_idle(VkQueue queue);
 }

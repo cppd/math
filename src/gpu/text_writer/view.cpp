@@ -31,7 +31,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/vulkan/commands.h>
 #include <src/vulkan/error.h>
 #include <src/vulkan/queue.h>
-#include <src/vulkan/sync.h>
 
 #include <array>
 #include <optional>
@@ -227,7 +226,7 @@ class Impl final : public View
 
                 if (vertex_buffer_->buffer().size() < size)
                 {
-                        vulkan::queue_wait_idle(queue);
+                        VULKAN_CHECK(vkQueueWaitIdle(queue));
 
                         command_buffers_.reset();
 

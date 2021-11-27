@@ -41,11 +41,11 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/gpu/text_writer/view.h>
 #include <src/image/alpha.h>
 #include <src/numerical/region.h>
+#include <src/vulkan/error.h>
 #include <src/vulkan/features.h>
 #include <src/vulkan/instance.h>
 #include <src/vulkan/objects.h>
 #include <src/vulkan/queue.h>
-#include <src/vulkan/sync.h>
 #include <src/window/surface.h>
 
 #include <chrono>
@@ -492,7 +492,7 @@ class Impl final
                                 VK_IMAGE_USAGE_TRANSFER_SRC_BIT);
 
                         image.resolve(queue, semaphore, INDEX);
-                        vulkan::queue_wait_idle(queue);
+                        VULKAN_CHECK(vkQueueWaitIdle(queue));
 
                         image.image(INDEX).read_pixels(
                                 instance_->graphics_compute_command_pool(), queue, VK_IMAGE_LAYOUT_GENERAL,
@@ -682,7 +682,7 @@ class Impl final
                         return false;
                 }
 
-                vulkan::queue_wait_idle(queue);
+                VULKAN_CHECK(vkQueueWaitIdle(queue));
 
                 return true;
         }

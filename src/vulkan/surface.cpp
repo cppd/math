@@ -28,23 +28,14 @@ namespace
 std::uint32_t find_format_count(VkPhysicalDevice physical_device, VkSurfaceKHR surface)
 {
         std::uint32_t format_count;
-        const VkResult result = vkGetPhysicalDeviceSurfaceFormatsKHR(physical_device, surface, &format_count, nullptr);
-        if (result != VK_SUCCESS)
-        {
-                vulkan::vulkan_function_error("vkGetPhysicalDeviceSurfaceFormatsKHR", result);
-        }
+        VULKAN_CHECK(vkGetPhysicalDeviceSurfaceFormatsKHR(physical_device, surface, &format_count, nullptr));
         return format_count;
 }
 
 std::uint32_t find_present_mode_count(VkPhysicalDevice physical_device, VkSurfaceKHR surface)
 {
         std::uint32_t mode_count;
-        const VkResult result =
-                vkGetPhysicalDeviceSurfacePresentModesKHR(physical_device, surface, &mode_count, nullptr);
-        if (result != VK_SUCCESS)
-        {
-                vulkan::vulkan_function_error("vkGetPhysicalDeviceSurfacePresentModesKHR", result);
-        }
+        VULKAN_CHECK(vkGetPhysicalDeviceSurfacePresentModesKHR(physical_device, surface, &mode_count, nullptr));
         return mode_count;
 }
 
@@ -57,14 +48,7 @@ std::vector<VkSurfaceFormatKHR> find_surface_formats(VkPhysicalDevice physical_d
         }
 
         std::vector<VkSurfaceFormatKHR> formats(format_count);
-
-        const VkResult result =
-                vkGetPhysicalDeviceSurfaceFormatsKHR(physical_device, surface, &format_count, formats.data());
-        if (result != VK_SUCCESS)
-        {
-                vulkan::vulkan_function_error("vkGetPhysicalDeviceSurfaceFormatsKHR", result);
-        }
-
+        VULKAN_CHECK(vkGetPhysicalDeviceSurfaceFormatsKHR(physical_device, surface, &format_count, formats.data()));
         return formats;
 }
 
@@ -77,14 +61,7 @@ std::vector<VkPresentModeKHR> find_present_modes(VkPhysicalDevice physical_devic
         }
 
         std::vector<VkPresentModeKHR> modes(mode_count);
-
-        const VkResult result =
-                vkGetPhysicalDeviceSurfacePresentModesKHR(physical_device, surface, &mode_count, modes.data());
-        if (result != VK_SUCCESS)
-        {
-                vulkan::vulkan_function_error("vkGetPhysicalDeviceSurfacePresentModesKHR", result);
-        }
-
+        VULKAN_CHECK(vkGetPhysicalDeviceSurfacePresentModesKHR(physical_device, surface, &mode_count, modes.data()));
         return modes;
 }
 }
@@ -98,11 +75,7 @@ bool find_surface_details(
 {
         ASSERT(surface_capabilities && surface_formats && present_modes);
 
-        const VkResult result = vkGetPhysicalDeviceSurfaceCapabilitiesKHR(device, surface, surface_capabilities);
-        if (result != VK_SUCCESS)
-        {
-                vulkan::vulkan_function_error("vkGetPhysicalDeviceSurfaceCapabilitiesKHR", result);
-        }
+        VULKAN_CHECK(vkGetPhysicalDeviceSurfaceCapabilitiesKHR(device, surface, surface_capabilities));
 
         *surface_formats = find_surface_formats(device, surface);
         if (surface_formats->empty())

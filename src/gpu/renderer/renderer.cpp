@@ -31,9 +31,9 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/numerical/vec.h>
 #include <src/vulkan/commands.h>
 #include <src/vulkan/device.h>
+#include <src/vulkan/error.h>
 #include <src/vulkan/query.h>
 #include <src/vulkan/queue.h>
-#include <src/vulkan/sync.h>
 
 #include <memory>
 #include <optional>
@@ -499,7 +499,7 @@ class Impl final : public Renderer
                         return {semaphore, false /*transparency*/};
                 }
 
-                vulkan::queue_wait_idle(graphics_queue);
+                VULKAN_CHECK(vkQueueWaitIdle(graphics_queue));
 
                 unsigned long long required_node_memory;
                 unsigned overload_counter;

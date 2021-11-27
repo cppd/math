@@ -22,8 +22,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <src/com/error.h>
 
-#include <algorithm>
-
 namespace ns::vulkan::handle
 {
 void Instance::destroy() noexcept
@@ -42,12 +40,7 @@ void Instance::move(Instance* const from) noexcept
 
 Instance::Instance(const VkInstanceCreateInfo& create_info)
 {
-        const VkResult result = vkCreateInstance(&create_info, nullptr, &instance_);
-        if (result != VK_SUCCESS)
-        {
-                vulkan_function_error("vkCreateInstance", result);
-        }
-        ASSERT(instance_ != VK_NULL_HANDLE);
+        VULKAN_CHECK(vkCreateInstance(&create_info, nullptr, &instance_));
 }
 
 //
@@ -72,14 +65,9 @@ void DebugReportCallback::move(DebugReportCallback* const from) noexcept
 DebugReportCallback::DebugReportCallback(
         const VkInstance instance,
         const VkDebugReportCallbackCreateInfoEXT& create_info)
+        : instance_(instance)
 {
-        const VkResult result = vkCreateDebugReportCallbackEXT(instance, &create_info, nullptr, &callback_);
-        if (result != VK_SUCCESS)
-        {
-                vulkan_function_error("vkCreateDebugReportCallbackEXT", result);
-        }
-        ASSERT(callback_ != VK_NULL_HANDLE);
-        instance_ = instance;
+        VULKAN_CHECK(vkCreateDebugReportCallbackEXT(instance, &create_info, nullptr, &callback_));
 }
 
 //
@@ -100,12 +88,7 @@ void Device::move(Device* const from) noexcept
 
 Device::Device(const VkPhysicalDevice physical_device, const VkDeviceCreateInfo& create_info)
 {
-        const VkResult result = vkCreateDevice(physical_device, &create_info, nullptr, &device_);
-        if (result != VK_SUCCESS)
-        {
-                vulkan_function_error("vkCreateDevice", result);
-        }
-        ASSERT(device_ != VK_NULL_HANDLE);
+        VULKAN_CHECK(vkCreateDevice(physical_device, &create_info, nullptr, &device_));
 }
 
 //
@@ -157,15 +140,9 @@ void SwapchainKHR::move(SwapchainKHR* const from) noexcept
         from->swapchain_ = VK_NULL_HANDLE;
 }
 
-SwapchainKHR::SwapchainKHR(const VkDevice device, const VkSwapchainCreateInfoKHR& create_info)
+SwapchainKHR::SwapchainKHR(const VkDevice device, const VkSwapchainCreateInfoKHR& create_info) : device_(device)
 {
-        const VkResult result = vkCreateSwapchainKHR(device, &create_info, nullptr, &swapchain_);
-        if (result != VK_SUCCESS)
-        {
-                vulkan_function_error("vkCreateSwapchainKHR", result);
-        }
-        ASSERT(swapchain_ != VK_NULL_HANDLE);
-        device_ = device;
+        VULKAN_CHECK(vkCreateSwapchainKHR(device, &create_info, nullptr, &swapchain_));
 }
 
 //
@@ -187,7 +164,7 @@ void ShaderModule::move(ShaderModule* const from) noexcept
         from->shader_module_ = VK_NULL_HANDLE;
 }
 
-ShaderModule::ShaderModule(const VkDevice device, const std::span<const std::uint32_t>& code)
+ShaderModule::ShaderModule(const VkDevice device, const std::span<const std::uint32_t>& code) : device_(device)
 {
         static_assert(sizeof(std::uint32_t) == 4);
 
@@ -200,14 +177,7 @@ ShaderModule::ShaderModule(const VkDevice device, const std::span<const std::uin
         create_info.sType = VK_STRUCTURE_TYPE_SHADER_MODULE_CREATE_INFO;
         create_info.codeSize = code.size_bytes();
         create_info.pCode = code.data();
-
-        const VkResult result = vkCreateShaderModule(device, &create_info, nullptr, &shader_module_);
-        if (result != VK_SUCCESS)
-        {
-                vulkan_function_error("vkCreateShaderModule", result);
-        }
-        ASSERT(shader_module_ != VK_NULL_HANDLE);
-        device_ = device;
+        VULKAN_CHECK(vkCreateShaderModule(device, &create_info, nullptr, &shader_module_));
 }
 
 //
@@ -229,15 +199,9 @@ void RenderPass::move(RenderPass* const from) noexcept
         from->render_pass_ = VK_NULL_HANDLE;
 }
 
-RenderPass::RenderPass(const VkDevice device, const VkRenderPassCreateInfo& create_info)
+RenderPass::RenderPass(const VkDevice device, const VkRenderPassCreateInfo& create_info) : device_(device)
 {
-        const VkResult result = vkCreateRenderPass(device, &create_info, nullptr, &render_pass_);
-        if (result != VK_SUCCESS)
-        {
-                vulkan_function_error("vkCreateRenderPass", result);
-        }
-        ASSERT(render_pass_ != VK_NULL_HANDLE);
-        device_ = device;
+        VULKAN_CHECK(vkCreateRenderPass(device, &create_info, nullptr, &render_pass_));
 }
 
 //
@@ -259,15 +223,9 @@ void PipelineLayout::move(PipelineLayout* const from) noexcept
         from->pipeline_layout_ = VK_NULL_HANDLE;
 }
 
-PipelineLayout::PipelineLayout(const VkDevice device, const VkPipelineLayoutCreateInfo& create_info)
+PipelineLayout::PipelineLayout(const VkDevice device, const VkPipelineLayoutCreateInfo& create_info) : device_(device)
 {
-        const VkResult result = vkCreatePipelineLayout(device, &create_info, nullptr, &pipeline_layout_);
-        if (result != VK_SUCCESS)
-        {
-                vulkan_function_error("vkCreatePipelineLayout", result);
-        }
-        ASSERT(pipeline_layout_ != VK_NULL_HANDLE);
-        device_ = device;
+        VULKAN_CHECK(vkCreatePipelineLayout(device, &create_info, nullptr, &pipeline_layout_));
 }
 
 //
@@ -289,30 +247,18 @@ void Pipeline::move(Pipeline* const from) noexcept
         from->pipeline_ = VK_NULL_HANDLE;
 }
 
-Pipeline::Pipeline(const VkDevice device, const VkGraphicsPipelineCreateInfo& create_info)
+Pipeline::Pipeline(const VkDevice device, const VkGraphicsPipelineCreateInfo& create_info) : device_(device)
 {
-        constexpr VkPipelineCache PIPELINE_CACHE = VK_NULL_HANDLE;
+        static constexpr VkPipelineCache PIPELINE_CACHE = VK_NULL_HANDLE;
 
-        const VkResult result = vkCreateGraphicsPipelines(device, PIPELINE_CACHE, 1, &create_info, nullptr, &pipeline_);
-        if (result != VK_SUCCESS)
-        {
-                vulkan_function_error("vkCreateGraphicsPipelines", result);
-        }
-        ASSERT(pipeline_ != VK_NULL_HANDLE);
-        device_ = device;
+        VULKAN_CHECK(vkCreateGraphicsPipelines(device, PIPELINE_CACHE, 1, &create_info, nullptr, &pipeline_));
 }
 
-Pipeline::Pipeline(const VkDevice device, const VkComputePipelineCreateInfo& create_info)
+Pipeline::Pipeline(const VkDevice device, const VkComputePipelineCreateInfo& create_info) : device_(device)
 {
-        constexpr VkPipelineCache PIPELINE_CACHE = VK_NULL_HANDLE;
+        static constexpr VkPipelineCache PIPELINE_CACHE = VK_NULL_HANDLE;
 
-        const VkResult result = vkCreateComputePipelines(device, PIPELINE_CACHE, 1, &create_info, nullptr, &pipeline_);
-        if (result != VK_SUCCESS)
-        {
-                vulkan_function_error("vkCreateComputePipelines", result);
-        }
-        ASSERT(pipeline_ != VK_NULL_HANDLE);
-        device_ = device;
+        VULKAN_CHECK(vkCreateComputePipelines(device, PIPELINE_CACHE, 1, &create_info, nullptr, &pipeline_));
 }
 
 //
@@ -326,7 +272,7 @@ void Framebuffer::destroy() noexcept
         }
 }
 
-void Framebuffer::move(Framebuffer* from) noexcept
+void Framebuffer::move(Framebuffer* const from) noexcept
 {
         device_ = from->device_;
         framebuffer_ = from->framebuffer_;
@@ -334,15 +280,9 @@ void Framebuffer::move(Framebuffer* from) noexcept
         from->framebuffer_ = VK_NULL_HANDLE;
 }
 
-Framebuffer::Framebuffer(const VkDevice device, const VkFramebufferCreateInfo& create_info)
+Framebuffer::Framebuffer(const VkDevice device, const VkFramebufferCreateInfo& create_info) : device_(device)
 {
-        const VkResult result = vkCreateFramebuffer(device, &create_info, nullptr, &framebuffer_);
-        if (result != VK_SUCCESS)
-        {
-                vulkan_function_error("vkCreateFramebuffer", result);
-        }
-        ASSERT(framebuffer_ != VK_NULL_HANDLE);
-        device_ = device;
+        VULKAN_CHECK(vkCreateFramebuffer(device, &create_info, nullptr, &framebuffer_));
 }
 
 //
@@ -364,15 +304,9 @@ void CommandPool::move(CommandPool* const from) noexcept
         from->command_pool_ = VK_NULL_HANDLE;
 }
 
-CommandPool::CommandPool(const VkDevice device, const VkCommandPoolCreateInfo& create_info)
+CommandPool::CommandPool(const VkDevice device, const VkCommandPoolCreateInfo& create_info) : device_(device)
 {
-        const VkResult result = vkCreateCommandPool(device, &create_info, nullptr, &command_pool_);
-        if (result != VK_SUCCESS)
-        {
-                vulkan_function_error("vkCreateCommandPool", result);
-        }
-        ASSERT(command_pool_ != VK_NULL_HANDLE);
-        device_ = device;
+        VULKAN_CHECK(vkCreateCommandPool(device, &create_info, nullptr, &command_pool_));
 }
 
 //
@@ -394,18 +328,11 @@ void Semaphore::move(Semaphore* const from) noexcept
         from->semaphore_ = VK_NULL_HANDLE;
 }
 
-Semaphore::Semaphore(VkDevice device)
+Semaphore::Semaphore(const VkDevice device) : device_(device)
 {
         VkSemaphoreCreateInfo create_info = {};
         create_info.sType = VK_STRUCTURE_TYPE_SEMAPHORE_CREATE_INFO;
-
-        const VkResult result = vkCreateSemaphore(device, &create_info, nullptr, &semaphore_);
-        if (result != VK_SUCCESS)
-        {
-                vulkan_function_error("vkCreateSemaphore", result);
-        }
-        ASSERT(semaphore_ != VK_NULL_HANDLE);
-        device_ = device;
+        VULKAN_CHECK(vkCreateSemaphore(device, &create_info, nullptr, &semaphore_));
 }
 
 //
@@ -427,7 +354,7 @@ void Fence::move(Fence* const from) noexcept
         from->fence_ = VK_NULL_HANDLE;
 }
 
-Fence::Fence(const VkDevice device, const bool signaled)
+Fence::Fence(const VkDevice device, const bool signaled) : device_(device)
 {
         VkFenceCreateInfo create_info = {};
         create_info.sType = VK_STRUCTURE_TYPE_FENCE_CREATE_INFO;
@@ -435,14 +362,7 @@ Fence::Fence(const VkDevice device, const bool signaled)
         {
                 create_info.flags = VK_FENCE_CREATE_SIGNALED_BIT;
         }
-
-        const VkResult result = vkCreateFence(device, &create_info, nullptr, &fence_);
-        if (result != VK_SUCCESS)
-        {
-                vulkan_function_error("vkCreateFence", result);
-        }
-        ASSERT(fence_ != VK_NULL_HANDLE);
-        device_ = device;
+        VULKAN_CHECK(vkCreateFence(device, &create_info, nullptr, &fence_));
 }
 
 //
@@ -464,15 +384,9 @@ void Buffer::move(Buffer* const from) noexcept
         from->buffer_ = VK_NULL_HANDLE;
 }
 
-Buffer::Buffer(const VkDevice device, const VkBufferCreateInfo& create_info)
+Buffer::Buffer(const VkDevice device, const VkBufferCreateInfo& create_info) : device_(device)
 {
-        const VkResult result = vkCreateBuffer(device, &create_info, nullptr, &buffer_);
-        if (result != VK_SUCCESS)
-        {
-                vulkan_function_error("vkCreateBuffer", result);
-        }
-        ASSERT(buffer_ != VK_NULL_HANDLE);
-        device_ = device;
+        VULKAN_CHECK(vkCreateBuffer(device, &create_info, nullptr, &buffer_));
 }
 
 //
@@ -494,15 +408,9 @@ void DeviceMemory::move(DeviceMemory* const from) noexcept
         from->device_memory_ = VK_NULL_HANDLE;
 }
 
-DeviceMemory::DeviceMemory(const VkDevice device, const VkMemoryAllocateInfo& allocate_info)
+DeviceMemory::DeviceMemory(const VkDevice device, const VkMemoryAllocateInfo& allocate_info) : device_(device)
 {
-        const VkResult result = vkAllocateMemory(device, &allocate_info, nullptr, &device_memory_);
-        if (result != VK_SUCCESS)
-        {
-                vulkan_function_error("vkAllocateMemory", result);
-        }
-        ASSERT(device_memory_ != VK_NULL_HANDLE);
-        device_ = device;
+        VULKAN_CHECK(vkAllocateMemory(device, &allocate_info, nullptr, &device_memory_));
 }
 
 //
@@ -528,21 +436,14 @@ void CommandBuffer::move(CommandBuffer* const from) noexcept
 }
 
 CommandBuffer::CommandBuffer(const VkDevice device, const VkCommandPool command_pool)
+        : device_(device), command_pool_(command_pool)
 {
         VkCommandBufferAllocateInfo allocate_info = {};
         allocate_info.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO;
         allocate_info.level = VK_COMMAND_BUFFER_LEVEL_PRIMARY;
         allocate_info.commandPool = command_pool;
         allocate_info.commandBufferCount = 1;
-
-        const VkResult result = vkAllocateCommandBuffers(device, &allocate_info, &command_buffer_);
-        if (result != VK_SUCCESS)
-        {
-                vulkan_function_error("vkAllocateCommandBuffers", result);
-        }
-        ASSERT(command_buffer_ != VK_NULL_HANDLE);
-        device_ = device;
-        command_pool_ = command_pool;
+        VULKAN_CHECK(vkAllocateCommandBuffers(device, &allocate_info, &command_buffer_));
 }
 
 //
@@ -568,29 +469,14 @@ void CommandBuffers::move(CommandBuffers* const from) noexcept
 }
 
 CommandBuffers::CommandBuffers(const VkDevice device, const VkCommandPool command_pool, const std::uint32_t count)
-        : command_buffers_(count)
+        : device_(device), command_pool_(command_pool), command_buffers_(count)
 {
         VkCommandBufferAllocateInfo allocate_info = {};
         allocate_info.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO;
         allocate_info.level = VK_COMMAND_BUFFER_LEVEL_PRIMARY;
         allocate_info.commandPool = command_pool;
         allocate_info.commandBufferCount = count;
-
-        const VkResult result = vkAllocateCommandBuffers(device, &allocate_info, command_buffers_.data());
-        if (result != VK_SUCCESS)
-        {
-                vulkan_function_error("vkAllocateCommandBuffers", result);
-        }
-
-        ASSERT(std::all_of(
-                command_buffers_.cbegin(), command_buffers_.cend(),
-                [](const VkCommandBuffer& command_buffer)
-                {
-                        return command_buffer != VK_NULL_HANDLE;
-                }));
-
-        device_ = device;
-        command_pool_ = command_pool;
+        VULKAN_CHECK(vkAllocateCommandBuffers(device, &allocate_info, command_buffers_.data()));
 }
 
 const VkCommandBuffer& CommandBuffers::operator[](const std::uint32_t index) const noexcept
@@ -624,14 +510,9 @@ void DescriptorSetLayout::move(DescriptorSetLayout* const from) noexcept
 }
 
 DescriptorSetLayout::DescriptorSetLayout(const VkDevice device, const VkDescriptorSetLayoutCreateInfo& create_info)
+        : device_(device)
 {
-        const VkResult result = vkCreateDescriptorSetLayout(device, &create_info, nullptr, &descriptor_set_layout_);
-        if (result != VK_SUCCESS)
-        {
-                vulkan_function_error("vkCreateDescriptorSetLayout", result);
-        }
-        ASSERT(descriptor_set_layout_ != VK_NULL_HANDLE);
-        device_ = device;
+        VULKAN_CHECK(vkCreateDescriptorSetLayout(device, &create_info, nullptr, &descriptor_set_layout_));
 }
 
 //
@@ -653,15 +534,9 @@ void DescriptorPool::move(DescriptorPool* const from) noexcept
         from->descriptor_pool_ = VK_NULL_HANDLE;
 }
 
-DescriptorPool::DescriptorPool(const VkDevice device, const VkDescriptorPoolCreateInfo& create_info)
+DescriptorPool::DescriptorPool(const VkDevice device, const VkDescriptorPoolCreateInfo& create_info) : device_(device)
 {
-        const VkResult result = vkCreateDescriptorPool(device, &create_info, nullptr, &descriptor_pool_);
-        if (result != VK_SUCCESS)
-        {
-                vulkan_function_error("vkCreateDescriptorPool", result);
-        }
-        ASSERT(descriptor_pool_ != VK_NULL_HANDLE);
-        device_ = device;
+        VULKAN_CHECK(vkCreateDescriptorPool(device, &create_info, nullptr, &descriptor_pool_));
 }
 
 //
@@ -672,11 +547,7 @@ void DescriptorSet::destroy() noexcept
         {
                 ASSERT(device_ != VK_NULL_HANDLE);
                 ASSERT(descriptor_pool_ != VK_NULL_HANDLE);
-                const VkResult result = vkFreeDescriptorSets(device_, descriptor_pool_, 1, &descriptor_set_);
-                if (result != VK_SUCCESS)
-                {
-                        vulkan_function_error("vkFreeDescriptorSets", result);
-                }
+                VULKAN_CHECK(vkFreeDescriptorSets(device_, descriptor_pool_, 1, &descriptor_set_));
         }
 }
 
@@ -694,6 +565,7 @@ DescriptorSet::DescriptorSet(
         const VkDevice device,
         const VkDescriptorPool descriptor_pool,
         const VkDescriptorSetLayout descriptor_set_layout)
+        : device_(device), descriptor_pool_(descriptor_pool)
 {
         ASSERT(device != VK_NULL_HANDLE);
         ASSERT(descriptor_pool != VK_NULL_HANDLE);
@@ -704,15 +576,7 @@ DescriptorSet::DescriptorSet(
         allocate_info.descriptorPool = descriptor_pool;
         allocate_info.descriptorSetCount = 1;
         allocate_info.pSetLayouts = &descriptor_set_layout;
-
-        const VkResult result = vkAllocateDescriptorSets(device, &allocate_info, &descriptor_set_);
-        if (result != VK_SUCCESS)
-        {
-                vulkan_function_error("vkAllocateDescriptorSets", result);
-        }
-        ASSERT(descriptor_set_ != VK_NULL_HANDLE);
-        device_ = device;
-        descriptor_pool_ = descriptor_pool;
+        VULKAN_CHECK(vkAllocateDescriptorSets(device, &allocate_info, &descriptor_set_));
 }
 
 //
@@ -723,12 +587,8 @@ void DescriptorSets::destroy() noexcept
         {
                 ASSERT(device_ != VK_NULL_HANDLE);
                 ASSERT(descriptor_pool_ != VK_NULL_HANDLE);
-                const VkResult result = vkFreeDescriptorSets(
-                        device_, descriptor_pool_, descriptor_sets_.size(), descriptor_sets_.data());
-                if (result != VK_SUCCESS)
-                {
-                        vulkan_function_error("vkFreeDescriptorSets", result);
-                }
+                VULKAN_CHECK(vkFreeDescriptorSets(
+                        device_, descriptor_pool_, descriptor_sets_.size(), descriptor_sets_.data()));
         }
 }
 
@@ -746,7 +606,7 @@ DescriptorSets::DescriptorSets(
         const VkDevice device,
         const VkDescriptorPool descriptor_pool,
         const std::vector<VkDescriptorSetLayout>& descriptor_set_layouts)
-        : descriptor_sets_(descriptor_set_layouts.size())
+        : device_(device), descriptor_pool_(descriptor_pool), descriptor_sets_(descriptor_set_layouts.size())
 {
         ASSERT(device != VK_NULL_HANDLE);
         ASSERT(descriptor_pool != VK_NULL_HANDLE);
@@ -763,22 +623,7 @@ DescriptorSets::DescriptorSets(
         allocate_info.descriptorPool = descriptor_pool;
         allocate_info.descriptorSetCount = descriptor_set_layouts.size();
         allocate_info.pSetLayouts = descriptor_set_layouts.data();
-
-        const VkResult result = vkAllocateDescriptorSets(device, &allocate_info, descriptor_sets_.data());
-        if (result != VK_SUCCESS)
-        {
-                vulkan_function_error("vkAllocateDescriptorSets", result);
-        }
-
-        ASSERT(std::all_of(
-                descriptor_sets_.cbegin(), descriptor_sets_.cend(),
-                [](const VkDescriptorSet& descriptor_set)
-                {
-                        return descriptor_set != VK_NULL_HANDLE;
-                }));
-
-        device_ = device;
-        descriptor_pool_ = descriptor_pool;
+        VULKAN_CHECK(vkAllocateDescriptorSets(device, &allocate_info, descriptor_sets_.data()));
 }
 
 const VkDescriptorSet& DescriptorSets::operator[](const std::uint32_t index) const noexcept
@@ -811,15 +656,9 @@ void Image::move(Image* const from) noexcept
         from->image_ = VK_NULL_HANDLE;
 }
 
-Image::Image(const VkDevice device, const VkImageCreateInfo& create_info)
+Image::Image(const VkDevice device, const VkImageCreateInfo& create_info) : device_(device)
 {
-        const VkResult result = vkCreateImage(device, &create_info, nullptr, &image_);
-        if (result != VK_SUCCESS)
-        {
-                vulkan_function_error("vkCreateImage", result);
-        }
-        ASSERT(image_ != VK_NULL_HANDLE);
-        device_ = device;
+        VULKAN_CHECK(vkCreateImage(device, &create_info, nullptr, &image_));
 }
 
 //
@@ -841,15 +680,9 @@ void ImageView::move(ImageView* const from) noexcept
         from->image_view_ = VK_NULL_HANDLE;
 }
 
-ImageView::ImageView(const VkDevice device, const VkImageViewCreateInfo& create_info)
+ImageView::ImageView(const VkDevice device, const VkImageViewCreateInfo& create_info) : device_(device)
 {
-        const VkResult result = vkCreateImageView(device, &create_info, nullptr, &image_view_);
-        if (result != VK_SUCCESS)
-        {
-                vulkan_function_error("vkCreateImageView", result);
-        }
-        ASSERT(image_view_ != VK_NULL_HANDLE);
-        device_ = device;
+        VULKAN_CHECK(vkCreateImageView(device, &create_info, nullptr, &image_view_));
 }
 
 //
@@ -871,14 +704,8 @@ void Sampler::move(Sampler* const from) noexcept
         from->sampler_ = VK_NULL_HANDLE;
 }
 
-Sampler::Sampler(const VkDevice device, const VkSamplerCreateInfo& create_info)
+Sampler::Sampler(const VkDevice device, const VkSamplerCreateInfo& create_info) : device_(device)
 {
-        const VkResult result = vkCreateSampler(device, &create_info, nullptr, &sampler_);
-        if (result != VK_SUCCESS)
-        {
-                vulkan_function_error("vkCreateSampler", result);
-        }
-        ASSERT(sampler_ != VK_NULL_HANDLE);
-        device_ = device;
+        VULKAN_CHECK(vkCreateSampler(device, &create_info, nullptr, &sampler_));
 }
 }

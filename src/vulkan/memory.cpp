@@ -39,11 +39,7 @@ handle::DeviceMemory create_device_memory(
 
         handle::DeviceMemory device_memory(device, allocate_info);
 
-        const VkResult result = vkBindBufferMemory(device, buffer, device_memory, 0);
-        if (result != VK_SUCCESS)
-        {
-                vulkan_function_error("vkBindBufferMemory", result);
-        }
+        VULKAN_CHECK(vkBindBufferMemory(device, buffer, device_memory, 0));
 
         return device_memory;
 }
@@ -65,11 +61,7 @@ handle::DeviceMemory create_device_memory(
 
         handle::DeviceMemory device_memory(device, allocate_info);
 
-        const VkResult result = vkBindImageMemory(device, image, device_memory, 0);
-        if (result != VK_SUCCESS)
-        {
-                vulkan_function_error("vkBindImageMemory", result);
-        }
+        VULKAN_CHECK(vkBindImageMemory(device, image, device_memory, 0));
 
         return device_memory;
 }

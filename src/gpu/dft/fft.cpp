@@ -25,7 +25,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/com/constant.h>
 #include <src/vulkan/error.h>
 #include <src/vulkan/queue.h>
-#include <src/vulkan/sync.h>
 
 #include <bit>
 
@@ -52,23 +51,16 @@ void begin_commands(const VkCommandBuffer command_buffer)
         VkCommandBufferBeginInfo command_buffer_info = {};
         command_buffer_info.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
         command_buffer_info.flags = VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT;
-        const VkResult result = vkBeginCommandBuffer(command_buffer, &command_buffer_info);
-        if (result != VK_SUCCESS)
-        {
-                vulkan::vulkan_function_error("vkBeginCommandBuffer", result);
-        }
+
+        VULKAN_CHECK(vkBeginCommandBuffer(command_buffer, &command_buffer_info));
 }
 
 void end_commands(const VkQueue queue, const VkCommandBuffer command_buffer)
 {
-        const VkResult result = vkEndCommandBuffer(command_buffer);
-        if (result != VK_SUCCESS)
-        {
-                vulkan::vulkan_function_error("vkEndCommandBuffer", result);
-        }
+        VULKAN_CHECK(vkEndCommandBuffer(command_buffer));
 
         vulkan::queue_submit(command_buffer, queue);
-        vulkan::queue_wait_idle(queue);
+        VULKAN_CHECK(vkQueueWaitIdle(queue));
 }
 
 void buffer_barrier(const VkCommandBuffer command_buffer, const VkBuffer buffer)

@@ -19,20 +19,14 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "error.h"
 
-#include <src/com/type/limit.h>
-
 namespace ns::vulkan
 {
-void reset_fence(VkDevice device, VkFence fence)
+void reset_fence(const VkDevice device, const VkFence fence)
 {
-        const VkResult result = vkResetFences(device, 1, &fence);
-        if (result != VK_SUCCESS)
-        {
-                vulkan::vulkan_function_error("vkResetFences", result);
-        }
+        VULKAN_CHECK(vkResetFences(device, 1, &fence));
 }
 
-bool wait_for_fence(VkDevice device, VkFence fence, std::uint64_t timeout_nanoseconds)
+bool wait_for_fence(const VkDevice device, const VkFence fence, const std::uint64_t timeout_nanoseconds)
 {
         static constexpr VkBool32 WAIT_ALL = VK_TRUE;
 
@@ -48,15 +42,6 @@ bool wait_for_fence(VkDevice device, VkFence fence, std::uint64_t timeout_nanose
                 return false;
         }
 
-        vulkan::vulkan_function_error("vkWaitForFences", result);
-}
-
-void queue_wait_idle(VkQueue queue)
-{
-        const VkResult result = vkQueueWaitIdle(queue);
-        if (result != VK_SUCCESS)
-        {
-                vulkan::vulkan_function_error("vkQueueWaitIdle", result);
-        }
+        VULKAN_ERROR(result);
 }
 }
