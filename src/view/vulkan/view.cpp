@@ -17,6 +17,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "view.h"
 
+#include "image_process.h"
 #include "image_resolve.h"
 #include "render_buffers.h"
 #include "swapchain.h"
@@ -33,10 +34,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/com/print.h>
 #include <src/com/type/limit.h>
 #include <src/com/variant.h>
-#include <src/gpu/convex_hull/view.h>
-#include <src/gpu/dft/view.h>
-#include <src/gpu/optical_flow/view.h>
-#include <src/gpu/pencil_sketch/view.h>
 #include <src/gpu/renderer/renderer.h>
 #include <src/gpu/text_writer/view.h>
 #include <src/image/alpha.h>
@@ -107,10 +104,7 @@ std::unique_ptr<vulkan::VulkanInstance> create_instance(const window::WindowID& 
         const vulkan::DeviceFeatures required_device_features = []()
         {
                 vulkan::DeviceFeatures features = device_features();
-                vulkan::add_features(&features, gpu::convex_hull::View::required_device_features());
-                vulkan::add_features(&features, gpu::dft::View::required_device_features());
-                vulkan::add_features(&features, gpu::optical_flow::View::required_device_features());
-                vulkan::add_features(&features, gpu::pencil_sketch::View::required_device_features());
+                vulkan::add_features(&features, ImageProcess::required_device_features());
                 vulkan::add_features(&features, gpu::renderer::Renderer::required_device_features());
                 vulkan::add_features(&features, gpu::text_writer::View::required_device_features());
                 return features;
@@ -145,19 +139,12 @@ class Impl final
         vulkan::PresentMode present_mode_ = SWAPCHAIN_INITIAL_PRESENT_MODE;
 
         bool text_active_ = true;
-        bool convex_hull_active_ = false;
-        bool pencil_sketch_active_ = false;
-        bool dft_active_ = false;
-        bool optical_flow_active_ = false;
 
         const std::unique_ptr<vulkan::VulkanInstance> instance_;
 
         std::unique_ptr<gpu::renderer::Renderer> renderer_;
         std::unique_ptr<gpu::text_writer::View> text_;
-        std::unique_ptr<gpu::convex_hull::View> convex_hull_;
-        std::unique_ptr<gpu::pencil_sketch::View> pencil_sketch_;
-        std::unique_ptr<gpu::dft::View> dft_;
-        std::unique_ptr<gpu::optical_flow::View> optical_flow_;
+        std::unique_ptr<ImageProcess> image_process_;
 
         const vulkan::handle::Semaphore swapchain_image_semaphore_{instance_->device()};
         std::unique_ptr<vulkan::Swapchain> swapchain_;
@@ -365,45 +352,40 @@ class Impl final
 
         void command(const command::ShowPencilSketch& d)
         {
-                pencil_sketch_active_ = d.show;
+                image_process_->command(d);
         }
 
         void command(const command::ShowDft& d)
         {
-                if (dft_active_ != d.show)
+                if (image_process_->command(d))
                 {
-                        dft_active_ = d.show;
                         create_swapchain();
                 }
         }
 
         void command(const command::SetDftBrightness& d)
         {
-                dft_->set_brightness(d.value);
+                image_process_->command(d);
         }
 
         void command(const command::SetDftBackgroundColor& d)
         {
-                dft_->set_background_color(d.value);
+                image_process_->command(d);
         }
 
         void command(const command::SetDftColor& d)
         {
-                dft_->set_color(d.value);
+                image_process_->command(d);
         }
 
         void command(const command::ShowConvexHull2D& d)
         {
-                convex_hull_active_ = d.show;
-                if (convex_hull_active_)
-                {
-                        convex_hull_->reset_timer();
-                }
+                image_process_->command(d);
         }
 
         void command(const command::ShowOpticalFlow& d)
         {
-                optical_flow_active_ = d.show;
+                image_process_->command(d);
         }
 
         void command(const command::SetVerticalSync& d)
@@ -514,10 +496,7 @@ class Impl final
         void delete_buffers()
         {
                 text_->delete_buffers();
-                convex_hull_->delete_buffers();
-                pencil_sketch_->delete_buffers();
-                dft_->delete_buffers();
-                optical_flow_->delete_buffers();
+                image_process_->delete_buffers();
                 renderer_->delete_buffers();
 
                 image_resolve_.reset();
@@ -540,38 +519,28 @@ class Impl final
                         VK_IMAGE_USAGE_STORAGE_BIT | VK_IMAGE_USAGE_TRANSFER_DST_BIT, VK_IMAGE_LAYOUT_GENERAL,
                         instance_->graphics_compute_command_pool(), instance_->graphics_compute_queues()[0]);
 
-                const auto [w_1, w_2] = window_position_and_size(
-                        dft_active_, render_buffers_->width(), render_buffers_->height(), frame_size_in_pixels_);
+                const auto [window_1, window_2] = window_position_and_size(
+                        image_process_->two_windows(), render_buffers_->width(), render_buffers_->height(),
+                        frame_size_in_pixels_);
 
-                draw_rectangle_ = w_1;
+                draw_rectangle_ = window_1;
 
                 static_assert(RENDER_BUFFER_COUNT == 1);
                 image_resolve_ = std::make_unique<ImageResolve>(
                         instance_->device(), instance_->graphics_compute_command_pool(),
-                        instance_->graphics_compute_queues()[0], *render_buffers_, draw_rectangle_,
+                        instance_->graphics_compute_queues()[0], *render_buffers_, window_1,
                         VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL, VK_IMAGE_USAGE_SAMPLED_BIT);
 
-                renderer_->create_buffers(&render_buffers_->buffers_3d(), object_image_.get(), draw_rectangle_);
+                renderer_->create_buffers(&render_buffers_->buffers_3d(), object_image_.get(), window_1);
 
                 text_->create_buffers(
                         &render_buffers_->buffers_2d(),
                         Region<2, int>({0, 0}, {render_buffers_->width(), render_buffers_->height()}));
 
-                convex_hull_->create_buffers(&render_buffers_->buffers_2d(), *object_image_, draw_rectangle_);
+                image_process_->create_buffers(
+                        &render_buffers_->buffers_2d(), image_resolve_->image(0), *object_image_, window_1, window_2);
 
-                pencil_sketch_->create_buffers(
-                        &render_buffers_->buffers_2d(), image_resolve_->image(0), *object_image_, draw_rectangle_);
-
-                optical_flow_->create_buffers(
-                        &render_buffers_->buffers_2d(), image_resolve_->image(0), window_ppi_, draw_rectangle_);
-
-                if (w_2)
-                {
-                        dft_->create_buffers(
-                                &render_buffers_->buffers_2d(), image_resolve_->image(0), draw_rectangle_, *w_2);
-                }
-
-                camera_.resize(draw_rectangle_.width(), draw_rectangle_.height());
+                camera_.resize(window_1.width(), window_1.height());
                 renderer_->set_camera(camera_.renderer_info());
         }
 
@@ -588,31 +557,7 @@ class Impl final
                 const vulkan::Queue& graphics_queue = instance_->graphics_compute_queues()[0];
                 const vulkan::Queue& compute_queue = instance_->compute_queue();
 
-                if (pencil_sketch_active_)
-                {
-                        semaphore = image_resolve_->resolve_semaphore(graphics_queue, semaphore, INDEX);
-                        semaphore = pencil_sketch_->draw(graphics_queue, semaphore, INDEX);
-                }
-
-                if (dft_active_ || optical_flow_active_)
-                {
-                        semaphore = image_resolve_->resolve_semaphore(graphics_queue, semaphore, INDEX);
-                }
-
-                if (dft_active_)
-                {
-                        semaphore = dft_->draw(graphics_queue, semaphore, INDEX);
-                }
-
-                if (optical_flow_active_)
-                {
-                        semaphore = optical_flow_->draw(graphics_queue, compute_queue, semaphore, INDEX);
-                }
-
-                if (convex_hull_active_)
-                {
-                        semaphore = convex_hull_->draw(graphics_queue, semaphore, INDEX);
-                }
+                semaphore = image_process_->draw(*image_resolve_, semaphore, graphics_queue, compute_queue, INDEX);
 
                 if (text_active_)
                 {
@@ -696,41 +641,22 @@ public:
                         error("Window PPI " + to_string(window_ppi_) + "is not positive");
                 }
 
-                const vulkan::Queue* const graphics_queue = &instance_->graphics_compute_queues()[0];
-                const vulkan::CommandPool* const graphics_pool = &instance_->graphics_compute_command_pool();
-                const vulkan::Queue* const compute_queue = &instance_->compute_queue();
-                const vulkan::CommandPool* const compute_pool = &instance_->compute_command_pool();
-                const vulkan::Queue* const transfer_queue = &instance_->transfer_queue();
-                const vulkan::CommandPool* const transfer_pool = &instance_->transfer_command_pool();
-
                 renderer_ = gpu::renderer::create_renderer(
-                        instance_.get(), graphics_pool, graphics_queue, transfer_pool, transfer_queue,
-                        SAMPLE_RATE_SHADING, SAMPLER_ANISOTROPY);
+                        instance_.get(), &instance_->graphics_compute_command_pool(),
+                        &instance_->graphics_compute_queues()[0], &instance_->transfer_command_pool(),
+                        &instance_->transfer_queue(), SAMPLE_RATE_SHADING, SAMPLER_ANISOTROPY);
 
                 text_ = gpu::text_writer::create_view(
-                        instance_.get(), graphics_pool, graphics_queue, transfer_pool, transfer_queue,
-                        SAMPLE_RATE_SHADING, frame_rate_.text_size(), DEFAULT_TEXT_COLOR);
+                        instance_.get(), &instance_->graphics_compute_command_pool(),
+                        &instance_->graphics_compute_queues()[0], &instance_->transfer_command_pool(),
+                        &instance_->transfer_queue(), SAMPLE_RATE_SHADING, frame_rate_.text_size(), DEFAULT_TEXT_COLOR);
 
-                convex_hull_ = gpu::convex_hull::create_view(
-                        instance_.get(), graphics_pool, graphics_queue, SAMPLE_RATE_SHADING);
-
-                pencil_sketch_ = gpu::pencil_sketch::create_view(
-                        instance_.get(), graphics_pool, graphics_queue, transfer_pool, transfer_queue,
-                        SAMPLE_RATE_SHADING);
-
-                dft_ = gpu::dft::create_view(
-                        instance_.get(), graphics_pool, graphics_queue, transfer_pool, transfer_queue,
-                        SAMPLE_RATE_SHADING);
-
-                optical_flow_ = gpu::optical_flow::create_view(
-                        instance_.get(), graphics_pool, graphics_queue, compute_pool, compute_queue, transfer_pool,
-                        transfer_queue, SAMPLE_RATE_SHADING);
-
-                //
+                image_process_ = std::make_unique<ImageProcess>(
+                        window_ppi, SAMPLE_RATE_SHADING, instance_.get(), &instance_->graphics_compute_command_pool(),
+                        &instance_->graphics_compute_queues()[0], &instance_->transfer_command_pool(),
+                        &instance_->transfer_queue(), &instance_->compute_command_pool(), &instance_->compute_queue());
 
                 create_swapchain();
-
-                //
 
                 reset_view_handler();
                 clip_plane_hide();
