@@ -19,6 +19,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "image_process.h"
 #include "image_resolve.h"
+#include "instance.h"
 #include "render_buffers.h"
 #include "swapchain.h"
 
@@ -32,7 +33,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/com/conversion.h>
 #include <src/com/error.h>
 #include <src/com/print.h>
-#include <src/com/variant.h>
 #include <src/gpu/renderer/renderer.h>
 #include <src/gpu/text_writer/view.h>
 #include <src/image/alpha.h>
@@ -42,7 +42,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/vulkan/instance.h>
 #include <src/vulkan/objects.h>
 #include <src/vulkan/queue.h>
-#include <src/window/surface.h>
 
 #include <chrono>
 
@@ -74,6 +73,10 @@ constexpr VkFormat OBJECT_IMAGE_FORMAT = VK_FORMAT_R32_UINT;
 
 constexpr color::Color DEFAULT_TEXT_COLOR{RGB8(255, 255, 255)};
 
+static_assert(
+        2 <= std::tuple_size_v<
+                std::remove_reference_t<decltype(std::declval<vulkan::VulkanInstance>().graphics_compute_queues())>>);
+
 vulkan::DeviceFeatures device_features()
 {
         vulkan::DeviceFeatures features{};
@@ -85,40 +88,10 @@ vulkan::DeviceFeatures device_features()
         {
                 features.features_10.samplerAnisotropy = VK_TRUE;
         }
+        vulkan::add_features(&features, ImageProcess::required_device_features());
+        vulkan::add_features(&features, gpu::renderer::Renderer::required_device_features());
+        vulkan::add_features(&features, gpu::text_writer::View::required_device_features());
         return features;
-}
-
-//
-
-std::unique_ptr<vulkan::VulkanInstance> create_instance(const window::WindowID& window)
-{
-        static_assert(
-                2 <= std::tuple_size_v<std::remove_cvref_t<
-                        decltype(std::declval<vulkan::VulkanInstance>().graphics_compute_queues())>>);
-
-        const std::vector<std::string> instance_extensions = window::vulkan_create_surface_required_extensions();
-
-        const std::vector<std::string> device_extensions = {};
-
-        const vulkan::DeviceFeatures required_device_features = []()
-        {
-                vulkan::DeviceFeatures features = device_features();
-                vulkan::add_features(&features, ImageProcess::required_device_features());
-                vulkan::add_features(&features, gpu::renderer::Renderer::required_device_features());
-                vulkan::add_features(&features, gpu::text_writer::View::required_device_features());
-                return features;
-        }();
-
-        const vulkan::DeviceFeatures optional_device_features = {};
-
-        const std::function<VkSurfaceKHR(VkInstance)> surface_function = [&](const VkInstance instance)
-        {
-                return window::vulkan_create_surface(window, instance);
-        };
-
-        return std::make_unique<vulkan::VulkanInstance>(
-                instance_extensions, device_extensions, required_device_features, optional_device_features,
-                surface_function);
 }
 
 class Impl final
@@ -168,6 +141,7 @@ class Impl final
                         create_swapchain();
                         return;
                 }
+
                 if (!v && present_mode_ != vulkan::PresentMode::PREFER_FAST)
                 {
                         present_mode_ = vulkan::PresentMode::PREFER_FAST;
@@ -176,11 +150,44 @@ class Impl final
                 }
         }
 
+        image::Image<2> resolve_to_image()
+        {
+                constexpr int INDEX = 0;
+
+                const int width = swapchain_->width();
+                const int height = swapchain_->height();
+
+                VkSemaphore semaphore = render();
+
+                const vulkan::Queue& queue = instance_->graphics_compute_queues()[0];
+
+                const ImageResolve image(
+                        instance_->device(), instance_->graphics_compute_command_pool(), queue, *render_buffers_,
+                        Region<2, int>({0, 0}, {width, height}), VK_IMAGE_LAYOUT_GENERAL,
+                        VK_IMAGE_USAGE_TRANSFER_SRC_BIT);
+
+                image.resolve(queue, semaphore, INDEX);
+                VULKAN_CHECK(vkQueueWaitIdle(queue));
+
+                image::Image<2> res;
+
+                res.size[0] = width;
+                res.size[1] = height;
+
+                image.image(INDEX).read_pixels(
+                        instance_->graphics_compute_command_pool(), queue, VK_IMAGE_LAYOUT_GENERAL,
+                        VK_IMAGE_LAYOUT_GENERAL, &res.color_format, &res.pixels);
+
+                ASSERT(4 == image::format_component_count(res.color_format));
+
+                return image::delete_alpha(res);
+        }
+
         //
 
         void command(const command::UpdateMeshObject& v)
         {
-                if (auto ptr = v.object.lock(); ptr)
+                if (const auto ptr = v.object.lock())
                 {
                         renderer_->object_update(*ptr);
                 }
@@ -188,7 +195,7 @@ class Impl final
 
         void command(const command::UpdateVolumeObject& v)
         {
-                if (auto ptr = v.object.lock(); ptr)
+                if (const auto ptr = v.object.lock())
                 {
                         renderer_->object_update(*ptr);
                 }
@@ -226,13 +233,13 @@ class Impl final
                 const bool background_is_dark = v.value.luminance() <= 0.5;
                 if (background_is_dark)
                 {
-                        static const color::Color white(1);
-                        text_->set_color(white);
+                        static constexpr color::Color WHITE(1);
+                        text_->set_color(WHITE);
                 }
                 else
                 {
-                        static const color::Color black(0);
-                        text_->set_color(black);
+                        static constexpr color::Color BLACK(0);
+                        text_->set_color(BLACK);
                 }
         }
 
@@ -346,7 +353,6 @@ class Impl final
         void info(info::Image* const image_info)
         {
                 static_assert(RENDER_BUFFER_COUNT == 1);
-                constexpr int INDEX = 0;
 
                 instance_->device_wait_idle();
 
@@ -356,29 +362,7 @@ class Impl final
                 delete_swapchain_buffers();
                 create_buffers(SAVE_FORMAT, width, height);
 
-                {
-                        VkSemaphore semaphore = render();
-
-                        const vulkan::Queue& queue = instance_->graphics_compute_queues()[0];
-
-                        const ImageResolve image(
-                                instance_->device(), instance_->graphics_compute_command_pool(), queue,
-                                *render_buffers_, Region<2, int>({0, 0}, {width, height}), VK_IMAGE_LAYOUT_GENERAL,
-                                VK_IMAGE_USAGE_TRANSFER_SRC_BIT);
-
-                        image.resolve(queue, semaphore, INDEX);
-                        VULKAN_CHECK(vkQueueWaitIdle(queue));
-
-                        image.image(INDEX).read_pixels(
-                                instance_->graphics_compute_command_pool(), queue, VK_IMAGE_LAYOUT_GENERAL,
-                                VK_IMAGE_LAYOUT_GENERAL, &image_info->image.color_format, &image_info->image.pixels);
-                }
-
-                image_info->image.size[0] = width;
-                image_info->image.size[1] = height;
-
-                ASSERT(4 == image::format_component_count(image_info->image.color_format));
-                image_info->image = image::delete_alpha(image_info->image);
+                image_info->image = resolve_to_image();
 
                 delete_buffers();
                 create_swapchain_buffers();
@@ -525,7 +509,7 @@ class Impl final
 
 public:
         Impl(const window::WindowID& window, const double window_ppi)
-                : window_ppi_(window_ppi), instance_(create_instance(window))
+                : window_ppi_(window_ppi), instance_(create_instance(window, device_features()))
         {
                 if (!(window_ppi_ > 0))
                 {

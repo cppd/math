@@ -23,7 +23,7 @@ namespace ns::view
 {
 namespace
 {
-void check(const Region<2, int>& window, int width, int height)
+void check(const Region<2, int>& window, const int width, const int height)
 {
         if (!(window.x0() >= 0) || !(window.y0() >= 0) || !(window.width() > 0) || !(window.height() > 0)
             || !(window.x1() <= width) || !(window.y1() <= height))
@@ -34,19 +34,18 @@ void check(const Region<2, int>& window, int width, int height)
 }
 
 std::tuple<Region<2, int>, std::optional<Region<2, int>>> window_position_and_size(
-        bool two_windows,
-        int width,
-        int height,
-        int frame)
+        const bool two_windows,
+        const int width,
+        const int height,
+        const int frame)
 {
-        std::tuple<Region<2, int>, std::optional<Region<2, int>>> result;
-
         if (two_windows)
         {
-                int w = (width - 3 * frame) / 2;
-                int h = (height - 2 * frame);
+                const int w = (width - 3 * frame) / 2;
+                const int h = (height - 2 * frame);
                 if (w > 0 && h > 0)
                 {
+                        std::tuple<Region<2, int>, std::optional<Region<2, int>>> result;
                         std::get<0>(result) = Region<2, int>({frame, frame}, {w, h});
                         std::get<1>(result) = Region<2, int>({width - frame - w, frame}, {w, h});
                         check(std::get<0>(result), width, height);
@@ -55,6 +54,7 @@ std::tuple<Region<2, int>, std::optional<Region<2, int>>> window_position_and_si
                 }
         }
 
+        std::tuple<Region<2, int>, std::optional<Region<2, int>>> result;
         std::get<0>(result) = Region<2, int>({0, 0}, {width, height});
         check(std::get<0>(result), width, height);
         return result;

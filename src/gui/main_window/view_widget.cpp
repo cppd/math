@@ -115,7 +115,7 @@ void ViewWidget::on_clip_plane_clicked()
 
 void ViewWidget::on_convex_hull_2d_clicked()
 {
-        view_->send(view::command::ShowConvexHull2D(ui_.checkBox_convex_hull_2d->isChecked()));
+        view_->send(view::command::ConvexHullShow(ui_.checkBox_convex_hull_2d->isChecked()));
 }
 
 void ViewWidget::on_dft_clicked()
@@ -127,7 +127,7 @@ void ViewWidget::on_dft_clicked()
 
         if (view_)
         {
-                view_->send(view::command::ShowDft(checked));
+                view_->send(view::command::DftShow(checked));
         }
 }
 
@@ -155,12 +155,12 @@ void ViewWidget::on_normals_clicked()
 
 void ViewWidget::on_optical_flow_clicked()
 {
-        view_->send(view::command::ShowOpticalFlow(ui_.checkBox_optical_flow->isChecked()));
+        view_->send(view::command::OpticalFlowShow(ui_.checkBox_optical_flow->isChecked()));
 }
 
 void ViewWidget::on_pencil_sketch_clicked()
 {
-        view_->send(view::command::ShowPencilSketch(ui_.checkBox_pencil_sketch->isChecked()));
+        view_->send(view::command::PencilSketchShow(ui_.checkBox_pencil_sketch->isChecked()));
 }
 
 void ViewWidget::on_shadow_clicked()
@@ -198,12 +198,12 @@ void ViewWidget::on_reset_view_clicked()
 
 void ViewWidget::on_clip_plane_changed(int)
 {
-        view_->send(view::command::ClipPlanePosition(slider_position(ui_.slider_clip_plane)));
+        view_->send(view::command::ClipPlaneSetPosition(slider_position(ui_.slider_clip_plane)));
 }
 
 void ViewWidget::on_dft_brightness_changed(int)
 {
-        view_->send(view::command::SetDftBrightness(dft_brightness()));
+        view_->send(view::command::DftSetBrightness(dft_brightness()));
 }
 
 void ViewWidget::on_normals_changed(int)

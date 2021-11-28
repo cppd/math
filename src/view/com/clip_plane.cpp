@@ -86,7 +86,7 @@ void ClipPlane<Renderer>::command(const command::ClipPlaneHide&)
 }
 
 template <typename Renderer>
-void ClipPlane<Renderer>::command(const command::ClipPlanePosition& v)
+void ClipPlane<Renderer>::command(const command::ClipPlaneSetPosition& v)
 {
         set_position(v.position);
 }
@@ -99,7 +99,7 @@ void ClipPlane<Renderer>::command(const command::ClipPlaneShow& v)
 }
 
 template <typename Renderer>
-void ClipPlane<Renderer>::command(const command::SetClipPlaneColor& v)
+void ClipPlane<Renderer>::command(const command::ClipPlaneSetColor& v)
 {
         renderer_->set_clip_plane_color(v.value);
 }

@@ -19,7 +19,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "ui_view_widget.h"
 
-#include <src/view/interface.h>
+#include <src/view/view.h>
 
 namespace ns::gui::main_window
 {

@@ -83,7 +83,7 @@ const vulkan::ImageWithMemory& ImageResolve::image(const unsigned image_index) c
 
 VkSemaphore ImageResolve::resolve_semaphore(
         const vulkan::Queue& graphics_queue,
-        VkSemaphore wait_semaphore,
+        const VkSemaphore wait_semaphore,
         const unsigned image_index) const
 {
         ASSERT(graphics_queue.family_index() == family_index_);
@@ -97,8 +97,10 @@ VkSemaphore ImageResolve::resolve_semaphore(
         return signal_semaphores_[image_index];
 }
 
-void ImageResolve::resolve(const vulkan::Queue& graphics_queue, VkSemaphore wait_semaphore, const unsigned image_index)
-        const
+void ImageResolve::resolve(
+        const vulkan::Queue& graphics_queue,
+        const VkSemaphore wait_semaphore,
+        const unsigned image_index) const
 {
         ASSERT(graphics_queue.family_index() == family_index_);
         ASSERT(image_index < command_buffers_.count());

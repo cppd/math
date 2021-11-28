@@ -187,7 +187,7 @@ void ColorsWidget::set_clip_plane_color(const QColor& c)
         clip_plane_color_ = c;
         if (view_)
         {
-                view_->send(view::command::SetClipPlaneColor(qcolor_to_color(c)));
+                view_->send(view::command::ClipPlaneSetColor(qcolor_to_color(c)));
         }
         set_widget_color(ui_.widget_clip_plane_color, c);
 }
@@ -217,7 +217,7 @@ void ColorsWidget::set_dft_background_color(const QColor& c)
         dft_background_color_ = c;
         if (view_)
         {
-                view_->send(view::command::SetDftBackgroundColor(qcolor_to_color(c)));
+                view_->send(view::command::DftSetBackgroundColor(qcolor_to_color(c)));
         }
         set_widget_color(ui_.widget_dft_background_color, c);
 }
@@ -227,7 +227,7 @@ void ColorsWidget::set_dft_color(const QColor& c)
         dft_color_ = c;
         if (view_)
         {
-                view_->send(view::command::SetDftColor(qcolor_to_color(c)));
+                view_->send(view::command::DftSetColor(qcolor_to_color(c)));
         }
         set_widget_color(ui_.widget_dft_color, c);
 }

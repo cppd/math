@@ -17,15 +17,15 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
-#include "../view.h"
+#include <src/vulkan/device.h>
+#include <src/vulkan/instance.h>
+#include <src/window/handle.h>
 
 #include <memory>
-#include <vector>
 
 namespace ns::view
 {
-std::unique_ptr<View> create_view_impl(
-        window::WindowID parent_window,
-        double parent_window_ppi,
-        std::vector<Command>&& initial_commands);
+std::unique_ptr<vulkan::VulkanInstance> create_instance(
+        const window::WindowID& window,
+        const vulkan::DeviceFeatures& required_device_features);
 }

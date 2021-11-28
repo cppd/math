@@ -37,9 +37,9 @@ class ClipPlane final
         void set_position(double position);
 
         void command(const command::ClipPlaneHide&);
-        void command(const command::ClipPlanePosition& v);
+        void command(const command::ClipPlaneSetPosition& v);
         void command(const command::ClipPlaneShow& v);
-        void command(const command::SetClipPlaneColor& v);
+        void command(const command::ClipPlaneSetColor& v);
 
 public:
         ClipPlane(Renderer* renderer, const Camera* camera);

@@ -26,7 +26,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "../com/threads.h"
 
 #include <src/storage/repository.h>
-#include <src/view/interface.h>
+#include <src/view/view.h>
 
 #include <QAction>
 #include <QMenu>

@@ -17,7 +17,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
-#include "../interface.h"
+#include "../view.h"
 
 #include <src/com/error.h>
 #include <src/com/message.h>
@@ -109,7 +109,7 @@ public:
                         });
         }
 
-        void dispatch_events(T* view)
+        void dispatch_events(T* const view)
         {
                 view->send(send_queue_.pop());
 
@@ -145,7 +145,7 @@ class ViewThread final : public View
                 event_queues_.receive(info);
         }
 
-        void thread_function(window::WindowID parent_window, double parent_window_ppi)
+        void thread_function(const window::WindowID parent_window, const double parent_window_ppi)
         {
                 try
                 {
@@ -203,7 +203,10 @@ class ViewThread final : public View
         }
 
 public:
-        ViewThread(window::WindowID parent_window, double parent_window_ppi, std::vector<Command>&& initial_commands)
+        ViewThread(
+                const window::WindowID parent_window,
+                const double parent_window_ppi,
+                std::vector<Command>&& initial_commands)
                 : event_queues_(std::move(initial_commands))
         {
                 try

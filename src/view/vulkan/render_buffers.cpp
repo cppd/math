@@ -357,11 +357,11 @@ const std::vector<VkImageView>& Impl::image_views() const
 }
 
 void Impl::commands_color_resolve(
-        VkCommandBuffer command_buffer,
-        VkImage image,
-        VkImageLayout image_layout,
+        const VkCommandBuffer command_buffer,
+        const VkImage image,
+        const VkImageLayout image_layout,
         const Region<2, int>& rectangle,
-        unsigned index) const
+        const unsigned index) const
 {
         ASSERT(index < color_attachments_.size());
         ASSERT(color_attachments_[index].image().sample_count() != VK_SAMPLE_COUNT_1_BIT);
@@ -373,11 +373,11 @@ void Impl::commands_color_resolve(
 }
 
 void Impl::commands_depth_copy(
-        VkCommandBuffer command_buffer,
-        VkImage image,
-        VkImageLayout image_layout,
+        const VkCommandBuffer command_buffer,
+        const VkImage image,
+        const VkImageLayout image_layout,
         const Region<2, int>& rectangle,
-        unsigned index) const
+        const unsigned index) const
 {
         ASSERT(image_layout == VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
         ASSERT(index < depth_attachments_.size());

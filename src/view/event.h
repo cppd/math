@@ -102,14 +102,6 @@ struct SetWireframeColor final
         }
 };
 
-struct SetClipPlaneColor final
-{
-        color::Color value;
-        explicit SetClipPlaneColor(const color::Color& value) : value(value)
-        {
-        }
-};
-
 struct SetNormalLength final
 {
         float value;
@@ -198,6 +190,30 @@ struct SetShadowZoom final
         }
 };
 
+struct ShowNormals final
+{
+        bool show;
+        explicit ShowNormals(const bool show) : show(show)
+        {
+        }
+};
+
+struct WindowResize final
+{
+        int x, y;
+        WindowResize(const int x, const int y) : x(x), y(y)
+        {
+        }
+};
+
+struct ClipPlaneSetColor final
+{
+        color::Color value;
+        explicit ClipPlaneSetColor(const color::Color& value) : value(value)
+        {
+        }
+};
+
 struct ClipPlaneShow final
 {
         double position;
@@ -206,24 +222,16 @@ struct ClipPlaneShow final
         }
 };
 
-struct ClipPlanePosition final
+struct ClipPlaneSetPosition final
 {
         double position;
-        explicit ClipPlanePosition(const double position) : position(position)
+        explicit ClipPlaneSetPosition(const double position) : position(position)
         {
         }
 };
 
 struct ClipPlaneHide final
 {
-};
-
-struct ShowNormals final
-{
-        bool show;
-        explicit ShowNormals(const bool show) : show(show)
-        {
-        }
 };
 
 struct MousePress final
@@ -261,70 +269,79 @@ struct MouseWheel final
         }
 };
 
-struct WindowResize final
-{
-        int x, y;
-        WindowResize(const int x, const int y) : x(x), y(y)
-        {
-        }
-};
-
-struct ShowDft final
+struct DftShow final
 {
         bool show;
-        explicit ShowDft(const bool show) : show(show)
+        explicit DftShow(const bool show) : show(show)
         {
         }
 };
 
-struct SetDftBrightness final
+struct DftSetBrightness final
 {
         double value;
-        explicit SetDftBrightness(const double value) : value(value)
+        explicit DftSetBrightness(const double value) : value(value)
         {
         }
 };
 
-struct SetDftBackgroundColor final
+struct DftSetBackgroundColor final
 {
         color::Color value;
-        explicit SetDftBackgroundColor(const color::Color& value) : value(value)
+        explicit DftSetBackgroundColor(const color::Color& value) : value(value)
         {
         }
 };
 
-struct SetDftColor final
+struct DftSetColor final
 {
         color::Color value;
-        explicit SetDftColor(const color::Color& value) : value(value)
+        explicit DftSetColor(const color::Color& value) : value(value)
         {
         }
 };
 
-struct ShowConvexHull2D final
+struct ConvexHullShow final
 {
         bool show;
-        explicit ShowConvexHull2D(const bool show) : show(show)
+        explicit ConvexHullShow(const bool show) : show(show)
         {
         }
 };
 
-struct ShowOpticalFlow final
+struct OpticalFlowShow final
 {
         bool show;
-        explicit ShowOpticalFlow(const bool show) : show(show)
+        explicit OpticalFlowShow(const bool show) : show(show)
         {
         }
 };
 
-struct ShowPencilSketch final
+struct PencilSketchShow final
 {
         bool show;
-        explicit ShowPencilSketch(const bool show) : show(show)
+        explicit PencilSketchShow(const bool show) : show(show)
         {
         }
 };
 }
+
+using ClipPlaneCommand = std::variant<
+        command::ClipPlaneHide,
+        command::ClipPlaneSetColor,
+        command::ClipPlaneSetPosition,
+        command::ClipPlaneShow>;
+
+using ImageCommand = std::variant<
+        command::ConvexHullShow,
+        command::DftSetBackgroundColor,
+        command::DftSetBrightness,
+        command::DftSetColor,
+        command::DftShow,
+        command::OpticalFlowShow,
+        command::PencilSketchShow>;
+
+using MouseCommand = std::variant<command::MouseMove, command::MousePress, command::MouseRelease, command::MouseWheel>;
 
 using ViewCommand = std::variant<
         command::DeleteAllObjects,
@@ -349,20 +366,6 @@ using ViewCommand = std::variant<
         command::UpdateMeshObject,
         command::UpdateVolumeObject,
         command::WindowResize>;
-
-using ImageCommand = std::variant<
-        command::SetDftBackgroundColor,
-        command::SetDftBrightness,
-        command::SetDftColor,
-        command::ShowConvexHull2D,
-        command::ShowDft,
-        command::ShowOpticalFlow,
-        command::ShowPencilSketch>;
-
-using MouseCommand = std::variant<command::MouseMove, command::MousePress, command::MouseRelease, command::MouseWheel>;
-
-using ClipPlaneCommand = std::
-        variant<command::ClipPlaneHide, command::ClipPlanePosition, command::ClipPlaneShow, command::SetClipPlaneColor>;
 
 using Command = std::variant<ClipPlaneCommand, ImageCommand, MouseCommand, ViewCommand>;
 

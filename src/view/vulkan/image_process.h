@@ -46,13 +46,13 @@ class ImageProcess
         std::unique_ptr<gpu::dft::View> dft_;
         std::unique_ptr<gpu::optical_flow::View> optical_flow_;
 
-        void command(const command::ShowPencilSketch& v);
-        void command(const command::ShowDft& v);
-        void command(const command::SetDftBrightness& v);
-        void command(const command::SetDftBackgroundColor& v);
-        void command(const command::SetDftColor& v);
-        void command(const command::ShowConvexHull2D& v);
-        void command(const command::ShowOpticalFlow& v);
+        void command(const command::PencilSketchShow& v);
+        void command(const command::DftShow& v);
+        void command(const command::DftSetBrightness& v);
+        void command(const command::DftSetBackgroundColor& v);
+        void command(const command::DftSetColor& v);
+        void command(const command::ConvexHullShow& v);
+        void command(const command::OpticalFlowShow& v);
 
 public:
         static vulkan::DeviceFeatures required_device_features();

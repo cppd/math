@@ -57,7 +57,7 @@ ImageProcess::ImageProcess(
                 transfer_command_pool, transfer_queue, sample_shading);
 }
 
-void ImageProcess::command(const command::ShowPencilSketch& v)
+void ImageProcess::command(const command::PencilSketchShow& v)
 {
         if (pencil_sketch_active_ != v.show)
         {
@@ -65,7 +65,7 @@ void ImageProcess::command(const command::ShowPencilSketch& v)
         }
 }
 
-void ImageProcess::command(const command::ShowDft& v)
+void ImageProcess::command(const command::DftShow& v)
 {
         if (dft_active_ != v.show)
         {
@@ -73,22 +73,22 @@ void ImageProcess::command(const command::ShowDft& v)
         }
 }
 
-void ImageProcess::command(const command::SetDftBrightness& v)
+void ImageProcess::command(const command::DftSetBrightness& v)
 {
         dft_->set_brightness(v.value);
 }
 
-void ImageProcess::command(const command::SetDftBackgroundColor& v)
+void ImageProcess::command(const command::DftSetBackgroundColor& v)
 {
         dft_->set_background_color(v.value);
 }
 
-void ImageProcess::command(const command::SetDftColor& v)
+void ImageProcess::command(const command::DftSetColor& v)
 {
         dft_->set_color(v.value);
 }
 
-void ImageProcess::command(const command::ShowConvexHull2D& v)
+void ImageProcess::command(const command::ConvexHullShow& v)
 {
         if (convex_hull_active_ != v.show)
         {
@@ -100,7 +100,7 @@ void ImageProcess::command(const command::ShowConvexHull2D& v)
         }
 }
 
-void ImageProcess::command(const command::ShowOpticalFlow& v)
+void ImageProcess::command(const command::OpticalFlowShow& v)
 {
         if (optical_flow_active_ != v.show)
         {
