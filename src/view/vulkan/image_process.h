@@ -46,6 +46,14 @@ class ImageProcess
         std::unique_ptr<gpu::dft::View> dft_;
         std::unique_ptr<gpu::optical_flow::View> optical_flow_;
 
+        void command(const command::ShowPencilSketch& v);
+        void command(const command::ShowDft& v);
+        void command(const command::SetDftBrightness& v);
+        void command(const command::SetDftBackgroundColor& v);
+        void command(const command::SetDftColor& v);
+        void command(const command::ShowConvexHull2D& v);
+        void command(const command::ShowOpticalFlow& v);
+
 public:
         static vulkan::DeviceFeatures required_device_features();
 
@@ -60,13 +68,7 @@ public:
                 const vulkan::CommandPool* compute_command_pool,
                 const vulkan::Queue* compute_queue);
 
-        bool command(const command::ShowPencilSketch& d);
-        bool command(const command::ShowDft& d);
-        void command(const command::SetDftBrightness& d);
-        void command(const command::SetDftBackgroundColor& d);
-        void command(const command::SetDftColor& d);
-        bool command(const command::ShowConvexHull2D& d);
-        bool command(const command::ShowOpticalFlow& d);
+        void command(const ImageCommand& image_command);
 
         bool two_windows() const;
 

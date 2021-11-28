@@ -237,30 +237,30 @@ class Impl final
 
         //
 
-        void command(const command::UpdateMeshObject& d)
+        void command(const command::UpdateMeshObject& v)
         {
-                if (auto ptr = d.object.lock(); ptr)
+                if (auto ptr = v.object.lock(); ptr)
                 {
                         renderer_->object_update(*ptr);
                 }
         }
 
-        void command(const command::UpdateVolumeObject& d)
+        void command(const command::UpdateVolumeObject& v)
         {
-                if (auto ptr = d.object.lock(); ptr)
+                if (auto ptr = v.object.lock(); ptr)
                 {
                         renderer_->object_update(*ptr);
                 }
         }
 
-        void command(const command::DeleteObject& d)
+        void command(const command::DeleteObject& v)
         {
-                renderer_->object_delete(d.id);
+                renderer_->object_delete(v.id);
         }
 
-        void command(const command::ShowObject& d)
+        void command(const command::ShowObject& v)
         {
-                renderer_->object_show(d.id, d.show);
+                renderer_->object_show(v.id, v.show);
         }
 
         void command(const command::DeleteAllObjects&)
@@ -279,10 +279,10 @@ class Impl final
                 renderer_->set_lighting_color(v.value);
         }
 
-        void command(const command::SetBackgroundColor& d)
+        void command(const command::SetBackgroundColor& v)
         {
-                renderer_->set_background_color(d.value);
-                const bool background_is_dark = d.value.luminance() <= 0.5;
+                renderer_->set_background_color(v.value);
+                const bool background_is_dark = v.value.luminance() <= 0.5;
                 if (background_is_dark)
                 {
                         static const color::Color white(1);
@@ -295,54 +295,54 @@ class Impl final
                 }
         }
 
-        void command(const command::SetWireframeColor& d)
+        void command(const command::SetWireframeColor& v)
         {
-                renderer_->set_wireframe_color(d.value);
+                renderer_->set_wireframe_color(v.value);
         }
 
-        void command(const command::SetClipPlaneColor& d)
+        void command(const command::SetClipPlaneColor& v)
         {
-                renderer_->set_clip_plane_color(d.value);
+                renderer_->set_clip_plane_color(v.value);
         }
 
-        void command(const command::SetNormalLength& d)
+        void command(const command::SetNormalLength& v)
         {
-                renderer_->set_normal_length(d.value);
+                renderer_->set_normal_length(v.value);
         }
 
-        void command(const command::SetNormalColorPositive& d)
+        void command(const command::SetNormalColorPositive& v)
         {
-                renderer_->set_normal_color_positive(d.value);
+                renderer_->set_normal_color_positive(v.value);
         }
 
-        void command(const command::SetNormalColorNegative& d)
+        void command(const command::SetNormalColorNegative& v)
         {
-                renderer_->set_normal_color_negative(d.value);
+                renderer_->set_normal_color_negative(v.value);
         }
 
-        void command(const command::ShowSmooth& d)
+        void command(const command::ShowSmooth& v)
         {
-                renderer_->set_show_smooth(d.show);
+                renderer_->set_show_smooth(v.show);
         }
 
-        void command(const command::ShowWireframe& d)
+        void command(const command::ShowWireframe& v)
         {
-                renderer_->set_show_wireframe(d.show);
+                renderer_->set_show_wireframe(v.show);
         }
 
-        void command(const command::ShowShadow& d)
+        void command(const command::ShowShadow& v)
         {
-                renderer_->set_show_shadow(d.show);
+                renderer_->set_show_shadow(v.show);
         }
 
-        void command(const command::ShowFog& d)
+        void command(const command::ShowFog& v)
         {
-                renderer_->set_show_fog(d.show);
+                renderer_->set_show_fog(v.show);
         }
 
-        void command(const command::ShowMaterials& d)
+        void command(const command::ShowMaterials& v)
         {
-                renderer_->set_show_materials(d.show);
+                renderer_->set_show_materials(v.show);
         }
 
         void command(const command::ShowFps& d)
@@ -350,62 +350,24 @@ class Impl final
                 text_active_ = d.show;
         }
 
-        void command(const command::ShowPencilSketch& d)
+        void command(const command::SetVerticalSync& v)
         {
-                image_process_->command(d);
+                set_vertical_sync_swapchain(v.enabled);
         }
 
-        void command(const command::ShowDft& d)
+        void command(const command::SetShadowZoom& v)
         {
-                if (image_process_->command(d))
-                {
-                        create_swapchain();
-                }
+                renderer_->set_shadow_zoom(v.value);
         }
 
-        void command(const command::SetDftBrightness& d)
+        void command(const command::ClipPlaneShow& v)
         {
-                image_process_->command(d);
+                clip_plane_show(v.position);
         }
 
-        void command(const command::SetDftBackgroundColor& d)
+        void command(const command::ClipPlanePosition& v)
         {
-                image_process_->command(d);
-        }
-
-        void command(const command::SetDftColor& d)
-        {
-                image_process_->command(d);
-        }
-
-        void command(const command::ShowConvexHull2D& d)
-        {
-                image_process_->command(d);
-        }
-
-        void command(const command::ShowOpticalFlow& d)
-        {
-                image_process_->command(d);
-        }
-
-        void command(const command::SetVerticalSync& d)
-        {
-                set_vertical_sync_swapchain(d.enabled);
-        }
-
-        void command(const command::SetShadowZoom& d)
-        {
-                renderer_->set_shadow_zoom(d.value);
-        }
-
-        void command(const command::ClipPlaneShow& d)
-        {
-                clip_plane_show(d.position);
-        }
-
-        void command(const command::ClipPlanePosition& d)
-        {
-                clip_plane_position(d.position);
+                clip_plane_position(v.position);
         }
 
         void command(const command::ClipPlaneHide&)
@@ -413,29 +375,29 @@ class Impl final
                 clip_plane_hide();
         }
 
-        void command(const command::ShowNormals& d)
+        void command(const command::ShowNormals& v)
         {
-                renderer_->set_show_normals(d.show);
+                renderer_->set_show_normals(v.show);
         }
 
-        void command(const command::MousePress& d)
+        void command(const command::MousePress& v)
         {
-                mouse_.press(d.x, d.y, d.button);
+                mouse_.press(v.x, v.y, v.button);
         }
 
-        void command(const command::MouseRelease& d)
+        void command(const command::MouseRelease& v)
         {
-                mouse_.release(d.x, d.y, d.button);
+                mouse_.release(v.x, v.y, v.button);
         }
 
-        void command(const command::MouseMove& d)
+        void command(const command::MouseMove& v)
         {
-                mouse_move(d.x, d.y);
+                mouse_move(v.x, v.y);
         }
 
-        void command(const command::MouseWheel& d)
+        void command(const command::MouseWheel& v)
         {
-                camera_.scale(d.x - draw_rectangle_.x0(), d.y - draw_rectangle_.y0(), d.delta);
+                camera_.scale(v.x - draw_rectangle_.x0(), v.y - draw_rectangle_.y0(), v.delta);
                 renderer_->set_camera(camera_.renderer_info());
         }
 
@@ -445,12 +407,33 @@ class Impl final
 
         //
 
-        void info(info::Camera* const d) const
+        void command(const ViewCommand& view_command)
         {
-                *d = camera_.view_info();
+                const auto visitor = [this](const auto& v)
+                {
+                        command(v);
+                };
+                std::visit(visitor, view_command);
         }
 
-        void info(info::Image* const d)
+        void command(const ImageCommand& image_command)
+        {
+                const bool two_windows = image_process_->two_windows();
+                image_process_->command(image_command);
+                if (two_windows != image_process_->two_windows())
+                {
+                        create_swapchain();
+                }
+        }
+
+        //
+
+        void info(info::Camera* const camera_info) const
+        {
+                *camera_info = camera_.view_info();
+        }
+
+        void info(info::Image* const image_info)
         {
                 static_assert(RENDER_BUFFER_COUNT == 1);
                 constexpr int INDEX = 0;
@@ -478,14 +461,14 @@ class Impl final
 
                         image.image(INDEX).read_pixels(
                                 instance_->graphics_compute_command_pool(), queue, VK_IMAGE_LAYOUT_GENERAL,
-                                VK_IMAGE_LAYOUT_GENERAL, &d->image.color_format, &d->image.pixels);
+                                VK_IMAGE_LAYOUT_GENERAL, &image_info->image.color_format, &image_info->image.pixels);
                 }
 
-                d->image.size[0] = width;
-                d->image.size[1] = height;
+                image_info->image.size[0] = width;
+                image_info->image.size[1] = height;
 
-                ASSERT(4 == image::format_component_count(d->image.color_format));
-                d->image = image::delete_alpha(d->image);
+                ASSERT(4 == image::format_component_count(image_info->image.color_format));
+                image_info->image = image::delete_alpha(image_info->image);
 
                 delete_buffers();
                 create_swapchain_buffers();

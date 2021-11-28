@@ -56,7 +56,7 @@ struct UpdateVolumeObject final
 struct DeleteObject final
 {
         ObjectId id;
-        explicit DeleteObject(ObjectId id) : id(id)
+        explicit DeleteObject(const ObjectId id) : id(id)
         {
         }
 };
@@ -65,7 +65,7 @@ struct ShowObject final
 {
         ObjectId id;
         bool show;
-        explicit ShowObject(ObjectId id, bool show) : id(id), show(show)
+        explicit ShowObject(const ObjectId id, const bool show) : id(id), show(show)
         {
         }
 };
@@ -113,7 +113,7 @@ struct SetClipPlaneColor final
 struct SetNormalLength final
 {
         float value;
-        explicit SetNormalLength(float value) : value(value)
+        explicit SetNormalLength(const float value) : value(value)
         {
         }
 };
@@ -137,7 +137,7 @@ struct SetNormalColorNegative final
 struct ShowSmooth final
 {
         bool show;
-        explicit ShowSmooth(bool show) : show(show)
+        explicit ShowSmooth(const bool show) : show(show)
         {
         }
 };
@@ -145,7 +145,7 @@ struct ShowSmooth final
 struct ShowWireframe final
 {
         bool show;
-        explicit ShowWireframe(bool show) : show(show)
+        explicit ShowWireframe(const bool show) : show(show)
         {
         }
 };
@@ -153,7 +153,7 @@ struct ShowWireframe final
 struct ShowShadow final
 {
         bool show;
-        explicit ShowShadow(bool show) : show(show)
+        explicit ShowShadow(const bool show) : show(show)
         {
         }
 };
@@ -161,7 +161,7 @@ struct ShowShadow final
 struct ShowFog final
 {
         bool show;
-        explicit ShowFog(bool show) : show(show)
+        explicit ShowFog(const bool show) : show(show)
         {
         }
 };
@@ -169,7 +169,7 @@ struct ShowFog final
 struct ShowMaterials final
 {
         bool show;
-        explicit ShowMaterials(bool show) : show(show)
+        explicit ShowMaterials(const bool show) : show(show)
         {
         }
 };
@@ -177,15 +177,94 @@ struct ShowMaterials final
 struct ShowFps final
 {
         bool show;
-        explicit ShowFps(bool show) : show(show)
+        explicit ShowFps(const bool show) : show(show)
         {
         }
 };
 
-struct ShowPencilSketch final
+struct SetVerticalSync final
+{
+        bool enabled;
+        explicit SetVerticalSync(const bool enabled) : enabled(enabled)
+        {
+        }
+};
+
+struct SetShadowZoom final
+{
+        double value;
+        explicit SetShadowZoom(const double value) : value(value)
+        {
+        }
+};
+
+struct ClipPlaneShow final
+{
+        double position;
+        explicit ClipPlaneShow(const double position) : position(position)
+        {
+        }
+};
+
+struct ClipPlanePosition final
+{
+        double position;
+        explicit ClipPlanePosition(const double position) : position(position)
+        {
+        }
+};
+
+struct ClipPlaneHide final
+{
+};
+
+struct ShowNormals final
 {
         bool show;
-        explicit ShowPencilSketch(bool show) : show(show)
+        explicit ShowNormals(const bool show) : show(show)
+        {
+        }
+};
+
+struct MousePress final
+{
+        int x, y;
+        MouseButton button;
+        MousePress(const int x, const int y, const MouseButton button) : x(x), y(y), button(button)
+        {
+        }
+};
+
+struct MouseRelease final
+{
+        int x, y;
+        MouseButton button;
+        MouseRelease(const int x, const int y, const MouseButton button) : x(x), y(y), button(button)
+        {
+        }
+};
+
+struct MouseMove final
+{
+        int x, y;
+        MouseMove(const int x, const int y) : x(x), y(y)
+        {
+        }
+};
+
+struct MouseWheel final
+{
+        int x, y;
+        double delta;
+        MouseWheel(const int x, const int y, const double delta) : x(x), y(y), delta(delta)
+        {
+        }
+};
+
+struct WindowResize final
+{
+        int x, y;
+        WindowResize(const int x, const int y) : x(x), y(y)
         {
         }
 };
@@ -193,7 +272,7 @@ struct ShowPencilSketch final
 struct ShowDft final
 {
         bool show;
-        explicit ShowDft(bool show) : show(show)
+        explicit ShowDft(const bool show) : show(show)
         {
         }
 };
@@ -201,7 +280,7 @@ struct ShowDft final
 struct SetDftBrightness final
 {
         double value;
-        explicit SetDftBrightness(double value) : value(value)
+        explicit SetDftBrightness(const double value) : value(value)
         {
         }
 };
@@ -225,7 +304,7 @@ struct SetDftColor final
 struct ShowConvexHull2D final
 {
         bool show;
-        explicit ShowConvexHull2D(bool show) : show(show)
+        explicit ShowConvexHull2D(const bool show) : show(show)
         {
         }
 };
@@ -233,100 +312,21 @@ struct ShowConvexHull2D final
 struct ShowOpticalFlow final
 {
         bool show;
-        explicit ShowOpticalFlow(bool show) : show(show)
+        explicit ShowOpticalFlow(const bool show) : show(show)
         {
         }
 };
 
-struct SetVerticalSync final
-{
-        bool enabled;
-        explicit SetVerticalSync(bool enabled) : enabled(enabled)
-        {
-        }
-};
-
-struct SetShadowZoom final
-{
-        double value;
-        explicit SetShadowZoom(double value) : value(value)
-        {
-        }
-};
-
-struct ClipPlaneShow final
-{
-        double position;
-        explicit ClipPlaneShow(double position) : position(position)
-        {
-        }
-};
-
-struct ClipPlanePosition final
-{
-        double position;
-        explicit ClipPlanePosition(double position) : position(position)
-        {
-        }
-};
-
-struct ClipPlaneHide final
-{
-};
-
-struct ShowNormals final
+struct ShowPencilSketch final
 {
         bool show;
-        explicit ShowNormals(bool show) : show(show)
-        {
-        }
-};
-
-struct MousePress final
-{
-        int x, y;
-        MouseButton button;
-        MousePress(int x, int y, MouseButton button) : x(x), y(y), button(button)
-        {
-        }
-};
-
-struct MouseRelease final
-{
-        int x, y;
-        MouseButton button;
-        MouseRelease(int x, int y, MouseButton button) : x(x), y(y), button(button)
-        {
-        }
-};
-
-struct MouseMove final
-{
-        int x, y;
-        MouseMove(int x, int y) : x(x), y(y)
-        {
-        }
-};
-
-struct MouseWheel final
-{
-        int x, y;
-        double delta;
-        MouseWheel(int x, int y, double delta) : x(x), y(y), delta(delta)
-        {
-        }
-};
-
-struct WindowResize final
-{
-        int x, y;
-        WindowResize(int x, int y) : x(x), y(y)
+        explicit ShowPencilSketch(const bool show) : show(show)
         {
         }
 };
 }
 
-using Command = std::variant<
+using ViewCommand = std::variant<
         command::ClipPlaneHide,
         command::ClipPlanePosition,
         command::ClipPlaneShow,
@@ -339,9 +339,6 @@ using Command = std::variant<
         command::ResetView,
         command::SetBackgroundColor,
         command::SetClipPlaneColor,
-        command::SetDftBackgroundColor,
-        command::SetDftBrightness,
-        command::SetDftColor,
         command::SetLightingColor,
         command::SetNormalColorNegative,
         command::SetNormalColorPositive,
@@ -349,21 +346,28 @@ using Command = std::variant<
         command::SetShadowZoom,
         command::SetVerticalSync,
         command::SetWireframeColor,
-        command::ShowConvexHull2D,
-        command::ShowDft,
         command::ShowFog,
         command::ShowFps,
         command::ShowMaterials,
         command::ShowNormals,
         command::ShowObject,
-        command::ShowOpticalFlow,
-        command::ShowPencilSketch,
         command::ShowShadow,
         command::ShowSmooth,
         command::ShowWireframe,
         command::UpdateMeshObject,
         command::UpdateVolumeObject,
         command::WindowResize>;
+
+using ImageCommand = std::variant<
+        command::SetDftBackgroundColor,
+        command::SetDftBrightness,
+        command::SetDftColor,
+        command::ShowConvexHull2D,
+        command::ShowDft,
+        command::ShowOpticalFlow,
+        command::ShowPencilSketch>;
+
+using Command = std::variant<ImageCommand, ViewCommand>;
 
 namespace info
 {

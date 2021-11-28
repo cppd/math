@@ -57,63 +57,64 @@ ImageProcess::ImageProcess(
                 transfer_command_pool, transfer_queue, sample_shading);
 }
 
-bool ImageProcess::command(const command::ShowPencilSketch& d)
+void ImageProcess::command(const command::ShowPencilSketch& v)
 {
-        if (pencil_sketch_active_ != d.show)
+        if (pencil_sketch_active_ != v.show)
         {
-                pencil_sketch_active_ = d.show;
-                return true;
+                pencil_sketch_active_ = v.show;
         }
-        return false;
 }
 
-bool ImageProcess::command(const command::ShowDft& d)
+void ImageProcess::command(const command::ShowDft& v)
 {
-        if (dft_active_ != d.show)
+        if (dft_active_ != v.show)
         {
-                dft_active_ = d.show;
-                return true;
+                dft_active_ = v.show;
         }
-        return false;
 }
 
-void ImageProcess::command(const command::SetDftBrightness& d)
+void ImageProcess::command(const command::SetDftBrightness& v)
 {
-        dft_->set_brightness(d.value);
+        dft_->set_brightness(v.value);
 }
 
-void ImageProcess::command(const command::SetDftBackgroundColor& d)
+void ImageProcess::command(const command::SetDftBackgroundColor& v)
 {
-        dft_->set_background_color(d.value);
+        dft_->set_background_color(v.value);
 }
 
-void ImageProcess::command(const command::SetDftColor& d)
+void ImageProcess::command(const command::SetDftColor& v)
 {
-        dft_->set_color(d.value);
+        dft_->set_color(v.value);
 }
 
-bool ImageProcess::command(const command::ShowConvexHull2D& d)
+void ImageProcess::command(const command::ShowConvexHull2D& v)
 {
-        if (convex_hull_active_ != d.show)
+        if (convex_hull_active_ != v.show)
         {
-                convex_hull_active_ = d.show;
+                convex_hull_active_ = v.show;
                 if (convex_hull_active_)
                 {
                         convex_hull_->reset_timer();
                 }
-                return true;
         }
-        return false;
 }
 
-bool ImageProcess::command(const command::ShowOpticalFlow& d)
+void ImageProcess::command(const command::ShowOpticalFlow& v)
 {
-        if (optical_flow_active_ != d.show)
+        if (optical_flow_active_ != v.show)
         {
-                optical_flow_active_ = d.show;
-                return false;
+                optical_flow_active_ = v.show;
         }
-        return true;
+}
+
+void ImageProcess::command(const ImageCommand& image_command)
+{
+        const auto visitor = [this](const auto& v)
+        {
+                command(v);
+        };
+        std::visit(visitor, image_command);
 }
 
 bool ImageProcess::two_windows() const
