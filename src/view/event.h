@@ -332,10 +332,6 @@ using ViewCommand = std::variant<
         command::ClipPlaneShow,
         command::DeleteAllObjects,
         command::DeleteObject,
-        command::MouseMove,
-        command::MousePress,
-        command::MouseRelease,
-        command::MouseWheel,
         command::ResetView,
         command::SetBackgroundColor,
         command::SetClipPlaneColor,
@@ -367,7 +363,9 @@ using ImageCommand = std::variant<
         command::ShowOpticalFlow,
         command::ShowPencilSketch>;
 
-using Command = std::variant<ImageCommand, ViewCommand>;
+using MouseCommand = std::variant<command::MouseMove, command::MousePress, command::MouseRelease, command::MouseWheel>;
+
+using Command = std::variant<ImageCommand, MouseCommand, ViewCommand>;
 
 namespace info
 {

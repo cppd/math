@@ -32,7 +32,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/com/conversion.h>
 #include <src/com/error.h>
 #include <src/com/print.h>
-#include <src/com/type/limit.h>
 #include <src/com/variant.h>
 #include <src/gpu/renderer/renderer.h>
 #include <src/gpu/text_writer/view.h>
@@ -129,10 +128,6 @@ class Impl final
         const int frame_size_in_pixels_ = std::max(1, millimeters_to_pixels(FRAME_SIZE_IN_MILLIMETERS, window_ppi_));
 
         FrameRate frame_rate_{window_ppi_};
-        Camera camera_;
-        Mouse mouse_;
-
-        Region<2, int> draw_rectangle_{{Limits<int>::lowest(), Limits<int>::lowest()}, {0, 0}};
 
         std::optional<Matrix4d> clip_plane_view_matrix_;
 
@@ -154,9 +149,12 @@ class Impl final
         std::unique_ptr<ImageResolve> image_resolve_;
         std::unique_ptr<vulkan::ImageWithMemory> object_image_;
 
+        std::unique_ptr<Camera> camera_;
+        std::unique_ptr<Mouse> mouse_;
+
         void clip_plane_show(const double position)
         {
-                clip_plane_view_matrix_ = camera_.renderer_info().main_view_matrix;
+                clip_plane_view_matrix_ = camera_->renderer_info().main_view_matrix;
                 clip_plane_position(position);
         }
 
@@ -180,43 +178,13 @@ class Impl final
                 renderer_->set_clip_plane(std::nullopt);
         }
 
-        void mouse_move(const int x, const int y)
-        {
-                mouse_.move(x, y);
-
-                bool changed = false;
-
-                const MouseButtonInfo& right = mouse_.info(MouseButton::RIGHT);
-                if (right.pressed && draw_rectangle_.is_inside(right.pressed_x, right.pressed_y)
-                    && (right.delta_x != 0 || right.delta_y != 0))
-                {
-                        camera_.rotate(-right.delta_x, -right.delta_y);
-                        changed = true;
-                }
-
-                const MouseButtonInfo& left = mouse_.info(MouseButton::LEFT);
-                if (left.pressed && draw_rectangle_.is_inside(left.pressed_x, left.pressed_y)
-                    && (left.delta_x != 0 || left.delta_y != 0))
-                {
-                        camera_.move(Vector2d(-left.delta_x, left.delta_y));
-                        changed = true;
-                }
-
-                if (changed)
-                {
-                        renderer_->set_camera(camera_.renderer_info());
-                }
-        }
-
         //
 
         void reset_view_handler()
         {
                 ASSERT(std::this_thread::get_id() == thread_id_);
 
-                camera_.reset(Vector3d(1, 0, 0), Vector3d(0, 1, 0), 1, Vector2d(0, 0));
-
-                renderer_->set_camera(camera_.renderer_info());
+                camera_->reset(Vector3d(1, 0, 0), Vector3d(0, 1, 0), 1, Vector2d(0, 0));
         }
 
         void set_vertical_sync_swapchain(const bool v)
@@ -380,27 +348,6 @@ class Impl final
                 renderer_->set_show_normals(v.show);
         }
 
-        void command(const command::MousePress& v)
-        {
-                mouse_.press(v.x, v.y, v.button);
-        }
-
-        void command(const command::MouseRelease& v)
-        {
-                mouse_.release(v.x, v.y, v.button);
-        }
-
-        void command(const command::MouseMove& v)
-        {
-                mouse_move(v.x, v.y);
-        }
-
-        void command(const command::MouseWheel& v)
-        {
-                camera_.scale(v.x - draw_rectangle_.x0(), v.y - draw_rectangle_.y0(), v.delta);
-                renderer_->set_camera(camera_.renderer_info());
-        }
-
         void command(const command::WindowResize&)
         {
         }
@@ -414,6 +361,11 @@ class Impl final
                         command(v);
                 };
                 std::visit(visitor, view_command);
+        }
+
+        void command(const MouseCommand& mouse_command)
+        {
+                mouse_->command(mouse_command);
         }
 
         void command(const ImageCommand& image_command)
@@ -430,7 +382,7 @@ class Impl final
 
         void info(info::Camera* const camera_info) const
         {
-                *camera_info = camera_.view_info();
+                *camera_info = camera_->view_info();
         }
 
         void info(info::Image* const image_info)
@@ -506,8 +458,6 @@ class Impl final
                         image_process_->two_windows(), render_buffers_->width(), render_buffers_->height(),
                         frame_size_in_pixels_);
 
-                draw_rectangle_ = window_1;
-
                 static_assert(RENDER_BUFFER_COUNT == 1);
                 image_resolve_ = std::make_unique<ImageResolve>(
                         instance_->device(), instance_->graphics_compute_command_pool(),
@@ -523,8 +473,8 @@ class Impl final
                 image_process_->create_buffers(
                         &render_buffers_->buffers_2d(), image_resolve_->image(0), *object_image_, window_1, window_2);
 
-                camera_.resize(window_1.width(), window_1.height());
-                renderer_->set_camera(camera_.renderer_info());
+                mouse_->set_rectangle(window_1);
+                camera_->resize(window_1.width(), window_1.height());
         }
 
         [[nodiscard]] VkSemaphore render() const
@@ -628,6 +578,14 @@ public:
                         instance_.get(), &instance_->graphics_compute_command_pool(),
                         &instance_->graphics_compute_queues()[0], &instance_->transfer_command_pool(),
                         &instance_->transfer_queue(), SAMPLE_RATE_SHADING, SAMPLER_ANISOTROPY);
+
+                camera_ = std::make_unique<Camera>(
+                        [this](const gpu::renderer::CameraInfo& info)
+                        {
+                                renderer_->set_camera(info);
+                        });
+
+                mouse_ = std::make_unique<Mouse>(camera_.get());
 
                 text_ = gpu::text_writer::create_view(
                         instance_.get(), &instance_->graphics_compute_command_pool(),

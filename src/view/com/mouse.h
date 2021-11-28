@@ -17,73 +17,47 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
+#include "camera.h"
+
 #include "../event.h"
 
 #include <src/com/type/limit.h>
+#include <src/numerical/region.h>
 
 #include <unordered_map>
 
 namespace ns::view
 {
-struct MouseButtonInfo final
-{
-        bool pressed = false;
-        int pressed_x;
-        int pressed_y;
-        int delta_x;
-        int delta_y;
-};
-
 class Mouse final
 {
+        struct MouseButtonInfo final
+        {
+                bool pressed = false;
+                int pressed_x;
+                int pressed_y;
+                int delta_x;
+                int delta_y;
+        };
+
         std::unordered_map<MouseButton, MouseButtonInfo> buttons_;
+
         int x_ = Limits<int>::lowest();
         int y_ = Limits<int>::lowest();
 
+        Camera* camera_;
+        Region<2, int> rectangle_{{Limits<int>::lowest(), Limits<int>::lowest()}, {0, 0}};
+
+        const MouseButtonInfo& info(MouseButton button) const;
+
+        void command(const command::MousePress& v);
+        void command(const command::MouseRelease& v);
+        void command(const command::MouseMove& v);
+        void command(const command::MouseWheel& v);
+
 public:
-        const MouseButtonInfo& info(const MouseButton button) const
-        {
-                auto iter = buttons_.find(button);
-                if (iter != buttons_.cend())
-                {
-                        return iter->second;
-                }
+        explicit Mouse(Camera* camera);
 
-                thread_local const MouseButtonInfo info{};
-                return info;
-        }
-
-        void press(const int x, const int y, const MouseButton button)
-        {
-                x_ = x;
-                y_ = y;
-                MouseButtonInfo& m = buttons_[button];
-                m.pressed = true;
-                m.pressed_x = x;
-                m.pressed_y = y;
-                m.delta_x = 0;
-                m.delta_y = 0;
-        }
-
-        void release(const int x, const int y, const MouseButton button)
-        {
-                buttons_[button].pressed = false;
-                x_ = x;
-                y_ = y;
-        }
-
-        void move(const int x, const int y)
-        {
-                for (auto& [button, info] : buttons_)
-                {
-                        if (info.pressed)
-                        {
-                                info.delta_x = x - x_;
-                                info.delta_y = y - y_;
-                        }
-                }
-                x_ = x;
-                y_ = y;
-        }
+        void set_rectangle(const Region<2, int>& rectangle);
+        void command(const MouseCommand& mouse_command);
 };
 }

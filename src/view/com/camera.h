@@ -23,6 +23,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/numerical/matrix.h>
 #include <src/numerical/vec.h>
 
+#include <functional>
 #include <mutex>
 
 namespace ns::view
@@ -30,6 +31,8 @@ namespace ns::view
 class Camera final
 {
         mutable std::mutex lock_;
+
+        std::function<void(const gpu::renderer::CameraInfo&)> set_camera_;
 
         Vector3d camera_right_{0};
         Vector3d camera_up_{0};
@@ -52,7 +55,11 @@ class Camera final
         Matrix4d main_view_matrix() const;
         Matrix4d shadow_view_matrix() const;
 
+        gpu::renderer::CameraInfo camera_info() const;
+
 public:
+        explicit Camera(std::function<void(const gpu::renderer::CameraInfo&)> set_camera);
+
         void reset(const Vector3d& right, const Vector3d& up, double scale, const Vector2d& window_center);
         void scale(double x, double y, double delta);
         void rotate(double around_up_axis, double around_right_axis);

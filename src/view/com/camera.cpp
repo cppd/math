@@ -36,15 +36,19 @@ constexpr double PI_DIV_180 = PI<double> / 180;
 constexpr gpu::renderer::CameraInfo::Volume SHADOW_VOLUME =
         {.left = -1, .right = 1, .bottom = -1, .top = 1, .near = 1, .far = -1};
 
-constexpr double to_radians(double angle)
+constexpr double to_radians(const double angle)
 {
         return angle * PI_DIV_180;
 }
 
-Vector3d rotate_vector_degree(const Vector3d& axis, double angle_degree, const Vector3d& v)
+Vector3d rotate_vector_degree(const Vector3d& axis, const double angle_degree, const Vector3d& v)
 {
         return rotate_vector(axis, to_radians(angle_degree), v);
 }
+}
+
+Camera::Camera(std::function<void(const gpu::renderer::CameraInfo&)> set_camera) : set_camera_(std::move(set_camera))
+{
 }
 
 void Camera::set_vectors(const Vector3d& right, const Vector3d& up)
@@ -55,7 +59,7 @@ void Camera::set_vectors(const Vector3d& right, const Vector3d& up)
 
         camera_right_ = cross(camera_direction_from_, camera_up_);
 
-        Vector3d light_right = rotate_vector_degree(camera_up_, -45, camera_right_);
+        const Vector3d light_right = rotate_vector_degree(camera_up_, -45, camera_right_);
         light_up_ = rotate_vector_degree(light_right, -45, camera_up_);
 
         light_direction_from_ = cross(light_up_, light_right).normalized();
@@ -63,7 +67,7 @@ void Camera::set_vectors(const Vector3d& right, const Vector3d& up)
 
 gpu::renderer::CameraInfo::Volume Camera::main_volume() const
 {
-        double scale = default_scale_ / std::pow(SCALE_BASE, scale_exponent_);
+        const double scale = default_scale_ / std::pow(SCALE_BASE, scale_exponent_);
 
         gpu::renderer::CameraInfo::Volume volume;
 
@@ -87,7 +91,21 @@ Matrix4d Camera::shadow_view_matrix() const
         return matrix::look_at(Vector3d(0, 0, 0), light_direction_from_, light_up_);
 }
 
-void Camera::reset(const Vector3d& right, const Vector3d& up, double scale, const Vector2d& window_center)
+gpu::renderer::CameraInfo Camera::camera_info() const
+{
+        gpu::renderer::CameraInfo v;
+
+        v.main_volume = main_volume();
+        v.shadow_volume = SHADOW_VOLUME;
+        v.main_view_matrix = main_view_matrix();
+        v.shadow_view_matrix = shadow_view_matrix();
+        v.light_direction = light_direction_from_;
+        v.camera_direction = camera_direction_from_;
+
+        return v;
+}
+
+void Camera::reset(const Vector3d& right, const Vector3d& up, const double scale, const Vector2d& window_center)
 {
         std::lock_guard lg(lock_);
 
@@ -104,9 +122,11 @@ void Camera::reset(const Vector3d& right, const Vector3d& up, double scale, cons
         {
                 default_scale_ = 1;
         }
+
+        set_camera_(camera_info());
 }
 
-void Camera::scale(double x, double y, double delta)
+void Camera::scale(const double x, const double y, const double delta)
 {
         std::lock_guard lg(lock_);
 
@@ -124,23 +144,29 @@ void Camera::scale(double x, double y, double delta)
         }
 
         scale_exponent_ += delta;
-        double scale_delta = std::pow(SCALE_BASE, delta);
 
-        Vector2d mouse_local(x - width_ * 0.5, height_ * 0.5 - y);
-        Vector2d mouse_global(mouse_local + window_center_);
+        const double scale_delta = std::pow(SCALE_BASE, delta);
+
+        const Vector2d mouse_local(x - width_ * 0.5, height_ * 0.5 - y);
+        const Vector2d mouse_global(mouse_local + window_center_);
+
         // new_center = old_center + (mouse_global * scale_delta - mouse_global)
         // center = center + mouse_global * scale_delta - mouse_global
         // center += mouse_global * (scale_delta - 1)
         window_center_ += mouse_global * (scale_delta - 1);
+
+        set_camera_(camera_info());
 }
 
-void Camera::rotate(double around_up_axis, double around_right_axis)
+void Camera::rotate(const double around_up_axis, const double around_right_axis)
 {
         std::lock_guard lg(lock_);
 
-        Vector3d right = rotate_vector_degree(camera_up_, around_up_axis, camera_right_);
-        Vector3d up = rotate_vector_degree(camera_right_, around_right_axis, camera_up_);
+        const Vector3d right = rotate_vector_degree(camera_up_, around_up_axis, camera_right_);
+        const Vector3d up = rotate_vector_degree(camera_right_, around_right_axis, camera_up_);
         set_vectors(right, up);
+
+        set_camera_(camera_info());
 }
 
 void Camera::move(const Vector2d& delta)
@@ -148,14 +174,18 @@ void Camera::move(const Vector2d& delta)
         std::lock_guard lg(lock_);
 
         window_center_ += delta;
+
+        set_camera_(camera_info());
 }
 
-void Camera::resize(int width, int height)
+void Camera::resize(const int width, const int height)
 {
         std::lock_guard lg(lock_);
 
         width_ = width;
         height_ = height;
+
+        set_camera_(camera_info());
 }
 
 info::Camera Camera::view_info() const
@@ -170,7 +200,7 @@ info::Camera Camera::view_info() const
         v.width = width_;
         v.height = height_;
 
-        gpu::renderer::CameraInfo::Volume volume = main_volume();
+        const gpu::renderer::CameraInfo::Volume volume = main_volume();
 
         Vector4d volume_center;
         volume_center[0] = (volume.right + volume.left) * 0.5;
@@ -178,7 +208,7 @@ info::Camera Camera::view_info() const
         volume_center[2] = (volume.far + volume.near) * 0.5;
         volume_center[3] = 1.0;
 
-        Vector4d view_center = main_view_matrix().inverse() * volume_center;
+        const Vector4d view_center = main_view_matrix().inverse() * volume_center;
 
         v.view_center = Vector3d(view_center[0], view_center[1], view_center[2]);
         v.view_width = volume.right - volume.left;
@@ -190,15 +220,6 @@ gpu::renderer::CameraInfo Camera::renderer_info() const
 {
         std::lock_guard lg(lock_);
 
-        gpu::renderer::CameraInfo v;
-
-        v.main_volume = main_volume();
-        v.shadow_volume = SHADOW_VOLUME;
-        v.main_view_matrix = main_view_matrix();
-        v.shadow_view_matrix = shadow_view_matrix();
-        v.light_direction = light_direction_from_;
-        v.camera_direction = camera_direction_from_;
-
-        return v;
+        return camera_info();
 }
 }
