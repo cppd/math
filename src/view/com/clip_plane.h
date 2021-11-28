@@ -17,29 +17,33 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
-#include <src/com/error.h>
+#include "camera.h"
+
+#include "../event.h"
+
 #include <src/numerical/matrix.h>
-#include <src/numerical/vec.h>
+
+#include <optional>
 
 namespace ns::view
 {
-[[nodiscard]] inline Vector4d create_clip_plane(const Matrix4d& clip_plane_view, const double position)
+template <typename Renderer>
+class ClipPlane final
 {
-        ASSERT(position >= 0.0 && position <= 1.0);
+        std::optional<Matrix4d> matrix_;
+        Renderer* renderer_;
+        const Camera* camera_;
 
-        // -z = 0 or (0, 0, -1, 0).
-        // (0, 0, -1, 0) * view matrix.
-        Vector4d plane = -clip_plane_view.row(2);
+        void set_position(double position);
 
-        Vector3d n(plane[0], plane[1], plane[2]);
-        double d = n.norm_1();
+        void command(const command::ClipPlaneHide&);
+        void command(const command::ClipPlanePosition& v);
+        void command(const command::ClipPlaneShow& v);
+        void command(const command::SetClipPlaneColor& v);
 
-        // -z = d * (1 - 2 * position)
-        // (0, 0, -1, d * (2 * position - 1)).
-        plane[3] += d * (2 * position - 1);
+public:
+        ClipPlane(Renderer* renderer, const Camera* camera);
 
-        plane /= n.norm();
-
-        return plane;
-}
+        void command(const ClipPlaneCommand& clip_plane_command);
+};
 }

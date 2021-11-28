@@ -327,14 +327,10 @@ struct ShowPencilSketch final
 }
 
 using ViewCommand = std::variant<
-        command::ClipPlaneHide,
-        command::ClipPlanePosition,
-        command::ClipPlaneShow,
         command::DeleteAllObjects,
         command::DeleteObject,
         command::ResetView,
         command::SetBackgroundColor,
-        command::SetClipPlaneColor,
         command::SetLightingColor,
         command::SetNormalColorNegative,
         command::SetNormalColorPositive,
@@ -365,7 +361,10 @@ using ImageCommand = std::variant<
 
 using MouseCommand = std::variant<command::MouseMove, command::MousePress, command::MouseRelease, command::MouseWheel>;
 
-using Command = std::variant<ImageCommand, MouseCommand, ViewCommand>;
+using ClipPlaneCommand = std::
+        variant<command::ClipPlaneHide, command::ClipPlanePosition, command::ClipPlaneShow, command::SetClipPlaneColor>;
+
+using Command = std::variant<ClipPlaneCommand, ImageCommand, MouseCommand, ViewCommand>;
 
 namespace info
 {

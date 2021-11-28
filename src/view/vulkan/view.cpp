@@ -129,8 +129,6 @@ class Impl final
 
         FrameRate frame_rate_{window_ppi_};
 
-        std::optional<Matrix4d> clip_plane_view_matrix_;
-
         vulkan::PresentMode present_mode_ = SWAPCHAIN_INITIAL_PRESENT_MODE;
 
         bool text_active_ = true;
@@ -151,32 +149,7 @@ class Impl final
 
         std::unique_ptr<Camera> camera_;
         std::unique_ptr<Mouse> mouse_;
-
-        void clip_plane_show(const double position)
-        {
-                clip_plane_view_matrix_ = camera_->renderer_info().main_view_matrix;
-                clip_plane_position(position);
-        }
-
-        void clip_plane_position(const double position)
-        {
-                if (!clip_plane_view_matrix_)
-                {
-                        error("Clip plane is not set");
-                }
-                if (!(position >= 0.0 && position <= 1.0))
-                {
-                        error("Error clip plane position " + to_string(position));
-                }
-
-                renderer_->set_clip_plane(create_clip_plane(*clip_plane_view_matrix_, position));
-        }
-
-        void clip_plane_hide()
-        {
-                clip_plane_view_matrix_.reset();
-                renderer_->set_clip_plane(std::nullopt);
-        }
+        std::unique_ptr<ClipPlane<std::remove_cvref_t<decltype(*renderer_)>>> clip_plane_;
 
         //
 
@@ -268,11 +241,6 @@ class Impl final
                 renderer_->set_wireframe_color(v.value);
         }
 
-        void command(const command::SetClipPlaneColor& v)
-        {
-                renderer_->set_clip_plane_color(v.value);
-        }
-
         void command(const command::SetNormalLength& v)
         {
                 renderer_->set_normal_length(v.value);
@@ -328,21 +296,6 @@ class Impl final
                 renderer_->set_shadow_zoom(v.value);
         }
 
-        void command(const command::ClipPlaneShow& v)
-        {
-                clip_plane_show(v.position);
-        }
-
-        void command(const command::ClipPlanePosition& v)
-        {
-                clip_plane_position(v.position);
-        }
-
-        void command(const command::ClipPlaneHide&)
-        {
-                clip_plane_hide();
-        }
-
         void command(const command::ShowNormals& v)
         {
                 renderer_->set_show_normals(v.show);
@@ -376,6 +329,11 @@ class Impl final
                 {
                         create_swapchain();
                 }
+        }
+
+        void command(const ClipPlaneCommand& clip_plane_command)
+        {
+                clip_plane_->command(clip_plane_command);
         }
 
         //
@@ -587,6 +545,8 @@ public:
 
                 mouse_ = std::make_unique<Mouse>(camera_.get());
 
+                clip_plane_ = std::make_unique<decltype(clip_plane_)::element_type>(renderer_.get(), camera_.get());
+
                 text_ = gpu::text_writer::create_view(
                         instance_.get(), &instance_->graphics_compute_command_pool(),
                         &instance_->graphics_compute_queues()[0], &instance_->transfer_command_pool(),
@@ -600,7 +560,6 @@ public:
                 create_swapchain();
 
                 reset_view_handler();
-                clip_plane_hide();
         }
 
         ~Impl()
