@@ -22,6 +22,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "instance.h"
 #include "render_buffers.h"
 #include "swapchain.h"
+#include "view_process.h"
 
 #include "../com/camera.h"
 #include "../com/clip_plane.h"
@@ -102,9 +103,6 @@ class Impl final
 
         FrameRate frame_rate_{window_ppi_};
 
-        bool vertical_sync_ = SWAPCHAIN_INITIAL_VERTICAL_SYNC;
-        bool text_active_ = true;
-
         const std::unique_ptr<vulkan::VulkanInstance> instance_;
 
         std::unique_ptr<gpu::renderer::Renderer> renderer_;
@@ -122,149 +120,13 @@ class Impl final
         std::unique_ptr<Camera> camera_;
         std::unique_ptr<Mouse> mouse_;
         std::unique_ptr<ClipPlane> clip_plane_;
-
-        //
-
-        void command(const command::UpdateMeshObject& v)
-        {
-                if (const auto ptr = v.object.lock())
-                {
-                        renderer_->object_update(*ptr);
-                }
-        }
-
-        void command(const command::UpdateVolumeObject& v)
-        {
-                if (const auto ptr = v.object.lock())
-                {
-                        renderer_->object_update(*ptr);
-                }
-        }
-
-        void command(const command::DeleteObject& v)
-        {
-                renderer_->object_delete(v.id);
-        }
-
-        void command(const command::ShowObject& v)
-        {
-                renderer_->object_show(v.id, v.show);
-        }
-
-        void command(const command::DeleteAllObjects&)
-        {
-                renderer_->object_delete_all();
-                command(command::ResetView());
-        }
-
-        void command(const command::ResetView&)
-        {
-                camera_->reset(Vector3d(1, 0, 0), Vector3d(0, 1, 0), 1, Vector2d(0, 0));
-        }
-
-        void command(const command::SetLightingColor& v)
-        {
-                renderer_->set_lighting_color(v.value);
-        }
-
-        void command(const command::SetBackgroundColor& v)
-        {
-                renderer_->set_background_color(v.value);
-                const bool background_is_dark = v.value.luminance() <= 0.5;
-                if (background_is_dark)
-                {
-                        static constexpr color::Color WHITE(1);
-                        text_->set_color(WHITE);
-                }
-                else
-                {
-                        static constexpr color::Color BLACK(0);
-                        text_->set_color(BLACK);
-                }
-        }
-
-        void command(const command::SetWireframeColor& v)
-        {
-                renderer_->set_wireframe_color(v.value);
-        }
-
-        void command(const command::SetNormalLength& v)
-        {
-                renderer_->set_normal_length(v.value);
-        }
-
-        void command(const command::SetNormalColorPositive& v)
-        {
-                renderer_->set_normal_color_positive(v.value);
-        }
-
-        void command(const command::SetNormalColorNegative& v)
-        {
-                renderer_->set_normal_color_negative(v.value);
-        }
-
-        void command(const command::ShowSmooth& v)
-        {
-                renderer_->set_show_smooth(v.show);
-        }
-
-        void command(const command::ShowWireframe& v)
-        {
-                renderer_->set_show_wireframe(v.show);
-        }
-
-        void command(const command::ShowShadow& v)
-        {
-                renderer_->set_show_shadow(v.show);
-        }
-
-        void command(const command::ShowFog& v)
-        {
-                renderer_->set_show_fog(v.show);
-        }
-
-        void command(const command::ShowMaterials& v)
-        {
-                renderer_->set_show_materials(v.show);
-        }
-
-        void command(const command::ShowFps& d)
-        {
-                text_active_ = d.show;
-        }
-
-        void command(const command::SetVerticalSync& v)
-        {
-                if (v.enabled != vertical_sync_)
-                {
-                        vertical_sync_ = v.enabled;
-                        create_swapchain();
-                }
-        }
-
-        void command(const command::SetShadowZoom& v)
-        {
-                renderer_->set_shadow_zoom(v.value);
-        }
-
-        void command(const command::ShowNormals& v)
-        {
-                renderer_->set_show_normals(v.show);
-        }
-
-        void command(const command::WindowResize&)
-        {
-        }
+        std::unique_ptr<ViewProcess> view_process_;
 
         //
 
         void command(const ViewCommand& view_command)
         {
-                const auto visitor = [this](const auto& v)
-                {
-                        command(v);
-                };
-                std::visit(visitor, view_command);
+                view_process_->command(view_command);
         }
 
         void command(const MouseCommand& mouse_command)
@@ -286,8 +148,6 @@ class Impl final
         {
                 clip_plane_->command(clip_plane_command);
         }
-
-        //
 
         void info(info::Camera* const camera_info) const
         {
@@ -385,7 +245,7 @@ class Impl final
                 semaphore =
                         image_process_->draw(*image_resolve_, semaphore, graphics_queue, compute_queue, IMAGE_INDEX);
 
-                if (text_active_)
+                if (view_process_->text_active())
                 {
                         semaphore = text_->draw(graphics_queue, semaphore, IMAGE_INDEX, frame_rate_.text_data());
                 }
@@ -421,15 +281,14 @@ class Impl final
         {
                 delete_swapchain();
 
-                const vulkan::PresentMode present_mode =
-                        vertical_sync_ ? vulkan::PresentMode::PREFER_SYNC : vulkan::PresentMode::PREFER_FAST;
-
                 swapchain_ = std::make_unique<vulkan::Swapchain>(
                         instance_->surface(), instance_->device(),
                         std::vector<std::uint32_t>{
                                 instance_->graphics_compute_queues()[0].family_index(),
                                 instance_->presentation_queue().family_index()},
-                        SWAPCHAIN_SURFACE_FORMAT, SWAPCHAIN_PREFERRED_IMAGE_COUNT, present_mode);
+                        SWAPCHAIN_SURFACE_FORMAT, SWAPCHAIN_PREFERRED_IMAGE_COUNT,
+                        view_process_->vertical_sync() ? vulkan::PresentMode::PREFER_SYNC
+                                                       : vulkan::PresentMode::PREFER_FAST);
 
                 create_swapchain_buffers();
         }
@@ -504,6 +363,13 @@ public:
                         &instance_->graphics_compute_queues()[0], &instance_->transfer_command_pool(),
                         &instance_->transfer_queue(), &instance_->compute_command_pool(), &instance_->compute_queue());
 
+                view_process_ = std::make_unique<ViewProcess>(
+                        renderer_.get(), text_.get(), camera_.get(), SWAPCHAIN_INITIAL_VERTICAL_SYNC,
+                        [this]
+                        {
+                                create_swapchain();
+                        });
+
                 create_swapchain();
 
                 command(command::ResetView());
@@ -530,7 +396,7 @@ public:
                 {
                         dispatch_events();
 
-                        if (text_active_)
+                        if (view_process_->text_active())
                         {
                                 frame_rate_.calculate();
                         }
