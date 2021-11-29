@@ -27,7 +27,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 namespace ns::view
 {
-class ViewProcess
+class ViewProcess final
 {
         gpu::renderer::Renderer* renderer_;
         gpu::text_writer::View* text_;
@@ -139,9 +139,9 @@ class ViewProcess
                 renderer_->set_show_materials(v.show);
         }
 
-        void command(const command::ShowFps& d)
+        void command(const command::ShowFps& v)
         {
-                text_active_ = d.show;
+                text_active_ = v.show;
         }
 
         void command(const command::SetVerticalSync& v)

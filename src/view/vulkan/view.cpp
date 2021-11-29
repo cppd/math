@@ -89,56 +89,65 @@ vulkan::DeviceFeatures device_features()
         {
                 features.features_10.samplerAnisotropy = VK_TRUE;
         }
-        vulkan::add_features(&features, ImageProcess::required_device_features());
         vulkan::add_features(&features, gpu::renderer::Renderer::required_device_features());
         vulkan::add_features(&features, gpu::text_writer::View::required_device_features());
+        vulkan::add_features(&features, ImageProcess::required_device_features());
         return features;
+}
+
+int frame_size_in_pixels(const double window_ppi)
+{
+        if (!(window_ppi > 0))
+        {
+                error("Window PPI " + to_string(window_ppi) + "is not positive");
+        }
+        return std::max(1, millimeters_to_pixels(FRAME_SIZE_IN_MILLIMETERS, window_ppi));
 }
 
 class Impl final
 {
         const std::thread::id thread_id_ = std::this_thread::get_id();
-        const double window_ppi_;
-        const int frame_size_in_pixels_ = std::max(1, millimeters_to_pixels(FRAME_SIZE_IN_MILLIMETERS, window_ppi_));
 
-        FrameRate frame_rate_{window_ppi_};
+        const int frame_size_in_pixels_;
+
+        FrameRate frame_rate_;
 
         const std::unique_ptr<vulkan::VulkanInstance> instance_;
+        const vulkan::handle::Semaphore swapchain_image_semaphore_{instance_->device()};
 
         std::unique_ptr<gpu::renderer::Renderer> renderer_;
         std::unique_ptr<gpu::text_writer::View> text_;
-        std::unique_ptr<ImageProcess> image_process_;
 
-        const vulkan::handle::Semaphore swapchain_image_semaphore_{instance_->device()};
-        std::unique_ptr<vulkan::Swapchain> swapchain_;
-        std::unique_ptr<Swapchain> swapchain_resolve_;
+        ImageProcess image_process_;
 
+        Camera camera_;
+        Mouse mouse_;
+        ClipPlane clip_plane_;
+        ViewProcess view_process_;
+
+        std::optional<vulkan::Swapchain> swapchain_;
         std::unique_ptr<RenderBuffers> render_buffers_;
-        std::unique_ptr<ImageResolve> image_resolve_;
-        std::unique_ptr<vulkan::ImageWithMemory> object_image_;
-
-        std::unique_ptr<Camera> camera_;
-        std::unique_ptr<Mouse> mouse_;
-        std::unique_ptr<ClipPlane> clip_plane_;
-        std::unique_ptr<ViewProcess> view_process_;
+        std::optional<vulkan::ImageWithMemory> object_image_;
+        std::optional<ImageResolve> image_resolve_;
+        std::optional<Swapchain> swapchain_resolve_;
 
         //
 
         void command(const ViewCommand& view_command)
         {
-                view_process_->command(view_command);
+                view_process_.command(view_command);
         }
 
         void command(const MouseCommand& mouse_command)
         {
-                mouse_->command(mouse_command);
+                mouse_.command(mouse_command);
         }
 
         void command(const ImageCommand& image_command)
         {
-                const bool two_windows = image_process_->two_windows();
-                image_process_->command(image_command);
-                if (two_windows != image_process_->two_windows())
+                const bool two_windows = image_process_.two_windows();
+                image_process_.command(image_command);
+                if (two_windows != image_process_.two_windows())
                 {
                         create_swapchain();
                 }
@@ -146,12 +155,12 @@ class Impl final
 
         void command(const ClipPlaneCommand& clip_plane_command)
         {
-                clip_plane_->command(clip_plane_command);
+                clip_plane_.command(clip_plane_command);
         }
 
         void info(info::Camera* const camera_info) const
         {
-                *camera_info = camera_->view_info();
+                *camera_info = camera_.view_info();
         }
 
         void info(info::Image* const image_info)
@@ -183,7 +192,7 @@ class Impl final
         void delete_buffers()
         {
                 text_->delete_buffers();
-                image_process_->delete_buffers();
+                image_process_.delete_buffers();
                 renderer_->delete_buffers();
 
                 image_resolve_.reset();
@@ -198,7 +207,7 @@ class Impl final
                         {instance_->graphics_compute_queues()[0].family_index()}, instance_->device(),
                         MINIMUM_SAMPLE_COUNT);
 
-                object_image_ = std::make_unique<vulkan::ImageWithMemory>(
+                object_image_.emplace(
                         instance_->device(),
                         std::vector<std::uint32_t>({instance_->graphics_compute_queues()[0].family_index()}),
                         std::vector<VkFormat>({OBJECT_IMAGE_FORMAT}), VK_SAMPLE_COUNT_1_BIT, VK_IMAGE_TYPE_2D,
@@ -207,26 +216,26 @@ class Impl final
                         instance_->graphics_compute_command_pool(), instance_->graphics_compute_queues()[0]);
 
                 const auto [window_1, window_2] = window_position_and_size(
-                        image_process_->two_windows(), render_buffers_->width(), render_buffers_->height(),
+                        image_process_.two_windows(), render_buffers_->width(), render_buffers_->height(),
                         frame_size_in_pixels_);
 
                 static_assert(RENDER_BUFFER_COUNT == 1);
-                image_resolve_ = std::make_unique<ImageResolve>(
+                image_resolve_.emplace(
                         instance_->device(), instance_->graphics_compute_command_pool(),
                         instance_->graphics_compute_queues()[0], *render_buffers_, window_1,
                         VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL, VK_IMAGE_USAGE_SAMPLED_BIT);
 
-                renderer_->create_buffers(&render_buffers_->buffers_3d(), object_image_.get(), window_1);
+                renderer_->create_buffers(&render_buffers_->buffers_3d(), &*object_image_, window_1);
 
                 text_->create_buffers(
                         &render_buffers_->buffers_2d(),
                         Region<2, int>({0, 0}, {render_buffers_->width(), render_buffers_->height()}));
 
-                image_process_->create_buffers(
+                image_process_.create_buffers(
                         &render_buffers_->buffers_2d(), image_resolve_->image(0), *object_image_, window_1, window_2);
 
-                mouse_->set_rectangle(window_1);
-                camera_->resize(window_1.width(), window_1.height());
+                mouse_.set_rectangle(window_1);
+                camera_.resize(window_1.width(), window_1.height());
         }
 
         [[nodiscard]] VkSemaphore render() const
@@ -242,10 +251,9 @@ class Impl final
                 const vulkan::Queue& graphics_queue = instance_->graphics_compute_queues()[0];
                 const vulkan::Queue& compute_queue = instance_->compute_queue();
 
-                semaphore =
-                        image_process_->draw(*image_resolve_, semaphore, graphics_queue, compute_queue, IMAGE_INDEX);
+                semaphore = image_process_.draw(*image_resolve_, semaphore, graphics_queue, compute_queue, IMAGE_INDEX);
 
-                if (view_process_->text_active())
+                if (view_process_.text_active())
                 {
                         semaphore = text_->draw(graphics_queue, semaphore, IMAGE_INDEX, frame_rate_.text_data());
                 }
@@ -265,7 +273,7 @@ class Impl final
         {
                 create_buffers(swapchain_->format(), swapchain_->width(), swapchain_->height());
 
-                swapchain_resolve_ = std::make_unique<Swapchain>(
+                swapchain_resolve_.emplace(
                         instance_->device(), instance_->graphics_compute_command_pool(), *render_buffers_, *swapchain_);
         }
 
@@ -281,14 +289,14 @@ class Impl final
         {
                 delete_swapchain();
 
-                swapchain_ = std::make_unique<vulkan::Swapchain>(
+                swapchain_.emplace(
                         instance_->surface(), instance_->device(),
                         std::vector<std::uint32_t>{
                                 instance_->graphics_compute_queues()[0].family_index(),
                                 instance_->presentation_queue().family_index()},
                         SWAPCHAIN_SURFACE_FORMAT, SWAPCHAIN_PREFERRED_IMAGE_COUNT,
-                        view_process_->vertical_sync() ? vulkan::PresentMode::PREFER_SYNC
-                                                       : vulkan::PresentMode::PREFER_FAST);
+                        view_process_.vertical_sync() ? vulkan::PresentMode::PREFER_SYNC
+                                                      : vulkan::PresentMode::PREFER_FAST);
 
                 create_swapchain_buffers();
         }
@@ -322,56 +330,63 @@ class Impl final
 
 public:
         Impl(const window::WindowID& window, const double window_ppi)
-                : window_ppi_(window_ppi), instance_(create_instance(window, device_features()))
+                : frame_size_in_pixels_(frame_size_in_pixels(window_ppi)),
+                  frame_rate_(window_ppi),
+                  instance_(create_instance(window, device_features())),
+                  renderer_(gpu::renderer::create_renderer(
+                          instance_.get(),
+                          &instance_->graphics_compute_command_pool(),
+                          &instance_->graphics_compute_queues()[0],
+                          &instance_->transfer_command_pool(),
+                          &instance_->transfer_queue(),
+                          SAMPLE_RATE_SHADING,
+                          SAMPLER_ANISOTROPY)),
+                  text_(gpu::text_writer::create_view(
+                          instance_.get(),
+                          &instance_->graphics_compute_command_pool(),
+                          &instance_->graphics_compute_queues()[0],
+                          &instance_->transfer_command_pool(),
+                          &instance_->transfer_queue(),
+                          SAMPLE_RATE_SHADING,
+                          frame_rate_.text_size(),
+                          DEFAULT_TEXT_COLOR)),
+                  image_process_(
+                          window_ppi,
+                          SAMPLE_RATE_SHADING,
+                          instance_.get(),
+                          &instance_->graphics_compute_command_pool(),
+                          &instance_->graphics_compute_queues()[0],
+                          &instance_->transfer_command_pool(),
+                          &instance_->transfer_queue(),
+                          &instance_->compute_command_pool(),
+                          &instance_->compute_queue()),
+                  camera_(
+                          [this](const auto& info)
+                          {
+                                  renderer_->set_camera(info);
+                          }),
+                  mouse_(&camera_),
+                  clip_plane_(
+                          &camera_,
+                          [this](const auto& clip_plane)
+                          {
+                                  renderer_->set_clip_plane(clip_plane);
+                          },
+                          [this](const auto& clip_plane_color)
+                          {
+                                  renderer_->set_clip_plane_color(clip_plane_color);
+                          }),
+                  view_process_(
+                          renderer_.get(),
+                          text_.get(),
+                          &camera_,
+                          SWAPCHAIN_INITIAL_VERTICAL_SYNC,
+                          [this]
+                          {
+                                  create_swapchain();
+                          })
         {
-                if (!(window_ppi_ > 0))
-                {
-                        error("Window PPI " + to_string(window_ppi_) + "is not positive");
-                }
-
-                renderer_ = gpu::renderer::create_renderer(
-                        instance_.get(), &instance_->graphics_compute_command_pool(),
-                        &instance_->graphics_compute_queues()[0], &instance_->transfer_command_pool(),
-                        &instance_->transfer_queue(), SAMPLE_RATE_SHADING, SAMPLER_ANISOTROPY);
-
-                camera_ = std::make_unique<Camera>(
-                        [this](const auto& info)
-                        {
-                                renderer_->set_camera(info);
-                        });
-
-                mouse_ = std::make_unique<Mouse>(camera_.get());
-
-                clip_plane_ = std::make_unique<ClipPlane>(
-                        camera_.get(),
-                        [this](const auto& clip_plane)
-                        {
-                                renderer_->set_clip_plane(clip_plane);
-                        },
-                        [this](const auto& clip_plane_color)
-                        {
-                                renderer_->set_clip_plane_color(clip_plane_color);
-                        });
-
-                text_ = gpu::text_writer::create_view(
-                        instance_.get(), &instance_->graphics_compute_command_pool(),
-                        &instance_->graphics_compute_queues()[0], &instance_->transfer_command_pool(),
-                        &instance_->transfer_queue(), SAMPLE_RATE_SHADING, frame_rate_.text_size(), DEFAULT_TEXT_COLOR);
-
-                image_process_ = std::make_unique<ImageProcess>(
-                        window_ppi, SAMPLE_RATE_SHADING, instance_.get(), &instance_->graphics_compute_command_pool(),
-                        &instance_->graphics_compute_queues()[0], &instance_->transfer_command_pool(),
-                        &instance_->transfer_queue(), &instance_->compute_command_pool(), &instance_->compute_queue());
-
-                view_process_ = std::make_unique<ViewProcess>(
-                        renderer_.get(), text_.get(), camera_.get(), SWAPCHAIN_INITIAL_VERTICAL_SYNC,
-                        [this]
-                        {
-                                create_swapchain();
-                        });
-
                 create_swapchain();
-
                 command(command::ResetView());
         }
 
@@ -396,7 +411,7 @@ public:
                 {
                         dispatch_events();
 
-                        if (view_process_->text_active())
+                        if (view_process_.text_active())
                         {
                                 frame_rate_.calculate();
                         }

@@ -149,7 +149,8 @@ class Impl final : public View
                 image_.reset();
         }
 
-        VkSemaphore draw(const vulkan::Queue& queue, const VkSemaphore wait_semaphore, const unsigned index) override
+        VkSemaphore draw(const vulkan::Queue& queue, const VkSemaphore wait_semaphore, const unsigned index)
+                const override
         {
                 ASSERT(std::this_thread::get_id() == thread_id_);
 

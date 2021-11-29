@@ -40,7 +40,7 @@ struct View
                 const Region<2, int>& draw_rectangle) = 0;
         virtual void delete_buffers() = 0;
 
-        virtual VkSemaphore draw(const vulkan::Queue& queue, VkSemaphore wait_semaphore, unsigned index) = 0;
+        virtual VkSemaphore draw(const vulkan::Queue& queue, VkSemaphore wait_semaphore, unsigned index) const = 0;
 
         virtual void set_brightness(double brightness) = 0;
         virtual void set_background_color(const color::Color& color) = 0;

@@ -192,7 +192,7 @@ class Impl final : public View
                 const vulkan::Queue& graphics_queue,
                 const vulkan::Queue& compute_queue,
                 VkSemaphore wait_semaphore,
-                const unsigned index) override
+                const unsigned index) const override
         {
                 ASSERT(std::this_thread::get_id() == thread_id_);
 

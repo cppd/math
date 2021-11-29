@@ -155,7 +155,7 @@ VkSemaphore ImageProcess::draw(
         VkSemaphore semaphore,
         const vulkan::Queue& graphics_queue,
         const vulkan::Queue& compute_queue,
-        const unsigned image_index)
+        const unsigned image_index) const
 {
         if (pencil_sketch_active_)
         {

@@ -86,6 +86,6 @@ public:
                 VkSemaphore semaphore,
                 const vulkan::Queue& graphics_queue,
                 const vulkan::Queue& compute_queue,
-                unsigned image_index);
+                unsigned image_index) const;
 };
 }
