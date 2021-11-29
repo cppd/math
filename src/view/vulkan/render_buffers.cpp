@@ -18,7 +18,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "render_buffers.h"
 
 #include "buffer_info.h"
-#include "commands.h"
+#include "image_commands.h"
 #include "render_pass.h"
 
 #include <src/com/error.h>

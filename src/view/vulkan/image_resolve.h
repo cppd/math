@@ -19,6 +19,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "render_buffers.h"
 
+#include <src/image/image.h>
+
 #include <vector>
 
 namespace ns::view
@@ -49,4 +51,12 @@ public:
 
         void resolve(const vulkan::Queue& graphics_queue, VkSemaphore wait_semaphore, unsigned image_index) const;
 };
+
+[[nodiscard]] image::Image<2> resolve_to_image(
+        const vulkan::Device& device,
+        const vulkan::CommandPool& command_pool,
+        const vulkan::Queue& queue,
+        const RenderBuffers& render_buffers,
+        VkSemaphore wait_semaphore,
+        unsigned image_index);
 }

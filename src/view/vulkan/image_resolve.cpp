@@ -17,6 +17,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "image_resolve.h"
 
+#include <src/image/alpha.h>
 #include <src/vulkan/error.h>
 #include <src/vulkan/queue.h>
 
@@ -107,5 +108,38 @@ void ImageResolve::resolve(
 
         vulkan::queue_submit(
                 wait_semaphore, VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT, command_buffers_[image_index], graphics_queue);
+}
+
+image::Image<2> resolve_to_image(
+        const vulkan::Device& device,
+        const vulkan::CommandPool& command_pool,
+        const vulkan::Queue& queue,
+        const RenderBuffers& render_buffers,
+        const VkSemaphore wait_semaphore,
+        const unsigned image_index)
+{
+        constexpr VkImageLayout IMAGE_LAYOUT = VK_IMAGE_LAYOUT_GENERAL;
+
+        const unsigned width = render_buffers.width();
+        const unsigned height = render_buffers.height();
+
+        const ImageResolve image(
+                device, command_pool, queue, render_buffers, Region<2, int>({0, 0}, {width, height}), IMAGE_LAYOUT,
+                VK_IMAGE_USAGE_TRANSFER_SRC_BIT);
+
+        image.resolve(queue, wait_semaphore, image_index);
+        VULKAN_CHECK(vkQueueWaitIdle(queue));
+
+        image::Image<2> res;
+
+        res.size[0] = width;
+        res.size[1] = height;
+
+        image.image(image_index)
+                .read_pixels(command_pool, queue, IMAGE_LAYOUT, IMAGE_LAYOUT, &res.color_format, &res.pixels);
+
+        ASSERT(4 == image::format_component_count(res.color_format));
+
+        return image::delete_alpha(res);
 }
 }

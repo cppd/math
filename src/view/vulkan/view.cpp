@@ -60,7 +60,7 @@ constexpr int SWAPCHAIN_PREFERRED_IMAGE_COUNT = 2; // 2 - double buffering, 3 - 
 constexpr VkSurfaceFormatKHR SWAPCHAIN_SURFACE_FORMAT{
         .format = VK_FORMAT_B8G8R8A8_SRGB,
         .colorSpace = VK_COLOR_SPACE_SRGB_NONLINEAR_KHR};
-constexpr vulkan::PresentMode SWAPCHAIN_INITIAL_PRESENT_MODE = vulkan::PresentMode::PREFER_FAST;
+constexpr bool SWAPCHAIN_INITIAL_VERTICAL_SYNC = false;
 
 constexpr VkFormat SAVE_FORMAT = VK_FORMAT_R32G32B32A32_SFLOAT;
 constexpr std::array DEPTH_FORMATS = std::to_array<VkFormat>({VK_FORMAT_D32_SFLOAT});
@@ -102,8 +102,7 @@ class Impl final
 
         FrameRate frame_rate_{window_ppi_};
 
-        vulkan::PresentMode present_mode_ = SWAPCHAIN_INITIAL_PRESENT_MODE;
-
+        bool vertical_sync_ = SWAPCHAIN_INITIAL_VERTICAL_SYNC;
         bool text_active_ = true;
 
         const std::unique_ptr<vulkan::VulkanInstance> instance_;
@@ -122,66 +121,7 @@ class Impl final
 
         std::unique_ptr<Camera> camera_;
         std::unique_ptr<Mouse> mouse_;
-        std::unique_ptr<ClipPlane<std::remove_cvref_t<decltype(*renderer_)>>> clip_plane_;
-
-        //
-
-        void reset_view_handler()
-        {
-                ASSERT(std::this_thread::get_id() == thread_id_);
-
-                camera_->reset(Vector3d(1, 0, 0), Vector3d(0, 1, 0), 1, Vector2d(0, 0));
-        }
-
-        void set_vertical_sync_swapchain(const bool v)
-        {
-                if (v && present_mode_ != vulkan::PresentMode::PREFER_SYNC)
-                {
-                        present_mode_ = vulkan::PresentMode::PREFER_SYNC;
-                        create_swapchain();
-                        return;
-                }
-
-                if (!v && present_mode_ != vulkan::PresentMode::PREFER_FAST)
-                {
-                        present_mode_ = vulkan::PresentMode::PREFER_FAST;
-                        create_swapchain();
-                        return;
-                }
-        }
-
-        image::Image<2> resolve_to_image()
-        {
-                constexpr int INDEX = 0;
-
-                const int width = swapchain_->width();
-                const int height = swapchain_->height();
-
-                VkSemaphore semaphore = render();
-
-                const vulkan::Queue& queue = instance_->graphics_compute_queues()[0];
-
-                const ImageResolve image(
-                        instance_->device(), instance_->graphics_compute_command_pool(), queue, *render_buffers_,
-                        Region<2, int>({0, 0}, {width, height}), VK_IMAGE_LAYOUT_GENERAL,
-                        VK_IMAGE_USAGE_TRANSFER_SRC_BIT);
-
-                image.resolve(queue, semaphore, INDEX);
-                VULKAN_CHECK(vkQueueWaitIdle(queue));
-
-                image::Image<2> res;
-
-                res.size[0] = width;
-                res.size[1] = height;
-
-                image.image(INDEX).read_pixels(
-                        instance_->graphics_compute_command_pool(), queue, VK_IMAGE_LAYOUT_GENERAL,
-                        VK_IMAGE_LAYOUT_GENERAL, &res.color_format, &res.pixels);
-
-                ASSERT(4 == image::format_component_count(res.color_format));
-
-                return image::delete_alpha(res);
-        }
+        std::unique_ptr<ClipPlane> clip_plane_;
 
         //
 
@@ -214,12 +154,12 @@ class Impl final
         void command(const command::DeleteAllObjects&)
         {
                 renderer_->object_delete_all();
-                reset_view_handler();
+                command(command::ResetView());
         }
 
         void command(const command::ResetView&)
         {
-                reset_view_handler();
+                camera_->reset(Vector3d(1, 0, 0), Vector3d(0, 1, 0), 1, Vector2d(0, 0));
         }
 
         void command(const command::SetLightingColor& v)
@@ -295,7 +235,11 @@ class Impl final
 
         void command(const command::SetVerticalSync& v)
         {
-                set_vertical_sync_swapchain(v.enabled);
+                if (v.enabled != vertical_sync_)
+                {
+                        vertical_sync_ = v.enabled;
+                        create_swapchain();
+                }
         }
 
         void command(const command::SetShadowZoom& v)
@@ -354,6 +298,8 @@ class Impl final
         {
                 static_assert(RENDER_BUFFER_COUNT == 1);
 
+                static constexpr int IMAGE_INDEX = 0;
+
                 instance_->device_wait_idle();
 
                 const int width = swapchain_->width();
@@ -362,7 +308,11 @@ class Impl final
                 delete_swapchain_buffers();
                 create_buffers(SAVE_FORMAT, width, height);
 
-                image_info->image = resolve_to_image();
+                const VkSemaphore semaphore = render();
+
+                image_info->image = resolve_to_image(
+                        instance_->device(), instance_->graphics_compute_command_pool(),
+                        instance_->graphics_compute_queues()[0], *render_buffers_, semaphore, IMAGE_INDEX);
 
                 delete_buffers();
                 create_swapchain_buffers();
@@ -422,21 +372,22 @@ class Impl final
         [[nodiscard]] VkSemaphore render() const
         {
                 static_assert(RENDER_BUFFER_COUNT == 1);
+
+                static constexpr int IMAGE_INDEX = 0;
                 ASSERT(render_buffers_->image_views().size() == 1);
 
-                constexpr int INDEX = 0;
-
                 VkSemaphore semaphore = renderer_->draw(
-                        instance_->graphics_compute_queues()[0], instance_->graphics_compute_queues()[1], INDEX);
+                        instance_->graphics_compute_queues()[0], instance_->graphics_compute_queues()[1], IMAGE_INDEX);
 
                 const vulkan::Queue& graphics_queue = instance_->graphics_compute_queues()[0];
                 const vulkan::Queue& compute_queue = instance_->compute_queue();
 
-                semaphore = image_process_->draw(*image_resolve_, semaphore, graphics_queue, compute_queue, INDEX);
+                semaphore =
+                        image_process_->draw(*image_resolve_, semaphore, graphics_queue, compute_queue, IMAGE_INDEX);
 
                 if (text_active_)
                 {
-                        semaphore = text_->draw(graphics_queue, semaphore, INDEX, frame_rate_.text_data());
+                        semaphore = text_->draw(graphics_queue, semaphore, IMAGE_INDEX, frame_rate_.text_data());
                 }
 
                 return semaphore;
@@ -470,12 +421,15 @@ class Impl final
         {
                 delete_swapchain();
 
+                const vulkan::PresentMode present_mode =
+                        vertical_sync_ ? vulkan::PresentMode::PREFER_SYNC : vulkan::PresentMode::PREFER_FAST;
+
                 swapchain_ = std::make_unique<vulkan::Swapchain>(
                         instance_->surface(), instance_->device(),
                         std::vector<std::uint32_t>{
                                 instance_->graphics_compute_queues()[0].family_index(),
                                 instance_->presentation_queue().family_index()},
-                        SWAPCHAIN_SURFACE_FORMAT, SWAPCHAIN_PREFERRED_IMAGE_COUNT, present_mode_);
+                        SWAPCHAIN_SURFACE_FORMAT, SWAPCHAIN_PREFERRED_IMAGE_COUNT, present_mode);
 
                 create_swapchain_buffers();
         }
@@ -522,14 +476,23 @@ public:
                         &instance_->transfer_queue(), SAMPLE_RATE_SHADING, SAMPLER_ANISOTROPY);
 
                 camera_ = std::make_unique<Camera>(
-                        [this](const gpu::renderer::CameraInfo& info)
+                        [this](const auto& info)
                         {
                                 renderer_->set_camera(info);
                         });
 
                 mouse_ = std::make_unique<Mouse>(camera_.get());
 
-                clip_plane_ = std::make_unique<decltype(clip_plane_)::element_type>(renderer_.get(), camera_.get());
+                clip_plane_ = std::make_unique<ClipPlane>(
+                        camera_.get(),
+                        [this](const auto& clip_plane)
+                        {
+                                renderer_->set_clip_plane(clip_plane);
+                        },
+                        [this](const auto& clip_plane_color)
+                        {
+                                renderer_->set_clip_plane_color(clip_plane_color);
+                        });
 
                 text_ = gpu::text_writer::create_view(
                         instance_.get(), &instance_->graphics_compute_command_pool(),
@@ -543,7 +506,7 @@ public:
 
                 create_swapchain();
 
-                reset_view_handler();
+                command(command::ResetView());
         }
 
         ~Impl()

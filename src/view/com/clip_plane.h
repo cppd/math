@@ -21,18 +21,20 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "../event.h"
 
+#include <src/color/color.h>
 #include <src/numerical/matrix.h>
 
+#include <functional>
 #include <optional>
 
 namespace ns::view
 {
-template <typename Renderer>
 class ClipPlane final
 {
         std::optional<Matrix4d> matrix_;
-        Renderer* renderer_;
         const Camera* camera_;
+        std::function<void(const std::optional<Vector4d>&)> set_clip_plane_;
+        std::function<void(const color::Color&)> set_clip_plane_color_;
 
         void set_position(double position);
 
@@ -42,7 +44,10 @@ class ClipPlane final
         void command(const command::ClipPlaneSetColor& v);
 
 public:
-        ClipPlane(Renderer* renderer, const Camera* camera);
+        ClipPlane(
+                const Camera* camera,
+                std::function<void(const std::optional<Vector4d>&)> set_clip_plane,
+                std::function<void(const color::Color&)> set_clip_plane_color);
 
         void command(const ClipPlaneCommand& clip_plane_command);
 };

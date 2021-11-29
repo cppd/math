@@ -46,24 +46,26 @@ Vector4d create_clip_plane(const Matrix4d& clip_plane_view, const double positio
 }
 }
 
-template <typename Renderer>
-ClipPlane<Renderer>::ClipPlane(Renderer* const renderer, const Camera* const camera)
-        : renderer_(renderer), camera_(camera)
+ClipPlane::ClipPlane(
+        const Camera* const camera,
+        std::function<void(const std::optional<Vector4d>&)> set_clip_plane,
+        std::function<void(const color::Color&)> set_clip_plane_color)
+        : camera_(camera),
+          set_clip_plane_(std::move(set_clip_plane)),
+          set_clip_plane_color_(std::move(set_clip_plane_color))
 {
 }
 
-template <typename Renderer>
-void ClipPlane<Renderer>::command(const ClipPlaneCommand& clip_plane_command)
+void ClipPlane::command(const ClipPlaneCommand& clip_plane_command)
 {
-        const auto visitor = [&](const auto& v)
+        const auto visitor = [this](const auto& v)
         {
                 command(v);
         };
         std::visit(visitor, clip_plane_command);
 }
 
-template <typename Renderer>
-void ClipPlane<Renderer>::set_position(const double position)
+void ClipPlane::set_position(const double position)
 {
         if (!matrix_)
         {
@@ -75,34 +77,28 @@ void ClipPlane<Renderer>::set_position(const double position)
                 error("Error clip plane position " + to_string(position));
         }
 
-        renderer_->set_clip_plane(create_clip_plane(*matrix_, position));
+        set_clip_plane_(create_clip_plane(*matrix_, position));
 }
 
-template <typename Renderer>
-void ClipPlane<Renderer>::command(const command::ClipPlaneHide&)
+void ClipPlane::command(const command::ClipPlaneHide&)
 {
         matrix_.reset();
-        renderer_->set_clip_plane(std::nullopt);
+        set_clip_plane_(std::nullopt);
 }
 
-template <typename Renderer>
-void ClipPlane<Renderer>::command(const command::ClipPlaneSetPosition& v)
+void ClipPlane::command(const command::ClipPlaneSetPosition& v)
 {
         set_position(v.position);
 }
 
-template <typename Renderer>
-void ClipPlane<Renderer>::command(const command::ClipPlaneShow& v)
+void ClipPlane::command(const command::ClipPlaneShow& v)
 {
         matrix_ = camera_->renderer_info().main_view_matrix;
         set_position(v.position);
 }
 
-template <typename Renderer>
-void ClipPlane<Renderer>::command(const command::ClipPlaneSetColor& v)
+void ClipPlane::command(const command::ClipPlaneSetColor& v)
 {
-        renderer_->set_clip_plane_color(v.value);
+        set_clip_plane_color_(v.value);
 }
-
-template class ClipPlane<gpu::renderer::Renderer>;
 }
