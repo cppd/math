@@ -75,12 +75,12 @@ class ViewProcess final
 
         void command(const command::SetLightingColor& v)
         {
-                renderer_->set_lighting_color(v.value);
+                renderer_->send(gpu::renderer::SetLightingColor(v.value));
         }
 
         void command(const command::SetBackgroundColor& v)
         {
-                renderer_->set_background_color(v.value);
+                renderer_->send(gpu::renderer::SetBackgroundColor(v.value));
                 const bool background_is_dark = v.value.luminance() <= 0.5;
                 if (background_is_dark)
                 {
@@ -96,47 +96,47 @@ class ViewProcess final
 
         void command(const command::SetWireframeColor& v)
         {
-                renderer_->set_wireframe_color(v.value);
+                renderer_->send(gpu::renderer::SetWireframeColor(v.value));
         }
 
         void command(const command::SetNormalLength& v)
         {
-                renderer_->set_normal_length(v.value);
+                renderer_->send(gpu::renderer::SetNormalLength(v.value));
         }
 
         void command(const command::SetNormalColorPositive& v)
         {
-                renderer_->set_normal_color_positive(v.value);
+                renderer_->send(gpu::renderer::SetNormalColorPositive(v.value));
         }
 
         void command(const command::SetNormalColorNegative& v)
         {
-                renderer_->set_normal_color_negative(v.value);
+                renderer_->send(gpu::renderer::SetNormalColorNegative(v.value));
         }
 
         void command(const command::ShowSmooth& v)
         {
-                renderer_->set_show_smooth(v.show);
+                renderer_->send(gpu::renderer::SetShowSmooth(v.show));
         }
 
         void command(const command::ShowWireframe& v)
         {
-                renderer_->set_show_wireframe(v.show);
+                renderer_->send(gpu::renderer::SetShowWireframe(v.show));
         }
 
         void command(const command::ShowShadow& v)
         {
-                renderer_->set_show_shadow(v.show);
+                renderer_->send(gpu::renderer::SetShowShadow(v.show));
         }
 
         void command(const command::ShowFog& v)
         {
-                renderer_->set_show_fog(v.show);
+                renderer_->send(gpu::renderer::SetShowFog(v.show));
         }
 
         void command(const command::ShowMaterials& v)
         {
-                renderer_->set_show_materials(v.show);
+                renderer_->send(gpu::renderer::SetShowMaterials(v.show));
         }
 
         void command(const command::ShowFps& v)
@@ -155,12 +155,12 @@ class ViewProcess final
 
         void command(const command::SetShadowZoom& v)
         {
-                renderer_->set_shadow_zoom(v.value);
+                renderer_->send(gpu::renderer::SetShadowZoom(v.value));
         }
 
         void command(const command::ShowNormals& v)
         {
-                renderer_->set_show_normals(v.show);
+                renderer_->send(gpu::renderer::SetShowNormals(v.show));
         }
 
         void command(const command::WindowResize&)

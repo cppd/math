@@ -166,118 +166,89 @@ class Impl final : public Renderer
         std::unique_ptr<TransparencyBuffers> transparency_buffers_;
         vulkan::handle::Semaphore render_transparent_as_opaque_signal_semaphore_;
 
-        void set_lighting_color(const color::Color& color) override
+        void command(const SetLightingColor& v)
         {
-                ASSERT(thread_id_ == std::this_thread::get_id());
-
-                shader_buffers_.set_lighting_color(color.rgb32().max_n(0));
+                shader_buffers_.set_lighting_color(v.color.rgb32().max_n(0));
         }
 
-        void set_background_color(const color::Color& color) override
+        void command(const SetBackgroundColor& v)
         {
-                ASSERT(thread_id_ == std::this_thread::get_id());
-
-                clear_color_rgb32_ = color.rgb32().clamp(0, 1);
+                clear_color_rgb32_ = v.color.rgb32().clamp(0, 1);
                 shader_buffers_.set_background_color(clear_color_rgb32_);
-
                 create_clear_command_buffers();
         }
 
-        void set_wireframe_color(const color::Color& color) override
+        void command(const SetWireframeColor& v)
         {
-                ASSERT(thread_id_ == std::this_thread::get_id());
-
-                shader_buffers_.set_wireframe_color(color.rgb32().clamp(0, 1));
+                shader_buffers_.set_wireframe_color(v.color.rgb32().clamp(0, 1));
         }
 
-        void set_clip_plane_color(const color::Color& color) override
+        void command(const SetClipPlaneColor& v)
         {
-                ASSERT(thread_id_ == std::this_thread::get_id());
-
-                shader_buffers_.set_clip_plane_color(color.rgb32().clamp(0, 1));
+                shader_buffers_.set_clip_plane_color(v.color.rgb32().clamp(0, 1));
         }
 
-        void set_normal_length(const float length) override
+        void command(const SetNormalLength& v)
         {
-                ASSERT(thread_id_ == std::this_thread::get_id());
-
-                shader_buffers_.set_normal_length(length);
+                shader_buffers_.set_normal_length(v.length);
         }
 
-        void set_normal_color_positive(const color::Color& color) override
+        void command(const SetNormalColorPositive& v)
         {
-                ASSERT(thread_id_ == std::this_thread::get_id());
-
-                shader_buffers_.set_normal_color_positive(color.rgb32().clamp(0, 1));
+                shader_buffers_.set_normal_color_positive(v.color.rgb32().clamp(0, 1));
         }
 
-        void set_normal_color_negative(const color::Color& color) override
+        void command(const SetNormalColorNegative& v)
         {
-                ASSERT(thread_id_ == std::this_thread::get_id());
-
-                shader_buffers_.set_normal_color_negative(color.rgb32().clamp(0, 1));
+                shader_buffers_.set_normal_color_negative(v.color.rgb32().clamp(0, 1));
         }
 
-        void set_show_smooth(const bool show) override
+        void command(const SetShowSmooth& v)
         {
-                ASSERT(thread_id_ == std::this_thread::get_id());
-
-                shader_buffers_.set_show_smooth(show);
+                shader_buffers_.set_show_smooth(v.show);
         }
 
-        void set_show_wireframe(const bool show) override
+        void command(const SetShowWireframe& v)
         {
-                ASSERT(thread_id_ == std::this_thread::get_id());
-
-                shader_buffers_.set_show_wireframe(show);
+                shader_buffers_.set_show_wireframe(v.show);
         }
 
-        void set_show_shadow(const bool show) override
+        void command(const SetShowShadow& v)
         {
-                ASSERT(thread_id_ == std::this_thread::get_id());
-
-                shader_buffers_.set_show_shadow(show);
-                show_shadow_ = show;
+                shader_buffers_.set_show_shadow(v.show);
+                show_shadow_ = v.show;
         }
 
-        void set_show_fog(const bool show) override
+        void command(const SetShowFog& v)
         {
-                ASSERT(thread_id_ == std::this_thread::get_id());
-
-                shader_buffers_.set_show_fog(show);
+                shader_buffers_.set_show_fog(v.show);
         }
 
-        void set_show_materials(const bool show) override
+        void command(const SetShowMaterials& v)
         {
-                ASSERT(thread_id_ == std::this_thread::get_id());
-
-                shader_buffers_.set_show_materials(show);
+                shader_buffers_.set_show_materials(v.show);
         }
 
-        void set_show_normals(const bool show) override
+        void command(const SetShowNormals& v)
         {
-                ASSERT(thread_id_ == std::this_thread::get_id());
-
-                if (show_normals_ != show)
+                if (show_normals_ != v.show)
                 {
-                        show_normals_ = show;
+                        show_normals_ = v.show;
                         create_mesh_render_command_buffers();
                 }
         }
 
-        void set_shadow_zoom(const double zoom) override
+        void command(const SetShadowZoom& v)
         {
-                ASSERT(thread_id_ == std::this_thread::get_id());
-
-                shadow_zoom_ = zoom;
+                shadow_zoom_ = v.zoom;
 
                 create_mesh_depth_buffers();
                 create_mesh_command_buffers();
         }
 
-        void set_camera(const CameraInfo& c) override
+        void command(const SetCamera& v)
         {
-                ASSERT(thread_id_ == std::this_thread::get_id());
+                const CameraInfo& c = v.info;
 
                 const Matrix4d& shadow_projection_matrix = matrix::ortho_vulkan<double>(
                         c.shadow_volume.left, c.shadow_volume.right, c.shadow_volume.bottom, c.shadow_volume.top,
@@ -296,11 +267,9 @@ class Impl final : public Renderer
                 set_matrices();
         }
 
-        void set_clip_plane(const std::optional<Vector4d>& plane) override
+        void command(const SetClipPlane& v)
         {
-                ASSERT(thread_id_ == std::this_thread::get_id());
-
-                clip_plane_ = plane;
+                clip_plane_ = v.plane;
                 if (clip_plane_)
                 {
                         shader_buffers_.set_clip_plane(*clip_plane_, true);
@@ -315,6 +284,17 @@ class Impl final : public Renderer
                         shader_buffers_.set_clip_plane(Vector4d(0), false);
                 }
                 create_mesh_render_command_buffers();
+        }
+
+        void send(Command&& renderer_command) override
+        {
+                ASSERT(thread_id_ == std::this_thread::get_id());
+
+                const auto visitor = [this](const auto& v)
+                {
+                        command(v);
+                };
+                std::visit(visitor, renderer_command);
         }
 
         void object_update(const mesh::MeshObject<3>& object) override

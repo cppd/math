@@ -363,18 +363,18 @@ public:
                   camera_(
                           [this](const auto& info)
                           {
-                                  renderer_->set_camera(info);
+                                  renderer_->send(gpu::renderer::SetCamera(info));
                           }),
                   mouse_(&camera_),
                   clip_plane_(
                           &camera_,
                           [this](const auto& clip_plane)
                           {
-                                  renderer_->set_clip_plane(clip_plane);
+                                  renderer_->send(gpu::renderer::SetClipPlane(clip_plane));
                           },
                           [this](const auto& clip_plane_color)
                           {
-                                  renderer_->set_clip_plane_color(clip_plane_color);
+                                  renderer_->send(gpu::renderer::SetClipPlaneColor(clip_plane_color));
                           }),
                   view_process_(
                           renderer_.get(),

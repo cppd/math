@@ -17,6 +17,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
+#include "event.h"
+
 #include <src/color/color.h>
 #include <src/gpu/render_buffers.h>
 #include <src/model/mesh_object.h>
@@ -35,43 +37,13 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 namespace ns::gpu::renderer
 {
-struct CameraInfo final
-{
-        struct Volume final
-        {
-                double left, right, bottom, top, near, far;
-        };
-
-        Volume main_volume;
-        Volume shadow_volume;
-        Matrix4d main_view_matrix;
-        Matrix4d shadow_view_matrix;
-        Vector3d light_direction;
-        Vector3d camera_direction;
-};
-
 struct Renderer
 {
         static vulkan::DeviceFeatures required_device_features();
 
         virtual ~Renderer() = default;
 
-        virtual void set_lighting_color(const color::Color& color) = 0;
-        virtual void set_background_color(const color::Color& color) = 0;
-        virtual void set_wireframe_color(const color::Color& color) = 0;
-        virtual void set_clip_plane_color(const color::Color& color) = 0;
-        virtual void set_normal_length(float length) = 0;
-        virtual void set_normal_color_positive(const color::Color& color) = 0;
-        virtual void set_normal_color_negative(const color::Color& color) = 0;
-        virtual void set_show_smooth(bool show) = 0;
-        virtual void set_show_wireframe(bool show) = 0;
-        virtual void set_show_shadow(bool show) = 0;
-        virtual void set_show_fog(bool show) = 0;
-        virtual void set_show_materials(bool show) = 0;
-        virtual void set_show_normals(bool show) = 0;
-        virtual void set_shadow_zoom(double zoom) = 0;
-        virtual void set_camera(const CameraInfo& c) = 0;
-        virtual void set_clip_plane(const std::optional<Vector4d>& plane) = 0;
+        virtual void send(Command&& command) = 0;
 
         virtual void object_update(const mesh::MeshObject<3>& object) = 0;
         virtual void object_update(const volume::VolumeObject<3>& object) = 0;
