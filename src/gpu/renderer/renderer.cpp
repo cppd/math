@@ -103,6 +103,12 @@ class Impl final : public Renderer
         vulkan::handle::Semaphore volume_renderer_signal_semaphore_;
         VolumeRenderer volume_renderer_;
 
+        const std::vector<vulkan::DescriptorSetLayoutAndBindings> mesh_layouts_{mesh_renderer_.mesh_layouts()};
+        const std::vector<vulkan::DescriptorSetLayoutAndBindings> mesh_material_layouts_{
+                mesh_renderer_.material_layouts()};
+        const std::vector<vulkan::DescriptorSetLayoutAndBindings> volume_image_layouts_{
+                volume_renderer_.image_layouts()};
+
         ObjectStorage<MeshObject> mesh_storage_;
         ObjectStorage<VolumeObject> volume_storage_;
 
@@ -249,27 +255,16 @@ class Impl final : public Renderer
         {
                 ASSERT(thread_id_ == std::this_thread::get_id());
 
-                ASSERT(volume_storage_.find(object.id()) == nullptr);
+                ASSERT(!volume_storage_.contains(object.id()));
 
-                bool created = false;
-
-                MeshObject* ptr = mesh_storage_.find(object.id());
-                if (!ptr)
-                {
-                        ptr = mesh_storage_.insert(
-                                object.id(),
-                                create_mesh_object(
-                                        device_, {graphics_queue_->family_index()}, transfer_command_pool_,
-                                        transfer_queue_, mesh_renderer_.mesh_layouts(),
-                                        mesh_renderer_.material_layouts(), mesh_renderer_.texture_sampler()));
-
-                        created = true;
-                }
+                MeshObject* const ptr = mesh_storage_.object(object.id());
 
                 MeshObject::UpdateChanges update_changes;
+                bool visible;
                 try
                 {
                         mesh::Reading reading(object);
+                        visible = reading.visible();
                         update_changes = ptr->update(reading);
                 }
                 catch (const std::exception& e)
@@ -285,17 +280,17 @@ class Impl final : public Renderer
                         return;
                 }
 
-                ASSERT(!(created && mesh_storage_.is_visible(object.id())));
-
-                if ((update_changes.command_buffers || update_changes.transparency)
-                    && mesh_storage_.is_visible(object.id()))
+                const bool storage_visible = mesh_storage_.is_visible(object.id());
+                if (visible && storage_visible)
                 {
-                        create_mesh_command_buffers();
+                        if (update_changes.command_buffers || update_changes.transparency)
+                        {
+                                create_mesh_command_buffers();
+                        }
                 }
-
-                if (created)
+                else if (visible || storage_visible)
                 {
-                        object_show(object.id(), object.visible());
+                        mesh_storage_.set_visible(object.id(), visible);
                 }
         }
 
@@ -303,27 +298,16 @@ class Impl final : public Renderer
         {
                 ASSERT(thread_id_ == std::this_thread::get_id());
 
-                ASSERT(mesh_storage_.find(object.id()) == nullptr);
+                ASSERT(!mesh_storage_.contains(object.id()));
 
-                bool created = false;
-
-                VolumeObject* ptr = volume_storage_.find(object.id());
-                if (!ptr)
-                {
-                        ptr = volume_storage_.insert(
-                                object.id(), create_volume_object(
-                                                     device_, {graphics_queue_->family_index()}, transfer_command_pool_,
-                                                     transfer_queue_, volume_renderer_.image_layouts(),
-                                                     volume_renderer_.image_sampler(),
-                                                     volume_renderer_.transfer_function_sampler()));
-
-                        created = true;
-                }
+                VolumeObject* ptr = volume_storage_.object(object.id());
 
                 VolumeObject::UpdateChanges update_changes;
+                bool visible;
                 try
                 {
                         volume::Reading reading(object);
+                        visible = reading.visible();
                         update_changes = ptr->update(reading);
                 }
                 catch (const std::exception& e)
@@ -339,16 +323,17 @@ class Impl final : public Renderer
                         return;
                 }
 
-                ASSERT(!(created && volume_storage_.is_visible(object.id())));
-
-                if (update_changes.command_buffers && volume_storage_.is_visible(object.id()))
+                const bool storage_visible = volume_storage_.is_visible(object.id());
+                if (visible && storage_visible)
                 {
-                        create_volume_command_buffers();
+                        if (update_changes.command_buffers)
+                        {
+                                create_volume_command_buffers();
+                        }
                 }
-
-                if (created)
+                else if (visible || storage_visible)
                 {
-                        object_show(object.id(), object.visible());
+                        volume_storage_.set_visible(object.id(), visible);
                 }
         }
 
@@ -546,8 +531,6 @@ class Impl final : public Renderer
         {
                 ASSERT(thread_id_ == std::this_thread::get_id());
 
-                //
-
                 clear_command_buffers_.reset();
                 volume_renderer_.delete_buffers();
                 delete_mesh_depth_buffers();
@@ -732,9 +715,23 @@ public:
                   mesh_storage_(
                           [this]()
                           {
+                                  return create_mesh_object(
+                                          device_, {graphics_queue_->family_index()}, transfer_command_pool_,
+                                          transfer_queue_, mesh_layouts_, mesh_material_layouts_,
+                                          mesh_renderer_.texture_sampler());
+                          },
+                          [this]()
+                          {
                                   mesh_visibility_changed();
                           }),
                   volume_storage_(
+                          [this]()
+                          {
+                                  return create_volume_object(
+                                          device_, {graphics_queue_->family_index()}, transfer_command_pool_,
+                                          transfer_queue_, volume_image_layouts_, volume_renderer_.image_sampler(),
+                                          volume_renderer_.transfer_function_sampler());
+                          },
                           [this]()
                           {
                                   volume_visibility_changed();
@@ -747,8 +744,6 @@ public:
         ~Impl() override
         {
                 ASSERT(thread_id_ == std::this_thread::get_id());
-
-                //
 
                 instance_->device_wait_idle_noexcept("the Vulkan renderer destructor");
         }

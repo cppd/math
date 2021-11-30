@@ -23,6 +23,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/com/error.h>
 
 #include <functional>
+#include <memory>
 #include <unordered_map>
 #include <unordered_set>
 
@@ -35,22 +36,20 @@ class ObjectStorage final
 
         using VisibleType = std::conditional_t<std::is_same_v<T, VolumeObject>, T, const T>;
 
-        std::unordered_map<ObjectId, std::unique_ptr<T>> map_;
-        std::unordered_set<VisibleType*> visible_objects_;
+        std::function<std::unique_ptr<T>()> create_object_;
         std::function<void()> visibility_changed_;
 
-public:
-        explicit ObjectStorage(std::function<void()>&& visibility_changed)
-                : visibility_changed_(std::move(visibility_changed))
-        {
-                ASSERT(visibility_changed_);
-        }
+        std::unordered_map<ObjectId, std::unique_ptr<T>> map_;
+        std::unordered_set<VisibleType*> visible_objects_;
 
-        T* insert(const ObjectId id, std::unique_ptr<T>&& object)
+public:
+        explicit ObjectStorage(
+                std::function<std::unique_ptr<T>()>&& create_object,
+                std::function<void()>&& visibility_changed)
+                : create_object_(std::move(create_object)), visibility_changed_(std::move(visibility_changed))
         {
-                const auto pair = map_.emplace(id, std::move(object));
-                ASSERT(pair.second);
-                return pair.first->second.get();
+                ASSERT(create_object_);
+                ASSERT(visibility_changed_);
         }
 
         bool erase(const ObjectId id)
@@ -86,10 +85,21 @@ public:
                 }
         }
 
-        T* find(const ObjectId id) const
+        bool contains(const ObjectId id) const
+        {
+                return map_.contains(id);
+        }
+
+        T* object(const ObjectId id)
         {
                 const auto iter = map_.find(id);
-                return (iter != map_.cend()) ? iter->second.get() : nullptr;
+                if (iter != map_.cend())
+                {
+                        return iter->second.get();
+                }
+                const auto pair = map_.emplace(id, create_object_());
+                ASSERT(pair.second);
+                return pair.first->second.get();
         }
 
         bool set_visible(const ObjectId id, const bool visible)
