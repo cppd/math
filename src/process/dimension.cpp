@@ -23,7 +23,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 namespace ns::process::implementation
 {
-[[noreturn]] void dimension_not_supported_error(unsigned dimension)
+[[noreturn]] void dimension_not_supported_error(const unsigned dimension)
 {
         error("Dimension " + to_string(dimension) + " is not supported, supported dimensions are "
               + to_string(settings::supported_dimensions()) + ".");

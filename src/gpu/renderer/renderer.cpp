@@ -263,7 +263,7 @@ class Impl final : public Renderer
                 bool visible;
                 try
                 {
-                        mesh::Reading reading(object);
+                        const mesh::Reading reading(object);
                         visible = reading.visible();
                         update_changes = ptr->update(reading);
                 }

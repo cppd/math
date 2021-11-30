@@ -68,7 +68,7 @@ std::function<void(ProgressRatioList*)> action_save_function(
 
         return [=](ProgressRatioList*)
         {
-                mesh::Reading reading(*mesh_object);
+                const mesh::Reading reading(*mesh_object);
                 switch (file_type)
                 {
                 case mesh::FileType::OBJ:

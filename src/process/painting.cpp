@@ -62,7 +62,7 @@ void thread_function(
         const Color& background_light,
         const gui::dialog::PainterParameters& parameters,
         const Parameters& dimension_parameters,
-        ProgressRatioList* progress_list)
+        ProgressRatioList* const progress_list)
 {
         std::unique_ptr<const painter::Shape<N, T, Color>> shape = [&]
         {
@@ -148,7 +148,7 @@ void thread_function(
         const color::Color& background_color,
         const gui::dialog::PainterParameters& parameters,
         const Parameters& dimension_parameters,
-        ProgressRatioList* progress_list)
+        ProgressRatioList* const progress_list)
 {
         static_assert(2 == std::tuple_size_v<Precisions>);
         switch (parameters.precision_index)
@@ -267,7 +267,8 @@ std::function<void(ProgressRatioList*)> action_painter(
                 std::visit(
                         [&]<std::size_t N>(const std::shared_ptr<const mesh::MeshObject<N>>& object)
                         {
-                                if (object->visible())
+                                const mesh::Reading reading(*object);
+                                if (reading.visible())
                                 {
                                         dimensions.insert(N);
                                         visible_objects.push_back(object);

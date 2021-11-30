@@ -52,7 +52,7 @@ std::vector<VkDescriptorSetLayoutBinding> ViewMemory::descriptor_set_layout_bind
 
 ViewMemory::ViewMemory(
         const vulkan::Device& device,
-        VkDescriptorSetLayout descriptor_set_layout,
+        const VkDescriptorSetLayout descriptor_set_layout,
         const std::vector<std::uint32_t>& family_indices)
         : descriptors_(device, 1, descriptor_set_layout, descriptor_set_layout_bindings())
 {
@@ -94,7 +94,7 @@ void ViewMemory::set_matrix(const Matrix4d& matrix) const
         vulkan::map_and_write_to_buffer(uniform_buffers_[data_buffer_index_], offsetof(Data, matrix), m);
 }
 
-void ViewMemory::set_brightness(float brightness) const
+void ViewMemory::set_brightness(const float brightness) const
 {
         decltype(Data().brightness) b = brightness;
         vulkan::map_and_write_to_buffer(uniform_buffers_[data_buffer_index_], offsetof(Data, brightness), b);
@@ -114,7 +114,7 @@ void ViewMemory::set_points(const vulkan::Buffer& buffer) const
 
 //
 
-ViewProgram::ViewProgram(const vulkan::Device* device)
+ViewProgram::ViewProgram(const vulkan::Device* const device)
         : device_(device),
           descriptor_set_layout_(
                   vulkan::create_descriptor_set_layout(*device, ViewMemory::descriptor_set_layout_bindings())),
@@ -136,9 +136,9 @@ VkPipelineLayout ViewProgram::pipeline_layout() const
 }
 
 vulkan::handle::Pipeline ViewProgram::create_pipeline(
-        VkRenderPass render_pass,
-        VkSampleCountFlagBits sample_count,
-        bool sample_shading,
+        const VkRenderPass render_pass,
+        const VkSampleCountFlagBits sample_count,
+        const bool sample_shading,
         const Region<2, int>& viewport) const
 {
         vulkan::GraphicsPipelineCreateInfo info;

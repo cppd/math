@@ -76,7 +76,7 @@ ObjectSelectionParametersDialog::ObjectSelectionParametersDialog(
         ui_.checkBox_minumum_spanning_tree->setChecked(input.mst);
 }
 
-void ObjectSelectionParametersDialog::set_all(bool checked)
+void ObjectSelectionParametersDialog::set_all(const bool checked)
 {
         ui_.checkBox_convex_hull->setChecked(checked);
         ui_.checkBox_minumum_spanning_tree->setChecked(checked);

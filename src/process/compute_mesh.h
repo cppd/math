@@ -300,7 +300,7 @@ void compute_meshes(
                         threads.add(
                                 [&]()
                                 {
-                                        mesh::Reading reading(mesh_object);
+                                        const mesh::Reading reading(mesh_object);
                                         impl::convex_hull(progress_list, reading);
                                 });
                 }
@@ -314,7 +314,7 @@ void compute_meshes(
                                         std::optional<ObjectId> id;
                                         std::vector<Vector<N, float>> points;
                                         {
-                                                mesh::Reading reading(mesh_object);
+                                                const mesh::Reading reading(mesh_object);
                                                 points = !reading.mesh().facets.empty()
                                                                  ? unique_facet_vertices(reading.mesh())
                                                                  : unique_point_vertices(reading.mesh());

@@ -34,7 +34,7 @@ struct Dimension
 };
 
 template <typename T>
-auto apply_for_dimension(std::size_t dimension, const T& f)
+auto apply_for_dimension(const std::size_t dimension, const T& f)
 {
         return [&]<std::size_t... N>(std::index_sequence<N...> &&)
         {

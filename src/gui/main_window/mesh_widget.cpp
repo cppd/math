@@ -190,7 +190,7 @@ void MeshWidget::on_color_clicked()
         std::visit(
                 [&]<std::size_t N>(const std::shared_ptr<mesh::MeshObject<N>>& object)
                 {
-                        mesh::Reading reading(*object);
+                        const mesh::Reading reading(*object);
                         color = reading.color();
                 },
                 *object_opt);
@@ -283,7 +283,7 @@ void MeshWidget::ui_set(const storage::MeshObjectConst& object)
                         double metalness;
                         double roughness;
                         {
-                                mesh::Reading reading(*mesh_object);
+                                const mesh::Reading reading(*mesh_object);
                                 alpha = reading.alpha();
                                 color = reading.color();
                                 ambient = reading.ambient();

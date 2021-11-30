@@ -39,7 +39,7 @@ namespace ns::process
 template <std::size_t N>
 std::shared_ptr<mesh::MeshObject<N>> load_mesh(
         const std::string& object_name,
-        ProgressRatioList* progress_list,
+        ProgressRatioList* const progress_list,
         const std::filesystem::path& path)
 {
         std::unique_ptr<mesh::Mesh<N>> mesh;
@@ -62,7 +62,7 @@ std::shared_ptr<mesh::MeshObject<N>> load_mesh(
 template <std::size_t N>
 std::shared_ptr<mesh::MeshObject<N>> load_point_mesh(
         const std::string& object_name,
-        int point_count,
+        const int point_count,
         const storage::Repository& repository)
 {
         std::unique_ptr<mesh::Mesh<N>> mesh = repository.point_mesh<N>(object_name, point_count);
@@ -79,7 +79,7 @@ std::shared_ptr<mesh::MeshObject<N>> load_point_mesh(
 template <std::size_t N>
 std::shared_ptr<mesh::MeshObject<N>> load_facet_mesh(
         const std::string& object_name,
-        int facet_count,
+        const int facet_count,
         const storage::Repository& repository)
 {
         std::unique_ptr<mesh::Mesh<N>> mesh = repository.facet_mesh<N>(object_name, facet_count);
@@ -96,7 +96,7 @@ std::shared_ptr<mesh::MeshObject<N>> load_facet_mesh(
 template <std::size_t N>
 std::shared_ptr<volume::VolumeObject<N>> load_volume(
         const std::string& object_name,
-        int image_size,
+        const int image_size,
         const storage::Repository& repository)
 {
         std::unique_ptr<volume::Volume<N>> volume = repository.volume<N>(object_name, image_size);
@@ -131,7 +131,7 @@ std::shared_ptr<volume::VolumeObject<N>> load_volume(const std::string& object_n
 template <std::size_t N>
 std::shared_ptr<volume::VolumeObject<N>> load_volume(
         const std::string& object_name,
-        ProgressRatioList* progress_list,
+        ProgressRatioList* const progress_list,
         const std::filesystem::path& path)
 {
         std::unique_ptr<volume::Volume<N>> volume = std::make_unique<volume::Volume<N>>();

@@ -61,9 +61,9 @@ std::vector<VkDescriptorSetLayoutBinding> Memory::descriptor_set_layout_bindings
 
 Memory::Memory(
         const vulkan::Device& device,
-        VkDescriptorSetLayout descriptor_set_layout,
+        const VkDescriptorSetLayout descriptor_set_layout,
         const std::vector<std::uint32_t>& family_indices,
-        VkSampler sampler,
+        const VkSampler sampler,
         const VkImageView& texture)
         : descriptors_(device, 1, descriptor_set_layout, descriptor_set_layout_bindings())
 {
@@ -125,12 +125,12 @@ const VkDescriptorSet& Memory::descriptor_set() const
 }
 
 template <typename T>
-void Memory::copy_to_matrices_buffer(VkDeviceSize offset, const T& data) const
+void Memory::copy_to_matrices_buffer(const VkDeviceSize offset, const T& data) const
 {
         vulkan::map_and_write_to_buffer(uniform_buffers_[matrices_buffer_index_], offset, data);
 }
 template <typename T>
-void Memory::copy_to_drawing_buffer(VkDeviceSize offset, const T& data) const
+void Memory::copy_to_drawing_buffer(const VkDeviceSize offset, const T& data) const
 {
         vulkan::map_and_write_to_buffer(uniform_buffers_[drawing_buffer_index_], offset, data);
 }
@@ -193,7 +193,7 @@ std::vector<VkVertexInputAttributeDescription> Vertex::attribute_descriptions()
 
 //
 
-Program::Program(const vulkan::Device* device)
+Program::Program(const vulkan::Device* const device)
         : device_(device),
           descriptor_set_layout_(
                   vulkan::create_descriptor_set_layout(*device, Memory::descriptor_set_layout_bindings())),
@@ -214,9 +214,9 @@ VkPipelineLayout Program::pipeline_layout() const
 }
 
 vulkan::handle::Pipeline Program::create_pipeline(
-        VkRenderPass render_pass,
-        VkSampleCountFlagBits sample_count,
-        bool sample_shading,
+        const VkRenderPass render_pass,
+        const VkSampleCountFlagBits sample_count,
+        const bool sample_shading,
         const Region<2, int>& viewport) const
 {
         vulkan::GraphicsPipelineCreateInfo info;
