@@ -54,7 +54,7 @@ using VertexIndexType = std::conditional_t<
         std::uint32_t,
         std::conditional_t<VERTEX_INDEX_TYPE == VK_INDEX_TYPE_UINT16, std::uint16_t, void>>;
 
-std::string time_string(double time)
+std::string time_string(const double time)
 {
         return to_string_fixed(1000.0 * time, 5) + " ms";
 }

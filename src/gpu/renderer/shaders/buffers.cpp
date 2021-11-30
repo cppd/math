@@ -17,7 +17,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "buffers.h"
 
-#include "../commands.h"
+#include "../buffer_commands.h"
 
 #include <src/com/merge.h>
 

@@ -46,21 +46,21 @@ public:
                 ASSERT(visibility_changed_);
         }
 
-        T* insert(ObjectId id, std::unique_ptr<T>&& object)
+        T* insert(const ObjectId id, std::unique_ptr<T>&& object)
         {
                 const auto pair = map_.emplace(id, std::move(object));
                 ASSERT(pair.second);
                 return pair.first->second.get();
         }
 
-        bool erase(ObjectId id)
+        bool erase(const ObjectId id)
         {
-                auto iter = map_.find(id);
+                const auto iter = map_.find(id);
                 if (iter == map_.cend())
                 {
                         return false;
                 }
-                bool visibility_changed = visible_objects_.erase(iter->second.get()) > 0;
+                const bool visibility_changed = visible_objects_.erase(iter->second.get()) > 0;
                 map_.erase(iter);
                 if (visibility_changed)
                 {
@@ -77,7 +77,7 @@ public:
 
         void clear()
         {
-                bool visibility_changed = !visible_objects_.empty();
+                const bool visibility_changed = !visible_objects_.empty();
                 visible_objects_.clear();
                 map_.clear();
                 if (visibility_changed)
@@ -86,22 +86,22 @@ public:
                 }
         }
 
-        T* find(ObjectId id) const
+        T* find(const ObjectId id) const
         {
-                auto iter = map_.find(id);
+                const auto iter = map_.find(id);
                 return (iter != map_.cend()) ? iter->second.get() : nullptr;
         }
 
-        bool set_visible(ObjectId id, bool visible)
+        bool set_visible(const ObjectId id, const bool visible)
         {
-                auto iter = map_.find(id);
+                const auto iter = map_.find(id);
                 if (iter == map_.cend())
                 {
                         return false;
                 }
 
-                VisibleType* ptr = iter->second.get();
-                auto iter_v = visible_objects_.find(ptr);
+                VisibleType* const ptr = iter->second.get();
+                const auto iter_v = visible_objects_.find(ptr);
                 if (!visible)
                 {
                         if (iter_v != visible_objects_.cend())
@@ -123,9 +123,9 @@ public:
                 return visible_objects_;
         }
 
-        bool is_visible(ObjectId id) const
+        bool is_visible(const ObjectId id) const
         {
-                auto iter = map_.find(id);
+                const auto iter = map_.find(id);
                 if (iter == map_.cend())
                 {
                         return false;

@@ -41,7 +41,7 @@ constexpr std::array DEPTH_IMAGE_FORMATS = std::to_array<VkFormat>
 constexpr VkSampleCountFlagBits SAMPLE_COUNT = VK_SAMPLE_COUNT_1_BIT;
 constexpr VkImageLayout IMAGE_LAYOUT = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
 
-vulkan::handle::RenderPass create_render_pass_depth(VkDevice device, VkFormat depth_format)
+vulkan::handle::RenderPass create_render_pass_depth(const VkDevice device, const VkFormat depth_format)
 {
         std::array<VkAttachmentDescription, 1> attachments = {};
 
@@ -140,9 +140,9 @@ void check_buffers(const std::vector<vulkan::DepthImageWithMemory>& depth)
 
 std::string buffer_info(
         const std::vector<vulkan::DepthImageWithMemory>& depth,
-        double zoom,
-        unsigned width,
-        unsigned height)
+        const double zoom,
+        const unsigned width,
+        const unsigned height)
 {
         check_buffers(depth);
 
@@ -195,10 +195,10 @@ public:
 };
 
 Impl::Impl(
-        unsigned buffer_count,
+        const unsigned buffer_count,
         const std::vector<std::uint32_t>& attachment_family_indices,
-        VkCommandPool graphics_command_pool,
-        VkQueue graphics_queue,
+        const VkCommandPool graphics_command_pool,
+        const VkQueue graphics_queue,
         const vulkan::Device& device,
         unsigned width,
         unsigned height,
@@ -223,9 +223,9 @@ Impl::Impl(
                         graphics_command_pool, graphics_queue);
         }
 
-        VkFormat depth_format = depth_attachments_[0].image().format();
-        unsigned depth_width = depth_attachments_[0].image().extent().width;
-        unsigned depth_height = depth_attachments_[0].image().extent().height;
+        const VkFormat depth_format = depth_attachments_[0].image().format();
+        const unsigned depth_width = depth_attachments_[0].image().extent().width;
+        const unsigned depth_height = depth_attachments_[0].image().extent().height;
 
         render_pass_ = create_render_pass_depth(device, depth_format);
 
@@ -246,7 +246,7 @@ Impl::Impl(
         LOG(buffer_info(depth_attachments_, zoom, width, height));
 }
 
-const vulkan::ImageView& Impl::image_view(unsigned index) const
+const vulkan::ImageView& Impl::image_view(const unsigned index) const
 {
         ASSERT(index < depth_attachments_.size());
 
@@ -290,14 +290,14 @@ const std::vector<VkClearValue>& Impl::clear_values() const
 }
 
 std::unique_ptr<DepthBuffers> create_depth_buffers(
-        unsigned buffer_count,
+        const unsigned buffer_count,
         const std::vector<std::uint32_t>& attachment_family_indices,
-        VkCommandPool graphics_command_pool,
-        VkQueue graphics_queue,
+        const VkCommandPool graphics_command_pool,
+        const VkQueue graphics_queue,
         const vulkan::Device& device,
-        unsigned width,
-        unsigned height,
-        double zoom)
+        const unsigned width,
+        const unsigned height,
+        const double zoom)
 {
         return std::make_unique<Impl>(
                 buffer_count, attachment_family_indices, graphics_command_pool, graphics_queue, device, width, height,

@@ -17,11 +17,13 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "renderer.h"
 
-#include "commands.h"
+#include "buffer_commands.h"
 #include "depth_buffer.h"
 #include "mesh_object.h"
 #include "mesh_renderer.h"
-#include "storage.h"
+#include "object_storage.h"
+#include "transparency_message.h"
+#include "viewport_transform.h"
 #include "volume_object.h"
 #include "volume_renderer.h"
 
@@ -47,6 +49,10 @@ constexpr VkImageLayout DEPTH_COPY_IMAGE_LAYOUT = VK_IMAGE_LAYOUT_SHADER_READ_ON
 constexpr std::uint32_t OBJECTS_CLEAR_VALUE = 0;
 constexpr std::uint32_t TRANSPARENCY_NODE_BUFFER_MAX_SIZE = (1ull << 30);
 
+// shadow coordinates x(-1, 1) y(-1, 1) z(0, 1).
+// shadow texture coordinates x(0, 1) y(0, 1) z(0, 1).
+constexpr Matrix4d SHADOW_TEXTURE_MATRIX = matrix::scale<double>(0.5, 0.5, 1) * matrix::translate<double>(1, 1, 0);
+
 vulkan::DeviceFeatures device_features()
 {
         vulkan::DeviceFeatures features{};
@@ -57,71 +63,11 @@ vulkan::DeviceFeatures device_features()
         return features;
 }
 
-struct ViewportTransform
-{
-        // device_coordinates = (framebuffer_coordinates - center) * factor
-        Vector2d center;
-        Vector2d factor;
-};
-ViewportTransform viewport_transform(const Region<2, int>& viewport)
-{
-        const Vector2d offset = to_vector<double>(viewport.from());
-        const Vector2d extent = to_vector<double>(viewport.extent());
-        ViewportTransform t;
-        t.center = offset + 0.5 * extent;
-        t.factor = Vector2d(2.0 / extent[0], 2.0 / extent[1]);
-        return t;
-}
-
-void transparency_message(long long required_node_memory, long long overload_count)
-{
-        thread_local long long previous_required_node_memory = -1;
-        thread_local long long previous_overload_count = -1;
-        if (required_node_memory < 0)
-        {
-                if (previous_required_node_memory >= 0)
-                {
-                        LOG("Transparency memory: OK");
-                }
-        }
-        else
-        {
-                if (previous_required_node_memory != required_node_memory)
-                {
-                        std::ostringstream oss;
-                        oss << "Transparency memory: required " << required_node_memory / 1'000'000 << " MB, limit "
-                            << TRANSPARENCY_NODE_BUFFER_MAX_SIZE / 1'000'000 << " MB.";
-                        LOG(oss.str());
-                }
-        }
-        if (overload_count < 0)
-        {
-                if (previous_overload_count >= 0)
-                {
-                        LOG("Transparency overload: OK");
-                }
-        }
-        else
-        {
-                if (previous_overload_count != overload_count)
-                {
-                        std::ostringstream oss;
-                        oss << "Transparency overload: " << overload_count << " samples.";
-                        LOG(oss.str());
-                }
-        }
-        previous_required_node_memory = required_node_memory;
-        previous_overload_count = overload_count;
-}
-
 class Impl final : public Renderer
 {
-        // shadow coordinates x(-1, 1) y(-1, 1) z(0, 1).
-        // shadow texture coordinates x(0, 1) y(0, 1) z(0, 1).
-        static constexpr Matrix4d SHADOW_TEXTURE_MATRIX =
-                matrix::scale<double>(0.5, 0.5, 1) * matrix::translate<double>(1, 1, 0);
-
         const std::thread::id thread_id_ = std::this_thread::get_id();
+
+        mutable TransparencyMessage transparency_message_{TRANSPARENCY_NODE_BUFFER_MAX_SIZE};
 
         Matrix4d main_vp_matrix_ = Matrix4d(1);
         Matrix4d shadow_vp_matrix_ = Matrix4d(1);
@@ -240,15 +186,17 @@ class Impl final : public Renderer
 
         void command(const SetShadowZoom& v)
         {
-                shadow_zoom_ = v.zoom;
-
-                create_mesh_depth_buffers();
-                create_mesh_command_buffers();
+                if (shadow_zoom_ != v.zoom)
+                {
+                        shadow_zoom_ = v.zoom;
+                        create_mesh_depth_buffers();
+                        create_mesh_command_buffers();
+                }
         }
 
         void command(const SetCamera& v)
         {
-                const CameraInfo& c = v.info;
+                const CameraInfo& c = *v.info;
 
                 const Matrix4d& shadow_projection_matrix = matrix::ortho_vulkan<double>(
                         c.shadow_volume.left, c.shadow_volume.right, c.shadow_volume.bottom, c.shadow_volume.top,
@@ -274,7 +222,7 @@ class Impl final : public Renderer
                 {
                         shader_buffers_.set_clip_plane(*clip_plane_, true);
 
-                        for (VolumeObject* visible_volume : volume_storage_.visible_objects())
+                        for (VolumeObject* const visible_volume : volume_storage_.visible_objects())
                         {
                                 visible_volume->set_clip_plane(*clip_plane_);
                         }
@@ -286,7 +234,7 @@ class Impl final : public Renderer
                 create_mesh_render_command_buffers();
         }
 
-        void send(Command&& renderer_command) override
+        void exec(Command&& renderer_command) override
         {
                 ASSERT(thread_id_ == std::this_thread::get_id());
 
@@ -475,7 +423,7 @@ class Impl final : public Renderer
 
                 if (!mesh_renderer_.has_transparent_meshes())
                 {
-                        transparency_message(-1, -1);
+                        transparency_message_.process(-1, -1);
                         return {semaphore, false /*transparency*/};
                 }
 
@@ -504,7 +452,7 @@ class Impl final : public Renderer
                         transparency = true;
                 }
 
-                transparency_message(
+                transparency_message_.process(
                         nodes ? static_cast<long long>(required_node_memory) : -1,
                         overload ? static_cast<long long>(overload_counter) : -1);
 
@@ -570,8 +518,8 @@ class Impl final : public Renderer
                 object_image_ = objects;
                 viewport_ = viewport;
 
-                ViewportTransform t = viewport_transform(viewport_);
-                shader_buffers_.set_viewport(t.center, t.factor);
+                const ViewportTransform transform = viewport_transform(viewport_);
+                shader_buffers_.set_viewport(transform.center, transform.factor);
 
                 ASSERT(render_buffers_->framebuffers().size() == render_buffers_->framebuffers_clear().size());
                 ASSERT(render_buffers_->framebuffers().size() == 1);

@@ -17,23 +17,16 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
-#include "event.h"
+#include "renderer_command.h"
 
-#include <src/color/color.h>
 #include <src/gpu/render_buffers.h>
 #include <src/model/mesh_object.h>
 #include <src/model/volume_object.h>
-#include <src/numerical/matrix.h>
 #include <src/numerical/region.h>
-#include <src/numerical/vec.h>
 #include <src/vulkan/buffers.h>
 #include <src/vulkan/instance.h>
 
-#include <functional>
 #include <memory>
-#include <optional>
-#include <string>
-#include <vector>
 
 namespace ns::gpu::renderer
 {
@@ -43,7 +36,7 @@ struct Renderer
 
         virtual ~Renderer() = default;
 
-        virtual void send(Command&& command) = 0;
+        virtual void exec(Command&& command) = 0;
 
         virtual void object_update(const mesh::MeshObject<3>& object) = 0;
         virtual void object_update(const volume::VolumeObject<3>& object) = 0;

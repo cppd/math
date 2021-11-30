@@ -15,14 +15,14 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include "commands.h"
+#include "buffer_commands.h"
 
 namespace ns::gpu::renderer
 {
 void commands_init_uint32_storage_image(
-        VkCommandBuffer command_buffer,
+        const VkCommandBuffer command_buffer,
         const vulkan::ImageWithMemory& image,
-        std::uint32_t value)
+        const std::uint32_t value)
 {
         ASSERT(image.image().has_usage(VK_IMAGE_USAGE_STORAGE_BIT));
 
@@ -77,7 +77,7 @@ void commands_init_uint32_storage_image(
 }
 
 void commands_init_buffer(
-        VkCommandBuffer command_buffer,
+        const VkCommandBuffer command_buffer,
         const vulkan::BufferWithMemory& src,
         const vulkan::BufferWithMemory& dst)
 {
@@ -106,7 +106,7 @@ void commands_init_buffer(
 }
 
 void commands_read_buffer(
-        VkCommandBuffer command_buffer,
+        const VkCommandBuffer command_buffer,
         const vulkan::BufferWithMemory& src,
         const vulkan::BufferWithMemory& dst)
 {

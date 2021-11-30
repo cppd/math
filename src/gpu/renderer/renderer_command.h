@@ -91,8 +91,8 @@ struct SetNormalColorNegative final
 
 struct SetCamera final
 {
-        CameraInfo info;
-        explicit SetCamera(const CameraInfo& info) : info(info)
+        const CameraInfo* info;
+        explicit SetCamera(const CameraInfo* const info) : info(info)
         {
         }
 };
