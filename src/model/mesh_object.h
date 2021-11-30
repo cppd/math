@@ -229,6 +229,11 @@ class MeshObject final : public std::enable_shared_from_this<MeshObject<N>>
                 roughness_ = roughness;
         }
 
+        bool visible_impl() const
+        {
+                return visible_;
+        }
+
         Updates updates(std::optional<int>* const version) const
         {
                 return versions_.updates(version);
@@ -298,7 +303,7 @@ public:
         bool visible() const
         {
                 std::shared_lock lock(mutex_);
-                return visible_;
+                return visible_impl();
         }
 
         void set_visible(const bool visible)
@@ -501,6 +506,11 @@ public:
         float roughness() const
         {
                 return object_->roughness();
+        }
+
+        bool visible() const
+        {
+                return object_->visible_impl();
         }
 };
 }
