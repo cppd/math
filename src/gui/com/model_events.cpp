@@ -61,16 +61,7 @@ public:
                 {
                         view_->send(view::command::UpdateMeshObject(event.object));
                 }
-                ObjectId id;
-                {
-                        auto ptr = event.object.lock();
-                        if (!ptr)
-                        {
-                                return;
-                        }
-                        id = ptr->id();
-                }
-                tree_->update(id);
+                tree_->update(event.object);
         }
 
         void operator()(const mesh::event::Visibility<N>& event) const
@@ -109,16 +100,7 @@ public:
                 {
                         view_->send(view::command::UpdateVolumeObject(event.object));
                 }
-                ObjectId id;
-                {
-                        auto ptr = event.object.lock();
-                        if (!ptr)
-                        {
-                                return;
-                        }
-                        id = ptr->id();
-                }
-                tree_->update(id);
+                tree_->update(event.object);
         }
 
         void operator()(const volume::event::Visibility<N>& event) const

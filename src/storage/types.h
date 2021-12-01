@@ -31,20 +31,26 @@ namespace types_implementation
 {
 template <std::size_t N>
 using MeshObjectPtr = std::shared_ptr<mesh::MeshObject<N>>;
+template <std::size_t N>
+using MeshObjectWeakPtr = std::weak_ptr<mesh::MeshObject<N>>;
 
 template <std::size_t N>
 using MeshObjectConstPtr = std::shared_ptr<const mesh::MeshObject<N>>;
 
 template <std::size_t N>
 using VolumeObjectPtr = std::shared_ptr<volume::VolumeObject<N>>;
+template <std::size_t N>
+using VolumeObjectWeakPtr = std::weak_ptr<volume::VolumeObject<N>>;
 
 template <std::size_t N>
 using VolumeObjectConstPtr = std::shared_ptr<const volume::VolumeObject<N>>;
 }
 
 using MeshObject = Sequence<settings::Dimensions, std::variant, types_implementation::MeshObjectPtr>;
+using MeshObjectWeak = Sequence<settings::Dimensions, std::variant, types_implementation::MeshObjectWeakPtr>;
 using MeshObjectConst = Sequence<settings::Dimensions, std::variant, types_implementation::MeshObjectConstPtr>;
 
 using VolumeObject = Sequence<settings::Dimensions, std::variant, types_implementation::VolumeObjectPtr>;
+using VolumeObjectWeak = Sequence<settings::Dimensions, std::variant, types_implementation::VolumeObjectWeakPtr>;
 using VolumeObjectConst = Sequence<settings::Dimensions, std::variant, types_implementation::VolumeObjectConstPtr>;
 }

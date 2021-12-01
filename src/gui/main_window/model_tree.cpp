@@ -81,6 +81,52 @@ void ModelTree::clear()
                 });
 }
 
+template <std::size_t N>
+void ModelTree::update_item(const std::shared_ptr<mesh::MeshObject<N>>& object)
+{
+        const auto iter = map_id_item_.find(object->id());
+        if (iter == map_id_item_.cend())
+        {
+                return;
+        }
+        QTreeWidgetItem* const item = iter->second;
+        set_item_color(item, mesh::Reading(*object).visible());
+        if (item == ui_.model_tree->currentItem())
+        {
+                Q_EMIT item_update();
+        }
+}
+
+template <std::size_t N>
+void ModelTree::update_item(const std::shared_ptr<volume::VolumeObject<N>>& object)
+{
+        const auto iter = map_id_item_.find(object->id());
+        if (iter == map_id_item_.cend())
+        {
+                return;
+        }
+        QTreeWidgetItem* const item = iter->second;
+        set_item_color(item, volume::Reading(*object).visible());
+        if (item == ui_.model_tree->currentItem())
+        {
+                Q_EMIT item_update();
+        }
+}
+
+template <typename T>
+void ModelTree::update_weak(const T& object)
+{
+        std::visit(
+                [&](const auto& v)
+                {
+                        if (const auto ptr = v.lock())
+                        {
+                                update_item(ptr);
+                        }
+                },
+                object);
+}
+
 void ModelTree::insert(storage::MeshObject&& object, const std::optional<ObjectId>& parent_object_id)
 {
         thread_queue_.push(
@@ -91,9 +137,9 @@ void ModelTree::insert(storage::MeshObject&& object, const std::optional<ObjectI
                         std::visit(
                                 [&]<std::size_t N>(const std::shared_ptr<mesh::MeshObject<N>>& mesh)
                                 {
-                                        insert_into_tree(
-                                                mesh->id(), N, mesh->name(), mesh->visible(), parent_object_id);
-                                        storage_.set_mesh_object(mesh);
+                                        insert_into_tree(mesh->id(), N, mesh->name(), parent_object_id);
+                                        storage_.set_object(mesh);
+                                        update_item(mesh);
                                 },
                                 object);
                 });
@@ -109,11 +155,33 @@ void ModelTree::insert(storage::VolumeObject&& object, const std::optional<Objec
                         std::visit(
                                 [&]<std::size_t N>(const std::shared_ptr<volume::VolumeObject<N>>& volume)
                                 {
-                                        insert_into_tree(
-                                                volume->id(), N, volume->name(), volume->visible(), parent_object_id);
-                                        storage_.set_volume_object(volume);
+                                        insert_into_tree(volume->id(), N, volume->name(), parent_object_id);
+                                        storage_.set_object(volume);
+                                        update_item(volume);
                                 },
                                 object);
+                });
+}
+
+void ModelTree::update(storage::MeshObjectWeak&& object)
+{
+        thread_queue_.push(
+                [this, object = std::move(object)]()
+                {
+                        ASSERT(std::this_thread::get_id() == thread_id_);
+
+                        update_weak(object);
+                });
+}
+
+void ModelTree::update(storage::VolumeObjectWeak&& object)
+{
+        thread_queue_.push(
+                [this, object = std::move(object)]()
+                {
+                        ASSERT(std::this_thread::get_id() == thread_id_);
+
+                        update_weak(object);
                 });
 }
 
@@ -126,26 +194,6 @@ void ModelTree::erase(const ObjectId id)
 
                         storage_.delete_object(id);
                         erase_from_tree(id);
-                });
-}
-
-void ModelTree::update(const ObjectId id)
-{
-        thread_queue_.push(
-                [this, id]()
-                {
-                        ASSERT(std::this_thread::get_id() == thread_id_);
-
-                        std::optional<ObjectId> current_id = current_item();
-                        if (!current_id)
-                        {
-                                return;
-                        }
-                        if (id != *current_id)
-                        {
-                                return;
-                        }
-                        Q_EMIT item_update();
                 });
 }
 
@@ -169,7 +217,6 @@ void ModelTree::insert_into_tree(
         const ObjectId id,
         const unsigned dimension,
         const std::string& name,
-        const bool visible,
         const std::optional<ObjectId>& parent_object_id)
 {
         ASSERT(std::this_thread::get_id() == thread_id_);
@@ -204,8 +251,6 @@ void ModelTree::insert_into_tree(
         const QString s = QString("(%1D) %2").arg(dimension).arg(QString::fromStdString(name));
         item->setText(0, s);
         item->setToolTip(0, s);
-
-        set_item_color(item, visible);
 
         map_item_id_[item] = id;
         map_id_item_[id] = item;

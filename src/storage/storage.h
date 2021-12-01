@@ -71,7 +71,7 @@ public:
         }
 
         template <std::size_t N>
-        void set_mesh_object(const std::shared_ptr<mesh::MeshObject<N>>& object)
+        void set_object(const std::shared_ptr<mesh::MeshObject<N>>& object)
         {
                 if (!object)
                 {
@@ -93,7 +93,7 @@ public:
         }
 
         template <std::size_t N>
-        void set_volume_object(const std::shared_ptr<volume::VolumeObject<N>>& object)
+        void set_object(const std::shared_ptr<volume::VolumeObject<N>>& object)
         {
                 if (!object)
                 {

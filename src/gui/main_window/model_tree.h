@@ -54,8 +54,9 @@ private:
 
         void insert(storage::MeshObject&& object, const std::optional<ObjectId>& parent_object_id) override;
         void insert(storage::VolumeObject&& object, const std::optional<ObjectId>& parent_object_id) override;
+        void update(storage::MeshObjectWeak&& object) override;
+        void update(storage::VolumeObjectWeak&& object) override;
         void erase(ObjectId id) override;
-        void update(ObjectId id) override;
         void show(ObjectId id, bool visible) override;
 
         void clear();
@@ -70,12 +71,20 @@ private:
                 ObjectId id,
                 unsigned dimension,
                 const std::string& name,
-                bool visible,
                 const std::optional<ObjectId>& parent_object_id);
         void erase_from_tree(ObjectId id);
 
         void show_object(ObjectId id, bool show);
         void show_only_this_object(ObjectId id);
+
+        template <typename T>
+        void update_weak(const T& object);
+
+        template <std::size_t N>
+        void update_item(const std::shared_ptr<mesh::MeshObject<N>>& object);
+
+        template <std::size_t N>
+        void update_item(const std::shared_ptr<volume::VolumeObject<N>>& object);
 
 public:
         ModelTree();

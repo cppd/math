@@ -31,8 +31,9 @@ protected:
 public:
         virtual void insert(storage::MeshObject&& object, const std::optional<ObjectId>& parent_object_id) = 0;
         virtual void insert(storage::VolumeObject&& object, const std::optional<ObjectId>& parent_object_id) = 0;
+        virtual void update(storage::MeshObjectWeak&& object) = 0;
+        virtual void update(storage::VolumeObjectWeak&& object) = 0;
         virtual void erase(ObjectId id) = 0;
-        virtual void update(ObjectId id) = 0;
         virtual void show(ObjectId id, bool visible) = 0;
 };
 }
