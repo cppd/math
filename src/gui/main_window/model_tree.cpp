@@ -89,9 +89,10 @@ void ModelTree::update_item(const std::shared_ptr<mesh::MeshObject<N>>& object)
         {
                 return;
         }
-        QTreeWidgetItem* const item = iter->second;
-        set_item_color(item, mesh::Reading(*object).visible());
-        if (item == ui_.model_tree->currentItem())
+        Item& item = iter->second;
+        item.visible = mesh::Reading(*object).visible();
+        set_item_color(item.item, item.visible);
+        if (item.item == ui_.model_tree->currentItem())
         {
                 Q_EMIT item_update();
         }
@@ -105,9 +106,10 @@ void ModelTree::update_item(const std::shared_ptr<volume::VolumeObject<N>>& obje
         {
                 return;
         }
-        QTreeWidgetItem* const item = iter->second;
-        set_item_color(item, volume::Reading(*object).visible());
-        if (item == ui_.model_tree->currentItem())
+        Item& item = iter->second;
+        item.visible = volume::Reading(*object).visible();
+        set_item_color(item.item, item.visible);
+        if (item.item == ui_.model_tree->currentItem())
         {
                 Q_EMIT item_update();
         }
@@ -209,7 +211,9 @@ void ModelTree::show(const ObjectId id, const bool visible)
                         {
                                 return;
                         }
-                        set_item_color(iter->second, visible);
+                        Item& item = iter->second;
+                        item.visible = visible;
+                        set_item_color(item.item, item.visible);
                 });
 }
 
@@ -221,8 +225,7 @@ void ModelTree::insert_into_tree(
 {
         ASSERT(std::this_thread::get_id() == thread_id_);
 
-        auto iter = map_id_item_.find(id);
-        if (iter != map_id_item_.cend())
+        if (map_id_item_.contains(id))
         {
                 return;
         }
@@ -233,7 +236,7 @@ void ModelTree::insert_into_tree(
                 auto parent_iter = map_id_item_.find(*parent_object_id);
                 if (parent_iter != map_id_item_.cend())
                 {
-                        parent_item = parent_iter->second;
+                        parent_item = parent_iter->second.item;
                 }
         }
 
@@ -253,19 +256,20 @@ void ModelTree::insert_into_tree(
         item->setToolTip(0, s);
 
         map_item_id_[item] = id;
-        map_id_item_[id] = item;
+        map_id_item_[id].item = item;
 }
 
 void ModelTree::erase_from_tree(const ObjectId id)
 {
         ASSERT(std::this_thread::get_id() == thread_id_);
 
-        auto iter = map_id_item_.find(id);
-        if (iter == map_id_item_.cend())
+        const auto item_iter = map_id_item_.find(id);
+        if (item_iter == map_id_item_.cend())
         {
                 return;
         }
-        QTreeWidgetItem* item = iter->second;
+
+        QTreeWidgetItem* item = item_iter->second.item;
 
         map_id_item_.erase(id);
         map_item_id_.erase(item);
@@ -346,16 +350,6 @@ std::optional<ObjectId> ModelTree::current_item() const
         }
         return std::nullopt;
 }
-
-// void ModelTree::set_current(ObjectId id)
-// {
-//         auto iter = map_id_item_.find(id);
-//         if (iter == map_id_item_.cend())
-//         {
-//                 return;
-//         }
-//         tree_->setCurrentItem(iter->second);
-// }
 
 std::optional<storage::MeshObject> ModelTree::current_mesh() const
 {
@@ -508,6 +502,12 @@ void ModelTree::make_menu_for_object(QMenu* const menu, const std::shared_ptr<T>
 {
         ASSERT(std::this_thread::get_id() == thread_id_);
 
+        const auto item_iter = map_id_item_.find(object->id());
+        if (item_iter == map_id_item_.cend())
+        {
+                return;
+        }
+
         {
                 QAction* const action = menu->addAction("Show only it");
                 QObject::connect(
@@ -518,7 +518,7 @@ void ModelTree::make_menu_for_object(QMenu* const menu, const std::shared_ptr<T>
                         });
         }
         {
-                const bool visible = object->visible();
+                const bool visible = item_iter->second.visible;
                 QAction* const action = visible ? menu->addAction("Hide") : menu->addAction("Show");
                 QObject::connect(
                         action, &QAction::triggered,
@@ -527,7 +527,9 @@ void ModelTree::make_menu_for_object(QMenu* const menu, const std::shared_ptr<T>
                                 object->set_visible(!visible);
                         });
         }
+
         menu->addSeparator();
+
         {
                 QAction* const action = menu->addAction("Delete");
                 QObject::connect(

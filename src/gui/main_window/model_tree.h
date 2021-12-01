@@ -46,8 +46,13 @@ private:
 
         storage::Storage storage_;
 
+        struct Item
+        {
+                QTreeWidgetItem* item;
+                bool visible;
+        };
         std::unordered_map<QTreeWidgetItem*, ObjectId> map_item_id_;
-        std::unordered_map<ObjectId, QTreeWidgetItem*> map_id_item_;
+        std::unordered_map<ObjectId, Item> map_id_item_;
 
         std::vector<Connection> connections_;
         ThreadQueue thread_queue_;
@@ -60,8 +65,6 @@ private:
         void show(ObjectId id, bool visible) override;
 
         void clear();
-
-        // void set_current(ObjectId id);
 
         void make_menu(const QPoint& pos);
         template <typename T>
