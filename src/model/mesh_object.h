@@ -67,20 +67,10 @@ struct Update final
         {
         }
 };
-
-template <std::size_t N>
-struct Visibility final
-{
-        ObjectId id;
-        bool visible;
-        Visibility(const ObjectId id, const bool visible) : id(id), visible(visible)
-        {
-        }
-};
 }
 
 template <std::size_t N>
-using MeshEvent = std::variant<event::Erase<N>, event::Insert<N>, event::Update<N>, event::Visibility<N>>;
+using MeshEvent = std::variant<event::Erase<N>, event::Insert<N>, event::Update<N>>;
 
 template <std::size_t N>
 class MeshEvents
@@ -94,15 +84,16 @@ public:
 
 enum Update
 {
-        UPDATE_MESH,
         UPDATE_ALPHA,
-        UPDATE_MATRIX,
-        UPDATE_COLOR,
         UPDATE_AMBIENT,
+        UPDATE_COLOR,
+        UPDATE_MATRIX,
+        UPDATE_MESH,
         UPDATE_METALNESS,
-        UPDATE_ROUGHNESS
+        UPDATE_ROUGHNESS,
+        UPDATE_VISIBILITY
 };
-using Updates = std::bitset<UPDATE_ROUGHNESS + 1>;
+using Updates = std::bitset<UPDATE_VISIBILITY + 1>;
 
 template <std::size_t N>
 class MeshObject final : public std::enable_shared_from_this<MeshObject<N>>
@@ -229,9 +220,14 @@ class MeshObject final : public std::enable_shared_from_this<MeshObject<N>>
                 roughness_ = roughness;
         }
 
-        bool visible_impl() const
+        bool visible() const
         {
                 return visible_;
+        }
+
+        void set_visible(const bool visible)
+        {
+                visible_ = visible;
         }
 
         Updates updates(std::optional<int>* const version) const
@@ -297,26 +293,6 @@ public:
                 {
                         inserted_ = false;
                         send_event(event::Erase<N>(id_));
-                }
-        }
-
-        bool visible() const
-        {
-                std::shared_lock lock(mutex_);
-                return visible_impl();
-        }
-
-        void set_visible(const bool visible)
-        {
-                std::unique_lock lock(mutex_);
-                if (visible_ == visible)
-                {
-                        return;
-                }
-                visible_ = visible;
-                if (inserted_)
-                {
-                        send_event(event::Visibility<N>(id_, visible));
                 }
         }
 };
@@ -445,6 +421,17 @@ public:
                 updates_.set(UPDATE_ROUGHNESS);
                 object_->set_roughness(roughness);
         }
+
+        bool visible() const
+        {
+                return object_->visible();
+        }
+
+        void set_visible(const bool visible)
+        {
+                updates_.set(UPDATE_VISIBILITY);
+                object_->set_visible(visible);
+        }
 };
 
 template <std::size_t N>
@@ -510,7 +497,7 @@ public:
 
         bool visible() const
         {
-                return object_->visible_impl();
+                return object_->visible();
         }
 };
 }

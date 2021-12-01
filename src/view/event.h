@@ -61,15 +61,6 @@ struct DeleteObject final
         }
 };
 
-struct ShowObject final
-{
-        ObjectId id;
-        bool show;
-        explicit ShowObject(const ObjectId id, const bool show) : id(id), show(show)
-        {
-        }
-};
-
 struct DeleteAllObjects final
 {
 };
@@ -359,7 +350,6 @@ using ViewCommand = std::variant<
         command::ShowFps,
         command::ShowMaterials,
         command::ShowNormals,
-        command::ShowObject,
         command::ShowShadow,
         command::ShowSmooth,
         command::ShowWireframe,

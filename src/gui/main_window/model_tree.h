@@ -62,7 +62,6 @@ private:
         void update(storage::MeshObjectWeak&& object) override;
         void update(storage::VolumeObjectWeak&& object) override;
         void erase(ObjectId id) override;
-        void show(ObjectId id, bool visible) override;
 
         void clear();
 
@@ -88,6 +87,11 @@ private:
 
         template <std::size_t N>
         void update_item(const std::shared_ptr<volume::VolumeObject<N>>& object);
+
+        template <std::size_t N>
+        void set_visible(mesh::MeshObject<N>* object, bool visible);
+        template <std::size_t N>
+        void set_visible(volume::VolumeObject<N>* object, bool visible);
 
 public:
         ModelTree();

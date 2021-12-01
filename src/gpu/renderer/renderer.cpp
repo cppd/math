@@ -359,20 +359,6 @@ class Impl final : public Renderer
                 volume_storage_.clear();
         }
 
-        void object_show(const ObjectId id, const bool show) override
-        {
-                ASSERT(thread_id_ == std::this_thread::get_id());
-
-                if (mesh_storage_.set_visible(id, show))
-                {
-                        return;
-                }
-                if (volume_storage_.set_visible(id, show))
-                {
-                        return;
-                }
-        }
-
         [[nodiscard]] std::tuple<VkSemaphore, bool> draw_meshes(
                 VkSemaphore semaphore,
                 const vulkan::Queue& graphics_queue,

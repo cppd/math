@@ -199,24 +199,6 @@ void ModelTree::erase(const ObjectId id)
                 });
 }
 
-void ModelTree::show(const ObjectId id, const bool visible)
-{
-        thread_queue_.push(
-                [this, id, visible]()
-                {
-                        ASSERT(std::this_thread::get_id() == thread_id_);
-
-                        auto iter = map_id_item_.find(id);
-                        if (iter == map_id_item_.cend())
-                        {
-                                return;
-                        }
-                        Item& item = iter->second;
-                        item.visible = visible;
-                        set_item_color(item.item, item.visible);
-                });
-}
-
 void ModelTree::insert_into_tree(
         const ObjectId id,
         const unsigned dimension,
@@ -310,7 +292,7 @@ void ModelTree::show_object(const ObjectId id, const bool show)
                 std::visit(
                         [&]<std::size_t N>(const std::shared_ptr<volume::VolumeObject<N>>& volume_object)
                         {
-                                volume_object->set_visible(show);
+                                set_visible(volume_object.get(), show);
                         },
                         *v);
         }
@@ -319,7 +301,7 @@ void ModelTree::show_object(const ObjectId id, const bool show)
                 std::visit(
                         [&]<std::size_t N>(const std::shared_ptr<mesh::MeshObject<N>>& mesh_object)
                         {
-                                mesh_object->set_visible(show);
+                                set_visible(mesh_object.get(), show);
                         },
                         *m);
         }
@@ -497,6 +479,20 @@ std::vector<storage::VolumeObjectConst> ModelTree::const_volume_objects() const
         return storage_.objects<storage::VolumeObjectConst>();
 }
 
+template <std::size_t N>
+void ModelTree::set_visible(mesh::MeshObject<N>* const object, const bool visible)
+{
+        mesh::Writing writing(object);
+        writing.set_visible(visible);
+}
+
+template <std::size_t N>
+void ModelTree::set_visible(volume::VolumeObject<N>* const object, const bool visible)
+{
+        volume::Writing writing(object);
+        writing.set_visible(visible);
+}
+
 template <typename T>
 void ModelTree::make_menu_for_object(QMenu* const menu, const std::shared_ptr<T>& object)
 {
@@ -524,7 +520,7 @@ void ModelTree::make_menu_for_object(QMenu* const menu, const std::shared_ptr<T>
                         action, &QAction::triggered,
                         [&, visible]()
                         {
-                                object->set_visible(!visible);
+                                set_visible(object.get(), !visible);
                         });
         }
 

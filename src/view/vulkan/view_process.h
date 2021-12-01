@@ -57,11 +57,6 @@ class ViewProcess final
                 renderer_->object_delete(v.id);
         }
 
-        void command(const command::ShowObject& v)
-        {
-                renderer_->object_show(v.id, v.show);
-        }
-
         void command(const command::DeleteAllObjects&)
         {
                 renderer_->object_delete_all();

@@ -64,15 +64,6 @@ public:
                 tree_->update(event.object);
         }
 
-        void operator()(const mesh::event::Visibility<N>& event) const
-        {
-                if constexpr (N == 3)
-                {
-                        view_->send(view::command::ShowObject(event.id, event.visible));
-                }
-                tree_->show(event.id, event.visible);
-        }
-
         //
 
         void operator()(const volume::event::Insert<N>& event) const
@@ -101,15 +92,6 @@ public:
                         view_->send(view::command::UpdateVolumeObject(event.object));
                 }
                 tree_->update(event.object);
-        }
-
-        void operator()(const volume::event::Visibility<N>& event) const
-        {
-                if constexpr (N == 3)
-                {
-                        view_->send(view::command::ShowObject(event.id, event.visible));
-                }
-                tree_->show(event.id, event.visible);
         }
 };
 }

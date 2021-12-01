@@ -267,8 +267,7 @@ std::function<void(ProgressRatioList*)> action_painter(
                 std::visit(
                         [&]<std::size_t N>(const std::shared_ptr<const mesh::MeshObject<N>>& object)
                         {
-                                const mesh::Reading reading(*object);
-                                if (reading.visible())
+                                if (mesh::Reading(*object).visible())
                                 {
                                         dimensions.insert(N);
                                         visible_objects.push_back(object);

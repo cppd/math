@@ -41,7 +41,6 @@ struct Renderer
         virtual void object_update(const mesh::MeshObject<3>& object) = 0;
         virtual void object_update(const volume::VolumeObject<3>& object) = 0;
         virtual void object_delete(ObjectId id) = 0;
-        virtual void object_show(ObjectId id, bool show) = 0;
         virtual void object_delete_all() = 0;
 
         virtual VkSemaphore draw(

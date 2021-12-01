@@ -391,7 +391,7 @@ class Impl final : public MeshObject
                 ASSERT(!mesh_object.mesh().facets.empty() || !mesh_object.mesh().lines.empty()
                        || !mesh_object.mesh().points.empty());
 
-                static_assert(mesh::Updates().size() == 7);
+                static_assert(mesh::Updates().size() == 8);
 
                 static constexpr mesh::Updates LIGHTING_UPDATES(
                         (1ull << mesh::UPDATE_AMBIENT) | (1ull << mesh::UPDATE_METALNESS)
@@ -432,6 +432,11 @@ class Impl final : public MeshObject
                         load_mesh_vertices(mesh);
 
                         update_changes.command_buffers = true;
+                }
+
+                if (updates[mesh::UPDATE_VISIBILITY])
+                {
+                        update_changes.visibility = true;
                 }
 
                 return update_changes;

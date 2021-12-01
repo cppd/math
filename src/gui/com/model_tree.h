@@ -34,6 +34,5 @@ public:
         virtual void update(storage::MeshObjectWeak&& object) = 0;
         virtual void update(storage::VolumeObjectWeak&& object) = 0;
         virtual void erase(ObjectId id) = 0;
-        virtual void show(ObjectId id, bool visible) = 0;
 };
 }

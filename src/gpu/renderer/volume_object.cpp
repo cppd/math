@@ -408,7 +408,7 @@ class Impl final : public VolumeObject
 
                 UpdateChanges update_changes;
 
-                static_assert(volume::Updates().size() == 11);
+                static_assert(volume::Updates().size() == 12);
 
                 static constexpr volume::Updates PARAMETERS_UPDATE(
                         (1ull << volume::UPDATE_COLOR) | (1ull << volume::UPDATE_LEVELS)
@@ -452,6 +452,11 @@ class Impl final : public VolumeObject
                         gradient_h_ = gradient_h(texture_to_world_matrix_, image_->image());
 
                         buffer_set_coordinates();
+                }
+
+                if (updates[volume::UPDATE_VISIBILITY])
+                {
+                        update_changes.visibility = true;
                 }
 
                 return update_changes;
