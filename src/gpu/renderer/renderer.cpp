@@ -127,7 +127,7 @@ class Impl final : public Renderer
         {
                 clear_color_rgb32_ = v.color.rgb32().clamp(0, 1);
                 shader_buffers_.set_background_color(clear_color_rgb32_);
-                create_clear_command_buffers();
+                background_changed();
         }
 
         void command(const SetWireframeColor& v)
@@ -186,7 +186,7 @@ class Impl final : public Renderer
                 if (show_normals_ != v.show)
                 {
                         show_normals_ = v.show;
-                        create_mesh_render_command_buffers();
+                        show_normals_changed();
                 }
         }
 
@@ -195,8 +195,7 @@ class Impl final : public Renderer
                 if (shadow_zoom_ != v.zoom)
                 {
                         shadow_zoom_ = v.zoom;
-                        create_mesh_depth_buffers();
-                        create_mesh_command_buffers();
+                        shadow_zoom_changed();
                 }
         }
 
@@ -217,8 +216,9 @@ class Impl final : public Renderer
 
                 shader_buffers_.set_direction_to_light(-to_vector<float>(c.light_direction));
                 shader_buffers_.set_direction_to_camera(-to_vector<float>(c.camera_direction));
+                shader_buffers_.set_matrices(main_vp_matrix_, shadow_vp_matrix_, shadow_vp_texture_matrix_);
 
-                set_matrices();
+                matrices_changed();
         }
 
         void command(const SetClipPlane& v)
@@ -237,7 +237,7 @@ class Impl final : public Renderer
                 {
                         shader_buffers_.set_clip_plane(Vector4d(0), false);
                 }
-                create_mesh_render_command_buffers();
+                clip_plane_changed();
         }
 
         void exec(Command&& renderer_command) override
@@ -646,7 +646,7 @@ class Impl final : public Renderer
                         render_buffers_->commands_depth_copy(
                                 command_buffer, depth_copy_image_->image(), DEPTH_COPY_IMAGE_LAYOUT, viewport_, INDEX);
                 };
-                for (VolumeObject* visible_volume : volume_storage_.visible_objects())
+                for (VolumeObject* const visible_volume : volume_storage_.visible_objects())
                 {
                         volume_renderer_.create_command_buffers(visible_volume, *graphics_command_pool_, copy_depth);
                 }
@@ -654,16 +654,10 @@ class Impl final : public Renderer
 
         void set_volume_matrix()
         {
-                for (VolumeObject* visible_volume : volume_storage_.visible_objects())
+                for (VolumeObject* const visible_volume : volume_storage_.visible_objects())
                 {
                         visible_volume->set_matrix_and_clip_plane(main_vp_matrix_, clip_plane_);
                 }
-        }
-
-        void set_matrices()
-        {
-                shader_buffers_.set_matrices(main_vp_matrix_, shadow_vp_matrix_, shadow_vp_texture_matrix_);
-                set_volume_matrix();
         }
 
         void mesh_visibility_changed()
@@ -675,6 +669,32 @@ class Impl final : public Renderer
         {
                 create_volume_command_buffers();
                 set_volume_matrix();
+        }
+
+        void background_changed()
+        {
+                create_clear_command_buffers();
+        }
+
+        void show_normals_changed()
+        {
+                create_mesh_render_command_buffers();
+        }
+
+        void shadow_zoom_changed()
+        {
+                create_mesh_depth_buffers();
+                create_mesh_command_buffers();
+        }
+
+        void matrices_changed()
+        {
+                set_volume_matrix();
+        }
+
+        void clip_plane_changed()
+        {
+                create_mesh_render_command_buffers();
         }
 
 public:
