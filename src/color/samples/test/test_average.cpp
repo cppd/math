@@ -83,17 +83,17 @@ typename Container::value_type f(
                 return 0;
         }
 
-        auto iter = std::lower_bound(waves.begin(), waves.end(), wave);
+        const auto iter = std::lower_bound(waves.begin(), waves.end(), wave);
         ASSERT(iter != waves.end());
 
-        std::size_t index = iter - waves.begin();
+        const std::size_t index = iter - waves.begin();
         if (waves[index] == wave)
         {
                 return samples[index];
         }
         ASSERT(index != 0);
 
-        T k = (wave - waves[index - 1]) / (waves[index] - waves[index - 1]);
+        const T k = (wave - waves[index - 1]) / (waves[index] - waves[index - 1]);
         return std::lerp(samples[index - 1], samples[index], k);
 }
 

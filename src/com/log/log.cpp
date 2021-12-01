@@ -171,7 +171,7 @@ void LogEvents::insert(const std::function<void(const LogEvent&)>* observer)
 void LogEvents::erase(const std::function<void(const LogEvent&)>* observer)
 {
         std::lock_guard lg(lock_);
-        auto iter = std::remove(log_observers_.begin(), log_observers_.end(), observer);
+        const auto iter = std::remove(log_observers_.begin(), log_observers_.end(), observer);
         log_observers_.erase(iter, log_observers_.cend());
 }
 
@@ -187,7 +187,7 @@ void LogEvents::insert(const std::function<void(const MessageEvent&)>* observer)
 void LogEvents::erase(const std::function<void(const MessageEvent&)>* observer)
 {
         std::lock_guard lg(lock_);
-        auto iter = std::remove(msg_observers_.begin(), msg_observers_.end(), observer);
+        const auto iter = std::remove(msg_observers_.begin(), msg_observers_.end(), observer);
         msg_observers_.erase(iter, msg_observers_.cend());
 }
 

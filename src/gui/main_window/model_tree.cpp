@@ -215,7 +215,7 @@ void ModelTree::insert_into_tree(
         QTreeWidgetItem* parent_item = nullptr;
         if (parent_object_id)
         {
-                auto parent_iter = map_id_item_.find(*parent_object_id);
+                const auto parent_iter = map_id_item_.find(*parent_object_id);
                 if (parent_iter != map_id_item_.cend())
                 {
                         parent_item = parent_iter->second.item;
@@ -325,7 +325,7 @@ std::optional<ObjectId> ModelTree::current_item() const
 {
         ASSERT(std::this_thread::get_id() == thread_id_);
 
-        auto iter = map_item_id_.find(ui_.model_tree->currentItem());
+        const auto iter = map_item_id_.find(ui_.model_tree->currentItem());
         if (iter != map_item_id_.cend())
         {
                 return iter->second;
