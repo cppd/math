@@ -8,7 +8,6 @@ Checks:
 
 bugprone-*,
 -bugprone-easily-swappable-parameters,
--bugprone-macro-parentheses,
 -bugprone-narrowing-conversions,
 
 cert-*,
@@ -53,7 +52,6 @@ modernize-*,
 performance-*,
 
 readability-*,
--readability-avoid-const-params-in-decls,
 -readability-magic-numbers,
 -readability-misleading-indentation,
 -readability-named-parameter,
@@ -74,8 +72,6 @@ CheckOptions:
 - key:   misc-non-private-member-variables-in-classes.IgnoreClassesWithAllMemberVariablesBeingPublic
   value: '1'
 - key:   modernize-loop-convert.UseCxx20ReverseRanges
-  value: '0'
-- key:   performance-move-const-arg.CheckTriviallyCopyableMove
   value: '0'
 - key:   readability-implicit-bool-conversion.AllowIntegerConditions
   value: '1'
