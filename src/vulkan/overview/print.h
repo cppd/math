@@ -27,6 +27,6 @@ std::string resolve_modes_to_string(VkResolveModeFlags flags);
 std::string shader_stages_to_string(VkShaderStageFlags flags);
 std::string subgroup_features_to_string(VkSubgroupFeatureFlags flags);
 std::string queues_to_string(VkQueueFlags flags);
-std::string shader_float_controls_independence_to_string(const VkShaderFloatControlsIndependence v);
-std::string point_clipping_behavior_to_string(const VkPointClippingBehavior v);
+std::string shader_float_controls_independence_to_string(VkShaderFloatControlsIndependence v);
+std::string point_clipping_behavior_to_string(VkPointClippingBehavior v);
 }

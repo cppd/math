@@ -23,5 +23,5 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 namespace ns::vulkan
 {
-std::array<std::string, 2> result_to_strings(const VkResult code);
+std::array<std::string, 2> result_to_strings(VkResult code);
 }
