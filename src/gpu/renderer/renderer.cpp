@@ -22,6 +22,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "mesh_object.h"
 #include "mesh_renderer.h"
 #include "object_storage.h"
+#include "renderer_process.h"
 #include "transparency_message.h"
 #include "viewport_transform.h"
 #include "volume_object.h"
@@ -29,8 +30,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <src/com/log.h>
 #include <src/com/print.h>
-#include <src/numerical/transform.h>
-#include <src/numerical/vec.h>
 #include <src/vulkan/commands.h>
 #include <src/vulkan/device.h>
 #include <src/vulkan/error.h>
@@ -49,10 +48,6 @@ constexpr VkImageLayout DEPTH_COPY_IMAGE_LAYOUT = VK_IMAGE_LAYOUT_SHADER_READ_ON
 constexpr std::uint32_t OBJECTS_CLEAR_VALUE = 0;
 constexpr std::uint32_t TRANSPARENCY_NODE_BUFFER_MAX_SIZE = (1ull << 30);
 
-// shadow coordinates x(-1, 1) y(-1, 1) z(0, 1).
-// shadow texture coordinates x(0, 1) y(0, 1) z(0, 1).
-constexpr Matrix4d SHADOW_TEXTURE_MATRIX = matrix::scale<double>(0.5, 0.5, 1) * matrix::translate<double>(1, 1, 0);
-
 vulkan::DeviceFeatures device_features()
 {
         vulkan::DeviceFeatures features{};
@@ -63,22 +58,13 @@ vulkan::DeviceFeatures device_features()
         return features;
 }
 
-class Impl final : public Renderer
+class Impl final : public Renderer, RendererProcessEvents
 {
         const std::thread::id thread_id_ = std::this_thread::get_id();
 
         mutable TransparencyMessage transparency_message_{TRANSPARENCY_NODE_BUFFER_MAX_SIZE};
 
-        Matrix4d main_vp_matrix_ = Matrix4d(1);
-        Matrix4d shadow_vp_matrix_ = Matrix4d(1);
-        Matrix4d shadow_vp_texture_matrix_ = Matrix4d(1);
-
-        Vector3f clear_color_rgb32_ = Vector3f(0);
-        double shadow_zoom_ = 1;
-        bool show_shadow_ = false;
         Region<2, int> viewport_;
-        std::optional<Vector4d> clip_plane_;
-        bool show_normals_ = false;
 
         const vulkan::VulkanInstance* const instance_;
         const vulkan::Device* const device_;
@@ -118,137 +104,13 @@ class Impl final : public Renderer
         std::unique_ptr<TransparencyBuffers> transparency_buffers_;
         vulkan::handle::Semaphore render_transparent_as_opaque_signal_semaphore_;
 
-        void command(const SetLightingColor& v)
-        {
-                shader_buffers_.set_lighting_color(v.color.rgb32().max_n(0));
-        }
-
-        void command(const SetBackgroundColor& v)
-        {
-                clear_color_rgb32_ = v.color.rgb32().clamp(0, 1);
-                shader_buffers_.set_background_color(clear_color_rgb32_);
-                background_changed();
-        }
-
-        void command(const SetWireframeColor& v)
-        {
-                shader_buffers_.set_wireframe_color(v.color.rgb32().clamp(0, 1));
-        }
-
-        void command(const SetClipPlaneColor& v)
-        {
-                shader_buffers_.set_clip_plane_color(v.color.rgb32().clamp(0, 1));
-        }
-
-        void command(const SetNormalLength& v)
-        {
-                shader_buffers_.set_normal_length(v.length);
-        }
-
-        void command(const SetNormalColorPositive& v)
-        {
-                shader_buffers_.set_normal_color_positive(v.color.rgb32().clamp(0, 1));
-        }
-
-        void command(const SetNormalColorNegative& v)
-        {
-                shader_buffers_.set_normal_color_negative(v.color.rgb32().clamp(0, 1));
-        }
-
-        void command(const SetShowSmooth& v)
-        {
-                shader_buffers_.set_show_smooth(v.show);
-        }
-
-        void command(const SetShowWireframe& v)
-        {
-                shader_buffers_.set_show_wireframe(v.show);
-        }
-
-        void command(const SetShowShadow& v)
-        {
-                shader_buffers_.set_show_shadow(v.show);
-                show_shadow_ = v.show;
-        }
-
-        void command(const SetShowFog& v)
-        {
-                shader_buffers_.set_show_fog(v.show);
-        }
-
-        void command(const SetShowMaterials& v)
-        {
-                shader_buffers_.set_show_materials(v.show);
-        }
-
-        void command(const SetShowNormals& v)
-        {
-                if (show_normals_ != v.show)
-                {
-                        show_normals_ = v.show;
-                        show_normals_changed();
-                }
-        }
-
-        void command(const SetShadowZoom& v)
-        {
-                if (shadow_zoom_ != v.zoom)
-                {
-                        shadow_zoom_ = v.zoom;
-                        shadow_zoom_changed();
-                }
-        }
-
-        void command(const SetCamera& v)
-        {
-                const CameraInfo& c = *v.info;
-
-                const Matrix4d& shadow_projection_matrix = matrix::ortho_vulkan<double>(
-                        c.shadow_volume.left, c.shadow_volume.right, c.shadow_volume.bottom, c.shadow_volume.top,
-                        c.shadow_volume.near, c.shadow_volume.far);
-                const Matrix4d& main_projection_matrix = matrix::ortho_vulkan<double>(
-                        c.main_volume.left, c.main_volume.right, c.main_volume.bottom, c.main_volume.top,
-                        c.main_volume.near, c.main_volume.far);
-
-                shadow_vp_matrix_ = shadow_projection_matrix * c.shadow_view_matrix;
-                shadow_vp_texture_matrix_ = SHADOW_TEXTURE_MATRIX * shadow_vp_matrix_;
-                main_vp_matrix_ = main_projection_matrix * c.main_view_matrix;
-
-                shader_buffers_.set_direction_to_light(-to_vector<float>(c.light_direction));
-                shader_buffers_.set_direction_to_camera(-to_vector<float>(c.camera_direction));
-                shader_buffers_.set_matrices(main_vp_matrix_, shadow_vp_matrix_, shadow_vp_texture_matrix_);
-
-                matrices_changed();
-        }
-
-        void command(const SetClipPlane& v)
-        {
-                clip_plane_ = v.plane;
-                if (clip_plane_)
-                {
-                        shader_buffers_.set_clip_plane(*clip_plane_, true);
-
-                        for (VolumeObject* const visible_volume : volume_storage_.visible_objects())
-                        {
-                                visible_volume->set_clip_plane(*clip_plane_);
-                        }
-                }
-                else
-                {
-                        shader_buffers_.set_clip_plane(Vector4d(0), false);
-                }
-                clip_plane_changed();
-        }
+        RendererProcess renderer_process_;
 
         void exec(Command&& renderer_command) override
         {
                 ASSERT(thread_id_ == std::this_thread::get_id());
 
-                const auto visitor = [this](const auto& v)
-                {
-                        command(v);
-                };
-                std::visit(visitor, renderer_command);
+                renderer_process_.exec(renderer_command);
         }
 
         void object_update(const mesh::MeshObject<3>& object) override
@@ -364,7 +226,7 @@ class Impl final : public Renderer
                 const vulkan::Queue& graphics_queue,
                 const unsigned index) const
         {
-                if (!show_shadow_)
+                if (!renderer_process_.show_shadow())
                 {
                         ASSERT(*mesh_renderer_.render_command_buffer_all(index));
                         vulkan::queue_submit(
@@ -567,7 +429,7 @@ class Impl final : public Renderer
                 mesh_renderer_depth_render_buffers_ = create_depth_buffers(
                         render_buffers_->framebuffers().size(), {graphics_queue_->family_index()},
                         *graphics_command_pool_, *graphics_queue_, *device_, viewport_.width(), viewport_.height(),
-                        shadow_zoom_);
+                        renderer_process_.shadow_zoom());
 
                 mesh_renderer_.create_depth_buffers(mesh_renderer_depth_render_buffers_.get());
         }
@@ -593,7 +455,8 @@ class Impl final : public Renderer
                         commands_init_uint32_storage_image(command_buffer, *object_image_, OBJECTS_CLEAR_VALUE);
                 };
 
-                const std::vector<VkClearValue> clear_values = render_buffers_->clear_values(clear_color_rgb32_);
+                const std::vector<VkClearValue> clear_values =
+                        render_buffers_->clear_values(renderer_process_.clear_color_rgb32());
                 info.clear_values = &clear_values;
 
                 clear_command_buffers_ = vulkan::create_command_buffers(info);
@@ -604,8 +467,8 @@ class Impl final : public Renderer
                 mesh_renderer_.delete_render_command_buffers();
 
                 mesh_renderer_.create_render_command_buffers(
-                        mesh_storage_.visible_objects(), *graphics_command_pool_, clip_plane_.has_value(),
-                        show_normals_,
+                        mesh_storage_.visible_objects(), *graphics_command_pool_,
+                        renderer_process_.clip_plane().has_value(), renderer_process_.show_normals(),
                         [this](VkCommandBuffer command_buffer)
                         {
                                 transparency_buffers_->commands_init(command_buffer);
@@ -620,8 +483,8 @@ class Impl final : public Renderer
         {
                 mesh_renderer_.delete_depth_command_buffers();
                 mesh_renderer_.create_depth_command_buffers(
-                        mesh_storage_.visible_objects(), *graphics_command_pool_, clip_plane_.has_value(),
-                        show_normals_);
+                        mesh_storage_.visible_objects(), *graphics_command_pool_,
+                        renderer_process_.clip_plane().has_value(), renderer_process_.show_normals());
         }
 
         void create_mesh_command_buffers()
@@ -656,7 +519,8 @@ class Impl final : public Renderer
         {
                 for (VolumeObject* const visible_volume : volume_storage_.visible_objects())
                 {
-                        visible_volume->set_matrix_and_clip_plane(main_vp_matrix_, clip_plane_);
+                        visible_volume->set_matrix_and_clip_plane(
+                                renderer_process_.main_vp_matrix(), renderer_process_.clip_plane());
                 }
         }
 
@@ -671,30 +535,39 @@ class Impl final : public Renderer
                 set_volume_matrix();
         }
 
-        void background_changed()
+        // RendererProcessEvents
+
+        void background_changed() override
         {
                 create_clear_command_buffers();
         }
 
-        void show_normals_changed()
+        void show_normals_changed() override
         {
                 create_mesh_render_command_buffers();
         }
 
-        void shadow_zoom_changed()
+        void shadow_zoom_changed() override
         {
                 create_mesh_depth_buffers();
                 create_mesh_command_buffers();
         }
 
-        void matrices_changed()
+        void matrices_changed() override
         {
                 set_volume_matrix();
         }
 
-        void clip_plane_changed()
+        void clip_plane_changed() override
         {
                 create_mesh_render_command_buffers();
+                if (renderer_process_.clip_plane())
+                {
+                        for (VolumeObject* const visible_volume : volume_storage_.visible_objects())
+                        {
+                                visible_volume->set_clip_plane(*renderer_process_.clip_plane());
+                        }
+                }
         }
 
 public:
@@ -743,7 +616,8 @@ public:
                                   volume_visibility_changed();
                           }),
                   clear_signal_semaphore_(*device_),
-                  render_transparent_as_opaque_signal_semaphore_(*device_)
+                  render_transparent_as_opaque_signal_semaphore_(*device_),
+                  renderer_process_(&shader_buffers_, this)
         {
         }
 
