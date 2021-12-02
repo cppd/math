@@ -449,7 +449,7 @@ void MeshRenderer::draw_commands(
 }
 
 void MeshRenderer::create_render_command_buffers(
-        const std::unordered_set<const MeshObject*>& meshes,
+        const std::vector<const MeshObject*>& meshes,
         const VkCommandPool graphics_command_pool,
         const bool clip_plane,
         const bool normals,
@@ -527,7 +527,7 @@ void MeshRenderer::delete_render_command_buffers()
 }
 
 void MeshRenderer::create_depth_command_buffers(
-        const std::unordered_set<const MeshObject*>& meshes,
+        const std::vector<const MeshObject*>& meshes,
         const VkCommandPool graphics_command_pool,
         const bool clip_plane,
         const bool normals)
