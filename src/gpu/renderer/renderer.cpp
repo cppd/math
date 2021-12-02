@@ -58,7 +58,7 @@ vulkan::DeviceFeatures device_features()
         return features;
 }
 
-class Impl final : public Renderer, RendererProcessEvents
+class Impl final : public Renderer, RendererProcessEvents, ObjectStorageEventsMesh, ObjectStorageEventsVolume
 {
         const std::thread::id thread_id_ = std::this_thread::get_id();
 
@@ -524,12 +524,29 @@ class Impl final : public Renderer, RendererProcessEvents
                 }
         }
 
-        void mesh_visibility_changed()
+        // ObjectStorageEvents
+
+        std::unique_ptr<MeshObject> create_mesh() const override
+        {
+                return create_mesh_object(
+                        device_, {graphics_queue_->family_index()}, transfer_command_pool_, transfer_queue_,
+                        mesh_layouts_, mesh_material_layouts_, mesh_renderer_.texture_sampler());
+        }
+
+        void mesh_visibility_changed() override
         {
                 create_mesh_command_buffers();
         }
 
-        void volume_visibility_changed()
+        std::unique_ptr<VolumeObject> create_volume() const override
+        {
+                return create_volume_object(
+                        device_, {graphics_queue_->family_index()}, transfer_command_pool_, transfer_queue_,
+                        volume_image_layouts_, volume_renderer_.image_sampler(),
+                        volume_renderer_.transfer_function_sampler());
+        }
+
+        void volume_visibility_changed() override
         {
                 create_volume_command_buffers();
                 set_volume_matrix();
@@ -591,30 +608,8 @@ public:
                   mesh_renderer_(device_, sample_shading, sampler_anisotropy, shader_buffers_),
                   volume_renderer_signal_semaphore_(*device_),
                   volume_renderer_(device_, sample_shading, shader_buffers_),
-                  mesh_storage_(
-                          [this]()
-                          {
-                                  return create_mesh_object(
-                                          device_, {graphics_queue_->family_index()}, transfer_command_pool_,
-                                          transfer_queue_, mesh_layouts_, mesh_material_layouts_,
-                                          mesh_renderer_.texture_sampler());
-                          },
-                          [this]()
-                          {
-                                  mesh_visibility_changed();
-                          }),
-                  volume_storage_(
-                          [this]()
-                          {
-                                  return create_volume_object(
-                                          device_, {graphics_queue_->family_index()}, transfer_command_pool_,
-                                          transfer_queue_, volume_image_layouts_, volume_renderer_.image_sampler(),
-                                          volume_renderer_.transfer_function_sampler());
-                          },
-                          [this]()
-                          {
-                                  volume_visibility_changed();
-                          }),
+                  mesh_storage_(this),
+                  volume_storage_(this),
                   clear_signal_semaphore_(*device_),
                   render_transparent_as_opaque_signal_semaphore_(*device_),
                   renderer_process_(&shader_buffers_, this)

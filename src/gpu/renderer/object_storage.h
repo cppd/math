@@ -28,6 +28,18 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 namespace ns::gpu::renderer
 {
+
+template <typename T>
+class ObjectStorageEvents
+{
+protected:
+        ~ObjectStorageEvents() = default;
+
+public:
+        virtual std::unique_ptr<T> create_object() const = 0;
+        virtual void visibility_changed() = 0;
+};
+
 template <typename T>
 class ObjectStorage final
 {
@@ -45,8 +57,7 @@ class ObjectStorage final
                 }
         };
 
-        std::function<std::unique_ptr<T>()> create_object_;
-        std::function<void()> visibility_changed_;
+        ObjectStorageEvents<T>* events_;
 
         std::unordered_map<ObjectId, Object> map_;
         std::vector<VisibleType*> visible_;
@@ -64,13 +75,8 @@ class ObjectStorage final
         }
 
 public:
-        explicit ObjectStorage(
-                std::function<std::unique_ptr<T>()>&& create_object,
-                std::function<void()>&& visibility_changed)
-                : create_object_(std::move(create_object)), visibility_changed_(std::move(visibility_changed))
+        explicit ObjectStorage(ObjectStorageEvents<T>* const events) : events_(events)
         {
-                ASSERT(create_object_);
-                ASSERT(visibility_changed_);
         }
 
         bool erase(const ObjectId id)
@@ -90,7 +96,7 @@ public:
                 map_.erase(iter);
                 if (visibility_changed)
                 {
-                        visibility_changed_();
+                        events_->visibility_changed();
                 }
                 return true;
         }
@@ -108,7 +114,7 @@ public:
                 map_.clear();
                 if (visibility_changed)
                 {
-                        visibility_changed_();
+                        events_->visibility_changed();
                 }
         }
 
@@ -124,7 +130,7 @@ public:
                 {
                         return iter->second.ptr.get();
                 }
-                const auto pair = map_.emplace(id, create_object_());
+                const auto pair = map_.emplace(id, events_->create_object());
                 ASSERT(pair.second);
                 return pair.first->second.ptr.get();
         }
@@ -144,7 +150,7 @@ public:
                         {
                                 erase_visible(visible_index);
                                 visible_index = EMPTY;
-                                visibility_changed_();
+                                events_->visibility_changed();
                         }
                 }
                 else if (visible_index == EMPTY)
@@ -153,7 +159,7 @@ public:
                         visible_index = visible_.size();
                         visible_.push_back(iter->second.ptr.get());
                         visible_ptr_.push_back(&iter->second);
-                        visibility_changed_();
+                        events_->visibility_changed();
                 }
                 return true;
         }
@@ -174,4 +180,41 @@ public:
         }
 };
 
+class ObjectStorageEventsMesh : public ObjectStorageEvents<MeshObject>
+{
+        virtual std::unique_ptr<MeshObject> create_mesh() const = 0;
+        virtual void mesh_visibility_changed() = 0;
+
+        virtual std::unique_ptr<MeshObject> create_object() const final
+        {
+                return create_mesh();
+        }
+
+        virtual void visibility_changed() final
+        {
+                mesh_visibility_changed();
+        }
+
+protected:
+        ~ObjectStorageEventsMesh() = default;
+};
+
+class ObjectStorageEventsVolume : public ObjectStorageEvents<VolumeObject>
+{
+        virtual std::unique_ptr<VolumeObject> create_volume() const = 0;
+        virtual void volume_visibility_changed() = 0;
+
+        virtual std::unique_ptr<VolumeObject> create_object() const final
+        {
+                return create_volume();
+        }
+
+        virtual void visibility_changed() final
+        {
+                volume_visibility_changed();
+        }
+
+protected:
+        ~ObjectStorageEventsVolume() = default;
+};
 }
