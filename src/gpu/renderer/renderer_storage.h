@@ -30,10 +30,10 @@ namespace ns::gpu::renderer
 {
 
 template <typename T>
-class ObjectStorageEvents
+class RendererStorageEvents
 {
 protected:
-        ~ObjectStorageEvents() = default;
+        ~RendererStorageEvents() = default;
 
 public:
         virtual std::unique_ptr<T> create_object() const = 0;
@@ -41,7 +41,7 @@ public:
 };
 
 template <typename T>
-class ObjectStorage final
+class RendererStorage final
 {
         static_assert(std::is_same_v<T, MeshObject> || std::is_same_v<T, VolumeObject>);
 
@@ -57,7 +57,7 @@ class ObjectStorage final
                 }
         };
 
-        ObjectStorageEvents<T>* events_;
+        RendererStorageEvents<T>* events_;
 
         std::unordered_map<ObjectId, Object> map_;
         std::vector<VisibleType*> visible_;
@@ -75,7 +75,7 @@ class ObjectStorage final
         }
 
 public:
-        explicit ObjectStorage(ObjectStorageEvents<T>* const events) : events_(events)
+        explicit RendererStorage(RendererStorageEvents<T>* const events) : events_(events)
         {
         }
 
@@ -180,41 +180,41 @@ public:
         }
 };
 
-class ObjectStorageEventsMesh : public ObjectStorageEvents<MeshObject>
+class RendererStorageEventsMesh : public RendererStorageEvents<MeshObject>
 {
         virtual std::unique_ptr<MeshObject> create_mesh() const = 0;
         virtual void mesh_visibility_changed() = 0;
 
-        virtual std::unique_ptr<MeshObject> create_object() const final
+        std::unique_ptr<MeshObject> create_object() const final
         {
                 return create_mesh();
         }
 
-        virtual void visibility_changed() final
+        void visibility_changed() final
         {
                 mesh_visibility_changed();
         }
 
 protected:
-        ~ObjectStorageEventsMesh() = default;
+        ~RendererStorageEventsMesh() = default;
 };
 
-class ObjectStorageEventsVolume : public ObjectStorageEvents<VolumeObject>
+class RendererStorageEventsVolume : public RendererStorageEvents<VolumeObject>
 {
         virtual std::unique_ptr<VolumeObject> create_volume() const = 0;
         virtual void volume_visibility_changed() = 0;
 
-        virtual std::unique_ptr<VolumeObject> create_object() const final
+        std::unique_ptr<VolumeObject> create_object() const final
         {
                 return create_volume();
         }
 
-        virtual void visibility_changed() final
+        void visibility_changed() final
         {
                 volume_visibility_changed();
         }
 
 protected:
-        ~ObjectStorageEventsVolume() = default;
+        ~RendererStorageEventsVolume() = default;
 };
 }

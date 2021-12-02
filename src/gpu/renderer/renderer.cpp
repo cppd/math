@@ -21,8 +21,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "depth_buffer.h"
 #include "mesh_object.h"
 #include "mesh_renderer.h"
-#include "object_storage.h"
 #include "renderer_process.h"
+#include "renderer_storage.h"
 #include "transparency_message.h"
 #include "viewport_transform.h"
 #include "volume_object.h"
@@ -58,7 +58,7 @@ vulkan::DeviceFeatures device_features()
         return features;
 }
 
-class Impl final : public Renderer, RendererProcessEvents, ObjectStorageEventsMesh, ObjectStorageEventsVolume
+class Impl final : public Renderer, RendererProcessEvents, RendererStorageEventsMesh, RendererStorageEventsVolume
 {
         const std::thread::id thread_id_ = std::this_thread::get_id();
 
@@ -95,8 +95,8 @@ class Impl final : public Renderer, RendererProcessEvents, ObjectStorageEventsMe
         const std::vector<vulkan::DescriptorSetLayoutAndBindings> volume_image_layouts_{
                 volume_renderer_.image_layouts()};
 
-        ObjectStorage<MeshObject> mesh_storage_;
-        ObjectStorage<VolumeObject> volume_storage_;
+        RendererStorage<MeshObject> mesh_storage_;
+        RendererStorage<VolumeObject> volume_storage_;
 
         std::optional<vulkan::handle::CommandBuffers> clear_command_buffers_;
         vulkan::handle::Semaphore clear_signal_semaphore_;
@@ -524,7 +524,7 @@ class Impl final : public Renderer, RendererProcessEvents, ObjectStorageEventsMe
                 }
         }
 
-        // ObjectStorageEvents
+        // RendererStorageEvents
 
         std::unique_ptr<MeshObject> create_mesh() const override
         {
