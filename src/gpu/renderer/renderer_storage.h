@@ -17,18 +17,15 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
-#include "mesh_object.h"
-#include "volume_object.h"
-
 #include <src/com/error.h>
+#include <src/model/object_id.h>
 
-#include <functional>
 #include <memory>
 #include <unordered_map>
+#include <vector>
 
 namespace ns::gpu::renderer
 {
-
 template <typename T>
 class RendererStorageEvents
 {
@@ -36,7 +33,6 @@ protected:
         ~RendererStorageEvents() = default;
 
 public:
-        virtual std::unique_ptr<T> create_object() const = 0;
         virtual void visibility_changed() = 0;
 };
 
@@ -49,6 +45,7 @@ class RendererStorage final
         {
                 std::unique_ptr<T> ptr;
                 std::size_t visible_index = EMPTY;
+
                 explicit Object(std::unique_ptr<T>&& ptr) : ptr(std::move(ptr))
                 {
                 }
@@ -64,6 +61,7 @@ class RendererStorage final
         {
                 ASSERT(index < visible_.size());
                 ASSERT(visible_.size() == visible_ptr_.size());
+
                 visible_[index] = visible_.back();
                 visible_.pop_back();
                 visible_ptr_[index] = visible_ptr_.back();
@@ -127,7 +125,12 @@ public:
                 {
                         return iter->second.ptr.get();
                 }
-                const auto pair = map_.emplace(id, events_->create_object());
+                return nullptr;
+        }
+
+        T* insert(const ObjectId id, std::unique_ptr<T>&& object)
+        {
+                const auto pair = map_.emplace(id, std::move(object));
                 ASSERT(pair.second);
                 return pair.first->second.ptr.get();
         }
@@ -158,7 +161,6 @@ public:
                         visible_ptr_.push_back(&iter->second);
                         events_->visibility_changed();
                 }
-                return;
         }
 
         const std::vector<VisibleType*>& visible_objects() const
@@ -175,43 +177,5 @@ public:
                 }
                 return iter->second.visible_index != EMPTY;
         }
-};
-
-class RendererStorageMeshEvents : public RendererStorageEvents<MeshObject>
-{
-        virtual std::unique_ptr<MeshObject> create_mesh() const = 0;
-        virtual void mesh_visibility_changed() = 0;
-
-        std::unique_ptr<MeshObject> create_object() const final
-        {
-                return create_mesh();
-        }
-
-        void visibility_changed() final
-        {
-                mesh_visibility_changed();
-        }
-
-protected:
-        ~RendererStorageMeshEvents() = default;
-};
-
-class RendererStorageVolumeEvents : public RendererStorageEvents<VolumeObject>
-{
-        virtual std::unique_ptr<VolumeObject> create_volume() const = 0;
-        virtual void volume_visibility_changed() = 0;
-
-        std::unique_ptr<VolumeObject> create_object() const final
-        {
-                return create_volume();
-        }
-
-        void visibility_changed() final
-        {
-                volume_visibility_changed();
-        }
-
-protected:
-        ~RendererStorageVolumeEvents() = default;
 };
 }

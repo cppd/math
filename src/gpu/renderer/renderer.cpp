@@ -22,7 +22,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "mesh_object.h"
 #include "mesh_renderer.h"
 #include "renderer_process.h"
-#include "renderer_storage.h"
+#include "renderer_storage_mesh.h"
+#include "renderer_storage_volume.h"
 #include "transparency_message.h"
 #include "viewport_transform.h"
 #include "volume_object.h"
@@ -95,15 +96,14 @@ class Impl final : public Renderer, RendererProcessEvents, RendererStorageMeshEv
         const std::vector<vulkan::DescriptorSetLayoutAndBindings> volume_image_layouts_{
                 volume_renderer_.image_layouts()};
 
-        RendererStorage<MeshObject, const MeshObject> mesh_storage_;
-        RendererStorage<VolumeObject, VolumeObject> volume_storage_;
-
         std::optional<vulkan::handle::CommandBuffers> clear_command_buffers_;
         vulkan::handle::Semaphore clear_signal_semaphore_;
 
         std::unique_ptr<TransparencyBuffers> transparency_buffers_;
         vulkan::handle::Semaphore render_transparent_as_opaque_signal_semaphore_;
 
+        RendererStorageMesh mesh_storage_;
+        RendererStorageVolume volume_storage_;
         RendererProcess renderer_process_;
 
         void exec(Command&& renderer_command) override
@@ -116,87 +116,17 @@ class Impl final : public Renderer, RendererProcessEvents, RendererStorageMeshEv
         void object_update(const mesh::MeshObject<3>& object) override
         {
                 ASSERT(thread_id_ == std::this_thread::get_id());
-
                 ASSERT(!volume_storage_.contains(object.id()));
 
-                MeshObject* const ptr = mesh_storage_.object(object.id());
-
-                MeshObject::UpdateChanges update_changes;
-                bool visible;
-                try
-                {
-                        const mesh::Reading reading(object);
-                        visible = reading.visible();
-                        update_changes = ptr->update(reading);
-                }
-                catch (const std::exception& e)
-                {
-                        mesh_storage_.erase(object.id());
-                        LOG(std::string("Error updating mesh object. ") + e.what());
-                        return;
-                }
-                catch (...)
-                {
-                        mesh_storage_.erase(object.id());
-                        LOG("Unknown error updating mesh object");
-                        return;
-                }
-
-                const bool storage_visible = mesh_storage_.is_visible(object.id());
-                if (visible && storage_visible)
-                {
-                        if (update_changes.command_buffers || update_changes.transparency)
-                        {
-                                create_mesh_command_buffers();
-                        }
-                }
-                else if (visible || storage_visible)
-                {
-                        mesh_storage_.set_visible(object.id(), visible);
-                }
+                mesh_storage_.update(object);
         }
 
         void object_update(const volume::VolumeObject<3>& object) override
         {
                 ASSERT(thread_id_ == std::this_thread::get_id());
-
                 ASSERT(!mesh_storage_.contains(object.id()));
 
-                VolumeObject* ptr = volume_storage_.object(object.id());
-
-                VolumeObject::UpdateChanges update_changes;
-                bool visible;
-                try
-                {
-                        volume::Reading reading(object);
-                        visible = reading.visible();
-                        update_changes = ptr->update(reading);
-                }
-                catch (const std::exception& e)
-                {
-                        volume_storage_.erase(object.id());
-                        LOG(std::string("Error updating volume object. ") + e.what());
-                        return;
-                }
-                catch (...)
-                {
-                        volume_storage_.erase(object.id());
-                        LOG("Unknown error updating volume object");
-                        return;
-                }
-
-                const bool storage_visible = volume_storage_.is_visible(object.id());
-                if (visible && storage_visible)
-                {
-                        if (update_changes.command_buffers)
-                        {
-                                create_volume_command_buffers();
-                        }
-                }
-                else if (visible || storage_visible)
-                {
-                        volume_storage_.set_visible(object.id(), visible);
-                }
+                volume_storage_.update(object);
         }
 
         void object_delete(const ObjectId id) override
@@ -205,10 +135,12 @@ class Impl final : public Renderer, RendererProcessEvents, RendererStorageMeshEv
 
                 if (mesh_storage_.erase(id))
                 {
+                        ASSERT(!volume_storage_.contains(id));
                         return;
                 }
                 if (volume_storage_.erase(id))
                 {
+                        ASSERT(!mesh_storage_.contains(id));
                         return;
                 }
         }
@@ -450,7 +382,7 @@ class Impl final : public Renderer, RendererProcessEvents, RendererStorageMeshEv
                 info.framebuffers = &render_buffers_->framebuffers_clear();
                 info.command_pool = *graphics_command_pool_;
 
-                info.before_render_pass_commands = [this](VkCommandBuffer command_buffer)
+                info.before_render_pass_commands = [this](const VkCommandBuffer command_buffer)
                 {
                         commands_init_uint32_storage_image(command_buffer, *object_image_, OBJECTS_CLEAR_VALUE);
                 };
@@ -469,11 +401,11 @@ class Impl final : public Renderer, RendererProcessEvents, RendererStorageMeshEv
                 mesh_renderer_.create_render_command_buffers(
                         mesh_storage_.visible_objects(), *graphics_command_pool_,
                         renderer_process_.clip_plane().has_value(), renderer_process_.show_normals(),
-                        [this](VkCommandBuffer command_buffer)
+                        [this](const VkCommandBuffer command_buffer)
                         {
                                 transparency_buffers_->commands_init(command_buffer);
                         },
-                        [this](VkCommandBuffer command_buffer)
+                        [this](const VkCommandBuffer command_buffer)
                         {
                                 transparency_buffers_->commands_read(command_buffer);
                         });
@@ -500,7 +432,7 @@ class Impl final : public Renderer, RendererProcessEvents, RendererStorageMeshEv
                 {
                         return;
                 }
-                auto copy_depth = [this](VkCommandBuffer command_buffer)
+                auto copy_depth = [this](const VkCommandBuffer command_buffer)
                 {
                         ASSERT(render_buffers_);
                         ASSERT(render_buffers_->framebuffers().size() == 1);
@@ -509,7 +441,7 @@ class Impl final : public Renderer, RendererProcessEvents, RendererStorageMeshEv
                         render_buffers_->commands_depth_copy(
                                 command_buffer, depth_copy_image_->image(), DEPTH_COPY_IMAGE_LAYOUT, viewport_, INDEX);
                 };
-                for (VolumeObject* const visible_volume : volume_storage_.visible_objects())
+                for (const VolumeObject* const visible_volume : volume_storage_.visible_objects())
                 {
                         volume_renderer_.create_command_buffers(visible_volume, *graphics_command_pool_, copy_depth);
                 }
@@ -524,7 +456,7 @@ class Impl final : public Renderer, RendererProcessEvents, RendererStorageMeshEv
                 }
         }
 
-        // RendererStorageEvents
+        // RendererStorageMeshEvents
 
         std::unique_ptr<MeshObject> create_mesh() const override
         {
@@ -538,6 +470,16 @@ class Impl final : public Renderer, RendererProcessEvents, RendererStorageMeshEv
                 create_mesh_command_buffers();
         }
 
+        void mesh_changed(const MeshObject::UpdateChanges& update_changes) override
+        {
+                if (update_changes.command_buffers || update_changes.transparency)
+                {
+                        create_mesh_command_buffers();
+                }
+        }
+
+        // RendererStorageVolumeEvents
+
         std::unique_ptr<VolumeObject> create_volume() const override
         {
                 return create_volume_object(
@@ -550,6 +492,14 @@ class Impl final : public Renderer, RendererProcessEvents, RendererStorageMeshEv
         {
                 create_volume_command_buffers();
                 set_volume_matrix();
+        }
+
+        void volume_changed(const VolumeObject::UpdateChanges& update_changes) override
+        {
+                if (update_changes.command_buffers)
+                {
+                        create_volume_command_buffers();
+                }
         }
 
         // RendererProcessEvents
@@ -608,10 +558,10 @@ public:
                   mesh_renderer_(device_, sample_shading, sampler_anisotropy, shader_buffers_),
                   volume_renderer_signal_semaphore_(*device_),
                   volume_renderer_(device_, sample_shading, shader_buffers_),
-                  mesh_storage_(this),
-                  volume_storage_(this),
                   clear_signal_semaphore_(*device_),
                   render_transparent_as_opaque_signal_semaphore_(*device_),
+                  mesh_storage_(this),
+                  volume_storage_(this),
                   renderer_process_(&shader_buffers_, this)
         {
         }
@@ -622,6 +572,11 @@ public:
 
                 instance_->device_wait_idle_noexcept("the Vulkan renderer destructor");
         }
+
+        Impl(const Impl&) = delete;
+        Impl& operator=(const Impl&) = delete;
+        Impl(Impl&&) = delete;
+        Impl& operator=(Impl&&) = delete;
 };
 }
 
