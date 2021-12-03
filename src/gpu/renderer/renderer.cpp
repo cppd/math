@@ -58,7 +58,7 @@ vulkan::DeviceFeatures device_features()
         return features;
 }
 
-class Impl final : public Renderer, RendererProcessEvents, RendererStorageEventsMesh, RendererStorageEventsVolume
+class Impl final : public Renderer, RendererProcessEvents, RendererStorageMeshEvents, RendererStorageVolumeEvents
 {
         const std::thread::id thread_id_ = std::this_thread::get_id();
 
@@ -95,8 +95,8 @@ class Impl final : public Renderer, RendererProcessEvents, RendererStorageEvents
         const std::vector<vulkan::DescriptorSetLayoutAndBindings> volume_image_layouts_{
                 volume_renderer_.image_layouts()};
 
-        RendererStorage<MeshObject> mesh_storage_;
-        RendererStorage<VolumeObject> volume_storage_;
+        RendererStorage<MeshObject, const MeshObject> mesh_storage_;
+        RendererStorage<VolumeObject, VolumeObject> volume_storage_;
 
         std::optional<vulkan::handle::CommandBuffers> clear_command_buffers_;
         vulkan::handle::Semaphore clear_signal_semaphore_;

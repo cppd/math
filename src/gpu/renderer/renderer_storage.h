@@ -40,14 +40,11 @@ public:
         virtual void visibility_changed() = 0;
 };
 
-template <typename T>
+template <typename T, typename VisibleType>
 class RendererStorage final
 {
-        static_assert(std::is_same_v<T, MeshObject> || std::is_same_v<T, VolumeObject>);
-
-        using VisibleType = std::conditional_t<std::is_same_v<T, VolumeObject>, T, const T>;
-
         static constexpr std::size_t EMPTY = -1;
+
         struct Object final
         {
                 std::unique_ptr<T> ptr;
@@ -135,12 +132,12 @@ public:
                 return pair.first->second.ptr.get();
         }
 
-        bool set_visible(const ObjectId id, const bool visible)
+        void set_visible(const ObjectId id, const bool visible)
         {
                 const auto iter = map_.find(id);
                 if (iter == map_.cend())
                 {
-                        return false;
+                        return;
                 }
 
                 std::size_t& visible_index = iter->second.visible_index;
@@ -161,7 +158,7 @@ public:
                         visible_ptr_.push_back(&iter->second);
                         events_->visibility_changed();
                 }
-                return true;
+                return;
         }
 
         const std::vector<VisibleType*>& visible_objects() const
@@ -180,7 +177,7 @@ public:
         }
 };
 
-class RendererStorageEventsMesh : public RendererStorageEvents<MeshObject>
+class RendererStorageMeshEvents : public RendererStorageEvents<MeshObject>
 {
         virtual std::unique_ptr<MeshObject> create_mesh() const = 0;
         virtual void mesh_visibility_changed() = 0;
@@ -196,10 +193,10 @@ class RendererStorageEventsMesh : public RendererStorageEvents<MeshObject>
         }
 
 protected:
-        ~RendererStorageEventsMesh() = default;
+        ~RendererStorageMeshEvents() = default;
 };
 
-class RendererStorageEventsVolume : public RendererStorageEvents<VolumeObject>
+class RendererStorageVolumeEvents : public RendererStorageEvents<VolumeObject>
 {
         virtual std::unique_ptr<VolumeObject> create_volume() const = 0;
         virtual void volume_visibility_changed() = 0;
@@ -215,6 +212,6 @@ class RendererStorageEventsVolume : public RendererStorageEvents<VolumeObject>
         }
 
 protected:
-        ~RendererStorageEventsVolume() = default;
+        ~RendererStorageVolumeEvents() = default;
 };
 }
