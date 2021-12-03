@@ -65,10 +65,6 @@ CheckOptions:
   value: 'glibc'
 - key:   cppcoreguidelines-macro-usage.CheckCapsOnly
   value: '1'
-- key:   cppcoreguidelines-special-member-functions.AllowSoleDefaultDtor
-  value: '1'
-- key:   hicpp-signed-bitwise.IgnorePositiveIntegerLiterals
-  value: '1'
 - key:   misc-non-private-member-variables-in-classes.IgnoreClassesWithAllMemberVariablesBeingPublic
   value: '1'
 - key:   modernize-loop-convert.UseCxx20ReverseRanges
