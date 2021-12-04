@@ -22,32 +22,47 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <src/com/log.h>
 
+#include <functional>
+#include <variant>
+
 namespace ns::gpu::renderer
 {
-class StorageMeshEvents : public StorageEvents<MeshObject>
+struct StorageMeshCreate final
 {
-        virtual void mesh_visibility_changed() = 0;
-
-        void visibility_changed() final
+        std::unique_ptr<MeshObject>* ptr;
+        explicit StorageMeshCreate(std::unique_ptr<MeshObject>* const ptr) : ptr(ptr)
         {
-                mesh_visibility_changed();
         }
-
-protected:
-        ~StorageMeshEvents() = default;
-
-public:
-        virtual std::unique_ptr<MeshObject> create_mesh() const = 0;
-        virtual void mesh_changed(const MeshObject::UpdateChanges& update_changes) = 0;
 };
 
-class StorageMesh final
+struct StorageMeshVisibilityChanged final
+{
+};
+
+struct StorageMeshChanged final
+{
+        const MeshObject::UpdateChanges* update_changes;
+        explicit StorageMeshChanged(const MeshObject::UpdateChanges* const update_changes)
+                : update_changes(update_changes)
+        {
+        }
+};
+
+using StorageMeshEvents = std::variant<StorageMeshChanged, StorageMeshCreate, StorageMeshVisibilityChanged>;
+
+class StorageMesh final : private StorageEvents<MeshObject>
 {
         Storage<MeshObject, const MeshObject> storage_;
-        StorageMeshEvents* events_;
+        std::function<void(const StorageMeshEvents&)> events_;
+
+        void visibility_changed() override
+        {
+                events_(StorageMeshVisibilityChanged());
+        }
 
 public:
-        explicit StorageMesh(StorageMeshEvents* const events) : storage_(events), events_(events)
+        explicit StorageMesh(std::function<void(const StorageMeshEvents&)>&& events)
+                : storage_(this), events_(std::move(events))
         {
         }
 
@@ -80,7 +95,9 @@ public:
                         {
                                 return p;
                         }
-                        return storage_.insert(object.id(), events_->create_mesh());
+                        std::unique_ptr<MeshObject> mesh;
+                        events_(StorageMeshCreate(&mesh));
+                        return storage_.insert(object.id(), std::move(mesh));
                 }();
 
                 MeshObject::UpdateChanges update_changes;
@@ -109,7 +126,7 @@ public:
 
                 if (visible && storage_visible)
                 {
-                        events_->mesh_changed(update_changes);
+                        events_(StorageMeshChanged(&update_changes));
                         return;
                 }
 

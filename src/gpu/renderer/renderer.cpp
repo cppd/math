@@ -59,7 +59,7 @@ vulkan::DeviceFeatures device_features()
         return features;
 }
 
-class Impl final : public Renderer, RendererProcessEvents, StorageMeshEvents, StorageVolumeEvents
+class Impl final : public Renderer, RendererProcessEvents
 {
         const std::thread::id thread_id_ = std::this_thread::get_id();
 
@@ -464,47 +464,43 @@ class Impl final : public Renderer, RendererProcessEvents, StorageMeshEvents, St
                 }
         }
 
-        // RendererStorageMeshEvents
-
-        std::unique_ptr<MeshObject> create_mesh() const override
+        void event(const StorageMeshCreate& v)
         {
-                return create_mesh_object(
+                *v.ptr = create_mesh_object(
                         device_, {graphics_queue_->family_index()}, transfer_command_pool_, transfer_queue_,
                         mesh_layouts_, mesh_material_layouts_, mesh_renderer_.texture_sampler());
         }
 
-        void mesh_visibility_changed() override
+        void event(const StorageMeshVisibilityChanged&)
         {
                 create_mesh_command_buffers();
         }
 
-        void mesh_changed(const MeshObject::UpdateChanges& update_changes) override
+        void event(const StorageMeshChanged& v)
         {
-                if (update_changes.command_buffers || update_changes.transparency)
+                if (v.update_changes->command_buffers || v.update_changes->transparency)
                 {
                         create_mesh_command_buffers();
                 }
         }
 
-        // RendererStorageVolumeEvents
-
-        std::unique_ptr<VolumeObject> create_volume() const override
+        void event(const StorageVolumeCreate& v)
         {
-                return create_volume_object(
+                *v.ptr = create_volume_object(
                         device_, {graphics_queue_->family_index()}, transfer_command_pool_, transfer_queue_,
                         volume_image_layouts_, volume_renderer_.image_sampler(),
                         volume_renderer_.transfer_function_sampler());
         }
 
-        void volume_visibility_changed() override
+        void event(const StorageVolumeVisibilityChanged&)
         {
                 create_volume_command_buffers();
                 set_volume_matrix();
         }
 
-        void volume_changed(const VolumeObject::UpdateChanges& update_changes) override
+        void event(const StorageVolumeChanged& v)
         {
-                if (update_changes.command_buffers)
+                if (v.update_changes->command_buffers)
                 {
                         create_volume_command_buffers();
                 }
@@ -568,8 +564,24 @@ public:
                   volume_renderer_(device_, sample_shading, shader_buffers_),
                   clear_signal_semaphore_(*device_),
                   render_transparent_as_opaque_signal_semaphore_(*device_),
-                  mesh_storage_(this),
-                  volume_storage_(this),
+                  mesh_storage_(
+                          [this](const StorageMeshEvents& events)
+                          {
+                                  const auto visitor = [this](const auto& v)
+                                  {
+                                          event(v);
+                                  };
+                                  std::visit(visitor, events);
+                          }),
+                  volume_storage_(
+                          [this](const StorageVolumeEvents& events)
+                          {
+                                  const auto visitor = [this](const auto& v)
+                                  {
+                                          event(v);
+                                  };
+                                  std::visit(visitor, events);
+                          }),
                   renderer_process_(&shader_buffers_, this)
         {
         }
