@@ -106,51 +106,59 @@ class Impl final : public Renderer, RendererProcessEvents, RendererStorageMeshEv
         RendererStorageVolume volume_storage_;
         RendererProcess renderer_process_;
 
+        void command(const MeshUpdate& v)
+        {
+                ASSERT(!volume_storage_.contains(v.object->id()));
+                mesh_storage_.update(*v.object);
+        }
+
+        void command(const VolumeUpdate& v)
+        {
+                ASSERT(!mesh_storage_.contains(v.object->id()));
+                volume_storage_.update(*v.object);
+        }
+
+        void command(const DeleteObject& v)
+        {
+                if (mesh_storage_.erase(v.id))
+                {
+                        ASSERT(!volume_storage_.contains(v.id));
+                }
+                else if (volume_storage_.erase(v.id))
+                {
+                        ASSERT(!mesh_storage_.contains(v.id));
+                }
+        }
+
+        void command(const DeleteAllObjects&)
+        {
+                mesh_storage_.clear();
+                volume_storage_.clear();
+        }
+
+        void command(const ObjectCommand& object_command)
+        {
+                const auto visitor = [this](const auto& v)
+                {
+                        command(v);
+                };
+                std::visit(visitor, object_command);
+        }
+
+        void command(const ViewCommand& view_command)
+        {
+                renderer_process_.exec(view_command);
+        }
+
         void exec(Command&& renderer_command) override
         {
                 ASSERT(thread_id_ == std::this_thread::get_id());
 
-                renderer_process_.exec(renderer_command);
-        }
-
-        void object_update(const mesh::MeshObject<3>& object) override
-        {
-                ASSERT(thread_id_ == std::this_thread::get_id());
-                ASSERT(!volume_storage_.contains(object.id()));
-
-                mesh_storage_.update(object);
-        }
-
-        void object_update(const volume::VolumeObject<3>& object) override
-        {
-                ASSERT(thread_id_ == std::this_thread::get_id());
-                ASSERT(!mesh_storage_.contains(object.id()));
-
-                volume_storage_.update(object);
-        }
-
-        void object_delete(const ObjectId id) override
-        {
-                ASSERT(thread_id_ == std::this_thread::get_id());
-
-                if (mesh_storage_.erase(id))
+                const auto visitor = [this](const auto& v)
                 {
-                        ASSERT(!volume_storage_.contains(id));
-                        return;
-                }
-                if (volume_storage_.erase(id))
-                {
-                        ASSERT(!mesh_storage_.contains(id));
-                        return;
-                }
-        }
-
-        void object_delete_all() override
-        {
-                ASSERT(thread_id_ == std::this_thread::get_id());
-
-                mesh_storage_.clear();
-                volume_storage_.clear();
+                        command(v);
+                };
+                std::visit(visitor, renderer_command);
         }
 
         [[nodiscard]] std::tuple<VkSemaphore, bool> draw_meshes(

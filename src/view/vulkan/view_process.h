@@ -40,7 +40,7 @@ class ViewProcess final
         {
                 if (const auto ptr = v.object.lock())
                 {
-                        renderer_->object_update(*ptr);
+                        renderer_->exec(gpu::renderer::MeshUpdate(ptr.get()));
                 }
         }
 
@@ -48,18 +48,18 @@ class ViewProcess final
         {
                 if (const auto ptr = v.object.lock())
                 {
-                        renderer_->object_update(*ptr);
+                        renderer_->exec(gpu::renderer::VolumeUpdate(ptr.get()));
                 }
         }
 
         void command(const command::DeleteObject& v)
         {
-                renderer_->object_delete(v.id);
+                renderer_->exec(gpu::renderer::DeleteObject(v.id));
         }
 
         void command(const command::DeleteAllObjects&)
         {
-                renderer_->object_delete_all();
+                renderer_->exec(gpu::renderer::DeleteAllObjects());
                 command(command::ResetView());
         }
 

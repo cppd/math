@@ -185,13 +185,13 @@ public:
         {
         }
 
-        void exec(const Command& renderer_command)
+        void exec(const ViewCommand& view_command)
         {
                 const auto visitor = [this](const auto& v)
                 {
                         command(v);
                 };
-                std::visit(visitor, renderer_command);
+                std::visit(visitor, view_command);
         }
 
         bool show_shadow() const

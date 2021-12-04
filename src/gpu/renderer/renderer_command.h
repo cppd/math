@@ -18,6 +18,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #pragma once
 
 #include <src/color/color.h>
+#include <src/model/mesh_object.h>
+#include <src/model/volume_object.h>
 #include <src/numerical/matrix.h>
 #include <src/numerical/vec.h>
 
@@ -30,7 +32,12 @@ struct CameraInfo final
 {
         struct Volume final
         {
-                double left, right, bottom, top, near, far;
+                double left;
+                double right;
+                double bottom;
+                double top;
+                double near;
+                double far;
         };
 
         Volume main_volume;
@@ -169,7 +176,35 @@ struct SetShadowZoom final
         }
 };
 
-using Command = std::variant<
+struct MeshUpdate final
+{
+        const mesh::MeshObject<3>* object;
+        explicit MeshUpdate(const mesh::MeshObject<3>* const object) : object(object)
+        {
+        }
+};
+
+struct VolumeUpdate final
+{
+        const volume::VolumeObject<3>* object;
+        explicit VolumeUpdate(const volume::VolumeObject<3>* const object) : object(object)
+        {
+        }
+};
+
+struct DeleteObject final
+{
+        ObjectId id;
+        explicit DeleteObject(const ObjectId id) : id(id)
+        {
+        }
+};
+
+struct DeleteAllObjects final
+{
+};
+
+using ViewCommand = std::variant<
         SetBackgroundColor,
         SetCamera,
         SetClipPlane,
@@ -186,4 +221,8 @@ using Command = std::variant<
         SetShowSmooth,
         SetShowWireframe,
         SetWireframeColor>;
+
+using ObjectCommand = std::variant<DeleteAllObjects, DeleteObject, MeshUpdate, VolumeUpdate>;
+
+using Command = std::variant<ObjectCommand, ViewCommand>;
 }

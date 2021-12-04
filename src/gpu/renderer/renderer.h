@@ -36,12 +36,7 @@ struct Renderer
 
         virtual ~Renderer() = default;
 
-        virtual void exec(Command&& command) = 0;
-
-        virtual void object_update(const mesh::MeshObject<3>& object) = 0;
-        virtual void object_update(const volume::VolumeObject<3>& object) = 0;
-        virtual void object_delete(ObjectId id) = 0;
-        virtual void object_delete_all() = 0;
+        virtual void exec(Command&& renderer_command) = 0;
 
         virtual VkSemaphore draw(
                 const vulkan::Queue& graphics_queue_1,
