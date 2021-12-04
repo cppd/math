@@ -22,8 +22,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "mesh_object.h"
 #include "mesh_renderer.h"
 #include "renderer_process.h"
-#include "renderer_storage_mesh.h"
-#include "renderer_storage_volume.h"
+#include "storage_mesh.h"
+#include "storage_volume.h"
 #include "transparency_message.h"
 #include "viewport_transform.h"
 #include "volume_object.h"
@@ -59,7 +59,7 @@ vulkan::DeviceFeatures device_features()
         return features;
 }
 
-class Impl final : public Renderer, RendererProcessEvents, RendererStorageMeshEvents, RendererStorageVolumeEvents
+class Impl final : public Renderer, RendererProcessEvents, StorageMeshEvents, StorageVolumeEvents
 {
         const std::thread::id thread_id_ = std::this_thread::get_id();
 
@@ -102,8 +102,8 @@ class Impl final : public Renderer, RendererProcessEvents, RendererStorageMeshEv
         std::unique_ptr<TransparencyBuffers> transparency_buffers_;
         vulkan::handle::Semaphore render_transparent_as_opaque_signal_semaphore_;
 
-        RendererStorageMesh mesh_storage_;
-        RendererStorageVolume volume_storage_;
+        StorageMesh mesh_storage_;
+        StorageVolume volume_storage_;
         RendererProcess renderer_process_;
 
         void command(const MeshUpdate& v)

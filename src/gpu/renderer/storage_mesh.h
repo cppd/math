@@ -17,37 +17,37 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
-#include "renderer_storage.h"
-#include "volume_object.h"
+#include "mesh_object.h"
+#include "storage.h"
 
 #include <src/com/log.h>
 
 namespace ns::gpu::renderer
 {
-class RendererStorageVolumeEvents : public RendererStorageEvents<VolumeObject>
+class StorageMeshEvents : public StorageEvents<MeshObject>
 {
-        virtual void volume_visibility_changed() = 0;
+        virtual void mesh_visibility_changed() = 0;
 
         void visibility_changed() final
         {
-                volume_visibility_changed();
+                mesh_visibility_changed();
         }
 
 protected:
-        ~RendererStorageVolumeEvents() = default;
+        ~StorageMeshEvents() = default;
 
 public:
-        virtual std::unique_ptr<VolumeObject> create_volume() const = 0;
-        virtual void volume_changed(const VolumeObject::UpdateChanges& update_changes) = 0;
+        virtual std::unique_ptr<MeshObject> create_mesh() const = 0;
+        virtual void mesh_changed(const MeshObject::UpdateChanges& update_changes) = 0;
 };
 
-class RendererStorageVolume final
+class StorageMesh final
 {
-        RendererStorage<VolumeObject, VolumeObject> storage_;
-        RendererStorageVolumeEvents* events_;
+        Storage<MeshObject, const MeshObject> storage_;
+        StorageMeshEvents* events_;
 
 public:
-        explicit RendererStorageVolume(RendererStorageVolumeEvents* const events) : storage_(events), events_(events)
+        explicit StorageMesh(StorageMeshEvents* const events) : storage_(events), events_(events)
         {
         }
 
@@ -71,37 +71,37 @@ public:
                 storage_.clear();
         }
 
-        void update(const volume::VolumeObject<3>& object)
+        void update(const mesh::MeshObject<3>& object)
         {
-                VolumeObject* const ptr = [&]
+                MeshObject* const ptr = [&]
                 {
-                        VolumeObject* const p = storage_.object(object.id());
+                        MeshObject* const p = storage_.object(object.id());
                         if (p)
                         {
                                 return p;
                         }
-                        return storage_.insert(object.id(), events_->create_volume());
+                        return storage_.insert(object.id(), events_->create_mesh());
                 }();
 
-                VolumeObject::UpdateChanges update_changes;
+                MeshObject::UpdateChanges update_changes;
                 bool visible;
 
                 try
                 {
-                        volume::Reading reading(object);
+                        const mesh::Reading reading(object);
                         visible = reading.visible();
                         update_changes = ptr->update(reading);
                 }
                 catch (const std::exception& e)
                 {
                         storage_.erase(object.id());
-                        LOG(std::string("Error updating volume object. ") + e.what());
+                        LOG(std::string("Error updating mesh object. ") + e.what());
                         return;
                 }
                 catch (...)
                 {
                         storage_.erase(object.id());
-                        LOG("Unknown error updating volume object");
+                        LOG("Unknown error updating mesh object");
                         return;
                 }
 
@@ -109,7 +109,7 @@ public:
 
                 if (visible && storage_visible)
                 {
-                        events_->volume_changed(update_changes);
+                        events_->mesh_changed(update_changes);
                         return;
                 }
 

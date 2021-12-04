@@ -27,17 +27,17 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 namespace ns::gpu::renderer
 {
 template <typename T>
-class RendererStorageEvents
+class StorageEvents
 {
 protected:
-        ~RendererStorageEvents() = default;
+        ~StorageEvents() = default;
 
 public:
         virtual void visibility_changed() = 0;
 };
 
 template <typename T, typename VisibleType>
-class RendererStorage final
+class Storage final
 {
         static constexpr std::size_t EMPTY = -1;
 
@@ -51,7 +51,7 @@ class RendererStorage final
                 }
         };
 
-        RendererStorageEvents<T>* events_;
+        StorageEvents<T>* events_;
 
         std::unordered_map<ObjectId, Object> map_;
         std::vector<VisibleType*> visible_;
@@ -70,7 +70,7 @@ class RendererStorage final
         }
 
 public:
-        explicit RendererStorage(RendererStorageEvents<T>* const events) : events_(events)
+        explicit Storage(StorageEvents<T>* const events) : events_(events)
         {
         }
 
