@@ -21,6 +21,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "depth_buffer.h"
 #include "mesh_object.h"
 #include "mesh_renderer.h"
+#include "renderer_objects.h"
 #include "renderer_process.h"
 #include "storage_mesh.h"
 #include "storage_volume.h"
@@ -102,47 +103,12 @@ class Impl final : public Renderer, RendererProcessEvents
         std::unique_ptr<TransparencyBuffers> transparency_buffers_;
         vulkan::handle::Semaphore render_transparent_as_opaque_signal_semaphore_;
 
-        StorageMesh mesh_storage_;
-        StorageVolume volume_storage_;
+        RendererObjects renderer_objects_;
         RendererProcess renderer_process_;
-
-        void command(const MeshUpdate& v)
-        {
-                ASSERT(!volume_storage_.contains(v.object->id()));
-                mesh_storage_.update(*v.object);
-        }
-
-        void command(const VolumeUpdate& v)
-        {
-                ASSERT(!mesh_storage_.contains(v.object->id()));
-                volume_storage_.update(*v.object);
-        }
-
-        void command(const DeleteObject& v)
-        {
-                if (mesh_storage_.erase(v.id))
-                {
-                        ASSERT(!volume_storage_.contains(v.id));
-                }
-                else if (volume_storage_.erase(v.id))
-                {
-                        ASSERT(!mesh_storage_.contains(v.id));
-                }
-        }
-
-        void command(const DeleteAllObjects&)
-        {
-                mesh_storage_.clear();
-                volume_storage_.clear();
-        }
 
         void command(const ObjectCommand& object_command)
         {
-                const auto visitor = [this](const auto& v)
-                {
-                        command(v);
-                };
-                std::visit(visitor, object_command);
+                renderer_objects_.command(object_command);
         }
 
         void command(const ViewCommand& view_command)
@@ -407,7 +373,7 @@ class Impl final : public Renderer, RendererProcessEvents
                 mesh_renderer_.delete_render_command_buffers();
 
                 mesh_renderer_.create_render_command_buffers(
-                        mesh_storage_.visible_objects(), *graphics_command_pool_,
+                        renderer_objects_.mesh_visible_objects(), *graphics_command_pool_,
                         renderer_process_.clip_plane().has_value(), renderer_process_.show_normals(),
                         [this](const VkCommandBuffer command_buffer)
                         {
@@ -423,7 +389,7 @@ class Impl final : public Renderer, RendererProcessEvents
         {
                 mesh_renderer_.delete_depth_command_buffers();
                 mesh_renderer_.create_depth_command_buffers(
-                        mesh_storage_.visible_objects(), *graphics_command_pool_,
+                        renderer_objects_.mesh_visible_objects(), *graphics_command_pool_,
                         renderer_process_.clip_plane().has_value(), renderer_process_.show_normals());
         }
 
@@ -436,7 +402,7 @@ class Impl final : public Renderer, RendererProcessEvents
         void create_volume_command_buffers()
         {
                 volume_renderer_.delete_command_buffers();
-                if (volume_storage_.visible_objects().size() != 1)
+                if (renderer_objects_.volume_visible_objects().size() != 1)
                 {
                         return;
                 }
@@ -449,7 +415,7 @@ class Impl final : public Renderer, RendererProcessEvents
                         render_buffers_->commands_depth_copy(
                                 command_buffer, depth_copy_image_->image(), DEPTH_COPY_IMAGE_LAYOUT, viewport_, INDEX);
                 };
-                for (const VolumeObject* const visible_volume : volume_storage_.visible_objects())
+                for (const VolumeObject* const visible_volume : renderer_objects_.volume_visible_objects())
                 {
                         volume_renderer_.create_command_buffers(visible_volume, *graphics_command_pool_, copy_depth);
                 }
@@ -457,7 +423,7 @@ class Impl final : public Renderer, RendererProcessEvents
 
         void set_volume_matrix()
         {
-                for (VolumeObject* const visible_volume : volume_storage_.visible_objects())
+                for (VolumeObject* const visible_volume : renderer_objects_.volume_visible_objects())
                 {
                         visible_volume->set_matrix_and_clip_plane(
                                 renderer_process_.main_vp_matrix(), renderer_process_.clip_plane());
@@ -534,7 +500,7 @@ class Impl final : public Renderer, RendererProcessEvents
                 create_mesh_render_command_buffers();
                 if (renderer_process_.clip_plane())
                 {
-                        for (VolumeObject* const visible_volume : volume_storage_.visible_objects())
+                        for (VolumeObject* const visible_volume : renderer_objects_.volume_visible_objects())
                         {
                                 visible_volume->set_clip_plane(*renderer_process_.clip_plane());
                         }
@@ -564,7 +530,7 @@ public:
                   volume_renderer_(device_, sample_shading, shader_buffers_),
                   clear_signal_semaphore_(*device_),
                   render_transparent_as_opaque_signal_semaphore_(*device_),
-                  mesh_storage_(
+                  renderer_objects_(
                           [this](const StorageMeshEvents& events)
                           {
                                   const auto visitor = [this](const auto& v)
@@ -572,8 +538,7 @@ public:
                                           event(v);
                                   };
                                   std::visit(visitor, events);
-                          }),
-                  volume_storage_(
+                          },
                           [this](const StorageVolumeEvents& events)
                           {
                                   const auto visitor = [this](const auto& v)
