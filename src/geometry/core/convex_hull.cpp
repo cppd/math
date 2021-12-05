@@ -72,11 +72,8 @@ namespace
 template <typename F>
 using FacetList = std::list<F>;
 
-template <typename F>
-using FacetListConstIterator = typename FacetList<F>::const_iterator;
-
 template <std::size_t N, typename DataType, typename ComputeType>
-using Facet = FacetInteger<N, DataType, ComputeType, FacetListConstIterator>;
+using Facet = Facet<N, DataType, ComputeType, FacetList>;
 
 template <typename S, typename C>
 int thread_count_for_horizon()
@@ -99,8 +96,8 @@ void connect_facets(
         {
                 if (vertices[r] == exclude_point)
                 {
-                        // the horizon ridge, the facet is aleady connected to it
-                        // when the facet was created
+                        // The horizon ridge. The facet is aleady
+                        // connected to it when the facet was created.
                         continue;
                 }
 
@@ -234,12 +231,12 @@ template <typename Facet>
 void add_new_facets_to_conflict_points(
         const unsigned thread_id,
         const unsigned thread_count,
-        std::vector<FacetList<Facet>>* const new_facets_vector,
+        const std::vector<FacetList<Facet>>& new_facets_vector,
         std::vector<FacetStorage<Facet>>* const point_conflicts)
 {
-        for (unsigned i = 0; i < new_facets_vector->size(); ++i)
+        for (const FacetList<Facet>& facet_list : new_facets_vector)
         {
-                for (const Facet& facet : (*new_facets_vector)[i])
+                for (const Facet& facet : facet_list)
                 {
                         for (const int p : facet.conflict_points())
                         {
@@ -298,7 +295,7 @@ void create_facets_for_point_and_horizon(
                                 points, set_elem(facet->vertices(), r, point), link_facet->vertices()[link_index],
                                 link_facet);
 
-                        Facet* new_facet = &(*std::prev(new_facets->end()));
+                        Facet* const new_facet = &(*std::prev(new_facets->end()));
                         new_facet->set_iter(std::prev(new_facets->cend()));
 
                         new_facet->set_link(new_facet->find_index_for_point(point), link_facet);
@@ -336,18 +333,18 @@ void create_horizon_facets(
         // erase first, then add.
         // this reduces the amount of searching.
         erase_visible_facets_from_conflict_points(thread_id, thread_count, point_conflicts, point);
-        add_new_facets_to_conflict_points(thread_id, thread_count, new_facets_vector, point_conflicts);
+        add_new_facets_to_conflict_points(thread_id, thread_count, *new_facets_vector, point_conflicts);
 }
 
 template <typename T>
 unsigned calculate_facet_count(const std::vector<T>& facets)
 {
-        return std::accumulate(
-                facets.cbegin(), facets.cend(), 0,
-                [](unsigned a, const T& b)
-                {
-                        return a + b.size();
-                });
+        unsigned sum = 0;
+        for (const T& facet : facets)
+        {
+                sum += facet.size();
+        }
+        return sum;
 }
 
 template <std::size_t N, typename S, typename C>
@@ -390,12 +387,15 @@ void add_point_to_convex_hull(
         }
         else
         {
-                // 0 = thread_id, 1 = thread_count
-                create_horizon_facets(0, 1, points, point, point_conflicts, unique_points_work, &new_facets, barrier);
+                constexpr unsigned THREAD_ID = 0;
+                constexpr unsigned THREAD_COUNT = 1;
+                create_horizon_facets(
+                        THREAD_ID, THREAD_COUNT, points, point, point_conflicts, unique_points_work, &new_facets,
+                        barrier);
         }
 
         // Erase visible facets
-        for (const Facet<N, S, C>* facet : (*point_conflicts)[point])
+        for (const Facet<N, S, C>* const facet : (*point_conflicts)[point])
         {
                 facets->erase(facet->iter());
         }
@@ -408,9 +408,9 @@ void add_point_to_convex_hull(
         // Connect facets, excluding horizon facets
         int ridges = 0;
         std::unordered_map<Ridge<N>, std::tuple<Facet<N, S, C>*, unsigned>> search_map(ridge_count);
-        for (unsigned i = 0; i < new_facets.size(); ++i)
+        for (FacetList<Facet<N, S, C>>& facet_list : new_facets)
         {
-                for (Facet<N, S, C>& facet : new_facets[i])
+                for (Facet<N, S, C>& facet : facet_list)
                 {
                         connect_facets(&facet, point, &search_map, &ridges);
                 }
@@ -481,7 +481,7 @@ void create_convex_hull(
 
         ASSERT(std::all_of(
                 facets->cbegin(), facets->cend(),
-                [](const Facet<N, S, C>& facet) -> bool
+                [](const Facet<N, S, C>& facet)
                 {
                         return facet.conflict_points().empty();
                 }));

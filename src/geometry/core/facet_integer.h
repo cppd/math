@@ -30,97 +30,32 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 namespace ns::geometry
 {
-template <std::size_t N, typename Derived, template <typename> typename FacetIter>
-class FacetBase
+template <std::size_t N>
+class FacetVertices final
 {
         static_assert(N > 1);
 
-        const std::array<int, N> vertices_;
-        std::vector<int> conflict_points_;
-        FacetIter<Derived> facet_iter_;
-        std::array<Derived*, N> links_;
-        mutable bool marked_as_visible_ = false;
-
-protected:
-        ~FacetBase() = default;
+        std::array<int, N> vertices_;
 
 public:
-        explicit FacetBase(std::array<int, N>&& vertices) : vertices_(sort(std::move(vertices)))
+        explicit FacetVertices(std::array<int, N>&& vertices) : vertices_(sort(std::move(vertices)))
         {
         }
 
-        const std::array<int, N>& vertices() const
+        const std::array<int, N>& data() const
         {
                 return vertices_;
         }
 
-        int find_index_for_point(const int point) const
+        int operator[](const unsigned i) const
         {
-                for (unsigned r = 0; r < N; ++r)
-                {
-                        if (vertices_[r] == point)
-                        {
-                                return r;
-                        }
-                }
-                error("local index not found for point " + to_string(point));
-        }
-
-        void add_conflict_point(const int point)
-        {
-                conflict_points_.push_back(point);
-        }
-        const std::vector<int>& conflict_points() const
-        {
-                return conflict_points_;
-        }
-
-        void set_iter(FacetIter<Derived> iter)
-        {
-                facet_iter_ = std::move(iter);
-        }
-        FacetIter<Derived> iter() const
-        {
-                return facet_iter_;
-        }
-
-        void set_link(const unsigned i, Derived* const facet)
-        {
-                ASSERT(i < N);
-                links_[i] = facet;
-        }
-        Derived* link(const unsigned i) const
-        {
-                ASSERT(i < N);
-                return links_[i];
-        }
-        unsigned find_link_index(const Derived* const facet)
-        {
-                for (unsigned i = 0; i < N; ++i)
-                {
-                        if (links_[i] == facet)
-                        {
-                                return i;
-                        }
-                }
-                error("link index not found for facet");
-        }
-
-        void mark_as_visible() const
-        {
-                marked_as_visible_ = true;
-        }
-        bool marked_as_visible() const
-        {
-                return marked_as_visible_;
+                return vertices_[i];
         }
 };
 
-template <std::size_t N, typename DataType, typename ComputeType, template <typename> typename FacetIter>
-class FacetInteger final : public FacetBase<N, FacetInteger<N, DataType, ComputeType, FacetIter>, FacetIter>
+template <std::size_t N, typename DataType, typename ComputeType>
+class FacetInteger
 {
-        using Base = FacetBase<N, FacetInteger, FacetIter>;
-
         static_assert(!std::is_class_v<DataType> && !std::is_class_v<ComputeType>);
         static_assert(Integral<DataType> && Integral<ComputeType>);
         static_assert(Signed<DataType> && Signed<ComputeType>);
@@ -149,12 +84,13 @@ class FacetInteger final : public FacetBase<N, FacetInteger<N, DataType, Compute
 
         //
 
+        FacetVertices<N> vertices_;
         Vector<N, ComputeType> ortho_;
 
         // dot(ortho, vector from facet to point)
         ComputeType visible(const std::vector<Vector<N, DataType>>& points, const int p) const
         {
-                const Vector<N, DataType>& facet_point = points[Base::vertices()[0]];
+                const Vector<N, DataType>& facet_point = points[vertices_[0]];
                 const Vector<N, DataType>& point = points[p];
 
                 ComputeType d = ortho_[0] * (point[0] - facet_point[0]);
@@ -165,14 +101,14 @@ class FacetInteger final : public FacetBase<N, FacetInteger<N, DataType, Compute
                 return d;
         }
 
-public:
+protected:
         FacetInteger(
                 const std::vector<Vector<N, DataType>>& points,
                 std::array<int, N>&& vertices,
                 const int convex_hull_point,
                 const FacetInteger* const convex_hull_facet)
-                : Base(std::move(vertices)),
-                  ortho_(numerical::orthogonal_complement<N, DataType, ComputeType>(points, Base::vertices()))
+                : vertices_(std::move(vertices)),
+                  ortho_(numerical::orthogonal_complement<N, DataType, ComputeType>(points, vertices_.data()))
         {
                 ASSERT(!ortho_.is_zero());
 
@@ -183,6 +119,7 @@ public:
                         // A convex hull point is invisible, ortho is directed outside
                         return;
                 }
+
                 if (v > 0)
                 {
                         // A convex hull point is visible, change ortho direction
@@ -197,6 +134,14 @@ public:
                 {
                         negate(&ortho_);
                 }
+        }
+
+        ~FacetInteger() = default;
+
+public:
+        const std::array<int, N>& vertices() const
+        {
+                return vertices_.data();
         }
 
         bool visible_from_point(const std::vector<Vector<N, DataType>>& points, const int from_point) const
@@ -216,15 +161,12 @@ public:
         }
 };
 
-template <std::size_t N, typename DataType, template <typename> typename FacetIter>
-class FacetInteger<N, DataType, mpz_class, FacetIter> final
-        : public FacetBase<N, FacetInteger<N, DataType, mpz_class, FacetIter>, FacetIter>
+template <std::size_t N, typename DataType>
+class FacetInteger<N, DataType, mpz_class>
 {
         static_assert(!std::is_class_v<DataType>);
         static_assert(Integral<DataType>);
         static_assert(Signed<DataType>);
-
-        using Base = FacetBase<N, FacetInteger, FacetIter>;
 
         static constexpr bool REDUCE = false;
 
@@ -304,6 +246,7 @@ class FacetInteger<N, DataType, mpz_class, FacetIter> final
 
         //
 
+        FacetVertices<N> vertices_;
         Vector<N, mpz_class> ortho_;
 
         // sign of dot(ortho, vector from facet to point)
@@ -312,7 +255,7 @@ class FacetInteger<N, DataType, mpz_class, FacetIter> final
                 thread_local mpz_class d;
                 thread_local mpz_class to_point;
 
-                const Vector<N, DataType>& facet_point = points[Base::vertices()[0]];
+                const Vector<N, DataType>& facet_point = points[vertices_[0]];
                 const Vector<N, DataType>& point = points[p];
 
                 mpz_from_any(&to_point, point[0] - facet_point[0]);
@@ -332,7 +275,7 @@ class FacetInteger<N, DataType, mpz_class, FacetIter> final
                 thread_local mpz_class d;
                 thread_local mpz_class to_point;
 
-                const Vector<N, mpz_class>& facet_point = points[Base::get_vertices()[0]];
+                const Vector<N, mpz_class>& facet_point = points[vertices_[0]];
                 const Vector<N, mpz_class>& point = points[p];
 
                 mpz_sub(to_point.get_mpz_t(), point[0].get_mpz_t(), facet_point[0].get_mpz_t());
@@ -346,14 +289,14 @@ class FacetInteger<N, DataType, mpz_class, FacetIter> final
                 return mpz_sgn(d.get_mpz_t());
         }
 
-public:
+protected:
         FacetInteger(
                 const std::vector<Vector<N, DataType>>& points,
                 std::array<int, N>&& vertices,
                 const int convex_hull_point,
                 const FacetInteger* const convex_hull_facet)
-                : Base(std::move(vertices)),
-                  ortho_(numerical::orthogonal_complement<N, DataType, mpz_class>(points, Base::vertices()))
+                : vertices_(std::move(vertices)),
+                  ortho_(numerical::orthogonal_complement<N, DataType, mpz_class>(points, vertices_.data()))
         {
                 ASSERT(!ortho_.is_zero());
 
@@ -369,6 +312,7 @@ public:
                         // a convex hull point is invisible, ortho is directed outside
                         return;
                 }
+
                 if (v > 0)
                 {
                         // a convex hull point is visible, change ortho direction
@@ -385,6 +329,14 @@ public:
                 }
         }
 
+        ~FacetInteger() = default;
+
+public:
+        const std::array<int, N>& vertices() const
+        {
+                return vertices_.data();
+        }
+
         bool visible_from_point(const std::vector<Vector<N, DataType>>& points, const int from_point) const
         {
                 // strictly greater than 0
@@ -399,6 +351,92 @@ public:
         bool last_ortho_coord_is_negative() const
         {
                 return mpz_sgn(ortho_[N - 1].get_mpz_t()) < 0;
+        }
+};
+
+template <std::size_t N, typename DataType, typename ComputeType, template <typename> typename Container>
+class Facet final : public FacetInteger<N, DataType, ComputeType>
+{
+        using Base = FacetInteger<N, DataType, ComputeType>;
+
+        std::vector<int> conflict_points_;
+        typename Container<Facet>::const_iterator facet_iter_;
+        std::array<Facet*, N> links_;
+        mutable bool marked_as_visible_ = false;
+
+public:
+        Facet(const std::vector<Vector<N, DataType>>& points,
+              std::array<int, N>&& vertices,
+              const int convex_hull_point,
+              const Facet* const convex_hull_facet)
+                : Base(points, std::move(vertices), convex_hull_point, convex_hull_facet)
+        {
+        }
+
+        int find_index_for_point(const int point) const
+        {
+                for (unsigned r = 0; r < N; ++r)
+                {
+                        if (Base::vertices()[r] == point)
+                        {
+                                return r;
+                        }
+                }
+                error("Local index not found for point " + to_string(point));
+        }
+
+        void add_conflict_point(const int point)
+        {
+                conflict_points_.push_back(point);
+        }
+
+        const std::vector<int>& conflict_points() const
+        {
+                return conflict_points_;
+        }
+
+        void set_iter(typename Container<Facet>::const_iterator iter)
+        {
+                facet_iter_ = std::move(iter);
+        }
+
+        typename Container<Facet>::const_iterator iter() const
+        {
+                return facet_iter_;
+        }
+
+        void set_link(const unsigned i, Facet* const facet)
+        {
+                ASSERT(i < N);
+                links_[i] = facet;
+        }
+
+        Facet* link(const unsigned i) const
+        {
+                ASSERT(i < N);
+                return links_[i];
+        }
+
+        unsigned find_link_index(const Facet* const facet)
+        {
+                for (unsigned i = 0; i < N; ++i)
+                {
+                        if (links_[i] == facet)
+                        {
+                                return i;
+                        }
+                }
+                error("Link index not found for facet");
+        }
+
+        void mark_as_visible() const
+        {
+                marked_as_visible_ = true;
+        }
+
+        bool marked_as_visible() const
+        {
+                return marked_as_visible_;
         }
 };
 }
