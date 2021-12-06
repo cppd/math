@@ -25,9 +25,9 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <unordered_set>
 #include <vector>
 
-namespace ns::geometry
+namespace ns::geometry::convex_hull
 {
-namespace integer_implementation
+namespace integer_convert_implementation
 {
 template <std::size_t N, typename IntegerType>
 class Transform
@@ -104,7 +104,7 @@ void convert_to_unique_integer(
         map->clear();
         map->reserve(source_points.size());
 
-        const integer_implementation::Transform<N, IntegerType> transform{&source_points, max_value};
+        const integer_convert_implementation::Transform<N, IntegerType> transform{&source_points, max_value};
 
         std::unordered_set<Vector<N, IntegerType>> set(source_points.size());
 

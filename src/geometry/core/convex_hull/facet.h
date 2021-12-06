@@ -23,17 +23,21 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/com/print.h>
 
 #include <array>
+#include <list>
 #include <vector>
 
-namespace ns::geometry
+namespace ns::geometry::convex_hull
 {
-template <std::size_t N, typename DataType, typename ComputeType, template <typename> typename Container>
+template <typename F>
+using FacetList = std::list<F>;
+
+template <std::size_t N, typename DataType, typename ComputeType>
 class Facet final : public IntegerFacet<N, DataType, ComputeType>
 {
         using Base = IntegerFacet<N, DataType, ComputeType>;
 
         std::vector<int> conflict_points_;
-        typename Container<Facet>::const_iterator facet_iter_;
+        typename FacetList<Facet>::const_iterator facet_iter_;
         std::array<Facet*, N> links_;
         mutable bool marked_as_visible_ = false;
 
@@ -68,12 +72,12 @@ public:
                 return conflict_points_;
         }
 
-        void set_iter(typename Container<Facet>::const_iterator iter)
+        void set_iter(typename FacetList<Facet>::const_iterator iter)
         {
                 facet_iter_ = std::move(iter);
         }
 
-        typename Container<Facet>::const_iterator iter() const
+        typename FacetList<Facet>::const_iterator iter() const
         {
                 return facet_iter_;
         }

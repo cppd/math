@@ -21,7 +21,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <vector>
 
-namespace ns::geometry
+namespace ns::geometry::convex_hull
 {
 template <typename T>
 class FacetStorage final

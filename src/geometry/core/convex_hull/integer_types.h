@@ -17,7 +17,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
-#include "max.h"
+#include "max_values.h"
 
 #include <src/com/names.h>
 #include <src/com/print.h>
@@ -27,7 +27,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <sstream>
 
-namespace ns::geometry
+namespace ns::geometry::convex_hull
 {
 namespace integer_types_implementation
 {

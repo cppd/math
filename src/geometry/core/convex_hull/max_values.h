@@ -21,7 +21,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <cstddef>
 
-namespace ns::geometry
+namespace ns::geometry::convex_hull
 {
 template <std::size_t N, std::size_t BITS>
 inline constexpr int MAX_DETERMINANT_PARABOLOID = []
