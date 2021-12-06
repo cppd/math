@@ -53,7 +53,7 @@ std::vector<VkDescriptorSetLayoutBinding> PrepareMemory::descriptor_set_layout_b
         return bindings;
 }
 
-PrepareMemory::PrepareMemory(const VkDevice& device, VkDescriptorSetLayout descriptor_set_layout)
+PrepareMemory::PrepareMemory(const VkDevice device, const VkDescriptorSetLayout descriptor_set_layout)
         : descriptors_(device, 1, descriptor_set_layout, descriptor_set_layout_bindings())
 {
 }
@@ -140,11 +140,14 @@ PrepareConstant::PrepareConstant()
         }
 }
 
-void PrepareConstant::set(std::int32_t local_size_x, std::int32_t buffer_size, const Region<2, int>& rectangle)
+void PrepareConstant::set(
+        const std::int32_t local_size_x,
+        const std::int32_t buffer_size,
+        const Region<2, int>& rectangle)
 {
-        static_assert(std::is_same_v<decltype(data_.local_size_x), decltype(local_size_x)>);
+        static_assert(std::is_same_v<decltype(data_.local_size_x), std::remove_const_t<decltype(local_size_x)>>);
         data_.local_size_x = local_size_x;
-        static_assert(std::is_same_v<decltype(data_.buffer_size), decltype(buffer_size)>);
+        static_assert(std::is_same_v<decltype(data_.buffer_size), std::remove_const_t<decltype(buffer_size)>>);
         data_.buffer_size = buffer_size;
 
         ASSERT(rectangle.is_positive());
@@ -171,7 +174,7 @@ std::size_t PrepareConstant::size() const
 
 //
 
-PrepareProgram::PrepareProgram(const VkDevice& device)
+PrepareProgram::PrepareProgram(const VkDevice device)
         : device_(device),
           descriptor_set_layout_(
                   vulkan::create_descriptor_set_layout(device, PrepareMemory::descriptor_set_layout_bindings())),
@@ -181,7 +184,7 @@ PrepareProgram::PrepareProgram(const VkDevice& device)
 {
 }
 
-void PrepareProgram::create_pipeline(unsigned buffer_and_group_size, const Region<2, int>& rectangle)
+void PrepareProgram::create_pipeline(const unsigned buffer_and_group_size, const Region<2, int>& rectangle)
 {
         constant_.set(buffer_and_group_size, buffer_and_group_size, rectangle);
 

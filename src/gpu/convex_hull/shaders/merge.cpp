@@ -43,7 +43,7 @@ std::vector<VkDescriptorSetLayoutBinding> MergeMemory::descriptor_set_layout_bin
         return bindings;
 }
 
-MergeMemory::MergeMemory(const VkDevice& device, VkDescriptorSetLayout descriptor_set_layout)
+MergeMemory::MergeMemory(const VkDevice device, const VkDescriptorSetLayout descriptor_set_layout)
         : descriptors_(device, 1, descriptor_set_layout, descriptor_set_layout_bindings())
 {
 }
@@ -97,21 +97,21 @@ MergeConstant::MergeConstant()
         }
 }
 
-void MergeConstant::set_line_size(std::int32_t v)
+void MergeConstant::set_line_size(const std::int32_t v)
 {
-        static_assert(std::is_same_v<decltype(data_.line_size), decltype(v)>);
+        static_assert(std::is_same_v<decltype(data_.line_size), std::remove_const_t<decltype(v)>>);
         data_.line_size = v;
 }
 
-void MergeConstant::set_iteration_count(std::int32_t v)
+void MergeConstant::set_iteration_count(const std::int32_t v)
 {
-        static_assert(std::is_same_v<decltype(data_.iteration_count), decltype(v)>);
+        static_assert(std::is_same_v<decltype(data_.iteration_count), std::remove_const_t<decltype(v)>>);
         data_.iteration_count = v;
 }
 
-void MergeConstant::set_local_size_x(std::int32_t v)
+void MergeConstant::set_local_size_x(const std::int32_t v)
 {
-        static_assert(std::is_same_v<decltype(data_.local_size_x), decltype(v)>);
+        static_assert(std::is_same_v<decltype(data_.local_size_x), std::remove_const_t<decltype(v)>>);
         data_.local_size_x = v;
 }
 
@@ -132,7 +132,7 @@ std::size_t MergeConstant::size() const
 
 //
 
-MergeProgram::MergeProgram(const VkDevice& device)
+MergeProgram::MergeProgram(const VkDevice device)
         : device_(device),
           descriptor_set_layout_(
                   vulkan::create_descriptor_set_layout(device, MergeMemory::descriptor_set_layout_bindings())),
@@ -142,7 +142,7 @@ MergeProgram::MergeProgram(const VkDevice& device)
 {
 }
 
-void MergeProgram::create_pipeline(unsigned height, unsigned local_size_x, unsigned iteration_count)
+void MergeProgram::create_pipeline(const unsigned height, const unsigned local_size_x, const unsigned iteration_count)
 {
         constant_.set_line_size(height);
         constant_.set_local_size_x(local_size_x);

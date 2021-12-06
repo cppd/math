@@ -46,14 +46,14 @@ vulkan::DeviceFeatures device_features()
         return {};
 }
 
-int group_size_merge(int height, const VkPhysicalDeviceLimits& limits)
+int group_size_merge(const int height, const VkPhysicalDeviceLimits& limits)
 {
         return convex_hull::group_size_merge(
                 height, limits.maxComputeWorkGroupSize[0], limits.maxComputeWorkGroupInvocations,
                 limits.maxComputeSharedMemorySize);
 }
 
-int group_size_prepare(int width, const VkPhysicalDeviceLimits& limits)
+int group_size_prepare(const int width, const VkPhysicalDeviceLimits& limits)
 {
         return convex_hull::group_size_prepare(
                 width, limits.maxComputeWorkGroupSize[0], limits.maxComputeWorkGroupInvocations,
@@ -61,10 +61,10 @@ int group_size_prepare(int width, const VkPhysicalDeviceLimits& limits)
 }
 
 void buffer_barrier(
-        VkCommandBuffer command_buffer,
-        VkBuffer buffer,
-        VkAccessFlags dst_access_mask,
-        VkPipelineStageFlags dst_stage_mask)
+        const VkCommandBuffer command_buffer,
+        const VkBuffer buffer,
+        const VkAccessFlags dst_access_mask,
+        const VkPipelineStageFlags dst_stage_mask)
 {
         ASSERT(buffer != VK_NULL_HANDLE);
 
@@ -103,7 +103,7 @@ class Impl final : public Compute
         FilterProgram filter_program_;
         FilterMemory filter_memory_;
 
-        void compute_commands(VkCommandBuffer command_buffer) const override
+        void compute_commands(const VkCommandBuffer command_buffer) const override
         {
                 ASSERT(std::this_thread::get_id() == thread_id_);
 
@@ -157,7 +157,7 @@ class Impl final : public Compute
                 const Region<2, int>& rectangle,
                 const vulkan::Buffer& points_buffer,
                 const vulkan::Buffer& point_count_buffer,
-                std::uint32_t family_index) override
+                const std::uint32_t family_index) override
         {
                 ASSERT(thread_id_ == std::this_thread::get_id());
 
@@ -215,7 +215,7 @@ class Impl final : public Compute
         }
 
 public:
-        explicit Impl(const vulkan::VulkanInstance* instance)
+        explicit Impl(const vulkan::VulkanInstance* const instance)
                 : instance_(instance),
                   prepare_program_(instance->device()),
                   prepare_memory_(instance->device(), prepare_program_.descriptor_set_layout()),
@@ -242,7 +242,7 @@ vulkan::DeviceFeatures Compute::required_device_features()
         return device_features();
 }
 
-std::unique_ptr<Compute> create_compute(const vulkan::VulkanInstance* instance)
+std::unique_ptr<Compute> create_compute(const vulkan::VulkanInstance* const instance)
 {
         return std::make_unique<Impl>(instance);
 }

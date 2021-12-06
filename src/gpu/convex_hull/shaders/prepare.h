@@ -40,7 +40,7 @@ public:
         static std::vector<VkDescriptorSetLayoutBinding> descriptor_set_layout_bindings();
         static unsigned set_number();
 
-        PrepareMemory(const VkDevice& device, VkDescriptorSetLayout descriptor_set_layout);
+        PrepareMemory(VkDevice device, VkDescriptorSetLayout descriptor_set_layout);
 
         PrepareMemory(const PrepareMemory&) = delete;
         PrepareMemory& operator=(const PrepareMemory&) = delete;
@@ -94,7 +94,7 @@ class PrepareProgram final
         vulkan::handle::Pipeline pipeline_;
 
 public:
-        explicit PrepareProgram(const VkDevice& device);
+        explicit PrepareProgram(VkDevice device);
 
         PrepareProgram(const PrepareProgram&) = delete;
         PrepareProgram& operator=(const PrepareProgram&) = delete;
