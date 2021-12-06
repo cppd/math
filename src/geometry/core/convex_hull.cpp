@@ -42,7 +42,7 @@ The projection to the n-space of the lower convex hull of the points
 
 #include "convex_hull.h"
 
-#include "facet_integer.h"
+#include "convex_hull_facet.h"
 #include "facet_storage.h"
 #include "integer_convert.h"
 #include "integer_types.h"
