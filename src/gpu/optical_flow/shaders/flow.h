@@ -140,7 +140,7 @@ class FlowProgram final
         vulkan::handle::Pipeline pipeline_;
 
 public:
-        explicit FlowProgram(const VkDevice& device);
+        explicit FlowProgram(VkDevice device);
 
         FlowProgram(const FlowProgram&) = delete;
         FlowProgram& operator=(const FlowProgram&) = delete;

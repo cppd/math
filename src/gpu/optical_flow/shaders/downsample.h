@@ -39,7 +39,7 @@ public:
         static std::vector<VkDescriptorSetLayoutBinding> descriptor_set_layout_bindings();
         static unsigned set_number();
 
-        DownsampleMemory(const VkDevice& device, VkDescriptorSetLayout descriptor_set_layout);
+        DownsampleMemory(VkDevice device, VkDescriptorSetLayout descriptor_set_layout);
 
         DownsampleMemory(const DownsampleMemory&) = delete;
         DownsampleMemory& operator=(const DownsampleMemory&) = delete;
@@ -89,7 +89,7 @@ class DownsampleProgram final
         vulkan::handle::Pipeline pipeline_;
 
 public:
-        explicit DownsampleProgram(const VkDevice& device);
+        explicit DownsampleProgram(VkDevice device);
 
         DownsampleProgram(const DownsampleProgram&) = delete;
         DownsampleProgram& operator=(const DownsampleProgram&) = delete;

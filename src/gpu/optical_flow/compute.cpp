@@ -58,12 +58,12 @@ vulkan::DeviceFeatures device_features()
 }
 
 void image_barrier(
-        VkCommandBuffer command_buffer,
+        const VkCommandBuffer command_buffer,
         const std::vector<VkImage>& images,
-        VkImageLayout old_layout,
-        VkImageLayout new_layout,
-        VkAccessFlags src_access_mask,
-        VkAccessFlags dst_access_mask)
+        const VkImageLayout old_layout,
+        const VkImageLayout new_layout,
+        const VkAccessFlags src_access_mask,
+        const VkAccessFlags dst_access_mask)
 {
         ASSERT(!images.empty());
         ASSERT(command_buffer != VK_NULL_HANDLE);
@@ -106,17 +106,20 @@ void image_barrier(
 }
 
 void image_barrier(
-        VkCommandBuffer command_buffer,
-        VkImage image,
-        VkImageLayout old_layout,
-        VkImageLayout new_layout,
-        VkAccessFlags src_access_mask,
-        VkAccessFlags dst_access_mask)
+        const VkCommandBuffer command_buffer,
+        const VkImage image,
+        const VkImageLayout old_layout,
+        const VkImageLayout new_layout,
+        const VkAccessFlags src_access_mask,
+        const VkAccessFlags dst_access_mask)
 {
         image_barrier(command_buffer, std::vector{image}, old_layout, new_layout, src_access_mask, dst_access_mask);
 }
 
-void buffer_barrier(VkCommandBuffer command_buffer, VkBuffer buffer, VkPipelineStageFlags dst_stage_mask)
+void buffer_barrier(
+        const VkCommandBuffer command_buffer,
+        const VkBuffer buffer,
+        const VkPipelineStageFlags dst_stage_mask)
 {
         ASSERT(buffer != VK_NULL_HANDLE);
 
@@ -199,7 +202,7 @@ class Impl final : public Compute
 
         int i_index_ = -1;
 
-        void commands_compute_image_pyramid(int index, VkCommandBuffer command_buffer)
+        void commands_compute_image_pyramid(const int index, const VkCommandBuffer command_buffer)
         {
                 ASSERT(index == 0 || index == 1);
                 ASSERT(downsample_memory_.size() == downsample_groups_.size());
@@ -231,7 +234,7 @@ class Impl final : public Compute
                 }
         }
 
-        void commands_compute_dxdy(int index, VkCommandBuffer command_buffer) const
+        void commands_compute_dxdy(const int index, const VkCommandBuffer command_buffer) const
         {
                 ASSERT(index == 0 || index == 1);
                 ASSERT(sobel_memory_.size() == sobel_groups_.size());
@@ -259,7 +262,10 @@ class Impl final : public Compute
                         VK_ACCESS_SHADER_WRITE_BIT, VK_ACCESS_SHADER_READ_BIT);
         }
 
-        void commands_compute_optical_flow(int index, VkCommandBuffer command_buffer, VkBuffer top_flow) const
+        void commands_compute_optical_flow(
+                const int index,
+                const VkCommandBuffer command_buffer,
+                const VkBuffer top_flow) const
         {
                 ASSERT(index == 0 || index == 1);
                 ASSERT(flow_memory_.size() == flow_groups_.size());
@@ -279,7 +285,7 @@ class Impl final : public Compute
                 }
         }
 
-        void commands_images_to_sampler_layout(int index, VkCommandBuffer command_buffer)
+        void commands_images_to_sampler_layout(const int index, const VkCommandBuffer command_buffer)
         {
                 for (const vulkan::ImageWithMemory& image : images_[index])
                 {
@@ -289,7 +295,7 @@ class Impl final : public Compute
                 }
         }
 
-        void commands_images_to_general_layout(int index, VkCommandBuffer command_buffer)
+        void commands_images_to_general_layout(const int index, const VkCommandBuffer command_buffer)
         {
                 for (const vulkan::ImageWithMemory& image : images_[index])
                 {
@@ -312,7 +318,7 @@ class Impl final : public Compute
                 end_command_buffer(command_buffer);
         }
 
-        void create_command_buffers(VkBuffer top_flow)
+        void create_command_buffers(const VkBuffer top_flow)
         {
                 command_buffers_ = vulkan::handle::CommandBuffers(*device_, *compute_command_pool_, 2);
 
@@ -367,11 +373,11 @@ class Impl final : public Compute
         }
 
         void create_buffers(
-                VkSampler sampler,
+                const VkSampler sampler,
                 const vulkan::ImageWithMemory& input,
                 const Region<2, int>& rectangle,
-                unsigned top_point_count_x,
-                unsigned top_point_count_y,
+                const unsigned top_point_count_x,
+                const unsigned top_point_count_y,
                 const vulkan::Buffer& top_points,
                 const vulkan::Buffer& top_flow) override
         {
@@ -473,9 +479,9 @@ class Impl final : public Compute
         }
 
 public:
-        Impl(const vulkan::VulkanInstance* instance,
-             const vulkan::CommandPool* compute_command_pool,
-             const vulkan::Queue* compute_queue)
+        Impl(const vulkan::VulkanInstance* const instance,
+             const vulkan::CommandPool* const compute_command_pool,
+             const vulkan::Queue* const compute_queue)
                 : instance_(instance),
                   device_(&instance->device()),
                   compute_command_pool_(compute_command_pool),
@@ -508,9 +514,9 @@ vulkan::DeviceFeatures Compute::required_device_features()
 }
 
 std::unique_ptr<Compute> create_compute(
-        const vulkan::VulkanInstance* instance,
-        const vulkan::CommandPool* compute_command_pool,
-        const vulkan::Queue* compute_queue)
+        const vulkan::VulkanInstance* const instance,
+        const vulkan::CommandPool* const compute_command_pool,
+        const vulkan::Queue* const compute_queue)
 {
         return std::make_unique<Impl>(instance, compute_command_pool, compute_queue);
 }

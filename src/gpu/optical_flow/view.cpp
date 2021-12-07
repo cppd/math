@@ -147,14 +147,14 @@ class Impl final : public View
                         top_flow_->buffer());
 
                 // (0, 0) is top left
-                double left = 0;
-                double right = rectangle.width();
-                double bottom = rectangle.height();
-                double top = 0;
-                double near = 1;
-                double far = -1;
-                Matrix4d p = matrix::ortho_vulkan<double>(left, right, bottom, top, near, far);
-                Matrix4d t = matrix::translate<double>(0.5, 0.5, 0);
+                const double left = 0;
+                const double right = rectangle.width();
+                const double bottom = rectangle.height();
+                const double top = 0;
+                const double near = 1;
+                const double far = -1;
+                const Matrix4d p = matrix::ortho_vulkan<double>(left, right, bottom, top, near, far);
+                const Matrix4d t = matrix::translate<double>(0.5, 0.5, 0);
                 memory_.set_matrix(p * t);
 
                 vulkan::CommandBufferCreateInfo info;

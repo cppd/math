@@ -52,7 +52,7 @@ std::vector<VkDescriptorSetLayoutBinding> GrayscaleMemory::descriptor_set_layout
         return bindings;
 }
 
-GrayscaleMemory::GrayscaleMemory(const VkDevice& device, VkDescriptorSetLayout descriptor_set_layout)
+GrayscaleMemory::GrayscaleMemory(const VkDevice device, const VkDescriptorSetLayout descriptor_set_layout)
         : descriptors_(device, 2, descriptor_set_layout, descriptor_set_layout_bindings())
 {
 }
@@ -62,13 +62,13 @@ unsigned GrayscaleMemory::set_number()
         return SET_NUMBER;
 }
 
-const VkDescriptorSet& GrayscaleMemory::descriptor_set(int index) const
+const VkDescriptorSet& GrayscaleMemory::descriptor_set(const int index) const
 {
         ASSERT(index == 0 || index == 1);
         return descriptors_.descriptor_set(index);
 }
 
-void GrayscaleMemory::set_src(VkSampler sampler, const vulkan::ImageView& image)
+void GrayscaleMemory::set_src(const VkSampler sampler, const vulkan::ImageView& image)
 {
         ASSERT(image.has_usage(VK_IMAGE_USAGE_SAMPLED_BIT));
 
@@ -148,11 +148,14 @@ GrayscaleConstant::GrayscaleConstant()
         }
 }
 
-void GrayscaleConstant::set(std::uint32_t local_size_x, std::uint32_t local_size_y, const Region<2, int>& rectangle)
+void GrayscaleConstant::set(
+        const std::uint32_t local_size_x,
+        const std::uint32_t local_size_y,
+        const Region<2, int>& rectangle)
 {
-        static_assert(std::is_same_v<decltype(data_.local_size_x), decltype(local_size_x)>);
+        static_assert(std::is_same_v<decltype(data_.local_size_x), std::remove_const_t<decltype(local_size_x)>>);
         data_.local_size_x = local_size_x;
-        static_assert(std::is_same_v<decltype(data_.local_size_y), decltype(local_size_y)>);
+        static_assert(std::is_same_v<decltype(data_.local_size_y), std::remove_const_t<decltype(local_size_y)>>);
         data_.local_size_y = local_size_y;
 
         ASSERT(rectangle.is_positive());
@@ -179,7 +182,7 @@ std::size_t GrayscaleConstant::size() const
 
 //
 
-GrayscaleProgram::GrayscaleProgram(const VkDevice& device)
+GrayscaleProgram::GrayscaleProgram(const VkDevice device)
         : device_(device),
           descriptor_set_layout_(
                   vulkan::create_descriptor_set_layout(device, GrayscaleMemory::descriptor_set_layout_bindings())),
@@ -206,8 +209,8 @@ VkPipeline GrayscaleProgram::pipeline() const
 }
 
 void GrayscaleProgram::create_pipeline(
-        std::uint32_t local_size_x,
-        std::uint32_t local_size_y,
+        const std::uint32_t local_size_x,
+        const std::uint32_t local_size_y,
         const Region<2, int>& rectangle)
 {
         constant_.set(local_size_x, local_size_y, rectangle);

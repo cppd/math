@@ -27,7 +27,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 namespace ns::gpu::optical_flow
 {
-std::vector<Vector2i> pyramid_sizes(int width, int height, int min_size)
+std::vector<Vector2i> pyramid_sizes(int width, int height, const int min_size)
 {
         std::vector<Vector2i> sizes;
 
@@ -105,8 +105,8 @@ std::vector<Vector2i> sobel_groups(const Vector2i& group_size, const std::vector
 std::vector<Vector2i> flow_groups(
         const Vector2i& group_size,
         const std::vector<Vector2i>& sizes,
-        int top_point_count_x,
-        int top_point_count_y)
+        const int top_point_count_x,
+        const int top_point_count_y)
 {
         std::vector<Vector2i> groups;
         groups.reserve(sizes.size());
@@ -122,19 +122,19 @@ std::vector<Vector2i> flow_groups(
 }
 
 void create_top_level_points(
-        int width,
-        int height,
-        double distance_between_points_in_mm,
-        int ppi,
-        int* point_count_x,
-        int* point_count_y,
-        std::vector<Vector2i>* points)
+        const int width,
+        const int height,
+        const double distance_between_points_in_mm,
+        const int ppi,
+        int* const point_count_x,
+        int* const point_count_y,
+        std::vector<Vector2i>* const points)
 {
         ASSERT(width >= 0 && height >= 0 && ppi >= 0);
 
         points->clear();
 
-        int distance = millimeters_to_pixels(distance_between_points_in_mm, ppi);
+        const int distance = millimeters_to_pixels(distance_between_points_in_mm, ppi);
 
         if (width <= 0 || height <= 0 || distance < 0)
         {
@@ -143,8 +143,8 @@ void create_top_level_points(
                 return;
         }
 
-        int lw = width - 2 * distance;
-        int lh = height - 2 * distance;
+        const int lw = width - 2 * distance;
+        const int lh = height - 2 * distance;
 
         if (lw <= 0 || lh <= 0)
         {
@@ -153,11 +153,11 @@ void create_top_level_points(
                 return;
         }
 
-        int size = distance + 1;
+        const int size = distance + 1;
         *point_count_x = (lw + size - 1) / size;
         *point_count_y = (lh + size - 1) / size;
 
-        int point_count = *point_count_x * *point_count_y;
+        const int point_count = *point_count_x * *point_count_y;
 
         points->clear();
         points->resize(point_count);

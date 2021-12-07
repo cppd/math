@@ -114,7 +114,7 @@ std::vector<VkDescriptorSetLayoutBinding> FlowMemory::descriptor_set_layout_bind
 
 FlowMemory::FlowMemory(
         const vulkan::Device& device,
-        VkDescriptorSetLayout descriptor_set_layout,
+        const VkDescriptorSetLayout descriptor_set_layout,
         const std::vector<std::uint32_t>& family_indices)
         : descriptors_(device, 2, descriptor_set_layout, descriptor_set_layout_bindings())
 {
@@ -147,7 +147,7 @@ unsigned FlowMemory::set_number()
         return SET_NUMBER;
 }
 
-const VkDescriptorSet& FlowMemory::descriptor_set(int index) const
+const VkDescriptorSet& FlowMemory::descriptor_set(const int index) const
 {
         ASSERT(index == 0 || index == 1);
         return descriptors_.descriptor_set(index);
@@ -213,7 +213,8 @@ void FlowMemory::set_i(const vulkan::ImageView& image_0, const vulkan::ImageView
         descriptors_.update_descriptor_set(1, I_BINDING, image_info);
 }
 
-void FlowMemory::set_j(VkSampler sampler, const vulkan::ImageView& image_0, const vulkan::ImageView& image_1) const
+void FlowMemory::set_j(const VkSampler sampler, const vulkan::ImageView& image_0, const vulkan::ImageView& image_1)
+        const
 {
         ASSERT(static_cast<VkImageView>(image_0) != static_cast<VkImageView>(image_1));
         ASSERT(image_0.has_usage(VK_IMAGE_USAGE_SAMPLED_BIT));
@@ -323,24 +324,26 @@ FlowConstant::FlowConstant()
 }
 
 void FlowConstant::set(
-        std::uint32_t local_size_x,
-        std::uint32_t local_size_y,
-        std::int32_t radius,
-        std::int32_t max_iteration_count,
-        float stop_move_square,
-        float min_determinant)
+        const std::uint32_t local_size_x,
+        const std::uint32_t local_size_y,
+        const std::int32_t radius,
+        const std::int32_t max_iteration_count,
+        const float stop_move_square,
+        const float min_determinant)
 {
-        static_assert(std::is_same_v<decltype(data_.local_size_x), decltype(local_size_x)>);
+        static_assert(std::is_same_v<decltype(data_.local_size_x), std::remove_const_t<decltype(local_size_x)>>);
         data_.local_size_x = local_size_x;
-        static_assert(std::is_same_v<decltype(data_.local_size_y), decltype(local_size_y)>);
+        static_assert(std::is_same_v<decltype(data_.local_size_y), std::remove_const_t<decltype(local_size_y)>>);
         data_.local_size_y = local_size_y;
-        static_assert(std::is_same_v<decltype(data_.radius), decltype(radius)>);
+        static_assert(std::is_same_v<decltype(data_.radius), std::remove_const_t<decltype(radius)>>);
         data_.radius = radius;
-        static_assert(std::is_same_v<decltype(data_.max_iteration_count), decltype(max_iteration_count)>);
+        static_assert(std::is_same_v<
+                      decltype(data_.max_iteration_count), std::remove_const_t<decltype(max_iteration_count)>>);
         data_.max_iteration_count = max_iteration_count;
-        static_assert(std::is_same_v<decltype(data_.stop_move_square), decltype(stop_move_square)>);
+        static_assert(
+                std::is_same_v<decltype(data_.stop_move_square), std::remove_const_t<decltype(stop_move_square)>>);
         data_.stop_move_square = stop_move_square;
-        static_assert(std::is_same_v<decltype(data_.min_determinant), decltype(min_determinant)>);
+        static_assert(std::is_same_v<decltype(data_.min_determinant), std::remove_const_t<decltype(min_determinant)>>);
         data_.min_determinant = min_determinant;
 }
 
@@ -361,7 +364,7 @@ std::size_t FlowConstant::size() const
 
 //
 
-FlowProgram::FlowProgram(const VkDevice& device)
+FlowProgram::FlowProgram(const VkDevice device)
         : device_(device),
           descriptor_set_layout_(
                   vulkan::create_descriptor_set_layout(device, FlowMemory::descriptor_set_layout_bindings())),
@@ -388,12 +391,12 @@ VkPipeline FlowProgram::pipeline() const
 }
 
 void FlowProgram::create_pipeline(
-        std::uint32_t local_size_x,
-        std::uint32_t local_size_y,
-        std::int32_t radius,
-        std::int32_t max_iteration_count,
-        float stop_move_square,
-        float min_determinant)
+        const std::uint32_t local_size_x,
+        const std::uint32_t local_size_y,
+        const std::int32_t radius,
+        const std::int32_t max_iteration_count,
+        const float stop_move_square,
+        const float min_determinant)
 {
         constant_.set(local_size_x, local_size_y, radius, max_iteration_count, stop_move_square, min_determinant);
 

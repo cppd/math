@@ -52,7 +52,7 @@ std::vector<VkDescriptorSetLayoutBinding> DownsampleMemory::descriptor_set_layou
         return bindings;
 }
 
-DownsampleMemory::DownsampleMemory(const VkDevice& device, VkDescriptorSetLayout descriptor_set_layout)
+DownsampleMemory::DownsampleMemory(const VkDevice device, const VkDescriptorSetLayout descriptor_set_layout)
         : descriptors_(device, 2, descriptor_set_layout, descriptor_set_layout_bindings())
 {
 }
@@ -62,7 +62,7 @@ unsigned DownsampleMemory::set_number()
         return SET_NUMBER;
 }
 
-const VkDescriptorSet& DownsampleMemory::descriptor_set(int index) const
+const VkDescriptorSet& DownsampleMemory::descriptor_set(const int index) const
 {
         ASSERT(index == 0 || index == 1);
         return descriptors_.descriptor_set(index);
@@ -122,11 +122,11 @@ DownsampleConstant::DownsampleConstant()
         }
 }
 
-void DownsampleConstant::set(std::uint32_t local_size_x, std::uint32_t local_size_y)
+void DownsampleConstant::set(const std::uint32_t local_size_x, const std::uint32_t local_size_y)
 {
-        static_assert(std::is_same_v<decltype(data_.local_size_x), decltype(local_size_x)>);
+        static_assert(std::is_same_v<decltype(data_.local_size_x), std::remove_const_t<decltype(local_size_x)>>);
         data_.local_size_x = local_size_x;
-        static_assert(std::is_same_v<decltype(data_.local_size_y), decltype(local_size_y)>);
+        static_assert(std::is_same_v<decltype(data_.local_size_y), std::remove_const_t<decltype(local_size_y)>>);
         data_.local_size_y = local_size_y;
 }
 
@@ -147,7 +147,7 @@ std::size_t DownsampleConstant::size() const
 
 //
 
-DownsampleProgram::DownsampleProgram(const VkDevice& device)
+DownsampleProgram::DownsampleProgram(const VkDevice device)
         : device_(device),
           descriptor_set_layout_(
                   vulkan::create_descriptor_set_layout(device, DownsampleMemory::descriptor_set_layout_bindings())),
@@ -173,7 +173,7 @@ VkPipeline DownsampleProgram::pipeline() const
         return pipeline_;
 }
 
-void DownsampleProgram::create_pipeline(std::uint32_t local_size_x, std::uint32_t local_size_y)
+void DownsampleProgram::create_pipeline(const std::uint32_t local_size_x, const std::uint32_t local_size_y)
 {
         constant_.set(local_size_x, local_size_y);
 

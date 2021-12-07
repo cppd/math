@@ -26,9 +26,9 @@ std::vector<vulkan::ImageWithMemory> create_images(
         const vulkan::CommandPool& compute_command_pool,
         const vulkan::Queue& compute_queue,
         const std::vector<Vector2i>& sizes,
-        VkFormat format,
-        std::uint32_t family_index,
-        VkImageUsageFlags usage)
+        const VkFormat format,
+        const std::uint32_t family_index,
+        const VkImageUsageFlags usage)
 {
         std::vector<vulkan::ImageWithMemory> images;
         images.reserve(sizes.size());
@@ -49,7 +49,7 @@ std::vector<vulkan::ImageWithMemory> create_images(
 std::vector<vulkan::BufferWithMemory> create_flow_buffers(
         const vulkan::Device& device,
         const std::vector<Vector2i>& sizes,
-        std::uint32_t family_index)
+        const std::uint32_t family_index)
 {
         std::vector<vulkan::BufferWithMemory> buffers;
         if (sizes.size() <= 1)
@@ -72,7 +72,7 @@ std::vector<vulkan::BufferWithMemory> create_flow_buffers(
 
 std::vector<DownsampleMemory> create_downsample_memory(
         const vulkan::Device& device,
-        VkDescriptorSetLayout descriptor_set_layout,
+        const VkDescriptorSetLayout descriptor_set_layout,
         const std::array<std::vector<vulkan::ImageWithMemory>, 2>& images)
 {
         ASSERT(images[0].size() == images[1].size());
@@ -91,7 +91,7 @@ std::vector<DownsampleMemory> create_downsample_memory(
 
 std::vector<SobelMemory> create_sobel_memory(
         const vulkan::Device& device,
-        VkDescriptorSetLayout descriptor_set_layout,
+        const VkDescriptorSetLayout descriptor_set_layout,
         const std::array<std::vector<vulkan::ImageWithMemory>, 2>& images,
         const std::vector<vulkan::ImageWithMemory>& dx,
         const std::vector<vulkan::ImageWithMemory>& dy)
@@ -115,13 +115,13 @@ std::vector<SobelMemory> create_sobel_memory(
 
 std::vector<FlowMemory> create_flow_memory(
         const vulkan::Device& device,
-        VkDescriptorSetLayout descriptor_set_layout,
-        std::uint32_t family_index,
-        VkSampler sampler,
+        const VkDescriptorSetLayout descriptor_set_layout,
+        const std::uint32_t family_index,
+        const VkSampler sampler,
         const std::vector<Vector2i>& sizes,
         const std::vector<const vulkan::Buffer*>& flow_buffers,
-        int top_point_count_x,
-        int top_point_count_y,
+        const int top_point_count_x,
+        const int top_point_count_y,
         const vulkan::Buffer& top_points,
         const vulkan::Buffer& top_flow,
         const std::array<std::vector<vulkan::ImageWithMemory>, 2>& images,
