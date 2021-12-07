@@ -103,7 +103,7 @@ class FftGlobalProgram final
         vulkan::handle::Pipeline pipeline_inverse_;
 
 public:
-        explicit FftGlobalProgram(const VkDevice& device);
+        explicit FftGlobalProgram(VkDevice device);
 
         FftGlobalProgram(const FftGlobalProgram&) = delete;
         FftGlobalProgram& operator=(const FftGlobalProgram&) = delete;

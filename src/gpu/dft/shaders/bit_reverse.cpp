@@ -42,7 +42,7 @@ std::vector<VkDescriptorSetLayoutBinding> BitReverseMemory::descriptor_set_layou
         return bindings;
 }
 
-BitReverseMemory::BitReverseMemory(const VkDevice& device, VkDescriptorSetLayout descriptor_set_layout)
+BitReverseMemory::BitReverseMemory(const VkDevice device, const VkDescriptorSetLayout descriptor_set_layout)
         : descriptors_(device, 1, descriptor_set_layout, descriptor_set_layout_bindings())
 {
 }
@@ -104,18 +104,18 @@ BitReverseConstant::BitReverseConstant()
 }
 
 void BitReverseConstant::set(
-        std::uint32_t group_size,
-        std::uint32_t data_size,
-        std::uint32_t n_mask,
-        std::uint32_t n_bits)
+        const std::uint32_t group_size,
+        const std::uint32_t data_size,
+        const std::uint32_t n_mask,
+        const std::uint32_t n_bits)
 {
-        static_assert(std::is_same_v<decltype(data_.group_size), decltype(group_size)>);
+        static_assert(std::is_same_v<decltype(data_.group_size), std::remove_const_t<decltype(group_size)>>);
         data_.group_size = group_size;
-        static_assert(std::is_same_v<decltype(data_.data_size), decltype(data_size)>);
+        static_assert(std::is_same_v<decltype(data_.data_size), std::remove_const_t<decltype(data_size)>>);
         data_.data_size = data_size;
-        static_assert(std::is_same_v<decltype(data_.n_mask), decltype(n_mask)>);
+        static_assert(std::is_same_v<decltype(data_.n_mask), std::remove_const_t<decltype(n_mask)>>);
         data_.n_mask = n_mask;
-        static_assert(std::is_same_v<decltype(data_.n_bits), decltype(n_bits)>);
+        static_assert(std::is_same_v<decltype(data_.n_bits), std::remove_const_t<decltype(n_bits)>>);
         data_.n_bits = n_bits;
 }
 
@@ -136,7 +136,7 @@ std::size_t BitReverseConstant::size() const
 
 //
 
-BitReverseProgram::BitReverseProgram(const VkDevice& device)
+BitReverseProgram::BitReverseProgram(const VkDevice device)
         : device_(device),
           descriptor_set_layout_(
                   vulkan::create_descriptor_set_layout(device, BitReverseMemory::descriptor_set_layout_bindings())),
@@ -163,10 +163,10 @@ VkPipeline BitReverseProgram::pipeline() const
 }
 
 void BitReverseProgram::create_pipeline(
-        std::uint32_t group_size,
-        std::uint32_t data_size,
-        std::uint32_t n_mask,
-        std::uint32_t n_bits)
+        const std::uint32_t group_size,
+        const std::uint32_t data_size,
+        const std::uint32_t n_mask,
+        const std::uint32_t n_bits)
 {
         constant_.set(group_size, data_size, n_mask, n_bits);
 

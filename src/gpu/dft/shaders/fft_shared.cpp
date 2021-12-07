@@ -42,7 +42,7 @@ std::vector<VkDescriptorSetLayoutBinding> FftSharedMemory::descriptor_set_layout
         return bindings;
 }
 
-FftSharedMemory::FftSharedMemory(const VkDevice& device, VkDescriptorSetLayout descriptor_set_layout)
+FftSharedMemory::FftSharedMemory(const VkDevice device, const VkDescriptorSetLayout descriptor_set_layout)
         : descriptors_(device, 1, descriptor_set_layout, descriptor_set_layout_bindings())
 {
 }
@@ -132,30 +132,30 @@ FftSharedConstant::FftSharedConstant()
 }
 
 void FftSharedConstant::set(
-        bool inverse,
-        std::uint32_t data_size,
-        std::uint32_t n,
-        std::uint32_t n_mask,
-        std::uint32_t n_bits,
-        std::uint32_t shared_size,
-        bool reverse_input,
-        std::uint32_t group_size)
+        const bool inverse,
+        const std::uint32_t data_size,
+        const std::uint32_t n,
+        const std::uint32_t n_mask,
+        const std::uint32_t n_bits,
+        const std::uint32_t shared_size,
+        const bool reverse_input,
+        const std::uint32_t group_size)
 {
         static_assert(std::is_same_v<decltype(data_.inverse), std::uint32_t>);
         data_.inverse = inverse ? 1 : 0;
-        static_assert(std::is_same_v<decltype(data_.data_size), decltype(data_size)>);
+        static_assert(std::is_same_v<decltype(data_.data_size), std::remove_const_t<decltype(data_size)>>);
         data_.data_size = data_size;
-        static_assert(std::is_same_v<decltype(data_.n), decltype(n)>);
+        static_assert(std::is_same_v<decltype(data_.n), std::remove_const_t<decltype(n)>>);
         data_.n = n;
-        static_assert(std::is_same_v<decltype(data_.n_mask), decltype(n_mask)>);
+        static_assert(std::is_same_v<decltype(data_.n_mask), std::remove_const_t<decltype(n_mask)>>);
         data_.n_mask = n_mask;
-        static_assert(std::is_same_v<decltype(data_.n_bits), decltype(n_bits)>);
+        static_assert(std::is_same_v<decltype(data_.n_bits), std::remove_const_t<decltype(n_bits)>>);
         data_.n_bits = n_bits;
-        static_assert(std::is_same_v<decltype(data_.shared_size), decltype(shared_size)>);
+        static_assert(std::is_same_v<decltype(data_.shared_size), std::remove_const_t<decltype(shared_size)>>);
         data_.shared_size = shared_size;
         static_assert(std::is_same_v<decltype(data_.reverse_input), std::uint32_t>);
         data_.reverse_input = reverse_input ? 1 : 0;
-        static_assert(std::is_same_v<decltype(data_.group_size), decltype(group_size)>);
+        static_assert(std::is_same_v<decltype(data_.group_size), std::remove_const_t<decltype(group_size)>>);
         data_.group_size = group_size;
 }
 
@@ -176,7 +176,7 @@ std::size_t FftSharedConstant::size() const
 
 //
 
-FftSharedProgram::FftSharedProgram(const VkDevice& device)
+FftSharedProgram::FftSharedProgram(const VkDevice device)
         : device_(device),
           descriptor_set_layout_(
                   vulkan::create_descriptor_set_layout(device, FftSharedMemory::descriptor_set_layout_bindings())),
@@ -196,7 +196,7 @@ VkPipelineLayout FftSharedProgram::pipeline_layout() const
         return pipeline_layout_;
 }
 
-VkPipeline FftSharedProgram::pipeline(bool inverse) const
+VkPipeline FftSharedProgram::pipeline(const bool inverse) const
 {
         if (inverse)
         {
@@ -209,13 +209,13 @@ VkPipeline FftSharedProgram::pipeline(bool inverse) const
 }
 
 void FftSharedProgram::create_pipelines(
-        std::uint32_t data_size,
-        std::uint32_t n,
-        std::uint32_t n_mask,
-        std::uint32_t n_bits,
-        std::uint32_t shared_size,
-        bool reverse_input,
-        std::uint32_t group_size)
+        const std::uint32_t data_size,
+        const std::uint32_t n,
+        const std::uint32_t n_mask,
+        const std::uint32_t n_bits,
+        const std::uint32_t shared_size,
+        const bool reverse_input,
+        const std::uint32_t group_size)
 {
         {
                 constant_.set(false, data_size, n, n_mask, n_bits, shared_size, reverse_input, group_size);

@@ -25,7 +25,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 namespace ns::gpu::dft
 {
-int compute_m(int n)
+int compute_m(const int n)
 {
         static constexpr int MAX_POWER_OF_2 = 1 << (Limits<int>::digits() - 1);
         if (n < 1 || n > MAX_POWER_OF_2 / 2)
@@ -42,7 +42,7 @@ int compute_m(int n)
 
 // Compute the symmetric Toeplitz H: for given N, compute the scalar constants
 // 13.4, 13.22.
-std::vector<std::complex<double>> compute_h(int n, bool inverse, double coef)
+std::vector<std::complex<double>> compute_h(const int n, const bool inverse, const double coef)
 {
         std::vector<std::complex<double>> h(n);
 
@@ -54,11 +54,11 @@ std::vector<std::complex<double>> compute_h(int n, bool inverse, double coef)
 
                 // Instead of l*l/n compute mod(l*l/n, 2) so that trigonometric
                 // functions work with numbers no more than 2π.
-                long long dividend = static_cast<long long>(l) * l;
-                long long quotient = dividend / n;
-                long long remainder = dividend - quotient * n;
+                const long long dividend = static_cast<long long>(l) * l;
+                const long long quotient = dividend / n;
+                const long long remainder = dividend - quotient * n;
                 // factor = (quotient mod 2) + (remainder / n).
-                double factor = (quotient & 1) + static_cast<double>(remainder) / n;
+                const double factor = (quotient & 1) + static_cast<double>(remainder) / n;
 
                 h[l] = std::polar(coef, (inverse ? -PI<double> : PI<double>)*factor);
         }
@@ -68,7 +68,7 @@ std::vector<std::complex<double>> compute_h(int n, bool inverse, double coef)
 
 // Embed H in the circulant H(2)
 // Based on corrected formulas 13.11, 13.23, 13.24, 13.25.
-std::vector<std::complex<double>> compute_h2(int n, int m, const std::vector<std::complex<double>>& h)
+std::vector<std::complex<double>> compute_h2(const int n, const int m, const std::vector<std::complex<double>>& h)
 {
         std::vector<std::complex<double>> h2(m);
 
@@ -88,7 +88,7 @@ std::vector<std::complex<double>> compute_h2(int n, int m, const std::vector<std
 }
 
 template <typename T>
-unsigned shared_size(unsigned dft_size, unsigned max_shared_memory_size)
+unsigned shared_size(const unsigned dft_size, const unsigned max_shared_memory_size)
 {
         // minimum of
         // 1) requested size, but not less than 128 so that a group
@@ -102,14 +102,14 @@ unsigned shared_size(unsigned dft_size, unsigned max_shared_memory_size)
 
 template <typename T>
 unsigned group_size(
-        unsigned dft_size,
-        unsigned max_group_size_x,
-        unsigned max_group_invocations,
-        unsigned max_shared_memory_size)
+        const unsigned dft_size,
+        const unsigned max_group_size_x,
+        const unsigned max_group_invocations,
+        const unsigned max_shared_memory_size)
 {
         // no more than 1 thread for 2 elements
-        unsigned max_threads_required = shared_size<T>(dft_size, max_shared_memory_size) / 2;
-        unsigned max_threads_supported = std::min(max_group_size_x, max_group_invocations);
+        const unsigned max_threads_required = shared_size<T>(dft_size, max_shared_memory_size) / 2;
+        const unsigned max_threads_supported = std::min(max_group_size_x, max_group_invocations);
         return std::min(max_threads_required, max_threads_supported);
 }
 

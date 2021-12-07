@@ -52,7 +52,7 @@ std::vector<VkDescriptorSetLayoutBinding> CopyOutputMemory::descriptor_set_layou
         return bindings;
 }
 
-CopyOutputMemory::CopyOutputMemory(const VkDevice& device, VkDescriptorSetLayout descriptor_set_layout)
+CopyOutputMemory::CopyOutputMemory(const VkDevice device, const VkDescriptorSetLayout descriptor_set_layout)
         : descriptors_(device, 1, descriptor_set_layout, descriptor_set_layout_bindings())
 {
 }
@@ -118,13 +118,13 @@ CopyOutputConstant::CopyOutputConstant()
         }
 }
 
-void CopyOutputConstant::set(std::uint32_t local_size_x, std::uint32_t local_size_y, float to_mul)
+void CopyOutputConstant::set(const std::uint32_t local_size_x, const std::uint32_t local_size_y, const float to_mul)
 {
-        static_assert(std::is_same_v<decltype(data_.local_size_x), decltype(local_size_x)>);
+        static_assert(std::is_same_v<decltype(data_.local_size_x), std::remove_const_t<decltype(local_size_x)>>);
         data_.local_size_x = local_size_x;
-        static_assert(std::is_same_v<decltype(data_.local_size_y), decltype(local_size_y)>);
+        static_assert(std::is_same_v<decltype(data_.local_size_y), std::remove_const_t<decltype(local_size_y)>>);
         data_.local_size_y = local_size_y;
-        static_assert(std::is_same_v<decltype(data_.to_mul), decltype(to_mul)>);
+        static_assert(std::is_same_v<decltype(data_.to_mul), std::remove_const_t<decltype(to_mul)>>);
         data_.to_mul = to_mul;
 }
 
@@ -145,7 +145,7 @@ std::size_t CopyOutputConstant::size() const
 
 //
 
-CopyOutputProgram::CopyOutputProgram(const VkDevice& device)
+CopyOutputProgram::CopyOutputProgram(const VkDevice device)
         : device_(device),
           descriptor_set_layout_(
                   vulkan::create_descriptor_set_layout(device, CopyOutputMemory::descriptor_set_layout_bindings())),
@@ -171,7 +171,10 @@ VkPipeline CopyOutputProgram::pipeline() const
         return pipeline_;
 }
 
-void CopyOutputProgram::create_pipeline(std::uint32_t local_size_x, std::uint32_t local_size_y, float to_mul)
+void CopyOutputProgram::create_pipeline(
+        const std::uint32_t local_size_x,
+        const std::uint32_t local_size_y,
+        const float to_mul)
 {
         constant_.set(local_size_x, local_size_y, to_mul);
 

@@ -53,7 +53,7 @@ std::vector<VkDescriptorSetLayoutBinding> MulMemory::descriptor_set_layout_bindi
         return bindings;
 }
 
-MulMemory::MulMemory(const VkDevice& device, VkDescriptorSetLayout descriptor_set_layout)
+MulMemory::MulMemory(const VkDevice device, const VkDescriptorSetLayout descriptor_set_layout)
         : descriptors_(device, 1, descriptor_set_layout, descriptor_set_layout_bindings())
 {
 }
@@ -155,28 +155,28 @@ MulConstant::MulConstant()
 }
 
 void MulConstant::set_data(
-        std::int32_t n1,
-        std::int32_t n2,
-        std::int32_t m1,
-        std::int32_t m2,
-        std::uint32_t group_size_x,
-        std::uint32_t group_size_y)
+        const std::int32_t n1,
+        const std::int32_t n2,
+        const std::int32_t m1,
+        const std::int32_t m2,
+        const std::uint32_t group_size_x,
+        const std::uint32_t group_size_y)
 {
-        static_assert(std::is_same_v<decltype(data_.n1), decltype(n1)>);
+        static_assert(std::is_same_v<decltype(data_.n1), std::remove_const_t<decltype(n1)>>);
         data_.n1 = n1;
-        static_assert(std::is_same_v<decltype(data_.n2), decltype(n2)>);
+        static_assert(std::is_same_v<decltype(data_.n2), std::remove_const_t<decltype(n2)>>);
         data_.n2 = n2;
-        static_assert(std::is_same_v<decltype(data_.m1), decltype(m1)>);
+        static_assert(std::is_same_v<decltype(data_.m1), std::remove_const_t<decltype(m1)>>);
         data_.m1 = m1;
-        static_assert(std::is_same_v<decltype(data_.m2), decltype(m2)>);
+        static_assert(std::is_same_v<decltype(data_.m2), std::remove_const_t<decltype(m2)>>);
         data_.m2 = m2;
-        static_assert(std::is_same_v<decltype(data_.group_size_x), decltype(group_size_x)>);
+        static_assert(std::is_same_v<decltype(data_.group_size_x), std::remove_const_t<decltype(group_size_x)>>);
         data_.group_size_x = group_size_x;
-        static_assert(std::is_same_v<decltype(data_.group_size_y), decltype(group_size_y)>);
+        static_assert(std::is_same_v<decltype(data_.group_size_y), std::remove_const_t<decltype(group_size_y)>>);
         data_.group_size_y = group_size_y;
 }
 
-void MulConstant::set_function(std::int32_t function_index, bool inverse)
+void MulConstant::set_function(const std::int32_t function_index, const bool inverse)
 {
         static_assert(std::is_same_v<decltype(data_.function_index), std::int32_t>);
         data_.function_index = function_index;
@@ -201,7 +201,7 @@ std::size_t MulConstant::size() const
 
 //
 
-MulProgram::MulProgram(const VkDevice& device)
+MulProgram::MulProgram(const VkDevice device)
         : device_(device),
           descriptor_set_layout_(
                   vulkan::create_descriptor_set_layout(device, MulMemory::descriptor_set_layout_bindings())),
@@ -220,7 +220,7 @@ VkPipelineLayout MulProgram::pipeline_layout() const
         return pipeline_layout_;
 }
 
-VkPipeline MulProgram::pipeline_rows_to_buffer(bool inverse) const
+VkPipeline MulProgram::pipeline_rows_to_buffer(const bool inverse) const
 {
         if (!inverse)
         {
@@ -232,7 +232,7 @@ VkPipeline MulProgram::pipeline_rows_to_buffer(bool inverse) const
         return pipeline_rows_to_buffer_inverse_;
 }
 
-VkPipeline MulProgram::pipeline_rows_from_buffer(bool inverse) const
+VkPipeline MulProgram::pipeline_rows_from_buffer(const bool inverse) const
 {
         if (!inverse)
         {
@@ -244,7 +244,7 @@ VkPipeline MulProgram::pipeline_rows_from_buffer(bool inverse) const
         return pipeline_rows_from_buffer_inverse_;
 }
 
-VkPipeline MulProgram::pipeline_columns_to_buffer(bool inverse) const
+VkPipeline MulProgram::pipeline_columns_to_buffer(const bool inverse) const
 {
         if (!inverse)
         {
@@ -256,7 +256,7 @@ VkPipeline MulProgram::pipeline_columns_to_buffer(bool inverse) const
         return pipeline_columns_to_buffer_inverse_;
 }
 
-VkPipeline MulProgram::pipeline_columns_from_buffer(bool inverse) const
+VkPipeline MulProgram::pipeline_columns_from_buffer(const bool inverse) const
 {
         if (!inverse)
         {
@@ -269,12 +269,12 @@ VkPipeline MulProgram::pipeline_columns_from_buffer(bool inverse) const
 }
 
 void MulProgram::create_pipelines(
-        std::int32_t n1,
-        std::int32_t n2,
-        std::int32_t m1,
-        std::int32_t m2,
-        std::uint32_t group_size_x,
-        std::uint32_t group_size_y)
+        const std::int32_t n1,
+        const std::int32_t n2,
+        const std::int32_t m1,
+        const std::int32_t m2,
+        const std::uint32_t group_size_x,
+        const std::uint32_t group_size_y)
 {
         constant_.set_data(n1, n2, m1, m2, group_size_x, group_size_y);
 

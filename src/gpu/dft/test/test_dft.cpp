@@ -73,7 +73,7 @@ void compare(
                 sum2 += std::abs(x_compute[i]);
         }
 
-        double d = (sum == 0) ? 0 : (sum / sum2);
+        const double d = (sum == 0) ? 0 : (sum / sum2);
 
         LOG("Discrepancy " + name_compute + ": " + to_string(d));
 

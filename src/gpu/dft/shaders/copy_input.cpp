@@ -52,7 +52,7 @@ std::vector<VkDescriptorSetLayoutBinding> CopyInputMemory::descriptor_set_layout
         return bindings;
 }
 
-CopyInputMemory::CopyInputMemory(const VkDevice& device, VkDescriptorSetLayout descriptor_set_layout)
+CopyInputMemory::CopyInputMemory(const VkDevice device, const VkDescriptorSetLayout descriptor_set_layout)
         : descriptors_(device, 1, descriptor_set_layout, descriptor_set_layout_bindings())
 {
 }
@@ -67,7 +67,7 @@ const VkDescriptorSet& CopyInputMemory::descriptor_set() const
         return descriptors_.descriptor_set(0);
 }
 
-void CopyInputMemory::set(VkSampler sampler, const vulkan::ImageView& input, const vulkan::Buffer& output) const
+void CopyInputMemory::set(const VkSampler sampler, const vulkan::ImageView& input, const vulkan::Buffer& output) const
 {
         {
                 ASSERT(input.has_usage(VK_IMAGE_USAGE_SAMPLED_BIT));
@@ -139,11 +139,14 @@ CopyInputConstant::CopyInputConstant()
         }
 }
 
-void CopyInputConstant::set(std::int32_t local_size_x, std::int32_t local_size_y, const Region<2, int>& rectangle)
+void CopyInputConstant::set(
+        const std::int32_t local_size_x,
+        const std::int32_t local_size_y,
+        const Region<2, int>& rectangle)
 {
-        static_assert(std::is_same_v<decltype(data_.local_size_x), decltype(local_size_x)>);
+        static_assert(std::is_same_v<decltype(data_.local_size_x), std::remove_const_t<decltype(local_size_x)>>);
         data_.local_size_x = local_size_x;
-        static_assert(std::is_same_v<decltype(data_.local_size_y), decltype(local_size_y)>);
+        static_assert(std::is_same_v<decltype(data_.local_size_y), std::remove_const_t<decltype(local_size_y)>>);
         data_.local_size_y = local_size_y;
 
         ASSERT(rectangle.is_positive());
@@ -170,7 +173,7 @@ std::size_t CopyInputConstant::size() const
 
 //
 
-CopyInputProgram::CopyInputProgram(const VkDevice& device)
+CopyInputProgram::CopyInputProgram(const VkDevice device)
         : device_(device),
           descriptor_set_layout_(
                   vulkan::create_descriptor_set_layout(device, CopyInputMemory::descriptor_set_layout_bindings())),
@@ -197,8 +200,8 @@ VkPipeline CopyInputProgram::pipeline() const
 }
 
 void CopyInputProgram::create_pipeline(
-        std::int32_t local_size_x,
-        std::int32_t local_size_y,
+        const std::int32_t local_size_x,
+        const std::int32_t local_size_y,
         const Region<2, int>& rectangle)
 {
         constant_.set(local_size_x, local_size_y, rectangle);

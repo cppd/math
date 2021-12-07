@@ -40,7 +40,7 @@ public:
         static std::vector<VkDescriptorSetLayoutBinding> descriptor_set_layout_bindings();
         static unsigned set_number();
 
-        CopyInputMemory(const VkDevice& device, VkDescriptorSetLayout descriptor_set_layout);
+        CopyInputMemory(VkDevice device, VkDescriptorSetLayout descriptor_set_layout);
 
         CopyInputMemory(const CopyInputMemory&) = delete;
         CopyInputMemory& operator=(const CopyInputMemory&) = delete;
@@ -93,7 +93,7 @@ class CopyInputProgram final
         vulkan::handle::Pipeline pipeline_;
 
 public:
-        explicit CopyInputProgram(const VkDevice& device);
+        explicit CopyInputProgram(VkDevice device);
 
         CopyInputProgram(const CopyInputProgram&) = delete;
         CopyInputProgram& operator=(const CopyInputProgram&) = delete;

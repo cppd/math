@@ -39,7 +39,7 @@ public:
         static std::vector<VkDescriptorSetLayoutBinding> descriptor_set_layout_bindings();
         static unsigned set_number();
 
-        MulDMemory(const VkDevice& device, VkDescriptorSetLayout descriptor_set_layout);
+        MulDMemory(VkDevice device, VkDescriptorSetLayout descriptor_set_layout);
 
         MulDMemory(const MulDMemory&) = delete;
         MulDMemory& operator=(const MulDMemory&) = delete;
@@ -91,7 +91,7 @@ class MulDProgram final
         vulkan::handle::Pipeline pipeline_columns_;
 
 public:
-        explicit MulDProgram(const VkDevice& device);
+        explicit MulDProgram(VkDevice device);
 
         MulDProgram(const MulDProgram&) = delete;
         MulDProgram& operator=(const MulDProgram&) = delete;

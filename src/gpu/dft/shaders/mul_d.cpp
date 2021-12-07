@@ -53,7 +53,7 @@ std::vector<VkDescriptorSetLayoutBinding> MulDMemory::descriptor_set_layout_bind
         return bindings;
 }
 
-MulDMemory::MulDMemory(const VkDevice& device, VkDescriptorSetLayout descriptor_set_layout)
+MulDMemory::MulDMemory(const VkDevice device, const VkDescriptorSetLayout descriptor_set_layout)
         : descriptors_(device, 1, descriptor_set_layout, descriptor_set_layout_bindings())
 {
 }
@@ -127,15 +127,19 @@ MulDConstant::MulDConstant()
         }
 }
 
-void MulDConstant::set(std::uint32_t group_size_x, std::uint32_t group_size_y, std::int32_t rows, std::int32_t columns)
+void MulDConstant::set(
+        const std::uint32_t group_size_x,
+        const std::uint32_t group_size_y,
+        const std::int32_t rows,
+        const std::int32_t columns)
 {
-        static_assert(std::is_same_v<decltype(data_.group_size_x), decltype(group_size_x)>);
+        static_assert(std::is_same_v<decltype(data_.group_size_x), std::remove_const_t<decltype(group_size_x)>>);
         data_.group_size_x = group_size_x;
-        static_assert(std::is_same_v<decltype(data_.group_size_y), decltype(group_size_y)>);
+        static_assert(std::is_same_v<decltype(data_.group_size_y), std::remove_const_t<decltype(group_size_y)>>);
         data_.group_size_y = group_size_y;
-        static_assert(std::is_same_v<decltype(data_.rows), decltype(rows)>);
+        static_assert(std::is_same_v<decltype(data_.rows), std::remove_const_t<decltype(rows)>>);
         data_.rows = rows;
-        static_assert(std::is_same_v<decltype(data_.columns), decltype(columns)>);
+        static_assert(std::is_same_v<decltype(data_.columns), std::remove_const_t<decltype(columns)>>);
         data_.columns = columns;
 }
 
@@ -156,7 +160,7 @@ std::size_t MulDConstant::size() const
 
 //
 
-MulDProgram::MulDProgram(const VkDevice& device)
+MulDProgram::MulDProgram(const VkDevice device)
         : device_(device),
           descriptor_set_layout_(
                   vulkan::create_descriptor_set_layout(device, MulDMemory::descriptor_set_layout_bindings())),
@@ -189,12 +193,12 @@ VkPipeline MulDProgram::pipeline_columns() const
 }
 
 void MulDProgram::create_pipelines(
-        std::uint32_t n1,
-        std::uint32_t n2,
-        std::uint32_t m1,
-        std::uint32_t m2,
-        std::uint32_t group_size_x,
-        std::uint32_t group_size_y)
+        const std::uint32_t n1,
+        const std::uint32_t n2,
+        const std::uint32_t m1,
+        const std::uint32_t m2,
+        const std::uint32_t group_size_x,
+        const std::uint32_t group_size_y)
 {
         {
                 constant_.set(group_size_x, group_size_y, n2, m1);
