@@ -43,7 +43,7 @@ public:
 
         //
 
-        ComputeMemory(const VkDevice& device, VkDescriptorSetLayout descriptor_set_layout);
+        ComputeMemory(VkDevice device, VkDescriptorSetLayout descriptor_set_layout);
 
         ComputeMemory(const ComputeMemory&) = delete;
         ComputeMemory& operator=(const ComputeMemory&) = delete;
@@ -98,7 +98,7 @@ class ComputeProgram final
         vulkan::handle::Pipeline pipeline_;
 
 public:
-        explicit ComputeProgram(const VkDevice& device);
+        explicit ComputeProgram(VkDevice device);
 
         ComputeProgram(const ComputeProgram&) = delete;
         ComputeProgram& operator=(const ComputeProgram&) = delete;

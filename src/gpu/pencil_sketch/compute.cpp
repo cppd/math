@@ -36,7 +36,7 @@ vulkan::DeviceFeatures device_features()
         return {};
 }
 
-void image_barrier_before(VkCommandBuffer command_buffer, VkImage image)
+void image_barrier_before(const VkCommandBuffer command_buffer, const VkImage image)
 {
         ASSERT(command_buffer != VK_NULL_HANDLE && image != VK_NULL_HANDLE);
 
@@ -66,7 +66,7 @@ void image_barrier_before(VkCommandBuffer command_buffer, VkImage image)
                 VK_DEPENDENCY_BY_REGION_BIT, 0, nullptr, 0, nullptr, 1, &barrier);
 }
 
-void image_barrier_after(VkCommandBuffer command_buffer, VkImage image)
+void image_barrier_after(const VkCommandBuffer command_buffer, const VkImage image)
 {
         ASSERT(command_buffer != VK_NULL_HANDLE && image != VK_NULL_HANDLE);
 
@@ -110,7 +110,7 @@ class Impl final : public Compute
 
         VkImage image_ = VK_NULL_HANDLE;
 
-        void compute_commands(VkCommandBuffer command_buffer) const override
+        void compute_commands(const VkCommandBuffer command_buffer) const override
         {
                 ASSERT(std::this_thread::get_id() == thread_id_);
 
@@ -130,7 +130,7 @@ class Impl final : public Compute
         }
 
         void create_buffers(
-                VkSampler sampler,
+                const VkSampler sampler,
                 const vulkan::ImageWithMemory& input,
                 const vulkan::ImageWithMemory& objects,
                 const Region<2, int>& rectangle,
@@ -186,7 +186,7 @@ class Impl final : public Compute
         }
 
 public:
-        explicit Impl(const vulkan::VulkanInstance* instance)
+        explicit Impl(const vulkan::VulkanInstance* const instance)
                 : instance_(instance),
                   program_(instance->device()),
                   memory_(instance->device(), program_.descriptor_set_layout())
@@ -209,7 +209,7 @@ vulkan::DeviceFeatures Compute::required_device_features()
         return device_features();
 }
 
-std::unique_ptr<Compute> create_compute(const vulkan::VulkanInstance* instance)
+std::unique_ptr<Compute> create_compute(const vulkan::VulkanInstance* const instance)
 {
         return std::make_unique<Impl>(instance);
 }

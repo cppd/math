@@ -41,7 +41,7 @@ std::vector<VkDescriptorSetLayoutBinding> ViewMemory::descriptor_set_layout_bind
         return bindings;
 }
 
-ViewMemory::ViewMemory(const vulkan::Device& device, VkDescriptorSetLayout descriptor_set_layout)
+ViewMemory::ViewMemory(const vulkan::Device& device, const VkDescriptorSetLayout descriptor_set_layout)
         : descriptors_(device, 1, descriptor_set_layout, descriptor_set_layout_bindings())
 {
 }

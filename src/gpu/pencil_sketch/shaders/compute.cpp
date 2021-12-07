@@ -67,7 +67,7 @@ unsigned ComputeMemory::set_number()
         return SET_NUMBER;
 }
 
-ComputeMemory::ComputeMemory(const VkDevice& device, VkDescriptorSetLayout descriptor_set_layout)
+ComputeMemory::ComputeMemory(const VkDevice device, const VkDescriptorSetLayout descriptor_set_layout)
         : descriptors_(device, 1, descriptor_set_layout, descriptor_set_layout_bindings())
 {
 }
@@ -77,7 +77,7 @@ const VkDescriptorSet& ComputeMemory::descriptor_set() const
         return descriptors_.descriptor_set(0);
 }
 
-void ComputeMemory::set_input(VkSampler sampler, const vulkan::ImageView& image) const
+void ComputeMemory::set_input(const VkSampler sampler, const vulkan::ImageView& image) const
 {
         ASSERT(image.has_usage(VK_IMAGE_USAGE_SAMPLED_BIT));
 
@@ -154,9 +154,9 @@ ComputeConstant::ComputeConstant()
         }
 }
 
-void ComputeConstant::set(std::int32_t local_size, const Region<2, int>& rectangle)
+void ComputeConstant::set(const std::int32_t local_size, const Region<2, int>& rectangle)
 {
-        static_assert(std::is_same_v<decltype(data_.local_size), decltype(local_size)>);
+        static_assert(std::is_same_v<decltype(data_.local_size), std::remove_const_t<decltype(local_size)>>);
         data_.local_size = local_size;
 
         ASSERT(rectangle.is_positive());
@@ -183,7 +183,7 @@ std::size_t ComputeConstant::size() const
 
 //
 
-ComputeProgram::ComputeProgram(const VkDevice& device)
+ComputeProgram::ComputeProgram(const VkDevice device)
         : device_(device),
           descriptor_set_layout_(
                   vulkan::create_descriptor_set_layout(device, ComputeMemory::descriptor_set_layout_bindings())),
@@ -209,7 +209,7 @@ VkPipeline ComputeProgram::pipeline() const
         return pipeline_;
 }
 
-void ComputeProgram::create_pipeline(unsigned group_size, const Region<2, int>& rectangle)
+void ComputeProgram::create_pipeline(const unsigned group_size, const Region<2, int>& rectangle)
 {
         constant_.set(group_size, rectangle);
 
