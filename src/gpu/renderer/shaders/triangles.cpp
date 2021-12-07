@@ -56,9 +56,9 @@ std::vector<VkDescriptorSetLayoutBinding> TrianglesMaterialMemory::descriptor_se
 }
 
 vulkan::Descriptors TrianglesMaterialMemory::create(
-        VkDevice device,
-        VkSampler sampler,
-        VkDescriptorSetLayout descriptor_set_layout,
+        const VkDevice device,
+        const VkSampler sampler,
+        const VkDescriptorSetLayout descriptor_set_layout,
         const std::vector<VkDescriptorSetLayoutBinding>& descriptor_set_layout_bindings,
         const std::vector<MaterialInfo>& materials)
 {
@@ -133,7 +133,7 @@ std::vector<VkDescriptorSetLayoutBinding> TrianglesProgram::descriptor_set_layou
         return TrianglesMaterialMemory::descriptor_set_layout_bindings();
 }
 
-TrianglesProgram::TrianglesProgram(const vulkan::Device* device)
+TrianglesProgram::TrianglesProgram(const vulkan::Device* const device)
         : device_(device),
           descriptor_set_layout_shared_(
                   vulkan::create_descriptor_set_layout(*device, descriptor_set_layout_shared_bindings())),
@@ -171,11 +171,11 @@ VkPipelineLayout TrianglesProgram::pipeline_layout() const
 }
 
 vulkan::handle::Pipeline TrianglesProgram::create_pipeline(
-        VkRenderPass render_pass,
-        VkSampleCountFlagBits sample_count,
-        bool sample_shading,
+        const VkRenderPass render_pass,
+        const VkSampleCountFlagBits sample_count,
+        const bool sample_shading,
         const Region<2, int>& viewport,
-        bool transparency) const
+        const bool transparency) const
 {
         vulkan::GraphicsPipelineCreateInfo info;
 

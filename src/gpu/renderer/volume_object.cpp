@@ -237,9 +237,9 @@ class Impl final : public VolumeObject
         void buffer_set_parameters(
                 float window_min,
                 float window_max,
-                float volume_alpha_coefficient,
+                const float volume_alpha_coefficient,
                 float isosurface_alpha,
-                bool isosurface,
+                const bool isosurface,
                 float isovalue,
                 const color::Color& color) const
         {
@@ -282,7 +282,7 @@ class Impl final : public VolumeObject
                 buffer_.set_clip_plane(image_clip_plane(*world_clip_plane_equation_, texture_to_world_matrix_));
         }
 
-        void buffer_set_color_volume(bool color_volume) const
+        void buffer_set_color_volume(const bool color_volume) const
         {
                 buffer_.set_color_volume(*transfer_command_pool_, *transfer_queue_, color_volume);
         }
@@ -331,7 +331,7 @@ class Impl final : public VolumeObject
                         VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL, image.color_format, image.pixels);
         }
 
-        void set_image(const image::Image<3>& image, bool* size_changed)
+        void set_image(const image::Image<3>& image, bool* const size_changed)
         {
                 VkImageLayout image_layout;
 
@@ -372,7 +372,7 @@ class Impl final : public VolumeObject
                         });
         }
 
-        const VkDescriptorSet& descriptor_set(VkDescriptorSetLayout descriptor_set_layout) const override
+        const VkDescriptorSet& descriptor_set(const VkDescriptorSetLayout descriptor_set_layout) const override
         {
                 auto iter = descriptor_sets_.find(descriptor_set_layout);
                 if (iter == descriptor_sets_.cend())
@@ -463,7 +463,7 @@ class Impl final : public VolumeObject
         }
 
 public:
-        Impl(const vulkan::Device* device,
+        Impl(const vulkan::Device* const device,
              const std::vector<std::uint32_t>& graphics_family_indices,
              const vulkan::CommandPool* const transfer_command_pool,
              const vulkan::Queue* const transfer_queue,

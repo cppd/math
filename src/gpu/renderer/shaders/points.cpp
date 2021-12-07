@@ -40,7 +40,7 @@ std::vector<VkDescriptorSetLayoutBinding> PointsProgram::descriptor_set_layout_m
         return MeshMemory::descriptor_set_layout_bindings(VK_SHADER_STAGE_VERTEX_BIT);
 }
 
-PointsProgram::PointsProgram(const vulkan::Device* device)
+PointsProgram::PointsProgram(const vulkan::Device* const device)
         : device_(device),
           descriptor_set_layout_shared_(
                   vulkan::create_descriptor_set_layout(*device, descriptor_set_layout_shared_bindings())),
@@ -72,11 +72,11 @@ VkPipelineLayout PointsProgram::pipeline_layout() const
 }
 
 vulkan::handle::Pipeline PointsProgram::create_pipeline(
-        VkRenderPass render_pass,
-        VkSampleCountFlagBits sample_count,
-        VkPrimitiveTopology primitive_topology,
+        const VkRenderPass render_pass,
+        const VkSampleCountFlagBits sample_count,
+        const VkPrimitiveTopology primitive_topology,
         const Region<2, int>& viewport,
-        bool transparency) const
+        const bool transparency) const
 {
         vulkan::GraphicsPipelineCreateInfo info;
 

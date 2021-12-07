@@ -38,7 +38,7 @@ std::vector<VkDescriptorSetLayoutBinding> NormalsProgram::descriptor_set_layout_
         return MeshMemory::descriptor_set_layout_bindings(VK_SHADER_STAGE_GEOMETRY_BIT);
 }
 
-NormalsProgram::NormalsProgram(const vulkan::Device* device)
+NormalsProgram::NormalsProgram(const vulkan::Device* const device)
         : device_(device),
           descriptor_set_layout_shared_(
                   vulkan::create_descriptor_set_layout(*device, descriptor_set_layout_shared_bindings())),
@@ -70,11 +70,11 @@ VkPipelineLayout NormalsProgram::pipeline_layout() const
 }
 
 vulkan::handle::Pipeline NormalsProgram::create_pipeline(
-        VkRenderPass render_pass,
-        VkSampleCountFlagBits sample_count,
-        bool sample_shading,
+        const VkRenderPass render_pass,
+        const VkSampleCountFlagBits sample_count,
+        const bool sample_shading,
         const Region<2, int>& viewport,
-        bool transparency) const
+        const bool transparency) const
 {
         vulkan::GraphicsPipelineCreateInfo info;
 

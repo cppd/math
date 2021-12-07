@@ -149,7 +149,7 @@ class Impl final : public MeshObject
                 }
         }
 
-        VkDescriptorSet find_mesh_descriptor_set(VkDescriptorSetLayout mesh_descriptor_set_layout) const
+        VkDescriptorSet find_mesh_descriptor_set(const VkDescriptorSetLayout mesh_descriptor_set_layout) const
         {
                 auto iter = mesh_descriptor_sets_.find(mesh_descriptor_set_layout);
                 if (iter == mesh_descriptor_sets_.cend())
@@ -178,7 +178,7 @@ class Impl final : public MeshObject
         }
 
         const vulkan::Descriptors& find_material_descriptor_sets(
-                VkDescriptorSetLayout material_descriptor_set_layout) const
+                const VkDescriptorSetLayout material_descriptor_set_layout) const
         {
                 auto iter = material_descriptor_sets_.find(material_descriptor_set_layout);
                 if (iter == material_descriptor_sets_.cend())
@@ -261,10 +261,10 @@ class Impl final : public MeshObject
         }
 
         void commands_triangles(
-                VkCommandBuffer command_buffer,
-                VkDescriptorSetLayout mesh_descriptor_set_layout,
+                const VkCommandBuffer command_buffer,
+                const VkDescriptorSetLayout mesh_descriptor_set_layout,
                 const std::function<void(VkDescriptorSet descriptor_set)>& bind_mesh_descriptor_set,
-                VkDescriptorSetLayout material_descriptor_set_layout,
+                const VkDescriptorSetLayout material_descriptor_set_layout,
                 const std::function<void(VkDescriptorSet descriptor_set)>& bind_material_descriptor_set) const override
         {
                 if (faces_vertex_count_ == 0)
@@ -298,8 +298,8 @@ class Impl final : public MeshObject
         }
 
         void commands_plain_triangles(
-                VkCommandBuffer command_buffer,
-                VkDescriptorSetLayout mesh_descriptor_set_layout,
+                const VkCommandBuffer command_buffer,
+                const VkDescriptorSetLayout mesh_descriptor_set_layout,
                 const std::function<void(VkDescriptorSet descriptor_set)>& bind_mesh_descriptor_set) const override
         {
                 if (faces_vertex_count_ == 0)
@@ -319,8 +319,8 @@ class Impl final : public MeshObject
         }
 
         void commands_triangle_vertices(
-                VkCommandBuffer command_buffer,
-                VkDescriptorSetLayout mesh_descriptor_set_layout,
+                const VkCommandBuffer command_buffer,
+                const VkDescriptorSetLayout mesh_descriptor_set_layout,
                 const std::function<void(VkDescriptorSet descriptor_set)>& bind_mesh_descriptor_set) const override
         {
                 if (faces_vertex_count_ == 0)
@@ -339,8 +339,8 @@ class Impl final : public MeshObject
         }
 
         void commands_lines(
-                VkCommandBuffer command_buffer,
-                VkDescriptorSetLayout mesh_descriptor_set_layout,
+                const VkCommandBuffer command_buffer,
+                const VkDescriptorSetLayout mesh_descriptor_set_layout,
                 const std::function<void(VkDescriptorSet descriptor_set)>& bind_mesh_descriptor_set) const override
         {
                 if (lines_vertex_count_ == 0)
@@ -359,8 +359,8 @@ class Impl final : public MeshObject
         }
 
         void commands_points(
-                VkCommandBuffer command_buffer,
-                VkDescriptorSetLayout mesh_descriptor_set_layout,
+                const VkCommandBuffer command_buffer,
+                const VkDescriptorSetLayout mesh_descriptor_set_layout,
                 const std::function<void(VkDescriptorSet descriptor_set)>& bind_mesh_descriptor_set) const override
         {
                 if (points_vertex_count_ == 0)

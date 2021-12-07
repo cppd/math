@@ -73,7 +73,7 @@ std::vector<VkDescriptorSetLayoutBinding> VolumeSharedMemory::descriptor_set_lay
 
 VolumeSharedMemory::VolumeSharedMemory(
         const vulkan::Device& device,
-        VkDescriptorSetLayout descriptor_set_layout,
+        const VkDescriptorSetLayout descriptor_set_layout,
         const std::vector<VkDescriptorSetLayoutBinding>& descriptor_set_layout_bindings,
         const vulkan::Buffer& drawing)
         : descriptors_(device, 1, descriptor_set_layout, descriptor_set_layout_bindings)
@@ -105,7 +105,7 @@ const VkDescriptorSet& VolumeSharedMemory::descriptor_set() const
         return descriptors_.descriptor_set(0);
 }
 
-void VolumeSharedMemory::set_depth_image(VkImageView image_view, VkSampler sampler) const
+void VolumeSharedMemory::set_depth_image(const VkImageView image_view, const VkSampler sampler) const
 {
         VkDescriptorImageInfo image_info = {};
         image_info.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
@@ -197,10 +197,10 @@ std::vector<VkDescriptorSetLayoutBinding> VolumeImageMemory::descriptor_set_layo
 }
 
 vulkan::Descriptors VolumeImageMemory::create(
-        VkDevice device,
-        VkSampler image_sampler,
-        VkSampler transfer_function_sampler,
-        VkDescriptorSetLayout descriptor_set_layout,
+        const VkDevice device,
+        const VkSampler image_sampler,
+        const VkSampler transfer_function_sampler,
+        const VkDescriptorSetLayout descriptor_set_layout,
         const std::vector<VkDescriptorSetLayoutBinding>& descriptor_set_layout_bindings,
         const CreateInfo& create_info)
 {
@@ -273,7 +273,7 @@ std::vector<VkDescriptorSetLayoutBinding> VolumeProgram::descriptor_set_layout_i
         return VolumeImageMemory::descriptor_set_layout_bindings();
 }
 
-VolumeProgram::VolumeProgram(const vulkan::Device* device)
+VolumeProgram::VolumeProgram(const vulkan::Device* const device)
         : device_(device),
           descriptor_set_layout_shared_(
                   vulkan::create_descriptor_set_layout(*device, descriptor_set_layout_shared_bindings())),
@@ -304,7 +304,7 @@ VkDescriptorSetLayout VolumeProgram::descriptor_set_layout_image() const
         return descriptor_set_layout_image_;
 }
 
-VkPipelineLayout VolumeProgram::pipeline_layout(PipelineLayoutType type) const
+VkPipelineLayout VolumeProgram::pipeline_layout(const PipelineLayoutType type) const
 {
         switch (type)
         {
@@ -317,11 +317,11 @@ VkPipelineLayout VolumeProgram::pipeline_layout(PipelineLayoutType type) const
 }
 
 vulkan::handle::Pipeline VolumeProgram::create_pipeline(
-        VkRenderPass render_pass,
-        VkSampleCountFlagBits sample_count,
-        bool sample_shading,
+        const VkRenderPass render_pass,
+        const VkSampleCountFlagBits sample_count,
+        const bool sample_shading,
         const Region<2, int>& viewport,
-        PipelineType type) const
+        const PipelineType type) const
 {
         VkPipelineLayout pipeline_layout = VK_NULL_HANDLE;
         const vulkan::FragmentShader* fragment_shader = nullptr;

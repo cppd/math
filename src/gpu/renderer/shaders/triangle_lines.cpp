@@ -39,7 +39,7 @@ std::vector<VkDescriptorSetLayoutBinding> TriangleLinesProgram::descriptor_set_l
         return MeshMemory::descriptor_set_layout_bindings(VK_SHADER_STAGE_VERTEX_BIT);
 }
 
-TriangleLinesProgram::TriangleLinesProgram(const vulkan::Device* device)
+TriangleLinesProgram::TriangleLinesProgram(const vulkan::Device* const device)
         : device_(device),
           descriptor_set_layout_shared_(
                   vulkan::create_descriptor_set_layout(*device, descriptor_set_layout_shared_bindings())),
@@ -71,11 +71,11 @@ VkPipelineLayout TriangleLinesProgram::pipeline_layout() const
 }
 
 vulkan::handle::Pipeline TriangleLinesProgram::create_pipeline(
-        VkRenderPass render_pass,
-        VkSampleCountFlagBits sample_count,
-        bool sample_shading,
+        const VkRenderPass render_pass,
+        const VkSampleCountFlagBits sample_count,
+        const bool sample_shading,
         const Region<2, int>& viewport,
-        bool transparency) const
+        const bool transparency) const
 {
         vulkan::GraphicsPipelineCreateInfo info;
 

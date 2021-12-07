@@ -28,7 +28,7 @@ CommonConstants::CommonConstants()
         entries_.push_back(entry);
 }
 
-void CommonConstants::set(bool transparency_drawing)
+void CommonConstants::set(const bool transparency_drawing)
 {
         data_.transparency_drawing = transparency_drawing ? 1 : 0;
 }
@@ -51,10 +51,10 @@ std::size_t CommonConstants::size() const
 //
 
 std::vector<VkDescriptorSetLayoutBinding> CommonMemory::descriptor_set_layout_bindings(
-        VkShaderStageFlags matrices,
-        VkShaderStageFlags drawing,
-        VkShaderStageFlags shadow,
-        VkShaderStageFlags objects)
+        const VkShaderStageFlags matrices,
+        const VkShaderStageFlags drawing,
+        const VkShaderStageFlags shadow,
+        const VkShaderStageFlags objects)
 {
         std::vector<VkDescriptorSetLayoutBinding> bindings;
 
@@ -149,7 +149,7 @@ std::vector<VkDescriptorSetLayoutBinding> CommonMemory::descriptor_set_layout_bi
 
 CommonMemory::CommonMemory(
         const vulkan::Device& device,
-        VkDescriptorSetLayout descriptor_set_layout,
+        const VkDescriptorSetLayout descriptor_set_layout,
         const std::vector<VkDescriptorSetLayoutBinding>& descriptor_set_layout_bindings,
         const vulkan::Buffer& matrices,
         const vulkan::Buffer& drawing)
@@ -192,7 +192,7 @@ const VkDescriptorSet& CommonMemory::descriptor_set() const
         return descriptors_.descriptor_set(0);
 }
 
-void CommonMemory::set_shadow_image(VkSampler sampler, const vulkan::ImageView& shadow_image) const
+void CommonMemory::set_shadow_image(const VkSampler sampler, const vulkan::ImageView& shadow_image) const
 {
         ASSERT(shadow_image.has_usage(VK_IMAGE_USAGE_SAMPLED_BIT));
         ASSERT(shadow_image.sample_count() == VK_SAMPLE_COUNT_1_BIT);
@@ -275,7 +275,8 @@ void CommonMemory::set_transparency(
 
 //
 
-std::vector<VkDescriptorSetLayoutBinding> MeshMemory::descriptor_set_layout_bindings(VkShaderStageFlags coordinates)
+std::vector<VkDescriptorSetLayoutBinding> MeshMemory::descriptor_set_layout_bindings(
+        const VkShaderStageFlags coordinates)
 {
         std::vector<VkDescriptorSetLayoutBinding> bindings;
 
@@ -294,8 +295,8 @@ std::vector<VkDescriptorSetLayoutBinding> MeshMemory::descriptor_set_layout_bind
 }
 
 vulkan::Descriptors MeshMemory::create(
-        VkDevice device,
-        VkDescriptorSetLayout descriptor_set_layout,
+        const VkDevice device,
+        const VkDescriptorSetLayout descriptor_set_layout,
         const std::vector<VkDescriptorSetLayoutBinding>& descriptor_set_layout_bindings,
         const std::vector<const vulkan::Buffer*>& coordinates)
 {
