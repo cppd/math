@@ -15,6 +15,8 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
+#include "compare_parallelotopes.h"
+
 #include "../hyperplane_parallelotope.h"
 #include "../parallelotope.h"
 #include "../parallelotope_aa.h"
@@ -30,35 +32,57 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/com/random/engine.h>
 #include <src/test/test.h>
 
-#include <algorithm>
 #include <cmath>
 #include <memory>
 #include <random>
-#include <utility>
 
-namespace ns::geometry::spatial
+namespace ns::geometry::spatial::test
 {
 namespace
 {
 constexpr bool PRINT_ALL = false;
 
-template <typename T>
-constexpr T EQUALITY_EPSILON;
-template <>
-constexpr double EQUALITY_EPSILON<float> = 1e-5;
-template <>
-constexpr double EQUALITY_EPSILON<double> = 1e-14;
-
-template <typename T, std::size_t... I>
-constexpr Vector<sizeof...(I), T> last_coord_impl(T v, T last, std::integer_sequence<std::size_t, I...>&&)
-{
-        return Vector<sizeof...(I), T>((I + 1 < sizeof...(I) ? v : last)...);
-}
-
 template <std::size_t N, typename T>
 constexpr Vector<N, T> last_coord(const T& v, const T& last)
 {
-        return last_coord_impl(v, last, std::make_integer_sequence<std::size_t, N>());
+        static_assert(N > 0);
+        Vector<N, T> res;
+        for (std::size_t i = 0; i < N - 1; ++i)
+        {
+                res[i] = v;
+        }
+        res[N - 1] = last;
+        return res;
+}
+
+template <std::size_t N, typename T>
+constexpr std::array<Vector<N, T>, N> to_edge_vector(const std::array<T, N>& edges)
+{
+        std::array<Vector<N, T>, N> res;
+        for (std::size_t i = 0; i < N; ++i)
+        {
+                for (std::size_t j = 0; j < N; ++j)
+                {
+                        res[i][j] = 0;
+                }
+                res[i][i] = edges[i];
+        }
+        return res;
+}
+
+template <std::size_t N, typename T>
+constexpr std::array<Vector<N + 1, T>, N> to_edge_vector_hyper(const std::array<T, N>& edges)
+{
+        std::array<Vector<N + 1, T>, N> res;
+        for (std::size_t i = 0; i < N; ++i)
+        {
+                for (std::size_t j = 0; j < N + 1; ++j)
+                {
+                        res[i][j] = 0;
+                }
+                res[i][i] = edges[i];
+        }
+        return res;
 }
 
 void print_separator()
@@ -77,18 +101,6 @@ void print_message(const std::string& msg)
         }
 }
 
-template <typename T>
-bool almost_equal(const T& a, const T& b)
-{
-        return std::abs(a - b) <= EQUALITY_EPSILON<T>;
-}
-
-template <std::size_t N, typename T>
-bool almost_equal(const Vector<N, T>& a, const Vector<N, T>& b)
-{
-        return (a - b).norm() <= EQUALITY_EPSILON<T>;
-}
-
 template <std::size_t N, typename T, typename RandomEngine>
 Vector<N, T> random_direction(RandomEngine& engine)
 {
@@ -98,31 +110,9 @@ Vector<N, T> random_direction(RandomEngine& engine)
         while (true)
         {
                 Vector<N, T> direction;
-                for (unsigned i = 0; i < N; ++i)
+                for (std::size_t i = 0; i < N; ++i)
                 {
                         direction[i] = urd_dir(engine);
-                }
-                if (direction.norm() > 0)
-                {
-                        return direction;
-                }
-        }
-}
-
-template <std::size_t N, typename T, typename RandomEngine>
-Vector<N, T> random_direction_for_parallelotope_comparison(RandomEngine& engine)
-{
-        std::uniform_real_distribution<T> urd_dir(-1, 1);
-        std::uniform_int_distribution<int> uid_dir(-1, 1);
-        std::uniform_int_distribution<int> uid_select(0, 10);
-
-        // equal probability is not needed
-        while (true)
-        {
-                Vector<N, T> direction;
-                for (unsigned i = 0; i < N; ++i)
-                {
-                        direction[i] = uid_select(engine) != 0 ? urd_dir(engine) : uid_dir(engine);
                 }
                 if (direction.norm() > 0)
                 {
@@ -134,7 +124,7 @@ Vector<N, T> random_direction_for_parallelotope_comparison(RandomEngine& engine)
 template <std::size_t N, std::size_t COUNT, typename T>
 bool point_is_in_feasible_region(const Vector<N, T>& point, const std::array<Constraint<N, T>, COUNT>& c)
 {
-        for (unsigned i = 0; i < COUNT; ++i)
+        for (std::size_t i = 0; i < COUNT; ++i)
         {
                 const T r = dot(c[i].a, point) + c[i].b;
 
@@ -143,7 +133,6 @@ bool point_is_in_feasible_region(const Vector<N, T>& point, const std::array<Con
                         error("Not finite point " + to_string(point) + " and constraint a = " + to_string(c[i].a)
                               + ", b = " + to_string(c[i].b));
                 }
-
                 if (r < 0)
                 {
                         return false;
@@ -167,7 +156,6 @@ void test_constraints(RandomEngine& engine, const int point_count, const Paralle
                 {
                         error("Inside. Point must be outside\n" + to_string(point));
                 }
-
                 if (point_is_in_feasible_region(point, constraints.c))
                 {
                         error("Constraints. Point must be outside\n" + to_string(point));
@@ -180,7 +168,6 @@ void test_constraints(RandomEngine& engine, const int point_count, const Paralle
                 {
                         error("Inside. Point must be inside\n" + to_string(origin));
                 }
-
                 if (!point_is_in_feasible_region(origin, constraints.c))
                 {
                         error("Constraints. Point must be inside\n" + to_string(origin));
@@ -230,142 +217,6 @@ void test_overlap(RandomEngine& engine, const int point_count, const Paralleloto
                         }
                 }
         }
-}
-
-template <std::size_t N, typename T, typename... Parallelotope>
-void verify_intersection(const Ray<N, T>& ray, const Parallelotope&... p)
-{
-        static_assert(((N == Parallelotope::SPACE_DIMENSION) && ...));
-        static_assert(((std::is_same_v<T, typename Parallelotope::DataType>)&&...));
-
-        std::array<std::optional<T>, sizeof...(Parallelotope)> intersections{p.intersect(ray)...};
-
-        for (unsigned i = 1; i < sizeof...(Parallelotope); ++i)
-        {
-                if (intersections[i].has_value() != intersections[0].has_value())
-                {
-                        error("Error intersection comparison\n" + to_string(ray));
-                }
-                if (!intersections[i])
-                {
-                        continue;
-                }
-                if (!almost_equal(*intersections[i], *intersections[0]))
-                {
-                        std::string s = "Error intersection distance comparison.\n";
-                        s += "Distance[" + to_string(i) + "] = " + to_string(*intersections[i]) + "\n";
-                        s += "Distance[0] = " + to_string(*intersections[0]) + "\n";
-                        s += "Ray = " + to_string(ray);
-                        error(s);
-                }
-        }
-}
-
-template <std::size_t N, typename T, std::size_t COUNT>
-void verify_vectors(const std::array<Vector<N, T>, COUNT>& vectors, const std::string& name)
-{
-        for (unsigned i = 1; i < COUNT; ++i)
-        {
-                if (!almost_equal(vectors[i], vectors[0]))
-                {
-                        error("Error comparison of " + name + ".\n" + to_string(vectors[i]) + " and "
-                              + to_string(vectors[0]));
-                }
-        }
-}
-
-template <std::size_t N, typename T, std::size_t COUNT>
-void verify_vectors(const std::array<std::array<Vector<N, T>, N>, COUNT>& vectors, const std::string& name)
-{
-        for (unsigned i = 1; i < COUNT; ++i)
-        {
-                for (unsigned n = 0; n < N; ++n)
-                {
-                        if (!almost_equal(vectors[i][n], vectors[0][n]))
-                        {
-                                error("Error comparison of " + name + ".\n" + to_string(vectors[i][n]) + " and "
-                                      + to_string(vectors[0][n]));
-                        }
-                }
-        }
-}
-
-template <typename RandomEngine, typename... Parallelotope>
-void compare_parallelotopes(RandomEngine& engine, const int point_count, const Parallelotope&... p)
-{
-        static_assert(sizeof...(Parallelotope) >= 2);
-
-        constexpr std::size_t N = std::get<0>(std::make_tuple(Parallelotope::SPACE_DIMENSION...));
-        using T = typename std::tuple_element_t<0, std::tuple<Parallelotope...>>::DataType;
-
-        static_assert(((N == Parallelotope::SPACE_DIMENSION) && ...));
-        static_assert(((std::is_same_v<T, typename Parallelotope::DataType>)&&...));
-
-        std::array<T, sizeof...(Parallelotope)> lengths{p.length()...};
-
-        for (unsigned i = 1; i < sizeof...(Parallelotope); ++i)
-        {
-                if (!almost_equal(lengths[i], lengths[0]))
-                {
-                        error("Error diagonal max length.\n" + to_string(lengths[i]) + " and " + to_string(lengths[0]));
-                }
-        }
-
-        std::array<Vector<N, T>, sizeof...(Parallelotope)> orgs{p.org()...};
-        verify_vectors(orgs, "orgs");
-
-        std::array<std::array<Vector<N, T>, N>, sizeof...(Parallelotope)> vectors{p.vectors()...};
-        verify_vectors(vectors, "vectors");
-
-        const auto& parallelotope = *std::get<0>(std::make_tuple(&p...));
-        for (Vector<N, T> point :
-             testing::random_cover_points(parallelotope.org(), parallelotope.vectors(), point_count, engine))
-        {
-                std::array<bool, sizeof...(Parallelotope)> inside{p.inside(point)...};
-                for (unsigned i = 1; i < sizeof...(Parallelotope); ++i)
-                {
-                        if (inside[i] != inside[0])
-                        {
-                                error("Error point inside\n" + to_string(point));
-                        }
-                }
-
-                const Ray<N, T> ray(point, random_direction_for_parallelotope_comparison<N, T>(engine));
-
-                verify_intersection(ray, p...);
-                verify_intersection(ray.moved(-10 * lengths[0]), p...);
-                verify_intersection(ray.moved(10 * lengths[0]), p...);
-                verify_intersection(ray.moved(10 * lengths[0]).reversed(), p...);
-                verify_intersection(ray.moved(-10 * lengths[0]).reversed(), p...);
-        }
-}
-
-template <std::size_t N, typename T>
-constexpr std::array<Vector<N, T>, N> to_edge_vector(const std::array<T, N>& edges)
-{
-        std::array<Vector<N, T>, N> edge_vector;
-        for (unsigned i = 0; i < N; ++i)
-        {
-                for (unsigned j = 0; j < N; ++j)
-                {
-                        edge_vector[i][j] = (i != j) ? 0 : edges[i];
-                }
-        }
-        return edge_vector;
-}
-
-template <std::size_t N, typename T>
-constexpr std::array<Vector<N + 1, T>, N> to_edge_vector_hyper(const std::array<T, N>& edges)
-{
-        std::array<Vector<N + 1, T>, N> edge_vector;
-        for (unsigned i = 0; i < N; ++i)
-        {
-                for (unsigned j = 0; j < N + 1; ++j)
-                {
-                        edge_vector[i][j] = (i != j) ? 0 : edges[i];
-                }
-        }
-        return edge_vector;
 }
 
 template <std::size_t N, typename T>
