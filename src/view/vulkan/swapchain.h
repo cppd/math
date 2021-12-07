@@ -35,7 +35,7 @@ class Swapchain
 
 public:
         Swapchain(
-                const VkDevice& device,
+                VkDevice device,
                 const vulkan::CommandPool& command_pool,
                 const RenderBuffers& render_buffers,
                 const vulkan::Swapchain& swapchain);

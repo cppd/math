@@ -23,10 +23,10 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 namespace ns::vulkan
 {
 handle::DeviceMemory create_device_memory(
-        const VkDevice& device,
-        const VkPhysicalDevice& physical_device,
-        const VkBuffer& buffer,
-        const VkMemoryPropertyFlags& properties)
+        const VkDevice device,
+        const VkPhysicalDevice physical_device,
+        const VkBuffer buffer,
+        const VkMemoryPropertyFlags properties)
 {
         VkMemoryRequirements memory_requirements;
         vkGetBufferMemoryRequirements(device, buffer, &memory_requirements);
@@ -45,10 +45,10 @@ handle::DeviceMemory create_device_memory(
 }
 
 handle::DeviceMemory create_device_memory(
-        const VkDevice& device,
-        const VkPhysicalDevice& physical_device,
-        const VkImage& image,
-        const VkMemoryPropertyFlags& properties)
+        const VkDevice device,
+        const VkPhysicalDevice physical_device,
+        const VkImage image,
+        const VkMemoryPropertyFlags properties)
 {
         VkMemoryRequirements memory_requirements;
         vkGetImageMemoryRequirements(device, image, &memory_requirements);

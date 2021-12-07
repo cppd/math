@@ -27,7 +27,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 namespace ns::view
 {
 Swapchain::Swapchain(
-        const VkDevice& device,
+        const VkDevice device,
         const vulkan::CommandPool& command_pool,
         const RenderBuffers& render_buffers,
         const vulkan::Swapchain& swapchain)

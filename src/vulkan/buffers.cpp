@@ -124,12 +124,12 @@ void end_command_buffer(const VkCommandBuffer command_buffer)
 }
 
 void transition_image_layout(
-        const VkImageAspectFlags& aspect_flags,
-        const VkDevice& device,
-        const VkCommandPool& command_pool,
-        const VkQueue& queue,
-        const VkImage& image,
-        const VkImageLayout& layout)
+        const VkImageAspectFlags aspect_flags,
+        const VkDevice device,
+        const VkCommandPool command_pool,
+        const VkQueue queue,
+        const VkImage image,
+        const VkImageLayout layout)
 {
         ASSERT(layout != VK_IMAGE_LAYOUT_UNDEFINED);
 
@@ -167,7 +167,7 @@ void transition_image_layout(
         VULKAN_CHECK(vkQueueWaitIdle(queue));
 }
 
-bool has_bits(const VkImageUsageFlags& usage, const VkImageUsageFlagBits& bits)
+bool has_bits(const VkImageUsageFlags usage, const VkImageUsageFlagBits bits)
 {
         return (usage & bits) == bits;
 }
@@ -252,7 +252,7 @@ void check_family_index(
         }
 }
 
-bool has_usage_for_image_view(const VkImageUsageFlags& usage)
+bool has_usage_for_image_view(const VkImageUsageFlags usage)
 {
         return has_bits(usage, VK_IMAGE_USAGE_SAMPLED_BIT) || has_bits(usage, VK_IMAGE_USAGE_STORAGE_BIT)
                || has_bits(usage, VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT)
@@ -263,14 +263,14 @@ bool has_usage_for_image_view(const VkImageUsageFlags& usage)
                || has_bits(usage, VK_IMAGE_USAGE_FRAGMENT_DENSITY_MAP_BIT_EXT);
 }
 
-bool has_usage_for_transfer(const VkImageUsageFlags& usage)
+bool has_usage_for_transfer(const VkImageUsageFlags usage)
 {
         return has_bits(usage, VK_IMAGE_USAGE_TRANSFER_SRC_BIT) || has_bits(usage, VK_IMAGE_USAGE_TRANSFER_DST_BIT);
 }
 }
 
 BufferWithMemory::BufferWithMemory(
-        BufferMemoryType memory_type,
+        const BufferMemoryType memory_type,
         const Device& device,
         const std::vector<std::uint32_t>& family_indices,
         const VkBufferUsageFlags usage,
