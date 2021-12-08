@@ -25,6 +25,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <vulkan/vulkan.h>
 
 #define VULKAN_HANDLE_SPECIAL_FUNCTIONS(name)  \
+        name() = default;                      \
         name(const name&) = delete;            \
         name& operator=(const name&) = delete; \
         ~name()                                \
@@ -112,7 +113,6 @@ class DebugReportCallbackEXT final
 public:
         VULKAN_HANDLE_INSTANCE_FUNCTIONS(DebugReportCallbackEXT, callback_)
 
-        DebugReportCallbackEXT() = default;
         DebugReportCallbackEXT(VkInstance instance, const VkDebugReportCallbackCreateInfoEXT& create_info);
 };
 
@@ -127,7 +127,6 @@ class SurfaceKHR final
 public:
         VULKAN_HANDLE_INSTANCE_FUNCTIONS(SurfaceKHR, surface_)
 
-        SurfaceKHR() = default;
         SurfaceKHR(VkInstance instance, const std::function<VkSurfaceKHR(VkInstance)>& create_surface);
 };
 
@@ -141,7 +140,6 @@ class Device final
 public:
         VULKAN_HANDLE_DEVICE_FUNCTIONS(Device, device_)
 
-        Device() = default;
         Device(VkPhysicalDevice physical_device, const VkDeviceCreateInfo& create_info);
 };
 
@@ -156,7 +154,6 @@ class SwapchainKHR final
 public:
         VULKAN_HANDLE_DEVICE_FUNCTIONS(SwapchainKHR, swapchain_)
 
-        SwapchainKHR() = default;
         SwapchainKHR(VkDevice device, const VkSwapchainCreateInfoKHR& create_info);
 };
 
@@ -171,7 +168,6 @@ class ShaderModule final
 public:
         VULKAN_HANDLE_DEVICE_FUNCTIONS(ShaderModule, shader_module_)
 
-        ShaderModule() = default;
         ShaderModule(VkDevice device, const std::span<const std::uint32_t>& code);
 };
 
@@ -186,7 +182,6 @@ class RenderPass final
 public:
         VULKAN_HANDLE_DEVICE_FUNCTIONS(RenderPass, render_pass_)
 
-        RenderPass() = default;
         RenderPass(VkDevice device, const VkRenderPassCreateInfo& create_info);
 };
 
@@ -201,7 +196,6 @@ class PipelineLayout final
 public:
         VULKAN_HANDLE_DEVICE_FUNCTIONS(PipelineLayout, pipeline_layout_)
 
-        PipelineLayout() = default;
         PipelineLayout(VkDevice device, const VkPipelineLayoutCreateInfo& create_info);
 };
 
@@ -216,7 +210,6 @@ class Pipeline final
 public:
         VULKAN_HANDLE_DEVICE_FUNCTIONS(Pipeline, pipeline_)
 
-        Pipeline() = default;
         Pipeline(VkDevice device, const VkGraphicsPipelineCreateInfo& create_info);
         Pipeline(VkDevice device, const VkComputePipelineCreateInfo& create_info);
 };
@@ -232,7 +225,6 @@ class Framebuffer final
 public:
         VULKAN_HANDLE_DEVICE_FUNCTIONS(Framebuffer, framebuffer_)
 
-        Framebuffer() = default;
         Framebuffer(VkDevice device, const VkFramebufferCreateInfo& create_info);
 };
 
@@ -247,7 +239,6 @@ class CommandPool final
 public:
         VULKAN_HANDLE_DEVICE_FUNCTIONS(CommandPool, command_pool_)
 
-        CommandPool() = default;
         CommandPool(VkDevice device, const VkCommandPoolCreateInfo& create_info);
 };
 
@@ -262,7 +253,6 @@ class Semaphore final
 public:
         VULKAN_HANDLE_DEVICE_FUNCTIONS(Semaphore, semaphore_)
 
-        Semaphore() = default;
         explicit Semaphore(VkDevice device);
 };
 
@@ -277,7 +267,6 @@ class Fence final
 public:
         VULKAN_HANDLE_DEVICE_FUNCTIONS(Fence, fence_)
 
-        Fence() = default;
         Fence(VkDevice device, bool signaled);
 };
 
@@ -292,7 +281,6 @@ class Buffer final
 public:
         VULKAN_HANDLE_DEVICE_FUNCTIONS(Buffer, buffer_)
 
-        Buffer() = default;
         Buffer(VkDevice device, const VkBufferCreateInfo& create_info);
 };
 
@@ -307,7 +295,6 @@ class DeviceMemory final
 public:
         VULKAN_HANDLE_DEVICE_FUNCTIONS(DeviceMemory, device_memory_)
 
-        DeviceMemory() = default;
         DeviceMemory(VkDevice device, const VkMemoryAllocateInfo& allocate_info);
 };
 
@@ -323,7 +310,6 @@ class CommandBuffer final
 public:
         VULKAN_HANDLE_DEVICE_FUNCTIONS(CommandBuffer, command_buffer_)
 
-        CommandBuffer() = default;
         CommandBuffer(VkDevice device, VkCommandPool command_pool);
 };
 
@@ -339,7 +325,6 @@ class CommandBuffers final
 public:
         VULKAN_HANDLE_DEVICE_VECTOR_FUNCTIONS(CommandBuffers, command_buffers_)
 
-        CommandBuffers() = default;
         CommandBuffers(VkDevice device, VkCommandPool command_pool, std::uint32_t count);
 };
 
@@ -354,7 +339,6 @@ class DescriptorSetLayout final
 public:
         VULKAN_HANDLE_DEVICE_FUNCTIONS(DescriptorSetLayout, descriptor_set_layout_)
 
-        DescriptorSetLayout() = default;
         DescriptorSetLayout(VkDevice device, const VkDescriptorSetLayoutCreateInfo& create_info);
 };
 
@@ -369,7 +353,6 @@ class DescriptorPool final
 public:
         VULKAN_HANDLE_DEVICE_FUNCTIONS(DescriptorPool, descriptor_pool_)
 
-        DescriptorPool() = default;
         DescriptorPool(VkDevice device, const VkDescriptorPoolCreateInfo& create_info);
 };
 
@@ -385,7 +368,6 @@ class DescriptorSet final
 public:
         VULKAN_HANDLE_DEVICE_FUNCTIONS(DescriptorSet, descriptor_set_)
 
-        DescriptorSet() = default;
         DescriptorSet(VkDevice device, VkDescriptorPool descriptor_pool, VkDescriptorSetLayout descriptor_set_layout);
 };
 
@@ -401,7 +383,6 @@ class DescriptorSets final
 public:
         VULKAN_HANDLE_DEVICE_VECTOR_FUNCTIONS(DescriptorSets, descriptor_sets_)
 
-        DescriptorSets() = default;
         DescriptorSets(
                 VkDevice device,
                 VkDescriptorPool descriptor_pool,
@@ -419,7 +400,6 @@ class Image final
 public:
         VULKAN_HANDLE_DEVICE_FUNCTIONS(Image, image_)
 
-        Image() = default;
         Image(VkDevice device, const VkImageCreateInfo& create_info);
 };
 
@@ -434,7 +414,6 @@ class ImageView final
 public:
         VULKAN_HANDLE_DEVICE_FUNCTIONS(ImageView, image_view_)
 
-        ImageView() = default;
         ImageView(VkDevice device, const VkImageViewCreateInfo& create_info);
 };
 
@@ -449,7 +428,6 @@ class Sampler final
 public:
         VULKAN_HANDLE_DEVICE_FUNCTIONS(Sampler, sampler_)
 
-        Sampler() = default;
         Sampler(VkDevice device, const VkSamplerCreateInfo& create_info);
 };
 }
