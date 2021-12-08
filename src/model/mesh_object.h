@@ -119,23 +119,22 @@ class MeshObject final : public std::enable_shared_from_this<MeshObject<N>>
         //
 
         std::unique_ptr<const Mesh<N>> mesh_;
-        Matrix<N + 1, N + 1, double> matrix_;
         std::string name_;
         ObjectId id_;
 
-        float alpha_ = 1;
+        bool inserted_ = false;
 
+        Matrix<N + 1, N + 1, double> matrix_;
+        float alpha_ = 1;
         color::Color color_{RGB8(220, 255, 220)};
         float ambient_ = 0.2;
         float metalness_ = 0.05;
         float roughness_ = 0.3;
-
         bool visible_ = false;
-        bool inserted_ = false;
-
-        mutable std::shared_mutex mutex_;
 
         Versions<Updates().size()> versions_;
+
+        mutable std::shared_mutex mutex_;
 
         void send_event(MeshEvent<N>&& event) noexcept
         {
@@ -153,88 +152,6 @@ class MeshObject final : public std::enable_shared_from_this<MeshObject<N>>
                 }
         }
 
-        //
-
-        const Mesh<N>& mesh() const
-        {
-                return *mesh_;
-        }
-
-        const Matrix<N + 1, N + 1, double>& matrix() const
-        {
-                return matrix_;
-        }
-
-        void set_matrix(const Matrix<N + 1, N + 1, double>& matrix)
-        {
-                matrix_ = matrix;
-        }
-
-        float alpha() const
-        {
-                return alpha_;
-        }
-
-        void set_alpha(const float alpha)
-        {
-                alpha_ = alpha;
-        }
-
-        const color::Color& color() const
-        {
-                return color_;
-        }
-
-        void set_color(const color::Color& color)
-        {
-                color_ = color;
-        }
-
-        float ambient() const
-        {
-                return ambient_;
-        }
-
-        void set_ambient(const float ambient)
-        {
-                ambient_ = ambient;
-        }
-
-        float metalness() const
-        {
-                return metalness_;
-        }
-
-        void set_metalness(const float metalness)
-        {
-                metalness_ = metalness;
-        }
-
-        float roughness() const
-        {
-                return roughness_;
-        }
-
-        void set_roughness(const float roughness)
-        {
-                roughness_ = roughness;
-        }
-
-        bool visible() const
-        {
-                return visible_;
-        }
-
-        void set_visible(const bool visible)
-        {
-                visible_ = visible;
-        }
-
-        Updates updates(std::optional<int>* const version) const
-        {
-                return versions_.updates(version);
-        }
-
 public:
         static void set_events(const MeshEvents<N>* const events)
         {
@@ -248,7 +165,7 @@ public:
         }
 
         MeshObject(std::unique_ptr<const Mesh<N>>&& mesh, const Matrix<N + 1, N + 1, double>& matrix, std::string name)
-                : mesh_(std::move(mesh)), matrix_(matrix), name_(std::move(name))
+                : mesh_(std::move(mesh)), name_(std::move(name)), matrix_(matrix)
         {
                 ASSERT(mesh_);
         }
@@ -297,8 +214,6 @@ public:
         }
 };
 
-//
-
 template <std::size_t N>
 class Writing final
 {
@@ -308,7 +223,7 @@ class Writing final
         Updates updates_;
 
 public:
-        explicit Writing(MeshObject<N>* object) : object_(object), lock_(object_->mutex_)
+        explicit Writing(MeshObject<N>* const object) : object_(object), lock_(object_->mutex_)
         {
         }
 
@@ -343,94 +258,94 @@ public:
 
         const std::string& name() const
         {
-                return object_->name();
+                return object_->name_;
         }
 
         const ObjectId& id() const
         {
-                return object_->id();
+                return object_->id_;
         }
 
         const Mesh<N>& mesh() const
         {
-                return object_->mesh();
+                return *object_->mesh_;
         }
 
         const Matrix<N + 1, N + 1, double>& matrix() const
         {
-                return object_->matrix();
+                return object_->matrix_;
         }
 
         void set_matrix(const Matrix<N + 1, N + 1, double>& matrix)
         {
                 updates_.set(UPDATE_MATRIX);
-                object_->set_matrix(matrix);
+                object_->matrix_ = matrix;
         }
 
         float alpha() const
         {
-                return object_->alpha();
+                return object_->alpha_;
         }
 
         void set_alpha(const float alpha)
         {
                 updates_.set(UPDATE_ALPHA);
-                object_->set_alpha(alpha);
+                object_->alpha_ = alpha;
         }
 
         const color::Color& color() const
         {
-                return object_->color();
+                return object_->color_;
         }
 
         void set_color(const color::Color& color)
         {
                 updates_.set(UPDATE_COLOR);
-                object_->set_color(color);
+                object_->color_ = color;
         }
 
         float ambient() const
         {
-                return object_->ambient();
+                return object_->ambient_;
         }
 
         void set_ambient(const float ambient)
         {
                 updates_.set(UPDATE_AMBIENT);
-                object_->set_ambient(ambient);
+                object_->ambient_ = ambient;
         }
 
         float metalness() const
         {
-                return object_->metalness();
+                return object_->metalness_;
         }
 
         void set_metalness(const float metalness)
         {
                 updates_.set(UPDATE_METALNESS);
-                object_->set_metalness(metalness);
+                object_->metalness_ = metalness;
         }
 
         float roughness() const
         {
-                return object_->roughness();
+                return object_->roughness_;
         }
 
         void set_roughness(const float roughness)
         {
                 updates_.set(UPDATE_ROUGHNESS);
-                object_->set_roughness(roughness);
+                object_->roughness_ = roughness;
         }
 
         bool visible() const
         {
-                return object_->visible();
+                return object_->visible_;
         }
 
         void set_visible(const bool visible)
         {
                 updates_.set(UPDATE_VISIBILITY);
-                object_->set_visible(visible);
+                object_->visible_ = visible;
         }
 };
 
@@ -447,57 +362,57 @@ public:
 
         Updates updates(std::optional<int>* const version) const
         {
-                return object_->updates(version);
+                return object_->versions_.updates(version);
         }
 
         const std::string& name() const
         {
-                return object_->name();
+                return object_->name_;
         }
 
         const ObjectId& id() const
         {
-                return object_->id();
+                return object_->id_;
         }
 
         const Mesh<N>& mesh() const
         {
-                return object_->mesh();
+                return *object_->mesh_;
         }
 
         const Matrix<N + 1, N + 1, double>& matrix() const
         {
-                return object_->matrix();
+                return object_->matrix_;
         }
 
         float alpha() const
         {
-                return object_->alpha();
+                return object_->alpha_;
         }
 
         const color::Color& color() const
         {
-                return object_->color();
+                return object_->color_;
         }
 
         float ambient() const
         {
-                return object_->ambient();
+                return object_->ambient_;
         }
 
         float metalness() const
         {
-                return object_->metalness();
+                return object_->metalness_;
         }
 
         float roughness() const
         {
-                return object_->roughness();
+                return object_->roughness_;
         }
 
         bool visible() const
         {
-                return object_->visible();
+                return object_->visible_;
         }
 };
 }
