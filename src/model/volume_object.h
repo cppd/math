@@ -123,30 +123,27 @@ class VolumeObject final : public std::enable_shared_from_this<VolumeObject<N>>
         //
 
         std::unique_ptr<const Volume<N>> volume_;
-        Matrix<N + 1, N + 1, double> matrix_;
         std::string name_;
         ObjectId id_;
 
+        bool inserted_ = false;
+
+        Matrix<N + 1, N + 1, double> matrix_;
         float level_min_ = 0;
         float level_max_ = 1;
-
         float volume_alpha_coefficient_ = 1;
         float isosurface_alpha_ = 1;
-
         bool isosurface_ = false;
         float isovalue_ = 0.5f;
-
         color::Color color_{RGB8(220, 255, 220)};
         float ambient_ = 0.2;
         float metalness_ = 0.05;
         float roughness_ = 0.3;
-
         bool visible_ = false;
-        bool inserted_ = false;
-
-        mutable std::shared_mutex mutex_;
 
         Versions<Updates().size()> versions_;
+
+        mutable std::shared_mutex mutex_;
 
         void send_event(VolumeEvent<N>&& event) noexcept
         {
@@ -164,134 +161,6 @@ class VolumeObject final : public std::enable_shared_from_this<VolumeObject<N>>
                 }
         }
 
-        //
-
-        const Volume<N>& volume() const
-        {
-                return *volume_;
-        }
-
-        const Matrix<N + 1, N + 1, double>& matrix() const
-        {
-                return matrix_;
-        }
-
-        void set_matrix(const Matrix<N + 1, N + 1, double>& matrix)
-        {
-                matrix_ = matrix;
-        }
-
-        float level_min() const
-        {
-                return level_min_;
-        }
-
-        float level_max() const
-        {
-                return level_max_;
-        }
-
-        void set_levels(const float min, const float max)
-        {
-                level_min_ = min;
-                level_max_ = max;
-        }
-
-        float volume_alpha_coefficient() const
-        {
-                return volume_alpha_coefficient_;
-        }
-
-        void set_volume_alpha_coefficient(const float coefficient)
-        {
-                volume_alpha_coefficient_ = coefficient;
-        }
-
-        float isosurface_alpha() const
-        {
-                return isosurface_alpha_;
-        }
-
-        void set_isosurface_alpha(const float alpha)
-        {
-                isosurface_alpha_ = alpha;
-        }
-
-        bool isosurface() const
-        {
-                return isosurface_;
-        }
-
-        void set_isosurface(const bool enabled)
-        {
-                isosurface_ = enabled;
-        }
-
-        float isovalue() const
-        {
-                return isovalue_;
-        }
-
-        void set_isovalue(const float value)
-        {
-                isovalue_ = value;
-        }
-
-        const color::Color& color() const
-        {
-                return color_;
-        }
-
-        void set_color(const color::Color& color)
-        {
-                color_ = color;
-        }
-
-        float ambient() const
-        {
-                return ambient_;
-        }
-
-        void set_ambient(const float ambient)
-        {
-                ambient_ = ambient;
-        }
-
-        float metalness() const
-        {
-                return metalness_;
-        }
-
-        void set_metalness(const float metalness)
-        {
-                metalness_ = metalness;
-        }
-
-        float roughness() const
-        {
-                return roughness_;
-        }
-
-        void set_roughness(const float roughness)
-        {
-                roughness_ = roughness;
-        }
-
-        bool visible() const
-        {
-                return visible_;
-        }
-
-        void set_visible(const bool visible)
-        {
-                visible_ = visible;
-        }
-
-        Updates updates(std::optional<int>* const version) const
-        {
-                return versions_.updates(version);
-        }
-
 public:
         static void set_events(const VolumeEvents<N>* const events)
         {
@@ -304,13 +173,11 @@ public:
                 events_ = &DEFAULT_EVENTS;
         }
 
-        //
-
         VolumeObject(
                 std::unique_ptr<const Volume<N>>&& volume,
                 const Matrix<N + 1, N + 1, double>& matrix,
                 std::string name)
-                : volume_(std::move(volume)), matrix_(matrix), name_(std::move(name))
+                : volume_(std::move(volume)), name_(std::move(name)), matrix_(matrix)
         {
                 ASSERT(volume_);
         }
@@ -359,8 +226,6 @@ public:
         }
 };
 
-//
-
 template <std::size_t N>
 class Writing final
 {
@@ -405,133 +270,134 @@ public:
 
         const Volume<N>& volume() const
         {
-                return object_->volume();
+                return *object_->volume_;
         }
 
         const Matrix<N + 1, N + 1, double>& matrix() const
         {
-                return object_->matrix();
+                return object_->matrix_;
         }
 
         void set_matrix(const Matrix<N + 1, N + 1, double>& matrix)
         {
                 updates_.set(UPDATE_MATRICES);
-                object_->set_matrix(matrix);
+                object_->matrix_ = matrix;
         }
 
         float level_min() const
         {
-                return object_->level_min();
+                return object_->level_min_;
         }
 
         float level_max() const
         {
-                return object_->level_max();
+                return object_->level_max_;
         }
 
         void set_levels(const float min, const float max)
         {
                 updates_.set(UPDATE_LEVELS);
-                object_->set_levels(min, max);
+                object_->level_min_ = min;
+                object_->level_max_ = max;
         }
 
         float volume_alpha_coefficient() const
         {
-                return object_->volume_alpha_coefficient();
+                return object_->volume_alpha_coefficient_;
         }
 
         void set_volume_alpha_coefficient(const float coefficient)
         {
                 updates_.set(UPDATE_VOLUME_ALPHA_COEFFICIENT);
-                object_->set_volume_alpha_coefficient(coefficient);
+                object_->volume_alpha_coefficient_ = coefficient;
         }
 
         float isosurface_alpha() const
         {
-                return object_->isosurface_alpha();
+                return object_->isosurface_alpha_;
         }
 
         void set_isosurface_alpha(const float alpha)
         {
                 updates_.set(UPDATE_ISOSURFACE_ALPHA);
-                object_->set_isosurface_alpha(alpha);
+                object_->isosurface_alpha_ = alpha;
         }
 
         bool isosurface() const
         {
-                return object_->isosurface();
+                return object_->isosurface_;
         }
 
         void set_isosurface(const bool enabled)
         {
                 updates_.set(UPDATE_ISOVALUE);
-                object_->set_isosurface(enabled);
+                object_->isosurface_ = enabled;
         }
 
         float isovalue() const
         {
-                return object_->isovalue();
+                return object_->isovalue_;
         }
 
         void set_isovalue(const float value)
         {
                 updates_.set(UPDATE_ISOVALUE);
-                object_->set_isovalue(value);
+                object_->isovalue_ = value;
         }
 
         const color::Color& color() const
         {
-                return object_->color();
+                return object_->color_;
         }
 
         void set_color(const color::Color& color)
         {
                 updates_.set(UPDATE_COLOR);
-                object_->set_color(color);
+                object_->color_ = color;
         }
 
         float ambient() const
         {
-                return object_->ambient();
+                return object_->ambient_;
         }
 
         void set_ambient(const float ambient)
         {
                 updates_.set(UPDATE_AMBIENT);
-                object_->set_ambient(ambient);
+                object_->ambient_ = ambient;
         }
 
         float metalness() const
         {
-                return object_->metalness();
+                return object_->metalness_;
         }
 
         void set_metalness(const float metalness)
         {
                 updates_.set(UPDATE_METALNESS);
-                object_->set_metalness(metalness);
+                object_->metalness_ = metalness;
         }
 
         float roughness() const
         {
-                return object_->roughness();
+                return object_->roughness_;
         }
 
         void set_roughness(const float roughness)
         {
                 updates_.set(UPDATE_ROUGHNESS);
-                object_->set_roughness(roughness);
+                object_->roughness_ = roughness;
         }
 
         bool visible() const
         {
-                return object_->visible();
+                return object_->visible_;
         }
 
         void set_visible(const bool visible)
         {
                 updates_.set(UPDATE_VISIBILITY);
-                object_->set_visible(visible);
+                object_->visible_ = visible;
         }
 };
 
@@ -548,72 +414,72 @@ public:
 
         Updates updates(std::optional<int>* const version) const
         {
-                return object_->updates(version);
+                return object_->versions_.updates(version);
         }
 
         const Volume<N>& volume() const
         {
-                return object_->volume();
+                return *object_->volume_;
         }
 
         const Matrix<N + 1, N + 1, double>& matrix() const
         {
-                return object_->matrix();
+                return object_->matrix_;
         }
 
         float level_min() const
         {
-                return object_->level_min();
+                return object_->level_min_;
         }
 
         float level_max() const
         {
-                return object_->level_max();
+                return object_->level_max_;
         }
 
         float volume_alpha_coefficient() const
         {
-                return object_->volume_alpha_coefficient();
+                return object_->volume_alpha_coefficient_;
         }
 
         float isosurface_alpha() const
         {
-                return object_->isosurface_alpha();
+                return object_->isosurface_alpha_;
         }
 
         bool isosurface() const
         {
-                return object_->isosurface();
+                return object_->isosurface_;
         }
 
         float isovalue() const
         {
-                return object_->isovalue();
+                return object_->isovalue_;
         }
 
         const color::Color& color() const
         {
-                return object_->color();
+                return object_->color_;
         }
 
         float ambient() const
         {
-                return object_->ambient();
+                return object_->ambient_;
         }
 
         float metalness() const
         {
-                return object_->metalness();
+                return object_->metalness_;
         }
 
         float roughness() const
         {
-                return object_->roughness();
+                return object_->roughness_;
         }
 
         bool visible() const
         {
-                return object_->visible();
+                return object_->visible_;
         }
 };
 }
