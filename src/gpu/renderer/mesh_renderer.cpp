@@ -17,6 +17,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "mesh_renderer.h"
 
+#include "mesh_commands.h"
 #include "mesh_sampler.h"
 
 #include <src/com/error.h>
@@ -26,9 +27,8 @@ namespace ns::gpu::renderer
 {
 namespace
 {
-template <template <typename...> typename T>
 void find_opaque_and_transparent(
-        const T<const MeshObject*>& meshes,
+        const std::vector<const MeshObject*>& meshes,
         std::vector<const MeshObject*>* const opaque_meshes,
         std::vector<const MeshObject*>* const transparent_meshes)
 {
@@ -165,7 +165,7 @@ void MeshRenderer::create_render_buffers(
                 transparency_heads_image.image_view(), transparency_heads_size_image.image_view(), transparency_counter,
                 transparency_nodes);
 
-        for (bool transparent : {false, true})
+        for (const bool transparent : {false, true})
         {
                 render_pipelines(transparent).triangles = triangles_program_.create_pipeline(
                         render_buffers->render_pass(), render_buffers->sample_count(), sample_shading_, viewport,
@@ -191,7 +191,7 @@ void MeshRenderer::delete_render_buffers()
 
         delete_render_command_buffers();
 
-        for (bool transparent : {false, true})
+        for (const bool transparent : {false, true})
         {
                 render_pipelines(transparent).triangles.reset();
                 render_pipelines(transparent).triangle_lines.reset();
@@ -266,9 +266,8 @@ VkSampler MeshRenderer::texture_sampler() const
         return texture_sampler_;
 }
 
-template <template <typename...> typename T>
 void MeshRenderer::draw_commands(
-        const T<const MeshObject*>& meshes,
+        const std::vector<const MeshObject*>& meshes,
         const VkCommandBuffer command_buffer,
         const bool clip_plane,
         const bool normals,
@@ -277,174 +276,46 @@ void MeshRenderer::draw_commands(
 {
         ASSERT(thread_id_ == std::this_thread::get_id());
 
-        //
-
         if (meshes.empty())
         {
                 return;
         }
 
-        ASSERT(!depth || !transparent);
-
         if (depth)
         {
+                ASSERT(!transparent);
+
                 vkCmdSetDepthBias(command_buffer, 1.5f, 0.0f, 1.5f);
+
+                commands_depth_triangles(
+                        meshes, command_buffer, *render_triangles_depth_pipeline_, triangles_depth_program_,
+                        triangles_depth_common_memory_);
+
+                return;
         }
 
-        if (!depth)
+        commands_triangles(
+                meshes, command_buffer, *render_pipelines(transparent).triangles, triangles_program_,
+                triangles_common_memory_);
+
+        commands_lines(
+                meshes, command_buffer, *render_pipelines(transparent).lines, points_program_, points_common_memory_);
+
+        commands_points(
+                meshes, command_buffer, *render_pipelines(transparent).points, points_program_, points_common_memory_);
+
+        if (clip_plane)
         {
-                vkCmdBindPipeline(
-                        command_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, *render_pipelines(transparent).triangles);
-
-                vkCmdBindDescriptorSets(
-                        command_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, triangles_program_.pipeline_layout(),
-                        CommonMemory::set_number(), 1 /*set count*/, &triangles_common_memory_.descriptor_set(), 0,
-                        nullptr);
-
-                auto bind_descriptor_set_mesh = [&](VkDescriptorSet descriptor_set)
-                {
-                        vkCmdBindDescriptorSets(
-                                command_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, triangles_program_.pipeline_layout(),
-                                MeshMemory::set_number(), 1 /*set count*/, &descriptor_set, 0, nullptr);
-                };
-
-                auto bind_descriptor_set_material = [&](VkDescriptorSet descriptor_set)
-                {
-                        vkCmdBindDescriptorSets(
-                                command_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, triangles_program_.pipeline_layout(),
-                                TrianglesMaterialMemory::set_number(), 1 /*set count*/, &descriptor_set, 0, nullptr);
-                };
-
-                for (const MeshObject* mesh : meshes)
-                {
-                        mesh->commands_triangles(
-                                command_buffer, triangles_program_.descriptor_set_layout_mesh(),
-                                bind_descriptor_set_mesh, triangles_program_.descriptor_set_layout_material(),
-                                bind_descriptor_set_material);
-                }
-        }
-        else
-        {
-                vkCmdBindPipeline(command_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, *render_triangles_depth_pipeline_);
-
-                vkCmdBindDescriptorSets(
-                        command_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, triangles_depth_program_.pipeline_layout(),
-                        CommonMemory::set_number(), 1 /*set count*/, &triangles_depth_common_memory_.descriptor_set(),
-                        0, nullptr);
-
-                auto bind_descriptor_set_mesh = [&](VkDescriptorSet descriptor_set)
-                {
-                        vkCmdBindDescriptorSets(
-                                command_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS,
-                                triangles_depth_program_.pipeline_layout(), MeshMemory::set_number(), 1 /*set count*/,
-                                &descriptor_set, 0, nullptr);
-                };
-
-                for (const MeshObject* mesh : meshes)
-                {
-                        mesh->commands_plain_triangles(
-                                command_buffer, triangles_depth_program_.descriptor_set_layout_mesh(),
-                                bind_descriptor_set_mesh);
-                }
+                commands_triangle_lines(
+                        meshes, command_buffer, *render_pipelines(transparent).triangle_lines, triangle_lines_program_,
+                        triangle_lines_common_memory_);
         }
 
-        if (!depth)
+        if (normals)
         {
-                vkCmdBindPipeline(
-                        command_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, *render_pipelines(transparent).lines);
-
-                vkCmdBindDescriptorSets(
-                        command_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, points_program_.pipeline_layout(),
-                        CommonMemory::set_number(), 1 /*set count*/, &points_common_memory_.descriptor_set(), 0,
-                        nullptr);
-
-                auto bind_descriptor_set_mesh = [&](VkDescriptorSet descriptor_set)
-                {
-                        vkCmdBindDescriptorSets(
-                                command_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, points_program_.pipeline_layout(),
-                                MeshMemory::set_number(), 1 /*set count*/, &descriptor_set, 0, nullptr);
-                };
-
-                for (const MeshObject* mesh : meshes)
-                {
-                        mesh->commands_lines(
-                                command_buffer, points_program_.descriptor_set_layout_mesh(), bind_descriptor_set_mesh);
-                }
-        }
-
-        if (!depth)
-        {
-                vkCmdBindPipeline(
-                        command_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, *render_pipelines(transparent).points);
-
-                vkCmdBindDescriptorSets(
-                        command_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, points_program_.pipeline_layout(),
-                        CommonMemory::set_number(), 1 /*set count*/, &points_common_memory_.descriptor_set(), 0,
-                        nullptr);
-
-                auto bind_descriptor_set_mesh = [&](VkDescriptorSet descriptor_set)
-                {
-                        vkCmdBindDescriptorSets(
-                                command_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, points_program_.pipeline_layout(),
-                                MeshMemory::set_number(), 1 /*set count*/, &descriptor_set, 0, nullptr);
-                };
-
-                for (const MeshObject* mesh : meshes)
-                {
-                        mesh->commands_points(
-                                command_buffer, points_program_.descriptor_set_layout_mesh(), bind_descriptor_set_mesh);
-                }
-        }
-
-        if (!depth && clip_plane)
-        {
-                vkCmdBindPipeline(
-                        command_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, *render_pipelines(transparent).triangle_lines);
-
-                vkCmdBindDescriptorSets(
-                        command_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, triangle_lines_program_.pipeline_layout(),
-                        CommonMemory::set_number(), 1 /*set count*/, &triangle_lines_common_memory_.descriptor_set(), 0,
-                        nullptr);
-
-                auto bind_descriptor_set_mesh = [&](VkDescriptorSet descriptor_set)
-                {
-                        vkCmdBindDescriptorSets(
-                                command_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS,
-                                triangle_lines_program_.pipeline_layout(), MeshMemory::set_number(), 1 /*set count*/,
-                                &descriptor_set, 0, nullptr);
-                };
-
-                for (const MeshObject* mesh : meshes)
-                {
-                        mesh->commands_plain_triangles(
-                                command_buffer, triangle_lines_program_.descriptor_set_layout_mesh(),
-                                bind_descriptor_set_mesh);
-                }
-        }
-
-        if (!depth && normals)
-        {
-                vkCmdBindPipeline(
-                        command_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, *render_pipelines(transparent).normals);
-
-                vkCmdBindDescriptorSets(
-                        command_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, normals_program_.pipeline_layout(),
-                        CommonMemory::set_number(), 1 /*set count*/, &normals_common_memory_.descriptor_set(), 0,
-                        nullptr);
-
-                auto bind_descriptor_set_mesh = [&](VkDescriptorSet descriptor_set)
-                {
-                        vkCmdBindDescriptorSets(
-                                command_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, normals_program_.pipeline_layout(),
-                                MeshMemory::set_number(), 1 /*set count*/, &descriptor_set, 0, nullptr);
-                };
-
-                for (const MeshObject* mesh : meshes)
-                {
-                        mesh->commands_triangle_vertices(
-                                command_buffer, normals_program_.descriptor_set_layout_mesh(),
-                                bind_descriptor_set_mesh);
-                }
+                commands_normals(
+                        meshes, command_buffer, *render_pipelines(transparent).normals, normals_program_,
+                        normals_common_memory_);
         }
 }
 
@@ -457,8 +328,6 @@ void MeshRenderer::create_render_command_buffers(
         const std::function<void(VkCommandBuffer command_buffer)>& after_transparency_render_pass_commands)
 {
         ASSERT(thread_id_ == std::this_thread::get_id());
-
-        //
 
         ASSERT(render_buffers_);
 
@@ -487,7 +356,7 @@ void MeshRenderer::create_render_command_buffers(
 
         info.before_render_pass_commands =
                 !transparent_meshes.empty() ? before_transparency_render_pass_commands : nullptr;
-        info.render_pass_commands = [&](VkCommandBuffer command_buffer)
+        info.render_pass_commands = [&](const VkCommandBuffer command_buffer)
         {
                 if (!opaque_meshes.empty())
                 {
@@ -509,7 +378,7 @@ void MeshRenderer::create_render_command_buffers(
         if (!transparent_meshes.empty())
         {
                 info.before_render_pass_commands = nullptr;
-                info.render_pass_commands = [&](VkCommandBuffer command_buffer)
+                info.render_pass_commands = [&](const VkCommandBuffer command_buffer)
                 {
                         draw_commands(
                                 transparent_meshes, command_buffer, clip_plane, normals, false /*depth*/,
@@ -534,8 +403,6 @@ void MeshRenderer::create_depth_command_buffers(
 {
         ASSERT(thread_id_ == std::this_thread::get_id());
 
-        //
-
         ASSERT(depth_buffers_);
 
         delete_depth_command_buffers();
@@ -557,7 +424,7 @@ void MeshRenderer::create_depth_command_buffers(
         info.framebuffers = &depth_buffers_->framebuffers();
         info.command_pool = graphics_command_pool;
         info.clear_values = &depth_buffers_->clear_values();
-        info.render_pass_commands = [&](VkCommandBuffer command_buffer)
+        info.render_pass_commands = [&](const VkCommandBuffer command_buffer)
         {
                 draw_commands(
                         meshes, command_buffer, clip_plane, normals, true /*depth*/, false /*transparent_pipeline*/);

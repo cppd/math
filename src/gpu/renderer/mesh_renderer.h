@@ -82,9 +82,8 @@ class MeshRenderer
         const Pipelines& render_pipelines(bool transparent) const;
         Pipelines& render_pipelines(bool transparent);
 
-        template <template <typename...> typename T>
         void draw_commands(
-                const T<const MeshObject*>& meshes,
+                const std::vector<const MeshObject*>& meshes,
                 VkCommandBuffer command_buffer,
                 bool clip_plane,
                 bool normals,
