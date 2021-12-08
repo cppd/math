@@ -79,7 +79,7 @@ Property                  | Value
 --------------------------|--------------------------------------------
 Programming languages     | C++20, GLSL 4.50
 C++ compilers             | GCC 11, Clang 13
-Platforms                 | Linux, Windows
+Platforms                 | Linux
 Graphics and compute APIs | Vulkan 1.2
 Frameworks                | Qt 5
 Libraries                 | FreeType, GMP
