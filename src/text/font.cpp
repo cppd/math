@@ -75,7 +75,7 @@ class Face final
 
 public:
 #if 0
-        Face(FT_Library library, const std::string& font_file)
+        Face(const FT_Library library, const std::string& font_file)
         {
                 if (FT_New_Face(library, font_file.c_str(), 0, &face_))
                 {
@@ -84,7 +84,7 @@ public:
         }
 #endif
         template <typename T>
-        Face(FT_Library library, T&& font_data) : font_data_(std::forward<T>(font_data))
+        Face(const FT_Library library, T&& font_data) : font_data_(std::forward<T>(font_data))
         {
                 if (FT_New_Memory_Face(library, data_pointer(font_data_), data_size(font_data_), 0, &face_))
                 {
@@ -116,7 +116,7 @@ public:
         Face& operator=(Face&&) = delete;
 };
 
-void save_to_file(char32_t code_point, const std::optional<Font::Char>& data)
+void save_to_file(const char32_t code_point, const std::optional<Font::Char>& data)
 {
         if (!data)
         {
@@ -175,7 +175,7 @@ class Font::Impl final
 
 public:
         template <typename T>
-        Impl(int size_in_pixels, T&& font_data) : face_(library_, std::forward<T>(font_data))
+        Impl(const int size_in_pixels, T&& font_data) : face_(library_, std::forward<T>(font_data))
         {
                 set_size(size_in_pixels);
         }
@@ -190,7 +190,7 @@ public:
         Impl(Impl&&) = delete;
         Impl& operator=(Impl&&) = delete;
 
-        void set_size(int size_in_pixels)
+        void set_size(const int size_in_pixels)
         {
                 ASSERT(std::this_thread::get_id() == thread_id_);
 
@@ -198,7 +198,7 @@ public:
                 FT_Set_Pixel_Sizes(face_, 0, size_in_pixels);
         }
 
-        std::optional<Char> render(char32_t code_point) const
+        std::optional<Char> render(const char32_t code_point) const
         {
                 ASSERT(std::this_thread::get_id() == thread_id_);
 
@@ -230,20 +230,20 @@ public:
         }
 };
 
-Font::Font(int size_in_pixels, std::vector<unsigned char>&& font_data)
+Font::Font(const int size_in_pixels, std::vector<unsigned char>&& font_data)
         : impl_(std::make_unique<Impl>(size_in_pixels, std::move(font_data)))
 {
 }
 
 Font::~Font() = default;
 
-void Font::set_size(int size_in_pixels)
+void Font::set_size(const int size_in_pixels)
 {
         impl_->set_size(size_in_pixels);
 }
 
 template <typename T>
-std::optional<Font::Char> Font::render(T code_point) const
+std::optional<Font::Char> Font::render(const T code_point) const
 {
         static_assert(std::is_same_v<T, char32_t>);
 

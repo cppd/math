@@ -27,7 +27,7 @@ namespace ns::numerical
 namespace identity_implementation
 {
 template <std::size_t VALUE_INDEX, typename T, int... I>
-constexpr Vector<sizeof...(I), T> make_vector_one_value(std::integer_sequence<int, I...>, const T& value)
+constexpr Vector<sizeof...(I), T> make_vector_one_value(std::integer_sequence<int, I...>&&, const T& value)
 {
         static_assert(VALUE_INDEX >= 0 && VALUE_INDEX < sizeof...(I));
 
@@ -42,7 +42,7 @@ constexpr Vector<N, T> make_vector_one_value(const T& value)
 
 template <typename T, int... I>
 constexpr std::array<Vector<sizeof...(I), T>, sizeof...(I)> make_array_of_vector_one_value(
-        std::integer_sequence<int, I...>,
+        std::integer_sequence<int, I...>&&,
         const T& value)
 {
         return {make_vector_one_value<sizeof...(I), T, I>(value)...};

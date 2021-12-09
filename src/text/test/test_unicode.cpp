@@ -30,13 +30,10 @@ void test_utf32_to_utf8_to_utf32()
 {
         LOG("UTF-32 to UTF-8 to UTF-32");
 
-        std::string utf8;
-
         for (char32_t c1 = 0; c1 <= 0x10FFFF; ++c1)
         {
-                utf8 = unicode::utf32_to_utf8(c1);
-
-                char32_t c2 = unicode::utf8_to_utf32(utf8);
+                const std::string utf8 = unicode::utf32_to_utf8(c1);
+                const char32_t c2 = unicode::utf8_to_utf32(utf8);
 
                 if (c2 != c1)
                 {
@@ -65,8 +62,12 @@ void test_utf8_replacement_character_and_self_synchronizing()
         LOG("UTF-8 replacement character and self-synchronizing");
 
         {
-                std::string s = reinterpret_cast<const char*>(u8"\U0000222B\U00002211");
-                s.erase(0, 1);
+                const std::string s = []
+                {
+                        std::string res = reinterpret_cast<const char*>(u8"\U0000222B\U00002211");
+                        res.erase(0, 1);
+                        return res;
+                }();
 
                 ASSERT(s.size() == 5);
 
@@ -101,8 +102,12 @@ void test_utf8_replacement_character_and_self_synchronizing()
         }
 
         {
-                std::string s = reinterpret_cast<const char*>(u8"\U0000222B\U00002211");
-                s.erase(2, 1);
+                const std::string s = []
+                {
+                        std::string res = reinterpret_cast<const char*>(u8"\U0000222B\U00002211");
+                        res.erase(2, 1);
+                        return res;
+                }();
 
                 ASSERT(s.size() == 5);
 

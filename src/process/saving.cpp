@@ -41,30 +41,37 @@ namespace
 constexpr bool STL_FORMAT_ASCII = true;
 
 template <std::size_t N>
-std::function<void(ProgressRatioList*)> action_save_function(
-        const std::shared_ptr<const mesh::MeshObject<N>>& mesh_object)
+std::vector<gui::dialog::FileFilter> create_filters()
 {
-        std::string name = mesh_object->name();
-
-        std::string caption = "Save " + name;
-        bool read_only = true;
-
-        std::vector<gui::dialog::FileFilter> filters;
+        std::vector<gui::dialog::FileFilter> res;
         for (const mesh::FileFormat& v : mesh::save_formats(N))
         {
-                gui::dialog::FileFilter& filter = filters.emplace_back();
+                gui::dialog::FileFilter& filter = res.emplace_back();
                 filter.name = v.format_name;
                 filter.file_extensions = v.file_name_extensions;
         }
+        return res;
+}
 
-        std::optional<std::string> file_name_string = gui::dialog::save_file(caption, filters, read_only);
+template <std::size_t N>
+std::function<void(ProgressRatioList*)> action_save_function(
+        const std::shared_ptr<const mesh::MeshObject<N>>& mesh_object)
+{
+        const std::string name = mesh_object->name();
+
+        const std::string caption = "Save " + name;
+        const bool read_only = true;
+
+        const std::vector<gui::dialog::FileFilter> filters = create_filters<N>();
+
+        const std::optional<std::string> file_name_string = gui::dialog::save_file(caption, filters, read_only);
         if (!file_name_string)
         {
                 return nullptr;
         }
-        std::filesystem::path file_name = path_from_utf8(*file_name_string);
+        const std::filesystem::path file_name = path_from_utf8(*file_name_string);
 
-        mesh::FileType file_type = mesh::file_type_by_name(file_name);
+        const mesh::FileType file_type = mesh::file_type_by_name(file_name);
 
         return [=](ProgressRatioList*)
         {
@@ -94,7 +101,7 @@ std::string time_to_file_name(const std::chrono::system_clock::time_point& time)
 
 std::string image_info(const image::Image<2>& image)
 {
-        auto max = image::max(image.color_format, image.pixels);
+        const auto max = image::max(image.color_format, image.pixels);
         if (!max)
         {
                 error("Maximum image value is not found");

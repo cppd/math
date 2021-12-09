@@ -44,7 +44,7 @@ struct LogEvent final
         LogType type;
 
         template <typename T>
-        LogEvent(T&& text, LogType type) : text(std::forward<T>(text)), type(type)
+        LogEvent(T&& text, const LogType type) : text(std::forward<T>(text)), type(type)
         {
         }
 };
@@ -55,7 +55,7 @@ struct MessageEvent final
         MessageType type;
 
         template <typename T>
-        MessageEvent(T&& text, MessageType type) : text(std::forward<T>(text)), type(type)
+        MessageEvent(T&& text, const MessageType type) : text(std::forward<T>(text)), type(type)
         {
         }
 };

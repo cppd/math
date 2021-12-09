@@ -32,7 +32,7 @@ std::vector<std::string> vulkan_create_surface_required_extensions()
         return {"VK_KHR_surface", "VK_KHR_xcb_surface"};
 }
 
-VkSurfaceKHR vulkan_create_surface(WindowID window, VkInstance instance)
+VkSurfaceKHR vulkan_create_surface(const WindowID window, const VkInstance instance)
 {
         VkXcbSurfaceCreateInfoKHR info = {};
         info.sType = VK_STRUCTURE_TYPE_XCB_SURFACE_CREATE_INFO_KHR;
@@ -61,7 +61,7 @@ std::vector<std::string> vulkan_create_surface_required_extensions()
         return {"VK_KHR_surface", "VK_KHR_win32_surface"};
 }
 
-VkSurfaceKHR vulkan_create_surface(WindowID window, VkInstance instance)
+VkSurfaceKHR vulkan_create_surface(const WindowID window, const VkInstance instance)
 {
         VkWin32SurfaceCreateInfoKHR info = {};
         info.sType = VK_STRUCTURE_TYPE_WIN32_SURFACE_CREATE_INFO_KHR;

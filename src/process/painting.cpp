@@ -115,7 +115,7 @@ void thread_function(
         const color::Color& background_color,
         const gui::dialog::PainterParameters& parameters,
         const Parameters& dimension_parameters,
-        ProgressRatioList* progress_list)
+        ProgressRatioList* const progress_list)
 {
         static_assert(2 == std::tuple_size_v<Colors>);
         switch (parameters.color_index)
@@ -220,7 +220,7 @@ std::function<void(ProgressRatioList*)> action_painter_function(
                         return nullptr;
                 }
 
-                return [=](ProgressRatioList* progress_list)
+                return [=](ProgressRatioList* const progress_list)
                 {
                         thread_function(
                                 mesh_objects, camera, lighting_color, background_color, std::get<0>(*parameters),
@@ -244,7 +244,7 @@ std::function<void(ProgressRatioList*)> action_painter_function(
                         return nullptr;
                 }
 
-                return [=](ProgressRatioList* progress_list)
+                return [=](ProgressRatioList* const progress_list)
                 {
                         thread_function(
                                 mesh_objects, camera, lighting_color, background_color, std::get<0>(*parameters),

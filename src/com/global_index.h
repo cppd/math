@@ -107,7 +107,7 @@ public:
                 return count_;
         }
 
-        constexpr IndexType stride(unsigned n) const
+        constexpr IndexType stride(const unsigned n) const
         {
                 ASSERT(n < N);
                 return strides_[n];

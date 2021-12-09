@@ -51,7 +51,7 @@ class UnionFind
                 return p;
         }
 
-        void compress_path(T p, T root)
+        void compress_path(T p, const T root)
         {
                 while (parent_[p] != root)
                 {
@@ -61,9 +61,9 @@ class UnionFind
                 }
         }
 
-        T find_and_compress(T p)
+        T find_and_compress(const T p)
         {
-                T root = find_root(p);
+                const T root = find_root(p);
                 compress_path(p, root);
                 return root;
         }
@@ -76,10 +76,10 @@ public:
                 std::fill(component_size_.begin(), component_size_.end(), 1);
         }
 
-        bool add_connection(T p, T q)
+        bool add_connection(const T p, const T q)
         {
-                T i = find_and_compress(p);
-                T j = find_and_compress(q);
+                const T i = find_and_compress(p);
+                const T j = find_and_compress(q);
 
                 if (i == j)
                 {
@@ -107,7 +107,7 @@ public:
         //         return component_count_;
         // }
 
-        // bool connected(T p, T q) const
+        // bool connected(const T p, const T q) const
         // {
         //         return find_root(p) == find_root(q);
         // }

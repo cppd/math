@@ -25,7 +25,7 @@ namespace ns
 {
 namespace
 {
-void check_true(bool v)
+void check_true(const bool v)
 {
         if (!v)
         {
@@ -33,7 +33,7 @@ void check_true(bool v)
         }
 }
 
-void check_false(bool v)
+void check_false(const bool v)
 {
         if (v)
         {

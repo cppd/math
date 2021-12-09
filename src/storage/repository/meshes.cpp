@@ -83,7 +83,7 @@ class DiscretePoints
         std::unordered_set<Vector<N, int>> integer_points_;
 
         template <typename T>
-        static Vector<N, int> to_integer(const Vector<N, T>& v, int factor)
+        static Vector<N, int> to_integer(const Vector<N, T>& v, const int factor)
         {
                 static_assert(std::is_floating_point_v<T>);
 
@@ -102,7 +102,7 @@ class DiscretePoints
         }
 
 public:
-        explicit DiscretePoints(unsigned point_count)
+        explicit DiscretePoints(const unsigned point_count)
         {
                 points_.reserve(point_count);
                 integer_points_.reserve(point_count);
@@ -136,7 +136,7 @@ public:
 };
 
 template <std::size_t N, typename T, typename RandomEngine>
-Vector<N, T> random_on_sphere(RandomEngine& engine, bool bound)
+Vector<N, T> random_on_sphere(RandomEngine& engine, const bool bound)
 {
         if (!bound)
         {
@@ -151,7 +151,7 @@ Vector<N, T> random_on_sphere(RandomEngine& engine, bool bound)
 }
 
 #if 0
-std::vector<Vector<2, float>> generate_points_semicircle(unsigned point_count)
+std::vector<Vector<2, float>> generate_points_semicircle(const unsigned point_count)
 {
         if (point_count < 3)
         {
@@ -177,7 +177,7 @@ std::vector<Vector<2, float>> generate_points_semicircle(unsigned point_count)
 #endif
 
 template <std::size_t N>
-std::vector<Vector<N, float>> generate_points_ellipsoid(unsigned point_count, bool bound)
+std::vector<Vector<N, float>> generate_points_ellipsoid(const unsigned point_count, const bool bound)
 {
         DiscretePoints<N> points(point_count);
 
@@ -194,7 +194,7 @@ std::vector<Vector<N, float>> generate_points_ellipsoid(unsigned point_count, bo
 }
 
 template <std::size_t N>
-std::vector<Vector<N, float>> generate_points_sphere_with_notch(unsigned point_count, bool bound)
+std::vector<Vector<N, float>> generate_points_sphere_with_notch(const unsigned point_count, const bool bound)
 {
         DiscretePoints<N> points(point_count);
 
@@ -214,7 +214,7 @@ std::vector<Vector<N, float>> generate_points_sphere_with_notch(unsigned point_c
         return points.release();
 }
 
-std::vector<Vector<3, float>> generate_points_mobius_strip(unsigned point_count)
+std::vector<Vector<3, float>> generate_points_mobius_strip(const unsigned point_count)
 {
         DiscretePoints<3> points(point_count);
 
@@ -230,7 +230,7 @@ std::vector<Vector<3, float>> generate_points_mobius_strip(unsigned point_count)
 }
 
 template <std::size_t N>
-std::vector<Vector<N, float>> generate_points_torus(unsigned point_count, bool bound)
+std::vector<Vector<N, float>> generate_points_torus(const unsigned point_count, const bool bound)
 {
         static_assert(N >= 3);
 
@@ -254,48 +254,48 @@ std::vector<Vector<N, float>> generate_points_torus(unsigned point_count, bool b
 //
 
 template <std::size_t N>
-std::unique_ptr<mesh::Mesh<N>> ellipsoid(unsigned point_count)
+std::unique_ptr<mesh::Mesh<N>> ellipsoid(const unsigned point_count)
 {
         return mesh::create_mesh_for_points(generate_points_ellipsoid<N>(point_count, false));
 }
 
 template <std::size_t N>
-std::unique_ptr<mesh::Mesh<N>> ellipsoid_bound(unsigned point_count)
+std::unique_ptr<mesh::Mesh<N>> ellipsoid_bound(const unsigned point_count)
 {
         return mesh::create_mesh_for_points(generate_points_ellipsoid<N>(point_count, true));
 }
 
 template <std::size_t N>
-std::unique_ptr<mesh::Mesh<N>> sphere_with_notch(unsigned point_count)
+std::unique_ptr<mesh::Mesh<N>> sphere_with_notch(const unsigned point_count)
 {
         return mesh::create_mesh_for_points(generate_points_sphere_with_notch<N>(point_count, false));
 }
 
 template <std::size_t N>
-std::unique_ptr<mesh::Mesh<N>> sphere_with_notch_bound(unsigned point_count)
+std::unique_ptr<mesh::Mesh<N>> sphere_with_notch_bound(const unsigned point_count)
 {
         return mesh::create_mesh_for_points(generate_points_sphere_with_notch<N>(point_count, true));
 }
 
-std::unique_ptr<mesh::Mesh<3>> mobius_strip(unsigned point_count)
+std::unique_ptr<mesh::Mesh<3>> mobius_strip(const unsigned point_count)
 {
         return mesh::create_mesh_for_points(generate_points_mobius_strip(point_count));
 }
 
 template <std::size_t N>
-std::unique_ptr<mesh::Mesh<N>> torus(unsigned point_count)
+std::unique_ptr<mesh::Mesh<N>> torus(const unsigned point_count)
 {
         return mesh::create_mesh_for_points(generate_points_torus<N>(point_count, false));
 }
 
 template <std::size_t N>
-std::unique_ptr<mesh::Mesh<N>> torus_bound(unsigned point_count)
+std::unique_ptr<mesh::Mesh<N>> torus_bound(const unsigned point_count)
 {
         return mesh::create_mesh_for_points(generate_points_torus<N>(point_count, true));
 }
 
 template <std::size_t N>
-std::unique_ptr<mesh::Mesh<N>> sphere(unsigned facet_count)
+std::unique_ptr<mesh::Mesh<N>> sphere(const unsigned facet_count)
 {
         std::vector<Vector<N, float>> points;
         std::vector<std::array<int, N>> facets;
@@ -337,7 +337,8 @@ class Impl final : public MeshObjectRepository<N>
                 return names_of_map(map_facet_);
         }
 
-        std::unique_ptr<mesh::Mesh<N>> point_object(const std::string& object_name, unsigned point_count) const override
+        std::unique_ptr<mesh::Mesh<N>> point_object(const std::string& object_name, const unsigned point_count)
+                const override
         {
                 auto iter = map_point_.find(object_name);
                 if (iter != map_point_.cend())
@@ -347,7 +348,8 @@ class Impl final : public MeshObjectRepository<N>
                 error("Point object not found in repository: " + object_name);
         }
 
-        std::unique_ptr<mesh::Mesh<N>> facet_object(const std::string& object_name, unsigned facet_count) const override
+        std::unique_ptr<mesh::Mesh<N>> facet_object(const std::string& object_name, const unsigned facet_count)
+                const override
         {
                 auto iter = map_facet_.find(object_name);
                 if (iter != map_facet_.cend())

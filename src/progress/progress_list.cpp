@@ -25,7 +25,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 namespace ns
 {
 // for worker threads
-void ProgressRatioList::add_progress_ratio(ProgressRatioControl* ratio)
+void ProgressRatioList::add_progress_ratio(ProgressRatioControl* const ratio)
 {
         ASSERT(std::this_thread::get_id() != thread_id_);
 
@@ -45,7 +45,7 @@ void ProgressRatioList::add_progress_ratio(ProgressRatioControl* ratio)
 }
 
 // for worker threads
-void ProgressRatioList::delete_progress_ratio(const ProgressRatioControl* ratio) noexcept
+void ProgressRatioList::delete_progress_ratio(const ProgressRatioControl* const ratio) noexcept
 {
         try
         {
@@ -119,7 +119,7 @@ std::vector<std::tuple<unsigned, unsigned, std::string>> ProgressRatioList::rati
         std::vector<std::tuple<unsigned, unsigned, std::string>> result;
         result.reserve(ratios_.size());
 
-        for (const ProgressRatioControl* ratio : ratios_)
+        for (const ProgressRatioControl* const ratio : ratios_)
         {
                 unsigned value;
                 unsigned maximum;

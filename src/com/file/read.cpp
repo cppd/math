@@ -26,7 +26,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 namespace ns
 {
 template <typename T>
-void read_text_file(const std::filesystem::path& file_name, T* s)
+void read_text_file(const std::filesystem::path& file_name, T* const s)
 {
         static_assert(std::is_same_v<T, std::string> || std::is_same_v<T, std::vector<char>>);
 
@@ -38,7 +38,8 @@ void read_text_file(const std::filesystem::path& file_name, T* s)
         }
 
         f.seekg(0, std::ios_base::end);
-        long long length = f.tellg();
+        const long long length = f.tellg();
+
         if (length == 0)
         {
                 s->clear();
@@ -61,7 +62,7 @@ void read_text_file(const std::filesystem::path& file_name, T* s)
 }
 
 template <typename T>
-void read_binary_file(const std::filesystem::path& file_name, T* s)
+void read_binary_file(const std::filesystem::path& file_name, T* const s)
 {
         static_assert(sizeof(typename T::value_type) == 1);
 
@@ -73,7 +74,7 @@ void read_binary_file(const std::filesystem::path& file_name, T* s)
         }
 
         f.seekg(0, std::ios_base::end);
-        long long length = f.tellg();
+        const long long length = f.tellg();
 
         if (length == 0)
         {

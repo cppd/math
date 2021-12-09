@@ -25,19 +25,22 @@ namespace ns
 {
 namespace
 {
-char to_upper(char c)
+char to_upper(const char c)
 {
         return std::toupper(static_cast<unsigned char>(c));
 }
-char to_lower(char c)
+
+char to_lower(const char c)
 {
         return std::tolower(static_cast<unsigned char>(c));
 }
-bool is_space(char c)
+
+bool is_space(const char c)
 {
         return std::isspace(static_cast<unsigned char>(c)) != 0;
 }
-bool is_alpha(char c)
+
+bool is_alpha(const char c)
 {
         return std::isalpha(static_cast<unsigned char>(c)) != 0;
 }
@@ -50,7 +53,8 @@ std::string trim(const std::string_view& s)
                 return {};
         }
 
-        std::size_t n = s.size();
+        const std::size_t n = s.size();
+
         std::size_t i = 0;
         while (i < n && is_space(s[i]))
         {
@@ -78,7 +82,7 @@ std::string to_upper(const std::string_view& s)
 {
         std::string result;
         result.reserve(s.size());
-        for (char c : s)
+        for (const char c : s)
         {
                 result += to_upper(c);
         }
@@ -89,7 +93,7 @@ std::string to_lower(const std::string_view& s)
 {
         std::string result;
         result.reserve(s.size());
-        for (char c : s)
+        for (const char c : s)
         {
                 result += to_lower(c);
         }

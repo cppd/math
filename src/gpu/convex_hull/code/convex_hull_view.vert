@@ -31,6 +31,6 @@ layout(std430, binding = 1) readonly buffer Points
 void main(void)
 {
         const int vertex_index = gl_VertexIndex;
-        ivec2 s = points[vertex_index];
+        const ivec2 s = points[vertex_index];
         gl_Position = matrix * vec4(s.x, s.y, 0, 1);
 }

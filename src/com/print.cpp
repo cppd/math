@@ -25,7 +25,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 namespace ns
 {
 #if 0 && !defined(__clang__)
-std::string to_string(__float128 t)
+std::string to_string(const __float128 t)
 {
         constexpr const char* QUAD_MATH_FORMAT = "%.36Qe"; // "%+-#*.36Qe"
 

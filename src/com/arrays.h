@@ -27,19 +27,19 @@ namespace ns
 namespace arrays_implementation
 {
 template <typename T, T... I>
-constexpr std::array<T, sizeof...(I)> make_array_sequence(std::integer_sequence<T, I...>)
+constexpr std::array<T, sizeof...(I)> make_array_sequence(std::integer_sequence<T, I...>&&)
 {
         return {I...};
 }
 
 template <typename T, std::size_t... I>
-constexpr std::array<T, sizeof...(I)> make_array_value(std::integer_sequence<std::size_t, I...>, const T& v)
+constexpr std::array<T, sizeof...(I)> make_array_value(std::integer_sequence<std::size_t, I...>&&, const T& v)
 {
         return {(static_cast<void>(I), v)...};
 }
 
 template <std::size_t VALUE_INDEX, typename T, std::size_t... I>
-constexpr std::array<T, sizeof...(I)> make_array_one_value(std::integer_sequence<std::size_t, I...>, const T& v)
+constexpr std::array<T, sizeof...(I)> make_array_one_value(std::integer_sequence<std::size_t, I...>&&, const T& v)
 {
         static_assert(VALUE_INDEX >= 0 && VALUE_INDEX < sizeof...(I));
 
@@ -51,8 +51,8 @@ constexpr std::array<T, sizeof...(I)> make_array_one_value(std::integer_sequence
 template <typename T, std::size_t... I>
 constexpr std::array<T, sizeof...(I)> del_elem(
         const std::array<T, sizeof...(I) + 1>& a,
-        unsigned pos,
-        std::integer_sequence<std::size_t, I...>)
+        const unsigned pos,
+        std::integer_sequence<std::size_t, I...>&&)
 {
         static_assert(((I < sizeof...(I)) && ...));
 
@@ -87,7 +87,7 @@ inline constexpr std::array<unsigned char, N> SEQUENCE_UCHAR_ARRAY = make_array_
 //
 
 template <typename T, std::size_t N>
-constexpr std::array<T, N> set_elem(const std::array<T, N>& a, unsigned pos, const T& v)
+constexpr std::array<T, N> set_elem(const std::array<T, N>& a, const unsigned pos, const T& v)
 {
         static_assert(N >= 1);
         ASSERT(pos < N);
@@ -99,7 +99,7 @@ constexpr std::array<T, N> set_elem(const std::array<T, N>& a, unsigned pos, con
 }
 
 template <typename T, std::size_t N>
-constexpr std::array<T, N - 1> del_elem(const std::array<T, N>& a, unsigned pos)
+constexpr std::array<T, N - 1> del_elem(const std::array<T, N>& a, const unsigned pos)
 {
         static_assert(N > 1);
         ASSERT(pos < N);
@@ -108,7 +108,7 @@ constexpr std::array<T, N - 1> del_elem(const std::array<T, N>& a, unsigned pos)
 }
 
 template <typename T>
-constexpr std::array<T, 1> del_elem(const std::array<T, 2>& a, unsigned pos)
+constexpr std::array<T, 1> del_elem(const std::array<T, 2>& a, const unsigned pos)
 {
         switch (pos)
         {
@@ -122,7 +122,7 @@ constexpr std::array<T, 1> del_elem(const std::array<T, 2>& a, unsigned pos)
 }
 
 template <typename T>
-constexpr std::array<T, 2> del_elem(const std::array<T, 3>& a, unsigned pos)
+constexpr std::array<T, 2> del_elem(const std::array<T, 3>& a, const unsigned pos)
 {
         switch (pos)
         {
@@ -138,7 +138,7 @@ constexpr std::array<T, 2> del_elem(const std::array<T, 3>& a, unsigned pos)
 }
 
 template <typename T>
-constexpr std::array<T, 3> del_elem(const std::array<T, 4>& a, unsigned pos)
+constexpr std::array<T, 3> del_elem(const std::array<T, 4>& a, const unsigned pos)
 {
         switch (pos)
         {
@@ -156,7 +156,7 @@ constexpr std::array<T, 3> del_elem(const std::array<T, 4>& a, unsigned pos)
 }
 
 template <typename T>
-constexpr std::array<T, 4> del_elem(const std::array<T, 5>& a, unsigned pos)
+constexpr std::array<T, 4> del_elem(const std::array<T, 5>& a, const unsigned pos)
 {
         switch (pos)
         {

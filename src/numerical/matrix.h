@@ -38,7 +38,7 @@ class Matrix final
         template <std::size_t COLUMN, std::size_t... I>
         static constexpr Vector<COLUMNS, T> make_vector_one_value_impl(
                 const T& v,
-                std::integer_sequence<std::size_t, I...>)
+                std::integer_sequence<std::size_t, I...>&&)
         {
                 static_assert(sizeof...(I) == COLUMNS);
                 static_assert(((I >= 0 && I < COLUMNS) && ...));
@@ -50,7 +50,7 @@ class Matrix final
         template <std::size_t... I>
         static constexpr std::array<Vector<COLUMNS, T>, ROWS> make_one_value_rows_impl(
                 const T& v,
-                std::integer_sequence<std::size_t, I...>)
+                std::integer_sequence<std::size_t, I...>&&)
         {
                 static_assert(sizeof...(I) == ROWS);
                 static_assert(((I >= 0 && I < ROWS) && ...));
@@ -68,7 +68,7 @@ class Matrix final
         std::array<Vector<COLUMNS, T>, ROWS> rows_;
 
         // template <std::size_t... I>
-        // constexpr Vector<ROWS, T> column_impl(std::size_t column, std::integer_sequence<std::size_t, I...>) const
+        // constexpr Vector<ROWS, T> column_impl(std::size_t column, std::integer_sequence<std::size_t, I...>&&) const
         // {
         //         static_assert(sizeof...(I) == ROWS);
         //         static_assert(((I >= 0 && I < ROWS) && ...));

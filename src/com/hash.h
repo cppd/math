@@ -39,7 +39,7 @@ std::size_t compute_hash(const T& v, const Ts&... vs)
         {
                 static_assert((std::is_same_v<T, Ts> && ...));
 
-                std::hash<T> hasher;
+                const std::hash<T> hasher;
                 std::size_t seed = hasher(v);
                 (combine(seed, hasher(vs)), ...);
                 return seed;
@@ -59,7 +59,7 @@ std::size_t compute_hash(const T& v, const Ts&... vs)
 
                 static constexpr std::size_t N = std::tuple_size_v<T>;
                 static_assert(N >= 1);
-                std::hash<typename T::value_type> hasher;
+                const std::hash<typename T::value_type> hasher;
                 std::size_t seed = hasher(v[0]);
                 for (std::size_t i = 1; i < N; ++i)
                 {

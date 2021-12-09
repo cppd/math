@@ -34,7 +34,7 @@ namespace
 constexpr unsigned MAXIMUM_VOLUME_SIZE = 1'000'000'000;
 
 template <std::size_t N>
-void check_volume_size(unsigned size)
+void check_volume_size(const unsigned size)
 {
         if (size < 2)
         {
@@ -51,7 +51,7 @@ void check_volume_size(unsigned size)
 }
 
 template <std::size_t N, std::size_t LEVEL, typename F>
-void image_coordinates(const std::array<int, N>& size, Vector<N, float>* coordinates, const F& f)
+void image_coordinates(const std::array<int, N>& size, Vector<N, float>* const coordinates, const F& f)
 {
         static_assert(LEVEL < N);
 
@@ -85,7 +85,7 @@ void image_coordinates(const std::array<int, N>& size, const F& f)
 }
 
 template <std::size_t N>
-void init_volume(const std::array<int, N>& size, image::ColorFormat color_format, volume::Volume<N>* volume)
+void init_volume(const std::array<int, N>& size, const image::ColorFormat color_format, volume::Volume<N>* const volume)
 {
         volume->image.size = size;
         volume->image.color_format = color_format;
@@ -95,7 +95,7 @@ void init_volume(const std::array<int, N>& size, image::ColorFormat color_format
 }
 
 template <typename I, typename F>
-I float_to_uint(F v)
+I float_to_uint(const F v)
 {
         static_assert(std::is_same_v<F, float>);
         static_assert(std::is_same_v<I, std::uint8_t> || std::is_same_v<I, std::uint16_t>);
@@ -103,7 +103,7 @@ I float_to_uint(F v)
 }
 
 template <std::size_t N>
-std::unique_ptr<volume::Volume<N>> scalar_cube(unsigned size)
+std::unique_ptr<volume::Volume<N>> scalar_cube(const unsigned size)
 {
         static constexpr image::ColorFormat COLOR_FORMAT = image::ColorFormat::R16;
         using Type = std::uint16_t;
@@ -152,7 +152,7 @@ std::unique_ptr<volume::Volume<N>> scalar_cube(unsigned size)
 }
 
 template <std::size_t N>
-std::unique_ptr<volume::Volume<N>> scalar_ellipsoid(unsigned size)
+std::unique_ptr<volume::Volume<N>> scalar_ellipsoid(const unsigned size)
 {
         constexpr image::ColorFormat COLOR_FORMAT = image::ColorFormat::R16;
         using Type = std::uint16_t;
@@ -198,7 +198,7 @@ std::unique_ptr<volume::Volume<N>> scalar_ellipsoid(unsigned size)
 }
 
 template <std::size_t N>
-std::unique_ptr<volume::Volume<N>> color_cube(unsigned size)
+std::unique_ptr<volume::Volume<N>> color_cube(const unsigned size)
 {
         static_assert(N >= 3);
 
@@ -263,7 +263,7 @@ class Impl final : public VolumeObjectRepository<N>
                 return names_of_map(map_);
         }
 
-        std::unique_ptr<volume::Volume<N>> object(const std::string& object_name, unsigned size) const override
+        std::unique_ptr<volume::Volume<N>> object(const std::string& object_name, const unsigned size) const override
         {
                 auto iter = map_.find(object_name);
                 if (iter != map_.cend())

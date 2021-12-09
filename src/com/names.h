@@ -21,7 +21,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 namespace ns
 {
-inline std::string space_name(int dimension)
+inline std::string space_name(const int dimension)
 {
         return std::to_string(dimension) + "-space";
 }

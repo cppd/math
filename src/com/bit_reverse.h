@@ -81,20 +81,20 @@ constexpr T bit_reverse(const int bit_count, T v)
         return r;
 }
 
-constexpr std::uint8_t bit_reverse_8(std::uint8_t v)
+constexpr std::uint8_t bit_reverse_8(const std::uint8_t v)
 {
         namespace impl = bit_reverse_implementation;
         return impl::BIT_REVERSE_TABLE[v];
 }
 
-constexpr std::uint16_t bit_reverse_16(std::uint16_t v)
+constexpr std::uint16_t bit_reverse_16(const std::uint16_t v)
 {
         namespace impl = bit_reverse_implementation;
         return (static_cast<std::uint16_t>(impl::BIT_REVERSE_TABLE[v & 0xff]) << 8)
                | (static_cast<std::uint16_t>(impl::BIT_REVERSE_TABLE[(v >> 8) & 0xff]));
 }
 
-constexpr std::uint32_t bit_reverse_32(std::uint32_t v)
+constexpr std::uint32_t bit_reverse_32(const std::uint32_t v)
 {
         namespace impl = bit_reverse_implementation;
         return (static_cast<std::uint32_t>(impl::BIT_REVERSE_TABLE[v & 0xff]) << 24)
@@ -103,7 +103,7 @@ constexpr std::uint32_t bit_reverse_32(std::uint32_t v)
                | (static_cast<std::uint32_t>(impl::BIT_REVERSE_TABLE[(v >> 24) & 0xff]));
 }
 
-constexpr std::uint64_t bit_reverse_64(std::uint64_t v)
+constexpr std::uint64_t bit_reverse_64(const std::uint64_t v)
 {
         namespace impl = bit_reverse_implementation;
         return (static_cast<std::uint64_t>(impl::BIT_REVERSE_TABLE[v & 0xff]) << 56)

@@ -91,7 +91,7 @@ char32_t utf8_4_to_utf32(const std::string& s, std::size_t* const i)
 }
 
 template <typename T>
-std::string utf32_to_number_string(T code_point)
+std::string utf32_to_number_string(const T code_point)
 {
         static_assert(std::is_same_v<T, char32_t>);
 
@@ -123,7 +123,7 @@ std::string utf8_to_number_string(const std::string& s)
 }
 
 template <typename T>
-std::string utf32_to_utf8(T code_point)
+std::string utf32_to_utf8(const T code_point)
 {
         static_assert(std::is_same_v<T, char32_t>);
 

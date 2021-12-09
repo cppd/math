@@ -46,6 +46,7 @@ inline constexpr int BINOMIAL = []
                 }
                 m = v;
         }
+
         static_assert(N >= K);
         for (unsigned __int128 i = N - K; i > 1; --i)
         {

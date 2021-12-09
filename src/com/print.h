@@ -34,7 +34,7 @@ namespace ns
 namespace print_implementation
 {
 template <unsigned DIGIT_GROUP_SIZE, typename T>
-void f(T v, int i, std::string& r, [[maybe_unused]] char s)
+void f(T v, int i, std::string& r, [[maybe_unused]] const char s)
 {
         constexpr bool LONGLONG_LESS_I128 = Limits<long long>::max() < Limits<__int128>::max()
                                             && Limits<long long>::lowest() > Limits<__int128>::lowest();
@@ -103,7 +103,7 @@ std::string to_string_digit_groups(const T& v, const char s) requires Integral<T
 std::string to_string(__float128 t);
 
 template <typename T>
-std::string to_string(std::complex<T> t) requires std::is_floating_point_v<T>
+std::string to_string(const std::complex<T> t) requires std::is_floating_point_v<T>
 {
         std::ostringstream o;
         o << std::setprecision(Limits<T>::max_digits10());
@@ -132,7 +132,7 @@ std::string to_string(std::complex<T> t) requires std::is_floating_point_v<T>
 }
 
 template <typename T>
-std::string to_string(T t) requires std::is_floating_point_v<T>
+std::string to_string(const T t) requires std::is_floating_point_v<T>
 {
         std::ostringstream o;
         o << std::setprecision(Limits<T>::max_digits10());
@@ -141,7 +141,7 @@ std::string to_string(T t) requires std::is_floating_point_v<T>
 }
 
 template <typename T>
-std::string to_string(T t, unsigned digits) requires std::is_floating_point_v<T>
+std::string to_string(const T t, const unsigned digits) requires std::is_floating_point_v<T>
 {
         std::ostringstream o;
         o << std::setprecision(digits);
@@ -150,7 +150,7 @@ std::string to_string(T t, unsigned digits) requires std::is_floating_point_v<T>
 }
 
 template <typename T>
-std::string to_string_fixed(T t, unsigned digits) requires std::is_floating_point_v<T>
+std::string to_string_fixed(const T t, const unsigned digits) requires std::is_floating_point_v<T>
 {
         std::ostringstream o;
         o << std::setprecision(digits);
@@ -198,13 +198,13 @@ std::string to_string_binary(T v, const std::string_view& prefix = "") requires 
 //
 
 template <typename T>
-std::string to_string(T v) requires Integral<T>
+std::string to_string(const T v) requires Integral<T>
 {
         return print_implementation::to_string_digit_groups<0, T>(v, '\x20');
 }
 
 template <typename T>
-std::string to_string_digit_groups(T v, char s = '\x20') requires Integral<T>
+std::string to_string_digit_groups(const T v, const char s = '\x20') requires Integral<T>
 {
         return print_implementation::to_string_digit_groups<3, T>(v, s);
 }

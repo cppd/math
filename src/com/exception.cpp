@@ -24,7 +24,7 @@ namespace ns
 {
 namespace
 {
-void message(const std::string& description, const char* exception)
+void message(const std::string& description, const char* const exception)
 {
         std::string msg;
         if (!description.empty())

@@ -26,7 +26,7 @@ namespace ns
 {
 namespace
 {
-LogType message_type_to_log_type(MessageType type)
+LogType message_type_to_log_type(const MessageType type)
 {
         switch (type)
         {
@@ -47,7 +47,7 @@ LogType message_type_to_log_type(MessageType type)
         return LogType::ERROR;
 }
 
-std::string_view log_type_to_string(LogType type)
+std::string_view log_type_to_string(const LogType type)
 {
         switch (type)
         {
@@ -159,7 +159,7 @@ void LogEvents::log_event(const std::string_view& text, const MessageType type) 
         }
 }
 
-void LogEvents::insert(const std::function<void(const LogEvent&)>* observer)
+void LogEvents::insert(const std::function<void(const LogEvent&)>* const observer)
 {
         std::lock_guard lg(lock_);
         if (std::find(log_observers_.cbegin(), log_observers_.cend(), observer) == log_observers_.cend())
@@ -168,14 +168,14 @@ void LogEvents::insert(const std::function<void(const LogEvent&)>* observer)
         }
 }
 
-void LogEvents::erase(const std::function<void(const LogEvent&)>* observer)
+void LogEvents::erase(const std::function<void(const LogEvent&)>* const observer)
 {
         std::lock_guard lg(lock_);
         const auto iter = std::remove(log_observers_.begin(), log_observers_.end(), observer);
         log_observers_.erase(iter, log_observers_.cend());
 }
 
-void LogEvents::insert(const std::function<void(const MessageEvent&)>* observer)
+void LogEvents::insert(const std::function<void(const MessageEvent&)>* const observer)
 {
         std::lock_guard lg(lock_);
         if (std::find(msg_observers_.cbegin(), msg_observers_.cend(), observer) == msg_observers_.cend())
@@ -184,7 +184,7 @@ void LogEvents::insert(const std::function<void(const MessageEvent&)>* observer)
         }
 }
 
-void LogEvents::erase(const std::function<void(const MessageEvent&)>* observer)
+void LogEvents::erase(const std::function<void(const MessageEvent&)>* const observer)
 {
         std::lock_guard lg(lock_);
         const auto iter = std::remove(msg_observers_.begin(), msg_observers_.end(), observer);
@@ -200,12 +200,12 @@ LogEvents& log_events()
 
 //
 
-void log(const std::string_view& text, LogType type) noexcept
+void log(const std::string_view& text, const LogType type) noexcept
 {
         log_events().log_event(text, type);
 }
 
-void log(const std::string_view& text, MessageType type) noexcept
+void log(const std::string_view& text, const MessageType type) noexcept
 {
         log_events().log_event(text, type);
 }

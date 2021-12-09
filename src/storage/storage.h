@@ -50,7 +50,7 @@ class Storage final
         }
 
 public:
-        void delete_object(ObjectId id)
+        void delete_object(const ObjectId id)
         {
                 typename decltype(map_)::mapped_type tmp;
                 std::unique_lock lock(mutex_);
@@ -115,7 +115,7 @@ public:
                        == std::get<std::shared_ptr<volume::VolumeObject<N>>>(std::get<VolumeObject>(iter->second)));
         }
 
-        std::optional<MeshObject> mesh_object(ObjectId id) const
+        std::optional<MeshObject> mesh_object(const ObjectId id) const
         {
                 std::optional<MeshObject> opt;
 
@@ -135,7 +135,7 @@ public:
                 return opt;
         }
 
-        std::optional<MeshObjectConst> mesh_object_const(ObjectId id) const
+        std::optional<MeshObjectConst> mesh_object_const(const ObjectId id) const
         {
                 std::optional<MeshObject> opt = mesh_object(id);
                 if (opt)
@@ -145,7 +145,7 @@ public:
                 return std::nullopt;
         }
 
-        std::optional<VolumeObject> volume_object(ObjectId id) const
+        std::optional<VolumeObject> volume_object(const ObjectId id) const
         {
                 std::optional<VolumeObject> opt;
 
@@ -165,7 +165,7 @@ public:
                 return opt;
         }
 
-        std::optional<VolumeObjectConst> volume_object_const(ObjectId id) const
+        std::optional<VolumeObjectConst> volume_object_const(const ObjectId id) const
         {
                 std::optional<VolumeObject> opt = volume_object(id);
                 if (opt)

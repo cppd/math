@@ -24,13 +24,13 @@ namespace ns
 namespace
 {
 template <typename Result, unsigned BASE, typename T>
-constexpr bool compare(T v, T v1, T v2)
+constexpr bool compare(const T v, const T v1, const T v2)
 {
         return static_cast<Result>(v1) / v2 == radical_inverse<BASE, Result>(v);
 }
 
 template <unsigned BASE, typename T>
-constexpr bool compare(T v, T v1, T v2)
+constexpr bool compare(const T v, const T v1, const T v2)
 {
         return compare<float, BASE>(v, v1, v2) && compare<double, BASE>(v, v1, v2)
                && compare<long double, BASE>(v, v1, v2);

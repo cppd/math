@@ -21,12 +21,12 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 namespace ns
 {
-inline int points_to_pixels(double points, double pixels_per_inch)
+inline int points_to_pixels(const double points, const double pixels_per_inch)
 {
         return std::lround(points / 72.0 * pixels_per_inch);
 }
 
-inline int millimeters_to_pixels(double millimeters, double pixels_per_inch)
+inline int millimeters_to_pixels(const double millimeters, const double pixels_per_inch)
 {
         return std::lround(millimeters / 25.4 * pixels_per_inch);
 }
