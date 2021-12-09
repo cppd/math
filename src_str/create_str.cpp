@@ -37,7 +37,7 @@ constexpr std::string_view COMMAND_CAT = "cat";
 // 3.1 Magic Number
 constexpr std::uint32_t SPR_MAGIC_NUMBER = 0x07230203;
 
-constexpr std::uint32_t bswap32(std::uint32_t n)
+constexpr std::uint32_t bswap32(const std::uint32_t n)
 {
         return __builtin_bswap32(n);
 }
@@ -62,7 +62,7 @@ namespace
 }
 
 template <typename T>
-[[nodiscard]] int char_to_int(T c)
+[[nodiscard]] int char_to_int(const T c)
 {
         static_assert(std::is_same_v<T, char>);
         return static_cast<unsigned char>(c);
