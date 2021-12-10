@@ -17,6 +17,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
+#include "model_tree_actions.h"
+
 #include "../com/connection.h"
 #include "../com/model_tree.h"
 #include "../com/thread_queue.h"
@@ -35,7 +37,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 namespace ns::gui::main_window
 {
-class ModelTree final : public QWidget, private ModelTreeEvents
+class ModelTree final : public QWidget, private ModelTreeEvents, private ModelTreeActions
 {
         Q_OBJECT
 
@@ -63,11 +65,11 @@ private:
         void update(storage::VolumeObjectWeak&& object) override;
         void erase(ObjectId id) override;
 
-        void clear();
+        void show(ObjectId id, bool show) override;
+        void show_only_it(ObjectId id) override;
+        void clear() override;
 
         void make_menu(const QPoint& pos);
-        template <typename T>
-        void make_menu_for_object(QMenu* menu, const std::shared_ptr<T>& object);
 
         void insert_into_tree(
                 ObjectId id,
@@ -75,9 +77,6 @@ private:
                 const std::string& name,
                 const std::optional<ObjectId>& parent_object_id);
         void erase_from_tree(ObjectId id);
-
-        void show_object(ObjectId id, bool show);
-        void show_only_this_object(ObjectId id);
 
         template <typename T>
         void update_weak(const T& object);
@@ -87,11 +86,6 @@ private:
 
         template <std::size_t N>
         void update_item(const std::shared_ptr<volume::VolumeObject<N>>& object);
-
-        template <std::size_t N>
-        void set_visible(mesh::MeshObject<N>* object, bool visible);
-        template <std::size_t N>
-        void set_visible(volume::VolumeObject<N>* object, bool visible);
 
 public:
         ModelTree();

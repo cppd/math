@@ -17,7 +17,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "model_tree.h"
 
-#include "../dialogs/message.h"
+#include "model_tree_menu.h"
 
 #include <src/com/error.h>
 
@@ -268,19 +268,19 @@ void ModelTree::erase_from_tree(const ObjectId id)
         {
                 do
                 {
-                        QTreeWidgetItem* parent = item->parent();
+                        QTreeWidgetItem* const parent = item->parent();
                         delete item;
                         item = parent;
                 } while (item != nullptr && item->childCount() == 0 && map_item_id_.count(item) == 0);
         }
 }
 
-void ModelTree::show_object(const ObjectId id, const bool show)
+void ModelTree::show(const ObjectId id, const bool show)
 {
         ASSERT(std::this_thread::get_id() == thread_id_);
 
-        std::optional<storage::MeshObject> m = storage_.mesh_object(id);
-        std::optional<storage::VolumeObject> v = storage_.volume_object(id);
+        const std::optional<storage::MeshObject> m = storage_.mesh_object(id);
+        const std::optional<storage::VolumeObject> v = storage_.volume_object(id);
 
         if (m.has_value() && v.has_value())
         {
@@ -292,7 +292,7 @@ void ModelTree::show_object(const ObjectId id, const bool show)
                 std::visit(
                         [&]<std::size_t N>(const std::shared_ptr<volume::VolumeObject<N>>& volume_object)
                         {
-                                set_visible(volume_object.get(), show);
+                                volume::Writing(volume_object.get()).set_visible(show);
                         },
                         *v);
         }
@@ -301,13 +301,13 @@ void ModelTree::show_object(const ObjectId id, const bool show)
                 std::visit(
                         [&]<std::size_t N>(const std::shared_ptr<mesh::MeshObject<N>>& mesh_object)
                         {
-                                set_visible(mesh_object.get(), show);
+                                mesh::Writing(mesh_object.get()).set_visible(show);
                         },
                         *m);
         }
 }
 
-void ModelTree::show_only_this_object(const ObjectId id)
+void ModelTree::show_only_it(const ObjectId id)
 {
         ASSERT(std::this_thread::get_id() == thread_id_);
 
@@ -315,10 +315,10 @@ void ModelTree::show_only_this_object(const ObjectId id)
         {
                 if (id != v.first)
                 {
-                        show_object(v.first, false);
+                        show(v.first, false);
                 }
         }
-        show_object(id, true);
+        show(id, true);
 }
 
 std::optional<ObjectId> ModelTree::current_item() const
@@ -479,81 +479,6 @@ std::vector<storage::VolumeObjectConst> ModelTree::const_volume_objects() const
         return storage_.objects<storage::VolumeObjectConst>();
 }
 
-template <std::size_t N>
-void ModelTree::set_visible(mesh::MeshObject<N>* const object, const bool visible)
-{
-        mesh::Writing writing(object);
-        writing.set_visible(visible);
-}
-
-template <std::size_t N>
-void ModelTree::set_visible(volume::VolumeObject<N>* const object, const bool visible)
-{
-        volume::Writing writing(object);
-        writing.set_visible(visible);
-}
-
-template <typename T>
-void ModelTree::make_menu_for_object(QMenu* const menu, const std::shared_ptr<T>& object)
-{
-        ASSERT(std::this_thread::get_id() == thread_id_);
-
-        const auto item_iter = map_id_item_.find(object->id());
-        if (item_iter == map_id_item_.cend())
-        {
-                return;
-        }
-
-        {
-                QAction* const action = menu->addAction("Show only it");
-                QObject::connect(
-                        action, &QAction::triggered,
-                        [&]()
-                        {
-                                show_only_this_object(object->id());
-                        });
-        }
-        {
-                const bool visible = item_iter->second.visible;
-                QAction* const action = visible ? menu->addAction("Hide") : menu->addAction("Show");
-                QObject::connect(
-                        action, &QAction::triggered,
-                        [&, visible]()
-                        {
-                                set_visible(object.get(), !visible);
-                        });
-        }
-
-        menu->addSeparator();
-
-        {
-                QAction* const action = menu->addAction("Delete");
-                QObject::connect(
-                        action, &QAction::triggered,
-                        [&]()
-                        {
-                                std::optional<bool> yes = dialog::message_question_default_no("Delete?");
-                                if (yes && *yes)
-                                {
-                                        object->erase();
-                                }
-                        });
-        }
-        {
-                QAction* const action = menu->addAction("Delete All");
-                QObject::connect(
-                        action, &QAction::triggered,
-                        [&]()
-                        {
-                                std::optional<bool> yes = dialog::message_question_default_no("Delete All?");
-                                if (yes && *yes)
-                                {
-                                        clear();
-                                }
-                        });
-        }
-}
-
 void ModelTree::make_menu(const QPoint& pos)
 {
         ASSERT(std::this_thread::get_id() == thread_id_);
@@ -564,40 +489,21 @@ void ModelTree::make_menu(const QPoint& pos)
                 return;
         }
 
-        std::optional<storage::VolumeObject> volume = ModelTree::current_volume();
-        std::optional<storage::MeshObject> mesh = ModelTree::current_mesh();
-        ASSERT(!volume || !mesh);
-        if (!volume && !mesh)
+        const auto id_iter = map_item_id_.find(item);
+        if (id_iter == map_item_id_.cend())
         {
                 return;
         }
 
-        const std::unique_ptr<QMenu> menu = std::make_unique<QMenu>();
+        const auto item_iter = map_id_item_.find(id_iter->second);
+        ASSERT(item_iter != map_id_item_.cend());
 
-        if (volume)
-        {
-                std::visit(
-                        [&]<std::size_t N>(const std::shared_ptr<volume::VolumeObject<N>>& object)
-                        {
-                                make_menu_for_object(menu.get(), object);
-                        },
-                        *volume);
-        }
-        else if (mesh)
-        {
-                std::visit(
-                        [&]<std::size_t N>(const std::shared_ptr<mesh::MeshObject<N>>& object)
-                        {
-                                make_menu_for_object(menu.get(), object);
-                        },
-                        *mesh);
-        }
+        const std::unique_ptr<QMenu> menu =
+                make_model_tree_menu_for_object(this, id_iter->second, item_iter->second.visible);
 
-        if (menu->actions().empty())
+        if (menu)
         {
-                return;
+                menu->exec(ui_.model_tree->mapToGlobal(pos));
         }
-
-        menu->exec(ui_.model_tree->mapToGlobal(pos));
 }
 }
