@@ -17,6 +17,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
+#include "device_info.h"
 #include "objects.h"
 
 #include <string>
@@ -26,20 +27,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 namespace ns::vulkan
 {
-struct DeviceFeatures final
-{
-        VkPhysicalDeviceFeatures features_10{};
-        VkPhysicalDeviceVulkan11Features features_11{};
-        VkPhysicalDeviceVulkan12Features features_12{};
-};
-
-struct DeviceProperties final
-{
-        VkPhysicalDeviceProperties properties_10;
-        VkPhysicalDeviceVulkan11Properties properties_11;
-        VkPhysicalDeviceVulkan12Properties properties_12;
-};
-
 class PhysicalDevice final
 {
         VkPhysicalDevice physical_device_;
@@ -92,10 +79,6 @@ public:
 
         Queue queue(std::uint32_t family_index, std::uint32_t queue_index) const;
 };
-
-//
-
-std::vector<VkPhysicalDevice> physical_devices(VkInstance instance);
 
 PhysicalDevice create_physical_device(
         VkInstance instance,

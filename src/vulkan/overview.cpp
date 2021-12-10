@@ -18,6 +18,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "overview.h"
 
 #include "device.h"
+#include "device_info.h"
 #include "print.h"
 #include "query.h"
 
@@ -277,26 +278,26 @@ std::string overview_physical_devices(const VkInstance instance, const VkSurface
 
         std::unordered_set<std::string> uuids;
 
-        for (const VkPhysicalDevice& d : physical_devices(instance))
+        for (const VkPhysicalDevice device : find_physical_devices(instance))
         {
-                const PhysicalDevice device(d, surface);
+                const PhysicalDevice physical_device(device, surface);
 
-                if (!uuids.emplace(to_string(device.properties().properties_10.pipelineCacheUUID)).second)
+                if (!uuids.emplace(to_string(physical_device.properties().properties_10.pipelineCacheUUID)).second)
                 {
                         continue;
                 }
 
                 const std::size_t node = tree.add("Physical Device");
 
-                device_name(device, node, &tree);
-                device_type(device, node, &tree);
-                api_version(device, node, &tree);
-                driver_info(device, node, &tree);
-                conformance_version(device, node, &tree);
-                extensions(device, node, &tree);
-                features(device, node, &tree);
-                properties(device, node, &tree);
-                queue_families(device, node, &tree);
+                device_name(physical_device, node, &tree);
+                device_type(physical_device, node, &tree);
+                api_version(physical_device, node, &tree);
+                driver_info(physical_device, node, &tree);
+                conformance_version(physical_device, node, &tree);
+                extensions(physical_device, node, &tree);
+                features(physical_device, node, &tree);
+                properties(physical_device, node, &tree);
+                queue_families(physical_device, node, &tree);
         }
 
         return tree.text(TREE_LEVEL_INDENT);
