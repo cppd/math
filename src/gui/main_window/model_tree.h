@@ -28,7 +28,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/model/object_id.h>
 #include <src/storage/storage.h>
 
-#include <QMenu>
 #include <QPoint>
 #include <QTreeWidget>
 #include <optional>

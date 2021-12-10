@@ -18,25 +18,12 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "model_tree.h"
 
 #include "model_tree_menu.h"
+#include "model_tree_style.h"
 
 #include <src/com/error.h>
 
-#include <QMenu>
-#include <memory>
-
 namespace ns::gui::main_window
 {
-namespace
-{
-constexpr QColor COLOR_VISIBLE(0, 0, 0);
-constexpr QColor COLOR_HIDDEN(128, 128, 128);
-
-void set_item_color(QTreeWidgetItem* const item, const bool visible)
-{
-        item->setForeground(0, visible ? COLOR_VISIBLE : COLOR_HIDDEN);
-}
-}
-
 ModelTree::ModelTree() : QWidget(nullptr), thread_id_(std::this_thread::get_id())
 {
         ui_.setupUi(this);
@@ -91,7 +78,7 @@ void ModelTree::update_item(const std::shared_ptr<mesh::MeshObject<N>>& object)
         }
         Item& item = iter->second;
         item.visible = mesh::Reading(*object).visible();
-        set_item_color(item.item, item.visible);
+        set_model_tree_item_style(item.item, item.visible);
         if (item.item == ui_.model_tree->currentItem())
         {
                 Q_EMIT item_update();
@@ -108,7 +95,7 @@ void ModelTree::update_item(const std::shared_ptr<volume::VolumeObject<N>>& obje
         }
         Item& item = iter->second;
         item.visible = volume::Reading(*object).visible();
-        set_item_color(item.item, item.visible);
+        set_model_tree_item_style(item.item, item.visible);
         if (item.item == ui_.model_tree->currentItem())
         {
                 Q_EMIT item_update();
@@ -258,52 +245,48 @@ void ModelTree::erase_from_tree(const ObjectId id)
 
         if (item->childCount() > 0)
         {
-                QFont font = item->font(0);
-                font.setStrikeOut(true);
-                item->setFont(0, font);
-                set_item_color(item, false);
+                set_model_tree_item_style_deleted(item);
                 Q_EMIT item_update();
+                return;
         }
-        else
+
+        do
         {
-                do
-                {
-                        QTreeWidgetItem* const parent = item->parent();
-                        delete item;
-                        item = parent;
-                } while (item != nullptr && item->childCount() == 0 && map_item_id_.count(item) == 0);
-        }
+                QTreeWidgetItem* const parent = item->parent();
+                delete item;
+                item = parent;
+        } while (item != nullptr && item->childCount() == 0 && map_item_id_.count(item) == 0);
 }
 
 void ModelTree::show(const ObjectId id, const bool show)
 {
         ASSERT(std::this_thread::get_id() == thread_id_);
 
-        const std::optional<storage::MeshObject> m = storage_.mesh_object(id);
-        const std::optional<storage::VolumeObject> v = storage_.volume_object(id);
+        const std::optional<storage::MeshObject> mesh = storage_.mesh_object(id);
+        const std::optional<storage::VolumeObject> volume = storage_.volume_object(id);
 
-        if (m.has_value() && v.has_value())
+        if (mesh.has_value() && volume.has_value())
         {
                 error_fatal("Mesh and volume with the same id");
         }
 
-        if (v)
+        if (volume)
         {
                 std::visit(
                         [&]<std::size_t N>(const std::shared_ptr<volume::VolumeObject<N>>& volume_object)
                         {
                                 volume::Writing(volume_object.get()).set_visible(show);
                         },
-                        *v);
+                        *volume);
         }
-        else if (m)
+        else if (mesh)
         {
                 std::visit(
                         [&]<std::size_t N>(const std::shared_ptr<mesh::MeshObject<N>>& mesh_object)
                         {
                                 mesh::Writing(mesh_object.get()).set_visible(show);
                         },
-                        *m);
+                        *mesh);
         }
 }
 
