@@ -17,13 +17,13 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "buffers.h"
 
+#include "buffers_image.h"
 #include "copy.h"
 #include "create.h"
 #include "error.h"
 #include "memory.h"
 #include "print.h"
 #include "query.h"
-#include "queue.h"
 
 #include <src/com/alg.h>
 #include <src/com/print.h>
@@ -62,174 +62,25 @@ const std::unordered_set<VkFormat>& stencil_format_set()
         return formats;
 }
 
-VkExtent3D correct_image_extent(const VkImageType& type, const VkExtent3D& extent)
+std::string formats_to_sorted_string(const std::vector<VkFormat>& formats, const std::string_view& separator)
 {
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wswitch-enum"
-        switch (type)
-        {
-        case VK_IMAGE_TYPE_1D:
-                return {.width = extent.width, .height = 1, .depth = 1};
-        case VK_IMAGE_TYPE_2D:
-                return {.width = extent.width, .height = extent.height, .depth = 1};
-        case VK_IMAGE_TYPE_3D:
-                return extent;
-        default:
-                error("Unknown image type " + image_type_to_string(type));
-        }
-#pragma GCC diagnostic pop
-}
-
-VkExtent3D max_image_extent(
-        const VkImageType& type,
-        const VkExtent3D& extent,
-        const VkPhysicalDevice& physical_device,
-        const VkFormat& format,
-        const VkImageTiling& tiling,
-        const VkImageUsageFlags& usage)
-{
-        const VkExtent3D max = find_max_image_extent(physical_device, format, type, tiling, usage);
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wswitch-enum"
-        switch (type)
-        {
-        case VK_IMAGE_TYPE_1D:
-                return {.width = std::min(extent.width, max.width), .height = 1, .depth = 1};
-        case VK_IMAGE_TYPE_2D:
-                return {.width = std::min(extent.width, max.width),
-                        .height = std::min(extent.height, max.height),
-                        .depth = 1};
-        case VK_IMAGE_TYPE_3D:
-                return {.width = std::min(extent.width, max.width),
-                        .height = std::min(extent.height, max.height),
-                        .depth = std::min(extent.depth, max.depth)};
-        default:
-                error("Unknown image type " + image_type_to_string(type));
-        }
-#pragma GCC diagnostic pop
-}
-
-void begin_command_buffer(const VkCommandBuffer command_buffer)
-{
-        VkCommandBufferBeginInfo command_buffer_info = {};
-        command_buffer_info.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
-        command_buffer_info.flags = VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT;
-
-        VULKAN_CHECK(vkBeginCommandBuffer(command_buffer, &command_buffer_info));
-}
-
-void end_command_buffer(const VkCommandBuffer command_buffer)
-{
-        VULKAN_CHECK(vkEndCommandBuffer(command_buffer));
-}
-
-void transition_image_layout(
-        const VkImageAspectFlags aspect_flags,
-        const VkDevice device,
-        const VkCommandPool command_pool,
-        const VkQueue queue,
-        const VkImage image,
-        const VkImageLayout layout)
-{
-        ASSERT(layout != VK_IMAGE_LAYOUT_UNDEFINED);
-
-        VkImageMemoryBarrier barrier = {};
-        barrier.sType = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER;
-
-        barrier.oldLayout = VK_IMAGE_LAYOUT_UNDEFINED;
-        barrier.newLayout = layout;
-
-        barrier.srcQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
-        barrier.dstQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
-
-        barrier.image = image;
-
-        barrier.subresourceRange.aspectMask = aspect_flags;
-        barrier.subresourceRange.baseMipLevel = 0;
-        barrier.subresourceRange.levelCount = 1;
-        barrier.subresourceRange.baseArrayLayer = 0;
-        barrier.subresourceRange.layerCount = 1;
-
-        barrier.srcAccessMask = 0;
-        barrier.dstAccessMask = 0;
-        const VkPipelineStageFlags src_stage = VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT;
-        const VkPipelineStageFlags dst_stage = VK_PIPELINE_STAGE_BOTTOM_OF_PIPE_BIT;
-
-        const handle::CommandBuffer command_buffer(device, command_pool);
-
-        begin_command_buffer(command_buffer);
-
-        vkCmdPipelineBarrier(command_buffer, src_stage, dst_stage, 0, 0, nullptr, 0, nullptr, 1, &barrier);
-
-        end_command_buffer(command_buffer);
-
-        queue_submit(command_buffer, queue);
-        VULKAN_CHECK(vkQueueWaitIdle(queue));
-}
-
-bool has_bits(const VkImageUsageFlags usage, const VkImageUsageFlagBits bits)
-{
-        return (usage & bits) == bits;
-}
-
-VkFormatFeatureFlags format_features_for_image_usage(VkImageUsageFlags usage)
-{
-        VkFormatFeatureFlags features = 0;
-        if (has_bits(usage, VK_IMAGE_USAGE_TRANSFER_SRC_BIT))
-        {
-                features |= VK_FORMAT_FEATURE_TRANSFER_SRC_BIT;
-                usage &= ~VK_IMAGE_USAGE_TRANSFER_SRC_BIT;
-        }
-        if (has_bits(usage, VK_IMAGE_USAGE_TRANSFER_DST_BIT))
-        {
-                features |= VK_FORMAT_FEATURE_TRANSFER_DST_BIT;
-                usage &= ~VK_IMAGE_USAGE_TRANSFER_DST_BIT;
-        }
-        if (has_bits(usage, VK_IMAGE_USAGE_SAMPLED_BIT))
-        {
-                features |= VK_FORMAT_FEATURE_SAMPLED_IMAGE_BIT;
-                usage &= ~VK_IMAGE_USAGE_SAMPLED_BIT;
-        }
-        if (has_bits(usage, VK_IMAGE_USAGE_STORAGE_BIT))
-        {
-                features |= VK_FORMAT_FEATURE_STORAGE_IMAGE_BIT;
-                usage &= ~VK_IMAGE_USAGE_STORAGE_BIT;
-        }
-        if (has_bits(usage, VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT))
-        {
-                features |= VK_FORMAT_FEATURE_COLOR_ATTACHMENT_BIT;
-                usage &= ~VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT;
-        }
-        if (has_bits(usage, VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT))
-        {
-                features |= VK_FORMAT_FEATURE_DEPTH_STENCIL_ATTACHMENT_BIT;
-                usage &= ~VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT;
-        }
-        if (usage != 0)
-        {
-                error("Unsupported image usage " + to_string_binary(usage));
-        }
-        return features;
-}
-
-template <typename T>
-std::string formats_to_sorted_string(const T& formats, const std::string_view& separator)
-{
-        static_assert(std::is_same_v<VkFormat, typename T::value_type>);
         if (formats.empty())
         {
                 return {};
         }
-        std::vector<std::string> v;
-        v.reserve(formats.size());
-        for (VkFormat format : formats)
+
+        std::vector<std::string> strings;
+        strings.reserve(formats.size());
+        for (const VkFormat format : formats)
         {
-                v.push_back(format_to_string(format));
+                strings.push_back(format_to_string(format));
         }
-        sort_and_unique(&v);
-        auto iter = v.cbegin();
+
+        sort_and_unique(&strings);
+
+        auto iter = strings.cbegin();
         std::string s = *iter;
-        while (++iter != v.cend())
+        while (++iter != strings.cend())
         {
                 s += separator;
                 s += *iter;
@@ -250,22 +101,6 @@ void check_family_index(
         {
                 error("Queue family index is not found in the family indices");
         }
-}
-
-bool has_usage_for_image_view(const VkImageUsageFlags usage)
-{
-        return has_bits(usage, VK_IMAGE_USAGE_SAMPLED_BIT) || has_bits(usage, VK_IMAGE_USAGE_STORAGE_BIT)
-               || has_bits(usage, VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT)
-               || has_bits(usage, VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT)
-               || has_bits(usage, VK_IMAGE_USAGE_INPUT_ATTACHMENT_BIT)
-               || has_bits(usage, VK_IMAGE_USAGE_TRANSIENT_ATTACHMENT_BIT)
-               || has_bits(usage, VK_IMAGE_USAGE_FRAGMENT_SHADING_RATE_ATTACHMENT_BIT_KHR)
-               || has_bits(usage, VK_IMAGE_USAGE_FRAGMENT_DENSITY_MAP_BIT_EXT);
-}
-
-bool has_usage_for_transfer(const VkImageUsageFlags usage)
-{
-        return has_bits(usage, VK_IMAGE_USAGE_TRANSFER_SRC_BIT) || has_bits(usage, VK_IMAGE_USAGE_TRANSFER_DST_BIT);
 }
 }
 
@@ -496,11 +331,11 @@ const std::vector<VkFormat>& DepthImageWithMemory::depth_formats(const std::vect
 DepthImageWithMemory::DepthImageWithMemory(
         const Device& device,
         const std::vector<std::uint32_t>& family_indices,
-        VkFormat format,
-        VkSampleCountFlagBits sample_count,
-        std::uint32_t width,
-        std::uint32_t height,
-        VkImageUsageFlags usage)
+        const VkFormat format,
+        const VkSampleCountFlagBits sample_count,
+        const std::uint32_t width,
+        const std::uint32_t height,
+        const VkImageUsageFlags usage)
         : image_(create_image(
                 device,
                 device.physical_device(),
