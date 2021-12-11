@@ -303,7 +303,7 @@ vulkan::Descriptors MeshMemory::create(
         ASSERT(!coordinates.empty());
         ASSERT(std::all_of(
                 coordinates.cbegin(), coordinates.cend(),
-                [](const vulkan::Buffer* buffer)
+                [](const vulkan::Buffer* const buffer)
                 {
                         return buffer != nullptr;
                 }));

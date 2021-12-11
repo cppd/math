@@ -66,7 +66,7 @@ public:
                VkDescriptorSetLayout descriptor_set_layout,
                const std::vector<std::uint32_t>& family_indices,
                VkSampler sampler,
-               const VkImageView& texture);
+               VkImageView texture);
 
         Memory(const Memory&) = delete;
         Memory& operator=(const Memory&) = delete;

@@ -109,10 +109,12 @@ public:
         {
                 mpf_set_default_prec(precision);
         }
+
         ~MpfPrecision()
         {
                 mpf_set_default_prec(precision_);
         }
+
         MpfPrecision(const MpfPrecision&) = delete;
         MpfPrecision& operator=(const MpfPrecision&) = delete;
 };

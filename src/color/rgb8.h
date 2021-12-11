@@ -35,7 +35,7 @@ public:
         {
         }
 
-        constexpr bool operator==(const RGB8& v) const
+        constexpr bool operator==(const RGB8 v) const
         {
                 return red_ == v.red_ && green_ == v.green_ && blue_ == v.blue_;
         }

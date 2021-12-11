@@ -47,7 +47,7 @@ void write_pixels_to_image(
         VkImageAspectFlags aspect_flag,
         VkImageLayout old_layout,
         VkImageLayout new_layout,
-        const image::ColorFormat& color_format,
+        image::ColorFormat color_format,
         const std::span<const std::byte>& pixels);
 
 void read_pixels_from_image(

@@ -22,7 +22,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 namespace ns::view
 {
 std::unique_ptr<vulkan::VulkanInstance> create_instance(
-        const window::WindowID& window,
+        const window::WindowID window,
         const vulkan::DeviceFeatures& required_device_features)
 {
         const std::vector<std::string> instance_extensions = window::vulkan_create_surface_required_extensions();

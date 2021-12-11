@@ -21,6 +21,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "../com/support.h"
 
+#include <src/com/alg.h>
 #include <src/com/error.h>
 #include <src/com/print.h>
 
@@ -45,12 +46,7 @@ ImageSliceDialog::ImageSliceDialog(
                 error("Image dimension " + to_string(size.size()) + " must be greater than or equal to 2");
         }
 
-        if (!std::all_of(
-                    size.cbegin(), size.cend(),
-                    [](const int& s)
-                    {
-                            return s > 0;
-                    }))
+        if (!all_positive(size))
         {
                 error("Image size " + to_string(size) + " must be positive");
         }

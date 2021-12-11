@@ -81,7 +81,7 @@ void compare_data(const std::vector<const Interface<T>*>& pointers, std::mt19937
         {
                 const T v = d(engine);
                 const T p = pointer->value();
-                if (p != v)
+                if (!(p == v))
                 {
                         error("Error value " + to_string(p) + ", expected " + to_string(v));
                 }

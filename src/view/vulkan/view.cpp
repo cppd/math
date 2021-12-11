@@ -329,7 +329,7 @@ class Impl final
         }
 
 public:
-        Impl(const window::WindowID& window, const double window_ppi)
+        Impl(const window::WindowID window, const double window_ppi)
                 : frame_size_in_pixels_(frame_size_in_pixels(window_ppi)),
                   frame_rate_(window_ppi),
                   instance_(create_instance(window, device_features())),
@@ -461,8 +461,8 @@ public:
 }
 
 std::unique_ptr<View> create_view_impl(
-        window::WindowID parent_window,
-        double parent_window_ppi,
+        const window::WindowID parent_window,
+        const double parent_window_ppi,
         std::vector<Command>&& initial_commands)
 {
         return std::make_unique<ViewThread<Impl>>(parent_window, parent_window_ppi, std::move(initial_commands));

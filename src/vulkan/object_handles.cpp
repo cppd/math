@@ -605,7 +605,7 @@ DescriptorSets::DescriptorSets(
         ASSERT(!descriptor_set_layouts.empty());
         ASSERT(std::all_of(
                 descriptor_set_layouts.cbegin(), descriptor_set_layouts.cend(),
-                [](const VkDescriptorSetLayout& descriptor_set_layout)
+                [](const VkDescriptorSetLayout descriptor_set_layout)
                 {
                         return descriptor_set_layout != VK_NULL_HANDLE;
                 }));

@@ -227,7 +227,7 @@ void manifold_constructor(
         const bool build_bound_cocone,
         const bool build_mst,
         const Matrix<N + 1, N + 1, double>& matrix,
-        const ObjectId& id,
+        const ObjectId id,
         const std::vector<Vector<N, float>>& points,
         const double rho,
         const double alpha)

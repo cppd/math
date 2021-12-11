@@ -86,7 +86,7 @@ VkPresentModeKHR choose_present_mode(
         error_fatal("Unknown preferred present mode");
 }
 
-VkExtent2D choose_extent(const VkSurfaceCapabilitiesKHR capabilities)
+VkExtent2D choose_extent(const VkSurfaceCapabilitiesKHR& capabilities)
 {
         if (!(capabilities.currentExtent.width == 0xffff'ffff && capabilities.currentExtent.height == 0xffff'ffff))
         {
@@ -103,7 +103,7 @@ VkExtent2D choose_extent(const VkSurfaceCapabilitiesKHR capabilities)
 #endif
 }
 
-std::uint32_t choose_image_count(const VkSurfaceCapabilitiesKHR capabilities, const int image_count)
+std::uint32_t choose_image_count(const VkSurfaceCapabilitiesKHR& capabilities, const int image_count)
 {
         if (image_count <= 0)
         {
@@ -114,6 +114,7 @@ std::uint32_t choose_image_count(const VkSurfaceCapabilitiesKHR capabilities, co
         {
                 return capabilities.minImageCount;
         }
+
         if (capabilities.maxImageCount > 0 && static_cast<std::uint32_t>(image_count) >= capabilities.maxImageCount)
         {
                 return capabilities.maxImageCount;

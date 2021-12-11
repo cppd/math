@@ -44,6 +44,6 @@ std::unique_ptr<Dft> create_dft(
         const vulkan::Queue* compute_queue,
         const vulkan::CommandPool* transfer_command_pool,
         const vulkan::Queue* transfer_queue,
-        const vulkan::BufferMemoryType& buffer_memory_type,
+        vulkan::BufferMemoryType buffer_memory_type,
         const Vector2i& group_size);
 }

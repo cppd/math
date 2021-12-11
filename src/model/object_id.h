@@ -37,7 +37,7 @@ public:
         {
         }
 
-        bool operator==(const ObjectId& id) const noexcept
+        bool operator==(const ObjectId id) const noexcept
         {
                 return id_ == id.id_;
         }
@@ -54,7 +54,7 @@ namespace std
 template <>
 struct hash<::ns::ObjectId>
 {
-        std::size_t operator()(const ::ns::ObjectId& id) const noexcept
+        std::size_t operator()(const ::ns::ObjectId id) const noexcept
         {
                 return id.hash();
         }

@@ -64,7 +64,7 @@ Memory::Memory(
         const VkDescriptorSetLayout descriptor_set_layout,
         const std::vector<std::uint32_t>& family_indices,
         const VkSampler sampler,
-        const VkImageView& texture)
+        const VkImageView texture)
         : descriptors_(device, 1, descriptor_set_layout, descriptor_set_layout_bindings())
 {
         std::vector<std::variant<VkDescriptorBufferInfo, VkDescriptorImageInfo>> infos;

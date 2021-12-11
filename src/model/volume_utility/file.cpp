@@ -188,7 +188,7 @@ void save_to_images(
 template <std::size_t N>
 void load_from_images(
         const std::filesystem::path& directory,
-        const image::ColorFormat& image_format,
+        const image::ColorFormat image_format,
         const std::array<int, N>& image_size,
         const std::span<std::byte>& image_bytes,
         ProgressRatio* const progress,

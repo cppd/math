@@ -26,6 +26,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 namespace ns::view
 {
 std::unique_ptr<vulkan::VulkanInstance> create_instance(
-        const window::WindowID& window,
+        window::WindowID window,
         const vulkan::DeviceFeatures& required_device_features);
 }

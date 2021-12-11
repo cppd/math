@@ -48,7 +48,7 @@ enum class ConstraintSolution
         CYCLING
 };
 
-inline const char* constraint_solution_to_string(const ConstraintSolution& cs)
+inline const char* constraint_solution_to_string(const ConstraintSolution cs)
 {
         switch (cs)
         {

@@ -93,7 +93,7 @@ static_assert(test_cofactor_expansion<__float128>());
 template <typename T>
 constexpr bool test_row_reduction()
 {
-        const auto cmp = [](const T& v, const long long& c)
+        const auto cmp = [](const T& v, const long long c)
         {
                 return v > c - T(0.1) && v < c + T(0.1);
         };

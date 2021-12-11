@@ -37,7 +37,7 @@ namespace
 {
 void check_pixel_buffer_size(
         const std::span<const std::byte>& pixels,
-        const image::ColorFormat& color_format,
+        const image::ColorFormat color_format,
         const VkExtent3D extent)
 {
         const std::size_t pixel_size = image::format_pixel_size_in_bytes(color_format);
@@ -353,7 +353,7 @@ void write_pixels_to_image(
         const VkImageAspectFlags aspect_flag,
         const VkImageLayout old_layout,
         const VkImageLayout new_layout,
-        const image::ColorFormat& color_format,
+        const image::ColorFormat color_format,
         const std::span<const std::byte>& pixels)
 {
         const auto write = [&](const std::span<const std::byte>& data)

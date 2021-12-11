@@ -161,22 +161,22 @@ public:
                 return image_.device();
         }
 
-        const VkFormat& format() const noexcept
+        VkFormat format() const noexcept
         {
                 return format_;
         }
 
-        const VkExtent3D& extent() const noexcept
+        VkExtent3D extent() const noexcept
         {
                 return extent_;
         }
 
-        const VkImageType& type() const noexcept
+        VkImageType type() const noexcept
         {
                 return type_;
         }
 
-        const VkSampleCountFlagBits& sample_count() const noexcept
+        VkSampleCountFlagBits sample_count() const noexcept
         {
                 return sample_count_;
         }
@@ -186,7 +186,7 @@ public:
                 return (usage_ & flag) == flag;
         }
 
-        const VkImageUsageFlags& usage() const noexcept
+        VkImageUsageFlags usage() const noexcept
         {
                 return usage_;
         }
@@ -219,12 +219,12 @@ public:
         }
         operator VkImageView() const&& noexcept = delete;
 
-        const VkFormat& format() const noexcept
+        VkFormat format() const noexcept
         {
                 return format_;
         }
 
-        const VkSampleCountFlagBits& sample_count() const noexcept
+        VkSampleCountFlagBits sample_count() const noexcept
         {
                 return sample_count_;
         }

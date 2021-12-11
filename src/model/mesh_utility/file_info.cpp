@@ -40,7 +40,7 @@ std::string obj_file_extension(const std::size_t n)
 std::vector<std::string> obj_file_extensions(const std::set<unsigned>& dimensions)
 {
         std::vector<std::string> result;
-        for (unsigned d : dimensions)
+        for (const unsigned d : dimensions)
         {
                 ASSERT(d >= 3);
                 if (d == 3)
@@ -72,7 +72,7 @@ std::string stl_file_extension(const std::size_t n)
 std::vector<std::string> stl_file_extensions(const std::set<unsigned>& dimensions)
 {
         std::vector<std::string> result;
-        for (unsigned d : dimensions)
+        for (const unsigned d : dimensions)
         {
                 ASSERT(d >= 3);
                 if (d == 3)

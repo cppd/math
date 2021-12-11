@@ -317,7 +317,7 @@ public:
              const vulkan::Queue* const compute_queue,
              const vulkan::CommandPool* const transfer_command_pool,
              const vulkan::Queue* const transfer_queue,
-             const vulkan::BufferMemoryType& buffer_memory_type,
+             const vulkan::BufferMemoryType buffer_memory_type,
              const Vector2i& group_size)
                 : instance_(instance),
                   device_(&instance->device()),
@@ -354,7 +354,7 @@ std::unique_ptr<Dft> create_dft(
         const vulkan::Queue* const compute_queue,
         const vulkan::CommandPool* const transfer_command_pool,
         const vulkan::Queue* const transfer_queue,
-        const vulkan::BufferMemoryType& buffer_memory_type,
+        const vulkan::BufferMemoryType buffer_memory_type,
         const Vector2i& group_size)
 {
         return std::make_unique<Impl>(
