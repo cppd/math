@@ -27,17 +27,20 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 namespace ns::vulkan
 {
 std::vector<handle::Semaphore> create_semaphores(VkDevice device, int count);
+
 std::vector<handle::Fence> create_fences(VkDevice device, int count, bool signaled_state);
 
 handle::PipelineLayout create_pipeline_layout(
         VkDevice device,
         const std::vector<VkDescriptorSetLayout>& descriptor_set_layouts);
+
 handle::PipelineLayout create_pipeline_layout(
         VkDevice device,
         const std::vector<unsigned>& set_numbers,
         const std::vector<VkDescriptorSetLayout>& set_layouts);
 
 CommandPool create_command_pool(VkDevice device, std::uint32_t queue_family_index);
+
 CommandPool create_transient_command_pool(VkDevice device, std::uint32_t queue_family_index);
 
 Instance create_instance(std::vector<std::string> required_extensions);
@@ -50,6 +53,7 @@ handle::Framebuffer create_framebuffer(
         const std::vector<VkImageView>& attachments);
 
 VkClearValue create_color_clear_value(VkFormat format, const Vector<3, float>& rgb);
+
 VkClearValue create_depth_stencil_clear_value();
 
 Buffer create_buffer(
@@ -69,5 +73,5 @@ Image create_image(
         VkImageTiling tiling,
         VkImageUsageFlags usage);
 
-ImageView create_image_view(const Image& image, const VkImageAspectFlags& aspect_flags);
+ImageView create_image_view(const Image& image, VkImageAspectFlags aspect_flags);
 }

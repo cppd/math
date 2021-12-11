@@ -15,13 +15,13 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include "buffers_image.h"
+#include "image.h"
 
-#include "error.h"
-#include "objects.h"
-#include "print.h"
-#include "query.h"
-#include "queue.h"
+#include "../error.h"
+#include "../objects.h"
+#include "../print.h"
+#include "../query.h"
+#include "../queue.h"
 
 #include <src/com/error.h>
 #include <src/com/print.h>

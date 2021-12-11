@@ -42,8 +42,8 @@ public:
 
         [[nodiscard]] VkSemaphore resolve(
                 const vulkan::Queue& graphics_queue,
-                const VkSemaphore& image_semaphore,
-                const VkSemaphore& wait_semaphore,
+                VkSemaphore image_semaphore,
+                VkSemaphore wait_semaphore,
                 unsigned image_index) const;
 };
 }

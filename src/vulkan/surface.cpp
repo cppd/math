@@ -25,21 +25,21 @@ namespace ns::vulkan
 {
 namespace
 {
-std::uint32_t find_format_count(VkPhysicalDevice physical_device, VkSurfaceKHR surface)
+std::uint32_t find_format_count(const VkPhysicalDevice physical_device, const VkSurfaceKHR surface)
 {
         std::uint32_t format_count;
         VULKAN_CHECK(vkGetPhysicalDeviceSurfaceFormatsKHR(physical_device, surface, &format_count, nullptr));
         return format_count;
 }
 
-std::uint32_t find_present_mode_count(VkPhysicalDevice physical_device, VkSurfaceKHR surface)
+std::uint32_t find_present_mode_count(const VkPhysicalDevice physical_device, const VkSurfaceKHR surface)
 {
         std::uint32_t mode_count;
         VULKAN_CHECK(vkGetPhysicalDeviceSurfacePresentModesKHR(physical_device, surface, &mode_count, nullptr));
         return mode_count;
 }
 
-std::vector<VkSurfaceFormatKHR> find_surface_formats(VkPhysicalDevice physical_device, VkSurfaceKHR surface)
+std::vector<VkSurfaceFormatKHR> find_surface_formats(const VkPhysicalDevice physical_device, const VkSurfaceKHR surface)
 {
         std::uint32_t format_count = find_format_count(physical_device, surface);
         if (format_count < 1)
@@ -52,7 +52,7 @@ std::vector<VkSurfaceFormatKHR> find_surface_formats(VkPhysicalDevice physical_d
         return formats;
 }
 
-std::vector<VkPresentModeKHR> find_present_modes(VkPhysicalDevice physical_device, VkSurfaceKHR surface)
+std::vector<VkPresentModeKHR> find_present_modes(const VkPhysicalDevice physical_device, const VkSurfaceKHR surface)
 {
         std::uint32_t mode_count = find_present_mode_count(physical_device, surface);
         if (mode_count < 1)
@@ -67,11 +67,11 @@ std::vector<VkPresentModeKHR> find_present_modes(VkPhysicalDevice physical_devic
 }
 
 bool find_surface_details(
-        VkSurfaceKHR surface,
-        VkPhysicalDevice device,
-        VkSurfaceCapabilitiesKHR* surface_capabilities,
-        std::vector<VkSurfaceFormatKHR>* surface_formats,
-        std::vector<VkPresentModeKHR>* present_modes)
+        const VkSurfaceKHR surface,
+        const VkPhysicalDevice device,
+        VkSurfaceCapabilitiesKHR* const surface_capabilities,
+        std::vector<VkSurfaceFormatKHR>* const surface_formats,
+        std::vector<VkPresentModeKHR>* const present_modes)
 {
         ASSERT(surface_capabilities && surface_formats && present_modes);
 
@@ -88,7 +88,7 @@ bool find_surface_details(
         return !present_modes->empty();
 }
 
-bool surface_suitable(VkSurfaceKHR surface, VkPhysicalDevice physical_device)
+bool surface_suitable(const VkSurfaceKHR surface, const VkPhysicalDevice physical_device)
 {
         VkSurfaceCapabilitiesKHR surface_capabilities;
         std::vector<VkSurfaceFormatKHR> surface_formats;

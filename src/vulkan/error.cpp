@@ -38,7 +38,7 @@ namespace
         {
                 oss << ' ' << msg;
         }
-        for (const std::string& s : vulkan::result_to_strings(code))
+        for (const std::string& s : result_to_strings(code))
         {
                 if (!s.empty())
                 {

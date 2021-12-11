@@ -29,8 +29,8 @@ namespace
 void pipeline_shader_stage_create_info(
         const std::vector<const Shader*>& shaders,
         const std::vector<const SpecializationConstant*>& constants,
-        std::vector<VkPipelineShaderStageCreateInfo>* create_info,
-        std::vector<std::unique_ptr<VkSpecializationInfo>>* specialization_info)
+        std::vector<VkPipelineShaderStageCreateInfo>* const create_info,
+        std::vector<std::unique_ptr<VkSpecializationInfo>>* const specialization_info)
 {
         ASSERT(shaders.size() == constants.size());
 
@@ -39,7 +39,7 @@ void pipeline_shader_stage_create_info(
 
         for (std::size_t i = 0; i < shaders.size(); ++i)
         {
-                const Shader* shader = shaders[i];
+                const Shader* const shader = shaders[i];
                 ASSERT(shader);
 
                 (*create_info)[i] = {};
@@ -48,7 +48,7 @@ void pipeline_shader_stage_create_info(
                 (*create_info)[i].module = shader->module();
                 (*create_info)[i].pName = shader->entry_point_name();
 
-                const SpecializationConstant* constant = constants[i];
+                const SpecializationConstant* const constant = constants[i];
                 if (constant)
                 {
                         specialization_info->push_back(std::make_unique<VkSpecializationInfo>());

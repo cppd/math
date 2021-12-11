@@ -110,7 +110,7 @@ std::uint32_t PhysicalDevice::family_index(
         {
                 return index;
         }
-        for (const VkQueueFlags& flags : default_flags)
+        for (const VkQueueFlags flags : default_flags)
         {
                 if (flags && find_family(queue_families_, flags, 0, &index))
                 {

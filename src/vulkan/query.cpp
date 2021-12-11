@@ -25,27 +25,11 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/com/print.h>
 
 #include <algorithm>
-#include <sstream>
 
 namespace ns::vulkan
 {
 namespace
 {
-std::string vulkan_formats_to_string(const std::vector<VkFormat>& formats)
-{
-        if (formats.empty())
-        {
-                return {};
-        }
-        std::string s = vulkan::format_to_string(formats[0]);
-        for (std::size_t i = 1; i < formats.size(); ++i)
-        {
-                s += ", ";
-                s += vulkan::format_to_string(formats[i]);
-        }
-        return s;
-}
-
 std::uint32_t find_extension_count()
 {
         std::uint32_t extension_count;
@@ -151,7 +135,7 @@ void check_validation_layer_support(const std::vector<std::string>& required_lay
         }
 }
 
-void check_api_version(std::uint32_t required_api_version)
+void check_api_version(const std::uint32_t required_api_version)
 {
         std::uint32_t api_version = supported_instance_api_version();
 
@@ -162,118 +146,12 @@ void check_api_version(std::uint32_t required_api_version)
         }
 }
 
-VkFormat find_supported_format(
-        VkPhysicalDevice physical_device,
-        const std::vector<VkFormat>& candidates,
-        VkImageTiling tiling,
-        VkFormatFeatureFlags features)
-{
-        if (tiling == VK_IMAGE_TILING_OPTIMAL)
-        {
-                for (VkFormat format : candidates)
-                {
-                        VkFormatProperties properties;
-                        vkGetPhysicalDeviceFormatProperties(physical_device, format, &properties);
-                        if ((properties.optimalTilingFeatures & features) == features)
-                        {
-                                return format;
-                        }
-                }
-        }
-        else if (tiling == VK_IMAGE_TILING_LINEAR)
-        {
-                for (VkFormat format : candidates)
-                {
-                        VkFormatProperties properties;
-                        vkGetPhysicalDeviceFormatProperties(physical_device, format, &properties);
-                        if ((properties.linearTilingFeatures & features) == features)
-                        {
-                                return format;
-                        }
-                }
-        }
-        else
-        {
-                error("Unknown image tiling " + to_string(enum_to_int(tiling)));
-        }
-
-        std::ostringstream oss;
-
-        oss << "Failed to find supported 2D image format.";
-        oss << " Format candidates " << vulkan_formats_to_string(candidates) << ".";
-        oss << " Tiling " << enum_to_int(tiling) << ".";
-        oss << std::hex;
-        oss << " Features 0x" << features << ".";
-
-        error(oss.str());
-}
-
-VkFormat find_supported_image_format(
-        VkPhysicalDevice physical_device,
-        const std::vector<VkFormat>& candidates,
-        VkImageType image_type,
-        VkImageTiling tiling,
-        VkFormatFeatureFlags features,
-        VkImageUsageFlags usage,
-        VkSampleCountFlags sample_count)
-{
-        for (VkFormat format : candidates)
-        {
-                VkFormatProperties properties;
-                vkGetPhysicalDeviceFormatProperties(physical_device, format, &properties);
-
-                if (tiling == VK_IMAGE_TILING_OPTIMAL)
-                {
-                        if ((properties.optimalTilingFeatures & features) != features)
-                        {
-                                continue;
-                        }
-                }
-                else if (tiling == VK_IMAGE_TILING_LINEAR)
-                {
-                        if ((properties.linearTilingFeatures & features) != features)
-                        {
-                                continue;
-                        }
-                }
-                else
-                {
-                        error("Unknown image tiling " + to_string(enum_to_int(tiling)));
-                }
-
-                VkImageFormatProperties image_properties;
-                VULKAN_CHECK(vkGetPhysicalDeviceImageFormatProperties(
-                        physical_device, format, image_type, tiling, usage, 0 /*VkImageCreateFlags*/,
-                        &image_properties));
-
-                if ((image_properties.sampleCounts & sample_count) != sample_count)
-                {
-                        continue;
-                }
-
-                return format;
-        }
-
-        std::ostringstream oss;
-
-        oss << "Failed to find supported image format.";
-        oss << " Format candidates " << vulkan_formats_to_string(candidates) << ".";
-        oss << " Image type " << image_type_to_string(image_type) << ".";
-        oss << " Tiling " << enum_to_int(tiling) << ".";
-        oss << std::hex;
-        oss << " Features 0x" << features << ".";
-        oss << " Usage 0x" << usage << ".";
-        oss << " Sample count 0x" << sample_count << ".";
-
-        error(oss.str());
-}
-
 VkExtent3D find_max_image_extent(
-        VkPhysicalDevice physical_device,
-        VkFormat format,
-        VkImageType image_type,
-        VkImageTiling tiling,
-        VkImageUsageFlags usage)
+        const VkPhysicalDevice physical_device,
+        const VkFormat format,
+        const VkImageType image_type,
+        const VkImageTiling tiling,
+        const VkImageUsageFlags usage)
 {
         VkImageFormatProperties image_properties;
         VULKAN_CHECK(vkGetPhysicalDeviceImageFormatProperties(
@@ -282,8 +160,8 @@ VkExtent3D find_max_image_extent(
 }
 
 VkSampleCountFlagBits supported_color_depth_framebuffer_sample_count_flag(
-        VkPhysicalDevice physical_device,
-        int required_minimum_sample_count)
+        const VkPhysicalDevice physical_device,
+        const int required_minimum_sample_count)
 {
         constexpr int MIN_SAMPLE_COUNT = 1;
         constexpr int MAX_SAMPLE_COUNT = 64;
@@ -342,7 +220,7 @@ VkSampleCountFlagBits supported_color_depth_framebuffer_sample_count_flag(
         error("The required minimum sample count " + to_string(required_minimum_sample_count) + " is not available");
 }
 
-int sample_count_flag_to_integer(VkSampleCountFlagBits sample_count)
+int sample_count_flag_to_integer(const VkSampleCountFlagBits sample_count)
 {
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wswitch"
@@ -369,9 +247,9 @@ int sample_count_flag_to_integer(VkSampleCountFlagBits sample_count)
 }
 
 std::uint32_t physical_device_memory_type_index(
-        VkPhysicalDevice physical_device,
-        std::uint32_t memory_type_bits,
-        VkMemoryPropertyFlags memory_property_flags)
+        const VkPhysicalDevice physical_device,
+        const std::uint32_t memory_type_bits,
+        const VkMemoryPropertyFlags memory_property_flags)
 {
         ASSERT(physical_device != VK_NULL_HANDLE);
 

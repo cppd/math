@@ -17,15 +17,23 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
-#include <array>
-#include <cstdint>
+#include <vector>
 #include <vulkan/vulkan.h>
 
 namespace ns::vulkan
 {
-inline constexpr int API_VERSION_MAJOR = 1;
-inline constexpr int API_VERSION_MINOR = 2;
-inline constexpr std::uint32_t API_VERSION = VK_MAKE_VERSION(API_VERSION_MAJOR, API_VERSION_MINOR, 0);
+VkFormat find_supported_format(
+        VkPhysicalDevice physical_device,
+        const std::vector<VkFormat>& candidates,
+        VkImageTiling tiling,
+        VkFormatFeatureFlags features);
 
-inline constexpr std::array VALIDATION_LAYERS = std::to_array<const char*>({"VK_LAYER_KHRONOS_validation"});
+VkFormat find_supported_image_format(
+        VkPhysicalDevice physical_device,
+        const std::vector<VkFormat>& candidates,
+        VkImageType image_type,
+        VkImageTiling tiling,
+        VkFormatFeatureFlags features,
+        VkImageUsageFlags usage,
+        VkSampleCountFlags sample_count);
 }

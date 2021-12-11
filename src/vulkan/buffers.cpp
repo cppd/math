@@ -17,13 +17,14 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "buffers.h"
 
-#include "buffers_image.h"
-#include "copy.h"
 #include "create.h"
 #include "error.h"
 #include "memory.h"
 #include "print.h"
-#include "query.h"
+
+#include "buffers/copy.h"
+#include "buffers/image.h"
+#include "buffers/query.h"
 
 #include <src/com/alg.h>
 #include <src/com/print.h>
@@ -60,32 +61,6 @@ const std::unordered_set<VkFormat>& stencil_format_set()
         };
         // clang-format on
         return formats;
-}
-
-std::string formats_to_sorted_string(const std::vector<VkFormat>& formats, const std::string_view& separator)
-{
-        if (formats.empty())
-        {
-                return {};
-        }
-
-        std::vector<std::string> strings;
-        strings.reserve(formats.size());
-        for (const VkFormat format : formats)
-        {
-                strings.push_back(format_to_string(format));
-        }
-
-        sort_and_unique(&strings);
-
-        auto iter = strings.cbegin();
-        std::string s = *iter;
-        while (++iter != strings.cend())
-        {
-                s += separator;
-                s += *iter;
-        }
-        return s;
 }
 
 void check_family_index(
@@ -228,7 +203,7 @@ ImageWithMemory::ImageWithMemory(
 {
         if (!std::none_of(
                     formats.cbegin(), formats.cend(),
-                    [depth = &depth_format_set(), stencil = &stencil_format_set()](const VkFormat& format)
+                    [depth = &depth_format_set(), stencil = &stencil_format_set()](const VkFormat format)
                     {
                             return depth->contains(format) || stencil->contains(format);
                     }))
@@ -318,7 +293,7 @@ const std::vector<VkFormat>& DepthImageWithMemory::depth_formats(const std::vect
 {
         if (!std::all_of(
                     formats.cbegin(), formats.cend(),
-                    [depth = &depth_format_set()](const VkFormat& format)
+                    [depth = &depth_format_set()](const VkFormat format)
                     {
                             return depth->contains(format);
                     }))

@@ -17,11 +17,11 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "copy.h"
 
-#include "create.h"
-#include "error.h"
-#include "memory.h"
-#include "print.h"
-#include "queue.h"
+#include "../create.h"
+#include "../error.h"
+#include "../memory.h"
+#include "../print.h"
+#include "../queue.h"
 
 #include <src/com/container.h>
 #include <src/com/error.h>
@@ -38,7 +38,7 @@ namespace
 void check_pixel_buffer_size(
         const std::span<const std::byte>& pixels,
         const image::ColorFormat& color_format,
-        const VkExtent3D& extent)
+        const VkExtent3D extent)
 {
         const std::size_t pixel_size = image::format_pixel_size_in_bytes(color_format);
 
@@ -58,8 +58,8 @@ void check_pixel_buffer_size(
 
 void copy_host_to_device(
         const handle::DeviceMemory& device_memory,
-        const VkDeviceSize& offset,
-        const VkDeviceSize& size,
+        const VkDeviceSize offset,
+        const VkDeviceSize size,
         const void* const data)
 {
         void* map_memory_data;
@@ -75,8 +75,8 @@ void copy_host_to_device(
 
 void copy_device_to_host(
         const handle::DeviceMemory& device_memory,
-        const VkDeviceSize& offset,
-        const VkDeviceSize& size,
+        const VkDeviceSize offset,
+        const VkDeviceSize size,
         void* const data)
 {
         void* map_memory_data;
@@ -91,11 +91,11 @@ void copy_device_to_host(
 }
 
 void cmd_transition_image_layout(
-        const VkImageAspectFlags& aspect_flags,
-        const VkCommandBuffer& command_buffer,
-        const VkImage& image,
-        const VkImageLayout& old_layout,
-        const VkImageLayout& new_layout)
+        const VkImageAspectFlags aspect_flags,
+        const VkCommandBuffer command_buffer,
+        const VkImage image,
+        const VkImageLayout old_layout,
+        const VkImageLayout new_layout)
 {
         if (old_layout == new_layout)
         {
@@ -159,11 +159,11 @@ void cmd_transition_image_layout(
 }
 
 void cmd_copy_buffer_to_image(
-        const VkImageAspectFlags& aspect_flag,
-        const VkCommandBuffer& command_buffer,
-        const VkImage& image,
-        const VkBuffer& buffer,
-        const VkExtent3D& extent)
+        const VkImageAspectFlags aspect_flag,
+        const VkCommandBuffer command_buffer,
+        const VkImage image,
+        const VkBuffer buffer,
+        const VkExtent3D extent)
 {
         VkBufferImageCopy region = {};
 
@@ -183,11 +183,11 @@ void cmd_copy_buffer_to_image(
 }
 
 void cmd_copy_image_to_buffer(
-        const VkImageAspectFlags& aspect_flag,
-        const VkCommandBuffer& command_buffer,
-        const VkBuffer& buffer,
-        const VkImage& image,
-        const VkExtent3D& extent)
+        const VkImageAspectFlags aspect_flag,
+        const VkCommandBuffer command_buffer,
+        const VkBuffer buffer,
+        const VkImage image,
+        const VkExtent3D extent)
 {
         VkBufferImageCopy region = {};
 
@@ -206,7 +206,7 @@ void cmd_copy_image_to_buffer(
         vkCmdCopyImageToBuffer(command_buffer, image, VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL, buffer, 1, &region);
 }
 
-void begin_commands(const VkCommandBuffer& command_buffer)
+void begin_commands(const VkCommandBuffer command_buffer)
 {
         VkCommandBufferBeginInfo command_buffer_info = {};
         command_buffer_info.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
@@ -215,7 +215,7 @@ void begin_commands(const VkCommandBuffer& command_buffer)
         VULKAN_CHECK(vkBeginCommandBuffer(command_buffer, &command_buffer_info));
 }
 
-void end_commands(const VkQueue& queue, const VkCommandBuffer& command_buffer)
+void end_commands(const VkQueue queue, const VkCommandBuffer command_buffer)
 {
         VULKAN_CHECK(vkEndCommandBuffer(command_buffer));
 
@@ -224,15 +224,15 @@ void end_commands(const VkQueue& queue, const VkCommandBuffer& command_buffer)
 }
 
 void staging_image_write(
-        const VkDevice& device,
-        const VkPhysicalDevice& physical_device,
+        const VkDevice device,
+        const VkPhysicalDevice physical_device,
         const CommandPool& command_pool,
         const Queue& queue,
-        const VkImage& image,
-        const VkImageLayout& old_image_layout,
-        const VkImageLayout& new_image_layout,
-        const VkImageAspectFlags& aspect_flag,
-        const VkExtent3D& extent,
+        const VkImage image,
+        const VkImageLayout old_image_layout,
+        const VkImageLayout new_image_layout,
+        const VkImageAspectFlags aspect_flag,
+        const VkExtent3D extent,
         const std::span<const std::byte>& data)
 {
         ASSERT(command_pool.family_index() == queue.family_index());
@@ -266,15 +266,15 @@ void staging_image_write(
 }
 
 void staging_image_read(
-        const VkDevice& device,
-        const VkPhysicalDevice& physical_device,
+        const VkDevice device,
+        const VkPhysicalDevice physical_device,
         const CommandPool& command_pool,
         const Queue& queue,
-        const VkImage& image,
-        const VkImageLayout& old_image_layout,
-        const VkImageLayout& new_image_layout,
-        const VkImageAspectFlags& aspect_flag,
-        const VkExtent3D& extent,
+        const VkImage image,
+        const VkImageLayout old_image_layout,
+        const VkImageLayout new_image_layout,
+        const VkImageAspectFlags aspect_flag,
+        const VkExtent3D extent,
         const std::span<std::byte>& data)
 {
         ASSERT(command_pool.family_index() == queue.family_index());

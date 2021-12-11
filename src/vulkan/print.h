@@ -19,6 +19,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "print/color_space.h"
 #include "print/format.h"
+#include "print/formats.h"
 #include "print/image_layout.h"
 #include "print/image_type.h"
 #include "print/physical_device_type.h"

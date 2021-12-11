@@ -52,7 +52,7 @@ std::unordered_map<std::uint32_t, std::uint32_t> compute_queue_count(
 }
 
 std::vector<std::string> merge_required_device_extensions(
-        bool with_swapchain,
+        const bool with_swapchain,
         const std::vector<std::string>& required_device_extensions)
 {
         if (with_swapchain)
@@ -213,7 +213,7 @@ void VulkanInstance::device_wait_idle() const
         VULKAN_CHECK(vkDeviceWaitIdle(device_));
 }
 
-void VulkanInstance::device_wait_idle_noexcept(const char* msg) const noexcept
+void VulkanInstance::device_wait_idle_noexcept(const char* const msg) const noexcept
 {
         try
         {

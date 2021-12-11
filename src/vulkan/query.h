@@ -36,21 +36,6 @@ void check_validation_layer_support(const std::vector<std::string>& required_lay
 
 void check_api_version(std::uint32_t required_api_version);
 
-VkFormat find_supported_format(
-        VkPhysicalDevice physical_device,
-        const std::vector<VkFormat>& candidates,
-        VkImageTiling tiling,
-        VkFormatFeatureFlags features);
-
-VkFormat find_supported_image_format(
-        VkPhysicalDevice physical_device,
-        const std::vector<VkFormat>& candidates,
-        VkImageType image_type,
-        VkImageTiling tiling,
-        VkFormatFeatureFlags features,
-        VkImageUsageFlags usage,
-        VkSampleCountFlags sample_count);
-
 VkExtent3D find_max_image_extent(
         VkPhysicalDevice physical_device,
         VkFormat format,

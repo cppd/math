@@ -107,9 +107,9 @@ std::unordered_set<std::string> find_device_extensions(const VkPhysicalDevice de
         VULKAN_CHECK(vkEnumerateDeviceExtensionProperties(device, nullptr, &count, extensions.data()));
 
         std::unordered_set<std::string> extension_set;
-        for (const VkExtensionProperties& e : extensions)
+        for (const VkExtensionProperties& properties : extensions)
         {
-                extension_set.emplace(e.extensionName);
+                extension_set.emplace(properties.extensionName);
         }
         return extension_set;
 }
@@ -147,10 +147,10 @@ std::vector<VkPhysicalDevice> find_physical_devices(const VkInstance instance)
         oss << API_VERSION_MAJOR << "." << API_VERSION_MINOR;
         oss << '\n';
         oss << "Found " << (all_devices.size() > 1 ? "devices" : "device");
-        for (const VkPhysicalDevice& d : all_devices)
+        for (const VkPhysicalDevice device : all_devices)
         {
                 VkPhysicalDeviceProperties properties;
-                vkGetPhysicalDeviceProperties(d, &properties);
+                vkGetPhysicalDeviceProperties(device, &properties);
                 oss << "\n";
                 oss << static_cast<const char*>(properties.deviceName) << "\n  API version "
                     << VK_VERSION_MAJOR(properties.apiVersion) << "." << VK_VERSION_MINOR(properties.apiVersion);

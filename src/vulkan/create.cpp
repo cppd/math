@@ -37,12 +37,12 @@ namespace ns::vulkan
 namespace
 {
 void check_image_size(
-        const VkPhysicalDevice& physical_device,
-        const VkImageType& type,
-        const VkExtent3D& extent,
-        const VkFormat& format,
-        const VkImageTiling& tiling,
-        const VkImageUsageFlags& usage)
+        const VkPhysicalDevice physical_device,
+        const VkImageType type,
+        const VkExtent3D extent,
+        const VkFormat format,
+        const VkImageTiling tiling,
+        const VkImageUsageFlags usage)
 {
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wswitch-enum"
@@ -56,7 +56,6 @@ void check_image_size(
                 }
                 break;
         case VK_IMAGE_TYPE_2D:
-
                 if (extent.width < 1 || extent.height < 1 || extent.depth != 1)
                 {
                         error("Image 2D size error (" + to_string(extent.width) + ", " + to_string(extent.height) + ", "
@@ -94,7 +93,7 @@ void check_image_size(
 }
 }
 
-std::vector<handle::Semaphore> create_semaphores(VkDevice device, int count)
+std::vector<handle::Semaphore> create_semaphores(const VkDevice device, const int count)
 {
         std::vector<handle::Semaphore> res;
         res.reserve(count);
@@ -105,7 +104,7 @@ std::vector<handle::Semaphore> create_semaphores(VkDevice device, int count)
         return res;
 }
 
-std::vector<handle::Fence> create_fences(VkDevice device, int count, bool signaled_state)
+std::vector<handle::Fence> create_fences(const VkDevice device, const int count, const bool signaled_state)
 {
         std::vector<handle::Fence> res;
         res.reserve(count);
@@ -119,7 +118,7 @@ std::vector<handle::Fence> create_fences(VkDevice device, int count, bool signal
 //
 
 handle::PipelineLayout create_pipeline_layout(
-        VkDevice device,
+        const VkDevice device,
         const std::vector<VkDescriptorSetLayout>& descriptor_set_layouts)
 {
         VkPipelineLayoutCreateInfo create_info = {};
@@ -133,7 +132,7 @@ handle::PipelineLayout create_pipeline_layout(
 }
 
 handle::PipelineLayout create_pipeline_layout(
-        VkDevice device,
+        const VkDevice device,
         const std::vector<unsigned>& set_numbers,
         const std::vector<VkDescriptorSetLayout>& set_layouts)
 {
@@ -157,7 +156,7 @@ handle::PipelineLayout create_pipeline_layout(
 
 //
 
-CommandPool create_command_pool(VkDevice device, std::uint32_t queue_family_index)
+CommandPool create_command_pool(const VkDevice device, const std::uint32_t queue_family_index)
 {
         VkCommandPoolCreateInfo create_info = {};
         create_info.sType = VK_STRUCTURE_TYPE_COMMAND_POOL_CREATE_INFO;
@@ -166,7 +165,7 @@ CommandPool create_command_pool(VkDevice device, std::uint32_t queue_family_inde
         return CommandPool(device, create_info);
 }
 
-CommandPool create_transient_command_pool(VkDevice device, std::uint32_t queue_family_index)
+CommandPool create_transient_command_pool(const VkDevice device, const std::uint32_t queue_family_index)
 {
         VkCommandPoolCreateInfo create_info = {};
         create_info.sType = VK_STRUCTURE_TYPE_COMMAND_POOL_CREATE_INFO;
@@ -229,10 +228,10 @@ Instance create_instance(std::vector<std::string> required_extensions)
 //
 
 handle::Framebuffer create_framebuffer(
-        VkDevice device,
-        VkRenderPass render_pass,
-        std::uint32_t width,
-        std::uint32_t height,
+        const VkDevice device,
+        const VkRenderPass render_pass,
+        const std::uint32_t width,
+        const std::uint32_t height,
         const std::vector<VkImageView>& attachments)
 {
         VkFramebufferCreateInfo create_info = {};
@@ -249,7 +248,7 @@ handle::Framebuffer create_framebuffer(
 
 //
 
-VkClearValue create_color_clear_value(VkFormat format, const Vector<3, float>& rgb)
+VkClearValue create_color_clear_value(const VkFormat format, const Vector<3, float>& rgb)
 {
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wswitch-enum"
@@ -381,7 +380,7 @@ Image create_image(
         return Image(device, create_info);
 }
 
-ImageView create_image_view(const Image& image, const VkImageAspectFlags& aspect_flags)
+ImageView create_image_view(const Image& image, const VkImageAspectFlags aspect_flags)
 {
         VkImageViewCreateInfo create_info = {};
         create_info.sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO;

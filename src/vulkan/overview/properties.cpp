@@ -37,7 +37,7 @@ void add_value(
 }
 
 void add_value(
-        const VkPointClippingBehavior& value,
+        const VkPointClippingBehavior value,
         const std::string_view& name,
         std::vector<std::tuple<std::string, std::string>>* const properties)
 {
@@ -45,7 +45,7 @@ void add_value(
 }
 
 void add_value(
-        const VkShaderFloatControlsIndependence& value,
+        const VkShaderFloatControlsIndependence value,
         const std::string_view& name,
         std::vector<std::tuple<std::string, std::string>>* const properties)
 {
@@ -53,7 +53,7 @@ void add_value(
 }
 
 void add_sample(
-        const VkSampleCountFlags& flags,
+        const VkSampleCountFlags flags,
         const std::string_view& name,
         std::vector<std::tuple<std::string, std::string>>* const properties)
 {
@@ -61,7 +61,7 @@ void add_sample(
 }
 
 void add_shader_stage(
-        const VkShaderStageFlags& flags,
+        const VkShaderStageFlags flags,
         const std::string_view& name,
         std::vector<std::tuple<std::string, std::string>>* const properties)
 {
@@ -69,7 +69,7 @@ void add_shader_stage(
 }
 
 void add_subgroup_feature(
-        const VkSubgroupFeatureFlags& flags,
+        const VkSubgroupFeatureFlags flags,
         const std::string_view& name,
         std::vector<std::tuple<std::string, std::string>>* const properties)
 {
@@ -77,7 +77,7 @@ void add_subgroup_feature(
 }
 
 void add_resolve_mode(
-        const VkResolveModeFlags& flags,
+        const VkResolveModeFlags flags,
         const std::string_view& name,
         std::vector<std::tuple<std::string, std::string>>* const properties)
 {

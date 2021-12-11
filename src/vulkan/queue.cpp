@@ -25,9 +25,9 @@ template <std::size_t N>
 void queue_submit(
         const std::array<VkSemaphore, N>& wait_semaphores,
         const std::array<VkPipelineStageFlags, N>& wait_stages,
-        VkCommandBuffer command_buffer,
-        VkSemaphore signal_semaphore,
-        VkQueue queue)
+        const VkCommandBuffer command_buffer,
+        const VkSemaphore signal_semaphore,
+        const VkQueue queue)
 {
         VkSubmitInfo info = {};
 
@@ -44,11 +44,11 @@ void queue_submit(
 }
 
 void queue_submit(
-        VkSemaphore wait_semaphore,
-        VkPipelineStageFlags wait_stage,
-        VkCommandBuffer command_buffer,
-        VkSemaphore signal_semaphore,
-        VkQueue queue)
+        const VkSemaphore wait_semaphore,
+        const VkPipelineStageFlags wait_stage,
+        const VkCommandBuffer command_buffer,
+        const VkSemaphore signal_semaphore,
+        const VkQueue queue)
 {
         VkSubmitInfo info = {};
 
@@ -65,10 +65,10 @@ void queue_submit(
 }
 
 void queue_submit(
-        VkSemaphore wait_semaphore,
-        VkPipelineStageFlags wait_stage,
-        VkCommandBuffer command_buffer,
-        VkQueue queue)
+        const VkSemaphore wait_semaphore,
+        const VkPipelineStageFlags wait_stage,
+        const VkCommandBuffer command_buffer,
+        const VkQueue queue)
 {
         VkSubmitInfo info = {};
 
@@ -82,7 +82,7 @@ void queue_submit(
         VULKAN_CHECK(vkQueueSubmit(queue, 1, &info, VK_NULL_HANDLE));
 }
 
-void queue_submit(VkCommandBuffer command_buffer, VkSemaphore signal_semaphore, VkQueue queue)
+void queue_submit(const VkCommandBuffer command_buffer, const VkSemaphore signal_semaphore, const VkQueue queue)
 {
         VkSubmitInfo info = {};
 
@@ -95,7 +95,7 @@ void queue_submit(VkCommandBuffer command_buffer, VkSemaphore signal_semaphore, 
         VULKAN_CHECK(vkQueueSubmit(queue, 1, &info, VK_NULL_HANDLE));
 }
 
-void queue_submit(VkCommandBuffer command_buffer, VkQueue queue)
+void queue_submit(const VkCommandBuffer command_buffer, const VkQueue queue)
 {
         VkSubmitInfo info = {};
 
@@ -106,7 +106,7 @@ void queue_submit(VkCommandBuffer command_buffer, VkQueue queue)
         VULKAN_CHECK(vkQueueSubmit(queue, 1, &info, VK_NULL_HANDLE));
 }
 
-void queue_submit(VkQueue queue, VkFence fence)
+void queue_submit(const VkQueue queue, const VkFence fence)
 {
         VULKAN_CHECK(vkQueueSubmit(queue, 0, nullptr, fence));
 }

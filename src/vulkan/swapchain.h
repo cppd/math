@@ -45,7 +45,7 @@ public:
                 VkSurfaceKHR surface,
                 const Device& device,
                 const std::vector<std::uint32_t>& family_indices,
-                const VkSurfaceFormatKHR& required_surface_format,
+                VkSurfaceFormatKHR required_surface_format,
                 int preferred_image_count,
                 PresentMode preferred_present_mode);
 

@@ -93,17 +93,17 @@ public:
                 return device_;
         }
 
-        const vulkan::CommandPool& graphics_compute_command_pool() const
+        const CommandPool& graphics_compute_command_pool() const
         {
                 return graphics_compute_command_pool_;
         }
 
-        const vulkan::CommandPool& compute_command_pool() const
+        const CommandPool& compute_command_pool() const
         {
                 return compute_command_pool_;
         }
 
-        const vulkan::CommandPool& transfer_command_pool() const
+        const CommandPool& transfer_command_pool() const
         {
                 return transfer_command_pool_;
         }

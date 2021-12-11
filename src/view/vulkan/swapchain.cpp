@@ -77,8 +77,8 @@ Swapchain::Swapchain(
 
 VkSemaphore Swapchain::resolve(
         const vulkan::Queue& graphics_queue,
-        const VkSemaphore& image_semaphore,
-        const VkSemaphore& wait_semaphore,
+        const VkSemaphore image_semaphore,
+        const VkSemaphore wait_semaphore,
         const unsigned image_index) const
 {
         ASSERT(graphics_queue.family_index() == family_index_);
