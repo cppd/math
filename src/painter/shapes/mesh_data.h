@@ -144,8 +144,8 @@ class MeshData final
                         vertices_.insert(vertices_.cend(), vertices.cbegin(), vertices.cend());
                 }
                 {
-                        auto iter_begin = std::next(vertices_.begin(), vertices_offset);
-                        auto iter_end = vertices_.end();
+                        const auto iter_begin = std::next(vertices_.begin(), vertices_offset);
+                        const auto iter_end = vertices_.end();
                         std::transform(
                                 iter_begin, iter_end, iter_begin,
                                 matrix::MatrixVectorMultiplier(to_matrix<T>(mesh_object.matrix())));

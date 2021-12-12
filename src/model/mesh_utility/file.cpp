@@ -74,7 +74,7 @@ std::unique_ptr<Mesh<N>> load(const Path& file_name, ProgressRatio* const progre
 {
         static_assert(std::is_same_v<Path, std::filesystem::path>);
 
-        auto [dimension, file_type] = file::file_dimension_and_type(file_name);
+        const auto [dimension, file_type] = file::file_dimension_and_type(file_name);
 
         if (dimension != static_cast<int>(N))
         {

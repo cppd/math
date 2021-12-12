@@ -177,7 +177,7 @@ RidgeSet<N> prune(
 
         for (const Ridge<N>& r : suspicious_ridges)
         {
-                auto ridge_iter = ridge_map->find(r);
+                const auto ridge_iter = ridge_map->find(r);
                 if (ridge_iter == ridge_map->cend())
                 {
                         continue;
@@ -196,12 +196,12 @@ RidgeSet<N> prune(
                         add_to_ridges(*(d->facet()), d->point(), &ridges);
                         facets_to_remove.push_back(d->facet());
 
-                        auto del = facet_ptr_index.find(d->facet());
+                        const auto del = facet_ptr_index.find(d->facet());
                         ASSERT(del != facet_ptr_index.cend());
                         (*cocone_facets)[del->second] = false;
                 }
 
-                for (const DelaunayFacet<N>* facet : facets_to_remove)
+                for (const DelaunayFacet<N>* const facet : facets_to_remove)
                 {
                         remove_from_ridges(*facet, ridge_map);
                 }

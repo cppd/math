@@ -47,7 +47,7 @@ std::unique_ptr<Mesh<N>> create_mesh(
         {
                 for (int vertex_index : line)
                 {
-                        auto [iter, inserted] = vertices.try_emplace(vertex_index);
+                        const auto [iter, inserted] = vertices.try_emplace(vertex_index);
                         if (inserted)
                         {
                                 iter->second = idx++;
@@ -71,7 +71,7 @@ std::unique_ptr<Mesh<N>> create_mesh(
 
                 for (int i = 0; i < 2; ++i)
                 {
-                        auto iter = vertices.find(line[i]);
+                        const auto iter = vertices.find(line[i]);
                         ASSERT(iter != vertices.cend());
                         mesh_line.vertices[i] = iter->second;
                 }

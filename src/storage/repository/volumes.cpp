@@ -265,7 +265,7 @@ class Impl final : public VolumeObjectRepository<N>
 
         std::unique_ptr<volume::Volume<N>> object(const std::string& object_name, const unsigned size) const override
         {
-                auto iter = map_.find(object_name);
+                const auto iter = map_.find(object_name);
                 if (iter != map_.cend())
                 {
                         return iter->second(size);

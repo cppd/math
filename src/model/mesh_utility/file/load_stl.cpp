@@ -227,7 +227,7 @@ std::unique_ptr<Mesh<N>> read_stl(const std::filesystem::path& file_name, Progre
                 {
                         unsigned index;
 
-                        auto iter = unique_vertices.find(facet_vertices[i]);
+                        const auto iter = unique_vertices.find(facet_vertices[i]);
                         if (iter != unique_vertices.cend())
                         {
                                 index = iter->second;

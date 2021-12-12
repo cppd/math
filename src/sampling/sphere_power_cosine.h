@@ -103,10 +103,10 @@ class PowerCosineOnHemisphere
                 n_ = power;
                 p_ = N - 2;
                 mean_ = std::atan(std::sqrt(p_ / n_));
-                T deviation = T(1) / std::sqrt((n_ + p_) * std::sqrt(T(2)));
+                const T deviation = T(1) / std::sqrt((n_ + p_) * std::sqrt(T(2)));
                 normal_distribution_ = std::normal_distribution<T>(mean_, deviation);
                 normal_distribution_coef_ = T(-1) / (T(2) * square(deviation));
-                T max = std::pow(std::cos(mean_), n_) * std::pow(std::sin(mean_), p_);
+                const T max = std::pow(std::cos(mean_), n_) * std::pow(std::sin(mean_), p_);
                 urd_ = std::uniform_real_distribution<T>(0, max);
         }
 
@@ -124,17 +124,17 @@ public:
                                 continue;
                         }
                         cos_angle = std::cos(angle);
-                        T f = std::pow(cos_angle, n_) * std::pow(std::sin(angle), p_);
-                        T p = std::exp(normal_distribution_coef_ * square(angle - mean_));
+                        const T f = std::pow(cos_angle, n_) * std::pow(std::sin(angle), p_);
+                        const T p = std::exp(normal_distribution_coef_ * square(angle - mean_));
                         if (f > p * urd_(random_engine))
                         {
                                 break;
                         }
                 }
 
-                T n = cos_angle;
-                T length = std::sqrt(1 - square(n));
-                Vector<N - 1, T> v = length * uniform_on_sphere<N - 1, T>(random_engine);
+                const T n = cos_angle;
+                const T length = std::sqrt(1 - square(n));
+                const Vector<N - 1, T> v = length * uniform_on_sphere<N - 1, T>(random_engine);
 
                 Vector<N, T> coordinates;
                 for (unsigned i = 0; i < N - 1; ++i)
@@ -149,7 +149,7 @@ public:
         static PowerCosineOnHemisphere& instance(const T power)
         {
                 thread_local std::unordered_map<T, PowerCosineOnHemisphere<N, T>> map;
-                auto iter = map.find(power);
+                const auto iter = map.find(power);
                 if (iter != map.end())
                 {
                         return iter->second;
@@ -177,8 +177,8 @@ requires(N == 3)
 
         uniform_in_sphere(random_engine, v, v_length_square);
 
-        T n = std::pow(v_length_square, 1 / (1 + power));
-        T new_length_squared = 1 - square(n);
+        const T n = std::pow(v_length_square, 1 / (1 + power));
+        const T new_length_squared = 1 - square(n);
         v *= std::sqrt(new_length_squared / v_length_square);
 
         Vector<N, T> coordinates;
@@ -194,9 +194,10 @@ requires(N == 3)
 template <std::size_t N, typename T, typename RandomEngine>
 Vector<N, T> power_cosine_on_hemisphere(RandomEngine& random_engine, const Vector<N, T>& normal, const T power)
 {
-        std::array<Vector<N, T>, N - 1> orthonormal_basis = numerical::orthogonal_complement_of_unit_vector(normal);
+        const std::array<Vector<N, T>, N - 1> orthonormal_basis =
+                numerical::orthogonal_complement_of_unit_vector(normal);
 
-        Vector<N, T> coordinates = power_cosine_on_hemisphere<N, T>(random_engine, power);
+        const Vector<N, T> coordinates = power_cosine_on_hemisphere<N, T>(random_engine, power);
 
         Vector<N, T> result = coordinates[N - 1] * normal;
         for (std::size_t i = 0; i < N - 1; ++i)

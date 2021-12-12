@@ -75,19 +75,21 @@ VkWriteDescriptorSet create_write_descriptor_set(
         write.descriptorType = descriptor_set_layout_binding.descriptorType;
         write.descriptorCount = descriptor_set_layout_binding.descriptorCount;
 
-        auto buffer = [&](const VkDescriptorBufferInfo& info)
-        {
-                ASSERT(descriptor_set_layout_binding.descriptorType == VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER
-                       || descriptor_set_layout_binding.descriptorType == VK_DESCRIPTOR_TYPE_STORAGE_BUFFER);
-                write.pBufferInfo = &info;
-        };
-        auto image = [&](const VkDescriptorImageInfo& info)
-        {
-                ASSERT(descriptor_set_layout_binding.descriptorType == VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER
-                       || descriptor_set_layout_binding.descriptorType == VK_DESCRIPTOR_TYPE_STORAGE_IMAGE);
-                write.pImageInfo = &info;
-        };
-        std::visit(Visitors{buffer, image}, descriptor_info);
+        const auto visitors = Visitors{
+                [&](const VkDescriptorBufferInfo& info)
+                {
+                        ASSERT(descriptor_set_layout_binding.descriptorType == VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER
+                               || descriptor_set_layout_binding.descriptorType == VK_DESCRIPTOR_TYPE_STORAGE_BUFFER);
+                        write.pBufferInfo = &info;
+                },
+                [&](const VkDescriptorImageInfo& info)
+                {
+                        ASSERT(descriptor_set_layout_binding.descriptorType == VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER
+                               || descriptor_set_layout_binding.descriptorType == VK_DESCRIPTOR_TYPE_STORAGE_IMAGE);
+                        write.pImageInfo = &info;
+                }};
+
+        std::visit(visitors, descriptor_info);
 
         return write;
 
@@ -145,7 +147,7 @@ Descriptors::Descriptors(
 
 const VkDescriptorSetLayoutBinding& Descriptors::layout_binding(const std::uint32_t binding) const
 {
-        auto i = binding_map_.find(binding);
+        const auto i = binding_map_.find(binding);
         if (i == binding_map_.cend())
         {
                 error("No binding " + to_string(binding) + " in the descriptor set layout bindings");
@@ -180,7 +182,7 @@ void Descriptors::update_descriptor_set(
 {
         ASSERT(index < descriptor_sets_.count());
 
-        VkWriteDescriptorSet write =
+        const VkWriteDescriptorSet write =
                 create_write_descriptor_set(descriptor_sets_[index], layout_binding(binding), info);
 
         vkUpdateDescriptorSets(device_, 1, &write, 0, nullptr);
@@ -194,7 +196,7 @@ void Descriptors::update_descriptor_set(
         ASSERT(bindings.size() == descriptor_infos.size());
         ASSERT(index < descriptor_sets_.count());
 
-        VkDescriptorSet descriptor_set = descriptor_sets_[index];
+        const VkDescriptorSet descriptor_set = descriptor_sets_[index];
 
         std::vector<VkWriteDescriptorSet> write(bindings.size());
         for (std::size_t i = 0; i < bindings.size(); ++i)

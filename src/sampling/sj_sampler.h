@@ -52,7 +52,7 @@ class StratifiedJitteredSampler
                               + ") is not a positive integer");
                 }
 
-                double v = std::pow(sample_count, 1.0 / N);
+                const double v = std::pow(sample_count, 1.0 / N);
 
                 if (unsigned v_floor = std::floor(v); power<N>(v_floor) >= static_cast<unsigned>(sample_count))
                 {
@@ -97,8 +97,8 @@ class StratifiedJitteredSampler
 
                 for (std::size_t i = 1; i < offsets.size(); ++i)
                 {
-                        T prev = offsets[i - 1];
-                        T next = offsets[i];
+                        const T prev = offsets[i - 1];
+                        const T next = offsets[i];
                         if (!(prev < next))
                         {
                                 error("Stratified jittered sampler: error creating offset values " + to_string(prev)
@@ -192,8 +192,8 @@ public:
                         Vector<N, T>& sample = (*samples)[i];
                         for (std::size_t n = 0; n < N; ++n)
                         {
-                                T min = offsets_[indices[n]];
-                                T max = offsets_[indices[n] + 1];
+                                const T min = offsets_[indices[n]];
+                                const T max = offsets_[indices[n] + 1];
                                 // Distribution may return max if T is float
                                 do
                                 {

@@ -57,8 +57,7 @@ std::string StringTree::text(const unsigned indent) const
 
         while (!stack.empty())
         {
-                auto index = std::get<0>(stack.top());
-                auto level = std::get<1>(stack.top());
+                const auto [index, level] = stack.top();
                 stack.pop();
 
                 if (level > 0)

@@ -149,7 +149,7 @@ bool ReadLib<N>::read_line(
                 std::string name;
                 read_name("material", *data_, second_b, second_e, &name);
 
-                auto iter = material_index_->find(name);
+                const auto iter = material_index_->find(name);
                 if (iter != material_index_->end())
                 {
                         mtl = &(mesh_->materials[iter->second]);

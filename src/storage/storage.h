@@ -54,7 +54,7 @@ public:
         {
                 typename decltype(map_)::mapped_type tmp;
                 std::unique_lock lock(mutex_);
-                auto iter = map_.find(id);
+                const auto iter = map_.find(id);
                 if (iter != map_.cend())
                 {
                         tmp = std::move(iter->second);
@@ -79,7 +79,7 @@ public:
                 }
 
                 std::unique_lock lock(mutex_);
-                auto iter = map_.find(object->id());
+                const auto iter = map_.find(object->id());
                 if (iter == map_.cend())
                 {
                         map_.emplace(object->id(), object);
@@ -101,7 +101,7 @@ public:
                 }
 
                 std::unique_lock lock(mutex_);
-                auto iter = map_.find(object->id());
+                const auto iter = map_.find(object->id());
                 if (iter == map_.cend())
                 {
                         map_.emplace(object->id(), object);
@@ -120,7 +120,7 @@ public:
                 std::optional<MeshObject> opt;
 
                 std::shared_lock lock(mutex_);
-                auto iter = map_.find(id);
+                const auto iter = map_.find(id);
                 if (iter != map_.cend())
                 {
                         try
@@ -150,7 +150,7 @@ public:
                 std::optional<VolumeObject> opt;
 
                 std::shared_lock lock(mutex_);
-                auto iter = map_.find(id);
+                const auto iter = map_.find(id);
                 if (iter != map_.cend())
                 {
                         try

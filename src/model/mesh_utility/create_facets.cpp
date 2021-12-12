@@ -48,7 +48,7 @@ std::unique_ptr<Mesh<N>> create_mesh(
         {
                 for (int vertex_index : facet)
                 {
-                        auto [iter, inserted] = vertices.try_emplace(vertex_index);
+                        const auto [iter, inserted] = vertices.try_emplace(vertex_index);
                         if (inserted)
                         {
                                 iter->second = idx++;
@@ -76,7 +76,7 @@ std::unique_ptr<Mesh<N>> create_mesh(
 
                 for (std::size_t i = 0; i < N; ++i)
                 {
-                        auto iter = vertices.find(facet[i]);
+                        const auto iter = vertices.find(facet[i]);
                         ASSERT(iter != vertices.cend());
                         mesh_facet.vertices[i] = iter->second;
                         mesh_facet.normals[i] = -1;

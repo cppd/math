@@ -87,12 +87,12 @@ void StatisticsWidget::update(const painter::Statistics& statistics, const std::
 {
         static constexpr std::string_view NOT_AVAILABLE = "n/a";
 
-        auto [difference, duration] =
+        const auto [difference, duration] =
                 difference_->compute(Counters(statistics.pixel_count, statistics.ray_count, statistics.sample_count));
 
         if (duration != 0)
         {
-                long long rays_per_second = std::llround(static_cast<double>(difference.ray_count) / duration);
+                const long long rays_per_second = std::llround(static_cast<double>(difference.ray_count) / duration);
                 set_label_text_and_minimum_width(ui_.label_rays_per_second, to_string_digit_groups(rays_per_second));
         }
         else
@@ -109,7 +109,7 @@ void StatisticsWidget::update(const painter::Statistics& statistics, const std::
 
         if (difference.pixel_count != 0)
         {
-                long long samples_per_pixel =
+                const long long samples_per_pixel =
                         std::llround(static_cast<double>(difference.sample_count) / difference.pixel_count);
                 set_label_text_and_minimum_width(
                         ui_.label_samples_per_pixel, to_string_digit_groups(samples_per_pixel));

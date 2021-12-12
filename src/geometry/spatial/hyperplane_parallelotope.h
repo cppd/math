@@ -231,7 +231,7 @@ std::array<Vector<N, T>, HyperplaneParallelotope<N, T>::VERTEX_COUNT> Hyperplane
 
         unsigned count = 0;
 
-        auto f = [&count, &result](const Vector<N, T>& p)
+        const auto f = [&count, &result](const Vector<N, T>& p)
         {
                 ASSERT(count < result.size());
                 result[count++] = p;

@@ -86,8 +86,9 @@ std::unordered_set<std::string> supported_validation_layers()
 
 std::uint32_t supported_instance_api_version()
 {
-        PFN_vkEnumerateInstanceVersion enumerate_instance_version = reinterpret_cast<PFN_vkEnumerateInstanceVersion>(
-                vkGetInstanceProcAddr(nullptr, "vkEnumerateInstanceVersion"));
+        const PFN_vkEnumerateInstanceVersion enumerate_instance_version =
+                reinterpret_cast<PFN_vkEnumerateInstanceVersion>(
+                        vkGetInstanceProcAddr(nullptr, "vkEnumerateInstanceVersion"));
 
         if (!enumerate_instance_version)
         {
@@ -109,11 +110,11 @@ void check_instance_extension_support(const std::vector<std::string>& required_e
 
         const std::unordered_set<std::string> extension_set = supported_instance_extensions();
 
-        for (const std::string& e : required_extensions)
+        for (const std::string& extension : required_extensions)
         {
-                if (extension_set.count(e) < 1)
+                if (!extension_set.contains(extension))
                 {
-                        error("Vulkan instance extension " + e + " is not supported");
+                        error("Vulkan instance extension " + extension + " is not supported");
                 }
         }
 }
@@ -127,11 +128,11 @@ void check_validation_layer_support(const std::vector<std::string>& required_lay
 
         const std::unordered_set<std::string> layer_set = supported_validation_layers();
 
-        for (const std::string& l : required_layers)
+        for (const std::string& layer : required_layers)
         {
-                if (layer_set.count(l) < 1)
+                if (!layer_set.contains(layer))
                 {
-                        error("Vulkan validation layer " + l + " is not supported");
+                        error("Vulkan validation layer " + layer + " is not supported");
                 }
         }
 }

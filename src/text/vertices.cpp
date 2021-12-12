@@ -65,14 +65,14 @@ void text_vertices(
                         continue;
                 }
 
-                char32_t code_point = unicode::utf8_to_utf32(text, &i);
+                const char32_t code_point = unicode::utf8_to_utf32(text, &i);
 
                 const FontGlyph& g = code_point_glyph(glyphs, code_point);
 
-                int x0 = *x + g.left;
-                int y0 = *y - g.top;
-                int x1 = x0 + g.width;
-                int y1 = y0 + g.height;
+                const int x0 = *x + g.left;
+                const int y0 = *y - g.top;
+                const int x1 = x0 + g.width;
+                const int y1 = y0 + g.height;
 
                 vertices->emplace_back(x0, y0, g.s0, g.t0);
                 vertices->emplace_back(x1, y0, g.s1, g.t0);

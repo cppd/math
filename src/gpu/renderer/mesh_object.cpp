@@ -151,7 +151,7 @@ class Impl final : public MeshObject
 
         VkDescriptorSet find_mesh_descriptor_set(const VkDescriptorSetLayout mesh_descriptor_set_layout) const
         {
-                auto iter = mesh_descriptor_sets_.find(mesh_descriptor_set_layout);
+                const auto iter = mesh_descriptor_sets_.find(mesh_descriptor_set_layout);
                 if (iter == mesh_descriptor_sets_.cend())
                 {
                         error("Failed to find mesh descriptor sets for mesh descriptor set layout");
@@ -180,7 +180,7 @@ class Impl final : public MeshObject
         const vulkan::Descriptors& find_material_descriptor_sets(
                 const VkDescriptorSetLayout material_descriptor_set_layout) const
         {
-                auto iter = material_descriptor_sets_.find(material_descriptor_set_layout);
+                const auto iter = material_descriptor_sets_.find(material_descriptor_set_layout);
                 if (iter == material_descriptor_sets_.cend())
                 {
                         error("Failed to find material descriptor sets for material descriptor set layout");

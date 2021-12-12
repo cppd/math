@@ -139,7 +139,7 @@ bool PhysicalDevice::supports_extensions(const std::vector<std::string>& extensi
                 extensions.cbegin(), extensions.cend(),
                 [&](const std::string& e)
                 {
-                        return supported_extensions_.count(e) >= 1;
+                        return supported_extensions_.contains(e);
                 });
 }
 

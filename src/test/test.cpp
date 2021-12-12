@@ -52,21 +52,25 @@ void Tests::run(
                 oss << "Self-Test, " << type_name << ", " << test_name;
                 return oss.str();
         }();
+
         ProgressRatio progress(progress_ratios, name);
-        auto f1 = [&](void (*const f)())
-        {
-                progress.set(0);
-                f();
-        };
-        auto f2 = [&](void (*const f)(ProgressRatio*))
-        {
-                f(&progress);
-        };
+
+        const auto visitors = Visitors{
+                [&progress](void (*const f)())
+                {
+                        progress.set(0);
+                        f();
+                },
+                [&progress](void (*const f)(ProgressRatio*))
+                {
+                        f(&progress);
+                }};
+
         catch_all(
                 name,
                 [&]()
                 {
-                        std::visit(Visitors{f1, f2}, test);
+                        std::visit(visitors, test);
                 });
 }
 
@@ -105,7 +109,7 @@ std::vector<std::string> Tests::performance_names() const
 
 void Tests::run_small(const std::string_view& name, ProgressRatios* const progress_ratios) const
 {
-        auto iter = small_tests_.find(name);
+        const auto iter = small_tests_.find(name);
         if (iter == small_tests_.cend())
         {
                 std::ostringstream oss;
@@ -117,7 +121,7 @@ void Tests::run_small(const std::string_view& name, ProgressRatios* const progre
 
 void Tests::run_large(const std::string_view& name, ProgressRatios* const progress_ratios) const
 {
-        auto iter = large_tests_.find(name);
+        const auto iter = large_tests_.find(name);
         if (iter == large_tests_.cend())
         {
                 std::ostringstream oss;
@@ -129,7 +133,7 @@ void Tests::run_large(const std::string_view& name, ProgressRatios* const progre
 
 void Tests::run_performance(const std::string_view& name, ProgressRatios* const progress_ratios) const
 {
-        auto iter = performance_tests_.find(name);
+        const auto iter = performance_tests_.find(name);
         if (iter == performance_tests_.cend())
         {
                 std::ostringstream oss;

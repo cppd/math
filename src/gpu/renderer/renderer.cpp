@@ -406,7 +406,7 @@ class Impl final : public Renderer, RendererProcessEvents
                 {
                         return;
                 }
-                auto copy_depth = [this](const VkCommandBuffer command_buffer)
+                const auto copy_depth = [this](const VkCommandBuffer command_buffer)
                 {
                         ASSERT(render_buffers_);
                         ASSERT(render_buffers_->framebuffers().size() == 1);

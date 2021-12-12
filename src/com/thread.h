@@ -134,8 +134,8 @@ public:
                         ASSERT(thread_id_ == std::this_thread::get_id());
                         try
                         {
-                                auto lambda =
-                                        [&, thread_num = threads_.size(), f = std::forward<F>(function)]() noexcept
+                                auto thread_function =
+                                        [this, thread_num = threads_.size(), f = std::forward<F>(function)]() noexcept
                                 {
                                         try
                                         {
@@ -161,7 +161,7 @@ public:
                                         }
                                 };
 
-                                threads_.emplace_back(std::thread(lambda));
+                                threads_.emplace_back(std::thread(std::move(thread_function)));
                         }
                         catch (const std::exception& e)
                         {

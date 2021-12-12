@@ -374,7 +374,7 @@ class Impl final : public VolumeObject
 
         const VkDescriptorSet& descriptor_set(const VkDescriptorSetLayout descriptor_set_layout) const override
         {
-                auto iter = descriptor_sets_.find(descriptor_set_layout);
+                const auto iter = descriptor_sets_.find(descriptor_set_layout);
                 if (iter == descriptor_sets_.cend())
                 {
                         error("Failed to find volume descriptor set for descriptor set layout");

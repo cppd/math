@@ -449,7 +449,7 @@ std::unordered_map<ColorFormat, std::unordered_set<QImage::Format>> color_format
 ColorFormat q_format_to_color_format(const QImage::Format format)
 {
         static const std::unordered_map<QImage::Format, ColorFormat> map = q_image_format_to_color_format_map();
-        auto iter = map.find(format);
+        const auto iter = map.find(format);
         if (iter != map.cend())
         {
                 return iter->second;
@@ -461,7 +461,7 @@ const std::unordered_set<QImage::Format>& color_format_to_q_format(const ColorFo
 {
         static const std::unordered_map<ColorFormat, std::unordered_set<QImage::Format>> map =
                 color_format_to_q_image_format_map();
-        auto iter = map.find(format);
+        const auto iter = map.find(format);
         if (iter != map.cend())
         {
                 return iter->second;

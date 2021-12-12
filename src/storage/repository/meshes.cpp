@@ -340,7 +340,7 @@ class Impl final : public MeshObjectRepository<N>
         std::unique_ptr<mesh::Mesh<N>> point_object(const std::string& object_name, const unsigned point_count)
                 const override
         {
-                auto iter = map_point_.find(object_name);
+                const auto iter = map_point_.find(object_name);
                 if (iter != map_point_.cend())
                 {
                         return iter->second(point_count);
@@ -351,7 +351,7 @@ class Impl final : public MeshObjectRepository<N>
         std::unique_ptr<mesh::Mesh<N>> facet_object(const std::string& object_name, const unsigned facet_count)
                 const override
         {
-                auto iter = map_facet_.find(object_name);
+                const auto iter = map_facet_.find(object_name);
                 if (iter != map_facet_.cend())
                 {
                         return iter->second(facet_count);

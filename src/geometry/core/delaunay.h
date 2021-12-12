@@ -111,7 +111,7 @@ void create_delaunay_objects_and_facets(
 
         const auto delaunay_index_for_simplex = [&simplex_to_delaunay](const DelaunaySimplex<N>* const simplex)
         {
-                auto iter = simplex_to_delaunay.find(simplex);
+                const auto iter = simplex_to_delaunay.find(simplex);
                 ASSERT(iter != simplex_to_delaunay.cend());
                 return iter->second;
         };

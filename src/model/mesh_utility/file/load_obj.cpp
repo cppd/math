@@ -371,7 +371,7 @@ void read_obj_stage_two(
                 {
                         std::string mtl_name;
                         read_name("material", data, lp.second_b, lp.second_e, &mtl_name);
-                        auto iter = material_index->find(mtl_name);
+                        const auto iter = material_index->find(mtl_name);
                         if (iter != material_index->end())
                         {
                                 mtl_index = iter->second;

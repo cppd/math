@@ -482,7 +482,7 @@ void test_overlap_hyperplane()
         std::unique_ptr w11 = make_shape_overlap(&p11);
         std::unique_ptr w12 = make_shape_overlap(&p12);
 
-        auto test = [&](const auto& parallelotope)
+        const auto test = [&](const auto& parallelotope)
         {
                 std::unique_ptr w = make_shape_overlap(&parallelotope);
 

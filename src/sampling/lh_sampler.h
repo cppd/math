@@ -128,8 +128,8 @@ public:
 
                 for (std::size_t i = 0; i < sample_count_; ++i)
                 {
-                        T min = offsets_[i];
-                        T max = offsets_[i + 1];
+                        const T min = offsets_[i];
+                        const T max = offsets_[i + 1];
                         std::uniform_real_distribution<T> urd(min, max);
                         Vector<N, T>& sample = (*samples)[i];
                         for (std::size_t n = 0; n < N; ++n)

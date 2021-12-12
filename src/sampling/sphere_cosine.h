@@ -46,7 +46,7 @@ Vector<N, T> cosine_on_hemisphere(RandomEngine& random_engine)
 
         uniform_in_sphere(random_engine, v, v_length_square);
 
-        T n = std::sqrt(1 - v_length_square);
+        const T n = std::sqrt(1 - v_length_square);
 
         Vector<N, T> coordinates;
         for (std::size_t i = 0; i < N - 1; ++i)
@@ -65,7 +65,7 @@ Vector<N, T> cosine_on_hemisphere(RandomEngine& random_engine, const Vector<N, T
 
         std::array<Vector<N, T>, N - 1> orthonormal_basis = numerical::orthogonal_complement_of_unit_vector(normal);
 
-        Vector<N, T> coordinates = cosine_on_hemisphere<N, T>(random_engine);
+        const Vector<N, T> coordinates = cosine_on_hemisphere<N, T>(random_engine);
 
         Vector<N, T> result = coordinates[N - 1] * normal;
         for (std::size_t i = 0; i < N - 1; ++i)

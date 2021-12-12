@@ -255,7 +255,7 @@ void ModelTree::erase_from_tree(const ObjectId id)
                 QTreeWidgetItem* const parent = item->parent();
                 delete item;
                 item = parent;
-        } while (item != nullptr && item->childCount() == 0 && map_item_id_.count(item) == 0);
+        } while (item != nullptr && item->childCount() == 0 && !map_item_id_.contains(item));
 }
 
 void ModelTree::show(const ObjectId id, const bool show)
