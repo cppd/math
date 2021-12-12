@@ -19,6 +19,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "error.h"
 #include "print.h"
+#include "settings.h"
 
 #include <src/com/enum.h>
 #include <src/com/error.h>
@@ -90,7 +91,7 @@ std::uint32_t supported_instance_api_version()
 
         if (!enumerate_instance_version)
         {
-                return VK_MAKE_VERSION(1, 0, 0);
+                return VK_MAKE_API_VERSION(0, 1, 0, 0);
         }
 
         std::uint32_t api_version;
@@ -135,13 +136,13 @@ void check_validation_layer_support(const std::vector<std::string>& required_lay
         }
 }
 
-void check_api_version(const std::uint32_t required_api_version)
+void check_instance_api_version()
 {
-        std::uint32_t api_version = supported_instance_api_version();
+        const std::uint32_t api_version = supported_instance_api_version();
 
-        if (required_api_version > api_version)
+        if (!api_version_suitable(api_version))
         {
-                error("Vulkan API version " + api_version_to_string(required_api_version)
+                error("Vulkan instance API version " + api_version_to_string(API_VERSION)
                       + " is not supported. Supported " + api_version_to_string(api_version) + ".");
         }
 }

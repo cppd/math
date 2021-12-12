@@ -25,9 +25,10 @@ namespace ns::vulkan
 std::string api_version_to_string(const std::uint32_t api_version)
 {
         std::ostringstream oss;
-        oss << VK_VERSION_MAJOR(api_version);
-        oss << "." << VK_VERSION_MINOR(api_version);
-        oss << "." << VK_VERSION_PATCH(api_version);
+        oss << VK_API_VERSION_VARIANT(api_version);
+        oss << "." << VK_API_VERSION_MAJOR(api_version);
+        oss << "." << VK_API_VERSION_MINOR(api_version);
+        oss << "." << VK_API_VERSION_PATCH(api_version);
         return oss.str();
 }
 }

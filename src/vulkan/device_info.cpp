@@ -18,6 +18,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "device_info.h"
 
 #include "error.h"
+#include "print.h"
 #include "settings.h"
 
 #include <src/com/enum.h>
@@ -130,11 +131,10 @@ std::vector<VkPhysicalDevice> find_physical_devices(const VkInstance instance)
         {
                 VkPhysicalDeviceProperties properties;
                 vkGetPhysicalDeviceProperties(device, &properties);
-                if (properties.apiVersion < API_VERSION)
+                if (api_version_suitable(properties.apiVersion))
                 {
-                        continue;
+                        devices.push_back(device);
                 }
-                devices.push_back(device);
         }
 
         if (!devices.empty())
@@ -143,17 +143,17 @@ std::vector<VkPhysicalDevice> find_physical_devices(const VkInstance instance)
         }
 
         std::ostringstream oss;
-        oss << "No Vulkan physical devices found with minimum supported version ";
-        oss << API_VERSION_MAJOR << "." << API_VERSION_MINOR;
+        oss << "No Vulkan physical device found with minimum supported version ";
+        oss << api_version_to_string(API_VERSION);
         oss << '\n';
         oss << "Found " << (all_devices.size() > 1 ? "devices" : "device");
         for (const VkPhysicalDevice device : all_devices)
         {
+                oss << '\n';
                 VkPhysicalDeviceProperties properties;
                 vkGetPhysicalDeviceProperties(device, &properties);
-                oss << "\n";
-                oss << static_cast<const char*>(properties.deviceName) << "\n  API version "
-                    << VK_VERSION_MAJOR(properties.apiVersion) << "." << VK_VERSION_MINOR(properties.apiVersion);
+                oss << static_cast<const char*>(properties.deviceName) << "\n";
+                oss << "  API version " << api_version_to_string(properties.apiVersion);
         }
         error(oss.str());
 }
@@ -163,14 +163,13 @@ DeviceProperties find_physical_device_properties(const VkPhysicalDevice device)
         {
                 VkPhysicalDeviceProperties properties;
                 vkGetPhysicalDeviceProperties(device, &properties);
-                if (properties.apiVersion < API_VERSION)
+                if (!(api_version_suitable(properties.apiVersion)))
                 {
                         std::ostringstream oss;
                         oss << "Vulkan physical device version ";
-                        oss << VK_VERSION_MAJOR(properties.apiVersion) << "."
-                            << VK_VERSION_MINOR(properties.apiVersion);
+                        oss << api_version_to_string(properties.apiVersion);
                         oss << " is not supported, minimum required version is ";
-                        oss << API_VERSION_MAJOR << "." << API_VERSION_MINOR;
+                        oss << api_version_to_string(API_VERSION);
                         error(oss.str());
                 }
         }

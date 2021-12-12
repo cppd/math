@@ -34,7 +34,7 @@ void check_instance_extension_support(const std::vector<std::string>& required_e
 
 void check_validation_layer_support(const std::vector<std::string>& required_layers);
 
-void check_api_version(std::uint32_t required_api_version);
+void check_instance_api_version();
 
 VkExtent3D find_max_image_extent(
         VkPhysicalDevice physical_device,

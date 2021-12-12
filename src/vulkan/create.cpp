@@ -181,7 +181,7 @@ Instance create_instance(std::vector<std::string> required_extensions)
 {
         LOG(overview());
 
-        check_api_version(API_VERSION);
+        check_instance_api_version();
 
         if (!VALIDATION_LAYERS.empty())
         {
