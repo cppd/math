@@ -17,6 +17,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "brdf.h"
 #include "color.h"
+#include "compute.h"
 
 #include "../lambertian.h"
 
@@ -36,7 +37,7 @@ template <typename T>
 using RandomEngine = std::conditional_t<sizeof(T) <= 4, std::mt19937, std::mt19937_64>;
 
 template <std::size_t N, typename T, typename Color>
-class BRDF final : public TestBRDF<N, T, Color, RandomEngine<T>>
+class TestBRDF final : public BRDF<N, T, Color, RandomEngine<T>>
 {
         const Color color_ = random_non_black_color<Color>();
 
@@ -80,24 +81,28 @@ void test_brdf()
 {
         constexpr unsigned SAMPLE_COUNT = 100'000;
 
-        const BRDF<N, T, Color> brdf;
+        const TestBRDF<N, T, Color> brdf;
 
-        Color result;
-
-        LOG(std::string(Color::name()) + ", " + to_string(N) + "D, " + type_name<T>() + ", f");
-        result = test_brdf_f(brdf, SAMPLE_COUNT);
-        check_color_equal(result, brdf.color());
-
-        LOG(std::string(Color::name()) + ", " + to_string(N) + "D, " + type_name<T>() + ", pdf");
-        T pdf = test_brdf_pdf(brdf, SAMPLE_COUNT);
-        if (!(std::abs(pdf - 1) <= T(0.01)))
+        LOG(std::string(Color::name()) + ", " + to_string(N) + "D, " + type_name<T>() + ", uniform");
         {
-                error("BRDF error, PDF is not equal to 1\n" + to_string(pdf));
+                const Color color = directional_albedo_uniform_sampling(brdf, SAMPLE_COUNT);
+                check_color_equal(color, brdf.color());
         }
 
-        LOG(std::string(Color::name()) + ", " + to_string(N) + "D, " + type_name<T>() + ", sample f");
-        result = test_brdf_sample_f(brdf, SAMPLE_COUNT);
-        check_color_equal(result, brdf.color());
+        LOG(std::string(Color::name()) + ", " + to_string(N) + "D, " + type_name<T>() + ", PDF integral");
+        {
+                const T integral = directional_pdf_integral(brdf, SAMPLE_COUNT);
+                if (!(std::abs(integral - 1) <= T(0.01)))
+                {
+                        error("BRDF error, PDF integral is not equal to 1\n" + to_string(integral));
+                }
+        }
+
+        LOG(std::string(Color::name()) + ", " + to_string(N) + "D, " + type_name<T>() + ", importance");
+        {
+                const Color color = directional_albedo_importance_sampling(brdf, SAMPLE_COUNT);
+                check_color_equal(color, brdf.color());
+        }
 }
 
 template <typename T, typename Color>

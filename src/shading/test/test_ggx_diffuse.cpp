@@ -17,6 +17,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "brdf.h"
 #include "color.h"
+#include "compute.h"
 
 #include "../ggx_diffuse.h"
 
@@ -42,7 +43,7 @@ template <typename T>
 constexpr T MIN_ROUGHNESS = 0.2;
 
 template <std::size_t N, typename T, typename Color>
-class BRDF final : public TestBRDF<N, T, Color, RandomEngine<T>>
+class TestBRDF final : public BRDF<N, T, Color, RandomEngine<T>>
 {
         Color color_;
         T metalness_;
@@ -64,9 +65,10 @@ class BRDF final : public TestBRDF<N, T, Color, RandomEngine<T>>
                 return ggx_diffuse::sample_f(random_engine, metalness_, roughness_, color_, n, v);
         }
 
-        BRDF(const Color& color,
-             const std::type_identity_t<T>& min_roughness,
-             RandomEngine<std::mt19937_64>&& random_engine)
+        TestBRDF(
+                const Color& color,
+                const std::type_identity_t<T>& min_roughness,
+                RandomEngine<std::mt19937_64>&& random_engine)
                 : color_(color),
                   metalness_(std::uniform_real_distribution<T>(0, 1)(random_engine)),
                   roughness_(std::uniform_real_distribution<T>(min_roughness, 1)(random_engine))
@@ -74,8 +76,8 @@ class BRDF final : public TestBRDF<N, T, Color, RandomEngine<T>>
         }
 
 public:
-        BRDF(const Color& color, const std::type_identity_t<T>& min_roughness)
-                : BRDF(color, min_roughness, create_engine<std::mt19937_64>())
+        TestBRDF(const Color& color, const std::type_identity_t<T>& min_roughness)
+                : TestBRDF(color, min_roughness, create_engine<std::mt19937_64>())
         {
         }
 
@@ -88,45 +90,49 @@ public:
 template <std::size_t N, typename T, typename Color>
 void test_brdf_white()
 {
-        const BRDF<N, T, Color> brdf(Color(1), MIN_ROUGHNESS<T>);
+        const TestBRDF<N, T, Color> brdf(Color(1), MIN_ROUGHNESS<T>);
 
-        Color result;
+        LOG(std::string(Color::name()) + ", " + to_string(N) + "D, " + type_name<T>() + ", uniform, white");
+        {
+                const Color color = directional_albedo_uniform_sampling(brdf, SAMPLE_COUNT);
+                check_color_less(color, brdf.color());
+        }
 
-        LOG(std::string(Color::name()) + ", " + to_string(N) + "D, " + type_name<T>() + ", f, white");
-        result = test_brdf_f(brdf, SAMPLE_COUNT);
-        check_color_less(result, brdf.color());
-
-        LOG(std::string(Color::name()) + ", " + to_string(N) + "D, " + type_name<T>() + ", sample f, white");
-        result = test_brdf_sample_f(brdf, SAMPLE_COUNT);
-        check_color_less(result, brdf.color());
+        LOG(std::string(Color::name()) + ", " + to_string(N) + "D, " + type_name<T>() + ", importance, white");
+        {
+                const Color color = directional_albedo_importance_sampling(brdf, SAMPLE_COUNT);
+                check_color_less(color, brdf.color());
+        }
 }
 
 template <std::size_t N, typename T, typename Color>
 void test_brdf_random()
 {
-        const BRDF<N, T, Color> brdf(random_non_black_color<Color>(), MIN_ROUGHNESS<T>);
+        const TestBRDF<N, T, Color> brdf(random_non_black_color<Color>(), MIN_ROUGHNESS<T>);
 
-        Color result;
+        LOG(std::string(Color::name()) + ", " + to_string(N) + "D, " + type_name<T>() + ", uniform, random");
+        {
+                const Color color = directional_albedo_uniform_sampling(brdf, SAMPLE_COUNT);
+                check_color_range(color);
+        }
 
-        LOG(std::string(Color::name()) + ", " + to_string(N) + "D, " + type_name<T>() + ", f, random");
-        result = test_brdf_f(brdf, SAMPLE_COUNT);
-        check_color_range(result);
-
-        LOG(std::string(Color::name()) + ", " + to_string(N) + "D, " + type_name<T>() + ", sample f, random");
-        result = test_brdf_sample_f(brdf, SAMPLE_COUNT);
-        check_color_range(result);
+        LOG(std::string(Color::name()) + ", " + to_string(N) + "D, " + type_name<T>() + ", importance, random");
+        {
+                const Color color = directional_albedo_importance_sampling(brdf, SAMPLE_COUNT);
+                check_color_range(color);
+        }
 }
 
 template <std::size_t N, typename T, typename Color>
 void test_brdf_pdf()
 {
-        const BRDF<N, T, Color> brdf(Color(1), MIN_ROUGHNESS<T>);
+        const TestBRDF<N, T, Color> brdf(Color(1), MIN_ROUGHNESS<T>);
 
-        LOG(std::string(Color::name()) + ", " + to_string(N) + "D, " + type_name<T>() + ", f, pdf");
-        T pdf = test_brdf_pdf(brdf, SAMPLE_COUNT);
-        if (!(pdf > 0 && pdf < T(1.01)))
+        LOG(std::string(Color::name()) + ", " + to_string(N) + "D, " + type_name<T>() + ", PDF integral");
+        const T integral = directional_pdf_integral(brdf, SAMPLE_COUNT);
+        if (!(integral > 0 && integral < T(1.01)))
         {
-                error("BRDF error, PDF is not less than 1\n" + to_string(pdf));
+                error("BRDF error, PDF integral is not less than 1\n" + to_string(integral));
         }
 }
 

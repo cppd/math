@@ -24,39 +24,13 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/com/random/engine.h>
 #include <src/sampling/sphere_uniform.h>
 
-#include <array>
-#include <random>
-
 namespace ns::shading::test
 {
-namespace brdf_implementation
-{
-template <std::size_t N, typename T>
-std::array<Vector<N, T>, 2> random_n_v()
-{
-        std::mt19937 random_engine = create_engine<std::mt19937>();
-
-        Vector<N, T> n = sampling::uniform_on_sphere<N, T>(random_engine);
-        Vector<N, T> v;
-        T d;
-        do
-        {
-                v = sampling::uniform_on_sphere<N, T>(random_engine);
-                d = dot(n, v);
-        } while (!(d != 0));
-        if (d > 0)
-        {
-                return {n, v};
-        }
-        return {n, -v};
-}
-}
-
 template <std::size_t N, typename T, typename Color, typename RandomEngine>
-class TestBRDF
+class BRDF
 {
 protected:
-        ~TestBRDF() = default;
+        ~BRDF() = default;
 
 public:
         virtual Color f(const Vector<N, T>& n, const Vector<N, T>& v, const Vector<N, T>& l) const = 0;
@@ -68,7 +42,11 @@ public:
 };
 
 template <std::size_t N, typename T, typename Color, typename RandomEngine>
-Color test_brdf_f(const TestBRDF<N, T, Color, RandomEngine>& brdf, const long long sample_count)
+Color directional_albedo_uniform_sampling(
+        const BRDF<N, T, Color, RandomEngine>& brdf,
+        const Vector<N, T>& n,
+        const Vector<N, T>& v,
+        const long long sample_count)
 {
         if (sample_count <= 0)
         {
@@ -76,8 +54,6 @@ Color test_brdf_f(const TestBRDF<N, T, Color, RandomEngine>& brdf, const long lo
         }
 
         static constexpr T UNIFORM_ON_HEMISPHERE_PDF = 2 * sampling::uniform_on_sphere_pdf<N, T>();
-
-        const auto [n, v] = brdf_implementation::random_n_v<N, T>();
 
         RandomEngine random_engine = create_engine<RandomEngine>();
 
@@ -91,7 +67,7 @@ Color test_brdf_f(const TestBRDF<N, T, Color, RandomEngine>& brdf, const long lo
 
                 if (n_l <= 0)
                 {
-                        Color c = brdf.f(n, v, l);
+                        const Color c = brdf.f(n, v, l);
                         if (!c.is_black())
                         {
                                 error("BRDF color is not black when dot(n,l) <= 0 " + to_string(c));
@@ -100,11 +76,13 @@ Color test_brdf_f(const TestBRDF<N, T, Color, RandomEngine>& brdf, const long lo
                 }
 
                 ++sample;
-                Color c = brdf.f(n, v, l);
+
+                const Color c = brdf.f(n, v, l);
                 if (c.is_black())
                 {
                         continue;
                 }
+
                 sum += c * (n_l / UNIFORM_ON_HEMISPHERE_PDF);
         }
 
@@ -112,7 +90,11 @@ Color test_brdf_f(const TestBRDF<N, T, Color, RandomEngine>& brdf, const long lo
 }
 
 template <std::size_t N, typename T, typename Color, typename RandomEngine>
-T test_brdf_pdf(const TestBRDF<N, T, Color, RandomEngine>& brdf, const long long sample_count)
+T directional_pdf_integral(
+        const BRDF<N, T, Color, RandomEngine>& brdf,
+        const Vector<N, T>& n,
+        const Vector<N, T>& v,
+        const long long sample_count)
 {
         if (sample_count <= 0)
         {
@@ -120,8 +102,6 @@ T test_brdf_pdf(const TestBRDF<N, T, Color, RandomEngine>& brdf, const long long
         }
 
         static constexpr T UNIFORM_ON_HEMISPHERE_PDF = 2 * sampling::uniform_on_sphere_pdf<N, T>();
-
-        const auto [n, v] = brdf_implementation::random_n_v<N, T>();
 
         RandomEngine random_engine = create_engine<RandomEngine>();
 
@@ -135,7 +115,7 @@ T test_brdf_pdf(const TestBRDF<N, T, Color, RandomEngine>& brdf, const long long
 
                 if (n_l <= 0)
                 {
-                        T pdf = brdf.pdf(n, v, l);
+                        const T pdf = brdf.pdf(n, v, l);
                         if (!(pdf == 0))
                         {
                                 error("BRDF PDF is not 0 when dot(n,l) <= 0 " + to_string(pdf));
@@ -151,14 +131,16 @@ T test_brdf_pdf(const TestBRDF<N, T, Color, RandomEngine>& brdf, const long long
 }
 
 template <std::size_t N, typename T, typename Color, typename RandomEngine>
-Color test_brdf_sample_f(const TestBRDF<N, T, Color, RandomEngine>& brdf, const long long sample_count)
+Color directional_albedo_importance_sampling(
+        const BRDF<N, T, Color, RandomEngine>& brdf,
+        const Vector<N, T>& n,
+        const Vector<N, T>& v,
+        const long long sample_count)
 {
         if (sample_count <= 0)
         {
                 error("Sample count must be positive");
         }
-
-        const auto [n, v] = brdf_implementation::random_n_v<N, T>();
 
         RandomEngine random_engine = create_engine<RandomEngine>();
 
@@ -166,16 +148,18 @@ Color test_brdf_sample_f(const TestBRDF<N, T, Color, RandomEngine>& brdf, const 
 
         for (long long i = 0; i < sample_count; ++i)
         {
-                Sample<N, T, Color> sample = brdf.sample_f(random_engine, n, v);
+                const Sample<N, T, Color> sample = brdf.sample_f(random_engine, n, v);
                 if (sample.brdf.is_black() || sample.pdf <= 0)
                 {
                         continue;
                 }
+
                 const T n_l = dot(n, sample.l);
                 if (n_l <= 0)
                 {
                         continue;
                 }
+
                 sum += sample.brdf * (n_l / sample.pdf);
         }
 
