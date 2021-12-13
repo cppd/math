@@ -91,17 +91,17 @@ struct Test
         static_assert(cmp_integrate<2>(1, 2.0L));
         static_assert(cmp_integrate<3>(1, PI_POW<1>));
         static_assert(cmp_integrate<4>(1, 4 * PI_POW<1> / 3));
-        static_assert(cmp_integrate<5>(2, PI_POW<2> / 2));
+        static_assert(cmp_integrate<5>(1, PI_POW<2> / 2));
         static_assert(cmp_integrate<6>(2, 8 * PI_POW<2> / 15));
         static_assert(cmp_integrate<7>(1, PI_POW<3> / 6));
         static_assert(cmp_integrate<8>(1, 16 * PI_POW<3> / 105));
-        static_assert(cmp_integrate<9>(1, PI_POW<4> / 24));
+        static_assert(cmp_integrate<9>(2, PI_POW<4> / 24));
         static_assert(cmp_integrate<10>(1, 32 * PI_POW<4> / 945));
-        static_assert(cmp_integrate<15>(3, PI_POW<7> / 5040));
-        static_assert(cmp_integrate<20>(1, 1024 * PI_POW<9> / 654729075));
+        static_assert(cmp_integrate<15>(1, PI_POW<7> / 5040));
+        static_assert(cmp_integrate<20>(4, 1024 * PI_POW<9> / 654729075));
         static_assert(cmp_integrate<25>(2, PI_POW<12> / 479001600));
         static_assert(cmp_integrate<30>(2, 32768 * PI_POW<14> / 6190283353629375));
-        static_assert(cmp_integrate<35>(6, PI_POW<17> / 355687428096000));
+        static_assert(cmp_integrate<35>(2, PI_POW<17> / 355687428096000));
 };
 
 template struct Test<float>;

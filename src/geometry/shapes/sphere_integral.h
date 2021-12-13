@@ -124,13 +124,21 @@ inline constexpr T SPHERE_UNIT_INTEGRAL_OVER_COSINE_INTEGRAL = []
         return p;
 }();
 
+/*
+Assuming[n>=2,Integrate[(Sin[x]^(n-2))*Cos[x],{x,0,Pi/2}]]
+1 / (n - 1)
+*/
 template <unsigned N, typename T>
 inline constexpr T SPHERE_INTEGRATE_COSINE_FACTOR_OVER_HEMISPHERE = []
 {
         static_assert(N >= 2);
         static_assert(std::is_floating_point_v<T>);
 
-        return SPHERE_AREA<N, long double> / SPHERE_UNIT_INTEGRAL_OVER_COSINE_INTEGRAL<N, long double> / 2;
+        if constexpr (N > 2)
+        {
+                return SPHERE_AREA<N - 1, long double> / (N - 1);
+        }
+        return 2.0L;
 }();
 
 /*
