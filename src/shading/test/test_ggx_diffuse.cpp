@@ -37,10 +37,8 @@ namespace
 template <typename T>
 using RandomEngine = std::conditional_t<sizeof(T) <= 4, std::mt19937, std::mt19937_64>;
 
-constexpr unsigned SAMPLE_COUNT = 1'000'000;
-
 template <typename T>
-constexpr T MIN_ROUGHNESS = 0.2;
+constexpr T MIN_ROUGHNESS = 0.3;
 
 template <std::size_t N, typename T, typename Color>
 class TestBRDF final : public BRDF<N, T, Color, RandomEngine<T>>
@@ -88,94 +86,81 @@ public:
 };
 
 template <std::size_t N, typename T, typename Color>
-void test_brdf_white()
+void test_brdf_white(const unsigned sample_count)
 {
         const TestBRDF<N, T, Color> brdf(Color(1), MIN_ROUGHNESS<T>);
 
         LOG(std::string(Color::name()) + ", " + to_string(N) + "D, " + type_name<T>() + ", uniform, white");
         {
-                const Color color = directional_albedo_uniform_sampling(brdf, SAMPLE_COUNT);
+                const Color color = directional_albedo_uniform_sampling(brdf, sample_count);
                 check_color_less(color, brdf.color());
         }
 
         LOG(std::string(Color::name()) + ", " + to_string(N) + "D, " + type_name<T>() + ", importance, white");
         {
-                const Color color = directional_albedo_importance_sampling(brdf, SAMPLE_COUNT);
+                const Color color = directional_albedo_importance_sampling(brdf, sample_count);
                 check_color_less(color, brdf.color());
         }
 }
 
 template <std::size_t N, typename T, typename Color>
-void test_brdf_random()
+void test_brdf_random(const unsigned sample_count)
 {
         const TestBRDF<N, T, Color> brdf(random_non_black_color<Color>(), MIN_ROUGHNESS<T>);
 
         LOG(std::string(Color::name()) + ", " + to_string(N) + "D, " + type_name<T>() + ", uniform, random");
         {
-                const Color color = directional_albedo_uniform_sampling(brdf, SAMPLE_COUNT);
+                const Color color = directional_albedo_uniform_sampling(brdf, sample_count);
                 check_color_range(color);
         }
 
         LOG(std::string(Color::name()) + ", " + to_string(N) + "D, " + type_name<T>() + ", importance, random");
         {
-                const Color color = directional_albedo_importance_sampling(brdf, SAMPLE_COUNT);
+                const Color color = directional_albedo_importance_sampling(brdf, sample_count);
                 check_color_range(color);
         }
 }
 
 template <std::size_t N, typename T, typename Color>
-void test_brdf_pdf()
+void test_brdf_pdf(const unsigned sample_count)
 {
         const TestBRDF<N, T, Color> brdf(Color(1), MIN_ROUGHNESS<T>);
 
         LOG(std::string(Color::name()) + ", " + to_string(N) + "D, " + type_name<T>() + ", PDF integral");
-        const T integral = directional_pdf_integral(brdf, SAMPLE_COUNT);
-        if (!(integral > 0 && integral < T(1.01)))
+        const T integral = directional_pdf_integral(brdf, sample_count);
+        if (!(std::abs(integral - 1) <= T(0.05)))
         {
-                error("BRDF error, PDF integral is not less than 1\n" + to_string(integral));
+                error("BRDF error, PDF integral is not equal to 1\n" + to_string(integral));
         }
 }
 
-template <typename T, typename Color>
-void test_brdf(ProgressRatio* const progress)
+template <std::size_t N, typename T, typename Color, typename Counter>
+void test_brdf(const Counter& counter)
 {
-        progress->set(0.0 / 9);
-        test_brdf_white<3, T, Color>();
+        constexpr unsigned SAMPLE_COUNT = 1'000'000;
 
-        progress->set(1.0 / 9);
-        test_brdf_random<3, T, Color>();
-
-        progress->set(2.0 / 9);
-        test_brdf_pdf<3, T, Color>();
-
-        //
-
-        progress->set(3.0 / 9);
-        test_brdf_white<4, T, Color>();
-
-        progress->set(4.0 / 9);
-        test_brdf_random<4, T, Color>();
-
-        progress->set(5.0 / 9);
-        test_brdf_pdf<4, T, Color>();
-
-        //
-
-        progress->set(6.0 / 9);
-        test_brdf_white<5, T, Color>();
-
-        progress->set(7.0 / 9);
-        test_brdf_random<5, T, Color>();
-
-        progress->set(8.0 / 9);
-        test_brdf_pdf<5, T, Color>();
+        counter();
+        test_brdf_white<N, T, Color>(SAMPLE_COUNT);
+        counter();
+        test_brdf_random<N, T, Color>(SAMPLE_COUNT);
+        counter();
+        test_brdf_pdf<N, T, Color>(2 * SAMPLE_COUNT);
 }
 
 void test_small(ProgressRatio* const progress)
 {
         LOG("Test GGX Diffuse BRDF");
 
-        test_brdf<double, color::Color>(progress);
+        constexpr int COUNT = 3 * 3;
+        int i = -1;
+        const auto counter = [&]
+        {
+                progress->set(++i, COUNT);
+        };
+
+        test_brdf<3, double, color::Color>(counter);
+        test_brdf<4, double, color::Color>(counter);
+        test_brdf<5, double, color::Color>(counter);
 
         LOG("Test GGX Diffuse BRDF passed");
 }
@@ -184,17 +169,28 @@ void test_large(ProgressRatio* const progress)
 {
         LOG("Test GGX Diffuse BRDF");
 
-        progress->set_text("float Color");
-        test_brdf<float, color::Color>(progress);
+        constexpr int COUNT = 3 * 12;
+        int i = -1;
+        const auto counter = [&]
+        {
+                progress->set(++i, COUNT);
+        };
 
-        progress->set_text("double Color");
-        test_brdf<double, color::Color>(progress);
+        test_brdf<3, float, color::Color>(counter);
+        test_brdf<4, float, color::Color>(counter);
+        test_brdf<5, float, color::Color>(counter);
 
-        progress->set_text("float Spectrum");
-        test_brdf<float, color::Spectrum>(progress);
+        test_brdf<3, double, color::Color>(counter);
+        test_brdf<4, double, color::Color>(counter);
+        test_brdf<5, double, color::Color>(counter);
 
-        progress->set_text("double Spectrum");
-        test_brdf<double, color::Spectrum>(progress);
+        test_brdf<3, float, color::Spectrum>(counter);
+        test_brdf<4, float, color::Spectrum>(counter);
+        test_brdf<5, float, color::Spectrum>(counter);
+
+        test_brdf<3, double, color::Spectrum>(counter);
+        test_brdf<4, double, color::Spectrum>(counter);
+        test_brdf<5, double, color::Spectrum>(counter);
 
         LOG("Test GGX Diffuse BRDF passed");
 }

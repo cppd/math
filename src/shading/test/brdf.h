@@ -101,8 +101,6 @@ T directional_pdf_integral(
                 error("Sample count must be positive");
         }
 
-        static constexpr T UNIFORM_ON_HEMISPHERE_PDF = 2 * sampling::uniform_on_sphere_pdf<N, T>();
-
         RandomEngine random_engine = create_engine<RandomEngine>();
 
         T sum = 0;
@@ -111,23 +109,11 @@ T directional_pdf_integral(
         while (sample < sample_count)
         {
                 const Vector<N, T> l = sampling::uniform_on_sphere<N, T>(random_engine);
-                const T n_l = dot(n, l);
-
-                if (n_l <= 0)
-                {
-                        const T pdf = brdf.pdf(n, v, l);
-                        if (!(pdf == 0))
-                        {
-                                error("BRDF PDF is not 0 when dot(n,l) <= 0 " + to_string(pdf));
-                        }
-                        continue;
-                }
-
                 ++sample;
                 sum += brdf.pdf(n, v, l);
         }
 
-        return sum / (sample_count * UNIFORM_ON_HEMISPHERE_PDF);
+        return sum / (sample_count * sampling::uniform_on_sphere_pdf<N, T>());
 }
 
 template <std::size_t N, typename T, typename Color, typename RandomEngine>
@@ -149,13 +135,18 @@ Color directional_albedo_importance_sampling(
         for (long long i = 0; i < sample_count; ++i)
         {
                 const Sample<N, T, Color> sample = brdf.sample_f(random_engine, n, v);
-                if (sample.brdf.is_black() || sample.pdf <= 0)
+                const T n_l = dot(n, sample.l);
+
+                if (n_l <= 0)
                 {
+                        if (!sample.brdf.is_black())
+                        {
+                                error("BRDF color is not black when dot(n,l) <= 0 " + to_string(sample.brdf));
+                        }
                         continue;
                 }
 
-                const T n_l = dot(n, sample.l);
-                if (n_l <= 0)
+                if (sample.brdf.is_black() || sample.pdf <= 0)
                 {
                         continue;
                 }

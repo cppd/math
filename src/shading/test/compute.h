@@ -42,7 +42,7 @@ std::array<Vector<N, T>, 2> random_n_v()
         {
                 v = sampling::uniform_on_sphere<N, T>(random_engine);
                 d = dot(n, v);
-        } while (!(d != 0));
+        } while (!(std::abs(d) > T(0.1)));
 
         if (d > 0)
         {

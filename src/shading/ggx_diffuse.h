@@ -185,20 +185,12 @@ std::tuple<Vector<N, T>, T> sample_ggx_cosine(
         {
                 l = sampling::cosine_on_hemisphere(random_engine, n);
                 ASSERT(l.is_unit());
-                if (dot(n, l) <= 0)
-                {
-                        return {Vector<N, T>(0), 0};
-                }
                 h = (v + l).normalized();
         }
         else
         {
                 std::tie(h, l) = ggx_visible_normals_h_l(random_engine, n, v, alpha);
                 ASSERT(l.is_unit());
-                if (dot(n, l) <= 0)
-                {
-                        return {Vector<N, T>(0), 0};
-                }
                 ASSERT(h.is_unit());
         }
 
@@ -229,6 +221,7 @@ Color f(const T metalness,
         {
                 return Color(0);
         }
+
         if (dot(n, l) <= 0)
         {
                 return Color(0);
@@ -248,10 +241,6 @@ T pdf(const T roughness, const Vector<N, T>& n, const Vector<N, T>& v, const Vec
         ASSERT(l.is_unit());
 
         if (dot(n, v) <= 0)
-        {
-                return 0;
-        }
-        if (dot(n, l) <= 0)
         {
                 return 0;
         }
@@ -284,13 +273,18 @@ Sample<N, T, Color> sample_f(
         }
 
         const auto [l, pdf] = impl::sample_ggx_cosine(random_engine, roughness, n, v);
+
         if (pdf <= 0)
         {
                 return BLACK;
         }
 
         ASSERT(l.is_unit());
-        ASSERT(dot(n, l) > 0);
+
+        if (dot(n, l) <= 0)
+        {
+                return {l, pdf, Color(0)};
+        }
 
         return {l, pdf, impl::f(metalness, roughness, color, n, v, l)};
 }
