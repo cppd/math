@@ -18,15 +18,14 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #pragma once
 
 #include <algorithm>
-#include <tuple>
 
 namespace ns::gpu::renderer
 {
-inline std::tuple<float, float, float> clean_shading_parameters(float ambient, float metalness, float roughness)
+template <typename T>
+void clean_shading_parameters(T* const ambient, T* const metalness, T* const roughness)
 {
-        ambient = std::clamp(ambient, float(0), float(1));
-        metalness = std::clamp(metalness, float(0), float(1));
-        roughness = std::clamp(roughness, float(0), float(1));
-        return {ambient, metalness, roughness};
+        *ambient = std::clamp<T>(*ambient, 0, 1);
+        *metalness = std::clamp<T>(*metalness, 0, 1);
+        *roughness = std::clamp<T>(*roughness, 0, 1);
 }
 }

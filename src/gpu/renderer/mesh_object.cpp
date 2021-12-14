@@ -115,7 +115,7 @@ class Impl final : public MeshObject
 
         void buffer_set_lighting(float ambient, float metalness, float roughness) const
         {
-                std::tie(ambient, metalness, roughness) = clean_shading_parameters(ambient, metalness, roughness);
+                clean_shading_parameters(&ambient, &metalness, &roughness);
 
                 mesh_buffer_.set_lighting(ambient, metalness, roughness);
         }

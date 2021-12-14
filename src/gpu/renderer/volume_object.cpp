@@ -259,7 +259,7 @@ class Impl final : public VolumeObject
 
         void buffer_set_lighting(float ambient, float metalness, float roughness) const
         {
-                std::tie(ambient, metalness, roughness) = clean_shading_parameters(ambient, metalness, roughness);
+                clean_shading_parameters(&ambient, &metalness, &roughness);
 
                 buffer_.set_lighting(*transfer_command_pool_, *transfer_queue_, ambient, metalness, roughness);
         }

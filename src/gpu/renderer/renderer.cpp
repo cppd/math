@@ -21,11 +21,11 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "depth_buffer.h"
 #include "mesh_object.h"
 #include "mesh_renderer.h"
+#include "renderer_draw.h"
 #include "renderer_objects.h"
 #include "renderer_process.h"
 #include "storage_mesh.h"
 #include "storage_volume.h"
-#include "transparency_message.h"
 #include "viewport_transform.h"
 #include "volume_object.h"
 #include "volume_renderer.h"
@@ -64,8 +64,6 @@ class Impl final : public Renderer, RendererProcessEvents
 {
         const std::thread::id thread_id_ = std::this_thread::get_id();
 
-        mutable TransparencyMessage transparency_message_{TRANSPARENCY_NODE_BUFFER_MAX_SIZE};
-
         Region<2, int> viewport_;
 
         const vulkan::VulkanInstance* const instance_;
@@ -79,16 +77,10 @@ class Impl final : public Renderer, RendererProcessEvents
         const vulkan::ImageWithMemory* object_image_ = nullptr;
 
         ShaderBuffers shader_buffers_;
-        vulkan::handle::Semaphore renderer_mesh_signal_semaphore_;
-        vulkan::handle::Semaphore renderer_volume_signal_semaphore_;
-
         std::unique_ptr<vulkan::DepthImageWithMemory> depth_copy_image_;
-
         std::unique_ptr<DepthBuffers> mesh_renderer_depth_render_buffers_;
-        vulkan::handle::Semaphore mesh_renderer_depth_signal_semaphore_;
-        MeshRenderer mesh_renderer_;
 
-        vulkan::handle::Semaphore volume_renderer_signal_semaphore_;
+        MeshRenderer mesh_renderer_;
         VolumeRenderer volume_renderer_;
 
         const std::vector<vulkan::DescriptorSetLayoutAndBindings> mesh_layouts_{mesh_renderer_.mesh_layouts()};
@@ -98,13 +90,11 @@ class Impl final : public Renderer, RendererProcessEvents
                 volume_renderer_.image_layouts()};
 
         std::optional<vulkan::handle::CommandBuffers> clear_command_buffers_;
-        vulkan::handle::Semaphore clear_signal_semaphore_;
-
-        std::unique_ptr<TransparencyBuffers> transparency_buffers_;
-        vulkan::handle::Semaphore render_transparent_as_opaque_signal_semaphore_;
+        std::optional<TransparencyBuffers> transparency_buffers_;
 
         RendererObjects renderer_objects_;
         RendererProcess renderer_process_;
+        RendererDraw renderer_draw_;
 
         void command(const ObjectCommand& object_command)
         {
@@ -127,77 +117,6 @@ class Impl final : public Renderer, RendererProcessEvents
                 std::visit(visitor, renderer_command);
         }
 
-        [[nodiscard]] std::tuple<VkSemaphore, bool> draw_meshes(
-                VkSemaphore semaphore,
-                const vulkan::Queue& graphics_queue,
-                const unsigned index) const
-        {
-                if (!renderer_process_.show_shadow())
-                {
-                        ASSERT(*mesh_renderer_.render_command_buffer_all(index));
-                        vulkan::queue_submit(
-                                semaphore, VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT,
-                                *mesh_renderer_.render_command_buffer_all(index), renderer_mesh_signal_semaphore_,
-                                graphics_queue);
-
-                        semaphore = renderer_mesh_signal_semaphore_;
-                }
-                else
-                {
-                        ASSERT(mesh_renderer_.depth_command_buffer(index));
-                        vulkan::queue_submit(
-                                *mesh_renderer_.depth_command_buffer(index), mesh_renderer_depth_signal_semaphore_,
-                                graphics_queue);
-
-                        ASSERT(*mesh_renderer_.render_command_buffer_all(index));
-                        vulkan::queue_submit(
-                                std::array<VkSemaphore, 2>{semaphore, mesh_renderer_depth_signal_semaphore_},
-                                std::array<VkPipelineStageFlags, 2>{
-                                        VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT, VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT},
-                                *mesh_renderer_.render_command_buffer_all(index), renderer_mesh_signal_semaphore_,
-                                graphics_queue);
-
-                        semaphore = renderer_mesh_signal_semaphore_;
-                }
-
-                if (!mesh_renderer_.has_transparent_meshes())
-                {
-                        transparency_message_.process(-1, -1);
-                        return {semaphore, false /*transparency*/};
-                }
-
-                VULKAN_CHECK(vkQueueWaitIdle(graphics_queue));
-
-                unsigned long long required_node_memory;
-                unsigned overload_counter;
-                transparency_buffers_->read(&required_node_memory, &overload_counter);
-
-                const bool nodes = required_node_memory > TRANSPARENCY_NODE_BUFFER_MAX_SIZE;
-                const bool overload = overload_counter > 0;
-                bool transparency;
-                if (nodes || overload)
-                {
-                        ASSERT(*mesh_renderer_.render_command_buffer_transparent_as_opaque(index));
-                        vulkan::queue_submit(
-                                semaphore, VK_PIPELINE_STAGE_BOTTOM_OF_PIPE_BIT,
-                                *mesh_renderer_.render_command_buffer_transparent_as_opaque(index),
-                                render_transparent_as_opaque_signal_semaphore_, graphics_queue);
-
-                        semaphore = render_transparent_as_opaque_signal_semaphore_;
-                        transparency = false;
-                }
-                else
-                {
-                        transparency = true;
-                }
-
-                transparency_message_.process(
-                        nodes ? static_cast<long long>(required_node_memory) : -1,
-                        overload ? static_cast<long long>(overload_counter) : -1);
-
-                return {semaphore, transparency};
-        }
-
         VkSemaphore draw(
                 const vulkan::Queue& graphics_queue_1,
                 const vulkan::Queue& graphics_queue_2,
@@ -207,32 +126,12 @@ class Impl final : public Renderer, RendererProcessEvents
 
                 ASSERT(graphics_queue_1.family_index() == graphics_queue_->family_index());
                 ASSERT(graphics_queue_2.family_index() == graphics_queue_->family_index());
-
                 ASSERT(clear_command_buffers_);
-                ASSERT(index < clear_command_buffers_->count());
-                vulkan::queue_submit((*clear_command_buffers_)[index], clear_signal_semaphore_, graphics_queue_2);
+                ASSERT(transparency_buffers_);
 
-                VkSemaphore semaphore = clear_signal_semaphore_;
-
-                bool transparency = false;
-
-                if (mesh_renderer_.has_meshes())
-                {
-                        std::tie(semaphore, transparency) = draw_meshes(semaphore, graphics_queue_1, index);
-                }
-
-                if (volume_renderer_.has_volume() || transparency)
-                {
-                        ASSERT(*volume_renderer_.command_buffer(index, transparency));
-                        vulkan::queue_submit(
-                                semaphore, VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT,
-                                *volume_renderer_.command_buffer(index, transparency),
-                                renderer_volume_signal_semaphore_, graphics_queue_1);
-
-                        semaphore = renderer_volume_signal_semaphore_;
-                }
-
-                return semaphore;
+                return renderer_draw_.draw(
+                        graphics_queue_1, graphics_queue_2, index, renderer_process_.show_shadow(),
+                        *clear_command_buffers_, *transparency_buffers_);
         }
 
         bool empty() const override
@@ -305,7 +204,7 @@ class Impl final : public Renderer, RendererProcessEvents
 
         void create_transparency_buffers()
         {
-                transparency_buffers_ = std::make_unique<TransparencyBuffers>(
+                transparency_buffers_.emplace(
                         *device_, *graphics_command_pool_, *graphics_queue_,
                         std::vector<std::uint32_t>({graphics_queue_->family_index()}), render_buffers_->sample_count(),
                         render_buffers_->width(), render_buffers_->height(), TRANSPARENCY_NODE_BUFFER_MAX_SIZE);
@@ -522,14 +421,8 @@ public:
                   transfer_command_pool_(transfer_command_pool),
                   transfer_queue_(transfer_queue),
                   shader_buffers_(*device_, {graphics_queue_->family_index()}),
-                  renderer_mesh_signal_semaphore_(*device_),
-                  renderer_volume_signal_semaphore_(*device_),
-                  mesh_renderer_depth_signal_semaphore_(*device_),
                   mesh_renderer_(device_, sample_shading, sampler_anisotropy, shader_buffers_),
-                  volume_renderer_signal_semaphore_(*device_),
                   volume_renderer_(device_, sample_shading, shader_buffers_),
-                  clear_signal_semaphore_(*device_),
-                  render_transparent_as_opaque_signal_semaphore_(*device_),
                   renderer_objects_(
                           [this](const StorageMeshEvents& events)
                           {
@@ -547,7 +440,8 @@ public:
                                   };
                                   std::visit(visitor, events);
                           }),
-                  renderer_process_(&shader_buffers_, this)
+                  renderer_process_(&shader_buffers_, this),
+                  renderer_draw_(*device_, TRANSPARENCY_NODE_BUFFER_MAX_SIZE, &mesh_renderer_, &volume_renderer_)
         {
         }
 
