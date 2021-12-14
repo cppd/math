@@ -29,13 +29,15 @@ class Quaternion final
         Vector<4, T> data_;
 
 public:
-        Quaternion() = default;
-
-        Quaternion(T w, T x, T y, T z) : data_(w, x, y, z)
+        Quaternion()
         {
         }
 
-        Quaternion(T w, const Vector<3, T>& v) : data_(w, v[0], v[1], v[2])
+        Quaternion(const T w, const T x, const T y, const T z) : data_(w, x, y, z)
+        {
+        }
+
+        Quaternion(const T w, const Vector<3, T>& v) : data_(w, v[0], v[1], v[2])
         {
         }
 
@@ -43,12 +45,12 @@ public:
         {
         }
 
-        T operator[](unsigned i) const
+        T operator[](const unsigned i) const
         {
                 return data_[i];
         }
 
-        T& operator[](unsigned i)
+        T& operator[](const unsigned i)
         {
                 return data_[i];
         }
@@ -79,20 +81,20 @@ Quaternion<T> operator-(const Quaternion<T>& a, const Quaternion<T>& b)
 template <typename T>
 Quaternion<T> operator*(const Quaternion<T>& a, const Quaternion<T>& b)
 {
-        Vector<3, T> a_v = a.imag();
-        Vector<3, T> b_v = b.imag();
+        const Vector<3, T> a_v = a.imag();
+        const Vector<3, T> b_v = b.imag();
 
         return Quaternion<T>(a[0] * b[0] - dot(a_v, b_v), a[0] * b_v + b[0] * a_v + cross(a_v, b_v));
 }
 
 template <typename T>
-Quaternion<T> operator*(const Quaternion<T>& a, T b)
+Quaternion<T> operator*(const Quaternion<T>& a, const T b)
 {
         return a.data() * b;
 }
 
 template <typename T>
-Quaternion<T> operator/(const Quaternion<T>& a, T b)
+Quaternion<T> operator/(const Quaternion<T>& a, const T b)
 {
         return a.data() / b;
 }
@@ -116,15 +118,15 @@ std::string to_string(const Quaternion<T>& a)
 }
 
 template <typename T>
-Quaternion<T> quaternion_for_rotation(const Vector<3, T>& axis, T angle)
+Quaternion<T> quaternion_for_rotation(const Vector<3, T>& axis, const T angle)
 {
         return Quaternion<T>(std::cos(angle / 2), std::sin(angle / 2) * axis.normalized());
 }
 
 template <typename T>
-Vector<3, T> rotate_vector(const Vector<3, T>& axis, T angle, const Vector<3, T>& v)
+Vector<3, T> rotate_vector(const Vector<3, T>& axis, const T angle, const Vector<3, T>& v)
 {
-        Quaternion q = quaternion_for_rotation(axis, angle);
+        const Quaternion q = quaternion_for_rotation(axis, angle);
         return (q * Quaternion<T>(static_cast<T>(0), v) * conjugate(q)).imag();
 }
 }

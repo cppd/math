@@ -122,17 +122,17 @@ double voronoi_height(
         // Vector<N, double> negative_pole(0);
         bool found = false;
 
-        for (int object_index : vertex_objects)
+        for (const int object_index : vertex_objects)
         {
-                Vector<N, double> voronoi_vertex = delaunay_objects[object_index].voronoi_vertex();
-                Vector<N, double> vp = voronoi_vertex - vertex;
+                const Vector<N, double> voronoi_vertex = delaunay_objects[object_index].voronoi_vertex();
+                const Vector<N, double> vp = voronoi_vertex - vertex;
 
                 if (dot(vp, positive_pole_norm) >= 0)
                 {
                         continue;
                 }
 
-                double distance = vp.norm_squared();
+                const double distance = vp.norm_squared();
                 if (distance > max_distance)
                 {
                         max_distance = distance;
@@ -146,7 +146,7 @@ double voronoi_height(
                 error("Negative pole vector not found");
         }
 
-        double len = std::sqrt(max_distance);
+        const double len = std::sqrt(max_distance);
 
         if (!std::isfinite(len))
         {
@@ -179,9 +179,9 @@ double voronoi_edge_radius(
 
         // here Voronoi vertices are not equal (if equal then they are inside cocone),
         // so it is possible to take a non-zero vector from a to b.
-        Vector<N, double> a_to_b = facet.one_sided() ? facet.ortho()
-                                                     : (delaunay_objects[facet.delaunay(1)].voronoi_vertex()
-                                                        - delaunay_objects[facet.delaunay(0)].voronoi_vertex());
+        const Vector<N, double> a_to_b = facet.one_sided() ? facet.ortho()
+                                                           : (delaunay_objects[facet.delaunay(1)].voronoi_vertex()
+                                                              - delaunay_objects[facet.delaunay(0)].voronoi_vertex());
 
         std::optional<double> max_distance = intersect_cocone_max_distance(positive_pole, pa, a_to_b);
         if (!max_distance)
@@ -189,8 +189,8 @@ double voronoi_edge_radius(
                 // if PA is close to positive pole
                 if (std::abs(cos_n_a) > LIMIT_COSINE_FOR_INTERSECTION_PA_POLE)
                 {
-                        double a_to_b_length = facet.one_sided() ? 1.0 : a_to_b.norm();
-                        double cos_pa_ab = dot(pa, a_to_b) / (pa_length * a_to_b_length);
+                        const double a_to_b_length = facet.one_sided() ? 1.0 : a_to_b.norm();
+                        const double cos_pa_ab = dot(pa, a_to_b) / (pa_length * a_to_b_length);
 
                         // if PA and AB are in opposite directions
                         if (cos_pa_ab < LIMIT_COSINE_FOR_INTERSECTION_PA_AB)
@@ -242,9 +242,9 @@ void cocone_facets_and_voronoi_radius(
         {
                 const DelaunayFacet<N>& facet = delaunay_facets[vertex_facet.facet_index];
 
-                Vector<N, double> pa = delaunay_objects[facet.delaunay(0)].voronoi_vertex() - vertex;
-                double pa_length = pa.norm();
-                double cos_n_a = dot(positive_pole, pa) / pa_length;
+                const Vector<N, double> pa = delaunay_objects[facet.delaunay(0)].voronoi_vertex() - vertex;
+                const double pa_length = pa.norm();
+                const double cos_n_a = dot(positive_pole, pa) / pa_length;
 
                 double pb_length;
                 double cos_n_b;
@@ -272,7 +272,7 @@ void cocone_facets_and_voronoi_radius(
 
                 if (find_radius && *radius != Limits<double>::max())
                 {
-                        double edge_radius = voronoi_edge_radius(
+                        const double edge_radius = voronoi_edge_radius(
                                 delaunay_objects, facet, positive_pole, pa, pa_length, pb_length, cos_n_a, cos_n_b);
 
                         *radius = std::max(*radius, edge_radius);
@@ -295,14 +295,14 @@ void cocone_neighbors(
         ASSERT(delaunay_facets.size() == facet_data.size());
         ASSERT(vertex_connections.size() == vertex_data->size());
 
-        int vertex_count = vertex_connections.size();
+        const int vertex_count = vertex_connections.size();
 
         for (int vertex_index = 0; vertex_index < vertex_count; ++vertex_index)
         {
                 for (const VertexConnections::Facet& vertex_facet : vertex_connections[vertex_index].facets)
                 {
-                        int facet_index = vertex_facet.facet_index;
-                        unsigned skip_v = vertex_facet.facet_vertex_index;
+                        const int facet_index = vertex_facet.facet_index;
+                        const unsigned skip_v = vertex_facet.facet_vertex_index;
 
                         for (unsigned v = 0; v < N; ++v)
                         {
@@ -335,7 +335,7 @@ std::vector<VertexConnections> vertex_connections(
         for (std::size_t facet = 0; facet < facets.size(); ++facet)
         {
                 int local_index = -1;
-                for (int vertex : facets[facet].vertices())
+                for (const int vertex : facets[facet].vertices())
                 {
                         ASSERT(vertex < vertex_count);
                         connections[vertex].facets.emplace_back(facet, ++local_index);
@@ -344,7 +344,7 @@ std::vector<VertexConnections> vertex_connections(
 
         for (std::size_t object = 0; object < objects.size(); ++object)
         {
-                for (int vertex : objects[object].vertices())
+                for (const int vertex : objects[object].vertices())
                 {
                         ASSERT(vertex < vertex_count);
                         connections[vertex].objects.emplace_back(object);
@@ -384,7 +384,8 @@ void find_vertex_and_facet_data(
 
                 ASSERT(!connections[v].facets.empty() && !connections[v].objects.empty());
 
-                Vector<N, double> positive_norm = voronoi_positive_norm(points[v], objects, facets, connections[v]);
+                const Vector<N, double> positive_norm =
+                        voronoi_positive_norm(points[v], objects, facets, connections[v]);
 
                 double radius;
 
@@ -398,7 +399,7 @@ void find_vertex_and_facet_data(
                 }
                 else
                 {
-                        double height = voronoi_height(points[v], objects, positive_norm, connections[v].objects);
+                        const double height = voronoi_height(points[v], objects, positive_norm, connections[v].objects);
 
                         cocone_facets_and_voronoi_radius(
                                 points[v], objects, facets, positive_norm, connections[v], true /*find_radius*/,

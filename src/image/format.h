@@ -43,7 +43,7 @@ enum class ColorFormat
 
 std::string format_to_string(ColorFormat format);
 
-constexpr unsigned format_pixel_size_in_bytes(ColorFormat format)
+constexpr unsigned format_pixel_size_in_bytes(const ColorFormat format)
 {
         switch (format)
         {
@@ -74,7 +74,7 @@ constexpr unsigned format_pixel_size_in_bytes(ColorFormat format)
         unknown_color_format_error(format);
 }
 
-constexpr unsigned format_component_count(ColorFormat format)
+constexpr unsigned format_component_count(const ColorFormat format)
 {
         switch (format)
         {

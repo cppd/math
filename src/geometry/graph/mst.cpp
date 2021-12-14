@@ -128,8 +128,8 @@ std::vector<std::array<int, 2>> kruskal(
 
         for (unsigned i = 0; i < sorted_edges.size() && mst.size() < mst_size; ++i)
         {
-                int v = sorted_edges[i].vertex(0);
-                int w = sorted_edges[i].vertex(1);
+                const int v = sorted_edges[i].vertex(0);
+                const int w = sorted_edges[i].vertex(1);
 
                 if (union_find.add_connection(v, w))
                 {
@@ -154,7 +154,7 @@ unsigned unique_vertex_count(const std::vector<std::array<int, N>>& delaunay_obj
 
         for (const std::array<int, N>& obj : delaunay_objects)
         {
-                for (int n : obj)
+                for (const int n : obj)
                 {
                         v.push_back(n);
                 }

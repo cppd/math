@@ -30,20 +30,21 @@ inline constexpr T SPHERE_AREA = []
         static_assert(N >= 2);
         static_assert(std::is_floating_point_v<T>);
 
+        constexpr int M = N / 2;
+
         // 2 * pow(π, n/2) / gamma(n/2)
 
         if ((N & 1) == 0)
         {
-                int n = N / 2;
                 // 2 * pow(π, n) / gamma(n)
                 // gamma(n) = (n - 1)!
                 long double res = 2;
                 res *= PI<long double>;
-                if (n >= 2)
+                if (M >= 2)
                 {
                         res *= PI<long double>;
                 }
-                for (int i = n - 1; i > 1; --i)
+                for (int i = M - 1; i > 1; --i)
                 {
                         res /= i;
                         res *= PI<long double>;
@@ -51,12 +52,11 @@ inline constexpr T SPHERE_AREA = []
                 return res;
         }
 
-        int n = N / 2;
         // 2 * pow(π, 1/2 + n) / gamma(1/2 + n)
         // 2 * pow(π, 1/2 + n) / pow(π, 1/2) / (2n!) * pow(4, n) * n!
         // 2 * pow(π, n) / (2n!) * pow(4, n) * n!
         long double res = 2;
-        for (int i = 2 * n; i > n; --i)
+        for (int i = 2 * M; i > M; --i)
         {
                 res /= i;
                 res *= 4;

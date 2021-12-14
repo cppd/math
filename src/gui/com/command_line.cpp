@@ -54,7 +54,7 @@ CommandLineOptions command_line_options()
 {
         QCommandLineParser parser;
 
-        QCommandLineOption no_object_selection_option(NO_OBJECT_SELECTION_OPTION);
+        const QCommandLineOption no_object_selection_option(NO_OBJECT_SELECTION_OPTION);
 
         if (!parser.addOptions({no_object_selection_option}))
         {
@@ -66,7 +66,7 @@ CommandLineOptions command_line_options()
                 error(parser.errorText().toStdString());
         }
 
-        QStringList positional_arguments = parser.positionalArguments();
+        const QStringList positional_arguments = parser.positionalArguments();
 
         //
 

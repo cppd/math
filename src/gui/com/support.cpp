@@ -261,13 +261,13 @@ window::WindowID widget_window_id(const QWidget* const widget)
 double widget_pixels_per_inch(const QWidget* const widget)
 {
 #if 0
-        int n = QApplication::desktop()->screenNumber(widget);
-        QScreen* s = QApplication::screens().at(n);
+        const int n = QApplication::desktop()->screenNumber(widget);
+        QScreen* const s = QApplication::screens().at(n);
         return s->logicalDotsPerInch();
 #else
-        double ppi_x = widget->logicalDpiX();
-        double ppi_y = widget->logicalDpiY();
-        double ppi = 0.5 * (ppi_x + ppi_y);
+        const double ppi_x = widget->logicalDpiX();
+        const double ppi_y = widget->logicalDpiY();
+        const double ppi = 0.5 * (ppi_x + ppi_y);
         ASSERT(ppi > 0);
         return ppi;
 #endif
@@ -301,17 +301,17 @@ void resize_window_widget(QMainWindow* const window, QWidget* const widget, cons
 
 double slider_position(const QSlider* const slider)
 {
-        double v = slider->value();
-        double min = slider->minimum();
-        double max = slider->maximum();
+        const double v = slider->value();
+        const double min = slider->minimum();
+        const double max = slider->maximum();
         ASSERT(max > min);
         return (v - min) / (max - min);
 }
 
 void set_slider_position(QSlider* const slider, const double v)
 {
-        double min = slider->minimum();
-        double max = slider->maximum();
+        const double min = slider->minimum();
+        const double max = slider->maximum();
         ASSERT(max > min);
         slider->setValue(std::lround(std::lerp(min, max, std::clamp(v, 0.0, 1.0))));
 }
@@ -322,7 +322,7 @@ void add_widget(QWidget* const dst, QWidget* const src)
         {
                 error("Error setting widget: there already is a layout manager");
         }
-        QVBoxLayout* l = new QVBoxLayout(dst);
+        QVBoxLayout* const l = new QVBoxLayout(dst);
         l->setContentsMargins(0, 0, 0, 0);
         l->addWidget(src);
 }
@@ -334,7 +334,7 @@ void set_label_minimum_width_for_text(QLabel* const label, const std::string_vie
 
 void set_label_text_and_minimum_width(QLabel* const label, const std::string_view& text)
 {
-        QString s = to_qstring(text);
+        const QString s = to_qstring(text);
         label->setText(s);
         label->setMinimumWidth(std::max(label->width(), label->fontMetrics().boundingRect(s).width()));
 }

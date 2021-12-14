@@ -29,7 +29,7 @@ void Connection::destroy() noexcept
         }
 }
 
-void Connection::move(Connection* from) noexcept
+void Connection::move(Connection* const from) noexcept
 {
         connection_ = from->connection_;
         from->connection_.reset();

@@ -101,17 +101,17 @@ std::optional<T> intersect_cocone_max_distance(
         const Vector<N, T>& vec_ab = vector_from_point_a;
         const Vector<N, T>& vec_norm = normalized_cone_axis;
 
-        T n_ab = dot(vec_norm, vec_ab);
-        T a_n = dot(vec_a, vec_norm);
-        T square_a = dot(vec_a, vec_a);
-        T square_ab = dot(vec_ab, vec_ab);
-        T a_ab = dot(vec_a, vec_ab);
-        T square_cos = square(functions_implementation::COS_OF_AN_OPENING_ANGLE_WITH_THE_AXIS<T>);
+        const T n_ab = dot(vec_norm, vec_ab);
+        const T a_n = dot(vec_a, vec_norm);
+        const T square_a = dot(vec_a, vec_a);
+        const T square_ab = dot(vec_ab, vec_ab);
+        const T a_ab = dot(vec_a, vec_ab);
+        const T square_cos = square(functions_implementation::COS_OF_AN_OPENING_ANGLE_WITH_THE_AXIS<T>);
 
         // ax² + bx + c = 0
-        T a = square(n_ab) - square_cos * square_ab;
-        T b = 2 * (a_n * n_ab - a_ab * square_cos);
-        T c = square(a_n) - square_a * square_cos;
+        const T a = square(n_ab) - square_cos * square_ab;
+        const T b = 2 * (a_n * n_ab - a_ab * square_cos);
+        const T c = square(a_n) - square_a * square_cos;
 
         T t1;
         T t2;
@@ -120,8 +120,8 @@ std::optional<T> intersect_cocone_max_distance(
                 return std::nullopt;
         }
 
-        bool t1_ok = t1 >= 0 && t1 <= Limits<T>::max();
-        bool t2_ok = t2 >= 0 && t2 <= Limits<T>::max();
+        const bool t1_ok = t1 >= 0 && t1 <= Limits<T>::max();
+        const bool t2_ok = t2 >= 0 && t2 <= Limits<T>::max();
 
         if (!t1_ok && !t2_ok)
         {
@@ -135,8 +135,10 @@ std::optional<T> intersect_cocone_max_distance(
         {
                 return (vec_a + t2 * vec_ab).norm();
         }
-        T d_1 = (vec_a + t1 * vec_ab).norm_squared();
-        T d_2 = (vec_a + t2 * vec_ab).norm_squared();
+
+        const T d_1 = (vec_a + t1 * vec_ab).norm_squared();
+        const T d_2 = (vec_a + t2 * vec_ab).norm_squared();
+
         return (d_1 > d_2) ? std::sqrt(d_1) : std::sqrt(d_2);
 }
 }

@@ -47,8 +47,8 @@ Vector<N, T> torus_point(RandomEngine& random_engine)
                 Vector<N, T> ortho(0);
                 ortho[n] = v_length;
 
-                Vector<2, T> s = sampling::uniform_on_sphere<2, T>(random_engine);
-                Vector<N, T> vn = T(0.5) * (s[0] * v + s[1] * ortho);
+                const Vector<2, T> s = sampling::uniform_on_sphere<2, T>(random_engine);
+                const Vector<N, T> vn = T(0.5) * (s[0] * v + s[1] * ortho);
                 sum += vn;
 
                 v = vn;

@@ -64,8 +64,8 @@ void PainterWindow::closeEvent(QCloseEvent* const event)
 {
         ASSERT(std::this_thread::get_id() == thread_id_);
 
-        QPointer ptr(this);
-        std::optional<bool> yes = dialog::message_question_default_no("Do you want to close the painter window?");
+        const QPointer ptr(this);
+        const std::optional<bool> yes = dialog::message_question_default_no("Do you want to close the painter window?");
         if (ptr.isNull())
         {
                 return;
@@ -86,12 +86,12 @@ void PainterWindow::create_interface()
         ui_.status_bar->setFixedHeight(ui_.status_bar->height());
 
         ASSERT(!ui_.main_widget->layout());
-        QVBoxLayout* main_layout = new QVBoxLayout(ui_.main_widget);
+        QVBoxLayout* const main_layout = new QVBoxLayout(ui_.main_widget);
         main_layout->setContentsMargins(0, 0, 0, 0);
         main_layout->setSpacing(0);
 
-        QWidget* image_widget = new QWidget(this);
-        QHBoxLayout* image_layout = new QHBoxLayout(image_widget);
+        QWidget* const image_widget = new QWidget(this);
+        QHBoxLayout* const image_layout = new QHBoxLayout(image_widget);
         image_layout->setContentsMargins(0, 0, 0, 0);
         image_layout->setSpacing(0);
         main_layout->addWidget(image_widget);
@@ -158,7 +158,7 @@ void PainterWindow::create_sliders()
 
 void PainterWindow::create_actions()
 {
-        QMenu* menu = ui_.menu_actions;
+        QMenu* const menu = ui_.menu_actions;
 
         actions_ = std::make_unique<Actions>(
                 pixels_.get(), menu, ui_.status_bar,

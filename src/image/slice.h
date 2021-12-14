@@ -25,10 +25,12 @@ struct Slice final
 {
         std::size_t dimension;
         std::size_t coordinate;
+
         Slice()
         {
         }
-        Slice(std::size_t dimension, std::size_t index) : dimension(dimension), coordinate(index)
+
+        Slice(const std::size_t dimension, const std::size_t index) : dimension(dimension), coordinate(index)
         {
         }
 };
