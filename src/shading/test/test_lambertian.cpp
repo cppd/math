@@ -23,8 +23,10 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <src/color/color.h>
 #include <src/com/log.h>
+#include <src/com/names.h>
 #include <src/com/print.h>
 #include <src/com/type/name.h>
+#include <src/sampling/testing/test.h>
 #include <src/test/test.h>
 
 #include <random>
@@ -41,6 +43,7 @@ class TestBRDF final : public BRDF<N, T, Color, RandomEngine<T>>
 {
         const Color color_ = random_non_black_color<Color>();
 
+public:
         Color f(const Vector<N, T>& n, const Vector<N, T>& v, const Vector<N, T>& l) const override
         {
                 if (dot(n, v) <= 0)
@@ -69,7 +72,6 @@ class TestBRDF final : public BRDF<N, T, Color, RandomEngine<T>>
                 return lambertian::sample_f(random_engine, color_, n);
         }
 
-public:
         const Color& color() const
         {
                 return color_;
@@ -108,31 +110,78 @@ void test_brdf()
         }
 }
 
-template <typename T, typename Color>
-void test_brdf()
+template <typename T, typename Color, typename Counter>
+void test_brdf(const Counter& counter)
 {
+        counter();
         test_brdf<3, T, Color>();
+        counter();
         test_brdf<4, T, Color>();
+        counter();
         test_brdf<5, T, Color>();
 }
 
-template <typename Color>
-void test_brdf()
+template <typename Color, typename Counter>
+void test_brdf(const Counter& counter)
 {
-        test_brdf<float, Color>();
-        test_brdf<double, Color>();
+        test_brdf<float, Color>(counter);
+        test_brdf<double, Color>(counter);
 }
 
-void test()
+void test(ProgressRatio* const progress)
 {
         LOG("Test Lambertian BRDF");
 
-        test_brdf<color::Color>();
-        test_brdf<color::Spectrum>();
+        constexpr int COUNT = 3 * 2 * 2;
+        int i = -1;
+        const auto counter = [&]
+        {
+                progress->set(++i, COUNT);
+        };
+
+        test_brdf<color::Color>(counter);
+        test_brdf<color::Spectrum>(counter);
 
         LOG("Test Lambertian BRDF passed");
+}
+
+//
+
+template <std::size_t N, typename T, typename Color>
+void test_sampling(ProgressRatio* const progress)
+{
+        constexpr int COUNT_PER_BUCKET = 10'000;
+
+        LOG("Lambertian Sampling, " + space_name(N) + ", " + type_name<T>());
+
+        const TestBRDF<N, T, Color> brdf;
+        const auto [n, v] = random_n_v<N, T>();
+
+        sampling::testing::test_distribution_surface<N, T, RandomEngine<T>>(
+                "", COUNT_PER_BUCKET,
+                [&, v = v, n = n](RandomEngine<T>& random_engine)
+                {
+                        const Sample<N, T, Color> sample = brdf.sample_f(random_engine, n, v);
+                        return sample.l;
+                },
+                [&, v = v, n = n](const Vector<N, T>& l)
+                {
+                        return brdf.pdf(n, v, l);
+                },
+                progress);
+}
+
+template <std::size_t N>
+void test_sampling(ProgressRatio* const progress)
+{
+        using Color = color::Spectrum;
+        test_sampling<N, float, Color>(progress);
+        test_sampling<N, double, Color>(progress);
 }
 }
 
 TEST_SMALL("BRDF, Lambertian", test)
+TEST_LARGE("BRDF, Lambertian Sampling, 3-space", test_sampling<3>)
+TEST_LARGE("BRDF, Lambertian Sampling, 4-space", test_sampling<4>)
+TEST_LARGE("BRDF, Lambertian Sampling, 5-space", test_sampling<5>)
 }

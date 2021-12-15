@@ -23,9 +23,11 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <src/color/color.h>
 #include <src/com/log.h>
+#include <src/com/names.h>
 #include <src/com/print.h>
 #include <src/com/random/engine.h>
 #include <src/com/type/name.h>
+#include <src/sampling/testing/test.h>
 #include <src/test/test.h>
 
 #include <random>
@@ -47,6 +49,18 @@ class TestBRDF final : public BRDF<N, T, Color, RandomEngine<T>>
         T metalness_;
         T roughness_;
 
+        TestBRDF(const Color& color, RandomEngine<std::mt19937_64>&& random_engine)
+                : color_(color),
+                  metalness_(std::uniform_real_distribution<T>(0, 1)(random_engine)),
+                  roughness_(std::uniform_real_distribution<T>(MIN_ROUGHNESS<T>, 1)(random_engine))
+        {
+        }
+
+public:
+        explicit TestBRDF(const Color& color) : TestBRDF(color, create_engine<std::mt19937_64>())
+        {
+        }
+
         Color f(const Vector<N, T>& n, const Vector<N, T>& v, const Vector<N, T>& l) const override
         {
                 return ggx_diffuse::f(metalness_, roughness_, color_, n, v, l);
@@ -63,22 +77,6 @@ class TestBRDF final : public BRDF<N, T, Color, RandomEngine<T>>
                 return ggx_diffuse::sample_f(random_engine, metalness_, roughness_, color_, n, v);
         }
 
-        TestBRDF(
-                const Color& color,
-                const std::type_identity_t<T>& min_roughness,
-                RandomEngine<std::mt19937_64>&& random_engine)
-                : color_(color),
-                  metalness_(std::uniform_real_distribution<T>(0, 1)(random_engine)),
-                  roughness_(std::uniform_real_distribution<T>(min_roughness, 1)(random_engine))
-        {
-        }
-
-public:
-        TestBRDF(const Color& color, const std::type_identity_t<T>& min_roughness)
-                : TestBRDF(color, min_roughness, create_engine<std::mt19937_64>())
-        {
-        }
-
         const Color& color() const
         {
                 return color_;
@@ -88,7 +86,7 @@ public:
 template <std::size_t N, typename T, typename Color>
 void test_brdf_white(const unsigned sample_count)
 {
-        const TestBRDF<N, T, Color> brdf(Color(1), MIN_ROUGHNESS<T>);
+        const TestBRDF<N, T, Color> brdf(Color(1));
 
         LOG(std::string(Color::name()) + ", " + to_string(N) + "D, " + type_name<T>() + ", uniform, white");
         {
@@ -108,7 +106,7 @@ void test_brdf_white(const unsigned sample_count)
 template <std::size_t N, typename T, typename Color>
 void test_brdf_random(const unsigned sample_count)
 {
-        const TestBRDF<N, T, Color> brdf(random_non_black_color<Color>(), MIN_ROUGHNESS<T>);
+        const TestBRDF<N, T, Color> brdf(random_non_black_color<Color>());
 
         LOG(std::string(Color::name()) + ", " + to_string(N) + "D, " + type_name<T>() + ", uniform, random");
         {
@@ -128,7 +126,7 @@ void test_brdf_random(const unsigned sample_count)
 template <std::size_t N, typename T, typename Color>
 void test_brdf_pdf(const unsigned sample_count)
 {
-        const TestBRDF<N, T, Color> brdf(Color(1), MIN_ROUGHNESS<T>);
+        const TestBRDF<N, T, Color> brdf(Color(1));
 
         LOG(std::string(Color::name()) + ", " + to_string(N) + "D, " + type_name<T>() + ", PDF integral");
         {
@@ -154,6 +152,14 @@ void test_brdf(const Counter& counter)
         test_brdf_pdf<N, T, Color>(2 * SAMPLE_COUNT);
 }
 
+template <typename T, typename Color, typename Counter>
+void test_brdf(const Counter& counter)
+{
+        test_brdf<3, T, Color>(counter);
+        test_brdf<4, T, Color>(counter);
+        test_brdf<5, T, Color>(counter);
+}
+
 void test_small(ProgressRatio* const progress)
 {
         LOG("Test GGX Diffuse BRDF");
@@ -165,9 +171,7 @@ void test_small(ProgressRatio* const progress)
                 progress->set(++i, COUNT);
         };
 
-        test_brdf<3, double, color::Color>(counter);
-        test_brdf<4, double, color::Color>(counter);
-        test_brdf<5, double, color::Color>(counter);
+        test_brdf<double, color::Color>(counter);
 
         LOG("Test GGX Diffuse BRDF passed");
 }
@@ -176,33 +180,59 @@ void test_large(ProgressRatio* const progress)
 {
         LOG("Test GGX Diffuse BRDF");
 
-        constexpr int COUNT = 3 * 12;
+        constexpr int COUNT = 3 * 3 * 4;
         int i = -1;
         const auto counter = [&]
         {
                 progress->set(++i, COUNT);
         };
 
-        test_brdf<3, float, color::Color>(counter);
-        test_brdf<4, float, color::Color>(counter);
-        test_brdf<5, float, color::Color>(counter);
-
-        test_brdf<3, double, color::Color>(counter);
-        test_brdf<4, double, color::Color>(counter);
-        test_brdf<5, double, color::Color>(counter);
-
-        test_brdf<3, float, color::Spectrum>(counter);
-        test_brdf<4, float, color::Spectrum>(counter);
-        test_brdf<5, float, color::Spectrum>(counter);
-
-        test_brdf<3, double, color::Spectrum>(counter);
-        test_brdf<4, double, color::Spectrum>(counter);
-        test_brdf<5, double, color::Spectrum>(counter);
+        test_brdf<float, color::Color>(counter);
+        test_brdf<double, color::Color>(counter);
+        test_brdf<float, color::Spectrum>(counter);
+        test_brdf<double, color::Spectrum>(counter);
 
         LOG("Test GGX Diffuse BRDF passed");
+}
+
+//
+
+template <std::size_t N, typename T, typename Color>
+void test_sampling(ProgressRatio* const progress)
+{
+        constexpr int COUNT_PER_BUCKET = 10'000;
+
+        LOG("GGX Diffuse Sampling, " + space_name(N) + ", " + type_name<T>());
+
+        const TestBRDF<N, T, Color> brdf(Color(1));
+        const auto [n, v] = random_n_v<N, T>();
+
+        sampling::testing::test_distribution_surface<N, T, RandomEngine<T>>(
+                "", COUNT_PER_BUCKET,
+                [&, v = v, n = n](RandomEngine<T>& random_engine)
+                {
+                        const Sample<N, T, Color> sample = brdf.sample_f(random_engine, n, v);
+                        return sample.l;
+                },
+                [&, v = v, n = n](const Vector<N, T>& l)
+                {
+                        return brdf.pdf(n, v, l);
+                },
+                progress);
+}
+
+template <std::size_t N>
+void test_sampling(ProgressRatio* const progress)
+{
+        using Color = color::Spectrum;
+        test_sampling<N, float, Color>(progress);
+        test_sampling<N, double, Color>(progress);
 }
 }
 
 TEST_SMALL("BRDF, GGX Diffuse", test_small)
 TEST_LARGE("BRDF, GGX Diffuse", test_large)
+TEST_LARGE("BRDF, GGX Diffuse Sampling, 3-space", test_sampling<3>)
+TEST_LARGE("BRDF, GGX Diffuse Sampling, 4-space", test_sampling<4>)
+TEST_LARGE("BRDF, GGX Diffuse Sampling, 5-space", test_sampling<5>)
 }
