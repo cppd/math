@@ -19,7 +19,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "volume_object.h"
 
-#include "shaders/buffers.h"
+#include "buffers/shaders.h"
 #include "shaders/volume.h"
 
 #include <src/gpu/render_buffers.h>

@@ -17,7 +17,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
-#include "shaders/buffers.h"
+#include "buffers/material.h"
 
 #include <src/model/mesh.h>
 #include <src/vulkan/buffers.h>

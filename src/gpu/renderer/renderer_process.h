@@ -19,7 +19,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "renderer_command.h"
 
-#include "shaders/buffers.h"
+#include "buffers/shaders.h"
 
 #include <src/numerical/matrix.h>
 #include <src/numerical/region.h>

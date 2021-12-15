@@ -20,7 +20,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "mesh_object_load.h"
 #include "shading_parameters.h"
 
-#include "shaders/buffers.h"
+#include "buffers/material.h"
+#include "buffers/mesh.h"
 #include "shaders/descriptors.h"
 #include "shaders/triangles.h"
 

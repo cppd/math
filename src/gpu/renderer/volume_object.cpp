@@ -19,7 +19,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "shading_parameters.h"
 
-#include "shaders/buffers.h"
+#include "buffers/volume.h"
 #include "shaders/volume.h"
 
 #include <src/com/alg.h>

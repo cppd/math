@@ -21,7 +21,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "transparency_message.h"
 #include "volume_renderer.h"
 
-#include "shaders/buffers.h"
+#include "buffers/transparency.h"
 
 #include <src/vulkan/objects.h>
 
