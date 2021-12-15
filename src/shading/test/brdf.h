@@ -50,17 +50,17 @@ Color directional_albedo_uniform_sampling(
 {
         if (sample_count <= 0)
         {
-                error("Sample count must be positive");
+                error("Sample count " + to_string(sample_count) + " must be positive");
         }
 
         static constexpr T UNIFORM_ON_HEMISPHERE_PDF = 2 * sampling::uniform_on_sphere_pdf<N, T>();
 
         RandomEngine random_engine = create_engine<RandomEngine>();
 
-        Color sum(0);
-        long long sample = 0;
+        Color sum{0};
 
-        while (sample < sample_count)
+        long long i = 0;
+        while (i < sample_count)
         {
                 const Vector<N, T> l = sampling::uniform_on_sphere<N, T>(random_engine);
                 const T n_l = dot(n, l);
@@ -75,7 +75,7 @@ Color directional_albedo_uniform_sampling(
                         continue;
                 }
 
-                ++sample;
+                ++i;
 
                 const Color c = brdf.f(n, v, l);
                 if (c.is_black())
@@ -90,33 +90,6 @@ Color directional_albedo_uniform_sampling(
 }
 
 template <std::size_t N, typename T, typename Color, typename RandomEngine>
-T directional_pdf_integral(
-        const BRDF<N, T, Color, RandomEngine>& brdf,
-        const Vector<N, T>& n,
-        const Vector<N, T>& v,
-        const long long sample_count)
-{
-        if (sample_count <= 0)
-        {
-                error("Sample count must be positive");
-        }
-
-        RandomEngine random_engine = create_engine<RandomEngine>();
-
-        T sum = 0;
-        long long sample = 0;
-
-        while (sample < sample_count)
-        {
-                const Vector<N, T> l = sampling::uniform_on_sphere<N, T>(random_engine);
-                ++sample;
-                sum += brdf.pdf(n, v, l);
-        }
-
-        return sum / (sample_count * sampling::uniform_on_sphere_pdf<N, T>());
-}
-
-template <std::size_t N, typename T, typename Color, typename RandomEngine>
 Color directional_albedo_importance_sampling(
         const BRDF<N, T, Color, RandomEngine>& brdf,
         const Vector<N, T>& n,
@@ -125,14 +98,15 @@ Color directional_albedo_importance_sampling(
 {
         if (sample_count <= 0)
         {
-                error("Sample count must be positive");
+                error("Sample count " + to_string(sample_count) + " must be positive");
         }
 
         RandomEngine random_engine = create_engine<RandomEngine>();
 
-        Color sum(0);
+        Color sum{0};
 
-        for (long long i = 0; i < sample_count; ++i)
+        long long i = 0;
+        while (i < sample_count)
         {
                 const Sample<N, T, Color> sample = brdf.sample_f(random_engine, n, v);
                 const T n_l = dot(n, sample.l);
@@ -146,6 +120,8 @@ Color directional_albedo_importance_sampling(
                         continue;
                 }
 
+                ++i;
+
                 if (sample.brdf.is_black() || sample.pdf <= 0)
                 {
                         continue;
@@ -155,5 +131,30 @@ Color directional_albedo_importance_sampling(
         }
 
         return sum / sample_count;
+}
+
+template <std::size_t N, typename T, typename Color, typename RandomEngine>
+T directional_pdf_integral(
+        const BRDF<N, T, Color, RandomEngine>& brdf,
+        const Vector<N, T>& n,
+        const Vector<N, T>& v,
+        const long long sample_count)
+{
+        if (sample_count <= 0)
+        {
+                error("Sample count " + to_string(sample_count) + " must be positive");
+        }
+
+        RandomEngine random_engine = create_engine<RandomEngine>();
+
+        T sum{0};
+
+        for (long long i = 0; i < sample_count; ++i)
+        {
+                const Vector<N, T> l = sampling::uniform_on_sphere<N, T>(random_engine);
+                sum += brdf.pdf(n, v, l);
+        }
+
+        return sum / (sample_count * sampling::uniform_on_sphere_pdf<N, T>());
 }
 }

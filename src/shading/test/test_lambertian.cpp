@@ -17,7 +17,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "brdf.h"
 #include "color.h"
-#include "compute.h"
+#include "random.h"
 
 #include "../lambertian.h"
 
@@ -85,23 +85,26 @@ void test_brdf()
 
         LOG(std::string(Color::name()) + ", " + to_string(N) + "D, " + type_name<T>() + ", uniform");
         {
-                const Color color = directional_albedo_uniform_sampling(brdf, SAMPLE_COUNT);
+                const auto [n, v] = random_n_v<N, T>();
+                const Color color = directional_albedo_uniform_sampling(brdf, n, v, SAMPLE_COUNT);
+                check_color_equal(color, brdf.color());
+        }
+
+        LOG(std::string(Color::name()) + ", " + to_string(N) + "D, " + type_name<T>() + ", importance");
+        {
+                const auto [n, v] = random_n_v<N, T>();
+                const Color color = directional_albedo_importance_sampling(brdf, n, v, SAMPLE_COUNT);
                 check_color_equal(color, brdf.color());
         }
 
         LOG(std::string(Color::name()) + ", " + to_string(N) + "D, " + type_name<T>() + ", PDF integral");
         {
-                const T integral = directional_pdf_integral(brdf, SAMPLE_COUNT);
-                if (!(std::abs(integral - 1) <= T(0.01)))
+                const auto [n, v] = random_n_v<N, T>();
+                const T integral = directional_pdf_integral(brdf, n, v, SAMPLE_COUNT);
+                if (!(std::abs(integral - 1) <= T(0.02)))
                 {
                         error("BRDF error, PDF integral is not equal to 1\n" + to_string(integral));
                 }
-        }
-
-        LOG(std::string(Color::name()) + ", " + to_string(N) + "D, " + type_name<T>() + ", importance");
-        {
-                const Color color = directional_albedo_importance_sampling(brdf, SAMPLE_COUNT);
-                check_color_equal(color, brdf.color());
         }
 }
 

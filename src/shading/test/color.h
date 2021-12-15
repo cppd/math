@@ -18,9 +18,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #pragma once
 
 #include <src/com/error.h>
-#include <src/com/random/engine.h>
-
-#include <random>
 
 namespace ns::shading::test
 {
@@ -87,23 +84,5 @@ void check_color_range(const Color& directional_albedo)
         {
                 error("BRDF error, directional albedo is not in the range [0, 1] " + to_string(directional_albedo));
         }
-}
-
-template <typename Color>
-Color random_non_black_color()
-{
-        std::mt19937 random_engine = create_engine<std::mt19937>();
-        std::uniform_real_distribution<double> urd(0, 1);
-
-        Color color;
-        do
-        {
-                double red = urd(random_engine);
-                double green = urd(random_engine);
-                double blue = urd(random_engine);
-                color = Color(red, green, blue);
-        } while (color.is_black());
-
-        return color;
 }
 }

@@ -17,7 +17,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "brdf.h"
 #include "color.h"
-#include "compute.h"
+#include "random.h"
 
 #include "../ggx_diffuse.h"
 
@@ -92,13 +92,15 @@ void test_brdf_white(const unsigned sample_count)
 
         LOG(std::string(Color::name()) + ", " + to_string(N) + "D, " + type_name<T>() + ", uniform, white");
         {
-                const Color color = directional_albedo_uniform_sampling(brdf, sample_count);
+                const auto [n, v] = random_n_v<N, T>();
+                const Color color = directional_albedo_uniform_sampling(brdf, n, v, sample_count);
                 check_color_less(color, brdf.color());
         }
 
         LOG(std::string(Color::name()) + ", " + to_string(N) + "D, " + type_name<T>() + ", importance, white");
         {
-                const Color color = directional_albedo_importance_sampling(brdf, sample_count);
+                const auto [n, v] = random_n_v<N, T>();
+                const Color color = directional_albedo_importance_sampling(brdf, n, v, sample_count);
                 check_color_less(color, brdf.color());
         }
 }
@@ -110,13 +112,15 @@ void test_brdf_random(const unsigned sample_count)
 
         LOG(std::string(Color::name()) + ", " + to_string(N) + "D, " + type_name<T>() + ", uniform, random");
         {
-                const Color color = directional_albedo_uniform_sampling(brdf, sample_count);
+                const auto [n, v] = random_n_v<N, T>();
+                const Color color = directional_albedo_uniform_sampling(brdf, n, v, sample_count);
                 check_color_range(color);
         }
 
         LOG(std::string(Color::name()) + ", " + to_string(N) + "D, " + type_name<T>() + ", importance, random");
         {
-                const Color color = directional_albedo_importance_sampling(brdf, sample_count);
+                const auto [n, v] = random_n_v<N, T>();
+                const Color color = directional_albedo_importance_sampling(brdf, n, v, sample_count);
                 check_color_range(color);
         }
 }
@@ -127,10 +131,13 @@ void test_brdf_pdf(const unsigned sample_count)
         const TestBRDF<N, T, Color> brdf(Color(1), MIN_ROUGHNESS<T>);
 
         LOG(std::string(Color::name()) + ", " + to_string(N) + "D, " + type_name<T>() + ", PDF integral");
-        const T integral = directional_pdf_integral(brdf, sample_count);
-        if (!(std::abs(integral - 1) <= T(0.05)))
         {
-                error("BRDF error, PDF integral is not equal to 1\n" + to_string(integral));
+                const auto [n, v] = random_n_v<N, T>();
+                const T integral = directional_pdf_integral(brdf, n, v, sample_count);
+                if (!(std::abs(integral - 1) <= T(0.05)))
+                {
+                        error("BRDF error, PDF integral is not equal to 1\n" + to_string(integral));
+                }
         }
 }
 

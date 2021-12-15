@@ -27,8 +27,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 namespace ns::shading::test
 {
-namespace random_implementation
-{
 template <std::size_t N, typename T>
 std::array<Vector<N, T>, 2> random_n_v()
 {
@@ -50,26 +48,22 @@ std::array<Vector<N, T>, 2> random_n_v()
         }
         return {n, -v};
 }
-}
 
-template <std::size_t N, typename T, typename Color, typename RandomEngine>
-Color directional_albedo_uniform_sampling(const BRDF<N, T, Color, RandomEngine>& brdf, const long long sample_count)
+template <typename Color>
+Color random_non_black_color()
 {
-        const auto [n, v] = random_implementation::random_n_v<N, T>();
-        return directional_albedo_uniform_sampling(brdf, n, v, sample_count);
-}
+        std::mt19937 random_engine = create_engine<std::mt19937>();
+        std::uniform_real_distribution<double> urd(0, 1);
 
-template <std::size_t N, typename T, typename Color, typename RandomEngine>
-T directional_pdf_integral(const BRDF<N, T, Color, RandomEngine>& brdf, const long long sample_count)
-{
-        const auto [n, v] = random_implementation::random_n_v<N, T>();
-        return directional_pdf_integral(brdf, n, v, sample_count);
-}
+        Color color;
+        do
+        {
+                const double r = urd(random_engine);
+                const double g = urd(random_engine);
+                const double b = urd(random_engine);
+                color = Color(r, g, b);
+        } while (color.is_black());
 
-template <std::size_t N, typename T, typename Color, typename RandomEngine>
-Color directional_albedo_importance_sampling(const BRDF<N, T, Color, RandomEngine>& brdf, const long long sample_count)
-{
-        const auto [n, v] = random_implementation::random_n_v<N, T>();
-        return directional_albedo_importance_sampling(brdf, n, v, sample_count);
+        return color;
 }
 }
