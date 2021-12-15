@@ -277,6 +277,12 @@ template <typename Dst, std::size_t ROWS, std::size_t COLUMNS, typename Src>
         return m;
 }
 
+template <typename Dst, std::size_t ROWS, std::size_t COLUMNS, typename Src>
+[[nodiscard]] Matrix<ROWS, COLUMNS, Src>&& to_matrix(Matrix<ROWS, COLUMNS, Src>&& m) requires(std::is_same_v<Dst, Src>)
+{
+        return std::move(m);
+}
+
 template <std::size_t ROWS, std::size_t COLUMNS, typename T>
 [[nodiscard]] std::string to_string(const Matrix<ROWS, COLUMNS, T>& m)
 {
