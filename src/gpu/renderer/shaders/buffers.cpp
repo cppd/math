@@ -17,43 +17,13 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "buffers.h"
 
+#include "../../com/matrix.h"
 #include "../buffer_commands.h"
 
 #include <src/com/merge.h>
 
 namespace ns::gpu::renderer
 {
-namespace
-{
-template <typename Dst, typename Src>
-Matrix<4, 4, Dst> mat4_std140(const Matrix<4, 4, Src>& m)
-{
-        Matrix<4, 4, Dst> res;
-        for (unsigned r = 0; r < 4; ++r)
-        {
-                for (unsigned c = 0; c < 4; ++c)
-                {
-                        res(c, r) = m(r, c);
-                }
-        }
-        return res;
-}
-
-template <typename Dst, typename Src>
-Matrix<3, 4, Dst> mat3_std140(const Matrix<3, 3, Src>& m)
-{
-        Matrix<3, 4, Dst> res;
-        for (unsigned r = 0; r < 3; ++r)
-        {
-                for (unsigned c = 0; c < 3; ++c)
-                {
-                        res(c, r) = m(r, c);
-                }
-        }
-        return res;
-}
-}
-
 ShaderBuffers::ShaderBuffers(const vulkan::Device& device, const std::vector<std::uint32_t>& family_indices)
 {
         static_assert(MATRICES_INDEX == 0);
@@ -109,14 +79,14 @@ void ShaderBuffers::set_matrices(
 {
         {
                 Matrices matrices;
-                matrices.vp_matrix = mat4_std140<float>(main_vp_matrix);
-                matrices.shadow_vp_texture_matrix = mat4_std140<float>(shadow_vp_texture_matrix);
+                matrices.vp_matrix = to_std140<float>(main_vp_matrix);
+                matrices.shadow_vp_texture_matrix = to_std140<float>(shadow_vp_texture_matrix);
                 copy_to_matrices_buffer(0, matrices);
         }
         {
                 Matrices matrices;
-                matrices.vp_matrix = mat4_std140<float>(shadow_vp_matrix);
-                matrices.shadow_vp_texture_matrix = mat4_std140<float>(shadow_vp_texture_matrix);
+                matrices.vp_matrix = to_std140<float>(shadow_vp_matrix);
+                matrices.shadow_vp_texture_matrix = to_std140<float>(shadow_vp_texture_matrix);
                 copy_to_shadow_matrices_buffer(0, matrices);
         }
 }
@@ -296,8 +266,8 @@ void MeshBuffer::set_coordinates(const Matrix4d& model_matrix, const Matrix3d& n
 
         vulkan::BufferMapper map(uniform_buffer_, OFFSET, SIZE);
 
-        decltype(Mesh().model_matrix) model = mat4_std140<float>(model_matrix);
-        decltype(Mesh().normal_matrix) normal = mat3_std140<float>(normal_matrix);
+        decltype(Mesh().model_matrix) model = to_std140<float>(model_matrix);
+        decltype(Mesh().normal_matrix) normal = to_std140<float>(normal_matrix);
 
         map.write(offsetof(Mesh, model_matrix) - OFFSET, model);
         map.write(offsetof(Mesh, normal_matrix) - OFFSET, normal);
@@ -381,11 +351,11 @@ void VolumeBuffer::set_coordinates(
         const Matrix3d& normal_matrix) const
 {
         Coordinates coordinates;
-        coordinates.inverse_mvp_matrix = mat4_std140<float>(inverse_mvp_matrix);
+        coordinates.inverse_mvp_matrix = to_std140<float>(inverse_mvp_matrix);
         coordinates.third_row_of_mvp = to_vector<float>(third_row_of_mvp);
         coordinates.clip_plane_equation = to_vector<float>(clip_plane_equation);
         coordinates.gradient_h = to_vector<float>(gradient_h);
-        coordinates.normal_matrix = mat3_std140<float>(normal_matrix);
+        coordinates.normal_matrix = to_std140<float>(normal_matrix);
         vulkan::map_and_write_to_buffer(uniform_buffer_coordinates_, 0, coordinates);
 }
 

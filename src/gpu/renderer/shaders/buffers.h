@@ -17,6 +17,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
+#include "../../com/matrix.h"
+
 #include <src/numerical/matrix.h>
 #include <src/numerical/vec.h>
 #include <src/vulkan/buffers.h>
@@ -135,7 +137,7 @@ class MeshBuffer final
         struct Mesh final
         {
                 alignas(sizeof(Vector4f)) Matrix4f model_matrix;
-                alignas(sizeof(Vector4f)) Matrix<3, 4, float> normal_matrix;
+                alignas(sizeof(Vector4f)) std140::Matrix3f normal_matrix;
                 alignas(sizeof(Vector4f)) Vector3f color;
                 float alpha;
                 float ambient;
@@ -165,7 +167,7 @@ class VolumeBuffer final
                 alignas(sizeof(Vector4f)) Vector4f third_row_of_mvp;
                 alignas(sizeof(Vector4f)) Vector4f clip_plane_equation;
                 alignas(sizeof(Vector4f)) Vector3f gradient_h;
-                alignas(sizeof(Vector4f)) Matrix<3, 4, float> normal_matrix;
+                alignas(sizeof(Vector4f)) std140::Matrix3f normal_matrix;
         };
 
         struct Volume final
