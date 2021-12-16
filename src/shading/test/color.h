@@ -85,4 +85,21 @@ void check_color_range(const Color& directional_albedo)
                 error("BRDF error, directional albedo is not in the range [0, 1] " + to_string(directional_albedo));
         }
 }
+
+template <typename Color>
+void check_uniform_importance_equal(
+        const Color& uniform_sampling_albedo,
+        const Color& importance_sampling_albedo,
+        const double relative_error)
+{
+        check_color(uniform_sampling_albedo, "Uniform sampling directional albedo");
+        check_color(importance_sampling_albedo, "Importance sampling directional albedo");
+
+        if (!uniform_sampling_albedo.equal_to_relative(importance_sampling_albedo, relative_error))
+        {
+                error("BRDF error, uniform sampling directional albedo"
+                      " is not equal to importance sampling directional albedo\n"
+                      + to_string(uniform_sampling_albedo) + "\n" + to_string(importance_sampling_albedo));
+        }
+}
 }

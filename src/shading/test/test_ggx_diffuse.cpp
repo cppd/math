@@ -40,7 +40,7 @@ template <typename T>
 using RandomEngine = std::conditional_t<sizeof(T) <= 4, std::mt19937, std::mt19937_64>;
 
 template <typename T>
-constexpr T MIN_ROUGHNESS = 0.3;
+constexpr T MIN_ROUGHNESS = 0.35;
 
 template <std::size_t N, typename T, typename Color>
 class TestBRDF final : public BRDF<N, T, Color, RandomEngine<T>>
@@ -88,19 +88,18 @@ void test_brdf_white(const unsigned sample_count)
 {
         const TestBRDF<N, T, Color> brdf(Color(1));
 
+        const auto [n, v] = random_n_v<N, T>();
+
         LOG(std::string(Color::name()) + ", " + to_string(N) + "D, " + type_name<T>() + ", uniform, white");
-        {
-                const auto [n, v] = random_n_v<N, T>();
-                const Color color = directional_albedo_uniform_sampling(brdf, n, v, sample_count);
-                check_color_less(color, brdf.color());
-        }
+        const Color color_uniform = directional_albedo_uniform_sampling(brdf, n, v, sample_count);
+        check_color_less(color_uniform, brdf.color());
 
         LOG(std::string(Color::name()) + ", " + to_string(N) + "D, " + type_name<T>() + ", importance, white");
-        {
-                const auto [n, v] = random_n_v<N, T>();
-                const Color color = directional_albedo_importance_sampling(brdf, n, v, sample_count);
-                check_color_less(color, brdf.color());
-        }
+        const Color color_importance = directional_albedo_importance_sampling(brdf, n, v, sample_count);
+        check_color_less(color_importance, brdf.color());
+
+        constexpr double RELATIVE_ERROR = 0.25;
+        check_uniform_importance_equal(color_uniform, color_importance, RELATIVE_ERROR);
 }
 
 template <std::size_t N, typename T, typename Color>
@@ -108,19 +107,18 @@ void test_brdf_random(const unsigned sample_count)
 {
         const TestBRDF<N, T, Color> brdf(random_non_black_color<Color>());
 
+        const auto [n, v] = random_n_v<N, T>();
+
         LOG(std::string(Color::name()) + ", " + to_string(N) + "D, " + type_name<T>() + ", uniform, random");
-        {
-                const auto [n, v] = random_n_v<N, T>();
-                const Color color = directional_albedo_uniform_sampling(brdf, n, v, sample_count);
-                check_color_range(color);
-        }
+        const Color color_uniform = directional_albedo_uniform_sampling(brdf, n, v, sample_count);
+        check_color_range(color_uniform);
 
         LOG(std::string(Color::name()) + ", " + to_string(N) + "D, " + type_name<T>() + ", importance, random");
-        {
-                const auto [n, v] = random_n_v<N, T>();
-                const Color color = directional_albedo_importance_sampling(brdf, n, v, sample_count);
-                check_color_range(color);
-        }
+        const Color color_importance = directional_albedo_importance_sampling(brdf, n, v, sample_count);
+        check_color_range(color_importance);
+
+        constexpr double RELATIVE_ERROR = 0.25;
+        check_uniform_importance_equal(color_uniform, color_importance, RELATIVE_ERROR);
 }
 
 template <std::size_t N, typename T, typename Color>

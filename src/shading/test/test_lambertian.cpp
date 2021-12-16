@@ -85,28 +85,24 @@ void test_brdf()
 
         const TestBRDF<N, T, Color> brdf;
 
+        const auto [n, v] = random_n_v<N, T>();
+
         LOG(std::string(Color::name()) + ", " + to_string(N) + "D, " + type_name<T>() + ", uniform");
-        {
-                const auto [n, v] = random_n_v<N, T>();
-                const Color color = directional_albedo_uniform_sampling(brdf, n, v, SAMPLE_COUNT);
-                check_color_equal(color, brdf.color());
-        }
+        const Color color_uniform = directional_albedo_uniform_sampling(brdf, n, v, SAMPLE_COUNT);
+        check_color_equal(color_uniform, brdf.color());
 
         LOG(std::string(Color::name()) + ", " + to_string(N) + "D, " + type_name<T>() + ", importance");
-        {
-                const auto [n, v] = random_n_v<N, T>();
-                const Color color = directional_albedo_importance_sampling(brdf, n, v, SAMPLE_COUNT);
-                check_color_equal(color, brdf.color());
-        }
+        const Color color_importance = directional_albedo_importance_sampling(brdf, n, v, SAMPLE_COUNT);
+        check_color_equal(color_importance, brdf.color());
+
+        constexpr double RELATIVE_ERROR = 0.01;
+        check_uniform_importance_equal(color_uniform, color_importance, RELATIVE_ERROR);
 
         LOG(std::string(Color::name()) + ", " + to_string(N) + "D, " + type_name<T>() + ", PDF integral");
+        const T integral = directional_pdf_integral(brdf, n, v, SAMPLE_COUNT);
+        if (!(std::abs(integral - 1) <= T(0.02)))
         {
-                const auto [n, v] = random_n_v<N, T>();
-                const T integral = directional_pdf_integral(brdf, n, v, SAMPLE_COUNT);
-                if (!(std::abs(integral - 1) <= T(0.02)))
-                {
-                        error("BRDF error, PDF integral is not equal to 1\n" + to_string(integral));
-                }
+                error("BRDF error, PDF integral is not equal to 1\n" + to_string(integral));
         }
 }
 
