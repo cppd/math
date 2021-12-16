@@ -204,76 +204,141 @@ void compare_with_gamma(const T& precision, std::integer_sequence<unsigned, I...
 template <typename T>
 void compare_with_gamma(const T& precision)
 {
-        LOG("Compare with gamma");
+        const std::string name = std::string("Compare with gamma <") + type_name<T>() + ">";
+
+        LOG(name);
 
         compare_with_gamma<T>(precision, std::make_integer_sequence<unsigned, 100>());
 
         compare_with_gamma<1'000, T>(precision);
         compare_with_gamma<1'111, T>(precision);
 
-        LOG("Compare with gamma passed");
+        LOG(name + " passed");
 }
 
 //
 
 template <unsigned N, typename T>
-void test_cosine(const int count, const T& precision)
+void test_cosine_weighted_average()
 {
         static_assert(std::is_floating_point_v<T>);
 
-        std::mt19937_64 engine = create_engine<std::mt19937_64>();
+        constexpr int SAMPLE_COUNT = 100'000;
+        constexpr int COUNT = 1'000;
+        constexpr T PRECISION = 1e-2;
 
+        const auto f = [](const T v)
+        {
+                return v;
+        };
+
+        std::mt19937_64 engine = create_engine<std::mt19937_64>();
         long double sum = 0;
-        for (int i = 0; i < count; ++i)
+        long double sum_cosine = 0;
+        for (int i = 0; i < SAMPLE_COUNT; ++i)
         {
                 Vector<N, T> v;
                 T length_square;
                 sampling::uniform_in_sphere(engine, v, length_square);
+
                 // dot(v.normalized(), (0, ..., 0, 1))
-                T c = v[N - 1] / std::sqrt(length_square);
-                sum += std::abs(c);
+                const T cosine = std::abs(v[N - 1] / std::sqrt(length_square));
+
+                sum += cosine * f(std::acos(cosine));
+                sum_cosine += cosine;
         }
 
-        static constexpr long double CONSTANT = SPHERE_UNIT_INTEGRAL_OVER_COSINE_INTEGRAL<N, long double>;
-        const long double computed = static_cast<long double>(count) / sum;
-        const long double relative_error =
-                std::abs(computed - CONSTANT) / std::max(std::abs(computed), std::abs(CONSTANT));
+        const T computed = sum / sum_cosine;
 
-        std::ostringstream oss;
-        oss << std::fixed;
-        oss << std::setprecision(Limits<long double>::max_digits10());
-        oss << "N = " << std::setw(2) << N << ", computed = " << computed << ", constant = " << CONSTANT;
-        oss << ", relative error = ";
-        oss << std::setprecision(7) << relative_error;
-        LOG(oss.str());
+        const T average = sphere_cosine_weighted_average<N, T>(f, COUNT);
 
-        if (!(relative_error <= precision))
+        const T relative_error = std::abs(computed - average) / std::max(std::abs(computed), std::abs(average));
+        if (!(relative_error <= PRECISION))
         {
-                error("Sphere integral error: " + oss.str());
+                std::ostringstream oss;
+                oss << std::scientific;
+                oss << std::setprecision(Limits<T>::max_digits10());
+                oss << "N = " << N << ", computed = " << computed << ", average = " << average;
+                oss << ", relative error = " << relative_error;
+                error("Cosine-weighted average error: " + oss.str());
         }
-}
-
-template <typename T, unsigned... I>
-void test_cosine(const int count, const T& precision, std::integer_sequence<unsigned, I...>&&)
-{
-        (test_cosine<I + 2, T>(count, precision), ...);
 }
 
 template <typename T>
-void test_cosine(const int count, const T& precision)
+void test_cosine_weighted_average()
 {
-        const std::string name = std::string("Test cosine sphere <") + type_name<T>() + ">";
+        const std::string name = std::string("Cosine-weighted average <") + type_name<T>() + ">";
 
         LOG(name);
 
-        test_cosine<T>(count, precision, std::make_integer_sequence<unsigned, 10>());
+        test_cosine_weighted_average<2, T>();
+        test_cosine_weighted_average<3, T>();
+        test_cosine_weighted_average<4, T>();
+        test_cosine_weighted_average<5, T>();
 
         LOG(name + " passed");
 }
 
 //
 
-void test_sphere_integral_small()
+template <unsigned N, typename T>
+void test_cosine()
+{
+        static_assert(std::is_floating_point_v<T>);
+
+        constexpr int SAMPLE_COUNT = 100'000;
+        constexpr T PRECISION = 1e-2;
+
+        std::mt19937_64 engine = create_engine<std::mt19937_64>();
+
+        long double sum = 0;
+        for (int i = 0; i < SAMPLE_COUNT; ++i)
+        {
+                Vector<N, T> v;
+                T length_square;
+                sampling::uniform_in_sphere(engine, v, length_square);
+
+                // dot(v.normalized(), (0, ..., 0, 1))
+                const T cosine = v[N - 1] / std::sqrt(length_square);
+
+                sum += std::abs(cosine);
+        }
+
+        static constexpr long double CONSTANT = SPHERE_UNIT_INTEGRAL_OVER_COSINE_INTEGRAL<N, long double>;
+        const long double computed = static_cast<long double>(SAMPLE_COUNT) / sum;
+        const long double relative_error =
+                std::abs(computed - CONSTANT) / std::max(std::abs(computed), std::abs(CONSTANT));
+
+        if (!(relative_error <= PRECISION))
+        {
+                std::ostringstream oss;
+                oss << std::fixed;
+                oss << std::setprecision(Limits<long double>::max_digits10());
+                oss << "N = " << std::setw(2) << N << ", computed = " << computed << ", constant = " << CONSTANT;
+                oss << ", relative error = ";
+                oss << std::setprecision(7) << relative_error;
+                error("Sphere integral error: " + oss.str());
+        }
+}
+
+template <typename T>
+void test_cosine()
+{
+        const std::string name = std::string("Test cosine sphere <") + type_name<T>() + ">";
+
+        LOG(name);
+
+        test_cosine<2, T>();
+        test_cosine<3, T>();
+        test_cosine<4, T>();
+        test_cosine<5, T>();
+
+        LOG(name + " passed");
+}
+
+//
+
+void test_sphere_integral()
 {
         test_integrate_power_cosine<float>(1e-3);
         test_integrate_power_cosine<double>(1e-12);
@@ -282,16 +347,14 @@ void test_sphere_integral_small()
         compare_with_gamma<float>(1e-3);
         compare_with_gamma<double>(1e-12);
         compare_with_gamma<long double>(1e-15);
+
+        test_cosine_weighted_average<float>();
+        test_cosine_weighted_average<double>();
+
+        test_cosine<float>();
+        test_cosine<double>();
 }
 
-void test_sphere_integral_large()
-{
-        test_cosine<float>(10'000'000, 1e-3);
-        LOG("");
-        test_cosine<double>(10'000'000, 1e-3);
-}
-
-TEST_SMALL("Sphere Integral", test_sphere_integral_small)
-TEST_LARGE("Sphere Integral", test_sphere_integral_large)
+TEST_SMALL("Sphere Integral", test_sphere_integral)
 }
 }
