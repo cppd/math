@@ -152,14 +152,16 @@ void test_erf_inv(const std::type_identity_t<T>& arg, const std::type_identity_t
                 }
                 else
                 {
-                        T p = precision;
-
-                        if (erf > 1 - 100 * Limits<T>::epsilon() || erf < -1 + 100 * Limits<T>::epsilon())
+                        const T p = [&]
                         {
-                                p *= 10;
-                        }
+                                if (erf > 1 - 100 * Limits<T>::epsilon() || erf < -1 + 100 * Limits<T>::epsilon())
+                                {
+                                        return precision * 10;
+                                }
+                                return precision;
+                        }();
 
-                        T e = std::abs((arg - inverse) / arg);
+                        const T e = std::abs((arg - inverse) / arg);
                         if (!(e < p))
                         {
                                 error("Relative erf_inv error " + to_string(e) + " is greater than " + to_string(p));
@@ -218,8 +220,8 @@ void test_erf_inv_array(const std::type_identity_t<T>& precision)
 
         for (const std::array<T, 2>& v : INVERSE_ERF<T>)
         {
-                T e1 = std::abs((erf_inv(v[0]) - v[1]) / v[1]);
-                T e2 = std::abs((erf_inv(-v[0]) - (-v[1])) / v[1]);
+                const T e1 = std::abs((erf_inv(v[0]) - v[1]) / v[1]);
+                const T e2 = std::abs((erf_inv(-v[0]) - (-v[1])) / v[1]);
                 if (!(e1 < precision && e2 < precision))
                 {
                         error("Relative erf_inv error e1 = " + to_string(e1) + " e2 = " + to_string(e2)

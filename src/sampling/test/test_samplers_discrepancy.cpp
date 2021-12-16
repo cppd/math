@@ -88,7 +88,7 @@ T test_discrepancy(
 }
 
 template <std::size_t N, typename T>
-T test_discrepancy_stratified_jittered_type(const unsigned sample_count, const std::type_identity_t<T> max_discrepancy)
+T test_stratified_jittered(const unsigned sample_count, const std::type_identity_t<T> max_discrepancy)
 {
         std::mt19937_64 engine = create_engine<std::mt19937_64>();
 
@@ -112,7 +112,7 @@ T test_discrepancy_stratified_jittered_type(const unsigned sample_count, const s
 }
 
 template <std::size_t N, typename T>
-T test_discrepancy_latin_hypercube_type(const unsigned sample_count, const std::type_identity_t<T> max_discrepancy)
+T test_latin_hypercube(const unsigned sample_count, const std::type_identity_t<T> max_discrepancy)
 {
         std::mt19937_64 engine = create_engine<std::mt19937_64>();
 
@@ -136,7 +136,7 @@ T test_discrepancy_latin_hypercube_type(const unsigned sample_count, const std::
 }
 
 template <std::size_t N, typename T>
-T test_discrepancy_halton_type(const int sample_count, const std::type_identity_t<T> max_discrepancy)
+T test_halton(const int sample_count, const std::type_identity_t<T> max_discrepancy)
 {
         std::mt19937_64 engine = create_engine<std::mt19937_64>();
 
@@ -154,26 +154,26 @@ T test_discrepancy_halton_type(const int sample_count, const std::type_identity_
 }
 
 template <std::size_t N>
-double test_discrepancy_stratified_jittered(const int sample_count, const double max_discrepancy)
+double test_stratified_jittered(const int sample_count, const double max_discrepancy)
 {
-        double f = test_discrepancy_stratified_jittered_type<N, float>(sample_count, max_discrepancy);
-        double d = test_discrepancy_stratified_jittered_type<N, double>(sample_count, max_discrepancy);
+        const double f = test_stratified_jittered<N, float>(sample_count, max_discrepancy);
+        const double d = test_stratified_jittered<N, double>(sample_count, max_discrepancy);
         return std::max(f, d);
 }
 
 template <std::size_t N>
-double test_discrepancy_latin_hypercube(const int sample_count, const double max_discrepancy)
+double test_latin_hypercube(const int sample_count, const double max_discrepancy)
 {
-        double f = test_discrepancy_latin_hypercube_type<N, float>(sample_count, max_discrepancy);
-        double d = test_discrepancy_latin_hypercube_type<N, double>(sample_count, max_discrepancy);
+        const double f = test_latin_hypercube<N, float>(sample_count, max_discrepancy);
+        const double d = test_latin_hypercube<N, double>(sample_count, max_discrepancy);
         return std::max(f, d);
 }
 
 template <std::size_t N>
-double test_discrepancy_halton(const int sample_count, const double max_discrepancy)
+double test_halton(const int sample_count, const double max_discrepancy)
 {
-        double f = test_discrepancy_halton_type<N, float>(sample_count, max_discrepancy);
-        double d = test_discrepancy_halton_type<N, double>(sample_count, max_discrepancy);
+        const double f = test_halton<N, float>(sample_count, max_discrepancy);
+        const double d = test_halton<N, double>(sample_count, max_discrepancy);
         return std::max(f, d);
 }
 
@@ -184,25 +184,25 @@ void test_sampler_discrepancy()
                 constexpr unsigned N = 2;
                 constexpr int SAMPLE_COUNT = power<N>(10);
 
-                test_discrepancy_stratified_jittered<N>(SAMPLE_COUNT, 0.15);
-                test_discrepancy_latin_hypercube<N>(SAMPLE_COUNT, 0.15);
-                test_discrepancy_halton<N>(SAMPLE_COUNT, 0.06);
+                test_stratified_jittered<N>(SAMPLE_COUNT, 0.15);
+                test_latin_hypercube<N>(SAMPLE_COUNT, 0.15);
+                test_halton<N>(SAMPLE_COUNT, 0.06);
         }
         {
                 constexpr unsigned N = 3;
                 constexpr int SAMPLE_COUNT = power<N>(10);
 
-                test_discrepancy_stratified_jittered<N>(SAMPLE_COUNT, 0.048);
-                test_discrepancy_latin_hypercube<N>(SAMPLE_COUNT, 0.048);
-                test_discrepancy_halton<N>(SAMPLE_COUNT, 0.016);
+                test_stratified_jittered<N>(SAMPLE_COUNT, 0.048);
+                test_latin_hypercube<N>(SAMPLE_COUNT, 0.048);
+                test_halton<N>(SAMPLE_COUNT, 0.016);
         }
         {
                 constexpr unsigned N = 4;
                 constexpr int SAMPLE_COUNT = power<N>(10);
 
-                test_discrepancy_stratified_jittered<N>(SAMPLE_COUNT, 0.014);
-                test_discrepancy_latin_hypercube<N>(SAMPLE_COUNT, 0.014);
-                test_discrepancy_halton<N>(SAMPLE_COUNT, 0.0027);
+                test_stratified_jittered<N>(SAMPLE_COUNT, 0.014);
+                test_latin_hypercube<N>(SAMPLE_COUNT, 0.014);
+                test_halton<N>(SAMPLE_COUNT, 0.0027);
         }
         LOG("Test sampler discrepancy passed");
 }

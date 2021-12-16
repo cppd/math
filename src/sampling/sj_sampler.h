@@ -54,12 +54,12 @@ class StratifiedJitteredSampler
 
                 const double v = std::pow(sample_count, 1.0 / N);
 
-                if (unsigned v_floor = std::floor(v); power<N>(v_floor) >= static_cast<unsigned>(sample_count))
+                if (const unsigned v_floor = std::floor(v); power<N>(v_floor) >= static_cast<unsigned>(sample_count))
                 {
                         return v_floor;
                 }
 
-                if (unsigned v_ceil = std::ceil(v); power<N>(v_ceil) >= static_cast<unsigned>(sample_count))
+                if (const unsigned v_ceil = std::ceil(v); power<N>(v_ceil) >= static_cast<unsigned>(sample_count))
                 {
                         return v_ceil;
                 }

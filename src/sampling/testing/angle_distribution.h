@@ -82,11 +82,10 @@ class AngleDistribution
                 const Vector<N, T>& normal,
                 const RandomVector& random_vector)
         {
-                Vector<N, T> v = random_vector(random_engine).normalized();
-                T cosine = dot(v, normal);
-                cosine = std::clamp(cosine, T(-1), T(1));
-                T angle = std::acos(cosine);
-                int bucket = angle * BUCKETS_PER_RADIAN;
+                const Vector<N, T> v = random_vector(random_engine).normalized();
+                const T cosine = std::clamp(dot(v, normal), T(-1), T(1));
+                const T angle = std::acos(cosine);
+                const int bucket = angle * BUCKETS_PER_RADIAN;
                 return std::clamp(bucket, 0, BUCKET_COUNT - 1);
         }
 

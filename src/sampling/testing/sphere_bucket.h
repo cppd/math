@@ -118,6 +118,7 @@ template <std::size_t N, typename T>
 void check_bucket_sizes(const std::vector<SphereBucket<N, T>>& buckets)
 {
         ASSERT(!buckets.empty());
+
         long long min = Limits<long long>::max();
         long long max = Limits<long long>::lowest();
         for (const SphereBucket<N, T>& bucket : buckets)
@@ -125,11 +126,13 @@ void check_bucket_sizes(const std::vector<SphereBucket<N, T>>& buckets)
                 min = std::min(min, bucket.uniform_count());
                 max = std::max(max, bucket.uniform_count());
         }
-        long long maximum_max_min_ratio = N < 5 ? 3 : 10;
-        if (max > 0 && min > 0 && max < maximum_max_min_ratio * min)
+
+        constexpr long long MAXIMUM_MAX_MIN_RATIO = N < 5 ? 3 : 10;
+        if (max > 0 && min > 0 && max < MAXIMUM_MAX_MIN_RATIO * min)
         {
                 return;
         }
+
         std::ostringstream oss;
         oss << "Buckets max/min is too large" << '\n';
         oss << "max = " << max << '\n';
