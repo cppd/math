@@ -165,14 +165,14 @@ public:
         {
                 for (std::size_t i = 0; i < N; ++i)
                 {
-                        T c1 = data_[i];
-                        T c2 = c.data_[i];
+                        const T c1 = data_[i];
+                        const T c2 = c.data_[i];
                         if (c1 == c2)
                         {
                                 continue;
                         }
-                        T abs = std::abs(c1 - c2);
-                        T max = std::max(std::abs(c1), std::abs(c2));
+                        const T abs = std::abs(c1 - c2);
+                        const T max = std::max(std::abs(c1), std::abs(c2));
                         if (!(abs / max <= relative_error))
                         {
                                 return false;
@@ -185,13 +185,13 @@ public:
         {
                 for (std::size_t i = 0; i < N; ++i)
                 {
-                        T c1 = data_[i];
-                        T c2 = c.data_[i];
+                        const T c1 = data_[i];
+                        const T c2 = c.data_[i];
                         if (c1 == c2)
                         {
                                 continue;
                         }
-                        T abs = std::abs(c1 - c2);
+                        const T abs = std::abs(c1 - c2);
                         if (!(abs <= absolute_error))
                         {
                                 return false;
@@ -204,13 +204,13 @@ public:
         {
                 for (std::size_t i = 0; i < N; ++i)
                 {
-                        T c1 = data_[i];
-                        T c2 = c.data_[i];
+                        const T c1 = data_[i];
+                        const T c2 = c.data_[i];
                         if (c1 <= c2)
                         {
                                 continue;
                         }
-                        T max = std::max(std::abs(c1), std::abs(c2));
+                        const T max = std::max(std::abs(c1), std::abs(c2));
                         if (!(std::abs(c1 - c2) / max < relative_error))
                         {
                                 return false;

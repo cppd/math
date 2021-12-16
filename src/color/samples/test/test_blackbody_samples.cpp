@@ -86,7 +86,7 @@ void compare_a(const double t, const int min, const int max, const unsigned coun
         }
 }
 
-void check_equal_to_a(double t, int min, int max, unsigned count)
+void check_equal_to_a(const double t, const int min, const int max, const unsigned count)
 {
         try
         {
@@ -98,7 +98,7 @@ void check_equal_to_a(double t, int min, int max, unsigned count)
         }
 }
 
-void check_not_equal_to_a(double t, int min, int max, unsigned count)
+void check_not_equal_to_a(const double t, const int min, const int max, const unsigned count)
 {
         try
         {
@@ -147,7 +147,7 @@ void test_blackbody()
         constexpr int TO = 1000;
         constexpr int COUNT = 7;
 
-        const auto create_samples = [&](double t)
+        const auto create_samples = [&](const double t)
         {
                 std::vector<double> samples = blackbody_samples(t, FROM, TO, COUNT);
                 if (samples.size() != static_cast<std::size_t>(COUNT))
@@ -157,7 +157,7 @@ void test_blackbody()
                 return samples;
         };
 
-        const auto check = [](double a, double b)
+        const auto check = [](const double a, const double b)
         {
                 if (a == b)
                 {

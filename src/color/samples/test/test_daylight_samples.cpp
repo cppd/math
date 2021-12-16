@@ -110,7 +110,7 @@ void compare_d65(const double cct, const int min, const int max, const unsigned 
         }
 }
 
-void check_equal_to_d65(double cct, int min, int max, unsigned count)
+void check_equal_to_d65(const double cct, const int min, const int max, const unsigned count)
 {
         try
         {
@@ -122,7 +122,7 @@ void check_equal_to_d65(double cct, int min, int max, unsigned count)
         }
 }
 
-void check_not_equal_to_d65(double cct, int min, int max, unsigned count)
+void check_not_equal_to_d65(const double cct, const int min, const int max, const unsigned count)
 {
         try
         {
