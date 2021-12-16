@@ -101,7 +101,7 @@ on the 3-torus T<sup>3</sup> (S<sup>1</sup>×S<sup>1</sup>×S<sup>1</sup>).
   * 4-parallelotope hierarchy.
   * 4-dimensional microfacet BRDF.
   * 3-ball light source.
-  * 4D soft shadows.
+  * 4-dimensional soft shadows.
   * Parallel projection onto 3D screen.
 
 Volumetric rendering
