@@ -21,6 +21,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <src/com/constant.h>
 #include <src/com/exponent.h>
+#include <src/numerical/integrate.h>
 
 #include <cmath>
 #include <numeric>
@@ -140,6 +141,25 @@ inline constexpr T SPHERE_INTEGRATE_COSINE_FACTOR_OVER_HEMISPHERE = []
         }
         return 2.0L;
 }();
+
+/*
+Assuming[n>=2,Integrate[(Sin[x]^(n-2))*Cos[x],{x,0,Pi/2}]]
+1 / (n - 1)
+*/
+template <unsigned N, typename T, typename F>
+T sphere_cosine_weighted_average(const F& f, const int count)
+{
+        static_assert(N >= 2);
+        static_assert(std::is_floating_point_v<T>);
+        static_assert(std::is_same_v<T, decltype(f(T()))>);
+
+        const auto function = [&](const T v)
+        {
+                return power<N - 2>(std::sin(v)) * std::max(T(0), std::cos(v)) * f(v);
+        };
+
+        return (N - 1) * numerical::integrate(function, T(0), PI<T> / 2, count);
+}
 
 /*
 hemisphereArea[n_]:=Power[\[Pi],n/2]/Gamma[n/2];
