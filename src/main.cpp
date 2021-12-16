@@ -76,7 +76,7 @@ namespace
 }
 }
 
-int main(int argc, char** argv)
+int main(const int argc, char** const argv)
 {
         std::set_terminate(terminate_handler);
 

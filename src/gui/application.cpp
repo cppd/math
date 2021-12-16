@@ -58,7 +58,7 @@ int run_application(int argc, char** const argv)
 {
         ApplicationMessage application_message;
 
-        Application a(argc, argv);
+        Application a(&argc, argv);
 
         MessageEventsObserver message_observer(
                 [](const MessageEvent& event)

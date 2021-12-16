@@ -32,7 +32,7 @@ private:
         bool notify(QObject* receiver, QEvent* event) noexcept override;
 
 public:
-        Application(int& argc, char** argv);
+        Application(int* argc, char** argv);
         ~Application() override;
 
         Application(const Application&) = delete;
