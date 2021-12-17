@@ -18,15 +18,11 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #pragma once
 
 #include <src/com/error.h>
-#include <src/com/global_index.h>
-#include <src/com/interpolation.h>
-#include <src/com/print.h>
 #include <src/image/conversion.h>
 #include <src/image/image.h>
+#include <src/numerical/interpolation.h>
 #include <src/numerical/vec.h>
 
-#include <algorithm>
-#include <array>
 #include <vector>
 
 namespace ns::painter
@@ -34,113 +30,42 @@ namespace ns::painter
 template <std::size_t N>
 class MeshTexture
 {
-        enum class Wrap
+        static std::vector<Vector<3, float>> to_rgb32(const image::Image<N>& image)
         {
-                CLAMP_TO_EDGE,
-                REPEATE
-        };
-
-        static constexpr Wrap WRAP = Wrap::CLAMP_TO_EDGE;
-
-        std::vector<Vector<3, float>> rgb_data_;
-        std::array<int, N> size_;
-        std::array<int, N> max_;
-        GlobalIndex<N, long long> global_index_;
-
-        void resize(const std::array<int, N>& size)
-        {
-                if (!std::all_of(
-                            size.cbegin(), size.cend(),
-                            [](int v)
-                            {
-                                    return v > 0;
-                            }))
-                {
-                        error("Error image size " + to_string(size));
-                }
-
-                size_ = size;
-
-                for (unsigned i = 0; i < N; ++i)
-                {
-                        max_[i] = size_[i] - 1;
-                }
-
-                global_index_ = decltype(global_index_)(size_);
-
-                rgb_data_.clear();
-                rgb_data_.shrink_to_fit();
-                rgb_data_.resize(global_index_.count());
-        }
-
-public:
-        explicit MeshTexture(const image::Image<N>& image)
-        {
-                resize(image.size);
+                std::vector<Vector<3, float>> pixels(
+                        (image.pixels.size() / format_pixel_size_in_bytes(image.color_format))
+                        * format_pixel_size_in_bytes(image::ColorFormat::R32G32B32));
 
                 image::format_conversion(
                         image.color_format, image.pixels, image::ColorFormat::R32G32B32,
-                        std::as_writable_bytes(std::span(rgb_data_.data(), rgb_data_.size())));
+                        std::as_writable_bytes(std::span(pixels.data(), pixels.size())));
 
-                for (Vector<3, float>& c : rgb_data_)
+                for (Vector<3, float>& c : pixels)
                 {
                         if (!is_finite(c))
                         {
                                 error("Not finite color " + to_string(c) + " in texture");
                         }
+
                         c[0] = std::clamp<float>(c[0], 0, 1);
                         c[1] = std::clamp<float>(c[1], 0, 1);
                         c[2] = std::clamp<float>(c[2], 0, 1);
                 }
+
+                return pixels;
+        }
+
+        Interpolation<N, Vector<3, float>, float> pixels_;
+
+public:
+        explicit MeshTexture(const image::Image<N>& image) : pixels_(image.size, to_rgb32(image))
+        {
         }
 
         template <typename T>
         Vector<3, float> color(const Vector<N, T>& p) const
         {
-                // Vulkan: Texel Coordinate Systems, Wrapping Operation.
-
-                std::array<int, N> x0;
-                std::array<int, N> x1;
-                std::array<float, N> x;
-
-                for (unsigned i = 0; i < N; ++i)
-                {
-                        T v = p[i] * size_[i] - T(0.5);
-                        T floor = std::floor(v);
-
-                        x[i] = v - floor;
-                        x0[i] = floor;
-                        x1[i] = x0[i] + 1;
-
-                        static_assert(WRAP == Wrap::CLAMP_TO_EDGE || WRAP == Wrap::REPEATE);
-                        if constexpr (WRAP == Wrap::CLAMP_TO_EDGE)
-                        {
-                                x0[i] = std::clamp(x0[i], 0, max_[i]);
-                                x1[i] = std::clamp(x1[i], 0, max_[i]);
-                        }
-                        else
-                        {
-                                x0[i] = x0[i] % size_[i];
-                                x1[i] = x1[i] % size_[i];
-                        }
-                }
-
-                std::array<Vector<3, float>, (1 << N)> pixels;
-
-                for (unsigned i = 0; i < pixels.size(); ++i)
-                {
-                        long long index = 0;
-                        for (unsigned n = 0; n < N; ++n)
-                        {
-                                int coordinate = ((1 << n) & i) ? x1[n] : x0[n];
-                                index += global_index_.stride(n) * coordinate;
-                        }
-                        pixels[i] = rgb_data_[index];
-                }
-
-                Vector<3, float> rgb = interpolation(pixels, x);
-
-                return rgb;
+                return pixels_.compute(p);
         }
 };
 }
