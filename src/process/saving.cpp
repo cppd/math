@@ -25,7 +25,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/gui/dialogs/file_dialog.h>
 #include <src/gui/dialogs/view_image.h>
 #include <src/image/depth.h>
-#include <src/image/file.h>
+#include <src/image/file_save.h>
 #include <src/image/max.h>
 #include <src/image/normalize.h>
 #include <src/model/mesh_utility.h>

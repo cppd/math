@@ -24,7 +24,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/com/file/path.h>
 #include <src/com/print.h>
 #include <src/com/string/ascii.h>
-#include <src/image/file.h>
+#include <src/image/file_load.h>
+#include <src/image/file_save.h>
 #include <src/image/flip.h>
 
 #include <cmath>

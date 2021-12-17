@@ -21,15 +21,9 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <array>
 #include <span>
-#include <string_view>
 
 namespace ns::image
 {
-[[nodiscard]] std::string_view file_extension();
-
-template <typename Path>
-void save(const Path& path, const ImageView<2>& image_view);
-
 struct Info final
 {
         std::array<int, 2> size;

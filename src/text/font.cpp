@@ -22,7 +22,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/com/container.h>
 #include <src/com/error.h>
 #include <src/com/file/path.h>
-#include <src/image/file.h>
+#include <src/image/file_save.h>
 
 #include <cmath>
 #include <fstream>

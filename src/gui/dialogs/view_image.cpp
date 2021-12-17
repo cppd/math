@@ -24,7 +24,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <src/com/file/path.h>
 #include <src/com/string/ascii.h>
-#include <src/image/file.h>
+#include <src/image/file_save.h>
 
 #include <algorithm>
 
@@ -176,7 +176,7 @@ void ViewImageDialog::on_select_path_clicked()
         const std::string caption = "File";
         dialog::FileFilter filter;
         filter.name = "Images";
-        filter.file_extensions.emplace_back(image::file_extension());
+        filter.file_extensions.emplace_back(image::save_file_extension());
         constexpr bool READ_ONLY = true;
 
         const std::string file_name =

@@ -26,7 +26,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/com/error.h>
 #include <src/com/file/path.h>
 #include <src/com/print.h>
-#include <src/image/file.h>
+#include <src/image/file_save.h>
 
 namespace ns::gui::dialog
 {
@@ -158,7 +158,7 @@ void PainterImageDialog::on_select_path_clicked()
                 const std::string caption = "File";
                 dialog::FileFilter filter;
                 filter.name = "Images";
-                filter.file_extensions.emplace_back(image::file_extension());
+                filter.file_extensions.emplace_back(image::save_file_extension());
                 const bool read_only = true;
                 path = dialog::save_file(caption, {filter}, read_only);
         }

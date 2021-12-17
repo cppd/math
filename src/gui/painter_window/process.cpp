@@ -25,7 +25,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/com/print.h>
 #include <src/image/conversion.h>
 #include <src/image/depth.h>
-#include <src/image/file.h>
+#include <src/image/file_save.h>
 #include <src/image/flip.h>
 #include <src/image/normalize.h>
 #include <src/model/volume_utility.h>
