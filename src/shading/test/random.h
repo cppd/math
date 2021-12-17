@@ -17,8 +17,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
-#include "brdf.h"
-
 #include <src/com/random/engine.h>
 #include <src/numerical/vec.h>
 #include <src/sampling/sphere_uniform.h>

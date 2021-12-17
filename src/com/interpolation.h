@@ -30,8 +30,8 @@ template <typename T>
 template <typename T, typename F>
 [[nodiscard]] constexpr T interpolation(const T& c00, const T& c01, const T& c10, const T& c11, const F& x, const F& y)
 {
-        T t0 = interpolation(c00, c01, x);
-        T t1 = interpolation(c10, c11, x);
+        const T t0 = interpolation(c00, c01, x);
+        const T t1 = interpolation(c10, c11, x);
         return interpolation(t0, t1, y);
 }
 
@@ -49,10 +49,10 @@ template <typename T, typename F>
         const F& y,
         const F& z)
 {
-        T t0 = interpolation(c000, c001, x);
-        T t1 = interpolation(c010, c011, x);
-        T t2 = interpolation(c100, c101, x);
-        T t3 = interpolation(c110, c111, x);
+        const T t0 = interpolation(c000, c001, x);
+        const T t1 = interpolation(c010, c011, x);
+        const T t2 = interpolation(c100, c101, x);
+        const T t3 = interpolation(c110, c111, x);
         return interpolation(t0, t1, t2, t3, y, z);
 }
 
@@ -67,28 +67,28 @@ template <std::size_t N, typename T, typename F>
         }
         else if constexpr (N == 2)
         {
-                T t0 = interpolation(data[0], data[1], p[0]);
-                T t1 = interpolation(data[2], data[3], p[0]);
+                const T t0 = interpolation(data[0], data[1], p[0]);
+                const T t1 = interpolation(data[2], data[3], p[0]);
                 return interpolation(t0, t1, p[1]);
         }
         else if constexpr (N == 3)
         {
-                T t0 = interpolation(data[0], data[1], p[0]);
-                T t1 = interpolation(data[2], data[3], p[0]);
-                T t2 = interpolation(data[4], data[5], p[0]);
-                T t3 = interpolation(data[6], data[7], p[0]);
+                const T t0 = interpolation(data[0], data[1], p[0]);
+                const T t1 = interpolation(data[2], data[3], p[0]);
+                const T t2 = interpolation(data[4], data[5], p[0]);
+                const T t3 = interpolation(data[6], data[7], p[0]);
                 return interpolation(t0, t1, t2, t3, p[1], p[2]);
         }
         else if constexpr (N == 4)
         {
-                T t0 = interpolation(data[0], data[1], p[0]);
-                T t1 = interpolation(data[2], data[3], p[0]);
-                T t2 = interpolation(data[4], data[5], p[0]);
-                T t3 = interpolation(data[6], data[7], p[0]);
-                T t4 = interpolation(data[8], data[9], p[0]);
-                T t5 = interpolation(data[10], data[11], p[0]);
-                T t6 = interpolation(data[12], data[13], p[0]);
-                T t7 = interpolation(data[14], data[15], p[0]);
+                const T t0 = interpolation(data[0], data[1], p[0]);
+                const T t1 = interpolation(data[2], data[3], p[0]);
+                const T t2 = interpolation(data[4], data[5], p[0]);
+                const T t3 = interpolation(data[6], data[7], p[0]);
+                const T t4 = interpolation(data[8], data[9], p[0]);
+                const T t5 = interpolation(data[10], data[11], p[0]);
+                const T t6 = interpolation(data[12], data[13], p[0]);
+                const T t7 = interpolation(data[14], data[15], p[0]);
                 return interpolation(t0, t1, t2, t3, t4, t5, t6, t7, p[1], p[2], p[3]);
         }
         else if constexpr (N >= 5)
