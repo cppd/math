@@ -70,20 +70,13 @@ Color directional_albedo_uniform_sampling(
                         const Color c = brdf.f(n, v, l);
                         if (!c.is_black())
                         {
-                                error("BRDF color is not black when dot(n,l) <= 0 " + to_string(c));
+                                error("BRDF color is not black when dot(n, l) <= 0 " + to_string(c));
                         }
                         continue;
                 }
 
                 ++i;
-
-                const Color c = brdf.f(n, v, l);
-                if (c.is_black())
-                {
-                        continue;
-                }
-
-                sum += c * (n_l / UNIFORM_ON_HEMISPHERE_PDF);
+                sum += brdf.f(n, v, l) * (n_l / UNIFORM_ON_HEMISPHERE_PDF);
         }
 
         return sum / sample_count;
@@ -109,24 +102,28 @@ Color directional_albedo_importance_sampling(
         while (i < sample_count)
         {
                 const Sample<N, T, Color> sample = brdf.sample_f(random_engine, n, v);
-                const T n_l = dot(n, sample.l);
 
+                if (!std::isfinite(sample.pdf))
+                {
+                        error("Sample PDF " + to_string(sample.pdf) + " is not finite");
+                }
+
+                if (sample.pdf <= 0)
+                {
+                        continue;
+                }
+
+                const T n_l = dot(n, sample.l);
                 if (n_l <= 0)
                 {
                         if (!sample.brdf.is_black())
                         {
-                                error("BRDF color is not black when dot(n,l) <= 0 " + to_string(sample.brdf));
+                                error("BRDF color is not black when dot(n, l) <= 0 " + to_string(sample.brdf));
                         }
                         continue;
                 }
 
                 ++i;
-
-                if (sample.brdf.is_black() || sample.pdf <= 0)
-                {
-                        continue;
-                }
-
                 sum += sample.brdf * (n_l / sample.pdf);
         }
 
@@ -152,7 +149,12 @@ T directional_pdf_integral(
         for (long long i = 0; i < sample_count; ++i)
         {
                 const Vector<N, T> l = sampling::uniform_on_sphere<N, T>(random_engine);
-                sum += brdf.pdf(n, v, l);
+                const T pdf = brdf.pdf(n, v, l);
+                if (!std::isfinite(pdf))
+                {
+                        error("Sample PDF " + to_string(pdf) + " is not finite");
+                }
+                sum += pdf;
         }
 
         return sum / (sample_count * sampling::uniform_on_sphere_pdf<N, T>());
