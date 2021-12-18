@@ -19,41 +19,38 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "../objects.h"
 
+#include <src/image/format.h>
+
 #include <span>
+#include <vector>
 
 namespace ns::vulkan
 {
-void write_data_to_buffer(
-        VkDevice device,
-        VkPhysicalDevice physical_device,
-        const CommandPool& command_pool,
-        const Queue& queue,
-        VkBuffer buffer,
-        VkDeviceSize offset,
-        VkDeviceSize size,
-        const void* data);
-
-void staging_image_write(
+void write_pixels_to_image(
         VkDevice device,
         VkPhysicalDevice physical_device,
         const CommandPool& command_pool,
         const Queue& queue,
         VkImage image,
-        VkImageLayout old_image_layout,
-        VkImageLayout new_image_layout,
-        VkImageAspectFlags aspect_flag,
+        VkFormat format,
         VkExtent3D extent,
-        const std::span<const std::byte>& data);
+        VkImageAspectFlags aspect_flag,
+        VkImageLayout old_layout,
+        VkImageLayout new_layout,
+        image::ColorFormat color_format,
+        const std::span<const std::byte>& pixels);
 
-void staging_image_read(
+void read_pixels_from_image(
         VkDevice device,
         VkPhysicalDevice physical_device,
         const CommandPool& command_pool,
         const Queue& queue,
         VkImage image,
-        VkImageLayout old_image_layout,
-        VkImageLayout new_image_layout,
-        VkImageAspectFlags aspect_flag,
+        VkFormat format,
         VkExtent3D extent,
-        const std::span<std::byte>& data);
+        VkImageAspectFlags aspect_flag,
+        VkImageLayout old_layout,
+        VkImageLayout new_layout,
+        image::ColorFormat* color_format,
+        std::vector<std::byte>* pixels);
 }

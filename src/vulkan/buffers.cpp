@@ -24,6 +24,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "buffers/copy.h"
 #include "buffers/image.h"
+#include "buffers/image_copy.h"
 #include "buffers/query.h"
 
 #include <src/com/alg.h>
