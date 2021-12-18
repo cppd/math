@@ -110,7 +110,7 @@ Color diffuse_disney_ws(const Color& f0, const Color& rho_ss, const T roughness,
 //         return (c * K) * rho_ss;
 // }
 
-template <std::size_t N, typename T, typename Color>
+template <bool GGX_ONLY, std::size_t N, typename T, typename Color>
 Color f(const T metalness,
         const T roughness,
         const Color& surface_color,
@@ -118,7 +118,7 @@ Color f(const T metalness,
         const Vector<N, T>& v,
         const Vector<N, T>& l)
 {
-        Vector<N, T> h = (l + v).normalized();
+        const Vector<N, T> h = (l + v).normalized();
 
         const T n_l = dot(n, l);
         const T h_l = dot(h, l);
@@ -126,14 +126,19 @@ Color f(const T metalness,
         const T n_h = dot(n, h);
 
         static constexpr Color F0(0.05);
-        static constexpr Color BLACK(0);
         const Color f0 = interpolation(F0, surface_color, metalness);
+        const Color ggx = ggx_brdf<N>(roughness, f0, n_v, n_l, n_h, h_l);
+
+        if (GGX_ONLY)
+        {
+                return ggx;
+        }
+
+        static constexpr Color BLACK(0);
         const Color rho_ss = interpolation(surface_color, BLACK, metalness);
+        const Color diffuse = diffuse_disney_ws<N>(f0, rho_ss, roughness, n_l, n_v, h_l);
 
-        const Color spec = ggx_brdf<N>(roughness, f0, n_v, n_l, n_h, h_l);
-        const Color diff = diffuse_disney_ws<N>(f0, rho_ss, roughness, n_l, n_v, h_l);
-
-        return spec + diff;
+        return ggx + diffuse;
 }
 
 // template <std::size_t N, typename T, typename RandomEngine>
@@ -149,7 +154,7 @@ Color f(const T metalness,
 //         return {l, pdf};
 // }
 
-template <std::size_t N, typename T>
+template <bool GGX_ONLY, std::size_t N, typename T>
 T pdf_ggx_cosine(
         const T alpha,
         const Vector<N, T>& n,
@@ -157,15 +162,19 @@ T pdf_ggx_cosine(
         const Vector<N, T>& l,
         const Vector<N, T>& h)
 {
-        const T pdf_cosine = sampling::cosine_on_hemisphere_pdf<N>(dot(n, l));
         const T pdf_ggx = ggx_visible_normals_l_pdf<N>(dot(n, v), dot(n, h), dot(h, l), alpha);
 
-        const T pdf = T(0.5) * (pdf_cosine + pdf_ggx);
+        if (GGX_ONLY)
+        {
+                return pdf_ggx;
+        }
 
-        return pdf;
+        const T pdf_cosine = sampling::cosine_on_hemisphere_pdf<N>(dot(n, l));
+
+        return T(0.5) * (pdf_cosine + pdf_ggx);
 }
 
-template <std::size_t N, typename T, typename RandomEngine>
+template <bool GGX_ONLY, std::size_t N, typename T, typename RandomEngine>
 std::tuple<Vector<N, T>, T> sample_ggx_cosine(
         RandomEngine& random_engine,
         const T roughness,
@@ -181,20 +190,20 @@ std::tuple<Vector<N, T>, T> sample_ggx_cosine(
 
         Vector<N, T> l;
         Vector<N, T> h;
-        if (std::bernoulli_distribution(0.5)(random_engine))
-        {
-                l = sampling::cosine_on_hemisphere(random_engine, n);
-                ASSERT(l.is_unit());
-                h = (v + l).normalized();
-        }
-        else
+        if (GGX_ONLY || std::bernoulli_distribution(0.5)(random_engine))
         {
                 std::tie(h, l) = ggx_visible_normals_h_l(random_engine, n, v, alpha);
                 ASSERT(l.is_unit());
                 ASSERT(h.is_unit());
         }
+        else
+        {
+                l = sampling::cosine_on_hemisphere(random_engine, n);
+                ASSERT(l.is_unit());
+                h = (v + l).normalized();
+        }
 
-        const T pdf = pdf_ggx_cosine(alpha, n, v, l, h);
+        const T pdf = pdf_ggx_cosine<GGX_ONLY>(alpha, n, v, l, h);
 
         return {l, pdf};
 }
@@ -202,7 +211,7 @@ std::tuple<Vector<N, T>, T> sample_ggx_cosine(
 
 //
 
-template <std::size_t N, typename T, typename Color>
+template <bool GGX_ONLY = false, std::size_t N, typename T, typename Color>
 Color f(const T metalness,
         const T roughness,
         const Color& color,
@@ -227,10 +236,10 @@ Color f(const T metalness,
                 return Color(0);
         }
 
-        return impl::f(metalness, roughness, color, n, v, l);
+        return impl::f<GGX_ONLY>(metalness, roughness, color, n, v, l);
 }
 
-template <std::size_t N, typename T>
+template <bool GGX_ONLY = false, std::size_t N, typename T>
 T pdf(const T roughness, const Vector<N, T>& n, const Vector<N, T>& v, const Vector<N, T>& l)
 {
         static_assert(N >= 3);
@@ -247,10 +256,10 @@ T pdf(const T roughness, const Vector<N, T>& n, const Vector<N, T>& v, const Vec
 
         const T alpha = square(roughness);
 
-        return impl::pdf_ggx_cosine(alpha, n, v, l, (v + l).normalized());
+        return impl::pdf_ggx_cosine<GGX_ONLY>(alpha, n, v, l, (v + l).normalized());
 }
 
-template <std::size_t N, typename T, typename Color, typename RandomEngine>
+template <bool GGX_ONLY = false, std::size_t N, typename T, typename Color, typename RandomEngine>
 Sample<N, T, Color> sample_f(
         RandomEngine& random_engine,
         const T metalness,
@@ -262,21 +271,19 @@ Sample<N, T, Color> sample_f(
         static_assert(N >= 3);
         namespace impl = implementation;
 
-        static constexpr Sample<N, T, Color> BLACK(Vector<N, T>(0), 0, Color(0));
-
         ASSERT(n.is_unit());
         ASSERT(v.is_unit());
 
         if (dot(n, v) <= 0)
         {
-                return BLACK;
+                return {Vector<N, T>(), 0, Color(0)};
         }
 
-        const auto [l, pdf] = impl::sample_ggx_cosine(random_engine, roughness, n, v);
+        const auto [l, pdf] = impl::sample_ggx_cosine<GGX_ONLY>(random_engine, roughness, n, v);
 
         if (pdf <= 0)
         {
-                return BLACK;
+                return {Vector<N, T>(), 0, Color(0)};
         }
 
         ASSERT(l.is_unit());
@@ -286,6 +293,6 @@ Sample<N, T, Color> sample_f(
                 return {l, pdf, Color(0)};
         }
 
-        return {l, pdf, impl::f(metalness, roughness, color, n, v, l)};
+        return {l, pdf, impl::f<GGX_ONLY>(metalness, roughness, color, n, v, l)};
 }
 }
