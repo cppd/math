@@ -86,6 +86,7 @@ public:
         template <typename... P>
         explicit Parallelotope(const Vector<N, T>& org, const P&... vectors);
         Parallelotope(const Vector<N, T>& org, const std::array<Vector<N, T>, N>& vectors);
+        Parallelotope(const Vector<N, T>& org, const std::array<T, N>& vectors);
         Parallelotope(const Vector<N, T>& min, const Vector<N, T>& max);
 
         Constraints<N, T, 2 * N, 0> constraints() const;
@@ -137,6 +138,21 @@ template <std::size_t N, typename T>
 Parallelotope<N, T>::Parallelotope(const Vector<N, T>& org, const std::array<Vector<N, T>, N>& vectors)
 {
         set_data(org, vectors);
+}
+
+template <std::size_t N, typename T>
+Parallelotope<N, T>::Parallelotope(const Vector<N, T>& org, const std::array<T, N>& vectors)
+{
+        std::array<Vector<N, T>, N> v;
+        for (std::size_t i = 0; i < N; ++i)
+        {
+                for (std::size_t j = 0; j < N; ++j)
+                {
+                        v[i][j] = 0;
+                }
+                v[i][i] = vectors[i];
+        }
+        set_data(org, v);
 }
 
 template <std::size_t N, typename T>
