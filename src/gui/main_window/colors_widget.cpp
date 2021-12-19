@@ -26,9 +26,9 @@ namespace
 {
 constexpr QRgb BACKGROUND_COLOR = qRgb(75, 90, 105);
 constexpr QRgb WIREFRAME_COLOR = qRgb(255, 255, 255);
-constexpr QRgb CLIP_PLANE_COLOR = qRgb(250, 230, 150);
-constexpr QRgb NORMAL_COLOR_POSITIVE = qRgb(200, 200, 0);
-constexpr QRgb NORMAL_COLOR_NEGATIVE = qRgb(50, 150, 50);
+constexpr QRgb CLIP_PLANE_COLOR = qRgb(255, 225, 100);
+constexpr QRgb NORMAL_COLOR_POSITIVE = qRgb(70, 180, 120);
+constexpr QRgb NORMAL_COLOR_NEGATIVE = qRgb(70, 120, 180);
 constexpr QRgb DFT_BACKGROUND_COLOR = qRgb(0, 0, 50);
 constexpr QRgb DFT_COLOR = qRgb(150, 200, 250);
 }
