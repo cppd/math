@@ -68,11 +68,20 @@ std::array<std::string, 2> result_to_strings(const VkResult code)
         case VK_ERROR_FRAGMENTED_POOL:
                 return {"VK_ERROR_FRAGMENTED_POOL",
                         "A pool allocation has failed due to fragmentation of the pool’s memory"};
+        case VK_ERROR_UNKNOWN:
+                return {"VK_ERROR_UNKNOWN", "An unknown error has occurred."};
         case VK_ERROR_OUT_OF_POOL_MEMORY:
                 return {"VK_ERROR_OUT_OF_POOL_MEMORY", "A pool memory allocation has failed"};
         case VK_ERROR_INVALID_EXTERNAL_HANDLE:
                 return {"VK_ERROR_INVALID_EXTERNAL_HANDLE",
                         "An external handle is not a valid handle of the specified type"};
+        case VK_ERROR_FRAGMENTATION:
+                return {"VK_ERROR_FRAGMENTATION", "A descriptor pool creation has failed due to fragmentation"};
+        case VK_ERROR_INVALID_OPAQUE_CAPTURE_ADDRESS:
+                return {"VK_ERROR_INVALID_OPAQUE_CAPTURE_ADDRESS",
+                        "A buffer creation or memory allocation failed because"
+                        " the requested address is not available. A shader group handle assignment failed"
+                        " because the requested shader group handle information is no longer valid."};
         case VK_ERROR_SURFACE_LOST_KHR:
                 return {"VK_ERROR_SURFACE_LOST_KHR", "A surface is no longer available"};
         case VK_ERROR_NATIVE_WINDOW_IN_USE_KHR:
@@ -96,17 +105,10 @@ std::array<std::string, 2> result_to_strings(const VkResult code)
                 return {"VK_ERROR_VALIDATION_FAILED_EXT", ""};
         case VK_ERROR_INVALID_SHADER_NV:
                 return {"VK_ERROR_INVALID_SHADER_NV", "One or more shaders failed to compile or link"};
-        case VK_ERROR_FRAGMENTATION_EXT:
-                return {"VK_ERROR_FRAGMENTATION_EXT", "A descriptor pool creation has failed due to fragmentation"};
-        case VK_ERROR_NOT_PERMITTED_EXT:
-                return {"VK_ERROR_NOT_PERMITTED_EXT", ""};
-        case VK_ERROR_INVALID_OPAQUE_CAPTURE_ADDRESS:
-                return {"VK_ERROR_INVALID_OPAQUE_CAPTURE_ADDRESS",
-                        "A buffer creation or memory allocation failed because"
-                        " the requested address is not available. A shader group handle assignment failed"
-                        " because the requested shader group handle information is no longer valid."};
         case VK_ERROR_INVALID_DRM_FORMAT_MODIFIER_PLANE_LAYOUT_EXT:
                 return {"VK_ERROR_INVALID_DRM_FORMAT_MODIFIER_PLANE_LAYOUT_EXT", ""};
+        case VK_ERROR_NOT_PERMITTED_EXT:
+                return {"VK_ERROR_NOT_PERMITTED_EXT", ""};
         case VK_ERROR_FULL_SCREEN_EXCLUSIVE_MODE_LOST_EXT:
                 return {"VK_ERROR_FULL_SCREEN_EXCLUSIVE_MODE_LOST_EXT",
                         "An operation on a swapchain created with"
@@ -130,8 +132,6 @@ std::array<std::string, 2> result_to_strings(const VkResult code)
                 return {"VK_PIPELINE_COMPILE_REQUIRED_EXT",
                         "A requested pipeline creation would have required compilation,"
                         " but the application requested compilation to not be performed."};
-        case VK_ERROR_UNKNOWN:
-                return {"VK_ERROR_UNKNOWN", "An unknown error has occurred."};
         }
 #pragma GCC diagnostic pop
 

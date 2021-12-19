@@ -20,6 +20,10 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/com/enum.h>
 #include <src/com/print.h>
 
+#define CASE(format) \
+        case format: \
+                return #format;
+
 namespace ns::vulkan
 {
 std::string color_space_to_string(const VkColorSpaceKHR color_space)
@@ -28,38 +32,22 @@ std::string color_space_to_string(const VkColorSpaceKHR color_space)
 #pragma GCC diagnostic ignored "-Wswitch"
         switch (color_space)
         {
-        case VK_COLOR_SPACE_SRGB_NONLINEAR_KHR:
-                return "VK_COLOR_SPACE_SRGB_NONLINEAR_KHR";
-        case VK_COLOR_SPACE_DISPLAY_P3_NONLINEAR_EXT:
-                return "VK_COLOR_SPACE_DISPLAY_P3_NONLINEAR_EXT";
-        case VK_COLOR_SPACE_EXTENDED_SRGB_LINEAR_EXT:
-                return "VK_COLOR_SPACE_EXTENDED_SRGB_LINEAR_EXT";
-        case VK_COLOR_SPACE_DCI_P3_LINEAR_EXT:
-                return "VK_COLOR_SPACE_DCI_P3_LINEAR_EXT";
-        case VK_COLOR_SPACE_DCI_P3_NONLINEAR_EXT:
-                return "VK_COLOR_SPACE_DCI_P3_NONLINEAR_EXT";
-        case VK_COLOR_SPACE_BT709_LINEAR_EXT:
-                return "VK_COLOR_SPACE_BT709_LINEAR_EXT";
-        case VK_COLOR_SPACE_BT709_NONLINEAR_EXT:
-                return "VK_COLOR_SPACE_BT709_NONLINEAR_EXT";
-        case VK_COLOR_SPACE_BT2020_LINEAR_EXT:
-                return "VK_COLOR_SPACE_BT2020_LINEAR_EXT";
-        case VK_COLOR_SPACE_HDR10_ST2084_EXT:
-                return "VK_COLOR_SPACE_HDR10_ST2084_EXT";
-        case VK_COLOR_SPACE_DOLBYVISION_EXT:
-                return "VK_COLOR_SPACE_DOLBYVISION_EXT";
-        case VK_COLOR_SPACE_HDR10_HLG_EXT:
-                return "VK_COLOR_SPACE_HDR10_HLG_EXT";
-        case VK_COLOR_SPACE_ADOBERGB_LINEAR_EXT:
-                return "VK_COLOR_SPACE_ADOBERGB_LINEAR_EXT";
-        case VK_COLOR_SPACE_ADOBERGB_NONLINEAR_EXT:
-                return "VK_COLOR_SPACE_ADOBERGB_NONLINEAR_EXT";
-        case VK_COLOR_SPACE_PASS_THROUGH_EXT:
-                return "VK_COLOR_SPACE_PASS_THROUGH_EXT";
-        case VK_COLOR_SPACE_EXTENDED_SRGB_NONLINEAR_EXT:
-                return "VK_COLOR_SPACE_EXTENDED_SRGB_NONLINEAR_EXT";
-        case VK_COLOR_SPACE_DISPLAY_NATIVE_AMD:
-                return "VK_COLOR_SPACE_DISPLAY_NATIVE_AMD";
+                CASE(VK_COLOR_SPACE_SRGB_NONLINEAR_KHR)
+                CASE(VK_COLOR_SPACE_DISPLAY_P3_NONLINEAR_EXT)
+                CASE(VK_COLOR_SPACE_EXTENDED_SRGB_LINEAR_EXT)
+                CASE(VK_COLOR_SPACE_DISPLAY_P3_LINEAR_EXT)
+                CASE(VK_COLOR_SPACE_DCI_P3_NONLINEAR_EXT)
+                CASE(VK_COLOR_SPACE_BT709_LINEAR_EXT)
+                CASE(VK_COLOR_SPACE_BT709_NONLINEAR_EXT)
+                CASE(VK_COLOR_SPACE_BT2020_LINEAR_EXT)
+                CASE(VK_COLOR_SPACE_HDR10_ST2084_EXT)
+                CASE(VK_COLOR_SPACE_DOLBYVISION_EXT)
+                CASE(VK_COLOR_SPACE_HDR10_HLG_EXT)
+                CASE(VK_COLOR_SPACE_ADOBERGB_LINEAR_EXT)
+                CASE(VK_COLOR_SPACE_ADOBERGB_NONLINEAR_EXT)
+                CASE(VK_COLOR_SPACE_PASS_THROUGH_EXT)
+                CASE(VK_COLOR_SPACE_EXTENDED_SRGB_NONLINEAR_EXT)
+                CASE(VK_COLOR_SPACE_DISPLAY_NATIVE_AMD)
         }
 #pragma GCC diagnostic pop
 

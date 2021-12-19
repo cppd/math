@@ -20,6 +20,10 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/com/enum.h>
 #include <src/com/print.h>
 
+#define CASE(format) \
+        case format: \
+                return #format;
+
 namespace ns::vulkan
 {
 std::string physical_device_type_to_string(const VkPhysicalDeviceType type)
@@ -28,16 +32,11 @@ std::string physical_device_type_to_string(const VkPhysicalDeviceType type)
 #pragma GCC diagnostic ignored "-Wswitch"
         switch (type)
         {
-        case VK_PHYSICAL_DEVICE_TYPE_OTHER:
-                return "Unknown";
-        case VK_PHYSICAL_DEVICE_TYPE_INTEGRATED_GPU:
-                return "Integrated GPU";
-        case VK_PHYSICAL_DEVICE_TYPE_DISCRETE_GPU:
-                return "Discrete GPU";
-        case VK_PHYSICAL_DEVICE_TYPE_VIRTUAL_GPU:
-                return "Virtual GPU";
-        case VK_PHYSICAL_DEVICE_TYPE_CPU:
-                return "CPU";
+                CASE(VK_PHYSICAL_DEVICE_TYPE_OTHER)
+                CASE(VK_PHYSICAL_DEVICE_TYPE_INTEGRATED_GPU)
+                CASE(VK_PHYSICAL_DEVICE_TYPE_DISCRETE_GPU)
+                CASE(VK_PHYSICAL_DEVICE_TYPE_VIRTUAL_GPU)
+                CASE(VK_PHYSICAL_DEVICE_TYPE_CPU)
         }
 #pragma GCC diagnostic pop
 

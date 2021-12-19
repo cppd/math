@@ -20,6 +20,10 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/com/enum.h>
 #include <src/com/print.h>
 
+#define CASE(format) \
+        case format: \
+                return #format;
+
 namespace ns::vulkan
 {
 std::string image_type_to_string(const VkImageType image_type)
@@ -28,12 +32,9 @@ std::string image_type_to_string(const VkImageType image_type)
 #pragma GCC diagnostic ignored "-Wswitch"
         switch (image_type)
         {
-        case VK_IMAGE_TYPE_1D:
-                return "VK_IMAGE_TYPE_1D";
-        case VK_IMAGE_TYPE_2D:
-                return "VK_IMAGE_TYPE_2D";
-        case VK_IMAGE_TYPE_3D:
-                return "VK_IMAGE_TYPE_3D";
+                CASE(VK_IMAGE_TYPE_1D)
+                CASE(VK_IMAGE_TYPE_2D)
+                CASE(VK_IMAGE_TYPE_3D)
         }
 #pragma GCC diagnostic pop
 
