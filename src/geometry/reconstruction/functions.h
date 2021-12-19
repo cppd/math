@@ -20,7 +20,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/com/exponent.h>
 #include <src/com/type/limit.h>
 #include <src/numerical/quadratic.h>
-#include <src/numerical/vec.h>
+#include <src/numerical/vector.h>
 
 #include <cmath>
 #include <optional>

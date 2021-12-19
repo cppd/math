@@ -25,7 +25,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/com/type/limit.h>
 #include <src/geometry/shapes/sphere_area.h>
 #include <src/numerical/integrate.h>
-#include <src/numerical/vec.h>
+#include <src/numerical/vector.h>
 #include <src/progress/progress.h>
 
 #include <algorithm>

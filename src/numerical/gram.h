@@ -18,7 +18,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #pragma once
 
 #include "matrix.h"
-#include "vec.h"
+#include "vector.h"
 
 namespace ns::numerical
 {

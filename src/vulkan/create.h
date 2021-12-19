@@ -19,7 +19,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "objects.h"
 
-#include <src/numerical/vec.h>
+#include <src/numerical/vector.h>
 
 #include <string>
 #include <vector>

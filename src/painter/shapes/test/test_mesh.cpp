@@ -25,7 +25,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/com/random/engine.h>
 #include <src/com/type/name.h>
 #include <src/numerical/ray.h>
-#include <src/numerical/vec.h>
+#include <src/numerical/vector.h>
 #include <src/test/test.h>
 
 #include <random>

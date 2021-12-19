@@ -28,7 +28,7 @@ Elsevier, 2017.
 
 #include <src/com/type/limit.h>
 #include <src/numerical/ray.h>
-#include <src/numerical/vec.h>
+#include <src/numerical/vector.h>
 
 #include <array>
 #include <optional>

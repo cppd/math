@@ -30,7 +30,7 @@ Elsevier, 2017.
 
 #include <src/geometry/shapes/sphere_integral.h>
 #include <src/numerical/complement.h>
-#include <src/numerical/vec.h>
+#include <src/numerical/vector.h>
 
 #include <cmath>
 

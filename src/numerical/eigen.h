@@ -28,7 +28,7 @@ Cambridge University Press, 2013.
 
 #include "identity.h"
 #include "matrix.h"
-#include "vec.h"
+#include "vector.h"
 
 #include <src/com/type/limit.h>
 

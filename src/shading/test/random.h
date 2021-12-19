@@ -18,7 +18,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #pragma once
 
 #include <src/com/random/engine.h>
-#include <src/numerical/vec.h>
+#include <src/numerical/vector.h>
 #include <src/sampling/sphere_uniform.h>
 
 #include <random>

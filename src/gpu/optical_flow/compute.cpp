@@ -38,7 +38,7 @@ Packt Publishing, 2015.
 #include "shaders/grayscale.h"
 #include "shaders/sobel.h"
 
-#include <src/numerical/vec.h>
+#include <src/numerical/vector.h>
 #include <src/vulkan/error.h>
 #include <src/vulkan/queue.h>
 

@@ -18,7 +18,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #pragma once
 
 #include "gauss.h"
-#include "vec.h"
+#include "vector.h"
 
 #include <src/com/arrays.h>
 #include <src/com/type/concept.h>

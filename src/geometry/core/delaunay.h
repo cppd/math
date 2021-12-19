@@ -22,7 +22,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "voronoi.h"
 
 #include <src/com/error.h>
-#include <src/numerical/vec.h>
+#include <src/numerical/vector.h>
 
 #include <array>
 #include <unordered_map>

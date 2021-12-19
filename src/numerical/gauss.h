@@ -24,7 +24,7 @@ Cambridge University Press.
 
 #pragma once
 
-#include "vec.h"
+#include "vector.h"
 
 #include <src/com/math.h>
 #include <src/com/type/concept.h>

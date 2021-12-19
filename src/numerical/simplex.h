@@ -25,7 +25,7 @@ The MIT Press, 2009.
 
 #pragma once
 
-#include "vec.h"
+#include "vector.h"
 
 #include <src/com/combinatorics.h>
 #include <src/com/error.h>

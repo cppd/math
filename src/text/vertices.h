@@ -20,7 +20,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "glyphs.h"
 #include "text_data.h"
 
-#include <src/numerical/vec.h>
+#include <src/numerical/vector.h>
 
 #include <cstdint>
 #include <unordered_map>

@@ -25,7 +25,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/com/print.h>
 #include <src/geometry/spatial/hyperplane_ball.h>
 #include <src/numerical/complement.h>
-#include <src/numerical/vec.h>
+#include <src/numerical/vector.h>
 #include <src/sampling/pdf.h>
 #include <src/sampling/sphere_uniform.h>
 

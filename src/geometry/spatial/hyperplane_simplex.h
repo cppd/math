@@ -31,7 +31,7 @@ Cambridge University Press, 2003.
 #include <src/com/print.h>
 #include <src/numerical/complement.h>
 #include <src/numerical/ray.h>
-#include <src/numerical/vec.h>
+#include <src/numerical/vector.h>
 
 #include <array>
 #include <optional>

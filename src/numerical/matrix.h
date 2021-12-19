@@ -19,7 +19,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "determinant.h"
 #include "solve.h"
-#include "vec.h"
+#include "vector.h"
 
 #include <src/com/type/concept.h>
 

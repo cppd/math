@@ -28,7 +28,7 @@ Wiley, 2014.
 #include "determinant.h"
 #include "difference.h"
 #include "identity.h"
-#include "vec.h"
+#include "vector.h"
 
 #include <src/com/error.h>
 #include <src/com/mpz.h>

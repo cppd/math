@@ -25,8 +25,9 @@ The OpenGL® Shading Language.
 
 #pragma once
 
+#include "vector.h"
+
 #include <src/com/exponent.h>
-#include <src/numerical/vec.h>
 
 #include <optional>
 

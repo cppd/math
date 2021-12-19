@@ -41,7 +41,7 @@ CRC Press, 2018.
 #include <src/numerical/complement.h>
 #include <src/numerical/identity.h>
 #include <src/numerical/optics.h>
-#include <src/numerical/vec.h>
+#include <src/numerical/vector.h>
 #include <src/sampling/pdf.h>
 #include <src/sampling/sphere_uniform.h>
 

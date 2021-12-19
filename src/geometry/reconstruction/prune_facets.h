@@ -30,7 +30,7 @@ Cambridge University Press, 2007.
 
 #include <src/com/error.h>
 #include <src/numerical/complement.h>
-#include <src/numerical/vec.h>
+#include <src/numerical/vector.h>
 
 #include <unordered_map>
 #include <unordered_set>

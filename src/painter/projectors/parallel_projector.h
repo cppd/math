@@ -24,7 +24,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/com/error.h>
 #include <src/com/print.h>
 #include <src/numerical/ray.h>
-#include <src/numerical/vec.h>
+#include <src/numerical/vector.h>
 
 namespace ns::painter
 {

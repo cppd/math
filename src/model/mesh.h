@@ -19,7 +19,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <src/color/color.h>
 #include <src/image/image.h>
-#include <src/numerical/vec.h>
+#include <src/numerical/vector.h>
 
 #include <array>
 #include <string>

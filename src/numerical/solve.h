@@ -29,7 +29,7 @@ Cramer’s Rule
 
 #include "gauss.h"
 #include "identity.h"
-#include "vec.h"
+#include "vector.h"
 
 #include <src/com/type/concept.h>
 

@@ -28,7 +28,7 @@ Springer-Verlag London, 2012.
 #include "complement.h"
 #include "eigen.h"
 #include "matrix.h"
-#include "vec.h"
+#include "vector.h"
 
 #include <src/com/error.h>
 #include <src/com/print.h>

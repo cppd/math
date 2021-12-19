@@ -24,7 +24,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/numerical/matrix.h>
 #include <src/numerical/region.h>
 #include <src/numerical/transform.h>
-#include <src/numerical/vec.h>
+#include <src/numerical/vector.h>
 
 namespace ns::gpu::renderer
 {

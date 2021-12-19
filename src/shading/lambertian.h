@@ -39,7 +39,7 @@ Elsevier, 2017.
 
 #include <src/com/error.h>
 #include <src/geometry/shapes/sphere_integral.h>
-#include <src/numerical/vec.h>
+#include <src/numerical/vector.h>
 #include <src/sampling/sphere_cosine.h>
 
 namespace ns::shading::lambertian

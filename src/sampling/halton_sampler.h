@@ -26,7 +26,7 @@ Elsevier, 2017.
 #pragma once
 
 #include <src/com/radical_inverse.h>
-#include <src/numerical/vec.h>
+#include <src/numerical/vector.h>
 
 #include <array>
 #include <utility>

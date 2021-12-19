@@ -21,7 +21,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/model/mesh_object.h>
 #include <src/model/volume_object.h>
 #include <src/numerical/matrix.h>
-#include <src/numerical/vec.h>
+#include <src/numerical/vector.h>
 
 #include <optional>
 #include <variant>

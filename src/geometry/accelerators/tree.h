@@ -28,7 +28,7 @@ CRC Press, 2014.
 #include "../spatial/bounding_box.h"
 
 #include <src/numerical/ray.h>
-#include <src/numerical/vec.h>
+#include <src/numerical/vector.h>
 #include <src/progress/progress.h>
 
 #include <array>

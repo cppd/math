@@ -40,7 +40,7 @@ E. Other continuous distributions
 #include <src/com/exponent.h>
 #include <src/geometry/shapes/ball_volume.h>
 #include <src/geometry/shapes/sphere_area.h>
-#include <src/numerical/vec.h>
+#include <src/numerical/vector.h>
 
 #include <cmath>
 #include <random>

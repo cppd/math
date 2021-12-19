@@ -29,7 +29,7 @@ Elsevier, 2017.
 #include <src/com/log.h>
 #include <src/com/print.h>
 #include <src/com/type/limit.h>
-#include <src/numerical/vec.h>
+#include <src/numerical/vector.h>
 
 #include <random>
 #include <vector>
