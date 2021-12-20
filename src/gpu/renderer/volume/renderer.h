@@ -17,9 +17,9 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
-#include "volume_object.h"
+#include "object.h"
 
-#include "buffers/shaders.h"
+#include "../buffers/shaders.h"
 #include "shaders/volume.h"
 
 #include <src/gpu/render_buffers.h>

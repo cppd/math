@@ -20,7 +20,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "descriptors.h"
 #include "vertex_triangles.h"
 
-#include "../code/code.h"
+#include "../../code/code.h"
 
 #include <src/com/error.h>
 #include <src/vulkan/create.h>
@@ -145,9 +145,9 @@ TrianglesProgram::TrianglesProgram(const vulkan::Device* const device)
                   *device,
                   {CommonMemory::set_number(), MeshMemory::set_number(), TrianglesMaterialMemory::set_number()},
                   {descriptor_set_layout_shared_, descriptor_set_layout_mesh_, descriptor_set_layout_material_})),
-          vertex_shader_(*device_, code_triangles_vert(), "main"),
-          geometry_shader_(*device_, code_triangles_geom(), "main"),
-          fragment_shader_(*device_, code_triangles_frag(), "main")
+          vertex_shader_(*device_, code_mesh_triangles_vert(), "main"),
+          geometry_shader_(*device_, code_mesh_triangles_geom(), "main"),
+          fragment_shader_(*device_, code_mesh_triangles_frag(), "main")
 {
 }
 

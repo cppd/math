@@ -17,7 +17,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "mesh.h"
 
-#include "../../com/matrix.h"
+#include <src/gpu/com/matrix.h>
 
 namespace ns::gpu::renderer
 {

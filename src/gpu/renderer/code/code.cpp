@@ -19,106 +19,106 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 namespace ns::gpu::renderer
 {
-std::vector<std::uint32_t> code_triangles_vert()
+std::vector<std::uint32_t> code_mesh_triangles_vert()
 {
         static constexpr std::uint32_t CODE[] = {
-#include "renderer_triangles.vert.spr"
+#include "renderer_mesh_triangles.vert.spr"
         };
         return {std::cbegin(CODE), std::cend(CODE)};
 }
 
-std::vector<std::uint32_t> code_triangles_geom()
+std::vector<std::uint32_t> code_mesh_triangles_geom()
 {
         static constexpr std::uint32_t CODE[] = {
-#include "renderer_triangles.geom.spr"
+#include "renderer_mesh_triangles.geom.spr"
         };
         return {std::cbegin(CODE), std::cend(CODE)};
 }
 
-std::vector<std::uint32_t> code_triangles_frag()
+std::vector<std::uint32_t> code_mesh_triangles_frag()
 {
         static constexpr std::uint32_t CODE[] = {
-#include "renderer_triangles.frag.spr"
+#include "renderer_mesh_triangles.frag.spr"
         };
         return {std::cbegin(CODE), std::cend(CODE)};
 }
 
-std::vector<std::uint32_t> code_triangles_depth_vert()
+std::vector<std::uint32_t> code_mesh_triangles_depth_vert()
 {
         static constexpr std::uint32_t CODE[] = {
-#include "renderer_triangles_depth.vert.spr"
+#include "renderer_mesh_triangles_depth.vert.spr"
         };
         return {std::cbegin(CODE), std::cend(CODE)};
 }
 
-std::vector<std::uint32_t> code_triangle_lines_vert()
+std::vector<std::uint32_t> code_mesh_triangle_lines_vert()
 {
         static constexpr std::uint32_t CODE[] = {
-#include "renderer_triangle_lines.vert.spr"
+#include "renderer_mesh_triangle_lines.vert.spr"
         };
         return {std::cbegin(CODE), std::cend(CODE)};
 }
 
-std::vector<std::uint32_t> code_triangle_lines_geom()
+std::vector<std::uint32_t> code_mesh_triangle_lines_geom()
 {
         static constexpr std::uint32_t CODE[] = {
-#include "renderer_triangle_lines.geom.spr"
+#include "renderer_mesh_triangle_lines.geom.spr"
         };
         return {std::cbegin(CODE), std::cend(CODE)};
 }
 
-std::vector<std::uint32_t> code_triangle_lines_frag()
+std::vector<std::uint32_t> code_mesh_triangle_lines_frag()
 {
         static constexpr std::uint32_t CODE[] = {
-#include "renderer_triangle_lines.frag.spr"
+#include "renderer_mesh_triangle_lines.frag.spr"
         };
         return {std::cbegin(CODE), std::cend(CODE)};
 }
 
-std::vector<std::uint32_t> code_points_0d_vert()
+std::vector<std::uint32_t> code_mesh_points_0d_vert()
 {
         static constexpr std::uint32_t CODE[] = {
-#include "renderer_points_0d.vert.spr"
+#include "renderer_mesh_points_0d.vert.spr"
         };
         return {std::cbegin(CODE), std::cend(CODE)};
 }
 
-std::vector<std::uint32_t> code_points_1d_vert()
+std::vector<std::uint32_t> code_mesh_points_1d_vert()
 {
         static constexpr std::uint32_t CODE[] = {
-#include "renderer_points_1d.vert.spr"
+#include "renderer_mesh_points_1d.vert.spr"
         };
         return {std::cbegin(CODE), std::cend(CODE)};
 }
 
-std::vector<std::uint32_t> code_points_frag()
+std::vector<std::uint32_t> code_mesh_points_frag()
 {
         static constexpr std::uint32_t CODE[] = {
-#include "renderer_points.frag.spr"
+#include "renderer_mesh_points.frag.spr"
         };
         return {std::cbegin(CODE), std::cend(CODE)};
 }
 
-std::vector<std::uint32_t> code_normals_vert()
+std::vector<std::uint32_t> code_mesh_normals_vert()
 {
         static constexpr std::uint32_t CODE[] = {
-#include "renderer_normals.vert.spr"
+#include "renderer_mesh_normals.vert.spr"
         };
         return {std::cbegin(CODE), std::cend(CODE)};
 }
 
-std::vector<std::uint32_t> code_normals_geom()
+std::vector<std::uint32_t> code_mesh_normals_geom()
 {
         static constexpr std::uint32_t CODE[] = {
-#include "renderer_normals.geom.spr"
+#include "renderer_mesh_normals.geom.spr"
         };
         return {std::cbegin(CODE), std::cend(CODE)};
 }
 
-std::vector<std::uint32_t> code_normals_frag()
+std::vector<std::uint32_t> code_mesh_normals_frag()
 {
         static constexpr std::uint32_t CODE[] = {
-#include "renderer_normals.frag.spr"
+#include "renderer_mesh_normals.frag.spr"
         };
         return {std::cbegin(CODE), std::cend(CODE)};
 }

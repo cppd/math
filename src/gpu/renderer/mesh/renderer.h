@@ -17,10 +17,10 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
-#include "depth_buffer.h"
-#include "mesh_object.h"
+#include "object.h"
 
-#include "buffers/shaders.h"
+#include "../buffers/shaders.h"
+#include "../depth_buffer.h"
 #include "shaders/descriptors.h"
 #include "shaders/normals.h"
 #include "shaders/points.h"

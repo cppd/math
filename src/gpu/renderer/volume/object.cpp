@@ -15,12 +15,12 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include "volume_object.h"
+#include "object.h"
 
-#include "shading_parameters.h"
-#include "volume_geometry.h"
-#include "volume_image.h"
+#include "geometry.h"
+#include "image.h"
 
+#include "../shading_parameters.h"
 #include "buffers/volume.h"
 #include "shaders/volume.h"
 

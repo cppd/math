@@ -15,14 +15,11 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include "mesh_sampler.h"
-
-#include <src/com/error.h>
-#include <src/com/log.h>
+#include "sampler.h"
 
 namespace ns::gpu::renderer
 {
-vulkan::handle::Sampler create_mesh_texture_sampler(const vulkan::Device& device, const bool anisotropy)
+vulkan::handle::Sampler create_volume_image_sampler(const VkDevice device)
 {
         VkSamplerCreateInfo create_info = {};
         create_info.sType = VK_STRUCTURE_TYPE_SAMPLER_CREATE_INFO;
@@ -30,24 +27,12 @@ vulkan::handle::Sampler create_mesh_texture_sampler(const vulkan::Device& device
         create_info.magFilter = VK_FILTER_LINEAR;
         create_info.minFilter = VK_FILTER_LINEAR;
 
-        create_info.addressModeU = VK_SAMPLER_ADDRESS_MODE_REPEAT;
-        create_info.addressModeV = VK_SAMPLER_ADDRESS_MODE_REPEAT;
-        create_info.addressModeW = VK_SAMPLER_ADDRESS_MODE_REPEAT;
+        create_info.addressModeU = VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_BORDER;
+        create_info.addressModeV = VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_BORDER;
+        create_info.addressModeW = VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_BORDER;
+        create_info.borderColor = VK_BORDER_COLOR_FLOAT_TRANSPARENT_BLACK;
 
-        if (anisotropy)
-        {
-                if (!device.features().features_10.samplerAnisotropy)
-                {
-                        error("Sampler anisotropy required but not supported");
-                }
-                create_info.anisotropyEnable = VK_TRUE;
-                create_info.maxAnisotropy = 16;
-                LOG("Anisotropy enabled");
-        }
-        else
-        {
-                create_info.anisotropyEnable = VK_FALSE;
-        }
+        create_info.anisotropyEnable = VK_FALSE;
 
         create_info.unnormalizedCoordinates = VK_FALSE;
 
@@ -61,7 +46,33 @@ vulkan::handle::Sampler create_mesh_texture_sampler(const vulkan::Device& device
         return vulkan::handle::Sampler(device, create_info);
 }
 
-vulkan::handle::Sampler create_mesh_shadow_sampler(const VkDevice device)
+vulkan::handle::Sampler create_volume_depth_image_sampler(const VkDevice device)
+{
+        VkSamplerCreateInfo create_info = {};
+        create_info.sType = VK_STRUCTURE_TYPE_SAMPLER_CREATE_INFO;
+
+        create_info.magFilter = VK_FILTER_NEAREST;
+        create_info.minFilter = VK_FILTER_NEAREST;
+
+        create_info.addressModeU = VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_EDGE;
+        create_info.addressModeV = VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_EDGE;
+        create_info.addressModeW = VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_EDGE;
+
+        create_info.anisotropyEnable = VK_FALSE;
+
+        create_info.unnormalizedCoordinates = VK_FALSE;
+
+        create_info.compareEnable = VK_FALSE;
+
+        create_info.mipmapMode = VK_SAMPLER_MIPMAP_MODE_NEAREST;
+        create_info.mipLodBias = 0.0f;
+        create_info.minLod = 0.0f;
+        create_info.maxLod = 0.0f;
+
+        return vulkan::handle::Sampler(device, create_info);
+}
+
+vulkan::handle::Sampler create_volume_transfer_function_sampler(const VkDevice device)
 {
         VkSamplerCreateInfo create_info = {};
         create_info.sType = VK_STRUCTURE_TYPE_SAMPLER_CREATE_INFO;

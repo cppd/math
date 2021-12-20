@@ -15,7 +15,7 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include "volume_image.h"
+#include "image.h"
 
 #include <src/color/rgb8.h>
 #include <src/com/container.h>

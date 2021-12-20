@@ -19,16 +19,17 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "buffer_commands.h"
 #include "depth_buffer.h"
-#include "mesh_object.h"
-#include "mesh_renderer.h"
 #include "renderer_draw.h"
 #include "renderer_objects.h"
 #include "renderer_process.h"
 #include "storage_mesh.h"
 #include "storage_volume.h"
 #include "viewport_transform.h"
-#include "volume_object.h"
-#include "volume_renderer.h"
+
+#include "mesh/object.h"
+#include "mesh/renderer.h"
+#include "volume/object.h"
+#include "volume/renderer.h"
 
 #include <src/com/log.h>
 #include <src/com/print.h>

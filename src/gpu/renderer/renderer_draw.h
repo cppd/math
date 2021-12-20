@@ -17,11 +17,11 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
-#include "mesh_renderer.h"
 #include "transparency_message.h"
-#include "volume_renderer.h"
 
 #include "buffers/transparency.h"
+#include "mesh/renderer.h"
+#include "volume/renderer.h"
 
 #include <src/vulkan/objects.h>
 

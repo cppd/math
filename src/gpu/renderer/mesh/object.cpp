@@ -15,11 +15,11 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include "mesh_object.h"
+#include "object.h"
 
-#include "mesh_object_load.h"
-#include "shading_parameters.h"
+#include "object_load.h"
 
+#include "../shading_parameters.h"
 #include "buffers/material.h"
 #include "buffers/mesh.h"
 #include "shaders/descriptors.h"

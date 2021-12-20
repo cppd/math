@@ -22,19 +22,19 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 namespace ns::gpu::renderer
 {
-std::vector<std::uint32_t> code_triangles_vert();
-std::vector<std::uint32_t> code_triangles_geom();
-std::vector<std::uint32_t> code_triangles_frag();
-std::vector<std::uint32_t> code_triangles_depth_vert();
-std::vector<std::uint32_t> code_triangle_lines_vert();
-std::vector<std::uint32_t> code_triangle_lines_geom();
-std::vector<std::uint32_t> code_triangle_lines_frag();
-std::vector<std::uint32_t> code_points_0d_vert();
-std::vector<std::uint32_t> code_points_1d_vert();
-std::vector<std::uint32_t> code_points_frag();
-std::vector<std::uint32_t> code_normals_vert();
-std::vector<std::uint32_t> code_normals_geom();
-std::vector<std::uint32_t> code_normals_frag();
+std::vector<std::uint32_t> code_mesh_triangles_vert();
+std::vector<std::uint32_t> code_mesh_triangles_geom();
+std::vector<std::uint32_t> code_mesh_triangles_frag();
+std::vector<std::uint32_t> code_mesh_triangles_depth_vert();
+std::vector<std::uint32_t> code_mesh_triangle_lines_vert();
+std::vector<std::uint32_t> code_mesh_triangle_lines_geom();
+std::vector<std::uint32_t> code_mesh_triangle_lines_frag();
+std::vector<std::uint32_t> code_mesh_points_0d_vert();
+std::vector<std::uint32_t> code_mesh_points_1d_vert();
+std::vector<std::uint32_t> code_mesh_points_frag();
+std::vector<std::uint32_t> code_mesh_normals_vert();
+std::vector<std::uint32_t> code_mesh_normals_geom();
+std::vector<std::uint32_t> code_mesh_normals_frag();
 std::vector<std::uint32_t> code_volume_vert();
 std::vector<std::uint32_t> code_volume_image_frag();
 std::vector<std::uint32_t> code_volume_image_fragments_frag();

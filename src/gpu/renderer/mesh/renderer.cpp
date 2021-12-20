@@ -15,10 +15,10 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include "mesh_renderer.h"
+#include "renderer.h"
 
-#include "mesh_commands.h"
-#include "mesh_sampler.h"
+#include "commands.h"
+#include "sampler.h"
 
 #include <src/com/error.h>
 #include <src/vulkan/commands.h>
