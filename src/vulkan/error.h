@@ -33,7 +33,7 @@ void check_code(const T code)
         {
                 return;
         }
-        error_implementation::vulkan_function_error(code);
+        vulkan_function_error(code);
 }
 
 template <typename T>

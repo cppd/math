@@ -17,11 +17,10 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
-#include <array>
 #include <string>
 #include <vulkan/vulkan.h>
 
 namespace ns::vulkan
 {
-std::array<std::string, 2> result_to_strings(VkResult code);
+std::string result_to_string(VkResult code);
 }

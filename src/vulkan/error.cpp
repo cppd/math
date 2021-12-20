@@ -33,17 +33,11 @@ namespace
 
         std::ostringstream oss;
 
-        oss << "Vulkan function has failed.";
+        oss << "Vulkan function has failed, return code " << result_to_string(code) << ".";
+
         if (!msg.empty())
         {
-                oss << ' ' << msg;
-        }
-        for (const std::string& s : result_to_strings(code))
-        {
-                if (!s.empty())
-                {
-                        oss << ' ' << s << '.';
-                }
+                oss << " " << msg;
         }
 
         error(oss.str());
