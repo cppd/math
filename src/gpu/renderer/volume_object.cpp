@@ -18,14 +18,15 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "volume_object.h"
 
 #include "shading_parameters.h"
+#include "volume_geometry.h"
+#include "volume_image.h"
 
 #include "buffers/volume.h"
 #include "shaders/volume.h"
 
 #include <src/com/alg.h>
 #include <src/com/merge.h>
-#include <src/image/conversion.h>
-#include <src/image/format.h>
+#include <src/image/image.h>
 #include <src/vulkan/buffers.h>
 
 #include <unordered_map>
@@ -34,178 +35,6 @@ namespace ns::gpu::renderer
 {
 namespace
 {
-constexpr double GRADIENT_H_IN_PIXELS = 0.5;
-
-std::vector<VkFormat> vulkan_transfer_function_formats(const image::ColorFormat color_format)
-{
-        switch (color_format)
-        {
-        case image::ColorFormat::R8G8B8A8_SRGB:
-        case image::ColorFormat::R16G16B16A16:
-        case image::ColorFormat::R16G16B16A16_SRGB:
-        case image::ColorFormat::R32G32B32A32:
-                return {VK_FORMAT_R8G8B8A8_SRGB, VK_FORMAT_R16G16B16A16_UNORM, VK_FORMAT_R32G32B32A32_SFLOAT};
-        case image::ColorFormat::R16:
-        case image::ColorFormat::R32:
-        case image::ColorFormat::R8_SRGB:
-        case image::ColorFormat::R8G8B8_SRGB:
-        case image::ColorFormat::R16G16B16:
-        case image::ColorFormat::R16G16B16_SRGB:
-        case image::ColorFormat::R32G32B32:
-        case image::ColorFormat::R8G8B8A8_SRGB_PREMULTIPLIED:
-        case image::ColorFormat::R16G16B16A16_PREMULTIPLIED:
-        case image::ColorFormat::R32G32B32A32_PREMULTIPLIED:
-                error("Unsupported transfer function format: " + image::format_to_string(color_format));
-        }
-        error_fatal("Unknown color format " + image::format_to_string(color_format));
-}
-
-std::vector<VkFormat> vulkan_image_formats(const image::ColorFormat color_format)
-{
-        switch (color_format)
-        {
-        case image::ColorFormat::R16:
-        case image::ColorFormat::R32:
-                return {VK_FORMAT_R16_UNORM, VK_FORMAT_R32_SFLOAT};
-        case image::ColorFormat::R8G8B8_SRGB:
-        case image::ColorFormat::R8G8B8A8_SRGB:
-        case image::ColorFormat::R8G8B8A8_SRGB_PREMULTIPLIED:
-                return {VK_FORMAT_R8G8B8A8_SRGB, VK_FORMAT_R16G16B16A16_UNORM, VK_FORMAT_R32G32B32A32_SFLOAT};
-        case image::ColorFormat::R16G16B16:
-        case image::ColorFormat::R16G16B16_SRGB:
-        case image::ColorFormat::R16G16B16A16:
-        case image::ColorFormat::R16G16B16A16_SRGB:
-        case image::ColorFormat::R16G16B16A16_PREMULTIPLIED:
-        case image::ColorFormat::R32G32B32:
-        case image::ColorFormat::R32G32B32A32:
-        case image::ColorFormat::R32G32B32A32_PREMULTIPLIED:
-                return {VK_FORMAT_R16G16B16A16_UNORM, VK_FORMAT_R8G8B8A8_SRGB, VK_FORMAT_R32G32B32A32_SFLOAT};
-        case image::ColorFormat::R8_SRGB:
-                error("Unsupported volume image format: " + image::format_to_string(color_format));
-        }
-        error_fatal("Unknown color format " + image::format_to_string(color_format));
-}
-
-void write_to_buffer_image(
-        const image::Image<3>& image,
-        const std::function<void(image::ColorFormat color_format, const std::vector<std::byte>& pixels)>& write)
-{
-        switch (image.color_format)
-        {
-        case image::ColorFormat::R16:
-        case image::ColorFormat::R32:
-        case image::ColorFormat::R8G8B8A8_SRGB:
-        case image::ColorFormat::R16G16B16A16:
-        case image::ColorFormat::R16G16B16A16_SRGB:
-        case image::ColorFormat::R32G32B32A32:
-                write(image.color_format, image.pixels);
-                return;
-        case image::ColorFormat::R8G8B8_SRGB:
-        case image::ColorFormat::R16G16B16:
-        case image::ColorFormat::R16G16B16_SRGB:
-        case image::ColorFormat::R32G32B32:
-        case image::ColorFormat::R8G8B8A8_SRGB_PREMULTIPLIED:
-        case image::ColorFormat::R16G16B16A16_PREMULTIPLIED:
-        case image::ColorFormat::R32G32B32A32_PREMULTIPLIED:
-        {
-                constexpr image::ColorFormat COLOR_FORMAT = image::ColorFormat::R32G32B32A32;
-                std::vector<std::byte> pixels;
-                image::format_conversion(image.color_format, image.pixels, COLOR_FORMAT, &pixels);
-                write(COLOR_FORMAT, pixels);
-                return;
-        }
-        case image::ColorFormat::R8_SRGB:
-                error("Unsupported volume image format: " + image::format_to_string(image.color_format));
-        }
-        error_fatal("Unknown color format " + image::format_to_string(image.color_format));
-}
-
-bool is_scalar_volume(image::ColorFormat color_format)
-{
-        return 1 == image::format_component_count(color_format);
-}
-
-image::Image<1> transfer_function()
-{
-        constexpr int SIZE = 256;
-
-        constexpr RGB8 COLOR = RGB8(230, 255, 230);
-        constexpr float RED = COLOR.linear_red();
-        constexpr float GREEN = COLOR.linear_green();
-        constexpr float BLUE = COLOR.linear_blue();
-
-        std::vector<float> pixels;
-        pixels.reserve(4ull * SIZE);
-        constexpr float MAX = SIZE - 1;
-        for (int i = 0; i < SIZE; ++i)
-        {
-                float alpha = i / MAX;
-                pixels.push_back(RED);
-                pixels.push_back(GREEN);
-                pixels.push_back(BLUE);
-                pixels.push_back(alpha);
-        }
-
-        image::Image<1> image;
-
-        image.pixels.resize(data_size(pixels));
-        std::memcpy(image.pixels.data(), data_pointer(pixels), data_size(pixels));
-        image.color_format = image::ColorFormat::R32G32B32A32;
-        image.size[0] = SIZE;
-
-        return image;
-}
-
-Vector4d image_clip_plane(const Vector4d& world_clip_plane, const Matrix4d& model)
-{
-        Vector4d p = world_clip_plane * model;
-
-        // from n * x + d with normal directed inward
-        // to n * x - d with normal directed outward
-        p[3] = -p[3];
-        Vector3d n = Vector3d(p[0], p[1], p[2]);
-        return p / -n.norm();
-}
-
-Vector3d world_volume_size(const Matrix4d& texture_to_world_matrix)
-{
-        // Example for x: texture_to_world_matrix * (1, 0, 0, 1) -> (x, y, z) -> length
-        Vector3d size;
-        for (unsigned i = 0; i < 3; ++i)
-        {
-                Vector3d v(texture_to_world_matrix(0, i), texture_to_world_matrix(1, i), texture_to_world_matrix(2, i));
-                size[i] = v.norm();
-        }
-        return size;
-}
-
-// in texture coordinates
-Vector3d gradient_h(const Matrix4d& texture_to_world_matrix, const vulkan::Image& image)
-{
-        ASSERT(image.type() == VK_IMAGE_TYPE_3D);
-
-        Vector3d texture_pixel_size(
-                1.0 / image.extent().width, 1.0 / image.extent().height, 1.0 / image.extent().depth);
-
-        Vector3d world_pixel_size(texture_pixel_size * world_volume_size(texture_to_world_matrix));
-
-        double min_world_pixel_size = world_pixel_size[0];
-        for (unsigned i = 1; i < 3; ++i)
-        {
-                min_world_pixel_size = std::min(min_world_pixel_size, world_pixel_size[i]);
-        }
-
-        min_world_pixel_size *= GRADIENT_H_IN_PIXELS;
-
-        Vector3d h;
-        for (unsigned i = 0; i < 3; ++i)
-        {
-                h[i] = (min_world_pixel_size / world_pixel_size[i]) * texture_pixel_size[i];
-        }
-
-        return h;
-}
-
 class Impl final : public VolumeObject
 {
         const vulkan::Device* const device_;
@@ -243,11 +72,12 @@ class Impl final : public VolumeObject
                 float isovalue,
                 const color::Color& color) const
         {
-                constexpr float EPS = 1e-10f;
-                window_min = std::min(std::max(0.0f, window_min), 1 - EPS);
-                window_max = std::max(std::min(1.0f, window_max), window_min + EPS);
-                float window_offset = window_min;
-                float window_scale = 1 / (window_max - window_min);
+                constexpr float EPS = Limits<float>::epsilon();
+                window_min = std::clamp(window_min, 0.0f, 1 - EPS);
+                window_max = std::clamp(window_max, window_min + EPS, 1.0f);
+
+                const float window_offset = window_min;
+                const float window_scale = 1 / (window_max - window_min);
 
                 isovalue = std::clamp(isovalue, 0.0f, 1.0f);
                 isosurface_alpha = std::clamp(isosurface_alpha, 0.0f, 1.0f);
@@ -269,7 +99,7 @@ class Impl final : public VolumeObject
                 const Matrix4d& mvp = vp_matrix_ * texture_to_world_matrix_;
                 const Vector4d& clip_plane =
                         world_clip_plane_equation_
-                                ? image_clip_plane(*world_clip_plane_equation_, texture_to_world_matrix_)
+                                ? volume_clip_plane(*world_clip_plane_equation_, texture_to_world_matrix_)
                                 : Vector4d(0);
 
                 buffer_.set_coordinates(
@@ -279,7 +109,7 @@ class Impl final : public VolumeObject
         void buffer_set_clip_plane() const
         {
                 ASSERT(world_clip_plane_equation_);
-                buffer_.set_clip_plane(image_clip_plane(*world_clip_plane_equation_, texture_to_world_matrix_));
+                buffer_.set_clip_plane(volume_clip_plane(*world_clip_plane_equation_, texture_to_world_matrix_));
         }
 
         void buffer_set_color_volume(const bool color_volume) const
@@ -316,12 +146,12 @@ class Impl final : public VolumeObject
                         return;
                 }
 
-                image::Image<1> image = transfer_function();
+                const image::Image<1> image = volume_transfer_function();
 
                 transfer_function_.reset();
 
                 transfer_function_ = std::make_unique<vulkan::ImageWithMemory>(
-                        *device_, family_indices_, vulkan_transfer_function_formats(image.color_format),
+                        *device_, family_indices_, volume_transfer_function_formats(image.color_format),
                         VK_SAMPLE_COUNT_1_BIT, VK_IMAGE_TYPE_1D, vulkan::make_extent(image.size[0]),
                         VK_IMAGE_USAGE_SAMPLED_BIT | VK_IMAGE_USAGE_TRANSFER_DST_BIT, VK_IMAGE_LAYOUT_UNDEFINED,
                         *transfer_command_pool_, *transfer_queue_);
@@ -335,7 +165,7 @@ class Impl final : public VolumeObject
         {
                 VkImageLayout image_layout;
 
-                if (!image_ || image_formats_ != vulkan_image_formats(image.color_format)
+                if (!image_ || image_formats_ != volume_image_formats(image.color_format)
                     || image_->image().extent().width != static_cast<unsigned>(image.size[0])
                     || image_->image().extent().height != static_cast<unsigned>(image.size[1])
                     || image_->image().extent().depth != static_cast<unsigned>(image.size[2]))
@@ -346,7 +176,7 @@ class Impl final : public VolumeObject
 
                         buffer_set_color_volume(!is_scalar_volume(image.color_format));
 
-                        image_formats_ = vulkan_image_formats(image.color_format);
+                        image_formats_ = volume_image_formats(image.color_format);
 
                         image_.reset();
                         image_ = std::make_unique<vulkan::ImageWithMemory>(
@@ -362,13 +192,13 @@ class Impl final : public VolumeObject
                         image_layout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
                 }
 
-                write_to_buffer_image(
+                write_volume_image(
                         image,
-                        [this, &image_layout](image::ColorFormat color_format, const std::vector<std::byte>& pixels)
+                        [&](const image::ColorFormat format, const std::vector<std::byte>& pixels)
                         {
                                 image_->write_pixels(
                                         *transfer_command_pool_, *transfer_queue_, image_layout,
-                                        VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL, color_format, pixels);
+                                        VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL, format, pixels);
                         });
         }
 
@@ -449,7 +279,7 @@ class Impl final : public VolumeObject
                         object_normal_to_world_normal_matrix_ =
                                 volume_object.matrix().top_left<3, 3>().inverse().transpose();
                         texture_to_world_matrix_ = volume_object.matrix() * volume_object.volume().matrix;
-                        gradient_h_ = gradient_h(texture_to_world_matrix_, image_->image());
+                        gradient_h_ = volume_gradient_h(texture_to_world_matrix_, image_->image());
 
                         buffer_set_coordinates();
                 }
