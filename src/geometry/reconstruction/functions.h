@@ -47,14 +47,17 @@ bool voronoi_edge_intersects_cocone(const T cos_n_pa, const T cos_n_pb)
         {
                 return true;
         }
+
         if (cos_n_pa < 0 && cos_n_pb > 0)
         {
                 return true;
         }
+
         if (cos_n_pa > 0 && cos_n_pb < 0)
         {
                 return true;
         }
+
         return false;
 }
 

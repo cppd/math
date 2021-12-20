@@ -64,7 +64,7 @@ std::stack<int> find_external_facets(const std::vector<DelaunayFacet<N>>& delaun
 }
 
 template <std::size_t N>
-std::optional<int> delaunay_for_facet(const DelaunayFacet<N>& facet, std::vector<bool>* visited_delaunay_objects)
+std::optional<int> delaunay_for_facet(const DelaunayFacet<N>& facet, std::vector<bool>* const visited_delaunay_objects)
 {
         int index;
         if (facet.one_sided())

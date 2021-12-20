@@ -42,8 +42,10 @@ namespace prune_facets_implementation
 {
 template <std::size_t N>
 using RidgeData = RidgeDataN<DelaunayFacet<N>>;
+
 template <std::size_t N>
 using RidgeMap = std::unordered_map<Ridge<N>, RidgeData<N>>;
+
 template <std::size_t N>
 using RidgeSet = std::unordered_set<Ridge<N>>;
 
@@ -83,7 +85,7 @@ public:
 template <std::size_t N>
 bool boundary_ridge(const std::vector<bool>& interior_vertices, const Ridge<N>& ridge)
 {
-        for (int v : ridge.vertices())
+        for (const auto v : ridge.vertices())
         {
                 if (!interior_vertices[v])
                 {
@@ -158,7 +160,7 @@ bool sharp_ridge(
         // if two angles are less than 90 degrees, then their sum is less 180 degrees
         // cos(a + b) = cos(a)cos(b) - sin(a)sin(b).
         // sin_minus <= 0, so use its absolute value
-        T cos_a_plus_b = cos_plus * cos_minus - std::abs(sin_plus * sin_minus);
+        const T cos_a_plus_b = cos_plus * cos_minus - std::abs(sin_plus * sin_minus);
 
         // sharp if the sum is less than 90
         return cos_a_plus_b > 0;
@@ -225,7 +227,7 @@ void prune_facets_incident_to_sharp_ridges(
 
         impl::RidgeMap<N> ridge_map;
         std::unordered_map<const DelaunayFacet<N>*, int> facet_ptr_index;
-        for (unsigned i = 0; i < delaunay_facets.size(); ++i)
+        for (std::size_t i = 0; i < delaunay_facets.size(); ++i)
         {
                 if ((*cocone_facets)[i])
                 {

@@ -87,11 +87,11 @@ Vector<N, double> voronoi_positive_norm(
         {
                 double max_distance = Limits<double>::lowest();
                 Vector<N, double> max_vector(0);
-                for (int object_index : vertex_connections.objects)
+                for (const auto object_index : vertex_connections.objects)
                 {
-                        Vector<N, double> voronoi_vertex = delaunay_objects[object_index].voronoi_vertex();
-                        Vector<N, double> vp = voronoi_vertex - vertex;
-                        double distance = vp.norm_squared();
+                        const Vector<N, double> voronoi_vertex = delaunay_objects[object_index].voronoi_vertex();
+                        const Vector<N, double> vp = voronoi_vertex - vertex;
+                        const double distance = vp.norm_squared();
                         if (distance > max_distance)
                         {
                                 max_distance = distance;
@@ -335,7 +335,7 @@ std::vector<VertexConnections> vertex_connections(
         for (std::size_t facet = 0; facet < facets.size(); ++facet)
         {
                 int local_index = -1;
-                for (const int vertex : facets[facet].vertices())
+                for (const auto vertex : facets[facet].vertices())
                 {
                         ASSERT(vertex < vertex_count);
                         connections[vertex].facets.emplace_back(facet, ++local_index);
@@ -344,7 +344,7 @@ std::vector<VertexConnections> vertex_connections(
 
         for (std::size_t object = 0; object < objects.size(); ++object)
         {
-                for (const int vertex : objects[object].vertices())
+                for (const auto vertex : objects[object].vertices())
                 {
                         ASSERT(vertex < vertex_count);
                         connections[vertex].objects.emplace_back(object);
@@ -372,7 +372,7 @@ void find_vertex_and_facet_data(
         facet_data->clear();
         facet_data->resize(facets.size());
 
-        for (unsigned v = 0; v < points.size(); ++v)
+        for (std::size_t v = 0; v < points.size(); ++v)
         {
                 if (connections[v].facets.empty() && connections[v].objects.empty())
                 {
