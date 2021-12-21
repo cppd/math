@@ -42,6 +42,7 @@ The projection to the n-space of the lower convex hull of the points
 
 #pragma once
 
+#include "connect.h"
 #include "facet.h"
 #include "facet_storage.h"
 #include "simplex_points.h"
@@ -59,8 +60,6 @@ The projection to the n-space of the lower convex hull of the points
 
 #include <algorithm>
 #include <barrier>
-#include <tuple>
-#include <unordered_map>
 
 namespace ns::geometry::convex_hull
 {
@@ -73,45 +72,6 @@ int thread_count_for_horizon()
 
         const int hc = hardware_concurrency();
         return std::max(hc - 1, 1);
-}
-
-template <std::size_t N, typename Facet, template <typename...> typename Map>
-void connect_facets(
-        Facet* const facet,
-        const int exclude_point,
-        Map<Ridge<N>, std::tuple<Facet*, unsigned>>* const search_map,
-        int* const ridge_count)
-{
-        const std::array<int, N>& vertices = facet->vertices();
-        for (unsigned r = 0; r < N; ++r)
-        {
-                if (vertices[r] == exclude_point)
-                {
-                        // The horizon ridge. The facet is aleady
-                        // connected to it when the facet was created.
-                        continue;
-                }
-
-                Ridge<N> ridge(del_elem(vertices, r));
-
-                const auto search_iter = search_map->find(ridge);
-                if (search_iter == search_map->end())
-                {
-                        search_map->emplace(std::move(ridge), std::make_tuple(facet, r));
-                }
-                else
-                {
-                        Facet* const link_facet = std::get<0>(search_iter->second);
-                        const unsigned link_r = std::get<1>(search_iter->second);
-
-                        facet->set_link(r, link_facet);
-                        link_facet->set_link(link_r, facet);
-
-                        search_map->erase(search_iter);
-
-                        ++(*ridge_count);
-                }
-        }
 }
 
 template <std::size_t N, typename S, typename C>
@@ -131,14 +91,11 @@ void create_initial_convex_hull(
 
         constexpr int RIDGE_COUNT = BINOMIAL<N + 1, N - 1>;
 
-        int ridges = 0;
-        std::unordered_map<Ridge<N>, std::tuple<Facet<N, S, C>*, unsigned>> search_map(RIDGE_COUNT);
+        Connect<N, Facet<N, S, C>> connect(RIDGE_COUNT);
         for (Facet<N, S, C>& facet : *facets)
         {
-                connect_facets(&facet, -1, &search_map, &ridges);
+                connect.connect_facets(&facet, -1);
         }
-        ASSERT(search_map.empty());
-        ASSERT(ridges == RIDGE_COUNT);
 }
 
 template <typename Point, typename Facet>
@@ -393,21 +350,20 @@ void add_point_to_convex_hull(
 
         (*point_conflicts)[point].clear();
 
-        const int facet_count = calculate_facet_count(new_facets);
-        const int ridge_count = (N - 1) * facet_count / 2;
-
-        // Connect facets, excluding horizon facets
-        int ridges = 0;
-        std::unordered_map<Ridge<N>, std::tuple<Facet<N, S, C>*, unsigned>> search_map(ridge_count);
-        for (FacetList<Facet<N, S, C>>& facet_list : new_facets)
         {
-                for (Facet<N, S, C>& facet : facet_list)
+                // Connect facets, excluding horizon facets
+                const int facet_count = calculate_facet_count(new_facets);
+                const int ridge_count = (N - 1) * facet_count / 2;
+
+                Connect<N, Facet<N, S, C>> connect(ridge_count);
+                for (FacetList<Facet<N, S, C>>& facet_list : new_facets)
                 {
-                        connect_facets(&facet, point, &search_map, &ridges);
+                        for (Facet<N, S, C>& facet : facet_list)
+                        {
+                                connect.connect_facets(&facet, point);
+                        }
                 }
         }
-        ASSERT(search_map.empty());
-        ASSERT(ridges == ridge_count);
 
         for (unsigned i = 0; i < new_facets.size(); ++i)
         {
