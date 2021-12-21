@@ -17,13 +17,9 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
-#include <src/vulkan/buffers.h>
-#include <src/vulkan/constant.h>
-#include <src/vulkan/instance.h>
+#include <src/vulkan/device.h>
 #include <src/vulkan/objects.h>
-#include <src/vulkan/shader.h>
 
-#include <functional>
 #include <memory>
 #include <vector>
 
@@ -44,7 +40,7 @@ struct DepthBuffers
 
 std::unique_ptr<DepthBuffers> create_depth_buffers(
         unsigned buffer_count,
-        const std::vector<std::uint32_t>& attachment_family_indices,
+        const std::vector<std::uint32_t>& family_indices,
         VkCommandPool graphics_command_pool,
         VkQueue graphics_queue,
         const vulkan::Device& device,

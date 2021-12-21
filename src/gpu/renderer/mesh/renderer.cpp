@@ -201,19 +201,28 @@ void MeshRenderer::delete_render_buffers()
         }
 }
 
-void MeshRenderer::create_depth_buffers(const DepthBuffers* const depth_buffers)
+void MeshRenderer::create_depth_buffers(
+        const unsigned buffer_count,
+        const std::vector<std::uint32_t>& family_indices,
+        const VkCommandPool graphics_command_pool,
+        const VkQueue graphics_queue,
+        const vulkan::Device& device,
+        const unsigned width,
+        const unsigned height,
+        const double zoom)
 {
         ASSERT(thread_id_ == std::this_thread::get_id());
 
         delete_depth_buffers();
 
-        depth_buffers_ = depth_buffers;
+        depth_buffers_ = renderer::create_depth_buffers(
+                buffer_count, family_indices, graphics_command_pool, graphics_queue, device, width, height, zoom);
 
-        triangles_common_memory_.set_shadow_image(shadow_sampler_, depth_buffers->image_view(0));
+        triangles_common_memory_.set_shadow_image(shadow_sampler_, depth_buffers_->image_view(0));
 
         render_triangles_depth_pipeline_ = triangles_depth_program_.create_pipeline(
-                depth_buffers->render_pass(), depth_buffers->sample_count(),
-                Region<2, int>({0, 0}, {depth_buffers->width(), depth_buffers->height()}));
+                depth_buffers_->render_pass(), depth_buffers_->sample_count(),
+                Region<2, int>({0, 0}, {depth_buffers_->width(), depth_buffers_->height()}));
 }
 
 void MeshRenderer::delete_depth_buffers()
@@ -223,6 +232,8 @@ void MeshRenderer::delete_depth_buffers()
         delete_depth_command_buffers();
 
         render_triangles_depth_pipeline_.reset();
+
+        depth_buffers_.reset();
 }
 
 std::vector<vulkan::DescriptorSetLayoutAndBindings> MeshRenderer::mesh_layouts() const

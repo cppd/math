@@ -15,16 +15,18 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include "depth_buffer.h"
+#include "depth_buffers.h"
 
 #include <src/com/error.h>
 #include <src/com/log.h>
 #include <src/com/print.h>
+#include <src/vulkan/buffers.h>
 #include <src/vulkan/create.h>
 #include <src/vulkan/print.h>
 
 #include <algorithm>
 #include <array>
+#include <cmath>
 #include <sstream>
 
 namespace ns::gpu::renderer
@@ -196,7 +198,7 @@ public:
 
 Impl::Impl(
         const unsigned buffer_count,
-        const std::vector<std::uint32_t>& attachment_family_indices,
+        const std::vector<std::uint32_t>& family_indices,
         const VkCommandPool graphics_command_pool,
         const VkQueue graphics_queue,
         const vulkan::Device& device,
@@ -204,7 +206,7 @@ Impl::Impl(
         unsigned height,
         double zoom)
 {
-        ASSERT(!attachment_family_indices.empty());
+        ASSERT(!family_indices.empty());
 
         zoom = std::max(zoom, 1.0);
         width = std::lround(width * zoom);
@@ -218,7 +220,7 @@ Impl::Impl(
                         depth_formats = {depth_attachments_[0].image().format()};
                 }
                 depth_attachments_.emplace_back(
-                        device, attachment_family_indices, depth_formats, SAMPLE_COUNT, width, height,
+                        device, family_indices, depth_formats, SAMPLE_COUNT, width, height,
                         VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT | VK_IMAGE_USAGE_SAMPLED_BIT, IMAGE_LAYOUT,
                         graphics_command_pool, graphics_queue);
         }
@@ -291,7 +293,7 @@ const std::vector<VkClearValue>& Impl::clear_values() const
 
 std::unique_ptr<DepthBuffers> create_depth_buffers(
         const unsigned buffer_count,
-        const std::vector<std::uint32_t>& attachment_family_indices,
+        const std::vector<std::uint32_t>& family_indices,
         const VkCommandPool graphics_command_pool,
         const VkQueue graphics_queue,
         const vulkan::Device& device,
@@ -300,7 +302,6 @@ std::unique_ptr<DepthBuffers> create_depth_buffers(
         const double zoom)
 {
         return std::make_unique<Impl>(
-                buffer_count, attachment_family_indices, graphics_command_pool, graphics_queue, device, width, height,
-                zoom);
+                buffer_count, family_indices, graphics_command_pool, graphics_queue, device, width, height, zoom);
 }
 }

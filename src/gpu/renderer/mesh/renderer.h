@@ -17,10 +17,10 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
+#include "depth_buffers.h"
 #include "object.h"
 
 #include "../buffers/shaders.h"
-#include "../depth_buffer.h"
 #include "shaders/descriptors.h"
 #include "shaders/normals.h"
 #include "shaders/points.h"
@@ -43,7 +43,7 @@ class MeshRenderer
         const bool sample_shading_;
 
         const RenderBuffers3D* render_buffers_ = nullptr;
-        const DepthBuffers* depth_buffers_ = nullptr;
+        std::unique_ptr<const DepthBuffers> depth_buffers_;
 
         TrianglesProgram triangles_program_;
         CommonMemory triangles_common_memory_;
@@ -111,7 +111,15 @@ public:
                 const Region<2, int>& viewport);
         void delete_render_buffers();
 
-        void create_depth_buffers(const DepthBuffers* depth_buffers);
+        void create_depth_buffers(
+                unsigned buffer_count,
+                const std::vector<std::uint32_t>& family_indices,
+                VkCommandPool graphics_command_pool,
+                VkQueue graphics_queue,
+                const vulkan::Device& device,
+                unsigned width,
+                unsigned height,
+                double zoom);
         void delete_depth_buffers();
 
         void create_render_command_buffers(

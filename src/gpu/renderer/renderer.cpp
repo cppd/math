@@ -18,7 +18,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "renderer.h"
 
 #include "buffer_commands.h"
-#include "depth_buffer.h"
 #include "renderer_draw.h"
 #include "renderer_objects.h"
 #include "renderer_process.h"
@@ -79,7 +78,6 @@ class Impl final : public Renderer, RendererProcessEvents
 
         ShaderBuffers shader_buffers_;
         std::unique_ptr<vulkan::DepthImageWithMemory> depth_copy_image_;
-        std::unique_ptr<DepthBuffers> mesh_renderer_depth_render_buffers_;
 
         MeshRenderer mesh_renderer_;
         VolumeRenderer volume_renderer_;
@@ -223,7 +221,6 @@ class Impl final : public Renderer, RendererProcessEvents
         void delete_mesh_depth_buffers()
         {
                 mesh_renderer_.delete_depth_buffers();
-                mesh_renderer_depth_render_buffers_.reset();
         }
 
         void create_mesh_depth_buffers()
@@ -232,12 +229,10 @@ class Impl final : public Renderer, RendererProcessEvents
 
                 delete_mesh_depth_buffers();
 
-                mesh_renderer_depth_render_buffers_ = create_depth_buffers(
+                mesh_renderer_.create_depth_buffers(
                         render_buffers_->framebuffers().size(), {graphics_queue_->family_index()},
                         *graphics_command_pool_, *graphics_queue_, *device_, viewport_.width(), viewport_.height(),
                         renderer_process_.shadow_zoom());
-
-                mesh_renderer_.create_depth_buffers(mesh_renderer_depth_render_buffers_.get());
         }
 
         void create_clear_command_buffers()
@@ -288,6 +283,7 @@ class Impl final : public Renderer, RendererProcessEvents
         void create_mesh_depth_command_buffers()
         {
                 mesh_renderer_.delete_depth_command_buffers();
+
                 mesh_renderer_.create_depth_command_buffers(
                         renderer_objects_.mesh_visible_objects(), *graphics_command_pool_,
                         renderer_process_.clip_plane().has_value(), renderer_process_.show_normals());
