@@ -320,136 +320,88 @@ std::optional<storage::MeshObject> ModelTree::current_mesh() const
 {
         ASSERT(std::this_thread::get_id() == thread_id_);
 
-        std::optional<ObjectId> id = current_item();
-        if (!id)
+        if (const auto id = current_item())
         {
-                return std::nullopt;
+                return storage_.mesh_object(*id);
         }
-        std::optional<storage::MeshObject> object = storage_.mesh_object(*id);
-        if (!object)
-        {
-                return std::nullopt;
-        }
-        return object;
+        return std::nullopt;
 }
 
 std::optional<storage::MeshObjectConst> ModelTree::current_mesh_const() const
 {
         ASSERT(std::this_thread::get_id() == thread_id_);
 
-        std::optional<ObjectId> id = current_item();
-        if (!id)
+        if (const auto id = current_item())
         {
-                return std::nullopt;
+                return storage_.mesh_object_const(*id);
         }
-        std::optional<storage::MeshObjectConst> object = storage_.mesh_object_const(*id);
-        if (!object)
-        {
-                return std::nullopt;
-        }
-        return object;
+        return std::nullopt;
 }
 
 std::optional<storage::MeshObjectConst> ModelTree::mesh_const_if_current(const ObjectId id) const
 {
         ASSERT(std::this_thread::get_id() == thread_id_);
 
-        std::optional<ObjectId> current_id = current_item();
-        if (!current_id || id != current_id)
+        if (const auto current_id = current_item(); id == current_id)
         {
-                return std::nullopt;
+                return storage_.mesh_object_const(id);
         }
-        std::optional<storage::MeshObjectConst> object = storage_.mesh_object_const(id);
-        if (!object)
-        {
-                return std::nullopt;
-        }
-        return object;
+        return std::nullopt;
 }
 
 std::optional<storage::MeshObject> ModelTree::mesh_if_current(const ObjectId id) const
 {
         ASSERT(std::this_thread::get_id() == thread_id_);
 
-        std::optional<ObjectId> current_id = current_item();
-        if (!current_id || id != current_id)
+        if (const auto current_id = current_item(); id == current_id)
         {
-                return std::nullopt;
+                return storage_.mesh_object(id);
         }
-        std::optional<storage::MeshObject> object = storage_.mesh_object(id);
-        if (!object)
-        {
-                return std::nullopt;
-        }
-        return object;
+        return std::nullopt;
 }
 
 std::optional<storage::VolumeObject> ModelTree::current_volume() const
 {
         ASSERT(std::this_thread::get_id() == thread_id_);
 
-        std::optional<ObjectId> id = current_item();
-        if (!id)
+        if (const auto id = current_item())
         {
-                return std::nullopt;
+                return storage_.volume_object(*id);
         }
-        std::optional<storage::VolumeObject> object = storage_.volume_object(*id);
-        if (!object)
-        {
-                return std::nullopt;
-        }
-        return object;
+        return std::nullopt;
 }
 
 std::optional<storage::VolumeObjectConst> ModelTree::current_volume_const() const
 {
         ASSERT(std::this_thread::get_id() == thread_id_);
 
-        std::optional<ObjectId> id = current_item();
-        if (!id)
+        if (const auto id = current_item())
         {
-                return std::nullopt;
+                return storage_.volume_object_const(*id);
         }
-        std::optional<storage::VolumeObjectConst> object = storage_.volume_object_const(*id);
-        if (!object)
-        {
-                return std::nullopt;
-        }
-        return object;
+        return std::nullopt;
 }
 
 std::optional<storage::VolumeObjectConst> ModelTree::volume_const_if_current(const ObjectId id) const
 {
         ASSERT(std::this_thread::get_id() == thread_id_);
 
-        std::optional<ObjectId> current_id = current_item();
-        if (!current_id || id != current_id)
+        if (const auto current_id = current_item(); id == current_id)
         {
-                return std::nullopt;
+                return storage_.volume_object_const(id);
         }
-        std::optional<storage::VolumeObjectConst> object = storage_.volume_object_const(id);
-        if (!object)
-        {
-                return std::nullopt;
-        }
-        return object;
+        return std::nullopt;
 }
 
 std::optional<storage::VolumeObject> ModelTree::volume_if_current(const ObjectId id) const
 {
         ASSERT(std::this_thread::get_id() == thread_id_);
 
-        std::optional<ObjectId> current_id = current_item();
-        if (!current_id || id != current_id)
+        if (const auto current_id = current_item(); id == current_id)
         {
-                return std::nullopt;
+                return storage_.volume_object(id);
         }
-        std::optional<storage::VolumeObject> object = storage_.volume_object(id);
-        if (!object)
-        {
-                return std::nullopt;
-        }
-        return object;
+        return std::nullopt;
 }
 
 std::vector<storage::MeshObjectConst> ModelTree::const_mesh_objects() const
