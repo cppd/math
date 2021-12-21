@@ -18,6 +18,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "renderer.h"
 
 #include "commands.h"
+#include "meshes.h"
 #include "sampler.h"
 
 #include <src/com/error.h>
@@ -25,40 +26,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 namespace ns::gpu::renderer
 {
-namespace
-{
-void find_opaque_and_transparent(
-        const std::vector<const MeshObject*>& meshes,
-        std::vector<const MeshObject*>* const opaque_meshes,
-        std::vector<const MeshObject*>* const transparent_meshes)
-{
-        const unsigned transparent_count = std::count_if(
-                meshes.cbegin(), meshes.cend(),
-                [](const MeshObject* mesh)
-                {
-                        return mesh->transparent();
-                });
-
-        opaque_meshes->clear();
-        opaque_meshes->reserve(meshes.size() - transparent_count);
-
-        transparent_meshes->clear();
-        transparent_meshes->reserve(transparent_count);
-
-        for (const MeshObject* const mesh : meshes)
-        {
-                if (mesh->transparent())
-                {
-                        transparent_meshes->push_back(mesh);
-                }
-                else
-                {
-                        opaque_meshes->push_back(mesh);
-                }
-        }
-}
-}
-
 MeshRenderer::MeshRenderer(
         const vulkan::Device* const device,
         const bool sample_shading,
@@ -351,7 +318,7 @@ void MeshRenderer::create_render_command_buffers(
 
         std::vector<const MeshObject*> opaque_meshes;
         std::vector<const MeshObject*> transparent_meshes;
-        find_opaque_and_transparent(meshes, &opaque_meshes, &transparent_meshes);
+        find_opaque_and_transparent_meshes(meshes, &opaque_meshes, &transparent_meshes);
 
         vulkan::CommandBufferCreateInfo info;
 
