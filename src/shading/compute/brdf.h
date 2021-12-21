@@ -24,7 +24,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/com/random/engine.h>
 #include <src/sampling/sphere_uniform.h>
 
-namespace ns::shading::test
+namespace ns::shading::compute
 {
 template <std::size_t N, typename T, typename Color, typename RandomEngine>
 class BRDF

@@ -15,10 +15,10 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include "brdf.h"
 #include "color.h"
 #include "random.h"
 
+#include "../compute/brdf.h"
 #include "../lambertian.h"
 
 #include <src/color/color.h>
@@ -39,7 +39,7 @@ template <typename T>
 using RandomEngine = std::conditional_t<sizeof(T) <= 4, std::mt19937, std::mt19937_64>;
 
 template <std::size_t N, typename T, typename Color>
-class TestBRDF final : public BRDF<N, T, Color, RandomEngine<T>>
+class TestBRDF final : public compute::BRDF<N, T, Color, RandomEngine<T>>
 {
         const Color color_ = random_non_black_color<Color>();
 
@@ -88,18 +88,18 @@ void test_brdf()
         const auto [n, v] = random_n_v<N, T>();
 
         LOG(std::string(Color::name()) + ", " + to_string(N) + "D, " + type_name<T>() + ", uniform");
-        const Color color_uniform = directional_albedo_uniform_sampling(brdf, n, v, SAMPLE_COUNT);
+        const Color color_uniform = compute::directional_albedo_uniform_sampling(brdf, n, v, SAMPLE_COUNT);
         check_color_equal(color_uniform, brdf.color());
 
         LOG(std::string(Color::name()) + ", " + to_string(N) + "D, " + type_name<T>() + ", importance");
-        const Color color_importance = directional_albedo_importance_sampling(brdf, n, v, SAMPLE_COUNT);
+        const Color color_importance = compute::directional_albedo_importance_sampling(brdf, n, v, SAMPLE_COUNT);
         check_color_equal(color_importance, brdf.color());
 
         constexpr double RELATIVE_ERROR = 0.01;
         check_uniform_importance_equal(color_uniform, color_importance, RELATIVE_ERROR);
 
         LOG(std::string(Color::name()) + ", " + to_string(N) + "D, " + type_name<T>() + ", PDF integral");
-        const T integral = directional_pdf_integral(brdf, n, v, SAMPLE_COUNT);
+        const T integral = compute::directional_pdf_integral(brdf, n, v, SAMPLE_COUNT);
         if (!(std::abs(integral - 1) <= T(0.02)))
         {
                 error("BRDF error, PDF integral is not equal to 1\n" + to_string(integral));

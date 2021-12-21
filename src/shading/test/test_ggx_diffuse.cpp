@@ -15,10 +15,10 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include "brdf.h"
 #include "color.h"
 #include "random.h"
 
+#include "../compute/brdf.h"
 #include "../ggx_diffuse.h"
 
 #include <src/color/color.h>
@@ -43,7 +43,7 @@ template <typename T>
 constexpr T MIN_ROUGHNESS = 0.35;
 
 template <std::size_t N, typename T, typename Color>
-class TestBRDF final : public BRDF<N, T, Color, RandomEngine<T>>
+class TestBRDF final : public compute::BRDF<N, T, Color, RandomEngine<T>>
 {
         Color color_;
         T metalness_;
@@ -91,11 +91,11 @@ void test_brdf_white(const unsigned sample_count)
         const auto [n, v] = random_n_v<N, T>();
 
         LOG(std::string(Color::name()) + ", " + to_string(N) + "D, " + type_name<T>() + ", uniform, white");
-        const Color color_uniform = directional_albedo_uniform_sampling(brdf, n, v, sample_count);
+        const Color color_uniform = compute::directional_albedo_uniform_sampling(brdf, n, v, sample_count);
         check_color_less(color_uniform, brdf.color());
 
         LOG(std::string(Color::name()) + ", " + to_string(N) + "D, " + type_name<T>() + ", importance, white");
-        const Color color_importance = directional_albedo_importance_sampling(brdf, n, v, sample_count);
+        const Color color_importance = compute::directional_albedo_importance_sampling(brdf, n, v, sample_count);
         check_color_less(color_importance, brdf.color());
 
         constexpr double RELATIVE_ERROR = 0.25;
@@ -110,11 +110,11 @@ void test_brdf_random(const unsigned sample_count)
         const auto [n, v] = random_n_v<N, T>();
 
         LOG(std::string(Color::name()) + ", " + to_string(N) + "D, " + type_name<T>() + ", uniform, random");
-        const Color color_uniform = directional_albedo_uniform_sampling(brdf, n, v, sample_count);
+        const Color color_uniform = compute::directional_albedo_uniform_sampling(brdf, n, v, sample_count);
         check_color_range(color_uniform);
 
         LOG(std::string(Color::name()) + ", " + to_string(N) + "D, " + type_name<T>() + ", importance, random");
-        const Color color_importance = directional_albedo_importance_sampling(brdf, n, v, sample_count);
+        const Color color_importance = compute::directional_albedo_importance_sampling(brdf, n, v, sample_count);
         check_color_range(color_importance);
 
         constexpr double RELATIVE_ERROR = 0.25;
@@ -129,7 +129,7 @@ void test_brdf_pdf(const unsigned sample_count)
         LOG(std::string(Color::name()) + ", " + to_string(N) + "D, " + type_name<T>() + ", PDF integral");
         {
                 const auto [n, v] = random_n_v<N, T>();
-                const T integral = directional_pdf_integral(brdf, n, v, sample_count);
+                const T integral = compute::directional_pdf_integral(brdf, n, v, sample_count);
                 if (!(std::abs(integral - 1) <= T(0.05)))
                 {
                         error("BRDF error, PDF integral is not equal to 1\n" + to_string(integral));
