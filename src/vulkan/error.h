@@ -71,5 +71,5 @@ template <typename T>
 #if !defined(RELEASE_BUILD)
 #define VULKAN_ERROR(code) ns::vulkan::error_implementation::error_code((code), __FILE__, __LINE__)
 #else
-#define VULKAN_CHECK(code) ns::vulkan::error_implementation::error_code((code))
+#define VULKAN_ERROR(code) ns::vulkan::error_implementation::error_code((code))
 #endif

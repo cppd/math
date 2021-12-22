@@ -94,8 +94,6 @@ Sample<N, T, Color> sample_f(RandomEngine& random_engine, const Color& color, co
         static_assert(N >= 3);
         namespace impl = implementation;
 
-        static constexpr Sample<N, T, Color> BLACK(Vector<N, T>(0), 0, Color(0));
-
         ASSERT(n.is_unit());
 
         const Vector<N, T> l = sampling::cosine_on_hemisphere(random_engine, n);
@@ -105,13 +103,13 @@ Sample<N, T, Color> sample_f(RandomEngine& random_engine, const Color& color, co
         const T n_l = dot(n, l);
         if (n_l <= 0)
         {
-                return BLACK;
+                return {Vector<N, T>(0), 0, Color(0)};
         }
 
         const T pdf = sampling::cosine_on_hemisphere_pdf<N>(n_l);
         if (pdf <= 0)
         {
-                return BLACK;
+                return {Vector<N, T>(0), 0, Color(0)};
         }
 
         return {l, pdf, impl::f<N>(color)};

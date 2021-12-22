@@ -276,14 +276,14 @@ Sample<N, T, Color> sample_f(
 
         if (dot(n, v) <= 0)
         {
-                return {Vector<N, T>(), 0, Color(0)};
+                return {Vector<N, T>(0), 0, Color(0)};
         }
 
         const auto [l, pdf] = impl::sample_ggx_cosine<GGX_ONLY>(random_engine, roughness, n, v);
 
         if (pdf <= 0)
         {
-                return {Vector<N, T>(), 0, Color(0)};
+                return {Vector<N, T>(0), 0, Color(0)};
         }
 
         ASSERT(l.is_unit());

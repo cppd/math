@@ -157,8 +157,19 @@ void test_sampling(ProgressRatio* const progress)
                 "", COUNT_PER_BUCKET,
                 [&, v = v, n = n](RandomEngine<T>& random_engine)
                 {
-                        const Sample<N, T, Color> sample = brdf.sample_f(random_engine, n, v);
-                        return sample.l;
+                        for (int i = 0; i < 10; ++i)
+                        {
+                                const Sample<N, T, Color> sample = brdf.sample_f(random_engine, n, v);
+                                if (!(sample.pdf >= 0))
+                                {
+                                        error("Sample PDF " + to_string(sample.pdf) + " is not non-negative");
+                                }
+                                if (sample.pdf > 0)
+                                {
+                                        return sample.l;
+                                }
+                        }
+                        error("No positive PDF found");
                 },
                 [&, v = v, n = n](const Vector<N, T>& l)
                 {

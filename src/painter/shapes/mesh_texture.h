@@ -32,9 +32,9 @@ class MeshTexture
 {
         static std::vector<Vector<3, float>> to_rgb32(const image::Image<N>& image)
         {
-                std::vector<Vector<3, float>> pixels(
-                        (image.pixels.size() / format_pixel_size_in_bytes(image.color_format))
-                        * format_pixel_size_in_bytes(image::ColorFormat::R32G32B32));
+                const std::size_t pixel_count = image.pixels.size() / format_pixel_size_in_bytes(image.color_format);
+
+                std::vector<Vector<3, float>> pixels(pixel_count);
 
                 image::format_conversion(
                         image.color_format, image.pixels, image::ColorFormat::R32G32B32,
