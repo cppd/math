@@ -42,7 +42,7 @@ namespace
 constexpr unsigned TREE_LEVEL_INDENT = 2;
 
 template <typename T>
-std::vector<std::string> sorted(T s)
+std::vector<std::string> sorted(const T& s)
 {
         std::vector<std::string> res(s.cbegin(), s.cend());
         std::sort(res.begin(), res.end());
