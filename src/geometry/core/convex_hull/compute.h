@@ -42,8 +42,8 @@ The projection to the n-space of the lower convex hull of the points
 
 #pragma once
 
-#include "connect.h"
 #include "facet.h"
+#include "facet_connector.h"
 #include "facet_storage.h"
 #include "simplex_points.h"
 
@@ -83,18 +83,18 @@ void create_initial_convex_hull(
         find_simplex_points<N, S, C>(points, vertices);
 
         facets->clear();
-        for (unsigned f = 0; f < N + 1; ++f)
+        for (std::size_t i = 0; i < N + 1; ++i)
         {
-                facets->emplace_back(points, del_elem(*vertices, f), (*vertices)[f], nullptr);
+                facets->emplace_back(points, del_elem(*vertices, i), (*vertices)[i], nullptr);
                 std::prev(facets->end())->set_iter(std::prev(facets->cend()));
         }
 
         constexpr int RIDGE_COUNT = BINOMIAL<N + 1, N - 1>;
 
-        Connect<N, Facet<N, S, C>> connect(RIDGE_COUNT);
+        FacetConnector<N, Facet<N, S, C>> facet_connector(RIDGE_COUNT);
         for (Facet<N, S, C>& facet : *facets)
         {
-                connect.connect_facets(&facet, -1);
+                facet_connector.connect(&facet, -1);
         }
 }
 
@@ -107,12 +107,12 @@ void create_initial_conflict_lists(
 {
         for (Facet& facet : *facets)
         {
-                for (unsigned point = 0; point < points.size(); ++point)
+                for (std::size_t i = 0; i < points.size(); ++i)
                 {
-                        if (enabled[point] && facet.visible_from_point(points, point))
+                        if (enabled[i] && facet.visible_from_point(points, i))
                         {
-                                (*point_conflicts)[point].insert(&facet);
-                                facet.add_conflict_point(point);
+                                (*point_conflicts)[i].insert(&facet);
+                                facet.add_conflict_point(i);
                         }
                 }
         }
@@ -215,8 +215,8 @@ void create_facets_for_point_and_horizon(
 
         new_facets->clear();
 
-        unsigned ridge_count = 0;
-        unsigned index = thread_id;
+        std::size_t ridge_count = 0;
+        std::size_t index = thread_id;
         for (const Facet* const facet : point_conflicts[point])
         {
                 for (unsigned r = 0; r < facet->vertices().size(); ++r)
@@ -285,9 +285,9 @@ void create_horizon_facets(
 }
 
 template <typename T>
-unsigned calculate_facet_count(const std::vector<T>& facets)
+std::size_t calculate_facet_count(const std::vector<T>& facets)
 {
-        unsigned sum = 0;
+        std::size_t sum = 0;
         for (const T& facet : facets)
         {
                 sum += facet.size();
@@ -352,20 +352,20 @@ void add_point_to_convex_hull(
 
         {
                 // Connect facets, excluding horizon facets
-                const int facet_count = calculate_facet_count(new_facets);
-                const int ridge_count = (N - 1) * facet_count / 2;
+                const std::size_t facet_count = calculate_facet_count(new_facets);
+                const std::size_t ridge_count = (N - 1) * facet_count / 2;
 
-                Connect<N, Facet<N, S, C>> connect(ridge_count);
+                FacetConnector<N, Facet<N, S, C>> facet_connector(ridge_count);
                 for (FacetList<Facet<N, S, C>>& facet_list : new_facets)
                 {
                         for (Facet<N, S, C>& facet : facet_list)
                         {
-                                connect.connect_facets(&facet, point);
+                                facet_connector.connect(&facet, point);
                         }
                 }
         }
 
-        for (unsigned i = 0; i < new_facets.size(); ++i)
+        for (std::size_t i = 0; i < new_facets.size(); ++i)
         {
                 facets->splice(facets->cend(), new_facets[i]);
         }
@@ -410,7 +410,7 @@ void compute_convex_hull(
         }
 
         // Initial simplex created, so N + 1 points already processed
-        for (unsigned i = 0, points_processed = N + 1; i < points.size(); ++i, ++points_processed)
+        for (std::size_t i = 0, points_processed = N + 1; i < points.size(); ++i, ++points_processed)
         {
                 if (!point_enabled[i])
                 {
