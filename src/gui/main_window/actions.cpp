@@ -17,6 +17,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "actions.h"
 
+#include "actions_repository.h"
+
 #include <src/com/error.h>
 #include <src/com/message.h>
 #include <src/com/names.h>
@@ -50,42 +52,6 @@ std::string action_name(const QAction& action)
         return s;
 }
 
-void load_point_mesh(
-        WorkerThreads* const threads,
-        const storage::Repository* const repository,
-        const int dimension,
-        const std::string& object_name,
-        const std::string& action)
-{
-        threads->terminate_and_start(
-                WORKER_THREAD_ID, action,
-                [&]()
-                {
-                        WorkerThreads::Function f = process::action_load_point_mesh(repository, dimension, object_name);
-                        // model_tree->clear();
-                        // view->send(view::command::ResetView());
-                        return f;
-                });
-}
-
-void load_facet_mesh(
-        WorkerThreads* const threads,
-        const storage::Repository* const repository,
-        const int dimension,
-        const std::string& object_name,
-        const std::string& action)
-{
-        threads->terminate_and_start(
-                WORKER_THREAD_ID, action,
-                [&]()
-                {
-                        WorkerThreads::Function f = process::action_load_facet_mesh(repository, dimension, object_name);
-                        // model_tree->clear();
-                        // view->send(view::command::ResetView());
-                        return f;
-                });
-}
-
 void load_mesh(
         WorkerThreads* const threads,
         const std::filesystem::path& path,
@@ -100,21 +66,6 @@ void load_mesh(
                         // model_tree->clear();
                         // view->send(view::command::ResetView());
                         return f;
-                });
-}
-
-void load_volume(
-        WorkerThreads* const threads,
-        const storage::Repository* const repository,
-        const int dimension,
-        const std::string& object_name,
-        const std::string& action)
-{
-        threads->terminate_and_start(
-                WORKER_THREAD_ID, action,
-                [&]()
-                {
-                        return process::action_load_volume(repository, dimension, object_name);
                 });
 }
 
@@ -309,137 +260,6 @@ void create_menu(
                         volume_3d_slice(threads, model_tree, action_name(*action));
                 }));
 }
-
-void create_point_mesh_menu(
-        const int dimension,
-        std::vector<std::string>&& object_names,
-        std::vector<Connection>* const connections,
-        WorkerThreads* const threads,
-        QMenu* const menu,
-        const storage::Repository* const repository)
-{
-        if (object_names.empty())
-        {
-                return;
-        }
-
-        if (!menu->actions().isEmpty())
-        {
-                menu->addSeparator();
-        }
-
-        std::sort(object_names.begin(), object_names.end());
-        for (const std::string& object_name : object_names)
-        {
-                ASSERT(!object_name.empty());
-
-                QAction* action = menu->addAction(QString::fromStdString(object_name + "..."));
-                connections->emplace_back(QObject::connect(
-                        action, &QAction::triggered,
-                        [=]()
-                        {
-                                load_point_mesh(threads, repository, dimension, object_name, action_name(*action));
-                        }));
-        }
-}
-
-void create_facet_mesh_menu(
-        const int dimension,
-        std::vector<std::string>&& object_names,
-        std::vector<Connection>* const connections,
-        WorkerThreads* const threads,
-        QMenu* const menu,
-        const storage::Repository* const repository)
-{
-        if (object_names.empty())
-        {
-                return;
-        }
-
-        if (!menu->actions().isEmpty())
-        {
-                menu->addSeparator();
-        }
-
-        std::sort(object_names.begin(), object_names.end());
-        for (const std::string& object_name : object_names)
-        {
-                ASSERT(!object_name.empty());
-
-                QAction* action = menu->addAction(QString::fromStdString(object_name + "..."));
-                connections->emplace_back(QObject::connect(
-                        action, &QAction::triggered,
-                        [=]()
-                        {
-                                load_facet_mesh(threads, repository, dimension, object_name, action_name(*action));
-                        }));
-        }
-}
-
-void create_volume_menu(
-        const int dimension,
-        std::vector<std::string>&& object_names,
-        std::vector<Connection>* const connections,
-        WorkerThreads* const threads,
-        QMenu* const menu,
-        const storage::Repository* const repository)
-{
-        if (object_names.empty() || dimension != 3)
-        {
-                return;
-        }
-
-        if (!menu->actions().isEmpty())
-        {
-                menu->addSeparator();
-        }
-
-        std::sort(object_names.begin(), object_names.end());
-        for (const std::string& object_name : object_names)
-        {
-                ASSERT(!object_name.empty());
-
-                QAction* action = menu->addAction(QString::fromStdString(object_name + "..."));
-                connections->emplace_back(QObject::connect(
-                        action, &QAction::triggered,
-                        [=]()
-                        {
-                                load_volume(threads, repository, dimension, object_name, action_name(*action));
-                        }));
-        }
-}
-
-void create_repository_menu(
-        std::vector<Connection>* const connections,
-        WorkerThreads* const threads,
-        QMenu* const menu_create,
-        const storage::Repository* const repository)
-{
-        std::vector<storage::Repository::ObjectNames> repository_objects = repository->object_names();
-
-        std::sort(
-                repository_objects.begin(), repository_objects.end(),
-                [](const auto& a, const auto& b)
-                {
-                        return a.dimension < b.dimension;
-                });
-
-        for (storage::Repository::ObjectNames& objects : repository_objects)
-        {
-                QMenu* const sub_menu = menu_create->addMenu(QString::fromStdString(space_name(objects.dimension)));
-
-                create_point_mesh_menu(
-                        objects.dimension, std::move(objects.point_mesh_names), connections, threads, sub_menu,
-                        repository);
-
-                create_facet_mesh_menu(
-                        objects.dimension, std::move(objects.facet_mesh_names), connections, threads, sub_menu,
-                        repository);
-
-                create_volume_menu(
-                        objects.dimension, std::move(objects.volume_names), connections, threads, sub_menu, repository);
-        }
-}
 }
 
 Actions::Actions(
@@ -462,7 +282,7 @@ Actions::Actions(
                 &connections_, worker_threads_.get(), action_self_test, action_benchmark, menu_file, menu_edit,
                 menu_rendering, view, model_tree, lighting, colors);
 
-        create_repository_menu(&connections_, worker_threads_.get(), menu_create, repository);
+        create_repository_menu(WORKER_THREAD_ID, &connections_, worker_threads_.get(), menu_create, repository);
 
         self_test(worker_threads_.get(), process::TestType::SMALL, "Self-Test");
 
