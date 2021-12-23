@@ -200,7 +200,7 @@ public:
                 return name_;
         }
 
-        const ObjectId& id() const
+        ObjectId id() const
         {
                 return id_;
         }
@@ -266,6 +266,16 @@ public:
                 {
                         error_fatal("Error in volume writing destructor");
                 }
+        }
+
+        const std::string& name() const
+        {
+                return object_->name_;
+        }
+
+        ObjectId id() const
+        {
+                return object_->id_;
         }
 
         const Volume<N>& volume() const
@@ -415,6 +425,16 @@ public:
         Updates updates(std::optional<int>* const version) const
         {
                 return object_->versions_.updates(version);
+        }
+
+        const std::string& name() const
+        {
+                return object_->name_;
+        }
+
+        ObjectId id() const
+        {
+                return object_->id_;
         }
 
         const Volume<N>& volume() const

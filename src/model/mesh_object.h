@@ -188,7 +188,7 @@ public:
                 return name_;
         }
 
-        const ObjectId& id() const
+        ObjectId id() const
         {
                 return id_;
         }
@@ -261,7 +261,7 @@ public:
                 return object_->name_;
         }
 
-        const ObjectId& id() const
+        ObjectId id() const
         {
                 return object_->id_;
         }
@@ -370,7 +370,7 @@ public:
                 return object_->name_;
         }
 
-        const ObjectId& id() const
+        ObjectId id() const
         {
                 return object_->id_;
         }
