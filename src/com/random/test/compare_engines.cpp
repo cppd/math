@@ -101,6 +101,6 @@ void compare(ProgressRatio* const progress)
         compare_random_engines<long double>(counter);
 }
 
-TEST_PERFORMANCE("Compare random engines", compare)
+TEST_PERFORMANCE("Random engines", compare)
 }
 }

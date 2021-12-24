@@ -153,6 +153,6 @@ void compare_types()
         write("unsigned __int128", std::vector<unsigned __int128>(N, 1e16));
 }
 
-TEST_PERFORMANCE("Compare arithmetic types", compare_types)
+TEST_PERFORMANCE("Arithmetic types", compare_types)
 }
 }
