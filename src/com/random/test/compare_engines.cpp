@@ -17,6 +17,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "../engine.h"
 #include "../name.h"
+#include "../pcg.h"
 
 #include <src/com/benchmark.h>
 #include <src/com/chrono.h>
@@ -76,6 +77,8 @@ void compare_random_engines(const Counter& counter)
         counter();
         test_random_engine<T, std::mt19937_64>();
         counter();
+        test_random_engine<T, PCG>();
+        counter();
         test_random_engine<T, std::ranlux24>();
         counter();
         test_random_engine<T, std::ranlux24_base>();
@@ -87,7 +90,7 @@ void compare_random_engines(const Counter& counter)
 
 void compare(ProgressRatio* const progress)
 {
-        constexpr int COUNT = 9 * 3;
+        constexpr int COUNT = 10 * 3;
         int i = -1;
         const auto counter = [&]
         {

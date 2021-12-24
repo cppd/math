@@ -17,6 +17,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
+#include "pcg.h"
+
 #include <random>
 #include <type_traits>
 
@@ -74,5 +76,11 @@ template <typename T>
 constexpr const char* random_engine_name() requires std::is_same_v<std::remove_cv_t<T>, std::ranlux48_base>
 {
         return "std::ranlux48_base";
+}
+
+template <typename T>
+constexpr const char* random_engine_name() requires std::is_same_v<std::remove_cv_t<T>, PCG>
+{
+        return "PCG";
 }
 }
