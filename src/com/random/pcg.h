@@ -23,28 +23,15 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 namespace ns
 {
-class PCG
+class PCG final
 {
         std::uint64_t state_;
         std::uint64_t increment_;
 
-        using ResultType = std::uint32_t;
-
-public:
-        static constexpr ResultType min()
-        {
-                return 0;
-        }
-
-        static constexpr ResultType max()
-        {
-                return 0xffff'ffff;
-        }
-
-        explicit PCG(std::seed_seq& seed_sequence)
+        void init(std::seed_seq& seed_seq)
         {
                 std::array<std::uint32_t, 4> v;
-                seed_sequence.generate(v.begin(), v.end());
+                seed_seq.generate(v.begin(), v.end());
                 state_ = v[0];
                 state_ |= static_cast<std::uint64_t>(v[1]) << 32;
                 increment_ = v[2];
@@ -52,7 +39,31 @@ public:
                 increment_ |= 1;
         }
 
-        ResultType operator()()
+public:
+        using result_type = std::uint32_t;
+
+        static constexpr result_type min()
+        {
+                return 0;
+        }
+
+        static constexpr result_type max()
+        {
+                return 0xffff'ffff;
+        }
+
+        explicit PCG(std::seed_seq& seed_seq)
+        {
+                init(seed_seq);
+        }
+
+        explicit PCG(const result_type value)
+        {
+                std::seed_seq seed_seq({value});
+                init(seed_seq);
+        }
+
+        result_type operator()()
         {
                 static constexpr std::uint64_t MULTIPLIER = 6364136223846793005;
 
