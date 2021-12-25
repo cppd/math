@@ -20,7 +20,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/com/error.h>
 #include <src/com/log.h>
 #include <src/com/print.h>
-#include <src/com/random/create.h>
+#include <src/com/random/pcg.h>
 #include <src/numerical/integrate.h>
 #include <src/test/test.h>
 
@@ -202,7 +202,7 @@ std::array<T, 2> min_max(
 template <typename ResultType, typename T>
 void test_random()
 {
-        std::mt19937_64 engine = create_engine<std::mt19937_64>();
+        PCG engine;
 
         constexpr unsigned MIN_COUNT = 10;
         constexpr unsigned MAX_COUNT = 100;

@@ -83,7 +83,7 @@ public:
                 spotlight_.emplace(spotlight_falloff_start, spotlight_width);
         }
 
-        LightSourceSample<N, T, Color> sample(RandomEngine<T>& random_engine, const Vector<N, T>& point) const override
+        LightSourceSample<N, T, Color> sample(RandomEngine<T>& engine, const Vector<N, T>& point) const override
         {
                 if (dot(parallelotope_.normal(), point - parallelotope_.org()) <= 0)
                 {
@@ -93,8 +93,7 @@ public:
                 }
 
                 const Vector<N, T> sample_location =
-                        parallelotope_.org()
-                        + sampling::uniform_in_parallelotope(parallelotope_.vectors(), random_engine);
+                        parallelotope_.org() + sampling::uniform_in_parallelotope(parallelotope_.vectors(), engine);
 
                 const Vector<N, T> direction = sample_location - point;
                 const T distance = direction.norm();

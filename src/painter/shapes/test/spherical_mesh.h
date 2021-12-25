@@ -35,8 +35,8 @@ namespace spherical_mesh_implementation
 {
 inline constexpr bool WRITE_LOG = false;
 
-template <std::size_t N, typename T>
-Vector<N, T> random_center(const T radius, std::mt19937_64& random_engine)
+template <std::size_t N, typename T, typename RandomEngine>
+Vector<N, T> random_center(const T radius, RandomEngine& engine)
 {
         static_assert(N >= 3);
 
@@ -46,25 +46,25 @@ Vector<N, T> random_center(const T radius, std::mt19937_64& random_engine)
         Vector<N, T> res;
         for (std::size_t i = 0; i < N; ++i)
         {
-                res[i] = bd(random_engine) ? v : -v;
+                res[i] = bd(engine) ? v : -v;
         }
         return res;
 }
 
-template <std::size_t N>
+template <std::size_t N, typename RandomEngine>
 std::unique_ptr<const mesh::Mesh<N>> create_spherical_mesh(
         const float radius,
         const int point_count,
-        std::mt19937_64& random_engine,
+        RandomEngine& engine,
         ProgressRatio* const progress)
 {
-        const Vector<N, float> center = random_center<N>(radius, random_engine);
+        const Vector<N, float> center = random_center<N>(radius, engine);
 
         std::vector<Vector<N, float>> points;
         points.resize(point_count);
         for (Vector<N, float>& p : points)
         {
-                p = radius * sampling::uniform_on_sphere<N, float>(random_engine) + center;
+                p = radius * sampling::uniform_on_sphere<N, float>(engine) + center;
         }
 
         progress->set_text("Data: %v of %m");
@@ -83,8 +83,8 @@ std::unique_ptr<const mesh::Mesh<N>> create_spherical_mesh(
         return mesh::create_mesh_for_facets(points, facets, WRITE_LOG);
 }
 
-template <std::size_t N, typename T>
-float random_radius(std::mt19937_64& random_engine)
+template <std::size_t N, typename T, typename RandomEngine>
+float random_radius(RandomEngine& engine)
 {
         static_assert(std::is_same_v<T, float> || std::is_same_v<T, double>);
 
@@ -96,7 +96,7 @@ float random_radius(std::mt19937_64& random_engine)
         static_assert(N >= 3 && N < 3 + EXPONENTS.size());
         static constexpr std::array<int, 2> EXPONENT = EXPONENTS[N - 3];
 
-        const float exponent = std::uniform_real_distribution<float>(EXPONENT[0], EXPONENT[1])(random_engine);
+        const float exponent = std::uniform_real_distribution<float>(EXPONENT[0], EXPONENT[1])(engine);
         return std::pow(10.0f, exponent);
 }
 }
@@ -110,18 +110,18 @@ struct SphericalMesh
         T surface;
 };
 
-template <std::size_t N, typename T, typename Color>
+template <std::size_t N, typename T, typename Color, typename RandomEngine>
 SphericalMesh<N, T, Color> create_spherical_mesh_scene(
         const int point_count,
-        std::mt19937_64& random_engine,
+        RandomEngine& engine,
         ProgressRatio* const progress)
 {
         namespace impl = spherical_mesh_implementation;
 
         SphericalMesh<N, T, Color> res;
 
-        std::unique_ptr<const mesh::Mesh<N>> mesh = impl::create_spherical_mesh<N>(
-                impl::random_radius<N, T>(random_engine), point_count, random_engine, progress);
+        std::unique_ptr<const mesh::Mesh<N>> mesh =
+                impl::create_spherical_mesh<N>(impl::random_radius<N, T>(engine), point_count, engine, progress);
 
         res.facet_count = mesh->facets.size();
 
@@ -154,11 +154,11 @@ SphericalMesh<N, T, Color> create_spherical_mesh_scene(
         return res;
 }
 
-template <std::size_t N, typename T>
+template <std::size_t N, typename T, typename RandomEngine>
 std::vector<Ray<N, T>> create_spherical_mesh_center_rays(
         const geometry::BoundingBox<N, T>& bb,
         const int ray_count,
-        std::mt19937_64& random_engine)
+        RandomEngine& engine)
 {
         const Vector<N, T> center = bb.center();
         const T radius = bb.diagonal().norm() / 2;
@@ -167,7 +167,7 @@ std::vector<Ray<N, T>> create_spherical_mesh_center_rays(
         rays.resize(ray_count);
         for (Ray<N, T>& ray : rays)
         {
-                Vector<N, T> v = sampling::uniform_on_sphere<N, T>(random_engine);
+                Vector<N, T> v = sampling::uniform_on_sphere<N, T>(engine);
                 ray = Ray<N, T>(radius * v + center, -v);
         }
         return rays;

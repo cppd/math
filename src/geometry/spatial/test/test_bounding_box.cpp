@@ -21,7 +21,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/com/error.h>
 #include <src/com/log.h>
 #include <src/com/print.h>
-#include <src/com/random/create.h>
+#include <src/com/random/pcg.h>
 #include <src/sampling/sphere_uniform.h>
 #include <src/test/test.h>
 
@@ -86,7 +86,7 @@ template struct Test<long double>;
 //
 
 template <std::size_t N, typename T>
-BoundingBox<N, T> create_random_bounding_box(std::mt19937_64& engine)
+BoundingBox<N, T> create_random_bounding_box(PCG& engine)
 {
         std::uniform_real_distribution<T> urd(-5, 5);
         Vector<N, T> p1;
@@ -103,7 +103,7 @@ BoundingBox<N, T> create_random_bounding_box(std::mt19937_64& engine)
 }
 
 template <std::size_t N, typename T>
-Vector<N, T> create_random_direction(const std::type_identity_t<T>& probability, std::mt19937_64& engine)
+Vector<N, T> create_random_direction(const std::type_identity_t<T>& probability, PCG& engine)
 {
         if (std::bernoulli_distribution(probability)(engine))
         {
@@ -116,7 +116,7 @@ Vector<N, T> create_random_direction(const std::type_identity_t<T>& probability,
 }
 
 template <std::size_t N, typename T>
-Vector<N, T> create_random_aa_direction(std::mt19937_64& engine)
+Vector<N, T> create_random_aa_direction(PCG& engine)
 {
         const std::size_t n = std::uniform_int_distribution<std::size_t>(0, N - 1)(engine);
         Vector<N, T> v(1);
@@ -267,11 +267,7 @@ void test_no_intersection(const BoundingBox<N, T>& box, const Ray<N, T>& ray, co
 }
 
 template <std::size_t N, typename T>
-void test_intersections(
-        const BoundingBox<N, T>& box,
-        const int point_count,
-        const T& precision,
-        std::mt19937_64& engine)
+void test_intersections(const BoundingBox<N, T>& box, const int point_count, const T& precision, PCG& engine)
 {
         const T length = box.diagonal().norm();
         const T move_distance = 2 * length;
@@ -326,7 +322,7 @@ void test_intersections(
 }
 
 template <std::size_t N, typename T>
-void test_external(const BoundingBox<N, T>& box, const int point_count, std::mt19937_64& engine)
+void test_external(const BoundingBox<N, T>& box, const int point_count, PCG& engine)
 {
         for (const Vector<N, T>& point :
              testing::random_external_points(box.min(), box.diagonal(), point_count, engine))
@@ -340,7 +336,7 @@ void test_external(const BoundingBox<N, T>& box, const int point_count, std::mt1
 }
 
 template <std::size_t N, typename T>
-void test(const int point_count, const std::type_identity_t<T>& precision, std::mt19937_64& engine)
+void test(const int point_count, const std::type_identity_t<T>& precision, PCG& engine)
 {
         const BoundingBox<N, T> box = create_random_bounding_box<N, T>(engine);
         test_intersections(box, point_count, precision, engine);
@@ -348,7 +344,7 @@ void test(const int point_count, const std::type_identity_t<T>& precision, std::
 }
 
 template <typename T>
-void test(const int point_count, const std::type_identity_t<T>& precision, std::mt19937_64& engine)
+void test(const int point_count, const std::type_identity_t<T>& precision, PCG& engine)
 {
         test<2, T>(point_count, precision, engine);
         test<3, T>(point_count, precision, engine);
@@ -358,7 +354,7 @@ void test(const int point_count, const std::type_identity_t<T>& precision, std::
 
 void test_bounding_box()
 {
-        std::mt19937_64 engine = create_engine<std::mt19937_64>();
+        PCG engine;
 
         LOG("Test bounding box");
         test<float>(10'000, 1e-5, engine);

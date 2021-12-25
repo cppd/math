@@ -22,7 +22,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/com/error.h>
 #include <src/com/log.h>
 #include <src/com/print.h>
-#include <src/com/random/create.h>
+#include <src/com/random/pcg.h>
 #include <src/com/type/limit.h>
 #include <src/com/type/name.h>
 #include <src/test/test.h>
@@ -239,7 +239,7 @@ void test_performance()
 
         const std::vector<T> data = [&]
         {
-                std::mt19937_64 engine = create_engine<std::mt19937_64>();
+                PCG engine;
                 std::uniform_real_distribution<T> urd(-1.0001, 1.0001);
                 std::vector<T> res;
                 res.reserve(DATA_SIZE);

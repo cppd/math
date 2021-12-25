@@ -41,8 +41,7 @@ public:
                 sample_.radiance = color;
         }
 
-        LightSourceSample<N, T, Color> sample(RandomEngine<T>& /*random_engine*/, const Vector<N, T>& /*point*/)
-                const override
+        LightSourceSample<N, T, Color> sample(RandomEngine<T>& /*engine*/, const Vector<N, T>& /*point*/) const override
         {
                 return sample_;
         }

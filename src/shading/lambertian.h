@@ -89,14 +89,14 @@ T pdf(const Vector<N, T>& n, const Vector<N, T>& l)
 }
 
 template <std::size_t N, typename T, typename Color, typename RandomEngine>
-Sample<N, T, Color> sample_f(RandomEngine& random_engine, const Color& color, const Vector<N, T>& n)
+Sample<N, T, Color> sample_f(RandomEngine& engine, const Color& color, const Vector<N, T>& n)
 {
         static_assert(N >= 3);
         namespace impl = implementation;
 
         ASSERT(n.is_unit());
 
-        const Vector<N, T> l = sampling::cosine_on_hemisphere(random_engine, n);
+        const Vector<N, T> l = sampling::cosine_on_hemisphere(engine, n);
 
         ASSERT(l.is_unit());
 

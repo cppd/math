@@ -28,7 +28,7 @@ namespace ns
 // Volume 2. Seminumerical Algorithms. 3.4.2. Random Sampling and Shuffling.
 
 template <typename RandomEngine, typename T>
-void shuffle_dimension(RandomEngine&& random_engine, const std::size_t dimension, T* const data)
+void shuffle_dimension(RandomEngine&& engine, const std::size_t dimension, T* const data)
 {
         ASSERT(dimension < std::tuple_size_v<typename T::value_type>);
 
@@ -39,13 +39,13 @@ void shuffle_dimension(RandomEngine&& random_engine, const std::size_t dimension
 
         for (std::size_t i = data->size() - 1; i > 0; --i)
         {
-                std::size_t j = std::uniform_int_distribution<std::size_t>(0, i)(random_engine);
+                std::size_t j = std::uniform_int_distribution<std::size_t>(0, i)(engine);
                 std::swap((*data)[i][dimension], (*data)[j][dimension]);
         }
 }
 
 template <typename RandomEngine, typename... T>
-void shuffle(RandomEngine&& random_engine, T* const... data)
+void shuffle(RandomEngine&& engine, T* const... data)
 {
         static_assert(sizeof...(T) >= 1);
 
@@ -65,7 +65,7 @@ void shuffle(RandomEngine&& random_engine, T* const... data)
 
         for (std::size_t i = size - 1; i > 0; --i)
         {
-                const std::size_t j = std::uniform_int_distribution<std::size_t>(0, i)(random_engine);
+                const std::size_t j = std::uniform_int_distribution<std::size_t>(0, i)(engine);
                 (std::swap((*data)[i], (*data)[j]), ...);
         }
 }

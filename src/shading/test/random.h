@@ -17,7 +17,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
-#include <src/com/random/create.h>
+#include <src/com/random/pcg.h>
 #include <src/numerical/vector.h>
 #include <src/sampling/sphere_uniform.h>
 
@@ -28,15 +28,15 @@ namespace ns::shading::test
 template <std::size_t N, typename T>
 std::array<Vector<N, T>, 2> random_n_v()
 {
-        std::mt19937 random_engine = create_engine<std::mt19937>();
+        PCG engine;
 
-        const Vector<N, T> n = sampling::uniform_on_sphere<N, T>(random_engine);
+        const Vector<N, T> n = sampling::uniform_on_sphere<N, T>(engine);
 
         Vector<N, T> v;
         T d;
         do
         {
-                v = sampling::uniform_on_sphere<N, T>(random_engine);
+                v = sampling::uniform_on_sphere<N, T>(engine);
                 d = dot(n, v);
         } while (!(std::abs(d) > T(0.1)));
 
@@ -50,15 +50,15 @@ std::array<Vector<N, T>, 2> random_n_v()
 template <typename Color>
 Color random_non_black_color()
 {
-        std::mt19937 random_engine = create_engine<std::mt19937>();
+        PCG engine;
         std::uniform_real_distribution<double> urd(0, 1);
 
         Color color;
         do
         {
-                const double r = urd(random_engine);
-                const double g = urd(random_engine);
-                const double b = urd(random_engine);
+                const double r = urd(engine);
+                const double g = urd(engine);
+                const double b = urd(engine);
                 color = Color(r, g, b);
         } while (color.is_black());
 

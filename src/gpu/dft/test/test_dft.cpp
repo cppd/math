@@ -32,13 +32,14 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/com/file/path.h>
 #include <src/com/log.h>
 #include <src/com/print.h>
-#include <src/com/random/create.h>
+#include <src/com/random/pcg.h>
 #include <src/test/test.h>
 
 #include <array>
 #include <cmath>
 #include <complex>
 #include <filesystem>
+#include <random>
 #include <string>
 #include <vector>
 
@@ -129,7 +130,7 @@ void compute_vulkan(
         }
 
         {
-                std::mt19937_64 engine = create_engine<std::mt19937_64>();
+                PCG engine;
                 std::uniform_int_distribution<int> uid(1, 3000);
                 dft->create_buffers(uid(engine), uid(engine));
                 dft->create_buffers(1, 1);
@@ -430,7 +431,7 @@ enum class TestSize
 
 TestSize find_test_size()
 {
-        std::mt19937_64 engine = create_engine<std::mt19937_64>();
+        PCG engine;
         std::bernoulli_distribution small_test(0.9);
         return small_test(engine) ? TestSize::SMALL : TestSize::LARGE;
 }
@@ -441,7 +442,7 @@ std::array<int, 2> find_dimensions(const TestSize test_size)
         {
         case TestSize::SMALL:
         {
-                std::mt19937_64 engine = create_engine<std::mt19937_64>();
+                PCG engine;
                 std::uniform_int_distribution<int> uid(1, 100);
                 return {uid(engine), uid(engine)};
         }

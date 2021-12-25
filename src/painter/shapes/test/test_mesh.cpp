@@ -22,13 +22,12 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/com/memory_arena.h>
 #include <src/com/names.h>
 #include <src/com/print.h>
-#include <src/com/random/create.h>
+#include <src/com/random/pcg.h>
 #include <src/com/type/name.h>
 #include <src/numerical/ray.h>
 #include <src/numerical/vector.h>
 #include <src/test/test.h>
 
-#include <random>
 #include <vector>
 
 namespace ns::painter
@@ -153,16 +152,16 @@ void test(const int point_count, const int ray_count, ProgressRatio* const progr
 
         LOG(name);
 
-        std::mt19937_64 random_engine = create_engine<std::mt19937_64>();
+        PCG engine;
 
         test::SphericalMesh<N, T, Color> mesh =
-                test::create_spherical_mesh_scene<N, T, Color>(point_count, random_engine, progress);
+                test::create_spherical_mesh_scene<N, T, Color>(point_count, engine, progress);
 
         test_intersections(
-                mesh, test::create_spherical_mesh_center_rays(mesh.bounding_box, ray_count, random_engine), progress);
+                mesh, test::create_spherical_mesh_center_rays(mesh.bounding_box, ray_count, engine), progress);
 
         test_surface_ratio(
-                mesh, test::create_random_intersections_rays(mesh.bounding_box, ray_count, random_engine), progress);
+                mesh, test::create_random_intersections_rays(mesh.bounding_box, ray_count, engine), progress);
 
         LOG(name + " passed");
 }

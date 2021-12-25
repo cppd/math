@@ -20,19 +20,19 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "sphere_mesh.h"
 
 #include <src/com/error.h>
-#include <src/com/random/create.h>
+#include <src/com/random/pcg.h>
 
 #include <sstream>
 #include <vector>
 
 namespace ns::sampling::testing
 {
-template <std::size_t N, typename T, typename RandomEngine>
+template <std::size_t N, typename T>
 class SphereIntersection final
 {
         const SphereMesh<N, T>* const sphere_mesh_;
 
-        RandomEngine random_engine_ = create_engine<RandomEngine>();
+        PCG random_engine_;
         long long intersection_count_ = 0;
         long long missed_intersection_count_ = 0;
 

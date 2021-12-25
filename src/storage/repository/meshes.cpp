@@ -20,6 +20,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/com/constant.h>
 #include <src/com/error.h>
 #include <src/com/exponent.h>
+#include <src/com/random/pcg.h>
 #include <src/geometry/shapes/mobius_strip.h>
 #include <src/geometry/shapes/sphere_create.h>
 #include <src/geometry/shapes/torus.h>
@@ -28,7 +29,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <functional>
 #include <map>
-#include <random>
 #include <type_traits>
 #include <unordered_set>
 #include <utility>
@@ -135,8 +135,8 @@ public:
         }
 };
 
-template <std::size_t N, typename T, typename RandomEngine>
-Vector<N, T> random_on_sphere(RandomEngine& engine, const bool bound)
+template <std::size_t N, typename T>
+Vector<N, T> random_on_sphere(PCG& engine, const bool bound)
 {
         if (!bound)
         {
@@ -181,7 +181,7 @@ std::vector<Vector<N, float>> generate_points_ellipsoid(const unsigned point_cou
 {
         DiscretePoints<N> points(point_count);
 
-        std::mt19937_64 engine(point_count);
+        PCG engine(point_count);
 
         while (points.size() < point_count)
         {
@@ -198,7 +198,7 @@ std::vector<Vector<N, float>> generate_points_sphere_with_notch(const unsigned p
 {
         DiscretePoints<N> points(point_count);
 
-        std::mt19937_64 engine(point_count);
+        PCG engine(point_count);
 
         while (points.size() < point_count)
         {
@@ -218,7 +218,7 @@ std::vector<Vector<3, float>> generate_points_mobius_strip(const unsigned point_
 {
         DiscretePoints<3> points(point_count);
 
-        std::mt19937_64 engine(point_count);
+        PCG engine(point_count);
 
         while (points.size() < point_count)
         {
@@ -236,7 +236,7 @@ std::vector<Vector<N, float>> generate_points_torus(const unsigned point_count, 
 
         DiscretePoints<N> points(point_count);
 
-        std::mt19937_64 engine(point_count);
+        PCG engine(point_count);
 
         while (points.size() < point_count)
         {

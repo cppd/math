@@ -23,10 +23,10 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/com/print.h>
 #include <src/com/random/create.h>
 #include <src/com/random/name.h>
+#include <src/com/random/pcg.h>
 #include <src/com/type/name.h>
 #include <src/test/test.h>
 
-#include <random>
 #include <sstream>
 #include <string>
 
@@ -37,63 +37,63 @@ namespace
 namespace impl = sphere_implementation;
 
 template <std::size_t N, typename T, typename RandomEngine>
-Vector<N, T> uniform_in_sphere_by_rejection(RandomEngine& random_engine)
+Vector<N, T> uniform_in_sphere_by_rejection(RandomEngine& engine)
 {
         Vector<N, T> v;
         T v_length_square;
-        impl::uniform_in_sphere_by_rejection(random_engine, v, v_length_square);
+        impl::uniform_in_sphere_by_rejection(engine, v, v_length_square);
         return v;
 }
 
 template <std::size_t N, typename T, typename RandomEngine>
-Vector<N, T> uniform_in_sphere_by_normal_distribution(RandomEngine& random_engine)
+Vector<N, T> uniform_in_sphere_by_normal_distribution(RandomEngine& engine)
 {
         Vector<N, T> v;
         T v_length_square;
-        impl::uniform_in_sphere_by_normal_distribution(random_engine, v, v_length_square);
+        impl::uniform_in_sphere_by_normal_distribution(engine, v, v_length_square);
         return v;
 }
 
 template <int COUNT, std::size_t N, typename T, typename RandomEngine>
-double test_on_sphere_by_rejection(RandomEngine& random_engine)
+double test_on_sphere_by_rejection(RandomEngine& engine)
 {
         const Clock::time_point start_time = Clock::now();
         for (int i = 0; i < COUNT; ++i)
         {
-                do_not_optimize(impl::uniform_on_sphere_by_rejection<N, T>(random_engine));
+                do_not_optimize(impl::uniform_on_sphere_by_rejection<N, T>(engine));
         }
         return duration_from(start_time);
 }
 
 template <int COUNT, std::size_t N, typename T, typename RandomEngine>
-double test_on_sphere_by_normal_distribution(RandomEngine& random_engine)
+double test_on_sphere_by_normal_distribution(RandomEngine& engine)
 {
         const Clock::time_point start_time = Clock::now();
         for (int i = 0; i < COUNT; ++i)
         {
-                do_not_optimize(impl::uniform_on_sphere_by_normal_distribution<N, T>(random_engine));
+                do_not_optimize(impl::uniform_on_sphere_by_normal_distribution<N, T>(engine));
         }
         return duration_from(start_time);
 }
 
 template <int COUNT, std::size_t N, typename T, typename RandomEngine>
-double test_in_sphere_by_rejection(RandomEngine& random_engine)
+double test_in_sphere_by_rejection(RandomEngine& engine)
 {
         const Clock::time_point start_time = Clock::now();
         for (int i = 0; i < COUNT; ++i)
         {
-                do_not_optimize(uniform_in_sphere_by_rejection<N, T>(random_engine));
+                do_not_optimize(uniform_in_sphere_by_rejection<N, T>(engine));
         }
         return duration_from(start_time);
 }
 
 template <int COUNT, std::size_t N, typename T, typename RandomEngine>
-double test_in_sphere_by_normal_distribution(RandomEngine& random_engine)
+double test_in_sphere_by_normal_distribution(RandomEngine& engine)
 {
         const Clock::time_point start_time = Clock::now();
         for (int i = 0; i < COUNT; ++i)
         {
-                do_not_optimize(uniform_in_sphere_by_normal_distribution<N, T>(random_engine));
+                do_not_optimize(uniform_in_sphere_by_normal_distribution<N, T>(engine));
         }
         return duration_from(start_time);
 }
@@ -131,24 +131,24 @@ void test_performance()
         oss << "Sample " << type_to_string<SAMPLE_TYPE>();
         oss << " <" << N << ", " << type_name<T>() << ", " << random_engine_name<RandomEngine>() << ">:";
 
-        RandomEngine random_engine = create_engine<RandomEngine>();
+        RandomEngine engine = create_engine<RandomEngine>();
 
         static_assert(SAMPLE_TYPE == SampleType::ON_SPHERE || SAMPLE_TYPE == SampleType::IN_SPHERE);
         switch (SAMPLE_TYPE)
         {
         case SampleType::ON_SPHERE:
         {
-                const double r = test_on_sphere_by_rejection<COUNT, N, T>(random_engine);
+                const double r = test_on_sphere_by_rejection<COUNT, N, T>(engine);
                 oss << " rejection " << to_string_digit_groups(std::llround(COUNT / r)) << " o/s";
-                const double n = test_on_sphere_by_normal_distribution<COUNT, N, T>(random_engine);
+                const double n = test_on_sphere_by_normal_distribution<COUNT, N, T>(engine);
                 oss << ", normal " << to_string_digit_groups(std::llround(COUNT / n)) << " o/s";
                 break;
         }
         case SampleType::IN_SPHERE:
         {
-                const double r = test_in_sphere_by_rejection<COUNT, N, T>(random_engine);
+                const double r = test_in_sphere_by_rejection<COUNT, N, T>(engine);
                 oss << " rejection " << to_string_digit_groups(std::llround(COUNT / r)) << " o/s";
-                const double n = test_in_sphere_by_normal_distribution<COUNT, N, T>(random_engine);
+                const double n = test_in_sphere_by_normal_distribution<COUNT, N, T>(engine);
                 oss << ", normal " << to_string_digit_groups(std::llround(COUNT / n)) << " o/s";
                 break;
         }
@@ -182,6 +182,8 @@ void test_performance(const Counter& counter)
         test_performance<SAMPLE_TYPE, float, std::mt19937_64>(counter);
         test_performance<SAMPLE_TYPE, double, std::mt19937>(counter);
         test_performance<SAMPLE_TYPE, double, std::mt19937_64>(counter);
+        test_performance<SAMPLE_TYPE, double, PCG>(counter);
+        test_performance<SAMPLE_TYPE, double, PCG>(counter);
 }
 
 void test(ProgressRatio* const progress)

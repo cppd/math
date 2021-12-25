@@ -180,7 +180,7 @@ public:
         }
 
         template <typename RandomEngine>
-        void generate(RandomEngine& random_engine, std::vector<Vector<N, T>>* const samples) const
+        void generate(RandomEngine& engine, std::vector<Vector<N, T>>* const samples) const
         {
                 constexpr bool IS_FLOAT = std::is_same_v<std::remove_cvref_t<T>, float>;
 
@@ -197,14 +197,14 @@ public:
                                 // Distribution may return max if T is float
                                 do
                                 {
-                                        sample[n] = std::uniform_real_distribution<T>(min, max)(random_engine);
+                                        sample[n] = std::uniform_real_distribution<T>(min, max)(engine);
                                 } while (IS_FLOAT && sample[n] >= max);
                         }
                 }
 
                 if (shuffle_)
                 {
-                        std::shuffle(samples->begin(), samples->end(), random_engine);
+                        std::shuffle(samples->begin(), samples->end(), engine);
                 }
         }
 };

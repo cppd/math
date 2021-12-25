@@ -26,13 +26,12 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/com/chrono.h>
 #include <src/com/error.h>
 #include <src/com/print.h>
-#include <src/com/random/create.h>
+#include <src/com/random/pcg.h>
 #include <src/com/type/limit.h>
 #include <src/sampling/simplex_uniform.h>
 #include <src/sampling/sphere_uniform.h>
 
 #include <cmath>
-#include <random>
 
 namespace ns::geometry::spatial::testing::hyperplane_simplex
 {
@@ -59,7 +58,7 @@ struct Simplex final
 };
 
 template <std::size_t N, typename T>
-Simplex<N, T> create_random_simplex(std::mt19937_64& engine)
+Simplex<N, T> create_random_simplex(PCG& engine)
 {
         constexpr T ORG_INTERVAL = 10;
         constexpr T MIN_LENGTH = 0.1;
@@ -93,7 +92,7 @@ T max_vertex_distance(const Simplex<N, T>& simplex)
 }
 
 template <std::size_t N, typename T>
-std::vector<Ray<N, T>> create_rays(const Simplex<N, T>& simplex, const int point_count, std::mt19937_64& engine)
+std::vector<Ray<N, T>> create_rays(const Simplex<N, T>& simplex, const int point_count, PCG& engine)
 {
         const Vector<N, T>& normal = simplex.simplex.normal();
 
@@ -142,7 +141,7 @@ void check_intersection_count(const Simplex<N, T>& simplex, const std::vector<Ra
 }
 
 template <std::size_t N, typename T, int COUNT>
-double compute_intersections_per_second(const int point_count, std::mt19937_64& engine)
+double compute_intersections_per_second(const int point_count, PCG& engine)
 {
         const Simplex<N, T> simplex = create_random_simplex<N, T>(engine);
         const std::vector<Ray<N, T>> rays = create_rays(simplex, point_count, engine);
@@ -165,7 +164,7 @@ double compute_intersections_per_second(const int point_count, std::mt19937_64& 
 template <std::size_t N, typename T>
 void test_intersection()
 {
-        std::mt19937_64 engine = create_engine<std::mt19937_64>();
+        PCG engine;
 
         const Simplex<N, T> simplex = create_random_simplex<N, T>(engine);
         const std::vector<Ray<N, T>> rays = create_rays(simplex, POINT_COUNT, engine);
@@ -176,7 +175,7 @@ void test_intersection()
 template <std::size_t N, typename T>
 double compute_intersections_per_second()
 {
-        std::mt19937_64 engine = create_engine<std::mt19937_64>();
+        PCG engine;
 
         return average<AVERAGE_COUNT>(
                 [&]

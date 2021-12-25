@@ -23,13 +23,12 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/com/exponent.h>
 #include <src/com/log.h>
 #include <src/com/print.h>
-#include <src/com/random/create.h>
+#include <src/com/random/pcg.h>
 #include <src/com/type/name.h>
 #include <src/sampling/sphere_uniform.h>
 #include <src/test/test.h>
 
 #include <cmath>
-#include <random>
 #include <sstream>
 #include <vector>
 
@@ -38,7 +37,7 @@ namespace ns::numerical
 namespace
 {
 template <std::size_t N, typename T>
-std::vector<Vector<N, T>> random_data(int count, std::mt19937_64& engine)
+std::vector<Vector<N, T>> random_data(const int count, PCG& engine)
 {
         std::vector<Vector<N, T>> data;
         data.reserve(count);
@@ -72,7 +71,7 @@ void test_optics_performance()
         constexpr T N_2 = 1.5;
         constexpr T ETA = N_1 / N_2;
 
-        std::mt19937_64 engine = create_engine<std::mt19937_64>();
+        PCG engine;
 
         const Vector<N, T> normal = sampling::uniform_on_sphere<N, T>(engine);
         const std::vector<Vector<N, T>> data = random_data<N, T>(DATA_SIZE, engine);

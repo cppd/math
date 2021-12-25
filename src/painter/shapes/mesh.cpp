@@ -99,7 +99,7 @@ class SurfaceImpl final : public Surface<N, T, Color>
         }
 
         Sample<N, T, Color> sample_brdf(
-                RandomEngine<T>& random_engine,
+                RandomEngine<T>& engine,
                 const Vector<N, T>& point,
                 const Vector<N, T>& n,
                 const Vector<N, T>& v) const override
@@ -108,8 +108,8 @@ class SurfaceImpl final : public Surface<N, T, Color>
 
                 const Material<T, Color>& m = mesh_data_->materials()[facet_->material()];
 
-                shading::Sample<N, T, Color> sample = shading::ggx_diffuse::sample_f(
-                        random_engine, m.metalness, m.roughness, surface_color(point, m), n, v);
+                shading::Sample<N, T, Color> sample =
+                        shading::ggx_diffuse::sample_f(engine, m.metalness, m.roughness, surface_color(point, m), n, v);
 
                 Sample<N, T, Color> s;
                 s.l = sample.l;

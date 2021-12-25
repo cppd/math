@@ -25,21 +25,17 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/com/log.h>
 #include <src/com/names.h>
 #include <src/com/print.h>
+#include <src/com/random/pcg.h>
 #include <src/com/type/name.h>
 #include <src/sampling/testing/test.h>
 #include <src/test/test.h>
-
-#include <random>
 
 namespace ns::shading::test
 {
 namespace
 {
-template <typename T>
-using RandomEngine = std::conditional_t<sizeof(T) <= 4, std::mt19937, std::mt19937_64>;
-
 template <std::size_t N, typename T, typename Color>
-class TestBRDF final : public compute::BRDF<N, T, Color, RandomEngine<T>>
+class TestBRDF final : public compute::BRDF<N, T, Color>
 {
         const Color color_ = random_non_black_color<Color>();
 
@@ -62,14 +58,13 @@ public:
                 return lambertian::pdf(n, l);
         }
 
-        Sample<N, T, Color> sample_f(RandomEngine<T>& random_engine, const Vector<N, T>& n, const Vector<N, T>& v)
-                const override
+        Sample<N, T, Color> sample_f(PCG& engine, const Vector<N, T>& n, const Vector<N, T>& v) const override
         {
                 if (dot(n, v) <= 0)
                 {
                         return {Vector<N, T>(0), 0, Color(0)};
                 }
-                return lambertian::sample_f(random_engine, color_, n);
+                return lambertian::sample_f(engine, color_, n);
         }
 
         const Color& color() const
@@ -153,13 +148,13 @@ void test_sampling(ProgressRatio* const progress)
         const TestBRDF<N, T, Color> brdf;
         const auto [n, v] = random_n_v<N, T>();
 
-        sampling::testing::test_distribution_surface<N, T, RandomEngine<T>>(
+        sampling::testing::test_distribution_surface<N, T>(
                 "", COUNT_PER_BUCKET,
-                [&, v = v, n = n](RandomEngine<T>& random_engine)
+                [&, v = v, n = n](auto& engine)
                 {
                         for (int i = 0; i < 10; ++i)
                         {
-                                const Sample<N, T, Color> sample = brdf.sample_f(random_engine, n, v);
+                                const Sample<N, T, Color> sample = brdf.sample_f(engine, n, v);
                                 if (!(sample.pdf >= 0))
                                 {
                                         error("Sample PDF " + to_string(sample.pdf) + " is not non-negative");

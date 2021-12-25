@@ -20,7 +20,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/com/log.h>
 #include <src/com/math.h>
 #include <src/com/print.h>
-#include <src/com/random/create.h>
+#include <src/com/random/pcg.h>
 #include <src/com/type/limit.h>
 #include <src/com/type/name.h>
 #include <src/test/test.h>
@@ -114,7 +114,7 @@ bool equal(
         return abs_sum <= sum_max_error;
 }
 
-Vector<3, float> random_rgb(std::mt19937_64& engine)
+Vector<3, float> random_rgb(PCG& engine)
 {
         std::uniform_real_distribution<float> urd(0, 1);
         return {urd(engine), urd(engine), urd(engine)};
@@ -122,7 +122,7 @@ Vector<3, float> random_rgb(std::mt19937_64& engine)
 
 template <typename ColorType>
 void test_color_white_light(
-        std::mt19937_64& engine,
+        PCG& engine,
         const std::string_view& test_name,
         const float max_error,
         const float sum_max_error)
@@ -144,7 +144,7 @@ void test_color_white_light(
 
 template <typename ColorType>
 void test_color_white_color(
-        std::mt19937_64& engine,
+        PCG& engine,
         const std::string_view& test_name,
         const float max_error,
         const float sum_max_error)
@@ -165,7 +165,7 @@ void test_color_white_color(
 }
 
 template <typename ColorType>
-void test_color_constructors(std::mt19937_64& engine, const std::string_view& test_name, const float max_error)
+void test_color_constructors(PCG& engine, const std::string_view& test_name, const float max_error)
 {
         const Vector<3, float> rgb = random_rgb(engine);
 
@@ -194,7 +194,7 @@ void test_color_constructors(std::mt19937_64& engine, const std::string_view& te
 }
 
 template <typename ColorType, typename FloatType>
-void test_color_conversions(std::mt19937_64& engine, const std::string_view& test_name)
+void test_color_conversions(PCG& engine, const std::string_view& test_name)
 {
         const Vector<3, float> rgb = random_rgb(engine);
 
@@ -219,7 +219,7 @@ void test_color_conversions(std::mt19937_64& engine, const std::string_view& tes
 }
 
 template <typename ColorType>
-void test_color_non_negative(std::mt19937_64& engine, const std::string_view& test_name)
+void test_color_non_negative(PCG& engine, const std::string_view& test_name)
 {
         std::uniform_real_distribution<float> urd_n(-1, 1);
 
@@ -240,7 +240,7 @@ void test_color_non_negative(std::mt19937_64& engine, const std::string_view& te
 }
 
 template <typename ColorType>
-void test_color_luminance(std::mt19937_64& engine, const std::string_view& test_name)
+void test_color_luminance(PCG& engine, const std::string_view& test_name)
 {
         std::uniform_real_distribution<double> urd(0, 2);
         const double value = urd(engine);
@@ -262,7 +262,7 @@ void test_color_luminance(std::mt19937_64& engine, const std::string_view& test_
 
 template <typename ColorType>
 void test_color(
-        std::mt19937_64& engine,
+        PCG& engine,
         const std::string_view& test_name,
         const float white_light_max_error,
         const float white_light_sum_max_error,
@@ -280,7 +280,7 @@ void test_color(
 }
 
 template <typename T>
-void test_color(std::mt19937_64& engine)
+void test_color(PCG& engine)
 {
         test_color<RGB<T>>(engine, "RGB", 0, 0, 0, 0, 0.005);
 
@@ -296,7 +296,7 @@ void test()
 {
         LOG("Test color");
 
-        std::mt19937_64 engine = create_engine<std::mt19937_64>();
+        PCG engine;
         for (int i = 0; i < 1000; ++i)
         {
                 test_color<float>(engine);

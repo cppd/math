@@ -25,7 +25,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/com/error.h>
 #include <src/com/log.h>
 #include <src/com/print.h>
-#include <src/com/random/create.h>
+#include <src/com/random/pcg.h>
 #include <src/com/string/ascii.h>
 #include <src/com/thread.h>
 #include <src/progress/progress.h>
@@ -76,7 +76,7 @@ inline void log(const std::string& message, const bool add_indent = false)
 }
 }
 
-template <std::size_t N, typename T, typename RandomEngine, typename RandomVector>
+template <std::size_t N, typename T, typename RandomVector>
 void test_unit(
         const std::string& description,
         const long long count,
@@ -100,14 +100,14 @@ void test_unit(
 
         const auto f = [&]()
         {
-                RandomEngine random_engine = create_engine<RandomEngine>();
+                PCG engine;
                 for (long long i = 0; i < count_per_thread; ++i)
                 {
                         if ((i & 0xfff) == 0xfff)
                         {
                                 progress->set(i * count_per_thread_reciprocal);
                         }
-                        Vector<N, T> v = random_vector(random_engine);
+                        const Vector<N, T> v = random_vector(engine);
                         if (!(v.is_unit()))
                         {
                                 error("Vector " + to_string(v) + " is not unit " + to_string(v.norm()));
@@ -133,7 +133,7 @@ void test_unit(
         }
 }
 
-template <std::size_t N, typename T, typename RandomEngine, typename RandomVector, typename PDF>
+template <std::size_t N, typename T, typename RandomVector, typename PDF>
 void test_distribution_angle(
         const std::string& description,
         const long long count_per_bucket,
@@ -165,12 +165,12 @@ void test_distribution_angle(
                 impl::log(s);
         }
 
-        buckets.template compute_distribution<RandomEngine>(count, normal, random_vector, progress);
+        buckets.compute_distribution(count, normal, random_vector, progress);
         // impl::log(buckets.histogram(pdf), true /*add_indent*/);
         buckets.compare_with_pdf(pdf);
 }
 
-template <std::size_t N, typename T, typename RandomEngine, typename RandomVector, typename PDF>
+template <std::size_t N, typename T, typename RandomVector, typename PDF>
 void test_distribution_surface(
         const std::string& description,
         const long long count_per_bucket,
@@ -198,29 +198,29 @@ void test_distribution_surface(
                 impl::log(s);
         }
 
-        buckets.template check_distribution<RandomEngine>(count, random_vector, pdf, progress);
+        buckets.check_distribution(count, random_vector, pdf, progress);
 }
 
-template <long long COUNT, typename RandomEngine, typename RandomVector>
+template <long long COUNT, typename RandomVector>
 long long test_performance(const RandomVector& random_vector)
 {
-        RandomEngine random_engine = create_engine<RandomEngine>();
+        PCG engine;
         const Clock::time_point start_time = Clock::now();
         for (long long i = 0; i < COUNT; ++i)
         {
-                do_not_optimize(random_vector(random_engine));
+                do_not_optimize(random_vector(engine));
         }
         return std::llround(COUNT / duration_from(start_time));
 }
 
-template <long long COUNT, typename RandomEngine, typename RandomVector>
+template <long long COUNT, typename RandomVector>
 void test_performance(const std::string& description, const RandomVector& random_vector, ProgressRatio* const progress)
 {
         namespace impl = test_implementation;
 
         progress->set(0);
 
-        const long long performance = test_performance<COUNT, RandomEngine>(random_vector);
+        const long long performance = test_performance<COUNT>(random_vector);
 
         std::string s = to_string_digit_groups(performance) + " o/s";
         impl::add_description(&s, ", ", description);

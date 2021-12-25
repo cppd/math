@@ -39,15 +39,15 @@ Vector<N, T> uniform_in_parallelotope(const std::array<Vector<N, T>, M>& vectors
 }
 
 template <std::size_t N, typename T, std::size_t M, std::uniform_random_bit_generator RandomEngine>
-Vector<N, T> uniform_in_parallelotope(const std::array<Vector<N, T>, M>& vectors, RandomEngine& random_engine)
+Vector<N, T> uniform_in_parallelotope(const std::array<Vector<N, T>, M>& vectors, RandomEngine& engine)
 {
         static_assert(N > 0 && M > 0 && M <= N);
 
         std::uniform_real_distribution<T> urd(0, 1);
-        Vector<N, T> res = vectors[0] * urd(random_engine);
+        Vector<N, T> res = vectors[0] * urd(engine);
         for (std::size_t i = 1; i < M; ++i)
         {
-                res.multiply_add(vectors[i], urd(random_engine));
+                res.multiply_add(vectors[i], urd(engine));
         }
         return res;
 }

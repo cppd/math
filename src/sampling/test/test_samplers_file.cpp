@@ -24,14 +24,13 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/com/exponent.h>
 #include <src/com/file/path.h>
 #include <src/com/log.h>
-#include <src/com/random/create.h>
+#include <src/com/random/pcg.h>
 #include <src/com/type/name.h>
 #include <src/test/test.h>
 
 #include <cctype>
 #include <filesystem>
 #include <fstream>
-#include <random>
 #include <sstream>
 
 namespace ns::sampling::test
@@ -121,12 +120,12 @@ void write_to_file(
         }
 }
 
-template <std::size_t N, typename T, typename RandomEngine>
+template <std::size_t N, typename T>
 void write_to_files(const bool shuffle)
 {
         static_assert(std::is_floating_point_v<T>);
 
-        RandomEngine random_engine = create_engine<RandomEngine>();
+        PCG engine;
 
         constexpr int PASS_COUNT = 10;
 
@@ -150,7 +149,7 @@ void write_to_files(const bool shuffle)
                 std::vector<Vector<N, T>> tmp;
                 for (int i = 0; i < PASS_COUNT; ++i)
                 {
-                        sampler.generate(random_engine, &tmp);
+                        sampler.generate(engine, &tmp);
                         data.insert(data.cend(), tmp.cbegin(), tmp.cend());
                 }
                 constexpr int GRID_SIZE = ONE_DIMENSION_SAMPLE_COUNT;
@@ -162,7 +161,7 @@ void write_to_files(const bool shuffle)
                 std::vector<Vector<N, T>> tmp;
                 for (int i = 0; i < PASS_COUNT; ++i)
                 {
-                        sampler.generate(random_engine, &tmp);
+                        sampler.generate(engine, &tmp);
                         data.insert(data.cend(), tmp.cbegin(), tmp.cend());
                 }
                 constexpr int GRID_SIZE = SAMPLE_COUNT;
@@ -180,25 +179,25 @@ void write_to_files(const bool shuffle)
         }
 }
 
-template <std::size_t N, typename T, typename RandomEngine>
+template <std::size_t N, typename T>
 void write_to_files()
 {
-        write_to_files<N, T, RandomEngine>(false);
-        write_to_files<N, T, RandomEngine>(true);
+        write_to_files<N, T>(false);
+        write_to_files<N, T>(true);
 }
 
-template <typename T, typename RandomEngine>
+template <typename T>
 void write_to_files()
 {
-        write_to_files<2, T, RandomEngine>();
-        write_to_files<3, T, RandomEngine>();
+        write_to_files<2, T>();
+        write_to_files<3, T>();
 }
 
 void write()
 {
-        write_to_files<float, std::mt19937_64>();
-        write_to_files<double, std::mt19937_64>();
-        write_to_files<long double, std::mt19937_64>();
+        write_to_files<float>();
+        write_to_files<double>();
+        write_to_files<long double>();
 }
 
 TEST_SMALL("Sampler files", write)

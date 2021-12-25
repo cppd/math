@@ -25,10 +25,10 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/com/error.h>
 #include <src/com/log.h>
 #include <src/com/names.h>
+#include <src/com/random/pcg.h>
 #include <src/com/shuffle.h>
 
 #include <array>
-#include <random>
 #include <vector>
 
 namespace ns::geometry
@@ -173,7 +173,7 @@ void compute_delaunay(
 
         ch::convert_to_unique_integer(source_points, ch::MAX_DELAUNAY, &convex_hull_points, &points_map);
 
-        shuffle(std::mt19937_64(convex_hull_points.size()), &convex_hull_points, &points_map);
+        shuffle(PCG(convex_hull_points.size()), &convex_hull_points, &points_map);
 
         if (write_log)
         {
@@ -217,7 +217,7 @@ void compute_convex_hull(
 
         ch::convert_to_unique_integer(source_points, ch::MAX_CONVEX_HULL, &convex_hull_points, &points_map);
 
-        shuffle(std::mt19937_64(convex_hull_points.size()), &convex_hull_points, &points_map);
+        shuffle(PCG(convex_hull_points.size()), &convex_hull_points, &points_map);
 
         if (write_log)
         {

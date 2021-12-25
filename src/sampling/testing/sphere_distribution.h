@@ -131,7 +131,7 @@ class SphereDistribution final
                 return result;
         }
 
-        template <typename RandomEngine, typename RandomVector, typename PDF>
+        template <typename RandomVector, typename PDF>
         std::vector<SphereBucket<N, T>> compute_buckets(
                 const long long count,
                 const RandomVector& random_vector,
@@ -161,7 +161,7 @@ class SphereDistribution final
                 {
                         ASSERT(buckets->size() == sphere_mesh_.facet_count());
 
-                        SphereIntersection<N, T, RandomEngine> intersections(&sphere_mesh_);
+                        SphereIntersection<N, T> intersections(&sphere_mesh_);
 
                         const auto add_data = [&]
                         {
@@ -170,15 +170,13 @@ class SphereDistribution final
                                         (*buckets)[index].add_sample();
                                 }
                                 {
-                                        const auto [index, dir] =
-                                                intersections.find(uniform_on_sphere<N, T, RandomEngine>);
+                                        const auto [index, dir] = intersections.find(uniform_on_sphere<N, T, PCG>);
                                         (*buckets)[index].add_pdf(pdf(dir));
                                         (*buckets)[index].add_uniform();
                                 }
                                 for (int i = 0; i < 3; ++i)
                                 {
-                                        const auto [index, dir] =
-                                                intersections.find(uniform_on_sphere<N, T, RandomEngine>);
+                                        const auto [index, dir] = intersections.find(uniform_on_sphere<N, T, PCG>);
                                         (*buckets)[index].add_uniform();
                                 }
                         };
@@ -219,15 +217,14 @@ public:
                 return std::ceil(count / round_to) * round_to;
         }
 
-        template <typename RandomEngine, typename RandomVector, typename PDF>
+        template <typename RandomVector, typename PDF>
         void check_distribution(
                 const long long count,
                 const RandomVector& random_vector,
                 const PDF& pdf,
                 ProgressRatio* const progress) const
         {
-                const std::vector<SphereBucket<N, T>> buckets =
-                        compute_buckets<RandomEngine>(count, random_vector, pdf, progress);
+                const std::vector<SphereBucket<N, T>> buckets = compute_buckets(count, random_vector, pdf, progress);
 
                 check_bucket_sizes(buckets);
 

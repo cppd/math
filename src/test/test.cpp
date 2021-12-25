@@ -19,10 +19,9 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <src/com/error.h>
 #include <src/com/exception.h>
-#include <src/com/random/create.h>
+#include <src/com/random/pcg.h>
 #include <src/com/variant.h>
 
-#include <random>
 #include <sstream>
 
 namespace ns::test
@@ -160,7 +159,7 @@ void Tests::run_performance(ProgressRatios* const progress_ratios) const
 
 void Tests::run_small(std::vector<std::string> names, ProgressRatios* const progress_ratios) const
 {
-        std::shuffle(names.begin(), names.end(), create_engine<std::mt19937>());
+        std::shuffle(names.begin(), names.end(), PCG());
         for (const std::string& name : names)
         {
                 run_small(name, progress_ratios);
@@ -169,7 +168,7 @@ void Tests::run_small(std::vector<std::string> names, ProgressRatios* const prog
 
 void Tests::run_large(std::vector<std::string> names, ProgressRatios* const progress_ratios) const
 {
-        std::shuffle(names.begin(), names.end(), create_engine<std::mt19937>());
+        std::shuffle(names.begin(), names.end(), PCG());
         for (const std::string& name : names)
         {
                 run_large(name, progress_ratios);
@@ -178,7 +177,7 @@ void Tests::run_large(std::vector<std::string> names, ProgressRatios* const prog
 
 void Tests::run_performance(std::vector<std::string> names, ProgressRatios* const progress_ratios) const
 {
-        std::shuffle(names.begin(), names.end(), create_engine<std::mt19937>());
+        std::shuffle(names.begin(), names.end(), PCG());
         for (const std::string& name : names)
         {
                 run_performance(name, progress_ratios);

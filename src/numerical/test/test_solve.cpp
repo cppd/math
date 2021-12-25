@@ -24,7 +24,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/com/log.h>
 #include <src/com/math.h>
 #include <src/com/print.h>
-#include <src/com/random/create.h>
+#include <src/com/random/pcg.h>
 #include <src/com/type/name.h>
 #include <src/test/test.h>
 
@@ -142,7 +142,7 @@ bool are_equal(const Matrix<R, C, T>& a, const Matrix<R, C, T>& b, const T& abs_
 template <std::size_t ROWS, std::size_t COLUMNS, typename T>
 std::vector<std::array<Vector<COLUMNS, T>, ROWS>> random_matrices(const int count)
 {
-        std::mt19937_64 random_engine = create_engine<std::mt19937_64>();
+        PCG engine;
         std::uniform_real_distribution<T> urd(-10, 10);
         std::vector<std::array<Vector<COLUMNS, T>, ROWS>> res(count);
         for (int i = 0; i < count; ++i)
@@ -151,7 +151,7 @@ std::vector<std::array<Vector<COLUMNS, T>, ROWS>> random_matrices(const int coun
                 {
                         for (std::size_t c = 0; c < COLUMNS; ++c)
                         {
-                                res[i][r][c] = urd(random_engine);
+                                res[i][r][c] = urd(engine);
                         }
                 }
         }
@@ -161,14 +161,14 @@ std::vector<std::array<Vector<COLUMNS, T>, ROWS>> random_matrices(const int coun
 template <std::size_t N, typename T>
 std::vector<Vector<N, T>> random_vectors(const int count)
 {
-        std::mt19937_64 random_engine = create_engine<std::mt19937_64>();
+        PCG engine;
         std::uniform_real_distribution<T> urd(-10, 10);
         std::vector<Vector<N, T>> res(count);
         for (int i = 0; i < count; ++i)
         {
                 for (std::size_t n = 0; n < N; ++n)
                 {
-                        res[i][n] = urd(random_engine);
+                        res[i][n] = urd(engine);
                 }
         }
         return res;

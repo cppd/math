@@ -25,7 +25,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/com/log.h>
 #include <src/com/names.h>
 #include <src/com/print.h>
-#include <src/com/random/create.h>
+#include <src/com/random/pcg.h>
 #include <src/com/type/name.h>
 #include <src/sampling/testing/test.h>
 #include <src/test/test.h>
@@ -37,27 +37,24 @@ namespace ns::shading::test
 namespace
 {
 template <typename T>
-using RandomEngine = std::conditional_t<sizeof(T) <= 4, std::mt19937, std::mt19937_64>;
-
-template <typename T>
 constexpr T MIN_ROUGHNESS = 0.35;
 
 template <std::size_t N, typename T, typename Color>
-class TestBRDF final : public compute::BRDF<N, T, Color, RandomEngine<T>>
+class TestBRDF final : public compute::BRDF<N, T, Color>
 {
         Color color_;
         T metalness_;
         T roughness_;
 
-        TestBRDF(const Color& color, RandomEngine<std::mt19937_64>&& random_engine)
+        TestBRDF(const Color& color, PCG&& engine)
                 : color_(color),
-                  metalness_(std::uniform_real_distribution<T>(0, 1)(random_engine)),
-                  roughness_(std::uniform_real_distribution<T>(MIN_ROUGHNESS<T>, 1)(random_engine))
+                  metalness_(std::uniform_real_distribution<T>(0, 1)(engine)),
+                  roughness_(std::uniform_real_distribution<T>(MIN_ROUGHNESS<T>, 1)(engine))
         {
         }
 
 public:
-        explicit TestBRDF(const Color& color) : TestBRDF(color, create_engine<std::mt19937_64>())
+        explicit TestBRDF(const Color& color) : TestBRDF(color, PCG())
         {
         }
 
@@ -71,10 +68,9 @@ public:
                 return ggx_diffuse::pdf(roughness_, n, v, l);
         }
 
-        Sample<N, T, Color> sample_f(RandomEngine<T>& random_engine, const Vector<N, T>& n, const Vector<N, T>& v)
-                const override
+        Sample<N, T, Color> sample_f(PCG& engine, const Vector<N, T>& n, const Vector<N, T>& v) const override
         {
-                return ggx_diffuse::sample_f(random_engine, metalness_, roughness_, color_, n, v);
+                return ggx_diffuse::sample_f(engine, metalness_, roughness_, color_, n, v);
         }
 
         const Color& color() const
@@ -205,13 +201,13 @@ void test_sampling(ProgressRatio* const progress)
         const TestBRDF<N, T, Color> brdf(Color(1));
         const auto [n, v] = random_n_v<N, T>();
 
-        sampling::testing::test_distribution_surface<N, T, RandomEngine<T>>(
+        sampling::testing::test_distribution_surface<N, T>(
                 "", COUNT_PER_BUCKET,
-                [&, v = v, n = n](RandomEngine<T>& random_engine)
+                [&, v = v, n = n](auto& engine)
                 {
                         for (int i = 0; i < 10; ++i)
                         {
-                                const Sample<N, T, Color> sample = brdf.sample_f(random_engine, n, v);
+                                const Sample<N, T, Color> sample = brdf.sample_f(engine, n, v);
                                 if (!(sample.pdf >= 0))
                                 {
                                         error("Sample PDF " + to_string(sample.pdf) + " is not non-negative");

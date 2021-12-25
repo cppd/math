@@ -112,13 +112,13 @@ class PowerCosineOnHemisphere
 
 public:
         template <typename RandomEngine>
-        Vector<N, T> sample(RandomEngine& random_engine)
+        Vector<N, T> sample(RandomEngine& engine)
         {
                 T angle;
                 T cos_angle;
                 while (true)
                 {
-                        angle = normal_distribution_(random_engine);
+                        angle = normal_distribution_(engine);
                         if (angle < 0 || angle > PI<T> / 2)
                         {
                                 continue;
@@ -126,7 +126,7 @@ public:
                         cos_angle = std::cos(angle);
                         const T f = std::pow(cos_angle, n_) * std::pow(std::sin(angle), p_);
                         const T p = std::exp(normal_distribution_coef_ * square(angle - mean_));
-                        if (f > p * urd_(random_engine))
+                        if (f > p * urd_(engine))
                         {
                                 break;
                         }
@@ -134,7 +134,7 @@ public:
 
                 const T n = cos_angle;
                 const T length = std::sqrt(1 - square(n));
-                const Vector<N - 1, T> v = length * uniform_on_sphere<N - 1, T>(random_engine);
+                const Vector<N - 1, T> v = length * uniform_on_sphere<N - 1, T>(engine);
 
                 Vector<N, T> coordinates;
                 for (unsigned i = 0; i < N - 1; ++i)
@@ -160,22 +160,20 @@ public:
 }
 
 template <std::size_t N, typename T, typename RandomEngine>
-requires(
-        N > 3) Vector<N, T> power_cosine_on_hemisphere(RandomEngine& random_engine, const std::type_identity_t<T> power)
+requires(N > 3) Vector<N, T> power_cosine_on_hemisphere(RandomEngine& engine, const std::type_identity_t<T> power)
 {
         namespace impl = sphere_power_cosine_implementation;
 
-        return impl::PowerCosineOnHemisphere<N, T>::instance(power).sample(random_engine);
+        return impl::PowerCosineOnHemisphere<N, T>::instance(power).sample(engine);
 }
 
 template <std::size_t N, typename T, typename RandomEngine>
-requires(N == 3)
-        Vector<N, T> power_cosine_on_hemisphere(RandomEngine& random_engine, const std::type_identity_t<T> power)
+requires(N == 3) Vector<N, T> power_cosine_on_hemisphere(RandomEngine& engine, const std::type_identity_t<T> power)
 {
         Vector<N - 1, T> v;
         T v_length_square;
 
-        uniform_in_sphere(random_engine, v, v_length_square);
+        uniform_in_sphere(engine, v, v_length_square);
 
         const T n = std::pow(v_length_square, 1 / (1 + power));
         const T new_length_squared = 1 - square(n);
@@ -192,12 +190,12 @@ requires(N == 3)
 }
 
 template <std::size_t N, typename T, typename RandomEngine>
-Vector<N, T> power_cosine_on_hemisphere(RandomEngine& random_engine, const Vector<N, T>& normal, const T power)
+Vector<N, T> power_cosine_on_hemisphere(RandomEngine& engine, const Vector<N, T>& normal, const T power)
 {
         const std::array<Vector<N, T>, N - 1> orthonormal_basis =
                 numerical::orthogonal_complement_of_unit_vector(normal);
 
-        const Vector<N, T> coordinates = power_cosine_on_hemisphere<N, T>(random_engine, power);
+        const Vector<N, T> coordinates = power_cosine_on_hemisphere<N, T>(engine, power);
 
         Vector<N, T> result = coordinates[N - 1] * normal;
         for (std::size_t i = 0; i < N - 1; ++i)

@@ -142,9 +142,9 @@ Color f(const T metalness,
 }
 
 // template <std::size_t N, typename T, typename RandomEngine>
-// std::tuple<Vector<N, T>, T> sample_cosine(RandomEngine& random_engine, const Vector<N, T>& n)
+// std::tuple<Vector<N, T>, T> sample_cosine(RandomEngine& engine, const Vector<N, T>& n)
 // {
-//         const Vector<N, T> l = sampling::cosine_on_hemisphere(random_engine, n);
+//         const Vector<N, T> l = sampling::cosine_on_hemisphere(engine, n);
 //         ASSERT(l.is_unit());
 //         if (dot(n, l) <= 0)
 //         {
@@ -176,7 +176,7 @@ T pdf_ggx_cosine(
 
 template <bool GGX_ONLY, std::size_t N, typename T, typename RandomEngine>
 std::tuple<Vector<N, T>, T> sample_ggx_cosine(
-        RandomEngine& random_engine,
+        RandomEngine& engine,
         const T roughness,
         const Vector<N, T>& n,
         const Vector<N, T>& v)
@@ -190,15 +190,15 @@ std::tuple<Vector<N, T>, T> sample_ggx_cosine(
 
         Vector<N, T> l;
         Vector<N, T> h;
-        if (GGX_ONLY || std::bernoulli_distribution(0.5)(random_engine))
+        if (GGX_ONLY || std::bernoulli_distribution(0.5)(engine))
         {
-                std::tie(h, l) = ggx_visible_normals_h_l(random_engine, n, v, alpha);
+                std::tie(h, l) = ggx_visible_normals_h_l(engine, n, v, alpha);
                 ASSERT(l.is_unit());
                 ASSERT(h.is_unit());
         }
         else
         {
-                l = sampling::cosine_on_hemisphere(random_engine, n);
+                l = sampling::cosine_on_hemisphere(engine, n);
                 ASSERT(l.is_unit());
                 h = (v + l).normalized();
         }
@@ -261,7 +261,7 @@ T pdf(const T roughness, const Vector<N, T>& n, const Vector<N, T>& v, const Vec
 
 template <bool GGX_ONLY = false, std::size_t N, typename T, typename Color, typename RandomEngine>
 Sample<N, T, Color> sample_f(
-        RandomEngine& random_engine,
+        RandomEngine& engine,
         const T metalness,
         const T roughness,
         const Color& color,
@@ -279,7 +279,7 @@ Sample<N, T, Color> sample_f(
                 return {Vector<N, T>(0), 0, Color(0)};
         }
 
-        const auto [l, pdf] = impl::sample_ggx_cosine<GGX_ONLY>(random_engine, roughness, n, v);
+        const auto [l, pdf] = impl::sample_ggx_cosine<GGX_ONLY>(engine, roughness, n, v);
 
         if (pdf <= 0)
         {

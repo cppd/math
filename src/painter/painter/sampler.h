@@ -78,9 +78,9 @@ public:
         }
 
         template <typename RandomEngine>
-        void generate(RandomEngine& random_engine, std::vector<Vector<N, T>>* const samples) const
+        void generate(RandomEngine& engine, std::vector<Vector<N, T>>* const samples) const
         {
-                sampler_.generate(random_engine, samples);
+                sampler_.generate(engine, samples);
         }
 
         void next_pass() const

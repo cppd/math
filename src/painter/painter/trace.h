@@ -214,8 +214,8 @@ std::optional<Color> trace_path(
         const Scene<N, T, Color>& scene,
         const bool smooth_normals,
         const Ray<N, T>& ray,
-        RandomEngine<T>& random_engine)
+        RandomEngine<T>& engine)
 {
-        return trace_implementation::trace_path<N, T, Color>(scene, smooth_normals, ray, random_engine);
+        return trace_implementation::trace_path<N, T, Color>(scene, smooth_normals, ray, engine);
 }
 }

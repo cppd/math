@@ -24,7 +24,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <src/com/log.h>
 #include <src/com/names.h>
-#include <src/com/random/create.h>
+#include <src/com/random/pcg.h>
 
 #include <array>
 #include <cmath>
@@ -175,7 +175,7 @@ void test_points(const int point_count)
 {
         const std::string name = "Test parallelotope points in " + space_name(N);
 
-        std::mt19937_64 engine = create_engine<std::mt19937_64>();
+        PCG engine;
 
         constexpr T ORG_INTERVAL = 10;
         constexpr T MIN_LENGTH = 0.1;

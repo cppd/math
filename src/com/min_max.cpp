@@ -21,7 +21,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/com/error.h>
 #include <src/com/log.h>
 #include <src/com/print.h>
-#include <src/com/random/create.h>
+#include <src/com/random/pcg.h>
 #include <src/com/type/name.h>
 #include <src/test/test.h>
 
@@ -56,8 +56,8 @@ void check_equal(const T& v1, const T& v2, const char* const text)
         }
 }
 
-template <typename T, typename Engine>
-void test_min_max(Engine& engine)
+template <typename T>
+void test_min_max(PCG& engine)
 {
         const std::vector<T> data = [&]
         {
@@ -81,8 +81,8 @@ void test_min_max(Engine& engine)
         }
 }
 
-template <typename T, typename Engine>
-void test_min_max_performance(Engine& engine)
+template <typename T>
+void test_min_max_performance(PCG& engine)
 {
         const std::string type_str = std::string("<") + type_name<T>() + ">";
 
@@ -129,7 +129,7 @@ void test_min_max_performance(Engine& engine)
 void test_equal()
 {
         LOG("Test minimum and maximum");
-        std::mt19937_64 engine = create_engine<std::mt19937_64>();
+        PCG engine;
         for (int i = 0; i < 10; ++i)
         {
                 test_min_max<float>(engine);
@@ -140,7 +140,7 @@ void test_equal()
 
 void test_performance()
 {
-        std::mt19937_64 engine = create_engine<std::mt19937_64>();
+        PCG engine;
         test_min_max_performance<float>(engine);
         test_min_max_performance<double>(engine);
 }

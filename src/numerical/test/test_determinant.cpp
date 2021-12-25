@@ -23,7 +23,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/com/error.h>
 #include <src/com/log.h>
 #include <src/com/print.h>
-#include <src/com/random/create.h>
+#include <src/com/random/pcg.h>
 #include <src/com/type/name.h>
 #include <src/test/test.h>
 
@@ -128,7 +128,7 @@ bool are_equal(const T& a, const T& b, const T& precision)
 template <std::size_t ROWS, std::size_t COLUMNS, typename T>
 std::vector<std::array<Vector<COLUMNS, T>, ROWS>> random_matrices(const int count)
 {
-        std::mt19937_64 random_engine = create_engine<std::mt19937_64>();
+        PCG engine;
         std::uniform_real_distribution<T> urd(-10, 10);
         std::vector<std::array<Vector<COLUMNS, T>, ROWS>> res(count);
         for (int i = 0; i < count; ++i)
@@ -137,7 +137,7 @@ std::vector<std::array<Vector<COLUMNS, T>, ROWS>> random_matrices(const int coun
                 {
                         for (std::size_t c = 0; c < COLUMNS; ++c)
                         {
-                                res[i][r][c] = urd(random_engine);
+                                res[i][r][c] = urd(engine);
                         }
                 }
         }

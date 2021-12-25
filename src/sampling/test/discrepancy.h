@@ -89,14 +89,14 @@ template <typename T, typename RandomEngine>
 std::array<T, 2> make_box_coordinates(
         const std::type_identity_t<T>& min,
         const std::type_identity_t<T>& max,
-        RandomEngine& random_engine)
+        RandomEngine& engine)
 {
         T v0;
         T v1;
         do
         {
-                v0 = std::uniform_real_distribution<T>(min, max)(random_engine);
-                v1 = std::uniform_real_distribution<T>(v0, max)(random_engine);
+                v0 = std::uniform_real_distribution<T>(min, max)(engine);
+                v1 = std::uniform_real_distribution<T>(v0, max)(engine);
         } while (!(v1 > v0));
         return {v0, v1};
 }
@@ -105,22 +105,22 @@ template <std::size_t N, typename T, typename RandomEngine>
 std::array<std::array<T, 2>, N> make_random_box(
         const std::type_identity_t<T>& min,
         const std::type_identity_t<T>& max,
-        RandomEngine& random_engine)
+        RandomEngine& engine)
 {
         std::array<std::array<T, 2>, N> box;
 
-        if (std::bernoulli_distribution(0.9)(random_engine))
+        if (std::bernoulli_distribution(0.9)(engine))
         {
                 for (unsigned i = 0; i < N; ++i)
                 {
-                        const auto [v0, v1] = make_box_coordinates<T>(min, max, random_engine);
+                        const auto [v0, v1] = make_box_coordinates<T>(min, max, engine);
                         box[i][0] = v0;
                         box[i][1] = v1;
                 }
         }
         else
         {
-                const auto [v0, v1] = make_box_coordinates<T>(min, max, random_engine);
+                const auto [v0, v1] = make_box_coordinates<T>(min, max, engine);
                 for (unsigned i = 0; i < N; ++i)
                 {
                         box[i][0] = v0;
@@ -149,7 +149,7 @@ T compute_discrepancy(
         const std::type_identity_t<T>& max,
         const std::vector<Vector<N, T>>& points,
         const int box_count,
-        RandomEngine& random_engine)
+        RandomEngine& engine)
 {
         if (!(max > min))
         {
@@ -170,7 +170,7 @@ T compute_discrepancy(
         T max_discrepancy = Limits<T>::lowest();
         for (int i = 0; i < box_count; ++i)
         {
-                const std::array<std::array<T, 2>, N> box = make_random_box<N, T>(box_min, box_max, random_engine);
+                const std::array<std::array<T, 2>, N> box = make_random_box<N, T>(box_min, box_max, engine);
                 const T box_volume = compute_box_volume(box);
                 const int point_count = point_search.count_points(box);
                 const T discrepancy = std::abs(box_volume / volume - static_cast<T>(point_count) / points.size());

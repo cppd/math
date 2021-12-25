@@ -26,7 +26,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/com/file/path.h>
 #include <src/com/log.h>
 #include <src/com/names.h>
-#include <src/com/random/create.h>
+#include <src/com/random/pcg.h>
 #include <src/com/string/str.h>
 #include <src/com/thread.h>
 #include <src/geometry/shapes/sphere_create.h>
@@ -147,8 +147,8 @@ float random_radius()
         static_assert(N >= 3 && N < 3 + EXPONENTS.size());
         static constexpr std::array<int, 2> MIN_MAX = EXPONENTS[N - 3];
 
-        std::mt19937 random_engine = create_engine<std::mt19937>();
-        float exponent = std::uniform_real_distribution<float>(MIN_MAX[0], MIN_MAX[1])(random_engine);
+        PCG engine;
+        const float exponent = std::uniform_real_distribution<float>(MIN_MAX[0], MIN_MAX[1])(engine);
         return std::pow(10.0f, exponent);
 }
 

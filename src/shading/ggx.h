@@ -53,7 +53,7 @@ namespace ggx_implementation
 {
 #if 0
 template <typename T, typename RandomEngine>
-Vector<3, T> ggx_vn(RandomEngine& random_engine, const Vector<3, T>& ve, const T alpha)
+Vector<3, T> ggx_vn(RandomEngine& engine, const Vector<3, T>& ve, const T alpha)
 {
         // Section 3.2: transforming the view direction to the hemisphere configuration
         Vector<3, T> vh = Vector<3, T>(alpha * ve[0], alpha * ve[1], ve[2]).normalized();
@@ -72,11 +72,11 @@ Vector<3, T> ggx_vn(RandomEngine& random_engine, const Vector<3, T>& ve, const T
         Vector<3, T> t1 = cross(vh, t0);
 
         // Section 4.2: parameterization of the projected area
-        Vector<2, T> t = [&random_engine]
+        Vector<2, T> t = [&engine]
         {
                 Vector<2, T> vector;
                 T vector_length_square;
-                sampling::uniform_in_sphere(random_engine, vector, vector_length_square);
+                sampling::uniform_in_sphere(engine, vector, vector_length_square);
                 return vector;
         }();
         T s = T(0.5) * (T(1) + vh[2]);
@@ -96,7 +96,7 @@ Vector<3, T> ggx_vn(RandomEngine& random_engine, const Vector<3, T>& ve, const T
 }
 #else
 template <std::size_t N, typename T, typename RandomEngine>
-Vector<N, T> ggx_vn(RandomEngine& random_engine, const Vector<N, T>& ve, const T alpha)
+Vector<N, T> ggx_vn(RandomEngine& engine, const Vector<N, T>& ve, const T alpha)
 {
         static_assert(N >= 3);
 
@@ -155,11 +155,11 @@ Vector<N, T> ggx_vn(RandomEngine& random_engine, const Vector<N, T>& ve, const T
         }
 
         // Section 4.2: parameterization of the projected area
-        Vector<N - 1, T> t = [&random_engine]
+        Vector<N - 1, T> t = [&engine]
         {
                 Vector<N - 1, T> vector;
                 T vector_length_square;
-                sampling::uniform_in_sphere(random_engine, vector, vector_length_square);
+                sampling::uniform_in_sphere(engine, vector, vector_length_square);
                 return vector;
         }();
         const T s = T(0.5) * (T(1) + vh[N - 1]);
@@ -233,7 +233,7 @@ Color fresnel(const Color& f0, const T h_l)
 
 template <std::size_t N, typename T, typename RandomEngine>
 Vector<N, T> ggx_visible_normals_h(
-        RandomEngine& random_engine,
+        RandomEngine& engine,
         const Vector<N, T>& normal,
         const Vector<N, T>& v,
         const T alpha)
@@ -252,7 +252,7 @@ Vector<N, T> ggx_visible_normals_h(
         }
         ve[N - 1] = dot(v, normal);
 
-        const Vector<N, T> ne = impl::ggx_vn(random_engine, ve, alpha);
+        const Vector<N, T> ne = impl::ggx_vn(engine, ve, alpha);
 
         Vector<N, T> res = ne[N - 1] * normal;
         for (std::size_t i = 0; i < N - 1; ++i)
@@ -264,12 +264,12 @@ Vector<N, T> ggx_visible_normals_h(
 
 template <std::size_t N, typename T, typename RandomEngine>
 std::tuple<Vector<N, T>, Vector<N, T>> ggx_visible_normals_h_l(
-        RandomEngine& random_engine,
+        RandomEngine& engine,
         const Vector<N, T>& normal,
         const Vector<N, T>& v,
         const T alpha)
 {
-        const Vector<N, T> h = ggx_visible_normals_h(random_engine, normal, v, alpha);
+        const Vector<N, T> h = ggx_visible_normals_h(engine, normal, v, alpha);
         const Vector<N, T> l = numerical::reflect_vn(v, h);
         return {h, l};
 }

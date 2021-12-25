@@ -20,7 +20,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/com/chrono.h>
 #include <src/com/log.h>
 #include <src/com/names.h>
-#include <src/com/random/create.h>
+#include <src/com/random/pcg.h>
 #include <src/geometry/core/check.h>
 #include <src/geometry/core/euler.h>
 #include <src/test/test.h>
@@ -35,7 +35,7 @@ namespace
 template <std::size_t N>
 std::vector<Vector<N, float>> random_data(const bool zero, const int count, const bool on_sphere)
 {
-        std::mt19937_64 engine(count);
+        PCG engine(count);
         std::uniform_real_distribution<double> urd(-1.0, 1.0);
 
         std::vector<Vector<N, float>> points;
@@ -197,7 +197,7 @@ void test(const std::size_t low, const std::size_t high, ProgressRatio* const pr
 
         const int size = [&]()
         {
-                std::mt19937_64 engine = create_engine<std::mt19937_64>();
+                PCG engine;
                 return std::uniform_int_distribution<int>(low, high)(engine);
         }();
 

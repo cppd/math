@@ -20,7 +20,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/com/constant.h>
 #include <src/com/error.h>
 #include <src/com/print.h>
-#include <src/com/random/create.h>
+#include <src/com/random/pcg.h>
 #include <src/com/thread.h>
 #include <src/com/type/limit.h>
 #include <src/geometry/shapes/sphere_area.h>
@@ -76,13 +76,10 @@ class AngleDistribution
                 }
         }
 
-        template <typename RandomEngine, typename RandomVector>
-        static int sample_bucket(
-                RandomEngine& random_engine,
-                const Vector<N, T>& normal,
-                const RandomVector& random_vector)
+        template <typename RandomVector>
+        static int sample_bucket(PCG& engine, const Vector<N, T>& normal, const RandomVector& random_vector)
         {
-                const Vector<N, T> v = random_vector(random_engine).normalized();
+                const Vector<N, T> v = random_vector(engine).normalized();
                 const T cosine = std::clamp(dot(v, normal), T(-1), T(1));
                 const T angle = std::acos(cosine);
                 const int bucket = angle * BUCKETS_PER_RADIAN;
@@ -129,7 +126,7 @@ class AngleDistribution
                 return result;
         }
 
-        template <typename RandomEngine, typename RandomVector>
+        template <typename RandomVector>
         static std::vector<long long> compute_buckets(
                 const long long count,
                 const Vector<N, T>& normal,
@@ -156,11 +153,12 @@ class AngleDistribution
                 const auto f = [&](std::vector<long long>* buckets)
                 {
                         ASSERT(buckets->size() == BUCKET_COUNT);
-                        RandomEngine random_engine = create_engine<RandomEngine>();
+
+                        PCG engine;
 
                         const auto add_data = [&]
                         {
-                                const int bucket = sample_bucket(random_engine, normal, random_vector);
+                                const int bucket = sample_bucket(engine, normal, random_vector);
                                 ++(*buckets)[bucket];
                         };
 
@@ -192,15 +190,14 @@ public:
                 return rounded_count;
         }
 
-        template <typename RandomEngine, typename RandomVector>
+        template <typename RandomVector>
         void compute_distribution(
                 const long long count,
                 const Vector<N, T>& normal,
                 const RandomVector& random_vector,
                 ProgressRatio* const progress)
         {
-                const std::vector<long long> buckets =
-                        compute_buckets<RandomEngine>(count, normal, random_vector, progress);
+                const std::vector<long long> buckets = compute_buckets(count, normal, random_vector, progress);
                 ASSERT(buckets.size() == BUCKET_COUNT);
 
                 distribution_.clear();

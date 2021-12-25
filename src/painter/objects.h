@@ -17,19 +17,19 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
+#include <src/com/random/pcg.h>
 #include <src/numerical/ray.h>
 #include <src/numerical/vector.h>
 
 #include <array>
 #include <optional>
-#include <random>
 #include <tuple>
 #include <vector>
 
 namespace ns::painter
 {
 template <typename T>
-using RandomEngine = std::conditional_t<std::is_same_v<std::remove_cv<T>, float>, std::mt19937, std::mt19937_64>;
+using RandomEngine = PCG;
 
 template <std::size_t N, typename T, typename Color>
 struct Sample final
@@ -68,7 +68,7 @@ public:
                 const = 0;
 
         virtual Sample<N, T, Color> sample_brdf(
-                RandomEngine<T>& random_engine,
+                RandomEngine<T>& engine,
                 const Vector<N, T>& point,
                 const Vector<N, T>& n,
                 const Vector<N, T>& v) const = 0;
@@ -163,8 +163,7 @@ struct LightSource
 
         virtual LightSourceInfo<T, Color> info(const Vector<N, T>& point, const Vector<N, T>& l) const = 0;
 
-        virtual LightSourceSample<N, T, Color> sample(RandomEngine<T>& random_engine, const Vector<N, T>& point)
-                const = 0;
+        virtual LightSourceSample<N, T, Color> sample(RandomEngine<T>& engine, const Vector<N, T>& point) const = 0;
 
         virtual bool is_delta() const = 0;
 };

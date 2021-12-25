@@ -20,11 +20,10 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <src/com/log.h>
 #include <src/com/names.h>
-#include <src/com/random/create.h>
+#include <src/com/random/pcg.h>
 #include <src/com/type/name.h>
 #include <src/test/test.h>
 
-#include <random>
 #include <sstream>
 
 namespace ns::sampling::test
@@ -36,9 +35,6 @@ constexpr long long ANGLE_COUNT_PER_BUCKET = 1'000;
 constexpr long long SURFACE_COUNT_PER_BUCKET = 10'000;
 constexpr long long PERFORMANCE_COUNT = 10'000'000;
 
-template <typename T>
-using RandomEngine = std::conditional_t<sizeof(T) <= 4, std::mt19937, std::mt19937_64>;
-
 //
 
 template <std::size_t N, typename T>
@@ -48,35 +44,35 @@ void test_sphere_uniform(ProgressRatio* const progress)
 
         const Vector<N, T> normal = []()
         {
-                RandomEngine<T> random_engine = create_engine<RandomEngine<T>>();
-                return uniform_on_sphere<N, T>(random_engine).normalized();
+                PCG engine;
+                return uniform_on_sphere<N, T>(engine).normalized();
         }();
 
-        testing::test_unit<N, T, RandomEngine<T>>(
+        testing::test_unit<N, T>(
                 "", UNIT_COUNT,
-                [&](RandomEngine<T>& random_engine)
+                [&](auto& engine)
                 {
-                        return uniform_on_sphere<N, T>(random_engine);
+                        return uniform_on_sphere<N, T>(engine);
                 },
                 progress);
 
-        testing::test_distribution_angle<N, T, RandomEngine<T>>(
+        testing::test_distribution_angle<N, T>(
                 "", ANGLE_COUNT_PER_BUCKET, normal,
-                [&](RandomEngine<T>& random_engine)
+                [&](auto& engine)
                 {
-                        return uniform_on_sphere<N, T>(random_engine);
+                        return uniform_on_sphere<N, T>(engine);
                 },
-                [](T /*angle*/)
+                [](const T /*angle*/)
                 {
                         return uniform_on_sphere_pdf<N, T>();
                 },
                 progress);
 
-        testing::test_distribution_surface<N, T, RandomEngine<T>>(
+        testing::test_distribution_surface<N, T>(
                 "", SURFACE_COUNT_PER_BUCKET,
-                [&](RandomEngine<T>& random_engine)
+                [&](auto& engine)
                 {
-                        return uniform_on_sphere<N, T>(random_engine);
+                        return uniform_on_sphere<N, T>(engine);
                 },
                 [&](const Vector<N, T>& /*v*/)
                 {
@@ -84,11 +80,11 @@ void test_sphere_uniform(ProgressRatio* const progress)
                 },
                 progress);
 
-        testing::test_performance<PERFORMANCE_COUNT, RandomEngine<T>>(
+        testing::test_performance<PERFORMANCE_COUNT>(
                 "",
-                [&](RandomEngine<T>& random_engine)
+                [&](auto& engine)
                 {
-                        return uniform_on_sphere<N, T>(random_engine);
+                        return uniform_on_sphere<N, T>(engine);
                 },
                 progress);
 }
@@ -105,12 +101,10 @@ void test_sphere_uniform(ProgressRatio* const progress)
 template <std::size_t N, typename T>
 void test_performance()
 {
-        using Engine = RandomEngine<T>;
-
-        const long long p = testing::test_performance<PERFORMANCE_COUNT, Engine>(
-                [&](RandomEngine<T>& random_engine)
+        const long long p = testing::test_performance<PERFORMANCE_COUNT>(
+                [&](auto& engine)
                 {
-                        return uniform_on_sphere<N, T>(random_engine);
+                        return uniform_on_sphere<N, T>(engine);
                 });
 
         std::ostringstream oss;

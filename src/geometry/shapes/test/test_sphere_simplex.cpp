@@ -22,7 +22,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <src/com/error.h>
 #include <src/com/log.h>
-#include <src/com/random/create.h>
+#include <src/com/random/pcg.h>
 #include <src/com/type/name.h>
 #include <src/geometry/spatial/hyperplane_simplex.h>
 #include <src/sampling/sphere_uniform.h>
@@ -40,7 +40,6 @@ template <std::size_t N, typename T>
 void test_integrate(ProgressRatio* const progress, const double progress_min, const double progress_max)
 {
         static_assert(std::is_floating_point_v<T>);
-        using RandomEngine = std::conditional_t<std::is_same_v<T, float>, std::mt19937, std::mt19937_64>;
 
         LOG(std::string("Test sphere " + to_string(N - 1) + "-simplex, integrate, ") + type_name<T>());
 
@@ -48,14 +47,14 @@ void test_integrate(ProgressRatio* const progress, const double progress_min, co
         constexpr T RELATIVE_PRECISION = 0.01;
         constexpr T MIN_RELATIVE_AREA = 0.01;
 
-        RandomEngine random_engine = create_engine<RandomEngine>();
+        PCG engine;
 
         const std::array<Vector<N, T>, N> simplex_vertices = [&]()
         {
                 std::array<Vector<N, T>, N> result;
                 for (Vector<N, T>& v : result)
                 {
-                        v = sampling::uniform_on_sphere<N, T>(random_engine);
+                        v = sampling::uniform_on_sphere<N, T>(engine);
                 }
                 return result;
         }();
@@ -86,7 +85,7 @@ void test_integrate(ProgressRatio* const progress, const double progress_min, co
                 {
                         progress->set(std::lerp(progress_min, progress_max, i * RAY_COUNT_R));
                 }
-                const Ray<N, T> ray(Vector<N, T>(0), sampling::uniform_on_sphere<N, T>(random_engine));
+                const Ray<N, T> ray(Vector<N, T>(0), sampling::uniform_on_sphere<N, T>(engine));
                 if (simplex.intersect(ray))
                 {
                         ++intersect_count;
@@ -115,12 +114,12 @@ void test_integrate(ProgressRatio* const progress, const double progress_min, co
         error(oss.str());
 }
 
-template <std::size_t N, typename T, typename RandomEngine>
-std::array<Vector<N + 1, T>, N> add_dimension(const std::array<Vector<N, T>, N>& a, RandomEngine& random_engine)
+template <std::size_t N, typename T>
+std::array<Vector<N + 1, T>, N> add_dimension(const std::array<Vector<N, T>, N>& a, PCG& engine)
 {
         std::uniform_int_distribution<unsigned> uid(0, N);
         std::array<Vector<N + 1, T>, N> r;
-        unsigned k = uid(random_engine);
+        const unsigned k = uid(engine);
         for (unsigned n = 0; n < N; ++n)
         {
                 for (unsigned i = 0; i < k; ++i)
@@ -141,7 +140,7 @@ void test_sphere_1_simplex(const T precision)
 {
         LOG(std::string("Test sphere 1-simplex, ") + type_name<T>());
 
-        std::mt19937 random_engine = create_engine<std::mt19937>();
+        PCG engine;
 
         const auto cmp = [&](const T v1, const T v2)
         {
@@ -150,7 +149,7 @@ void test_sphere_1_simplex(const T precision)
 
         const auto add = [&](const auto& a)
         {
-                return add_dimension(a, random_engine);
+                return add_dimension(a, engine);
         };
 
         // arcLength[a_, b_] :=
@@ -208,7 +207,7 @@ void test_sphere_2_simplex(const T precision)
 {
         LOG(std::string("Test sphere 2-simplex, ") + type_name<T>());
 
-        std::mt19937 random_engine = create_engine<std::mt19937>();
+        PCG engine;
 
         const auto cmp = [&](const T v1, const T v2)
         {
@@ -217,7 +216,7 @@ void test_sphere_2_simplex(const T precision)
 
         const auto add = [&](const auto& a)
         {
-                return add_dimension(a, random_engine);
+                return add_dimension(a, engine);
         };
 
         // triangleArea[a_, b_, c_] :=

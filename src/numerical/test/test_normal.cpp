@@ -20,7 +20,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <src/com/log.h>
 #include <src/com/print.h>
-#include <src/com/random/create.h>
+#include <src/com/random/pcg.h>
 #include <src/com/type/limit.h>
 #include <src/com/type/name.h>
 #include <src/sampling/sphere_uniform.h>
@@ -68,14 +68,14 @@ void test_normal_defined()
         compare_normals(real_normal, computed_normal, T(0.9999999));
 }
 
-template <std::size_t N, typename T, typename RandomEngine>
-std::vector<Vector<N, T>> random_vectors(const unsigned count, RandomEngine& random_engine)
+template <std::size_t N, typename T>
+std::vector<Vector<N, T>> random_vectors(const unsigned count, PCG& engine)
 {
         std::vector<Vector<N, T>> res;
         res.reserve(count);
         for (unsigned i = 0; i < count; ++i)
         {
-                res.push_back(sampling::uniform_on_sphere<N, T>(random_engine));
+                res.push_back(sampling::uniform_on_sphere<N, T>(engine));
         }
         return res;
 }
@@ -85,22 +85,22 @@ void test_normal_random(const unsigned test_count)
 {
         constexpr unsigned POINT_COUNT = 100;
 
-        std::mt19937_64 random_engine = create_engine<std::mt19937_64>();
+        PCG engine;
 
         std::uniform_real_distribution<T> urd_for_normal(T(0.0), T(0.01));
         std::uniform_real_distribution<T> urd_for_complement(T(0.1), T(1.0));
 
-        for (const Vector<N, T>& real_normal : random_vectors<N, T>(test_count, random_engine))
+        for (const Vector<N, T>& real_normal : random_vectors<N, T>(test_count, engine))
         {
                 const std::array<Vector<N, T>, N - 1> vectors = orthogonal_complement_of_unit_vector(real_normal);
 
                 std::vector<Vector<N, T>> points(POINT_COUNT);
                 for (Vector<N, T>& p : points)
                 {
-                        p = urd_for_normal(random_engine) * real_normal;
+                        p = urd_for_normal(engine) * real_normal;
                         for (const Vector<N, T>& v : vectors)
                         {
-                                p += urd_for_complement(random_engine) * v;
+                                p += urd_for_complement(engine) * v;
                         }
                 }
 

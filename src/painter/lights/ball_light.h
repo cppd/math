@@ -93,7 +93,7 @@ public:
                 color_ *= sampling::area_pdf_to_solid_angle_pdf<N>(pdf_, T(1) /*cosine*/, distance);
         }
 
-        LightSourceSample<N, T, Color> sample(RandomEngine<T>& random_engine, const Vector<N, T>& point) const override
+        LightSourceSample<N, T, Color> sample(RandomEngine<T>& engine, const Vector<N, T>& point) const override
         {
                 if (dot(ball_.normal(), point - ball_.center()) <= 0)
                 {
@@ -102,8 +102,7 @@ public:
                         return sample;
                 }
 
-                const Vector<N, T> sample_location =
-                        ball_.center() + sampling::uniform_in_sphere(vectors_, random_engine);
+                const Vector<N, T> sample_location = ball_.center() + sampling::uniform_in_sphere(vectors_, engine);
 
                 const Vector<N, T> direction = sample_location - point;
                 const T distance = direction.norm();

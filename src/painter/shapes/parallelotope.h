@@ -82,13 +82,13 @@ class Parallelotope final : public Shape<N, T, Color>
                 }
 
                 Sample<N, T, Color> sample_brdf(
-                        RandomEngine<T>& random_engine,
+                        RandomEngine<T>& engine,
                         const Vector<N, T>& /*point*/,
                         const Vector<N, T>& n,
                         const Vector<N, T>& v) const override
                 {
                         shading::Sample<N, T, Color> sample = shading::ggx_diffuse::sample_f(
-                                random_engine, obj_->metalness_, obj_->roughness_, obj_->color_, n, v);
+                                engine, obj_->metalness_, obj_->roughness_, obj_->color_, n, v);
 
                         Sample<N, T, Color> s;
                         s.l = sample.l;

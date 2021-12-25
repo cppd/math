@@ -26,7 +26,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/com/chrono.h>
 #include <src/com/error.h>
 #include <src/com/print.h>
-#include <src/com/random/create.h>
+#include <src/com/random/pcg.h>
 #include <src/numerical/complement.h>
 #include <src/sampling/sphere_uniform.h>
 
@@ -47,7 +47,7 @@ template <typename T>
 inline constexpr T ERROR_MAX = 1.002;
 
 template <std::size_t N, typename T>
-HyperplaneBall<N, T> create_random_hyperplane_ball(std::mt19937_64& engine)
+HyperplaneBall<N, T> create_random_hyperplane_ball(PCG& engine)
 {
         constexpr T ORG_INTERVAL = 10;
         constexpr T MIN_RADIUS = 0.1;
@@ -71,7 +71,7 @@ std::array<Vector<N, T>, N - 1> ball_plane_vectors(const HyperplaneBall<N, T>& b
 }
 
 template <std::size_t N, typename T>
-std::vector<Ray<N, T>> create_rays(const HyperplaneBall<N, T>& ball, const int point_count, std::mt19937_64& engine)
+std::vector<Ray<N, T>> create_rays(const HyperplaneBall<N, T>& ball, const int point_count, PCG& engine)
 {
         ASSERT(ball.normal().is_unit());
 
@@ -121,7 +121,7 @@ void check_intersection_count(const HyperplaneBall<N, T>& ball, const std::vecto
 }
 
 template <std::size_t N, typename T, int COUNT>
-double compute_intersections_per_second(const int point_count, std::mt19937_64& engine)
+double compute_intersections_per_second(const int point_count, PCG& engine)
 {
         const HyperplaneBall<N, T> ball = create_random_hyperplane_ball<N, T>(engine);
         const std::vector<Ray<N, T>> rays = create_rays(ball, point_count, engine);
@@ -144,7 +144,7 @@ double compute_intersections_per_second(const int point_count, std::mt19937_64& 
 template <std::size_t N, typename T>
 void test_intersection()
 {
-        std::mt19937_64 engine = create_engine<std::mt19937_64>();
+        PCG engine;
 
         const HyperplaneBall<N, T> ball = create_random_hyperplane_ball<N, T>(engine);
         const std::vector<Ray<N, T>> rays = create_rays(ball, POINT_COUNT, engine);
@@ -155,7 +155,7 @@ void test_intersection()
 template <std::size_t N, typename T>
 double compute_intersections_per_second()
 {
-        std::mt19937_64 engine = create_engine<std::mt19937_64>();
+        PCG engine;
 
         return average<AVERAGE_COUNT>(
                 [&]

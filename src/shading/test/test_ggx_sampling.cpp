@@ -20,7 +20,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/com/log.h>
 #include <src/com/names.h>
 #include <src/com/print.h>
-#include <src/com/random/create.h>
+#include <src/com/random/pcg.h>
 #include <src/com/type/name.h>
 #include <src/sampling/testing/test.h>
 #include <src/test/test.h>
@@ -38,30 +38,27 @@ constexpr long long ANGLE_COUNT_PER_BUCKET = 1'000;
 constexpr long long SURFACE_COUNT_PER_BUCKET = 10'000;
 constexpr long long PERFORMANCE_COUNT = 10'000'000;
 
-template <typename T>
-using RandomEngine = std::conditional_t<sizeof(T) <= 4, std::mt19937, std::mt19937_64>;
-
 namespace st = sampling::testing;
 
 template <typename T>
 T random_alpha()
 {
-        RandomEngine<T> random_engine = create_engine<RandomEngine<T>>();
-        return std::uniform_real_distribution<T>(0.1, 1)(random_engine);
+        PCG engine;
+        return std::uniform_real_distribution<T>(0.1, 1)(engine);
 }
 
 template <std::size_t N, typename T>
 Vector<N, T> random_normal()
 {
-        RandomEngine<T> random_engine = create_engine<RandomEngine<T>>();
-        return sampling::uniform_on_sphere<N, T>(random_engine).normalized();
+        PCG engine;
+        return sampling::uniform_on_sphere<N, T>(engine).normalized();
 }
 
 template <std::size_t N, typename T>
 Vector<N, T> random_v(const Vector<N, T>& normal)
 {
-        RandomEngine<T> random_engine = create_engine<RandomEngine<T>>();
-        Vector<N, T> r = sampling::uniform_on_sphere<N, T>(random_engine).normalized();
+        PCG engine;
+        Vector<N, T> r = sampling::uniform_on_sphere<N, T>(engine).normalized();
         if (dot(r, normal) < 0)
         {
                 return -r;
@@ -80,51 +77,51 @@ void test_ggx(ProgressRatio* const progress)
 
         const Vector<N, T> normal = random_normal<N, T>();
 
-        st::test_unit<N, T, RandomEngine<T>>(
+        st::test_unit<N, T>(
                 "Visible Normals", UNIT_COUNT,
-                [&](RandomEngine<T>& random_engine)
+                [&](auto& engine)
                 {
-                        Vector<N, T> v = sampling::uniform_on_sphere<N, T>(random_engine);
+                        Vector<N, T> v = sampling::uniform_on_sphere<N, T>(engine);
                         if (dot(v, normal) < 0)
                         {
                                 v = -v;
                         }
-                        return ggx_visible_normals_h(random_engine, normal, v, alpha);
+                        return ggx_visible_normals_h(engine, normal, v, alpha);
                 },
                 progress);
 
-        st::test_unit<N, T, RandomEngine<T>>(
+        st::test_unit<N, T>(
                 "Visible Normals, Reflected", UNIT_COUNT,
-                [&](RandomEngine<T>& random_engine)
+                [&](auto& engine)
                 {
-                        Vector<N, T> v = sampling::uniform_on_sphere<N, T>(random_engine);
+                        Vector<N, T> v = sampling::uniform_on_sphere<N, T>(engine);
                         if (dot(v, normal) < 0)
                         {
                                 v = -v;
                         }
-                        const auto [h, l] = ggx_visible_normals_h_l(random_engine, normal, v, alpha);
+                        const auto [h, l] = ggx_visible_normals_h_l(engine, normal, v, alpha);
                         return l;
                 },
                 progress);
 
-        st::test_distribution_angle<N, T, RandomEngine<T>>(
+        st::test_distribution_angle<N, T>(
                 "Normals", ANGLE_COUNT_PER_BUCKET, normal,
-                [&](RandomEngine<T>& random_engine)
+                [&](auto& engine)
                 {
-                        return ggx_visible_normals_h(random_engine, normal, normal, alpha);
+                        return ggx_visible_normals_h(engine, normal, normal, alpha);
                 },
-                [&](T angle)
+                [&](const T angle)
                 {
                         const T n_h = std::cos(angle);
                         return n_h * ggx_pdf<N>(n_h, alpha);
                 },
                 progress);
 
-        st::test_distribution_surface<N, T, RandomEngine<T>>(
+        st::test_distribution_surface<N, T>(
                 "Normals", SURFACE_COUNT_PER_BUCKET,
-                [&](RandomEngine<T>& random_engine)
+                [&](auto& engine)
                 {
-                        return ggx_visible_normals_h(random_engine, normal, normal, alpha);
+                        return ggx_visible_normals_h(engine, normal, normal, alpha);
                 },
                 [&](const Vector<N, T>& v)
                 {
@@ -137,11 +134,11 @@ void test_ggx(ProgressRatio* const progress)
 
         const T n_v = dot(normal, v);
 
-        st::test_distribution_surface<N, T, RandomEngine<T>>(
+        st::test_distribution_surface<N, T>(
                 "Visible Normals", SURFACE_COUNT_PER_BUCKET,
-                [&](RandomEngine<T>& random_engine)
+                [&](auto& engine)
                 {
-                        return ggx_visible_normals_h(random_engine, normal, v, alpha);
+                        return ggx_visible_normals_h(engine, normal, v, alpha);
                 },
                 [&](const Vector<N, T>& h)
                 {
@@ -151,11 +148,11 @@ void test_ggx(ProgressRatio* const progress)
                 },
                 progress);
 
-        st::test_distribution_surface<N, T, RandomEngine<T>>(
+        st::test_distribution_surface<N, T>(
                 "Visible Normals, Reflected", SURFACE_COUNT_PER_BUCKET,
-                [&](RandomEngine<T>& random_engine)
+                [&](auto& engine)
                 {
-                        const auto [h, l] = ggx_visible_normals_h_l(random_engine, normal, v, alpha);
+                        const auto [h, l] = ggx_visible_normals_h_l(engine, normal, v, alpha);
                         return l;
                 },
                 [&](const Vector<N, T>& l)
@@ -167,19 +164,19 @@ void test_ggx(ProgressRatio* const progress)
                 },
                 progress);
 
-        st::test_performance<PERFORMANCE_COUNT, RandomEngine<T>>(
+        st::test_performance<PERFORMANCE_COUNT>(
                 "Visible Normals",
-                [&](RandomEngine<T>& random_engine)
+                [&](auto& engine)
                 {
-                        return ggx_visible_normals_h(random_engine, normal, v, alpha);
+                        return ggx_visible_normals_h(engine, normal, v, alpha);
                 },
                 progress);
 
-        st::test_performance<PERFORMANCE_COUNT, RandomEngine<T>>(
+        st::test_performance<PERFORMANCE_COUNT>(
                 "Visible Normals, Reflected",
-                [&](RandomEngine<T>& random_engine)
+                [&](auto& engine)
                 {
-                        const auto [h, l] = ggx_visible_normals_h_l(random_engine, normal, v, alpha);
+                        const auto [h, l] = ggx_visible_normals_h_l(engine, normal, v, alpha);
                         return l;
                 },
                 progress);
@@ -197,22 +194,20 @@ void test_ggx(ProgressRatio* const progress)
 template <std::size_t N, typename T>
 void test_performance()
 {
-        using Engine = RandomEngine<T>;
-
         const T alpha = random_alpha<T>();
         const Vector<N, T> normal = random_normal<N, T>();
         const Vector<N, T> v = random_v<N, T>(normal);
 
-        const long long p_visible_normals = st::test_performance<PERFORMANCE_COUNT, Engine>(
-                [&](RandomEngine<T>& random_engine)
+        const long long p_visible_normals = st::test_performance<PERFORMANCE_COUNT>(
+                [&](auto& engine)
                 {
-                        return ggx_visible_normals_h(random_engine, normal, v, alpha);
+                        return ggx_visible_normals_h(engine, normal, v, alpha);
                 });
 
-        const long long p_visible_normals_reflected = st::test_performance<PERFORMANCE_COUNT, Engine>(
-                [&](RandomEngine<T>& random_engine)
+        const long long p_visible_normals_reflected = st::test_performance<PERFORMANCE_COUNT>(
+                [&](auto& engine)
                 {
-                        const auto [h, l] = ggx_visible_normals_h_l(random_engine, normal, v, alpha);
+                        const auto [h, l] = ggx_visible_normals_h_l(engine, normal, v, alpha);
                         return l;
                 });
 

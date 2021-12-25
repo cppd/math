@@ -25,10 +25,10 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/com/log.h>
 #include <src/com/random/create.h>
 #include <src/com/random/name.h>
+#include <src/com/random/pcg.h>
 #include <src/com/type/name.h>
 #include <src/test/test.h>
 
-#include <random>
 #include <sstream>
 
 namespace ns::sampling::test
@@ -57,7 +57,7 @@ constexpr int one_dimension_sample_count()
 template <std::size_t N, typename T, typename RandomEngine>
 void test_performance(const bool shuffle)
 {
-        RandomEngine random_engine = create_engine<RandomEngine>();
+        RandomEngine engine = create_engine<RandomEngine>();
 
         constexpr int ITER_COUNT = 100'000;
         constexpr int SAMPLE_COUNT = power<N>(one_dimension_sample_count<N>());
@@ -70,7 +70,7 @@ void test_performance(const bool shuffle)
                 const Clock::time_point start_time = Clock::now();
                 for (int i = 0; i < ITER_COUNT; ++i)
                 {
-                        sampler.generate(random_engine, &data);
+                        sampler.generate(engine, &data);
                 }
                 return std::llround(COUNT / duration_from(start_time));
         }();
@@ -82,7 +82,7 @@ void test_performance(const bool shuffle)
                 const Clock::time_point start_time = Clock::now();
                 for (int i = 0; i < ITER_COUNT; ++i)
                 {
-                        sampler.generate(random_engine, &data);
+                        sampler.generate(engine, &data);
                 }
                 return std::llround(COUNT / duration_from(start_time));
         }();
@@ -145,6 +145,7 @@ void test_performance(const Counter& counter)
 {
         test_performance<T, std::mt19937>(counter);
         test_performance<T, std::mt19937_64>(counter);
+        test_performance<T, PCG>(counter);
 }
 
 void test_sampler_performance(ProgressRatio* const progress)

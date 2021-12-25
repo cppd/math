@@ -31,7 +31,7 @@ namespace ns::sampling
 namespace simplex_implementation
 {
 template <std::size_t N, typename T, std::size_t M, typename RandomEngine>
-Vector<N, T> uniform_in_simplex_1(const std::array<Vector<N, T>, M>& vertices, RandomEngine& random_engine)
+Vector<N, T> uniform_in_simplex_1(const std::array<Vector<N, T>, M>& vertices, RandomEngine& engine)
 {
         std::array<T, M - 1> random_points;
         std::uniform_real_distribution<T> urd(0, 1 + Limits<T>::epsilon());
@@ -39,7 +39,7 @@ Vector<N, T> uniform_in_simplex_1(const std::array<Vector<N, T>, M>& vertices, R
         {
                 do
                 {
-                        random_points[i] = urd(random_engine);
+                        random_points[i] = urd(engine);
                 } while (random_points[i] > 1);
         }
         sort(random_points);
@@ -55,7 +55,7 @@ Vector<N, T> uniform_in_simplex_1(const std::array<Vector<N, T>, M>& vertices, R
 }
 
 template <std::size_t N, typename T, std::size_t M, typename RandomEngine>
-Vector<N, T> uniform_in_simplex_2(const std::array<Vector<N, T>, M>& vertices, RandomEngine& random_engine)
+Vector<N, T> uniform_in_simplex_2(const std::array<Vector<N, T>, M>& vertices, RandomEngine& engine)
 {
         std::array<T, M> coordinates;
         std::uniform_real_distribution<T> urd(-1, 0);
@@ -65,7 +65,7 @@ Vector<N, T> uniform_in_simplex_2(const std::array<Vector<N, T>, M>& vertices, R
                 sum = 0;
                 for (std::size_t i = 0; i < M; ++i)
                 {
-                        const T c = -std::log(-urd(random_engine));
+                        const T c = -std::log(-urd(engine));
                         coordinates[i] = c;
                         sum += c;
                 }
@@ -81,16 +81,16 @@ Vector<N, T> uniform_in_simplex_2(const std::array<Vector<N, T>, M>& vertices, R
 }
 
 template <std::size_t N, typename T, std::size_t M, typename RandomEngine>
-Vector<N, T> uniform_in_simplex(const std::array<Vector<N, T>, M>& vertices, RandomEngine& random_engine)
+Vector<N, T> uniform_in_simplex(const std::array<Vector<N, T>, M>& vertices, RandomEngine& engine)
 {
         static_assert(N > 0 && M >= 2 && M <= N + 1);
 
         switch (1)
         {
         case 1:
-                return simplex_implementation::uniform_in_simplex_1(vertices, random_engine);
+                return simplex_implementation::uniform_in_simplex_1(vertices, engine);
         case 2:
-                return simplex_implementation::uniform_in_simplex_2(vertices, random_engine);
+                return simplex_implementation::uniform_in_simplex_2(vertices, engine);
         }
 }
 

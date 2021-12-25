@@ -21,7 +21,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/com/exponent.h>
 #include <src/com/log.h>
 #include <src/com/print.h>
-#include <src/com/random/create.h>
+#include <src/com/random/pcg.h>
 #include <src/numerical/complement.h>
 #include <src/sampling/sphere_uniform.h>
 #include <src/test/test.h>
@@ -73,7 +73,7 @@ void test(
 }
 
 template <std::size_t N, typename T>
-void test(const T& precision, std::mt19937_64& engine)
+void test(const T& precision, PCG& engine)
 {
         const T scale = std::uniform_real_distribution<T>(0.1, 10)(engine);
         const Vector<N, T> vector = sampling::uniform_on_sphere<N, T>(engine);
@@ -90,7 +90,7 @@ void test(const T& precision, std::mt19937_64& engine)
 }
 
 template <typename T>
-void test(const T& precision, std::mt19937_64& engine)
+void test(const T& precision, PCG& engine)
 {
         test<3, T>(precision, engine);
         test<4, T>(precision, engine);
@@ -101,7 +101,7 @@ void test(const T& precision, std::mt19937_64& engine)
 void test_parallelotope_volume()
 {
         LOG("Test parallelotope volume");
-        std::mt19937_64 engine = create_engine<std::mt19937_64>();
+        PCG engine;
         test<float>(1e-6, engine);
         test<double>(1e-14, engine);
         test<long double>(1e-18, engine);

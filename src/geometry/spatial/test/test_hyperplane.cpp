@@ -20,7 +20,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/com/error.h>
 #include <src/com/log.h>
 #include <src/com/print.h>
-#include <src/com/random/create.h>
+#include <src/com/random/pcg.h>
 #include <src/test/test.h>
 
 #include <random>
@@ -31,7 +31,7 @@ namespace ns::geometry::spatial
 namespace
 {
 template <std::size_t N, typename T>
-Vector<N, T> random_vector(std::mt19937_64& engine)
+Vector<N, T> random_vector(PCG& engine)
 {
         std::uniform_real_distribution<T> urd(-5, 5);
         Vector<N, T> v;
@@ -43,7 +43,7 @@ Vector<N, T> random_vector(std::mt19937_64& engine)
 }
 
 template <std::size_t N, typename T>
-Vector<N, T> random_direction(std::mt19937_64& engine)
+Vector<N, T> random_direction(PCG& engine)
 {
         std::uniform_real_distribution<T> urd(-5, 5);
         Vector<N, T> v;
@@ -59,7 +59,7 @@ Vector<N, T> random_direction(std::mt19937_64& engine)
 }
 
 template <std::size_t N, typename T>
-Ray<N, T> random_ray(std::mt19937_64& engine)
+Ray<N, T> random_ray(PCG& engine)
 {
         Ray<N, T> ray;
         do
@@ -99,7 +99,7 @@ bool test_point_on_plane(
 }
 
 template <std::size_t N, typename T>
-void test_intersect(const T& precision, std::mt19937_64& engine)
+void test_intersect(const T& precision, PCG& engine)
 {
         constexpr int COUNT = 100;
 
@@ -132,7 +132,7 @@ void test_intersect(const T& precision, std::mt19937_64& engine)
 }
 
 template <std::size_t N, typename T>
-void test_project(const T& precision, std::mt19937_64& engine)
+void test_project(const T& precision, PCG& engine)
 {
         constexpr int COUNT = 100;
 
@@ -158,14 +158,14 @@ void test_project(const T& precision, std::mt19937_64& engine)
 }
 
 template <std::size_t N, typename T>
-void test(const T& precision, std::mt19937_64& engine)
+void test(const T& precision, PCG& engine)
 {
         test_intersect<N, T>(precision, engine);
         test_project<N, T>(precision, engine);
 }
 
 template <typename T>
-void test(const T& precision, std::mt19937_64& engine)
+void test(const T& precision, PCG& engine)
 {
         test<2, T>(precision, engine);
         test<3, T>(precision, engine);
@@ -175,7 +175,7 @@ void test(const T& precision, std::mt19937_64& engine)
 
 void test_hyperplane()
 {
-        std::mt19937_64 engine = create_engine<std::mt19937_64>();
+        PCG engine;
 
         LOG("Test hyperplane");
         test<float>(1e-4, engine);

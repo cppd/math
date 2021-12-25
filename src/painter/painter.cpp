@@ -143,7 +143,7 @@ void paint_pixels(
         PaintingStatistics* const statistics,
         Notifier<N - 1>* const notifier)
 {
-        thread_local RandomEngine<T> random_engine = create_engine<RandomEngine<T>>();
+        thread_local RandomEngine<T> engine = create_engine<RandomEngine<T>>();
         thread_local std::vector<Vector<N - 1, T>> sample_points;
         thread_local std::vector<std::optional<Color>> sample_colors;
 
@@ -166,7 +166,7 @@ void paint_pixels(
 
                 const Vector<N - 1, T> pixel_org = to_vector<T>(*pixel);
 
-                pixel_data->sampler.generate(random_engine, &sample_points);
+                pixel_data->sampler.generate(engine, &sample_points);
                 sample_colors.resize(sample_points.size());
 
                 const long long ray_count = paint_data.scene->thread_ray_count();
@@ -174,8 +174,8 @@ void paint_pixels(
                 for (std::size_t i = 0; i < sample_points.size(); ++i)
                 {
                         const Ray<N, T> ray = pixel_data->projector->ray(pixel_org + sample_points[i]);
-                        sample_colors[i] = trace_path<N, T, Color>(
-                                *paint_data.scene, paint_data.smooth_normals, ray, random_engine);
+                        sample_colors[i] =
+                                trace_path<N, T, Color>(*paint_data.scene, paint_data.smooth_normals, ray, engine);
                 }
 
                 pixel_data->pixels.add_samples(*pixel, sample_points, sample_colors);

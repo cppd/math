@@ -19,7 +19,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <src/com/log.h>
 #include <src/com/print.h>
-#include <src/com/random/create.h>
+#include <src/com/random/pcg.h>
 #include <src/com/type/limit.h>
 #include <src/test/test.h>
 
@@ -60,7 +60,7 @@ public:
 };
 
 template <typename T, typename Distribution>
-std::vector<const Interface<T>*> create_data(const std::size_t object_count, std::mt19937_64 engine, Distribution d)
+std::vector<const Interface<T>*> create_data(const std::size_t object_count, PCG engine, Distribution d)
 {
         std::vector<const Interface<T>*> pointers;
         for (std::size_t i = 0; i < object_count; ++i)
@@ -71,7 +71,7 @@ std::vector<const Interface<T>*> create_data(const std::size_t object_count, std
 }
 
 template <typename T, typename Distribution>
-void compare_data(const std::vector<const Interface<T>*>& pointers, std::mt19937_64 engine, Distribution d)
+void compare_data(const std::vector<const Interface<T>*>& pointers, PCG engine, Distribution d)
 {
         if (pointers.empty())
         {
@@ -135,7 +135,7 @@ void test_arena(const std::size_t object_count, const Distribution d)
 {
         MemoryArena::thread_local_instance().clear();
 
-        const std::mt19937_64 engine = create_engine<std::mt19937_64>();
+        const PCG engine;
 
         const std::vector<const Interface<T>*> pointers = create_data<T>(object_count, engine, d);
         check_arena<T>(object_count);
@@ -145,7 +145,7 @@ void test_arena(const std::size_t object_count, const Distribution d)
 template <typename T>
 std::size_t random_object_count()
 {
-        std::mt19937_64 engine = create_engine<std::mt19937_64>();
+        PCG engine;
         std::uniform_int_distribution<int> uid(1, 5 * (MemoryArena::block_size() / sizeof(Impl<T>)));
         return uid(engine);
 }

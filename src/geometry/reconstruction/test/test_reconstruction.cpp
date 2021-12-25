@@ -23,7 +23,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/com/log.h>
 #include <src/com/names.h>
 #include <src/com/print.h>
-#include <src/com/random/create.h>
+#include <src/com/random/pcg.h>
 #include <src/geometry/core/check.h>
 #include <src/geometry/core/euler.h>
 #include <src/sampling/sphere_uniform.h>
@@ -51,8 +51,8 @@ constexpr Vector<sizeof...(I) + 1, T> make_last_axis(V&& value, std::integer_seq
 template <std::size_t N, typename T>
 constexpr Vector<N, T> LAST_AXIS = make_last_axis<T>(1, std::make_integer_sequence<std::size_t, N - 1>());
 
-template <std::size_t N, typename T, typename RandomEngine>
-Vector<N, T> random_on_sphere(RandomEngine& engine, const bool bound)
+template <std::size_t N, typename T>
+Vector<N, T> random_on_sphere(PCG& engine, const bool bound)
 {
         if (!bound)
         {
@@ -69,7 +69,7 @@ Vector<N, T> random_on_sphere(RandomEngine& engine, const bool bound)
 template <std::size_t N>
 std::vector<Vector<N, float>> points_sphere_with_notch(const unsigned point_count, const bool bound)
 {
-        std::mt19937_64 engine(point_count);
+        PCG engine(point_count);
 
         std::vector<Vector<N, float>> points;
 
@@ -258,7 +258,7 @@ void test(const int low, const int high, ProgressRatio* const progress)
 {
         const int point_count = [&]()
         {
-                std::mt19937 engine = create_engine<std::mt19937>();
+                PCG engine;
                 return std::uniform_int_distribution<int>(low, high)(engine);
         }();
 

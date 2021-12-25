@@ -120,7 +120,7 @@ public:
         }
 
         template <typename RandomEngine>
-        void generate(RandomEngine& random_engine, std::vector<Vector<N, T>>* const samples) const
+        void generate(RandomEngine& engine, std::vector<Vector<N, T>>* const samples) const
         {
                 constexpr bool IS_FLOAT = std::is_same_v<std::remove_cvref_t<T>, float>;
 
@@ -137,14 +137,14 @@ public:
                                 // Distribution may return max if T is float
                                 do
                                 {
-                                        sample[n] = urd(random_engine);
+                                        sample[n] = urd(engine);
                                 } while (IS_FLOAT && sample[n] >= max);
                         }
                 }
 
                 for (std::size_t i = initial_shuffle_dimension_; i < N; ++i)
                 {
-                        shuffle_dimension(random_engine, i, samples);
+                        shuffle_dimension(engine, i, samples);
                 }
         }
 };

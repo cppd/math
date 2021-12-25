@@ -22,7 +22,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/com/constant.h>
 #include <src/com/exponent.h>
 #include <src/com/log.h>
-#include <src/com/random/create.h>
+#include <src/com/random/pcg.h>
 #include <src/com/type/limit.h>
 #include <src/com/type/name.h>
 #include <src/numerical/vector.h>
@@ -30,7 +30,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/test/test.h>
 
 #include <cmath>
-#include <random>
 #include <sstream>
 
 namespace ns::geometry::shapes::test
@@ -232,7 +231,7 @@ void test_cosine_weighted_average()
                 return v;
         };
 
-        std::mt19937_64 engine = create_engine<std::mt19937_64>();
+        PCG engine;
         long double sum = 0;
         long double sum_cosine = 0;
         for (int i = 0; i < SAMPLE_COUNT; ++i)
@@ -289,7 +288,7 @@ void test_cosine()
         constexpr int SAMPLE_COUNT = 100'000;
         constexpr T PRECISION = 1e-2;
 
-        std::mt19937_64 engine = create_engine<std::mt19937_64>();
+        PCG engine;
 
         long double sum = 0;
         for (int i = 0; i < SAMPLE_COUNT; ++i)

@@ -20,6 +20,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/com/error.h>
 #include <src/com/log.h>
 #include <src/com/print.h>
+#include <src/com/random/pcg.h>
 
 #include <fstream>
 #include <random>
@@ -104,7 +105,7 @@ void generate_random_data(const std::filesystem::path& file_name, const int n1, 
 
         LOG("Generating " + to_string(n1) + "x" + to_string(n2) + ", total number count " + to_string(n1 * n2));
 
-        std::mt19937_64 gen((static_cast<unsigned long long>(n1) << 32) + n2);
+        PCG engine((static_cast<unsigned long long>(n1) << 32) + n2);
         std::uniform_real_distribution<T> urd(-1, 1);
 
         std::ofstream file(file_name);
@@ -118,7 +119,7 @@ void generate_random_data(const std::filesystem::path& file_name, const int n1, 
 
         for (int i = 0; i < n1 * n2; ++i)
         {
-                file << urd(gen) << ' ' << urd(gen) << '\n';
+                file << urd(engine) << ' ' << urd(engine) << '\n';
         }
 }
 

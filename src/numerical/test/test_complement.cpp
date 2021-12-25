@@ -22,7 +22,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/com/log.h>
 #include <src/com/names.h>
 #include <src/com/print.h>
-#include <src/com/random/create.h>
+#include <src/com/random/pcg.h>
 #include <src/com/type/limit.h>
 #include <src/com/type/name.h>
 #include <src/sampling/sphere_uniform.h>
@@ -57,12 +57,12 @@ constexpr bool vectors_are_parallel(const Vector<N, T>& a, const Vector<N, T>& b
 template <std::size_t N, typename T>
 std::vector<Vector<N, T>> random_vectors(const int count)
 {
-        std::mt19937_64 random_engine = create_engine<std::mt19937_64>();
+        PCG engine;
         std::vector<Vector<N, T>> res;
         res.reserve(count);
         for (int i = 0; i < count; ++i)
         {
-                res.push_back(sampling::uniform_on_sphere<N, T>(random_engine));
+                res.push_back(sampling::uniform_on_sphere<N, T>(engine));
         }
         return res;
 }
@@ -208,28 +208,28 @@ void test(ProgressRatio* const progress)
 
 //
 
-void random_number(mpz_class* const v, std::mt19937_64& random_engine)
+void random_number(mpz_class* const v, PCG& engine)
 {
         std::array<unsigned char, 50> data;
         std::uniform_int_distribution<int> uid(0, Limits<unsigned char>::max());
         for (unsigned char& c : data)
         {
-                c = uid(random_engine);
+                c = uid(engine);
         }
         mpz_import(v->get_mpz_t(), 1, -1, data.size(), 0, 0, data.data());
-        if (std::bernoulli_distribution(0.5)(random_engine))
+        if (std::bernoulli_distribution(0.5)(engine))
         {
                 mpz_neg(v->get_mpz_t(), v->get_mpz_t());
         }
 }
 
-void random_number(long long* const v, std::mt19937_64& random_engine)
+void random_number(long long* const v, PCG& engine)
 {
-        *v = std::uniform_int_distribution<long long>(-100, 100)(random_engine);
+        *v = std::uniform_int_distribution<long long>(-100, 100)(engine);
 }
 
 template <std::size_t N, typename T>
-std::array<Vector<N, T>, N - 1> random_vectors(std::mt19937_64& random_engine)
+std::array<Vector<N, T>, N - 1> random_vectors(PCG& engine)
 {
         std::array<Vector<N, T>, N - 1> vectors;
         for (Vector<N, T>& v : vectors)
@@ -239,7 +239,7 @@ std::array<Vector<N, T>, N - 1> random_vectors(std::mt19937_64& random_engine)
                 {
                         for (std::size_t i = 0; i < N; ++i)
                         {
-                                random_number(&v[i], random_engine);
+                                random_number(&v[i], engine);
                                 not_zero = (v[i] != 0);
                         }
                 } while (!not_zero);
@@ -264,7 +264,7 @@ void test_integer_impl()
 {
         static_assert(N >= 2);
 
-        std::mt19937_64 random_engine = create_engine<std::mt19937_64>();
+        PCG engine;
 
         std::array<Vector<N, T>, N - 1> vectors;
         Vector<N, T> complement;
@@ -275,7 +275,7 @@ void test_integer_impl()
                 {
                         error("Non-zero complement not found, " + type_name<T>());
                 }
-                vectors = random_vectors<N, T>(random_engine);
+                vectors = random_vectors<N, T>(engine);
                 complement = orthogonal_complement(vectors);
         } while (dot(complement, complement) == 0);
 

@@ -22,7 +22,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/com/exponent.h>
 #include <src/com/log.h>
 #include <src/com/print.h>
-#include <src/com/random/create.h>
+#include <src/com/random/pcg.h>
 #include <src/com/type/name.h>
 #include <src/test/test.h>
 
@@ -45,7 +45,7 @@ bool are_equal(const T& a, const T& b, const T& precision)
 }
 
 template <std::size_t N, typename T, std::size_t COUNT>
-std::array<Vector<N, T>, COUNT> random_vectors(std::mt19937_64& random_engine)
+std::array<Vector<N, T>, COUNT> random_vectors(PCG& engine)
 {
         std::uniform_real_distribution<T> urd(-10, 10);
 
@@ -58,7 +58,7 @@ std::array<Vector<N, T>, COUNT> random_vectors(std::mt19937_64& random_engine)
                 {
                         for (std::size_t i = 0; i < N; ++i)
                         {
-                                v[i] = urd(random_engine);
+                                v[i] = urd(engine);
                         }
                         norm = v.norm_squared();
                         ASSERT(std::isfinite(norm));
@@ -69,11 +69,11 @@ std::array<Vector<N, T>, COUNT> random_vectors(std::mt19937_64& random_engine)
 }
 
 template <std::size_t N, typename T>
-void test_gram_and_complement(std::mt19937_64& random_engine)
+void test_gram_and_complement(PCG& engine)
 {
         static_assert(N >= 2);
 
-        const std::array<Vector<N, T>, N - 1> vectors = random_vectors<N, T, N - 1>(random_engine);
+        const std::array<Vector<N, T>, N - 1> vectors = random_vectors<N, T, N - 1>(engine);
 
         const T norm_squared = orthogonal_complement(vectors).norm_squared();
         const T gram_determinant = gram_matrix(vectors).determinant();
@@ -86,11 +86,11 @@ void test_gram_and_complement(std::mt19937_64& random_engine)
 }
 
 template <std::size_t N, typename T>
-void test_gram_and_determinant(std::mt19937_64& random_engine)
+void test_gram_and_determinant(PCG& engine)
 {
         static_assert(N >= 1);
 
-        const std::array<Vector<N, T>, N> vectors = random_vectors<N, T, N>(random_engine);
+        const std::array<Vector<N, T>, N> vectors = random_vectors<N, T, N>(engine);
 
         const T determinant_squared = square(determinant(vectors));
         const T gram_determinant = gram_matrix(vectors).determinant();
@@ -104,34 +104,34 @@ void test_gram_and_determinant(std::mt19937_64& random_engine)
 }
 
 template <typename T>
-void test_gram(std::mt19937_64& random_engine)
+void test_gram(PCG& engine)
 {
-        test_gram_and_complement<2, T>(random_engine);
-        test_gram_and_complement<3, T>(random_engine);
-        test_gram_and_complement<4, T>(random_engine);
-        test_gram_and_complement<5, T>(random_engine);
-        test_gram_and_complement<6, T>(random_engine);
-        test_gram_and_complement<7, T>(random_engine);
-        test_gram_and_complement<8, T>(random_engine);
+        test_gram_and_complement<2, T>(engine);
+        test_gram_and_complement<3, T>(engine);
+        test_gram_and_complement<4, T>(engine);
+        test_gram_and_complement<5, T>(engine);
+        test_gram_and_complement<6, T>(engine);
+        test_gram_and_complement<7, T>(engine);
+        test_gram_and_complement<8, T>(engine);
 
-        test_gram_and_determinant<1, T>(random_engine);
-        test_gram_and_determinant<2, T>(random_engine);
-        test_gram_and_determinant<3, T>(random_engine);
-        test_gram_and_determinant<4, T>(random_engine);
-        test_gram_and_determinant<5, T>(random_engine);
-        test_gram_and_determinant<6, T>(random_engine);
-        test_gram_and_determinant<7, T>(random_engine);
-        test_gram_and_determinant<8, T>(random_engine);
+        test_gram_and_determinant<1, T>(engine);
+        test_gram_and_determinant<2, T>(engine);
+        test_gram_and_determinant<3, T>(engine);
+        test_gram_and_determinant<4, T>(engine);
+        test_gram_and_determinant<5, T>(engine);
+        test_gram_and_determinant<6, T>(engine);
+        test_gram_and_determinant<7, T>(engine);
+        test_gram_and_determinant<8, T>(engine);
 }
 
 void test()
 {
         LOG("Test Gram matrix");
 
-        std::mt19937_64 random_engine = create_engine<std::mt19937_64>();
+        PCG engine;
 
-        test_gram<double>(random_engine);
-        test_gram<long double>(random_engine);
+        test_gram<double>(engine);
+        test_gram<long double>(engine);
 
         LOG("Test Gram matrix passed");
 }

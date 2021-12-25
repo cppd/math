@@ -24,12 +24,11 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/com/file/path.h>
 #include <src/com/log.h>
 #include <src/com/print.h>
-#include <src/com/random/create.h>
+#include <src/com/random/pcg.h>
 #include <src/com/type/name.h>
 #include <src/test/test.h>
 
 #include <fstream>
-#include <random>
 #include <sstream>
 #include <string>
 
@@ -81,20 +80,20 @@ void write_samples_to_files()
 
         LOG("Writing samples <" + to_string(N) + ", " + type_name<T>() + ">");
 
-        std::mt19937_64 random_engine = create_engine<std::mt19937_64>();
+        PCG engine;
 
         write_samples_to_file<N, T>(
                 "on sphere rejection", COUNT,
                 [&]()
                 {
-                        return impl::uniform_on_sphere_by_rejection<N, T>(random_engine);
+                        return impl::uniform_on_sphere_by_rejection<N, T>(engine);
                 });
 
         write_samples_to_file<N, T>(
                 "on sphere normal distribution", COUNT,
                 [&]()
                 {
-                        return impl::uniform_on_sphere_by_normal_distribution<N, T>(random_engine);
+                        return impl::uniform_on_sphere_by_normal_distribution<N, T>(engine);
                 });
 
         write_samples_to_file<N, T>(
@@ -103,7 +102,7 @@ void write_samples_to_files()
                 {
                         Vector<N, T> v;
                         T v_length_square;
-                        impl::uniform_in_sphere_by_rejection(random_engine, v, v_length_square);
+                        impl::uniform_in_sphere_by_rejection(engine, v, v_length_square);
                         return v;
                 });
 
@@ -113,7 +112,7 @@ void write_samples_to_files()
                 {
                         Vector<N, T> v;
                         T v_length_square;
-                        impl::uniform_in_sphere_by_normal_distribution(random_engine, v, v_length_square);
+                        impl::uniform_in_sphere_by_normal_distribution(engine, v, v_length_square);
                         return v;
                 });
 
@@ -132,7 +131,7 @@ void write_samples_to_files()
                                 res[N] = Vector<N, T>(1 / std::sqrt(T(N)));
                                 return res;
                         }();
-                        return uniform_in_simplex(vertices, random_engine);
+                        return uniform_in_simplex(vertices, engine);
                 });
 
         constexpr std::array<Vector<N, T>, N> VECTORS = []
@@ -150,11 +149,11 @@ void write_samples_to_files()
                 "in parallelotope", COUNT,
                 [&]()
                 {
-                        return uniform_in_parallelotope(VECTORS, random_engine);
+                        return uniform_in_parallelotope(VECTORS, engine);
                 });
 
         std::vector<Vector<N, T>> samples;
-        StratifiedJitteredSampler<N, T>(0, 1, COUNT, false).generate(random_engine, &samples);
+        StratifiedJitteredSampler<N, T>(0, 1, COUNT, false).generate(engine, &samples);
         std::size_t sample = 0;
         write_samples_to_file<N, T>(
                 "in parallelotope with sampler", samples.size(),

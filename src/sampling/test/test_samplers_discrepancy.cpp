@@ -25,7 +25,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/com/exponent.h>
 #include <src/com/log.h>
 #include <src/com/print.h>
-#include <src/com/random/create.h>
+#include <src/com/random/pcg.h>
 #include <src/com/type/name.h>
 #include <src/test/test.h>
 
@@ -36,17 +36,17 @@ namespace ns::sampling::test
 {
 namespace
 {
-template <typename T, typename RandomEngine>
-std::array<T, 2> min_max_for_sampler(RandomEngine& random_engine)
+template <typename T>
+std::array<T, 2> min_max_for_sampler(PCG& engine)
 {
         T min;
         T max;
-        if (std::bernoulli_distribution(0.5)(random_engine))
+        if (std::bernoulli_distribution(0.5)(engine))
         {
-                min = std::uniform_real_distribution<T>(-10, 10)(random_engine);
-                max = std::uniform_real_distribution<T>(min + 0.1, min + 10)(random_engine);
+                min = std::uniform_real_distribution<T>(-10, 10)(engine);
+                max = std::uniform_real_distribution<T>(min + 0.1, min + 10)(engine);
         }
-        else if (std::bernoulli_distribution(0.5)(random_engine))
+        else if (std::bernoulli_distribution(0.5)(engine))
         {
                 min = 0;
                 max = 1;
@@ -59,20 +59,20 @@ std::array<T, 2> min_max_for_sampler(RandomEngine& random_engine)
         return {min, max};
 }
 
-template <std::size_t N, typename T, typename RandomEngine>
+template <std::size_t N, typename T>
 T test_discrepancy(
         const std::string& name,
         const T& min,
         const T& max,
         const std::vector<Vector<N, T>>& data,
         const T& discrepancy_limit,
-        RandomEngine& random_engine)
+        PCG& engine)
 {
         LOG(name);
 
         constexpr int BOX_COUNT = 10'000;
 
-        const T discrepancy = compute_discrepancy(min, max, data, BOX_COUNT, random_engine);
+        const T discrepancy = compute_discrepancy(min, max, data, BOX_COUNT, engine);
         LOG("Discrepancy = " + to_string(discrepancy));
 
         if (!(discrepancy < discrepancy_limit))
@@ -90,7 +90,7 @@ T test_discrepancy(
 template <std::size_t N, typename T>
 T test_stratified_jittered(const unsigned sample_count, const std::type_identity_t<T> max_discrepancy)
 {
-        std::mt19937_64 engine = create_engine<std::mt19937_64>();
+        PCG engine;
 
         const auto [min, max] = min_max_for_sampler<T>(engine);
 
@@ -114,7 +114,7 @@ T test_stratified_jittered(const unsigned sample_count, const std::type_identity
 template <std::size_t N, typename T>
 T test_latin_hypercube(const unsigned sample_count, const std::type_identity_t<T> max_discrepancy)
 {
-        std::mt19937_64 engine = create_engine<std::mt19937_64>();
+        PCG engine;
 
         const auto [min, max] = min_max_for_sampler<T>(engine);
 
@@ -138,7 +138,7 @@ T test_latin_hypercube(const unsigned sample_count, const std::type_identity_t<T
 template <std::size_t N, typename T>
 T test_halton(const int sample_count, const std::type_identity_t<T> max_discrepancy)
 {
-        std::mt19937_64 engine = create_engine<std::mt19937_64>();
+        PCG engine;
 
         HaltonSampler<N, T> sampler;
 

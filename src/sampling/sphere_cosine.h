@@ -37,14 +37,14 @@ Elsevier, 2017.
 namespace ns::sampling
 {
 template <std::size_t N, typename T, typename RandomEngine>
-Vector<N, T> cosine_on_hemisphere(RandomEngine& random_engine)
+Vector<N, T> cosine_on_hemisphere(RandomEngine& engine)
 {
         static_assert(N > 2);
 
         Vector<N - 1, T> v;
         T v_length_square;
 
-        uniform_in_sphere(random_engine, v, v_length_square);
+        uniform_in_sphere(engine, v, v_length_square);
 
         const T n = std::sqrt(1 - v_length_square);
 
@@ -59,13 +59,13 @@ Vector<N, T> cosine_on_hemisphere(RandomEngine& random_engine)
 }
 
 template <typename RandomEngine, std::size_t N, typename T>
-Vector<N, T> cosine_on_hemisphere(RandomEngine& random_engine, const Vector<N, T>& normal)
+Vector<N, T> cosine_on_hemisphere(RandomEngine& engine, const Vector<N, T>& normal)
 {
         static_assert(N > 2);
 
         std::array<Vector<N, T>, N - 1> orthonormal_basis = numerical::orthogonal_complement_of_unit_vector(normal);
 
-        const Vector<N, T> coordinates = cosine_on_hemisphere<N, T>(random_engine);
+        const Vector<N, T> coordinates = cosine_on_hemisphere<N, T>(engine);
 
         Vector<N, T> result = coordinates[N - 1] * normal;
         for (std::size_t i = 0; i < N - 1; ++i)

@@ -26,7 +26,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/com/chrono.h>
 #include <src/com/error.h>
 #include <src/com/print.h>
-#include <src/com/random/create.h>
+#include <src/com/random/pcg.h>
 #include <src/sampling/sphere_uniform.h>
 
 #include <cmath>
@@ -41,7 +41,7 @@ inline constexpr int COMPUTE_COUNT = 100;
 inline constexpr int AVERAGE_COUNT = 100;
 
 template <std::size_t N, typename T>
-BoundingBox<N, T> create_random_bounding_box(std::mt19937_64& engine)
+BoundingBox<N, T> create_random_bounding_box(PCG& engine)
 {
         std::uniform_real_distribution<T> urd(-5, 5);
         Vector<N, T> p1;
@@ -58,10 +58,7 @@ BoundingBox<N, T> create_random_bounding_box(std::mt19937_64& engine)
 }
 
 template <std::size_t N, typename T>
-std::vector<Ray<N, T>> rays_for_intersections(
-        const BoundingBox<N, T>& box,
-        const int point_count,
-        std::mt19937_64& engine)
+std::vector<Ray<N, T>> rays_for_intersections(const BoundingBox<N, T>& box, const int point_count, PCG& engine)
 {
         const T length = box.diagonal().norm();
         const T move_distance = length;
@@ -168,7 +165,7 @@ std::vector<Vector<N, bool>> ray_negative_directions(const std::vector<Ray<N, T>
 }
 
 template <std::size_t N, typename T, int COUNT>
-double compute_intersections_per_second(const int point_count, std::mt19937_64& engine)
+double compute_intersections_per_second(const int point_count, PCG& engine)
 {
         const BoundingBox<N, T> box = create_random_bounding_box<N, T>(engine);
         const std::vector<Ray<N, T>> rays = rays_for_intersections(box, point_count, engine);
@@ -187,7 +184,7 @@ double compute_intersections_per_second(const int point_count, std::mt19937_64& 
 }
 
 template <std::size_t N, typename T, int COUNT>
-double compute_intersections_r_per_second(const int point_count, std::mt19937_64& engine)
+double compute_intersections_r_per_second(const int point_count, PCG& engine)
 {
         const BoundingBox<N, T> box = create_random_bounding_box<N, T>(engine);
         const std::vector<Ray<N, T>> rays = rays_for_intersections(box, point_count, engine);
@@ -216,7 +213,7 @@ double compute_intersections_r_per_second(const int point_count, std::mt19937_64
 template <std::size_t N, typename T>
 void test_intersection()
 {
-        std::mt19937_64 engine = create_engine<std::mt19937_64>();
+        PCG engine;
 
         const BoundingBox<N, T> box = create_random_bounding_box<N, T>(engine);
         const std::vector<Ray<N, T>> rays = rays_for_intersections(box, POINT_COUNT, engine);
@@ -233,7 +230,7 @@ void test_intersection()
 template <std::size_t N, typename T>
 double compute_intersections_per_second()
 {
-        std::mt19937_64 engine = create_engine<std::mt19937_64>();
+        PCG engine;
 
         return average<AVERAGE_COUNT>(
                 [&]
@@ -245,7 +242,7 @@ double compute_intersections_per_second()
 template <std::size_t N, typename T>
 double compute_intersections_r_per_second()
 {
-        std::mt19937_64 engine = create_engine<std::mt19937_64>();
+        PCG engine;
 
         return average<AVERAGE_COUNT>(
                 [&]

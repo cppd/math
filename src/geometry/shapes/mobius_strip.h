@@ -44,15 +44,15 @@ T curve(T x)
 }
 
 template <typename T, typename RandomEngine>
-Vector<3, T> mobius_strip_point(const T width, RandomEngine& random_engine)
+Vector<3, T> mobius_strip_point(const T width, RandomEngine& engine)
 {
         namespace impl = mobius_strip_implementation;
 
-        const T alpha = std::uniform_real_distribution<T>(0, 2 * PI<T>)(random_engine);
+        const T alpha = std::uniform_real_distribution<T>(0, 2 * PI<T>)(engine);
         const T curve_angle = PI<T> / 2 - impl::curve(alpha);
 
         // random point on Z
-        Vector<3, T> v(0, 0, std::uniform_real_distribution<T>(-width / 2, width / 2)(random_engine));
+        Vector<3, T> v(0, 0, std::uniform_real_distribution<T>(-width / 2, width / 2)(engine));
 
         // rotate around Y
         v = Vector<3, T>(v[2] * std::sin(curve_angle), 0, v[2] * std::cos(curve_angle));
