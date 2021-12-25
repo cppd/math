@@ -25,6 +25,6 @@ namespace ns::gpu::renderer
 {
 void find_opaque_and_transparent_meshes(
         const std::vector<const MeshObject*>& meshes,
-        std::vector<const MeshObject*>* const opaque_meshes,
-        std::vector<const MeshObject*>* const transparent_meshes);
+        std::vector<const MeshObject*>* opaque_meshes,
+        std::vector<const MeshObject*>* transparent_meshes);
 }
