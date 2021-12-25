@@ -22,7 +22,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/com/exponent.h>
 #include <src/com/log.h>
 #include <src/com/print.h>
-#include <src/com/random/engine.h>
+#include <src/com/random/create.h>
 #include <src/numerical/complement.h>
 #include <src/sampling/sphere_uniform.h>
 #include <src/test/test.h>

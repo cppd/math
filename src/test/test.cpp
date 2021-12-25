@@ -19,7 +19,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <src/com/error.h>
 #include <src/com/exception.h>
-#include <src/com/random/engine.h>
+#include <src/com/random/create.h>
 #include <src/com/variant.h>
 
 #include <random>

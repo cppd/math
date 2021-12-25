@@ -20,7 +20,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "sphere_mesh.h"
 
 #include <src/com/error.h>
-#include <src/com/random/engine.h>
+#include <src/com/random/create.h>
 
 #include <sstream>
 #include <vector>
