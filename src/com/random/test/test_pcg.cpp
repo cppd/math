@@ -112,20 +112,44 @@ std::unordered_set<typename T::result_type> test_values(T&& engine)
 }
 
 template <typename T>
+void test_value(T&& engine, const int count, const typename T::result_type expected_value)
+{
+        if (count < 1)
+        {
+                error(std::string(random_engine_name<T>()) + " value count " + std::to_string(count)
+                      + " must be positive");
+        }
+
+        for (int i = 1; i < count; ++i)
+        {
+                engine();
+        }
+
+        const auto v = engine();
+        if (!(v == expected_value))
+        {
+                error(std::string(random_engine_name<T>()) + " value error (" + std::to_string(v) + "), expected "
+                      + std::to_string(expected_value));
+        }
+}
+
+template <typename T>
 void test_engine()
 {
         static_assert(std::uniform_random_bit_generator<PCG>);
 
-        test_distribution(create_engine<T>());
+        test_distribution(T());
+        test_values(T());
 
+        test_distribution(create_engine<T>());
         test_values(create_engine<T>());
 
-        if (!(test_distribution(create_engine<T>()) != test_distribution(create_engine<T>())))
+        if (!(test_distribution(T()) != test_distribution(T())))
         {
                 error(std::string(random_engine_name<T>()) + " random distribution error, results are equal");
         }
 
-        if (!(test_values(create_engine<T>()) != test_values(create_engine<T>())))
+        if (!(test_values(T()) != test_values(T())))
         {
                 error(std::string(random_engine_name<T>()) + " random value error, results are equal");
         }
@@ -159,6 +183,9 @@ void test()
         LOG("Test PCG");
 
         test_engine<PCG>();
+
+        test_value(PCG(0), 1000, 1'557'370'411);
+        test_value(PCG(1000), 1000, 2'243'789'472);
 
         LOG("Test PCG passed");
 }
