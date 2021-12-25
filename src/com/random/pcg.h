@@ -17,7 +17,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
-#include <array>
 #include <bit>
 #include <random>
 
@@ -27,17 +26,6 @@ class PCG final
 {
         std::uint64_t state_;
         std::uint64_t increment_;
-
-        void init(std::seed_seq& seed_seq)
-        {
-                std::array<std::uint32_t, 4> v;
-                seed_seq.generate(v.begin(), v.end());
-                state_ = v[0];
-                state_ |= static_cast<std::uint64_t>(v[1]) << 32;
-                increment_ = v[2];
-                increment_ |= static_cast<std::uint64_t>(v[3]) << 32;
-                increment_ |= 1;
-        }
 
 public:
         using result_type = std::uint32_t;
@@ -52,20 +40,15 @@ public:
                 return 0xffff'ffff;
         }
 
-        explicit PCG(std::seed_seq& seed_seq)
-        {
-                init(seed_seq);
-        }
+        PCG();
 
-        explicit PCG(const result_type value)
-        {
-                std::seed_seq seed_seq({value});
-                init(seed_seq);
-        }
+        explicit PCG(std::seed_seq& seed_seq);
+
+        explicit PCG(result_type value);
 
         result_type operator()()
         {
-                static constexpr std::uint64_t MULTIPLIER = 6364136223846793005;
+                constexpr std::uint64_t MULTIPLIER = 6'364136'223846'793005;
 
                 const std::uint64_t x = state_;
                 state_ = x * MULTIPLIER + increment_;
