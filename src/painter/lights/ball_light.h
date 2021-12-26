@@ -93,7 +93,7 @@ public:
                 color_ *= sampling::area_pdf_to_solid_angle_pdf<N>(pdf_, T(1) /*cosine*/, distance);
         }
 
-        LightSourceSample<N, T, Color> sample(RandomEngine<T>& engine, const Vector<N, T>& point) const override
+        LightSourceSample<N, T, Color> sample(PCG& engine, const Vector<N, T>& point) const override
         {
                 if (dot(ball_.normal(), point - ball_.center()) <= 0)
                 {

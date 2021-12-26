@@ -72,12 +72,12 @@ Normals<N, T> compute_normals(
         return {.geometric = geometric, .shading = geometric, .smooth = false};
 }
 
-template <std::size_t N, typename T, typename Color>
+template <std::size_t N, typename T, typename Color, typename RandomEngine>
 std::optional<std::tuple<Color, Vector<N, T>>> sample_brdf(
         const SurfacePoint<N, T, Color>& surface,
         const Vector<N, T>& v,
         const Normals<N, T>& normals,
-        RandomEngine<T>& engine)
+        RandomEngine& engine)
 {
         const Vector<N, T>& n = normals.shading;
 
@@ -132,12 +132,12 @@ bool terminate(RandomEngine& engine, const int depth, Color* const beta)
         return true;
 }
 
-template <std::size_t N, typename T, typename Color>
+template <std::size_t N, typename T, typename Color, typename RandomEngine>
 std::optional<Color> trace_path(
         const Scene<N, T, Color>& scene,
         const bool smooth_normals,
         Ray<N, T> ray,
-        RandomEngine<T>& engine)
+        RandomEngine& engine)
 {
         SurfacePoint surface = [&]
         {
@@ -209,12 +209,12 @@ std::optional<Color> trace_path(
 }
 }
 
-template <std::size_t N, typename T, typename Color>
+template <std::size_t N, typename T, typename Color, typename RandomEngine>
 std::optional<Color> trace_path(
         const Scene<N, T, Color>& scene,
         const bool smooth_normals,
         const Ray<N, T>& ray,
-        RandomEngine<T>& engine)
+        RandomEngine& engine)
 {
         return trace_implementation::trace_path<N, T, Color>(scene, smooth_normals, ray, engine);
 }

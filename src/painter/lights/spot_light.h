@@ -63,7 +63,7 @@ public:
                 }
         }
 
-        LightSourceSample<N, T, Color> sample(RandomEngine<T>& /*engine*/, const Vector<N, T>& point) const override
+        LightSourceSample<N, T, Color> sample(PCG& /*engine*/, const Vector<N, T>& point) const override
         {
                 const Vector<N, T> direction = location_ - point;
                 const T squared_distance = direction.norm_squared();

@@ -82,7 +82,7 @@ class HyperplaneParallelotope final : public Shape<N, T, Color>
                 }
 
                 Sample<N, T, Color> sample_brdf(
-                        RandomEngine<T>& engine,
+                        PCG& engine,
                         const Vector<N, T>& /*point*/,
                         const Vector<N, T>& n,
                         const Vector<N, T>& v) const override

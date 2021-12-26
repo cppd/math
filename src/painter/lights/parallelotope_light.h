@@ -83,7 +83,7 @@ public:
                 spotlight_.emplace(spotlight_falloff_start, spotlight_width);
         }
 
-        LightSourceSample<N, T, Color> sample(RandomEngine<T>& engine, const Vector<N, T>& point) const override
+        LightSourceSample<N, T, Color> sample(PCG& engine, const Vector<N, T>& point) const override
         {
                 if (dot(parallelotope_.normal(), point - parallelotope_.org()) <= 0)
                 {

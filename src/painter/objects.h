@@ -28,9 +28,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 namespace ns::painter
 {
-template <typename T>
-using RandomEngine = PCG;
-
 template <std::size_t N, typename T, typename Color>
 struct Sample final
 {
@@ -68,7 +65,7 @@ public:
                 const = 0;
 
         virtual Sample<N, T, Color> sample_brdf(
-                RandomEngine<T>& engine,
+                PCG& engine,
                 const Vector<N, T>& point,
                 const Vector<N, T>& n,
                 const Vector<N, T>& v) const = 0;
@@ -125,7 +122,7 @@ public:
                 return surface_->pdf(point_, n, v, l);
         }
 
-        decltype(auto) sample_brdf(RandomEngine<T>& engine, const Vector<N, T>& n, const Vector<N, T>& v) const
+        decltype(auto) sample_brdf(PCG& engine, const Vector<N, T>& n, const Vector<N, T>& v) const
         {
                 return surface_->sample_brdf(engine, point_, n, v);
         }
@@ -163,7 +160,7 @@ struct LightSource
 
         virtual LightSourceInfo<T, Color> info(const Vector<N, T>& point, const Vector<N, T>& l) const = 0;
 
-        virtual LightSourceSample<N, T, Color> sample(RandomEngine<T>& engine, const Vector<N, T>& point) const = 0;
+        virtual LightSourceSample<N, T, Color> sample(PCG& engine, const Vector<N, T>& point) const = 0;
 
         virtual bool is_delta() const = 0;
 };

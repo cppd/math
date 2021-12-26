@@ -143,7 +143,7 @@ void paint_pixels(
         PaintingStatistics* const statistics,
         Notifier<N - 1>* const notifier)
 {
-        thread_local RandomEngine<T> engine = create_engine<RandomEngine<T>>();
+        thread_local PCG engine;
         thread_local std::vector<Vector<N - 1, T>> sample_points;
         thread_local std::vector<std::optional<Color>> sample_colors;
 

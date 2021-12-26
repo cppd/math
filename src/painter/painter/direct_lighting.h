@@ -57,14 +57,14 @@ T mis_heuristic(const int f_n, const T f_pdf, const int g_n, const T g_pdf)
         return sampling::mis::power_heuristic(f_n, f_pdf, g_n, g_pdf);
 }
 
-template <std::size_t N, typename T, typename Color>
+template <std::size_t N, typename T, typename Color, typename RandomEngine>
 std::optional<Color> sample_light_with_mis(
         const LightSource<N, T, Color>& light,
         const Scene<N, T, Color>& scene,
         const SurfacePoint<N, T, Color>& surface,
         const Vector<N, T>& v,
         const Normals<N, T>& normals,
-        RandomEngine<T>& engine)
+        RandomEngine& engine)
 {
         const Vector<N, T>& n = normals.shading;
 
@@ -98,14 +98,14 @@ std::optional<Color> sample_light_with_mis(
         return brdf * sample.radiance * (weight * n_l / sample.pdf);
 }
 
-template <std::size_t N, typename T, typename Color>
+template <std::size_t N, typename T, typename Color, typename RandomEngine>
 std::optional<Color> sample_brdf_with_mis(
         const LightSource<N, T, Color>& light,
         const Scene<N, T, Color>& scene,
         const SurfacePoint<N, T, Color>& surface,
         const Vector<N, T>& v,
         const Normals<N, T>& normals,
-        RandomEngine<T>& engine)
+        RandomEngine& engine)
 {
         if (light.is_delta())
         {
@@ -177,13 +177,13 @@ void add(Dst* const dst, Src&& src) requires requires
 }
 }
 
-template <std::size_t N, typename T, typename Color>
+template <std::size_t N, typename T, typename Color, typename RandomEngine>
 std::optional<Color> direct_lighting(
         const Scene<N, T, Color>& scene,
         const SurfacePoint<N, T, Color>& surface,
         const Vector<N, T>& v,
         const Normals<N, T>& normals,
-        RandomEngine<T>& engine)
+        RandomEngine& engine)
 {
         namespace impl = direct_lighting_implementation;
 
