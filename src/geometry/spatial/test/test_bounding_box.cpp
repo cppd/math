@@ -85,8 +85,8 @@ template struct Test<long double>;
 
 //
 
-template <std::size_t N, typename T>
-BoundingBox<N, T> create_random_bounding_box(PCG& engine)
+template <std::size_t N, typename T, typename RandomEngine>
+BoundingBox<N, T> create_random_bounding_box(RandomEngine& engine)
 {
         std::uniform_real_distribution<T> urd(-5, 5);
         Vector<N, T> p1;
@@ -102,8 +102,8 @@ BoundingBox<N, T> create_random_bounding_box(PCG& engine)
         return {p1, p2};
 }
 
-template <std::size_t N, typename T>
-Vector<N, T> create_random_direction(const std::type_identity_t<T>& probability, PCG& engine)
+template <std::size_t N, typename T, typename RandomEngine>
+Vector<N, T> create_random_direction(const std::type_identity_t<T>& probability, RandomEngine& engine)
 {
         if (std::bernoulli_distribution(probability)(engine))
         {
@@ -115,8 +115,8 @@ Vector<N, T> create_random_direction(const std::type_identity_t<T>& probability,
         return std::bernoulli_distribution(0.5)(engine) ? v : -v;
 }
 
-template <std::size_t N, typename T>
-Vector<N, T> create_random_aa_direction(PCG& engine)
+template <std::size_t N, typename T, typename RandomEngine>
+Vector<N, T> create_random_aa_direction(RandomEngine& engine)
 {
         const std::size_t n = std::uniform_int_distribution<std::size_t>(0, N - 1)(engine);
         Vector<N, T> v(1);
@@ -266,8 +266,8 @@ void test_no_intersection(const BoundingBox<N, T>& box, const Ray<N, T>& ray, co
         error(s);
 }
 
-template <std::size_t N, typename T>
-void test_intersections(const BoundingBox<N, T>& box, const int point_count, const T& precision, PCG& engine)
+template <std::size_t N, typename T, typename RandomEngine>
+void test_intersections(const BoundingBox<N, T>& box, const int point_count, const T& precision, RandomEngine& engine)
 {
         const T length = box.diagonal().norm();
         const T move_distance = 2 * length;
@@ -321,8 +321,8 @@ void test_intersections(const BoundingBox<N, T>& box, const int point_count, con
         }
 }
 
-template <std::size_t N, typename T>
-void test_external(const BoundingBox<N, T>& box, const int point_count, PCG& engine)
+template <std::size_t N, typename T, typename RandomEngine>
+void test_external(const BoundingBox<N, T>& box, const int point_count, RandomEngine& engine)
 {
         for (const Vector<N, T>& point :
              testing::random_external_points(box.min(), box.diagonal(), point_count, engine))
@@ -335,16 +335,16 @@ void test_external(const BoundingBox<N, T>& box, const int point_count, PCG& eng
         }
 }
 
-template <std::size_t N, typename T>
-void test(const int point_count, const std::type_identity_t<T>& precision, PCG& engine)
+template <std::size_t N, typename T, typename RandomEngine>
+void test(const int point_count, const std::type_identity_t<T>& precision, RandomEngine& engine)
 {
         const BoundingBox<N, T> box = create_random_bounding_box<N, T>(engine);
         test_intersections(box, point_count, precision, engine);
         test_external(box, std::max(1, point_count / 10), engine);
 }
 
-template <typename T>
-void test(const int point_count, const std::type_identity_t<T>& precision, PCG& engine)
+template <typename T, typename RandomEngine>
+void test(const int point_count, const std::type_identity_t<T>& precision, RandomEngine& engine)
 {
         test<2, T>(point_count, precision, engine);
         test<3, T>(point_count, precision, engine);

@@ -44,8 +44,8 @@ bool are_equal(const T& a, const T& b, const T& precision)
         return (rel < precision);
 }
 
-template <std::size_t N, typename T, std::size_t COUNT>
-std::array<Vector<N, T>, COUNT> random_vectors(PCG& engine)
+template <std::size_t N, typename T, std::size_t COUNT, typename RandomEngine>
+std::array<Vector<N, T>, COUNT> random_vectors(RandomEngine& engine)
 {
         std::uniform_real_distribution<T> urd(-10, 10);
 
@@ -68,8 +68,8 @@ std::array<Vector<N, T>, COUNT> random_vectors(PCG& engine)
         return vectors;
 }
 
-template <std::size_t N, typename T>
-void test_gram_and_complement(PCG& engine)
+template <std::size_t N, typename T, typename RandomEngine>
+void test_gram_and_complement(RandomEngine& engine)
 {
         static_assert(N >= 2);
 
@@ -85,8 +85,8 @@ void test_gram_and_complement(PCG& engine)
         }
 }
 
-template <std::size_t N, typename T>
-void test_gram_and_determinant(PCG& engine)
+template <std::size_t N, typename T, typename RandomEngine>
+void test_gram_and_determinant(RandomEngine& engine)
 {
         static_assert(N >= 1);
 
@@ -103,8 +103,8 @@ void test_gram_and_determinant(PCG& engine)
         }
 }
 
-template <typename T>
-void test_gram(PCG& engine)
+template <typename T, typename RandomEngine>
+void test_gram(RandomEngine& engine)
 {
         test_gram_and_complement<2, T>(engine);
         test_gram_and_complement<3, T>(engine);

@@ -30,8 +30,8 @@ namespace ns::geometry::spatial
 {
 namespace
 {
-template <std::size_t N, typename T>
-Vector<N, T> random_vector(PCG& engine)
+template <std::size_t N, typename T, typename RandomEngine>
+Vector<N, T> random_vector(RandomEngine& engine)
 {
         std::uniform_real_distribution<T> urd(-5, 5);
         Vector<N, T> v;
@@ -42,8 +42,8 @@ Vector<N, T> random_vector(PCG& engine)
         return v;
 }
 
-template <std::size_t N, typename T>
-Vector<N, T> random_direction(PCG& engine)
+template <std::size_t N, typename T, typename RandomEngine>
+Vector<N, T> random_direction(RandomEngine& engine)
 {
         std::uniform_real_distribution<T> urd(-5, 5);
         Vector<N, T> v;
@@ -58,8 +58,8 @@ Vector<N, T> random_direction(PCG& engine)
         return v;
 }
 
-template <std::size_t N, typename T>
-Ray<N, T> random_ray(PCG& engine)
+template <std::size_t N, typename T, typename RandomEngine>
+Ray<N, T> random_ray(RandomEngine& engine)
 {
         Ray<N, T> ray;
         do
@@ -98,8 +98,8 @@ bool test_point_on_plane(
         error(oss.str());
 }
 
-template <std::size_t N, typename T>
-void test_intersect(const T& precision, PCG& engine)
+template <std::size_t N, typename T, typename RandomEngine>
+void test_intersect(const T& precision, RandomEngine& engine)
 {
         constexpr int COUNT = 100;
 
@@ -131,8 +131,8 @@ void test_intersect(const T& precision, PCG& engine)
         }
 }
 
-template <std::size_t N, typename T>
-void test_project(const T& precision, PCG& engine)
+template <std::size_t N, typename T, typename RandomEngine>
+void test_project(const T& precision, RandomEngine& engine)
 {
         constexpr int COUNT = 100;
 
@@ -157,15 +157,15 @@ void test_project(const T& precision, PCG& engine)
         }
 }
 
-template <std::size_t N, typename T>
-void test(const T& precision, PCG& engine)
+template <std::size_t N, typename T, typename RandomEngine>
+void test(const T& precision, RandomEngine& engine)
 {
         test_intersect<N, T>(precision, engine);
         test_project<N, T>(precision, engine);
 }
 
-template <typename T>
-void test(const T& precision, PCG& engine)
+template <typename T, typename RandomEngine>
+void test(const T& precision, RandomEngine& engine)
 {
         test<2, T>(precision, engine);
         test<3, T>(precision, engine);

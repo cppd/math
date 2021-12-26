@@ -175,20 +175,25 @@ void test_performance(const Counter& counter)
         test_performance<SAMPLE_TYPE, 7, T, RandomEngine>();
 }
 
+template <SampleType SAMPLE_TYPE, typename T, typename Counter>
+void test_performance(const Counter& counter)
+{
+        test_performance<SAMPLE_TYPE, T, std::mt19937>(counter);
+        test_performance<SAMPLE_TYPE, T, std::mt19937_64>(counter);
+        test_performance<SAMPLE_TYPE, T, PCG>(counter);
+}
+
 template <SampleType SAMPLE_TYPE, typename Counter>
 void test_performance(const Counter& counter)
 {
-        test_performance<SAMPLE_TYPE, float, std::mt19937>(counter);
-        test_performance<SAMPLE_TYPE, float, std::mt19937_64>(counter);
-        test_performance<SAMPLE_TYPE, double, std::mt19937>(counter);
-        test_performance<SAMPLE_TYPE, double, std::mt19937_64>(counter);
-        test_performance<SAMPLE_TYPE, double, PCG>(counter);
-        test_performance<SAMPLE_TYPE, double, PCG>(counter);
+        test_performance<SAMPLE_TYPE, float>(counter);
+        test_performance<SAMPLE_TYPE, double>(counter);
+        test_performance<SAMPLE_TYPE, long double>(counter);
 }
 
 void test(ProgressRatio* const progress)
 {
-        constexpr int COUNT = 6 * 4 * 2;
+        constexpr int COUNT = 6 * 3 * 3 * 2;
         int i = -1;
         const auto counter = [&]
         {

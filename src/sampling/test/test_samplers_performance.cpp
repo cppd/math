@@ -150,7 +150,7 @@ void test_performance(const Counter& counter)
 
 void test_sampler_performance(ProgressRatio* const progress)
 {
-        constexpr int COUNT = 2 * 5 * 2 * 3;
+        constexpr int COUNT = 2 * 5 * 3 * 3;
         int i = -1;
         const auto counter = [&]
         {

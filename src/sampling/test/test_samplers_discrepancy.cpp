@@ -36,8 +36,8 @@ namespace ns::sampling::test
 {
 namespace
 {
-template <typename T>
-std::array<T, 2> min_max_for_sampler(PCG& engine)
+template <typename T, typename RandomEngine>
+std::array<T, 2> min_max_for_sampler(RandomEngine& engine)
 {
         T min;
         T max;
@@ -59,14 +59,14 @@ std::array<T, 2> min_max_for_sampler(PCG& engine)
         return {min, max};
 }
 
-template <std::size_t N, typename T>
+template <std::size_t N, typename T, typename RandomEngine>
 T test_discrepancy(
         const std::string& name,
         const T& min,
         const T& max,
         const std::vector<Vector<N, T>>& data,
         const T& discrepancy_limit,
-        PCG& engine)
+        RandomEngine& engine)
 {
         LOG(name);
 

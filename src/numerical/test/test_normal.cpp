@@ -68,8 +68,8 @@ void test_normal_defined()
         compare_normals(real_normal, computed_normal, T(0.9999999));
 }
 
-template <std::size_t N, typename T>
-std::vector<Vector<N, T>> random_vectors(const unsigned count, PCG& engine)
+template <std::size_t N, typename T, typename RandomEngine>
+std::vector<Vector<N, T>> random_vectors(const unsigned count, RandomEngine& engine)
 {
         std::vector<Vector<N, T>> res;
         res.reserve(count);

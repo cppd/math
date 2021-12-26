@@ -76,10 +76,9 @@ class AngleDistribution
                 }
         }
 
-        template <typename RandomVector>
-        static int sample_bucket(PCG& engine, const Vector<N, T>& normal, const RandomVector& random_vector)
+        static int sample_bucket(const Vector<N, T>& normal, const Vector<N, T>& random_vector)
         {
-                const Vector<N, T> v = random_vector(engine).normalized();
+                const Vector<N, T> v = random_vector.normalized();
                 const T cosine = std::clamp(dot(v, normal), T(-1), T(1));
                 const T angle = std::acos(cosine);
                 const int bucket = angle * BUCKETS_PER_RADIAN;
@@ -158,7 +157,7 @@ class AngleDistribution
 
                         const auto add_data = [&]
                         {
-                                const int bucket = sample_bucket(engine, normal, random_vector);
+                                const int bucket = sample_bucket(normal, random_vector(engine));
                                 ++(*buckets)[bucket];
                         };
 

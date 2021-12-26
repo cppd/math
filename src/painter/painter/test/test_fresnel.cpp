@@ -34,8 +34,8 @@ namespace ns::painter
 {
 namespace
 {
-template <std::size_t N, typename T>
-std::vector<Vector<N, T>> random_data(const int count, PCG& engine)
+template <std::size_t N, typename T, typename RandomEngine>
+std::vector<Vector<N, T>> random_data(const int count, RandomEngine& engine)
 {
         std::vector<Vector<N, T>> data;
         data.reserve(count);

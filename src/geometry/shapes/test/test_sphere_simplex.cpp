@@ -114,8 +114,8 @@ void test_integrate(ProgressRatio* const progress, const double progress_min, co
         error(oss.str());
 }
 
-template <std::size_t N, typename T>
-std::array<Vector<N + 1, T>, N> add_dimension(const std::array<Vector<N, T>, N>& a, PCG& engine)
+template <std::size_t N, typename T, typename RandomEngine>
+std::array<Vector<N + 1, T>, N> add_dimension(const std::array<Vector<N, T>, N>& a, RandomEngine& engine)
 {
         std::uniform_int_distribution<unsigned> uid(0, N);
         std::array<Vector<N + 1, T>, N> r;

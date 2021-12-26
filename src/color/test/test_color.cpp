@@ -114,15 +114,16 @@ bool equal(
         return abs_sum <= sum_max_error;
 }
 
-Vector<3, float> random_rgb(PCG& engine)
+template <typename RandomEngine>
+Vector<3, float> random_rgb(RandomEngine& engine)
 {
         std::uniform_real_distribution<float> urd(0, 1);
         return {urd(engine), urd(engine), urd(engine)};
 }
 
-template <typename ColorType>
+template <typename ColorType, typename RandomEngine>
 void test_color_white_light(
-        PCG& engine,
+        RandomEngine& engine,
         const std::string_view& test_name,
         const float max_error,
         const float sum_max_error)
@@ -142,9 +143,9 @@ void test_color_white_light(
         }
 }
 
-template <typename ColorType>
+template <typename ColorType, typename RandomEngine>
 void test_color_white_color(
-        PCG& engine,
+        RandomEngine& engine,
         const std::string_view& test_name,
         const float max_error,
         const float sum_max_error)
@@ -164,8 +165,8 @@ void test_color_white_color(
         }
 }
 
-template <typename ColorType>
-void test_color_constructors(PCG& engine, const std::string_view& test_name, const float max_error)
+template <typename ColorType, typename RandomEngine>
+void test_color_constructors(RandomEngine& engine, const std::string_view& test_name, const float max_error)
 {
         const Vector<3, float> rgb = random_rgb(engine);
 
@@ -193,8 +194,8 @@ void test_color_constructors(PCG& engine, const std::string_view& test_name, con
         }
 }
 
-template <typename ColorType, typename FloatType>
-void test_color_conversions(PCG& engine, const std::string_view& test_name)
+template <typename ColorType, typename FloatType, typename RandomEngine>
+void test_color_conversions(RandomEngine& engine, const std::string_view& test_name)
 {
         const Vector<3, float> rgb = random_rgb(engine);
 
@@ -218,8 +219,8 @@ void test_color_conversions(PCG& engine, const std::string_view& test_name)
         }
 }
 
-template <typename ColorType>
-void test_color_non_negative(PCG& engine, const std::string_view& test_name)
+template <typename ColorType, typename RandomEngine>
+void test_color_non_negative(RandomEngine& engine, const std::string_view& test_name)
 {
         std::uniform_real_distribution<float> urd_n(-1, 1);
 
@@ -239,8 +240,8 @@ void test_color_non_negative(PCG& engine, const std::string_view& test_name)
         }
 }
 
-template <typename ColorType>
-void test_color_luminance(PCG& engine, const std::string_view& test_name)
+template <typename ColorType, typename RandomEngine>
+void test_color_luminance(RandomEngine& engine, const std::string_view& test_name)
 {
         std::uniform_real_distribution<double> urd(0, 2);
         const double value = urd(engine);
@@ -260,9 +261,9 @@ void test_color_luminance(PCG& engine, const std::string_view& test_name)
         }
 }
 
-template <typename ColorType>
+template <typename ColorType, typename RandomEngine>
 void test_color(
-        PCG& engine,
+        RandomEngine& engine,
         const std::string_view& test_name,
         const float white_light_max_error,
         const float white_light_sum_max_error,
@@ -279,8 +280,8 @@ void test_color(
         test_color_luminance<ColorType>(engine, test_name);
 }
 
-template <typename T>
-void test_color(PCG& engine)
+template <typename T, typename RandomEngine>
+void test_color(RandomEngine& engine)
 {
         test_color<RGB<T>>(engine, "RGB", 0, 0, 0, 0, 0.005);
 

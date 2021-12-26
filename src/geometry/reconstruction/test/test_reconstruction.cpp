@@ -51,8 +51,8 @@ constexpr Vector<sizeof...(I) + 1, T> make_last_axis(V&& value, std::integer_seq
 template <std::size_t N, typename T>
 constexpr Vector<N, T> LAST_AXIS = make_last_axis<T>(1, std::make_integer_sequence<std::size_t, N - 1>());
 
-template <std::size_t N, typename T>
-Vector<N, T> random_on_sphere(PCG& engine, const bool bound)
+template <std::size_t N, typename T, typename RandomEngine>
+Vector<N, T> random_on_sphere(RandomEngine& engine, const bool bound)
 {
         if (!bound)
         {

@@ -135,8 +135,8 @@ public:
         }
 };
 
-template <std::size_t N, typename T>
-Vector<N, T> random_on_sphere(PCG& engine, const bool bound)
+template <std::size_t N, typename T, typename RandomEngine>
+Vector<N, T> random_on_sphere(RandomEngine& engine, const bool bound)
 {
         if (!bound)
         {

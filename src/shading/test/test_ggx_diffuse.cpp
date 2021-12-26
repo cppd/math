@@ -46,7 +46,8 @@ class TestBRDF final : public compute::BRDF<N, T, Color>
         T metalness_;
         T roughness_;
 
-        TestBRDF(const Color& color, PCG&& engine)
+        template <typename RandomEngine>
+        TestBRDF(const Color& color, RandomEngine&& engine)
                 : color_(color),
                   metalness_(std::uniform_real_distribution<T>(0, 1)(engine)),
                   roughness_(std::uniform_real_distribution<T>(MIN_ROUGHNESS<T>, 1)(engine))

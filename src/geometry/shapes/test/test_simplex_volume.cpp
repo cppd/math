@@ -73,8 +73,8 @@ void test(
         (test_simplex<I + 1>(vertices, power<I + 1>(scale) / FACTORIAL<I + 1>, precision), ...);
 }
 
-template <std::size_t N, typename T>
-void test(const T& precision, PCG& engine)
+template <std::size_t N, typename T, typename RandomEngine>
+void test(const T& precision, RandomEngine& engine)
 {
         const T scale = std::uniform_real_distribution<T>(0.1, 10)(engine);
         const Vector<N, T> vector = sampling::uniform_on_sphere<N, T>(engine);
@@ -101,8 +101,8 @@ void test(const T& precision, PCG& engine)
         test(vertices, scale, precision, std::make_integer_sequence<std::size_t, N>());
 }
 
-template <typename T>
-void test(const T& precision, PCG& engine)
+template <typename T, typename RandomEngine>
+void test(const T& precision, RandomEngine& engine)
 {
         test<3, T>(precision, engine);
         test<4, T>(precision, engine);

@@ -208,7 +208,8 @@ void test(ProgressRatio* const progress)
 
 //
 
-void random_number(mpz_class* const v, PCG& engine)
+template <typename RandomEngine>
+void random_number(mpz_class* const v, RandomEngine& engine)
 {
         std::array<unsigned char, 50> data;
         std::uniform_int_distribution<int> uid(0, Limits<unsigned char>::max());
@@ -223,13 +224,14 @@ void random_number(mpz_class* const v, PCG& engine)
         }
 }
 
-void random_number(long long* const v, PCG& engine)
+template <typename RandomEngine>
+void random_number(long long* const v, RandomEngine& engine)
 {
         *v = std::uniform_int_distribution<long long>(-100, 100)(engine);
 }
 
-template <std::size_t N, typename T>
-std::array<Vector<N, T>, N - 1> random_vectors(PCG& engine)
+template <std::size_t N, typename T, typename RandomEngine>
+std::array<Vector<N, T>, N - 1> random_vectors(RandomEngine& engine)
 {
         std::array<Vector<N, T>, N - 1> vectors;
         for (Vector<N, T>& v : vectors)

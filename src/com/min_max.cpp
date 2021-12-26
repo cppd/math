@@ -56,8 +56,8 @@ void check_equal(const T& v1, const T& v2, const char* const text)
         }
 }
 
-template <typename T>
-void test_min_max(PCG& engine)
+template <typename T, typename RandomEngine>
+void test_min_max(RandomEngine& engine)
 {
         const std::vector<T> data = [&]
         {
@@ -81,8 +81,8 @@ void test_min_max(PCG& engine)
         }
 }
 
-template <typename T>
-void test_min_max_performance(PCG& engine)
+template <typename T, typename RandomEngine>
+void test_min_max_performance(RandomEngine& engine)
 {
         const std::string type_str = std::string("<") + type_name<T>() + ">";
 

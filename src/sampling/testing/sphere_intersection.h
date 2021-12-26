@@ -20,7 +20,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "sphere_mesh.h"
 
 #include <src/com/error.h>
-#include <src/com/random/pcg.h>
 
 #include <sstream>
 #include <vector>
@@ -32,7 +31,6 @@ class SphereIntersection final
 {
         const SphereMesh<N, T>* const sphere_mesh_;
 
-        PCG random_engine_;
         long long intersection_count_ = 0;
         long long missed_intersection_count_ = 0;
 
@@ -41,12 +39,11 @@ public:
         {
         }
 
-        template <typename RandomVector>
-        std::tuple<unsigned, Vector<N, T>> find(const RandomVector& random_vector)
+        std::tuple<unsigned, Vector<N, T>> find(const Vector<N, T>& direction)
         {
                 while (true)
                 {
-                        const Ray<N, T> ray(Vector<N, T>(0), random_vector(random_engine_));
+                        const Ray<N, T> ray(Vector<N, T>(0), direction);
                         const auto index = sphere_mesh_->intersect(ray);
                         if (index)
                         {

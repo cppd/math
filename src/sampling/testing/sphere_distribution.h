@@ -25,6 +25,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <src/com/error.h>
 #include <src/com/print.h>
+#include <src/com/random/pcg.h>
 #include <src/com/thread.h>
 #include <src/geometry/shapes/sphere_area.h>
 #include <src/geometry/shapes/sphere_simplex.h>
@@ -163,20 +164,22 @@ class SphereDistribution final
 
                         SphereIntersection<N, T> intersections(&sphere_mesh_);
 
+                        PCG engine;
+
                         const auto add_data = [&]
                         {
                                 {
-                                        const auto [index, dir] = intersections.find(random_vector);
+                                        const auto [index, dir] = intersections.find(random_vector(engine));
                                         (*buckets)[index].add_sample();
                                 }
                                 {
-                                        const auto [index, dir] = intersections.find(uniform_on_sphere<N, T, PCG>);
+                                        const auto [index, dir] = intersections.find(uniform_on_sphere<N, T>(engine));
                                         (*buckets)[index].add_pdf(pdf(dir));
                                         (*buckets)[index].add_uniform();
                                 }
                                 for (int i = 0; i < 3; ++i)
                                 {
-                                        const auto [index, dir] = intersections.find(uniform_on_sphere<N, T, PCG>);
+                                        const auto [index, dir] = intersections.find(uniform_on_sphere<N, T>(engine));
                                         (*buckets)[index].add_uniform();
                                 }
                         };
