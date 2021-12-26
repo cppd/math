@@ -57,8 +57,8 @@ struct Simplex final
         }
 };
 
-template <std::size_t N, typename T>
-Simplex<N, T> create_random_simplex(PCG& engine)
+template <std::size_t N, typename T, typename RandomEngine>
+Simplex<N, T> create_random_simplex(RandomEngine& engine)
 {
         constexpr T ORG_INTERVAL = 10;
         constexpr T MIN_LENGTH = 0.1;
@@ -91,8 +91,8 @@ T max_vertex_distance(const Simplex<N, T>& simplex)
         return max;
 }
 
-template <std::size_t N, typename T>
-std::vector<Ray<N, T>> create_rays(const Simplex<N, T>& simplex, const int point_count, PCG& engine)
+template <std::size_t N, typename T, typename RandomEngine>
+std::vector<Ray<N, T>> create_rays(const Simplex<N, T>& simplex, const int point_count, RandomEngine& engine)
 {
         const Vector<N, T>& normal = simplex.simplex.normal();
 
@@ -140,8 +140,8 @@ void check_intersection_count(const Simplex<N, T>& simplex, const std::vector<Ra
         }
 }
 
-template <std::size_t N, typename T, int COUNT>
-double compute_intersections_per_second(const int point_count, PCG& engine)
+template <std::size_t N, typename T, int COUNT, typename RandomEngine>
+double compute_intersections_per_second(const int point_count, RandomEngine& engine)
 {
         const Simplex<N, T> simplex = create_random_simplex<N, T>(engine);
         const std::vector<Ray<N, T>> rays = create_rays(simplex, point_count, engine);

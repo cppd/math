@@ -46,8 +46,8 @@ inline constexpr T ERROR_MIN = 0.998;
 template <typename T>
 inline constexpr T ERROR_MAX = 1.002;
 
-template <std::size_t N, typename T>
-HyperplaneBall<N, T> create_random_hyperplane_ball(PCG& engine)
+template <std::size_t N, typename T, typename RandomEngine>
+HyperplaneBall<N, T> create_random_hyperplane_ball(RandomEngine& engine)
 {
         constexpr T ORG_INTERVAL = 10;
         constexpr T MIN_RADIUS = 0.1;
@@ -70,8 +70,8 @@ std::array<Vector<N, T>, N - 1> ball_plane_vectors(const HyperplaneBall<N, T>& b
         return vectors;
 }
 
-template <std::size_t N, typename T>
-std::vector<Ray<N, T>> create_rays(const HyperplaneBall<N, T>& ball, const int point_count, PCG& engine)
+template <std::size_t N, typename T, typename RandomEngine>
+std::vector<Ray<N, T>> create_rays(const HyperplaneBall<N, T>& ball, const int point_count, RandomEngine& engine)
 {
         ASSERT(ball.normal().is_unit());
 
@@ -120,8 +120,8 @@ void check_intersection_count(const HyperplaneBall<N, T>& ball, const std::vecto
         }
 }
 
-template <std::size_t N, typename T, int COUNT>
-double compute_intersections_per_second(const int point_count, PCG& engine)
+template <std::size_t N, typename T, int COUNT, typename RandomEngine>
+double compute_intersections_per_second(const int point_count, RandomEngine& engine)
 {
         const HyperplaneBall<N, T> ball = create_random_hyperplane_ball<N, T>(engine);
         const std::vector<Ray<N, T>> rays = create_rays(ball, point_count, engine);

@@ -41,8 +41,8 @@ inline constexpr int POINT_COUNT = 10'000;
 inline constexpr int COMPUTE_COUNT = 100;
 inline constexpr int AVERAGE_COUNT = 100;
 
-template <std::size_t N, typename T>
-Parallelotope<N, T> create_random_parallelotope(PCG& engine)
+template <std::size_t N, typename T, typename RandomEngine>
+Parallelotope<N, T> create_random_parallelotope(RandomEngine& engine)
 {
         constexpr T ORG_INTERVAL = 10;
         constexpr T MIN_LENGTH = 0.1;
@@ -52,8 +52,8 @@ Parallelotope<N, T> create_random_parallelotope(PCG& engine)
                 random_org<N, T>(ORG_INTERVAL, engine), random_vectors<N, N, T>(MIN_LENGTH, MAX_LENGTH, engine));
 }
 
-template <std::size_t N, typename T>
-std::vector<Ray<N, T>> create_rays(const Parallelotope<N, T>& p, const int point_count, PCG& engine)
+template <std::size_t N, typename T, typename RandomEngine>
+std::vector<Ray<N, T>> create_rays(const Parallelotope<N, T>& p, const int point_count, RandomEngine& engine)
 {
         const T move_distance = p.length();
         const int ray_count = 3 * point_count;
@@ -92,8 +92,8 @@ void check_intersection_count(const Parallelotope<N, T>& p, const std::vector<Ra
         }
 }
 
-template <std::size_t N, typename T, int COUNT>
-double compute_intersections_per_second(const int point_count, PCG& engine)
+template <std::size_t N, typename T, int COUNT, typename RandomEngine>
+double compute_intersections_per_second(const int point_count, RandomEngine& engine)
 {
         const Parallelotope<N, T> parallelotope = create_random_parallelotope<N, T>(engine);
         const std::vector<Ray<N, T>> rays = create_rays(parallelotope, point_count, engine);

@@ -46,8 +46,8 @@ inline constexpr T ERROR_MIN = 0.998;
 template <typename T>
 inline constexpr T ERROR_MAX = 1.002;
 
-template <std::size_t N, typename T>
-HyperplaneParallelotope<N, T> create_random_hyperplane_parallelotope(PCG& engine)
+template <std::size_t N, typename T, typename RandomEngine>
+HyperplaneParallelotope<N, T> create_random_hyperplane_parallelotope(RandomEngine& engine)
 {
         constexpr T ORG_INTERVAL = 10;
         constexpr T MIN_LENGTH = 0.1;
@@ -57,8 +57,8 @@ HyperplaneParallelotope<N, T> create_random_hyperplane_parallelotope(PCG& engine
                 random_org<N, T>(ORG_INTERVAL, engine), random_vectors<N - 1, N, T>(MIN_LENGTH, MAX_LENGTH, engine));
 }
 
-template <std::size_t N, typename T>
-std::vector<Ray<N, T>> create_rays(const HyperplaneParallelotope<N, T>& p, const int point_count, PCG& engine)
+template <std::size_t N, typename T, typename RandomEngine>
+std::vector<Ray<N, T>> create_rays(const HyperplaneParallelotope<N, T>& p, const int point_count, RandomEngine& engine)
 {
         std::uniform_real_distribution<T> urd(0, 1);
 
@@ -106,8 +106,8 @@ void check_intersection_count(const HyperplaneParallelotope<N, T>& p, const std:
         }
 }
 
-template <std::size_t N, typename T, int COUNT>
-double compute_intersections_per_second(const int point_count, PCG& engine)
+template <std::size_t N, typename T, int COUNT, typename RandomEngine>
+double compute_intersections_per_second(const int point_count, RandomEngine& engine)
 {
         const HyperplaneParallelotope<N, T> p = create_random_hyperplane_parallelotope<N, T>(engine);
         const std::vector<Ray<N, T>> rays = create_rays(p, point_count, engine);

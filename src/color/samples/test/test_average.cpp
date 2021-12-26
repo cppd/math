@@ -175,12 +175,12 @@ void test_constant()
         check<ResultType>(WAVES, SAMPLES, 5.5, 8, 5);
 }
 
-template <typename T, typename Engine>
+template <typename T, typename RandomEngine>
 std::array<T, 2> min_max(
         std::type_identity_t<T> from,
         std::type_identity_t<T> to,
         std::type_identity_t<T> min_distance,
-        Engine& engine)
+        RandomEngine& engine)
 {
         ASSERT(from < to);
         ASSERT(min_distance < (to - from));

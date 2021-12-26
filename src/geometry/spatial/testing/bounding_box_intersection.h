@@ -40,8 +40,8 @@ inline constexpr int POINT_COUNT = 10'000;
 inline constexpr int COMPUTE_COUNT = 100;
 inline constexpr int AVERAGE_COUNT = 100;
 
-template <std::size_t N, typename T>
-BoundingBox<N, T> create_random_bounding_box(PCG& engine)
+template <std::size_t N, typename T, typename RandomEngine>
+BoundingBox<N, T> create_random_bounding_box(RandomEngine& engine)
 {
         std::uniform_real_distribution<T> urd(-5, 5);
         Vector<N, T> p1;
@@ -57,8 +57,8 @@ BoundingBox<N, T> create_random_bounding_box(PCG& engine)
         return {p1, p2};
 }
 
-template <std::size_t N, typename T>
-std::vector<Ray<N, T>> rays_for_intersections(const BoundingBox<N, T>& box, const int point_count, PCG& engine)
+template <std::size_t N, typename T, typename RandomEngine>
+std::vector<Ray<N, T>> rays_for_intersections(const BoundingBox<N, T>& box, const int point_count, RandomEngine& engine)
 {
         const T length = box.diagonal().norm();
         const T move_distance = length;
@@ -164,8 +164,8 @@ std::vector<Vector<N, bool>> ray_negative_directions(const std::vector<Ray<N, T>
         return res;
 }
 
-template <std::size_t N, typename T, int COUNT>
-double compute_intersections_per_second(const int point_count, PCG& engine)
+template <std::size_t N, typename T, int COUNT, typename RandomEngine>
+double compute_intersections_per_second(const int point_count, RandomEngine& engine)
 {
         const BoundingBox<N, T> box = create_random_bounding_box<N, T>(engine);
         const std::vector<Ray<N, T>> rays = rays_for_intersections(box, point_count, engine);
@@ -183,8 +183,8 @@ double compute_intersections_per_second(const int point_count, PCG& engine)
         return COUNT * (rays.size() / duration_from(start_time));
 }
 
-template <std::size_t N, typename T, int COUNT>
-double compute_intersections_r_per_second(const int point_count, PCG& engine)
+template <std::size_t N, typename T, int COUNT, typename RandomEngine>
+double compute_intersections_r_per_second(const int point_count, RandomEngine& engine)
 {
         const BoundingBox<N, T> box = create_random_bounding_box<N, T>(engine);
         const std::vector<Ray<N, T>> rays = rays_for_intersections(box, point_count, engine);

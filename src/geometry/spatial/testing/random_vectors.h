@@ -60,8 +60,8 @@ bool test_vectors(const T& min_length, const T& max_length, const std::array<Vec
 }
 }
 
-template <std::size_t M, std::size_t N, typename T, typename Engine>
-std::array<Vector<N, T>, M> random_vectors(const T& min_length, const T& max_length, Engine& engine)
+template <std::size_t M, std::size_t N, typename T, typename RandomEngine>
+std::array<Vector<N, T>, M> random_vectors(const T& min_length, const T& max_length, RandomEngine& engine)
 {
         static_assert(M > 0 && M <= N);
 
@@ -84,8 +84,8 @@ std::array<Vector<N, T>, M> random_vectors(const T& min_length, const T& max_len
         return vectors;
 }
 
-template <std::size_t N, typename T, typename Engine>
-std::array<T, N> random_aa_vectors(const T& min_length, const T& max_length, Engine& engine)
+template <std::size_t N, typename T, typename RandomEngine>
+std::array<T, N> random_aa_vectors(const T& min_length, const T& max_length, RandomEngine& engine)
 {
         ASSERT(min_length > 0 && min_length < max_length);
 
@@ -98,8 +98,8 @@ std::array<T, N> random_aa_vectors(const T& min_length, const T& max_length, Eng
         return vectors;
 }
 
-template <std::size_t N, typename T, typename Engine>
-Vector<N, T> random_org(const T& interval, Engine& engine)
+template <std::size_t N, typename T, typename RandomEngine>
+Vector<N, T> random_org(const T& interval, RandomEngine& engine)
 {
         ASSERT(interval >= 0);
 
@@ -112,8 +112,8 @@ Vector<N, T> random_org(const T& interval, Engine& engine)
         return v;
 }
 
-template <std::size_t N, typename T, typename Engine>
-Vector<N, T> random_direction_for_normal(const T& from, const T& to, const Vector<N, T>& normal, Engine& engine)
+template <std::size_t N, typename T, typename RandomEngine>
+Vector<N, T> random_direction_for_normal(const T& from, const T& to, const Vector<N, T>& normal, RandomEngine& engine)
 {
         while (true)
         {
