@@ -35,7 +35,7 @@ Elsevier, 2017.
 
 #pragma once
 
-#include "sample.h"
+#include "objects.h"
 
 #include <src/com/error.h>
 #include <src/geometry/shapes/sphere_integral.h>

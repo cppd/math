@@ -24,6 +24,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/com/memory_arena.h>
 #include <src/geometry/spatial/parallelotope.h>
 #include <src/shading/ggx_diffuse.h>
+#include <src/shading/metalness.h>
 
 namespace ns::painter
 {
@@ -32,9 +33,8 @@ class Parallelotope final : public Shape<N, T, Color>
 {
         const geometry::Parallelotope<N, T> parallelotope_;
         std::optional<Color> light_source_;
-        const T metalness_;
         const T roughness_;
-        const Color color_;
+        const shading::Colors<Color> colors_;
         const T alpha_;
         const bool alpha_nonzero_ = alpha_ > 0;
 
@@ -70,7 +70,7 @@ class Parallelotope final : public Shape<N, T, Color>
                         const Vector<N, T>& v,
                         const Vector<N, T>& l) const override
                 {
-                        return shading::ggx_diffuse::f(obj_->metalness_, obj_->roughness_, obj_->color_, n, v, l);
+                        return shading::ggx_diffuse::f(obj_->roughness_, obj_->colors_, n, v, l);
                 }
 
                 T pdf(const Vector<N, T>& /*point*/,
@@ -87,8 +87,8 @@ class Parallelotope final : public Shape<N, T, Color>
                         const Vector<N, T>& n,
                         const Vector<N, T>& v) const override
                 {
-                        shading::Sample<N, T, Color> sample = shading::ggx_diffuse::sample_f(
-                                engine, obj_->metalness_, obj_->roughness_, obj_->color_, n, v);
+                        const shading::Sample<N, T, Color>& sample =
+                                shading::ggx_diffuse::sample_f(engine, obj_->roughness_, obj_->colors_, n, v);
 
                         Sample<N, T, Color> s;
                         s.l = sample.l;
@@ -153,9 +153,8 @@ public:
                 const Vector<N, T>& org,
                 const V&... e)
                 : parallelotope_(org, e...),
-                  metalness_(std::clamp(metalness, T(0), T(1))),
                   roughness_(std::clamp(roughness, T(0), T(1))),
-                  color_(color.clamp(0, 1)),
+                  colors_(shading::compute_metalness(color.clamp(0, 1), std::clamp(metalness, T(0), T(1)))),
                   alpha_(std::clamp(alpha, T(0), T(1)))
         {
         }

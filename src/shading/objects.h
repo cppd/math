@@ -21,6 +21,13 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 namespace ns::shading
 {
+template <typename Color>
+struct Colors final
+{
+        Color f0;
+        Color rho_ss;
+};
+
 template <std::size_t N, typename T, typename Color>
 struct Sample final
 {

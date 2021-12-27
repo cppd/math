@@ -20,6 +20,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "../compute/brdf.h"
 #include "../ggx_diffuse.h"
+#include "../metalness.h"
 
 #include <src/color/color.h>
 #include <src/com/log.h>
@@ -43,13 +44,13 @@ template <std::size_t N, typename T, typename Color>
 class TestBRDF final : public compute::BRDF<N, T, Color>
 {
         Color color_;
-        T metalness_;
+        Colors<Color> colors_;
         T roughness_;
 
         template <typename RandomEngine>
         TestBRDF(const Color& color, RandomEngine&& engine)
                 : color_(color),
-                  metalness_(std::uniform_real_distribution<T>(0, 1)(engine)),
+                  colors_(compute_metalness(color, std::uniform_real_distribution<T>(0, 1)(engine))),
                   roughness_(std::uniform_real_distribution<T>(MIN_ROUGHNESS<T>, 1)(engine))
         {
         }
@@ -61,7 +62,7 @@ public:
 
         Color f(const Vector<N, T>& n, const Vector<N, T>& v, const Vector<N, T>& l) const override
         {
-                return ggx_diffuse::f(metalness_, roughness_, color_, n, v, l);
+                return ggx_diffuse::f(roughness_, colors_, n, v, l);
         }
 
         T pdf(const Vector<N, T>& n, const Vector<N, T>& v, const Vector<N, T>& l) const override
@@ -71,7 +72,7 @@ public:
 
         Sample<N, T, Color> sample_f(PCG& engine, const Vector<N, T>& n, const Vector<N, T>& v) const override
         {
-                return ggx_diffuse::sample_f(engine, metalness_, roughness_, color_, n, v);
+                return ggx_diffuse::sample_f(engine, roughness_, colors_, n, v);
         }
 
         const Color& color() const

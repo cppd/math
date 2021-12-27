@@ -36,7 +36,7 @@ Elsevier, 2017.
 #pragma once
 
 #include "ggx.h"
-#include "sample.h"
+#include "objects.h"
 
 #include <src/com/constant.h>
 #include <src/com/error.h>
@@ -111,9 +111,9 @@ Color diffuse_disney_ws(const Color& f0, const Color& rho_ss, const T roughness,
 // }
 
 template <bool GGX_ONLY, std::size_t N, typename T, typename Color>
-Color f(const T metalness,
-        const T roughness,
-        const Color& surface_color,
+Color f(const T roughness,
+        const Color& f0,
+        const Color& rho_ss,
         const Vector<N, T>& n,
         const Vector<N, T>& v,
         const Vector<N, T>& l)
@@ -125,8 +125,6 @@ Color f(const T metalness,
         const T n_v = dot(n, v);
         const T n_h = dot(n, h);
 
-        static constexpr Color F0(0.05);
-        const Color f0 = interpolation(F0, surface_color, metalness);
         const Color ggx = ggx_brdf<N>(roughness, f0, n_v, n_l, n_h, h_l);
 
         if (GGX_ONLY)
@@ -134,8 +132,6 @@ Color f(const T metalness,
                 return ggx;
         }
 
-        static constexpr Color BLACK(0);
-        const Color rho_ss = interpolation(surface_color, BLACK, metalness);
         const Color diffuse = diffuse_disney_ws<N>(f0, rho_ss, roughness, n_l, n_v, h_l);
 
         return ggx + diffuse;
@@ -212,9 +208,8 @@ std::tuple<Vector<N, T>, T> sample_ggx_cosine(
 //
 
 template <bool GGX_ONLY = false, std::size_t N, typename T, typename Color>
-Color f(const T metalness,
-        const T roughness,
-        const Color& color,
+Color f(const T roughness,
+        const Colors<Color>& colors,
         const Vector<N, T>& n,
         const Vector<N, T>& v,
         const Vector<N, T>& l)
@@ -236,7 +231,7 @@ Color f(const T metalness,
                 return Color(0);
         }
 
-        return impl::f<GGX_ONLY>(metalness, roughness, color, n, v, l);
+        return impl::f<GGX_ONLY>(roughness, colors.f0, colors.rho_ss, n, v, l);
 }
 
 template <bool GGX_ONLY = false, std::size_t N, typename T>
@@ -262,9 +257,8 @@ T pdf(const T roughness, const Vector<N, T>& n, const Vector<N, T>& v, const Vec
 template <bool GGX_ONLY = false, std::size_t N, typename T, typename Color, typename RandomEngine>
 Sample<N, T, Color> sample_f(
         RandomEngine& engine,
-        const T metalness,
         const T roughness,
-        const Color& color,
+        const Colors<Color>& colors,
         const Vector<N, T>& n,
         const Vector<N, T>& v)
 {
@@ -293,6 +287,6 @@ Sample<N, T, Color> sample_f(
                 return {l, pdf, Color(0)};
         }
 
-        return {l, pdf, impl::f<GGX_ONLY>(metalness, roughness, color, n, v, l)};
+        return {l, pdf, impl::f<GGX_ONLY>(roughness, colors.f0, colors.rho_ss, n, v, l)};
 }
 }

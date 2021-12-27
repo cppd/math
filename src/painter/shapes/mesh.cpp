@@ -32,6 +32,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/geometry/accelerators/bvh.h>
 #include <src/geometry/spatial/ray_intersection.h>
 #include <src/shading/ggx_diffuse.h>
+#include <src/shading/metalness.h>
 
 namespace ns::painter
 {
@@ -43,15 +44,16 @@ class SurfaceImpl final : public Surface<N, T, Color>
         const MeshData<N, T, Color>* mesh_data_;
         const MeshFacet<N, T>* facet_;
 
-        Color surface_color(const Vector<N, T>& point, const Material<T, Color>& m) const
+        shading::Colors<Color> surface_color(const Vector<N, T>& point, const Material<T, Color>& m) const
         {
                 if (facet_->has_texcoord() && m.image >= 0)
                 {
                         const Vector<3, float> rgb =
                                 mesh_data_->images()[m.image].color(facet_->texcoord(mesh_data_->texcoords(), point));
-                        return Color(rgb[0], rgb[1], rgb[2]);
+                        const Color color = Color(rgb[0], rgb[1], rgb[2]);
+                        return shading::compute_metalness(color, m.metalness);
                 }
-                return m.color;
+                return shading::compute_metalness(m.color, m.metalness);
         }
 
         //
@@ -83,7 +85,7 @@ class SurfaceImpl final : public Surface<N, T, Color>
 
                 const Material<T, Color>& m = mesh_data_->materials()[facet_->material()];
 
-                return shading::ggx_diffuse::f(m.metalness, m.roughness, surface_color(point, m), n, v, l);
+                return shading::ggx_diffuse::f(m.roughness, surface_color(point, m), n, v, l);
         }
 
         T pdf(const Vector<N, T>& /*point*/,
@@ -108,8 +110,8 @@ class SurfaceImpl final : public Surface<N, T, Color>
 
                 const Material<T, Color>& m = mesh_data_->materials()[facet_->material()];
 
-                shading::Sample<N, T, Color> sample =
-                        shading::ggx_diffuse::sample_f(engine, m.metalness, m.roughness, surface_color(point, m), n, v);
+                const shading::Sample<N, T, Color>& sample =
+                        shading::ggx_diffuse::sample_f(engine, m.roughness, surface_color(point, m), n, v);
 
                 Sample<N, T, Color> s;
                 s.l = sample.l;
