@@ -17,7 +17,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
-#include <src/com/random/pcg.h>
 #include <src/numerical/vector.h>
 #include <src/sampling/sphere_uniform.h>
 
@@ -25,11 +24,9 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 namespace ns::shading::test
 {
-template <std::size_t N, typename T>
-std::array<Vector<N, T>, 2> random_n_v()
+template <std::size_t N, typename T, typename RandomEngine>
+std::array<Vector<N, T>, 2> random_n_v(RandomEngine& engine)
 {
-        PCG engine;
-
         const Vector<N, T> n = sampling::uniform_on_sphere<N, T>(engine);
 
         Vector<N, T> v;
@@ -47,10 +44,9 @@ std::array<Vector<N, T>, 2> random_n_v()
         return {n, -v};
 }
 
-template <typename Color>
-Color random_non_black_color()
+template <typename Color, typename RandomEngine>
+Color random_non_black_color(RandomEngine& engine)
 {
-        PCG engine;
         std::uniform_real_distribution<double> urd(0, 1);
 
         Color color;

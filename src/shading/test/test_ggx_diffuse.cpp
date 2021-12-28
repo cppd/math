@@ -47,16 +47,12 @@ class TestBRDF final : public compute::BRDF<N, T, Color>
         Colors<Color> colors_;
         T roughness_;
 
+public:
         template <typename RandomEngine>
         TestBRDF(const Color& color, RandomEngine&& engine)
                 : color_(color),
                   colors_(compute_metalness(color, std::uniform_real_distribution<T>(0, 1)(engine))),
                   roughness_(std::uniform_real_distribution<T>(MIN_ROUGHNESS<T>, 1)(engine))
-        {
-        }
-
-public:
-        explicit TestBRDF(const Color& color) : TestBRDF(color, PCG())
         {
         }
 
@@ -81,53 +77,55 @@ public:
         }
 };
 
-template <std::size_t N, typename T, typename Color>
-void test_brdf_white(const unsigned sample_count)
+template <std::size_t N, typename T, typename Color, typename RandomEngine>
+void test_brdf_white(const unsigned sample_count, RandomEngine& engine)
 {
-        const TestBRDF<N, T, Color> brdf(Color(1));
+        const TestBRDF<N, T, Color> brdf(Color(1), engine);
 
-        const auto [n, v] = random_n_v<N, T>();
+        const auto [n, v] = random_n_v<N, T>(engine);
 
         LOG(std::string(Color::name()) + ", " + to_string(N) + "D, " + type_name<T>() + ", uniform, white");
-        const Color color_uniform = compute::directional_albedo_uniform_sampling(brdf, n, v, sample_count);
+        const Color color_uniform = compute::directional_albedo_uniform_sampling(brdf, n, v, sample_count, engine);
         check_color_less(color_uniform, brdf.color());
 
         LOG(std::string(Color::name()) + ", " + to_string(N) + "D, " + type_name<T>() + ", importance, white");
-        const Color color_importance = compute::directional_albedo_importance_sampling(brdf, n, v, sample_count);
+        const Color color_importance =
+                compute::directional_albedo_importance_sampling(brdf, n, v, sample_count, engine);
         check_color_less(color_importance, brdf.color());
 
         constexpr double RELATIVE_ERROR = 0.25;
         check_uniform_importance_equal(color_uniform, color_importance, RELATIVE_ERROR);
 }
 
-template <std::size_t N, typename T, typename Color>
-void test_brdf_random(const unsigned sample_count)
+template <std::size_t N, typename T, typename Color, typename RandomEngine>
+void test_brdf_random(const unsigned sample_count, RandomEngine& engine)
 {
-        const TestBRDF<N, T, Color> brdf(random_non_black_color<Color>());
+        const TestBRDF<N, T, Color> brdf(random_non_black_color<Color>(engine), engine);
 
-        const auto [n, v] = random_n_v<N, T>();
+        const auto [n, v] = random_n_v<N, T>(engine);
 
         LOG(std::string(Color::name()) + ", " + to_string(N) + "D, " + type_name<T>() + ", uniform, random");
-        const Color color_uniform = compute::directional_albedo_uniform_sampling(brdf, n, v, sample_count);
+        const Color color_uniform = compute::directional_albedo_uniform_sampling(brdf, n, v, sample_count, engine);
         check_color_range(color_uniform);
 
         LOG(std::string(Color::name()) + ", " + to_string(N) + "D, " + type_name<T>() + ", importance, random");
-        const Color color_importance = compute::directional_albedo_importance_sampling(brdf, n, v, sample_count);
+        const Color color_importance =
+                compute::directional_albedo_importance_sampling(brdf, n, v, sample_count, engine);
         check_color_range(color_importance);
 
         constexpr double RELATIVE_ERROR = 0.25;
         check_uniform_importance_equal(color_uniform, color_importance, RELATIVE_ERROR);
 }
 
-template <std::size_t N, typename T, typename Color>
-void test_brdf_pdf(const unsigned sample_count)
+template <std::size_t N, typename T, typename Color, typename RandomEngine>
+void test_brdf_pdf(const unsigned sample_count, RandomEngine& engine)
 {
-        const TestBRDF<N, T, Color> brdf(Color(1));
+        const TestBRDF<N, T, Color> brdf(Color(1), engine);
 
         LOG(std::string(Color::name()) + ", " + to_string(N) + "D, " + type_name<T>() + ", PDF integral");
         {
-                const auto [n, v] = random_n_v<N, T>();
-                const T integral = compute::directional_pdf_integral(brdf, n, v, sample_count);
+                const auto [n, v] = random_n_v<N, T>(engine);
+                const T integral = compute::directional_pdf_integral(brdf, n, v, sample_count, engine);
                 if (!(std::abs(integral - 1) <= T(0.05)))
                 {
                         error("BRDF error, PDF integral is not equal to 1\n" + to_string(integral));
@@ -135,30 +133,32 @@ void test_brdf_pdf(const unsigned sample_count)
         }
 }
 
-template <std::size_t N, typename T, typename Color, typename Counter>
-void test_brdf(const Counter& counter)
+template <std::size_t N, typename T, typename Color, typename Counter, typename RandomEngine>
+void test_brdf(const Counter& counter, RandomEngine& engine)
 {
         constexpr unsigned SAMPLE_COUNT = 1'000'000;
 
         counter();
-        test_brdf_white<N, T, Color>(SAMPLE_COUNT);
+        test_brdf_white<N, T, Color>(SAMPLE_COUNT, engine);
         counter();
-        test_brdf_random<N, T, Color>(SAMPLE_COUNT);
+        test_brdf_random<N, T, Color>(SAMPLE_COUNT, engine);
         counter();
-        test_brdf_pdf<N, T, Color>(2 * SAMPLE_COUNT);
+        test_brdf_pdf<N, T, Color>(2 * SAMPLE_COUNT, engine);
 }
 
-template <typename T, typename Color, typename Counter>
-void test_brdf(const Counter& counter)
+template <typename T, typename Color, typename Counter, typename RandomEngine>
+void test_brdf(const Counter& counter, RandomEngine& engine)
 {
-        test_brdf<3, T, Color>(counter);
-        test_brdf<4, T, Color>(counter);
-        test_brdf<5, T, Color>(counter);
+        test_brdf<3, T, Color>(counter, engine);
+        test_brdf<4, T, Color>(counter, engine);
+        test_brdf<5, T, Color>(counter, engine);
 }
 
 void test_small(ProgressRatio* const progress)
 {
         LOG("Test GGX Diffuse BRDF");
+
+        PCG engine;
 
         constexpr int COUNT = 3 * 3;
         int i = -1;
@@ -167,7 +167,7 @@ void test_small(ProgressRatio* const progress)
                 progress->set(++i, COUNT);
         };
 
-        test_brdf<double, color::Color>(counter);
+        test_brdf<double, color::Color>(counter, engine);
 
         LOG("Test GGX Diffuse BRDF passed");
 }
@@ -176,6 +176,8 @@ void test_large(ProgressRatio* const progress)
 {
         LOG("Test GGX Diffuse BRDF");
 
+        PCG engine;
+
         constexpr int COUNT = 3 * 3 * 4;
         int i = -1;
         const auto counter = [&]
@@ -183,10 +185,10 @@ void test_large(ProgressRatio* const progress)
                 progress->set(++i, COUNT);
         };
 
-        test_brdf<float, color::Color>(counter);
-        test_brdf<double, color::Color>(counter);
-        test_brdf<float, color::Spectrum>(counter);
-        test_brdf<double, color::Spectrum>(counter);
+        test_brdf<float, color::Color>(counter, engine);
+        test_brdf<double, color::Color>(counter, engine);
+        test_brdf<float, color::Spectrum>(counter, engine);
+        test_brdf<double, color::Spectrum>(counter, engine);
 
         LOG("Test GGX Diffuse BRDF passed");
 }
@@ -194,18 +196,17 @@ void test_large(ProgressRatio* const progress)
 //
 
 template <std::size_t N, typename T, typename Color>
-void test_sampling(ProgressRatio* const progress)
+void test_distribution(
+        const TestBRDF<N, T, Color>& brdf,
+        const Vector<N, T>& n,
+        const Vector<N, T>& v,
+        ProgressRatio* const progress)
 {
         constexpr int COUNT_PER_BUCKET = 10'000;
 
-        LOG("GGX Diffuse Sampling, " + space_name(N) + ", " + type_name<T>());
-
-        const TestBRDF<N, T, Color> brdf(Color(1));
-        const auto [n, v] = random_n_v<N, T>();
-
         sampling::testing::test_distribution_surface<N, T>(
                 "", COUNT_PER_BUCKET,
-                [&, v = v, n = n](auto& engine)
+                [&](auto& engine)
                 {
                         for (int i = 0; i < 10; ++i)
                         {
@@ -221,19 +222,33 @@ void test_sampling(ProgressRatio* const progress)
                         }
                         error("No positive PDF found");
                 },
-                [&, v = v, n = n](const Vector<N, T>& l)
+                [&](const Vector<N, T>& l)
                 {
                         return brdf.pdf(n, v, l);
                 },
                 progress);
 }
 
+template <std::size_t N, typename T, typename Color, typename RandomEngine>
+void test_sampling(ProgressRatio* const progress, RandomEngine& engine)
+{
+        LOG("GGX Diffuse Sampling, " + space_name(N) + ", " + type_name<T>());
+
+        const TestBRDF<N, T, Color> brdf(Color(1), engine);
+        const auto [n, v] = random_n_v<N, T>(engine);
+
+        test_distribution(brdf, n, v, progress);
+}
+
 template <std::size_t N>
 void test_sampling(ProgressRatio* const progress)
 {
         using Color = color::Spectrum;
-        test_sampling<N, float, Color>(progress);
-        test_sampling<N, double, Color>(progress);
+
+        PCG engine;
+
+        test_sampling<N, float, Color>(progress, engine);
+        test_sampling<N, double, Color>(progress, engine);
 }
 }
 

@@ -40,12 +40,13 @@ public:
         virtual Sample<N, T, Color> sample_f(PCG& engine, const Vector<N, T>& n, const Vector<N, T>& v) const = 0;
 };
 
-template <std::size_t N, typename T, typename Color>
+template <std::size_t N, typename T, typename Color, typename RandomEngine>
 Color directional_albedo_uniform_sampling(
         const BRDF<N, T, Color>& brdf,
         const Vector<N, T>& n,
         const Vector<N, T>& v,
-        const long long sample_count)
+        const long long sample_count,
+        RandomEngine& engine)
 {
         if (sample_count <= 0)
         {
@@ -53,8 +54,6 @@ Color directional_albedo_uniform_sampling(
         }
 
         static constexpr T UNIFORM_ON_HEMISPHERE_PDF = 2 * sampling::uniform_on_sphere_pdf<N, T>();
-
-        PCG engine;
 
         Color sum{0};
 
@@ -81,19 +80,18 @@ Color directional_albedo_uniform_sampling(
         return sum / sample_count;
 }
 
-template <std::size_t N, typename T, typename Color>
+template <std::size_t N, typename T, typename Color, typename RandomEngine>
 Color directional_albedo_importance_sampling(
         const BRDF<N, T, Color>& brdf,
         const Vector<N, T>& n,
         const Vector<N, T>& v,
-        const long long sample_count)
+        const long long sample_count,
+        RandomEngine& engine)
 {
         if (sample_count <= 0)
         {
                 error("Sample count " + to_string(sample_count) + " must be positive");
         }
-
-        PCG engine;
 
         Color sum{0};
 
@@ -129,19 +127,18 @@ Color directional_albedo_importance_sampling(
         return sum / sample_count;
 }
 
-template <std::size_t N, typename T, typename Color>
+template <std::size_t N, typename T, typename Color, typename RandomEngine>
 T directional_pdf_integral(
         const BRDF<N, T, Color>& brdf,
         const Vector<N, T>& n,
         const Vector<N, T>& v,
-        const long long sample_count)
+        const long long sample_count,
+        RandomEngine& engine)
 {
         if (sample_count <= 0)
         {
                 error("Sample count " + to_string(sample_count) + " must be positive");
         }
-
-        PCG engine;
 
         T sum{0};
 

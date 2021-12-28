@@ -40,6 +40,11 @@ class TestBRDF final : public compute::BRDF<N, T, Color>
         const Color color_ = random_non_black_color<Color>();
 
 public:
+        template <typename RandomEngine>
+        TestBRDF(RandomEngine&& engine) : color_(random_non_black_color<Color>(engine))
+        {
+        }
+
         Color f(const Vector<N, T>& n, const Vector<N, T>& v, const Vector<N, T>& l) const override
         {
                 if (dot(n, v) <= 0)
@@ -73,55 +78,58 @@ public:
         }
 };
 
-template <std::size_t N, typename T, typename Color>
-void test_brdf()
+template <std::size_t N, typename T, typename Color, typename RandomEngine>
+void test_brdf(RandomEngine& engine)
 {
         constexpr unsigned SAMPLE_COUNT = 100'000;
 
-        const TestBRDF<N, T, Color> brdf;
+        const TestBRDF<N, T, Color> brdf(engine);
 
-        const auto [n, v] = random_n_v<N, T>();
+        const auto [n, v] = random_n_v<N, T>(engine);
 
         LOG(std::string(Color::name()) + ", " + to_string(N) + "D, " + type_name<T>() + ", uniform");
-        const Color color_uniform = compute::directional_albedo_uniform_sampling(brdf, n, v, SAMPLE_COUNT);
+        const Color color_uniform = compute::directional_albedo_uniform_sampling(brdf, n, v, SAMPLE_COUNT, engine);
         check_color_equal(color_uniform, brdf.color());
 
         LOG(std::string(Color::name()) + ", " + to_string(N) + "D, " + type_name<T>() + ", importance");
-        const Color color_importance = compute::directional_albedo_importance_sampling(brdf, n, v, SAMPLE_COUNT);
+        const Color color_importance =
+                compute::directional_albedo_importance_sampling(brdf, n, v, SAMPLE_COUNT, engine);
         check_color_equal(color_importance, brdf.color());
 
         constexpr double RELATIVE_ERROR = 0.01;
         check_uniform_importance_equal(color_uniform, color_importance, RELATIVE_ERROR);
 
         LOG(std::string(Color::name()) + ", " + to_string(N) + "D, " + type_name<T>() + ", PDF integral");
-        const T integral = compute::directional_pdf_integral(brdf, n, v, SAMPLE_COUNT);
+        const T integral = compute::directional_pdf_integral(brdf, n, v, SAMPLE_COUNT, engine);
         if (!(std::abs(integral - 1) <= T(0.02)))
         {
                 error("BRDF error, PDF integral is not equal to 1\n" + to_string(integral));
         }
 }
 
-template <typename T, typename Color, typename Counter>
-void test_brdf(const Counter& counter)
+template <typename T, typename Color, typename Counter, typename RandomEngine>
+void test_brdf(const Counter& counter, RandomEngine& engine)
 {
         counter();
-        test_brdf<3, T, Color>();
+        test_brdf<3, T, Color>(engine);
         counter();
-        test_brdf<4, T, Color>();
+        test_brdf<4, T, Color>(engine);
         counter();
-        test_brdf<5, T, Color>();
+        test_brdf<5, T, Color>(engine);
 }
 
-template <typename Color, typename Counter>
-void test_brdf(const Counter& counter)
+template <typename Color, typename Counter, typename RandomEngine>
+void test_brdf(const Counter& counter, RandomEngine& engine)
 {
-        test_brdf<float, Color>(counter);
-        test_brdf<double, Color>(counter);
+        test_brdf<float, Color>(counter, engine);
+        test_brdf<double, Color>(counter, engine);
 }
 
 void test(ProgressRatio* const progress)
 {
         LOG("Test Lambertian BRDF");
+
+        PCG engine;
 
         constexpr int COUNT = 3 * 2 * 2;
         int i = -1;
@@ -130,8 +138,8 @@ void test(ProgressRatio* const progress)
                 progress->set(++i, COUNT);
         };
 
-        test_brdf<color::Color>(counter);
-        test_brdf<color::Spectrum>(counter);
+        test_brdf<color::Color>(counter, engine);
+        test_brdf<color::Spectrum>(counter, engine);
 
         LOG("Test Lambertian BRDF passed");
 }
@@ -139,18 +147,17 @@ void test(ProgressRatio* const progress)
 //
 
 template <std::size_t N, typename T, typename Color>
-void test_sampling(ProgressRatio* const progress)
+void test_distribution(
+        const TestBRDF<N, T, Color>& brdf,
+        const Vector<N, T>& n,
+        const Vector<N, T>& v,
+        ProgressRatio* const progress)
 {
         constexpr int COUNT_PER_BUCKET = 10'000;
 
-        LOG("Lambertian Sampling, " + space_name(N) + ", " + type_name<T>());
-
-        const TestBRDF<N, T, Color> brdf;
-        const auto [n, v] = random_n_v<N, T>();
-
         sampling::testing::test_distribution_surface<N, T>(
                 "", COUNT_PER_BUCKET,
-                [&, v = v, n = n](auto& engine)
+                [&](auto& engine)
                 {
                         for (int i = 0; i < 10; ++i)
                         {
@@ -166,19 +173,33 @@ void test_sampling(ProgressRatio* const progress)
                         }
                         error("No positive PDF found");
                 },
-                [&, v = v, n = n](const Vector<N, T>& l)
+                [&](const Vector<N, T>& l)
                 {
                         return brdf.pdf(n, v, l);
                 },
                 progress);
 }
 
+template <std::size_t N, typename T, typename Color, typename RandomEngine>
+void test_sampling(ProgressRatio* const progress, RandomEngine& engine)
+{
+        LOG("Lambertian Sampling, " + space_name(N) + ", " + type_name<T>());
+
+        const TestBRDF<N, T, Color> brdf(engine);
+        const auto [n, v] = random_n_v<N, T>(engine);
+
+        test_distribution(brdf, n, v, progress);
+}
+
 template <std::size_t N>
 void test_sampling(ProgressRatio* const progress)
 {
         using Color = color::Spectrum;
-        test_sampling<N, float, Color>(progress);
-        test_sampling<N, double, Color>(progress);
+
+        PCG engine;
+
+        test_sampling<N, float, Color>(progress, engine);
+        test_sampling<N, double, Color>(progress, engine);
 }
 }
 

@@ -40,24 +40,21 @@ constexpr long long PERFORMANCE_COUNT = 10'000'000;
 
 namespace st = sampling::testing;
 
-template <typename T>
-T random_alpha()
+template <typename T, typename RandomEngine>
+T random_alpha(RandomEngine& engine)
 {
-        PCG engine;
         return std::uniform_real_distribution<T>(0.1, 1)(engine);
 }
 
-template <std::size_t N, typename T>
-Vector<N, T> random_normal()
+template <std::size_t N, typename T, typename RandomEngine>
+Vector<N, T> random_normal(RandomEngine& engine)
 {
-        PCG engine;
         return sampling::uniform_on_sphere<N, T>(engine).normalized();
 }
 
-template <std::size_t N, typename T>
-Vector<N, T> random_v(const Vector<N, T>& normal)
+template <std::size_t N, typename T, typename RandomEngine>
+Vector<N, T> random_v(const Vector<N, T>& normal, RandomEngine& engine)
 {
-        PCG engine;
         Vector<N, T> r = sampling::uniform_on_sphere<N, T>(engine).normalized();
         if (dot(r, normal) < 0)
         {
@@ -69,24 +66,18 @@ Vector<N, T> random_v(const Vector<N, T>& normal)
 //
 
 template <std::size_t N, typename T>
-void test_ggx(ProgressRatio* const progress)
+void test_unit(ProgressRatio* const progress, const T alpha, const Vector<N, T>& n)
 {
-        const T alpha = random_alpha<T>();
-
-        LOG("GGX, " + space_name(N) + ", " + type_name<T>() + ", alpha " + to_string_fixed(alpha, 2));
-
-        const Vector<N, T> normal = random_normal<N, T>();
-
         st::test_unit<N, T>(
                 "Visible Normals", UNIT_COUNT,
                 [&](auto& engine)
                 {
                         Vector<N, T> v = sampling::uniform_on_sphere<N, T>(engine);
-                        if (dot(v, normal) < 0)
+                        if (dot(v, n) < 0)
                         {
                                 v = -v;
                         }
-                        return ggx_visible_normals_h(engine, normal, v, alpha);
+                        return ggx_visible_normals_h(engine, n, v, alpha);
                 },
                 progress);
 
@@ -95,20 +86,24 @@ void test_ggx(ProgressRatio* const progress)
                 [&](auto& engine)
                 {
                         Vector<N, T> v = sampling::uniform_on_sphere<N, T>(engine);
-                        if (dot(v, normal) < 0)
+                        if (dot(v, n) < 0)
                         {
                                 v = -v;
                         }
-                        const auto [h, l] = ggx_visible_normals_h_l(engine, normal, v, alpha);
+                        const auto [h, l] = ggx_visible_normals_h_l(engine, n, v, alpha);
                         return l;
                 },
                 progress);
+}
 
+template <std::size_t N, typename T>
+void test_distribution(ProgressRatio* const progress, const T alpha, const Vector<N, T>& n, const Vector<N, T>& v)
+{
         st::test_distribution_angle<N, T>(
-                "Normals", ANGLE_COUNT_PER_BUCKET, normal,
+                "Normals", ANGLE_COUNT_PER_BUCKET, n,
                 [&](auto& engine)
                 {
-                        return ggx_visible_normals_h(engine, normal, normal, alpha);
+                        return ggx_visible_normals_h(engine, n, n, alpha);
                 },
                 [&](const T angle)
                 {
@@ -121,28 +116,26 @@ void test_ggx(ProgressRatio* const progress)
                 "Normals", SURFACE_COUNT_PER_BUCKET,
                 [&](auto& engine)
                 {
-                        return ggx_visible_normals_h(engine, normal, normal, alpha);
+                        return ggx_visible_normals_h(engine, n, n, alpha);
                 },
-                [&](const Vector<N, T>& v)
+                [&](const Vector<N, T>& h)
                 {
-                        const T n_h = dot(normal, v);
+                        const T n_h = dot(n, h);
                         return n_h * ggx_pdf<N>(n_h, alpha);
                 },
                 progress);
 
-        const Vector<N, T> v = random_v<N, T>(normal);
-
-        const T n_v = dot(normal, v);
+        const T n_v = dot(n, v);
 
         st::test_distribution_surface<N, T>(
                 "Visible Normals", SURFACE_COUNT_PER_BUCKET,
                 [&](auto& engine)
                 {
-                        return ggx_visible_normals_h(engine, normal, v, alpha);
+                        return ggx_visible_normals_h(engine, n, v, alpha);
                 },
                 [&](const Vector<N, T>& h)
                 {
-                        const T n_h = dot(normal, h);
+                        const T n_h = dot(n, h);
                         const T h_v = dot(h, v);
                         return ggx_visible_normals_h_pdf<N>(n_v, n_h, h_v, alpha);
                 },
@@ -152,23 +145,27 @@ void test_ggx(ProgressRatio* const progress)
                 "Visible Normals, Reflected", SURFACE_COUNT_PER_BUCKET,
                 [&](auto& engine)
                 {
-                        const auto [h, l] = ggx_visible_normals_h_l(engine, normal, v, alpha);
+                        const auto [h, l] = ggx_visible_normals_h_l(engine, n, v, alpha);
                         return l;
                 },
                 [&](const Vector<N, T>& l)
                 {
                         const Vector<N, T> h = (l + v).normalized();
-                        const T n_h = dot(normal, h);
+                        const T n_h = dot(n, h);
                         const T h_v = dot(h, v);
                         return ggx_visible_normals_l_pdf<N>(n_v, n_h, h_v, alpha);
                 },
                 progress);
+}
 
+template <std::size_t N, typename T>
+void test_performance(ProgressRatio* const progress, const T alpha, const Vector<N, T>& n, const Vector<N, T>& v)
+{
         st::test_performance<PERFORMANCE_COUNT>(
                 "Visible Normals",
                 [&](auto& engine)
                 {
-                        return ggx_visible_normals_h(engine, normal, v, alpha);
+                        return ggx_visible_normals_h(engine, n, v, alpha);
                 },
                 progress);
 
@@ -176,28 +173,41 @@ void test_ggx(ProgressRatio* const progress)
                 "Visible Normals, Reflected",
                 [&](auto& engine)
                 {
-                        const auto [h, l] = ggx_visible_normals_h_l(engine, normal, v, alpha);
+                        const auto [h, l] = ggx_visible_normals_h_l(engine, n, v, alpha);
                         return l;
                 },
                 progress);
 }
 
+template <std::size_t N, typename T, typename RandomEngine>
+void test_ggx(ProgressRatio* const progress, RandomEngine& engine)
+{
+        const T alpha = random_alpha<T>(engine);
+
+        LOG("GGX, " + space_name(N) + ", " + type_name<T>() + ", alpha " + to_string_fixed(alpha, 2));
+
+        const Vector<N, T> n = random_normal<N, T>(engine);
+        const Vector<N, T> v = random_v<N, T>(n, engine);
+
+        test_unit(progress, alpha, n);
+        test_distribution(progress, alpha, n, v);
+        test_performance(progress, alpha, n, v);
+}
+
 template <std::size_t N>
 void test_ggx(ProgressRatio* const progress)
 {
-        test_ggx<N, float>(progress);
-        test_ggx<N, double>(progress);
+        PCG engine;
+
+        test_ggx<N, float>(progress, engine);
+        test_ggx<N, double>(progress, engine);
 }
 
 //
 
 template <std::size_t N, typename T>
-void test_performance()
+void test_performance(const T alpha, const Vector<N, T>& normal, const Vector<N, T>& v)
 {
-        const T alpha = random_alpha<T>();
-        const Vector<N, T> normal = random_normal<N, T>();
-        const Vector<N, T> v = random_v<N, T>(normal);
-
         const long long p_visible_normals = st::test_performance<PERFORMANCE_COUNT>(
                 [&](auto& engine)
                 {
@@ -212,33 +222,46 @@ void test_performance()
                 });
 
         std::ostringstream oss;
-        oss << "GGX visible normals <" << N << ", " << type_name<T>() << ">: ";
-        oss << to_string_digit_groups(p_visible_normals) << " o/s, reflected ";
-        oss << to_string_digit_groups(p_visible_normals_reflected) << " o/s";
+        oss << "GGX visible normals <" << N << ", " << type_name<T>() << ">:";
+        oss << " " << to_string_digit_groups(p_visible_normals) << " o/s";
+        oss << ", reflected " << to_string_digit_groups(p_visible_normals_reflected) << " o/s";
         LOG(oss.str());
 }
 
-template <typename T, typename Counter>
-void test_performance(const Counter& counter)
+template <std::size_t N, typename T, typename RandomEngine>
+void test_performance(RandomEngine& engine)
+{
+        const T alpha = random_alpha<T>(engine);
+        const Vector<N, T> n = random_normal<N, T>(engine);
+        const Vector<N, T> v = random_v<N, T>(n, engine);
+
+        test_performance(alpha, n, v);
+}
+
+template <typename T, typename Counter, typename RandomEngine>
+void test_performance(const Counter& counter, RandomEngine& engine)
 {
         counter();
-        test_performance<3, T>();
+        test_performance<3, T>(engine);
         counter();
-        test_performance<4, T>();
+        test_performance<4, T>(engine);
         counter();
-        test_performance<5, T>();
+        test_performance<5, T>(engine);
 }
 
 void test_ggx_performance(ProgressRatio* const progress)
 {
+        PCG engine;
+
         constexpr int COUNT = 3 * 2;
         int i = -1;
         const auto counter = [&]
         {
                 progress->set(++i, COUNT);
         };
-        test_performance<float>(counter);
-        test_performance<double>(counter);
+
+        test_performance<float>(counter, engine);
+        test_performance<double>(counter, engine);
 }
 
 //
