@@ -22,6 +22,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #extension GL_GOOGLE_include_directive : enable
 #include "common.glsl"
 #include "shading_ggx_diffuse.glsl"
+#include "shading_metalness.glsl"
 
 layout(set = 2, binding = 0, std140) uniform Material
 {
@@ -63,36 +64,39 @@ float edge_factor()
         return min(min(a.x, a.y), a.z);
 }
 
-vec3 shade_light(const vec3 color, const vec3 n, const vec3 v)
+vec3 shade_light(const vec3 f0, const vec3 rho_ss, const vec3 n, const vec3 v)
 {
         const vec3 l = drawing.direction_to_light;
-        const vec3 s = shading_ggx_diffuse(mesh.metalness, mesh.roughness, color, n, v, l);
+        const vec3 s = shading_ggx_diffuse(mesh.roughness, f0, rho_ss, n, v, l);
         return s;
 }
 
-vec3 shade_camera(const vec3 color, const vec3 n, const vec3 v)
+vec3 shade_camera_light(const vec3 f0, const vec3 rho_ss, const vec3 n, const vec3 v)
 {
         const vec3 l = v;
-        const vec3 s = shading_ggx_diffuse(mesh.metalness, mesh.roughness, color, n, v, l);
+        const vec3 s = shading_ggx_diffuse(mesh.roughness, f0, rho_ss, n, v, l);
         return s;
 }
 
-vec3 shade(const vec3 color)
+vec3 shade(const vec3 surface_color)
 {
         const vec3 n = normalize(gs.world_normal);
         const vec3 v = drawing.direction_to_camera;
 
+        const vec3 f0 = shading_compute_metalness_f0(surface_color, mesh.metalness);
+        const vec3 rho_ss = shading_compute_metalness_rho_ss(surface_color, mesh.metalness);
+
         if (!drawing.show_shadow)
         {
-                return shade_light(color, n, v);
+                return shade_light(f0, rho_ss, n, v);
         }
 
-        vec3 s = 0.2 * shade_camera(color, n, v);
+        vec3 s = 0.2 * shade_camera_light(f0, rho_ss, n, v);
 
         const float c = (1 - shadow_weight());
         if (c > 0)
         {
-                s += c * 0.8 * shade_light(color, n, v);
+                s += c * 0.8 * shade_light(f0, rho_ss, n, v);
         }
 
         return s;
@@ -100,22 +104,22 @@ vec3 shade(const vec3 color)
 
 vec3 shade()
 {
-        vec3 color;
+        vec3 surface_color;
 
         if (!mtl.use_material || !drawing.show_materials)
         {
-                color = mesh.color;
+                surface_color = mesh.color;
         }
         else if (!has_texture_coordinates() || !mtl.use_texture)
         {
-                color = mtl.color;
+                surface_color = mtl.color;
         }
         else
         {
-                color = texture(material_texture, gs.texture_coordinates).rgb;
+                surface_color = texture(material_texture, gs.texture_coordinates).rgb;
         }
 
-        return drawing.lighting_color * shade(color) + mesh.ambient * color;
+        return drawing.lighting_color * shade(surface_color) + mesh.ambient * surface_color;
 }
 
 void main()

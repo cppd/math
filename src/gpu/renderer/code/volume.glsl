@@ -35,7 +35,6 @@ A K Peters, Ltd, 2006.
 */
 
 #extension GL_GOOGLE_include_directive : enable
-#include "shading_ggx_diffuse.glsl"
 #include "volume_fragments.glsl"
 #include "volume_image.glsl"
 #include "volume_intersect.glsl"

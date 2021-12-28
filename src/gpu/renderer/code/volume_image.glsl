@@ -17,6 +17,10 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #if defined(IMAGE)
 
+#extension GL_GOOGLE_include_directive : enable
+#include "shading_ggx_diffuse.glsl"
+#include "shading_metalness.glsl"
+
 const int ISOSURFACE_ITERATION_COUNT = 5;
 
 layout(set = 1, binding = 0, std140) uniform Coordinates
@@ -129,7 +133,11 @@ vec3 shade(const vec3 p, const vec3 v, const vec3 l)
 {
         const vec3 wn = world_normal(p);
         const vec3 n = faceforward(wn, -v, wn);
-        return shading_ggx_diffuse(volume.metalness, volume.roughness, volume.color, n, v, l);
+
+        const vec3 f0 = shading_compute_metalness_f0(volume.color, volume.metalness);
+        const vec3 rho_ss = shading_compute_metalness_rho_ss(volume.color, volume.metalness);
+
+        return shading_ggx_diffuse(volume.roughness, f0, rho_ss, n, v, l);
 }
 
 vec4 volume_color(const vec3 p, const vec3 lighting_color)

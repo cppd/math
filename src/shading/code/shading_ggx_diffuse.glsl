@@ -137,9 +137,9 @@ vec3 shading_ggx_brdf(
 }
 
 vec3 shading_ggx_diffuse(
-        const float metalness,
         const float roughness,
-        const vec3 surface_color,
+        const vec3 f0,
+        const vec3 rho_ss,
         const vec3 n,
         const vec3 v,
         const vec3 l)
@@ -159,10 +159,6 @@ vec3 shading_ggx_diffuse(
         const vec3 h = normalize(l + v);
         const float h_l = dot(h, l);
         const float n_h = dot(n, h);
-
-        const float F0 = 0.05;
-        const vec3 f0 = mix(vec3(F0), surface_color, metalness);
-        const vec3 rho_ss = mix(surface_color, vec3(0), metalness);
 
         const vec3 spec = shading_ggx_brdf(roughness, f0, n_v, n_l, n_h, h_l);
         const vec3 diff = shading_diffuse_disney_ws(f0, rho_ss, roughness, n_l, n_v, h_l);
