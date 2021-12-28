@@ -35,6 +35,8 @@ CRC Press, 2018.
 
 #pragma once
 
+#include "fresnel.h"
+
 #include <src/com/exponent.h>
 #include <src/com/interpolation.h>
 #include <src/geometry/shapes/sphere_integral.h>
@@ -220,15 +222,6 @@ T ggx_g2(const T n_v, const T n_l, const T alpha)
 {
         return 1 / (1 + ggx_lambda(n_v, alpha) + ggx_lambda(n_l, alpha));
 }
-
-// (9.16)
-// Schlick approximation of Fresnel reflectance
-template <typename T, typename Color>
-Color fresnel(const Color& f0, const T h_l)
-{
-        static constexpr Color WHITE(1);
-        return interpolation(f0, WHITE, power<5>(1 - h_l));
-}
 }
 
 template <std::size_t N, typename T, typename RandomEngine>
@@ -345,7 +338,7 @@ Color ggx_brdf(const T roughness, const Color& f0, const T n_v, const T n_l, con
                 const T g2 = impl::ggx_g2(n_v, n_l, alpha);
                 const T divisor = (n_v * n_l * (1 << (N - 1)) * power<N - 3>(h_l));
 
-                return impl::fresnel(f0, h_l) * (pdf * g2 / divisor);
+                return fresnel(f0, h_l) * (pdf * g2 / divisor);
         }
 
         return Color(0);

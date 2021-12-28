@@ -21,17 +21,23 @@ Angelo Pesce, Michal Iwanicki, Sébastien Hillaire.
 Real-Time Rendering. Fourth Edition.
 CRC Press, 2018.
 
-9.5.2 Typical Fresnel Reflectance Values
-Parameterizing Fresnel Values
+9.5 Fresnel Reflectance
 */
 
-vec3 shading_compute_metalness_f0(const vec3 surface_color, const float metalness)
-{
-        const vec3 f0 = vec3(0.05);
-        return mix(f0, surface_color, metalness);
-}
+#pragma once
 
-vec3 shading_compute_metalness_rho_ss(const vec3 surface_color, const float metalness)
+#include <src/com/error.h>
+#include <src/com/exponent.h>
+
+namespace ns::shading
 {
-        return mix(surface_color, vec3(0), metalness);
+// (9.16)
+// Schlick approximation of Fresnel reflectance
+template <typename T, typename Color>
+Color fresnel(const Color& f0, const T h_l)
+{
+        ASSERT(h_l >= 0);
+        static constexpr Color WHITE(1);
+        return interpolation(f0, WHITE, power<5>(1 - h_l));
+}
 }
