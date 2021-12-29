@@ -26,6 +26,14 @@ struct Colors final
 {
         Color f0;
         Color rho_ss;
+
+        Colors()
+        {
+        }
+
+        constexpr Colors(const Color& f0, const Color& rho_ss) : f0(f0), rho_ss(rho_ss)
+        {
+        }
 };
 
 template <std::size_t N, typename T, typename Color>
