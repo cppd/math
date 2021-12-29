@@ -17,6 +17,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
+#include "sphere_bucket.h"
 #include "sphere_mesh.h"
 
 #include <src/com/error.h>
@@ -39,11 +40,12 @@ public:
         {
         }
 
-        std::tuple<unsigned, Vector<N, T>> find(const Vector<N, T>& direction)
+        template <typename RandomVector>
+        std::tuple<unsigned, Vector<N, T>> find(const RandomVector& random_vector)
         {
-                while (true)
+                for (int i = 0; i < 10; ++i)
                 {
-                        const Ray<N, T> ray(Vector<N, T>(0), direction);
+                        const Ray<N, T> ray(Vector<N, T>(0), random_vector());
                         const auto index = sphere_mesh_->intersect(ray);
                         if (index)
                         {
@@ -52,6 +54,7 @@ public:
                         }
                         ++missed_intersection_count_;
                 }
+                error("Too many missed intersections");
         }
 
         long long intersection_count() const

@@ -166,20 +166,30 @@ class SphereDistribution final
 
                         PCG engine;
 
+                        const auto random = [&]
+                        {
+                                return random_vector(engine);
+                        };
+
+                        const auto uniform = [&]
+                        {
+                                return uniform_on_sphere<N, T>(engine);
+                        };
+
                         const auto add_data = [&]
                         {
                                 {
-                                        const auto [index, dir] = intersections.find(random_vector(engine));
+                                        const auto [index, dir] = intersections.find(random);
                                         (*buckets)[index].add_sample();
                                 }
                                 {
-                                        const auto [index, dir] = intersections.find(uniform_on_sphere<N, T>(engine));
+                                        const auto [index, dir] = intersections.find(uniform);
                                         (*buckets)[index].add_pdf(pdf(dir));
                                         (*buckets)[index].add_uniform();
                                 }
                                 for (int i = 0; i < 3; ++i)
                                 {
-                                        const auto [index, dir] = intersections.find(uniform_on_sphere<N, T>(engine));
+                                        const auto [index, dir] = intersections.find(uniform);
                                         (*buckets)[index].add_uniform();
                                 }
                         };
