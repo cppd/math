@@ -41,7 +41,7 @@ class TestBRDF final : public compute::BRDF<N, T, Color>
 
 public:
         template <typename RandomEngine>
-        TestBRDF(RandomEngine&& engine) : color_(random_non_black_color<Color>(engine))
+        explicit TestBRDF(RandomEngine& engine) : color_(random_non_black_color<Color>(engine))
         {
         }
 
