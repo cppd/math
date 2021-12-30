@@ -17,6 +17,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
+#include <src/com/math.h>
 #include <src/com/type/limit.h>
 #include <src/numerical/vector.h>
 
@@ -161,7 +162,7 @@ public:
                 return true;
         }
 
-        [[nodiscard]] bool equal_to_relative(const Derived& c, const T& relative_error) const
+        [[nodiscard]] constexpr bool equal_to_relative(const Derived& c, const T& relative_error) const
         {
                 for (std::size_t i = 0; i < N; ++i)
                 {
@@ -171,8 +172,8 @@ public:
                         {
                                 continue;
                         }
-                        const T abs = std::abs(c1 - c2);
-                        const T max = std::max(std::abs(c1), std::abs(c2));
+                        const T abs = absolute(c1 - c2);
+                        const T max = std::max(absolute(c1), absolute(c2));
                         if (!(abs / max <= relative_error))
                         {
                                 return false;
@@ -181,7 +182,7 @@ public:
                 return true;
         }
 
-        [[nodiscard]] bool equal_to_absolute(const Derived& c, const T& absolute_error) const
+        [[nodiscard]] constexpr bool equal_to_absolute(const Derived& c, const T& absolute_error) const
         {
                 for (std::size_t i = 0; i < N; ++i)
                 {
@@ -191,7 +192,7 @@ public:
                         {
                                 continue;
                         }
-                        const T abs = std::abs(c1 - c2);
+                        const T abs = absolute(c1 - c2);
                         if (!(abs <= absolute_error))
                         {
                                 return false;
