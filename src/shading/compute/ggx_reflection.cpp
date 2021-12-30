@@ -59,7 +59,7 @@ public:
 
         void set_roughness(const T roughness)
         {
-                roughness = 1;
+                roughness_ = roughness;
         }
 };
 }
@@ -70,7 +70,7 @@ std::string ggx_reflection()
         static_assert(N >= 2);
 
         using T = double;
-        using Color = color::Color;
+        using Color = color::RGB<T>;
 
         constexpr int COUNT = 32;
         constexpr int SAMPLE_COUNT = 1'000'000;
@@ -93,39 +93,57 @@ std::string ggx_reflection()
 
         std::ostringstream oss_average;
         oss_average << std::setprecision(4) << std::scientific;
-        oss_average << "cosine-weighted average";
+        oss_average << "cosine-weighted average {";
 
-        for (int roughness_i = 1; roughness_i <= COUNT; ++roughness_i)
+        for (int roughness_i = 0; roughness_i < COUNT; ++roughness_i)
         {
-                const T roughness = static_cast<T>(roughness_i) / COUNT;
+                const T roughness = static_cast<T>(roughness_i) / (COUNT - 1);
 
-                oss_albedo << "roughness [" << roughness << "]:";
+                oss_albedo << "roughness [" << roughness << "]: {";
+                brdf.set_roughness(roughness);
 
                 T sum = 0;
                 T cosine_sum = 0;
-                for (int angle_i = 1; angle_i <= COUNT; ++angle_i)
+                for (int angle_i = 0; angle_i < COUNT; ++angle_i)
                 {
-                        const T cosine = static_cast<T>(angle_i) / COUNT;
+                        const T cosine = static_cast<T>(angle_i) / (COUNT - 1);
 
                         v[N - 1] = cosine;
                         v[N - 2] = std::sqrt(1 - square(cosine));
 
-                        const Color color_albedo =
-                                directional_albedo_importance_sampling(brdf, n, v, SAMPLE_COUNT, engine);
+                        const Color color_albedo = [&]
+                        {
+                                if (roughness == 0 || cosine == 0)
+                                {
+                                        return Color(1);
+                                }
+                                return directional_albedo_importance_sampling(brdf, n, v, SAMPLE_COUNT, engine);
+                        }();
                         const Vector<3, float> rgb = color_albedo.rgb32();
                         ASSERT(rgb[0] == rgb[1] && rgb[1] == rgb[2]);
 
                         const T albedo = rgb[0];
 
-                        oss_albedo << " " << albedo;
+                        if (angle_i > 0)
+                        {
+                                oss_albedo << ", ";
+                        }
+                        oss_albedo << albedo;
 
                         LOG("(" + to_string(roughness_i) + "," + to_string(angle_i) + ") " + to_string(albedo));
+
                         sum += cosine * albedo;
                         cosine_sum += cosine;
                 }
-                oss_albedo << "\n";
-                oss_average << " " << sum / cosine_sum;
+                oss_albedo << "}\n";
+
+                if (roughness_i > 0)
+                {
+                        oss_average << ", ";
+                }
+                oss_average << sum / cosine_sum;
         }
+        oss_average << "}";
 
         return oss_albedo.str() + oss_average.str();
 }
