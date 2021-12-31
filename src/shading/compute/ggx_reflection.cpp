@@ -24,6 +24,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/color/color.h>
 #include <src/com/exponent.h>
 #include <src/com/log.h>
+#include <src/com/math.h>
 #include <src/com/print.h>
 #include <src/com/thread.h>
 
@@ -34,6 +35,16 @@ namespace ns::shading::compute
 {
 namespace
 {
+using ComputeType = double;
+constexpr std::size_t SIZE = 32;
+constexpr int SAMPLE_COUNT = 100'000'000;
+
+constexpr int PRECISION = 6;
+constexpr int ROW_SIZE = 8;
+constexpr std::string_view INDENT = "        ";
+
+static_assert(INDENT.size() == 8);
+
 template <std::size_t N, typename T, typename Color>
 class ComputeBRDF final : public BRDF<N, T, Color>
 {
@@ -68,7 +79,7 @@ template <typename T>
 struct Albedo
 {
         T albedo;
-        T cosine_albedo;
+        T weight;
 };
 
 template <std::size_t N, typename T, std::size_t COUNT, typename Color, typename RandomEngine>
@@ -82,15 +93,20 @@ void compute(
         std::array<std::array<Albedo<T>, COUNT>, COUNT>* const data,
         RandomEngine& engine)
 {
+        static_assert(N >= 2);
+
         const T roughness = static_cast<T>(roughness_index == 0 ? T(0.01) : roughness_index) / (COUNT - 1);
         const T cosine = static_cast<T>(cosine_index == 0 ? T(0.01) : cosine_index) / (COUNT - 1);
+        const T sine = std::sqrt(1 - square(cosine));
+
         ASSERT(roughness >= 0 && roughness <= 1);
         ASSERT(cosine >= 0 && cosine <= 1);
+        ASSERT(sine >= 0 && sine <= 1);
 
         brdf->set_roughness(roughness);
 
         (*v)[N - 1] = cosine;
-        (*v)[N - 2] = std::sqrt(1 - square(cosine));
+        (*v)[N - 2] = sine;
 
         const Color color_albedo = [&]
         {
@@ -101,7 +117,7 @@ void compute(
                 return directional_albedo_importance_sampling(*brdf, n, *v, sample_count, engine);
         }();
 
-        const auto albedo = [&]
+        const T albedo = [&]
         {
                 const Vector<3, float> rgb = color_albedo.rgb32();
                 ASSERT(rgb[0] == rgb[1] && rgb[1] == rgb[2]);
@@ -121,16 +137,18 @@ void compute(
                 return std::min<decltype(r)>(r, 1);
         }();
 
+        const T weight = cosine * power<N - 2>(sine);
+
+        ASSERT(weight >= 0 && weight <= 1);
+
         (*data)[roughness_index][cosine_index].albedo = albedo;
-        (*data)[roughness_index][cosine_index].cosine_albedo = albedo * cosine;
+        (*data)[roughness_index][cosine_index].weight = weight;
 }
 
 template <std::size_t N, typename T, std::size_t COUNT>
 std::array<std::array<Albedo<T>, COUNT>, COUNT> compute_albedo()
 {
         using Color = color::RGB<T>;
-
-        constexpr int SAMPLE_COUNT = 50'000'000;
 
         const Vector<N, T> n = []
         {
@@ -174,12 +192,15 @@ std::array<T, COUNT> compute_cosine_weighted_average(const std::array<std::array
         for (std::size_t roughness_i = 0; roughness_i < COUNT; ++roughness_i)
         {
                 long double sum = 0;
+                long double weight_sum = 0;
                 for (std::size_t cosine_i = 0; cosine_i < COUNT; ++cosine_i)
                 {
-                        sum += data[roughness_i][cosine_i].cosine_albedo;
+                        const Albedo<T>& v = data[roughness_i][cosine_i];
+                        sum += v.albedo * v.weight;
+                        weight_sum += v.weight;
                 }
 
-                const T average = sum / 0.5 * COUNT; // cosine sum == (0.0 + 1.0) / 2 * COUNT == 0.5 * COUNT
+                const T average = sum / weight_sum;
 
                 if (!(average >= 0))
                 {
@@ -197,52 +218,65 @@ std::array<T, COUNT> compute_cosine_weighted_average(const std::array<std::array
 }
 
 template <typename T, std::size_t COUNT>
-std::string albedo_to_string(const std::array<std::array<Albedo<T>, COUNT>, COUNT>& data)
+void write_albedo(const std::array<std::array<Albedo<T>, COUNT>, COUNT>& data, std::ostringstream& oss)
 {
-        std::ostringstream oss;
-        oss << std::setprecision(5) << std::scientific;
-
-        oss << "{\n";
+        oss << "template <typename T>\n";
+        oss << "constexpr std::array ALBEDO_ROUGHNESS_COSINE = ";
+        oss << "std::to_array<std::array<T, " + to_string(COUNT) + ">>\n";
+        oss << "({\n";
         for (std::size_t roughness_i = 0; roughness_i < COUNT; ++roughness_i)
         {
                 if (roughness_i > 0)
                 {
                         oss << ",\n";
                 }
-                oss << "{";
+                oss << "{\n";
+                oss << INDENT;
                 for (std::size_t angle_i = 0; angle_i < COUNT; ++angle_i)
                 {
                         if (angle_i > 0)
                         {
-                                oss << ", ";
+                                oss << ",";
+                                if (angle_i % ROW_SIZE == 0)
+                                {
+                                        oss << "\n" << INDENT;
+                                }
+                                else
+                                {
+                                        oss << " ";
+                                }
                         }
                         oss << data[roughness_i][angle_i].albedo;
                 }
-                oss << "}";
+                oss << "\n}";
         }
-        oss << "\n}\n";
-
-        return oss.str();
+        oss << "\n});\n";
 }
 
 template <typename T, std::size_t COUNT>
-std::string cosine_weighted_average_to_string(const std::array<T, COUNT>& data)
+void write_cosine_weighted_average(const std::array<T, COUNT>& data, std::ostringstream& oss)
 {
-        std::ostringstream oss;
-        oss << std::setprecision(5) << std::scientific;
-
-        oss << "{";
+        oss << "template <typename T>\n";
+        oss << "constexpr std::array COSINE_WEIGHTED_AVERAGE = std::to_array<T>\n";
+        oss << "({\n";
+        oss << INDENT;
         for (std::size_t roughness_i = 0; roughness_i < COUNT; ++roughness_i)
         {
                 if (roughness_i > 0)
                 {
-                        oss << ", ";
+                        oss << ",";
+                        if (roughness_i % ROW_SIZE == 0)
+                        {
+                                oss << "\n" << INDENT;
+                        }
+                        else
+                        {
+                                oss << " ";
+                        }
                 }
                 oss << data[roughness_i];
         }
-        oss << "}";
-
-        return oss.str();
+        oss << "\n});\n";
 }
 }
 
@@ -251,15 +285,21 @@ std::string ggx_reflection()
 {
         static_assert(N >= 2);
 
-        using T = double;
-
-        constexpr std::size_t COUNT = 32;
-
-        const auto albedo = compute_albedo<N, T, COUNT>();
+        const auto albedo = compute_albedo<N, ComputeType, SIZE>();
         const auto cosine_weighted_average = compute_cosine_weighted_average(albedo);
 
-        return albedo_to_string(albedo) + "\n" + cosine_weighted_average_to_string(cosine_weighted_average);
+        std::ostringstream oss;
+        oss << std::setprecision(PRECISION) << std::fixed;
+
+        oss << "// clang-format off\n";
+        write_albedo(albedo, oss);
+        write_cosine_weighted_average(cosine_weighted_average, oss);
+        oss << "// clang-format on\n";
+
+        return oss.str();
 }
 
 template std::string ggx_reflection<3>();
+template std::string ggx_reflection<4>();
+template std::string ggx_reflection<5>();
 }
