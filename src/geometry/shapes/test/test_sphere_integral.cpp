@@ -217,19 +217,12 @@ void compare_with_gamma(const T& precision)
 
 //
 
-template <unsigned N, typename T>
-void test_cosine_weighted_average()
+template <unsigned N, typename T, bool BY_ANGLE, typename F>
+T compute_cosine_weighted_average(const F& f)
 {
         static_assert(std::is_floating_point_v<T>);
 
         constexpr int SAMPLE_COUNT = 100'000;
-        constexpr int COUNT = 1'000;
-        constexpr T PRECISION = 1e-2;
-
-        const auto f = [](const T v)
-        {
-                return v;
-        };
 
         PCG engine;
         long double sum = 0;
@@ -243,23 +236,58 @@ void test_cosine_weighted_average()
                 // dot(v.normalized(), (0, ..., 0, 1))
                 const T cosine = std::abs(v[N - 1] / std::sqrt(length_square));
 
-                sum += cosine * f(std::acos(cosine));
+                sum += cosine * f(BY_ANGLE ? std::acos(cosine) : cosine);
                 sum_cosine += cosine;
         }
 
-        const T computed = sum / sum_cosine;
+        return sum / sum_cosine;
+}
 
-        const T average = sphere_cosine_weighted_average<N, T>(f, COUNT);
+template <unsigned N, typename T>
+void check_cosine_weighted_average(const std::string_view& description, const T computed, const T average)
+{
+        constexpr T PRECISION = 1e-2;
 
         const T relative_error = std::abs(computed - average) / std::max(std::abs(computed), std::abs(average));
-        if (!(relative_error <= PRECISION))
+
+        if (relative_error <= PRECISION)
         {
-                std::ostringstream oss;
-                oss << std::scientific;
-                oss << std::setprecision(Limits<T>::max_digits10());
-                oss << "N = " << N << ", computed = " << computed << ", average = " << average;
-                oss << ", relative error = " << relative_error;
-                error("Cosine-weighted average error: " + oss.str());
+                return;
+        }
+
+        std::ostringstream oss;
+        oss << "Cosine-weighted average (" << description << ") error: ";
+        oss << std::scientific;
+        oss << std::setprecision(Limits<T>::max_digits10());
+        oss << "N = " << N << ", computed = " << computed << ", average = " << average;
+        oss << ", relative error = " << relative_error;
+        error(oss.str());
+}
+
+template <unsigned N, typename T>
+void test_cosine_weighted_average()
+{
+        static_assert(std::is_floating_point_v<T>);
+
+        constexpr int COUNT = 1'000;
+
+        const auto f = [](const T v)
+        {
+                return 2 * v * v;
+        };
+
+        {
+                constexpr bool BY_ANGLE = true;
+                const T computed = compute_cosine_weighted_average<N, T, BY_ANGLE>(f);
+                const T average = sphere_cosine_weighted_average_by_angle<N, T>(f, COUNT);
+                check_cosine_weighted_average<N, T>("angle", computed, average);
+        }
+
+        {
+                constexpr bool BY_ANGLE = false;
+                const T computed = compute_cosine_weighted_average<N, T, BY_ANGLE>(f);
+                const T average = sphere_cosine_weighted_average_by_cosine<N, T>(f, COUNT);
+                check_cosine_weighted_average<N, T>("cosine", computed, average);
         }
 }
 

@@ -147,7 +147,7 @@ Assuming[n>=2,Integrate[(Sin[x]^(n-2))*Cos[x],{x,0,Pi/2}]]
 1 / (n - 1)
 */
 template <unsigned N, typename T, typename F>
-T sphere_cosine_weighted_average(const F& f, const int count)
+T sphere_cosine_weighted_average_by_angle(const F& f, const int count)
 {
         static_assert(N >= 2);
         static_assert(std::is_floating_point_v<T>);
@@ -155,7 +155,25 @@ T sphere_cosine_weighted_average(const F& f, const int count)
 
         const auto function = [&](const T v)
         {
-                return power<N - 2>(std::sin(v)) * std::max(T(0), std::cos(v)) * f(v);
+                const T cosine = std::max(T(0), std::cos(v));
+                const T sine = std::sin(v);
+                return power<N - 2>(sine) * cosine * f(v);
+        };
+
+        return (N - 1) * numerical::integrate(function, T(0), PI<T> / 2, count);
+}
+template <unsigned N, typename T, typename F>
+T sphere_cosine_weighted_average_by_cosine(const F& f, const int count)
+{
+        static_assert(N >= 2);
+        static_assert(std::is_floating_point_v<T>);
+        static_assert(std::is_same_v<T, decltype(f(T()))>);
+
+        const auto function = [&](const T v)
+        {
+                const T cosine = std::max(T(0), std::cos(v));
+                const T sine = std::sin(v);
+                return power<N - 2>(sine) * cosine * f(cosine);
         };
 
         return (N - 1) * numerical::integrate(function, T(0), PI<T> / 2, count);
