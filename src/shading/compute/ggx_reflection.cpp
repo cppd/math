@@ -27,6 +27,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/com/math.h>
 #include <src/com/print.h>
 #include <src/com/thread.h>
+#include <src/geometry/shapes/sphere_integral.h>
+#include <src/numerical/interpolation.h>
 
 #include <cmath>
 #include <sstream>
@@ -75,13 +77,6 @@ public:
         }
 };
 
-template <typename T>
-struct Albedo
-{
-        T albedo;
-        T weight;
-};
-
 template <std::size_t N, typename T, std::size_t COUNT, typename Color, typename RandomEngine>
 void compute(
         const std::size_t roughness_index,
@@ -90,7 +85,7 @@ void compute(
         const Vector<N, T>& n,
         Vector<N, T>* const v,
         ComputeBRDF<N, T, Color>* const brdf,
-        std::array<std::array<Albedo<T>, COUNT>, COUNT>* const data,
+        std::array<std::array<T, COUNT>, COUNT>* const data,
         RandomEngine& engine)
 {
         static_assert(N >= 2);
@@ -137,16 +132,11 @@ void compute(
                 return std::min<decltype(r)>(r, 1);
         }();
 
-        const T weight = cosine * power<N - 2>(sine);
-
-        ASSERT(weight >= 0 && weight <= 1);
-
-        (*data)[roughness_index][cosine_index].albedo = albedo;
-        (*data)[roughness_index][cosine_index].weight = weight;
+        (*data)[roughness_index][cosine_index] = albedo;
 }
 
 template <std::size_t N, typename T, std::size_t COUNT>
-std::array<std::array<Albedo<T>, COUNT>, COUNT> compute_albedo()
+std::array<std::array<T, COUNT>, COUNT> compute_albedo()
 {
         using Color = color::RGB<T>;
 
@@ -157,7 +147,7 @@ std::array<std::array<Albedo<T>, COUNT>, COUNT> compute_albedo()
                 return res;
         }();
 
-        std::array<std::array<Albedo<T>, COUNT>, COUNT> data;
+        std::array<std::array<T, COUNT>, COUNT> data;
 
         constexpr std::size_t TASK_COUNT = COUNT * COUNT;
 
@@ -177,7 +167,7 @@ std::array<std::array<Albedo<T>, COUNT>, COUNT> compute_albedo()
                                 compute(roughness_i, cosine_i, SAMPLE_COUNT, n, &v, &brdf, &data, engine);
 
                                 LOG("(" + to_string(roughness_i) + "," + to_string(cosine_i) + ") "
-                                    + to_string(data[roughness_i][cosine_i].albedo));
+                                    + to_string(data[roughness_i][cosine_i]));
                         }
                 },
                 TASK_COUNT);
@@ -185,22 +175,21 @@ std::array<std::array<Albedo<T>, COUNT>, COUNT> compute_albedo()
         return data;
 }
 
-template <typename T, std::size_t COUNT>
-std::array<T, COUNT> compute_cosine_weighted_average(const std::array<std::array<Albedo<T>, COUNT>, COUNT>& data)
+template <std::size_t N, typename T, std::size_t COUNT>
+std::array<T, COUNT> compute_cosine_weighted_average(const std::array<std::array<T, COUNT>, COUNT>& data)
 {
         std::array<T, COUNT> res;
         for (std::size_t roughness_i = 0; roughness_i < COUNT; ++roughness_i)
         {
-                long double sum = 0;
-                long double weight_sum = 0;
-                for (std::size_t cosine_i = 0; cosine_i < COUNT; ++cosine_i)
-                {
-                        const Albedo<T>& v = data[roughness_i][cosine_i];
-                        sum += v.albedo * v.weight;
-                        weight_sum += v.weight;
-                }
+                Interpolation<1, T, T> interpolation({COUNT}, {data[roughness_i].cbegin(), data[roughness_i].cend()});
 
-                const T average = sum / weight_sum;
+                constexpr int AVERAGE_COUNT = 1000;
+                const T average = geometry::sphere_cosine_weighted_average_by_cosine<N, T>(
+                        [&](const T cosine)
+                        {
+                                return interpolation.compute(Vector<1, T>(cosine));
+                        },
+                        AVERAGE_COUNT);
 
                 if (!(average >= 0))
                 {
@@ -218,26 +207,21 @@ std::array<T, COUNT> compute_cosine_weighted_average(const std::array<std::array
 }
 
 template <typename T, std::size_t COUNT>
-void write_albedo(const std::array<std::array<Albedo<T>, COUNT>, COUNT>& data, std::ostringstream& oss)
+void write_albedo(const std::array<std::array<T, COUNT>, COUNT>& data, std::ostringstream& oss)
 {
         oss << "template <typename T>\n";
-        oss << "constexpr std::array ALBEDO_ROUGHNESS_COSINE = ";
-        oss << "std::to_array<std::array<T, " + to_string(COUNT) + ">>\n";
+        oss << "constexpr std::array ALBEDO_ROUGHNESS_";
+        oss << COUNT << "_COSINE_" << COUNT << " = std::to_array<T>\n";
         oss << "({\n";
-        for (std::size_t roughness_i = 0; roughness_i < COUNT; ++roughness_i)
+        oss << INDENT;
+        for (std::size_t roughness_i = 0, i = 0; roughness_i < COUNT; ++roughness_i)
         {
-                if (roughness_i > 0)
+                for (std::size_t angle_i = 0; angle_i < COUNT; ++angle_i, ++i)
                 {
-                        oss << ",\n";
-                }
-                oss << "{\n";
-                oss << INDENT;
-                for (std::size_t angle_i = 0; angle_i < COUNT; ++angle_i)
-                {
-                        if (angle_i > 0)
+                        if (i > 0)
                         {
                                 oss << ",";
-                                if (angle_i % ROW_SIZE == 0)
+                                if (i % ROW_SIZE == 0)
                                 {
                                         oss << "\n" << INDENT;
                                 }
@@ -246,9 +230,8 @@ void write_albedo(const std::array<std::array<Albedo<T>, COUNT>, COUNT>& data, s
                                         oss << " ";
                                 }
                         }
-                        oss << data[roughness_i][angle_i].albedo;
+                        oss << data[roughness_i][angle_i];
                 }
-                oss << "\n}";
         }
         oss << "\n});\n";
 }
@@ -286,7 +269,7 @@ std::string ggx_reflection()
         static_assert(N >= 2);
 
         const auto albedo = compute_albedo<N, ComputeType, SIZE>();
-        const auto cosine_weighted_average = compute_cosine_weighted_average(albedo);
+        const auto cosine_weighted_average = compute_cosine_weighted_average<N, ComputeType>(albedo);
 
         std::ostringstream oss;
         oss << std::setprecision(PRECISION) << std::fixed;
