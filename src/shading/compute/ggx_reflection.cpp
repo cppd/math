@@ -47,6 +47,9 @@ constexpr std::string_view INDENT = "        ";
 
 static_assert(INDENT.size() == 8);
 
+constexpr std::string_view ALBEDO_NAME = "ALBEDO_ROUGHNESS_COSINE";
+constexpr std::string_view ALBEDO_COSINE_NAME = "ALBEDO_COSINE_WEIGHTED_AVERAGE";
+
 template <std::size_t N, typename T, typename Color>
 class ComputeBRDF final : public BRDF<N, T, Color>
 {
@@ -166,7 +169,7 @@ std::array<std::array<T, COUNT>, COUNT> compute_albedo()
 
                                 compute(roughness_i, cosine_i, SAMPLE_COUNT, n, &v, &brdf, &data, engine);
 
-                                LOG("(" + to_string(roughness_i) + "," + to_string(cosine_i) + ") "
+                                LOG(to_string(N) + "D (" + to_string(roughness_i) + "," + to_string(cosine_i) + ") "
                                     + to_string(data[roughness_i][cosine_i]));
                         }
                 },
@@ -206,12 +209,12 @@ std::array<T, COUNT> compute_cosine_weighted_average(const std::array<std::array
         return res;
 }
 
-template <typename T, std::size_t COUNT>
+template <std::size_t N, typename T, std::size_t COUNT>
 void write_albedo(const std::array<std::array<T, COUNT>, COUNT>& data, std::ostringstream& oss)
 {
         oss << "template <typename T>\n";
-        oss << "constexpr std::array ALBEDO_ROUGHNESS_";
-        oss << COUNT << "_COSINE_" << COUNT << " = std::to_array<T>\n";
+        oss << "constexpr std::array " << ALBEDO_NAME;
+        oss << "<" + to_string(N) + ", T> = std::to_array<T>\n";
         oss << "({\n";
         oss << INDENT;
         for (std::size_t roughness_i = 0, i = 0; roughness_i < COUNT; ++roughness_i)
@@ -236,11 +239,12 @@ void write_albedo(const std::array<std::array<T, COUNT>, COUNT>& data, std::ostr
         oss << "\n});\n";
 }
 
-template <typename T, std::size_t COUNT>
+template <std::size_t N, typename T, std::size_t COUNT>
 void write_cosine_weighted_average(const std::array<T, COUNT>& data, std::ostringstream& oss)
 {
         oss << "template <typename T>\n";
-        oss << "constexpr std::array COSINE_WEIGHTED_AVERAGE = std::to_array<T>\n";
+        oss << "constexpr std::array " << ALBEDO_COSINE_NAME;
+        oss << "<" + to_string(N) + ", T> = std::to_array<T>\n";
         oss << "({\n";
         oss << INDENT;
         for (std::size_t roughness_i = 0; roughness_i < COUNT; ++roughness_i)
@@ -261,28 +265,45 @@ void write_cosine_weighted_average(const std::array<T, COUNT>& data, std::ostrin
         }
         oss << "\n});\n";
 }
-}
 
 template <std::size_t N>
-std::string ggx_reflection()
+void ggx_reflection(std::ostringstream& oss)
 {
         static_assert(N >= 2);
 
         const auto albedo = compute_albedo<N, ComputeType, SIZE>();
         const auto cosine_weighted_average = compute_cosine_weighted_average<N, ComputeType>(albedo);
 
+        write_albedo<N>(albedo, oss);
+        oss << "\n";
+        write_cosine_weighted_average<N>(cosine_weighted_average, oss);
+}
+}
+
+std::string ggx_reflection()
+{
         std::ostringstream oss;
         oss << std::setprecision(PRECISION) << std::fixed;
 
         oss << "// clang-format off\n";
-        write_albedo(albedo, oss);
-        write_cosine_weighted_average(cosine_weighted_average, oss);
+        oss << "\n";
+
+        oss << "template <std::size_t N, typename T>\n";
+        oss << "constexpr std::array<T, 0> " << ALBEDO_NAME << ";\n";
+        oss << "\n";
+        oss << "template <std::size_t N, typename T>\n";
+        oss << "constexpr std::array<T, 0> " << ALBEDO_COSINE_NAME << ";\n";
+        oss << "\n";
+
+        ggx_reflection<3>(oss);
+        oss << "\n";
+        ggx_reflection<4>(oss);
+        oss << "\n";
+        ggx_reflection<5>(oss);
+
+        oss << "\n";
         oss << "// clang-format on\n";
 
         return oss.str();
 }
-
-template std::string ggx_reflection<3>();
-template std::string ggx_reflection<4>();
-template std::string ggx_reflection<5>();
 }

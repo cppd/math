@@ -21,6 +21,5 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 namespace ns::shading::compute
 {
-template <std::size_t N>
 std::string ggx_reflection();
 }
