@@ -26,7 +26,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <algorithm>
 #include <array>
-#include <vector>
+#include <span>
 
 namespace ns
 {
@@ -41,13 +41,24 @@ class Interpolation
 
         static constexpr Wrap WRAP = Wrap::CLAMP_TO_EDGE;
 
+        static std::array<int, N> max(const std::array<int, N>& size)
+        {
+                std::array<int, N> res;
+                for (std::size_t i = 0; i < N; ++i)
+                {
+                        res[i] = size[i] - 1;
+                }
+                return res;
+        }
+
         GlobalIndex<N, long long> global_index_;
         std::array<int, N> size_;
         std::array<int, N> max_;
-        std::vector<DataType> data_;
+        std::span<const DataType> data_;
 
 public:
-        Interpolation(const std::array<int, N>& size, std::vector<DataType>&& data) : global_index_(size), size_(size)
+        Interpolation(const std::array<int, N>& size, const std::span<const DataType>& data)
+                : global_index_(size), size_(size), max_(max(size)), data_(data)
         {
                 if (!std::all_of(
                             size_.cbegin(), size_.cend(),
@@ -63,13 +74,6 @@ public:
                 {
                         error("Interpolation data size " + to_string(data.size()) + " is not equal to "
                               + to_string(global_index_.count()));
-                }
-
-                data_ = std::move(data);
-
-                for (unsigned i = 0; i < N; ++i)
-                {
-                        max_[i] = size_[i] - 1;
                 }
         }
 

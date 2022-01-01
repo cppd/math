@@ -55,17 +55,19 @@ class MeshTexture
                 return pixels;
         }
 
-        Interpolation<N, Vector<3, float>, float> pixels_;
+        std::vector<Vector<3, float>> pixels_;
+        Interpolation<N, Vector<3, float>, float> interpolation_;
 
 public:
-        explicit MeshTexture(const image::Image<N>& image) : pixels_(image.size, to_rgb32(image))
+        explicit MeshTexture(const image::Image<N>& image)
+                : pixels_(to_rgb32(image)), interpolation_(image.size, pixels_)
         {
         }
 
         template <typename T>
         Vector<3, float> color(const Vector<N, T>& p) const
         {
-                return pixels_.compute(p);
+                return interpolation_.compute(p);
         }
 };
 }
