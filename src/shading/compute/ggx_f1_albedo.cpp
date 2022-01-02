@@ -15,7 +15,7 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include "ggx_reflection.h"
+#include "ggx_f1_albedo.h"
 
 #include "brdf.h"
 
@@ -47,21 +47,23 @@ constexpr std::string_view INDENT = "        ";
 
 static_assert(INDENT.size() == 8);
 
-constexpr std::string_view ALBEDO_NAME = "ALBEDO_ROUGHNESS_COSINE";
-constexpr std::string_view ALBEDO_COSINE_NAME = "ALBEDO_COSINE_WEIGHTED_AVERAGE";
+constexpr std::string_view ALBEDO_NAME = "GGX_F1_ALBEDO_ROUGHNESS_COSINE";
+constexpr std::string_view ALBEDO_COSINE_NAME = "GGX_F1_ALBEDO_COSINE_WEIGHTED_AVERAGE";
 
 template <std::size_t N, typename T, typename Color>
 class ComputeBRDF final : public BRDF<N, T, Color>
 {
         static constexpr bool GGX_ONLY = true;
+        static constexpr Color F0 = Color(1);
+        static constexpr Color RHO_SS = Color(0);
+        static constexpr Colors<Color> COLORS{F0, RHO_SS};
 
-        Colors<Color> colors_{Color(1), Color(0)};
         T roughness_ = 1;
 
 public:
         Color f(const Vector<N, T>& n, const Vector<N, T>& v, const Vector<N, T>& l) const override
         {
-                return ggx_diffuse::f<GGX_ONLY>(roughness_, colors_, n, v, l);
+                return ggx_diffuse::f<GGX_ONLY>(roughness_, COLORS, n, v, l);
         }
 
         T pdf(const Vector<N, T>& n, const Vector<N, T>& v, const Vector<N, T>& l) const override
@@ -71,7 +73,7 @@ public:
 
         Sample<N, T, Color> sample_f(PCG& engine, const Vector<N, T>& n, const Vector<N, T>& v) const override
         {
-                return ggx_diffuse::sample_f<GGX_ONLY>(engine, roughness_, colors_, n, v);
+                return ggx_diffuse::sample_f<GGX_ONLY>(engine, roughness_, COLORS, n, v);
         }
 
         void set_roughness(const T roughness)
@@ -267,7 +269,7 @@ void write_cosine_weighted_average(const std::array<T, COUNT>& data, std::ostrin
 }
 
 template <std::size_t N>
-void ggx_reflection(std::ostringstream& oss)
+void ggx_f1_albedo(std::ostringstream& oss)
 {
         static_assert(N >= 2);
 
@@ -280,7 +282,7 @@ void ggx_reflection(std::ostringstream& oss)
 }
 }
 
-std::string ggx_reflection()
+std::string ggx_f1_albedo()
 {
         std::ostringstream oss;
         oss << std::setprecision(PRECISION) << std::fixed;
@@ -288,6 +290,9 @@ std::string ggx_reflection()
         oss << "// clang-format off\n";
         oss << "\n";
 
+        oss << "constexpr std::array<int, 2> " << ALBEDO_NAME << "_SIZE = {" << SIZE << ", " << SIZE << "};\n";
+        oss << "constexpr std::array<int, 1> " << ALBEDO_COSINE_NAME << "_SIZE = {" << SIZE << "};\n";
+        oss << "\n";
         oss << "template <std::size_t N, typename T>\n";
         oss << "constexpr std::array<T, 0> " << ALBEDO_NAME << ";\n";
         oss << "\n";
@@ -295,11 +300,11 @@ std::string ggx_reflection()
         oss << "constexpr std::array<T, 0> " << ALBEDO_COSINE_NAME << ";\n";
         oss << "\n";
 
-        ggx_reflection<3>(oss);
+        ggx_f1_albedo<3>(oss);
         oss << "\n";
-        ggx_reflection<4>(oss);
+        ggx_f1_albedo<4>(oss);
         oss << "\n";
-        ggx_reflection<5>(oss);
+        ggx_f1_albedo<5>(oss);
 
         oss << "\n";
         oss << "// clang-format on\n";

@@ -21,5 +21,5 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 namespace ns::shading::compute
 {
-std::string ggx_reflection();
+std::string ggx_f1_albedo();
 }
