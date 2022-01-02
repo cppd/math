@@ -47,7 +47,7 @@ constexpr std::string_view INDENT = "        ";
 
 static_assert(INDENT.size() == 8);
 
-constexpr std::string_view ALBEDO_NAME = "GGX_F1_ALBEDO_ROUGHNESS_COSINE";
+constexpr std::string_view ALBEDO_NAME = "GGX_F1_ALBEDO_COSINE_ROUGHNESS";
 constexpr std::string_view ALBEDO_COSINE_NAME = "GGX_F1_ALBEDO_COSINE_WEIGHTED_AVERAGE";
 
 template <std::size_t N, typename T, typename Color>
@@ -99,8 +99,8 @@ void compute(
         const T cosine = static_cast<T>(cosine_index == 0 ? T(0.01) : cosine_index) / (COUNT - 1);
         const T sine = std::sqrt(1 - square(cosine));
 
-        ASSERT(roughness >= 0 && roughness <= 1);
-        ASSERT(cosine >= 0 && cosine <= 1);
+        ASSERT(roughness > 0 && roughness <= 1);
+        ASSERT(cosine > 0 && cosine <= 1);
         ASSERT(sine >= 0 && sine <= 1);
 
         brdf->set_roughness(roughness);
@@ -110,7 +110,7 @@ void compute(
 
         const Color color_albedo = [&]
         {
-                if (roughness == 0 || cosine == 0)
+                if (roughness_index == 0 && cosine_index != 0)
                 {
                         return Color(1);
                 }
