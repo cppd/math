@@ -41,7 +41,7 @@ class Interpolation
 
         static constexpr Wrap WRAP = Wrap::CLAMP_TO_EDGE;
 
-        static std::array<int, N> max(const std::array<int, N>& size)
+        static constexpr std::array<int, N> max(const std::array<int, N>& size)
         {
                 std::array<int, N> res;
                 for (std::size_t i = 0; i < N; ++i)
@@ -57,7 +57,7 @@ class Interpolation
         std::span<const DataType> data_;
 
 public:
-        Interpolation(const std::array<int, N>& size, const std::span<const DataType>& data)
+        constexpr Interpolation(const std::array<int, N>& size, const std::span<const DataType>& data)
                 : global_index_(size), size_(size), max_(max(size)), data_(data)
         {
                 if (!std::all_of(
