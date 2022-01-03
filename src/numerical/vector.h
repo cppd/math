@@ -104,6 +104,17 @@ template <std::size_t N, typename T>
 }
 
 template <std::size_t N, typename T>
+[[nodiscard]] constexpr Vector<N, T> operator/(const Vector<N, T>& a, const Vector<N, T>& b)
+{
+        Vector<N, T> res;
+        for (std::size_t i = 0; i < N; ++i)
+        {
+                res[i] = a[i] / b[i];
+        }
+        return res;
+}
+
+template <std::size_t N, typename T>
 [[nodiscard]] constexpr Vector<N, T> operator-(const Vector<N, T>& a)
 {
         Vector<N, T> res;

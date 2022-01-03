@@ -319,5 +319,12 @@ public:
                 r.data_ = a.data_ / b;
                 return r;
         }
+
+        [[nodiscard]] constexpr friend Derived operator/(const Derived& a, const Derived& b)
+        {
+                Derived r;
+                r.data_ = a.data_ / b.data_;
+                return r;
+        }
 };
 }
