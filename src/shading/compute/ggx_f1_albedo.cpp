@@ -305,6 +305,8 @@ std::string ggx_f1_albedo()
         ggx_f1_albedo<4>(oss);
         oss << "\n";
         ggx_f1_albedo<5>(oss);
+        oss << "\n";
+        ggx_f1_albedo<6>(oss);
 
         oss << "\n";
         oss << "// clang-format on\n";
