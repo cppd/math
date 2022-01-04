@@ -18,7 +18,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #version 450
 
 #extension GL_GOOGLE_include_directive : enable
-#include "common.glsl"
+#include "mesh_common.glsl"
 
 layout(triangles) in;
 layout(line_strip, max_vertices = 2) out;

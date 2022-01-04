@@ -17,10 +17,9 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #version 450
 
-#define FRAGMENT_SHADER
-
 #extension GL_GOOGLE_include_directive : enable
-#include "common.glsl"
+#include "mesh_common.glsl"
+#include "mesh_out.glsl"
 
 vec3 fog(const vec3 fog_color, const vec3 fragment_color)
 {
