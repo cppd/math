@@ -88,6 +88,7 @@ void test()
         test<3, T>();
         test<4, T>();
         test<5, T>();
+        test<6, T>();
 }
 
 void test_albedo()
