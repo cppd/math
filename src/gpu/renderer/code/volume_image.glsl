@@ -17,7 +17,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #if defined(IMAGE)
 
-#extension GL_GOOGLE_include_directive : enable
 #include "shading_ggx_diffuse.glsl"
 #include "shading_metalness.glsl"
 

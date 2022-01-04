@@ -34,37 +34,11 @@ Real-Time Volume Graphics.
 A K Peters, Ltd, 2006.
 */
 
-#extension GL_GOOGLE_include_directive : enable
+#include "volume_common.glsl"
 #include "volume_fragments.glsl"
 #include "volume_image.glsl"
 #include "volume_intersect.glsl"
 #include "volume_out.glsl"
-
-layout(set = 0, binding = 0, std140) uniform Drawing
-{
-        vec3 lighting_color;
-        vec3 background_color;
-        vec3 wireframe_color;
-        vec3 normal_color_positive;
-        vec3 normal_color_negative;
-        float normal_length;
-        bool show_materials;
-        bool show_wireframe;
-        bool show_shadow;
-        bool show_fog;
-        bool show_smooth;
-        vec3 clip_plane_color;
-        vec4 clip_plane_equation;
-        bool clip_plane_enabled;
-        vec3 direction_to_light;
-        vec3 direction_to_camera;
-        vec2 viewport_center;
-        vec2 viewport_factor;
-        uint transparency_max_node_count;
-}
-drawing;
-
-layout(set = 0, binding = 1) uniform sampler2DMS depth_image;
 
 #define COLOR_ADD(c)                \
         do                          \

@@ -24,7 +24,6 @@ CRC Press, 2018.
 9.9 BRDF Models for Subsurface Scattering
 */
 
-#extension GL_GOOGLE_include_directive : enable
 #include "shading_constants.glsl"
 
 // (9.64)

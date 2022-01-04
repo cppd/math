@@ -15,7 +15,6 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#extension GL_GOOGLE_include_directive : enable
 #include "transparency.glsl"
 
 layout(constant_id = 0) const bool TRANSPARENCY_DRAWING = false;

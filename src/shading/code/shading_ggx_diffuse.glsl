@@ -27,7 +27,6 @@ CRC Press, 2018.
 9.8 BRDF Models for Surface Reflection
 */
 
-#extension GL_GOOGLE_include_directive : enable
 #include "shading_constants.glsl"
 #include "shading_subsurface.glsl"
 

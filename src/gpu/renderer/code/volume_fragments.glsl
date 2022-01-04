@@ -22,15 +22,9 @@ The MIT Press, 2009.
 6. Heapsort
 */
 
-#include "transparency.glsl"
+#include "volume_common.glsl"
 
 const uint TRANSPARENCY_NULL_POINTER = 0xffffffff;
-
-layout(set = 0, binding = 2, r32ui) uniform restrict readonly uimage2DMS transparency_heads;
-layout(set = 0, binding = 3, std430) restrict readonly buffer TransparencyNodes
-{
-        TransparencyNode transparency_nodes[];
-};
 
 struct Fragment
 {
