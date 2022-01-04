@@ -629,9 +629,24 @@ T ggx_f1_albedo_cosine_weighted_average(const T roughness)
         return INTERPOLATION_COSINE<N, T>.compute(Vector<1, T>(roughness));
 }
 
-#define CREATE_GGX_F1_ALBEDO_INSTANTIATION_N_T(N, T) \
-        template T ggx_f1_albedo<(N)>(T, T);         \
-        template T ggx_f1_albedo_cosine_weighted_average<(N)>(T);
+template <std::size_t N, typename T>
+std::tuple<std::array<int, 2>, std::span<const T>> ggx_f1_albedo_cosine_roughness_data()
+{
+        return {GGX_F1_ALBEDO_COSINE_ROUGHNESS_SIZE, GGX_F1_ALBEDO_COSINE_ROUGHNESS<N, T>};
+}
+
+template <std::size_t N, typename T>
+std::tuple<std::array<int, 1>, std::span<const T>> ggx_f1_albedo_cosine_weighted_average_data()
+{
+        return {GGX_F1_ALBEDO_COSINE_WEIGHTED_AVERAGE_SIZE, GGX_F1_ALBEDO_COSINE_WEIGHTED_AVERAGE<N, T>};
+}
+
+#define CREATE_GGX_F1_ALBEDO_INSTANTIATION_N_T(N, T)                                                               \
+        template T ggx_f1_albedo<(N)>(T, T);                                                                       \
+        template T ggx_f1_albedo_cosine_weighted_average<(N)>(T);                                                  \
+        template std::tuple<std::array<int, 2>, std::span<const T>> ggx_f1_albedo_cosine_roughness_data<(N), T>(); \
+        template std::tuple<std::array<int, 1>, std::span<const T>>                                                \
+                ggx_f1_albedo_cosine_weighted_average_data<(N), T>();
 
 #define CREATE_GGX_F1_ALBEDO_INSTANTIATION_N(N)            \
         CREATE_GGX_F1_ALBEDO_INSTANTIATION_N_T((N), float) \

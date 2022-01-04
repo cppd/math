@@ -17,7 +17,9 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
-#include <cstddef>
+#include <array>
+#include <span>
+#include <tuple>
 
 namespace ns::shading
 {
@@ -26,4 +28,10 @@ T ggx_f1_albedo(T roughness, T cosine);
 
 template <std::size_t N, typename T>
 T ggx_f1_albedo_cosine_weighted_average(T roughness);
+
+template <std::size_t N, typename T>
+std::tuple<std::array<int, 2>, std::span<const T>> ggx_f1_albedo_cosine_roughness_data();
+
+template <std::size_t N, typename T>
+std::tuple<std::array<int, 1>, std::span<const T>> ggx_f1_albedo_cosine_weighted_average_data();
 }
