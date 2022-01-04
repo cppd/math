@@ -18,6 +18,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "renderer.h"
 
 #include "buffer_commands.h"
+#include "ggx_f1_albedo.h"
 #include "renderer_draw.h"
 #include "renderer_objects.h"
 #include "renderer_process.h"
@@ -77,6 +78,7 @@ class Impl final : public Renderer, RendererProcessEvents
         const vulkan::ImageWithMemory* object_image_ = nullptr;
 
         ShaderBuffers shader_buffers_;
+        GgxF1Albedo ggx_f1_albedo_;
         std::unique_ptr<vulkan::DepthImageWithMemory> depth_copy_image_;
 
         MeshRenderer mesh_renderer_;
@@ -418,6 +420,11 @@ public:
                   transfer_command_pool_(transfer_command_pool),
                   transfer_queue_(transfer_queue),
                   shader_buffers_(*device_, {graphics_queue_->family_index()}),
+                  ggx_f1_albedo_(
+                          *device_,
+                          {graphics_queue_->family_index()},
+                          *transfer_command_pool_,
+                          *transfer_queue_),
                   mesh_renderer_(device_, sample_shading, sampler_anisotropy, shader_buffers_),
                   volume_renderer_(device_, sample_shading, shader_buffers_),
                   renderer_objects_(
