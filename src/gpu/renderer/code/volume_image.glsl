@@ -19,7 +19,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "shading_ggx_diffuse.glsl"
 #include "shading_metalness.glsl"
-#include "volume_common.glsl"
+#include "volume_in.glsl"
 
 const int ISOSURFACE_ITERATION_COUNT = 5;
 

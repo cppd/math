@@ -15,7 +15,7 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include "mesh_common.glsl"
+#include "mesh_in.glsl"
 
 layout(early_fragment_tests) in;
 

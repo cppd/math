@@ -18,7 +18,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #version 450
 
 #extension GL_GOOGLE_include_directive : enable
-#include "mesh_common.glsl"
+#include "mesh_in.glsl"
 #include "mesh_out.glsl"
 #include "shading_ggx_diffuse.glsl"
 #include "shading_metalness.glsl"

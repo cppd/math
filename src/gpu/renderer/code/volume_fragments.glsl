@@ -22,7 +22,7 @@ The MIT Press, 2009.
 6. Heapsort
 */
 
-#include "volume_common.glsl"
+#include "volume_in.glsl"
 
 const uint TRANSPARENCY_NULL_POINTER = 0xffffffff;
 
