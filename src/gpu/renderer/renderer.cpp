@@ -26,7 +26,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "viewport_transform.h"
 
 #include "buffers/ggx_f1_albedo.h"
-#include "buffers/shaders.h"
+#include "buffers/shader.h"
 #include "buffers/transparency.h"
 #include "mesh/object.h"
 #include "mesh/renderer.h"

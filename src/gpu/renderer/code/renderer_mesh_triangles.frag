@@ -23,17 +23,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "shading_ggx_diffuse.glsl"
 #include "shading_metalness.glsl"
 
-layout(set = 2, binding = 0, std140) uniform Material
-{
-        vec3 color;
-        bool use_texture;
-        bool use_material;
-}
-mtl;
-layout(set = 2, binding = 1) uniform sampler2D material_texture;
-
-//
-
 layout(location = 0) in GS
 {
         vec3 world_normal;

@@ -21,13 +21,13 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "object.h"
 
 #include "../buffers/ggx_f1_albedo.h"
-#include "../buffers/shaders.h"
+#include "../buffers/shader.h"
 #include "shaders/descriptors.h"
-#include "shaders/normals.h"
-#include "shaders/points.h"
-#include "shaders/triangle_lines.h"
-#include "shaders/triangles.h"
-#include "shaders/triangles_depth.h"
+#include "shaders/program_normals.h"
+#include "shaders/program_points.h"
+#include "shaders/program_triangle_lines.h"
+#include "shaders/program_triangles.h"
+#include "shaders/program_triangles_depth.h"
 
 #include <src/gpu/render_buffers.h>
 
@@ -47,19 +47,19 @@ class MeshRenderer
         std::unique_ptr<const DepthBuffers> depth_buffers_;
 
         TrianglesProgram triangles_program_;
-        CommonMemory triangles_common_memory_;
+        SharedMemory triangles_shared_memory_;
 
         TriangleLinesProgram triangle_lines_program_;
-        CommonMemory triangle_lines_common_memory_;
+        SharedMemory triangle_lines_shared_memory_;
 
         NormalsProgram normals_program_;
-        CommonMemory normals_common_memory_;
+        SharedMemory normals_shared_memory_;
 
         TrianglesDepthProgram triangles_depth_program_;
-        CommonMemory triangles_depth_common_memory_;
+        SharedMemory triangles_depth_shared_memory_;
 
         PointsProgram points_program_;
-        CommonMemory points_common_memory_;
+        SharedMemory points_shared_memory_;
 
         struct Pipelines
         {

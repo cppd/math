@@ -18,8 +18,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #pragma once
 
 #include <src/numerical/region.h>
-#include <src/numerical/vector.h>
-#include <src/vulkan/buffers.h>
 #include <src/vulkan/descriptor.h>
 #include <src/vulkan/device.h>
 #include <src/vulkan/objects.h>
@@ -29,32 +27,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 namespace ns::gpu::renderer
 {
-class TrianglesMaterialMemory final
-{
-        static constexpr int SET_NUMBER = 2;
-
-        static constexpr int MATERIAL_BINDING = 0;
-        static constexpr int TEXTURE_BINDING = 1;
-
-public:
-        static std::vector<VkDescriptorSetLayoutBinding> descriptor_set_layout_bindings();
-        static unsigned set_number();
-
-        struct MaterialInfo final
-        {
-                VkBuffer buffer;
-                VkDeviceSize buffer_size;
-                VkImageView texture;
-        };
-
-        static vulkan::Descriptors create(
-                VkDevice device,
-                VkSampler sampler,
-                VkDescriptorSetLayout descriptor_set_layout,
-                const std::vector<VkDescriptorSetLayoutBinding>& descriptor_set_layout_bindings,
-                const std::vector<MaterialInfo>& materials);
-};
-
 class TrianglesProgram final
 {
         const vulkan::Device* device_;

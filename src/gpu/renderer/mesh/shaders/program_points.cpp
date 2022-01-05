@@ -15,7 +15,7 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include "points.h"
+#include "program_points.h"
 
 #include "descriptors.h"
 #include "vertex_points.h"
@@ -30,7 +30,7 @@ namespace ns::gpu::renderer
 {
 std::vector<VkDescriptorSetLayoutBinding> PointsProgram::descriptor_set_layout_shared_bindings()
 {
-        return CommonMemory::descriptor_set_layout_bindings(
+        return SharedMemory::descriptor_set_layout_bindings(
                 VK_SHADER_STAGE_VERTEX_BIT, VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT, 0,
                 VK_SHADER_STAGE_FRAGMENT_BIT);
 }
@@ -48,7 +48,7 @@ PointsProgram::PointsProgram(const vulkan::Device* const device)
                   vulkan::create_descriptor_set_layout(*device, descriptor_set_layout_mesh_bindings())),
           pipeline_layout_(vulkan::create_pipeline_layout(
                   *device,
-                  {CommonMemory::set_number(), MeshMemory::set_number()},
+                  {SharedMemory::set_number(), MeshMemory::set_number()},
                   {descriptor_set_layout_shared_, descriptor_set_layout_mesh_})),
           vertex_shader_0d_(*device_, code_mesh_points_0d_vert(), "main"),
           vertex_shader_1d_(*device_, code_mesh_points_1d_vert(), "main"),
@@ -89,8 +89,8 @@ vulkan::handle::Pipeline PointsProgram::create_pipeline(
         info.viewport = viewport;
         info.primitive_topology = primitive_topology;
 
-        CommonConstants common_constants;
-        common_constants.set(transparency);
+        SharedConstants shared_constants;
+        shared_constants.set(transparency);
         info.depth_write = !transparency;
 
         std::vector<const vulkan::Shader*> shaders;
@@ -106,7 +106,7 @@ vulkan::handle::Pipeline PointsProgram::create_pipeline(
         {
                 error_fatal("Unsupported primitive topology for renderer points program");
         }
-        const std::vector<const vulkan::SpecializationConstant*> constants = {&common_constants, &common_constants};
+        const std::vector<const vulkan::SpecializationConstant*> constants = {&shared_constants, &shared_constants};
         const std::vector<VkVertexInputBindingDescription> binding_descriptions = PointsVertex::binding_descriptions();
         const std::vector<VkVertexInputAttributeDescription> attribute_descriptions =
                 PointsVertex::attribute_descriptions();

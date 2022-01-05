@@ -19,7 +19,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 namespace ns::gpu::renderer
 {
-CommonConstants::CommonConstants()
+SharedConstants::SharedConstants()
 {
         VkSpecializationMapEntry entry = {};
         entry.constantID = 0;
@@ -28,29 +28,29 @@ CommonConstants::CommonConstants()
         entries_.push_back(entry);
 }
 
-void CommonConstants::set(const bool transparency_drawing)
+void SharedConstants::set(const bool transparency_drawing)
 {
         data_.transparency_drawing = transparency_drawing ? 1 : 0;
 }
 
-const std::vector<VkSpecializationMapEntry>& CommonConstants::entries() const
+const std::vector<VkSpecializationMapEntry>& SharedConstants::entries() const
 {
         return entries_;
 }
 
-const void* CommonConstants::data() const
+const void* SharedConstants::data() const
 {
         return &data_;
 }
 
-std::size_t CommonConstants::size() const
+std::size_t SharedConstants::size() const
 {
         return sizeof(data_);
 }
 
 //
 
-std::vector<VkDescriptorSetLayoutBinding> CommonMemory::descriptor_set_layout_bindings(
+std::vector<VkDescriptorSetLayoutBinding> SharedMemory::descriptor_set_layout_bindings(
         const VkShaderStageFlags matrices,
         const VkShaderStageFlags drawing,
         const VkShaderStageFlags shadow,
@@ -167,7 +167,7 @@ std::vector<VkDescriptorSetLayoutBinding> CommonMemory::descriptor_set_layout_bi
         return bindings;
 }
 
-CommonMemory::CommonMemory(
+SharedMemory::SharedMemory(
         const vulkan::Device& device,
         const VkDescriptorSetLayout descriptor_set_layout,
         const std::vector<VkDescriptorSetLayoutBinding>& descriptor_set_layout_bindings,
@@ -226,17 +226,17 @@ CommonMemory::CommonMemory(
         descriptors_.update_descriptor_set(0, bindings, infos);
 }
 
-unsigned CommonMemory::set_number()
+unsigned SharedMemory::set_number()
 {
         return SET_NUMBER;
 }
 
-const VkDescriptorSet& CommonMemory::descriptor_set() const
+const VkDescriptorSet& SharedMemory::descriptor_set() const
 {
         return descriptors_.descriptor_set(0);
 }
 
-void CommonMemory::set_shadow_image(const VkSampler sampler, const vulkan::ImageView& shadow_image) const
+void SharedMemory::set_shadow_image(const VkSampler sampler, const vulkan::ImageView& shadow_image) const
 {
         ASSERT(shadow_image.has_usage(VK_IMAGE_USAGE_SAMPLED_BIT));
         ASSERT(shadow_image.sample_count() == VK_SAMPLE_COUNT_1_BIT);
@@ -249,7 +249,7 @@ void CommonMemory::set_shadow_image(const VkSampler sampler, const vulkan::Image
         descriptors_.update_descriptor_set(0, SHADOW_BINDING, image_info);
 }
 
-void CommonMemory::set_objects_image(const vulkan::ImageView& objects) const
+void SharedMemory::set_objects_image(const vulkan::ImageView& objects) const
 {
         ASSERT(objects.format() == VK_FORMAT_R32_UINT);
         ASSERT(objects.has_usage(VK_IMAGE_USAGE_STORAGE_BIT));
@@ -261,7 +261,7 @@ void CommonMemory::set_objects_image(const vulkan::ImageView& objects) const
         descriptors_.update_descriptor_set(0, OBJECTS_BINDING, image_info);
 }
 
-void CommonMemory::set_transparency(
+void SharedMemory::set_transparency(
         const vulkan::ImageView& heads,
         const vulkan::ImageView& heads_size,
         const vulkan::Buffer& counters,
@@ -376,6 +376,91 @@ vulkan::Descriptors MeshMemory::create(
 }
 
 unsigned MeshMemory::set_number()
+{
+        return SET_NUMBER;
+}
+
+//
+
+std::vector<VkDescriptorSetLayoutBinding> MaterialMemory::descriptor_set_layout_bindings()
+{
+        std::vector<VkDescriptorSetLayoutBinding> bindings;
+
+        {
+                VkDescriptorSetLayoutBinding b = {};
+                b.binding = MATERIAL_BINDING;
+                b.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
+                b.descriptorCount = 1;
+                b.stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
+
+                bindings.push_back(b);
+        }
+        {
+                VkDescriptorSetLayoutBinding b = {};
+                b.binding = TEXTURE_BINDING;
+                b.descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+                b.descriptorCount = 1;
+                b.stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
+                b.pImmutableSamplers = nullptr;
+
+                bindings.push_back(b);
+        }
+
+        return bindings;
+}
+
+vulkan::Descriptors MaterialMemory::create(
+        const VkDevice device,
+        const VkSampler sampler,
+        const VkDescriptorSetLayout descriptor_set_layout,
+        const std::vector<VkDescriptorSetLayoutBinding>& descriptor_set_layout_bindings,
+        const std::vector<MaterialInfo>& materials)
+{
+        ASSERT(!materials.empty());
+        ASSERT(std::all_of(
+                materials.cbegin(), materials.cend(),
+                [](const MaterialInfo& m)
+                {
+                        return m.buffer != VK_NULL_HANDLE && m.buffer_size > 0 && m.texture != VK_NULL_HANDLE;
+                }));
+
+        vulkan::Descriptors descriptors(
+                vulkan::Descriptors(device, materials.size(), descriptor_set_layout, descriptor_set_layout_bindings));
+
+        std::vector<std::variant<VkDescriptorBufferInfo, VkDescriptorImageInfo>> infos;
+        std::vector<std::uint32_t> bindings;
+
+        for (std::size_t i = 0; i < materials.size(); ++i)
+        {
+                const MaterialInfo& material = materials[i];
+
+                infos.clear();
+                bindings.clear();
+                {
+                        VkDescriptorBufferInfo buffer_info = {};
+                        buffer_info.buffer = material.buffer;
+                        buffer_info.offset = 0;
+                        buffer_info.range = material.buffer_size;
+
+                        infos.emplace_back(buffer_info);
+                        bindings.push_back(MATERIAL_BINDING);
+                }
+                {
+                        VkDescriptorImageInfo image_info = {};
+                        image_info.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
+                        image_info.imageView = material.texture;
+                        image_info.sampler = sampler;
+
+                        infos.emplace_back(image_info);
+                        bindings.push_back(TEXTURE_BINDING);
+                }
+                descriptors.update_descriptor_set(i, bindings, infos);
+        }
+
+        return descriptors;
+}
+
+unsigned MaterialMemory::set_number()
 {
         return SET_NUMBER;
 }

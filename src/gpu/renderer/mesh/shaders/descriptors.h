@@ -26,7 +26,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 namespace ns::gpu::renderer
 {
-class CommonConstants final : public vulkan::SpecializationConstant
+class SharedConstants final : public vulkan::SpecializationConstant
 {
         struct Data
         {
@@ -40,12 +40,12 @@ class CommonConstants final : public vulkan::SpecializationConstant
         std::size_t size() const override;
 
 public:
-        CommonConstants();
+        SharedConstants();
 
         void set(bool transparency_drawing);
 };
 
-class CommonMemory final
+class SharedMemory final
 {
         static constexpr int SET_NUMBER = 0;
 
@@ -71,7 +71,7 @@ public:
                 VkShaderStageFlags objects);
         static unsigned set_number();
 
-        CommonMemory(
+        SharedMemory(
                 const vulkan::Device& device,
                 VkDescriptorSetLayout descriptor_set_layout,
                 const std::vector<VkDescriptorSetLayoutBinding>& descriptor_set_layout_bindings,
@@ -106,5 +106,31 @@ public:
                 VkDescriptorSetLayout descriptor_set_layout,
                 const std::vector<VkDescriptorSetLayoutBinding>& descriptor_set_layout_bindings,
                 const std::vector<const vulkan::Buffer*>& coordinates);
+};
+
+class MaterialMemory final
+{
+        static constexpr int SET_NUMBER = 2;
+
+        static constexpr int MATERIAL_BINDING = 0;
+        static constexpr int TEXTURE_BINDING = 1;
+
+public:
+        static std::vector<VkDescriptorSetLayoutBinding> descriptor_set_layout_bindings();
+        static unsigned set_number();
+
+        struct MaterialInfo final
+        {
+                VkBuffer buffer;
+                VkDeviceSize buffer_size;
+                VkImageView texture;
+        };
+
+        static vulkan::Descriptors create(
+                VkDevice device,
+                VkSampler sampler,
+                VkDescriptorSetLayout descriptor_set_layout,
+                const std::vector<VkDescriptorSetLayoutBinding>& descriptor_set_layout_bindings,
+                const std::vector<MaterialInfo>& materials);
 };
 }

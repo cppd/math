@@ -87,4 +87,15 @@ layout(set = 1, binding = 0, std140) uniform Mesh
 }
 mesh;
 
+//
+
+layout(set = 2, binding = 0, std140) uniform Material
+{
+        vec3 color;
+        bool use_texture;
+        bool use_material;
+}
+mtl;
+layout(set = 2, binding = 1) uniform sampler2D material_texture;
+
 #endif

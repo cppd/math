@@ -17,13 +17,9 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
-#include <src/color/color.h>
-#include <src/numerical/region.h>
-#include <src/numerical/vector.h>
 #include <src/vulkan/descriptor.h>
 #include <src/vulkan/device.h>
 #include <src/vulkan/objects.h>
-#include <src/vulkan/shader.h>
 
 #include <vector>
 
@@ -100,57 +96,5 @@ public:
                 VkDescriptorSetLayout descriptor_set_layout,
                 const std::vector<VkDescriptorSetLayoutBinding>& descriptor_set_layout_bindings,
                 const CreateInfo& create_info);
-};
-
-class VolumeProgram final
-{
-        const vulkan::Device* device_;
-
-        vulkan::handle::DescriptorSetLayout descriptor_set_layout_shared_;
-        vulkan::handle::DescriptorSetLayout descriptor_set_layout_image_;
-        vulkan::handle::PipelineLayout pipeline_layout_image_fragments_;
-        vulkan::handle::PipelineLayout pipeline_layout_fragments_;
-        vulkan::VertexShader vertex_shader_;
-        vulkan::FragmentShader fragment_shader_image_;
-        vulkan::FragmentShader fragment_shader_image_fragments_;
-        vulkan::FragmentShader fragment_shader_fragments_;
-
-public:
-        enum class PipelineLayoutType
-        {
-                IMAGE_FRAGMENTS,
-                FRAGMENTS
-        };
-
-        enum class PipelineType
-        {
-                IMAGE,
-                IMAGE_FRAGMENTS,
-                FRAGMENTS
-        };
-
-        explicit VolumeProgram(const vulkan::Device* device);
-
-        VolumeProgram(const VolumeProgram&) = delete;
-        VolumeProgram& operator=(const VolumeProgram&) = delete;
-        VolumeProgram& operator=(VolumeProgram&&) = delete;
-
-        VolumeProgram(VolumeProgram&&) = default;
-        ~VolumeProgram() = default;
-
-        vulkan::handle::Pipeline create_pipeline(
-                VkRenderPass render_pass,
-                VkSampleCountFlagBits sample_count,
-                bool sample_shading,
-                const Region<2, int>& viewport,
-                PipelineType type) const;
-
-        VkDescriptorSetLayout descriptor_set_layout_shared() const;
-        static std::vector<VkDescriptorSetLayoutBinding> descriptor_set_layout_shared_bindings();
-
-        VkDescriptorSetLayout descriptor_set_layout_image() const;
-        static std::vector<VkDescriptorSetLayoutBinding> descriptor_set_layout_image_bindings();
-
-        VkPipelineLayout pipeline_layout(PipelineLayoutType type) const;
 };
 }

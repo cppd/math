@@ -24,13 +24,13 @@ void commands_triangles(
         const VkCommandBuffer command_buffer,
         const VkPipeline pipeline,
         const TrianglesProgram& triangles_program,
-        const CommonMemory& triangles_common_memory)
+        const SharedMemory& triangles_shared_memory)
 {
         vkCmdBindPipeline(command_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipeline);
 
         vkCmdBindDescriptorSets(
                 command_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, triangles_program.pipeline_layout(),
-                CommonMemory::set_number(), 1 /*set count*/, &triangles_common_memory.descriptor_set(), 0, nullptr);
+                SharedMemory::set_number(), 1 /*set count*/, &triangles_shared_memory.descriptor_set(), 0, nullptr);
 
         const auto bind_descriptor_set_mesh = [&](VkDescriptorSet descriptor_set)
         {
@@ -43,7 +43,7 @@ void commands_triangles(
         {
                 vkCmdBindDescriptorSets(
                         command_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, triangles_program.pipeline_layout(),
-                        TrianglesMaterialMemory::set_number(), 1 /*set count*/, &descriptor_set, 0, nullptr);
+                        MaterialMemory::set_number(), 1 /*set count*/, &descriptor_set, 0, nullptr);
         };
 
         for (const MeshObject* const mesh : meshes)
@@ -59,13 +59,13 @@ void commands_depth_triangles(
         const VkCommandBuffer command_buffer,
         const VkPipeline pipeline,
         const TrianglesDepthProgram& triangles_depth_program,
-        const CommonMemory& triangles_depth_common_memory)
+        const SharedMemory& triangles_depth_shared_memory)
 {
         vkCmdBindPipeline(command_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipeline);
 
         vkCmdBindDescriptorSets(
                 command_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, triangles_depth_program.pipeline_layout(),
-                CommonMemory::set_number(), 1 /*set count*/, &triangles_depth_common_memory.descriptor_set(), 0,
+                SharedMemory::set_number(), 1 /*set count*/, &triangles_depth_shared_memory.descriptor_set(), 0,
                 nullptr);
 
         const auto bind_descriptor_set_mesh = [&](VkDescriptorSet descriptor_set)
@@ -87,13 +87,13 @@ void commands_lines(
         const VkCommandBuffer command_buffer,
         const VkPipeline pipeline,
         const PointsProgram& points_program,
-        const CommonMemory& points_common_memory)
+        const SharedMemory& points_shared_memory)
 {
         vkCmdBindPipeline(command_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipeline);
 
         vkCmdBindDescriptorSets(
                 command_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, points_program.pipeline_layout(),
-                CommonMemory::set_number(), 1 /*set count*/, &points_common_memory.descriptor_set(), 0, nullptr);
+                SharedMemory::set_number(), 1 /*set count*/, &points_shared_memory.descriptor_set(), 0, nullptr);
 
         const auto bind_descriptor_set_mesh = [&](VkDescriptorSet descriptor_set)
         {
@@ -114,13 +114,13 @@ void commands_points(
         const VkCommandBuffer command_buffer,
         const VkPipeline pipeline,
         const PointsProgram& points_program,
-        const CommonMemory& points_common_memory)
+        const SharedMemory& points_shared_memory)
 {
         vkCmdBindPipeline(command_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipeline);
 
         vkCmdBindDescriptorSets(
                 command_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, points_program.pipeline_layout(),
-                CommonMemory::set_number(), 1 /*set count*/, &points_common_memory.descriptor_set(), 0, nullptr);
+                SharedMemory::set_number(), 1 /*set count*/, &points_shared_memory.descriptor_set(), 0, nullptr);
 
         const auto bind_descriptor_set_mesh = [&](VkDescriptorSet descriptor_set)
         {
@@ -141,13 +141,13 @@ void commands_triangle_lines(
         const VkCommandBuffer command_buffer,
         const VkPipeline pipeline,
         const TriangleLinesProgram& triangle_lines_program,
-        const CommonMemory& triangle_lines_common_memory)
+        const SharedMemory& triangle_lines_shared_memory)
 {
         vkCmdBindPipeline(command_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipeline);
 
         vkCmdBindDescriptorSets(
                 command_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, triangle_lines_program.pipeline_layout(),
-                CommonMemory::set_number(), 1 /*set count*/, &triangle_lines_common_memory.descriptor_set(), 0,
+                SharedMemory::set_number(), 1 /*set count*/, &triangle_lines_shared_memory.descriptor_set(), 0,
                 nullptr);
 
         const auto bind_descriptor_set_mesh = [&](VkDescriptorSet descriptor_set)
@@ -169,13 +169,13 @@ void commands_normals(
         const VkCommandBuffer command_buffer,
         const VkPipeline pipeline,
         const NormalsProgram& normals_program,
-        const CommonMemory& normals_common_memory)
+        const SharedMemory& normals_shared_memory)
 {
         vkCmdBindPipeline(command_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipeline);
 
         vkCmdBindDescriptorSets(
                 command_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, normals_program.pipeline_layout(),
-                CommonMemory::set_number(), 1 /*set count*/, &normals_common_memory.descriptor_set(), 0, nullptr);
+                SharedMemory::set_number(), 1 /*set count*/, &normals_shared_memory.descriptor_set(), 0, nullptr);
 
         const auto bind_descriptor_set_mesh = [&](VkDescriptorSet descriptor_set)
         {

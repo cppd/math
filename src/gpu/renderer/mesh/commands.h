@@ -20,11 +20,11 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "object.h"
 
 #include "shaders/descriptors.h"
-#include "shaders/normals.h"
-#include "shaders/points.h"
-#include "shaders/triangle_lines.h"
-#include "shaders/triangles.h"
-#include "shaders/triangles_depth.h"
+#include "shaders/program_normals.h"
+#include "shaders/program_points.h"
+#include "shaders/program_triangle_lines.h"
+#include "shaders/program_triangles.h"
+#include "shaders/program_triangles_depth.h"
 
 #include <vector>
 #include <vulkan/vulkan.h>
@@ -36,40 +36,40 @@ void commands_triangles(
         VkCommandBuffer command_buffer,
         VkPipeline pipeline,
         const TrianglesProgram& triangles_program,
-        const CommonMemory& triangles_common_memory);
+        const SharedMemory& triangles_shared_memory);
 
 void commands_depth_triangles(
         const std::vector<const MeshObject*>& meshes,
         VkCommandBuffer command_buffer,
         VkPipeline pipeline,
         const TrianglesDepthProgram& triangles_depth_program,
-        const CommonMemory& triangles_depth_common_memory);
+        const SharedMemory& triangles_depth_shared_memory);
 
 void commands_lines(
         const std::vector<const MeshObject*>& meshes,
         VkCommandBuffer command_buffer,
         VkPipeline pipeline,
         const PointsProgram& points_program,
-        const CommonMemory& points_common_memory);
+        const SharedMemory& points_shared_memory);
 
 void commands_points(
         const std::vector<const MeshObject*>& meshes,
         VkCommandBuffer command_buffer,
         VkPipeline pipeline,
         const PointsProgram& points_program,
-        const CommonMemory& points_common_memory);
+        const SharedMemory& points_shared_memory);
 
 void commands_triangle_lines(
         const std::vector<const MeshObject*>& meshes,
         VkCommandBuffer command_buffer,
         VkPipeline pipeline,
         const TriangleLinesProgram& triangle_lines_program,
-        const CommonMemory& triangle_lines_common_memory);
+        const SharedMemory& triangle_lines_shared_memory);
 
 void commands_normals(
         const std::vector<const MeshObject*>& meshes,
         VkCommandBuffer command_buffer,
         VkPipeline pipeline,
         const NormalsProgram& normals_program,
-        const CommonMemory& normals_common_memory);
+        const SharedMemory& normals_shared_memory);
 }

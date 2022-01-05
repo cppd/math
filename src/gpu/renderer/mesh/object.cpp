@@ -23,7 +23,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "buffers/material.h"
 #include "buffers/mesh.h"
 #include "shaders/descriptors.h"
-#include "shaders/triangles.h"
 
 #include <src/com/alg.h>
 #include <src/com/error.h>
@@ -40,7 +39,7 @@ namespace ns::gpu::renderer
 {
 namespace
 {
-std::vector<TrianglesMaterialMemory::MaterialInfo> materials_info(
+std::vector<MaterialMemory::MaterialInfo> materials_info(
         const mesh::Mesh<3>& mesh,
         const std::vector<vulkan::ImageWithMemory>& textures,
         const std::vector<MaterialBuffer>& material_buffers)
@@ -51,7 +50,7 @@ std::vector<TrianglesMaterialMemory::MaterialInfo> materials_info(
 
         VkImageView no_texture = textures.back().image_view();
 
-        std::vector<TrianglesMaterialMemory::MaterialInfo> materials;
+        std::vector<MaterialMemory::MaterialInfo> materials;
         materials.reserve(mesh.materials.size() + 1);
 
         for (std::size_t i = 0; i < mesh.materials.size(); ++i)
@@ -60,13 +59,13 @@ std::vector<TrianglesMaterialMemory::MaterialInfo> materials_info(
 
                 ASSERT(mesh_material.image < static_cast<int>(textures.size()) - 1);
 
-                TrianglesMaterialMemory::MaterialInfo& m = materials.emplace_back();
+                MaterialMemory::MaterialInfo& m = materials.emplace_back();
                 m.buffer = material_buffers[i].buffer();
                 m.buffer_size = material_buffers[i].buffer().size();
                 m.texture = (mesh_material.image >= 0) ? textures[mesh_material.image].image_view() : no_texture;
         }
 
-        TrianglesMaterialMemory::MaterialInfo& m = materials.emplace_back();
+        MaterialMemory::MaterialInfo& m = materials.emplace_back();
         m.buffer = material_buffers.back().buffer();
         m.buffer_size = material_buffers.back().buffer().size();
         m.texture = no_texture;
@@ -161,7 +160,7 @@ class Impl final : public MeshObject
                 return iter->second.descriptor_set(0);
         }
 
-        void create_material_descriptor_sets(const std::vector<TrianglesMaterialMemory::MaterialInfo>& material_info)
+        void create_material_descriptor_sets(const std::vector<MaterialMemory::MaterialInfo>& material_info)
         {
                 material_descriptor_sets_.clear();
                 if (material_info.empty())
@@ -170,7 +169,7 @@ class Impl final : public MeshObject
                 }
                 for (const vulkan::DescriptorSetLayoutAndBindings& layout : material_layouts_)
                 {
-                        vulkan::Descriptors sets = TrianglesMaterialMemory::create(
+                        vulkan::Descriptors sets = MaterialMemory::create(
                                 *device_, texture_sampler_, layout.descriptor_set_layout,
                                 layout.descriptor_set_layout_bindings, material_info);
                         ASSERT(sets.descriptor_set_count() == material_info.size());

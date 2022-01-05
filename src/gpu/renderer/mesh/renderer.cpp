@@ -36,7 +36,7 @@ MeshRenderer::MeshRenderer(
           sample_shading_(sample_shading),
           //
           triangles_program_(device),
-          triangles_common_memory_(
+          triangles_shared_memory_(
                   *device,
                   triangles_program_.descriptor_set_layout_shared(),
                   triangles_program_.descriptor_set_layout_shared_bindings(),
@@ -47,7 +47,7 @@ MeshRenderer::MeshRenderer(
                   ggx_f1_albedo.cosine_weighted_average()),
           //
           triangle_lines_program_(device),
-          triangle_lines_common_memory_(
+          triangle_lines_shared_memory_(
                   *device,
                   triangle_lines_program_.descriptor_set_layout_shared(),
                   triangle_lines_program_.descriptor_set_layout_shared_bindings(),
@@ -58,7 +58,7 @@ MeshRenderer::MeshRenderer(
                   ggx_f1_albedo.cosine_weighted_average()),
           //
           normals_program_(device),
-          normals_common_memory_(
+          normals_shared_memory_(
                   *device,
                   normals_program_.descriptor_set_layout_shared(),
                   normals_program_.descriptor_set_layout_shared_bindings(),
@@ -69,7 +69,7 @@ MeshRenderer::MeshRenderer(
                   ggx_f1_albedo.cosine_weighted_average()),
           //
           triangles_depth_program_(device),
-          triangles_depth_common_memory_(
+          triangles_depth_shared_memory_(
                   *device,
                   triangles_depth_program_.descriptor_set_layout_shared(),
                   triangles_depth_program_.descriptor_set_layout_shared_bindings(),
@@ -80,7 +80,7 @@ MeshRenderer::MeshRenderer(
                   ggx_f1_albedo.cosine_weighted_average()),
           //
           points_program_(device),
-          points_common_memory_(
+          points_shared_memory_(
                   *device,
                   points_program_.descriptor_set_layout_shared(),
                   points_program_.descriptor_set_layout_shared_bindings(),
@@ -128,23 +128,23 @@ void MeshRenderer::create_render_buffers(
 
         render_buffers_ = render_buffers;
 
-        triangles_common_memory_.set_objects_image(objects_image.image_view());
-        triangles_common_memory_.set_transparency(
+        triangles_shared_memory_.set_objects_image(objects_image.image_view());
+        triangles_shared_memory_.set_transparency(
                 transparency_heads_image.image_view(), transparency_heads_size_image.image_view(), transparency_counter,
                 transparency_nodes);
 
-        triangle_lines_common_memory_.set_objects_image(objects_image.image_view());
-        triangle_lines_common_memory_.set_transparency(
+        triangle_lines_shared_memory_.set_objects_image(objects_image.image_view());
+        triangle_lines_shared_memory_.set_transparency(
                 transparency_heads_image.image_view(), transparency_heads_size_image.image_view(), transparency_counter,
                 transparency_nodes);
 
-        points_common_memory_.set_objects_image(objects_image.image_view());
-        points_common_memory_.set_transparency(
+        points_shared_memory_.set_objects_image(objects_image.image_view());
+        points_shared_memory_.set_transparency(
                 transparency_heads_image.image_view(), transparency_heads_size_image.image_view(), transparency_counter,
                 transparency_nodes);
 
-        normals_common_memory_.set_objects_image(objects_image.image_view());
-        normals_common_memory_.set_transparency(
+        normals_shared_memory_.set_objects_image(objects_image.image_view());
+        normals_shared_memory_.set_transparency(
                 transparency_heads_image.image_view(), transparency_heads_size_image.image_view(), transparency_counter,
                 transparency_nodes);
 
@@ -201,7 +201,7 @@ void MeshRenderer::create_depth_buffers(
         depth_buffers_ = renderer::create_depth_buffers(
                 buffer_count, family_indices, graphics_command_pool, graphics_queue, device, width, height, zoom);
 
-        triangles_common_memory_.set_shadow_image(shadow_sampler_, depth_buffers_->image_view(0));
+        triangles_shared_memory_.set_shadow_image(shadow_sampler_, depth_buffers_->image_view(0));
 
         render_triangles_depth_pipeline_ = triangles_depth_program_.create_pipeline(
                 depth_buffers_->render_pass(), depth_buffers_->sample_count(),
@@ -283,33 +283,33 @@ void MeshRenderer::draw_commands(
 
                 commands_depth_triangles(
                         meshes, command_buffer, *render_triangles_depth_pipeline_, triangles_depth_program_,
-                        triangles_depth_common_memory_);
+                        triangles_depth_shared_memory_);
 
                 return;
         }
 
         commands_triangles(
                 meshes, command_buffer, *render_pipelines(transparent).triangles, triangles_program_,
-                triangles_common_memory_);
+                triangles_shared_memory_);
 
         commands_lines(
-                meshes, command_buffer, *render_pipelines(transparent).lines, points_program_, points_common_memory_);
+                meshes, command_buffer, *render_pipelines(transparent).lines, points_program_, points_shared_memory_);
 
         commands_points(
-                meshes, command_buffer, *render_pipelines(transparent).points, points_program_, points_common_memory_);
+                meshes, command_buffer, *render_pipelines(transparent).points, points_program_, points_shared_memory_);
 
         if (clip_plane)
         {
                 commands_triangle_lines(
                         meshes, command_buffer, *render_pipelines(transparent).triangle_lines, triangle_lines_program_,
-                        triangle_lines_common_memory_);
+                        triangle_lines_shared_memory_);
         }
 
         if (normals)
         {
                 commands_normals(
                         meshes, command_buffer, *render_pipelines(transparent).normals, normals_program_,
-                        normals_common_memory_);
+                        normals_shared_memory_);
         }
 }
 

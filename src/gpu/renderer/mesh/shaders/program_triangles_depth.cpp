@@ -15,7 +15,7 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include "triangle_lines.h"
+#include "program_triangles_depth.h"
 
 #include "descriptors.h"
 #include "vertex_triangles.h"
@@ -27,19 +27,18 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 namespace ns::gpu::renderer
 {
-std::vector<VkDescriptorSetLayoutBinding> TriangleLinesProgram::descriptor_set_layout_shared_bindings()
+std::vector<VkDescriptorSetLayoutBinding> TrianglesDepthProgram::descriptor_set_layout_shared_bindings()
 {
-        return CommonMemory::descriptor_set_layout_bindings(
-                VK_SHADER_STAGE_GEOMETRY_BIT, VK_SHADER_STAGE_GEOMETRY_BIT | VK_SHADER_STAGE_FRAGMENT_BIT, 0,
-                VK_SHADER_STAGE_FRAGMENT_BIT);
+        return SharedMemory::descriptor_set_layout_bindings(
+                VK_SHADER_STAGE_VERTEX_BIT, VK_SHADER_STAGE_VERTEX_BIT, 0, 0);
 }
 
-std::vector<VkDescriptorSetLayoutBinding> TriangleLinesProgram::descriptor_set_layout_mesh_bindings()
+std::vector<VkDescriptorSetLayoutBinding> TrianglesDepthProgram::descriptor_set_layout_mesh_bindings()
 {
         return MeshMemory::descriptor_set_layout_bindings(VK_SHADER_STAGE_VERTEX_BIT);
 }
 
-TriangleLinesProgram::TriangleLinesProgram(const vulkan::Device* const device)
+TrianglesDepthProgram::TrianglesDepthProgram(const vulkan::Device* const device)
         : device_(device),
           descriptor_set_layout_shared_(
                   vulkan::create_descriptor_set_layout(*device, descriptor_set_layout_shared_bindings())),
@@ -47,62 +46,59 @@ TriangleLinesProgram::TriangleLinesProgram(const vulkan::Device* const device)
                   vulkan::create_descriptor_set_layout(*device, descriptor_set_layout_mesh_bindings())),
           pipeline_layout_(vulkan::create_pipeline_layout(
                   *device,
-                  {CommonMemory::set_number(), MeshMemory::set_number()},
+                  {SharedMemory::set_number(), MeshMemory::set_number()},
                   {descriptor_set_layout_shared_, descriptor_set_layout_mesh_})),
-          vertex_shader_(*device_, code_mesh_triangle_lines_vert(), "main"),
-          geometry_shader_(*device_, code_mesh_triangle_lines_geom(), "main"),
-          fragment_shader_(*device_, code_mesh_triangle_lines_frag(), "main")
+          vertex_shader_(*device_, code_mesh_triangles_depth_vert(), "main")
 {
 }
 
-VkDescriptorSetLayout TriangleLinesProgram::descriptor_set_layout_shared() const
+VkDescriptorSetLayout TrianglesDepthProgram::descriptor_set_layout_shared() const
 {
         return descriptor_set_layout_shared_;
 }
 
-VkDescriptorSetLayout TriangleLinesProgram::descriptor_set_layout_mesh() const
+VkDescriptorSetLayout TrianglesDepthProgram::descriptor_set_layout_mesh() const
 {
         return descriptor_set_layout_mesh_;
 }
 
-VkPipelineLayout TriangleLinesProgram::pipeline_layout() const
+VkPipelineLayout TrianglesDepthProgram::pipeline_layout() const
 {
         return pipeline_layout_;
 }
 
-vulkan::handle::Pipeline TriangleLinesProgram::create_pipeline(
+vulkan::handle::Pipeline TrianglesDepthProgram::create_pipeline(
         const VkRenderPass render_pass,
         const VkSampleCountFlagBits sample_count,
-        const bool sample_shading,
-        const Region<2, int>& viewport,
-        const bool transparency) const
+        const Region<2, int>& viewport) const
 {
+        ASSERT(sample_count == VK_SAMPLE_COUNT_1_BIT);
+        ASSERT(viewport.is_positive());
+
         vulkan::GraphicsPipelineCreateInfo info;
 
         info.device = device_;
         info.render_pass = render_pass;
         info.sub_pass = 0;
         info.sample_count = sample_count;
-        info.sample_shading = sample_shading;
+        info.sample_shading = false;
         info.pipeline_layout = pipeline_layout_;
         info.viewport = viewport;
         info.primitive_topology = VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST;
+        info.depth_bias = true;
 
-        CommonConstants common_constants;
-        common_constants.set(transparency);
-        info.depth_write = !transparency;
+        const std::vector<const vulkan::Shader*> shaders = {&vertex_shader_};
+        info.shaders = &shaders;
 
-        const std::vector<const vulkan::Shader*> shaders = {&vertex_shader_, &geometry_shader_, &fragment_shader_};
-        const std::vector<const vulkan::SpecializationConstant*> constants = {
-                &common_constants, &common_constants, &common_constants};
+        const std::vector<const vulkan::SpecializationConstant*> constants = {nullptr};
+        info.constants = &constants;
+
         const std::vector<VkVertexInputBindingDescription> binding_descriptions =
                 TrianglesVertex::binding_descriptions();
-        const std::vector<VkVertexInputAttributeDescription> attribute_descriptions =
-                TrianglesVertex::attribute_descriptions_triangle_lines();
-
-        info.shaders = &shaders;
-        info.constants = &constants;
         info.binding_descriptions = &binding_descriptions;
+
+        const std::vector<VkVertexInputAttributeDescription> attribute_descriptions =
+                TrianglesVertex::attribute_descriptions_triangles_depth();
         info.attribute_descriptions = &attribute_descriptions;
 
         return vulkan::create_graphics_pipeline(info);

@@ -20,8 +20,9 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "object.h"
 
 #include "../buffers/ggx_f1_albedo.h"
-#include "../buffers/shaders.h"
-#include "shaders/volume.h"
+#include "../buffers/shader.h"
+#include "shaders/descriptors.h"
+#include "shaders/program_volume.h"
 
 #include <src/gpu/render_buffers.h>
 
