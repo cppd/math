@@ -66,14 +66,18 @@ float edge_factor()
 vec3 shade_light(const vec3 f0, const vec3 rho_ss, const vec3 n, const vec3 v)
 {
         const vec3 l = drawing.direction_to_light;
-        const vec3 s = shading_ggx_diffuse(mesh.roughness, f0, rho_ss, n, v, l);
+        const vec3 s = shading_ggx_diffuse(
+                mesh.roughness, f0, rho_ss, n, v, l, ggx_f1_albedo_cosine_roughness,
+                ggx_f1_albedo_cosine_weighted_average);
         return s;
 }
 
 vec3 shade_camera_light(const vec3 f0, const vec3 rho_ss, const vec3 n, const vec3 v)
 {
         const vec3 l = v;
-        const vec3 s = shading_ggx_diffuse(mesh.roughness, f0, rho_ss, n, v, l);
+        const vec3 s = shading_ggx_diffuse(
+                mesh.roughness, f0, rho_ss, n, v, l, ggx_f1_albedo_cosine_roughness,
+                ggx_f1_albedo_cosine_weighted_average);
         return s;
 }
 

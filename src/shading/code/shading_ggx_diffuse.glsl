@@ -21,21 +21,15 @@ Angelo Pesce, Michal Iwanicki, Sébastien Hillaire.
 Real-Time Rendering. Fourth Edition.
 CRC Press, 2018.
 
-9.5 Fresnel Reflectance
 9.6 Microgeometry
 9.7 Microfacet Theory
 9.8 BRDF Models for Surface Reflection
 */
 
 #include "shading_constants.glsl"
+#include "shading_fresnel.glsl"
+#include "shading_multiple_bounce.glsl"
 #include "shading_subsurface.glsl"
-
-// (9.16)
-// Schlick approximation of Fresnel reflectance
-vec3 shading_fresnel(const vec3 f0, const float h_l)
-{
-        return mix(f0, vec3(1), pow(1 - h_l, 5));
-}
 
 // (9.41)
 // GGX distribution
@@ -79,7 +73,9 @@ vec3 shading_ggx_diffuse(
         const vec3 rho_ss,
         const vec3 n,
         const vec3 v,
-        const vec3 l)
+        const vec3 l,
+        const sampler2D ggx_f1_albedo_cosine_roughness,
+        const sampler1D ggx_f1_albedo_cosine_weighted_average)
 {
         const float n_l = dot(n, l);
         if (n_l <= 0)
@@ -97,8 +93,12 @@ vec3 shading_ggx_diffuse(
         const float h_l = dot(h, l);
         const float n_h = dot(n, h);
 
-        const vec3 spec = shading_ggx_brdf(roughness, f0, n_v, n_l, n_h, h_l);
-        const vec3 diff = shading_diffuse_disney_ws(f0, rho_ss, roughness, n_l, n_v, h_l);
+        const vec3 ggx = shading_ggx_brdf(roughness, f0, n_v, n_l, n_h, h_l);
 
-        return n_l * (spec + diff);
+        const vec3 multiple_bounce = shading_ggx_multiple_bounce_surface_reflection(
+                f0, roughness, n_l, n_v, ggx_f1_albedo_cosine_roughness, ggx_f1_albedo_cosine_weighted_average);
+
+        const vec3 diffuse = shading_diffuse_disney_ws(f0, rho_ss, roughness, n_l, n_v, h_l);
+
+        return n_l * (ggx + multiple_bounce + diffuse);
 }

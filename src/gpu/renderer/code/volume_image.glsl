@@ -19,6 +19,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "shading_ggx_diffuse.glsl"
 #include "shading_metalness.glsl"
+#include "volume_common.glsl"
 
 const int ISOSURFACE_ITERATION_COUNT = 5;
 
@@ -136,7 +137,9 @@ vec3 shade(const vec3 p, const vec3 v, const vec3 l)
         const vec3 f0 = shading_compute_metalness_f0(volume.color, volume.metalness);
         const vec3 rho_ss = shading_compute_metalness_rho_ss(volume.color, volume.metalness);
 
-        return shading_ggx_diffuse(volume.roughness, f0, rho_ss, n, v, l);
+        return shading_ggx_diffuse(
+                volume.roughness, f0, rho_ss, n, v, l, ggx_f1_albedo_cosine_roughness,
+                ggx_f1_albedo_cosine_weighted_average);
 }
 
 vec4 volume_color(const vec3 p, const vec3 lighting_color)
