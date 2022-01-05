@@ -30,7 +30,8 @@ MeshRenderer::MeshRenderer(
         const vulkan::Device* const device,
         const bool sample_shading,
         const bool sampler_anisotropy,
-        const ShaderBuffers& buffers)
+        const ShaderBuffers& buffers,
+        const GgxF1Albedo& ggx_f1_albedo)
         : device_(*device),
           sample_shading_(sample_shading),
           //
@@ -40,7 +41,10 @@ MeshRenderer::MeshRenderer(
                   triangles_program_.descriptor_set_layout_shared(),
                   triangles_program_.descriptor_set_layout_shared_bindings(),
                   buffers.matrices_buffer(),
-                  buffers.drawing_buffer()),
+                  buffers.drawing_buffer(),
+                  ggx_f1_albedo.sampler(),
+                  ggx_f1_albedo.cosine_roughness(),
+                  ggx_f1_albedo.cosine_weighted_average()),
           //
           triangle_lines_program_(device),
           triangle_lines_common_memory_(
@@ -48,7 +52,10 @@ MeshRenderer::MeshRenderer(
                   triangle_lines_program_.descriptor_set_layout_shared(),
                   triangle_lines_program_.descriptor_set_layout_shared_bindings(),
                   buffers.matrices_buffer(),
-                  buffers.drawing_buffer()),
+                  buffers.drawing_buffer(),
+                  ggx_f1_albedo.sampler(),
+                  ggx_f1_albedo.cosine_roughness(),
+                  ggx_f1_albedo.cosine_weighted_average()),
           //
           normals_program_(device),
           normals_common_memory_(
@@ -56,7 +63,10 @@ MeshRenderer::MeshRenderer(
                   normals_program_.descriptor_set_layout_shared(),
                   normals_program_.descriptor_set_layout_shared_bindings(),
                   buffers.matrices_buffer(),
-                  buffers.drawing_buffer()),
+                  buffers.drawing_buffer(),
+                  ggx_f1_albedo.sampler(),
+                  ggx_f1_albedo.cosine_roughness(),
+                  ggx_f1_albedo.cosine_weighted_average()),
           //
           triangles_depth_program_(device),
           triangles_depth_common_memory_(
@@ -64,7 +74,10 @@ MeshRenderer::MeshRenderer(
                   triangles_depth_program_.descriptor_set_layout_shared(),
                   triangles_depth_program_.descriptor_set_layout_shared_bindings(),
                   buffers.shadow_matrices_buffer(),
-                  buffers.drawing_buffer()),
+                  buffers.drawing_buffer(),
+                  ggx_f1_albedo.sampler(),
+                  ggx_f1_albedo.cosine_roughness(),
+                  ggx_f1_albedo.cosine_weighted_average()),
           //
           points_program_(device),
           points_common_memory_(
@@ -72,7 +85,10 @@ MeshRenderer::MeshRenderer(
                   points_program_.descriptor_set_layout_shared(),
                   points_program_.descriptor_set_layout_shared_bindings(),
                   buffers.matrices_buffer(),
-                  buffers.drawing_buffer()),
+                  buffers.drawing_buffer(),
+                  ggx_f1_albedo.sampler(),
+                  ggx_f1_albedo.cosine_roughness(),
+                  ggx_f1_albedo.cosine_weighted_average()),
           //
           texture_sampler_(create_mesh_texture_sampler(*device, sampler_anisotropy)),
           shadow_sampler_(create_mesh_shadow_sampler(*device))

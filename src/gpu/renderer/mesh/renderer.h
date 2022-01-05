@@ -20,6 +20,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "depth_buffers.h"
 #include "object.h"
 
+#include "../buffers/ggx_f1_albedo.h"
 #include "../buffers/shaders.h"
 #include "shaders/descriptors.h"
 #include "shaders/normals.h"
@@ -95,7 +96,8 @@ public:
                 const vulkan::Device* device,
                 bool sample_shading,
                 bool sampler_anisotropy,
-                const ShaderBuffers& buffers);
+                const ShaderBuffers& buffers,
+                const GgxF1Albedo& ggx_f1_albedo);
 
         std::vector<vulkan::DescriptorSetLayoutAndBindings> mesh_layouts() const;
         std::vector<vulkan::DescriptorSetLayoutAndBindings> material_layouts() const;

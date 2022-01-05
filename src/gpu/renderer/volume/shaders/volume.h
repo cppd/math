@@ -35,8 +35,10 @@ class VolumeSharedMemory final
 
         static constexpr int DRAWING_BINDING = 0;
         static constexpr int DEPTH_IMAGE_BINDING = 1;
-        static constexpr int TRANSPARENCY_HEADS_BINDING = 2;
-        static constexpr int TRANSPARENCY_NODES_BINDING = 3;
+        static constexpr int GGX_F1_ALBEDO_COSINE_ROUGHNESS_BINDING = 2;
+        static constexpr int GGX_F1_ALBEDO_COSINE_WEIGHTED_AVERAGE_BINDING = 3;
+        static constexpr int TRANSPARENCY_HEADS_BINDING = 4;
+        static constexpr int TRANSPARENCY_NODES_BINDING = 5;
 
         vulkan::Descriptors descriptors_;
 
@@ -48,7 +50,10 @@ public:
                 const vulkan::Device& device,
                 VkDescriptorSetLayout descriptor_set_layout,
                 const std::vector<VkDescriptorSetLayoutBinding>& descriptor_set_layout_bindings,
-                const vulkan::Buffer& drawing);
+                const vulkan::Buffer& drawing,
+                VkSampler ggx_f1_albedo_sampler,
+                const vulkan::ImageView& ggx_f1_albedo_cosine_roughness,
+                const vulkan::ImageView& ggx_f1_albedo_cosine_weighted_average);
 
         VolumeSharedMemory(const VolumeSharedMemory&) = delete;
         VolumeSharedMemory& operator=(const VolumeSharedMemory&) = delete;

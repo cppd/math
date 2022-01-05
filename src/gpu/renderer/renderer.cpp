@@ -18,7 +18,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "renderer.h"
 
 #include "buffer_commands.h"
-#include "ggx_f1_albedo.h"
 #include "renderer_draw.h"
 #include "renderer_objects.h"
 #include "renderer_process.h"
@@ -26,6 +25,9 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "storage_volume.h"
 #include "viewport_transform.h"
 
+#include "buffers/ggx_f1_albedo.h"
+#include "buffers/shaders.h"
+#include "buffers/transparency.h"
 #include "mesh/object.h"
 #include "mesh/renderer.h"
 #include "volume/object.h"
@@ -425,8 +427,8 @@ public:
                           {graphics_queue_->family_index()},
                           *transfer_command_pool_,
                           *transfer_queue_),
-                  mesh_renderer_(device_, sample_shading, sampler_anisotropy, shader_buffers_),
-                  volume_renderer_(device_, sample_shading, shader_buffers_),
+                  mesh_renderer_(device_, sample_shading, sampler_anisotropy, shader_buffers_, ggx_f1_albedo_),
+                  volume_renderer_(device_, sample_shading, shader_buffers_, ggx_f1_albedo_),
                   renderer_objects_(
                           [this](const StorageMeshEvents& events)
                           {

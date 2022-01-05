@@ -19,6 +19,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "object.h"
 
+#include "../buffers/ggx_f1_albedo.h"
 #include "../buffers/shaders.h"
 #include "shaders/volume.h"
 
@@ -59,7 +60,11 @@ class VolumeRenderer
         void create_command_buffers_fragments(VkCommandPool graphics_command_pool);
 
 public:
-        VolumeRenderer(const vulkan::Device* device, bool sample_shading, const ShaderBuffers& buffers);
+        VolumeRenderer(
+                const vulkan::Device* device,
+                bool sample_shading,
+                const ShaderBuffers& buffers,
+                const GgxF1Albedo& ggx_f1_albedo);
 
         std::vector<vulkan::DescriptorSetLayoutAndBindings> image_layouts() const;
         VkSampler image_sampler() const;

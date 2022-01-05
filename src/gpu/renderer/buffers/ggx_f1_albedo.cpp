@@ -118,17 +118,17 @@ GgxF1Albedo::GgxF1Albedo(
 {
 }
 
-const vulkan::ImageWithMemory& GgxF1Albedo::cosine_roughness() const
+const vulkan::ImageView& GgxF1Albedo::cosine_roughness() const
 {
-        return cosine_roughness_;
+        return cosine_roughness_.image_view();
 }
 
-const vulkan::ImageWithMemory& GgxF1Albedo::cosine_weighted_average() const
+const vulkan::ImageView& GgxF1Albedo::cosine_weighted_average() const
 {
-        return cosine_weighted_average_;
+        return cosine_weighted_average_.image_view();
 }
 
-const vulkan::handle::Sampler& GgxF1Albedo::sampler() const
+VkSampler GgxF1Albedo::sampler() const
 {
         return sampler_;
 }

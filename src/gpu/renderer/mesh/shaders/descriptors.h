@@ -53,11 +53,13 @@ class CommonMemory final
         static constexpr int DRAWING_BINDING = 1;
         static constexpr int SHADOW_BINDING = 2;
         static constexpr int OBJECTS_BINDING = 3;
+        static constexpr int GGX_F1_ALBEDO_COSINE_ROUGHNESS_BINDING = 4;
+        static constexpr int GGX_F1_ALBEDO_COSINE_WEIGHTED_AVERAGE_BINDING = 5;
 
-        static constexpr int TRANSPARENCY_HEADS_BINDING = 4;
-        static constexpr int TRANSPARENCY_HEADS_SIZE_BINDING = 5;
-        static constexpr int TRANSPARENCY_COUNTERS_BINDING = 6;
-        static constexpr int TRANSPARENCY_NODES_BINDING = 7;
+        static constexpr int TRANSPARENCY_HEADS_BINDING = 6;
+        static constexpr int TRANSPARENCY_HEADS_SIZE_BINDING = 7;
+        static constexpr int TRANSPARENCY_COUNTERS_BINDING = 8;
+        static constexpr int TRANSPARENCY_NODES_BINDING = 9;
 
         vulkan::Descriptors descriptors_;
 
@@ -74,7 +76,10 @@ public:
                 VkDescriptorSetLayout descriptor_set_layout,
                 const std::vector<VkDescriptorSetLayoutBinding>& descriptor_set_layout_bindings,
                 const vulkan::Buffer& matrices,
-                const vulkan::Buffer& drawing);
+                const vulkan::Buffer& drawing,
+                VkSampler ggx_f1_albedo_sampler,
+                const vulkan::ImageView& ggx_f1_albedo_cosine_roughness,
+                const vulkan::ImageView& ggx_f1_albedo_cosine_weighted_average);
 
         const VkDescriptorSet& descriptor_set() const;
 

@@ -58,16 +58,17 @@ drawing;
 layout(set = 0, binding = 2) uniform sampler2D shadow_texture;
 layout(set = 0, binding = 3, r32ui) uniform writeonly uimage2D object_image;
 
-//
+layout(set = 0, binding = 4) uniform sampler2D ggx_f1_albedo_cosine_roughness;
+layout(set = 0, binding = 5) uniform sampler1D ggx_f1_albedo_cosine_weighted_average;
 
-layout(set = 0, binding = 4, r32ui) uniform restrict uimage2DMS transparency_heads;
-layout(set = 0, binding = 5, r32ui) uniform restrict uimage2DMS transparency_heads_size;
-layout(set = 0, binding = 6, std430) restrict buffer TransparencyCounters
+layout(set = 0, binding = 6, r32ui) uniform restrict uimage2DMS transparency_heads;
+layout(set = 0, binding = 7, r32ui) uniform restrict uimage2DMS transparency_heads_size;
+layout(set = 0, binding = 8, std430) restrict buffer TransparencyCounters
 {
         uint transparency_node_counter;
         uint transparency_overload_counter;
 };
-layout(set = 0, binding = 7, std430) restrict writeonly buffer TransparencyNodes
+layout(set = 0, binding = 9, std430) restrict writeonly buffer TransparencyNodes
 {
         TransparencyNode transparency_nodes[];
 };

@@ -89,7 +89,6 @@ vulkan::Descriptors TrianglesMaterialMemory::create(
                         buffer_info.range = material.buffer_size;
 
                         infos.emplace_back(buffer_info);
-
                         bindings.push_back(MATERIAL_BINDING);
                 }
                 {
@@ -99,7 +98,6 @@ vulkan::Descriptors TrianglesMaterialMemory::create(
                         image_info.sampler = sampler;
 
                         infos.emplace_back(image_info);
-
                         bindings.push_back(TEXTURE_BINDING);
                 }
                 descriptors.update_descriptor_set(i, bindings, infos);

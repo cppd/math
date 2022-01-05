@@ -46,8 +46,11 @@ drawing;
 
 layout(set = 0, binding = 1) uniform sampler2DMS depth_image;
 
-layout(set = 0, binding = 2, r32ui) uniform restrict readonly uimage2DMS transparency_heads;
-layout(set = 0, binding = 3, std430) restrict readonly buffer TransparencyNodes
+layout(set = 0, binding = 2) uniform sampler2D ggx_f1_albedo_cosine_roughness;
+layout(set = 0, binding = 3) uniform sampler1D ggx_f1_albedo_cosine_weighted_average;
+
+layout(set = 0, binding = 4, r32ui) uniform restrict readonly uimage2DMS transparency_heads;
+layout(set = 0, binding = 5, std430) restrict readonly buffer TransparencyNodes
 {
         TransparencyNode transparency_nodes[];
 };

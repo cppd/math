@@ -50,6 +50,26 @@ std::vector<VkDescriptorSetLayoutBinding> VolumeSharedMemory::descriptor_set_lay
         }
         {
                 VkDescriptorSetLayoutBinding b = {};
+                b.binding = GGX_F1_ALBEDO_COSINE_ROUGHNESS_BINDING;
+                b.descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+                b.descriptorCount = 1;
+                b.stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
+                b.pImmutableSamplers = nullptr;
+
+                bindings.push_back(b);
+        }
+        {
+                VkDescriptorSetLayoutBinding b = {};
+                b.binding = GGX_F1_ALBEDO_COSINE_WEIGHTED_AVERAGE_BINDING;
+                b.descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+                b.descriptorCount = 1;
+                b.stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
+                b.pImmutableSamplers = nullptr;
+
+                bindings.push_back(b);
+        }
+        {
+                VkDescriptorSetLayoutBinding b = {};
                 b.binding = TRANSPARENCY_HEADS_BINDING;
                 b.descriptorType = VK_DESCRIPTOR_TYPE_STORAGE_IMAGE;
                 b.descriptorCount = 1;
@@ -75,9 +95,17 @@ VolumeSharedMemory::VolumeSharedMemory(
         const vulkan::Device& device,
         const VkDescriptorSetLayout descriptor_set_layout,
         const std::vector<VkDescriptorSetLayoutBinding>& descriptor_set_layout_bindings,
-        const vulkan::Buffer& drawing)
+        const vulkan::Buffer& drawing,
+        VkSampler ggx_f1_albedo_sampler,
+        const vulkan::ImageView& ggx_f1_albedo_cosine_roughness,
+        const vulkan::ImageView& ggx_f1_albedo_cosine_weighted_average)
         : descriptors_(device, 1, descriptor_set_layout, descriptor_set_layout_bindings)
 {
+        ASSERT(ggx_f1_albedo_cosine_roughness.has_usage(VK_IMAGE_USAGE_SAMPLED_BIT));
+        ASSERT(ggx_f1_albedo_cosine_roughness.sample_count() == VK_SAMPLE_COUNT_1_BIT);
+        ASSERT(ggx_f1_albedo_cosine_weighted_average.has_usage(VK_IMAGE_USAGE_SAMPLED_BIT));
+        ASSERT(ggx_f1_albedo_cosine_weighted_average.sample_count() == VK_SAMPLE_COUNT_1_BIT);
+
         std::vector<std::variant<VkDescriptorBufferInfo, VkDescriptorImageInfo>> infos;
         std::vector<std::uint32_t> bindings;
 
@@ -88,8 +116,25 @@ VolumeSharedMemory::VolumeSharedMemory(
                 buffer_info.range = drawing.size();
 
                 infos.emplace_back(buffer_info);
-
                 bindings.push_back(DRAWING_BINDING);
+        }
+        {
+                VkDescriptorImageInfo image_info = {};
+                image_info.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
+                image_info.imageView = ggx_f1_albedo_cosine_roughness;
+                image_info.sampler = ggx_f1_albedo_sampler;
+
+                infos.emplace_back(image_info);
+                bindings.push_back(GGX_F1_ALBEDO_COSINE_ROUGHNESS_BINDING);
+        }
+        {
+                VkDescriptorImageInfo image_info = {};
+                image_info.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
+                image_info.imageView = ggx_f1_albedo_cosine_weighted_average;
+                image_info.sampler = ggx_f1_albedo_sampler;
+
+                infos.emplace_back(image_info);
+                bindings.push_back(GGX_F1_ALBEDO_COSINE_WEIGHTED_AVERAGE_BINDING);
         }
 
         descriptors_.update_descriptor_set(0, bindings, infos);
@@ -139,7 +184,6 @@ void VolumeSharedMemory::set_transparency(const vulkan::ImageView& heads, const 
                 buffer_info.range = nodes.size();
 
                 infos.emplace_back(buffer_info);
-
                 bindings.push_back(TRANSPARENCY_NODES_BINDING);
         }
 
@@ -217,7 +261,6 @@ vulkan::Descriptors VolumeImageMemory::create(
                 buffer_info.range = create_info.buffer_coordinates_size;
 
                 infos.emplace_back(buffer_info);
-
                 bindings.push_back(BUFFER_COORDINATES_BINDING);
         }
         {
@@ -227,7 +270,6 @@ vulkan::Descriptors VolumeImageMemory::create(
                 buffer_info.range = create_info.buffer_volume_size;
 
                 infos.emplace_back(buffer_info);
-
                 bindings.push_back(BUFFER_VOLUME_BINDING);
         }
         {
@@ -237,7 +279,6 @@ vulkan::Descriptors VolumeImageMemory::create(
                 image_info.sampler = image_sampler;
 
                 infos.emplace_back(image_info);
-
                 bindings.push_back(IMAGE_BINDING);
         }
         {
@@ -247,7 +288,6 @@ vulkan::Descriptors VolumeImageMemory::create(
                 image_info.sampler = transfer_function_sampler;
 
                 infos.emplace_back(image_info);
-
                 bindings.push_back(TRANSFER_FUNCTION_BINDING);
         }
 
