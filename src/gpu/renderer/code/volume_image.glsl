@@ -23,37 +23,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 const int ISOSURFACE_ITERATION_COUNT = 5;
 
-layout(set = 1, binding = 0, std140) uniform Coordinates
-{
-        mat4 inverse_mvp_matrix;
-        vec4 third_row_of_mvp;
-        vec4 clip_plane_equation;
-        vec3 gradient_h;
-        mat3 normal_matrix;
-}
-coordinates;
-
-layout(set = 1, binding = 1, std140) uniform Volume
-{
-        float window_offset;
-        float window_scale;
-        float volume_alpha_coefficient;
-        float isosurface_alpha;
-        bool isosurface;
-        float isovalue;
-        vec3 color;
-        bool color_volume;
-        float ambient;
-        float metalness;
-        float roughness;
-}
-volume;
-
-layout(set = 1, binding = 2) uniform sampler3D image;
-layout(set = 1, binding = 3) uniform sampler1D transfer_function;
-
-//
-
 bool is_volume()
 {
         return volume.color_volume || !volume.isosurface;

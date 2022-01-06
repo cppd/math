@@ -18,31 +18,10 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #ifndef VOLUME_COMMON
 #define VOLUME_COMMON
 
+#include "drawing_buffer.glsl"
 #include "transparency.glsl"
 
-layout(set = 0, binding = 0, std140) uniform Drawing
-{
-        vec3 lighting_color;
-        vec3 background_color;
-        vec3 wireframe_color;
-        vec3 normal_color_positive;
-        vec3 normal_color_negative;
-        float normal_length;
-        bool show_materials;
-        bool show_wireframe;
-        bool show_shadow;
-        bool show_fog;
-        bool show_smooth;
-        vec3 clip_plane_color;
-        vec4 clip_plane_equation;
-        bool clip_plane_enabled;
-        vec3 direction_to_light;
-        vec3 direction_to_camera;
-        vec2 viewport_center;
-        vec2 viewport_factor;
-        uint transparency_max_node_count;
-}
-drawing;
+DRAWING_BUFFER(0, 0);
 
 layout(set = 0, binding = 1) uniform sampler2DMS depth_image;
 
@@ -50,9 +29,41 @@ layout(set = 0, binding = 2) uniform sampler2D ggx_f1_albedo_cosine_roughness;
 layout(set = 0, binding = 3) uniform sampler1D ggx_f1_albedo_cosine_weighted_average;
 
 layout(set = 0, binding = 4, r32ui) uniform restrict readonly uimage2DMS transparency_heads;
-layout(set = 0, binding = 5, std430) restrict readonly buffer TransparencyNodes
+layout(set = 0, binding = 5, std430) buffer restrict readonly TransparencyNodes
 {
         TransparencyNode transparency_nodes[];
 };
+
+//
+
+layout(set = 1, binding = 0, std140) uniform restrict Coordinates
+{
+        mat4 inverse_mvp_matrix;
+        vec4 third_row_of_mvp;
+        vec4 clip_plane_equation;
+        vec3 gradient_h;
+        mat3 normal_matrix;
+}
+coordinates;
+
+layout(set = 1, binding = 1, std140) uniform restrict Volume
+{
+        float window_offset;
+        float window_scale;
+        float volume_alpha_coefficient;
+        float isosurface_alpha;
+        bool isosurface;
+        float isovalue;
+        vec3 color;
+        bool color_volume;
+        float ambient;
+        float metalness;
+        float roughness;
+}
+volume;
+
+layout(set = 1, binding = 2) uniform sampler3D image;
+
+layout(set = 1, binding = 3) uniform sampler1D transfer_function;
 
 #endif
