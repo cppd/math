@@ -136,7 +136,7 @@ class VolumeObject final : public std::enable_shared_from_this<VolumeObject<N>>
         bool isosurface_ = false;
         float isovalue_ = 0.5f;
         color::Color color_{RGB8(220, 255, 220)};
-        float ambient_ = 0.2;
+        float ambient_ = 0.1;
         float metalness_ = 0.05;
         float roughness_ = 0.3;
         bool visible_ = false;

@@ -127,7 +127,7 @@ class MeshObject final : public std::enable_shared_from_this<MeshObject<N>>
         Matrix<N + 1, N + 1, double> matrix_;
         float alpha_ = 1;
         color::Color color_{RGB8(220, 255, 220)};
-        float ambient_ = 0.2;
+        float ambient_ = 0.1;
         float metalness_ = 0.05;
         float roughness_ = 0.3;
         bool visible_ = false;
