@@ -75,6 +75,11 @@ public:
         {
                 return color_;
         }
+
+        std::string description() const
+        {
+                return "roughness = " + to_string(roughness_);
+        }
 };
 
 template <std::size_t N, typename T, typename Color, typename RandomEngine>
@@ -94,7 +99,13 @@ void test_brdf_white(const unsigned sample_count, RandomEngine& engine)
         check_color_less(color_importance, brdf.color());
 
         constexpr double RELATIVE_ERROR = 0.25;
-        check_uniform_importance_equal(color_uniform, color_importance, RELATIVE_ERROR);
+
+        check_uniform_importance_equal(
+                color_uniform, color_importance, RELATIVE_ERROR,
+                [&]
+                {
+                        return brdf.description();
+                });
 }
 
 template <std::size_t N, typename T, typename Color, typename RandomEngine>
@@ -114,7 +125,13 @@ void test_brdf_random(const unsigned sample_count, RandomEngine& engine)
         check_color_range(color_importance);
 
         constexpr double RELATIVE_ERROR = 0.25;
-        check_uniform_importance_equal(color_uniform, color_importance, RELATIVE_ERROR);
+
+        check_uniform_importance_equal(
+                color_uniform, color_importance, RELATIVE_ERROR,
+                [&]
+                {
+                        return brdf.description();
+                });
 }
 
 template <std::size_t N, typename T, typename Color, typename RandomEngine>

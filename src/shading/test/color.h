@@ -86,20 +86,30 @@ void check_color_range(const Color& directional_albedo)
         }
 }
 
-template <typename Color>
+template <typename Color, typename DescriptionFunction>
 void check_uniform_importance_equal(
         const Color& uniform_sampling_albedo,
         const Color& importance_sampling_albedo,
-        const double relative_error)
+        const double relative_error,
+        const DescriptionFunction& description)
 {
         check_color(uniform_sampling_albedo, "Uniform sampling directional albedo");
         check_color(importance_sampling_albedo, "Importance sampling directional albedo");
 
         if (!uniform_sampling_albedo.equal_to_relative(importance_sampling_albedo, relative_error))
         {
-                error("BRDF error, uniform sampling directional albedo"
-                      " is not equal to importance sampling directional albedo\n"
-                      + to_string(uniform_sampling_albedo) + "\n" + to_string(importance_sampling_albedo));
+                std::string s;
+                s += "BRDF error, uniform sampling directional albedo"
+                     " is not equal to importance sampling directional albedo\n";
+                s += to_string(uniform_sampling_albedo);
+                s += "\n";
+                s += to_string(importance_sampling_albedo);
+                if (const std::string& d = description(); !d.empty())
+                {
+                        s += "\n";
+                        s += d;
+                }
+                error(s);
         }
 }
 }

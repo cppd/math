@@ -97,7 +97,12 @@ void test_brdf(RandomEngine& engine)
         check_color_equal(color_importance, brdf.color());
 
         constexpr double RELATIVE_ERROR = 0.01;
-        check_uniform_importance_equal(color_uniform, color_importance, RELATIVE_ERROR);
+        check_uniform_importance_equal(
+                color_uniform, color_importance, RELATIVE_ERROR,
+                [&]
+                {
+                        return "";
+                });
 
         LOG(std::string(Color::name()) + ", " + to_string(N) + "D, " + type_name<T>() + ", PDF integral");
         const T integral = compute::directional_pdf_integral(brdf, n, v, SAMPLE_COUNT, engine);
