@@ -76,6 +76,11 @@ public:
         {
                 return color_;
         }
+
+        std::string description() const
+        {
+                return space_name(N);
+        }
 };
 
 template <std::size_t N, typename T, typename Color, typename RandomEngine>
@@ -101,7 +106,7 @@ void test_brdf(RandomEngine& engine)
                 color_uniform, color_importance, RELATIVE_ERROR,
                 [&]
                 {
-                        return "";
+                        return brdf.description();
                 });
 
         LOG(std::string(Color::name()) + ", " + to_string(N) + "D, " + type_name<T>() + ", PDF integral");

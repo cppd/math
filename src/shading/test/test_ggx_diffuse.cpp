@@ -78,7 +78,7 @@ public:
 
         std::string description() const
         {
-                return "roughness = " + to_string(roughness_);
+                return space_name(N) + ", roughness = " + to_string(roughness_);
         }
 };
 
