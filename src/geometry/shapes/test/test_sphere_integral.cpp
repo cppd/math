@@ -369,7 +369,7 @@ void test_sphere_integral()
 {
         test_integrate_power_cosine<float>(1e-3);
         test_integrate_power_cosine<double>(1e-12);
-        test_integrate_power_cosine<long double>(1e-16);
+        test_integrate_power_cosine<long double>(1e-15);
 
         compare_with_gamma<float>(1e-3);
         compare_with_gamma<double>(1e-12);
