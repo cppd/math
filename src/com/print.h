@@ -211,6 +211,27 @@ std::string to_string_digit_groups(const T v, const char s = '\x20') requires In
 
 //
 
+std::string to_string(char) = delete;
+std::string to_string(wchar_t) = delete;
+std::string to_string(char8_t) = delete;
+std::string to_string(char16_t) = delete;
+std::string to_string(char32_t) = delete;
+std::string to_string_digit_groups(char v, char) = delete;
+std::string to_string_digit_groups(wchar_t v, char) = delete;
+std::string to_string_digit_groups(char8_t v, char) = delete;
+std::string to_string_digit_groups(char16_t v, char) = delete;
+std::string to_string_digit_groups(char32_t v, char) = delete;
+
+template <typename T>
+std::string to_string(const T&) requires(std::is_pointer_v<T>) = delete;
+
+template <typename T>
+std::string to_string(std::basic_string<T>) = delete;
+template <typename T>
+std::string to_string(std::basic_string_view<T>) = delete;
+
+//
+
 template <typename T>
 std::string to_string(const T& data) requires requires
 {
@@ -231,25 +252,4 @@ std::string to_string(const T& data) requires requires
         }
         return res;
 }
-
-//
-
-std::string to_string(char) = delete;
-std::string to_string(wchar_t) = delete;
-std::string to_string(char8_t) = delete;
-std::string to_string(char16_t) = delete;
-std::string to_string(char32_t) = delete;
-std::string to_string_digit_groups(char v, char) = delete;
-std::string to_string_digit_groups(wchar_t v, char) = delete;
-std::string to_string_digit_groups(char8_t v, char) = delete;
-std::string to_string_digit_groups(char16_t v, char) = delete;
-std::string to_string_digit_groups(char32_t v, char) = delete;
-
-template <typename T>
-std::string to_string(const T&) requires(std::is_pointer_v<T>) = delete;
-
-template <typename T>
-std::string to_string(std::basic_string<T>) = delete;
-template <typename T>
-std::string to_string(std::basic_string_view<T>) = delete;
 }
