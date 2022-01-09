@@ -61,6 +61,50 @@ bool find_family(
         }
         return false;
 }
+
+int device_priority(const PhysicalDevice& physical_device)
+{
+        const VkPhysicalDeviceType type = physical_device.properties().properties_10.deviceType;
+
+        if (type == VK_PHYSICAL_DEVICE_TYPE_DISCRETE_GPU)
+        {
+                return 0;
+        }
+
+        if (type == VK_PHYSICAL_DEVICE_TYPE_INTEGRATED_GPU)
+        {
+                return 1;
+        }
+
+        if (type == VK_PHYSICAL_DEVICE_TYPE_CPU)
+        {
+                return 2;
+        }
+
+        return 3;
+}
+
+PhysicalDevice find_best_physical_device(std::vector<PhysicalDevice>&& physical_devices)
+{
+        if (physical_devices.empty())
+        {
+                error("Failed to find a suitable Vulkan physical device");
+        }
+
+        std::size_t index = 0;
+        auto priority = device_priority(physical_devices[0]);
+        for (std::size_t i = 1; i < physical_devices.size(); ++i)
+        {
+                const auto p = device_priority(physical_devices[i]);
+                if (p < priority)
+                {
+                        priority = p;
+                        index = i;
+                }
+        }
+
+        return std::move(physical_devices[index]);
+}
 }
 
 PhysicalDevice::PhysicalDevice(const VkPhysicalDevice physical_device, const VkSurfaceKHR surface)
@@ -222,17 +266,11 @@ PhysicalDevice create_physical_device(
 
         LOG(overview_physical_devices(instance, surface));
 
+        std::vector<PhysicalDevice> physical_devices;
+
         for (const VkPhysicalDevice device : find_physical_devices(instance))
         {
                 PhysicalDevice physical_device(device, surface);
-
-                if (physical_device.properties().properties_10.deviceType != VK_PHYSICAL_DEVICE_TYPE_DISCRETE_GPU
-                    && physical_device.properties().properties_10.deviceType != VK_PHYSICAL_DEVICE_TYPE_INTEGRATED_GPU
-                    && physical_device.properties().properties_10.deviceType != VK_PHYSICAL_DEVICE_TYPE_VIRTUAL_GPU
-                    && physical_device.properties().properties_10.deviceType != VK_PHYSICAL_DEVICE_TYPE_CPU)
-                {
-                        continue;
-                }
 
                 if (!check_features(required_features, physical_device.features()))
                 {
@@ -270,10 +308,15 @@ PhysicalDevice create_physical_device(
                         }
                 }
 
-                return physical_device;
+                physical_devices.push_back(std::move(physical_device));
         }
 
-        error("Failed to find a suitable Vulkan physical device");
+        PhysicalDevice physical_device = find_best_physical_device(std::move(physical_devices));
+
+        LOG(std::string("Vulkan physical device: ")
+            + static_cast<const char*>(physical_device.properties().properties_10.deviceName));
+
+        return physical_device;
 }
 
 Device create_device(
