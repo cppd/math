@@ -17,6 +17,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
+#include <optional>
 #include <string>
 #include <unordered_set>
 #include <vector>
@@ -29,6 +30,8 @@ struct DeviceProperties final
         VkPhysicalDeviceProperties properties_10;
         VkPhysicalDeviceVulkan11Properties properties_11;
         VkPhysicalDeviceVulkan12Properties properties_12;
+        std::optional<VkPhysicalDeviceAccelerationStructurePropertiesKHR> acceleration_structure;
+        std::optional<VkPhysicalDeviceRayTracingPipelinePropertiesKHR> ray_tracing_pipeline;
 };
 
 struct DeviceFeatures final
@@ -36,6 +39,8 @@ struct DeviceFeatures final
         VkPhysicalDeviceFeatures features_10{};
         VkPhysicalDeviceVulkan11Features features_11{};
         VkPhysicalDeviceVulkan12Features features_12{};
+        std::optional<VkPhysicalDeviceAccelerationStructureFeaturesKHR> acceleration_structure;
+        std::optional<VkPhysicalDeviceRayTracingPipelineFeaturesKHR> ray_tracing_pipeline;
 };
 
 struct DeviceInfo final
@@ -52,7 +57,9 @@ DeviceInfo find_physical_device_info(VkPhysicalDevice device);
 
 std::vector<bool> find_queue_family_presentation_support(VkSurfaceKHR surface, VkPhysicalDevice device);
 
-void add_device_features(VkPhysicalDeviceFeatures2* features_2, DeviceFeatures* features);
+void make_device_features(VkPhysicalDeviceFeatures2* features_2, DeviceFeatures* features);
+
+void add_device_feature_extensions(const DeviceFeatures& features, std::vector<std::string>* extensions);
 
 DeviceFeatures extract_device_features(const VkDeviceCreateInfo& create_info);
 }

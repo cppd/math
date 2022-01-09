@@ -71,45 +71,122 @@ std::unordered_set<std::string> find_extensions(const VkPhysicalDevice device)
         return extension_set;
 }
 
-DeviceProperties find_properties(const VkPhysicalDevice device)
+template <typename T>
+void connect(void**& last, T& s)
 {
-        VkPhysicalDeviceVulkan12Properties vulkan_12_properties = {};
-        vulkan_12_properties.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_VULKAN_1_2_PROPERTIES;
-        VkPhysicalDeviceVulkan11Properties vulkan_11_properties = {};
-        vulkan_11_properties.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_VULKAN_1_1_PROPERTIES;
-        vulkan_11_properties.pNext = &vulkan_12_properties;
-        VkPhysicalDeviceProperties2 properties_2 = {};
+        if (last)
+        {
+                *last = &s;
+        }
+        s.pNext = nullptr;
+        last = &s.pNext;
+}
+
+void set_nullptr_next(DeviceProperties* const properties)
+{
+        properties->properties_11.pNext = nullptr;
+        properties->properties_12.pNext = nullptr;
+        if (properties->acceleration_structure)
+        {
+                properties->acceleration_structure->pNext = nullptr;
+        }
+        if (properties->ray_tracing_pipeline)
+        {
+                properties->ray_tracing_pipeline->pNext = nullptr;
+        }
+}
+
+void set_nullptr_next(DeviceFeatures* const features)
+{
+        features->features_11.pNext = nullptr;
+        features->features_12.pNext = nullptr;
+        if (features->acceleration_structure)
+        {
+                features->acceleration_structure->pNext = nullptr;
+        }
+        if (features->ray_tracing_pipeline)
+        {
+                features->ray_tracing_pipeline->pNext = nullptr;
+        }
+}
+
+DeviceProperties find_properties(const VkPhysicalDevice device, const std::unordered_set<std::string>& extensions)
+{
+        DeviceProperties res;
+
+        void** last = nullptr;
+
+        VkPhysicalDeviceProperties2 properties_2;
         properties_2.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_PROPERTIES_2;
-        properties_2.pNext = &vulkan_11_properties;
+        connect(last, properties_2);
+
+        res.properties_11.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_VULKAN_1_1_PROPERTIES;
+        connect(last, res.properties_11);
+
+        res.properties_12.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_VULKAN_1_2_PROPERTIES;
+        connect(last, res.properties_12);
+
+        if (extensions.contains(VK_KHR_ACCELERATION_STRUCTURE_EXTENSION_NAME))
+        {
+                res.acceleration_structure.emplace();
+                res.acceleration_structure->sType =
+                        VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_ACCELERATION_STRUCTURE_PROPERTIES_KHR;
+                connect(last, *res.acceleration_structure);
+        }
+
+        if (extensions.contains(VK_KHR_RAY_TRACING_PIPELINE_EXTENSION_NAME))
+        {
+                res.ray_tracing_pipeline.emplace();
+                res.ray_tracing_pipeline->sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_RAY_TRACING_PIPELINE_PROPERTIES_KHR;
+                connect(last, *res.ray_tracing_pipeline);
+        }
+
         vkGetPhysicalDeviceProperties2(device, &properties_2);
 
-        DeviceProperties res;
         res.properties_10 = properties_2.properties;
-        res.properties_11 = vulkan_11_properties;
-        res.properties_11.pNext = nullptr;
-        res.properties_12 = vulkan_12_properties;
-        res.properties_12.pNext = nullptr;
+
+        set_nullptr_next(&res);
+
         return res;
 }
 
-DeviceFeatures find_features(const VkPhysicalDevice device)
+DeviceFeatures find_features(const VkPhysicalDevice device, const std::unordered_set<std::string>& extensions)
 {
-        VkPhysicalDeviceVulkan12Features vulkan_12_features = {};
-        vulkan_12_features.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_VULKAN_1_2_FEATURES;
-        VkPhysicalDeviceVulkan11Features vulkan_11_features = {};
-        vulkan_11_features.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_VULKAN_1_1_FEATURES;
-        vulkan_11_features.pNext = &vulkan_12_features;
-        VkPhysicalDeviceFeatures2 features_2 = {};
+        DeviceFeatures res;
+
+        void** last = nullptr;
+
+        VkPhysicalDeviceFeatures2 features_2;
         features_2.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_FEATURES_2;
-        features_2.pNext = &vulkan_11_features;
+        connect(last, features_2);
+
+        res.features_11.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_VULKAN_1_1_FEATURES;
+        connect(last, res.features_11);
+
+        res.features_12.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_VULKAN_1_2_FEATURES;
+        connect(last, res.features_12);
+
+        if (extensions.contains(VK_KHR_ACCELERATION_STRUCTURE_EXTENSION_NAME))
+        {
+                res.acceleration_structure.emplace();
+                res.acceleration_structure->sType =
+                        VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_ACCELERATION_STRUCTURE_FEATURES_KHR;
+                connect(last, *res.acceleration_structure);
+        }
+
+        if (extensions.contains(VK_KHR_RAY_TRACING_PIPELINE_EXTENSION_NAME))
+        {
+                res.ray_tracing_pipeline.emplace();
+                res.ray_tracing_pipeline->sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_RAY_TRACING_PIPELINE_FEATURES_KHR;
+                connect(last, *res.ray_tracing_pipeline);
+        }
+
         vkGetPhysicalDeviceFeatures2(device, &features_2);
 
-        DeviceFeatures res;
         res.features_10 = features_2.features;
-        res.features_11 = vulkan_11_features;
-        res.features_11.pNext = nullptr;
-        res.features_12 = vulkan_12_features;
-        res.features_12.pNext = nullptr;
+
+        set_nullptr_next(&res);
+
         return res;
 }
 
@@ -127,6 +204,62 @@ std::vector<VkQueueFamilyProperties> find_queue_families(const VkPhysicalDevice 
         vkGetPhysicalDeviceQueueFamilyProperties(device, &count, queue_families.data());
 
         return queue_families;
+}
+
+void extract_feature(
+        const VkStructureType type,
+        const void** const ptr,
+        int* const required_feature_count,
+        DeviceFeatures* const features)
+{
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wswitch"
+        switch (type)
+        {
+        case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_FEATURES_2:
+        {
+                ++(*required_feature_count);
+                VkPhysicalDeviceFeatures2 features_2;
+                std::memcpy(&features_2, *ptr, sizeof(VkPhysicalDeviceFeatures2));
+                *ptr = features_2.pNext;
+                features->features_10 = features_2.features;
+                return;
+        }
+        case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_VULKAN_1_1_FEATURES:
+        {
+                ++(*required_feature_count);
+                std::memcpy(&features->features_11, *ptr, sizeof(VkPhysicalDeviceVulkan11Features));
+                *ptr = features->features_11.pNext;
+                return;
+        }
+        case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_VULKAN_1_2_FEATURES:
+        {
+                ++(*required_feature_count);
+                std::memcpy(&features->features_12, *ptr, sizeof(VkPhysicalDeviceVulkan12Features));
+                *ptr = features->features_12.pNext;
+                return;
+        }
+        case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_ACCELERATION_STRUCTURE_FEATURES_KHR:
+        {
+                features->acceleration_structure.emplace();
+                std::memcpy(
+                        &*features->acceleration_structure, *ptr,
+                        sizeof(VkPhysicalDeviceAccelerationStructureFeaturesKHR));
+                *ptr = features->acceleration_structure->pNext;
+                return;
+        }
+        case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_RAY_TRACING_PIPELINE_FEATURES_KHR:
+        {
+                features->ray_tracing_pipeline.emplace();
+                std::memcpy(
+                        &*features->ray_tracing_pipeline, *ptr, sizeof(VkPhysicalDeviceRayTracingPipelineFeaturesKHR));
+                *ptr = features->ray_tracing_pipeline->pNext;
+                return;
+        }
+        }
+#pragma GCC diagnostic pop
+
+        error("Unknown device create info type " + to_string(enum_to_int(type)));
 }
 }
 
@@ -184,8 +317,8 @@ DeviceInfo find_physical_device_info(const VkPhysicalDevice device)
 
         DeviceInfo info;
         info.extensions = find_extensions(device);
-        info.properties = find_properties(device);
-        info.features = find_features(device);
+        info.properties = find_properties(device, info.extensions);
+        info.features = find_features(device, info.extensions);
         info.queue_families = find_queue_families(device);
         return info;
 }
@@ -213,79 +346,82 @@ std::vector<bool> find_queue_family_presentation_support(const VkSurfaceKHR surf
         return presentation_support;
 }
 
-void add_device_features(VkPhysicalDeviceFeatures2* const features_2, DeviceFeatures* const features)
+void make_device_features(VkPhysicalDeviceFeatures2* const features_2, DeviceFeatures* const features)
 {
-        *features_2 = {};
-        features_2->sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_FEATURES_2;
+        void** last = nullptr;
 
+        features_2->sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_FEATURES_2;
         features_2->features = features->features_10;
-        features_2->pNext = &features->features_11;
+        connect(last, *features_2);
 
         features->features_11.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_VULKAN_1_1_FEATURES;
-        features->features_11.pNext = &features->features_12;
+        connect(last, features->features_11);
 
         features->features_12.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_VULKAN_1_2_FEATURES;
-        features->features_12.pNext = nullptr;
+        connect(last, features->features_12);
+
+        if (features->acceleration_structure)
+        {
+                features->acceleration_structure->sType =
+                        VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_ACCELERATION_STRUCTURE_FEATURES_KHR;
+                connect(last, *features->acceleration_structure);
+        }
+
+        if (features->ray_tracing_pipeline)
+        {
+                features->ray_tracing_pipeline->sType =
+                        VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_RAY_TRACING_PIPELINE_FEATURES_KHR;
+                connect(last, *features->ray_tracing_pipeline);
+        }
+}
+
+void add_device_feature_extensions(const DeviceFeatures& features, std::vector<std::string>* extensions)
+{
+        const auto add_acceleration_structure_extensions = [&]
+        {
+                extensions->emplace_back(VK_KHR_DEFERRED_HOST_OPERATIONS_EXTENSION_NAME);
+                extensions->emplace_back(VK_KHR_ACCELERATION_STRUCTURE_EXTENSION_NAME);
+        };
+
+        if (features.ray_tracing_pipeline)
+        {
+                add_acceleration_structure_extensions();
+                extensions->emplace_back(VK_KHR_RAY_TRACING_PIPELINE_EXTENSION_NAME);
+        }
+        else if (features.acceleration_structure)
+        {
+                add_acceleration_structure_extensions();
+        }
 }
 
 DeviceFeatures extract_device_features(const VkDeviceCreateInfo& create_info)
 {
         DeviceFeatures features;
 
-        bool features_10 = false;
-        bool features_11 = false;
-        bool features_12 = false;
+        std::unordered_set<VkStructureType> found_features;
 
         const void* ptr = create_info.pNext;
+        int required_feature_count = 0;
 
         while (ptr)
         {
                 VkStructureType type;
                 std::memcpy(&type, ptr, sizeof(VkStructureType));
-                if (type == VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_FEATURES_2)
+
+                if (!found_features.insert(type).second)
                 {
-                        if (features_10)
-                        {
-                                error("Unique device features required");
-                        }
-                        features_10 = true;
-                        VkPhysicalDeviceFeatures2 features_2;
-                        std::memcpy(&features_2, ptr, sizeof(VkPhysicalDeviceFeatures2));
-                        ptr = features_2.pNext;
-                        features.features_10 = features_2.features;
+                        error("Unique device features required");
                 }
-                else if (type == VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_VULKAN_1_1_FEATURES)
-                {
-                        if (features_11)
-                        {
-                                error("Unique device features required");
-                        }
-                        features_11 = true;
-                        std::memcpy(&features.features_11, ptr, sizeof(VkPhysicalDeviceVulkan11Features));
-                        ptr = features.features_11.pNext;
-                        features.features_11.pNext = nullptr;
-                }
-                else if (type == VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_VULKAN_1_2_FEATURES)
-                {
-                        if (features_12)
-                        {
-                                error("Unique device features required");
-                        }
-                        features_12 = true;
-                        std::memcpy(&features.features_12, ptr, sizeof(VkPhysicalDeviceVulkan12Features));
-                        ptr = features.features_12.pNext;
-                        features.features_12.pNext = nullptr;
-                }
-                else
-                {
-                        error("Unknown device create info type " + to_string(enum_to_int(type)));
-                }
+
+                extract_feature(type, &ptr, &required_feature_count, &features);
         }
 
-        if (!features_10 || !features_11 || !features_12)
+        if (required_feature_count != 3)
         {
-                error("Not all device features specified for device creation");
+                error("All required device features are not specified for device creation");
         }
+
+        set_nullptr_next(&features);
 
         return features;
 }

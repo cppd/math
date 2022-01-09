@@ -107,6 +107,46 @@ PhysicalDevice find_best_physical_device(std::vector<PhysicalDevice>&& physical_
 
         return std::move(physical_devices[best_i]);
 }
+
+void check_queue_families(
+        const PhysicalDevice& physical_device,
+        const std::unordered_map<std::uint32_t, std::uint32_t>& queue_families)
+{
+        if (queue_families.empty())
+        {
+                error("No queue families for device creation");
+        }
+
+        if (!std::all_of(
+                    queue_families.cbegin(), queue_families.cend(),
+                    [&](const auto& v)
+                    {
+                            return v.first < physical_device.queue_families().size();
+                    }))
+        {
+                error("Error queue families");
+        }
+
+        if (!std::all_of(
+                    queue_families.cbegin(), queue_families.cend(),
+                    [](const auto& v)
+                    {
+                            return v.second > 0;
+                    }))
+        {
+                error("Error queue families");
+        }
+
+        if (!std::all_of(
+                    queue_families.cbegin(), queue_families.cend(),
+                    [&](const auto& v)
+                    {
+                            return v.second <= physical_device.queue_families()[v.first].queueCount;
+                    }))
+        {
+                error("Error queue families");
+        }
+}
 }
 
 PhysicalDevice::PhysicalDevice(const VkPhysicalDevice physical_device, const VkSurfaceKHR surface)
@@ -341,41 +381,7 @@ Device create_device(
         const DeviceFeatures& required_features,
         const DeviceFeatures& optional_features)
 {
-        sort_and_unique(&required_extensions);
-
-        for (const std::string& extension : required_extensions)
-        {
-                if (!physical_device->extensions().contains(extension))
-                {
-                        error("Vulkan physical device does not support extension " + extension);
-                }
-        }
-
-        ASSERT(std::all_of(
-                queue_families.cbegin(), queue_families.cend(),
-                [&](const auto& v)
-                {
-                        return v.first < physical_device->queue_families().size();
-                }));
-
-        ASSERT(std::all_of(
-                queue_families.cbegin(), queue_families.cend(),
-                [](const auto& v)
-                {
-                        return v.second > 0;
-                }));
-
-        ASSERT(std::all_of(
-                queue_families.cbegin(), queue_families.cend(),
-                [&](const auto& v)
-                {
-                        return v.second <= physical_device->queue_families()[v.first].queueCount;
-                }));
-
-        if (queue_families.empty())
-        {
-                error("No queue families for device creation");
-        }
+        check_queue_families(*physical_device, queue_families);
 
         std::vector<std::vector<float>> queue_priorities(queue_families.size());
         std::vector<VkDeviceQueueCreateInfo> queue_create_infos(queue_families.size());
@@ -400,13 +406,24 @@ Device create_device(
         create_info.queueCreateInfoCount = queue_create_infos.size();
         create_info.pQueueCreateInfos = queue_create_infos.data();
 
+        DeviceFeatures features = make_features(required_features, optional_features, physical_device->features());
+
+        add_device_feature_extensions(features, &required_extensions);
+        sort_and_unique(&required_extensions);
+        for (const std::string& extension : required_extensions)
+        {
+                if (!physical_device->extensions().contains(extension))
+                {
+                        error("Vulkan physical device does not support extension " + extension);
+                }
+        }
+
         const std::vector<const char*> extensions = const_char_pointer_vector(required_extensions);
         create_info.enabledExtensionCount = extensions.size();
         create_info.ppEnabledExtensionNames = extensions.data();
 
-        DeviceFeatures features = make_features(required_features, optional_features, physical_device->features());
         VkPhysicalDeviceFeatures2 features_2;
-        add_device_features(&features_2, &features);
+        make_device_features(&features_2, &features);
         create_info.pNext = &features_2;
 
         return Device(physical_device, create_info);
