@@ -99,7 +99,7 @@ void extensions(const PhysicalDevice& device, const std::size_t device_node, Str
         const std::size_t node = tree->add(device_node, "Extensions");
         try
         {
-                for (const std::string& e : sorted(device.supported_extensions()))
+                for (const std::string& e : sorted(device.extensions()))
                 {
                         tree->add(node, e);
                 }
@@ -295,8 +295,8 @@ std::string overview_physical_devices(const VkInstance instance, const VkSurface
                 driver_info(physical_device, node, &tree);
                 conformance_version(physical_device, node, &tree);
                 extensions(physical_device, node, &tree);
-                features(physical_device, node, &tree);
                 properties(physical_device, node, &tree);
+                features(physical_device, node, &tree);
                 queue_families(physical_device, node, &tree);
         }
 

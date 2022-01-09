@@ -32,71 +32,28 @@ namespace ns::vulkan
 {
 namespace
 {
-std::uint32_t find_device_extension_count(const VkPhysicalDevice device)
+void check_api_version(const VkPhysicalDevice device)
+{
+        VkPhysicalDeviceProperties properties;
+        vkGetPhysicalDeviceProperties(device, &properties);
+
+        if (api_version_suitable(properties.apiVersion))
+        {
+                return;
+        }
+
+        std::ostringstream oss;
+        oss << "Vulkan physical device version ";
+        oss << api_version_to_string(properties.apiVersion);
+        oss << " is not supported, minimum required version is ";
+        oss << api_version_to_string(API_VERSION);
+        error(oss.str());
+}
+
+std::unordered_set<std::string> find_extensions(const VkPhysicalDevice device)
 {
         std::uint32_t count;
         VULKAN_CHECK(vkEnumerateDeviceExtensionProperties(device, nullptr, &count, nullptr));
-        return count;
-}
-
-std::uint32_t find_physical_device_count(const VkInstance instance)
-{
-        std::uint32_t count;
-        VULKAN_CHECK(vkEnumeratePhysicalDevices(instance, &count, nullptr));
-        return count;
-}
-}
-
-std::vector<bool> find_presentation_support(
-        const VkSurfaceKHR surface,
-        const VkPhysicalDevice device,
-        const std::vector<VkQueueFamilyProperties>& queue_families)
-{
-        if (surface == VK_NULL_HANDLE)
-        {
-                return std::vector<bool>(queue_families.size(), false);
-        }
-
-        std::vector<bool> presentation_supported(queue_families.size());
-
-        for (std::uint32_t i = 0; i < queue_families.size(); ++i)
-        {
-                if (queue_families[i].queueCount < 1)
-                {
-                        continue;
-                }
-
-                VkBool32 supported;
-
-                VULKAN_CHECK(vkGetPhysicalDeviceSurfaceSupportKHR(device, i, surface, &supported));
-
-                presentation_supported[i] = (supported == VK_TRUE);
-        }
-
-        return presentation_supported;
-}
-
-std::vector<VkQueueFamilyProperties> find_queue_families(const VkPhysicalDevice device)
-{
-        std::uint32_t count;
-
-        vkGetPhysicalDeviceQueueFamilyProperties(device, &count, nullptr);
-
-        if (count < 1)
-        {
-                return {};
-        }
-
-        std::vector<VkQueueFamilyProperties> queue_families(count);
-
-        vkGetPhysicalDeviceQueueFamilyProperties(device, &count, queue_families.data());
-
-        return queue_families;
-}
-
-std::unordered_set<std::string> find_device_extensions(const VkPhysicalDevice device)
-{
-        std::uint32_t count = find_device_extension_count(device);
 
         if (count < 1)
         {
@@ -104,7 +61,6 @@ std::unordered_set<std::string> find_device_extensions(const VkPhysicalDevice de
         }
 
         std::vector<VkExtensionProperties> extensions(count);
-
         VULKAN_CHECK(vkEnumerateDeviceExtensionProperties(device, nullptr, &count, extensions.data()));
 
         std::unordered_set<std::string> extension_set;
@@ -115,9 +71,70 @@ std::unordered_set<std::string> find_device_extensions(const VkPhysicalDevice de
         return extension_set;
 }
 
+DeviceProperties find_properties(const VkPhysicalDevice device)
+{
+        VkPhysicalDeviceVulkan12Properties vulkan_12_properties = {};
+        vulkan_12_properties.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_VULKAN_1_2_PROPERTIES;
+        VkPhysicalDeviceVulkan11Properties vulkan_11_properties = {};
+        vulkan_11_properties.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_VULKAN_1_1_PROPERTIES;
+        vulkan_11_properties.pNext = &vulkan_12_properties;
+        VkPhysicalDeviceProperties2 properties_2 = {};
+        properties_2.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_PROPERTIES_2;
+        properties_2.pNext = &vulkan_11_properties;
+        vkGetPhysicalDeviceProperties2(device, &properties_2);
+
+        DeviceProperties res;
+        res.properties_10 = properties_2.properties;
+        res.properties_11 = vulkan_11_properties;
+        res.properties_11.pNext = nullptr;
+        res.properties_12 = vulkan_12_properties;
+        res.properties_12.pNext = nullptr;
+        return res;
+}
+
+DeviceFeatures find_features(const VkPhysicalDevice device)
+{
+        VkPhysicalDeviceVulkan12Features vulkan_12_features = {};
+        vulkan_12_features.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_VULKAN_1_2_FEATURES;
+        VkPhysicalDeviceVulkan11Features vulkan_11_features = {};
+        vulkan_11_features.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_VULKAN_1_1_FEATURES;
+        vulkan_11_features.pNext = &vulkan_12_features;
+        VkPhysicalDeviceFeatures2 features_2 = {};
+        features_2.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_FEATURES_2;
+        features_2.pNext = &vulkan_11_features;
+        vkGetPhysicalDeviceFeatures2(device, &features_2);
+
+        DeviceFeatures res;
+        res.features_10 = features_2.features;
+        res.features_11 = vulkan_11_features;
+        res.features_11.pNext = nullptr;
+        res.features_12 = vulkan_12_features;
+        res.features_12.pNext = nullptr;
+        return res;
+}
+
+std::vector<VkQueueFamilyProperties> find_queue_families(const VkPhysicalDevice device)
+{
+        std::uint32_t count;
+        vkGetPhysicalDeviceQueueFamilyProperties(device, &count, nullptr);
+
+        if (count < 1)
+        {
+                return {};
+        }
+
+        std::vector<VkQueueFamilyProperties> queue_families(count);
+        vkGetPhysicalDeviceQueueFamilyProperties(device, &count, queue_families.data());
+
+        return queue_families;
+}
+}
+
 std::vector<VkPhysicalDevice> find_physical_devices(const VkInstance instance)
 {
-        std::uint32_t count = find_physical_device_count(instance);
+        std::uint32_t count;
+        VULKAN_CHECK(vkEnumeratePhysicalDevices(instance, &count, nullptr));
+
         if (count < 1)
         {
                 error("No Vulkan physical device found");
@@ -127,10 +144,12 @@ std::vector<VkPhysicalDevice> find_physical_devices(const VkInstance instance)
         VULKAN_CHECK(vkEnumeratePhysicalDevices(instance, &count, all_devices.data()));
 
         std::vector<VkPhysicalDevice> devices;
+
         for (const VkPhysicalDevice device : all_devices)
         {
                 VkPhysicalDeviceProperties properties;
                 vkGetPhysicalDeviceProperties(device, &properties);
+
                 if (api_version_suitable(properties.apiVersion))
                 {
                         devices.push_back(device);
@@ -155,63 +174,58 @@ std::vector<VkPhysicalDevice> find_physical_devices(const VkInstance instance)
                 oss << static_cast<const char*>(properties.deviceName) << "\n";
                 oss << "  API version " << api_version_to_string(properties.apiVersion);
         }
+
         error(oss.str());
 }
 
-DeviceProperties find_physical_device_properties(const VkPhysicalDevice device)
+DeviceInfo find_physical_device_info(const VkPhysicalDevice device)
 {
-        {
-                VkPhysicalDeviceProperties properties;
-                vkGetPhysicalDeviceProperties(device, &properties);
-                if (!(api_version_suitable(properties.apiVersion)))
-                {
-                        std::ostringstream oss;
-                        oss << "Vulkan physical device version ";
-                        oss << api_version_to_string(properties.apiVersion);
-                        oss << " is not supported, minimum required version is ";
-                        oss << api_version_to_string(API_VERSION);
-                        error(oss.str());
-                }
-        }
+        check_api_version(device);
 
-        VkPhysicalDeviceVulkan12Properties vulkan_12_properties = {};
-        vulkan_12_properties.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_VULKAN_1_2_PROPERTIES;
-        VkPhysicalDeviceVulkan11Properties vulkan_11_properties = {};
-        vulkan_11_properties.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_VULKAN_1_1_PROPERTIES;
-        vulkan_11_properties.pNext = &vulkan_12_properties;
-        VkPhysicalDeviceProperties2 properties_2 = {};
-        properties_2.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_PROPERTIES_2;
-        properties_2.pNext = &vulkan_11_properties;
-        vkGetPhysicalDeviceProperties2(device, &properties_2);
-
-        DeviceProperties res;
-        res.properties_10 = properties_2.properties;
-        res.properties_11 = vulkan_11_properties;
-        res.properties_11.pNext = nullptr;
-        res.properties_12 = vulkan_12_properties;
-        res.properties_12.pNext = nullptr;
-        return res;
+        DeviceInfo info;
+        info.extensions = find_extensions(device);
+        info.properties = find_properties(device);
+        info.features = find_features(device);
+        info.queue_families = find_queue_families(device);
+        return info;
 }
 
-DeviceFeatures find_physical_device_features(const VkPhysicalDevice device)
+std::vector<bool> find_queue_family_presentation_support(const VkSurfaceKHR surface, const VkPhysicalDevice device)
 {
-        VkPhysicalDeviceVulkan12Features vulkan_12_features = {};
-        vulkan_12_features.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_VULKAN_1_2_FEATURES;
-        VkPhysicalDeviceVulkan11Features vulkan_11_features = {};
-        vulkan_11_features.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_VULKAN_1_1_FEATURES;
-        vulkan_11_features.pNext = &vulkan_12_features;
-        VkPhysicalDeviceFeatures2 features_2 = {};
-        features_2.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_FEATURES_2;
-        features_2.pNext = &vulkan_11_features;
-        vkGetPhysicalDeviceFeatures2(device, &features_2);
+        std::uint32_t family_count;
+        vkGetPhysicalDeviceQueueFamilyProperties(device, &family_count, nullptr);
 
-        DeviceFeatures res;
-        res.features_10 = features_2.features;
-        res.features_11 = vulkan_11_features;
-        res.features_11.pNext = nullptr;
-        res.features_12 = vulkan_12_features;
-        res.features_12.pNext = nullptr;
-        return res;
+        std::vector<bool> presentation_support(family_count, false);
+
+        if (surface == VK_NULL_HANDLE)
+        {
+                return presentation_support;
+        }
+
+        for (std::uint32_t family_index = 0; family_index < family_count; ++family_index)
+        {
+                VkBool32 supported;
+                VULKAN_CHECK(vkGetPhysicalDeviceSurfaceSupportKHR(device, family_index, surface, &supported));
+
+                presentation_support[family_index] = (supported == VK_TRUE);
+        }
+
+        return presentation_support;
+}
+
+void add_device_features(VkPhysicalDeviceFeatures2* const features_2, DeviceFeatures* const features)
+{
+        *features_2 = {};
+        features_2->sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_FEATURES_2;
+
+        features_2->features = features->features_10;
+        features_2->pNext = &features->features_11;
+
+        features->features_11.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_VULKAN_1_1_FEATURES;
+        features->features_11.pNext = &features->features_12;
+
+        features->features_12.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_VULKAN_1_2_FEATURES;
+        features->features_12.pNext = nullptr;
 }
 
 DeviceFeatures extract_device_features(const VkDeviceCreateInfo& create_info)

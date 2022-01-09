@@ -30,29 +30,29 @@ namespace ns::vulkan
 class PhysicalDevice final
 {
         VkPhysicalDevice physical_device_;
-        DeviceFeatures features_;
-        DeviceProperties properties_;
-        std::vector<VkQueueFamilyProperties> queue_families_;
-        std::vector<bool> presentation_supported_;
-        std::unordered_set<std::string> supported_extensions_;
+        DeviceInfo info_;
+        std::vector<bool> presentation_support_;
 
 public:
         PhysicalDevice(VkPhysicalDevice physical_device, VkSurfaceKHR surface);
 
         VkPhysicalDevice device() const;
 
-        const DeviceFeatures& features() const;
+        const DeviceInfo& info() const;
+        const std::unordered_set<std::string>& extensions() const;
         const DeviceProperties& properties() const;
-
+        const DeviceFeatures& features() const;
         const std::vector<VkQueueFamilyProperties>& queue_families() const;
-        const std::unordered_set<std::string>& supported_extensions() const;
 
         std::uint32_t family_index(
                 VkQueueFlags set_flags,
                 VkQueueFlags not_set_flags,
                 const std::vector<VkQueueFlags>& default_flags) const;
+
         std::uint32_t presentation_family_index() const;
+
         bool supports_extensions(const std::vector<std::string>& extensions) const;
+
         bool queue_family_supports_presentation(std::uint32_t index) const;
 };
 

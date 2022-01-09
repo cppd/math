@@ -24,13 +24,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 namespace ns::vulkan
 {
-struct DeviceFeatures final
-{
-        VkPhysicalDeviceFeatures features_10{};
-        VkPhysicalDeviceVulkan11Features features_11{};
-        VkPhysicalDeviceVulkan12Features features_12{};
-};
-
 struct DeviceProperties final
 {
         VkPhysicalDeviceProperties properties_10;
@@ -38,20 +31,28 @@ struct DeviceProperties final
         VkPhysicalDeviceVulkan12Properties properties_12;
 };
 
-std::vector<bool> find_presentation_support(
-        VkSurfaceKHR surface,
-        VkPhysicalDevice device,
-        const std::vector<VkQueueFamilyProperties>& queue_families);
+struct DeviceFeatures final
+{
+        VkPhysicalDeviceFeatures features_10{};
+        VkPhysicalDeviceVulkan11Features features_11{};
+        VkPhysicalDeviceVulkan12Features features_12{};
+};
 
-std::vector<VkQueueFamilyProperties> find_queue_families(VkPhysicalDevice device);
-
-std::unordered_set<std::string> find_device_extensions(VkPhysicalDevice device);
+struct DeviceInfo final
+{
+        std::unordered_set<std::string> extensions;
+        DeviceProperties properties;
+        DeviceFeatures features;
+        std::vector<VkQueueFamilyProperties> queue_families;
+};
 
 std::vector<VkPhysicalDevice> find_physical_devices(VkInstance instance);
 
-DeviceProperties find_physical_device_properties(VkPhysicalDevice device);
+DeviceInfo find_physical_device_info(VkPhysicalDevice device);
 
-DeviceFeatures find_physical_device_features(VkPhysicalDevice device);
+std::vector<bool> find_queue_family_presentation_support(VkSurfaceKHR surface, VkPhysicalDevice device);
+
+void add_device_features(VkPhysicalDeviceFeatures2* features_2, DeviceFeatures* features);
 
 DeviceFeatures extract_device_features(const VkDeviceCreateInfo& create_info);
 }

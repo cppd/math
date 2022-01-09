@@ -59,6 +59,7 @@ bool find_family(
                         return true;
                 }
         }
+
         return false;
 }
 
@@ -91,32 +92,35 @@ PhysicalDevice find_best_physical_device(std::vector<PhysicalDevice>&& physical_
                 error("Failed to find a suitable Vulkan physical device");
         }
 
-        std::size_t index = 0;
-        auto priority = device_priority(physical_devices[0]);
+        std::size_t best_i = 0;
+        auto best_priority = device_priority(physical_devices[0]);
+
         for (std::size_t i = 1; i < physical_devices.size(); ++i)
         {
-                const auto p = device_priority(physical_devices[i]);
-                if (p < priority)
+                const auto priority = device_priority(physical_devices[i]);
+                if (priority < best_priority)
                 {
-                        priority = p;
-                        index = i;
+                        best_priority = priority;
+                        best_i = i;
                 }
         }
 
-        return std::move(physical_devices[index]);
+        return std::move(physical_devices[best_i]);
 }
 }
 
 PhysicalDevice::PhysicalDevice(const VkPhysicalDevice physical_device, const VkSurfaceKHR surface)
         : physical_device_(physical_device),
-          features_(find_physical_device_features(physical_device)),
-          properties_(find_physical_device_properties(physical_device)),
-          queue_families_(find_queue_families(physical_device)),
-          presentation_supported_(find_presentation_support(surface, physical_device_, queue_families_)),
-          supported_extensions_(find_device_extensions(physical_device_))
+          info_(find_physical_device_info(physical_device)),
+          presentation_support_(find_queue_family_presentation_support(surface, physical_device_))
 {
         ASSERT(physical_device_ != VK_NULL_HANDLE);
-        ASSERT(queue_families_.size() == presentation_supported_.size());
+        ASSERT(info_.queue_families.size() == presentation_support_.size());
+}
+
+const DeviceInfo& PhysicalDevice::info() const
+{
+        return info_;
 }
 
 VkPhysicalDevice PhysicalDevice::device() const
@@ -124,24 +128,24 @@ VkPhysicalDevice PhysicalDevice::device() const
         return physical_device_;
 }
 
-const DeviceFeatures& PhysicalDevice::features() const
+const std::unordered_set<std::string>& PhysicalDevice::extensions() const
 {
-        return features_;
+        return info_.extensions;
 }
 
 const DeviceProperties& PhysicalDevice::properties() const
 {
-        return properties_;
+        return info_.properties;
+}
+
+const DeviceFeatures& PhysicalDevice::features() const
+{
+        return info_.features;
 }
 
 const std::vector<VkQueueFamilyProperties>& PhysicalDevice::queue_families() const
 {
-        return queue_families_;
-}
-
-const std::unordered_set<std::string>& PhysicalDevice::supported_extensions() const
-{
-        return supported_extensions_;
+        return info_.queue_families;
 }
 
 std::uint32_t PhysicalDevice::family_index(
@@ -150,30 +154,34 @@ std::uint32_t PhysicalDevice::family_index(
         const std::vector<VkQueueFlags>& default_flags) const
 {
         std::uint32_t index;
-        if (set_flags && find_family(queue_families_, set_flags, not_set_flags, &index))
+
+        if (set_flags && find_family(info_.queue_families, set_flags, not_set_flags, &index))
         {
                 return index;
         }
+
         for (const VkQueueFlags flags : default_flags)
         {
-                if (flags && find_family(queue_families_, flags, 0, &index))
+                if (flags && find_family(info_.queue_families, flags, 0, &index))
                 {
                         return index;
                 }
         }
+
         error("Queue family not found, flags set " + to_string(set_flags) + "; not set " + to_string(not_set_flags)
               + "; default " + to_string(default_flags));
 }
 
 std::uint32_t PhysicalDevice::presentation_family_index() const
 {
-        for (std::size_t i = 0; i < presentation_supported_.size(); ++i)
+        for (std::size_t family_index = 0; family_index < presentation_support_.size(); ++family_index)
         {
-                if (presentation_supported_[i])
+                if (presentation_support_[family_index])
                 {
-                        return i;
+                        return family_index;
                 }
         }
+
         error("Presentation family not found");
 }
 
@@ -183,15 +191,15 @@ bool PhysicalDevice::supports_extensions(const std::vector<std::string>& extensi
                 extensions.cbegin(), extensions.cend(),
                 [&](const std::string& e)
                 {
-                        return supported_extensions_.contains(e);
+                        return info_.extensions.contains(e);
                 });
 }
 
 bool PhysicalDevice::queue_family_supports_presentation(const std::uint32_t index) const
 {
-        ASSERT(index < presentation_supported_.size());
+        ASSERT(index < presentation_support_.size());
 
-        return presentation_supported_[index];
+        return presentation_support_[index];
 }
 
 //
@@ -208,18 +216,22 @@ Device::Device(const PhysicalDevice* const physical_device, const VkDeviceCreate
                 const std::uint32_t family_index = create_info.pQueueCreateInfos[i].queueFamilyIndex;
                 const std::uint32_t queue_count = create_info.pQueueCreateInfos[i].queueCount;
                 const auto [iter, inserted] = queues_.try_emplace(family_index);
+
                 if (!inserted)
                 {
                         error("Non unique device queue family indices");
                 }
+
                 for (std::uint32_t queue_index = 0; queue_index < queue_count; ++queue_index)
                 {
                         VkQueue queue;
                         vkGetDeviceQueue(device_, family_index, queue_index, &queue);
+
                         if (queue == VK_NULL_HANDLE)
                         {
                                 error("Null queue handle");
                         }
+
                         iter->second.push_back(queue);
                 }
         }
@@ -243,14 +255,17 @@ const DeviceProperties& Device::properties() const
 Queue Device::queue(const std::uint32_t family_index, const std::uint32_t queue_index) const
 {
         const auto iter = queues_.find(family_index);
+
         if (iter == queues_.cend())
         {
                 error("Queue family index " + to_string(family_index) + " not found");
         }
+
         if (queue_index >= iter->second.size())
         {
                 error("Queue " + to_string(queue_index) + " not found");
         }
+
         return {family_index, iter->second[queue_index]};
 }
 
@@ -328,18 +343,28 @@ Device create_device(
 {
         sort_and_unique(&required_extensions);
 
+        for (const std::string& extension : required_extensions)
+        {
+                if (!physical_device->extensions().contains(extension))
+                {
+                        error("Vulkan physical device does not support extension " + extension);
+                }
+        }
+
         ASSERT(std::all_of(
                 queue_families.cbegin(), queue_families.cend(),
                 [&](const auto& v)
                 {
                         return v.first < physical_device->queue_families().size();
                 }));
+
         ASSERT(std::all_of(
                 queue_families.cbegin(), queue_families.cend(),
                 [](const auto& v)
                 {
                         return v.second > 0;
                 }));
+
         ASSERT(std::all_of(
                 queue_families.cbegin(), queue_families.cend(),
                 [&](const auto& v)
@@ -369,29 +394,20 @@ Device create_device(
                 ++i;
         }
 
-        DeviceFeatures features = make_features(required_features, optional_features, physical_device->features());
-
-        features.features_12.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_VULKAN_1_2_FEATURES;
-        features.features_12.pNext = nullptr;
-        features.features_11.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_VULKAN_1_1_FEATURES;
-        features.features_11.pNext = &features.features_12;
-        VkPhysicalDeviceFeatures2 features_2 = {};
-        features_2.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_FEATURES_2;
-        features_2.pNext = &features.features_11;
-        features_2.features = features.features_10;
-
         VkDeviceCreateInfo create_info = {};
         create_info.sType = VK_STRUCTURE_TYPE_DEVICE_CREATE_INFO;
+
         create_info.queueCreateInfoCount = queue_create_infos.size();
         create_info.pQueueCreateInfos = queue_create_infos.data();
-        create_info.pNext = &features_2;
 
         const std::vector<const char*> extensions = const_char_pointer_vector(required_extensions);
-        if (!extensions.empty())
-        {
-                create_info.enabledExtensionCount = extensions.size();
-                create_info.ppEnabledExtensionNames = extensions.data();
-        }
+        create_info.enabledExtensionCount = extensions.size();
+        create_info.ppEnabledExtensionNames = extensions.data();
+
+        DeviceFeatures features = make_features(required_features, optional_features, physical_device->features());
+        VkPhysicalDeviceFeatures2 features_2;
+        add_device_features(&features_2, &features);
+        create_info.pNext = &features_2;
 
         return Device(physical_device, create_info);
 }
