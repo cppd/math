@@ -25,11 +25,37 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "print/physical_device_type.h"
 #include "print/result.h"
 
-#include <span>
+#include <algorithm>
 #include <string>
 
 namespace ns::vulkan
 {
 std::string api_version_to_string(std::uint32_t api_version);
-std::string strings_to_sorted_string(std::span<const char* const> strings);
+
+template <typename T>
+std::string strings_to_sorted_string(const T& strings)
+{
+        if (std::empty(strings))
+        {
+                return {};
+        }
+
+        if (std::size(strings) == 1)
+        {
+                return strings[0];
+        }
+
+        std::vector<std::string_view> data(std::begin(strings), std::end(strings));
+
+        std::sort(data.begin(), data.end());
+
+        std::string s;
+        s += data[0];
+        for (std::size_t i = 1; i < data.size(); ++i)
+        {
+                s += ", ";
+                s += data[i];
+        }
+        return s;
+}
 }
