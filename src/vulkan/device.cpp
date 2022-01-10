@@ -20,7 +20,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "device_info.h"
 #include "features.h"
 #include "overview.h"
-#include "query.h"
+#include "print.h"
 #include "surface.h"
 
 #include <src/com/alg.h>
@@ -366,12 +366,7 @@ PhysicalDevice find_physical_device(
                 physical_devices.push_back(std::move(physical_device));
         }
 
-        PhysicalDevice physical_device = find_best_physical_device(std::move(physical_devices));
-
-        LOG(std::string("Vulkan physical device: ")
-            + static_cast<const char*>(physical_device.properties().properties_10.deviceName));
-
-        return physical_device;
+        return find_best_physical_device(std::move(physical_devices));
 }
 
 Device create_device(
@@ -418,13 +413,23 @@ Device create_device(
                 }
         }
 
+        std::string info;
+
+        info = std::string("Vulkan device name: ")
+               + static_cast<const char*>(physical_device->properties().properties_10.deviceName);
+        info += "\nVulkan device API version: "
+                + api_version_to_string(physical_device->properties().properties_10.apiVersion);
+
         const std::vector<const char*> extensions = const_char_pointer_vector(required_extensions);
         create_info.enabledExtensionCount = extensions.size();
         create_info.ppEnabledExtensionNames = extensions.data();
+        info += "\nVulkan device extensions: {" + strings_to_sorted_string(extensions) + "}";
 
         VkPhysicalDeviceFeatures2 features_2;
         make_device_features(&features_2, &features);
         create_info.pNext = &features_2;
+
+        LOG(info);
 
         return Device(physical_device, create_info);
 }

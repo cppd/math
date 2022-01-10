@@ -115,17 +115,18 @@ Instance create_instance(std::vector<std::string> required_extensions)
         create_info.pApplicationInfo = &app_info;
 
         const std::vector<const char*> extensions = const_char_pointer_vector(required_extensions);
-        if (!extensions.empty())
-        {
-                create_info.enabledExtensionCount = extensions.size();
-                create_info.ppEnabledExtensionNames = extensions.data();
-        }
 
-        if (!LAYERS.empty())
-        {
-                create_info.enabledLayerCount = LAYERS.size();
-                create_info.ppEnabledLayerNames = LAYERS.data();
-        }
+        std::string info;
+
+        create_info.enabledExtensionCount = extensions.size();
+        create_info.ppEnabledExtensionNames = extensions.data();
+        info = "Vulkan instance extensions: {" + strings_to_sorted_string(extensions) + "}";
+
+        create_info.enabledLayerCount = LAYERS.size();
+        create_info.ppEnabledLayerNames = LAYERS.data();
+        info += "\nVulkan instance layers: {" + strings_to_sorted_string(LAYERS) + "}";
+
+        LOG(info);
 
         return Instance(create_info);
 }

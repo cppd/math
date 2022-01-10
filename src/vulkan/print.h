@@ -25,9 +25,11 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "print/physical_device_type.h"
 #include "print/result.h"
 
+#include <span>
 #include <string>
 
 namespace ns::vulkan
 {
 std::string api_version_to_string(std::uint32_t api_version);
+std::string strings_to_sorted_string(std::span<const char* const> strings);
 }
