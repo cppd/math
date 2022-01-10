@@ -205,62 +205,6 @@ std::vector<VkQueueFamilyProperties> find_queue_families(const VkPhysicalDevice 
 
         return queue_families;
 }
-
-void extract_feature(
-        const VkStructureType type,
-        const void** const ptr,
-        int* const required_feature_count,
-        DeviceFeatures* const features)
-{
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wswitch"
-        switch (type)
-        {
-        case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_FEATURES_2:
-        {
-                ++(*required_feature_count);
-                VkPhysicalDeviceFeatures2 features_2;
-                std::memcpy(&features_2, *ptr, sizeof(VkPhysicalDeviceFeatures2));
-                *ptr = features_2.pNext;
-                features->features_10 = features_2.features;
-                return;
-        }
-        case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_VULKAN_1_1_FEATURES:
-        {
-                ++(*required_feature_count);
-                std::memcpy(&features->features_11, *ptr, sizeof(VkPhysicalDeviceVulkan11Features));
-                *ptr = features->features_11.pNext;
-                return;
-        }
-        case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_VULKAN_1_2_FEATURES:
-        {
-                ++(*required_feature_count);
-                std::memcpy(&features->features_12, *ptr, sizeof(VkPhysicalDeviceVulkan12Features));
-                *ptr = features->features_12.pNext;
-                return;
-        }
-        case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_ACCELERATION_STRUCTURE_FEATURES_KHR:
-        {
-                features->acceleration_structure.emplace();
-                std::memcpy(
-                        &*features->acceleration_structure, *ptr,
-                        sizeof(VkPhysicalDeviceAccelerationStructureFeaturesKHR));
-                *ptr = features->acceleration_structure->pNext;
-                return;
-        }
-        case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_RAY_TRACING_PIPELINE_FEATURES_KHR:
-        {
-                features->ray_tracing_pipeline.emplace();
-                std::memcpy(
-                        &*features->ray_tracing_pipeline, *ptr, sizeof(VkPhysicalDeviceRayTracingPipelineFeaturesKHR));
-                *ptr = features->ray_tracing_pipeline->pNext;
-                return;
-        }
-        }
-#pragma GCC diagnostic pop
-
-        error("Unknown device create info type " + to_string(enum_to_int(type)));
-}
 }
 
 std::vector<VkPhysicalDevice> find_physical_devices(const VkInstance instance)
@@ -346,32 +290,37 @@ std::vector<bool> find_queue_family_presentation_support(const VkSurfaceKHR surf
         return presentation_support;
 }
 
-void make_device_features(VkPhysicalDeviceFeatures2* const features_2, DeviceFeatures* const features)
+void make_device_features(
+        const DeviceFeatures& features,
+        VkPhysicalDeviceFeatures2* const features_2,
+        DeviceFeatures* const device_features)
 {
+        *device_features = features;
+
         void** last = nullptr;
 
         features_2->sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_FEATURES_2;
-        features_2->features = features->features_10;
+        features_2->features = device_features->features_10;
         connect(last, *features_2);
 
-        features->features_11.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_VULKAN_1_1_FEATURES;
-        connect(last, features->features_11);
+        device_features->features_11.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_VULKAN_1_1_FEATURES;
+        connect(last, device_features->features_11);
 
-        features->features_12.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_VULKAN_1_2_FEATURES;
-        connect(last, features->features_12);
+        device_features->features_12.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_VULKAN_1_2_FEATURES;
+        connect(last, device_features->features_12);
 
-        if (features->acceleration_structure)
+        if (device_features->acceleration_structure)
         {
-                features->acceleration_structure->sType =
+                device_features->acceleration_structure->sType =
                         VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_ACCELERATION_STRUCTURE_FEATURES_KHR;
-                connect(last, *features->acceleration_structure);
+                connect(last, *device_features->acceleration_structure);
         }
 
-        if (features->ray_tracing_pipeline)
+        if (device_features->ray_tracing_pipeline)
         {
-                features->ray_tracing_pipeline->sType =
+                device_features->ray_tracing_pipeline->sType =
                         VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_RAY_TRACING_PIPELINE_FEATURES_KHR;
-                connect(last, *features->ray_tracing_pipeline);
+                connect(last, *device_features->ray_tracing_pipeline);
         }
 }
 
@@ -392,37 +341,5 @@ void add_device_feature_extensions(const DeviceFeatures& features, std::vector<s
         {
                 add_acceleration_structure_extensions();
         }
-}
-
-DeviceFeatures extract_device_features(const VkDeviceCreateInfo& create_info)
-{
-        DeviceFeatures features;
-
-        std::unordered_set<VkStructureType> found_features;
-
-        const void* ptr = create_info.pNext;
-        int required_feature_count = 0;
-
-        while (ptr)
-        {
-                VkStructureType type;
-                std::memcpy(&type, ptr, sizeof(VkStructureType));
-
-                if (!found_features.insert(type).second)
-                {
-                        error("Unique device features required");
-                }
-
-                extract_feature(type, &ptr, &required_feature_count, &features);
-        }
-
-        if (required_feature_count != 3)
-        {
-                error("All required device features are not specified for device creation");
-        }
-
-        set_nullptr_next(&features);
-
-        return features;
 }
 }

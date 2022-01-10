@@ -114,8 +114,7 @@ VulkanInstance::VulkanInstance(
                   {VK_QUEUE_GRAPHICS_BIT, VK_QUEUE_COMPUTE_BIT})),
           presentation_family_index_(create_surface ? physical_device_.presentation_family_index() : NO_FAMILY_INDEX),
           //
-          device_(create_device(
-                  &physical_device_,
+          device_(&physical_device_,
                   compute_queue_count(
                           {{graphics_compute_family_index_, GRAPHICS_COMPUTE_QUEUE_COUNT},
                            {compute_family_index_, COMPUTE_QUEUE_COUNT},
@@ -127,7 +126,7 @@ VulkanInstance::VulkanInstance(
                   //
                   required_device_features,
                   //
-                  optional_device_features)),
+                  optional_device_features),
           //
           graphics_compute_command_pool_(create_command_pool(device_, graphics_compute_family_index_)),
           compute_command_pool_(create_command_pool(device_, compute_family_index_)),

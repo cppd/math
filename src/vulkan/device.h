@@ -19,52 +19,27 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "device_info.h"
 #include "objects.h"
+#include "physical_device.h"
 
 #include <string>
 #include <unordered_map>
-#include <unordered_set>
 #include <vector>
 
 namespace ns::vulkan
 {
-class PhysicalDevice final
-{
-        VkPhysicalDevice physical_device_;
-        DeviceInfo info_;
-        std::vector<bool> presentation_support_;
-
-public:
-        PhysicalDevice(VkPhysicalDevice physical_device, VkSurfaceKHR surface);
-
-        VkPhysicalDevice device() const;
-
-        const DeviceInfo& info() const;
-        const std::unordered_set<std::string>& extensions() const;
-        const DeviceProperties& properties() const;
-        const DeviceFeatures& features() const;
-        const std::vector<VkQueueFamilyProperties>& queue_families() const;
-
-        std::uint32_t family_index(
-                VkQueueFlags set_flags,
-                VkQueueFlags not_set_flags,
-                const std::vector<VkQueueFlags>& default_flags) const;
-
-        std::uint32_t presentation_family_index() const;
-
-        bool supports_extensions(const std::vector<std::string>& extensions) const;
-
-        bool queue_family_supports_presentation(std::uint32_t index) const;
-};
-
 class Device final
 {
-        handle::Device device_;
         const PhysicalDevice* physical_device_ = nullptr;
         DeviceFeatures features_;
+        handle::Device device_;
         std::unordered_map<std::uint32_t, std::vector<VkQueue>> queues_;
 
 public:
-        Device(const PhysicalDevice* physical_device, const VkDeviceCreateInfo& create_info);
+        Device(const PhysicalDevice* physical_device,
+               const std::unordered_map<std::uint32_t, std::uint32_t>& queue_families,
+               const std::vector<std::string>& required_extensions,
+               const DeviceFeatures& required_features,
+               const DeviceFeatures& optional_features);
 
         operator VkDevice() const& noexcept
         {
@@ -79,17 +54,4 @@ public:
 
         Queue queue(std::uint32_t family_index, std::uint32_t queue_index) const;
 };
-
-PhysicalDevice find_physical_device(
-        VkInstance instance,
-        VkSurfaceKHR surface,
-        std::vector<std::string> required_extensions,
-        const DeviceFeatures& required_features);
-
-Device create_device(
-        const PhysicalDevice* physical_device,
-        const std::unordered_map<std::uint32_t, std::uint32_t>& queue_families,
-        std::vector<std::string> required_extensions,
-        const DeviceFeatures& required_features,
-        const DeviceFeatures& optional_features);
 }

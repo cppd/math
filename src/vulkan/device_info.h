@@ -57,9 +57,10 @@ DeviceInfo find_physical_device_info(VkPhysicalDevice device);
 
 std::vector<bool> find_queue_family_presentation_support(VkSurfaceKHR surface, VkPhysicalDevice device);
 
-void make_device_features(VkPhysicalDeviceFeatures2* features_2, DeviceFeatures* features);
+void make_device_features(
+        const DeviceFeatures& features,
+        VkPhysicalDeviceFeatures2* features_2,
+        DeviceFeatures* device_features);
 
 void add_device_feature_extensions(const DeviceFeatures& features, std::vector<std::string>* extensions);
-
-DeviceFeatures extract_device_features(const VkDeviceCreateInfo& create_info);
 }
