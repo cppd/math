@@ -17,18 +17,13 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "create.h"
 
-#include "overview.h"
 #include "print.h"
 #include "query.h"
-#include "settings.h"
 
 #include <src/color/conversion.h>
 #include <src/com/alg.h>
 #include <src/com/error.h>
-#include <src/com/log.h>
 #include <src/com/print.h>
-#include <src/com/string/vector.h>
-#include <src/settings/name.h>
 
 #include <unordered_set>
 
@@ -173,56 +168,6 @@ CommandPool create_transient_command_pool(const VkDevice device, const std::uint
         create_info.flags = VK_COMMAND_POOL_CREATE_TRANSIENT_BIT;
 
         return CommandPool(device, create_info);
-}
-
-//
-
-Instance create_instance(std::vector<std::string> required_extensions)
-{
-        LOG(overview());
-
-        check_instance_api_version();
-
-        if (!VALIDATION_LAYERS.empty())
-        {
-                required_extensions.emplace_back(VK_EXT_DEBUG_REPORT_EXTENSION_NAME);
-        }
-
-        sort_and_unique(&required_extensions);
-
-        check_instance_extension_support(required_extensions);
-
-        if (!VALIDATION_LAYERS.empty())
-        {
-                check_validation_layer_support({VALIDATION_LAYERS.cbegin(), VALIDATION_LAYERS.cend()});
-        }
-
-        VkApplicationInfo app_info = {};
-        app_info.sType = VK_STRUCTURE_TYPE_APPLICATION_INFO;
-        app_info.pApplicationName = settings::APPLICATION_NAME;
-        app_info.applicationVersion = 1;
-        app_info.pEngineName = nullptr;
-        app_info.engineVersion = 0;
-        app_info.apiVersion = API_VERSION;
-
-        VkInstanceCreateInfo create_info = {};
-        create_info.sType = VK_STRUCTURE_TYPE_INSTANCE_CREATE_INFO;
-        create_info.pApplicationInfo = &app_info;
-
-        const std::vector<const char*> extensions = const_char_pointer_vector(required_extensions);
-        if (!extensions.empty())
-        {
-                create_info.enabledExtensionCount = extensions.size();
-                create_info.ppEnabledExtensionNames = extensions.data();
-        }
-
-        if (!VALIDATION_LAYERS.empty())
-        {
-                create_info.enabledLayerCount = VALIDATION_LAYERS.size();
-                create_info.ppEnabledLayerNames = VALIDATION_LAYERS.data();
-        }
-
-        return Instance(create_info);
 }
 
 //

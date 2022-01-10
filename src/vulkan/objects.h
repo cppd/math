@@ -29,11 +29,11 @@ namespace ns::vulkan
 class Instance final
 {
         handle::Instance instance_;
-        bool validation_layers_enabled_;
+        bool layers_enabled_;
 
 public:
         explicit Instance(const VkInstanceCreateInfo& create_info)
-                : instance_(create_info), validation_layers_enabled_(create_info.enabledLayerCount > 0)
+                : instance_(create_info), layers_enabled_(create_info.enabledLayerCount > 0)
         {
         }
 
@@ -43,9 +43,9 @@ public:
         }
         operator VkInstance() const&& noexcept = delete;
 
-        bool validation_layers_enabled() const noexcept
+        bool layers_enabled() const noexcept
         {
-                return validation_layers_enabled_;
+                return layers_enabled_;
         }
 };
 

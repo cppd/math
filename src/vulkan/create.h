@@ -21,7 +21,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <src/numerical/vector.h>
 
-#include <string>
 #include <vector>
 
 namespace ns::vulkan
@@ -42,8 +41,6 @@ handle::PipelineLayout create_pipeline_layout(
 CommandPool create_command_pool(VkDevice device, std::uint32_t queue_family_index);
 
 CommandPool create_transient_command_pool(VkDevice device, std::uint32_t queue_family_index);
-
-Instance create_instance(std::vector<std::string> required_extensions);
 
 handle::Framebuffer create_framebuffer(
         VkDevice device,

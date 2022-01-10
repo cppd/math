@@ -73,11 +73,11 @@ VKAPI_ATTR VkBool32 VKAPI_CALL debug_callback(
 
         if (!s.empty())
         {
-                LOG("Validation layer message (" + s + "): " + message);
+                LOG("Layer message (" + s + "): " + message);
         }
         else
         {
-                LOG(std::string("Validation layer message: ") + message);
+                LOG(std::string("Layer message: ") + message);
         }
 
         return VK_FALSE;

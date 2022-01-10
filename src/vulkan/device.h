@@ -80,7 +80,7 @@ public:
         Queue queue(std::uint32_t family_index, std::uint32_t queue_index) const;
 };
 
-PhysicalDevice create_physical_device(
+PhysicalDevice find_physical_device(
         VkInstance instance,
         VkSurfaceKHR surface,
         std::vector<std::string> required_extensions,

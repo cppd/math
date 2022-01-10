@@ -19,8 +19,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "device.h"
 #include "device_info.h"
+#include "instance_info.h"
 #include "print.h"
-#include "query.h"
 
 #include "overview/device.h"
 #include "overview/features.h"
@@ -211,6 +211,7 @@ void api_version(StringTree* const tree)
                 tree->add(node, e.what());
         }
 }
+
 void extensions(StringTree* const tree)
 {
         const std::size_t node = tree->add("Extensions");
@@ -227,12 +228,12 @@ void extensions(StringTree* const tree)
         }
 }
 
-void validation_layers(StringTree* const tree)
+void layers(StringTree* const tree)
 {
-        const std::size_t node = tree->add("Validation Layers");
+        const std::size_t node = tree->add("Layers");
         try
         {
-                for (const std::string& layer : sorted(supported_validation_layers()))
+                for (const std::string& layer : sorted(supported_instance_layers()))
                 {
                         tree->add(node, layer);
                 }
@@ -266,7 +267,7 @@ std::string overview()
 
         api_version(&tree);
         extensions(&tree);
-        validation_layers(&tree);
+        layers(&tree);
         required_surface_extensions(&tree);
 
         return tree.text(TREE_LEVEL_INDENT);

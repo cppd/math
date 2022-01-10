@@ -18,136 +18,13 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "query.h"
 
 #include "error.h"
-#include "print.h"
-#include "settings.h"
 
 #include <src/com/enum.h>
 #include <src/com/error.h>
 #include <src/com/print.h>
 
-#include <algorithm>
-
 namespace ns::vulkan
 {
-namespace
-{
-std::uint32_t find_extension_count()
-{
-        std::uint32_t extension_count;
-        VULKAN_CHECK(vkEnumerateInstanceExtensionProperties(nullptr, &extension_count, nullptr));
-        return extension_count;
-}
-
-std::uint32_t find_layer_count()
-{
-        std::uint32_t layer_count;
-        VULKAN_CHECK(vkEnumerateInstanceLayerProperties(&layer_count, nullptr));
-        return layer_count;
-}
-}
-
-std::unordered_set<std::string> supported_instance_extensions()
-{
-        std::uint32_t extension_count = find_extension_count();
-        if (extension_count < 1)
-        {
-                return {};
-        }
-
-        std::vector<VkExtensionProperties> extensions(extension_count);
-        VULKAN_CHECK(vkEnumerateInstanceExtensionProperties(nullptr, &extension_count, extensions.data()));
-
-        std::unordered_set<std::string> extension_set;
-        for (const VkExtensionProperties& e : extensions)
-        {
-                extension_set.emplace(e.extensionName);
-        }
-        return extension_set;
-}
-
-std::unordered_set<std::string> supported_validation_layers()
-{
-        std::uint32_t layer_count = find_layer_count();
-        if (layer_count < 1)
-        {
-                return {};
-        }
-
-        std::vector<VkLayerProperties> layers(layer_count);
-        VULKAN_CHECK(vkEnumerateInstanceLayerProperties(&layer_count, layers.data()));
-
-        std::unordered_set<std::string> layer_set;
-        for (const VkLayerProperties& l : layers)
-        {
-                layer_set.emplace(l.layerName);
-        }
-        return layer_set;
-}
-
-std::uint32_t supported_instance_api_version()
-{
-        const PFN_vkEnumerateInstanceVersion enumerate_instance_version =
-                reinterpret_cast<PFN_vkEnumerateInstanceVersion>(
-                        vkGetInstanceProcAddr(nullptr, "vkEnumerateInstanceVersion"));
-
-        if (!enumerate_instance_version)
-        {
-                return VK_MAKE_API_VERSION(0, 1, 0, 0);
-        }
-
-        std::uint32_t api_version;
-        VULKAN_CHECK(enumerate_instance_version(&api_version));
-
-        return api_version;
-}
-
-void check_instance_extension_support(const std::vector<std::string>& required_extensions)
-{
-        if (required_extensions.empty())
-        {
-                return;
-        }
-
-        const std::unordered_set<std::string> extension_set = supported_instance_extensions();
-
-        for (const std::string& extension : required_extensions)
-        {
-                if (!extension_set.contains(extension))
-                {
-                        error("Vulkan instance extension " + extension + " is not supported");
-                }
-        }
-}
-
-void check_validation_layer_support(const std::vector<std::string>& required_layers)
-{
-        if (required_layers.empty())
-        {
-                return;
-        }
-
-        const std::unordered_set<std::string> layer_set = supported_validation_layers();
-
-        for (const std::string& layer : required_layers)
-        {
-                if (!layer_set.contains(layer))
-                {
-                        error("Vulkan validation layer " + layer + " is not supported");
-                }
-        }
-}
-
-void check_instance_api_version()
-{
-        const std::uint32_t api_version = supported_instance_api_version();
-
-        if (!api_version_suitable(api_version))
-        {
-                error("Vulkan instance API version " + api_version_to_string(API_VERSION)
-                      + " is not supported. Supported " + api_version_to_string(api_version) + ".");
-        }
-}
-
 VkExtent3D find_max_image_extent(
         const VkPhysicalDevice physical_device,
         const VkFormat format,

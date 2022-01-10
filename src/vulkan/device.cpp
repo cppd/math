@@ -311,7 +311,7 @@ Queue Device::queue(const std::uint32_t family_index, const std::uint32_t queue_
 
 //
 
-PhysicalDevice create_physical_device(
+PhysicalDevice find_physical_device(
         const VkInstance instance,
         const VkSurfaceKHR surface,
         std::vector<std::string> required_extensions,

@@ -20,6 +20,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "create.h"
 #include "debug.h"
 #include "error.h"
+#include "instance_create.h"
 
 #include <src/com/error.h>
 #include <src/com/log.h>
@@ -87,11 +88,11 @@ VulkanInstance::VulkanInstance(
         const std::function<VkSurfaceKHR(VkInstance)>& create_surface)
         : instance_(create_instance(required_instance_extensions)),
           callback_(
-                  instance_.validation_layers_enabled() ? std::make_optional(create_debug_report_callback(instance_))
-                                                        : std::nullopt),
+                  instance_.layers_enabled() ? std::make_optional(create_debug_report_callback(instance_))
+                                             : std::nullopt),
           surface_(create_surface ? std::optional(handle::SurfaceKHR(instance_, create_surface)) : std::nullopt),
           //
-          physical_device_(create_physical_device(
+          physical_device_(find_physical_device(
                   instance_,
                   //
                   (create_surface ? static_cast<VkSurfaceKHR>(*surface_) : VK_NULL_HANDLE),
