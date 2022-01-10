@@ -29,4 +29,6 @@ DeviceFeatures make_features(
         const DeviceFeatures& supported_features);
 
 [[nodiscard]] bool check_features(const DeviceFeatures& required_features, const DeviceFeatures& supported_features);
+
+std::vector<std::string> features_to_strings(const DeviceFeatures& features, bool enabled);
 }

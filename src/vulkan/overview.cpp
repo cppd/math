@@ -19,11 +19,11 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "device.h"
 #include "device_info.h"
+#include "features.h"
 #include "instance_info.h"
 #include "print.h"
 
 #include "overview/device.h"
-#include "overview/features.h"
 #include "overview/print.h"
 #include "overview/properties.h"
 
@@ -135,14 +135,12 @@ void features(const PhysicalDevice& device, const std::size_t device_node, Strin
         const std::size_t not_supported_node = tree->add(features_node, "Not Supported");
         try
         {
-                const auto [supported, not_supported] = find_features(device.features());
-
-                for (const std::string& name : sorted(supported))
+                for (const std::string& name : sorted(features_to_strings(device.features(), true)))
                 {
                         tree->add(supported_node, name);
                 }
 
-                for (const std::string& name : sorted(not_supported))
+                for (const std::string& name : sorted(features_to_strings(device.features(), false)))
                 {
                         tree->add(not_supported_node, name);
                 }

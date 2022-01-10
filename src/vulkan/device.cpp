@@ -425,6 +425,8 @@ Device create_device(
         create_info.ppEnabledExtensionNames = extensions.data();
         info += "\nVulkan device extensions: {" + strings_to_sorted_string(extensions) + "}";
 
+        info += "\nVulkan device features: {" + strings_to_sorted_string(features_to_strings(features, true)) + "}";
+
         VkPhysicalDeviceFeatures2 features_2;
         make_device_features(&features_2, &features);
         create_info.pNext = &features_2;

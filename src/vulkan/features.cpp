@@ -316,6 +316,25 @@ void check_features(const Features& required_features, const Features& supported
         }
 }
 
+template <typename Features>
+void features_to_strings(const Features& features, const bool enabled, std::vector<std::string>* const strings)
+{
+        static constexpr std::size_t COUNT = FeatureProperties<Features>::COUNT;
+        static constexpr std::size_t OFFSET = FeatureProperties<Features>::OFFSET;
+
+        const std::byte* ptr = reinterpret_cast<const std::byte*>(&features) + OFFSET;
+
+        for (std::size_t i = 0; i < COUNT; ++i, ptr += SIZE)
+        {
+                VkBool32 feature;
+                std::memcpy(&feature, ptr, SIZE);
+                if (static_cast<bool>(feature) == enabled)
+                {
+                        strings->push_back(FeatureProperties<Features>::name(i));
+                }
+        }
+}
+
 template <bool REQUIRED>
 void set_features(
         const DeviceFeatures& features,
@@ -376,5 +395,14 @@ bool check_features(const DeviceFeatures& required_features, const DeviceFeature
                 return false;
         }
         return true;
+}
+
+std::vector<std::string> features_to_strings(const DeviceFeatures& features, const bool enabled)
+{
+        std::vector<std::string> res;
+        features_to_strings(features.features_10, enabled, &res);
+        features_to_strings(features.features_11, enabled, &res);
+        features_to_strings(features.features_12, enabled, &res);
+        return res;
 }
 }
