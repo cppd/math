@@ -68,7 +68,6 @@ struct FeatureProperties<VkPhysicalDeviceVulkan12Features>
 template <>
 struct FeatureProperties<VkPhysicalDeviceAccelerationStructureFeaturesKHR>
 {
-        static constexpr std::string_view FEATURES_NAME = "VkPhysicalDeviceAccelerationStructureFeaturesKHR";
         static constexpr std::size_t OFFSET =
                 offsetof(VkPhysicalDeviceAccelerationStructureFeaturesKHR, accelerationStructure);
         static constexpr std::size_t COUNT = 5;
@@ -79,7 +78,6 @@ struct FeatureProperties<VkPhysicalDeviceAccelerationStructureFeaturesKHR>
 template <>
 struct FeatureProperties<VkPhysicalDeviceRayQueryFeaturesKHR>
 {
-        static constexpr std::string_view FEATURES_NAME = "VkPhysicalDeviceRayQueryFeaturesKHR";
         static constexpr std::size_t OFFSET = offsetof(VkPhysicalDeviceRayQueryFeaturesKHR, rayQuery);
         static constexpr std::size_t COUNT = 1;
         static std::string name(std::size_t index);
@@ -89,7 +87,6 @@ struct FeatureProperties<VkPhysicalDeviceRayQueryFeaturesKHR>
 template <>
 struct FeatureProperties<VkPhysicalDeviceRayTracingPipelineFeaturesKHR>
 {
-        static constexpr std::string_view FEATURES_NAME = "VkPhysicalDeviceRayTracingPipelineFeaturesKHR";
         static constexpr std::size_t OFFSET =
                 offsetof(VkPhysicalDeviceRayTracingPipelineFeaturesKHR, rayTracingPipeline);
         static constexpr std::size_t COUNT = 5;
@@ -97,21 +94,23 @@ struct FeatureProperties<VkPhysicalDeviceRayTracingPipelineFeaturesKHR>
         static_assert(check_size<VkPhysicalDeviceRayTracingPipelineFeaturesKHR>(COUNT * SIZE + OFFSET));
 };
 
-#define CASE_FEATURE(type, feature)                                              \
+#define CASE_FEATURE(name, type, feature)                                        \
         case (offsetof(type, feature) - FeatureProperties<type>::OFFSET) / SIZE: \
-                return #feature;
+                return name "::" #feature;
 
-#define CASE_FEATURE_10(feature) CASE_FEATURE(VkPhysicalDeviceFeatures, feature)
+#define CASE_FEATURE_10(feature) CASE_FEATURE("Features", VkPhysicalDeviceFeatures, feature)
 
-#define CASE_FEATURE_11(feature) CASE_FEATURE(VkPhysicalDeviceVulkan11Features, feature)
+#define CASE_FEATURE_11(feature) CASE_FEATURE("Vulkan11Features", VkPhysicalDeviceVulkan11Features, feature)
 
-#define CASE_FEATURE_12(feature) CASE_FEATURE(VkPhysicalDeviceVulkan12Features, feature)
+#define CASE_FEATURE_12(feature) CASE_FEATURE("Vulkan12Features", VkPhysicalDeviceVulkan12Features, feature)
 
-#define CASE_ACCELERATION_STRUCTURE(feature) CASE_FEATURE(VkPhysicalDeviceAccelerationStructureFeaturesKHR, feature)
+#define CASE_ACCELERATION_STRUCTURE(feature) \
+        CASE_FEATURE("AccelerationStructureFeaturesKHR", VkPhysicalDeviceAccelerationStructureFeaturesKHR, feature)
 
-#define CASE_RAY_QUERY(feature) CASE_FEATURE(VkPhysicalDeviceRayQueryFeaturesKHR, feature)
+#define CASE_RAY_QUERY(feature) CASE_FEATURE("RayQueryFeaturesKHR", VkPhysicalDeviceRayQueryFeaturesKHR, feature)
 
-#define CASE_RAY_TRACING_PIPELINE(feature) CASE_FEATURE(VkPhysicalDeviceRayTracingPipelineFeaturesKHR, feature)
+#define CASE_RAY_TRACING_PIPELINE(feature) \
+        CASE_FEATURE("RayTracingPipelineFeaturesKHR", VkPhysicalDeviceRayTracingPipelineFeaturesKHR, feature)
 
 std::string FeatureProperties<VkPhysicalDeviceFeatures>::name(const std::size_t index)
 {
@@ -336,22 +335,6 @@ void add_features(Features* const dst, const Features& src)
         }
 }
 
-template <typename Features>
-void add_optional_features(Features* const dst, const Features& src)
-{
-        if (!src)
-        {
-                return;
-        }
-
-        if (!*dst)
-        {
-                dst->emplace();
-        }
-
-        add_features(&**dst, *src);
-}
-
 template <bool REQUIRED, typename Features>
 void set_features(const Features& features, const Features& supported, Features* const result)
 {
@@ -384,24 +367,6 @@ void set_features(const Features& features, const Features& supported, Features*
         }
 }
 
-template <bool REQUIRED, typename Features>
-void set_optional_features(const Features& features, const Features& supported, Features* const result)
-{
-        if (!features)
-        {
-                result->reset();
-                return;
-        }
-
-        if (!supported)
-        {
-                feature_is_not_supported_error(FeatureProperties<typename Features::value_type>::FEATURES_NAME);
-        }
-
-        result->emplace();
-        set_features<REQUIRED>(*features, *supported, &**result);
-}
-
 template <typename Features>
 void check_features(const Features& required, const Features& supported)
 {
@@ -430,22 +395,6 @@ void check_features(const Features& required, const Features& supported)
 }
 
 template <typename Features>
-void check_optional_features(const Features& required, const Features& supported)
-{
-        if (!required)
-        {
-                return;
-        }
-
-        if (!supported)
-        {
-                feature_is_not_supported_error(FeatureProperties<typename Features::value_type>::FEATURES_NAME);
-        }
-
-        check_features(*required, *supported);
-}
-
-template <typename Features>
 void features_to_strings(const Features& features, const bool enabled, std::vector<std::string>* const strings)
 {
         static constexpr std::size_t COUNT = FeatureProperties<Features>::COUNT;
@@ -464,19 +413,6 @@ void features_to_strings(const Features& features, const bool enabled, std::vect
         }
 }
 
-template <typename Features>
-void optional_features_to_strings(const Features& features, const bool enabled, std::vector<std::string>* const strings)
-{
-        if (!features)
-        {
-                features_to_strings(typename Features::value_type(), enabled, strings);
-        }
-        else
-        {
-                features_to_strings(*features, enabled, strings);
-        }
-}
-
 template <bool REQUIRED>
 void set_features(
         const PhysicalDeviceFeatures& features,
@@ -484,15 +420,17 @@ void set_features(
         PhysicalDeviceFeatures* const result)
 {
         set_features<REQUIRED>(features.features_10, supported.features_10, &result->features_10);
+
         set_features<REQUIRED>(features.features_11, supported.features_11, &result->features_11);
+
         set_features<REQUIRED>(features.features_12, supported.features_12, &result->features_12);
 
-        set_optional_features<REQUIRED>(
+        set_features<REQUIRED>(
                 features.acceleration_structure, supported.acceleration_structure, &result->acceleration_structure);
 
-        set_optional_features<REQUIRED>(features.ray_query, supported.ray_query, &result->ray_query);
+        set_features<REQUIRED>(features.ray_query, supported.ray_query, &result->ray_query);
 
-        set_optional_features<REQUIRED>(
+        set_features<REQUIRED>(
                 features.ray_tracing_pipeline, supported.ray_tracing_pipeline, &result->ray_tracing_pipeline);
 }
 }
@@ -502,10 +440,9 @@ void add_features(PhysicalDeviceFeatures* const dst, const PhysicalDeviceFeature
         add_features(&dst->features_10, src.features_10);
         add_features(&dst->features_11, src.features_11);
         add_features(&dst->features_12, src.features_12);
-
-        add_optional_features(&dst->acceleration_structure, src.acceleration_structure);
-        add_optional_features(&dst->ray_query, src.ray_query);
-        add_optional_features(&dst->ray_tracing_pipeline, src.ray_tracing_pipeline);
+        add_features(&dst->acceleration_structure, src.acceleration_structure);
+        add_features(&dst->ray_query, src.ray_query);
+        add_features(&dst->ray_tracing_pipeline, src.ray_tracing_pipeline);
 }
 
 PhysicalDeviceFeatures make_features(
@@ -543,10 +480,9 @@ bool check_features(const PhysicalDeviceFeatures& required, const PhysicalDevice
                 check_features(required.features_10, supported.features_10);
                 check_features(required.features_11, supported.features_11);
                 check_features(required.features_12, supported.features_12);
-
-                check_optional_features(required.acceleration_structure, supported.acceleration_structure);
-                check_optional_features(required.ray_query, supported.ray_query);
-                check_optional_features(required.ray_tracing_pipeline, supported.ray_tracing_pipeline);
+                check_features(required.acceleration_structure, supported.acceleration_structure);
+                check_features(required.ray_query, supported.ray_query);
+                check_features(required.ray_tracing_pipeline, supported.ray_tracing_pipeline);
         }
         catch (const FeatureIsNotSupported&)
         {
@@ -562,11 +498,38 @@ std::vector<std::string> features_to_strings(const PhysicalDeviceFeatures& featu
         features_to_strings(features.features_10, enabled, &res);
         features_to_strings(features.features_11, enabled, &res);
         features_to_strings(features.features_12, enabled, &res);
-
-        optional_features_to_strings(features.acceleration_structure, enabled, &res);
-        optional_features_to_strings(features.ray_query, enabled, &res);
-        optional_features_to_strings(features.ray_tracing_pipeline, enabled, &res);
+        features_to_strings(features.acceleration_structure, enabled, &res);
+        features_to_strings(features.ray_query, enabled, &res);
+        features_to_strings(features.ray_tracing_pipeline, enabled, &res);
 
         return res;
 }
+
+template <typename Features>
+bool any_feature_enabled(const Features& features)
+{
+        static constexpr std::size_t COUNT = FeatureProperties<Features>::COUNT;
+        static constexpr std::size_t OFFSET = FeatureProperties<Features>::OFFSET;
+
+        const std::byte* ptr = reinterpret_cast<const std::byte*>(&features) + OFFSET;
+
+        for (std::size_t i = 0; i < COUNT; ++i, ptr += SIZE)
+        {
+                VkBool32 feature;
+                std::memcpy(&feature, ptr, SIZE);
+                if (feature)
+                {
+                        return true;
+                }
+        }
+
+        return false;
+}
+
+template bool any_feature_enabled(const VkPhysicalDeviceFeatures&);
+template bool any_feature_enabled(const VkPhysicalDeviceVulkan11Features&);
+template bool any_feature_enabled(const VkPhysicalDeviceVulkan12Features&);
+template bool any_feature_enabled(const VkPhysicalDeviceAccelerationStructureFeaturesKHR&);
+template bool any_feature_enabled(const VkPhysicalDeviceRayQueryFeaturesKHR&);
+template bool any_feature_enabled(const VkPhysicalDeviceRayTracingPipelineFeaturesKHR&);
 }

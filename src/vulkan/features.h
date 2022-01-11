@@ -31,4 +31,7 @@ PhysicalDeviceFeatures make_features(
 [[nodiscard]] bool check_features(const PhysicalDeviceFeatures& required, const PhysicalDeviceFeatures& supported);
 
 std::vector<std::string> features_to_strings(const PhysicalDeviceFeatures& features, bool enabled);
+
+template <typename Features>
+bool any_feature_enabled(const Features& features);
 }

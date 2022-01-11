@@ -18,6 +18,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "physical_device_info.h"
 
 #include "error.h"
+#include "features.h"
 #include "print.h"
 #include "settings.h"
 
@@ -100,18 +101,9 @@ void set_nullptr_next(PhysicalDeviceFeatures* const features)
 {
         features->features_11.pNext = nullptr;
         features->features_12.pNext = nullptr;
-        if (features->acceleration_structure)
-        {
-                features->acceleration_structure->pNext = nullptr;
-        }
-        if (features->ray_query)
-        {
-                features->ray_query->pNext = nullptr;
-        }
-        if (features->ray_tracing_pipeline)
-        {
-                features->ray_tracing_pipeline->pNext = nullptr;
-        }
+        features->acceleration_structure.pNext = nullptr;
+        features->ray_query.pNext = nullptr;
+        features->ray_tracing_pipeline.pNext = nullptr;
 }
 
 PhysicalDeviceProperties find_properties(
@@ -174,24 +166,33 @@ PhysicalDeviceFeatures find_features(const VkPhysicalDevice device, const std::u
 
         if (extensions.contains(VK_KHR_ACCELERATION_STRUCTURE_EXTENSION_NAME))
         {
-                res.acceleration_structure.emplace();
-                res.acceleration_structure->sType =
+                res.acceleration_structure.sType =
                         VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_ACCELERATION_STRUCTURE_FEATURES_KHR;
-                connect(last, *res.acceleration_structure);
+                connect(last, res.acceleration_structure);
+        }
+        else
+        {
+                res.acceleration_structure = {};
         }
 
         if (extensions.contains(VK_KHR_RAY_QUERY_EXTENSION_NAME))
         {
-                res.ray_query.emplace();
-                res.ray_query->sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_RAY_QUERY_FEATURES_KHR;
-                connect(last, *res.ray_query);
+                res.ray_query.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_RAY_QUERY_FEATURES_KHR;
+                connect(last, res.ray_query);
+        }
+        else
+        {
+                res.ray_query = {};
         }
 
         if (extensions.contains(VK_KHR_RAY_TRACING_PIPELINE_EXTENSION_NAME))
         {
-                res.ray_tracing_pipeline.emplace();
-                res.ray_tracing_pipeline->sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_RAY_TRACING_PIPELINE_FEATURES_KHR;
-                connect(last, *res.ray_tracing_pipeline);
+                res.ray_tracing_pipeline.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_RAY_TRACING_PIPELINE_FEATURES_KHR;
+                connect(last, res.ray_tracing_pipeline);
+        }
+        else
+        {
+                res.ray_tracing_pipeline = {};
         }
 
         vkGetPhysicalDeviceFeatures2(device, &features_2);
@@ -251,24 +252,24 @@ void make_physical_device_features(
         device_features->features_12.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_VULKAN_1_2_FEATURES;
         connect(last, device_features->features_12);
 
-        if (device_features->acceleration_structure)
+        if (any_feature_enabled(device_features->acceleration_structure))
         {
-                device_features->acceleration_structure->sType =
+                device_features->acceleration_structure.sType =
                         VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_ACCELERATION_STRUCTURE_FEATURES_KHR;
-                connect(last, *device_features->acceleration_structure);
+                connect(last, device_features->acceleration_structure);
         }
 
-        if (device_features->ray_query)
+        if (any_feature_enabled(device_features->ray_query))
         {
-                device_features->ray_query->sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_RAY_QUERY_FEATURES_KHR;
-                connect(last, *device_features->ray_query);
+                device_features->ray_query.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_RAY_QUERY_FEATURES_KHR;
+                connect(last, device_features->ray_query);
         }
 
-        if (device_features->ray_tracing_pipeline)
+        if (any_feature_enabled(device_features->ray_tracing_pipeline))
         {
-                device_features->ray_tracing_pipeline->sType =
+                device_features->ray_tracing_pipeline.sType =
                         VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_RAY_TRACING_PIPELINE_FEATURES_KHR;
-                connect(last, *device_features->ray_tracing_pipeline);
+                connect(last, device_features->ray_tracing_pipeline);
         }
 }
 
@@ -282,18 +283,18 @@ void add_physical_device_feature_extensions(
                 extensions->emplace_back(VK_KHR_ACCELERATION_STRUCTURE_EXTENSION_NAME);
         };
 
-        if (features.acceleration_structure)
+        if (any_feature_enabled(features.acceleration_structure))
         {
                 add_acceleration_structure_extensions();
         }
 
-        if (features.ray_query)
+        if (any_feature_enabled(features.ray_query))
         {
                 add_acceleration_structure_extensions();
                 extensions->emplace_back(VK_KHR_RAY_QUERY_EXTENSION_NAME);
         }
 
-        if (features.ray_tracing_pipeline)
+        if (any_feature_enabled(features.ray_tracing_pipeline))
         {
                 add_acceleration_structure_extensions();
                 extensions->emplace_back(VK_KHR_RAY_TRACING_PIPELINE_EXTENSION_NAME);
