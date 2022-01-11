@@ -17,9 +17,11 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "physical_device.h"
 
+#include "error.h"
 #include "features.h"
 #include "overview.h"
 #include "print.h"
+#include "settings.h"
 #include "surface.h"
 
 #include <src/com/alg.h>
@@ -28,6 +30,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/com/print.h>
 
 #include <algorithm>
+#include <sstream>
 
 namespace ns::vulkan
 {
@@ -59,6 +62,29 @@ bool find_family(
         }
 
         return false;
+}
+
+std::vector<bool> find_queue_family_presentation_support(const VkSurfaceKHR surface, const VkPhysicalDevice device)
+{
+        std::uint32_t family_count;
+        vkGetPhysicalDeviceQueueFamilyProperties(device, &family_count, nullptr);
+
+        std::vector<bool> presentation_support(family_count, false);
+
+        if (surface == VK_NULL_HANDLE)
+        {
+                return presentation_support;
+        }
+
+        for (std::uint32_t family_index = 0; family_index < family_count; ++family_index)
+        {
+                VkBool32 supported;
+                VULKAN_CHECK(vkGetPhysicalDeviceSurfaceSupportKHR(device, family_index, surface, &supported));
+
+                presentation_support[family_index] = (supported == VK_TRUE);
+        }
+
+        return presentation_support;
 }
 
 int device_priority(const PhysicalDevice& physical_device)
@@ -116,7 +142,7 @@ PhysicalDevice::PhysicalDevice(const VkPhysicalDevice physical_device, const VkS
         ASSERT(info_.queue_families.size() == presentation_support_.size());
 }
 
-const DeviceInfo& PhysicalDevice::info() const
+const PhysicalDeviceInfo& PhysicalDevice::info() const
 {
         return info_;
 }
@@ -131,12 +157,12 @@ const std::unordered_set<std::string>& PhysicalDevice::extensions() const
         return info_.extensions;
 }
 
-const DeviceProperties& PhysicalDevice::properties() const
+const PhysicalDeviceProperties& PhysicalDevice::properties() const
 {
         return info_.properties;
 }
 
-const DeviceFeatures& PhysicalDevice::features() const
+const PhysicalDeviceFeatures& PhysicalDevice::features() const
 {
         return info_.features;
 }
@@ -202,11 +228,59 @@ bool PhysicalDevice::queue_family_supports_presentation(const std::uint32_t inde
 
 //
 
+std::vector<VkPhysicalDevice> find_physical_devices(const VkInstance instance)
+{
+        std::uint32_t count;
+        VULKAN_CHECK(vkEnumeratePhysicalDevices(instance, &count, nullptr));
+
+        if (count < 1)
+        {
+                error("No Vulkan physical device found");
+        }
+
+        std::vector<VkPhysicalDevice> all_devices(count);
+        VULKAN_CHECK(vkEnumeratePhysicalDevices(instance, &count, all_devices.data()));
+
+        std::vector<VkPhysicalDevice> devices;
+
+        for (const VkPhysicalDevice device : all_devices)
+        {
+                VkPhysicalDeviceProperties properties;
+                vkGetPhysicalDeviceProperties(device, &properties);
+
+                if (api_version_suitable(properties.apiVersion))
+                {
+                        devices.push_back(device);
+                }
+        }
+
+        if (!devices.empty())
+        {
+                return devices;
+        }
+
+        std::ostringstream oss;
+        oss << "No Vulkan physical device found with minimum supported version ";
+        oss << api_version_to_string(API_VERSION);
+        oss << '\n';
+        oss << "Found " << (all_devices.size() > 1 ? "devices" : "device");
+        for (const VkPhysicalDevice device : all_devices)
+        {
+                oss << '\n';
+                VkPhysicalDeviceProperties properties;
+                vkGetPhysicalDeviceProperties(device, &properties);
+                oss << static_cast<const char*>(properties.deviceName) << "\n";
+                oss << "  API version " << api_version_to_string(properties.apiVersion);
+        }
+
+        error(oss.str());
+}
+
 PhysicalDevice find_physical_device(
         const VkInstance instance,
         const VkSurfaceKHR surface,
         std::vector<std::string> required_extensions,
-        const DeviceFeatures& required_features)
+        const PhysicalDeviceFeatures& required_features)
 {
         sort_and_unique(&required_extensions);
 

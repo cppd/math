@@ -38,9 +38,9 @@ namespace
 constexpr int VERTEX_COUNT = 4;
 constexpr VkFormat IMAGE_FORMAT = VK_FORMAT_R32_SFLOAT;
 
-vulkan::DeviceFeatures device_features()
+vulkan::PhysicalDeviceFeatures device_features()
 {
-        vulkan::DeviceFeatures features{};
+        vulkan::PhysicalDeviceFeatures features{};
         features.features_10.vertexPipelineStoresAndAtomics = VK_TRUE;
         return features;
 }
@@ -240,9 +240,9 @@ public:
 };
 }
 
-vulkan::DeviceFeatures View::required_device_features()
+vulkan::PhysicalDeviceFeatures View::required_device_features()
 {
-        vulkan::DeviceFeatures features = device_features();
+        vulkan::PhysicalDeviceFeatures features = device_features();
         vulkan::add_features(&features, ComputeImage::required_device_features());
         return features;
 }

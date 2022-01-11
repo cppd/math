@@ -17,9 +17,9 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
-#include "device_info.h"
 #include "objects.h"
 #include "physical_device.h"
+#include "physical_device_info.h"
 
 #include <string>
 #include <unordered_map>
@@ -31,5 +31,5 @@ handle::Device create_device(
         const PhysicalDevice* physical_device,
         const std::unordered_map<std::uint32_t, std::uint32_t>& queue_families,
         std::vector<std::string> required_extensions,
-        const DeviceFeatures& features);
+        const PhysicalDeviceFeatures& features);
 }

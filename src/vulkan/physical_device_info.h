@@ -25,7 +25,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 namespace ns::vulkan
 {
-struct DeviceProperties final
+struct PhysicalDeviceProperties final
 {
         VkPhysicalDeviceProperties properties_10;
         VkPhysicalDeviceVulkan11Properties properties_11;
@@ -34,7 +34,7 @@ struct DeviceProperties final
         std::optional<VkPhysicalDeviceRayTracingPipelinePropertiesKHR> ray_tracing_pipeline;
 };
 
-struct DeviceFeatures final
+struct PhysicalDeviceFeatures final
 {
         VkPhysicalDeviceFeatures features_10{};
         VkPhysicalDeviceVulkan11Features features_11{};
@@ -43,24 +43,22 @@ struct DeviceFeatures final
         std::optional<VkPhysicalDeviceRayTracingPipelineFeaturesKHR> ray_tracing_pipeline;
 };
 
-struct DeviceInfo final
+struct PhysicalDeviceInfo final
 {
         std::unordered_set<std::string> extensions;
-        DeviceProperties properties;
-        DeviceFeatures features;
+        PhysicalDeviceProperties properties;
+        PhysicalDeviceFeatures features;
         std::vector<VkQueueFamilyProperties> queue_families;
 };
 
-std::vector<VkPhysicalDevice> find_physical_devices(VkInstance instance);
+PhysicalDeviceInfo find_physical_device_info(VkPhysicalDevice device);
 
-DeviceInfo find_physical_device_info(VkPhysicalDevice device);
-
-std::vector<bool> find_queue_family_presentation_support(VkSurfaceKHR surface, VkPhysicalDevice device);
-
-void make_device_features(
-        const DeviceFeatures& features,
+void make_physical_device_features(
+        const PhysicalDeviceFeatures& features,
         VkPhysicalDeviceFeatures2* features_2,
-        DeviceFeatures* device_features);
+        PhysicalDeviceFeatures* device_features);
 
-void add_device_feature_extensions(const DeviceFeatures& features, std::vector<std::string>* extensions);
+void add_physical_device_feature_extensions(
+        const PhysicalDeviceFeatures& features,
+        std::vector<std::string>* extensions);
 }

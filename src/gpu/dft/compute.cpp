@@ -64,15 +64,15 @@ namespace
 {
 constexpr const Vector2i GROUP_SIZE_2D = Vector2i(16, 16);
 
-vulkan::DeviceFeatures image_device_features()
+vulkan::PhysicalDeviceFeatures image_device_features()
 {
         return {};
 }
-vulkan::DeviceFeatures vector_required_device_features()
+vulkan::PhysicalDeviceFeatures vector_required_device_features()
 {
         return {};
 }
-vulkan::DeviceFeatures vector_optional_device_features()
+vulkan::PhysicalDeviceFeatures vector_optional_device_features()
 {
         return {};
 }
@@ -295,7 +295,7 @@ public:
 };
 }
 
-vulkan::DeviceFeatures ComputeImage::required_device_features()
+vulkan::PhysicalDeviceFeatures ComputeImage::required_device_features()
 {
         return image_device_features();
 }

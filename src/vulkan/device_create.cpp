@@ -76,7 +76,7 @@ handle::Device create_device(
         const PhysicalDevice* const physical_device,
         const std::unordered_map<std::uint32_t, std::uint32_t>& queue_families,
         std::vector<std::string> required_extensions,
-        const DeviceFeatures& features)
+        const PhysicalDeviceFeatures& features)
 {
         check_queue_families(*physical_device, queue_families);
 
@@ -112,7 +112,7 @@ handle::Device create_device(
 
         info += "\nVulkan device features: {" + strings_to_sorted_string(features_to_strings(features, true)) + "}";
 
-        add_device_feature_extensions(features, &required_extensions);
+        add_physical_device_feature_extensions(features, &required_extensions);
         sort_and_unique(&required_extensions);
         for (const std::string& extension : required_extensions)
         {
@@ -128,8 +128,8 @@ handle::Device create_device(
         info += "\nVulkan device extensions: {" + strings_to_sorted_string(extensions) + "}";
 
         VkPhysicalDeviceFeatures2 features_2;
-        DeviceFeatures device_features;
-        make_device_features(features, &features_2, &device_features);
+        PhysicalDeviceFeatures device_features;
+        make_physical_device_features(features, &features_2, &device_features);
         create_info.pNext = &features_2;
 
         LOG(info);

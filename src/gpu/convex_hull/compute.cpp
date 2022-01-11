@@ -41,7 +41,7 @@ namespace ns::gpu::convex_hull
 {
 namespace
 {
-vulkan::DeviceFeatures device_features()
+vulkan::PhysicalDeviceFeatures device_features()
 {
         return {};
 }
@@ -237,7 +237,7 @@ public:
 };
 }
 
-vulkan::DeviceFeatures Compute::required_device_features()
+vulkan::PhysicalDeviceFeatures Compute::required_device_features()
 {
         return device_features();
 }

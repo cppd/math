@@ -23,13 +23,13 @@ namespace ns::view
 {
 std::unique_ptr<vulkan::VulkanInstance> create_instance(
         const window::WindowID window,
-        const vulkan::DeviceFeatures& required_device_features)
+        const vulkan::PhysicalDeviceFeatures& required_device_features)
 {
         const std::vector<std::string> instance_extensions = window::vulkan_create_surface_required_extensions();
 
         const std::vector<std::string> device_extensions = {};
 
-        const vulkan::DeviceFeatures optional_device_features = {};
+        const vulkan::PhysicalDeviceFeatures optional_device_features = {};
 
         const std::function<VkSurfaceKHR(VkInstance)> surface_function = [&](const VkInstance instance)
         {

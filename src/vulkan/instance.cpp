@@ -83,8 +83,8 @@ void check_family_indices(const CommandPool& pool, const T& queues)
 VulkanInstance::VulkanInstance(
         const std::vector<std::string>& required_instance_extensions,
         const std::vector<std::string>& required_device_extensions,
-        const DeviceFeatures& required_device_features,
-        const DeviceFeatures& optional_device_features,
+        const PhysicalDeviceFeatures& required_device_features,
+        const PhysicalDeviceFeatures& optional_device_features,
         const std::function<VkSurfaceKHR(VkInstance)>& create_surface)
         : instance_(create_instance(required_instance_extensions)),
           callback_(

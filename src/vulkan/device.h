@@ -17,9 +17,9 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
-#include "device_info.h"
 #include "objects.h"
 #include "physical_device.h"
+#include "physical_device_info.h"
 
 #include <string>
 #include <unordered_map>
@@ -30,7 +30,7 @@ namespace ns::vulkan
 class Device final
 {
         const PhysicalDevice* physical_device_ = nullptr;
-        DeviceFeatures features_;
+        PhysicalDeviceFeatures features_;
         handle::Device device_;
         std::unordered_map<std::uint32_t, std::vector<VkQueue>> queues_;
 
@@ -38,8 +38,8 @@ public:
         Device(const PhysicalDevice* physical_device,
                const std::unordered_map<std::uint32_t, std::uint32_t>& queue_families,
                const std::vector<std::string>& required_extensions,
-               const DeviceFeatures& required_features,
-               const DeviceFeatures& optional_features);
+               const PhysicalDeviceFeatures& required_features,
+               const PhysicalDeviceFeatures& optional_features);
 
         operator VkDevice() const& noexcept
         {
@@ -49,8 +49,8 @@ public:
 
         VkPhysicalDevice physical_device() const;
 
-        const DeviceFeatures& features() const;
-        const DeviceProperties& properties() const;
+        const PhysicalDeviceFeatures& features() const;
+        const PhysicalDeviceProperties& properties() const;
 
         Queue queue(std::uint32_t family_index, std::uint32_t queue_index) const;
 };

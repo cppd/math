@@ -30,7 +30,7 @@ namespace ns::gpu::text_writer
 {
 struct View
 {
-        static vulkan::DeviceFeatures required_device_features();
+        static vulkan::PhysicalDeviceFeatures required_device_features();
 
         virtual ~View() = default;
 

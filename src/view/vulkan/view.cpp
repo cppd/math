@@ -78,9 +78,9 @@ static_assert(
         2 <= std::tuple_size_v<
                 std::remove_reference_t<decltype(std::declval<vulkan::VulkanInstance>().graphics_compute_queues())>>);
 
-vulkan::DeviceFeatures device_features()
+vulkan::PhysicalDeviceFeatures device_features()
 {
-        vulkan::DeviceFeatures features{};
+        vulkan::PhysicalDeviceFeatures features{};
         if (MINIMUM_SAMPLE_COUNT > 1 && SAMPLE_RATE_SHADING)
         {
                 features.features_10.sampleRateShading = VK_TRUE;

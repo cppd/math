@@ -65,8 +65,8 @@ Device::Device(
         const PhysicalDevice* const physical_device,
         const std::unordered_map<std::uint32_t, std::uint32_t>& queue_families,
         const std::vector<std::string>& required_extensions,
-        const DeviceFeatures& required_features,
-        const DeviceFeatures& optional_features)
+        const PhysicalDeviceFeatures& required_features,
+        const PhysicalDeviceFeatures& optional_features)
         : physical_device_(physical_device),
           features_(make_features(required_features, optional_features, physical_device_->features())),
           device_(create_device(physical_device_, queue_families, required_extensions, features_)),
@@ -79,12 +79,12 @@ VkPhysicalDevice Device::physical_device() const
         return physical_device_->device();
 }
 
-const DeviceFeatures& Device::features() const
+const PhysicalDeviceFeatures& Device::features() const
 {
         return features_;
 }
 
-const DeviceProperties& Device::properties() const
+const PhysicalDeviceProperties& Device::properties() const
 {
         return physical_device_->properties();
 }

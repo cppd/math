@@ -101,7 +101,7 @@ void add_resolve_mode(
 
 #define ADD_RESOLVE_MODE_12(v) add_resolve_mode(device_properties.properties_12.v, #v, &properties)
 
-std::vector<std::tuple<std::string, std::string>> find_properties(const DeviceProperties& device_properties)
+std::vector<std::tuple<std::string, std::string>> find_properties(const PhysicalDeviceProperties& device_properties)
 {
         std::vector<std::tuple<std::string, std::string>> properties;
 

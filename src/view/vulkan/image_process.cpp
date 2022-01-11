@@ -22,9 +22,9 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 namespace ns::view
 {
-vulkan::DeviceFeatures ImageProcess::required_device_features()
+vulkan::PhysicalDeviceFeatures ImageProcess::required_device_features()
 {
-        vulkan::DeviceFeatures features;
+        vulkan::PhysicalDeviceFeatures features;
         vulkan::add_features(&features, gpu::convex_hull::View::required_device_features());
         vulkan::add_features(&features, gpu::dft::View::required_device_features());
         vulkan::add_features(&features, gpu::optical_flow::View::required_device_features());

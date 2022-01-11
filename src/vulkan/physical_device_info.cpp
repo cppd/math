@@ -15,7 +15,7 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include "device_info.h"
+#include "physical_device_info.h"
 
 #include "error.h"
 #include "print.h"
@@ -82,7 +82,7 @@ void connect(void**& last, T& s)
         last = &s.pNext;
 }
 
-void set_nullptr_next(DeviceProperties* const properties)
+void set_nullptr_next(PhysicalDeviceProperties* const properties)
 {
         properties->properties_11.pNext = nullptr;
         properties->properties_12.pNext = nullptr;
@@ -96,7 +96,7 @@ void set_nullptr_next(DeviceProperties* const properties)
         }
 }
 
-void set_nullptr_next(DeviceFeatures* const features)
+void set_nullptr_next(PhysicalDeviceFeatures* const features)
 {
         features->features_11.pNext = nullptr;
         features->features_12.pNext = nullptr;
@@ -110,9 +110,11 @@ void set_nullptr_next(DeviceFeatures* const features)
         }
 }
 
-DeviceProperties find_properties(const VkPhysicalDevice device, const std::unordered_set<std::string>& extensions)
+PhysicalDeviceProperties find_properties(
+        const VkPhysicalDevice device,
+        const std::unordered_set<std::string>& extensions)
 {
-        DeviceProperties res;
+        PhysicalDeviceProperties res;
 
         void** last = nullptr;
 
@@ -150,9 +152,9 @@ DeviceProperties find_properties(const VkPhysicalDevice device, const std::unord
         return res;
 }
 
-DeviceFeatures find_features(const VkPhysicalDevice device, const std::unordered_set<std::string>& extensions)
+PhysicalDeviceFeatures find_features(const VkPhysicalDevice device, const std::unordered_set<std::string>& extensions)
 {
-        DeviceFeatures res;
+        PhysicalDeviceFeatures res;
 
         void** last = nullptr;
 
@@ -207,59 +209,11 @@ std::vector<VkQueueFamilyProperties> find_queue_families(const VkPhysicalDevice 
 }
 }
 
-std::vector<VkPhysicalDevice> find_physical_devices(const VkInstance instance)
-{
-        std::uint32_t count;
-        VULKAN_CHECK(vkEnumeratePhysicalDevices(instance, &count, nullptr));
-
-        if (count < 1)
-        {
-                error("No Vulkan physical device found");
-        }
-
-        std::vector<VkPhysicalDevice> all_devices(count);
-        VULKAN_CHECK(vkEnumeratePhysicalDevices(instance, &count, all_devices.data()));
-
-        std::vector<VkPhysicalDevice> devices;
-
-        for (const VkPhysicalDevice device : all_devices)
-        {
-                VkPhysicalDeviceProperties properties;
-                vkGetPhysicalDeviceProperties(device, &properties);
-
-                if (api_version_suitable(properties.apiVersion))
-                {
-                        devices.push_back(device);
-                }
-        }
-
-        if (!devices.empty())
-        {
-                return devices;
-        }
-
-        std::ostringstream oss;
-        oss << "No Vulkan physical device found with minimum supported version ";
-        oss << api_version_to_string(API_VERSION);
-        oss << '\n';
-        oss << "Found " << (all_devices.size() > 1 ? "devices" : "device");
-        for (const VkPhysicalDevice device : all_devices)
-        {
-                oss << '\n';
-                VkPhysicalDeviceProperties properties;
-                vkGetPhysicalDeviceProperties(device, &properties);
-                oss << static_cast<const char*>(properties.deviceName) << "\n";
-                oss << "  API version " << api_version_to_string(properties.apiVersion);
-        }
-
-        error(oss.str());
-}
-
-DeviceInfo find_physical_device_info(const VkPhysicalDevice device)
+PhysicalDeviceInfo find_physical_device_info(const VkPhysicalDevice device)
 {
         check_api_version(device);
 
-        DeviceInfo info;
+        PhysicalDeviceInfo info;
         info.extensions = find_extensions(device);
         info.properties = find_properties(device, info.extensions);
         info.features = find_features(device, info.extensions);
@@ -267,33 +221,10 @@ DeviceInfo find_physical_device_info(const VkPhysicalDevice device)
         return info;
 }
 
-std::vector<bool> find_queue_family_presentation_support(const VkSurfaceKHR surface, const VkPhysicalDevice device)
-{
-        std::uint32_t family_count;
-        vkGetPhysicalDeviceQueueFamilyProperties(device, &family_count, nullptr);
-
-        std::vector<bool> presentation_support(family_count, false);
-
-        if (surface == VK_NULL_HANDLE)
-        {
-                return presentation_support;
-        }
-
-        for (std::uint32_t family_index = 0; family_index < family_count; ++family_index)
-        {
-                VkBool32 supported;
-                VULKAN_CHECK(vkGetPhysicalDeviceSurfaceSupportKHR(device, family_index, surface, &supported));
-
-                presentation_support[family_index] = (supported == VK_TRUE);
-        }
-
-        return presentation_support;
-}
-
-void make_device_features(
-        const DeviceFeatures& features,
+void make_physical_device_features(
+        const PhysicalDeviceFeatures& features,
         VkPhysicalDeviceFeatures2* const features_2,
-        DeviceFeatures* const device_features)
+        PhysicalDeviceFeatures* const device_features)
 {
         *device_features = features;
 
@@ -324,7 +255,9 @@ void make_device_features(
         }
 }
 
-void add_device_feature_extensions(const DeviceFeatures& features, std::vector<std::string>* extensions)
+void add_physical_device_feature_extensions(
+        const PhysicalDeviceFeatures& features,
+        std::vector<std::string>* const extensions)
 {
         const auto add_acceleration_structure_extensions = [&]
         {

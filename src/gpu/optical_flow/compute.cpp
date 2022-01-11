@@ -53,7 +53,7 @@ namespace
 {
 constexpr VkFormat IMAGE_FORMAT = VK_FORMAT_R32_SFLOAT;
 
-vulkan::DeviceFeatures device_features()
+vulkan::PhysicalDeviceFeatures device_features()
 {
         return {};
 }
@@ -428,7 +428,7 @@ public:
 };
 }
 
-vulkan::DeviceFeatures Compute::required_device_features()
+vulkan::PhysicalDeviceFeatures Compute::required_device_features()
 {
         return device_features();
 }

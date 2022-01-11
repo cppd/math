@@ -27,7 +27,7 @@ namespace ns::gpu::pencil_sketch
 {
 struct Compute
 {
-        static vulkan::DeviceFeatures required_device_features();
+        static vulkan::PhysicalDeviceFeatures required_device_features();
 
         virtual ~Compute() = default;
 

@@ -337,9 +337,9 @@ void features_to_strings(const Features& features, const bool enabled, std::vect
 
 template <bool REQUIRED>
 void set_features(
-        const DeviceFeatures& features,
-        const DeviceFeatures& supported_features,
-        DeviceFeatures* const result_features)
+        const PhysicalDeviceFeatures& features,
+        const PhysicalDeviceFeatures& supported_features,
+        PhysicalDeviceFeatures* const result_features)
 {
         set_features<REQUIRED>(features.features_10, supported_features.features_10, &result_features->features_10);
         set_features<REQUIRED>(features.features_11, supported_features.features_11, &result_features->features_11);
@@ -347,19 +347,19 @@ void set_features(
 }
 }
 
-void add_features(DeviceFeatures* const dst, const DeviceFeatures& src)
+void add_features(PhysicalDeviceFeatures* const dst, const PhysicalDeviceFeatures& src)
 {
         add_features(&dst->features_10, src.features_10);
         add_features(&dst->features_11, src.features_11);
         add_features(&dst->features_12, src.features_12);
 }
 
-DeviceFeatures make_features(
-        const DeviceFeatures& required_features,
-        const DeviceFeatures& optional_features,
-        const DeviceFeatures& supported_features)
+PhysicalDeviceFeatures make_features(
+        const PhysicalDeviceFeatures& required_features,
+        const PhysicalDeviceFeatures& optional_features,
+        const PhysicalDeviceFeatures& supported_features)
 {
-        DeviceFeatures result_features = {};
+        PhysicalDeviceFeatures result_features = {};
 
         try
         {
@@ -382,7 +382,7 @@ DeviceFeatures make_features(
         return result_features;
 }
 
-bool check_features(const DeviceFeatures& required_features, const DeviceFeatures& supported_features)
+bool check_features(const PhysicalDeviceFeatures& required_features, const PhysicalDeviceFeatures& supported_features)
 {
         try
         {
@@ -397,7 +397,7 @@ bool check_features(const DeviceFeatures& required_features, const DeviceFeature
         return true;
 }
 
-std::vector<std::string> features_to_strings(const DeviceFeatures& features, const bool enabled)
+std::vector<std::string> features_to_strings(const PhysicalDeviceFeatures& features, const bool enabled)
 {
         std::vector<std::string> res;
         features_to_strings(features.features_10, enabled, &res);

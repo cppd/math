@@ -25,5 +25,5 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 namespace ns::vulkan
 {
-std::vector<std::tuple<std::string, std::string>> find_properties(const DeviceProperties& device_properties);
+std::vector<std::tuple<std::string, std::string>> find_properties(const PhysicalDeviceProperties& device_properties);
 }

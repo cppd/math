@@ -38,9 +38,9 @@ namespace ns::gpu::optical_flow
 {
 namespace
 {
-vulkan::DeviceFeatures device_features()
+vulkan::PhysicalDeviceFeatures device_features()
 {
-        vulkan::DeviceFeatures features{};
+        vulkan::PhysicalDeviceFeatures features{};
         features.features_10.vertexPipelineStoresAndAtomics = VK_TRUE;
         return features;
 }
@@ -267,9 +267,9 @@ public:
 };
 }
 
-vulkan::DeviceFeatures View::required_device_features()
+vulkan::PhysicalDeviceFeatures View::required_device_features()
 {
-        vulkan::DeviceFeatures features = device_features();
+        vulkan::PhysicalDeviceFeatures features = device_features();
         vulkan::add_features(&features, Compute::required_device_features());
         return features;
 }

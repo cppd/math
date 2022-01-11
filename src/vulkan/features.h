@@ -17,18 +17,20 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
-#include "device_info.h"
+#include "physical_device_info.h"
 
 namespace ns::vulkan
 {
-void add_features(DeviceFeatures* dst, const DeviceFeatures& src);
+void add_features(PhysicalDeviceFeatures* dst, const PhysicalDeviceFeatures& src);
 
-DeviceFeatures make_features(
-        const DeviceFeatures& required_features,
-        const DeviceFeatures& optional_features,
-        const DeviceFeatures& supported_features);
+PhysicalDeviceFeatures make_features(
+        const PhysicalDeviceFeatures& required_features,
+        const PhysicalDeviceFeatures& optional_features,
+        const PhysicalDeviceFeatures& supported_features);
 
-[[nodiscard]] bool check_features(const DeviceFeatures& required_features, const DeviceFeatures& supported_features);
+[[nodiscard]] bool check_features(
+        const PhysicalDeviceFeatures& required_features,
+        const PhysicalDeviceFeatures& supported_features);
 
-std::vector<std::string> features_to_strings(const DeviceFeatures& features, bool enabled);
+std::vector<std::string> features_to_strings(const PhysicalDeviceFeatures& features, bool enabled);
 }

@@ -53,9 +53,9 @@ constexpr VkImageLayout DEPTH_COPY_IMAGE_LAYOUT = VK_IMAGE_LAYOUT_SHADER_READ_ON
 constexpr std::uint32_t OBJECTS_CLEAR_VALUE = 0;
 constexpr std::uint32_t TRANSPARENCY_NODE_BUFFER_MAX_SIZE = (1ull << 30);
 
-vulkan::DeviceFeatures device_features()
+vulkan::PhysicalDeviceFeatures device_features()
 {
-        vulkan::DeviceFeatures features{};
+        vulkan::PhysicalDeviceFeatures features{};
         features.features_10.geometryShader = VK_TRUE;
         features.features_10.fragmentStoresAndAtomics = VK_TRUE;
         features.features_10.shaderStorageImageMultisample = VK_TRUE;
@@ -465,7 +465,7 @@ public:
 };
 }
 
-vulkan::DeviceFeatures Renderer::required_device_features()
+vulkan::PhysicalDeviceFeatures Renderer::required_device_features()
 {
         return device_features();
 }

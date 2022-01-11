@@ -17,8 +17,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
-#include "device_info.h"
 #include "objects.h"
+#include "physical_device_info.h"
 
 #include <string>
 #include <unordered_set>
@@ -29,7 +29,7 @@ namespace ns::vulkan
 class PhysicalDevice final
 {
         VkPhysicalDevice physical_device_;
-        DeviceInfo info_;
+        PhysicalDeviceInfo info_;
         std::vector<bool> presentation_support_;
 
 public:
@@ -37,10 +37,10 @@ public:
 
         VkPhysicalDevice device() const;
 
-        const DeviceInfo& info() const;
+        const PhysicalDeviceInfo& info() const;
         const std::unordered_set<std::string>& extensions() const;
-        const DeviceProperties& properties() const;
-        const DeviceFeatures& features() const;
+        const PhysicalDeviceProperties& properties() const;
+        const PhysicalDeviceFeatures& features() const;
         const std::vector<VkQueueFamilyProperties>& queue_families() const;
 
         std::uint32_t family_index(
@@ -55,9 +55,11 @@ public:
         bool queue_family_supports_presentation(std::uint32_t index) const;
 };
 
+std::vector<VkPhysicalDevice> find_physical_devices(VkInstance instance);
+
 PhysicalDevice find_physical_device(
         VkInstance instance,
         VkSurfaceKHR surface,
         std::vector<std::string> required_extensions,
-        const DeviceFeatures& required_features);
+        const PhysicalDeviceFeatures& required_features);
 }

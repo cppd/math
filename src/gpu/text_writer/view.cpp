@@ -53,7 +53,7 @@ constexpr std::array GRAYSCALE_IMAGE_FORMATS = std::to_array<VkFormat>
 });
 // clang-format on
 
-vulkan::DeviceFeatures device_features()
+vulkan::PhysicalDeviceFeatures device_features()
 {
         return {};
 }
@@ -345,7 +345,7 @@ public:
 };
 }
 
-vulkan::DeviceFeatures View::required_device_features()
+vulkan::PhysicalDeviceFeatures View::required_device_features()
 {
         return device_features();
 }
