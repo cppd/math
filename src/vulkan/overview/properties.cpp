@@ -85,21 +85,27 @@ void add_resolve_mode(
 }
 }
 
-#define ADD_VALUE_10(v) add_value(device_properties.properties_10.limits.v, #v, &properties)
+#define ADD_VALUE_10(v) add_value(device_properties.properties_10.limits.v, "Limits::" #v, &properties)
 
-#define ADD_SAMPLE_10(v) add_sample(device_properties.properties_10.limits.v, #v, &properties)
+#define ADD_SAMPLE_10(v) add_sample(device_properties.properties_10.limits.v, "Limits::" #v, &properties)
 
-#define ADD_VALUE_11(v) add_value(device_properties.properties_11.v, #v, &properties)
+#define ADD_VALUE_11(v) add_value(device_properties.properties_11.v, "Vulkan11::" #v, &properties)
 
-#define ADD_SHADER_STAGE_11(v) add_shader_stage(device_properties.properties_11.v, #v, &properties)
+#define ADD_SHADER_STAGE_11(v) add_shader_stage(device_properties.properties_11.v, "Vulkan11::" #v, &properties)
 
-#define ADD_SUBGROUP_FEATURE_11(v) add_subgroup_feature(device_properties.properties_11.v, #v, &properties)
+#define ADD_SUBGROUP_FEATURE_11(v) add_subgroup_feature(device_properties.properties_11.v, "Vulkan11::" #v, &properties)
 
-#define ADD_VALUE_12(v) add_value(device_properties.properties_12.v, #v, &properties)
+#define ADD_VALUE_12(v) add_value(device_properties.properties_12.v, "Vulkan12::" #v, &properties)
 
-#define ADD_SAMPLE_12(v) add_sample(device_properties.properties_12.v, #v, &properties)
+#define ADD_SAMPLE_12(v) add_sample(device_properties.properties_12.v, "Vulkan12::" #v, &properties)
 
-#define ADD_RESOLVE_MODE_12(v) add_resolve_mode(device_properties.properties_12.v, #v, &properties)
+#define ADD_RESOLVE_MODE_12(v) add_resolve_mode(device_properties.properties_12.v, "Vulkan12::" #v, &properties)
+
+#define ADD_VALUE_ACCELERATION_STRUCTURE(v) \
+        add_value(device_properties.acceleration_structure->v, "AccelerationStructure::" #v, &properties)
+
+#define ADD_VALUE_RAY_TRACING_PIPELINE(v) \
+        add_value(device_properties.ray_tracing_pipeline->v, "RayTracingPipeline::" #v, &properties)
 
 std::vector<std::tuple<std::string, std::string>> find_properties(const PhysicalDeviceProperties& device_properties)
 {
@@ -269,6 +275,30 @@ std::vector<std::tuple<std::string, std::string>> find_properties(const Physical
         ADD_VALUE_12(shaderStorageBufferArrayNonUniformIndexingNative);
         ADD_VALUE_12(shaderStorageImageArrayNonUniformIndexingNative);
         ADD_VALUE_12(shaderUniformBufferArrayNonUniformIndexingNative);
+
+        if (device_properties.acceleration_structure)
+        {
+                ADD_VALUE_ACCELERATION_STRUCTURE(maxDescriptorSetAccelerationStructures);
+                ADD_VALUE_ACCELERATION_STRUCTURE(maxDescriptorSetUpdateAfterBindAccelerationStructures);
+                ADD_VALUE_ACCELERATION_STRUCTURE(maxGeometryCount);
+                ADD_VALUE_ACCELERATION_STRUCTURE(maxInstanceCount);
+                ADD_VALUE_ACCELERATION_STRUCTURE(maxPerStageDescriptorAccelerationStructures);
+                ADD_VALUE_ACCELERATION_STRUCTURE(maxPerStageDescriptorUpdateAfterBindAccelerationStructures);
+                ADD_VALUE_ACCELERATION_STRUCTURE(maxPrimitiveCount);
+                ADD_VALUE_ACCELERATION_STRUCTURE(minAccelerationStructureScratchOffsetAlignment);
+        }
+
+        if (device_properties.ray_tracing_pipeline)
+        {
+                ADD_VALUE_RAY_TRACING_PIPELINE(maxRayDispatchInvocationCount);
+                ADD_VALUE_RAY_TRACING_PIPELINE(maxRayHitAttributeSize);
+                ADD_VALUE_RAY_TRACING_PIPELINE(maxRayRecursionDepth);
+                ADD_VALUE_RAY_TRACING_PIPELINE(maxShaderGroupStride);
+                ADD_VALUE_RAY_TRACING_PIPELINE(shaderGroupBaseAlignment);
+                ADD_VALUE_RAY_TRACING_PIPELINE(shaderGroupHandleAlignment);
+                ADD_VALUE_RAY_TRACING_PIPELINE(shaderGroupHandleCaptureReplaySize);
+                ADD_VALUE_RAY_TRACING_PIPELINE(shaderGroupHandleSize);
+        }
 
         std::sort(
                 properties.begin(), properties.end(),
