@@ -24,13 +24,11 @@ namespace ns::vulkan
 void add_features(PhysicalDeviceFeatures* dst, const PhysicalDeviceFeatures& src);
 
 PhysicalDeviceFeatures make_features(
-        const PhysicalDeviceFeatures& required_features,
-        const PhysicalDeviceFeatures& optional_features,
-        const PhysicalDeviceFeatures& supported_features);
+        const PhysicalDeviceFeatures& required,
+        const PhysicalDeviceFeatures& optional,
+        const PhysicalDeviceFeatures& supported);
 
-[[nodiscard]] bool check_features(
-        const PhysicalDeviceFeatures& required_features,
-        const PhysicalDeviceFeatures& supported_features);
+[[nodiscard]] bool check_features(const PhysicalDeviceFeatures& required, const PhysicalDeviceFeatures& supported);
 
 std::vector<std::string> features_to_strings(const PhysicalDeviceFeatures& features, bool enabled);
 }
