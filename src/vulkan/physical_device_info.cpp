@@ -104,6 +104,10 @@ void set_nullptr_next(PhysicalDeviceFeatures* const features)
         {
                 features->acceleration_structure->pNext = nullptr;
         }
+        if (features->ray_query)
+        {
+                features->ray_query->pNext = nullptr;
+        }
         if (features->ray_tracing_pipeline)
         {
                 features->ray_tracing_pipeline->pNext = nullptr;
@@ -174,6 +178,13 @@ PhysicalDeviceFeatures find_features(const VkPhysicalDevice device, const std::u
                 res.acceleration_structure->sType =
                         VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_ACCELERATION_STRUCTURE_FEATURES_KHR;
                 connect(last, *res.acceleration_structure);
+        }
+
+        if (extensions.contains(VK_KHR_RAY_QUERY_EXTENSION_NAME))
+        {
+                res.ray_query.emplace();
+                res.ray_query->sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_RAY_QUERY_FEATURES_KHR;
+                connect(last, *res.ray_query);
         }
 
         if (extensions.contains(VK_KHR_RAY_TRACING_PIPELINE_EXTENSION_NAME))
@@ -247,6 +258,12 @@ void make_physical_device_features(
                 connect(last, *device_features->acceleration_structure);
         }
 
+        if (device_features->ray_query)
+        {
+                device_features->ray_query->sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_RAY_QUERY_FEATURES_KHR;
+                connect(last, *device_features->ray_query);
+        }
+
         if (device_features->ray_tracing_pipeline)
         {
                 device_features->ray_tracing_pipeline->sType =
@@ -265,14 +282,21 @@ void add_physical_device_feature_extensions(
                 extensions->emplace_back(VK_KHR_ACCELERATION_STRUCTURE_EXTENSION_NAME);
         };
 
+        if (features.acceleration_structure)
+        {
+                add_acceleration_structure_extensions();
+        }
+
+        if (features.ray_query)
+        {
+                add_acceleration_structure_extensions();
+                extensions->emplace_back(VK_KHR_RAY_QUERY_EXTENSION_NAME);
+        }
+
         if (features.ray_tracing_pipeline)
         {
                 add_acceleration_structure_extensions();
                 extensions->emplace_back(VK_KHR_RAY_TRACING_PIPELINE_EXTENSION_NAME);
-        }
-        else if (features.acceleration_structure)
-        {
-                add_acceleration_structure_extensions();
         }
 }
 }

@@ -40,6 +40,7 @@ struct PhysicalDeviceFeatures final
         VkPhysicalDeviceVulkan11Features features_11{};
         VkPhysicalDeviceVulkan12Features features_12{};
         std::optional<VkPhysicalDeviceAccelerationStructureFeaturesKHR> acceleration_structure;
+        std::optional<VkPhysicalDeviceRayQueryFeaturesKHR> ray_query;
         std::optional<VkPhysicalDeviceRayTracingPipelineFeaturesKHR> ray_tracing_pipeline;
 };
 
