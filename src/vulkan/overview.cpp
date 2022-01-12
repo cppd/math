@@ -23,8 +23,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "print.h"
 
 #include "overview/device.h"
+#include "overview/device_properties.h"
 #include "overview/print.h"
-#include "overview/properties.h"
 
 #include <src/com/print.h>
 #include <src/com/string_tree.h>
@@ -114,7 +114,7 @@ void properties(const PhysicalDevice& device, const std::size_t device_node, Str
         const std::size_t node = tree->add(device_node, "Properties");
         try
         {
-                for (auto& [name, value] : find_properties(device.properties()))
+                for (auto& [name, value] : device_properties_to_strings(device.properties()))
                 {
                         name += " = ";
                         name += value;

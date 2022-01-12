@@ -15,7 +15,7 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include "properties.h"
+#include "device_properties.h"
 
 #include "print.h"
 
@@ -31,85 +31,86 @@ template <typename T>
 void add_value(
         const T& value,
         const std::string_view& name,
-        std::vector<std::tuple<std::string, std::string>>* const properties)
+        std::vector<std::tuple<std::string, std::string>>* const strings)
 {
-        properties->emplace_back(name, to_string(value));
+        strings->emplace_back(name, to_string(value));
 }
 
 void add_value(
         const VkPointClippingBehavior value,
         const std::string_view& name,
-        std::vector<std::tuple<std::string, std::string>>* const properties)
+        std::vector<std::tuple<std::string, std::string>>* const strings)
 {
-        properties->emplace_back(name, point_clipping_behavior_to_string(value));
+        strings->emplace_back(name, point_clipping_behavior_to_string(value));
 }
 
 void add_value(
         const VkShaderFloatControlsIndependence value,
         const std::string_view& name,
-        std::vector<std::tuple<std::string, std::string>>* const properties)
+        std::vector<std::tuple<std::string, std::string>>* const strings)
 {
-        properties->emplace_back(name, shader_float_controls_independence_to_string(value));
+        strings->emplace_back(name, shader_float_controls_independence_to_string(value));
 }
 
 void add_sample(
         const VkSampleCountFlags flags,
         const std::string_view& name,
-        std::vector<std::tuple<std::string, std::string>>* const properties)
+        std::vector<std::tuple<std::string, std::string>>* const strings)
 {
-        properties->emplace_back(name, samples_to_string(flags));
+        strings->emplace_back(name, samples_to_string(flags));
 }
 
 void add_shader_stage(
         const VkShaderStageFlags flags,
         const std::string_view& name,
-        std::vector<std::tuple<std::string, std::string>>* const properties)
+        std::vector<std::tuple<std::string, std::string>>* const strings)
 {
-        properties->emplace_back(name, shader_stages_to_string(flags));
+        strings->emplace_back(name, shader_stages_to_string(flags));
 }
 
 void add_subgroup_feature(
         const VkSubgroupFeatureFlags flags,
         const std::string_view& name,
-        std::vector<std::tuple<std::string, std::string>>* const properties)
+        std::vector<std::tuple<std::string, std::string>>* const strings)
 {
-        properties->emplace_back(name, subgroup_features_to_string(flags));
+        strings->emplace_back(name, subgroup_features_to_string(flags));
 }
 
 void add_resolve_mode(
         const VkResolveModeFlags flags,
         const std::string_view& name,
-        std::vector<std::tuple<std::string, std::string>>* const properties)
+        std::vector<std::tuple<std::string, std::string>>* const strings)
 {
-        properties->emplace_back(name, resolve_modes_to_string(flags));
+        strings->emplace_back(name, resolve_modes_to_string(flags));
 }
 }
 
-#define ADD_VALUE_10(v) add_value(device_properties.properties_10.limits.v, "Limits::" #v, &properties)
+#define ADD_VALUE_10(v) add_value(properties.properties_10.limits.v, "Limits::" #v, &strings)
 
-#define ADD_SAMPLE_10(v) add_sample(device_properties.properties_10.limits.v, "Limits::" #v, &properties)
+#define ADD_SAMPLE_10(v) add_sample(properties.properties_10.limits.v, "Limits::" #v, &strings)
 
-#define ADD_VALUE_11(v) add_value(device_properties.properties_11.v, "Vulkan11::" #v, &properties)
+#define ADD_VALUE_11(v) add_value(properties.properties_11.v, "Vulkan11::" #v, &strings)
 
-#define ADD_SHADER_STAGE_11(v) add_shader_stage(device_properties.properties_11.v, "Vulkan11::" #v, &properties)
+#define ADD_SHADER_STAGE_11(v) add_shader_stage(properties.properties_11.v, "Vulkan11::" #v, &strings)
 
-#define ADD_SUBGROUP_FEATURE_11(v) add_subgroup_feature(device_properties.properties_11.v, "Vulkan11::" #v, &properties)
+#define ADD_SUBGROUP_FEATURE_11(v) add_subgroup_feature(properties.properties_11.v, "Vulkan11::" #v, &strings)
 
-#define ADD_VALUE_12(v) add_value(device_properties.properties_12.v, "Vulkan12::" #v, &properties)
+#define ADD_VALUE_12(v) add_value(properties.properties_12.v, "Vulkan12::" #v, &strings)
 
-#define ADD_SAMPLE_12(v) add_sample(device_properties.properties_12.v, "Vulkan12::" #v, &properties)
+#define ADD_SAMPLE_12(v) add_sample(properties.properties_12.v, "Vulkan12::" #v, &strings)
 
-#define ADD_RESOLVE_MODE_12(v) add_resolve_mode(device_properties.properties_12.v, "Vulkan12::" #v, &properties)
+#define ADD_RESOLVE_MODE_12(v) add_resolve_mode(properties.properties_12.v, "Vulkan12::" #v, &strings)
 
 #define ADD_VALUE_ACCELERATION_STRUCTURE(v) \
-        add_value(device_properties.acceleration_structure->v, "AccelerationStructure::" #v, &properties)
+        add_value(properties.acceleration_structure->v, "AccelerationStructure::" #v, &strings)
 
 #define ADD_VALUE_RAY_TRACING_PIPELINE(v) \
-        add_value(device_properties.ray_tracing_pipeline->v, "RayTracingPipeline::" #v, &properties)
+        add_value(properties.ray_tracing_pipeline->v, "RayTracingPipeline::" #v, &strings)
 
-std::vector<std::tuple<std::string, std::string>> find_properties(const PhysicalDeviceProperties& device_properties)
+std::vector<std::tuple<std::string, std::string>> device_properties_to_strings(
+        const PhysicalDeviceProperties& properties)
 {
-        std::vector<std::tuple<std::string, std::string>> properties;
+        std::vector<std::tuple<std::string, std::string>> strings;
 
         ADD_SAMPLE_10(framebufferColorSampleCounts);
         ADD_SAMPLE_10(framebufferDepthSampleCounts);
@@ -276,7 +277,7 @@ std::vector<std::tuple<std::string, std::string>> find_properties(const Physical
         ADD_VALUE_12(shaderStorageImageArrayNonUniformIndexingNative);
         ADD_VALUE_12(shaderUniformBufferArrayNonUniformIndexingNative);
 
-        if (device_properties.acceleration_structure)
+        if (properties.acceleration_structure)
         {
                 ADD_VALUE_ACCELERATION_STRUCTURE(maxDescriptorSetAccelerationStructures);
                 ADD_VALUE_ACCELERATION_STRUCTURE(maxDescriptorSetUpdateAfterBindAccelerationStructures);
@@ -288,7 +289,7 @@ std::vector<std::tuple<std::string, std::string>> find_properties(const Physical
                 ADD_VALUE_ACCELERATION_STRUCTURE(minAccelerationStructureScratchOffsetAlignment);
         }
 
-        if (device_properties.ray_tracing_pipeline)
+        if (properties.ray_tracing_pipeline)
         {
                 ADD_VALUE_RAY_TRACING_PIPELINE(maxRayDispatchInvocationCount);
                 ADD_VALUE_RAY_TRACING_PIPELINE(maxRayHitAttributeSize);
@@ -301,12 +302,12 @@ std::vector<std::tuple<std::string, std::string>> find_properties(const Physical
         }
 
         std::sort(
-                properties.begin(), properties.end(),
+                strings.begin(), strings.end(),
                 [](const auto& v1, const auto& v2)
                 {
                         return std::get<0>(v1) < std::get<0>(v2);
                 });
 
-        return properties;
+        return strings;
 }
 }
