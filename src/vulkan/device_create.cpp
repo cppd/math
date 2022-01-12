@@ -20,7 +20,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "features.h"
 #include "print.h"
 
-#include <src/com/alg.h>
 #include <src/com/error.h>
 #include <src/com/log.h>
 #include <src/com/string/vector.h>
@@ -75,7 +74,7 @@ void check_queue_families(
 handle::Device create_device(
         const PhysicalDevice* const physical_device,
         const std::unordered_map<std::uint32_t, std::uint32_t>& queue_families,
-        std::vector<std::string> required_extensions,
+        const std::unordered_set<std::string>& required_extensions,
         const PhysicalDeviceFeatures& required_features)
 {
         check_queue_families(*physical_device, queue_families);
@@ -110,7 +109,6 @@ handle::Device create_device(
         create_info.queueCreateInfoCount = queue_create_infos.size();
         create_info.pQueueCreateInfos = queue_create_infos.data();
 
-        sort_and_unique(&required_extensions);
         for (const std::string& extension : required_extensions)
         {
                 if (!physical_device->extensions().contains(extension))
@@ -118,7 +116,7 @@ handle::Device create_device(
                         error("Vulkan physical device does not support required extension " + extension);
                 }
         }
-        const std::vector<const char*> extensions = const_char_pointer_vector(required_extensions);
+        const std::vector<const char*> extensions = const_char_pointer_vector(&required_extensions);
         create_info.enabledExtensionCount = extensions.size();
         create_info.ppEnabledExtensionNames = extensions.data();
         info += "\nVulkan device extensions: {" + strings_to_sorted_string(extensions) + "}";

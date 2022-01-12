@@ -22,5 +22,17 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 namespace ns
 {
-std::vector<const char*> const_char_pointer_vector(const std::vector<std::string>& v);
+template <typename T>
+std::vector<const char*> const_char_pointer_vector(const T* const v)
+{
+        std::vector<const char*> res;
+        res.reserve(std::size(*v));
+
+        for (const std::string& s : *v)
+        {
+                res.push_back(s.c_str());
+        }
+
+        return res;
+}
 }

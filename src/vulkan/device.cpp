@@ -109,7 +109,7 @@ Device::Device(
           features_(make_features(required_features, optional_features, physical_device_->features())),
           extensions_(
                   make_extensions(features_, required_extensions, optional_extensions, physical_device_->extensions())),
-          device_(create_device(physical_device_, queue_families, required_extensions, features_)),
+          device_(create_device(physical_device_, queue_families, extensions_, features_)),
           queues_(find_queues(device_, queue_families))
 {
 }

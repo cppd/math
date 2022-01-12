@@ -23,13 +23,13 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <string>
 #include <unordered_map>
-#include <vector>
+#include <unordered_set>
 
 namespace ns::vulkan
 {
 handle::Device create_device(
         const PhysicalDevice* physical_device,
         const std::unordered_map<std::uint32_t, std::uint32_t>& queue_families,
-        std::vector<std::string> required_extensions,
+        const std::unordered_set<std::string>& required_extensions,
         const PhysicalDeviceFeatures& required_features);
 }
