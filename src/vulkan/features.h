@@ -19,6 +19,9 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "physical_device_info.h"
 
+#include <string>
+#include <vector>
+
 namespace ns::vulkan
 {
 void add_features(PhysicalDeviceFeatures* dst, const PhysicalDeviceFeatures& src);
