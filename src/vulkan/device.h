@@ -23,6 +23,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <string>
 #include <unordered_map>
+#include <unordered_set>
 #include <vector>
 
 namespace ns::vulkan
@@ -31,6 +32,7 @@ class Device final
 {
         const PhysicalDevice* physical_device_ = nullptr;
         PhysicalDeviceFeatures features_;
+        std::unordered_set<std::string> extensions_;
         handle::Device device_;
         std::unordered_map<std::uint32_t, std::vector<VkQueue>> queues_;
 
@@ -38,6 +40,7 @@ public:
         Device(const PhysicalDevice* physical_device,
                const std::unordered_map<std::uint32_t, std::uint32_t>& queue_families,
                const std::vector<std::string>& required_extensions,
+               const std::vector<std::string>& optional_extensions,
                const PhysicalDeviceFeatures& required_features,
                const PhysicalDeviceFeatures& optional_features);
 
@@ -49,8 +52,9 @@ public:
 
         VkPhysicalDevice physical_device() const;
 
-        const PhysicalDeviceFeatures& features() const;
         const PhysicalDeviceProperties& properties() const;
+        const std::unordered_set<std::string>& extensions() const;
+        const PhysicalDeviceFeatures& features() const;
 
         Queue queue(std::uint32_t family_index, std::uint32_t queue_index) const;
 };

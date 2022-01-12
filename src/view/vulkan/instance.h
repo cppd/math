@@ -27,5 +27,8 @@ namespace ns::view
 {
 std::unique_ptr<vulkan::VulkanInstance> create_instance(
         window::WindowID window,
-        const vulkan::PhysicalDeviceFeatures& required_device_features);
+        std::vector<std::string> required_device_extensions,
+        const std::vector<std::string>& optional_device_extensions,
+        const vulkan::PhysicalDeviceFeatures& required_device_features,
+        const vulkan::PhysicalDeviceFeatures& optional_device_features);
 }

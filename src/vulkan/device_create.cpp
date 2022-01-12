@@ -76,7 +76,7 @@ handle::Device create_device(
         const PhysicalDevice* const physical_device,
         const std::unordered_map<std::uint32_t, std::uint32_t>& queue_families,
         std::vector<std::string> required_extensions,
-        const PhysicalDeviceFeatures& features)
+        const PhysicalDeviceFeatures& required_features)
 {
         check_queue_families(*physical_device, queue_families);
 
@@ -110,27 +110,25 @@ handle::Device create_device(
         create_info.queueCreateInfoCount = queue_create_infos.size();
         create_info.pQueueCreateInfos = queue_create_infos.data();
 
-        info += "\nVulkan device features: {" + strings_to_sorted_string(features_to_strings(features, true)) + "}";
-
-        add_physical_device_feature_extensions(features, &required_extensions);
         sort_and_unique(&required_extensions);
         for (const std::string& extension : required_extensions)
         {
                 if (!physical_device->extensions().contains(extension))
                 {
-                        error("Vulkan physical device does not support extension " + extension);
+                        error("Vulkan physical device does not support required extension " + extension);
                 }
         }
-
         const std::vector<const char*> extensions = const_char_pointer_vector(required_extensions);
         create_info.enabledExtensionCount = extensions.size();
         create_info.ppEnabledExtensionNames = extensions.data();
         info += "\nVulkan device extensions: {" + strings_to_sorted_string(extensions) + "}";
 
         VkPhysicalDeviceFeatures2 features_2;
-        PhysicalDeviceFeatures device_features;
-        make_physical_device_features(features, &features_2, &device_features);
+        PhysicalDeviceFeatures features;
+        make_physical_device_features(required_features, &features_2, &features);
         create_info.pNext = &features_2;
+        info += "\nVulkan device features: {" + strings_to_sorted_string(features_to_strings(required_features, true))
+                + "}";
 
         LOG(info);
 

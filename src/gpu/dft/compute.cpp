@@ -64,15 +64,7 @@ namespace
 {
 constexpr const Vector2i GROUP_SIZE_2D = Vector2i(16, 16);
 
-vulkan::PhysicalDeviceFeatures image_device_features()
-{
-        return {};
-}
-vulkan::PhysicalDeviceFeatures vector_required_device_features()
-{
-        return {};
-}
-vulkan::PhysicalDeviceFeatures vector_optional_device_features()
+vulkan::PhysicalDeviceFeatures device_features()
 {
         return {};
 }
@@ -281,7 +273,7 @@ class DftVector final : public ComputeVector
 
 public:
         DftVector()
-                : instance_({}, {}, vector_required_device_features(), vector_optional_device_features()),
+                : instance_({}, {}, {}, {}, {}, {}),
                   dft_(create_dft(
                           &instance_,
                           &instance_.compute_command_pool(),
@@ -297,7 +289,7 @@ public:
 
 vulkan::PhysicalDeviceFeatures ComputeImage::required_device_features()
 {
-        return image_device_features();
+        return device_features();
 }
 
 std::unique_ptr<ComputeImage> create_compute_image(

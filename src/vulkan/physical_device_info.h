@@ -59,7 +59,5 @@ void make_physical_device_features(
         VkPhysicalDeviceFeatures2* features_2,
         PhysicalDeviceFeatures* device_features);
 
-void add_physical_device_feature_extensions(
-        const PhysicalDeviceFeatures& features,
-        std::vector<std::string>* extensions);
+std::vector<std::string> physical_device_feature_extensions(const PhysicalDeviceFeatures& features);
 }

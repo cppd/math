@@ -52,19 +52,6 @@ std::unordered_map<std::uint32_t, std::uint32_t> compute_queue_count(
         return queues;
 }
 
-std::vector<std::string> merge_required_device_extensions(
-        const bool with_swapchain,
-        const std::vector<std::string>& required_device_extensions)
-{
-        if (with_swapchain)
-        {
-                std::vector<std::string> extensions = required_device_extensions;
-                extensions.emplace_back(VK_KHR_SWAPCHAIN_EXTENSION_NAME);
-                return extensions;
-        }
-        return required_device_extensions;
-}
-
 template <typename T>
 void check_family_indices(const CommandPool& pool, const T& queues)
 {
@@ -83,6 +70,7 @@ void check_family_indices(const CommandPool& pool, const T& queues)
 VulkanInstance::VulkanInstance(
         const std::vector<std::string>& required_instance_extensions,
         const std::vector<std::string>& required_device_extensions,
+        const std::vector<std::string>& optional_device_extensions,
         const PhysicalDeviceFeatures& required_device_features,
         const PhysicalDeviceFeatures& optional_device_features,
         const std::function<VkSurfaceKHR(VkInstance)>& create_surface)
@@ -91,16 +79,11 @@ VulkanInstance::VulkanInstance(
                   instance_.layers_enabled() ? std::make_optional(create_debug_report_callback(instance_))
                                              : std::nullopt),
           surface_(create_surface ? std::optional(handle::SurfaceKHR(instance_, create_surface)) : std::nullopt),
-          //
           physical_device_(find_physical_device(
                   instance_,
-                  //
                   (create_surface ? static_cast<VkSurfaceKHR>(*surface_) : VK_NULL_HANDLE),
-                  //
-                  merge_required_device_extensions(create_surface != nullptr, required_device_extensions),
-                  //
+                  required_device_extensions,
                   required_device_features)),
-          //
           graphics_compute_family_index_(
                   physical_device_.family_index(VK_QUEUE_GRAPHICS_BIT | VK_QUEUE_COMPUTE_BIT, 0, {0})),
           compute_family_index_(
@@ -113,7 +96,6 @@ VulkanInstance::VulkanInstance(
                   // supports either graphics or compute operations
                   {VK_QUEUE_GRAPHICS_BIT, VK_QUEUE_COMPUTE_BIT})),
           presentation_family_index_(create_surface ? physical_device_.presentation_family_index() : NO_FAMILY_INDEX),
-          //
           device_(&physical_device_,
                   compute_queue_count(
                           {{graphics_compute_family_index_, GRAPHICS_COMPUTE_QUEUE_COUNT},
@@ -121,13 +103,10 @@ VulkanInstance::VulkanInstance(
                            {transfer_family_index_, TRANSFER_QUEUE_COUNT},
                            {presentation_family_index_, PRESENTATION_QUEUE_COUNT}},
                           physical_device_.queue_families()),
-                  //
-                  merge_required_device_extensions(create_surface != nullptr, required_device_extensions),
-                  //
+                  required_device_extensions,
+                  optional_device_extensions,
                   required_device_features,
-                  //
                   optional_device_features),
-          //
           graphics_compute_command_pool_(create_command_pool(device_, graphics_compute_family_index_)),
           compute_command_pool_(create_command_pool(device_, compute_family_index_)),
           transfer_command_pool_(create_transient_command_pool(device_, transfer_family_index_))

@@ -23,21 +23,23 @@ namespace ns::view
 {
 std::unique_ptr<vulkan::VulkanInstance> create_instance(
         const window::WindowID window,
-        const vulkan::PhysicalDeviceFeatures& required_device_features)
+        std::vector<std::string> required_device_extensions,
+        const std::vector<std::string>& optional_device_extensions,
+        const vulkan::PhysicalDeviceFeatures& required_device_features,
+        const vulkan::PhysicalDeviceFeatures& optional_device_features)
 {
-        const std::vector<std::string> instance_extensions = window::vulkan_create_surface_required_extensions();
+        const std::vector<std::string> required_instance_extensions =
+                window::vulkan_create_surface_required_extensions();
 
-        const std::vector<std::string> device_extensions = {};
+        required_device_extensions.emplace_back(VK_KHR_SWAPCHAIN_EXTENSION_NAME);
 
-        const vulkan::PhysicalDeviceFeatures optional_device_features = {};
-
-        const std::function<VkSurfaceKHR(VkInstance)> surface_function = [&](const VkInstance instance)
+        const std::function<VkSurfaceKHR(VkInstance)> create_surface = [&](const VkInstance instance)
         {
                 return window::vulkan_create_surface(window, instance);
         };
 
         return std::make_unique<vulkan::VulkanInstance>(
-                instance_extensions, device_extensions, required_device_features, optional_device_features,
-                surface_function);
+                required_instance_extensions, required_device_extensions, optional_device_extensions,
+                required_device_features, optional_device_features, create_surface);
 }
 }

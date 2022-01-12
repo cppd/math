@@ -273,14 +273,14 @@ void make_physical_device_features(
         }
 }
 
-void add_physical_device_feature_extensions(
-        const PhysicalDeviceFeatures& features,
-        std::vector<std::string>* const extensions)
+std::vector<std::string> physical_device_feature_extensions(const PhysicalDeviceFeatures& features)
 {
+        std::vector<std::string> extensions;
+
         const auto add_acceleration_structure_extensions = [&]
         {
-                extensions->emplace_back(VK_KHR_DEFERRED_HOST_OPERATIONS_EXTENSION_NAME);
-                extensions->emplace_back(VK_KHR_ACCELERATION_STRUCTURE_EXTENSION_NAME);
+                extensions.emplace_back(VK_KHR_DEFERRED_HOST_OPERATIONS_EXTENSION_NAME);
+                extensions.emplace_back(VK_KHR_ACCELERATION_STRUCTURE_EXTENSION_NAME);
         };
 
         if (any_feature_enabled(features.acceleration_structure))
@@ -291,13 +291,15 @@ void add_physical_device_feature_extensions(
         if (any_feature_enabled(features.ray_query))
         {
                 add_acceleration_structure_extensions();
-                extensions->emplace_back(VK_KHR_RAY_QUERY_EXTENSION_NAME);
+                extensions.emplace_back(VK_KHR_RAY_QUERY_EXTENSION_NAME);
         }
 
         if (any_feature_enabled(features.ray_tracing_pipeline))
         {
                 add_acceleration_structure_extensions();
-                extensions->emplace_back(VK_KHR_RAY_TRACING_PIPELINE_EXTENSION_NAME);
+                extensions.emplace_back(VK_KHR_RAY_TRACING_PIPELINE_EXTENSION_NAME);
         }
+
+        return extensions;
 }
 }

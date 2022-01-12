@@ -27,6 +27,43 @@ namespace ns::vulkan
 {
 namespace
 {
+std::unordered_set<std::string> make_extensions(
+        const PhysicalDeviceFeatures& required_features,
+        const std::vector<std::string>& required_extensions,
+        const std::vector<std::string>& optional_extensions,
+        const std::unordered_set<std::string>& supported_extensions)
+{
+        std::unordered_set<std::string> res;
+
+        for (const std::string& extension : required_extensions)
+        {
+                if (!supported_extensions.contains(extension))
+                {
+                        error("Vulkan physical device does not support required extension " + extension);
+                }
+                res.insert(extension);
+        }
+
+        for (const std::string& extension : physical_device_feature_extensions(required_features))
+        {
+                if (!supported_extensions.contains(extension))
+                {
+                        error("Vulkan physical device does not support required feature extension " + extension);
+                }
+                res.insert(extension);
+        }
+
+        for (const std::string& extension : optional_extensions)
+        {
+                if (supported_extensions.contains(extension))
+                {
+                        res.insert(extension);
+                }
+        }
+
+        return res;
+}
+
 std::unordered_map<std::uint32_t, std::vector<VkQueue>> find_queues(
         const VkDevice device,
         const std::unordered_map<std::uint32_t, std::uint32_t>& queue_families)
@@ -65,10 +102,13 @@ Device::Device(
         const PhysicalDevice* const physical_device,
         const std::unordered_map<std::uint32_t, std::uint32_t>& queue_families,
         const std::vector<std::string>& required_extensions,
+        const std::vector<std::string>& optional_extensions,
         const PhysicalDeviceFeatures& required_features,
         const PhysicalDeviceFeatures& optional_features)
         : physical_device_(physical_device),
           features_(make_features(required_features, optional_features, physical_device_->features())),
+          extensions_(
+                  make_extensions(features_, required_extensions, optional_extensions, physical_device_->extensions())),
           device_(create_device(physical_device_, queue_families, required_extensions, features_)),
           queues_(find_queues(device_, queue_families))
 {
@@ -79,14 +119,19 @@ VkPhysicalDevice Device::physical_device() const
         return physical_device_->device();
 }
 
-const PhysicalDeviceFeatures& Device::features() const
-{
-        return features_;
-}
-
 const PhysicalDeviceProperties& Device::properties() const
 {
         return physical_device_->properties();
+}
+
+const std::unordered_set<std::string>& Device::extensions() const
+{
+        return extensions_;
+}
+
+const PhysicalDeviceFeatures& Device::features() const
+{
+        return features_;
 }
 
 Queue Device::queue(const std::uint32_t family_index, const std::uint32_t queue_index) const

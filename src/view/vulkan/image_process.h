@@ -55,7 +55,10 @@ class ImageProcess
         void command(const command::OpticalFlowShow& v);
 
 public:
+        static std::vector<std::string> required_device_extensions();
+        static std::vector<std::string> optional_device_extensions();
         static vulkan::PhysicalDeviceFeatures required_device_features();
+        static vulkan::PhysicalDeviceFeatures optional_device_features();
 
         ImageProcess(
                 double window_ppi,

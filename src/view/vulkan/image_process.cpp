@@ -22,6 +22,17 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 namespace ns::view
 {
+
+std::vector<std::string> ImageProcess::required_device_extensions()
+{
+        return {};
+}
+
+std::vector<std::string> ImageProcess::optional_device_extensions()
+{
+        return {};
+}
+
 vulkan::PhysicalDeviceFeatures ImageProcess::required_device_features()
 {
         vulkan::PhysicalDeviceFeatures features;
@@ -30,6 +41,11 @@ vulkan::PhysicalDeviceFeatures ImageProcess::required_device_features()
         vulkan::add_features(&features, gpu::optical_flow::View::required_device_features());
         vulkan::add_features(&features, gpu::pencil_sketch::View::required_device_features());
         return features;
+}
+
+vulkan::PhysicalDeviceFeatures ImageProcess::optional_device_features()
+{
+        return {};
 }
 
 ImageProcess::ImageProcess(
