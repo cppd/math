@@ -41,11 +41,6 @@ namespace ns::gpu::convex_hull
 {
 namespace
 {
-vulkan::PhysicalDeviceFeatures device_features()
-{
-        return {};
-}
-
 int group_size_merge(const int height, const VkPhysicalDeviceLimits& limits)
 {
         return convex_hull::group_size_merge(
@@ -235,11 +230,6 @@ public:
                 instance_->device_wait_idle_noexcept("the Vulkan convex hull compute destructor");
         }
 };
-}
-
-vulkan::PhysicalDeviceFeatures Compute::required_device_features()
-{
-        return device_features();
 }
 
 std::unique_ptr<Compute> create_compute(const vulkan::VulkanInstance* const instance)

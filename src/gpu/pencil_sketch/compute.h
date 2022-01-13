@@ -27,8 +27,6 @@ namespace ns::gpu::pencil_sketch
 {
 struct Compute
 {
-        static vulkan::PhysicalDeviceFeatures required_device_features();
-
         virtual ~Compute() = default;
 
         virtual void compute_commands(VkCommandBuffer command_buffer) const = 0;

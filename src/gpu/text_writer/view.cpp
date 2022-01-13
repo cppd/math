@@ -53,11 +53,6 @@ constexpr std::array GRAYSCALE_IMAGE_FORMATS = std::to_array<VkFormat>
 });
 // clang-format on
 
-vulkan::PhysicalDeviceFeatures device_features()
-{
-        return {};
-}
-
 std::vector<unsigned char> font_data()
 {
         const text::Fonts& fonts = text::Fonts::instance();
@@ -345,9 +340,9 @@ public:
 };
 }
 
-vulkan::PhysicalDeviceFeatures View::required_device_features()
+vulkan::DeviceFunctionality View::device_functionality()
 {
-        return device_features();
+        return {};
 }
 
 std::unique_ptr<View> create_view(

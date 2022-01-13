@@ -25,10 +25,10 @@ namespace ns::view
 vulkan::DeviceFunctionality ImageProcess::device_functionality()
 {
         vulkan::DeviceFunctionality res;
-        vulkan::add_features(&res.required_features, gpu::convex_hull::View::required_device_features());
-        vulkan::add_features(&res.required_features, gpu::dft::View::required_device_features());
-        vulkan::add_features(&res.required_features, gpu::optical_flow::View::required_device_features());
-        vulkan::add_features(&res.required_features, gpu::pencil_sketch::View::required_device_features());
+        res.merge(gpu::convex_hull::View::device_functionality());
+        res.merge(gpu::dft::View::device_functionality());
+        res.merge(gpu::optical_flow::View::device_functionality());
+        res.merge(gpu::pencil_sketch::View::device_functionality());
         return res;
 }
 

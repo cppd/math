@@ -29,8 +29,6 @@ namespace ns::gpu::dft
 {
 struct ComputeImage
 {
-        static vulkan::PhysicalDeviceFeatures required_device_features();
-
         virtual ~ComputeImage() = default;
 
         virtual void compute_commands(VkCommandBuffer command_buffer) const = 0;

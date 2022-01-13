@@ -31,11 +31,6 @@ namespace
 {
 constexpr unsigned GROUP_SIZE = 16;
 
-vulkan::PhysicalDeviceFeatures device_features()
-{
-        return {};
-}
-
 void image_barrier_before(const VkCommandBuffer command_buffer, const VkImage image)
 {
         ASSERT(command_buffer != VK_NULL_HANDLE && image != VK_NULL_HANDLE);
@@ -202,11 +197,6 @@ public:
                 instance_->device_wait_idle_noexcept("the Vulkan pencil sketch compute destructor");
         }
 };
-}
-
-vulkan::PhysicalDeviceFeatures Compute::required_device_features()
-{
-        return device_features();
 }
 
 std::unique_ptr<Compute> create_compute(const vulkan::VulkanInstance* const instance)

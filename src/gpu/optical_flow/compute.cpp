@@ -53,11 +53,6 @@ namespace
 {
 constexpr VkFormat IMAGE_FORMAT = VK_FORMAT_R32_SFLOAT;
 
-vulkan::PhysicalDeviceFeatures device_features()
-{
-        return {};
-}
-
 std::vector<const vulkan::Buffer*> to_buffer_pointers(const std::vector<vulkan::BufferWithMemory>& buffers)
 {
         std::vector<const vulkan::Buffer*> result;
@@ -426,11 +421,6 @@ public:
                 instance_->device_wait_idle_noexcept("the Vulkan optical flow compute destructor");
         }
 };
-}
-
-vulkan::PhysicalDeviceFeatures Compute::required_device_features()
-{
-        return device_features();
 }
 
 std::unique_ptr<Compute> create_compute(

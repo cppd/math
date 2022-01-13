@@ -27,8 +27,6 @@ namespace ns::gpu::optical_flow
 {
 struct Compute
 {
-        static vulkan::PhysicalDeviceFeatures required_device_features();
-
         virtual ~Compute() = default;
 
         virtual VkSemaphore compute(const vulkan::Queue& queue, VkSemaphore wait_semaphore) = 0;

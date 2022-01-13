@@ -92,9 +92,8 @@ vulkan::DeviceFunctionality device_functionality()
                 res.required_features.features_10.samplerAnisotropy = VK_TRUE;
         }
 
-        vulkan::add_features(&res.required_features, gpu::renderer::Renderer::required_device_features());
-        vulkan::add_features(&res.required_features, gpu::text_writer::View::required_device_features());
-
+        res.merge(gpu::renderer::Renderer::device_functionality());
+        res.merge(gpu::text_writer::View::device_functionality());
         res.merge(ImageProcess::device_functionality());
 
         return res;

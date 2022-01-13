@@ -64,11 +64,6 @@ namespace
 {
 constexpr const Vector2i GROUP_SIZE_2D = Vector2i(16, 16);
 
-vulkan::PhysicalDeviceFeatures device_features()
-{
-        return {};
-}
-
 void begin_command_buffer(const VkCommandBuffer command_buffer)
 {
         VkCommandBufferBeginInfo command_buffer_info = {};
@@ -285,11 +280,6 @@ public:
         {
         }
 };
-}
-
-vulkan::PhysicalDeviceFeatures ComputeImage::required_device_features()
-{
-        return device_features();
 }
 
 std::unique_ptr<ComputeImage> create_compute_image(

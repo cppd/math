@@ -38,13 +38,6 @@ namespace ns::gpu::optical_flow
 {
 namespace
 {
-vulkan::PhysicalDeviceFeatures device_features()
-{
-        vulkan::PhysicalDeviceFeatures features{};
-        features.features_10.vertexPipelineStoresAndAtomics = VK_TRUE;
-        return features;
-}
-
 class Impl final : public View
 {
         const std::thread::id thread_id_ = std::this_thread::get_id();
@@ -267,11 +260,11 @@ public:
 };
 }
 
-vulkan::PhysicalDeviceFeatures View::required_device_features()
+vulkan::DeviceFunctionality View::device_functionality()
 {
-        vulkan::PhysicalDeviceFeatures features = device_features();
-        vulkan::add_features(&features, Compute::required_device_features());
-        return features;
+        vulkan::DeviceFunctionality res;
+        res.required_features.features_10.vertexPipelineStoresAndAtomics = VK_TRUE;
+        return res;
 }
 
 std::unique_ptr<View> create_view(

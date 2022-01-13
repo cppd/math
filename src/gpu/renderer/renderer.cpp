@@ -53,16 +53,6 @@ constexpr VkImageLayout DEPTH_COPY_IMAGE_LAYOUT = VK_IMAGE_LAYOUT_SHADER_READ_ON
 constexpr std::uint32_t OBJECTS_CLEAR_VALUE = 0;
 constexpr std::uint32_t TRANSPARENCY_NODE_BUFFER_MAX_SIZE = (1ull << 30);
 
-vulkan::PhysicalDeviceFeatures device_features()
-{
-        vulkan::PhysicalDeviceFeatures features{};
-        features.features_10.geometryShader = VK_TRUE;
-        features.features_10.fragmentStoresAndAtomics = VK_TRUE;
-        features.features_10.shaderStorageImageMultisample = VK_TRUE;
-        features.features_10.shaderClipDistance = VK_TRUE;
-        return features;
-}
-
 class Impl final : public Renderer, RendererProcessEvents
 {
         const std::thread::id thread_id_ = std::this_thread::get_id();
@@ -465,9 +455,14 @@ public:
 };
 }
 
-vulkan::PhysicalDeviceFeatures Renderer::required_device_features()
+vulkan::DeviceFunctionality Renderer::device_functionality()
 {
-        return device_features();
+        vulkan::DeviceFunctionality res;
+        res.required_features.features_10.geometryShader = VK_TRUE;
+        res.required_features.features_10.fragmentStoresAndAtomics = VK_TRUE;
+        res.required_features.features_10.shaderStorageImageMultisample = VK_TRUE;
+        res.required_features.features_10.shaderClipDistance = VK_TRUE;
+        return res;
 }
 
 std::unique_ptr<Renderer> create_renderer(
