@@ -21,6 +21,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "debug.h"
 #include "error.h"
 #include "instance_create.h"
+#include "instance_info.h"
+#include "settings.h"
 
 #include <src/com/error.h>
 #include <src/com/log.h>
@@ -36,6 +38,82 @@ namespace ns::vulkan
 namespace
 {
 constexpr std::uint32_t NO_FAMILY_INDEX = Limits<std::uint32_t>::max();
+
+std::unordered_set<std::string> make_layers(
+        const std::unordered_set<std::string>& required_layers,
+        const std::unordered_set<std::string>& optional_layers)
+{
+        std::unordered_set<std::string> res;
+
+        const std::unordered_set<std::string> supported_layers = supported_instance_layers();
+
+        for (const std::string& layer : required_layers)
+        {
+                if (!supported_layers.contains(layer))
+                {
+                        error("Vulkan layer " + layer + " is not supported");
+                }
+                res.insert(layer);
+        }
+
+        for (const char* const layer : LAYERS)
+        {
+                if (!supported_layers.contains(layer))
+                {
+                        error(std::string("Vulkan layer ") + layer + " is not supported");
+                }
+                res.insert(layer);
+        }
+
+        for (const std::string& layer : optional_layers)
+        {
+                if (supported_layers.contains(layer))
+                {
+                        res.insert(layer);
+                }
+        }
+
+        return res;
+}
+
+std::unordered_set<std::string> make_extensions(
+        const std::unordered_set<std::string>& required_layers,
+        const std::unordered_set<std::string>& required_extensions,
+        const std::unordered_set<std::string>& optional_extensions)
+{
+        std::unordered_set<std::string> res;
+
+        const std::unordered_set<std::string> supported = supported_instance_extensions();
+
+        for (const std::string& extension : required_extensions)
+        {
+                if (!supported.contains(extension))
+                {
+                        error("Vulkan instance extension " + extension + " is not supported");
+                }
+                res.insert(extension);
+        }
+
+        if (!required_layers.empty())
+        {
+                constexpr const char* DEBUG_REPORT = VK_EXT_DEBUG_REPORT_EXTENSION_NAME;
+                if (!supported.contains(DEBUG_REPORT))
+                {
+                        error(std::string("Vulkan instance extension ") + DEBUG_REPORT + " is not supported");
+                }
+                res.emplace(DEBUG_REPORT);
+        }
+
+        for (const std::string& extension : optional_extensions)
+        {
+                if (supported.contains(extension))
+                {
+                        res.insert(extension);
+                }
+        }
+
+        return res;
+}
 
 std::unordered_map<std::uint32_t, std::uint32_t> compute_queue_count(
         const std::vector<std::tuple<std::uint32_t, std::uint32_t>>& family_index_and_count,
@@ -68,10 +146,15 @@ void check_family_indices(const CommandPool& pool, const T& queues)
 }
 
 VulkanInstance::VulkanInstance(
-        const std::vector<std::string>& required_instance_extensions,
+        const InstanceFunctionality& instance_functionality,
         const DeviceFunctionality& device_functionality,
         const std::function<VkSurfaceKHR(VkInstance)>& create_surface)
-        : instance_(create_instance(required_instance_extensions)),
+        : layers_(make_layers(instance_functionality.required_layers, instance_functionality.optional_layers)),
+          extensions_(make_extensions(
+                  layers_,
+                  instance_functionality.required_extensions,
+                  instance_functionality.optional_extensions)),
+          instance_(create_instance(layers_, extensions_)),
           callback_(
                   instance_.layers_enabled() ? std::make_optional(create_debug_report_callback(instance_))
                                              : std::nullopt),

@@ -39,6 +39,8 @@ class VulkanInstance final
         static constexpr unsigned TRANSFER_QUEUE_COUNT = 1;
         static constexpr unsigned PRESENTATION_QUEUE_COUNT = 1;
 
+        const std::unordered_set<std::string> layers_;
+        const std::unordered_set<std::string> extensions_;
         const Instance instance_;
         const std::optional<handle::DebugReportCallbackEXT> callback_;
 
@@ -64,7 +66,7 @@ class VulkanInstance final
 
 public:
         VulkanInstance(
-                const std::vector<std::string>& required_instance_extensions,
+                const InstanceFunctionality& instance_functionality,
                 const DeviceFunctionality& device_functionality,
                 const std::function<VkSurfaceKHR(VkInstance)>& create_surface);
 
@@ -81,6 +83,9 @@ public:
         void device_wait_idle_noexcept(const char* msg) const noexcept;
 
         //
+
+        const std::unordered_set<std::string>& layers() const;
+        const std::unordered_set<std::string>& extensions() const;
 
         VkSurfaceKHR surface() const
         {

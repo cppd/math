@@ -20,9 +20,11 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "objects.h"
 
 #include <string>
-#include <vector>
+#include <unordered_set>
 
 namespace ns::vulkan
 {
-Instance create_instance(std::vector<std::string> required_extensions);
+Instance create_instance(
+        const std::unordered_set<std::string>& required_layers,
+        const std::unordered_set<std::string>& required_extensions);
 }

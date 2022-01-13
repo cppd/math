@@ -22,37 +22,27 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "print.h"
 #include "settings.h"
 
-#include <src/com/alg.h>
 #include <src/com/error.h>
 #include <src/com/log.h>
 #include <src/com/string/vector.h>
 #include <src/settings/name.h>
 
-#include <unordered_set>
-
 namespace ns::vulkan
 {
 namespace
 {
-void check_extension_support(const std::vector<std::string>& required_extensions)
+void check_api_version()
 {
-        if (required_extensions.empty())
-        {
-                return;
-        }
+        const std::uint32_t api_version = supported_instance_api_version();
 
-        const std::unordered_set<std::string> supported = supported_instance_extensions();
-
-        for (const std::string& extension : required_extensions)
+        if (!api_version_suitable(api_version))
         {
-                if (!supported.contains(extension))
-                {
-                        error("Vulkan instance extension " + extension + " is not supported");
-                }
+                error("Vulkan instance API version " + api_version_to_string(API_VERSION)
+                      + " is not supported. Supported " + api_version_to_string(api_version) + ".");
         }
 }
 
-void check_layer_support(const std::vector<std::string>& required_layers)
+void check_layer_support(const std::unordered_set<std::string>& required_layers)
 {
         if (required_layers.empty())
         {
@@ -70,37 +60,34 @@ void check_layer_support(const std::vector<std::string>& required_layers)
         }
 }
 
-void check_api_version()
+void check_extension_support(const std::unordered_set<std::string>& required_extensions)
 {
-        const std::uint32_t api_version = supported_instance_api_version();
-
-        if (!api_version_suitable(api_version))
+        if (required_extensions.empty())
         {
-                error("Vulkan instance API version " + api_version_to_string(API_VERSION)
-                      + " is not supported. Supported " + api_version_to_string(api_version) + ".");
+                return;
+        }
+
+        const std::unordered_set<std::string> supported = supported_instance_extensions();
+
+        for (const std::string& extension : required_extensions)
+        {
+                if (!supported.contains(extension))
+                {
+                        error("Vulkan instance extension " + extension + " is not supported");
+                }
         }
 }
 }
 
-Instance create_instance(std::vector<std::string> required_extensions)
+Instance create_instance(
+        const std::unordered_set<std::string>& required_layers,
+        const std::unordered_set<std::string>& required_extensions)
 {
         LOG(overview());
 
         check_api_version();
-
-        if (!LAYERS.empty())
-        {
-                required_extensions.emplace_back(VK_EXT_DEBUG_REPORT_EXTENSION_NAME);
-        }
-
-        sort_and_unique(&required_extensions);
-
+        check_layer_support(required_layers);
         check_extension_support(required_extensions);
-
-        if (!LAYERS.empty())
-        {
-                check_layer_support({LAYERS.cbegin(), LAYERS.cend()});
-        }
 
         VkApplicationInfo app_info = {};
         app_info.sType = VK_STRUCTURE_TYPE_APPLICATION_INFO;
@@ -115,6 +102,7 @@ Instance create_instance(std::vector<std::string> required_extensions)
         create_info.pApplicationInfo = &app_info;
 
         const std::vector<const char*> extensions = const_char_pointer_vector(&required_extensions);
+        const std::vector<const char*> layers = const_char_pointer_vector(&required_layers);
 
         std::string info;
 
@@ -122,9 +110,9 @@ Instance create_instance(std::vector<std::string> required_extensions)
         create_info.ppEnabledExtensionNames = extensions.data();
         info = "Vulkan instance extensions: {" + strings_to_sorted_string(extensions) + "}";
 
-        create_info.enabledLayerCount = LAYERS.size();
-        create_info.ppEnabledLayerNames = LAYERS.data();
-        info += "\nVulkan instance layers: {" + strings_to_sorted_string(LAYERS) + "}";
+        create_info.enabledLayerCount = layers.size();
+        create_info.ppEnabledLayerNames = layers.data();
+        info += "\nVulkan instance layers: {" + strings_to_sorted_string(layers) + "}";
 
         LOG(info);
 
