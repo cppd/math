@@ -18,6 +18,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #pragma once
 
 #include "device.h"
+#include "functionality.h"
 #include "objects.h"
 #include "physical_device.h"
 
@@ -64,10 +65,7 @@ class VulkanInstance final
 public:
         VulkanInstance(
                 const std::vector<std::string>& required_instance_extensions,
-                const std::vector<std::string>& required_device_extensions,
-                const std::vector<std::string>& optional_device_extensions,
-                const PhysicalDeviceFeatures& required_device_features,
-                const PhysicalDeviceFeatures& optional_device_features,
+                const DeviceFunctionality& device_functionality,
                 const std::function<VkSurfaceKHR(VkInstance)>& create_surface);
 
         ~VulkanInstance();

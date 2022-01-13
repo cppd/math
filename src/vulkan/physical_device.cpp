@@ -24,7 +24,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "settings.h"
 #include "surface.h"
 
-#include <src/com/alg.h>
 #include <src/com/error.h>
 #include <src/com/log.h>
 #include <src/com/print.h>
@@ -209,16 +208,6 @@ std::uint32_t PhysicalDevice::presentation_family_index() const
         error("Presentation family not found");
 }
 
-bool PhysicalDevice::supports_extensions(const std::vector<std::string>& extensions) const
-{
-        return std::all_of(
-                extensions.cbegin(), extensions.cend(),
-                [&](const std::string& e)
-                {
-                        return info_.extensions.contains(e);
-                });
-}
-
 bool PhysicalDevice::queue_family_supports_presentation(const std::uint32_t index) const
 {
         ASSERT(index < presentation_support_.size());
@@ -279,11 +268,8 @@ std::vector<VkPhysicalDevice> find_physical_devices(const VkInstance instance)
 PhysicalDevice find_physical_device(
         const VkInstance instance,
         const VkSurfaceKHR surface,
-        std::vector<std::string> required_extensions,
-        const PhysicalDeviceFeatures& required_features)
+        const DeviceFunctionality& device_functionality)
 {
-        sort_and_unique(&required_extensions);
-
         LOG(overview_physical_devices(instance, surface));
 
         std::vector<PhysicalDevice> physical_devices;
@@ -292,12 +278,18 @@ PhysicalDevice find_physical_device(
         {
                 PhysicalDevice physical_device(device, surface);
 
-                if (!check_features(required_features, physical_device.features()))
+                if (!check_features(device_functionality.required_features, physical_device.features()))
                 {
                         continue;
                 }
 
-                if (!physical_device.supports_extensions(required_extensions))
+                if (!std::all_of(
+                            device_functionality.required_extensions.cbegin(),
+                            device_functionality.required_extensions.cend(),
+                            [&](const std::string& e)
+                            {
+                                    return physical_device.extensions().contains(e);
+                            }))
                 {
                         continue;
                 }

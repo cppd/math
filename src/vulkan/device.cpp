@@ -29,8 +29,8 @@ namespace
 {
 std::unordered_set<std::string> make_extensions(
         const PhysicalDeviceFeatures& required_features,
-        const std::vector<std::string>& required_extensions,
-        const std::vector<std::string>& optional_extensions,
+        const std::unordered_set<std::string>& required_extensions,
+        const std::unordered_set<std::string>& optional_extensions,
         const std::unordered_set<std::string>& supported_extensions)
 {
         std::unordered_set<std::string> res;
@@ -101,14 +101,17 @@ std::unordered_map<std::uint32_t, std::vector<VkQueue>> find_queues(
 Device::Device(
         const PhysicalDevice* const physical_device,
         const std::unordered_map<std::uint32_t, std::uint32_t>& queue_families,
-        const std::vector<std::string>& required_extensions,
-        const std::vector<std::string>& optional_extensions,
-        const PhysicalDeviceFeatures& required_features,
-        const PhysicalDeviceFeatures& optional_features)
+        const DeviceFunctionality& functionality)
         : physical_device_(physical_device),
-          features_(make_features(required_features, optional_features, physical_device_->features())),
-          extensions_(
-                  make_extensions(features_, required_extensions, optional_extensions, physical_device_->extensions())),
+          features_(make_features(
+                  functionality.required_features,
+                  functionality.optional_features,
+                  physical_device_->features())),
+          extensions_(make_extensions(
+                  features_,
+                  functionality.required_extensions,
+                  functionality.optional_extensions,
+                  physical_device_->extensions())),
           device_(create_device(physical_device_, queue_families, extensions_, features_)),
           queues_(find_queues(device_, queue_families))
 {

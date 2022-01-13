@@ -17,6 +17,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
+#include "functionality.h"
 #include "objects.h"
 #include "physical_device.h"
 #include "physical_device_info.h"
@@ -39,10 +40,7 @@ class Device final
 public:
         Device(const PhysicalDevice* physical_device,
                const std::unordered_map<std::uint32_t, std::uint32_t>& queue_families,
-               const std::vector<std::string>& required_extensions,
-               const std::vector<std::string>& optional_extensions,
-               const PhysicalDeviceFeatures& required_features,
-               const PhysicalDeviceFeatures& optional_features);
+               const DeviceFunctionality& functionality);
 
         operator VkDevice() const& noexcept
         {

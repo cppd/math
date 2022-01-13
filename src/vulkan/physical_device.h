@@ -17,6 +17,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
+#include "functionality.h"
 #include "objects.h"
 #include "physical_device_info.h"
 
@@ -50,8 +51,6 @@ public:
 
         std::uint32_t presentation_family_index() const;
 
-        bool supports_extensions(const std::vector<std::string>& extensions) const;
-
         bool queue_family_supports_presentation(std::uint32_t index) const;
 };
 
@@ -60,6 +59,5 @@ std::vector<VkPhysicalDevice> find_physical_devices(VkInstance instance);
 PhysicalDevice find_physical_device(
         VkInstance instance,
         VkSurfaceKHR surface,
-        std::vector<std::string> required_extensions,
-        const PhysicalDeviceFeatures& required_features);
+        const DeviceFunctionality& device_functionality);
 }

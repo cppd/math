@@ -69,10 +69,7 @@ void check_family_indices(const CommandPool& pool, const T& queues)
 
 VulkanInstance::VulkanInstance(
         const std::vector<std::string>& required_instance_extensions,
-        const std::vector<std::string>& required_device_extensions,
-        const std::vector<std::string>& optional_device_extensions,
-        const PhysicalDeviceFeatures& required_device_features,
-        const PhysicalDeviceFeatures& optional_device_features,
+        const DeviceFunctionality& device_functionality,
         const std::function<VkSurfaceKHR(VkInstance)>& create_surface)
         : instance_(create_instance(required_instance_extensions)),
           callback_(
@@ -82,8 +79,7 @@ VulkanInstance::VulkanInstance(
           physical_device_(find_physical_device(
                   instance_,
                   (create_surface ? static_cast<VkSurfaceKHR>(*surface_) : VK_NULL_HANDLE),
-                  required_device_extensions,
-                  required_device_features)),
+                  device_functionality)),
           graphics_compute_family_index_(
                   physical_device_.family_index(VK_QUEUE_GRAPHICS_BIT | VK_QUEUE_COMPUTE_BIT, 0, {0})),
           compute_family_index_(
@@ -103,10 +99,7 @@ VulkanInstance::VulkanInstance(
                            {transfer_family_index_, TRANSFER_QUEUE_COUNT},
                            {presentation_family_index_, PRESENTATION_QUEUE_COUNT}},
                           physical_device_.queue_families()),
-                  required_device_extensions,
-                  optional_device_extensions,
-                  required_device_features,
-                  optional_device_features),
+                  device_functionality),
           graphics_compute_command_pool_(create_command_pool(device_, graphics_compute_family_index_)),
           compute_command_pool_(create_command_pool(device_, compute_family_index_)),
           transfer_command_pool_(create_transient_command_pool(device_, transfer_family_index_))

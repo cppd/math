@@ -78,48 +78,26 @@ static_assert(
         2 <= std::tuple_size_v<
                 std::remove_reference_t<decltype(std::declval<vulkan::VulkanInstance>().graphics_compute_queues())>>);
 
-std::vector<std::string> required_device_extensions()
+vulkan::DeviceFunctionality device_functionality()
 {
-        std::vector<std::string> extensions;
-        for (const std::string& extension : ImageProcess::required_device_extensions())
-        {
-                extensions.push_back(extension);
-        }
-        return extensions;
-}
+        vulkan::DeviceFunctionality res;
 
-std::vector<std::string> optional_device_extensions()
-{
-        std::vector<std::string> extensions;
-        for (const std::string& extension : ImageProcess::optional_device_extensions())
-        {
-                extensions.push_back(extension);
-        }
-        return extensions;
-}
-
-vulkan::PhysicalDeviceFeatures required_device_features()
-{
-        vulkan::PhysicalDeviceFeatures features{};
         if (MINIMUM_SAMPLE_COUNT > 1 && SAMPLE_RATE_SHADING)
         {
-                features.features_10.sampleRateShading = VK_TRUE;
+                res.required_features.features_10.sampleRateShading = VK_TRUE;
         }
+
         if (SAMPLER_ANISOTROPY)
         {
-                features.features_10.samplerAnisotropy = VK_TRUE;
+                res.required_features.features_10.samplerAnisotropy = VK_TRUE;
         }
-        vulkan::add_features(&features, gpu::renderer::Renderer::required_device_features());
-        vulkan::add_features(&features, gpu::text_writer::View::required_device_features());
-        vulkan::add_features(&features, ImageProcess::required_device_features());
-        return features;
-}
 
-vulkan::PhysicalDeviceFeatures optional_device_features()
-{
-        vulkan::PhysicalDeviceFeatures features{};
-        vulkan::add_features(&features, ImageProcess::optional_device_features());
-        return features;
+        vulkan::add_features(&res.required_features, gpu::renderer::Renderer::required_device_features());
+        vulkan::add_features(&res.required_features, gpu::text_writer::View::required_device_features());
+
+        res.merge(ImageProcess::device_functionality());
+
+        return res;
 }
 
 int frame_size_in_pixels(const double window_ppi)
@@ -359,12 +337,7 @@ public:
         Impl(const window::WindowID window, const double window_ppi)
                 : frame_size_in_pixels_(frame_size_in_pixels(window_ppi)),
                   frame_rate_(window_ppi),
-                  instance_(create_instance(
-                          window,
-                          required_device_extensions(),
-                          optional_device_extensions(),
-                          required_device_features(),
-                          optional_device_features())),
+                  instance_(create_surface_instance(window, device_functionality())),
                   renderer_(gpu::renderer::create_renderer(
                           instance_.get(),
                           &instance_->graphics_compute_command_pool(),

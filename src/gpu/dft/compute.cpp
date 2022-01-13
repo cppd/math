@@ -273,7 +273,7 @@ class DftVector final : public ComputeVector
 
 public:
         DftVector()
-                : instance_({}, {}, {}, {}, {}, {}),
+                : instance_({}, {}, {}),
                   dft_(create_dft(
                           &instance_,
                           &instance_.compute_command_pool(),

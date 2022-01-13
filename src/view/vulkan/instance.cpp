@@ -21,17 +21,14 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 namespace ns::view
 {
-std::unique_ptr<vulkan::VulkanInstance> create_instance(
+std::unique_ptr<vulkan::VulkanInstance> create_surface_instance(
         const window::WindowID window,
-        std::vector<std::string> required_device_extensions,
-        const std::vector<std::string>& optional_device_extensions,
-        const vulkan::PhysicalDeviceFeatures& required_device_features,
-        const vulkan::PhysicalDeviceFeatures& optional_device_features)
+        vulkan::DeviceFunctionality&& device_functionality)
 {
         const std::vector<std::string> required_instance_extensions =
                 window::vulkan_create_surface_required_extensions();
 
-        required_device_extensions.emplace_back(VK_KHR_SWAPCHAIN_EXTENSION_NAME);
+        device_functionality.required_extensions.emplace(VK_KHR_SWAPCHAIN_EXTENSION_NAME);
 
         const std::function<VkSurfaceKHR(VkInstance)> create_surface = [&](const VkInstance instance)
         {
@@ -39,7 +36,6 @@ std::unique_ptr<vulkan::VulkanInstance> create_instance(
         };
 
         return std::make_unique<vulkan::VulkanInstance>(
-                required_instance_extensions, required_device_extensions, optional_device_extensions,
-                required_device_features, optional_device_features, create_surface);
+                required_instance_extensions, device_functionality, create_surface);
 }
 }

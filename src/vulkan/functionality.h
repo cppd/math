@@ -17,15 +17,20 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
-#include <src/vulkan/functionality.h>
-#include <src/vulkan/instance.h>
-#include <src/window/handle.h>
+#include "physical_device_info.h"
 
-#include <memory>
+#include <string>
+#include <unordered_set>
 
-namespace ns::view
+namespace ns::vulkan
 {
-std::unique_ptr<vulkan::VulkanInstance> create_surface_instance(
-        window::WindowID window,
-        vulkan::DeviceFunctionality&& device_functionality);
+struct DeviceFunctionality final
+{
+        std::unordered_set<std::string> required_extensions;
+        std::unordered_set<std::string> optional_extensions;
+        PhysicalDeviceFeatures required_features;
+        PhysicalDeviceFeatures optional_features;
+
+        void merge(const DeviceFunctionality& functionality);
+};
 }

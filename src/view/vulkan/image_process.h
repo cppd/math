@@ -28,6 +28,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/gpu/render_buffers.h>
 #include <src/numerical/region.h>
 #include <src/vulkan/buffers.h>
+#include <src/vulkan/functionality.h>
 #include <src/vulkan/instance.h>
 
 namespace ns::view
@@ -55,10 +56,7 @@ class ImageProcess
         void command(const command::OpticalFlowShow& v);
 
 public:
-        static std::vector<std::string> required_device_extensions();
-        static std::vector<std::string> optional_device_extensions();
-        static vulkan::PhysicalDeviceFeatures required_device_features();
-        static vulkan::PhysicalDeviceFeatures optional_device_features();
+        static vulkan::DeviceFunctionality device_functionality();
 
         ImageProcess(
                 double window_ppi,

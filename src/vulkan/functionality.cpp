@@ -15,17 +15,26 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#pragma once
+#include "functionality.h"
 
-#include <src/vulkan/functionality.h>
-#include <src/vulkan/instance.h>
-#include <src/window/handle.h>
+#include "features.h"
 
-#include <memory>
-
-namespace ns::view
+namespace ns::vulkan
 {
-std::unique_ptr<vulkan::VulkanInstance> create_surface_instance(
-        window::WindowID window,
-        vulkan::DeviceFunctionality&& device_functionality);
+void DeviceFunctionality::merge(const DeviceFunctionality& functionality)
+{
+        for (const std::string& extension : functionality.required_extensions)
+        {
+                required_extensions.insert(extension);
+        }
+
+        for (const std::string& extension : functionality.optional_extensions)
+        {
+                optional_extensions.insert(extension);
+        }
+
+        add_features(&required_features, functionality.required_features);
+
+        add_features(&optional_features, functionality.optional_features);
+}
 }
