@@ -155,6 +155,7 @@ VulkanInstance::VulkanInstance(
                   instance_functionality.required_extensions,
                   instance_functionality.optional_extensions)),
           instance_(create_instance(layers_, extensions_)),
+          instance_extensions_(create_surface ? std::optional<InstanceExtensions>(instance_) : std::nullopt),
           callback_(
                   instance_.layers_enabled() ? std::make_optional(create_debug_report_callback(instance_))
                                              : std::nullopt),
@@ -183,6 +184,7 @@ VulkanInstance::VulkanInstance(
                            {presentation_family_index_, PRESENTATION_QUEUE_COUNT}},
                           physical_device_.queue_families()),
                   device_functionality),
+          device_extensions_(create_surface ? std::optional<DeviceExtensions>(device_) : std::nullopt),
           graphics_compute_command_pool_(create_command_pool(device_, graphics_compute_family_index_)),
           compute_command_pool_(create_command_pool(device_, compute_family_index_)),
           transfer_command_pool_(create_transient_command_pool(device_, transfer_family_index_))

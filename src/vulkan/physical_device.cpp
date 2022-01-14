@@ -18,6 +18,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "physical_device.h"
 
 #include "error.h"
+#include "extensions.h"
 #include "features.h"
 #include "overview.h"
 #include "print.h"

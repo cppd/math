@@ -18,6 +18,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "swapchain.h"
 
 #include "error.h"
+#include "extensions.h"
 #include "print.h"
 #include "surface.h"
 

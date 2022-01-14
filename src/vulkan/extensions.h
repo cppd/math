@@ -17,22 +17,71 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
-#include <utility>
+#include <mutex>
 #include <vulkan/vulkan.h>
 
-namespace ns::vulkan
+namespace ns
+{
+namespace vulkan
 {
 PFN_vkVoidFunction proc_addr(VkInstance instance, const char* name);
+
+class InstanceExtensions final
+{
+        inline static std::mutex mutex_;
+        std::unique_lock<std::mutex> lock_;
+
+public:
+        explicit InstanceExtensions(VkInstance instance);
+        ~InstanceExtensions();
+
+        InstanceExtensions(const InstanceExtensions&) = delete;
+        InstanceExtensions(InstanceExtensions&&) = delete;
+        InstanceExtensions& operator=(const InstanceExtensions&) = delete;
+        InstanceExtensions& operator=(InstanceExtensions&&) = delete;
+};
+
+class DeviceExtensions final
+{
+        inline static std::mutex mutex_;
+        std::unique_lock<std::mutex> lock_;
+
+public:
+        explicit DeviceExtensions(VkDevice device);
+        ~DeviceExtensions();
+
+        DeviceExtensions(const DeviceExtensions&) = delete;
+        DeviceExtensions(DeviceExtensions&&) = delete;
+        DeviceExtensions& operator=(const DeviceExtensions&) = delete;
+        DeviceExtensions& operator=(DeviceExtensions&&) = delete;
+};
 }
 
-#define VULKAN_EXTENSION_FUNCTION(name)                                 \
-        template <typename... T>                                        \
-        inline decltype(auto) name(const VkInstance instance, T&&... v) \
-        {                                                               \
-                const auto p = ns::vulkan::proc_addr(instance, #name);  \
-                const auto f = reinterpret_cast<PFN_##name>(p);         \
-                return f(instance, std::forward<T>(v)...);              \
+#define VULKAN_EXTENSION_FUNCTION(name)                            \
+        template <typename... T>                                   \
+        decltype(auto) name(const VkInstance instance, T&&... v)   \
+        {                                                          \
+                const auto p = vulkan::proc_addr(instance, #name); \
+                const auto f = reinterpret_cast<PFN_##name>(p);    \
+                return f(instance, std::forward<T>(v)...);         \
         }
 
 VULKAN_EXTENSION_FUNCTION(vkCreateDebugReportCallbackEXT)
 VULKAN_EXTENSION_FUNCTION(vkDestroyDebugReportCallbackEXT)
+
+//
+
+inline PFN_vkDestroySurfaceKHR vkDestroySurfaceKHR = nullptr;
+inline PFN_vkGetPhysicalDeviceSurfaceCapabilitiesKHR vkGetPhysicalDeviceSurfaceCapabilitiesKHR = nullptr;
+inline PFN_vkGetPhysicalDeviceSurfaceFormatsKHR vkGetPhysicalDeviceSurfaceFormatsKHR = nullptr;
+inline PFN_vkGetPhysicalDeviceSurfacePresentModesKHR vkGetPhysicalDeviceSurfacePresentModesKHR = nullptr;
+inline PFN_vkGetPhysicalDeviceSurfaceSupportKHR vkGetPhysicalDeviceSurfaceSupportKHR = nullptr;
+
+//
+
+inline PFN_vkAcquireNextImageKHR vkAcquireNextImageKHR = nullptr;
+inline PFN_vkCreateSwapchainKHR vkCreateSwapchainKHR = nullptr;
+inline PFN_vkDestroySwapchainKHR vkDestroySwapchainKHR = nullptr;
+inline PFN_vkGetSwapchainImagesKHR vkGetSwapchainImagesKHR = nullptr;
+inline PFN_vkQueuePresentKHR vkQueuePresentKHR = nullptr;
+}

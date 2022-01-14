@@ -18,6 +18,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #pragma once
 
 #include "device.h"
+#include "extensions.h"
 #include "functionality.h"
 #include "objects.h"
 #include "physical_device.h"
@@ -42,6 +43,7 @@ class VulkanInstance final
         const std::unordered_set<std::string> layers_;
         const std::unordered_set<std::string> extensions_;
         const Instance instance_;
+        const std::optional<InstanceExtensions> instance_extensions_;
         const std::optional<handle::DebugReportCallbackEXT> callback_;
 
         const std::optional<handle::SurfaceKHR> surface_;
@@ -54,6 +56,7 @@ class VulkanInstance final
         const std::uint32_t presentation_family_index_;
 
         const Device device_;
+        const std::optional<DeviceExtensions> device_extensions_;
 
         const CommandPool graphics_compute_command_pool_;
         const CommandPool compute_command_pool_;
