@@ -77,7 +77,6 @@ std::unordered_set<std::string> make_layers(
 }
 
 std::unordered_set<std::string> make_extensions(
-        const std::unordered_set<std::string>& required_layers,
         const std::unordered_set<std::string>& required_extensions,
         const std::unordered_set<std::string>& optional_extensions)
 {
@@ -94,13 +93,9 @@ std::unordered_set<std::string> make_extensions(
                 res.insert(extension);
         }
 
-        if (!required_layers.empty())
+        constexpr const char* DEBUG_REPORT = VK_EXT_DEBUG_REPORT_EXTENSION_NAME;
+        if (supported.contains(DEBUG_REPORT))
         {
-                constexpr const char* DEBUG_REPORT = VK_EXT_DEBUG_REPORT_EXTENSION_NAME;
-                if (!supported.contains(DEBUG_REPORT))
-                {
-                        error(std::string("Vulkan instance extension ") + DEBUG_REPORT + " is not supported");
-                }
                 res.emplace(DEBUG_REPORT);
         }
 
@@ -151,14 +146,15 @@ VulkanInstance::VulkanInstance(
         const std::function<VkSurfaceKHR(VkInstance)>& create_surface)
         : layers_(make_layers(instance_functionality.required_layers, instance_functionality.optional_layers)),
           extensions_(make_extensions(
-                  layers_,
                   instance_functionality.required_extensions,
                   instance_functionality.optional_extensions)),
           instance_(create_instance(layers_, extensions_)),
-          instance_extensions_(create_surface ? std::optional<InstanceExtensions>(instance_) : std::nullopt),
+          instance_extension_functions_(
+                  create_surface ? std::optional<InstanceExtensionFunctions>(instance_) : std::nullopt),
           callback_(
-                  instance_.layers_enabled() ? std::make_optional(create_debug_report_callback(instance_))
-                                             : std::nullopt),
+                  layers_.contains(VK_EXT_DEBUG_REPORT_EXTENSION_NAME)
+                          ? std::make_optional(create_debug_report_callback(instance_))
+                          : std::nullopt),
           surface_(create_surface ? std::optional(handle::SurfaceKHR(instance_, create_surface)) : std::nullopt),
           physical_device_(find_physical_device(
                   instance_,
@@ -184,7 +180,7 @@ VulkanInstance::VulkanInstance(
                            {presentation_family_index_, PRESENTATION_QUEUE_COUNT}},
                           physical_device_.queue_families()),
                   device_functionality),
-          device_extensions_(create_surface ? std::optional<DeviceExtensions>(device_) : std::nullopt),
+          device_extension_functions_(create_surface ? std::optional<DeviceExtensionFunctions>(device_) : std::nullopt),
           graphics_compute_command_pool_(create_command_pool(device_, graphics_compute_family_index_)),
           compute_command_pool_(create_command_pool(device_, compute_family_index_)),
           transfer_command_pool_(create_transient_command_pool(device_, transfer_family_index_))

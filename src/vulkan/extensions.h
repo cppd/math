@@ -26,34 +26,34 @@ namespace vulkan
 {
 PFN_vkVoidFunction proc_addr(VkInstance instance, const char* name);
 
-class InstanceExtensions final
+class InstanceExtensionFunctions final
 {
         inline static std::mutex mutex_;
         std::unique_lock<std::mutex> lock_;
 
 public:
-        explicit InstanceExtensions(VkInstance instance);
-        ~InstanceExtensions();
+        explicit InstanceExtensionFunctions(VkInstance instance);
+        ~InstanceExtensionFunctions();
 
-        InstanceExtensions(const InstanceExtensions&) = delete;
-        InstanceExtensions(InstanceExtensions&&) = delete;
-        InstanceExtensions& operator=(const InstanceExtensions&) = delete;
-        InstanceExtensions& operator=(InstanceExtensions&&) = delete;
+        InstanceExtensionFunctions(const InstanceExtensionFunctions&) = delete;
+        InstanceExtensionFunctions(InstanceExtensionFunctions&&) = delete;
+        InstanceExtensionFunctions& operator=(const InstanceExtensionFunctions&) = delete;
+        InstanceExtensionFunctions& operator=(InstanceExtensionFunctions&&) = delete;
 };
 
-class DeviceExtensions final
+class DeviceExtensionFunctions final
 {
         inline static std::mutex mutex_;
         std::unique_lock<std::mutex> lock_;
 
 public:
-        explicit DeviceExtensions(VkDevice device);
-        ~DeviceExtensions();
+        explicit DeviceExtensionFunctions(VkDevice device);
+        ~DeviceExtensionFunctions();
 
-        DeviceExtensions(const DeviceExtensions&) = delete;
-        DeviceExtensions(DeviceExtensions&&) = delete;
-        DeviceExtensions& operator=(const DeviceExtensions&) = delete;
-        DeviceExtensions& operator=(DeviceExtensions&&) = delete;
+        DeviceExtensionFunctions(const DeviceExtensionFunctions&) = delete;
+        DeviceExtensionFunctions(DeviceExtensionFunctions&&) = delete;
+        DeviceExtensionFunctions& operator=(const DeviceExtensionFunctions&) = delete;
+        DeviceExtensionFunctions& operator=(DeviceExtensionFunctions&&) = delete;
 };
 }
 

@@ -26,29 +26,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 namespace ns::vulkan
 {
-class Instance final
-{
-        handle::Instance instance_;
-        bool layers_enabled_;
-
-public:
-        explicit Instance(const VkInstanceCreateInfo& create_info)
-                : instance_(create_info), layers_enabled_(create_info.enabledLayerCount > 0)
-        {
-        }
-
-        operator VkInstance() const& noexcept
-        {
-                return instance_;
-        }
-        operator VkInstance() const&& noexcept = delete;
-
-        bool layers_enabled() const noexcept
-        {
-                return layers_enabled_;
-        }
-};
-
 class Queue final
 {
         VkQueue queue_ = VK_NULL_HANDLE;

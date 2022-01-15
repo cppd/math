@@ -42,8 +42,8 @@ class VulkanInstance final
 
         const std::unordered_set<std::string> layers_;
         const std::unordered_set<std::string> extensions_;
-        const Instance instance_;
-        const std::optional<InstanceExtensions> instance_extensions_;
+        const handle::Instance instance_;
+        const std::optional<InstanceExtensionFunctions> instance_extension_functions_;
         const std::optional<handle::DebugReportCallbackEXT> callback_;
 
         const std::optional<handle::SurfaceKHR> surface_;
@@ -56,7 +56,7 @@ class VulkanInstance final
         const std::uint32_t presentation_family_index_;
 
         const Device device_;
-        const std::optional<DeviceExtensions> device_extensions_;
+        const std::optional<DeviceExtensionFunctions> device_extension_functions_;
 
         const CommandPool graphics_compute_command_pool_;
         const CommandPool compute_command_pool_;

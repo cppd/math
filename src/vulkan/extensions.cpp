@@ -46,7 +46,7 @@ PFN_vkVoidFunction proc_addr(const VkInstance instance, const char* const name)
 
 //
 
-InstanceExtensions::InstanceExtensions(const VkInstance instance) : lock_(mutex_, std::try_to_lock)
+InstanceExtensionFunctions::InstanceExtensionFunctions(const VkInstance instance) : lock_(mutex_, std::try_to_lock)
 {
         ASSERT(instance != VK_NULL_HANDLE);
 
@@ -62,7 +62,7 @@ InstanceExtensions::InstanceExtensions(const VkInstance instance) : lock_(mutex_
         SET_INSTANCE_ADDRESS(vkGetPhysicalDeviceSurfaceSupportKHR);
 }
 
-InstanceExtensions::~InstanceExtensions()
+InstanceExtensionFunctions::~InstanceExtensionFunctions()
 {
         vkDestroySurfaceKHR = nullptr;
         vkGetPhysicalDeviceSurfaceCapabilitiesKHR = nullptr;
@@ -73,7 +73,7 @@ InstanceExtensions::~InstanceExtensions()
 
 //
 
-DeviceExtensions::DeviceExtensions(const VkDevice device) : lock_(mutex_, std::try_to_lock)
+DeviceExtensionFunctions::DeviceExtensionFunctions(const VkDevice device) : lock_(mutex_, std::try_to_lock)
 {
         ASSERT(device != VK_NULL_HANDLE);
 
@@ -89,7 +89,7 @@ DeviceExtensions::DeviceExtensions(const VkDevice device) : lock_(mutex_, std::t
         SET_DEVICE_ADDRESS(vkQueuePresentKHR);
 }
 
-DeviceExtensions::~DeviceExtensions()
+DeviceExtensionFunctions::~DeviceExtensionFunctions()
 {
         vkAcquireNextImageKHR = nullptr;
         vkCreateSwapchainKHR = nullptr;

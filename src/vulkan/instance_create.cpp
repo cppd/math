@@ -79,7 +79,7 @@ void check_extension_support(const std::unordered_set<std::string>& required_ext
 }
 }
 
-Instance create_instance(
+handle::Instance create_instance(
         const std::unordered_set<std::string>& required_layers,
         const std::unordered_set<std::string>& required_extensions)
 {
@@ -116,6 +116,6 @@ Instance create_instance(
 
         LOG(info);
 
-        return Instance(create_info);
+        return handle::Instance(create_info);
 }
 }
