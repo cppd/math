@@ -21,6 +21,30 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 namespace ns::vulkan
 {
+namespace
+{
+template <typename T>
+void set_instance(const VkInstance instance, const char* const name, T*& ptr)
+{
+        ptr = reinterpret_cast<T*>(vkGetInstanceProcAddr(instance, name));
+}
+
+template <typename T>
+void set_device(const VkDevice device, const char* const name, T*& ptr)
+{
+        ptr = reinterpret_cast<T*>(vkGetDeviceProcAddr(device, name));
+}
+
+#define SET_INSTANCE(name) set_instance((instance), #name, (name));
+#define SET_DEVICE(name) set_device((device), #name, (name));
+
+template <typename T>
+void reset(T*& ptr)
+{
+        ptr = nullptr;
+}
+}
+
 PFN_vkVoidFunction proc_addr(const VkInstance instance, const char* const name)
 {
         ASSERT(instance != VK_NULL_HANDLE);
@@ -31,18 +55,6 @@ PFN_vkVoidFunction proc_addr(const VkInstance instance, const char* const name)
         }
         error(std::string("Failed to find address of ") + name);
 }
-
-#define SET_INSTANCE_ADDRESS(name)                                                               \
-        do                                                                                       \
-        {                                                                                        \
-                (name) = reinterpret_cast<PFN_##name>(vkGetInstanceProcAddr((instance), #name)); \
-        } while (false)
-
-#define SET_DEVICE_ADDRESS(name)                                                             \
-        do                                                                                   \
-        {                                                                                    \
-                (name) = reinterpret_cast<PFN_##name>(vkGetDeviceProcAddr((device), #name)); \
-        } while (false)
 
 //
 
@@ -55,20 +67,20 @@ InstanceExtensionFunctions::InstanceExtensionFunctions(const VkInstance instance
                 error("Vulkan instance extension function pointers are busy");
         }
 
-        SET_INSTANCE_ADDRESS(vkDestroySurfaceKHR);
-        SET_INSTANCE_ADDRESS(vkGetPhysicalDeviceSurfaceCapabilitiesKHR);
-        SET_INSTANCE_ADDRESS(vkGetPhysicalDeviceSurfaceFormatsKHR);
-        SET_INSTANCE_ADDRESS(vkGetPhysicalDeviceSurfacePresentModesKHR);
-        SET_INSTANCE_ADDRESS(vkGetPhysicalDeviceSurfaceSupportKHR);
+        SET_INSTANCE(vkDestroySurfaceKHR)
+        SET_INSTANCE(vkGetPhysicalDeviceSurfaceCapabilitiesKHR)
+        SET_INSTANCE(vkGetPhysicalDeviceSurfaceFormatsKHR)
+        SET_INSTANCE(vkGetPhysicalDeviceSurfacePresentModesKHR)
+        SET_INSTANCE(vkGetPhysicalDeviceSurfaceSupportKHR)
 }
 
 InstanceExtensionFunctions::~InstanceExtensionFunctions()
 {
-        vkDestroySurfaceKHR = nullptr;
-        vkGetPhysicalDeviceSurfaceCapabilitiesKHR = nullptr;
-        vkGetPhysicalDeviceSurfaceFormatsKHR = nullptr;
-        vkGetPhysicalDeviceSurfacePresentModesKHR = nullptr;
-        vkGetPhysicalDeviceSurfaceSupportKHR = nullptr;
+        reset(vkDestroySurfaceKHR);
+        reset(vkGetPhysicalDeviceSurfaceCapabilitiesKHR);
+        reset(vkGetPhysicalDeviceSurfaceFormatsKHR);
+        reset(vkGetPhysicalDeviceSurfacePresentModesKHR);
+        reset(vkGetPhysicalDeviceSurfaceSupportKHR);
 }
 
 //
@@ -82,19 +94,69 @@ DeviceExtensionFunctions::DeviceExtensionFunctions(const VkDevice device) : lock
                 error("Vulkan device extension function pointers are busy");
         }
 
-        SET_DEVICE_ADDRESS(vkAcquireNextImageKHR);
-        SET_DEVICE_ADDRESS(vkCreateSwapchainKHR);
-        SET_DEVICE_ADDRESS(vkDestroySwapchainKHR);
-        SET_DEVICE_ADDRESS(vkGetSwapchainImagesKHR);
-        SET_DEVICE_ADDRESS(vkQueuePresentKHR);
+        SET_DEVICE(vkAcquireNextImageKHR)
+        SET_DEVICE(vkCreateSwapchainKHR)
+        SET_DEVICE(vkDestroySwapchainKHR)
+        SET_DEVICE(vkGetSwapchainImagesKHR)
+        SET_DEVICE(vkQueuePresentKHR)
+
+        SET_DEVICE(vkCmdSetRayTracingPipelineStackSizeKHR)
+        SET_DEVICE(vkCmdTraceRaysIndirectKHR)
+        SET_DEVICE(vkCmdTraceRaysKHR)
+        SET_DEVICE(vkCreateRayTracingPipelinesKHR)
+        SET_DEVICE(vkGetRayTracingCaptureReplayShaderGroupHandlesKHR)
+        SET_DEVICE(vkGetRayTracingShaderGroupHandlesKHR)
+        SET_DEVICE(vkGetRayTracingShaderGroupStackSizeKHR)
+
+        SET_DEVICE(vkBuildAccelerationStructuresKHR)
+        SET_DEVICE(vkCmdBuildAccelerationStructuresIndirectKHR)
+        SET_DEVICE(vkCmdBuildAccelerationStructuresKHR)
+        SET_DEVICE(vkCmdCopyAccelerationStructureKHR)
+        SET_DEVICE(vkCmdCopyAccelerationStructureToMemoryKHR)
+        SET_DEVICE(vkCmdCopyMemoryToAccelerationStructureKHR)
+        SET_DEVICE(vkCmdWriteAccelerationStructuresPropertiesKHR)
+        SET_DEVICE(vkCopyAccelerationStructureKHR)
+        SET_DEVICE(vkCopyAccelerationStructureToMemoryKHR)
+        SET_DEVICE(vkCopyMemoryToAccelerationStructureKHR)
+        SET_DEVICE(vkCreateAccelerationStructureKHR)
+        SET_DEVICE(vkDestroyAccelerationStructureKHR)
+        SET_DEVICE(vkGetAccelerationStructureBuildSizesKHR)
+        SET_DEVICE(vkGetAccelerationStructureDeviceAddressKHR)
+        SET_DEVICE(vkGetDeviceAccelerationStructureCompatibilityKHR)
+        SET_DEVICE(vkWriteAccelerationStructuresPropertiesKHR)
 }
 
 DeviceExtensionFunctions::~DeviceExtensionFunctions()
 {
-        vkAcquireNextImageKHR = nullptr;
-        vkCreateSwapchainKHR = nullptr;
-        vkDestroySwapchainKHR = nullptr;
-        vkGetSwapchainImagesKHR = nullptr;
-        vkQueuePresentKHR = nullptr;
+        reset(vkAcquireNextImageKHR);
+        reset(vkCreateSwapchainKHR);
+        reset(vkDestroySwapchainKHR);
+        reset(vkGetSwapchainImagesKHR);
+        reset(vkQueuePresentKHR);
+
+        reset(vkCmdSetRayTracingPipelineStackSizeKHR);
+        reset(vkCmdTraceRaysIndirectKHR);
+        reset(vkCmdTraceRaysKHR);
+        reset(vkCreateRayTracingPipelinesKHR);
+        reset(vkGetRayTracingCaptureReplayShaderGroupHandlesKHR);
+        reset(vkGetRayTracingShaderGroupHandlesKHR);
+        reset(vkGetRayTracingShaderGroupStackSizeKHR);
+
+        reset(vkBuildAccelerationStructuresKHR);
+        reset(vkCmdBuildAccelerationStructuresIndirectKHR);
+        reset(vkCmdBuildAccelerationStructuresKHR);
+        reset(vkCmdCopyAccelerationStructureKHR);
+        reset(vkCmdCopyAccelerationStructureToMemoryKHR);
+        reset(vkCmdCopyMemoryToAccelerationStructureKHR);
+        reset(vkCmdWriteAccelerationStructuresPropertiesKHR);
+        reset(vkCopyAccelerationStructureKHR);
+        reset(vkCopyAccelerationStructureToMemoryKHR);
+        reset(vkCopyMemoryToAccelerationStructureKHR);
+        reset(vkCreateAccelerationStructureKHR);
+        reset(vkDestroyAccelerationStructureKHR);
+        reset(vkGetAccelerationStructureBuildSizesKHR);
+        reset(vkGetAccelerationStructureDeviceAddressKHR);
+        reset(vkGetDeviceAccelerationStructureCompatibilityKHR);
+        reset(vkWriteAccelerationStructuresPropertiesKHR);
 }
 }
