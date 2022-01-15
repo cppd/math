@@ -66,8 +66,8 @@ public:
                 return f(instance, std::forward<T>(v)...);         \
         }
 
-VULKAN_EXTENSION_FUNCTION(vkCreateDebugReportCallbackEXT)
-VULKAN_EXTENSION_FUNCTION(vkDestroyDebugReportCallbackEXT)
+VULKAN_EXTENSION_FUNCTION(vkCreateDebugUtilsMessengerEXT)
+VULKAN_EXTENSION_FUNCTION(vkDestroyDebugUtilsMessengerEXT)
 
 //
 

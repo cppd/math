@@ -102,18 +102,18 @@ public:
         explicit Instance(const VkInstanceCreateInfo& create_info);
 };
 
-class DebugReportCallbackEXT final
+class DebugUtilsMessengerEXT final
 {
         VkInstance instance_ = VK_NULL_HANDLE;
-        VkDebugReportCallbackEXT callback_ = VK_NULL_HANDLE;
+        VkDebugUtilsMessengerEXT messenger_ = VK_NULL_HANDLE;
 
         void destroy() noexcept;
-        void move(DebugReportCallbackEXT* from) noexcept;
+        void move(DebugUtilsMessengerEXT* from) noexcept;
 
 public:
-        VULKAN_HANDLE_INSTANCE_FUNCTIONS(DebugReportCallbackEXT, callback_)
+        VULKAN_HANDLE_INSTANCE_FUNCTIONS(DebugUtilsMessengerEXT, messenger_)
 
-        DebugReportCallbackEXT(VkInstance instance, const VkDebugReportCallbackCreateInfoEXT& create_info);
+        DebugUtilsMessengerEXT(VkInstance instance, const VkDebugUtilsMessengerCreateInfoEXT& create_info);
 };
 
 class SurfaceKHR final

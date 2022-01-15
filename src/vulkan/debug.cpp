@@ -33,77 +33,80 @@ void add(std::string* const str, const char* const text)
         *str += text;
 }
 
-bool bits(const VkDebugReportFlagsEXT flags, const VkDebugReportFlagBitsEXT bits)
+bool bits(const VkDebugUtilsMessageTypeFlagsEXT flags, const VkDebugUtilsMessageTypeFlagBitsEXT bits)
 {
         return (flags & bits) == bits;
 }
 
-VKAPI_ATTR VkBool32 VKAPI_CALL debug_callback(
-        const VkDebugReportFlagsEXT flags,
-        const VkDebugReportObjectTypeEXT /*object_type*/,
-        const std::uint64_t /*object*/,
-        const std::size_t /*location*/,
-        const std::int32_t /*message_code*/,
-        const char* const /*layer_prefix*/,
-        const char* const message,
+VkBool32 VKAPI_PTR user_callback(
+        const VkDebugUtilsMessageSeverityFlagBitsEXT message_severity,
+        const VkDebugUtilsMessageTypeFlagsEXT message_types,
+        const VkDebugUtilsMessengerCallbackDataEXT* const callback_data,
         void* const /*user_data*/)
 {
         std::string s;
 
-        if (bits(flags, VK_DEBUG_REPORT_INFORMATION_BIT_EXT))
-        {
-                add(&s, "information");
-        }
-        if (bits(flags, VK_DEBUG_REPORT_WARNING_BIT_EXT))
-        {
-                add(&s, "warning");
-        }
-        if (bits(flags, VK_DEBUG_REPORT_PERFORMANCE_WARNING_BIT_EXT))
-        {
-                add(&s, "performance warning");
-        }
-        if (bits(flags, VK_DEBUG_REPORT_ERROR_BIT_EXT))
+        if (message_severity >= VK_DEBUG_UTILS_MESSAGE_SEVERITY_ERROR_BIT_EXT)
         {
                 add(&s, "error");
         }
-        if (bits(flags, VK_DEBUG_REPORT_DEBUG_BIT_EXT))
+        else if (message_severity >= VK_DEBUG_UTILS_MESSAGE_SEVERITY_WARNING_BIT_EXT)
         {
-                add(&s, "debug");
+                add(&s, "warning");
+        }
+        else if (message_severity >= VK_DEBUG_UTILS_MESSAGE_SEVERITY_INFO_BIT_EXT)
+        {
+                add(&s, "info");
+        }
+        else if (message_severity >= VK_DEBUG_UTILS_MESSAGE_SEVERITY_VERBOSE_BIT_EXT)
+        {
+                add(&s, "verbose");
         }
 
+        if (bits(message_types, VK_DEBUG_UTILS_MESSAGE_TYPE_PERFORMANCE_BIT_EXT))
+        {
+                add(&s, "performance");
+        }
+        if (bits(message_types, VK_DEBUG_UTILS_MESSAGE_TYPE_VALIDATION_BIT_EXT))
+        {
+                add(&s, "validation");
+        }
+        if (bits(message_types, VK_DEBUG_UTILS_MESSAGE_TYPE_GENERAL_BIT_EXT))
+        {
+                add(&s, "general");
+        }
+
+        std::string msg = "Debug message";
         if (!s.empty())
         {
-                LOG("Layer message (" + s + "): " + message);
+                msg += " (" + s + ")";
         }
-        else
-        {
-                LOG(std::string("Layer message: ") + message);
-        }
+
+        LOG(msg + ": " + callback_data->pMessage);
 
         return VK_FALSE;
 }
 }
 
-handle::DebugReportCallbackEXT create_debug_report_callback(const VkInstance instance)
+handle::DebugUtilsMessengerEXT create_debug_utils_messenger(const VkInstance instance)
 {
         if (instance == VK_NULL_HANDLE)
         {
-                error("No VkInstance for DebugReportCallbackEXT");
+                error("No VkInstance for DebugUtilsMessengerEXT");
         }
 
-        VkDebugReportCallbackCreateInfoEXT create_info = {};
+        VkDebugUtilsMessengerCreateInfoEXT create_info = {};
+        create_info.sType = VK_STRUCTURE_TYPE_DEBUG_UTILS_MESSENGER_CREATE_INFO_EXT;
 
-        create_info.sType = VK_STRUCTURE_TYPE_DEBUG_REPORT_CALLBACK_CREATE_INFO_EXT;
+        create_info.messageSeverity = VK_DEBUG_UTILS_MESSAGE_SEVERITY_INFO_BIT_EXT
+                                      | VK_DEBUG_UTILS_MESSAGE_SEVERITY_WARNING_BIT_EXT
+                                      | VK_DEBUG_UTILS_MESSAGE_SEVERITY_ERROR_BIT_EXT;
 
-        create_info.flags |= VK_DEBUG_REPORT_ERROR_BIT_EXT;
-        create_info.flags |= VK_DEBUG_REPORT_WARNING_BIT_EXT;
-        create_info.flags |= VK_DEBUG_REPORT_PERFORMANCE_WARNING_BIT_EXT;
+        create_info.messageType =
+                VK_DEBUG_UTILS_MESSAGE_TYPE_VALIDATION_BIT_EXT | VK_DEBUG_UTILS_MESSAGE_TYPE_PERFORMANCE_BIT_EXT;
 
-        // create_info.flags |= VK_DEBUG_REPORT_DEBUG_BIT_EXT;
-        // create_info.flags |= VK_DEBUG_REPORT_INFORMATION_BIT_EXT;
+        create_info.pfnUserCallback = user_callback;
 
-        create_info.pfnCallback = debug_callback;
-
-        return handle::DebugReportCallbackEXT(instance, create_info);
+        return handle::DebugUtilsMessengerEXT(instance, create_info);
 }
 }

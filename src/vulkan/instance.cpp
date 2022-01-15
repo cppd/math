@@ -37,6 +37,8 @@ namespace ns::vulkan
 {
 namespace
 {
+constexpr const char* DEBUG = VK_EXT_DEBUG_UTILS_EXTENSION_NAME;
+
 constexpr std::uint32_t NO_FAMILY_INDEX = Limits<std::uint32_t>::max();
 
 std::unordered_set<std::string> make_layers(
@@ -93,11 +95,11 @@ std::unordered_set<std::string> make_extensions(
                 res.insert(extension);
         }
 
-        constexpr const char* DEBUG_REPORT = VK_EXT_DEBUG_REPORT_EXTENSION_NAME;
-        if (supported.contains(DEBUG_REPORT))
+        if (!supported.contains(DEBUG))
         {
-                res.emplace(DEBUG_REPORT);
+                error(std::string("Vulkan instance extension ") + DEBUG + " is not supported");
         }
+        res.emplace(DEBUG);
 
         for (const std::string& extension : optional_extensions)
         {
@@ -151,10 +153,9 @@ VulkanInstance::VulkanInstance(
           instance_(create_instance(layers_, extensions_)),
           instance_extension_functions_(
                   create_surface ? std::optional<InstanceExtensionFunctions>(instance_) : std::nullopt),
-          callback_(
-                  layers_.contains(VK_EXT_DEBUG_REPORT_EXTENSION_NAME)
-                          ? std::make_optional(create_debug_report_callback(instance_))
-                          : std::nullopt),
+          messenger_(
+                  extensions_.contains(DEBUG) ? std::make_optional(create_debug_utils_messenger(instance_))
+                                              : std::nullopt),
           surface_(create_surface ? std::optional(handle::SurfaceKHR(instance_, create_surface)) : std::nullopt),
           physical_device_(find_physical_device(
                   instance_,

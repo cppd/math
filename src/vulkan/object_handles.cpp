@@ -45,29 +45,29 @@ Instance::Instance(const VkInstanceCreateInfo& create_info)
 
 //
 
-void DebugReportCallbackEXT::destroy() noexcept
+void DebugUtilsMessengerEXT::destroy() noexcept
 {
-        if (callback_ != VK_NULL_HANDLE)
+        if (messenger_ != VK_NULL_HANDLE)
         {
                 ASSERT(instance_ != VK_NULL_HANDLE);
-                vkDestroyDebugReportCallbackEXT(instance_, callback_, nullptr);
+                vkDestroyDebugUtilsMessengerEXT(instance_, messenger_, nullptr);
         }
 }
 
-void DebugReportCallbackEXT::move(DebugReportCallbackEXT* const from) noexcept
+void DebugUtilsMessengerEXT::move(DebugUtilsMessengerEXT* const from) noexcept
 {
         instance_ = from->instance_;
-        callback_ = from->callback_;
+        messenger_ = from->messenger_;
         from->instance_ = VK_NULL_HANDLE;
-        from->callback_ = VK_NULL_HANDLE;
+        from->messenger_ = VK_NULL_HANDLE;
 }
 
-DebugReportCallbackEXT::DebugReportCallbackEXT(
+DebugUtilsMessengerEXT::DebugUtilsMessengerEXT(
         const VkInstance instance,
-        const VkDebugReportCallbackCreateInfoEXT& create_info)
+        const VkDebugUtilsMessengerCreateInfoEXT& create_info)
         : instance_(instance)
 {
-        VULKAN_CHECK(vkCreateDebugReportCallbackEXT(instance, &create_info, nullptr, &callback_));
+        VULKAN_CHECK(vkCreateDebugUtilsMessengerEXT(instance, &create_info, nullptr, &messenger_));
 }
 
 //

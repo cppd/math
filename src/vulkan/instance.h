@@ -44,7 +44,7 @@ class VulkanInstance final
         const std::unordered_set<std::string> extensions_;
         const handle::Instance instance_;
         const std::optional<InstanceExtensionFunctions> instance_extension_functions_;
-        const std::optional<handle::DebugReportCallbackEXT> callback_;
+        const std::optional<handle::DebugUtilsMessengerEXT> messenger_;
 
         const std::optional<handle::SurfaceKHR> surface_;
 
