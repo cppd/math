@@ -38,7 +38,6 @@ namespace ns::vulkan
 namespace
 {
 constexpr const char* DEBUG = VK_EXT_DEBUG_UTILS_EXTENSION_NAME;
-
 constexpr std::uint32_t NO_FAMILY_INDEX = Limits<std::uint32_t>::max();
 
 std::unordered_set<std::string> make_layers(
@@ -140,6 +139,36 @@ void check_family_indices(const CommandPool& pool, const T& queues)
                 error("Error pool and queue family indices");
         }
 }
+
+template <std::size_t SIZE>
+void set_queues(
+        const Device& device,
+        const std::string_view& name,
+        const std::uint32_t family_index,
+        std::array<Queue, SIZE>* const queues,
+        std::unordered_map<std::uint32_t, std::uint32_t>* const queue_count,
+        std::string* const description)
+{
+        if (!description->empty())
+        {
+                *description += '\n';
+        }
+
+        *description += name;
+        *description += " queues, family index = " + to_string(family_index);
+
+        for (std::size_t i = 0; i < queues->size(); ++i)
+        {
+                std::uint32_t& device_queue = (*queue_count)[family_index];
+                if (device_queue >= device.queue_count(family_index))
+                {
+                        device_queue = 0;
+                }
+                (*queues)[i] = device.queue(family_index, device_queue);
+                *description += "\n  queue = " + to_string(i) + ", device queue = " + to_string(device_queue);
+                ++device_queue;
+        }
+}
 }
 
 VulkanInstance::VulkanInstance(
@@ -186,69 +215,25 @@ VulkanInstance::VulkanInstance(
           compute_command_pool_(create_command_pool(device_, compute_family_index_)),
           transfer_command_pool_(create_transient_command_pool(device_, transfer_family_index_))
 {
-        std::string s;
+        std::string description;
         std::unordered_map<std::uint32_t, std::uint32_t> queue_count;
-        std::uint32_t index;
 
-        index = graphics_compute_family_index_;
-        s += "Graphics compute queues, family index = " + to_string(index);
-        for (std::size_t i = 0; i < graphics_compute_queues_.size(); ++i)
-        {
-                graphics_compute_queues_[i] = device_.queue(index, queue_count[index]);
-                s += "\n  queue = " + to_string(i) + ", device queue = " + to_string(queue_count[index]);
-                ++queue_count[index];
-                if (queue_count[index] >= physical_device_.queue_families()[index].queueCount)
-                {
-                        queue_count[index] = 0;
-                }
-        }
+        set_queues(
+                device_, "graphics compute", graphics_compute_family_index_, &graphics_compute_queues_, &queue_count,
+                &description);
 
-        s += '\n';
-        index = compute_family_index_;
-        s += "Compute queues, family index = " + to_string(index);
-        for (std::size_t i = 0; i < compute_queues_.size(); ++i)
-        {
-                compute_queues_[i] = device_.queue(index, queue_count[index]);
-                s += "\n  queue = " + to_string(i) + ", device queue = " + to_string(queue_count[index]);
-                ++queue_count[index];
-                if (queue_count[index] >= physical_device_.queue_families()[index].queueCount)
-                {
-                        queue_count[index] = 0;
-                }
-        }
+        set_queues(device_, "compute", compute_family_index_, &compute_queues_, &queue_count, &description);
 
-        s += '\n';
-        index = transfer_family_index_;
-        s += "Transfer queues, family index = " + to_string(index);
-        for (std::size_t i = 0; i < transfer_queues_.size(); ++i)
-        {
-                transfer_queues_[i] = device_.queue(index, queue_count[index]);
-                s += "\n  queue = " + to_string(i) + ", device queue = " + to_string(queue_count[index]);
-                ++queue_count[index];
-                if (queue_count[index] >= physical_device_.queue_families()[index].queueCount)
-                {
-                        queue_count[index] = 0;
-                }
-        }
+        set_queues(device_, "transfer", transfer_family_index_, &transfer_queues_, &queue_count, &description);
 
         if (create_surface)
         {
-                s += '\n';
-                index = presentation_family_index_;
-                s += "Presentation queues, family index = " + to_string(index);
-                for (std::size_t i = 0; i < presentation_queues_.size(); ++i)
-                {
-                        presentation_queues_[i] = device_.queue(index, queue_count[index]);
-                        s += "\n  queue = " + to_string(i) + ", device queue = " + to_string(queue_count[index]);
-                        ++queue_count[index];
-                        if (queue_count[index] >= physical_device_.queue_families()[index].queueCount)
-                        {
-                                queue_count[index] = 0;
-                        }
-                }
+                set_queues(
+                        device_, "presentation", presentation_family_index_, &presentation_queues_, &queue_count,
+                        &description);
         }
 
-        LOG(s);
+        LOG(description);
 
         check_family_indices(graphics_compute_command_pool_, graphics_compute_queues_);
         check_family_indices(compute_command_pool_, compute_queues_);
