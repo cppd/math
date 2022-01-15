@@ -55,5 +55,6 @@ public:
         const PhysicalDeviceFeatures& features() const;
 
         Queue queue(std::uint32_t family_index, std::uint32_t queue_index) const;
+        std::uint32_t queue_count(std::uint32_t family_index) const;
 };
 }

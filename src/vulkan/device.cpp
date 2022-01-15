@@ -153,4 +153,16 @@ Queue Device::queue(const std::uint32_t family_index, const std::uint32_t queue_
 
         return {family_index, iter->second[queue_index]};
 }
+
+std::uint32_t Device::queue_count(const std::uint32_t family_index) const
+{
+        const auto iter = queues_.find(family_index);
+
+        if (iter == queues_.cend())
+        {
+                error("Queue family index " + to_string(family_index) + " not found");
+        }
+
+        return iter->second.size();
+}
 }
