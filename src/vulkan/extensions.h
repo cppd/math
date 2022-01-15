@@ -24,7 +24,7 @@ namespace ns
 {
 namespace vulkan
 {
-PFN_vkVoidFunction proc_addr(VkInstance instance, const char* name);
+PFN_vkVoidFunction instance_proc_addr(VkInstance instance, const char* name);
 
 class InstanceExtensionFunctions final
 {
@@ -57,17 +57,8 @@ public:
 };
 }
 
-#define VULKAN_EXTENSION_FUNCTION(name)                            \
-        template <typename... T>                                   \
-        decltype(auto) name(const VkInstance instance, T&&... v)   \
-        {                                                          \
-                const auto p = vulkan::proc_addr(instance, #name); \
-                const auto f = reinterpret_cast<PFN_##name>(p);    \
-                return f(instance, std::forward<T>(v)...);         \
-        }
-
-VULKAN_EXTENSION_FUNCTION(vkCreateDebugUtilsMessengerEXT)
-VULKAN_EXTENSION_FUNCTION(vkDestroyDebugUtilsMessengerEXT)
+#define VULKAN_INSTANCE_PROC_ADDR(instance, name) \
+        reinterpret_cast<PFN_##name>(::ns::vulkan::instance_proc_addr((instance), #name))
 
 //
 

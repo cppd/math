@@ -67,18 +67,8 @@ std::unordered_set<std::string> supported_instance_layers()
 
 std::uint32_t supported_instance_api_version()
 {
-        const PFN_vkEnumerateInstanceVersion enumerate_instance_version =
-                reinterpret_cast<PFN_vkEnumerateInstanceVersion>(
-                        vkGetInstanceProcAddr(nullptr, "vkEnumerateInstanceVersion"));
-
-        if (!enumerate_instance_version)
-        {
-                return VK_MAKE_API_VERSION(0, 1, 0, 0);
-        }
-
         std::uint32_t api_version;
-        VULKAN_CHECK(enumerate_instance_version(&api_version));
-
+        VULKAN_CHECK(vkEnumerateInstanceVersion(&api_version));
         return api_version;
 }
 }

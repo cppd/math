@@ -50,6 +50,8 @@ void DebugUtilsMessengerEXT::destroy() noexcept
         if (messenger_ != VK_NULL_HANDLE)
         {
                 ASSERT(instance_ != VK_NULL_HANDLE);
+                const auto vkDestroyDebugUtilsMessengerEXT =
+                        VULKAN_INSTANCE_PROC_ADDR(instance_, vkDestroyDebugUtilsMessengerEXT);
                 vkDestroyDebugUtilsMessengerEXT(instance_, messenger_, nullptr);
         }
 }
@@ -67,6 +69,7 @@ DebugUtilsMessengerEXT::DebugUtilsMessengerEXT(
         const VkDebugUtilsMessengerCreateInfoEXT& create_info)
         : instance_(instance)
 {
+        const auto vkCreateDebugUtilsMessengerEXT = VULKAN_INSTANCE_PROC_ADDR(instance, vkCreateDebugUtilsMessengerEXT);
         VULKAN_CHECK(vkCreateDebugUtilsMessengerEXT(instance, &create_info, nullptr, &messenger_));
 }
 

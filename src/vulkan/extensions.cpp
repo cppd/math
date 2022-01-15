@@ -45,7 +45,7 @@ void reset(T*& ptr)
 }
 }
 
-PFN_vkVoidFunction proc_addr(const VkInstance instance, const char* const name)
+PFN_vkVoidFunction instance_proc_addr(const VkInstance instance, const char* const name)
 {
         ASSERT(instance != VK_NULL_HANDLE);
         const PFN_vkVoidFunction addr = vkGetInstanceProcAddr(instance, name);

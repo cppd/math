@@ -19,6 +19,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <src/com/error.h>
 #include <src/vulkan/error.h>
+#include <src/vulkan/extensions.h>
 
 #if defined(__linux__)
 
@@ -35,12 +36,7 @@ std::vector<std::string> vulkan_create_surface_required_extensions()
 
 VkSurfaceKHR vulkan_create_surface(const WindowID window, const VkInstance instance)
 {
-        const PFN_vkCreateXcbSurfaceKHR vkCreateXcbSurfaceKHR =
-                reinterpret_cast<PFN_vkCreateXcbSurfaceKHR>(vkGetInstanceProcAddr(instance, "vkCreateXcbSurfaceKHR"));
-        if (!vkCreateXcbSurfaceKHR)
-        {
-                error("Failed to find address of vkCreateXcbSurfaceKHR");
-        }
+        const auto vkCreateXcbSurfaceKHR = VULKAN_INSTANCE_PROC_ADDR(instance, vkCreateXcbSurfaceKHR);
 
         VkXcbSurfaceCreateInfoKHR info = {};
         info.sType = VK_STRUCTURE_TYPE_XCB_SURFACE_CREATE_INFO_KHR;
@@ -71,12 +67,7 @@ std::vector<std::string> vulkan_create_surface_required_extensions()
 
 VkSurfaceKHR vulkan_create_surface(const WindowID window, const VkInstance instance)
 {
-        const PFN_vkCreateWin32SurfaceKHR vkCreateWin32SurfaceKHR = reinterpret_cast<PFN_vkCreateWin32SurfaceKHR>(
-                vkGetInstanceProcAddr(instance, "vkCreateWin32SurfaceKHR"));
-        if (!vkCreateWin32SurfaceKHR)
-        {
-                error("Failed to find address of vkCreateWin32SurfaceKHR");
-        }
+        const auto vkCreateWin32SurfaceKHR = VULKAN_INSTANCE_PROC_ADDR(instance, vkCreateWin32SurfaceKHR);
 
         VkWin32SurfaceCreateInfoKHR info = {};
         info.sType = VK_STRUCTURE_TYPE_WIN32_SURFACE_CREATE_INFO_KHR;
