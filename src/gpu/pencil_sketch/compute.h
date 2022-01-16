@@ -19,7 +19,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <src/numerical/region.h>
 #include <src/vulkan/buffers.h>
-#include <src/vulkan/instance.h>
+#include <src/vulkan/device_instance.h>
 
 #include <memory>
 
@@ -39,5 +39,5 @@ struct Compute
         virtual void delete_buffers() = 0;
 };
 
-std::unique_ptr<Compute> create_compute(const vulkan::VulkanInstance* instance);
+std::unique_ptr<Compute> create_compute(const vulkan::DeviceInstance* instance);
 }

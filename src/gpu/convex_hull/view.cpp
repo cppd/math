@@ -51,7 +51,7 @@ class Impl final : public View
 
         const std::uint32_t family_index_;
 
-        const vulkan::VulkanInstance* const instance_;
+        const vulkan::DeviceInstance* const instance_;
         VkCommandPool graphics_command_pool_;
 
         vulkan::handle::Semaphore semaphore_;
@@ -182,7 +182,7 @@ class Impl final : public View
         }
 
 public:
-        Impl(const vulkan::VulkanInstance* const instance,
+        Impl(const vulkan::DeviceInstance* const instance,
              const vulkan::CommandPool* const graphics_command_pool,
              const vulkan::Queue* const graphics_queue,
              const bool sample_shading)
@@ -226,7 +226,7 @@ vulkan::DeviceFunctionality View::device_functionality()
 }
 
 std::unique_ptr<View> create_view(
-        const vulkan::VulkanInstance* const instance,
+        const vulkan::DeviceInstance* const instance,
         const vulkan::CommandPool* const graphics_command_pool,
         const vulkan::Queue* const graphics_queue,
         const bool sample_shading)

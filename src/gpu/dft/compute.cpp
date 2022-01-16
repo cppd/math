@@ -54,6 +54,7 @@ There are errors in chapter 13 when calculating H2
 
 #include <src/com/error.h>
 #include <src/vulkan/error.h>
+#include <src/vulkan/instance.h>
 #include <src/vulkan/queue.h>
 
 #include <optional>
@@ -166,7 +167,7 @@ class DftImage final : public ComputeImage
 
 public:
         DftImage(
-                const vulkan::VulkanInstance* instance,
+                const vulkan::DeviceInstance* instance,
                 const vulkan::CommandPool* compute_command_pool,
                 const vulkan::Queue* compute_queue,
                 const vulkan::CommandPool* transfer_command_pool,
@@ -189,7 +190,7 @@ public:
 
 class DftVector final : public ComputeVector
 {
-        vulkan::VulkanInstance instance_;
+        vulkan::DeviceInstance instance_;
 
         std::unique_ptr<Dft> dft_;
 
@@ -268,7 +269,7 @@ class DftVector final : public ComputeVector
 
 public:
         DftVector()
-                : instance_({}, {}, {}),
+                : instance_(vulkan::Instance::handle(), {}, {}),
                   dft_(create_dft(
                           &instance_,
                           &instance_.compute_command_pool(),
@@ -283,7 +284,7 @@ public:
 }
 
 std::unique_ptr<ComputeImage> create_compute_image(
-        const vulkan::VulkanInstance* instance,
+        const vulkan::DeviceInstance* instance,
         const vulkan::CommandPool* compute_command_pool,
         const vulkan::Queue* compute_queue,
         const vulkan::CommandPool* transfer_command_pool,

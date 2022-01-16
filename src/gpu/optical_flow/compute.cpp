@@ -82,7 +82,7 @@ class Impl final : public Compute
 {
         const std::thread::id thread_id_ = std::this_thread::get_id();
 
-        const vulkan::VulkanInstance* const instance_;
+        const vulkan::DeviceInstance* const instance_;
         const vulkan::Device* const device_;
 
         const vulkan::CommandPool* const compute_command_pool_;
@@ -394,7 +394,7 @@ class Impl final : public Compute
         }
 
 public:
-        Impl(const vulkan::VulkanInstance* const instance,
+        Impl(const vulkan::DeviceInstance* const instance,
              const vulkan::CommandPool* const compute_command_pool,
              const vulkan::Queue* const compute_queue)
                 : instance_(instance),
@@ -424,7 +424,7 @@ public:
 }
 
 std::unique_ptr<Compute> create_compute(
-        const vulkan::VulkanInstance* const instance,
+        const vulkan::DeviceInstance* const instance,
         const vulkan::CommandPool* const compute_command_pool,
         const vulkan::Queue* const compute_queue)
 {

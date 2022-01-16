@@ -19,7 +19,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "image_process.h"
 #include "image_resolve.h"
-#include "instance.h"
 #include "render_buffers.h"
 #include "swapchain.h"
 #include "view_process.h"
@@ -38,11 +37,13 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/gpu/text_writer/view.h>
 #include <src/image/alpha.h>
 #include <src/numerical/region.h>
+#include <src/vulkan/device_instance.h>
 #include <src/vulkan/error.h>
 #include <src/vulkan/features.h>
 #include <src/vulkan/instance.h>
 #include <src/vulkan/objects.h>
 #include <src/vulkan/queue.h>
+#include <src/window/surface.h>
 
 #include <chrono>
 
@@ -76,7 +77,7 @@ constexpr color::Color DEFAULT_TEXT_COLOR{RGB8(255, 255, 255)};
 
 static_assert(
         2 <= std::tuple_size_v<
-                std::remove_reference_t<decltype(std::declval<vulkan::VulkanInstance>().graphics_compute_queues())>>);
+                std::remove_reference_t<decltype(std::declval<vulkan::DeviceInstance>().graphics_compute_queues())>>);
 
 vulkan::DeviceFunctionality device_functionality()
 {
@@ -91,6 +92,8 @@ vulkan::DeviceFunctionality device_functionality()
         {
                 res.required_features.features_10.samplerAnisotropy = VK_TRUE;
         }
+
+        res.required_extensions.insert(VK_KHR_SWAPCHAIN_EXTENSION_NAME);
 
         res.merge(gpu::renderer::Renderer::device_functionality());
         res.merge(gpu::text_writer::View::device_functionality());
@@ -116,8 +119,9 @@ class Impl final
 
         FrameRate frame_rate_;
 
-        const std::unique_ptr<vulkan::VulkanInstance> instance_;
-        const vulkan::handle::Semaphore swapchain_image_semaphore_{instance_->device()};
+        const vulkan::handle::SurfaceKHR surface_;
+        const vulkan::DeviceInstance instance_;
+        const vulkan::handle::Semaphore swapchain_image_semaphore_{instance_.device()};
 
         std::unique_ptr<gpu::renderer::Renderer> renderer_;
         std::unique_ptr<gpu::text_writer::View> text_;
@@ -173,7 +177,7 @@ class Impl final
 
                 static constexpr int IMAGE_INDEX = 0;
 
-                instance_->device_wait_idle();
+                instance_.device_wait_idle();
 
                 const int width = swapchain_->width();
                 const int height = swapchain_->height();
@@ -184,8 +188,8 @@ class Impl final
                 const VkSemaphore semaphore = render();
 
                 image_info->image = resolve_to_image(
-                        instance_->device(), instance_->graphics_compute_command_pool(),
-                        instance_->graphics_compute_queues()[0], *render_buffers_, semaphore, IMAGE_INDEX);
+                        instance_.device(), instance_.graphics_compute_command_pool(),
+                        instance_.graphics_compute_queues()[0], *render_buffers_, semaphore, IMAGE_INDEX);
 
                 delete_buffers();
                 create_swapchain_buffers();
@@ -208,16 +212,16 @@ class Impl final
         {
                 render_buffers_ = create_render_buffers(
                         RENDER_BUFFER_COUNT, format, DEPTH_FORMATS, width, height,
-                        {instance_->graphics_compute_queues()[0].family_index()}, instance_->device(),
+                        {instance_.graphics_compute_queues()[0].family_index()}, instance_.device(),
                         MINIMUM_SAMPLE_COUNT);
 
                 object_image_.emplace(
-                        instance_->device(),
-                        std::vector<std::uint32_t>({instance_->graphics_compute_queues()[0].family_index()}),
+                        instance_.device(),
+                        std::vector<std::uint32_t>({instance_.graphics_compute_queues()[0].family_index()}),
                         std::vector<VkFormat>({OBJECT_IMAGE_FORMAT}), VK_SAMPLE_COUNT_1_BIT, VK_IMAGE_TYPE_2D,
                         vulkan::make_extent(render_buffers_->width(), render_buffers_->height()),
                         VK_IMAGE_USAGE_STORAGE_BIT | VK_IMAGE_USAGE_TRANSFER_DST_BIT, VK_IMAGE_LAYOUT_GENERAL,
-                        instance_->graphics_compute_command_pool(), instance_->graphics_compute_queues()[0]);
+                        instance_.graphics_compute_command_pool(), instance_.graphics_compute_queues()[0]);
 
                 const auto [window_1, window_2] = window_position_and_size(
                         image_process_.two_windows(), render_buffers_->width(), render_buffers_->height(),
@@ -225,8 +229,8 @@ class Impl final
 
                 static_assert(RENDER_BUFFER_COUNT == 1);
                 image_resolve_.emplace(
-                        instance_->device(), instance_->graphics_compute_command_pool(),
-                        instance_->graphics_compute_queues()[0], *render_buffers_, window_1,
+                        instance_.device(), instance_.graphics_compute_command_pool(),
+                        instance_.graphics_compute_queues()[0], *render_buffers_, window_1,
                         VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL, VK_IMAGE_USAGE_SAMPLED_BIT);
 
                 renderer_->create_buffers(&render_buffers_->buffers_3d(), &*object_image_, window_1);
@@ -250,10 +254,10 @@ class Impl final
                 ASSERT(render_buffers_->image_views().size() == 1);
 
                 VkSemaphore semaphore = renderer_->draw(
-                        instance_->graphics_compute_queues()[0], instance_->graphics_compute_queues()[1], IMAGE_INDEX);
+                        instance_.graphics_compute_queues()[0], instance_.graphics_compute_queues()[1], IMAGE_INDEX);
 
-                const vulkan::Queue& graphics_queue = instance_->graphics_compute_queues()[0];
-                const vulkan::Queue& compute_queue = instance_->compute_queue();
+                const vulkan::Queue& graphics_queue = instance_.graphics_compute_queues()[0];
+                const vulkan::Queue& compute_queue = instance_.compute_queue();
 
                 semaphore = image_process_.draw(*image_resolve_, semaphore, graphics_queue, compute_queue, IMAGE_INDEX);
 
@@ -278,12 +282,12 @@ class Impl final
                 create_buffers(swapchain_->format(), swapchain_->width(), swapchain_->height());
 
                 swapchain_resolve_.emplace(
-                        instance_->device(), instance_->graphics_compute_command_pool(), *render_buffers_, *swapchain_);
+                        instance_.device(), instance_.graphics_compute_command_pool(), *render_buffers_, *swapchain_);
         }
 
         void delete_swapchain()
         {
-                instance_->device_wait_idle();
+                instance_.device_wait_idle();
 
                 delete_swapchain_buffers();
                 swapchain_.reset();
@@ -294,10 +298,10 @@ class Impl final
                 delete_swapchain();
 
                 swapchain_.emplace(
-                        instance_->surface(), instance_->device(),
+                        surface_, instance_.device(),
                         std::vector<std::uint32_t>{
-                                instance_->graphics_compute_queues()[0].family_index(),
-                                instance_->presentation_queue().family_index()},
+                                instance_.graphics_compute_queues()[0].family_index(),
+                                instance_.presentation_queue().family_index()},
                         SWAPCHAIN_SURFACE_FORMAT, SWAPCHAIN_PREFERRED_IMAGE_COUNT,
                         view_process_.vertical_sync() ? vulkan::PresentMode::PREFER_SYNC
                                                       : vulkan::PresentMode::PREFER_FAST);
@@ -308,21 +312,21 @@ class Impl final
         [[nodiscard]] bool render_swapchain() const
         {
                 const std::optional<std::uint32_t> image_index = vulkan::acquire_next_image(
-                        instance_->device(), swapchain_->swapchain(), swapchain_image_semaphore_);
+                        instance_.device(), swapchain_->swapchain(), swapchain_image_semaphore_);
 
                 if (!image_index)
                 {
                         return false;
                 }
 
-                const vulkan::Queue& queue = instance_->graphics_compute_queues()[0];
+                const vulkan::Queue& queue = instance_.graphics_compute_queues()[0];
 
                 VkSemaphore semaphore = render();
 
                 semaphore = swapchain_resolve_->resolve(queue, swapchain_image_semaphore_, semaphore, *image_index);
 
                 if (!vulkan::queue_present(
-                            semaphore, swapchain_->swapchain(), *image_index, instance_->presentation_queue()))
+                            semaphore, swapchain_->swapchain(), *image_index, instance_.presentation_queue()))
                 {
                         return false;
                 }
@@ -336,34 +340,40 @@ public:
         Impl(const window::WindowID window, const double window_ppi)
                 : frame_size_in_pixels_(frame_size_in_pixels(window_ppi)),
                   frame_rate_(window_ppi),
-                  instance_(create_surface_instance(window, device_functionality())),
+                  surface_(
+                          vulkan::Instance::handle(),
+                          [&](const VkInstance instance)
+                          {
+                                  return window::vulkan_create_surface(window, instance);
+                          }),
+                  instance_(vulkan::Instance::handle(), device_functionality(), surface_),
                   renderer_(gpu::renderer::create_renderer(
-                          instance_.get(),
-                          &instance_->graphics_compute_command_pool(),
-                          &instance_->graphics_compute_queues()[0],
-                          &instance_->transfer_command_pool(),
-                          &instance_->transfer_queue(),
+                          &instance_,
+                          &instance_.graphics_compute_command_pool(),
+                          &instance_.graphics_compute_queues()[0],
+                          &instance_.transfer_command_pool(),
+                          &instance_.transfer_queue(),
                           SAMPLE_RATE_SHADING,
                           SAMPLER_ANISOTROPY)),
                   text_(gpu::text_writer::create_view(
-                          instance_.get(),
-                          &instance_->graphics_compute_command_pool(),
-                          &instance_->graphics_compute_queues()[0],
-                          &instance_->transfer_command_pool(),
-                          &instance_->transfer_queue(),
+                          &instance_,
+                          &instance_.graphics_compute_command_pool(),
+                          &instance_.graphics_compute_queues()[0],
+                          &instance_.transfer_command_pool(),
+                          &instance_.transfer_queue(),
                           SAMPLE_RATE_SHADING,
                           frame_rate_.text_size(),
                           DEFAULT_TEXT_COLOR)),
                   image_process_(
                           window_ppi,
                           SAMPLE_RATE_SHADING,
-                          instance_.get(),
-                          &instance_->graphics_compute_command_pool(),
-                          &instance_->graphics_compute_queues()[0],
-                          &instance_->transfer_command_pool(),
-                          &instance_->transfer_queue(),
-                          &instance_->compute_command_pool(),
-                          &instance_->compute_queue()),
+                          &instance_,
+                          &instance_.graphics_compute_command_pool(),
+                          &instance_.graphics_compute_queues()[0],
+                          &instance_.transfer_command_pool(),
+                          &instance_.transfer_queue(),
+                          &instance_.compute_command_pool(),
+                          &instance_.compute_queue()),
                   camera_(
                           [this](const auto& info)
                           {

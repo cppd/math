@@ -82,7 +82,7 @@ class Impl final : public Compute
 {
         const std::thread::id thread_id_ = std::this_thread::get_id();
 
-        const vulkan::VulkanInstance* const instance_;
+        const vulkan::DeviceInstance* const instance_;
 
         std::optional<vulkan::BufferWithMemory> lines_buffer_;
         VkBuffer points_buffer_ = VK_NULL_HANDLE;
@@ -210,7 +210,7 @@ class Impl final : public Compute
         }
 
 public:
-        explicit Impl(const vulkan::VulkanInstance* const instance)
+        explicit Impl(const vulkan::DeviceInstance* const instance)
                 : instance_(instance),
                   prepare_program_(instance->device()),
                   prepare_memory_(instance->device(), prepare_program_.descriptor_set_layout()),
@@ -232,7 +232,7 @@ public:
 };
 }
 
-std::unique_ptr<Compute> create_compute(const vulkan::VulkanInstance* const instance)
+std::unique_ptr<Compute> create_compute(const vulkan::DeviceInstance* const instance)
 {
         return std::make_unique<Impl>(instance);
 }

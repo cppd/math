@@ -35,7 +35,7 @@ vulkan::DeviceFunctionality ImageProcess::device_functionality()
 ImageProcess::ImageProcess(
         const double window_ppi,
         const bool sample_shading,
-        const vulkan::VulkanInstance* const instance,
+        const vulkan::DeviceInstance* const instance,
         const vulkan::CommandPool* const graphics_command_pool,
         const vulkan::Queue* const graphics_queue,
         const vulkan::CommandPool* const transfer_command_pool,

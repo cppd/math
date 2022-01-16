@@ -27,7 +27,7 @@ namespace ns::vulkan
 {
 namespace
 {
-std::unordered_set<std::string> make_extensions(
+std::unordered_set<std::string> instance_extensions(
         const PhysicalDeviceFeatures& required_features,
         const std::unordered_set<std::string>& required_extensions,
         const std::unordered_set<std::string>& optional_extensions,
@@ -107,7 +107,7 @@ Device::Device(
                   functionality.required_features,
                   functionality.optional_features,
                   physical_device_->features())),
-          extensions_(make_extensions(
+          extensions_(instance_extensions(
                   features_,
                   functionality.required_extensions,
                   functionality.optional_extensions,

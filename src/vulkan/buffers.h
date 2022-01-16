@@ -18,7 +18,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #pragma once
 
 #include "device.h"
-#include "instance.h"
 #include "objects.h"
 
 #include <src/com/container.h>

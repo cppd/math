@@ -28,6 +28,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/com/error.h>
 #include <src/com/log.h>
 #include <src/com/print.h>
+#include <src/vulkan/instance.h>
 
 namespace ns::gui
 {
@@ -71,6 +72,8 @@ int run_application(int argc, char** const argv)
                 });
 
         LOG(command_line_description());
+
+        vulkan::Instance vulkan_instance;
 
         create_delete_on_close_window<gui::main_window::MainWindow>()->show();
 

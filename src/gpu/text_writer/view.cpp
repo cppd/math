@@ -96,7 +96,7 @@ class Impl final : public View
 
         const bool sample_shading_;
 
-        const vulkan::VulkanInstance* const instance_;
+        const vulkan::DeviceInstance* const instance_;
         const vulkan::Device* const device_;
         VkCommandPool graphics_command_pool_;
 
@@ -253,7 +253,7 @@ class Impl final : public View
                 return semaphore_;
         }
 
-        Impl(const vulkan::VulkanInstance* const instance,
+        Impl(const vulkan::DeviceInstance* const instance,
              const vulkan::CommandPool* const graphics_command_pool,
              const vulkan::Queue* const graphics_queue,
              const vulkan::CommandPool* const /*transfer_command_pool*/,
@@ -310,7 +310,7 @@ class Impl final : public View
         }
 
 public:
-        Impl(const vulkan::VulkanInstance* const instance,
+        Impl(const vulkan::DeviceInstance* const instance,
              const vulkan::CommandPool* const graphics_command_pool,
              const vulkan::Queue* const graphics_queue,
              const vulkan::CommandPool* const transfer_command_pool,
@@ -346,7 +346,7 @@ vulkan::DeviceFunctionality View::device_functionality()
 }
 
 std::unique_ptr<View> create_view(
-        const vulkan::VulkanInstance* const instance,
+        const vulkan::DeviceInstance* const instance,
         const vulkan::CommandPool* const graphics_command_pool,
         const vulkan::Queue* const graphics_queue,
         const vulkan::CommandPool* const transfer_command_pool,

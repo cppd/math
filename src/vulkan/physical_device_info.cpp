@@ -17,10 +17,10 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "physical_device_info.h"
 
+#include "api_version.h"
 #include "error.h"
 #include "features.h"
 #include "print.h"
-#include "settings.h"
 
 #include <src/com/enum.h>
 #include <src/com/error.h>

@@ -21,29 +21,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 namespace ns::vulkan
 {
-void InstanceFunctionality::merge(const InstanceFunctionality& functionality)
-{
-        for (const std::string& extension : functionality.required_layers)
-        {
-                required_layers.insert(extension);
-        }
-
-        for (const std::string& extension : functionality.optional_layers)
-        {
-                optional_layers.insert(extension);
-        }
-
-        for (const std::string& extension : functionality.required_extensions)
-        {
-                required_extensions.insert(extension);
-        }
-
-        for (const std::string& extension : functionality.optional_extensions)
-        {
-                optional_extensions.insert(extension);
-        }
-}
-
 void DeviceFunctionality::merge(const DeviceFunctionality& functionality)
 {
         for (const std::string& extension : functionality.required_extensions)

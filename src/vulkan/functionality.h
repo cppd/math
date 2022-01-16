@@ -24,16 +24,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 namespace ns::vulkan
 {
-struct InstanceFunctionality final
-{
-        std::unordered_set<std::string> required_layers;
-        std::unordered_set<std::string> optional_layers;
-        std::unordered_set<std::string> required_extensions;
-        std::unordered_set<std::string> optional_extensions;
-
-        void merge(const InstanceFunctionality& functionality);
-};
-
 struct DeviceFunctionality final
 {
         std::unordered_set<std::string> required_extensions;

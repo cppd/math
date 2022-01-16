@@ -43,7 +43,7 @@ class Impl final : public Dft
 {
         const std::thread::id thread_id_ = std::this_thread::get_id();
 
-        const vulkan::VulkanInstance* const instance_;
+        const vulkan::DeviceInstance* const instance_;
         const vulkan::Device* const device_;
 
         const vulkan::CommandPool* const compute_command_pool_;
@@ -312,7 +312,7 @@ class Impl final : public Dft
         }
 
 public:
-        Impl(const vulkan::VulkanInstance* const instance,
+        Impl(const vulkan::DeviceInstance* const instance,
              const vulkan::CommandPool* const compute_command_pool,
              const vulkan::Queue* const compute_queue,
              const vulkan::CommandPool* const transfer_command_pool,
@@ -349,7 +349,7 @@ public:
 }
 
 std::unique_ptr<Dft> create_dft(
-        const vulkan::VulkanInstance* const instance,
+        const vulkan::DeviceInstance* const instance,
         const vulkan::CommandPool* const compute_command_pool,
         const vulkan::Queue* const compute_queue,
         const vulkan::CommandPool* const transfer_command_pool,
