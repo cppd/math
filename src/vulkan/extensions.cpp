@@ -72,6 +72,18 @@ InstanceExtensionFunctions::InstanceExtensionFunctions(const VkInstance instance
         SET_INSTANCE(vkGetPhysicalDeviceSurfaceFormatsKHR)
         SET_INSTANCE(vkGetPhysicalDeviceSurfacePresentModesKHR)
         SET_INSTANCE(vkGetPhysicalDeviceSurfaceSupportKHR)
+
+        SET_INSTANCE(vkCmdBeginDebugUtilsLabelEXT)
+        SET_INSTANCE(vkCmdEndDebugUtilsLabelEXT)
+        SET_INSTANCE(vkCmdInsertDebugUtilsLabelEXT)
+        SET_INSTANCE(vkCreateDebugUtilsMessengerEXT)
+        SET_INSTANCE(vkDestroyDebugUtilsMessengerEXT)
+        SET_INSTANCE(vkQueueBeginDebugUtilsLabelEXT)
+        SET_INSTANCE(vkQueueEndDebugUtilsLabelEXT)
+        SET_INSTANCE(vkQueueInsertDebugUtilsLabelEXT)
+        SET_INSTANCE(vkSetDebugUtilsObjectNameEXT)
+        SET_INSTANCE(vkSetDebugUtilsObjectTagEXT)
+        SET_INSTANCE(vkSubmitDebugUtilsMessageEXT)
 }
 
 InstanceExtensionFunctions::~InstanceExtensionFunctions()
@@ -81,6 +93,18 @@ InstanceExtensionFunctions::~InstanceExtensionFunctions()
         reset(vkGetPhysicalDeviceSurfaceFormatsKHR);
         reset(vkGetPhysicalDeviceSurfacePresentModesKHR);
         reset(vkGetPhysicalDeviceSurfaceSupportKHR);
+
+        reset(vkCmdBeginDebugUtilsLabelEXT);
+        reset(vkCmdEndDebugUtilsLabelEXT);
+        reset(vkCmdInsertDebugUtilsLabelEXT);
+        reset(vkCreateDebugUtilsMessengerEXT);
+        reset(vkDestroyDebugUtilsMessengerEXT);
+        reset(vkQueueBeginDebugUtilsLabelEXT);
+        reset(vkQueueEndDebugUtilsLabelEXT);
+        reset(vkQueueInsertDebugUtilsLabelEXT);
+        reset(vkSetDebugUtilsObjectNameEXT);
+        reset(vkSetDebugUtilsObjectTagEXT);
+        reset(vkSubmitDebugUtilsMessageEXT);
 }
 
 //

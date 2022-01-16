@@ -64,12 +64,29 @@ public:
 
 #define VULKAN_EXTENSION_POINTER(name) inline PFN_##name name = nullptr;
 
+//
+
 // VK_KHR_surface
 VULKAN_EXTENSION_POINTER(vkDestroySurfaceKHR)
 VULKAN_EXTENSION_POINTER(vkGetPhysicalDeviceSurfaceCapabilitiesKHR)
 VULKAN_EXTENSION_POINTER(vkGetPhysicalDeviceSurfaceFormatsKHR)
 VULKAN_EXTENSION_POINTER(vkGetPhysicalDeviceSurfacePresentModesKHR)
 VULKAN_EXTENSION_POINTER(vkGetPhysicalDeviceSurfaceSupportKHR)
+
+// VK_EXT_debug_utils
+VULKAN_EXTENSION_POINTER(vkCmdBeginDebugUtilsLabelEXT)
+VULKAN_EXTENSION_POINTER(vkCmdEndDebugUtilsLabelEXT)
+VULKAN_EXTENSION_POINTER(vkCmdInsertDebugUtilsLabelEXT)
+VULKAN_EXTENSION_POINTER(vkCreateDebugUtilsMessengerEXT)
+VULKAN_EXTENSION_POINTER(vkDestroyDebugUtilsMessengerEXT)
+VULKAN_EXTENSION_POINTER(vkQueueBeginDebugUtilsLabelEXT)
+VULKAN_EXTENSION_POINTER(vkQueueEndDebugUtilsLabelEXT)
+VULKAN_EXTENSION_POINTER(vkQueueInsertDebugUtilsLabelEXT)
+VULKAN_EXTENSION_POINTER(vkSetDebugUtilsObjectNameEXT)
+VULKAN_EXTENSION_POINTER(vkSetDebugUtilsObjectTagEXT)
+VULKAN_EXTENSION_POINTER(vkSubmitDebugUtilsMessageEXT)
+
+//
 
 // VK_KHR_swapchain
 VULKAN_EXTENSION_POINTER(vkAcquireNextImageKHR)
