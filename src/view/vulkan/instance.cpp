@@ -25,15 +25,12 @@ std::unique_ptr<vulkan::VulkanInstance> create_surface_instance(
         const window::WindowID window,
         vulkan::DeviceFunctionality&& device_functionality)
 {
-        const std::vector<std::string> required_instance_extensions =
-                window::vulkan_create_surface_required_extensions();
-
         vulkan::InstanceFunctionality instance_functionality;
 
-        instance_functionality.required_extensions.insert(
-                required_instance_extensions.cbegin(), required_instance_extensions.cend());
+        instance_functionality.required_extensions.insert(window::vulkan_create_surface_extension());
+        instance_functionality.required_extensions.insert(VK_KHR_SURFACE_EXTENSION_NAME);
 
-        device_functionality.required_extensions.emplace(VK_KHR_SWAPCHAIN_EXTENSION_NAME);
+        device_functionality.required_extensions.insert(VK_KHR_SWAPCHAIN_EXTENSION_NAME);
 
         const std::function<VkSurfaceKHR(VkInstance)> create_surface = [&](const VkInstance instance)
         {

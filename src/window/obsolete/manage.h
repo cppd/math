@@ -22,12 +22,11 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "handle.h"
 
 #include <string>
-#include <vector>
 #include <vulkan/vulkan.h>
 
 namespace ns::window
 {
-std::vector<std::string> vulkan_create_surface_required_extensions();
+std::string vulkan_create_surface_extension();
 VkSurfaceKHR vulkan_create_surface(WindowID window, VkInstance instance);
 
 class WindowInit final

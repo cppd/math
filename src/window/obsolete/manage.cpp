@@ -155,9 +155,9 @@ WindowInit::~WindowInit()
 //        XResizeWindow(display, window, parent_attr.width, parent_attr.height);
 //}
 
-std::vector<std::string> vulkan_create_surface_required_extensions()
+std::string vulkan_create_surface_extension()
 {
-        return {"VK_KHR_surface", "VK_KHR_xlib_surface"};
+        return VK_KHR_XLIB_SURFACE_EXTENSION_NAME;
 }
 
 VkSurfaceKHR vulkan_create_surface(WindowID window, VkInstance instance)
@@ -233,9 +233,9 @@ WindowInit::~WindowInit()
 //        SetWindowPos(window, HWND_TOP, 0, 0, rect.right - rect.left, rect.bottom - rect.top, 0);
 //}
 
-std::vector<std::string> vulkan_create_surface_required_extensions()
+std::string vulkan_create_surface_extension()
 {
-        return {"VK_KHR_surface", "VK_KHR_win32_surface"};
+        return VK_KHR_WIN32_SURFACE_EXTENSION_NAME;
 }
 
 VkSurfaceKHR vulkan_create_surface(WindowID window, VkInstance instance)

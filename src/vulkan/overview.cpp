@@ -241,15 +241,12 @@ void layers(StringTree* const tree)
         }
 }
 
-void required_surface_extensions(StringTree* const tree)
+void create_surface_extension(StringTree* const tree)
 {
-        const std::size_t node = tree->add("Required Surface Extensions");
+        const std::size_t node = tree->add("Create Surface Extension");
         try
         {
-                for (const std::string& extension : sorted(window::vulkan_create_surface_required_extensions()))
-                {
-                        tree->add(node, extension);
-                }
+                tree->add(node, window::vulkan_create_surface_extension());
         }
         catch (const std::exception& e)
         {
@@ -265,7 +262,7 @@ std::string overview()
         api_version(&tree);
         extensions(&tree);
         layers(&tree);
-        required_surface_extensions(&tree);
+        create_surface_extension(&tree);
 
         return tree.text(TREE_LEVEL_INDENT);
 }

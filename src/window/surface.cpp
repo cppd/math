@@ -17,7 +17,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "surface.h"
 
-#include <src/com/error.h>
 #include <src/vulkan/error.h>
 #include <src/vulkan/extensions.h>
 
@@ -29,9 +28,9 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 namespace ns::window
 {
-std::vector<std::string> vulkan_create_surface_required_extensions()
+std::string vulkan_create_surface_extension()
 {
-        return {"VK_KHR_surface", "VK_KHR_xcb_surface"};
+        return VK_KHR_XCB_SURFACE_EXTENSION_NAME;
 }
 
 VkSurfaceKHR vulkan_create_surface(const WindowID window, const VkInstance instance)
@@ -60,9 +59,9 @@ VkSurfaceKHR vulkan_create_surface(const WindowID window, const VkInstance insta
 
 namespace ns::window
 {
-std::vector<std::string> vulkan_create_surface_required_extensions()
+std::string vulkan_create_surface_extension()
 {
-        return {"VK_KHR_surface", "VK_KHR_win32_surface"};
+        return VK_KHR_WIN32_SURFACE_EXTENSION_NAME;
 }
 
 VkSurfaceKHR vulkan_create_surface(const WindowID window, const VkInstance instance)
