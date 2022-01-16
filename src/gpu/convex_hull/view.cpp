@@ -211,9 +211,7 @@ public:
         {
                 ASSERT(std::this_thread::get_id() == thread_id_);
 
-                //
-
-                instance_->device_wait_idle_noexcept("the Vulkan convex hull view destructor");
+                instance_->device().wait_idle_noexcept("convex hull view destructor");
         }
 };
 }

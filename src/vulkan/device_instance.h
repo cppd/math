@@ -57,21 +57,17 @@ class DeviceInstance final
         std::array<Queue, PRESENTATION_QUEUE_COUNT> presentation_queues_;
 
 public:
-        DeviceInstance(VkInstance instance, const DeviceFunctionality& device_functionality, VkSurfaceKHR surface);
+        explicit DeviceInstance(
+                VkInstance instance,
+                const DeviceFunctionality& device_functionality = {},
+                VkSurfaceKHR surface = VK_NULL_HANDLE);
 
-        ~DeviceInstance();
+        ~DeviceInstance() = default;
 
         DeviceInstance(const DeviceInstance&) = delete;
         DeviceInstance(DeviceInstance&&) = delete;
         DeviceInstance& operator=(const DeviceInstance&) = delete;
         DeviceInstance& operator=(DeviceInstance&&) = delete;
-
-        //
-
-        void device_wait_idle() const;
-        void device_wait_idle_noexcept(const char* msg) const noexcept;
-
-        //
 
         const Device& device() const
         {

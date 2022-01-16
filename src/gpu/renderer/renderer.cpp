@@ -445,7 +445,7 @@ public:
         {
                 ASSERT(thread_id_ == std::this_thread::get_id());
 
-                instance_->device_wait_idle_noexcept("the Vulkan renderer destructor");
+                instance_->device().wait_idle_noexcept("renderer destructor");
         }
 
         Impl(const Impl&) = delete;

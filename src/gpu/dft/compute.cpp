@@ -269,7 +269,7 @@ class DftVector final : public ComputeVector
 
 public:
         DftVector()
-                : instance_(vulkan::Instance::handle(), {}, {}),
+                : instance_(vulkan::Instance::handle()),
                   dft_(create_dft(
                           &instance_,
                           &instance_.compute_command_pool(),

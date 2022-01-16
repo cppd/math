@@ -18,9 +18,11 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "device.h"
 
 #include "device_create.h"
+#include "error.h"
 #include "features.h"
 
 #include <src/com/error.h>
+#include <src/com/log.h>
 #include <src/com/print.h>
 
 namespace ns::vulkan
@@ -117,6 +119,11 @@ Device::Device(
 {
 }
 
+Device::~Device()
+{
+        wait_idle_noexcept("device destructor");
+}
+
 VkPhysicalDevice Device::physical_device() const
 {
         return physical_device_->device();
@@ -164,5 +171,44 @@ std::uint32_t Device::queue_count(const std::uint32_t family_index) const
         }
 
         return iter->second.size();
+}
+
+void Device::wait_idle() const
+{
+        if (device_ != VK_NULL_HANDLE)
+        {
+                VULKAN_CHECK(vkDeviceWaitIdle(device_));
+        }
+}
+
+void Device::wait_idle_noexcept(const char* const msg) const noexcept
+{
+        try
+        {
+                try
+                {
+                        wait_idle();
+                }
+                catch (const std::exception& e)
+                {
+                        if (!msg)
+                        {
+                                error_fatal("No message for the device wait idle function");
+                        }
+                        LOG(std::string("Device wait idle error in ") + msg + ": " + e.what());
+                }
+                catch (...)
+                {
+                        if (!msg)
+                        {
+                                error_fatal("No message for the device wait idle function");
+                        }
+                        LOG(std::string("Device wait idle unknown error in ") + msg);
+                }
+        }
+        catch (...)
+        {
+                error_fatal("Error in the device wait idle exception handlers");
+        }
 }
 }

@@ -333,9 +333,7 @@ public:
         {
                 ASSERT(std::this_thread::get_id() == thread_id_);
 
-                //
-
-                instance_->device_wait_idle_noexcept("the Vulkan text destructor");
+                instance_->device().wait_idle_noexcept("text writer destructor");
         }
 };
 }

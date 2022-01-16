@@ -42,6 +42,8 @@ public:
                const std::unordered_map<std::uint32_t, std::uint32_t>& queue_families,
                const DeviceFunctionality& functionality);
 
+        ~Device();
+
         operator VkDevice() const& noexcept
         {
                 return device_;
@@ -56,5 +58,8 @@ public:
 
         Queue queue(std::uint32_t family_index, std::uint32_t queue_index) const;
         std::uint32_t queue_count(std::uint32_t family_index) const;
+
+        void wait_idle() const;
+        void wait_idle_noexcept(const char* msg) const noexcept;
 };
 }

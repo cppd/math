@@ -151,49 +151,4 @@ DeviceInstance::DeviceInstance(
         check_family_indices(compute_command_pool_, compute_queues_);
         check_family_indices(transfer_command_pool_, transfer_queues_);
 }
-
-DeviceInstance::~DeviceInstance()
-{
-        device_wait_idle_noexcept("the Vulkan instance destructor");
-}
-
-void DeviceInstance::device_wait_idle() const
-{
-        ASSERT(device_ != VK_NULL_HANDLE);
-
-        VULKAN_CHECK(vkDeviceWaitIdle(device_));
-}
-
-void DeviceInstance::device_wait_idle_noexcept(const char* const msg) const noexcept
-{
-        try
-        {
-                try
-                {
-                        device_wait_idle();
-                }
-                catch (const std::exception& e)
-                {
-                        if (!msg)
-                        {
-                                error_fatal("No message for the device wait idle function");
-                        }
-                        std::string s = "Device wait idle exception in " + std::string(msg) + ": " + e.what();
-                        LOG(s);
-                }
-                catch (...)
-                {
-                        if (!msg)
-                        {
-                                error_fatal("No message for the device wait idle function");
-                        }
-                        std::string s = "Device wait idle unknown exception in " + std::string(msg);
-                        LOG(s);
-                }
-        }
-        catch (...)
-        {
-                error_fatal("Exception in the device wait idle exception handlers");
-        }
-}
 }

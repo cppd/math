@@ -416,9 +416,7 @@ public:
         {
                 ASSERT(std::this_thread::get_id() == thread_id_);
 
-                //
-
-                instance_->device_wait_idle_noexcept("the Vulkan optical flow compute destructor");
+                instance_->device().wait_idle_noexcept("optical flow compute destructor");
         }
 };
 }

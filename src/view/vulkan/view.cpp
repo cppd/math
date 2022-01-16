@@ -177,7 +177,7 @@ class Impl final
 
                 static constexpr int IMAGE_INDEX = 0;
 
-                instance_.device_wait_idle();
+                instance_.device().wait_idle();
 
                 const int width = swapchain_->width();
                 const int height = swapchain_->height();
@@ -287,7 +287,7 @@ class Impl final
 
         void delete_swapchain()
         {
-                instance_.device_wait_idle();
+                instance_.device().wait_idle();
 
                 delete_swapchain_buffers();
                 swapchain_.reset();
