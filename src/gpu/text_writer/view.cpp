@@ -96,7 +96,6 @@ class Impl final : public View
 
         const bool sample_shading_;
 
-        const vulkan::DeviceInstance* const instance_;
         const vulkan::Device* const device_;
         VkCommandPool graphics_command_pool_;
 
@@ -253,7 +252,7 @@ class Impl final : public View
                 return semaphore_;
         }
 
-        Impl(const vulkan::DeviceInstance* const instance,
+        Impl(const vulkan::Device* const device,
              const vulkan::CommandPool* const graphics_command_pool,
              const vulkan::Queue* const graphics_queue,
              const vulkan::CommandPool* const /*transfer_command_pool*/,
@@ -262,8 +261,7 @@ class Impl final : public View
              const color::Color& color,
              Glyphs&& glyphs)
                 : sample_shading_(sample_shading),
-                  instance_(instance),
-                  device_(&instance_->device()),
+                  device_(device),
                   graphics_command_pool_(*graphics_command_pool),
                   glyph_texture_(
                           *device_,
@@ -310,7 +308,7 @@ class Impl final : public View
         }
 
 public:
-        Impl(const vulkan::DeviceInstance* const instance,
+        Impl(const vulkan::Device* const device,
              const vulkan::CommandPool* const graphics_command_pool,
              const vulkan::Queue* const graphics_queue,
              const vulkan::CommandPool* const transfer_command_pool,
@@ -318,14 +316,14 @@ public:
              const bool sample_shading,
              const int size,
              const color::Color& color)
-                : Impl(instance,
+                : Impl(device,
                        graphics_command_pool,
                        graphics_queue,
                        transfer_command_pool,
                        transfer_queue,
                        sample_shading,
                        color,
-                       Glyphs(size, instance->device().properties().properties_10.limits.maxImageDimension2D))
+                       Glyphs(size, device->properties().properties_10.limits.maxImageDimension2D))
         {
         }
 
@@ -333,7 +331,7 @@ public:
         {
                 ASSERT(std::this_thread::get_id() == thread_id_);
 
-                instance_->device().wait_idle_noexcept("text writer destructor");
+                device_->wait_idle_noexcept("text writer destructor");
         }
 };
 }
@@ -344,7 +342,7 @@ vulkan::DeviceFunctionality View::device_functionality()
 }
 
 std::unique_ptr<View> create_view(
-        const vulkan::DeviceInstance* const instance,
+        const vulkan::Device* const device,
         const vulkan::CommandPool* const graphics_command_pool,
         const vulkan::Queue* const graphics_queue,
         const vulkan::CommandPool* const transfer_command_pool,
@@ -354,7 +352,7 @@ std::unique_ptr<View> create_view(
         const color::Color& color)
 {
         return std::make_unique<Impl>(
-                instance, graphics_command_pool, graphics_queue, transfer_command_pool, transfer_queue, sample_shading,
+                device, graphics_command_pool, graphics_queue, transfer_command_pool, transfer_queue, sample_shading,
                 size, color);
 }
 }

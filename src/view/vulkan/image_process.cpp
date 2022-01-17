@@ -35,7 +35,7 @@ vulkan::DeviceFunctionality ImageProcess::device_functionality()
 ImageProcess::ImageProcess(
         const double window_ppi,
         const bool sample_shading,
-        const vulkan::DeviceInstance* const instance,
+        const vulkan::Device* const device,
         const vulkan::CommandPool* const graphics_command_pool,
         const vulkan::Queue* const graphics_queue,
         const vulkan::CommandPool* const transfer_command_pool,
@@ -44,16 +44,16 @@ ImageProcess::ImageProcess(
         const vulkan::Queue* const compute_queue)
         : window_ppi_(window_ppi)
 {
-        convex_hull_ = gpu::convex_hull::create_view(instance, graphics_command_pool, graphics_queue, sample_shading);
+        convex_hull_ = gpu::convex_hull::create_view(device, graphics_command_pool, graphics_queue, sample_shading);
 
         pencil_sketch_ = gpu::pencil_sketch::create_view(
-                instance, graphics_command_pool, graphics_queue, transfer_command_pool, transfer_queue, sample_shading);
+                device, graphics_command_pool, graphics_queue, transfer_command_pool, transfer_queue, sample_shading);
 
         dft_ = gpu::dft::create_view(
-                instance, graphics_command_pool, graphics_queue, transfer_command_pool, transfer_queue, sample_shading);
+                device, graphics_command_pool, graphics_queue, transfer_command_pool, transfer_queue, sample_shading);
 
         optical_flow_ = gpu::optical_flow::create_view(
-                instance, graphics_command_pool, graphics_queue, compute_command_pool, compute_queue,
+                device, graphics_command_pool, graphics_queue, compute_command_pool, compute_queue,
                 transfer_command_pool, transfer_queue, sample_shading);
 }
 

@@ -43,7 +43,6 @@ class Impl final : public Dft
 {
         const std::thread::id thread_id_ = std::this_thread::get_id();
 
-        const vulkan::DeviceInstance* const instance_;
         const vulkan::Device* const device_;
 
         const vulkan::CommandPool* const compute_command_pool_;
@@ -189,13 +188,13 @@ class Impl final : public Dft
 
                 {
                         std::unique_ptr<Fft> fft =
-                                create_fft(instance_->device(), {compute_command_pool_->family_index()}, 1, m1_);
+                                create_fft(*device_, {compute_command_pool_->family_index()}, 1, m1_);
                         fft->run_for_data(false, *d1_fwd_, *device_, *compute_command_pool_, *compute_queue_);
                         fft->run_for_data(true, *d1_inv_, *device_, *compute_command_pool_, *compute_queue_);
                 }
                 {
                         std::unique_ptr<Fft> fft =
-                                create_fft(instance_->device(), {compute_command_pool_->family_index()}, 1, m2_);
+                                create_fft(*device_, {compute_command_pool_->family_index()}, 1, m2_);
                         fft->run_for_data(false, *d2_fwd_, *device_, *compute_command_pool_, *compute_queue_);
                         fft->run_for_data(true, *d2_inv_, *device_, *compute_command_pool_, *compute_queue_);
                 }
@@ -226,11 +225,11 @@ class Impl final : public Dft
                         vulkan::BufferMemoryType::DEVICE_LOCAL);
 
                 fft_n2_m1_.reset();
-                fft_n2_m1_ = create_fft(instance_->device(), family_indices, n2_, m1_);
+                fft_n2_m1_ = create_fft(*device_, family_indices, n2_, m1_);
                 fft_n2_m1_->set_data(*buffer_);
 
                 fft_n1_m2_.reset();
-                fft_n1_m2_ = create_fft(instance_->device(), family_indices, n1_, m2_);
+                fft_n1_m2_ = create_fft(*device_, family_indices, n1_, m2_);
                 fft_n1_m2_->set_data(*buffer_);
 
                 mul_memory_.set(x_d_->buffer(), buffer_->buffer());
@@ -312,28 +311,27 @@ class Impl final : public Dft
         }
 
 public:
-        Impl(const vulkan::DeviceInstance* const instance,
+        Impl(const vulkan::Device* const device,
              const vulkan::CommandPool* const compute_command_pool,
              const vulkan::Queue* const compute_queue,
              const vulkan::CommandPool* const transfer_command_pool,
              const vulkan::Queue* const transfer_queue,
              const vulkan::BufferMemoryType buffer_memory_type,
              const Vector2i& group_size)
-                : instance_(instance),
-                  device_(&instance->device()),
+                : device_(device),
                   compute_command_pool_(compute_command_pool),
                   compute_queue_(compute_queue),
                   transfer_command_pool_(transfer_command_pool),
                   transfer_queue_(transfer_queue),
                   buffer_memory_type_(buffer_memory_type),
                   group_size_(group_size),
-                  mul_program_(instance->device()),
-                  mul_memory_(instance->device(), mul_program_.descriptor_set_layout()),
-                  mul_d_program_(instance->device()),
-                  mul_d_d1_fwd_(instance->device(), mul_d_program_.descriptor_set_layout()),
-                  mul_d_d1_inv_(instance->device(), mul_d_program_.descriptor_set_layout()),
-                  mul_d_d2_fwd_(instance->device(), mul_d_program_.descriptor_set_layout()),
-                  mul_d_d2_inv_(instance->device(), mul_d_program_.descriptor_set_layout())
+                  mul_program_(*device_),
+                  mul_memory_(*device_, mul_program_.descriptor_set_layout()),
+                  mul_d_program_(*device_),
+                  mul_d_d1_fwd_(*device_, mul_d_program_.descriptor_set_layout()),
+                  mul_d_d1_inv_(*device_, mul_d_program_.descriptor_set_layout()),
+                  mul_d_d2_fwd_(*device_, mul_d_program_.descriptor_set_layout()),
+                  mul_d_d2_inv_(*device_, mul_d_program_.descriptor_set_layout())
         {
                 ASSERT(compute_command_pool->family_index() == compute_queue->family_index());
                 ASSERT(transfer_command_pool->family_index() == transfer_queue->family_index());
@@ -343,13 +341,13 @@ public:
         {
                 ASSERT(std::this_thread::get_id() == thread_id_);
 
-                instance_->device().wait_idle_noexcept("DFT compute destructor");
+                device_->wait_idle_noexcept("DFT compute destructor");
         }
 };
 }
 
 std::unique_ptr<Dft> create_dft(
-        const vulkan::DeviceInstance* const instance,
+        const vulkan::Device* const device,
         const vulkan::CommandPool* const compute_command_pool,
         const vulkan::Queue* const compute_queue,
         const vulkan::CommandPool* const transfer_command_pool,
@@ -358,7 +356,7 @@ std::unique_ptr<Dft> create_dft(
         const Vector2i& group_size)
 {
         return std::make_unique<Impl>(
-                instance, compute_command_pool, compute_queue, transfer_command_pool, transfer_queue,
-                buffer_memory_type, group_size);
+                device, compute_command_pool, compute_queue, transfer_command_pool, transfer_queue, buffer_memory_type,
+                group_size);
 }
 }

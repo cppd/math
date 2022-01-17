@@ -19,7 +19,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <src/numerical/region.h>
 #include <src/vulkan/buffers.h>
-#include <src/vulkan/device_instance.h>
+#include <src/vulkan/device.h>
 
 #include <memory>
 
@@ -44,7 +44,7 @@ struct Compute
 };
 
 std::unique_ptr<Compute> create_compute(
-        const vulkan::DeviceInstance* instance,
+        const vulkan::Device* device,
         const vulkan::CommandPool* compute_command_pool,
         const vulkan::Queue* compute_queue);
 }

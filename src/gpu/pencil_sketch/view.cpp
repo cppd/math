@@ -44,7 +44,6 @@ class Impl final : public View
 
         // const bool sample_shading_;
 
-        const vulkan::DeviceInstance* const instance_;
         const vulkan::Device* const device_;
         const vulkan::CommandPool* const graphics_command_pool_;
         const vulkan::Queue* const graphics_queue_;
@@ -177,25 +176,24 @@ class Impl final : public View
         }
 
 public:
-        Impl(const vulkan::DeviceInstance* const instance,
+        Impl(const vulkan::Device* const device,
              const vulkan::CommandPool* const graphics_command_pool,
              const vulkan::Queue* const graphics_queue,
              const vulkan::CommandPool* const /*transfer_command_pool*/,
              const vulkan::Queue* const /*transfer_queue*/,
              const bool /*sample_shading*/)
                 : // sample_shading_(sample_shading),
-                  instance_(instance),
-                  device_(&instance->device()),
+                  device_(device),
                   graphics_command_pool_(graphics_command_pool),
                   graphics_queue_(graphics_queue),
                   // transfer_command_pool_(transfer_command_pool),
                   // transfer_queue_(transfer_queue),
                   graphics_family_index_(graphics_queue->family_index()),
-                  signal_semaphore_(instance->device()),
-                  program_(&instance->device()),
-                  memory_(instance->device(), program_.descriptor_set_layout()),
-                  sampler_(create_sampler(instance->device())),
-                  compute_(create_compute(instance))
+                  signal_semaphore_(*device_),
+                  program_(device_),
+                  memory_(*device_, program_.descriptor_set_layout()),
+                  sampler_(create_sampler(*device_)),
+                  compute_(create_compute(device_))
         {
                 create_vertices();
         }
@@ -204,7 +202,7 @@ public:
         {
                 ASSERT(std::this_thread::get_id() == thread_id_);
 
-                instance_->device().wait_idle_noexcept("pencil sketch view destructor");
+                device_->wait_idle_noexcept("pencil sketch view destructor");
         }
 };
 }
@@ -217,7 +215,7 @@ vulkan::DeviceFunctionality View::device_functionality()
 }
 
 std::unique_ptr<View> create_view(
-        const vulkan::DeviceInstance* const instance,
+        const vulkan::Device* const device,
         const vulkan::CommandPool* const graphics_command_pool,
         const vulkan::Queue* const graphics_queue,
         const vulkan::CommandPool* const transfer_command_pool,
@@ -225,6 +223,6 @@ std::unique_ptr<View> create_view(
         const bool sample_shading)
 {
         return std::make_unique<Impl>(
-                instance, graphics_command_pool, graphics_queue, transfer_command_pool, transfer_queue, sample_shading);
+                device, graphics_command_pool, graphics_queue, transfer_command_pool, transfer_queue, sample_shading);
 }
 }

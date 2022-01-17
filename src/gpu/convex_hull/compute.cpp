@@ -82,7 +82,7 @@ class Impl final : public Compute
 {
         const std::thread::id thread_id_ = std::this_thread::get_id();
 
-        const vulkan::DeviceInstance* const instance_;
+        const vulkan::Device* const device_;
 
         std::optional<vulkan::BufferWithMemory> lines_buffer_;
         VkBuffer points_buffer_ = VK_NULL_HANDLE;
@@ -170,9 +170,8 @@ class Impl final : public Compute
                 const int height = rectangle.height();
 
                 lines_buffer_.emplace(
-                        vulkan::BufferMemoryType::DEVICE_LOCAL, instance_->device(),
-                        std::vector<std::uint32_t>({family_index}), VK_BUFFER_USAGE_STORAGE_BUFFER_BIT,
-                        sizeof(std::int32_t) * 2 * height);
+                        vulkan::BufferMemoryType::DEVICE_LOCAL, *device_, std::vector<std::uint32_t>({family_index}),
+                        VK_BUFFER_USAGE_STORAGE_BUFFER_BIT, sizeof(std::int32_t) * 2 * height);
                 points_buffer_ = points_buffer;
                 point_count_buffer_ = point_count_buffer;
 
@@ -180,11 +179,11 @@ class Impl final : public Compute
                 prepare_memory_.set_lines(lines_buffer_->buffer());
                 prepare_group_count_ = height;
                 prepare_program_.create_pipeline(
-                        group_size_prepare(width, instance_->device().properties().properties_10.limits), rectangle);
+                        group_size_prepare(width, device_->properties().properties_10.limits), rectangle);
 
                 merge_memory_.set_lines(lines_buffer_->buffer());
                 merge_program_.create_pipeline(
-                        height, group_size_merge(height, instance_->device().properties().properties_10.limits),
+                        height, group_size_merge(height, device_->properties().properties_10.limits),
                         iteration_count_merge(height));
 
                 filter_memory_.set_lines(lines_buffer_->buffer());
@@ -210,14 +209,14 @@ class Impl final : public Compute
         }
 
 public:
-        explicit Impl(const vulkan::DeviceInstance* const instance)
-                : instance_(instance),
-                  prepare_program_(instance->device()),
-                  prepare_memory_(instance->device(), prepare_program_.descriptor_set_layout()),
-                  merge_program_(instance->device()),
-                  merge_memory_(instance->device(), merge_program_.descriptor_set_layout()),
-                  filter_program_(instance->device()),
-                  filter_memory_(instance->device(), filter_program_.descriptor_set_layout())
+        explicit Impl(const vulkan::Device* const device)
+                : device_(device),
+                  prepare_program_(*device_),
+                  prepare_memory_(*device_, prepare_program_.descriptor_set_layout()),
+                  merge_program_(*device_),
+                  merge_memory_(*device_, merge_program_.descriptor_set_layout()),
+                  filter_program_(*device_),
+                  filter_memory_(*device_, filter_program_.descriptor_set_layout())
         {
         }
 
@@ -225,13 +224,13 @@ public:
         {
                 ASSERT(std::this_thread::get_id() == thread_id_);
 
-                instance_->device().wait_idle_noexcept("convex hull compute destructor");
+                device_->wait_idle_noexcept("convex hull compute destructor");
         }
 };
 }
 
-std::unique_ptr<Compute> create_compute(const vulkan::DeviceInstance* const instance)
+std::unique_ptr<Compute> create_compute(const vulkan::Device* const device)
 {
-        return std::make_unique<Impl>(instance);
+        return std::make_unique<Impl>(device);
 }
 }

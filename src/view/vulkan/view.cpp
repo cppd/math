@@ -348,7 +348,7 @@ public:
                           }),
                   instance_(vulkan::Instance::handle(), device_functionality(), surface_),
                   renderer_(gpu::renderer::create_renderer(
-                          &instance_,
+                          &instance_.device(),
                           &instance_.graphics_compute_command_pool(),
                           &instance_.graphics_compute_queues()[0],
                           &instance_.transfer_command_pool(),
@@ -356,7 +356,7 @@ public:
                           SAMPLE_RATE_SHADING,
                           SAMPLER_ANISOTROPY)),
                   text_(gpu::text_writer::create_view(
-                          &instance_,
+                          &instance_.device(),
                           &instance_.graphics_compute_command_pool(),
                           &instance_.graphics_compute_queues()[0],
                           &instance_.transfer_command_pool(),
@@ -367,7 +367,7 @@ public:
                   image_process_(
                           window_ppi,
                           SAMPLE_RATE_SHADING,
-                          &instance_,
+                          &instance_.device(),
                           &instance_.graphics_compute_command_pool(),
                           &instance_.graphics_compute_queues()[0],
                           &instance_.transfer_command_pool(),

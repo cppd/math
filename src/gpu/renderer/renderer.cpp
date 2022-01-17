@@ -59,7 +59,6 @@ class Impl final : public Renderer, RendererProcessEvents
 
         Region<2, int> viewport_;
 
-        const vulkan::DeviceInstance* const instance_;
         const vulkan::Device* const device_;
         const vulkan::CommandPool* const graphics_command_pool_;
         const vulkan::Queue* const graphics_queue_;
@@ -398,15 +397,14 @@ class Impl final : public Renderer, RendererProcessEvents
         }
 
 public:
-        Impl(const vulkan::DeviceInstance* const instance,
+        Impl(const vulkan::Device* const device,
              const vulkan::CommandPool* const graphics_command_pool,
              const vulkan::Queue* const graphics_queue,
              const vulkan::CommandPool* const transfer_command_pool,
              const vulkan::Queue* const transfer_queue,
              const bool sample_shading,
              const bool sampler_anisotropy)
-                : instance_(instance),
-                  device_(&instance->device()),
+                : device_(device),
                   graphics_command_pool_(graphics_command_pool),
                   graphics_queue_(graphics_queue),
                   transfer_command_pool_(transfer_command_pool),
@@ -445,7 +443,7 @@ public:
         {
                 ASSERT(thread_id_ == std::this_thread::get_id());
 
-                instance_->device().wait_idle_noexcept("renderer destructor");
+                device_->wait_idle_noexcept("renderer destructor");
         }
 
         Impl(const Impl&) = delete;
@@ -466,7 +464,7 @@ vulkan::DeviceFunctionality Renderer::device_functionality()
 }
 
 std::unique_ptr<Renderer> create_renderer(
-        const vulkan::DeviceInstance* const instance,
+        const vulkan::Device* const device,
         const vulkan::CommandPool* const graphics_command_pool,
         const vulkan::Queue* const graphics_queue,
         const vulkan::CommandPool* const transfer_command_pool,
@@ -475,7 +473,7 @@ std::unique_ptr<Renderer> create_renderer(
         const bool sampler_anisotropy)
 {
         return std::make_unique<Impl>(
-                instance, graphics_command_pool, graphics_queue, transfer_command_pool, transfer_queue, sample_shading,
+                device, graphics_command_pool, graphics_queue, transfer_command_pool, transfer_queue, sample_shading,
                 sampler_anisotropy);
 }
 }

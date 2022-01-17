@@ -24,7 +24,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/model/volume_object.h>
 #include <src/numerical/region.h>
 #include <src/vulkan/buffers.h>
-#include <src/vulkan/device_instance.h>
+#include <src/vulkan/device.h>
 #include <src/vulkan/functionality.h>
 
 #include <memory>
@@ -54,7 +54,7 @@ struct Renderer
 };
 
 std::unique_ptr<Renderer> create_renderer(
-        const vulkan::DeviceInstance* instance,
+        const vulkan::Device* device,
         const vulkan::CommandPool* graphics_command_pool,
         const vulkan::Queue* graphics_queue,
         const vulkan::CommandPool* transfer_command_pool,

@@ -95,7 +95,7 @@ class Impl final : public Compute
 {
         const std::thread::id thread_id_ = std::this_thread::get_id();
 
-        const vulkan::DeviceInstance* const instance_;
+        const vulkan::Device* const device_;
 
         ComputeProgram program_;
         ComputeMemory memory_;
@@ -181,10 +181,8 @@ class Impl final : public Compute
         }
 
 public:
-        explicit Impl(const vulkan::DeviceInstance* const instance)
-                : instance_(instance),
-                  program_(instance->device()),
-                  memory_(instance->device(), program_.descriptor_set_layout())
+        explicit Impl(const vulkan::Device* const device)
+                : device_(device), program_(*device_), memory_(*device_, program_.descriptor_set_layout())
         {
         }
 
@@ -192,13 +190,13 @@ public:
         {
                 ASSERT(std::this_thread::get_id() == thread_id_);
 
-                instance_->device().wait_idle_noexcept("pencil sketch compute destructor");
+                device_->wait_idle_noexcept("pencil sketch compute destructor");
         }
 };
 }
 
-std::unique_ptr<Compute> create_compute(const vulkan::DeviceInstance* const instance)
+std::unique_ptr<Compute> create_compute(const vulkan::Device* const device)
 {
-        return std::make_unique<Impl>(instance);
+        return std::make_unique<Impl>(device);
 }
 }

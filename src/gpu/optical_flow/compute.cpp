@@ -82,7 +82,6 @@ class Impl final : public Compute
 {
         const std::thread::id thread_id_ = std::this_thread::get_id();
 
-        const vulkan::DeviceInstance* const instance_;
         const vulkan::Device* const device_;
 
         const vulkan::CommandPool* const compute_command_pool_;
@@ -394,20 +393,19 @@ class Impl final : public Compute
         }
 
 public:
-        Impl(const vulkan::DeviceInstance* const instance,
+        Impl(const vulkan::Device* const device,
              const vulkan::CommandPool* const compute_command_pool,
              const vulkan::Queue* const compute_queue)
-                : instance_(instance),
-                  device_(&instance->device()),
+                : device_(device),
                   compute_command_pool_(compute_command_pool),
                   compute_queue_(compute_queue),
-                  semaphore_first_pyramid_(instance->device()),
-                  semaphore_(instance->device()),
-                  grayscale_program_(instance->device()),
+                  semaphore_first_pyramid_(*device_),
+                  semaphore_(*device_),
+                  grayscale_program_(*device_),
                   grayscale_memory_(*device_, grayscale_program_.descriptor_set_layout()),
-                  downsample_program_(instance->device()),
-                  sobel_program_(instance->device()),
-                  flow_program_(instance->device())
+                  downsample_program_(*device_),
+                  sobel_program_(*device_),
+                  flow_program_(*device_)
         {
                 ASSERT(compute_command_pool->family_index() == compute_queue->family_index());
         }
@@ -416,16 +414,16 @@ public:
         {
                 ASSERT(std::this_thread::get_id() == thread_id_);
 
-                instance_->device().wait_idle_noexcept("optical flow compute destructor");
+                device_->wait_idle_noexcept("optical flow compute destructor");
         }
 };
 }
 
 std::unique_ptr<Compute> create_compute(
-        const vulkan::DeviceInstance* const instance,
+        const vulkan::Device* const device,
         const vulkan::CommandPool* const compute_command_pool,
         const vulkan::Queue* const compute_queue)
 {
-        return std::make_unique<Impl>(instance, compute_command_pool, compute_queue);
+        return std::make_unique<Impl>(device, compute_command_pool, compute_queue);
 }
 }

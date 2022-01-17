@@ -53,6 +53,7 @@ There are errors in chapter 13 when calculating H2
 #include "shaders/copy_output.h"
 
 #include <src/com/error.h>
+#include <src/vulkan/device_instance.h>
 #include <src/vulkan/error.h>
 #include <src/vulkan/instance.h>
 #include <src/vulkan/queue.h>
@@ -167,23 +168,23 @@ class DftImage final : public ComputeImage
 
 public:
         DftImage(
-                const vulkan::DeviceInstance* instance,
-                const vulkan::CommandPool* compute_command_pool,
-                const vulkan::Queue* compute_queue,
-                const vulkan::CommandPool* transfer_command_pool,
-                const vulkan::Queue* transfer_queue)
+                const vulkan::Device* const device,
+                const vulkan::CommandPool* const compute_command_pool,
+                const vulkan::Queue* const compute_queue,
+                const vulkan::CommandPool* const transfer_command_pool,
+                const vulkan::Queue* const transfer_queue)
                 : dft_(create_dft(
-                        instance,
+                        device,
                         compute_command_pool,
                         compute_queue,
                         transfer_command_pool,
                         transfer_queue,
                         vulkan::BufferMemoryType::DEVICE_LOCAL,
                         GROUP_SIZE_2D)),
-                  copy_input_program_(instance->device()),
-                  copy_input_memory_(instance->device(), copy_input_program_.descriptor_set_layout()),
-                  copy_output_program_(instance->device()),
-                  copy_output_memory_(instance->device(), copy_output_program_.descriptor_set_layout())
+                  copy_input_program_(*device),
+                  copy_input_memory_(*device, copy_input_program_.descriptor_set_layout()),
+                  copy_output_program_(*device),
+                  copy_output_memory_(*device, copy_output_program_.descriptor_set_layout())
         {
         }
 };
@@ -271,7 +272,7 @@ public:
         DftVector()
                 : instance_(vulkan::Instance::handle()),
                   dft_(create_dft(
-                          &instance_,
+                          &instance_.device(),
                           &instance_.compute_command_pool(),
                           &instance_.compute_queue(),
                           &instance_.transfer_command_pool(),
@@ -284,14 +285,14 @@ public:
 }
 
 std::unique_ptr<ComputeImage> create_compute_image(
-        const vulkan::DeviceInstance* instance,
+        const vulkan::Device* device,
         const vulkan::CommandPool* compute_command_pool,
         const vulkan::Queue* compute_queue,
         const vulkan::CommandPool* transfer_command_pool,
         const vulkan::Queue* transfer_queue)
 {
         return std::make_unique<DftImage>(
-                instance, compute_command_pool, compute_queue, transfer_command_pool, transfer_queue);
+                device, compute_command_pool, compute_queue, transfer_command_pool, transfer_queue);
 }
 
 std::unique_ptr<ComputeVector> create_compute_vector()

@@ -20,7 +20,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/gpu/render_buffers.h>
 #include <src/numerical/region.h>
 #include <src/vulkan/buffers.h>
-#include <src/vulkan/device_instance.h>
+#include <src/vulkan/device.h>
 #include <src/vulkan/functionality.h>
 
 #include <memory>
@@ -45,7 +45,7 @@ struct View
 };
 
 std::unique_ptr<View> create_view(
-        const vulkan::DeviceInstance* instance,
+        const vulkan::Device* device,
         const vulkan::CommandPool* graphics_command_pool,
         const vulkan::Queue* graphics_queue,
         bool sample_shading);
