@@ -47,10 +47,6 @@ class DeviceInstance final
         const Device device_;
         const std::optional<DeviceExtensionFunctions> device_extension_functions_;
 
-        const CommandPool graphics_compute_command_pool_;
-        const CommandPool compute_command_pool_;
-        const CommandPool transfer_command_pool_;
-
         std::array<Queue, GRAPHICS_COMPUTE_QUEUE_COUNT> graphics_compute_queues_;
         std::array<Queue, COMPUTE_QUEUE_COUNT> compute_queues_;
         std::array<Queue, TRANSFER_QUEUE_COUNT> transfer_queues_;
@@ -74,19 +70,19 @@ public:
                 return device_;
         }
 
-        const CommandPool& graphics_compute_command_pool() const
+        std::uint32_t graphics_compute_family_index() const
         {
-                return graphics_compute_command_pool_;
+                return graphics_compute_family_index_;
         }
 
-        const CommandPool& compute_command_pool() const
+        std::uint32_t compute_family_index() const
         {
-                return compute_command_pool_;
+                return compute_family_index_;
         }
 
-        const CommandPool& transfer_command_pool() const
+        std::uint32_t transfer_family_index() const
         {
-                return transfer_command_pool_;
+                return transfer_family_index_;
         }
 
         const std::array<Queue, GRAPHICS_COMPUTE_QUEUE_COUNT>& graphics_compute_queues() const

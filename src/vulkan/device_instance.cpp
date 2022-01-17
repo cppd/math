@@ -17,15 +17,12 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "device_instance.h"
 
-#include "create.h"
 #include "error.h"
 
-#include <src/com/error.h>
 #include <src/com/log.h>
 #include <src/com/print.h>
 #include <src/com/type/limit.h>
 
-#include <algorithm>
 #include <tuple>
 #include <unordered_map>
 
@@ -48,20 +45,6 @@ std::unordered_map<std::uint32_t, std::uint32_t> compute_queue_count(
                 }
         }
         return queues;
-}
-
-template <typename T>
-void check_family_indices(const CommandPool& pool, const T& queues)
-{
-        if (!std::all_of(
-                    queues.begin(), queues.end(),
-                    [&](const Queue& queue)
-                    {
-                            return pool.family_index() == queue.family_index();
-                    }))
-        {
-                error("Error pool and queue family indices");
-        }
 }
 
 template <std::size_t SIZE>
@@ -122,10 +105,7 @@ DeviceInstance::DeviceInstance(
                           physical_device_.queue_families()),
                   device_functionality),
           device_extension_functions_(
-                  surface != VK_NULL_HANDLE ? std::optional<DeviceExtensionFunctions>(device_) : std::nullopt),
-          graphics_compute_command_pool_(create_command_pool(device_, graphics_compute_family_index_)),
-          compute_command_pool_(create_command_pool(device_, compute_family_index_)),
-          transfer_command_pool_(create_transient_command_pool(device_, transfer_family_index_))
+                  surface != VK_NULL_HANDLE ? std::optional<DeviceExtensionFunctions>(device_) : std::nullopt)
 {
         std::string description;
         std::unordered_map<std::uint32_t, std::uint32_t> queue_count;
@@ -146,9 +126,5 @@ DeviceInstance::DeviceInstance(
         }
 
         LOG(description);
-
-        check_family_indices(graphics_compute_command_pool_, graphics_compute_queues_);
-        check_family_indices(compute_command_pool_, compute_queues_);
-        check_family_indices(transfer_command_pool_, transfer_queues_);
 }
 }
