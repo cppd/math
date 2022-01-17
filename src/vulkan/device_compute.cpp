@@ -26,8 +26,11 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 namespace ns::vulkan
 {
-DeviceCompute::DeviceCompute(const VkInstance instance, const DeviceFunctionality& device_functionality)
-        : physical_device_(find_physical_device(instance, VK_NULL_HANDLE, device_functionality)),
+DeviceCompute::DeviceCompute(
+        const PhysicalDeviceSearchType search_type,
+        const VkInstance instance,
+        const DeviceFunctionality& device_functionality)
+        : physical_device_(find_physical_device(search_type, instance, VK_NULL_HANDLE, device_functionality)),
           compute_family_index_(
                   physical_device_.family_index(VK_QUEUE_COMPUTE_BIT, VK_QUEUE_GRAPHICS_BIT, {VK_QUEUE_COMPUTE_BIT})),
           transfer_family_index_(physical_device_.family_index(

@@ -56,7 +56,14 @@ public:
 
 std::vector<VkPhysicalDevice> find_physical_devices(VkInstance instance);
 
+enum class PhysicalDeviceSearchType
+{
+        BEST,
+        RANDOM
+};
+
 PhysicalDevice find_physical_device(
+        PhysicalDeviceSearchType search_type,
         VkInstance instance,
         VkSurfaceKHR surface,
         const DeviceFunctionality& device_functionality);

@@ -42,7 +42,10 @@ class DeviceCompute final
         std::array<Queue, TRANSFER_QUEUE_COUNT> transfer_queues_;
 
 public:
-        DeviceCompute(VkInstance instance, const DeviceFunctionality& device_functionality);
+        DeviceCompute(
+                PhysicalDeviceSearchType search_type,
+                VkInstance instance,
+                const DeviceFunctionality& device_functionality);
 
         ~DeviceCompute() = default;
 

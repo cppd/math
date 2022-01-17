@@ -25,11 +25,14 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "print.h"
 #include "surface.h"
 
+#include <src/com/enum.h>
 #include <src/com/error.h>
 #include <src/com/log.h>
 #include <src/com/print.h>
+#include <src/com/random/pcg.h>
 
 #include <algorithm>
+#include <random>
 #include <sstream>
 
 namespace ns::vulkan
@@ -93,28 +96,25 @@ int device_priority(const PhysicalDevice& physical_device)
 
         if (type == VK_PHYSICAL_DEVICE_TYPE_DISCRETE_GPU)
         {
-                return 0;
+                return 3;
         }
 
         if (type == VK_PHYSICAL_DEVICE_TYPE_INTEGRATED_GPU)
         {
-                return 1;
+                return 2;
         }
 
         if (type == VK_PHYSICAL_DEVICE_TYPE_CPU)
         {
-                return 2;
+                return 1;
         }
 
-        return 3;
+        return 0;
 }
 
 PhysicalDevice find_best_physical_device(std::vector<PhysicalDevice>&& physical_devices)
 {
-        if (physical_devices.empty())
-        {
-                error("Failed to find a suitable Vulkan physical device");
-        }
+        ASSERT(!physical_devices.empty());
 
         std::size_t best_i = 0;
         auto best_priority = device_priority(physical_devices[0]);
@@ -122,7 +122,7 @@ PhysicalDevice find_best_physical_device(std::vector<PhysicalDevice>&& physical_
         for (std::size_t i = 1; i < physical_devices.size(); ++i)
         {
                 const auto priority = device_priority(physical_devices[i]);
-                if (priority < best_priority)
+                if (priority > best_priority)
                 {
                         best_priority = priority;
                         best_i = i;
@@ -130,6 +130,36 @@ PhysicalDevice find_best_physical_device(std::vector<PhysicalDevice>&& physical_
         }
 
         return std::move(physical_devices[best_i]);
+}
+
+PhysicalDevice find_random_physical_device(std::vector<PhysicalDevice>&& physical_devices)
+{
+        ASSERT(!physical_devices.empty());
+
+        PCG engine;
+        std::uniform_int_distribution<std::size_t> uid(0, physical_devices.size() - 1);
+
+        return std::move(physical_devices[uid(engine)]);
+}
+
+PhysicalDevice find_physical_device(
+        const PhysicalDeviceSearchType search_type,
+        std::vector<PhysicalDevice>&& physical_devices)
+{
+        if (physical_devices.empty())
+        {
+                error("Failed to find a suitable Vulkan physical device");
+        }
+
+        switch (search_type)
+        {
+        case PhysicalDeviceSearchType::BEST:
+                return find_best_physical_device(std::move(physical_devices));
+        case PhysicalDeviceSearchType::RANDOM:
+                return find_random_physical_device(std::move(physical_devices));
+        }
+
+        error("Unknown physical device search type " + to_string(enum_to_int(search_type)));
 }
 }
 
@@ -267,6 +297,7 @@ std::vector<VkPhysicalDevice> find_physical_devices(const VkInstance instance)
 }
 
 PhysicalDevice find_physical_device(
+        const PhysicalDeviceSearchType search_type,
         const VkInstance instance,
         const VkSurfaceKHR surface,
         const DeviceFunctionality& device_functionality)
@@ -324,6 +355,6 @@ PhysicalDevice find_physical_device(
                 physical_devices.push_back(std::move(physical_device));
         }
 
-        return find_best_physical_device(std::move(physical_devices));
+        return find_physical_device(search_type, std::move(physical_devices));
 }
 }

@@ -30,7 +30,8 @@ DeviceGraphics::DeviceGraphics(
         const VkInstance instance,
         const DeviceFunctionality& device_functionality,
         const VkSurfaceKHR surface)
-        : physical_device_(find_physical_device(instance, surface, device_functionality)),
+        : physical_device_(
+                find_physical_device(PhysicalDeviceSearchType::BEST, instance, surface, device_functionality)),
           graphics_compute_family_index_(
                   physical_device_.family_index(VK_QUEUE_GRAPHICS_BIT | VK_QUEUE_COMPUTE_BIT, 0, {0})),
           compute_family_index_(

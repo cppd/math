@@ -20,6 +20,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/numerical/region.h>
 #include <src/vulkan/buffers.h>
 #include <src/vulkan/device.h>
+#include <src/vulkan/physical_device.h>
 
 #include <complex>
 #include <memory>
@@ -56,5 +57,5 @@ std::unique_ptr<ComputeImage> create_compute_image(
         const vulkan::CommandPool* transfer_command_pool,
         const vulkan::Queue* transfer_queue);
 
-std::unique_ptr<ComputeVector> create_compute_vector();
+std::unique_ptr<ComputeVector> create_compute_vector(vulkan::PhysicalDeviceSearchType search_type);
 }
