@@ -38,7 +38,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/image/alpha.h>
 #include <src/numerical/region.h>
 #include <src/vulkan/create.h>
-#include <src/vulkan/device_instance.h>
+#include <src/vulkan/device_graphics.h>
 #include <src/vulkan/error.h>
 #include <src/vulkan/features.h>
 #include <src/vulkan/instance.h>
@@ -75,10 +75,6 @@ constexpr bool SAMPLER_ANISOTROPY = true; // anisotropic filtering
 constexpr VkFormat OBJECT_IMAGE_FORMAT = VK_FORMAT_R32_UINT;
 
 constexpr color::Color DEFAULT_TEXT_COLOR{RGB8(255, 255, 255)};
-
-static_assert(
-        2 <= std::tuple_size_v<
-                std::remove_reference_t<decltype(std::declval<vulkan::DeviceInstance>().graphics_compute_queues())>>);
 
 vulkan::DeviceFunctionality device_functionality()
 {
@@ -121,11 +117,11 @@ class Impl final
         FrameRate frame_rate_;
 
         const vulkan::handle::SurfaceKHR surface_;
-        const vulkan::DeviceInstance device_instance_;
+        const vulkan::DeviceGraphics device_graphics_;
         const vulkan::CommandPool graphics_compute_command_pool_;
         const vulkan::CommandPool compute_command_pool_;
         const vulkan::CommandPool transfer_command_pool_;
-        const vulkan::handle::Semaphore swapchain_image_semaphore_{device_instance_.device()};
+        const vulkan::handle::Semaphore swapchain_image_semaphore_{device_graphics_.device()};
 
         std::unique_ptr<gpu::renderer::Renderer> renderer_;
         std::unique_ptr<gpu::text_writer::View> text_;
@@ -181,7 +177,7 @@ class Impl final
 
                 static constexpr int IMAGE_INDEX = 0;
 
-                device_instance_.device().wait_idle();
+                device_graphics_.device().wait_idle();
 
                 const int width = swapchain_->width();
                 const int height = swapchain_->height();
@@ -192,8 +188,8 @@ class Impl final
                 const VkSemaphore semaphore = render();
 
                 image_info->image = resolve_to_image(
-                        device_instance_.device(), graphics_compute_command_pool_,
-                        device_instance_.graphics_compute_queues()[0], *render_buffers_, semaphore, IMAGE_INDEX);
+                        device_graphics_.device(), graphics_compute_command_pool_,
+                        device_graphics_.graphics_compute_queues()[0], *render_buffers_, semaphore, IMAGE_INDEX);
 
                 delete_buffers();
                 create_swapchain_buffers();
@@ -216,16 +212,16 @@ class Impl final
         {
                 render_buffers_ = create_render_buffers(
                         RENDER_BUFFER_COUNT, format, DEPTH_FORMATS, width, height,
-                        {device_instance_.graphics_compute_queues()[0].family_index()}, device_instance_.device(),
+                        {device_graphics_.graphics_compute_queues()[0].family_index()}, device_graphics_.device(),
                         MINIMUM_SAMPLE_COUNT);
 
                 object_image_.emplace(
-                        device_instance_.device(),
-                        std::vector<std::uint32_t>({device_instance_.graphics_compute_queues()[0].family_index()}),
+                        device_graphics_.device(),
+                        std::vector<std::uint32_t>({device_graphics_.graphics_compute_queues()[0].family_index()}),
                         std::vector<VkFormat>({OBJECT_IMAGE_FORMAT}), VK_SAMPLE_COUNT_1_BIT, VK_IMAGE_TYPE_2D,
                         vulkan::make_extent(render_buffers_->width(), render_buffers_->height()),
                         VK_IMAGE_USAGE_STORAGE_BIT | VK_IMAGE_USAGE_TRANSFER_DST_BIT, VK_IMAGE_LAYOUT_GENERAL,
-                        graphics_compute_command_pool_, device_instance_.graphics_compute_queues()[0]);
+                        graphics_compute_command_pool_, device_graphics_.graphics_compute_queues()[0]);
 
                 const auto [window_1, window_2] = window_position_and_size(
                         image_process_.two_windows(), render_buffers_->width(), render_buffers_->height(),
@@ -233,8 +229,8 @@ class Impl final
 
                 static_assert(RENDER_BUFFER_COUNT == 1);
                 image_resolve_.emplace(
-                        device_instance_.device(), graphics_compute_command_pool_,
-                        device_instance_.graphics_compute_queues()[0], *render_buffers_, window_1,
+                        device_graphics_.device(), graphics_compute_command_pool_,
+                        device_graphics_.graphics_compute_queues()[0], *render_buffers_, window_1,
                         VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL, VK_IMAGE_USAGE_SAMPLED_BIT);
 
                 renderer_->create_buffers(&render_buffers_->buffers_3d(), &*object_image_, window_1);
@@ -258,11 +254,11 @@ class Impl final
                 ASSERT(render_buffers_->image_views().size() == 1);
 
                 VkSemaphore semaphore = renderer_->draw(
-                        device_instance_.graphics_compute_queues()[0], device_instance_.graphics_compute_queues()[1],
+                        device_graphics_.graphics_compute_queues()[0], device_graphics_.graphics_compute_queues()[1],
                         IMAGE_INDEX);
 
-                const vulkan::Queue& graphics_queue = device_instance_.graphics_compute_queues()[0];
-                const vulkan::Queue& compute_queue = device_instance_.compute_queue();
+                const vulkan::Queue& graphics_queue = device_graphics_.graphics_compute_queues()[0];
+                const vulkan::Queue& compute_queue = device_graphics_.compute_queue();
 
                 semaphore = image_process_.draw(*image_resolve_, semaphore, graphics_queue, compute_queue, IMAGE_INDEX);
 
@@ -287,12 +283,12 @@ class Impl final
                 create_buffers(swapchain_->format(), swapchain_->width(), swapchain_->height());
 
                 swapchain_resolve_.emplace(
-                        device_instance_.device(), graphics_compute_command_pool_, *render_buffers_, *swapchain_);
+                        device_graphics_.device(), graphics_compute_command_pool_, *render_buffers_, *swapchain_);
         }
 
         void delete_swapchain()
         {
-                device_instance_.device().wait_idle();
+                device_graphics_.device().wait_idle();
 
                 delete_swapchain_buffers();
                 swapchain_.reset();
@@ -303,10 +299,10 @@ class Impl final
                 delete_swapchain();
 
                 swapchain_.emplace(
-                        surface_, device_instance_.device(),
+                        surface_, device_graphics_.device(),
                         std::vector<std::uint32_t>{
-                                device_instance_.graphics_compute_queues()[0].family_index(),
-                                device_instance_.presentation_queue().family_index()},
+                                device_graphics_.graphics_compute_queues()[0].family_index(),
+                                device_graphics_.presentation_queue().family_index()},
                         SWAPCHAIN_SURFACE_FORMAT, SWAPCHAIN_PREFERRED_IMAGE_COUNT,
                         view_process_.vertical_sync() ? vulkan::PresentMode::PREFER_SYNC
                                                       : vulkan::PresentMode::PREFER_FAST);
@@ -317,21 +313,21 @@ class Impl final
         [[nodiscard]] bool render_swapchain() const
         {
                 const std::optional<std::uint32_t> image_index = vulkan::acquire_next_image(
-                        device_instance_.device(), swapchain_->swapchain(), swapchain_image_semaphore_);
+                        device_graphics_.device(), swapchain_->swapchain(), swapchain_image_semaphore_);
 
                 if (!image_index)
                 {
                         return false;
                 }
 
-                const vulkan::Queue& queue = device_instance_.graphics_compute_queues()[0];
+                const vulkan::Queue& queue = device_graphics_.graphics_compute_queues()[0];
 
                 VkSemaphore semaphore = render();
 
                 semaphore = swapchain_resolve_->resolve(queue, swapchain_image_semaphore_, semaphore, *image_index);
 
                 if (!vulkan::queue_present(
-                            semaphore, swapchain_->swapchain(), *image_index, device_instance_.presentation_queue()))
+                            semaphore, swapchain_->swapchain(), *image_index, device_graphics_.presentation_queue()))
                 {
                         return false;
                 }
@@ -351,43 +347,43 @@ public:
                           {
                                   return window::vulkan_create_surface(window, instance);
                           }),
-                  device_instance_(vulkan::Instance::handle(), device_functionality(), surface_),
+                  device_graphics_(vulkan::Instance::handle(), device_functionality(), surface_),
                   graphics_compute_command_pool_(vulkan::create_command_pool(
-                          device_instance_.device(),
-                          device_instance_.graphics_compute_family_index())),
+                          device_graphics_.device(),
+                          device_graphics_.graphics_compute_family_index())),
                   compute_command_pool_(vulkan::create_command_pool(
-                          device_instance_.device(),
-                          device_instance_.compute_family_index())),
+                          device_graphics_.device(),
+                          device_graphics_.compute_family_index())),
                   transfer_command_pool_(vulkan::create_transient_command_pool(
-                          device_instance_.device(),
-                          device_instance_.transfer_family_index())),
+                          device_graphics_.device(),
+                          device_graphics_.transfer_family_index())),
                   renderer_(gpu::renderer::create_renderer(
-                          &device_instance_.device(),
+                          &device_graphics_.device(),
                           &graphics_compute_command_pool_,
-                          &device_instance_.graphics_compute_queues()[0],
+                          &device_graphics_.graphics_compute_queues()[0],
                           &transfer_command_pool_,
-                          &device_instance_.transfer_queue(),
+                          &device_graphics_.transfer_queue(),
                           SAMPLE_RATE_SHADING,
                           SAMPLER_ANISOTROPY)),
                   text_(gpu::text_writer::create_view(
-                          &device_instance_.device(),
+                          &device_graphics_.device(),
                           &graphics_compute_command_pool_,
-                          &device_instance_.graphics_compute_queues()[0],
+                          &device_graphics_.graphics_compute_queues()[0],
                           &transfer_command_pool_,
-                          &device_instance_.transfer_queue(),
+                          &device_graphics_.transfer_queue(),
                           SAMPLE_RATE_SHADING,
                           frame_rate_.text_size(),
                           DEFAULT_TEXT_COLOR)),
                   image_process_(
                           window_ppi,
                           SAMPLE_RATE_SHADING,
-                          &device_instance_.device(),
+                          &device_graphics_.device(),
                           &graphics_compute_command_pool_,
-                          &device_instance_.graphics_compute_queues()[0],
+                          &device_graphics_.graphics_compute_queues()[0],
                           &transfer_command_pool_,
-                          &device_instance_.transfer_queue(),
+                          &device_graphics_.transfer_queue(),
                           &compute_command_pool_,
-                          &device_instance_.compute_queue()),
+                          &device_graphics_.compute_queue()),
                   camera_(
                           [this](const auto& info)
                           {
@@ -414,6 +410,8 @@ public:
                                   create_swapchain();
                           })
         {
+                ASSERT(device_graphics_.graphics_compute_queues().size() >= 2);
+
                 create_swapchain();
                 command(command::ResetView());
         }

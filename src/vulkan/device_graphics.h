@@ -23,14 +23,11 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "objects.h"
 #include "physical_device.h"
 
-#include <src/com/error.h>
-
 #include <array>
-#include <optional>
 
 namespace ns::vulkan
 {
-class DeviceInstance final
+class DeviceGraphics final
 {
         static constexpr unsigned GRAPHICS_COMPUTE_QUEUE_COUNT = 2;
         static constexpr unsigned COMPUTE_QUEUE_COUNT = 1;
@@ -45,7 +42,7 @@ class DeviceInstance final
         const std::uint32_t presentation_family_index_;
 
         const Device device_;
-        const std::optional<DeviceExtensionFunctions> device_extension_functions_;
+        const DeviceExtensionFunctions device_extension_functions_;
 
         std::array<Queue, GRAPHICS_COMPUTE_QUEUE_COUNT> graphics_compute_queues_;
         std::array<Queue, COMPUTE_QUEUE_COUNT> compute_queues_;
@@ -53,17 +50,14 @@ class DeviceInstance final
         std::array<Queue, PRESENTATION_QUEUE_COUNT> presentation_queues_;
 
 public:
-        explicit DeviceInstance(
-                VkInstance instance,
-                const DeviceFunctionality& device_functionality = {},
-                VkSurfaceKHR surface = VK_NULL_HANDLE);
+        DeviceGraphics(VkInstance instance, const DeviceFunctionality& device_functionality, VkSurfaceKHR surface);
 
-        ~DeviceInstance() = default;
+        ~DeviceGraphics() = default;
 
-        DeviceInstance(const DeviceInstance&) = delete;
-        DeviceInstance(DeviceInstance&&) = delete;
-        DeviceInstance& operator=(const DeviceInstance&) = delete;
-        DeviceInstance& operator=(DeviceInstance&&) = delete;
+        DeviceGraphics(const DeviceGraphics&) = delete;
+        DeviceGraphics(DeviceGraphics&&) = delete;
+        DeviceGraphics& operator=(const DeviceGraphics&) = delete;
+        DeviceGraphics& operator=(DeviceGraphics&&) = delete;
 
         const Device& device() const
         {
@@ -102,7 +96,6 @@ public:
 
         const Queue& presentation_queue() const
         {
-                ASSERT(static_cast<VkQueue>(presentation_queues_[0]) != VK_NULL_HANDLE);
                 return presentation_queues_[0];
         }
 };

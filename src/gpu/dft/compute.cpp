@@ -54,7 +54,7 @@ There are errors in chapter 13 when calculating H2
 
 #include <src/com/error.h>
 #include <src/vulkan/create.h>
-#include <src/vulkan/device_instance.h>
+#include <src/vulkan/device_compute.h>
 #include <src/vulkan/error.h>
 #include <src/vulkan/instance.h>
 #include <src/vulkan/queue.h>
@@ -192,7 +192,7 @@ public:
 
 class DftVector final : public ComputeVector
 {
-        const vulkan::DeviceInstance device_instance_;
+        const vulkan::DeviceCompute device_compute_;
         const vulkan::CommandPool compute_command_pool_;
         const vulkan::CommandPool transfer_command_pool_;
 
@@ -223,9 +223,9 @@ class DftVector final : public ComputeVector
 
                 //
 
-                dft_->create_buffers(width, height, device_instance_.compute_queue().family_index());
+                dft_->create_buffers(width, height, device_compute_.compute_queue().family_index());
 
-                command_buffers_ = vulkan::handle::CommandBuffers(device_instance_.device(), compute_command_pool_, 2);
+                command_buffers_ = vulkan::handle::CommandBuffers(device_compute_.device(), compute_command_pool_, 2);
 
                 for (const int index : {DftType::FORWARD, DftType::INVERSE})
                 {
@@ -262,8 +262,8 @@ class DftVector final : public ComputeVector
 
                 vulkan::queue_submit(
                         (*command_buffers_)[inverse ? DftType::INVERSE : DftType::FORWARD],
-                        device_instance_.compute_queue());
-                VULKAN_CHECK(vkQueueWaitIdle(device_instance_.compute_queue()));
+                        device_compute_.compute_queue());
+                VULKAN_CHECK(vkQueueWaitIdle(device_compute_.compute_queue()));
 
                 {
                         vulkan::BufferMapper mapper(dft_->buffer_with_memory());
@@ -273,17 +273,17 @@ class DftVector final : public ComputeVector
 
 public:
         DftVector()
-                : device_instance_(vulkan::Instance::handle()),
+                : device_compute_(vulkan::Instance::handle(), vulkan::DeviceFunctionality()),
                   compute_command_pool_(
-                          create_command_pool(device_instance_.device(), device_instance_.compute_family_index())),
+                          create_command_pool(device_compute_.device(), device_compute_.compute_family_index())),
                   transfer_command_pool_(
-                          create_command_pool(device_instance_.device(), device_instance_.transfer_family_index())),
+                          create_command_pool(device_compute_.device(), device_compute_.transfer_family_index())),
                   dft_(create_dft(
-                          &device_instance_.device(),
+                          &device_compute_.device(),
                           &compute_command_pool_,
-                          &device_instance_.compute_queue(),
+                          &device_compute_.compute_queue(),
                           &transfer_command_pool_,
-                          &device_instance_.transfer_queue(),
+                          &device_compute_.transfer_queue(),
                           vulkan::BufferMemoryType::HOST_VISIBLE,
                           GROUP_SIZE_2D))
         {
