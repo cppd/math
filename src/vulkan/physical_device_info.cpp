@@ -219,6 +219,36 @@ std::vector<VkQueueFamilyProperties> find_queue_families(const VkPhysicalDevice 
 
         return queue_families;
 }
+
+std::vector<std::string> extensions_for_features(const PhysicalDeviceFeatures& features)
+{
+        std::vector<std::string> extensions;
+
+        const auto add_acceleration_structure_extensions = [&]
+        {
+                extensions.emplace_back(VK_KHR_DEFERRED_HOST_OPERATIONS_EXTENSION_NAME);
+                extensions.emplace_back(VK_KHR_ACCELERATION_STRUCTURE_EXTENSION_NAME);
+        };
+
+        if (any_feature_enabled(features.acceleration_structure))
+        {
+                add_acceleration_structure_extensions();
+        }
+
+        if (any_feature_enabled(features.ray_query))
+        {
+                add_acceleration_structure_extensions();
+                extensions.emplace_back(VK_KHR_RAY_QUERY_EXTENSION_NAME);
+        }
+
+        if (any_feature_enabled(features.ray_tracing_pipeline))
+        {
+                add_acceleration_structure_extensions();
+                extensions.emplace_back(VK_KHR_RAY_TRACING_PIPELINE_EXTENSION_NAME);
+        }
+
+        return extensions;
+}
 }
 
 PhysicalDeviceInfo find_physical_device_info(const VkPhysicalDevice device)
@@ -273,33 +303,40 @@ void make_physical_device_features(
         }
 }
 
-std::vector<std::string> physical_device_feature_extensions(const PhysicalDeviceFeatures& features)
+std::unordered_set<std::string> make_extensions(
+        const PhysicalDeviceFeatures& required_features,
+        const std::unordered_set<std::string>& required_extensions,
+        const std::unordered_set<std::string>& optional_extensions,
+        const std::unordered_set<std::string>& supported_extensions)
 {
-        std::vector<std::string> extensions;
+        std::unordered_set<std::string> res;
 
-        const auto add_acceleration_structure_extensions = [&]
+        for (const std::string& extension : required_extensions)
         {
-                extensions.emplace_back(VK_KHR_DEFERRED_HOST_OPERATIONS_EXTENSION_NAME);
-                extensions.emplace_back(VK_KHR_ACCELERATION_STRUCTURE_EXTENSION_NAME);
-        };
-
-        if (any_feature_enabled(features.acceleration_structure))
-        {
-                add_acceleration_structure_extensions();
+                if (!supported_extensions.contains(extension))
+                {
+                        error("Vulkan physical device does not support required extension " + extension);
+                }
+                res.insert(extension);
         }
 
-        if (any_feature_enabled(features.ray_query))
+        for (const std::string& extension : extensions_for_features(required_features))
         {
-                add_acceleration_structure_extensions();
-                extensions.emplace_back(VK_KHR_RAY_QUERY_EXTENSION_NAME);
+                if (!supported_extensions.contains(extension))
+                {
+                        error("Vulkan physical device does not support required feature extension " + extension);
+                }
+                res.insert(extension);
         }
 
-        if (any_feature_enabled(features.ray_tracing_pipeline))
+        for (const std::string& extension : optional_extensions)
         {
-                add_acceleration_structure_extensions();
-                extensions.emplace_back(VK_KHR_RAY_TRACING_PIPELINE_EXTENSION_NAME);
+                if (supported_extensions.contains(extension))
+                {
+                        res.insert(extension);
+                }
         }
 
-        return extensions;
+        return res;
 }
 }

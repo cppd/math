@@ -17,9 +17,11 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "device.h"
 
-#include "device_create.h"
 #include "error.h"
 #include "features.h"
+
+#include "device/create.h"
+#include "device/queues.h"
 
 #include <src/com/error.h>
 #include <src/com/log.h>
@@ -27,79 +29,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 namespace ns::vulkan
 {
-namespace
-{
-std::unordered_set<std::string> instance_extensions(
-        const PhysicalDeviceFeatures& required_features,
-        const std::unordered_set<std::string>& required_extensions,
-        const std::unordered_set<std::string>& optional_extensions,
-        const std::unordered_set<std::string>& supported_extensions)
-{
-        std::unordered_set<std::string> res;
-
-        for (const std::string& extension : required_extensions)
-        {
-                if (!supported_extensions.contains(extension))
-                {
-                        error("Vulkan physical device does not support required extension " + extension);
-                }
-                res.insert(extension);
-        }
-
-        for (const std::string& extension : physical_device_feature_extensions(required_features))
-        {
-                if (!supported_extensions.contains(extension))
-                {
-                        error("Vulkan physical device does not support required feature extension " + extension);
-                }
-                res.insert(extension);
-        }
-
-        for (const std::string& extension : optional_extensions)
-        {
-                if (supported_extensions.contains(extension))
-                {
-                        res.insert(extension);
-                }
-        }
-
-        return res;
-}
-
-std::unordered_map<std::uint32_t, std::vector<VkQueue>> find_queues(
-        const VkDevice device,
-        const std::unordered_map<std::uint32_t, std::uint32_t>& queue_families)
-{
-        std::unordered_map<std::uint32_t, std::vector<VkQueue>> queues;
-
-        for (const auto& [family_index, queue_count] : queue_families)
-        {
-                const auto [iter, inserted] = queues.try_emplace(family_index);
-
-                if (!inserted)
-                {
-                        error("Non unique device queue family indices");
-                }
-
-                for (std::uint32_t queue_index = 0; queue_index < queue_count; ++queue_index)
-                {
-                        VkQueue queue;
-                        vkGetDeviceQueue(device, family_index, queue_index, &queue);
-
-                        if (queue == VK_NULL_HANDLE)
-                        {
-                                error("Null queue handle, family " + to_string(family_index) + ", queue "
-                                      + to_string(queue_index));
-                        }
-
-                        iter->second.push_back(queue);
-                }
-        }
-
-        return queues;
-}
-}
-
 Device::Device(
         const PhysicalDevice* const physical_device,
         const std::unordered_map<std::uint32_t, std::uint32_t>& queue_families,
@@ -109,13 +38,13 @@ Device::Device(
                   functionality.required_features,
                   functionality.optional_features,
                   physical_device_->features())),
-          extensions_(instance_extensions(
+          extensions_(make_extensions(
                   features_,
                   functionality.required_extensions,
                   functionality.optional_extensions,
                   physical_device_->extensions())),
           device_(create_device(physical_device_, queue_families, extensions_, features_)),
-          queues_(find_queues(device_, queue_families))
+          queues_(find_device_queues(device_, queue_families))
 {
 }
 

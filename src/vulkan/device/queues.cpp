@@ -15,8 +15,9 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include "device_queues.h"
+#include "queues.h"
 
+#include <src/com/error.h>
 #include <src/com/print.h>
 
 #include <algorithm>
@@ -62,5 +63,38 @@ void distribute_device_queues(
                 *description += "\n  queue = " + to_string(i) + ", device queue = " + to_string(device_queue);
                 ++device_queue;
         }
+}
+
+std::unordered_map<std::uint32_t, std::vector<VkQueue>> find_device_queues(
+        const VkDevice device,
+        const std::unordered_map<std::uint32_t, std::uint32_t>& queue_families)
+{
+        std::unordered_map<std::uint32_t, std::vector<VkQueue>> queues;
+
+        for (const auto& [family_index, queue_count] : queue_families)
+        {
+                const auto [iter, inserted] = queues.try_emplace(family_index);
+
+                if (!inserted)
+                {
+                        error("Non unique device queue family indices");
+                }
+
+                for (std::uint32_t queue_index = 0; queue_index < queue_count; ++queue_index)
+                {
+                        VkQueue queue;
+                        vkGetDeviceQueue(device, family_index, queue_index, &queue);
+
+                        if (queue == VK_NULL_HANDLE)
+                        {
+                                error("Null queue handle, family " + to_string(family_index) + ", queue "
+                                      + to_string(queue_index));
+                        }
+
+                        iter->second.push_back(queue);
+                }
+        }
+
+        return queues;
 }
 }

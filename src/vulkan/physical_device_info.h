@@ -59,5 +59,9 @@ void make_physical_device_features(
         VkPhysicalDeviceFeatures2* features_2,
         PhysicalDeviceFeatures* device_features);
 
-std::vector<std::string> physical_device_feature_extensions(const PhysicalDeviceFeatures& features);
+std::unordered_set<std::string> make_extensions(
+        const PhysicalDeviceFeatures& required_features,
+        const std::unordered_set<std::string>& required_extensions,
+        const std::unordered_set<std::string>& optional_extensions,
+        const std::unordered_set<std::string>& supported_extensions);
 }

@@ -17,8 +17,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
-#include "device.h"
-#include "physical_device.h"
+#include "../device.h"
+#include "../physical_device.h"
 
 #include <span>
 #include <string>
@@ -39,4 +39,8 @@ void distribute_device_queues(
         const std::span<Queue>& queues,
         std::unordered_map<std::uint32_t, std::uint32_t>* queue_count,
         std::string* description);
+
+std::unordered_map<std::uint32_t, std::vector<VkQueue>> find_device_queues(
+        const VkDevice device,
+        const std::unordered_map<std::uint32_t, std::uint32_t>& queue_families);
 }

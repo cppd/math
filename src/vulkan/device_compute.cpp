@@ -17,7 +17,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "device_compute.h"
 
-#include "device_queues.h"
+#include "device/queues.h"
 
 #include <src/com/log.h>
 
