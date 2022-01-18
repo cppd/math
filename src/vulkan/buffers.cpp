@@ -19,12 +19,13 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "create.h"
 #include "error.h"
-#include "memory.h"
 #include "print.h"
 
 #include "buffers/copy.h"
+#include "buffers/create.h"
 #include "buffers/image.h"
 #include "buffers/image_copy.h"
+#include "buffers/memory.h"
 #include "buffers/query.h"
 
 #include <src/com/alg.h>
@@ -316,7 +317,7 @@ DepthImageWithMemory::DepthImageWithMemory(
                 device,
                 device.physical_device(),
                 VK_IMAGE_TYPE_2D,
-                max_image_extent(
+                limit_image_extent(
                         VK_IMAGE_TYPE_2D,
                         make_extent(width, height),
                         device.physical_device(),

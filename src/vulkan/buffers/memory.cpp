@@ -17,11 +17,46 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "memory.h"
 
-#include "error.h"
-#include "query.h"
+#include "../error.h"
+
+#include <src/com/error.h>
+#include <src/com/print.h>
+#include <src/com/type/limit.h>
 
 namespace ns::vulkan
 {
+namespace
+{
+std::uint32_t physical_device_memory_type_index(
+        const VkPhysicalDevice physical_device,
+        const std::uint32_t memory_type_bits,
+        const VkMemoryPropertyFlags memory_property_flags)
+{
+        ASSERT(physical_device != VK_NULL_HANDLE);
+
+        VkPhysicalDeviceMemoryProperties memory_properties;
+        vkGetPhysicalDeviceMemoryProperties(physical_device, &memory_properties);
+
+        if (memory_properties.memoryTypeCount > static_cast<unsigned>(Limits<std::uint32_t>::digits()))
+        {
+                error("memoryTypeCount (" + to_string(memory_properties.memoryTypeCount) + ") > "
+                      + to_string(Limits<std::uint32_t>::digits()));
+        }
+
+        for (std::uint32_t i = 0; i < memory_properties.memoryTypeCount; ++i)
+        {
+                if ((memory_type_bits & (static_cast<std::uint32_t>(1) << i))
+                    && (memory_properties.memoryTypes[i].propertyFlags & memory_property_flags)
+                               == memory_property_flags)
+                {
+                        return i;
+                }
+        }
+
+        error("Failed to find suitable memory type");
+}
+}
+
 handle::DeviceMemory create_device_memory(
         const VkDevice device,
         const VkPhysicalDevice physical_device,

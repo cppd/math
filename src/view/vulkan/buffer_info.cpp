@@ -19,7 +19,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <src/com/error.h>
 #include <src/vulkan/print.h>
-#include <src/vulkan/query.h>
+#include <src/vulkan/sample.h>
 
 #include <algorithm>
 #include <sstream>

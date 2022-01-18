@@ -21,9 +21,16 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 namespace ns::vulkan
 {
+VkExtent3D find_max_image_extent(
+        VkPhysicalDevice physical_device,
+        VkFormat format,
+        VkImageType image_type,
+        VkImageTiling tiling,
+        VkImageUsageFlags usage);
+
 VkExtent3D correct_image_extent(VkImageType type, VkExtent3D extent);
 
-VkExtent3D max_image_extent(
+VkExtent3D limit_image_extent(
         VkImageType type,
         VkExtent3D extent,
         VkPhysicalDevice physical_device,

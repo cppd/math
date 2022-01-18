@@ -20,7 +20,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "../error.h"
 #include "../objects.h"
 #include "../print.h"
-#include "../query.h"
 #include "../queue.h"
 
 #include <src/com/error.h>
@@ -50,6 +49,19 @@ bool has_bits(const VkImageUsageFlags usage, const VkImageUsageFlagBits bits)
 }
 }
 
+VkExtent3D find_max_image_extent(
+        const VkPhysicalDevice physical_device,
+        const VkFormat format,
+        const VkImageType image_type,
+        const VkImageTiling tiling,
+        const VkImageUsageFlags usage)
+{
+        VkImageFormatProperties image_properties;
+        VULKAN_CHECK(vkGetPhysicalDeviceImageFormatProperties(
+                physical_device, format, image_type, tiling, usage, 0 /*VkImageCreateFlags*/, &image_properties));
+        return image_properties.maxExtent;
+}
+
 VkExtent3D correct_image_extent(const VkImageType type, const VkExtent3D extent)
 {
 #pragma GCC diagnostic push
@@ -68,7 +80,7 @@ VkExtent3D correct_image_extent(const VkImageType type, const VkExtent3D extent)
 #pragma GCC diagnostic pop
 }
 
-VkExtent3D max_image_extent(
+VkExtent3D limit_image_extent(
         const VkImageType type,
         const VkExtent3D extent,
         const VkPhysicalDevice physical_device,
@@ -76,21 +88,22 @@ VkExtent3D max_image_extent(
         const VkImageTiling tiling,
         const VkImageUsageFlags usage)
 {
-        const VkExtent3D max = find_max_image_extent(physical_device, format, type, tiling, usage);
+        const VkExtent3D max_extent = find_max_image_extent(physical_device, format, type, tiling, usage);
+
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wswitch-enum"
         switch (type)
         {
         case VK_IMAGE_TYPE_1D:
-                return {.width = std::min(extent.width, max.width), .height = 1, .depth = 1};
+                return {.width = std::min(extent.width, max_extent.width), .height = 1, .depth = 1};
         case VK_IMAGE_TYPE_2D:
-                return {.width = std::min(extent.width, max.width),
-                        .height = std::min(extent.height, max.height),
+                return {.width = std::min(extent.width, max_extent.width),
+                        .height = std::min(extent.height, max_extent.height),
                         .depth = 1};
         case VK_IMAGE_TYPE_3D:
-                return {.width = std::min(extent.width, max.width),
-                        .height = std::min(extent.height, max.height),
-                        .depth = std::min(extent.depth, max.depth)};
+                return {.width = std::min(extent.width, max_extent.width),
+                        .height = std::min(extent.height, max_extent.height),
+                        .depth = std::min(extent.depth, max_extent.depth)};
         default:
                 error("Unknown image type " + image_type_to_string(type));
         }
@@ -144,40 +157,48 @@ void transition_image_layout(
 VkFormatFeatureFlags format_features_for_image_usage(VkImageUsageFlags usage)
 {
         VkFormatFeatureFlags features = 0;
+
         if (has_bits(usage, VK_IMAGE_USAGE_TRANSFER_SRC_BIT))
         {
                 features |= VK_FORMAT_FEATURE_TRANSFER_SRC_BIT;
                 usage &= ~VK_IMAGE_USAGE_TRANSFER_SRC_BIT;
         }
+
         if (has_bits(usage, VK_IMAGE_USAGE_TRANSFER_DST_BIT))
         {
                 features |= VK_FORMAT_FEATURE_TRANSFER_DST_BIT;
                 usage &= ~VK_IMAGE_USAGE_TRANSFER_DST_BIT;
         }
+
         if (has_bits(usage, VK_IMAGE_USAGE_SAMPLED_BIT))
         {
                 features |= VK_FORMAT_FEATURE_SAMPLED_IMAGE_BIT;
                 usage &= ~VK_IMAGE_USAGE_SAMPLED_BIT;
         }
+
         if (has_bits(usage, VK_IMAGE_USAGE_STORAGE_BIT))
         {
                 features |= VK_FORMAT_FEATURE_STORAGE_IMAGE_BIT;
                 usage &= ~VK_IMAGE_USAGE_STORAGE_BIT;
         }
+
         if (has_bits(usage, VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT))
         {
                 features |= VK_FORMAT_FEATURE_COLOR_ATTACHMENT_BIT;
                 usage &= ~VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT;
         }
+
         if (has_bits(usage, VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT))
         {
                 features |= VK_FORMAT_FEATURE_DEPTH_STENCIL_ATTACHMENT_BIT;
                 usage &= ~VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT;
         }
+
         if (usage != 0)
         {
                 error("Unsupported image usage " + to_string_binary(usage));
         }
+
         return features;
 }
 

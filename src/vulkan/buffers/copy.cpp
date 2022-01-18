@@ -17,6 +17,9 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "copy.h"
 
+#include "create.h"
+#include "memory.h"
+
 #include "../create.h"
 #include "../error.h"
 #include "../memory.h"

@@ -52,23 +52,4 @@ handle::Framebuffer create_framebuffer(
 VkClearValue create_color_clear_value(VkFormat format, const Vector<3, float>& rgb);
 
 VkClearValue create_depth_stencil_clear_value();
-
-Buffer create_buffer(
-        VkDevice device,
-        VkDeviceSize size,
-        VkBufferUsageFlags usage,
-        std::vector<std::uint32_t> family_indices);
-
-Image create_image(
-        VkDevice device,
-        VkPhysicalDevice physical_device,
-        VkImageType type,
-        VkExtent3D extent,
-        VkFormat format,
-        std::vector<std::uint32_t> family_indices,
-        VkSampleCountFlagBits samples,
-        VkImageTiling tiling,
-        VkImageUsageFlags usage);
-
-ImageView create_image_view(const Image& image, VkImageAspectFlags aspect_flags);
 }

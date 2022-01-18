@@ -17,19 +17,13 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
-#include "objects.h"
+#include <vulkan/vulkan.h>
 
 namespace ns::vulkan
 {
-handle::DeviceMemory create_device_memory(
-        VkDevice device,
+VkSampleCountFlagBits supported_color_depth_framebuffer_sample_count_flag(
         VkPhysicalDevice physical_device,
-        VkBuffer buffer,
-        VkMemoryPropertyFlags properties);
+        int required_minimum_sample_count);
 
-handle::DeviceMemory create_device_memory(
-        VkDevice device,
-        VkPhysicalDevice physical_device,
-        VkImage image,
-        VkMemoryPropertyFlags properties);
+int sample_count_flag_to_integer(VkSampleCountFlagBits sample_count);
 }
