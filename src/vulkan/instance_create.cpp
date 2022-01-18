@@ -27,6 +27,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/com/string/vector.h>
 #include <src/settings/name.h>
 
+#include <sstream>
+
 namespace ns::vulkan
 {
 namespace
@@ -35,11 +37,17 @@ void check_api_version()
 {
         const std::uint32_t api_version = supported_instance_api_version();
 
-        if (!api_version_suitable(api_version))
+        if (api_version_suitable(api_version))
         {
-                error("Vulkan instance API version " + api_version_to_string(API_VERSION)
-                      + " is not supported. Supported " + api_version_to_string(api_version) + ".");
+                return;
         }
+
+        std::ostringstream oss;
+        oss << "Vulkan instance API version ";
+        oss << api_version_to_string(api_version);
+        oss << " is not supported, minimum required version is ";
+        oss << api_version_to_string(API_VERSION);
+        error(oss.str());
 }
 
 void check_layer_support(const std::unordered_set<std::string>& required_layers)

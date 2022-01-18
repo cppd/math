@@ -280,7 +280,7 @@ std::vector<VkPhysicalDevice> find_physical_devices(const VkInstance instance)
         }
 
         std::ostringstream oss;
-        oss << "No Vulkan physical device found with minimum supported version ";
+        oss << "No Vulkan physical device found with minimum required version ";
         oss << api_version_to_string(API_VERSION);
         oss << '\n';
         oss << "Found " << (all_devices.size() > 1 ? "devices" : "device");
