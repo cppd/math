@@ -269,6 +269,8 @@ void MainWindow::first_shown()
 
         const CommandLineOptions options = command_line_options();
 
+        vulkan_instance_ = std::make_unique<vulkan::Instance>();
+
         view_ = view::create_view(
                 widget_window_id(graphics_widget_), widget_pixels_per_inch(graphics_widget_), view_initial_commands());
 
