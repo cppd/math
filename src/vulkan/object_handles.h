@@ -430,4 +430,18 @@ public:
 
         Sampler(VkDevice device, const VkSamplerCreateInfo& create_info);
 };
+
+class AccelerationStructureKHR final
+{
+        VkDevice device_ = VK_NULL_HANDLE;
+        VkAccelerationStructureKHR acceleration_structure_ = VK_NULL_HANDLE;
+
+        void destroy() noexcept;
+        void move(AccelerationStructureKHR* from) noexcept;
+
+public:
+        VULKAN_HANDLE_DEVICE_FUNCTIONS(AccelerationStructureKHR, acceleration_structure_)
+
+        AccelerationStructureKHR(VkDevice device, const VkAccelerationStructureCreateInfoKHR& create_info);
+};
 }

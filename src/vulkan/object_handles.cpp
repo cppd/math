@@ -689,4 +689,31 @@ Sampler::Sampler(const VkDevice device, const VkSamplerCreateInfo& create_info) 
 {
         VULKAN_CHECK(vkCreateSampler(device, &create_info, nullptr, &sampler_));
 }
+
+//
+
+void AccelerationStructureKHR::destroy() noexcept
+{
+        if (acceleration_structure_ != VK_NULL_HANDLE)
+        {
+                ASSERT(device_ != VK_NULL_HANDLE);
+                vkDestroyAccelerationStructureKHR(device_, acceleration_structure_, nullptr);
+        }
+}
+
+void AccelerationStructureKHR::move(AccelerationStructureKHR* const from) noexcept
+{
+        device_ = from->device_;
+        acceleration_structure_ = from->acceleration_structure_;
+        from->device_ = VK_NULL_HANDLE;
+        from->acceleration_structure_ = VK_NULL_HANDLE;
+}
+
+AccelerationStructureKHR::AccelerationStructureKHR(
+        const VkDevice device,
+        const VkAccelerationStructureCreateInfoKHR& create_info)
+        : device_(device)
+{
+        VULKAN_CHECK(vkCreateAccelerationStructureKHR(device, &create_info, nullptr, &acceleration_structure_));
+}
 }
