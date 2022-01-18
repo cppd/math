@@ -27,50 +27,55 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/window/surface.h>
 
 #include <atomic>
-#include <optional>
 
 namespace ns::vulkan
 {
 namespace
 {
-constexpr const char* DEBUG = VK_EXT_DEBUG_UTILS_EXTENSION_NAME;
-
 std::unordered_set<std::string> layers()
 {
-        const std::unordered_set<std::string> supported = supported_instance_layers();
+        std::unordered_set<std::string> layers;
 
-        std::unordered_set<std::string> required;
-        required.insert("VK_LAYER_KHRONOS_validation");
+#if !defined(RELEASE_BUILD)
+        layers.insert("VK_LAYER_KHRONOS_validation");
+#endif
 
-        for (const std::string& s : required)
+        if (!layers.empty())
         {
-                if (!supported.contains(s))
+                const std::unordered_set<std::string> supported = supported_instance_layers();
+                for (const std::string& s : layers)
                 {
-                        error("Vulkan layer " + s + " is not supported");
+                        if (!supported.contains(s))
+                        {
+                                error("Vulkan layer " + s + " is not supported");
+                        }
                 }
         }
 
-        return required;
+        return layers;
 }
 
 std::unordered_set<std::string> extensions()
 {
-        const std::unordered_set<std::string> supported = supported_instance_extensions();
+        std::unordered_set<std::string> extensions;
 
-        std::unordered_set<std::string> required;
-        required.insert(window::vulkan_create_surface_extension());
-        required.insert(VK_KHR_SURFACE_EXTENSION_NAME);
-        required.insert(DEBUG);
+        extensions.insert(window::vulkan_create_surface_extension());
+        extensions.insert(VK_KHR_SURFACE_EXTENSION_NAME);
+        extensions.insert(VK_EXT_DEBUG_UTILS_EXTENSION_NAME);
 
-        for (const std::string& s : required)
+        if (!extensions.empty())
         {
-                if (!supported.contains(s))
+                const std::unordered_set<std::string> supported = supported_instance_extensions();
+                for (const std::string& s : extensions)
                 {
-                        error("Vulkan instance extension " + s + " is not supported");
+                        if (!supported.contains(s))
+                        {
+                                error("Vulkan instance extension " + s + " is not supported");
+                        }
                 }
         }
 
-        return required;
+        return extensions;
 }
 }
 
@@ -78,12 +83,12 @@ class Instance::Impl final
 {
         handle::Instance instance_;
         InstanceExtensionFunctions instance_extension_functions_;
-        std::optional<handle::DebugUtilsMessengerEXT> messenger_;
+        handle::DebugUtilsMessengerEXT messenger_;
 
         Impl(const std::unordered_set<std::string>& layers, const std::unordered_set<std::string>& extensions)
                 : instance_(create_instance(layers, extensions)), instance_extension_functions_(instance_)
         {
-                if (extensions.contains(DEBUG))
+                if (extensions.contains(VK_EXT_DEBUG_UTILS_EXTENSION_NAME))
                 {
                         messenger_ = create_debug_utils_messenger(instance_);
                 }
