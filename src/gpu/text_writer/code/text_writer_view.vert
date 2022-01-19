@@ -15,7 +15,7 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#version 450
+#version 460
 
 layout(location = 0) in ivec2 window_coordinates;
 layout(location = 1) in vec2 texture_coordinates;
