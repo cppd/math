@@ -15,7 +15,7 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
 
-cmake_minimum_required(VERSION 3.21)
+cmake_minimum_required(VERSION 3.22)
 
 ##################################################
 
@@ -27,10 +27,10 @@ set(compilers "GNU;Clang")
 set(gcc_minimal_version "11")
 set(clang_minimal_version "13")
 
-set(extensions_shaders "comp;frag;geom;vert;tesc;tese")
+set(shader_environment "vulkan1.2")
+set(extensions_shaders "comp;frag;geom;rahit;rcall;rchit;rgen;rint;rmiss;vert;tesc;tese")
 set(extensions_shaders_include "glsl")
 set(extensions_all "h;c;cpp;ui" ${extensions_shaders} ${extensions_shaders_include})
-set(extensions_binary "ttf")
 
 ##################################################
 
@@ -149,7 +149,7 @@ function(AddIncludeFiles FILE_TYPE)
 
         cmake_parse_arguments(PARSE_ARGV 1 ARG
                 ""
-                "HEADER_FILE;OUTPUT_EXTENSION;OUTPUT_DIRECTORY"
+                "OUTPUT_EXTENSION;OUTPUT_DIRECTORY"
                 "EXTENSIONS;EXTENSIONS_INCLUDE;SOURCE;INCLUDE_DIRECTORIES;MACROS")
         if(NOT ARG_OUTPUT_EXTENSION)
                 message(FATAL_ERROR "OUTPUT_EXTENSION is not specified")
@@ -170,9 +170,6 @@ function(AddIncludeFiles FILE_TYPE)
         unset(VULKAN_SHADERS)
 
         if("${FILE_TYPE}" STREQUAL "BINARY_FILES")
-                if(ARG_HEADER_FILE)
-                        message(FATAL_ERROR "Binary file header is not supported")
-                endif()
                 if(ARG_MACROS)
                         message(FATAL_ERROR "Binary file macros are not supported")
                 endif()
@@ -286,11 +283,6 @@ function(AddIncludeFiles FILE_TYPE)
                                         file(GLOB_RECURSE include_files LIST_DIRECTORIES false ${globbing_expressions_include})
                                 endif()
 
-                                unset(header)
-                                if(ARG_HEADER_FILE)
-                                        set(header "${PROJECT_SOURCE_DIR}/${ARG_HEADER_FILE}")
-                                endif()
-
                                 unset(macro_list)
                                 foreach(macro ${ARG_MACROS})
                                         list(APPEND macro_list "-D${macro}")
@@ -314,11 +306,11 @@ function(AddIncludeFiles FILE_TYPE)
                                                 "${output_file}"
                                         COMMAND
                                                 "${PROJECT_BINARY_DIR}/create_str"
-                                                "cat" ${header} "${long_file_name}" "${output_glsl}"
+                                                "cat" "${long_file_name}" "${output_glsl}"
                                         COMMAND
                                                 Vulkan::glslangValidator
                                                 ${include_directories_list}
-                                                "-V"
+                                                "--target-env" "${shader_environment}"
                                                 ${macro_list}
                                                 "${output_glsl}"
                                                 "-o" "${output_sprv}"
@@ -326,7 +318,6 @@ function(AddIncludeFiles FILE_TYPE)
                                                 "${PROJECT_BINARY_DIR}/create_str"
                                                 "spr" "${output_sprv}" "${output_file}"
                                         DEPENDS
-                                                "${header}"
                                                 "${long_file_name}"
                                                 "${PROJECT_BINARY_DIR}/create_str"
                                                 ${include_files}
@@ -388,7 +379,7 @@ AddIncludeFiles(BINARY_FILES
                         OUTPUT_DIRECTORY "${output_headers_directory}/fonts"
                         OUTPUT_EXTENSION "bin"
                         SOURCE "font"
-                        EXTENSIONS ${extensions_binary})
+                        EXTENSIONS "ttf")
 
 AddIncludeFiles(VULKAN_SHADERS
                         OUTPUT_DIRECTORY "${output_headers_directory}/shaders"
