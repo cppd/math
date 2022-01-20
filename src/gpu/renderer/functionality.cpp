@@ -40,7 +40,7 @@ constexpr vulkan::PhysicalDeviceFeatures RAY_TRACING_FEATURES = []
         vulkan::PhysicalDeviceFeatures res;
 
         // res.features_12.descriptorIndexing = VK_TRUE;
-        // res.features_12.bufferDeviceAddress = VK_TRUE;
+        res.features_12.bufferDeviceAddress = VK_TRUE;
 
         res.acceleration_structure.accelerationStructure = VK_TRUE;
         // res.acceleration_structure.descriptorBindingAccelerationStructureUpdateAfterBind = VK_TRUE;
