@@ -19,6 +19,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "buffer_commands.h"
 #include "functionality.h"
+#include "ray_tracing.h"
 #include "renderer_draw.h"
 #include "renderer_objects.h"
 #include "renderer_process.h"
@@ -397,7 +398,8 @@ class Impl final : public Renderer, RendererProcessEvents
         }
 
 public:
-        Impl(const vulkan::Device* const device,
+        Impl(const bool ray_tracing,
+             const vulkan::Device* const device,
              const vulkan::CommandPool* const graphics_command_pool,
              const vulkan::Queue* const graphics_queue,
              const vulkan::CommandPool* const transfer_command_pool,
@@ -437,6 +439,10 @@ public:
                   renderer_process_(&shader_buffers_, this),
                   renderer_draw_(*device_, TRANSPARENCY_NODE_BUFFER_MAX_SIZE, &mesh_renderer_, &volume_renderer_)
         {
+                if (ray_tracing)
+                {
+                        create_ray_tracing_data(device, graphics_command_pool, graphics_queue);
+                }
         }
 
         ~Impl() override
@@ -467,11 +473,11 @@ std::unique_ptr<Renderer> create_renderer(
         const bool sample_shading,
         const bool sampler_anisotropy)
 {
-        LOG("Renderer device ray tracing: "
-            + std::string(ray_tracing_supported(*device) ? "supported" : "not supported"));
+        const bool ray_tracing = ray_tracing_supported(*device);
+        LOG("Renderer device ray tracing: " + std::string(ray_tracing ? "supported" : "not supported"));
 
         return std::make_unique<Impl>(
-                device, graphics_command_pool, graphics_queue, transfer_command_pool, transfer_queue, sample_shading,
-                sampler_anisotropy);
+                ray_tracing, device, graphics_command_pool, graphics_queue, transfer_command_pool, transfer_queue,
+                sample_shading, sampler_anisotropy);
 }
 }
