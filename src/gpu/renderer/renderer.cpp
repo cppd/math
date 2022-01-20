@@ -18,6 +18,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "renderer.h"
 
 #include "buffer_commands.h"
+#include "functionality.h"
 #include "renderer_draw.h"
 #include "renderer_objects.h"
 #include "renderer_process.h"
@@ -38,7 +39,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/vulkan/commands.h>
 #include <src/vulkan/device.h>
 #include <src/vulkan/error.h>
-#include <src/vulkan/features.h>
 #include <src/vulkan/queue.h>
 
 #include <memory>
@@ -52,46 +52,6 @@ namespace
 constexpr VkImageLayout DEPTH_COPY_IMAGE_LAYOUT = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
 constexpr std::uint32_t OBJECTS_CLEAR_VALUE = 0;
 constexpr std::uint32_t TRANSPARENCY_NODE_BUFFER_MAX_SIZE = (1ull << 30);
-
-std::unordered_set<std::string> ray_tracing_extensions()
-{
-        std::unordered_set<std::string> res;
-
-        res.insert(VK_KHR_ACCELERATION_STRUCTURE_EXTENSION_NAME);
-        res.insert(VK_KHR_DEFERRED_HOST_OPERATIONS_EXTENSION_NAME);
-        res.insert(VK_KHR_RAY_QUERY_EXTENSION_NAME);
-        res.insert(VK_KHR_RAY_TRACING_PIPELINE_EXTENSION_NAME);
-
-        return res;
-}
-
-vulkan::PhysicalDeviceFeatures ray_tracing_features()
-{
-        vulkan::PhysicalDeviceFeatures res;
-
-        res.features_12.descriptorIndexing = VK_TRUE;
-        res.features_12.bufferDeviceAddress = VK_TRUE;
-
-        res.acceleration_structure.accelerationStructure = VK_TRUE;
-        res.acceleration_structure.descriptorBindingAccelerationStructureUpdateAfterBind = VK_TRUE;
-
-        res.ray_tracing_pipeline.rayTracingPipeline = VK_TRUE;
-        res.ray_tracing_pipeline.rayTracingPipelineTraceRaysIndirect = VK_TRUE;
-        res.ray_tracing_pipeline.rayTraversalPrimitiveCulling = VK_TRUE;
-
-        res.ray_query.rayQuery = VK_TRUE;
-
-        return res;
-}
-
-void add_ray_tracing_functionality(vulkan::DeviceFunctionality* const res)
-{
-        for (const std::string& s : ray_tracing_extensions())
-        {
-                res->optional_extensions.insert(s);
-        }
-        vulkan::add_features(&res->optional_features, ray_tracing_features());
-}
 
 class Impl final : public Renderer, RendererProcessEvents
 {
@@ -495,16 +455,7 @@ public:
 
 vulkan::DeviceFunctionality Renderer::device_functionality()
 {
-        vulkan::DeviceFunctionality res;
-
-        res.required_features.features_10.geometryShader = VK_TRUE;
-        res.required_features.features_10.fragmentStoresAndAtomics = VK_TRUE;
-        res.required_features.features_10.shaderStorageImageMultisample = VK_TRUE;
-        res.required_features.features_10.shaderClipDistance = VK_TRUE;
-
-        add_ray_tracing_functionality(&res);
-
-        return res;
+        return renderer::device_functionality();
 }
 
 std::unique_ptr<Renderer> create_renderer(
@@ -516,6 +467,9 @@ std::unique_ptr<Renderer> create_renderer(
         const bool sample_shading,
         const bool sampler_anisotropy)
 {
+        LOG("Renderer device ray tracing: "
+            + std::string(ray_tracing_supported(*device) ? "supported" : "not supported"));
+
         return std::make_unique<Impl>(
                 device, graphics_command_pool, graphics_queue, transfer_command_pool, transfer_queue, sample_shading,
                 sampler_anisotropy);
