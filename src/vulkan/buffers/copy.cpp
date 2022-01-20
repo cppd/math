@@ -221,7 +221,7 @@ void write_data_to_buffer(
 
         handle::DeviceMemory staging_device_memory(create_device_memory(
                 device, physical_device, staging_buffer,
-                VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT));
+                VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT, 0 /*allocate_flags*/));
 
         //
 
@@ -259,7 +259,7 @@ void staging_image_write(
 
         handle::DeviceMemory staging_device_memory(create_device_memory(
                 device, physical_device, staging_buffer,
-                VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT));
+                VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT, 0 /*allocate_flags*/));
 
         //
 
@@ -301,7 +301,7 @@ void staging_image_read(
 
         handle::DeviceMemory staging_device_memory(create_device_memory(
                 device, physical_device, staging_buffer,
-                VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT));
+                VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT, 0 /*allocate_flags*/));
 
         //
 

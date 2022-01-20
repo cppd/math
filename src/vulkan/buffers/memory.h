@@ -25,7 +25,8 @@ handle::DeviceMemory create_device_memory(
         VkDevice device,
         VkPhysicalDevice physical_device,
         VkBuffer buffer,
-        VkMemoryPropertyFlags properties);
+        VkMemoryPropertyFlags properties,
+        VkMemoryAllocateFlags allocate_flags);
 
 handle::DeviceMemory create_device_memory(
         VkDevice device,

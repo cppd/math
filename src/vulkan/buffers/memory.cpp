@@ -61,7 +61,8 @@ handle::DeviceMemory create_device_memory(
         const VkDevice device,
         const VkPhysicalDevice physical_device,
         const VkBuffer buffer,
-        const VkMemoryPropertyFlags properties)
+        const VkMemoryPropertyFlags properties,
+        const VkMemoryAllocateFlags allocate_flags)
 {
         VkMemoryRequirements memory_requirements;
         vkGetBufferMemoryRequirements(device, buffer, &memory_requirements);
@@ -71,6 +72,20 @@ handle::DeviceMemory create_device_memory(
         allocate_info.allocationSize = memory_requirements.size;
         allocate_info.memoryTypeIndex =
                 physical_device_memory_type_index(physical_device, memory_requirements.memoryTypeBits, properties);
+
+        VkMemoryAllocateFlagsInfo allocate_flags_info;
+
+        if (allocate_flags)
+        {
+                if ((allocate_flags & VK_MEMORY_ALLOCATE_DEVICE_MASK_BIT) == VK_MEMORY_ALLOCATE_DEVICE_MASK_BIT)
+                {
+                        error("VK_MEMORY_ALLOCATE_DEVICE_MASK_BIT is not supported");
+                }
+                allocate_flags_info = {};
+                allocate_flags_info.sType = VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_FLAGS_INFO;
+                allocate_flags_info.flags = allocate_flags;
+                allocate_info.pNext = &allocate_flags_info;
+        }
 
         handle::DeviceMemory device_memory(device, allocate_info);
 

@@ -94,7 +94,14 @@ BufferWithMemory::BufferWithMemory(
                   memory_type == BufferMemoryType::HOST_VISIBLE
                           ? (VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT)
                           : (VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT)),
-          device_memory_(create_device_memory(device, device.physical_device(), buffer_, memory_properties_))
+          device_memory_(create_device_memory(
+                  device,
+                  device.physical_device(),
+                  buffer_,
+                  memory_properties_,
+                  (usage & VK_BUFFER_USAGE_SHADER_DEVICE_ADDRESS_BIT) == VK_BUFFER_USAGE_SHADER_DEVICE_ADDRESS_BIT
+                          ? VK_MEMORY_ALLOCATE_DEVICE_ADDRESS_BIT
+                          : 0))
 {
         ASSERT(size > 0);
 }
