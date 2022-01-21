@@ -22,5 +22,5 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 namespace ns::vulkan
 {
-std::string physical_device_type_to_string(VkPhysicalDeviceType type);
+std::string physical_device_type_to_string(VkPhysicalDeviceType physical_device_type);
 }

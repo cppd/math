@@ -41,6 +41,6 @@ void distribute_device_queues(
         std::string* description);
 
 std::unordered_map<std::uint32_t, std::vector<VkQueue>> find_device_queues(
-        const VkDevice device,
+        VkDevice device,
         const std::unordered_map<std::uint32_t, std::uint32_t>& queue_families);
 }

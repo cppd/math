@@ -20,17 +20,17 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/com/enum.h>
 #include <src/com/print.h>
 
-#define CASE(format) \
-        case format: \
-                return #format;
+#define CASE(parameter) \
+        case parameter: \
+                return #parameter;
 
 namespace ns::vulkan
 {
-std::string result_to_string(const VkResult code)
+std::string result_to_string(const VkResult result)
 {
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wswitch"
-        switch (code)
+        switch (result)
         {
                 CASE(VK_SUCCESS)
                 CASE(VK_NOT_READY)
@@ -73,6 +73,6 @@ std::string result_to_string(const VkResult code)
         }
 #pragma GCC diagnostic pop
 
-        return "Unknown VkResult " + to_string(enum_to_int(code));
+        return "Unknown VkResult " + to_string(enum_to_int(result));
 }
 }

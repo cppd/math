@@ -22,5 +22,5 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 namespace ns::vulkan
 {
-std::string result_to_string(VkResult code);
+std::string result_to_string(VkResult result);
 }

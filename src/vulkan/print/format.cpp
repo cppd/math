@@ -20,9 +20,9 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/com/enum.h>
 #include <src/com/print.h>
 
-#define CASE(format) \
-        case format: \
-                return #format;
+#define CASE(parameter) \
+        case parameter: \
+                return #parameter;
 
 namespace ns::vulkan
 {
