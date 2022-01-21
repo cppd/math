@@ -68,6 +68,8 @@ VkPresentModeKHR choose_present_mode(
         const std::vector<VkPresentModeKHR>& present_modes,
         const PresentMode preferred_present_mode)
 {
+        // VK_PRESENT_MODE_FIFO_KHR is required to be supported
+
         switch (preferred_present_mode)
         {
         case PresentMode::PREFER_SYNC:
@@ -75,12 +77,18 @@ VkPresentModeKHR choose_present_mode(
         case PresentMode::PREFER_FAST:
                 for (const VkPresentModeKHR present_mode : present_modes)
                 {
+                        if (present_mode == VK_PRESENT_MODE_MAILBOX_KHR)
+                        {
+                                return present_mode;
+                        }
+                }
+                for (const VkPresentModeKHR present_mode : present_modes)
+                {
                         if (present_mode == VK_PRESENT_MODE_IMMEDIATE_KHR)
                         {
                                 return present_mode;
                         }
                 }
-                // VK_PRESENT_MODE_FIFO_KHR is required to be supported
                 return VK_PRESENT_MODE_FIFO_KHR;
         }
 
@@ -95,13 +103,6 @@ VkExtent2D choose_extent(const VkSurfaceCapabilitiesKHR& capabilities)
         }
 
         error("Current width and height of the surface are not defined");
-
-#if 0
-        VkExtent2D extent;
-        extent.width = std::clamp(1u, capabilities.minImageExtent.width, capabilities.maxImageExtent.width);
-        extent.height = std::clamp(1u, capabilities.minImageExtent.height, capabilities.maxImageExtent.height);
-        return extent;
-#endif
 }
 
 std::uint32_t choose_image_count(const VkSurfaceCapabilitiesKHR& capabilities, const int image_count)
@@ -162,10 +163,8 @@ handle::SwapchainKHR create_swapchain_khr(
         sort_and_unique(&family_indices);
 
         VkSwapchainCreateInfoKHR create_info = {};
-
         create_info.sType = VK_STRUCTURE_TYPE_SWAPCHAIN_CREATE_INFO_KHR;
         create_info.surface = surface;
-
         create_info.minImageCount = image_count;
         create_info.imageFormat = surface_format.format;
         create_info.imageColorSpace = surface_format.colorSpace;
@@ -186,10 +185,8 @@ handle::SwapchainKHR create_swapchain_khr(
 
         create_info.preTransform = transform;
         create_info.compositeAlpha = VK_COMPOSITE_ALPHA_OPAQUE_BIT_KHR;
-
         create_info.presentMode = present_mode;
         create_info.clipped = VK_TRUE;
-
         create_info.oldSwapchain = VK_NULL_HANDLE;
 
         return handle::SwapchainKHR(device, create_info);
@@ -204,15 +201,12 @@ handle::ImageView create_image_view(
         VkImageViewCreateInfo create_info = {};
         create_info.sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO;
         create_info.image = image;
-
         create_info.viewType = VK_IMAGE_VIEW_TYPE_2D;
         create_info.format = format;
-
         create_info.components.r = VK_COMPONENT_SWIZZLE_IDENTITY;
         create_info.components.g = VK_COMPONENT_SWIZZLE_IDENTITY;
         create_info.components.b = VK_COMPONENT_SWIZZLE_IDENTITY;
         create_info.components.a = VK_COMPONENT_SWIZZLE_IDENTITY;
-
         create_info.subresourceRange.aspectMask = aspect_flags;
         create_info.subresourceRange.baseMipLevel = 0;
         create_info.subresourceRange.levelCount = 1;
@@ -223,6 +217,7 @@ handle::ImageView create_image_view(
 }
 std::string swapchain_info_string(
         const VkSurfaceFormatKHR surface_format,
+        const VkPresentModeKHR present_mode,
         const int preferred_image_count,
         const int image_count)
 {
@@ -231,6 +226,8 @@ std::string swapchain_info_string(
         s += "Swapchain surface format " + format_to_string(surface_format.format);
         s += '\n';
         s += "Swapchain color space " + color_space_to_string(surface_format.colorSpace);
+        s += '\n';
+        s += "Swapchain present mode " + present_mode_to_string(present_mode);
         s += '\n';
         s += "Swapchain preferred image count = " + to_string(preferred_image_count);
         s += '\n';
@@ -325,10 +322,11 @@ Swapchain::Swapchain(
 
         surface_format_ = choose_surface_format(required_surface_format, surface_formats);
         extent_ = choose_extent(surface_capabilities);
-        VkPresentModeKHR present_mode = choose_present_mode(present_modes, preferred_present_mode);
-        std::uint32_t image_count = choose_image_count(surface_capabilities, preferred_image_count);
 
-        LOG(swapchain_info_string(surface_format_, preferred_image_count, image_count));
+        const VkPresentModeKHR present_mode = choose_present_mode(present_modes, preferred_present_mode);
+        const std::uint32_t image_count = choose_image_count(surface_capabilities, preferred_image_count);
+
+        LOG(swapchain_info_string(surface_format_, present_mode, preferred_image_count, image_count));
 
         swapchain_ = create_swapchain_khr(
                 device, surface, surface_format_, present_mode, extent_, image_count,
