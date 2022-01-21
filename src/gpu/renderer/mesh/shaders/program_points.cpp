@@ -50,9 +50,9 @@ PointsProgram::PointsProgram(const vulkan::Device* const device)
                   *device,
                   {SharedMemory::set_number(), MeshMemory::set_number()},
                   {descriptor_set_layout_shared_, descriptor_set_layout_mesh_})),
-          vertex_shader_0d_(*device_, code_mesh_points_0d_vert(), "main"),
-          vertex_shader_1d_(*device_, code_mesh_points_1d_vert(), "main"),
-          fragment_shader_(*device_, code_mesh_points_frag(), "main")
+          vertex_shader_0d_(*device_, code_mesh_points_0d_vert(), VK_SHADER_STAGE_VERTEX_BIT),
+          vertex_shader_1d_(*device_, code_mesh_points_1d_vert(), VK_SHADER_STAGE_VERTEX_BIT),
+          fragment_shader_(*device_, code_mesh_points_frag(), VK_SHADER_STAGE_FRAGMENT_BIT)
 {
 }
 

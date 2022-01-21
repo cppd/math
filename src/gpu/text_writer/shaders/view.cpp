@@ -198,8 +198,8 @@ Program::Program(const vulkan::Device* const device)
           descriptor_set_layout_(
                   vulkan::create_descriptor_set_layout(*device, Memory::descriptor_set_layout_bindings())),
           pipeline_layout_(vulkan::create_pipeline_layout(*device, {Memory::set_number()}, {descriptor_set_layout_})),
-          vertex_shader_(*device_, code_view_vert(), "main"),
-          fragment_shader_(*device_, code_view_frag(), "main")
+          vertex_shader_(*device_, code_view_vert(), VK_SHADER_STAGE_VERTEX_BIT),
+          fragment_shader_(*device_, code_view_frag(), VK_SHADER_STAGE_FRAGMENT_BIT)
 {
 }
 

@@ -73,8 +73,8 @@ class ViewProgram final
 
         vulkan::handle::DescriptorSetLayout descriptor_set_layout_;
         vulkan::handle::PipelineLayout pipeline_layout_;
-        vulkan::VertexShader vertex_shader_;
-        vulkan::FragmentShader fragment_shader_;
+        vulkan::Shader vertex_shader_;
+        vulkan::Shader fragment_shader_;
 
 public:
         explicit ViewProgram(const vulkan::Device* device);

@@ -182,7 +182,7 @@ FftSharedProgram::FftSharedProgram(const VkDevice device)
                   vulkan::create_descriptor_set_layout(device, FftSharedMemory::descriptor_set_layout_bindings())),
           pipeline_layout_(
                   vulkan::create_pipeline_layout(device, {FftSharedMemory::set_number()}, {descriptor_set_layout_})),
-          shader_(device, code_fft_shared_comp(), "main")
+          shader_(device, code_fft_shared_comp(), VK_SHADER_STAGE_COMPUTE_BIT)
 {
 }
 

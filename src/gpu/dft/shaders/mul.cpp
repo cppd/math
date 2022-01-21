@@ -206,7 +206,7 @@ MulProgram::MulProgram(const VkDevice device)
           descriptor_set_layout_(
                   vulkan::create_descriptor_set_layout(device, MulMemory::descriptor_set_layout_bindings())),
           pipeline_layout_(vulkan::create_pipeline_layout(device, {MulMemory::set_number()}, {descriptor_set_layout_})),
-          shader_(device, code_mul_comp(), "main")
+          shader_(device, code_mul_comp(), VK_SHADER_STAGE_COMPUTE_BIT)
 {
 }
 

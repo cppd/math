@@ -51,10 +51,10 @@ VolumeProgram::VolumeProgram(const vulkan::Device* const device)
                   *device,
                   {VolumeSharedMemory::set_number()},
                   {descriptor_set_layout_shared_})),
-          vertex_shader_(*device_, code_volume_vert(), "main"),
-          fragment_shader_image_(*device_, code_volume_image_frag(), "main"),
-          fragment_shader_image_fragments_(*device_, code_volume_image_fragments_frag(), "main"),
-          fragment_shader_fragments_(*device_, code_volume_fragments_frag(), "main")
+          vertex_shader_(*device_, code_volume_vert(), VK_SHADER_STAGE_VERTEX_BIT),
+          fragment_shader_image_(*device_, code_volume_image_frag(), VK_SHADER_STAGE_FRAGMENT_BIT),
+          fragment_shader_image_fragments_(*device_, code_volume_image_fragments_frag(), VK_SHADER_STAGE_FRAGMENT_BIT),
+          fragment_shader_fragments_(*device_, code_volume_fragments_frag(), VK_SHADER_STAGE_FRAGMENT_BIT)
 {
 }
 
@@ -88,7 +88,7 @@ vulkan::handle::Pipeline VolumeProgram::create_pipeline(
         const PipelineType type) const
 {
         VkPipelineLayout pipeline_layout = VK_NULL_HANDLE;
-        const vulkan::FragmentShader* fragment_shader = nullptr;
+        const vulkan::Shader* fragment_shader = nullptr;
 
         switch (type)
         {

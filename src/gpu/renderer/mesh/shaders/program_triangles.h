@@ -35,9 +35,9 @@ class TrianglesProgram final
         vulkan::handle::DescriptorSetLayout descriptor_set_layout_mesh_;
         vulkan::handle::DescriptorSetLayout descriptor_set_layout_material_;
         vulkan::handle::PipelineLayout pipeline_layout_;
-        vulkan::VertexShader vertex_shader_;
-        vulkan::GeometryShader geometry_shader_;
-        vulkan::FragmentShader fragment_shader_;
+        vulkan::Shader vertex_shader_;
+        vulkan::Shader geometry_shader_;
+        vulkan::Shader fragment_shader_;
 
 public:
         explicit TrianglesProgram(const vulkan::Device* device);

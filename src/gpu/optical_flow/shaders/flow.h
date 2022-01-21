@@ -136,7 +136,7 @@ class FlowProgram final
         vulkan::handle::DescriptorSetLayout descriptor_set_layout_;
         vulkan::handle::PipelineLayout pipeline_layout_;
         FlowConstant constant_;
-        vulkan::ComputeShader shader_;
+        vulkan::Shader shader_;
         vulkan::handle::Pipeline pipeline_;
 
 public:

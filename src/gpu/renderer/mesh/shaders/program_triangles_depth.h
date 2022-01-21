@@ -34,7 +34,7 @@ class TrianglesDepthProgram final
         vulkan::handle::DescriptorSetLayout descriptor_set_layout_shared_;
         vulkan::handle::DescriptorSetLayout descriptor_set_layout_mesh_;
         vulkan::handle::PipelineLayout pipeline_layout_;
-        vulkan::VertexShader vertex_shader_;
+        vulkan::Shader vertex_shader_;
 
 public:
         explicit TrianglesDepthProgram(const vulkan::Device* device);

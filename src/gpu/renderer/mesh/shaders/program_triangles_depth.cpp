@@ -48,7 +48,7 @@ TrianglesDepthProgram::TrianglesDepthProgram(const vulkan::Device* const device)
                   *device,
                   {SharedMemory::set_number(), MeshMemory::set_number()},
                   {descriptor_set_layout_shared_, descriptor_set_layout_mesh_})),
-          vertex_shader_(*device_, code_mesh_triangles_depth_vert(), "main")
+          vertex_shader_(*device_, code_mesh_triangles_depth_vert(), VK_SHADER_STAGE_VERTEX_BIT)
 {
 }
 

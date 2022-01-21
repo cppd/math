@@ -37,9 +37,9 @@ class PointsProgram final
         vulkan::handle::DescriptorSetLayout descriptor_set_layout_shared_;
         vulkan::handle::DescriptorSetLayout descriptor_set_layout_mesh_;
         vulkan::handle::PipelineLayout pipeline_layout_;
-        vulkan::VertexShader vertex_shader_0d_;
-        vulkan::VertexShader vertex_shader_1d_;
-        vulkan::FragmentShader fragment_shader_;
+        vulkan::Shader vertex_shader_0d_;
+        vulkan::Shader vertex_shader_1d_;
+        vulkan::Shader fragment_shader_;
 
 public:
         explicit PointsProgram(const vulkan::Device* device);

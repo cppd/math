@@ -20,71 +20,20 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "objects.h"
 
 #include <span>
-#include <string>
 
 namespace ns::vulkan
 {
-class Shader
+class Shader final
 {
         handle::ShaderModule module_;
         VkShaderStageFlagBits stage_;
-        std::string entry_point_name_;
-
-protected:
-        Shader(VkDevice device,
-               const std::span<const std::uint32_t>& code,
-               VkShaderStageFlagBits stage,
-               std::string entry_point_name);
-
-        Shader(Shader&&) = default;
-        Shader& operator=(Shader&&) = default;
-        ~Shader() = default;
 
 public:
+        Shader(VkDevice device, const std::span<const std::uint32_t>& code, VkShaderStageFlagBits stage);
+
         VkShaderModule module() const;
         VkShaderStageFlagBits stage() const;
-        const char* entry_point_name() const;
-};
 
-class VertexShader final : public Shader
-{
-public:
-        VertexShader(VkDevice device, const std::span<const std::uint32_t>& code, std::string entry_point_name);
-};
-
-class TesselationControlShader final : public Shader
-{
-public:
-        TesselationControlShader(
-                VkDevice device,
-                const std::span<const std::uint32_t>& code,
-                std::string entry_point_name);
-};
-
-class TesselationEvaluationShader final : public Shader
-{
-public:
-        TesselationEvaluationShader(
-                VkDevice device,
-                const std::span<const std::uint32_t>& code,
-                std::string entry_point_name);
-};
-
-class GeometryShader final : public Shader
-{
-public:
-        GeometryShader(VkDevice device, const std::span<const std::uint32_t>& code, std::string entry_point_name);
-};
-
-class FragmentShader final : public Shader
-{
-public:
-        FragmentShader(VkDevice device, const std::span<const std::uint32_t>& code, std::string entry_point_name);
-};
-
-class ComputeShader final : public Shader
-{
-public:
-        ComputeShader(VkDevice device, const std::span<const std::uint32_t>& code, std::string entry_point_name);
+        static const char* entry_point_name();
 };
 }

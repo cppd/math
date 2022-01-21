@@ -97,7 +97,7 @@ class MulProgram final
         vulkan::handle::DescriptorSetLayout descriptor_set_layout_;
         vulkan::handle::PipelineLayout pipeline_layout_;
         MulConstant constant_;
-        vulkan::ComputeShader shader_;
+        vulkan::Shader shader_;
         vulkan::handle::Pipeline pipeline_rows_to_buffer_forward_;
         vulkan::handle::Pipeline pipeline_rows_to_buffer_inverse_;
         vulkan::handle::Pipeline pipeline_rows_from_buffer_forward_;

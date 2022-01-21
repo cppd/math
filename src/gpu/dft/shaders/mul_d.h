@@ -86,7 +86,7 @@ class MulDProgram final
         vulkan::handle::DescriptorSetLayout descriptor_set_layout_;
         vulkan::handle::PipelineLayout pipeline_layout_;
         MulDConstant constant_;
-        vulkan::ComputeShader shader_;
+        vulkan::Shader shader_;
         vulkan::handle::Pipeline pipeline_rows_;
         vulkan::handle::Pipeline pipeline_columns_;
 

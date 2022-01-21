@@ -98,7 +98,7 @@ class FftGlobalProgram final
         vulkan::handle::DescriptorSetLayout descriptor_set_layout_;
         vulkan::handle::PipelineLayout pipeline_layout_;
         FftGlobalConstant constant_;
-        vulkan::ComputeShader shader_;
+        vulkan::Shader shader_;
         vulkan::handle::Pipeline pipeline_forward_;
         vulkan::handle::Pipeline pipeline_inverse_;
 

@@ -57,9 +57,9 @@ TrianglesProgram::TrianglesProgram(const vulkan::Device* const device)
                   *device,
                   {SharedMemory::set_number(), MeshMemory::set_number(), MaterialMemory::set_number()},
                   {descriptor_set_layout_shared_, descriptor_set_layout_mesh_, descriptor_set_layout_material_})),
-          vertex_shader_(*device_, code_mesh_triangles_vert(), "main"),
-          geometry_shader_(*device_, code_mesh_triangles_geom(), "main"),
-          fragment_shader_(*device_, code_mesh_triangles_frag(), "main")
+          vertex_shader_(*device_, code_mesh_triangles_vert(), VK_SHADER_STAGE_VERTEX_BIT),
+          geometry_shader_(*device_, code_mesh_triangles_geom(), VK_SHADER_STAGE_GEOMETRY_BIT),
+          fragment_shader_(*device_, code_mesh_triangles_frag(), VK_SHADER_STAGE_FRAGMENT_BIT)
 {
 }
 

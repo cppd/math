@@ -49,9 +49,9 @@ TriangleLinesProgram::TriangleLinesProgram(const vulkan::Device* const device)
                   *device,
                   {SharedMemory::set_number(), MeshMemory::set_number()},
                   {descriptor_set_layout_shared_, descriptor_set_layout_mesh_})),
-          vertex_shader_(*device_, code_mesh_triangle_lines_vert(), "main"),
-          geometry_shader_(*device_, code_mesh_triangle_lines_geom(), "main"),
-          fragment_shader_(*device_, code_mesh_triangle_lines_frag(), "main")
+          vertex_shader_(*device_, code_mesh_triangle_lines_vert(), VK_SHADER_STAGE_VERTEX_BIT),
+          geometry_shader_(*device_, code_mesh_triangle_lines_geom(), VK_SHADER_STAGE_GEOMETRY_BIT),
+          fragment_shader_(*device_, code_mesh_triangle_lines_frag(), VK_SHADER_STAGE_FRAGMENT_BIT)
 {
 }
 

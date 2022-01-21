@@ -60,7 +60,7 @@ struct ComputePipelineCreateInfo
         // required
         VkDevice device = VK_NULL_HANDLE;
         VkPipelineLayout pipeline_layout = VK_NULL_HANDLE;
-        const ComputeShader* shader = nullptr;
+        const Shader* shader = nullptr;
 
         // optional
         const SpecializationConstant* constants = nullptr;

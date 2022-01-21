@@ -34,10 +34,10 @@ class VolumeProgram final
         vulkan::handle::DescriptorSetLayout descriptor_set_layout_image_;
         vulkan::handle::PipelineLayout pipeline_layout_image_fragments_;
         vulkan::handle::PipelineLayout pipeline_layout_fragments_;
-        vulkan::VertexShader vertex_shader_;
-        vulkan::FragmentShader fragment_shader_image_;
-        vulkan::FragmentShader fragment_shader_image_fragments_;
-        vulkan::FragmentShader fragment_shader_fragments_;
+        vulkan::Shader vertex_shader_;
+        vulkan::Shader fragment_shader_image_;
+        vulkan::Shader fragment_shader_image_fragments_;
+        vulkan::Shader fragment_shader_fragments_;
 
 public:
         enum class PipelineLayoutType

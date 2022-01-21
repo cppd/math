@@ -179,7 +179,7 @@ CopyInputProgram::CopyInputProgram(const VkDevice device)
                   vulkan::create_descriptor_set_layout(device, CopyInputMemory::descriptor_set_layout_bindings())),
           pipeline_layout_(
                   vulkan::create_pipeline_layout(device, {CopyInputMemory::set_number()}, {descriptor_set_layout_})),
-          shader_(device, code_copy_input_comp(), "main")
+          shader_(device, code_copy_input_comp(), VK_SHADER_STAGE_COMPUTE_BIT)
 {
 }
 
