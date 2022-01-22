@@ -88,8 +88,8 @@ public:
 
 AccelerationStructure create_bottom_level_acceleration_structure(
         const vulkan::Device& device,
-        const vulkan::CommandPool& graphics_command_pool,
-        const vulkan::Queue& graphics_queue,
+        const vulkan::CommandPool& compute_command_pool,
+        const vulkan::Queue& compute_queue,
         const std::vector<std::uint32_t>& family_indices)
 {
         const std::vector<Vector3f> vertices = {{Vector3f{0, 1, 0}}, {Vector3f{-1, 0, 0}}, {Vector3f{1, 0, 0}}};
@@ -190,13 +190,13 @@ AccelerationStructure create_bottom_level_acceleration_structure(
 
                 const std::vector<VkAccelerationStructureBuildRangeInfoKHR*> build_range_infos = {&build_range_info};
 
-                vulkan::handle::CommandBuffer command_buffer(device, graphics_command_pool);
+                vulkan::handle::CommandBuffer command_buffer(device, compute_command_pool);
 
                 begin_commands(command_buffer);
 
                 vkCmdBuildAccelerationStructuresKHR(command_buffer, 1, &build_geometry_info, build_range_infos.data());
 
-                end_commands(graphics_queue, command_buffer);
+                end_commands(compute_queue, command_buffer);
         }
 
         return AccelerationStructure(
@@ -205,8 +205,8 @@ AccelerationStructure create_bottom_level_acceleration_structure(
 
 AccelerationStructure create_top_level_acceleration_structure(
         const vulkan::Device& device,
-        const vulkan::CommandPool& graphics_command_pool,
-        const vulkan::Queue& graphics_queue,
+        const vulkan::CommandPool& compute_command_pool,
+        const vulkan::Queue& compute_queue,
         const std::vector<std::uint32_t>& family_indices,
         const AccelerationStructure& bottom_level_acceleration_structure)
 {
@@ -290,13 +290,13 @@ AccelerationStructure create_top_level_acceleration_structure(
 
                 const std::vector<VkAccelerationStructureBuildRangeInfoKHR*> build_range_infos = {&build_range_info};
 
-                vulkan::handle::CommandBuffer command_buffer(device, graphics_command_pool);
+                vulkan::handle::CommandBuffer command_buffer(device, compute_command_pool);
 
                 begin_commands(command_buffer);
 
                 vkCmdBuildAccelerationStructuresKHR(command_buffer, 1, &build_geometry_info, build_range_infos.data());
 
-                end_commands(graphics_queue, command_buffer);
+                end_commands(compute_queue, command_buffer);
         }
 
         return AccelerationStructure(
@@ -306,14 +306,13 @@ AccelerationStructure create_top_level_acceleration_structure(
 
 void create_ray_tracing_data(
         const vulkan::Device* const device,
-        const vulkan::CommandPool* const graphics_command_pool,
-        const vulkan::Queue* const graphics_queue)
+        const vulkan::CommandPool* const compute_command_pool,
+        const vulkan::Queue* const compute_queue)
 {
         const AccelerationStructure bottom_level = create_bottom_level_acceleration_structure(
-                *device, *graphics_command_pool, *graphics_queue, {graphics_command_pool->family_index()});
+                *device, *compute_command_pool, *compute_queue, {compute_command_pool->family_index()});
 
         create_top_level_acceleration_structure(
-                *device, *graphics_command_pool, *graphics_queue, {graphics_command_pool->family_index()},
-                bottom_level);
+                *device, *compute_command_pool, *compute_queue, {compute_command_pool->family_index()}, bottom_level);
 }
 }

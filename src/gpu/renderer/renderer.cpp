@@ -65,6 +65,8 @@ class Impl final : public Renderer, RendererProcessEvents
         const vulkan::Queue* const graphics_queue_;
         const vulkan::CommandPool* const transfer_command_pool_;
         const vulkan::Queue* const transfer_queue_;
+        const vulkan::CommandPool* const compute_command_pool_;
+        const vulkan::Queue* const compute_queue_;
 
         const RenderBuffers3D* render_buffers_ = nullptr;
         const vulkan::ImageWithMemory* object_image_ = nullptr;
@@ -404,6 +406,8 @@ public:
              const vulkan::Queue* const graphics_queue,
              const vulkan::CommandPool* const transfer_command_pool,
              const vulkan::Queue* const transfer_queue,
+             const vulkan::CommandPool* const compute_command_pool,
+             const vulkan::Queue* const compute_queue,
              const bool sample_shading,
              const bool sampler_anisotropy)
                 : device_(device),
@@ -411,6 +415,8 @@ public:
                   graphics_queue_(graphics_queue),
                   transfer_command_pool_(transfer_command_pool),
                   transfer_queue_(transfer_queue),
+                  compute_command_pool_(compute_command_pool),
+                  compute_queue_(compute_queue),
                   shader_buffers_(*device_, {graphics_queue_->family_index()}),
                   ggx_f1_albedo_(
                           *device_,
@@ -441,7 +447,7 @@ public:
         {
                 if (ray_tracing)
                 {
-                        create_ray_tracing_data(device, graphics_command_pool, graphics_queue);
+                        create_ray_tracing_data(device_, compute_command_pool_, compute_queue_);
                 }
         }
 
@@ -470,6 +476,8 @@ std::unique_ptr<Renderer> create_renderer(
         const vulkan::Queue* const graphics_queue,
         const vulkan::CommandPool* const transfer_command_pool,
         const vulkan::Queue* const transfer_queue,
+        const vulkan::CommandPool* const compute_command_pool,
+        const vulkan::Queue* const compute_queue,
         const bool sample_shading,
         const bool sampler_anisotropy)
 {
@@ -478,6 +486,6 @@ std::unique_ptr<Renderer> create_renderer(
 
         return std::make_unique<Impl>(
                 ray_tracing, device, graphics_command_pool, graphics_queue, transfer_command_pool, transfer_queue,
-                sample_shading, sampler_anisotropy);
+                compute_command_pool, compute_queue, sample_shading, sampler_anisotropy);
 }
 }

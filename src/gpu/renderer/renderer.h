@@ -59,6 +59,8 @@ std::unique_ptr<Renderer> create_renderer(
         const vulkan::Queue* graphics_queue,
         const vulkan::CommandPool* transfer_command_pool,
         const vulkan::Queue* transfer_queue,
+        const vulkan::CommandPool* compute_command_pool,
+        const vulkan::Queue* compute_queue,
         bool sample_shading,
         bool sampler_anisotropy);
 }

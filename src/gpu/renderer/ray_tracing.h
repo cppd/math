@@ -25,6 +25,6 @@ namespace ns::gpu::renderer
 {
 void create_ray_tracing_data(
         const vulkan::Device* device,
-        const vulkan::CommandPool* graphics_command_pool,
-        const vulkan::Queue* graphics_queue);
+        const vulkan::CommandPool* compute_command_pool,
+        const vulkan::Queue* compute_queue);
 }

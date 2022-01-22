@@ -363,6 +363,8 @@ public:
                           &device_graphics_.graphics_compute_queues()[0],
                           &transfer_command_pool_,
                           &device_graphics_.transfer_queue(),
+                          &compute_command_pool_,
+                          &device_graphics_.compute_queue(),
                           SAMPLE_RATE_SHADING,
                           SAMPLER_ANISOTROPY)),
                   text_(gpu::text_writer::create_view(
