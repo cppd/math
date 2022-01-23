@@ -264,6 +264,15 @@ Pipeline::Pipeline(const VkDevice device, const VkComputePipelineCreateInfo& cre
         VULKAN_CHECK(vkCreateComputePipelines(device, PIPELINE_CACHE, 1, &create_info, nullptr, &pipeline_));
 }
 
+Pipeline::Pipeline(const VkDevice device, const VkRayTracingPipelineCreateInfoKHR& create_info) : device_(device)
+{
+        static constexpr VkDeferredOperationKHR DEFERRED_OPERATION = VK_NULL_HANDLE;
+        static constexpr VkPipelineCache PIPELINE_CACHE = VK_NULL_HANDLE;
+
+        VULKAN_CHECK(vkCreateRayTracingPipelinesKHR(
+                device, DEFERRED_OPERATION, PIPELINE_CACHE, 1, &create_info, nullptr, &pipeline_));
+}
+
 //
 
 void Framebuffer::destroy() noexcept

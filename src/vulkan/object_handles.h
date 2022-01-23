@@ -212,6 +212,7 @@ public:
 
         Pipeline(VkDevice device, const VkGraphicsPipelineCreateInfo& create_info);
         Pipeline(VkDevice device, const VkComputePipelineCreateInfo& create_info);
+        Pipeline(VkDevice device, const VkRayTracingPipelineCreateInfoKHR& create_info);
 };
 
 class Framebuffer final
