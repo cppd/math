@@ -55,6 +55,8 @@ struct GraphicsPipelineCreateInfo
 
 handle::Pipeline create_graphics_pipeline(const GraphicsPipelineCreateInfo& info);
 
+//
+
 struct ComputePipelineCreateInfo
 {
         // required
@@ -67,4 +69,20 @@ struct ComputePipelineCreateInfo
 };
 
 handle::Pipeline create_compute_pipeline(const ComputePipelineCreateInfo& info);
+
+//
+
+struct RayTracingPipelineCreateInfo
+{
+        // required
+        VkDevice device = VK_NULL_HANDLE;
+        VkPipelineLayout pipeline_layout = VK_NULL_HANDLE;
+        const std::vector<const Shader*>* shaders = nullptr;
+        const std::vector<VkRayTracingShaderGroupCreateInfoKHR>* shader_groups = nullptr;
+
+        // optional
+        const std::vector<const SpecializationConstant*>* constants = nullptr;
+};
+
+handle::Pipeline create_ray_tracing_pipeline(const RayTracingPipelineCreateInfo& info);
 }

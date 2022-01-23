@@ -272,4 +272,39 @@ handle::Pipeline create_compute_pipeline(const ComputePipelineCreateInfo& info)
 
         return handle::Pipeline(info.device, create_info);
 }
+
+handle::Pipeline create_ray_tracing_pipeline(const RayTracingPipelineCreateInfo& info)
+{
+        if (info.device == VK_NULL_HANDLE || info.pipeline_layout == VK_NULL_HANDLE || !info.shaders
+            || !info.shader_groups)
+        {
+                error("No required data to create ray tracing pipeline");
+        }
+
+        std::vector<VkPipelineShaderStageCreateInfo> shader_stage_info;
+        std::vector<std::unique_ptr<VkSpecializationInfo>> specialization_info;
+        pipeline_shader_stage_create_info(*info.shaders, *info.constants, &shader_stage_info, &specialization_info);
+
+        std::vector<VkRayTracingShaderGroupCreateInfoKHR> group_info = *info.shader_groups;
+        for (VkRayTracingShaderGroupCreateInfoKHR& v : group_info)
+        {
+                v.sType = VK_STRUCTURE_TYPE_RAY_TRACING_SHADER_GROUP_CREATE_INFO_KHR;
+                v.pNext = nullptr;
+                ASSERT(v.generalShader == VK_SHADER_UNUSED_KHR || v.generalShader < shader_stage_info.size());
+                ASSERT(v.closestHitShader == VK_SHADER_UNUSED_KHR || v.closestHitShader < shader_stage_info.size());
+                ASSERT(v.anyHitShader == VK_SHADER_UNUSED_KHR || v.anyHitShader < shader_stage_info.size());
+                ASSERT(v.intersectionShader == VK_SHADER_UNUSED_KHR || v.intersectionShader < shader_stage_info.size());
+        }
+
+        VkRayTracingPipelineCreateInfoKHR create_info = {};
+        create_info.sType = VK_STRUCTURE_TYPE_RAY_TRACING_PIPELINE_CREATE_INFO_KHR;
+        create_info.stageCount = shader_stage_info.size();
+        create_info.pStages = shader_stage_info.data();
+        create_info.groupCount = group_info.size();
+        create_info.pGroups = group_info.data();
+        create_info.maxPipelineRayRecursionDepth = 1;
+        create_info.layout = info.pipeline_layout;
+
+        return handle::Pipeline(info.device, create_info);
+}
 }
