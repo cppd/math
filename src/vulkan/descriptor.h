@@ -80,14 +80,13 @@ public:
         std::uint32_t descriptor_set_count() const;
         const VkDescriptorSet& descriptor_set(std::uint32_t index) const;
 
-        void update_descriptor_set(
-                std::uint32_t index,
-                const std::vector<std::uint32_t>& bindings,
-                const std::vector<std::variant<VkDescriptorBufferInfo, VkDescriptorImageInfo>>& descriptor_infos) const;
+        using Info = std::variant<VkDescriptorBufferInfo, VkDescriptorImageInfo, VkAccelerationStructureKHR>;
 
         void update_descriptor_set(
                 std::uint32_t index,
-                std::uint32_t binding,
-                const std::variant<VkDescriptorBufferInfo, VkDescriptorImageInfo>& info) const;
+                const std::vector<std::uint32_t>& bindings,
+                const std::vector<Info>& descriptor_infos) const;
+
+        void update_descriptor_set(std::uint32_t index, std::uint32_t binding, const Info& info) const;
 };
 }

@@ -183,7 +183,7 @@ SharedMemory::SharedMemory(
         ASSERT(ggx_f1_albedo_cosine_weighted_average.has_usage(VK_IMAGE_USAGE_SAMPLED_BIT));
         ASSERT(ggx_f1_albedo_cosine_weighted_average.sample_count() == VK_SAMPLE_COUNT_1_BIT);
 
-        std::vector<std::variant<VkDescriptorBufferInfo, VkDescriptorImageInfo>> infos;
+        std::vector<vulkan::Descriptors::Info> infos;
         std::vector<std::uint32_t> bindings;
 
         {
@@ -274,7 +274,7 @@ void SharedMemory::set_transparency(
         ASSERT(counters.has_usage(VK_BUFFER_USAGE_STORAGE_BUFFER_BIT));
         ASSERT(nodes.has_usage(VK_BUFFER_USAGE_STORAGE_BUFFER_BIT));
 
-        std::vector<std::variant<VkDescriptorBufferInfo, VkDescriptorImageInfo>> infos;
+        std::vector<vulkan::Descriptors::Info> infos;
         std::vector<std::uint32_t> bindings;
 
         {
@@ -353,7 +353,7 @@ vulkan::Descriptors MeshMemory::create(
         vulkan::Descriptors descriptors(
                 vulkan::Descriptors(device, coordinates.size(), descriptor_set_layout, descriptor_set_layout_bindings));
 
-        std::vector<std::variant<VkDescriptorBufferInfo, VkDescriptorImageInfo>> infos;
+        std::vector<vulkan::Descriptors::Info> infos;
         std::vector<std::uint32_t> bindings;
 
         for (std::size_t i = 0; i < coordinates.size(); ++i)
@@ -427,7 +427,7 @@ vulkan::Descriptors MaterialMemory::create(
         vulkan::Descriptors descriptors(
                 vulkan::Descriptors(device, materials.size(), descriptor_set_layout, descriptor_set_layout_bindings));
 
-        std::vector<std::variant<VkDescriptorBufferInfo, VkDescriptorImageInfo>> infos;
+        std::vector<vulkan::Descriptors::Info> infos;
         std::vector<std::uint32_t> bindings;
 
         for (std::size_t i = 0; i < materials.size(); ++i)

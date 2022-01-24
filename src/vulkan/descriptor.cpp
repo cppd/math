@@ -60,40 +60,47 @@ handle::DescriptorPool create_descriptor_pool(
         return handle::DescriptorPool(device, create_info);
 }
 
-VkWriteDescriptorSet create_write_descriptor_set(
+void write_descriptor_set(
         const VkDescriptorSet descriptor_set,
         const VkDescriptorSetLayoutBinding& descriptor_set_layout_binding,
-        const std::variant<VkDescriptorBufferInfo, VkDescriptorImageInfo>& descriptor_info)
+        const Descriptors::Info& info,
+        VkWriteDescriptorSet* const write,
+        VkWriteDescriptorSetAccelerationStructureKHR* const write_as)
 {
-        VkWriteDescriptorSet write = {};
-        write.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
-
-        write.dstSet = descriptor_set;
-        write.dstBinding = descriptor_set_layout_binding.binding;
-        write.dstArrayElement = 0;
-
-        write.descriptorType = descriptor_set_layout_binding.descriptorType;
-        write.descriptorCount = descriptor_set_layout_binding.descriptorCount;
+        *write = {};
+        write->sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+        write->dstSet = descriptor_set;
+        write->dstBinding = descriptor_set_layout_binding.binding;
+        write->dstArrayElement = 0;
+        write->descriptorType = descriptor_set_layout_binding.descriptorType;
+        write->descriptorCount = descriptor_set_layout_binding.descriptorCount;
+        ASSERT(write->descriptorCount == 1);
 
         const auto visitors = Visitors{
-                [&](const VkDescriptorBufferInfo& info)
+                [&](const VkDescriptorBufferInfo& buffer_info)
                 {
                         ASSERT(descriptor_set_layout_binding.descriptorType == VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER
                                || descriptor_set_layout_binding.descriptorType == VK_DESCRIPTOR_TYPE_STORAGE_BUFFER);
-                        write.pBufferInfo = &info;
+                        write->pBufferInfo = &buffer_info;
                 },
-                [&](const VkDescriptorImageInfo& info)
+                [&](const VkDescriptorImageInfo& image_info)
                 {
                         ASSERT(descriptor_set_layout_binding.descriptorType == VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER
                                || descriptor_set_layout_binding.descriptorType == VK_DESCRIPTOR_TYPE_STORAGE_IMAGE);
-                        write.pImageInfo = &info;
+                        write->pImageInfo = &image_info;
+                },
+                [&](const VkAccelerationStructureKHR& acceleration_structure)
+                {
+                        ASSERT(descriptor_set_layout_binding.descriptorType
+                               == VK_DESCRIPTOR_TYPE_ACCELERATION_STRUCTURE_KHR);
+                        *write_as = {};
+                        write_as->sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET_ACCELERATION_STRUCTURE_KHR;
+                        write_as->accelerationStructureCount = 1;
+                        write_as->pAccelerationStructures = &acceleration_structure;
+                        write->pNext = write_as;
                 }};
 
-        std::visit(visitors, descriptor_info);
-
-        return write;
-
-        // write.pTexelBufferView = nullptr;
+        std::visit(visitors, info);
 }
 
 std::unordered_map<std::uint32_t, std::uint32_t> create_binding_map(
@@ -175,15 +182,13 @@ const VkDescriptorSet& Descriptors::descriptor_set(const std::uint32_t index) co
         return descriptor_sets_[index];
 }
 
-void Descriptors::update_descriptor_set(
-        const std::uint32_t index,
-        const std::uint32_t binding,
-        const std::variant<VkDescriptorBufferInfo, VkDescriptorImageInfo>& info) const
+void Descriptors::update_descriptor_set(const std::uint32_t index, const std::uint32_t binding, const Info& info) const
 {
         ASSERT(index < descriptor_sets_.count());
 
-        const VkWriteDescriptorSet write =
-                create_write_descriptor_set(descriptor_sets_[index], layout_binding(binding), info);
+        VkWriteDescriptorSet write;
+        VkWriteDescriptorSetAccelerationStructureKHR write_as;
+        write_descriptor_set(descriptor_sets_[index], layout_binding(binding), info, &write, &write_as);
 
         vkUpdateDescriptorSets(device_, 1, &write, 0, nullptr);
 }
@@ -191,7 +196,7 @@ void Descriptors::update_descriptor_set(
 void Descriptors::update_descriptor_set(
         const std::uint32_t index,
         const std::vector<std::uint32_t>& bindings,
-        const std::vector<std::variant<VkDescriptorBufferInfo, VkDescriptorImageInfo>>& descriptor_infos) const
+        const std::vector<Info>& descriptor_infos) const
 {
         ASSERT(bindings.size() == descriptor_infos.size());
         ASSERT(index < descriptor_sets_.count());
@@ -199,10 +204,11 @@ void Descriptors::update_descriptor_set(
         const VkDescriptorSet descriptor_set = descriptor_sets_[index];
 
         std::vector<VkWriteDescriptorSet> write(bindings.size());
+        std::vector<VkWriteDescriptorSetAccelerationStructureKHR> write_as(bindings.size());
         for (std::size_t i = 0; i < bindings.size(); ++i)
         {
-                write[i] =
-                        create_write_descriptor_set(descriptor_set, layout_binding(bindings[i]), descriptor_infos[i]);
+                write_descriptor_set(
+                        descriptor_set, layout_binding(bindings[i]), descriptor_infos[i], &write[i], &write_as[i]);
         }
 
         vkUpdateDescriptorSets(device_, write.size(), write.data(), 0, nullptr);

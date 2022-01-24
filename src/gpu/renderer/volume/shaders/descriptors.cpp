@@ -100,7 +100,7 @@ VolumeSharedMemory::VolumeSharedMemory(
         ASSERT(ggx_f1_albedo_cosine_weighted_average.has_usage(VK_IMAGE_USAGE_SAMPLED_BIT));
         ASSERT(ggx_f1_albedo_cosine_weighted_average.sample_count() == VK_SAMPLE_COUNT_1_BIT);
 
-        std::vector<std::variant<VkDescriptorBufferInfo, VkDescriptorImageInfo>> infos;
+        std::vector<vulkan::Descriptors::Info> infos;
         std::vector<std::uint32_t> bindings;
 
         {
@@ -160,7 +160,7 @@ void VolumeSharedMemory::set_transparency(const vulkan::ImageView& heads, const 
         ASSERT(heads.has_usage(VK_IMAGE_USAGE_STORAGE_BIT));
         ASSERT(nodes.has_usage(VK_BUFFER_USAGE_STORAGE_BUFFER_BIT));
 
-        std::vector<std::variant<VkDescriptorBufferInfo, VkDescriptorImageInfo>> infos;
+        std::vector<vulkan::Descriptors::Info> infos;
         std::vector<std::uint32_t> bindings;
 
         {
@@ -245,7 +245,7 @@ vulkan::Descriptors VolumeImageMemory::create(
         vulkan::Descriptors descriptors(
                 vulkan::Descriptors(device, 1, descriptor_set_layout, descriptor_set_layout_bindings));
 
-        std::vector<std::variant<VkDescriptorBufferInfo, VkDescriptorImageInfo>> infos;
+        std::vector<vulkan::Descriptors::Info> infos;
         std::vector<std::uint32_t> bindings;
 
         {
