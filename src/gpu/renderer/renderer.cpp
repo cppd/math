@@ -19,7 +19,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "buffer_commands.h"
 #include "functionality.h"
-#include "ray_tracing.h"
 #include "renderer_draw.h"
 #include "renderer_objects.h"
 #include "renderer_process.h"
@@ -32,6 +31,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "buffers/transparency.h"
 #include "mesh/object.h"
 #include "mesh/renderer.h"
+#include "ray_tracing/ray_tracing.h"
 #include "volume/object.h"
 #include "volume/renderer.h"
 
