@@ -19,8 +19,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <src/vulkan/device.h>
 
-#include <vector>
-
 namespace ns::gpu::renderer
 {
 void create_ray_tracing_data(
