@@ -28,12 +28,10 @@ namespace
 {
 void pipeline_shader_stage_create_info(
         const std::vector<const Shader*>& shaders,
-        const std::vector<const SpecializationConstant*>& constants,
+        const std::vector<const SpecializationConstant*>* const constants,
         std::vector<VkPipelineShaderStageCreateInfo>* const create_info,
         std::vector<std::unique_ptr<VkSpecializationInfo>>* const specialization_info)
 {
-        ASSERT(shaders.size() == constants.size());
-
         create_info->resize(shaders.size());
         specialization_info->clear();
 
@@ -47,8 +45,18 @@ void pipeline_shader_stage_create_info(
                 (*create_info)[i].stage = shader->stage();
                 (*create_info)[i].module = shader->module();
                 (*create_info)[i].pName = shader->entry_point_name();
+        }
 
-                const SpecializationConstant* const constant = constants[i];
+        if (!constants)
+        {
+                return;
+        }
+
+        ASSERT(shaders.size() == constants->size());
+
+        for (std::size_t i = 0; i < shaders.size(); ++i)
+        {
+                const SpecializationConstant* const constant = (*constants)[i];
                 if (constant)
                 {
                         specialization_info->push_back(std::make_unique<VkSpecializationInfo>());
@@ -77,7 +85,7 @@ handle::Pipeline create_graphics_pipeline(const GraphicsPipelineCreateInfo& info
         std::vector<VkPipelineShaderStageCreateInfo> pipeline_shader_stage_info;
         std::vector<std::unique_ptr<VkSpecializationInfo>> specialization_info;
         pipeline_shader_stage_create_info(
-                *info.shaders, *info.constants, &pipeline_shader_stage_info, &specialization_info);
+                *info.shaders, info.constants, &pipeline_shader_stage_info, &specialization_info);
 
         VkPipelineVertexInputStateCreateInfo vertex_input_state_info = {};
         vertex_input_state_info.sType = VK_STRUCTURE_TYPE_PIPELINE_VERTEX_INPUT_STATE_CREATE_INFO;
@@ -283,7 +291,7 @@ handle::Pipeline create_ray_tracing_pipeline(const RayTracingPipelineCreateInfo&
 
         std::vector<VkPipelineShaderStageCreateInfo> shader_stage_info;
         std::vector<std::unique_ptr<VkSpecializationInfo>> specialization_info;
-        pipeline_shader_stage_create_info(*info.shaders, *info.constants, &shader_stage_info, &specialization_info);
+        pipeline_shader_stage_create_info(*info.shaders, info.constants, &shader_stage_info, &specialization_info);
 
         std::vector<VkRayTracingShaderGroupCreateInfoKHR> group_info = *info.shader_groups;
         for (VkRayTracingShaderGroupCreateInfoKHR& v : group_info)
