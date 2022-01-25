@@ -18,6 +18,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "ray_tracing.h"
 
 #include "acceleration_structure.h"
+#include "descriptors.h"
 #include "pipeline.h"
 
 namespace ns::gpu::renderer
@@ -33,8 +34,14 @@ void create_ray_tracing_data(
         const AccelerationStructure top_level = create_top_level_acceleration_structure(
                 *device, *compute_command_pool, *compute_queue, {compute_command_pool->family_index()}, bottom_level);
 
-        const RayTracingPipeline pipeline(*device);
+        const RayTracingPipeline ray_tracing_pipeline(*device);
 
-        pipeline.create_pipeline();
+        const RayTracingMemory memory(
+                *device, ray_tracing_pipeline.descriptor_set_layout(),
+                ray_tracing_pipeline.descriptor_set_layout_bindings());
+
+        memory.set_acceleration_structure(top_level.handle());
+
+        const vulkan::handle::Pipeline pipeline = ray_tracing_pipeline.create_pipeline();
 }
 }
