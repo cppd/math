@@ -37,6 +37,11 @@ public:
                 vulkan::BufferWithMemory&& buffer,
                 vulkan::handle::AccelerationStructureKHR&& handle);
 
+        VkAccelerationStructureKHR handle() const
+        {
+                return acceleration_structure_;
+        }
+
         VkDeviceAddress device_address() const
         {
                 return device_address_;
