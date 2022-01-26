@@ -21,8 +21,41 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "descriptors.h"
 #include "program.h"
 
+#include <src/vulkan/error.h>
+#include <src/vulkan/queue.h>
+
 namespace ns::gpu::renderer
 {
+namespace
+{
+vulkan::handle::CommandBuffer create_command_buffer(
+        const vulkan::Device& device,
+        const vulkan::CommandPool& compute_command_pool,
+        const RayTracingProgram& program,
+        const RayTracingMemory& memory)
+{
+        vulkan::handle::CommandBuffer command_buffer(device, compute_command_pool);
+
+        VkCommandBufferBeginInfo command_buffer_info = {};
+        command_buffer_info.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
+        command_buffer_info.flags = VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT;
+
+        VULKAN_CHECK(vkBeginCommandBuffer(command_buffer, &command_buffer_info));
+
+        vkCmdBindPipeline(command_buffer, VK_PIPELINE_BIND_POINT_RAY_TRACING_KHR, program.pipeline());
+
+        vkCmdBindDescriptorSets(
+                command_buffer, VK_PIPELINE_BIND_POINT_RAY_TRACING_KHR, program.pipeline_layout(), memory.set_number(),
+                1 /*set count*/, &memory.descriptor_set(), 0, nullptr);
+
+        program.command_trace_rays(command_buffer, 1, 1, 1);
+
+        VULKAN_CHECK(vkEndCommandBuffer(command_buffer));
+
+        return command_buffer;
+}
+}
+
 void create_ray_tracing_data(
         const vulkan::Device* const device,
         const vulkan::CommandPool* const compute_command_pool,
@@ -40,5 +73,11 @@ void create_ray_tracing_data(
                 *device, program.descriptor_set_layout(), program.descriptor_set_layout_bindings());
 
         memory.set_acceleration_structure(top_level.handle());
+
+        const vulkan::handle::CommandBuffer command_buffer =
+                create_command_buffer(*device, *compute_command_pool, program, memory);
+
+        vulkan::queue_submit(command_buffer, *compute_queue);
+        VULKAN_CHECK(vkQueueWaitIdle(*compute_queue));
 }
 }
