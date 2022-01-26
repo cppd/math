@@ -157,23 +157,14 @@ void RayTracingProgram::create(const vulkan::Device& device, const std::vector<s
         callable_shader_binding_table_ = {};
 }
 
-const VkStridedDeviceAddressRegionKHR& RayTracingProgram::raygen_shader_binding_table() const
+void RayTracingProgram::command_trace_rays(
+        const VkCommandBuffer command_buffer,
+        const unsigned width,
+        const unsigned height,
+        const unsigned depth) const
 {
-        return raygen_shader_binding_table_;
-}
-
-const VkStridedDeviceAddressRegionKHR& RayTracingProgram::miss_shader_binding_table() const
-{
-        return miss_shader_binding_table_;
-}
-
-const VkStridedDeviceAddressRegionKHR& RayTracingProgram::hit_shader_binding_table() const
-{
-        return hit_shader_binding_table_;
-}
-
-const VkStridedDeviceAddressRegionKHR& RayTracingProgram::callable_shader_binding_table() const
-{
-        return callable_shader_binding_table_;
+        vkCmdTraceRaysKHR(
+                command_buffer, &raygen_shader_binding_table_, &miss_shader_binding_table_, &hit_shader_binding_table_,
+                &callable_shader_binding_table_, width, height, depth);
 }
 }

@@ -60,9 +60,6 @@ public:
 
         VkPipelineLayout pipeline_layout() const;
 
-        const VkStridedDeviceAddressRegionKHR& raygen_shader_binding_table() const;
-        const VkStridedDeviceAddressRegionKHR& miss_shader_binding_table() const;
-        const VkStridedDeviceAddressRegionKHR& hit_shader_binding_table() const;
-        const VkStridedDeviceAddressRegionKHR& callable_shader_binding_table() const;
+        void command_trace_rays(VkCommandBuffer command_buffer, unsigned width, unsigned height, unsigned depth) const;
 };
 }
