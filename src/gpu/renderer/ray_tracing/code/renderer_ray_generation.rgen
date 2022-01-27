@@ -19,7 +19,9 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #extension GL_EXT_ray_tracing : enable
 
-layout(binding = 0, set = 0) uniform accelerationStructureEXT acceleration_structure;
+layout(set = 0, binding = 0) uniform accelerationStructureEXT acceleration_structure;
+layout(set = 0, binding = 1, rgba32f) writeonly restrict uniform image2D image;
+
 layout(location = 0) rayPayloadEXT vec3 hit_value;
 
 void main()
@@ -30,10 +32,12 @@ void main()
         const vec2 pixel_center = vec2(gl_LaunchIDEXT.xy) + vec2(0.5);
         const vec2 d = 2 * pixel_center / vec2(gl_LaunchSizeEXT.xy) - 1;
 
-        const vec3 org = vec3(0);
+        const vec3 org = vec3(0, 0, -1);
         const vec3 dir = normalize(vec3(d.x, d.y, 1));
 
         hit_value = vec3(0);
 
         traceRayEXT(acceleration_structure, gl_RayFlagsOpaqueEXT, 0xFF, 0, 0, 0, org, t_min, dir, t_max, 0);
+
+        imageStore(image, ivec2(gl_LaunchIDEXT.xy), vec4(hit_value, 0));
 }

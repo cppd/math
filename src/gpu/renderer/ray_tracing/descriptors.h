@@ -30,6 +30,7 @@ class RayTracingMemory final
         static constexpr int SET_NUMBER = 0;
 
         static constexpr int ACCELERATION_STRUCTURE_BINDING = 0;
+        static constexpr int IMAGE_BINDING = 1;
 
         vulkan::Descriptors descriptors_;
 
@@ -45,5 +46,6 @@ public:
         const VkDescriptorSet& descriptor_set() const;
 
         void set_acceleration_structure(VkAccelerationStructureKHR acceleration_structure) const;
+        void set_image(const vulkan::ImageView& image) const;
 };
 }
