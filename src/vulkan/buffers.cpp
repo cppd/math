@@ -154,6 +154,14 @@ bool BufferWithMemory::host_visible() const
         return (memory_properties_ & VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT) == VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT;
 }
 
+VkDeviceAddress BufferWithMemory::device_address() const
+{
+        VkBufferDeviceAddressInfo info{};
+        info.sType = VK_STRUCTURE_TYPE_BUFFER_DEVICE_ADDRESS_INFO;
+        info.buffer = buffer_;
+        return vkGetBufferDeviceAddress(buffer_.device(), &info);
+}
+
 //
 
 BufferMapper::BufferMapper(const BufferWithMemory& buffer, const VkDeviceSize offset, const VkDeviceSize size)

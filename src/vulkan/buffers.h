@@ -78,6 +78,8 @@ public:
 
         VkMemoryPropertyFlags memory_properties() const;
         bool host_visible() const;
+
+        VkDeviceAddress device_address() const;
 };
 
 class BufferMapper final

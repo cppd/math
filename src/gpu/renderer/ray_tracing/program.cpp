@@ -28,17 +28,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 namespace ns::gpu::renderer
 {
-namespace
-{
-VkDeviceAddress buffer_device_address(const VkDevice device, const VkBuffer buffer)
-{
-        VkBufferDeviceAddressInfo info{};
-        info.sType = VK_STRUCTURE_TYPE_BUFFER_DEVICE_ADDRESS_INFO;
-        info.buffer = buffer;
-        return vkGetBufferDeviceAddress(device, &info);
-}
-}
-
 std::vector<VkDescriptorSetLayoutBinding> RayTracingProgram::descriptor_set_layout_bindings()
 {
         return RayTracingMemory::descriptor_set_layout_bindings();
@@ -139,18 +128,15 @@ void RayTracingProgram::create(const vulkan::Device& device, const std::vector<s
         vulkan::BufferMapper(*miss_shader_binding_table_buffer_)
                 .write(0, handle_size, shader_group_handles.data() + 2 * handle_size);
 
-        raygen_shader_binding_table_.deviceAddress =
-                buffer_device_address(device, raygen_shader_binding_table_buffer_->buffer());
+        raygen_shader_binding_table_.deviceAddress = raygen_shader_binding_table_buffer_->device_address();
         raygen_shader_binding_table_.stride = handle_size;
         raygen_shader_binding_table_.size = handle_size;
 
-        miss_shader_binding_table_.deviceAddress =
-                buffer_device_address(device, miss_shader_binding_table_buffer_->buffer());
+        miss_shader_binding_table_.deviceAddress = miss_shader_binding_table_buffer_->device_address();
         miss_shader_binding_table_.stride = handle_size;
         miss_shader_binding_table_.size = handle_size;
 
-        hit_shader_binding_table_.deviceAddress =
-                buffer_device_address(device, hit_shader_binding_table_buffer_->buffer());
+        hit_shader_binding_table_.deviceAddress = hit_shader_binding_table_buffer_->device_address();
         hit_shader_binding_table_.stride = handle_size;
         hit_shader_binding_table_.size = handle_size;
 

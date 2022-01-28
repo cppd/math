@@ -27,14 +27,6 @@ namespace ns::gpu::renderer
 {
 namespace
 {
-VkDeviceAddress buffer_device_address(const VkDevice device, const VkBuffer buffer)
-{
-        VkBufferDeviceAddressInfo info{};
-        info.sType = VK_STRUCTURE_TYPE_BUFFER_DEVICE_ADDRESS_INFO;
-        info.buffer = buffer;
-        return vkGetBufferDeviceAddress(device, &info);
-}
-
 VkDeviceAddress acceleration_structure_device_address(
         const VkDevice device,
         const VkAccelerationStructureKHR acceleration_structure)
@@ -108,9 +100,9 @@ AccelerationStructure create_bottom_level_acceleration_structure(
         VkDeviceOrHostAddressConstKHR index_buffer_device_address{};
         VkDeviceOrHostAddressConstKHR transform_buffer_device_address{};
 
-        vertex_buffer_device_address.deviceAddress = buffer_device_address(device, vertex_buffer.buffer());
-        index_buffer_device_address.deviceAddress = buffer_device_address(device, index_buffer.buffer());
-        transform_buffer_device_address.deviceAddress = buffer_device_address(device, transform_matrix_buffer.buffer());
+        vertex_buffer_device_address.deviceAddress = vertex_buffer.device_address();
+        index_buffer_device_address.deviceAddress = index_buffer.device_address();
+        transform_buffer_device_address.deviceAddress = transform_matrix_buffer.device_address();
 
         VkAccelerationStructureGeometryKHR geometry{};
         geometry.sType = VK_STRUCTURE_TYPE_ACCELERATION_STRUCTURE_GEOMETRY_KHR;
@@ -167,7 +159,7 @@ AccelerationStructure create_bottom_level_acceleration_structure(
                 build_geometry_info.dstAccelerationStructure = acceleration_structure;
                 build_geometry_info.geometryCount = 1;
                 build_geometry_info.pGeometries = &geometry;
-                build_geometry_info.scratchData.deviceAddress = buffer_device_address(device, scratch_buffer.buffer());
+                build_geometry_info.scratchData.deviceAddress = scratch_buffer.device_address();
 
                 VkAccelerationStructureBuildRangeInfoKHR build_range_info{};
                 build_range_info.primitiveCount = geometry_primitive_count[0];
@@ -215,7 +207,7 @@ AccelerationStructure create_top_level_acceleration_structure(
         vulkan::BufferMapper(instance_buffer).write(instance);
 
         VkDeviceOrHostAddressConstKHR instance_buffer_device_address{};
-        instance_buffer_device_address.deviceAddress = buffer_device_address(device, instance_buffer.buffer());
+        instance_buffer_device_address.deviceAddress = instance_buffer.device_address();
 
         VkAccelerationStructureGeometryKHR geometry{};
         geometry.sType = VK_STRUCTURE_TYPE_ACCELERATION_STRUCTURE_GEOMETRY_KHR;
@@ -267,7 +259,7 @@ AccelerationStructure create_top_level_acceleration_structure(
                 build_geometry_info.dstAccelerationStructure = acceleration_structure;
                 build_geometry_info.geometryCount = 1;
                 build_geometry_info.pGeometries = &geometry;
-                build_geometry_info.scratchData.deviceAddress = buffer_device_address(device, scratch_buffer.buffer());
+                build_geometry_info.scratchData.deviceAddress = scratch_buffer.device_address();
 
                 VkAccelerationStructureBuildRangeInfoKHR build_range_info{};
                 build_range_info.primitiveCount = geometry_primitive_count[0];
