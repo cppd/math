@@ -214,24 +214,35 @@ AccelerationStructure create_top_level_acceleration_structure(
         const vulkan::CommandPool& compute_command_pool,
         const vulkan::Queue& compute_queue,
         const std::vector<std::uint32_t>& family_indices,
-        const AccelerationStructure& bottom_level_acceleration_structure)
+        const std::span<const std::uint64_t>& bottom_level_references)
 {
-        const VkTransformMatrixKHR transform_matrix = {{{1, 0, 0, 0}, {0, 1, 0, 0}, {0, 0, 1, 0}}};
+        if (bottom_level_references.empty())
+        {
+                error("No bottom level acceleration structure references for top level acceleration structure");
+        }
 
-        VkAccelerationStructureInstanceKHR instance{};
-        instance.transform = transform_matrix;
-        instance.instanceCustomIndex = 0;
-        instance.mask = 0xff;
-        instance.instanceShaderBindingTableRecordOffset = 0;
-        instance.flags = VK_GEOMETRY_INSTANCE_TRIANGLE_FACING_CULL_DISABLE_BIT_KHR;
-        instance.accelerationStructureReference = bottom_level_acceleration_structure.device_address();
+        const std::uint32_t geometry_primitive_count = bottom_level_references.size();
+
+        constexpr VkTransformMatrixKHR TRANSFORM = {{{1, 0, 0, 0}, {0, 1, 0, 0}, {0, 0, 1, 0}}};
+
+        std::vector<VkAccelerationStructureInstanceKHR> instances(bottom_level_references.size());
+        for (std::size_t i = 0; i < bottom_level_references.size(); ++i)
+        {
+                instances[i] = {};
+                instances[i].transform = TRANSFORM;
+                instances[i].instanceCustomIndex = 0;
+                instances[i].mask = 0xFF;
+                instances[i].instanceShaderBindingTableRecordOffset = 0;
+                instances[i].flags = VK_GEOMETRY_INSTANCE_TRIANGLE_FACING_CULL_DISABLE_BIT_KHR;
+                instances[i].accelerationStructureReference = bottom_level_references[i];
+        }
 
         vulkan::BufferWithMemory instance_buffer(
                 vulkan::BufferMemoryType::HOST_VISIBLE, device, {compute_queue.family_index()},
                 VK_BUFFER_USAGE_SHADER_DEVICE_ADDRESS_BIT
                         | VK_BUFFER_USAGE_ACCELERATION_STRUCTURE_BUILD_INPUT_READ_ONLY_BIT_KHR,
-                data_size(instance));
-        vulkan::BufferMapper(instance_buffer).write(instance);
+                data_size(instances));
+        vulkan::BufferMapper(instance_buffer).write(instances);
 
         VkDeviceOrHostAddressConstKHR instance_buffer_device_address{};
         instance_buffer_device_address.deviceAddress = instance_buffer.device_address();
@@ -250,8 +261,6 @@ AccelerationStructure create_top_level_acceleration_structure(
         build_geometry_info_sizes.flags = VK_BUILD_ACCELERATION_STRUCTURE_PREFER_FAST_TRACE_BIT_KHR;
         build_geometry_info_sizes.geometryCount = 1;
         build_geometry_info_sizes.pGeometries = &geometry;
-
-        const std::uint32_t geometry_primitive_count = 1;
 
         VkAccelerationStructureBuildSizesInfoKHR build_sizes_info{};
         build_sizes_info.sType = VK_STRUCTURE_TYPE_ACCELERATION_STRUCTURE_BUILD_SIZES_INFO_KHR;

@@ -57,6 +57,46 @@ vulkan::handle::CommandBuffer create_command_buffer(
 
         return command_buffer;
 }
+
+std::vector<AccelerationStructure> create_bottom_level(
+        const vulkan::Device& device,
+        const vulkan::CommandPool& compute_command_pool,
+        const vulkan::Queue& compute_queue)
+{
+        std::vector<AccelerationStructure> bottom_level;
+
+        constexpr std::array VERTICES_0 = std::to_array<Vector3f>({{-0.5, 1, 0}, {-1, 0, 0}, {0, 0, 0}, {-0.5, -1, 0}});
+        constexpr std::array INDICES_0 = std::to_array<std::uint32_t>({0, 1, 2, 1, 2, 3});
+
+        bottom_level.push_back(create_bottom_level_acceleration_structure(
+                device, compute_command_pool, compute_queue, {compute_command_pool.family_index()}, VERTICES_0,
+                INDICES_0, std::nullopt));
+
+        constexpr std::array VERTICES_1 = std::to_array<Vector3f>({{0.5, 1, 0}, {1, 0, 0}, {0, 0, 0}, {0.5, -1, 0}});
+        constexpr std::array INDICES_1 = std::to_array<std::uint32_t>({0, 1, 2, 1, 2, 3});
+
+        bottom_level.push_back(create_bottom_level_acceleration_structure(
+                device, compute_command_pool, compute_queue, {compute_command_pool.family_index()}, VERTICES_1,
+                INDICES_1, std::nullopt));
+
+        return bottom_level;
+}
+
+AccelerationStructure create_top_level(
+        const vulkan::Device& device,
+        const vulkan::CommandPool& compute_command_pool,
+        const vulkan::Queue& compute_queue,
+        const std::vector<AccelerationStructure>& bottom_level)
+{
+        std::vector<std::uint64_t> references;
+        references.reserve(bottom_level.size());
+        for (const AccelerationStructure& v : bottom_level)
+        {
+                references.push_back(v.device_address());
+        }
+        return create_top_level_acceleration_structure(
+                device, compute_command_pool, compute_queue, {compute_command_pool.family_index()}, references);
+}
 }
 
 void create_ray_tracing_data(
@@ -64,17 +104,13 @@ void create_ray_tracing_data(
         const vulkan::CommandPool* const compute_command_pool,
         const vulkan::Queue* const compute_queue)
 {
-        constexpr std::array VERTICES = std::to_array<Vector3f>({{0, 1, 0}, {-1, 0, 0}, {1, 0, 0}, {0, -1, 0}});
-        constexpr std::array INDICES = std::to_array<std::uint32_t>({0, 1, 2, 1, 2, 3});
-
         const RayTracingImage image(1000, 1000, device, compute_command_pool, compute_queue);
 
-        const AccelerationStructure bottom_level = create_bottom_level_acceleration_structure(
-                *device, *compute_command_pool, *compute_queue, {compute_command_pool->family_index()}, VERTICES,
-                INDICES, std::nullopt);
+        const std::vector<AccelerationStructure> bottom_level =
+                create_bottom_level(*device, *compute_command_pool, *compute_queue);
 
-        const AccelerationStructure top_level = create_top_level_acceleration_structure(
-                *device, *compute_command_pool, *compute_queue, {compute_command_pool->family_index()}, bottom_level);
+        const AccelerationStructure top_level =
+                create_top_level(*device, *compute_command_pool, *compute_queue, bottom_level);
 
         const RayTracingProgram program(*device, {compute_command_pool->family_index()});
 

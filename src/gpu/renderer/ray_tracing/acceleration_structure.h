@@ -65,5 +65,5 @@ AccelerationStructure create_top_level_acceleration_structure(
         const vulkan::CommandPool& compute_command_pool,
         const vulkan::Queue& compute_queue,
         const std::vector<std::uint32_t>& family_indices,
-        const AccelerationStructure& bottom_level_acceleration_structure);
+        const std::span<const std::uint64_t>& bottom_level_references);
 }
