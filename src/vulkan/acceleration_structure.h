@@ -17,28 +17,26 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
+#include "buffers.h"
+#include "device.h"
+#include "objects.h"
+
 #include <src/numerical/vector.h>
-#include <src/vulkan/buffers.h>
-#include <src/vulkan/device.h>
-#include <src/vulkan/objects.h>
 
 #include <optional>
 #include <span>
 #include <vector>
 
-namespace ns::gpu::renderer
+namespace ns::vulkan
 {
 class AccelerationStructure final
 {
-        vulkan::BufferWithMemory buffer_;
-        vulkan::handle::AccelerationStructureKHR acceleration_structure_;
+        BufferWithMemory buffer_;
+        handle::AccelerationStructureKHR acceleration_structure_;
         VkDeviceAddress device_address_;
 
 public:
-        AccelerationStructure(
-                const vulkan::Device& device,
-                vulkan::BufferWithMemory&& buffer,
-                vulkan::handle::AccelerationStructureKHR&& handle);
+        AccelerationStructure(BufferWithMemory&& buffer, handle::AccelerationStructureKHR&& handle);
 
         VkAccelerationStructureKHR handle() const
         {
@@ -52,18 +50,18 @@ public:
 };
 
 AccelerationStructure create_bottom_level_acceleration_structure(
-        const vulkan::Device& device,
-        const vulkan::CommandPool& compute_command_pool,
-        const vulkan::Queue& compute_queue,
+        const Device& device,
+        const CommandPool& compute_command_pool,
+        const Queue& compute_queue,
         const std::vector<std::uint32_t>& family_indices,
         const std::span<const Vector3f>& vertices,
         const std::span<const std::uint32_t>& indices,
         const std::optional<VkTransformMatrixKHR>& transform_matrix);
 
 AccelerationStructure create_top_level_acceleration_structure(
-        const vulkan::Device& device,
-        const vulkan::CommandPool& compute_command_pool,
-        const vulkan::Queue& compute_queue,
+        const Device& device,
+        const CommandPool& compute_command_pool,
+        const Queue& compute_queue,
         const std::vector<std::uint32_t>& family_indices,
         const std::span<const std::uint64_t>& bottom_level_references);
 }

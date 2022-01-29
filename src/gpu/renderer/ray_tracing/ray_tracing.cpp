@@ -17,11 +17,11 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "ray_tracing.h"
 
-#include "acceleration_structure.h"
 #include "descriptors.h"
 #include "image.h"
 #include "program.h"
 
+#include <src/vulkan/acceleration_structure.h>
 #include <src/vulkan/error.h>
 #include <src/vulkan/queue.h>
 
@@ -58,12 +58,12 @@ vulkan::handle::CommandBuffer create_command_buffer(
         return command_buffer;
 }
 
-std::vector<AccelerationStructure> create_bottom_level(
+std::vector<vulkan::AccelerationStructure> create_bottom_level(
         const vulkan::Device& device,
         const vulkan::CommandPool& compute_command_pool,
         const vulkan::Queue& compute_queue)
 {
-        std::vector<AccelerationStructure> bottom_level;
+        std::vector<vulkan::AccelerationStructure> bottom_level;
 
         constexpr std::array VERTICES_0 = std::to_array<Vector3f>({{-0.5, 1, 0}, {-1, 0, 0}, {0, 0, 0}, {-0.5, -1, 0}});
         constexpr std::array INDICES_0 = std::to_array<std::uint32_t>({0, 1, 2, 1, 2, 3});
@@ -82,15 +82,15 @@ std::vector<AccelerationStructure> create_bottom_level(
         return bottom_level;
 }
 
-AccelerationStructure create_top_level(
+vulkan::AccelerationStructure create_top_level(
         const vulkan::Device& device,
         const vulkan::CommandPool& compute_command_pool,
         const vulkan::Queue& compute_queue,
-        const std::vector<AccelerationStructure>& bottom_level)
+        const std::vector<vulkan::AccelerationStructure>& bottom_level)
 {
         std::vector<std::uint64_t> references;
         references.reserve(bottom_level.size());
-        for (const AccelerationStructure& v : bottom_level)
+        for (const vulkan::AccelerationStructure& v : bottom_level)
         {
                 references.push_back(v.device_address());
         }
@@ -106,10 +106,10 @@ void create_ray_tracing_data(
 {
         const RayTracingImage image(1000, 1000, device, compute_command_pool, compute_queue);
 
-        const std::vector<AccelerationStructure> bottom_level =
+        const std::vector<vulkan::AccelerationStructure> bottom_level =
                 create_bottom_level(*device, *compute_command_pool, *compute_queue);
 
-        const AccelerationStructure top_level =
+        const vulkan::AccelerationStructure top_level =
                 create_top_level(*device, *compute_command_pool, *compute_queue, bottom_level);
 
         const RayTracingProgram program(*device, {compute_command_pool->family_index()});

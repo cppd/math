@@ -17,13 +17,14 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "acceleration_structure.h"
 
+#include "error.h"
+#include "extensions.h"
+#include "queue.h"
+
 #include <src/com/container.h>
 #include <src/com/print.h>
-#include <src/vulkan/error.h>
-#include <src/vulkan/extensions.h>
-#include <src/vulkan/queue.h>
 
-namespace ns::gpu::renderer
+namespace ns::vulkan
 {
 namespace
 {
@@ -48,22 +49,22 @@ void begin_commands(const VkCommandBuffer command_buffer)
 void end_commands(const VkQueue queue, const VkCommandBuffer command_buffer)
 {
         VULKAN_CHECK(vkEndCommandBuffer(command_buffer));
-        vulkan::queue_submit(command_buffer, queue);
+        queue_submit(command_buffer, queue);
         VULKAN_CHECK(vkQueueWaitIdle(queue));
 }
 
 void build_acceleration_structure(
-        const vulkan::Device& device,
-        const vulkan::CommandPool& compute_command_pool,
-        const vulkan::Queue& compute_queue,
+        const Device& device,
+        const CommandPool& compute_command_pool,
+        const Queue& compute_queue,
         const VkAccelerationStructureBuildSizesInfoKHR& build_sizes_info,
         const VkAccelerationStructureGeometryKHR& geometry,
         const VkAccelerationStructureTypeKHR type,
         const VkAccelerationStructureKHR acceleration_structure,
         const std::uint32_t primitive_count)
 {
-        vulkan::BufferWithMemory scratch_buffer(
-                vulkan::BufferMemoryType::DEVICE_LOCAL, device, {compute_queue.family_index()},
+        const BufferWithMemory scratch_buffer(
+                BufferMemoryType::DEVICE_LOCAL, device, {compute_queue.family_index()},
                 VK_BUFFER_USAGE_SHADER_DEVICE_ADDRESS_BIT | VK_BUFFER_USAGE_STORAGE_BUFFER_BIT,
                 build_sizes_info.buildScratchSize);
 
@@ -85,7 +86,7 @@ void build_acceleration_structure(
 
         const std::vector<VkAccelerationStructureBuildRangeInfoKHR*> build_range_infos = {&build_range_info};
 
-        vulkan::handle::CommandBuffer command_buffer(device, compute_command_pool);
+        const handle::CommandBuffer command_buffer(device, compute_command_pool);
 
         begin_commands(command_buffer);
 
@@ -95,20 +96,17 @@ void build_acceleration_structure(
 }
 }
 
-AccelerationStructure::AccelerationStructure(
-        const vulkan::Device& device,
-        vulkan::BufferWithMemory&& buffer,
-        vulkan::handle::AccelerationStructureKHR&& handle)
+AccelerationStructure::AccelerationStructure(BufferWithMemory&& buffer, handle::AccelerationStructureKHR&& handle)
         : buffer_(std::move(buffer)),
           acceleration_structure_(std::move(handle)),
-          device_address_(acceleration_structure_device_address(device, acceleration_structure_))
+          device_address_(acceleration_structure_device_address(buffer_.buffer().device(), acceleration_structure_))
 {
 }
 
 AccelerationStructure create_bottom_level_acceleration_structure(
-        const vulkan::Device& device,
-        const vulkan::CommandPool& compute_command_pool,
-        const vulkan::Queue& compute_queue,
+        const Device& device,
+        const CommandPool& compute_command_pool,
+        const Queue& compute_queue,
         const std::vector<std::uint32_t>& family_indices,
         const std::span<const Vector3f>& vertices,
         const std::span<const std::uint32_t>& indices,
@@ -131,33 +129,37 @@ AccelerationStructure create_bottom_level_acceleration_structure(
 
         const std::uint32_t geometry_primitive_count = indices.size() / 3;
 
-        vulkan::BufferWithMemory vertex_buffer(
-                vulkan::BufferMemoryType::HOST_VISIBLE, device, {compute_queue.family_index()},
+        const std::vector<std::uint32_t> buffer_family_indices = {compute_queue.family_index()};
+
+        const BufferWithMemory vertex_buffer(
+                BufferMemoryType::HOST_VISIBLE, device, buffer_family_indices,
                 VK_BUFFER_USAGE_SHADER_DEVICE_ADDRESS_BIT
                         | VK_BUFFER_USAGE_ACCELERATION_STRUCTURE_BUILD_INPUT_READ_ONLY_BIT_KHR,
                 data_size(vertices));
+        BufferMapper(vertex_buffer).write(vertices);
 
-        vulkan::BufferMapper(vertex_buffer).write(vertices);
-
-        vulkan::BufferWithMemory index_buffer(
-                vulkan::BufferMemoryType::HOST_VISIBLE, device, {compute_queue.family_index()},
+        const BufferWithMemory index_buffer(
+                BufferMemoryType::HOST_VISIBLE, device, buffer_family_indices,
                 VK_BUFFER_USAGE_SHADER_DEVICE_ADDRESS_BIT
                         | VK_BUFFER_USAGE_ACCELERATION_STRUCTURE_BUILD_INPUT_READ_ONLY_BIT_KHR,
                 data_size(indices));
+        BufferMapper(index_buffer).write(indices);
 
-        vulkan::BufferMapper(index_buffer).write(indices);
-
-        std::optional<vulkan::BufferWithMemory> transform_matrix_buffer;
-        if (transform_matrix)
+        const std::optional<BufferWithMemory> transform_matrix_buffer = [&]
         {
-                transform_matrix_buffer.emplace(
-                        vulkan::BufferMemoryType::HOST_VISIBLE, device, std::vector({compute_queue.family_index()}),
-                        VK_BUFFER_USAGE_SHADER_DEVICE_ADDRESS_BIT
-                                | VK_BUFFER_USAGE_ACCELERATION_STRUCTURE_BUILD_INPUT_READ_ONLY_BIT_KHR,
-                        data_size(*transform_matrix));
-
-                vulkan::BufferMapper(*transform_matrix_buffer).write(*transform_matrix);
-        }
+                if (transform_matrix)
+                {
+                        std::optional<BufferWithMemory> buffer;
+                        buffer.emplace(
+                                BufferMemoryType::HOST_VISIBLE, device, buffer_family_indices,
+                                VK_BUFFER_USAGE_SHADER_DEVICE_ADDRESS_BIT
+                                        | VK_BUFFER_USAGE_ACCELERATION_STRUCTURE_BUILD_INPUT_READ_ONLY_BIT_KHR,
+                                data_size(*transform_matrix));
+                        BufferMapper(*buffer).write(*transform_matrix);
+                        return buffer;
+                }
+                return std::optional<BufferWithMemory>();
+        }();
 
         VkAccelerationStructureGeometryKHR geometry{};
         geometry.sType = VK_STRUCTURE_TYPE_ACCELERATION_STRUCTURE_GEOMETRY_KHR;
@@ -188,8 +190,8 @@ AccelerationStructure create_bottom_level_acceleration_structure(
                 device, VK_ACCELERATION_STRUCTURE_BUILD_TYPE_DEVICE_KHR, &build_geometry_info_sizes,
                 &geometry_primitive_count, &build_sizes_info);
 
-        vulkan::BufferWithMemory acceleration_structure_buffer(
-                vulkan::BufferMemoryType::DEVICE_LOCAL, device, family_indices,
+        BufferWithMemory acceleration_structure_buffer(
+                BufferMemoryType::DEVICE_LOCAL, device, family_indices,
                 VK_BUFFER_USAGE_SHADER_DEVICE_ADDRESS_BIT | VK_BUFFER_USAGE_ACCELERATION_STRUCTURE_STORAGE_BIT_KHR,
                 build_sizes_info.accelerationStructureSize);
 
@@ -199,20 +201,19 @@ AccelerationStructure create_bottom_level_acceleration_structure(
         create_info.size = build_sizes_info.accelerationStructureSize;
         create_info.type = VK_ACCELERATION_STRUCTURE_TYPE_BOTTOM_LEVEL_KHR;
 
-        vulkan::handle::AccelerationStructureKHR acceleration_structure(device, create_info);
+        handle::AccelerationStructureKHR acceleration_structure(device, create_info);
 
         build_acceleration_structure(
                 device, compute_command_pool, compute_queue, build_sizes_info, geometry,
                 VK_ACCELERATION_STRUCTURE_TYPE_BOTTOM_LEVEL_KHR, acceleration_structure, geometry_primitive_count);
 
-        return AccelerationStructure(
-                device, std::move(acceleration_structure_buffer), std::move(acceleration_structure));
+        return AccelerationStructure(std::move(acceleration_structure_buffer), std::move(acceleration_structure));
 }
 
 AccelerationStructure create_top_level_acceleration_structure(
-        const vulkan::Device& device,
-        const vulkan::CommandPool& compute_command_pool,
-        const vulkan::Queue& compute_queue,
+        const Device& device,
+        const CommandPool& compute_command_pool,
+        const Queue& compute_queue,
         const std::vector<std::uint32_t>& family_indices,
         const std::span<const std::uint64_t>& bottom_level_references)
 {
@@ -223,7 +224,7 @@ AccelerationStructure create_top_level_acceleration_structure(
 
         const std::uint32_t geometry_primitive_count = bottom_level_references.size();
 
-        constexpr VkTransformMatrixKHR TRANSFORM = {{{1, 0, 0, 0}, {0, 1, 0, 0}, {0, 0, 1, 0}}};
+        static constexpr VkTransformMatrixKHR TRANSFORM = {{{1, 0, 0, 0}, {0, 1, 0, 0}, {0, 0, 1, 0}}};
 
         std::vector<VkAccelerationStructureInstanceKHR> instances(bottom_level_references.size());
         for (std::size_t i = 0; i < bottom_level_references.size(); ++i)
@@ -237,12 +238,12 @@ AccelerationStructure create_top_level_acceleration_structure(
                 instances[i].accelerationStructureReference = bottom_level_references[i];
         }
 
-        vulkan::BufferWithMemory instance_buffer(
-                vulkan::BufferMemoryType::HOST_VISIBLE, device, {compute_queue.family_index()},
+        const BufferWithMemory instance_buffer(
+                BufferMemoryType::HOST_VISIBLE, device, {compute_queue.family_index()},
                 VK_BUFFER_USAGE_SHADER_DEVICE_ADDRESS_BIT
                         | VK_BUFFER_USAGE_ACCELERATION_STRUCTURE_BUILD_INPUT_READ_ONLY_BIT_KHR,
                 data_size(instances));
-        vulkan::BufferMapper(instance_buffer).write(instances);
+        BufferMapper(instance_buffer).write(instances);
 
         VkDeviceOrHostAddressConstKHR instance_buffer_device_address{};
         instance_buffer_device_address.deviceAddress = instance_buffer.device_address();
@@ -268,8 +269,8 @@ AccelerationStructure create_top_level_acceleration_structure(
                 device, VK_ACCELERATION_STRUCTURE_BUILD_TYPE_DEVICE_KHR, &build_geometry_info_sizes,
                 &geometry_primitive_count, &build_sizes_info);
 
-        vulkan::BufferWithMemory acceleration_structure_buffer(
-                vulkan::BufferMemoryType::DEVICE_LOCAL, device, family_indices,
+        BufferWithMemory acceleration_structure_buffer(
+                BufferMemoryType::DEVICE_LOCAL, device, family_indices,
                 VK_BUFFER_USAGE_SHADER_DEVICE_ADDRESS_BIT | VK_BUFFER_USAGE_ACCELERATION_STRUCTURE_STORAGE_BIT_KHR,
                 build_sizes_info.accelerationStructureSize);
 
@@ -279,13 +280,12 @@ AccelerationStructure create_top_level_acceleration_structure(
         create_info.size = build_sizes_info.accelerationStructureSize;
         create_info.type = VK_ACCELERATION_STRUCTURE_TYPE_TOP_LEVEL_KHR;
 
-        vulkan::handle::AccelerationStructureKHR acceleration_structure(device, create_info);
+        handle::AccelerationStructureKHR acceleration_structure(device, create_info);
 
         build_acceleration_structure(
                 device, compute_command_pool, compute_queue, build_sizes_info, geometry,
                 VK_ACCELERATION_STRUCTURE_TYPE_TOP_LEVEL_KHR, acceleration_structure, geometry_primitive_count);
 
-        return AccelerationStructure(
-                device, std::move(acceleration_structure_buffer), std::move(acceleration_structure));
+        return AccelerationStructure(std::move(acceleration_structure_buffer), std::move(acceleration_structure));
 }
 }
