@@ -17,10 +17,13 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
+#include <src/numerical/vector.h>
 #include <src/vulkan/buffers.h>
 #include <src/vulkan/device.h>
 #include <src/vulkan/objects.h>
 
+#include <optional>
+#include <span>
 #include <vector>
 
 namespace ns::gpu::renderer
@@ -52,7 +55,10 @@ AccelerationStructure create_bottom_level_acceleration_structure(
         const vulkan::Device& device,
         const vulkan::CommandPool& compute_command_pool,
         const vulkan::Queue& compute_queue,
-        const std::vector<std::uint32_t>& family_indices);
+        const std::vector<std::uint32_t>& family_indices,
+        const std::span<const Vector3f>& vertices,
+        const std::span<const std::uint32_t>& indices,
+        const std::optional<VkTransformMatrixKHR>& transform_matrix);
 
 AccelerationStructure create_top_level_acceleration_structure(
         const vulkan::Device& device,

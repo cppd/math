@@ -64,10 +64,14 @@ void create_ray_tracing_data(
         const vulkan::CommandPool* const compute_command_pool,
         const vulkan::Queue* const compute_queue)
 {
+        constexpr std::array VERTICES = std::to_array<Vector3f>({{0, 1, 0}, {-1, 0, 0}, {1, 0, 0}, {0, -1, 0}});
+        constexpr std::array INDICES = std::to_array<std::uint32_t>({0, 1, 2, 1, 2, 3});
+
         const RayTracingImage image(1000, 1000, device, compute_command_pool, compute_queue);
 
         const AccelerationStructure bottom_level = create_bottom_level_acceleration_structure(
-                *device, *compute_command_pool, *compute_queue, {compute_command_pool->family_index()});
+                *device, *compute_command_pool, *compute_queue, {compute_command_pool->family_index()}, VERTICES,
+                INDICES, std::nullopt);
 
         const AccelerationStructure top_level = create_top_level_acceleration_structure(
                 *device, *compute_command_pool, *compute_queue, {compute_command_pool->family_index()}, bottom_level);
