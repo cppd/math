@@ -1,0 +1,55 @@
+/*
+Copyright (C) 2017-2022 Topological Manifold
+
+This program is free software: you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with this program.  If not, see <http://www.gnu.org/licenses/>.
+*/
+
+#version 460
+
+#extension GL_EXT_ray_query : enable
+
+layout(local_size_x_id = 0) in;
+layout(local_size_y_id = 1) in;
+
+layout(set = 0, binding = 0) uniform accelerationStructureEXT acceleration_structure;
+layout(set = 0, binding = 1, rgba32f) writeonly restrict uniform image2D image;
+
+void main()
+{
+        const ivec2 p = ivec2(gl_GlobalInvocationID.xy);
+
+        if (any(greaterThanEqual(p, imageSize(image))))
+        {
+                return;
+        }
+
+        const float t_min = 0.001;
+        const float t_max = 1000;
+
+        const vec2 pixel_center = vec2(p.xy) + vec2(0.5);
+        const vec2 d = 2 * pixel_center / vec2(imageSize(image).xy) - 1;
+
+        const vec3 org = vec3(0, 0, -1);
+        const vec3 dir = normalize(vec3(d.x, d.y, 1));
+
+        rayQueryEXT ray_query;
+
+        const uint flags = gl_RayFlagsOpaqueEXT | gl_RayFlagsTerminateOnFirstHitEXT;
+        rayQueryInitializeEXT(ray_query, acceleration_structure, flags, 0xFF, org, t_min, dir, t_max);
+        rayQueryProceedEXT(ray_query);
+
+        const bool hit = rayQueryGetIntersectionTypeEXT(ray_query, true) == gl_RayQueryCommittedIntersectionTriangleEXT;
+
+        imageStore(image, p, hit ? vec4(0, 1, 0, 0) : vec4(1, 0, 0, 0));
+}

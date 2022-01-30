@@ -25,4 +25,5 @@ namespace ns::gpu::renderer
 std::vector<std::uint32_t> code_ray_closest_hit_rchit();
 std::vector<std::uint32_t> code_ray_generation_rgen();
 std::vector<std::uint32_t> code_ray_miss_rmiss();
+std::vector<std::uint32_t> code_ray_query_comp();
 }

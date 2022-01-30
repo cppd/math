@@ -42,4 +42,12 @@ std::vector<std::uint32_t> code_ray_miss_rmiss()
         };
         return {std::cbegin(CODE), std::cend(CODE)};
 }
+
+std::vector<std::uint32_t> code_ray_query_comp()
+{
+        static constexpr std::uint32_t CODE[] = {
+#include "renderer_ray_query.comp.spr"
+        };
+        return {std::cbegin(CODE), std::cend(CODE)};
+}
 }

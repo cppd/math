@@ -15,7 +15,7 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include "program.h"
+#include "program_ray_tracing.h"
 
 #include "descriptors.h"
 
@@ -30,7 +30,8 @@ namespace ns::gpu::renderer
 {
 std::vector<VkDescriptorSetLayoutBinding> RayTracingProgram::descriptor_set_layout_bindings()
 {
-        return RayTracingMemory::descriptor_set_layout_bindings();
+        constexpr bool RAYGEN = true;
+        return RayTracingMemory::descriptor_set_layout_bindings(RAYGEN);
 }
 
 RayTracingProgram::RayTracingProgram(const vulkan::Device& device, const std::vector<std::uint32_t>& family_indices)

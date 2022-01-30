@@ -45,7 +45,7 @@ constexpr vulkan::PhysicalDeviceFeatures RAY_TRACING_FEATURES = []
         res.acceleration_structure.accelerationStructure = VK_TRUE;
         // res.acceleration_structure.descriptorBindingAccelerationStructureUpdateAfterBind = VK_TRUE;
 
-        // res.ray_query.rayQuery = VK_TRUE;
+        res.ray_query.rayQuery = VK_TRUE;
 
         res.ray_tracing_pipeline.rayTracingPipeline = VK_TRUE;
         // res.ray_tracing_pipeline.rayTracingPipelineTraceRaysIndirect = VK_TRUE;

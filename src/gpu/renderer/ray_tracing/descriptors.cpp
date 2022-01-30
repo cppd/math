@@ -21,7 +21,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 namespace ns::gpu::renderer
 {
-std::vector<VkDescriptorSetLayoutBinding> RayTracingMemory::descriptor_set_layout_bindings()
+std::vector<VkDescriptorSetLayoutBinding> RayTracingMemory::descriptor_set_layout_bindings(const bool raygen)
 {
         std::vector<VkDescriptorSetLayoutBinding> bindings;
 
@@ -30,7 +30,7 @@ std::vector<VkDescriptorSetLayoutBinding> RayTracingMemory::descriptor_set_layou
                 b.binding = ACCELERATION_STRUCTURE_BINDING;
                 b.descriptorType = VK_DESCRIPTOR_TYPE_ACCELERATION_STRUCTURE_KHR;
                 b.descriptorCount = 1;
-                b.stageFlags = VK_SHADER_STAGE_RAYGEN_BIT_KHR;
+                b.stageFlags = raygen ? VK_SHADER_STAGE_RAYGEN_BIT_KHR : VK_SHADER_STAGE_COMPUTE_BIT;
                 bindings.push_back(b);
         }
 
@@ -39,7 +39,7 @@ std::vector<VkDescriptorSetLayoutBinding> RayTracingMemory::descriptor_set_layou
                 b.binding = IMAGE_BINDING;
                 b.descriptorType = VK_DESCRIPTOR_TYPE_STORAGE_IMAGE;
                 b.descriptorCount = 1;
-                b.stageFlags = VK_SHADER_STAGE_RAYGEN_BIT_KHR;
+                b.stageFlags = raygen ? VK_SHADER_STAGE_RAYGEN_BIT_KHR : VK_SHADER_STAGE_COMPUTE_BIT;
                 bindings.push_back(b);
         }
 

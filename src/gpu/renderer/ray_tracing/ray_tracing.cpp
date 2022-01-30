@@ -19,7 +19,10 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "descriptors.h"
 #include "image.h"
-#include "program.h"
+#include "program_ray_query.h"
+#include "program_ray_tracing.h"
+
+#include "../../com/groups.h"
 
 #include <src/vulkan/acceleration_structure.h>
 #include <src/vulkan/error.h>
@@ -29,13 +32,15 @@ namespace ns::gpu::renderer
 {
 namespace
 {
-vulkan::handle::CommandBuffer create_command_buffer(
+constexpr unsigned GROUP_SIZE = 16;
+
+vulkan::handle::CommandBuffer create_ray_tracing_command_buffer(
         const vulkan::Device& device,
         const vulkan::CommandPool& compute_command_pool,
         const RayTracingProgram& program,
         const RayTracingMemory& memory,
-        unsigned width,
-        unsigned height)
+        const unsigned width,
+        const unsigned height)
 {
         vulkan::handle::CommandBuffer command_buffer(device, compute_command_pool);
 
@@ -52,6 +57,35 @@ vulkan::handle::CommandBuffer create_command_buffer(
                 1 /*set count*/, &memory.descriptor_set(), 0, nullptr);
 
         program.command_trace_rays(command_buffer, width, height, 1);
+
+        VULKAN_CHECK(vkEndCommandBuffer(command_buffer));
+
+        return command_buffer;
+}
+
+vulkan::handle::CommandBuffer create_ray_query_command_buffer(
+        const vulkan::Device& device,
+        const vulkan::CommandPool& compute_command_pool,
+        const RayQueryProgram& program,
+        const RayTracingMemory& memory,
+        const unsigned width,
+        const unsigned height)
+{
+        vulkan::handle::CommandBuffer command_buffer(device, compute_command_pool);
+
+        VkCommandBufferBeginInfo command_buffer_info = {};
+        command_buffer_info.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
+        command_buffer_info.flags = VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT;
+
+        VULKAN_CHECK(vkBeginCommandBuffer(command_buffer, &command_buffer_info));
+
+        vkCmdBindPipeline(command_buffer, VK_PIPELINE_BIND_POINT_COMPUTE, program.pipeline());
+
+        vkCmdBindDescriptorSets(
+                command_buffer, VK_PIPELINE_BIND_POINT_COMPUTE, program.pipeline_layout(), memory.set_number(),
+                1 /*set count*/, &memory.descriptor_set(), 0, nullptr);
+
+        vkCmdDispatch(command_buffer, group_count(width, GROUP_SIZE), group_count(height, GROUP_SIZE), 1);
 
         VULKAN_CHECK(vkEndCommandBuffer(command_buffer));
 
@@ -97,6 +131,54 @@ vulkan::AccelerationStructure create_top_level(
         return create_top_level_acceleration_structure(
                 device, compute_command_pool, compute_queue, {compute_command_pool.family_index()}, references);
 }
+
+void ray_tracing(
+        const vulkan::Device& device,
+        const vulkan::CommandPool& compute_command_pool,
+        const vulkan::Queue& compute_queue,
+        const RayTracingImage& image,
+        const VkAccelerationStructureKHR acceleration_structure)
+{
+        const RayTracingProgram program(device, {compute_command_pool.family_index()});
+
+        const RayTracingMemory memory(
+                device, program.descriptor_set_layout(), program.descriptor_set_layout_bindings());
+
+        memory.set_acceleration_structure(acceleration_structure);
+        memory.set_image(image.image_view());
+
+        const vulkan::handle::CommandBuffer command_buffer = create_ray_tracing_command_buffer(
+                device, compute_command_pool, program, memory, image.width(), image.height());
+
+        vulkan::queue_submit(command_buffer, compute_queue);
+        VULKAN_CHECK(vkQueueWaitIdle(compute_queue));
+
+        image.save_to_file("ray_tracing");
+}
+
+void ray_query(
+        const vulkan::Device& device,
+        const vulkan::CommandPool& compute_command_pool,
+        const vulkan::Queue& compute_queue,
+        const RayTracingImage& image,
+        const VkAccelerationStructureKHR acceleration_structure)
+{
+        const RayQueryProgram program(device, GROUP_SIZE);
+
+        const RayTracingMemory memory(
+                device, program.descriptor_set_layout(), program.descriptor_set_layout_bindings());
+
+        memory.set_acceleration_structure(acceleration_structure);
+        memory.set_image(image.image_view());
+
+        const vulkan::handle::CommandBuffer command_buffer = create_ray_query_command_buffer(
+                device, compute_command_pool, program, memory, image.width(), image.height());
+
+        vulkan::queue_submit(command_buffer, compute_queue);
+        VULKAN_CHECK(vkQueueWaitIdle(compute_queue));
+
+        image.save_to_file("ray_query");
+}
 }
 
 void create_ray_tracing_data(
@@ -112,20 +194,7 @@ void create_ray_tracing_data(
         const vulkan::AccelerationStructure top_level =
                 create_top_level(*device, *compute_command_pool, *compute_queue, bottom_level);
 
-        const RayTracingProgram program(*device, {compute_command_pool->family_index()});
-
-        const RayTracingMemory memory(
-                *device, program.descriptor_set_layout(), program.descriptor_set_layout_bindings());
-
-        memory.set_acceleration_structure(top_level.handle());
-        memory.set_image(image.image_view());
-
-        const vulkan::handle::CommandBuffer command_buffer =
-                create_command_buffer(*device, *compute_command_pool, program, memory, image.width(), image.height());
-
-        vulkan::queue_submit(command_buffer, *compute_queue);
-        VULKAN_CHECK(vkQueueWaitIdle(*compute_queue));
-
-        image.save_to_file("ray_tracing");
+        ray_tracing(*device, *compute_command_pool, *compute_queue, image, top_level.handle());
+        ray_query(*device, *compute_command_pool, *compute_queue, image, top_level.handle());
 }
 }

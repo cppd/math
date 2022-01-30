@@ -35,7 +35,7 @@ class RayTracingMemory final
         vulkan::Descriptors descriptors_;
 
 public:
-        static std::vector<VkDescriptorSetLayoutBinding> descriptor_set_layout_bindings();
+        static std::vector<VkDescriptorSetLayoutBinding> descriptor_set_layout_bindings(bool raygen);
         static unsigned set_number();
 
         RayTracingMemory(
