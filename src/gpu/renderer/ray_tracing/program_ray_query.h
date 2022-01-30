@@ -34,7 +34,7 @@ class RayQueryProgram final
         vulkan::handle::Pipeline pipeline_;
 
 public:
-        explicit RayQueryProgram(const vulkan::Device& device, unsigned local_size);
+        RayQueryProgram(const vulkan::Device& device, unsigned local_size);
 
         RayQueryProgram(const RayQueryProgram&) = delete;
         RayQueryProgram& operator=(const RayQueryProgram&) = delete;

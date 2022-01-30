@@ -44,7 +44,7 @@ class RayTracingProgram final
         void create(const vulkan::Device& device, const std::vector<std::uint32_t>& family_indices);
 
 public:
-        explicit RayTracingProgram(const vulkan::Device& device, const std::vector<std::uint32_t>& family_indices);
+        RayTracingProgram(const vulkan::Device& device, const std::vector<std::uint32_t>& family_indices);
 
         RayTracingProgram(const RayTracingProgram&) = delete;
         RayTracingProgram& operator=(const RayTracingProgram&) = delete;
