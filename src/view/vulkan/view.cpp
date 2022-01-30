@@ -385,7 +385,8 @@ public:
                           &transfer_command_pool_,
                           &device_graphics_.transfer_queue(),
                           &compute_command_pool_,
-                          &device_graphics_.compute_queue()),
+                          &device_graphics_.compute_queue(),
+                          RENDER_BUFFER_COUNT),
                   camera_(
                           [this](const auto& info)
                           {

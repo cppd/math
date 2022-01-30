@@ -41,7 +41,8 @@ ImageProcess::ImageProcess(
         const vulkan::CommandPool* const transfer_command_pool,
         const vulkan::Queue* const transfer_queue,
         const vulkan::CommandPool* const compute_command_pool,
-        const vulkan::Queue* const compute_queue)
+        const vulkan::Queue* const compute_queue,
+        const unsigned image_count)
         : window_ppi_(window_ppi)
 {
         convex_hull_ = gpu::convex_hull::create_view(device, graphics_command_pool, graphics_queue, sample_shading);
@@ -55,6 +56,13 @@ ImageProcess::ImageProcess(
         optical_flow_ = gpu::optical_flow::create_view(
                 device, graphics_command_pool, graphics_queue, compute_command_pool, compute_queue,
                 transfer_command_pool, transfer_queue, sample_shading);
+
+        resolve_semaphores_.resize(image_count);
+        for (std::array<vulkan::handle::Semaphore, 2>& semaphores : resolve_semaphores_)
+        {
+                semaphores[0] = vulkan::handle::Semaphore(*device);
+                semaphores[1] = vulkan::handle::Semaphore(*device);
+        }
 }
 
 void ImageProcess::command(const command::PencilSketchShow& v)
@@ -159,13 +167,18 @@ VkSemaphore ImageProcess::draw(
 {
         if (pencil_sketch_active_)
         {
-                semaphore = image_resolve.resolve_semaphore(graphics_queue, semaphore, image_index);
-                semaphore = pencil_sketch_->draw(graphics_queue, semaphore, image_index);
+                ASSERT(image_index < resolve_semaphores_.size());
+                const VkSemaphore resolve_semaphore = resolve_semaphores_[image_index][0];
+                image_resolve.resolve(graphics_queue, semaphore, resolve_semaphore, image_index);
+                semaphore = pencil_sketch_->draw(graphics_queue, resolve_semaphore, image_index);
         }
 
         if (dft_active_ || optical_flow_active_)
         {
-                semaphore = image_resolve.resolve_semaphore(graphics_queue, semaphore, image_index);
+                ASSERT(image_index < resolve_semaphores_.size());
+                const VkSemaphore resolve_semaphore = resolve_semaphores_[image_index][1];
+                image_resolve.resolve(graphics_queue, semaphore, resolve_semaphore, image_index);
+                semaphore = resolve_semaphore;
         }
 
         if (dft_active_)

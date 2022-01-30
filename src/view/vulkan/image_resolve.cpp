@@ -53,7 +53,6 @@ ImageResolve::ImageResolve(
         const std::size_t count = render_buffers.image_views().size();
 
         images_.reserve(count);
-        signal_semaphores_.reserve(count);
 
         command_buffers_ = vulkan::handle::CommandBuffers(device, command_pool, count);
 
@@ -64,8 +63,6 @@ ImageResolve::ImageResolve(
                         std::vector<VkFormat>({render_buffers.color_format()}), VK_SAMPLE_COUNT_1_BIT, VK_IMAGE_TYPE_2D,
                         vulkan::make_extent(render_buffers.width(), render_buffers.height()),
                         usage | VK_IMAGE_USAGE_TRANSFER_DST_BIT, image_layout, command_pool, queue);
-
-                signal_semaphores_.emplace_back(device);
 
                 begin_command_buffer(command_buffers_[i]);
 
@@ -82,20 +79,18 @@ const vulkan::ImageWithMemory& ImageResolve::image(const unsigned image_index) c
         return images_[image_index];
 }
 
-VkSemaphore ImageResolve::resolve_semaphore(
+void ImageResolve::resolve(
         const vulkan::Queue& graphics_queue,
         const VkSemaphore wait_semaphore,
+        const VkSemaphore signal_semaphore,
         const unsigned image_index) const
 {
         ASSERT(graphics_queue.family_index() == family_index_);
         ASSERT(image_index < command_buffers_.count());
-        ASSERT(image_index < signal_semaphores_.size());
 
         vulkan::queue_submit(
-                wait_semaphore, VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT, command_buffers_[image_index],
-                signal_semaphores_[image_index], graphics_queue);
-
-        return signal_semaphores_[image_index];
+                wait_semaphore, VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT, command_buffers_[image_index], signal_semaphore,
+                graphics_queue);
 }
 
 void ImageResolve::resolve(

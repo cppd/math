@@ -31,6 +31,9 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/vulkan/device.h>
 #include <src/vulkan/functionality.h>
 
+#include <array>
+#include <vector>
+
 namespace ns::view
 {
 class ImageProcess
@@ -46,6 +49,8 @@ class ImageProcess
         std::unique_ptr<gpu::pencil_sketch::View> pencil_sketch_;
         std::unique_ptr<gpu::dft::View> dft_;
         std::unique_ptr<gpu::optical_flow::View> optical_flow_;
+
+        std::vector<std::array<vulkan::handle::Semaphore, 2>> resolve_semaphores_;
 
         void command(const command::PencilSketchShow& v);
         void command(const command::DftShow& v);
@@ -67,7 +72,8 @@ public:
                 const vulkan::CommandPool* transfer_command_pool,
                 const vulkan::Queue* transfer_queue,
                 const vulkan::CommandPool* compute_command_pool,
-                const vulkan::Queue* compute_queue);
+                const vulkan::Queue* compute_queue,
+                unsigned image_count);
 
         void command(const ImageCommand& image_command);
 

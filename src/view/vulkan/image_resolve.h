@@ -30,7 +30,6 @@ class ImageResolve
         const std::uint32_t family_index_;
         std::vector<vulkan::ImageWithMemory> images_;
         vulkan::handle::CommandBuffers command_buffers_;
-        std::vector<vulkan::handle::Semaphore> signal_semaphores_;
 
 public:
         ImageResolve(
@@ -44,9 +43,10 @@ public:
 
         const vulkan::ImageWithMemory& image(unsigned image_index) const;
 
-        [[nodiscard]] VkSemaphore resolve_semaphore(
+        void resolve(
                 const vulkan::Queue& graphics_queue,
                 VkSemaphore wait_semaphore,
+                VkSemaphore signal_semaphore,
                 unsigned image_index) const;
 
         void resolve(const vulkan::Queue& graphics_queue, VkSemaphore wait_semaphore, unsigned image_index) const;
