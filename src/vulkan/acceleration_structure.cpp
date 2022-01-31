@@ -53,6 +53,29 @@ void end_commands(const VkQueue queue, const VkCommandBuffer command_buffer)
         VULKAN_CHECK(vkQueueWaitIdle(queue));
 }
 
+VkAccelerationStructureBuildSizesInfoKHR acceleration_structure_build_sizes(
+        const Device& device,
+        const VkAccelerationStructureGeometryKHR& geometry,
+        const VkAccelerationStructureTypeKHR type,
+        const std::uint32_t primitive_count)
+{
+        VkAccelerationStructureBuildGeometryInfoKHR build_geometry_info{};
+        build_geometry_info.sType = VK_STRUCTURE_TYPE_ACCELERATION_STRUCTURE_BUILD_GEOMETRY_INFO_KHR;
+        build_geometry_info.type = type;
+        build_geometry_info.flags = VK_BUILD_ACCELERATION_STRUCTURE_PREFER_FAST_TRACE_BIT_KHR;
+        build_geometry_info.geometryCount = 1;
+        build_geometry_info.pGeometries = &geometry;
+
+        VkAccelerationStructureBuildSizesInfoKHR build_sizes_info{};
+        build_sizes_info.sType = VK_STRUCTURE_TYPE_ACCELERATION_STRUCTURE_BUILD_SIZES_INFO_KHR;
+
+        vkGetAccelerationStructureBuildSizesKHR(
+                device, VK_ACCELERATION_STRUCTURE_BUILD_TYPE_DEVICE_KHR, &build_geometry_info, &primitive_count,
+                &build_sizes_info);
+
+        return build_sizes_info;
+}
+
 void build_acceleration_structure(
         const Device& device,
         const CommandPool& compute_command_pool,
@@ -94,6 +117,24 @@ void build_acceleration_structure(
 
         end_commands(compute_queue, command_buffer);
 }
+
+void check_data(const std::span<const Vector3f>& vertices, const std::span<const std::uint32_t>& indices)
+{
+        if (vertices.empty())
+        {
+                error("No vertices for acceleration structure");
+        }
+
+        if (indices.empty())
+        {
+                error("No indices for acceleration structure");
+        }
+
+        if (!(indices.size() % 3 == 0))
+        {
+                error("Index count " + to_string(indices.size()) + " is not a multiple of 3");
+        }
+}
 }
 
 AccelerationStructure::AccelerationStructure(BufferWithMemory&& buffer, handle::AccelerationStructureKHR&& handle)
@@ -112,20 +153,7 @@ AccelerationStructure create_bottom_level_acceleration_structure(
         const std::span<const std::uint32_t>& indices,
         const std::optional<VkTransformMatrixKHR>& transform_matrix)
 {
-        if (vertices.empty())
-        {
-                error("No vertices for acceleration structure");
-        }
-
-        if (indices.empty())
-        {
-                error("No indices for acceleration structure");
-        }
-
-        if (!(indices.size() % 3 == 0))
-        {
-                error("Index count " + to_string(indices.size()) + " is not a multiple of 3");
-        }
+        check_data(vertices, indices);
 
         const std::uint32_t geometry_primitive_count = indices.size() / 3;
 
@@ -177,34 +205,24 @@ AccelerationStructure create_bottom_level_acceleration_structure(
                 geometry.geometry.triangles.transformData.deviceAddress = transform_matrix_buffer->device_address();
         }
 
-        VkAccelerationStructureBuildGeometryInfoKHR build_geometry_info_sizes{};
-        build_geometry_info_sizes.sType = VK_STRUCTURE_TYPE_ACCELERATION_STRUCTURE_BUILD_GEOMETRY_INFO_KHR;
-        build_geometry_info_sizes.type = VK_ACCELERATION_STRUCTURE_TYPE_BOTTOM_LEVEL_KHR;
-        build_geometry_info_sizes.flags = VK_BUILD_ACCELERATION_STRUCTURE_PREFER_FAST_TRACE_BIT_KHR;
-        build_geometry_info_sizes.geometryCount = 1;
-        build_geometry_info_sizes.pGeometries = &geometry;
-
-        VkAccelerationStructureBuildSizesInfoKHR build_sizes_info{};
-        build_sizes_info.sType = VK_STRUCTURE_TYPE_ACCELERATION_STRUCTURE_BUILD_SIZES_INFO_KHR;
-        vkGetAccelerationStructureBuildSizesKHR(
-                device, VK_ACCELERATION_STRUCTURE_BUILD_TYPE_DEVICE_KHR, &build_geometry_info_sizes,
-                &geometry_primitive_count, &build_sizes_info);
+        const VkAccelerationStructureBuildSizesInfoKHR build_sizes = acceleration_structure_build_sizes(
+                device, geometry, VK_ACCELERATION_STRUCTURE_TYPE_BOTTOM_LEVEL_KHR, geometry_primitive_count);
 
         BufferWithMemory acceleration_structure_buffer(
                 BufferMemoryType::DEVICE_LOCAL, device, family_indices,
                 VK_BUFFER_USAGE_SHADER_DEVICE_ADDRESS_BIT | VK_BUFFER_USAGE_ACCELERATION_STRUCTURE_STORAGE_BIT_KHR,
-                build_sizes_info.accelerationStructureSize);
+                build_sizes.accelerationStructureSize);
 
         VkAccelerationStructureCreateInfoKHR create_info{};
         create_info.sType = VK_STRUCTURE_TYPE_ACCELERATION_STRUCTURE_CREATE_INFO_KHR;
         create_info.buffer = acceleration_structure_buffer.buffer();
-        create_info.size = build_sizes_info.accelerationStructureSize;
+        create_info.size = build_sizes.accelerationStructureSize;
         create_info.type = VK_ACCELERATION_STRUCTURE_TYPE_BOTTOM_LEVEL_KHR;
 
         handle::AccelerationStructureKHR acceleration_structure(device, create_info);
 
         build_acceleration_structure(
-                device, compute_command_pool, compute_queue, build_sizes_info, geometry,
+                device, compute_command_pool, compute_queue, build_sizes, geometry,
                 VK_ACCELERATION_STRUCTURE_TYPE_BOTTOM_LEVEL_KHR, acceleration_structure, geometry_primitive_count);
 
         return AccelerationStructure(std::move(acceleration_structure_buffer), std::move(acceleration_structure));
@@ -256,34 +274,24 @@ AccelerationStructure create_top_level_acceleration_structure(
         geometry.geometry.instances.arrayOfPointers = VK_FALSE;
         geometry.geometry.instances.data = instance_buffer_device_address;
 
-        VkAccelerationStructureBuildGeometryInfoKHR build_geometry_info_sizes{};
-        build_geometry_info_sizes.sType = VK_STRUCTURE_TYPE_ACCELERATION_STRUCTURE_BUILD_GEOMETRY_INFO_KHR;
-        build_geometry_info_sizes.type = VK_ACCELERATION_STRUCTURE_TYPE_TOP_LEVEL_KHR;
-        build_geometry_info_sizes.flags = VK_BUILD_ACCELERATION_STRUCTURE_PREFER_FAST_TRACE_BIT_KHR;
-        build_geometry_info_sizes.geometryCount = 1;
-        build_geometry_info_sizes.pGeometries = &geometry;
-
-        VkAccelerationStructureBuildSizesInfoKHR build_sizes_info{};
-        build_sizes_info.sType = VK_STRUCTURE_TYPE_ACCELERATION_STRUCTURE_BUILD_SIZES_INFO_KHR;
-        vkGetAccelerationStructureBuildSizesKHR(
-                device, VK_ACCELERATION_STRUCTURE_BUILD_TYPE_DEVICE_KHR, &build_geometry_info_sizes,
-                &geometry_primitive_count, &build_sizes_info);
+        const VkAccelerationStructureBuildSizesInfoKHR build_sizes = acceleration_structure_build_sizes(
+                device, geometry, VK_ACCELERATION_STRUCTURE_TYPE_TOP_LEVEL_KHR, geometry_primitive_count);
 
         BufferWithMemory acceleration_structure_buffer(
                 BufferMemoryType::DEVICE_LOCAL, device, family_indices,
                 VK_BUFFER_USAGE_SHADER_DEVICE_ADDRESS_BIT | VK_BUFFER_USAGE_ACCELERATION_STRUCTURE_STORAGE_BIT_KHR,
-                build_sizes_info.accelerationStructureSize);
+                build_sizes.accelerationStructureSize);
 
         VkAccelerationStructureCreateInfoKHR create_info{};
         create_info.sType = VK_STRUCTURE_TYPE_ACCELERATION_STRUCTURE_CREATE_INFO_KHR;
         create_info.buffer = acceleration_structure_buffer.buffer();
-        create_info.size = build_sizes_info.accelerationStructureSize;
+        create_info.size = build_sizes.accelerationStructureSize;
         create_info.type = VK_ACCELERATION_STRUCTURE_TYPE_TOP_LEVEL_KHR;
 
         handle::AccelerationStructureKHR acceleration_structure(device, create_info);
 
         build_acceleration_structure(
-                device, compute_command_pool, compute_queue, build_sizes_info, geometry,
+                device, compute_command_pool, compute_queue, build_sizes, geometry,
                 VK_ACCELERATION_STRUCTURE_TYPE_TOP_LEVEL_KHR, acceleration_structure, geometry_primitive_count);
 
         return AccelerationStructure(std::move(acceleration_structure_buffer), std::move(acceleration_structure));
