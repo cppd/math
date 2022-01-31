@@ -63,5 +63,6 @@ AccelerationStructure create_top_level_acceleration_structure(
         const CommandPool& compute_command_pool,
         const Queue& compute_queue,
         const std::vector<std::uint32_t>& family_indices,
-        const std::span<const std::uint64_t>& bottom_level_references);
+        const std::span<const std::uint64_t>& bottom_level_references,
+        const std::span<const VkTransformMatrixKHR>& bottom_level_matrices);
 }

@@ -80,17 +80,12 @@ void build_acceleration_structure(
         const Device& device,
         const CommandPool& compute_command_pool,
         const Queue& compute_queue,
-        const VkAccelerationStructureBuildSizesInfoKHR& build_sizes_info,
+        const BufferWithMemory& scratch_buffer,
         const VkAccelerationStructureGeometryKHR& geometry,
         const VkAccelerationStructureTypeKHR type,
         const VkAccelerationStructureKHR acceleration_structure,
         const std::uint32_t primitive_count)
 {
-        const BufferWithMemory scratch_buffer(
-                BufferMemoryType::DEVICE_LOCAL, device, {compute_queue.family_index()},
-                VK_BUFFER_USAGE_SHADER_DEVICE_ADDRESS_BIT | VK_BUFFER_USAGE_STORAGE_BUFFER_BIT,
-                build_sizes_info.buildScratchSize);
-
         VkAccelerationStructureBuildGeometryInfoKHR build_geometry_info{};
         build_geometry_info.sType = VK_STRUCTURE_TYPE_ACCELERATION_STRUCTURE_BUILD_GEOMETRY_INFO_KHR;
         build_geometry_info.type = type;
@@ -133,6 +128,22 @@ void check_data(const std::span<const Vector3f>& vertices, const std::span<const
         if (!(indices.size() % 3 == 0))
         {
                 error("Index count " + to_string(indices.size()) + " is not a multiple of 3");
+        }
+}
+
+void check_data(
+        const std::span<const std::uint64_t>& bottom_level_references,
+        const std::span<const VkTransformMatrixKHR>& bottom_level_matrices)
+{
+        if (bottom_level_references.empty())
+        {
+                error("No bottom level acceleration structure references for top level acceleration structure");
+        }
+
+        if (bottom_level_references.size() != bottom_level_matrices.size())
+        {
+                error("Bottom level reference count " + to_string(bottom_level_references.size())
+                      + " is not equal to matrix count " + to_string(bottom_level_matrices.size()));
         }
 }
 }
@@ -221,8 +232,13 @@ AccelerationStructure create_bottom_level_acceleration_structure(
 
         handle::AccelerationStructureKHR acceleration_structure(device, create_info);
 
+        const BufferWithMemory scratch_buffer(
+                BufferMemoryType::DEVICE_LOCAL, device, buffer_family_indices,
+                VK_BUFFER_USAGE_SHADER_DEVICE_ADDRESS_BIT | VK_BUFFER_USAGE_STORAGE_BUFFER_BIT,
+                build_sizes.buildScratchSize);
+
         build_acceleration_structure(
-                device, compute_command_pool, compute_queue, build_sizes, geometry,
+                device, compute_command_pool, compute_queue, scratch_buffer, geometry,
                 VK_ACCELERATION_STRUCTURE_TYPE_BOTTOM_LEVEL_KHR, acceleration_structure, geometry_primitive_count);
 
         return AccelerationStructure(std::move(acceleration_structure_buffer), std::move(acceleration_structure));
@@ -233,22 +249,20 @@ AccelerationStructure create_top_level_acceleration_structure(
         const CommandPool& compute_command_pool,
         const Queue& compute_queue,
         const std::vector<std::uint32_t>& family_indices,
-        const std::span<const std::uint64_t>& bottom_level_references)
+        const std::span<const std::uint64_t>& bottom_level_references,
+        const std::span<const VkTransformMatrixKHR>& bottom_level_matrices)
 {
-        if (bottom_level_references.empty())
-        {
-                error("No bottom level acceleration structure references for top level acceleration structure");
-        }
+        check_data(bottom_level_references, bottom_level_matrices);
 
         const std::uint32_t geometry_primitive_count = bottom_level_references.size();
 
-        static constexpr VkTransformMatrixKHR TRANSFORM = {{{1, 0, 0, 0}, {0, 1, 0, 0}, {0, 0, 1, 0}}};
+        const std::vector<std::uint32_t> buffer_family_indices = {compute_queue.family_index()};
 
         std::vector<VkAccelerationStructureInstanceKHR> instances(bottom_level_references.size());
         for (std::size_t i = 0; i < bottom_level_references.size(); ++i)
         {
                 instances[i] = {};
-                instances[i].transform = TRANSFORM;
+                instances[i].transform = bottom_level_matrices[i];
                 instances[i].instanceCustomIndex = 0;
                 instances[i].mask = 0xFF;
                 instances[i].instanceShaderBindingTableRecordOffset = 0;
@@ -257,7 +271,7 @@ AccelerationStructure create_top_level_acceleration_structure(
         }
 
         const BufferWithMemory instance_buffer(
-                BufferMemoryType::HOST_VISIBLE, device, {compute_queue.family_index()},
+                BufferMemoryType::HOST_VISIBLE, device, buffer_family_indices,
                 VK_BUFFER_USAGE_SHADER_DEVICE_ADDRESS_BIT
                         | VK_BUFFER_USAGE_ACCELERATION_STRUCTURE_BUILD_INPUT_READ_ONLY_BIT_KHR,
                 data_size(instances));
@@ -290,8 +304,13 @@ AccelerationStructure create_top_level_acceleration_structure(
 
         handle::AccelerationStructureKHR acceleration_structure(device, create_info);
 
+        const BufferWithMemory scratch_buffer(
+                BufferMemoryType::DEVICE_LOCAL, device, buffer_family_indices,
+                VK_BUFFER_USAGE_SHADER_DEVICE_ADDRESS_BIT | VK_BUFFER_USAGE_STORAGE_BUFFER_BIT,
+                build_sizes.buildScratchSize);
+
         build_acceleration_structure(
-                device, compute_command_pool, compute_queue, build_sizes, geometry,
+                device, compute_command_pool, compute_queue, scratch_buffer, geometry,
                 VK_ACCELERATION_STRUCTURE_TYPE_TOP_LEVEL_KHR, acceleration_structure, geometry_primitive_count);
 
         return AccelerationStructure(std::move(acceleration_structure_buffer), std::move(acceleration_structure));
