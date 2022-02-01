@@ -25,31 +25,31 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 namespace ns::vulkan
 {
-std::vector<handle::Semaphore> create_semaphores(VkDevice device, int count);
+[[nodiscard]] std::vector<handle::Semaphore> create_semaphores(VkDevice device, int count);
 
-std::vector<handle::Fence> create_fences(VkDevice device, int count, bool signaled_state);
+[[nodiscard]] std::vector<handle::Fence> create_fences(VkDevice device, int count, bool signaled_state);
 
-handle::PipelineLayout create_pipeline_layout(
+[[nodiscard]] handle::PipelineLayout create_pipeline_layout(
         VkDevice device,
         const std::vector<VkDescriptorSetLayout>& descriptor_set_layouts);
 
-handle::PipelineLayout create_pipeline_layout(
+[[nodiscard]] handle::PipelineLayout create_pipeline_layout(
         VkDevice device,
         const std::vector<unsigned>& set_numbers,
         const std::vector<VkDescriptorSetLayout>& set_layouts);
 
-CommandPool create_command_pool(VkDevice device, std::uint32_t queue_family_index);
+[[nodiscard]] CommandPool create_command_pool(VkDevice device, std::uint32_t queue_family_index);
 
-CommandPool create_transient_command_pool(VkDevice device, std::uint32_t queue_family_index);
+[[nodiscard]] CommandPool create_transient_command_pool(VkDevice device, std::uint32_t queue_family_index);
 
-handle::Framebuffer create_framebuffer(
+[[nodiscard]] handle::Framebuffer create_framebuffer(
         VkDevice device,
         VkRenderPass render_pass,
         std::uint32_t width,
         std::uint32_t height,
         const std::vector<VkImageView>& attachments);
 
-VkClearValue create_color_clear_value(VkFormat format, const Vector<3, float>& rgb);
+[[nodiscard]] VkClearValue create_color_clear_value(VkFormat format, const Vector<3, float>& rgb);
 
-VkClearValue create_depth_stencil_clear_value();
+[[nodiscard]] VkClearValue create_depth_stencil_clear_value();
 }
