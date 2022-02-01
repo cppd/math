@@ -57,12 +57,17 @@ VkAccelerationStructureBuildSizesInfoKHR acceleration_structure_build_sizes(
         const Device& device,
         const VkAccelerationStructureGeometryKHR& geometry,
         const VkAccelerationStructureTypeKHR type,
-        const std::uint32_t primitive_count)
+        const std::uint32_t primitive_count,
+        const bool allow_update)
 {
         VkAccelerationStructureBuildGeometryInfoKHR build_geometry_info{};
         build_geometry_info.sType = VK_STRUCTURE_TYPE_ACCELERATION_STRUCTURE_BUILD_GEOMETRY_INFO_KHR;
         build_geometry_info.type = type;
         build_geometry_info.flags = VK_BUILD_ACCELERATION_STRUCTURE_PREFER_FAST_TRACE_BIT_KHR;
+        if (allow_update)
+        {
+                build_geometry_info.flags |= VK_BUILD_ACCELERATION_STRUCTURE_ALLOW_UPDATE_BIT_KHR;
+        }
         build_geometry_info.geometryCount = 1;
         build_geometry_info.pGeometries = &geometry;
 
@@ -83,14 +88,24 @@ void build_acceleration_structure(
         const BufferWithMemory& scratch_buffer,
         const VkAccelerationStructureGeometryKHR& geometry,
         const VkAccelerationStructureTypeKHR type,
+        const VkBuildAccelerationStructureModeKHR mode,
         const VkAccelerationStructureKHR acceleration_structure,
-        const std::uint32_t primitive_count)
+        const std::uint32_t primitive_count,
+        const bool allow_update)
 {
         VkAccelerationStructureBuildGeometryInfoKHR build_geometry_info{};
         build_geometry_info.sType = VK_STRUCTURE_TYPE_ACCELERATION_STRUCTURE_BUILD_GEOMETRY_INFO_KHR;
         build_geometry_info.type = type;
         build_geometry_info.flags = VK_BUILD_ACCELERATION_STRUCTURE_PREFER_FAST_TRACE_BIT_KHR;
-        build_geometry_info.mode = VK_BUILD_ACCELERATION_STRUCTURE_MODE_BUILD_KHR;
+        if (allow_update)
+        {
+                build_geometry_info.flags |= VK_BUILD_ACCELERATION_STRUCTURE_ALLOW_UPDATE_BIT_KHR;
+        }
+        build_geometry_info.mode = mode;
+        if (mode == VK_BUILD_ACCELERATION_STRUCTURE_MODE_UPDATE_KHR)
+        {
+                build_geometry_info.srcAccelerationStructure = acceleration_structure;
+        }
         build_geometry_info.dstAccelerationStructure = acceleration_structure;
         build_geometry_info.geometryCount = 1;
         build_geometry_info.pGeometries = &geometry;
@@ -148,14 +163,63 @@ void check_data(
 }
 }
 
-AccelerationStructure::AccelerationStructure(BufferWithMemory&& buffer, handle::AccelerationStructureKHR&& handle)
+BottomLevelAccelerationStructure::BottomLevelAccelerationStructure(
+        BufferWithMemory&& buffer,
+        handle::AccelerationStructureKHR&& handle)
         : buffer_(std::move(buffer)),
           acceleration_structure_(std::move(handle)),
           device_address_(acceleration_structure_device_address(buffer_.buffer().device(), acceleration_structure_))
 {
 }
 
-AccelerationStructure create_bottom_level_acceleration_structure(
+TopLevelAccelerationStructure::TopLevelAccelerationStructure(
+        BufferWithMemory&& buffer,
+        handle::AccelerationStructureKHR&& handle,
+        const VkAccelerationStructureGeometryKHR& geometry,
+        const std::uint32_t geometry_primitive_count,
+        BufferWithMemory&& instance_buffer,
+        BufferWithMemory&& scratch_buffer_update)
+        : buffer_(std::move(buffer)),
+          acceleration_structure_(std::move(handle)),
+          device_address_(acceleration_structure_device_address(buffer_.buffer().device(), acceleration_structure_)),
+          geometry_(geometry),
+          geometry_primitive_count_(geometry_primitive_count),
+          instance_buffer_(std::move(instance_buffer)),
+          scratch_buffer_update_(std::move(scratch_buffer_update))
+{
+}
+
+void TopLevelAccelerationStructure::update_matrices(
+        const Device& device,
+        const CommandPool& compute_command_pool,
+        const Queue& compute_queue,
+        const std::span<const VkTransformMatrixKHR>& bottom_level_matrices) const
+{
+        if (bottom_level_matrices.size() != geometry_primitive_count_)
+        {
+                error("Bottom level matrix count " + to_string(bottom_level_matrices.size()) + " is not equal to "
+                      + to_string(geometry_primitive_count_));
+        }
+
+        {
+                constexpr std::size_t SIZE = sizeof(VkAccelerationStructureInstanceKHR);
+                constexpr std::size_t OFFSET = offsetof(VkAccelerationStructureInstanceKHR, transform);
+                BufferMapper mapper(instance_buffer_);
+                for (std::size_t i = 0; i < geometry_primitive_count_; ++i)
+                {
+                        mapper.write(i * SIZE + OFFSET, bottom_level_matrices[i]);
+                }
+        }
+
+        constexpr bool ALLOW_UPDATE = true;
+
+        build_acceleration_structure(
+                device, compute_command_pool, compute_queue, scratch_buffer_update_, geometry_,
+                VK_ACCELERATION_STRUCTURE_TYPE_TOP_LEVEL_KHR, VK_BUILD_ACCELERATION_STRUCTURE_MODE_UPDATE_KHR,
+                acceleration_structure_, geometry_primitive_count_, ALLOW_UPDATE);
+}
+
+BottomLevelAccelerationStructure create_bottom_level_acceleration_structure(
         const Device& device,
         const CommandPool& compute_command_pool,
         const Queue& compute_queue,
@@ -216,8 +280,11 @@ AccelerationStructure create_bottom_level_acceleration_structure(
                 geometry.geometry.triangles.transformData.deviceAddress = transform_matrix_buffer->device_address();
         }
 
+        constexpr bool ALLOW_UPDATE = false;
+
         const VkAccelerationStructureBuildSizesInfoKHR build_sizes = acceleration_structure_build_sizes(
-                device, geometry, VK_ACCELERATION_STRUCTURE_TYPE_BOTTOM_LEVEL_KHR, geometry_primitive_count);
+                device, geometry, VK_ACCELERATION_STRUCTURE_TYPE_BOTTOM_LEVEL_KHR, geometry_primitive_count,
+                ALLOW_UPDATE);
 
         BufferWithMemory acceleration_structure_buffer(
                 BufferMemoryType::DEVICE_LOCAL, device, family_indices,
@@ -232,19 +299,23 @@ AccelerationStructure create_bottom_level_acceleration_structure(
 
         handle::AccelerationStructureKHR acceleration_structure(device, create_info);
 
-        const BufferWithMemory scratch_buffer(
-                BufferMemoryType::DEVICE_LOCAL, device, buffer_family_indices,
-                VK_BUFFER_USAGE_SHADER_DEVICE_ADDRESS_BIT | VK_BUFFER_USAGE_STORAGE_BUFFER_BIT,
-                build_sizes.buildScratchSize);
+        {
+                const BufferWithMemory scratch_buffer(
+                        BufferMemoryType::DEVICE_LOCAL, device, buffer_family_indices,
+                        VK_BUFFER_USAGE_SHADER_DEVICE_ADDRESS_BIT | VK_BUFFER_USAGE_STORAGE_BUFFER_BIT,
+                        build_sizes.buildScratchSize);
 
-        build_acceleration_structure(
-                device, compute_command_pool, compute_queue, scratch_buffer, geometry,
-                VK_ACCELERATION_STRUCTURE_TYPE_BOTTOM_LEVEL_KHR, acceleration_structure, geometry_primitive_count);
+                build_acceleration_structure(
+                        device, compute_command_pool, compute_queue, scratch_buffer, geometry,
+                        VK_ACCELERATION_STRUCTURE_TYPE_BOTTOM_LEVEL_KHR, VK_BUILD_ACCELERATION_STRUCTURE_MODE_BUILD_KHR,
+                        acceleration_structure, geometry_primitive_count, ALLOW_UPDATE);
+        }
 
-        return AccelerationStructure(std::move(acceleration_structure_buffer), std::move(acceleration_structure));
+        return BottomLevelAccelerationStructure(
+                std::move(acceleration_structure_buffer), std::move(acceleration_structure));
 }
 
-AccelerationStructure create_top_level_acceleration_structure(
+TopLevelAccelerationStructure create_top_level_acceleration_structure(
         const Device& device,
         const CommandPool& compute_command_pool,
         const Queue& compute_queue,
@@ -270,15 +341,12 @@ AccelerationStructure create_top_level_acceleration_structure(
                 instances[i].accelerationStructureReference = bottom_level_references[i];
         }
 
-        const BufferWithMemory instance_buffer(
+        BufferWithMemory instance_buffer(
                 BufferMemoryType::HOST_VISIBLE, device, buffer_family_indices,
                 VK_BUFFER_USAGE_SHADER_DEVICE_ADDRESS_BIT
                         | VK_BUFFER_USAGE_ACCELERATION_STRUCTURE_BUILD_INPUT_READ_ONLY_BIT_KHR,
                 data_size(instances));
         BufferMapper(instance_buffer).write(instances);
-
-        VkDeviceOrHostAddressConstKHR instance_buffer_device_address{};
-        instance_buffer_device_address.deviceAddress = instance_buffer.device_address();
 
         VkAccelerationStructureGeometryKHR geometry{};
         geometry.sType = VK_STRUCTURE_TYPE_ACCELERATION_STRUCTURE_GEOMETRY_KHR;
@@ -286,10 +354,12 @@ AccelerationStructure create_top_level_acceleration_structure(
         geometry.geometryType = VK_GEOMETRY_TYPE_INSTANCES_KHR;
         geometry.geometry.instances.sType = VK_STRUCTURE_TYPE_ACCELERATION_STRUCTURE_GEOMETRY_INSTANCES_DATA_KHR;
         geometry.geometry.instances.arrayOfPointers = VK_FALSE;
-        geometry.geometry.instances.data = instance_buffer_device_address;
+        geometry.geometry.instances.data.deviceAddress = instance_buffer.device_address();
+
+        constexpr bool ALLOW_UPDATE = true;
 
         const VkAccelerationStructureBuildSizesInfoKHR build_sizes = acceleration_structure_build_sizes(
-                device, geometry, VK_ACCELERATION_STRUCTURE_TYPE_TOP_LEVEL_KHR, geometry_primitive_count);
+                device, geometry, VK_ACCELERATION_STRUCTURE_TYPE_TOP_LEVEL_KHR, geometry_primitive_count, ALLOW_UPDATE);
 
         BufferWithMemory acceleration_structure_buffer(
                 BufferMemoryType::DEVICE_LOCAL, device, family_indices,
@@ -304,15 +374,25 @@ AccelerationStructure create_top_level_acceleration_structure(
 
         handle::AccelerationStructureKHR acceleration_structure(device, create_info);
 
-        const BufferWithMemory scratch_buffer(
+        {
+                const BufferWithMemory scratch_buffer_build(
+                        BufferMemoryType::DEVICE_LOCAL, device, buffer_family_indices,
+                        VK_BUFFER_USAGE_SHADER_DEVICE_ADDRESS_BIT | VK_BUFFER_USAGE_STORAGE_BUFFER_BIT,
+                        build_sizes.buildScratchSize);
+
+                build_acceleration_structure(
+                        device, compute_command_pool, compute_queue, scratch_buffer_build, geometry,
+                        VK_ACCELERATION_STRUCTURE_TYPE_TOP_LEVEL_KHR, VK_BUILD_ACCELERATION_STRUCTURE_MODE_BUILD_KHR,
+                        acceleration_structure, geometry_primitive_count, ALLOW_UPDATE);
+        }
+
+        BufferWithMemory scratch_buffer_update(
                 BufferMemoryType::DEVICE_LOCAL, device, buffer_family_indices,
                 VK_BUFFER_USAGE_SHADER_DEVICE_ADDRESS_BIT | VK_BUFFER_USAGE_STORAGE_BUFFER_BIT,
-                build_sizes.buildScratchSize);
+                build_sizes.updateScratchSize);
 
-        build_acceleration_structure(
-                device, compute_command_pool, compute_queue, scratch_buffer, geometry,
-                VK_ACCELERATION_STRUCTURE_TYPE_TOP_LEVEL_KHR, acceleration_structure, geometry_primitive_count);
-
-        return AccelerationStructure(std::move(acceleration_structure_buffer), std::move(acceleration_structure));
+        return TopLevelAccelerationStructure(
+                std::move(acceleration_structure_buffer), std::move(acceleration_structure), geometry,
+                geometry_primitive_count, std::move(instance_buffer), std::move(scratch_buffer_update));
 }
 }

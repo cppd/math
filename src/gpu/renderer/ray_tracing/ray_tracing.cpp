@@ -28,8 +28,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/vulkan/error.h>
 #include <src/vulkan/queue.h>
 
-#include <tuple>
-
 namespace ns::gpu::renderer
 {
 namespace
@@ -94,7 +92,7 @@ vulkan::handle::CommandBuffer create_ray_query_command_buffer(
         return command_buffer;
 }
 
-std::tuple<std::vector<vulkan::AccelerationStructure>, std::vector<VkTransformMatrixKHR>> create_bottom_level(
+std::vector<vulkan::BottomLevelAccelerationStructure> create_bottom_level(
         const vulkan::Device& device,
         const vulkan::CommandPool& compute_command_pool,
         const vulkan::Queue& compute_queue,
@@ -102,14 +100,11 @@ std::tuple<std::vector<vulkan::AccelerationStructure>, std::vector<VkTransformMa
 {
         constexpr std::array VERTICES_0 = std::to_array<Vector3f>({{-0.5, 1, 0}, {-1, 0, 0}, {0, 0, 0}, {-0.5, -1, 0}});
         constexpr std::array INDICES_0 = std::to_array<std::uint32_t>({0, 1, 2, 1, 2, 3});
-        constexpr VkTransformMatrixKHR MATRIX_0{{{1, 0, 0, 0.1}, {0, 1, 0, 0}, {0, 0, 1, 0}}};
 
         constexpr std::array VERTICES_1 = std::to_array<Vector3f>({{0.5, 1, 0}, {1, 0, 0}, {0, 0, 0}, {0.5, -1, 0}});
         constexpr std::array INDICES_1 = std::to_array<std::uint32_t>({0, 1, 2, 1, 2, 3});
-        constexpr VkTransformMatrixKHR MATRIX_1{{{1, 0, 0, -0.1}, {0, 1, 0, 0}, {0, 0, 1, 0}}};
 
-        std::vector<vulkan::AccelerationStructure> bottom_level;
-        std::vector<VkTransformMatrixKHR> matrices;
+        std::vector<vulkan::BottomLevelAccelerationStructure> bottom_level;
 
         bottom_level.push_back(create_bottom_level_acceleration_structure(
                 device, compute_command_pool, compute_queue, family_indices, VERTICES_0, INDICES_0, std::nullopt));
@@ -117,24 +112,31 @@ std::tuple<std::vector<vulkan::AccelerationStructure>, std::vector<VkTransformMa
         bottom_level.push_back(create_bottom_level_acceleration_structure(
                 device, compute_command_pool, compute_queue, family_indices, VERTICES_1, INDICES_1, std::nullopt));
 
-        matrices.push_back(MATRIX_0);
-
-        matrices.push_back(MATRIX_1);
-
-        return {std::move(bottom_level), std::move(matrices)};
+        return bottom_level;
 }
 
-vulkan::AccelerationStructure create_top_level(
+std::vector<VkTransformMatrixKHR> create_matrices()
+{
+        constexpr VkTransformMatrixKHR MATRIX_0{{{1, 0, 0, 0.1}, {0, 1, 0, 0}, {0, 0, 1, 0}}};
+        constexpr VkTransformMatrixKHR MATRIX_1{{{1, 0, 0, -0.1}, {0, 1, 0, 0}, {0, 0, 1, 0}}};
+
+        std::vector<VkTransformMatrixKHR> matrices;
+        matrices.push_back(MATRIX_0);
+        matrices.push_back(MATRIX_1);
+        return matrices;
+}
+
+vulkan::TopLevelAccelerationStructure create_top_level(
         const vulkan::Device& device,
         const vulkan::CommandPool& compute_command_pool,
         const vulkan::Queue& compute_queue,
         const std::vector<std::uint32_t>& family_indices,
-        const std::vector<vulkan::AccelerationStructure>& bottom_level,
+        const std::vector<vulkan::BottomLevelAccelerationStructure>& bottom_level,
         const std::vector<VkTransformMatrixKHR>& matrices)
 {
         std::vector<std::uint64_t> references;
         references.reserve(bottom_level.size());
-        for (const vulkan::AccelerationStructure& v : bottom_level)
+        for (const vulkan::BottomLevelAccelerationStructure& v : bottom_level)
         {
                 references.push_back(v.device_address());
         }
@@ -148,7 +150,8 @@ void ray_tracing(
         const vulkan::CommandPool& compute_command_pool,
         const vulkan::Queue& compute_queue,
         const RayTracingImage& image,
-        const VkAccelerationStructureKHR acceleration_structure)
+        const VkAccelerationStructureKHR acceleration_structure,
+        const std::string_view& file_name)
 {
         const RayTracingProgram program(device, {compute_command_pool.family_index()});
 
@@ -164,7 +167,7 @@ void ray_tracing(
         vulkan::queue_submit(command_buffer, compute_queue);
         VULKAN_CHECK(vkQueueWaitIdle(compute_queue));
 
-        image.save_to_file("ray_tracing");
+        image.save_to_file(file_name);
 }
 
 void ray_query(
@@ -172,7 +175,8 @@ void ray_query(
         const vulkan::CommandPool& compute_command_pool,
         const vulkan::Queue& compute_queue,
         const RayTracingImage& image,
-        const VkAccelerationStructureKHR acceleration_structure)
+        const VkAccelerationStructureKHR acceleration_structure,
+        const std::string_view& file_name)
 {
         const RayQueryProgram program(device, GROUP_SIZE);
 
@@ -188,7 +192,7 @@ void ray_query(
         vulkan::queue_submit(command_buffer, compute_queue);
         VULKAN_CHECK(vkQueueWaitIdle(compute_queue));
 
-        image.save_to_file("ray_query");
+        image.save_to_file(file_name);
 }
 }
 
@@ -201,13 +205,24 @@ void create_ray_tracing_data(
 
         const std::vector<std::uint32_t> family_indices{compute_command_pool->family_index()};
 
-        const auto [bottom_level, matrices] =
+        const std::vector<vulkan::BottomLevelAccelerationStructure> bottom_level =
                 create_bottom_level(*device, *compute_command_pool, *compute_queue, family_indices);
 
-        const vulkan::AccelerationStructure top_level = create_top_level(
+        std::vector<VkTransformMatrixKHR> matrices = create_matrices();
+
+        const vulkan::TopLevelAccelerationStructure top_level = create_top_level(
                 *device, *compute_command_pool, *compute_queue, family_indices, bottom_level, matrices);
 
-        ray_tracing(*device, *compute_command_pool, *compute_queue, image, top_level.handle());
-        ray_query(*device, *compute_command_pool, *compute_queue, image, top_level.handle());
+        ray_tracing(*device, *compute_command_pool, *compute_queue, image, top_level.handle(), "ray_tracing");
+        ray_query(*device, *compute_command_pool, *compute_queue, image, top_level.handle(), "ray_query");
+
+        for (VkTransformMatrixKHR& m : matrices)
+        {
+                m.matrix[0][3] += 0.1;
+        }
+        top_level.update_matrices(*device, *compute_command_pool, *compute_queue, matrices);
+
+        ray_tracing(*device, *compute_command_pool, *compute_queue, image, top_level.handle(), "ray_tracing_update");
+        ray_query(*device, *compute_command_pool, *compute_queue, image, top_level.handle(), "ray_query_update");
 }
 }

@@ -29,14 +29,14 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 namespace ns::vulkan
 {
-class AccelerationStructure final
+class BottomLevelAccelerationStructure final
 {
         BufferWithMemory buffer_;
         handle::AccelerationStructureKHR acceleration_structure_;
         VkDeviceAddress device_address_;
 
 public:
-        AccelerationStructure(BufferWithMemory&& buffer, handle::AccelerationStructureKHR&& handle);
+        BottomLevelAccelerationStructure(BufferWithMemory&& buffer, handle::AccelerationStructureKHR&& handle);
 
         VkAccelerationStructureKHR handle() const
         {
@@ -49,7 +49,44 @@ public:
         }
 };
 
-AccelerationStructure create_bottom_level_acceleration_structure(
+class TopLevelAccelerationStructure final
+{
+        BufferWithMemory buffer_;
+        handle::AccelerationStructureKHR acceleration_structure_;
+        VkDeviceAddress device_address_;
+
+        VkAccelerationStructureGeometryKHR geometry_;
+        std::uint32_t geometry_primitive_count_;
+        BufferWithMemory instance_buffer_;
+        BufferWithMemory scratch_buffer_update_;
+
+public:
+        TopLevelAccelerationStructure(
+                BufferWithMemory&& buffer,
+                handle::AccelerationStructureKHR&& handle,
+                const VkAccelerationStructureGeometryKHR& geometry,
+                std::uint32_t geometry_primitive_count,
+                BufferWithMemory&& instance_buffer,
+                BufferWithMemory&& scratch_buffer_update);
+
+        VkAccelerationStructureKHR handle() const
+        {
+                return acceleration_structure_;
+        }
+
+        VkDeviceAddress device_address() const
+        {
+                return device_address_;
+        }
+
+        void update_matrices(
+                const Device& device,
+                const CommandPool& compute_command_pool,
+                const Queue& compute_queue,
+                const std::span<const VkTransformMatrixKHR>& bottom_level_matrices) const;
+};
+
+BottomLevelAccelerationStructure create_bottom_level_acceleration_structure(
         const Device& device,
         const CommandPool& compute_command_pool,
         const Queue& compute_queue,
@@ -58,7 +95,7 @@ AccelerationStructure create_bottom_level_acceleration_structure(
         const std::span<const std::uint32_t>& indices,
         const std::optional<VkTransformMatrixKHR>& transform_matrix);
 
-AccelerationStructure create_top_level_acceleration_structure(
+TopLevelAccelerationStructure create_top_level_acceleration_structure(
         const Device& device,
         const CommandPool& compute_command_pool,
         const Queue& compute_queue,
