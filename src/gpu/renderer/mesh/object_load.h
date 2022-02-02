@@ -18,8 +18,10 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #pragma once
 
 #include "buffers/material.h"
+#include "shaders/vertex_triangles.h"
 
 #include <src/model/mesh.h>
+#include <src/vulkan/acceleration_structure.h>
 #include <src/vulkan/buffers.h>
 #include <src/vulkan/objects.h>
 
@@ -29,6 +31,13 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 namespace ns::gpu::renderer
 {
 inline constexpr VkIndexType VERTEX_INDEX_TYPE = VK_INDEX_TYPE_UINT32;
+using VertexIndexType = std::uint32_t;
+
+struct BufferMesh final
+{
+        std::vector<TrianglesVertex> vertices;
+        std::vector<VertexIndexType> indices;
+};
 
 void load_vertices(
         const vulkan::Device& device,
@@ -39,8 +48,14 @@ void load_vertices(
         const std::vector<int>& sorted_face_indices,
         std::unique_ptr<vulkan::BufferWithMemory>* vertex_buffer,
         std::unique_ptr<vulkan::BufferWithMemory>* index_buffer,
-        unsigned* vertex_count,
-        unsigned* index_count);
+        BufferMesh* buffer_mesh);
+
+std::unique_ptr<vulkan::BottomLevelAccelerationStructure> load_acceleration_structure(
+        const vulkan::Device& device,
+        const vulkan::CommandPool& compute_command_pool,
+        const vulkan::Queue& compute_queue,
+        const std::vector<std::uint32_t>& family_indices,
+        const BufferMesh& buffer_mesh);
 
 std::unique_ptr<vulkan::BufferWithMemory> load_point_vertices(
         const vulkan::Device& device,

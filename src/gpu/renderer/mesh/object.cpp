@@ -28,6 +28,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/com/error.h>
 #include <src/com/merge.h>
 #include <src/model/mesh_utility.h>
+#include <src/vulkan/acceleration_structure.h>
 #include <src/vulkan/buffers.h>
 #include <src/vulkan/descriptor.h>
 
@@ -76,10 +77,15 @@ std::vector<MaterialMemory::MaterialInfo> materials_info(
 class Impl final : public MeshObject
 {
         const vulkan::Device* const device_;
+        const bool ray_tracing_;
+
+        const vulkan::CommandPool* const compute_command_pool_;
+        const vulkan::Queue* const compute_queue_;
         const vulkan::CommandPool* const transfer_command_pool_;
         const vulkan::Queue* const transfer_queue_;
 
         const std::vector<std::uint32_t> family_indices_;
+        const std::vector<std::uint32_t> acceleration_structure_family_indices_;
 
         MeshBuffer mesh_buffer_;
         std::unordered_map<VkDescriptorSetLayout, vulkan::Descriptors> mesh_descriptor_sets_;
@@ -108,6 +114,8 @@ class Impl final : public MeshObject
 
         std::unique_ptr<vulkan::BufferWithMemory> points_vertex_buffer_;
         unsigned points_vertex_count_ = 0;
+
+        std::unique_ptr<vulkan::BottomLevelAccelerationStructure> acceleration_structure_;
 
         bool transparent_ = false;
 
@@ -195,10 +203,11 @@ class Impl final : public MeshObject
 
         void load_mesh_textures_and_materials(const mesh::Mesh<3>& mesh)
         {
+                textures_.clear();
+                material_buffers_.clear();
+
                 if (mesh.facets.empty())
                 {
-                        textures_.clear();
-                        material_buffers_.clear();
                         create_material_descriptor_sets({});
                         return;
                 }
@@ -211,8 +220,16 @@ class Impl final : public MeshObject
                 create_material_descriptor_sets(materials_info(mesh, textures_, material_buffers_));
         }
 
-        void load_mesh_vertices(const mesh::Mesh<3>& mesh)
+        void load_mesh_geometry(const mesh::Mesh<3>& mesh)
         {
+                faces_vertex_buffer_.reset();
+                faces_index_buffer_.reset();
+                lines_vertex_buffer_.reset();
+                points_vertex_buffer_.reset();
+                acceleration_structure_.reset();
+
+                BufferMesh buffer_mesh;
+
                 {
                         std::vector<int> sorted_face_indices;
                         std::vector<int> material_face_offset;
@@ -238,8 +255,10 @@ class Impl final : public MeshObject
 
                         load_vertices(
                                 *device_, *transfer_command_pool_, *transfer_queue_, family_indices_, mesh,
-                                sorted_face_indices, &faces_vertex_buffer_, &faces_index_buffer_, &faces_vertex_count_,
-                                &faces_index_count_);
+                                sorted_face_indices, &faces_vertex_buffer_, &faces_index_buffer_, &buffer_mesh);
+
+                        faces_vertex_count_ = buffer_mesh.vertices.size();
+                        faces_index_count_ = buffer_mesh.indices.size();
 
                         ASSERT(faces_index_count_ == 3 * mesh.facets.size());
                 }
@@ -251,6 +270,13 @@ class Impl final : public MeshObject
                 points_vertex_buffer_ =
                         load_point_vertices(*device_, *transfer_command_pool_, *transfer_queue_, family_indices_, mesh);
                 points_vertex_count_ = mesh.points.size();
+
+                if (ray_tracing_)
+                {
+                        acceleration_structure_ = load_acceleration_structure(
+                                *device_, *compute_command_pool_, *compute_queue_,
+                                acceleration_structure_family_indices_, buffer_mesh);
+                }
         }
 
         //
@@ -429,7 +455,7 @@ class Impl final : public MeshObject
                         const mesh::Mesh<3>& mesh = mesh_object.mesh();
 
                         load_mesh_textures_and_materials(mesh);
-                        load_mesh_vertices(mesh);
+                        load_mesh_geometry(mesh);
 
                         update_changes.command_buffers = true;
                 }
@@ -444,17 +470,25 @@ class Impl final : public MeshObject
 
 public:
         Impl(const vulkan::Device* const device,
+             const bool ray_tracing,
              const std::vector<std::uint32_t>& graphics_family_indices,
+             const vulkan::CommandPool* const compute_command_pool,
+             const vulkan::Queue* const compute_queue,
              const vulkan::CommandPool* const transfer_command_pool,
              const vulkan::Queue* const transfer_queue,
              std::vector<vulkan::DescriptorSetLayoutAndBindings> mesh_layouts,
              std::vector<vulkan::DescriptorSetLayoutAndBindings> material_layouts,
              const VkSampler texture_sampler)
                 : device_(device),
+                  ray_tracing_(ray_tracing),
+                  compute_command_pool_(compute_command_pool),
+                  compute_queue_(compute_queue),
                   transfer_command_pool_(transfer_command_pool),
                   transfer_queue_(transfer_queue),
                   family_indices_(sort_and_unique(
                           merge<std::vector<std::uint32_t>>(graphics_family_indices, transfer_queue->family_index()))),
+                  acceleration_structure_family_indices_(sort_and_unique(
+                          merge<std::vector<std::uint32_t>>(graphics_family_indices, compute_queue->family_index()))),
                   mesh_buffer_(*device, graphics_family_indices),
                   mesh_layouts_(std::move(mesh_layouts)),
                   material_layouts_(std::move(material_layouts)),
@@ -469,7 +503,10 @@ public:
 
 std::unique_ptr<MeshObject> create_mesh_object(
         const vulkan::Device* const device,
+        const bool ray_tracing,
         const std::vector<std::uint32_t>& graphics_family_indices,
+        const vulkan::CommandPool* const compute_command_pool,
+        const vulkan::Queue* const compute_queue,
         const vulkan::CommandPool* const transfer_command_pool,
         const vulkan::Queue* const transfer_queue,
         std::vector<vulkan::DescriptorSetLayoutAndBindings> mesh_layouts,
@@ -477,7 +514,8 @@ std::unique_ptr<MeshObject> create_mesh_object(
         const VkSampler texture_sampler)
 {
         return std::make_unique<Impl>(
-                device, graphics_family_indices, transfer_command_pool, transfer_queue, std::move(mesh_layouts),
-                std::move(material_layouts), texture_sampler);
+                device, ray_tracing, graphics_family_indices, compute_command_pool, compute_queue,
+                transfer_command_pool, transfer_queue, std::move(mesh_layouts), std::move(material_layouts),
+                texture_sampler);
 }
 }

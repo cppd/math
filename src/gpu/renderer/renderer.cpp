@@ -61,6 +61,8 @@ class Impl final : public Renderer, RendererProcessEvents
         Region<2, int> viewport_;
 
         const vulkan::Device* const device_;
+        const bool ray_tracing_;
+
         const vulkan::CommandPool* const graphics_command_pool_;
         const vulkan::Queue* const graphics_queue_;
         const vulkan::CommandPool* const transfer_command_pool_;
@@ -325,8 +327,9 @@ class Impl final : public Renderer, RendererProcessEvents
         void event(const StorageMeshCreate& v)
         {
                 *v.ptr = create_mesh_object(
-                        device_, {graphics_queue_->family_index()}, transfer_command_pool_, transfer_queue_,
-                        mesh_layouts_, mesh_material_layouts_, mesh_renderer_.texture_sampler());
+                        device_, ray_tracing_, {graphics_queue_->family_index()}, compute_command_pool_, compute_queue_,
+                        transfer_command_pool_, transfer_queue_, mesh_layouts_, mesh_material_layouts_,
+                        mesh_renderer_.texture_sampler());
         }
 
         void event(const StorageMeshVisibilityChanged&)
@@ -411,6 +414,7 @@ public:
              const bool sample_shading,
              const bool sampler_anisotropy)
                 : device_(device),
+                  ray_tracing_(ray_tracing),
                   graphics_command_pool_(graphics_command_pool),
                   graphics_queue_(graphics_queue),
                   transfer_command_pool_(transfer_command_pool),
