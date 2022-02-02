@@ -73,9 +73,9 @@ std::vector<Edge2> all_edges_from_delaunay_objects(const std::vector<std::array<
 
         for (const std::array<int, N>& indices : delaunay_objects)
         {
-                for (unsigned p1 = 0; p1 < indices.size() - 1; ++p1)
+                for (std::size_t p1 = 0; p1 < indices.size() - 1; ++p1)
                 {
-                        for (unsigned p2 = p1 + 1; p2 < indices.size(); ++p2)
+                        for (std::size_t p2 = p1 + 1; p2 < indices.size(); ++p2)
                         {
                                 if (indices[p1] < indices[p2])
                                 {
@@ -126,7 +126,7 @@ std::vector<std::array<int, 2>> kruskal(
 
         UnionFind<int> union_find(point_count);
 
-        for (unsigned i = 0; i < sorted_edges.size() && mst.size() < mst_size; ++i)
+        for (std::size_t i = 0; i < sorted_edges.size() && mst.size() < mst_size; ++i)
         {
                 const int v = sorted_edges[i].vertex(0);
                 const int w = sorted_edges[i].vertex(1);

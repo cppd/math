@@ -247,7 +247,7 @@ class Impl final : public MeshObject
                                 }));
 
                         material_vertices_.resize(material_face_count.size());
-                        for (unsigned i = 0; i < material_face_count.size(); ++i)
+                        for (std::size_t i = 0; i < material_face_count.size(); ++i)
                         {
                                 material_vertices_[i].offset = 3 * material_face_offset[i];
                                 material_vertices_[i].count = 3 * material_face_count[i];
@@ -309,7 +309,7 @@ class Impl final : public MeshObject
                 vkCmdBindVertexBuffers(command_buffer, 0, buffers.size(), buffers.data(), offsets.data());
                 vkCmdBindIndexBuffer(command_buffer, faces_index_buffer_->buffer(), 0, VERTEX_INDEX_TYPE);
 
-                for (unsigned i = 0; i < material_vertices_.size(); ++i)
+                for (std::size_t i = 0; i < material_vertices_.size(); ++i)
                 {
                         if (material_vertices_[i].count <= 0)
                         {

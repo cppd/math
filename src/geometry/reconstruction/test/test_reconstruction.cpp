@@ -107,11 +107,11 @@ std::vector<Vector<N, float>> clone_object(const std::vector<Vector<N, float>>& 
         for (unsigned clone = 0; clone < clone_count; ++clone)
         {
                 Vector<N, float> vec_shift;
-                for (unsigned n = 0; n < N; ++n)
+                for (std::size_t n = 0; n < N; ++n)
                 {
                         vec_shift[n] = ((1 << n) & clone) ? SHIFT : -SHIFT;
                 }
-                for (unsigned i = 0; i < points.size(); ++i)
+                for (std::size_t i = 0; i < points.size(); ++i)
                 {
                         clones.push_back(points[i] + vec_shift);
                 }

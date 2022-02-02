@@ -41,7 +41,7 @@ Swapchain::Swapchain(
 
         std::vector<VkImageView> attachments(2);
 
-        for (unsigned i = 0; i < swapchain.image_views().size(); ++i)
+        for (std::size_t i = 0; i < swapchain.image_views().size(); ++i)
         {
                 signal_semaphores_.emplace_back(device);
 

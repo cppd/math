@@ -112,10 +112,10 @@ public:
 
                 std::array<DataType, (1 << N)> data;
 
-                for (unsigned i = 0; i < data.size(); ++i)
+                for (std::size_t i = 0; i < data.size(); ++i)
                 {
                         long long index = 0;
-                        for (unsigned n = 0; n < N; ++n)
+                        for (std::size_t n = 0; n < N; ++n)
                         {
                                 const int coordinate = ((1 << n) & i) ? x1[n] : x0[n];
                                 index += global_index_.stride(n) * coordinate;

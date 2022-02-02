@@ -79,7 +79,7 @@ std::vector<DownsampleMemory> create_downsample_memory(
 
         std::vector<DownsampleMemory> downsample_images;
 
-        for (unsigned i = 1; i < images[0].size(); ++i)
+        for (std::size_t i = 1; i < images[0].size(); ++i)
         {
                 downsample_images.emplace_back(device, descriptor_set_layout);
                 downsample_images.back().set_big(images[0][i - 1].image_view(), images[1][i - 1].image_view());

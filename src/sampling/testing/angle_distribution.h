@@ -208,7 +208,7 @@ public:
                                              / geometry::sphere_relative_area<N, long double>(0, PI<T>);
 
                 long long cnt = 0;
-                for (unsigned bucket = 0; bucket < buckets.size(); ++bucket)
+                for (std::size_t bucket = 0; bucket < buckets.size(); ++bucket)
                 {
                         Distribution& d = distribution_.emplace_back();
 

@@ -81,7 +81,7 @@ std::vector<Vector2i> downsample_groups(const Vector2i& group_size, const std::v
         std::vector<Vector2i> groups;
         groups.reserve(sizes.size() - 1);
 
-        for (unsigned i = 1; i < sizes.size(); ++i)
+        for (std::size_t i = 1; i < sizes.size(); ++i)
         {
                 groups.push_back(group_count(sizes[i][0], sizes[i][1], group_size));
         }

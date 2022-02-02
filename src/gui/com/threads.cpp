@@ -287,7 +287,7 @@ class Impl final : public WorkerThreads
 
                 auto bar = progress_bars->begin();
 
-                for (unsigned i = 0; i < ratios.size(); ++i, ++bar)
+                for (std::size_t i = 0; i < ratios.size(); ++i, ++bar)
                 {
                         if (!bar->isVisible())
                         {
@@ -354,7 +354,7 @@ public:
                 threads_.resize(thread_count);
                 progress_.reserve(thread_count);
 
-                for (unsigned id = 0; id < threads_.size(); ++id)
+                for (std::size_t id = 0; id < threads_.size(); ++id)
                 {
                         Progress p;
                         p.id = id;

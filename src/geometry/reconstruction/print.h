@@ -34,7 +34,7 @@ template <std::size_t N>
 void print_delaunay_facets(const std::vector<DelaunayFacet<N>>& delaunay_facets)
 {
         LOG("--delaunay facets--");
-        for (unsigned i = 0; i < delaunay_facets.size(); ++i)
+        for (std::size_t i = 0; i < delaunay_facets.size(); ++i)
         {
                 LOG(to_string(delaunay_facets[i].vertices()));
         }
@@ -45,7 +45,7 @@ template <std::size_t N>
 void print_cocone_facets(const std::vector<DelaunayFacet<N>>& delaunay_facets, const std::vector<bool>& cocone_facets)
 {
         LOG("--cocone facets--");
-        for (unsigned i = 0; i < delaunay_facets.size(); ++i)
+        for (std::size_t i = 0; i < delaunay_facets.size(); ++i)
         {
                 if (cocone_facets[i])
                 {
@@ -61,7 +61,7 @@ void print_not_cocone_facets(
         const std::vector<bool>& cocone_facets)
 {
         LOG("--not cocone facets--");
-        for (unsigned i = 0; i < delaunay_facets.size(); ++i)
+        for (std::size_t i = 0; i < delaunay_facets.size(); ++i)
         {
                 if (!cocone_facets[i])
                 {

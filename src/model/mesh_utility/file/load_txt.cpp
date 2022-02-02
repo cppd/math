@@ -122,7 +122,7 @@ std::unique_ptr<Mesh<N>> read_text(const std::filesystem::path& file_name, Progr
         }
 
         mesh->points.resize(mesh->vertices.size());
-        for (unsigned i = 0; i < mesh->points.size(); ++i)
+        for (std::size_t i = 0; i < mesh->points.size(); ++i)
         {
                 mesh->points[i].vertex = i;
         }

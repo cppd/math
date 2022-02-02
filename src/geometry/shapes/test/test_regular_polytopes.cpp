@@ -51,9 +51,9 @@ void test_simplex(const std::array<Vector<N, T>, N + 1>& vertices)
         }
 
         const T distance = (vertices[0] - vertices[1]).norm();
-        for (unsigned i = 0; i < vertices.size(); ++i)
+        for (std::size_t i = 0; i < vertices.size(); ++i)
         {
-                for (unsigned j = i + 1; j < vertices.size(); ++j)
+                for (std::size_t j = i + 1; j < vertices.size(); ++j)
                 {
                         if (!(std::abs(distance - (vertices[i] - vertices[j]).norm()) < ABS_ERROR<T>))
                         {
@@ -71,9 +71,9 @@ void check_facet_equal_distances(const std::string& name, const std::vector<std:
         for (const std::array<Vector<N, T>, N>& vertices : facets)
         {
                 const T d = (vertices[0] - vertices[1]).norm();
-                for (unsigned i = 0; i < vertices.size(); ++i)
+                for (std::size_t i = 0; i < vertices.size(); ++i)
                 {
-                        for (unsigned j = i + 1; j < vertices.size(); ++j)
+                        for (std::size_t j = i + 1; j < vertices.size(); ++j)
                         {
                                 if (!(std::abs(d - (vertices[j] - vertices[i]).norm()) < ABS_ERROR<T>))
                                 {

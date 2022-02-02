@@ -75,7 +75,7 @@ template <std::size_t N>
 void check_visible_from_point(
         const std::vector<Vector<N, float>>& points,
         const ConvexHullFacet<N>& facet,
-        const int point)
+        const std::size_t point)
 {
         if (points[point] == points[facet.vertices()[0]])
         {
@@ -141,7 +141,7 @@ void check_convex_hull(const std::vector<Vector<N, float>>& points, const std::v
                         error("Facet ortho is not unit: " + to_string(facet.ortho().norm()));
                 }
 
-                for (unsigned i = 0; i < points.size(); ++i)
+                for (std::size_t i = 0; i < points.size(); ++i)
                 {
                         check_visible_from_point(points, facet, i);
                 }

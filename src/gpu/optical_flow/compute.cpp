@@ -132,7 +132,7 @@ class Impl final : public Compute
                         command_buffer, images_[index][0].image(), VK_IMAGE_LAYOUT_GENERAL, VK_IMAGE_LAYOUT_GENERAL,
                         VK_ACCESS_SHADER_WRITE_BIT, VK_ACCESS_SHADER_READ_BIT);
 
-                for (unsigned i = 0; i < downsample_groups_.size(); ++i)
+                for (std::size_t i = 0; i < downsample_groups_.size(); ++i)
                 {
                         vkCmdBindPipeline(
                                 command_buffer, VK_PIPELINE_BIND_POINT_COMPUTE, downsample_program_.pipeline());
@@ -155,7 +155,7 @@ class Impl final : public Compute
                 ASSERT(sobel_groups_.size() == dx_.size());
                 ASSERT(sobel_groups_.size() == dy_.size());
 
-                for (unsigned i = 0; i < sobel_groups_.size(); ++i)
+                for (std::size_t i = 0; i < sobel_groups_.size(); ++i)
                 {
                         vkCmdBindPipeline(command_buffer, VK_PIPELINE_BIND_POINT_COMPUTE, sobel_program_.pipeline());
                         vkCmdBindDescriptorSets(
@@ -166,7 +166,7 @@ class Impl final : public Compute
 
                 std::vector<VkImage> images;
                 images.reserve(dx_.size() + dy_.size());
-                for (unsigned i = 0; i < sobel_groups_.size(); ++i)
+                for (std::size_t i = 0; i < sobel_groups_.size(); ++i)
                 {
                         images.push_back(dx_[i].image());
                         images.push_back(dy_[i].image());
