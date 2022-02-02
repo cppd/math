@@ -482,7 +482,6 @@ std::unique_ptr<Renderer> create_renderer(
         const bool sampler_anisotropy)
 {
         const bool ray_tracing = ray_tracing_supported(*device);
-        LOG("Renderer device ray tracing: " + std::string(ray_tracing ? "supported" : "not supported"));
 
         return std::make_unique<Impl>(
                 ray_tracing, device, graphics_command_pool, graphics_queue, transfer_command_pool, transfer_queue,

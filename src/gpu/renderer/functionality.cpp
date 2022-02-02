@@ -17,8 +17,10 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "functionality.h"
 
+#include <src/com/log.h>
 #include <src/vulkan/features.h>
 
+#include <algorithm>
 #include <array>
 
 namespace ns::gpu::renderer
@@ -81,14 +83,33 @@ vulkan::DeviceFunctionality device_functionality()
 
 bool ray_tracing_supported(const vulkan::Device& device)
 {
-        for (const auto& s : RAY_TRACING_EXTENSIONS)
+        for (const auto& extension : RAY_TRACING_EXTENSIONS)
         {
-                if (!device.extensions().contains(s))
+                if (!device.extensions().contains(extension))
                 {
+                        LOG(std::string("Renderer ray tracing extension is not supported ") + extension);
                         return false;
                 }
         }
 
-        return check_features(RAY_TRACING_FEATURES, device.features());
+        if (!check_features(RAY_TRACING_FEATURES, device.features()))
+        {
+                std::vector<std::string> features = vulkan::features_to_strings(RAY_TRACING_FEATURES, true);
+                std::sort(features.begin(), features.end());
+                std::string s;
+                for (const auto& feature : features)
+                {
+                        if (!s.empty())
+                        {
+                                s += ", ";
+                        }
+                        s += feature;
+                }
+                LOG("Renderer ray tracing features are not supported: " + s);
+                return false;
+        }
+
+        LOG("Renderer ray tracing supported");
+        return true;
 }
 }
