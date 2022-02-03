@@ -61,7 +61,8 @@ struct MeshObject
 
         struct UpdateChanges
         {
-                bool command_buffers = false;
+                bool matrix = false;
+                bool mesh = false;
                 bool transparency = false;
                 bool visibility = false;
         };

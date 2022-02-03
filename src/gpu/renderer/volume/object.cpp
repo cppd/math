@@ -257,7 +257,7 @@ class Impl final : public VolumeObject
                         set_transfer_function();
                         set_image(volume_object.volume().image, &size_changed);
                         create_descriptor_sets();
-                        update_changes.command_buffers = true;
+                        update_changes.image = true;
                 }
 
                 if ((updates & PARAMETERS_UPDATE).any())

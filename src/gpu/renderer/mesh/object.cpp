@@ -426,6 +426,8 @@ class Impl final : public MeshObject
                 if (updates[mesh::UPDATE_MATRIX])
                 {
                         buffer_set_coordinates(mesh_object.matrix());
+
+                        update_changes.matrix = true;
                 }
 
                 if (updates[mesh::UPDATE_ALPHA])
@@ -457,7 +459,7 @@ class Impl final : public MeshObject
                         load_mesh_textures_and_materials(mesh);
                         load_mesh_geometry(mesh);
 
-                        update_changes.command_buffers = true;
+                        update_changes.mesh = true;
                 }
 
                 if (updates[mesh::UPDATE_VISIBILITY])

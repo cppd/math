@@ -345,7 +345,7 @@ class Impl final : public Renderer, RendererViewEvents, StorageMeshEvents, Stora
 
         void mesh_changed(const MeshObject::UpdateChanges& update_changes) override
         {
-                if (update_changes.command_buffers || update_changes.transparency)
+                if (update_changes.mesh || update_changes.transparency)
                 {
                         create_mesh_command_buffers();
                 }
@@ -369,7 +369,7 @@ class Impl final : public Renderer, RendererViewEvents, StorageMeshEvents, Stora
 
         void volume_changed(const VolumeObject::UpdateChanges& update_changes) override
         {
-                if (update_changes.command_buffers)
+                if (update_changes.image)
                 {
                         create_volume_command_buffers();
                 }
