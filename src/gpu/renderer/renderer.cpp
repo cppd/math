@@ -17,7 +17,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "renderer.h"
 
-#include "buffer_commands.h"
+#include "buffer.h"
 #include "functionality.h"
 #include "renderer_draw.h"
 #include "renderer_object.h"
@@ -97,25 +97,25 @@ class Impl final : public Renderer, RendererViewEvents, StorageMeshEvents, Stora
 
         RendererDraw renderer_draw_;
 
-        void command(const ObjectCommand& object_command)
+        void exec(const ObjectCommand& command)
         {
-                renderer_object_.command(object_command);
+                renderer_object_.command(command);
         }
 
-        void command(const ViewCommand& view_command)
+        void exec(const ViewCommand& command)
         {
-                renderer_view_.exec(view_command);
+                renderer_view_.command(command);
         }
 
-        void exec(Command&& renderer_command) override
+        void exec(Command&& command) override
         {
                 ASSERT(thread_id_ == std::this_thread::get_id());
 
                 const auto visitor = [this](const auto& v)
                 {
-                        command(v);
+                        exec(v);
                 };
-                std::visit(visitor, renderer_command);
+                std::visit(visitor, command);
         }
 
         VkSemaphore draw(

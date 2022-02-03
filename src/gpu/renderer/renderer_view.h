@@ -17,7 +17,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
-#include "renderer_command.h"
+#include "command.h"
 
 #include "buffers/shader.h"
 
@@ -184,7 +184,7 @@ public:
         {
         }
 
-        void exec(const ViewCommand& view_command)
+        void command(const ViewCommand& view_command)
         {
                 const auto visitor = [this](const auto& v)
                 {

@@ -18,7 +18,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "shader.h"
 
 #include "../../com/matrix.h"
-#include "../buffer_commands.h"
 
 namespace ns::gpu::renderer
 {

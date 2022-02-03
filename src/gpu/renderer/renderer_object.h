@@ -17,7 +17,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
-#include "renderer_command.h"
+#include "command.h"
 #include "storage_mesh.h"
 #include "storage_volume.h"
 

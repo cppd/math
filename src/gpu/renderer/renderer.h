@@ -17,7 +17,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
-#include "renderer_command.h"
+#include "command.h"
 
 #include <src/gpu/render_buffers.h>
 #include <src/model/mesh_object.h>
@@ -37,7 +37,7 @@ struct Renderer
 
         virtual ~Renderer() = default;
 
-        virtual void exec(Command&& renderer_command) = 0;
+        virtual void exec(Command&& command) = 0;
 
         virtual VkSemaphore draw(
                 const vulkan::Queue& graphics_queue_1,
