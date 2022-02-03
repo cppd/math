@@ -25,46 +25,44 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 namespace ns::gpu::renderer
 {
-class RendererObjects
+class RendererObject
 {
-        StorageMesh mesh_storage_;
-        StorageVolume volume_storage_;
+        StorageMesh* mesh_storage_;
+        StorageVolume* volume_storage_;
 
         void command(const MeshUpdate& v)
         {
-                ASSERT(!volume_storage_.contains(v.object->id()));
-                mesh_storage_.update(*v.object);
+                ASSERT(!volume_storage_->contains(v.object->id()));
+                mesh_storage_->update(*v.object);
         }
 
         void command(const VolumeUpdate& v)
         {
-                ASSERT(!mesh_storage_.contains(v.object->id()));
-                volume_storage_.update(*v.object);
+                ASSERT(!mesh_storage_->contains(v.object->id()));
+                volume_storage_->update(*v.object);
         }
 
         void command(const DeleteObject& v)
         {
-                if (mesh_storage_.erase(v.id))
+                if (mesh_storage_->erase(v.id))
                 {
-                        ASSERT(!volume_storage_.contains(v.id));
+                        ASSERT(!volume_storage_->contains(v.id));
                 }
-                else if (volume_storage_.erase(v.id))
+                else if (volume_storage_->erase(v.id))
                 {
-                        ASSERT(!mesh_storage_.contains(v.id));
+                        ASSERT(!mesh_storage_->contains(v.id));
                 }
         }
 
         void command(const DeleteAllObjects&)
         {
-                mesh_storage_.clear();
-                volume_storage_.clear();
+                mesh_storage_->clear();
+                volume_storage_->clear();
         }
 
 public:
-        RendererObjects(
-                std::function<void(const StorageMeshEvents&)>&& mesh_events,
-                std::function<void(const StorageVolumeEvents&)>&& volume_events)
-                : mesh_storage_(std::move(mesh_events)), volume_storage_(std::move(volume_events))
+        RendererObject(StorageMesh* const mesh_storage, StorageVolume* const volume_storage)
+                : mesh_storage_(mesh_storage), volume_storage_(volume_storage)
         {
         }
 
@@ -75,16 +73,6 @@ public:
                         command(v);
                 };
                 std::visit(visitor, object_command);
-        }
-
-        decltype(auto) mesh_visible_objects() const
-        {
-                return mesh_storage_.visible_objects();
-        }
-
-        decltype(auto) volume_visible_objects() const
-        {
-                return volume_storage_.visible_objects();
         }
 };
 }

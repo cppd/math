@@ -23,47 +23,31 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <src/com/log.h>
 
-#include <functional>
-#include <variant>
-
 namespace ns::gpu::renderer
 {
-struct StorageVolumeCreate final
+class StorageVolumeEvents
 {
-        std::unique_ptr<VolumeObject>* ptr;
-        explicit StorageVolumeCreate(std::unique_ptr<VolumeObject>* const ptr) : ptr(ptr)
-        {
-        }
-};
+protected:
+        ~StorageVolumeEvents() = default;
 
-struct StorageVolumeVisibilityChanged final
-{
+public:
+        virtual void volume_create(std::unique_ptr<VolumeObject>* ptr) = 0;
+        virtual void volume_visibility_changed() = 0;
+        virtual void volume_changed(const VolumeObject::UpdateChanges& update_changes) = 0;
 };
-
-struct StorageVolumeChanged final
-{
-        const VolumeObject::UpdateChanges* update_changes;
-        explicit StorageVolumeChanged(const VolumeObject::UpdateChanges* const update_changes)
-                : update_changes(update_changes)
-        {
-        }
-};
-
-using StorageVolumeEvents = std::variant<StorageVolumeChanged, StorageVolumeCreate, StorageVolumeVisibilityChanged>;
 
 class StorageVolume final : private StorageEvents<VolumeObject>
 {
         Storage<VolumeObject, VolumeObject> storage_;
-        std::function<void(const StorageVolumeEvents&)> events_;
+        StorageVolumeEvents* events_;
 
         void visibility_changed() override
         {
-                events_(StorageVolumeVisibilityChanged());
+                events_->volume_visibility_changed();
         }
 
 public:
-        explicit StorageVolume(std::function<void(const StorageVolumeEvents&)>&& events)
-                : storage_(this), events_(std::move(events))
+        explicit StorageVolume(StorageVolumeEvents* const events) : storage_(this), events_(events)
         {
         }
 
@@ -97,7 +81,7 @@ public:
                                 return p;
                         }
                         std::unique_ptr<VolumeObject> volume;
-                        events_(StorageVolumeCreate(&volume));
+                        events_->volume_create(&volume);
                         return storage_.insert(object.id(), std::move(volume));
                 }();
 
@@ -127,7 +111,7 @@ public:
 
                 if (visible && storage_visible)
                 {
-                        events_(StorageVolumeChanged(&update_changes));
+                        events_->volume_changed(update_changes);
                         return;
                 }
 

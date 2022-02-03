@@ -20,7 +20,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "buffer_commands.h"
 #include "functionality.h"
 #include "renderer_draw.h"
-#include "renderer_objects.h"
+#include "renderer_object.h"
 #include "renderer_process.h"
 #include "storage_mesh.h"
 #include "storage_volume.h"
@@ -54,7 +54,7 @@ constexpr VkImageLayout DEPTH_COPY_IMAGE_LAYOUT = VK_IMAGE_LAYOUT_SHADER_READ_ON
 constexpr std::uint32_t OBJECTS_CLEAR_VALUE = 0;
 constexpr std::uint32_t TRANSPARENCY_NODE_BUFFER_MAX_SIZE = (1ull << 30);
 
-class Impl final : public Renderer, RendererProcessEvents
+class Impl final : public Renderer, RendererProcessEvents, StorageMeshEvents, StorageVolumeEvents
 {
         const std::thread::id thread_id_ = std::this_thread::get_id();
 
@@ -89,13 +89,16 @@ class Impl final : public Renderer, RendererProcessEvents
         std::optional<vulkan::handle::CommandBuffers> clear_command_buffers_;
         std::optional<TransparencyBuffers> transparency_buffers_;
 
-        RendererObjects renderer_objects_;
+        StorageMesh mesh_storage_;
+        StorageVolume volume_storage_;
+
+        RendererObject renderer_object_;
         RendererProcess renderer_process_;
         RendererDraw renderer_draw_;
 
         void command(const ObjectCommand& object_command)
         {
-                renderer_objects_.command(object_command);
+                renderer_object_.command(object_command);
         }
 
         void command(const ViewCommand& view_command)
@@ -266,7 +269,7 @@ class Impl final : public Renderer, RendererProcessEvents
                 mesh_renderer_.delete_render_command_buffers();
 
                 mesh_renderer_.create_render_command_buffers(
-                        renderer_objects_.mesh_visible_objects(), *graphics_command_pool_,
+                        mesh_storage_.visible_objects(), *graphics_command_pool_,
                         renderer_process_.clip_plane().has_value(), renderer_process_.show_normals(),
                         [this](const VkCommandBuffer command_buffer)
                         {
@@ -283,7 +286,7 @@ class Impl final : public Renderer, RendererProcessEvents
                 mesh_renderer_.delete_depth_command_buffers();
 
                 mesh_renderer_.create_depth_command_buffers(
-                        renderer_objects_.mesh_visible_objects(), *graphics_command_pool_,
+                        mesh_storage_.visible_objects(), *graphics_command_pool_,
                         renderer_process_.clip_plane().has_value(), renderer_process_.show_normals());
         }
 
@@ -296,7 +299,7 @@ class Impl final : public Renderer, RendererProcessEvents
         void create_volume_command_buffers()
         {
                 volume_renderer_.delete_command_buffers();
-                if (renderer_objects_.volume_visible_objects().size() != 1)
+                if (volume_storage_.visible_objects().size() != 1)
                 {
                         return;
                 }
@@ -309,7 +312,7 @@ class Impl final : public Renderer, RendererProcessEvents
                         render_buffers_->commands_depth_copy(
                                 command_buffer, depth_copy_image_->image(), DEPTH_COPY_IMAGE_LAYOUT, viewport_, INDEX);
                 };
-                for (const VolumeObject* const visible_volume : renderer_objects_.volume_visible_objects())
+                for (const VolumeObject* const visible_volume : volume_storage_.visible_objects())
                 {
                         volume_renderer_.create_command_buffers(visible_volume, *graphics_command_pool_, copy_depth);
                 }
@@ -317,51 +320,55 @@ class Impl final : public Renderer, RendererProcessEvents
 
         void set_volume_matrix()
         {
-                for (VolumeObject* const visible_volume : renderer_objects_.volume_visible_objects())
+                for (VolumeObject* const visible_volume : volume_storage_.visible_objects())
                 {
                         visible_volume->set_matrix_and_clip_plane(
                                 renderer_process_.main_vp_matrix(), renderer_process_.clip_plane());
                 }
         }
 
-        void event(const StorageMeshCreate& v)
+        // StorageMeshEvents
+
+        void mesh_create(std::unique_ptr<MeshObject>* const ptr) override
         {
-                *v.ptr = create_mesh_object(
+                *ptr = create_mesh_object(
                         device_, ray_tracing_, {graphics_queue_->family_index()}, compute_command_pool_, compute_queue_,
                         transfer_command_pool_, transfer_queue_, mesh_layouts_, mesh_material_layouts_,
                         mesh_renderer_.texture_sampler());
         }
 
-        void event(const StorageMeshVisibilityChanged&)
+        void mesh_visibility_changed() override
         {
                 create_mesh_command_buffers();
         }
 
-        void event(const StorageMeshChanged& v)
+        void mesh_changed(const MeshObject::UpdateChanges& update_changes) override
         {
-                if (v.update_changes->command_buffers || v.update_changes->transparency)
+                if (update_changes.command_buffers || update_changes.transparency)
                 {
                         create_mesh_command_buffers();
                 }
         }
 
-        void event(const StorageVolumeCreate& v)
+        // StorageVolumeEvents
+
+        void volume_create(std::unique_ptr<VolumeObject>* const ptr) override
         {
-                *v.ptr = create_volume_object(
+                *ptr = create_volume_object(
                         device_, {graphics_queue_->family_index()}, transfer_command_pool_, transfer_queue_,
                         volume_image_layouts_, volume_renderer_.image_sampler(),
                         volume_renderer_.transfer_function_sampler());
         }
 
-        void event(const StorageVolumeVisibilityChanged&)
+        void volume_visibility_changed() override
         {
                 create_volume_command_buffers();
                 set_volume_matrix();
         }
 
-        void event(const StorageVolumeChanged& v)
+        void volume_changed(const VolumeObject::UpdateChanges& update_changes) override
         {
-                if (v.update_changes->command_buffers)
+                if (update_changes.command_buffers)
                 {
                         create_volume_command_buffers();
                 }
@@ -395,7 +402,7 @@ class Impl final : public Renderer, RendererProcessEvents
                 create_mesh_render_command_buffers();
                 if (renderer_process_.clip_plane())
                 {
-                        for (VolumeObject* const visible_volume : renderer_objects_.volume_visible_objects())
+                        for (VolumeObject* const visible_volume : volume_storage_.visible_objects())
                         {
                                 visible_volume->set_clip_plane(*renderer_process_.clip_plane());
                         }
@@ -429,23 +436,9 @@ public:
                           *transfer_queue_),
                   mesh_renderer_(device_, sample_shading, sampler_anisotropy, shader_buffers_, ggx_f1_albedo_),
                   volume_renderer_(device_, sample_shading, shader_buffers_, ggx_f1_albedo_),
-                  renderer_objects_(
-                          [this](const StorageMeshEvents& events)
-                          {
-                                  const auto visitor = [this](const auto& v)
-                                  {
-                                          event(v);
-                                  };
-                                  std::visit(visitor, events);
-                          },
-                          [this](const StorageVolumeEvents& events)
-                          {
-                                  const auto visitor = [this](const auto& v)
-                                  {
-                                          event(v);
-                                  };
-                                  std::visit(visitor, events);
-                          }),
+                  mesh_storage_(this),
+                  volume_storage_(this),
+                  renderer_object_(&mesh_storage_, &volume_storage_),
                   renderer_process_(&shader_buffers_, this),
                   renderer_draw_(*device_, TRANSPARENCY_NODE_BUFFER_MAX_SIZE, &mesh_renderer_, &volume_renderer_)
         {
