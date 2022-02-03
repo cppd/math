@@ -28,20 +28,20 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 namespace ns::gpu::renderer
 {
-class RendererProcessEvents
+class RendererViewEvents
 {
 protected:
-        ~RendererProcessEvents() = default;
+        ~RendererViewEvents() = default;
 
 public:
-        virtual void background_changed() = 0;
-        virtual void show_normals_changed() = 0;
-        virtual void shadow_zoom_changed() = 0;
-        virtual void matrices_changed() = 0;
-        virtual void clip_plane_changed() = 0;
+        virtual void view_background_changed() = 0;
+        virtual void view_show_normals_changed() = 0;
+        virtual void view_shadow_zoom_changed() = 0;
+        virtual void view_matrices_changed() = 0;
+        virtual void view_clip_plane_changed() = 0;
 };
 
-class RendererProcess final
+class RendererView final
 {
         // shadow coordinates x(-1, 1) y(-1, 1) z(0, 1).
         // shadow texture coordinates x(0, 1) y(0, 1) z(0, 1).
@@ -59,7 +59,7 @@ class RendererProcess final
         bool show_normals_ = false;
 
         ShaderBuffers* shader_buffers_;
-        RendererProcessEvents* events_;
+        RendererViewEvents* events_;
 
         void command(const SetLightingColor& v)
         {
@@ -70,7 +70,7 @@ class RendererProcess final
         {
                 clear_color_rgb32_ = v.color.rgb32().clamp(0, 1);
                 shader_buffers_->set_background_color(clear_color_rgb32_);
-                events_->background_changed();
+                events_->view_background_changed();
         }
 
         void command(const SetWireframeColor& v)
@@ -129,7 +129,7 @@ class RendererProcess final
                 if (show_normals_ != v.show)
                 {
                         show_normals_ = v.show;
-                        events_->show_normals_changed();
+                        events_->view_show_normals_changed();
                 }
         }
 
@@ -138,7 +138,7 @@ class RendererProcess final
                 if (shadow_zoom_ != v.zoom)
                 {
                         shadow_zoom_ = v.zoom;
-                        events_->shadow_zoom_changed();
+                        events_->view_shadow_zoom_changed();
                 }
         }
 
@@ -161,7 +161,7 @@ class RendererProcess final
                 shader_buffers_->set_direction_to_camera(-to_vector<float>(c.camera_direction));
                 shader_buffers_->set_matrices(main_vp_matrix_, shadow_vp_matrix_, shadow_vp_texture_matrix_);
 
-                events_->matrices_changed();
+                events_->view_matrices_changed();
         }
 
         void command(const SetClipPlane& v)
@@ -175,11 +175,11 @@ class RendererProcess final
                 {
                         shader_buffers_->set_clip_plane(Vector4d(0), false);
                 }
-                events_->clip_plane_changed();
+                events_->view_clip_plane_changed();
         }
 
 public:
-        RendererProcess(ShaderBuffers* const shader_buffers, RendererProcessEvents* const events)
+        RendererView(ShaderBuffers* const shader_buffers, RendererViewEvents* const events)
                 : shader_buffers_(shader_buffers), events_(events)
         {
         }

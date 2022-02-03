@@ -21,7 +21,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "functionality.h"
 #include "renderer_draw.h"
 #include "renderer_object.h"
-#include "renderer_process.h"
+#include "renderer_view.h"
 #include "storage_mesh.h"
 #include "storage_volume.h"
 #include "viewport_transform.h"
@@ -54,7 +54,7 @@ constexpr VkImageLayout DEPTH_COPY_IMAGE_LAYOUT = VK_IMAGE_LAYOUT_SHADER_READ_ON
 constexpr std::uint32_t OBJECTS_CLEAR_VALUE = 0;
 constexpr std::uint32_t TRANSPARENCY_NODE_BUFFER_MAX_SIZE = (1ull << 30);
 
-class Impl final : public Renderer, RendererProcessEvents, StorageMeshEvents, StorageVolumeEvents
+class Impl final : public Renderer, RendererViewEvents, StorageMeshEvents, StorageVolumeEvents
 {
         const std::thread::id thread_id_ = std::this_thread::get_id();
 
@@ -93,7 +93,8 @@ class Impl final : public Renderer, RendererProcessEvents, StorageMeshEvents, St
         StorageVolume volume_storage_;
 
         RendererObject renderer_object_;
-        RendererProcess renderer_process_;
+        RendererView renderer_view_;
+
         RendererDraw renderer_draw_;
 
         void command(const ObjectCommand& object_command)
@@ -103,7 +104,7 @@ class Impl final : public Renderer, RendererProcessEvents, StorageMeshEvents, St
 
         void command(const ViewCommand& view_command)
         {
-                renderer_process_.exec(view_command);
+                renderer_view_.exec(view_command);
         }
 
         void exec(Command&& renderer_command) override
@@ -130,7 +131,7 @@ class Impl final : public Renderer, RendererProcessEvents, StorageMeshEvents, St
                 ASSERT(transparency_buffers_);
 
                 return renderer_draw_.draw(
-                        graphics_queue_1, graphics_queue_2, index, renderer_process_.show_shadow(),
+                        graphics_queue_1, graphics_queue_2, index, renderer_view_.show_shadow(),
                         *clear_command_buffers_, *transparency_buffers_);
         }
 
@@ -233,7 +234,7 @@ class Impl final : public Renderer, RendererProcessEvents, StorageMeshEvents, St
                 mesh_renderer_.create_depth_buffers(
                         render_buffers_->framebuffers().size(), {graphics_queue_->family_index()},
                         *graphics_command_pool_, *graphics_queue_, *device_, viewport_.width(), viewport_.height(),
-                        renderer_process_.shadow_zoom());
+                        renderer_view_.shadow_zoom());
         }
 
         void create_clear_command_buffers()
@@ -258,7 +259,7 @@ class Impl final : public Renderer, RendererProcessEvents, StorageMeshEvents, St
                 };
 
                 const std::vector<VkClearValue> clear_values =
-                        render_buffers_->clear_values(renderer_process_.clear_color_rgb32());
+                        render_buffers_->clear_values(renderer_view_.clear_color_rgb32());
                 info.clear_values = &clear_values;
 
                 clear_command_buffers_ = vulkan::create_command_buffers(info);
@@ -270,7 +271,7 @@ class Impl final : public Renderer, RendererProcessEvents, StorageMeshEvents, St
 
                 mesh_renderer_.create_render_command_buffers(
                         mesh_storage_.visible_objects(), *graphics_command_pool_,
-                        renderer_process_.clip_plane().has_value(), renderer_process_.show_normals(),
+                        renderer_view_.clip_plane().has_value(), renderer_view_.show_normals(),
                         [this](const VkCommandBuffer command_buffer)
                         {
                                 transparency_buffers_->commands_init(command_buffer);
@@ -287,7 +288,7 @@ class Impl final : public Renderer, RendererProcessEvents, StorageMeshEvents, St
 
                 mesh_renderer_.create_depth_command_buffers(
                         mesh_storage_.visible_objects(), *graphics_command_pool_,
-                        renderer_process_.clip_plane().has_value(), renderer_process_.show_normals());
+                        renderer_view_.clip_plane().has_value(), renderer_view_.show_normals());
         }
 
         void create_mesh_command_buffers()
@@ -323,7 +324,7 @@ class Impl final : public Renderer, RendererProcessEvents, StorageMeshEvents, St
                 for (VolumeObject* const visible_volume : volume_storage_.visible_objects())
                 {
                         visible_volume->set_matrix_and_clip_plane(
-                                renderer_process_.main_vp_matrix(), renderer_process_.clip_plane());
+                                renderer_view_.main_vp_matrix(), renderer_view_.clip_plane());
                 }
         }
 
@@ -374,37 +375,37 @@ class Impl final : public Renderer, RendererProcessEvents, StorageMeshEvents, St
                 }
         }
 
-        // RendererProcessEvents
+        // RendererViewEvents
 
-        void background_changed() override
+        void view_background_changed() override
         {
                 create_clear_command_buffers();
         }
 
-        void show_normals_changed() override
+        void view_show_normals_changed() override
         {
                 create_mesh_render_command_buffers();
         }
 
-        void shadow_zoom_changed() override
+        void view_shadow_zoom_changed() override
         {
                 create_mesh_depth_buffers();
                 create_mesh_command_buffers();
         }
 
-        void matrices_changed() override
+        void view_matrices_changed() override
         {
                 set_volume_matrix();
         }
 
-        void clip_plane_changed() override
+        void view_clip_plane_changed() override
         {
                 create_mesh_render_command_buffers();
-                if (renderer_process_.clip_plane())
+                if (renderer_view_.clip_plane())
                 {
                         for (VolumeObject* const visible_volume : volume_storage_.visible_objects())
                         {
-                                visible_volume->set_clip_plane(*renderer_process_.clip_plane());
+                                visible_volume->set_clip_plane(*renderer_view_.clip_plane());
                         }
                 }
         }
@@ -439,7 +440,7 @@ public:
                   mesh_storage_(this),
                   volume_storage_(this),
                   renderer_object_(&mesh_storage_, &volume_storage_),
-                  renderer_process_(&shader_buffers_, this),
+                  renderer_view_(&shader_buffers_, this),
                   renderer_draw_(*device_, TRANSPARENCY_NODE_BUFFER_MAX_SIZE, &mesh_renderer_, &volume_renderer_)
         {
                 if (ray_tracing)
