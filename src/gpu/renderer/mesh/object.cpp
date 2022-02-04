@@ -116,6 +116,7 @@ class Impl final : public MeshObject
         unsigned points_vertex_count_ = 0;
 
         std::unique_ptr<vulkan::BottomLevelAccelerationStructure> acceleration_structure_;
+        VkTransformMatrixKHR transform_matrix_;
 
         bool transparent_ = false;
 
@@ -142,6 +143,20 @@ class Impl final : public MeshObject
         void buffer_set_coordinates(const Matrix4d& model_matrix)
         {
                 mesh_buffer_.set_coordinates(model_matrix, model_matrix.top_left<3, 3>().inverse().transpose());
+        }
+
+        void set_transform_matrix(const Matrix4d& model_matrix)
+        {
+                if (ray_tracing_)
+                {
+                        for (std::size_t i = 0; i < 3; ++i)
+                        {
+                                for (std::size_t j = 0; j < 4; ++j)
+                                {
+                                        transform_matrix_.matrix[i][j] = model_matrix(i, j);
+                                }
+                        }
+                }
         }
 
         void create_mesh_descriptor_sets()
@@ -426,6 +441,7 @@ class Impl final : public MeshObject
                 if (updates[mesh::UPDATE_MATRIX])
                 {
                         buffer_set_coordinates(mesh_object.matrix());
+                        set_transform_matrix(mesh_object.matrix());
 
                         update_changes.matrix = true;
                 }
@@ -463,6 +479,19 @@ class Impl final : public MeshObject
                 }
 
                 return update_changes;
+        }
+
+        VkDeviceAddress acceleration_structure_device_address() const override
+        {
+                ASSERT(ray_tracing_);
+                ASSERT(acceleration_structure_);
+                return acceleration_structure_->device_address();
+        }
+
+        const VkTransformMatrixKHR& acceleration_structure_matrix() const override
+        {
+                ASSERT(ray_tracing_);
+                return transform_matrix_;
         }
 
 public:

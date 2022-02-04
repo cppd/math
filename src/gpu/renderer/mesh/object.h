@@ -66,6 +66,9 @@ struct MeshObject
                 bool transparency = false;
         };
         virtual UpdateChanges update(const mesh::Reading<3>& mesh_object) = 0;
+
+        virtual VkDeviceAddress acceleration_structure_device_address() const = 0;
+        virtual const VkTransformMatrixKHR& acceleration_structure_matrix() const = 0;
 };
 
 std::unique_ptr<MeshObject> create_mesh_object(
