@@ -150,11 +150,6 @@ void check_data(
         const std::span<const std::uint64_t>& bottom_level_references,
         const std::span<const VkTransformMatrixKHR>& bottom_level_matrices)
 {
-        if (bottom_level_references.empty())
-        {
-                error("No bottom level acceleration structure references for top level acceleration structure");
-        }
-
         if (bottom_level_references.size() != bottom_level_matrices.size())
         {
                 error("Bottom level reference count " + to_string(bottom_level_references.size())
@@ -323,6 +318,8 @@ TopLevelAccelerationStructure create_top_level_acceleration_structure(
         const std::span<const std::uint64_t>& bottom_level_references,
         const std::span<const VkTransformMatrixKHR>& bottom_level_matrices)
 {
+        constexpr std::size_t MIN_BUFFER_SIZE = 1;
+
         check_data(bottom_level_references, bottom_level_matrices);
 
         const std::uint32_t geometry_primitive_count = bottom_level_references.size();
@@ -345,7 +342,7 @@ TopLevelAccelerationStructure create_top_level_acceleration_structure(
                 BufferMemoryType::HOST_VISIBLE, device, buffer_family_indices,
                 VK_BUFFER_USAGE_SHADER_DEVICE_ADDRESS_BIT
                         | VK_BUFFER_USAGE_ACCELERATION_STRUCTURE_BUILD_INPUT_READ_ONLY_BIT_KHR,
-                data_size(instances));
+                std::max<std::size_t>(MIN_BUFFER_SIZE, data_size(instances)));
         BufferMapper(instance_buffer).write(instances);
 
         VkAccelerationStructureGeometryKHR geometry{};
@@ -364,7 +361,7 @@ TopLevelAccelerationStructure create_top_level_acceleration_structure(
         BufferWithMemory acceleration_structure_buffer(
                 BufferMemoryType::DEVICE_LOCAL, device, family_indices,
                 VK_BUFFER_USAGE_SHADER_DEVICE_ADDRESS_BIT | VK_BUFFER_USAGE_ACCELERATION_STRUCTURE_STORAGE_BIT_KHR,
-                build_sizes.accelerationStructureSize);
+                std::max<std::size_t>(MIN_BUFFER_SIZE, build_sizes.accelerationStructureSize));
 
         VkAccelerationStructureCreateInfoKHR create_info{};
         create_info.sType = VK_STRUCTURE_TYPE_ACCELERATION_STRUCTURE_CREATE_INFO_KHR;
@@ -378,7 +375,7 @@ TopLevelAccelerationStructure create_top_level_acceleration_structure(
                 const BufferWithMemory scratch_buffer_build(
                         BufferMemoryType::DEVICE_LOCAL, device, buffer_family_indices,
                         VK_BUFFER_USAGE_SHADER_DEVICE_ADDRESS_BIT | VK_BUFFER_USAGE_STORAGE_BUFFER_BIT,
-                        build_sizes.buildScratchSize);
+                        std::max<std::size_t>(MIN_BUFFER_SIZE, build_sizes.buildScratchSize));
 
                 build_acceleration_structure(
                         device, compute_command_pool, compute_queue, scratch_buffer_build, geometry,
@@ -389,7 +386,7 @@ TopLevelAccelerationStructure create_top_level_acceleration_structure(
         BufferWithMemory scratch_buffer_update(
                 BufferMemoryType::DEVICE_LOCAL, device, buffer_family_indices,
                 VK_BUFFER_USAGE_SHADER_DEVICE_ADDRESS_BIT | VK_BUFFER_USAGE_STORAGE_BUFFER_BIT,
-                build_sizes.updateScratchSize);
+                std::max<std::size_t>(MIN_BUFFER_SIZE, build_sizes.updateScratchSize));
 
         return TopLevelAccelerationStructure(
                 std::move(acceleration_structure_buffer), std::move(acceleration_structure), geometry,
