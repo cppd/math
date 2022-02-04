@@ -64,7 +64,6 @@ struct MeshObject
                 bool matrix = false;
                 bool mesh = false;
                 bool transparency = false;
-                bool visibility = false;
         };
         virtual UpdateChanges update(const mesh::Reading<3>& mesh_object) = 0;
 };

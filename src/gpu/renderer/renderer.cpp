@@ -330,9 +330,9 @@ class Impl final : public Renderer, RendererViewEvents, StorageMeshEvents, Stora
 
         // StorageMeshEvents
 
-        void mesh_create(std::unique_ptr<MeshObject>* const ptr) override
+        std::unique_ptr<MeshObject> mesh_create() override
         {
-                *ptr = create_mesh_object(
+                return create_mesh_object(
                         device_, ray_tracing_, {graphics_queue_->family_index()}, compute_command_pool_, compute_queue_,
                         transfer_command_pool_, transfer_queue_, mesh_layouts_, mesh_material_layouts_,
                         mesh_renderer_.texture_sampler());
@@ -343,7 +343,7 @@ class Impl final : public Renderer, RendererViewEvents, StorageMeshEvents, Stora
                 create_mesh_command_buffers();
         }
 
-        void mesh_changed(const MeshObject::UpdateChanges& update_changes) override
+        void mesh_visible_changed(const MeshObject::UpdateChanges& update_changes) override
         {
                 if (update_changes.mesh || update_changes.transparency)
                 {
@@ -353,9 +353,9 @@ class Impl final : public Renderer, RendererViewEvents, StorageMeshEvents, Stora
 
         // StorageVolumeEvents
 
-        void volume_create(std::unique_ptr<VolumeObject>* const ptr) override
+        std::unique_ptr<VolumeObject> volume_create() override
         {
-                *ptr = create_volume_object(
+                return create_volume_object(
                         device_, {graphics_queue_->family_index()}, transfer_command_pool_, transfer_queue_,
                         volume_image_layouts_, volume_renderer_.image_sampler(),
                         volume_renderer_.transfer_function_sampler());
@@ -367,7 +367,7 @@ class Impl final : public Renderer, RendererViewEvents, StorageMeshEvents, Stora
                 set_volume_matrix();
         }
 
-        void volume_changed(const VolumeObject::UpdateChanges& update_changes) override
+        void volume_visible_changed(const VolumeObject::UpdateChanges& update_changes) override
         {
                 if (update_changes.image)
                 {

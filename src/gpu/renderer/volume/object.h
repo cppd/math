@@ -41,7 +41,6 @@ struct VolumeObject
         struct UpdateChanges
         {
                 bool image = false;
-                bool visibility = false;
         };
         virtual UpdateChanges update(const volume::Reading<3>& volume_object) = 0;
 };

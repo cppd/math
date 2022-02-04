@@ -462,11 +462,6 @@ class Impl final : public MeshObject
                         update_changes.mesh = true;
                 }
 
-                if (updates[mesh::UPDATE_VISIBILITY])
-                {
-                        update_changes.visibility = true;
-                }
-
                 return update_changes;
         }
 

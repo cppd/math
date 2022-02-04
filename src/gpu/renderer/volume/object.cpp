@@ -284,11 +284,6 @@ class Impl final : public VolumeObject
                         buffer_set_coordinates();
                 }
 
-                if (updates[volume::UPDATE_VISIBILITY])
-                {
-                        update_changes.visibility = true;
-                }
-
                 return update_changes;
         }
 

@@ -31,9 +31,9 @@ protected:
         ~StorageMeshEvents() = default;
 
 public:
-        virtual void mesh_create(std::unique_ptr<MeshObject>* ptr) = 0;
+        virtual std::unique_ptr<MeshObject> mesh_create() = 0;
         virtual void mesh_visibility_changed() = 0;
-        virtual void mesh_changed(const MeshObject::UpdateChanges& update_changes) = 0;
+        virtual void mesh_visible_changed(const MeshObject::UpdateChanges& update_changes) = 0;
 };
 
 class StorageMesh final : private StorageEvents<MeshObject>
@@ -80,9 +80,7 @@ public:
                         {
                                 return p;
                         }
-                        std::unique_ptr<MeshObject> mesh;
-                        events_->mesh_create(&mesh);
-                        return storage_.insert(object.id(), std::move(mesh));
+                        return storage_.insert(object.id(), events_->mesh_create());
                 }();
 
                 MeshObject::UpdateChanges update_changes;
@@ -97,7 +95,7 @@ public:
                 catch (const std::exception& e)
                 {
                         storage_.erase(object.id());
-                        LOG(std::string("Error updating mesh object. ") + e.what());
+                        LOG(std::string("Error updating mesh object: ") + e.what());
                         return;
                 }
                 catch (...)
@@ -111,11 +109,11 @@ public:
 
                 if (visible && storage_visible)
                 {
-                        events_->mesh_changed(update_changes);
+                        events_->mesh_visible_changed(update_changes);
                         return;
                 }
 
-                if (visible || storage_visible)
+                if (visible != storage_visible)
                 {
                         storage_.set_visible(object.id(), visible);
                 }

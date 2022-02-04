@@ -31,9 +31,9 @@ protected:
         ~StorageVolumeEvents() = default;
 
 public:
-        virtual void volume_create(std::unique_ptr<VolumeObject>* ptr) = 0;
+        virtual std::unique_ptr<VolumeObject> volume_create() = 0;
         virtual void volume_visibility_changed() = 0;
-        virtual void volume_changed(const VolumeObject::UpdateChanges& update_changes) = 0;
+        virtual void volume_visible_changed(const VolumeObject::UpdateChanges& update_changes) = 0;
 };
 
 class StorageVolume final : private StorageEvents<VolumeObject>
@@ -80,9 +80,7 @@ public:
                         {
                                 return p;
                         }
-                        std::unique_ptr<VolumeObject> volume;
-                        events_->volume_create(&volume);
-                        return storage_.insert(object.id(), std::move(volume));
+                        return storage_.insert(object.id(), events_->volume_create());
                 }();
 
                 VolumeObject::UpdateChanges update_changes;
@@ -97,7 +95,7 @@ public:
                 catch (const std::exception& e)
                 {
                         storage_.erase(object.id());
-                        LOG(std::string("Error updating volume object. ") + e.what());
+                        LOG(std::string("Error updating volume object: ") + e.what());
                         return;
                 }
                 catch (...)
@@ -111,11 +109,11 @@ public:
 
                 if (visible && storage_visible)
                 {
-                        events_->volume_changed(update_changes);
+                        events_->volume_visible_changed(update_changes);
                         return;
                 }
 
-                if (visible || storage_visible)
+                if (visible != storage_visible)
                 {
                         storage_.set_visible(object.id(), visible);
                 }
