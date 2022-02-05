@@ -166,8 +166,10 @@ function(AddIncludeFiles FILE_TYPE)
 
         #
 
-        unset(BINARY_FILES)
-        unset(VULKAN_SHADERS)
+        set(output_directory "${ARG_OUTPUT_DIRECTORY}")
+
+        unset(binary_files)
+        unset(vulkan_shaders)
 
         if("${FILE_TYPE}" STREQUAL "BINARY_FILES")
                 if(ARG_MACROS)
@@ -179,18 +181,30 @@ function(AddIncludeFiles FILE_TYPE)
                 if(ARG_INCLUDE_DIRECTORIES)
                         message(FATAL_ERROR "Binary file include are not supported")
                 endif()
-                set(BINARY_FILES TRUE)
+                set(binary_files TRUE)
                 set(custom_target_prefix "custom_target_binary_files")
         elseif("${FILE_TYPE}" STREQUAL "VULKAN_SHADERS")
-                set(VULKAN_SHADERS TRUE)
+                set(vulkan_shaders TRUE)
+                unset(macros)
+                foreach(macro ${ARG_MACROS})
+                        string(TOLOWER "${macro}" macro_lower)
+                        if(macros)
+                                string(APPEND macros "_")
+                        endif()
+                        string(APPEND macros "${macro_lower}")
+                endforeach()
                 set(custom_target_prefix "custom_target_vulkan_shaders")
+                if(macros)
+                        string(APPEND custom_target_prefix "_${macros}")
+                        string(APPEND output_directory "/${macros}")
+                endif()
         else()
                 message(FATAL_ERROR "Unknown file type ${FILE_TYPE}")
         endif()
 
         #
 
-        file(MAKE_DIRECTORY "${ARG_OUTPUT_DIRECTORY}")
+        file(MAKE_DIRECTORY "${output_directory}")
         target_include_directories(${PROJECT_NAME} PRIVATE "${ARG_OUTPUT_DIRECTORY}")
 
         #
@@ -240,21 +254,14 @@ function(AddIncludeFiles FILE_TYPE)
 
                         get_filename_component(file_name "${long_file_name}" NAME)
 
-                        if(VULKAN_SHADERS)
-                                foreach(macro ${ARG_MACROS})
-                                        string(TOLOWER "_${macro}" macro_lower)
-                                        string(APPEND file_name "${macro_lower}")
-                                endforeach()
-                        endif()
-
                         set(target_name "${custom_target_prefix}_${file_name}")
-                        set(output_file "${ARG_OUTPUT_DIRECTORY}/${file_name}.${ARG_OUTPUT_EXTENSION}")
+                        set(output_file "${output_directory}/${file_name}.${ARG_OUTPUT_EXTENSION}")
 
                         add_custom_target(${target_name} DEPENDS "${output_file}")
                         add_dependencies(${target_name} create_str)
                         add_dependencies(${PROJECT_NAME} ${target_name})
 
-                        if(BINARY_FILES)
+                        if(binary_files)
 
                                 add_custom_command(
                                         OUTPUT
@@ -270,7 +277,7 @@ function(AddIncludeFiles FILE_TYPE)
                                         VERBATIM
                                 )
 
-                        elseif(VULKAN_SHADERS)
+                        elseif(vulkan_shaders)
 
                                 unset(include_directory)
                                 unset(include_files)
@@ -296,10 +303,10 @@ function(AddIncludeFiles FILE_TYPE)
 
                                 get_filename_component(file_ext "${long_file_name}" EXT)
                                 string(RANDOM LENGTH 10 random_string_glsl)
-                                set(output_glsl "${ARG_OUTPUT_DIRECTORY}/${file_name}_${random_string_glsl}${file_ext}")
+                                set(output_glsl "${output_file}_${random_string_glsl}${file_ext}")
 
                                 string(RANDOM LENGTH 10 random_string_sprv)
-                                set(output_sprv "${ARG_OUTPUT_DIRECTORY}/${file_name}_${random_string_sprv}.sprv")
+                                set(output_sprv "${output_file}_${random_string_sprv}.sprv")
 
                                 add_custom_command(
                                         OUTPUT
