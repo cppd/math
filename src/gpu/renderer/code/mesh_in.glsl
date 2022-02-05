@@ -15,8 +15,8 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#ifndef MESH_COMMON
-#define MESH_COMMON
+#ifndef MESH_IN
+#define MESH_IN
 
 #include "drawing_buffer.glsl"
 #include "transparency.glsl"
