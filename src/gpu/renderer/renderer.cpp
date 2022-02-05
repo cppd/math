@@ -17,6 +17,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "renderer.h"
 
+#include "acceleration_structure.h"
 #include "buffer.h"
 #include "functionality.h"
 #include "renderer_draw.h"
@@ -91,6 +92,7 @@ class Impl final : public Renderer, RendererViewEvents, StorageMeshEvents, Stora
 
         StorageMesh mesh_storage_;
         StorageVolume volume_storage_;
+        std::optional<AccelerationStructure> acceleration_structure_;
 
         RendererObject renderer_object_;
         RendererView renderer_view_;
@@ -341,6 +343,12 @@ class Impl final : public Renderer, RendererViewEvents, StorageMeshEvents, Stora
         void mesh_visibility_changed() override
         {
                 create_mesh_command_buffers();
+
+                if (ray_tracing_)
+                {
+                        acceleration_structure_->create(
+                                *device_, *compute_command_pool_, *compute_queue_, mesh_storage_.visible_objects());
+                }
         }
 
         void mesh_visible_changed(const MeshObject::UpdateChanges& update_changes) override
@@ -348,6 +356,22 @@ class Impl final : public Renderer, RendererViewEvents, StorageMeshEvents, Stora
                 if (update_changes.mesh || update_changes.transparency)
                 {
                         create_mesh_command_buffers();
+                }
+
+                if (ray_tracing_)
+                {
+                        if (update_changes.mesh)
+                        {
+                                acceleration_structure_->create(
+                                        *device_, *compute_command_pool_, *compute_queue_,
+                                        mesh_storage_.visible_objects());
+                        }
+                        else if (update_changes.matrix)
+                        {
+                                acceleration_structure_->update_matrices(
+                                        *device_, *compute_command_pool_, *compute_queue_,
+                                        mesh_storage_.visible_objects());
+                        }
                 }
         }
 
@@ -445,6 +469,10 @@ public:
         {
                 if (ray_tracing)
                 {
+                        acceleration_structure_.emplace(
+                                *device_, *compute_command_pool_, *compute_queue_,
+                                std::vector<std::uint32_t>({graphics_queue_->family_index()}));
+
                         create_ray_tracing_data(device_, compute_command_pool_, compute_queue_);
                 }
         }

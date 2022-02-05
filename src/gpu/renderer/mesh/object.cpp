@@ -481,11 +481,14 @@ class Impl final : public MeshObject
                 return update_changes;
         }
 
-        VkDeviceAddress acceleration_structure_device_address() const override
+        std::optional<VkDeviceAddress> acceleration_structure_device_address() const override
         {
                 ASSERT(ray_tracing_);
-                ASSERT(acceleration_structure_);
-                return acceleration_structure_->device_address();
+                if (acceleration_structure_)
+                {
+                        return acceleration_structure_->device_address();
+                }
+                return {};
         }
 
         const VkTransformMatrixKHR& acceleration_structure_matrix() const override
@@ -513,8 +516,7 @@ public:
                   transfer_queue_(transfer_queue),
                   family_indices_(sort_and_unique(
                           merge<std::vector<std::uint32_t>>(graphics_family_indices, transfer_queue->family_index()))),
-                  acceleration_structure_family_indices_(sort_and_unique(
-                          merge<std::vector<std::uint32_t>>(graphics_family_indices, compute_queue->family_index()))),
+                  acceleration_structure_family_indices_(graphics_family_indices),
                   mesh_buffer_(*device, graphics_family_indices),
                   mesh_layouts_(std::move(mesh_layouts)),
                   material_layouts_(std::move(material_layouts)),
