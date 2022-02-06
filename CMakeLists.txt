@@ -145,12 +145,97 @@ function(AddSourceFiles TARGET_TYPE)
 
 endfunction()
 
+function(AddBinaryFile)
+
+        cmake_parse_arguments(PARSE_ARGV 0 ARG
+                ""
+                "INPUT_FILE;OUTPUT_FILE"
+                "")
+
+        add_custom_command(
+                OUTPUT
+                        "${ARG_OUTPUT_FILE}"
+                COMMAND
+                        "${PROJECT_BINARY_DIR}/create_str"
+                        "bin" "${ARG_INPUT_FILE}" "${ARG_OUTPUT_FILE}"
+                DEPENDS
+                        "${ARG_INPUT_FILE}"
+                        "${PROJECT_BINARY_DIR}/create_str"
+                WORKING_DIRECTORY
+                        "${PROJECT_BINARY_DIR}"
+                VERBATIM
+        )
+
+endfunction()
+
+function(AddShaderFile)
+
+        cmake_parse_arguments(PARSE_ARGV 0 ARG
+                ""
+                "INPUT_FILE;OUTPUT_FILE"
+                "GLOBAL_INCLUDE_DIRECTORIES;GLOBAL_INCLUDE_FILES;MACROS")
+
+        unset(include_directory)
+        unset(include_files)
+        get_filename_component(include_directory "${ARG_INPUT_FILE}" DIRECTORY)
+        unset(globbing_expressions_include)
+        foreach(ext ${extensions_shaders_include})
+                list(APPEND globbing_expressions_include "${include_directory}/*.${ext}")
+        endforeach()
+        file(GLOB_RECURSE include_files LIST_DIRECTORIES false ${globbing_expressions_include})
+
+        unset(macro_list)
+        foreach(macro ${ARG_MACROS})
+                list(APPEND macro_list "-D${macro}")
+        endforeach()
+
+        unset(include_directories_list)
+        list(APPEND include_directories_list "-I${include_directory}")
+        foreach(dir ${ARG_GLOBAL_INCLUDE_DIRECTORIES})
+                list(APPEND include_directories_list "-I${dir}")
+        endforeach()
+
+        get_filename_component(file_ext "${ARG_INPUT_FILE}" EXT)
+        string(RANDOM LENGTH 10 random_string_glsl)
+        set(output_glsl "${ARG_OUTPUT_FILE}_${random_string_glsl}${file_ext}")
+
+        string(RANDOM LENGTH 10 random_string_sprv)
+        set(output_sprv "${ARG_OUTPUT_FILE}_${random_string_sprv}.sprv")
+
+        add_custom_command(
+                OUTPUT
+                        "${ARG_OUTPUT_FILE}"
+                COMMAND
+                        "${PROJECT_BINARY_DIR}/create_str"
+                        "cat" "${ARG_INPUT_FILE}" "${output_glsl}"
+                COMMAND
+                        Vulkan::glslangValidator
+                        ${include_directories_list}
+                        "--target-env" "${shader_environment}"
+                        ${macro_list}
+                        "${output_glsl}"
+                        "-o" "${output_sprv}"
+                COMMAND
+                        "${PROJECT_BINARY_DIR}/create_str"
+                        "spr" "${output_sprv}" "${ARG_OUTPUT_FILE}"
+                DEPENDS
+                        "${ARG_INPUT_FILE}"
+                        "${PROJECT_BINARY_DIR}/create_str"
+                        ${include_files}
+                        ${ARG_GLOBAL_INCLUDE_FILES}
+                WORKING_DIRECTORY
+                        "${PROJECT_BINARY_DIR}"
+                VERBATIM
+        )
+
+endfunction()
+
 function(AddIncludeFiles FILE_TYPE)
 
         cmake_parse_arguments(PARSE_ARGV 1 ARG
                 ""
                 "OUTPUT_EXTENSION;OUTPUT_DIRECTORY"
-                "EXTENSIONS;EXTENSIONS_INCLUDE;SOURCE;INCLUDE_DIRECTORIES;MACROS")
+                "EXTENSIONS;SOURCE;INCLUDE_DIRECTORIES;MACROS")
         if(NOT ARG_OUTPUT_EXTENSION)
                 message(FATAL_ERROR "OUTPUT_EXTENSION is not specified")
         endif()
@@ -174,9 +259,6 @@ function(AddIncludeFiles FILE_TYPE)
         if("${FILE_TYPE}" STREQUAL "BINARY_FILES")
                 if(ARG_MACROS)
                         message(FATAL_ERROR "Binary file macros are not supported")
-                endif()
-                if(ARG_EXTENSIONS_INCLUDE)
-                        message(FATAL_ERROR "Binary file include extensions are not supported")
                 endif()
                 if(ARG_INCLUDE_DIRECTORIES)
                         message(FATAL_ERROR "Binary file include are not supported")
@@ -212,22 +294,19 @@ function(AddIncludeFiles FILE_TYPE)
         unset(global_include_directories)
         unset(global_include_files)
         if(ARG_INCLUDE_DIRECTORIES)
-                if(NOT ARG_EXTENSIONS_INCLUDE)
-                        message(FATAL_ERROR "Include extensions are not specified")
-                endif()
                 unset(globbing_expressions_include)
                 foreach(dir ${ARG_INCLUDE_DIRECTORIES})
                         set(dir "${PROJECT_SOURCE_DIR}/${dir}")
                         if(NOT IS_DIRECTORY "${dir}")
                                 message(FATAL_ERROR "Include directory ${dir} is not a directory")
                         endif()
-                        foreach(ext ${ARG_EXTENSIONS_INCLUDE})
+                        foreach(ext ${extensions_shaders_include})
                                 list(APPEND globbing_expressions_include "${dir}/*.${ext}")
                         endforeach()
                 endforeach()
                 file(GLOB_RECURSE global_include_files LIST_DIRECTORIES false ${globbing_expressions_include})
-                foreach(long_file_name ${global_include_files})
-                        get_filename_component(dir "${long_file_name}" DIRECTORY)
+                foreach(include_file ${global_include_files})
+                        get_filename_component(dir "${include_file}" DIRECTORY)
                         list(APPEND global_include_directories "${dir}")
                 endforeach()
         endif()
@@ -250,9 +329,9 @@ function(AddIncludeFiles FILE_TYPE)
                         set(files "${source}")
                 endif()
 
-                foreach(long_file_name ${files})
+                foreach(input_file ${files})
 
-                        get_filename_component(file_name "${long_file_name}" NAME)
+                        get_filename_component(file_name "${input_file}" NAME)
 
                         set(target_name "${custom_target_prefix}_${file_name}")
                         set(output_file "${output_directory}/${file_name}.${ARG_OUTPUT_EXTENSION}")
@@ -263,76 +342,18 @@ function(AddIncludeFiles FILE_TYPE)
 
                         if(binary_files)
 
-                                add_custom_command(
-                                        OUTPUT
-                                                "${output_file}"
-                                        COMMAND
-                                                "${PROJECT_BINARY_DIR}/create_str"
-                                                "bin" "${long_file_name}" "${output_file}"
-                                        DEPENDS
-                                                "${long_file_name}"
-                                                "${PROJECT_BINARY_DIR}/create_str"
-                                        WORKING_DIRECTORY
-                                                "${PROJECT_BINARY_DIR}"
-                                        VERBATIM
-                                )
+                                AddBinaryFile(
+                                        INPUT_FILE ${input_file}
+                                        OUTPUT_FILE ${output_file})
 
                         elseif(vulkan_shaders)
 
-                                unset(include_directory)
-                                unset(include_files)
-                                if(ARG_EXTENSIONS_INCLUDE)
-                                        get_filename_component(include_directory "${long_file_name}" DIRECTORY)
-                                        unset(globbing_expressions_include)
-                                        foreach(ext ${ARG_EXTENSIONS_INCLUDE})
-                                                list(APPEND globbing_expressions_include "${include_directory}/*.${ext}")
-                                        endforeach()
-                                        file(GLOB_RECURSE include_files LIST_DIRECTORIES false ${globbing_expressions_include})
-                                endif()
-
-                                unset(macro_list)
-                                foreach(macro ${ARG_MACROS})
-                                        list(APPEND macro_list "-D${macro}")
-                                endforeach()
-
-                                unset(include_directories_list)
-                                list(APPEND include_directories_list "-I${include_directory}")
-                                foreach(dir ${global_include_directories})
-                                        list(APPEND include_directories_list "-I${dir}")
-                                endforeach()
-
-                                get_filename_component(file_ext "${long_file_name}" EXT)
-                                string(RANDOM LENGTH 10 random_string_glsl)
-                                set(output_glsl "${output_file}_${random_string_glsl}${file_ext}")
-
-                                string(RANDOM LENGTH 10 random_string_sprv)
-                                set(output_sprv "${output_file}_${random_string_sprv}.sprv")
-
-                                add_custom_command(
-                                        OUTPUT
-                                                "${output_file}"
-                                        COMMAND
-                                                "${PROJECT_BINARY_DIR}/create_str"
-                                                "cat" "${long_file_name}" "${output_glsl}"
-                                        COMMAND
-                                                Vulkan::glslangValidator
-                                                ${include_directories_list}
-                                                "--target-env" "${shader_environment}"
-                                                ${macro_list}
-                                                "${output_glsl}"
-                                                "-o" "${output_sprv}"
-                                        COMMAND
-                                                "${PROJECT_BINARY_DIR}/create_str"
-                                                "spr" "${output_sprv}" "${output_file}"
-                                        DEPENDS
-                                                "${long_file_name}"
-                                                "${PROJECT_BINARY_DIR}/create_str"
-                                                ${include_files}
-                                                ${global_include_files}
-                                        WORKING_DIRECTORY
-                                                "${PROJECT_BINARY_DIR}"
-                                        VERBATIM
-                                )
+                                AddShaderFile(
+                                        INPUT_FILE ${input_file}
+                                        OUTPUT_FILE ${output_file}
+                                        GLOBAL_INCLUDE_DIRECTORIES ${global_include_directories}
+                                        GLOBAL_INCLUDE_FILES ${global_include_files}
+                                        MACROS ${ARG_MACROS})
 
                         endif()
 
@@ -393,8 +414,7 @@ AddIncludeFiles(VULKAN_SHADERS
                         OUTPUT_EXTENSION "spr"
                         SOURCE "src/gpu"
                         INCLUDE_DIRECTORIES "src/shading"
-                        EXTENSIONS ${extensions_shaders}
-                        EXTENSIONS_INCLUDE ${extensions_shaders_include})
+                        EXTENSIONS ${extensions_shaders})
 
 target_compile_definitions(${PROJECT_NAME} PRIVATE QT_NO_KEYWORDS)
 target_compile_definitions(${PROJECT_NAME} PRIVATE QT_DISABLE_DEPRECATED_BEFORE=0x050F00)
