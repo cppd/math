@@ -23,6 +23,13 @@ namespace ns::gpu::renderer
 {
 class ShaderCode final : public Code
 {
+        bool ray_tracing_;
+
+        bool ray_tracing() const override
+        {
+                return ray_tracing_;
+        }
+
         std::vector<std::uint32_t> mesh_triangles_vert() const override;
         std::vector<std::uint32_t> mesh_triangles_geom() const override;
         std::vector<std::uint32_t> mesh_triangles_frag() const override;
@@ -42,6 +49,6 @@ class ShaderCode final : public Code
         std::vector<std::uint32_t> volume_fragments_frag() const override;
 
 public:
-        ShaderCode();
+        explicit ShaderCode(bool ray_tracing);
 };
 }

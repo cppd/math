@@ -436,8 +436,7 @@ class Impl final : public Renderer, RendererViewEvents, StorageMeshEvents, Stora
         }
 
 public:
-        Impl(const bool ray_tracing,
-             const vulkan::Device* const device,
+        Impl(const vulkan::Device* const device,
              const Code& code,
              const vulkan::CommandPool* const graphics_command_pool,
              const vulkan::Queue* const graphics_queue,
@@ -448,7 +447,7 @@ public:
              const bool sample_shading,
              const bool sampler_anisotropy)
                 : device_(device),
-                  ray_tracing_(ray_tracing),
+                  ray_tracing_(code.ray_tracing()),
                   graphics_command_pool_(graphics_command_pool),
                   graphics_queue_(graphics_queue),
                   transfer_command_pool_(transfer_command_pool),
@@ -469,7 +468,7 @@ public:
                   renderer_view_(&shader_buffers_, this),
                   renderer_draw_(*device_, TRANSPARENCY_NODE_BUFFER_MAX_SIZE, &mesh_renderer_, &volume_renderer_)
         {
-                if (ray_tracing)
+                if (ray_tracing_)
                 {
                         acceleration_structure_.emplace(
                                 *device_, *compute_command_pool_, *compute_queue_,
@@ -510,10 +509,10 @@ std::unique_ptr<Renderer> create_renderer(
         const bool sampler_anisotropy)
 {
         const bool ray_tracing = ray_tracing_supported(*device);
-        const ShaderCode shader_code;
+        const ShaderCode shader_code(ray_tracing);
 
         return std::make_unique<Impl>(
-                ray_tracing, device, shader_code, graphics_command_pool, graphics_queue, transfer_command_pool,
-                transfer_queue, compute_command_pool, compute_queue, sample_shading, sampler_anisotropy);
+                device, shader_code, graphics_command_pool, graphics_queue, transfer_command_pool, transfer_queue,
+                compute_command_pool, compute_queue, sample_shading, sampler_anisotropy);
 }
 }

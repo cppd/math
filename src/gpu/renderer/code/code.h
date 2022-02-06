@@ -28,6 +28,8 @@ protected:
         ~Code() = default;
 
 public:
+        virtual bool ray_tracing() const = 0;
+
         virtual std::vector<std::uint32_t> mesh_triangles_vert() const = 0;
         virtual std::vector<std::uint32_t> mesh_triangles_geom() const = 0;
         virtual std::vector<std::uint32_t> mesh_triangles_frag() const = 0;
