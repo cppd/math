@@ -140,17 +140,24 @@ add_include_files(
         SOURCE "font"
         EXTENSIONS "ttf")
 
-add_include_files(
-        VULKAN_SHADERS
-        GLSL_COMPILER Vulkan::glslangValidator
-        CREATE_STR "${PROJECT_BINARY_DIR}/create_str"
-        OUTPUT_DIRECTORY "${output_headers_directory}/shaders"
-        OUTPUT_EXTENSION "spr"
-        SOURCE "src/gpu"
-        INCLUDE_DIRECTORIES "src/shading"
-        INCLUDE_EXTENSIONS ${extensions_shaders_include}
-        SHADER_ENVIRONMENT ${shader_environment}
-        EXTENSIONS ${extensions_shaders})
+function(add_shaders)
+        cmake_parse_arguments(PARSE_ARGV 0 ARG "" "SOURCE" "MACROS")
+        add_include_files(
+                VULKAN_SHADERS
+                GLSL_COMPILER Vulkan::glslangValidator
+                CREATE_STR "${PROJECT_BINARY_DIR}/create_str"
+                OUTPUT_DIRECTORY "${output_headers_directory}/shaders"
+                OUTPUT_EXTENSION "spr"
+                SOURCE ${ARG_SOURCE}
+                MACROS ${ARG_MACROS}
+                INCLUDE_DIRECTORIES "src/shading"
+                INCLUDE_EXTENSIONS ${extensions_shaders_include}
+                SHADER_ENVIRONMENT ${shader_environment}
+                EXTENSIONS ${extensions_shaders})
+endfunction()
+
+add_shaders(SOURCE "src/gpu")
+add_shaders(SOURCE "src/gpu/renderer" MACROS RAY_TRACING)
 
 target_compile_definitions(${PROJECT_NAME} PRIVATE QT_NO_KEYWORDS)
 target_compile_definitions(${PROJECT_NAME} PRIVATE QT_DISABLE_DEPRECATED_BEFORE=0x050F00)
