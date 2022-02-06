@@ -20,8 +20,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "descriptors.h"
 #include "vertex_triangles.h"
 
-#include "../../code/code.h"
-
 #include <src/vulkan/create.h>
 #include <src/vulkan/pipeline.h>
 
@@ -45,7 +43,7 @@ std::vector<VkDescriptorSetLayoutBinding> TrianglesProgram::descriptor_set_layou
         return MaterialMemory::descriptor_set_layout_bindings();
 }
 
-TrianglesProgram::TrianglesProgram(const vulkan::Device* const device)
+TrianglesProgram::TrianglesProgram(const vulkan::Device* const device, const Code& code)
         : device_(device),
           descriptor_set_layout_shared_(
                   vulkan::create_descriptor_set_layout(*device, descriptor_set_layout_shared_bindings())),
@@ -57,9 +55,9 @@ TrianglesProgram::TrianglesProgram(const vulkan::Device* const device)
                   *device,
                   {SharedMemory::set_number(), MeshMemory::set_number(), MaterialMemory::set_number()},
                   {descriptor_set_layout_shared_, descriptor_set_layout_mesh_, descriptor_set_layout_material_})),
-          vertex_shader_(*device_, code_mesh_triangles_vert(), VK_SHADER_STAGE_VERTEX_BIT),
-          geometry_shader_(*device_, code_mesh_triangles_geom(), VK_SHADER_STAGE_GEOMETRY_BIT),
-          fragment_shader_(*device_, code_mesh_triangles_frag(), VK_SHADER_STAGE_FRAGMENT_BIT)
+          vertex_shader_(*device_, code.mesh_triangles_vert(), VK_SHADER_STAGE_VERTEX_BIT),
+          geometry_shader_(*device_, code.mesh_triangles_geom(), VK_SHADER_STAGE_GEOMETRY_BIT),
+          fragment_shader_(*device_, code.mesh_triangles_frag(), VK_SHADER_STAGE_FRAGMENT_BIT)
 {
 }
 

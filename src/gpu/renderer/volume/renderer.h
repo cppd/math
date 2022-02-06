@@ -21,6 +21,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "../buffers/ggx_f1_albedo.h"
 #include "../buffers/shader.h"
+#include "../code/code.h"
 #include "shaders/descriptors.h"
 #include "shaders/program_volume.h"
 
@@ -63,6 +64,7 @@ class VolumeRenderer
 public:
         VolumeRenderer(
                 const vulkan::Device* device,
+                const Code& code,
                 bool sample_shading,
                 const ShaderBuffers& buffers,
                 const GgxF1Albedo& ggx_f1_albedo);

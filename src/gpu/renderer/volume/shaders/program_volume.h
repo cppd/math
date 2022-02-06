@@ -17,6 +17,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
+#include "../../code/code.h"
+
 #include <src/numerical/region.h>
 #include <src/vulkan/device.h>
 #include <src/vulkan/objects.h>
@@ -53,7 +55,7 @@ public:
                 FRAGMENTS
         };
 
-        explicit VolumeProgram(const vulkan::Device* device);
+        explicit VolumeProgram(const vulkan::Device* device, const Code& code);
 
         VolumeProgram(const VolumeProgram&) = delete;
         VolumeProgram& operator=(const VolumeProgram&) = delete;

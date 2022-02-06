@@ -28,6 +28,7 @@ namespace ns::gpu::renderer
 {
 MeshRenderer::MeshRenderer(
         const vulkan::Device* const device,
+        const Code& code,
         const bool sample_shading,
         const bool sampler_anisotropy,
         const ShaderBuffers& buffers,
@@ -35,7 +36,7 @@ MeshRenderer::MeshRenderer(
         : device_(*device),
           sample_shading_(sample_shading),
           //
-          triangles_program_(device),
+          triangles_program_(device, code),
           triangles_shared_memory_(
                   *device,
                   triangles_program_.descriptor_set_layout_shared(),
@@ -46,7 +47,7 @@ MeshRenderer::MeshRenderer(
                   ggx_f1_albedo.cosine_roughness(),
                   ggx_f1_albedo.cosine_weighted_average()),
           //
-          triangle_lines_program_(device),
+          triangle_lines_program_(device, code),
           triangle_lines_shared_memory_(
                   *device,
                   triangle_lines_program_.descriptor_set_layout_shared(),
@@ -57,7 +58,7 @@ MeshRenderer::MeshRenderer(
                   ggx_f1_albedo.cosine_roughness(),
                   ggx_f1_albedo.cosine_weighted_average()),
           //
-          normals_program_(device),
+          normals_program_(device, code),
           normals_shared_memory_(
                   *device,
                   normals_program_.descriptor_set_layout_shared(),
@@ -68,7 +69,7 @@ MeshRenderer::MeshRenderer(
                   ggx_f1_albedo.cosine_roughness(),
                   ggx_f1_albedo.cosine_weighted_average()),
           //
-          triangles_depth_program_(device),
+          triangles_depth_program_(device, code),
           triangles_depth_shared_memory_(
                   *device,
                   triangles_depth_program_.descriptor_set_layout_shared(),
@@ -79,7 +80,7 @@ MeshRenderer::MeshRenderer(
                   ggx_f1_albedo.cosine_roughness(),
                   ggx_f1_albedo.cosine_weighted_average()),
           //
-          points_program_(device),
+          points_program_(device, code),
           points_shared_memory_(
                   *device,
                   points_program_.descriptor_set_layout_shared(),

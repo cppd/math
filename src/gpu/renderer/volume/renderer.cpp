@@ -26,13 +26,14 @@ namespace ns::gpu::renderer
 {
 VolumeRenderer::VolumeRenderer(
         const vulkan::Device* const device,
+        const Code& code,
         const bool sample_shading,
         const ShaderBuffers& buffers,
         const GgxF1Albedo& ggx_f1_albedo)
         : device_(*device),
           sample_shading_(sample_shading),
           //
-          program_(device),
+          program_(device, code),
           shared_memory_(
                   *device,
                   program_.descriptor_set_layout_shared(),

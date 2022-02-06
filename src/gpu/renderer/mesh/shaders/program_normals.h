@@ -17,6 +17,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
+#include "../../code/code.h"
+
 #include <src/numerical/region.h>
 #include <src/vulkan/descriptor.h>
 #include <src/vulkan/device.h>
@@ -39,7 +41,7 @@ class NormalsProgram final
         vulkan::Shader fragment_shader_;
 
 public:
-        explicit NormalsProgram(const vulkan::Device* device);
+        explicit NormalsProgram(const vulkan::Device* device, const Code& code);
 
         NormalsProgram(const NormalsProgram&) = delete;
         NormalsProgram& operator=(const NormalsProgram&) = delete;

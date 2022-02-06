@@ -22,21 +22,28 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 namespace ns::gpu::renderer
 {
-std::vector<std::uint32_t> code_mesh_triangles_vert();
-std::vector<std::uint32_t> code_mesh_triangles_geom();
-std::vector<std::uint32_t> code_mesh_triangles_frag();
-std::vector<std::uint32_t> code_mesh_triangles_depth_vert();
-std::vector<std::uint32_t> code_mesh_triangle_lines_vert();
-std::vector<std::uint32_t> code_mesh_triangle_lines_geom();
-std::vector<std::uint32_t> code_mesh_triangle_lines_frag();
-std::vector<std::uint32_t> code_mesh_points_0d_vert();
-std::vector<std::uint32_t> code_mesh_points_1d_vert();
-std::vector<std::uint32_t> code_mesh_points_frag();
-std::vector<std::uint32_t> code_mesh_normals_vert();
-std::vector<std::uint32_t> code_mesh_normals_geom();
-std::vector<std::uint32_t> code_mesh_normals_frag();
-std::vector<std::uint32_t> code_volume_vert();
-std::vector<std::uint32_t> code_volume_image_frag();
-std::vector<std::uint32_t> code_volume_image_fragments_frag();
-std::vector<std::uint32_t> code_volume_fragments_frag();
+class Code
+{
+protected:
+        ~Code() = default;
+
+public:
+        virtual std::vector<std::uint32_t> mesh_triangles_vert() const = 0;
+        virtual std::vector<std::uint32_t> mesh_triangles_geom() const = 0;
+        virtual std::vector<std::uint32_t> mesh_triangles_frag() const = 0;
+        virtual std::vector<std::uint32_t> mesh_triangles_depth_vert() const = 0;
+        virtual std::vector<std::uint32_t> mesh_triangle_lines_vert() const = 0;
+        virtual std::vector<std::uint32_t> mesh_triangle_lines_geom() const = 0;
+        virtual std::vector<std::uint32_t> mesh_triangle_lines_frag() const = 0;
+        virtual std::vector<std::uint32_t> mesh_points_0d_vert() const = 0;
+        virtual std::vector<std::uint32_t> mesh_points_1d_vert() const = 0;
+        virtual std::vector<std::uint32_t> mesh_points_frag() const = 0;
+        virtual std::vector<std::uint32_t> mesh_normals_vert() const = 0;
+        virtual std::vector<std::uint32_t> mesh_normals_geom() const = 0;
+        virtual std::vector<std::uint32_t> mesh_normals_frag() const = 0;
+        virtual std::vector<std::uint32_t> volume_vert() const = 0;
+        virtual std::vector<std::uint32_t> volume_image_frag() const = 0;
+        virtual std::vector<std::uint32_t> volume_image_fragments_frag() const = 0;
+        virtual std::vector<std::uint32_t> volume_fragments_frag() const = 0;
+};
 }

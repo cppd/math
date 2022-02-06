@@ -19,8 +19,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "descriptors.h"
 
-#include "../../code/code.h"
-
 #include <src/com/error.h>
 #include <src/vulkan/create.h>
 #include <src/vulkan/pipeline.h>
@@ -37,7 +35,7 @@ std::vector<VkDescriptorSetLayoutBinding> VolumeProgram::descriptor_set_layout_i
         return VolumeImageMemory::descriptor_set_layout_bindings();
 }
 
-VolumeProgram::VolumeProgram(const vulkan::Device* const device)
+VolumeProgram::VolumeProgram(const vulkan::Device* const device, const Code& code)
         : device_(device),
           descriptor_set_layout_shared_(
                   vulkan::create_descriptor_set_layout(*device, descriptor_set_layout_shared_bindings())),
@@ -51,10 +49,10 @@ VolumeProgram::VolumeProgram(const vulkan::Device* const device)
                   *device,
                   {VolumeSharedMemory::set_number()},
                   {descriptor_set_layout_shared_})),
-          vertex_shader_(*device_, code_volume_vert(), VK_SHADER_STAGE_VERTEX_BIT),
-          fragment_shader_image_(*device_, code_volume_image_frag(), VK_SHADER_STAGE_FRAGMENT_BIT),
-          fragment_shader_image_fragments_(*device_, code_volume_image_fragments_frag(), VK_SHADER_STAGE_FRAGMENT_BIT),
-          fragment_shader_fragments_(*device_, code_volume_fragments_frag(), VK_SHADER_STAGE_FRAGMENT_BIT)
+          vertex_shader_(*device_, code.volume_vert(), VK_SHADER_STAGE_VERTEX_BIT),
+          fragment_shader_image_(*device_, code.volume_image_frag(), VK_SHADER_STAGE_FRAGMENT_BIT),
+          fragment_shader_image_fragments_(*device_, code.volume_image_fragments_frag(), VK_SHADER_STAGE_FRAGMENT_BIT),
+          fragment_shader_fragments_(*device_, code.volume_fragments_frag(), VK_SHADER_STAGE_FRAGMENT_BIT)
 {
 }
 

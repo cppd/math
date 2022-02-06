@@ -17,6 +17,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
+#include "../../code/code.h"
+
 #include <src/numerical/region.h>
 #include <src/vulkan/descriptor.h>
 #include <src/vulkan/device.h>
@@ -40,7 +42,7 @@ class TrianglesProgram final
         vulkan::Shader fragment_shader_;
 
 public:
-        explicit TrianglesProgram(const vulkan::Device* device);
+        explicit TrianglesProgram(const vulkan::Device* device, const Code& code);
 
         TrianglesProgram(const TrianglesProgram&) = delete;
         TrianglesProgram& operator=(const TrianglesProgram&) = delete;

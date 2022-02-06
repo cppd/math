@@ -17,6 +17,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
+#include "../../code/code.h"
+
 #include <src/numerical/region.h>
 #include <src/vulkan/descriptor.h>
 #include <src/vulkan/device.h>
@@ -37,7 +39,7 @@ class TrianglesDepthProgram final
         vulkan::Shader vertex_shader_;
 
 public:
-        explicit TrianglesDepthProgram(const vulkan::Device* device);
+        explicit TrianglesDepthProgram(const vulkan::Device* device, const Code& code);
 
         TrianglesDepthProgram(const TrianglesDepthProgram&) = delete;
         TrianglesDepthProgram& operator=(const TrianglesDepthProgram&) = delete;

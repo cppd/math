@@ -30,6 +30,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "buffers/ggx_f1_albedo.h"
 #include "buffers/shader.h"
 #include "buffers/transparency.h"
+#include "code/shader_code.h"
 #include "mesh/object.h"
 #include "mesh/renderer.h"
 #include "ray_tracing/ray_tracing.h"
@@ -437,6 +438,7 @@ class Impl final : public Renderer, RendererViewEvents, StorageMeshEvents, Stora
 public:
         Impl(const bool ray_tracing,
              const vulkan::Device* const device,
+             const Code& code,
              const vulkan::CommandPool* const graphics_command_pool,
              const vulkan::Queue* const graphics_queue,
              const vulkan::CommandPool* const transfer_command_pool,
@@ -459,8 +461,8 @@ public:
                           {graphics_queue_->family_index()},
                           *transfer_command_pool_,
                           *transfer_queue_),
-                  mesh_renderer_(device_, sample_shading, sampler_anisotropy, shader_buffers_, ggx_f1_albedo_),
-                  volume_renderer_(device_, sample_shading, shader_buffers_, ggx_f1_albedo_),
+                  mesh_renderer_(device_, code, sample_shading, sampler_anisotropy, shader_buffers_, ggx_f1_albedo_),
+                  volume_renderer_(device_, code, sample_shading, shader_buffers_, ggx_f1_albedo_),
                   mesh_storage_(this),
                   volume_storage_(this),
                   renderer_object_(&mesh_storage_, &volume_storage_),
@@ -508,9 +510,10 @@ std::unique_ptr<Renderer> create_renderer(
         const bool sampler_anisotropy)
 {
         const bool ray_tracing = ray_tracing_supported(*device);
+        const ShaderCode shader_code;
 
         return std::make_unique<Impl>(
-                ray_tracing, device, graphics_command_pool, graphics_queue, transfer_command_pool, transfer_queue,
-                compute_command_pool, compute_queue, sample_shading, sampler_anisotropy);
+                ray_tracing, device, shader_code, graphics_command_pool, graphics_queue, transfer_command_pool,
+                transfer_queue, compute_command_pool, compute_queue, sample_shading, sampler_anisotropy);
 }
 }

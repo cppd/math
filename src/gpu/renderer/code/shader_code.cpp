@@ -15,11 +15,11 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include "code.h"
+#include "shader_code.h"
 
 namespace ns::gpu::renderer
 {
-std::vector<std::uint32_t> code_mesh_triangles_vert()
+std::vector<std::uint32_t> ShaderCode::mesh_triangles_vert() const
 {
         static constexpr std::uint32_t CODE[] = {
 #include "renderer_mesh_triangles.vert.spr"
@@ -27,7 +27,7 @@ std::vector<std::uint32_t> code_mesh_triangles_vert()
         return {std::cbegin(CODE), std::cend(CODE)};
 }
 
-std::vector<std::uint32_t> code_mesh_triangles_geom()
+std::vector<std::uint32_t> ShaderCode::mesh_triangles_geom() const
 {
         static constexpr std::uint32_t CODE[] = {
 #include "renderer_mesh_triangles.geom.spr"
@@ -35,7 +35,7 @@ std::vector<std::uint32_t> code_mesh_triangles_geom()
         return {std::cbegin(CODE), std::cend(CODE)};
 }
 
-std::vector<std::uint32_t> code_mesh_triangles_frag()
+std::vector<std::uint32_t> ShaderCode::mesh_triangles_frag() const
 {
         static constexpr std::uint32_t CODE[] = {
 #include "renderer_mesh_triangles.frag.spr"
@@ -43,7 +43,7 @@ std::vector<std::uint32_t> code_mesh_triangles_frag()
         return {std::cbegin(CODE), std::cend(CODE)};
 }
 
-std::vector<std::uint32_t> code_mesh_triangles_depth_vert()
+std::vector<std::uint32_t> ShaderCode::mesh_triangles_depth_vert() const
 {
         static constexpr std::uint32_t CODE[] = {
 #include "renderer_mesh_triangles_depth.vert.spr"
@@ -51,7 +51,7 @@ std::vector<std::uint32_t> code_mesh_triangles_depth_vert()
         return {std::cbegin(CODE), std::cend(CODE)};
 }
 
-std::vector<std::uint32_t> code_mesh_triangle_lines_vert()
+std::vector<std::uint32_t> ShaderCode::mesh_triangle_lines_vert() const
 {
         static constexpr std::uint32_t CODE[] = {
 #include "renderer_mesh_triangle_lines.vert.spr"
@@ -59,7 +59,7 @@ std::vector<std::uint32_t> code_mesh_triangle_lines_vert()
         return {std::cbegin(CODE), std::cend(CODE)};
 }
 
-std::vector<std::uint32_t> code_mesh_triangle_lines_geom()
+std::vector<std::uint32_t> ShaderCode::mesh_triangle_lines_geom() const
 {
         static constexpr std::uint32_t CODE[] = {
 #include "renderer_mesh_triangle_lines.geom.spr"
@@ -67,7 +67,7 @@ std::vector<std::uint32_t> code_mesh_triangle_lines_geom()
         return {std::cbegin(CODE), std::cend(CODE)};
 }
 
-std::vector<std::uint32_t> code_mesh_triangle_lines_frag()
+std::vector<std::uint32_t> ShaderCode::mesh_triangle_lines_frag() const
 {
         static constexpr std::uint32_t CODE[] = {
 #include "renderer_mesh_triangle_lines.frag.spr"
@@ -75,7 +75,7 @@ std::vector<std::uint32_t> code_mesh_triangle_lines_frag()
         return {std::cbegin(CODE), std::cend(CODE)};
 }
 
-std::vector<std::uint32_t> code_mesh_points_0d_vert()
+std::vector<std::uint32_t> ShaderCode::mesh_points_0d_vert() const
 {
         static constexpr std::uint32_t CODE[] = {
 #include "renderer_mesh_points_0d.vert.spr"
@@ -83,7 +83,7 @@ std::vector<std::uint32_t> code_mesh_points_0d_vert()
         return {std::cbegin(CODE), std::cend(CODE)};
 }
 
-std::vector<std::uint32_t> code_mesh_points_1d_vert()
+std::vector<std::uint32_t> ShaderCode::mesh_points_1d_vert() const
 {
         static constexpr std::uint32_t CODE[] = {
 #include "renderer_mesh_points_1d.vert.spr"
@@ -91,7 +91,7 @@ std::vector<std::uint32_t> code_mesh_points_1d_vert()
         return {std::cbegin(CODE), std::cend(CODE)};
 }
 
-std::vector<std::uint32_t> code_mesh_points_frag()
+std::vector<std::uint32_t> ShaderCode::mesh_points_frag() const
 {
         static constexpr std::uint32_t CODE[] = {
 #include "renderer_mesh_points.frag.spr"
@@ -99,7 +99,7 @@ std::vector<std::uint32_t> code_mesh_points_frag()
         return {std::cbegin(CODE), std::cend(CODE)};
 }
 
-std::vector<std::uint32_t> code_mesh_normals_vert()
+std::vector<std::uint32_t> ShaderCode::mesh_normals_vert() const
 {
         static constexpr std::uint32_t CODE[] = {
 #include "renderer_mesh_normals.vert.spr"
@@ -107,7 +107,7 @@ std::vector<std::uint32_t> code_mesh_normals_vert()
         return {std::cbegin(CODE), std::cend(CODE)};
 }
 
-std::vector<std::uint32_t> code_mesh_normals_geom()
+std::vector<std::uint32_t> ShaderCode::mesh_normals_geom() const
 {
         static constexpr std::uint32_t CODE[] = {
 #include "renderer_mesh_normals.geom.spr"
@@ -115,7 +115,7 @@ std::vector<std::uint32_t> code_mesh_normals_geom()
         return {std::cbegin(CODE), std::cend(CODE)};
 }
 
-std::vector<std::uint32_t> code_mesh_normals_frag()
+std::vector<std::uint32_t> ShaderCode::mesh_normals_frag() const
 {
         static constexpr std::uint32_t CODE[] = {
 #include "renderer_mesh_normals.frag.spr"
@@ -123,7 +123,7 @@ std::vector<std::uint32_t> code_mesh_normals_frag()
         return {std::cbegin(CODE), std::cend(CODE)};
 }
 
-std::vector<std::uint32_t> code_volume_vert()
+std::vector<std::uint32_t> ShaderCode::volume_vert() const
 {
         static constexpr std::uint32_t CODE[] = {
 #include "renderer_volume.vert.spr"
@@ -131,7 +131,7 @@ std::vector<std::uint32_t> code_volume_vert()
         return {std::cbegin(CODE), std::cend(CODE)};
 }
 
-std::vector<std::uint32_t> code_volume_image_frag()
+std::vector<std::uint32_t> ShaderCode::volume_image_frag() const
 {
         static constexpr std::uint32_t CODE[] = {
 #include "renderer_volume_image.frag.spr"
@@ -139,7 +139,7 @@ std::vector<std::uint32_t> code_volume_image_frag()
         return {std::cbegin(CODE), std::cend(CODE)};
 }
 
-std::vector<std::uint32_t> code_volume_image_fragments_frag()
+std::vector<std::uint32_t> ShaderCode::volume_image_fragments_frag() const
 {
         static constexpr std::uint32_t CODE[] = {
 #include "renderer_volume_image_fragments.frag.spr"
@@ -147,11 +147,15 @@ std::vector<std::uint32_t> code_volume_image_fragments_frag()
         return {std::cbegin(CODE), std::cend(CODE)};
 }
 
-std::vector<std::uint32_t> code_volume_fragments_frag()
+std::vector<std::uint32_t> ShaderCode::volume_fragments_frag() const
 {
         static constexpr std::uint32_t CODE[] = {
 #include "renderer_volume_fragments.frag.spr"
         };
         return {std::cbegin(CODE), std::cend(CODE)};
+}
+
+ShaderCode::ShaderCode()
+{
 }
 }

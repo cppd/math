@@ -17,6 +17,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
+#include "../../code/code.h"
+
 #include <src/color/color.h>
 #include <src/numerical/region.h>
 #include <src/numerical/vector.h>
@@ -42,7 +44,7 @@ class PointsProgram final
         vulkan::Shader fragment_shader_;
 
 public:
-        explicit PointsProgram(const vulkan::Device* device);
+        explicit PointsProgram(const vulkan::Device* device, const Code& code);
 
         PointsProgram(const PointsProgram&) = delete;
         PointsProgram& operator=(const PointsProgram&) = delete;

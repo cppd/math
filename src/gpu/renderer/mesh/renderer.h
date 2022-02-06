@@ -22,6 +22,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "../buffers/ggx_f1_albedo.h"
 #include "../buffers/shader.h"
+#include "../code/code.h"
 #include "shaders/descriptors.h"
 #include "shaders/program_normals.h"
 #include "shaders/program_points.h"
@@ -94,6 +95,7 @@ class MeshRenderer
 public:
         MeshRenderer(
                 const vulkan::Device* device,
+                const Code& code,
                 bool sample_shading,
                 bool sampler_anisotropy,
                 const ShaderBuffers& buffers,
