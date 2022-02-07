@@ -331,6 +331,28 @@ class Impl final : public Renderer, RendererViewEvents, StorageMeshEvents, Stora
                 }
         }
 
+        void acceleration_structure_create()
+        {
+                if (!ray_tracing_)
+                {
+                        return;
+                }
+                acceleration_structure_->create(
+                        *device_, *compute_command_pool_, *compute_queue_, mesh_storage_.visible_objects());
+                mesh_renderer_.set_acceleration_structure(acceleration_structure_->handle());
+                create_mesh_render_command_buffers();
+        }
+
+        void acceleration_structure_update_matrices() const
+        {
+                if (!ray_tracing_)
+                {
+                        return;
+                }
+                acceleration_structure_->update_matrices(
+                        *device_, *compute_command_pool_, *compute_queue_, mesh_storage_.visible_objects());
+        }
+
         // StorageMeshEvents
 
         std::unique_ptr<MeshObject> mesh_create() override
@@ -344,12 +366,7 @@ class Impl final : public Renderer, RendererViewEvents, StorageMeshEvents, Stora
         void mesh_visibility_changed() override
         {
                 create_mesh_command_buffers();
-
-                if (ray_tracing_)
-                {
-                        acceleration_structure_->create(
-                                *device_, *compute_command_pool_, *compute_queue_, mesh_storage_.visible_objects());
-                }
+                acceleration_structure_create();
         }
 
         void mesh_visible_changed(const MeshObject::UpdateChanges& update_changes) override
@@ -359,20 +376,13 @@ class Impl final : public Renderer, RendererViewEvents, StorageMeshEvents, Stora
                         create_mesh_command_buffers();
                 }
 
-                if (ray_tracing_)
+                if (update_changes.mesh)
                 {
-                        if (update_changes.mesh)
-                        {
-                                acceleration_structure_->create(
-                                        *device_, *compute_command_pool_, *compute_queue_,
-                                        mesh_storage_.visible_objects());
-                        }
-                        else if (update_changes.matrix)
-                        {
-                                acceleration_structure_->update_matrices(
-                                        *device_, *compute_command_pool_, *compute_queue_,
-                                        mesh_storage_.visible_objects());
-                        }
+                        acceleration_structure_create();
+                }
+                else if (update_changes.matrix)
+                {
+                        acceleration_structure_update_matrices();
                 }
         }
 
@@ -473,6 +483,7 @@ public:
                         acceleration_structure_.emplace(
                                 *device_, *compute_command_pool_, *compute_queue_,
                                 std::vector<std::uint32_t>({graphics_queue_->family_index()}));
+                        mesh_renderer_.set_acceleration_structure(acceleration_structure_->handle());
 
                         create_ray_tracing_data(device_, compute_command_pool_, compute_queue_);
                 }

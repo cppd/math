@@ -61,6 +61,8 @@ class SharedMemory final
         static constexpr int TRANSPARENCY_COUNTERS_BINDING = 8;
         static constexpr int TRANSPARENCY_NODES_BINDING = 9;
 
+        static constexpr int ACCELERATION_STRUCTURE_BINDING = 10;
+
         vulkan::Descriptors descriptors_;
 
 public:
@@ -68,7 +70,8 @@ public:
                 VkShaderStageFlags matrices,
                 VkShaderStageFlags drawing,
                 VkShaderStageFlags shadow,
-                VkShaderStageFlags objects);
+                VkShaderStageFlags objects,
+                VkShaderStageFlags acceleration_structure);
         static unsigned set_number();
 
         SharedMemory(
@@ -90,6 +93,7 @@ public:
                 const vulkan::ImageView& heads_size,
                 const vulkan::Buffer& counters,
                 const vulkan::Buffer& nodes) const;
+        void set_acceleration_structure(VkAccelerationStructureKHR acceleration_structure) const;
 };
 
 class MeshMemory final

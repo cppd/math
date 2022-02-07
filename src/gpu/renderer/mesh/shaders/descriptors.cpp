@@ -54,7 +54,8 @@ std::vector<VkDescriptorSetLayoutBinding> SharedMemory::descriptor_set_layout_bi
         const VkShaderStageFlags matrices,
         const VkShaderStageFlags drawing,
         const VkShaderStageFlags shadow,
-        const VkShaderStageFlags objects)
+        const VkShaderStageFlags objects,
+        const VkShaderStageFlags acceleration_structure)
 {
         std::vector<VkDescriptorSetLayoutBinding> bindings;
 
@@ -160,6 +161,16 @@ std::vector<VkDescriptorSetLayoutBinding> SharedMemory::descriptor_set_layout_bi
                 b.descriptorType = VK_DESCRIPTOR_TYPE_STORAGE_BUFFER;
                 b.descriptorCount = 1;
                 b.stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
+
+                bindings.push_back(b);
+        }
+        if (acceleration_structure)
+        {
+                VkDescriptorSetLayoutBinding b = {};
+                b.binding = ACCELERATION_STRUCTURE_BINDING;
+                b.descriptorType = VK_DESCRIPTOR_TYPE_ACCELERATION_STRUCTURE_KHR;
+                b.descriptorCount = 1;
+                b.stageFlags = acceleration_structure;
 
                 bindings.push_back(b);
         }
@@ -313,6 +324,11 @@ void SharedMemory::set_transparency(
         }
 
         descriptors_.update_descriptor_set(0, bindings, infos);
+}
+
+void SharedMemory::set_acceleration_structure(const VkAccelerationStructureKHR acceleration_structure) const
+{
+        descriptors_.update_descriptor_set(0, ACCELERATION_STRUCTURE_BINDING, acceleration_structure);
 }
 
 //

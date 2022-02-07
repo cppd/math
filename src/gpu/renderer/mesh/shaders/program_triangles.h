@@ -32,6 +32,7 @@ namespace ns::gpu::renderer
 class TrianglesProgram final
 {
         const vulkan::Device* device_;
+        bool ray_tracing_;
 
         vulkan::handle::DescriptorSetLayout descriptor_set_layout_shared_;
         vulkan::handle::DescriptorSetLayout descriptor_set_layout_mesh_;
@@ -59,7 +60,7 @@ public:
                 bool transparency) const;
 
         VkDescriptorSetLayout descriptor_set_layout_shared() const;
-        static std::vector<VkDescriptorSetLayoutBinding> descriptor_set_layout_shared_bindings();
+        std::vector<VkDescriptorSetLayoutBinding> descriptor_set_layout_shared_bindings() const;
 
         VkDescriptorSetLayout descriptor_set_layout_mesh() const;
         static std::vector<VkDescriptorSetLayoutBinding> descriptor_set_layout_mesh_bindings();

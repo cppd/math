@@ -142,6 +142,8 @@ public:
                 bool normals);
         void delete_depth_command_buffers();
 
+        void set_acceleration_structure(VkAccelerationStructureKHR acceleration_structure);
+
         bool has_meshes() const;
         bool has_transparent_meshes() const;
         std::optional<VkCommandBuffer> render_command_buffer_all(unsigned index) const;

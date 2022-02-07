@@ -28,7 +28,7 @@ namespace ns::gpu::renderer
 std::vector<VkDescriptorSetLayoutBinding> NormalsProgram::descriptor_set_layout_shared_bindings()
 {
         return SharedMemory::descriptor_set_layout_bindings(
-                VK_SHADER_STAGE_GEOMETRY_BIT, VK_SHADER_STAGE_GEOMETRY_BIT, 0, VK_SHADER_STAGE_FRAGMENT_BIT);
+                VK_SHADER_STAGE_GEOMETRY_BIT, VK_SHADER_STAGE_GEOMETRY_BIT, 0, VK_SHADER_STAGE_FRAGMENT_BIT, 0);
 }
 
 std::vector<VkDescriptorSetLayoutBinding> NormalsProgram::descriptor_set_layout_mesh_bindings()

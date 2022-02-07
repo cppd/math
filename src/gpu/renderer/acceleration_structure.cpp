@@ -70,7 +70,7 @@ void AccelerationStructure::update_matrices(
         const vulkan::Device& device,
         const vulkan::CommandPool& compute_command_pool,
         const vulkan::Queue& compute_queue,
-        const std::vector<const MeshObject*>& meshes)
+        const std::vector<const MeshObject*>& meshes) const
 {
         ASSERT(acceleration_structure_);
 

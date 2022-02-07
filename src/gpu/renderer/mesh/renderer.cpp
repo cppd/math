@@ -433,6 +433,12 @@ void MeshRenderer::delete_depth_command_buffers()
         render_depth_command_buffers_.reset();
 }
 
+void MeshRenderer::set_acceleration_structure(const VkAccelerationStructureKHR acceleration_structure)
+{
+        delete_render_command_buffers();
+        triangles_shared_memory_.set_acceleration_structure(acceleration_structure);
+}
+
 bool MeshRenderer::has_meshes() const
 {
         return render_command_buffers_all_.has_value();
