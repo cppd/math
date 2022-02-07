@@ -50,6 +50,7 @@ out gl_PerVertex
 layout(location = 0) out GS
 {
         vec3 world_normal;
+        vec3 world_position;
         vec4 shadow_position;
         vec2 texture_coordinates;
         vec3 baricentric;
@@ -104,6 +105,7 @@ void main()
                 gs.world_normal = normals[i];
                 gs.baricentric = baricentric[i];
 
+                gs.world_position = vs[i].world_position;
                 gs.shadow_position = vs[i].shadow_position;
                 gs.texture_coordinates = vs[i].texture_coordinates;
 

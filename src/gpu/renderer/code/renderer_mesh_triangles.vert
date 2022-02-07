@@ -50,8 +50,7 @@ void main()
 
         if (drawing.clip_plane_enabled)
         {
-                const vec4 world = mesh.model_matrix * vec4(position, 1.0);
-                gl_ClipDistance[0] = dot(drawing.clip_plane_equation, world);
+                gl_ClipDistance[0] = dot(drawing.clip_plane_equation, world_coordinates);
         }
         else
         {
@@ -59,7 +58,7 @@ void main()
         }
 
         vs.world_normal = mesh.normal_matrix * normal;
-        vs.world_position = position;
+        vs.world_position = world_coordinates.xyz;
 
         vs.shadow_position = matrices.shadow_vp_texture_matrix * world_coordinates;
         vs.texture_coordinates = texture_coordinates;

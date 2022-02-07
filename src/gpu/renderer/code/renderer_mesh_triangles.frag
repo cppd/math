@@ -26,6 +26,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 layout(location = 0) in GS
 {
         vec3 world_normal;
+        vec3 world_position;
         vec4 shadow_position;
         vec2 texture_coordinates;
         vec3 baricentric;
@@ -34,11 +35,51 @@ gs;
 
 //
 
+#ifdef RAY_TRACING
+float shadow_weight()
+{
+        const float t_min = 1e-5;
+        const float t_max = 10;
+
+        const vec3 org = gs.world_position;
+        const vec3 dir = drawing.direction_to_light;
+
+        rayQueryEXT ray_query;
+
+        if (!drawing.clip_plane_enabled)
+        {
+                const uint flags = gl_RayFlagsOpaqueEXT | gl_RayFlagsTerminateOnFirstHitEXT;
+                rayQueryInitializeEXT(ray_query, acceleration_structure, flags, 0xFF, org, t_min, dir, t_max);
+                rayQueryProceedEXT(ray_query);
+        }
+        else
+        {
+                const uint flags = gl_RayFlagsNoOpaqueEXT | gl_RayFlagsTerminateOnFirstHitEXT;
+                rayQueryInitializeEXT(ray_query, acceleration_structure, flags, 0xFF, org, t_min, dir, t_max);
+                while (rayQueryProceedEXT(ray_query))
+                {
+                        if (rayQueryGetIntersectionTypeEXT(ray_query, false)
+                            == gl_RayQueryCandidateIntersectionTriangleEXT)
+                        {
+                                const float t = rayQueryGetIntersectionTEXT(ray_query, false);
+                                if (dot(drawing.clip_plane_equation, vec4(org + t * dir, 1)) >= 0)
+                                {
+                                        rayQueryConfirmIntersectionEXT(ray_query);
+                                }
+                        }
+                }
+        }
+
+        const bool hit = rayQueryGetIntersectionTypeEXT(ray_query, true) == gl_RayQueryCommittedIntersectionTriangleEXT;
+        return hit ? 1 : 0;
+}
+#else
 float shadow_weight()
 {
         const float d = texture(shadow_texture, gs.shadow_position.xy).r;
         return d <= gs.shadow_position.z ? 1 : 0;
 }
+#endif
 
 bool has_texture_coordinates()
 {

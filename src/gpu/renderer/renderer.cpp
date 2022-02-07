@@ -134,7 +134,7 @@ class Impl final : public Renderer, RendererViewEvents, StorageMeshEvents, Stora
                 ASSERT(transparency_buffers_);
 
                 return renderer_draw_.draw(
-                        graphics_queue_1, graphics_queue_2, index, renderer_view_.show_shadow(),
+                        graphics_queue_1, graphics_queue_2, index, !ray_tracing_ && renderer_view_.show_shadow(),
                         *clear_command_buffers_, *transparency_buffers_);
         }
 
