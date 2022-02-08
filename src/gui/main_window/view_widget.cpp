@@ -43,6 +43,9 @@ ViewWidget::ViewWidget() : QWidget(nullptr)
 {
         ui_.setupUi(this);
 
+        ui_.label_shadow_quality->setVisible(false);
+        ui_.slider_shadow_quality->setVisible(false);
+
         ui_.checkBox_clip_plane->setChecked(false);
         ui_.slider_clip_plane->setEnabled(false);
         set_slider_position(ui_.slider_clip_plane, 0.5);
@@ -83,6 +86,12 @@ ViewWidget::ViewWidget() : QWidget(nullptr)
 void ViewWidget::set_view(view::View* const view)
 {
         view_ = view;
+
+        view::info::Info info;
+        view_->receive({&info});
+
+        ui_.label_shadow_quality->setVisible(info.shadow_zoom);
+        ui_.slider_shadow_quality->setVisible(info.shadow_zoom);
 }
 
 void ViewWidget::on_clip_plane_clicked()
