@@ -54,19 +54,16 @@ float shadow_weight()
         }
         else
         {
-                const uint flags = gl_RayFlagsNoOpaqueEXT | gl_RayFlagsTerminateOnFirstHitEXT;
-                rayQueryInitializeEXT(ray_query, acceleration_structure, flags, 0xFF, org, t_min, dir, t_max);
-                while (rayQueryProceedEXT(ray_query))
+                // org is inside the clip plane
+                const float n_dot_dir = dot(drawing.clip_plane_equation.xyz, dir);
+                const float t_clip_plane =
+                        n_dot_dir >= 0 ? t_max : dot(drawing.clip_plane_equation, vec4(org, 1)) / -n_dot_dir;
+                if (t_clip_plane > t_min)
                 {
-                        if (rayQueryGetIntersectionTypeEXT(ray_query, false)
-                            == gl_RayQueryCandidateIntersectionTriangleEXT)
-                        {
-                                const float t = rayQueryGetIntersectionTEXT(ray_query, false);
-                                if (dot(drawing.clip_plane_equation, vec4(org + t * dir, 1)) >= 0)
-                                {
-                                        rayQueryConfirmIntersectionEXT(ray_query);
-                                }
-                        }
+                        const uint flags = gl_RayFlagsOpaqueEXT | gl_RayFlagsTerminateOnFirstHitEXT;
+                        rayQueryInitializeEXT(
+                                ray_query, acceleration_structure, flags, 0xFF, org, t_min, dir, t_clip_plane);
+                        rayQueryProceedEXT(ray_query);
                 }
         }
 
