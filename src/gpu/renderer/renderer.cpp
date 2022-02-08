@@ -140,9 +140,11 @@ class Impl final : public Renderer, RendererViewEvents, StorageMeshEvents, Stora
                 ASSERT(clear_command_buffers_);
                 ASSERT(transparency_buffers_);
 
+                const bool shadow_mapping = !ray_tracing_ && renderer_view_.show_shadow();
+
                 return renderer_draw_.draw(
-                        graphics_queue_1, graphics_queue_2, index, !ray_tracing_ && renderer_view_.show_shadow(),
-                        *clear_command_buffers_, *transparency_buffers_);
+                        graphics_queue_1, graphics_queue_2, index, shadow_mapping, *clear_command_buffers_,
+                        *transparency_buffers_);
         }
 
         bool empty() const override
@@ -173,14 +175,14 @@ class Impl final : public Renderer, RendererViewEvents, StorageMeshEvents, Stora
                 ASSERT(render_buffers_->framebuffers().size() == render_buffers_->framebuffers_clear().size());
                 ASSERT(render_buffers_->framebuffers().size() == 1);
 
-                create_depth_image();
+                create_depth_copy_image();
                 create_transparency_buffers();
 
                 mesh_renderer_.create_render_buffers(
                         render_buffers_, *object_image_, transparency_buffers_->heads(),
                         transparency_buffers_->heads_size(), transparency_buffers_->counters(),
                         transparency_buffers_->nodes(), viewport_);
-                create_mesh_depth_buffers();
+                create_mesh_shadow_mapping_buffers();
 
                 volume_renderer_.create_buffers(
                         render_buffers_, *graphics_command_pool_, viewport_, depth_copy_image_->image_view(),
@@ -197,13 +199,13 @@ class Impl final : public Renderer, RendererViewEvents, StorageMeshEvents, Stora
 
                 clear_command_buffers_.reset();
                 volume_renderer_.delete_buffers();
-                delete_mesh_depth_buffers();
+                delete_mesh_shadow_mapping_buffers();
                 mesh_renderer_.delete_render_buffers();
                 depth_copy_image_.reset();
                 delete_transparency_buffers();
         }
 
-        void create_depth_image()
+        void create_depth_copy_image()
         {
                 depth_copy_image_ = std::make_unique<vulkan::DepthImageWithMemory>(
                         *device_, std::vector<std::uint32_t>({graphics_queue_->family_index()}),
@@ -230,18 +232,28 @@ class Impl final : public Renderer, RendererViewEvents, StorageMeshEvents, Stora
                 transparency_buffers_.reset();
         }
 
-        void delete_mesh_depth_buffers()
+        void delete_mesh_shadow_mapping_buffers()
         {
-                mesh_renderer_.delete_depth_buffers();
+                if (ray_tracing_)
+                {
+                        return;
+                }
+
+                mesh_renderer_.delete_shadow_mapping_buffers();
         }
 
-        void create_mesh_depth_buffers()
+        void create_mesh_shadow_mapping_buffers()
         {
+                if (ray_tracing_)
+                {
+                        return;
+                }
+
                 ASSERT(render_buffers_);
 
-                delete_mesh_depth_buffers();
+                delete_mesh_shadow_mapping_buffers();
 
-                mesh_renderer_.create_depth_buffers(
+                mesh_renderer_.create_shadow_mapping_buffers(
                         render_buffers_->framebuffers().size(), {graphics_queue_->family_index()},
                         *graphics_command_pool_, *graphics_queue_, *device_, viewport_.width(), viewport_.height(),
                         renderer_view_.shadow_zoom());
@@ -292,11 +304,16 @@ class Impl final : public Renderer, RendererViewEvents, StorageMeshEvents, Stora
                         });
         }
 
-        void create_mesh_depth_command_buffers()
+        void create_mesh_shadow_mapping_command_buffers()
         {
-                mesh_renderer_.delete_depth_command_buffers();
+                if (ray_tracing_)
+                {
+                        return;
+                }
 
-                mesh_renderer_.create_depth_command_buffers(
+                mesh_renderer_.delete_shadow_mapping_command_buffers();
+
+                mesh_renderer_.create_shadow_mapping_command_buffers(
                         mesh_storage_.visible_objects(), *graphics_command_pool_,
                         renderer_view_.clip_plane().has_value(), renderer_view_.show_normals());
         }
@@ -304,7 +321,7 @@ class Impl final : public Renderer, RendererViewEvents, StorageMeshEvents, Stora
         void create_mesh_command_buffers()
         {
                 create_mesh_render_command_buffers();
-                create_mesh_depth_command_buffers();
+                create_mesh_shadow_mapping_command_buffers();
         }
 
         void create_volume_command_buffers()
@@ -431,7 +448,7 @@ class Impl final : public Renderer, RendererViewEvents, StorageMeshEvents, Stora
 
         void view_shadow_zoom_changed() override
         {
-                create_mesh_depth_buffers();
+                create_mesh_shadow_mapping_buffers();
                 create_mesh_command_buffers();
         }
 

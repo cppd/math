@@ -45,7 +45,7 @@ class MeshRenderer
         const bool sample_shading_;
 
         const RenderBuffers3D* render_buffers_ = nullptr;
-        std::unique_ptr<const DepthBuffers> depth_buffers_;
+        std::unique_ptr<const DepthBuffers> shadow_mapping_buffers_;
 
         TrianglesProgram triangles_program_;
         SharedMemory triangles_shared_memory_;
@@ -56,8 +56,8 @@ class MeshRenderer
         NormalsProgram normals_program_;
         SharedMemory normals_shared_memory_;
 
-        TrianglesDepthProgram triangles_depth_program_;
-        SharedMemory triangles_depth_shared_memory_;
+        TrianglesDepthProgram triangles_shadow_mapping_program_;
+        SharedMemory triangles_shadow_mapping_shared_memory_;
 
         PointsProgram points_program_;
         SharedMemory points_shared_memory_;
@@ -75,8 +75,8 @@ class MeshRenderer
         std::optional<vulkan::handle::CommandBuffers> render_command_buffers_all_;
         std::optional<vulkan::handle::CommandBuffers> render_command_buffers_transparent_as_opaque_;
 
-        std::optional<vulkan::handle::Pipeline> render_triangles_depth_pipeline_;
-        std::optional<vulkan::handle::CommandBuffers> render_depth_command_buffers_;
+        std::optional<vulkan::handle::Pipeline> render_triangles_shadow_mapping_pipeline_;
+        std::optional<vulkan::handle::CommandBuffers> render_shadow_mapping_command_buffers_;
 
         vulkan::handle::Sampler texture_sampler_;
         vulkan::handle::Sampler shadow_sampler_;
@@ -89,7 +89,7 @@ class MeshRenderer
                 VkCommandBuffer command_buffer,
                 bool clip_plane,
                 bool normals,
-                bool depth,
+                bool shadow_mapping,
                 bool transparent_pipeline) const;
 
 public:
@@ -115,7 +115,7 @@ public:
                 const Region<2, int>& viewport);
         void delete_render_buffers();
 
-        void create_depth_buffers(
+        void create_shadow_mapping_buffers(
                 unsigned buffer_count,
                 const std::vector<std::uint32_t>& family_indices,
                 VkCommandPool graphics_command_pool,
@@ -124,7 +124,7 @@ public:
                 unsigned width,
                 unsigned height,
                 double zoom);
-        void delete_depth_buffers();
+        void delete_shadow_mapping_buffers();
 
         void create_render_command_buffers(
                 const std::vector<const MeshObject*>& meshes,
@@ -135,12 +135,12 @@ public:
                 const std::function<void(VkCommandBuffer command_buffer)>& after_transparency_render_pass_commands);
         void delete_render_command_buffers();
 
-        void create_depth_command_buffers(
+        void create_shadow_mapping_command_buffers(
                 const std::vector<const MeshObject*>& meshes,
                 VkCommandPool graphics_command_pool,
                 bool clip_plane,
                 bool normals);
-        void delete_depth_command_buffers();
+        void delete_shadow_mapping_command_buffers();
 
         void set_acceleration_structure(VkAccelerationStructureKHR acceleration_structure);
 
@@ -148,6 +148,6 @@ public:
         bool has_transparent_meshes() const;
         std::optional<VkCommandBuffer> render_command_buffer_all(unsigned index) const;
         std::optional<VkCommandBuffer> render_command_buffer_transparent_as_opaque(unsigned index) const;
-        std::optional<VkCommandBuffer> depth_command_buffer(unsigned index) const;
+        std::optional<VkCommandBuffer> shadow_mapping_command_buffer(unsigned index) const;
 };
 }

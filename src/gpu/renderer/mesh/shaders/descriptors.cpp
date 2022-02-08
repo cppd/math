@@ -57,6 +57,8 @@ std::vector<VkDescriptorSetLayoutBinding> SharedMemory::descriptor_set_layout_bi
         const VkShaderStageFlags objects,
         const VkShaderStageFlags acceleration_structure)
 {
+        ASSERT(!(shadow && acceleration_structure));
+
         std::vector<VkDescriptorSetLayoutBinding> bindings;
 
         {
@@ -80,15 +82,13 @@ std::vector<VkDescriptorSetLayoutBinding> SharedMemory::descriptor_set_layout_bi
 
                 bindings.push_back(b);
         }
+        if (shadow)
         {
                 VkDescriptorSetLayoutBinding b = {};
                 b.binding = SHADOW_BINDING;
                 b.descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
-                if (shadow)
-                {
-                        b.descriptorCount = 1;
-                        b.stageFlags = shadow;
-                }
+                b.descriptorCount = 1;
+                b.stageFlags = shadow;
                 b.pImmutableSamplers = nullptr;
 
                 bindings.push_back(b);

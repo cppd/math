@@ -46,7 +46,7 @@ class RendererDraw
                 VkSemaphore semaphore,
                 const vulkan::Queue& graphics_queue,
                 unsigned index,
-                bool show_shadow,
+                bool shadow_mapping,
                 const TransparencyBuffers& transparency_buffers) const;
 
 public:
@@ -60,7 +60,7 @@ public:
                 const vulkan::Queue& graphics_queue_1,
                 const vulkan::Queue& graphics_queue_2,
                 unsigned index,
-                bool show_shadow,
+                bool shadow_mapping,
                 const vulkan::handle::CommandBuffers& clear_command_buffers,
                 const TransparencyBuffers& transparency_buffers) const;
 };

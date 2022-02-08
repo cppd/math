@@ -38,7 +38,7 @@ matrices;
 
 DRAWING_BUFFER(0, 1);
 
-layout(set = 0, binding = 2) uniform sampler2D shadow_texture;
+layout(set = 0, binding = 2) uniform sampler2D shadow_mapping_texture;
 
 layout(set = 0, binding = 3, r32ui) uniform restrict writeonly uimage2D object_image;
 

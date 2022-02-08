@@ -44,10 +44,10 @@ std::tuple<VkSemaphore, bool> RendererDraw::draw_meshes(
         VkSemaphore semaphore,
         const vulkan::Queue& graphics_queue,
         const unsigned index,
-        const bool show_shadow,
+        const bool shadow_mapping,
         const TransparencyBuffers& transparency_buffers) const
 {
-        if (!show_shadow)
+        if (!shadow_mapping)
         {
                 ASSERT(mesh_renderer_->render_command_buffer_all(index));
                 vulkan::queue_submit(
@@ -58,9 +58,9 @@ std::tuple<VkSemaphore, bool> RendererDraw::draw_meshes(
         }
         else
         {
-                ASSERT(mesh_renderer_->depth_command_buffer(index));
+                ASSERT(mesh_renderer_->shadow_mapping_command_buffer(index));
                 vulkan::queue_submit(
-                        *mesh_renderer_->depth_command_buffer(index), mesh_depth_semaphore_, graphics_queue);
+                        *mesh_renderer_->shadow_mapping_command_buffer(index), mesh_depth_semaphore_, graphics_queue);
 
                 ASSERT(mesh_renderer_->render_command_buffer_all(index));
                 vulkan::queue_submit(
@@ -114,7 +114,7 @@ VkSemaphore RendererDraw::draw(
         const vulkan::Queue& graphics_queue_1,
         const vulkan::Queue& graphics_queue_2,
         const unsigned index,
-        const bool show_shadow,
+        const bool shadow_mapping,
         const vulkan::handle::CommandBuffers& clear_command_buffers,
         const TransparencyBuffers& transparency_buffers) const
 {
@@ -128,7 +128,7 @@ VkSemaphore RendererDraw::draw(
         if (mesh_renderer_->has_meshes())
         {
                 std::tie(semaphore, transparency) =
-                        draw_meshes(semaphore, graphics_queue_1, index, show_shadow, transparency_buffers);
+                        draw_meshes(semaphore, graphics_queue_1, index, shadow_mapping, transparency_buffers);
         }
 
         if (volume_renderer_->has_volume() || transparency)

@@ -73,7 +73,7 @@ float shadow_weight()
 #else
 float shadow_weight()
 {
-        const float d = texture(shadow_texture, gs.shadow_position.xy).r;
+        const float d = texture(shadow_mapping_texture, gs.shadow_position.xy).r;
         return d <= gs.shadow_position.z ? 1 : 0;
 }
 #endif
