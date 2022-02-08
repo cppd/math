@@ -100,6 +100,13 @@ class Impl final : public Renderer, RendererViewEvents, StorageMeshEvents, Stora
 
         RendererDraw renderer_draw_;
 
+        Info info() const override
+        {
+                Info res;
+                res.shadow_zoom = !ray_tracing_;
+                return res;
+        }
+
         void exec(const ObjectCommand& command)
         {
                 renderer_object_.command(command);

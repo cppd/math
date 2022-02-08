@@ -376,7 +376,12 @@ struct Image final
 {
         image::Image<2> image;
 };
+
+struct Info
+{
+        bool shadow_zoom;
+};
 }
 
-using Info = std::variant<info::Camera*, info::Image*>;
+using Info = std::variant<info::Camera*, info::Image*, info::Info*>;
 }

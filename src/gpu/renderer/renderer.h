@@ -31,11 +31,18 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 namespace ns::gpu::renderer
 {
+struct Info
+{
+        bool shadow_zoom;
+};
+
 struct Renderer
 {
         static vulkan::DeviceFunctionality device_functionality();
 
         virtual ~Renderer() = default;
+
+        virtual Info info() const = 0;
 
         virtual void exec(Command&& command) = 0;
 
