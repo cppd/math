@@ -195,10 +195,11 @@ class Impl final
                 create_swapchain_buffers();
         }
 
-        void info(info::Info* const info) const
+        void info(info::Functionality* const functionality) const
         {
-                const gpu::renderer::Info renderer_info = renderer_->info();
-                info->shadow_zoom = renderer_info.shadow_zoom;
+                gpu::renderer::info::Functionality info;
+                renderer_->info(&info);
+                functionality->shadow_zoom = info.shadow_zoom;
         }
 
         //

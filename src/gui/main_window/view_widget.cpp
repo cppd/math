@@ -87,11 +87,11 @@ void ViewWidget::set_view(view::View* const view)
 {
         view_ = view;
 
-        view::info::Info info;
-        view_->receive({&info});
+        view::info::Functionality functionality;
+        view_->receive({&functionality});
 
-        ui_.label_shadow_quality->setVisible(info.shadow_zoom);
-        ui_.slider_shadow_quality->setVisible(info.shadow_zoom);
+        ui_.label_shadow_quality->setVisible(functionality.shadow_zoom);
+        ui_.slider_shadow_quality->setVisible(functionality.shadow_zoom);
 }
 
 void ViewWidget::on_clip_plane_clicked()

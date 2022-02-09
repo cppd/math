@@ -225,4 +225,14 @@ using ViewCommand = std::variant<
 using ObjectCommand = std::variant<DeleteAllObjects, DeleteObject, MeshUpdate, VolumeUpdate>;
 
 using Command = std::variant<ObjectCommand, ViewCommand>;
+
+namespace info
+{
+struct Functionality
+{
+        bool shadow_zoom;
+};
+}
+
+using Info = std::variant<info::Functionality*>;
 }

@@ -102,11 +102,20 @@ class Impl final : public Renderer, RendererViewEvents, StorageMeshEvents, Stora
 
         RendererDraw renderer_draw_;
 
-        Info info() const override
+        void info(info::Functionality* const functionality) const
         {
-                Info res;
-                res.shadow_zoom = !ray_tracing_;
-                return res;
+                functionality->shadow_zoom = !ray_tracing_;
+        }
+
+        void info(const Info& info) const override
+        {
+                ASSERT(thread_id_ == std::this_thread::get_id());
+
+                const auto visitor = [this](const auto& v)
+                {
+                        this->info(v);
+                };
+                std::visit(visitor, info);
         }
 
         void exec(const ObjectCommand& command)
