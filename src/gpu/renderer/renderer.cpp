@@ -52,6 +52,8 @@ namespace ns::gpu::renderer
 {
 namespace
 {
+constexpr bool RAY_TRACING = true;
+
 constexpr VkImageLayout DEPTH_COPY_IMAGE_LAYOUT = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
 constexpr std::uint32_t OBJECTS_CLEAR_VALUE = 0;
 constexpr std::uint32_t TRANSPARENCY_NODE_BUFFER_MAX_SIZE = (1ull << 30);
@@ -529,7 +531,7 @@ public:
 
 vulkan::DeviceFunctionality Renderer::device_functionality()
 {
-        return renderer::device_functionality();
+        return renderer::device_functionality(RAY_TRACING);
 }
 
 std::unique_ptr<Renderer> create_renderer(

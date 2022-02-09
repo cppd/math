@@ -67,7 +67,7 @@ void add_ray_tracing_functionality(vulkan::DeviceFunctionality* const res)
 }
 }
 
-vulkan::DeviceFunctionality device_functionality()
+vulkan::DeviceFunctionality device_functionality(const bool ray_tracing)
 {
         vulkan::DeviceFunctionality res;
 
@@ -76,7 +76,10 @@ vulkan::DeviceFunctionality device_functionality()
         res.required_features.features_10.shaderStorageImageMultisample = VK_TRUE;
         res.required_features.features_10.shaderClipDistance = VK_TRUE;
 
-        add_ray_tracing_functionality(&res);
+        if (ray_tracing)
+        {
+                add_ray_tracing_functionality(&res);
+        }
 
         return res;
 }
