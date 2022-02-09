@@ -38,7 +38,11 @@ matrices;
 
 DRAWING_BUFFER(0, 1);
 
+#ifdef RAY_TRACING
+layout(set = 0, binding = 2) uniform accelerationStructureEXT acceleration_structure;
+#else
 layout(set = 0, binding = 2) uniform sampler2D shadow_mapping_texture;
+#endif
 
 layout(set = 0, binding = 3, r32ui) uniform restrict writeonly uimage2D object_image;
 
@@ -56,10 +60,6 @@ layout(set = 0, binding = 9, std430) buffer restrict writeonly TransparencyNodes
 {
         TransparencyNode transparency_nodes[];
 };
-
-#ifdef RAY_TRACING
-layout(set = 0, binding = 10) uniform accelerationStructureEXT acceleration_structure;
-#endif
 
 //
 

@@ -51,7 +51,10 @@ class SharedMemory final
 
         static constexpr int MATRICES_BINDING = 0;
         static constexpr int DRAWING_BINDING = 1;
+
+        static constexpr int ACCELERATION_STRUCTURE_BINDING = 2;
         static constexpr int SHADOW_BINDING = 2;
+
         static constexpr int OBJECTS_BINDING = 3;
         static constexpr int GGX_F1_ALBEDO_COSINE_ROUGHNESS_BINDING = 4;
         static constexpr int GGX_F1_ALBEDO_COSINE_WEIGHTED_AVERAGE_BINDING = 5;
@@ -61,16 +64,14 @@ class SharedMemory final
         static constexpr int TRANSPARENCY_COUNTERS_BINDING = 8;
         static constexpr int TRANSPARENCY_NODES_BINDING = 9;
 
-        static constexpr int ACCELERATION_STRUCTURE_BINDING = 10;
-
         vulkan::Descriptors descriptors_;
 
 public:
         static std::vector<VkDescriptorSetLayoutBinding> descriptor_set_layout_bindings(
                 VkShaderStageFlags matrices,
                 VkShaderStageFlags drawing,
-                VkShaderStageFlags shadow,
                 VkShaderStageFlags objects,
+                VkShaderStageFlags shadow_map,
                 VkShaderStageFlags acceleration_structure);
         static unsigned set_number();
 

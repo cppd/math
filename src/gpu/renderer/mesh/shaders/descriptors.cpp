@@ -53,23 +53,19 @@ std::size_t SharedConstants::size() const
 std::vector<VkDescriptorSetLayoutBinding> SharedMemory::descriptor_set_layout_bindings(
         const VkShaderStageFlags matrices,
         const VkShaderStageFlags drawing,
-        const VkShaderStageFlags shadow,
         const VkShaderStageFlags objects,
+        const VkShaderStageFlags shadow_map,
         const VkShaderStageFlags acceleration_structure)
 {
-        ASSERT(!(shadow && acceleration_structure));
-
         std::vector<VkDescriptorSetLayoutBinding> bindings;
 
+        if (matrices)
         {
                 VkDescriptorSetLayoutBinding b = {};
                 b.binding = MATRICES_BINDING;
                 b.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
-                if (matrices)
-                {
-                        b.descriptorCount = 1;
-                        b.stageFlags = matrices;
-                }
+                b.descriptorCount = 1;
+                b.stageFlags = matrices;
 
                 bindings.push_back(b);
         }
@@ -82,26 +78,36 @@ std::vector<VkDescriptorSetLayoutBinding> SharedMemory::descriptor_set_layout_bi
 
                 bindings.push_back(b);
         }
-        if (shadow)
+        if (acceleration_structure)
         {
+                ASSERT(!shadow_map);
+                VkDescriptorSetLayoutBinding b = {};
+                b.binding = ACCELERATION_STRUCTURE_BINDING;
+                b.descriptorType = VK_DESCRIPTOR_TYPE_ACCELERATION_STRUCTURE_KHR;
+                b.descriptorCount = 1;
+                b.stageFlags = acceleration_structure;
+
+                bindings.push_back(b);
+        }
+        if (shadow_map)
+        {
+                ASSERT(!acceleration_structure);
                 VkDescriptorSetLayoutBinding b = {};
                 b.binding = SHADOW_BINDING;
                 b.descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
                 b.descriptorCount = 1;
-                b.stageFlags = shadow;
+                b.stageFlags = shadow_map;
                 b.pImmutableSamplers = nullptr;
 
                 bindings.push_back(b);
         }
+        if (objects)
         {
                 VkDescriptorSetLayoutBinding b = {};
                 b.binding = OBJECTS_BINDING;
                 b.descriptorType = VK_DESCRIPTOR_TYPE_STORAGE_IMAGE;
-                if (objects)
-                {
-                        b.descriptorCount = 1;
-                        b.stageFlags = objects;
-                }
+                b.descriptorCount = 1;
+                b.stageFlags = objects;
                 b.pImmutableSamplers = nullptr;
 
                 bindings.push_back(b);
@@ -161,16 +167,6 @@ std::vector<VkDescriptorSetLayoutBinding> SharedMemory::descriptor_set_layout_bi
                 b.descriptorType = VK_DESCRIPTOR_TYPE_STORAGE_BUFFER;
                 b.descriptorCount = 1;
                 b.stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
-
-                bindings.push_back(b);
-        }
-        if (acceleration_structure)
-        {
-                VkDescriptorSetLayoutBinding b = {};
-                b.binding = ACCELERATION_STRUCTURE_BINDING;
-                b.descriptorType = VK_DESCRIPTOR_TYPE_ACCELERATION_STRUCTURE_KHR;
-                b.descriptorCount = 1;
-                b.stageFlags = acceleration_structure;
 
                 bindings.push_back(b);
         }
