@@ -380,7 +380,9 @@ class Impl final : public Renderer, RendererViewEvents, StorageMeshEvents, Stora
                 acceleration_structure_->create(
                         *device_, *compute_command_pool_, *compute_queue_, mesh_storage_.visible_objects());
                 mesh_renderer_.set_acceleration_structure(acceleration_structure_->handle());
+                volume_renderer_.set_acceleration_structure(acceleration_structure_->handle());
                 create_mesh_render_command_buffers();
+                create_volume_command_buffers();
         }
 
         void acceleration_structure_update_matrices() const

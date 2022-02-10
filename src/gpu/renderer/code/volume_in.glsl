@@ -21,6 +21,10 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "drawing_buffer.glsl"
 #include "transparency.glsl"
 
+#ifdef RAY_TRACING
+#extension GL_EXT_ray_query : require
+#endif
+
 DRAWING_BUFFER(0, 0);
 
 layout(set = 0, binding = 1) uniform sampler2DMS depth_image;
@@ -33,6 +37,10 @@ layout(set = 0, binding = 5, std430) buffer restrict readonly TransparencyNodes
 {
         TransparencyNode transparency_nodes[];
 };
+
+#ifdef RAY_TRACING
+layout(set = 0, binding = 6) uniform accelerationStructureEXT acceleration_structure;
+#endif
 
 //
 

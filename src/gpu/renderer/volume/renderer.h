@@ -88,6 +88,8 @@ public:
                 const std::function<void(VkCommandBuffer command_buffer)>& before_render_pass_commands);
         void delete_command_buffers();
 
+        void set_acceleration_structure(VkAccelerationStructureKHR acceleration_structure);
+
         bool has_volume() const;
         std::optional<VkCommandBuffer> command_buffer(unsigned index, bool with_fragments) const;
 };

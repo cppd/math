@@ -35,11 +35,13 @@ class VolumeSharedMemory final
         static constexpr int GGX_F1_ALBEDO_COSINE_WEIGHTED_AVERAGE_BINDING = 3;
         static constexpr int TRANSPARENCY_HEADS_BINDING = 4;
         static constexpr int TRANSPARENCY_NODES_BINDING = 5;
+        static constexpr int ACCELERATION_STRUCTURE_BINDING = 6;
 
         vulkan::Descriptors descriptors_;
 
 public:
-        static std::vector<VkDescriptorSetLayoutBinding> descriptor_set_layout_bindings();
+        static std::vector<VkDescriptorSetLayoutBinding> descriptor_set_layout_bindings(
+                VkShaderStageFlags acceleration_structure);
         static unsigned set_number();
 
         VolumeSharedMemory(
@@ -64,6 +66,7 @@ public:
 
         void set_depth_image(VkImageView image_view, VkSampler sampler) const;
         void set_transparency(const vulkan::ImageView& heads, const vulkan::Buffer& nodes) const;
+        void set_acceleration_structure(VkAccelerationStructureKHR acceleration_structure) const;
 };
 
 class VolumeImageMemory final

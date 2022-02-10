@@ -31,6 +31,7 @@ namespace ns::gpu::renderer
 class VolumeProgram final
 {
         const vulkan::Device* device_;
+        bool ray_tracing_;
 
         vulkan::handle::DescriptorSetLayout descriptor_set_layout_shared_;
         vulkan::handle::DescriptorSetLayout descriptor_set_layout_image_;
@@ -72,7 +73,7 @@ public:
                 PipelineType type) const;
 
         VkDescriptorSetLayout descriptor_set_layout_shared() const;
-        static std::vector<VkDescriptorSetLayoutBinding> descriptor_set_layout_shared_bindings();
+        std::vector<VkDescriptorSetLayoutBinding> descriptor_set_layout_shared_bindings() const;
 
         VkDescriptorSetLayout descriptor_set_layout_image() const;
         static std::vector<VkDescriptorSetLayoutBinding> descriptor_set_layout_image_bindings();

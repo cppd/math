@@ -25,9 +25,9 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 namespace ns::gpu::renderer
 {
-std::vector<VkDescriptorSetLayoutBinding> VolumeProgram::descriptor_set_layout_shared_bindings()
+std::vector<VkDescriptorSetLayoutBinding> VolumeProgram::descriptor_set_layout_shared_bindings() const
 {
-        return VolumeSharedMemory::descriptor_set_layout_bindings();
+        return VolumeSharedMemory::descriptor_set_layout_bindings(ray_tracing_ ? VK_SHADER_STAGE_FRAGMENT_BIT : 0);
 }
 
 std::vector<VkDescriptorSetLayoutBinding> VolumeProgram::descriptor_set_layout_image_bindings()
@@ -37,6 +37,7 @@ std::vector<VkDescriptorSetLayoutBinding> VolumeProgram::descriptor_set_layout_i
 
 VolumeProgram::VolumeProgram(const vulkan::Device* const device, const Code& code)
         : device_(device),
+          ray_tracing_(code.ray_tracing()),
           descriptor_set_layout_shared_(
                   vulkan::create_descriptor_set_layout(*device, descriptor_set_layout_shared_bindings())),
           descriptor_set_layout_image_(
