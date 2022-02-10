@@ -136,9 +136,16 @@ void MainWindow::constructor_objects()
 
         ui_.action_about->setText("About " + QString(settings::APPLICATION_NAME));
         connect(ui_.action_about, &QAction::triggered, this,
-                []
+                [this]
                 {
-                        dialog::application_about();
+                        bool ray_tracing = false;
+                        if (view_)
+                        {
+                                view::info::Description description;
+                                view_->receive({&description});
+                                ray_tracing = description.ray_tracing;
+                        }
+                        dialog::application_about(ray_tracing);
                 });
 
         connect(ui_.action_help, &QAction::triggered, this,

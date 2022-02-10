@@ -30,7 +30,7 @@ namespace ns::gui::dialog
 {
 namespace
 {
-QString message()
+QString message(const bool ray_tracing)
 {
         std::ostringstream oss;
 
@@ -64,6 +64,10 @@ QString message()
 
         oss << "\n\n";
         oss << "Vulkan " << vulkan::API_VERSION_MAJOR << "." << vulkan::API_VERSION_MINOR;
+        if (ray_tracing)
+        {
+                oss << ", Ray Tracing";
+        }
 
         return QString::fromStdString(oss.str());
 }
@@ -74,10 +78,10 @@ QString title()
 }
 }
 
-void application_about()
+void application_about(const bool ray_tracing)
 {
         QtObjectInDynamicMemory<QMessageBox> w(
-                QMessageBox::NoIcon, title(), message(), QMessageBox::Ok, parent_for_dialog());
+                QMessageBox::NoIcon, title(), message(ray_tracing), QMessageBox::Ok, parent_for_dialog());
 
         w->exec();
 }
