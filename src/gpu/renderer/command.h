@@ -228,11 +228,16 @@ using Command = std::variant<ObjectCommand, ViewCommand>;
 
 namespace info
 {
-struct Functionality
+struct Functionality final
 {
         bool shadow_zoom;
 };
+
+struct Description final
+{
+        bool ray_tracing;
+};
 }
 
-using Info = std::variant<info::Functionality*>;
+using Info = std::variant<info::Functionality*, info::Description*>;
 }

@@ -107,6 +107,11 @@ class Impl final : public Renderer, RendererViewEvents, StorageMeshEvents, Stora
                 functionality->shadow_zoom = !ray_tracing_;
         }
 
+        void info(info::Description* const description) const
+        {
+                description->ray_tracing = ray_tracing_;
+        }
+
         void info(const Info& info) const override
         {
                 ASSERT(thread_id_ == std::this_thread::get_id());

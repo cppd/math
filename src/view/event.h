@@ -377,11 +377,16 @@ struct Image final
         image::Image<2> image;
 };
 
-struct Functionality
+struct Functionality final
 {
         bool shadow_zoom;
 };
+
+struct Description final
+{
+        bool ray_tracing;
+};
 }
 
-using Info = std::variant<info::Camera*, info::Image*, info::Functionality*>;
+using Info = std::variant<info::Camera*, info::Image*, info::Functionality*, info::Description*>;
 }

@@ -202,6 +202,13 @@ class Impl final
                 functionality->shadow_zoom = info.shadow_zoom;
         }
 
+        void info(info::Description* const description) const
+        {
+                gpu::renderer::info::Description info;
+                renderer_->info(&info);
+                description->ray_tracing = info.ray_tracing;
+        }
+
         //
 
         void delete_buffers()
