@@ -35,6 +35,8 @@ class Matrix final
         static_assert(FloatingPoint<T>);
         static_assert(ROWS >= 1 && COLUMNS >= 1);
 
+        //
+
         template <std::size_t COLUMN, std::size_t... I>
         static constexpr Vector<COLUMNS, T> make_vector_one_value_impl(
                 const T& v,
@@ -46,6 +48,8 @@ class Matrix final
 
                 return {(I == COLUMN ? v : 0)...};
         }
+
+        //
 
         template <std::size_t... I>
         static constexpr std::array<Vector<COLUMNS, T>, ROWS> make_one_value_rows_impl(
@@ -59,6 +63,25 @@ class Matrix final
         }
 
         static constexpr std::array<Vector<COLUMNS, T>, ROWS> make_diagonal_matrix(const T& v)
+        {
+                return make_one_value_rows_impl(v, std::make_integer_sequence<std::size_t, ROWS>());
+        }
+
+        //
+
+        template <std::size_t... I>
+        static constexpr std::array<Vector<ROWS, T>, ROWS> make_one_value_rows_impl(
+                const Vector<ROWS, T>& v,
+                std::integer_sequence<std::size_t, I...>&&) requires(COLUMNS == ROWS)
+        {
+                static_assert(sizeof...(I) == ROWS);
+                static_assert(((I >= 0 && I < ROWS) && ...));
+
+                return {make_vector_one_value_impl<I>(v[I], std::make_integer_sequence<std::size_t, ROWS>())...};
+        }
+
+        static constexpr std::array<Vector<ROWS, T>, ROWS> make_diagonal_matrix(const Vector<ROWS, T>& v) requires(
+                COLUMNS == ROWS)
         {
                 return make_one_value_rows_impl(v, std::make_integer_sequence<std::size_t, ROWS>());
         }
@@ -96,6 +119,10 @@ public:
         template <typename Arg>
         explicit constexpr Matrix(const Arg& v) requires(COLUMNS == ROWS && std::is_convertible_v<Arg, T>)
                 : rows_(make_diagonal_matrix(v))
+        {
+        }
+
+        explicit constexpr Matrix(const Vector<ROWS, T>& v) requires(COLUMNS == ROWS) : rows_(make_diagonal_matrix(v))
         {
         }
 
