@@ -66,14 +66,14 @@ void VolumeBuffer::set_coordinates(
         const Vector4d& third_row_of_mvp,
         const Vector4d& clip_plane_equation,
         const Vector3d& gradient_h,
-        const Matrix3d& normal_matrix) const
+        const Matrix3d& gradient_to_world_matrix) const
 {
         Coordinates coordinates;
         coordinates.inverse_mvp_matrix = to_std140<float>(inverse_mvp_matrix);
         coordinates.third_row_of_mvp = to_vector<float>(third_row_of_mvp);
         coordinates.clip_plane_equation = to_vector<float>(clip_plane_equation);
         coordinates.gradient_h = to_vector<float>(gradient_h);
-        coordinates.normal_matrix = to_std140<float>(normal_matrix);
+        coordinates.gradient_to_world_matrix = to_std140<float>(gradient_to_world_matrix);
         vulkan::map_and_write_to_buffer(uniform_buffer_coordinates_, 0, coordinates);
 }
 

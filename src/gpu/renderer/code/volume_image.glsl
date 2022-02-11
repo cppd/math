@@ -95,7 +95,7 @@ vec3 gradient(const vec3 p)
 
 vec3 world_normal(const vec3 p)
 {
-        return normalize(coordinates.normal_matrix * gradient(p));
+        return normalize(coordinates.gradient_to_world_matrix * gradient(p));
 }
 
 vec3 shade(const vec3 p, const vec3 v, const vec3 l)

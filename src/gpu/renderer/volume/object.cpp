@@ -46,7 +46,7 @@ class Impl final : public VolumeObject
         Matrix4d vp_matrix_ = Matrix4d(1);
         std::optional<Vector4d> world_clip_plane_equation_;
 
-        Matrix3d object_normal_to_world_normal_matrix_;
+        Matrix3d gradient_to_world_matrix_;
         Matrix4d texture_to_world_matrix_;
         Vector3d gradient_h_;
 
@@ -102,8 +102,7 @@ class Impl final : public VolumeObject
                                 ? volume_clip_plane(*world_clip_plane_equation_, texture_to_world_matrix_)
                                 : Vector4d(0);
 
-                buffer_.set_coordinates(
-                        mvp.inverse(), mvp.row(2), clip_plane, gradient_h_, object_normal_to_world_normal_matrix_);
+                buffer_.set_coordinates(mvp.inverse(), mvp.row(2), clip_plane, gradient_h_, gradient_to_world_matrix_);
         }
 
         void buffer_set_clip_plane() const
@@ -276,10 +275,9 @@ class Impl final : public VolumeObject
 
                 if (size_changed || updates[volume::UPDATE_MATRICES])
                 {
-                        object_normal_to_world_normal_matrix_ =
-                                volume_object.matrix().top_left<3, 3>().inverse().transpose();
                         texture_to_world_matrix_ = volume_object.matrix() * volume_object.volume().matrix;
                         gradient_h_ = volume_gradient_h(texture_to_world_matrix_, image_->image());
+                        gradient_to_world_matrix_ = texture_to_world_matrix_.top_left<3, 3>() * Matrix3d(gradient_h_);
 
                         buffer_set_coordinates();
                 }
