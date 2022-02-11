@@ -34,6 +34,7 @@ class VolumeBuffer final
         struct Coordinates final
         {
                 alignas(sizeof(Vector4f)) Matrix4f inverse_mvp_matrix;
+                alignas(sizeof(Vector4f)) Matrix4f texture_to_world_matrix;
                 alignas(sizeof(Vector4f)) Vector4f third_row_of_mvp;
                 alignas(sizeof(Vector4f)) Vector4f clip_plane_equation;
                 alignas(sizeof(Vector4f)) Vector3f gradient_h;
@@ -69,6 +70,7 @@ public:
 
         void set_coordinates(
                 const Matrix4d& inverse_mvp_matrix,
+                const Matrix4d& texture_to_world_matrix,
                 const Vector4d& third_row_of_mvp,
                 const Vector4d& clip_plane_equation,
                 const Vector3d& gradient_h,

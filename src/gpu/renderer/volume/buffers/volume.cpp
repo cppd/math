@@ -63,6 +63,7 @@ VkDeviceSize VolumeBuffer::buffer_volume_size() const
 
 void VolumeBuffer::set_coordinates(
         const Matrix4d& inverse_mvp_matrix,
+        const Matrix4d& texture_to_world_matrix,
         const Vector4d& third_row_of_mvp,
         const Vector4d& clip_plane_equation,
         const Vector3d& gradient_h,
@@ -70,6 +71,7 @@ void VolumeBuffer::set_coordinates(
 {
         Coordinates coordinates;
         coordinates.inverse_mvp_matrix = to_std140<float>(inverse_mvp_matrix);
+        coordinates.texture_to_world_matrix = to_std140<float>(texture_to_world_matrix);
         coordinates.third_row_of_mvp = to_vector<float>(third_row_of_mvp);
         coordinates.clip_plane_equation = to_vector<float>(clip_plane_equation);
         coordinates.gradient_h = to_vector<float>(gradient_h);
