@@ -83,7 +83,7 @@ void draw_image_as_volume(vec3 image_dir, const vec3 image_org, float depth_dir,
                         while (volume_depth <= fragment.depth)
                         {
                                 vec3 p = image_org + s * image_dir;
-                                COLOR_ADD(volume_color(p, drawing.lighting_color));
+                                COLOR_ADD(volume_color(p));
                                 if (++s >= sample_end)
                                 {
                                         break;
@@ -116,7 +116,7 @@ void draw_image_as_volume(vec3 image_dir, const vec3 image_org, float depth_dir,
         for (; s < sample_end; ++s)
         {
                 vec3 p = image_org + s * image_dir;
-                COLOR_ADD(volume_color(p, drawing.lighting_color));
+                COLOR_ADD(volume_color(p));
         }
 
         for (; !fragments_empty(); fragments_pop())
@@ -170,9 +170,7 @@ void draw_image_as_isosurface(vec3 image_dir, const vec3 image_org, float depth_
                                         p = find_isosurface(prev_p, p, prev_sign);
                                         prev_sign = next_sign;
 
-                                        COLOR_ADD(isosurface_color(
-                                                p, drawing.direction_to_camera, drawing.direction_to_light,
-                                                drawing.lighting_color));
+                                        COLOR_ADD(isosurface_color(p));
                                 }
 
                                 if (++s >= sample_end)
@@ -206,9 +204,7 @@ void draw_image_as_isosurface(vec3 image_dir, const vec3 image_org, float depth_
                                         fragment = fragments_top();
                                 };
 
-                                COLOR_ADD(isosurface_color(
-                                        v.xyz, drawing.direction_to_camera, drawing.direction_to_light,
-                                        drawing.lighting_color));
+                                COLOR_ADD(isosurface_color(v.xyz));
                         }
 
                         if (!fragments_empty())
@@ -256,8 +252,7 @@ void draw_image_as_isosurface(vec3 image_dir, const vec3 image_org, float depth_
                 p = find_isosurface(prev_p, p, prev_sign);
                 prev_sign = next_sign;
 
-                COLOR_ADD(isosurface_color(
-                        p, drawing.direction_to_camera, drawing.direction_to_light, drawing.lighting_color));
+                COLOR_ADD(isosurface_color(p));
         }
 }
 
