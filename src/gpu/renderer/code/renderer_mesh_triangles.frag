@@ -20,6 +20,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #extension GL_GOOGLE_include_directive : enable
 #include "mesh_in.glsl"
 #include "mesh_out.glsl"
+#include "ray_tracing_intersection.glsl"
 #include "shading_ggx_diffuse.glsl"
 #include "shading_metalness.glsl"
 
@@ -38,37 +39,13 @@ gs;
 #ifdef RAY_TRACING
 float shadow_weight()
 {
-        const float t_min = 1e-5;
-        const float t_max = 10;
-
         const vec3 org = gs.world_position;
         const vec3 dir = drawing.direction_to_light;
-
-        rayQueryEXT ray_query;
-
-        if (!drawing.clip_plane_enabled)
-        {
-                const uint flags = gl_RayFlagsOpaqueEXT | gl_RayFlagsTerminateOnFirstHitEXT;
-                rayQueryInitializeEXT(ray_query, acceleration_structure, flags, 0xFF, org, t_min, dir, t_max);
-                rayQueryProceedEXT(ray_query);
-        }
-        else
-        {
-                // org is inside the clip plane
-                const float n_dot_dir = dot(drawing.clip_plane_equation.xyz, dir);
-                const float t_clip_plane =
-                        n_dot_dir >= 0 ? t_max : dot(drawing.clip_plane_equation, vec4(org, 1)) / -n_dot_dir;
-                if (t_clip_plane > t_min)
-                {
-                        const uint flags = gl_RayFlagsOpaqueEXT | gl_RayFlagsTerminateOnFirstHitEXT;
-                        rayQueryInitializeEXT(
-                                ray_query, acceleration_structure, flags, 0xFF, org, t_min, dir, t_clip_plane);
-                        rayQueryProceedEXT(ray_query);
-                }
-        }
-
-        const bool hit = rayQueryGetIntersectionTypeEXT(ray_query, true) == gl_RayQueryCommittedIntersectionTriangleEXT;
-        return hit ? 1 : 0;
+        const bool intersection =
+                !drawing.clip_plane_enabled
+                        ? ray_tracing_intersection(org, dir, acceleration_structure)
+                        : ray_tracing_intersection(org, dir, acceleration_structure, drawing.clip_plane_equation);
+        return intersection ? 1 : 0;
 }
 #else
 float shadow_weight()
