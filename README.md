@@ -29,7 +29,7 @@ Just for fun with mathematics and stuff
 
 ### GPU
 
-* Triangle meshes.
+* Triangle meshes (rasterization).
 * Volumes (ray marching).
 * Isosurfaces (ray marching).
 * Shadows (ray tracing, shadow mapping).
