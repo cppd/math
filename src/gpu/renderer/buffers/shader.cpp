@@ -21,65 +21,40 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 namespace ns::gpu::renderer
 {
-ShaderBuffers::ShaderBuffers(const vulkan::Device& device, const std::vector<std::uint32_t>& family_indices)
+DrawingBuffer::DrawingBuffer(const vulkan::Device& device, const std::vector<std::uint32_t>& family_indices)
+        : buffer_(
+                vulkan::BufferMemoryType::HOST_VISIBLE,
+                device,
+                family_indices,
+                VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT,
+                sizeof(Drawing))
 {
-        static_assert(DRAWING_INDEX == 0);
-        static_assert(SHADOW_MATRICES_INDEX == 1);
-
-        static constexpr auto MEMORY_TYPE = vulkan::BufferMemoryType::HOST_VISIBLE;
-        static constexpr auto USAGE = VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT;
-
-        uniform_buffers_.reserve(2);
-        uniform_buffers_.emplace_back(MEMORY_TYPE, device, family_indices, USAGE, sizeof(Drawing));
-        uniform_buffers_.emplace_back(MEMORY_TYPE, device, family_indices, USAGE, sizeof(ShadowMatrices));
 }
 
-const vulkan::Buffer& ShaderBuffers::drawing_buffer() const
+const vulkan::Buffer& DrawingBuffer::buffer() const
 {
-        return uniform_buffers_[DRAWING_INDEX].buffer();
-}
-
-const vulkan::Buffer& ShaderBuffers::shadow_matrices_buffer() const
-{
-        return uniform_buffers_[SHADOW_MATRICES_INDEX].buffer();
+        return buffer_.buffer();
 }
 
 template <typename T>
-void ShaderBuffers::copy_to_drawing_buffer(const VkDeviceSize offset, const T& data) const
+void DrawingBuffer::copy_to_buffer(const VkDeviceSize offset, const T& data) const
 {
-        vulkan::map_and_write_to_buffer(uniform_buffers_[DRAWING_INDEX], offset, data);
+        vulkan::map_and_write_to_buffer(buffer_, offset, data);
 }
 
-template <typename T>
-void ShaderBuffers::copy_to_shadow_matrices_buffer(const VkDeviceSize offset, const T& data) const
+void DrawingBuffer::set_matrix(const Matrix4d& vp_matrix) const
 {
-        vulkan::map_and_write_to_buffer(uniform_buffers_[SHADOW_MATRICES_INDEX], offset, data);
+        decltype(Drawing().vp_matrix) m = to_std140<float>(vp_matrix);
+        copy_to_buffer(offsetof(Drawing, vp_matrix), m);
 }
 
-void ShaderBuffers::set_matrices(
-        const Matrix4d& vp_matrix,
-        const Matrix4d& shadow_vp_matrix,
-        const Matrix4d& shadow_vp_texture_matrix) const
-{
-        {
-                decltype(Drawing().vp_matrix) c = to_std140<float>(vp_matrix);
-                copy_to_drawing_buffer(offsetof(Drawing, vp_matrix), c);
-        }
-        {
-                ShadowMatrices shadow_matrices;
-                shadow_matrices.vp_matrix = to_std140<float>(shadow_vp_matrix);
-                shadow_matrices.vp_texture_matrix = to_std140<float>(shadow_vp_texture_matrix);
-                copy_to_shadow_matrices_buffer(0, shadow_matrices);
-        }
-}
-
-void ShaderBuffers::set_transparency_max_node_count(const std::uint32_t count) const
+void DrawingBuffer::set_transparency_max_node_count(const std::uint32_t count) const
 {
         decltype(Drawing().transparency_max_node_count) c = count;
-        copy_to_drawing_buffer(offsetof(Drawing, transparency_max_node_count), c);
+        copy_to_buffer(offsetof(Drawing, transparency_max_node_count), c);
 }
 
-void ShaderBuffers::set_clip_plane(const Vector4d& equation, const bool enabled) const
+void DrawingBuffer::set_clip_plane(const Vector4d& equation, const bool enabled) const
 {
         static_assert(
                 offsetof(Drawing, clip_plane_equation) + sizeof(Drawing::clip_plane_equation)
@@ -88,7 +63,7 @@ void ShaderBuffers::set_clip_plane(const Vector4d& equation, const bool enabled)
         constexpr std::size_t OFFSET = offsetof(Drawing, clip_plane_equation);
         constexpr std::size_t SIZE = sizeof(Drawing::clip_plane_equation) + sizeof(Drawing::clip_plane_enabled);
 
-        vulkan::BufferMapper map(uniform_buffers_[DRAWING_INDEX], OFFSET, SIZE);
+        vulkan::BufferMapper map(buffer_, OFFSET, SIZE);
 
         decltype(Drawing().clip_plane_equation) clip_plane_equation = to_vector<float>(equation);
         decltype(Drawing().clip_plane_enabled) clip_plane_enabled = enabled ? 1 : 0;
@@ -97,7 +72,7 @@ void ShaderBuffers::set_clip_plane(const Vector4d& equation, const bool enabled)
         map.write(sizeof(clip_plane_equation), clip_plane_enabled);
 }
 
-void ShaderBuffers::set_viewport(const Vector2d& center, const Vector2d& factor) const
+void DrawingBuffer::set_viewport(const Vector2d& center, const Vector2d& factor) const
 {
         static_assert(
                 offsetof(Drawing, viewport_center) + sizeof(Drawing::viewport_factor)
@@ -106,7 +81,7 @@ void ShaderBuffers::set_viewport(const Vector2d& center, const Vector2d& factor)
         constexpr std::size_t OFFSET = offsetof(Drawing, viewport_center);
         constexpr std::size_t SIZE = sizeof(Drawing::viewport_center) + sizeof(Drawing::viewport_factor);
 
-        vulkan::BufferMapper map(uniform_buffers_[DRAWING_INDEX], OFFSET, SIZE);
+        vulkan::BufferMapper map(buffer_, OFFSET, SIZE);
 
         decltype(Drawing().viewport_center) viewport_center = to_vector<float>(center);
         decltype(Drawing().viewport_factor) viewport_factor = to_vector<float>(factor);
@@ -115,87 +90,114 @@ void ShaderBuffers::set_viewport(const Vector2d& center, const Vector2d& factor)
         map.write(sizeof(viewport_center), viewport_factor);
 }
 
-void ShaderBuffers::set_lighting_color(const Vector3f& color) const
+void DrawingBuffer::set_lighting_color(const Vector3f& color) const
 {
         decltype(Drawing().lighting_color) v = color;
-        copy_to_drawing_buffer(offsetof(Drawing, lighting_color), v);
+        copy_to_buffer(offsetof(Drawing, lighting_color), v);
 }
 
-void ShaderBuffers::set_background_color(const Vector3f& color) const
+void DrawingBuffer::set_background_color(const Vector3f& color) const
 {
         decltype(Drawing().background_color) c = color;
-        copy_to_drawing_buffer(offsetof(Drawing, background_color), c);
+        copy_to_buffer(offsetof(Drawing, background_color), c);
 }
 
-void ShaderBuffers::set_wireframe_color(const Vector3f& color) const
+void DrawingBuffer::set_wireframe_color(const Vector3f& color) const
 {
         decltype(Drawing().wireframe_color) c = color;
-        copy_to_drawing_buffer(offsetof(Drawing, wireframe_color), c);
+        copy_to_buffer(offsetof(Drawing, wireframe_color), c);
 }
 
-void ShaderBuffers::set_clip_plane_color(const Vector3f& color) const
+void DrawingBuffer::set_clip_plane_color(const Vector3f& color) const
 {
         decltype(Drawing().clip_plane_color) c = color;
-        copy_to_drawing_buffer(offsetof(Drawing, clip_plane_color), c);
+        copy_to_buffer(offsetof(Drawing, clip_plane_color), c);
 }
 
-void ShaderBuffers::set_normal_color_positive(const Vector3f& color) const
+void DrawingBuffer::set_normal_color_positive(const Vector3f& color) const
 {
         decltype(Drawing().normal_color_positive) c = color;
-        copy_to_drawing_buffer(offsetof(Drawing, normal_color_positive), c);
+        copy_to_buffer(offsetof(Drawing, normal_color_positive), c);
 }
 
-void ShaderBuffers::set_normal_color_negative(const Vector3f& color) const
+void DrawingBuffer::set_normal_color_negative(const Vector3f& color) const
 {
         decltype(Drawing().normal_color_negative) c = color;
-        copy_to_drawing_buffer(offsetof(Drawing, normal_color_negative), c);
+        copy_to_buffer(offsetof(Drawing, normal_color_negative), c);
 }
 
-void ShaderBuffers::set_normal_length(const float length) const
+void DrawingBuffer::set_normal_length(const float length) const
 {
         decltype(Drawing().normal_length) l = length;
-        copy_to_drawing_buffer(offsetof(Drawing, normal_length), l);
+        copy_to_buffer(offsetof(Drawing, normal_length), l);
 }
 
-void ShaderBuffers::set_show_materials(const bool show) const
+void DrawingBuffer::set_show_materials(const bool show) const
 {
         decltype(Drawing().show_materials) s = show ? 1 : 0;
-        copy_to_drawing_buffer(offsetof(Drawing, show_materials), s);
+        copy_to_buffer(offsetof(Drawing, show_materials), s);
 }
 
-void ShaderBuffers::set_show_wireframe(const bool show) const
+void DrawingBuffer::set_show_wireframe(const bool show) const
 {
         decltype(Drawing().show_wireframe) s = show ? 1 : 0;
-        copy_to_drawing_buffer(offsetof(Drawing, show_wireframe), s);
+        copy_to_buffer(offsetof(Drawing, show_wireframe), s);
 }
 
-void ShaderBuffers::set_show_shadow(const bool show) const
+void DrawingBuffer::set_show_shadow(const bool show) const
 {
         decltype(Drawing().show_shadow) s = show ? 1 : 0;
-        copy_to_drawing_buffer(offsetof(Drawing, show_shadow), s);
+        copy_to_buffer(offsetof(Drawing, show_shadow), s);
 }
 
-void ShaderBuffers::set_show_fog(const bool show) const
+void DrawingBuffer::set_show_fog(const bool show) const
 {
         decltype(Drawing().show_fog) s = show ? 1 : 0;
-        copy_to_drawing_buffer(offsetof(Drawing, show_fog), s);
+        copy_to_buffer(offsetof(Drawing, show_fog), s);
 }
 
-void ShaderBuffers::set_show_smooth(const bool show) const
+void DrawingBuffer::set_show_smooth(const bool show) const
 {
         decltype(Drawing().show_smooth) s = show ? 1 : 0;
-        copy_to_drawing_buffer(offsetof(Drawing, show_smooth), s);
+        copy_to_buffer(offsetof(Drawing, show_smooth), s);
 }
 
-void ShaderBuffers::set_direction_to_light(const Vector3f& direction) const
+void DrawingBuffer::set_direction_to_light(const Vector3f& direction) const
 {
         decltype(Drawing().direction_to_light) d = direction;
-        copy_to_drawing_buffer(offsetof(Drawing, direction_to_light), d);
+        copy_to_buffer(offsetof(Drawing, direction_to_light), d);
 }
 
-void ShaderBuffers::set_direction_to_camera(const Vector3f& direction) const
+void DrawingBuffer::set_direction_to_camera(const Vector3f& direction) const
 {
         decltype(Drawing().direction_to_camera) d = direction;
-        copy_to_drawing_buffer(offsetof(Drawing, direction_to_camera), d);
+        copy_to_buffer(offsetof(Drawing, direction_to_camera), d);
+}
+
+//
+
+ShadowMatricesBuffer::ShadowMatricesBuffer(
+        const vulkan::Device& device,
+        const std::vector<std::uint32_t>& family_indices)
+        : buffer_(
+                vulkan::BufferMemoryType::HOST_VISIBLE,
+                device,
+                family_indices,
+                VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT,
+                sizeof(ShadowMatrices))
+{
+}
+
+const vulkan::Buffer& ShadowMatricesBuffer::buffer() const
+{
+        return buffer_.buffer();
+}
+
+void ShadowMatricesBuffer::set_matrices(const Matrix4d& vp_matrix, const Matrix4d& vp_texture_matrix) const
+{
+        ShadowMatrices shadow_matrices;
+        shadow_matrices.vp_matrix = to_std140<float>(vp_matrix);
+        shadow_matrices.vp_texture_matrix = to_std140<float>(vp_texture_matrix);
+        vulkan::map_and_write_to_buffer(buffer_, shadow_matrices);
 }
 }

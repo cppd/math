@@ -28,7 +28,7 @@ VolumeRenderer::VolumeRenderer(
         const vulkan::Device* const device,
         const Code& code,
         const bool sample_shading,
-        const ShaderBuffers& buffers,
+        const DrawingBuffer& drawing_buffer,
         const GgxF1Albedo& ggx_f1_albedo)
         : device_(*device),
           sample_shading_(sample_shading),
@@ -38,7 +38,7 @@ VolumeRenderer::VolumeRenderer(
                   *device,
                   program_.descriptor_set_layout_shared(),
                   program_.descriptor_set_layout_shared_bindings(),
-                  buffers.drawing_buffer(),
+                  drawing_buffer.buffer(),
                   ggx_f1_albedo.sampler(),
                   ggx_f1_albedo.cosine_roughness(),
                   ggx_f1_albedo.cosine_weighted_average()),

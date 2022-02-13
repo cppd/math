@@ -25,12 +25,9 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 namespace ns::gpu::renderer
 {
-class ShaderBuffers final
+class DrawingBuffer final
 {
-        static constexpr unsigned DRAWING_INDEX = 0;
-        static constexpr unsigned SHADOW_MATRICES_INDEX = 1;
-
-        std::vector<vulkan::BufferWithMemory> uniform_buffers_;
+        vulkan::BufferWithMemory buffer_;
 
         // If structures are placed in one buffer then
         // VkPhysicalDeviceLimits::minUniformBufferOffsetAlignment
@@ -60,28 +57,15 @@ class ShaderBuffers final
                 std::uint32_t transparency_max_node_count;
         };
 
-        struct ShadowMatrices final
-        {
-                Matrix4f vp_matrix;
-                Matrix4f vp_texture_matrix;
-        };
-
         template <typename T>
-        void copy_to_drawing_buffer(VkDeviceSize offset, const T& data) const;
-
-        template <typename T>
-        void copy_to_shadow_matrices_buffer(VkDeviceSize offset, const T& data) const;
+        void copy_to_buffer(VkDeviceSize offset, const T& data) const;
 
 public:
-        ShaderBuffers(const vulkan::Device& device, const std::vector<std::uint32_t>& family_indices);
+        DrawingBuffer(const vulkan::Device& device, const std::vector<std::uint32_t>& family_indices);
 
-        const vulkan::Buffer& drawing_buffer() const;
-        const vulkan::Buffer& shadow_matrices_buffer() const;
+        const vulkan::Buffer& buffer() const;
 
-        void set_matrices(
-                const Matrix4d& vp_matrix,
-                const Matrix4d& shadow_vp_matrix,
-                const Matrix4d& shadow_vp_texture_matrix) const;
+        void set_matrix(const Matrix4d& vp_matrix) const;
 
         void set_transparency_max_node_count(std::uint32_t count) const;
 
@@ -101,5 +85,23 @@ public:
         void set_show_wireframe(bool show) const;
         void set_show_shadow(bool show) const;
         void set_show_fog(bool show) const;
+};
+
+class ShadowMatricesBuffer final
+{
+        vulkan::BufferWithMemory buffer_;
+
+        struct ShadowMatrices final
+        {
+                Matrix4f vp_matrix;
+                Matrix4f vp_texture_matrix;
+        };
+
+public:
+        ShadowMatricesBuffer(const vulkan::Device& device, const std::vector<std::uint32_t>& family_indices);
+
+        const vulkan::Buffer& buffer() const;
+
+        void set_matrices(const Matrix4d& vp_matrix, const Matrix4d& vp_texture_matrix) const;
 };
 }

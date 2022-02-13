@@ -21,6 +21,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "buffers/shader.h"
 
+#include <src/com/error.h>
 #include <src/numerical/matrix.h>
 #include <src/numerical/region.h>
 #include <src/numerical/transform.h>
@@ -48,7 +49,12 @@ class RendererView final
         static constexpr Matrix4d SHADOW_TEXTURE_MATRIX =
                 matrix::scale<double>(0.5, 0.5, 1) * matrix::translate<double>(1, 1, 0);
 
-        Matrix4d main_vp_matrix_ = Matrix4d(1);
+        DrawingBuffer* const drawing_buffer_;
+        ShadowMatricesBuffer* const shadow_matrices_buffer_;
+        RendererViewEvents* const events_;
+
+        Matrix4d vp_matrix_ = Matrix4d(1);
+
         Matrix4d shadow_vp_matrix_ = Matrix4d(1);
         Matrix4d shadow_vp_texture_matrix_ = Matrix4d(1);
 
@@ -58,70 +64,67 @@ class RendererView final
         std::optional<Vector4d> clip_plane_;
         bool show_normals_ = false;
 
-        ShaderBuffers* shader_buffers_;
-        RendererViewEvents* events_;
-
         void command(const SetLightingColor& v)
         {
-                shader_buffers_->set_lighting_color(v.color.rgb32().max_n(0));
+                drawing_buffer_->set_lighting_color(v.color.rgb32().max_n(0));
         }
 
         void command(const SetBackgroundColor& v)
         {
                 clear_color_rgb32_ = v.color.rgb32().clamp(0, 1);
-                shader_buffers_->set_background_color(clear_color_rgb32_);
+                drawing_buffer_->set_background_color(clear_color_rgb32_);
                 events_->view_background_changed();
         }
 
         void command(const SetWireframeColor& v)
         {
-                shader_buffers_->set_wireframe_color(v.color.rgb32().clamp(0, 1));
+                drawing_buffer_->set_wireframe_color(v.color.rgb32().clamp(0, 1));
         }
 
         void command(const SetClipPlaneColor& v)
         {
-                shader_buffers_->set_clip_plane_color(v.color.rgb32().clamp(0, 1));
+                drawing_buffer_->set_clip_plane_color(v.color.rgb32().clamp(0, 1));
         }
 
         void command(const SetNormalLength& v)
         {
-                shader_buffers_->set_normal_length(v.length);
+                drawing_buffer_->set_normal_length(v.length);
         }
 
         void command(const SetNormalColorPositive& v)
         {
-                shader_buffers_->set_normal_color_positive(v.color.rgb32().clamp(0, 1));
+                drawing_buffer_->set_normal_color_positive(v.color.rgb32().clamp(0, 1));
         }
 
         void command(const SetNormalColorNegative& v)
         {
-                shader_buffers_->set_normal_color_negative(v.color.rgb32().clamp(0, 1));
+                drawing_buffer_->set_normal_color_negative(v.color.rgb32().clamp(0, 1));
         }
 
         void command(const SetShowSmooth& v)
         {
-                shader_buffers_->set_show_smooth(v.show);
+                drawing_buffer_->set_show_smooth(v.show);
         }
 
         void command(const SetShowWireframe& v)
         {
-                shader_buffers_->set_show_wireframe(v.show);
+                drawing_buffer_->set_show_wireframe(v.show);
         }
 
         void command(const SetShowShadow& v)
         {
-                shader_buffers_->set_show_shadow(v.show);
+                drawing_buffer_->set_show_shadow(v.show);
                 show_shadow_ = v.show;
         }
 
         void command(const SetShowFog& v)
         {
-                shader_buffers_->set_show_fog(v.show);
+                drawing_buffer_->set_show_fog(v.show);
         }
 
         void command(const SetShowMaterials& v)
         {
-                shader_buffers_->set_show_materials(v.show);
+                drawing_buffer_->set_show_materials(v.show);
         }
 
         void command(const SetShowNormals& v)
@@ -135,6 +138,10 @@ class RendererView final
 
         void command(const SetShadowZoom& v)
         {
+                if (!shadow_matrices_buffer_)
+                {
+                        return;
+                }
                 if (shadow_zoom_ != v.zoom)
                 {
                         shadow_zoom_ = v.zoom;
@@ -146,20 +153,27 @@ class RendererView final
         {
                 const CameraInfo& c = *v.info;
 
-                const Matrix4d& shadow_projection_matrix = matrix::ortho_vulkan<double>(
-                        c.shadow_volume.left, c.shadow_volume.right, c.shadow_volume.bottom, c.shadow_volume.top,
-                        c.shadow_volume.near, c.shadow_volume.far);
-                const Matrix4d& main_projection_matrix = matrix::ortho_vulkan<double>(
-                        c.main_volume.left, c.main_volume.right, c.main_volume.bottom, c.main_volume.top,
-                        c.main_volume.near, c.main_volume.far);
+                {
+                        const Matrix4d& projection_matrix = matrix::ortho_vulkan<double>(
+                                c.main_volume.left, c.main_volume.right, c.main_volume.bottom, c.main_volume.top,
+                                c.main_volume.near, c.main_volume.far);
+                        vp_matrix_ = projection_matrix * c.main_view_matrix;
+                        drawing_buffer_->set_matrix(vp_matrix_);
+                }
 
-                shadow_vp_matrix_ = shadow_projection_matrix * c.shadow_view_matrix;
-                shadow_vp_texture_matrix_ = SHADOW_TEXTURE_MATRIX * shadow_vp_matrix_;
-                main_vp_matrix_ = main_projection_matrix * c.main_view_matrix;
+                if (shadow_matrices_buffer_)
+                {
+                        const Matrix4d& projection_matrix = matrix::ortho_vulkan<double>(
+                                c.shadow_volume.left, c.shadow_volume.right, c.shadow_volume.bottom,
+                                c.shadow_volume.top, c.shadow_volume.near, c.shadow_volume.far);
 
-                shader_buffers_->set_direction_to_light(-to_vector<float>(c.light_direction));
-                shader_buffers_->set_direction_to_camera(-to_vector<float>(c.camera_direction));
-                shader_buffers_->set_matrices(main_vp_matrix_, shadow_vp_matrix_, shadow_vp_texture_matrix_);
+                        shadow_vp_matrix_ = projection_matrix * c.shadow_view_matrix;
+                        shadow_vp_texture_matrix_ = SHADOW_TEXTURE_MATRIX * shadow_vp_matrix_;
+                        shadow_matrices_buffer_->set_matrices(shadow_vp_matrix_, shadow_vp_texture_matrix_);
+                }
+
+                drawing_buffer_->set_direction_to_light(-to_vector<float>(c.light_direction));
+                drawing_buffer_->set_direction_to_camera(-to_vector<float>(c.camera_direction));
 
                 events_->view_matrices_changed();
         }
@@ -169,18 +183,21 @@ class RendererView final
                 clip_plane_ = v.plane;
                 if (clip_plane_)
                 {
-                        shader_buffers_->set_clip_plane(*clip_plane_, true);
+                        drawing_buffer_->set_clip_plane(*clip_plane_, true);
                 }
                 else
                 {
-                        shader_buffers_->set_clip_plane(Vector4d(0), false);
+                        drawing_buffer_->set_clip_plane(Vector4d(0), false);
                 }
                 events_->view_clip_plane_changed();
         }
 
 public:
-        RendererView(ShaderBuffers* const shader_buffers, RendererViewEvents* const events)
-                : shader_buffers_(shader_buffers), events_(events)
+        RendererView(
+                DrawingBuffer* const drawing_buffer,
+                ShadowMatricesBuffer* const shadow_matrices_buffer,
+                RendererViewEvents* const events)
+                : drawing_buffer_(drawing_buffer), shadow_matrices_buffer_(shadow_matrices_buffer), events_(events)
         {
         }
 
@@ -200,6 +217,7 @@ public:
 
         double shadow_zoom() const
         {
+                ASSERT(shadow_matrices_buffer_);
                 return shadow_zoom_;
         }
 
@@ -218,9 +236,9 @@ public:
                 return show_normals_;
         }
 
-        const Matrix4d& main_vp_matrix() const
+        const Matrix4d& vp_matrix() const
         {
-                return main_vp_matrix_;
+                return vp_matrix_;
         }
 };
 }

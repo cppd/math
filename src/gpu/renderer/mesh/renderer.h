@@ -79,7 +79,7 @@ class MeshRenderer
         std::optional<vulkan::handle::CommandBuffers> render_shadow_mapping_command_buffers_;
 
         vulkan::handle::Sampler texture_sampler_;
-        vulkan::handle::Sampler shadow_sampler_;
+        vulkan::handle::Sampler shadow_mapping_sampler_;
 
         const Pipelines& render_pipelines(bool transparent) const;
         Pipelines& render_pipelines(bool transparent);
@@ -98,7 +98,8 @@ public:
                 const Code& code,
                 bool sample_shading,
                 bool sampler_anisotropy,
-                const ShaderBuffers& buffers,
+                const vulkan::Buffer& drawing_buffer,
+                const vulkan::Buffer& shadow_matrices_buffer,
                 const GgxF1Albedo& ggx_f1_albedo);
 
         std::vector<vulkan::DescriptorSetLayoutAndBindings> mesh_layouts() const;

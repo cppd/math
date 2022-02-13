@@ -66,7 +66,7 @@ public:
                 const vulkan::Device* device,
                 const Code& code,
                 bool sample_shading,
-                const ShaderBuffers& buffers,
+                const DrawingBuffer& drawing_buffer,
                 const GgxF1Albedo& ggx_f1_albedo);
 
         std::vector<vulkan::DescriptorSetLayoutAndBindings> image_layouts() const;

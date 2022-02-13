@@ -178,8 +178,8 @@ SharedMemory::SharedMemory(
         const vulkan::Device& device,
         const VkDescriptorSetLayout descriptor_set_layout,
         const std::vector<VkDescriptorSetLayoutBinding>& descriptor_set_layout_bindings,
-        const vulkan::Buffer& shadow_matrices,
         const vulkan::Buffer& drawing,
+        const vulkan::Buffer& shadow_matrices,
         const VkSampler ggx_f1_albedo_sampler,
         const vulkan::ImageView& ggx_f1_albedo_cosine_roughness,
         const vulkan::ImageView& ggx_f1_albedo_cosine_weighted_average)

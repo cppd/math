@@ -31,7 +31,8 @@ MeshRenderer::MeshRenderer(
         const Code& code,
         const bool sample_shading,
         const bool sampler_anisotropy,
-        const ShaderBuffers& buffers,
+        const vulkan::Buffer& drawing_buffer,
+        const vulkan::Buffer& shadow_matrices_buffer,
         const GgxF1Albedo& ggx_f1_albedo)
         : device_(*device),
           sample_shading_(sample_shading),
@@ -41,8 +42,8 @@ MeshRenderer::MeshRenderer(
                   *device,
                   triangles_program_.descriptor_set_layout_shared(),
                   triangles_program_.descriptor_set_layout_shared_bindings(),
-                  buffers.shadow_matrices_buffer(),
-                  buffers.drawing_buffer(),
+                  drawing_buffer,
+                  shadow_matrices_buffer,
                   ggx_f1_albedo.sampler(),
                   ggx_f1_albedo.cosine_roughness(),
                   ggx_f1_albedo.cosine_weighted_average()),
@@ -52,8 +53,8 @@ MeshRenderer::MeshRenderer(
                   *device,
                   triangle_lines_program_.descriptor_set_layout_shared(),
                   triangle_lines_program_.descriptor_set_layout_shared_bindings(),
-                  buffers.shadow_matrices_buffer(),
-                  buffers.drawing_buffer(),
+                  drawing_buffer,
+                  shadow_matrices_buffer,
                   ggx_f1_albedo.sampler(),
                   ggx_f1_albedo.cosine_roughness(),
                   ggx_f1_albedo.cosine_weighted_average()),
@@ -63,8 +64,8 @@ MeshRenderer::MeshRenderer(
                   *device,
                   normals_program_.descriptor_set_layout_shared(),
                   normals_program_.descriptor_set_layout_shared_bindings(),
-                  buffers.shadow_matrices_buffer(),
-                  buffers.drawing_buffer(),
+                  drawing_buffer,
+                  shadow_matrices_buffer,
                   ggx_f1_albedo.sampler(),
                   ggx_f1_albedo.cosine_roughness(),
                   ggx_f1_albedo.cosine_weighted_average()),
@@ -74,8 +75,8 @@ MeshRenderer::MeshRenderer(
                   *device,
                   triangles_shadow_mapping_program_.descriptor_set_layout_shared(),
                   triangles_shadow_mapping_program_.descriptor_set_layout_shared_bindings(),
-                  buffers.shadow_matrices_buffer(),
-                  buffers.drawing_buffer(),
+                  drawing_buffer,
+                  shadow_matrices_buffer,
                   ggx_f1_albedo.sampler(),
                   ggx_f1_albedo.cosine_roughness(),
                   ggx_f1_albedo.cosine_weighted_average()),
@@ -85,14 +86,14 @@ MeshRenderer::MeshRenderer(
                   *device,
                   points_program_.descriptor_set_layout_shared(),
                   points_program_.descriptor_set_layout_shared_bindings(),
-                  buffers.shadow_matrices_buffer(),
-                  buffers.drawing_buffer(),
+                  drawing_buffer,
+                  shadow_matrices_buffer,
                   ggx_f1_albedo.sampler(),
                   ggx_f1_albedo.cosine_roughness(),
                   ggx_f1_albedo.cosine_weighted_average()),
           //
           texture_sampler_(create_mesh_texture_sampler(*device, sampler_anisotropy)),
-          shadow_sampler_(create_mesh_shadow_sampler(*device))
+          shadow_mapping_sampler_(create_mesh_shadow_sampler(*device))
 {
 }
 
@@ -202,7 +203,7 @@ void MeshRenderer::create_shadow_mapping_buffers(
         shadow_mapping_buffers_ = renderer::create_depth_buffers(
                 buffer_count, family_indices, graphics_command_pool, graphics_queue, device, width, height, zoom);
 
-        triangles_shared_memory_.set_shadow_image(shadow_sampler_, shadow_mapping_buffers_->image_view(0));
+        triangles_shared_memory_.set_shadow_image(shadow_mapping_sampler_, shadow_mapping_buffers_->image_view(0));
 
         render_triangles_shadow_mapping_pipeline_ = triangles_shadow_mapping_program_.create_pipeline(
                 shadow_mapping_buffers_->render_pass(), shadow_mapping_buffers_->sample_count(),
