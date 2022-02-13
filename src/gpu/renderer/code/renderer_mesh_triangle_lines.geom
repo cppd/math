@@ -41,11 +41,11 @@ out gl_PerVertex
 void line(const int i0, const int i1, const int i2, const float d0, const float d1, const float d2)
 {
         const vec4 from = mix(vs[i0].world_position, vs[i1].world_position, d0 / (d0 - d1));
-        gl_Position = matrices.vp_matrix * from;
+        gl_Position = drawing.vp_matrix * from;
         EmitVertex();
 
         const vec4 to = mix(vs[i0].world_position, vs[i2].world_position, d0 / (d0 - d2));
-        gl_Position = matrices.vp_matrix * to;
+        gl_Position = drawing.vp_matrix * to;
         EmitVertex();
 
         EndPrimitive();

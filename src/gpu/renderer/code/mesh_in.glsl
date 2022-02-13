@@ -29,14 +29,14 @@ layout(constant_id = 0) const bool TRANSPARENCY_DRAWING = false;
 
 //
 
-layout(set = 0, binding = 0, std140) uniform restrict Matrices
+DRAWING_BUFFER(0, 0);
+
+layout(set = 0, binding = 1, std140) uniform restrict ShadowMatrices
 {
         mat4 vp_matrix;
-        mat4 shadow_vp_texture_matrix;
+        mat4 vp_texture_matrix;
 }
-matrices;
-
-DRAWING_BUFFER(0, 1);
+shadow_matrices;
 
 #ifdef RAY_TRACING
 layout(set = 0, binding = 2) uniform accelerationStructureEXT acceleration_structure;

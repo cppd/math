@@ -45,7 +45,7 @@ void main()
 {
         const vec4 world_coordinates = mesh.model_matrix * vec4(position, 1.0);
 
-        const vec4 pos = matrices.vp_matrix * world_coordinates;
+        const vec4 pos = drawing.vp_matrix * world_coordinates;
         gl_Position = pos;
 
         if (drawing.clip_plane_enabled)
@@ -60,6 +60,6 @@ void main()
         vs.world_normal = mesh.normal_matrix * normal;
         vs.world_position = world_coordinates.xyz;
 
-        vs.shadow_position = matrices.shadow_vp_texture_matrix * world_coordinates;
+        vs.shadow_position = shadow_matrices.vp_texture_matrix * world_coordinates;
         vs.texture_coordinates = texture_coordinates;
 }

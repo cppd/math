@@ -23,27 +23,15 @@ namespace ns::gpu::renderer
 {
 ShaderBuffers::ShaderBuffers(const vulkan::Device& device, const std::vector<std::uint32_t>& family_indices)
 {
-        static_assert(MATRICES_INDEX == 0);
+        static_assert(DRAWING_INDEX == 0);
         static_assert(SHADOW_MATRICES_INDEX == 1);
-        static_assert(DRAWING_INDEX == 2);
 
         static constexpr auto MEMORY_TYPE = vulkan::BufferMemoryType::HOST_VISIBLE;
         static constexpr auto USAGE = VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT;
 
-        uniform_buffers_.reserve(3);
-        uniform_buffers_.emplace_back(MEMORY_TYPE, device, family_indices, USAGE, sizeof(Matrices));
-        uniform_buffers_.emplace_back(MEMORY_TYPE, device, family_indices, USAGE, sizeof(Matrices));
+        uniform_buffers_.reserve(2);
         uniform_buffers_.emplace_back(MEMORY_TYPE, device, family_indices, USAGE, sizeof(Drawing));
-}
-
-const vulkan::Buffer& ShaderBuffers::matrices_buffer() const
-{
-        return uniform_buffers_[MATRICES_INDEX].buffer();
-}
-
-const vulkan::Buffer& ShaderBuffers::shadow_matrices_buffer() const
-{
-        return uniform_buffers_[SHADOW_MATRICES_INDEX].buffer();
+        uniform_buffers_.emplace_back(MEMORY_TYPE, device, family_indices, USAGE, sizeof(ShadowMatrices));
 }
 
 const vulkan::Buffer& ShaderBuffers::drawing_buffer() const
@@ -51,16 +39,9 @@ const vulkan::Buffer& ShaderBuffers::drawing_buffer() const
         return uniform_buffers_[DRAWING_INDEX].buffer();
 }
 
-template <typename T>
-void ShaderBuffers::copy_to_matrices_buffer(const VkDeviceSize offset, const T& data) const
+const vulkan::Buffer& ShaderBuffers::shadow_matrices_buffer() const
 {
-        vulkan::map_and_write_to_buffer(uniform_buffers_[MATRICES_INDEX], offset, data);
-}
-
-template <typename T>
-void ShaderBuffers::copy_to_shadow_matrices_buffer(const VkDeviceSize offset, const T& data) const
-{
-        vulkan::map_and_write_to_buffer(uniform_buffers_[SHADOW_MATRICES_INDEX], offset, data);
+        return uniform_buffers_[SHADOW_MATRICES_INDEX].buffer();
 }
 
 template <typename T>
@@ -69,22 +50,26 @@ void ShaderBuffers::copy_to_drawing_buffer(const VkDeviceSize offset, const T& d
         vulkan::map_and_write_to_buffer(uniform_buffers_[DRAWING_INDEX], offset, data);
 }
 
+template <typename T>
+void ShaderBuffers::copy_to_shadow_matrices_buffer(const VkDeviceSize offset, const T& data) const
+{
+        vulkan::map_and_write_to_buffer(uniform_buffers_[SHADOW_MATRICES_INDEX], offset, data);
+}
+
 void ShaderBuffers::set_matrices(
-        const Matrix4d& main_vp_matrix,
+        const Matrix4d& vp_matrix,
         const Matrix4d& shadow_vp_matrix,
         const Matrix4d& shadow_vp_texture_matrix) const
 {
         {
-                Matrices matrices;
-                matrices.vp_matrix = to_std140<float>(main_vp_matrix);
-                matrices.shadow_vp_texture_matrix = to_std140<float>(shadow_vp_texture_matrix);
-                copy_to_matrices_buffer(0, matrices);
+                decltype(Drawing().vp_matrix) c = to_std140<float>(vp_matrix);
+                copy_to_drawing_buffer(offsetof(Drawing, vp_matrix), c);
         }
         {
-                Matrices matrices;
-                matrices.vp_matrix = to_std140<float>(shadow_vp_matrix);
-                matrices.shadow_vp_texture_matrix = to_std140<float>(shadow_vp_texture_matrix);
-                copy_to_shadow_matrices_buffer(0, matrices);
+                ShadowMatrices shadow_matrices;
+                shadow_matrices.vp_matrix = to_std140<float>(shadow_vp_matrix);
+                shadow_matrices.vp_texture_matrix = to_std140<float>(shadow_vp_texture_matrix);
+                copy_to_shadow_matrices_buffer(0, shadow_matrices);
         }
 }
 

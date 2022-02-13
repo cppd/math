@@ -49,11 +49,11 @@ class SharedMemory final
 {
         static constexpr int SET_NUMBER = 0;
 
-        static constexpr int MATRICES_BINDING = 0;
-        static constexpr int DRAWING_BINDING = 1;
+        static constexpr int DRAWING_BINDING = 0;
+        static constexpr int SHADOW_MATRICES_BINDING = 1;
 
         static constexpr int ACCELERATION_STRUCTURE_BINDING = 2;
-        static constexpr int SHADOW_BINDING = 2;
+        static constexpr int SHADOW_MAP_BINDING = 2;
 
         static constexpr int OBJECTS_BINDING = 3;
         static constexpr int GGX_F1_ALBEDO_COSINE_ROUGHNESS_BINDING = 4;
@@ -68,7 +68,7 @@ class SharedMemory final
 
 public:
         static std::vector<VkDescriptorSetLayoutBinding> descriptor_set_layout_bindings(
-                VkShaderStageFlags matrices,
+                VkShaderStageFlags shadow_matrices,
                 VkShaderStageFlags drawing,
                 VkShaderStageFlags objects,
                 VkShaderStageFlags shadow_map,
@@ -79,7 +79,7 @@ public:
                 const vulkan::Device& device,
                 VkDescriptorSetLayout descriptor_set_layout,
                 const std::vector<VkDescriptorSetLayoutBinding>& descriptor_set_layout_bindings,
-                const vulkan::Buffer& matrices,
+                const vulkan::Buffer& shadow_matrices,
                 const vulkan::Buffer& drawing,
                 VkSampler ggx_f1_albedo_sampler,
                 const vulkan::ImageView& ggx_f1_albedo_cosine_roughness,
@@ -87,13 +87,13 @@ public:
 
         const VkDescriptorSet& descriptor_set() const;
 
-        void set_shadow_image(VkSampler sampler, const vulkan::ImageView& shadow_image) const;
         void set_objects_image(const vulkan::ImageView& objects_image) const;
         void set_transparency(
                 const vulkan::ImageView& heads,
                 const vulkan::ImageView& heads_size,
                 const vulkan::Buffer& counters,
                 const vulkan::Buffer& nodes) const;
+        void set_shadow_image(VkSampler sampler, const vulkan::ImageView& shadow_image) const;
         void set_acceleration_structure(VkAccelerationStructureKHR acceleration_structure) const;
 };
 

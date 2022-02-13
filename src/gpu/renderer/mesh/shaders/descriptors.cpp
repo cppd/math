@@ -51,7 +51,7 @@ std::size_t SharedConstants::size() const
 //
 
 std::vector<VkDescriptorSetLayoutBinding> SharedMemory::descriptor_set_layout_bindings(
-        const VkShaderStageFlags matrices,
+        const VkShaderStageFlags shadow_matrices,
         const VkShaderStageFlags drawing,
         const VkShaderStageFlags objects,
         const VkShaderStageFlags shadow_map,
@@ -59,22 +59,22 @@ std::vector<VkDescriptorSetLayoutBinding> SharedMemory::descriptor_set_layout_bi
 {
         std::vector<VkDescriptorSetLayoutBinding> bindings;
 
-        if (matrices)
-        {
-                VkDescriptorSetLayoutBinding b = {};
-                b.binding = MATRICES_BINDING;
-                b.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
-                b.descriptorCount = 1;
-                b.stageFlags = matrices;
-
-                bindings.push_back(b);
-        }
         {
                 VkDescriptorSetLayoutBinding b = {};
                 b.binding = DRAWING_BINDING;
                 b.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
                 b.descriptorCount = 1;
                 b.stageFlags = drawing | VK_SHADER_STAGE_FRAGMENT_BIT;
+
+                bindings.push_back(b);
+        }
+        if (shadow_matrices)
+        {
+                VkDescriptorSetLayoutBinding b = {};
+                b.binding = SHADOW_MATRICES_BINDING;
+                b.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
+                b.descriptorCount = 1;
+                b.stageFlags = shadow_matrices;
 
                 bindings.push_back(b);
         }
@@ -93,7 +93,7 @@ std::vector<VkDescriptorSetLayoutBinding> SharedMemory::descriptor_set_layout_bi
         {
                 ASSERT(!acceleration_structure);
                 VkDescriptorSetLayoutBinding b = {};
-                b.binding = SHADOW_BINDING;
+                b.binding = SHADOW_MAP_BINDING;
                 b.descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
                 b.descriptorCount = 1;
                 b.stageFlags = shadow_map;
@@ -178,7 +178,7 @@ SharedMemory::SharedMemory(
         const vulkan::Device& device,
         const VkDescriptorSetLayout descriptor_set_layout,
         const std::vector<VkDescriptorSetLayoutBinding>& descriptor_set_layout_bindings,
-        const vulkan::Buffer& matrices,
+        const vulkan::Buffer& shadow_matrices,
         const vulkan::Buffer& drawing,
         const VkSampler ggx_f1_albedo_sampler,
         const vulkan::ImageView& ggx_f1_albedo_cosine_roughness,
@@ -195,15 +195,6 @@ SharedMemory::SharedMemory(
 
         {
                 VkDescriptorBufferInfo buffer_info = {};
-                buffer_info.buffer = matrices;
-                buffer_info.offset = 0;
-                buffer_info.range = matrices.size();
-
-                infos.emplace_back(buffer_info);
-                bindings.push_back(MATRICES_BINDING);
-        }
-        {
-                VkDescriptorBufferInfo buffer_info = {};
                 buffer_info.buffer = drawing;
                 buffer_info.offset = 0;
                 buffer_info.range = drawing.size();
@@ -211,6 +202,23 @@ SharedMemory::SharedMemory(
                 infos.emplace_back(buffer_info);
                 bindings.push_back(DRAWING_BINDING);
         }
+
+        if (std::any_of(
+                    descriptor_set_layout_bindings.cbegin(), descriptor_set_layout_bindings.cend(),
+                    [](const VkDescriptorSetLayoutBinding& binding)
+                    {
+                            return binding.binding == SHADOW_MATRICES_BINDING;
+                    }))
+        {
+                VkDescriptorBufferInfo buffer_info = {};
+                buffer_info.buffer = shadow_matrices;
+                buffer_info.offset = 0;
+                buffer_info.range = shadow_matrices.size();
+
+                infos.emplace_back(buffer_info);
+                bindings.push_back(SHADOW_MATRICES_BINDING);
+        }
+
         {
                 VkDescriptorImageInfo image_info = {};
                 image_info.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
@@ -241,19 +249,6 @@ unsigned SharedMemory::set_number()
 const VkDescriptorSet& SharedMemory::descriptor_set() const
 {
         return descriptors_.descriptor_set(0);
-}
-
-void SharedMemory::set_shadow_image(const VkSampler sampler, const vulkan::ImageView& shadow_image) const
-{
-        ASSERT(shadow_image.has_usage(VK_IMAGE_USAGE_SAMPLED_BIT));
-        ASSERT(shadow_image.sample_count() == VK_SAMPLE_COUNT_1_BIT);
-
-        VkDescriptorImageInfo image_info = {};
-        image_info.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
-        image_info.imageView = shadow_image;
-        image_info.sampler = sampler;
-
-        descriptors_.update_descriptor_set(0, SHADOW_BINDING, image_info);
 }
 
 void SharedMemory::set_objects_image(const vulkan::ImageView& objects) const
@@ -320,6 +315,19 @@ void SharedMemory::set_transparency(
         }
 
         descriptors_.update_descriptor_set(0, bindings, infos);
+}
+
+void SharedMemory::set_shadow_image(const VkSampler sampler, const vulkan::ImageView& shadow_image) const
+{
+        ASSERT(shadow_image.has_usage(VK_IMAGE_USAGE_SAMPLED_BIT));
+        ASSERT(shadow_image.sample_count() == VK_SAMPLE_COUNT_1_BIT);
+
+        VkDescriptorImageInfo image_info = {};
+        image_info.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
+        image_info.imageView = shadow_image;
+        image_info.sampler = sampler;
+
+        descriptors_.update_descriptor_set(0, SHADOW_MAP_BINDING, image_info);
 }
 
 void SharedMemory::set_acceleration_structure(const VkAccelerationStructureKHR acceleration_structure) const

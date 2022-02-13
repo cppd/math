@@ -27,9 +27,8 @@ namespace ns::gpu::renderer
 {
 class ShaderBuffers final
 {
-        static constexpr unsigned MATRICES_INDEX = 0;
+        static constexpr unsigned DRAWING_INDEX = 0;
         static constexpr unsigned SHADOW_MATRICES_INDEX = 1;
-        static constexpr unsigned DRAWING_INDEX = 2;
 
         std::vector<vulkan::BufferWithMemory> uniform_buffers_;
 
@@ -37,14 +36,9 @@ class ShaderBuffers final
         // VkPhysicalDeviceLimits::minUniformBufferOffsetAlignment
         // is the minimum required alignment for VkDescriptorBufferInfo::offset
 
-        struct Matrices final
-        {
-                Matrix4f vp_matrix;
-                Matrix4f shadow_vp_texture_matrix;
-        };
-
         struct Drawing final
         {
+                alignas(sizeof(Vector4f)) Matrix4f vp_matrix;
                 alignas(sizeof(Vector4f)) Vector3f lighting_color;
                 alignas(sizeof(Vector4f)) Vector3f background_color;
                 alignas(sizeof(Vector4f)) Vector3f wireframe_color;
@@ -66,22 +60,26 @@ class ShaderBuffers final
                 std::uint32_t transparency_max_node_count;
         };
 
-        template <typename T>
-        void copy_to_matrices_buffer(VkDeviceSize offset, const T& data) const;
-        template <typename T>
-        void copy_to_shadow_matrices_buffer(VkDeviceSize offset, const T& data) const;
+        struct ShadowMatrices final
+        {
+                Matrix4f vp_matrix;
+                Matrix4f vp_texture_matrix;
+        };
+
         template <typename T>
         void copy_to_drawing_buffer(VkDeviceSize offset, const T& data) const;
+
+        template <typename T>
+        void copy_to_shadow_matrices_buffer(VkDeviceSize offset, const T& data) const;
 
 public:
         ShaderBuffers(const vulkan::Device& device, const std::vector<std::uint32_t>& family_indices);
 
-        const vulkan::Buffer& matrices_buffer() const;
-        const vulkan::Buffer& shadow_matrices_buffer() const;
         const vulkan::Buffer& drawing_buffer() const;
+        const vulkan::Buffer& shadow_matrices_buffer() const;
 
         void set_matrices(
-                const Matrix4d& main_vp_matrix,
+                const Matrix4d& vp_matrix,
                 const Matrix4d& shadow_vp_matrix,
                 const Matrix4d& shadow_vp_texture_matrix) const;
 

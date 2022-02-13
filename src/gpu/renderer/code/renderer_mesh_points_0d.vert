@@ -31,7 +31,7 @@ out gl_PerVertex
 
 void main(void)
 {
-        const vec4 pos = matrices.vp_matrix * (mesh.model_matrix * vec4(position, 1.0));
+        const vec4 pos = drawing.vp_matrix * (mesh.model_matrix * vec4(position, 1.0));
         gl_Position = pos;
         if (drawing.clip_plane_enabled)
         {

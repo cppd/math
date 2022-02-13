@@ -48,13 +48,13 @@ gs;
 
 void line(const vec3 world_from, const vec3 world_to)
 {
-        const vec4 from = matrices.vp_matrix * vec4(world_from, 1.0);
+        const vec4 from = drawing.vp_matrix * vec4(world_from, 1.0);
         gl_Position = from;
         gl_ClipDistance[0] = drawing.clip_plane_enabled ? dot(drawing.clip_plane_equation, vec4(world_from, 1.0)) : 1;
         gs.color = drawing.normal_color_negative;
         EmitVertex();
 
-        const vec4 to = matrices.vp_matrix * vec4(world_to, 1.0);
+        const vec4 to = drawing.vp_matrix * vec4(world_to, 1.0);
         gl_Position = to;
         gl_ClipDistance[0] = drawing.clip_plane_enabled ? dot(drawing.clip_plane_equation, vec4(world_to, 1.0)) : 1;
         gs.color = drawing.normal_color_positive;

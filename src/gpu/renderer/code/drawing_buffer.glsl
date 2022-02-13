@@ -18,6 +18,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #define DRAWING_BUFFER(set_number, binding_number)                                          \
         layout(set = set_number, binding = binding_number, std140) uniform restrict Drawing \
         {                                                                                   \
+                mat4 vp_matrix;                                                             \
                 vec3 lighting_color;                                                        \
                 vec3 background_color;                                                      \
                 vec3 wireframe_color;                                                       \
