@@ -17,6 +17,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #if defined(IMAGE)
 
+#include "ray_tracing_intersection.glsl"
 #include "shade.glsl"
 #include "volume_in.glsl"
 
@@ -92,6 +93,32 @@ vec3 gradient(const vec3 p)
         return s2 - s1;
 }
 
+#ifdef RAY_TRACING
+float shadow_weight(const vec3 p)
+{
+        const vec3 org = (coordinates.texture_to_world_matrix * vec4(p, 1)).xyz;
+        const vec3 dir = drawing.direction_to_light;
+        const bool intersection =
+                !drawing.clip_plane_enabled
+                        ? ray_tracing_intersection(org, dir, acceleration_structure)
+                        : ray_tracing_intersection(org, dir, acceleration_structure, drawing.clip_plane_equation);
+        return intersection ? 1 : 0;
+}
+bool show_shadow()
+{
+        return drawing.show_shadow;
+}
+#else
+float shadow_weight(const vec3)
+{
+        return 0;
+}
+bool show_shadow()
+{
+        return false;
+}
+#endif
+
 vec4 volume_color(const vec3 p)
 {
         vec4 color = color_volume_value(p);
@@ -108,9 +135,13 @@ vec4 isosurface_color(const vec3 p)
         const vec3 world_normal = normalize(coordinates.gradient_to_world_matrix * gradient(p));
         const vec3 n = faceforward(world_normal, -v, world_normal);
 
-        const vec3 shade_color =
-                shade(volume.color, volume.metalness, volume.roughness, n, v, l, ggx_f1_albedo_cosine_roughness,
-                      ggx_f1_albedo_cosine_weighted_average, drawing.lighting_color, volume.ambient);
+        const vec3 shade_color = show_shadow()
+                                         ? shade(volume.color, volume.metalness, volume.roughness, n, v, l,
+                                                 ggx_f1_albedo_cosine_roughness, ggx_f1_albedo_cosine_weighted_average,
+                                                 drawing.lighting_color, volume.ambient, shadow_weight(p))
+                                         : shade(volume.color, volume.metalness, volume.roughness, n, v, l,
+                                                 ggx_f1_albedo_cosine_roughness, ggx_f1_albedo_cosine_weighted_average,
+                                                 drawing.lighting_color, volume.ambient);
 
         return vec4(shade_color, volume.isosurface_alpha);
 }
