@@ -58,12 +58,6 @@ MeshRenderer::MeshRenderer(
                   normals_program_.descriptor_set_layout_shared_bindings(),
                   drawing_buffer),
           //
-          triangles_shadow_mapping_program_(device, code),
-          triangles_shadow_mapping_shared_memory_(
-                  *device,
-                  triangles_shadow_mapping_program_.descriptor_set_layout_shared(),
-                  triangles_shadow_mapping_program_.descriptor_set_layout_shared_bindings(),
-                  drawing_buffer),
           //
           points_program_(device, code),
           points_shared_memory_(
@@ -72,14 +66,24 @@ MeshRenderer::MeshRenderer(
                   points_program_.descriptor_set_layout_shared_bindings(),
                   drawing_buffer),
           //
-          texture_sampler_(create_mesh_texture_sampler(*device, sampler_anisotropy)),
-          shadow_mapping_sampler_(create_mesh_shadow_sampler(*device))
+          texture_sampler_(create_mesh_texture_sampler(*device, sampler_anisotropy))
 {
-        triangles_shadow_mapping_shared_memory_.set_shadow_matrices(shadow_matrices_buffer);
         triangles_shared_memory_.set_shadow_matrices(shadow_matrices_buffer);
-
         triangles_shared_memory_.set_ggx_f1_albedo(
                 ggx_f1_albedo.sampler(), ggx_f1_albedo.cosine_roughness(), ggx_f1_albedo.cosine_weighted_average());
+
+        if (!code.ray_tracing())
+        {
+                shadow_mapping_ = std::make_unique<ShadowMapping>();
+
+                shadow_mapping_->triangles_program.emplace(device, code);
+                shadow_mapping_->triangles_shared_memory.emplace(
+                        *device, shadow_mapping_->triangles_program->descriptor_set_layout_shared(),
+                        shadow_mapping_->triangles_program->descriptor_set_layout_shared_bindings(), drawing_buffer);
+                shadow_mapping_->sampler = create_mesh_shadow_sampler(*device);
+
+                shadow_mapping_->triangles_shared_memory->set_shadow_matrices(shadow_matrices_buffer);
+        }
 }
 
 const MeshRenderer::Pipelines& MeshRenderer::render_pipelines(const bool transparent) const
@@ -183,27 +187,30 @@ void MeshRenderer::create_shadow_mapping_buffers(
 {
         ASSERT(thread_id_ == std::this_thread::get_id());
 
+        ASSERT(shadow_mapping_);
+
         delete_shadow_mapping_buffers();
 
-        shadow_mapping_buffers_ = renderer::create_depth_buffers(
+        shadow_mapping_->buffers = renderer::create_depth_buffers(
                 buffer_count, family_indices, graphics_command_pool, graphics_queue, device, width, height, zoom);
 
-        triangles_shared_memory_.set_shadow_image(shadow_mapping_sampler_, shadow_mapping_buffers_->image_view(0));
+        triangles_shared_memory_.set_shadow_image(shadow_mapping_->sampler, shadow_mapping_->buffers->image_view(0));
 
-        render_triangles_shadow_mapping_pipeline_ = triangles_shadow_mapping_program_.create_pipeline(
-                shadow_mapping_buffers_->render_pass(), shadow_mapping_buffers_->sample_count(),
-                Region<2, int>({0, 0}, {shadow_mapping_buffers_->width(), shadow_mapping_buffers_->height()}));
+        shadow_mapping_->render_triangles_pipeline = shadow_mapping_->triangles_program->create_pipeline(
+                shadow_mapping_->buffers->render_pass(), shadow_mapping_->buffers->sample_count(),
+                Region<2, int>({0, 0}, {shadow_mapping_->buffers->width(), shadow_mapping_->buffers->height()}));
 }
 
 void MeshRenderer::delete_shadow_mapping_buffers()
 {
         ASSERT(thread_id_ == std::this_thread::get_id());
 
+        ASSERT(shadow_mapping_);
+
         delete_shadow_mapping_command_buffers();
 
-        render_triangles_shadow_mapping_pipeline_.reset();
-
-        shadow_mapping_buffers_.reset();
+        shadow_mapping_->render_triangles_pipeline.reset();
+        shadow_mapping_->buffers.reset();
 }
 
 std::vector<vulkan::DescriptorSetLayoutAndBindings> MeshRenderer::mesh_layouts() const
@@ -224,9 +231,12 @@ std::vector<vulkan::DescriptorSetLayoutAndBindings> MeshRenderer::mesh_layouts()
                 triangles_program_.descriptor_set_layout_mesh(),
                 triangles_program_.descriptor_set_layout_mesh_bindings());
 
-        layouts.emplace_back(
-                triangles_shadow_mapping_program_.descriptor_set_layout_mesh(),
-                triangles_shadow_mapping_program_.descriptor_set_layout_mesh_bindings());
+        if (shadow_mapping_)
+        {
+                layouts.emplace_back(
+                        shadow_mapping_->triangles_program->descriptor_set_layout_mesh(),
+                        shadow_mapping_->triangles_program->descriptor_set_layout_mesh_bindings());
+        }
 
         return layouts;
 }
@@ -265,12 +275,13 @@ void MeshRenderer::draw_commands(
         if (shadow_mapping)
         {
                 ASSERT(!transparent);
+                ASSERT(shadow_mapping_);
 
                 vkCmdSetDepthBias(command_buffer, 1.5f, 0.0f, 1.5f);
 
                 commands_depth_triangles(
-                        meshes, command_buffer, *render_triangles_shadow_mapping_pipeline_,
-                        triangles_shadow_mapping_program_, triangles_shadow_mapping_shared_memory_);
+                        meshes, command_buffer, *shadow_mapping_->render_triangles_pipeline,
+                        *shadow_mapping_->triangles_program, *shadow_mapping_->triangles_shared_memory);
 
                 return;
         }
@@ -384,7 +395,8 @@ void MeshRenderer::create_shadow_mapping_command_buffers(
 {
         ASSERT(thread_id_ == std::this_thread::get_id());
 
-        ASSERT(shadow_mapping_buffers_);
+        ASSERT(shadow_mapping_);
+        ASSERT(shadow_mapping_->buffers);
 
         delete_shadow_mapping_command_buffers();
 
@@ -399,12 +411,12 @@ void MeshRenderer::create_shadow_mapping_command_buffers(
         info.render_area.emplace();
         info.render_area->offset.x = 0;
         info.render_area->offset.y = 0;
-        info.render_area->extent.width = shadow_mapping_buffers_->width();
-        info.render_area->extent.height = shadow_mapping_buffers_->height();
-        info.render_pass = shadow_mapping_buffers_->render_pass();
-        info.framebuffers = &shadow_mapping_buffers_->framebuffers();
+        info.render_area->extent.width = shadow_mapping_->buffers->width();
+        info.render_area->extent.height = shadow_mapping_->buffers->height();
+        info.render_pass = shadow_mapping_->buffers->render_pass();
+        info.framebuffers = &shadow_mapping_->buffers->framebuffers();
         info.command_pool = graphics_command_pool;
-        info.clear_values = &shadow_mapping_buffers_->clear_values();
+        info.clear_values = &shadow_mapping_->buffers->clear_values();
         info.render_pass_commands = [&](const VkCommandBuffer command_buffer)
         {
                 draw_commands(
@@ -412,12 +424,14 @@ void MeshRenderer::create_shadow_mapping_command_buffers(
                         false /*transparent_pipeline*/);
         };
 
-        render_shadow_mapping_command_buffers_ = vulkan::create_command_buffers(info);
+        shadow_mapping_->render_command_buffers = vulkan::create_command_buffers(info);
 }
 
 void MeshRenderer::delete_shadow_mapping_command_buffers()
 {
-        render_shadow_mapping_command_buffers_.reset();
+        ASSERT(shadow_mapping_);
+
+        shadow_mapping_->render_command_buffers.reset();
 }
 
 void MeshRenderer::set_acceleration_structure(const VkAccelerationStructureKHR acceleration_structure)
@@ -458,10 +472,12 @@ std::optional<VkCommandBuffer> MeshRenderer::render_command_buffer_transparent_a
 
 std::optional<VkCommandBuffer> MeshRenderer::shadow_mapping_command_buffer(const unsigned index) const
 {
-        if (render_shadow_mapping_command_buffers_)
+        ASSERT(shadow_mapping_);
+
+        if (shadow_mapping_->render_command_buffers)
         {
-                ASSERT(index < render_shadow_mapping_command_buffers_->count());
-                return (*render_shadow_mapping_command_buffers_)[index];
+                ASSERT(index < shadow_mapping_->render_command_buffers->count());
+                return (*shadow_mapping_->render_command_buffers)[index];
         }
         return std::nullopt;
 }

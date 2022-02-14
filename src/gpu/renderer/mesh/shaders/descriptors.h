@@ -74,7 +74,8 @@ public:
                 VkShaderStageFlags objects,
                 VkShaderStageFlags shadow_map,
                 VkShaderStageFlags acceleration_structure,
-                VkShaderStageFlags ggx_f1_albedo);
+                VkShaderStageFlags ggx_f1_albedo,
+                VkShaderStageFlags transparency);
         static unsigned set_number();
 
         SharedMemory(
@@ -93,11 +94,13 @@ public:
                 const vulkan::ImageView& cosine_weighted_average) const;
 
         void set_objects_image(const vulkan::ImageView& objects_image) const;
+
         void set_transparency(
                 const vulkan::ImageView& heads,
                 const vulkan::ImageView& heads_size,
                 const vulkan::Buffer& counters,
                 const vulkan::Buffer& nodes) const;
+
         void set_shadow_image(VkSampler sampler, const vulkan::ImageView& shadow_image) const;
         void set_acceleration_structure(VkAccelerationStructureKHR acceleration_structure) const;
 };

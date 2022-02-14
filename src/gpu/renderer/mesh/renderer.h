@@ -45,7 +45,6 @@ class MeshRenderer
         const bool sample_shading_;
 
         const RenderBuffers3D* render_buffers_ = nullptr;
-        std::unique_ptr<const DepthBuffers> shadow_mapping_buffers_;
 
         TrianglesProgram triangles_program_;
         SharedMemory triangles_shared_memory_;
@@ -55,9 +54,6 @@ class MeshRenderer
 
         NormalsProgram normals_program_;
         SharedMemory normals_shared_memory_;
-
-        TrianglesDepthProgram triangles_shadow_mapping_program_;
-        SharedMemory triangles_shadow_mapping_shared_memory_;
 
         PointsProgram points_program_;
         SharedMemory points_shared_memory_;
@@ -75,11 +71,18 @@ class MeshRenderer
         std::optional<vulkan::handle::CommandBuffers> render_command_buffers_all_;
         std::optional<vulkan::handle::CommandBuffers> render_command_buffers_transparent_as_opaque_;
 
-        std::optional<vulkan::handle::Pipeline> render_triangles_shadow_mapping_pipeline_;
-        std::optional<vulkan::handle::CommandBuffers> render_shadow_mapping_command_buffers_;
-
         vulkan::handle::Sampler texture_sampler_;
-        vulkan::handle::Sampler shadow_mapping_sampler_;
+
+        struct ShadowMapping final
+        {
+                std::unique_ptr<const DepthBuffers> buffers;
+                std::optional<TrianglesDepthProgram> triangles_program;
+                std::optional<SharedMemory> triangles_shared_memory;
+                std::optional<vulkan::handle::Pipeline> render_triangles_pipeline;
+                std::optional<vulkan::handle::CommandBuffers> render_command_buffers;
+                vulkan::handle::Sampler sampler;
+        };
+        std::unique_ptr<ShadowMapping> shadow_mapping_;
 
         const Pipelines& render_pipelines(bool transparent) const;
         Pipelines& render_pipelines(bool transparent);
