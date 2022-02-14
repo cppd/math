@@ -28,7 +28,7 @@ layout(std430, binding = 1) readonly buffer Points
         ivec2 points[];
 };
 
-void main(void)
+void main()
 {
         const int vertex_index = gl_VertexIndex;
         const ivec2 s = points[vertex_index];

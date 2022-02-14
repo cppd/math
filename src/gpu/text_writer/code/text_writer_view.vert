@@ -32,7 +32,7 @@ layout(location = 0) out VS
 }
 vs;
 
-void main(void)
+void main()
 {
         gl_Position = matrices.matrix * vec4(window_coordinates, 0, 1);
         vs.texture_coordinates = texture_coordinates;

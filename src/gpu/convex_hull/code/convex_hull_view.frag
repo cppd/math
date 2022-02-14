@@ -25,7 +25,7 @@ layout(std140, binding = 0) uniform Data
 
 layout(location = 0) out vec4 color;
 
-void main(void)
+void main()
 {
         color = vec4(brightness.xxx, 1);
 }

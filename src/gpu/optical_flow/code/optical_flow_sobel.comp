@@ -65,7 +65,7 @@ void set_dy(const ivec2 p, const float v)
         imageStore(image_dy, p, vec4(v, v, v, 1));
 }
 
-void main(void)
+void main()
 {
         const ivec2 p = ivec2(gl_GlobalInvocationID.xy);
 

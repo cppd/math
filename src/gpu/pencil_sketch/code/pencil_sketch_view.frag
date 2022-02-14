@@ -27,7 +27,7 @@ vs;
 
 layout(location = 0) out vec4 color;
 
-void main(void)
+void main()
 {
         const float s = texture(tex, vs.texture_coordinates).r;
         color = vec4(vec3(s), 1);

@@ -74,7 +74,7 @@ bool point_inside(const ivec2 p)
         return all(lessThanEqual(X0, p)) && all(lessThan(p, X1));
 }
 
-void main(void)
+void main()
 {
         const ivec2 p = X0 + ivec2(gl_GlobalInvocationID.xy);
 

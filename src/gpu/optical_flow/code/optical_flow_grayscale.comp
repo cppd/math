@@ -34,7 +34,7 @@ vec4 grayscale(const vec4 c)
 const ivec2 X0 = ivec2(X, Y);
 const ivec2 X1 = ivec2(X + WIDTH, Y + HEIGHT);
 
-void main(void)
+void main()
 {
         const ivec2 p = X0 + ivec2(gl_GlobalInvocationID.xy);
 

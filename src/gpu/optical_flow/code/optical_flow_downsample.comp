@@ -50,7 +50,7 @@ void set_small(const ivec2 p, const float v)
         imageStore(image_small, p, vec4(v, v, v, 1));
 }
 
-void main(void)
+void main()
 {
         const ivec2 p_small = ivec2(gl_GlobalInvocationID.xy);
 

@@ -34,7 +34,7 @@ vs;
 
 layout(location = 0) out vec4 color;
 
-void main(void)
+void main()
 {
         const float v = brightness * texture(tex, vs.texture_coordinates).r;
         color = vec4(mix(background_color, foreground_color, clamp(v, 0, 1)), 1);

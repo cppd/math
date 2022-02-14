@@ -32,7 +32,7 @@ const vec4 vertices[4] = vec4[4]
 // Texture (0, 0) is bottom left
 // const vec2 texture_coordinates[4] = vec2[4](vec2(0, 1), vec2(1, 1), vec2(0, 0), vec2(1, 0));
 
-void main(void)
+void main()
 {
         const int vertex_index = gl_VertexIndex;
 

@@ -43,7 +43,7 @@ bool not_background(const int x, const int y)
 // x for minimum values, y for maximum values
 shared ivec2 shared_buffer[BUFFER_SIZE];
 
-void main(void)
+void main()
 {
         // One group for one row
         // x = gl_LocalInvocationID.x

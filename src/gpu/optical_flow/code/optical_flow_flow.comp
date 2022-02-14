@@ -113,7 +113,7 @@ vec2 get_guess(const ivec2 p_screen)
         return vec2(flow.x * guess_kx, flow.y * guess_ky);
 }
 
-void main(void)
+void main()
 {
         if (gl_GlobalInvocationID.x >= point_count_x || gl_GlobalInvocationID.y >= point_count_y)
         {

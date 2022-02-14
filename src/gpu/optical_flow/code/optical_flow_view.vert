@@ -36,7 +36,7 @@ out gl_PerVertex
         float gl_PointSize;
 };
 
-void main(void)
+void main()
 {
         const int vertex_index = gl_VertexIndex;
 

@@ -23,7 +23,7 @@ layout(binding = 0) uniform sampler2D tex;
 
 layout(location = 0) out vec4 color;
 
-void main(void)
+void main()
 {
         // float c = texture(tex, vs_texture_coordinates).x;
         const float c = texelFetch(tex, ivec2(gl_FragCoord.xy), 0).x;

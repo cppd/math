@@ -158,7 +158,7 @@ void process(const int low, const int right, const int high)
         }
 }
 
-void main(void)
+void main()
 {
         copy_to_buffer();
 

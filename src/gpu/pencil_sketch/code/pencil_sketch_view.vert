@@ -26,7 +26,7 @@ layout(location = 0) out VS
 }
 vs;
 
-void main(void)
+void main()
 {
         gl_Position = position;
         vs.texture_coordinates = texture_coordinates;

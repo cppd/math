@@ -33,7 +33,7 @@ vs;
 
 layout(location = 0) out vec4 color;
 
-void main(void)
+void main()
 {
         color = vec4(drawing.color, texture(tex, vs.texture_coordinates).r);
 }
