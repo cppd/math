@@ -31,16 +31,15 @@ layout(constant_id = 0) const bool TRANSPARENCY_DRAWING = false;
 
 DRAWING_BUFFER(0, 0);
 
+#ifdef RAY_TRACING
+layout(set = 0, binding = 2) uniform accelerationStructureEXT acceleration_structure;
+#else
 layout(set = 0, binding = 1, std140) uniform restrict ShadowMatrices
 {
         mat4 vp_matrix;
         mat4 vp_texture_matrix;
 }
 shadow_matrices;
-
-#ifdef RAY_TRACING
-layout(set = 0, binding = 2) uniform accelerationStructureEXT acceleration_structure;
-#else
 layout(set = 0, binding = 2) uniform sampler2D shadow_mapping_texture;
 #endif
 

@@ -27,7 +27,9 @@ layout(location = 0) in GS
 {
         vec3 world_normal;
         vec3 world_position;
+#ifndef RAY_TRACING
         vec4 shadow_position;
+#endif
         vec2 texture_coordinates;
         vec3 baricentric;
 }

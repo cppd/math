@@ -26,7 +26,7 @@ layout(location = 0) in GS
 }
 gs;
 
-void main(void)
+void main()
 {
         set_fragment_color(gs.color);
 }

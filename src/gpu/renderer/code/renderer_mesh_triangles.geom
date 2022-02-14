@@ -29,7 +29,9 @@ layout(location = 0) in VS
 {
         vec3 world_normal;
         vec3 world_position;
+#ifndef RAY_TRACING
         vec4 shadow_position;
+#endif
         vec2 texture_coordinates;
 }
 vs[3];
@@ -51,7 +53,9 @@ layout(location = 0) out GS
 {
         vec3 world_normal;
         vec3 world_position;
+#ifndef RAY_TRACING
         vec4 shadow_position;
+#endif
         vec2 texture_coordinates;
         vec3 baricentric;
 }
@@ -106,7 +110,9 @@ void main()
                 gs.baricentric = baricentric[i];
 
                 gs.world_position = vs[i].world_position;
+#ifndef RAY_TRACING
                 gs.shadow_position = vs[i].shadow_position;
+#endif
                 gs.texture_coordinates = vs[i].texture_coordinates;
 
                 EmitVertex();

@@ -24,7 +24,7 @@ out gl_PerVertex
         vec4 gl_Position;
 };
 
-void main(void)
+void main()
 {
         gl_Position = vertices[gl_VertexIndex];
 }

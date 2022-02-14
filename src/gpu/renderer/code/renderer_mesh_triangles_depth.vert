@@ -17,6 +17,14 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #version 460
 
+#ifdef RAY_TRACING
+
+void main()
+{
+}
+
+#else
+
 #extension GL_GOOGLE_include_directive : enable
 #include "mesh_in.glsl"
 
@@ -28,7 +36,7 @@ out gl_PerVertex
         float gl_ClipDistance[1];
 };
 
-void main(void)
+void main()
 {
         const vec4 pos = shadow_matrices.vp_matrix * (mesh.model_matrix * vec4(position, 1.0));
         gl_Position = pos;
@@ -42,3 +50,5 @@ void main(void)
                 gl_ClipDistance[0] = 1;
         }
 }
+
+#endif

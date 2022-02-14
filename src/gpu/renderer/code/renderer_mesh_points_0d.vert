@@ -29,7 +29,7 @@ out gl_PerVertex
         float gl_PointSize;
 };
 
-void main(void)
+void main()
 {
         const vec4 pos = drawing.vp_matrix * (mesh.model_matrix * vec4(position, 1.0));
         gl_Position = pos;

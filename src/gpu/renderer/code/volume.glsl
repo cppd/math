@@ -297,7 +297,7 @@ void draw_without_volume()
         color_set();
 }
 
-void main(void)
+void main()
 {
         fragments_build();
 

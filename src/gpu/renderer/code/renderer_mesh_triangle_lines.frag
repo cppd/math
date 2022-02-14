@@ -21,7 +21,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "mesh_in.glsl"
 #include "mesh_out.glsl"
 
-void main(void)
+void main()
 {
         set_fragment_color(drawing.clip_plane_color);
 }

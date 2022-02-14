@@ -34,7 +34,7 @@ vec3 fog(const vec3 fog_color, const vec3 fragment_color)
         return mix(fog_color, fragment_color, fog_blending_factor);
 }
 
-void main(void)
+void main()
 {
         const vec3 color = mesh.color * drawing.lighting_color * mesh.ambient;
 
