@@ -88,14 +88,11 @@ endif()
 
 ##################################################
 
-function(check_c_has_int128)
-        check_c_source_compiles("int main(void){__int128 v;}" C_HAS_INT128)
+function(check_int128)
+        check_c_source_compiles("int main(){__int128 v;}" C_HAS_INT128)
         if(NOT C_HAS_INT128)
                 message(FATAL_ERROR "C doesn't have __int128")
         endif()
-endfunction()
-
-function(check_cxx_has_int128)
         check_cxx_source_compiles("int main(){__int128 v;}" CXX_HAS_INT128)
         if(NOT CXX_HAS_INT128)
                 message(FATAL_ERROR "C++ doesn't have __int128")
@@ -124,8 +121,7 @@ set(CMAKE_AUTOMOC ON)
 set(CMAKE_AUTOUIC ON)
 set(CMAKE_INCLUDE_CURRENT_DIR ON)
 
-check_c_has_int128()
-check_cxx_has_int128()
+check_int128()
 
 add_source_files(
         EXECUTABLE
