@@ -31,7 +31,7 @@ std::vector<VkDescriptorSetLayoutBinding> TrianglesProgram::descriptor_set_layou
                 VK_SHADER_STAGE_VERTEX_BIT,
                 VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_GEOMETRY_BIT | VK_SHADER_STAGE_FRAGMENT_BIT,
                 VK_SHADER_STAGE_FRAGMENT_BIT, !ray_tracing_ ? VK_SHADER_STAGE_FRAGMENT_BIT : 0,
-                ray_tracing_ ? VK_SHADER_STAGE_FRAGMENT_BIT : 0);
+                ray_tracing_ ? VK_SHADER_STAGE_FRAGMENT_BIT : 0, VK_SHADER_STAGE_FRAGMENT_BIT);
 }
 
 std::vector<VkDescriptorSetLayoutBinding> TrianglesProgram::descriptor_set_layout_mesh_bindings()

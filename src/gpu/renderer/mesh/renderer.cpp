@@ -42,59 +42,44 @@ MeshRenderer::MeshRenderer(
                   *device,
                   triangles_program_.descriptor_set_layout_shared(),
                   triangles_program_.descriptor_set_layout_shared_bindings(),
-                  drawing_buffer,
-                  shadow_matrices_buffer,
-                  ggx_f1_albedo.sampler(),
-                  ggx_f1_albedo.cosine_roughness(),
-                  ggx_f1_albedo.cosine_weighted_average()),
+                  drawing_buffer),
           //
           triangle_lines_program_(device, code),
           triangle_lines_shared_memory_(
                   *device,
                   triangle_lines_program_.descriptor_set_layout_shared(),
                   triangle_lines_program_.descriptor_set_layout_shared_bindings(),
-                  drawing_buffer,
-                  shadow_matrices_buffer,
-                  ggx_f1_albedo.sampler(),
-                  ggx_f1_albedo.cosine_roughness(),
-                  ggx_f1_albedo.cosine_weighted_average()),
+                  drawing_buffer),
           //
           normals_program_(device, code),
           normals_shared_memory_(
                   *device,
                   normals_program_.descriptor_set_layout_shared(),
                   normals_program_.descriptor_set_layout_shared_bindings(),
-                  drawing_buffer,
-                  shadow_matrices_buffer,
-                  ggx_f1_albedo.sampler(),
-                  ggx_f1_albedo.cosine_roughness(),
-                  ggx_f1_albedo.cosine_weighted_average()),
+                  drawing_buffer),
           //
           triangles_shadow_mapping_program_(device, code),
           triangles_shadow_mapping_shared_memory_(
                   *device,
                   triangles_shadow_mapping_program_.descriptor_set_layout_shared(),
                   triangles_shadow_mapping_program_.descriptor_set_layout_shared_bindings(),
-                  drawing_buffer,
-                  shadow_matrices_buffer,
-                  ggx_f1_albedo.sampler(),
-                  ggx_f1_albedo.cosine_roughness(),
-                  ggx_f1_albedo.cosine_weighted_average()),
+                  drawing_buffer),
           //
           points_program_(device, code),
           points_shared_memory_(
                   *device,
                   points_program_.descriptor_set_layout_shared(),
                   points_program_.descriptor_set_layout_shared_bindings(),
-                  drawing_buffer,
-                  shadow_matrices_buffer,
-                  ggx_f1_albedo.sampler(),
-                  ggx_f1_albedo.cosine_roughness(),
-                  ggx_f1_albedo.cosine_weighted_average()),
+                  drawing_buffer),
           //
           texture_sampler_(create_mesh_texture_sampler(*device, sampler_anisotropy)),
           shadow_mapping_sampler_(create_mesh_shadow_sampler(*device))
 {
+        triangles_shadow_mapping_shared_memory_.set_shadow_matrices(shadow_matrices_buffer);
+        triangles_shared_memory_.set_shadow_matrices(shadow_matrices_buffer);
+
+        triangles_shared_memory_.set_ggx_f1_albedo(
+                ggx_f1_albedo.sampler(), ggx_f1_albedo.cosine_roughness(), ggx_f1_albedo.cosine_weighted_average());
 }
 
 const MeshRenderer::Pipelines& MeshRenderer::render_pipelines(const bool transparent) const

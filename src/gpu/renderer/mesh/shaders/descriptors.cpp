@@ -55,7 +55,8 @@ std::vector<VkDescriptorSetLayoutBinding> SharedMemory::descriptor_set_layout_bi
         const VkShaderStageFlags drawing,
         const VkShaderStageFlags objects,
         const VkShaderStageFlags shadow_map,
-        const VkShaderStageFlags acceleration_structure)
+        const VkShaderStageFlags acceleration_structure,
+        const VkShaderStageFlags ggx_f1_albedo)
 {
         std::vector<VkDescriptorSetLayoutBinding> bindings;
 
@@ -112,22 +113,24 @@ std::vector<VkDescriptorSetLayoutBinding> SharedMemory::descriptor_set_layout_bi
 
                 bindings.push_back(b);
         }
+        if (ggx_f1_albedo)
         {
                 VkDescriptorSetLayoutBinding b = {};
                 b.binding = GGX_F1_ALBEDO_COSINE_ROUGHNESS_BINDING;
                 b.descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
                 b.descriptorCount = 1;
-                b.stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
+                b.stageFlags = ggx_f1_albedo;
                 b.pImmutableSamplers = nullptr;
 
                 bindings.push_back(b);
         }
+        if (ggx_f1_albedo)
         {
                 VkDescriptorSetLayoutBinding b = {};
                 b.binding = GGX_F1_ALBEDO_COSINE_WEIGHTED_AVERAGE_BINDING;
                 b.descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
                 b.descriptorCount = 1;
-                b.stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
+                b.stageFlags = ggx_f1_albedo;
                 b.pImmutableSamplers = nullptr;
 
                 bindings.push_back(b);
@@ -178,18 +181,9 @@ SharedMemory::SharedMemory(
         const vulkan::Device& device,
         const VkDescriptorSetLayout descriptor_set_layout,
         const std::vector<VkDescriptorSetLayoutBinding>& descriptor_set_layout_bindings,
-        const vulkan::Buffer& drawing,
-        const vulkan::Buffer& shadow_matrices,
-        const VkSampler ggx_f1_albedo_sampler,
-        const vulkan::ImageView& ggx_f1_albedo_cosine_roughness,
-        const vulkan::ImageView& ggx_f1_albedo_cosine_weighted_average)
+        const vulkan::Buffer& drawing)
         : descriptors_(device, 1, descriptor_set_layout, descriptor_set_layout_bindings)
 {
-        ASSERT(ggx_f1_albedo_cosine_roughness.has_usage(VK_IMAGE_USAGE_SAMPLED_BIT));
-        ASSERT(ggx_f1_albedo_cosine_roughness.sample_count() == VK_SAMPLE_COUNT_1_BIT);
-        ASSERT(ggx_f1_albedo_cosine_weighted_average.has_usage(VK_IMAGE_USAGE_SAMPLED_BIT));
-        ASSERT(ggx_f1_albedo_cosine_weighted_average.sample_count() == VK_SAMPLE_COUNT_1_BIT);
-
         std::vector<vulkan::Descriptors::Info> infos;
         std::vector<std::uint32_t> bindings;
 
@@ -203,41 +197,6 @@ SharedMemory::SharedMemory(
                 bindings.push_back(DRAWING_BINDING);
         }
 
-        if (std::any_of(
-                    descriptor_set_layout_bindings.cbegin(), descriptor_set_layout_bindings.cend(),
-                    [](const VkDescriptorSetLayoutBinding& binding)
-                    {
-                            return binding.binding == SHADOW_MATRICES_BINDING;
-                    }))
-        {
-                VkDescriptorBufferInfo buffer_info = {};
-                buffer_info.buffer = shadow_matrices;
-                buffer_info.offset = 0;
-                buffer_info.range = shadow_matrices.size();
-
-                infos.emplace_back(buffer_info);
-                bindings.push_back(SHADOW_MATRICES_BINDING);
-        }
-
-        {
-                VkDescriptorImageInfo image_info = {};
-                image_info.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
-                image_info.imageView = ggx_f1_albedo_cosine_roughness;
-                image_info.sampler = ggx_f1_albedo_sampler;
-
-                infos.emplace_back(image_info);
-                bindings.push_back(GGX_F1_ALBEDO_COSINE_ROUGHNESS_BINDING);
-        }
-        {
-                VkDescriptorImageInfo image_info = {};
-                image_info.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
-                image_info.imageView = ggx_f1_albedo_cosine_weighted_average;
-                image_info.sampler = ggx_f1_albedo_sampler;
-
-                infos.emplace_back(image_info);
-                bindings.push_back(GGX_F1_ALBEDO_COSINE_WEIGHTED_AVERAGE_BINDING);
-        }
-
         descriptors_.update_descriptor_set(0, bindings, infos);
 }
 
@@ -249,6 +208,51 @@ unsigned SharedMemory::set_number()
 const VkDescriptorSet& SharedMemory::descriptor_set() const
 {
         return descriptors_.descriptor_set(0);
+}
+
+void SharedMemory::set_shadow_matrices(const vulkan::Buffer& shadow_matrices) const
+{
+        VkDescriptorBufferInfo buffer_info = {};
+        buffer_info.buffer = shadow_matrices;
+        buffer_info.offset = 0;
+        buffer_info.range = shadow_matrices.size();
+
+        descriptors_.update_descriptor_set(0, SHADOW_MATRICES_BINDING, buffer_info);
+}
+
+void SharedMemory::set_ggx_f1_albedo(
+        const VkSampler sampler,
+        const vulkan::ImageView& cosine_roughness,
+        const vulkan::ImageView& cosine_weighted_average) const
+{
+        ASSERT(cosine_roughness.has_usage(VK_IMAGE_USAGE_SAMPLED_BIT));
+        ASSERT(cosine_roughness.sample_count() == VK_SAMPLE_COUNT_1_BIT);
+        ASSERT(cosine_weighted_average.has_usage(VK_IMAGE_USAGE_SAMPLED_BIT));
+        ASSERT(cosine_weighted_average.sample_count() == VK_SAMPLE_COUNT_1_BIT);
+
+        std::vector<vulkan::Descriptors::Info> infos;
+        std::vector<std::uint32_t> bindings;
+
+        {
+                VkDescriptorImageInfo image_info = {};
+                image_info.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
+                image_info.imageView = cosine_roughness;
+                image_info.sampler = sampler;
+
+                infos.emplace_back(image_info);
+                bindings.push_back(GGX_F1_ALBEDO_COSINE_ROUGHNESS_BINDING);
+        }
+        {
+                VkDescriptorImageInfo image_info = {};
+                image_info.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
+                image_info.imageView = cosine_weighted_average;
+                image_info.sampler = sampler;
+
+                infos.emplace_back(image_info);
+                bindings.push_back(GGX_F1_ALBEDO_COSINE_WEIGHTED_AVERAGE_BINDING);
+        }
+
+        descriptors_.update_descriptor_set(0, bindings, infos);
 }
 
 void SharedMemory::set_objects_image(const vulkan::ImageView& objects) const

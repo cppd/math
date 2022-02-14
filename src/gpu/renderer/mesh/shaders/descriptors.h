@@ -56,6 +56,7 @@ class SharedMemory final
         static constexpr int SHADOW_MAP_BINDING = 2;
 
         static constexpr int OBJECTS_BINDING = 3;
+
         static constexpr int GGX_F1_ALBEDO_COSINE_ROUGHNESS_BINDING = 4;
         static constexpr int GGX_F1_ALBEDO_COSINE_WEIGHTED_AVERAGE_BINDING = 5;
 
@@ -72,20 +73,24 @@ public:
                 VkShaderStageFlags drawing,
                 VkShaderStageFlags objects,
                 VkShaderStageFlags shadow_map,
-                VkShaderStageFlags acceleration_structure);
+                VkShaderStageFlags acceleration_structure,
+                VkShaderStageFlags ggx_f1_albedo);
         static unsigned set_number();
 
         SharedMemory(
                 const vulkan::Device& device,
                 VkDescriptorSetLayout descriptor_set_layout,
                 const std::vector<VkDescriptorSetLayoutBinding>& descriptor_set_layout_bindings,
-                const vulkan::Buffer& drawing,
-                const vulkan::Buffer& shadow_matrices,
-                VkSampler ggx_f1_albedo_sampler,
-                const vulkan::ImageView& ggx_f1_albedo_cosine_roughness,
-                const vulkan::ImageView& ggx_f1_albedo_cosine_weighted_average);
+                const vulkan::Buffer& drawing);
 
         const VkDescriptorSet& descriptor_set() const;
+
+        void set_shadow_matrices(const vulkan::Buffer& shadow_matrices) const;
+
+        void set_ggx_f1_albedo(
+                VkSampler sampler,
+                const vulkan::ImageView& cosine_roughness,
+                const vulkan::ImageView& cosine_weighted_average) const;
 
         void set_objects_image(const vulkan::ImageView& objects_image) const;
         void set_transparency(

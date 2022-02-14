@@ -29,7 +29,7 @@ namespace ns::gpu::renderer
 std::vector<VkDescriptorSetLayoutBinding> PointsProgram::descriptor_set_layout_shared_bindings()
 {
         return SharedMemory::descriptor_set_layout_bindings(
-                0, VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT, VK_SHADER_STAGE_FRAGMENT_BIT, 0, 0);
+                0, VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT, VK_SHADER_STAGE_FRAGMENT_BIT, 0, 0, 0);
 }
 
 std::vector<VkDescriptorSetLayoutBinding> PointsProgram::descriptor_set_layout_mesh_bindings()
