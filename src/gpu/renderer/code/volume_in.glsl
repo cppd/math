@@ -25,24 +25,30 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #extension GL_EXT_ray_query : require
 #endif
 
-DRAWING_BUFFER(0, 0);
-
-layout(set = 0, binding = 1) uniform sampler2DMS depth_image;
-
-layout(set = 0, binding = 2) uniform sampler2D ggx_f1_albedo_cosine_roughness;
-layout(set = 0, binding = 3) uniform sampler1D ggx_f1_albedo_cosine_weighted_average;
-
-layout(set = 0, binding = 4, r32ui) uniform restrict readonly uimage2DMS transparency_heads;
-layout(set = 0, binding = 5, std430) buffer restrict readonly TransparencyNodes
+layout(set = 0, binding = 0, r32ui) uniform restrict readonly uimage2DMS transparency_heads;
+layout(set = 0, binding = 1, std430) buffer restrict readonly TransparencyNodes
 {
         TransparencyNode transparency_nodes[];
 };
+
+#ifdef IMAGE
+
+DRAWING_BUFFER(0, 2);
+
+layout(set = 0, binding = 3) uniform sampler2DMS depth_image;
+
+layout(set = 0, binding = 4) uniform sampler2D ggx_f1_albedo_cosine_roughness;
+layout(set = 0, binding = 5) uniform sampler1D ggx_f1_albedo_cosine_weighted_average;
 
 #ifdef RAY_TRACING
 layout(set = 0, binding = 6) uniform accelerationStructureEXT acceleration_structure;
 #endif
 
+#endif
+
 //
+
+#ifdef IMAGE
 
 layout(set = 1, binding = 0, std140) uniform restrict Coordinates
 {
@@ -74,5 +80,7 @@ volume;
 layout(set = 1, binding = 2) uniform sampler3D image;
 
 layout(set = 1, binding = 3) uniform sampler1D transfer_function;
+
+#endif
 
 #endif
