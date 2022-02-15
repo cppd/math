@@ -15,78 +15,49 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include "program_volume.h"
+#include "program_fragments.h"
 
 #include "descriptors.h"
 
-#include <src/com/enum.h>
 #include <src/com/error.h>
-#include <src/com/print.h>
 #include <src/vulkan/create.h>
 #include <src/vulkan/pipeline.h>
 
 namespace ns::gpu::renderer
 {
-std::vector<VkDescriptorSetLayoutBinding> VolumeProgram::descriptor_set_layout_shared_bindings() const
+std::vector<VkDescriptorSetLayoutBinding> FragmentsProgram::descriptor_set_layout_shared_bindings()
 {
-        return VolumeSharedMemory::descriptor_set_layout_bindings(ray_tracing_ ? VK_SHADER_STAGE_FRAGMENT_BIT : 0);
+        return VolumeSharedMemory::descriptor_set_layout_bindings(0);
 }
 
-std::vector<VkDescriptorSetLayoutBinding> VolumeProgram::descriptor_set_layout_image_bindings()
-{
-        return VolumeImageMemory::descriptor_set_layout_bindings();
-}
-
-VolumeProgram::VolumeProgram(const vulkan::Device* const device, const Code& code)
+FragmentsProgram::FragmentsProgram(const vulkan::Device* const device, const Code& code)
         : device_(device),
-          ray_tracing_(code.ray_tracing()),
           descriptor_set_layout_shared_(
                   vulkan::create_descriptor_set_layout(*device, descriptor_set_layout_shared_bindings())),
-          descriptor_set_layout_image_(
-                  vulkan::create_descriptor_set_layout(*device, descriptor_set_layout_image_bindings())),
           pipeline_layout_(vulkan::create_pipeline_layout(
                   *device,
-                  {VolumeSharedMemory::set_number(), VolumeImageMemory::set_number()},
-                  {descriptor_set_layout_shared_, descriptor_set_layout_image_})),
+                  {VolumeSharedMemory::set_number()},
+                  {descriptor_set_layout_shared_})),
           vertex_shader_(*device_, code.volume_vert(), VK_SHADER_STAGE_VERTEX_BIT),
-          fragment_shader_image_(*device_, code.volume_image_frag(), VK_SHADER_STAGE_FRAGMENT_BIT),
-          fragment_shader_image_fragments_(*device_, code.volume_image_fragments_frag(), VK_SHADER_STAGE_FRAGMENT_BIT)
+          fragment_shader_(*device_, code.volume_fragments_frag(), VK_SHADER_STAGE_FRAGMENT_BIT)
 {
 }
 
-VkDescriptorSetLayout VolumeProgram::descriptor_set_layout_shared() const
+VkDescriptorSetLayout FragmentsProgram::descriptor_set_layout_shared() const
 {
         return descriptor_set_layout_shared_;
 }
 
-VkDescriptorSetLayout VolumeProgram::descriptor_set_layout_image() const
-{
-        return descriptor_set_layout_image_;
-}
-
-VkPipelineLayout VolumeProgram::pipeline_layout() const
+VkPipelineLayout FragmentsProgram::pipeline_layout() const
 {
         return pipeline_layout_;
 }
 
-const vulkan::Shader* VolumeProgram::fragment_shader(const VolumeProgramPipelineType type) const
-{
-        switch (type)
-        {
-        case VolumeProgramPipelineType::IMAGE:
-                return &fragment_shader_image_;
-        case VolumeProgramPipelineType::IMAGE_FRAGMENTS:
-                return &fragment_shader_image_fragments_;
-        }
-        error_fatal("Unknown volume program pipeline type " + to_string(enum_to_int(type)));
-}
-
-vulkan::handle::Pipeline VolumeProgram::create_pipeline(
+vulkan::handle::Pipeline FragmentsProgram::create_pipeline(
         const VkRenderPass render_pass,
         const VkSampleCountFlagBits sample_count,
         const bool sample_shading,
-        const Region<2, int>& viewport,
-        const VolumeProgramPipelineType type) const
+        const Region<2, int>& viewport) const
 {
         vulkan::GraphicsPipelineCreateInfo info;
 
@@ -112,7 +83,7 @@ vulkan::handle::Pipeline VolumeProgram::create_pipeline(
         info.color_blend->dstAlphaBlendFactor = VK_BLEND_FACTOR_ZERO;
         info.color_blend->alphaBlendOp = VK_BLEND_OP_ADD;
 
-        const std::vector<const vulkan::Shader*> shaders{&vertex_shader_, fragment_shader(type)};
+        const std::vector<const vulkan::Shader*> shaders{&vertex_shader_, &fragment_shader_};
         const std::vector<const vulkan::SpecializationConstant*> specialization_constants = {nullptr, nullptr};
         const std::vector<VkVertexInputBindingDescription> binding_descriptions;
         const std::vector<VkVertexInputAttributeDescription> attribute_descriptions;

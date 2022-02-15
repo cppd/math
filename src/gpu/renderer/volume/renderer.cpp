@@ -33,11 +33,21 @@ VolumeRenderer::VolumeRenderer(
         : device_(*device),
           sample_shading_(sample_shading),
           //
-          program_(device, code),
-          shared_memory_(
+          image_program_(device, code),
+          image_shared_memory_(
                   *device,
-                  program_.descriptor_set_layout_shared(),
-                  program_.descriptor_set_layout_shared_bindings(),
+                  image_program_.descriptor_set_layout_shared(),
+                  image_program_.descriptor_set_layout_shared_bindings(),
+                  drawing_buffer.buffer(),
+                  ggx_f1_albedo.sampler(),
+                  ggx_f1_albedo.cosine_roughness(),
+                  ggx_f1_albedo.cosine_weighted_average()),
+          //
+          fragments_program_(device, code),
+          fragments_shared_memory_(
+                  *device,
+                  fragments_program_.descriptor_set_layout_shared(),
+                  fragments_program_.descriptor_set_layout_shared_bindings(),
                   drawing_buffer.buffer(),
                   ggx_f1_albedo.sampler(),
                   ggx_f1_albedo.cosine_roughness(),
@@ -63,20 +73,21 @@ void VolumeRenderer::create_buffers(
 
         render_buffers_ = render_buffers;
 
-        shared_memory_.set_depth_image(depth_image, depth_sampler_);
-        shared_memory_.set_transparency(transparency_heads_image.image_view(), transparency_nodes);
+        image_shared_memory_.set_depth_image(depth_image, depth_sampler_);
+        image_shared_memory_.set_transparency(transparency_heads_image.image_view(), transparency_nodes);
 
-        pipeline_image_ = program_.create_pipeline(
-                render_buffers->render_pass(), render_buffers->sample_count(), sample_shading_, viewport,
-                VolumeProgram::PipelineType::IMAGE);
+        fragments_shared_memory_.set_transparency(transparency_heads_image.image_view(), transparency_nodes);
 
-        pipeline_image_fragments_ = program_.create_pipeline(
+        pipeline_image_ = image_program_.create_pipeline(
                 render_buffers->render_pass(), render_buffers->sample_count(), sample_shading_, viewport,
-                VolumeProgram::PipelineType::IMAGE_FRAGMENTS);
+                VolumeProgramPipelineType::IMAGE);
 
-        pipeline_fragments_ = program_.create_pipeline(
+        pipeline_image_fragments_ = image_program_.create_pipeline(
                 render_buffers->render_pass(), render_buffers->sample_count(), sample_shading_, viewport,
-                VolumeProgram::PipelineType::FRAGMENTS);
+                VolumeProgramPipelineType::IMAGE_FRAGMENTS);
+
+        pipeline_fragments_ = fragments_program_.create_pipeline(
+                render_buffers->render_pass(), render_buffers->sample_count(), sample_shading_, viewport);
 
         create_command_buffers_fragments(graphics_command_pool);
 }
@@ -97,7 +108,8 @@ std::vector<vulkan::DescriptorSetLayoutAndBindings> VolumeRenderer::image_layout
 {
         std::vector<vulkan::DescriptorSetLayoutAndBindings> layouts;
 
-        layouts.emplace_back(program_.descriptor_set_layout_image(), program_.descriptor_set_layout_image_bindings());
+        layouts.emplace_back(
+                image_program_.descriptor_set_layout_image(), image_program_.descriptor_set_layout_image_bindings());
 
         return layouts;
 }
@@ -121,9 +133,9 @@ void VolumeRenderer::draw_commands_fragments(const VkCommandBuffer command_buffe
         vkCmdBindPipeline(command_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, *pipeline_fragments_);
 
         vkCmdBindDescriptorSets(
-                command_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS,
-                program_.pipeline_layout(VolumeProgram::PipelineLayoutType::FRAGMENTS),
-                VolumeSharedMemory::set_number(), 1 /*set count*/, &shared_memory_.descriptor_set(), 0, nullptr);
+                command_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, fragments_program_.pipeline_layout(),
+                VolumeSharedMemory::set_number(), 1 /*set count*/, &fragments_shared_memory_.descriptor_set(), 0,
+                nullptr);
 
         vkCmdDraw(command_buffer, 3, 1, 0, 0);
 }
@@ -137,15 +149,13 @@ void VolumeRenderer::draw_commands_image(const VolumeObject* const volume, const
         vkCmdBindPipeline(command_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, *pipeline_image_);
 
         vkCmdBindDescriptorSets(
-                command_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS,
-                program_.pipeline_layout(VolumeProgram::PipelineLayoutType::IMAGE_FRAGMENTS),
-                VolumeSharedMemory::set_number(), 1 /*set count*/, &shared_memory_.descriptor_set(), 0, nullptr);
+                command_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, image_program_.pipeline_layout(),
+                VolumeSharedMemory::set_number(), 1 /*set count*/, &image_shared_memory_.descriptor_set(), 0, nullptr);
 
         vkCmdBindDescriptorSets(
-                command_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS,
-                program_.pipeline_layout(VolumeProgram::PipelineLayoutType::IMAGE_FRAGMENTS),
+                command_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, image_program_.pipeline_layout(),
                 VolumeImageMemory::set_number(), 1 /*set count*/,
-                &volume->descriptor_set(program_.descriptor_set_layout_image()), 0, nullptr);
+                &volume->descriptor_set(image_program_.descriptor_set_layout_image()), 0, nullptr);
 
         vkCmdDraw(command_buffer, 3, 1, 0, 0);
 }
@@ -161,15 +171,13 @@ void VolumeRenderer::draw_commands_image_fragments(
         vkCmdBindPipeline(command_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, *pipeline_image_fragments_);
 
         vkCmdBindDescriptorSets(
-                command_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS,
-                program_.pipeline_layout(VolumeProgram::PipelineLayoutType::IMAGE_FRAGMENTS),
-                VolumeSharedMemory::set_number(), 1 /*set count*/, &shared_memory_.descriptor_set(), 0, nullptr);
+                command_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, image_program_.pipeline_layout(),
+                VolumeSharedMemory::set_number(), 1 /*set count*/, &image_shared_memory_.descriptor_set(), 0, nullptr);
 
         vkCmdBindDescriptorSets(
-                command_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS,
-                program_.pipeline_layout(VolumeProgram::PipelineLayoutType::IMAGE_FRAGMENTS),
+                command_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, image_program_.pipeline_layout(),
                 VolumeImageMemory::set_number(), 1 /*set count*/,
-                &volume->descriptor_set(program_.descriptor_set_layout_image()), 0, nullptr);
+                &volume->descriptor_set(image_program_.descriptor_set_layout_image()), 0, nullptr);
 
         vkCmdDraw(command_buffer, 3, 1, 0, 0);
 }
@@ -256,7 +264,7 @@ void VolumeRenderer::delete_command_buffers()
 void VolumeRenderer::set_acceleration_structure(const VkAccelerationStructureKHR acceleration_structure)
 {
         delete_command_buffers();
-        shared_memory_.set_acceleration_structure(acceleration_structure);
+        image_shared_memory_.set_acceleration_structure(acceleration_structure);
 }
 
 bool VolumeRenderer::has_volume() const

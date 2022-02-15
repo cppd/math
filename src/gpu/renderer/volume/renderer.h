@@ -23,6 +23,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "../buffers/shader.h"
 #include "../code/code.h"
 #include "shaders/descriptors.h"
+#include "shaders/program_fragments.h"
 #include "shaders/program_volume.h"
 
 #include <src/gpu/render_buffers.h>
@@ -40,9 +41,11 @@ class VolumeRenderer
 
         const RenderBuffers3D* render_buffers_ = nullptr;
 
-        VolumeProgram program_;
+        VolumeProgram image_program_;
+        VolumeSharedMemory image_shared_memory_;
 
-        VolumeSharedMemory shared_memory_;
+        FragmentsProgram fragments_program_;
+        VolumeSharedMemory fragments_shared_memory_;
 
         std::optional<vulkan::handle::Pipeline> pipeline_image_;
         std::optional<vulkan::handle::Pipeline> pipeline_image_fragments_;
