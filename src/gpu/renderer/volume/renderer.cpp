@@ -37,26 +37,21 @@ VolumeRenderer::VolumeRenderer(
           image_shared_memory_(
                   *device,
                   image_program_.descriptor_set_layout_shared(),
-                  image_program_.descriptor_set_layout_shared_bindings(),
-                  drawing_buffer.buffer(),
-                  ggx_f1_albedo.sampler(),
-                  ggx_f1_albedo.cosine_roughness(),
-                  ggx_f1_albedo.cosine_weighted_average()),
+                  image_program_.descriptor_set_layout_shared_bindings()),
           //
           fragments_program_(device, code),
           fragments_shared_memory_(
                   *device,
                   fragments_program_.descriptor_set_layout_shared(),
-                  fragments_program_.descriptor_set_layout_shared_bindings(),
-                  drawing_buffer.buffer(),
-                  ggx_f1_albedo.sampler(),
-                  ggx_f1_albedo.cosine_roughness(),
-                  ggx_f1_albedo.cosine_weighted_average()),
+                  fragments_program_.descriptor_set_layout_shared_bindings()),
           //
           image_sampler_(create_volume_image_sampler(*device)),
           depth_sampler_(create_volume_depth_image_sampler(*device)),
           transfer_function_sampler_(create_volume_transfer_function_sampler(*device))
 {
+        image_shared_memory_.set_drawing(drawing_buffer.buffer());
+        image_shared_memory_.set_ggx_f1_albedo(
+                ggx_f1_albedo.sampler(), ggx_f1_albedo.cosine_roughness(), ggx_f1_albedo.cosine_weighted_average());
 }
 
 void VolumeRenderer::create_buffers(

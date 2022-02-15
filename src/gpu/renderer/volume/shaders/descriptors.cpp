@@ -20,49 +20,60 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 namespace ns::gpu::renderer
 {
 std::vector<VkDescriptorSetLayoutBinding> VolumeSharedMemory::descriptor_set_layout_bindings(
+        const VkShaderStageFlags drawing,
+        const VkShaderStageFlags depth_image,
+        const VkShaderStageFlags ggx_f1_albedo,
         const VkShaderStageFlags acceleration_structure)
 {
         std::vector<VkDescriptorSetLayoutBinding> bindings;
 
+        if (drawing)
         {
                 VkDescriptorSetLayoutBinding b = {};
                 b.binding = DRAWING_BINDING;
                 b.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
                 b.descriptorCount = 1;
-                b.stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
+                b.stageFlags = drawing;
 
                 bindings.push_back(b);
         }
+
+        if (depth_image)
         {
                 VkDescriptorSetLayoutBinding b = {};
                 b.binding = DEPTH_IMAGE_BINDING;
                 b.descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
                 b.descriptorCount = 1;
-                b.stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
+                b.stageFlags = depth_image;
                 b.pImmutableSamplers = nullptr;
 
                 bindings.push_back(b);
         }
+
+        if (ggx_f1_albedo)
         {
-                VkDescriptorSetLayoutBinding b = {};
-                b.binding = GGX_F1_ALBEDO_COSINE_ROUGHNESS_BINDING;
-                b.descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
-                b.descriptorCount = 1;
-                b.stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
-                b.pImmutableSamplers = nullptr;
+                {
+                        VkDescriptorSetLayoutBinding b = {};
+                        b.binding = GGX_F1_ALBEDO_COSINE_ROUGHNESS_BINDING;
+                        b.descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+                        b.descriptorCount = 1;
+                        b.stageFlags = ggx_f1_albedo;
+                        b.pImmutableSamplers = nullptr;
 
-                bindings.push_back(b);
-        }
-        {
-                VkDescriptorSetLayoutBinding b = {};
-                b.binding = GGX_F1_ALBEDO_COSINE_WEIGHTED_AVERAGE_BINDING;
-                b.descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
-                b.descriptorCount = 1;
-                b.stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
-                b.pImmutableSamplers = nullptr;
+                        bindings.push_back(b);
+                }
+                {
+                        VkDescriptorSetLayoutBinding b = {};
+                        b.binding = GGX_F1_ALBEDO_COSINE_WEIGHTED_AVERAGE_BINDING;
+                        b.descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+                        b.descriptorCount = 1;
+                        b.stageFlags = ggx_f1_albedo;
+                        b.pImmutableSamplers = nullptr;
 
-                bindings.push_back(b);
+                        bindings.push_back(b);
+                }
         }
+
         {
                 VkDescriptorSetLayoutBinding b = {};
                 b.binding = TRANSPARENCY_HEADS_BINDING;
@@ -82,6 +93,7 @@ std::vector<VkDescriptorSetLayoutBinding> VolumeSharedMemory::descriptor_set_lay
 
                 bindings.push_back(b);
         }
+
         if (acceleration_structure)
         {
                 VkDescriptorSetLayoutBinding b = {};
@@ -99,50 +111,9 @@ std::vector<VkDescriptorSetLayoutBinding> VolumeSharedMemory::descriptor_set_lay
 VolumeSharedMemory::VolumeSharedMemory(
         const vulkan::Device& device,
         const VkDescriptorSetLayout descriptor_set_layout,
-        const std::vector<VkDescriptorSetLayoutBinding>& descriptor_set_layout_bindings,
-        const vulkan::Buffer& drawing,
-        VkSampler ggx_f1_albedo_sampler,
-        const vulkan::ImageView& ggx_f1_albedo_cosine_roughness,
-        const vulkan::ImageView& ggx_f1_albedo_cosine_weighted_average)
+        const std::vector<VkDescriptorSetLayoutBinding>& descriptor_set_layout_bindings)
         : descriptors_(device, 1, descriptor_set_layout, descriptor_set_layout_bindings)
 {
-        ASSERT(ggx_f1_albedo_cosine_roughness.has_usage(VK_IMAGE_USAGE_SAMPLED_BIT));
-        ASSERT(ggx_f1_albedo_cosine_roughness.sample_count() == VK_SAMPLE_COUNT_1_BIT);
-        ASSERT(ggx_f1_albedo_cosine_weighted_average.has_usage(VK_IMAGE_USAGE_SAMPLED_BIT));
-        ASSERT(ggx_f1_albedo_cosine_weighted_average.sample_count() == VK_SAMPLE_COUNT_1_BIT);
-
-        std::vector<vulkan::Descriptors::Info> infos;
-        std::vector<std::uint32_t> bindings;
-
-        {
-                VkDescriptorBufferInfo buffer_info = {};
-                buffer_info.buffer = drawing;
-                buffer_info.offset = 0;
-                buffer_info.range = drawing.size();
-
-                infos.emplace_back(buffer_info);
-                bindings.push_back(DRAWING_BINDING);
-        }
-        {
-                VkDescriptorImageInfo image_info = {};
-                image_info.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
-                image_info.imageView = ggx_f1_albedo_cosine_roughness;
-                image_info.sampler = ggx_f1_albedo_sampler;
-
-                infos.emplace_back(image_info);
-                bindings.push_back(GGX_F1_ALBEDO_COSINE_ROUGHNESS_BINDING);
-        }
-        {
-                VkDescriptorImageInfo image_info = {};
-                image_info.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
-                image_info.imageView = ggx_f1_albedo_cosine_weighted_average;
-                image_info.sampler = ggx_f1_albedo_sampler;
-
-                infos.emplace_back(image_info);
-                bindings.push_back(GGX_F1_ALBEDO_COSINE_WEIGHTED_AVERAGE_BINDING);
-        }
-
-        descriptors_.update_descriptor_set(0, bindings, infos);
 }
 
 unsigned VolumeSharedMemory::set_number()
@@ -153,6 +124,51 @@ unsigned VolumeSharedMemory::set_number()
 const VkDescriptorSet& VolumeSharedMemory::descriptor_set() const
 {
         return descriptors_.descriptor_set(0);
+}
+
+void VolumeSharedMemory::set_drawing(const vulkan::Buffer& drawing) const
+{
+        VkDescriptorBufferInfo buffer_info = {};
+        buffer_info.buffer = drawing;
+        buffer_info.offset = 0;
+        buffer_info.range = drawing.size();
+
+        descriptors_.update_descriptor_set(0, DRAWING_BINDING, buffer_info);
+}
+
+void VolumeSharedMemory::set_ggx_f1_albedo(
+        const VkSampler sampler,
+        const vulkan::ImageView& cosine_roughness,
+        const vulkan::ImageView& cosine_weighted_average) const
+{
+        ASSERT(cosine_roughness.has_usage(VK_IMAGE_USAGE_SAMPLED_BIT));
+        ASSERT(cosine_roughness.sample_count() == VK_SAMPLE_COUNT_1_BIT);
+        ASSERT(cosine_weighted_average.has_usage(VK_IMAGE_USAGE_SAMPLED_BIT));
+        ASSERT(cosine_weighted_average.sample_count() == VK_SAMPLE_COUNT_1_BIT);
+
+        std::vector<vulkan::Descriptors::Info> infos;
+        std::vector<std::uint32_t> bindings;
+
+        {
+                VkDescriptorImageInfo image_info = {};
+                image_info.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
+                image_info.imageView = cosine_roughness;
+                image_info.sampler = sampler;
+
+                infos.emplace_back(image_info);
+                bindings.push_back(GGX_F1_ALBEDO_COSINE_ROUGHNESS_BINDING);
+        }
+        {
+                VkDescriptorImageInfo image_info = {};
+                image_info.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
+                image_info.imageView = cosine_weighted_average;
+                image_info.sampler = sampler;
+
+                infos.emplace_back(image_info);
+                bindings.push_back(GGX_F1_ALBEDO_COSINE_WEIGHTED_AVERAGE_BINDING);
+        }
+
+        descriptors_.update_descriptor_set(0, bindings, infos);
 }
 
 void VolumeSharedMemory::set_depth_image(const VkImageView image_view, const VkSampler sampler) const

@@ -29,7 +29,9 @@ namespace ns::gpu::renderer
 {
 std::vector<VkDescriptorSetLayoutBinding> VolumeProgram::descriptor_set_layout_shared_bindings() const
 {
-        return VolumeSharedMemory::descriptor_set_layout_bindings(ray_tracing_ ? VK_SHADER_STAGE_FRAGMENT_BIT : 0);
+        return VolumeSharedMemory::descriptor_set_layout_bindings(
+                VK_SHADER_STAGE_FRAGMENT_BIT, VK_SHADER_STAGE_FRAGMENT_BIT, VK_SHADER_STAGE_FRAGMENT_BIT,
+                ray_tracing_ ? VK_SHADER_STAGE_FRAGMENT_BIT : 0);
 }
 
 std::vector<VkDescriptorSetLayoutBinding> VolumeProgram::descriptor_set_layout_image_bindings()
