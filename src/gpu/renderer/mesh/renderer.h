@@ -17,8 +17,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
-#include "depth_buffers.h"
 #include "object.h"
+#include "shadow_mapping.h"
 
 #include "../buffers/ggx_f1_albedo.h"
 #include "../buffers/shader.h"
@@ -28,7 +28,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "shaders/program_points.h"
 #include "shaders/program_triangle_lines.h"
 #include "shaders/program_triangles.h"
-#include "shaders/program_triangles_depth.h"
 
 #include <src/gpu/render_buffers.h>
 
@@ -73,15 +72,6 @@ class MeshRenderer
 
         vulkan::handle::Sampler texture_sampler_;
 
-        struct ShadowMapping final
-        {
-                std::unique_ptr<const DepthBuffers> buffers;
-                std::optional<TrianglesDepthProgram> triangles_program;
-                std::optional<SharedMemory> triangles_shared_memory;
-                std::optional<vulkan::handle::Pipeline> render_triangles_pipeline;
-                std::optional<vulkan::handle::CommandBuffers> render_command_buffers;
-                vulkan::handle::Sampler sampler;
-        };
         std::unique_ptr<ShadowMapping> shadow_mapping_;
 
         const Pipelines& render_pipelines(bool transparent) const;
@@ -92,7 +82,6 @@ class MeshRenderer
                 VkCommandBuffer command_buffer,
                 bool clip_plane,
                 bool normals,
-                bool shadow_mapping,
                 bool transparent_pipeline) const;
 
 public:
@@ -141,9 +130,7 @@ public:
 
         void create_shadow_mapping_command_buffers(
                 const std::vector<const MeshObject*>& meshes,
-                VkCommandPool graphics_command_pool,
-                bool clip_plane,
-                bool normals);
+                VkCommandPool graphics_command_pool);
         void delete_shadow_mapping_command_buffers();
 
         void set_acceleration_structure(VkAccelerationStructureKHR acceleration_structure);

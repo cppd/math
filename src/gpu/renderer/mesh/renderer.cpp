@@ -74,15 +74,7 @@ MeshRenderer::MeshRenderer(
 
         if (!code.ray_tracing())
         {
-                shadow_mapping_ = std::make_unique<ShadowMapping>();
-
-                shadow_mapping_->triangles_program.emplace(device, code);
-                shadow_mapping_->triangles_shared_memory.emplace(
-                        *device, shadow_mapping_->triangles_program->descriptor_set_layout_shared(),
-                        shadow_mapping_->triangles_program->descriptor_set_layout_shared_bindings(), drawing_buffer);
-                shadow_mapping_->sampler = create_mesh_shadow_sampler(*device);
-
-                shadow_mapping_->triangles_shared_memory->set_shadow_matrices(shadow_matrices_buffer);
+                shadow_mapping_ = std::make_unique<ShadowMapping>(device, code, drawing_buffer, shadow_matrices_buffer);
         }
 }
 
@@ -188,17 +180,10 @@ void MeshRenderer::create_shadow_mapping_buffers(
         ASSERT(thread_id_ == std::this_thread::get_id());
 
         ASSERT(shadow_mapping_);
-
-        delete_shadow_mapping_buffers();
-
-        shadow_mapping_->buffers = renderer::create_depth_buffers(
+        shadow_mapping_->create_buffers(
                 buffer_count, family_indices, graphics_command_pool, graphics_queue, device, width, height, zoom);
 
-        triangles_shared_memory_.set_shadow_image(shadow_mapping_->sampler, shadow_mapping_->buffers->image_view(0));
-
-        shadow_mapping_->render_triangles_pipeline = shadow_mapping_->triangles_program->create_pipeline(
-                shadow_mapping_->buffers->render_pass(), shadow_mapping_->buffers->sample_count(),
-                Region<2, int>({0, 0}, {shadow_mapping_->buffers->width(), shadow_mapping_->buffers->height()}));
+        triangles_shared_memory_.set_shadow_image(shadow_mapping_->sampler(), shadow_mapping_->image_view());
 }
 
 void MeshRenderer::delete_shadow_mapping_buffers()
@@ -206,11 +191,7 @@ void MeshRenderer::delete_shadow_mapping_buffers()
         ASSERT(thread_id_ == std::this_thread::get_id());
 
         ASSERT(shadow_mapping_);
-
-        delete_shadow_mapping_command_buffers();
-
-        shadow_mapping_->render_triangles_pipeline.reset();
-        shadow_mapping_->buffers.reset();
+        shadow_mapping_->delete_buffers();
 }
 
 std::vector<vulkan::DescriptorSetLayoutAndBindings> MeshRenderer::mesh_layouts() const
@@ -234,8 +215,8 @@ std::vector<vulkan::DescriptorSetLayoutAndBindings> MeshRenderer::mesh_layouts()
         if (shadow_mapping_)
         {
                 layouts.emplace_back(
-                        shadow_mapping_->triangles_program->descriptor_set_layout_mesh(),
-                        shadow_mapping_->triangles_program->descriptor_set_layout_mesh_bindings());
+                        shadow_mapping_->descriptor_set_layout_mesh(),
+                        shadow_mapping_->descriptor_set_layout_mesh_bindings());
         }
 
         return layouts;
@@ -262,27 +243,12 @@ void MeshRenderer::draw_commands(
         const VkCommandBuffer command_buffer,
         const bool clip_plane,
         const bool normals,
-        const bool shadow_mapping,
         const bool transparent) const
 {
         ASSERT(thread_id_ == std::this_thread::get_id());
 
         if (meshes.empty())
         {
-                return;
-        }
-
-        if (shadow_mapping)
-        {
-                ASSERT(!transparent);
-                ASSERT(shadow_mapping_);
-
-                vkCmdSetDepthBias(command_buffer, 1.5f, 0.0f, 1.5f);
-
-                commands_depth_triangles(
-                        meshes, command_buffer, *shadow_mapping_->render_triangles_pipeline,
-                        *shadow_mapping_->triangles_program, *shadow_mapping_->triangles_shared_memory);
-
                 return;
         }
 
@@ -352,15 +318,11 @@ void MeshRenderer::create_render_command_buffers(
         {
                 if (!opaque_meshes.empty())
                 {
-                        draw_commands(
-                                opaque_meshes, command_buffer, clip_plane, normals, false /*shadow_mapping*/,
-                                false /*transparent_pipeline*/);
+                        draw_commands(opaque_meshes, command_buffer, clip_plane, normals, false /*transparent*/);
                 }
                 if (!transparent_meshes.empty())
                 {
-                        draw_commands(
-                                transparent_meshes, command_buffer, clip_plane, normals, false /*shadow_mapping*/,
-                                true /*transparent_pipeline*/);
+                        draw_commands(transparent_meshes, command_buffer, clip_plane, normals, true /*transparent*/);
                 }
         };
         info.after_render_pass_commands =
@@ -372,9 +334,7 @@ void MeshRenderer::create_render_command_buffers(
                 info.before_render_pass_commands = nullptr;
                 info.render_pass_commands = [&](const VkCommandBuffer command_buffer)
                 {
-                        draw_commands(
-                                transparent_meshes, command_buffer, clip_plane, normals, false /*shadow_mapping*/,
-                                false /*transparent_pipeline*/);
+                        draw_commands(transparent_meshes, command_buffer, clip_plane, normals, false /*transparent*/);
                 };
                 info.after_render_pass_commands = nullptr;
                 render_command_buffers_transparent_as_opaque_ = vulkan::create_command_buffers(info);
@@ -389,49 +349,18 @@ void MeshRenderer::delete_render_command_buffers()
 
 void MeshRenderer::create_shadow_mapping_command_buffers(
         const std::vector<const MeshObject*>& meshes,
-        const VkCommandPool graphics_command_pool,
-        const bool clip_plane,
-        const bool normals)
+        const VkCommandPool graphics_command_pool)
 {
         ASSERT(thread_id_ == std::this_thread::get_id());
 
         ASSERT(shadow_mapping_);
-        ASSERT(shadow_mapping_->buffers);
-
-        delete_shadow_mapping_command_buffers();
-
-        if (meshes.empty())
-        {
-                return;
-        }
-
-        vulkan::CommandBufferCreateInfo info;
-
-        info.device = device_;
-        info.render_area.emplace();
-        info.render_area->offset.x = 0;
-        info.render_area->offset.y = 0;
-        info.render_area->extent.width = shadow_mapping_->buffers->width();
-        info.render_area->extent.height = shadow_mapping_->buffers->height();
-        info.render_pass = shadow_mapping_->buffers->render_pass();
-        info.framebuffers = &shadow_mapping_->buffers->framebuffers();
-        info.command_pool = graphics_command_pool;
-        info.clear_values = &shadow_mapping_->buffers->clear_values();
-        info.render_pass_commands = [&](const VkCommandBuffer command_buffer)
-        {
-                draw_commands(
-                        meshes, command_buffer, clip_plane, normals, true /*shadow_mapping*/,
-                        false /*transparent_pipeline*/);
-        };
-
-        shadow_mapping_->render_command_buffers = vulkan::create_command_buffers(info);
+        shadow_mapping_->create_command_buffers(device_, meshes, graphics_command_pool);
 }
 
 void MeshRenderer::delete_shadow_mapping_command_buffers()
 {
         ASSERT(shadow_mapping_);
-
-        shadow_mapping_->render_command_buffers.reset();
+        shadow_mapping_->delete_command_buffers();
 }
 
 void MeshRenderer::set_acceleration_structure(const VkAccelerationStructureKHR acceleration_structure)
@@ -473,12 +402,6 @@ std::optional<VkCommandBuffer> MeshRenderer::render_command_buffer_transparent_a
 std::optional<VkCommandBuffer> MeshRenderer::shadow_mapping_command_buffer(const unsigned index) const
 {
         ASSERT(shadow_mapping_);
-
-        if (shadow_mapping_->render_command_buffers)
-        {
-                ASSERT(index < shadow_mapping_->render_command_buffers->count());
-                return (*shadow_mapping_->render_command_buffers)[index];
-        }
-        return std::nullopt;
+        return shadow_mapping_->command_buffer(index);
 }
 }

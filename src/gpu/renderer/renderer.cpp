@@ -331,8 +331,7 @@ class Impl final : public Renderer, RendererViewEvents, StorageMeshEvents, Stora
                 mesh_renderer_.delete_shadow_mapping_command_buffers();
 
                 mesh_renderer_.create_shadow_mapping_command_buffers(
-                        mesh_storage_.visible_objects(), *graphics_command_pool_,
-                        renderer_view_.clip_plane().has_value(), renderer_view_.show_normals());
+                        mesh_storage_.visible_objects(), *graphics_command_pool_);
         }
 
         void create_mesh_command_buffers()
