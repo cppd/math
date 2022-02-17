@@ -50,7 +50,7 @@ class RendererView final
                 matrix::scale<double>(0.5, 0.5, 1) * matrix::translate<double>(1, 1, 0);
 
         DrawingBuffer* const drawing_buffer_;
-        ShadowMatricesBuffer* const shadow_matrices_buffer_;
+        const ShadowMatricesBuffer* const shadow_matrices_buffer_;
         RendererViewEvents* const events_;
 
         Matrix4d vp_matrix_ = Matrix4d(1);
@@ -195,7 +195,7 @@ class RendererView final
 public:
         RendererView(
                 DrawingBuffer* const drawing_buffer,
-                ShadowMatricesBuffer* const shadow_matrices_buffer,
+                const ShadowMatricesBuffer* const shadow_matrices_buffer,
                 RendererViewEvents* const events)
                 : drawing_buffer_(drawing_buffer), shadow_matrices_buffer_(shadow_matrices_buffer), events_(events)
         {

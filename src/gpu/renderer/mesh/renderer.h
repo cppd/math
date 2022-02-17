@@ -31,6 +31,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <src/gpu/render_buffers.h>
 
+#include <memory>
 #include <optional>
 #include <thread>
 #include <vector>
@@ -72,6 +73,7 @@ class MeshRenderer
 
         vulkan::handle::Sampler texture_sampler_;
 
+        std::unique_ptr<ShadowMatricesBuffer> shadow_matrices_buffer_;
         std::unique_ptr<ShadowMapping> shadow_mapping_;
 
         const Pipelines& render_pipelines(bool transparent) const;
@@ -91,7 +93,7 @@ public:
                 bool sample_shading,
                 bool sampler_anisotropy,
                 const vulkan::Buffer& drawing_buffer,
-                const vulkan::Buffer& shadow_matrices_buffer,
+                const std::vector<std::uint32_t>& drawing_family_indices,
                 const GgxF1Albedo& ggx_f1_albedo);
 
         std::vector<vulkan::DescriptorSetLayoutAndBindings> mesh_layouts() const;
@@ -139,6 +141,8 @@ public:
         bool has_transparent_meshes() const;
         std::optional<VkCommandBuffer> render_command_buffer_all(unsigned index) const;
         std::optional<VkCommandBuffer> render_command_buffer_transparent_as_opaque(unsigned index) const;
+
         std::optional<VkCommandBuffer> shadow_mapping_command_buffer(unsigned index) const;
+        const ShadowMatricesBuffer* shadow_matrices_buffer() const;
 };
 }

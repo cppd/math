@@ -32,7 +32,7 @@ MeshRenderer::MeshRenderer(
         const bool sample_shading,
         const bool sampler_anisotropy,
         const vulkan::Buffer& drawing_buffer,
-        const vulkan::Buffer& shadow_matrices_buffer,
+        const std::vector<std::uint32_t>& drawing_family_indices,
         const GgxF1Albedo& ggx_f1_albedo)
         : device_(*device),
           sample_shading_(sample_shading),
@@ -73,8 +73,10 @@ MeshRenderer::MeshRenderer(
 
         if (!code.ray_tracing())
         {
-                triangles_shared_memory_.set_shadow_matrices(shadow_matrices_buffer);
-                shadow_mapping_ = std::make_unique<ShadowMapping>(device, code, drawing_buffer, shadow_matrices_buffer);
+                shadow_matrices_buffer_ = std::make_unique<ShadowMatricesBuffer>(*device, drawing_family_indices);
+                triangles_shared_memory_.set_shadow_matrices(shadow_matrices_buffer_->buffer());
+                shadow_mapping_ = std::make_unique<ShadowMapping>(
+                        device, code, drawing_buffer, shadow_matrices_buffer_->buffer());
         }
 }
 
@@ -403,5 +405,10 @@ std::optional<VkCommandBuffer> MeshRenderer::shadow_mapping_command_buffer(const
 {
         ASSERT(shadow_mapping_);
         return shadow_mapping_->command_buffer(index);
+}
+
+const ShadowMatricesBuffer* MeshRenderer::shadow_matrices_buffer() const
+{
+        return shadow_matrices_buffer_.get();
 }
 }

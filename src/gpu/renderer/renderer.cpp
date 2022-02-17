@@ -78,7 +78,6 @@ class Impl final : public Renderer, RendererViewEvents, StorageMeshEvents, Stora
         const vulkan::ImageWithMemory* object_image_ = nullptr;
 
         DrawingBuffer drawing_buffer_;
-        ShadowMatricesBuffer shadow_matrices_buffer_;
         GgxF1Albedo ggx_f1_albedo_;
         std::unique_ptr<vulkan::DepthImageWithMemory> depth_copy_image_;
 
@@ -507,7 +506,6 @@ public:
                   compute_command_pool_(compute_command_pool),
                   compute_queue_(compute_queue),
                   drawing_buffer_(*device_, {graphics_queue_->family_index()}),
-                  shadow_matrices_buffer_(*device_, {graphics_queue_->family_index()}),
                   ggx_f1_albedo_(
                           *device_,
                           {graphics_queue_->family_index()},
@@ -519,13 +517,13 @@ public:
                           sample_shading,
                           sampler_anisotropy,
                           drawing_buffer_.buffer(),
-                          shadow_matrices_buffer_.buffer(),
+                          {graphics_queue_->family_index()},
                           ggx_f1_albedo_),
                   volume_renderer_(device_, code, sample_shading, drawing_buffer_, ggx_f1_albedo_),
                   mesh_storage_(this),
                   volume_storage_(this),
                   renderer_object_(&mesh_storage_, &volume_storage_),
-                  renderer_view_(&drawing_buffer_, ray_tracing_ ? nullptr : &shadow_matrices_buffer_, this),
+                  renderer_view_(&drawing_buffer_, mesh_renderer_.shadow_matrices_buffer(), this),
                   renderer_draw_(*device_, TRANSPARENCY_NODE_BUFFER_MAX_SIZE, &mesh_renderer_, &volume_renderer_)
         {
                 if (ray_tracing_)
