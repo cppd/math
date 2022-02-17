@@ -86,22 +86,4 @@ public:
         void set_show_shadow(bool show) const;
         void set_show_fog(bool show) const;
 };
-
-class ShadowMatricesBuffer final
-{
-        vulkan::BufferWithMemory buffer_;
-
-        struct ShadowMatrices final
-        {
-                Matrix4f vp_matrix;
-                Matrix4f vp_texture_matrix;
-        };
-
-public:
-        ShadowMatricesBuffer(const vulkan::Device& device, const std::vector<std::uint32_t>& family_indices);
-
-        const vulkan::Buffer& buffer() const;
-
-        void set_matrices(const Matrix4d& vp_matrix, const Matrix4d& vp_texture_matrix) const;
-};
 }

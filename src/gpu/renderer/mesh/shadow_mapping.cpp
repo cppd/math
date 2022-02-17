@@ -21,26 +21,35 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "sampler.h"
 
 #include <src/com/error.h>
+#include <src/numerical/transform.h>
 #include <src/vulkan/commands.h>
 
 namespace ns::gpu::renderer
 {
+namespace
+{
+// shadow coordinates x(-1, 1) y(-1, 1) z(0, 1).
+// shadow texture coordinates x(0, 1) y(0, 1) z(0, 1).
+constexpr Matrix4d SHADOW_TEXTURE_MATRIX = matrix::scale<double>(0.5, 0.5, 1) * matrix::translate<double>(1, 1, 0);
+}
+
 ShadowMapping::ShadowMapping(
         const vulkan::Device* const device,
         const Code& code,
         const vulkan::Buffer& drawing_buffer,
-        const vulkan::Buffer& shadow_matrices_buffer)
+        const std::vector<std::uint32_t>& drawing_family_indices)
         : triangles_program_(device, code),
           triangles_shared_memory_(
                   *device,
                   triangles_program_.descriptor_set_layout_shared(),
                   triangles_program_.descriptor_set_layout_shared_bindings(),
                   drawing_buffer),
-          sampler_(create_mesh_shadow_sampler(*device))
+          sampler_(create_mesh_shadow_sampler(*device)),
+          shadow_matrices_buffer_(*device, drawing_family_indices)
 {
         ASSERT(!code.ray_tracing());
 
-        triangles_shared_memory_.set_shadow_matrices(shadow_matrices_buffer);
+        triangles_shared_memory_.set_shadow_matrices(shadow_matrices_buffer_.buffer());
 }
 
 void ShadowMapping::create_buffers(
@@ -114,6 +123,11 @@ void ShadowMapping::delete_command_buffers()
         render_command_buffers_.reset();
 }
 
+void ShadowMapping::set_shadow_vp_matrix(const Matrix4d& shadow_vp_matrix)
+{
+        shadow_matrices_buffer_.set_matrices(shadow_vp_matrix, SHADOW_TEXTURE_MATRIX * shadow_vp_matrix);
+}
+
 const vulkan::ImageView& ShadowMapping::image_view() const
 {
         return buffers_->image_view(0);
@@ -122,6 +136,11 @@ const vulkan::ImageView& ShadowMapping::image_view() const
 VkSampler ShadowMapping::sampler() const
 {
         return sampler_;
+}
+
+const vulkan::Buffer& ShadowMapping::shadow_matrices_buffer() const
+{
+        return shadow_matrices_buffer_.buffer();
 }
 
 VkDescriptorSetLayout ShadowMapping::descriptor_set_layout_mesh() const

@@ -20,6 +20,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "depth_buffers.h"
 #include "object.h"
 
+#include "buffers/shadow_matrices.h"
 #include "shaders/descriptors.h"
 #include "shaders/program_triangles_depth.h"
 
@@ -34,6 +35,7 @@ class ShadowMapping final
         TrianglesDepthProgram triangles_program_;
         SharedMemory triangles_shared_memory_;
         vulkan::handle::Sampler sampler_;
+        ShadowMatricesBuffer shadow_matrices_buffer_;
         std::unique_ptr<const DepthBuffers> buffers_;
         std::optional<vulkan::handle::Pipeline> render_triangles_pipeline_;
         std::optional<vulkan::handle::CommandBuffers> render_command_buffers_;
@@ -43,7 +45,7 @@ public:
                 const vulkan::Device* device,
                 const Code& code,
                 const vulkan::Buffer& drawing_buffer,
-                const vulkan::Buffer& shadow_matrices_buffer);
+                const std::vector<std::uint32_t>& drawing_family_indices);
 
         void create_buffers(
                 unsigned buffer_count,
@@ -64,8 +66,11 @@ public:
 
         void delete_command_buffers();
 
+        void set_shadow_vp_matrix(const Matrix4d& shadow_vp_matrix);
+
         const vulkan::ImageView& image_view() const;
         VkSampler sampler() const;
+        const vulkan::Buffer& shadow_matrices_buffer() const;
         VkDescriptorSetLayout descriptor_set_layout_mesh() const;
         std::vector<VkDescriptorSetLayoutBinding> descriptor_set_layout_mesh_bindings() const;
         std::optional<VkCommandBuffer> command_buffer(unsigned index) const;

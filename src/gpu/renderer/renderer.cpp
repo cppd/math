@@ -472,6 +472,10 @@ class Impl final : public Renderer, RendererViewEvents, StorageMeshEvents, Stora
         void view_matrices_changed() override
         {
                 set_volume_matrix();
+                if (!ray_tracing_)
+                {
+                        mesh_renderer_.set_shadow_vp_matrix(renderer_view_.shadow_vp_matrix());
+                }
         }
 
         void view_clip_plane_changed() override
@@ -523,7 +527,7 @@ public:
                   mesh_storage_(this),
                   volume_storage_(this),
                   renderer_object_(&mesh_storage_, &volume_storage_),
-                  renderer_view_(&drawing_buffer_, mesh_renderer_.shadow_matrices_buffer(), this),
+                  renderer_view_(!ray_tracing_, &drawing_buffer_, this),
                   renderer_draw_(*device_, TRANSPARENCY_NODE_BUFFER_MAX_SIZE, &mesh_renderer_, &volume_renderer_)
         {
                 if (ray_tracing_)

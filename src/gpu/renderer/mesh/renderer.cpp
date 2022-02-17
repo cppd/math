@@ -73,10 +73,8 @@ MeshRenderer::MeshRenderer(
 
         if (!code.ray_tracing())
         {
-                shadow_matrices_buffer_ = std::make_unique<ShadowMatricesBuffer>(*device, drawing_family_indices);
-                triangles_shared_memory_.set_shadow_matrices(shadow_matrices_buffer_->buffer());
-                shadow_mapping_ = std::make_unique<ShadowMapping>(
-                        device, code, drawing_buffer, shadow_matrices_buffer_->buffer());
+                shadow_mapping_ = std::make_unique<ShadowMapping>(device, code, drawing_buffer, drawing_family_indices);
+                triangles_shared_memory_.set_shadow_matrices(shadow_mapping_->shadow_matrices_buffer());
         }
 }
 
@@ -365,6 +363,12 @@ void MeshRenderer::delete_shadow_mapping_command_buffers()
         shadow_mapping_->delete_command_buffers();
 }
 
+void MeshRenderer::set_shadow_vp_matrix(const Matrix4d& shadow_vp_matrix)
+{
+        ASSERT(shadow_mapping_);
+        shadow_mapping_->set_shadow_vp_matrix(shadow_vp_matrix);
+}
+
 void MeshRenderer::set_acceleration_structure(const VkAccelerationStructureKHR acceleration_structure)
 {
         delete_render_command_buffers();
@@ -405,10 +409,5 @@ std::optional<VkCommandBuffer> MeshRenderer::shadow_mapping_command_buffer(const
 {
         ASSERT(shadow_mapping_);
         return shadow_mapping_->command_buffer(index);
-}
-
-const ShadowMatricesBuffer* MeshRenderer::shadow_matrices_buffer() const
-{
-        return shadow_matrices_buffer_.get();
 }
 }

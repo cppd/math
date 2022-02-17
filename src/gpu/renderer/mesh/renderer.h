@@ -21,7 +21,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "shadow_mapping.h"
 
 #include "../buffers/ggx_f1_albedo.h"
-#include "../buffers/shader.h"
 #include "../code/code.h"
 #include "shaders/descriptors.h"
 #include "shaders/program_normals.h"
@@ -73,7 +72,6 @@ class MeshRenderer
 
         vulkan::handle::Sampler texture_sampler_;
 
-        std::unique_ptr<ShadowMatricesBuffer> shadow_matrices_buffer_;
         std::unique_ptr<ShadowMapping> shadow_mapping_;
 
         const Pipelines& render_pipelines(bool transparent) const;
@@ -135,6 +133,8 @@ public:
                 VkCommandPool graphics_command_pool);
         void delete_shadow_mapping_command_buffers();
 
+        void set_shadow_vp_matrix(const Matrix4d& shadow_vp_matrix);
+
         void set_acceleration_structure(VkAccelerationStructureKHR acceleration_structure);
 
         bool has_meshes() const;
@@ -143,6 +143,5 @@ public:
         std::optional<VkCommandBuffer> render_command_buffer_transparent_as_opaque(unsigned index) const;
 
         std::optional<VkCommandBuffer> shadow_mapping_command_buffer(unsigned index) const;
-        const ShadowMatricesBuffer* shadow_matrices_buffer() const;
 };
 }

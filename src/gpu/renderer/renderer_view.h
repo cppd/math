@@ -37,26 +37,19 @@ protected:
 public:
         virtual void view_background_changed() = 0;
         virtual void view_show_normals_changed() = 0;
-        virtual void view_shadow_zoom_changed() = 0;
         virtual void view_matrices_changed() = 0;
         virtual void view_clip_plane_changed() = 0;
+        virtual void view_shadow_zoom_changed() = 0;
 };
 
 class RendererView final
 {
-        // shadow coordinates x(-1, 1) y(-1, 1) z(0, 1).
-        // shadow texture coordinates x(0, 1) y(0, 1) z(0, 1).
-        static constexpr Matrix4d SHADOW_TEXTURE_MATRIX =
-                matrix::scale<double>(0.5, 0.5, 1) * matrix::translate<double>(1, 1, 0);
-
+        const bool shadow_mapping_;
         DrawingBuffer* const drawing_buffer_;
-        const ShadowMatricesBuffer* const shadow_matrices_buffer_;
         RendererViewEvents* const events_;
 
         Matrix4d vp_matrix_ = Matrix4d(1);
-
         Matrix4d shadow_vp_matrix_ = Matrix4d(1);
-        Matrix4d shadow_vp_texture_matrix_ = Matrix4d(1);
 
         Vector3f clear_color_rgb32_ = Vector3f(0);
         double shadow_zoom_ = 1;
@@ -138,7 +131,7 @@ class RendererView final
 
         void command(const SetShadowZoom& v)
         {
-                if (!shadow_matrices_buffer_)
+                if (!shadow_mapping_)
                 {
                         return;
                 }
@@ -161,15 +154,13 @@ class RendererView final
                         drawing_buffer_->set_matrix(vp_matrix_);
                 }
 
-                if (shadow_matrices_buffer_)
+                if (shadow_mapping_)
                 {
                         const Matrix4d& projection_matrix = matrix::ortho_vulkan<double>(
                                 c.shadow_volume.left, c.shadow_volume.right, c.shadow_volume.bottom,
                                 c.shadow_volume.top, c.shadow_volume.near, c.shadow_volume.far);
 
                         shadow_vp_matrix_ = projection_matrix * c.shadow_view_matrix;
-                        shadow_vp_texture_matrix_ = SHADOW_TEXTURE_MATRIX * shadow_vp_matrix_;
-                        shadow_matrices_buffer_->set_matrices(shadow_vp_matrix_, shadow_vp_texture_matrix_);
                 }
 
                 drawing_buffer_->set_direction_to_light(-to_vector<float>(c.light_direction));
@@ -193,11 +184,8 @@ class RendererView final
         }
 
 public:
-        RendererView(
-                DrawingBuffer* const drawing_buffer,
-                const ShadowMatricesBuffer* const shadow_matrices_buffer,
-                RendererViewEvents* const events)
-                : drawing_buffer_(drawing_buffer), shadow_matrices_buffer_(shadow_matrices_buffer), events_(events)
+        RendererView(const bool shadow_mapping, DrawingBuffer* const drawing_buffer, RendererViewEvents* const events)
+                : shadow_mapping_(shadow_mapping), drawing_buffer_(drawing_buffer), events_(events)
         {
         }
 
@@ -213,12 +201,6 @@ public:
         bool show_shadow() const
         {
                 return show_shadow_;
-        }
-
-        double shadow_zoom() const
-        {
-                ASSERT(shadow_matrices_buffer_);
-                return shadow_zoom_;
         }
 
         Vector3f clear_color_rgb32() const
@@ -239,6 +221,17 @@ public:
         const Matrix4d& vp_matrix() const
         {
                 return vp_matrix_;
+        }
+
+        const Matrix4d& shadow_vp_matrix() const
+        {
+                return shadow_vp_matrix_;
+        }
+
+        double shadow_zoom() const
+        {
+                ASSERT(shadow_mapping_);
+                return shadow_zoom_;
         }
 };
 }

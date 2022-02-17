@@ -173,31 +173,4 @@ void DrawingBuffer::set_direction_to_camera(const Vector3f& direction) const
         decltype(Drawing().direction_to_camera) d = direction;
         copy_to_buffer(offsetof(Drawing, direction_to_camera), d);
 }
-
-//
-
-ShadowMatricesBuffer::ShadowMatricesBuffer(
-        const vulkan::Device& device,
-        const std::vector<std::uint32_t>& family_indices)
-        : buffer_(
-                vulkan::BufferMemoryType::HOST_VISIBLE,
-                device,
-                family_indices,
-                VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT,
-                sizeof(ShadowMatrices))
-{
-}
-
-const vulkan::Buffer& ShadowMatricesBuffer::buffer() const
-{
-        return buffer_.buffer();
-}
-
-void ShadowMatricesBuffer::set_matrices(const Matrix4d& vp_matrix, const Matrix4d& vp_texture_matrix) const
-{
-        ShadowMatrices shadow_matrices;
-        shadow_matrices.vp_matrix = to_std140<float>(vp_matrix);
-        shadow_matrices.vp_texture_matrix = to_std140<float>(vp_texture_matrix);
-        vulkan::map_and_write_to_buffer(buffer_, shadow_matrices);
-}
 }
