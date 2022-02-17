@@ -28,7 +28,7 @@ namespace ns::gpu::renderer
 std::vector<VkDescriptorSetLayoutBinding> TrianglesProgram::descriptor_set_layout_shared_bindings() const
 {
         return SharedMemory::descriptor_set_layout_bindings(
-                VK_SHADER_STAGE_VERTEX_BIT,
+                !ray_tracing_ ? VK_SHADER_STAGE_VERTEX_BIT : 0,
                 VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_GEOMETRY_BIT | VK_SHADER_STAGE_FRAGMENT_BIT,
                 VK_SHADER_STAGE_FRAGMENT_BIT, !ray_tracing_ ? VK_SHADER_STAGE_FRAGMENT_BIT : 0,
                 ray_tracing_ ? VK_SHADER_STAGE_FRAGMENT_BIT : 0, VK_SHADER_STAGE_FRAGMENT_BIT,

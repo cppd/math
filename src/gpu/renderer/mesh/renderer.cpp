@@ -68,12 +68,12 @@ MeshRenderer::MeshRenderer(
           //
           texture_sampler_(create_mesh_texture_sampler(*device, sampler_anisotropy))
 {
-        triangles_shared_memory_.set_shadow_matrices(shadow_matrices_buffer);
         triangles_shared_memory_.set_ggx_f1_albedo(
                 ggx_f1_albedo.sampler(), ggx_f1_albedo.cosine_roughness(), ggx_f1_albedo.cosine_weighted_average());
 
         if (!code.ray_tracing())
         {
+                triangles_shared_memory_.set_shadow_matrices(shadow_matrices_buffer);
                 shadow_mapping_ = std::make_unique<ShadowMapping>(device, code, drawing_buffer, shadow_matrices_buffer);
         }
 }
