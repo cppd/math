@@ -23,6 +23,7 @@ std::vector<VkDescriptorSetLayoutBinding> VolumeSharedMemory::descriptor_set_lay
         const VkShaderStageFlags drawing,
         const VkShaderStageFlags depth_image,
         const VkShaderStageFlags ggx_f1_albedo,
+        const VkShaderStageFlags shadow_map,
         const VkShaderStageFlags acceleration_structure)
 {
         std::vector<VkDescriptorSetLayoutBinding> bindings;
@@ -96,11 +97,25 @@ std::vector<VkDescriptorSetLayoutBinding> VolumeSharedMemory::descriptor_set_lay
 
         if (acceleration_structure)
         {
+                ASSERT(!shadow_map);
                 VkDescriptorSetLayoutBinding b = {};
                 b.binding = ACCELERATION_STRUCTURE_BINDING;
                 b.descriptorType = VK_DESCRIPTOR_TYPE_ACCELERATION_STRUCTURE_KHR;
                 b.descriptorCount = 1;
                 b.stageFlags = acceleration_structure;
+
+                bindings.push_back(b);
+        }
+
+        if (shadow_map)
+        {
+                ASSERT(!acceleration_structure);
+                VkDescriptorSetLayoutBinding b = {};
+                b.binding = SHADOW_MAP_BINDING;
+                b.descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+                b.descriptorCount = 1;
+                b.stageFlags = shadow_map;
+                b.pImmutableSamplers = nullptr;
 
                 bindings.push_back(b);
         }
@@ -209,6 +224,19 @@ void VolumeSharedMemory::set_transparency(const vulkan::ImageView& heads, const 
         }
 
         descriptors_.update_descriptor_set(0, bindings, infos);
+}
+
+void VolumeSharedMemory::set_shadow_image(const VkSampler sampler, const vulkan::ImageView& shadow_image) const
+{
+        ASSERT(shadow_image.has_usage(VK_IMAGE_USAGE_SAMPLED_BIT));
+        ASSERT(shadow_image.sample_count() == VK_SAMPLE_COUNT_1_BIT);
+
+        VkDescriptorImageInfo image_info = {};
+        image_info.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
+        image_info.imageView = shadow_image;
+        image_info.sampler = sampler;
+
+        descriptors_.update_descriptor_set(0, SHADOW_MAP_BINDING, image_info);
 }
 
 void VolumeSharedMemory::set_acceleration_structure(const VkAccelerationStructureKHR acceleration_structure) const

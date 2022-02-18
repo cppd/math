@@ -42,6 +42,8 @@ layout(set = 0, binding = 5) uniform sampler1D ggx_f1_albedo_cosine_weighted_ave
 
 #ifdef RAY_TRACING
 layout(set = 0, binding = 6) uniform accelerationStructureEXT acceleration_structure;
+#else
+layout(set = 0, binding = 6) uniform sampler2D shadow_mapping_texture;
 #endif
 
 #endif

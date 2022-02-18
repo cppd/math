@@ -91,6 +91,7 @@ public:
                 const std::function<void(VkCommandBuffer command_buffer)>& before_render_pass_commands);
         void delete_command_buffers();
 
+        void set_shadow_image(VkSampler sampler, const vulkan::ImageView& shadow_image);
         void set_acceleration_structure(VkAccelerationStructureKHR acceleration_structure);
 
         bool has_volume() const;

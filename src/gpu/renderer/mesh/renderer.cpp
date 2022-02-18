@@ -410,4 +410,16 @@ std::optional<VkCommandBuffer> MeshRenderer::shadow_mapping_command_buffer(const
         ASSERT(shadow_mapping_);
         return shadow_mapping_->command_buffer(index);
 }
+
+const vulkan::ImageView& MeshRenderer::shadow_mapping_image_view() const
+{
+        ASSERT(shadow_mapping_);
+        return shadow_mapping_->image_view();
+}
+
+VkSampler MeshRenderer::shadow_mapping_sampler() const
+{
+        ASSERT(shadow_mapping_);
+        return shadow_mapping_->sampler();
+}
 }

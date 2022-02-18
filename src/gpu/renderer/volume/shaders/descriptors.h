@@ -38,6 +38,7 @@ class VolumeSharedMemory final
         static constexpr int GGX_F1_ALBEDO_COSINE_WEIGHTED_AVERAGE_BINDING = 5;
 
         static constexpr int ACCELERATION_STRUCTURE_BINDING = 6;
+        static constexpr int SHADOW_MAP_BINDING = 6;
 
         vulkan::Descriptors descriptors_;
 
@@ -46,6 +47,7 @@ public:
                 VkShaderStageFlags drawing,
                 VkShaderStageFlags depth_image,
                 VkShaderStageFlags ggx_f1_albedo,
+                VkShaderStageFlags shadow_map,
                 VkShaderStageFlags acceleration_structure);
         static unsigned set_number();
 
@@ -74,6 +76,8 @@ public:
 
         void set_depth_image(VkImageView image_view, VkSampler sampler) const;
         void set_transparency(const vulkan::ImageView& heads, const vulkan::Buffer& nodes) const;
+
+        void set_shadow_image(VkSampler sampler, const vulkan::ImageView& shadow_image) const;
         void set_acceleration_structure(VkAccelerationStructureKHR acceleration_structure) const;
 };
 

@@ -273,6 +273,9 @@ class Impl final : public Renderer, RendererViewEvents, StorageMeshEvents, Stora
                         render_buffers_->framebuffers().size(), {graphics_queue_->family_index()},
                         *graphics_command_pool_, *graphics_queue_, *device_, viewport_.width(), viewport_.height(),
                         renderer_view_.shadow_zoom());
+
+                volume_renderer_.set_shadow_image(
+                        mesh_renderer_.shadow_mapping_sampler(), mesh_renderer_.shadow_mapping_image_view());
         }
 
         void create_clear_command_buffers()

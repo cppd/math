@@ -134,7 +134,6 @@ public:
         void delete_shadow_mapping_command_buffers();
 
         void set_shadow_vp_matrix(const Matrix4d& shadow_vp_matrix);
-
         void set_acceleration_structure(VkAccelerationStructureKHR acceleration_structure);
 
         bool has_meshes() const;
@@ -143,5 +142,7 @@ public:
         std::optional<VkCommandBuffer> render_command_buffer_transparent_as_opaque(unsigned index) const;
 
         std::optional<VkCommandBuffer> shadow_mapping_command_buffer(unsigned index) const;
+        const vulkan::ImageView& shadow_mapping_image_view() const;
+        VkSampler shadow_mapping_sampler() const;
 };
 }

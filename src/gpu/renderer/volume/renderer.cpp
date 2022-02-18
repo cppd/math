@@ -256,6 +256,12 @@ void VolumeRenderer::delete_command_buffers()
         command_buffers_image_fragments_.reset();
 }
 
+void VolumeRenderer::set_shadow_image(const VkSampler sampler, const vulkan::ImageView& shadow_image)
+{
+        delete_command_buffers();
+        image_shared_memory_.set_shadow_image(sampler, shadow_image);
+}
+
 void VolumeRenderer::set_acceleration_structure(const VkAccelerationStructureKHR acceleration_structure)
 {
         delete_command_buffers();
