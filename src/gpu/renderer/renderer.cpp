@@ -27,8 +27,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "storage_volume.h"
 #include "viewport_transform.h"
 
+#include "buffers/drawing.h"
 #include "buffers/ggx_f1_albedo.h"
-#include "buffers/shader.h"
 #include "buffers/transparency.h"
 #include "code/shader_code.h"
 #include "mesh/object.h"
@@ -526,7 +526,7 @@ public:
                           drawing_buffer_.buffer(),
                           {graphics_queue_->family_index()},
                           ggx_f1_albedo_),
-                  volume_renderer_(device_, code, sample_shading, drawing_buffer_, ggx_f1_albedo_),
+                  volume_renderer_(device_, code, sample_shading, drawing_buffer_.buffer(), ggx_f1_albedo_),
                   mesh_storage_(this),
                   volume_storage_(this),
                   renderer_object_(&mesh_storage_, &volume_storage_),

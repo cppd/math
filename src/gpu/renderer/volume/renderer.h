@@ -20,7 +20,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "object.h"
 
 #include "../buffers/ggx_f1_albedo.h"
-#include "../buffers/shader.h"
 #include "../code/code.h"
 #include "shaders/descriptors.h"
 #include "shaders/program_fragments.h"
@@ -69,7 +68,7 @@ public:
                 const vulkan::Device* device,
                 const Code& code,
                 bool sample_shading,
-                const DrawingBuffer& drawing_buffer,
+                const vulkan::Buffer& drawing_buffer,
                 const GgxF1Albedo& ggx_f1_albedo);
 
         std::vector<vulkan::DescriptorSetLayoutAndBindings> image_layouts() const;

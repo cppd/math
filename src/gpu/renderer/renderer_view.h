@@ -19,7 +19,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "command.h"
 
-#include "buffers/shader.h"
+#include "buffers/drawing.h"
 
 #include <src/com/error.h>
 #include <src/numerical/matrix.h>
