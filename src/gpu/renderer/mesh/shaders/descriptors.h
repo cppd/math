@@ -110,15 +110,19 @@ class MeshMemory final
         static constexpr int SET_NUMBER = 1;
         static constexpr int BUFFER_BINDING = 0;
 
+        vulkan::Descriptors descriptors_;
+
 public:
         static std::vector<VkDescriptorSetLayoutBinding> descriptor_set_layout_bindings(VkShaderStageFlags coordinates);
         static unsigned set_number();
 
-        static vulkan::Descriptors create(
+        MeshMemory(
                 VkDevice device,
                 VkDescriptorSetLayout descriptor_set_layout,
                 const std::vector<VkDescriptorSetLayoutBinding>& descriptor_set_layout_bindings,
-                const std::vector<const vulkan::Buffer*>& coordinates);
+                const vulkan::Buffer& buffer);
+
+        const VkDescriptorSet& descriptor_set() const;
 };
 
 class MaterialMemory final
@@ -127,6 +131,8 @@ class MaterialMemory final
 
         static constexpr int MATERIAL_BINDING = 0;
         static constexpr int TEXTURE_BINDING = 1;
+
+        vulkan::Descriptors descriptors_;
 
 public:
         static std::vector<VkDescriptorSetLayoutBinding> descriptor_set_layout_bindings();
@@ -139,11 +145,14 @@ public:
                 VkImageView texture;
         };
 
-        static vulkan::Descriptors create(
+        MaterialMemory(
                 VkDevice device,
                 VkSampler sampler,
                 VkDescriptorSetLayout descriptor_set_layout,
                 const std::vector<VkDescriptorSetLayoutBinding>& descriptor_set_layout_bindings,
                 const std::vector<MaterialInfo>& materials);
+
+        std::uint32_t descriptor_set_count() const;
+        const VkDescriptorSet& descriptor_set(std::uint32_t index) const;
 };
 }

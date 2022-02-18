@@ -371,48 +371,31 @@ std::vector<VkDescriptorSetLayoutBinding> MeshMemory::descriptor_set_layout_bind
         return bindings;
 }
 
-vulkan::Descriptors MeshMemory::create(
+MeshMemory::MeshMemory(
         const VkDevice device,
         const VkDescriptorSetLayout descriptor_set_layout,
         const std::vector<VkDescriptorSetLayoutBinding>& descriptor_set_layout_bindings,
-        const std::vector<const vulkan::Buffer*>& coordinates)
+        const vulkan::Buffer& buffer)
+        : descriptors_(device, 1, descriptor_set_layout, descriptor_set_layout_bindings)
 {
-        ASSERT(!coordinates.empty());
-        ASSERT(std::all_of(
-                coordinates.cbegin(), coordinates.cend(),
-                [](const vulkan::Buffer* const buffer)
-                {
-                        return buffer != nullptr;
-                }));
+        ASSERT(buffer != VK_NULL_HANDLE && buffer.size() > 0);
 
-        vulkan::Descriptors descriptors(
-                vulkan::Descriptors(device, coordinates.size(), descriptor_set_layout, descriptor_set_layout_bindings));
+        VkDescriptorBufferInfo buffer_info = {};
+        buffer_info.buffer = buffer;
+        buffer_info.offset = 0;
+        buffer_info.range = buffer.size();
 
-        std::vector<vulkan::Descriptors::Info> infos;
-        std::vector<std::uint32_t> bindings;
-
-        for (std::size_t i = 0; i < coordinates.size(); ++i)
-        {
-                infos.clear();
-                bindings.clear();
-                {
-                        VkDescriptorBufferInfo buffer_info = {};
-                        buffer_info.buffer = *coordinates[i];
-                        buffer_info.offset = 0;
-                        buffer_info.range = coordinates[i]->size();
-
-                        infos.emplace_back(buffer_info);
-                        bindings.push_back(BUFFER_BINDING);
-                }
-                descriptors.update_descriptor_set(i, bindings, infos);
-        }
-
-        return descriptors;
+        descriptors_.update_descriptor_set(0, BUFFER_BINDING, buffer_info);
 }
 
 unsigned MeshMemory::set_number()
 {
         return SET_NUMBER;
+}
+
+const VkDescriptorSet& MeshMemory::descriptor_set() const
+{
+        return descriptors_.descriptor_set(0);
 }
 
 //
@@ -444,12 +427,13 @@ std::vector<VkDescriptorSetLayoutBinding> MaterialMemory::descriptor_set_layout_
         return bindings;
 }
 
-vulkan::Descriptors MaterialMemory::create(
+MaterialMemory::MaterialMemory(
         const VkDevice device,
         const VkSampler sampler,
         const VkDescriptorSetLayout descriptor_set_layout,
         const std::vector<VkDescriptorSetLayoutBinding>& descriptor_set_layout_bindings,
         const std::vector<MaterialInfo>& materials)
+        : descriptors_(device, materials.size(), descriptor_set_layout, descriptor_set_layout_bindings)
 {
         ASSERT(!materials.empty());
         ASSERT(std::all_of(
@@ -458,9 +442,6 @@ vulkan::Descriptors MaterialMemory::create(
                 {
                         return m.buffer != VK_NULL_HANDLE && m.buffer_size > 0 && m.texture != VK_NULL_HANDLE;
                 }));
-
-        vulkan::Descriptors descriptors(
-                vulkan::Descriptors(device, materials.size(), descriptor_set_layout, descriptor_set_layout_bindings));
 
         std::vector<vulkan::Descriptors::Info> infos;
         std::vector<std::uint32_t> bindings;
@@ -489,14 +470,22 @@ vulkan::Descriptors MaterialMemory::create(
                         infos.emplace_back(image_info);
                         bindings.push_back(TEXTURE_BINDING);
                 }
-                descriptors.update_descriptor_set(i, bindings, infos);
+                descriptors_.update_descriptor_set(i, bindings, infos);
         }
-
-        return descriptors;
 }
 
 unsigned MaterialMemory::set_number()
 {
         return SET_NUMBER;
+}
+
+std::uint32_t MaterialMemory::descriptor_set_count() const
+{
+        return descriptors_.descriptor_set_count();
+}
+
+const VkDescriptorSet& MaterialMemory::descriptor_set(const std::uint32_t index) const
+{
+        return descriptors_.descriptor_set(index);
 }
 }

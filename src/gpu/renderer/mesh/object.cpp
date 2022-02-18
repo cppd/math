@@ -74,6 +74,47 @@ std::vector<MaterialMemory::MaterialInfo> materials_info(
         return materials;
 }
 
+std::unordered_map<VkDescriptorSetLayout, MeshMemory> create_mesh_memory(
+        const VkDevice device,
+        const std::vector<vulkan::DescriptorSetLayoutAndBindings>& mesh_layouts,
+        const vulkan::Buffer& mesh_buffer)
+{
+        std::unordered_map<VkDescriptorSetLayout, MeshMemory> mesh_memory;
+
+        for (const vulkan::DescriptorSetLayoutAndBindings& layout : mesh_layouts)
+        {
+                MeshMemory memory(
+                        device, layout.descriptor_set_layout, layout.descriptor_set_layout_bindings, mesh_buffer);
+                mesh_memory.emplace(layout.descriptor_set_layout, std::move(memory));
+        }
+
+        return mesh_memory;
+}
+
+std::unordered_map<VkDescriptorSetLayout, MaterialMemory> create_material_memory(
+        const VkDevice device,
+        const VkSampler texture_sampler,
+        const std::vector<vulkan::DescriptorSetLayoutAndBindings>& material_layouts,
+        const std::vector<MaterialMemory::MaterialInfo>& material_info)
+{
+        if (material_info.empty())
+        {
+                return {};
+        }
+
+        std::unordered_map<VkDescriptorSetLayout, MaterialMemory> material_memory;
+
+        for (const vulkan::DescriptorSetLayoutAndBindings& layout : material_layouts)
+        {
+                MaterialMemory memory(
+                        device, texture_sampler, layout.descriptor_set_layout, layout.descriptor_set_layout_bindings,
+                        material_info);
+                material_memory.emplace(layout.descriptor_set_layout, std::move(memory));
+        }
+
+        return material_memory;
+}
+
 class Impl final : public MeshObject
 {
         const vulkan::Device* const device_;
@@ -87,9 +128,9 @@ class Impl final : public MeshObject
         const std::vector<std::uint32_t> family_indices_;
         const std::vector<std::uint32_t> acceleration_structure_family_indices_;
 
-        MeshBuffer mesh_buffer_;
-        std::unordered_map<VkDescriptorSetLayout, vulkan::Descriptors> mesh_descriptor_sets_;
+        const MeshBuffer mesh_buffer_;
         const std::vector<vulkan::DescriptorSetLayoutAndBindings> mesh_layouts_;
+        const std::unordered_map<VkDescriptorSetLayout, MeshMemory> mesh_memory_;
 
         struct MaterialVertices
         {
@@ -103,11 +144,12 @@ class Impl final : public MeshObject
         unsigned faces_vertex_count_ = 0;
         unsigned faces_index_count_ = 0;
 
+        const VkSampler texture_sampler_;
         std::vector<vulkan::ImageWithMemory> textures_;
-        std::vector<MaterialBuffer> material_buffers_;
-        std::unordered_map<VkDescriptorSetLayout, vulkan::Descriptors> material_descriptor_sets_;
+
         const std::vector<vulkan::DescriptorSetLayoutAndBindings> material_layouts_;
-        VkSampler texture_sampler_;
+        std::vector<MaterialBuffer> material_buffers_;
+        std::unordered_map<VkDescriptorSetLayout, MaterialMemory> material_memory_;
 
         std::unique_ptr<vulkan::BufferWithMemory> lines_vertex_buffer_;
         unsigned lines_vertex_count_ = 0;
@@ -159,59 +201,24 @@ class Impl final : public MeshObject
                 }
         }
 
-        void create_mesh_descriptor_sets()
-        {
-                mesh_descriptor_sets_.clear();
-                for (const vulkan::DescriptorSetLayoutAndBindings& layout : mesh_layouts_)
-                {
-                        vulkan::Descriptors sets = MeshMemory::create(
-                                *device_, layout.descriptor_set_layout, layout.descriptor_set_layout_bindings,
-                                {&mesh_buffer_.buffer()});
-                        ASSERT(sets.descriptor_set_count() == 1);
-                        mesh_descriptor_sets_.emplace(sets.descriptor_set_layout(), std::move(sets));
-                }
-        }
-
         VkDescriptorSet find_mesh_descriptor_set(const VkDescriptorSetLayout mesh_descriptor_set_layout) const
         {
-                const auto iter = mesh_descriptor_sets_.find(mesh_descriptor_set_layout);
-                if (iter == mesh_descriptor_sets_.cend())
+                const auto iter = mesh_memory_.find(mesh_descriptor_set_layout);
+                if (iter != mesh_memory_.cend())
                 {
-                        error("Failed to find mesh descriptor sets for mesh descriptor set layout");
+                        return iter->second.descriptor_set();
                 }
-                ASSERT(iter->second.descriptor_set_count() == 1);
-                return iter->second.descriptor_set(0);
+                error("Failed to find mesh memory for mesh descriptor set layout");
         }
 
-        void create_material_descriptor_sets(const std::vector<MaterialMemory::MaterialInfo>& material_info)
+        const MaterialMemory& find_material_memory(const VkDescriptorSetLayout material_descriptor_set_layout) const
         {
-                material_descriptor_sets_.clear();
-                if (material_info.empty())
+                const auto iter = material_memory_.find(material_descriptor_set_layout);
+                if (iter != material_memory_.cend())
                 {
-                        return;
+                        return iter->second;
                 }
-                for (const vulkan::DescriptorSetLayoutAndBindings& layout : material_layouts_)
-                {
-                        vulkan::Descriptors sets = MaterialMemory::create(
-                                *device_, texture_sampler_, layout.descriptor_set_layout,
-                                layout.descriptor_set_layout_bindings, material_info);
-                        ASSERT(sets.descriptor_set_count() == material_info.size());
-                        material_descriptor_sets_.emplace(sets.descriptor_set_layout(), std::move(sets));
-                }
-        }
-
-        const vulkan::Descriptors& find_material_descriptor_sets(
-                const VkDescriptorSetLayout material_descriptor_set_layout) const
-        {
-                const auto iter = material_descriptor_sets_.find(material_descriptor_set_layout);
-                if (iter == material_descriptor_sets_.cend())
-                {
-                        error("Failed to find material descriptor sets for material descriptor set layout");
-                }
-
-                ASSERT(iter->second.descriptor_set_count() == material_vertices_.size());
-
-                return iter->second;
+                error("Failed to find material memory for material descriptor set layout");
         }
 
         //
@@ -220,10 +227,10 @@ class Impl final : public MeshObject
         {
                 textures_.clear();
                 material_buffers_.clear();
+                material_memory_.clear();
 
                 if (mesh.facets.empty())
                 {
-                        create_material_descriptor_sets({});
                         return;
                 }
 
@@ -232,7 +239,9 @@ class Impl final : public MeshObject
                 material_buffers_ =
                         load_materials(*device_, *transfer_command_pool_, *transfer_queue_, family_indices_, mesh);
 
-                create_material_descriptor_sets(materials_info(mesh, textures_, material_buffers_));
+                material_memory_ = create_material_memory(
+                        *device_, texture_sampler_, material_layouts_,
+                        materials_info(mesh, textures_, material_buffers_));
         }
 
         void load_mesh_geometry(const mesh::Mesh<3>& mesh)
@@ -255,7 +264,7 @@ class Impl final : public MeshObject
 
                         ASSERT(material_face_offset.size() == material_face_count.size());
                         ASSERT(std::all_of(
-                                material_descriptor_sets_.cbegin(), material_descriptor_sets_.cend(),
+                                material_memory_.cbegin(), material_memory_.cend(),
                                 [&](const auto& v)
                                 {
                                         return material_face_offset.size() == v.second.descriptor_set_count();
@@ -315,8 +324,7 @@ class Impl final : public MeshObject
 
                 bind_mesh_descriptor_set(find_mesh_descriptor_set(mesh_descriptor_set_layout));
 
-                const vulkan::Descriptors& descriptor_sets =
-                        find_material_descriptor_sets(material_descriptor_set_layout);
+                const MaterialMemory& material_memory = find_material_memory(material_descriptor_set_layout);
 
                 const std::array<VkBuffer, 1> buffers{faces_vertex_buffer_->buffer()};
                 const std::array<VkDeviceSize, 1> offsets{0};
@@ -331,7 +339,7 @@ class Impl final : public MeshObject
                                 continue;
                         }
 
-                        bind_material_descriptor_set(descriptor_sets.descriptor_set(i));
+                        bind_material_descriptor_set(material_memory.descriptor_set(i));
 
                         vkCmdDrawIndexed(
                                 command_buffer, material_vertices_[i].count, 1, material_vertices_[i].offset, 0, 0);
@@ -519,12 +527,11 @@ public:
                   acceleration_structure_family_indices_(graphics_family_indices),
                   mesh_buffer_(*device, graphics_family_indices),
                   mesh_layouts_(std::move(mesh_layouts)),
-                  material_layouts_(std::move(material_layouts)),
-                  texture_sampler_(texture_sampler)
+                  mesh_memory_(create_mesh_memory(*device_, mesh_layouts_, mesh_buffer_.buffer())),
+                  texture_sampler_(texture_sampler),
+                  material_layouts_(std::move(material_layouts))
         {
                 ASSERT(transfer_command_pool->family_index() == transfer_queue->family_index());
-
-                create_mesh_descriptor_sets();
         }
 };
 }
