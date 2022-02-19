@@ -62,11 +62,8 @@ public:
                 const std::vector<std::uint32_t>& graphics_family_indices,
                 const std::vector<std::uint32_t>& transfer_family_indices);
 
-        VkBuffer buffer_coordinates() const;
-        VkDeviceSize buffer_coordinates_size() const;
-
-        VkBuffer buffer_volume() const;
-        VkDeviceSize buffer_volume_size() const;
+        const vulkan::Buffer& buffer_coordinates() const;
+        const vulkan::Buffer& buffer_volume() const;
 
         void set_coordinates(
                 const Matrix4d& inverse_mvp_matrix,

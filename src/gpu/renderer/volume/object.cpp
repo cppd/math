@@ -55,8 +55,8 @@ class Impl final : public VolumeObject
         std::vector<VkFormat> image_formats_;
         std::unique_ptr<vulkan::ImageWithMemory> transfer_function_;
 
-        std::unordered_map<VkDescriptorSetLayout, vulkan::Descriptors> descriptor_sets_;
         const std::vector<vulkan::DescriptorSetLayoutAndBindings> image_layouts_;
+        std::unordered_map<VkDescriptorSetLayout, VolumeImageMemory> image_memory_;
 
         VkSampler image_sampler_;
         VkSampler transfer_function_sampler_;
@@ -120,23 +120,15 @@ class Impl final : public VolumeObject
 
         void create_descriptor_sets()
         {
-                VolumeImageMemory::CreateInfo info;
-                info.buffer_coordinates = buffer_.buffer_coordinates();
-                info.buffer_coordinates_size = buffer_.buffer_coordinates_size();
-                info.buffer_volume = buffer_.buffer_volume();
-                info.buffer_volume_size = buffer_.buffer_volume_size();
-                info.image = image_->image_view();
-                info.transfer_function = transfer_function_->image_view();
-
-                descriptor_sets_.clear();
+                image_memory_.clear();
                 for (const vulkan::DescriptorSetLayoutAndBindings& layout : image_layouts_)
                 {
-                        vulkan::Descriptors sets = VolumeImageMemory::create(
-                                *device_, image_sampler_, transfer_function_sampler_, layout.descriptor_set_layout,
-                                layout.descriptor_set_layout_bindings, info);
+                        VolumeImageMemory memory = VolumeImageMemory(
+                                *device_, layout.descriptor_set_layout, layout.descriptor_set_layout_bindings,
+                                buffer_.buffer_coordinates(), buffer_.buffer_volume(), image_sampler_,
+                                image_->image_view(), transfer_function_sampler_, transfer_function_->image_view());
 
-                        ASSERT(sets.descriptor_set_count() == 1);
-                        descriptor_sets_.emplace(sets.descriptor_set_layout(), std::move(sets));
+                        image_memory_.emplace(layout.descriptor_set_layout, std::move(memory));
                 }
         }
 
@@ -205,13 +197,12 @@ class Impl final : public VolumeObject
 
         const VkDescriptorSet& descriptor_set(const VkDescriptorSetLayout descriptor_set_layout) const override
         {
-                const auto iter = descriptor_sets_.find(descriptor_set_layout);
-                if (iter == descriptor_sets_.cend())
+                const auto iter = image_memory_.find(descriptor_set_layout);
+                if (iter != image_memory_.cend())
                 {
-                        error("Failed to find volume descriptor set for descriptor set layout");
+                        return iter->second.descriptor_set();
                 }
-                ASSERT(iter->second.descriptor_set_count() == 1);
-                return iter->second.descriptor_set(0);
+                error("Failed to find volume image memory for descriptor set layout");
         }
 
         void set_matrix_and_clip_plane(

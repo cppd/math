@@ -87,29 +87,27 @@ class VolumeImageMemory final
 
         static constexpr int BUFFER_COORDINATES_BINDING = 0;
         static constexpr int BUFFER_VOLUME_BINDING = 1;
+
         static constexpr int IMAGE_BINDING = 2;
         static constexpr int TRANSFER_FUNCTION_BINDING = 3;
+
+        vulkan::Descriptors descriptors_;
 
 public:
         static std::vector<VkDescriptorSetLayoutBinding> descriptor_set_layout_bindings();
         static unsigned set_number();
 
-        struct CreateInfo final
-        {
-                VkBuffer buffer_coordinates;
-                VkDeviceSize buffer_coordinates_size;
-                VkBuffer buffer_volume;
-                VkDeviceSize buffer_volume_size;
-                VkImageView image;
-                VkImageView transfer_function;
-        };
-
-        static vulkan::Descriptors create(
+        VolumeImageMemory(
                 VkDevice device,
-                VkSampler image_sampler,
-                VkSampler transfer_function_sampler,
                 VkDescriptorSetLayout descriptor_set_layout,
                 const std::vector<VkDescriptorSetLayoutBinding>& descriptor_set_layout_bindings,
-                const CreateInfo& create_info);
+                const vulkan::Buffer& buffer_coordinates,
+                const vulkan::Buffer& buffer_volume,
+                VkSampler image_sampler,
+                const vulkan::ImageView& image,
+                VkSampler transfer_function_sampler,
+                const vulkan::ImageView& transfer_function);
+
+        const VkDescriptorSet& descriptor_set() const;
 };
 }

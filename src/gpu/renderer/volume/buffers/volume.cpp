@@ -41,24 +41,14 @@ VolumeBuffer::VolumeBuffer(
 {
 }
 
-VkBuffer VolumeBuffer::buffer_coordinates() const
+const vulkan::Buffer& VolumeBuffer::buffer_coordinates() const
 {
         return uniform_buffer_coordinates_.buffer();
 }
 
-VkDeviceSize VolumeBuffer::buffer_coordinates_size() const
-{
-        return uniform_buffer_coordinates_.buffer().size();
-}
-
-VkBuffer VolumeBuffer::buffer_volume() const
+const vulkan::Buffer& VolumeBuffer::buffer_volume() const
 {
         return uniform_buffer_volume_.buffer();
-}
-
-VkDeviceSize VolumeBuffer::buffer_volume_size() const
-{
-        return uniform_buffer_volume_.buffer().size();
 }
 
 void VolumeBuffer::set_coordinates(

@@ -294,34 +294,35 @@ std::vector<VkDescriptorSetLayoutBinding> VolumeImageMemory::descriptor_set_layo
         return bindings;
 }
 
-vulkan::Descriptors VolumeImageMemory::create(
+VolumeImageMemory::VolumeImageMemory(
         const VkDevice device,
-        const VkSampler image_sampler,
-        const VkSampler transfer_function_sampler,
         const VkDescriptorSetLayout descriptor_set_layout,
         const std::vector<VkDescriptorSetLayoutBinding>& descriptor_set_layout_bindings,
-        const CreateInfo& create_info)
+        const vulkan::Buffer& buffer_coordinates,
+        const vulkan::Buffer& buffer_volume,
+        const VkSampler image_sampler,
+        const vulkan::ImageView& image,
+        const VkSampler transfer_function_sampler,
+        const vulkan::ImageView& transfer_function)
+        : descriptors_(vulkan::Descriptors(device, 1, descriptor_set_layout, descriptor_set_layout_bindings))
 {
-        vulkan::Descriptors descriptors(
-                vulkan::Descriptors(device, 1, descriptor_set_layout, descriptor_set_layout_bindings));
-
         std::vector<vulkan::Descriptors::Info> infos;
         std::vector<std::uint32_t> bindings;
 
         {
                 VkDescriptorBufferInfo buffer_info = {};
-                buffer_info.buffer = create_info.buffer_coordinates;
+                buffer_info.buffer = buffer_coordinates;
                 buffer_info.offset = 0;
-                buffer_info.range = create_info.buffer_coordinates_size;
+                buffer_info.range = buffer_coordinates.size();
 
                 infos.emplace_back(buffer_info);
                 bindings.push_back(BUFFER_COORDINATES_BINDING);
         }
         {
                 VkDescriptorBufferInfo buffer_info = {};
-                buffer_info.buffer = create_info.buffer_volume;
+                buffer_info.buffer = buffer_volume;
                 buffer_info.offset = 0;
-                buffer_info.range = create_info.buffer_volume_size;
+                buffer_info.range = buffer_volume.size();
 
                 infos.emplace_back(buffer_info);
                 bindings.push_back(BUFFER_VOLUME_BINDING);
@@ -329,7 +330,7 @@ vulkan::Descriptors VolumeImageMemory::create(
         {
                 VkDescriptorImageInfo image_info = {};
                 image_info.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
-                image_info.imageView = create_info.image;
+                image_info.imageView = image;
                 image_info.sampler = image_sampler;
 
                 infos.emplace_back(image_info);
@@ -338,20 +339,23 @@ vulkan::Descriptors VolumeImageMemory::create(
         {
                 VkDescriptorImageInfo image_info = {};
                 image_info.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
-                image_info.imageView = create_info.transfer_function;
+                image_info.imageView = transfer_function;
                 image_info.sampler = transfer_function_sampler;
 
                 infos.emplace_back(image_info);
                 bindings.push_back(TRANSFER_FUNCTION_BINDING);
         }
 
-        descriptors.update_descriptor_set(0, bindings, infos);
-
-        return descriptors;
+        descriptors_.update_descriptor_set(0, bindings, infos);
 }
 
 unsigned VolumeImageMemory::set_number()
 {
         return SET_NUMBER;
+}
+
+const VkDescriptorSet& VolumeImageMemory::descriptor_set() const
+{
+        return descriptors_.descriptor_set(0);
 }
 }
