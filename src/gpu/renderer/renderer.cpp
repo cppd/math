@@ -539,6 +539,7 @@ public:
                                 *device_, *compute_command_pool_, *compute_queue_,
                                 std::vector<std::uint32_t>({graphics_queue_->family_index()}));
                         mesh_renderer_.set_acceleration_structure(acceleration_structure_->handle());
+                        volume_renderer_.set_acceleration_structure(acceleration_structure_->handle());
 
                         create_ray_tracing_data(device_, compute_command_pool_, compute_queue_);
                 }
