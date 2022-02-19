@@ -35,6 +35,45 @@ namespace ns::gpu::renderer
 {
 namespace
 {
+std::unordered_map<VkDescriptorSetLayout, VolumeImageMemory> create_image_memory(
+        const VkDevice device,
+        const std::vector<vulkan::DescriptorSetLayoutAndBindings>& image_layouts,
+        const vulkan::Buffer& buffer_coordinates,
+        const vulkan::Buffer& buffer_volume)
+{
+        std::unordered_map<VkDescriptorSetLayout, VolumeImageMemory> image_memory;
+        for (const vulkan::DescriptorSetLayoutAndBindings& layout : image_layouts)
+        {
+                VolumeImageMemory memory = VolumeImageMemory(
+                        device, layout.descriptor_set_layout, layout.descriptor_set_layout_bindings, buffer_coordinates,
+                        buffer_volume);
+
+                image_memory.emplace(layout.descriptor_set_layout, std::move(memory));
+        }
+        return image_memory;
+}
+
+vulkan::ImageWithMemory create_transfer_function(
+        const vulkan::Device& device,
+        const std::vector<std::uint32_t>& family_indices,
+        const vulkan::CommandPool& transfer_command_pool,
+        const vulkan::Queue& transfer_queue)
+{
+        const image::Image<1> transfer_function = volume_transfer_function();
+
+        vulkan::ImageWithMemory image(
+                device, family_indices, volume_transfer_function_formats(transfer_function.color_format),
+                VK_SAMPLE_COUNT_1_BIT, VK_IMAGE_TYPE_1D, vulkan::make_extent(transfer_function.size[0]),
+                VK_IMAGE_USAGE_SAMPLED_BIT | VK_IMAGE_USAGE_TRANSFER_DST_BIT, VK_IMAGE_LAYOUT_UNDEFINED,
+                transfer_command_pool, transfer_queue);
+
+        image.write_pixels(
+                transfer_command_pool, transfer_queue, VK_IMAGE_LAYOUT_UNDEFINED,
+                VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL, transfer_function.color_format, transfer_function.pixels);
+
+        return image;
+}
+
 class Impl final : public VolumeObject
 {
         const vulkan::Device* const device_;
@@ -51,9 +90,10 @@ class Impl final : public VolumeObject
         Vector3d gradient_h_;
 
         VolumeBuffer buffer_;
+
+        vulkan::ImageWithMemory transfer_function_;
         std::unique_ptr<vulkan::ImageWithMemory> image_;
         std::vector<VkFormat> image_formats_;
-        std::unique_ptr<vulkan::ImageWithMemory> transfer_function_;
 
         const std::vector<vulkan::DescriptorSetLayoutAndBindings> image_layouts_;
         std::unordered_map<VkDescriptorSetLayout, VolumeImageMemory> image_memory_;
@@ -118,40 +158,20 @@ class Impl final : public VolumeObject
                 buffer_.set_color_volume(*transfer_command_pool_, *transfer_queue_, color_volume);
         }
 
-        void create_descriptor_sets()
+        void set_memory_image() const
         {
-                image_memory_.clear();
-                for (const vulkan::DescriptorSetLayoutAndBindings& layout : image_layouts_)
+                for (const auto& [layout, memory] : image_memory_)
                 {
-                        VolumeImageMemory memory = VolumeImageMemory(
-                                *device_, layout.descriptor_set_layout, layout.descriptor_set_layout_bindings,
-                                buffer_.buffer_coordinates(), buffer_.buffer_volume(), image_sampler_,
-                                image_->image_view(), transfer_function_sampler_, transfer_function_->image_view());
-
-                        image_memory_.emplace(layout.descriptor_set_layout, std::move(memory));
+                        memory.set_image(image_sampler_, image_->image_view());
                 }
         }
 
-        void set_transfer_function()
+        void set_memory_transfer_function() const
         {
-                if (transfer_function_)
+                for (const auto& [layout, memory] : image_memory_)
                 {
-                        return;
+                        memory.set_transfer_function(transfer_function_sampler_, transfer_function_.image_view());
                 }
-
-                const image::Image<1> image = volume_transfer_function();
-
-                transfer_function_.reset();
-
-                transfer_function_ = std::make_unique<vulkan::ImageWithMemory>(
-                        *device_, family_indices_, volume_transfer_function_formats(image.color_format),
-                        VK_SAMPLE_COUNT_1_BIT, VK_IMAGE_TYPE_1D, vulkan::make_extent(image.size[0]),
-                        VK_IMAGE_USAGE_SAMPLED_BIT | VK_IMAGE_USAGE_TRANSFER_DST_BIT, VK_IMAGE_LAYOUT_UNDEFINED,
-                        *transfer_command_pool_, *transfer_queue_);
-
-                transfer_function_->write_pixels(
-                        *transfer_command_pool_, *transfer_queue_, VK_IMAGE_LAYOUT_UNDEFINED,
-                        VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL, image.color_format, image.pixels);
         }
 
         void set_image(const image::Image<3>& image, bool* const size_changed)
@@ -177,6 +197,8 @@ class Impl final : public VolumeObject
                                 vulkan::make_extent(image.size[0], image.size[1], image.size[2]),
                                 VK_IMAGE_USAGE_SAMPLED_BIT | VK_IMAGE_USAGE_TRANSFER_DST_BIT, image_layout,
                                 *transfer_command_pool_, *transfer_queue_);
+
+                        set_memory_image();
                 }
                 else
                 {
@@ -246,9 +268,7 @@ class Impl final : public VolumeObject
 
                 if (updates[volume::UPDATE_IMAGE])
                 {
-                        set_transfer_function();
                         set_image(volume_object.volume().image, &size_changed);
-                        create_descriptor_sets();
                         update_changes.image = true;
                 }
 
@@ -292,11 +312,23 @@ public:
                   family_indices_(sort_and_unique(
                           merge<std::vector<std::uint32_t>>(graphics_family_indices, transfer_queue->family_index()))),
                   buffer_(*device_, graphics_family_indices, {transfer_queue->family_index()}),
+                  transfer_function_(create_transfer_function(
+                          *device_,
+                          family_indices_,
+                          *transfer_command_pool_,
+                          *transfer_queue_)),
                   image_layouts_(std::move(image_layouts)),
+                  image_memory_(create_image_memory(
+                          *device_,
+                          image_layouts_,
+                          buffer_.buffer_coordinates(),
+                          buffer_.buffer_volume())),
                   image_sampler_(image_sampler),
                   transfer_function_sampler_(transfer_function_sampler)
         {
                 ASSERT(transfer_command_pool->family_index() == transfer_queue->family_index());
+
+                set_memory_transfer_function();
         }
 };
 }

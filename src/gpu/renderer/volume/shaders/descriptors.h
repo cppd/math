@@ -102,11 +102,10 @@ public:
                 VkDescriptorSetLayout descriptor_set_layout,
                 const std::vector<VkDescriptorSetLayoutBinding>& descriptor_set_layout_bindings,
                 const vulkan::Buffer& buffer_coordinates,
-                const vulkan::Buffer& buffer_volume,
-                VkSampler image_sampler,
-                const vulkan::ImageView& image,
-                VkSampler transfer_function_sampler,
-                const vulkan::ImageView& transfer_function);
+                const vulkan::Buffer& buffer_volume);
+
+        void set_image(VkSampler sampler, VkImageView image) const;
+        void set_transfer_function(VkSampler sampler, VkImageView transfer_function) const;
 
         const VkDescriptorSet& descriptor_set() const;
 };
