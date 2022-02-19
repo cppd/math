@@ -366,10 +366,22 @@ class Impl final : public Renderer, RendererViewEvents, StorageMeshEvents, Stora
 
         void set_volume_matrix()
         {
-                for (VolumeObject* const visible_volume : volume_storage_.visible_objects())
+                if (ray_tracing_)
                 {
-                        visible_volume->set_matrix_and_clip_plane(
-                                renderer_view_.vp_matrix(), renderer_view_.clip_plane());
+                        for (VolumeObject* const visible_volume : volume_storage_.visible_objects())
+                        {
+                                visible_volume->set_matrix_and_clip_plane(
+                                        renderer_view_.vp_matrix(), renderer_view_.clip_plane());
+                        }
+                }
+                else
+                {
+                        for (VolumeObject* const visible_volume : volume_storage_.visible_objects())
+                        {
+                                visible_volume->set_matrix_and_clip_plane(
+                                        renderer_view_.vp_matrix(), renderer_view_.clip_plane(),
+                                        renderer_view_.shadow_vp_matrix());
+                        }
                 }
         }
 
@@ -435,8 +447,8 @@ class Impl final : public Renderer, RendererViewEvents, StorageMeshEvents, Stora
         std::unique_ptr<VolumeObject> volume_create() override
         {
                 return create_volume_object(
-                        device_, {graphics_queue_->family_index()}, transfer_command_pool_, transfer_queue_,
-                        volume_image_layouts_, volume_renderer_.image_sampler(),
+                        ray_tracing_, device_, {graphics_queue_->family_index()}, transfer_command_pool_,
+                        transfer_queue_, volume_image_layouts_, volume_renderer_.image_sampler(),
                         volume_renderer_.transfer_function_sampler());
         }
 
@@ -470,6 +482,7 @@ class Impl final : public Renderer, RendererViewEvents, StorageMeshEvents, Stora
         {
                 create_mesh_shadow_mapping_buffers();
                 create_mesh_command_buffers();
+                create_volume_command_buffers();
         }
 
         void view_matrices_changed() override

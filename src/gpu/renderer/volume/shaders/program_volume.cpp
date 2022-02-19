@@ -34,9 +34,9 @@ std::vector<VkDescriptorSetLayoutBinding> VolumeProgram::descriptor_set_layout_s
                 !ray_tracing_ ? VK_SHADER_STAGE_FRAGMENT_BIT : 0, ray_tracing_ ? VK_SHADER_STAGE_FRAGMENT_BIT : 0);
 }
 
-std::vector<VkDescriptorSetLayoutBinding> VolumeProgram::descriptor_set_layout_image_bindings()
+std::vector<VkDescriptorSetLayoutBinding> VolumeProgram::descriptor_set_layout_image_bindings() const
 {
-        return VolumeImageMemory::descriptor_set_layout_bindings();
+        return VolumeImageMemory::descriptor_set_layout_bindings(!ray_tracing_);
 }
 
 VolumeProgram::VolumeProgram(const vulkan::Device* const device, const Code& code)

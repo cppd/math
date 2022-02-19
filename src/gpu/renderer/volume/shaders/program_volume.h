@@ -69,7 +69,7 @@ public:
         std::vector<VkDescriptorSetLayoutBinding> descriptor_set_layout_shared_bindings() const;
 
         VkDescriptorSetLayout descriptor_set_layout_image() const;
-        static std::vector<VkDescriptorSetLayoutBinding> descriptor_set_layout_image_bindings();
+        std::vector<VkDescriptorSetLayoutBinding> descriptor_set_layout_image_bindings() const;
 
         VkPipelineLayout pipeline_layout() const;
 };

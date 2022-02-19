@@ -21,6 +21,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "image.h"
 
 #include "../shading_parameters.h"
+#include "buffers/shadow_matrix.h"
 #include "buffers/volume.h"
 #include "shaders/descriptors.h"
 
@@ -39,7 +40,8 @@ std::unordered_map<VkDescriptorSetLayout, VolumeImageMemory> create_image_memory
         const VkDevice device,
         const std::vector<vulkan::DescriptorSetLayoutAndBindings>& image_layouts,
         const vulkan::Buffer& buffer_coordinates,
-        const vulkan::Buffer& buffer_volume)
+        const vulkan::Buffer& buffer_volume,
+        const vulkan::Buffer* const buffer_shadow_matrix)
 {
         std::unordered_map<VkDescriptorSetLayout, VolumeImageMemory> image_memory;
         for (const vulkan::DescriptorSetLayoutAndBindings& layout : image_layouts)
@@ -47,6 +49,11 @@ std::unordered_map<VkDescriptorSetLayout, VolumeImageMemory> create_image_memory
                 VolumeImageMemory memory = VolumeImageMemory(
                         device, layout.descriptor_set_layout, layout.descriptor_set_layout_bindings, buffer_coordinates,
                         buffer_volume);
+
+                if (buffer_shadow_matrix)
+                {
+                        memory.set_shadow_matrix(*buffer_shadow_matrix);
+                }
 
                 image_memory.emplace(layout.descriptor_set_layout, std::move(memory));
         }
@@ -90,6 +97,9 @@ class Impl final : public VolumeObject
         Vector3d gradient_h_;
 
         VolumeBuffer buffer_;
+
+        Matrix4d world_to_shadow_matrix_;
+        std::unique_ptr<VolumeShadowMatrixBuffer> shadow_matrix_buffer_;
 
         vulkan::ImageWithMemory transfer_function_;
         std::unique_ptr<vulkan::ImageWithMemory> image_;
@@ -145,6 +155,11 @@ class Impl final : public VolumeObject
                 buffer_.set_coordinates(
                         mvp.inverse(), texture_to_world_matrix_, mvp.row(2), clip_plane, gradient_h_,
                         gradient_to_world_matrix_);
+
+                if (shadow_matrix_buffer_)
+                {
+                        shadow_matrix_buffer_->set_matrix(world_to_shadow_matrix_ * texture_to_world_matrix_);
+                }
         }
 
         void buffer_set_clip_plane() const
@@ -236,6 +251,16 @@ class Impl final : public VolumeObject
                 buffer_set_coordinates();
         }
 
+        void set_matrix_and_clip_plane(
+                const Matrix4d& vp_matrix,
+                const std::optional<Vector4d>& world_clip_plane_equation,
+                const Matrix4d& world_to_shadow_matrix) override
+        {
+                ASSERT(shadow_matrix_buffer_);
+                world_to_shadow_matrix_ = world_to_shadow_matrix;
+                set_matrix_and_clip_plane(vp_matrix, world_clip_plane_equation);
+        }
+
         void set_clip_plane(const Vector4d& world_clip_plane_equation) override
         {
                 world_clip_plane_equation_ = world_clip_plane_equation;
@@ -299,7 +324,8 @@ class Impl final : public VolumeObject
         }
 
 public:
-        Impl(const vulkan::Device* const device,
+        Impl(const bool ray_tracing,
+             const vulkan::Device* const device,
              const std::vector<std::uint32_t>& graphics_family_indices,
              const vulkan::CommandPool* const transfer_command_pool,
              const vulkan::Queue* const transfer_queue,
@@ -312,6 +338,9 @@ public:
                   family_indices_(sort_and_unique(
                           merge<std::vector<std::uint32_t>>(graphics_family_indices, transfer_queue->family_index()))),
                   buffer_(*device_, graphics_family_indices, {transfer_queue->family_index()}),
+                  shadow_matrix_buffer_(
+                          ray_tracing ? nullptr
+                                      : std::make_unique<VolumeShadowMatrixBuffer>(*device_, graphics_family_indices)),
                   transfer_function_(create_transfer_function(
                           *device_,
                           family_indices_,
@@ -322,7 +351,8 @@ public:
                           *device_,
                           image_layouts_,
                           buffer_.buffer_coordinates(),
-                          buffer_.buffer_volume())),
+                          buffer_.buffer_volume(),
+                          shadow_matrix_buffer_ ? &shadow_matrix_buffer_->buffer() : nullptr)),
                   image_sampler_(image_sampler),
                   transfer_function_sampler_(transfer_function_sampler)
         {
@@ -334,6 +364,7 @@ public:
 }
 
 std::unique_ptr<VolumeObject> create_volume_object(
+        const bool ray_tracing,
         const vulkan::Device* const device,
         const std::vector<std::uint32_t>& graphics_family_indices,
         const vulkan::CommandPool* const transfer_command_pool,
@@ -343,7 +374,7 @@ std::unique_ptr<VolumeObject> create_volume_object(
         const VkSampler transfer_function_sampler)
 {
         return std::make_unique<Impl>(
-                device, graphics_family_indices, transfer_command_pool, transfer_queue, std::move(image_layouts),
-                image_sampler, transfer_function_sampler);
+                ray_tracing, device, graphics_family_indices, transfer_command_pool, transfer_queue,
+                std::move(image_layouts), image_sampler, transfer_function_sampler);
 }
 }
