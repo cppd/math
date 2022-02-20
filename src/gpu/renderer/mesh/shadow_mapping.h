@@ -66,7 +66,7 @@ public:
 
         void delete_command_buffers();
 
-        void set_shadow_vp_matrix(const Matrix4d& shadow_vp_matrix);
+        void set_shadow_matrices(const Matrix4d& shadow_vp_matrix, const Matrix4d& shadow_vp_texture_matrix) const;
 
         const vulkan::ImageView& image_view() const;
         VkSampler sampler() const;

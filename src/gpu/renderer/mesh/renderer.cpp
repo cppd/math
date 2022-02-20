@@ -363,10 +363,10 @@ void MeshRenderer::delete_shadow_mapping_command_buffers()
         shadow_mapping_->delete_command_buffers();
 }
 
-void MeshRenderer::set_shadow_vp_matrix(const Matrix4d& shadow_vp_matrix)
+void MeshRenderer::set_shadow_matrices(const Matrix4d& shadow_vp_matrix, const Matrix4d& shadow_vp_texture_matrix) const
 {
         ASSERT(shadow_mapping_);
-        shadow_mapping_->set_shadow_vp_matrix(shadow_vp_matrix);
+        shadow_mapping_->set_shadow_matrices(shadow_vp_matrix, shadow_vp_texture_matrix);
 }
 
 void MeshRenderer::set_acceleration_structure(const VkAccelerationStructureKHR acceleration_structure)

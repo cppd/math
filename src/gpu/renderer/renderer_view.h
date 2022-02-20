@@ -50,12 +50,19 @@ class RendererView final
 
         Matrix4d vp_matrix_ = Matrix4d(1);
         Matrix4d shadow_vp_matrix_ = Matrix4d(1);
+        Matrix4d shadow_vp_texture_matrix_ = Matrix4d(1);
 
         Vector3f clear_color_rgb32_ = Vector3f(0);
         double shadow_zoom_ = 1;
         bool show_shadow_ = false;
         std::optional<Vector4d> clip_plane_;
         bool show_normals_ = false;
+
+        static Matrix4d camera_volume_to_projection(const CameraInfo::Volume& volume)
+        {
+                return matrix::ortho_vulkan<double>(
+                        volume.left, volume.right, volume.bottom, volume.top, volume.near, volume.far);
+        }
 
         void command(const SetLightingColor& v)
         {
@@ -146,21 +153,18 @@ class RendererView final
         {
                 const CameraInfo& c = *v.info;
 
-                {
-                        const Matrix4d& projection_matrix = matrix::ortho_vulkan<double>(
-                                c.main_volume.left, c.main_volume.right, c.main_volume.bottom, c.main_volume.top,
-                                c.main_volume.near, c.main_volume.far);
-                        vp_matrix_ = projection_matrix * c.main_view_matrix;
-                        drawing_buffer_->set_matrix(vp_matrix_);
-                }
+                vp_matrix_ = camera_volume_to_projection(c.main_volume) * c.main_view_matrix;
+                drawing_buffer_->set_matrix(vp_matrix_);
 
                 if (shadow_mapping_)
                 {
-                        const Matrix4d& projection_matrix = matrix::ortho_vulkan<double>(
-                                c.shadow_volume.left, c.shadow_volume.right, c.shadow_volume.bottom,
-                                c.shadow_volume.top, c.shadow_volume.near, c.shadow_volume.far);
+                        // shadow coordinates x(-1, 1) y(-1, 1) z(0, 1).
+                        // shadow texture coordinates x(0, 1) y(0, 1) z(0, 1).
+                        static constexpr Matrix4d TEXTURE_MATRIX =
+                                matrix::scale<double>(0.5, 0.5, 1) * matrix::translate<double>(1, 1, 0);
 
-                        shadow_vp_matrix_ = projection_matrix * c.shadow_view_matrix;
+                        shadow_vp_matrix_ = camera_volume_to_projection(c.shadow_volume) * c.shadow_view_matrix;
+                        shadow_vp_texture_matrix_ = TEXTURE_MATRIX * shadow_vp_matrix_;
                 }
 
                 drawing_buffer_->set_direction_to_light(-to_vector<float>(c.light_direction));
@@ -226,6 +230,11 @@ public:
         const Matrix4d& shadow_vp_matrix() const
         {
                 return shadow_vp_matrix_;
+        }
+
+        const Matrix4d& shadow_vp_texture_matrix() const
+        {
+                return shadow_vp_texture_matrix_;
         }
 
         double shadow_zoom() const

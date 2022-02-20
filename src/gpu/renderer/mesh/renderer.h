@@ -133,7 +133,7 @@ public:
                 VkCommandPool graphics_command_pool);
         void delete_shadow_mapping_command_buffers();
 
-        void set_shadow_vp_matrix(const Matrix4d& shadow_vp_matrix);
+        void set_shadow_matrices(const Matrix4d& shadow_vp_matrix, const Matrix4d& shadow_vp_texture_matrix) const;
         void set_acceleration_structure(VkAccelerationStructureKHR acceleration_structure);
 
         bool has_meshes() const;
