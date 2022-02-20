@@ -104,18 +104,12 @@ float shadow_weight(const vec3 p)
                         : ray_tracing_intersection(org, dir, acceleration_structure, drawing.clip_plane_equation);
         return intersection ? 1 : 0;
 }
-bool show_shadow()
-{
-        return drawing.show_shadow;
-}
 #else
-float shadow_weight(const vec3)
+float shadow_weight(const vec3 p)
 {
-        return 0;
-}
-bool show_shadow()
-{
-        return false;
+        const vec3 shadow_position = (shadow_matrix.texture_to_shadow * vec4(p, 1)).xyz;
+        const float d = texture(shadow_mapping_texture, shadow_position.xy).r;
+        return d <= shadow_position.z ? 1 : 0;
 }
 #endif
 
@@ -135,7 +129,7 @@ vec4 isosurface_color(const vec3 p)
         const vec3 world_normal = normalize(coordinates.gradient_to_world_matrix * gradient(p));
         const vec3 n = faceforward(world_normal, -v, world_normal);
 
-        const vec3 shade_color = show_shadow()
+        const vec3 shade_color = drawing.show_shadow
                                          ? shade(volume.color, volume.metalness, volume.roughness, n, v, l,
                                                  ggx_f1_albedo_cosine_roughness, ggx_f1_albedo_cosine_weighted_average,
                                                  drawing.lighting_color, volume.ambient, shadow_weight(p))
