@@ -19,9 +19,9 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "geometry.h"
 #include "image.h"
+#include "shadow_mapping.h"
 
 #include "../shading_parameters.h"
-#include "buffers/shadow_matrix.h"
 #include "buffers/volume.h"
 #include "shaders/descriptors.h"
 
@@ -98,8 +98,7 @@ class Impl final : public VolumeObject
 
         VolumeBuffer buffer_;
 
-        Matrix4d shadow_vp_texture_matrix_;
-        std::unique_ptr<VolumeShadowMatrixBuffer> shadow_matrix_buffer_;
+        std::unique_ptr<VolumeShadowMapping> shadow_mapping_;
 
         vulkan::ImageWithMemory transfer_function_;
         std::unique_ptr<vulkan::ImageWithMemory> image_;
@@ -155,11 +154,6 @@ class Impl final : public VolumeObject
                 buffer_.set_coordinates(
                         mvp.inverse(), texture_to_world_matrix_, mvp.row(2), clip_plane, gradient_h_,
                         gradient_to_world_matrix_);
-
-                if (shadow_matrix_buffer_)
-                {
-                        shadow_matrix_buffer_->set_matrix(shadow_vp_texture_matrix_ * texture_to_world_matrix_);
-                }
         }
 
         void buffer_set_clip_plane() const
@@ -232,6 +226,20 @@ class Impl final : public VolumeObject
                         });
         }
 
+        void set_texture_to_world_matrix(const Matrix4d& texture_to_world_matrix)
+        {
+                texture_to_world_matrix_ = texture_to_world_matrix;
+                gradient_h_ = volume_gradient_h(texture_to_world_matrix_, image_->image());
+                gradient_to_world_matrix_ = texture_to_world_matrix_.top_left<3, 3>() * Matrix3d(gradient_h_);
+
+                buffer_set_coordinates();
+
+                if (shadow_mapping_)
+                {
+                        shadow_mapping_->set_matrix(texture_to_world_matrix_);
+                }
+        }
+
         const VkDescriptorSet& descriptor_set(const VkDescriptorSetLayout descriptor_set_layout) const override
         {
                 const auto iter = image_memory_.find(descriptor_set_layout);
@@ -256,8 +264,8 @@ class Impl final : public VolumeObject
                 const std::optional<Vector4d>& world_clip_plane_equation,
                 const Matrix4d& shadow_vp_texture_matrix) override
         {
-                ASSERT(shadow_matrix_buffer_);
-                shadow_vp_texture_matrix_ = shadow_vp_texture_matrix;
+                ASSERT(shadow_mapping_);
+                shadow_mapping_->set_matrix(shadow_vp_texture_matrix, texture_to_world_matrix_);
                 set_matrix_and_clip_plane(vp_matrix, world_clip_plane_equation);
         }
 
@@ -313,11 +321,7 @@ class Impl final : public VolumeObject
 
                 if (size_changed || updates[volume::UPDATE_MATRICES])
                 {
-                        texture_to_world_matrix_ = volume_object.matrix() * volume_object.volume().matrix;
-                        gradient_h_ = volume_gradient_h(texture_to_world_matrix_, image_->image());
-                        gradient_to_world_matrix_ = texture_to_world_matrix_.top_left<3, 3>() * Matrix3d(gradient_h_);
-
-                        buffer_set_coordinates();
+                        set_texture_to_world_matrix(volume_object.matrix() * volume_object.volume().matrix);
                 }
 
                 return update_changes;
@@ -338,9 +342,9 @@ public:
                   family_indices_(sort_and_unique(
                           merge<std::vector<std::uint32_t>>(graphics_family_indices, transfer_queue->family_index()))),
                   buffer_(*device_, graphics_family_indices, {transfer_queue->family_index()}),
-                  shadow_matrix_buffer_(
+                  shadow_mapping_(
                           ray_tracing ? nullptr
-                                      : std::make_unique<VolumeShadowMatrixBuffer>(*device_, graphics_family_indices)),
+                                      : std::make_unique<VolumeShadowMapping>(*device_, graphics_family_indices)),
                   transfer_function_(create_transfer_function(
                           *device_,
                           family_indices_,
@@ -352,7 +356,7 @@ public:
                           image_layouts_,
                           buffer_.buffer_coordinates(),
                           buffer_.buffer_volume(),
-                          shadow_matrix_buffer_ ? &shadow_matrix_buffer_->buffer() : nullptr)),
+                          shadow_mapping_ ? &shadow_mapping_->buffer() : nullptr)),
                   image_sampler_(image_sampler),
                   transfer_function_sampler_(transfer_function_sampler)
         {
