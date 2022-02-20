@@ -39,7 +39,7 @@ struct VolumeObject
         virtual void set_matrix_and_clip_plane(
                 const Matrix4d& vp_matrix,
                 const std::optional<Vector4d>& world_clip_plane_equation,
-                const Matrix4d& world_to_shadow_matrix) = 0;
+                const Matrix4d& shadow_vp_texture_matrix) = 0;
 
         virtual void set_clip_plane(const Vector4d& world_clip_plane_equation) = 0;
 

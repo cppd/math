@@ -98,7 +98,7 @@ class Impl final : public VolumeObject
 
         VolumeBuffer buffer_;
 
-        Matrix4d world_to_shadow_matrix_;
+        Matrix4d shadow_vp_texture_matrix_;
         std::unique_ptr<VolumeShadowMatrixBuffer> shadow_matrix_buffer_;
 
         vulkan::ImageWithMemory transfer_function_;
@@ -158,7 +158,7 @@ class Impl final : public VolumeObject
 
                 if (shadow_matrix_buffer_)
                 {
-                        shadow_matrix_buffer_->set_matrix(world_to_shadow_matrix_ * texture_to_world_matrix_);
+                        shadow_matrix_buffer_->set_matrix(shadow_vp_texture_matrix_ * texture_to_world_matrix_);
                 }
         }
 
@@ -254,10 +254,10 @@ class Impl final : public VolumeObject
         void set_matrix_and_clip_plane(
                 const Matrix4d& vp_matrix,
                 const std::optional<Vector4d>& world_clip_plane_equation,
-                const Matrix4d& world_to_shadow_matrix) override
+                const Matrix4d& shadow_vp_texture_matrix) override
         {
                 ASSERT(shadow_matrix_buffer_);
-                world_to_shadow_matrix_ = world_to_shadow_matrix;
+                shadow_vp_texture_matrix_ = shadow_vp_texture_matrix;
                 set_matrix_and_clip_plane(vp_matrix, world_clip_plane_equation);
         }
 
