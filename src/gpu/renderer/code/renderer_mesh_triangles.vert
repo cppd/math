@@ -45,19 +45,11 @@ out gl_PerVertex
 
 void main()
 {
-        const vec4 world_coordinates = mesh.model_matrix * vec4(position, 1.0);
+        const vec4 world_coordinates = mesh.model_matrix * vec4(position, 1);
 
-        const vec4 pos = drawing.vp_matrix * world_coordinates;
-        gl_Position = pos;
+        gl_Position = drawing.vp_matrix * world_coordinates;
 
-        if (drawing.clip_plane_enabled)
-        {
-                gl_ClipDistance[0] = dot(drawing.clip_plane_equation, world_coordinates);
-        }
-        else
-        {
-                gl_ClipDistance[0] = 1;
-        }
+        gl_ClipDistance[0] = drawing.clip_plane_enabled ? dot(drawing.clip_plane_equation, world_coordinates) : 1;
 
         vs.world_normal = mesh.normal_matrix * normal;
         vs.world_position = world_coordinates.xyz;

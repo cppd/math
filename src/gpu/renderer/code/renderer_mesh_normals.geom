@@ -48,15 +48,15 @@ gs;
 
 void line(const vec3 world_from, const vec3 world_to)
 {
-        const vec4 from = drawing.vp_matrix * vec4(world_from, 1.0);
+        const vec4 from = drawing.vp_matrix * vec4(world_from, 1);
         gl_Position = from;
-        gl_ClipDistance[0] = drawing.clip_plane_enabled ? dot(drawing.clip_plane_equation, vec4(world_from, 1.0)) : 1;
+        gl_ClipDistance[0] = drawing.clip_plane_enabled ? dot(drawing.clip_plane_equation, vec4(world_from, 1)) : 1;
         gs.color = drawing.normal_color_negative;
         EmitVertex();
 
-        const vec4 to = drawing.vp_matrix * vec4(world_to, 1.0);
+        const vec4 to = drawing.vp_matrix * vec4(world_to, 1);
         gl_Position = to;
-        gl_ClipDistance[0] = drawing.clip_plane_enabled ? dot(drawing.clip_plane_equation, vec4(world_to, 1.0)) : 1;
+        gl_ClipDistance[0] = drawing.clip_plane_enabled ? dot(drawing.clip_plane_equation, vec4(world_to, 1)) : 1;
         gs.color = drawing.normal_color_positive;
         EmitVertex();
 
@@ -65,7 +65,7 @@ void line(const vec3 world_from, const vec3 world_to)
 
 void main()
 {
-        const vec3 world_from = (mesh.model_matrix * vec4(vs[0].position, 1.0)).xyz;
+        const vec3 world_from = (mesh.model_matrix * vec4(vs[0].position, 1)).xyz;
         const vec3 world_normal = mesh.normal_matrix * vs[0].normal;
         const vec3 world_normal_vector = drawing.normal_length * normalize(world_normal);
 
