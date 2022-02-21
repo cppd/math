@@ -34,11 +34,11 @@ Real-Time Volume Graphics.
 A K Peters, Ltd, 2006.
 */
 
-#include "convex_intersection.glsl"
 #include "volume_color.glsl"
 #include "volume_fragments.glsl"
 #include "volume_image.glsl"
 #include "volume_in.glsl"
+#include "volume_intersect.glsl"
 #include "volume_isosurface.glsl"
 #include "volume_out.glsl"
 
@@ -67,7 +67,7 @@ void draw_fragments()
 
 void draw_image_as_volume(vec3 image_dir, const vec3 image_org, float depth_dir, const float depth_org)
 {
-        const float length_in_samples = length(image_size() * image_dir);
+        const float length_in_samples = length(textureSize(image, 0) * image_dir);
         const float sample_end = length_in_samples;
 
         image_dir /= length_in_samples;
@@ -129,7 +129,7 @@ void draw_image_as_volume(vec3 image_dir, const vec3 image_org, float depth_dir,
 
 void draw_image_as_isosurface(vec3 image_dir, const vec3 image_org, float depth_dir, const float depth_org)
 {
-        const float length_in_samples = ceil(length(image_size() * image_dir));
+        const float length_in_samples = ceil(length(textureSize(image, 0) * image_dir));
         const float sample_end = length_in_samples + 1;
 
         image_dir /= length_in_samples;
@@ -258,36 +258,18 @@ void draw_image_as_isosurface(vec3 image_dir, const vec3 image_org, float depth_
         }
 }
 
-bool intersect(
-        const vec3 ray_org,
-        const vec3 ray_dir,
-        const vec3 planes_min,
-        const vec3 planes_max,
-        out float near,
-        out float far)
+void draw_volume(const vec3 image_dir, const vec3 image_org, const float depth_dir, const float depth_org)
 {
-        if (!box_intersection(ray_org, ray_dir, planes_min, planes_max, near, far))
+        color_init();
+        if (is_volume())
         {
-                return false;
+                draw_image_as_volume(image_dir, image_org, depth_dir, depth_org);
         }
-        if (drawing.clip_plane_enabled)
+        else
         {
-                if (!plane_intersection(ray_org, ray_dir, coordinates.clip_plane_equation, near, far))
-                {
-                        return false;
-                }
+                draw_image_as_isosurface(image_dir, image_org, depth_dir, depth_org);
         }
-        return true;
-}
-
-bool intersect(const bool exact, const vec3 ray_org, const vec3 ray_dir, out float first, out float second)
-{
-        if (exact)
-        {
-                return intersect(ray_org, ray_dir, vec3(0), vec3(1), first, second);
-        }
-        const vec3 region = vec3(0.5) / image_size();
-        return intersect(ray_org, ray_dir, -region, vec3(1) + region, first, second);
+        color_set();
 }
 
 void draw_without_volume()
@@ -307,11 +289,9 @@ void main()
         const vec3 ray_org = (coordinates.inverse_mvp_matrix * vec4(device_coordinates, 0, 1)).xyz;
         const vec3 ray_dir = normalize(mat3(coordinates.inverse_mvp_matrix) * vec3(0, 0, 1));
 
-        const bool draw_as_volume = is_volume();
-
         float first;
         float second;
-        if (!intersect(draw_as_volume, ray_org, ray_dir, first, second))
+        if (!volume_intersect(ray_org, ray_dir, first, second))
         {
                 draw_without_volume();
                 return;
@@ -335,16 +315,7 @@ void main()
                 depth_dir = depth_dir_limit;
         }
 
-        color_init();
-        if (draw_as_volume)
-        {
-                draw_image_as_volume(image_dir, image_org, depth_dir, depth_org);
-        }
-        else
-        {
-                draw_image_as_isosurface(image_dir, image_org, depth_dir, depth_org);
-        }
-        color_set();
+        draw_volume(image_dir, image_org, depth_dir, depth_org);
 }
 
 #elif defined(FRAGMENTS)

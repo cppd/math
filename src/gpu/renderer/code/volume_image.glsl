@@ -27,11 +27,6 @@ bool is_volume()
         return volume.color_volume || !volume.isosurface;
 }
 
-ivec3 image_size()
-{
-        return textureSize(image, 0);
-}
-
 float scalar_volume_value(const vec3 p)
 {
         const float image_value = texture(image, p).r;
