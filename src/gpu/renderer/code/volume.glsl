@@ -34,11 +34,11 @@ Real-Time Volume Graphics.
 A K Peters, Ltd, 2006.
 */
 
+#include "convex_intersection.glsl"
 #include "volume_color.glsl"
 #include "volume_fragments.glsl"
 #include "volume_image.glsl"
 #include "volume_in.glsl"
-#include "volume_intersect.glsl"
 #include "volume_isosurface.glsl"
 #include "volume_out.glsl"
 
@@ -266,13 +266,13 @@ bool intersect(
         out float near,
         out float far)
 {
-        if (!volume_intersect(ray_org, ray_dir, planes_min, planes_max, near, far))
+        if (!box_intersection(ray_org, ray_dir, planes_min, planes_max, near, far))
         {
                 return false;
         }
         if (drawing.clip_plane_enabled)
         {
-                if (!clip_plane_intersect(ray_org, ray_dir, coordinates.clip_plane_equation, near, far))
+                if (!plane_intersection(ray_org, ray_dir, coordinates.clip_plane_equation, near, far))
                 {
                         return false;
                 }

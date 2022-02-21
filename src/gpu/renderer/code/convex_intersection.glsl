@@ -15,11 +15,14 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-bool volume_intersect(
-        const vec3 ray_org,
-        const vec3 ray_dir,
-        const vec3 planes_min,
-        const vec3 planes_max,
+#ifndef CONVEX_INTERSECTION
+#define CONVEX_INTERSECTION
+
+bool box_intersection(
+        const vec3 org,
+        const vec3 dir,
+        const vec3 box_min,
+        const vec3 box_max,
         out float near,
         out float far)
 {
@@ -27,11 +30,11 @@ bool volume_intersect(
         far = 1e38;
         for (int i = 0; i < 3; ++i)
         {
-                const float s = ray_dir[i];
-                const float d = ray_org[i];
+                const float s = dir[i];
+                const float d = org[i];
                 if (s == 0)
                 {
-                        if (d < planes_min[i] || d > planes_max[i])
+                        if (d < box_min[i] || d > box_max[i])
                         {
                                 return false;
                         }
@@ -39,7 +42,7 @@ bool volume_intersect(
                 }
                 const bool dir_negative = (s < 0);
                 const float r = 1 / s;
-                const vec2 a = vec2((planes_min[i] - d) * r, (planes_max[i] - d) * r);
+                const vec2 a = vec2((box_min[i] - d) * r, (box_max[i] - d) * r);
                 near = max(near, a[int(dir_negative)]);
                 far = min(far, a[int(!dir_negative)]);
                 if (far < near)
@@ -50,17 +53,12 @@ bool volume_intersect(
         return true;
 }
 
-bool clip_plane_intersect(
-        const vec3 ray_org,
-        const vec3 ray_dir,
-        const vec4 clip_plane,
-        inout float near,
-        inout float far)
+bool plane_intersection(const vec3 org, const vec3 dir, const vec4 plane, inout float near, inout float far)
 {
-        const vec3 plane_n = clip_plane.xyz;
-        const float plane_d = clip_plane.w;
-        const float s = dot(ray_dir, plane_n);
-        const float d = dot(ray_org, plane_n);
+        const vec3 plane_n = plane.xyz;
+        const float plane_d = plane.w;
+        const float s = dot(dir, plane_n);
+        const float d = dot(org, plane_n);
         if (s == 0)
         {
                 if (d > plane_d)
@@ -84,3 +82,5 @@ bool clip_plane_intersect(
         }
         return true;
 }
+
+#endif
