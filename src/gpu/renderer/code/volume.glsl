@@ -34,10 +34,12 @@ Real-Time Volume Graphics.
 A K Peters, Ltd, 2006.
 */
 
+#include "volume_color.glsl"
 #include "volume_fragments.glsl"
 #include "volume_image.glsl"
 #include "volume_in.glsl"
 #include "volume_intersect.glsl"
+#include "volume_isosurface.glsl"
 #include "volume_out.glsl"
 
 #define COLOR_ADD(c)                \
@@ -270,7 +272,7 @@ bool intersect(
         }
         if (drawing.clip_plane_enabled)
         {
-                if (!clip_plane_intersect(ray_org, ray_dir, image_clip_plane_equation(), near, far))
+                if (!clip_plane_intersect(ray_org, ray_dir, coordinates.clip_plane_equation, near, far))
                 {
                         return false;
                 }
@@ -302,9 +304,8 @@ void main()
         fragments_build();
 
         const vec2 device_coordinates = (gl_FragCoord.xy - drawing.viewport_center) * drawing.viewport_factor;
-
-        const vec3 ray_org = image_ray_org(device_coordinates);
-        const vec3 ray_dir = image_ray_dir();
+        const vec3 ray_org = (coordinates.inverse_mvp_matrix * vec4(device_coordinates, 0, 1)).xyz;
+        const vec3 ray_dir = normalize(mat3(coordinates.inverse_mvp_matrix) * vec3(0, 0, 1));
 
         const bool draw_as_volume = is_volume();
 
@@ -317,7 +318,7 @@ void main()
         }
 
         const vec3 image_org = ray_org + ray_dir * first;
-        const float depth_org = image_depth_org(image_org);
+        const float depth_org = dot(coordinates.third_row_of_mvp, vec4(image_org, 1));
         const float depth_limit = texelFetch(depth_image, ivec2(gl_FragCoord.xy), gl_SampleID).r;
         const float depth_dir_limit = depth_limit - depth_org;
         if (depth_dir_limit <= 0)
@@ -327,7 +328,7 @@ void main()
         }
 
         vec3 image_dir = ray_dir * (second - first);
-        float depth_dir = image_depth_dir(image_dir);
+        float depth_dir = dot(coordinates.third_row_of_mvp.xyz, image_dir);
         if (depth_dir > depth_dir_limit)
         {
                 image_dir *= depth_dir_limit / depth_dir;

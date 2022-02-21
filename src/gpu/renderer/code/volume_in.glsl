@@ -31,7 +31,7 @@ layout(set = 0, binding = 1, std430) buffer restrict readonly TransparencyNodes
         TransparencyNode transparency_nodes[];
 };
 
-#ifdef IMAGE
+#if defined(IMAGE)
 
 DRAWING_BUFFER(0, 2);
 
@@ -50,7 +50,7 @@ layout(set = 0, binding = 6) uniform sampler2D shadow_mapping_texture;
 
 //
 
-#ifdef IMAGE
+#if defined(IMAGE)
 
 layout(set = 1, binding = 0, std140) uniform restrict Coordinates
 {
