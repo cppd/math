@@ -39,7 +39,6 @@ A K Peters, Ltd, 2006.
 #include "volume_image.glsl"
 #include "volume_in.glsl"
 #include "volume_intersect.glsl"
-#include "volume_isosurface.glsl"
 #include "volume_out.glsl"
 
 #define COLOR_ADD(c)                \
@@ -169,7 +168,7 @@ void draw_image_as_isosurface(vec3 image_dir, const vec3 image_org, float depth_
                                 if (next_sign != prev_sign)
                                 {
                                         vec3 prev_p = image_org + (s - 1) * image_dir;
-                                        p = find_isosurface(prev_p, p, prev_sign);
+                                        p = isosurface_intersect(prev_p, p, prev_sign);
                                         prev_sign = next_sign;
 
                                         COLOR_ADD(isosurface_color(p));
@@ -193,7 +192,7 @@ void draw_image_as_isosurface(vec3 image_dir, const vec3 image_org, float depth_
                         if (next_sign != prev_sign)
                         {
                                 vec4 prev_v = vec4(image_org, depth_org) + (s - 1) * vec4(image_dir, depth_dir);
-                                vec4 v = find_isosurface(prev_v, vec4(p, volume_depth), prev_sign);
+                                vec4 v = isosurface_intersect(prev_v, vec4(p, volume_depth), prev_sign);
                                 prev_sign = next_sign;
 
                                 while (fragment.depth <= v.w)
@@ -251,7 +250,7 @@ void draw_image_as_isosurface(vec3 image_dir, const vec3 image_org, float depth_
                 }
 
                 vec3 prev_p = image_org + (s - 1) * image_dir;
-                p = find_isosurface(prev_p, p, prev_sign);
+                p = isosurface_intersect(prev_p, p, prev_sign);
                 prev_sign = next_sign;
 
                 COLOR_ADD(isosurface_color(p));

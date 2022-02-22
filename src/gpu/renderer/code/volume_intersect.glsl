@@ -24,6 +24,10 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "volume_image.glsl"
 #include "volume_in.glsl"
 
+const int ISOSURFACE_ITERATION_COUNT = 5;
+
+//
+
 bool volume_intersect(
         const vec3 org,
         const vec3 dir,
@@ -57,6 +61,47 @@ bool volume_intersect(const vec3 org, const vec3 dir, out float first, out float
 
         const vec3 region = vec3(0.5) / textureSize(image, 0);
         return volume_intersect(org, dir, -region, vec3(1) + region, first, second);
+}
+
+//
+
+float isosurface_sign(const vec3 p)
+{
+        return sign(scalar_volume_value(p) - volume.isovalue);
+}
+
+vec3 isosurface_intersect(vec3 a, vec3 b, const float sign_a)
+{
+        for (int i = 0; i < ISOSURFACE_ITERATION_COUNT; ++i)
+        {
+                const vec3 m = 0.5 * (a + b);
+                if (sign_a == sign(scalar_volume_value(m) - volume.isovalue))
+                {
+                        a = m;
+                }
+                else
+                {
+                        b = m;
+                }
+        }
+        return 0.5 * (a + b);
+}
+
+vec4 isosurface_intersect(vec4 a, vec4 b, const float sign_a)
+{
+        for (int i = 0; i < ISOSURFACE_ITERATION_COUNT; ++i)
+        {
+                const vec4 m = 0.5 * (a + b);
+                if (sign_a == sign(scalar_volume_value(m.xyz) - volume.isovalue))
+                {
+                        a = m;
+                }
+                else
+                {
+                        b = m;
+                }
+        }
+        return 0.5 * (a + b);
 }
 
 #endif
