@@ -60,6 +60,7 @@ layout(set = 1, binding = 0, std140) uniform restrict Coordinates
         vec4 clip_plane_equation;
         vec3 gradient_h;
         mat3 gradient_to_world_matrix;
+        mat3 world_to_texture_matrix;
 }
 coordinates;
 

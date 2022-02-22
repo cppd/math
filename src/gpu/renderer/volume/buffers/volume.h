@@ -39,6 +39,7 @@ class VolumeBuffer final
                 alignas(sizeof(Vector4f)) Vector4f clip_plane_equation;
                 alignas(sizeof(Vector4f)) Vector3f gradient_h;
                 alignas(sizeof(Vector4f)) std140::Matrix3f gradient_to_world_matrix;
+                alignas(sizeof(Vector4f)) std140::Matrix3f world_to_texture_matrix;
         };
 
         struct Volume final
@@ -71,7 +72,8 @@ public:
                 const Vector4d& third_row_of_mvp,
                 const Vector4d& clip_plane_equation,
                 const Vector3d& gradient_h,
-                const Matrix3d& gradient_to_world_matrix) const;
+                const Matrix3d& gradient_to_world_matrix,
+                const Matrix3d& world_to_texture_matrix) const;
 
         void set_clip_plane(const Vector4d& clip_plane_equation) const;
 
