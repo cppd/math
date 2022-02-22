@@ -21,6 +21,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "shade.glsl"
 #include "volume_image.glsl"
 #include "volume_in.glsl"
+#include "volume_intersect.glsl"
 
 vec3 gradient(const vec3 p)
 {
@@ -39,6 +40,12 @@ vec3 gradient(const vec3 p)
         return s2 - s1;
 }
 
+bool isosurface_shadow(const vec3 p)
+{
+        const vec3 direction_to_light = normalize(coordinates.world_to_texture_matrix * drawing.direction_to_light);
+        return isosurface_intersect(p, direction_to_light);
+}
+
 #ifdef RAY_TRACING
 float shadow_weight(const vec3 p)
 {
@@ -48,14 +55,14 @@ float shadow_weight(const vec3 p)
                 !drawing.clip_plane_enabled
                         ? ray_tracing_intersection(org, dir, acceleration_structure)
                         : ray_tracing_intersection(org, dir, acceleration_structure, drawing.clip_plane_equation);
-        return intersection ? 1 : 0;
+        return intersection || isosurface_shadow(p) ? 1 : 0;
 }
 #else
 float shadow_weight(const vec3 p)
 {
         const vec3 shadow_position = (shadow_matrix.texture_to_shadow * vec4(p, 1)).xyz;
         const float d = texture(shadow_mapping_texture, shadow_position.xy).r;
-        return d <= shadow_position.z ? 1 : 0;
+        return d <= shadow_position.z || isosurface_shadow(p) ? 1 : 0;
 }
 #endif
 

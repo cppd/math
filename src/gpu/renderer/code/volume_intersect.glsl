@@ -25,6 +25,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "volume_in.glsl"
 
 const int ISOSURFACE_ITERATION_COUNT = 5;
+const float ISOSURFACE_INTERSECTION_OFFSET = 0.1;
 
 //
 
@@ -102,6 +103,38 @@ vec4 isosurface_intersect(vec4 a, vec4 b, const float sign_a)
                 }
         }
         return 0.5 * (a + b);
+}
+
+//
+
+bool isosurface_intersect(const vec3 org, const vec3 dir)
+{
+        float first;
+        float second;
+        if (!volume_intersect(org, dir, first, second))
+        {
+                return false;
+        }
+
+        const float length_in_samples = ceil(length(textureSize(image, 0) * dir) * (second - first));
+        const float sample_length = (second - first) / length_in_samples;
+
+        const vec3 image_org = org + dir * first;
+        const vec3 image_dir = dir * sample_length;
+
+        const float prev_sign = isosurface_sign(image_org + ISOSURFACE_INTERSECTION_OFFSET * image_dir);
+
+        for (float s = 1; s <= length_in_samples; ++s)
+        {
+                const vec3 next_p = image_org + s * image_dir;
+                const float next_sign = isosurface_sign(next_p);
+                if (next_sign != prev_sign)
+                {
+                        return true;
+                }
+        }
+
+        return false;
 }
 
 #endif
