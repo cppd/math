@@ -28,35 +28,32 @@ void set_fragment_color(const vec3 color)
         if (!TRANSPARENCY_DRAWING)
         {
                 out_color = vec4(color, 1);
+                return;
         }
-        else
+
+        const uint heads_size = imageAtomicAdd(transparency_heads_size, ivec2(gl_FragCoord.xy), gl_SampleID, 1);
+
+        if (heads_size < TRANSPARENCY_MAX_NODES)
         {
-                const uint heads_size = imageAtomicAdd(transparency_heads_size, ivec2(gl_FragCoord.xy), gl_SampleID, 1);
-                if (heads_size < TRANSPARENCY_MAX_NODES)
+                const uint node_index = atomicAdd(transparency_node_counter, 1);
+                if (node_index < drawing.transparency_max_node_count)
                 {
-                        const uint index = atomicAdd(transparency_node_counter, 1);
-                        if (index < drawing.transparency_max_node_count)
-                        {
-                                const uint prev_head = imageAtomicExchange(
-                                        transparency_heads, ivec2(gl_FragCoord.xy), gl_SampleID, index);
+                        const uint prev_head = imageAtomicExchange(
+                                transparency_heads, ivec2(gl_FragCoord.xy), gl_SampleID, node_index);
 
-                                TransparencyNode node;
-                                node.color_rg = packUnorm2x16(color.rg);
-                                node.color_ba = packUnorm2x16(vec2(color.b, mesh.alpha));
-                                node.depth = gl_FragCoord.z;
-                                node.next = prev_head;
+                        TransparencyNode node;
+                        node.color_rg = packUnorm2x16(color.rg);
+                        node.color_ba = packUnorm2x16(vec2(color.b, mesh.alpha));
+                        node.depth = gl_FragCoord.z;
+                        node.next = prev_head;
 
-                                transparency_nodes[index] = node;
-                        }
+                        transparency_nodes[node_index] = node;
                 }
-                else
-                {
-                        if (heads_size == TRANSPARENCY_MAX_NODES)
-                        {
-                                atomicAdd(transparency_overload_counter, 1);
-                        }
-                }
-
-                discard;
         }
+        else if (heads_size == TRANSPARENCY_MAX_NODES)
+        {
+                atomicAdd(transparency_overload_counter, 1);
+        }
+
+        discard;
 }
