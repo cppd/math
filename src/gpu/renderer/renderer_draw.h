@@ -35,7 +35,7 @@ class RendererDraw
 
         vulkan::handle::Semaphore mesh_semaphore_;
         vulkan::handle::Semaphore volume_semaphore_;
-        vulkan::handle::Semaphore mesh_depth_semaphore_;
+        vulkan::handle::Semaphore shadow_mapping_semaphore_;
         vulkan::handle::Semaphore clear_semaphore_;
         vulkan::handle::Semaphore transparent_as_opaque_semaphore_;
 

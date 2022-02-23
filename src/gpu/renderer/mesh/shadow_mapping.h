@@ -73,6 +73,6 @@ public:
         const vulkan::Buffer& shadow_matrices_buffer() const;
         VkDescriptorSetLayout descriptor_set_layout_mesh() const;
         std::vector<VkDescriptorSetLayoutBinding> descriptor_set_layout_mesh_bindings() const;
-        std::optional<VkCommandBuffer> command_buffer(unsigned index) const;
+        VkCommandBuffer command_buffer(unsigned index) const;
 };
 }

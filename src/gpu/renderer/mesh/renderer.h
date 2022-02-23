@@ -141,7 +141,7 @@ public:
         std::optional<VkCommandBuffer> render_command_buffer_all(unsigned index) const;
         std::optional<VkCommandBuffer> render_command_buffer_transparent_as_opaque(unsigned index) const;
 
-        std::optional<VkCommandBuffer> shadow_mapping_command_buffer(unsigned index) const;
+        VkCommandBuffer shadow_mapping_command_buffer(unsigned index) const;
         const vulkan::ImageView& shadow_mapping_image_view() const;
         VkSampler shadow_mapping_sampler() const;
 };

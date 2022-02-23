@@ -405,7 +405,7 @@ std::optional<VkCommandBuffer> MeshRenderer::render_command_buffer_transparent_a
         return std::nullopt;
 }
 
-std::optional<VkCommandBuffer> MeshRenderer::shadow_mapping_command_buffer(const unsigned index) const
+VkCommandBuffer MeshRenderer::shadow_mapping_command_buffer(const unsigned index) const
 {
         ASSERT(shadow_mapping_);
         return shadow_mapping_->command_buffer(index);

@@ -81,11 +81,6 @@ void ShadowMapping::create_command_buffers(
 
         delete_command_buffers();
 
-        if (meshes.empty())
-        {
-                return;
-        }
-
         vulkan::CommandBufferCreateInfo info;
 
         info.device = device;
@@ -98,14 +93,18 @@ void ShadowMapping::create_command_buffers(
         info.framebuffers = &buffers_->framebuffers();
         info.command_pool = graphics_command_pool;
         info.clear_values = &buffers_->clear_values();
-        info.render_pass_commands = [&](const VkCommandBuffer command_buffer)
-        {
-                vkCmdSetDepthBias(command_buffer, 1.5f, 0.0f, 1.5f);
 
-                commands_depth_triangles(
-                        meshes, command_buffer, *render_triangles_pipeline_, triangles_program_,
-                        triangles_shared_memory_);
-        };
+        if (!meshes.empty())
+        {
+                info.render_pass_commands = [&](const VkCommandBuffer command_buffer)
+                {
+                        vkCmdSetDepthBias(command_buffer, 1.5f, 0.0f, 1.5f);
+
+                        commands_depth_triangles(
+                                meshes, command_buffer, *render_triangles_pipeline_, triangles_program_,
+                                triangles_shared_memory_);
+                };
+        }
 
         render_command_buffers_ = vulkan::create_command_buffers(info);
 }
@@ -146,13 +145,10 @@ std::vector<VkDescriptorSetLayoutBinding> ShadowMapping::descriptor_set_layout_m
         return triangles_program_.descriptor_set_layout_mesh_bindings();
 }
 
-std::optional<VkCommandBuffer> ShadowMapping::command_buffer(const unsigned index) const
+VkCommandBuffer ShadowMapping::command_buffer(const unsigned index) const
 {
-        if (render_command_buffers_)
-        {
-                ASSERT(index < render_command_buffers_->count());
-                return (*render_command_buffers_)[index];
-        }
-        return std::nullopt;
+        ASSERT(render_command_buffers_);
+        ASSERT(index < render_command_buffers_->count());
+        return (*render_command_buffers_)[index];
 }
 }

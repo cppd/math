@@ -32,7 +32,7 @@ RendererDraw::RendererDraw(
           transparency_message_(transparency_node_buffer_max_size),
           mesh_semaphore_(device),
           volume_semaphore_(device),
-          mesh_depth_semaphore_(device),
+          shadow_mapping_semaphore_(device),
           clear_semaphore_(device),
           transparent_as_opaque_semaphore_(device),
           mesh_renderer_(mesh_renderer),
@@ -58,13 +58,13 @@ std::tuple<VkSemaphore, bool> RendererDraw::draw_meshes(
         }
         else
         {
-                ASSERT(mesh_renderer_->shadow_mapping_command_buffer(index));
                 vulkan::queue_submit(
-                        *mesh_renderer_->shadow_mapping_command_buffer(index), mesh_depth_semaphore_, graphics_queue);
+                        mesh_renderer_->shadow_mapping_command_buffer(index), shadow_mapping_semaphore_,
+                        graphics_queue);
 
                 ASSERT(mesh_renderer_->render_command_buffer_all(index));
                 vulkan::queue_submit(
-                        std::array<VkSemaphore, 2>{semaphore, mesh_depth_semaphore_},
+                        std::array<VkSemaphore, 2>{semaphore, shadow_mapping_semaphore_},
                         std::array<VkPipelineStageFlags, 2>{
                                 VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT, VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT},
                         *mesh_renderer_->render_command_buffer_all(index), mesh_semaphore_, graphics_queue);
@@ -122,13 +122,21 @@ VkSemaphore RendererDraw::draw(
         vulkan::queue_submit(clear_command_buffers[index], clear_semaphore_, graphics_queue_2);
 
         VkSemaphore semaphore = clear_semaphore_;
-
         bool transparency = false;
 
         if (mesh_renderer_->has_meshes())
         {
                 std::tie(semaphore, transparency) =
                         draw_meshes(semaphore, graphics_queue_1, index, shadow_mapping, transparency_buffers);
+        }
+        else if (shadow_mapping && volume_renderer_->has_volume())
+        {
+                vulkan::queue_submit(
+                        semaphore, VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT,
+                        mesh_renderer_->shadow_mapping_command_buffer(index), shadow_mapping_semaphore_,
+                        graphics_queue_2);
+                semaphore = shadow_mapping_semaphore_;
+                transparency = false;
         }
 
         if (volume_renderer_->has_volume() || transparency)
