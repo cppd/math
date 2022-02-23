@@ -15,8 +15,8 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#ifndef SHADING_CONSTANTS
-#define SHADING_CONSTANTS
+#ifndef SHADING_CONSTANTS_GLSL
+#define SHADING_CONSTANTS_GLSL
 
 const float SHADING_PI = 3.1415926535897932384626433832795028841971693993751;
 

@@ -39,4 +39,4 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
                 vec2 viewport_factor;                                                       \
                 uint transparency_max_node_count;                                           \
         }                                                                                   \
-        drawing
+        drawing;

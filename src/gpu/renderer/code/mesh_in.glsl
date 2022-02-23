@@ -15,8 +15,8 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#ifndef MESH_IN
-#define MESH_IN
+#ifndef MESH_IN_GLSL
+#define MESH_IN_GLSL
 
 #include "drawing_buffer.glsl"
 #include "transparency.glsl"
@@ -29,7 +29,7 @@ layout(constant_id = 0) const bool TRANSPARENCY_DRAWING = false;
 
 //
 
-DRAWING_BUFFER(0, 0);
+DRAWING_BUFFER(0, 0)
 
 #ifdef RAY_TRACING
 layout(set = 0, binding = 2) uniform accelerationStructureEXT acceleration_structure;

@@ -15,10 +15,10 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#if defined(IMAGE)
+#ifndef VOLUME_INTERSECT_GLSL
+#define VOLUME_INTERSECT_GLSL
 
-#ifndef VOLUME_INTERSECT
-#define VOLUME_INTERSECT
+#if defined(IMAGE)
 
 #include "convex_intersection.glsl"
 #include "volume_image.glsl"

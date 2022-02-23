@@ -15,8 +15,8 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#ifndef VOLUME_IN
-#define VOLUME_IN
+#ifndef VOLUME_IN_GLSL
+#define VOLUME_IN_GLSL
 
 #include "drawing_buffer.glsl"
 #include "transparency.glsl"
@@ -25,15 +25,19 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #extension GL_EXT_ray_query : require
 #endif
 
+#if defined(FRAGMENTS)
+
 layout(set = 0, binding = 0, r32ui) uniform restrict readonly uimage2DMS transparency_heads;
 layout(set = 0, binding = 1, std430) buffer restrict readonly TransparencyNodes
 {
         TransparencyNode transparency_nodes[];
 };
 
+#endif
+
 #if defined(IMAGE)
 
-DRAWING_BUFFER(0, 2);
+DRAWING_BUFFER(0, 2)
 
 layout(set = 0, binding = 3) uniform sampler2DMS depth_image;
 
@@ -45,12 +49,6 @@ layout(set = 0, binding = 6) uniform accelerationStructureEXT acceleration_struc
 #else
 layout(set = 0, binding = 6) uniform sampler2D shadow_mapping_texture;
 #endif
-
-#endif
-
-//
-
-#if defined(IMAGE)
 
 layout(set = 1, binding = 0, std140) uniform restrict Coordinates
 {

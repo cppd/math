@@ -24,8 +24,8 @@ CRC Press, 2018.
 9.5 Fresnel Reflectance
 */
 
-#ifndef SHADING_FRESNEL
-#define SHADING_FRESNEL
+#ifndef SHADING_FRESNEL_GLSL
+#define SHADING_FRESNEL_GLSL
 
 // (9.16)
 // Schlick approximation of Fresnel reflectance

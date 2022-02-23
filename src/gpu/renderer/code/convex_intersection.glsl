@@ -15,8 +15,8 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#ifndef CONVEX_INTERSECTION
-#define CONVEX_INTERSECTION
+#ifndef CONVEX_INTERSECTION_GLSL
+#define CONVEX_INTERSECTION_GLSL
 
 bool box_intersection(
         const vec3 org,

@@ -15,10 +15,10 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#if defined(IMAGE)
+#ifndef VOLUME_IMAGE_GLSL
+#define VOLUME_IMAGE_GLSL
 
-#ifndef VOLUME_IMAGE
-#define VOLUME_IMAGE
+#if defined(IMAGE)
 
 #include "volume_in.glsl"
 
