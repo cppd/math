@@ -22,7 +22,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 namespace ns::gpu::renderer
 {
-vulkan::DeviceFunctionality device_functionality(bool ray_tracing);
+vulkan::DeviceFunctionality device_ray_tracing_functionality();
+vulkan::DeviceFunctionality device_functionality();
 
 bool ray_tracing_supported(const vulkan::Device& device);
 }

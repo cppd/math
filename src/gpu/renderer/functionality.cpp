@@ -55,19 +55,23 @@ constexpr vulkan::PhysicalDeviceFeatures RAY_TRACING_FEATURES = []
 
         return res;
 }();
+}
 
-void add_ray_tracing_functionality(vulkan::DeviceFunctionality* const res)
+vulkan::DeviceFunctionality device_ray_tracing_functionality()
 {
+        vulkan::DeviceFunctionality res;
+
         for (const auto& s : RAY_TRACING_EXTENSIONS)
         {
-                res->optional_extensions.insert(s);
+                res.optional_extensions.insert(s);
         }
 
-        vulkan::add_features(&res->optional_features, RAY_TRACING_FEATURES);
-}
+        vulkan::add_features(&res.optional_features, RAY_TRACING_FEATURES);
+
+        return res;
 }
 
-vulkan::DeviceFunctionality device_functionality(const bool ray_tracing)
+vulkan::DeviceFunctionality device_functionality()
 {
         vulkan::DeviceFunctionality res;
 
@@ -75,11 +79,6 @@ vulkan::DeviceFunctionality device_functionality(const bool ray_tracing)
         res.required_features.features_10.fragmentStoresAndAtomics = VK_TRUE;
         res.required_features.features_10.shaderStorageImageMultisample = VK_TRUE;
         res.required_features.features_10.shaderClipDistance = VK_TRUE;
-
-        if (ray_tracing)
-        {
-                add_ray_tracing_functionality(&res);
-        }
 
         return res;
 }

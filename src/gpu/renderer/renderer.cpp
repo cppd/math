@@ -575,7 +575,12 @@ public:
 
 vulkan::DeviceFunctionality Renderer::device_functionality()
 {
-        return renderer::device_functionality(RAY_TRACING);
+        vulkan::DeviceFunctionality res = renderer::device_functionality();
+        if (RAY_TRACING)
+        {
+                res.merge(renderer::device_ray_tracing_functionality());
+        }
+        return res;
 }
 
 std::unique_ptr<Renderer> create_renderer(
