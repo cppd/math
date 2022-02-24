@@ -17,12 +17,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
-#include <src/vulkan/device.h>
-
 namespace ns::gpu::renderer
 {
-void create_ray_tracing_data(
-        const vulkan::Device* device,
-        const vulkan::CommandPool* compute_command_pool,
-        const vulkan::Queue* compute_queue);
+void test_ray_tracing();
 }

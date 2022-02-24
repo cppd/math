@@ -555,7 +555,7 @@ public:
                         mesh_renderer_.set_acceleration_structure(acceleration_structure_->handle());
                         volume_renderer_.set_acceleration_structure(acceleration_structure_->handle());
 
-                        create_ray_tracing_data(device_, compute_command_pool_, compute_queue_);
+                        test_ray_tracing();
                 }
         }
 

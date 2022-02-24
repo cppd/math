@@ -33,7 +33,7 @@ public:
         RayTracingImage(
                 unsigned width,
                 unsigned height,
-                const vulkan::Device* device,
+                const vulkan::Device& device,
                 const vulkan::CommandPool* compute_command_pool,
                 const vulkan::Queue* compute_queue);
 

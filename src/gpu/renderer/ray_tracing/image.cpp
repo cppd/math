@@ -34,14 +34,14 @@ constexpr VkImageLayout IMAGE_LAYOUT = VK_IMAGE_LAYOUT_GENERAL;
 RayTracingImage::RayTracingImage(
         const unsigned width,
         const unsigned height,
-        const vulkan::Device* const device,
+        const vulkan::Device& device,
         const vulkan::CommandPool* const compute_command_pool,
         const vulkan::Queue* const compute_queue)
         : compute_command_pool_(compute_command_pool),
           compute_queue_(compute_queue),
           width_(width),
           height_(height),
-          image_(*device,
+          image_(device,
                  {compute_command_pool_->family_index()},
                  {VK_FORMAT_R32G32B32A32_SFLOAT},
                  VK_SAMPLE_COUNT_1_BIT,
