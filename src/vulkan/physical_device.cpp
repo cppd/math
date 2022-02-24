@@ -112,16 +112,18 @@ int device_priority(const PhysicalDevice& physical_device)
         return 0;
 }
 
-PhysicalDevice find_best_physical_device(std::vector<PhysicalDevice>&& physical_devices)
+PhysicalDevice find_best_physical_device(
+        std::vector<PhysicalDevice>&& physical_devices,
+        const std::vector<std::size_t>& suitable_devices)
 {
-        ASSERT(!physical_devices.empty());
+        ASSERT(!physical_devices.empty() && !suitable_devices.empty());
 
         std::size_t best_i = 0;
-        auto best_priority = device_priority(physical_devices[0]);
+        auto best_priority = device_priority(physical_devices[suitable_devices[0]]);
 
-        for (std::size_t i = 1; i < physical_devices.size(); ++i)
+        for (std::size_t i = 1; i < suitable_devices.size(); ++i)
         {
-                const auto priority = device_priority(physical_devices[i]);
+                const auto priority = device_priority(physical_devices[suitable_devices[i]]);
                 if (priority > best_priority)
                 {
                         best_priority = priority;
@@ -129,24 +131,27 @@ PhysicalDevice find_best_physical_device(std::vector<PhysicalDevice>&& physical_
                 }
         }
 
-        return std::move(physical_devices[best_i]);
+        return std::move(physical_devices[suitable_devices[best_i]]);
 }
 
-PhysicalDevice find_random_physical_device(std::vector<PhysicalDevice>&& physical_devices)
+PhysicalDevice find_random_physical_device(
+        std::vector<PhysicalDevice>&& physical_devices,
+        const std::vector<std::size_t>& suitable_devices)
 {
-        ASSERT(!physical_devices.empty());
+        ASSERT(!physical_devices.empty() && !suitable_devices.empty());
 
         PCG engine;
-        std::uniform_int_distribution<std::size_t> uid(0, physical_devices.size() - 1);
+        std::uniform_int_distribution<std::size_t> uid(0, suitable_devices.size() - 1);
 
-        return std::move(physical_devices[uid(engine)]);
+        return std::move(physical_devices[suitable_devices[uid(engine)]]);
 }
 
 PhysicalDevice find_physical_device(
         const PhysicalDeviceSearchType search_type,
-        std::vector<PhysicalDevice>&& physical_devices)
+        std::vector<PhysicalDevice>&& physical_devices,
+        const std::vector<std::size_t>& suitable_devices)
 {
-        if (physical_devices.empty())
+        if (suitable_devices.empty())
         {
                 error("Failed to find a suitable Vulkan physical device");
         }
@@ -154,12 +159,88 @@ PhysicalDevice find_physical_device(
         switch (search_type)
         {
         case PhysicalDeviceSearchType::BEST:
-                return find_best_physical_device(std::move(physical_devices));
+                return find_best_physical_device(std::move(physical_devices), suitable_devices);
         case PhysicalDeviceSearchType::RANDOM:
-                return find_random_physical_device(std::move(physical_devices));
+                return find_random_physical_device(std::move(physical_devices), suitable_devices);
         }
 
         error("Unknown physical device search type " + to_string(enum_to_int(search_type)));
+}
+
+bool extensions_supported(const PhysicalDevice& physical_device, const std::unordered_set<std::string>& extensions)
+{
+        return std::all_of(
+                extensions.cbegin(), extensions.cend(),
+                [&](const std::string& e)
+                {
+                        return physical_device.extensions().contains(e);
+                });
+}
+
+std::vector<std::size_t> suitable_physical_devices(
+        const std::vector<PhysicalDevice>& physical_devices,
+        const VkSurfaceKHR surface,
+        const DeviceFunctionality& device_functionality,
+        const bool optional_as_required)
+{
+        std::vector<std::size_t> res;
+
+        for (std::size_t i = 0; i < physical_devices.size(); ++i)
+        {
+                const PhysicalDevice& physical_device = physical_devices[i];
+
+                if (!check_features(device_functionality.required_features, physical_device.features()))
+                {
+                        continue;
+                }
+
+                if (optional_as_required
+                    && !check_features(device_functionality.optional_features, physical_device.features()))
+                {
+                        continue;
+                }
+
+                if (!extensions_supported(physical_device, device_functionality.required_extensions))
+                {
+                        continue;
+                }
+
+                if (optional_as_required
+                    && !extensions_supported(physical_device, device_functionality.optional_extensions))
+                {
+                        continue;
+                }
+
+                try
+                {
+                        physical_device.family_index(VK_QUEUE_GRAPHICS_BIT | VK_QUEUE_COMPUTE_BIT, 0, {0});
+                }
+                catch (...)
+                {
+                        continue;
+                }
+
+                if (surface != VK_NULL_HANDLE)
+                {
+                        try
+                        {
+                                physical_device.presentation_family_index();
+                        }
+                        catch (...)
+                        {
+                                continue;
+                        }
+
+                        if (!surface_suitable(surface, physical_device.device()))
+                        {
+                                continue;
+                        }
+                }
+
+                res.push_back(i);
+        }
+
+        return res;
 }
 }
 
@@ -304,57 +385,24 @@ PhysicalDevice find_physical_device(
 {
         LOG(overview_physical_devices(instance, surface));
 
-        std::vector<PhysicalDevice> physical_devices;
+        const std::vector<VkPhysicalDevice> handles = find_physical_devices(instance);
 
-        for (const VkPhysicalDevice device : find_physical_devices(instance))
+        std::vector<PhysicalDevice> devices;
+        devices.reserve(handles.size());
+        for (const VkPhysicalDevice handle : handles)
         {
-                PhysicalDevice physical_device(device, surface);
-
-                if (!check_features(device_functionality.required_features, physical_device.features()))
-                {
-                        continue;
-                }
-
-                if (!std::all_of(
-                            device_functionality.required_extensions.cbegin(),
-                            device_functionality.required_extensions.cend(),
-                            [&](const std::string& e)
-                            {
-                                    return physical_device.extensions().contains(e);
-                            }))
-                {
-                        continue;
-                }
-
-                try
-                {
-                        physical_device.family_index(VK_QUEUE_GRAPHICS_BIT | VK_QUEUE_COMPUTE_BIT, 0, {0});
-                }
-                catch (...)
-                {
-                        continue;
-                }
-
-                if (surface != VK_NULL_HANDLE)
-                {
-                        try
-                        {
-                                physical_device.presentation_family_index();
-                        }
-                        catch (...)
-                        {
-                                continue;
-                        }
-
-                        if (!surface_suitable(surface, physical_device.device()))
-                        {
-                                continue;
-                        }
-                }
-
-                physical_devices.push_back(std::move(physical_device));
+                devices.emplace_back(handle, surface);
         }
 
-        return find_physical_device(search_type, std::move(physical_devices));
+        std::vector<std::size_t> suitable_devices = suitable_physical_devices(
+                std::as_const(devices), surface, device_functionality, true /*optional_as_required*/);
+
+        if (suitable_devices.empty())
+        {
+                suitable_devices = suitable_physical_devices(
+                        std::as_const(devices), surface, device_functionality, false /*optional_as_required*/);
+        }
+
+        return find_physical_device(search_type, std::move(devices), suitable_devices);
 }
 }
