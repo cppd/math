@@ -17,7 +17,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "code.h"
 
-namespace ns::gpu::renderer
+namespace ns::gpu::renderer::test
 {
 std::vector<std::uint32_t> code_ray_closest_hit_rchit()
 {

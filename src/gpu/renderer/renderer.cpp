@@ -33,7 +33,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "code/shader_code.h"
 #include "mesh/object.h"
 #include "mesh/renderer.h"
-#include "ray_tracing/ray_tracing.h"
 #include "volume/object.h"
 #include "volume/renderer.h"
 
@@ -554,8 +553,6 @@ public:
                                 std::vector<std::uint32_t>({graphics_queue_->family_index()}));
                         mesh_renderer_.set_acceleration_structure(acceleration_structure_->handle());
                         volume_renderer_.set_acceleration_structure(acceleration_structure_->handle());
-
-                        test_ray_tracing();
                 }
         }
 

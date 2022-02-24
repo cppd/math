@@ -17,7 +17,13 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
-namespace ns::gpu::renderer
+#include <cstdint>
+#include <vector>
+
+namespace ns::gpu::renderer::test
 {
-void test_ray_tracing();
+std::vector<std::uint32_t> code_ray_closest_hit_rchit();
+std::vector<std::uint32_t> code_ray_generation_rgen();
+std::vector<std::uint32_t> code_ray_miss_rmiss();
+std::vector<std::uint32_t> code_ray_query_comp();
 }

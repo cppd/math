@@ -23,7 +23,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <vector>
 
-namespace ns::gpu::renderer
+namespace ns::gpu::renderer::test
 {
 class RayTracingMemory final
 {

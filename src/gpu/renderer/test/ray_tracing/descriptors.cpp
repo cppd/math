@@ -19,7 +19,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <src/com/error.h>
 
-namespace ns::gpu::renderer
+namespace ns::gpu::renderer::test
 {
 std::vector<VkDescriptorSetLayoutBinding> RayTracingMemory::descriptor_set_layout_bindings(const bool raygen)
 {

@@ -15,16 +15,16 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include "ray_tracing.h"
-
 #include "descriptors.h"
 #include "image.h"
 #include "program_ray_query.h"
 #include "program_ray_tracing.h"
 
-#include "../../com/groups.h"
-#include "../functionality.h"
+#include "../../../com/groups.h"
+#include "../../functionality.h"
 
+#include <src/com/log.h>
+#include <src/test/test.h>
 #include <src/vulkan/acceleration_structure.h>
 #include <src/vulkan/create.h>
 #include <src/vulkan/device_compute.h>
@@ -32,7 +32,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/vulkan/instance.h>
 #include <src/vulkan/queue.h>
 
-namespace ns::gpu::renderer
+namespace ns::gpu::renderer::test
 {
 namespace
 {
@@ -198,7 +198,6 @@ void ray_query(
 
         image.save_to_file(file_name);
 }
-}
 
 void test_ray_tracing()
 {
@@ -242,4 +241,14 @@ void test_ray_tracing()
         ray_tracing(device, command_pool, queue, image, top_level.handle(), "ray_tracing_update");
         ray_query(device, command_pool, queue, image, top_level.handle(), "ray_query_update");
 }
+
+void test()
+{
+        LOG("Test Vulkan ray tracing");
+        test_ray_tracing();
+        LOG("Test Vulkan ray tracing passed");
+}
+}
+
+TEST_SMALL("Vulkan ray tracing", test)
 }

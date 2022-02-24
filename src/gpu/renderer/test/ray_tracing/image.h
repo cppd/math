@@ -19,7 +19,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <src/vulkan/buffers.h>
 
-namespace ns::gpu::renderer
+namespace ns::gpu::renderer::test
 {
 class RayTracingImage
 {
