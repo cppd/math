@@ -23,7 +23,9 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "../../../com/groups.h"
 #include "../../functionality.h"
 
+#include <src/com/file/path.h>
 #include <src/com/log.h>
+#include <src/image/file_save.h>
 #include <src/test/test.h>
 #include <src/vulkan/acceleration_structure.h>
 #include <src/vulkan/create.h>
@@ -32,11 +34,18 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/vulkan/instance.h>
 #include <src/vulkan/queue.h>
 
+#include <filesystem>
+
 namespace ns::gpu::renderer::test
 {
 namespace
 {
 constexpr unsigned GROUP_SIZE = 16;
+
+void save_to_file(const std::string_view& name, const image::Image<2>& image)
+{
+        image::save(std::filesystem::temp_directory_path() / path_from_utf8(name), image::ImageView<2>(image));
+}
 
 vulkan::handle::CommandBuffer create_ray_tracing_command_buffer(
         const vulkan::Device& device,
@@ -171,7 +180,7 @@ void ray_tracing(
         vulkan::queue_submit(command_buffer, compute_queue);
         VULKAN_CHECK(vkQueueWaitIdle(compute_queue));
 
-        image.save_to_file(file_name);
+        save_to_file(file_name, image.image());
 }
 
 void ray_query(
@@ -196,7 +205,7 @@ void ray_query(
         vulkan::queue_submit(command_buffer, compute_queue);
         VULKAN_CHECK(vkQueueWaitIdle(compute_queue));
 
-        image.save_to_file(file_name);
+        save_to_file(file_name, image.image());
 }
 
 void test_ray_tracing()

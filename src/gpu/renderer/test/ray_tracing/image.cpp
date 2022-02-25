@@ -17,12 +17,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "image.h"
 
-#include <src/com/file/path.h>
 #include <src/image/alpha.h>
-#include <src/image/file_save.h>
-#include <src/image/image.h>
-
-#include <filesystem>
 
 namespace ns::gpu::renderer::test
 {
@@ -54,7 +49,7 @@ RayTracingImage::RayTracingImage(
 {
 }
 
-void RayTracingImage::save_to_file(const std::string_view& name) const
+image::Image<2> RayTracingImage::image() const
 {
         image::Image<2> res;
 
@@ -64,8 +59,6 @@ void RayTracingImage::save_to_file(const std::string_view& name) const
         image_.read_pixels(
                 *compute_command_pool_, *compute_queue_, IMAGE_LAYOUT, IMAGE_LAYOUT, &res.color_format, &res.pixels);
 
-        res = image::delete_alpha(res);
-
-        image::save(std::filesystem::temp_directory_path() / path_from_utf8(name), image::ImageView<2>(res));
+        return image::delete_alpha(res);
 }
 }

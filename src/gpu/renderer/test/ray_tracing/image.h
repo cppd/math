@@ -17,6 +17,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
+#include <src/image/image.h>
 #include <src/vulkan/buffers.h>
 
 namespace ns::gpu::renderer::test
@@ -52,6 +53,6 @@ public:
                 return image_.image_view();
         }
 
-        void save_to_file(const std::string_view& name) const;
+        image::Image<2> image() const;
 };
 }
