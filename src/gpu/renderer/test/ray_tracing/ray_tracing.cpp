@@ -23,8 +23,10 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "../../../com/groups.h"
 #include "../../functionality.h"
 
+#include <src/com/error.h>
 #include <src/com/file/path.h>
 #include <src/com/log.h>
+#include <src/com/print.h>
 #include <src/image/file_save.h>
 #include <src/test/test.h>
 #include <src/vulkan/acceleration_structure.h>
@@ -41,10 +43,56 @@ namespace ns::gpu::renderer::test
 namespace
 {
 constexpr unsigned GROUP_SIZE = 16;
+constexpr unsigned IMAGE_SIZE = 100;
 
 void save_to_file(const std::string_view& name, const image::Image<2>& image)
 {
         image::save(std::filesystem::temp_directory_path() / path_from_utf8(name), image::ImageView<2>(image));
+}
+
+std::array<float, 3> pixel(const image::Image<2>& image, unsigned x, unsigned y)
+{
+        ASSERT(image.color_format == image::ColorFormat::R32G32B32);
+        ASSERT(static_cast<int>(x) < image.size[0] && static_cast<int>(y) < image.size[1]);
+
+        std::array<float, 3> rgb;
+        const std::size_t offset = (static_cast<std::size_t>(y) * image.size[0] + x) * 3 * sizeof(float);
+        std::memcpy(rgb.data(), image.pixels.data() + offset, 3 * sizeof(float));
+        return rgb;
+}
+
+void test_pixel(const image::Image<2>& image, unsigned x, unsigned y, const std::array<float, 3>& rgb)
+{
+        const std::array<float, 3> p = pixel(image, x, y);
+        if (p == rgb)
+        {
+                return;
+        }
+        error("pixel error: " + to_string(p) + " is not equal to " + to_string(rgb));
+}
+
+void check_ray_tracing_1(const image::Image<2>& image)
+{
+        test_pixel(image, 48, 48, {0.854999959, 0.0300000217, 0.115000017});
+        test_pixel(image, 98, 48, {0.1, 0.1, 0.1});
+}
+
+void check_ray_query_1(const image::Image<2>& image)
+{
+        test_pixel(image, 48, 48, {0, 1, 0});
+        test_pixel(image, 98, 48, {1, 0, 0});
+}
+
+void check_ray_tracing_2(const image::Image<2>& image)
+{
+        test_pixel(image, 48, 48, {0.754999995, 0.0300000217, 0.214999989});
+        test_pixel(image, 98, 48, {0.0150000202, 0.0300000217, 0.954999924});
+}
+
+void check_ray_query_2(const image::Image<2>& image)
+{
+        test_pixel(image, 48, 48, {0, 1, 0});
+        test_pixel(image, 98, 48, {0, 1, 0});
 }
 
 vulkan::handle::CommandBuffer create_ray_tracing_command_buffer(
@@ -158,11 +206,11 @@ vulkan::TopLevelAccelerationStructure create_top_level(
                 device, compute_command_pool, compute_queue, family_indices, references, matrices);
 }
 
-void ray_tracing(
+image::Image<2> ray_tracing(
         const vulkan::Device& device,
         const vulkan::CommandPool& compute_command_pool,
         const vulkan::Queue& compute_queue,
-        const RayTracingImage& image,
+        const RayTracingImage& ray_tracing_image,
         const VkAccelerationStructureKHR acceleration_structure,
         const std::string_view& file_name)
 {
@@ -172,22 +220,24 @@ void ray_tracing(
                 device, program.descriptor_set_layout(), program.descriptor_set_layout_bindings());
 
         memory.set_acceleration_structure(acceleration_structure);
-        memory.set_image(image.image_view());
+        memory.set_image(ray_tracing_image.image_view());
 
         const vulkan::handle::CommandBuffer command_buffer = create_ray_tracing_command_buffer(
-                device, compute_command_pool, program, memory, image.width(), image.height());
+                device, compute_command_pool, program, memory, ray_tracing_image.width(), ray_tracing_image.height());
 
         vulkan::queue_submit(command_buffer, compute_queue);
         VULKAN_CHECK(vkQueueWaitIdle(compute_queue));
 
-        save_to_file(file_name, image.image());
+        image::Image<2> image = ray_tracing_image.image();
+        save_to_file(file_name, image);
+        return image;
 }
 
-void ray_query(
+image::Image<2> ray_query(
         const vulkan::Device& device,
         const vulkan::CommandPool& compute_command_pool,
         const vulkan::Queue& compute_queue,
-        const RayTracingImage& image,
+        const RayTracingImage& ray_tracing_image,
         const VkAccelerationStructureKHR acceleration_structure,
         const std::string_view& file_name)
 {
@@ -197,15 +247,17 @@ void ray_query(
                 device, program.descriptor_set_layout(), program.descriptor_set_layout_bindings());
 
         memory.set_acceleration_structure(acceleration_structure);
-        memory.set_image(image.image_view());
+        memory.set_image(ray_tracing_image.image_view());
 
         const vulkan::handle::CommandBuffer command_buffer = create_ray_query_command_buffer(
-                device, compute_command_pool, program, memory, image.width(), image.height());
+                device, compute_command_pool, program, memory, ray_tracing_image.width(), ray_tracing_image.height());
 
         vulkan::queue_submit(command_buffer, compute_queue);
         VULKAN_CHECK(vkQueueWaitIdle(compute_queue));
 
-        save_to_file(file_name, image.image());
+        image::Image<2> image = ray_tracing_image.image();
+        save_to_file(file_name, image);
+        return image;
 }
 
 void test_ray_tracing()
@@ -226,7 +278,7 @@ void test_ray_tracing()
         const vulkan::CommandPool command_pool =
                 vulkan::create_command_pool(device, device_compute.compute_family_index());
 
-        const RayTracingImage image(1000, 1000, device, &command_pool, &queue);
+        const RayTracingImage ray_tracing_image(IMAGE_SIZE, IMAGE_SIZE, device, &command_pool, &queue);
 
         const std::vector<std::uint32_t> family_indices{command_pool.family_index()};
 
@@ -238,8 +290,16 @@ void test_ray_tracing()
         const vulkan::TopLevelAccelerationStructure top_level =
                 create_top_level(device, command_pool, queue, family_indices, bottom_level, matrices);
 
-        ray_tracing(device, command_pool, queue, image, top_level.handle(), "ray_tracing");
-        ray_query(device, command_pool, queue, image, top_level.handle(), "ray_query");
+        {
+                const image::Image<2> image =
+                        ray_tracing(device, command_pool, queue, ray_tracing_image, top_level.handle(), "ray_tracing");
+                check_ray_tracing_1(image);
+        }
+        {
+                const image::Image<2> image =
+                        ray_query(device, command_pool, queue, ray_tracing_image, top_level.handle(), "ray_query");
+                check_ray_query_1(image);
+        }
 
         for (VkTransformMatrixKHR& m : matrices)
         {
@@ -247,8 +307,16 @@ void test_ray_tracing()
         }
         top_level.update_matrices(device, command_pool, queue, matrices);
 
-        ray_tracing(device, command_pool, queue, image, top_level.handle(), "ray_tracing_update");
-        ray_query(device, command_pool, queue, image, top_level.handle(), "ray_query_update");
+        {
+                const image::Image<2> image = ray_tracing(
+                        device, command_pool, queue, ray_tracing_image, top_level.handle(), "ray_tracing_update");
+                check_ray_tracing_2(image);
+        }
+        {
+                const image::Image<2> image = ray_query(
+                        device, command_pool, queue, ray_tracing_image, top_level.handle(), "ray_query_update");
+                check_ray_query_2(image);
+        }
 }
 
 void test()
