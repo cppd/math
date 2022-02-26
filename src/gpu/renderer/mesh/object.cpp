@@ -17,6 +17,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "object.h"
 
+#include "memory.h"
 #include "object_load.h"
 
 #include "../shading_parameters.h"
@@ -40,81 +41,6 @@ namespace ns::gpu::renderer
 {
 namespace
 {
-std::vector<MaterialMemory::MaterialInfo> materials_info(
-        const mesh::Mesh<3>& mesh,
-        const std::vector<vulkan::ImageWithMemory>& textures,
-        const std::vector<MaterialBuffer>& material_buffers)
-{
-        // one more texture and material for specifying but not using
-        ASSERT(textures.size() == mesh.images.size() + 1);
-        ASSERT(material_buffers.size() == mesh.materials.size() + 1);
-
-        VkImageView no_texture = textures.back().image_view();
-
-        std::vector<MaterialMemory::MaterialInfo> materials;
-        materials.reserve(mesh.materials.size() + 1);
-
-        for (std::size_t i = 0; i < mesh.materials.size(); ++i)
-        {
-                const typename mesh::Mesh<3>::Material& mesh_material = mesh.materials[i];
-
-                ASSERT(mesh_material.image < static_cast<int>(textures.size()) - 1);
-
-                MaterialMemory::MaterialInfo& m = materials.emplace_back();
-                m.buffer = material_buffers[i].buffer();
-                m.buffer_size = material_buffers[i].buffer().size();
-                m.texture = (mesh_material.image >= 0) ? textures[mesh_material.image].image_view() : no_texture;
-        }
-
-        MaterialMemory::MaterialInfo& m = materials.emplace_back();
-        m.buffer = material_buffers.back().buffer();
-        m.buffer_size = material_buffers.back().buffer().size();
-        m.texture = no_texture;
-
-        return materials;
-}
-
-std::unordered_map<VkDescriptorSetLayout, MeshMemory> create_mesh_memory(
-        const VkDevice device,
-        const std::vector<vulkan::DescriptorSetLayoutAndBindings>& mesh_layouts,
-        const vulkan::Buffer& mesh_buffer)
-{
-        std::unordered_map<VkDescriptorSetLayout, MeshMemory> mesh_memory;
-
-        for (const vulkan::DescriptorSetLayoutAndBindings& layout : mesh_layouts)
-        {
-                MeshMemory memory(
-                        device, layout.descriptor_set_layout, layout.descriptor_set_layout_bindings, mesh_buffer);
-                mesh_memory.emplace(layout.descriptor_set_layout, std::move(memory));
-        }
-
-        return mesh_memory;
-}
-
-std::unordered_map<VkDescriptorSetLayout, MaterialMemory> create_material_memory(
-        const VkDevice device,
-        const VkSampler texture_sampler,
-        const std::vector<vulkan::DescriptorSetLayoutAndBindings>& material_layouts,
-        const std::vector<MaterialMemory::MaterialInfo>& material_info)
-{
-        if (material_info.empty())
-        {
-                return {};
-        }
-
-        std::unordered_map<VkDescriptorSetLayout, MaterialMemory> material_memory;
-
-        for (const vulkan::DescriptorSetLayoutAndBindings& layout : material_layouts)
-        {
-                MaterialMemory memory(
-                        device, texture_sampler, layout.descriptor_set_layout, layout.descriptor_set_layout_bindings,
-                        material_info);
-                material_memory.emplace(layout.descriptor_set_layout, std::move(memory));
-        }
-
-        return material_memory;
-}
-
 class Impl final : public MeshObject
 {
         const vulkan::Device* const device_;
@@ -240,8 +166,7 @@ class Impl final : public MeshObject
                         load_materials(*device_, *transfer_command_pool_, *transfer_queue_, family_indices_, mesh);
 
                 material_memory_ = create_material_memory(
-                        *device_, texture_sampler_, material_layouts_,
-                        materials_info(mesh, textures_, material_buffers_));
+                        *device_, texture_sampler_, material_layouts_, mesh, textures_, material_buffers_);
         }
 
         void load_mesh_geometry(const mesh::Mesh<3>& mesh)
