@@ -15,7 +15,7 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include "object_load.h"
+#include "load.h"
 
 #include "shaders/vertex_points.h"
 #include "shaders/vertex_triangles.h"

@@ -17,8 +17,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "object.h"
 
+#include "load.h"
 #include "memory.h"
-#include "object_load.h"
 
 #include "../shading_parameters.h"
 #include "buffers/material.h"
