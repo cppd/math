@@ -16,6 +16,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
 #include "mesh_in.glsl"
+#include "ray_tracing_intersection.glsl"
+#include "shade.glsl"
 
 layout(early_fragment_tests) in;
 
@@ -56,4 +58,52 @@ void set_fragment_color(const vec3 color)
         }
 
         discard;
+}
+
+#ifdef RAY_TRACING
+float shadow_weight(const vec3 world_position)
+{
+        const vec3 org = world_position;
+        const vec3 dir = drawing.direction_to_light;
+        const bool intersection =
+                !drawing.clip_plane_enabled
+                        ? ray_tracing_intersection(org, dir, acceleration_structure)
+                        : ray_tracing_intersection(org, dir, acceleration_structure, drawing.clip_plane_equation);
+        return intersection ? 1 : 0;
+}
+#else
+float shadow_weight(const vec3 shadow_position)
+{
+        const float d = texture(shadow_mapping_texture, shadow_position.xy).r;
+        return d <= shadow_position.z ? 1 : 0;
+}
+#endif
+
+void set_color(const vec3 surface_color, const vec3 n, const vec3 position_for_shadow, const float edge_factor)
+{
+        const vec3 v = drawing.direction_to_camera;
+        const vec3 l = drawing.direction_to_light;
+
+        vec3 color;
+
+        if (drawing.show_shadow)
+        {
+                color =
+                        shade(surface_color, mesh.metalness, mesh.roughness, n, v, l, ggx_f1_albedo_cosine_roughness,
+                              ggx_f1_albedo_cosine_weighted_average, drawing.lighting_color, mesh.ambient,
+                              shadow_weight(position_for_shadow));
+        }
+        else
+        {
+                color =
+                        shade(surface_color, mesh.metalness, mesh.roughness, n, v, l, ggx_f1_albedo_cosine_roughness,
+                              ggx_f1_albedo_cosine_weighted_average, drawing.lighting_color, mesh.ambient);
+        }
+
+        if (edge_factor >= 0)
+        {
+                color = mix(drawing.wireframe_color, color, edge_factor);
+        }
+
+        set_fragment_color(color);
 }

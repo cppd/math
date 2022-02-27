@@ -30,7 +30,7 @@ layout(location = 0) in VS
         vec3 world_normal;
         vec3 world_position;
 #ifndef RAY_TRACING
-        vec4 shadow_position;
+        vec3 shadow_position;
 #endif
         vec2 texture_coordinates;
 }
@@ -55,7 +55,7 @@ layout(location = 0) out GS
 #ifdef RAY_TRACING
         vec3 world_position;
 #else
-        vec4 shadow_position;
+        vec3 shadow_position;
 #endif
         vec2 texture_coordinates;
         vec3 baricentric;

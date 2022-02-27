@@ -31,7 +31,7 @@ layout(location = 0) out VS
         vec3 world_normal;
         vec3 world_position;
 #ifndef RAY_TRACING
-        vec4 shadow_position;
+        vec3 shadow_position;
 #endif
         vec2 texture_coordinates;
 }
@@ -54,7 +54,7 @@ void main()
         vs.world_normal = mesh.normal_matrix * normal;
         vs.world_position = world_coordinates.xyz;
 #ifndef RAY_TRACING
-        vs.shadow_position = shadow_matrices.vp_texture_matrix * world_coordinates;
+        vs.shadow_position = (shadow_matrices.vp_texture_matrix * world_coordinates).xyz;
 #endif
         vs.texture_coordinates = texture_coordinates;
 }
