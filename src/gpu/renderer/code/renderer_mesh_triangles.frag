@@ -26,8 +26,9 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 layout(location = 0) in GS
 {
         vec3 world_normal;
+#ifdef RAY_TRACING
         vec3 world_position;
-#ifndef RAY_TRACING
+#else
         vec4 shadow_position;
 #endif
         vec2 texture_coordinates;

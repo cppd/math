@@ -52,8 +52,9 @@ out gl_PerVertex
 layout(location = 0) out GS
 {
         vec3 world_normal;
+#ifdef RAY_TRACING
         vec3 world_position;
-#ifndef RAY_TRACING
+#else
         vec4 shadow_position;
 #endif
         vec2 texture_coordinates;
@@ -109,8 +110,9 @@ void main()
                 gs.world_normal = normals[i];
                 gs.baricentric = baricentric[i];
 
+#ifdef RAY_TRACING
                 gs.world_position = vs[i].world_position;
-#ifndef RAY_TRACING
+#else
                 gs.shadow_position = vs[i].shadow_position;
 #endif
                 gs.texture_coordinates = vs[i].texture_coordinates;
