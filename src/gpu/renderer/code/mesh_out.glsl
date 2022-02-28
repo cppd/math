@@ -16,23 +16,14 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
 #include "mesh_in.glsl"
-#include "ray_tracing_intersection.glsl"
-#include "shade.glsl"
+#include "mesh_shade.glsl"
 
 layout(early_fragment_tests) in;
 
 layout(location = 0) out vec4 out_color;
 
-void set_fragment_color(const vec3 color)
+void write_transparency(const vec3 color)
 {
-        imageStore(object_image, ivec2(gl_FragCoord.xy), uvec4(1));
-
-        if (!TRANSPARENCY_DRAWING)
-        {
-                out_color = vec4(color, 1);
-                return;
-        }
-
         const uint heads_size = imageAtomicAdd(transparency_heads_size, ivec2(gl_FragCoord.xy), gl_SampleID, 1);
 
         if (heads_size < TRANSPARENCY_MAX_NODES)
@@ -56,54 +47,25 @@ void set_fragment_color(const vec3 color)
         {
                 atomicAdd(transparency_overload_counter, 1);
         }
-
-        discard;
 }
 
-#ifdef RAY_TRACING
-float shadow_weight(const vec3 world_position)
+void set_fragment_color(const vec3 color)
 {
-        const vec3 org = world_position;
-        const vec3 dir = drawing.direction_to_light;
-        const bool intersection =
-                !drawing.clip_plane_enabled
-                        ? ray_tracing_intersection(org, dir, acceleration_structure)
-                        : ray_tracing_intersection(org, dir, acceleration_structure, drawing.clip_plane_equation);
-        return intersection ? 1 : 0;
-}
-#else
-float shadow_weight(const vec3 shadow_position)
-{
-        const float d = texture(shadow_mapping_texture, shadow_position.xy).r;
-        return d <= shadow_position.z ? 1 : 0;
-}
-#endif
+        imageStore(object_image, ivec2(gl_FragCoord.xy), uvec4(1));
 
-void set_color(const vec3 surface_color, const vec3 n, const vec3 position_for_shadow, const float edge_factor)
-{
-        const vec3 v = drawing.direction_to_camera;
-        const vec3 l = drawing.direction_to_light;
-
-        vec3 color;
-
-        if (drawing.show_shadow)
+        if (!TRANSPARENCY_DRAWING)
         {
-                color =
-                        shade(surface_color, mesh.metalness, mesh.roughness, n, v, l, ggx_f1_albedo_cosine_roughness,
-                              ggx_f1_albedo_cosine_weighted_average, drawing.lighting_color, mesh.ambient,
-                              shadow_weight(position_for_shadow));
+                out_color = vec4(color, 1);
         }
         else
         {
-                color =
-                        shade(surface_color, mesh.metalness, mesh.roughness, n, v, l, ggx_f1_albedo_cosine_roughness,
-                              ggx_f1_albedo_cosine_weighted_average, drawing.lighting_color, mesh.ambient);
+                write_transparency(color);
+                discard;
         }
+}
 
-        if (edge_factor >= 0)
-        {
-                color = mix(drawing.wireframe_color, color, edge_factor);
-        }
-
+void set_fragment_color(const vec3 surface_color, const vec3 n, const vec3 position_for_shadow, const float edge_factor)
+{
+        const vec3 color = mesh_shade(surface_color, n, position_for_shadow, edge_factor);
         set_fragment_color(color);
 }

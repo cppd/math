@@ -86,5 +86,5 @@ vec3 position_for_shadow()
 
 void main()
 {
-        set_color(surface_color(), normal(), position_for_shadow(), edge_factor());
+        set_fragment_color(surface_color(), normal(), position_for_shadow(), edge_factor());
 }
