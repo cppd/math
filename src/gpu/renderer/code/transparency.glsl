@@ -24,3 +24,15 @@ struct TransparencyNode
         float depth;
         uint next;
 };
+
+TransparencyNode create_transparency_node(const vec3 color, const float alpha, const float depth, const uint next)
+{
+        TransparencyNode node;
+
+        node.color_rg = packUnorm2x16(color.rg);
+        node.color_ba = packUnorm2x16(vec2(color.b, alpha));
+        node.depth = depth;
+        node.next = next;
+
+        return node;
+}

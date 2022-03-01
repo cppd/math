@@ -22,25 +22,19 @@ layout(early_fragment_tests) in;
 
 layout(location = 0) out vec4 out_color;
 
-void write_transparency(const vec3 color)
+void write_transparency(const vec3 color, const float alpha)
 {
-        const uint heads_size = imageAtomicAdd(transparency_heads_size, ivec2(gl_FragCoord.xy), gl_SampleID, 1);
+        const ivec2 coord = ivec2(gl_FragCoord.xy);
+        const uint heads_size = imageAtomicAdd(transparency_heads_size, coord, gl_SampleID, 1);
 
         if (heads_size < TRANSPARENCY_MAX_NODES)
         {
-                const uint node_index = atomicAdd(transparency_node_counter, 1);
-                if (node_index < drawing.transparency_max_node_count)
+                const uint node = atomicAdd(transparency_node_counter, 1);
+
+                if (node < drawing.transparency_max_node_count)
                 {
-                        const uint prev_head = imageAtomicExchange(
-                                transparency_heads, ivec2(gl_FragCoord.xy), gl_SampleID, node_index);
-
-                        TransparencyNode node;
-                        node.color_rg = packUnorm2x16(color.rg);
-                        node.color_ba = packUnorm2x16(vec2(color.b, mesh.alpha));
-                        node.depth = gl_FragCoord.z;
-                        node.next = prev_head;
-
-                        transparency_nodes[node_index] = node;
+                        const uint next_node = imageAtomicExchange(transparency_heads, coord, gl_SampleID, node);
+                        transparency_nodes[node] = create_transparency_node(color, alpha, gl_FragCoord.z, next_node);
                 }
         }
         else if (heads_size == TRANSPARENCY_MAX_NODES)
@@ -59,7 +53,7 @@ void set_fragment_color(const vec3 color)
         }
         else
         {
-                write_transparency(color);
+                write_transparency(color, mesh.alpha);
                 discard;
         }
 }
