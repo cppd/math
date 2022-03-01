@@ -15,7 +15,11 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
+#ifndef TRANSPARENCY_GLSL
+#define TRANSPARENCY_GLSL
+
 const uint TRANSPARENCY_MAX_NODES = 32;
+const uint TRANSPARENCY_NULL_INDEX = 0xffffffff;
 
 struct TransparencyNode
 {
@@ -23,6 +27,13 @@ struct TransparencyNode
         uint color_ba;
         float depth;
         uint next;
+};
+
+struct Fragment
+{
+        uint color_rg;
+        uint color_ba;
+        float depth;
 };
 
 TransparencyNode create_transparency_node(const vec3 color, const float alpha, const float depth, const uint next)
@@ -36,3 +47,23 @@ TransparencyNode create_transparency_node(const vec3 color, const float alpha, c
 
         return node;
 }
+
+Fragment transparency_node_to_fragment(const TransparencyNode node)
+{
+        Fragment fragment;
+
+        fragment.color_rg = node.color_rg;
+        fragment.color_ba = node.color_ba;
+        fragment.depth = node.depth;
+
+        return fragment;
+}
+
+vec4 fragment_color(const Fragment fragment)
+{
+        const vec2 rg = unpackUnorm2x16(fragment.color_rg);
+        const vec2 ba = unpackUnorm2x16(fragment.color_ba);
+        return vec4(rg, ba);
+}
+
+#endif

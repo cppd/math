@@ -22,23 +22,8 @@ The MIT Press, 2009.
 6. Heapsort
 */
 
+#include "transparency.glsl"
 #include "volume_in.glsl"
-
-const uint TRANSPARENCY_NULL_POINTER = 0xffffffff;
-
-struct Fragment
-{
-        uint color_rg;
-        uint color_ba;
-        float depth;
-};
-
-vec4 fragment_color(const Fragment fragment)
-{
-        const vec2 rg = unpackUnorm2x16(fragment.color_rg);
-        const vec2 ba = unpackUnorm2x16(fragment.color_ba);
-        return vec4(rg, ba);
-}
 
 #if !defined(FRAGMENTS)
 
@@ -122,19 +107,17 @@ void fragments_build()
 {
         g_fragments_count = 0;
 
-        uint pointer = imageLoad(transparency_heads, ivec2(gl_FragCoord.xy), gl_SampleID).r;
+        uint node_index = imageLoad(transparency_heads, ivec2(gl_FragCoord.xy), gl_SampleID).r;
 
-        if (pointer == TRANSPARENCY_NULL_POINTER)
+        if (node_index == TRANSPARENCY_NULL_INDEX)
         {
                 return;
         }
 
-        while (pointer != TRANSPARENCY_NULL_POINTER && g_fragments_count < TRANSPARENCY_MAX_NODES)
+        while (node_index != TRANSPARENCY_NULL_INDEX && g_fragments_count < TRANSPARENCY_MAX_NODES)
         {
-                g_fragments[g_fragments_count].color_rg = transparency_nodes[pointer].color_rg;
-                g_fragments[g_fragments_count].color_ba = transparency_nodes[pointer].color_ba;
-                g_fragments[g_fragments_count].depth = transparency_nodes[pointer].depth;
-                pointer = transparency_nodes[pointer].next;
+                g_fragments[g_fragments_count] = transparency_node_to_fragment(transparency_nodes[node_index]);
+                node_index = transparency_nodes[node_index].next;
                 ++g_fragments_count;
         }
 
