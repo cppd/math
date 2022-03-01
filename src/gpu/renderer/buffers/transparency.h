@@ -17,7 +17,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
-#include <src/com/type/limit.h>
 #include <src/vulkan/buffers.h>
 
 #include <vector>
@@ -26,11 +25,6 @@ namespace ns::gpu::renderer
 {
 class TransparencyBuffers final
 {
-        static constexpr std::uint32_t HEADS_NULL_POINTER = Limits<std::uint32_t>::max();
-
-        // (uint color_rg) + (uint color_ba) + (float depth) + (uint next)
-        static constexpr unsigned long long NODE_SIZE = 16;
-
         const unsigned node_count_;
 
         vulkan::ImageWithMemory heads_;

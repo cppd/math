@@ -21,6 +21,14 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 namespace ns::gpu::renderer
 {
+namespace
+{
+constexpr std::uint32_t HEADS_NULL_INDEX = 0xffff'ffff;
+
+// (uint color_rg) + (uint color_ba) + (float depth) + (uint next)
+constexpr unsigned long long NODE_SIZE = 16;
+}
+
 TransparencyBuffers::TransparencyBuffers(
         const vulkan::Device& device,
         const vulkan::CommandPool& command_pool,
@@ -116,7 +124,7 @@ unsigned TransparencyBuffers::node_count() const
 
 void TransparencyBuffers::commands_init(const VkCommandBuffer command_buffer) const
 {
-        commands_init_uint32_storage_image(command_buffer, heads_, HEADS_NULL_POINTER);
+        commands_init_uint32_storage_image(command_buffer, heads_, HEADS_NULL_INDEX);
         commands_init_uint32_storage_image(command_buffer, heads_size_, 0);
         commands_init_buffer(command_buffer, init_buffer_, counters_);
 }
