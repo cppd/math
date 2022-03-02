@@ -50,7 +50,7 @@ vec3 shade(
         const sampler1D ggx_f1_albedo_cosine_weighted_average,
         const vec3 lighting_color,
         const float ambient,
-        const float shadow_weight)
+        const float shadow_transparency)
 {
         const vec3 f0 = shading_compute_metalness_f0(surface_color, metalness);
         const vec3 rho_ss = shading_compute_metalness_rho_ss(surface_color, metalness);
@@ -60,9 +60,9 @@ vec3 shade(
                                    roughness, f0, rho_ss, n, v, v, ggx_f1_albedo_cosine_roughness,
                                    ggx_f1_albedo_cosine_weighted_average);
 
-        if (shadow_weight < 1)
+        if (shadow_transparency > 0)
         {
-                shade_color += ((1 - shadow_weight) * 0.8)
+                shade_color += (shadow_transparency * 0.8)
                                * shading_ggx_diffuse(
                                        roughness, f0, rho_ss, n, v, l, ggx_f1_albedo_cosine_roughness,
                                        ggx_f1_albedo_cosine_weighted_average);

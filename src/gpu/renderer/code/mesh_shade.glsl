@@ -20,7 +20,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "shade.glsl"
 
 #ifdef RAY_TRACING
-float shadow_weight(const vec3 world_position)
+float mesh_shadow_transparency(const vec3 world_position)
 {
         const vec3 org = world_position;
         const vec3 dir = drawing.direction_to_light;
@@ -28,13 +28,13 @@ float shadow_weight(const vec3 world_position)
                 !drawing.clip_plane_enabled
                         ? ray_tracing_intersection(org, dir, acceleration_structure)
                         : ray_tracing_intersection(org, dir, acceleration_structure, drawing.clip_plane_equation);
-        return intersection ? 1 : 0;
+        return intersection ? 0 : 1;
 }
 #else
-float shadow_weight(const vec3 shadow_position)
+float mesh_shadow_transparency(const vec3 shadow_position)
 {
         const float d = texture(shadow_mapping_texture, shadow_position.xy).r;
-        return d <= shadow_position.z ? 1 : 0;
+        return d <= shadow_position.z ? 0 : 1;
 }
 #endif
 
@@ -50,7 +50,7 @@ vec3 mesh_shade(const vec3 surface_color, const vec3 n, const vec3 position_for_
                 color =
                         shade(surface_color, mesh.metalness, mesh.roughness, n, v, l, ggx_f1_albedo_cosine_roughness,
                               ggx_f1_albedo_cosine_weighted_average, drawing.lighting_color, mesh.ambient,
-                              shadow_weight(position_for_shadow));
+                              mesh_shadow_transparency(position_for_shadow));
         }
         else
         {

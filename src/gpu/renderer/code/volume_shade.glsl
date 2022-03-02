@@ -23,14 +23,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "volume_in.glsl"
 #include "volume_intersect.glsl"
 
-bool isosurface_shadow(const vec3 p)
-{
-        const vec3 direction_to_light = normalize(coordinates.world_to_texture_matrix * drawing.direction_to_light);
-        return isosurface_intersect(p, direction_to_light);
-}
-
 #ifdef RAY_TRACING
-float shadow_weight(const vec3 p)
+float mesh_shadow_transparency(const vec3 p)
 {
         const vec3 org = (coordinates.texture_to_world_matrix * vec4(p, 1)).xyz;
         const vec3 dir = drawing.direction_to_light;
@@ -38,16 +32,27 @@ float shadow_weight(const vec3 p)
                 !drawing.clip_plane_enabled
                         ? ray_tracing_intersection(org, dir, acceleration_structure)
                         : ray_tracing_intersection(org, dir, acceleration_structure, drawing.clip_plane_equation);
-        return intersection || isosurface_shadow(p) ? 1 : 0;
+        return intersection ? 0 : 1;
 }
 #else
-float shadow_weight(const vec3 p)
+float mesh_shadow_transparency(const vec3 p)
 {
         const vec3 shadow_position = (shadow_matrix.texture_to_shadow * vec4(p, 1)).xyz;
         const float d = texture(shadow_mapping_texture, shadow_position.xy).r;
-        return d <= shadow_position.z || isosurface_shadow(p) ? 1 : 0;
+        return d <= shadow_position.z ? 0 : 1;
 }
 #endif
+
+float isosurface_shadow_transparency(const vec3 p)
+{
+        const vec3 direction_to_light = normalize(coordinates.world_to_texture_matrix * drawing.direction_to_light);
+        return isosurface_intersect(p, direction_to_light) ? 0 : 1;
+}
+
+float shadow_transparency(const vec3 p)
+{
+        return mesh_shadow_transparency(p) * isosurface_shadow_transparency(p);
+}
 
 vec4 isosurface_color(const vec3 p)
 {
@@ -60,7 +65,7 @@ vec4 isosurface_color(const vec3 p)
         const vec3 shade_color = drawing.show_shadow
                                          ? shade(volume.color, volume.metalness, volume.roughness, n, v, l,
                                                  ggx_f1_albedo_cosine_roughness, ggx_f1_albedo_cosine_weighted_average,
-                                                 drawing.lighting_color, volume.ambient, shadow_weight(p))
+                                                 drawing.lighting_color, volume.ambient, shadow_transparency(p))
                                          : shade(volume.color, volume.metalness, volume.roughness, n, v, l,
                                                  ggx_f1_albedo_cosine_roughness, ggx_f1_albedo_cosine_weighted_average,
                                                  drawing.lighting_color, volume.ambient);
