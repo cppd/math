@@ -34,12 +34,12 @@ Real-Time Volume Graphics.
 A K Peters, Ltd, 2006.
 */
 
-#include "volume_color.glsl"
 #include "volume_fragments.glsl"
 #include "volume_image.glsl"
 #include "volume_in.glsl"
 #include "volume_intersect.glsl"
 #include "volume_out.glsl"
+#include "volume_shade.glsl"
 
 #define COLOR_ADD(c)                \
         do                          \

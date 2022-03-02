@@ -45,6 +45,31 @@ vec4 color_volume_value(const vec3 p)
         return vec4(volume.color, value);
 }
 
+vec4 volume_color(const vec3 p)
+{
+        vec4 color = color_volume_value(p);
+        color.rgb *= drawing.lighting_color * volume.ambient;
+        color.a = clamp(color.a * volume.volume_alpha_coefficient, 0, 1);
+        return color;
+}
+
+vec3 volume_gradient(const vec3 p)
+{
+        vec3 s1;
+        vec3 s2;
+
+        s1.x = scalar_volume_value(vec3(p.x - coordinates.gradient_h.x, p.y, p.z));
+        s2.x = scalar_volume_value(vec3(p.x + coordinates.gradient_h.x, p.y, p.z));
+
+        s1.y = scalar_volume_value(vec3(p.x, p.y - coordinates.gradient_h.y, p.z));
+        s2.y = scalar_volume_value(vec3(p.x, p.y + coordinates.gradient_h.y, p.z));
+
+        s1.z = scalar_volume_value(vec3(p.x, p.y, p.z - coordinates.gradient_h.z));
+        s2.z = scalar_volume_value(vec3(p.x, p.y, p.z + coordinates.gradient_h.z));
+
+        return s2 - s1;
+}
+
 #endif
 
 #endif

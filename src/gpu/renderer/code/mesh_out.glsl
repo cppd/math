@@ -41,6 +41,7 @@ void write_transparency(const vec3 color, const float alpha)
         {
                 atomicAdd(transparency_overload_counter, 1);
         }
+        discard;
 }
 
 void set_fragment_color(const vec3 color)
@@ -54,7 +55,6 @@ void set_fragment_color(const vec3 color)
         else
         {
                 write_transparency(color, mesh.alpha);
-                discard;
         }
 }
 

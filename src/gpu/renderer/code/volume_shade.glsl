@@ -23,23 +23,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "volume_in.glsl"
 #include "volume_intersect.glsl"
 
-vec3 gradient(const vec3 p)
-{
-        vec3 s1;
-        vec3 s2;
-
-        s1.x = scalar_volume_value(vec3(p.x - coordinates.gradient_h.x, p.y, p.z));
-        s2.x = scalar_volume_value(vec3(p.x + coordinates.gradient_h.x, p.y, p.z));
-
-        s1.y = scalar_volume_value(vec3(p.x, p.y - coordinates.gradient_h.y, p.z));
-        s2.y = scalar_volume_value(vec3(p.x, p.y + coordinates.gradient_h.y, p.z));
-
-        s1.z = scalar_volume_value(vec3(p.x, p.y, p.z - coordinates.gradient_h.z));
-        s2.z = scalar_volume_value(vec3(p.x, p.y, p.z + coordinates.gradient_h.z));
-
-        return s2 - s1;
-}
-
 bool isosurface_shadow(const vec3 p)
 {
         const vec3 direction_to_light = normalize(coordinates.world_to_texture_matrix * drawing.direction_to_light);
@@ -66,20 +49,12 @@ float shadow_weight(const vec3 p)
 }
 #endif
 
-vec4 volume_color(const vec3 p)
-{
-        vec4 color = color_volume_value(p);
-        color.rgb *= drawing.lighting_color * volume.ambient;
-        color.a = clamp(color.a * volume.volume_alpha_coefficient, 0, 1);
-        return color;
-}
-
 vec4 isosurface_color(const vec3 p)
 {
         const vec3 v = drawing.direction_to_camera;
         const vec3 l = drawing.direction_to_light;
 
-        const vec3 world_normal = normalize(coordinates.gradient_to_world_matrix * gradient(p));
+        const vec3 world_normal = normalize(coordinates.gradient_to_world_matrix * volume_gradient(p));
         const vec3 n = faceforward(world_normal, -v, world_normal);
 
         const vec3 shade_color = drawing.show_shadow

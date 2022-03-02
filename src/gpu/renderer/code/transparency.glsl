@@ -21,14 +21,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 const uint TRANSPARENCY_MAX_NODES = 32;
 const uint TRANSPARENCY_NULL_INDEX = 0xffffffff;
 
-struct TransparencyNode
-{
-        uint color_rg;
-        uint color_ba;
-        float depth;
-        uint next;
-};
-
 struct Fragment
 {
         uint color_rg;
@@ -36,27 +28,22 @@ struct Fragment
         float depth;
 };
 
+struct TransparencyNode
+{
+        Fragment fragment;
+        uint next;
+};
+
 TransparencyNode create_transparency_node(const vec3 color, const float alpha, const float depth, const uint next)
 {
         TransparencyNode node;
 
-        node.color_rg = packUnorm2x16(color.rg);
-        node.color_ba = packUnorm2x16(vec2(color.b, alpha));
-        node.depth = depth;
+        node.fragment.color_rg = packUnorm2x16(color.rg);
+        node.fragment.color_ba = packUnorm2x16(vec2(color.b, alpha));
+        node.fragment.depth = depth;
         node.next = next;
 
         return node;
-}
-
-Fragment transparency_node_to_fragment(const TransparencyNode node)
-{
-        Fragment fragment;
-
-        fragment.color_rg = node.color_rg;
-        fragment.color_ba = node.color_ba;
-        fragment.depth = node.depth;
-
-        return fragment;
 }
 
 vec4 fragment_color(const Fragment fragment)

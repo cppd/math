@@ -30,13 +30,16 @@ The MIT Press, 2009.
 void fragments_build()
 {
 }
+
 bool fragments_empty()
 {
         return true;
 }
+
 void fragments_pop()
 {
 }
+
 Fragment fragments_top()
 {
         Fragment f;
@@ -116,7 +119,7 @@ void fragments_build()
 
         while (node_index != TRANSPARENCY_NULL_INDEX && g_fragments_count < TRANSPARENCY_MAX_NODES)
         {
-                g_fragments[g_fragments_count] = transparency_node_to_fragment(transparency_nodes[node_index]);
+                g_fragments[g_fragments_count] = transparency_nodes[node_index].fragment;
                 node_index = transparency_nodes[node_index].next;
                 ++g_fragments_count;
         }
