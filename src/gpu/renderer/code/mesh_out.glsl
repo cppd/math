@@ -15,6 +15,9 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
+#ifndef MESH_OUT_GLSL
+#define MESH_OUT_GLSL
+
 #include "mesh_in.glsl"
 #include "mesh_shade.glsl"
 
@@ -63,3 +66,5 @@ void set_fragment_color(const vec3 surface_color, const vec3 n, const vec3 posit
         const vec3 color = mesh_shade(surface_color, n, position_for_shadow, edge_factor);
         set_fragment_color(color);
 }
+
+#endif

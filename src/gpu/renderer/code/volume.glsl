@@ -34,6 +34,9 @@ Real-Time Volume Graphics.
 A K Peters, Ltd, 2006.
 */
 
+#ifndef VOLUME_GLSL
+#define VOLUME_GLSL
+
 #include "volume_fragments.glsl"
 #include "volume_image.glsl"
 #include "volume_in.glsl"
@@ -330,4 +333,6 @@ void main()
 
 #else
 #error IMAGE or FRAGMENTS not defined
+#endif
+
 #endif

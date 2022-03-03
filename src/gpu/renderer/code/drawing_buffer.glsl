@@ -15,6 +15,9 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
+#ifndef DRAWING_BUFFER_GLSL
+#define DRAWING_BUFFER_GLSL
+
 #define DRAWING_BUFFER(set_number, binding_number)                                          \
         layout(set = set_number, binding = binding_number, std140) uniform restrict Drawing \
         {                                                                                   \
@@ -40,3 +43,5 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
                 uint transparency_max_node_count;                                           \
         }                                                                                   \
         drawing;
+
+#endif

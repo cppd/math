@@ -15,6 +15,9 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
+#ifndef VOLUME_OUT_GLSL
+#define VOLUME_OUT_GLSL
+
 const float MIN_TRANSPARENCY = 1.0 / 256;
 
 // srcColorBlendFactor = VK_BLEND_FACTOR_ONE
@@ -42,3 +45,5 @@ bool color_add(const vec4 c)
         g_transparency *= 1.0 - c.a;
         return g_transparency < MIN_TRANSPARENCY;
 }
+
+#endif

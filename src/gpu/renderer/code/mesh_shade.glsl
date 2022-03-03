@@ -15,6 +15,9 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
+#ifndef MESH_SHADE_GLSL
+#define MESH_SHADE_GLSL
+
 #include "mesh_in.glsl"
 #include "ray_tracing_intersection.glsl"
 #include "shade.glsl"
@@ -66,3 +69,5 @@ vec3 mesh_shade(const vec3 surface_color, const vec3 n, const vec3 position_for_
 
         return color;
 }
+
+#endif

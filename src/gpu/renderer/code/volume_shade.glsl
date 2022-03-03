@@ -15,6 +15,9 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
+#ifndef VOLUME_SHADE_GLSL
+#define VOLUME_SHADE_GLSL
+
 #if defined(IMAGE)
 
 #include "ray_tracing_intersection.glsl"
@@ -72,5 +75,7 @@ vec4 isosurface_color(const vec3 p)
 
         return vec4(shade_color, volume.isosurface_alpha);
 }
+
+#endif
 
 #endif

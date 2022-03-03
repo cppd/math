@@ -22,6 +22,9 @@ The MIT Press, 2009.
 6. Heapsort
 */
 
+#ifndef VOLUME_FRAGMENTS_GLSL
+#define VOLUME_FRAGMENTS_GLSL
+
 #include "transparency.glsl"
 #include "volume_in.glsl"
 
@@ -126,5 +129,7 @@ void fragments_build()
 
         fragments_build_min_heap();
 }
+
+#endif
 
 #endif

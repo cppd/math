@@ -15,6 +15,9 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
+#ifndef RAY_TRACING_INTERSECTION_GLSL
+#define RAY_TRACING_INTERSECTION_GLSL
+
 #ifdef RAY_TRACING
 
 #extension GL_EXT_ray_query : require
@@ -66,5 +69,7 @@ bool ray_tracing_intersection(
 
         return false;
 }
+
+#endif
 
 #endif

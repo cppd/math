@@ -15,6 +15,9 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
+#ifndef SHADE_GLSL
+#define SHADE_GLSL
+
 #include "shading_ggx_diffuse.glsl"
 #include "shading_metalness.glsl"
 
@@ -70,3 +73,5 @@ vec3 shade(
 
         return lighting_color * shade_color + ambient * surface_color;
 }
+
+#endif
