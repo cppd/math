@@ -25,6 +25,9 @@ CRC Press, 2018.
 Parameterizing Fresnel Values
 */
 
+#ifndef SHADING_METALNESS_GLSL
+#define SHADING_METALNESS_GLSL
+
 vec3 shading_compute_metalness_f0(const vec3 surface_color, const float metalness)
 {
         const vec3 f0 = vec3(0.05);
@@ -35,3 +38,5 @@ vec3 shading_compute_metalness_rho_ss(const vec3 surface_color, const float meta
 {
         return mix(surface_color, vec3(0), metalness);
 }
+
+#endif

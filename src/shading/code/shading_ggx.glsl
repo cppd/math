@@ -26,6 +26,9 @@ CRC Press, 2018.
 9.8 BRDF Models for Surface Reflection
 */
 
+#ifndef SHADING_GGX_GLSL
+#define SHADING_GGX_GLSL
+
 #include "shading_constants.glsl"
 #include "shading_fresnel.glsl"
 
@@ -66,3 +69,5 @@ vec3 shading_ggx_brdf(
 
         return shading_fresnel(f0, h_l) * shading_ggx_g2_combined(alpha_2, n_l, n_v) * shading_ggx(alpha_2, n_h);
 }
+
+#endif

@@ -24,6 +24,9 @@ CRC Press, 2018.
 9.9 BRDF Models for Subsurface Scattering
 */
 
+#ifndef SHADING_SUBSURFACE_GLSL
+#define SHADING_SUBSURFACE_GLSL
+
 #include "shading_constants.glsl"
 
 // (9.64)
@@ -83,3 +86,5 @@ vec3 shading_diffuse_disney_ws(
 //         const float c = mix(f_d, 1.25 * f_ss, k_ss);
 //         return (c * SHADING_PI_R) * rho_ss;
 // }
+
+#endif

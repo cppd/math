@@ -24,6 +24,9 @@ CRC Press, 2018.
 9.8.2 Multiple-Bounce Surface Reflection
 */
 
+#ifndef SHADING_MULTIPLE_BOUNCE_GLSL
+#define SHADING_MULTIPLE_BOUNCE_GLSL
+
 #include "shading_constants.glsl"
 #include "shading_fresnel.glsl"
 
@@ -54,3 +57,5 @@ vec3 shading_ggx_multiple_bounce_surface_reflection(
 
         return shading_multiple_bounce_surface_reflection(f0, rs_f1, rs_f1_l, rs_f1_v);
 }
+
+#endif
