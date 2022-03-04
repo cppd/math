@@ -15,14 +15,18 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#version 460
+#ifndef VIEW_IN_GLSL
+#define VIEW_IN_GLSL
 
-#extension GL_GOOGLE_include_directive : enable
-#include "view_in.glsl"
-
-layout(location = 0) out vec4 color;
-
-void main()
+layout(std140, binding = 0) restrict uniform Data
 {
-        color = vec4(brightness.xxx, 1);
-}
+        mat4 matrix;
+        float brightness;
+};
+
+layout(std430, binding = 1) readonly restrict buffer Points
+{
+        ivec2 points[];
+};
+
+#endif

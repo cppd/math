@@ -25,6 +25,7 @@ layout(constant_id = 2) const int X = 1;
 layout(constant_id = 3) const int Y = 1;
 layout(constant_id = 4) const int WIDTH = 1;
 layout(constant_id = 5) const int HEIGHT = 1;
+
 layout(binding = 1, r32ui) readonly restrict uniform uimage2D objects;
 
 layout(std430, binding = 0) writeonly restrict buffer Lines
@@ -40,6 +41,21 @@ bool not_background(const int x, const int y)
         return s.r != 0;
 }
 
+ivec2 min_max_x(const int local_id, const int y, const int group_size)
+{
+        int min_x = 1000000000;
+        int max_x = -1000000000;
+        for (int x = local_id; x < WIDTH; x += group_size)
+        {
+                if (not_background(x, y))
+                {
+                        min_x = min(min_x, x);
+                        max_x = max(max_x, x);
+                }
+        }
+        return ivec2(min_x, max_x);
+}
+
 // x for minimum values, y for maximum values
 shared ivec2 shared_buffer[BUFFER_SIZE];
 
@@ -53,18 +69,7 @@ void main()
         const int y = int(gl_WorkGroupID.x);
         const int group_size = int(gl_WorkGroupSize.x);
 
-        int min_x = 1000000;
-        int max_x = -1000000;
-        for (int x = local_id; x < WIDTH; x += group_size)
-        {
-                if (not_background(x, y))
-                {
-                        min_x = min(min_x, x);
-                        max_x = max(max_x, x);
-                }
-        }
-
-        shared_buffer[local_id] = ivec2(min_x, max_x);
+        shared_buffer[local_id] = min_max_x(local_id, y, group_size);
 
         barrier();
 

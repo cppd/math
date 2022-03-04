@@ -17,20 +17,10 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #version 460
 
-layout(std140, binding = 0) uniform Data
-{
-        mat4 matrix;
-        float brightness;
-};
-
-layout(std430, binding = 1) readonly buffer Points
-{
-        ivec2 points[];
-};
+#extension GL_GOOGLE_include_directive : enable
+#include "view_in.glsl"
 
 void main()
 {
-        const int vertex_index = gl_VertexIndex;
-        const ivec2 s = points[vertex_index];
-        gl_Position = matrix * vec4(s.x, s.y, 0, 1);
+        gl_Position = matrix * vec4(points[gl_VertexIndex].xy, 0, 1);
 }

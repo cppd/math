@@ -20,7 +20,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 // gl_GlobalInvocationID = gl_WorkGroupID * gl_WorkGroupSize + gl_LocalInvocationID
 
 layout(constant_id = 0) const int LINE_SIZE = 1;
-
 layout(local_size_x = 1) in;
 
 // Ignore points with negative Lines values
