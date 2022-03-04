@@ -33,8 +33,8 @@ class ViewMemory final
 {
         static constexpr int SET_NUMBER = 0;
 
-        static constexpr int IMAGE_BINDING = 1;
-        static constexpr int DATA_BINDING = 0;
+        static constexpr int IMAGE_BINDING = 0;
+        static constexpr int DATA_BINDING = 1;
 
         vulkan::Descriptors descriptors_;
         std::vector<vulkan::BufferWithMemory> uniform_buffers_;

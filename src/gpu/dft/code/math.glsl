@@ -15,27 +15,21 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#version 460
+#ifndef MATH_GLSL
+#define MATH_GLSL
 
-layout(binding = 0) uniform sampler2D tex;
+const float PI = 3.1415926535897932384626433832795028841971693993751;
 
-layout(std140, binding = 1) restrict uniform Data
+uint bit_reverse(const uint i, const uint bits)
 {
-        vec3 background_color;
-        vec3 foreground_color;
-        float brightness;
-};
-
-layout(location = 0) in VS
-{
-        vec2 texture_coordinates;
+        return bitfieldReverse(i) >> (32 - bits);
 }
-vs;
 
-layout(location = 0) out vec4 color;
-
-void main()
+vec2 complex_mul(const vec2 a, const vec2 b)
 {
-        const float v = brightness * texture(tex, vs.texture_coordinates).r;
-        color = vec4(mix(background_color, foreground_color, clamp(v, 0, 1)), 1);
+        const float x = a.x * b.x - a.y * b.y;
+        const float y = a.x * b.y + a.y * b.x;
+        return vec2(x, y);
 }
+
+#endif

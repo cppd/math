@@ -26,6 +26,7 @@ layout(constant_id = 2) const int X = 1;
 layout(constant_id = 3) const int Y = 1;
 layout(constant_id = 4) const int WIDTH = 1;
 layout(constant_id = 5) const int HEIGHT = 1;
+
 layout(binding = 1) uniform sampler2D src;
 
 layout(std430, binding = 0) writeonly restrict buffer Buffer

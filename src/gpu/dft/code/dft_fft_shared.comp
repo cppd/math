@@ -17,7 +17,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #version 460
 
-const float PI = 3.1415926535897932384626433832795028841971693993751;
+#extension GL_GOOGLE_include_directive : enable
+#include "math.glsl"
 
 // gl_GlobalInvocationID = gl_WorkGroupID * gl_WorkGroupSize + gl_LocalInvocationID
 
@@ -30,7 +31,7 @@ layout(constant_id = 5) const uint SHARED_SIZE = 1;
 layout(constant_id = 6) const bool REVERSE_INPUT = true;
 layout(local_size_x_id = 7) in;
 
-layout(std430, binding = 0) buffer Buffer
+layout(std430, binding = 0) restrict buffer Buffer
 {
         vec2 global_data[];
 };
@@ -38,16 +39,6 @@ layout(std430, binding = 0) buffer Buffer
 const uint N_MAX = (N <= SHARED_SIZE) ? N : SHARED_SIZE;
 
 shared vec2 shared_data[SHARED_SIZE];
-
-uint bit_reverse(const uint i, const uint bits)
-{
-        return bitfieldReverse(i) >> (32 - bits);
-}
-
-vec2 complex_mul(const vec2 a, const vec2 b)
-{
-        return vec2(a.x * b.x - a.y * b.y, a.x * b.y + a.y * b.x);
-}
 
 void copy_global_to_shared()
 {

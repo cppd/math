@@ -17,6 +17,9 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #version 460
 
+#extension GL_GOOGLE_include_directive : enable
+#include "math.glsl"
+
 // gl_GlobalInvocationID = gl_WorkGroupID * gl_WorkGroupSize + gl_LocalInvocationID
 
 layout(local_size_x_id = 0, local_size_y_id = 1) in;
@@ -34,11 +37,6 @@ layout(std430, binding = 1) restrict buffer BufferData
 {
         vec2 data[];
 };
-
-vec2 complex_mul(const vec2 a, const vec2 b)
-{
-        return vec2(a.x * b.x - a.y * b.y, a.x * b.y + a.y * b.x);
-}
 
 void main()
 {
