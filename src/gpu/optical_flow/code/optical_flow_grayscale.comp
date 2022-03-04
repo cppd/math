@@ -22,17 +22,18 @@ layout(constant_id = 2) const int X = 1;
 layout(constant_id = 3) const int Y = 1;
 layout(constant_id = 4) const int WIDTH = 1;
 layout(constant_id = 5) const int HEIGHT = 1;
+
 layout(binding = 0) uniform sampler2D src;
 layout(binding = 1, r32f) writeonly restrict uniform image2D dst;
+
+const ivec2 X0 = ivec2(X, Y);
+const ivec2 X1 = ivec2(X + WIDTH, Y + HEIGHT);
 
 vec4 grayscale(const vec4 c)
 {
         const float g = (c.r + c.g + c.b) * 0.33333333333333333333;
         return vec4(vec3(g), c.a);
 }
-
-const ivec2 X0 = ivec2(X, Y);
-const ivec2 X1 = ivec2(X + WIDTH, Y + HEIGHT);
 
 void main()
 {

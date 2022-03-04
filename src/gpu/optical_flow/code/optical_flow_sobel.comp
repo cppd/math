@@ -18,6 +18,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #version 460
 
 layout(local_size_x_id = 0, local_size_y_id = 1) in;
+
 layout(binding = 0, r32f) readonly restrict uniform image2D image_i;
 layout(binding = 1, r32f) writeonly restrict uniform image2D image_dx;
 layout(binding = 2, r32f) writeonly restrict uniform image2D image_dy;
@@ -25,13 +26,13 @@ layout(binding = 2, r32f) writeonly restrict uniform image2D image_dy;
 const int SOBEL_DELTA = 1;
 
 // clang-format off
-const float sobel_dx[3][3] =
+const float SOBEL_DX[3][3] =
 {
         {-1,  0,  1},
         {-2,  0,  2},
         {-1,  0,  1},
 };
-const float sobel_dy[3][3] =
+const float SOBEL_DY[3][3] =
 {
         {-1, -2, -1},
         { 0,  0,  0},
@@ -39,17 +40,17 @@ const float sobel_dy[3][3] =
 };
 // clang-format on
 
-float get_sobel_dx(const int x, const int y)
+float sobel_dx(const int x, const int y)
 {
-        return sobel_dx[y + SOBEL_DELTA][x + SOBEL_DELTA];
+        return SOBEL_DX[y + SOBEL_DELTA][x + SOBEL_DELTA];
 }
 
-float get_sobel_dy(const int x, const int y)
+float sobel_dy(const int x, const int y)
 {
-        return sobel_dy[y + SOBEL_DELTA][x + SOBEL_DELTA];
+        return SOBEL_DY[y + SOBEL_DELTA][x + SOBEL_DELTA];
 }
 
-float get_pixel(const int x, const int y)
+float pixel(const int x, const int y)
 {
         const ivec2 p = clamp(ivec2(x, y), ivec2(0), imageSize(image_i) - 1);
         return imageLoad(image_i, p).r;
@@ -81,10 +82,10 @@ void main()
         {
                 for (int x = -SOBEL_DELTA; x <= SOBEL_DELTA; ++x)
                 {
-                        const float v = get_pixel(p.x + x, p.y + y);
+                        const float v = pixel(p.x + x, p.y + y);
 
-                        sum_x += v * get_sobel_dx(x, y);
-                        sum_y += v * get_sobel_dy(x, y);
+                        sum_x += v * sobel_dx(x, y);
+                        sum_y += v * sobel_dy(x, y);
                 }
         }
 

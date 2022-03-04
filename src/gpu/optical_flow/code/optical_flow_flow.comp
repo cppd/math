@@ -22,25 +22,23 @@ layout(constant_id = 2) const int RADIUS = 1;
 layout(constant_id = 3) const int MAX_ITERATION_COUNT = 1;
 layout(constant_id = 4) const float STOP_MOVE_SQUARE = 1;
 layout(constant_id = 5) const float MIN_DETERMINANT = 1;
-layout(binding = 4, r32f) readonly restrict uniform image2D image_dx;
-layout(binding = 5, r32f) readonly restrict uniform image2D image_dy;
-layout(binding = 6, r32f) readonly restrict uniform image2D image_i;
-layout(binding = 7) uniform sampler2D texture_j;
 
-layout(std430, binding = 0) readonly buffer TopPoints
+layout(std430, binding = 0) readonly restrict buffer TopPoints
 {
         ivec2 top_points[];
 };
-layout(std430, binding = 1) writeonly buffer PointsFlow
+
+layout(std430, binding = 1) writeonly restrict buffer PointsFlow
 {
         vec2 points_flow[];
 };
-layout(std430, binding = 2) readonly buffer PointsFlowGuess
+
+layout(std430, binding = 2) readonly restrict buffer PointsFlowGuess
 {
         vec2 points_flow_guess[];
 };
 
-layout(std140, binding = 3) uniform Data
+layout(std140, binding = 3) restrict uniform Data
 {
         int point_count_x;
         int point_count_y;
@@ -50,6 +48,11 @@ layout(std140, binding = 3) uniform Data
         int guess_ky;
         int guess_width;
 };
+
+layout(binding = 4, r32f) readonly restrict uniform image2D image_dx;
+layout(binding = 5, r32f) readonly restrict uniform image2D image_dy;
+layout(binding = 6, r32f) readonly restrict uniform image2D image_i;
+layout(binding = 7) uniform sampler2D texture_j;
 
 vec2 pixel_to_texture(const vec2 pixel)
 {

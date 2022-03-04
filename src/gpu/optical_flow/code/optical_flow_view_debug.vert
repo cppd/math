@@ -20,7 +20,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 // out vec2 vs_texture_coordinates;
 
 // clang-format off
-const vec4 vertices[4] = vec4[4]
+const vec4 VERTICES[4] = vec4[4]
 (
         vec4(-1,  1, 0, 1),
         vec4( 1,  1, 0, 1),
@@ -38,7 +38,7 @@ void main()
 
         if (vertex_index < 4)
         {
-                gl_Position = vertices[vertex_index];
+                gl_Position = VERTICES[vertex_index];
                 // vs_texture_coordinates = texture_coordinates[vertex_index];
         }
 }

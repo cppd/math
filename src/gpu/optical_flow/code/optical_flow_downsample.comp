@@ -18,13 +18,14 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #version 460
 
 layout(local_size_x_id = 0, local_size_y_id = 1) in;
+
 layout(binding = 0, r32f) readonly restrict uniform image2D image_big;
 layout(binding = 1, r32f) writeonly restrict uniform image2D image_small;
 
 // clang-format off
 // GaussianMatrix[2]
-const int delta = 2;
-const float filter_2d[5][5] =
+const int DELTA = 2;
+const float FILTER_2D[5][5] =
 {
         {0.002589,  0.0107788, 0.0241466, 0.0107788, 0.002589},
         {0.0107788, 0.0448755, 0.10053,   0.0448755, 0.0107788},
@@ -32,7 +33,7 @@ const float filter_2d[5][5] =
         {0.0107788, 0.0448755, 0.10053,   0.0448755, 0.0107788},
         {0.002589,  0.0107788, 0.0241466, 0.0107788, 0.002589}
 };
-const float filter_1d[5] = {0.05088, 0.21184, 0.47456, 0.21184, 0.05088};
+const float FILTER_1D[5] = {0.05088, 0.21184, 0.47456, 0.21184, 0.05088};
 // clang-format on
 
 bool point_inside_big(const ivec2 p)
@@ -69,14 +70,14 @@ void main()
 
         if (kx > 1 && ky > 1)
         {
-                for (int j = -delta; j <= delta; ++j)
+                for (int j = -DELTA; j <= DELTA; ++j)
                 {
-                        for (int i = -delta; i <= delta; ++i)
+                        for (int i = -DELTA; i <= DELTA; ++i)
                         {
                                 const ivec2 pd = ivec2(p_big.x + i, p_big.y + j);
                                 if (point_inside_big(pd))
                                 {
-                                        const float m = filter_2d[j + delta][i + delta];
+                                        const float m = FILTER_2D[j + DELTA][i + DELTA];
                                         sum_image += get_big(pd) * m;
                                         sum_filter += m;
                                 }
@@ -85,12 +86,12 @@ void main()
         }
         else if (kx > 1)
         {
-                for (int i = -delta; i <= delta; ++i)
+                for (int i = -DELTA; i <= DELTA; ++i)
                 {
                         const ivec2 pd = ivec2(p_big.x + i, p_big.y);
                         if (point_inside_big(pd))
                         {
-                                const float m = filter_1d[i + delta];
+                                const float m = FILTER_1D[i + DELTA];
                                 sum_image += get_big(pd) * m;
                                 sum_filter += m;
                         }
@@ -98,12 +99,12 @@ void main()
         }
         else if (ky > 1)
         {
-                for (int i = -delta; i <= delta; ++i)
+                for (int i = -DELTA; i <= DELTA; ++i)
                 {
                         const ivec2 pd = ivec2(p_big.x, p_big.y + i);
                         if (point_inside_big(pd))
                         {
-                                const float m = filter_1d[i + delta];
+                                const float m = FILTER_1D[i + DELTA];
                                 sum_image += get_big(pd) * m;
                                 sum_filter += m;
                         }

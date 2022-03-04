@@ -17,15 +17,17 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #version 460
 
-layout(std430, binding = 0) readonly buffer StorageBufferPoints
+layout(std430, binding = 0) readonly restrict buffer StorageBufferPoints
 {
         ivec2 points[];
 };
-layout(std430, binding = 1) readonly buffer StorageBufferPointsFlow
+
+layout(std430, binding = 1) readonly restrict buffer StorageBufferPointsFlow
 {
         vec2 points_flow[];
 };
-layout(std140, binding = 2) uniform Data
+
+layout(std140, binding = 2) restrict uniform Data
 {
         mat4 matrix;
 };
