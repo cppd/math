@@ -15,20 +15,21 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#version 460
+#ifndef VIEW_IN_GLSL
+#define VIEW_IN_GLSL
 
-#extension GL_GOOGLE_include_directive : enable
-#include "view_in.glsl"
-
-layout(location = 0) in VS
+layout(std140, binding = 0) restrict uniform Matrices
 {
-        vec2 texture_coordinates;
+        mat4 matrix;
 }
-vs;
+matrices;
 
-layout(location = 0) out vec4 color;
+layout(binding = 1) uniform sampler2D tex;
 
-void main()
+layout(std140, binding = 2) restrict uniform Drawing
 {
-        color = vec4(drawing.color, texture(tex, vs.texture_coordinates).r);
+        vec3 color;
 }
+drawing;
+
+#endif

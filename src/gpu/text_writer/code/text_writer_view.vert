@@ -17,14 +17,11 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #version 460
 
+#extension GL_GOOGLE_include_directive : enable
+#include "view_in.glsl"
+
 layout(location = 0) in ivec2 window_coordinates;
 layout(location = 1) in vec2 texture_coordinates;
-
-layout(std140, binding = 0) uniform Matrices
-{
-        mat4 matrix;
-}
-matrices;
 
 layout(location = 0) out VS
 {
