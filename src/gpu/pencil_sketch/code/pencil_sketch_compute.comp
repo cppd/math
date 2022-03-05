@@ -22,17 +22,18 @@ layout(constant_id = 1) const int X = 1;
 layout(constant_id = 2) const int Y = 1;
 layout(constant_id = 3) const int WIDTH = 1;
 layout(constant_id = 4) const int HEIGHT = 1;
+
 layout(binding = 0) uniform sampler2D src;
-layout(binding = 1, r32f) writeonly uniform image2D img_output;
-layout(binding = 2, r32ui) readonly uniform uimage2D img_objects;
+layout(binding = 1, r32f) writeonly restrict uniform image2D img_output;
+layout(binding = 2, r32ui) readonly restrict uniform uimage2D img_objects;
 
 const ivec2 X0 = ivec2(X, Y);
 const ivec2 X1 = ivec2(X + WIDTH, Y + HEIGHT);
 
 // GaussianMatrix[{4, 3}]
 // clang-format off
-const int delta = 4;
-const float Gauss[delta * 2 + 1][delta * 2 + 1] =
+const int DELTA = 4;
+const float GAUSS[DELTA * 2 + 1][DELTA * 2 + 1] =
 {
         {0.00378449, 0.00564742, 0.00754943, 0.00900273, 0.00955004, 0.00900273, 0.00754943, 0.00564742, 0.00378449},
         {0.00564742, 0.00842740, 0.01126570, 0.01343440, 0.01425110, 0.01343440, 0.01126570, 0.00842740, 0.00564742},
@@ -46,7 +47,7 @@ const float Gauss[delta * 2 + 1][delta * 2 + 1] =
 };
 // clang-format on
 
-const float background_value = 0;
+const float BACKGROUND_VALUE = 0;
 
 float luminance_of_rgb(const vec4 c)
 {
@@ -92,13 +93,13 @@ void main()
         }
 
         float sum = 0;
-        for (int i = -delta; i <= delta; ++i)
+        for (int i = -DELTA; i <= DELTA; ++i)
         {
-                for (int j = -delta; j <= delta; ++j)
+                for (int j = -DELTA; j <= DELTA; ++j)
                 {
                         const ivec2 p2 = ivec2(p.x + i, p.y + j);
-                        const float s2 = (point_inside(p2) && !is_background(p2)) ? read_pixel(p2) : background_value;
-                        sum += s2 * Gauss[i + delta][j + delta];
+                        const float s2 = (point_inside(p2) && !is_background(p2)) ? read_pixel(p2) : BACKGROUND_VALUE;
+                        sum += s2 * GAUSS[i + DELTA][j + DELTA];
                 }
         }
 

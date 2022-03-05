@@ -48,7 +48,7 @@ float get_big(const ivec2 p)
 
 void set_small(const ivec2 p, const float v)
 {
-        imageStore(image_small, p, vec4(v, v, v, 1));
+        imageStore(image_small, p, vec4(vec3(v), 1));
 }
 
 void main()
