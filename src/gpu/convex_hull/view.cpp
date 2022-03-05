@@ -55,6 +55,7 @@ class Impl final : public View
         VkCommandPool graphics_command_pool_;
 
         vulkan::handle::Semaphore semaphore_;
+        ViewDataBuffer data_buffer_;
         ViewProgram program_;
         ViewMemory memory_;
         std::optional<vulkan::BufferWithMemory> points_;
@@ -107,7 +108,7 @@ class Impl final : public View
                 double far = -1;
                 Matrix4d p = matrix::ortho_vulkan<double>(left, right, bottom, top, near, far);
                 Matrix4d t = matrix::translate<double>(0.5, 0.5, 0);
-                memory_.set_matrix(p * t);
+                data_buffer_.set_matrix(p * t);
 
                 pipeline_ = program_.create_pipeline(
                         render_buffers->render_pass(), render_buffers->sample_count(), sample_shading_, rectangle);
@@ -156,7 +157,7 @@ class Impl final : public View
                 //
 
                 float brightness = 0.5 + 0.5 * std::sin(ANGULAR_FREQUENCY * duration_from(start_time_));
-                memory_.set_brightness(brightness);
+                data_buffer_.set_brightness(brightness);
 
                 //
 
@@ -190,8 +191,9 @@ public:
                   device_(device),
                   graphics_command_pool_(*graphics_command_pool),
                   semaphore_(*device_),
+                  data_buffer_(*device_, {family_index_}),
                   program_(device_),
-                  memory_(*device_, program_.descriptor_set_layout(), {family_index_}),
+                  memory_(*device_, program_.descriptor_set_layout(), data_buffer_.buffer()),
                   indirect_buffer_(
                           vulkan::BufferMemoryType::DEVICE_LOCAL,
                           *device_,

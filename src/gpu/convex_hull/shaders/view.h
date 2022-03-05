@@ -28,6 +28,25 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 namespace ns::gpu::convex_hull
 {
+class ViewDataBuffer final
+{
+        vulkan::BufferWithMemory buffer_;
+
+        struct Data final
+        {
+                Matrix4f matrix;
+                float brightness;
+        };
+
+public:
+        ViewDataBuffer(const vulkan::Device& device, const std::vector<std::uint32_t>& family_indices);
+
+        const vulkan::Buffer& buffer() const;
+
+        void set_matrix(const Matrix4d& matrix) const;
+        void set_brightness(float brightness) const;
+};
+
 class ViewMemory final
 {
         static constexpr int SET_NUMBER = 0;
@@ -36,15 +55,6 @@ class ViewMemory final
         static constexpr int POINTS_BINDING = 1;
 
         vulkan::Descriptors descriptors_;
-        std::vector<vulkan::BufferWithMemory> uniform_buffers_;
-
-        struct Data
-        {
-                Matrix4f matrix;
-                float brightness;
-        };
-
-        std::size_t data_buffer_index_;
 
 public:
         static std::vector<VkDescriptorSetLayoutBinding> descriptor_set_layout_bindings();
@@ -53,23 +63,10 @@ public:
         ViewMemory(
                 const vulkan::Device& device,
                 VkDescriptorSetLayout descriptor_set_layout,
-                const std::vector<std::uint32_t>& family_indices);
-
-        ViewMemory(const ViewMemory&) = delete;
-        ViewMemory& operator=(const ViewMemory&) = delete;
-        ViewMemory& operator=(ViewMemory&&) = delete;
-
-        ViewMemory(ViewMemory&&) = default;
-        ~ViewMemory() = default;
-
-        //
+                const vulkan::Buffer& data_buffer);
 
         const VkDescriptorSet& descriptor_set() const;
 
-        //
-
-        void set_matrix(const Matrix4d& matrix) const;
-        void set_brightness(float brightness) const;
         void set_points(const vulkan::Buffer& buffer) const;
 };
 
