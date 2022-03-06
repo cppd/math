@@ -52,6 +52,7 @@ class Impl final : public View
         std::uint32_t graphics_family_index_;
 
         vulkan::handle::Semaphore signal_semaphore_;
+        ViewDataBuffer data_buffer_;
         ViewProgram program_;
         ViewMemory memory_;
         std::unique_ptr<vulkan::BufferWithMemory> vertices_;
@@ -160,17 +161,17 @@ class Impl final : public View
 
         void set_brightness(const double brightness) override
         {
-                memory_.set_brightness(brightness);
+                data_buffer_.set_brightness(brightness);
         }
 
         void set_background_color(const color::Color& color) override
         {
-                memory_.set_background_color(color.rgb32().clamp(0, 1));
+                data_buffer_.set_background_color(color.rgb32().clamp(0, 1));
         }
 
         void set_color(const color::Color& color) override
         {
-                memory_.set_foreground_color(color.rgb32().clamp(0, 1));
+                data_buffer_.set_foreground_color(color.rgb32().clamp(0, 1));
         }
 
         void create_vertices()
@@ -207,8 +208,9 @@ public:
                   // transfer_queue_(transfer_queue),
                   graphics_family_index_(graphics_queue->family_index()),
                   signal_semaphore_(*device_),
+                  data_buffer_(*device_, {graphics_queue->family_index()}),
                   program_(device_),
-                  memory_(*device_, program_.descriptor_set_layout(), {graphics_queue->family_index()}),
+                  memory_(*device_, program_.descriptor_set_layout(), data_buffer_.buffer()),
                   sampler_(create_sampler(*device_)),
                   compute_(create_compute_image(
                           device_,

@@ -29,15 +29,9 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 namespace ns::gpu::dft
 {
-class ViewMemory final
+class ViewDataBuffer final
 {
-        static constexpr int SET_NUMBER = 0;
-
-        static constexpr int IMAGE_BINDING = 0;
-        static constexpr int DATA_BINDING = 1;
-
-        vulkan::Descriptors descriptors_;
-        std::vector<vulkan::BufferWithMemory> uniform_buffers_;
+        vulkan::BufferWithMemory buffer_;
 
         struct Data
         {
@@ -47,30 +41,35 @@ class ViewMemory final
         };
 
 public:
+        ViewDataBuffer(const vulkan::Device& device, const std::vector<std::uint32_t>& family_indices);
+
+        const vulkan::Buffer& buffer() const;
+
+        void set_background_color(const Vector3f& background_color) const;
+        void set_foreground_color(const Vector3f& foreground_color) const;
+        void set_brightness(float brightness) const;
+};
+
+class ViewMemory final
+{
+        static constexpr int SET_NUMBER = 0;
+
+        static constexpr int IMAGE_BINDING = 0;
+        static constexpr int DATA_BINDING = 1;
+
+        vulkan::Descriptors descriptors_;
+
+public:
         static std::vector<VkDescriptorSetLayoutBinding> descriptor_set_layout_bindings();
         static unsigned set_number();
 
         ViewMemory(
                 const vulkan::Device& device,
                 VkDescriptorSetLayout descriptor_set_layout,
-                const std::vector<std::uint32_t>& family_indices);
-
-        ViewMemory(const ViewMemory&) = delete;
-        ViewMemory& operator=(const ViewMemory&) = delete;
-        ViewMemory& operator=(ViewMemory&&) = delete;
-
-        ViewMemory(ViewMemory&&) = default;
-        ~ViewMemory() = default;
-
-        //
+                const vulkan::Buffer& data_buffer);
 
         const VkDescriptorSet& descriptor_set() const;
 
-        //
-
-        void set_background_color(const Vector3f& background_color) const;
-        void set_foreground_color(const Vector3f& foreground_color) const;
-        void set_brightness(float brightness) const;
         void set_image(VkSampler sampler, const vulkan::ImageView& image) const;
 };
 

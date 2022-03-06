@@ -24,6 +24,42 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 namespace ns::gpu::dft
 {
+
+ViewDataBuffer::ViewDataBuffer(const vulkan::Device& device, const std::vector<std::uint32_t>& family_indices)
+        : buffer_(
+                vulkan::BufferMemoryType::HOST_VISIBLE,
+                device,
+                family_indices,
+                VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT,
+                sizeof(Data))
+{
+}
+
+const vulkan::Buffer& ViewDataBuffer::buffer() const
+{
+        return buffer_.buffer();
+}
+
+void ViewDataBuffer::set_background_color(const Vector3f& background_color) const
+{
+        decltype(Data().background_color) v = background_color;
+        vulkan::map_and_write_to_buffer(buffer_, offsetof(Data, background_color), v);
+}
+
+void ViewDataBuffer::set_foreground_color(const Vector3f& foreground_color) const
+{
+        decltype(Data().foreground_color) v = foreground_color;
+        vulkan::map_and_write_to_buffer(buffer_, offsetof(Data, foreground_color), v);
+}
+
+void ViewDataBuffer::set_brightness(const float brightness) const
+{
+        decltype(Data().brightness) v = brightness;
+        vulkan::map_and_write_to_buffer(buffer_, offsetof(Data, brightness), v);
+}
+
+//
+
 std::vector<VkDescriptorSetLayoutBinding> ViewMemory::descriptor_set_layout_bindings()
 {
         std::vector<VkDescriptorSetLayoutBinding> bindings;
@@ -53,28 +89,15 @@ std::vector<VkDescriptorSetLayoutBinding> ViewMemory::descriptor_set_layout_bind
 ViewMemory::ViewMemory(
         const vulkan::Device& device,
         const VkDescriptorSetLayout descriptor_set_layout,
-        const std::vector<std::uint32_t>& family_indices)
+        const vulkan::Buffer& data_buffer)
         : descriptors_(device, 1, descriptor_set_layout, descriptor_set_layout_bindings())
 {
-        std::vector<vulkan::Descriptors::Info> infos;
-        std::vector<std::uint32_t> bindings;
+        VkDescriptorBufferInfo buffer_info = {};
+        buffer_info.buffer = data_buffer;
+        buffer_info.offset = 0;
+        buffer_info.range = data_buffer.size();
 
-        {
-                uniform_buffers_.emplace_back(
-                        vulkan::BufferMemoryType::HOST_VISIBLE, device, family_indices,
-                        VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT, sizeof(Data));
-
-                VkDescriptorBufferInfo buffer_info = {};
-                buffer_info.buffer = uniform_buffers_.back().buffer();
-                buffer_info.offset = 0;
-                buffer_info.range = uniform_buffers_.back().buffer().size();
-
-                infos.emplace_back(buffer_info);
-
-                bindings.push_back(DATA_BINDING);
-        }
-
-        descriptors_.update_descriptor_set(0, bindings, infos);
+        descriptors_.update_descriptor_set(0, DATA_BINDING, buffer_info);
 }
 
 unsigned ViewMemory::set_number()
@@ -85,24 +108,6 @@ unsigned ViewMemory::set_number()
 const VkDescriptorSet& ViewMemory::descriptor_set() const
 {
         return descriptors_.descriptor_set(0);
-}
-
-void ViewMemory::set_background_color(const Vector3f& background_color) const
-{
-        decltype(Data().background_color) v = background_color;
-        vulkan::map_and_write_to_buffer(uniform_buffers_[0], offsetof(Data, background_color), v);
-}
-
-void ViewMemory::set_foreground_color(const Vector3f& foreground_color) const
-{
-        decltype(Data().foreground_color) v = foreground_color;
-        vulkan::map_and_write_to_buffer(uniform_buffers_[0], offsetof(Data, foreground_color), v);
-}
-
-void ViewMemory::set_brightness(const float brightness) const
-{
-        decltype(Data().brightness) v = brightness;
-        vulkan::map_and_write_to_buffer(uniform_buffers_[0], offsetof(Data, brightness), v);
 }
 
 void ViewMemory::set_image(const VkSampler sampler, const vulkan::ImageView& image) const
