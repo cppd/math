@@ -39,7 +39,7 @@ const vulkan::Buffer& FftGlobalBuffer::buffer() const
         return buffer_.buffer();
 }
 
-void FftGlobalBuffer::set_data(const float two_pi_div_m, const int m_div_2) const
+void FftGlobalBuffer::set(const float two_pi_div_m, const int m_div_2) const
 {
         Data d;
         d.two_pi_div_m = two_pi_div_m;
@@ -100,7 +100,7 @@ const VkDescriptorSet& FftGlobalMemory::descriptor_set() const
         return descriptors_.descriptor_set(0);
 }
 
-void FftGlobalMemory::set_buffer(const vulkan::Buffer& buffer) const
+void FftGlobalMemory::set(const vulkan::Buffer& buffer) const
 {
         ASSERT(buffer.has_usage(VK_BUFFER_USAGE_STORAGE_BUFFER_BIT));
 

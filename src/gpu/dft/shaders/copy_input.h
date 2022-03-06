@@ -42,18 +42,7 @@ public:
 
         CopyInputMemory(VkDevice device, VkDescriptorSetLayout descriptor_set_layout);
 
-        CopyInputMemory(const CopyInputMemory&) = delete;
-        CopyInputMemory& operator=(const CopyInputMemory&) = delete;
-        CopyInputMemory& operator=(CopyInputMemory&&) = delete;
-
-        CopyInputMemory(CopyInputMemory&&) = default;
-        ~CopyInputMemory() = default;
-
-        //
-
         const VkDescriptorSet& descriptor_set() const;
-
-        //
 
         void set(VkSampler sampler, const vulkan::ImageView& input, const vulkan::Buffer& output) const;
 };

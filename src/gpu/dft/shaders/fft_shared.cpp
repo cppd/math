@@ -57,7 +57,7 @@ const VkDescriptorSet& FftSharedMemory::descriptor_set() const
         return descriptors_.descriptor_set(0);
 }
 
-void FftSharedMemory::set_buffer(const vulkan::Buffer& buffer) const
+void FftSharedMemory::set(const vulkan::Buffer& buffer) const
 {
         ASSERT(buffer.has_usage(VK_BUFFER_USAGE_STORAGE_BUFFER_BIT));
 

@@ -41,18 +41,7 @@ public:
 
         MulMemory(VkDevice device, VkDescriptorSetLayout descriptor_set_layout);
 
-        MulMemory(const MulMemory&) = delete;
-        MulMemory& operator=(const MulMemory&) = delete;
-        MulMemory& operator=(MulMemory&&) = delete;
-
-        MulMemory(MulMemory&&) = default;
-        ~MulMemory() = default;
-
-        //
-
         const VkDescriptorSet& descriptor_set() const;
-
-        //
 
         void set(const vulkan::Buffer& data, const vulkan::Buffer& buffer) const;
 };
@@ -87,6 +76,7 @@ public:
                 std::int32_t m2,
                 std::uint32_t group_size_x,
                 std::uint32_t group_size_y);
+
         void set_function(std::int32_t function_index, bool inverse);
 };
 

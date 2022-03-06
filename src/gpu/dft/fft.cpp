@@ -152,15 +152,15 @@ class Impl final : public Fft
 
                 ASSERT(data.size() >= data_size_);
                 buffer_ = data.buffer();
-                fft_memory_->set_buffer(data.buffer());
+                fft_memory_->set(data.buffer());
                 if (only_shared_)
                 {
                         return;
                 }
-                bit_reverse_memory_->set_buffer(data.buffer());
+                bit_reverse_memory_->set(data.buffer());
                 for (const FftGlobalMemory& m : fft_g_memory_)
                 {
-                        m.set_buffer(data.buffer());
+                        m.set(data.buffer());
                 }
         }
 
@@ -270,7 +270,7 @@ public:
                 {
                         const FftGlobalBuffer& buffer = fft_g_data_buffer_.emplace_back(device, family_indices);
                         fft_g_memory_.emplace_back(device, fft_g_program_->descriptor_set_layout(), buffer.buffer());
-                        buffer.set_data(two_pi_div_m, m_div_2);
+                        buffer.set(two_pi_div_m, m_div_2);
                 }
                 ASSERT(!fft_g_memory_.empty());
                 ASSERT(fft_g_memory_.size() == fft_g_data_buffer_.size());

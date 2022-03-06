@@ -42,7 +42,7 @@ public:
 
         const vulkan::Buffer& buffer() const;
 
-        void set_data(float two_pi_div_m, int m_div_2) const;
+        void set(float two_pi_div_m, int m_div_2) const;
 };
 
 class FftGlobalMemory final
@@ -65,7 +65,7 @@ public:
 
         const VkDescriptorSet& descriptor_set() const;
 
-        void set_buffer(const vulkan::Buffer& buffer) const;
+        void set(const vulkan::Buffer& buffer) const;
 };
 
 class FftGlobalConstant final : public vulkan::SpecializationConstant

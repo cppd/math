@@ -41,18 +41,7 @@ public:
 
         MulDMemory(VkDevice device, VkDescriptorSetLayout descriptor_set_layout);
 
-        MulDMemory(const MulDMemory&) = delete;
-        MulDMemory& operator=(const MulDMemory&) = delete;
-        MulDMemory& operator=(MulDMemory&&) = delete;
-
-        MulDMemory(MulDMemory&&) = default;
-        ~MulDMemory() = default;
-
-        //
-
         const VkDescriptorSet& descriptor_set() const;
-
-        //
 
         void set(const vulkan::Buffer& diagonal, const vulkan::Buffer& data) const;
 };

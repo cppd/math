@@ -40,20 +40,9 @@ public:
 
         FftSharedMemory(VkDevice device, VkDescriptorSetLayout descriptor_set_layout);
 
-        FftSharedMemory(const FftSharedMemory&) = delete;
-        FftSharedMemory& operator=(const FftSharedMemory&) = delete;
-        FftSharedMemory& operator=(FftSharedMemory&&) = delete;
-
-        FftSharedMemory(FftSharedMemory&&) = default;
-        ~FftSharedMemory() = default;
-
-        //
-
         const VkDescriptorSet& descriptor_set() const;
 
-        //
-
-        void set_buffer(const vulkan::Buffer& buffer) const;
+        void set(const vulkan::Buffer& buffer) const;
 };
 
 class FftSharedConstant final : public vulkan::SpecializationConstant

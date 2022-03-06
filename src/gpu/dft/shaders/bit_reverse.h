@@ -40,20 +40,9 @@ public:
 
         BitReverseMemory(VkDevice device, VkDescriptorSetLayout descriptor_set_layout);
 
-        BitReverseMemory(const BitReverseMemory&) = delete;
-        BitReverseMemory& operator=(const BitReverseMemory&) = delete;
-        BitReverseMemory& operator=(BitReverseMemory&&) = delete;
-
-        BitReverseMemory(BitReverseMemory&&) = default;
-        ~BitReverseMemory() = default;
-
-        //
-
         const VkDescriptorSet& descriptor_set() const;
 
-        //
-
-        void set_buffer(const vulkan::Buffer& buffer) const;
+        void set(const vulkan::Buffer& buffer) const;
 };
 
 class BitReverseConstant final : public vulkan::SpecializationConstant

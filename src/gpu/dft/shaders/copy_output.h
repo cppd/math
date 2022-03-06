@@ -41,18 +41,7 @@ public:
 
         CopyOutputMemory(VkDevice device, VkDescriptorSetLayout descriptor_set_layout);
 
-        CopyOutputMemory(const CopyOutputMemory&) = delete;
-        CopyOutputMemory& operator=(const CopyOutputMemory&) = delete;
-        CopyOutputMemory& operator=(CopyOutputMemory&&) = delete;
-
-        CopyOutputMemory(CopyOutputMemory&&) = default;
-        ~CopyOutputMemory() = default;
-
-        //
-
         const VkDescriptorSet& descriptor_set() const;
-
-        //
 
         void set(const vulkan::Buffer& input, const vulkan::ImageView& output) const;
 };
