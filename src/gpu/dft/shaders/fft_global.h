@@ -27,15 +27,9 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 namespace ns::gpu::dft
 {
-class FftGlobalMemory final
+class FftGlobalBuffer final
 {
-        static constexpr int SET_NUMBER = 0;
-
-        static constexpr int DATA_BINDING = 0;
-        static constexpr int BUFFER_BINDING = 1;
-
-        vulkan::Descriptors descriptors_;
-        std::vector<vulkan::BufferWithMemory> uniform_buffers_;
+        vulkan::BufferWithMemory buffer_;
 
         struct Data
         {
@@ -44,28 +38,33 @@ class FftGlobalMemory final
         };
 
 public:
+        FftGlobalBuffer(const vulkan::Device& device, const std::vector<std::uint32_t>& family_indices);
+
+        const vulkan::Buffer& buffer() const;
+
+        void set_data(float two_pi_div_m, int m_div_2) const;
+};
+
+class FftGlobalMemory final
+{
+        static constexpr int SET_NUMBER = 0;
+
+        static constexpr int DATA_BINDING = 0;
+        static constexpr int BUFFER_BINDING = 1;
+
+        vulkan::Descriptors descriptors_;
+
+public:
         static std::vector<VkDescriptorSetLayoutBinding> descriptor_set_layout_bindings();
         static unsigned set_number();
 
         FftGlobalMemory(
                 const vulkan::Device& device,
                 VkDescriptorSetLayout descriptor_set_layout,
-                const std::vector<std::uint32_t>& family_indices);
-
-        FftGlobalMemory(const FftGlobalMemory&) = delete;
-        FftGlobalMemory& operator=(const FftGlobalMemory&) = delete;
-        FftGlobalMemory& operator=(FftGlobalMemory&&) = delete;
-
-        FftGlobalMemory(FftGlobalMemory&&) = default;
-        ~FftGlobalMemory() = default;
-
-        //
+                const vulkan::Buffer& data_buffer);
 
         const VkDescriptorSet& descriptor_set() const;
 
-        //
-
-        void set_data(float two_pi_div_m, int m_div_2) const;
         void set_buffer(const vulkan::Buffer& buffer) const;
 };
 

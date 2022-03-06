@@ -99,6 +99,7 @@ class Impl final : public Fft
         int bit_reverse_groups_;
 
         std::optional<FftGlobalProgram> fft_g_program_;
+        std::vector<FftGlobalBuffer> fft_g_data_buffer_;
         std::vector<FftGlobalMemory> fft_g_memory_;
         int fft_g_groups_;
 
@@ -267,10 +268,12 @@ public:
                 float two_pi_div_m = PI<float> / m_div_2;
                 for (; m_div_2 < n_; two_pi_div_m /= 2, m_div_2 <<= 1)
                 {
-                        fft_g_memory_.emplace_back(device, fft_g_program_->descriptor_set_layout(), family_indices);
-                        fft_g_memory_.back().set_data(two_pi_div_m, m_div_2);
+                        const FftGlobalBuffer& buffer = fft_g_data_buffer_.emplace_back(device, family_indices);
+                        fft_g_memory_.emplace_back(device, fft_g_program_->descriptor_set_layout(), buffer.buffer());
+                        buffer.set_data(two_pi_div_m, m_div_2);
                 }
                 ASSERT(!fft_g_memory_.empty());
+                ASSERT(fft_g_memory_.size() == fft_g_data_buffer_.size());
                 ASSERT(n_ == (n_shared_ << fft_g_memory_.size()));
         }
 };

@@ -24,6 +24,31 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 namespace ns::gpu::dft
 {
+FftGlobalBuffer::FftGlobalBuffer(const vulkan::Device& device, const std::vector<std::uint32_t>& family_indices)
+        : buffer_(
+                vulkan::BufferMemoryType::HOST_VISIBLE,
+                device,
+                family_indices,
+                VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT,
+                sizeof(Data))
+{
+}
+
+const vulkan::Buffer& FftGlobalBuffer::buffer() const
+{
+        return buffer_.buffer();
+}
+
+void FftGlobalBuffer::set_data(const float two_pi_div_m, const int m_div_2) const
+{
+        Data d;
+        d.two_pi_div_m = two_pi_div_m;
+        d.m_div_2 = m_div_2;
+        vulkan::map_and_write_to_buffer(buffer_, d);
+}
+
+//
+
 std::vector<VkDescriptorSetLayoutBinding> FftGlobalMemory::descriptor_set_layout_bindings()
 {
         std::vector<VkDescriptorSetLayoutBinding> bindings;
@@ -54,28 +79,15 @@ std::vector<VkDescriptorSetLayoutBinding> FftGlobalMemory::descriptor_set_layout
 FftGlobalMemory::FftGlobalMemory(
         const vulkan::Device& device,
         const VkDescriptorSetLayout descriptor_set_layout,
-        const std::vector<std::uint32_t>& family_indices)
+        const vulkan::Buffer& data_buffer)
         : descriptors_(device, 1, descriptor_set_layout, descriptor_set_layout_bindings())
 {
-        std::vector<vulkan::Descriptors::Info> infos;
-        std::vector<std::uint32_t> bindings;
+        VkDescriptorBufferInfo buffer_info = {};
+        buffer_info.buffer = data_buffer;
+        buffer_info.offset = 0;
+        buffer_info.range = data_buffer.size();
 
-        {
-                uniform_buffers_.emplace_back(
-                        vulkan::BufferMemoryType::HOST_VISIBLE, device, family_indices,
-                        VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT, sizeof(Data));
-
-                VkDescriptorBufferInfo buffer_info = {};
-                buffer_info.buffer = uniform_buffers_.back().buffer();
-                buffer_info.offset = 0;
-                buffer_info.range = uniform_buffers_.back().buffer().size();
-
-                infos.emplace_back(buffer_info);
-
-                bindings.push_back(DATA_BINDING);
-        }
-
-        descriptors_.update_descriptor_set(0, bindings, infos);
+        descriptors_.update_descriptor_set(0, DATA_BINDING, buffer_info);
 }
 
 unsigned FftGlobalMemory::set_number()
@@ -86,14 +98,6 @@ unsigned FftGlobalMemory::set_number()
 const VkDescriptorSet& FftGlobalMemory::descriptor_set() const
 {
         return descriptors_.descriptor_set(0);
-}
-
-void FftGlobalMemory::set_data(const float two_pi_div_m, const int m_div_2) const
-{
-        Data d;
-        d.two_pi_div_m = two_pi_div_m;
-        d.m_div_2 = m_div_2;
-        vulkan::map_and_write_to_buffer(uniform_buffers_[0], d);
 }
 
 void FftGlobalMemory::set_buffer(const vulkan::Buffer& buffer) const
