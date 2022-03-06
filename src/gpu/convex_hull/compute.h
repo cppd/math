@@ -31,12 +31,14 @@ struct Compute
         virtual ~Compute() = default;
 
         virtual void compute_commands(VkCommandBuffer command_buffer) const = 0;
+
         virtual void create_buffers(
                 const vulkan::ImageWithMemory& objects,
                 const Region<2, int>& rectangle,
                 const vulkan::Buffer& points_buffer,
                 const vulkan::Buffer& point_count_buffer,
                 std::uint32_t family_index) = 0;
+
         virtual void delete_buffers() = 0;
 };
 

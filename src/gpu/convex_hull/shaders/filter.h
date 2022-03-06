@@ -42,18 +42,7 @@ public:
 
         FilterMemory(VkDevice device, VkDescriptorSetLayout descriptor_set_layout);
 
-        FilterMemory(const FilterMemory&) = delete;
-        FilterMemory& operator=(const FilterMemory&) = delete;
-        FilterMemory& operator=(FilterMemory&&) = delete;
-
-        FilterMemory(FilterMemory&&) = default;
-        ~FilterMemory() = default;
-
-        //
-
         const VkDescriptorSet& descriptor_set() const;
-
-        //
 
         void set_lines(const vulkan::Buffer& buffer) const;
         void set_points(const vulkan::Buffer& buffer) const;

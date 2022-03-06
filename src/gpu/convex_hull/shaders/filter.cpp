@@ -22,8 +22,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/vulkan/create.h>
 #include <src/vulkan/pipeline.h>
 
-#include <type_traits>
-
 namespace ns::gpu::convex_hull
 {
 std::vector<VkDescriptorSetLayoutBinding> FilterMemory::descriptor_set_layout_bindings()

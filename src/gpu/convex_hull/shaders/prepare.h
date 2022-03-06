@@ -42,18 +42,7 @@ public:
 
         PrepareMemory(VkDevice device, VkDescriptorSetLayout descriptor_set_layout);
 
-        PrepareMemory(const PrepareMemory&) = delete;
-        PrepareMemory& operator=(const PrepareMemory&) = delete;
-        PrepareMemory& operator=(PrepareMemory&&) = delete;
-
-        PrepareMemory(PrepareMemory&&) = default;
-        ~PrepareMemory() = default;
-
-        //
-
         const VkDescriptorSet& descriptor_set() const;
-
-        //
 
         void set_object_image(const vulkan::ImageView& storage_image) const;
         void set_lines(const vulkan::Buffer& buffer) const;

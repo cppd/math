@@ -40,18 +40,7 @@ public:
 
         MergeMemory(VkDevice device, VkDescriptorSetLayout descriptor_set_layout);
 
-        MergeMemory(const MergeMemory&) = delete;
-        MergeMemory& operator=(const MergeMemory&) = delete;
-        MergeMemory& operator=(MergeMemory&&) = delete;
-
-        MergeMemory(MergeMemory&&) = default;
-        ~MergeMemory() = default;
-
-        //
-
         const VkDescriptorSet& descriptor_set() const;
-
-        //
 
         void set_lines(const vulkan::Buffer& buffer) const;
 };
