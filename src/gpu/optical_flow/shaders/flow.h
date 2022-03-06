@@ -27,6 +27,40 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 namespace ns::gpu::optical_flow
 {
+class FlowDataBuffer final
+{
+        vulkan::BufferWithMemory buffer_;
+
+        struct BufferData
+        {
+                std::int32_t point_count_x;
+                std::int32_t point_count_y;
+                std::uint32_t use_all_points;
+                std::uint32_t use_guess;
+                std::int32_t guess_kx;
+                std::int32_t guess_ky;
+                std::int32_t guess_width;
+        };
+
+public:
+        FlowDataBuffer(const vulkan::Device& device, const std::vector<std::uint32_t>& family_indices);
+
+        const vulkan::Buffer& buffer() const;
+
+        struct Data final
+        {
+                int point_count_x;
+                int point_count_y;
+                bool use_all_points;
+                bool use_guess;
+                int guess_kx;
+                int guess_ky;
+                int guess_width;
+        };
+
+        void set(const Data& data) const;
+};
+
 class FlowMemory final
 {
         static constexpr int SET_NUMBER = 0;
@@ -41,18 +75,6 @@ class FlowMemory final
         static constexpr int J_BINDING = 7;
 
         vulkan::Descriptors descriptors_;
-        std::vector<vulkan::BufferWithMemory> uniform_buffers_;
-
-        struct BufferData
-        {
-                std::int32_t point_count_x;
-                std::int32_t point_count_y;
-                std::uint32_t use_all_points;
-                std::uint32_t use_guess;
-                std::int32_t guess_kx;
-                std::int32_t guess_ky;
-                std::int32_t guess_width;
-        };
 
 public:
         static std::vector<VkDescriptorSetLayoutBinding> descriptor_set_layout_bindings();
@@ -61,33 +83,9 @@ public:
         FlowMemory(
                 const vulkan::Device& device,
                 VkDescriptorSetLayout descriptor_set_layout,
-                const std::vector<std::uint32_t>& family_indices);
-
-        FlowMemory(const FlowMemory&) = delete;
-        FlowMemory& operator=(const FlowMemory&) = delete;
-        FlowMemory& operator=(FlowMemory&&) = delete;
-
-        FlowMemory(FlowMemory&&) = default;
-        ~FlowMemory() = default;
-
-        //
+                const vulkan::Buffer& data_buffer);
 
         const VkDescriptorSet& descriptor_set(int index) const;
-
-        //
-
-        struct Data
-        {
-                int point_count_x;
-                int point_count_y;
-                bool use_all_points;
-                bool use_guess;
-                int guess_kx;
-                int guess_ky;
-                int guess_width;
-        };
-
-        void set_data(const Data& data) const;
 
         void set_dx(const vulkan::ImageView& image) const;
         void set_dy(const vulkan::ImageView& image) const;

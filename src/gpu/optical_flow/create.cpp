@@ -113,7 +113,7 @@ std::vector<SobelMemory> create_sobel_memory(
         return sobel_images;
 }
 
-std::vector<FlowMemory> create_flow_memory(
+std::tuple<std::vector<FlowDataBuffer>, std::vector<FlowMemory>> create_flow_memory(
         const vulkan::Device& device,
         const VkDescriptorSetLayout descriptor_set_layout,
         const std::uint32_t family_index,
@@ -149,7 +149,9 @@ std::vector<FlowMemory> create_flow_memory(
 
         const std::vector<std::uint32_t> family_indices{family_index};
 
-        std::vector<FlowMemory> flow_memory;
+        std::tuple<std::vector<FlowDataBuffer>, std::vector<FlowMemory>> result;
+        std::vector<FlowDataBuffer>& flow_buffer = std::get<0>(result);
+        std::vector<FlowMemory>& flow_memory = std::get<1>(result);
 
         for (std::size_t i = 0; i < size; ++i)
         {
@@ -157,7 +159,7 @@ std::vector<FlowMemory> create_flow_memory(
                 const vulkan::Buffer* flow_ptr;
                 const vulkan::Buffer* flow_guess_ptr;
 
-                FlowMemory::Data data;
+                FlowDataBuffer::Data data;
 
                 const bool top = (i == 0);
                 const bool bottom = (i + 1 == size);
@@ -194,9 +196,10 @@ std::vector<FlowMemory> create_flow_memory(
                         data.use_guess = false;
                 }
 
-                flow_memory.emplace_back(device, descriptor_set_layout, family_indices);
+                flow_buffer.emplace_back(device, family_indices);
+                flow_memory.emplace_back(device, descriptor_set_layout, flow_buffer[i].buffer());
 
-                flow_memory[i].set_data(data);
+                flow_buffer[i].set(data);
 
                 flow_memory[i].set_top_points(*top_points_ptr);
                 flow_memory[i].set_flow(*flow_ptr);
@@ -208,7 +211,7 @@ std::vector<FlowMemory> create_flow_memory(
                 flow_memory[i].set_j(sampler, images[1][i].image_view(), images[0][i].image_view());
         }
 
-        return flow_memory;
+        return result;
 }
 
 }

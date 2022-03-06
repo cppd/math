@@ -55,7 +55,7 @@ std::vector<SobelMemory> create_sobel_memory(
         const std::vector<vulkan::ImageWithMemory>& dx,
         const std::vector<vulkan::ImageWithMemory>& dy);
 
-std::vector<FlowMemory> create_flow_memory(
+std::tuple<std::vector<FlowDataBuffer>, std::vector<FlowMemory>> create_flow_memory(
         const vulkan::Device& device,
         VkDescriptorSetLayout descriptor_set_layout,
         std::uint32_t family_index,

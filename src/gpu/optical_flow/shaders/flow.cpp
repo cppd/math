@@ -24,6 +24,36 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 namespace ns::gpu::optical_flow
 {
+FlowDataBuffer::FlowDataBuffer(const vulkan::Device& device, const std::vector<std::uint32_t>& family_indices)
+        : buffer_(
+                vulkan::BufferMemoryType::HOST_VISIBLE,
+                device,
+                family_indices,
+                VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT,
+                sizeof(BufferData))
+{
+}
+
+const vulkan::Buffer& FlowDataBuffer::buffer() const
+{
+        return buffer_.buffer();
+}
+
+void FlowDataBuffer::set(const Data& data) const
+{
+        BufferData buffer_data;
+        buffer_data.point_count_x = data.point_count_x;
+        buffer_data.point_count_y = data.point_count_y;
+        buffer_data.use_all_points = data.use_all_points ? 1 : 0;
+        buffer_data.use_guess = data.use_guess ? 1 : 0;
+        buffer_data.guess_kx = data.guess_kx;
+        buffer_data.guess_ky = data.guess_ky;
+        buffer_data.guess_width = data.guess_width;
+        vulkan::map_and_write_to_buffer(buffer_, buffer_data);
+}
+
+//
+
 std::vector<VkDescriptorSetLayoutBinding> FlowMemory::descriptor_set_layout_bindings()
 {
         std::vector<VkDescriptorSetLayoutBinding> bindings;
@@ -115,30 +145,17 @@ std::vector<VkDescriptorSetLayoutBinding> FlowMemory::descriptor_set_layout_bind
 FlowMemory::FlowMemory(
         const vulkan::Device& device,
         const VkDescriptorSetLayout descriptor_set_layout,
-        const std::vector<std::uint32_t>& family_indices)
+        const vulkan::Buffer& data_buffer)
         : descriptors_(device, 2, descriptor_set_layout, descriptor_set_layout_bindings())
 {
-        std::vector<vulkan::Descriptors::Info> infos;
-        std::vector<std::uint32_t> bindings;
+        VkDescriptorBufferInfo buffer_info = {};
+        buffer_info.buffer = data_buffer;
+        buffer_info.offset = 0;
+        buffer_info.range = data_buffer.size();
 
+        for (int i = 0; i < 2; ++i)
         {
-                uniform_buffers_.emplace_back(
-                        vulkan::BufferMemoryType::HOST_VISIBLE, device, family_indices,
-                        VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT, sizeof(BufferData));
-
-                VkDescriptorBufferInfo buffer_info = {};
-                buffer_info.buffer = uniform_buffers_.back().buffer();
-                buffer_info.offset = 0;
-                buffer_info.range = uniform_buffers_.back().buffer().size();
-
-                infos.emplace_back(buffer_info);
-
-                bindings.push_back(DATA_BINDING);
-        }
-
-        for (int s = 0; s < 2; ++s)
-        {
-                descriptors_.update_descriptor_set(s, bindings, infos);
+                descriptors_.update_descriptor_set(i, DATA_BINDING, buffer_info);
         }
 }
 
@@ -151,19 +168,6 @@ const VkDescriptorSet& FlowMemory::descriptor_set(const int index) const
 {
         ASSERT(index == 0 || index == 1);
         return descriptors_.descriptor_set(index);
-}
-
-void FlowMemory::set_data(const Data& data) const
-{
-        BufferData buffer_data;
-        buffer_data.point_count_x = data.point_count_x;
-        buffer_data.point_count_y = data.point_count_y;
-        buffer_data.use_all_points = data.use_all_points ? 1 : 0;
-        buffer_data.use_guess = data.use_guess ? 1 : 0;
-        buffer_data.guess_kx = data.guess_kx;
-        buffer_data.guess_ky = data.guess_ky;
-        buffer_data.guess_width = data.guess_width;
-        vulkan::map_and_write_to_buffer(uniform_buffers_[0], buffer_data);
 }
 
 void FlowMemory::set_dx(const vulkan::ImageView& image) const

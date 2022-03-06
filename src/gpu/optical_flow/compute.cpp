@@ -111,6 +111,7 @@ class Impl final : public Compute
         std::vector<Vector2i> sobel_groups_;
 
         FlowProgram flow_program_;
+        std::vector<FlowDataBuffer> flow_buffer_;
         std::vector<FlowMemory> flow_memory_;
         std::vector<Vector2i> flow_groups_;
 
@@ -353,7 +354,7 @@ class Impl final : public Compute
                 flow_program_.create_pipeline(
                         GROUPS_X, GROUPS_Y, RADIUS, MAX_ITERATION_COUNT, STOP_MOVE_SQUARE, MIN_DETERMINANT);
 
-                flow_memory_ = create_flow_memory(
+                std::tie(flow_buffer_, flow_memory_) = create_flow_memory(
                         *device_, flow_program_.descriptor_set_layout(), family_index, sampler, sizes,
                         to_buffer_pointers(flow_buffers_), top_point_count_x, top_point_count_y, top_points, top_flow,
                         images_, dx_, dy_);
