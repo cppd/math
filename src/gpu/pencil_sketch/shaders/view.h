@@ -42,23 +42,12 @@ public:
 
         ViewMemory(const vulkan::Device& device, VkDescriptorSetLayout descriptor_set_layout);
 
-        ViewMemory(const ViewMemory&) = delete;
-        ViewMemory& operator=(const ViewMemory&) = delete;
-        ViewMemory& operator=(ViewMemory&&) = delete;
-
-        ViewMemory(ViewMemory&&) = default;
-        ~ViewMemory() = default;
-
-        //
-
         const VkDescriptorSet& descriptor_set() const;
-
-        //
 
         void set_image(VkSampler sampler, const vulkan::ImageView& image) const;
 };
 
-struct ViewVertex
+struct ViewVertex final
 {
         Vector4f position;
         Vector2f texture_coordinates;

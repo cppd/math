@@ -41,22 +41,9 @@ public:
         static std::vector<VkDescriptorSetLayoutBinding> descriptor_set_layout_bindings();
         static unsigned set_number();
 
-        //
-
         ComputeMemory(VkDevice device, VkDescriptorSetLayout descriptor_set_layout);
 
-        ComputeMemory(const ComputeMemory&) = delete;
-        ComputeMemory& operator=(const ComputeMemory&) = delete;
-        ComputeMemory& operator=(ComputeMemory&&) = delete;
-
-        ComputeMemory(ComputeMemory&&) = default;
-        ~ComputeMemory() = default;
-
-        //
-
         const VkDescriptorSet& descriptor_set() const;
-
-        //
 
         void set_input(VkSampler sampler, const vulkan::ImageView& image) const;
         void set_output_image(const vulkan::ImageView& image) const;
