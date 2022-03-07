@@ -42,18 +42,7 @@ public:
 
         SobelMemory(VkDevice device, VkDescriptorSetLayout descriptor_set_layout);
 
-        SobelMemory(const SobelMemory&) = delete;
-        SobelMemory& operator=(const SobelMemory&) = delete;
-        SobelMemory& operator=(SobelMemory&&) = delete;
-
-        SobelMemory(SobelMemory&&) = default;
-        ~SobelMemory() = default;
-
-        //
-
         const VkDescriptorSet& descriptor_set(int index) const;
-
-        //
 
         void set_i(const vulkan::ImageView& image_0, const vulkan::ImageView& image_1);
         void set_dx(const vulkan::ImageView& image_dx);

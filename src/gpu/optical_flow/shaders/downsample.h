@@ -41,18 +41,7 @@ public:
 
         DownsampleMemory(VkDevice device, VkDescriptorSetLayout descriptor_set_layout);
 
-        DownsampleMemory(const DownsampleMemory&) = delete;
-        DownsampleMemory& operator=(const DownsampleMemory&) = delete;
-        DownsampleMemory& operator=(DownsampleMemory&&) = delete;
-
-        DownsampleMemory(DownsampleMemory&&) = default;
-        ~DownsampleMemory() = default;
-
-        //
-
         const VkDescriptorSet& descriptor_set(int index) const;
-
-        //
 
         void set_big(const vulkan::ImageView& image_0, const vulkan::ImageView& image_1) const;
         void set_small(const vulkan::ImageView& image_0, const vulkan::ImageView& image_1) const;

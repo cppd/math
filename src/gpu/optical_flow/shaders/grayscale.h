@@ -42,18 +42,7 @@ public:
 
         GrayscaleMemory(VkDevice device, VkDescriptorSetLayout descriptor_set_layout);
 
-        GrayscaleMemory(const GrayscaleMemory&) = delete;
-        GrayscaleMemory& operator=(const GrayscaleMemory&) = delete;
-        GrayscaleMemory& operator=(GrayscaleMemory&&) = delete;
-
-        GrayscaleMemory(GrayscaleMemory&&) = default;
-        ~GrayscaleMemory() = default;
-
-        //
-
         const VkDescriptorSet& descriptor_set(int index) const;
-
-        //
 
         void set_src(VkSampler sampler, const vulkan::ImageView& image);
         void set_dst(const vulkan::ImageView& image_0, const vulkan::ImageView& image_1);
