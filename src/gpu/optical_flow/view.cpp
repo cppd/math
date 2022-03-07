@@ -54,6 +54,7 @@ class Impl final : public View
 
         vulkan::handle::Semaphore signal_semaphore_;
         ViewProgram program_;
+        ViewDataBuffer buffer_;
         ViewMemory memory_;
         vulkan::handle::Sampler sampler_;
         std::optional<vulkan::BufferWithMemory> top_points_;
@@ -147,7 +148,7 @@ class Impl final : public View
                 const double far = -1;
                 const Matrix4d p = matrix::ortho_vulkan<double>(left, right, bottom, top, near, far);
                 const Matrix4d t = matrix::translate<double>(0.5, 0.5, 0);
-                memory_.set_matrix(p * t);
+                buffer_.set_matrix(p * t);
 
                 vulkan::CommandBufferCreateInfo info;
                 info.device = *device_;
@@ -241,7 +242,8 @@ public:
                   // transfer_queue_(transfer_queue),
                   signal_semaphore_(*device_),
                   program_(device_),
-                  memory_(*device, program_.descriptor_set_layout(), {graphics_queue->family_index()}),
+                  buffer_(*device, {graphics_queue->family_index()}),
+                  memory_(*device, program_.descriptor_set_layout(), buffer_.buffer()),
                   sampler_(create_sampler(*device_)),
                   compute_(create_compute(device_, compute_command_pool, compute_queue))
         {

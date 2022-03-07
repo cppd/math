@@ -29,6 +29,23 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 namespace ns::gpu::optical_flow
 {
+class ViewDataBuffer final
+{
+        vulkan::BufferWithMemory buffer_;
+
+        struct Data
+        {
+                Matrix4f matrix;
+        };
+
+public:
+        ViewDataBuffer(const vulkan::Device& device, const std::vector<std::uint32_t>& family_indices);
+
+        const vulkan::Buffer& buffer() const;
+
+        void set_matrix(const Matrix4d& matrix) const;
+};
+
 class ViewMemory final
 {
         static constexpr int SET_NUMBER = 0;
@@ -38,12 +55,6 @@ class ViewMemory final
         static constexpr int DATA_BINDING = 2;
 
         vulkan::Descriptors descriptors_;
-        std::vector<vulkan::BufferWithMemory> uniform_buffers_;
-
-        struct Data
-        {
-                Matrix4f matrix;
-        };
 
 public:
         static std::vector<VkDescriptorSetLayoutBinding> descriptor_set_layout_bindings();
@@ -52,24 +63,12 @@ public:
         ViewMemory(
                 const vulkan::Device& device,
                 VkDescriptorSetLayout descriptor_set_layout,
-                const std::vector<std::uint32_t>& family_indices);
-
-        ViewMemory(const ViewMemory&) = delete;
-        ViewMemory& operator=(const ViewMemory&) = delete;
-        ViewMemory& operator=(ViewMemory&&) = delete;
-
-        ViewMemory(ViewMemory&&) = default;
-        ~ViewMemory() = default;
-
-        //
+                const vulkan::Buffer& data_buffer);
 
         const VkDescriptorSet& descriptor_set() const;
 
-        //
-
         void set_points(const vulkan::Buffer& buffer) const;
         void set_flow(const vulkan::Buffer& buffer) const;
-        void set_matrix(const Matrix4d& matrix) const;
 };
 
 class ViewProgram final

@@ -24,6 +24,30 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 namespace ns::gpu::optical_flow
 {
+ViewDataBuffer::ViewDataBuffer(const vulkan::Device& device, const std::vector<std::uint32_t>& family_indices)
+        : buffer_(
+                vulkan::BufferMemoryType::HOST_VISIBLE,
+                device,
+                family_indices,
+                VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT,
+                sizeof(Data))
+{
+}
+
+const vulkan::Buffer& ViewDataBuffer::buffer() const
+{
+        return buffer_.buffer();
+}
+
+void ViewDataBuffer::set_matrix(const Matrix4d& matrix) const
+{
+        Data data;
+        data.matrix = to_matrix<float>(matrix).transpose();
+        vulkan::map_and_write_to_buffer(buffer_, 0, data);
+}
+
+//
+
 std::vector<VkDescriptorSetLayoutBinding> ViewMemory::descriptor_set_layout_bindings()
 {
         std::vector<VkDescriptorSetLayoutBinding> bindings;
@@ -62,28 +86,15 @@ std::vector<VkDescriptorSetLayoutBinding> ViewMemory::descriptor_set_layout_bind
 ViewMemory::ViewMemory(
         const vulkan::Device& device,
         const VkDescriptorSetLayout descriptor_set_layout,
-        const std::vector<std::uint32_t>& family_indices)
+        const vulkan::Buffer& data_buffer)
         : descriptors_(device, 1, descriptor_set_layout, descriptor_set_layout_bindings())
 {
-        std::vector<vulkan::Descriptors::Info> infos;
-        std::vector<std::uint32_t> bindings;
+        VkDescriptorBufferInfo buffer_info = {};
+        buffer_info.buffer = data_buffer;
+        buffer_info.offset = 0;
+        buffer_info.range = data_buffer.size();
 
-        {
-                uniform_buffers_.emplace_back(
-                        vulkan::BufferMemoryType::HOST_VISIBLE, device, family_indices,
-                        VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT, sizeof(Data));
-
-                VkDescriptorBufferInfo buffer_info = {};
-                buffer_info.buffer = uniform_buffers_.back().buffer();
-                buffer_info.offset = 0;
-                buffer_info.range = uniform_buffers_.back().buffer().size();
-
-                infos.emplace_back(buffer_info);
-
-                bindings.push_back(DATA_BINDING);
-        }
-
-        descriptors_.update_descriptor_set(0, bindings, infos);
+        descriptors_.update_descriptor_set(0, DATA_BINDING, buffer_info);
 }
 
 unsigned ViewMemory::set_number()
@@ -118,13 +129,6 @@ void ViewMemory::set_flow(const vulkan::Buffer& buffer) const
         buffer_info.range = buffer.size();
 
         descriptors_.update_descriptor_set(0, FLOW_BINDING, buffer_info);
-}
-
-void ViewMemory::set_matrix(const Matrix4d& matrix) const
-{
-        Data data;
-        data.matrix = to_matrix<float>(matrix).transpose();
-        vulkan::map_and_write_to_buffer(uniform_buffers_[0], 0, data);
 }
 
 //
