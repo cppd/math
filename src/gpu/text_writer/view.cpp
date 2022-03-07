@@ -105,6 +105,7 @@ class Impl final : public View
         vulkan::handle::Semaphore semaphore_;
         vulkan::handle::Sampler sampler_;
         Program program_;
+        Buffer buffer_;
         Memory memory_;
         std::optional<vulkan::BufferWithMemory> vertex_buffer_;
         vulkan::BufferWithMemory indirect_buffer_;
@@ -116,7 +117,7 @@ class Impl final : public View
 
         void set_color(const color::Color& color) const override
         {
-                memory_.set_color(color.rgb32().clamp(0, 1));
+                buffer_.set_color(color.rgb32().clamp(0, 1));
         }
 
         void draw_commands(const VkCommandBuffer command_buffer) const
@@ -179,7 +180,7 @@ class Impl final : public View
                 double top = 0;
                 double near = 1;
                 double far = -1;
-                memory_.set_matrix(matrix::ortho_vulkan<double>(left, right, bottom, top, near, far));
+                buffer_.set_matrix(matrix::ortho_vulkan<double>(left, right, bottom, top, near, far));
         }
 
         void delete_buffers() override
@@ -280,9 +281,10 @@ class Impl final : public View
                   semaphore_(*device_),
                   sampler_(create_sampler(*device_)),
                   program_(device_),
+                  buffer_(*device_, std::vector<std::uint32_t>({graphics_queue->family_index()})),
                   memory_(*device_,
                           program_.descriptor_set_layout(),
-                          std::vector<std::uint32_t>({graphics_queue->family_index()}),
+                          buffer_.buffer(),
                           sampler_,
                           glyph_texture_.image_view()),
                   vertex_buffer_(

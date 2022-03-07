@@ -24,6 +24,35 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 namespace ns::gpu::text_writer
 {
+Buffer::Buffer(const vulkan::Device& device, const std::vector<std::uint32_t>& family_indices)
+        : buffer_(
+                vulkan::BufferMemoryType::HOST_VISIBLE,
+                device,
+                family_indices,
+                VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT,
+                sizeof(Data))
+{
+}
+
+const vulkan::Buffer& Buffer::buffer() const
+{
+        return buffer_.buffer();
+}
+
+void Buffer::set_matrix(const Matrix4d& matrix) const
+{
+        decltype(Data().matrix) m = to_matrix<float>(matrix).transpose();
+        vulkan::map_and_write_to_buffer(buffer_, offsetof(Data, matrix), m);
+}
+
+void Buffer::set_color(const Vector3f& color) const
+{
+        decltype(Data().color) c = color;
+        vulkan::map_and_write_to_buffer(buffer_, offsetof(Data, color), c);
+}
+
+//
+
 std::vector<VkDescriptorSetLayoutBinding> Memory::descriptor_set_layout_bindings()
 {
         std::vector<VkDescriptorSetLayoutBinding> bindings;
@@ -53,24 +82,19 @@ std::vector<VkDescriptorSetLayoutBinding> Memory::descriptor_set_layout_bindings
 Memory::Memory(
         const vulkan::Device& device,
         const VkDescriptorSetLayout descriptor_set_layout,
-        const std::vector<std::uint32_t>& family_indices,
+        const vulkan::Buffer& data_buffer,
         const VkSampler sampler,
         const VkImageView texture)
-        : descriptors_(device, 1, descriptor_set_layout, descriptor_set_layout_bindings()),
-          buffer_(vulkan::BufferMemoryType::HOST_VISIBLE,
-                  device,
-                  family_indices,
-                  VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT,
-                  sizeof(Data))
+        : descriptors_(device, 1, descriptor_set_layout, descriptor_set_layout_bindings())
 {
         std::vector<vulkan::Descriptors::Info> infos;
         std::vector<std::uint32_t> bindings;
 
         {
                 VkDescriptorBufferInfo buffer_info = {};
-                buffer_info.buffer = buffer_.buffer();
+                buffer_info.buffer = data_buffer;
                 buffer_info.offset = 0;
-                buffer_info.range = buffer_.buffer().size();
+                buffer_info.range = data_buffer.size();
 
                 infos.emplace_back(buffer_info);
 
@@ -98,18 +122,6 @@ unsigned Memory::set_number()
 const VkDescriptorSet& Memory::descriptor_set() const
 {
         return descriptors_.descriptor_set(0);
-}
-
-void Memory::set_matrix(const Matrix4d& matrix) const
-{
-        decltype(Data().matrix) m = to_matrix<float>(matrix).transpose();
-        vulkan::map_and_write_to_buffer(buffer_, offsetof(Data, matrix), m);
-}
-
-void Memory::set_color(const Vector3f& color) const
-{
-        decltype(Data().color) c = color;
-        vulkan::map_and_write_to_buffer(buffer_, offsetof(Data, color), c);
 }
 
 //

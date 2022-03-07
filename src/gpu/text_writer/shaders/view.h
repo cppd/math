@@ -29,14 +29,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 namespace ns::gpu::text_writer
 {
-class Memory final
+class Buffer final
 {
-        static constexpr int SET_NUMBER = 0;
-
-        static constexpr int DATA_BINDING = 0;
-        static constexpr int TEXTURE_BINDING = 1;
-
-        vulkan::Descriptors descriptors_;
         vulkan::BufferWithMemory buffer_;
 
         struct Data
@@ -46,30 +40,34 @@ class Memory final
         };
 
 public:
+        Buffer(const vulkan::Device& device, const std::vector<std::uint32_t>& family_indices);
+
+        const vulkan::Buffer& buffer() const;
+
+        void set_matrix(const Matrix4d& matrix) const;
+        void set_color(const Vector3f& color) const;
+};
+
+class Memory final
+{
+        static constexpr int SET_NUMBER = 0;
+
+        static constexpr int DATA_BINDING = 0;
+        static constexpr int TEXTURE_BINDING = 1;
+
+        vulkan::Descriptors descriptors_;
+
+public:
         static std::vector<VkDescriptorSetLayoutBinding> descriptor_set_layout_bindings();
         static unsigned set_number();
 
         Memory(const vulkan::Device& device,
                VkDescriptorSetLayout descriptor_set_layout,
-               const std::vector<std::uint32_t>& family_indices,
+               const vulkan::Buffer& data_buffer,
                VkSampler sampler,
                VkImageView texture);
 
-        Memory(const Memory&) = delete;
-        Memory& operator=(const Memory&) = delete;
-        Memory& operator=(Memory&&) = delete;
-
-        Memory(Memory&&) = default;
-        ~Memory() = default;
-
-        //
-
         const VkDescriptorSet& descriptor_set() const;
-
-        //
-
-        void set_matrix(const Matrix4d& matrix) const;
-        void set_color(const Vector3f& color) const;
 };
 
 struct Vertex final
