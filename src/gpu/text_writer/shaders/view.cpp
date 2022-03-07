@@ -30,10 +30,10 @@ std::vector<VkDescriptorSetLayoutBinding> Memory::descriptor_set_layout_bindings
 
         {
                 VkDescriptorSetLayoutBinding b = {};
-                b.binding = MATRICES_BINDING;
+                b.binding = DATA_BINDING;
                 b.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
                 b.descriptorCount = 1;
-                b.stageFlags = VK_SHADER_STAGE_VERTEX_BIT;
+                b.stageFlags = VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT;
 
                 bindings.push_back(b);
         }
@@ -41,15 +41,6 @@ std::vector<VkDescriptorSetLayoutBinding> Memory::descriptor_set_layout_bindings
                 VkDescriptorSetLayoutBinding b = {};
                 b.binding = TEXTURE_BINDING;
                 b.descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
-                b.descriptorCount = 1;
-                b.stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
-
-                bindings.push_back(b);
-        }
-        {
-                VkDescriptorSetLayoutBinding b = {};
-                b.binding = DRAWING_BINDING;
-                b.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
                 b.descriptorCount = 1;
                 b.stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
 
@@ -65,25 +56,25 @@ Memory::Memory(
         const std::vector<std::uint32_t>& family_indices,
         const VkSampler sampler,
         const VkImageView texture)
-        : descriptors_(device, 1, descriptor_set_layout, descriptor_set_layout_bindings())
+        : descriptors_(device, 1, descriptor_set_layout, descriptor_set_layout_bindings()),
+          buffer_(vulkan::BufferMemoryType::HOST_VISIBLE,
+                  device,
+                  family_indices,
+                  VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT,
+                  sizeof(Data))
 {
         std::vector<vulkan::Descriptors::Info> infos;
         std::vector<std::uint32_t> bindings;
 
         {
-                uniform_buffers_.emplace_back(
-                        vulkan::BufferMemoryType::HOST_VISIBLE, device, family_indices,
-                        VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT, sizeof(Matrices));
-                matrices_buffer_index_ = uniform_buffers_.size() - 1;
-
                 VkDescriptorBufferInfo buffer_info = {};
-                buffer_info.buffer = uniform_buffers_.back().buffer();
+                buffer_info.buffer = buffer_.buffer();
                 buffer_info.offset = 0;
-                buffer_info.range = uniform_buffers_.back().buffer().size();
+                buffer_info.range = buffer_.buffer().size();
 
                 infos.emplace_back(buffer_info);
 
-                bindings.push_back(MATRICES_BINDING);
+                bindings.push_back(DATA_BINDING);
         }
         {
                 VkDescriptorImageInfo image_info = {};
@@ -94,21 +85,6 @@ Memory::Memory(
                 infos.emplace_back(image_info);
 
                 bindings.push_back(TEXTURE_BINDING);
-        }
-        {
-                uniform_buffers_.emplace_back(
-                        vulkan::BufferMemoryType::HOST_VISIBLE, device, family_indices,
-                        VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT, sizeof(Drawing));
-                drawing_buffer_index_ = uniform_buffers_.size() - 1;
-
-                VkDescriptorBufferInfo buffer_info = {};
-                buffer_info.buffer = uniform_buffers_.back().buffer();
-                buffer_info.offset = 0;
-                buffer_info.range = uniform_buffers_.back().buffer().size();
-
-                infos.emplace_back(buffer_info);
-
-                bindings.push_back(DRAWING_BINDING);
         }
 
         descriptors_.update_descriptor_set(0, bindings, infos);
@@ -124,27 +100,16 @@ const VkDescriptorSet& Memory::descriptor_set() const
         return descriptors_.descriptor_set(0);
 }
 
-template <typename T>
-void Memory::copy_to_matrices_buffer(const VkDeviceSize offset, const T& data) const
-{
-        vulkan::map_and_write_to_buffer(uniform_buffers_[matrices_buffer_index_], offset, data);
-}
-template <typename T>
-void Memory::copy_to_drawing_buffer(const VkDeviceSize offset, const T& data) const
-{
-        vulkan::map_and_write_to_buffer(uniform_buffers_[drawing_buffer_index_], offset, data);
-}
-
 void Memory::set_matrix(const Matrix4d& matrix) const
 {
-        decltype(Matrices().matrix) m = to_matrix<float>(matrix).transpose();
-        copy_to_matrices_buffer(offsetof(Matrices, matrix), m);
+        decltype(Data().matrix) m = to_matrix<float>(matrix).transpose();
+        vulkan::map_and_write_to_buffer(buffer_, offsetof(Data, matrix), m);
 }
 
 void Memory::set_color(const Vector3f& color) const
 {
-        decltype(Drawing().color) c = color;
-        copy_to_drawing_buffer(offsetof(Drawing, color), c);
+        decltype(Data().color) c = color;
+        vulkan::map_and_write_to_buffer(buffer_, offsetof(Data, color), c);
 }
 
 //

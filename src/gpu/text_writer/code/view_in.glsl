@@ -18,18 +18,13 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #ifndef VIEW_IN_GLSL
 #define VIEW_IN_GLSL
 
-layout(std140, binding = 0) restrict uniform Matrices
+layout(std140, binding = 0) restrict uniform Data
 {
         mat4 matrix;
-}
-matrices;
-
-layout(binding = 1) uniform sampler2D tex;
-
-layout(std140, binding = 2) restrict uniform Drawing
-{
         vec3 color;
 }
-drawing;
+data;
+
+layout(binding = 1) uniform sampler2D tex;
 
 #endif

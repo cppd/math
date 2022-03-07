@@ -33,30 +33,17 @@ class Memory final
 {
         static constexpr int SET_NUMBER = 0;
 
-        static constexpr int MATRICES_BINDING = 0;
+        static constexpr int DATA_BINDING = 0;
         static constexpr int TEXTURE_BINDING = 1;
-        static constexpr int DRAWING_BINDING = 2;
 
         vulkan::Descriptors descriptors_;
-        std::vector<vulkan::BufferWithMemory> uniform_buffers_;
+        vulkan::BufferWithMemory buffer_;
 
-        struct Matrices
+        struct Data
         {
-                Matrix4f matrix;
+                alignas(sizeof(Vector4f)) Matrix4f matrix;
+                alignas(sizeof(Vector4f)) Vector3f color;
         };
-
-        struct Drawing
-        {
-                Vector3f color;
-        };
-
-        std::size_t matrices_buffer_index_;
-        std::size_t drawing_buffer_index_;
-
-        template <typename T>
-        void copy_to_matrices_buffer(VkDeviceSize offset, const T& data) const;
-        template <typename T>
-        void copy_to_drawing_buffer(VkDeviceSize offset, const T& data) const;
 
 public:
         static std::vector<VkDescriptorSetLayoutBinding> descriptor_set_layout_bindings();
@@ -85,7 +72,7 @@ public:
         void set_color(const Vector3f& color) const;
 };
 
-struct Vertex
+struct Vertex final
 {
         Vector<2, std::int32_t> window_coordinates;
         Vector<2, float> texture_coordinates;
