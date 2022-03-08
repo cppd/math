@@ -47,7 +47,7 @@ public:
 
 class BitReverseConstant final : public vulkan::SpecializationConstant
 {
-        struct Data
+        struct Data final
         {
                 std::uint32_t group_size;
                 std::uint32_t data_size;

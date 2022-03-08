@@ -47,7 +47,7 @@ public:
 
 class FftSharedConstant final : public vulkan::SpecializationConstant
 {
-        struct Data
+        struct Data final
         {
                 std::uint32_t inverse;
                 std::uint32_t data_size;

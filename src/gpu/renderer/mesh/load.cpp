@@ -474,16 +474,17 @@ std::vector<MaterialBuffer> load_materials(
 
         for (const typename mesh::Mesh<3>::Material& mesh_material : mesh.materials)
         {
-                MaterialBuffer::Material mb{
-                        .color = mesh_material.color.rgb32().clamp(0, 1),
-                        .use_texture = (mesh_material.image >= 0) ? 1u : 0,
-                        .use_material = 1};
-                buffers.emplace_back(device, command_pool, queue, family_indices, mb);
+                const Vector3f color = mesh_material.color.rgb32().clamp(0, 1);
+                const bool use_texture = (mesh_material.image >= 0);
+                const bool use_material = true;
+                buffers.emplace_back(device, command_pool, queue, family_indices, color, use_texture, use_material);
         }
 
         // material for vertices without material
-        MaterialBuffer::Material mb{.color = Vector3f(0), .use_texture = 0, .use_material = 0};
-        buffers.emplace_back(device, command_pool, queue, family_indices, mb);
+        constexpr Vector3f COLOR(0);
+        constexpr const bool USE_TEXTURE = false;
+        constexpr const bool USE_MATERIAL = false;
+        buffers.emplace_back(device, command_pool, queue, family_indices, COLOR, USE_TEXTURE, USE_MATERIAL);
 
         return buffers;
 }

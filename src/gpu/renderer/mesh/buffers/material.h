@@ -26,9 +26,6 @@ namespace ns::gpu::renderer
 {
 class MaterialBuffer final
 {
-        vulkan::BufferWithMemory uniform_buffer_;
-
-public:
         struct Material final
         {
                 alignas(sizeof(Vector4f)) Vector3f color;
@@ -36,12 +33,17 @@ public:
                 std::uint32_t use_material;
         };
 
+        vulkan::BufferWithMemory uniform_buffer_;
+
+public:
         MaterialBuffer(
                 const vulkan::Device& device,
                 const vulkan::CommandPool& command_pool,
                 const vulkan::Queue& queue,
                 const std::vector<std::uint32_t>& family_indices,
-                const Material& material);
+                const Vector3f& color,
+                bool use_texture,
+                bool use_material);
 
         const vulkan::Buffer& buffer() const;
 };

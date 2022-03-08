@@ -29,9 +29,7 @@ namespace ns::gpu::optical_flow
 {
 class FlowDataBuffer final
 {
-        vulkan::BufferWithMemory buffer_;
-
-        struct BufferData
+        struct BufferData final
         {
                 std::int32_t point_count_x;
                 std::int32_t point_count_y;
@@ -41,6 +39,8 @@ class FlowDataBuffer final
                 std::int32_t guess_ky;
                 std::int32_t guess_width;
         };
+
+        vulkan::BufferWithMemory buffer_;
 
 public:
         FlowDataBuffer(const vulkan::Device& device, const std::vector<std::uint32_t>& family_indices);
@@ -99,7 +99,7 @@ public:
 
 class FlowConstant final : public vulkan::SpecializationConstant
 {
-        struct Data
+        struct Data final
         {
                 std::uint32_t local_size_x;
                 std::uint32_t local_size_y;

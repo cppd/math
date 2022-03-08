@@ -26,13 +26,13 @@ namespace ns::gpu::renderer
 {
 class ShadowMatricesBuffer final
 {
-        vulkan::BufferWithMemory buffer_;
-
         struct ShadowMatrices final
         {
                 Matrix4f vp_matrix;
                 Matrix4f vp_texture_matrix;
         };
+
+        vulkan::BufferWithMemory buffer_;
 
 public:
         ShadowMatricesBuffer(const vulkan::Device& device, const std::vector<std::uint32_t>& family_indices);

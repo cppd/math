@@ -24,7 +24,9 @@ MaterialBuffer::MaterialBuffer(
         const vulkan::CommandPool& command_pool,
         const vulkan::Queue& queue,
         const std::vector<std::uint32_t>& family_indices,
-        const Material& material)
+        const Vector3f& color,
+        const bool use_texture,
+        const bool use_material)
         : uniform_buffer_(
                 vulkan::BufferMemoryType::DEVICE_LOCAL,
                 device,
@@ -32,7 +34,12 @@ MaterialBuffer::MaterialBuffer(
                 VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT | VK_BUFFER_USAGE_TRANSFER_DST_BIT,
                 sizeof(Material))
 {
-        uniform_buffer_.write(command_pool, queue, data_size(material), data_pointer(material));
+        Material m;
+        m.color = color;
+        m.use_texture = use_texture ? 1 : 0;
+        m.use_material = use_material ? 1 : 0;
+
+        uniform_buffer_.write(command_pool, queue, sizeof(m), &m);
 }
 
 const vulkan::Buffer& MaterialBuffer::buffer() const

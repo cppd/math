@@ -28,8 +28,6 @@ namespace ns::gpu::renderer
 {
 class MeshBuffer final
 {
-        vulkan::BufferWithMemory uniform_buffer_;
-
         struct Mesh final
         {
                 alignas(sizeof(Vector4f)) Matrix4f model_matrix;
@@ -40,6 +38,8 @@ class MeshBuffer final
                 float metalness;
                 float roughness;
         };
+
+        vulkan::BufferWithMemory uniform_buffer_;
 
 public:
         MeshBuffer(const vulkan::Device& device, const std::vector<std::uint32_t>& family_indices);

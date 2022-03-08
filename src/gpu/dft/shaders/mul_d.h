@@ -48,7 +48,7 @@ public:
 
 class MulDConstant final : public vulkan::SpecializationConstant
 {
-        struct Data
+        struct Data final
         {
                 std::uint32_t group_size_x;
                 std::uint32_t group_size_y;

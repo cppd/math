@@ -28,9 +28,6 @@ namespace ns::gpu::renderer
 {
 class VolumeBuffer final
 {
-        vulkan::BufferWithMemory uniform_buffer_coordinates_;
-        vulkan::BufferWithMemory uniform_buffer_volume_;
-
         struct Coordinates final
         {
                 alignas(sizeof(Vector4f)) Matrix4f inverse_mvp_matrix;
@@ -56,6 +53,9 @@ class VolumeBuffer final
                 float metalness;
                 float roughness;
         };
+
+        vulkan::BufferWithMemory uniform_buffer_coordinates_;
+        vulkan::BufferWithMemory uniform_buffer_volume_;
 
 public:
         VolumeBuffer(

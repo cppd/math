@@ -48,7 +48,7 @@ public:
 
 class CopyOutputConstant final : public vulkan::SpecializationConstant
 {
-        struct Data
+        struct Data final
         {
                 std::uint32_t local_size_x;
                 std::uint32_t local_size_y;

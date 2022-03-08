@@ -31,14 +31,14 @@ namespace ns::gpu::dft
 {
 class ViewDataBuffer final
 {
-        vulkan::BufferWithMemory buffer_;
-
-        struct Data
+        struct Data final
         {
                 alignas(sizeof(Vector4f)) Vector3f background_color;
                 alignas(sizeof(Vector4f)) Vector3f foreground_color;
                 float brightness;
         };
+
+        vulkan::BufferWithMemory buffer_;
 
 public:
         ViewDataBuffer(const vulkan::Device& device, const std::vector<std::uint32_t>& family_indices);

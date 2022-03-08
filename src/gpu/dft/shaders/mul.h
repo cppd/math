@@ -48,7 +48,7 @@ public:
 
 class MulConstant final : public vulkan::SpecializationConstant
 {
-        struct Data
+        struct Data final
         {
                 std::int32_t function_index;
                 std::int32_t n1;

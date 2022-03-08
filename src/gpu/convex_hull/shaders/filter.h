@@ -51,7 +51,7 @@ public:
 
 class FilterConstant final : public vulkan::SpecializationConstant
 {
-        struct Data
+        struct Data final
         {
                 std::int32_t line_size;
         } data_;

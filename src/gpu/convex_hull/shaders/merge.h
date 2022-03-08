@@ -47,7 +47,7 @@ public:
 
 class MergeConstant final : public vulkan::SpecializationConstant
 {
-        struct Data
+        struct Data final
         {
                 std::int32_t line_size;
                 std::int32_t iteration_count;

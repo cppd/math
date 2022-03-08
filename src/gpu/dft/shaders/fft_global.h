@@ -70,7 +70,7 @@ public:
 
 class FftGlobalConstant final : public vulkan::SpecializationConstant
 {
-        struct Data
+        struct Data final
         {
                 std::uint32_t group_size;
                 std::uint32_t inverse;

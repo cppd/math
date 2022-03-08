@@ -26,12 +26,12 @@ namespace ns::gpu::renderer
 {
 class VolumeShadowMatrixBuffer final
 {
-        vulkan::BufferWithMemory buffer_;
-
         struct ShadowMatrix final
         {
                 Matrix4f texture_to_shadow;
         };
+
+        vulkan::BufferWithMemory buffer_;
 
 public:
         VolumeShadowMatrixBuffer(const vulkan::Device& device, const std::vector<std::uint32_t>& family_indices);

@@ -31,13 +31,13 @@ namespace ns::gpu::text_writer
 {
 class Buffer final
 {
-        vulkan::BufferWithMemory buffer_;
-
-        struct Data
+        struct Data final
         {
                 alignas(sizeof(Vector4f)) Matrix4f matrix;
                 alignas(sizeof(Vector4f)) Vector3f color;
         };
+
+        vulkan::BufferWithMemory buffer_;
 
 public:
         Buffer(const vulkan::Device& device, const std::vector<std::uint32_t>& family_indices);

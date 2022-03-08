@@ -25,6 +25,12 @@ namespace ns::gpu::renderer
 {
 class TransparencyBuffers final
 {
+        struct Counters final
+        {
+                std::uint32_t transparency_node_counter;
+                std::uint32_t transparency_overload_counter;
+        };
+
         const unsigned node_count_;
 
         vulkan::ImageWithMemory heads_;
@@ -34,12 +40,6 @@ class TransparencyBuffers final
         vulkan::BufferWithMemory init_buffer_;
         vulkan::BufferWithMemory read_buffer_;
         vulkan::BufferWithMemory counters_;
-
-        struct Counters final
-        {
-                std::uint32_t transparency_node_counter;
-                std::uint32_t transparency_overload_counter;
-        };
 
 public:
         TransparencyBuffers(

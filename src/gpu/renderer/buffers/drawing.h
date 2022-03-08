@@ -27,12 +27,6 @@ namespace ns::gpu::renderer
 {
 class DrawingBuffer final
 {
-        vulkan::BufferWithMemory buffer_;
-
-        // If structures are placed in one buffer then
-        // VkPhysicalDeviceLimits::minUniformBufferOffsetAlignment
-        // is the minimum required alignment for VkDescriptorBufferInfo::offset
-
         struct Drawing final
         {
                 alignas(sizeof(Vector4f)) Matrix4f vp_matrix;
@@ -57,6 +51,8 @@ class DrawingBuffer final
                 std::uint32_t transparency_max_node_count;
         };
 
+        vulkan::BufferWithMemory buffer_;
+
         template <typename T>
         void copy_to_buffer(VkDeviceSize offset, const T& data) const;
 
@@ -66,9 +62,7 @@ public:
         const vulkan::Buffer& buffer() const;
 
         void set_matrix(const Matrix4d& vp_matrix) const;
-
         void set_transparency_max_node_count(std::uint32_t count) const;
-
         void set_lighting_color(const Vector3f& color) const;
         void set_background_color(const Vector3f& color) const;
         void set_wireframe_color(const Vector3f& color) const;

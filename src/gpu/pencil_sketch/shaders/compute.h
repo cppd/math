@@ -52,7 +52,7 @@ public:
 
 class ComputeConstant final : public vulkan::SpecializationConstant
 {
-        struct Data
+        struct Data final
         {
                 std::int32_t local_size;
                 std::int32_t x;

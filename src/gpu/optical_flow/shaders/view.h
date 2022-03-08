@@ -31,12 +31,12 @@ namespace ns::gpu::optical_flow
 {
 class ViewDataBuffer final
 {
-        vulkan::BufferWithMemory buffer_;
-
-        struct Data
+        struct Data final
         {
                 Matrix4f matrix;
         };
+
+        vulkan::BufferWithMemory buffer_;
 
 public:
         ViewDataBuffer(const vulkan::Device& device, const std::vector<std::uint32_t>& family_indices);

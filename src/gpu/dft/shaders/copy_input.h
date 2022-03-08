@@ -49,7 +49,7 @@ public:
 
 class CopyInputConstant final : public vulkan::SpecializationConstant
 {
-        struct Data
+        struct Data final
         {
                 std::int32_t local_size_x;
                 std::int32_t local_size_y;
