@@ -74,7 +74,7 @@ vulkan::ImageWithMemory create_transfer_function(
                 VK_IMAGE_USAGE_SAMPLED_BIT | VK_IMAGE_USAGE_TRANSFER_DST_BIT, VK_IMAGE_LAYOUT_UNDEFINED,
                 transfer_command_pool, transfer_queue);
 
-        image.write_pixels(
+        image.write(
                 transfer_command_pool, transfer_queue, VK_IMAGE_LAYOUT_UNDEFINED,
                 VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL, transfer_function.color_format, transfer_function.pixels);
 
@@ -221,7 +221,7 @@ class Impl final : public VolumeObject
                         image,
                         [&](const image::ColorFormat format, const std::vector<std::byte>& pixels)
                         {
-                                image_->write_pixels(
+                                image_->write(
                                         *transfer_command_pool_, *transfer_queue_, image_layout,
                                         VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL, format, pixels);
                         });

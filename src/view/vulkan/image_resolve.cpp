@@ -130,8 +130,7 @@ image::Image<2> resolve_to_image(
         res.size[0] = width;
         res.size[1] = height;
 
-        image.image(image_index)
-                .read_pixels(command_pool, queue, IMAGE_LAYOUT, IMAGE_LAYOUT, &res.color_format, &res.pixels);
+        image.image(image_index).read(command_pool, queue, IMAGE_LAYOUT, IMAGE_LAYOUT, &res.color_format, &res.pixels);
 
         ASSERT(4 == image::format_component_count(res.color_format));
 

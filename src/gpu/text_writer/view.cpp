@@ -302,7 +302,7 @@ class Impl final : public View
                           sizeof(VkDrawIndirectCommand)),
                   graphics_family_index_(graphics_queue->family_index())
         {
-                glyph_texture_.write_pixels(
+                glyph_texture_.write(
                         *graphics_command_pool, *graphics_queue, VK_IMAGE_LAYOUT_UNDEFINED,
                         VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL, glyphs.image().color_format, glyphs.image().pixels);
 

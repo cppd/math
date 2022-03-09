@@ -56,7 +56,7 @@ image::Image<2> RayTracingImage::image() const
         res.size[0] = width_;
         res.size[1] = height_;
 
-        image_.read_pixels(
+        image_.read(
                 *compute_command_pool_, *compute_queue_, IMAGE_LAYOUT, IMAGE_LAYOUT, &res.color_format, &res.pixels);
 
         return image::delete_alpha(res);

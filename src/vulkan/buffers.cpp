@@ -65,6 +65,34 @@ const std::unordered_set<VkFormat>& stencil_format_set()
         return formats;
 }
 
+const std::vector<VkFormat>& depth_formats(const std::vector<VkFormat>& formats)
+{
+        if (!std::all_of(
+                    formats.cbegin(), formats.cend(),
+                    [depth = &depth_format_set()](const VkFormat format)
+                    {
+                            return depth->contains(format);
+                    }))
+        {
+                error("Not a depth format: " + formats_to_sorted_string(formats, ", "));
+        }
+        return formats;
+}
+
+const std::vector<VkFormat>& color_formats(const std::vector<VkFormat>& formats)
+{
+        if (std::any_of(
+                    formats.cbegin(), formats.cend(),
+                    [depth = &depth_format_set(), stencil = &stencil_format_set()](const VkFormat format)
+                    {
+                            return depth->contains(format) || stencil->contains(format);
+                    }))
+        {
+                error("Not a color format: " + formats_to_sorted_string(formats, ", "));
+        }
+        return formats;
+}
+
 void check_family_index(
         const CommandPool& command_pool,
         const Queue& queue,
@@ -74,6 +102,7 @@ void check_family_index(
         {
                 error("Command pool family index is not equal to queue family index");
         }
+
         if (!std::binary_search(family_indices.cbegin(), family_indices.cend(), queue.family_index()))
         {
                 error("Queue family index is not found in the family indices");
@@ -206,7 +235,7 @@ ImageWithMemory::ImageWithMemory(
                   correct_image_extent(type, extent),
                   find_supported_image_format(
                           physical_device_,
-                          formats,
+                          color_formats(formats),
                           type,
                           VK_IMAGE_TILING_OPTIMAL,
                           format_features_for_image_usage(usage),
@@ -218,16 +247,6 @@ ImageWithMemory::ImageWithMemory(
                   usage)),
           device_memory_(create_device_memory(device, physical_device_, image_, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT))
 {
-        if (!std::none_of(
-                    formats.cbegin(), formats.cend(),
-                    [depth = &depth_format_set(), stencil = &stencil_format_set()](const VkFormat format)
-                    {
-                            return depth->contains(format) || stencil->contains(format);
-                    }))
-        {
-                error("Not a color format: " + formats_to_sorted_string(formats, ", "));
-        }
-
         if (has_usage_for_image_view(usage))
         {
                 image_view_ = create_image_view(image_, VK_IMAGE_ASPECT_COLOR_BIT);
@@ -259,7 +278,7 @@ ImageWithMemory::ImageWithMemory(
         }
 }
 
-void ImageWithMemory::write_pixels(
+void ImageWithMemory::write(
         const CommandPool& command_pool,
         const Queue& queue,
         const VkImageLayout old_layout,
@@ -276,7 +295,7 @@ void ImageWithMemory::write_pixels(
                 VK_IMAGE_ASPECT_COLOR_BIT, old_layout, new_layout, color_format, pixels);
 }
 
-void ImageWithMemory::read_pixels(
+void ImageWithMemory::read(
         const CommandPool& command_pool,
         const Queue& queue,
         const VkImageLayout old_layout,
@@ -305,20 +324,6 @@ const ImageView& ImageWithMemory::image_view() const
 }
 
 //
-
-const std::vector<VkFormat>& DepthImageWithMemory::depth_formats(const std::vector<VkFormat>& formats)
-{
-        if (!std::all_of(
-                    formats.cbegin(), formats.cend(),
-                    [depth = &depth_format_set()](const VkFormat format)
-                    {
-                            return depth->contains(format);
-                    }))
-        {
-                error("Not a depth format: " + formats_to_sorted_string(formats, ", "));
-        }
-        return formats;
-}
 
 DepthImageWithMemory::DepthImageWithMemory(
         const Device& device,

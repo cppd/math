@@ -67,7 +67,7 @@ vulkan::ImageWithMemory create_cosine_roughness_image(
                 VK_IMAGE_USAGE_SAMPLED_BIT | VK_IMAGE_USAGE_TRANSFER_DST_BIT, VK_IMAGE_LAYOUT_UNDEFINED,
                 transfer_command_pool, transfer_queue);
 
-        image.write_pixels(
+        image.write(
                 transfer_command_pool, transfer_queue, VK_IMAGE_LAYOUT_UNDEFINED,
                 VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL, image::ColorFormat::R32, std::as_bytes(data));
 
@@ -91,7 +91,7 @@ vulkan::ImageWithMemory create_cosine_weighted_average_image(
                 VK_IMAGE_USAGE_SAMPLED_BIT | VK_IMAGE_USAGE_TRANSFER_DST_BIT, VK_IMAGE_LAYOUT_UNDEFINED,
                 transfer_command_pool, transfer_queue);
 
-        image.write_pixels(
+        image.write(
                 transfer_command_pool, transfer_queue, VK_IMAGE_LAYOUT_UNDEFINED,
                 VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL, image::ColorFormat::R32, std::as_bytes(data));
 

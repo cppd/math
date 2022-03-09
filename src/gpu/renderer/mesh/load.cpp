@@ -449,7 +449,7 @@ std::vector<vulkan::ImageWithMemory> load_textures(
                         vulkan::make_extent(image.size[0], image.size[1]),
                         VK_IMAGE_USAGE_SAMPLED_BIT | VK_IMAGE_USAGE_TRANSFER_DST_BIT, VK_IMAGE_LAYOUT_UNDEFINED,
                         command_pool, queue);
-                textures.back().write_pixels(
+                textures.back().write(
                         command_pool, queue, VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL,
                         image.color_format, image.pixels);
         }

@@ -208,7 +208,7 @@ public:
 
         //
 
-        void write_pixels(
+        void write(
                 const CommandPool& command_pool,
                 const Queue& queue,
                 VkImageLayout old_layout,
@@ -216,7 +216,7 @@ public:
                 image::ColorFormat color_format,
                 const std::span<const std::byte>& pixels) const;
 
-        void read_pixels(
+        void read(
                 const CommandPool& command_pool,
                 const Queue& queue,
                 VkImageLayout old_layout,
@@ -231,8 +231,6 @@ public:
 
 class DepthImageWithMemory final
 {
-        static const std::vector<VkFormat>& depth_formats(const std::vector<VkFormat>& formats);
-
         Image image_;
         handle::DeviceMemory device_memory_;
         ImageView image_view_;
