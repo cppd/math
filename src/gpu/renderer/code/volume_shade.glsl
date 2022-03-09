@@ -22,6 +22,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "ray_tracing_intersection.glsl"
 #include "shade.glsl"
+#include "transparency.glsl"
 #include "volume_image.glsl"
 #include "volume_in.glsl"
 #include "volume_intersect.glsl"
@@ -77,5 +78,10 @@ vec4 isosurface_color(const vec3 p)
 }
 
 #endif
+
+vec4 fragment_color(const Fragment fragment)
+{
+        return fragment_data(fragment).color;
+}
 
 #endif

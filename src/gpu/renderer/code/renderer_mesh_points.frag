@@ -21,7 +21,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "mesh_in.glsl"
 #include "mesh_out.glsl"
 
-vec3 fog(const vec3 fog_color, const vec3 fragment_color)
+vec3 fog(const vec3 fog_color, const vec3 color)
 {
         const float fog_density = 2;
 
@@ -31,7 +31,7 @@ vec3 fog(const vec3 fog_color, const vec3 fragment_color)
         const float fog_distance = clamp(gl_FragCoord.z - fog_start, 0, fog_end - fog_start);
         const float fog_blending_factor = exp(-fog_density * fog_distance);
 
-        return mix(fog_color, fragment_color, fog_blending_factor);
+        return mix(fog_color, color, fog_blending_factor);
 }
 
 void main()

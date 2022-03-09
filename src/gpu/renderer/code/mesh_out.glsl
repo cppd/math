@@ -20,6 +20,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "mesh_in.glsl"
 #include "mesh_shade.glsl"
+#include "transparency.glsl"
 
 layout(early_fragment_tests) in;
 

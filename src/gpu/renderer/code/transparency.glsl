@@ -34,6 +34,11 @@ struct TransparencyNode
         uint next;
 };
 
+struct FragmentData
+{
+        vec4 color;
+};
+
 TransparencyNode create_transparency_node(const vec3 color, const float alpha, const float depth, const uint next)
 {
         TransparencyNode node;
@@ -46,11 +51,12 @@ TransparencyNode create_transparency_node(const vec3 color, const float alpha, c
         return node;
 }
 
-vec4 fragment_color(const Fragment fragment)
+FragmentData fragment_data(const Fragment fragment)
 {
-        const vec2 rg = unpackUnorm2x16(fragment.color_rg);
-        const vec2 ba = unpackUnorm2x16(fragment.color_ba);
-        return vec4(rg, ba);
+        FragmentData data;
+        data.color.rg = unpackUnorm2x16(fragment.color_rg);
+        data.color.ba = unpackUnorm2x16(fragment.color_ba);
+        return data;
 }
 
 #endif
