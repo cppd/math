@@ -41,7 +41,14 @@ float mesh_shadow_transparency(const vec3 shadow_position)
 }
 #endif
 
-vec3 mesh_shade(const vec3 surface_color, const vec3 n, const vec3 position_for_shadow, const float edge_factor)
+vec3 mesh_shade(
+        const vec3 surface_color,
+        const vec3 n,
+        const float metalness,
+        const float roughness,
+        const float ambient,
+        const vec3 position_for_shadow,
+        const float edge_factor)
 {
         const vec3 v = drawing.direction_to_camera;
         const vec3 l = drawing.direction_to_light;
@@ -51,15 +58,15 @@ vec3 mesh_shade(const vec3 surface_color, const vec3 n, const vec3 position_for_
         if (drawing.show_shadow)
         {
                 color =
-                        shade(surface_color, mesh.metalness, mesh.roughness, n, v, l, ggx_f1_albedo_cosine_roughness,
-                              ggx_f1_albedo_cosine_weighted_average, drawing.lighting_color, mesh.ambient,
+                        shade(surface_color, metalness, roughness, n, v, l, ggx_f1_albedo_cosine_roughness,
+                              ggx_f1_albedo_cosine_weighted_average, drawing.lighting_color, ambient,
                               mesh_shadow_transparency(position_for_shadow));
         }
         else
         {
                 color =
-                        shade(surface_color, mesh.metalness, mesh.roughness, n, v, l, ggx_f1_albedo_cosine_roughness,
-                              ggx_f1_albedo_cosine_weighted_average, drawing.lighting_color, mesh.ambient);
+                        shade(surface_color, metalness, roughness, n, v, l, ggx_f1_albedo_cosine_roughness,
+                              ggx_f1_albedo_cosine_weighted_average, drawing.lighting_color, ambient);
         }
 
         if (edge_factor >= 0)

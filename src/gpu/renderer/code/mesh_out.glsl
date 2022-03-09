@@ -64,7 +64,9 @@ void set_fragment_color(const vec3 color)
 
 void set_fragment_color(const vec3 surface_color, const vec3 n, const vec3 position_for_shadow, const float edge_factor)
 {
-        const vec3 color = mesh_shade(surface_color, n, position_for_shadow, edge_factor);
+        const vec3 color = mesh_shade(
+                surface_color, n, mesh.metalness, mesh.roughness, mesh.ambient, position_for_shadow, edge_factor);
+
         set_fragment_color(color);
 }
 
