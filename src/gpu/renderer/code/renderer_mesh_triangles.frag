@@ -24,11 +24,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 layout(location = 0) in GS
 {
         vec3 world_normal;
-#ifdef RAY_TRACING
         vec3 world_position;
-#else
-        vec3 shadow_position;
-#endif
         vec2 texture_coordinates;
         vec3 baricentric;
 }
@@ -80,7 +76,7 @@ vec3 position_for_shadow()
 #else
 vec3 position_for_shadow()
 {
-        return gs.shadow_position;
+        return (shadow_matrices.vp_texture_matrix * vec4(gs.world_position, 1)).xyz;
 }
 #endif
 

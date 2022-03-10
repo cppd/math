@@ -29,9 +29,6 @@ layout(location = 0) in VS
 {
         vec3 world_normal;
         vec3 world_position;
-#ifndef RAY_TRACING
-        vec3 shadow_position;
-#endif
         vec2 texture_coordinates;
 }
 vs[3];
@@ -52,11 +49,7 @@ out gl_PerVertex
 layout(location = 0) out GS
 {
         vec3 world_normal;
-#ifdef RAY_TRACING
         vec3 world_position;
-#else
-        vec3 shadow_position;
-#endif
         vec2 texture_coordinates;
         vec3 baricentric;
 }
@@ -100,7 +93,7 @@ vec3[3] compute_normals()
 
 void main()
 {
-        vec3 normals[3] = compute_normals();
+        const vec3 normals[3] = compute_normals();
 
         for (int i = 0; i < 3; ++i)
         {
@@ -108,14 +101,9 @@ void main()
                 gl_ClipDistance[0] = gl_in[i].gl_ClipDistance[0];
 
                 gs.world_normal = normals[i];
-                gs.baricentric = baricentric[i];
-
-#ifdef RAY_TRACING
                 gs.world_position = vs[i].world_position;
-#else
-                gs.shadow_position = vs[i].shadow_position;
-#endif
                 gs.texture_coordinates = vs[i].texture_coordinates;
+                gs.baricentric = baricentric[i];
 
                 EmitVertex();
         }

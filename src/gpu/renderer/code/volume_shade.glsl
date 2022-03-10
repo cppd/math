@@ -81,7 +81,8 @@ vec4 isosurface_color(const vec3 p)
 
 vec4 fragment_color(const Fragment fragment)
 {
-        return fragment_data(fragment).color;
+        const FragmentData d = fragment_data(fragment);
+        return d.color;
 }
 
 #endif

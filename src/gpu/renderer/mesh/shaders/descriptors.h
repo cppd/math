@@ -108,6 +108,7 @@ public:
 class MeshMemory final
 {
         static constexpr int SET_NUMBER = 1;
+
         static constexpr int BUFFER_BINDING = 0;
 
         vulkan::Descriptors descriptors_;
