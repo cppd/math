@@ -37,7 +37,7 @@ layout(set = 0, binding = 2) uniform accelerationStructureEXT acceleration_struc
 layout(set = 0, binding = 1, std140) uniform restrict ShadowMatrices
 {
         mat4 vp_matrix;
-        mat4 vp_texture_matrix;
+        mat4 world_to_shadow;
 }
 shadow_matrices;
 layout(set = 0, binding = 2) uniform sampler2D shadow_mapping_texture;

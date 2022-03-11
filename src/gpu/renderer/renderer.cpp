@@ -379,7 +379,7 @@ class Impl final : public Renderer, RendererViewEvents, StorageMeshEvents, Stora
                         {
                                 visible_volume->set_matrix_and_clip_plane(
                                         renderer_view_.vp_matrix(), renderer_view_.clip_plane(),
-                                        renderer_view_.shadow_vp_texture_matrix());
+                                        renderer_view_.world_to_shadow_matrix());
                         }
                 }
         }
@@ -490,7 +490,7 @@ class Impl final : public Renderer, RendererViewEvents, StorageMeshEvents, Stora
                 if (!ray_tracing_)
                 {
                         mesh_renderer_.set_shadow_matrices(
-                                renderer_view_.shadow_vp_matrix(), renderer_view_.shadow_vp_texture_matrix());
+                                renderer_view_.shadow_vp_matrix(), renderer_view_.world_to_shadow_matrix());
                 }
         }
 

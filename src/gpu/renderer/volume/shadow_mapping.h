@@ -28,7 +28,7 @@ namespace ns::gpu::renderer
 {
 class VolumeShadowMapping final
 {
-        Matrix4d vp_texture_matrix_ = Matrix4d(1);
+        Matrix4d world_to_shadow_ = Matrix4d(1);
         VolumeShadowMatrixBuffer buffer_;
 
 public:
@@ -36,7 +36,7 @@ public:
 
         const vulkan::Buffer& buffer() const;
 
-        void set_matrix(const Matrix4d& shadow_vp_texture_matrix, const Matrix4d& texture_to_world_matrix);
-        void set_matrix(const Matrix4d& texture_to_world_matrix) const;
+        void set_matrix(const Matrix4d& world_to_shadow, const Matrix4d& texture_to_world);
+        void set_matrix(const Matrix4d& texture_to_world) const;
 };
 }

@@ -34,8 +34,9 @@ float mesh_shadow_transparency(const vec3 world_position)
         return intersection ? 0 : 1;
 }
 #else
-float mesh_shadow_transparency(const vec3 shadow_position)
+float mesh_shadow_transparency(const vec3 world_position)
 {
+        const vec3 shadow_position = (shadow_matrices.world_to_shadow * vec4(world_position, 1)).xyz;
         const float d = texture(shadow_mapping_texture, shadow_position.xy).r;
         return d <= shadow_position.z ? 0 : 1;
 }
@@ -47,7 +48,7 @@ vec3 mesh_shade(
         const float metalness,
         const float roughness,
         const float ambient,
-        const vec3 position_for_shadow,
+        const vec3 world_position,
         const float edge_factor)
 {
         const vec3 v = drawing.direction_to_camera;
@@ -60,7 +61,7 @@ vec3 mesh_shade(
                 color =
                         shade(surface_color, metalness, roughness, n, v, l, ggx_f1_albedo_cosine_roughness,
                               ggx_f1_albedo_cosine_weighted_average, drawing.lighting_color, ambient,
-                              mesh_shadow_transparency(position_for_shadow));
+                              mesh_shadow_transparency(world_position));
         }
         else
         {

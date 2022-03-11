@@ -58,29 +58,13 @@ float edge_factor()
         {
                 return -1;
         }
+
         const vec3 d = 0.5 * fwidth(gs.baricentric);
         const vec3 a = smoothstep(vec3(0), d, gs.baricentric);
         return min(min(a.x, a.y), a.z);
 }
 
-vec3 normal()
-{
-        return normalize(gs.world_normal);
-}
-
-#ifdef RAY_TRACING
-vec3 position_for_shadow()
-{
-        return gs.world_position;
-}
-#else
-vec3 position_for_shadow()
-{
-        return (shadow_matrices.vp_texture_matrix * vec4(gs.world_position, 1)).xyz;
-}
-#endif
-
 void main()
 {
-        set_fragment_color(surface_color(), normal(), position_for_shadow(), edge_factor());
+        set_fragment_color(surface_color(), normalize(gs.world_normal), gs.world_position, edge_factor());
 }

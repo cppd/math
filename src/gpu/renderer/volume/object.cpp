@@ -266,10 +266,10 @@ class Impl final : public VolumeObject
         void set_matrix_and_clip_plane(
                 const Matrix4d& vp_matrix,
                 const std::optional<Vector4d>& world_clip_plane_equation,
-                const Matrix4d& shadow_vp_texture_matrix) override
+                const Matrix4d& world_to_shadow_matrix) override
         {
                 ASSERT(shadow_mapping_);
-                shadow_mapping_->set_matrix(shadow_vp_texture_matrix, texture_to_world_matrix_);
+                shadow_mapping_->set_matrix(world_to_shadow_matrix, texture_to_world_matrix_);
                 set_matrix_and_clip_plane(vp_matrix, world_clip_plane_equation);
         }
 

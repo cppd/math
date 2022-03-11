@@ -50,7 +50,7 @@ class RendererView final
 
         Matrix4d vp_matrix_ = Matrix4d(1);
         Matrix4d shadow_vp_matrix_ = Matrix4d(1);
-        Matrix4d shadow_vp_texture_matrix_ = Matrix4d(1);
+        Matrix4d world_to_shadow_matrix_ = Matrix4d(1);
 
         Vector3f clear_color_rgb32_ = Vector3f(0);
         double shadow_zoom_ = 1;
@@ -164,7 +164,7 @@ class RendererView final
                                 matrix::scale<double>(0.5, 0.5, 1) * matrix::translate<double>(1, 1, 0);
 
                         shadow_vp_matrix_ = camera_volume_to_projection(c.shadow_volume) * c.shadow_view_matrix;
-                        shadow_vp_texture_matrix_ = TEXTURE_MATRIX * shadow_vp_matrix_;
+                        world_to_shadow_matrix_ = TEXTURE_MATRIX * shadow_vp_matrix_;
                 }
 
                 drawing_buffer_->set_direction_to_light(-to_vector<float>(c.light_direction));
@@ -232,9 +232,9 @@ public:
                 return shadow_vp_matrix_;
         }
 
-        const Matrix4d& shadow_vp_texture_matrix() const
+        const Matrix4d& world_to_shadow_matrix() const
         {
-                return shadow_vp_texture_matrix_;
+                return world_to_shadow_matrix_;
         }
 
         double shadow_zoom() const

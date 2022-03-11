@@ -29,7 +29,7 @@ class ShadowMatricesBuffer final
         struct ShadowMatrices final
         {
                 Matrix4f vp_matrix;
-                Matrix4f vp_texture_matrix;
+                Matrix4f world_to_shadow;
         };
 
         vulkan::BufferWithMemory buffer_;
@@ -39,6 +39,6 @@ public:
 
         const vulkan::Buffer& buffer() const;
 
-        void set_matrices(const Matrix4d& vp_matrix, const Matrix4d& vp_texture_matrix) const;
+        void set_matrices(const Matrix4d& vp_matrix, const Matrix4d& world_to_shadow) const;
 };
 }
