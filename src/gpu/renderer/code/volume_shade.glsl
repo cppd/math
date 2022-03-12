@@ -66,7 +66,7 @@ vec4 isosurface_color(const vec3 texture_position)
         const vec3 world_normal = normalize(coordinates.gradient_to_world_matrix * volume_gradient(texture_position));
         const vec3 n = faceforward(world_normal, -v, world_normal);
 
-        const vec3 shade_color =
+        const vec3 color =
                 drawing.show_shadow
                         ? shade(volume.color, volume.metalness, volume.roughness, n, v, l,
                                 ggx_f1_albedo_cosine_roughness, ggx_f1_albedo_cosine_weighted_average,
@@ -75,7 +75,7 @@ vec4 isosurface_color(const vec3 texture_position)
                                 ggx_f1_albedo_cosine_roughness, ggx_f1_albedo_cosine_weighted_average,
                                 drawing.lighting_color, volume.ambient);
 
-        return vec4(shade_color, volume.isosurface_alpha);
+        return vec4(color, volume.isosurface_alpha);
 }
 
 #endif
