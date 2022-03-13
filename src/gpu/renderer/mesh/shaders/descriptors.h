@@ -68,14 +68,18 @@ class SharedMemory final
         vulkan::Descriptors descriptors_;
 
 public:
-        static std::vector<VkDescriptorSetLayoutBinding> descriptor_set_layout_bindings(
-                VkShaderStageFlags shadow_matrices,
-                VkShaderStageFlags drawing,
-                VkShaderStageFlags objects,
-                VkShaderStageFlags shadow_map,
-                VkShaderStageFlags acceleration_structure,
-                VkShaderStageFlags ggx_f1_albedo,
-                VkShaderStageFlags transparency);
+        struct Flags final
+        {
+                VkShaderStageFlags shadow_matrices;
+                VkShaderStageFlags drawing;
+                VkShaderStageFlags objects;
+                VkShaderStageFlags shadow_map;
+                VkShaderStageFlags acceleration_structure;
+                VkShaderStageFlags ggx_f1_albedo;
+                VkShaderStageFlags transparency;
+        };
+
+        static std::vector<VkDescriptorSetLayoutBinding> descriptor_set_layout_bindings(const Flags& flags);
         static unsigned set_number();
 
         SharedMemory(

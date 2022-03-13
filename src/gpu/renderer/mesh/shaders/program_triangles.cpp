@@ -27,20 +27,17 @@ namespace ns::gpu::renderer
 {
 std::vector<VkDescriptorSetLayoutBinding> TrianglesProgram::descriptor_set_layout_shared_bindings() const
 {
-        const VkShaderStageFlags shadow_matrices =
-                !ray_tracing_ ? (VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT) : 0;
+        SharedMemory::Flags flags;
 
-        const VkShaderStageFlags drawing =
-                VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_GEOMETRY_BIT | VK_SHADER_STAGE_FRAGMENT_BIT;
+        flags.shadow_matrices = !ray_tracing_ ? (VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT) : 0;
+        flags.drawing = VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_GEOMETRY_BIT | VK_SHADER_STAGE_FRAGMENT_BIT;
+        flags.objects = VK_SHADER_STAGE_FRAGMENT_BIT;
+        flags.shadow_map = !ray_tracing_ ? VK_SHADER_STAGE_FRAGMENT_BIT : 0;
+        flags.acceleration_structure = ray_tracing_ ? VK_SHADER_STAGE_FRAGMENT_BIT : 0;
+        flags.ggx_f1_albedo = VK_SHADER_STAGE_FRAGMENT_BIT;
+        flags.transparency = VK_SHADER_STAGE_FRAGMENT_BIT;
 
-        const VkShaderStageFlags objects = VK_SHADER_STAGE_FRAGMENT_BIT;
-        const VkShaderStageFlags shadow_map = !ray_tracing_ ? VK_SHADER_STAGE_FRAGMENT_BIT : 0;
-        const VkShaderStageFlags acceleration_structure = ray_tracing_ ? VK_SHADER_STAGE_FRAGMENT_BIT : 0;
-        const VkShaderStageFlags ggx_f1_albedo = VK_SHADER_STAGE_FRAGMENT_BIT;
-        const VkShaderStageFlags transparency = VK_SHADER_STAGE_FRAGMENT_BIT;
-
-        return SharedMemory::descriptor_set_layout_bindings(
-                shadow_matrices, drawing, objects, shadow_map, acceleration_structure, ggx_f1_albedo, transparency);
+        return SharedMemory::descriptor_set_layout_bindings(flags);
 }
 
 std::vector<VkDescriptorSetLayoutBinding> TrianglesProgram::descriptor_set_layout_mesh_bindings()

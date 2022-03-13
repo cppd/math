@@ -27,8 +27,17 @@ namespace ns::gpu::renderer
 {
 std::vector<VkDescriptorSetLayoutBinding> TrianglesDepthProgram::descriptor_set_layout_shared_bindings()
 {
-        return SharedMemory::descriptor_set_layout_bindings(
-                VK_SHADER_STAGE_VERTEX_BIT, VK_SHADER_STAGE_VERTEX_BIT, 0, 0, 0, 0, 0);
+        SharedMemory::Flags flags;
+
+        flags.shadow_matrices = VK_SHADER_STAGE_VERTEX_BIT;
+        flags.drawing = VK_SHADER_STAGE_VERTEX_BIT;
+        flags.objects = 0;
+        flags.shadow_map = 0;
+        flags.acceleration_structure = 0;
+        flags.ggx_f1_albedo = 0;
+        flags.transparency = 0;
+
+        return SharedMemory::descriptor_set_layout_bindings(flags);
 }
 
 std::vector<VkDescriptorSetLayoutBinding> TrianglesDepthProgram::descriptor_set_layout_mesh_bindings()
