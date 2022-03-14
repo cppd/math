@@ -33,7 +33,8 @@ public:
         virtual std::vector<std::uint32_t> mesh_triangles_vert() const = 0;
         virtual std::vector<std::uint32_t> mesh_triangles_geom() const = 0;
         virtual std::vector<std::uint32_t> mesh_triangles_frag() const = 0;
-        virtual std::vector<std::uint32_t> mesh_triangles_depth_vert() const = 0;
+        virtual std::vector<std::uint32_t> mesh_triangles_image_frag() const = 0;
+        virtual std::vector<std::uint32_t> mesh_shadow_vert() const = 0;
         virtual std::vector<std::uint32_t> mesh_triangle_lines_vert() const = 0;
         virtual std::vector<std::uint32_t> mesh_triangle_lines_geom() const = 0;
         virtual std::vector<std::uint32_t> mesh_triangle_lines_frag() const = 0;

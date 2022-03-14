@@ -33,7 +33,8 @@ class ShaderCode final : public Code
         std::vector<std::uint32_t> mesh_triangles_vert() const override;
         std::vector<std::uint32_t> mesh_triangles_geom() const override;
         std::vector<std::uint32_t> mesh_triangles_frag() const override;
-        std::vector<std::uint32_t> mesh_triangles_depth_vert() const override;
+        std::vector<std::uint32_t> mesh_triangles_image_frag() const override;
+        std::vector<std::uint32_t> mesh_shadow_vert() const override;
         std::vector<std::uint32_t> mesh_triangle_lines_vert() const override;
         std::vector<std::uint32_t> mesh_triangle_lines_geom() const override;
         std::vector<std::uint32_t> mesh_triangle_lines_frag() const override;

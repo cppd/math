@@ -100,7 +100,7 @@ void ShadowMapping::create_command_buffers(
                 {
                         vkCmdSetDepthBias(command_buffer, 1.5f, 0.0f, 1.5f);
 
-                        commands_depth_triangles(
+                        commands_shadow(
                                 meshes, command_buffer, *render_triangles_pipeline_, triangles_program_,
                                 triangles_shared_memory_);
                 };

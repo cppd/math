@@ -22,7 +22,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "buffers/shadow_matrices.h"
 #include "shaders/descriptors.h"
-#include "shaders/program_triangles_depth.h"
+#include "shaders/program_shadow.h"
 
 #include <memory>
 #include <optional>
@@ -32,7 +32,7 @@ namespace ns::gpu::renderer
 {
 class ShadowMapping final
 {
-        TrianglesDepthProgram triangles_program_;
+        ShadowProgram triangles_program_;
         SharedMemory triangles_shared_memory_;
         vulkan::handle::Sampler sampler_;
         ShadowMatricesBuffer shadow_matrices_buffer_;

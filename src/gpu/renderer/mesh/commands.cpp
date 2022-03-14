@@ -54,31 +54,30 @@ void commands_triangles(
         }
 }
 
-void commands_depth_triangles(
+void commands_shadow(
         const std::vector<const MeshObject*>& meshes,
         const VkCommandBuffer command_buffer,
         const VkPipeline pipeline,
-        const TrianglesDepthProgram& triangles_depth_program,
-        const SharedMemory& triangles_depth_shared_memory)
+        const ShadowProgram& shadow_program,
+        const SharedMemory& shadow_shared_memory)
 {
         vkCmdBindPipeline(command_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipeline);
 
         vkCmdBindDescriptorSets(
-                command_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, triangles_depth_program.pipeline_layout(),
-                SharedMemory::set_number(), 1 /*set count*/, &triangles_depth_shared_memory.descriptor_set(), 0,
-                nullptr);
+                command_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, shadow_program.pipeline_layout(),
+                SharedMemory::set_number(), 1 /*set count*/, &shadow_shared_memory.descriptor_set(), 0, nullptr);
 
         const auto bind_descriptor_set_mesh = [&](VkDescriptorSet descriptor_set)
         {
                 vkCmdBindDescriptorSets(
-                        command_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, triangles_depth_program.pipeline_layout(),
+                        command_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, shadow_program.pipeline_layout(),
                         MeshMemory::set_number(), 1 /*set count*/, &descriptor_set, 0, nullptr);
         };
 
         for (const MeshObject* const mesh : meshes)
         {
                 mesh->commands_plain_triangles(
-                        command_buffer, triangles_depth_program.descriptor_set_layout_mesh(), bind_descriptor_set_mesh);
+                        command_buffer, shadow_program.descriptor_set_layout_mesh(), bind_descriptor_set_mesh);
         }
 }
 

@@ -17,5 +17,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #version 460
 
+#define IMAGE
+
 #extension GL_GOOGLE_include_directive : enable
 #include "mesh_triangles.glsl"

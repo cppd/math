@@ -15,7 +15,7 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include "program_triangles_depth.h"
+#include "program_shadow.h"
 
 #include "descriptors.h"
 #include "vertex_triangles.h"
@@ -25,7 +25,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 namespace ns::gpu::renderer
 {
-std::vector<VkDescriptorSetLayoutBinding> TrianglesDepthProgram::descriptor_set_layout_shared_bindings()
+std::vector<VkDescriptorSetLayoutBinding> ShadowProgram::descriptor_set_layout_shared_bindings()
 {
         SharedMemory::Flags flags;
 
@@ -40,12 +40,12 @@ std::vector<VkDescriptorSetLayoutBinding> TrianglesDepthProgram::descriptor_set_
         return SharedMemory::descriptor_set_layout_bindings(flags);
 }
 
-std::vector<VkDescriptorSetLayoutBinding> TrianglesDepthProgram::descriptor_set_layout_mesh_bindings()
+std::vector<VkDescriptorSetLayoutBinding> ShadowProgram::descriptor_set_layout_mesh_bindings()
 {
         return MeshMemory::descriptor_set_layout_bindings(VK_SHADER_STAGE_VERTEX_BIT);
 }
 
-TrianglesDepthProgram::TrianglesDepthProgram(const vulkan::Device* const device, const Code& code)
+ShadowProgram::ShadowProgram(const vulkan::Device* const device, const Code& code)
         : device_(device),
           descriptor_set_layout_shared_(
                   vulkan::create_descriptor_set_layout(*device, descriptor_set_layout_shared_bindings())),
@@ -55,26 +55,26 @@ TrianglesDepthProgram::TrianglesDepthProgram(const vulkan::Device* const device,
                   *device,
                   {SharedMemory::set_number(), MeshMemory::set_number()},
                   {descriptor_set_layout_shared_, descriptor_set_layout_mesh_})),
-          vertex_shader_(*device_, code.mesh_triangles_depth_vert(), VK_SHADER_STAGE_VERTEX_BIT)
+          vertex_shader_(*device_, code.mesh_shadow_vert(), VK_SHADER_STAGE_VERTEX_BIT)
 {
 }
 
-VkDescriptorSetLayout TrianglesDepthProgram::descriptor_set_layout_shared() const
+VkDescriptorSetLayout ShadowProgram::descriptor_set_layout_shared() const
 {
         return descriptor_set_layout_shared_;
 }
 
-VkDescriptorSetLayout TrianglesDepthProgram::descriptor_set_layout_mesh() const
+VkDescriptorSetLayout ShadowProgram::descriptor_set_layout_mesh() const
 {
         return descriptor_set_layout_mesh_;
 }
 
-VkPipelineLayout TrianglesDepthProgram::pipeline_layout() const
+VkPipelineLayout ShadowProgram::pipeline_layout() const
 {
         return pipeline_layout_;
 }
 
-vulkan::handle::Pipeline TrianglesDepthProgram::create_pipeline(
+vulkan::handle::Pipeline ShadowProgram::create_pipeline(
         const VkRenderPass render_pass,
         const VkSampleCountFlagBits sample_count,
         const Region<2, int>& viewport) const
@@ -105,7 +105,7 @@ vulkan::handle::Pipeline TrianglesDepthProgram::create_pipeline(
         info.binding_descriptions = &binding_descriptions;
 
         const std::vector<VkVertexInputAttributeDescription> attribute_descriptions =
-                TrianglesVertex::attribute_descriptions_triangles_depth();
+                TrianglesVertex::attribute_descriptions_shadow();
         info.attribute_descriptions = &attribute_descriptions;
 
         return vulkan::create_graphics_pipeline(info);

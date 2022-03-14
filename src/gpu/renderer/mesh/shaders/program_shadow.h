@@ -29,7 +29,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 namespace ns::gpu::renderer
 {
-class TrianglesDepthProgram final
+class ShadowProgram final
 {
         const vulkan::Device* device_;
 
@@ -39,14 +39,14 @@ class TrianglesDepthProgram final
         vulkan::Shader vertex_shader_;
 
 public:
-        explicit TrianglesDepthProgram(const vulkan::Device* device, const Code& code);
+        explicit ShadowProgram(const vulkan::Device* device, const Code& code);
 
-        TrianglesDepthProgram(const TrianglesDepthProgram&) = delete;
-        TrianglesDepthProgram& operator=(const TrianglesDepthProgram&) = delete;
-        TrianglesDepthProgram& operator=(TrianglesDepthProgram&&) = delete;
+        ShadowProgram(const ShadowProgram&) = delete;
+        ShadowProgram& operator=(const ShadowProgram&) = delete;
+        ShadowProgram& operator=(ShadowProgram&&) = delete;
 
-        TrianglesDepthProgram(TrianglesDepthProgram&&) = default;
-        ~TrianglesDepthProgram() = default;
+        ShadowProgram(ShadowProgram&&) = default;
+        ~ShadowProgram() = default;
 
         vulkan::handle::Pipeline create_pipeline(
                 VkRenderPass render_pass,

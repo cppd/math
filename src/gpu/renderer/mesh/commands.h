@@ -22,9 +22,9 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "shaders/descriptors.h"
 #include "shaders/program_normals.h"
 #include "shaders/program_points.h"
+#include "shaders/program_shadow.h"
 #include "shaders/program_triangle_lines.h"
 #include "shaders/program_triangles.h"
-#include "shaders/program_triangles_depth.h"
 
 #include <vector>
 #include <vulkan/vulkan.h>
@@ -38,12 +38,12 @@ void commands_triangles(
         const TrianglesProgram& triangles_program,
         const SharedMemory& triangles_shared_memory);
 
-void commands_depth_triangles(
+void commands_shadow(
         const std::vector<const MeshObject*>& meshes,
         VkCommandBuffer command_buffer,
         VkPipeline pipeline,
-        const TrianglesDepthProgram& triangles_depth_program,
-        const SharedMemory& triangles_depth_shared_memory);
+        const ShadowProgram& shadow_program,
+        const SharedMemory& shadow_shared_memory);
 
 void commands_lines(
         const std::vector<const MeshObject*>& meshes,

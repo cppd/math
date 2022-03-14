@@ -72,7 +72,7 @@ std::vector<VkVertexInputAttributeDescription> TrianglesVertex::attribute_descri
         return descriptions;
 }
 
-std::vector<VkVertexInputAttributeDescription> TrianglesVertex::attribute_descriptions_triangles_depth()
+std::vector<VkVertexInputAttributeDescription> TrianglesVertex::attribute_descriptions_shadow()
 {
         std::vector<VkVertexInputAttributeDescription> descriptions;
 

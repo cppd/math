@@ -38,7 +38,7 @@ struct TrianglesVertex
         static std::vector<VkVertexInputBindingDescription> binding_descriptions();
 
         static std::vector<VkVertexInputAttributeDescription> attribute_descriptions_triangles();
-        static std::vector<VkVertexInputAttributeDescription> attribute_descriptions_triangles_depth();
+        static std::vector<VkVertexInputAttributeDescription> attribute_descriptions_shadow();
         static std::vector<VkVertexInputAttributeDescription> attribute_descriptions_triangle_lines();
         static std::vector<VkVertexInputAttributeDescription> attribute_descriptions_normals();
 };
