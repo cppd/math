@@ -20,6 +20,9 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "descriptors.h"
 #include "vertex_triangles.h"
 
+#include <src/com/enum.h>
+#include <src/com/error.h>
+#include <src/com/print.h>
 #include <src/vulkan/create.h>
 #include <src/vulkan/pipeline.h>
 
@@ -65,7 +68,8 @@ TrianglesProgram::TrianglesProgram(const vulkan::Device* const device, const Cod
                   {descriptor_set_layout_shared_, descriptor_set_layout_mesh_, descriptor_set_layout_material_})),
           vertex_shader_(*device_, code.mesh_triangles_vert(), VK_SHADER_STAGE_VERTEX_BIT),
           geometry_shader_(*device_, code.mesh_triangles_geom(), VK_SHADER_STAGE_GEOMETRY_BIT),
-          fragment_shader_(*device_, code.mesh_triangles_frag(), VK_SHADER_STAGE_FRAGMENT_BIT)
+          fragment_shader_fragments_(*device_, code.mesh_triangles_frag(), VK_SHADER_STAGE_FRAGMENT_BIT),
+          fragment_shader_image_(*device_, code.mesh_triangles_image_frag(), VK_SHADER_STAGE_FRAGMENT_BIT)
 {
 }
 
@@ -88,12 +92,25 @@ VkPipelineLayout TrianglesProgram::pipeline_layout() const
         return pipeline_layout_;
 }
 
+const vulkan::Shader* TrianglesProgram::fragment_shader(const TrianglesProgramPipelineType type) const
+{
+        switch (type)
+        {
+        case TrianglesProgramPipelineType::FRAGMENTS:
+                return &fragment_shader_fragments_;
+        case TrianglesProgramPipelineType::IMAGE:
+                return &fragment_shader_image_;
+        }
+        error_fatal("Unknown triangles program pipeline type " + to_string(enum_to_int(type)));
+}
+
 vulkan::handle::Pipeline TrianglesProgram::create_pipeline(
         const VkRenderPass render_pass,
         const VkSampleCountFlagBits sample_count,
         const bool sample_shading,
         const Region<2, int>& viewport,
-        const bool transparency) const
+        const bool transparency,
+        const TrianglesProgramPipelineType type) const
 {
         vulkan::GraphicsPipelineCreateInfo info;
 
@@ -110,7 +127,7 @@ vulkan::handle::Pipeline TrianglesProgram::create_pipeline(
         shared_constants.set(transparency);
         info.depth_write = !transparency;
 
-        const std::vector<const vulkan::Shader*> shaders = {&vertex_shader_, &geometry_shader_, &fragment_shader_};
+        const std::vector<const vulkan::Shader*> shaders = {&vertex_shader_, &geometry_shader_, fragment_shader(type)};
         const std::vector<const vulkan::SpecializationConstant*> constants = {
                 &shared_constants, &shared_constants, &shared_constants};
         const std::vector<VkVertexInputBindingDescription> binding_descriptions =

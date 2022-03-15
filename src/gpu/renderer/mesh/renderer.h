@@ -57,16 +57,17 @@ class MeshRenderer
         PointsProgram points_program_;
         SharedMemory points_shared_memory_;
 
-        struct Pipelines
+        struct Pipelines final
         {
-                std::optional<vulkan::handle::Pipeline> triangles;
-                std::optional<vulkan::handle::Pipeline> triangle_lines;
-                std::optional<vulkan::handle::Pipeline> normals;
-                std::optional<vulkan::handle::Pipeline> points;
-                std::optional<vulkan::handle::Pipeline> lines;
+                vulkan::handle::Pipeline triangles_fragments;
+                vulkan::handle::Pipeline triangles_image;
+                vulkan::handle::Pipeline triangle_lines;
+                vulkan::handle::Pipeline normals;
+                vulkan::handle::Pipeline points;
+                vulkan::handle::Pipeline lines;
         };
-        Pipelines render_pipelines_opaque_;
-        Pipelines render_pipelines_transparent_;
+        std::optional<Pipelines> render_pipelines_opaque_;
+        std::optional<Pipelines> render_pipelines_transparent_;
         std::optional<vulkan::handle::CommandBuffers> render_command_buffers_all_;
         std::optional<vulkan::handle::CommandBuffers> render_command_buffers_transparent_as_opaque_;
 
@@ -74,8 +75,8 @@ class MeshRenderer
 
         std::unique_ptr<ShadowMapping> shadow_mapping_;
 
-        const Pipelines& render_pipelines(bool transparent) const;
-        Pipelines& render_pipelines(bool transparent);
+        const std::optional<Pipelines>& render_pipelines(bool transparent) const;
+        std::optional<Pipelines>& render_pipelines(bool transparent);
 
         void draw_commands(
                 const std::vector<const MeshObject*>& meshes,
