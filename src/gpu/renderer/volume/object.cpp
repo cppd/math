@@ -104,6 +104,8 @@ class Impl final : public VolumeObject
         vulkan::ImageWithMemory transfer_function_;
         std::unique_ptr<vulkan::ImageWithMemory> image_;
         std::vector<VkFormat> image_formats_;
+        bool image_scalar_ = false;
+        bool isosurface_ = false;
 
         const std::vector<vulkan::DescriptorSetLayoutAndBindings> image_layouts_;
         std::unordered_map<VkDescriptorSetLayout, VolumeImageMemory> image_memory_;
@@ -197,7 +199,9 @@ class Impl final : public VolumeObject
 
                         image_layout = VK_IMAGE_LAYOUT_UNDEFINED;
 
-                        buffer_set_color_volume(!is_scalar_volume(image.color_format));
+                        image_scalar_ = is_scalar_volume(image.color_format);
+
+                        buffer_set_color_volume(!image_scalar_);
 
                         image_formats_ = volume_image_formats(image.color_format);
 
@@ -311,6 +315,7 @@ class Impl final : public VolumeObject
 
                 if ((updates & PARAMETERS_UPDATE).any())
                 {
+                        isosurface_ = volume_object.isosurface();
                         buffer_set_parameters(
                                 volume_object.level_min(), volume_object.level_max(),
                                 volume_object.volume_alpha_coefficient(), volume_object.isosurface_alpha(),
@@ -329,6 +334,11 @@ class Impl final : public VolumeObject
                 }
 
                 return update_changes;
+        }
+
+        bool is_isosurface() const override
+        {
+                return image_scalar_ && isosurface_;
         }
 
 public:
