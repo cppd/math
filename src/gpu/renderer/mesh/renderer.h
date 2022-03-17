@@ -66,10 +66,13 @@ class MeshRenderer
                 vulkan::handle::Pipeline points;
                 vulkan::handle::Pipeline lines;
         };
-        std::optional<Pipelines> render_pipelines_opaque_;
-        std::optional<Pipelines> render_pipelines_transparent_;
-        std::optional<vulkan::handle::CommandBuffers> render_command_buffers_all_;
-        std::optional<vulkan::handle::CommandBuffers> render_command_buffers_transparent_as_opaque_;
+        std::optional<Pipelines> pipelines_opaque_;
+        std::optional<Pipelines> pipelines_transparent_;
+
+        std::optional<vulkan::handle::CommandBuffers> command_buffers_all_;
+        std::optional<vulkan::handle::CommandBuffers> command_buffers_all_image_;
+        std::optional<vulkan::handle::CommandBuffers> command_buffers_transparent_as_opaque_;
+        std::optional<vulkan::handle::CommandBuffers> command_buffers_transparent_as_opaque_image_;
 
         vulkan::handle::Sampler texture_sampler_;
 
@@ -78,12 +81,16 @@ class MeshRenderer
         const std::optional<Pipelines>& render_pipelines(bool transparent) const;
         std::optional<Pipelines>& render_pipelines(bool transparent);
 
+        const std::optional<vulkan::handle::CommandBuffers>& command_buffers_all(bool image) const;
+        const std::optional<vulkan::handle::CommandBuffers>& command_buffers_transparent_as_opaque(bool image) const;
+
         void draw_commands(
                 const std::vector<const MeshObject*>& meshes,
                 VkCommandBuffer command_buffer,
                 bool clip_plane,
                 bool normals,
-                bool transparent_pipeline) const;
+                bool transparent,
+                bool image) const;
 
 public:
         MeshRenderer(
@@ -139,8 +146,8 @@ public:
 
         bool has_meshes() const;
         bool has_transparent_meshes() const;
-        std::optional<VkCommandBuffer> render_command_buffer_all(unsigned index) const;
-        std::optional<VkCommandBuffer> render_command_buffer_transparent_as_opaque(unsigned index) const;
+        std::optional<VkCommandBuffer> render_command_buffer_all(unsigned index, bool image) const;
+        std::optional<VkCommandBuffer> render_command_buffer_transparent_as_opaque(unsigned index, bool image) const;
 
         VkCommandBuffer shadow_mapping_command_buffer(unsigned index) const;
         const vulkan::ImageView& shadow_mapping_image_view() const;

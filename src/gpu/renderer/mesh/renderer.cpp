@@ -82,18 +82,37 @@ const std::optional<MeshRenderer::Pipelines>& MeshRenderer::render_pipelines(con
 {
         if (transparent)
         {
-                return render_pipelines_transparent_;
+                return pipelines_transparent_;
         }
-        return render_pipelines_opaque_;
+        return pipelines_opaque_;
 }
 
 std::optional<MeshRenderer::Pipelines>& MeshRenderer::render_pipelines(const bool transparent)
 {
         if (transparent)
         {
-                return render_pipelines_transparent_;
+                return pipelines_transparent_;
         }
-        return render_pipelines_opaque_;
+        return pipelines_opaque_;
+}
+
+const std::optional<vulkan::handle::CommandBuffers>& MeshRenderer::command_buffers_all(const bool image) const
+{
+        if (image)
+        {
+                return command_buffers_all_image_;
+        }
+        return command_buffers_all_;
+}
+
+const std::optional<vulkan::handle::CommandBuffers>& MeshRenderer::command_buffers_transparent_as_opaque(
+        const bool image) const
+{
+        if (image)
+        {
+                return command_buffers_transparent_as_opaque_image_;
+        }
+        return command_buffers_transparent_as_opaque_;
 }
 
 void MeshRenderer::create_render_buffers(
@@ -249,7 +268,8 @@ void MeshRenderer::draw_commands(
         const VkCommandBuffer command_buffer,
         const bool clip_plane,
         const bool normals,
-        const bool transparent) const
+        const bool transparent,
+        const bool image) const
 {
         ASSERT(thread_id_ == std::this_thread::get_id());
 
@@ -260,9 +280,18 @@ void MeshRenderer::draw_commands(
 
         ASSERT(render_pipelines(transparent));
 
-        commands_triangles(
-                meshes, command_buffer, render_pipelines(transparent)->triangles_fragments, triangles_program_,
-                triangles_shared_memory_);
+        if (!image)
+        {
+                commands_triangles(
+                        meshes, command_buffer, render_pipelines(transparent)->triangles_fragments, triangles_program_,
+                        triangles_shared_memory_);
+        }
+        else
+        {
+                commands_triangles(
+                        meshes, command_buffer, render_pipelines(transparent)->triangles_image, triangles_program_,
+                        triangles_shared_memory_);
+        }
 
         commands_lines(
                 meshes, command_buffer, render_pipelines(transparent)->lines, points_program_, points_shared_memory_);
@@ -320,39 +349,49 @@ void MeshRenderer::create_render_command_buffers(
         info.framebuffers = &render_buffers_->framebuffers();
         info.command_pool = graphics_command_pool;
 
+        bool image;
+
         info.before_render_pass_commands =
                 !transparent_meshes.empty() ? before_transparency_render_pass_commands : nullptr;
+        info.after_render_pass_commands =
+                !transparent_meshes.empty() ? after_transparency_render_pass_commands : nullptr;
         info.render_pass_commands = [&](const VkCommandBuffer command_buffer)
         {
                 if (!opaque_meshes.empty())
                 {
-                        draw_commands(opaque_meshes, command_buffer, clip_plane, normals, false /*transparent*/);
+                        draw_commands(opaque_meshes, command_buffer, clip_plane, normals, false /*transparent*/, image);
                 }
                 if (!transparent_meshes.empty())
                 {
-                        draw_commands(transparent_meshes, command_buffer, clip_plane, normals, true /*transparent*/);
+                        draw_commands(
+                                transparent_meshes, command_buffer, clip_plane, normals, true /*transparent*/, image);
                 }
         };
-        info.after_render_pass_commands =
-                !transparent_meshes.empty() ? after_transparency_render_pass_commands : nullptr;
-        render_command_buffers_all_ = vulkan::create_command_buffers(info);
+        image = false;
+        command_buffers_all_ = vulkan::create_command_buffers(info);
+        image = true;
+        command_buffers_all_image_ = vulkan::create_command_buffers(info);
 
         if (!transparent_meshes.empty())
         {
                 info.before_render_pass_commands = nullptr;
+                info.after_render_pass_commands = nullptr;
                 info.render_pass_commands = [&](const VkCommandBuffer command_buffer)
                 {
-                        draw_commands(transparent_meshes, command_buffer, clip_plane, normals, false /*transparent*/);
+                        draw_commands(
+                                transparent_meshes, command_buffer, clip_plane, normals, false /*transparent*/, image);
                 };
-                info.after_render_pass_commands = nullptr;
-                render_command_buffers_transparent_as_opaque_ = vulkan::create_command_buffers(info);
+                image = false;
+                command_buffers_transparent_as_opaque_ = vulkan::create_command_buffers(info);
+                image = true;
+                command_buffers_transparent_as_opaque_image_ = vulkan::create_command_buffers(info);
         }
 }
 
 void MeshRenderer::delete_render_command_buffers()
 {
-        render_command_buffers_all_.reset();
-        render_command_buffers_transparent_as_opaque_.reset();
+        command_buffers_all_.reset();
+        command_buffers_transparent_as_opaque_.reset();
 }
 
 void MeshRenderer::create_shadow_mapping_command_buffers(
@@ -385,30 +424,35 @@ void MeshRenderer::set_acceleration_structure(const VkAccelerationStructureKHR a
 
 bool MeshRenderer::has_meshes() const
 {
-        return render_command_buffers_all_.has_value();
+        return command_buffers_all_.has_value();
 }
 
 bool MeshRenderer::has_transparent_meshes() const
 {
-        return render_command_buffers_transparent_as_opaque_.has_value();
+        return command_buffers_transparent_as_opaque_.has_value();
 }
 
-std::optional<VkCommandBuffer> MeshRenderer::render_command_buffer_all(const unsigned index) const
+std::optional<VkCommandBuffer> MeshRenderer::render_command_buffer_all(const unsigned index, const bool image) const
 {
-        if (render_command_buffers_all_)
+        const std::optional<vulkan::handle::CommandBuffers>& command_buffers = command_buffers_all(image);
+        if (command_buffers)
         {
-                ASSERT(index < render_command_buffers_all_->count());
-                return (*render_command_buffers_all_)[index];
+                ASSERT(index < command_buffers->count());
+                return (*command_buffers)[index];
         }
         return std::nullopt;
 }
 
-std::optional<VkCommandBuffer> MeshRenderer::render_command_buffer_transparent_as_opaque(const unsigned index) const
+std::optional<VkCommandBuffer> MeshRenderer::render_command_buffer_transparent_as_opaque(
+        const unsigned index,
+        const bool image) const
 {
-        if (render_command_buffers_transparent_as_opaque_)
+        const std::optional<vulkan::handle::CommandBuffers>& command_buffers =
+                command_buffers_transparent_as_opaque(image);
+        if (command_buffers)
         {
-                ASSERT(index < render_command_buffers_transparent_as_opaque_->count());
-                return (*render_command_buffers_transparent_as_opaque_)[index];
+                ASSERT(index < command_buffers->count());
+                return (*command_buffers)[index];
         }
         return std::nullopt;
 }
