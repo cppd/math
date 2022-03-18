@@ -47,14 +47,14 @@ std::tuple<VkSemaphore, bool> RendererDraw::draw_meshes(
         const bool shadow_mapping,
         const TransparencyBuffers& transparency_buffers) const
 {
-        constexpr bool MESH_IMAGE = false;
+        const bool has_volume = volume_renderer_->has_volume();
 
         if (!shadow_mapping)
         {
-                ASSERT(mesh_renderer_->render_command_buffer_all(index, MESH_IMAGE));
+                ASSERT(mesh_renderer_->render_command_buffer_all(index, has_volume));
                 vulkan::queue_submit(
                         semaphore, VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT,
-                        *mesh_renderer_->render_command_buffer_all(index, MESH_IMAGE), mesh_semaphore_, graphics_queue);
+                        *mesh_renderer_->render_command_buffer_all(index, has_volume), mesh_semaphore_, graphics_queue);
 
                 semaphore = mesh_semaphore_;
         }
@@ -64,12 +64,12 @@ std::tuple<VkSemaphore, bool> RendererDraw::draw_meshes(
                         mesh_renderer_->shadow_mapping_command_buffer(index), shadow_mapping_semaphore_,
                         graphics_queue);
 
-                ASSERT(mesh_renderer_->render_command_buffer_all(index, MESH_IMAGE));
+                ASSERT(mesh_renderer_->render_command_buffer_all(index, has_volume));
                 vulkan::queue_submit(
                         std::array<VkSemaphore, 2>{semaphore, shadow_mapping_semaphore_},
                         std::array<VkPipelineStageFlags, 2>{
                                 VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT, VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT},
-                        *mesh_renderer_->render_command_buffer_all(index, MESH_IMAGE), mesh_semaphore_, graphics_queue);
+                        *mesh_renderer_->render_command_buffer_all(index, has_volume), mesh_semaphore_, graphics_queue);
 
                 semaphore = mesh_semaphore_;
         }
@@ -91,10 +91,10 @@ std::tuple<VkSemaphore, bool> RendererDraw::draw_meshes(
         bool transparency;
         if (nodes || overload)
         {
-                ASSERT(mesh_renderer_->render_command_buffer_transparent_as_opaque(index, MESH_IMAGE));
+                ASSERT(mesh_renderer_->render_command_buffer_transparent_as_opaque(index, has_volume));
                 vulkan::queue_submit(
                         semaphore, VK_PIPELINE_STAGE_BOTTOM_OF_PIPE_BIT,
-                        *mesh_renderer_->render_command_buffer_transparent_as_opaque(index, MESH_IMAGE),
+                        *mesh_renderer_->render_command_buffer_transparent_as_opaque(index, has_volume),
                         transparent_as_opaque_semaphore_, graphics_queue);
 
                 semaphore = transparent_as_opaque_semaphore_;
