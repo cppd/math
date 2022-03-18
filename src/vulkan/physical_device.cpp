@@ -39,6 +39,8 @@ namespace ns::vulkan
 {
 namespace
 {
+constexpr std::uint32_t MIN_STORAGE_BUFFER_RANGE = 1'000'000'000;
+
 bool find_family(
         const std::vector<VkQueueFamilyProperties>& families,
         const VkQueueFlags flags,
@@ -177,6 +179,12 @@ bool extensions_supported(const PhysicalDevice& physical_device, const std::unor
                 });
 }
 
+bool minimum_properties_supported(const PhysicalDevice& physical_device)
+{
+        const VkPhysicalDeviceLimits& limits = physical_device.info().properties.properties_10.limits;
+        return limits.maxStorageBufferRange >= MIN_STORAGE_BUFFER_RANGE;
+}
+
 std::vector<std::size_t> suitable_physical_devices(
         const std::vector<PhysicalDevice>& physical_devices,
         const VkSurfaceKHR surface,
@@ -207,6 +215,11 @@ std::vector<std::size_t> suitable_physical_devices(
 
                 if (optional_as_required
                     && !extensions_supported(physical_device, device_functionality.optional_extensions))
+                {
+                        continue;
+                }
+
+                if (!minimum_properties_supported(physical_device))
                 {
                         continue;
                 }
