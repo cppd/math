@@ -33,6 +33,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "code/shader_code.h"
 #include "mesh/object.h"
 #include "mesh/renderer.h"
+#include "test/ray_tracing/test_ray_tracing.h"
 #include "volume/object.h"
 #include "volume/renderer.h"
 
@@ -593,6 +594,12 @@ std::unique_ptr<Renderer> create_renderer(
         const bool sampler_anisotropy)
 {
         const bool ray_tracing = ray_tracing_supported(*device);
+
+        if (ray_tracing)
+        {
+                test::test_ray_tracing(*device, *compute_queue);
+        }
+
         const ShaderCode shader_code(ray_tracing);
 
         return std::make_unique<Impl>(
