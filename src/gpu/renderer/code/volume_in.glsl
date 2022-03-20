@@ -86,6 +86,7 @@ layout(set = 1, binding = 3) uniform sampler1D transfer_function;
 layout(set = 1, binding = 4, std140) uniform restrict ShadowMatrix
 {
         mat4 texture_to_shadow;
+        mat4 world_to_shadow;
 }
 shadow_matrix;
 #endif

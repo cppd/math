@@ -28,7 +28,8 @@ class VolumeShadowMatrixBuffer final
 {
         struct ShadowMatrix final
         {
-                Matrix4f texture_to_shadow;
+                alignas(sizeof(Vector4f)) Matrix4f texture_to_shadow;
+                alignas(sizeof(Vector4f)) Matrix4f world_to_shadow;
         };
 
         vulkan::BufferWithMemory buffer_;
@@ -38,6 +39,6 @@ public:
 
         const vulkan::Buffer& buffer() const;
 
-        void set_matrix(const Matrix4d& texture_to_shadow) const;
+        void set(const Matrix4d& texture_to_shadow, const Matrix4d& world_to_shadow) const;
 };
 }

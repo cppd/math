@@ -38,10 +38,11 @@ const vulkan::Buffer& VolumeShadowMatrixBuffer::buffer() const
         return buffer_.buffer();
 }
 
-void VolumeShadowMatrixBuffer::set_matrix(const Matrix4d& texture_to_shadow) const
+void VolumeShadowMatrixBuffer::set(const Matrix4d& texture_to_shadow, const Matrix4d& world_to_shadow) const
 {
-        ShadowMatrix shadow_matrix;
-        shadow_matrix.texture_to_shadow = to_std140<float>(texture_to_shadow);
-        vulkan::map_and_write_to_buffer(buffer_, shadow_matrix);
+        ShadowMatrix m;
+        m.texture_to_shadow = to_std140<float>(texture_to_shadow);
+        m.world_to_shadow = to_std140<float>(world_to_shadow);
+        vulkan::map_and_write_to_buffer(buffer_, m);
 }
 }

@@ -39,6 +39,6 @@ void VolumeShadowMapping::set_matrix(const Matrix4d& world_to_shadow, const Matr
 
 void VolumeShadowMapping::set_matrix(const Matrix4d& texture_to_world) const
 {
-        buffer_.set_matrix(world_to_shadow_ * texture_to_world);
+        buffer_.set(world_to_shadow_ * texture_to_world, world_to_shadow_);
 }
 }
