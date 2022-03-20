@@ -103,9 +103,10 @@ void StatisticsWidget::update(const painter::Statistics& statistics, const std::
         set_label_text_and_minimum_width(ui_.label_ray_count, to_string_digit_groups(statistics.ray_count));
 
         set_label_text_and_minimum_width(
-                ui_.label_pass_count, to_string_digit_groups(statistics.pass_number)
-                                              .append(":")
-                                              .append(progress_to_string(statistics.pass_progress)));
+                ui_.label_pass_count,
+                to_string_digit_groups(statistics.pass_number)
+                        .append(":")
+                        .append(progress_to_string(statistics.pass_progress)));
 
         if (difference.pixel_count != 0)
         {

@@ -58,17 +58,19 @@ vec3 shade(
         const vec3 f0 = shading_compute_metalness_f0(surface_color, metalness);
         const vec3 rho_ss = shading_compute_metalness_rho_ss(surface_color, metalness);
 
-        vec3 shade_color = 0.2
-                           * shading_ggx_diffuse(
-                                   roughness, f0, rho_ss, n, v, v, ggx_f1_albedo_cosine_roughness,
-                                   ggx_f1_albedo_cosine_weighted_average);
+        vec3 shade_color =
+                0.2
+                * shading_ggx_diffuse(
+                        roughness, f0, rho_ss, n, v, v, ggx_f1_albedo_cosine_roughness,
+                        ggx_f1_albedo_cosine_weighted_average);
 
         if (shadow_transparency > 0)
         {
-                shade_color += (shadow_transparency * 0.8)
-                               * shading_ggx_diffuse(
-                                       roughness, f0, rho_ss, n, v, l, ggx_f1_albedo_cosine_roughness,
-                                       ggx_f1_albedo_cosine_weighted_average);
+                shade_color +=
+                        (shadow_transparency * 0.8)
+                        * shading_ggx_diffuse(
+                                roughness, f0, rho_ss, n, v, l, ggx_f1_albedo_cosine_roughness,
+                                ggx_f1_albedo_cosine_weighted_average);
         }
 
         return lighting_color * shade_color + ambient * surface_color;

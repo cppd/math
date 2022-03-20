@@ -179,9 +179,10 @@ double voronoi_edge_radius(
 
         // here Voronoi vertices are not equal (if equal then they are inside cocone),
         // so it is possible to take a non-zero vector from a to b.
-        const Vector<N, double> a_to_b = facet.one_sided() ? facet.ortho()
-                                                           : (delaunay_objects[facet.delaunay(1)].voronoi_vertex()
-                                                              - delaunay_objects[facet.delaunay(0)].voronoi_vertex());
+        const Vector<N, double> a_to_b =
+                facet.one_sided() ? facet.ortho()
+                                  : (delaunay_objects[facet.delaunay(1)].voronoi_vertex()
+                                     - delaunay_objects[facet.delaunay(0)].voronoi_vertex());
 
         std::optional<double> max_distance = intersect_cocone_max_distance(positive_pole, pa, a_to_b);
         if (!max_distance)

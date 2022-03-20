@@ -164,8 +164,9 @@ handle::Pipeline create_graphics_pipeline(const GraphicsPipelineCreateInfo& info
         VkPipelineColorBlendAttachmentState color_blend_attachment_state = {};
         if (!info.color_blend)
         {
-                color_blend_attachment_state.colorWriteMask = VK_COLOR_COMPONENT_R_BIT | VK_COLOR_COMPONENT_G_BIT
-                                                              | VK_COLOR_COMPONENT_B_BIT | VK_COLOR_COMPONENT_A_BIT;
+                color_blend_attachment_state.colorWriteMask =
+                        VK_COLOR_COMPONENT_R_BIT | VK_COLOR_COMPONENT_G_BIT | VK_COLOR_COMPONENT_B_BIT
+                        | VK_COLOR_COMPONENT_A_BIT;
                 color_blend_attachment_state.blendEnable = VK_FALSE;
         }
         else

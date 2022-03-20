@@ -208,8 +208,9 @@ vulkan::handle::Pipeline Program::create_pipeline(
         info.primitive_topology = VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST;
 
         info.color_blend.emplace();
-        info.color_blend->colorWriteMask = VK_COLOR_COMPONENT_R_BIT | VK_COLOR_COMPONENT_G_BIT
-                                           | VK_COLOR_COMPONENT_B_BIT | VK_COLOR_COMPONENT_A_BIT;
+        info.color_blend->colorWriteMask =
+                VK_COLOR_COMPONENT_R_BIT | VK_COLOR_COMPONENT_G_BIT | VK_COLOR_COMPONENT_B_BIT
+                | VK_COLOR_COMPONENT_A_BIT;
         info.color_blend->blendEnable = VK_TRUE;
         info.color_blend->srcColorBlendFactor = VK_BLEND_FACTOR_SRC_ALPHA;
         info.color_blend->dstColorBlendFactor = VK_BLEND_FACTOR_ONE_MINUS_SRC_ALPHA;

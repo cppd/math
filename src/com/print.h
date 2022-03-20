@@ -36,8 +36,9 @@ namespace print_implementation
 template <unsigned DIGIT_GROUP_SIZE, typename T>
 void f(T v, int i, std::string& r, [[maybe_unused]] const char s)
 {
-        constexpr bool LONGLONG_LESS_I128 = Limits<long long>::max() < Limits<__int128>::max()
-                                            && Limits<long long>::lowest() > Limits<__int128>::lowest();
+        constexpr bool LONGLONG_LESS_I128 =
+                Limits<long long>::max() < Limits<__int128>::max()
+                && Limits<long long>::lowest() > Limits<__int128>::lowest();
 
         constexpr bool ULONGLONG_LESS_UI128 = Limits<unsigned long long>::max() < Limits<unsigned __int128>::max();
 
