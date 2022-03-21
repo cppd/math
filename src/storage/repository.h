@@ -33,15 +33,10 @@ namespace ns::storage
 class Repository final
 {
         template <std::size_t N>
-        struct Repositories
+        struct Repositories final
         {
-                std::unique_ptr<const MeshObjectRepository<N>> meshes;
-                std::unique_ptr<const VolumeObjectRepository<N>> volumes;
-                Repositories()
-                        : meshes(create_mesh_object_repository<N>()),
-                          volumes(create_volume_object_repository<N>())
-                {
-                }
+                std::unique_ptr<const MeshObjectRepository<N>> meshes = create_mesh_object_repository<N>();
+                std::unique_ptr<const VolumeObjectRepository<N>> volumes = create_volume_object_repository<N>();
         };
 
         using Tuple = Sequence<settings::Dimensions, std::tuple, Repositories>;
@@ -49,7 +44,7 @@ class Repository final
         Tuple data_;
 
 public:
-        struct ObjectNames
+        struct ObjectNames final
         {
                 int dimension;
                 std::vector<std::string> point_mesh_names;
