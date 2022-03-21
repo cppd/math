@@ -94,7 +94,8 @@ class SphereMesh final
 
 public:
         SphereMesh(const unsigned facet_min_count, ProgressRatio* const progress)
-                : sphere_(facet_min_count), bvh_(sphere_.bvh_objects(), progress)
+                : sphere_(facet_min_count),
+                  bvh_(sphere_.bvh_objects(), progress)
         {
         }
 

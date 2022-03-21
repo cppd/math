@@ -159,7 +159,9 @@ public:
         Pixels(const std::array<int, N>& screen_size,
                const std::type_identity_t<Color>& background,
                Notifier<N>* const notifier)
-                : screen_size_(screen_size), background_(background.max_n(0)), notifier_(notifier)
+                : screen_size_(screen_size),
+                  background_(background.max_n(0)),
+                  notifier_(notifier)
         {
                 if (!background.is_finite())
                 {

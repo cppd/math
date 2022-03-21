@@ -83,7 +83,8 @@ public:
         }
 
         SurfacePoint(const Surface<N, T, Color>* const surface, const Ray<N, T>& ray, const T& distance)
-                : surface_(surface), point_(surface->point(ray, distance))
+                : surface_(surface),
+                  point_(surface->point(ray, distance))
         {
         }
 

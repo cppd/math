@@ -347,7 +347,8 @@ public:
         Impl(const unsigned thread_count,
              const std::optional<unsigned>& permanent_thread_id,
              QStatusBar* const status_bar)
-                : permanent_thread_id_(permanent_thread_id), status_bar_(status_bar)
+                : permanent_thread_id_(permanent_thread_id),
+                  status_bar_(status_bar)
         {
                 ASSERT(thread_count > 0);
 

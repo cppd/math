@@ -123,7 +123,8 @@ class SurfaceImpl final : public Surface<N, T, Color>
 
 public:
         SurfaceImpl(const MeshData<N, T, Color>* const mesh_data, const MeshFacet<N, T>* const facet)
-                : mesh_data_(mesh_data), facet_(facet)
+                : mesh_data_(mesh_data),
+                  facet_(facet)
         {
         }
 };

@@ -57,7 +57,8 @@ class CommandPool final
 
 public:
         CommandPool(const VkDevice device, const VkCommandPoolCreateInfo& create_info)
-                : command_pool_(device, create_info), family_index_(create_info.queueFamilyIndex)
+                : command_pool_(device, create_info),
+                  family_index_(create_info.queueFamilyIndex)
         {
         }
 
@@ -81,7 +82,9 @@ class Buffer final
 
 public:
         Buffer(const VkDevice device, const VkBufferCreateInfo& create_info)
-                : buffer_(device, create_info), size_(create_info.size), usage_(create_info.usage)
+                : buffer_(device, create_info),
+                  size_(create_info.size),
+                  usage_(create_info.usage)
         {
         }
 

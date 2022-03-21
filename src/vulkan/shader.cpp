@@ -27,7 +27,8 @@ constexpr const char* ENTRY_POINT_NAME = "main";
 }
 
 Shader::Shader(const VkDevice device, const std::span<const std::uint32_t>& code, const VkShaderStageFlagBits stage)
-        : module_(device, code), stage_(stage)
+        : module_(device, code),
+          stage_(stage)
 {
         ASSERT(stage == VK_SHADER_STAGE_VERTEX_BIT || stage == VK_SHADER_STAGE_TESSELLATION_CONTROL_BIT
                || stage == VK_SHADER_STAGE_TESSELLATION_EVALUATION_BIT || stage == VK_SHADER_STAGE_GEOMETRY_BIT

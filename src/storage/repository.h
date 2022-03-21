@@ -38,7 +38,8 @@ class Repository final
                 std::unique_ptr<const MeshObjectRepository<N>> meshes;
                 std::unique_ptr<const VolumeObjectRepository<N>> volumes;
                 Repositories()
-                        : meshes(create_mesh_object_repository<N>()), volumes(create_volume_object_repository<N>())
+                        : meshes(create_mesh_object_repository<N>()),
+                          volumes(create_volume_object_repository<N>())
                 {
                 }
         };

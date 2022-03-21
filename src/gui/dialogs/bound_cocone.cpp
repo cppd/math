@@ -64,7 +64,8 @@ BoundCoconeParametersDialog::BoundCoconeParametersDialog(
         const int minimum_alpha_exponent,
         const BoundCoconeParameters& input,
         std::optional<BoundCoconeParameters>& parameters)
-        : QDialog(parent_for_dialog()), parameters_(parameters)
+        : QDialog(parent_for_dialog()),
+          parameters_(parameters)
 {
         ui_.setupUi(this);
         setWindowTitle("BoundCocone Parameters");

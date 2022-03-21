@@ -45,7 +45,8 @@ struct Insert final
         std::shared_ptr<MeshObject<N>> object;
         std::optional<ObjectId> parent_object_id;
         Insert(std::shared_ptr<MeshObject<N>>&& object, const std::optional<ObjectId>& parent_object_id)
-                : object(std::move(object)), parent_object_id(parent_object_id)
+                : object(std::move(object)),
+                  parent_object_id(parent_object_id)
         {
         }
 };
@@ -165,7 +166,9 @@ public:
         }
 
         MeshObject(std::unique_ptr<const Mesh<N>>&& mesh, const Matrix<N + 1, N + 1, double>& matrix, std::string name)
-                : mesh_(std::move(mesh)), name_(std::move(name)), matrix_(matrix)
+                : mesh_(std::move(mesh)),
+                  name_(std::move(name)),
+                  matrix_(matrix)
         {
                 ASSERT(mesh_);
         }

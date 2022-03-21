@@ -54,7 +54,9 @@ struct BvhBuildNode final
                 const BoundingBox<N, T>& bounds,
                 const unsigned object_index_offset,
                 const unsigned object_index_count)
-                : bounds(bounds), object_index_offset(object_index_offset), object_index_count(object_index_count)
+                : bounds(bounds),
+                  object_index_offset(object_index_offset),
+                  object_index_count(object_index_count)
         {
                 ASSERT(object_index_count > 0);
         }
@@ -65,7 +67,10 @@ struct BvhBuildNode final
                 const unsigned axis,
                 const unsigned child_0,
                 const unsigned child_1)
-                : bounds(bounds), children{child_0, child_1}, axis(axis), object_index_count(0)
+                : bounds(bounds),
+                  children{child_0, child_1},
+                  axis(axis),
+                  object_index_count(0)
         {
         }
 };
@@ -90,7 +95,9 @@ class BvhBuild final
                 Task(const std::span<BvhObject<N, T>>& objects,
                      const BoundingBox<N, T>& bounds,
                      BvhBuildNode<N, T>* const node)
-                        : objects(objects), bounds(bounds), node(node)
+                        : objects(objects),
+                          bounds(bounds),
+                          node(node)
                 {
                 }
         };

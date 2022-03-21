@@ -61,7 +61,8 @@ public:
                 const bool has_texcoords,
                 const std::array<int, N>& texcoord_indices,
                 const int material)
-                : simplex_(vertices), material_(material)
+                : simplex_(vertices),
+                  material_(material)
         {
                 ASSERT((has_normals && all_non_negative(normal_indices)) || !has_normals);
                 ASSERT((has_texcoords && all_non_negative(texcoord_indices)) || !has_texcoords);

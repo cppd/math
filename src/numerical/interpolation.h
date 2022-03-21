@@ -58,7 +58,10 @@ class Interpolation
 
 public:
         constexpr Interpolation(const std::array<int, N>& size, const std::span<const DataType>& data)
-                : global_index_(size), size_(size), max_(max(size)), data_(data)
+                : global_index_(size),
+                  size_(size),
+                  max_(max(size)),
+                  data_(data)
         {
                 if (!std::all_of(
                             size_.cbegin(), size_.cend(),

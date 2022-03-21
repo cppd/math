@@ -86,7 +86,8 @@ class Instance::Impl final
         handle::DebugUtilsMessengerEXT messenger_;
 
         Impl(const std::unordered_set<std::string>& layers, const std::unordered_set<std::string>& extensions)
-                : instance_(create_instance(layers, extensions)), instance_extension_functions_(instance_)
+                : instance_(create_instance(layers, extensions)),
+                  instance_extension_functions_(instance_)
         {
                 if (extensions.contains(VK_EXT_DEBUG_UTILS_EXTENSION_NAME))
                 {

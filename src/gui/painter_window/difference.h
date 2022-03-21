@@ -33,7 +33,9 @@ class Difference final
                 Clock::time_point time;
 
                 template <typename V>
-                Point(V&& data, const Clock::time_point& time) : data(std::forward<V>(data)), time(time)
+                Point(V&& data, const Clock::time_point& time)
+                        : data(std::forward<V>(data)),
+                          time(time)
                 {
                 }
         };

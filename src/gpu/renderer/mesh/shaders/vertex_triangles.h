@@ -31,7 +31,9 @@ struct TrianglesVertex
         Vector2f texture_coordinates;
 
         constexpr TrianglesVertex(const Vector3f& position, const Vector3f& normal, const Vector2f& texture_coordinates)
-                : position(position), normal(normal), texture_coordinates(texture_coordinates)
+                : position(position),
+                  normal(normal),
+                  texture_coordinates(texture_coordinates)
         {
         }
 

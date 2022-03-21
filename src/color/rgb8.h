@@ -31,7 +31,9 @@ class RGB8 final
 
 public:
         constexpr RGB8(const unsigned char red, const unsigned char green, const unsigned char blue)
-                : red_(red), green_(green), blue_(blue)
+                : red_(red),
+                  green_(green),
+                  blue_(blue)
         {
         }
 

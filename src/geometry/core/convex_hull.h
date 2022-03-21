@@ -34,7 +34,8 @@ class ConvexHullFacet final
 
 public:
         ConvexHullFacet(const std::array<int, N>& indices, const Vector<N, double>& ortho)
-                : indices_(indices), ortho_(ortho)
+                : indices_(indices),
+                  ortho_(ortho)
         {
         }
         const std::array<int, N>& vertices() const
@@ -55,7 +56,8 @@ class DelaunaySimplex final
 
 public:
         DelaunaySimplex(const std::array<int, N + 1>& indices, const std::array<Vector<N, double>, N + 1>& orthos)
-                : indices_(indices), orthos_(orthos)
+                : indices_(indices),
+                  orthos_(orthos)
         {
         }
         const std::array<int, N + 1>& vertices() const

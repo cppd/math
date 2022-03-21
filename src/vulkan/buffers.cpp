@@ -194,7 +194,9 @@ VkDeviceAddress BufferWithMemory::device_address() const
 //
 
 BufferMapper::BufferMapper(const BufferWithMemory& buffer, const VkDeviceSize offset, const VkDeviceSize size)
-        : device_(buffer.device_memory_.device()), device_memory_(buffer.device_memory_), size_(size)
+        : device_(buffer.device_memory_.device()),
+          device_memory_(buffer.device_memory_),
+          size_(size)
 {
         ASSERT(buffer.host_visible());
         ASSERT(size_ > 0 && offset + size_ <= buffer.buffer().size());
@@ -203,7 +205,9 @@ BufferMapper::BufferMapper(const BufferWithMemory& buffer, const VkDeviceSize of
 }
 
 BufferMapper::BufferMapper(const BufferWithMemory& buffer)
-        : device_(buffer.device_memory_.device()), device_memory_(buffer.device_memory_), size_(buffer.buffer().size())
+        : device_(buffer.device_memory_.device()),
+          device_memory_(buffer.device_memory_),
+          size_(buffer.buffer().size())
 {
         ASSERT(buffer.host_visible());
 

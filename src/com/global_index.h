@@ -98,7 +98,8 @@ public:
 
         template <typename T>
         explicit constexpr GlobalIndex(const T& sizes)
-                : strides_(compute_strides(sizes)), count_(strides_[N - 1] * sizes[N - 1])
+                : strides_(compute_strides(sizes)),
+                  count_(strides_[N - 1] * sizes[N - 1])
         {
         }
 

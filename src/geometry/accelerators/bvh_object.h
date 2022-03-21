@@ -31,7 +31,10 @@ class BvhObject final
 
 public:
         BvhObject(const BoundingBox<N, T>& bounds, const T intersection_cost, const unsigned index)
-                : bounds_(bounds), center_(bounds.center()), intersection_cost_(intersection_cost), index_(index)
+                : bounds_(bounds),
+                  center_(bounds.center()),
+                  intersection_cost_(intersection_cost),
+                  index_(index)
         {
         }
 

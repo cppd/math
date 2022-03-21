@@ -56,7 +56,9 @@ struct StatisticsWidget::Counters final
         long long sample_count;
 
         Counters(const long long pixel_count, const long long ray_count, const long long sample_count)
-                : pixel_count(pixel_count), ray_count(ray_count), sample_count(sample_count)
+                : pixel_count(pixel_count),
+                  ray_count(ray_count),
+                  sample_count(sample_count)
         {
         }
 

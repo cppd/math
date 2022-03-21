@@ -45,7 +45,8 @@ struct Insert final
         std::shared_ptr<VolumeObject<N>> object;
         std::optional<ObjectId> parent_object_id;
         Insert(std::shared_ptr<VolumeObject<N>>&& object, const std::optional<ObjectId>& parent_object_id)
-                : object(std::move(object)), parent_object_id(parent_object_id)
+                : object(std::move(object)),
+                  parent_object_id(parent_object_id)
         {
         }
 };
@@ -177,7 +178,9 @@ public:
                 std::unique_ptr<const Volume<N>>&& volume,
                 const Matrix<N + 1, N + 1, double>& matrix,
                 std::string name)
-                : volume_(std::move(volume)), name_(std::move(name)), matrix_(matrix)
+                : volume_(std::move(volume)),
+                  name_(std::move(name)),
+                  matrix_(matrix)
         {
                 ASSERT(volume_);
         }

@@ -116,7 +116,9 @@ ViewImageDialog::ViewImageDialog(
         const std::string& info,
         const std::string& file_name,
         std::optional<ViewImageParameters>& parameters)
-        : QDialog(parent_for_dialog()), file_name_(file_name), parameters_(parameters)
+        : QDialog(parent_for_dialog()),
+          file_name_(file_name),
+          parameters_(parameters)
 {
         ui_.setupUi(this);
         setWindowTitle(QString::fromStdString(title));

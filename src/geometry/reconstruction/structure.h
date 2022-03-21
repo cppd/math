@@ -35,7 +35,9 @@ struct ManifoldVertex final
         std::vector<int> cocone_neighbors;
 
         ManifoldVertex(const Vector<N, double>& positive_norm, const double height, const double radius)
-                : positive_norm(positive_norm), height(height), radius(radius)
+                : positive_norm(positive_norm),
+                  height(height),
+                  radius(radius)
         {
         }
 };

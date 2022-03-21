@@ -62,7 +62,8 @@ class RendererObject
 
 public:
         RendererObject(StorageMesh* const mesh_storage, StorageVolume* const volume_storage)
-                : mesh_storage_(mesh_storage), volume_storage_(volume_storage)
+                : mesh_storage_(mesh_storage),
+                  volume_storage_(volume_storage)
         {
         }
 

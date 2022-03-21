@@ -35,7 +35,9 @@ PainterImageDialog::PainterImageDialog(
         const PainterImagePathType path_type,
         const bool use_all,
         std::optional<PainterImageParameters>& parameters)
-        : QDialog(parent_for_dialog()), path_type_(path_type), parameters_(parameters)
+        : QDialog(parent_for_dialog()),
+          path_type_(path_type),
+          parameters_(parameters)
 {
         ui_.setupUi(this);
         setWindowTitle(QString::fromStdString(title));

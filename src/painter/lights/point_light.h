@@ -46,7 +46,9 @@ public:
                 const Vector<N, T>& location,
                 const Color& color,
                 const std::type_identity_t<T>& unit_intensity_distance)
-                : location_(location), color_(color), coef_(power<N - 1>(unit_intensity_distance))
+                : location_(location),
+                  color_(color),
+                  coef_(power<N - 1>(unit_intensity_distance))
         {
                 if (!(unit_intensity_distance > 0))
                 {

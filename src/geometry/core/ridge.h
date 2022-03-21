@@ -93,7 +93,8 @@ public:
         }
 
         RidgeDataElement(const Facet* const facet, const int external_vertex_index)
-                : facet_(facet), external_vertex_index_(external_vertex_index)
+                : facet_(facet),
+                  external_vertex_index_(external_vertex_index)
         {
         }
 
@@ -128,7 +129,8 @@ class RidgeDataC
 
 public:
         RidgeDataC(const Facet* const facet, const int external_point_index)
-                : data_{{{facet, external_point_index}, {}}}, size_(1)
+                : data_{{{facet, external_point_index}, {}}},
+                  size_(1)
         {
         }
 

@@ -70,7 +70,9 @@ class UnionFind
 
 public:
         explicit UnionFind(std::type_identity_t<T> count)
-                : parent_(count), component_size_(count), component_count_(count)
+                : parent_(count),
+                  component_size_(count),
+                  component_count_(count)
         {
                 std::iota(parent_.begin(), parent_.end(), 0);
                 std::fill(component_size_.begin(), component_size_.end(), 1);

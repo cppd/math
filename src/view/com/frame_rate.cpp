@@ -37,7 +37,8 @@ constexpr const char* TEXT = "FPS: ";
 }
 
 FrameRate::FrameRate(const double ppi)
-        : frequency_(INTERVAL_LENGTH, SAMPLE_COUNT), text_size_(points_to_pixels(TEXT_SIZE_IN_POINTS, ppi))
+        : frequency_(INTERVAL_LENGTH, SAMPLE_COUNT),
+          text_size_(points_to_pixels(TEXT_SIZE_IN_POINTS, ppi))
 {
         text_data_.step_y = points_to_pixels(TEXT_STEP_Y_IN_POINTS, ppi);
         text_data_.start_x = points_to_pixels(TEXT_X_IN_POINTS, ppi);

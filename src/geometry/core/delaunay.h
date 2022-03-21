@@ -45,7 +45,9 @@ public:
                 const Vector<N, double>& ortho,
                 const int delaunay_0,
                 const int delaunay_1)
-                : vertices_(vertices), ortho_(ortho), delaunay_{delaunay_0, delaunay_1}
+                : vertices_(vertices),
+                  ortho_(ortho),
+                  delaunay_{delaunay_0, delaunay_1}
         {
         }
         bool one_sided() const
@@ -75,7 +77,8 @@ class DelaunayObject final
 
 public:
         DelaunayObject(const std::array<int, N + 1>& vertices, const Vector<N, double>& voronoi_vertex)
-                : vertices_(vertices), voronoi_vertex_(voronoi_vertex)
+                : vertices_(vertices),
+                  voronoi_vertex_(voronoi_vertex)
         {
         }
         const std::array<int, N + 1>& vertices() const

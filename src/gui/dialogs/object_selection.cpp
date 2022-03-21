@@ -54,7 +54,8 @@ DialogParameters& dialog_parameters()
 ObjectSelectionParametersDialog::ObjectSelectionParametersDialog(
         const ObjectSelectionParameters& input,
         std::optional<ObjectSelectionParameters>& parameters)
-        : QDialog(parent_for_dialog()), parameters_(parameters)
+        : QDialog(parent_for_dialog()),
+          parameters_(parameters)
 {
         ui_.setupUi(this);
         setWindowTitle("Object Selection");

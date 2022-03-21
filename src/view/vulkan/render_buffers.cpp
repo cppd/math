@@ -183,7 +183,9 @@ Impl::Impl(
         const std::vector<std::uint32_t>& family_indices,
         const vulkan::Device& device,
         const int required_minimum_sample_count)
-        : format_(color_format), width_(width), height_(height)
+        : format_(color_format),
+          width_(width),
+          height_(height)
 {
         if (buffer_count < 1)
         {

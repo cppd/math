@@ -39,7 +39,8 @@ public:
         static T intersection_cost();
 
         HyperplaneBall(const Vector<N, T>& center, const Vector<N, T>& normal, const T& radius)
-                : center_(center), radius_squared_(square(radius))
+                : center_(center),
+                  radius_squared_(square(radius))
         {
                 plane_.n = normal.normalized();
                 if (!is_finite(plane_.n))

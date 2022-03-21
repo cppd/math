@@ -448,7 +448,8 @@ void CommandBuffer::move(CommandBuffer* const from) noexcept
 }
 
 CommandBuffer::CommandBuffer(const VkDevice device, const VkCommandPool command_pool)
-        : device_(device), command_pool_(command_pool)
+        : device_(device),
+          command_pool_(command_pool)
 {
         VkCommandBufferAllocateInfo allocate_info = {};
         allocate_info.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO;
@@ -481,7 +482,9 @@ void CommandBuffers::move(CommandBuffers* const from) noexcept
 }
 
 CommandBuffers::CommandBuffers(const VkDevice device, const VkCommandPool command_pool, const std::uint32_t count)
-        : device_(device), command_pool_(command_pool), command_buffers_(count)
+        : device_(device),
+          command_pool_(command_pool),
+          command_buffers_(count)
 {
         VkCommandBufferAllocateInfo allocate_info = {};
         allocate_info.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO;
@@ -566,7 +569,8 @@ DescriptorSet::DescriptorSet(
         const VkDevice device,
         const VkDescriptorPool descriptor_pool,
         const VkDescriptorSetLayout descriptor_set_layout)
-        : device_(device), descriptor_pool_(descriptor_pool)
+        : device_(device),
+          descriptor_pool_(descriptor_pool)
 {
         ASSERT(device != VK_NULL_HANDLE);
         ASSERT(descriptor_pool != VK_NULL_HANDLE);
@@ -607,7 +611,9 @@ DescriptorSets::DescriptorSets(
         const VkDevice device,
         const VkDescriptorPool descriptor_pool,
         const std::vector<VkDescriptorSetLayout>& descriptor_set_layouts)
-        : device_(device), descriptor_pool_(descriptor_pool), descriptor_sets_(descriptor_set_layouts.size())
+        : device_(device),
+          descriptor_pool_(descriptor_pool),
+          descriptor_sets_(descriptor_set_layouts.size())
 {
         ASSERT(device != VK_NULL_HANDLE);
         ASSERT(descriptor_pool != VK_NULL_HANDLE);

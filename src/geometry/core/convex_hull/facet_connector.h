@@ -33,7 +33,8 @@ class FacetConnector final
 
 public:
         explicit FacetConnector(const std::size_t expected_ridge_count)
-                : ridge_map_(expected_ridge_count), expected_ridge_count_(expected_ridge_count)
+                : ridge_map_(expected_ridge_count),
+                  expected_ridge_count_(expected_ridge_count)
         {
         }
 

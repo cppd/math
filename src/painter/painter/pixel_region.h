@@ -61,7 +61,8 @@ class PixelRegion final
 
 public:
         PixelRegion(const std::array<int, N>& size, const int integer_radius)
-                : max_(max_values_for_size(size)), integer_radius_(integer_radius)
+                : max_(max_values_for_size(size)),
+                  integer_radius_(integer_radius)
         {
         }
 

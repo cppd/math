@@ -112,7 +112,8 @@ class ProgressRatio::Impl final : public ProgressRatioControl
 
 public:
         Impl(ProgressRatios* const ratios, std::string permanent_text)
-                : ratios_(ratios), permanent_text_(std::move(permanent_text))
+                : ratios_(ratios),
+                  permanent_text_(std::move(permanent_text))
         {
                 set_undefined();
 

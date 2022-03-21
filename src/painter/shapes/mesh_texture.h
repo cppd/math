@@ -60,7 +60,8 @@ class MeshTexture
 
 public:
         explicit MeshTexture(const image::Image<N>& image)
-                : pixels_(to_rgb32(image)), interpolation_(image.size, pixels_)
+                : pixels_(to_rgb32(image)),
+                  interpolation_(image.size, pixels_)
         {
         }
 

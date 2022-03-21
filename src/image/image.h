@@ -42,7 +42,9 @@ struct ImageView
         std::span<const std::byte> pixels;
 
         explicit ImageView(const Image<N>& image)
-                : size(image.size), color_format(image.color_format), pixels(image.pixels)
+                : size(image.size),
+                  color_format(image.color_format),
+                  pixels(image.pixels)
         {
         }
 
@@ -50,7 +52,9 @@ struct ImageView
                 const std::array<int, N>& size,
                 const ColorFormat color_format,
                 const std::span<const std::byte>& pixels)
-                : size(size), color_format(color_format), pixels(pixels)
+                : size(size),
+                  color_format(color_format),
+                  pixels(pixels)
         {
         }
 };

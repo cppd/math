@@ -73,7 +73,8 @@ struct PaintData final
         bool smooth_normals;
 
         PaintData(const Scene<N, T, Color>* const scene, const bool smooth_normals)
-                : scene(scene), smooth_normals(smooth_normals)
+                : scene(scene),
+                  smooth_normals(smooth_normals)
         {
                 ASSERT(scene);
         }
@@ -123,7 +124,8 @@ class ThreadBusy final
 
 public:
         ThreadBusy(Notifier<N>* const notifier, const unsigned thread, const std::array<int, N>& pixel)
-                : notifier_(notifier), thread_(thread)
+                : notifier_(notifier),
+                  thread_(thread)
         {
                 notifier_->thread_busy(thread_, pixel);
         }

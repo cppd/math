@@ -189,7 +189,9 @@ class RendererView final
 
 public:
         RendererView(const bool shadow_mapping, DrawingBuffer* const drawing_buffer, RendererViewEvents* const events)
-                : shadow_mapping_(shadow_mapping), drawing_buffer_(drawing_buffer), events_(events)
+                : shadow_mapping_(shadow_mapping),
+                  drawing_buffer_(drawing_buffer),
+                  events_(events)
         {
         }
 

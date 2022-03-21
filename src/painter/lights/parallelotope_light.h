@@ -50,7 +50,9 @@ public:
                 const std::array<Vector<N, T>, N - 1>& vectors,
                 const Vector<N, T>& direction,
                 const Color& color)
-                : parallelotope_(org, vectors), color_(color), pdf_(sampling::uniform_in_parallelotope_pdf(vectors))
+                : parallelotope_(org, vectors),
+                  color_(color),
+                  pdf_(sampling::uniform_in_parallelotope_pdf(vectors))
         {
                 if (!std::all_of(
                             vectors.cbegin(), vectors.cend(),

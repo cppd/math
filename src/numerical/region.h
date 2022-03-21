@@ -39,7 +39,9 @@ public:
         }
 
         Region(const Vector<N, T>& offset, const Vector<N, T>& extent)
-                : offset0_(offset), extent_(extent), offset1_(offset0_ + extent_)
+                : offset0_(offset),
+                  extent_(extent),
+                  offset1_(offset0_ + extent_)
         {
         }
 

@@ -356,7 +356,9 @@ public:
         using DataType = T;
 
         explicit ShapeOverlap(const Shape* const shape)
-                : shape_(shape), vertices_(shape->vertices()), constraints_(shape_->constraints())
+                : shape_(shape),
+                  vertices_(shape->vertices()),
+                  constraints_(shape_->constraints())
         {
                 // min_ = find_min_vector(vertices_);
         }
@@ -401,7 +403,9 @@ public:
         using DataType = T;
 
         explicit ShapeOverlap(const Shape* const shape)
-                : shape_(shape), vertices_(shape->vertices()), edges_(shape->edges())
+                : shape_(shape),
+                  vertices_(shape->vertices()),
+                  edges_(shape->edges())
         {
         }
 

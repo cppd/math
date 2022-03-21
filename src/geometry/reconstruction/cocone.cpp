@@ -274,7 +274,8 @@ public:
                 const std::vector<Vector<N, float>>& source_points,
                 const bool cocone_only,
                 ProgressRatio* const progress)
-                : cocone_only_(cocone_only), source_points_(source_points)
+                : cocone_only_(cocone_only),
+                  source_points_(source_points)
         {
                 if (source_points.size() < N + 2)
                 {

@@ -110,7 +110,8 @@ template <std::size_t N, typename T>
 HyperplaneParallelotope<N, T>::HyperplaneParallelotope(
         const Vector<N, T>& org,
         const std::array<Vector<N, T>, N - 1>& vectors)
-        : org_(org), vectors_(vectors)
+        : org_(org),
+          vectors_(vectors)
 {
         plane_.n = numerical::orthogonal_complement(vectors).normalized();
         if (!is_finite(plane_.n))

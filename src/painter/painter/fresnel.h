@@ -59,7 +59,8 @@ struct FresnelDielectric
         T reflected;
         T transmitted;
         FresnelDielectric(const std::type_identity_t<T>& reflected, const std::type_identity_t<T>& transmitted)
-                : reflected(reflected), transmitted(transmitted)
+                : reflected(reflected),
+                  transmitted(transmitted)
         {
         }
 };

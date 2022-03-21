@@ -35,7 +35,9 @@ class TestSelectionParametersDialog::Items final
                 std::string lower_text;
 
                 Item(std::string&& name, QListWidgetItem* const item)
-                        : name(std::move(name)), item(item), lower_text(item->text().toLower().toStdString())
+                        : name(std::move(name)),
+                          item(item),
+                          lower_text(item->text().toLower().toStdString())
                 {
                 }
         };
@@ -149,7 +151,8 @@ TestSelectionParametersDialog::TestSelectionParametersDialog(
         const std::string_view& title,
         std::vector<std::string> test_names,
         std::optional<TestSelectionParameters>& parameters)
-        : QDialog(parent_for_dialog()), parameters_(parameters)
+        : QDialog(parent_for_dialog()),
+          parameters_(parameters)
 {
         ui_.setupUi(this);
 

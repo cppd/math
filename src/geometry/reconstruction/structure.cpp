@@ -43,7 +43,8 @@ struct VertexConnections final
                 int facet_index;
                 int facet_vertex_index;
                 Facet(int facet_index, int facet_vertex_index)
-                        : facet_index(facet_index), facet_vertex_index(facet_vertex_index)
+                        : facet_index(facet_index),
+                          facet_vertex_index(facet_vertex_index)
                 {
                 }
         };

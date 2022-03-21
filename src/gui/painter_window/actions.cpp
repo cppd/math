@@ -49,7 +49,8 @@ Actions::Actions(
         QMenu* const menu,
         QStatusBar* const status_bar,
         std::function<long long()> slice_number)
-        : pixels_(pixels), worker_threads_(create_worker_threads(THREAD_ID_COUNT, std::nullopt, status_bar))
+        : pixels_(pixels),
+          worker_threads_(create_worker_threads(THREAD_ID_COUNT, std::nullopt, status_bar))
 {
         ASSERT(slice_number);
 
