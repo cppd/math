@@ -41,7 +41,7 @@ void check_volume_size(const unsigned size)
                 error("Volume size is too small");
         }
 
-        double volume_size = std::pow(size, N);
+        const double volume_size = std::pow(size, N);
 
         if (volume_size > MAXIMUM_VOLUME_SIZE)
         {
@@ -85,13 +85,17 @@ void image_coordinates(const std::array<int, N>& size, const F& f)
 }
 
 template <std::size_t N>
-void init_volume(const std::array<int, N>& size, const image::ColorFormat color_format, volume::Volume<N>* const volume)
+volume::Volume<N> create_volume(const std::array<int, N>& size, const image::ColorFormat color_format)
 {
-        volume->image.size = size;
-        volume->image.color_format = color_format;
-        volume->image.pixels.resize(
-                image::format_pixel_size_in_bytes(color_format) * multiply_all<long long>(volume->image.size));
-        volume->matrix = volume::matrix_for_image_size(size);
+        volume::Volume<N> volume;
+
+        volume.image.size = size;
+        volume.image.color_format = color_format;
+        volume.image.pixels.resize(
+                image::format_pixel_size_in_bytes(color_format) * multiply_all<long long>(volume.image.size));
+        volume.matrix = volume::matrix_for_image_size(size);
+
+        return volume;
 }
 
 template <typename I, typename F>
@@ -115,14 +119,13 @@ std::unique_ptr<volume::Volume<N>> scalar_cube(const unsigned size)
 
         check_volume_size<N>(size);
 
-        volume::Volume<N> volume;
-
         std::array<int, N> sizes;
         for (unsigned i = 0; i < N; ++i)
         {
                 sizes[i] = size;
         }
-        init_volume(sizes, COLOR_FORMAT, &volume);
+
+        volume::Volume<N> volume = create_volume(sizes, COLOR_FORMAT);
 
         std::byte* ptr = volume.image.pixels.data();
 
@@ -168,15 +171,14 @@ std::unique_ptr<volume::Volume<N>> scalar_ellipsoid(const unsigned size)
                 error("Ellipsiod size is too small");
         }
 
-        volume::Volume<N> volume;
-
         std::array<int, N> sizes;
         sizes[0] = size;
         for (unsigned i = 1; i < N; ++i)
         {
                 sizes[i] = size / 2;
         }
-        init_volume(sizes, COLOR_FORMAT, &volume);
+
+        volume::Volume<N> volume = create_volume(sizes, COLOR_FORMAT);
 
         std::byte* ptr = volume.image.pixels.data();
 
@@ -206,14 +208,13 @@ std::unique_ptr<volume::Volume<N>> color_cube(const unsigned size)
 
         check_volume_size<N>(size);
 
-        volume::Volume<N> volume;
-
         std::array<int, N> sizes;
         for (unsigned i = 0; i < N; ++i)
         {
                 sizes[i] = size;
         }
-        init_volume(sizes, COLOR_FORMAT, &volume);
+
+        volume::Volume<N> volume = create_volume(sizes, COLOR_FORMAT);
 
         std::array<std::uint8_t, 4> color;
         std::uint8_t alpha = std::max(std::uint8_t(1), float_to_uint<std::uint8_t>(1.0f / size));
