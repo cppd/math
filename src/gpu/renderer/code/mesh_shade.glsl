@@ -54,13 +54,24 @@ vec3 mesh_shade(
         const vec3 v = drawing.direction_to_camera;
         const vec3 l = drawing.direction_to_light;
 
-        const vec3 color =
-                drawing.show_shadow
-                        ? shade(surface_color, metalness, roughness, n, v, l, ggx_f1_albedo_cosine_roughness,
-                                ggx_f1_albedo_cosine_weighted_average, drawing.lighting_color, ambient,
-                                mesh_shadow_transparency(world_position))
-                        : shade(surface_color, metalness, roughness, n, v, l, ggx_f1_albedo_cosine_roughness,
-                                ggx_f1_albedo_cosine_weighted_average, drawing.lighting_color, ambient);
+        vec3 color;
+
+        if (drawing.show_shadow)
+        {
+                const float transparency = mesh_shadow_transparency(world_position);
+
+                const Lighting lighting =
+                        shade(surface_color, metalness, roughness, n, v, l, ggx_f1_albedo_cosine_roughness,
+                              ggx_f1_albedo_cosine_weighted_average, drawing.lighting_color, ambient, transparency);
+
+                color = lighting.front + lighting.side;
+        }
+        else
+        {
+                color =
+                        shade(surface_color, metalness, roughness, n, v, l, ggx_f1_albedo_cosine_roughness,
+                              ggx_f1_albedo_cosine_weighted_average, drawing.lighting_color, ambient);
+        }
 
         if (edge_factor >= 0)
         {

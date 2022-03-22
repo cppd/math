@@ -42,7 +42,13 @@ vec3 shade(
         return lighting_color * shade_color + ambient * surface_color;
 }
 
-vec3 shade(
+struct Lighting
+{
+        vec3 front;
+        vec3 side;
+};
+
+Lighting shade(
         const vec3 surface_color,
         const float metalness,
         const float roughness,
@@ -58,22 +64,34 @@ vec3 shade(
         const vec3 f0 = shading_compute_metalness_f0(surface_color, metalness);
         const vec3 rho_ss = shading_compute_metalness_rho_ss(surface_color, metalness);
 
-        vec3 shade_color =
-                0.2
-                * shading_ggx_diffuse(
-                        roughness, f0, rho_ss, n, v, v, ggx_f1_albedo_cosine_roughness,
-                        ggx_f1_albedo_cosine_weighted_average);
+        Lighting res;
+
+        {
+                const vec3 front_lighting =
+                        lighting_color
+                        * shading_ggx_diffuse(
+                                roughness, f0, rho_ss, n, v, v, ggx_f1_albedo_cosine_roughness,
+                                ggx_f1_albedo_cosine_weighted_average);
+
+                res.front = 0.2 * front_lighting + ambient * surface_color;
+        }
 
         if (shadow_transparency > 0)
         {
-                shade_color +=
-                        (shadow_transparency * 0.8)
+                const vec3 side_lighting =
+                        lighting_color
                         * shading_ggx_diffuse(
                                 roughness, f0, rho_ss, n, v, l, ggx_f1_albedo_cosine_roughness,
                                 ggx_f1_albedo_cosine_weighted_average);
+
+                res.side = (shadow_transparency * 0.8) * side_lighting;
+        }
+        else
+        {
+                res.side = vec3(0);
         }
 
-        return lighting_color * shade_color + ambient * surface_color;
+        return res;
 }
 
 #endif

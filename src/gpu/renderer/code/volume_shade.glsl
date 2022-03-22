@@ -66,14 +66,24 @@ vec4 isosurface_color(const vec3 texture_position)
         const vec3 world_normal = normalize(coordinates.gradient_to_world_matrix * volume_gradient(texture_position));
         const vec3 n = faceforward(world_normal, -v, world_normal);
 
-        const vec3 color =
-                drawing.show_shadow
-                        ? shade(volume.color, volume.metalness, volume.roughness, n, v, l,
-                                ggx_f1_albedo_cosine_roughness, ggx_f1_albedo_cosine_weighted_average,
-                                drawing.lighting_color, volume.ambient, shadow_transparency(texture_position))
-                        : shade(volume.color, volume.metalness, volume.roughness, n, v, l,
-                                ggx_f1_albedo_cosine_roughness, ggx_f1_albedo_cosine_weighted_average,
-                                drawing.lighting_color, volume.ambient);
+        vec3 color;
+
+        if (drawing.show_shadow)
+        {
+                const float transparency = shadow_transparency(texture_position);
+
+                const Lighting lighting = shade(
+                        volume.color, volume.metalness, volume.roughness, n, v, l, ggx_f1_albedo_cosine_roughness,
+                        ggx_f1_albedo_cosine_weighted_average, drawing.lighting_color, volume.ambient, transparency);
+
+                color = lighting.front + lighting.side;
+        }
+        else
+        {
+                color =
+                        shade(volume.color, volume.metalness, volume.roughness, n, v, l, ggx_f1_albedo_cosine_roughness,
+                              ggx_f1_albedo_cosine_weighted_average, drawing.lighting_color, volume.ambient);
+        }
 
         return vec4(color, volume.isosurface_alpha);
 }
