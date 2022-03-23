@@ -25,45 +25,17 @@ namespace
 {
 constexpr std::uint32_t HEADS_NULL_INDEX = 0xffff'ffff;
 
+constexpr unsigned long long BUFFER_SIZE = 1ull << 30;
+
 // (uint color_rg) + (uint color_ba) + (float depth) + (uint next)
 constexpr unsigned long long NODE_SIZE = 16;
 }
 
-TransparencyBuffers::TransparencyBuffers(
-        const vulkan::Device& device,
-        const vulkan::CommandPool& command_pool,
-        const vulkan::Queue& queue,
-        const std::vector<std::uint32_t>& family_indices,
-        const VkSampleCountFlagBits sample_count,
-        const unsigned width,
-        const unsigned height,
-        const unsigned long long max_node_buffer_size)
-        : node_count_(
-                std::min(
-                        max_node_buffer_size,
-                        static_cast<unsigned long long>(device.properties().properties_10.limits.maxStorageBufferRange))
-                / NODE_SIZE),
-          heads_(device,
-                 family_indices,
-                 std::vector<VkFormat>({VK_FORMAT_R32_UINT}),
-                 sample_count,
-                 VK_IMAGE_TYPE_2D,
-                 vulkan::make_extent(width, height),
-                 VK_IMAGE_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_STORAGE_BIT,
-                 VK_IMAGE_LAYOUT_GENERAL,
-                 command_pool,
-                 queue),
-          heads_size_(
-                  device,
-                  family_indices,
-                  std::vector<VkFormat>({VK_FORMAT_R32_UINT}),
-                  sample_count,
-                  VK_IMAGE_TYPE_2D,
-                  vulkan::make_extent(width, height),
-                  VK_IMAGE_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_STORAGE_BIT,
-                  VK_IMAGE_LAYOUT_GENERAL,
-                  command_pool,
-                  queue),
+TransparencyBuffers::TransparencyBuffers(const vulkan::Device& device, const std::vector<std::uint32_t>& family_indices)
+        : buffer_size_(std::min<unsigned long long>(
+                BUFFER_SIZE,
+                device.properties().properties_10.limits.maxStorageBufferRange)),
+          node_count_(buffer_size_ / NODE_SIZE),
           node_buffer_(
                   vulkan::BufferMemoryType::DEVICE_LOCAL,
                   device,
@@ -97,19 +69,42 @@ TransparencyBuffers::TransparencyBuffers(
         mapper.write(counters);
 }
 
+unsigned long long TransparencyBuffers::buffer_size() const
+{
+        return buffer_size_;
+}
+
+void TransparencyBuffers::create_buffers(
+        const vulkan::Device& device,
+        const vulkan::CommandPool& command_pool,
+        const vulkan::Queue& queue,
+        const std::vector<std::uint32_t>& family_indices,
+        const VkSampleCountFlagBits sample_count,
+        const unsigned width,
+        const unsigned height)
+{
+        delete_buffers();
+
+        heads_.emplace(
+                device, family_indices, std::vector<VkFormat>({VK_FORMAT_R32_UINT}), sample_count, VK_IMAGE_TYPE_2D,
+                vulkan::make_extent(width, height), VK_IMAGE_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_STORAGE_BIT,
+                VK_IMAGE_LAYOUT_GENERAL, command_pool, queue);
+
+        heads_size_.emplace(
+                device, family_indices, std::vector<VkFormat>({VK_FORMAT_R32_UINT}), sample_count, VK_IMAGE_TYPE_2D,
+                vulkan::make_extent(width, height), VK_IMAGE_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_STORAGE_BIT,
+                VK_IMAGE_LAYOUT_GENERAL, command_pool, queue);
+}
+
+void TransparencyBuffers::delete_buffers()
+{
+        heads_.reset();
+        heads_size_.reset();
+}
+
 const vulkan::Buffer& TransparencyBuffers::counters() const
 {
         return counters_.buffer();
-}
-
-const vulkan::ImageWithMemory& TransparencyBuffers::heads() const
-{
-        return heads_;
-}
-
-const vulkan::ImageWithMemory& TransparencyBuffers::heads_size() const
-{
-        return heads_size_;
 }
 
 const vulkan::Buffer& TransparencyBuffers::nodes() const
@@ -122,10 +117,24 @@ unsigned TransparencyBuffers::node_count() const
         return node_count_;
 }
 
+const vulkan::ImageWithMemory& TransparencyBuffers::heads() const
+{
+        ASSERT(heads_);
+        return *heads_;
+}
+
+const vulkan::ImageWithMemory& TransparencyBuffers::heads_size() const
+{
+        ASSERT(heads_size_);
+        return *heads_size_;
+}
+
 void TransparencyBuffers::commands_init(const VkCommandBuffer command_buffer) const
 {
-        commands_init_uint32_storage_image(command_buffer, heads_, HEADS_NULL_INDEX);
-        commands_init_uint32_storage_image(command_buffer, heads_size_, 0);
+        ASSERT(heads_);
+        ASSERT(heads_size_);
+        commands_init_uint32_storage_image(command_buffer, *heads_, HEADS_NULL_INDEX);
+        commands_init_uint32_storage_image(command_buffer, *heads_size_, 0);
         commands_init_buffer(command_buffer, init_buffer_, counters_);
 }
 

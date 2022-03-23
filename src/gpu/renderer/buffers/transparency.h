@@ -19,6 +19,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <src/vulkan/buffers.h>
 
+#include <optional>
 #include <vector>
 
 namespace ns::gpu::renderer
@@ -31,33 +32,41 @@ class TransparencyBuffers final
                 std::uint32_t transparency_overload_counter;
         };
 
+        const unsigned long long buffer_size_;
         const unsigned node_count_;
 
-        vulkan::ImageWithMemory heads_;
-        vulkan::ImageWithMemory heads_size_;
-        vulkan::BufferWithMemory node_buffer_;
+        const vulkan::BufferWithMemory node_buffer_;
 
-        vulkan::BufferWithMemory init_buffer_;
-        vulkan::BufferWithMemory read_buffer_;
-        vulkan::BufferWithMemory counters_;
+        const vulkan::BufferWithMemory init_buffer_;
+        const vulkan::BufferWithMemory read_buffer_;
+        const vulkan::BufferWithMemory counters_;
+
+        std::optional<vulkan::ImageWithMemory> heads_;
+        std::optional<vulkan::ImageWithMemory> heads_size_;
 
 public:
-        TransparencyBuffers(
+        TransparencyBuffers(const vulkan::Device& device, const std::vector<std::uint32_t>& family_indices);
+
+        unsigned long long buffer_size() const;
+
+        void create_buffers(
                 const vulkan::Device& device,
                 const vulkan::CommandPool& command_pool,
                 const vulkan::Queue& queue,
                 const std::vector<std::uint32_t>& family_indices,
                 VkSampleCountFlagBits sample_count,
                 unsigned width,
-                unsigned height,
-                unsigned long long max_node_buffer_size);
+                unsigned height);
+
+        void delete_buffers();
 
         const vulkan::Buffer& counters() const;
-        const vulkan::ImageWithMemory& heads() const;
-        const vulkan::ImageWithMemory& heads_size() const;
         const vulkan::Buffer& nodes() const;
 
         unsigned node_count() const;
+
+        const vulkan::ImageWithMemory& heads() const;
+        const vulkan::ImageWithMemory& heads_size() const;
 
         void commands_init(VkCommandBuffer command_buffer) const;
         void commands_read(VkCommandBuffer command_buffer) const;

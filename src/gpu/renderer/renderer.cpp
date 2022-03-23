@@ -56,7 +56,6 @@ constexpr bool RAY_TRACING = true;
 
 constexpr VkImageLayout DEPTH_COPY_IMAGE_LAYOUT = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
 constexpr std::uint32_t OBJECTS_CLEAR_VALUE = 0;
-constexpr std::uint32_t TRANSPARENCY_NODE_BUFFER_MAX_SIZE = (1ull << 30);
 
 class Impl final : public Renderer, RendererViewEvents, StorageMeshEvents, StorageVolumeEvents
 {
@@ -79,6 +78,7 @@ class Impl final : public Renderer, RendererViewEvents, StorageMeshEvents, Stora
 
         DrawingBuffer drawing_buffer_;
         GgxF1Albedo ggx_f1_albedo_;
+        TransparencyBuffers transparency_buffers_;
         std::unique_ptr<vulkan::DepthImageWithMemory> depth_copy_image_;
 
         MeshRenderer mesh_renderer_;
@@ -91,7 +91,6 @@ class Impl final : public Renderer, RendererViewEvents, StorageMeshEvents, Stora
                 volume_renderer_.image_layouts()};
 
         std::optional<vulkan::handle::CommandBuffers> clear_command_buffers_;
-        std::optional<TransparencyBuffers> transparency_buffers_;
 
         StorageMesh mesh_storage_;
         StorageVolume volume_storage_;
@@ -154,13 +153,12 @@ class Impl final : public Renderer, RendererViewEvents, StorageMeshEvents, Stora
                 ASSERT(graphics_queue_1.family_index() == graphics_queue_->family_index());
                 ASSERT(graphics_queue_2.family_index() == graphics_queue_->family_index());
                 ASSERT(clear_command_buffers_);
-                ASSERT(transparency_buffers_);
 
                 const bool shadow_mapping = !ray_tracing_ && renderer_view_.show_shadow();
 
                 return renderer_draw_.draw(
                         graphics_queue_1, graphics_queue_2, index, shadow_mapping, *clear_command_buffers_,
-                        *transparency_buffers_);
+                        transparency_buffers_);
         }
 
         bool empty() const override
@@ -196,14 +194,14 @@ class Impl final : public Renderer, RendererViewEvents, StorageMeshEvents, Stora
                 create_transparency_buffers();
 
                 mesh_renderer_.create_render_buffers(
-                        render_buffers_, *object_image_, transparency_buffers_->heads(),
-                        transparency_buffers_->heads_size(), transparency_buffers_->counters(),
-                        transparency_buffers_->nodes(), viewport_);
+                        render_buffers_, *object_image_, transparency_buffers_.heads(),
+                        transparency_buffers_.heads_size(), transparency_buffers_.counters(),
+                        transparency_buffers_.nodes(), viewport_);
                 create_mesh_shadow_mapping_buffers();
 
                 volume_renderer_.create_buffers(
                         render_buffers_, *graphics_command_pool_, viewport_, depth_copy_image_->image_view(),
-                        transparency_buffers_->heads(), transparency_buffers_->nodes());
+                        transparency_buffers_.heads(), transparency_buffers_.nodes());
 
                 create_mesh_command_buffers();
                 create_volume_command_buffers();
@@ -234,19 +232,19 @@ class Impl final : public Renderer, RendererViewEvents, StorageMeshEvents, Stora
 
         void create_transparency_buffers()
         {
-                transparency_buffers_.emplace(
+                transparency_buffers_.create_buffers(
                         *device_, *graphics_command_pool_, *graphics_queue_,
                         std::vector<std::uint32_t>({graphics_queue_->family_index()}), render_buffers_->sample_count(),
-                        render_buffers_->width(), render_buffers_->height(), TRANSPARENCY_NODE_BUFFER_MAX_SIZE);
+                        render_buffers_->width(), render_buffers_->height());
 
-                LOG("Transparency node count: " + to_string_digit_groups(transparency_buffers_->node_count()));
+                LOG("Transparency node count: " + to_string_digit_groups(transparency_buffers_.node_count()));
 
-                drawing_buffer_.set_transparency_max_node_count(transparency_buffers_->node_count());
+                drawing_buffer_.set_transparency_max_node_count(transparency_buffers_.node_count());
         }
 
         void delete_transparency_buffers()
         {
-                transparency_buffers_.reset();
+                transparency_buffers_.delete_buffers();
         }
 
         void delete_mesh_shadow_mapping_buffers()
@@ -316,11 +314,11 @@ class Impl final : public Renderer, RendererViewEvents, StorageMeshEvents, Stora
                         renderer_view_.clip_plane().has_value(), renderer_view_.show_normals(),
                         [this](const VkCommandBuffer command_buffer)
                         {
-                                transparency_buffers_->commands_init(command_buffer);
+                                transparency_buffers_.commands_init(command_buffer);
                         },
                         [this](const VkCommandBuffer command_buffer)
                         {
-                                transparency_buffers_->commands_read(command_buffer);
+                                transparency_buffers_.commands_read(command_buffer);
                         });
         }
 
@@ -533,6 +531,7 @@ public:
                           {graphics_queue_->family_index()},
                           *transfer_command_pool_,
                           *transfer_queue_),
+                  transparency_buffers_(*device_, std::vector<std::uint32_t>({graphics_queue_->family_index()})),
                   mesh_renderer_(
                           device_,
                           code,
@@ -546,7 +545,7 @@ public:
                   volume_storage_(this),
                   renderer_object_(&mesh_storage_, &volume_storage_),
                   renderer_view_(!ray_tracing_, &drawing_buffer_, this),
-                  renderer_draw_(*device_, TRANSPARENCY_NODE_BUFFER_MAX_SIZE, &mesh_renderer_, &volume_renderer_)
+                  renderer_draw_(*device_, transparency_buffers_.buffer_size(), &mesh_renderer_, &volume_renderer_)
         {
                 if (ray_tracing_)
                 {
