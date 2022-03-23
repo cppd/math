@@ -155,8 +155,8 @@ class Impl final : public VolumeObject
                                 : Vector4d(0);
 
                 buffer_.set_coordinates(
-                        mvp.inverse(), texture_to_world_matrix_, mvp.row(2), clip_plane, gradient_h_,
-                        gradient_to_world_matrix_, world_to_texture_matrix_);
+                        mvp.inverse(), texture_to_world_matrix_, vp_matrix_.inverse(), mvp.row(2), clip_plane,
+                        gradient_h_, gradient_to_world_matrix_, world_to_texture_matrix_);
         }
 
         void buffer_set_clip_plane() const
