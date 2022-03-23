@@ -36,7 +36,8 @@ public:
 
         const vulkan::Buffer& buffer() const;
 
-        void set_matrix(const Matrix4d& world_to_shadow, const Matrix4d& texture_to_world);
-        void set_matrix(const Matrix4d& texture_to_world) const;
+        void set(const Matrix4d& world_to_shadow, const Matrix4d& texture_to_world, const Matrix4d& device_to_world);
+
+        void set(const Matrix4d& texture_to_world, const Matrix4d& device_to_world) const;
 };
 }

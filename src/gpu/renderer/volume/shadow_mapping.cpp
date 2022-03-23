@@ -31,14 +31,17 @@ const vulkan::Buffer& VolumeShadowMapping::buffer() const
         return buffer_.buffer();
 }
 
-void VolumeShadowMapping::set_matrix(const Matrix4d& world_to_shadow, const Matrix4d& texture_to_world)
+void VolumeShadowMapping::set(
+        const Matrix4d& world_to_shadow,
+        const Matrix4d& texture_to_world,
+        const Matrix4d& device_to_world)
 {
         world_to_shadow_ = world_to_shadow;
-        set_matrix(texture_to_world);
+        set(texture_to_world, device_to_world);
 }
 
-void VolumeShadowMapping::set_matrix(const Matrix4d& texture_to_world) const
+void VolumeShadowMapping::set(const Matrix4d& texture_to_world, const Matrix4d& device_to_world) const
 {
-        buffer_.set(world_to_shadow_ * texture_to_world, world_to_shadow_);
+        buffer_.set(world_to_shadow_ * texture_to_world, world_to_shadow_ * device_to_world);
 }
 }

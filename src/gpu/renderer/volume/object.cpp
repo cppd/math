@@ -90,6 +90,7 @@ class Impl final : public VolumeObject
         const std::vector<std::uint32_t> family_indices_;
 
         Matrix4d vp_matrix_ = Matrix4d(1);
+        Matrix4d device_to_world_matrix_ = Matrix4d(1);
         std::optional<Vector4d> world_clip_plane_equation_;
 
         Matrix3d gradient_to_world_matrix_;
@@ -155,7 +156,7 @@ class Impl final : public VolumeObject
                                 : Vector4d(0);
 
                 buffer_.set_coordinates(
-                        mvp.inverse(), texture_to_world_matrix_, vp_matrix_.inverse(), mvp.row(2), clip_plane,
+                        mvp.inverse(), texture_to_world_matrix_, device_to_world_matrix_, mvp.row(2), clip_plane,
                         gradient_h_, gradient_to_world_matrix_, world_to_texture_matrix_);
         }
 
@@ -244,7 +245,7 @@ class Impl final : public VolumeObject
 
                 if (shadow_mapping_)
                 {
-                        shadow_mapping_->set_matrix(texture_to_world_matrix_);
+                        shadow_mapping_->set(texture_to_world_matrix_, device_to_world_matrix_);
                 }
         }
 
@@ -263,6 +264,7 @@ class Impl final : public VolumeObject
                 const std::optional<Vector4d>& world_clip_plane_equation) override
         {
                 vp_matrix_ = vp_matrix;
+                device_to_world_matrix_ = vp_matrix.inverse();
                 world_clip_plane_equation_ = world_clip_plane_equation;
                 buffer_set_coordinates();
         }
@@ -273,8 +275,8 @@ class Impl final : public VolumeObject
                 const Matrix4d& world_to_shadow_matrix) override
         {
                 ASSERT(shadow_mapping_);
-                shadow_mapping_->set_matrix(world_to_shadow_matrix, texture_to_world_matrix_);
                 set_matrix_and_clip_plane(vp_matrix, world_clip_plane_equation);
+                shadow_mapping_->set(world_to_shadow_matrix, texture_to_world_matrix_, device_to_world_matrix_);
         }
 
         void set_clip_plane(const Vector4d& world_clip_plane_equation) override
