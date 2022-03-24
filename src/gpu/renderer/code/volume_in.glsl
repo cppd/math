@@ -35,11 +35,13 @@ layout(set = 0, binding = 1, std430) buffer restrict readonly TransparencyNodes
 
 #endif
 
-DRAWING_BUFFER(0, 2)
-
 #if defined(IMAGE)
 
-layout(set = 0, binding = 3) uniform sampler2DMS depth_image;
+layout(set = 0, binding = 2) uniform sampler2DMS depth_image;
+
+#endif
+
+DRAWING_BUFFER(0, 3)
 
 layout(set = 0, binding = 4) uniform sampler2D ggx_f1_albedo_cosine_roughness;
 layout(set = 0, binding = 5) uniform sampler1D ggx_f1_albedo_cosine_weighted_average;
@@ -49,6 +51,8 @@ layout(set = 0, binding = 6) uniform accelerationStructureEXT acceleration_struc
 #else
 layout(set = 0, binding = 6) uniform sampler2D shadow_mapping_texture;
 #endif
+
+#if defined(IMAGE)
 
 layout(set = 1, binding = 0, std140) uniform restrict Coordinates
 {

@@ -31,15 +31,16 @@ std::vector<VkDescriptorSetLayoutBinding> FragmentsProgram::descriptor_set_layou
 
         flags.drawing = VK_SHADER_STAGE_FRAGMENT_BIT;
         flags.depth_image = 0;
-        flags.ggx_f1_albedo = 0;
-        flags.shadow_map = 0;
-        flags.acceleration_structure = 0;
+        flags.ggx_f1_albedo = VK_SHADER_STAGE_FRAGMENT_BIT;
+        flags.shadow_map = !ray_tracing_ ? VK_SHADER_STAGE_FRAGMENT_BIT : 0;
+        flags.acceleration_structure = ray_tracing_ ? VK_SHADER_STAGE_FRAGMENT_BIT : 0;
 
         return VolumeSharedMemory::descriptor_set_layout_bindings(flags);
 }
 
 FragmentsProgram::FragmentsProgram(const vulkan::Device* const device, const Code& code)
         : device_(device),
+          ray_tracing_(code.ray_tracing()),
           descriptor_set_layout_shared_(
                   vulkan::create_descriptor_set_layout(*device, descriptor_set_layout_shared_bindings())),
           pipeline_layout_(vulkan::create_pipeline_layout(

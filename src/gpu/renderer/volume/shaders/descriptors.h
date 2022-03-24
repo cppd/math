@@ -32,8 +32,10 @@ class VolumeSharedMemory final
         static constexpr int TRANSPARENCY_HEADS_BINDING = 0;
         static constexpr int TRANSPARENCY_NODES_BINDING = 1;
 
-        static constexpr int DRAWING_BINDING = 2;
-        static constexpr int DEPTH_IMAGE_BINDING = 3;
+        static constexpr int DEPTH_IMAGE_BINDING = 2;
+
+        static constexpr int DRAWING_BINDING = 3;
+
         static constexpr int GGX_F1_ALBEDO_COSINE_ROUGHNESS_BINDING = 4;
         static constexpr int GGX_F1_ALBEDO_COSINE_WEIGHTED_AVERAGE_BINDING = 5;
 
