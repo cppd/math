@@ -19,46 +19,41 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 namespace ns::gpu::renderer
 {
-std::vector<VkDescriptorSetLayoutBinding> VolumeSharedMemory::descriptor_set_layout_bindings(
-        const VkShaderStageFlags drawing,
-        const VkShaderStageFlags depth_image,
-        const VkShaderStageFlags ggx_f1_albedo,
-        const VkShaderStageFlags shadow_map,
-        const VkShaderStageFlags acceleration_structure)
+std::vector<VkDescriptorSetLayoutBinding> VolumeSharedMemory::descriptor_set_layout_bindings(const Flags& flags)
 {
         std::vector<VkDescriptorSetLayoutBinding> bindings;
 
-        if (drawing)
+        if (flags.drawing)
         {
                 VkDescriptorSetLayoutBinding b = {};
                 b.binding = DRAWING_BINDING;
                 b.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
                 b.descriptorCount = 1;
-                b.stageFlags = drawing;
+                b.stageFlags = flags.drawing;
 
                 bindings.push_back(b);
         }
 
-        if (depth_image)
+        if (flags.depth_image)
         {
                 VkDescriptorSetLayoutBinding b = {};
                 b.binding = DEPTH_IMAGE_BINDING;
                 b.descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
                 b.descriptorCount = 1;
-                b.stageFlags = depth_image;
+                b.stageFlags = flags.depth_image;
                 b.pImmutableSamplers = nullptr;
 
                 bindings.push_back(b);
         }
 
-        if (ggx_f1_albedo)
+        if (flags.ggx_f1_albedo)
         {
                 {
                         VkDescriptorSetLayoutBinding b = {};
                         b.binding = GGX_F1_ALBEDO_COSINE_ROUGHNESS_BINDING;
                         b.descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
                         b.descriptorCount = 1;
-                        b.stageFlags = ggx_f1_albedo;
+                        b.stageFlags = flags.ggx_f1_albedo;
                         b.pImmutableSamplers = nullptr;
 
                         bindings.push_back(b);
@@ -68,7 +63,7 @@ std::vector<VkDescriptorSetLayoutBinding> VolumeSharedMemory::descriptor_set_lay
                         b.binding = GGX_F1_ALBEDO_COSINE_WEIGHTED_AVERAGE_BINDING;
                         b.descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
                         b.descriptorCount = 1;
-                        b.stageFlags = ggx_f1_albedo;
+                        b.stageFlags = flags.ggx_f1_albedo;
                         b.pImmutableSamplers = nullptr;
 
                         bindings.push_back(b);
@@ -95,26 +90,26 @@ std::vector<VkDescriptorSetLayoutBinding> VolumeSharedMemory::descriptor_set_lay
                 bindings.push_back(b);
         }
 
-        if (acceleration_structure)
+        if (flags.acceleration_structure)
         {
-                ASSERT(!shadow_map);
+                ASSERT(!flags.shadow_map);
                 VkDescriptorSetLayoutBinding b = {};
                 b.binding = ACCELERATION_STRUCTURE_BINDING;
                 b.descriptorType = VK_DESCRIPTOR_TYPE_ACCELERATION_STRUCTURE_KHR;
                 b.descriptorCount = 1;
-                b.stageFlags = acceleration_structure;
+                b.stageFlags = flags.acceleration_structure;
 
                 bindings.push_back(b);
         }
 
-        if (shadow_map)
+        if (flags.shadow_map)
         {
-                ASSERT(!acceleration_structure);
+                ASSERT(!flags.acceleration_structure);
                 VkDescriptorSetLayoutBinding b = {};
                 b.binding = SHADOW_MAP_BINDING;
                 b.descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
                 b.descriptorCount = 1;
-                b.stageFlags = shadow_map;
+                b.stageFlags = flags.shadow_map;
                 b.pImmutableSamplers = nullptr;
 
                 bindings.push_back(b);

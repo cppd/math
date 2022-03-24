@@ -27,7 +27,15 @@ namespace ns::gpu::renderer
 {
 std::vector<VkDescriptorSetLayoutBinding> FragmentsProgram::descriptor_set_layout_shared_bindings()
 {
-        return VolumeSharedMemory::descriptor_set_layout_bindings(VK_SHADER_STAGE_FRAGMENT_BIT, 0, 0, 0, 0);
+        VolumeSharedMemory::Flags flags;
+
+        flags.drawing = VK_SHADER_STAGE_FRAGMENT_BIT;
+        flags.depth_image = 0;
+        flags.ggx_f1_albedo = 0;
+        flags.shadow_map = 0;
+        flags.acceleration_structure = 0;
+
+        return VolumeSharedMemory::descriptor_set_layout_bindings(flags);
 }
 
 FragmentsProgram::FragmentsProgram(const vulkan::Device* const device, const Code& code)

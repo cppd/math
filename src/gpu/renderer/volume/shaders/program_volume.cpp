@@ -29,9 +29,15 @@ namespace ns::gpu::renderer
 {
 std::vector<VkDescriptorSetLayoutBinding> VolumeProgram::descriptor_set_layout_shared_bindings() const
 {
-        return VolumeSharedMemory::descriptor_set_layout_bindings(
-                VK_SHADER_STAGE_FRAGMENT_BIT, VK_SHADER_STAGE_FRAGMENT_BIT, VK_SHADER_STAGE_FRAGMENT_BIT,
-                !ray_tracing_ ? VK_SHADER_STAGE_FRAGMENT_BIT : 0, ray_tracing_ ? VK_SHADER_STAGE_FRAGMENT_BIT : 0);
+        VolumeSharedMemory::Flags flags;
+
+        flags.drawing = VK_SHADER_STAGE_FRAGMENT_BIT;
+        flags.depth_image = VK_SHADER_STAGE_FRAGMENT_BIT;
+        flags.ggx_f1_albedo = VK_SHADER_STAGE_FRAGMENT_BIT;
+        flags.shadow_map = !ray_tracing_ ? VK_SHADER_STAGE_FRAGMENT_BIT : 0;
+        flags.acceleration_structure = ray_tracing_ ? VK_SHADER_STAGE_FRAGMENT_BIT : 0;
+
+        return VolumeSharedMemory::descriptor_set_layout_bindings(flags);
 }
 
 std::vector<VkDescriptorSetLayoutBinding> VolumeProgram::descriptor_set_layout_image_bindings() const

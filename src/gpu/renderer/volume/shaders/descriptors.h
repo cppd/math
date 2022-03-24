@@ -43,12 +43,16 @@ class VolumeSharedMemory final
         vulkan::Descriptors descriptors_;
 
 public:
-        static std::vector<VkDescriptorSetLayoutBinding> descriptor_set_layout_bindings(
-                VkShaderStageFlags drawing,
-                VkShaderStageFlags depth_image,
-                VkShaderStageFlags ggx_f1_albedo,
-                VkShaderStageFlags shadow_map,
-                VkShaderStageFlags acceleration_structure);
+        struct Flags final
+        {
+                VkShaderStageFlags drawing;
+                VkShaderStageFlags depth_image;
+                VkShaderStageFlags ggx_f1_albedo;
+                VkShaderStageFlags shadow_map;
+                VkShaderStageFlags acceleration_structure;
+        };
+
+        static std::vector<VkDescriptorSetLayoutBinding> descriptor_set_layout_bindings(const Flags& flags);
         static unsigned set_number();
 
         VolumeSharedMemory(
