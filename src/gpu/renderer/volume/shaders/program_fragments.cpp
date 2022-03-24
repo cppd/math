@@ -27,7 +27,7 @@ namespace ns::gpu::renderer
 {
 std::vector<VkDescriptorSetLayoutBinding> FragmentsProgram::descriptor_set_layout_shared_bindings()
 {
-        return VolumeSharedMemory::descriptor_set_layout_bindings(0, 0, 0, 0, 0);
+        return VolumeSharedMemory::descriptor_set_layout_bindings(VK_SHADER_STAGE_FRAGMENT_BIT, 0, 0, 0, 0);
 }
 
 FragmentsProgram::FragmentsProgram(const vulkan::Device* const device, const Code& code)

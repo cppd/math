@@ -26,7 +26,14 @@ layout(early_fragment_tests) in;
 
 layout(location = 0) out vec4 out_color;
 
-void write_transparency(const vec3 color, const float alpha)
+void write_transparency(
+        const vec3 color,
+        const float alpha,
+        const vec3 n,
+        const float metalness,
+        const float roughness,
+        const float ambient,
+        const float edge_factor)
 {
         const ivec2 coord = ivec2(gl_FragCoord.xy);
         const uint heads_size = imageAtomicAdd(transparency_heads_size, coord, gl_SampleID, 1);
@@ -38,7 +45,8 @@ void write_transparency(const vec3 color, const float alpha)
                 if (node < drawing.transparency_max_node_count)
                 {
                         const uint next_node = imageAtomicExchange(transparency_heads, coord, gl_SampleID, node);
-                        transparency_nodes[node] = create_transparency_node(color, alpha, gl_FragCoord.z, next_node);
+                        transparency_nodes[node] = create_transparency_node(
+                                color, alpha, n, metalness, roughness, ambient, edge_factor, gl_FragCoord.z, next_node);
                 }
         }
         else if (heads_size == TRANSPARENCY_MAX_NODES)
@@ -58,16 +66,26 @@ void set_fragment_color(const vec3 color)
         }
         else
         {
-                write_transparency(color, mesh.alpha);
+                write_transparency(color, mesh.alpha, vec3(0), 0, 0, 0, 0);
         }
 }
 
 void set_fragment_color(const vec3 surface_color, const vec3 n, const vec3 world_position, const float edge_factor)
 {
-        const vec3 color =
-                mesh_shade(surface_color, n, mesh.metalness, mesh.roughness, mesh.ambient, world_position, edge_factor);
+        imageStore(object_image, ivec2(gl_FragCoord.xy), uvec4(1));
 
-        set_fragment_color(color);
+        if (!TRANSPARENCY_DRAWING)
+        {
+                const vec3 color = mesh_shade(
+                        surface_color, n, mesh.metalness, mesh.roughness, mesh.ambient, world_position, edge_factor);
+                out_color = vec4(color, 1);
+        }
+        else
+        {
+                const vec3 color = mesh_shade(
+                        surface_color, n, mesh.metalness, mesh.roughness, mesh.ambient, world_position, edge_factor);
+                write_transparency(color, mesh.alpha, n, mesh.metalness, mesh.roughness, mesh.ambient, edge_factor);
+        }
 }
 
 #endif

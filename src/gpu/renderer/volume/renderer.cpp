@@ -49,6 +49,7 @@ VolumeRenderer::VolumeRenderer(
           depth_sampler_(create_volume_depth_image_sampler(*device)),
           transfer_function_sampler_(create_volume_transfer_function_sampler(*device))
 {
+        fragments_shared_memory_.set_drawing(drawing_buffer);
         image_shared_memory_.set_drawing(drawing_buffer);
         image_shared_memory_.set_ggx_f1_albedo(
                 ggx_f1_albedo.sampler(), ggx_f1_albedo.cosine_roughness(), ggx_f1_albedo.cosine_weighted_average());

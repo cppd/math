@@ -35,9 +35,9 @@ layout(set = 0, binding = 1, std430) buffer restrict readonly TransparencyNodes
 
 #endif
 
-#if defined(IMAGE)
-
 DRAWING_BUFFER(0, 2)
+
+#if defined(IMAGE)
 
 layout(set = 0, binding = 3) uniform sampler2DMS depth_image;
 
