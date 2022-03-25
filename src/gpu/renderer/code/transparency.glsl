@@ -75,6 +75,7 @@ struct FragmentData
         float roughness;
         float ambient;
         float edge_factor;
+        float depth;
 };
 
 FragmentData fragment_data(const Fragment fragment)
@@ -83,7 +84,6 @@ FragmentData fragment_data(const Fragment fragment)
 
         data.color.rg = unpackUnorm2x16(fragment.color_rg);
         data.color.ba = unpackUnorm2x16(fragment.color_ba);
-
         data.n.xy = unpackUnorm2x16(fragment.n_xy);
         {
                 const vec2 v = unpackUnorm2x16(fragment.n_z_metalness);
@@ -96,6 +96,7 @@ FragmentData fragment_data(const Fragment fragment)
                 data.ambient = v.y;
         }
         data.edge_factor = fragment.edge_factor;
+        data.depth = fragment.depth;
 
         return data;
 }

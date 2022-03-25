@@ -98,4 +98,6 @@ shadow_matrices;
 
 #endif
 
+vec2 device_coordinates = (gl_FragCoord.xy - drawing.viewport_center) * drawing.viewport_factor;
+
 #endif
