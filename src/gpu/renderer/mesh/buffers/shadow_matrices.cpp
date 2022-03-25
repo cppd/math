@@ -38,7 +38,7 @@ const vulkan::Buffer& ShadowMatricesBuffer::buffer() const
         return buffer_.buffer();
 }
 
-void ShadowMatricesBuffer::set_matrices(const Matrix4d& vp_matrix, const Matrix4d& world_to_shadow) const
+void ShadowMatricesBuffer::set(const Matrix4d& vp_matrix, const Matrix4d& world_to_shadow) const
 {
         ShadowMatrices shadow_matrices;
         shadow_matrices.vp_matrix = to_std140<float>(vp_matrix);

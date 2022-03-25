@@ -24,9 +24,9 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 namespace ns::gpu::renderer
 {
-class VolumeShadowMatrixBuffer final
+class VolumeShadowMatricesBuffer final
 {
-        struct ShadowMatrix final
+        struct ShadowMatrices final
         {
                 alignas(sizeof(Vector4f)) Matrix4f texture_to_shadow;
                 alignas(sizeof(Vector4f)) Matrix4f device_to_shadow;
@@ -35,7 +35,7 @@ class VolumeShadowMatrixBuffer final
         vulkan::BufferWithMemory buffer_;
 
 public:
-        VolumeShadowMatrixBuffer(const vulkan::Device& device, const std::vector<std::uint32_t>& family_indices);
+        VolumeShadowMatricesBuffer(const vulkan::Device& device, const std::vector<std::uint32_t>& family_indices);
 
         const vulkan::Buffer& buffer() const;
 

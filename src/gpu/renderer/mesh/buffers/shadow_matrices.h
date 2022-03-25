@@ -39,6 +39,6 @@ public:
 
         const vulkan::Buffer& buffer() const;
 
-        void set_matrices(const Matrix4d& vp_matrix, const Matrix4d& world_to_shadow) const;
+        void set(const Matrix4d& vp_matrix, const Matrix4d& world_to_shadow) const;
 };
 }

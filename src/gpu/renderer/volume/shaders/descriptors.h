@@ -97,12 +97,12 @@ class VolumeImageMemory final
         static constexpr int IMAGE_BINDING = 2;
         static constexpr int TRANSFER_FUNCTION_BINDING = 3;
 
-        static constexpr int SHADOW_MATRIX_BINDING = 4;
+        static constexpr int SHADOW_MATRICES_BINDING = 4;
 
         vulkan::Descriptors descriptors_;
 
 public:
-        static std::vector<VkDescriptorSetLayoutBinding> descriptor_set_layout_bindings(bool shadow_matrix);
+        static std::vector<VkDescriptorSetLayoutBinding> descriptor_set_layout_bindings(bool shadow_matrices);
         static unsigned set_number();
 
         VolumeImageMemory(
@@ -117,6 +117,6 @@ public:
         void set_image(VkSampler sampler, VkImageView image) const;
         void set_transfer_function(VkSampler sampler, VkImageView transfer_function) const;
 
-        void set_shadow_matrix(const vulkan::Buffer& buffer) const;
+        void set_shadow_matrices(const vulkan::Buffer& buffer) const;
 };
 }

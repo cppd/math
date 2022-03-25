@@ -41,7 +41,7 @@ float mesh_shadow_transparency(const vec3 texture_position)
 #else
 float mesh_shadow_transparency(const vec3 texture_position)
 {
-        const vec3 shadow_position = (shadow_matrix.texture_to_shadow * vec4(texture_position, 1)).xyz;
+        const vec3 shadow_position = (shadow_matrices.texture_to_shadow * vec4(texture_position, 1)).xyz;
         const float d = texture(shadow_mapping_texture, shadow_position.xy).r;
         return d <= shadow_position.z ? 0 : 1;
 }

@@ -241,7 +241,7 @@ void VolumeSharedMemory::set_acceleration_structure(const VkAccelerationStructur
 
 //
 
-std::vector<VkDescriptorSetLayoutBinding> VolumeImageMemory::descriptor_set_layout_bindings(const bool shadow_matrix)
+std::vector<VkDescriptorSetLayoutBinding> VolumeImageMemory::descriptor_set_layout_bindings(const bool shadow_matrices)
 {
         std::vector<VkDescriptorSetLayoutBinding> bindings;
 
@@ -285,10 +285,10 @@ std::vector<VkDescriptorSetLayoutBinding> VolumeImageMemory::descriptor_set_layo
 
                 bindings.push_back(b);
         }
-        if (shadow_matrix)
+        if (shadow_matrices)
         {
                 VkDescriptorSetLayoutBinding b = {};
-                b.binding = SHADOW_MATRIX_BINDING;
+                b.binding = SHADOW_MATRICES_BINDING;
                 b.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
                 b.descriptorCount = 1;
                 b.stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
@@ -362,13 +362,13 @@ void VolumeImageMemory::set_transfer_function(const VkSampler sampler, const VkI
         descriptors_.update_descriptor_set(0, TRANSFER_FUNCTION_BINDING, image_info);
 }
 
-void VolumeImageMemory::set_shadow_matrix(const vulkan::Buffer& buffer) const
+void VolumeImageMemory::set_shadow_matrices(const vulkan::Buffer& buffer) const
 {
         VkDescriptorBufferInfo buffer_info = {};
         buffer_info.buffer = buffer;
         buffer_info.offset = 0;
         buffer_info.range = buffer.size();
 
-        descriptors_.update_descriptor_set(0, SHADOW_MATRIX_BINDING, buffer_info);
+        descriptors_.update_descriptor_set(0, SHADOW_MATRICES_BINDING, buffer_info);
 }
 }

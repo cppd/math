@@ -41,7 +41,7 @@ std::unordered_map<VkDescriptorSetLayout, VolumeImageMemory> create_image_memory
         const std::vector<vulkan::DescriptorSetLayoutAndBindings>& image_layouts,
         const vulkan::Buffer& buffer_coordinates,
         const vulkan::Buffer& buffer_volume,
-        const vulkan::Buffer* const buffer_shadow_matrix)
+        const vulkan::Buffer* const buffer_shadow_matrices)
 {
         std::unordered_map<VkDescriptorSetLayout, VolumeImageMemory> image_memory;
         for (const vulkan::DescriptorSetLayoutAndBindings& layout : image_layouts)
@@ -50,9 +50,9 @@ std::unordered_map<VkDescriptorSetLayout, VolumeImageMemory> create_image_memory
                         device, layout.descriptor_set_layout, layout.descriptor_set_layout_bindings, buffer_coordinates,
                         buffer_volume);
 
-                if (buffer_shadow_matrix)
+                if (buffer_shadow_matrices)
                 {
-                        memory.set_shadow_matrix(*buffer_shadow_matrix);
+                        memory.set_shadow_matrices(*buffer_shadow_matrices);
                 }
 
                 image_memory.emplace(layout.descriptor_set_layout, std::move(memory));

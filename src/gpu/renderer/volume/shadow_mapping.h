@@ -17,7 +17,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
-#include "buffers/shadow_matrix.h"
+#include "buffers/shadow_matrices.h"
 
 #include <src/numerical/matrix.h>
 #include <src/vulkan/device.h>
@@ -29,7 +29,7 @@ namespace ns::gpu::renderer
 class VolumeShadowMapping final
 {
         Matrix4d world_to_shadow_ = Matrix4d(1);
-        VolumeShadowMatrixBuffer buffer_;
+        VolumeShadowMatricesBuffer buffer_;
 
 public:
         VolumeShadowMapping(const vulkan::Device& device, const std::vector<std::uint32_t>& graphics_family_indices);

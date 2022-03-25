@@ -15,13 +15,13 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include "shadow_matrix.h"
+#include "shadow_matrices.h"
 
 #include "../../../com/matrix.h"
 
 namespace ns::gpu::renderer
 {
-VolumeShadowMatrixBuffer::VolumeShadowMatrixBuffer(
+VolumeShadowMatricesBuffer::VolumeShadowMatricesBuffer(
         const vulkan::Device& device,
         const std::vector<std::uint32_t>& family_indices)
         : buffer_(
@@ -29,18 +29,18 @@ VolumeShadowMatrixBuffer::VolumeShadowMatrixBuffer(
                 device,
                 family_indices,
                 VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT,
-                sizeof(ShadowMatrix))
+                sizeof(ShadowMatrices))
 {
 }
 
-const vulkan::Buffer& VolumeShadowMatrixBuffer::buffer() const
+const vulkan::Buffer& VolumeShadowMatricesBuffer::buffer() const
 {
         return buffer_.buffer();
 }
 
-void VolumeShadowMatrixBuffer::set(const Matrix4d& texture_to_shadow, const Matrix4d& device_to_shadow) const
+void VolumeShadowMatricesBuffer::set(const Matrix4d& texture_to_shadow, const Matrix4d& device_to_shadow) const
 {
-        ShadowMatrix m;
+        ShadowMatrices m;
         m.texture_to_shadow = to_std140<float>(texture_to_shadow);
         m.device_to_shadow = to_std140<float>(device_to_shadow);
         vulkan::map_and_write_to_buffer(buffer_, m);

@@ -88,12 +88,12 @@ layout(set = 1, binding = 2) uniform sampler3D image;
 layout(set = 1, binding = 3) uniform sampler1D transfer_function;
 
 #ifndef RAY_TRACING
-layout(set = 1, binding = 4, std140) uniform restrict ShadowMatrix
+layout(set = 1, binding = 4, std140) uniform restrict ShadowMatrices
 {
         mat4 texture_to_shadow;
         mat4 device_to_shadow;
 }
-shadow_matrix;
+shadow_matrices;
 #endif
 
 #endif

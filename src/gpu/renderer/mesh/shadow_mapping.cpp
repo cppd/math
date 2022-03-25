@@ -116,7 +116,7 @@ void ShadowMapping::delete_command_buffers()
 
 void ShadowMapping::set_shadow_matrices(const Matrix4d& vp_matrix, const Matrix4d& world_to_shadow) const
 {
-        shadow_matrices_buffer_.set_matrices(vp_matrix, world_to_shadow);
+        shadow_matrices_buffer_.set(vp_matrix, world_to_shadow);
 }
 
 const vulkan::ImageView& ShadowMapping::image_view() const
