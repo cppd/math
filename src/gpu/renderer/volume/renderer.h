@@ -77,13 +77,13 @@ public:
 
         void create_buffers(
                 const RenderBuffers3D* render_buffers,
-                VkCommandPool graphics_command_pool,
                 const Region<2, int>& viewport,
                 VkImageView depth_image,
                 const vulkan::ImageWithMemory& transparency_heads_image,
                 const vulkan::Buffer& transparency_nodes);
         void delete_buffers();
 
+        void create_command_buffers(VkCommandPool graphics_command_pool);
         void create_command_buffers(
                 const VolumeObject* volume,
                 VkCommandPool graphics_command_pool,

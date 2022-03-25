@@ -200,8 +200,8 @@ class Impl final : public Renderer, RendererViewEvents, StorageMeshEvents, Stora
                 create_mesh_shadow_mapping_buffers();
 
                 volume_renderer_.create_buffers(
-                        render_buffers_, *graphics_command_pool_, viewport_, depth_copy_image_->image_view(),
-                        transparency_buffers_.heads(), transparency_buffers_.nodes());
+                        render_buffers_, viewport_, depth_copy_image_->image_view(), transparency_buffers_.heads(),
+                        transparency_buffers_.nodes());
 
                 create_mesh_command_buffers();
                 create_volume_command_buffers();
@@ -344,10 +344,13 @@ class Impl final : public Renderer, RendererViewEvents, StorageMeshEvents, Stora
         void create_volume_command_buffers()
         {
                 volume_renderer_.delete_command_buffers();
+
                 if (volume_storage_.visible_objects().size() != 1)
                 {
+                        volume_renderer_.create_command_buffers(*graphics_command_pool_);
                         return;
                 }
+
                 const auto copy_depth = [this](const VkCommandBuffer command_buffer)
                 {
                         ASSERT(render_buffers_);
@@ -357,10 +360,9 @@ class Impl final : public Renderer, RendererViewEvents, StorageMeshEvents, Stora
                         render_buffers_->commands_depth_copy(
                                 command_buffer, depth_copy_image_->image(), DEPTH_COPY_IMAGE_LAYOUT, viewport_, INDEX);
                 };
-                for (const VolumeObject* const visible_volume : volume_storage_.visible_objects())
-                {
-                        volume_renderer_.create_command_buffers(visible_volume, *graphics_command_pool_, copy_depth);
-                }
+
+                volume_renderer_.create_command_buffers(
+                        volume_storage_.visible_objects().front(), *graphics_command_pool_, copy_depth);
         }
 
         void set_volume_matrix()

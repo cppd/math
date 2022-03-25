@@ -49,15 +49,17 @@ VolumeRenderer::VolumeRenderer(
           depth_sampler_(create_volume_depth_image_sampler(*device)),
           transfer_function_sampler_(create_volume_transfer_function_sampler(*device))
 {
-        fragments_shared_memory_.set_drawing(drawing_buffer);
         image_shared_memory_.set_drawing(drawing_buffer);
         image_shared_memory_.set_ggx_f1_albedo(
+                ggx_f1_albedo.sampler(), ggx_f1_albedo.cosine_roughness(), ggx_f1_albedo.cosine_weighted_average());
+
+        fragments_shared_memory_.set_drawing(drawing_buffer);
+        fragments_shared_memory_.set_ggx_f1_albedo(
                 ggx_f1_albedo.sampler(), ggx_f1_albedo.cosine_roughness(), ggx_f1_albedo.cosine_weighted_average());
 }
 
 void VolumeRenderer::create_buffers(
         const RenderBuffers3D* const render_buffers,
-        const VkCommandPool graphics_command_pool,
         const Region<2, int>& viewport,
         const VkImageView depth_image,
         const vulkan::ImageWithMemory& transparency_heads_image,
@@ -84,8 +86,6 @@ void VolumeRenderer::create_buffers(
 
         pipeline_fragments_ = fragments_program_.create_pipeline(
                 render_buffers->render_pass(), render_buffers->sample_count(), sample_shading_, viewport);
-
-        create_command_buffers_fragments(graphics_command_pool);
 }
 
 void VolumeRenderer::delete_buffers()
@@ -207,6 +207,11 @@ void VolumeRenderer::create_command_buffers_fragments(const VkCommandPool graphi
         command_buffers_fragments_ = vulkan::create_command_buffers(info);
 }
 
+void VolumeRenderer::create_command_buffers(const VkCommandPool graphics_command_pool)
+{
+        create_command_buffers(nullptr, graphics_command_pool, nullptr);
+}
+
 void VolumeRenderer::create_command_buffers(
         const VolumeObject* const volume,
         const VkCommandPool graphics_command_pool,
@@ -220,10 +225,14 @@ void VolumeRenderer::create_command_buffers(
 
         delete_command_buffers();
 
+        create_command_buffers_fragments(graphics_command_pool);
+
         if (!volume)
         {
                 return;
         }
+
+        ASSERT(before_render_pass_commands);
 
         vulkan::CommandBufferCreateInfo info;
 
@@ -253,6 +262,7 @@ void VolumeRenderer::create_command_buffers(
 
 void VolumeRenderer::delete_command_buffers()
 {
+        command_buffers_fragments_.reset();
         command_buffers_image_.reset();
         command_buffers_image_fragments_.reset();
 }
@@ -261,12 +271,14 @@ void VolumeRenderer::set_shadow_image(const VkSampler sampler, const vulkan::Ima
 {
         delete_command_buffers();
         image_shared_memory_.set_shadow_image(sampler, shadow_image);
+        fragments_shared_memory_.set_shadow_image(sampler, shadow_image);
 }
 
 void VolumeRenderer::set_acceleration_structure(const VkAccelerationStructureKHR acceleration_structure)
 {
         delete_command_buffers();
         image_shared_memory_.set_acceleration_structure(acceleration_structure);
+        fragments_shared_memory_.set_acceleration_structure(acceleration_structure);
 }
 
 bool VolumeRenderer::has_volume() const

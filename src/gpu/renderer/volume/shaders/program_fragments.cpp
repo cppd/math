@@ -25,7 +25,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 namespace ns::gpu::renderer
 {
-std::vector<VkDescriptorSetLayoutBinding> FragmentsProgram::descriptor_set_layout_shared_bindings()
+std::vector<VkDescriptorSetLayoutBinding> FragmentsProgram::descriptor_set_layout_shared_bindings() const
 {
         VolumeSharedMemory::Flags flags;
 

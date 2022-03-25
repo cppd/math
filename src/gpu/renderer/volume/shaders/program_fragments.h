@@ -55,7 +55,7 @@ public:
                 const Region<2, int>& viewport) const;
 
         VkDescriptorSetLayout descriptor_set_layout_shared() const;
-        std::vector<VkDescriptorSetLayoutBinding> descriptor_set_layout_shared_bindings();
+        std::vector<VkDescriptorSetLayoutBinding> descriptor_set_layout_shared_bindings() const;
 
         VkPipelineLayout pipeline_layout() const;
 };
