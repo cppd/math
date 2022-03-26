@@ -28,9 +28,10 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "volume_intersect.glsl"
 
 #ifdef RAY_TRACING
-float mesh_shadow_transparency(const vec3 texture_position)
+
+float mesh_shadow_transparency(const vec3 world_position)
 {
-        const vec3 org = (coordinates.texture_to_world_matrix * vec4(texture_position, 1)).xyz;
+        const vec3 org = world_position;
         const vec3 dir = drawing.direction_to_light;
         const bool intersection =
                 !drawing.clip_plane_enabled
@@ -38,25 +39,77 @@ float mesh_shadow_transparency(const vec3 texture_position)
                         : ray_tracing_intersection(org, dir, acceleration_structure, drawing.clip_plane_equation);
         return intersection ? 0 : 1;
 }
-#else
-float mesh_shadow_transparency(const vec3 texture_position)
+
+float mesh_shadow_transparency_texture(const vec3 texture_position)
 {
-        const vec3 shadow_position = (shadow_matrices.texture_to_shadow * vec4(texture_position, 1)).xyz;
+        const vec4 world_position = coordinates.texture_to_world_matrix * vec4(texture_position, 1);
+        return mesh_shadow_transparency(world_position.xyz);
+}
+
+float mesh_shadow_transparency_device(const vec3 device_position)
+{
+        const vec4 world_position = coordinates.device_to_world_matrix * vec4(device_position, 1);
+        return mesh_shadow_transparency(world_position.xyz);
+}
+
+#else
+
+float mesh_shadow_transparency(const vec3 shadow_position)
+{
         const float d = texture(shadow_mapping_texture, shadow_position.xy).r;
         return d <= shadow_position.z ? 0 : 1;
 }
+
+float mesh_shadow_transparency_texture(const vec3 texture_position)
+{
+        const vec4 shadow_position = shadow_matrices.texture_to_shadow * vec4(texture_position, 1);
+        return mesh_shadow_transparency(shadow_position.xyz);
+}
+
+float mesh_shadow_transparency_device(const vec3 device_position)
+{
+        const vec4 shadow_position = shadow_matrices.device_to_shadow * vec4(device_position, 1);
+        return mesh_shadow_transparency(shadow_position.xyz);
+}
+
 #endif
 
-float isosurface_shadow_transparency(const vec3 texture_position)
+//
+
+float isosurface_shadow_transparency_texture(const vec3 texture_position)
 {
         const vec3 direction_to_light = normalize(coordinates.world_to_texture_matrix * drawing.direction_to_light);
         return isosurface_intersect(texture_position, direction_to_light) ? 0 : 1;
 }
 
-float shadow_transparency(const vec3 texture_position)
+float isosurface_shadow_transparency_device(const vec3 device_position)
 {
-        return mesh_shadow_transparency(texture_position) * isosurface_shadow_transparency(texture_position);
+        const vec4 texture_position = coordinates.device_to_texture_matrix * vec4(device_position, 1);
+        return isosurface_shadow_transparency_texture(texture_position.xyz);
 }
+
+//
+
+float shadow_transparency(const float mesh_shadow, const float isosurface_shadow)
+{
+        return mesh_shadow * isosurface_shadow;
+}
+
+float shadow_transparency_texture(const vec3 texture_position)
+{
+        const float mesh_shadow = mesh_shadow_transparency_texture(texture_position);
+        const float isosurface_shadow = isosurface_shadow_transparency_texture(texture_position);
+        return shadow_transparency(mesh_shadow, isosurface_shadow);
+}
+
+float shadow_transparency_device(const vec3 device_position)
+{
+        const float mesh_shadow = mesh_shadow_transparency_device(device_position);
+        const float isosurface_shadow = isosurface_shadow_transparency_device(device_position);
+        return shadow_transparency(mesh_shadow, isosurface_shadow);
+}
+
+//
 
 vec4 isosurface_color(const vec3 texture_position)
 {
@@ -70,7 +123,7 @@ vec4 isosurface_color(const vec3 texture_position)
 
         if (drawing.show_shadow)
         {
-                const float transparency = shadow_transparency(texture_position);
+                const float transparency = shadow_transparency_texture(texture_position);
 
                 const Lighting lighting = shade(
                         volume.color, volume.metalness, volume.roughness, n, v, l, ggx_f1_albedo_cosine_roughness,
