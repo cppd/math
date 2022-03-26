@@ -94,7 +94,8 @@ class Impl final : public VolumeObject
         std::optional<Vector4d> world_clip_plane_equation_;
 
         Matrix3d gradient_to_world_matrix_;
-        Matrix3d world_to_texture_matrix_;
+        Matrix3d world_to_texture_matrix_3x3_;
+        Matrix4d world_to_texture_matrix_4x4_;
         Matrix4d texture_to_world_matrix_;
         Vector3d gradient_h_;
 
@@ -156,8 +157,9 @@ class Impl final : public VolumeObject
                                 : Vector4d(0);
 
                 buffer_.set_coordinates(
-                        mvp.inverse(), texture_to_world_matrix_, device_to_world_matrix_, mvp.row(2), clip_plane,
-                        gradient_h_, gradient_to_world_matrix_, world_to_texture_matrix_);
+                        mvp.inverse(), texture_to_world_matrix_, device_to_world_matrix_,
+                        world_to_texture_matrix_4x4_ * device_to_world_matrix_, mvp.row(2), clip_plane, gradient_h_,
+                        gradient_to_world_matrix_, world_to_texture_matrix_3x3_);
         }
 
         void buffer_set_clip_plane() const
@@ -236,10 +238,9 @@ class Impl final : public VolumeObject
         {
                 texture_to_world_matrix_ = texture_to_world_matrix;
                 gradient_h_ = volume_gradient_h(texture_to_world_matrix_, image_->image());
-
-                const Matrix3d texture_to_world = texture_to_world_matrix_.top_left<3, 3>();
-                gradient_to_world_matrix_ = texture_to_world * Matrix3d(gradient_h_);
-                world_to_texture_matrix_ = texture_to_world.inverse();
+                gradient_to_world_matrix_ = texture_to_world_matrix_.top_left<3, 3>() * Matrix3d(gradient_h_);
+                world_to_texture_matrix_4x4_ = texture_to_world_matrix_.inverse();
+                world_to_texture_matrix_3x3_ = world_to_texture_matrix_4x4_.top_left<3, 3>();
 
                 buffer_set_coordinates();
 
