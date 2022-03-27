@@ -30,11 +30,10 @@ class VolumeBuffer final
 {
         struct Coordinates final
         {
-                alignas(sizeof(Vector4f)) Matrix4f inverse_mvp_matrix;
+                alignas(sizeof(Vector4f)) Matrix4f device_to_texture_matrix;
                 alignas(sizeof(Vector4f)) Matrix4f texture_to_world_matrix;
                 alignas(sizeof(Vector4f)) Matrix4f device_to_world_matrix;
-                alignas(sizeof(Vector4f)) Matrix4f device_to_texture_matrix;
-                alignas(sizeof(Vector4f)) Vector4f third_row_of_mvp;
+                alignas(sizeof(Vector4f)) Vector4f third_row_of_texture_to_device;
                 alignas(sizeof(Vector4f)) Vector4f clip_plane_equation;
                 alignas(sizeof(Vector4f)) Vector3f gradient_h;
                 alignas(sizeof(Vector4f)) std140::Matrix3f gradient_to_world_matrix;
@@ -69,11 +68,10 @@ public:
         const vulkan::Buffer& buffer_volume() const;
 
         void set_coordinates(
-                const Matrix4d& inverse_mvp_matrix,
+                const Matrix4d& device_to_texture_matrix,
                 const Matrix4d& texture_to_world_matrix,
                 const Matrix4d& device_to_world_matrix,
-                const Matrix4d& device_to_texture_matrix,
-                const Vector4d& third_row_of_mvp,
+                const Vector4d& third_row_of_texture_to_device,
                 const Vector4d& clip_plane_equation,
                 const Vector3d& gradient_h,
                 const Matrix3d& gradient_to_world_matrix,

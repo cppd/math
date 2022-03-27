@@ -287,8 +287,8 @@ void main()
 {
         fragments_build();
 
-        const vec3 ray_org = (coordinates.inverse_mvp_matrix * vec4(device_coordinates, 0, 1)).xyz;
-        const vec3 ray_dir = normalize(mat3(coordinates.inverse_mvp_matrix) * vec3(0, 0, 1));
+        const vec3 ray_org = (coordinates.device_to_texture_matrix * vec4(device_coordinates, 0, 1)).xyz;
+        const vec3 ray_dir = normalize(mat3(coordinates.device_to_texture_matrix) * vec3(0, 0, 1));
 
         float first;
         float second;
@@ -299,7 +299,7 @@ void main()
         }
 
         const vec3 image_org = ray_org + ray_dir * first;
-        const float depth_org = dot(coordinates.third_row_of_mvp, vec4(image_org, 1));
+        const float depth_org = dot(coordinates.third_row_of_texture_to_device, vec4(image_org, 1));
         const float depth_limit = texelFetch(depth_image, ivec2(gl_FragCoord.xy), gl_SampleID).r;
         const float depth_dir_limit = depth_limit - depth_org;
         if (depth_dir_limit <= 0)
@@ -309,7 +309,7 @@ void main()
         }
 
         vec3 image_dir = ray_dir * (second - first);
-        float depth_dir = dot(coordinates.third_row_of_mvp.xyz, image_dir);
+        float depth_dir = dot(coordinates.third_row_of_texture_to_device.xyz, image_dir);
         if (depth_dir > depth_dir_limit)
         {
                 image_dir *= depth_dir_limit / depth_dir;
