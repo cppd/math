@@ -62,13 +62,13 @@ float mesh_shadow_transparency(const vec3 shadow_position)
 
 float mesh_shadow_transparency_texture(const vec3 texture_position)
 {
-        const vec4 shadow_position = shadow_matrices.texture_to_shadow * vec4(texture_position, 1);
+        const vec4 shadow_position = coordinates.texture_to_shadow_matrix * vec4(texture_position, 1);
         return mesh_shadow_transparency(shadow_position.xyz);
 }
 
 float mesh_shadow_transparency_device(const vec3 device_position)
 {
-        const vec4 shadow_position = shadow_matrices.device_to_shadow * vec4(device_position, 1);
+        const vec4 shadow_position = coordinates.device_to_shadow_matrix * vec4(device_position, 1);
         return mesh_shadow_transparency(shadow_position.xyz);
 }
 

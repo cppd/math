@@ -40,9 +40,9 @@ std::vector<VkDescriptorSetLayoutBinding> VolumeProgram::descriptor_set_layout_s
         return VolumeSharedMemory::descriptor_set_layout_bindings(flags);
 }
 
-std::vector<VkDescriptorSetLayoutBinding> VolumeProgram::descriptor_set_layout_image_bindings() const
+std::vector<VkDescriptorSetLayoutBinding> VolumeProgram::descriptor_set_layout_image_bindings()
 {
-        return VolumeImageMemory::descriptor_set_layout_bindings(!ray_tracing_);
+        return VolumeImageMemory::descriptor_set_layout_bindings();
 }
 
 VolumeProgram::VolumeProgram(const vulkan::Device* const device, const Code& code)

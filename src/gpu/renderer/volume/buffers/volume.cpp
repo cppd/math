@@ -73,6 +73,21 @@ void VolumeBuffer::set_coordinates(
         vulkan::map_and_write_to_buffer(uniform_buffer_coordinates_, 0, coordinates);
 }
 
+void VolumeBuffer::set_coordinates(const Matrix4d& texture_to_shadow_matrix, const Matrix4d& device_to_shadow_matrix)
+        const
+{
+        {
+                decltype(Coordinates().texture_to_shadow_matrix) m = to_std140<float>(texture_to_shadow_matrix);
+                vulkan::map_and_write_to_buffer(
+                        uniform_buffer_coordinates_, offsetof(Coordinates, texture_to_shadow_matrix), m);
+        }
+        {
+                decltype(Coordinates().device_to_shadow_matrix) m = to_std140<float>(device_to_shadow_matrix);
+                vulkan::map_and_write_to_buffer(
+                        uniform_buffer_coordinates_, offsetof(Coordinates, device_to_shadow_matrix), m);
+        }
+}
+
 void VolumeBuffer::set_clip_plane(const Vector4d& clip_plane_equation) const
 {
         decltype(Coordinates().clip_plane_equation) clip_plane = to_vector<float>(clip_plane_equation);
