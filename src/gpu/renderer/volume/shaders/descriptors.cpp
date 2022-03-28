@@ -34,6 +34,17 @@ std::vector<VkDescriptorSetLayoutBinding> VolumeSharedMemory::descriptor_set_lay
                 bindings.push_back(b);
         }
 
+        if (flags.device_matrices)
+        {
+                VkDescriptorSetLayoutBinding b = {};
+                b.binding = DEVICE_MATRICES_BINDING;
+                b.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
+                b.descriptorCount = 1;
+                b.stageFlags = flags.device_matrices;
+
+                bindings.push_back(b);
+        }
+
         if (flags.depth_image)
         {
                 VkDescriptorSetLayoutBinding b = {};
@@ -144,6 +155,16 @@ void VolumeSharedMemory::set_drawing(const vulkan::Buffer& drawing) const
         buffer_info.range = drawing.size();
 
         descriptors_.update_descriptor_set(0, DRAWING_BINDING, buffer_info);
+}
+
+void VolumeSharedMemory::set_device_matrices(const vulkan::Buffer& device_matrices) const
+{
+        VkDescriptorBufferInfo buffer_info = {};
+        buffer_info.buffer = device_matrices;
+        buffer_info.offset = 0;
+        buffer_info.range = device_matrices.size();
+
+        descriptors_.update_descriptor_set(0, DEVICE_MATRICES_BINDING, buffer_info);
 }
 
 void VolumeSharedMemory::set_ggx_f1_albedo(

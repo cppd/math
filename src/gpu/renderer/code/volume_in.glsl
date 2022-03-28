@@ -33,23 +33,30 @@ layout(set = 0, binding = 1, std430) buffer restrict readonly TransparencyNodes
         TransparencyNode transparency_nodes[];
 };
 
+layout(set = 0, binding = 2, std140) uniform restrict DeviceMatrices
+{
+        mat4 device_to_world;
+        mat4 device_to_shadow;
+}
+device_matrices;
+
 #endif
 
 #if defined(IMAGE)
 
-layout(set = 0, binding = 2) uniform sampler2DMS depth_image;
+layout(set = 0, binding = 3) uniform sampler2DMS depth_image;
 
 #endif
 
-DRAWING_BUFFER(0, 3)
+DRAWING_BUFFER(0, 4)
 
-layout(set = 0, binding = 4) uniform sampler2D ggx_f1_albedo_cosine_roughness;
-layout(set = 0, binding = 5) uniform sampler1D ggx_f1_albedo_cosine_weighted_average;
+layout(set = 0, binding = 5) uniform sampler2D ggx_f1_albedo_cosine_roughness;
+layout(set = 0, binding = 6) uniform sampler1D ggx_f1_albedo_cosine_weighted_average;
 
 #ifdef RAY_TRACING
-layout(set = 0, binding = 6) uniform accelerationStructureEXT acceleration_structure;
+layout(set = 0, binding = 7) uniform accelerationStructureEXT acceleration_structure;
 #else
-layout(set = 0, binding = 6) uniform sampler2D shadow_mapping_texture;
+layout(set = 0, binding = 7) uniform sampler2D shadow_mapping_texture;
 #endif
 
 #if defined(IMAGE)

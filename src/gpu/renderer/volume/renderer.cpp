@@ -28,10 +28,13 @@ VolumeRenderer::VolumeRenderer(
         const vulkan::Device* const device,
         const Code& code,
         const bool sample_shading,
+        const std::vector<std::uint32_t>& graphics_family_indices,
         const vulkan::Buffer& drawing_buffer,
         const GgxF1Albedo& ggx_f1_albedo)
         : device_(*device),
           sample_shading_(sample_shading),
+          //
+          device_matrices_buffer_(*device, graphics_family_indices),
           //
           image_program_(device, code),
           image_shared_memory_(
@@ -56,6 +59,7 @@ VolumeRenderer::VolumeRenderer(
         fragments_shared_memory_.set_drawing(drawing_buffer);
         fragments_shared_memory_.set_ggx_f1_albedo(
                 ggx_f1_albedo.sampler(), ggx_f1_albedo.cosine_roughness(), ggx_f1_albedo.cosine_weighted_average());
+        fragments_shared_memory_.set_device_matrices(device_matrices_buffer_.buffer());
 }
 
 void VolumeRenderer::create_buffers(

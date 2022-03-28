@@ -27,9 +27,10 @@ namespace ns::gpu::renderer
 {
 std::vector<VkDescriptorSetLayoutBinding> FragmentsProgram::descriptor_set_layout_shared_bindings() const
 {
-        VolumeSharedMemory::Flags flags;
+        VolumeSharedMemory::Flags flags{};
 
         flags.drawing = VK_SHADER_STAGE_FRAGMENT_BIT;
+        flags.device_matrices = VK_SHADER_STAGE_FRAGMENT_BIT;
         flags.depth_image = 0;
         flags.ggx_f1_albedo = VK_SHADER_STAGE_FRAGMENT_BIT;
         flags.shadow_map = !ray_tracing_ ? VK_SHADER_STAGE_FRAGMENT_BIT : 0;

@@ -21,6 +21,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "../buffers/ggx_f1_albedo.h"
 #include "../code/code.h"
+#include "buffers/device_matrices.h"
 #include "shaders/descriptors.h"
 #include "shaders/program_fragments.h"
 #include "shaders/program_volume.h"
@@ -39,6 +40,8 @@ class VolumeRenderer
         const bool sample_shading_;
 
         const RenderBuffers3D* render_buffers_ = nullptr;
+
+        VolumeDeviceMatricesBuffer device_matrices_buffer_;
 
         VolumeProgram image_program_;
         VolumeSharedMemory image_shared_memory_;
@@ -68,6 +71,7 @@ public:
                 const vulkan::Device* device,
                 const Code& code,
                 bool sample_shading,
+                const std::vector<std::uint32_t>& graphics_family_indices,
                 const vulkan::Buffer& drawing_buffer,
                 const GgxF1Albedo& ggx_f1_albedo);
 
