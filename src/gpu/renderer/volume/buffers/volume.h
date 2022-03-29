@@ -32,9 +32,7 @@ class VolumeBuffer final
         {
                 alignas(sizeof(Vector4f)) Matrix4f device_to_texture_matrix;
                 alignas(sizeof(Vector4f)) Matrix4f texture_to_world_matrix;
-                alignas(sizeof(Vector4f)) Matrix4f device_to_world_matrix;
                 alignas(sizeof(Vector4f)) Matrix4f texture_to_shadow_matrix;
-                alignas(sizeof(Vector4f)) Matrix4f device_to_shadow_matrix;
                 alignas(sizeof(Vector4f)) Vector4f third_row_of_texture_to_device;
                 alignas(sizeof(Vector4f)) Vector4f clip_plane_equation;
                 alignas(sizeof(Vector4f)) Vector3f gradient_h;
@@ -72,14 +70,13 @@ public:
         void set_coordinates(
                 const Matrix4d& device_to_texture_matrix,
                 const Matrix4d& texture_to_world_matrix,
-                const Matrix4d& device_to_world_matrix,
                 const Vector4d& third_row_of_texture_to_device,
                 const Vector4d& clip_plane_equation,
                 const Vector3d& gradient_h,
                 const Matrix3d& gradient_to_world_matrix,
                 const Matrix3d& world_to_texture_matrix) const;
 
-        void set_coordinates(const Matrix4d& texture_to_shadow_matrix, const Matrix4d& device_to_shadow_matrix) const;
+        void set_texture_to_shadow_matrix(const Matrix4d& texture_to_shadow_matrix) const;
 
         void set_clip_plane(const Vector4d& clip_plane_equation) const;
 

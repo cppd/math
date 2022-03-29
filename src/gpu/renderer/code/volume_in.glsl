@@ -65,9 +65,7 @@ layout(set = 1, binding = 0, std140) uniform restrict Coordinates
 {
         mat4 device_to_texture_matrix;
         mat4 texture_to_world_matrix;
-        mat4 device_to_world_matrix;
         mat4 texture_to_shadow_matrix;
-        mat4 device_to_shadow_matrix;
         vec4 third_row_of_texture_to_device;
         vec4 clip_plane_equation;
         vec3 gradient_h;

@@ -54,7 +54,6 @@ const vulkan::Buffer& VolumeBuffer::buffer_volume() const
 void VolumeBuffer::set_coordinates(
         const Matrix4d& device_to_texture_matrix,
         const Matrix4d& texture_to_world_matrix,
-        const Matrix4d& device_to_world_matrix,
         const Vector4d& third_row_of_texture_to_device,
         const Vector4d& clip_plane_equation,
         const Vector3d& gradient_h,
@@ -64,7 +63,6 @@ void VolumeBuffer::set_coordinates(
         Coordinates coordinates;
         coordinates.device_to_texture_matrix = to_std140<float>(device_to_texture_matrix);
         coordinates.texture_to_world_matrix = to_std140<float>(texture_to_world_matrix);
-        coordinates.device_to_world_matrix = to_std140<float>(device_to_world_matrix);
         coordinates.third_row_of_texture_to_device = to_vector<float>(third_row_of_texture_to_device);
         coordinates.clip_plane_equation = to_vector<float>(clip_plane_equation);
         coordinates.gradient_h = to_vector<float>(gradient_h);
@@ -73,19 +71,11 @@ void VolumeBuffer::set_coordinates(
         vulkan::map_and_write_to_buffer(uniform_buffer_coordinates_, 0, coordinates);
 }
 
-void VolumeBuffer::set_coordinates(const Matrix4d& texture_to_shadow_matrix, const Matrix4d& device_to_shadow_matrix)
-        const
+void VolumeBuffer::set_texture_to_shadow_matrix(const Matrix4d& texture_to_shadow_matrix) const
 {
-        {
-                decltype(Coordinates().texture_to_shadow_matrix) m = to_std140<float>(texture_to_shadow_matrix);
-                vulkan::map_and_write_to_buffer(
-                        uniform_buffer_coordinates_, offsetof(Coordinates, texture_to_shadow_matrix), m);
-        }
-        {
-                decltype(Coordinates().device_to_shadow_matrix) m = to_std140<float>(device_to_shadow_matrix);
-                vulkan::map_and_write_to_buffer(
-                        uniform_buffer_coordinates_, offsetof(Coordinates, device_to_shadow_matrix), m);
-        }
+        decltype(Coordinates().texture_to_shadow_matrix) m = to_std140<float>(texture_to_shadow_matrix);
+        vulkan::map_and_write_to_buffer(
+                uniform_buffer_coordinates_, offsetof(Coordinates, texture_to_shadow_matrix), m);
 }
 
 void VolumeBuffer::set_clip_plane(const Vector4d& clip_plane_equation) const

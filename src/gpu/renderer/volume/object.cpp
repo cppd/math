@@ -84,13 +84,12 @@ class Impl final : public VolumeObject
         const std::vector<std::uint32_t> family_indices_;
 
         Matrix4d vp_matrix_ = Matrix4d(1);
-        Matrix4d device_to_world_matrix_ = Matrix4d(1);
         std::optional<Vector4d> world_clip_plane_equation_;
 
         Matrix3d gradient_to_world_matrix_;
         Matrix3d world_to_texture_matrix_;
         Matrix4d texture_to_world_matrix_;
-        Matrix4d world_to_shadow_matrix_;
+        Matrix4d world_to_shadow_matrix_ = Matrix4d(1);
 
         Vector3d gradient_h_;
 
@@ -150,9 +149,13 @@ class Impl final : public VolumeObject
                                 : Vector4d(0);
 
                 buffer_.set_coordinates(
-                        texture_to_device.inverse(), texture_to_world_matrix_, device_to_world_matrix_,
-                        texture_to_device.row(2), clip_plane, gradient_h_, gradient_to_world_matrix_,
-                        world_to_texture_matrix_);
+                        texture_to_device.inverse(), texture_to_world_matrix_, texture_to_device.row(2), clip_plane,
+                        gradient_h_, gradient_to_world_matrix_, world_to_texture_matrix_);
+
+                if (!ray_tracing_)
+                {
+                        buffer_.set_texture_to_shadow_matrix(world_to_shadow_matrix_ * texture_to_world_matrix_);
+                }
         }
 
         void buffer_set_clip_plane() const
@@ -237,13 +240,6 @@ class Impl final : public VolumeObject
                 world_to_texture_matrix_ = texture_to_world_3x3.inverse();
 
                 buffer_set_coordinates();
-
-                if (!ray_tracing_)
-                {
-                        buffer_.set_coordinates(
-                                world_to_shadow_matrix_ * texture_to_world_matrix_,
-                                world_to_shadow_matrix_ * device_to_world_matrix_);
-                }
         }
 
         const VkDescriptorSet& descriptor_set(const VkDescriptorSetLayout descriptor_set_layout) const override
@@ -261,7 +257,6 @@ class Impl final : public VolumeObject
                 const std::optional<Vector4d>& world_clip_plane_equation) override
         {
                 vp_matrix_ = vp_matrix;
-                device_to_world_matrix_ = vp_matrix.inverse();
                 world_clip_plane_equation_ = world_clip_plane_equation;
                 buffer_set_coordinates();
         }
@@ -271,12 +266,9 @@ class Impl final : public VolumeObject
                 const std::optional<Vector4d>& world_clip_plane_equation,
                 const Matrix4d& world_to_shadow_matrix) override
         {
-                set_matrix_and_clip_plane(vp_matrix, world_clip_plane_equation);
                 ASSERT(!ray_tracing_);
                 world_to_shadow_matrix_ = world_to_shadow_matrix;
-                buffer_.set_coordinates(
-                        world_to_shadow_matrix_ * texture_to_world_matrix_,
-                        world_to_shadow_matrix_ * device_to_world_matrix_);
+                set_matrix_and_clip_plane(vp_matrix, world_clip_plane_equation);
         }
 
         void set_clip_plane(const Vector4d& world_clip_plane_equation) override
