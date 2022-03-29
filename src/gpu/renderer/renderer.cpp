@@ -489,10 +489,16 @@ class Impl final : public Renderer, RendererViewEvents, StorageMeshEvents, Stora
         void view_matrices_changed() override
         {
                 set_volume_matrix();
-                if (!ray_tracing_)
+                if (ray_tracing_)
+                {
+                        volume_renderer_.set_matrix(renderer_view_.vp_matrix());
+                }
+                else
                 {
                         mesh_renderer_.set_shadow_matrices(
                                 renderer_view_.shadow_vp_matrix(), renderer_view_.world_to_shadow_matrix());
+                        volume_renderer_.set_matrix(
+                                renderer_view_.vp_matrix(), renderer_view_.world_to_shadow_matrix());
                 }
         }
 

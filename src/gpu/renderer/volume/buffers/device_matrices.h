@@ -39,6 +39,7 @@ public:
 
         const vulkan::Buffer& buffer() const;
 
+        void set(const Matrix4d& device_to_world) const;
         void set(const Matrix4d& device_to_world, const Matrix4d& device_to_shadow) const;
 };
 }

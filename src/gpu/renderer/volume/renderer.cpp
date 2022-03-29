@@ -313,4 +313,17 @@ std::optional<VkCommandBuffer> VolumeRenderer::command_buffer(const unsigned ind
         }
         return std::nullopt;
 }
+
+void VolumeRenderer::set_matrix(const Matrix4d& vp_matrix)
+{
+        const Matrix4d device_to_world = vp_matrix.inverse();
+        device_matrices_buffer_.set(device_to_world);
+}
+
+void VolumeRenderer::set_matrix(const Matrix4d& vp_matrix, const Matrix4d& world_to_shadow_matrix)
+{
+        const Matrix4d device_to_world = vp_matrix.inverse();
+        const Matrix4d device_to_shadow = world_to_shadow_matrix * device_to_world;
+        device_matrices_buffer_.set(device_to_world, device_to_shadow);
+}
 }

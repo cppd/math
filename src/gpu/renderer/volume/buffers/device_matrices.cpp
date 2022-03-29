@@ -38,6 +38,12 @@ const vulkan::Buffer& VolumeDeviceMatricesBuffer::buffer() const
         return buffer_.buffer();
 }
 
+void VolumeDeviceMatricesBuffer::set(const Matrix4d& device_to_world) const
+{
+        decltype(DeviceMatrices().device_to_world) m = to_std140<float>(device_to_world);
+        vulkan::map_and_write_to_buffer(buffer_, offsetof(DeviceMatrices, device_to_world), m);
+}
+
 void VolumeDeviceMatricesBuffer::set(const Matrix4d& device_to_world, const Matrix4d& device_to_shadow) const
 {
         DeviceMatrices m;
