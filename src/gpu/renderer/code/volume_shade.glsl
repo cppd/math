@@ -18,14 +18,17 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #ifndef VOLUME_SHADE_GLSL
 #define VOLUME_SHADE_GLSL
 
-#if defined(IMAGE)
-
 #include "ray_tracing_intersection.glsl"
 #include "shade.glsl"
 #include "transparency.glsl"
-#include "volume_image.glsl"
 #include "volume_in.glsl"
+
+#if defined(IMAGE)
+#include "volume_image.glsl"
 #include "volume_intersect.glsl"
+#endif
+
+//
 
 #ifdef RAY_TRACING
 
@@ -40,17 +43,21 @@ float mesh_shadow_transparency(const vec3 world_position)
         return intersection ? 0 : 1;
 }
 
+#if defined(IMAGE)
 float mesh_shadow_transparency_texture(const vec3 texture_position)
 {
         const vec4 world_position = coordinates.texture_to_world_matrix * vec4(texture_position, 1);
         return mesh_shadow_transparency(world_position.xyz);
 }
+#endif
 
+#if defined(FRAGMENTS)
 float mesh_shadow_transparency_device(const vec3 device_position)
 {
-        const vec4 world_position = coordinates.device_to_world_matrix * vec4(device_position, 1);
+        const vec4 world_position = device_matrices.device_to_world * vec4(device_position, 1);
         return mesh_shadow_transparency(world_position.xyz);
 }
+#endif
 
 #else
 
@@ -60,21 +67,27 @@ float mesh_shadow_transparency(const vec3 shadow_position)
         return d <= shadow_position.z ? 0 : 1;
 }
 
+#if defined(IMAGE)
 float mesh_shadow_transparency_texture(const vec3 texture_position)
 {
         const vec4 shadow_position = coordinates.texture_to_shadow_matrix * vec4(texture_position, 1);
         return mesh_shadow_transparency(shadow_position.xyz);
 }
+#endif
 
+#if defined(FRAGMENTS)
 float mesh_shadow_transparency_device(const vec3 device_position)
 {
-        const vec4 shadow_position = coordinates.device_to_shadow_matrix * vec4(device_position, 1);
+        const vec4 shadow_position = device_matrices.device_to_shadow * vec4(device_position, 1);
         return mesh_shadow_transparency(shadow_position.xyz);
 }
+#endif
 
 #endif
 
 //
+
+#if defined(IMAGE)
 
 float isosurface_shadow_transparency_texture(const vec3 texture_position)
 {
@@ -82,13 +95,13 @@ float isosurface_shadow_transparency_texture(const vec3 texture_position)
         return isosurface_intersect(texture_position, direction_to_light) ? 0 : 1;
 }
 
+#if defined(FRAGMENTS)
 float isosurface_shadow_transparency_device(const vec3 device_position)
 {
         const vec4 texture_position = coordinates.device_to_texture_matrix * vec4(device_position, 1);
         return isosurface_shadow_transparency_texture(texture_position.xyz);
 }
-
-//
+#endif
 
 float shadow_transparency(const float mesh_shadow, const float isosurface_shadow)
 {
@@ -102,14 +115,27 @@ float shadow_transparency_texture(const vec3 texture_position)
         return shadow_transparency(mesh_shadow, isosurface_shadow);
 }
 
+#if defined(FRAGMENTS)
 float shadow_transparency_device(const vec3 device_position)
 {
         const float mesh_shadow = mesh_shadow_transparency_device(device_position);
         const float isosurface_shadow = isosurface_shadow_transparency_device(device_position);
         return shadow_transparency(mesh_shadow, isosurface_shadow);
 }
+#endif
+
+#elif defined(FRAGMENTS)
+
+float shadow_transparency_device(const vec3 device_position)
+{
+        return mesh_shadow_transparency_device(device_position);
+}
+
+#endif
 
 //
+
+#if defined(IMAGE)
 
 vec4 isosurface_color(const vec3 texture_position)
 {
@@ -143,10 +169,25 @@ vec4 isosurface_color(const vec3 texture_position)
 
 #endif
 
+//
+
+#if !defined(FRAGMENTS)
+
+vec4 fragment_color(const Fragment)
+{
+        return vec4(0);
+}
+
+#else
+
 vec4 fragment_color(const Fragment fragment)
 {
         const FragmentData d = fragment_data(fragment);
         return d.color;
 }
+
+#endif
+
+//
 
 #endif
