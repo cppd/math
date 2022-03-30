@@ -29,13 +29,14 @@ constexpr unsigned long long BUFFER_SIZE = 1ull << 30;
 
 // uint color_rg
 // uint color_ba
-// uint n_xy
-// uint n_z_metalness
-// uint roughness_ambient
-// float edge_factor
+// uint metalness_roughness
+// uint ambient_edge_factor
+// float n_x
+// float n_y
+// float n_z
 // float depth
 // uint next
-constexpr unsigned long long NODE_SIZE = 32;
+constexpr unsigned long long NODE_SIZE = 36;
 }
 
 TransparencyBuffers::TransparencyBuffers(const vulkan::Device& device, const std::vector<std::uint32_t>& family_indices)

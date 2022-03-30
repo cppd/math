@@ -27,10 +27,11 @@ struct Fragment
 {
         uint color_rg;
         uint color_ba;
-        uint n_xy;
-        uint n_z_metalness;
-        uint roughness_ambient;
-        float edge_factor;
+        uint metalness_roughness;
+        uint ambient_edge_factor;
+        float n_x;
+        float n_y;
+        float n_z;
         float depth;
 };
 
@@ -55,10 +56,11 @@ TransparencyNode create_transparency_node(
 
         node.fragment.color_rg = packUnorm2x16(color.rg);
         node.fragment.color_ba = packUnorm2x16(vec2(color.b, alpha));
-        node.fragment.n_xy = packUnorm2x16(n.xy);
-        node.fragment.n_z_metalness = packUnorm2x16(vec2(n.z, metalness));
-        node.fragment.roughness_ambient = packUnorm2x16(vec2(roughness, ambient));
-        node.fragment.edge_factor = edge_factor;
+        node.fragment.metalness_roughness = packUnorm2x16(vec2(metalness, roughness));
+        node.fragment.ambient_edge_factor = packUnorm2x16(vec2(ambient, edge_factor));
+        node.fragment.n_x = n.x;
+        node.fragment.n_y = n.y;
+        node.fragment.n_z = n.z;
         node.fragment.depth = depth;
         node.next = next;
 
@@ -70,11 +72,11 @@ TransparencyNode create_transparency_node(
 struct FragmentData
 {
         vec4 color;
-        vec3 n;
         float metalness;
         float roughness;
         float ambient;
         float edge_factor;
+        vec3 n;
         float depth;
 };
 
@@ -84,18 +86,17 @@ FragmentData fragment_data(const Fragment fragment)
 
         data.color.rg = unpackUnorm2x16(fragment.color_rg);
         data.color.ba = unpackUnorm2x16(fragment.color_ba);
-        data.n.xy = unpackUnorm2x16(fragment.n_xy);
         {
-                const vec2 v = unpackUnorm2x16(fragment.n_z_metalness);
-                data.n.z = v.x;
-                data.metalness = v.y;
+                const vec2 v = unpackUnorm2x16(fragment.metalness_roughness);
+                data.metalness = v.x;
+                data.roughness = v.y;
         }
         {
-                const vec2 v = unpackUnorm2x16(fragment.roughness_ambient);
-                data.roughness = v.x;
-                data.ambient = v.y;
+                const vec2 v = unpackUnorm2x16(fragment.ambient_edge_factor);
+                data.ambient = v.x;
+                data.edge_factor = v.y;
         }
-        data.edge_factor = fragment.edge_factor;
+        data.n = vec3(fragment.n_x, fragment.n_y, fragment.n_z);
         data.depth = fragment.depth;
 
         return data;
