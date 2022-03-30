@@ -119,6 +119,10 @@ float shadow_transparency_texture(const vec3 texture_position)
 float shadow_transparency_device(const vec3 device_position)
 {
         const float mesh_shadow = mesh_shadow_transparency_device(device_position);
+        if (is_volume())
+        {
+                return mesh_shadow;
+        }
         const float isosurface_shadow = isosurface_shadow_transparency_device(device_position);
         return shadow_transparency(mesh_shadow, isosurface_shadow);
 }
