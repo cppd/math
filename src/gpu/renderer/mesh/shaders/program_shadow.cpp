@@ -27,7 +27,7 @@ namespace ns::gpu::renderer
 {
 std::vector<VkDescriptorSetLayoutBinding> ShadowProgram::descriptor_set_layout_shared_bindings()
 {
-        SharedMemory::Flags flags;
+        SharedMemory::Flags flags{};
 
         flags.shadow_matrices = VK_SHADER_STAGE_VERTEX_BIT;
         flags.drawing = VK_SHADER_STAGE_VERTEX_BIT;

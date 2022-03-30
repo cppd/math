@@ -28,7 +28,7 @@ namespace ns::gpu::renderer
 {
 std::vector<VkDescriptorSetLayoutBinding> PointsProgram::descriptor_set_layout_shared_bindings()
 {
-        SharedMemory::Flags flags;
+        SharedMemory::Flags flags{};
 
         flags.shadow_matrices = 0;
         flags.drawing = VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT;
