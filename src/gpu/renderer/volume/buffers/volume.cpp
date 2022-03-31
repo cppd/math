@@ -31,7 +31,7 @@ VolumeBuffer::VolumeBuffer(
                 device,
                 graphics_family_indices,
                 VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT,
-                sizeof(Coordinates)),
+                sizeof(VolumeCoordinates)),
           uniform_buffer_volume_(
                   vulkan::BufferMemoryType::DEVICE_LOCAL,
                   device,
@@ -60,7 +60,7 @@ void VolumeBuffer::set_coordinates(
         const Matrix3d& gradient_to_world_matrix,
         const Matrix3d& world_to_texture_matrix) const
 {
-        Coordinates coordinates;
+        VolumeCoordinates coordinates;
         coordinates.device_to_texture_matrix = to_std140<float>(device_to_texture_matrix);
         coordinates.texture_to_world_matrix = to_std140<float>(texture_to_world_matrix);
         coordinates.third_row_of_texture_to_device = to_vector<float>(third_row_of_texture_to_device);
@@ -73,16 +73,16 @@ void VolumeBuffer::set_coordinates(
 
 void VolumeBuffer::set_texture_to_shadow_matrix(const Matrix4d& texture_to_shadow_matrix) const
 {
-        decltype(Coordinates().texture_to_shadow_matrix) m = to_std140<float>(texture_to_shadow_matrix);
+        decltype(VolumeCoordinates().texture_to_shadow_matrix) m = to_std140<float>(texture_to_shadow_matrix);
         vulkan::map_and_write_to_buffer(
-                uniform_buffer_coordinates_, offsetof(Coordinates, texture_to_shadow_matrix), m);
+                uniform_buffer_coordinates_, offsetof(VolumeCoordinates, texture_to_shadow_matrix), m);
 }
 
 void VolumeBuffer::set_clip_plane(const Vector4d& clip_plane_equation) const
 {
-        decltype(Coordinates().clip_plane_equation) clip_plane = to_vector<float>(clip_plane_equation);
+        decltype(VolumeCoordinates().clip_plane_equation) clip_plane = to_vector<float>(clip_plane_equation);
         vulkan::map_and_write_to_buffer(
-                uniform_buffer_coordinates_, offsetof(Coordinates, clip_plane_equation), clip_plane);
+                uniform_buffer_coordinates_, offsetof(VolumeCoordinates, clip_plane_equation), clip_plane);
 }
 
 void VolumeBuffer::set_parameters(

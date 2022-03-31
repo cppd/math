@@ -15,13 +15,13 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include "device_matrices.h"
+#include "coordinates.h"
 
 #include "../../../com/matrix.h"
 
 namespace ns::gpu::renderer
 {
-VolumeDeviceMatricesBuffer::VolumeDeviceMatricesBuffer(
+VolumeCoordinatesBuffer::VolumeCoordinatesBuffer(
         const vulkan::Device& device,
         const std::vector<std::uint32_t>& family_indices)
         : buffer_(
@@ -29,24 +29,24 @@ VolumeDeviceMatricesBuffer::VolumeDeviceMatricesBuffer(
                 device,
                 family_indices,
                 VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT,
-                sizeof(DeviceMatrices))
+                sizeof(Coordinates))
 {
 }
 
-const vulkan::Buffer& VolumeDeviceMatricesBuffer::buffer() const
+const vulkan::Buffer& VolumeCoordinatesBuffer::buffer() const
 {
         return buffer_.buffer();
 }
 
-void VolumeDeviceMatricesBuffer::set(const Matrix4d& device_to_world) const
+void VolumeCoordinatesBuffer::set(const Matrix4d& device_to_world) const
 {
-        decltype(DeviceMatrices().device_to_world) m = to_std140<float>(device_to_world);
-        vulkan::map_and_write_to_buffer(buffer_, offsetof(DeviceMatrices, device_to_world), m);
+        decltype(Coordinates().device_to_world) m = to_std140<float>(device_to_world);
+        vulkan::map_and_write_to_buffer(buffer_, offsetof(Coordinates, device_to_world), m);
 }
 
-void VolumeDeviceMatricesBuffer::set(const Matrix4d& device_to_world, const Matrix4d& device_to_shadow) const
+void VolumeCoordinatesBuffer::set(const Matrix4d& device_to_world, const Matrix4d& device_to_shadow) const
 {
-        DeviceMatrices m;
+        Coordinates m;
         m.device_to_world = to_std140<float>(device_to_world);
         m.device_to_shadow = to_std140<float>(device_to_shadow);
         vulkan::map_and_write_to_buffer(buffer_, m);

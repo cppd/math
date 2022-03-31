@@ -21,7 +21,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "../buffers/ggx_f1_albedo.h"
 #include "../code/code.h"
-#include "buffers/device_matrices.h"
+#include "buffers/coordinates.h"
 #include "shaders/descriptors.h"
 #include "shaders/program_fragments.h"
 #include "shaders/program_volume.h"
@@ -41,7 +41,7 @@ class VolumeRenderer
 
         const RenderBuffers3D* render_buffers_ = nullptr;
 
-        VolumeDeviceMatricesBuffer device_matrices_buffer_;
+        VolumeCoordinatesBuffer coordinates_buffer_;
 
         VolumeProgram image_program_;
         VolumeSharedMemory image_shared_memory_;

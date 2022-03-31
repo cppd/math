@@ -44,7 +44,7 @@ bool volume_intersect(
 
         if (drawing.clip_plane_enabled)
         {
-                if (!plane_intersection(org, dir, coordinates.clip_plane_equation, near, far))
+                if (!plane_intersection(org, dir, volume_coordinates.clip_plane_equation, near, far))
                 {
                         return false;
                 }

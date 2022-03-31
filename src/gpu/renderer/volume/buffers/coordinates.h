@@ -24,9 +24,9 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 namespace ns::gpu::renderer
 {
-class VolumeDeviceMatricesBuffer final
+class VolumeCoordinatesBuffer final
 {
-        struct DeviceMatrices final
+        struct Coordinates final
         {
                 alignas(sizeof(Vector4f)) Matrix4f device_to_world;
                 alignas(sizeof(Vector4f)) Matrix4f device_to_shadow;
@@ -35,7 +35,7 @@ class VolumeDeviceMatricesBuffer final
         vulkan::BufferWithMemory buffer_;
 
 public:
-        VolumeDeviceMatricesBuffer(const vulkan::Device& device, const std::vector<std::uint32_t>& family_indices);
+        VolumeCoordinatesBuffer(const vulkan::Device& device, const std::vector<std::uint32_t>& family_indices);
 
         const vulkan::Buffer& buffer() const;
 

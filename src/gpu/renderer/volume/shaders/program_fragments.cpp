@@ -30,7 +30,7 @@ std::vector<VkDescriptorSetLayoutBinding> FragmentsProgram::descriptor_set_layou
         VolumeSharedMemory::Flags flags{};
 
         flags.drawing = VK_SHADER_STAGE_FRAGMENT_BIT;
-        flags.device_matrices = VK_SHADER_STAGE_FRAGMENT_BIT;
+        flags.coordinates = VK_SHADER_STAGE_FRAGMENT_BIT;
         flags.depth_image = 0;
         flags.ggx_f1_albedo = VK_SHADER_STAGE_FRAGMENT_BIT;
         flags.shadow_map = !ray_tracing_ ? VK_SHADER_STAGE_FRAGMENT_BIT : 0;

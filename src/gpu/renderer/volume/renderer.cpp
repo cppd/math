@@ -34,7 +34,7 @@ VolumeRenderer::VolumeRenderer(
         : device_(*device),
           sample_shading_(sample_shading),
           //
-          device_matrices_buffer_(*device, graphics_family_indices),
+          coordinates_buffer_(*device, graphics_family_indices),
           //
           image_program_(device, code),
           image_shared_memory_(
@@ -55,12 +55,12 @@ VolumeRenderer::VolumeRenderer(
         image_shared_memory_.set_drawing(drawing_buffer);
         image_shared_memory_.set_ggx_f1_albedo(
                 ggx_f1_albedo.sampler(), ggx_f1_albedo.cosine_roughness(), ggx_f1_albedo.cosine_weighted_average());
-        image_shared_memory_.set_device_matrices(device_matrices_buffer_.buffer());
+        image_shared_memory_.set_coordinates(coordinates_buffer_.buffer());
 
         fragments_shared_memory_.set_drawing(drawing_buffer);
         fragments_shared_memory_.set_ggx_f1_albedo(
                 ggx_f1_albedo.sampler(), ggx_f1_albedo.cosine_roughness(), ggx_f1_albedo.cosine_weighted_average());
-        fragments_shared_memory_.set_device_matrices(device_matrices_buffer_.buffer());
+        fragments_shared_memory_.set_coordinates(coordinates_buffer_.buffer());
 }
 
 void VolumeRenderer::create_buffers(
@@ -318,13 +318,13 @@ std::optional<VkCommandBuffer> VolumeRenderer::command_buffer(const unsigned ind
 void VolumeRenderer::set_matrix(const Matrix4d& vp_matrix)
 {
         const Matrix4d device_to_world = vp_matrix.inverse();
-        device_matrices_buffer_.set(device_to_world);
+        coordinates_buffer_.set(device_to_world);
 }
 
 void VolumeRenderer::set_matrix(const Matrix4d& vp_matrix, const Matrix4d& world_to_shadow_matrix)
 {
         const Matrix4d device_to_world = vp_matrix.inverse();
         const Matrix4d device_to_shadow = world_to_shadow_matrix * device_to_world;
-        device_matrices_buffer_.set(device_to_world, device_to_shadow);
+        coordinates_buffer_.set(device_to_world, device_to_shadow);
 }
 }

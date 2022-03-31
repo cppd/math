@@ -28,7 +28,7 @@ namespace ns::gpu::renderer
 {
 class VolumeBuffer final
 {
-        struct Coordinates final
+        struct VolumeCoordinates final
         {
                 alignas(sizeof(Vector4f)) Matrix4f device_to_texture_matrix;
                 alignas(sizeof(Vector4f)) Matrix4f texture_to_world_matrix;

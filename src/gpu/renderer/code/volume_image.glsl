@@ -58,14 +58,14 @@ vec3 volume_gradient(const vec3 p)
         vec3 s1;
         vec3 s2;
 
-        s1.x = scalar_volume_value(vec3(p.x - coordinates.gradient_h.x, p.y, p.z));
-        s2.x = scalar_volume_value(vec3(p.x + coordinates.gradient_h.x, p.y, p.z));
+        s1.x = scalar_volume_value(vec3(p.x - volume_coordinates.gradient_h.x, p.y, p.z));
+        s2.x = scalar_volume_value(vec3(p.x + volume_coordinates.gradient_h.x, p.y, p.z));
 
-        s1.y = scalar_volume_value(vec3(p.x, p.y - coordinates.gradient_h.y, p.z));
-        s2.y = scalar_volume_value(vec3(p.x, p.y + coordinates.gradient_h.y, p.z));
+        s1.y = scalar_volume_value(vec3(p.x, p.y - volume_coordinates.gradient_h.y, p.z));
+        s2.y = scalar_volume_value(vec3(p.x, p.y + volume_coordinates.gradient_h.y, p.z));
 
-        s1.z = scalar_volume_value(vec3(p.x, p.y, p.z - coordinates.gradient_h.z));
-        s2.z = scalar_volume_value(vec3(p.x, p.y, p.z + coordinates.gradient_h.z));
+        s1.z = scalar_volume_value(vec3(p.x, p.y, p.z - volume_coordinates.gradient_h.z));
+        s2.z = scalar_volume_value(vec3(p.x, p.y, p.z + volume_coordinates.gradient_h.z));
 
         return s2 - s1;
 }

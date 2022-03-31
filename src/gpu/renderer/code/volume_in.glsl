@@ -33,12 +33,12 @@ layout(set = 0, binding = 1, std430) buffer restrict readonly TransparencyNodes
         TransparencyNode transparency_nodes[];
 };
 
-layout(set = 0, binding = 2, std140) uniform restrict DeviceMatrices
+layout(set = 0, binding = 2, std140) uniform restrict Coordinates
 {
         mat4 device_to_world;
         mat4 device_to_shadow;
 }
-device_matrices;
+coordinates;
 
 #endif
 
@@ -61,7 +61,7 @@ layout(set = 0, binding = 7) uniform sampler2D shadow_mapping_texture;
 
 #if defined(IMAGE)
 
-layout(set = 1, binding = 0, std140) uniform restrict Coordinates
+layout(set = 1, binding = 0, std140) uniform restrict VolumeCoordinates
 {
         mat4 device_to_texture_matrix;
         mat4 texture_to_world_matrix;
@@ -72,7 +72,7 @@ layout(set = 1, binding = 0, std140) uniform restrict Coordinates
         mat3 gradient_to_world_matrix;
         mat3 world_to_texture_matrix;
 }
-coordinates;
+volume_coordinates;
 
 layout(set = 1, binding = 1, std140) uniform restrict Volume
 {

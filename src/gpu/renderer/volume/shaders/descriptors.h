@@ -32,7 +32,7 @@ class VolumeSharedMemory final
         static constexpr int TRANSPARENCY_HEADS_BINDING = 0;
         static constexpr int TRANSPARENCY_NODES_BINDING = 1;
 
-        static constexpr int DEVICE_MATRICES_BINDING = 2;
+        static constexpr int COORDINATES_BINDING = 2;
 
         static constexpr int DEPTH_IMAGE_BINDING = 3;
 
@@ -50,7 +50,7 @@ public:
         struct Flags final
         {
                 VkShaderStageFlags drawing;
-                VkShaderStageFlags device_matrices;
+                VkShaderStageFlags coordinates;
                 VkShaderStageFlags depth_image;
                 VkShaderStageFlags ggx_f1_albedo;
                 VkShaderStageFlags shadow_map;
@@ -77,7 +77,7 @@ public:
         const VkDescriptorSet& descriptor_set() const;
 
         void set_drawing(const vulkan::Buffer& drawing) const;
-        void set_device_matrices(const vulkan::Buffer& device_matrices) const;
+        void set_coordinates(const vulkan::Buffer& coordinates) const;
 
         void set_ggx_f1_albedo(
                 VkSampler sampler,
