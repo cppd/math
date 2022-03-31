@@ -57,7 +57,7 @@ TransparencyNode create_transparency_node(
         node.fragment.color_rg = packUnorm2x16(color.rg);
         node.fragment.color_ba = packUnorm2x16(vec2(color.b, alpha));
         node.fragment.metalness_roughness = packUnorm2x16(vec2(metalness, roughness));
-        node.fragment.ambient_edge_factor = packUnorm2x16(vec2(ambient, edge_factor));
+        node.fragment.ambient_edge_factor = packSnorm2x16(vec2(ambient, edge_factor));
         node.fragment.n_x = n.x;
         node.fragment.n_y = n.y;
         node.fragment.n_z = n.z;
@@ -92,7 +92,7 @@ FragmentData fragment_data(const Fragment fragment)
                 data.roughness = v.y;
         }
         {
-                const vec2 v = unpackUnorm2x16(fragment.ambient_edge_factor);
+                const vec2 v = unpackSnorm2x16(fragment.ambient_edge_factor);
                 data.ambient = v.x;
                 data.edge_factor = v.y;
         }
