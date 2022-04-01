@@ -174,15 +174,6 @@ vulkan::handle::Pipeline ViewProgram::create_pipeline(
         const std::vector<const vulkan::Shader*> shaders = {&vertex_shader_, &fragment_shader_};
         info.shaders = &shaders;
 
-        const std::vector<const vulkan::SpecializationConstant*> constants = {nullptr, nullptr};
-        info.constants = &constants;
-
-        const std::vector<VkVertexInputBindingDescription> binding_descriptions;
-        info.binding_descriptions = &binding_descriptions;
-
-        const std::vector<VkVertexInputAttributeDescription> attribute_descriptions;
-        info.attribute_descriptions = &attribute_descriptions;
-
         return vulkan::create_graphics_pipeline(info);
 }
 }

@@ -123,14 +123,7 @@ vulkan::handle::Pipeline VolumeProgram::create_pipeline(
         info.color_blend->alphaBlendOp = VK_BLEND_OP_ADD;
 
         const std::vector<const vulkan::Shader*> shaders{&vertex_shader_, fragment_shader(type)};
-        const std::vector<const vulkan::SpecializationConstant*> specialization_constants = {nullptr, nullptr};
-        const std::vector<VkVertexInputBindingDescription> binding_descriptions;
-        const std::vector<VkVertexInputAttributeDescription> attribute_descriptions;
-
         info.shaders = &shaders;
-        info.constants = &specialization_constants;
-        info.binding_descriptions = &binding_descriptions;
-        info.attribute_descriptions = &attribute_descriptions;
 
         return vulkan::create_graphics_pipeline(info);
 }
