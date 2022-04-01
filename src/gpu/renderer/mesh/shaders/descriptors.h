@@ -32,25 +32,6 @@ void push_constant_command(VkCommandBuffer command_buffer, VkPipelineLayout pipe
 
 //
 
-class SharedConstants final : public vulkan::SpecializationConstant
-{
-        struct Data
-        {
-                std::uint32_t transparency_drawing;
-        } data_;
-
-        std::vector<VkSpecializationMapEntry> entries_;
-
-        const std::vector<VkSpecializationMapEntry>& entries() const override;
-        const void* data() const override;
-        std::size_t size() const override;
-
-public:
-        SharedConstants();
-
-        void set(bool transparency_drawing);
-};
-
 class SharedMemory final
 {
         static constexpr int SET_NUMBER = 0;

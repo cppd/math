@@ -60,7 +60,7 @@ void set_fragment_color(const vec3 color)
 {
         imageStore(object_image, ivec2(gl_FragCoord.xy), uvec4(1));
 
-        if (!TRANSPARENCY_DRAWING)
+        if (!transparency_drawing)
         {
                 out_color = vec4(color, 1);
         }
@@ -74,7 +74,7 @@ void set_fragment_color(const vec3 surface_color, const vec3 n, const vec3 world
 {
         imageStore(object_image, ivec2(gl_FragCoord.xy), uvec4(1));
 
-        if (!TRANSPARENCY_DRAWING)
+        if (!transparency_drawing)
         {
                 const vec3 color = mesh_shade(
                         surface_color, n, mesh.metalness, mesh.roughness, mesh.ambient, world_position, edge_factor);

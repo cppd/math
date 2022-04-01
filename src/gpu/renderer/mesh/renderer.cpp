@@ -283,33 +283,35 @@ void MeshRenderer::draw_commands(
         if (!image)
         {
                 commands_triangles(
-                        meshes, command_buffer, render_pipelines(transparent)->triangles_fragments, triangles_program_,
-                        triangles_shared_memory_);
+                        meshes, command_buffer, render_pipelines(transparent)->triangles_fragments, transparent,
+                        triangles_program_, triangles_shared_memory_);
         }
         else
         {
                 commands_triangles(
-                        meshes, command_buffer, render_pipelines(transparent)->triangles_image, triangles_program_,
-                        triangles_shared_memory_);
+                        meshes, command_buffer, render_pipelines(transparent)->triangles_image, transparent,
+                        triangles_program_, triangles_shared_memory_);
         }
 
         commands_lines(
-                meshes, command_buffer, render_pipelines(transparent)->lines, points_program_, points_shared_memory_);
+                meshes, command_buffer, render_pipelines(transparent)->lines, transparent, points_program_,
+                points_shared_memory_);
 
         commands_points(
-                meshes, command_buffer, render_pipelines(transparent)->points, points_program_, points_shared_memory_);
+                meshes, command_buffer, render_pipelines(transparent)->points, transparent, points_program_,
+                points_shared_memory_);
 
         if (clip_plane)
         {
                 commands_triangle_lines(
-                        meshes, command_buffer, render_pipelines(transparent)->triangle_lines, triangle_lines_program_,
-                        triangle_lines_shared_memory_);
+                        meshes, command_buffer, render_pipelines(transparent)->triangle_lines, transparent,
+                        triangle_lines_program_, triangle_lines_shared_memory_);
         }
 
         if (normals)
         {
                 commands_normals(
-                        meshes, command_buffer, render_pipelines(transparent)->normals, normals_program_,
+                        meshes, command_buffer, render_pipelines(transparent)->normals, transparent, normals_program_,
                         normals_shared_memory_);
         }
 }

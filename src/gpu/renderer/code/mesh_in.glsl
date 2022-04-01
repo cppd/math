@@ -25,8 +25,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #extension GL_EXT_ray_query : require
 #endif
 
-layout(constant_id = 0) const bool TRANSPARENCY_DRAWING = false;
-
 layout(push_constant, std430) uniform restrict PushConstants
 {
         bool transparency_drawing;

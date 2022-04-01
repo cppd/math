@@ -54,8 +54,7 @@ ShadowProgram::ShadowProgram(const vulkan::Device* const device, const Code& cod
           pipeline_layout_(vulkan::create_pipeline_layout(
                   *device,
                   {SharedMemory::set_number(), MeshMemory::set_number()},
-                  {descriptor_set_layout_shared_, descriptor_set_layout_mesh_},
-                  push_constant_ranges())),
+                  {descriptor_set_layout_shared_, descriptor_set_layout_mesh_})),
           vertex_shader_(*device_, code.mesh_shadow_vert(), VK_SHADER_STAGE_VERTEX_BIT)
 {
 }
@@ -97,9 +96,6 @@ vulkan::handle::Pipeline ShadowProgram::create_pipeline(
 
         const std::vector<const vulkan::Shader*> shaders = {&vertex_shader_};
         info.shaders = &shaders;
-
-        const std::vector<const vulkan::SpecializationConstant*> constants = {nullptr};
-        info.constants = &constants;
 
         const std::vector<VkVertexInputBindingDescription> binding_descriptions =
                 TrianglesVertex::binding_descriptions();

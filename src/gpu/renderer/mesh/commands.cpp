@@ -23,6 +23,7 @@ void commands_triangles(
         const std::vector<const MeshObject*>& meshes,
         const VkCommandBuffer command_buffer,
         const VkPipeline pipeline,
+        const bool transparent,
         const TrianglesProgram& triangles_program,
         const SharedMemory& triangles_shared_memory)
 {
@@ -31,6 +32,8 @@ void commands_triangles(
         vkCmdBindDescriptorSets(
                 command_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, triangles_program.pipeline_layout(),
                 SharedMemory::set_number(), 1 /*set count*/, &triangles_shared_memory.descriptor_set(), 0, nullptr);
+
+        push_constant_command(command_buffer, triangles_program.pipeline_layout(), transparent);
 
         const auto bind_descriptor_set_mesh = [&](VkDescriptorSet descriptor_set)
         {
@@ -85,6 +88,7 @@ void commands_lines(
         const std::vector<const MeshObject*>& meshes,
         const VkCommandBuffer command_buffer,
         const VkPipeline pipeline,
+        const bool transparent,
         const PointsProgram& points_program,
         const SharedMemory& points_shared_memory)
 {
@@ -93,6 +97,8 @@ void commands_lines(
         vkCmdBindDescriptorSets(
                 command_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, points_program.pipeline_layout(),
                 SharedMemory::set_number(), 1 /*set count*/, &points_shared_memory.descriptor_set(), 0, nullptr);
+
+        push_constant_command(command_buffer, points_program.pipeline_layout(), transparent);
 
         const auto bind_descriptor_set_mesh = [&](VkDescriptorSet descriptor_set)
         {
@@ -112,6 +118,7 @@ void commands_points(
         const std::vector<const MeshObject*>& meshes,
         const VkCommandBuffer command_buffer,
         const VkPipeline pipeline,
+        const bool transparent,
         const PointsProgram& points_program,
         const SharedMemory& points_shared_memory)
 {
@@ -120,6 +127,8 @@ void commands_points(
         vkCmdBindDescriptorSets(
                 command_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, points_program.pipeline_layout(),
                 SharedMemory::set_number(), 1 /*set count*/, &points_shared_memory.descriptor_set(), 0, nullptr);
+
+        push_constant_command(command_buffer, points_program.pipeline_layout(), transparent);
 
         const auto bind_descriptor_set_mesh = [&](VkDescriptorSet descriptor_set)
         {
@@ -139,6 +148,7 @@ void commands_triangle_lines(
         const std::vector<const MeshObject*>& meshes,
         const VkCommandBuffer command_buffer,
         const VkPipeline pipeline,
+        const bool transparent,
         const TriangleLinesProgram& triangle_lines_program,
         const SharedMemory& triangle_lines_shared_memory)
 {
@@ -148,6 +158,8 @@ void commands_triangle_lines(
                 command_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, triangle_lines_program.pipeline_layout(),
                 SharedMemory::set_number(), 1 /*set count*/, &triangle_lines_shared_memory.descriptor_set(), 0,
                 nullptr);
+
+        push_constant_command(command_buffer, triangle_lines_program.pipeline_layout(), transparent);
 
         const auto bind_descriptor_set_mesh = [&](VkDescriptorSet descriptor_set)
         {
@@ -167,6 +179,7 @@ void commands_normals(
         const std::vector<const MeshObject*>& meshes,
         const VkCommandBuffer command_buffer,
         const VkPipeline pipeline,
+        const bool transparent,
         const NormalsProgram& normals_program,
         const SharedMemory& normals_shared_memory)
 {
@@ -175,6 +188,8 @@ void commands_normals(
         vkCmdBindDescriptorSets(
                 command_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, normals_program.pipeline_layout(),
                 SharedMemory::set_number(), 1 /*set count*/, &normals_shared_memory.descriptor_set(), 0, nullptr);
+
+        push_constant_command(command_buffer, normals_program.pipeline_layout(), transparent);
 
         const auto bind_descriptor_set_mesh = [&](VkDescriptorSet descriptor_set)
         {

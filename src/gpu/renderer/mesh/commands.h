@@ -35,6 +35,7 @@ void commands_triangles(
         const std::vector<const MeshObject*>& meshes,
         VkCommandBuffer command_buffer,
         VkPipeline pipeline,
+        bool transparent,
         const TrianglesProgram& triangles_program,
         const SharedMemory& triangles_shared_memory);
 
@@ -49,6 +50,7 @@ void commands_lines(
         const std::vector<const MeshObject*>& meshes,
         VkCommandBuffer command_buffer,
         VkPipeline pipeline,
+        bool transparent,
         const PointsProgram& points_program,
         const SharedMemory& points_shared_memory);
 
@@ -56,6 +58,7 @@ void commands_points(
         const std::vector<const MeshObject*>& meshes,
         VkCommandBuffer command_buffer,
         VkPipeline pipeline,
+        bool transparent,
         const PointsProgram& points_program,
         const SharedMemory& points_shared_memory);
 
@@ -63,6 +66,7 @@ void commands_triangle_lines(
         const std::vector<const MeshObject*>& meshes,
         VkCommandBuffer command_buffer,
         VkPipeline pipeline,
+        bool transparent,
         const TriangleLinesProgram& triangle_lines_program,
         const SharedMemory& triangle_lines_shared_memory);
 
@@ -70,6 +74,7 @@ void commands_normals(
         const std::vector<const MeshObject*>& meshes,
         VkCommandBuffer command_buffer,
         VkPipeline pipeline,
+        bool transparent,
         const NormalsProgram& normals_program,
         const SharedMemory& normals_shared_memory);
 }

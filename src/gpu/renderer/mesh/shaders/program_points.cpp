@@ -95,9 +95,6 @@ vulkan::handle::Pipeline PointsProgram::create_pipeline(
         info.pipeline_layout = pipeline_layout_;
         info.viewport = viewport;
         info.primitive_topology = primitive_topology;
-
-        SharedConstants shared_constants;
-        shared_constants.set(transparency);
         info.depth_write = !transparency;
 
         std::vector<const vulkan::Shader*> shaders;
@@ -113,13 +110,11 @@ vulkan::handle::Pipeline PointsProgram::create_pipeline(
         {
                 error_fatal("Unsupported primitive topology for renderer points program");
         }
-        const std::vector<const vulkan::SpecializationConstant*> constants = {&shared_constants, &shared_constants};
         const std::vector<VkVertexInputBindingDescription> binding_descriptions = PointsVertex::binding_descriptions();
         const std::vector<VkVertexInputAttributeDescription> attribute_descriptions =
                 PointsVertex::attribute_descriptions();
 
         info.shaders = &shaders;
-        info.constants = &constants;
         info.binding_descriptions = &binding_descriptions;
         info.attribute_descriptions = &attribute_descriptions;
 

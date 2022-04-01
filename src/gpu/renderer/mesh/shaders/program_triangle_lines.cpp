@@ -94,21 +94,15 @@ vulkan::handle::Pipeline TriangleLinesProgram::create_pipeline(
         info.pipeline_layout = pipeline_layout_;
         info.viewport = viewport;
         info.primitive_topology = VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST;
-
-        SharedConstants shared_constants;
-        shared_constants.set(transparency);
         info.depth_write = !transparency;
 
         const std::vector<const vulkan::Shader*> shaders = {&vertex_shader_, &geometry_shader_, &fragment_shader_};
-        const std::vector<const vulkan::SpecializationConstant*> constants = {
-                &shared_constants, &shared_constants, &shared_constants};
         const std::vector<VkVertexInputBindingDescription> binding_descriptions =
                 TrianglesVertex::binding_descriptions();
         const std::vector<VkVertexInputAttributeDescription> attribute_descriptions =
                 TrianglesVertex::attribute_descriptions_triangle_lines();
 
         info.shaders = &shaders;
-        info.constants = &constants;
         info.binding_descriptions = &binding_descriptions;
         info.attribute_descriptions = &attribute_descriptions;
 

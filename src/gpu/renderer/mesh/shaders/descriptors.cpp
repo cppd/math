@@ -48,37 +48,6 @@ void push_constant_command(
 
 //
 
-SharedConstants::SharedConstants()
-{
-        VkSpecializationMapEntry entry = {};
-        entry.constantID = 0;
-        entry.offset = offsetof(Data, transparency_drawing);
-        entry.size = sizeof(Data::transparency_drawing);
-        entries_.push_back(entry);
-}
-
-void SharedConstants::set(const bool transparency_drawing)
-{
-        data_.transparency_drawing = transparency_drawing ? 1 : 0;
-}
-
-const std::vector<VkSpecializationMapEntry>& SharedConstants::entries() const
-{
-        return entries_;
-}
-
-const void* SharedConstants::data() const
-{
-        return &data_;
-}
-
-std::size_t SharedConstants::size() const
-{
-        return sizeof(data_);
-}
-
-//
-
 std::vector<VkDescriptorSetLayoutBinding> SharedMemory::descriptor_set_layout_bindings(const Flags& flags)
 {
         std::vector<VkDescriptorSetLayoutBinding> bindings;
