@@ -76,8 +76,7 @@ void pipeline_shader_stage_create_info(
 handle::Pipeline create_graphics_pipeline(const GraphicsPipelineCreateInfo& info)
 {
         if (!info.device || !info.render_pass || !info.sub_pass || !info.sample_count || !info.sample_shading
-            || !info.pipeline_layout || !info.viewport || !info.primitive_topology || !info.shaders
-            || !info.binding_descriptions || !info.attribute_descriptions)
+            || !info.pipeline_layout || !info.viewport || !info.primitive_topology || !info.shaders)
         {
                 error("No required data to create graphics pipeline");
         }
@@ -89,10 +88,18 @@ handle::Pipeline create_graphics_pipeline(const GraphicsPipelineCreateInfo& info
 
         VkPipelineVertexInputStateCreateInfo vertex_input_state_info = {};
         vertex_input_state_info.sType = VK_STRUCTURE_TYPE_PIPELINE_VERTEX_INPUT_STATE_CREATE_INFO;
-        vertex_input_state_info.vertexBindingDescriptionCount = info.binding_descriptions->size();
-        vertex_input_state_info.pVertexBindingDescriptions = info.binding_descriptions->data();
-        vertex_input_state_info.vertexAttributeDescriptionCount = info.attribute_descriptions->size();
-        vertex_input_state_info.pVertexAttributeDescriptions = info.attribute_descriptions->data();
+
+        if (info.binding_descriptions)
+        {
+                vertex_input_state_info.vertexBindingDescriptionCount = info.binding_descriptions->size();
+                vertex_input_state_info.pVertexBindingDescriptions = info.binding_descriptions->data();
+        }
+
+        if (info.attribute_descriptions)
+        {
+                vertex_input_state_info.vertexAttributeDescriptionCount = info.attribute_descriptions->size();
+                vertex_input_state_info.pVertexAttributeDescriptions = info.attribute_descriptions->data();
+        }
 
         VkPipelineInputAssemblyStateCreateInfo input_assembly_state_info = {};
         input_assembly_state_info.sType = VK_STRUCTURE_TYPE_PIPELINE_INPUT_ASSEMBLY_STATE_CREATE_INFO;
