@@ -54,7 +54,8 @@ TriangleLinesProgram::TriangleLinesProgram(const vulkan::Device* const device, c
           pipeline_layout_(vulkan::create_pipeline_layout(
                   *device,
                   {SharedMemory::set_number(), MeshMemory::set_number()},
-                  {descriptor_set_layout_shared_, descriptor_set_layout_mesh_})),
+                  {descriptor_set_layout_shared_, descriptor_set_layout_mesh_},
+                  push_constant_ranges())),
           vertex_shader_(*device_, code.mesh_triangle_lines_vert(), VK_SHADER_STAGE_VERTEX_BIT),
           geometry_shader_(*device_, code.mesh_triangle_lines_geom(), VK_SHADER_STAGE_GEOMETRY_BIT),
           fragment_shader_(*device_, code.mesh_triangle_lines_frag(), VK_SHADER_STAGE_FRAGMENT_BIT)

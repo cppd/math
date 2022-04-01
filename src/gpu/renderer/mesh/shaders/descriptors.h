@@ -26,6 +26,12 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 namespace ns::gpu::renderer
 {
+std::vector<VkPushConstantRange> push_constant_ranges();
+
+void push_constant_command(VkCommandBuffer command_buffer, VkPipelineLayout pipeline_layout, bool transparency_drawing);
+
+//
+
 class SharedConstants final : public vulkan::SpecializationConstant
 {
         struct Data

@@ -54,7 +54,8 @@ ShadowProgram::ShadowProgram(const vulkan::Device* const device, const Code& cod
           pipeline_layout_(vulkan::create_pipeline_layout(
                   *device,
                   {SharedMemory::set_number(), MeshMemory::set_number()},
-                  {descriptor_set_layout_shared_, descriptor_set_layout_mesh_})),
+                  {descriptor_set_layout_shared_, descriptor_set_layout_mesh_},
+                  push_constant_ranges())),
           vertex_shader_(*device_, code.mesh_shadow_vert(), VK_SHADER_STAGE_VERTEX_BIT)
 {
 }

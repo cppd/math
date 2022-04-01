@@ -65,7 +65,8 @@ TrianglesProgram::TrianglesProgram(const vulkan::Device* const device, const Cod
           pipeline_layout_(vulkan::create_pipeline_layout(
                   *device,
                   {SharedMemory::set_number(), MeshMemory::set_number(), MaterialMemory::set_number()},
-                  {descriptor_set_layout_shared_, descriptor_set_layout_mesh_, descriptor_set_layout_material_})),
+                  {descriptor_set_layout_shared_, descriptor_set_layout_mesh_, descriptor_set_layout_material_},
+                  push_constant_ranges())),
           vertex_shader_(*device_, code.mesh_triangles_vert(), VK_SHADER_STAGE_VERTEX_BIT),
           geometry_shader_(*device_, code.mesh_triangles_geom(), VK_SHADER_STAGE_GEOMETRY_BIT),
           fragment_shader_fragments_(*device_, code.mesh_triangles_frag(), VK_SHADER_STAGE_FRAGMENT_BIT),

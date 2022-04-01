@@ -19,6 +19,35 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 namespace ns::gpu::renderer
 {
+namespace
+{
+constexpr VkShaderStageFlags PUSH_CONSTANT_STAGE = VK_SHADER_STAGE_FRAGMENT_BIT;
+
+struct PushConstants final
+{
+        std::uint32_t transparency_drawing;
+};
+}
+
+//
+
+std::vector<VkPushConstantRange> push_constant_ranges()
+{
+        return {{.stageFlags = PUSH_CONSTANT_STAGE, .offset = 0, .size = sizeof(PushConstants)}};
+}
+
+void push_constant_command(
+        const VkCommandBuffer command_buffer,
+        const VkPipelineLayout pipeline_layout,
+        const bool transparency_drawing)
+{
+        const PushConstants values{.transparency_drawing = transparency_drawing ? 1u : 0u};
+
+        vkCmdPushConstants(command_buffer, pipeline_layout, PUSH_CONSTANT_STAGE, 0, sizeof(PushConstants), &values);
+}
+
+//
+
 SharedConstants::SharedConstants()
 {
         VkSpecializationMapEntry entry = {};
