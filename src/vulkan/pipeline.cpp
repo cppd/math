@@ -76,7 +76,7 @@ void pipeline_shader_stage_create_info(
 handle::Pipeline create_graphics_pipeline(const GraphicsPipelineCreateInfo& info)
 {
         if (!info.device || !info.render_pass || !info.sub_pass || !info.sample_count || !info.sample_shading
-            || !info.pipeline_layout || !info.viewport || !info.primitive_topology || !info.shaders || !info.constants
+            || !info.pipeline_layout || !info.viewport || !info.primitive_topology || !info.shaders
             || !info.binding_descriptions || !info.attribute_descriptions)
         {
                 error("No required data to create graphics pipeline");

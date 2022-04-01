@@ -41,7 +41,6 @@ struct GraphicsPipelineCreateInfo
         std::optional<Region<2, int>> viewport;
         std::optional<VkPrimitiveTopology> primitive_topology;
         const std::vector<const Shader*>* shaders = nullptr;
-        const std::vector<const SpecializationConstant*>* constants = nullptr;
         const std::vector<VkVertexInputBindingDescription>* binding_descriptions = nullptr;
         const std::vector<VkVertexInputAttributeDescription>* attribute_descriptions = nullptr;
 
@@ -50,6 +49,7 @@ struct GraphicsPipelineCreateInfo
         bool depth_write = true;
 
         // optional
+        const std::vector<const SpecializationConstant*>* constants = nullptr;
         std::optional<VkPipelineColorBlendAttachmentState> color_blend;
 };
 
