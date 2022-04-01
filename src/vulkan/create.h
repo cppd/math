@@ -25,18 +25,31 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 namespace ns::vulkan
 {
-[[nodiscard]] std::vector<handle::Semaphore> create_semaphores(VkDevice device, int count);
-
-[[nodiscard]] std::vector<handle::Fence> create_fences(VkDevice device, int count, bool signaled_state);
-
 [[nodiscard]] handle::PipelineLayout create_pipeline_layout(
         VkDevice device,
         const std::vector<VkDescriptorSetLayout>& descriptor_set_layouts);
 
 [[nodiscard]] handle::PipelineLayout create_pipeline_layout(
         VkDevice device,
+        const std::vector<VkDescriptorSetLayout>& descriptor_set_layouts,
+        const std::vector<VkPushConstantRange>& push_constant_ranges);
+
+[[nodiscard]] handle::PipelineLayout create_pipeline_layout(
+        VkDevice device,
         const std::vector<unsigned>& set_numbers,
         const std::vector<VkDescriptorSetLayout>& set_layouts);
+
+[[nodiscard]] handle::PipelineLayout create_pipeline_layout(
+        VkDevice device,
+        const std::vector<unsigned>& set_numbers,
+        const std::vector<VkDescriptorSetLayout>& set_layouts,
+        const std::vector<VkPushConstantRange>& push_constant_ranges);
+
+//
+
+[[nodiscard]] std::vector<handle::Semaphore> create_semaphores(VkDevice device, int count);
+
+[[nodiscard]] std::vector<handle::Fence> create_fences(VkDevice device, int count, bool signaled_state);
 
 [[nodiscard]] CommandPool create_command_pool(VkDevice device, std::uint32_t queue_family_index);
 

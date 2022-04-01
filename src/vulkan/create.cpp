@@ -26,6 +26,90 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 namespace ns::vulkan
 {
+namespace
+{
+handle::PipelineLayout create_pipeline_layout(
+        const VkDevice device,
+        const std::vector<VkDescriptorSetLayout>& descriptor_set_layouts,
+        const std::vector<VkPushConstantRange>* const push_constant_ranges)
+{
+        VkPipelineLayoutCreateInfo create_info = {};
+        create_info.sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO;
+
+        create_info.setLayoutCount = descriptor_set_layouts.size();
+        create_info.pSetLayouts = descriptor_set_layouts.data();
+
+        if (push_constant_ranges)
+        {
+                create_info.pushConstantRangeCount = push_constant_ranges->size();
+                create_info.pPushConstantRanges = push_constant_ranges->data();
+        }
+
+        return handle::PipelineLayout(device, create_info);
+}
+
+handle::PipelineLayout create_pipeline_layout(
+        const VkDevice device,
+        const std::vector<unsigned>& set_numbers,
+        const std::vector<VkDescriptorSetLayout>& set_layouts,
+        const std::vector<VkPushConstantRange>* const push_constant_ranges)
+{
+        ASSERT(set_numbers.size() == set_layouts.size());
+        ASSERT(!set_numbers.empty());
+        ASSERT(set_numbers.size() == std::unordered_set(set_numbers.begin(), set_numbers.end()).size());
+        ASSERT(0 == *std::min_element(set_numbers.begin(), set_numbers.end()));
+        ASSERT(set_numbers.size() == 1 + *std::max_element(set_numbers.begin(), set_numbers.end()));
+
+        std::vector<VkDescriptorSetLayout> layouts(set_numbers.size());
+        auto n = set_numbers.begin();
+        auto l = set_layouts.begin();
+        while (n != set_numbers.end() && l != set_layouts.end())
+        {
+                layouts.at(*n++) = *l++;
+        }
+
+        ASSERT(n == set_numbers.end() && l == set_layouts.end());
+
+        return create_pipeline_layout(device, layouts, push_constant_ranges);
+}
+}
+
+//
+
+handle::PipelineLayout create_pipeline_layout(
+        const VkDevice device,
+        const std::vector<VkDescriptorSetLayout>& descriptor_set_layouts)
+{
+        return create_pipeline_layout(device, descriptor_set_layouts, nullptr);
+}
+
+handle::PipelineLayout create_pipeline_layout(
+        const VkDevice device,
+        const std::vector<VkDescriptorSetLayout>& descriptor_set_layouts,
+        const std::vector<VkPushConstantRange>& push_constant_ranges)
+{
+        return create_pipeline_layout(device, descriptor_set_layouts, &push_constant_ranges);
+}
+
+handle::PipelineLayout create_pipeline_layout(
+        const VkDevice device,
+        const std::vector<unsigned>& set_numbers,
+        const std::vector<VkDescriptorSetLayout>& set_layouts)
+{
+        return create_pipeline_layout(device, set_numbers, set_layouts, nullptr);
+}
+
+handle::PipelineLayout create_pipeline_layout(
+        const VkDevice device,
+        const std::vector<unsigned>& set_numbers,
+        const std::vector<VkDescriptorSetLayout>& set_layouts,
+        const std::vector<VkPushConstantRange>& push_constant_ranges)
+{
+        return create_pipeline_layout(device, set_numbers, set_layouts, &push_constant_ranges);
+}
+
+//
+
 std::vector<handle::Semaphore> create_semaphores(const VkDevice device, const int count)
 {
         std::vector<handle::Semaphore> res;
@@ -48,47 +132,6 @@ std::vector<handle::Fence> create_fences(const VkDevice device, const int count,
         return res;
 }
 
-//
-
-handle::PipelineLayout create_pipeline_layout(
-        const VkDevice device,
-        const std::vector<VkDescriptorSetLayout>& descriptor_set_layouts)
-{
-        VkPipelineLayoutCreateInfo create_info = {};
-        create_info.sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO;
-        create_info.setLayoutCount = descriptor_set_layouts.size();
-        create_info.pSetLayouts = descriptor_set_layouts.data();
-        // create_info.pushConstantRangeCount = 0;
-        // create_info.pPushConstantRanges = nullptr;
-
-        return handle::PipelineLayout(device, create_info);
-}
-
-handle::PipelineLayout create_pipeline_layout(
-        const VkDevice device,
-        const std::vector<unsigned>& set_numbers,
-        const std::vector<VkDescriptorSetLayout>& set_layouts)
-{
-        ASSERT(set_numbers.size() == set_layouts.size() && !set_numbers.empty());
-        ASSERT(set_numbers.size() == std::unordered_set<unsigned>(set_numbers.begin(), set_numbers.end()).size());
-        ASSERT(0 == *std::min_element(set_numbers.begin(), set_numbers.end()));
-        ASSERT(set_numbers.size() - 1 == *std::max_element(set_numbers.begin(), set_numbers.end()));
-
-        std::vector<VkDescriptorSetLayout> layouts(set_numbers.size());
-        auto n = set_numbers.begin();
-        auto l = set_layouts.begin();
-        while (n != set_numbers.end() && l != set_layouts.end())
-        {
-                layouts.at(*n++) = *l++;
-        }
-
-        ASSERT(n == set_numbers.end() && l == set_layouts.end());
-
-        return create_pipeline_layout(device, layouts);
-}
-
-//
-
 CommandPool create_command_pool(const VkDevice device, const std::uint32_t queue_family_index)
 {
         VkCommandPoolCreateInfo create_info = {};
@@ -108,8 +151,6 @@ CommandPool create_transient_command_pool(const VkDevice device, const std::uint
         return CommandPool(device, create_info);
 }
 
-//
-
 handle::Framebuffer create_framebuffer(
         const VkDevice device,
         const VkRenderPass render_pass,
@@ -128,8 +169,6 @@ handle::Framebuffer create_framebuffer(
 
         return handle::Framebuffer(device, create_info);
 }
-
-//
 
 VkClearValue create_color_clear_value(const VkFormat format, const Vector<3, float>& rgb)
 {
