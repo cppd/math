@@ -82,9 +82,8 @@ void set_fragment_color(const vec3 surface_color, const vec3 n, const vec3 world
         }
         else
         {
-                const vec3 color = mesh_shade(
-                        surface_color, n, mesh.metalness, mesh.roughness, mesh.ambient, world_position, edge_factor);
-                write_transparency(color, mesh.alpha, n, mesh.metalness, mesh.roughness, mesh.ambient, edge_factor);
+                write_transparency(
+                        surface_color, mesh.alpha, n, mesh.metalness, mesh.roughness, mesh.ambient, edge_factor);
         }
 }
 

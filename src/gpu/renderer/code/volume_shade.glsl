@@ -189,7 +189,41 @@ vec4 fragment_color(const Fragment)
 vec4 fragment_color(const Fragment fragment)
 {
         const FragmentData d = fragment_data(fragment);
-        return d.color;
+
+        if (d.n == vec3(0))
+        {
+                return d.color;
+        }
+
+        const vec3 v = drawing.direction_to_camera;
+        const vec3 l = drawing.direction_to_light;
+
+        vec3 color;
+
+        if (drawing.show_shadow)
+        {
+                const vec3 device_position = vec3(device_coordinates, d.depth);
+                const float transparency = shadow_transparency_device(device_position);
+
+                const Lighting lighting =
+                        shade(d.color.rgb, d.metalness, d.roughness, d.n, v, l, ggx_f1_albedo_cosine_roughness,
+                              ggx_f1_albedo_cosine_weighted_average, drawing.lighting_color, d.ambient, transparency);
+
+                color = lighting.front + lighting.side;
+        }
+        else
+        {
+                color =
+                        shade(d.color.rgb, d.metalness, d.roughness, d.n, v, l, ggx_f1_albedo_cosine_roughness,
+                              ggx_f1_albedo_cosine_weighted_average, drawing.lighting_color, d.ambient);
+        }
+
+        if (d.edge_factor >= 0)
+        {
+                color = mix(drawing.wireframe_color, color, d.edge_factor);
+        }
+
+        return vec4(color, d.color.a);
 }
 
 #endif

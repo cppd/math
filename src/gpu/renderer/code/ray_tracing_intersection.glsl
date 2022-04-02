@@ -22,7 +22,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #extension GL_EXT_ray_query : require
 
-const float RAY_TRACING_T_MIN = 1e-5;
+const float RAY_TRACING_T_MIN = 3e-5;
 const float RAY_TRACING_T_MAX = 10;
 
 bool ray_tracing_intersection(
