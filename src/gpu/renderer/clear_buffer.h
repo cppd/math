@@ -27,20 +27,22 @@ class ClearBuffer final
 {
         VkDevice device_;
         VkCommandPool graphics_command_pool_;
-        const RenderBuffers3D* render_buffers_;
-        const vulkan::ImageWithMemory* image_;
-
         vulkan::handle::Semaphore clear_semaphore_;
+
+        const RenderBuffers3D* render_buffers_ = nullptr;
+        const vulkan::ImageWithMemory* image_ = nullptr;
 
         vulkan::handle::CommandBuffers command_buffers_;
 
 public:
-        ClearBuffer(
-                VkDevice device,
-                VkCommandPool graphics_command_pool,
+        ClearBuffer(VkDevice device, VkCommandPool graphics_command_pool);
+
+        void create_buffers(
                 const RenderBuffers3D* render_buffers,
                 const vulkan::ImageWithMemory* image,
                 const Vector3f& clear_color);
+
+        void delete_buffers();
 
         [[nodiscard]] VkSemaphore clear(const vulkan::Queue& graphics_queue, unsigned index) const;
 

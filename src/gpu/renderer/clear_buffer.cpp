@@ -82,19 +82,28 @@ void commands_init_storage_image(const VkCommandBuffer command_buffer, const vul
 }
 }
 
-ClearBuffer::ClearBuffer(
-        const VkDevice device,
-        const VkCommandPool graphics_command_pool,
+ClearBuffer::ClearBuffer(const VkDevice device, const VkCommandPool graphics_command_pool)
+        : device_(device),
+          graphics_command_pool_(graphics_command_pool),
+          clear_semaphore_(device)
+{
+}
+
+void ClearBuffer::create_buffers(
         const RenderBuffers3D* const render_buffers,
         const vulkan::ImageWithMemory* const image,
         const Vector3f& clear_color)
-        : device_(device),
-          graphics_command_pool_(graphics_command_pool),
-          render_buffers_(render_buffers),
-          image_(image),
-          clear_semaphore_(device)
 {
+        render_buffers_ = render_buffers;
+        image_ = image;
         set_color(clear_color);
+}
+
+void ClearBuffer::delete_buffers()
+{
+        command_buffers_ = vulkan::handle::CommandBuffers();
+        render_buffers_ = nullptr;
+        image_ = nullptr;
 }
 
 VkSemaphore ClearBuffer::clear(const vulkan::Queue& graphics_queue, const unsigned index) const
@@ -106,6 +115,11 @@ VkSemaphore ClearBuffer::clear(const vulkan::Queue& graphics_queue, const unsign
 
 void ClearBuffer::set_color(const Vector3f& clear_color)
 {
+        if (!render_buffers_)
+        {
+                return;
+        }
+
         command_buffers_ = vulkan::handle::CommandBuffers();
 
         vulkan::CommandBufferCreateInfo info;
