@@ -18,7 +18,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "renderer.h"
 
 #include "acceleration_structure.h"
-#include "buffer.h"
+#include "clear_buffer.h"
 #include "functionality.h"
 #include "renderer_draw.h"
 #include "renderer_object.h"
@@ -55,7 +55,6 @@ namespace
 constexpr bool RAY_TRACING = true;
 
 constexpr VkImageLayout DEPTH_COPY_IMAGE_LAYOUT = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
-constexpr std::uint32_t OBJECTS_CLEAR_VALUE = 0;
 
 class Impl final : public Renderer, RendererViewEvents, StorageMeshEvents, StorageVolumeEvents
 {
@@ -281,28 +280,9 @@ class Impl final : public Renderer, RendererViewEvents, StorageMeshEvents, Stora
         {
                 clear_command_buffers_.reset();
 
-                vulkan::CommandBufferCreateInfo info;
-
-                info.device = *device_;
-                info.render_area.emplace();
-                info.render_area->offset.x = 0;
-                info.render_area->offset.y = 0;
-                info.render_area->extent.width = render_buffers_->width();
-                info.render_area->extent.height = render_buffers_->height();
-                info.render_pass = render_buffers_->render_pass_clear();
-                info.framebuffers = &render_buffers_->framebuffers_clear();
-                info.command_pool = *graphics_command_pool_;
-
-                info.before_render_pass_commands = [this](const VkCommandBuffer command_buffer)
-                {
-                        commands_init_uint32_storage_image(command_buffer, *object_image_, OBJECTS_CLEAR_VALUE);
-                };
-
-                const std::vector<VkClearValue> clear_values =
-                        render_buffers_->clear_values(renderer_view_.clear_color_rgb32());
-                info.clear_values = &clear_values;
-
-                clear_command_buffers_ = vulkan::create_command_buffers(info);
+                clear_command_buffers_ = clear_command_buffers(
+                        *device_, *graphics_command_pool_, *render_buffers_, renderer_view_.clear_color_rgb32(),
+                        *object_image_);
         }
 
         void create_mesh_render_command_buffers()
