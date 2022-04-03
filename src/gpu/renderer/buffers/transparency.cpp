@@ -17,7 +17,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "transparency.h"
 
-#include "../buffer.h"
+#include "commands.h"
 
 namespace ns::gpu::renderer
 {

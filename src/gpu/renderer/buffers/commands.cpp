@@ -15,7 +15,7 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include "buffer.h"
+#include "commands.h"
 
 namespace ns::gpu::renderer
 {
@@ -25,6 +25,10 @@ void commands_init_uint32_storage_image(
         const std::uint32_t value)
 {
         ASSERT(image.image().has_usage(VK_IMAGE_USAGE_STORAGE_BIT));
+        ASSERT(image.image().format() == VK_FORMAT_R32_UINT);
+
+        // for vkCmdClearColorImage
+        ASSERT(image.image().has_usage(VK_IMAGE_USAGE_TRANSFER_DST_BIT));
 
         VkImageMemoryBarrier barrier = {};
 
@@ -49,22 +53,19 @@ void commands_init_uint32_storage_image(
                 command_buffer, VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT, VK_PIPELINE_STAGE_TRANSFER_BIT, 0, 0, nullptr, 0,
                 nullptr, 1, &barrier);
 
-        //
+        {
+                const VkClearColorValue clear_color = [&]
+                {
+                        VkClearColorValue color;
+                        color.uint32[0] = value;
+                        return color;
+                }();
 
-        VkClearColorValue clear_color;
+                const VkImageSubresourceRange range = barrier.subresourceRange;
 
-        ASSERT(image.image().format() == VK_FORMAT_R32_UINT);
-        clear_color.uint32[0] = value;
-
-        VkImageSubresourceRange range = barrier.subresourceRange;
-
-        // for vkCmdClearColorImage
-        ASSERT(image.image().has_usage(VK_IMAGE_USAGE_TRANSFER_DST_BIT));
-
-        vkCmdClearColorImage(
-                command_buffer, image.image(), VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, &clear_color, 1, &range);
-
-        //
+                vkCmdClearColorImage(
+                        command_buffer, image.image(), VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, &clear_color, 1, &range);
+        }
 
         barrier.oldLayout = VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL;
         barrier.newLayout = VK_IMAGE_LAYOUT_GENERAL;
