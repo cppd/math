@@ -81,33 +81,49 @@ void commands_init_storage_image(const VkCommandBuffer command_buffer, const vul
 }
 }
 
-vulkan::handle::CommandBuffers clear_command_buffers(
+ClearBuffer::ClearBuffer(
         const VkDevice device,
         const VkCommandPool graphics_command_pool,
-        const RenderBuffers3D& render_buffers,
-        const Vector3f& clear_color,
-        const vulkan::ImageWithMemory& image)
+        const RenderBuffers3D* const render_buffers,
+        const vulkan::ImageWithMemory* const image,
+        const Vector3f& clear_color)
+        : device_(device),
+          graphics_command_pool_(graphics_command_pool),
+          render_buffers_(render_buffers),
+          image_(image)
 {
+        set_color(clear_color);
+}
+
+const vulkan::handle::CommandBuffers& ClearBuffer::command_buffer() const
+{
+        return command_buffers_;
+}
+
+void ClearBuffer::set_color(const Vector3f& clear_color)
+{
+        command_buffers_ = vulkan::handle::CommandBuffers();
+
         vulkan::CommandBufferCreateInfo info;
 
-        info.device = device;
+        info.device = device_;
         info.render_area.emplace();
         info.render_area->offset.x = 0;
         info.render_area->offset.y = 0;
-        info.render_area->extent.width = render_buffers.width();
-        info.render_area->extent.height = render_buffers.height();
-        info.render_pass = render_buffers.render_pass_clear();
-        info.framebuffers = &render_buffers.framebuffers_clear();
-        info.command_pool = graphics_command_pool;
+        info.render_area->extent.width = render_buffers_->width();
+        info.render_area->extent.height = render_buffers_->height();
+        info.render_pass = render_buffers_->render_pass_clear();
+        info.framebuffers = &render_buffers_->framebuffers_clear();
+        info.command_pool = graphics_command_pool_;
 
         info.before_render_pass_commands = [&](const VkCommandBuffer command_buffer)
         {
-                commands_init_storage_image(command_buffer, image);
+                commands_init_storage_image(command_buffer, *image_);
         };
 
-        const std::vector<VkClearValue> clear_values = render_buffers.clear_values(clear_color);
+        const std::vector<VkClearValue> clear_values = render_buffers_->clear_values(clear_color);
         info.clear_values = &clear_values;
 
-        return vulkan::create_command_buffers(info);
+        command_buffers_ = vulkan::create_command_buffers(info);
 }
 }

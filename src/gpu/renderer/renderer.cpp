@@ -89,7 +89,7 @@ class Impl final : public Renderer, RendererViewEvents, StorageMeshEvents, Stora
         const std::vector<vulkan::DescriptorSetLayoutAndBindings> volume_image_layouts_{
                 volume_renderer_.image_layouts()};
 
-        std::optional<vulkan::handle::CommandBuffers> clear_command_buffers_;
+        std::optional<ClearBuffer> clear_buffer_;
 
         StorageMesh mesh_storage_;
         StorageVolume volume_storage_;
@@ -151,12 +151,12 @@ class Impl final : public Renderer, RendererViewEvents, StorageMeshEvents, Stora
 
                 ASSERT(graphics_queue_1.family_index() == graphics_queue_->family_index());
                 ASSERT(graphics_queue_2.family_index() == graphics_queue_->family_index());
-                ASSERT(clear_command_buffers_);
+                ASSERT(clear_buffer_);
 
                 const bool shadow_mapping = !ray_tracing_ && renderer_view_.show_shadow();
 
                 return renderer_draw_.draw(
-                        graphics_queue_1, graphics_queue_2, index, shadow_mapping, *clear_command_buffers_,
+                        graphics_queue_1, graphics_queue_2, index, shadow_mapping, clear_buffer_->command_buffer(),
                         transparency_buffers_);
         }
 
@@ -204,14 +204,17 @@ class Impl final : public Renderer, RendererViewEvents, StorageMeshEvents, Stora
 
                 create_mesh_command_buffers();
                 create_volume_command_buffers();
-                create_clear_command_buffers();
+
+                clear_buffer_.emplace(
+                        *device_, *graphics_command_pool_, render_buffers_, object_image_,
+                        renderer_view_.clear_color_rgb32());
         }
 
         void delete_buffers() override
         {
                 ASSERT(thread_id_ == std::this_thread::get_id());
 
-                clear_command_buffers_.reset();
+                clear_buffer_.reset();
                 volume_renderer_.delete_buffers();
                 delete_mesh_shadow_mapping_buffers();
                 mesh_renderer_.delete_render_buffers();
@@ -274,15 +277,6 @@ class Impl final : public Renderer, RendererViewEvents, StorageMeshEvents, Stora
 
                 volume_renderer_.set_shadow_image(
                         mesh_renderer_.shadow_mapping_sampler(), mesh_renderer_.shadow_mapping_image_view());
-        }
-
-        void create_clear_command_buffers()
-        {
-                clear_command_buffers_.reset();
-
-                clear_command_buffers_ = clear_command_buffers(
-                        *device_, *graphics_command_pool_, *render_buffers_, renderer_view_.clear_color_rgb32(),
-                        *object_image_);
         }
 
         void create_mesh_render_command_buffers()
@@ -451,7 +445,10 @@ class Impl final : public Renderer, RendererViewEvents, StorageMeshEvents, Stora
 
         void view_background_changed() override
         {
-                create_clear_command_buffers();
+                if (clear_buffer_)
+                {
+                        clear_buffer_->set_color(renderer_view_.clear_color_rgb32());
+                }
         }
 
         void view_show_normals_changed() override

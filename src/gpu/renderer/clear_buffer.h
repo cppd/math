@@ -23,10 +23,25 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 namespace ns::gpu::renderer
 {
-vulkan::handle::CommandBuffers clear_command_buffers(
-        VkDevice device,
-        VkCommandPool graphics_command_pool,
-        const RenderBuffers3D& render_buffers,
-        const Vector3f& clear_color,
-        const vulkan::ImageWithMemory& image);
+class ClearBuffer final
+{
+        VkDevice device_;
+        VkCommandPool graphics_command_pool_;
+        const RenderBuffers3D* render_buffers_;
+        const vulkan::ImageWithMemory* image_;
+
+        vulkan::handle::CommandBuffers command_buffers_;
+
+public:
+        ClearBuffer(
+                VkDevice device,
+                VkCommandPool graphics_command_pool,
+                const RenderBuffers3D* render_buffers,
+                const vulkan::ImageWithMemory* image,
+                const Vector3f& clear_color);
+
+        const vulkan::handle::CommandBuffers& command_buffer() const;
+
+        void set_color(const Vector3f& clear_color);
+};
 }
