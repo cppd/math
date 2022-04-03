@@ -33,7 +33,6 @@ RendererDraw::RendererDraw(
           mesh_semaphore_(device),
           volume_semaphore_(device),
           shadow_mapping_semaphore_(device),
-          clear_semaphore_(device),
           transparent_as_opaque_semaphore_(device),
           mesh_renderer_(mesh_renderer),
           volume_renderer_(volume_renderer)
@@ -113,17 +112,13 @@ std::tuple<VkSemaphore, bool> RendererDraw::draw_meshes(
 }
 
 VkSemaphore RendererDraw::draw(
+        VkSemaphore semaphore,
         const vulkan::Queue& graphics_queue_1,
         const vulkan::Queue& graphics_queue_2,
         const unsigned index,
         const bool shadow_mapping,
-        const vulkan::handle::CommandBuffers& clear_command_buffers,
         const TransparencyBuffers& transparency_buffers) const
 {
-        ASSERT(index < clear_command_buffers.count());
-        vulkan::queue_submit(clear_command_buffers[index], clear_semaphore_, graphics_queue_2);
-
-        VkSemaphore semaphore = clear_semaphore_;
         bool transparency = false;
 
         if (mesh_renderer_->has_meshes())

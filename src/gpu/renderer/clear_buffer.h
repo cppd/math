@@ -30,6 +30,8 @@ class ClearBuffer final
         const RenderBuffers3D* render_buffers_;
         const vulkan::ImageWithMemory* image_;
 
+        vulkan::handle::Semaphore clear_semaphore_;
+
         vulkan::handle::CommandBuffers command_buffers_;
 
 public:
@@ -40,7 +42,7 @@ public:
                 const vulkan::ImageWithMemory* image,
                 const Vector3f& clear_color);
 
-        const vulkan::handle::CommandBuffers& command_buffer() const;
+        [[nodiscard]] VkSemaphore clear(const vulkan::Queue& graphics_queue, unsigned index) const;
 
         void set_color(const Vector3f& clear_color);
 };

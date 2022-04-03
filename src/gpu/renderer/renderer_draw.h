@@ -36,7 +36,6 @@ class RendererDraw
         vulkan::handle::Semaphore mesh_semaphore_;
         vulkan::handle::Semaphore volume_semaphore_;
         vulkan::handle::Semaphore shadow_mapping_semaphore_;
-        vulkan::handle::Semaphore clear_semaphore_;
         vulkan::handle::Semaphore transparent_as_opaque_semaphore_;
 
         const MeshRenderer* mesh_renderer_;
@@ -57,11 +56,11 @@ public:
                 const VolumeRenderer* volume_renderer);
 
         VkSemaphore draw(
+                VkSemaphore semaphore,
                 const vulkan::Queue& graphics_queue_1,
                 const vulkan::Queue& graphics_queue_2,
                 unsigned index,
                 bool shadow_mapping,
-                const vulkan::handle::CommandBuffers& clear_command_buffers,
                 const TransparencyBuffers& transparency_buffers) const;
 };
 }

@@ -155,9 +155,10 @@ class Impl final : public Renderer, RendererViewEvents, StorageMeshEvents, Stora
 
                 const bool shadow_mapping = !ray_tracing_ && renderer_view_.show_shadow();
 
+                const VkSemaphore semaphore = clear_buffer_->clear(graphics_queue_2, index);
+
                 return renderer_draw_.draw(
-                        graphics_queue_1, graphics_queue_2, index, shadow_mapping, clear_buffer_->command_buffer(),
-                        transparency_buffers_);
+                        semaphore, graphics_queue_1, graphics_queue_2, index, shadow_mapping, transparency_buffers_);
         }
 
         bool empty() const override

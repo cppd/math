@@ -18,6 +18,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "clear_buffer.h"
 
 #include <src/vulkan/commands.h>
+#include <src/vulkan/queue.h>
 
 namespace ns::gpu::renderer
 {
@@ -90,14 +91,17 @@ ClearBuffer::ClearBuffer(
         : device_(device),
           graphics_command_pool_(graphics_command_pool),
           render_buffers_(render_buffers),
-          image_(image)
+          image_(image),
+          clear_semaphore_(device)
 {
         set_color(clear_color);
 }
 
-const vulkan::handle::CommandBuffers& ClearBuffer::command_buffer() const
+VkSemaphore ClearBuffer::clear(const vulkan::Queue& graphics_queue, const unsigned index) const
 {
-        return command_buffers_;
+        ASSERT(index < command_buffers_.count());
+        vulkan::queue_submit(command_buffers_[index], clear_semaphore_, graphics_queue);
+        return clear_semaphore_;
 }
 
 void ClearBuffer::set_color(const Vector3f& clear_color)
