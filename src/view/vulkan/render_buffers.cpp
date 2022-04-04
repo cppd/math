@@ -38,9 +38,6 @@ class Impl3D : public gpu::RenderBuffers3D
 {
         virtual VkRenderPass render_pass_3d() const = 0;
         virtual const std::vector<VkFramebuffer>& framebuffers_3d() const = 0;
-        virtual VkRenderPass render_pass_clear_3d() const = 0;
-        virtual const std::vector<VkFramebuffer>& framebuffers_clear_3d() const = 0;
-        virtual std::vector<VkClearValue> clear_values_3d(const Vector<3, float>& rgb) const = 0;
 
         //
 
@@ -52,21 +49,6 @@ class Impl3D : public gpu::RenderBuffers3D
         const std::vector<VkFramebuffer>& framebuffers() const final
         {
                 return framebuffers_3d();
-        }
-
-        VkRenderPass render_pass_clear() const final
-        {
-                return render_pass_clear_3d();
-        }
-
-        const std::vector<VkFramebuffer>& framebuffers_clear() const final
-        {
-                return framebuffers_clear_3d();
-        }
-
-        std::vector<VkClearValue> clear_values(const Vector<3, float>& rgb) const final
-        {
-                return clear_values_3d(rgb);
         }
 
 protected:
@@ -106,11 +88,12 @@ class Impl final : public RenderBuffers, public Impl3D, public Impl2D
         std::vector<VkImageView> color_attachment_image_views_;
 
         vulkan::handle::RenderPass render_pass_3d_;
-        vulkan::handle::RenderPass render_pass_clear_3d_;
         std::vector<vulkan::handle::Framebuffer> framebuffers_3d_;
-        std::vector<vulkan::handle::Framebuffer> framebuffers_clear_3d_;
         std::vector<VkFramebuffer> framebuffers_handles_3d_;
-        std::vector<VkFramebuffer> framebuffers_handles_clear_3d_;
+
+        vulkan::handle::RenderPass render_pass_3d_clear_;
+        std::vector<vulkan::handle::Framebuffer> framebuffers_3d_clear_;
+        std::vector<VkFramebuffer> framebuffers_handles_3d_clear_;
 
         vulkan::handle::RenderPass render_pass_2d_;
         std::vector<vulkan::handle::Framebuffer> framebuffers_2d_;
@@ -133,6 +116,10 @@ class Impl final : public RenderBuffers, public Impl3D, public Impl2D
         VkSampleCountFlagBits sample_count() const override;
         const std::vector<VkImageView>& image_views() const override;
 
+        VkRenderPass render_pass_clear() const override;
+        const std::vector<VkFramebuffer>& framebuffers_clear() const override;
+        std::vector<VkClearValue> clear_values(const Vector<3, float>& rgb) const override;
+
         void commands_color_resolve(
                 VkCommandBuffer command_buffer,
                 VkImage image,
@@ -151,9 +138,6 @@ class Impl final : public RenderBuffers, public Impl3D, public Impl2D
 
         VkRenderPass render_pass_3d() const override;
         const std::vector<VkFramebuffer>& framebuffers_3d() const override;
-        VkRenderPass render_pass_clear_3d() const override;
-        const std::vector<VkFramebuffer>& framebuffers_clear_3d() const override;
-        std::vector<VkClearValue> clear_values_3d(const Vector<3, float>& rgb) const override;
 
         VkRenderPass render_pass_2d() const override;
         const std::vector<VkFramebuffer>& framebuffers_2d() const override;
@@ -244,7 +228,7 @@ void Impl::create_buffers(
         std::vector<VkImageView> attachments;
 
         render_pass_3d_ = render_pass_color_depth(device, format_, depth_format, sample_count, false);
-        render_pass_clear_3d_ = render_pass_color_depth(device, format_, depth_format, sample_count, true);
+        render_pass_3d_clear_ = render_pass_color_depth(device, format_, depth_format, sample_count, true);
 
         attachments.resize(2);
         for (unsigned i = 0; i < buffer_count; ++i)
@@ -256,9 +240,9 @@ void Impl::create_buffers(
                         vulkan::create_framebuffer(device, render_pass_3d_, width_, height_, attachments));
                 framebuffers_handles_3d_.push_back(framebuffers_3d_.back());
 
-                framebuffers_clear_3d_.push_back(
-                        vulkan::create_framebuffer(device, render_pass_clear_3d_, width_, height_, attachments));
-                framebuffers_handles_clear_3d_.push_back(framebuffers_clear_3d_.back());
+                framebuffers_3d_clear_.push_back(
+                        vulkan::create_framebuffer(device, render_pass_3d_clear_, width_, height_, attachments));
+                framebuffers_handles_3d_clear_.push_back(framebuffers_3d_clear_.back());
         }
 
         render_pass_2d_ = render_pass_color(device, format_, sample_count);
@@ -295,26 +279,6 @@ const std::vector<VkFramebuffer>& Impl::framebuffers_3d() const
         return framebuffers_handles_3d_;
 }
 
-VkRenderPass Impl::render_pass_clear_3d() const
-{
-        return render_pass_clear_3d_;
-}
-
-const std::vector<VkFramebuffer>& Impl::framebuffers_clear_3d() const
-{
-        ASSERT(!framebuffers_clear_3d_.empty()
-               && framebuffers_clear_3d_.size() == framebuffers_handles_clear_3d_.size());
-        return framebuffers_handles_clear_3d_;
-}
-
-std::vector<VkClearValue> Impl::clear_values_3d(const Vector<3, float>& rgb) const
-{
-        std::vector<VkClearValue> clear_values(2);
-        clear_values[0] = vulkan::create_color_clear_value(format_, rgb);
-        clear_values[1] = vulkan::create_depth_stencil_clear_value();
-        return clear_values;
-}
-
 VkRenderPass Impl::render_pass_2d() const
 {
         return render_pass_2d_;
@@ -324,6 +288,26 @@ const std::vector<VkFramebuffer>& Impl::framebuffers_2d() const
 {
         ASSERT(!framebuffers_2d_.empty() && framebuffers_2d_.size() == framebuffers_handles_2d_.size());
         return framebuffers_handles_2d_;
+}
+
+VkRenderPass Impl::render_pass_clear() const
+{
+        return render_pass_3d_clear_;
+}
+
+const std::vector<VkFramebuffer>& Impl::framebuffers_clear() const
+{
+        ASSERT(!framebuffers_3d_clear_.empty()
+               && framebuffers_3d_clear_.size() == framebuffers_handles_3d_clear_.size());
+        return framebuffers_handles_3d_clear_;
+}
+
+std::vector<VkClearValue> Impl::clear_values(const Vector<3, float>& rgb) const
+{
+        std::vector<VkClearValue> clear_values(2);
+        clear_values[0] = vulkan::create_color_clear_value(format_, rgb);
+        clear_values[1] = vulkan::create_depth_stencil_clear_value();
+        return clear_values;
 }
 
 unsigned Impl::width() const

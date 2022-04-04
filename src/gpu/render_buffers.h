@@ -38,10 +38,6 @@ public:
 
         virtual VkRenderPass render_pass() const = 0;
         virtual const std::vector<VkFramebuffer>& framebuffers() const = 0;
-        virtual VkRenderPass render_pass_clear() const = 0;
-        virtual const std::vector<VkFramebuffer>& framebuffers_clear() const = 0;
-
-        virtual std::vector<VkClearValue> clear_values(const Vector<3, float>& rgb) const = 0;
 
         virtual void commands_depth_copy(
                 VkCommandBuffer command_buffer,

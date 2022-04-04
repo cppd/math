@@ -90,7 +90,7 @@ ClearBuffer::ClearBuffer(const VkDevice device, const VkCommandPool graphics_com
 }
 
 void ClearBuffer::create_buffers(
-        const gpu::RenderBuffers3D* const render_buffers,
+        const RenderBuffers* const render_buffers,
         const vulkan::ImageWithMemory* const image,
         const Vector3f& clear_color)
 {

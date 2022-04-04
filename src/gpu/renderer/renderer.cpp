@@ -182,7 +182,6 @@ class Impl final : public Renderer, RendererViewEvents, StorageMeshEvents, Stora
                 const ViewportTransform transform = viewport_transform(viewport_);
                 drawing_buffer_.set_viewport(transform.center, transform.factor);
 
-                ASSERT(render_buffers_->framebuffers().size() == render_buffers_->framebuffers_clear().size());
                 ASSERT(render_buffers_->framebuffers().size() == 1);
 
                 create_depth_copy_image();

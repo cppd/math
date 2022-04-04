@@ -251,8 +251,7 @@ class Impl final
                         device_graphics_.graphics_compute_queues()[0], *render_buffers_, window_1,
                         VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL, VK_IMAGE_USAGE_SAMPLED_BIT);
 
-                clear_buffer_.create_buffers(
-                        &render_buffers_->buffers_3d(), &*object_image_, view_process_.clear_color_rgb32());
+                clear_buffer_.create_buffers(render_buffers_.get(), &*object_image_, view_process_.clear_color_rgb32());
 
                 renderer_->create_buffers(&render_buffers_->buffers_3d(), &*object_image_, window_1);
 
