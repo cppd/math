@@ -17,6 +17,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
+#include "clear_buffer.h"
+
 #include "../com/camera.h"
 #include "../event.h"
 
@@ -29,12 +31,14 @@ namespace ns::view
 {
 class ViewProcess final
 {
+        ClearBuffer* clear_buffer_;
         gpu::renderer::Renderer* renderer_;
         gpu::text_writer::View* text_;
         Camera* camera_;
         std::function<void()> create_swapchain_;
         bool vertical_sync_;
         bool text_active_ = true;
+        Vector3f clear_color_rgb32_ = Vector3f(0);
 
         void command(const command::UpdateMeshObject& v)
         {
@@ -75,6 +79,8 @@ class ViewProcess final
 
         void command(const command::SetBackgroundColor& v)
         {
+                clear_color_rgb32_ = v.value.rgb32().clamp(0, 1);
+                clear_buffer_->set_color(clear_color_rgb32_);
                 renderer_->exec(gpu::renderer::SetBackgroundColor(v.value));
                 const bool background_is_dark = v.value.luminance() <= 0.5;
                 if (background_is_dark)
@@ -164,12 +170,14 @@ class ViewProcess final
 
 public:
         ViewProcess(
+                ClearBuffer* const clear_buffer,
                 gpu::renderer::Renderer* const renderer,
                 gpu::text_writer::View* const text,
                 Camera* const camera,
                 const bool vertical_sync,
                 std::function<void()> create_swapchain)
-                : renderer_(renderer),
+                : clear_buffer_(clear_buffer),
+                  renderer_(renderer),
                   text_(text),
                   camera_(camera),
                   create_swapchain_(std::move(create_swapchain)),
@@ -194,6 +202,11 @@ public:
         bool text_active() const
         {
                 return text_active_;
+        }
+
+        Vector3f clear_color_rgb32() const
+        {
+                return clear_color_rgb32_;
         }
 };
 }

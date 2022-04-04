@@ -18,7 +18,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "renderer.h"
 
 #include "acceleration_structure.h"
-#include "clear_buffer.h"
 #include "functionality.h"
 #include "renderer_draw.h"
 #include "renderer_object.h"
@@ -75,7 +74,6 @@ class Impl final : public Renderer, RendererViewEvents, StorageMeshEvents, Stora
         const RenderBuffers3D* render_buffers_ = nullptr;
         const vulkan::ImageWithMemory* object_image_ = nullptr;
 
-        ClearBuffer clear_buffer_;
         DrawingBuffer drawing_buffer_;
         GgxF1Albedo ggx_f1_albedo_;
         TransparencyBuffers transparency_buffers_;
@@ -142,6 +140,7 @@ class Impl final : public Renderer, RendererViewEvents, StorageMeshEvents, Stora
         }
 
         VkSemaphore draw(
+                const VkSemaphore semaphore,
                 const vulkan::Queue& graphics_queue_1,
                 const vulkan::Queue& graphics_queue_2,
                 const unsigned index) const override
@@ -152,8 +151,6 @@ class Impl final : public Renderer, RendererViewEvents, StorageMeshEvents, Stora
                 ASSERT(graphics_queue_2.family_index() == graphics_queue_->family_index());
 
                 const bool shadow_mapping = !ray_tracing_ && renderer_view_.show_shadow();
-
-                const VkSemaphore semaphore = clear_buffer_.clear(graphics_queue_2, index);
 
                 return renderer_draw_.draw(
                         semaphore, graphics_queue_1, graphics_queue_2, index, shadow_mapping, transparency_buffers_);
@@ -191,8 +188,6 @@ class Impl final : public Renderer, RendererViewEvents, StorageMeshEvents, Stora
                 create_depth_copy_image();
                 create_transparency_buffers();
 
-                clear_buffer_.create_buffers(render_buffers_, object_image_, renderer_view_.clear_color_rgb32());
-
                 mesh_renderer_.create_render_buffers(
                         render_buffers_, *object_image_, transparency_buffers_.heads(),
                         transparency_buffers_.heads_size(), transparency_buffers_.counters(),
@@ -214,7 +209,6 @@ class Impl final : public Renderer, RendererViewEvents, StorageMeshEvents, Stora
                 volume_renderer_.delete_buffers();
                 delete_mesh_shadow_mapping_buffers();
                 mesh_renderer_.delete_render_buffers();
-                clear_buffer_.delete_buffers();
                 depth_copy_image_.reset();
                 delete_transparency_buffers();
         }
@@ -440,11 +434,6 @@ class Impl final : public Renderer, RendererViewEvents, StorageMeshEvents, Stora
 
         // RendererViewEvents
 
-        void view_background_changed() override
-        {
-                clear_buffer_.set_color(renderer_view_.clear_color_rgb32());
-        }
-
         void view_show_normals_changed() override
         {
                 create_mesh_render_command_buffers();
@@ -504,7 +493,6 @@ public:
                   transfer_queue_(transfer_queue),
                   compute_command_pool_(compute_command_pool),
                   compute_queue_(compute_queue),
-                  clear_buffer_(*device_, *graphics_command_pool_),
                   drawing_buffer_(*device_, {graphics_queue_->family_index()}),
                   ggx_f1_albedo_(
                           *device_,

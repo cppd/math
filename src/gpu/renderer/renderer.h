@@ -42,6 +42,7 @@ struct Renderer
         virtual void exec(Command&& command) = 0;
 
         virtual VkSemaphore draw(
+                VkSemaphore semaphore,
                 const vulkan::Queue& graphics_queue_1,
                 const vulkan::Queue& graphics_queue_2,
                 unsigned index) const = 0;

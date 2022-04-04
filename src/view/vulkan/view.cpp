@@ -17,6 +17,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "view.h"
 
+#include "clear_buffer.h"
 #include "image_process.h"
 #include "image_resolve.h"
 #include "render_buffers.h"
@@ -123,6 +124,8 @@ class Impl final
         const vulkan::CommandPool transfer_command_pool_;
         const vulkan::handle::Semaphore swapchain_image_semaphore_{device_graphics_.device()};
 
+        ClearBuffer clear_buffer_;
+
         std::unique_ptr<gpu::renderer::Renderer> renderer_;
         std::unique_ptr<gpu::text_writer::View> text_;
 
@@ -216,6 +219,7 @@ class Impl final
                 text_->delete_buffers();
                 image_process_.delete_buffers();
                 renderer_->delete_buffers();
+                clear_buffer_.delete_buffers();
 
                 image_resolve_.reset();
                 object_image_.reset();
@@ -247,6 +251,9 @@ class Impl final
                         device_graphics_.graphics_compute_queues()[0], *render_buffers_, window_1,
                         VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL, VK_IMAGE_USAGE_SAMPLED_BIT);
 
+                clear_buffer_.create_buffers(
+                        &render_buffers_->buffers_3d(), &*object_image_, view_process_.clear_color_rgb32());
+
                 renderer_->create_buffers(&render_buffers_->buffers_3d(), &*object_image_, window_1);
 
                 text_->create_buffers(
@@ -267,9 +274,11 @@ class Impl final
                 static constexpr int IMAGE_INDEX = 0;
                 ASSERT(render_buffers_->image_views().size() == 1);
 
-                VkSemaphore semaphore = renderer_->draw(
-                        device_graphics_.graphics_compute_queues()[0], device_graphics_.graphics_compute_queues()[1],
-                        IMAGE_INDEX);
+                VkSemaphore semaphore = clear_buffer_.clear(device_graphics_.graphics_compute_queues()[1], IMAGE_INDEX);
+
+                semaphore = renderer_->draw(
+                        semaphore, device_graphics_.graphics_compute_queues()[0],
+                        device_graphics_.graphics_compute_queues()[1], IMAGE_INDEX);
 
                 const vulkan::Queue& graphics_queue = device_graphics_.graphics_compute_queues()[0];
                 const vulkan::Queue& compute_queue = device_graphics_.compute_queue();
@@ -371,6 +380,7 @@ public:
                   transfer_command_pool_(vulkan::create_transient_command_pool(
                           device_graphics_.device(),
                           device_graphics_.transfer_family_index())),
+                  clear_buffer_(device_graphics_.device(), graphics_compute_command_pool_),
                   renderer_(gpu::renderer::create_renderer(
                           &device_graphics_.device(),
                           &graphics_compute_command_pool_,
@@ -418,6 +428,7 @@ public:
                                   renderer_->exec(gpu::renderer::SetClipPlaneColor(clip_plane_color));
                           }),
                   view_process_(
+                          &clear_buffer_,
                           renderer_.get(),
                           text_.get(),
                           &camera_,

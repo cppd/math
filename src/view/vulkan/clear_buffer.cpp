@@ -20,7 +20,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/vulkan/commands.h>
 #include <src/vulkan/queue.h>
 
-namespace ns::gpu::renderer
+namespace ns::view
 {
 namespace
 {
@@ -90,7 +90,7 @@ ClearBuffer::ClearBuffer(const VkDevice device, const VkCommandPool graphics_com
 }
 
 void ClearBuffer::create_buffers(
-        const RenderBuffers3D* const render_buffers,
+        const gpu::RenderBuffers3D* const render_buffers,
         const vulkan::ImageWithMemory* const image,
         const Vector3f& clear_color)
 {

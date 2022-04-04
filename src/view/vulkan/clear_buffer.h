@@ -21,7 +21,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/numerical/vector.h>
 #include <src/vulkan/buffers.h>
 
-namespace ns::gpu::renderer
+namespace ns::view
 {
 class ClearBuffer final
 {
@@ -29,7 +29,7 @@ class ClearBuffer final
         VkCommandPool graphics_command_pool_;
         vulkan::handle::Semaphore clear_semaphore_;
 
-        const RenderBuffers3D* render_buffers_ = nullptr;
+        const gpu::RenderBuffers3D* render_buffers_ = nullptr;
         const vulkan::ImageWithMemory* image_ = nullptr;
 
         vulkan::handle::CommandBuffers command_buffers_;
@@ -38,7 +38,7 @@ public:
         ClearBuffer(VkDevice device, VkCommandPool graphics_command_pool);
 
         void create_buffers(
-                const RenderBuffers3D* render_buffers,
+                const gpu::RenderBuffers3D* render_buffers,
                 const vulkan::ImageWithMemory* image,
                 const Vector3f& clear_color);
 

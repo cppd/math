@@ -35,7 +35,6 @@ protected:
         ~RendererViewEvents() = default;
 
 public:
-        virtual void view_background_changed() = 0;
         virtual void view_show_normals_changed() = 0;
         virtual void view_matrices_changed() = 0;
         virtual void view_clip_plane_changed() = 0;
@@ -52,7 +51,6 @@ class RendererView final
         Matrix4d shadow_vp_matrix_ = Matrix4d(1);
         Matrix4d world_to_shadow_matrix_ = Matrix4d(1);
 
-        Vector3f clear_color_rgb32_ = Vector3f(0);
         double shadow_zoom_ = 1;
         bool show_shadow_ = false;
         std::optional<Vector4d> clip_plane_;
@@ -71,9 +69,7 @@ class RendererView final
 
         void command(const SetBackgroundColor& v)
         {
-                clear_color_rgb32_ = v.color.rgb32().clamp(0, 1);
-                drawing_buffer_->set_background_color(clear_color_rgb32_);
-                events_->view_background_changed();
+                drawing_buffer_->set_background_color(v.color.rgb32().clamp(0, 1));
         }
 
         void command(const SetWireframeColor& v)
@@ -207,11 +203,6 @@ public:
         bool show_shadow() const
         {
                 return show_shadow_;
-        }
-
-        Vector3f clear_color_rgb32() const
-        {
-                return clear_color_rgb32_;
         }
 
         const std::optional<Vector4d>& clip_plane() const
