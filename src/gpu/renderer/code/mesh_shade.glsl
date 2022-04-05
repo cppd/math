@@ -73,9 +73,9 @@ vec3 mesh_shade(
                               ggx_f1_albedo_cosine_weighted_average, drawing.lighting_color, ambient);
         }
 
-        if (edge_factor >= 0)
+        if (edge_factor > 0)
         {
-                return mix(drawing.wireframe_color, color, edge_factor);
+                color = mix(color, drawing.wireframe_color, edge_factor);
         }
 
         return color;

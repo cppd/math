@@ -218,9 +218,9 @@ vec4 fragment_color(const Fragment fragment)
                               ggx_f1_albedo_cosine_weighted_average, drawing.lighting_color, d.ambient);
         }
 
-        if (d.edge_factor >= 0)
+        if (d.edge_factor > 0)
         {
-                color = mix(drawing.wireframe_color, color, d.edge_factor);
+                color = mix(color, drawing.wireframe_color, d.edge_factor);
         }
 
         return vec4(color, d.color.a);

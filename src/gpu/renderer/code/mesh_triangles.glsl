@@ -53,12 +53,12 @@ float edge_factor()
 {
         if (!drawing.show_wireframe)
         {
-                return -1;
+                return 0;
         }
 
         const vec3 d = 0.5 * fwidth(gs.baricentric);
         const vec3 a = smoothstep(vec3(0), d, gs.baricentric);
-        return min(min(a.x, a.y), a.z);
+        return 1 - min(min(a.x, a.y), a.z);
 }
 
 void main()
