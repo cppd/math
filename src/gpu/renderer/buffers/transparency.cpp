@@ -25,7 +25,7 @@ namespace
 {
 constexpr std::uint32_t HEADS_NULL_INDEX = 0xffff'ffff;
 
-constexpr unsigned long long BUFFER_SIZE = 1ull << 30;
+constexpr unsigned long long BUFFER_SIZE = 1ull << 31;
 
 // uint color_rg
 // uint color_ba
