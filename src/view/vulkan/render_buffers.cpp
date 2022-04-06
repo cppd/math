@@ -113,6 +113,7 @@ class Impl final : public RenderBuffers, public Impl3D, public Impl2D
         unsigned height() const override;
         VkFormat color_format() const override;
         VkFormat depth_format() const override;
+        VkImageView depth_image_view(unsigned index) const override;
         VkSampleCountFlagBits sample_count() const override;
         const std::vector<VkImageView>& image_views() const override;
 
@@ -329,6 +330,12 @@ VkFormat Impl::depth_format() const
 {
         ASSERT(!depth_attachments_.empty());
         return depth_attachments_[0].image().format();
+}
+
+VkImageView Impl::depth_image_view(const unsigned index) const
+{
+        ASSERT(index < depth_attachments_.size());
+        return depth_attachments_[index].image_view();
 }
 
 VkSampleCountFlagBits Impl::sample_count() const
