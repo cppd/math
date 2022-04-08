@@ -113,6 +113,7 @@ public:
                 const vulkan::ImageWithMemory& transparency_heads_size_image,
                 const vulkan::Buffer& transparency_counter,
                 const vulkan::Buffer& transparency_nodes,
+                const std::vector<vulkan::ImageWithMemory>& opacity_images,
                 const Region<2, int>& viewport);
         void delete_render_buffers();
 

@@ -28,6 +28,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "buffers/drawing.h"
 #include "buffers/ggx_f1_albedo.h"
+#include "buffers/opacity.h"
 #include "buffers/transparency.h"
 #include "code/shader_code.h"
 #include "mesh/object.h"
@@ -77,6 +78,7 @@ class Impl final : public Renderer, RendererViewEvents, StorageMeshEvents, Stora
         DrawingBuffer drawing_buffer_;
         GgxF1Albedo ggx_f1_albedo_;
         TransparencyBuffers transparency_buffers_;
+        OpacityBuffers opacity_buffers_;
         std::unique_ptr<vulkan::DepthImageWithMemory> depth_copy_image_;
 
         MeshRenderer mesh_renderer_;
@@ -186,16 +188,17 @@ class Impl final : public Renderer, RendererViewEvents, StorageMeshEvents, Stora
 
                 create_depth_copy_image();
                 create_transparency_buffers();
+                create_opacity_buffers();
 
                 mesh_renderer_.create_render_buffers(
                         render_buffers_, *object_image_, transparency_buffers_.heads(),
                         transparency_buffers_.heads_size(), transparency_buffers_.counters(),
-                        transparency_buffers_.nodes(), viewport_);
+                        transparency_buffers_.nodes(), opacity_buffers_.images(), viewport_);
                 create_mesh_shadow_mapping_buffers();
 
                 volume_renderer_.create_buffers(
                         render_buffers_, viewport_, depth_copy_image_->image_view(), transparency_buffers_.heads(),
-                        transparency_buffers_.nodes());
+                        transparency_buffers_.nodes(), opacity_buffers_.images());
 
                 create_mesh_command_buffers();
                 create_volume_command_buffers();
@@ -209,7 +212,8 @@ class Impl final : public Renderer, RendererViewEvents, StorageMeshEvents, Stora
                 delete_mesh_shadow_mapping_buffers();
                 mesh_renderer_.delete_render_buffers();
                 depth_copy_image_.reset();
-                delete_transparency_buffers();
+                transparency_buffers_.delete_buffers();
+                opacity_buffers_.delete_buffers();
         }
 
         void create_depth_copy_image()
@@ -234,9 +238,11 @@ class Impl final : public Renderer, RendererViewEvents, StorageMeshEvents, Stora
                 drawing_buffer_.set_transparency_max_node_count(transparency_buffers_.node_count());
         }
 
-        void delete_transparency_buffers()
+        void create_opacity_buffers()
         {
-                transparency_buffers_.delete_buffers();
+                opacity_buffers_.create_buffers(
+                        *device_, std::vector<std::uint32_t>({graphics_queue_->family_index()}),
+                        render_buffers_->sample_count(), render_buffers_->width(), render_buffers_->height());
         }
 
         void delete_mesh_shadow_mapping_buffers()

@@ -68,7 +68,8 @@ void VolumeRenderer::create_buffers(
         const Region<2, int>& viewport,
         const VkImageView depth_image,
         const vulkan::ImageWithMemory& transparency_heads_image,
-        const vulkan::Buffer& transparency_nodes)
+        const vulkan::Buffer& transparency_nodes,
+        const std::vector<vulkan::ImageWithMemory>& /*opacity_images*/)
 {
         ASSERT(thread_id_ == std::this_thread::get_id());
 

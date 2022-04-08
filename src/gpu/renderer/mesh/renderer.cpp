@@ -122,6 +122,7 @@ void MeshRenderer::create_render_buffers(
         const vulkan::ImageWithMemory& transparency_heads_size_image,
         const vulkan::Buffer& transparency_counter,
         const vulkan::Buffer& transparency_nodes,
+        const std::vector<vulkan::ImageWithMemory>& /*opacity_images*/,
         const Region<2, int>& viewport)
 {
         ASSERT(thread_id_ == std::this_thread::get_id());

@@ -84,7 +84,8 @@ public:
                 const Region<2, int>& viewport,
                 VkImageView depth_image,
                 const vulkan::ImageWithMemory& transparency_heads_image,
-                const vulkan::Buffer& transparency_nodes);
+                const vulkan::Buffer& transparency_nodes,
+                const std::vector<vulkan::ImageWithMemory>& opacity_images);
         void delete_buffers();
 
         void create_command_buffers(VkCommandPool graphics_command_pool);
